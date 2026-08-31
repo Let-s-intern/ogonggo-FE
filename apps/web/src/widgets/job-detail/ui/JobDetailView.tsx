@@ -7,6 +7,7 @@ import { JobApplyCta } from './JobApplyCta';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobInfoGrid } from './JobInfoGrid';
+import { SimilarJobs } from './SimilarJobs';
 
 export interface JobDetailViewProps {
   jobId: number;
@@ -84,6 +85,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
           </Card>
         ))}
       <JobApplyCta sourceUrl={job.sourceUrl} bookmarked={job.bookmarked} bookmarkCount={job.bookmarkCount} />
+      <SimilarJobs excludeJobId={job.id} />
     </div>
   );
 }
