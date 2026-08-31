@@ -1,12 +1,13 @@
-import { Button, Card, CardTitle } from '@ogonggo/ui';
+import { JobList } from '@/widgets/job-list';
 
-export function HomePage() {
+export interface HomePageProps {
+  page: number;
+}
+
+export function HomePage({ page }: HomePageProps) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
-      <Card className="w-96">
-        <CardTitle>오공고</CardTitle>
-        <Button className="mt-4">공고 확인하기</Button>
-      </Card>
+    <main className="flex min-h-screen flex-col items-center gap-6 bg-gray-50 px-4 py-10">
+      <JobList page={page} />
     </main>
   );
 }
