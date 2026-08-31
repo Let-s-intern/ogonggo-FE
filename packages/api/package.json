@@ -1,0 +1,25 @@
+{
+  "name": "@ogonggo/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "generate": "orval --config orval.config.ts",
+    "type-check": "tsgo --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.102.8",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@ogonggo/config": "workspace:*",
+    "msw": "^2.15.0",
+    "orval": "^8.27.0",
+    "typescript": "^5.9.3"
+  }
+}

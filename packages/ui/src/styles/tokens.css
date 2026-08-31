@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens transcribed from docs/design-system.md (Color Parameter System,
+ * Spacing Scale, Border Radius Scale). No typography scale was captured in that
+ * doc yet — the font tokens below are a placeholder until one is added.
+ */
+@theme {
+  --color-blue-00: #f5f9ff;
+  --color-blue-50: #ebf1ff;
+  --color-blue-100: #d6e3ff;
+  --color-blue-150: #c0d4ff;
+  --color-blue-200: #abc5ff;
+  --color-blue-300: #8babff;
+  --color-blue-400: #6b91ff;
+  --color-blue-500: #4a76ff;
+  --color-blue-600: #3b60e6;
+  --color-blue-700: #2d4abd;
+  --color-blue-800: #2c4999;
+  --color-blue-900: #1e3366;
+  --color-blue-950: #162350;
+
+  --color-gray-00: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-150: #ecedf0;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #0ea5e9;
+
+  /*
+   * Spacing scale: Tailwind's default --spacing is 4px, so the design doc's
+   * 4/8/12/16/24/32/48/64px steps already fall out of the stock numeric utilities
+   * (p-1, p-2, p-3, p-4, p-6, p-8, p-12, p-16) with no override needed. Redefining
+   * --spacing-N here would make e.g. `p-4` mean two different things depending on
+   * which file you're reading, so this file intentionally leaves --spacing alone.
+   */
+
+  --radius-xs: 4px;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-full: 999px;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+}
