@@ -5,6 +5,7 @@ import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
+import { JobInfoGrid } from './JobInfoGrid';
 
 export interface JobDetailViewProps {
   jobId: number;
@@ -66,6 +67,12 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
         recruitmentType={job.recruitmentType}
         recruitmentEndAt={job.recruitmentEndAt}
         viewCount={job.viewCount}
+      />
+      <JobInfoGrid
+        experienceType={job.experienceType}
+        employmentType={job.employmentType}
+        educationLevel={job.educationLevel}
+        region={job.region}
       />
       {buildSections(job)
         .filter((section) => Boolean(section.value))
