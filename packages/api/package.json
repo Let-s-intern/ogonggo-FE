@@ -17,6 +17,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@ogonggo/config": "workspace:*",
     "msw": "^2.15.0",
     "orval": "^8.27.0",
