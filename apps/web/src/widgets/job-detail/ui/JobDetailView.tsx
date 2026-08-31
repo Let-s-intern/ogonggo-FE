@@ -43,6 +43,7 @@ async function fetchJobDetail(jobId: number): Promise<JobDetail> {
 function buildSections(job: JobDetail): { label: string; value?: string }[] {
   return [
     { label: '회사소개', value: job.companyAndTeamIntroduction },
+    { label: '주요업무', value: job.responsibilities },
     { label: '자격요건', value: job.qualifications },
     { label: '우대사항', value: job.preferredQualifications },
     { label: '보상', value: job.compensation },
