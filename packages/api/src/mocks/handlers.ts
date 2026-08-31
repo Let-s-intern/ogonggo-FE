@@ -38,13 +38,43 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
     sort === GetJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
   );
 
+/**
+ * `q`/`employmentType`/`experienceType`는 실제 백엔드 `GET /api/v1/jobs`에는 없는 파라미터다
+ * (PRD 10절) — MSW 위에서만 의미가 있고, 실제 API로 전환할 때 이 필터는 다시 손을 대야 한다.
+ * `q`는 제목+회사명 부분 일치(대소문자 무시)다.
+ */
+const filterJobs = (
+  jobs: UserJobDetailResponse[],
+  { q, employmentType, experienceType }: { q?: string; employmentType?: string; experienceType?: string },
+): UserJobDetailResponse[] =>
+  jobs.filter((job) => {
+    if (q) {
+      const needle = q.toLowerCase();
+      const haystack = `${job.title} ${job.companyName}`.toLowerCase();
+      if (!haystack.includes(needle)) {
+        return false;
+      }
+    }
+    if (employmentType && job.employmentType !== employmentType) {
+      return false;
+    }
+    if (experienceType && job.experienceType !== experienceType) {
+      return false;
+    }
+    return true;
+  });
+
 const getJobsHandler = http.get('*/api/v1/jobs', ({ request }) => {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
   const size = Number(url.searchParams.get('size') ?? DEFAULT_SIZE);
   const sort = url.searchParams.get('sort') ?? GetJobsSort.LATEST;
+  const q = url.searchParams.get('q') ?? undefined;
+  const employmentType = url.searchParams.get('employmentType') ?? undefined;
+  const experienceType = url.searchParams.get('experienceType') ?? undefined;
 
-  const sorted = sortJobs(JOB_FIXTURES, sort);
+  const filtered = filterJobs(JOB_FIXTURES, { q, employmentType, experienceType });
+  const sorted = sortJobs(filtered, sort);
   const start = (page - 1) * size;
   const items = sorted.slice(start, start + size).map(toSummary);
 
