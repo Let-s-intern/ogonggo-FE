@@ -1,1 +1,29 @@
-/docs/asset
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+.next/
+storybook-static/
+
+# generated code
+**/src/generated/
+
+# turbo
+.turbo/
+
+# typescript
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+pnpm-debug.log*
+
+# OS
+.DS_Store
