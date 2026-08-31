@@ -64,7 +64,7 @@ export async function JobList(query: JobListProps) {
             experienceType={experienceType}
             sort={sort}
           />
-          <SortToggle sort={sort} />
+          <SortToggle query={query} />
         </div>
       </div>
       {items.length === 0 ? (
