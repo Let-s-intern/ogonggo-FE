@@ -56,12 +56,16 @@ function buildSections(job: JobDetail): { label: string; value?: string }[] {
   ];
 }
 
-/** 채용공고 상세 — breadcrumb, 회사 정보 헤더, 본문 섹션(값 있는 것만)을 보여준다. */
+/**
+ * 채용공고 상세 — `docs/asset/상세 채용공고.png` 순서(헤더 카드 → 정보 그리드 → 본문 섹션
+ * (값 있는 것만) → 사이드바)로 조합한다. 본문(왼쪽)과 사이드바(오른쪽)는 데스크톱에서 2단,
+ * 좁은 화면에서는 세로로 쌓인다.
+ */
 export async function JobDetailView({ jobId }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-4">
+    <div className="flex w-full max-w-6xl flex-col gap-4">
       <JobDetailBreadcrumb />
       <JobDetailHeaderCard
         companyName={job.companyName}
@@ -71,23 +75,33 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
         recruitmentEndAt={job.recruitmentEndAt}
         viewCount={job.viewCount}
       />
-      <JobInfoGrid
-        experienceType={job.experienceType}
-        employmentType={job.employmentType}
-        educationLevel={job.educationLevel}
-        region={job.region}
-      />
-      {buildSections(job)
-        .filter((section) => Boolean(section.value))
-        .map((section) => (
-          <Card key={section.label}>
-            <CardTitle>{section.label}</CardTitle>
-            <p className="whitespace-pre-line text-sm text-gray-700">{section.value}</p>
-          </Card>
-        ))}
-      <JobApplyCta sourceUrl={job.sourceUrl} bookmarked={job.bookmarked} bookmarkCount={job.bookmarkCount} />
-      <SimilarJobs excludeJobId={job.id} />
-      <CrossSellWidget />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <JobInfoGrid
+            experienceType={job.experienceType}
+            employmentType={job.employmentType}
+            educationLevel={job.educationLevel}
+            region={job.region}
+          />
+          {buildSections(job)
+            .filter((section) => Boolean(section.value))
+            .map((section) => (
+              <Card key={section.label}>
+                <CardTitle>{section.label}</CardTitle>
+                <p className="whitespace-pre-line text-sm text-gray-700">{section.value}</p>
+              </Card>
+            ))}
+        </div>
+        <aside className="flex flex-col gap-6">
+          <JobApplyCta
+            sourceUrl={job.sourceUrl}
+            bookmarked={job.bookmarked}
+            bookmarkCount={job.bookmarkCount}
+          />
+          <SimilarJobs excludeJobId={job.id} />
+          <CrossSellWidget />
+        </aside>
+      </div>
     </div>
   );
 }
