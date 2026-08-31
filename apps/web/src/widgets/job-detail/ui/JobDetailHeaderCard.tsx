@@ -46,7 +46,7 @@ export function JobDetailHeaderCard({
   viewCount,
 }: JobDetailHeaderCardProps) {
   return (
-    <Card className="bg-gray-50">
+    <Card className="bg-gray-50 p-10">
       <div className="flex items-center gap-3">
         <div className="h-16 w-16 shrink-0 rounded-m bg-gray-200" />
         <div>
@@ -54,8 +54,8 @@ export function JobDetailHeaderCard({
           {region ? <p className="text-sm text-gray-500">{region}</p> : null}
         </div>
       </div>
-      <h1 className="mt-4 text-xl font-bold text-gray-900">{title}</h1>
-      <hr className="my-4 border-gray-200" />
+      <h1 className="mt-6 text-2xl font-bold text-gray-900">{title}</h1>
+      <hr className="my-6 border-gray-200" />
       <div className="flex items-center gap-3 text-sm">
         <JobDday recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
         <span className="text-gray-500">{formatDeadlineText(recruitmentType, recruitmentEndAt)}</span>

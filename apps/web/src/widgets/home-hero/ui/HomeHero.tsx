@@ -12,9 +12,9 @@ export function HomeHero() {
         지원해볼 만한 공고만 엄선했어요
       </span>
       <h1 className="mt-6 text-3xl font-extrabold text-gray-900 md:text-4xl">
-        커리어 여정에 <span className="text-blue-500">딱!</span> 맞는
+        커리어 여정에 <span className="italic text-green-500">딱!</span> 맞는
         <br />
-        채용공고만 <span className="text-success">쏙!</span> 보여드려요
+        채용공고만 <span className="italic text-green-500">쏙!</span> 보여드려요
       </h1>
     </section>
   );

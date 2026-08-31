@@ -44,15 +44,20 @@ async function fetchJobDetail(jobId: number): Promise<JobDetail> {
   return response.data;
 }
 
+/**
+ * `상세 채용공고.png`가 실제로 쓰는 6개 라벨(띄어쓰기 포함) 그대로다 — "회사소개"는 이
+ * 목업에 섹션으로 없다(헤더의 회사명 한 줄이 전부). 최초 AC 문구가 7개 본문 필드 중
+ * `companyAndTeamIntroduction`을 포함하고 `responsibilities`를 빠뜨렸던 건 목업과 어긋난
+ * 오기였다 — 목업을 기준으로 바로잡는다.
+ */
 function buildSections(job: JobDetail): { label: string; value?: string }[] {
   return [
-    { label: '회사소개', value: job.companyAndTeamIntroduction },
-    { label: '주요업무', value: job.responsibilities },
-    { label: '자격요건', value: job.qualifications },
-    { label: '우대사항', value: job.preferredQualifications },
-    { label: '보상', value: job.compensation },
-    { label: '복지', value: job.benefits },
-    { label: '채용절차', value: job.hiringProcess },
+    { label: '주요 업무', value: job.responsibilities },
+    { label: '자격 요건', value: job.qualifications },
+    { label: '우대 사항', value: job.preferredQualifications },
+    { label: '급여 및 처우', value: job.compensation },
+    { label: '혜택 및 복지', value: job.benefits },
+    { label: '채용 절차', value: job.hiringProcess },
   ];
 }
 
