@@ -13,13 +13,13 @@
     "react": "^19.0.0"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@tanstack/react-query": "^5.102.8",
+    "msw": "^2.15.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.6.0",
     "@ogonggo/config": "workspace:*",
-    "msw": "^2.15.0",
     "orval": "^8.27.0",
     "typescript": "^5.9.3"
   }

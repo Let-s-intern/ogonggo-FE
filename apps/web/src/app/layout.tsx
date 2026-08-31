@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { SiteFooter } from '@/widgets/site-footer';
+import { SiteHeader } from '@/widgets/site-header';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -12,7 +14,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko">
       <body>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </AppProviders>
       </body>
     </html>
   );

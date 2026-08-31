@@ -115,9 +115,15 @@ importers:
 
   packages/api:
     dependencies:
+      '@faker-js/faker':
+        specifier: ^10.6.0
+        version: 10.6.0
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
+      msw:
+        specifier: ^2.15.0
+        version: 2.15.0(@types/node@22.20.1)(typescript@5.9.3)
       react:
         specifier: ^19.0.0
         version: 19.2.8
@@ -125,15 +131,9 @@ importers:
         specifier: ^4.5.4
         version: 4.5.4
     devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.6.0
-        version: 10.6.0
       '@ogonggo/config':
         specifier: workspace:*
         version: link:../config
-      msw:
-        specifier: ^2.15.0
-        version: 2.15.0(@types/node@22.20.1)(typescript@5.9.3)
       orval:
         specifier: ^8.27.0
         version: 8.27.0(@faker-js/faker@10.6.0)(typescript@5.9.3)

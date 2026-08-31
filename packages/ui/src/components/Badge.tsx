@@ -17,7 +17,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
     <span
       ref={ref}
       className={cn(
-        'inline-flex items-center rounded-s px-2 py-1 text-sm font-medium',
+        'inline-flex items-center rounded-sm px-2 py-1 text-sm font-medium',
         TONE_CLASSES[tone],
         className,
       )}
