@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Card, CardTitle } from '@ogonggo/ui';
 import { httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
+import { computeDday } from '@/entities/job/model/dday';
 import { JobBadge } from '@/entities/job/ui/JobBadge';
 import { JobMeta } from '@/entities/job/ui/JobMeta';
+import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 import type { JobSummary } from '@/entities/job/model/types';
 import type { JobListQuery } from '../lib/query';
 import { Pagination } from './Pagination';
@@ -77,26 +78,33 @@ export async function JobList(query: JobListProps) {
   );
 }
 
+/**
+ * `home.png`의 "전체 공고" 4열 그리드(3.4절) — 회색 placeholder, 북마크 우상단, 배지, 회사명,
+ * 제목. 지역은 목업의 이 카드 변형엔 안 보이지만 PRD 5절의 "제목·회사명·지역" 표시 요구가
+ * 우선이라 `JobMeta`(회사명·지역·마감 한 줄)를 그대로 쓴다.
+ */
 function JobListItems({ items }: { items: JobSummary[] }) {
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
       {items.map((job) => (
         <li key={job.id}>
-          <Link href={`/jobs/${job.id}`}>
-            <Card>
-              <CardTitle>{job.title}</CardTitle>
-              <JobMeta
-                companyName={job.companyName}
-                region={job.region}
-                recruitmentType={job.recruitmentType}
-                recruitmentEndAt={job.recruitmentEndAt}
-              />
-              <JobBadge
-                employmentType={job.employmentType}
-                experienceType={job.experienceType}
-                educationLevel={job.educationLevel}
-              />
-            </Card>
+          <Link href={`/jobs/${job.id}`} className="flex flex-col gap-2">
+            <JobThumbnail
+              bookmarked={job.bookmarked}
+              dday={computeDday(job.recruitmentType, job.recruitmentEndAt)}
+            />
+            <JobBadge
+              employmentType={job.employmentType}
+              experienceType={job.experienceType}
+              educationLevel={job.educationLevel}
+            />
+            <JobMeta
+              companyName={job.companyName}
+              region={job.region}
+              recruitmentType={job.recruitmentType}
+              recruitmentEndAt={job.recruitmentEndAt}
+            />
+            <p className="line-clamp-2 text-sm font-bold text-gray-900">{job.title}</p>
           </Link>
         </li>
       ))}
