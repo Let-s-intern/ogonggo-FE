@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
-import { Button, Card, CardTitle } from '@ogonggo/ui';
+import { Card, CardTitle } from '@ogonggo/ui';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
+import { JobApplyCta } from './JobApplyCta';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobInfoGrid } from './JobInfoGrid';
@@ -82,13 +83,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
             <p className="whitespace-pre-line text-sm text-gray-700">{section.value}</p>
           </Card>
         ))}
-      {job.sourceUrl ? (
-        <Button asChild variant="secondary">
-          <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer">
-            원문 보기
-          </a>
-        </Button>
-      ) : null}
+      <JobApplyCta sourceUrl={job.sourceUrl} bookmarked={job.bookmarked} bookmarkCount={job.bookmarkCount} />
     </div>
   );
 }
