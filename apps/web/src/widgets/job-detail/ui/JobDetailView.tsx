@@ -2,10 +2,9 @@ import { notFound } from 'next/navigation';
 import { Button, Card, CardTitle } from '@ogonggo/ui';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
-import { JobBadge } from '@/entities/job/ui/JobBadge';
-import { JobMeta } from '@/entities/job/ui/JobMeta';
 import type { JobDetail } from '@/entities/job/model/types';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
+import { JobDetailHeaderCard } from './JobDetailHeaderCard';
 
 export interface JobDetailViewProps {
   jobId: number;
@@ -53,27 +52,21 @@ function buildSections(job: JobDetail): { label: string; value?: string }[] {
   ];
 }
 
-/** 채용공고 상세 — 헤더(제목·메타·배지)와 본문 섹션(값 있는 것만)을 보여준다. */
+/** 채용공고 상세 — breadcrumb, 회사 정보 헤더, 본문 섹션(값 있는 것만)을 보여준다. */
 export async function JobDetailView({ jobId }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
       <JobDetailBreadcrumb />
-      <Card>
-        <CardTitle>{job.title}</CardTitle>
-        <JobMeta
-          companyName={job.companyName}
-          region={job.region}
-          recruitmentType={job.recruitmentType}
-          recruitmentEndAt={job.recruitmentEndAt}
-        />
-        <JobBadge
-          employmentType={job.employmentType}
-          experienceType={job.experienceType}
-          educationLevel={job.educationLevel}
-        />
-      </Card>
+      <JobDetailHeaderCard
+        companyName={job.companyName}
+        region={job.region}
+        title={job.title}
+        recruitmentType={job.recruitmentType}
+        recruitmentEndAt={job.recruitmentEndAt}
+        viewCount={job.viewCount}
+      />
       {buildSections(job)
         .filter((section) => Boolean(section.value))
         .map((section) => (
