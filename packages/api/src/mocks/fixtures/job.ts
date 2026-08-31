@@ -114,12 +114,13 @@ const alwaysOpen: UserJobDetailResponse = {
 };
 
 /**
- * `real-jobs-seed.ts`의 148건 실데이터(스냅샷에서 회사명이 있는 전부)를
- * `UserJobDetailResponse`로 변환한다. 그 파일이 설명하는 대로 회사명·제목·본문·자격요건·원문
- * 링크는 실제 크롤링 결과이고, 크롤러가 아예 수집하지 않는 필드(학력·지역·경력연차·상세 본문
- * 나머지 섹션)는 지어내지 않고 비워둔다 —
- * `preferredQualifications`/`compensation`/`benefits`/`hiringProcess`가 전부 `undefined`인
- * 것도 실데이터의 한계이지 버그가 아니다(해당 섹션은 화면에서 자연히 숨는다).
+ * `real-jobs-seed.ts`의 696건 실데이터(사용자가 직접 내려받은 크롤러 운영 DB 스냅샷 전부)를
+ * `UserJobDetailResponse`로 변환한다. 회사명·제목·고용형태·경력·지역·본문 4종
+ * (주요업무/자격요건/우대사항/채용절차)·원문 링크는 전부 실제 크롤링 결과다 — 그 DB의
+ * `normalized_jobs`가 이 필드들을 이미 컬럼으로 분리해 갖고 있어서 더 이상 제목 문구로
+ * 추측하지 않는다. 여전히 크롤러가 수집하지 않는 필드(학력, 급여/복지 본문, 경력 연차 숫자)는
+ * 지어내지 않고 비워둔다 — `educationLevel`은 신호가 없어 전부 `ANY`,
+ * `compensation`/`benefits`는 전부 `undefined`(해당 섹션은 화면에서 자연히 숨는다).
  */
 const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => {
   const id = 6 + index;
@@ -136,7 +137,7 @@ const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => 
     experienceMinYears: undefined,
     experienceMaxYears: undefined,
     educationLevel: 'ANY',
-    region: undefined,
+    region: seed.region,
     recruitmentType: 'PERIOD',
     recruitmentStartAt: undefined,
     recruitmentEndAt: isoDate(endAt),
@@ -147,12 +148,12 @@ const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => 
     bookmarkCount: seed.bookmarkCount,
     commentCount: seed.commentCount,
     companyAndTeamIntroduction: undefined,
-    responsibilities: seed.body ?? undefined,
-    qualifications: seed.requirements ?? undefined,
-    preferredQualifications: undefined,
+    responsibilities: seed.responsibilities ?? undefined,
+    qualifications: seed.qualifications ?? undefined,
+    preferredQualifications: seed.preferredQualifications ?? undefined,
     compensation: undefined,
     benefits: undefined,
-    hiringProcess: undefined,
+    hiringProcess: seed.hiringProcess ?? undefined,
   };
 });
 

@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { cn } from '@ogonggo/ui';
+import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
-import { PopularJobCard } from './PopularJobCard';
 
 type TabKey = 'popular' | 'intern' | 'newcomer';
 
@@ -55,7 +55,7 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {items.map((job) => (
             <li key={job.id}>
-              <PopularJobCard job={job} />
+              <JobCard job={job} />
             </li>
           ))}
         </ul>

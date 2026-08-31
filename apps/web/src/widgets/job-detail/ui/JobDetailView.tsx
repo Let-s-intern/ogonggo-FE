@@ -79,8 +79,8 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
         recruitmentEndAt={job.recruitmentEndAt}
         viewCount={job.viewCount}
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="flex flex-col gap-4 lg:col-span-3">
           <JobInfoGrid
             experienceType={job.experienceType}
             employmentType={job.employmentType}
