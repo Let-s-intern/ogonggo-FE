@@ -9,7 +9,7 @@ const SKELETON_COUNT = 5;
  */
 export default function Loading() {
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 bg-gray-50 px-4 py-10">
+    <main className="flex min-h-screen flex-col items-center gap-6 bg-white px-4 py-10">
       <div className="flex w-full max-w-2xl flex-col gap-3">
         {Array.from({ length: SKELETON_COUNT }, (_, index) => (
           <Card key={index} className="h-24 animate-pulse bg-gray-100" />
