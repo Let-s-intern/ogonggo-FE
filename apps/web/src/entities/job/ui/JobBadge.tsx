@@ -1,29 +1,10 @@
 import { Badge } from '@ogonggo/ui';
+import {
+  EDUCATION_LEVEL_LABELS,
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+} from '../model/labels';
 import type { JobEducationLevel, JobEmploymentType, JobExperienceType } from '../model/types';
-
-const EMPLOYMENT_TYPE_LABELS: Record<JobEmploymentType, string> = {
-  FULL_TIME: '정규직',
-  CONTRACT: '계약직',
-  INTERN: '인턴',
-  PART_TIME: '파트타임',
-  ETC: '기타',
-};
-
-const EXPERIENCE_TYPE_LABELS: Record<JobExperienceType, string> = {
-  NEWCOMER: '신입',
-  EXPERIENCED: '경력',
-  BOTH: '경력무관',
-  IRRELEVANT: '경력무관',
-};
-
-const EDUCATION_LEVEL_LABELS: Record<JobEducationLevel, string> = {
-  ANY: '학력무관',
-  HIGH_SCHOOL: '고졸',
-  ASSOCIATE: '초대졸',
-  BACHELOR: '대졸',
-  MASTER: '석사',
-  DOCTORATE: '박사',
-};
 
 export interface JobBadgeProps {
   employmentType: JobEmploymentType;
