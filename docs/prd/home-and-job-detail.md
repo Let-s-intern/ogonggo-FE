@@ -91,7 +91,7 @@ MVP 범위에는 넣지 않고, 버튼 자체(2.2의 `sourceUrl`로 새 탭 이�
 실제로 확인했다:
 
 ```
-$ curl http://localhost:3000/api/v1/jobs   # apps/web dev 서버 → 프록시 → 백엔드
+$ curl http://localhost:4000/api/v1/jobs   # apps/web dev 서버 → 프록시 → 백엔드
 {"status":401,"code":"UNAUTHORIZED","message":"리소스 접근 권한이 없습니다."}
 ```
 

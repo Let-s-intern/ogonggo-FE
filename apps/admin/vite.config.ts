@@ -7,7 +7,8 @@ const ADMIN_API_ORIGIN = process.env.OGONGGO_ADMIN_API_ORIGIN ?? 'http://localho
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 5173,
+    port: 4001,
+    strictPort: true,
     // Same-origin from the browser avoids CORS and keeps packages/api free of
     // any base-URL config — see packages/api/src/lib/http-client.ts.
     proxy: {

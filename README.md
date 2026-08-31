@@ -9,9 +9,12 @@ pnpm workspace: `apps/admin`(Vite, 내부 관리자), `apps/web`(Next.js + Turbo
 
 ```bash
 pnpm install
-pnpm dev:admin   # apps/admin, http://localhost:5173
-pnpm dev:web     # apps/web, http://localhost:3000
+pnpm dev:admin   # apps/admin, http://localhost:4001
+pnpm dev:web     # apps/web, http://localhost:4000
 ```
+
+포트는 3000번대를 피해 4000/4001로 고정했다 — 렛츠커리어 프론트(`lets-intern-client`)가 로컬에서
+3000(web)/3001(admin)/3002(mentor)를 쓰므로, 두 스택을 동시에 띄워도 겹치지 않는다.
 
 `packages/api`는 ogonggo-BE의 OpenAPI 스펙에서 코드를 생성한다. 로컬에서 백엔드를 띄운 뒤:
 
