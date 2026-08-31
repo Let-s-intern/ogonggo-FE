@@ -1,14 +1,12 @@
-import { GetJobsSort } from '@ogonggo/api';
+import Link from 'next/link';
 import { cn, Input } from '@ogonggo/ui';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
+import { buildJobListHref, type JobListQuery } from '../lib/query';
 
 export interface SearchFilterBarProps {
-  q?: string;
-  employmentType?: JobEmploymentType;
-  experienceType?: JobExperienceType;
-  sort: GetJobsSort;
+  query: JobListQuery;
 }
 
 const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPE_LABELS) as [
@@ -20,52 +18,85 @@ const EXPERIENCE_TYPE_OPTIONS = Object.entries(EXPERIENCE_TYPE_LABELS) as [
   string,
 ][];
 
-function FilterSelect({
-  name,
-  placeholder,
-  defaultValue,
+/**
+ * `home.png`의 "채용 형태 ▾"/"경력 ▾" 드롭다운 — `SortToggle`과 같은 `<details>`/`<summary>`
+ * 패턴(자바스크립트 없이 여닫힘)으로 통일해, 네이티브 `<select>`가 열 때 OS 기본 팝업으로
+ * 렌더되던 것과 달리 항상 같은 커스텀 스타일로 보이게 한다. 옵션을 고르면 그 자리에서 바로
+ * 적용되는 `<Link>` 이동이다(제출 버튼 필요 없음).
+ */
+function FilterDropdown<TValue extends string>({
+  label,
+  selected,
   options,
+  buildHref,
 }: {
-  name: string;
-  placeholder: string;
-  defaultValue?: string;
-  options: [string, string][];
+  label: string;
+  selected?: TValue;
+  options: [TValue, string][];
+  buildHref: (value: TValue | undefined) => string;
 }) {
+  const currentLabel = options.find(([value]) => value === selected)?.[1] ?? label;
+
   return (
-    <div className="relative">
-      <select
-        name={name}
-        defaultValue={defaultValue ?? ''}
+    <details className="group relative">
+      <summary
         className={cn(
-          'h-9 appearance-none rounded-full border border-gray-200 bg-white py-1 pl-3 pr-8 text-sm text-gray-600',
-          'focus:border-blue-500 focus:outline-none',
+          'flex h-9 cursor-pointer list-none items-center gap-1 rounded-full border px-3 text-sm font-medium [&::-webkit-details-marker]:hidden',
+          selected ? 'border-blue-500 text-blue-600' : 'border-gray-200 text-gray-600',
         )}
       >
-        <option value="">{placeholder}</option>
-        {options.map(([value, label]) => (
-          <option key={value} value={value}>
+        {currentLabel}
+        <ChevronIcon className="h-4 w-4 text-gray-400 group-open:rotate-180" />
+      </summary>
+      <ul className="absolute right-0 z-10 mt-1 w-32 rounded-m border border-gray-200 bg-white py-1 shadow-md">
+        <li>
+          <Link
+            href={buildHref(undefined)}
+            className={cn('block px-3 py-1.5 text-sm', !selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50')}
+          >
             {label}
-          </option>
+          </Link>
+        </li>
+        {options.map(([value, optionLabel]) => (
+          <li key={value}>
+            <Link
+              href={buildHref(value)}
+              className={cn(
+                'block px-3 py-1.5 text-sm',
+                value === selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50',
+              )}
+            >
+              {optionLabel}
+            </Link>
+          </li>
         ))}
-      </select>
-      <ChevronIcon className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-    </div>
+      </ul>
+    </details>
   );
 }
 
 /**
- * 자바스크립트 없이도 동작하는 네이티브 `<form method="GET">` — 셀렉트 변경만으로 자동 제출하지
- * 않고, 검색 아이콘(=submit 버튼)을 눌러 검색어·채용형태·경력을 한 번에 적용한다(Push 4 task
- * 파일 3.2 "확인 필요" 검토 결과: 네이티브 `<select>`가 URL 기반 폼 제출과 가장 적은 코드로
- * 맞는다). 현재 정렬은 hidden input으로 함께 제출해 유지하고, `page`는 폼에 없어 제출 시 자연스럽게
- * 1페이지로 초기화된다.
+ * 검색어는 자유 텍스트라 `<Link>` 이동으로는 못 만든다 — `<form method="GET">` + 제출 버튼(검색
+ * 아이콘)은 유지한다. 채용형태·경력 드롭다운은 `FilterDropdown`으로 클릭 즉시 적용된다.
  */
-export function SearchFilterBar({ q, employmentType, experienceType, sort }: SearchFilterBarProps) {
+export function SearchFilterBar({ query }: SearchFilterBarProps) {
   return (
-    <form action="/" method="GET" className="flex flex-wrap items-center gap-2">
-      <input type="hidden" name="sort" value={sort} />
-      <div className="relative min-w-[220px] flex-1">
-        <Input type="text" name="q" defaultValue={q} placeholder="공고 검색" className="h-9 pl-9" />
+    <div className="flex flex-wrap items-center gap-2">
+      <form action="/" method="GET" className="relative min-w-[220px] flex-1">
+        <input type="hidden" name="sort" value={query.sort} />
+        {query.employmentType ? (
+          <input type="hidden" name="employmentType" value={query.employmentType} />
+        ) : null}
+        {query.experienceType ? (
+          <input type="hidden" name="experienceType" value={query.experienceType} />
+        ) : null}
+        <Input
+          type="text"
+          name="q"
+          defaultValue={query.q}
+          placeholder="공고 검색"
+          className="h-9 pl-9"
+        />
         <button
           type="submit"
           aria-label="검색"
@@ -73,19 +104,19 @@ export function SearchFilterBar({ q, employmentType, experienceType, sort }: Sea
         >
           <SearchIcon className="h-4 w-4" />
         </button>
-      </div>
-      <FilterSelect
-        name="employmentType"
-        placeholder="채용 형태"
-        defaultValue={employmentType}
+      </form>
+      <FilterDropdown
+        label="채용 형태"
+        selected={query.employmentType}
         options={EMPLOYMENT_TYPE_OPTIONS}
+        buildHref={(value) => buildJobListHref(query, { employmentType: value })}
       />
-      <FilterSelect
-        name="experienceType"
-        placeholder="경력"
-        defaultValue={experienceType}
+      <FilterDropdown
+        label="경력"
+        selected={query.experienceType}
         options={EXPERIENCE_TYPE_OPTIONS}
+        buildHref={(value) => buildJobListHref(query, { experienceType: value })}
       />
-    </form>
+    </div>
   );
 }

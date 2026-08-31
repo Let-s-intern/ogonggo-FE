@@ -9,18 +9,21 @@ import { Button } from '@ogonggo/ui';
 export function SiteHeader() {
   return (
     <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-stretch justify-between px-6">
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-baseline gap-2">
-            <span className="text-lg font-extrabold text-gray-900">오늘의 공고</span>
+            <span className="text-lg font-extrabold text-blue-500">오늘의 공고</span>
             <span className="text-xs font-medium text-gray-400">BY LETS CAREER</span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm font-semibold">
-            <Link href="/" className="text-gray-900">
+          <nav className="flex items-stretch gap-6 text-sm font-semibold">
+            <Link
+              href="/"
+              className="flex items-center border-b-2 border-gray-900 text-gray-900"
+            >
               채용공고
             </Link>
-            <span className="text-gray-400">교육·부트캠프</span>
-            <span className="text-gray-400">사이드·스터디</span>
+            <span className="flex items-center text-gray-400">교육·부트캠프</span>
+            <span className="flex items-center text-gray-400">사이드·스터디</span>
           </nav>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">

@@ -11,6 +11,9 @@ export function HomePage(query: HomePageProps) {
       <HomeHero />
       <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
         <PopularJobs />
+        {/* home.png: 인기 공고와 전체 공고 사이의 배너 광고 자리. 광고 콘텐츠는 이 기능 범위
+            밖이라 자리만 잡아둔다(PRD 10절). */}
+        <div className="h-40 w-full rounded-l bg-gray-100" aria-hidden="true" />
         <JobList {...query} />
         <div className="w-full">
           <ForBusinessBanner />

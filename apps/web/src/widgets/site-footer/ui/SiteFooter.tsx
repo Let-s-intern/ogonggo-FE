@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:justify-between">
         <div className="flex flex-col gap-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-extrabold text-gray-900">오늘의 공고</span>
+            <span className="text-base font-extrabold text-blue-500">오늘의 공고</span>
             <span className="text-xs font-medium text-gray-400">BY LETS CAREER</span>
           </div>
           <p className="text-sm text-gray-500">

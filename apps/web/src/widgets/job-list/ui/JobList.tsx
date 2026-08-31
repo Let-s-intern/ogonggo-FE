@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { computeDday } from '@/entities/job/model/dday';
-import { JobBadge } from '@/entities/job/ui/JobBadge';
+import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import { JobMeta } from '@/entities/job/ui/JobMeta';
 import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 import type { JobSummary } from '@/entities/job/model/types';
@@ -51,7 +51,6 @@ async function fetchJobPage(query: JobListQuery): Promise<{ items: JobSummary[];
 
 /** 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다. */
 export async function JobList(query: JobListProps) {
-  const { sort, q, employmentType, experienceType } = query;
   const { items, pageInfo } = await fetchJobPage(query);
 
   return (
@@ -59,12 +58,7 @@ export async function JobList(query: JobListProps) {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <SearchFilterBar
-            q={q}
-            employmentType={employmentType}
-            experienceType={experienceType}
-            sort={sort}
-          />
+          <SearchFilterBar query={query} />
           <SortToggle query={query} />
         </div>
       </div>
@@ -93,16 +87,15 @@ function JobListItems({ items }: { items: JobSummary[] }) {
               bookmarked={job.bookmarked}
               dday={computeDday(job.recruitmentType, job.recruitmentEndAt)}
             />
-            <JobBadge
-              employmentType={job.employmentType}
-              experienceType={job.experienceType}
-              educationLevel={job.educationLevel}
-            />
+            <p className="text-xs text-gray-400">
+              {EMPLOYMENT_TYPE_LABELS[job.employmentType]} · {EXPERIENCE_TYPE_LABELS[job.experienceType]}
+            </p>
             <JobMeta
               companyName={job.companyName}
               region={job.region}
               recruitmentType={job.recruitmentType}
               recruitmentEndAt={job.recruitmentEndAt}
+              showDeadline={false}
             />
             <p className="line-clamp-2 text-sm font-bold text-gray-900">{job.title}</p>
           </Link>
