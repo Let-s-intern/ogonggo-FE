@@ -8,7 +8,12 @@ build/
 storybook-static/
 
 # generated code
-**/src/generated/
+# packages/api/src/generated is committed on purpose, so it is not listed here:
+# orval reads a running backend's /v3/api-docs (packages/api/orval.config.ts),
+# which a deploy build cannot reach, and @ogonggo/api re-exports that directory
+# from its entry point. Ignoring it made the Vercel build fail to resolve
+# @ogonggo/api at all. Re-run `pnpm codegen` and commit the diff when the API
+# changes.
 
 # turbo
 .turbo/
