@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getJobs, GetJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
+import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { JobSummary } from '@/entities/job/model/types';
 
 export interface SimilarJobsProps {
@@ -39,7 +40,7 @@ export async function SimilarJobs({ excludeJobId }: SimilarJobsProps) {
         {items.map((job) => (
           <li key={job.id}>
             <Link href={`/jobs/${job.id}`} className="flex items-center gap-3">
-              <div className="h-12 w-12 shrink-0 rounded-m bg-gray-100" />
+              <CompanyLogo companyName={job.companyName} className="h-12 w-12" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-gray-900">{job.title}</p>
                 <p className="text-xs text-gray-500">{job.companyName}</p>

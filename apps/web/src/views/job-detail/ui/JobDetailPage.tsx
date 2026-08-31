@@ -13,7 +13,7 @@ export function JobDetailPage({ jobId }: JobDetailPageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center gap-10 bg-white px-4 py-10">
       <JobDetailView jobId={jobId} />
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-6xl px-6">
         <ForBusinessBanner />
       </div>
     </main>

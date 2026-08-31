@@ -1,4 +1,5 @@
 import { Card } from '@ogonggo/ui';
+import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import { JobDday } from '@/entities/job/ui/JobDday';
 import type { JobRecruitmentType } from '@/entities/job/model/types';
 import { EyeIcon } from '@/shared/ui/icons';
@@ -48,7 +49,7 @@ export function JobDetailHeaderCard({
   return (
     <Card className="bg-gray-50 p-10">
       <div className="flex items-center gap-3">
-        <div className="h-16 w-16 shrink-0 rounded-m bg-gray-200" />
+        <CompanyLogo companyName={companyName} className="h-16 w-16" />
         <div>
           <p className="font-bold text-gray-900">{companyName}</p>
           {region ? <p className="text-sm text-gray-500">{region}</p> : null}
