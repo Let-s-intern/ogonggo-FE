@@ -83,12 +83,17 @@ function JobListItems({ items }: { items: JobSummary[] }) {
       {items.map((job) => (
         <li key={job.id}>
           <Link href={`/jobs/${job.id}`} className="flex flex-col gap-2">
-            <JobThumbnail
-              bookmarked={job.bookmarked}
-              dday={computeDday(job.recruitmentType, job.recruitmentEndAt)}
-            />
-            <p className="text-xs text-gray-400">
-              {EMPLOYMENT_TYPE_LABELS[job.employmentType]} · {EXPERIENCE_TYPE_LABELS[job.experienceType]}
+            <JobThumbnail bookmarked={job.bookmarked} />
+            <p className="flex items-center justify-between text-xs text-gray-400">
+              <span>
+                {EMPLOYMENT_TYPE_LABELS[job.employmentType]} ·{' '}
+                {EXPERIENCE_TYPE_LABELS[job.experienceType]}
+              </span>
+              {computeDday(job.recruitmentType, job.recruitmentEndAt) ? (
+                <span className="font-semibold text-gray-900">
+                  {computeDday(job.recruitmentType, job.recruitmentEndAt)}
+                </span>
+              ) : null}
             </p>
             <JobMeta
               companyName={job.companyName}

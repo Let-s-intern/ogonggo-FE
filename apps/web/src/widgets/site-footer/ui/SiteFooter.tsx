@@ -5,7 +5,7 @@
 export function SiteFooter() {
   return (
     <footer className="border-t border-gray-200 bg-gray-50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:justify-between">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-3">
           <div className="flex items-baseline gap-2">
             <span className="text-base font-extrabold text-blue-500">오늘의 공고</span>

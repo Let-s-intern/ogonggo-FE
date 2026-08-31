@@ -6,6 +6,21 @@ import { cn } from '@ogonggo/ui';
  * 인라인 SVG로 직접 그린다. 업무 의미가 없는 범용 그래픽이라 `shared/ui`에 둔다.
  */
 
+/** `home.png` 히어로 배지 앞의 위치 핀 아이콘. */
+export function PinIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M10 18C10 18 16 12.5 16 8A6 6 0 0 0 4 8C4 12.5 10 18 10 18Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="8" r="2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 export function SearchIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
