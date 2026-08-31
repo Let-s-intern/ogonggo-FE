@@ -96,7 +96,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
               </div>
             ))}
         </div>
-        <aside className="flex flex-col gap-6">
+        <aside className="flex flex-col gap-6 lg:col-span-2">
           <JobApplyCta
             sourceUrl={job.sourceUrl}
             bookmarked={job.bookmarked}
