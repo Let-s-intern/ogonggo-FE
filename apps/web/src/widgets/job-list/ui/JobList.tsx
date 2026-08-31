@@ -9,6 +9,7 @@ import type {
 import { JobBadge } from '@/entities/job/ui/JobBadge';
 import { JobMeta } from '@/entities/job/ui/JobMeta';
 import type { JobSummary } from '@/entities/job/model/types';
+import { Pagination } from './Pagination';
 import { SortToggle } from './SortToggle';
 
 export interface JobListProps {
@@ -45,7 +46,7 @@ async function fetchJobPage(
 
 /** 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다. */
 export async function JobList({ page, sort }: JobListProps) {
-  const { items } = await fetchJobPage({ page, sort });
+  const { items, pageInfo } = await fetchJobPage({ page, sort });
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-3">
@@ -55,6 +56,7 @@ export async function JobList({ page, sort }: JobListProps) {
       ) : (
         <JobListItems items={items} />
       )}
+      <Pagination pageInfo={pageInfo} sort={sort} />
     </div>
   );
 }
