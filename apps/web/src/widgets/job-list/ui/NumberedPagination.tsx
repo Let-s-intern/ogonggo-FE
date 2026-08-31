@@ -42,7 +42,7 @@ function PageArrow({
     <Link
       href={href}
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-m text-gray-500 hover:bg-gray-50"
+      className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-50"
     >
       {icon}
     </Link>
@@ -87,7 +87,7 @@ export function NumberedPagination({ pageInfo, query }: NumberedPaginationProps)
             href={buildJobListHref(query, { page: item })}
             aria-current={item === pageNum ? 'page' : undefined}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-m text-sm font-medium',
+              'flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium',
               item === pageNum ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50',
             )}
           >

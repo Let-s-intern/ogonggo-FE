@@ -28,7 +28,7 @@ export function CompanyLogo({ companyName, className }: CompanyLogoProps) {
   if (!logoUrl || failed) {
     return (
       <div
-        className={cn('shrink-0 rounded-m bg-gray-200 shadow-sm', className)}
+        className={cn('shrink-0 rounded-md bg-gray-200 shadow-sm', className)}
         aria-hidden="true"
       />
     );
@@ -37,7 +37,7 @@ export function CompanyLogo({ companyName, className }: CompanyLogoProps) {
     <img
       src={logoUrl}
       alt={`${companyName} 로고`}
-      className={cn('shrink-0 rounded-m bg-white object-contain p-1 shadow-sm', className)}
+      className={cn('shrink-0 rounded-md bg-white object-contain p-1 shadow-sm', className)}
       onError={() => setFailed(true)}
     />
   );

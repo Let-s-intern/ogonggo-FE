@@ -28,7 +28,7 @@ function InfoCell({ label, value }: { label: string; value: string }) {
  */
 export function JobInfoGrid({ experienceType, employmentType, educationLevel, region }: JobInfoGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-x-8 gap-y-4 rounded-l border border-gray-200 bg-gray-50 p-4">
+    <div className="grid grid-cols-2 gap-x-8 gap-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
       <InfoCell label="경력" value={EXPERIENCE_TYPE_LABELS[experienceType]} />
       <InfoCell label="채용 유형" value={EMPLOYMENT_TYPE_LABELS[employmentType]} />
       <InfoCell label="학력" value={EDUCATION_LEVEL_LABELS[educationLevel]} />

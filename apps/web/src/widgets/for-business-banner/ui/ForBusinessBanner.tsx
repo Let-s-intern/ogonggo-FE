@@ -7,7 +7,7 @@ import { Button } from '@ogonggo/ui';
  */
 export function ForBusinessBanner() {
   return (
-    <section className="rounded-l bg-blue-50 px-8 py-8">
+    <section className="rounded-lg bg-blue-50 px-8 py-8">
       <p className="text-xs font-semibold text-blue-600">FOR BUSINESS</p>
       <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>

@@ -28,7 +28,7 @@ export function SortToggle({ query }: SortToggleProps) {
         {currentLabel}
         <ChevronIcon className="h-4 w-4 text-gray-400 group-open:rotate-180" />
       </summary>
-      <ul className="absolute right-0 z-10 mt-1 w-24 rounded-m border border-gray-200 bg-white py-1 shadow-md">
+      <ul className="absolute right-0 z-10 mt-1 w-24 rounded-md border border-gray-200 bg-white py-1 shadow-md">
         {OPTIONS.map((option) => (
           <li key={option.value}>
             <Link

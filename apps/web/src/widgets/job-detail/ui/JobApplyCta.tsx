@@ -22,7 +22,7 @@ export function JobApplyCta({ sourceUrl, bookmarked, bookmarkCount }: JobApplyCt
           </a>
         </Button>
       ) : null}
-      <div className="flex h-11 flex-col items-center justify-center rounded-m border border-gray-300 px-3 text-xs text-gray-500">
+      <div className="flex h-11 flex-col items-center justify-center rounded-md border border-gray-300 px-3 text-xs text-gray-500">
         <BookmarkIcon filled={bookmarked} className="h-4 w-4" />
         <span>{bookmarkCount}</span>
       </div>

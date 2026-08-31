@@ -38,7 +38,7 @@ export function JobCard({ job }: JobCardProps) {
         {dday ? (
           <Badge
             tone={urgent ? 'urgent' : 'main'}
-            className="rounded-full px-3 py-1.5 text-base font-bold"
+            className="rounded-full px-2 py-0.5 text-xs font-bold"
           >
             {dday}
           </Badge>

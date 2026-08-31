@@ -15,7 +15,7 @@ export function CrossSellWidget() {
       <ul className="mt-3 flex flex-col gap-3">
         {CROSS_SELL_ITEMS.map((item) => (
           <li key={item.title} className="flex items-center gap-3">
-            <div className="h-12 w-12 shrink-0 rounded-m bg-gray-100" />
+            <div className="h-12 w-12 shrink-0 rounded-md bg-gray-100" />
             <div className="min-w-0">
               <p className="truncate text-xs text-gray-500">{item.eyebrow}</p>
               <p className="truncate text-sm font-semibold text-gray-900">{item.title}</p>

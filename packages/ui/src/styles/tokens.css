@@ -47,10 +47,17 @@
    * which file you're reading, so this file intentionally leaves --spacing alone.
    */
 
+  /*
+   * Radius names must not collide with Tailwind's side suffixes. These were s/m/l
+   * and `rounded-l` then resolved to BOTH the 16px token and the built-in
+   * "left side" utility, so the left corners rendered at the 4px default while
+   * the right ones were 16px. `rounded-s` (inline-start) had the same problem.
+   * sm/md/lg are not side names, so they stay whole-box radii.
+   */
   --radius-xs: 4px;
-  --radius-s: 8px;
-  --radius-m: 12px;
-  --radius-l: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-full: 999px;
 
   --font-sans:

@@ -79,8 +79,14 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
         recruitmentEndAt={job.recruitmentEndAt}
         viewCount={job.viewCount}
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="flex flex-col gap-4 lg:col-span-3">
+      {/* 좌우 `px-8`은 아래 `ForBusinessBanner`(`rounded-lg bg-blue-50 px-8 py-8`)의 안쪽 여백과
+          위 헤더 카드(`p-8`)에 맞춘 값이다 — 이 세 블록의 글자 시작 x가 한 줄로 맞아야 한다.
+          본문 2단만 여백 없이 컨테이너 끝까지 붙어 있어서 어긋나 보였다. */}
+      {/* 2단 비율은 `상세 채용공고.png` 실측값(본문 739px : 사이드바 323px, 사이 간격 60px,
+          1440px 기준)을 그대로 `fr`로 옮긴 것이다. 3:2로 뒀을 때 사이드바가 목업보다 넓고
+          본문이 좁았다. */}
+      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[739fr_323fr] lg:gap-15">
+        <div className="flex flex-col gap-4">
           <JobInfoGrid
             experienceType={job.experienceType}
             employmentType={job.employmentType}
@@ -96,7 +102,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
               </div>
             ))}
         </div>
-        <aside className="flex flex-col gap-6 lg:col-span-2">
+        <aside className="flex flex-col gap-6">
           <JobApplyCta
             sourceUrl={job.sourceUrl}
             bookmarked={job.bookmarked}

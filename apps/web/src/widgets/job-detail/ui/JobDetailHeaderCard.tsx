@@ -47,7 +47,7 @@ export function JobDetailHeaderCard({
   viewCount,
 }: JobDetailHeaderCardProps) {
   return (
-    <Card className="bg-gray-50 p-10">
+    <Card className="bg-gray-50 p-8">
       <div className="flex items-center gap-3">
         <CompanyLogo companyName={companyName} className="h-16 w-16" />
         <div>
