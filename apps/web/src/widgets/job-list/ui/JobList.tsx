@@ -7,7 +7,7 @@ import { JobMeta } from '@/entities/job/ui/JobMeta';
 import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 import type { JobSummary } from '@/entities/job/model/types';
 import type { JobListQuery } from '../lib/query';
-import { Pagination } from './Pagination';
+import { NumberedPagination } from './NumberedPagination';
 import { SearchFilterBar } from './SearchFilterBar';
 import { SortToggle } from './SortToggle';
 
@@ -73,7 +73,7 @@ export async function JobList(query: JobListProps) {
       ) : (
         <JobListItems items={items} />
       )}
-      <Pagination pageInfo={pageInfo} sort={sort} />
+      <NumberedPagination pageInfo={pageInfo} query={query} />
     </div>
   );
 }
