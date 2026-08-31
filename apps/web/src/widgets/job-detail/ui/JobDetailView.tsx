@@ -1,4 +1,4 @@
-import { Card, CardTitle } from '@ogonggo/ui';
+import { Button, Card, CardTitle } from '@ogonggo/ui';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import { JobBadge } from '@/entities/job/ui/JobBadge';
@@ -64,6 +64,13 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
             <p className="whitespace-pre-line text-sm text-gray-700">{section.value}</p>
           </Card>
         ))}
+      {job.sourceUrl ? (
+        <Button asChild variant="secondary">
+          <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer">
+            원문 보기
+          </a>
+        </Button>
+      ) : null}
     </div>
   );
 }
