@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Card, CardTitle } from '@ogonggo/ui';
 import { getJobs } from '@ogonggo/api';
 import type {
@@ -66,20 +67,22 @@ function JobListItems({ items }: { items: JobSummary[] }) {
     <ul className="flex flex-col gap-3">
       {items.map((job) => (
         <li key={job.id}>
-          <Card>
-            <CardTitle>{job.title}</CardTitle>
-            <JobMeta
-              companyName={job.companyName}
-              region={job.region}
-              recruitmentType={job.recruitmentType}
-              recruitmentEndAt={job.recruitmentEndAt}
-            />
-            <JobBadge
-              employmentType={job.employmentType}
-              experienceType={job.experienceType}
-              educationLevel={job.educationLevel}
-            />
-          </Card>
+          <Link href={`/jobs/${job.id}`}>
+            <Card>
+              <CardTitle>{job.title}</CardTitle>
+              <JobMeta
+                companyName={job.companyName}
+                region={job.region}
+                recruitmentType={job.recruitmentType}
+                recruitmentEndAt={job.recruitmentEndAt}
+              />
+              <JobBadge
+                employmentType={job.employmentType}
+                experienceType={job.experienceType}
+                educationLevel={job.educationLevel}
+              />
+            </Card>
+          </Link>
         </li>
       ))}
     </ul>
