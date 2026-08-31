@@ -3,6 +3,7 @@ import { Card, CardTitle } from '@ogonggo/ui';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
+import { CrossSellWidget } from './CrossSellWidget';
 import { JobApplyCta } from './JobApplyCta';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
@@ -86,6 +87,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
         ))}
       <JobApplyCta sourceUrl={job.sourceUrl} bookmarked={job.bookmarked} bookmarkCount={job.bookmarkCount} />
       <SimilarJobs excludeJobId={job.id} />
+      <CrossSellWidget />
     </div>
   );
 }
