@@ -5,6 +5,7 @@ import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import { JobBadge } from '@/entities/job/ui/JobBadge';
 import { JobMeta } from '@/entities/job/ui/JobMeta';
 import type { JobDetail } from '@/entities/job/model/types';
+import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 
 export interface JobDetailViewProps {
   jobId: number;
@@ -58,6 +59,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
+      <JobDetailBreadcrumb />
       <Card>
         <CardTitle>{job.title}</CardTitle>
         <JobMeta
