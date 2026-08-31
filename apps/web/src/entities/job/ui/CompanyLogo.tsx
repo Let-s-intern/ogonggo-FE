@@ -15,11 +15,11 @@ export interface CompanyLogoProps {
  * (`company-logo.ts` 참고). 로드 실패를 `useState`로 잡아 깨진 이미지 아이콘 대신 항상 같은
  * 회색 박스로 떨어지게 한다.
  *
- * `object-cover`를 쓴다(`object-contain`이 아니라) — 소스가 정식 로고 API가 아니라 구글
- * 이미지 캐시 썸네일이라 로고 마크 자체가 이미지 안에서 한쪽으로 치우쳐 있는 경우가 많다.
- * `contain`은 그 비대칭 여백까지 그대로 보존해 로고가 박스 안에서 안 가운데로 보였다 —
- * `cover`는 항상 이미지의 중심을 박스 중심에 맞추고 넘치는 부분만 잘라내므로 실제로
- * 가운데 정렬된 것처럼 보인다(사용자 실측 지적으로 바꿈).
+ * `object-contain`을 쓴다 — `object-cover`로 바꿔봤다가(로고 마크가 이미지 안에서 한쪽으로
+ * 치우친 경우가 많아 가운데 정렬처럼 보이게 하려던 시도) SK 로고 등에서 실제로 글자가 잘려
+ * 나가는 게 스크린샷으로 확인돼 되돌렸다 — 일부가 안 보이는 크롭 사고가 살짝 비대칭인 여백보다
+ * 나쁘다. 정식 로고 API가 아니라 구글 이미지 캐시 썸네일이라 로고가 박스 안에서 완벽하게
+ * 가운데로 안 보이는 경우가 남아 있을 수 있다 — 그건 이 데이터 소스의 한계다.
  */
 export function CompanyLogo({ companyName, className }: CompanyLogoProps) {
   const logoUrl = getCompanyLogoUrl(companyName);
@@ -37,7 +37,7 @@ export function CompanyLogo({ companyName, className }: CompanyLogoProps) {
     <img
       src={logoUrl}
       alt={`${companyName} 로고`}
-      className={cn('shrink-0 rounded-m bg-white object-cover shadow-sm', className)}
+      className={cn('shrink-0 rounded-m bg-white object-contain p-1 shadow-sm', className)}
       onError={() => setFailed(true)}
     />
   );

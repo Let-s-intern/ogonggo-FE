@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { computeDday } from '../model/dday';
+import { cn } from '@ogonggo/ui';
+import { computeDday, isDdayUrgent } from '../model/dday';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
 import type { JobSummary } from '../model/types';
 import { JobMeta } from './JobMeta';
@@ -17,6 +18,7 @@ export interface JobCardProps {
  */
 export function JobCard({ job }: JobCardProps) {
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
+  const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
 
   return (
     <Link href={`/jobs/${job.id}`} className="flex flex-col gap-2">
@@ -25,7 +27,16 @@ export function JobCard({ job }: JobCardProps) {
         <span>
           {EMPLOYMENT_TYPE_LABELS[job.employmentType]} · {EXPERIENCE_TYPE_LABELS[job.experienceType]}
         </span>
-        {dday ? <span className="font-semibold text-gray-900">{dday}</span> : null}
+        {dday ? (
+          <span
+            className={cn(
+              'text-sm font-bold',
+              urgent ? 'text-orange-500' : 'text-blue-600',
+            )}
+          >
+            {dday}
+          </span>
+        ) : null}
       </p>
       <JobMeta
         companyName={job.companyName}
