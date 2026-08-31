@@ -3,6 +3,7 @@ import type { UserJobDetailResponse } from '../../generated/user/models/userJobD
 import type { UserJobDetailResponseEducationLevel } from '../../generated/user/models/userJobDetailResponseEducationLevel';
 import type { UserJobDetailResponseEmploymentType } from '../../generated/user/models/userJobDetailResponseEmploymentType';
 import type { UserJobDetailResponseExperienceType } from '../../generated/user/models/userJobDetailResponseExperienceType';
+import { REAL_JOB_SEEDS } from './real-jobs-seed';
 
 /**
  * Fixed seed so the fixture set generated below — and with it every id,
@@ -112,10 +113,47 @@ const alwaysOpen: UserJobDetailResponse = {
   recruitmentEndAt: undefined,
 };
 
-const FILLER_COUNT = 20;
-const filler: UserJobDetailResponse[] = Array.from({ length: FILLER_COUNT }, (_, index) =>
-  baseJob(6 + index),
-);
+/**
+ * `real-jobs-seed.ts`의 30건 실데이터를 `UserJobDetailResponse`로 변환한다. 그 파일이 설명하는
+ * 대로 회사명·제목·본문·자격요건·원문 링크는 실제 크롤링 결과이고, 크롤러가 아예 수집하지 않는
+ * 필드(학력·지역·경력연차·상세 본문 나머지 섹션)는 지어내지 않고 비워둔다 —
+ * `preferredQualifications`/`compensation`/`benefits`/`hiringProcess`가 전부 `undefined`인
+ * 것도 실데이터의 한계이지 버그가 아니다(해당 섹션은 화면에서 자연히 숨는다).
+ */
+const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => {
+  const id = 6 + index;
+  const endAt = new Date();
+  endAt.setUTCDate(endAt.getUTCDate() + seed.daysOut);
+  endAt.setUTCHours(23, 59, 0, 0);
+
+  return {
+    id,
+    companyName: seed.company,
+    title: seed.title,
+    employmentType: seed.employmentType,
+    experienceType: seed.experienceType,
+    experienceMinYears: undefined,
+    experienceMaxYears: undefined,
+    educationLevel: 'ANY',
+    region: undefined,
+    recruitmentType: 'PERIOD',
+    recruitmentStartAt: undefined,
+    recruitmentEndAt: isoDate(endAt),
+    sourceUrl: seed.sourceUrl,
+    closedAt: undefined,
+    bookmarked: seed.bookmarked,
+    viewCount: seed.viewCount,
+    bookmarkCount: seed.bookmarkCount,
+    commentCount: seed.commentCount,
+    companyAndTeamIntroduction: undefined,
+    responsibilities: seed.body ?? undefined,
+    qualifications: seed.requirements ?? undefined,
+    preferredQualifications: undefined,
+    compensation: undefined,
+    benefits: undefined,
+    hiringProcess: undefined,
+  };
+});
 
 export const JOB_FIXTURES: UserJobDetailResponse[] = [
   full,
@@ -123,7 +161,7 @@ export const JOB_FIXTURES: UserJobDetailResponse[] = [
   noSourceUrl,
   noRegion,
   alwaysOpen,
-  ...filler,
+  ...realFiller,
 ];
 
 /**

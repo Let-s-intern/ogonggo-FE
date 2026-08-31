@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { Card, CardTitle } from '@ogonggo/ui';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
@@ -91,10 +90,10 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
           {buildSections(job)
             .filter((section) => Boolean(section.value))
             .map((section) => (
-              <Card key={section.label}>
-                <CardTitle>{section.label}</CardTitle>
-                <p className="whitespace-pre-line text-sm text-gray-700">{section.value}</p>
-              </Card>
+              <div key={section.label}>
+                <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
+                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{section.value}</p>
+              </div>
             ))}
         </div>
         <aside className="flex flex-col gap-6">
