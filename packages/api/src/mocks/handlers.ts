@@ -1,6 +1,12 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES } from './fixtures/job';
+import {
+  SIDE_STUDY_FIXTURES,
+  type SideStudyDetail,
+  type SideStudyListResponse,
+  type SideStudySummary,
+} from './fixtures/side-study';
 import { GetJobsSort } from '../generated/user/models/getJobsSort';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
@@ -239,9 +245,65 @@ const getBootcampHandler = http.get('*/api/v1/bootcamps/:bootcampId', ({ params 
   return HttpResponse.json(body, { status: 200 });
 });
 
+/** 사이드·스터디 목록 한 페이지 건수. 목업 `사이드스터디.png`의 카드 8장에 맞췄다(PRD 10절 3번). */
+const DEFAULT_SIDE_STUDY_SIZE = 8;
+
+const toSideStudySummary = ({
+  recruitmentStartAt: _recruitmentStartAt,
+  contactMethod: _contactMethod,
+  expectedDuration: _expectedDuration,
+  shortDescription: _shortDescription,
+  content: _content,
+  eligibility: _eligibility,
+  applicationUrl: _applicationUrl,
+  ...summary
+}: SideStudyDetail): SideStudySummary => summary;
+
+/**
+ * API 없음: 이 경로 자체가 백엔드에 없다. 사이드·스터디는 ogonggo-BE에 엔드포인트도 엔티티도
+ * 없어서(PRD 5절) 위 두 목록과 달리 생성 타입이 하나도 없다 — 응답 형태는 가정이고
+ * `./fixtures/side-study.ts`가 그 가정을 적어 둔 곳이다. 실제 API가 생기면 이 핸들러도 그
+ * 파일도 사라진다.
+ *
+ * 받는 파라미터는 `page`·`size`·`kind` 셋이다. 그중 `kind`가 목록 탭 세 개
+ * (`전체`/`사이드 프로젝트`/`스터디`)를 가른다. 정렬 파라미터는 두지 않았다 — 목업의 이
+ * 자리에는 정렬 드롭다운이 아니라 `모집글 쓰기` 버튼이 있다(PRD 4.3). 순서는 id 역순(최신순)
+ * 고정이다.
+ */
+const getSideStudiesHandler = http.get('*/api/v1/side-studies', ({ request }) => {
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
+  const size = Number(url.searchParams.get('size') ?? DEFAULT_SIDE_STUDY_SIZE);
+  const kind = url.searchParams.get('kind') ?? undefined;
+
+  const filtered = kind
+    ? SIDE_STUDY_FIXTURES.filter((sideStudy) => sideStudy.kind === kind)
+    : SIDE_STUDY_FIXTURES;
+  const sorted = [...filtered].sort((a, b) => b.id - a.id);
+  const start = (page - 1) * size;
+  const items = sorted.slice(start, start + size).map(toSideStudySummary);
+
+  const body: SideStudyListResponse = {
+    status: 200,
+    message: '사이드·스터디 목록을 조회했습니다.',
+    data: {
+      items,
+      pageInfo: {
+        pageNum: page,
+        pageSize: size,
+        totalElements: sorted.length,
+        totalPages: Math.ceil(sorted.length / size),
+      },
+    },
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
 export const handlers: HttpHandler[] = [
   getJobsHandler,
   getJobHandler,
   getBootcampsHandler,
   getBootcampHandler,
+  getSideStudiesHandler,
 ];
