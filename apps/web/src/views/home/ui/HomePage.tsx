@@ -8,7 +8,11 @@ export type HomePageProps = JobListQuery;
 export function HomePage(query: HomePageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center bg-white">
-      <HomeHero />
+      <HomeHero
+        badge="지원해볼 만한 공고만 엄선했어요"
+        headlineLines={['커리어 여정에 딱! 맞는', '채용공고만 쏙! 보여드려요']}
+        emphasisWords={['딱!', '쏙!']}
+      />
       <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
         <PopularJobs />
         {/* home.png: 인기 공고와 전체 공고 사이의 배너 광고 자리. 광고 콘텐츠는 이 기능 범위
