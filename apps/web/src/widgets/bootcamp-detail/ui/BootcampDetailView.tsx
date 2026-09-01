@@ -4,6 +4,7 @@ import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
 import { BootcampDetailHeaderCard } from './BootcampDetailHeaderCard';
+import { BootcampInfoGrid } from './BootcampInfoGrid';
 
 export interface BootcampDetailViewProps {
   bootcampId: number;
@@ -53,7 +54,9 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
       <BootcampDetailBreadcrumb />
       <BootcampDetailHeaderCard bootcamp={bootcamp} />
       <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[739fr_323fr] lg:gap-15">
-        <div className="flex flex-col gap-8" />
+        <div className="flex flex-col gap-8">
+          <BootcampInfoGrid bootcamp={bootcamp} />
+        </div>
         <aside className="flex flex-col gap-6" />
       </div>
     </div>
