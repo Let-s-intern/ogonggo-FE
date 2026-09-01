@@ -10,6 +10,23 @@
 export const BOOTCAMP_TABS = ['all', 'bootcamp', 'government', 'free'] as const;
 export type BootcampTab = (typeof BOOTCAMP_TABS)[number];
 
+/**
+ * 탭 하나가 목록 요청에 더하는 쿼리 파라미터(PRD 4.1 표). `programType`과 `tuitionType`이
+ * 섞여 있어 한 파라미터로 묶이지 않는다 — `부트캠프`만 `programType`이고 나머지 둘은
+ * `tuitionType`이다.
+ *
+ * `부트캠프`의 값 `'부트캠프'`는 픽스처에서 오프라인 과정 12건의 `programType`이다
+ * (`packages/api/src/mocks/fixtures/bootcamp.ts`). 온라인 과정은 새싹의 카테고리 표기
+ * (AI, 파이썬, AICE, 웹크롤링, 풀스택, AIot, 프론트엔드, 안드로이드)가 `programType`이라
+ * 이 탭에 걸리지 않는다.
+ */
+export const TAB_FILTERS: Record<BootcampTab, Record<string, string>> = {
+  all: {},
+  bootcamp: { programType: '부트캠프' },
+  government: { tuitionType: 'GOVERNMENT_FUNDED' },
+  free: { tuitionType: 'FREE' },
+};
+
 /** API 없음: `getBootcamps`에 `sort` 파라미터가 없다. 목업의 `최신순` 드롭다운용이다. */
 export const BOOTCAMP_SORTS = ['LATEST', 'VIEW_COUNT'] as const;
 export type BootcampSort = (typeof BOOTCAMP_SORTS)[number];
