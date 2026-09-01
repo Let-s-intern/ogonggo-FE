@@ -7,6 +7,9 @@ const CROSS_SELL_ITEMS = [
 /**
  * "함께 보면 좋아요" — 채용공고 데이터가 아니라 렛츠커리어의 다른 상품(챌린지) 광고라 공고별로
  * 달라질 이유가 없다. API를 호출하지 않고 목업 텍스트 그대로 완전히 하드코딩한다(PRD 10절).
+ *
+ * 원래 `widgets/job-detail/ui/CrossSellWidget.tsx`였다. 채용공고 상세와 교육·부트캠프 상세가
+ * 같은 것을 그대로 쓰므로 두 상세 위젯 어느 쪽에도 속하지 않는 자리로 옮겼다.
  */
 export function CrossSellWidget() {
   return (

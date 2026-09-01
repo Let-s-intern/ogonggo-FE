@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import { Badge } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { BookmarkIcon } from '@/shared/ui/icons';
-import { STATUS_LABELS, TUITION_TYPE_LABELS } from '../model/labels';
+import { TUITION_TYPE_LABELS } from '../model/labels';
 import type { BootcampSummary } from '../model/types';
+import { BootcampBadge } from './BootcampBadge';
 
 export interface BootcampCardProps {
   bootcamp: BootcampSummary;
@@ -21,8 +20,6 @@ export interface BootcampCardProps {
  * 그 설정을 늘릴 이유가 없다. 로드에 실패하면 뒤의 회색 박스가 그대로 보인다.
  */
 export function BootcampCard({ bootcamp }: BootcampCardProps) {
-  const dday = computeDday(bootcamp.recruitmentType, bootcamp.recruitmentEndAt);
-  const urgent = isDdayUrgent(bootcamp.recruitmentType, bootcamp.recruitmentEndAt);
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
 
   return (
@@ -41,41 +38,14 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
       </div>
       <p className="flex items-center justify-between gap-2 text-xs text-gray-400">
         <span className="truncate">{metaParts.join(' · ')}</span>
-        <BootcampBadge dday={dday} urgent={urgent} status={bootcamp.status} />
+        <BootcampBadge
+          recruitmentType={bootcamp.recruitmentType}
+          recruitmentEndAt={bootcamp.recruitmentEndAt}
+          status={bootcamp.status}
+        />
       </p>
       <p className="text-sm text-gray-500">{bootcamp.companyName}</p>
       <p className="line-clamp-2 text-sm font-bold text-gray-900">{bootcamp.title}</p>
     </Link>
-  );
-}
-
-/**
- * 목업의 배지는 두 종류다 — 마감이 임박하면 D-day(주황), 아니면 `모집 중`(파랑). 마감된 건은
- * 목업에 없지만 픽스처에 있고(`status: CLOSED`) 그때는 회색 `마감`이다.
- */
-function BootcampBadge({
-  dday,
-  urgent,
-  status,
-}: {
-  dday: string | null;
-  urgent: boolean;
-  status: BootcampSummary['status'];
-}) {
-  if (status !== 'RECRUITING') {
-    return (
-      <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold">
-        {STATUS_LABELS[status]}
-      </Badge>
-    );
-  }
-
-  return (
-    <Badge
-      tone={urgent ? 'urgent' : 'main'}
-      className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold"
-    >
-      {urgent && dday ? dday : STATUS_LABELS.RECRUITING}
-    </Badge>
   );
 }

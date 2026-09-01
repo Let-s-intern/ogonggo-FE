@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
-import { CrossSellWidget } from './CrossSellWidget';
-import { JobApplyCta } from './JobApplyCta';
+import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { CrossSellWidget } from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobInfoGrid } from './JobInfoGrid';
@@ -103,8 +103,9 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
             ))}
         </div>
         <aside className="flex flex-col gap-6">
-          <JobApplyCta
-            sourceUrl={job.sourceUrl}
+          <ApplyCta
+            href={job.sourceUrl}
+            label="지원하러 가기"
             bookmarked={job.bookmarked}
             bookmarkCount={job.bookmarkCount}
           />

@@ -2,10 +2,13 @@ import { notFound } from 'next/navigation';
 import { getBootcamp1 } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
+import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { CrossSellWidget } from '@/widgets/cross-sell';
 import { BootcampCurriculum } from './BootcampCurriculum';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
 import { BootcampDetailHeaderCard } from './BootcampDetailHeaderCard';
 import { BootcampInfoGrid } from './BootcampInfoGrid';
+import { SimilarBootcamps } from './SimilarBootcamps';
 
 export interface BootcampDetailViewProps {
   bootcampId: number;
@@ -42,6 +45,18 @@ async function fetchBootcampDetail(bootcampId: number): Promise<BootcampDetail> 
 }
 
 /**
+ * `신청하러 가기` 링크 — `applicationMethod`가 `EXTERNAL_PAGE`면 `applicationUrl`,
+ * `EMAIL`이면 `mailto:managerEmail`이다(PRD 4.2 표). 해당 값이 비어 있으면 `undefined`를
+ * 돌려주고, 그때는 버튼 없이 북마크 칸만 남는다(`shared/ui/ApplyCta.tsx`).
+ */
+function buildApplicationHref(bootcamp: BootcampDetail): string | undefined {
+  if (bootcamp.applicationMethod === 'EMAIL') {
+    return bootcamp.managerEmail ? `mailto:${bootcamp.managerEmail}` : undefined;
+  }
+  return bootcamp.applicationUrl;
+}
+
+/**
  * 교육·부트캠프 상세 — `docs/asset/교육부트캠프 상세페이지.png` 순서(브레드크럼 → 헤더 카드 →
  * 정보 그리드·본문 / 사이드바)로 조합한다. 2단 비율·여백(`lg:grid-cols-[739fr_323fr]`, `px-8`,
  * `lg:gap-15`)은 채용공고 상세와 같은 값이다 — 두 상세 화면의 글자 시작 x가 한 줄로 맞아야
@@ -69,7 +84,19 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
             </section>
           ) : null}
         </div>
-        <aside className="flex flex-col gap-6" />
+        <aside className="flex flex-col gap-6">
+          <ApplyCta
+            href={buildApplicationHref(bootcamp)}
+            label="신청하러 가기"
+            /* API 없음: 부트캠프 응답에는 북마크 여부 필드가 없다(`bookmarkCount`만 있다).
+               목록 카드와 같은 이유로 항상 빈 아이콘이다 — `entities/bootcamp/ui/BootcampCard.tsx`
+               참고. */
+            bookmarked={false}
+            bookmarkCount={bootcamp.bookmarkCount}
+          />
+          <SimilarBootcamps excludeBootcampId={bootcamp.id} />
+          <CrossSellWidget />
+        </aside>
       </div>
     </div>
   );
