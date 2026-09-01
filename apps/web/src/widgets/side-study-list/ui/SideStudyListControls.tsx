@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cn } from '@ogonggo/ui';
+import { Button, cn } from '@ogonggo/ui';
 import {
   buildSideStudyListHref,
   SIDE_STUDY_TABS,
@@ -42,6 +42,13 @@ export function SideStudyListControls({ query }: SideStudyListControlsProps) {
           </Link>
         ))}
       </nav>
+      {/* API 없음: 모집글 쓰기 API가 없다. 쓰기는커녕 사이드·스터디 엔드포인트 자체가
+          백엔드에 없어서(PRD 5절) 이 버튼은 목업대로 그리기만 하고 `onClick`을 붙이지 않는다 —
+          눌러도 아무 일도 일어나지 않는다(PRD 8절). `for-business-banner`의 두 버튼과 같은
+          처리다. 실제로 붙이려면 모집글 등록 API와 작성 화면이 먼저 있어야 한다. */}
+      <Button size="sm" className="rounded-full px-4">
+        모집글 쓰기
+      </Button>
     </div>
   );
 }
