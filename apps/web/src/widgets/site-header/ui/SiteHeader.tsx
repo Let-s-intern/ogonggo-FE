@@ -11,15 +11,16 @@ import { Button, cn } from '@ogonggo/ui';
 const NAV_ITEMS = [
   { href: '/', label: '채용공고', matches: (path: string) => path === '/' || path.startsWith('/jobs') },
   { href: '/bootcamps', label: '교육·부트캠프', matches: (path: string) => path.startsWith('/bootcamps') },
+  { href: '/side-studies', label: '사이드·스터디', matches: (path: string) => path.startsWith('/side-studies') },
 ] as const;
 
 /**
  * `home.png`·`교육부트캠프.png`의 상단 헤더. 현재 경로에 밑줄이 붙어야 해서 `usePathname`을
  * 쓰는 클라이언트 컴포넌트다.
  *
- * `사이드·스터디`와 우측 링크는 아직 대상 화면이 없어(PRD 1절, Push 3·4) 진짜 라우팅을 걸지
- * 않도록 `<Link>`/`<a>`가 아닌 비활성 스타일의 `<span>`으로 둔다. "로그인" 버튼도 같은 이유로
- * `Button`을 `Link`로 감싸지 않아 클릭해도 아무 일도 일어나지 않는다.
+ * 우측 링크는 아직 대상 화면이 없어(PRD 1절) 진짜 라우팅을 걸지 않도록 `<Link>`/`<a>`가 아닌
+ * 비활성 스타일의 `<span>`으로 둔다. "로그인" 버튼도 같은 이유로 `Button`을 `Link`로 감싸지
+ * 않아 클릭해도 아무 일도 일어나지 않는다.
  */
 export function SiteHeader() {
   const pathname = usePathname();
@@ -49,7 +50,6 @@ export function SiteHeader() {
                 </Link>
               );
             })}
-            <span className="flex items-center text-gray-400">사이드·스터디</span>
           </nav>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
