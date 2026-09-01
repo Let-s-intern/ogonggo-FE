@@ -3,6 +3,7 @@ import { parseSideStudyListQuery } from '@/widgets/side-study-list';
 
 interface SideStudySearchParams {
   page?: string;
+  tab?: string;
 }
 
 /**

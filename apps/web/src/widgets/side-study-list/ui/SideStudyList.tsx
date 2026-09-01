@@ -6,7 +6,8 @@ import type {
 } from '@/entities/side-study/model/types';
 import { SideStudyCard } from '@/entities/side-study/ui/SideStudyCard';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
-import { buildSideStudyListHref, type SideStudyListQuery } from '../lib/query';
+import { buildSideStudyListHref, TAB_KINDS, type SideStudyListQuery } from '../lib/query';
+import { SideStudyListControls } from './SideStudyListControls';
 
 export type SideStudyListProps = SideStudyListQuery;
 
@@ -18,9 +19,13 @@ export type SideStudyListProps = SideStudyListQuery;
  * `size`는 보내지 않는다 — 한 페이지 건수는 MSW 핸들러의 기본값(`DEFAULT_SIDE_STUDY_SIZE`,
  * 목업의 카드 8장) 한 곳에만 둔다.
  */
-function buildSideStudiesRequestUrl({ page }: SideStudyListQuery): string {
+function buildSideStudiesRequestUrl({ page, tab }: SideStudyListQuery): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
+  const kind = TAB_KINDS[tab];
+  if (kind) {
+    params.set('kind', kind);
+  }
   return `/api/v1/side-studies?${params.toString()}`;
 }
 
@@ -37,12 +42,13 @@ async function fetchSideStudyPage(
   );
 }
 
-/** `사이드스터디.png`의 목록 본문 — 4열 카드 그리드 + 번호 페이지네이션. */
+/** `사이드스터디.png`의 목록 본문 — 컨트롤 한 줄 + 4열 카드 그리드 + 번호 페이지네이션. */
 export async function SideStudyList(query: SideStudyListProps) {
   const { items, pageInfo } = await fetchSideStudyPage(query);
 
   return (
     <div className="flex w-full flex-col gap-6">
+      <SideStudyListControls query={query} />
       {items.length === 0 ? (
         <p className="py-16 text-center text-sm text-gray-500">모집 중인 글이 없습니다.</p>
       ) : (
