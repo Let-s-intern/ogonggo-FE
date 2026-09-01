@@ -1,5 +1,5 @@
 import { cn } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '../model/dday';
+import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import type { JobRecruitmentType } from '../model/types';
 
 export interface JobDdayProps {
