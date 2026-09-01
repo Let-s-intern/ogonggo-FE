@@ -6,6 +6,7 @@ import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../generated/user/models/successResponsePageResponseUserJobSummaryResponse';
+import type { SuccessResponseUserBootcampDetailResponse } from '../generated/user/models/successResponseUserBootcampDetailResponse';
 import type { SuccessResponseUserJobDetailResponse } from '../generated/user/models/successResponseUserJobDetailResponse';
 import type { UserBootcampDetailResponse } from '../generated/user/models/userBootcampDetailResponse';
 import type { UserBootcampSummaryResponse } from '../generated/user/models/userBootcampSummaryResponse';
@@ -211,4 +212,36 @@ const getBootcampsHandler = http.get('*/api/v1/bootcamps', ({ request }) => {
   return HttpResponse.json(body, { status: 200 });
 });
 
-export const handlers: HttpHandler[] = [getJobsHandler, getJobHandler, getBootcampsHandler];
+/**
+ * `getBootcamp1`(공개 상세, `GET /api/v1/bootcamps/{bootcampId}`)에 대응한다. 기업 회원용
+ * `getBootcamp`(`/api/v1/users/me/bootcamps/{id}`)는 이 화면이 쓰지 않으므로 핸들러도 없다.
+ * 404 본문은 `getJobHandler`와 같은 `ErrorResponse` 모양이다.
+ */
+const getBootcampHandler = http.get('*/api/v1/bootcamps/:bootcampId', ({ params }) => {
+  const bootcampId = Number(params.bootcampId);
+  const bootcamp = BOOTCAMP_FIXTURES.find((fixture) => fixture.id === bootcampId);
+
+  if (!bootcamp) {
+    const body: ErrorResponse = {
+      status: 404,
+      code: 'BOOTCAMP_NOT_FOUND',
+      message: `부트캠프를 찾을 수 없습니다: ${String(params.bootcampId)}`,
+    };
+    return HttpResponse.json(body, { status: 404 });
+  }
+
+  const body: SuccessResponseUserBootcampDetailResponse = {
+    status: 200,
+    message: '부트캠프 상세를 조회했습니다.',
+    data: bootcamp,
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
+export const handlers: HttpHandler[] = [
+  getJobsHandler,
+  getJobHandler,
+  getBootcampsHandler,
+  getBootcampHandler,
+];
