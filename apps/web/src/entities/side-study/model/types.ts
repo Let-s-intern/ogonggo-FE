@@ -8,6 +8,7 @@
  */
 import type {
   SideStudyDetail,
+  SideStudyDetailResponse,
   SideStudyKind,
   SideStudyListResponse,
   SideStudyOperationType,
@@ -17,6 +18,7 @@ import type {
 
 export type {
   SideStudyDetail,
+  SideStudyDetailResponse,
   SideStudyKind,
   SideStudyListResponse,
   SideStudyOperationType,
