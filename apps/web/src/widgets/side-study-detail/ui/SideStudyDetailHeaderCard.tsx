@@ -1,4 +1,5 @@
 import { Card } from '@ogonggo/ui';
+import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { KIND_LABELS, OPERATION_TYPE_LABELS } from '@/entities/side-study/model/labels';
 import type { SideStudyDetail } from '@/entities/side-study/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -68,7 +69,11 @@ export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCa
   return (
     <Card className="bg-gray-50 p-8">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 shrink-0 rounded-md bg-gray-200 shadow-sm" />
+        <Thumbnail
+          src={sideStudy.thumbnailUrl}
+          alt=""
+          className="h-12 w-12 shrink-0 rounded-md shadow-sm"
+        />
         <div>
           <p className="font-bold text-gray-900">{sideStudy.authorNickname}</p>
           <p className="text-sm text-gray-500">{subtitleParts.join(' · ')}</p>

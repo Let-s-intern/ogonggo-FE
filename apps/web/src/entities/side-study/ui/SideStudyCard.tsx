@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Badge } from '@ogonggo/ui';
+import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { computeDaysRemaining } from '@/shared/lib/dday';
 import { BookmarkIcon, CommentIcon, EyeIcon } from '@/shared/ui/icons';
 import { KIND_LABELS, OPERATION_TYPE_LABELS } from '../model/labels';
@@ -31,6 +32,7 @@ export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
   return (
     <Link href={`/side-studies/${sideStudy.id}`} className="flex flex-col gap-2">
       <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
+        <Thumbnail src={sideStudy.thumbnailUrl} alt="" className="h-full w-full" />
         {/* API 없음: 북마크 토글은 이 PRD의 범위 밖이라 `bookmarked` 표시 전용이다(PRD 8절).
             누르는 동작을 붙이려면 사이드·스터디 북마크 API가 먼저 있어야 한다 — 지금은
             엔드포인트 자체가 없다. */}

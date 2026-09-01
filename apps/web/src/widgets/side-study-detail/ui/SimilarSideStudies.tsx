@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { httpClient } from '@ogonggo/api';
+import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { KIND_LABELS, OPERATION_TYPE_LABELS } from '@/entities/side-study/model/labels';
 import type {
   SideStudyKind,
@@ -53,7 +54,11 @@ export async function SimilarSideStudies({ excludePostId, kind }: SimilarSideStu
             <Link href={`/side-studies/${sideStudy.id}`} className="flex items-center gap-3">
               {/* 목록 카드와 같은 이유로 회색 박스다 — 지어낸 목데이터라 걸어 둘 이미지가 없다
                   (`entities/side-study/ui/SideStudyCard.tsx`). */}
-              <div className="h-12 w-12 shrink-0 rounded-md bg-gray-100 shadow-sm" />
+              <Thumbnail
+                src={sideStudy.thumbnailUrl}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-md shadow-sm"
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-gray-900">{sideStudy.title}</p>
                 <p className="truncate text-xs text-gray-500">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { BookmarkIcon } from '@/shared/ui/icons';
 import { TUITION_TYPE_LABELS } from '../model/labels';
 import type { BootcampSummary } from '../model/types';
@@ -25,11 +26,7 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
   return (
     <Link href={`/bootcamps/${bootcamp.id}`} className="flex flex-col gap-2">
       <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
-        <img
-          src={bootcamp.representativeImageUrl}
-          alt=""
-          className="h-full w-full object-cover"
-        />
+        <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-full w-full" />
         {/* API 없음: `UserBootcampSummaryResponse`에 북마크 여부 필드가 없다(채용공고의
             `bookmarked`에 해당하는 것이 부트캠프 응답에는 아예 없다). 목업에 아이콘이 있어
             자리는 그리되 항상 빈 아이콘이다 — 실제 API로 붙일 때 목록 응답에 북마크 여부

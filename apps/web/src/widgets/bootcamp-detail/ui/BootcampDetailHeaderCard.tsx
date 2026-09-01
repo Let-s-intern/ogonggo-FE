@@ -1,4 +1,5 @@
 import { Card } from '@ogonggo/ui';
+import { Thumbnail } from '@/shared/ui/Thumbnail';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
@@ -48,11 +49,7 @@ export function BootcampDetailHeaderCard({ bootcamp }: BootcampDetailHeaderCardP
   return (
     <Card className="bg-gray-50 p-8">
       <div className="flex items-center gap-3">
-        <img
-          src={bootcamp.representativeImageUrl}
-          alt=""
-          className="h-16 w-16 shrink-0 rounded-md bg-gray-200 object-cover shadow-sm"
-        />
+        <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-16 w-16 shrink-0 rounded-md shadow-sm" />
         <div>
           <p className="font-bold text-gray-900">{bootcamp.companyName}</p>
           <p className="text-sm text-gray-500">교육 · {bootcamp.programType}</p>
