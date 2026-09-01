@@ -8,7 +8,7 @@ import { cn } from '@ogonggo/ui';
  * 회색 빈 박스 대신 이걸 쓴다 — 빈 박스는 "이미지를 못 불러왔다"와 "원래 없다"를 구분해 주지
  * 않는다.
  */
-export const DEFAULT_THUMBNAIL_URL = '/default-thumbnail.png';
+export const DEFAULT_THUMBNAIL_URL = '/default-thumbnail.jpg';
 
 export interface ThumbnailProps {
   /** 없으면 기본 이미지를 쓴다. */
