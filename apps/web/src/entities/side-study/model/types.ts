@@ -9,8 +9,17 @@
 import type {
   SideStudyDetail,
   SideStudyKind,
+  SideStudyListResponse,
   SideStudyOperationType,
+  SideStudyPageInfo,
   SideStudySummary,
 } from '@ogonggo/api/src/mocks/fixtures/side-study';
 
-export type { SideStudyDetail, SideStudyKind, SideStudyOperationType, SideStudySummary };
+export type {
+  SideStudyDetail,
+  SideStudyKind,
+  SideStudyListResponse,
+  SideStudyOperationType,
+  SideStudyPageInfo,
+  SideStudySummary,
+};
