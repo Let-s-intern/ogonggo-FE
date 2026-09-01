@@ -1,11 +1,16 @@
-import { httpClient } from '@ogonggo/api';
+import { GetJobsSort, httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
-import type { JobListQuery } from '../lib/query';
-import { NumberedPagination } from './NumberedPagination';
+import { NumberedPagination } from '@/shared/ui/NumberedPagination';
+import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
+import { buildJobListHref, type JobListQuery } from '../lib/query';
 import { SearchFilterBar } from './SearchFilterBar';
-import { SortToggle } from './SortToggle';
+
+const SORT_OPTIONS: SortOption<GetJobsSort>[] = [
+  { value: GetJobsSort.LATEST, label: '최신순' },
+  { value: GetJobsSort.VIEW_COUNT, label: '조회순' },
+];
 
 export type JobListProps = JobListQuery;
 
@@ -55,7 +60,11 @@ export async function JobList(query: JobListProps) {
         <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
         <div className="flex flex-wrap items-center gap-2">
           <SearchFilterBar query={query} />
-          <SortToggle query={query} />
+          <SortToggle
+            options={SORT_OPTIONS}
+            current={query.sort}
+            buildHref={(sort) => buildJobListHref(query, { sort })}
+          />
         </div>
       </div>
       {items.length === 0 ? (
@@ -63,7 +72,10 @@ export async function JobList(query: JobListProps) {
       ) : (
         <JobListItems items={items} />
       )}
-      <NumberedPagination pageInfo={pageInfo} query={query} />
+      <NumberedPagination
+        pageInfo={pageInfo}
+        buildHref={(page) => buildJobListHref(query, { page })}
+      />
     </div>
   );
 }

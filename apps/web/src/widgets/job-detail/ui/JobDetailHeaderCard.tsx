@@ -1,7 +1,7 @@
 import { Card } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
-import { JobDday } from '@/entities/job/ui/JobDday';
 import type { JobRecruitmentType } from '@/entities/job/model/types';
+import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
 
 export interface JobDetailHeaderCardProps {
@@ -58,7 +58,7 @@ export function JobDetailHeaderCard({
       <h1 className="mt-6 text-2xl font-bold text-gray-900">{title}</h1>
       <hr className="my-6 border-gray-200" />
       <div className="flex items-center gap-3 text-sm">
-        <JobDday recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
+        <DdayBadge recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
         <span className="text-gray-500">{formatDeadlineText(recruitmentType, recruitmentEndAt)}</span>
         <span className="ml-auto flex items-center gap-1 text-gray-400">
           <EyeIcon className="h-4 w-4" />

@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
-import { CrossSellWidget } from './CrossSellWidget';
-import { JobApplyCta } from './JobApplyCta';
+import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { CrossSellWidget } from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobInfoGrid } from './JobInfoGrid';
@@ -85,7 +85,7 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
       {/* 2단 비율은 `상세 채용공고.png` 실측값(본문 739px : 사이드바 323px, 사이 간격 60px,
           1440px 기준)을 그대로 `fr`로 옮긴 것이다. 3:2로 뒀을 때 사이드바가 목업보다 넓고
           본문이 좁았다. */}
-      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[739fr_323fr] lg:gap-15">
+      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-4">
           <JobInfoGrid
             experienceType={job.experienceType}
@@ -103,8 +103,9 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
             ))}
         </div>
         <aside className="flex flex-col gap-6">
-          <JobApplyCta
-            sourceUrl={job.sourceUrl}
+          <ApplyCta
+            href={job.sourceUrl}
+            label="지원하러 가기"
             bookmarked={job.bookmarked}
             bookmarkCount={job.bookmarkCount}
           />

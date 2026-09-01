@@ -1,9 +1,8 @@
 import { cn } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '../model/dday';
-import type { JobRecruitmentType } from '../model/types';
+import { computeDday, isDdayUrgent, type RecruitmentType } from '@/shared/lib/dday';
 
-export interface JobDdayProps {
-  recruitmentType: JobRecruitmentType;
+export interface DdayBadgeProps {
+  recruitmentType: RecruitmentType;
   recruitmentEndAt?: string;
 }
 
@@ -14,8 +13,12 @@ export interface JobDdayProps {
  *
  * 크기는 옆의 마감일시 문구와 같은 `text-base` 기준이다. 한때 `text-2xl px-6 py-3`으로 훨씬
  * 크게 그렸는데 목업(`상세 채용공고.png`)에선 마감 문구와 거의 같은 높이의 작은 알약이다.
+ *
+ * 원래 `entities/job/ui/JobDday.tsx`였다. 부트캠프 상세 헤더(`widgets/bootcamp-detail`)가 같은
+ * 배지를 쓰게 되어(`교육부트캠프 상세페이지.png`의 `D-5`) `shared/lib/dday.ts`가 옮겨온 것과
+ * 같은 이유로 여기로 옮겼다 — 그림은 그대로다.
  */
-export function JobDday({ recruitmentType, recruitmentEndAt }: JobDdayProps) {
+export function DdayBadge({ recruitmentType, recruitmentEndAt }: DdayBadgeProps) {
   const dday = computeDday(recruitmentType, recruitmentEndAt);
   if (!dday) {
     return null;

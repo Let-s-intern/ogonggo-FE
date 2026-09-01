@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Badge } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '../model/dday';
+import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
 import type { JobSummary } from '../model/types';
