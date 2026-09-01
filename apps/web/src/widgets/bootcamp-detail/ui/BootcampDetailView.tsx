@@ -61,6 +61,10 @@ function buildApplicationHref(bootcamp: BootcampDetail): string | undefined {
  * 정보 그리드·본문 / 사이드바)로 조합한다. 2단 비율·여백(`lg:grid-cols-[739fr_323fr]`, `px-8`,
  * `lg:gap-15`)은 채용공고 상세와 같은 값이다 — 두 상세 화면의 글자 시작 x가 한 줄로 맞아야
  * 한다(PRD 7절).
+ *
+ * 컬럼 폭에 `minmax(0, ...)`를 쓴다. 그냥 `739fr_323fr`로 두면 그리드 아이템의
+ * `min-width: auto` 때문에 사이드바의 긴 제목이 줄지 못하고 컬럼을 밀어내 비율이 깨진다 —
+ * 본문이 좁아지고 사이드바가 넓어지는 증상이었다.
  */
 export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps) {
   const bootcamp = await fetchBootcampDetail(bootcampId);
@@ -69,7 +73,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
     <div className="flex w-full max-w-6xl flex-col gap-4">
       <BootcampDetailBreadcrumb />
       <BootcampDetailHeaderCard bootcamp={bootcamp} />
-      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[739fr_323fr] lg:gap-15">
+      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-8">
           <BootcampInfoGrid bootcamp={bootcamp} />
           <BootcampCurriculum curriculums={bootcamp.curriculums} />
