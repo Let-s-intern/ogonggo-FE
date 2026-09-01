@@ -1,1 +1,11 @@
 @import '@ogonggo/ui/src/styles/tokens.css';
+
+/*
+ * Tailwind v4 는 node_modules 를 스캔하지 않는다. `@ogonggo/ui` 는 pnpm 심볼릭 링크로
+ * node_modules 를 거쳐 들어오므로, 그 패키지 안에서만 쓰이는 유틸리티가 CSS 에 생성되지
+ * 않았다 — `Button` 의 `disabled:bg-blue-200`·`disabled:cursor-not-allowed` 가 클래스는
+ * 붙는데 아무 효과가 없어 비활성 버튼이 활성 버튼과 똑같이 보였다.
+ *
+ * apps/web 에서도 쓰는 클래스(`bg-blue-500` 등)는 멀쩡히 나오기 때문에 오래 눈에 띄지 않았다.
+ */
+@source '../../../../packages/ui/src';
