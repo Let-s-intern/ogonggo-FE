@@ -3,6 +3,7 @@ import { httpClient } from '@ogonggo/api';
 import type { SideStudyDetail, SideStudyDetailResponse } from '@/entities/side-study/model/types';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
 import { SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
+import { SideStudyInfoGrid } from './SideStudyInfoGrid';
 
 export interface SideStudyDetailViewProps {
   postId: number;
@@ -49,7 +50,9 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
       <SideStudyDetailBreadcrumb />
       <SideStudyDetailHeaderCard sideStudy={sideStudy} />
       <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[739fr_323fr] lg:gap-15">
-        <div className="flex flex-col gap-8" />
+        <div className="flex flex-col gap-8">
+          <SideStudyInfoGrid sideStudy={sideStudy} />
+        </div>
         <aside className="flex flex-col gap-6" />
       </div>
     </div>
