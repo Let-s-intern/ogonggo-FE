@@ -112,8 +112,16 @@ export interface SideStudyListResponse {
  * id가 클수록 최신이다. 기본 정렬(id 역순)에서 마감 임박·마감·정원 참 세 가지가 1페이지
  * 위쪽에 모이도록 12·11·10에 몰아 두었다 — 배지 세 모양을 한 화면에서 확인할 수 있다.
  *
- * 선택 필드가 빈 경로도 한 번씩 지나간다. id 5는 `recruitmentEndAt`이 없는 상시 모집이고,
- * id 2·3·4는 `eligibility`가 없다.
+ * 상세 화면(`/side-studies/{id}`)의 분기도 데이터로 한 번씩 지나간다. 값이 없는 정보 그리드
+ * 칸은 빈 칸으로 새지 않고 "정보 없음"이 들어가야 하고(PRD 9절 4번), 값이 없는 본문 섹션은
+ * 제목째 사라져야 한다.
+ *
+ * | 상세의 분기 | 해당 id |
+ * |---|---|
+ * | `eligibility`가 없어 `지원 자격 및 전형` 섹션이 통째로 사라진다 | 2·3·4 |
+ * | `recruitmentEndAt`이 없어 `모집 마감일`이 상시 모집이 된다 | 5 |
+ * | `techStack`이 비어 `기술 스택` 칸이 "정보 없음"이 된다 | 3 |
+ * | `applicationUrl`이 없어 `신청하러 가기`가 비활성이 된다 | 12건 전부 |
  */
 
 /** 오늘 기준 상대 일수를 날짜 문자열로. `fixtures/bootcamp.ts`의 같은 이름 함수와 같은 계산이다. */
@@ -205,7 +213,13 @@ export const SIDE_STUDY_FIXTURES: SideStudyDetail[] = [
     authorNickname: '초록노트',
     title: '데이터 분석 포트폴리오 합평 스터디',
     positions: ['기획자'],
-    techStack: ['TypeScript'],
+    /**
+     * 12건 중 유일하게 비어 있다. 쓰는 도구를 정해 두지 않은 합평 스터디라 자연스럽기도 하고,
+     * 상세 정보 그리드의 `기술 스택` 칸이 "정보 없음"으로 떨어지는 경로를 한 번은 지나가야
+     * 하기 때문이다. PRD 6.2 표의 "1~4개"는 값을 지어낼 때의 범위이지 빈 배열을 막는 제약이
+     * 아니다 — 타입은 `string[]`이라 빈 배열이 정상 값이다.
+     */
+    techStack: [],
     recruitmentStartAt: daysFromToday(-6),
     recruitmentEndAt: daysFromToday(18),
     capacity: 6,
