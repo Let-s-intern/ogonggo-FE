@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
 import { httpClient } from '@ogonggo/api';
 import type { SideStudyDetail, SideStudyDetailResponse } from '@/entities/side-study/model/types';
+import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
 import { SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
 import { SideStudyInfoGrid } from './SideStudyInfoGrid';
+import { SimilarSideStudies } from './SimilarSideStudies';
 
 export interface SideStudyDetailViewProps {
   postId: number;
@@ -80,7 +82,25 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
               </section>
             ))}
         </div>
-        <aside className="flex flex-col gap-6" />
+        <aside className="flex flex-col gap-6">
+          {/* API 없음: `applicationUrl`이 픽스처 12건 모두 비어 있다 — 지어낸 모집글이라
+              신청 주소를 만들 수 없고, 실존하지 않는 외부 주소를 지어내 넣지 않았다
+              (PRD 6.2). 그래서 이 화면의 `신청하러 가기`는 항상 비활성 버튼이다
+              (`keepButtonWhenNoHref`). 실제 API가 신청 주소를 주면 그대로 링크가 된다.
+
+              북마크 카운트도 응답에 없다 — 사이드·스터디에는 `bookmarked`(표시 전용)만 있고
+              누적 수 필드가 없어 0으로 둔다. 목록 카드와 같은 이유다(PRD 8절). */}
+          <ApplyCta
+            label="신청하러 가기"
+            href={sideStudy.applicationUrl}
+            keepButtonWhenNoHref
+            bookmarked={sideStudy.bookmarked}
+            bookmarkCount={0}
+          />
+          {/* 목업의 이 자리에 있는 댓글·대댓글 스레드는 그리지 않는다
+              (PRD 8절, 2026-09-01 결정). 대신 들어가는 것이 아래 `비슷한 사이드·스터디`다. */}
+          <SimilarSideStudies excludePostId={sideStudy.id} kind={sideStudy.kind} />
+        </aside>
       </div>
     </div>
   );

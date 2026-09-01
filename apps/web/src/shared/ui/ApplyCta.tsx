@@ -8,6 +8,14 @@ export interface ApplyCtaProps {
   label: string;
   bookmarked: boolean;
   bookmarkCount: number;
+  /**
+   * `href`가 없을 때 버튼을 감추는 대신 비활성 버튼으로 남긴다. 기본값은 감추는 쪽이라
+   * 채용공고·부트캠프의 동작은 그대로다.
+   *
+   * 사이드·스터디가 이걸 켠다. 지어낸 목데이터라 신청 주소를 만들 수 없어 12건 모두
+   * `applicationUrl`이 비어 있고, 감추면 목업에서 가장 큰 요소가 화면에서 통째로 사라진다.
+   */
+  keepButtonWhenNoHref?: boolean;
 }
 
 /**
@@ -18,7 +26,13 @@ export interface ApplyCtaProps {
  * 것을 쓰게 되어(`교육부트캠프 상세페이지.png`의 "신청하러 가기") 호출부가 둘이 된 지금
  * 여기로 옮겼다(PRD 7절 — 두 곳 이상일 때만 옮긴다).
  */
-export function ApplyCta({ href, label, bookmarked, bookmarkCount }: ApplyCtaProps) {
+export function ApplyCta({
+  href,
+  label,
+  bookmarked,
+  bookmarkCount,
+  keepButtonWhenNoHref = false,
+}: ApplyCtaProps) {
   return (
     <div className="flex items-center gap-2">
       {href ? (
@@ -26,6 +40,10 @@ export function ApplyCta({ href, label, bookmarked, bookmarkCount }: ApplyCtaPro
           <a href={href} target="_blank" rel="noopener noreferrer">
             {label}
           </a>
+        </Button>
+      ) : keepButtonWhenNoHref ? (
+        <Button disabled className="flex-1">
+          {label}
         </Button>
       ) : null}
       <div className="flex h-11 flex-col items-center justify-center rounded-md border border-gray-300 px-3 text-xs text-gray-500">
