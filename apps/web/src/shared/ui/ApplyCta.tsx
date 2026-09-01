@@ -19,8 +19,12 @@ export interface ApplyCtaProps {
 }
 
 /**
- * 상세 사이드바 최상단 CTA — 버튼 + 북마크 아이콘·카운트(표시 전용, 클릭해도 상태가 바뀌지
- * 않는다, PRD 8절).
+ * 상세 사이드바 최상단 CTA — 버튼 + 북마크 아이콘·카운트.
+ *
+ * API 없음: 북마크 토글에 붙일 API가 없다. 아이콘은 `bookmarked` 표시 전용이라 눌러도 상태가
+ * 바뀌지 않는다(PRD 2절 표의 "공통 / 북마크 토글", PRD 8절). 목록 카드
+ * (`entities/bootcamp/ui/BootcampCard.tsx`, `entities/side-study/ui/SideStudyCard.tsx`)의
+ * 북마크 아이콘과 같은 처리이고, 붙이려면 북마크 등록·해제 엔드포인트가 먼저 있어야 한다.
  *
  * 원래 `widgets/job-detail/ui/JobApplyCta.tsx`였다. 부트캠프 상세가 문구와 링크만 다른 같은
  * 것을 쓰게 되어(`교육부트캠프 상세페이지.png`의 "신청하러 가기") 호출부가 둘이 된 지금
