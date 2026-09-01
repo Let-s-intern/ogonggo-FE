@@ -84,6 +84,13 @@ export interface SideStudyListResponse {
   data?: SideStudyPageResponse;
 }
 
+/** `GET /api/v1/side-studies/{postId}`의 응답 봉투. 위 목록 봉투와 `data`만 다르다. */
+export interface SideStudyDetailResponse {
+  status: number;
+  message: string;
+  data?: SideStudyDetail;
+}
+
 /**
  * 아래 12건은 **전부 지어낸 값이다.** 제목, 닉네임, 본문, 기술 스택, 조회수까지 실존하는
  * 게시글에서 옮겨 온 것이 하나도 없다 — 외부 모집 게시판에서 가져오지 않기로 한

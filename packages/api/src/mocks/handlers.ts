@@ -4,6 +4,7 @@ import { JOB_FIXTURES } from './fixtures/job';
 import {
   SIDE_STUDY_FIXTURES,
   type SideStudyDetail,
+  type SideStudyDetailResponse,
   type SideStudyListResponse,
   type SideStudySummary,
 } from './fixtures/side-study';
@@ -300,10 +301,42 @@ const getSideStudiesHandler = http.get('*/api/v1/side-studies', ({ request }) =>
   return HttpResponse.json(body, { status: 200 });
 });
 
+/**
+ * `GET /api/v1/side-studies/{postId}`. 목록 핸들러와 같은 가정 위에 있고(`./fixtures/side-study.ts`)
+ * 백엔드에 없는 경로라는 것도 같다 — 위 `getSideStudiesHandler`의 주석을 참고한다.
+ *
+ * 목록과 달리 `SideStudyDetail`을 통째로 돌려준다. `toSideStudySummary`가 떼어 내는 상세
+ * 전용 필드(`content`·`eligibility`·`contactMethod` 등)가 여기서는 응답에 그대로 실린다.
+ * 404 본문은 `getJobHandler`·`getBootcampHandler`와 같은 `ErrorResponse` 모양이라 상세 화면이
+ * 세 경로에서 같은 방식으로 `notFound()`로 바꿀 수 있다.
+ */
+const getSideStudyHandler = http.get('*/api/v1/side-studies/:postId', ({ params }) => {
+  const postId = Number(params.postId);
+  const sideStudy = SIDE_STUDY_FIXTURES.find((fixture) => fixture.id === postId);
+
+  if (!sideStudy) {
+    const body: ErrorResponse = {
+      status: 404,
+      code: 'SIDE_STUDY_NOT_FOUND',
+      message: `사이드·스터디 모집글을 찾을 수 없습니다: ${String(params.postId)}`,
+    };
+    return HttpResponse.json(body, { status: 404 });
+  }
+
+  const body: SideStudyDetailResponse = {
+    status: 200,
+    message: '사이드·스터디 모집글 상세를 조회했습니다.',
+    data: sideStudy,
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
 export const handlers: HttpHandler[] = [
   getJobsHandler,
   getJobHandler,
   getBootcampsHandler,
   getBootcampHandler,
   getSideStudiesHandler,
+  getSideStudyHandler,
 ];
