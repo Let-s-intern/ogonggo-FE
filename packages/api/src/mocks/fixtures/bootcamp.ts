@@ -24,9 +24,13 @@ import type { UserBootcampDetailResponse } from '../../generated/user/models/use
  * 4. `viewCount`. 새싹이 공개하지 않는 값이라 `bookmarkCount`에서 계산해 채웠다.
  *    `bookmarkCount`(관심과정 수)와 `commentCount`(수강후기 수)는 실제 값이다.
  *
- * `partners`는 전부 비어 있다. 실존 기업 이름을 지어내지 않는다 — 새싹 상세에 "협약기업",
- * "인턴십 연계"라는 표현은 있어도 기업명은 공개돼 있지 않다. 상세 화면의 "수료 후 파트너사"는
- * 이 픽스처에서 "정보 없음" 경로를 탄다(PRD 4.2).
+ * `partners`는 13번 한 건만 채워져 있고 그 셋은 **지어낸 이름이다**. 새싹 상세에 "협약기업",
+ * "인턴십 연계"라는 표현은 있어도 기업명은 공개돼 있지 않아 실존 기업 이름을 옮길 수 없었다.
+ * 나머지 23건은 빈 배열이라 상세 화면의 "수료 후 파트너사"가 "정보 없음" 경로를 탄다(PRD 4.2).
+ *
+ * 24번 한 건은 `curriculums`와 `eligibilityAndSelectionProcess`를 비웠다. 값이 없는 선택
+ * 필드를 상세 화면이 어떻게 처리하는지 확인할 건이 필요해서다. 자세한 것은 그 건의 주석에
+ * 적었다.
  *
  * `tuitionAmount`도 전부 비어 있다. 오프라인은 국비지원(`GOVERNMENT_FUNDED`), 온라인은
  * 무료(`FREE`)라 금액이 없다.
@@ -635,7 +639,17 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     viewCount: 735,
     bookmarkCount: 16,
     commentCount: 0,
-    partners: [],
+    /**
+     * 지어낸 값이다. 새싹 데이터가 아니다 — 이 과정은 "인턴십 연계"라고만 밝히고 협약기업
+     * 이름은 어디에도 공개하지 않는다. 상세 화면의 "수료 후 파트너사" 칸이 채워진 경우를
+     * 확인해야 해서 24건 중 이 한 건에만 실존하지 않는 이름 셋을 넣었다. 나머지 23건은
+     * 빈 배열 그대로이고 그쪽이 "정보 없음" 경로다.
+     */
+    partners: [
+      { name: '가상뷰티랩', displayOrder: 1 },
+      { name: '예시커머스', displayOrder: 2 },
+      { name: '목업코스메틱', displayOrder: 3 },
+    ],
     curriculums: [
       { startWeek: 1, endWeek: 2, subtitle: 'PART 1. 데이터로 뷰티를 읽다 : AI·데이터 리터러시 부트캠프', displayOrder: 1 },
       { startWeek: 2, endWeek: 4, subtitle: 'PART 2. 피부부터 향까지, 제품의 속살을 해부하다 : K-뷰티 제품 인사이드', displayOrder: 2 },
@@ -1142,7 +1156,14 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     representativeImageUrl: `${SESAC_IMAGE_BASE}/uploadData/course/2026/7/15/54B0BBD8-2D49-4384-BA77-44C8479A9176.jpg`,
     shortDescription: '강남캠퍼스 · 317시간 · 출석률 80%이상',
     content: '(1:1 몰입형 11명·AI툴 20만원 지원) 복붙 코딩 탈출, 설계할 줄 아는 개발자 · 총 317시간 과정입니다. 자세한 내용은 새싹 과정 페이지에서 확인할 수 있습니다.',
-    eligibilityAndSelectionProcess: '자기소개서 제출 → 레벨테스트 → 면접 → 선발 결과 안내 순으로 진행됩니다. 수료 기준은 출석률 80%이상입니다.',
+    /**
+     * 이 한 건만 `eligibilityAndSelectionProcess`와 `curriculums`를 비워 뒀다. 수집한 값이
+     * 없어서가 아니라(원문 상세에는 둘 다 있다, 위 `sourceUrl`), 상세 화면에서 값이 없는
+     * 선택 필드가 어떻게 되는지 확인할 건이 24건 중 하나도 없었기 때문이다 — 커리큘럼·지원
+     * 자격 섹션이 통째로 사라지는지, "기간" 칸이 `programStartDate`~`programEndDate`로
+     * 계산되는지가 이 건으로만 확인된다.
+     */
+    eligibilityAndSelectionProcess: undefined,
     applicationMethod: 'EXTERNAL_PAGE',
     applicationUrl: `${SESAC_BASE}/sesac/course/offline/courseDetail.do?crsSn=1277`,
     managerEmail: undefined,
@@ -1156,15 +1177,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 16,
     commentCount: 0,
     partners: [],
-    curriculums: [
-      { startWeek: 1, endWeek: 2, subtitle: 'Java 객체지향 프로그래밍', displayOrder: 1 },
-      { startWeek: 2, endWeek: 3, subtitle: 'Kotlin', displayOrder: 2 },
-      { startWeek: 3, endWeek: 4, subtitle: '설계 원칙', displayOrder: 3 },
-      { startWeek: 5, endWeek: 7, subtitle: '모던 앱 개발 & 아키텍처', displayOrder: 4 },
-      { startWeek: 7, endWeek: 9, subtitle: '웹 풀스택', displayOrder: 5 },
-      { startWeek: 9, endWeek: 9, subtitle: '게임 개발', displayOrder: 6 },
-      { startWeek: 10, endWeek: 11, subtitle: '비즈니스 & 마케팅', displayOrder: 7 },
-    ],
+    curriculums: [],
   },];
 
 /**
@@ -1186,5 +1199,9 @@ export const BOOTCAMP_SCENARIO_IDS = {
   withCapacity: 18,
   /** 신청 방법이 EMAIL인 건 */
   emailApply: 8,
+  /** `partners`가 채워진 유일한 건 — 상세의 "수료 후 파트너사"가 나열되는 경우 */
+  withPartners: 13,
+  /** `curriculums`와 `eligibilityAndSelectionProcess`가 비어 있는 유일한 건 */
+  emptyDetailSections: 24,
   notFound: 999999,
 } as const;
