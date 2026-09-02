@@ -1,4 +1,5 @@
 import { getJobCalendar } from '@ogonggo/api';
+import { CalendarGrid } from './CalendarGrid';
 import type {
   SuccessResponseListUserJobCalendarItemResponse,
   UserJobCalendarItemResponse,
@@ -56,25 +57,11 @@ export interface JobCalendarViewProps {
  * 공고 달력의 데이터 담당. **서버 컴포넌트다** — 달력 항목을 여기서 받아 props 로 내려주고
  * 브라우저는 `/api/v1/jobs/calendar` 를 부르지 않는다(PRD 6.1, AC 10).
  *
- * 격자에 그리는 일은 아래로 넘긴다. 지금 목록으로 뱉는 자리는 Push 1 task 2.2 의
- * `CalendarGrid` 가 대신한다.
+ * 격자에 그리는 일은 `CalendarGrid`(클라이언트 컴포넌트)가 한다.
  */
 export async function JobCalendarView({ baseDate = new Date() }: JobCalendarViewProps) {
   const { from, to } = monthGridRange(baseDate);
   const items = await fetchCalendarItems(toCalendarParam(from), toCalendarParam(to));
 
-  return (
-    <section className="flex w-full flex-col gap-2">
-      <p className="text-sm text-gray-500">
-        {toCalendarParam(from)} ~ {toCalendarParam(to)} 마감 {items.length}건
-      </p>
-      <ul className="flex flex-wrap gap-x-4 text-sm text-gray-900">
-        {items.map((item) => (
-          <li key={item.id}>
-            {item.recruitmentEndAt.slice(0, 10)} {item.companyName}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
+  return <CalendarGrid items={items} initialDate={toCalendarParam(baseDate)} />;
 }
