@@ -6,6 +6,7 @@ import { cn } from '@ogonggo/ui';
 import { useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import {
   EVENT_RESET_CLASSES,
   formatDeadlineHint,
@@ -144,13 +145,26 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
                 // 호버 문구는 마감일이고 월간과 같다(PRD 8.5).
                 title={formatDeadlineHint(deadline)}
                 className={cn(
-                  'block h-9 truncate rounded-[6px] px-3 text-sm leading-9 text-gray-800',
+                  'flex h-9 items-center gap-2 rounded-[6px] px-3 text-sm text-gray-800',
                   // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
                   // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
                   deadline === today ? 'bg-blue-50' : 'bg-gray-100',
                 )}
               >
-                {arg.event.title}
+                {/*
+                  기업명 왼쪽에 회사 로고를 둔다. 월간 타일과 같은 출처이고(달력 응답에 로고
+                  URL 이 없어 회사명으로 찾는다) 못 찾으면 기본 썸네일로 떨어진다. `p-0` 으로
+                  안쪽 여백만 없애고 `object-contain` 은 그대로 둔다 — `object-cover` 로
+                  채우면 마크가 치우친 로고에서 글자가 잘린다(`CompanyLogo.tsx` 주석).
+                  36px 막대 안에 20px 이면 위아래로 8px 씩 남는다.
+                */}
+                <CompanyLogo companyName={arg.event.title} className="h-5 w-5 rounded-xs p-0" />
+                {/*
+                  말줄임은 이 자식이 맡는다. flex 항목은 기본 최소 너비가 내용 크기라 그냥 두면
+                  좁은 막대에서 로고를 밀어내는데, `truncate` 의 `overflow: hidden` 이 그 최소
+                  너비를 0 으로 만들어 준다.
+                */}
+                <span className="truncate">{arg.event.title}</span>
               </span>
             </span>
           );
