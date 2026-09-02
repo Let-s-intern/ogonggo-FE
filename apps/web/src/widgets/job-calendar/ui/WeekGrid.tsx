@@ -123,6 +123,16 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
         headerToolbar={false}
         height="auto"
         // 먼저 시작하고 긴 막대가 위로 온다. 줄을 쌓는 일은 FullCalendar 가 한다.
+        //
+        // **이 값으로 줄 수를 줄일 수는 없다**(2026-09-02 실측). 겹치지 않는 막대를 몇 줄에
+        // 담을 수 있는지는 "한 날에 가장 많이 겹치는 막대 수"가 곧 하한이고(구간 그래프라
+        // 최대 클릭 = 채색 수), 시작일 순 우선 배치가 그 하한을 그대로 달성하는 고전적인
+        // 최적 그리디다. 이번 주 데이터로 네 가지(`start,-duration` / `-duration,start` /
+        // `duration,start` / `start`)를 재 보니 막대 40개가 **전부 30줄**이었고, 화요일의
+        // 겹침 수 30 과 같았다. 순서를 바꾸면 어느 줄이 붐비는지만 달라진다.
+        //
+        // 줄이 많아 보이는 것은 목 데이터 밀도 때문이지 배치 때문이 아니다. 막대를 숨겨
+        // 줄을 줄이지는 않는다 — `buildWeekEvents` 의 `+N` 판단과 같은 이유다.
         eventOrder="start,-duration,title"
         dayHeaderContent={(arg) => (
           // 머리글은 `MON` 아래 날짜 두 줄이고 오늘은 파란 숫자다(PRD 5.2). 두 줄 사이는
