@@ -28,6 +28,14 @@ function SplitLine({ text, lineIndex }: { text: string; lineIndex: number }) {
  *
  * 배경은 `public/about-hero-loop.mp4`다(1280×720, 10초 루프, 1.1MB). 원본에 붙어 있던 오디오
  * 트랙은 빼고 넣었다 — 배경 영상은 어차피 `muted`로 돌고, 없는 편이 파일이 작다.
+ *
+ * 출처: Pixabay, 내려받은 원본 파일명 `131999-751915336_medium.mp4`. Pixabay Content License라
+ * 상업적 사용이 되고 저작자 표기 의무도 없다. 인물·상표·식별 가능한 사물이 없는 추상
+ * 그라디언트라 별도 릴리스도 필요 없다.
+ *
+ * 한 가지 제약이 남는다. 이 라이선스는 콘텐츠를 상표나 디자인 마크의 일부로 쓰는 것을
+ * 금지한다. 배경으로 까는 건 되지만, 이 영상의 한 프레임을 잘라 서비스 로고나 브랜드 마크에
+ * 넣으면 안 된다. 브랜딩 작업에서는 이 재료를 빼야 한다.
  */
 export function AboutHero() {
   const root = useRef<HTMLElement>(null);
