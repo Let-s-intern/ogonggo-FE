@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { Button } from '@ogonggo/ui';
-import { ErrorState } from '@/shared/ui/ErrorState';
+import { ERROR_ACTION_CLASS, ErrorState } from '@/shared/ui/ErrorState';
+import { HomeIcon, RefreshIcon } from '@/shared/ui/icons';
 
 /**
  * 화면 렌더 중 오류가 났을 때 그 자리를 대신한다. 헤더와 푸터(`app/layout.tsx`)는 그대로
@@ -30,9 +31,15 @@ export default function Error({
       hint={error.digest ? `오류 번호 ${error.digest}` : undefined}
       actions={
         <>
-          <Button onClick={() => retry()} className="h-12 px-6">다시 시도</Button>
-          <Button variant="secondary" asChild className="h-12 px-6">
-            <Link href="/">홈으로</Link>
+          <Button onClick={() => retry()} className={ERROR_ACTION_CLASS}>
+            <RefreshIcon className="h-5 w-5" />
+            다시 시도
+          </Button>
+          <Button variant="secondary" asChild className={ERROR_ACTION_CLASS}>
+            <Link href="/">
+              <HomeIcon className="h-5 w-5" />
+              홈으로
+            </Link>
           </Button>
         </>
       }

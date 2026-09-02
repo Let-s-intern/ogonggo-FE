@@ -1,6 +1,7 @@
 'use client';
 
-import { ErrorState } from '@/shared/ui/ErrorState';
+import { ERROR_ACTION_CLASS, ErrorState } from '@/shared/ui/ErrorState';
+import { RefreshIcon } from '@/shared/ui/icons';
 import './globals.css';
 
 /**
@@ -36,8 +37,9 @@ export default function GlobalError({
             <button
               type="button"
               onClick={() => retry()}
-              className="inline-flex h-12 items-center justify-center rounded-md bg-blue-500 px-6 text-base font-semibold text-white transition-colors hover:bg-blue-600"
+              className={`inline-flex items-center justify-center rounded-md bg-blue-500 text-base font-semibold text-white transition-colors hover:bg-blue-600 ${ERROR_ACTION_CLASS}`}
             >
+              <RefreshIcon className="h-5 w-5" />
               다시 시도
             </button>
           }
