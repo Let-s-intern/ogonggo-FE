@@ -19,6 +19,19 @@ const FIRST_DAY = 1;
  */
 const MAX_EVENTS_PER_DAY = 6;
 
+/**
+ * 항목에 마우스를 올리면 뜨는 문구. **마감일이다** — 기업명도 제목도 아니다(PRD 8.5).
+ * 격자가 앞뒤 달을 함께 보여주므로 연도까지 적는다.
+ */
+function formatDeadlineHint(deadline: Date | null): string | undefined {
+  if (!deadline) {
+    return undefined;
+  }
+  const month = String(deadline.getMonth() + 1).padStart(2, '0');
+  const day = String(deadline.getDate()).padStart(2, '0');
+  return `${deadline.getFullYear()}.${month}.${day} 마감`;
+}
+
 export interface CalendarGridProps {
   /** 서버 컴포넌트가 받아 내려준 달력 항목. 여기서 다시 API를 부르지 않는다. */
   items: UserJobCalendarItemResponse[];
@@ -107,11 +120,15 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         height="auto"
         dayMaxEvents={MAX_EVENTS_PER_DAY}
         moreLinkContent={(arg) => `+${arg.num}`}
+        // 기본값이 영어 문구(`Show N more events`)라 바꾼다.
+        moreLinkHint={(num) => `${num}건 더 있음`}
         // 목업의 `+N`은 글자일 뿐 누르는 것이 아니다. 항목 클릭(상세 모달)은 Push 4 다.
         moreLinkClick={() => undefined}
         dayHeaderContent={(arg) => WEEKDAY_LABELS[(arg.date.getDay() + 6) % 7]}
         eventContent={(arg) => (
-          <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs" />
+          <span title={formatDeadlineHint(arg.event.start)}>
+            <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs" />
+          </span>
         )}
         events={items.map((item) => ({
           id: String(item.id),
