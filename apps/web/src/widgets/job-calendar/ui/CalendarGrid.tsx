@@ -94,11 +94,19 @@ function formatDeadlineHint(deadline: Date | null): string | undefined {
   return `${deadline.getFullYear()}.${month}.${day} 마감`;
 }
 
+/**
+ * 그릴 뷰. `간략히 보기`가 켜지면 주간이다(PRD 8.1). 둘 다 `daygrid` 플러그인 하나로 되고
+ * `timeline`·`resource` 같은 유료 플러그인은 쓰지 않는다(PRD 6.1).
+ */
+export type CalendarViewType = 'dayGridMonth' | 'dayGridWeek';
+
 export interface CalendarGridProps {
   /** 서버 컴포넌트가 받아 내려준 달력 항목. 여기서 다시 API를 부르지 않는다. */
   items: UserJobCalendarItemResponse[];
   /** 펼칠 달. `YYYY-MM-DD`. */
   initialDate: string;
+  /** 월간(기본)인지 주간인지. `?brief=1`이 정한다. */
+  view: CalendarViewType;
 }
 
 /**
@@ -123,7 +131,7 @@ export interface CalendarGridProps {
  * 3. FullCalendar 가 잡는 속성(이벤트 테두리·배경, 격자 세로선, `opacity`)은 `!`를 붙인다 —
  *    유틸리티는 `@layer utilities` 안이라 레이어 밖 규칙에게 명시도와 무관하게 진다.
  */
-export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
+export function CalendarGrid({ items, initialDate, view }: CalendarGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
 
   // `initialDate` 는 이름 그대로 처음 한 번만 읽힌다. 날짜 이동 줄의 화살표는 같은 라우트 안의
@@ -134,9 +142,21 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
   // 마이크로태스크로 미루는 것은 `gotoDate` 가 안에서 `flushSync` 를 부르기 때문이다. `<Link>`
   // 이동은 트랜지션 안에서 일어나 이 이펙트가 React 가 아직 렌더 중일 때 실행되고, 그대로 부르면
   // 이동 한 번에 `flushSync was called from inside a lifecycle method` 경고가 수백 건 쌓인다.
+  //
+  // `initialView` 도 같은 함정이다. 체크박스를 켜는 것 역시 같은 라우트 안의 이동이라
+  // 리마운트가 없어서, 프로퍼티만 바꾸면 격자는 월간에 머문 채 URL 만 `?brief=1` 이 된다.
   useEffect(() => {
-    queueMicrotask(() => calendarRef.current?.getApi().gotoDate(initialDate));
-  }, [initialDate]);
+    queueMicrotask(() => {
+      const api = calendarRef.current?.getApi();
+      if (!api) {
+        return;
+      }
+      if (api.view.type !== view) {
+        api.changeView(view);
+      }
+      api.gotoDate(initialDate);
+    });
+  }, [initialDate, view]);
 
   return (
     <div
@@ -200,11 +220,13 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin]}
-        initialView="dayGridMonth"
+        initialView={view}
         initialDate={initialDate}
         firstDay={FIRST_DAY}
         headerToolbar={false}
-        fixedWeekCount
+        // 달력 전체 옵션이라 주간에도 걸린다 — `dayGridWeek` 에 켜 두면 1주짜리 뷰가 6주로
+        // 늘어난다(`@fullcalendar/daygrid` 의 `buildDayTableRenderRange`). 월간에서만 켠다.
+        fixedWeekCount={view === 'dayGridMonth'}
         showNonCurrentDates
         height="auto"
         // 한 칸 안의 순서는 `buildCalendarEvents`가 매긴 `order` 그대로다(기본값은 제목순).

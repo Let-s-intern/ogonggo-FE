@@ -16,7 +16,7 @@ export function JobCalendarPage(query: JobCalendarPageProps) {
         {/* 목업에서 제목과 필터 줄은 같은 줄이고 세로 가운데가 맞는다. */}
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-900">공고 달력</h1>
-          <CalendarFilterBar />
+          <CalendarFilterBar query={query} />
         </div>
         {/*
           목업에서 필터 줄 아래와 날짜 이동 줄 사이는 47px 인데, 이 열의 기본 간격(24px)에
@@ -25,7 +25,7 @@ export function JobCalendarPage(query: JobCalendarPageProps) {
         <div className="mt-4">
           <CalendarHeader query={query} />
         </div>
-        <JobCalendarView baseDate={query.date} />
+        <JobCalendarView baseDate={query.date} brief={query.brief} />
       </div>
     </main>
   );

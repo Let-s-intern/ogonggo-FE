@@ -42,6 +42,8 @@ async function fetchCalendarItems(from: string, to: string): Promise<UserJobCale
 export interface JobCalendarViewProps {
   /** 어느 달을 펼칠지. `?date=` 가 정하고, 없으면 오늘이다(`../lib/query`). */
   baseDate?: Date;
+  /** `간략히 보기`. 켜면 주간, 끄면 월간이다(PRD 8.1). */
+  brief?: boolean;
 }
 
 /**
@@ -50,9 +52,18 @@ export interface JobCalendarViewProps {
  *
  * 격자에 그리는 일은 `CalendarGrid`(클라이언트 컴포넌트)가 한다.
  */
-export async function JobCalendarView({ baseDate = new Date() }: JobCalendarViewProps) {
+export async function JobCalendarView({
+  baseDate = new Date(),
+  brief = false,
+}: JobCalendarViewProps) {
   const { from, to } = monthGridRange(baseDate);
   const items = await fetchCalendarItems(toCalendarParam(from), toCalendarParam(to));
 
-  return <CalendarGrid items={items} initialDate={toCalendarParam(baseDate)} />;
+  return (
+    <CalendarGrid
+      items={items}
+      initialDate={toCalendarParam(baseDate)}
+      view={brief ? 'dayGridWeek' : 'dayGridMonth'}
+    />
+  );
 }
