@@ -172,12 +172,21 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         // 칸에 맞춰 늘어나는데 세로 가운데 정렬이 겹쳐 항목이 적은 칸일수록 내용이 아래로
         // 내려갔고, `display: contents` 로 편 항목들이 첫 줄 앞에 여백 한 칸(4px)을 더 만들어
         // 둘째 줄이 왼쪽으로 밀렸다. 타일을 담는 자리만 flex 로 두면 둘 다 생기지 않는다.
-        '[&_.fc-daygrid-day-frame]:px-1 [&_.fc-daygrid-day-frame]:pb-2',
+        '[&_.fc-daygrid-day-frame]:px-1 [&_.fc-daygrid-day-frame]:pt-5 [&_.fc-daygrid-day-frame]:pb-2',
+        // 칸 높이. 내용에 맡기면 항목이 없는 주는 38px, 한 줄인 주는 98px, 두 줄인 주는 102px 로
+        // 주마다 제각각이 되어 답답해 보였다. 목업의 한 주는 146px 이고(가로 구분선 사이,
+        // `docs/asset/공고달력.png`) 이 화면은 목업보다 2.8% 좁으므로 144px 로 맞춘다.
+        // 8개(두 줄)가 든 칸이 여유 있게 담기는 높이이기도 하다. `!` 가 붙은 이유는
+        // `EVENT_TILE_CLASSES` 주석과 같다 — FullCalendar 가 여기에 `min-height: 100%` 를
+        // 레이어 밖에서 걸어 둔다. Push 1 의 `min-h-[104px]` 가 아무 효과도 없던 것이 이것이다.
+        '[&_.fc-daygrid-day-frame]:min-h-[144px]!',
         '[&_.fc-daygrid-day-events]:flex [&_.fc-daygrid-day-events]:flex-wrap',
         '[&_.fc-daygrid-day-events]:gap-1',
-        // FullCalendar 가 이 자리에 걸어 둔 `min-height: 2em`·`margin-bottom: 1em` 을 지운다
+        // FullCalendar 가 이 자리에 걸어 둔 `min-height: 2em`·`margin-bottom: 1em` 을 지우고
+        // 날짜 숫자와의 사이를 목업만큼 띄운다
         // (레이어 밖 규칙이라 `!` 가 필요하다 — `EVENT_TILE_CLASSES` 주석 참고).
-        '[&_.fc-daygrid-day-events]:mb-0! [&_.fc-daygrid-day-events]:min-h-0!',
+        '[&_.fc-daygrid-day-events]:mt-3! [&_.fc-daygrid-day-events]:mb-0!',
+        '[&_.fc-daygrid-day-events]:min-h-0!',
         // FullCalendar 는 이 자리에 float 를 걷어내려고 `::before`/`::after` clearfix 를
         // `display: table` 로 넣어 둔다. flex 컨테이너에서는 그게 폭 0짜리 항목 하나가 되어
         // **첫 줄만 여백 한 칸(4px)만큼 오른쪽으로 밀린다** — 둘째 줄과 왼쪽 끝이 어긋난다.
