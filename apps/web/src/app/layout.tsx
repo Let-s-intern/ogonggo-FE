@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { AppProviders } from './providers';
-import { SiteChrome } from './site-chrome';
 import './globals.css';
 
 /**
@@ -31,10 +30,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko">
       <body>
-        <AppProviders>
-          {/* 헤더·푸터는 경로에 따라 붙는다 — 소개 페이지에는 붙지 않는다(`site-chrome.tsx`) */}
-          <SiteChrome>{children}</SiteChrome>
-        </AppProviders>
+        {/*
+          헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
+          그룹 밖이라 껍데기 없이 렌더된다.
+        */}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
