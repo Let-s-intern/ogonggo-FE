@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronIcon } from '@/shared/ui/icons';
+import { MiniCalendarPopover } from './MiniCalendarPopover';
 import { buildJobCalendarHref, type JobCalendarQuery } from '../lib/query';
 
 export interface CalendarHeaderProps {
@@ -24,8 +28,13 @@ function shiftMonths(date: Date, delta: number): Date {
  *
  * 색은 목업에서 그대로 읽었다 — 왼쪽 화살표만 `gray-900`이고 오른쪽은 `gray-300`이다.
  * 둘 다 똑같이 동작한다. 목업의 이 비대칭을 그대로 따른다.
+ *
+ * 가운데 달력 아이콘이 미니 달력 팝오버를 연다. 팝오버는 고른 날짜를 콜백으로 돌려주므로
+ * 이동은 여기서 한다 — 화살표와 달리 `<Link>` 로 미리 그려 둘 수 없는 이동이라 `useRouter` 다.
+ * 이것 때문에 이 컴포넌트가 클라이언트 컴포넌트다.
  */
 export function CalendarHeader({ query }: CalendarHeaderProps) {
+  const router = useRouter();
   const title = `${query.date.getFullYear()}.${String(query.date.getMonth() + 1).padStart(2, '0')}`;
 
   return (
@@ -40,6 +49,11 @@ export function CalendarHeader({ query }: CalendarHeaderProps) {
         <ChevronIcon direction="left" className="h-8 w-8" />
       </Link>
       <span className="text-2xl font-bold text-gray-900">{title}</span>
+      <MiniCalendarPopover
+        selected={query.date}
+        // 고른 날이 든 주로 간다(PRD 8.4). 월간에서는 그 날이 든 달을 펴는 것과 같다.
+        onSelect={(date) => router.push(buildJobCalendarHref(query, { date }))}
+      />
       <Link
         href={buildJobCalendarHref(query, { date: shiftMonths(query.date, 1) })}
         aria-label="다음 달"
