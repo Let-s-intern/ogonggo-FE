@@ -18,12 +18,18 @@ const NAV_ITEMS = [
  * `home.png`·`교육부트캠프.png`의 상단 헤더. 현재 경로에 밑줄이 붙어야 해서 `usePathname`을
  * 쓰는 클라이언트 컴포넌트다.
  *
- * 우측 링크는 아직 대상 화면이 없어(PRD 1절) 진짜 라우팅을 걸지 않도록 `<Link>`/`<a>`가 아닌
- * 비활성 스타일의 `<span>`으로 둔다. "로그인" 버튼도 같은 이유로 `Button`을 `Link`로 감싸지
- * 않아 클릭해도 아무 일도 일어나지 않는다.
+ * 우측 메뉴 중 `공고 달력`만 대상 화면(`/calendar`)이 생겨 링크다. `공고 등록`은 아직 화면이
+ * 없어(PRD 1절) 비활성 스타일의 `<span>`으로 남는다. "로그인" 버튼도 같은 이유로 `Button`을
+ * `Link`로 감싸지 않아 클릭해도 아무 일도 일어나지 않는다.
+ *
+ * 우측 메뉴의 활성 표시는 좌측과 다르다. 좌측은 밑줄(`border-b-2`)인데, 우측은 목업
+ * (`docs/asset/공고달력.png`)의 `공고 달력` 화면에서도 밑줄이 없다 — 헤더 높이를 꽉 채우는
+ * 좌측 탭과 달리 우측은 가운데 정렬된 짧은 줄이라 밑줄이 붙을 자리가 없다. 그래서 글자색만
+ * 진해진다.
  */
 export function SiteHeader() {
   const pathname = usePathname();
+  const calendarActive = pathname.startsWith('/calendar');
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -54,7 +60,13 @@ export function SiteHeader() {
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
           <span>공고 등록</span>
-          <span>공고 달력</span>
+          <Link
+            href="/calendar"
+            aria-current={calendarActive ? 'page' : undefined}
+            className={calendarActive ? 'font-semibold text-gray-900' : undefined}
+          >
+            공고 달력
+          </Link>
           <Button size="sm">로그인</Button>
         </div>
       </div>

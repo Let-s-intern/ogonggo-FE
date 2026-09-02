@@ -11,13 +11,18 @@
     "start": "next start --port 4000"
   },
   "dependencies": {
+    "@fullcalendar/core": "6.1.21",
+    "@fullcalendar/daygrid": "6.1.21",
+    "@fullcalendar/react": "6.1.21",
     "@gsap/react": "^2.1.2",
     "@ogonggo/api": "workspace:*",
     "@ogonggo/ui": "workspace:*",
+    "@radix-ui/react-popover": "^1.1.23",
     "@tanstack/react-query": "^5.102.8",
     "gsap": "^3.15.0",
     "next": "^16.3.3",
     "react": "^19.2.8",
+    "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
