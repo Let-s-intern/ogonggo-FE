@@ -3,10 +3,11 @@
 import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import { cn } from '@ogonggo/ui';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import { ChevronIcon } from '@/shared/ui/icons';
 import {
   EVENT_RESET_CLASSES,
   formatDeadlineHint,
@@ -15,8 +16,8 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
-import { toCalendarParam } from '../lib/query';
-import { CALENDAR_FIRST_DAY } from '../lib/week';
+import { parseCalendarDate, toCalendarParam } from '../lib/query';
+import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 
 /**
  * 주간 뷰의 막대. 공고 하나가 가로 막대 하나이고 **모집 시작일부터 마감일까지** 걸친다
@@ -68,6 +69,37 @@ function exclusiveEnd(day: string): string {
  */
 const EVENT_BAR_CLASSES = [...EVENT_RESET_CLASSES, 'rounded-none!'];
 
+/** 접었을 때 보여 주는 줄 수. */
+const COLLAPSED_ROWS = 7;
+
+/**
+ * 한 주가 몇 줄이 되는지. **한 날에 가장 많이 겹치는 막대 수**가 곧 줄 수다 — 겹치지 않는
+ * 막대를 같은 줄에 넣는 배치에서 그 수는 하한이고, FullCalendar 의 시작일 순 그리디가 그
+ * 하한을 그대로 달성한다(2026-09-02 실측, `eventOrder` 주석 참고).
+ *
+ * 렌더된 격자를 재지 않고 데이터로 세는 이유는 FullCalendar 가 막대 높이를 잰 뒤에야 줄
+ * 자리를 정하기 때문이다 — 마운트 직후에 재면 아직 배치 전이라 틀린 값이 나온다.
+ *
+ * 어긋나더라도 화면이 깨지지는 않는다. 적게 세면 `collapsible` 이 꺼져 **자르지 않고 전부
+ * 보이고**(컨트롤 없이 잘리는 일이 없다), 많이 세면 컨트롤이 붙되 이미 다 보이는 격자라
+ * 눌러도 달라지는 게 없다.
+ */
+function countWeekRows(items: UserJobCalendarItemResponse[], weekStart: Date): number {
+  let max = 0;
+  for (let offset = 0; offset < 7; offset += 1) {
+    const day = toCalendarParam(
+      new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + offset),
+    );
+    const covering = items.filter((item) => {
+      const deadline = item.recruitmentEndAt.slice(0, 10);
+      const start = item.recruitmentStartAt.slice(0, 10);
+      return (start <= deadline ? start : deadline) <= day && day <= deadline;
+    }).length;
+    max = Math.max(max, covering);
+  }
+  return max;
+}
+
 export interface WeekGridProps {
   /** 서버 컴포넌트가 받아 내려준 달력 항목. 여기서 다시 API를 부르지 않는다. */
   items: UserJobCalendarItemResponse[];
@@ -98,6 +130,24 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
   // 된다 — 그건 막대가 오늘을 지나가는지이지 오늘 끝나는지가 아니다.
   const today = toCalendarParam(new Date());
 
+  // 접힘은 지역 상태다. `date`·`brief` 와 달리 공유하거나 새로고침 뒤 되살릴 값이 아니라
+  // URL 에 두지 않는다.
+  //
+  // 주를 옮기면 접힌 채로 시작해야 하는데, 화살표는 같은 라우트 안의 이동이라 이 컴포넌트가
+  // 다시 마운트되지 않는다(`useCalendarDate` 가 있는 이유와 같다) — 그냥 두면 펼친 상태가
+  // 다음 주까지 따라간다. 렌더 중에 되돌리는 것은 React 가 "프로퍼티가 바뀔 때 상태를
+  // 맞추는" 방법으로 안내하는 형태다. 이펙트로 미루면 한 프레임 펼쳐진 채 그려졌다가 접힌다.
+  const [expanded, setExpanded] = useState(false);
+  const [renderedWeek, setRenderedWeek] = useState(initialDate);
+  if (renderedWeek !== initialDate) {
+    setRenderedWeek(initialDate);
+    setExpanded(false);
+  }
+
+  const weekStart = startOfCalendarWeek(parseCalendarDate(initialDate) ?? new Date());
+  const rowCount = countWeekRows(items, weekStart);
+  const collapsed = rowCount > COLLAPSED_ROWS && !expanded;
+
   return (
     <div
       style={GRID_STYLE}
@@ -115,6 +165,16 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
         // `min-height: 2em`·`margin-bottom: 1em` 이 함께 붙어 있어 셋 다 덮는다.
         '[&_.fc-daygrid-day-events]:mt-3! [&_.fc-daygrid-day-events]:mb-0!',
         '[&_.fc-daygrid-day-events]:min-h-0!',
+        // 접었을 때는 격자를 7줄 높이에서 자른다. FullCalendar 의 `dayMaxEventRows` 를 쓰지
+        // 않는 이유는 그 옵션이 가려진 줄에 걸친 **모든 요일 칸마다** `+N` 링크를 하나씩
+        // 만들기 때문이다 — 주간에 `+N` 을 두지 않기로 한 판단(`buildWeekEvents` 주석)과
+        // 어긋난다. 높이로 자르면 배치는 그대로 두고 보이는 데까지만 보여줄 수 있다.
+        //
+        // 320px = 12px + 44px × 7. 12px 은 머리글 아래 첫 막대까지의 간격
+        // (`.fc-daygrid-day-events` 의 `mt-3`)이고 44px 은 한 줄(막대 36px + 아래 여백 8px)이다.
+        // **줄 높이의 정확한 배수여야 한다** — 7번째 줄 막대가 312px 에서 끝나므로 320px 에서
+        // 자르면 그 줄은 온전히 보이고 8번째 줄(320px 에서 시작)은 1px 도 보이지 않는다.
+        collapsed ? '[&_.fc-daygrid-body]:max-h-[320px] [&_.fc-daygrid-body]:overflow-hidden' : '',
       ].join(' ')}
     >
       <FullCalendar
@@ -186,6 +246,22 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
         }}
         events={buildWeekEvents(items, today)}
       />
+      {rowCount > COLLAPSED_ROWS ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((previous) => !previous)}
+          className="flex w-full items-center justify-center gap-1 py-3 text-sm text-gray-500 transition-colors hover:text-gray-700"
+        >
+          {/*
+            숫자는 **이 주의 공고 수**다. "몇 개가 가려졌는지"가 더 친절하지만 그 수를 알려면
+            어느 막대가 앞 7줄에 놓였는지를 알아야 하고, 그건 FullCalendar 의 줄 쌓기를 우리
+            코드에 그대로 옮겨 적는 일이다 — 라이브러리 내부가 바뀌면 조용히 틀린 수가 뜬다.
+            주의 공고 수는 데이터에서 바로 나오고 "얼마나 더 있나"라는 같은 질문에 답한다.
+          */}
+          {expanded ? '접기' : `공고 ${items.length}개 전체 보기`}
+          <ChevronIcon direction={expanded ? 'up' : 'down'} className="h-4 w-4" />
+        </button>
+      ) : null}
     </div>
   );
 }
