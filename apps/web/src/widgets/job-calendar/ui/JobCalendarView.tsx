@@ -1,4 +1,5 @@
 import { getJobCalendar } from '@ogonggo/api';
+import { toCalendarParam } from '../lib/query';
 import { CalendarGrid } from './CalendarGrid';
 import type {
   SuccessResponseListUserJobCalendarItemResponse,
@@ -10,16 +11,6 @@ export const CALENDAR_FIRST_DAY = 1;
 
 /** 월간 격자는 앞뒤 달을 물고 항상 6주다(PRD 5.3). 42일이라 92일 제한 안에 든다(PRD 4절). */
 const CALENDAR_GRID_DAYS = 42;
-
-/**
- * `YYYY-MM-DD`. `toISOString()`은 UTC로 바꾸므로 한국 시간대에서 하루 앞의 날짜가 나온다 —
- * 로컬 날짜를 그대로 적는다.
- */
-export function toCalendarParam(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
 
 /**
  * 기준 날짜가 든 달의 격자 범위. 시작은 그 달 1일이 든 주의 월요일이고 거기서 6주다.
@@ -49,7 +40,7 @@ async function fetchCalendarItems(from: string, to: string): Promise<UserJobCale
 }
 
 export interface JobCalendarViewProps {
-  /** 어느 달을 펼칠지. 날짜 이동 줄은 Push 2 가 붙이므로 지금은 늘 오늘이다. */
+  /** 어느 달을 펼칠지. `?date=` 가 정하고, 없으면 오늘이다(`../lib/query`). */
   baseDate?: Date;
 }
 
