@@ -8,6 +8,7 @@ import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import {
   EVENT_RESET_CLASSES,
+  formatDeadlineHint,
   GRID_CLASSES,
   GRID_STYLE,
   useCalendarDate,
@@ -133,22 +134,27 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
           </span>
         )}
         eventClassNames={EVENT_BAR_CLASSES}
-        eventContent={(arg) => (
-          // 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
-          // 있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
-          <span className="block pb-2">
-            <span
-              className={cn(
-                'block h-9 truncate rounded-[6px] px-3 text-sm leading-9 text-gray-800',
-                // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
-                // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
-                arg.event.extendedProps.deadline === today ? 'bg-blue-50' : 'bg-gray-100',
-              )}
-            >
-              {arg.event.title}
+        eventContent={(arg) => {
+          const deadline = arg.event.extendedProps.deadline as string;
+          return (
+            // 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
+            // 있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
+            <span className="block pb-2">
+              <span
+                // 호버 문구는 마감일이고 월간과 같다(PRD 8.5).
+                title={formatDeadlineHint(deadline)}
+                className={cn(
+                  'block h-9 truncate rounded-[6px] px-3 text-sm leading-9 text-gray-800',
+                  // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
+                  // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
+                  deadline === today ? 'bg-blue-50' : 'bg-gray-100',
+                )}
+              >
+                {arg.event.title}
+              </span>
             </span>
-          </span>
-        )}
+          );
+        }}
         events={buildWeekEvents(items)}
       />
     </div>

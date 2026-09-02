@@ -63,6 +63,18 @@ export const GRID_CLASSES = [
 export const EVENT_RESET_CLASSES = ['border-0!', 'bg-transparent!', 'p-0!', 'm-0!'];
 
 /**
+ * 항목에 마우스를 올리면 뜨는 문구. **마감일이다** — 기업명도 제목도 아니다(PRD 8.5).
+ * 월간과 주간이 같은 문구여야 해서 여기 있다. 격자가 앞뒤 달을 함께 보여주므로 연도까지 적는다.
+ *
+ * 받는 값이 `Date` 가 아니라 `YYYY-MM-DD` 문자열인 것은 주간 때문이다. 주간 막대의
+ * `event.start` 는 모집 시작일이라 그대로 쓰면 마감일이 아닌 날이 뜬다 — 두 뷰가 같은 값을
+ * 넣도록 마감일을 `extendedProps.deadline` 에 담아 여기로 넘긴다.
+ */
+export function formatDeadlineHint(deadline: string): string {
+  return `${deadline.slice(0, 4)}.${deadline.slice(5, 7)}.${deadline.slice(8, 10)} 마감`;
+}
+
+/**
  * 보고 있는 날짜를 FullCalendar 인스턴스에 따라붙게 한다.
  *
  * `initialDate` 는 이름 그대로 처음 한 번만 읽힌다. 날짜 이동 줄의 화살표는 같은 라우트 안의

@@ -8,6 +8,7 @@ import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import {
   EVENT_RESET_CLASSES,
+  formatDeadlineHint,
   GRID_CLASSES,
   GRID_STYLE,
   useCalendarDate,
@@ -52,7 +53,7 @@ function buildMonthEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
         title: item.companyName,
         start: day,
         allDay: true,
-        extendedProps: { order: index },
+        extendedProps: { order: index, deadline: day },
       });
     });
 
@@ -69,19 +70,6 @@ function buildMonthEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
   }
 
   return events;
-}
-
-/**
- * 항목에 마우스를 올리면 뜨는 문구. **마감일이다** — 기업명도 제목도 아니다(PRD 8.5).
- * 격자가 앞뒤 달을 함께 보여주므로 연도까지 적는다.
- */
-function formatDeadlineHint(deadline: Date | null): string | undefined {
-  if (!deadline) {
-    return undefined;
-  }
-  const month = String(deadline.getMonth() + 1).padStart(2, '0');
-  const day = String(deadline.getDate()).padStart(2, '0');
-  return `${deadline.getFullYear()}.${month}.${day} 마감`;
 }
 
 export interface MonthGridProps {
@@ -185,7 +173,7 @@ export function MonthGrid({ items, initialDate }: MonthGridProps) {
             );
           }
           return (
-            <span title={formatDeadlineHint(arg.event.start)}>
+            <span title={formatDeadlineHint(arg.event.extendedProps.deadline as string)}>
               {/*
                 `CompanyLogo` 의 기본 안쪽 여백(`p-1`)을 여기서만 없앤다. 28px 타일에서 4px 씩
                 빼면 그림이 들어갈 자리가 20px 밖에 남지 않아 로고가 상자 안에서 너무 작아
