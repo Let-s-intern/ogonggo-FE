@@ -216,7 +216,14 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
           }
           return (
             <span title={formatDeadlineHint(arg.event.start)}>
-              <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs" />
+              {/*
+                `CompanyLogo` 의 기본 안쪽 여백(`p-1`)을 여기서만 없앤다. 28px 타일에서 4px 씩
+                빼면 그림이 들어갈 자리가 20px 밖에 남지 않아 로고가 상자 안에서 너무 작아
+                보였다(상자 넓이 대비 그림 넓이 평균 29.9%). `object-contain` 은 그대로 둔다 —
+                `object-cover` 로 채우면 마크가 치우친 로고에서 글자가 잘린다
+                (`entities/job/ui/CompanyLogo.tsx` 주석).
+              */}
+              <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs p-0" />
             </span>
           );
         }}
