@@ -13,6 +13,7 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
+import { toCalendarParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY } from '../lib/week';
 
 /**
@@ -87,6 +88,11 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
   useCalendarDate(calendarRef, initialDate);
 
+  // 막대 색을 가르는 기준(PRD 8.3). 조회 범위가 이 주 7일이라 그려진 막대는 전부 "이번 주
+  // 마감"이고, 그 중 마감일이 오늘인 것만 파랑이다. FullCalendar 의 `arg.isToday` 로는 안
+  // 된다 — 그건 막대가 오늘을 지나가는지이지 오늘 끝나는지가 아니다.
+  const today = toCalendarParam(new Date());
+
   return (
     <div
       style={GRID_STYLE}
@@ -131,7 +137,14 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
           // 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
           // 있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
           <span className="block pb-2">
-            <span className="block h-9 truncate rounded-[6px] bg-gray-100 px-3 text-sm leading-9 text-gray-800">
+            <span
+              className={cn(
+                'block h-9 truncate rounded-[6px] px-3 text-sm leading-9 text-gray-800',
+                // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
+                // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
+                arg.event.extendedProps.deadline === today ? 'bg-blue-50' : 'bg-gray-100',
+              )}
+            >
               {arg.event.title}
             </span>
           </span>
