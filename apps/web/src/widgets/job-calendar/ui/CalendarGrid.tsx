@@ -153,14 +153,21 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         '[&_.fc-daygrid-day-top]:justify-center',
         // 오늘은 파란 글씨다(미니 달력과 같은 규칙).
         '[&_.fc-day-today_.fc-daygrid-day-number]:text-blue-500',
-        // 항목은 로고 타일이다 — 한 줄에 4개까지 깔리도록 이벤트 자리를 flex 로 바꾼다(PRD 5.3).
-        // 날짜 칸 자체를 flex 로 두고 이벤트 묶음과 `+N` 줄은 `display: contents` 로 껍데기를
-        // 없앤다. 그래야 목업처럼 `+N`이 마지막 타일 옆에 붙는다.
-        '[&_.fc-daygrid-day-frame]:flex [&_.fc-daygrid-day-frame]:flex-wrap',
-        '[&_.fc-daygrid-day-frame]:items-center [&_.fc-daygrid-day-frame]:gap-1',
+        // 날짜 칸은 위에서부터 쌓는다 — 날짜 숫자가 맨 위, 그 아래 로고 타일이다.
+        // 칸을 통째로 flex 로 만들었다가 두 가지가 어긋났다. 칸 높이는 그 주에서 가장 많은
+        // 칸에 맞춰 늘어나는데 세로 가운데 정렬이 겹쳐 항목이 적은 칸일수록 내용이 아래로
+        // 내려갔고, `display: contents` 로 편 항목들이 첫 줄 앞에 여백 한 칸(4px)을 더 만들어
+        // 둘째 줄이 왼쪽으로 밀렸다. 타일을 담는 자리만 flex 로 두면 둘 다 생기지 않는다.
         '[&_.fc-daygrid-day-frame]:px-1 [&_.fc-daygrid-day-frame]:pb-2',
-        '[&_.fc-daygrid-day-top]:w-full',
-        '[&_.fc-daygrid-day-events]:contents [&_.fc-daygrid-day-bottom]:contents',
+        '[&_.fc-daygrid-day-events]:flex [&_.fc-daygrid-day-events]:flex-wrap',
+        '[&_.fc-daygrid-day-events]:gap-1',
+        // FullCalendar 가 이 자리에 걸어 둔 `min-height: 2em`·`margin-bottom: 1em` 을 지운다
+        // (레이어 밖 규칙이라 `!` 가 필요하다 — `EVENT_TILE_CLASSES` 주석 참고).
+        '[&_.fc-daygrid-day-events]:mb-0! [&_.fc-daygrid-day-events]:min-h-0!',
+        // FullCalendar 는 이 자리에 float 를 걷어내려고 `::before`/`::after` clearfix 를
+        // `display: table` 로 넣어 둔다. flex 컨테이너에서는 그게 폭 0짜리 항목 하나가 되어
+        // **첫 줄만 여백 한 칸(4px)만큼 오른쪽으로 밀린다** — 둘째 줄과 왼쪽 끝이 어긋난다.
+        '[&_.fc-daygrid-day-events::before]:hidden! [&_.fc-daygrid-day-events::after]:hidden!',
         // 한 줄에 4개까지다(PRD 5.3). 칸 너비에 기대지 않고 자리 폭을 1/4로 못 박는다 —
         // 가로 여백 4px 세 칸(12px)에 반올림 여유 4px 을 더 뺀다. 딱 맞게 잡으면 소수점
         // 반올림에서 한 개가 다음 줄로 밀린다.
