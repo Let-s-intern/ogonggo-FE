@@ -65,27 +65,27 @@ export function AboutPillars() {
   );
 
   return (
-    <section ref={root} className="bg-gray-950 px-6 py-32">
+    <section ref={root} className="bg-white px-6 py-32">
       <div className="mx-auto max-w-4xl">
-        <h2 className="text-sm font-semibold tracking-widest text-blue-400">무엇을 모으나</h2>
+        <h2 className="text-sm font-semibold tracking-widest text-blue-600">무엇을 모으나</h2>
 
         <div className="mt-16 flex flex-col">
           {PILLARS.map((pillar, index) => (
             <div
               key={pillar.label}
               data-pillar
-              className="flex flex-col gap-4 border-t border-white/10 py-12 opacity-0 sm:flex-row sm:gap-10"
+              className="flex flex-col gap-4 border-t border-gray-200 py-12 opacity-0 sm:flex-row sm:gap-10"
             >
               <span
                 data-pillar-index
-                className="text-5xl font-extrabold text-white/10 opacity-0 sm:text-6xl"
+                className="text-5xl font-extrabold text-blue-100 opacity-0 sm:text-6xl"
               >
                 {String(index + 1).padStart(2, '0')}
               </span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-blue-400">{pillar.label}</p>
-                <p className="mt-3 text-2xl font-bold text-white sm:text-3xl">{pillar.headline}</p>
-                <p className="mt-4 max-w-xl leading-relaxed text-gray-400">{pillar.body}</p>
+                <p className="text-sm font-semibold text-blue-600">{pillar.label}</p>
+                <p className="mt-3 text-2xl font-bold text-gray-900 sm:text-3xl">{pillar.headline}</p>
+                <p className="mt-4 max-w-xl leading-relaxed text-gray-500">{pillar.body}</p>
               </div>
             </div>
           ))}

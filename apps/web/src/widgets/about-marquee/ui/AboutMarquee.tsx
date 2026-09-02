@@ -21,7 +21,7 @@ function Row({ reverse, speed }: { reverse: boolean; speed: number }) {
       {names.map((name, index) => (
         <span
           key={`${name}-${index}`}
-          className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold whitespace-nowrap text-gray-300"
+          className="rounded-full border border-gray-200 bg-white px-6 py-3 text-sm font-semibold whitespace-nowrap text-gray-700 shadow-sm"
         >
           {name}
         </span>
@@ -69,7 +69,7 @@ export function AboutMarquee() {
   );
 
   return (
-    <section className="border-y border-white/10 bg-gray-950 py-16">
+    <section className="border-y border-gray-200 bg-blue-00 py-16">
       <p className="px-6 text-center text-sm text-gray-500">
         지금까지 이런 회사들의 공고를 모았습니다
       </p>
@@ -81,11 +81,11 @@ export function AboutMarquee() {
         </div>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-gray-950 to-transparent sm:w-40"
+          className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-blue-00 to-transparent sm:w-40"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-gray-950 to-transparent sm:w-40"
+          className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-blue-00 to-transparent sm:w-40"
         />
       </div>
     </section>

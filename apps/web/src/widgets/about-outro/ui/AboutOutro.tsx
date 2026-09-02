@@ -42,7 +42,7 @@ export function AboutOutro() {
   return (
     <section
       ref={root}
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gray-950 px-6 text-center"
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-white px-6 text-center"
     >
       {/*
         히어로와 같은 영상을 다시 쓴다 — 브라우저 캐시에 이미 있어 추가 전송이 없고, 첫 화면과
@@ -56,14 +56,14 @@ export function AboutOutro() {
         playsInline
         preload="none"
         poster="/about-hero-poster.jpg"
-        className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-20 blur-2xl"
+        className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl"
       >
         <source src="/about-hero-loop.mp4" type="video/mp4" />
       </video>
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gray-950/60" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-white/60" />
       <p
         data-outro-line
-        className="relative text-4xl font-extrabold text-white opacity-0 sm:text-6xl"
+        className="relative text-4xl font-extrabold text-gray-900 opacity-0 sm:text-6xl"
       >
         곧 만나요
       </p>
@@ -76,7 +76,7 @@ export function AboutOutro() {
       </p>
       <p
         data-outro-line
-        className="relative mt-20 text-xs tracking-widest text-gray-700 opacity-0"
+        className="relative mt-20 text-xs tracking-widest text-gray-400 opacity-0"
       >
         오늘의 공고 · BY LETS CAREER
       </p>

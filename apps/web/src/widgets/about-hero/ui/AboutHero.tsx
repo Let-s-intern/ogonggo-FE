@@ -98,7 +98,7 @@ export function AboutHero() {
   return (
     <section
       ref={root}
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-950 px-6"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-6"
     >
       {/*
         배경 모션 그래픽. `muted`가 없으면 브라우저가 자동재생을 막는다. `playsInline`은 iOS
@@ -121,30 +121,30 @@ export function AboutHero() {
       </video>
 
       {/*
-        영상이 밝은 하늘색 그라디언트라 흰 글자가 그냥은 안 읽힌다. 그렇다고 전체를 진하게
-        덮으면 색이 다 죽어 배경을 쓰는 의미가 없어진다. 그래서 두 겹으로 나눈다 — 전체는
-        옅게 눌러 색을 남기고, 글자가 놓이는 가운데만 타원으로 진하게 깐다.
+        글자는 짙은 회색(`gray-900`)이라 영상의 어두운 구석 위에서는 안 읽힌다. 그렇다고 전체를
+        하얗게 덮으면 색이 다 날아가 배경을 쓰는 의미가 없어진다. 그래서 두 겹으로 나눈다 —
+        전체는 옅게 씌워 하늘색을 남기고, 글자가 놓이는 가운데만 타원으로 희게 깐다.
       */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gray-950/45" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-white/25" />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_45%,rgba(3,7,18,0.82),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_65%_55%_at_50%_45%,rgba(255,255,255,0.6),transparent_65%)]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent to-gray-950"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent to-white"
       />
 
       <div className="relative flex flex-col items-center text-center">
         <span
           data-hero-badge
-          className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold tracking-wide text-blue-200 opacity-0"
+          className="rounded-full border border-blue-100 bg-white px-4 py-2 text-xs font-semibold tracking-wide text-blue-600 shadow-sm opacity-0"
         >
           오늘의 공고 · 준비 중
         </span>
 
         <h1
-          className="mt-8 text-4xl leading-tight font-extrabold text-white sm:text-6xl lg:text-7xl"
+          className="mt-8 text-4xl leading-tight font-extrabold text-gray-900 sm:text-6xl lg:text-7xl"
           aria-label={HEADLINE_LINES.join(' ')}
         >
           {HEADLINE_LINES.map((line, index) => (
@@ -154,13 +154,13 @@ export function AboutHero() {
 
         <p
           data-hero-sub
-          className="mt-8 max-w-xl text-base leading-relaxed text-gray-400 opacity-0 sm:text-lg"
+          className="mt-8 max-w-xl text-base leading-relaxed text-gray-500 opacity-0 sm:text-lg"
         >
           채용공고와 교육 과정, 사이드 프로젝트까지. 커리어에 필요한 것들이 사이트마다 흩어져
           있습니다. 그걸 한 자리에 모으고 있습니다.
         </p>
 
-        <span data-hero-cue className="mt-16 text-xs tracking-widest text-gray-300 opacity-0">
+        <span data-hero-cue className="mt-16 text-xs tracking-widest text-gray-500 opacity-0">
           아래로 스크롤
         </span>
       </div>

@@ -15,7 +15,7 @@ import { AboutStats } from '@/widgets/about-stats';
  */
 export function AboutPage() {
   return (
-    <main data-page="about" className="bg-gray-950">
+    <main className="bg-white">
       <AboutHero />
       <AboutMarquee />
       <AboutPillars />

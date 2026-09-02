@@ -55,24 +55,24 @@ export function AboutStats() {
   );
 
   return (
-    <section ref={root} className="border-y border-white/10 bg-gray-950 px-6 py-32">
+    <section ref={root} className="border-y border-gray-200 bg-blue-00 px-6 py-32">
       <div className="mx-auto max-w-4xl text-center">
-        <h2 className="text-sm font-semibold tracking-widest text-blue-400">지금까지</h2>
+        <h2 className="text-sm font-semibold tracking-widest text-blue-600">지금까지</h2>
 
         <div className="mt-14 flex flex-col justify-center gap-16 sm:flex-row sm:gap-24">
           {STATS.map((stat) => (
             <div key={stat.label}>
-              <p className="text-6xl font-extrabold text-white tabular-nums sm:text-7xl">
+              <p className="text-6xl font-extrabold text-gray-900 tabular-nums sm:text-7xl">
                 {/* 초기값 0. 스크롤이 닿으면 GSAP이 textContent를 갈아 끼운다 */}
                 <span data-stat-value={stat.value}>0</span>
-                <span className="ml-1 text-3xl text-blue-400 sm:text-4xl">{stat.unit}</span>
+                <span className="ml-1 text-3xl text-blue-500 sm:text-4xl">{stat.unit}</span>
               </p>
               <p className="mt-4 text-sm text-gray-500">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        <p className="mt-16 text-xs text-gray-600">
+        <p className="mt-16 text-xs text-gray-400">
           크롤러가 실제로 수집한 데이터 기준입니다. 실시간 집계가 아닙니다.
         </p>
       </div>
