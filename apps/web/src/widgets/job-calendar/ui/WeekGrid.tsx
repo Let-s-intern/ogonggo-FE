@@ -204,7 +204,9 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
           // 목업 실측 26px 이다.
           <span className="flex flex-col items-center gap-[26px]">
             <span className="text-xs font-medium text-gray-400">{weekdayLabel(arg.date)}</span>
-            <span className={cn('text-sm font-bold', arg.isToday ? 'text-blue-500' : 'text-gray-900')}>
+            <span
+              className={cn('text-sm font-bold', arg.isToday ? 'text-blue-500' : 'text-gray-900')}
+            >
               {arg.date.getDate()}
             </span>
           </span>

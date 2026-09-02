@@ -18,7 +18,9 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(
       )}
       {...props}
     >
-      {src ? <RadixAvatar.Image src={src} alt={alt} className="h-full w-full object-cover" /> : null}
+      {src ? (
+        <RadixAvatar.Image src={src} alt={alt} className="h-full w-full object-cover" />
+      ) : null}
       <RadixAvatar.Fallback delayMs={src ? 400 : undefined}>{fallback}</RadixAvatar.Fallback>
     </RadixAvatar.Root>
   ),

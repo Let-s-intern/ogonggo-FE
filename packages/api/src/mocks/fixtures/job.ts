@@ -56,7 +56,10 @@ const baseJob = (id: number): UserJobDetailResponse => ({
   employmentType: faker.helpers.arrayElement(EMPLOYMENT_TYPES),
   experienceType: faker.helpers.arrayElement(EXPERIENCE_TYPES),
   experienceMinYears: faker.helpers.arrayElement([undefined, faker.number.int({ min: 0, max: 3 })]),
-  experienceMaxYears: faker.helpers.arrayElement([undefined, faker.number.int({ min: 3, max: 10 })]),
+  experienceMaxYears: faker.helpers.arrayElement([
+    undefined,
+    faker.number.int({ min: 3, max: 10 }),
+  ]),
   educationLevel: faker.helpers.arrayElement(EDUCATION_LEVELS),
   region: faker.location.city(),
   recruitmentType: 'PERIOD',
@@ -231,7 +234,9 @@ const calendarDayOffsets = (count: number): number[] => {
 const withCalendarDeadlines = (jobs: UserJobDetailResponse[]): UserJobDetailResponse[] => {
   const dated = jobs
     .filter((job) => job.recruitmentEndAt !== undefined)
-    .sort((a, b) => (a.recruitmentEndAt ?? '').localeCompare(b.recruitmentEndAt ?? '') || a.id - b.id);
+    .sort(
+      (a, b) => (a.recruitmentEndAt ?? '').localeCompare(b.recruitmentEndAt ?? '') || a.id - b.id,
+    );
   const offsets = calendarDayOffsets(dated.length);
   const offsetById = new Map(dated.map((job, index) => [job.id, offsets[index] ?? 0]));
 

@@ -1,10 +1,6 @@
 {
   "name": "ogonggo-fe",
   "private": true,
-  "packageManager": "pnpm@10.33.0",
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
     "dev:admin": "pnpm --filter admin dev",
     "dev:web": "pnpm --filter web dev",
@@ -21,5 +17,9 @@
     "oxlint": "^1.80.0",
     "turbo": "^2.10.12",
     "typescript": "^5.9.3"
-  }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.0"
 }

@@ -36,14 +36,13 @@ export function ErrorState({ title, description, hint, actions }: ErrorStateProp
         {description}
       </p>
 
-      {actions ? <div className="mt-8 flex items-center justify-center gap-3">{actions}</div> : null}
+      {actions ? (
+        <div className="mt-8 flex items-center justify-center gap-3">{actions}</div>
+      ) : null}
 
       <p className="mt-10 text-xs text-gray-400">
         도움이 필요하면 편하게 알려주세요{' '}
-        <a
-          href={`mailto:${SUPPORT_EMAIL}`}
-          className="font-semibold text-blue-500 hover:underline"
-        >
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-blue-500 hover:underline">
           {SUPPORT_EMAIL}
         </a>
       </p>

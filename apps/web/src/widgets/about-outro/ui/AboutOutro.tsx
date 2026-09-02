@@ -61,12 +61,9 @@ export function AboutOutro() {
       >
         곧 만나요
       </p>
-      <p
-        data-outro-line
-        className="relative mt-8 max-w-md leading-relaxed text-gray-600 opacity-0"
-      >
-        오늘의 공고는 준비 중입니다. 취업 준비에 드는 시간을 공고 찾는 데 쓰지 않아도 되게
-        만들고 있습니다.
+      <p data-outro-line className="relative mt-8 max-w-md leading-relaxed text-gray-600 opacity-0">
+        오늘의 공고는 준비 중입니다. 취업 준비에 드는 시간을 공고 찾는 데 쓰지 않아도 되게 만들고
+        있습니다.
       </p>
       <Link
         data-outro-line
@@ -84,10 +81,7 @@ export function AboutOutro() {
         위의 짧은 선이 본문과 서명을 가른다. 구분선을 화면 폭으로 긋지 않는 이유는 이 구간이
         배경 영상을 비추는 자리라서다 — 가로줄이 길면 영상을 자른다.
       */}
-      <span
-        data-outro-line
-        className="relative mt-20 flex flex-col items-center gap-4 opacity-0"
-      >
+      <span data-outro-line className="relative mt-20 flex flex-col items-center gap-4 opacity-0">
         <span aria-hidden="true" className="h-px w-10 bg-blue-500/30" />
 
         <span className="flex flex-col items-center gap-1.5">

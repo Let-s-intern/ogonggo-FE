@@ -9,9 +9,6 @@
     "generate": "orval --config orval.config.ts",
     "type-check": "tsgo --noEmit"
   },
-  "peerDependencies": {
-    "react": "^19.0.0"
-  },
   "dependencies": {
     "@faker-js/faker": "^10.6.0",
     "@tanstack/react-query": "^5.102.8",
@@ -22,5 +19,8 @@
     "@ogonggo/config": "workspace:*",
     "orval": "^8.27.0",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   }
 }

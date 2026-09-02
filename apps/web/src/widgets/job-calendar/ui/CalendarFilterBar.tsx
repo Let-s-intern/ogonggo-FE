@@ -10,7 +10,11 @@ import { buildJobCalendarHref, type JobCalendarQuery } from '../lib/query';
  * 크기·색은 목업에서 실측했다. 높이 36px(`h-9`), 테두리 `gray-200`(229,231,235),
  * 글자 `gray-400`(156,163,175) — 전체 공고 화면의 `SearchFilterBar`와 같은 값이다.
  */
-function FilterPill({ label, leading, trailing }: {
+function FilterPill({
+  label,
+  leading,
+  trailing,
+}: {
   label: string;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
