@@ -1,0 +1,41 @@
+/*
+ * 소개 페이지 전용 스타일. 이 파일은 `app/about/layout.tsx`만 import 하므로 다른 화면의
+ * 글꼴에는 영향을 주지 않는다. 사이트 전체 글꼴을 바꾸려면 여기가 아니라
+ * `packages/ui/src/styles/tokens.css`의 `--font-sans`를 고쳐야 하고, 그건 기존 화면 전부가
+ * 함께 바뀌는 결정이라 따로 논의한다.
+ *
+ * 네이버 나눔스퀘어 네오는 굵기마다 패밀리 이름이 따로다 — `NanumSquareNeo`(400),
+ * `NanumSquareNeoBold`, `NanumSquareNeoExtraBold`, `NanumSquareNeoHeavy`. 그래서 `font-weight`
+ * 로 굵기를 고를 수 없고 패밀리를 갈아 끼워야 한다.
+ *
+ * 강조는 전부 Bold 하나로 통일한다. 처음엔 헤드라인에 Heavy를 썼는데 너무 두꺼웠다 —
+ * 나눔스퀘어 네오는 굵기가 올라갈수록 속공간이 빨리 닫혀서 큰 크기에서 글자가 뭉친다.
+ *
+ * 각 클래스가 `font-weight: 400`을 함께 못 박는다. 이게 없으면 Tailwind의 `font-bold` 같은
+ * 유틸리티가 남아 있을 때 브라우저가 이미 두꺼운 폰트를 한 번 더 굵게 그리는 가짜
+ * 볼드(faux bold)가 생겨 글자가 뭉갠다.
+ */
+
+.about-root {
+  font-family: 'NanumSquareNeo', var(--font-sans);
+}
+
+/* 헤드라인. 자간을 살짝 좁혀 덩어리로 읽히게 한다. */
+.about-display {
+  font-family: 'NanumSquareNeoBold', 'NanumSquareNeo', var(--font-sans);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+/* 소제목·숫자처럼 본문보다 세게 잡아야 하는 자리. */
+.about-strong {
+  font-family: 'NanumSquareNeoBold', 'NanumSquareNeo', var(--font-sans);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+/* 레이블처럼 작지만 또렷해야 하는 자리. */
+.about-label {
+  font-family: 'NanumSquareNeoBold', 'NanumSquareNeo', var(--font-sans);
+  font-weight: 400;
+}

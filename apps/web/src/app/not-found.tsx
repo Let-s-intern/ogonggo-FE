@@ -1,7 +1,9 @@
-import Link from 'next/link';
-import { Button } from '@ogonggo/ui';
-import { ERROR_ACTION_CLASS, ErrorState } from '@/shared/ui/ErrorState';
-import { HomeIcon } from '@/shared/ui/icons';
+import Link from "next/link";
+import { Button } from "@ogonggo/ui";
+import { ERROR_ACTION_CLASS, ErrorState } from "@/shared/ui/ErrorState";
+import { HomeIcon } from "@/shared/ui/icons";
+import { SiteFooter } from "@/widgets/site-footer";
+import { SiteHeader } from "@/widgets/site-header";
 
 /**
  * 없는 주소이거나 `notFound()`가 불린 자리를 대신한다
@@ -13,20 +15,27 @@ import { HomeIcon } from '@/shared/ui/icons';
  *
  * 버튼은 하나다. `/`가 곧 채용공고 목록이라 `공고 목록`과 `홈으로`를 나란히 두면 같은 곳을
  * 가리키는 버튼이 둘이 된다.
+ *
+ * 헤더와 푸터를 직접 단다. 이 파일은 `(site)` 그룹 밖에 있어야 하고(없는 주소 전부를 여기서
+ * 받는다) 그래서 그룹 레이아웃의 껍데기를 물려받지 못한다.
  */
 export default function NotFound() {
   return (
-    <ErrorState
-      title="찾는 페이지가 없어요"
-      description="주소가 바뀌었거나 사라진 것 같아요."
-      actions={
-        <Button asChild className={ERROR_ACTION_CLASS}>
-          <Link href="/">
-            <HomeIcon className="h-5 w-5" />
-            홈으로
-          </Link>
-        </Button>
-      }
-    />
+    <>
+      <SiteHeader />
+      <ErrorState
+        title="찾는 페이지가 없어요"
+        description="주소가 바뀌었거나 사라진 것 같아요."
+        actions={
+          <Button asChild className={ERROR_ACTION_CLASS}>
+            <Link href="/">
+              <HomeIcon className="h-5 w-5" />
+              홈으로
+            </Link>
+          </Button>
+        }
+      />
+      <SiteFooter />
+    </>
   );
 }
