@@ -9,9 +9,21 @@ import { Button, cn } from '@ogonggo/ui';
  * 경로 접두사를 공유하지 않아 따로 적는다 — 접두사만 보면 `/`가 모든 경로에 걸린다.
  */
 const NAV_ITEMS = [
-  { href: '/', label: '채용공고', matches: (path: string) => path === '/' || path.startsWith('/jobs') },
-  { href: '/bootcamps', label: '교육·부트캠프', matches: (path: string) => path.startsWith('/bootcamps') },
-  { href: '/side-studies', label: '사이드·스터디', matches: (path: string) => path.startsWith('/side-studies') },
+  {
+    href: '/',
+    label: '채용공고',
+    matches: (path: string) => path === '/' || path.startsWith('/jobs'),
+  },
+  {
+    href: '/bootcamps',
+    label: '교육·부트캠프',
+    matches: (path: string) => path.startsWith('/bootcamps'),
+  },
+  {
+    href: '/side-studies',
+    label: '사이드·스터디',
+    matches: (path: string) => path.startsWith('/side-studies'),
+  },
 ] as const;
 
 /**

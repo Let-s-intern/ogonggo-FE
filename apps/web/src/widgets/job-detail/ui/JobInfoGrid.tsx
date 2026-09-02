@@ -3,7 +3,11 @@ import {
   EMPLOYMENT_TYPE_LABELS,
   EXPERIENCE_TYPE_LABELS,
 } from '@/entities/job/model/labels';
-import type { JobEducationLevel, JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
+import type {
+  JobEducationLevel,
+  JobEmploymentType,
+  JobExperienceType,
+} from '@/entities/job/model/types';
 
 export interface JobInfoGridProps {
   experienceType: JobExperienceType;
@@ -26,7 +30,12 @@ function InfoCell({ label, value }: { label: string; value: string }) {
  * 가 쓰는 것과 같은 맵)를 재사용한다. `region`은 자유 문자열이라 라벨 맵이 없다 — 없으면
  * 빈 칸 대신 "정보 없음"으로 대체한다(`.claude/rules/writing.md`).
  */
-export function JobInfoGrid({ experienceType, employmentType, educationLevel, region }: JobInfoGridProps) {
+export function JobInfoGrid({
+  experienceType,
+  employmentType,
+  educationLevel,
+  region,
+}: JobInfoGridProps) {
   return (
     <div className="grid grid-cols-2 gap-x-8 gap-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
       <InfoCell label="경력" value={EXPERIENCE_TYPE_LABELS[experienceType]} />

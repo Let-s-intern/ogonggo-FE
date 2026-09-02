@@ -28,11 +28,7 @@ function parseExperienceType(value: string | undefined): JobExperienceType | und
   return value && value in EXPERIENCE_TYPE_LABELS ? (value as JobExperienceType) : undefined;
 }
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<HomeSearchParams>;
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<HomeSearchParams> }) {
   const { page, sort, q, employmentType, experienceType } = await searchParams;
 
   return (

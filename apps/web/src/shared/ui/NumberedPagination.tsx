@@ -67,19 +67,8 @@ export function NumberedPagination({ pageInfo, buildHref }: NumberedPaginationPr
 
   return (
     <nav className="flex items-center justify-center gap-1" aria-label="페이지 이동">
-      <PageArrow
-        href={buildHref(1)}
-        disabled={!hasPrev}
-        direction="left"
-        double
-        label="처음"
-      />
-      <PageArrow
-        href={buildHref(pageNum - 1)}
-        disabled={!hasPrev}
-        direction="left"
-        label="이전"
-      />
+      <PageArrow href={buildHref(1)} disabled={!hasPrev} direction="left" double label="처음" />
+      <PageArrow href={buildHref(pageNum - 1)} disabled={!hasPrev} direction="left" label="이전" />
       {pageItems.map((item, index) =>
         item === 'ellipsis' ? (
           <span key={`ellipsis-${index}`} className="px-1 text-sm text-gray-400">
@@ -99,12 +88,7 @@ export function NumberedPagination({ pageInfo, buildHref }: NumberedPaginationPr
           </Link>
         ),
       )}
-      <PageArrow
-        href={buildHref(pageNum + 1)}
-        disabled={!hasNext}
-        direction="right"
-        label="다음"
-      />
+      <PageArrow href={buildHref(pageNum + 1)} disabled={!hasNext} direction="right" label="다음" />
       <PageArrow
         href={buildHref(totalPages)}
         disabled={!hasNext}

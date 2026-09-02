@@ -17,7 +17,15 @@ function formatDate(value?: string): string {
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} (${WEEKDAY_LABELS[date.getDay()]})`;
 }
 
-function InfoCell({ label, value, className }: { label: string; value: string; className?: string }) {
+function InfoCell({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
   return (
     <div className={className}>
       <p className="text-xs text-gray-500">{label}</p>
@@ -52,10 +60,7 @@ export function SideStudyInfoGrid({ sideStudy }: SideStudyInfoGridProps) {
       <InfoCell label="진행 방식" value={OPERATION_TYPE_LABELS[sideStudy.operationType]} />
       {/* 모집 인원은 정원만이 아니라 `현재/정원`이다 — 목록 카드 배지(`모집 중 2/6`)와 같은
           두 값을 쓰고, 남은 자리가 몇인지가 이 화면에서 가장 자주 보는 숫자다(PRD 5절). */}
-      <InfoCell
-        label="모집 인원"
-        value={`${sideStudy.appliedCount}/${sideStudy.capacity}명`}
-      />
+      <InfoCell label="모집 인원" value={`${sideStudy.appliedCount}/${sideStudy.capacity}명`} />
       <InfoCell
         label="기술 스택"
         value={sideStudy.techStack.length > 0 ? sideStudy.techStack.join(', ') : NO_VALUE}

@@ -18,7 +18,10 @@ export interface JobListQuery {
  * 기본값(`page=1`, `sort=LATEST`)은 URL에서 생략한다 — 기존 `Pagination`/`SortToggle`이 이미
  * 하던 방식 그대로. `overrides`에 없는 필드는 `base`를 그대로 쓴다.
  */
-export function buildJobListHref(base: JobListQuery, overrides: Partial<JobListQuery> = {}): string {
+export function buildJobListHref(
+  base: JobListQuery,
+  overrides: Partial<JobListQuery> = {},
+): string {
   const merged: JobListQuery = { ...base, ...overrides };
   const params = new URLSearchParams();
 

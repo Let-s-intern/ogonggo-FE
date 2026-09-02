@@ -18,7 +18,10 @@ const MILLISECONDS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
  * 같은 날이어도 "0주 과정"이 되지 않게 최소 1주로 둔다.
  */
 function formatDuration(bootcamp: BootcampDetail): string {
-  const lastWeek = bootcamp.curriculums.reduce((max, curriculum) => Math.max(max, curriculum.endWeek), 0);
+  const lastWeek = bootcamp.curriculums.reduce(
+    (max, curriculum) => Math.max(max, curriculum.endWeek),
+    0,
+  );
   if (lastWeek > 0) {
     return `${lastWeek}주 과정`;
   }

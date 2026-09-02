@@ -52,7 +52,10 @@ function FilterDropdown<TValue extends string>({
         <li>
           <Link
             href={buildHref(undefined)}
-            className={cn('block px-3 py-1.5 text-sm', !selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50')}
+            className={cn(
+              'block px-3 py-1.5 text-sm',
+              !selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50',
+            )}
           >
             {label}
           </Link>
@@ -63,7 +66,9 @@ function FilterDropdown<TValue extends string>({
               href={buildHref(value)}
               className={cn(
                 'block px-3 py-1.5 text-sm',
-                value === selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50',
+                value === selected
+                  ? 'font-semibold text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50',
               )}
             >
               {optionLabel}

@@ -28,7 +28,8 @@ export function SortToggle<TValue extends string>({
   current,
   buildHref,
 }: SortToggleProps<TValue>) {
-  const currentLabel = options.find((option) => option.value === current)?.label ?? options[0]?.label;
+  const currentLabel =
+    options.find((option) => option.value === current)?.label ?? options[0]?.label;
 
   return (
     <details className="group relative">

@@ -1,9 +1,9 @@
-import Link from "next/link";
-import { Button } from "@ogonggo/ui";
-import { ERROR_ACTION_CLASS, ErrorState } from "@/shared/ui/ErrorState";
-import { HomeIcon } from "@/shared/ui/icons";
-import { SiteFooter } from "@/widgets/site-footer";
-import { SiteHeader } from "@/widgets/site-header";
+import Link from 'next/link';
+import { Button } from '@ogonggo/ui';
+import { ERROR_ACTION_CLASS, ErrorState } from '@/shared/ui/ErrorState';
+import { HomeIcon } from '@/shared/ui/icons';
+import { SiteFooter } from '@/widgets/site-footer';
+import { SiteHeader } from '@/widgets/site-header';
 
 /**
  * 없는 주소이거나 `notFound()`가 불린 자리를 대신한다

@@ -21,7 +21,13 @@ export type JobListProps = JobListQuery;
  * `{ data, status, headers }`로 감싸지 않음) — 실제 런타임 값은 `getJobs`가 감싸는 `data` 필드
  * 하나(`SuccessResponsePageResponseUserJobSummaryResponse`)와 같다.
  */
-function buildJobsRequestUrl({ page, sort, q, employmentType, experienceType }: JobListQuery): string {
+function buildJobsRequestUrl({
+  page,
+  sort,
+  q,
+  employmentType,
+  experienceType,
+}: JobListQuery): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('sort', sort);
@@ -37,7 +43,9 @@ function buildJobsRequestUrl({ page, sort, q, employmentType, experienceType }: 
   return `/api/v1/jobs?${params.toString()}`;
 }
 
-async function fetchJobPage(query: JobListQuery): Promise<{ items: JobSummary[]; pageInfo: PageInfo }> {
+async function fetchJobPage(
+  query: JobListQuery,
+): Promise<{ items: JobSummary[]; pageInfo: PageInfo }> {
   const response = await httpClient<SuccessResponsePageResponseUserJobSummaryResponse>(
     buildJobsRequestUrl(query),
   );

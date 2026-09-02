@@ -20,7 +20,10 @@ const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
  * `formatDeadline`은 목록 카드용 짧은 표기("~7.25 마감")라 요일·시각이 없다 — 이 화면
  * 전용으로 로컬에 둔다.
  */
-function formatDeadlineText(recruitmentType: JobRecruitmentType, recruitmentEndAt?: string): string {
+function formatDeadlineText(
+  recruitmentType: JobRecruitmentType,
+  recruitmentEndAt?: string,
+): string {
   if (recruitmentType === 'ALWAYS_OPEN') {
     return '상시채용';
   }
@@ -59,7 +62,9 @@ export function JobDetailHeaderCard({
       <hr className="my-6 border-gray-200" />
       <div className="flex items-center gap-3 text-sm">
         <DdayBadge recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
-        <span className="text-gray-500">{formatDeadlineText(recruitmentType, recruitmentEndAt)}</span>
+        <span className="text-gray-500">
+          {formatDeadlineText(recruitmentType, recruitmentEndAt)}
+        </span>
         <span className="ml-auto flex items-center gap-1 text-gray-400">
           <EyeIcon className="h-4 w-4" />
           {viewCount}

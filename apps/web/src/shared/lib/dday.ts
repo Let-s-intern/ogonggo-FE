@@ -46,10 +46,7 @@ export function computeDday(
 }
 
 /** 마감까지 하루 이하로 남았으면(D-DAY·D-1) 급함 — Figma의 두 배지 색 기준(D-1 주황 / D-10 파랑). */
-export function isDdayUrgent(
-  recruitmentType: RecruitmentType,
-  recruitmentEndAt?: string,
-): boolean {
+export function isDdayUrgent(recruitmentType: RecruitmentType, recruitmentEndAt?: string): boolean {
   const diffDays = computeDaysRemaining(recruitmentType, recruitmentEndAt);
   return diffDays !== null && diffDays <= 1;
 }

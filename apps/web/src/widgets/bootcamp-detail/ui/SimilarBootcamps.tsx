@@ -50,7 +50,11 @@ export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsPr
         {items.map((bootcamp) => (
           <li key={bootcamp.id}>
             <Link href={`/bootcamps/${bootcamp.id}`} className="flex items-center gap-3">
-              <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-12 w-12 shrink-0 rounded-md shadow-sm" />
+              <Thumbnail
+                src={bootcamp.representativeImageUrl}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-md shadow-sm"
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-gray-900">{bootcamp.title}</p>
                 <p className="truncate text-xs text-gray-500">

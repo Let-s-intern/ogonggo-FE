@@ -55,7 +55,10 @@ export function AboutStats() {
   );
 
   return (
-    <section ref={root} className="bg-gradient-to-b from-white/80 via-white/62 to-white/45 px-6 py-32">
+    <section
+      ref={root}
+      className="bg-gradient-to-b from-white/80 via-white/62 to-white/45 px-6 py-32"
+    >
       <div className="mx-auto max-w-4xl text-center">
         <h2 className="about-label text-sm tracking-widest text-blue-600">지금까지</h2>
 

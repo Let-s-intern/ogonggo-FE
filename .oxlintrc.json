@@ -7,10 +7,5 @@
     "browser": true,
     "es2022": true
   },
-  "ignorePatterns": [
-    "**/dist/**",
-    "**/.next/**",
-    "**/src/generated/**",
-    "**/storybook-static/**"
-  ]
+  "ignorePatterns": ["**/dist/**", "**/.next/**", "**/src/generated/**", "**/storybook-static/**"]
 }

@@ -28,7 +28,11 @@ export interface CardGridSkeletonProps {
  * 가장 높은 카드에 맞춰 늘어난다. 그래서 제목은 최대인 두 줄(40px)로 그린다. 한 행의 제목이
  * 전부 한 줄인 경우에만 그 행이 20px 짧아진다.
  */
-export function CardGridSkeleton({ count, gapClass, hasCardFooter = false }: CardGridSkeletonProps) {
+export function CardGridSkeleton({
+  count,
+  gapClass,
+  hasCardFooter = false,
+}: CardGridSkeletonProps) {
   return (
     <ul className={cn('grid grid-cols-2 md:grid-cols-4', gapClass)}>
       {Array.from({ length: count }, (_, index) => (

@@ -36,25 +36,24 @@ my-monorepo/
 packages:
   - 'apps/*'
   - 'packages/*'
-
 ```
 
 **패키지별 핵심 역할**
 
-* **`apps/admin` (Vite)**: 내부 관리자 시스템. FSD 레이어 규칙을 따르며 `packages/api`와 `packages/ui`를 가져다 사용.
-* **`apps/web` (Next.js with Turbopack)**: 대국민 서비스 웹. FSD 구조 적용, Server Components 및 클라이언트 컴포넌트 분리.
-* **`packages/api`**: OpenAPI 스펙을 바탕으로 `Orval`이 TanStack Query 훅, Zod 스키마, TypeScript 타입을 자동 생성하며, `MSW`를 통한 목업 서버 환경 제공.
-* **`packages/ui`**: `Radix UI` 헤드리스 컴포넌트와 `Tailwind CSS`를 결합한 공통 디자인 시스템 컴포넌트 및 `Storybook` 문서화 환경.
-* **`packages/config`**: `oxlint`, `oxfmt`, `tsgo`, 그리고 `tsconfig` 공통 설정을 중앙화하여 모노레포 전체의 품질 및 빌드 기준 통일.
+- **`apps/admin` (Vite)**: 내부 관리자 시스템. FSD 레이어 규칙을 따르며 `packages/api`와 `packages/ui`를 가져다 사용.
+- **`apps/web` (Next.js with Turbopack)**: 대국민 서비스 웹. FSD 구조 적용, Server Components 및 클라이언트 컴포넌트 분리.
+- **`packages/api`**: OpenAPI 스펙을 바탕으로 `Orval`이 TanStack Query 훅, Zod 스키마, TypeScript 타입을 자동 생성하며, `MSW`를 통한 목업 서버 환경 제공.
+- **`packages/ui`**: `Radix UI` 헤드리스 컴포넌트와 `Tailwind CSS`를 결합한 공통 디자인 시스템 컴포넌트 및 `Storybook` 문서화 환경.
+- **`packages/config`**: `oxlint`, `oxfmt`, `tsgo`, 그리고 `tsconfig` 공통 설정을 중앙화하여 모노레포 전체의 품질 및 빌드 기준 통일.
 
 **빌드 오케스트레이션 — Turborepo와 Turbopack**
 
 이름이 비슷하지만 역할이 다른 두 도구를 함께 쓴다.
 
-| 도구 | 층위 | 하는 일 |
-|---|---|---|
+| 도구          | 층위                              | 하는 일                                                                                                                                                         |
+| ------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Turborepo** | 모노레포 전체 (루트 `turbo.json`) | `apps/*`, `packages/*` 사이의 태스크(build, lint, type-check, test)를 의존 그래프 순서대로 실행하고, 로컬/원격 캐시로 바뀌지 않은 패키지는 다시 실행하지 않는다 |
-| **Turbopack** | `apps/web` 내부 (Next.js) | Next.js의 Rust 기반 번들러 겸 개발 서버. Webpack을 대체하며 `next dev --turbo`로만 켜진다. `apps/admin`(Vite)에는 관여하지 않는다 |
+| **Turbopack** | `apps/web` 내부 (Next.js)         | Next.js의 Rust 기반 번들러 겸 개발 서버. Webpack을 대체하며 `next dev --turbo`로만 켜진다. `apps/admin`(Vite)에는 관여하지 않는다                               |
 
 Turborepo는 "여러 패키지를 어떤 순서로, 뭘 캐싱해서 돌릴지"를 결정하고, Turbopack은 그중 `apps/web` 한 패키지를 "얼마나 빨리 번들링할지"를 결정한다. 서로 대체 관계가 아니라 층이 다르다.
 
@@ -107,5 +106,4 @@ Turborepo는 "여러 패키지를 어떤 순서로, 뭘 캐싱해서 돌릴지"�
     "storybook": "pnpm --filter ui storybook"
   }
 }
-
 ```

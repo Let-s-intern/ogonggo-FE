@@ -45,7 +45,10 @@ export function weekGridRange(baseDate: Date): { from: Date; to: Date } {
  * `widgets/job-detail/ui/JobDetailView.tsx`와 같은 이유로 `{ data, status, headers }`로 감싼
  * 응답을 가정하지만, 이 저장소의 `httpClient`는 파싱된 body 를 그대로 반환한다.
  */
-async function fetchCalendarItems(from: string, to: string): Promise<UserJobCalendarItemResponse[]> {
+async function fetchCalendarItems(
+  from: string,
+  to: string,
+): Promise<UserJobCalendarItemResponse[]> {
   const response = (await getJobCalendar({
     from,
     to,

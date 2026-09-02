@@ -62,7 +62,11 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
  */
 const filterJobs = (
   jobs: UserJobDetailResponse[],
-  { q, employmentType, experienceType }: { q?: string; employmentType?: string; experienceType?: string },
+  {
+    q,
+    employmentType,
+    experienceType,
+  }: { q?: string; employmentType?: string; experienceType?: string },
 ): UserJobDetailResponse[] =>
   jobs.filter((job) => {
     if (q) {
@@ -167,7 +171,10 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
 
   const days = (toCalendarDay(to) - toCalendarDay(from)) / 86_400_000 + 1;
   if (days > MAX_CALENDAR_RANGE_DAYS) {
-    return calendarBadRequest('to', `조회 기간은 최대 ${MAX_CALENDAR_RANGE_DAYS}일까지 가능합니다.`);
+    return calendarBadRequest(
+      'to',
+      `조회 기간은 최대 ${MAX_CALENDAR_RANGE_DAYS}일까지 가능합니다.`,
+    );
   }
 
   const items: UserJobCalendarItemResponse[] = JOB_FIXTURES.filter((job) => {
@@ -175,7 +182,9 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
     return endDay !== undefined && endDay >= from && endDay <= to;
   })
     // BE 질의의 `order by job.recruitmentEndAt asc, job.id asc`와 같은 순서다.
-    .sort((a, b) => (a.recruitmentEndAt ?? '').localeCompare(b.recruitmentEndAt ?? '') || a.id - b.id)
+    .sort(
+      (a, b) => (a.recruitmentEndAt ?? '').localeCompare(b.recruitmentEndAt ?? '') || a.id - b.id,
+    )
     .map((job) => ({
       id: job.id,
       companyName: job.companyName,
@@ -244,7 +253,11 @@ const toBootcampSummary = ({
  */
 const filterBootcamps = (
   bootcamps: UserBootcampDetailResponse[],
-  { programType, tuitionType, status }: { programType?: string; tuitionType?: string; status?: string },
+  {
+    programType,
+    tuitionType,
+    status,
+  }: { programType?: string; tuitionType?: string; status?: string },
 ): UserBootcampDetailResponse[] =>
   bootcamps.filter((bootcamp) => {
     if (programType && bootcamp.programType !== programType) {
