@@ -1,5 +1,6 @@
 'use client';
 
+import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import type { CSSProperties } from 'react';
 import FullCalendar from '@fullcalendar/react';
@@ -12,12 +13,61 @@ const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 /** 격자의 첫 요일(월요일). `JobCalendarView`의 조회 범위 계산과 같은 값이어야 한다. */
 const FIRST_DAY = 1;
 
+/** 한 칸에 그대로 다 그리는 최대 개수. 여기까지는 `+N`이 붙지 않는다(PRD 8.2). */
+const MAX_EVENTS_PER_DAY = 8;
+
+/** 위를 넘긴 칸에서 실제로 그리는 로고 수. 남은 한 자리(8번째)를 `+N`이 차지한다. */
+const EVENTS_BESIDE_MORE = 7;
+
 /**
- * 한 칸에 그리는 로고 수. 7개 이상이면 6개까지 그리고 나머지를 `+N`으로 적는다(PRD 8.2).
- * FullCalendar 의 `dayMaxEvents`는 숫자를 주면 `+N` 링크를 세지 않고 이벤트만 이 수로 자른다 —
- * 6건인 날에는 `+N`이 붙지 않는다.
+ * 날짜별로 묶어 그 칸에 넣을 이벤트를 만든다.
+ *
+ * `+N`을 FullCalendar 의 `dayMaxEvents`에 맡기지 않는 이유가 있다. 그 옵션은 숫자를 주면
+ * `maxStackCnt`가 되고 `hiddenConsumes`가 `false`라 링크가 자리를 차지하지 않는다
+ * (`@fullcalendar/daygrid` 의 `internal.js`) — 즉 "항상 N개를 그리고 넘치면 링크를 더 붙인다"
+ * 뿐이라 **8개인 칸만 예외로 다 보여주는** 이 규칙을 표현할 수 없다. `dayMaxEvents={7}`로 두면
+ * 8개인 칸이 `7개 + +1`이 되어 버린다. 그래서 자르는 일을 여기서 한다.
+ *
+ * `+N`도 이벤트 하나로 넣는다. 그래야 로고와 같은 자리 폭(1/4)을 받아 목업처럼 마지막
+ * 8번째 칸에 앉는다. 순서는 `order`로 못 박는다 — FullCalendar 의 기본 정렬은 제목순이라
+ * `+5` 같은 문자열이 로고들 사이로 끼어든다.
  */
-const MAX_EVENTS_PER_DAY = 6;
+function buildCalendarEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
+  const byDay = new Map<string, UserJobCalendarItemResponse[]>();
+  for (const item of items) {
+    const day = item.recruitmentEndAt.slice(0, 10);
+    byDay.set(day, [...(byDay.get(day) ?? []), item]);
+  }
+
+  const events: EventInput[] = [];
+  for (const [day, dayItems] of byDay) {
+    const overflowing = dayItems.length > MAX_EVENTS_PER_DAY;
+    const visible = overflowing ? dayItems.slice(0, EVENTS_BESIDE_MORE) : dayItems;
+
+    visible.forEach((item, index) => {
+      events.push({
+        id: String(item.id),
+        title: item.companyName,
+        start: day,
+        allDay: true,
+        extendedProps: { order: index },
+      });
+    });
+
+    if (overflowing) {
+      const hiddenCount = dayItems.length - EVENTS_BESIDE_MORE;
+      events.push({
+        id: `more-${day}`,
+        title: `+${hiddenCount}`,
+        start: day,
+        allDay: true,
+        extendedProps: { order: EVENTS_BESIDE_MORE, hiddenCount },
+      });
+    }
+  }
+
+  return events;
+}
 
 /**
  * 항목(로고 타일)에서 FullCalendar 기본 껍데기를 벗기는 클래스.
@@ -115,10 +165,6 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         // 가로 여백 4px 세 칸(12px)에 반올림 여유 4px 을 더 뺀다. 딱 맞게 잡으면 소수점
         // 반올림에서 한 개가 다음 줄로 밀린다.
         '[&_.fc-daygrid-event-harness]:basis-[calc(25%-4px)]',
-        // `+N`은 목업에서 회색 작은 글씨다. 누를 것이 아니라 남은 수를 알려주는 표시다.
-        '[&_.fc-daygrid-more-link]:text-xs [&_.fc-daygrid-more-link]:font-medium',
-        '[&_.fc-daygrid-more-link]:text-gray-400 [&_.fc-daygrid-more-link]:no-underline',
-        '[&_.fc-daygrid-more-link]:cursor-default!',
       ].join(' ')}
     >
       <FullCalendar
@@ -130,25 +176,29 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         fixedWeekCount
         showNonCurrentDates
         height="auto"
-        dayMaxEvents={MAX_EVENTS_PER_DAY}
-        moreLinkContent={(arg) => `+${arg.num}`}
-        // 기본값이 영어 문구(`Show N more events`)라 바꾼다.
-        moreLinkHint={(num) => `${num}건 더 있음`}
-        // 목업의 `+N`은 글자일 뿐 누르는 것이 아니다. 항목 클릭(상세 모달)은 Push 4 다.
-        moreLinkClick={() => undefined}
+        // 한 칸 안의 순서는 `buildCalendarEvents`가 매긴 `order` 그대로다(기본값은 제목순).
+        eventOrder="order"
         dayHeaderContent={(arg) => WEEKDAY_LABELS[(arg.date.getDay() + 6) % 7]}
         eventClassNames={EVENT_TILE_CLASSES}
-        eventContent={(arg) => (
-          <span title={formatDeadlineHint(arg.event.start)}>
-            <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs" />
-          </span>
-        )}
-        events={items.map((item) => ({
-          id: String(item.id),
-          title: item.companyName,
-          start: item.recruitmentEndAt.slice(0, 10),
-          allDay: true,
-        }))}
+        eventContent={(arg) => {
+          const hiddenCount = arg.event.extendedProps.hiddenCount as number | undefined;
+          if (hiddenCount !== undefined) {
+            return (
+              <span
+                title={`${hiddenCount}건 더 있음`}
+                className="flex h-7 items-center text-xs font-medium text-gray-400"
+              >
+                {arg.event.title}
+              </span>
+            );
+          }
+          return (
+            <span title={formatDeadlineHint(arg.event.start)}>
+              <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs" />
+            </span>
+          );
+        }}
+        events={buildCalendarEvents(items)}
       />
     </div>
   );
