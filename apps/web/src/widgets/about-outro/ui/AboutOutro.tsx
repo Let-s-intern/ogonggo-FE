@@ -76,12 +76,29 @@ export function AboutOutro() {
         데모 확인하기
       </Link>
 
-      <p
+      {/*
+        마무리 서명. 히어로의 로고 락업과 같은 재료(심볼 + 워드마크)를 쓰되, 여기서는 세로로
+        쌓아 페이지를 닫는 인장처럼 보이게 한다. 가운뎃점으로 이어 붙인 한 줄짜리 캡션은
+        본문에서 흘러나온 문장처럼 읽혀 끝맺음이 되지 않았다.
+
+        위의 짧은 선이 본문과 서명을 가른다. 구분선을 화면 폭으로 긋지 않는 이유는 이 구간이
+        배경 영상을 비추는 자리라서다 — 가로줄이 길면 영상을 자른다.
+      */}
+      <span
         data-outro-line
-        className="about-label relative mt-16 text-xs tracking-widest text-gray-500 opacity-0"
+        className="relative mt-20 flex flex-col items-center gap-4 opacity-0"
       >
-        오늘의 공고 · BY LETS CAREER
-      </p>
+        <span aria-hidden="true" className="h-px w-10 bg-blue-500/30" />
+
+        <span className="flex flex-col items-center gap-1.5">
+          <img src="/icon-512.png" alt="" width={32} height={32} className="h-8 w-8" />
+          <span className="about-display text-base text-blue-500">오늘의 공고</span>
+        </span>
+
+        <span className="about-label text-[10px] tracking-[0.25em] text-gray-400">
+          BY LETS CAREER
+        </span>
+      </span>
     </section>
   );
 }
