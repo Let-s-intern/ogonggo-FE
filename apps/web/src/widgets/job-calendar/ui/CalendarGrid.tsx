@@ -12,6 +12,13 @@ const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 /** 격자의 첫 요일(월요일). `JobCalendarView`의 조회 범위 계산과 같은 값이어야 한다. */
 const FIRST_DAY = 1;
 
+/**
+ * 한 칸에 그리는 로고 수. 7개 이상이면 6개까지 그리고 나머지를 `+N`으로 적는다(PRD 8.2).
+ * FullCalendar 의 `dayMaxEvents`는 숫자를 주면 `+N` 링크를 세지 않고 이벤트만 이 수로 자른다 —
+ * 6건인 날에는 `+N`이 붙지 않는다.
+ */
+const MAX_EVENTS_PER_DAY = 6;
+
 export interface CalendarGridProps {
   /** 서버 컴포넌트가 받아 내려준 달력 항목. 여기서 다시 API를 부르지 않는다. */
   items: UserJobCalendarItemResponse[];
@@ -65,14 +72,28 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         '[&_.fc-day-today_.fc-daygrid-day-number]:text-blue-500',
         '[&_.fc-daygrid-day-frame]:min-h-[104px]',
         // 항목은 로고 타일이다 — 한 줄에 4개까지 깔리도록 이벤트 자리를 flex 로 바꾼다(PRD 5.3).
-        '[&_.fc-daygrid-day-events]:mt-0 [&_.fc-daygrid-day-events]:flex',
-        '[&_.fc-daygrid-day-events]:flex-wrap [&_.fc-daygrid-day-events]:gap-1',
+        // 날짜 칸 자체를 flex 로 두고 이벤트 묶음과 `+N` 줄은 `display: contents` 로 껍데기를
+        // 없앤다. 그래야 목업처럼 `+N`이 마지막 타일 옆에 붙는다.
+        '[&_.fc-daygrid-day-frame]:flex [&_.fc-daygrid-day-frame]:flex-wrap',
+        '[&_.fc-daygrid-day-frame]:items-center [&_.fc-daygrid-day-frame]:gap-1',
+        '[&_.fc-daygrid-day-frame]:px-1 [&_.fc-daygrid-day-frame]:pb-2',
+        '[&_.fc-daygrid-day-top]:w-full',
+        '[&_.fc-daygrid-day-events]:contents [&_.fc-daygrid-day-bottom]:contents',
         // FullCalendar 기본 이벤트 껍데기(테두리·배경·여백)를 지운다. 클래스를 두 번 적어
         // 명시도를 올린 것은 이 라이브러리가 CSS 를 런타임에 <head> 로 주입해 뒤에 오기 때문이다.
-        '[&_.fc-daygrid-event-harness.fc-daygrid-event-harness]:mt-0',
+        '[&_.fc-daygrid-event-harness.fc-daygrid-event-harness]:m-0',
+        '[&_.fc-event-main]:p-0',
+        // 한 줄에 4개까지다(PRD 5.3). 칸 너비에 기대지 않고 자리 폭을 1/4로 못 박는다 —
+        // 가로 여백 4px 세 칸(12px)에 반올림 여유 4px 을 더 뺀다. 딱 맞게 잡으면 소수점
+        // 반올림에서 한 개가 다음 줄로 밀린다.
+        '[&_.fc-daygrid-event-harness]:basis-[calc(25%-4px)]',
         '[&_.fc-daygrid-event.fc-daygrid-event]:m-0 [&_.fc-daygrid-event.fc-daygrid-event]:border-0',
         '[&_.fc-daygrid-event.fc-daygrid-event]:bg-transparent',
         '[&_.fc-daygrid-event.fc-daygrid-event]:p-0',
+        // `+N`은 목업에서 회색 작은 글씨다. 누를 것이 아니라 남은 수를 알려주는 표시다.
+        '[&_.fc-daygrid-more-link]:text-xs [&_.fc-daygrid-more-link]:font-medium',
+        '[&_.fc-daygrid-more-link]:text-gray-400 [&_.fc-daygrid-more-link]:no-underline',
+        '[&_.fc-daygrid-more-link]:cursor-default',
       ].join(' ')}
     >
       <FullCalendar
@@ -84,6 +105,10 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
         fixedWeekCount
         showNonCurrentDates
         height="auto"
+        dayMaxEvents={MAX_EVENTS_PER_DAY}
+        moreLinkContent={(arg) => `+${arg.num}`}
+        // 목업의 `+N`은 글자일 뿐 누르는 것이 아니다. 항목 클릭(상세 모달)은 Push 4 다.
+        moreLinkClick={() => undefined}
         dayHeaderContent={(arg) => WEEKDAY_LABELS[(arg.date.getDay() + 6) % 7]}
         eventContent={(arg) => (
           <CompanyLogo companyName={arg.event.title} className="h-7 w-7 rounded-xs" />
