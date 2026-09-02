@@ -2,7 +2,7 @@
 
 import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
@@ -124,6 +124,20 @@ export interface CalendarGridProps {
  *    유틸리티는 `@layer utilities` 안이라 레이어 밖 규칙에게 명시도와 무관하게 진다.
  */
 export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
+  const calendarRef = useRef<FullCalendar>(null);
+
+  // `initialDate` 는 이름 그대로 처음 한 번만 읽힌다. 날짜 이동 줄의 화살표는 같은 라우트 안의
+  // 이동이라 React 가 이 컴포넌트를 다시 마운트하지 않고, `events` 는 새 달의 것으로 바뀌는데
+  // 격자는 처음 그린 달에 그대로 머문다. 보고 있는 달을 명령형 API 로 따라가게 한다 —
+  // `key` 를 걸어 통째로 다시 마운트하는 방법도 있지만 화살표 한 번에 격자 전체를 새로 만든다.
+  //
+  // 마이크로태스크로 미루는 것은 `gotoDate` 가 안에서 `flushSync` 를 부르기 때문이다. `<Link>`
+  // 이동은 트랜지션 안에서 일어나 이 이펙트가 React 가 아직 렌더 중일 때 실행되고, 그대로 부르면
+  // 이동 한 번에 `flushSync was called from inside a lifecycle method` 경고가 수백 건 쌓인다.
+  useEffect(() => {
+    queueMicrotask(() => calendarRef.current?.getApi().gotoDate(initialDate));
+  }, [initialDate]);
+
   return (
     <div
       // FullCalendar 가 CSS 변수로 내놓는 색은 변수로 덮는다 — 선택자 명시도 싸움을 안 해도 된다.
@@ -175,6 +189,7 @@ export function CalendarGrid({ items, initialDate }: CalendarGridProps) {
       ].join(' ')}
     >
       <FullCalendar
+        ref={calendarRef}
         plugins={[dayGridPlugin]}
         initialView="dayGridMonth"
         initialDate={initialDate}
