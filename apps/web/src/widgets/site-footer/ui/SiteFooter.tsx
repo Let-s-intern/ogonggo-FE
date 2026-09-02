@@ -20,7 +20,6 @@ export function SiteFooter() {
             <p>통신판매업신고번호 제 2024호</p>
             <p>주소: 서울특별시</p>
             <p>이메일: official@letscareer.co.kr</p>
-            <p>고객센터: 0507-0178-8541</p>
             <p>Copyright© 2024 오늘의 공고. All rights reserved</p>
           </div>
           <div className="flex gap-4 text-xs text-gray-400">

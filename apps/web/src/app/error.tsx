@@ -30,8 +30,8 @@ export default function Error({
       hint={error.digest ? `오류 번호 ${error.digest}` : undefined}
       actions={
         <>
-          <Button onClick={() => retry()}>다시 시도</Button>
-          <Button variant="secondary" asChild>
+          <Button onClick={() => retry()} className="h-12 px-6">다시 시도</Button>
+          <Button variant="secondary" asChild className="h-12 px-6">
             <Link href="/">홈으로</Link>
           </Button>
         </>

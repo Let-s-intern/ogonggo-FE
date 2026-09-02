@@ -17,10 +17,10 @@ export default function NotFound() {
       description={'주소가 바뀌었거나 삭제된 공고일 수 있어요.\n목록에서 다시 찾아보세요.'}
       actions={
         <>
-          <Button asChild>
+          <Button asChild className="h-12 px-6">
             <Link href="/">채용공고 목록</Link>
           </Button>
-          <Button variant="secondary" asChild>
+          <Button variant="secondary" asChild className="h-12 px-6">
             <Link href="/bootcamps">교육·부트캠프</Link>
           </Button>
         </>

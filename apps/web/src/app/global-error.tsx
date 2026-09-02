@@ -36,7 +36,7 @@ export default function GlobalError({
             <button
               type="button"
               onClick={() => retry()}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-blue-500 px-4 text-base font-semibold text-white transition-colors hover:bg-blue-600"
+              className="inline-flex h-12 items-center justify-center rounded-md bg-blue-500 px-6 text-base font-semibold text-white transition-colors hover:bg-blue-600"
             >
               다시 시도
             </button>
