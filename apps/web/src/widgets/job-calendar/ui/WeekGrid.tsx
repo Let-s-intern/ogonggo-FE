@@ -33,7 +33,7 @@ import { CALENDAR_FIRST_DAY } from '../lib/week';
  * 켜면 가려진 줄에 걸친 모든 요일 칸마다 `+N` 링크를 하나씩 만든다. 목업
  * (`docs/asset/공고달력 간략히.png`)에도 `+N`이 없고 막대 아래는 그냥 빈 자리다.
  */
-function buildWeekEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
+function buildWeekEvents(items: UserJobCalendarItemResponse[], today: string): EventInput[] {
   return items.map((item) => {
     const deadline = item.recruitmentEndAt.slice(0, 10);
     const start = item.recruitmentStartAt.slice(0, 10);
@@ -43,7 +43,10 @@ function buildWeekEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
       start: start <= deadline ? start : deadline,
       end: exclusiveEnd(deadline),
       allDay: true,
-      extendedProps: { deadline },
+      // `dueToday` 는 색과 정렬에 같이 쓰인다. `eventOrder` 는 `extendedProps` 를 비교 객체에
+      // 평탄하게 펼쳐 주므로(`buildSegCompareObj`, `@fullcalendar/core`) 필드 이름으로 바로
+      // 쓸 수 있다.
+      extendedProps: { deadline, dueToday: deadline === today ? 1 : 0 },
     };
   });
 }
@@ -122,7 +125,9 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
         firstDay={CALENDAR_FIRST_DAY}
         headerToolbar={false}
         height="auto"
-        // 먼저 시작하고 긴 막대가 위로 온다. 줄을 쌓는 일은 FullCalendar 가 한다.
+        // **오늘 마감이 맨 위다.** 7줄만 먼저 보여주므로(아래 `collapsed`) 가장 급한 공고가
+        // 8번째 줄에 있으면 파랑으로 칠한 의미가 없다. 그 다음은 먼저 시작하고 긴 막대 순이고,
+        // 줄을 쌓는 일은 FullCalendar 가 한다.
         //
         // **이 값으로 줄 수를 줄일 수는 없다**(2026-09-02 실측). 겹치지 않는 막대를 몇 줄에
         // 담을 수 있는지는 "한 날에 가장 많이 겹치는 막대 수"가 곧 하한이고(구간 그래프라
@@ -133,7 +138,7 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
         //
         // 줄이 많아 보이는 것은 목 데이터 밀도 때문이지 배치 때문이 아니다. 막대를 숨겨
         // 줄을 줄이지는 않는다 — `buildWeekEvents` 의 `+N` 판단과 같은 이유다.
-        eventOrder="start,-duration,title"
+        eventOrder="-dueToday,start,-duration,title"
         dayHeaderContent={(arg) => (
           // 머리글은 `MON` 아래 날짜 두 줄이고 오늘은 파란 숫자다(PRD 5.2). 두 줄 사이는
           // 목업 실측 26px 이다.
@@ -179,7 +184,7 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
             </span>
           );
         }}
-        events={buildWeekEvents(items)}
+        events={buildWeekEvents(items, today)}
       />
     </div>
   );
