@@ -10,10 +10,29 @@
  * into every server-side fetch a Server Component makes — the browser side
  * is unaffected and still goes through next.config.ts's `/api/**` rewrite.
  */
+/**
+ * `register()` 가 한 프로세스에서 두 번 이상 불릴 수 있다. 두 번째 `server.listen()` 은
+ * `Failed to call "configure()" on the network: cannot configure an already enabled network`
+ * 로 던지고, 그러면 Next 가 `Invariant Violation: An error occurred while loading
+ * instrumentation hook` 으로 모든 요청을 500 으로 만든다.
+ *
+ * 아래 `keepMswFetchAcrossRecompiles` 가 `globalThis.fetch` 를 접근자로 바꾸기 때문에 MSW 의
+ * 재적용 판정이 달라져 이 경로가 열렸다. 켜 놓았다는 사실을 전역 심볼에 남겨 두 번째 호출을
+ * 그냥 돌려보낸다 — 모듈 스코프 변수로는 안 된다. 재컴파일이 모듈을 다시 평가하면 그 변수가
+ * 초기화되기 때문이다.
+ */
+const MSW_STARTED = Symbol.for('ogonggo.msw.started');
+
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
     return;
   }
+
+  const globals = globalThis as typeof globalThis & { [MSW_STARTED]?: boolean };
+  if (globals[MSW_STARTED]) {
+    return;
+  }
+  globals[MSW_STARTED] = true;
 
   const originalFetch = globalThis.fetch;
 
