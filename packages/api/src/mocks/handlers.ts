@@ -13,10 +13,12 @@ import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../generated/user/models/successResponsePageResponseUserJobSummaryResponse';
+import type { SuccessResponseListUserJobCalendarItemResponse } from '../generated/user/models/successResponseListUserJobCalendarItemResponse';
 import type { SuccessResponseUserBootcampDetailResponse } from '../generated/user/models/successResponseUserBootcampDetailResponse';
 import type { SuccessResponseUserJobDetailResponse } from '../generated/user/models/successResponseUserJobDetailResponse';
 import type { UserBootcampDetailResponse } from '../generated/user/models/userBootcampDetailResponse';
 import type { UserBootcampSummaryResponse } from '../generated/user/models/userBootcampSummaryResponse';
+import type { UserJobCalendarItemResponse } from '../generated/user/models/userJobCalendarItemResponse';
 import type { UserJobDetailResponse } from '../generated/user/models/userJobDetailResponse';
 import type { UserJobSummaryResponse } from '../generated/user/models/userJobSummaryResponse';
 
@@ -104,6 +106,87 @@ const getJobsHandler = http.get('*/api/v1/jobs', ({ request }) => {
     status: 200,
     message: '채용공고 목록을 조회했습니다.',
     data: { items, pageInfo },
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
+/** 달력 조회 최대 기간(일). ogonggo-BE `UserJobController.MAX_CALENDAR_RANGE_DAYS`와 같은 값이다. */
+const MAX_CALENDAR_RANGE_DAYS = 92;
+
+const CALENDAR_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/** `YYYY-MM-DD` 하루의 UTC 자정 epoch. 날짜 문자열만 다뤄 실행 시간대의 영향을 받지 않는다. */
+const toCalendarDay = (value: string): number => Date.parse(`${value}T00:00:00Z`);
+
+/**
+ * ogonggo-BE `UserApiExceptionHandler`가 `InvalidRequestParameterException`을 400으로 바꿀 때
+ * 만드는 본문과 같은 모양이다 — 코드는 `BAD_REQUEST`이고 메시지는 `[파라미터명] 사유`다.
+ * (PRD 4절이 부르는 `INVALID_REQUEST_PARAMETER`는 예외 이름이고, 응답 `code`는 아니다.)
+ */
+const calendarBadRequest = (parameterName: string, reason: string) => {
+  const body: ErrorResponse = {
+    status: 400,
+    code: 'BAD_REQUEST',
+    message: `[${parameterName}] ${reason}`,
+  };
+  return HttpResponse.json(body, { status: 400 });
+};
+
+/**
+ * `GET /api/v1/jobs/calendar`. `getJobHandler`의 경로 패턴이 `/api/v1/jobs/:jobId`라 이 경로도
+ * 삼키므로 `handlers` 배열에서 반드시 그보다 앞에 있어야 한다 — MSW는 먼저 맞는 핸들러를 쓴다.
+ *
+ * 응답은 `UserJobCalendarItemResponse` 네 필드뿐이다(PRD 2절). 제목도 로고 URL도 없어서
+ * 달력 화면은 `companyName`으로 로고를 찾는다.
+ *
+ * 담는 기준은 **`recruitmentEndAt`이 `from`~`to`에 드는 공고**다(Push 1 task 1.1). 실제 BE의
+ * `findPublishedCalendarJobs`는 모집 기간이 조회 범위와 겹치기만 하면 담는 질의라 실 API로
+ * 바꾸면 여기서 안 오던 공고(범위 밖에서 마감하는 공고)가 더 온다 — 화면은 마감일 칸에만
+ * 그리므로 그때도 격자에 나타나지는 않지만, 주간 뷰 막대 색 규칙(PRD 8.3, "이번 주 마감")과는
+ * 어긋나므로 그 시점에 한 번 정해야 한다.
+ *
+ * 마감일이 없는 상시채용은 BE 질의의 `recruitmentEndAt is not null`과 같게 제외한다.
+ * `recruitmentStartAt`은 응답 타입이 필수인데 실데이터 픽스처 대부분이 비어 있어 없으면
+ * 마감일로 채운다 — 하루짜리 일정이 된다.
+ */
+const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) => {
+  const url = new URL(request.url);
+  const from = url.searchParams.get('from') ?? '';
+  const to = url.searchParams.get('to') ?? '';
+
+  if (!CALENDAR_DATE_PATTERN.test(from)) {
+    return calendarBadRequest('from', '조회 시작일은 YYYY-MM-DD 형식이어야 합니다.');
+  }
+  if (!CALENDAR_DATE_PATTERN.test(to)) {
+    return calendarBadRequest('to', '조회 종료일은 YYYY-MM-DD 형식이어야 합니다.');
+  }
+  if (from > to) {
+    return calendarBadRequest('from', '조회 시작일은 종료일보다 늦을 수 없습니다.');
+  }
+
+  const days = (toCalendarDay(to) - toCalendarDay(from)) / 86_400_000 + 1;
+  if (days > MAX_CALENDAR_RANGE_DAYS) {
+    return calendarBadRequest('to', `조회 기간은 최대 ${MAX_CALENDAR_RANGE_DAYS}일까지 가능합니다.`);
+  }
+
+  const items: UserJobCalendarItemResponse[] = JOB_FIXTURES.filter((job) => {
+    const endDay = job.recruitmentEndAt?.slice(0, 10);
+    return endDay !== undefined && endDay >= from && endDay <= to;
+  })
+    // BE 질의의 `order by job.recruitmentEndAt asc, job.id asc`와 같은 순서다.
+    .sort((a, b) => (a.recruitmentEndAt ?? '').localeCompare(b.recruitmentEndAt ?? '') || a.id - b.id)
+    .map((job) => ({
+      id: job.id,
+      companyName: job.companyName,
+      recruitmentStartAt: job.recruitmentStartAt ?? (job.recruitmentEndAt as string),
+      recruitmentEndAt: job.recruitmentEndAt as string,
+    }));
+
+  const body: SuccessResponseListUserJobCalendarItemResponse = {
+    status: 200,
+    message: '채용공고 달력을 조회했습니다.',
+    data: items,
   };
 
   return HttpResponse.json(body, { status: 200 });
@@ -334,6 +417,8 @@ const getSideStudyHandler = http.get('*/api/v1/side-studies/:postId', ({ params 
 
 export const handlers: HttpHandler[] = [
   getJobsHandler,
+  // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`도 잡는다.
+  getJobCalendarHandler,
   getJobHandler,
   getBootcampsHandler,
   getBootcampHandler,
