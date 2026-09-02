@@ -1,16 +1,17 @@
 import { getJobCalendar } from '@ogonggo/api';
 import { toCalendarParam } from '../lib/query';
+import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 import { CalendarGrid } from './CalendarGrid';
 import type {
   SuccessResponseListUserJobCalendarItemResponse,
   UserJobCalendarItemResponse,
 } from '@ogonggo/api';
 
-/** 격자의 첫 요일. 목업(`docs/asset/공고달력.png`)이 `MON`~`SUN`이다. */
-export const CALENDAR_FIRST_DAY = 1;
-
 /** 월간 격자는 앞뒤 달을 물고 항상 6주다(PRD 5.3). 42일이라 92일 제한 안에 든다(PRD 4절). */
 const CALENDAR_GRID_DAYS = 42;
+
+/** 주간 격자는 월요일부터 7일이다(PRD 5.2). 42일보다도 짧으니 92일 제한과는 무관하다. */
+const CALENDAR_WEEK_DAYS = 7;
 
 /**
  * 기준 날짜가 든 달의 격자 범위. 시작은 그 달 1일이 든 주의 월요일이고 거기서 6주다.
@@ -22,6 +23,19 @@ export function monthGridRange(baseDate: Date): { from: Date; to: Date } {
   const leadingDays = (firstOfMonth.getDay() - CALENDAR_FIRST_DAY + 7) % 7;
   const from = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1 - leadingDays);
   const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + CALENDAR_GRID_DAYS - 1);
+  return { from, to };
+}
+
+/**
+ * 기준 날짜가 든 주의 범위. 월요일부터 7일이고 `dayGridWeek` 이 그리는 범위와 같다.
+ *
+ * 이 범위를 그대로 `from`~`to` 로 보내는 것이 주간 뷰 색 규칙과도 맞는다 — 응답이
+ * **마감일이 이 주에 든 공고**만 담으므로(`packages/api/src/mocks/handlers.ts`) 그린 막대는
+ * 전부 "이번 주 마감"이고, 그 중 오늘 마감인 것만 파랑이 된다(PRD 8.3).
+ */
+export function weekGridRange(baseDate: Date): { from: Date; to: Date } {
+  const from = startOfCalendarWeek(baseDate);
+  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + CALENDAR_WEEK_DAYS - 1);
   return { from, to };
 }
 
@@ -56,7 +70,7 @@ export async function JobCalendarView({
   baseDate = new Date(),
   brief = false,
 }: JobCalendarViewProps) {
-  const { from, to } = monthGridRange(baseDate);
+  const { from, to } = brief ? weekGridRange(baseDate) : monthGridRange(baseDate);
   const items = await fetchCalendarItems(toCalendarParam(from), toCalendarParam(to));
 
   return (
