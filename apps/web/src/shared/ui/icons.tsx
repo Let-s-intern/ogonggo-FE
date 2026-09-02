@@ -115,3 +115,96 @@ export function CommentIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** 날짜 이동 줄의 달력 아이콘(`docs/asset/공고달력 미니달력 모달.png`). */
+export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <rect
+        x="3"
+        y="4.5"
+        width="14"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path d="M3 8h14" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M7 3v3M13 3v3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 오류 화면(`ErrorState`)의 원형 배지 안에 들어가는 느낌표. */
+export function AlertIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M12 7.5v5.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="16.4" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** `다시 시도` 버튼의 새로고침 화살표. */
+export function RefreshIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M16 10a6 6 0 1 1-1.76-4.24"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 3.5V7h-3.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** `홈으로` 버튼의 집 모양. */
+export function HomeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M3.5 8.6 10 3.5l6.5 5.1V16a.9.9 0 0 1-.9.9H4.4a.9.9 0 0 1-.9-.9V8.6Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M8 16.9v-4.4h4v4.4" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** 목록으로 보내는 버튼의 줄 세 개. */
+export function ListIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M7 5.5h9M7 10h9M7 14.5h9"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <circle cx="4" cy="5.5" r="1" fill="currentColor" />
+      <circle cx="4" cy="10" r="1" fill="currentColor" />
+      <circle cx="4" cy="14.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}

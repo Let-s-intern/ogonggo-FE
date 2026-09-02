@@ -9,3 +9,66 @@
  * apps/web 에서도 쓰는 클래스(`bg-blue-500` 등)는 멀쩡히 나오기 때문에 오래 눈에 띄지 않았다.
  */
 @source '../../../../packages/ui/src';
+
+/*
+ * 로딩 폴백(`app` 아래 `loading.tsx` 여섯 개)이 쓰는 규칙. Tailwind 유틸리티로 안 되는 것만
+ * 여기 둔다 — 지연 노출, 로고 맥동, 그리고 `prefers-reduced-motion`에서 `animate-pulse`를
+ * 끄는 일이다.
+ *
+ * 레이어 밖에 둔다. `@layer utilities` 안의 Tailwind 유틸리티(`animate-pulse` 등)보다 레이어
+ * 없는 규칙이 이기므로 `!`가 필요 없다.
+ */
+@keyframes ogonggo-fallback-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ogonggo-logo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+/*
+ * 300ms 지연 노출. `backwards`가 핵심이다 — 지연 동안 요소가 첫 프레임(`opacity: 0`)을 쓰게
+ * 만든다. 이게 없으면 지연 중에도 그대로 보여서 지연이 없는 것과 같아진다.
+ *
+ * `loading.tsx`는 Suspense가 걸리는 즉시 렌더되고 "N ms 뒤에 보여줘" 옵션이 없다. 데이터가
+ * 300ms 안에 오면 이 요소는 한 번도 보이지 않고 사라진다 — 짧은 전환에서 스켈레톤이 한 프레임
+ * 번쩍이는 것이 로딩 표시가 아예 없는 것보다 나쁘다.
+ */
+.ogonggo-fallback {
+  animation: ogonggo-fallback-appear 200ms ease-out 300ms backwards;
+}
+
+.ogonggo-logo-pulse {
+  animation: ogonggo-logo-pulse 1200ms ease-in-out infinite;
+}
+
+/*
+ * `.ogonggo-skeleton`은 이 밖에서는 아무 동작도 정의하지 않는다. 맥동은 같은 요소에 붙는
+ * Tailwind `animate-pulse`가 만들고, 이 클래스는 아래 미디어 쿼리가 그걸 끄기 위한 표식이다.
+ * 여기서 `animation`을 정의하면 `animate-pulse`를 덮어써서 평소에도 맥동이 사라진다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * 맥동은 끄고 지연 노출은 남긴다. 깜빡임을 막는 300ms는 움직임이 아니라 타이밍이라 없앨
+   * 이유가 없다. 다만 페이드를 1ms로 줄여 나타나는 순간 자체는 움직이지 않게 한다.
+   */
+  .ogonggo-fallback {
+    animation: ogonggo-fallback-appear 1ms linear 300ms backwards;
+  }
+
+  .ogonggo-logo-pulse,
+  .ogonggo-skeleton {
+    animation: none;
+  }
+}
