@@ -44,7 +44,7 @@ export function CalendarHeader({ query }: CalendarHeaderProps) {
       <Link
         href={buildJobCalendarHref(query, { date: shiftMonths(query.date, -1) })}
         aria-label="이전 달"
-        className="rounded-sm text-gray-900 transition-colors hover:bg-gray-100"
+        className="rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
       >
         <ChevronIcon direction="left" className="h-8 w-8" />
       </Link>
@@ -57,7 +57,7 @@ export function CalendarHeader({ query }: CalendarHeaderProps) {
       <Link
         href={buildJobCalendarHref(query, { date: shiftMonths(query.date, 1) })}
         aria-label="다음 달"
-        className="rounded-sm text-gray-300 transition-colors hover:bg-gray-100"
+        className="rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
       >
         <ChevronIcon direction="right" className="h-8 w-8" />
       </Link>
