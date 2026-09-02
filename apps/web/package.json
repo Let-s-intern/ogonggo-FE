@@ -11,9 +11,11 @@
     "start": "next start --port 4000"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@ogonggo/api": "workspace:*",
     "@ogonggo/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.8",
+    "gsap": "^3.15.0",
     "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

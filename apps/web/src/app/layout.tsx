@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { SiteFooter } from '@/widgets/site-footer';
-import { SiteHeader } from '@/widgets/site-header';
 import { AppProviders } from './providers';
+import { SiteChrome } from './site-chrome';
 import './globals.css';
 
 /**
@@ -33,9 +32,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko">
       <body>
         <AppProviders>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
+          {/* 헤더·푸터는 경로에 따라 붙는다 — 소개 페이지에는 붙지 않는다(`site-chrome.tsx`) */}
+          <SiteChrome>{children}</SiteChrome>
         </AppProviders>
       </body>
     </html>
