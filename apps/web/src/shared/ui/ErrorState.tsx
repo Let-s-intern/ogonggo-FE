@@ -41,7 +41,7 @@ export function ErrorState({ title, description, hint, actions }: ErrorStateProp
 
       <div className="flex flex-col items-center gap-1.5 text-xs text-gray-400">
         <p>
-          같은 문제가 반복되면 알려주세요{' '}
+          도움이 필요하면 편하게 알려주세요{' '}
           <a
             href={`mailto:${SUPPORT_EMAIL}`}
             className="font-semibold text-blue-500 hover:underline"

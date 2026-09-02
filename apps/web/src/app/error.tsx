@@ -25,8 +25,8 @@ export default function Error({
 }) {
   return (
     <ErrorState
-      title="일시적인 오류가 발생했어요"
-      description={'잠시 후 다시 시도해 주세요.\n같은 화면에서 반복되면 저희가 확인해야 하는 문제입니다.'}
+      title="잠시 문제가 생겼어요"
+      description="금방 지나갈 수 있어요. 다시 시도해 주세요."
       hint={error.digest ? `오류 번호 ${error.digest}` : undefined}
       actions={
         <>

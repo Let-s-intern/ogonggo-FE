@@ -30,7 +30,7 @@ export default function GlobalError({
         <title>오류 | 오늘의 공고</title>
         <ErrorState
           title="화면을 불러오지 못했어요"
-          description={'일시적인 문제일 수 있어요. 잠시 후 다시 시도해 주세요.\n반복되면 저희가 확인해야 하는 문제입니다.'}
+          description="잠시 후 다시 열어봐 주세요."
           hint={error.digest ? `오류 번호 ${error.digest}` : undefined}
           actions={
             <button

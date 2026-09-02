@@ -14,7 +14,7 @@ export default function NotFound() {
   return (
     <ErrorState
       title="찾는 페이지가 없어요"
-      description={'주소가 바뀌었거나 삭제된 공고일 수 있어요.\n목록에서 다시 찾아보세요.'}
+      description="주소가 바뀌었거나 사라진 것 같아요."
       actions={
         <>
           <Button asChild className="h-12 px-6">
