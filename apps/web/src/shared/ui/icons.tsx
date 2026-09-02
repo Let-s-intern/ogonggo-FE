@@ -115,3 +115,27 @@ export function CommentIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** 날짜 이동 줄의 달력 아이콘(`docs/asset/공고달력 미니달력 모달.png`). */
+export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <rect
+        x="3"
+        y="4.5"
+        width="14"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path d="M3 8h14" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M7 3v3M13 3v3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
