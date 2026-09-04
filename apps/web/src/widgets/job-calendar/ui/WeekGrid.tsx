@@ -3,6 +3,7 @@
 import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import { cn } from '@ogonggo/ui';
+import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
@@ -16,7 +17,7 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
-import { parseCalendarDate, toCalendarParam } from '../lib/query';
+import { parseCalendarDate, toCalendarParam, withJobParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 
 /**
@@ -34,7 +35,11 @@ import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
  * 켜면 가려진 줄에 걸친 모든 요일 칸마다 `+N` 링크를 하나씩 만든다. 목업
  * (`docs/asset/공고달력 간략히.png`)에도 `+N`이 없고 막대 아래는 그냥 빈 자리다.
  */
-function buildWeekEvents(items: UserJobCalendarItemResponse[], today: string): EventInput[] {
+function buildWeekEvents(
+  items: UserJobCalendarItemResponse[],
+  today: string,
+  calendarHref: string,
+): EventInput[] {
   return items.map((item) => {
     const deadline = item.recruitmentEndAt.slice(0, 10);
     const start = item.recruitmentStartAt.slice(0, 10);
@@ -44,6 +49,9 @@ function buildWeekEvents(items: UserJobCalendarItemResponse[], today: string): E
       start: start <= deadline ? start : deadline,
       end: exclusiveEnd(deadline),
       allDay: true,
+      // 막대를 누르면 상세 모달이 열린다. `url` 을 주는 이유는 `MonthGrid` 와 같다 —
+      // 진짜 `href` 가 있는 `<a>` 가 되어 키보드와 `cmd+클릭` 이 그대로 동작한다.
+      url: withJobParam(calendarHref, item.id),
       // `dueToday` 는 색과 정렬에 같이 쓰인다. `eventOrder` 는 `extendedProps` 를 비교 객체에
       // 평탄하게 펼쳐 주므로(`buildSegCompareObj`, `@fullcalendar/core`) 필드 이름으로 바로
       // 쓸 수 있다.
@@ -105,6 +113,8 @@ export interface WeekGridProps {
   items: UserJobCalendarItemResponse[];
   /** 펼칠 주에 든 아무 날짜. `YYYY-MM-DD`. */
   initialDate: string;
+  /** 지금 달력 주소(`?date=`·`?brief=` 포함). 막대 링크는 여기에 `job=<id>` 만 붙인다. */
+  calendarHref: string;
 }
 
 /**
@@ -121,8 +131,9 @@ export interface WeekGridProps {
  *
  * 스타일을 덮는 방법은 `../lib/calendar-grid`의 `GRID_CLASSES` 주석에 정리했다.
  */
-export function WeekGrid({ items, initialDate }: WeekGridProps) {
+export function WeekGrid({ items, initialDate, calendarHref }: WeekGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const router = useRouter();
   useCalendarDate(calendarRef, initialDate);
 
   // 막대 색을 가르는 기준(PRD 8.3). 조회 범위가 이 주 7일이라 그려진 막대는 전부 "이번 주
@@ -212,6 +223,13 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
           </span>
         )}
         eventClassNames={EVENT_BAR_CLASSES}
+        // 월간과 같다 — `url` 을 따라가는 전체 새로고침을 막고 라우터로 옮긴다.
+        eventClick={(arg) => {
+          arg.jsEvent.preventDefault();
+          if (arg.event.url) {
+            router.push(arg.event.url);
+          }
+        }}
         eventContent={(arg) => {
           const deadline = arg.event.extendedProps.deadline as string;
           return (
@@ -246,7 +264,7 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
             </span>
           );
         }}
-        events={buildWeekEvents(items, today)}
+        events={buildWeekEvents(items, today, calendarHref)}
       />
       {rowCount > COLLAPSED_ROWS ? (
         <button

@@ -2,6 +2,7 @@
 
 import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
@@ -14,6 +15,7 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
+import { withJobParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY } from '../lib/week';
 
 /** 한 칸에 그대로 다 그리는 최대 개수. 여기까지는 `+N`이 붙지 않는다(PRD 8.2). */
@@ -35,7 +37,10 @@ const EVENTS_BESIDE_MORE = 7;
  * 8번째 칸에 앉는다. 순서는 `order`로 못 박는다 — FullCalendar 의 기본 정렬은 제목순이라
  * `+5` 같은 문자열이 로고들 사이로 끼어든다.
  */
-function buildMonthEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
+function buildMonthEvents(
+  items: UserJobCalendarItemResponse[],
+  calendarHref: string,
+): EventInput[] {
   const byDay = new Map<string, UserJobCalendarItemResponse[]>();
   for (const item of items) {
     const day = item.recruitmentEndAt.slice(0, 10);
@@ -53,6 +58,10 @@ function buildMonthEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
         title: item.companyName,
         start: day,
         allDay: true,
+        // `url` 을 주면 FullCalendar 가 타일을 진짜 `href` 가 있는 `<a>` 로 그린다 — 키보드
+        // 포커스와 `cmd+클릭`(새 탭)이 그대로 되고 스크린 리더도 링크로 읽는다. 실제 이동은
+        // `eventClick` 이 가로채 라우터로 처리한다(전체 새로고침을 막는다).
+        url: withJobParam(calendarHref, item.id),
         extendedProps: { order: index, deadline: day },
       });
     });
@@ -77,6 +86,8 @@ export interface MonthGridProps {
   items: UserJobCalendarItemResponse[];
   /** 펼칠 달. `YYYY-MM-DD`. */
   initialDate: string;
+  /** 지금 달력 주소(`?date=`·`?brief=` 포함). 타일 링크는 여기에 `job=<id>` 만 붙인다. */
+  calendarHref: string;
 }
 
 /**
@@ -93,8 +104,9 @@ export interface MonthGridProps {
  *
  * 스타일을 덮는 방법은 `../lib/calendar-grid`의 `GRID_CLASSES` 주석에 정리했다.
  */
-export function MonthGrid({ items, initialDate }: MonthGridProps) {
+export function MonthGrid({ items, initialDate, calendarHref }: MonthGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const router = useRouter();
   useCalendarDate(calendarRef, initialDate);
 
   return (
@@ -160,6 +172,16 @@ export function MonthGrid({ items, initialDate }: MonthGridProps) {
         eventOrder="order"
         dayHeaderContent={(arg) => weekdayLabel(arg.date)}
         eventClassNames={EVENT_RESET_CLASSES}
+        // 타일을 누르면 상세 모달이 열린다(PRD 8.6). `url` 을 그대로 따라가게 두면 전체
+        // 새로고침이라 여기서 막고 라우터로 옮긴다 — 그래야 뒤에 있는 달력이 그대로 남고
+        // 모달만 새로 뜬다. `+N` 은 `url` 이 없어 아무 일도 하지 않는다(어떤 공고를 열지
+        // 정해지지 않았다, PRD 범위 밖).
+        eventClick={(arg) => {
+          arg.jsEvent.preventDefault();
+          if (arg.event.url) {
+            router.push(arg.event.url);
+          }
+        }}
         eventContent={(arg) => {
           const hiddenCount = arg.event.extendedProps.hiddenCount as number | undefined;
           if (hiddenCount !== undefined) {
@@ -185,7 +207,7 @@ export function MonthGrid({ items, initialDate }: MonthGridProps) {
             </span>
           );
         }}
-        events={buildMonthEvents(items)}
+        events={buildMonthEvents(items, calendarHref)}
       />
     </div>
   );

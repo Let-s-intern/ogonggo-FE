@@ -21,6 +21,12 @@ export interface DetailPageSkeletonProps {
    * 만들기 때문이다 — 계산해 만든 이름은 CSS에 나오지 않는다.
    */
   bodyGapClass: 'gap-4' | 'gap-8';
+  /**
+   * 브레드크럼 자리를 그릴지. 상세 화면 셋은 켜고, 달력 모달처럼 브레드크럼이 없는 자리는
+   * 끈다 — 켜 두면 로딩이 끝나는 순간 내용이 20px + `gap-4` 만큼 위로 튄다
+   * (`widgets/job-detail/ui/JobDetailView.tsx` 의 같은 이름 프로퍼티와 짝이다).
+   */
+  showBreadcrumb?: boolean;
 }
 
 /** 자리만 채우는 회색 막대. 실제 요소의 line-height를 그대로 높이로 쓴다. */
@@ -55,6 +61,7 @@ export function DetailPageSkeleton({
   sectionLines,
   sidebarListCount,
   bodyGapClass,
+  showBreadcrumb = true,
 }: DetailPageSkeletonProps) {
   return (
     <div className="w-full" role="status">
@@ -64,7 +71,7 @@ export function DetailPageSkeleton({
         className="ogonggo-skeleton mx-auto flex w-full max-w-6xl animate-pulse flex-col gap-4"
       >
         {/* 브레드크럼 — `flex items-center gap-1 text-sm`이라 높이 20px. */}
-        <Bar className="h-5 w-28" />
+        {showBreadcrumb ? <Bar className="h-5 w-28" /> : null}
 
         {/* 헤더 카드 — `Card`(`rounded-lg border border-gray-200 bg-white p-4`)에
             `bg-gray-50 p-8`이 덧붙은 모양 그대로다. */}

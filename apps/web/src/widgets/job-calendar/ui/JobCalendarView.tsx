@@ -1,5 +1,5 @@
 import { getJobCalendar } from '@ogonggo/api';
-import { toCalendarParam } from '../lib/query';
+import { buildJobCalendarHref, toCalendarParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 import { MonthGrid } from './MonthGrid';
 import { WeekGrid } from './WeekGrid';
@@ -79,14 +79,18 @@ export async function JobCalendarView({
 
   const initialDate = toCalendarParam(baseDate);
 
+  // 항목을 눌렀을 때 갈 주소의 밑동. 격자가 여기에 `job=<id>` 만 붙인다(`withJobParam`).
+  // 지금 보고 있는 날짜와 뷰가 그대로 들어 있으므로 모달을 닫으면 이 자리로 돌아온다.
+  const calendarHref = buildJobCalendarHref({ date: baseDate, brief });
+
   // 뷰를 컴포넌트 통째로 갈아끼운다(2026-09-02 결정). 한 인스턴스에서 `changeView()` 를 부르는
   // 방법도 되지만, `initialDate`/`initialView` 처럼 마운트 때만 읽히는 값을 명령형 API 로
   // 따라가게 하는 자리가 하나 더 늘어난다. 어차피 조회 범위가 7일과 42일로 달라 토글하면
   // 서버가 다시 렌더하므로 리마운트가 추가 비용도 아니다. 두 뷰의 렌더 규칙이 서로 겹치지
   // 않는다는 점이 더 크다 — 로고와 `+N` 은 월간, 가로 막대는 주간이다.
   return brief ? (
-    <WeekGrid items={items} initialDate={initialDate} />
+    <WeekGrid items={items} initialDate={initialDate} calendarHref={calendarHref} />
   ) : (
-    <MonthGrid items={items} initialDate={initialDate} />
+    <MonthGrid items={items} initialDate={initialDate} calendarHref={calendarHref} />
   );
 }
