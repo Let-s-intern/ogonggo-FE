@@ -40,14 +40,19 @@ jobs:
 
           web=false
           admin=false
+          launch_notice=false
           shared=false
 
           while IFS= read -r file; do
             case "$file" in
               apps/web/*)   web=true ;;
               apps/admin/*) admin=true ;;
-              # 공용 패키지는 두 앱이 함께 쓴다. 여기가 바뀌면 앱 하나만 봐서는
+              # 런칭 전 임시 앱. 2026-09-23 뒤 앱과 함께 이 줄들도 지운다
+              # (apps/launch-notice/README.md).
+              apps/launch-notice/*) launch_notice=true ;;
+              # 공용 패키지는 web·admin 이 함께 쓴다. 여기가 바뀌면 앱 하나만 봐서는
               # 깨진 걸 못 잡으므로 전체를 돈다. 루트 설정도 마찬가지다.
+              # (launch-notice 는 packages/ 를 쓰지 않지만, 전체를 돌아도 몇 초다.)
               packages/*) shared=true ;;
               package.json|pnpm-lock.yaml|pnpm-workspace.yaml|turbo.json) shared=true ;;
               tsconfig*.json|.oxlintrc.json|.oxfmtrc.json) shared=true ;;
@@ -71,6 +76,10 @@ jobs:
               filter="$filter --filter=admin"
               format_paths="$format_paths apps/admin"
             fi
+            if [ "$launch_notice" = true ]; then
+              filter="$filter --filter=launch-notice"
+              format_paths="$format_paths apps/launch-notice"
+            fi
             if [ -n "$filter" ]; then run=true; else run=false; fi
           fi
 
@@ -78,7 +87,7 @@ jobs:
           echo "filter=$filter" >> "$GITHUB_OUTPUT"
           echo "format_paths=$format_paths" >> "$GITHUB_OUTPUT"
 
-          echo "web=$web admin=$admin shared=$shared" >> "$GITHUB_STEP_SUMMARY"
+          echo "web=$web admin=$admin launch-notice=$launch_notice shared=$shared" >> "$GITHUB_STEP_SUMMARY"
           echo "turbo filter: ${filter:-(전체)}" >> "$GITHUB_STEP_SUMMARY"
 
   # 순서는 타입체크 → 린트 → 포맷 → 보안이다. `needs` 로 묶었으므로 앞이 실패하면
