@@ -7,29 +7,27 @@
  *
  * 설치
  *   1. 신청을 받을 스프레드시트를 연다
- *   2. 주소창의 `/d/` 와 `/edit` 사이 문자열을 SPREADSHEET_ID 에 넣는다
- *        https://docs.google.com/spreadsheets/d/<여기>/edit
- *   3. 확장 프로그램 → Apps Script 를 열고 이 파일 내용을 통째로 붙여 넣는다
- *   4. SHARED_SECRET 을 아무도 모르는 문자열로 바꾼다
- *   5. 저장(Ctrl+S) 후 함수 목록에서 `setup` 을 골라 한 번 실행한다
+ *   2. 확장 프로그램 → Apps Script 를 열고 이 파일 내용을 통째로 붙여 넣는다
+ *   3. SHARED_SECRET 을 아무도 모르는 문자열로 바꾼다
+ *   4. 저장(Ctrl+S) 후 함수 목록에서 `setup` 을 골라 한 번 실행한다
  *      → 권한 승인 창이 뜨면 허용한다. **배포 전에 이걸 먼저 해야 한다**
- *   6. 배포 → 새 배포 → 유형 "웹 앱"
+ *   5. 배포 → 새 배포 → 유형 "웹 앱"
  *      - 실행 사용자: 나
  *      - 액세스 권한: 모든 사용자
- *   7. 나온 `/exec` 주소를 브라우저로 열어 `{"ok":true,...}` 가 보이는지 확인한다
- *   8. 그 주소와 4번의 문자열을 Vercel 환경변수에 넣는다
+ *   6. 나온 `/exec` 주소를 브라우저로 열어 `{"ok":true,...}` 가 보이는지 확인한다
+ *   7. 그 주소와 3번의 문자열을 Vercel 환경변수에 넣는다
  *        LAUNCH_NOTICE_SHEET_WEBHOOK_URL / LAUNCH_NOTICE_SHEET_SECRET
+ *
+ * **시트 ID 를 손으로 적지 않는다.** `setup` 이 자기가 붙어 있는 문서에서 ID 를 읽어
+ * 스크립트 속성에 저장하고, 그 다음부터 웹 앱이 그 값을 쓴다. 주소창에서 ID 를 골라
+ * 복사하는 일이 없어지므로 엉뚱한 조각을 집어 `Illegal spreadsheet id` 로 막힐 일도 없다.
  *
  * "모든 사용자" 로 열어야 하는 것은 우리 서버가 구글 로그인 없이 부르기 때문이다. 대신
  * SHARED_SECRET 이 맞지 않는 요청은 아무 일도 하지 않는다. 주소만으로는 행을 넣을 수 없다.
  */
 
-/**
- * 시트 문서 ID. `getActiveSpreadsheet()` 를 쓰지 않는다 — 그 함수는 "지금 열려 있는 문서"를
- * 뜻해서 편집기에서 직접 돌릴 때는 되지만, 웹 앱으로 들어온 요청에는 열린 문서가 없어 `null`
- * 이 되고 그 다음 줄이 바로 터진다. 실행 기록에 이유 없는 오류로만 남는 흔한 원인이다.
- */
-var SPREADSHEET_ID = '여기에-시트-ID';
+/** 스크립트 속성에 시트 ID 를 저장해 둘 이름. */
+var ID_PROPERTY = 'SPREADSHEET_ID';
 
 /** 우리 서버만 아는 문자열. 이게 맞지 않으면 행을 넣지 않는다. */
 var SHARED_SECRET = '여기를-바꾸세요';
@@ -75,13 +73,40 @@ var HEADER_LABELS = [
  * 실행 기록에 시트 이름이 찍히면 성공이다.
  */
 function setup() {
+  var book = resolveBook();
   var sheet = getSheet();
-  Logger.log('준비됨: ' + sheet.getName() + ' (' + sheet.getLastRow() + '행)');
+  Logger.log('준비됨: ' + book.getName() + ' / ' + sheet.getName() + ' (' + sheet.getLastRow() + '행)');
   return sheet.getName();
 }
 
+/**
+ * 신청을 쌓을 문서를 찾는다.
+ *
+ * 두 경로가 다르기 때문에 갈라 둔다. 편집기에서 `setup` 을 돌릴 때는 "지금 열려 있는 문서"가
+ * 있어서 `getActiveSpreadsheet()` 로 찾을 수 있고, 그때 ID 를 스크립트 속성에 적어 둔다.
+ * 웹 앱으로 들어온 요청에는 열린 문서가 없어 그 함수가 `null` 을 주므로, 적어 둔 ID 로 연다.
+ *
+ * 그래서 **시트 ID 를 손으로 적을 일이 없다.** 주소창에서 ID 를 골라 복사하는 것은 생각보다
+ * 자주 틀리고(`Illegal spreadsheet id or key`), 틀려도 배포는 성공해서 나중에 터진다.
+ */
+function resolveBook() {
+  var props = PropertiesService.getScriptProperties();
+  var stored = props.getProperty(ID_PROPERTY);
+  if (stored) {
+    return SpreadsheetApp.openById(stored);
+  }
+
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) {
+    props.setProperty(ID_PROPERTY, active.getId());
+    return active;
+  }
+
+  throw new Error('시트를 찾지 못했습니다. 스프레드시트에서 연 편집기로 setup() 을 한 번 실행하세요.');
+}
+
 function getSheet() {
-  var book = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var book = resolveBook();
   var sheet = book.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = book.insertSheet(SHEET_NAME);
