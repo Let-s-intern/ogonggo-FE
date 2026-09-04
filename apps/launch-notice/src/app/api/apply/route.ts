@@ -1,11 +1,18 @@
 import { MODE_LABEL, hasErrors, validateApply, type ApplyPayload } from '@/lib/apply';
+import { appendRow } from '@/lib/sheets';
 
 /**
- * 신청서를 받아 구글 스프레드시트로 넘긴다.
+ * `node:crypto` 로 JWT 에 서명하므로 Node 런타임이어야 한다(`lib/sheets.ts`).
+ * 라우트 핸들러의 기본값이기도 하지만, 바뀌면 조용히 깨지는 자리라 적어 둔다.
+ */
+export const runtime = 'nodejs';
+
+/**
+ * 신청서를 받아 구글 스프레드시트에 행으로 더한다.
  *
- * **브라우저가 시트로 직접 쏘지 않는 이유가 여기다.** 앱스 스크립트 웹앱 주소는 그 자체가
- * 열쇠라, 프런트 번들에 넣으면 누구나 남의 시트에 행을 넣을 수 있다. 이 자리를 한 번 거치면
- * 주소와 비밀이 서버 환경변수에만 남는다.
+ * **브라우저가 시트로 직접 쏘지 않는 이유가 여기다.** 시트에 쓰려면 서비스 계정 개인 키가
+ * 필요한데, 그건 프런트 번들에 넣을 수 있는 물건이 아니다. 이 자리를 한 번 거치면 키가 서버
+ * 환경변수에만 남는다.
  *
  * 서버 검증을 다시 하는 것도 같은 이유다. 폼을 거치지 않고 이 엔드포인트로 바로 POST 하는
  * 요청이 있으므로 클라이언트 검증은 사용자 편의일 뿐 관문이 아니다.
@@ -29,53 +36,37 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, errors }, { status: 400 });
   }
 
-  const webhookUrl = process.env.LAUNCH_NOTICE_SHEET_WEBHOOK_URL;
-  if (!webhookUrl) {
-    // 환경변수를 안 넣고 배포한 경우다. 사용자에게는 일반적인 실패로 보이지만 서버 로그에는
-    // 원인이 남아야 한다 — 이게 없으면 "왜 시트가 비어 있지"를 한참 찾는다.
-    console.error('LAUNCH_NOTICE_SHEET_WEBHOOK_URL 이 없습니다. 신청을 저장하지 못했습니다.');
-    return Response.json(
-      { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-      { status: 500 },
-    );
-  }
-
-  // 시트의 열 순서와 이름이 여기서 정해진다. 앱스 스크립트는 이 키들을 그대로 행으로 옮긴다
-  // (`docs/apps-script.gs`). 키를 바꾸면 그쪽 `HEADERS` 도 같이 바꿔야 한다.
-  const row = {
-    secret: process.env.LAUNCH_NOTICE_SHEET_SECRET ?? '',
-    submittedAt: new Date().toISOString(),
-    mode: MODE_LABEL[payload.mode],
-    company: payload.company.trim(),
-    name: payload.name.trim(),
-    title: payload.title.trim(),
-    email: payload.email.trim().toLowerCase(),
-    phone: payload.phone.trim(),
-    channel: payload.channel?.trim() ?? '',
-    role: payload.role?.trim() ?? '',
-    link: payload.link?.trim() ?? '',
-    survey: payload.survey.trim(),
-    marketing: payload.marketing ? 'Y' : 'N',
-  };
+  // 열 순서는 `lib/sheets.ts` 의 `HEADER_LABELS` 와 짝이다. 하나를 바꾸면 다른 하나도 바꾼다.
+  const row = [
+    new Date().toISOString(),
+    MODE_LABEL[payload.mode],
+    payload.company.trim(),
+    payload.name.trim(),
+    payload.title.trim(),
+    payload.email.trim().toLowerCase(),
+    payload.phone.trim(),
+    payload.channel?.trim() ?? '',
+    payload.role?.trim() ?? '',
+    payload.link?.trim() ?? '',
+    payload.survey.trim(),
+    payload.marketing ? 'Y' : 'N',
+  ];
 
   try {
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(row),
-      // 앱스 스크립트는 가끔 몇 초씩 걸린다. 그렇다고 무한정 기다리면 요청이 쌓이므로 끊는다.
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!response.ok) {
-      console.error(`시트 웹훅이 ${response.status} 를 돌려줬습니다.`);
+    const result = await appendRow(row);
+    if (result === '설정되지 않음') {
+      // 환경변수를 안 넣고 배포한 경우다. 사용자에게는 일반적인 실패로 보이지만 서버 로그에는
+      // 원인이 남아야 한다 — 이게 없으면 "왜 시트가 비어 있지"를 한참 찾는다.
+      console.error(
+        'GOOGLE_SERVICE_ACCOUNT_JSON 또는 LAUNCH_NOTICE_SHEET_ID 가 없습니다. 신청을 저장하지 못했습니다.',
+      );
       return Response.json(
         { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-        { status: 502 },
+        { status: 500 },
       );
     }
   } catch (error) {
-    console.error('시트 웹훅 호출에 실패했습니다.', error);
+    console.error('시트에 행을 더하지 못했습니다.', error);
     return Response.json(
       { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
       { status: 502 },
