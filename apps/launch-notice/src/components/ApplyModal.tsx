@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ApplyForm } from './ApplyForm';
 
 /**
  * 화면 오른쪽 아래에 붙어 다니는 신청 버튼과, 그것이 여는 모달.
  *
- * 페이지 아래쪽 `#apply` 섹션까지 내려가지 않은 사람을 위한 자리다. 그래서 **첫 화면에서는
- * 뜨지 않는다** — 히어로에 이미 상단 `출시 알림 신청` 버튼이 있어서 겹치고, 아직 아무것도 읽지
- * 않은 사람에게 신청부터 들이미는 꼴이 된다. 조금 내려가면 나타난다.
+ * **첫 화면부터 계속 보인다**(2026-09-05 결정). 처음에는 조금 내려가야 나타나게 두었는데 —
+ * 상단 버튼과 겹치고 읽기도 전에 신청부터 들이미는 꼴이라고 봤다 — 3주짜리 캠페인이라
+ * 신청 자리가 눈에서 사라지지 않는 편이 낫다. 상단 버튼은 `#apply` 로 내려가고 이쪽은
+ * 모달을 열어, 어디에 있든 한 번에 폼에 닿는다.
  *
  * `<dialog>` 를 쓴다. `showModal()` 하나로 포커스 가두기·`Esc` 로 닫기·배경 비활성화·
  * `::backdrop` 이 전부 따라온다. 이걸 라이브러리로 가져오면 3주 뒤 지울 앱에 의존성이 하나
@@ -16,29 +17,28 @@ import { ApplyForm } from './ApplyForm';
  */
 export function ApplyModal() {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    // 한 화면 높이만큼 내려가면 버튼을 띄운다.
-    const onScroll = () => setVisible(window.scrollY > window.innerHeight * 0.6);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  // 접수가 끝나면 머리글을 내린다. `1분이면 끝납니다` 가 완료 화면 위에 남으면 아직 할 일이
+  // 있는 것처럼 읽힌다.
+  const [done, setDone] = useState(false);
 
   return (
     <>
-      <button
-        type="button"
-        className="floating"
-        data-visible={visible}
-        // 버튼이 숨어 있을 때는 탭 순서에서도 빠져야 한다. 보이지 않는 버튼에 포커스가
-        // 가면 키보드 사용자는 아무 데도 없는 곳에 도착한다.
-        tabIndex={visible ? 0 : -1}
-        aria-hidden={!visible}
-        onClick={() => dialogRef.current?.showModal()}
-      >
-        출시 알림 신청
+      <button type="button" className="floating" onClick={() => dialogRef.current?.showModal()}>
+        <span className="floating-text">
+          <span className="floating-main">무료 홍보 신청하기</span>
+          {/* 왜 지금 눌러야 하는지 한 줄. 버튼 하나만 떠 있으면 배너처럼 읽고 지나친다. */}
+          <span className="floating-sub">1분이면 끝나요</span>
+        </span>
+        {/* 화살표가 있어야 눌러서 어디론가 간다는 것이 읽힌다. 장식이라 스크린 리더는 건너뛴다. */}
+        <svg className="floating-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path
+            d="M7 4l6 6-6 6"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
 
       <dialog
@@ -61,11 +61,15 @@ export function ApplyModal() {
           >
             ×
           </button>
-          <h2 className="applydialog-title">출시 알림 신청</h2>
-          <p className="applydialog-note">
-            1분이면 끝납니다. 런칭 전에 담당자가 직접 연락드립니다.
-          </p>
-          <ApplyForm />
+          {done ? null : (
+            <>
+              <h2 className="applydialog-title">출시 알림 신청</h2>
+              <p className="applydialog-note">
+                1분이면 끝납니다. 런칭 전에 담당자가 직접 연락드립니다.
+              </p>
+            </>
+          )}
+          <ApplyForm onDone={() => setDone(true)} />
         </div>
       </dialog>
     </>

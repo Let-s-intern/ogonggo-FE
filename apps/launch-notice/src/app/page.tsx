@@ -33,29 +33,6 @@ const FEATURES = [
   },
 ];
 
-const STEPS = [
-  {
-    title: <>공고 링크를 보내주세요</>,
-    body: '이미 올려둔 채용 페이지 주소 하나면 충분합니다. 별도 소재를 만들어 주실 필요 없습니다.',
-  },
-  {
-    title: <>렛츠커리어가 소재를 제작합니다</>,
-    body: '채널별 규격에 맞춰 카드뉴스와 요약문을 만들고, 발송 전에 확인을 받습니다.',
-  },
-  {
-    title: (
-      <>
-        <span className="hilite">48시간 안에 집행</span>합니다
-      </>
-    ),
-    body: '확인해주신 시점부터 이틀 안에 모든 채널에 노출됩니다. 마감이 급한 공고도 태울 수 있습니다.',
-  },
-  {
-    title: <>결과를 정리해 보내드립니다</>,
-    body: '채널별 노출·클릭 수와 지원 페이지 유입을 리포트로 받아보십니다.',
-  },
-];
-
 const FAQ = [
   {
     q: '지금 채용 계획이 확정되지 않았는데 신청해도 되나요?',
@@ -89,9 +66,7 @@ export default function Page() {
     <>
       <div className="topbar">
         <div className="wrap">
-          <div className="mark">
-            렛츠커리어 <span>오늘의 공고</span>
-          </div>
+          <div className="mark">오공고</div>
           <a className="jump" href="#apply">
             출시 알림 신청
           </a>
@@ -202,23 +177,6 @@ export default function Page() {
             />
             <figcaption>운영 중인 채널과 실제 집행 사례</figcaption>
           </figure>
-        </div>
-      </section>
-
-      <section className="band">
-        <div className="wrap">
-          <h2 className="sec">렛츠커리어 채용공고 홍보 프로세스</h2>
-          <p className="sec-note">
-            공고 링크를 주신 시점부터 집행까지 이틀이면 끝납니다. 채용은 마감일이 정해져 있으니까요.
-          </p>
-          <ol className="steps">
-            {STEPS.map((step, index) => (
-              <li key={index}>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </li>
-            ))}
-          </ol>
         </div>
       </section>
 

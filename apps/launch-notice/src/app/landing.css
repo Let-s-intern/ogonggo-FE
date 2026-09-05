@@ -20,6 +20,8 @@ html {
   }
   * {
     transition: none !important;
+    /* 애니메이션도 함께 끈다. 플로팅 버튼이 5초마다 튀는 것이 여기 걸린다. */
+    animation: none !important;
   }
 }
 body {
@@ -65,12 +67,11 @@ a {
   height: 64px;
   gap: 16px;
 }
+/* 로고. 초록 글자 하나로 둔다 — 상단 오른쪽 버튼과 나란히 서야 해서 짧을수록 낫다. */
 .mark {
   font-weight: 800;
-  font-size: 15px;
-  letter-spacing: -0.02em;
-}
-.mark span {
+  font-size: 20px;
+  letter-spacing: -0.035em;
   color: var(--brand-deep);
 }
 .topbar .jump {
@@ -377,58 +378,6 @@ h2.sec {
   max-width: 36em;
 }
 
-/* steps */
-ol.steps {
-  list-style: none;
-  counter-reset: s;
-  margin: 0;
-  padding: 0;
-}
-ol.steps li {
-  counter-increment: s;
-  position: relative;
-  padding: 0 0 30px 58px;
-  border-left: 2px solid var(--line);
-  margin-left: 17px;
-}
-ol.steps li:last-child {
-  border-left-color: transparent;
-  padding-bottom: 0;
-}
-ol.steps li::before {
-  content: counter(s);
-  position: absolute;
-  left: -18px;
-  top: -2px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--ink);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 800;
-}
-ol.steps h3 {
-  font-size: 17.5px;
-  font-weight: 700;
-  margin: 2px 0 6px;
-}
-ol.steps p {
-  margin: 0;
-  font-size: 15.5px;
-  color: var(--muted);
-  max-width: 32em;
-}
-.hilite {
-  background: linear-gradient(transparent 62%, var(--brand) 62%);
-  font-weight: 700;
-  color: var(--ink);
-  padding: 0 2px;
-}
-
 /* ---------- form ---------- */
 .formband {
   background: var(--ink);
@@ -519,6 +468,7 @@ ol.steps p {
 input[type='text'],
 input[type='email'],
 input[type='tel'],
+input[type='password'],
 select,
 textarea {
   width: 100%;
@@ -628,20 +578,72 @@ fieldset {
   margin: 14px 0 0;
   text-align: center;
 }
+/*
+ * 접수 완료 화면. 폼이 통째로 이 자리로 바뀐다(`components/ApplyForm.tsx`).
+ *
+ * `display: none` 으로 두고 스크립트가 켜던 에셋과 달리, 리액트는 완료일 때만 그리므로
+ * 숨겨 둘 필요가 없다.
+ */
 .done {
-  display: none;
   text-align: center;
-  padding: 30px 6px;
+  padding: 44px 16px 40px;
+}
+.done-mark {
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 22px;
+  color: var(--brand-deep);
+}
+.done-mark svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/*
+ * 원을 그린 뒤 체크를 긋는다. `stroke-dasharray` 를 선 길이만큼 주고 `dashoffset` 을 0 으로
+ * 당기면 선이 자라나는 것처럼 보인다. 길이는 원 둘레(2πr, r=23 이라 약 145)와 체크 경로
+ * 길이(약 40)를 넉넉히 잡은 값이다.
+ */
+.done-circle {
+  stroke-dasharray: 145;
+  stroke-dashoffset: 145;
+  animation: done-draw 0.5s ease-out forwards;
+}
+.done-check {
+  stroke-dasharray: 44;
+  stroke-dashoffset: 44;
+  animation: done-draw 0.35s ease-out 0.4s forwards;
+}
+@keyframes done-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 .done h3 {
   font-size: 22px;
   font-weight: 800;
+  letter-spacing: -0.03em;
   margin: 0 0 10px;
 }
 .done p {
   color: var(--muted);
   font-size: 15.5px;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 26em;
+  line-height: 1.65;
+}
+/* 다음에 무슨 일이 있는지. 본문과 떨어뜨리고 브랜드색 배지로 눈에 남게 한다. */
+.done-next {
+  display: inline-block;
+  margin-top: 22px !important;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--wash);
+  border: 1px solid var(--brand);
+  color: var(--brand-deep) !important;
+  font-size: 13.5px;
+  font-weight: 700;
 }
 .err {
   color: #b3261e;
@@ -705,41 +707,165 @@ footer {
   margin-top: 6px;
 }
 
-/* 플로팅 신청 버튼. 한 화면쯤 내려가야 나타난다(`components/ApplyModal.tsx`). */
+/*
+ * 플로팅 신청 버튼. 첫 화면부터 계속 떠 있다(`components/ApplyModal.tsx`).
+ *
+ * **밝은 초록에 검은 글씨를 쓰지 않는다.** 브랜드색(`--brand`, #62D335)은 형광에 가까워서
+ * 그 위의 어두운 글씨가 잘 안 읽히고 버튼이라기보다 형광펜 자국처럼 보였다. 짙은 초록
+ * (`--brand-deep`)에 흰 글씨로 뒤집으면 대비가 서고 눌러야 할 것으로 읽힌다.
+ *
+ * 두 줄이라 알약이 아니라 모서리 둥근 사각이다. 한 줄짜리 알약이면 상단 버튼과 똑같이 생겨서
+ * 같은 것이 두 개 떠 있는 것처럼 보인다.
+ */
 .floating {
   position: fixed;
   right: 24px;
   bottom: 24px;
   z-index: 40;
-  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px 14px 22px;
   border: 0;
-  border-radius: 999px;
-  background: var(--brand);
-  color: #0d2405;
+  border-radius: 14px;
+  background: var(--brand-deep);
+  color: #fff;
   font: inherit;
-  font-size: 15px;
-  font-weight: 800;
-  box-shadow: 0 6px 20px rgba(20, 33, 14, 0.22);
+  text-align: left;
   cursor: pointer;
-  opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
+  overflow: hidden;
+  box-shadow:
+    0 4px 14px rgba(20, 33, 14, 0.24),
+    0 14px 36px rgba(20, 33, 14, 0.18);
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+  /*
+   * 두 가지가 겹친다. 뜰 때 한 번 올라오고(`floating-in`), 그 뒤로는 5초에 한 번 짧게
+   * 튄다(`floating-bob`). 계속 움직이면 성가시므로 주기의 대부분은 가만히 있는다.
+   */
+  animation:
+    floating-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both,
+    floating-bob 5s ease-in-out 1.6s infinite;
 }
-.floating[data-visible='true'] {
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
+/*
+ * 광택이 왼쪽에서 오른쪽으로 한 번 스친다. 튀는 것과 같은 박자라 둘이 한 동작으로 읽힌다.
+ * 버튼에 `overflow: hidden` 이 있어야 모서리 밖으로 새지 않는다.
+ */
+.floating::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.26), transparent);
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: floating-shine 5s ease-in-out 1.6s infinite;
+}
+@keyframes floating-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes floating-bob {
+  0%,
+  82%,
+  100% {
+    transform: translateY(0);
+  }
+  87% {
+    transform: translateY(-7px);
+  }
+  92% {
+    transform: translateY(-2px);
+  }
+  96% {
+    transform: translateY(-1px);
+  }
+}
+@keyframes floating-shine {
+  0%,
+  78% {
+    left: -60%;
+  }
+  95%,
+  100% {
+    left: 120%;
+  }
 }
 .floating:hover {
-  background: #54bf2a;
+  /* 손이 올라오면 움직임을 멈추고 호버 상태만 남긴다. 둘이 겹치면 버튼이 떨린다. */
+  animation: none;
+  background: #266514;
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 18px rgba(20, 33, 14, 0.28),
+    0 18px 44px rgba(20, 33, 14, 0.22);
+}
+.floating:active {
+  transform: translateY(0);
+}
+.floating-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.floating-main {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.floating-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+.floating-arrow {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.8);
+  transition: transform 0.15s ease;
+  /* 버튼이 튀는 순간 화살표도 한 번 나간다. 같은 지연·주기라 박자가 어긋나지 않는다. */
+  animation: floating-arrow-nudge 5s ease-in-out 1.6s infinite;
+}
+@keyframes floating-arrow-nudge {
+  0%,
+  82%,
+  100% {
+    transform: translateX(0);
+  }
+  88% {
+    transform: translateX(4px);
+  }
+  94% {
+    transform: translateX(0);
+  }
+}
+.floating:hover .floating-arrow {
+  animation: none;
+}
+.floating:hover .floating-arrow {
+  transform: translateX(2px);
+  color: #fff;
 }
 @media (max-width: 520px) {
   .floating {
     right: 16px;
     bottom: 16px;
+    padding: 12px 14px 12px 18px;
+    gap: 10px;
+  }
+  .floating-sub {
+    display: none;
   }
 }
 

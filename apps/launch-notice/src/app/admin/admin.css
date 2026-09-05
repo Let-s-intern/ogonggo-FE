@@ -1,0 +1,153 @@
+/*
+ * `/admin` 화면 스타일. 랜딩(`landing.css`)의 토큰(`--ink`, `--line`, `--brand` 등)을 그대로
+ * 쓰되 여기 있는 클래스는 이 화면에서만 쓴다.
+ *
+ * Tailwind 도 `@ogonggo/ui` 도 쓰지 않는다 — 이 앱은 `packages/` 를 참조하지 않기로 했고
+ * (README "런칭 이후 지우는 법"), 그 규칙은 어드민 화면에도 똑같이 적용된다.
+ */
+.adminwrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.adminhead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.adminhead h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.adminhead .count {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.adminactions {
+  display: flex;
+  gap: 8px;
+}
+
+.adminbtn {
+  padding: 10px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+.adminbtn:hover:not(:disabled) {
+  background: var(--wash);
+}
+.adminbtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.adminbtn.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #0d2405;
+}
+.adminbtn.primary:hover:not(:disabled) {
+  background: #54bf2a;
+}
+
+/* 로그인 카드 — 화면 가운데. */
+.admincard {
+  max-width: 400px;
+  margin: 80px auto;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+.admincard h1 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+.admincard p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.admincard form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adminerr {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: #b3261e;
+}
+
+/*
+ * 열이 12개라 좁은 화면에서는 표만 가로로 스크롤된다. 페이지 전체가 밀리지 않는다.
+ */
+.admintablewrap {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+/*
+ * `min-width` 가 핵심이다. 이게 없으면 표가 컨테이너 폭에 자기를 욱여넣느라 칸마다 글자가
+ * 한두 자씩 세로로 쪼개진다("인사/팀/매니/저"). 열이 12개라 표가 화면보다 넓은 것이 정상이고,
+ * 넘치는 만큼은 `.admintablewrap` 이 가로로 스크롤한다.
+ */
+table.admintable {
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+/* 기본은 한 줄이다. 여러 줄이 되는 칸은 설문 답변 하나뿐이라 그것만 아래에서 푼다. */
+table.admintable th,
+table.admintable td {
+  white-space: nowrap;
+}
+table.admintable th {
+  padding: 11px 14px;
+  text-align: left;
+  background: var(--wash);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+table.admintable td {
+  padding: 11px 14px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+  color: var(--ink);
+}
+table.admintable tbody tr:hover {
+  background: #fbfdfa;
+}
+/* 설문 답변만 여러 줄로 편다. 폭을 묶지 않으면 이 칸 하나가 표를 화면 밖으로 밀어낸다. */
+table.admintable td.survey {
+  white-space: pre-line;
+  min-width: 260px;
+  max-width: 380px;
+}
+table.admintable a {
+  color: var(--brand-deep);
+  font-weight: 600;
+}
+
+.adminempty {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--muted);
+}

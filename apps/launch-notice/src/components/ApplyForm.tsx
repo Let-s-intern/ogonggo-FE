@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import {
   CHANNELS,
+  formatPhone,
   hasErrors,
   validateApply,
   type ApplyErrors,
@@ -13,14 +14,16 @@ import {
 /** 제출 결과에 따라 보여 줄 것이 달라진다. `done` 이면 폼 대신 감사 문구가 뜬다. */
 type Status = 'editing' | 'sending' | 'done';
 
-const DONE_COPY: Record<ApplyMode, { title: string; body: string }> = {
+const DONE_COPY: Record<ApplyMode, { title: string; body: string; next: string }> = {
   promo: {
-    title: '무료 홍보 신청이 접수됐습니다',
+    title: '무료 홍보 신청이 접수되었습니다',
     body: '보내주신 공고를 확인한 뒤, 담당자가 이틀 안에 소재와 집행 일정을 안내드리겠습니다.',
+    next: '이틀 안에 연락드립니다',
   },
   alert: {
-    title: '출시 알림 신청이 접수됐습니다',
+    title: '출시 알림 신청이 접수되었습니다',
     body: '입력하신 메일로 채널 소개서를 보냈습니다. 9월 23일 런칭 전에 담당자가 직접 연락드리겠습니다.',
+    next: '9월 23일 런칭 전에 연락드립니다',
   },
 };
 
@@ -34,7 +37,15 @@ const DONE_COPY: Record<ApplyMode, { title: string; body: string }> = {
  * 검증은 `lib/apply` 가 하고 서버가 같은 함수를 다시 부른다. 여기서 막는 것은 사용자가 바로
  * 알아차리게 하기 위한 것이지 보안이 아니다.
  */
-export function ApplyForm() {
+export interface ApplyFormProps {
+  /**
+   * 접수가 끝나면 한 번 불린다. 모달이 자기 머리글("1분이면 끝납니다")을 내리는 데 쓴다 —
+   * 접수된 화면 위에 그대로 남으면 아직 뭔가 더 해야 하는 것처럼 읽힌다.
+   */
+  onDone?: () => void;
+}
+
+export function ApplyForm({ onDone }: ApplyFormProps = {}) {
   const uid = useId();
   const field = (name: string) => `${uid}-${name}`;
 
@@ -45,6 +56,9 @@ export function ApplyForm() {
   // 제출을 한 번이라도 눌렀는지. 누르기 전에는 빨간 문구를 띄우지 않는다 — 아직 채우는
   // 중인 자리를 틀렸다고 하면 성가시다.
   const [submitted, setSubmitted] = useState(false);
+  // 연락처만 값을 붙들고 있는다. 치는 대로 하이픈을 넣어 되돌려줘야 해서다
+  // (`formatPhone`). 나머지 칸은 브라우저가 갖고 제출 때 `FormData` 로 한 번에 읽는다.
+  const [phone, setPhone] = useState('');
 
   const isPromo = mode === 'promo';
 
@@ -53,7 +67,8 @@ export function ApplyForm() {
     setSubmitted(true);
     setFailure(undefined);
 
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     const payload: ApplyPayload = {
       mode,
       company: String(data.get('company') ?? ''),
@@ -77,6 +92,13 @@ export function ApplyForm() {
     const found = validateApply(payload);
     setErrors(found);
     if (hasErrors(found)) {
+      // 틀린 칸으로 데려간다. 폼이 길어서 제출 버튼과 첫 오류가 화면 하나만큼 떨어져 있고,
+      // 그냥 두면 버튼을 눌러도 아무 일도 안 일어난 것처럼 보인다(2026-09-05 실측: 버튼
+      // y=1472, 오류 y=561, 화면 높이 802).
+      const first = Object.keys(found)[0];
+      const field = form.querySelector<HTMLElement>(`[name="${first}"]`);
+      field?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      field?.focus({ preventScroll: true });
       return;
     }
 
@@ -100,13 +122,39 @@ export function ApplyForm() {
     }
 
     setStatus('done');
+    onDone?.();
   }
 
   if (status === 'done') {
     return (
-      <div className="done" style={{ display: 'block' }}>
+      // `role="status"` 를 두면 스크린 리더가 화면이 바뀐 것을 읽어 준다. 폼이 통째로
+      // 사라지는 자리라 알려 주지 않으면 무슨 일이 일어났는지 알 수 없다.
+      <div className="done" role="status">
+        {/* 체크 표시가 먼저 눈에 들어와야 "됐다"가 읽힌다. 원이 그려진 뒤 체크가 그어진다. */}
+        <span className="done-mark" aria-hidden="true">
+          <svg viewBox="0 0 52 52" fill="none">
+            <circle
+              className="done-circle"
+              cx="26"
+              cy="26"
+              r="23"
+              stroke="currentColor"
+              strokeWidth="3"
+            />
+            <path
+              className="done-check"
+              d="M16 27l7 7 13-14"
+              stroke="currentColor"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
         <h3>{DONE_COPY[mode].title}</h3>
         <p>{DONE_COPY[mode].body}</p>
+        {/* 다음에 무슨 일이 있는지 한 줄로 굵게. 본문을 다 읽지 않아도 이건 눈에 남는다. */}
+        <p className="done-next">{DONE_COPY[mode].next}</p>
       </div>
     );
   }
@@ -183,7 +231,7 @@ export function ApplyForm() {
 
       <div className="field">
         <label htmlFor={field('email')}>
-          회사 이메일<span className="req">*</span>
+          이메일<span className="req">*</span>
         </label>
         <input
           type="email"
@@ -205,6 +253,9 @@ export function ApplyForm() {
           name="phone"
           autoComplete="tel"
           placeholder="010-0000-0000"
+          inputMode="numeric"
+          value={phone}
+          onChange={(event) => setPhone(formatPhone(event.target.value))}
         />
         {error('phone') ? <p className="err-shown">{error('phone')}</p> : null}
       </div>
@@ -305,6 +356,15 @@ export function ApplyForm() {
       {failure ? (
         <p className="err-shown" role="alert" style={{ textAlign: 'center' }}>
           {failure}
+        </p>
+      ) : null}
+      {/*
+        버튼 바로 아래에도 알린다. 위로 데려가긴 하지만 스크롤이 끝나기 전에는 버튼 근처가
+        여전히 조용해서, 눌렀는데 반응이 없다고 읽힌다.
+      */}
+      {submitted && hasErrors(errors) ? (
+        <p className="err-shown" role="alert" style={{ textAlign: 'center' }}>
+          입력을 다시 확인해주세요.
         </p>
       ) : null}
       <p className="fineprint">

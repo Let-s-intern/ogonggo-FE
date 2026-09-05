@@ -24,25 +24,6 @@ export const CHANNELS = [
   '정하기 어렵습니다. 추천해주세요',
 ] as const;
 
-/**
- * 개인 메일 도메인. 회사 이메일을 받으려는 것이므로 이 목록에 걸리면 되돌린다.
- *
- * 완전한 목록일 수 없고 그럴 필요도 없다 — 목적은 차단이 아니라 "회사 메일을 적어 달라"는
- * 안내다. 흔한 것만 막으면 대부분 거른다.
- */
-const PERSONAL_EMAIL_DOMAINS = [
-  'gmail.com',
-  'naver.com',
-  'daum.net',
-  'hanmail.net',
-  'kakao.com',
-  'nate.com',
-  'outlook.com',
-  'hotmail.com',
-  'yahoo.com',
-  'icloud.com',
-];
-
 export interface ApplyPayload {
   mode: ApplyMode;
   company: string;
@@ -74,7 +55,7 @@ function isBlank(value: string | undefined): boolean {
 }
 
 /**
- * 신청서를 검증한다. 비어 있으면 안 되는 자리, 회사 이메일 여부, 공고 링크 모양을 본다.
+ * 신청서를 검증한다. 비어 있으면 안 되는 자리, 이메일과 공고 링크의 모양을 본다.
  *
  * 링크는 `new URL()` 로 재지 않는다. 사용자가 `letscareer.co.kr/jobs/1` 처럼 스킴 없이 적는
  * 경우가 흔한데 그건 오타가 아니라 그냥 주소이고, 되돌려 보내면 신청을 포기한다. 점이 있는지만
@@ -90,12 +71,12 @@ export function validateApply(payload: ApplyPayload): ApplyErrors {
   if (isBlank(payload.survey)) errors.survey = '답변을 입력해주세요.';
   if (!payload.agree) errors.agree = '개인정보 수집·이용에 동의해주세요.';
 
+  // 개인 메일(네이버·지메일 등)도 받는다(2026-09-05 결정). 한국 기업 담당자가 실제로 그런
+  // 주소를 쓰는 경우가 흔한데, 막아 두면 진짜 신청자가 여기서 되돌아간다. 모양만 본다.
   const email = payload.email.trim().toLowerCase();
   const domain = email.split('@')[1] ?? '';
   if (isBlank(email) || !domain.includes('.')) {
     errors.email = '이메일을 입력해주세요.';
-  } else if (PERSONAL_EMAIL_DOMAINS.includes(domain)) {
-    errors.email = '회사 도메인 이메일로 입력해주세요.';
   }
 
   if (payload.mode === 'promo') {
@@ -111,4 +92,43 @@ export function validateApply(payload: ApplyPayload): ApplyErrors {
 
 export function hasErrors(errors: ApplyErrors): boolean {
   return Object.keys(errors).length > 0;
+}
+
+/**
+ * 연락처에 하이픈을 넣는다. 입력하는 동안 부르므로 아직 덜 친 번호도 그대로 돌려줘야 한다.
+ *
+ * 국번 자릿수가 갈린다.
+ *   02        서울 지역번호만 두 자리다 (02-1234-5678, 02-123-4567)
+ *   그 외 10자리  3-3-4 (031-123-4567, 011-123-4567)
+ *   그 외 11자리  3-4-4 (010-1234-5678, 070-1234-5678)
+ *
+ * 숫자가 아닌 글자는 버린다. 붙여넣기로 `+82 10 1234 5678` 이 들어오는 경우가 있는데, 앞의
+ * `82` 를 국번으로 읽으면 엉뚱하게 잘리므로 국가번호는 `0` 으로 되돌린다.
+ */
+export function formatPhone(value: string): string {
+  let digits = value.replace(/\D/g, '');
+  if (digits.startsWith('82')) {
+    digits = `0${digits.slice(2)}`;
+  }
+  digits = digits.slice(0, 11);
+
+  if (digits.startsWith('02')) {
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`;
+    return `${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
+  }
+
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+
+  // 휴대폰(`010`)은 길이를 보지 않고 3-4-4 로 간다. 길이로만 나누면 여덟 자리째에
+  // `010-123-45` 로 갈랐다가 열한 자리째에 `010-1234-5678` 로 다시 갈라, 치는 도중에
+  // 하이픈이 한 칸 뛴다. 010 은 11자리로 정해져 있으므로 처음부터 그 모양으로 둔다.
+  if (digits.startsWith('010')) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+
+  if (digits.length <= 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }

@@ -1,4 +1,5 @@
 import { MODE_LABEL, hasErrors, validateApply, type ApplyPayload } from '@/lib/apply';
+import { notifyAdvertisementInquiry } from '@/lib/advertisement-inquiry';
 import { saveApplication } from '@/lib/pocketbase';
 
 /**
@@ -62,6 +63,18 @@ export async function POST(request: Request) {
       { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
       { status: 502 },
     );
+  }
+
+  // 무료 홍보 신청만 영업 슬랙으로 알린다. 저장이 끝난 뒤라 여기서 실패해도 신청은 남는다
+  // (`lib/advertisement-inquiry.ts` 가 던지지 않고 로그만 남기는 이유).
+  if (payload.mode === 'promo') {
+    await notifyAdvertisementInquiry({
+      companyName: record.company,
+      managerName: record.name,
+      email: record.email,
+      phoneNumber: record.phone,
+      promotionAnswer: record.survey,
+    });
   }
 
   return Response.json({ ok: true });

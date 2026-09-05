@@ -1,20 +1,19 @@
 /**
- * 출시알림 신청을 포켓베이스에서 읽어 온다.
+ * `/admin` 화면이 포켓베이스에서 신청을 읽어 오는 자리.
  *
- * **런칭(2026-09-23) 뒤 지운다.** `apps/launch-notice` 와 함께 이 폴더를 통째로 지우면 되고,
- * 어드민에서 그 앱과 이어진 자리는 이 폴더와 `pages/home/ui/HomePage.tsx` 의 한 줄이 전부다.
- *
- * SDK(`pocketbase` npm 패키지)를 쓰지 않는다. 로그인 한 번과 목록 조회 한 번뿐이고, 어차피
- * 지울 코드에 의존성을 늘리지 않는다.
+ * **브라우저에서 직접 부른다.** 신청을 저장하는 쪽(`lib/pocketbase.ts`)과 다르다 — 그쪽은
+ * 서버가 슈퍼유저 비밀번호로 로그인하지만, 이쪽은 사람이 화면에서 로그인한다. 서버 환경변수의
+ * 비밀번호를 이 화면에 쓰면 `/admin` 주소를 아는 누구나 신청자 전원의 개인정보를 보게 된다.
  */
 
-/** 신청이 담긴 컬렉션. `apps/launch-notice/src/lib/pocketbase.ts` 와 같은 이름이다. */
+/** 신청이 담긴 컬렉션. `lib/pocketbase.ts` 와 같은 이름이다. */
 const COLLECTION = 'launch_notice_applications';
 
-/** 포켓베이스 주소. 공개돼도 되는 값이다 — 읽으려면 로그인해야 한다(컬렉션 규칙이 잠겨 있다). */
-export const POCKETBASE_URL = (
-  (import.meta.env.VITE_POCKETBASE_URL as string | undefined) ?? ''
-).replace(/\/$/, '');
+/**
+ * 포켓베이스 주소. 공개돼도 되는 값이다 — 컬렉션이 잠겨 있어(비인증 조회 403) 읽으려면
+ * 로그인해야 한다. 그래서 `NEXT_PUBLIC_` 이 붙어 있다.
+ */
+export const POCKETBASE_URL = (process.env.NEXT_PUBLIC_POCKETBASE_URL ?? '').replace(/\/$/, '');
 
 export interface Application {
   id: string;
@@ -32,7 +31,7 @@ export interface Application {
   marketing: boolean;
 }
 
-/** 화면과 CSV 가 함께 쓰는 열 정의. 순서가 곧 표와 파일의 열 순서다. */
+/** 표와 CSV 가 함께 쓰는 열 정의. 순서가 곧 화면과 파일의 열 순서다. */
 export const COLUMNS: { key: keyof Application; label: string }[] = [
   { key: 'created', label: '신청 시각' },
   { key: 'mode', label: '유형' },
