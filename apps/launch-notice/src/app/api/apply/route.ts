@@ -1,12 +1,12 @@
 import { MODE_LABEL, hasErrors, validateApply, type ApplyPayload } from '@/lib/apply';
+import { saveApplication } from '@/lib/pocketbase';
 
 /**
- * 신청서를 받아 구글 앱스 스크립트 웹앱으로 넘긴다. 그쪽이 스프레드시트에 행을 더한다
- * (`docs/apps-script.gs`).
+ * 신청서를 받아 포켓베이스에 저장한다(`lib/pocketbase.ts`).
  *
- * **브라우저가 웹앱으로 직접 쏘지 않는 이유가 여기다.** 그 주소는 그 자체가 열쇠라 프런트
- * 번들에 넣으면 누구나 남의 시트에 행을 넣을 수 있다. 이 자리를 한 번 거치면 주소와 비밀이
- * 서버 환경변수에만 남는다.
+ * **브라우저가 포켓베이스로 직접 쏘지 않는 이유가 여기다.** 컬렉션 규칙을 슈퍼유저 전용으로
+ * 잠가 두었고, 그 자격증명은 프런트 번들에 넣을 수 있는 물건이 아니다. 이 자리를 한 번
+ * 거치면 주소와 비밀번호가 서버 환경변수에만 남는다.
  *
  * 서버 검증을 다시 하는 것도 같은 이유다. 폼을 거치지 않고 이 엔드포인트로 바로 POST 하는
  * 요청이 있으므로 클라이언트 검증은 사용자 편의일 뿐 관문이 아니다.
@@ -30,20 +30,8 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, errors }, { status: 400 });
   }
 
-  const webhookUrl = process.env.LAUNCH_NOTICE_SHEET_WEBHOOK_URL;
-  if (!webhookUrl) {
-    console.error('[신청] LAUNCH_NOTICE_SHEET_WEBHOOK_URL 이 없습니다. 저장하지 못했습니다.');
-    return Response.json(
-      { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-      { status: 500 },
-    );
-  }
-
-  // 시트의 열 순서와 이름이 여기서 정해진다. 앱스 스크립트는 이 키들을 그대로 행으로 옮긴다
-  // (`docs/apps-script.gs` 의 `HEADERS`). 키를 바꾸면 그쪽도 같이 바꾼다.
-  const row = {
-    secret: process.env.LAUNCH_NOTICE_SHEET_SECRET ?? '',
-    submittedAt: new Date().toISOString(),
+  // 필드 이름은 포켓베이스 컬렉션과 짝이다(`lib/pocketbase.ts` 의 `ApplicationRecord`).
+  const record = {
     mode: MODE_LABEL[payload.mode],
     company: payload.company.trim(),
     name: payload.name.trim(),
@@ -54,64 +42,22 @@ export async function POST(request: Request) {
     role: payload.role?.trim() ?? '',
     link: payload.link?.trim() ?? '',
     survey: payload.survey.trim(),
-    marketing: payload.marketing ? 'Y' : 'N',
+    marketing: payload.marketing,
   };
 
   try {
-    // 앱스 스크립트 웹앱은 `/exec` 로 요청하면 `script.googleusercontent.com` 으로
-    // 302 를 준다. `fetch` 는 기본으로 따라가므로 그대로 두면 되지만, 따라간 뒤의 응답이
-    // 진짜 결과다 — 302 자체를 성공으로 읽지 않도록 아래에서 본문까지 확인한다.
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(row),
-      redirect: 'follow',
-      // 앱스 스크립트는 가끔 몇 초씩 걸린다. 그렇다고 무한정 기다리면 요청이 쌓이므로 끊는다.
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    const text = await response.text();
-
-    if (!response.ok) {
-      // 앱스 스크립트가 실패하면 JSON 이 아니라 HTML 오류 페이지를 준다. 앞부분만 남겨도
-      // "권한 승인 안 됨"인지 "배포 없음"인지 구분이 된다.
-      console.error(
-        `[신청] 웹훅이 ${response.status} 를 돌려줬습니다. 응답 앞부분: ${text.slice(0, 300)}`,
-      );
+    const result = await saveApplication(record);
+    if (result === '설정되지 않음') {
+      // 환경변수를 안 넣고 배포한 경우다. 사용자에게는 일반적인 실패로 보이지만 서버 로그에는
+      // 원인이 남아야 한다 — 이게 없으면 "왜 신청이 안 쌓이지"를 한참 찾는다.
+      console.error('[신청] POCKETBASE_* 환경변수가 없습니다. 저장하지 못했습니다.');
       return Response.json(
         { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-        { status: 502 },
-      );
-    }
-
-    // 200 이어도 실패일 수 있다. 스크립트가 `{ok:false, where, message}` 를 돌려주는 경우와,
-    // 배포 설정이 잘못돼 로그인 페이지 HTML 이 오는 경우가 그렇다. 둘 다 여기서 걸러야
-    // 사용자에게 "접수됐다"고 거짓말하지 않는다.
-    let result: { ok?: boolean; where?: string; message?: string };
-    try {
-      result = JSON.parse(text) as typeof result;
-    } catch {
-      console.error(
-        `[신청] 웹훅이 JSON 이 아닌 응답을 줬습니다. 배포의 "액세스 권한"이 ` +
-          `"모든 사용자"인지 확인하세요. 응답 앞부분: ${text.slice(0, 300)}`,
-      );
-      return Response.json(
-        { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-        { status: 502 },
-      );
-    }
-
-    if (!result.ok) {
-      console.error(
-        `[신청] 스크립트가 실패를 알렸습니다. where=${result.where ?? '-'} message=${result.message ?? '-'}`,
-      );
-      return Response.json(
-        { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-        { status: 502 },
+        { status: 500 },
       );
     }
   } catch (error) {
-    console.error('[신청] 웹훅 호출에 실패했습니다.', error);
+    console.error('[신청] 포켓베이스 저장에 실패했습니다.', error);
     return Response.json(
       { ok: false, message: '접수에 실패했습니다. 잠시 후 다시 시도해주세요.' },
       { status: 502 },
