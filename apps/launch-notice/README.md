@@ -8,9 +8,7 @@
 1. 이 폴더(`apps/launch-notice`)를 지운다
 2. Vercel 에서 이 앱의 프로젝트를 지운다
 3. 서브도메인 DNS 레코드를 지운다
-4. `apps/admin/src/pages/home/ui/HomePage.tsx` 의 시트 링크 블록을 지운다
-5. `.github/workflows/ci.yml` 의 `launch_notice` 줄들을 지운다
-6. 구글 서비스 계정을 지운다 (GCP 콘솔)
+4. `apps/admin/src/pages/home/ui/HomePage.tsx` 의 시트 링크 한 줄을 지운다
 
 그 밖에 손댈 곳이 없어야 한다. **이 앱은 `packages/` 를 가져다 쓰지 않고, 다른 앱도 이 앱을
 참조하지 않는다.** 스타일도 폰트도 자기 것만 쓴다(`src/app/landing.css`) — 공유하는 껍데기가
@@ -18,43 +16,36 @@
 
 ## 환경변수
 
-`.env.example` 참고. 로컬에서는 `.env` 또는 `.env.local` 에 넣는다.
+`.env.example` 참고. 로컬에서는 `.env.local` 에 넣는다.
 
-| 이름                          | 무엇                                          |
-| ----------------------------- | --------------------------------------------- |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | 서비스 계정 JSON 통째로 (한 줄)               |
-| `LAUNCH_NOTICE_SHEET_ID`      | 시트 주소의 `/d/` 와 `/edit` 사이 44자 문자열 |
+| 이름                              | 무엇                                     |
+| --------------------------------- | ---------------------------------------- |
+| `LAUNCH_NOTICE_SHEET_WEBHOOK_URL` | 앱스 스크립트 웹앱의 `/exec` 주소        |
+| `LAUNCH_NOTICE_SHEET_SECRET`      | 그 스크립트의 `SHARED_SECRET` 과 같은 값 |
 
-**둘 다 서버에서만 읽는다.** `NEXT_PUBLIC_` 을 붙이면 브라우저 번들에 들어가고, 그러면 개인
-키가 그대로 노출된다.
+**둘 다 서버에서만 읽는다.** `NEXT_PUBLIC_` 을 붙이면 브라우저 번들에 들어가고, 그러면 주소를
+아는 누구나 시트에 행을 넣을 수 있다.
 
 값이 없으면 폼은 그려지지만 제출이 500 으로 실패한다. 원인은 서버 로그에 남는다.
 
 ## 시트 연결
 
-**API 키로는 안 된다.** 구글 API 키는 "공개된 자원을 인증 없이 읽는" 용도라 시트에 쓰지
-못한다 — `sheets.googleapis.com` 이 append 요청에 `401 API keys are not supported by this
-API` 를 준다(2026-09-04 확인). 사람 없이 서버가 쓰려면 주체가 있는 자격증명, 즉 서비스
-계정이 필요하다.
+`docs/apps-script.gs` 의 설치 순서를 따른다. **시트 ID 를 손으로 적지 않는다** — `setup` 이 자기가 붙어 있는 문서에서 읽어 스크립트 속성에 저장한다. **배포 전에 `setup` 함수를 한 번 손으로 실행해야 한다** — 앱스 스크립트는 권한 승인 없이 배포하면 첫 요청에서 조용히 실패한다. 배포 뒤 `/exec` 주소를 브라우저로 열어 `{"ok":true}` 가 보이면 살아 있는 것이다.
+나오는 주소를 위 환경변수에 넣으면 끝이다. 열 순서는 그 파일의 `HEADERS` 가 정하고,
+`src/app/api/apply/route.ts` 가 보내는 키와 이름이 같아야 한다.
 
-1. console.cloud.google.com → 프로젝트 선택 → **API 및 서비스 → 라이브러리** → `Google
-Sheets API` 사용 설정
-2. **IAM 및 관리자 → 서비스 계정 → 서비스 계정 만들기** (이름은 아무거나, 역할은 주지 않아도
-   된다 — 권한은 시트 공유로 준다)
-3. 만든 계정 → **키 → 키 추가 → 새 키 만들기 → JSON** → 파일이 받아진다
-4. 그 파일 내용을 **한 줄로** `GOOGLE_SERVICE_ACCOUNT_JSON` 에 넣는다
-5. 신청을 받을 스프레드시트를 열고, JSON 안의 `client_email`
-   (`...@....iam.gserviceaccount.com`) 을 **편집자로 공유**한다. 이 단계를 빠뜨리면
-   `Sheets API 403` 이 난다
-6. 시트 주소의 `/d/` 와 `/edit` 사이 문자열을 `LAUNCH_NOTICE_SHEET_ID` 에 넣는다
+## 배포가 됐는지 확인
 
-신청은 `출시알림 신청` 이라는 이름의 탭에 쌓인다. **탭은 미리 만들어 둔다** — 없으면
-`Sheets API 400 Unable to parse range` 가 난다. 머리글은 비어 있을 때 코드가 알아서 깐다.
-첫 탭에 다른 데이터가 있어도 건드리지 않는다.
+```bash
+pnpm --filter launch-notice check-sheet
+```
 
-라이브러리(`googleapis`)를 쓰지 않는다. 이 한 가지 호출을 위해 들이기엔 크고, 필요한 것은
-JWT 하나를 만들어 토큰으로 바꾸고 POST 하는 것뿐이라 Node 기본 `crypto` 로 충분하다
-(`src/lib/sheets.ts`).
+`.env` 를 읽어 배포를 실제로 두드려 본다 — 살아 있는지, 비밀이 막고 있는지, 행이 진짜
+들어가는지. 앱스 스크립트는 설정이 어긋나면 JSON 대신 HTML 로그인 페이지를 200 으로
+돌려주기 때문에 그냥 호출해서는 성공과 실패가 구분되지 않는다. 이 명령은 응답의 모양까지
+보고 무엇이 잘못됐는지(액세스 권한 / 권한 승인 / 배포 없음 / `/dev` 주소) 말해 준다.
+
+통과하면 마지막에 점검용 행이 한 줄 들어가 있다. 시트에서 지우면 된다.
 
 ## 손으로 고치는 값
 
