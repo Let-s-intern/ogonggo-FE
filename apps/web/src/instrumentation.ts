@@ -23,8 +23,29 @@
  */
 const MSW_STARTED = Symbol.for('ogonggo.msw.started');
 
+/**
+ * 목데이터를 쓸지. 기본은 **켜짐**이다 — 지금 배포본이 MSW 기반이라 기본을 뒤집으면 그게
+ * 깨진다. 실제 백엔드를 보려면 `OGONGGO_USE_MOCKS=false` 를 준다.
+ *
+ * `!== 'false'` 가 아니라 `=== 'false'` 로 끄는 것에 뜻이 있다. 오타(`fasle`)나 빈 값이
+ * 조용히 목을 꺼 버리면, 데이터가 안 보이는 이유를 한참 찾게 된다. 끄는 쪽이 정확한 철자를
+ * 요구하는 편이 안전하다.
+ */
+function usesMocks(): boolean {
+  return process.env.OGONGGO_USE_MOCKS !== 'false';
+}
+
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
+    return;
+  }
+
+  if (!usesMocks()) {
+    // 어느 쪽으로 떴는지 남긴다. 목이 켜진 줄 모르고 "왜 데이터가 안 바뀌지"를 찾는 일이
+    // 실제로 있었다 — 켜짐도 꺼짐도 한 줄씩 찍는다.
+    console.info(
+      `[ogonggo] 목데이터 꺼짐. 실제 백엔드를 봅니다 — ${process.env.OGONGGO_USER_API_ORIGIN ?? 'http://localhost:8080'}`,
+    );
     return;
   }
 
@@ -38,6 +59,7 @@ export async function register() {
 
   const { server } = await import('@ogonggo/api/src/mocks/server');
   server.listen({ onUnhandledRequest: 'bypass' });
+  console.info('[ogonggo] 목데이터 켜짐 (MSW). 실제 백엔드를 보려면 OGONGGO_USE_MOCKS=false');
 
   keepMswFetchAcrossRecompiles(originalFetch, globalThis.fetch);
 }
