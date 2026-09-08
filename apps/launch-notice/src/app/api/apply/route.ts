@@ -1,4 +1,4 @@
-import { MODE_LABEL, hasErrors, validateApply, type ApplyPayload } from '@/lib/apply';
+import { findChannel, hasErrors, MODE_LABEL, validateApply, type ApplyPayload } from '@/lib/apply';
 import { notifyAdvertisementInquiry } from '@/lib/advertisement-inquiry';
 import { saveApplication } from '@/lib/pocketbase';
 
@@ -39,7 +39,9 @@ export async function POST(request: Request) {
     title: payload.title.trim(),
     email: payload.email.trim().toLowerCase(),
     phone: payload.phone.trim(),
-    channel: payload.channel?.trim() ?? '',
+    // 폼은 백엔드 enum 코드를 보낸다. 포켓베이스에는 한국어 라벨로 넣는다 — 어드민 표와
+    // CSV 를 사람이 읽는다.
+    channel: findChannel(payload.channel)?.label ?? '',
     role: payload.role?.trim() ?? '',
     link: payload.link?.trim() ?? '',
     survey: payload.survey.trim(),
@@ -67,12 +69,15 @@ export async function POST(request: Request) {
 
   // 무료 홍보 신청만 영업 슬랙으로 알린다. 저장이 끝난 뒤라 여기서 실패해도 신청은 남는다
   // (`lib/advertisement-inquiry.ts` 가 던지지 않고 로그만 남기는 이유).
-  if (payload.mode === 'promo') {
+  // `validateApply` 가 아는 코드인지 이미 확인했으므로 여기서는 있는 것으로 본다.
+  const channel = findChannel(payload.channel);
+  if (payload.mode === 'promo' && channel) {
     await notifyAdvertisementInquiry({
       companyName: record.company,
       managerName: record.name,
       email: record.email,
       phoneNumber: record.phone,
+      promotionChannel: channel.code,
       promotionAnswer: record.survey,
     });
   }

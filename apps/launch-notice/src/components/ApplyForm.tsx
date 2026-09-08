@@ -275,8 +275,10 @@ export function ApplyForm({ onDone }: ApplyFormProps = {}) {
             <select id={field('channel')} name="channel" defaultValue="">
               <option value="">한 곳만 선택해주세요</option>
               {CHANNELS.map((channel) => (
-                <option key={channel} value={channel}>
-                  {channel}
+                // `value` 는 백엔드 enum 이고 보이는 글자는 한국어다. 서버가 라벨을 다시
+                // 한국어로 되돌려 포켓베이스에 넣는다(`api/apply/route.ts`).
+                <option key={channel.code} value={channel.code}>
+                  {channel.label}
                 </option>
               ))}
             </select>

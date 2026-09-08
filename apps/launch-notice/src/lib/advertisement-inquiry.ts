@@ -10,6 +10,8 @@
  * `LAUNCH_ALERT` 가 있지만 쓰지 않는다.
  */
 
+import type { ChannelCode } from './apply';
+
 /** 백엔드 enum. 우리는 `FREE_PROMOTION` 만 보낸다. */
 const INQUIRY_TYPE = 'FREE_PROMOTION';
 
@@ -18,6 +20,12 @@ export interface AdvertisementInquiry {
   managerName: string;
   email: string;
   phoneNumber: string;
+  /**
+   * 홍보를 원하는 채널. 백엔드 enum 이라 한국어 라벨이 아니라 코드를 보낸다
+   * (`lib/apply.ts` 의 `CHANNELS`). 2026-09-08 에 필수로 추가됐고, 안 보내는 동안
+   * 알림이 나가지 않았다.
+   */
+  promotionChannel: ChannelCode;
   /** 설문 답변. 백엔드에서 필수 필드다. */
   promotionAnswer: string;
 }

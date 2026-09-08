@@ -12,17 +12,32 @@ export const MODE_LABEL: Record<ApplyMode, string> = {
   alert: '출시 알림 신청',
 };
 
-/** 무료 홍보를 태울 수 있는 채널. 목업의 `select` 항목 그대로다. */
+/**
+ * 무료 홍보를 태울 수 있는 채널.
+ *
+ * `code` 는 백엔드 `promotionChannel` enum, `label` 은 목업의 `select` 항목 그대로다.
+ * **한 벌로 둔다.** 화면은 `label` 을, 슬랙 알림은 `code` 를, 포켓베이스는 다시 `label` 을
+ * 쓰는데(어드민 표와 CSV 가 한국어로 읽혀야 한다), 목록을 나눠 두면 라벨을 손보는 순간
+ * 매핑이 조용히 깨진다.
+ */
 export const CHANNELS = [
-  '인스타그램 @letscareer.job · 2.7만 팔로워',
-  '오픈채팅방 · 마케팅 (2,015명)',
-  '오픈채팅방 · 기획·운영 (1,146명)',
-  '오픈채팅방 · 인사·HR·경영관리 (1,087명)',
-  '오픈채팅방 · 공채 전반 (856명)',
-  '오픈채팅방 · 세일즈 (330명)',
-  '오픈채팅방 · AI역량·개발 (105명)',
-  '정하기 어렵습니다. 추천해주세요',
+  { code: 'INSTAGRAM', label: '인스타그램 @letscareer.job · 2.7만 팔로워' },
+  { code: 'OPEN_CHAT_MARKETING', label: '오픈채팅방 · 마케팅 (2,015명)' },
+  { code: 'OPEN_CHAT_PLANNING', label: '오픈채팅방 · 기획·운영 (1,146명)' },
+  { code: 'OPEN_CHAT_HR', label: '오픈채팅방 · 인사·HR·경영관리 (1,087명)' },
+  { code: 'OPEN_CHAT_PUBLIC_RECRUITMENT', label: '오픈채팅방 · 공채 전반 (856명)' },
+  { code: 'OPEN_CHAT_SALES', label: '오픈채팅방 · 세일즈 (330명)' },
+  { code: 'OPEN_CHAT_AI_DEVELOPMENT', label: '오픈채팅방 · AI역량·개발 (105명)' },
+  { code: 'RECOMMENDATION_REQUESTED', label: '정하기 어렵습니다. 추천해주세요' },
 ] as const;
+
+/** 폼이 보내는 채널 값. `select` 의 `value` 가 이것이다. */
+export type ChannelCode = (typeof CHANNELS)[number]['code'];
+
+/** 모르는 값이면 `undefined`. 폼을 거치지 않은 요청이 아무 문자열이나 넣을 수 있다. */
+export function findChannel(code: string | undefined) {
+  return CHANNELS.find((channel) => channel.code === code);
+}
 
 export interface ApplyPayload {
   mode: ApplyMode;
@@ -80,7 +95,9 @@ export function validateApply(payload: ApplyPayload): ApplyErrors {
   }
 
   if (payload.mode === 'promo') {
-    if (isBlank(payload.channel)) errors.channel = '채널을 한 곳 선택해주세요.';
+    // 비었는지만 보지 않고 아는 값인지까지 본다. 백엔드가 enum 을 받으므로 모르는 값을
+    // 흘려보내면 슬랙 알림이 400 으로 떨어진다.
+    if (!findChannel(payload.channel)) errors.channel = '채널을 한 곳 선택해주세요.';
     if (isBlank(payload.role)) errors.role = '채용 직무명을 입력해주세요.';
     if (isBlank(payload.link) || !payload.link!.includes('.')) {
       errors.link = '공고 페이지 주소를 입력해주세요.';
