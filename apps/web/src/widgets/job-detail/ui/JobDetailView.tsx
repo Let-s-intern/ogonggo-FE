@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { getJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
@@ -11,6 +12,16 @@ import { SimilarJobs } from './SimilarJobs';
 
 export interface JobDetailViewProps {
   jobId: number;
+  /**
+   * `‹ 채용공고 목록` 을 보일지. 페이지(`/jobs/{id}`)에서는 켜고, 달력 모달처럼 돌아갈
+   * 목록이 뒤에 이미 있는 자리에서는 끈다(`docs/asset/공고달력 클릭시.png` 에도 없다).
+   */
+  showBreadcrumb?: boolean;
+  /**
+   * 없는 공고일 때 `notFound()` 대신 그릴 것. 모달은 화면 전체를 404 로 보내면 안 된다 —
+   * 뒤에 있던 달력까지 사라진다. 넘기지 않으면 지금까지처럼 `notFound()` 다.
+   */
+  missingFallback?: ReactNode;
 }
 
 /**
@@ -21,26 +32,23 @@ export interface JobDetailViewProps {
  *
  * 404(JOB_NOT_FOUND)는 `httpClient`가 구조화된 응답 대신
  * `Error("GET /api/v1/jobs/{id} failed: 404")`를 던지므로(응답이 `ok`가 아니면 무조건 던짐),
- * 메시지 끝의 상태 코드로 404를 가려내 `notFound()`(node_modules/next/dist/docs/01-app/
- * 03-api-reference/04-functions/not-found.md)로 변환한다. 그 외 오류(전송 실패 등)는 그대로
- * 다시 던진다.
+ * 메시지 끝의 상태 코드로 404를 가려낸다. 그 외 오류(전송 실패 등)는 그대로 다시 던진다.
+ *
+ * 없을 때 무엇을 할지는 여기서 정하지 않고 `null` 로 알린다. 페이지는 `notFound()` 지만
+ * 모달은 화면을 통째로 404 로 보내면 안 되기 때문이다(`missingFallback`).
  */
-async function fetchJobDetail(jobId: number): Promise<JobDetail> {
+async function fetchJobDetail(jobId: number): Promise<JobDetail | null> {
   let response: SuccessResponseUserJobDetailResponse;
   try {
     response = (await getJob(jobId)) as unknown as SuccessResponseUserJobDetailResponse;
   } catch (error) {
     if (error instanceof Error && error.message.endsWith(': 404')) {
-      notFound();
+      return null;
     }
     throw error;
   }
 
-  if (!response.data) {
-    notFound();
-  }
-
-  return response.data;
+  return response.data ?? null;
 }
 
 /**
@@ -65,12 +73,24 @@ function buildSections(job: JobDetail): { label: string; value?: string }[] {
  * (값 있는 것만) → 사이드바)로 조합한다. 본문(왼쪽)과 사이드바(오른쪽)는 데스크톱에서 2단,
  * 좁은 화면에서는 세로로 쌓인다.
  */
-export async function JobDetailView({ jobId }: JobDetailViewProps) {
+export async function JobDetailView({
+  jobId,
+  showBreadcrumb = true,
+  missingFallback,
+}: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
+
+  if (!job) {
+    if (missingFallback !== undefined) {
+      return missingFallback;
+    }
+    // node_modules/next/dist/docs/01-app/03-api-reference/04-functions/not-found.md
+    notFound();
+  }
 
   return (
     <div className="flex w-full max-w-6xl flex-col gap-4">
-      <JobDetailBreadcrumb />
+      {showBreadcrumb ? <JobDetailBreadcrumb /> : null}
       <JobDetailHeaderCard
         companyName={job.companyName}
         region={job.region}

@@ -190,3 +190,17 @@ export function ListIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** 모달 오른쪽 위 닫기(`docs/asset/공고달력 클릭시.png`). */
+export function CloseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="m5 5 10 10M15 5 5 15"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

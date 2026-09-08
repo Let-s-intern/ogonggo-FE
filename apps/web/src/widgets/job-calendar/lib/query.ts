@@ -16,6 +16,7 @@ export interface JobCalendarQuery {
 export interface JobCalendarSearchParams {
   date?: string;
   brief?: string;
+  job?: string;
 }
 
 /** `brief` 가 켜졌다고 인정하는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
@@ -95,4 +96,31 @@ export function buildJobCalendarHref(
 
   const query = params.toString();
   return query ? `/calendar?${query}` : '/calendar';
+}
+
+/**
+ * 상세 모달이 열렸는지는 `?job=<id>` 가 정한다. `date`·`brief` 와 달리 `JobCalendarQuery` 에
+ * 넣지 않는다 — 그 둘은 "달력이 무엇을 보여주는가"이고 `job` 은 그 위에 겹쳐 뜬 모달이다.
+ * 갈라 두면 `buildJobCalendarHref` 가 만드는 링크(화살표, 미니 달력, 간략히 보기)가 모달을
+ * 달고 다니지 않는다 — 모달을 닫는 주소가 곧 그 링크이기도 하다.
+ *
+ * 숫자가 아닌 값은 모달을 열지 않는다. 숫자이지만 없는 id 는 여기서 거르지 않는다 — 모달
+ * 안에서 오류 문구로 처리한다(`JobDetailModal`). 그 둘은 다른 상황이다. 앞은 주소가 망가진
+ * 것이고 뒤는 주소는 멀쩡한데 공고가 사라진 것이다.
+ */
+export function parseJobParam(value: string | undefined): number | undefined {
+  if (!value || !/^\d+$/.test(value)) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
+}
+
+/**
+ * 달력 주소에 `?job=` 만 덧붙인다. 보고 있던 날짜와 뷰는 그대로 남으므로 모달을 닫으면
+ * 원래 보던 화면으로 돌아온다.
+ */
+export function withJobParam(calendarHref: string, jobId: number): string {
+  return `${calendarHref}${calendarHref.includes('?') ? '&' : '?'}job=${jobId}`;
 }

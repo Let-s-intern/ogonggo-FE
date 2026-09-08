@@ -1,6 +1,7 @@
 import { JobCalendarPage } from '@/views/job-calendar';
 import {
   parseJobCalendarQuery,
+  parseJobParam,
   type JobCalendarSearchParams,
 } from '@/widgets/job-calendar/lib/query';
 
@@ -16,7 +17,8 @@ export default async function Page({
 }: {
   searchParams: Promise<JobCalendarSearchParams>;
 }) {
-  const query = parseJobCalendarQuery(await searchParams);
+  const resolved = await searchParams;
+  const query = parseJobCalendarQuery(resolved);
 
-  return <JobCalendarPage {...query} />;
+  return <JobCalendarPage {...query} job={parseJobParam(resolved.job)} />;
 }
