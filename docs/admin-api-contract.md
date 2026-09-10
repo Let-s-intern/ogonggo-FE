@@ -33,7 +33,7 @@
 **성공 응답 봉투.** 사용자 API 와 같다.
 
 ```json
-{ "status": 200, "message": "OK", "data": { } }
+{ "status": 200, "message": "OK", "data": {} }
 ```
 
 **오류 응답 봉투.**
@@ -67,38 +67,38 @@
 
 ## 한눈에 보기
 
-| # | 페이지 | 조작 | 메서드 · 경로 | 동작 |
-|---|---|---|---|---|
-| 1 | `/` 대시보드 | 진입 | `GET /dashboard/summary` | 처리할 일·오늘 유입 숫자를 한 번에 |
-| 2 | `/content/jobs` | 진입·검색·필터·정렬·페이지 | `GET /jobs` | 목록. 파라미터를 실제로 반영 |
-| 3 | `/content/jobs` | 노출 토글 | `PATCH /jobs/{id}` | `visibility` 만 바꿈 |
-| 4 | `/content/jobs/{id}` | 진입 | `GET /jobs/{id}` | 상세 |
-| 5 | `/content/jobs/{id}` | 운영 값 수정 → 저장 | `PATCH /jobs/{id}` | 노출·등록 경로·검수 상태 |
-| 6 | `/content/jobs/{id}` | 내용 수정 → 저장 | `PATCH /jobs/{id}` | 제목·본문 칸 |
-| 7 | `/content/jobs/{id}` | 삭제 → 문구 입력 | `DELETE /jobs/{id}` | 삭제 후 목록으로 |
-| 8 | `/content/bootcamps` | 진입·검색·필터·정렬 | `GET /bootcamps` | 목록 |
-| 9 | `/content/bootcamps/{id}` | 진입 | `GET /bootcamps/{id}` | 상세 |
-| 10 | `/content/bootcamps/{id}` | 내용 수정 → 저장 | `PATCH /bootcamps/{id}` | 제목·본문·노출 |
-| 11 | `/content/bootcamps/{id}` | 삭제 | `DELETE /bootcamps/{id}` | 삭제 후 목록으로 |
-| 12 | `/content/side-studies` | 진입·검색·필터 | `GET /side-studies` | 목록 |
-| 13 | `/content/side-studies/{id}` | 진입 | `GET /side-studies/{id}` | 상세 |
-| 14 | `/content/side-studies/{id}` | 삭제 | `DELETE /side-studies/{id}` | 삭제 후 목록으로 |
-| 15 | `/content/review` | 진입 | `GET /review-queue` | 검수 대기 전체 (페이지 없음) |
-| 16 | `/content/review` | Space·Backspace 후 저장하기 | `PATCH /review-queue/{type}/{id}` | 판정. 반려는 사유 필수 |
-| 17 | `/content/review` | 되돌리기 | `PATCH /review-queue/{type}/{id}/undo` | 대기로 되돌림 |
-| 18 | `/content/review` | 내용 수정 → 저장 | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 5·10과 같은 API |
-| 19 | `/content/rejections` | 진입·검색·필터 | `GET /rejections` | 반려 기록 목록 |
-| 20 | `/content/rejections` | 사유 수정 → 저장 | `PATCH /rejections/{type}/{id}` | 사유 교체. 비울 수 없음 |
-| 21 | `/members/users` | 진입·검색·필터 | `GET /members/users` | 목록 |
-| 22 | `/members/users/{id}` | 진입 | `GET /members/users/{id}` | 상세 + 활동 |
-| 23 | `/members/companies` | 진입·검색·필터 | `GET /members/companies` | 목록 |
-| 24 | `/members/companies/{id}` | 진입 | `GET /members/companies/{id}` | 상세 + 등록 공고 |
-| 25 | `/support/inquiries` | 진입·검색·필터 | `GET /inquiries` | 목록 |
-| 26 | `/support/inquiries/{id}` | 진입 | `GET /inquiries/{id}` | 상세 |
-| 27 | `/support/inquiries/{id}` | 답변 저장 | `PATCH /inquiries/{id}` | 답변 필수. 상태 함께 바뀜 |
-| 28 | `/support/notices` | 진입 | `GET /notices` | 전체 (페이지 없음) |
-| 29 | `/support/notices` | 새 공지 → 저장 | `POST /notices` | 고정은 하나만 |
-| 30 | `/support/notices` | 행 클릭 → 저장 | `PUT /notices/{id}` | 고정은 하나만 |
+| #   | 페이지                       | 조작                        | 메서드 · 경로                                | 동작                               |
+| --- | ---------------------------- | --------------------------- | -------------------------------------------- | ---------------------------------- |
+| 1   | `/` 대시보드                 | 진입                        | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
+| 2   | `/content/jobs`              | 진입·검색·필터·정렬·페이지  | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
+| 3   | `/content/jobs`              | 노출 토글                   | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
+| 4   | `/content/jobs/{id}`         | 진입                        | `GET /jobs/{id}`                             | 상세                               |
+| 5   | `/content/jobs/{id}`         | 운영 값 수정 → 저장         | `PATCH /jobs/{id}`                           | 노출·등록 경로·검수 상태           |
+| 6   | `/content/jobs/{id}`         | 내용 수정 → 저장            | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
+| 7   | `/content/jobs/{id}`         | 삭제 → 문구 입력            | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
+| 8   | `/content/bootcamps`         | 진입·검색·필터·정렬         | `GET /bootcamps`                             | 목록                               |
+| 9   | `/content/bootcamps/{id}`    | 진입                        | `GET /bootcamps/{id}`                        | 상세                               |
+| 10  | `/content/bootcamps/{id}`    | 내용 수정 → 저장            | `PATCH /bootcamps/{id}`                      | 제목·본문·노출                     |
+| 11  | `/content/bootcamps/{id}`    | 삭제                        | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
+| 12  | `/content/side-studies`      | 진입·검색·필터              | `GET /side-studies`                          | 목록                               |
+| 13  | `/content/side-studies/{id}` | 진입                        | `GET /side-studies/{id}`                     | 상세                               |
+| 14  | `/content/side-studies/{id}` | 삭제                        | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
+| 15  | `/content/review`            | 진입                        | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
+| 16  | `/content/review`            | Space·Backspace 후 저장하기 | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
+| 17  | `/content/review`            | 되돌리기                    | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
+| 18  | `/content/review`            | 내용 수정 → 저장            | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 5·10과 같은 API                    |
+| 19  | `/content/rejections`        | 진입·검색·필터              | `GET /rejections`                            | 반려 기록 목록                     |
+| 20  | `/content/rejections`        | 사유 수정 → 저장            | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
+| 21  | `/members/users`             | 진입·검색·필터              | `GET /members/users`                         | 목록                               |
+| 22  | `/members/users/{id}`        | 진입                        | `GET /members/users/{id}`                    | 상세 + 활동                        |
+| 23  | `/members/companies`         | 진입·검색·필터              | `GET /members/companies`                     | 목록                               |
+| 24  | `/members/companies/{id}`    | 진입                        | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
+| 25  | `/support/inquiries`         | 진입·검색·필터              | `GET /inquiries`                             | 목록                               |
+| 26  | `/support/inquiries/{id}`    | 진입                        | `GET /inquiries/{id}`                        | 상세                               |
+| 27  | `/support/inquiries/{id}`    | 답변 저장                   | `PATCH /inquiries/{id}`                      | 답변 필수. 상태 함께 바뀜          |
+| 28  | `/support/notices`           | 진입                        | `GET /notices`                               | 전체 (페이지 없음)                 |
+| 29  | `/support/notices`           | 새 공지 → 저장              | `POST /notices`                              | 고정은 하나만                      |
+| 30  | `/support/notices`           | 행 클릭 → 저장              | `PUT /notices/{id}`                          | 고정은 하나만                      |
 
 지면(`/placements`)과 통계(`/stats`)는 만들지 않는다. 메뉴에 회색 비활성으로 자리만 있다.
 
@@ -141,13 +141,13 @@
 **카드 링크** — 각 숫자는 조건이 걸린 목록으로 간다. 서버가 관여하지 않지만 필터 파라미터가
 아래 목록 API 와 맞아야 한다.
 
-| 카드 | 이동 |
-|---|---|
-| 검수 대기 공고 | `/content/jobs?reviewStatus=PENDING&source=COMPANY` |
-| 미답변 문의 | `/support/inquiries?status=unanswered` |
-| 크롤링 채용공고 | `/content/jobs?source=CRAWLER` |
-| 비즈니스 등록 공고 | `/content/jobs?source=COMPANY` |
-| 이번 주 신규 회원 | `/members/users?joinedWithinDays=7d` |
+| 카드               | 이동                                                |
+| ------------------ | --------------------------------------------------- |
+| 검수 대기 공고     | `/content/jobs?reviewStatus=PENDING&source=COMPANY` |
+| 미답변 문의        | `/support/inquiries?status=unanswered`              |
+| 크롤링 채용공고    | `/content/jobs?source=CRAWLER`                      |
+| 비즈니스 등록 공고 | `/content/jobs?source=COMPANY`                      |
+| 이번 주 신규 회원  | `/members/users?joinedWithinDays=7d`                |
 
 ---
 
@@ -159,15 +159,15 @@
 
 **쿼리 파라미터**
 
-| 이름 | 값 | 비고 |
-|---|---|---|
-| `page` | 1부터 | 기본 1 |
-| `size` | 정수 | 기본 20 |
-| `keyword` | 문자열 | **제목 + 회사명** 부분 일치 |
-| `visibility` | `VISIBLE` · `HIDDEN` | |
-| `source` | `CRAWLER` · `COMPANY` | |
-| `reviewStatus` | `PENDING` · `APPROVED` · `REJECTED` | |
-| `sort` | `REGISTERED_AT` · `VIEW_COUNT` | 기본 `REGISTERED_AT` |
+| 이름           | 값                                  | 비고                        |
+| -------------- | ----------------------------------- | --------------------------- |
+| `page`         | 1부터                               | 기본 1                      |
+| `size`         | 정수                                | 기본 20                     |
+| `keyword`      | 문자열                              | **제목 + 회사명** 부분 일치 |
+| `visibility`   | `VISIBLE` · `HIDDEN`                |                             |
+| `source`       | `CRAWLER` · `COMPANY`               |                             |
+| `reviewStatus` | `PENDING` · `APPROVED` · `REJECTED` |                             |
+| `sort`         | `REGISTERED_AT` · `VIEW_COUNT`      | 기본 `REGISTERED_AT`        |
 
 **응답 `data.items[]`**
 
@@ -381,9 +381,7 @@
       { "label": "지역", "value": "서울 본사" },
       { "label": "모집 마감", "value": "2026-09-14" }
     ],
-    "sections": [
-      { "field": "responsibilities", "label": "주요 업무", "body": "..." }
-    ]
+    "sections": [{ "field": "responsibilities", "label": "주요 업무", "body": "..." }]
   }
 ]
 ```
@@ -517,9 +515,19 @@
 ```json
 {
   "bookmarkedJobs": [{ "id": 1, "title": "...", "companyName": "...", "viewCount": 100 }],
-  "bookmarkedBootcamps": [{ "id": 1, "title": "...", "companyName": "...", "status": "RECRUITING" }],
+  "bookmarkedBootcamps": [
+    { "id": 1, "title": "...", "companyName": "...", "status": "RECRUITING" }
+  ],
   "authoredSideStudies": [
-    { "id": 1, "title": "...", "kind": "STUDY", "appliedCount": 5, "capacity": 8, "closed": false, "viewCount": 100 }
+    {
+      "id": 1,
+      "title": "...",
+      "kind": "STUDY",
+      "appliedCount": 5,
+      "capacity": 8,
+      "closed": false,
+      "viewCount": 100
+    }
   ]
 }
 ```
@@ -647,18 +655,18 @@
 
 검증. 어긋나면 400 과 화면에 그대로 보여줄 한국어 `message`.
 
-| 조건 | 문구 |
-|---|---|
-| 제목 없음 | `제목을 입력해 주세요.` |
-| 본문 없음 | `본문을 입력해 주세요.` |
-| 게시 시작일 없음 | `게시 시작일을 입력해 주세요.` |
-| 종료일 < 시작일 | `게시 종료일이 시작일보다 빠릅니다.` |
+| 조건             | 문구                                 |
+| ---------------- | ------------------------------------ |
+| 제목 없음        | `제목을 입력해 주세요.`              |
+| 본문 없음        | `본문을 입력해 주세요.`              |
+| 게시 시작일 없음 | `게시 시작일을 입력해 주세요.`       |
+| 종료일 < 시작일  | `게시 종료일이 시작일보다 빠릅니다.` |
 
 **상단 고정은 동시에 하나뿐이다.** `pinned: true` 로 저장하면 먼저 고정돼 있던 공지의 고정을
 푼다. **그리고 무엇이 풀렸는지 응답에 실어 준다.**
 
 ```json
-{ "notice": { }, "unpinnedNoticeTitle": "개인정보 처리방침 개정 안내" }
+{ "notice": {}, "unpinnedNoticeTitle": "개인정보 처리방침 개정 안내" }
 ```
 
 풀린 것이 없으면 `null`. 조용히 풀지 않는 이유는, 운영자가 새 공지를 고정한 뒤 앞의 공지가
