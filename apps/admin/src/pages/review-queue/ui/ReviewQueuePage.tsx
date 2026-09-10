@@ -17,6 +17,8 @@ import {
   type ReviewDecisionInput,
   type ReviewQueueItem,
 } from '@/entities/review/api/useReviewQueue';
+import { usePatchBootcamp, usePatchJob } from '@/entities/content/api/useContent';
+import { ContentEditor } from '@/widgets/content-editor';
 import { PageHeader } from '@/widgets/page-header';
 import { formatDateTime } from '@/shared/lib/format';
 import { useRejectFormShortcuts, useReviewShortcuts } from './useReviewShortcuts';
@@ -52,6 +54,7 @@ export function ReviewQueuePage() {
   const [index, setIndex] = useState(0);
   const [decisions, setDecisions] = useState<Map<string, Decision>>(new Map());
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [reason, setReason] = useState('');
   const [lastDecided, setLastDecided] = useState<Decision | null>(null);
   const [alert, setAlert] = useState<{
@@ -83,15 +86,21 @@ export function ReviewQueuePage() {
    * 주소로 바로 들어오거나 새로고침하면 포커스가 어디에도 없어서 첫 Space 가 아무 데도 가지
    * 않는다. 운영자는 "안 되는 화면"으로 읽고 마우스로 한 번 클릭한 뒤에야 쓰게 된다.
    *
-   * 의존성이 `isPending` 인 이유는 로딩 중에는 이 요소가 아직 없기 때문이다. 빈 배열로 두면
-   * 마운트 시점에 `rootRef.current` 가 null 이고, 데이터가 온 뒤로는 다시 돌지 않아 포커스가
-   * 영영 잡히지 않는다.
+   * 큐가 실제로 그려진 뒤에 잡는다. 빈 배열 의존성으로 두면 마운트 시점에 `rootRef.current` 가
+   * null 이고(로딩 문구만 렌더된다) 데이터가 온 뒤로는 다시 돌지 않아 포커스가 영영 잡히지
+   * 않는다.
+   *
+   * 모달이 열려 있을 때는 건드리지 않는다. 사유를 쓰는 중에 포커스를 빼앗으면 글이 화면 밖으로
+   * 간다.
    */
   useEffect(() => {
-    if (!isPending) {
-      rootRef.current?.focus({ preventScroll: true });
+    if (isPending || queue.length === 0 || isRejecting || isEditing) {
+      return;
     }
-  }, [isPending]);
+    // 렌더가 끝난 다음 프레임에 잡는다. 같은 틱에 부르면 아직 DOM 에 붙기 전일 수 있다.
+    const frame = requestAnimationFrame(() => rootRef.current?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(frame);
+  }, [isPending, queue.length, isRejecting, isEditing]);
 
   const hasUnsaved = decisions.size > 0 && !isSaved;
 
@@ -205,7 +214,7 @@ export function ReviewQueuePage() {
     [scrollBy, move, approve, openReject],
   );
 
-  useReviewShortcuts({ enabled: !isRejecting && !isSaved, handlers });
+  useReviewShortcuts({ enabled: !isRejecting && !isEditing && !isSaved, handlers });
   useRejectFormShortcuts(reasonRef, { submit: submitReject, cancel: cancelReject });
 
   if (isPending) {
@@ -302,9 +311,11 @@ export function ReviewQueuePage() {
         <ReviewCard
           item={current}
           decision={currentDecision?.decision}
+          reason={currentDecision?.reason}
           bodyRef={bodyRef}
           onApprove={approve}
           onRejectOpen={openReject}
+          onEditOpen={() => setIsEditing(true)}
         />
       ) : null}
 
@@ -313,6 +324,17 @@ export function ReviewQueuePage() {
           count={decisions.size}
           isSaving={saveMutation.isPending}
           onSave={() => saveMutation.mutate(toInputs(decisions))}
+        />
+      ) : null}
+
+      {current ? (
+        <ReviewContentEditor
+          item={current}
+          open={isEditing}
+          onClose={() => {
+            setIsEditing(false);
+            rootRef.current?.focus({ preventScroll: true });
+          }}
         />
       ) : null}
 
@@ -421,14 +443,35 @@ function ShortcutLegend() {
 interface ReviewCardProps {
   item: ReviewQueueItem;
   decision: 'APPROVED' | 'REJECTED' | undefined;
+  reason: string | undefined;
   bodyRef: React.RefObject<HTMLDivElement | null>;
   onApprove: () => void;
   onRejectOpen: () => void;
+  onEditOpen: () => void;
 }
 
-function ReviewCard({ item, decision, bodyRef, onApprove, onRejectOpen }: ReviewCardProps) {
+/**
+ * 판정한 건은 테두리로 표시한다. 허용은 초록, 반려는 빨강.
+ *
+ * A/D 로 앞뒤를 오갈 때 이 건을 이미 처리했는지가 한눈에 보여야 한다. 뱃지 하나로는 제목 옆
+ * 작은 글자라 빠르게 넘기는 중에 눈에 들어오지 않는다.
+ */
+const DECISION_BORDER = {
+  APPROVED: 'border-green-500 ring-1 ring-green-100',
+  REJECTED: 'border-red-500 ring-1 ring-red-100',
+} as const;
+
+function ReviewCard({
+  item,
+  decision,
+  reason,
+  bodyRef,
+  onApprove,
+  onRejectOpen,
+  onEditOpen,
+}: ReviewCardProps) {
   return (
-    <Card>
+    <Card className={decision ? DECISION_BORDER[decision] : undefined}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 pb-1">
@@ -451,6 +494,9 @@ function ReviewCard({ item, decision, bodyRef, onApprove, onRejectOpen }: Review
           </Button>
           <Button size="sm" variant="secondary" onClick={onRejectOpen}>
             반려
+          </Button>
+          <Button size="sm" variant="ghost" onClick={onEditOpen}>
+            내용 수정
           </Button>
         </div>
       </div>
@@ -497,6 +543,49 @@ function ReviewCard({ item, decision, bodyRef, onApprove, onRejectOpen }: Review
           ))
         )}
       </div>
+
+      {/* 반려한 건은 무엇이라고 돌려보냈는지 카드 안에 남긴다. A 로 되짚어 왔을 때 확인용이다. */}
+      {decision === 'REJECTED' && reason ? (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
+          <p className="text-sm font-medium text-error">반려 사유</p>
+          <p className="whitespace-pre-wrap pt-1 text-sm text-gray-900">{reason}</p>
+        </div>
+      ) : null}
     </Card>
+  );
+}
+
+/**
+ * 검수 화면에서 본문을 고친다.
+ *
+ * 종류에 따라 보낼 곳이 다르지만 화면은 그것을 모른다 — `ReviewQueueItem.sections` 이 이미
+ * 칸 이름을 들고 있어 그대로 되돌려 보내면 된다. `field` 가 빈 섹션(커리큘럼처럼 구조가 있는
+ * 값)은 고칠 수 없으므로 뺀다.
+ */
+function ReviewContentEditor({
+  item,
+  open,
+  onClose,
+}: {
+  item: ReviewQueueItem;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const patchJob = usePatchJob(item.id);
+  const patchBootcamp = usePatchBootcamp(item.id);
+  const mutation = item.type === 'JOB' ? patchJob : patchBootcamp;
+
+  return (
+    <ContentEditor
+      open={open}
+      title={item.title}
+      fields={item.sections
+        .filter((section) => section.field !== '')
+        .map((section) => ({ field: section.field, label: section.label, value: section.body }))}
+      isSaving={mutation.isPending}
+      errorMessage={mutation.isError ? '저장하지 못했습니다.' : undefined}
+      onClose={onClose}
+      onSave={(input) => mutation.mutate(input, { onSuccess: onClose })}
+    />
   );
 }

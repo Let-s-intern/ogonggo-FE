@@ -9,6 +9,7 @@ import {
   type AdminJobSummary,
   type AdminSideStudy,
 } from '../fixtures/admin-content';
+import { clearRejection } from '../fixtures/admin-rejection';
 import { matches, notFound, ok, paginate, readPaging, type PageResponse } from './paging';
 
 /**
@@ -99,11 +100,64 @@ const getJobHandler = http.get('*/api/v1/admin/jobs/:jobId', ({ params }) => {
   return HttpResponse.json(ok(job), { status: 200 });
 });
 
-/** 상세 화면에서 고칠 수 있는 것. 본문은 여기서 손대지 않는다 — 올린 사람이 쓴 글이다. */
-export interface AdminJobPatchRequest {
+/**
+ * 어드민이 고칠 수 있는 본문 칸.
+ *
+ * 크롤링 수집분이든 비즈니스 등록분이든 운영자가 고칠 수 있다. 크롤러가 원문 구조를 잘못 읽어
+ * 오는 일이 있고, 그때 고칠 방법이 없으면 그 공고는 통째로 내리는 수밖에 없다.
+ *
+ * 목록에 없는 키는 무시한다. 요청이 아무 필드나 실어 보내 `id` 나 `viewCount` 를 덮어쓰는 일을
+ * 막는다.
+ */
+export const JOB_CONTENT_FIELDS = [
+  'companyAndTeamIntroduction',
+  'responsibilities',
+  'qualifications',
+  'preferredQualifications',
+  'compensation',
+  'benefits',
+  'hiringProcess',
+] as const;
+
+export const BOOTCAMP_CONTENT_FIELDS = ['content', 'eligibilityAndSelectionProcess'] as const;
+
+export interface AdminContentPatchRequest {
+  title?: string;
+  /** 칸 이름 -> 새 내용. 빈 문자열은 그 칸을 비우는 뜻이다. */
+  fields?: Record<string, string>;
+}
+
+/** 상세 화면에서 고칠 수 있는 운영 값. */
+export interface AdminJobPatchRequest extends AdminContentPatchRequest {
   visibility?: AdminJobDetail['visibility'];
   source?: AdminJobDetail['source'];
   reviewStatus?: AdminJobDetail['reviewStatus'];
+}
+
+export interface AdminBootcampPatchRequest extends AdminContentPatchRequest {
+  visibility?: AdminBootcampDetail['visibility'];
+}
+
+/** 제목과 본문 칸을 적용한다. 허용 목록에 없는 키는 버린다. */
+function applyContentPatch(
+  target: Record<string, unknown>,
+  body: AdminContentPatchRequest,
+  allowed: readonly string[],
+): string | null {
+  if (body.title !== undefined) {
+    const title = body.title.trim();
+    if (title.length === 0) {
+      return '제목을 입력해 주세요.';
+    }
+    target.title = title;
+  }
+  Object.entries(body.fields ?? {}).forEach(([field, value]) => {
+    if (allowed.includes(field)) {
+      // 빈 문자열은 칸을 비우는 뜻이라 `undefined` 로 넣는다 — 화면이 빈 칸을 그리지 않는다.
+      target[field] = value.trim() === '' ? undefined : value;
+    }
+  });
+  return null;
 }
 
 /**
@@ -123,6 +177,15 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
 
   const body = (await request.json()) as AdminJobPatchRequest;
 
+  const error = applyContentPatch(
+    job as unknown as Record<string, unknown>,
+    body,
+    JOB_CONTENT_FIELDS,
+  );
+  if (error) {
+    return HttpResponse.json({ status: 400, code: 'BAD_REQUEST', message: error }, { status: 400 });
+  }
+
   if (body.visibility !== undefined) {
     job.visibility = body.visibility;
   }
@@ -137,8 +200,85 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (body.reviewStatus !== undefined && job.source === 'COMPANY') {
     job.reviewStatus = body.reviewStatus;
   }
+  // 반려가 풀리면 보낸 사유도 함께 사라진다. 남겨 두면 반려 보관에 허용된 건이 섞인다.
+  if (job.reviewStatus !== 'REJECTED') {
+    clearRejection('JOB', job.id);
+  }
 
   return HttpResponse.json(ok(job), { status: 200 });
+});
+
+const patchBootcampHandler = http.patch(
+  '*/api/v1/admin/bootcamps/:bootcampId',
+  async ({ params, request }) => {
+    const bootcamp = ADMIN_BOOTCAMP_FIXTURES.find(
+      (fixture) => fixture.id === Number(params.bootcampId),
+    );
+    if (!bootcamp) {
+      return HttpResponse.json(notFound('부트캠프를 찾을 수 없습니다.'), { status: 404 });
+    }
+
+    const body = (await request.json()) as AdminBootcampPatchRequest;
+    const error = applyContentPatch(
+      bootcamp as unknown as Record<string, unknown>,
+      body,
+      BOOTCAMP_CONTENT_FIELDS,
+    );
+    if (error) {
+      return HttpResponse.json(
+        { status: 400, code: 'BAD_REQUEST', message: error },
+        { status: 400 },
+      );
+    }
+
+    if (body.visibility !== undefined) {
+      bootcamp.visibility = body.visibility;
+    }
+
+    return HttpResponse.json(ok(bootcamp), { status: 200 });
+  },
+);
+
+/**
+ * 삭제. 배열에서 실제로 뺀다.
+ *
+ * 되돌릴 길을 두지 않는다 — 화면에서 문구를 그대로 입력해야만 버튼이 열리고, 그 확인이
+ * 되돌리기를 대신한다. 실제 백엔드에서는 soft delete 로 두는 편이 낫고, 그 결정은 계약을
+ * 넘길 때 함께 정한다.
+ */
+function removeById<T extends { id: number }>(list: T[], id: number): boolean {
+  const position = list.findIndex((entry) => entry.id === id);
+  if (position < 0) {
+    return false;
+  }
+  list.splice(position, 1);
+  return true;
+}
+
+const deleteJobHandler = http.delete('*/api/v1/admin/jobs/:jobId', ({ params }) => {
+  const id = Number(params.jobId);
+  if (!removeById(ADMIN_JOB_FIXTURES, id)) {
+    return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
+  }
+  clearRejection('JOB', id);
+  return HttpResponse.json(ok({ id }), { status: 200 });
+});
+
+const deleteBootcampHandler = http.delete('*/api/v1/admin/bootcamps/:bootcampId', ({ params }) => {
+  const id = Number(params.bootcampId);
+  if (!removeById(ADMIN_BOOTCAMP_FIXTURES, id)) {
+    return HttpResponse.json(notFound('부트캠프를 찾을 수 없습니다.'), { status: 404 });
+  }
+  clearRejection('BOOTCAMP', id);
+  return HttpResponse.json(ok({ id }), { status: 200 });
+});
+
+const deleteSideStudyHandler = http.delete('*/api/v1/admin/side-studies/:postId', ({ params }) => {
+  const id = Number(params.postId);
+  if (!removeById(ADMIN_SIDE_STUDY_FIXTURES, id)) {
+    return HttpResponse.json(notFound('사이드·스터디 글을 찾을 수 없습니다.'), { status: 404 });
+  }
+  return HttpResponse.json(ok({ id }), { status: 200 });
 });
 
 const listBootcampsHandler = http.get('*/api/v1/admin/bootcamps', ({ request }) => {
@@ -220,6 +360,10 @@ export const contentHandlers: HttpHandler[] = [
   patchJobHandler,
   listBootcampsHandler,
   getBootcampHandler,
+  patchBootcampHandler,
+  deleteJobHandler,
+  deleteBootcampHandler,
+  deleteSideStudyHandler,
   listSideStudiesHandler,
   getSideStudyHandler,
 ];

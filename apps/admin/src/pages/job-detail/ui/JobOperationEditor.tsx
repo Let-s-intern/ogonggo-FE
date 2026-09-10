@@ -6,11 +6,15 @@ import { CONTENT_SOURCE_OPTIONS, JOB_REVIEW_STATUS_OPTIONS } from '@/shared/conf
 
 export interface JobOperationEditorProps {
   job: AdminJobDetail;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
- * 채용공고의 운영 값을 상세 화면에서 고친다. 본문을 보면서 바로 고칠 수 있어야 해서
- * 화면 오른쪽 아래 플로팅 버튼으로 연다.
+ * 채용공고의 운영 값을 상세 화면에서 고친다.
+ *
+ * 여는 버튼은 여기 없다. 상세 화면의 플로팅 버튼 묶음(`ContentActions`)이 함께 들고 있다 —
+ * 각자 `fixed` 버튼을 그렸더니 같은 자리에 겹쳐 떠서 글자가 서로를 가렸다.
  *
  * 고치는 것은 셋뿐이다 — 노출 여부, 등록 경로, 검수 상태. 제목과 본문은 올린 사람이 쓴 글이라
  * 운영자가 손대지 않는다. 고쳐야 할 글이면 반려해서 올린 사람이 고치게 한다.
@@ -18,8 +22,7 @@ export interface JobOperationEditorProps {
  * 검수 상태는 등록 경로가 비즈니스 등록일 때만 고를 수 있다. 크롤링 수집분은 검수 대상이
  * 아니라 값 자체가 없다.
  */
-export function JobOperationEditor({ job }: JobOperationEditorProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function JobOperationEditor({ job, open, onOpenChange }: JobOperationEditorProps) {
   const [visible, setVisible] = useState(job.visibility === 'VISIBLE');
   const [source, setSource] = useState<AdminJobDetail['source']>(job.source);
   const [reviewStatus, setReviewStatus] = useState<string>(job.reviewStatus ?? '');
@@ -40,7 +43,7 @@ export function JobOperationEditor({ job }: JobOperationEditorProps) {
     (source === 'COMPANY' && reviewStatus !== (job.reviewStatus ?? ''));
 
   const close = () => {
-    setIsOpen(false);
+    onOpenChange(false);
     // 닫을 때 서버 값으로 되돌린다. 고치다 만 값이 다음에 열었을 때 남아 있으면 헷갈린다.
     setVisible(job.visibility === 'VISIBLE');
     setSource(job.source);
@@ -59,7 +62,7 @@ export function JobOperationEditor({ job }: JobOperationEditorProps) {
       },
       {
         onSuccess: () => {
-          setIsOpen(false);
+          onOpenChange(false);
           setAlert({ message: '수정했습니다.', nonce: Date.now() });
         },
       },
@@ -77,17 +80,8 @@ export function JobOperationEditor({ job }: JobOperationEditorProps) {
         />
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="fixed right-8 bottom-8 z-40 flex items-center gap-2 rounded-full bg-blue-500 py-3 pr-5 pl-4 text-sm font-semibold text-white shadow-[0_8px_24px_-6px_rgba(74,118,255,0.6)] transition-colors hover:bg-blue-600"
-      >
-        <PencilIcon />
-        운영 값 수정
-      </button>
-
       <Modal
-        open={isOpen}
+        open={open}
         title="운영 값 수정"
         description="노출 여부와 등록 경로, 검수 상태만 고칩니다. 제목과 본문은 올린 사람이 쓴 글이라 여기서 고치지 않습니다."
         onClose={close}
@@ -145,23 +139,5 @@ export function JobOperationEditor({ job }: JobOperationEditorProps) {
         </div>
       </Modal>
     </>
-  );
-}
-
-function PencilIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
   );
 }

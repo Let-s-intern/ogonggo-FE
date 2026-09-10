@@ -4,6 +4,7 @@ import { useSideStudyDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { plainLabel, sideStudyKindLabel } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
+import { ContentActions } from '@/widgets/content-actions';
 
 /** 사이드·스터디 상세. 읽기 전용이다. */
 export function SideStudyDetailPage() {
@@ -66,6 +67,13 @@ export function SideStudyDetailPage() {
           ]}
         />
       </Card>
+
+      <ContentActions
+        kind="side-studies"
+        id={data.id}
+        title={data.title}
+        listPath="/content/side-studies"
+      />
 
       <Card className="mt-4">
         <CardTitle>본문</CardTitle>

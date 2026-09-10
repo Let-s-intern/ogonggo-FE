@@ -5,6 +5,7 @@ import {
   type AdminBootcampDetail,
   type AdminJobDetail,
 } from '../fixtures/admin-content';
+import { clearRejection, recordRejection } from '../fixtures/admin-rejection';
 import { notFound, ok } from './paging';
 
 /**
@@ -25,6 +26,8 @@ export type ReviewTargetType = 'JOB' | 'BOOTCAMP';
 
 /** 검수 화면이 그리는 본문 한 덩어리. */
 export interface ReviewSection {
+  /** 콘텐츠의 실제 칸 이름. 검수 화면에서 본문을 고칠 때 이 이름으로 되돌려 보낸다. */
+  field: string;
   label: string;
   body: string;
 }
@@ -53,11 +56,6 @@ export interface ReviewDecisionRequest {
   reason?: string;
 }
 
-/** 반려 사유는 어디에도 저장되지 않는다 — 이 배열이 그 자리다(아래 주석 참고). */
-const rejectionReasons = new Map<string, string>();
-
-const keyOf = (type: ReviewTargetType, id: number) => `${type}:${id}`;
-
 /**
  * 메타 값은 여기서 한국어로 풀어 내보낸다.
  *
@@ -83,13 +81,17 @@ const label = (value: string): string => VALUE_LABELS[value] ?? value;
 
 function toJobItem(job: AdminJobDetail): ReviewQueueItem {
   const sections: ReviewSection[] = [
-    { label: '회사·팀 소개', body: job.companyAndTeamIntroduction },
-    { label: '주요 업무', body: job.responsibilities },
-    { label: '자격 요건', body: job.qualifications },
-    { label: '우대 사항', body: job.preferredQualifications },
-    { label: '보상', body: job.compensation },
-    { label: '복지', body: job.benefits },
-    { label: '채용 절차', body: job.hiringProcess },
+    {
+      field: 'companyAndTeamIntroduction',
+      label: '회사·팀 소개',
+      body: job.companyAndTeamIntroduction,
+    },
+    { field: 'responsibilities', label: '주요 업무', body: job.responsibilities },
+    { field: 'qualifications', label: '자격 요건', body: job.qualifications },
+    { field: 'preferredQualifications', label: '우대 사항', body: job.preferredQualifications },
+    { field: 'compensation', label: '보상', body: job.compensation },
+    { field: 'benefits', label: '복지', body: job.benefits },
+    { field: 'hiringProcess', label: '채용 절차', body: job.hiringProcess },
   ].filter((section): section is ReviewSection => Boolean(section.body));
 
   return {
@@ -110,9 +112,15 @@ function toJobItem(job: AdminJobDetail): ReviewQueueItem {
 
 function toBootcampItem(bootcamp: AdminBootcampDetail): ReviewQueueItem {
   const sections: ReviewSection[] = [
-    { label: '소개', body: bootcamp.content },
-    { label: '지원 자격과 선발 절차', body: bootcamp.eligibilityAndSelectionProcess },
+    { field: 'content', label: '소개', body: bootcamp.content },
     {
+      field: 'eligibilityAndSelectionProcess',
+      label: '지원 자격과 선발 절차',
+      body: bootcamp.eligibilityAndSelectionProcess,
+    },
+    {
+      // 커리큘럼은 구조가 있는 값이라 여기서 고치지 않는다. 읽기만 한다.
+      field: '',
       label: '커리큘럼',
       body: bootcamp.curriculums
         .map((item) =>
@@ -163,8 +171,8 @@ const listQueueHandler = http.get('*/api/v1/admin/review-queue', () =>
  * 같은 글이 다시 올라온다. 화면에서도 막지만 여기서도 400 으로 거절한다 — 화면만 막으면 규칙이
  * 화면에만 있게 된다.
  *
- * 이 목은 사유를 `rejectionReasons` 에 담아 두기만 하고 아무 데도 보내지 않는다. 실제로는
- * 올린 회원에게 알림이 가야 하고, 그 경로는 백엔드가 정할 일이라 여기서 지어내지 않는다.
+ * 사유는 `fixtures/admin-rejection.ts` 에 기록되고 반려 보관 화면이 그것을 읽는다. 올린 회원에게
+ * 실제로 알림이 가는 경로는 백엔드가 정할 일이라 여기서 지어내지 않는다.
  */
 const decideHandler = http.patch(
   '*/api/v1/admin/review-queue/:type/:id',
@@ -191,10 +199,16 @@ const decideHandler = http.patch(
           { status: 400 },
         );
       }
-      rejectionReasons.set(keyOf(type, id), reason);
+      recordRejection({
+        type,
+        id,
+        title: target.title,
+        companyName: target.companyName,
+        reason,
+      });
       target.reviewStatus = 'REJECTED';
     } else {
-      rejectionReasons.delete(keyOf(type, id));
+      clearRejection(type, id);
       target.reviewStatus = 'APPROVED';
     }
 
@@ -223,7 +237,7 @@ const undoHandler = http.patch('*/api/v1/admin/review-queue/:type/:id/undo', ({ 
     return HttpResponse.json(notFound('검수 대상을 찾을 수 없습니다.'), { status: 404 });
   }
 
-  rejectionReasons.delete(keyOf(type, id));
+  clearRejection(type, id);
   target.reviewStatus = 'PENDING';
 
   return HttpResponse.json(ok({ type, id, remaining: pendingQueue().length }), { status: 200 });

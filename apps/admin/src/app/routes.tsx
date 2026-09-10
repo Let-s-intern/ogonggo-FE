@@ -11,6 +11,7 @@ import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { NoticeListPage } from '@/pages/notice-list';
 import { NotFoundPage } from '@/pages/not-found';
+import { RejectionsPage } from '@/pages/rejections';
 import { ReviewQueuePage } from '@/pages/review-queue';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'content/side-studies', element: <SideStudyListPage /> },
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
       { path: 'content/review', element: <ReviewQueuePage /> },
+      { path: 'content/rejections', element: <RejectionsPage /> },
 
       { path: 'members/users', element: <UserMemberListPage /> },
       { path: 'members/users/:memberId', element: <UserMemberDetailPage /> },

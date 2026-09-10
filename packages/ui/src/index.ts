@@ -4,6 +4,11 @@ export { Badge, type BadgeProps } from './components/Badge';
 export { Button, type ButtonProps } from './components/Button';
 export { Callout, type CalloutProps } from './components/Callout';
 export { Card, CardDescription, CardTitle, type CardProps } from './components/Card';
+export {
+  ConfirmDelete,
+  DELETE_CONFIRM_PHRASE,
+  type ConfirmDeleteProps,
+} from './components/ConfirmDelete';
 export { DataTable, type DataTableColumn, type DataTableProps } from './components/DataTable';
 export {
   DescriptionList,

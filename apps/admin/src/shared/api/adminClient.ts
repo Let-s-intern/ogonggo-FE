@@ -49,3 +49,8 @@ export async function adminWrite<T>(method: 'POST' | 'PUT' | 'PATCH', path: stri
   });
   return response.data;
 }
+
+/** 삭제. 응답 본문은 지운 id 뿐이라 따로 쓰지 않는다. */
+export async function adminDelete(path: string) {
+  await httpClient<AdminResponse<{ id: number }>>(path, { method: 'DELETE' });
+}

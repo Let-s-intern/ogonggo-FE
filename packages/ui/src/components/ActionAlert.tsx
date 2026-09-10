@@ -39,7 +39,12 @@ export interface ActionAlertProps {
    * 대상의 id 나 시각을 넘긴다.
    */
   nonce?: string | number;
-  /** 자동으로 사라지기까지의 시간(ms). */
+  /**
+   * 자동으로 사라지기까지의 시간(ms).
+   *
+   * 짧게 잡는다. 키로 연달아 처리하는 화면에서는 다음 건을 보려는데 알림이 아직 떠 있는 것이
+   * 그 자체로 방해다. 읽어야 할 글은 두 줄뿐이라 이 정도면 충분하다.
+   */
   duration?: number;
   onDismiss: () => void;
 }
@@ -65,7 +70,7 @@ export function ActionAlert({
   detail,
   tone = 'success',
   nonce,
-  duration = 1400,
+  duration = 900,
   onDismiss,
 }: ActionAlertProps) {
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
-import { Callout, DataTable, Pagination, Select, type DataTableColumn } from '@ogonggo/ui';
+import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminJobSummary } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import { useJobList } from '@/entities/content/api/useContent';
+import { useJobList, usePatchJob } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
@@ -11,7 +11,6 @@ import {
   JOB_REVIEW_STATUS_OPTIONS,
   JobReviewStatusBadge,
   VISIBILITY_OPTIONS,
-  VisibilityBadge,
 } from '@/shared/config/labels';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
@@ -45,8 +44,8 @@ export function JobListPage() {
     {
       key: 'visibility',
       header: '노출',
-      width: 'w-24',
-      render: (row) => <VisibilityBadge value={row.visibility} />,
+      width: 'w-32',
+      render: (row) => <VisibilityToggle job={row} />,
     },
     {
       key: 'source',
@@ -128,5 +127,31 @@ export function JobListPage() {
         </>
       )}
     </>
+  );
+}
+
+/**
+ * 목록에서 바로 노출을 끄고 켠다.
+ *
+ * 상세로 들어가 고치고 나오는 것이 노출 하나 때문이라면 왕복이 아깝다. 지면에서 급히 내려야
+ * 할 때가 그런 경우다.
+ *
+ * 클릭을 행에서 멈춘다. 행 전체가 상세로 가는 링크라 멈추지 않으면 토글을 누르는 순간 화면이
+ * 넘어간다.
+ */
+function VisibilityToggle({ job }: { job: AdminJobSummary }) {
+  const patchMutation = usePatchJob(job.id);
+  const visible = job.visibility === 'VISIBLE';
+
+  return (
+    // 라벨이 줄바꿈되면 행 높이가 들쭉날쭉해진다.
+    <span className="whitespace-nowrap" onClick={(event) => event.stopPropagation()}>
+      <Toggle
+        checked={visible}
+        disabled={patchMutation.isPending}
+        label={visible ? '노출' : '비노출'}
+        onChange={(next) => patchMutation.mutate({ visibility: next ? 'VISIBLE' : 'HIDDEN' })}
+      />
+    </span>
   );
 }

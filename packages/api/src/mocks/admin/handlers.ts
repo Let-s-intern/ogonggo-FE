@@ -4,6 +4,7 @@ import { dashboardHandlers } from './dashboard';
 import { inquiryHandlers } from './inquiries';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
+import { rejectionHandlers } from './rejections';
 import { reviewHandlers } from './review';
 
 /**
@@ -23,6 +24,7 @@ import { reviewHandlers } from './review';
 export const adminHandlers: HttpHandler[] = [
   ...dashboardHandlers,
   ...reviewHandlers,
+  ...rejectionHandlers,
   ...contentHandlers,
   ...memberHandlers,
   ...inquiryHandlers,

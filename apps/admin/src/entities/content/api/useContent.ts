@@ -6,8 +6,11 @@ import type {
   AdminJobSummary,
   AdminSideStudy,
 } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import type { AdminJobPatchRequest } from '@ogonggo/api/src/mocks/admin/content';
-import { adminGet, adminWrite, type PageResponse } from '@/shared/api/adminClient';
+import type {
+  AdminBootcampPatchRequest,
+  AdminJobPatchRequest,
+} from '@ogonggo/api/src/mocks/admin/content';
+import { adminDelete, adminGet, adminWrite, type PageResponse } from '@/shared/api/adminClient';
 
 /**
  * 콘텐츠 목록·상세 조회.
@@ -109,4 +112,37 @@ export function usePatchJob(jobId: number) {
   });
 }
 
-export type { AdminJobPatchRequest };
+export type { AdminBootcampPatchRequest, AdminJobPatchRequest };
+
+/** 부트캠프의 제목·본문·노출을 고친다. */
+export function usePatchBootcamp(bootcampId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminBootcampPatchRequest) =>
+      adminWrite<AdminBootcampDetail>('PATCH', `/api/v1/admin/bootcamps/${bootcampId}`, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+    },
+  });
+}
+
+/**
+ * 콘텐츠 삭제.
+ *
+ * 성공하면 그 콘텐츠의 캐시를 지우고 목록을 다시 받는다. 남겨 두면 뒤로 가기로 돌아왔을 때
+ * 없는 글의 상세가 캐시에서 그려진다.
+ */
+export function useDeleteContent(kind: 'jobs' | 'bootcamps' | 'side-studies') {
+  const queryClient = useQueryClient();
+  const queryKey = kind === 'side-studies' ? 'side-studies' : kind;
+  return useMutation({
+    mutationFn: (id: number) => adminDelete(`/api/v1/admin/${kind}/${id}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', queryKey] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'rejections'] });
+    },
+  });
+}

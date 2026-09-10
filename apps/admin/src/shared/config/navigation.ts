@@ -39,6 +39,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/content/bootcamps', label: '부트캠프' },
       { path: '/content/side-studies', label: '사이드·스터디' },
       { path: '/content/review', label: '검수 대기' },
+      { path: '/content/rejections', label: '반려 보관' },
     ],
   },
   {

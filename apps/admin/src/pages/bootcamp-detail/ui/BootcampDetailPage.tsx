@@ -4,6 +4,7 @@ import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BootcampStatusBadge, VisibilityBadge, plainLabel } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
+import { ContentActions } from '@/widgets/content-actions';
 
 /** 부트캠프 상세. 읽기 전용이다. */
 export function BootcampDetailPage() {
@@ -110,6 +111,21 @@ export function BootcampDetailPage() {
           </p>
         </Card>
       ) : null}
+
+      <ContentActions
+        kind="bootcamps"
+        id={data.id}
+        title={data.title}
+        listPath="/content/bootcamps"
+        fields={[
+          { field: 'content', label: '소개', value: data.content ?? '' },
+          {
+            field: 'eligibilityAndSelectionProcess',
+            label: '지원 자격과 선발 절차',
+            value: data.eligibilityAndSelectionProcess ?? '',
+          },
+        ]}
+      />
 
       {data.partners.length > 0 ? (
         <Card className="mt-4">

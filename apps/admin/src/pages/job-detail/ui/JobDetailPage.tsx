@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams } from 'react-router';
-import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
+import { Button, Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useJobDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import {
@@ -10,6 +11,7 @@ import {
   plainLabel,
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
+import { ContentActions } from '@/widgets/content-actions';
 import { JobOperationEditor } from './JobOperationEditor';
 
 /**
@@ -20,6 +22,7 @@ import { JobOperationEditor } from './JobOperationEditor';
  */
 export function JobDetailPage() {
   const { jobId } = useParams();
+  const [isEditingOperation, setIsEditingOperation] = useState(false);
   const { data, isPending, isError } = useJobDetail(Number(jobId));
 
   if (isPending) {
@@ -108,7 +111,44 @@ export function JobDetailPage() {
         />
       </Card>
 
-      <JobOperationEditor job={data} />
+      <JobOperationEditor
+        job={data}
+        open={isEditingOperation}
+        onOpenChange={setIsEditingOperation}
+      />
+
+      <ContentActions
+        kind="jobs"
+        id={data.id}
+        title={data.title}
+        listPath="/content/jobs"
+        extraActions={
+          <Button
+            variant="secondary"
+            className="rounded-full bg-white shadow-[0_8px_24px_-6px_rgba(17,24,39,0.25)]"
+            onClick={() => setIsEditingOperation(true)}
+          >
+            운영 값 수정
+          </Button>
+        }
+        fields={[
+          {
+            field: 'companyAndTeamIntroduction',
+            label: '회사·팀 소개',
+            value: data.companyAndTeamIntroduction ?? '',
+          },
+          { field: 'responsibilities', label: '주요 업무', value: data.responsibilities ?? '' },
+          { field: 'qualifications', label: '자격 요건', value: data.qualifications ?? '' },
+          {
+            field: 'preferredQualifications',
+            label: '우대 사항',
+            value: data.preferredQualifications ?? '',
+          },
+          { field: 'compensation', label: '보상', value: data.compensation ?? '' },
+          { field: 'benefits', label: '복지', value: data.benefits ?? '' },
+          { field: 'hiringProcess', label: '채용 절차', value: data.hiringProcess ?? '' },
+        ]}
+      />
 
       {bodyFields.length > 0 ? (
         <Card className="mt-4">
