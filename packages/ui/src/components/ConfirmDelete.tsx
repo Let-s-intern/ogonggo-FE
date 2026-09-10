@@ -1,3 +1,13 @@
+'use client';
+
+/*
+ * 훅을 쓰므로 클라이언트 경계다.
+ *
+ * `apps/web` 은 Next 서버 컴포넌트가 기본이고, 서버 컴포넌트가 `@ogonggo/ui` 에서 무엇 하나만
+ * 가져와도 배럴(`index.ts`)을 통해 이 파일까지 딸려 들어온다. 이 줄이 없으면 그 순간
+ * "useEffect only works in Client Components" 로 빌드가 깨진다 — `apps/web` 의 `not-found.tsx`
+ * 가 실제로 그렇게 깨졌다.
+ */
 import { useEffect, useState } from 'react';
 import { Button } from './Button';
 import { Callout } from './Callout';
