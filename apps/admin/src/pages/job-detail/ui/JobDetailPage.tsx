@@ -6,6 +6,8 @@ import {
   ContentSourceBadge,
   JobPublicationStatusBadge,
   JobReviewStatusBadge,
+  experienceLabel,
+  plainLabel,
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
@@ -61,6 +63,17 @@ export function JobDetailPage() {
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '지역', value: data.region ?? '-' },
+            { label: '고용 형태', value: plainLabel(data.employmentType) },
+            {
+              label: '경력',
+              value: experienceLabel(
+                data.experienceType,
+                data.experienceMinYears,
+                data.experienceMaxYears,
+              ),
+            },
+            { label: '학력', value: plainLabel(data.educationLevel) },
+            { label: '모집 유형', value: plainLabel(data.recruitmentType) },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
             { label: '마감 처리', value: formatDateTime(data.closedAt) },

@@ -2,7 +2,7 @@ import { useParams } from 'react-router';
 import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
-import { BootcampStatusBadge } from '@/shared/config/labels';
+import { BootcampStatusBadge, plainLabel } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /** 부트캠프 상세. 읽기 전용이다. */
@@ -43,13 +43,23 @@ export function BootcampDetailPage() {
             { label: '게시 상태', value: <BootcampStatusBadge value={data.status} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '프로그램 유형', value: data.programType },
-            { label: '진행 방식', value: data.operationType },
-            { label: '수강료', value: data.tuitionType },
+            { label: '진행 방식', value: plainLabel(data.operationType) },
+            {
+              label: '수강료',
+              value:
+                data.tuitionAmount === undefined
+                  ? plainLabel(data.tuitionType)
+                  : `${plainLabel(data.tuitionType)} (${formatCount(data.tuitionAmount)}원)`,
+            },
+            { label: '모집 유형', value: plainLabel(data.recruitmentType) },
+            { label: '지원 방법', value: plainLabel(data.applicationMethod) },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
             { label: '정원', value: formatCount(data.capacity) },
-            { label: '과정 시작', value: data.programStartDate ?? '-' },
-            { label: '과정 종료', value: data.programEndDate ?? '-' },
+            // programStartDate/EndDate 는 `YYYY-MM-DD` 문자열이라 그대로 두면 위의 모집일과
+            // 형식이 어긋난다.
+            { label: '과정 시작', value: formatDate(data.programStartDate) },
+            { label: '과정 종료', value: formatDate(data.programEndDate) },
             { label: '문의 메일', value: data.managerEmail ?? '-' },
             {
               label: '지원 페이지',
@@ -88,6 +98,31 @@ export function BootcampDetailPage() {
         <Card className="mt-4">
           <CardTitle>소개</CardTitle>
           <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">{data.content}</p>
+        </Card>
+      ) : null}
+
+      {data.eligibilityAndSelectionProcess ? (
+        <Card className="mt-4">
+          <CardTitle>지원 자격과 선발 절차</CardTitle>
+          <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">
+            {data.eligibilityAndSelectionProcess}
+          </p>
+        </Card>
+      ) : null}
+
+      {data.partners.length > 0 ? (
+        <Card className="mt-4">
+          <CardTitle>파트너사</CardTitle>
+          <ul className="flex flex-wrap gap-2 pt-4">
+            {data.partners.map((partner) => (
+              <li
+                key={partner.name}
+                className="rounded-sm bg-gray-100 px-2 py-1 text-sm text-gray-700"
+              >
+                {partner.name}
+              </li>
+            ))}
+          </ul>
         </Card>
       ) : null}
 

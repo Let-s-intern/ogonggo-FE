@@ -2,7 +2,7 @@ import { useParams } from 'react-router';
 import { Badge, Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useSideStudyDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
-import { sideStudyKindLabel } from '@/shared/config/labels';
+import { plainLabel, sideStudyKindLabel } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /** 사이드·스터디 상세. 읽기 전용이다. */
@@ -41,7 +41,7 @@ export function SideStudyDetailPage() {
           items={[
             { label: '종류', value: <Badge tone="neutral">{sideStudyKindLabel(data.kind)}</Badge> },
             { label: '모집장', value: data.authorNickname },
-            { label: '진행 방식', value: data.operationType },
+            { label: '진행 방식', value: plainLabel(data.operationType) },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
@@ -69,8 +69,16 @@ export function SideStudyDetailPage() {
 
       <Card className="mt-4">
         <CardTitle>본문</CardTitle>
-        <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">{data.content}</p>
+        <p className="pt-4 text-sm text-gray-500">{data.shortDescription}</p>
+        <p className="whitespace-pre-wrap pt-3 text-sm text-gray-900">{data.content}</p>
       </Card>
+
+      {data.eligibility ? (
+        <Card className="mt-4">
+          <CardTitle>지원 자격</CardTitle>
+          <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">{data.eligibility}</p>
+        </Card>
+      ) : null}
     </>
   );
 }

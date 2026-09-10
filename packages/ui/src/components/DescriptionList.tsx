@@ -11,7 +11,7 @@ export interface DescriptionItem {
 export interface DescriptionListProps {
   items: DescriptionItem[];
   /** 한 줄에 몇 칸을 둘지. 기본 2 칸. */
-  columns?: 1 | 2 | 3;
+  columns?: 1 | 2 | 3 | 4;
   className?: string;
 }
 
@@ -19,6 +19,7 @@ const COLUMN_CLASSES = {
   1: 'grid-cols-1',
   2: 'grid-cols-2',
   3: 'grid-cols-3',
+  4: 'grid-cols-4',
 } as const;
 
 /*
@@ -30,6 +31,7 @@ const FULL_SPAN_CLASSES = {
   1: 'col-span-1',
   2: 'col-span-2',
   3: 'col-span-3',
+  4: 'col-span-4',
 } as const;
 
 /** 상세 화면의 라벨-값 목록. `dl` 이라 스크린 리더가 짝으로 읽는다. */

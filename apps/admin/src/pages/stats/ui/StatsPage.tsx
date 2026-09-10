@@ -25,7 +25,10 @@ const SORT_OPTIONS = [
 ];
 
 /**
- * 콘텐츠 지표.
+ * 통계. 지금은 콘텐츠별 조회·클릭 지표 한 표다.
+ *
+ * 하위 메뉴를 두지 않는다. 표가 하나뿐인데 "통계 > 콘텐츠 지표"로 한 단 더 들어가게 하면
+ * 클릭만 늘고 얻는 것이 없다. 지면 지표가 붙을 때 그때 나눈다.
  *
  * 클릭률에 "로그인 사용자 기준"을 적는다. 백엔드 `JobSourceUrlClick` 이 `user_id` 를 필수 칸으로
  * 잡고 있어 비로그인 클릭이 기록되지 않는데, 조회 수는 로그인 여부와 무관하게 오른다. 그래서
@@ -34,7 +37,7 @@ const SORT_OPTIONS = [
  * 기간 필터도 조회가 일어난 시점이 아니라 등록일 기준이다. `JobMetric` 이 누적 조회 수만 들고
  * 있어 기간별 조회를 뽑을 원본이 없다.
  */
-export function ContentMetricsPage() {
+export function StatsPage() {
   const { get, page, setFilter, setPage } = useListQuery();
 
   const filters = {
@@ -89,7 +92,7 @@ export function ContentMetricsPage() {
 
   return (
     <>
-      <PageHeader title="콘텐츠 지표" />
+      <PageHeader title="통계" />
 
       <Callout className="mb-4">
         클릭률은 로그인 사용자 기준입니다. 원문 이동 기록이 로그인 사용자만 남아 실제보다 낮게

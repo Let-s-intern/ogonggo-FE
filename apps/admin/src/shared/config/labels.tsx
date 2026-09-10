@@ -136,3 +136,65 @@ export const CONTENT_SORT_OPTIONS = [
   { value: 'REGISTERED_AT', label: '등록일순' },
   { value: 'VIEW_COUNT', label: '조회순' },
 ];
+
+/**
+ * 상세 화면에서 값 그대로 보여주기엔 읽기 어려운 enum 들.
+ *
+ * 뱃지가 아니라 평문이다. 상세의 라벨-값 목록에서 값 하나하나에 색을 입히면 어떤 것이 상태이고
+ * 어떤 것이 단순 속성인지 구분이 사라진다.
+ */
+const PLAIN_LABELS: Record<string, string> = {
+  // 고용 형태
+  FULL_TIME: '정규직',
+  CONTRACT: '계약직',
+  INTERN: '인턴',
+  PART_TIME: '파트타임',
+  // 경력
+  NEWCOMER: '신입',
+  EXPERIENCED: '경력',
+  BOTH: '신입·경력',
+  IRRELEVANT: '경력 무관',
+  // 학력
+  ANY: '학력 무관',
+  HIGH_SCHOOL: '고졸',
+  ASSOCIATE: '초대졸',
+  BACHELOR: '대졸',
+  MASTER: '석사',
+  DOCTORATE: '박사',
+  // 모집 유형
+  PERIOD: '기간 모집',
+  ALWAYS_OPEN: '상시 모집',
+  // 진행 방식
+  ONLINE: '온라인',
+  OFFLINE: '오프라인',
+  HYBRID: '온·오프라인',
+  // 수강료
+  FREE: '무료',
+  PAID: '유료',
+  GOVERNMENT_FUNDED: '국비지원',
+  // 지원 방법
+  EXTERNAL_PAGE: '외부 페이지',
+  EMAIL: '이메일',
+  // 공통
+  ETC: '기타',
+};
+
+/** 매핑에 없으면 원래 값을 그대로 보여준다. 빈 칸보다 낫다. */
+export const plainLabel = (value: string | undefined): string =>
+  value === undefined ? '-' : (PLAIN_LABELS[value] ?? value);
+
+/** 경력 연차. `experienceMinYears`·`experienceMaxYears` 가 둘 다 없으면 유형만 보여준다. */
+export const experienceLabel = (
+  type: string,
+  minYears: number | undefined,
+  maxYears: number | undefined,
+): string => {
+  const base = plainLabel(type);
+  if (minYears === undefined && maxYears === undefined) {
+    return base;
+  }
+  if (minYears !== undefined && maxYears !== undefined) {
+    return `${base} (${minYears}~${maxYears}년)`;
+  }
+  return minYears !== undefined ? `${base} (${minYears}년 이상)` : `${base} (${maxYears}년 이하)`;
+};

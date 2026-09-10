@@ -43,6 +43,11 @@ export function CompanyMemberDetailPage() {
     );
   }
 
+  // 공고 현황 요약. 상세에 들어온 이유가 대개 "이 회사 것 중 밀린 게 있나"라서 위로 올린다.
+  const pendingCount = data.jobs.filter((job) => job.reviewStatus === 'PENDING').length;
+  const publishedCount = data.jobs.filter((job) => job.publicationStatus === 'PUBLISHED').length;
+  const totalViewCount = data.jobs.reduce((sum, job) => sum + job.viewCount, 0);
+
   const jobColumns: DataTableColumn<CompanyMemberJob>[] = [
     { key: 'title', header: '제목', render: (row) => row.title },
     {
@@ -100,6 +105,26 @@ export function CompanyMemberDetailPage() {
           정지된 회원입니다. 이 회사의 공고를 함께 내릴지는 운영 쿼리로 판단합니다.
         </Callout>
       ) : null}
+
+      <Card className="mt-4">
+        <CardTitle>공고 현황</CardTitle>
+        <DescriptionList
+          className="pt-4"
+          columns={4}
+          items={[
+            { label: '전체', value: formatCount(data.jobs.length) },
+            { label: '검수 대기', value: formatCount(pendingCount) },
+            { label: '게시 중', value: formatCount(publishedCount) },
+            { label: '누적 조회', value: formatCount(totalViewCount) },
+          ]}
+        />
+        {pendingCount > 0 ? (
+          <Callout tone="warning" className="mt-4">
+            검수 대기 {formatCount(pendingCount)}건이 있습니다. 아래 목록에서 해당 공고로 넘어갈 수
+            있습니다.
+          </Callout>
+        ) : null}
+      </Card>
 
       <div className="pt-6">
         <h2 className="pb-3 text-base font-bold text-gray-900">

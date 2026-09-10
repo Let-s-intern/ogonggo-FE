@@ -13,7 +13,10 @@ export interface NavItem {
 }
 
 export interface NavSection {
-  /** 대시보드처럼 상위 묶음이 없는 항목은 제목이 없다. */
+  /**
+   * 상위 묶음 제목. 하위가 하나뿐인 구역은 제목을 두지 않는다 — 제목과 항목이 같은 말을 두 번
+   * 하게 되고, 메뉴만 한 단 깊어진다. 대시보드·지면·통계가 그렇다.
+   */
   title?: string;
   items: NavItem[];
 }
@@ -31,11 +34,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: '지면',
-    items: [
-      { path: '/placements/hero', label: '메인 배너' },
-      { path: '/placements/mid', label: '중간 배너' },
-    ],
+    items: [{ path: '/placements', label: '지면' }],
   },
   {
     title: '회원',
@@ -52,7 +51,6 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: '통계',
-    items: [{ path: '/stats/content', label: '콘텐츠 지표' }],
+    items: [{ path: '/stats', label: '통계' }],
   },
 ];

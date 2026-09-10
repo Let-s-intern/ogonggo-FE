@@ -79,7 +79,7 @@ const startOfToday = (): number => {
  * 아래는 xorshift 계열의 정수 해시다. 곱셈과 xor 로 하위 비트까지 섞은 뒤 나누므로, salt 가
  * 다른 두 값 사이에 그런 상관이 생기지 않는다.
  */
-const hash = (id: number, salt: number): number => {
+export const hashId = (id: number, salt: number): number => {
   let value = (id + salt * 0x9e37_79b9) | 0;
   value = Math.imul(value ^ (value >>> 16), 0x85eb_ca6b);
   value = Math.imul(value ^ (value >>> 13), 0xc2b2_ae35);
@@ -88,24 +88,24 @@ const hash = (id: number, salt: number): number => {
 
 /** 등록 시각. 0~59 일 전 사이에 흩어진다. */
 const registeredAtFor = (id: number): string => {
-  const daysAgo = hash(id, 1) % 60;
+  const daysAgo = hashId(id, 1) % 60;
   // 하루를 통째로 빼지 않고 시각까지 벌려 둔다. 같은 날 등록된 행이 여럿일 때 등록일 정렬이
   // 뒤집히지 않는지 보려면 시각이 달라야 한다.
-  const minutesIntoDay = hash(id, 2) % (24 * 60);
+  const minutesIntoDay = hashId(id, 2) % (24 * 60);
   return new Date(
     startOfToday() - daysAgo * 24 * 60 * 60 * 1000 + minutesIntoDay * 60 * 1000,
   ).toISOString();
 };
 
 /** 셋 중 하나는 비즈니스 회원 등록. 목록의 등록 경로 필터가 양쪽 다 결과를 갖게 하려는 값이다. */
-const sourceFor = (id: number): ContentSource => (hash(id, 3) % 3 === 0 ? 'COMPANY' : 'CRAWLER');
+const sourceFor = (id: number): ContentSource => (hashId(id, 3) % 3 === 0 ? 'COMPANY' : 'CRAWLER');
 
 /**
  * 대부분은 게시 상태다. 나머지 세 값도 한 건씩은 나오게 흩어 둔다 — 상태 필터를 골랐을 때
  * 빈 목록만 나오면 필터가 도는지 알 수 없다.
  */
 const publicationStatusFor = (id: number): JobPublicationStatus => {
-  const bucket = hash(id, 4) % 11;
+  const bucket = hashId(id, 4) % 11;
   if (bucket === 4) {
     return 'HIDDEN';
   }
@@ -130,10 +130,10 @@ const REVIEW_BACKLOG_DAYS = 7;
  */
 const reviewStatusFor = (id: number, registeredAt: string): JobReviewStatus => {
   const ageDays = (startOfToday() - new Date(registeredAt).getTime()) / 86_400_000;
-  if (ageDays < REVIEW_BACKLOG_DAYS && hash(id, 5) % 3 !== 0) {
+  if (ageDays < REVIEW_BACKLOG_DAYS && hashId(id, 5) % 3 !== 0) {
     return 'PENDING';
   }
-  return hash(id, 6) % 5 === 0 ? 'REJECTED' : 'APPROVED';
+  return hashId(id, 6) % 5 === 0 ? 'REJECTED' : 'APPROVED';
 };
 
 const jobMetaFor = (id: number): AdminJobMeta => {

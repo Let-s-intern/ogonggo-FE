@@ -6,6 +6,7 @@ import {
   type UserMemberSummary,
 } from '../fixtures/admin-member';
 import { ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
+import { activityFor } from '../fixtures/admin-member-activity';
 import { matches, notFound, ok, paginate, readPaging, type PageResponse } from './paging';
 
 /**
@@ -58,13 +59,14 @@ const listUserMembersHandler = http.get('*/api/v1/admin/members/users', ({ reque
   return HttpResponse.json(ok(body), { status: 200 });
 });
 
+/** 상세는 기본 정보에 북마크와 작성 글을 함께 준다. 요청을 셋으로 나누면 화면이 세 번 흔들린다. */
 const getUserMemberHandler = http.get('*/api/v1/admin/members/users/:memberId', ({ params }) => {
   const memberId = Number(params.memberId);
   const member = USER_MEMBER_FIXTURES.find((fixture) => fixture.id === memberId);
   if (!member) {
     return HttpResponse.json(notFound('회원을 찾을 수 없습니다.'), { status: 404 });
   }
-  return HttpResponse.json(ok(member), { status: 200 });
+  return HttpResponse.json(ok({ ...member, ...activityFor(memberId) }), { status: 200 });
 });
 
 const listCompanyMembersHandler = http.get('*/api/v1/admin/members/companies', ({ request }) => {

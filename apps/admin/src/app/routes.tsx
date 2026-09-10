@@ -4,7 +4,7 @@ import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
 import { CompanyMemberListPage } from '@/pages/company-member-list';
-import { ContentMetricsPage } from '@/pages/content-metrics';
+import { StatsPage } from '@/pages/stats';
 import { DashboardPage } from '@/pages/dashboard';
 import { InquiryDetailPage } from '@/pages/inquiry-detail';
 import { InquiryListPage } from '@/pages/inquiry-list';
@@ -12,8 +12,7 @@ import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { NoticeListPage } from '@/pages/notice-list';
 import { NotFoundPage } from '@/pages/not-found';
-import { PlacementHeroPage } from '@/pages/placement-hero';
-import { PlacementMidPage } from '@/pages/placement-mid';
+import { PlacementsPage } from '@/pages/placements';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
@@ -39,8 +38,7 @@ export const router = createBrowserRouter([
       { path: 'content/side-studies', element: <SideStudyListPage /> },
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
 
-      { path: 'placements/hero', element: <PlacementHeroPage /> },
-      { path: 'placements/mid', element: <PlacementMidPage /> },
+      { path: 'placements', element: <PlacementsPage /> },
 
       { path: 'members/users', element: <UserMemberListPage /> },
       { path: 'members/users/:memberId', element: <UserMemberDetailPage /> },
@@ -51,7 +49,7 @@ export const router = createBrowserRouter([
       { path: 'support/inquiries/:inquiryId', element: <InquiryDetailPage /> },
       { path: 'support/notices', element: <NoticeListPage /> },
 
-      { path: 'stats/content', element: <ContentMetricsPage /> },
+      { path: 'stats', element: <StatsPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

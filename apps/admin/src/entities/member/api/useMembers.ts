@@ -7,6 +7,7 @@ import type {
   JobPublicationStatus,
   JobReviewStatus,
 } from '@ogonggo/api/src/mocks/fixtures/admin-content';
+import type { UserMemberActivity } from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
 import { adminGet, type PageResponse } from '@/shared/api/adminClient';
 
 export interface MemberListFilters {
@@ -24,10 +25,13 @@ export function useUserMemberList(filters: MemberListFilters) {
   });
 }
 
+/** 상세는 기본 정보에 북마크와 작성 글을 함께 준다. */
+export type UserMemberDetail = UserMemberSummary & UserMemberActivity;
+
 export function useUserMemberDetail(memberId: number) {
   return useQuery({
     queryKey: ['admin', 'members', 'users', memberId],
-    queryFn: () => adminGet<UserMemberSummary>(`/api/v1/admin/members/users/${memberId}`),
+    queryFn: () => adminGet<UserMemberDetail>(`/api/v1/admin/members/users/${memberId}`),
     enabled: Number.isInteger(memberId),
   });
 }
