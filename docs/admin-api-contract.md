@@ -22,6 +22,10 @@
 부르고 각 앱의 dev 서버가 `/api/**` 를 백엔드로 프록시한다
 (`apps/admin/vite.config.ts` 의 `server.proxy`).
 
+**메뉴와 경로.** 검수 대기와 반려 보관은 화면상 광고 메뉴 아래(`/ads/review`, `/ads/rejections`)에
+있다. API 경로는 `/api/v1/admin/review-queue` 그대로다 — 화면 묶음이 바뀌었다고 API 를 옮기면
+백엔드가 메뉴 구성 변화를 따라다니게 된다.
+
 **경로 접두사.** 모두 `/api/v1/admin/` 아래다. 크롤러가 쓰는 `/api/v1/internal/` 과 섞지 않는다 —
 `internal` 은 API 키를 쓰고(`InternalApiKeyAuthenticationFilter.kt`) `admin` 은 관리자 세션을
 쓸 자리라 인증 방식이 다르다.
@@ -67,38 +71,38 @@
 
 ## 한눈에 보기
 
-| #   | 페이지                       | 조작                        | 메서드 · 경로                                | 동작                               |
-| --- | ---------------------------- | --------------------------- | -------------------------------------------- | ---------------------------------- |
-| 1   | `/` 대시보드                 | 진입                        | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
-| 2   | `/content/jobs`              | 진입·검색·필터·정렬·페이지  | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
-| 3   | `/content/jobs`              | 노출 토글                   | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
-| 4   | `/content/jobs/{id}`         | 진입                        | `GET /jobs/{id}`                             | 상세                               |
-| 5   | `/content/jobs/{id}`         | 운영 값 수정 → 저장         | `PATCH /jobs/{id}`                           | 노출·등록 경로·검수 상태           |
-| 6   | `/content/jobs/{id}`         | 내용 수정 → 저장            | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
-| 7   | `/content/jobs/{id}`         | 삭제 → 문구 입력            | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
-| 8   | `/content/bootcamps`         | 진입·검색·필터·정렬         | `GET /bootcamps`                             | 목록                               |
-| 9   | `/content/bootcamps/{id}`    | 진입                        | `GET /bootcamps/{id}`                        | 상세                               |
-| 10  | `/content/bootcamps/{id}`    | 내용 수정 → 저장            | `PATCH /bootcamps/{id}`                      | 제목·본문·노출                     |
-| 11  | `/content/bootcamps/{id}`    | 삭제                        | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
-| 12  | `/content/side-studies`      | 진입·검색·필터              | `GET /side-studies`                          | 목록                               |
-| 13  | `/content/side-studies/{id}` | 진입                        | `GET /side-studies/{id}`                     | 상세                               |
-| 14  | `/content/side-studies/{id}` | 삭제                        | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
-| 15  | `/content/review`            | 진입                        | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
-| 16  | `/content/review`            | Space·Backspace 후 저장하기 | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
-| 17  | `/content/review`            | 되돌리기                    | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
-| 18  | `/content/review`            | 내용 수정 → 저장            | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 5·10과 같은 API                    |
-| 19  | `/content/rejections`        | 진입·검색·필터              | `GET /rejections`                            | 반려 기록 목록                     |
-| 20  | `/content/rejections`        | 사유 수정 → 저장            | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
-| 21  | `/members/users`             | 진입·검색·필터              | `GET /members/users`                         | 목록                               |
-| 22  | `/members/users/{id}`        | 진입                        | `GET /members/users/{id}`                    | 상세 + 활동                        |
-| 23  | `/members/companies`         | 진입·검색·필터              | `GET /members/companies`                     | 목록                               |
-| 24  | `/members/companies/{id}`    | 진입                        | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
-| 25  | `/support/inquiries`         | 진입·검색·필터              | `GET /inquiries`                             | 목록                               |
-| 26  | `/support/inquiries/{id}`    | 진입                        | `GET /inquiries/{id}`                        | 상세                               |
-| 27  | `/support/inquiries/{id}`    | 답변 저장                   | `PATCH /inquiries/{id}`                      | 답변 필수. 상태 함께 바뀜          |
-| 28  | `/support/notices`           | 진입                        | `GET /notices`                               | 전체 (페이지 없음)                 |
-| 29  | `/support/notices`           | 새 공지 → 저장              | `POST /notices`                              | 고정은 하나만                      |
-| 30  | `/support/notices`           | 행 클릭 → 저장              | `PUT /notices/{id}`                          | 고정은 하나만                      |
+| #   | 페이지                       | 조작                          | 메서드 · 경로                                | 동작                               |
+| --- | ---------------------------- | ----------------------------- | -------------------------------------------- | ---------------------------------- |
+| 1   | `/` 대시보드                 | 진입                          | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
+| 2   | `/content/jobs`              | 진입·검색·필터·정렬·페이지    | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
+| 3   | `/content/jobs`              | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
+| 4   | `/content/jobs/{id}`         | 진입                          | `GET /jobs/{id}`                             | 상세                               |
+| 5   | `/content/jobs/{id}`         | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·등록 경로·검수 상태           |
+| 6   | `/content/jobs/{id}`         | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
+| 7   | `/content/jobs/{id}`         | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
+| 8   | `/content/bootcamps`         | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
+| 9   | `/content/bootcamps`         | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
+| 10  | `/content/bootcamps/{id}`    | 진입                          | `GET /bootcamps/{id}`                        | 상세                               |
+| 11  | `/content/bootcamps/{id}`    | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·등록 경로·검수 상태           |
+| 12  | `/content/bootcamps/{id}`    | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
+| 13  | `/content/bootcamps/{id}`    | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
+| 14  | `/content/side-studies`      | 진입·검색·필터                | `GET /side-studies`                          | 목록                               |
+| 15  | `/content/side-studies/{id}` | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
+| 16  | `/content/side-studies/{id}` | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
+| 17  | `/ads/review`                | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
+| —   | `/ads/review`                | 이전·다음 (버튼 또는 `A`/`D`) | 없음                                         | 화면 안에서만 이동한다             |
+| 18  | `/ads/review`                | Space·Backspace 후 저장하기   | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
+| 19  | `/ads/review`                | 되돌리기                      | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
+| 20  | `/ads/review`                | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
+| 21  | `/ads/rejections`            | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
+| 22  | `/ads/rejections`            | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
+| 23  | `/members/users`             | 진입·검색·필터                | `GET /members/users`                         | 목록                               |
+| 24  | `/members/users/{id}`        | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
+| 25  | `/members/companies`         | 진입·검색·필터                | `GET /members/companies`                     | 목록                               |
+| 26  | `/members/companies/{id}`    | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
+| 27  | `/support/notices`           | 진입                          | `GET /notices`                               | 전체 (페이지 없음)                 |
+| 28  | `/support/notices`           | 새 공지 → 저장                | `POST /notices`                              | 고정은 하나만                      |
+| 29  | `/support/notices`           | 행 클릭 → 저장                | `PUT /notices/{id}`                          | 고정은 하나만                      |
 
 지면(`/placements`)과 통계(`/stats`)는 만들지 않는다. 메뉴에 회색 비활성으로 자리만 있다.
 
@@ -114,7 +118,7 @@
 
 ```json
 {
-  "todo": { "jobsPendingReview": 15, "unansweredInquiries": 8 },
+  "todo": { "jobsPendingReview": 15 },
   "intake": {
     "jobsCrawledToday": 10,
     "bootcampsCrawledToday": 0,
@@ -126,12 +130,10 @@
 
 **동작**
 
-숫자를 한 요청으로 준다. 카드마다 나누면 로딩이 여섯으로 쪼개져 그 사이 화면이 계속 흔들린다.
+숫자를 한 요청으로 준다. 카드마다 나누면 로딩이 다섯으로 쪼개져 그 사이 화면이 계속 흔들린다.
 
 `jobsPendingReview` 는 채용공고와 부트캠프를 **합한** 수다. 둘 다 비즈니스 회원이 올린다.
 `reviewStatus = PENDING` 인 것만 센다.
-
-`unansweredInquiries` 는 `RECEIVED` + `IN_PROGRESS` 다. `ANSWERED` 는 세지 않는다.
 
 `intake` 는 **오늘 00:00 이후** 등록된 것이다. 크롤링분과 비즈니스 등록분을 나눠 센다 —
 합치면 "크롤링이 멈춘 것"과 "그날 아무도 안 올린 것"을 구분할 수 없다.
@@ -141,13 +143,13 @@
 **카드 링크** — 각 숫자는 조건이 걸린 목록으로 간다. 서버가 관여하지 않지만 필터 파라미터가
 아래 목록 API 와 맞아야 한다.
 
-| 카드               | 이동                                                |
-| ------------------ | --------------------------------------------------- |
-| 검수 대기 공고     | `/content/jobs?reviewStatus=PENDING&source=COMPANY` |
-| 미답변 문의        | `/support/inquiries?status=unanswered`              |
-| 크롤링 채용공고    | `/content/jobs?source=CRAWLER`                      |
-| 비즈니스 등록 공고 | `/content/jobs?source=COMPANY`                      |
-| 이번 주 신규 회원  | `/members/users?joinedWithinDays=7d`                |
+| 카드               | 이동                                 |
+| ------------------ | ------------------------------------ |
+| 검수 대기          | `/ads/review`                        |
+| 크롤링 채용공고    | `/content/jobs?source=CRAWLER`       |
+| 크롤링 부트캠프    | `/content/bootcamps?source=CRAWLER`  |
+| 비즈니스 등록 공고 | `/content/jobs?source=COMPANY`       |
+| 이번 주 신규 회원  | `/members/users?joinedWithinDays=7d` |
 
 ---
 
@@ -159,15 +161,16 @@
 
 **쿼리 파라미터**
 
-| 이름           | 값                                  | 비고                        |
-| -------------- | ----------------------------------- | --------------------------- |
-| `page`         | 1부터                               | 기본 1                      |
-| `size`         | 정수                                | 기본 20                     |
-| `keyword`      | 문자열                              | **제목 + 회사명** 부분 일치 |
-| `visibility`   | `VISIBLE` · `HIDDEN`                |                             |
-| `source`       | `CRAWLER` · `COMPANY`               |                             |
-| `reviewStatus` | `PENDING` · `APPROVED` · `REJECTED` |                             |
-| `sort`         | `REGISTERED_AT` · `VIEW_COUNT`      | 기본 `REGISTERED_AT`        |
+| 이름                | 값                                  | 비고                        |
+| ------------------- | ----------------------------------- | --------------------------- |
+| `page`              | 1부터                               | 기본 1                      |
+| `size`              | 정수                                | 기본 20                     |
+| `keyword`           | 문자열                              | **제목 + 회사명** 부분 일치 |
+| `visibility`        | `VISIBLE` · `HIDDEN`                |                             |
+| `source`            | `CRAWLER` · `COMPANY`               |                             |
+| `reviewStatus`      | `PENDING` · `APPROVED` · `REJECTED` | 크롤링 수집분은 `null`      |
+| `recruitmentStatus` | `RECRUITING` · `CLOSED`             | **파생값** — 아래 참고      |
+| `sort`              | `REGISTERED_AT` · `VIEW_COUNT`      | 기본 `REGISTERED_AT`        |
 
 **응답 `data.items[]`**
 
@@ -191,6 +194,7 @@
   "visibility": "HIDDEN",
   "source": "COMPANY",
   "reviewStatus": "PENDING",
+  "recruitmentStatus": "RECRUITING",
   "registeredAt": "2026-09-10T10:48:00Z"
 }
 ```
@@ -207,6 +211,20 @@
 `visibility` 는 백엔드 `JobPublicationStatus` 네 값을 **둘로 접어서** 준다. `PUBLISHED` 만
 `VISIBLE` 이고 나머지(`DRAFT`·`HIDDEN`·`ARCHIVED`)는 `HIDDEN` 이다. 어드민이 구분해야 하는
 것은 "지금 사용자에게 보이는가" 하나다.
+
+**`recruitmentStatus` 는 저장된 칸이 아니라 파생값이다.** `Job` 엔티티에는 모집 상태 enum 이
+없고 `closedAt`(마감 처리 일시)·`recruitmentEndAt`(모집 종료 일시)·`recruitmentType`(기간/상시)만
+있다. 셋에서 이렇게 계산한다.
+
+1. `closedAt` 이 있으면 `CLOSED`
+2. `recruitmentType` 이 `ALWAYS_OPEN` 이거나 `recruitmentEndAt` 이 없으면 `RECRUITING`
+3. `recruitmentEndAt` 이 지났으면 `CLOSED`, 아니면 `RECRUITING`
+
+종료일이 없는 기간 채용을 모집 중으로 보는 것이 2번이다. 값이 없다고 닫힌 것으로 보면 수집이
+덜 된 공고가 통째로 마감으로 나간다.
+
+**값은 둘뿐이다.** 부트캠프의 `BootcampStatus` 에는 `DRAFT`(임시저장)도 있지만 어드민은 쓰지
+않는다 — 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 필터로 남겨 두면 골라도 늘 0 건이다.
 
 `reviewStatus` 는 **크롤링 수집분에서 `null`** 이다. 크롤링은 우리가 고른 사이트에서 긁어오는
 것이라 사람이 한 건씩 통과시킬 대상이 아니다. `source = CRAWLER` 이면서 `reviewStatus` 가
@@ -301,18 +319,26 @@
 
 **부르는 곳** — `/content/bootcamps` 진입, 검색·필터·정렬.
 
-**쿼리** — `page` `size` `sort`(채용공고와 같음), `keyword`(**과정명 + 운영사**),
-`status`(`DRAFT` · `RECRUITING` · `CLOSED`).
+**쿼리** — **채용공고와 같다.** `page` `size` `sort` `visibility` `source` `reviewStatus` 에
+`keyword`(**과정명 + 운영사**)와 `status` 가 더 있다.
 
-**응답 `data.items[]`** — 부트캠프 요약 + `registeredAt` `source` `visibility` `reviewStatus`.
+`status` 는 부트캠프의 모집 상태(`BootcampStatus`)이고 어드민이 쓰는 값은
+`RECRUITING` · `CLOSED` 둘이다. 백엔드에는 `DRAFT` 도 있지만 화면에서 다루지 않는다.
+
+**응답 `data.items[]`** — 부트캠프 요약 + `registeredAt` `visibility` `source` `reviewStatus`.
 
 **동작**
 
-`status` 는 **모집 상태**다. 노출 여부(`visibility`)와 다른 것이고 둘을 합치면 안 된다 —
-모집이 끝난 과정을 지면에 남겨 둘 수도, 모집 중인데 내릴 수도 있다.
+**칸과 필터를 채용공고와 같게 맞춘다.** 비즈니스 회원은 부트캠프도 올리므로 노출·등록 경로·검수
+상태가 똑같이 있다. 한쪽에만 칸을 빼 두면 같은 일을 하러 두 화면을 오갈 때 조작이 달라진다.
 
-부트캠프도 비즈니스 회원이 올릴 수 있어 `source` 와 `reviewStatus` 를 갖는다. 규칙은 채용공고와
-같다.
+모집 상태의 이름만 다르다. 부트캠프는 저장된 칸(`status`)이고 채용공고는 파생값
+(`recruitmentStatus`)이다. 화면에서는 둘 다 "모집 상태" 로 같은 뱃지를 쓴다.
+
+모집 상태는 노출 여부(`visibility`)와 다른 것이라 합치면 안 된다 — 모집이 끝난 과정을 지면에
+남겨 둘 수도, 모집 중인데 내릴 수도 있다.
+
+`source` 와 `reviewStatus` 규칙은 채용공고와 같다. 크롤링 수집분의 `reviewStatus` 는 `null` 이다.
 
 ### `GET /api/v1/admin/bootcamps/{bootcampId}`
 
@@ -323,12 +349,17 @@
 
 **부르는 곳** — 상세와 검수 화면의 "내용 수정" 저장.
 
-**요청** — `title` `fields` `visibility`.
+**부르는 곳** — 목록의 노출 토글, 상세의 "운영 값 수정" 저장, 상세와 검수 화면의 "내용 수정"
+저장.
+
+**요청** — `title` `fields` `visibility` `source` `reviewStatus`. **채용공고와 같다.**
 
 허용 칸: `content` `eligibilityAndSelectionProcess`
 
-**동작** — 채용공고의 `PATCH` 와 같다. 커리큘럼과 파트너사는 구조가 있는 값이라 이 API 로
-고치지 않는다.
+**동작** — 채용공고의 `PATCH` 와 규칙이 같다. 부분 수정이고, `source` 를 `CRAWLER` 로 바꾸면
+`reviewStatus` 를 지우고, 반려가 풀리면 반려 기록도 지운다.
+
+커리큘럼과 파트너사는 구조가 있는 값이라 이 API 로 고치지 않는다.
 
 ### `DELETE /api/v1/admin/bootcamps/{bootcampId}`
 
@@ -359,7 +390,7 @@
 
 ---
 
-## 5. 콘텐츠 · 검수 대기
+## 5. 광고 · 검수 대기
 
 ### `GET /api/v1/admin/review-queue`
 
@@ -447,7 +478,7 @@
 
 ---
 
-## 6. 콘텐츠 · 반려 보관
+## 6. 광고 · 반려 보관
 
 ### `GET /api/v1/admin/rejections`
 
@@ -577,51 +608,7 @@
 
 ---
 
-## 8. 고객 지원 · 문의
-
-### `GET /api/v1/admin/inquiries`
-
-**쿼리** — `page` `size`, `keyword`(**제목 + 작성자명**),
-`status`(`RECEIVED` · `IN_PROGRESS` · `ANSWERED` · **`unanswered`**),
-`category`(`SERVICE` · `JOB_POSTING` · `ACCOUNT` · `ADVERTISEMENT` · `ETC`).
-
-**응답 `data.items[]`** — `id` `title` `authorName` `authorEmail` `category` `status` `createdAt`.
-
-**동작**
-
-**`status=unanswered` 는 특별한 값이다.** `RECEIVED` + `IN_PROGRESS` 를 뜻하고, 대시보드의
-"미답변 문의" 카드가 이 값으로 링크해 온다. 드롭다운에는 없는 값이라 화면이 그 사실을 안내
-문구로 알린다.
-
-접수일 역순. 본문과 답변은 목록에 싣지 않는다.
-
-### `GET /api/v1/admin/inquiries/{inquiryId}`
-
-**응답** — 목록 항목 + `content` `answer` `answeredAt`.
-
-### `PATCH /api/v1/admin/inquiries/{inquiryId}`
-
-**부르는 곳** — 상세의 "답변 저장", "처리중으로 저장".
-
-**요청** — `{ "answer": "…", "status": "IN_PROGRESS" }` (`status` 는 선택)
-
-**동작**
-
-빈 답변은 **400**. 실수로 저장을 눌러 답변이 사라지는 것을 막는 유일한 장치다.
-
-`status` 를 주지 않으면 `ANSWERED` 로 바꾼다. 답변만 저장하고 상태는 그대로 두고 싶을 때가
-있어 따로 받는다.
-
-`answeredAt` 을 갱신한다.
-
-**답변은 한 번 쓰면 수정만 되고 지워지지 않는다.** 지우는 API 를 만들지 않는다.
-
-이 저장이 **대시보드의 미답변 수를 함께 바꾼다.** 화면은 저장 성공 시 문의와 대시보드 캐시를
-모두 무효화한다.
-
----
-
-## 9. 고객 지원 · 공지사항
+## 8. 고객 지원 · 공지사항
 
 ### `GET /api/v1/admin/notices`
 
@@ -690,9 +677,6 @@
 
 **비즈니스 회원과 공고를 잇는 키.** 목은 회사명으로 잇지만 백엔드에는 `companyId` 가 있을
 자리다.
-
-**문의를 누가 넣는지.** 로그인 회원만인지 비로그인도 되는지에 따라 `authorName` 의 필수 여부가
-갈린다.
 
 **관리자 인증.** `AdminSecurityConfiguration.kt` 가 지금 `/api/v1/internal/**` 외 전부를
 `denyAll()` 로 닫고 있다. 이 API 들을 열려면 관리자 세션이 먼저 필요하다.

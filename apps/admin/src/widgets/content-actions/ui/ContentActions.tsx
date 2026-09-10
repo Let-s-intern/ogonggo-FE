@@ -1,8 +1,14 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ActionAlert, Button, ConfirmDelete } from '@ogonggo/ui';
+import type {
+  ContentSource,
+  JobReviewStatus,
+  Visibility,
+} from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import { useDeleteContent, usePatchBootcamp, usePatchJob } from '@/entities/content/api/useContent';
 import { ContentEditor, type ContentEditorField } from '@/widgets/content-editor';
+import { OperationEditor } from '@/widgets/operation-editor';
 
 type ContentKind = 'jobs' | 'bootcamps' | 'side-studies';
 
@@ -15,12 +21,15 @@ export interface ContentActionsProps {
   /** 삭제 후 돌아갈 목록 주소. */
   listPath: string;
   /**
-   * 이 화면에만 있는 버튼. 채용공고의 "운영 값 수정" 이 여기 들어온다.
+   * 운영 값(노출·등록 경로·검수 상태). 넘기면 "운영 값 수정" 버튼이 함께 뜬다.
    *
-   * 화면마다 따로 `fixed` 버튼을 그리면 같은 자리에 겹쳐 떠서 글자가 서로를 가린다. 플로팅
-   * 자리는 이 묶음 하나가 소유하고, 다른 화면은 버튼만 넘긴다.
+   * 사이드·스터디에는 이 값들이 없어서 선택이다.
    */
-  extraActions?: ReactNode;
+  operation?: {
+    visibility: Visibility;
+    source: ContentSource;
+    reviewStatus: JobReviewStatus | null;
+  };
 }
 
 /**
@@ -38,10 +47,11 @@ export function ContentActions({
   title,
   fields,
   listPath,
-  extraActions,
+  operation,
 }: ContentActionsProps) {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingOperation, setIsEditingOperation] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
 
@@ -63,8 +73,20 @@ export function ContentActions({
         />
       ) : null}
 
+      {/*
+        플로팅 자리는 이 묶음 하나가 소유한다. 화면마다 따로 `fixed` 버튼을 그리면 같은 자리에
+        겹쳐 떠서 글자가 서로를 가린다 — 실제로 채용공고 상세에서 그렇게 겹쳤다.
+      */}
       <div className="fixed right-8 bottom-8 z-40 flex items-center gap-2">
-        {extraActions}
+        {operation ? (
+          <Button
+            variant="secondary"
+            className="rounded-full bg-white shadow-[0_8px_24px_-6px_rgba(17,24,39,0.25)]"
+            onClick={() => setIsEditingOperation(true)}
+          >
+            운영 값 수정
+          </Button>
+        ) : null}
         {canEdit ? (
           <Button
             className="rounded-full shadow-[0_8px_24px_-6px_rgba(74,118,255,0.6)]"
@@ -98,6 +120,19 @@ export function ContentActions({
               },
             })
           }
+        />
+      ) : null}
+
+      {operation && kind !== 'side-studies' ? (
+        <OperationEditor
+          kind={kind}
+          id={id}
+          visibility={operation.visibility}
+          source={operation.source}
+          reviewStatus={operation.reviewStatus}
+          open={isEditingOperation}
+          onOpenChange={setIsEditingOperation}
+          onSaved={() => setAlert({ message: '운영 값을 수정했습니다.', nonce: Date.now() })}
         />
       ) : null}
 

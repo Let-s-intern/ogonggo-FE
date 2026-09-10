@@ -10,6 +10,8 @@ import {
   ContentSourceBadge,
   JOB_REVIEW_STATUS_OPTIONS,
   JobReviewStatusBadge,
+  RECRUITMENT_STATUS_OPTIONS,
+  RecruitmentStatusBadge,
   VISIBILITY_OPTIONS,
 } from '@/shared/config/labels';
 import { formatCount, formatDate } from '@/shared/lib/format';
@@ -33,6 +35,7 @@ export function JobListPage() {
     visibility: get('visibility'),
     source: get('source'),
     reviewStatus: get('reviewStatus'),
+    recruitmentStatus: get('recruitmentStatus'),
     sort: get('sort', 'REGISTERED_AT'),
   };
 
@@ -58,6 +61,12 @@ export function JobListPage() {
       header: '검수',
       width: 'w-28',
       render: (row) => <JobReviewStatusBadge value={row.reviewStatus} />,
+    },
+    {
+      key: 'recruitmentStatus',
+      header: '모집 상태',
+      width: 'w-28',
+      render: (row) => <RecruitmentStatusBadge value={row.recruitmentStatus} />,
     },
     {
       key: 'viewCount',
@@ -101,6 +110,12 @@ export function JobListPage() {
           value={filters.reviewStatus}
           onChange={(event) => setFilter('reviewStatus', event.target.value)}
           aria-label="검수 상태"
+        />
+        <Select
+          options={RECRUITMENT_STATUS_OPTIONS}
+          value={filters.recruitmentStatus}
+          onChange={(event) => setFilter('recruitmentStatus', event.target.value)}
+          aria-label="모집 상태"
         />
         <Select
           options={CONTENT_SORT_OPTIONS}

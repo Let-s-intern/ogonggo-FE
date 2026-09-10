@@ -64,6 +64,7 @@ const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
   const visibility = url.searchParams.get('visibility') ?? '';
   const source = url.searchParams.get('source') ?? '';
   const reviewStatus = url.searchParams.get('reviewStatus') ?? '';
+  const recruitmentStatus = url.searchParams.get('recruitmentStatus') ?? '';
   const { page, size } = readPaging(url);
 
   const filtered = ADMIN_JOB_FIXTURES.filter((job) => {
@@ -77,6 +78,9 @@ const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
       return false;
     }
     if (reviewStatus && job.reviewStatus !== reviewStatus) {
+      return false;
+    }
+    if (recruitmentStatus && job.recruitmentStatus !== recruitmentStatus) {
       return false;
     }
     return true;
@@ -136,6 +140,8 @@ export interface AdminJobPatchRequest extends AdminContentPatchRequest {
 
 export interface AdminBootcampPatchRequest extends AdminContentPatchRequest {
   visibility?: AdminBootcampDetail['visibility'];
+  source?: AdminBootcampDetail['source'];
+  reviewStatus?: AdminBootcampDetail['reviewStatus'];
 }
 
 /** 제목과 본문 칸을 적용한다. 허용 목록에 없는 키는 버린다. */
@@ -234,6 +240,21 @@ const patchBootcampHandler = http.patch(
     if (body.visibility !== undefined) {
       bootcamp.visibility = body.visibility;
     }
+    // 등록 경로·검수 상태 규칙은 채용공고와 같다. 이유는 위 patchJobHandler 주석에 있다.
+    if (body.source !== undefined) {
+      bootcamp.source = body.source;
+      if (body.source === 'CRAWLER') {
+        bootcamp.reviewStatus = null;
+      } else if (bootcamp.reviewStatus === null) {
+        bootcamp.reviewStatus = 'PENDING';
+      }
+    }
+    if (body.reviewStatus !== undefined && bootcamp.source === 'COMPANY') {
+      bootcamp.reviewStatus = body.reviewStatus;
+    }
+    if (bootcamp.reviewStatus !== 'REJECTED') {
+      clearRejection('BOOTCAMP', bootcamp.id);
+    }
 
     return HttpResponse.json(ok(bootcamp), { status: 200 });
   },
@@ -284,14 +305,27 @@ const deleteSideStudyHandler = http.delete('*/api/v1/admin/side-studies/:postId'
 const listBootcampsHandler = http.get('*/api/v1/admin/bootcamps', ({ request }) => {
   const url = new URL(request.url);
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-  const status = url.searchParams.get('status') ?? '';
+  const recruitmentStatus = url.searchParams.get('recruitmentStatus') ?? '';
+  const visibility = url.searchParams.get('visibility') ?? '';
+  const source = url.searchParams.get('source') ?? '';
+  const reviewStatus = url.searchParams.get('reviewStatus') ?? '';
   const { page, size } = readPaging(url);
 
+  // 채용공고와 같은 필터를 받는다. 같은 일을 하러 두 화면을 오갈 때 조작이 달라지면 안 된다.
   const filtered = ADMIN_BOOTCAMP_FIXTURES.filter((bootcamp) => {
     if (keyword && !matches(`${bootcamp.title} ${bootcamp.companyName}`, keyword)) {
       return false;
     }
-    if (status && bootcamp.status !== status) {
+    if (recruitmentStatus && bootcamp.recruitmentStatus !== recruitmentStatus) {
+      return false;
+    }
+    if (visibility && bootcamp.visibility !== visibility) {
+      return false;
+    }
+    if (source && bootcamp.source !== source) {
+      return false;
+    }
+    if (reviewStatus && bootcamp.reviewStatus !== reviewStatus) {
       return false;
     }
     return true;

@@ -285,10 +285,36 @@ export function ReviewQueuePage() {
       <ShortcutLegend />
 
       <div className="flex items-center justify-between gap-4 pt-4 pb-3">
-        <p className="text-sm text-gray-500">
-          {index + 1} / {queue.length} · 판정 {decisions.size}건 · 남은{' '}
-          {queue.length - decisions.size}건
-        </p>
+        <div className="flex items-center gap-3">
+          {/*
+            키보드가 주 조작이지만 버튼도 둔다. 단축키를 처음 보는 사람과 마우스로 오는 사람이
+            있고, 화면에 버튼이 있어야 A/D 가 무엇을 하는 키인지도 짐작이 된다.
+          */}
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => move(-1)}
+              disabled={index === 0}
+              aria-label="이전 건"
+            >
+              ← 이전
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => move(1)}
+              disabled={index >= queue.length - 1}
+              aria-label="다음 건"
+            >
+              다음 →
+            </Button>
+          </div>
+          <p className="text-sm text-gray-500">
+            {index + 1} / {queue.length} · 판정 {decisions.size}건 · 남은{' '}
+            {queue.length - decisions.size}건
+          </p>
+        </div>
         {lastDecided ? (
           <button
             type="button"

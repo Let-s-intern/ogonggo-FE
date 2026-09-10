@@ -2,7 +2,13 @@ import { useParams } from 'react-router';
 import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
-import { BootcampStatusBadge, VisibilityBadge, plainLabel } from '@/shared/config/labels';
+import {
+  RecruitmentStatusBadge,
+  ContentSourceBadge,
+  JobReviewStatusBadge,
+  VisibilityBadge,
+  plainLabel,
+} from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
 
@@ -41,8 +47,13 @@ export function BootcampDetailPage() {
           columns={3}
           items={[
             { label: '운영사', value: data.companyName },
-            { label: '모집 상태', value: <BootcampStatusBadge value={data.status} /> },
+            {
+              label: '모집 상태',
+              value: <RecruitmentStatusBadge value={data.recruitmentStatus} />,
+            },
             { label: '노출', value: <VisibilityBadge value={data.visibility} /> },
+            { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },
+            { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '프로그램 유형', value: data.programType },
             { label: '진행 방식', value: plainLabel(data.operationType) },
@@ -117,6 +128,11 @@ export function BootcampDetailPage() {
         id={data.id}
         title={data.title}
         listPath="/content/bootcamps"
+        operation={{
+          visibility: data.visibility,
+          source: data.source,
+          reviewStatus: data.reviewStatus,
+        }}
         fields={[
           { field: 'content', label: '소개', value: data.content ?? '' },
           {

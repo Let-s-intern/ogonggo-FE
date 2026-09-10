@@ -38,6 +38,56 @@ export type ContentSource = 'CRAWLER' | 'COMPANY';
 export type Visibility = 'VISIBLE' | 'HIDDEN';
 
 /**
+ * 모집 상태. **채용공고와 부트캠프가 같은 값을 쓴다.**
+ *
+ * 저장된 칸이 아니라 모집 일정에서 계산한다. `Job` 엔티티에는 모집 상태 enum 이 아예 없고
+ * (`closedAt`·`recruitmentStartAt`·`recruitmentEndAt`·`recruitmentType` 뿐이다), 부트캠프의
+ * `BootcampStatus` 에는 "모집 예정" 에 해당하는 값이 없다. 둘을 같은 규칙으로 계산해야 두
+ * 목록이 같은 뜻의 뱃지를 보여준다.
+ *
+ * 임시저장(`DRAFT`)은 두지 않는다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 목록에
+ * 필터로 남겨 두면 골라도 늘 0 건이다.
+ */
+export type RecruitmentStatus = 'UPCOMING' | 'RECRUITING' | 'CLOSED';
+
+/** 모집 일정. 두 종류가 같은 모양으로 넘겨 같은 규칙을 태운다. */
+interface RecruitmentWindow {
+  closedAt?: string;
+  recruitmentStartAt?: string;
+  recruitmentEndAt?: string;
+  /** 채용공고에만 있다. 상시 채용은 시작·종료가 없어도 늘 모집 중이다. */
+  alwaysOpen?: boolean;
+}
+
+/**
+ * 모집 상태를 일정에서 계산한다.
+ *
+ * 마감이 먼저다. 이미 닫힌 것은 시작일이 미래여도 마감이다 — 잘못 등록해 되돌린 건이 "모집
+ * 예정" 으로 다시 올라오면 안 된다.
+ *
+ * 시작일이 미래면 모집 예정. 종료일이 지났으면 마감. 둘 다 아니면 모집 중이다.
+ *
+ * 날짜가 비어 있으면 모집 중으로 본다. 값이 없다고 닫힌 것으로 보면 수집이 덜 된 공고가
+ * 통째로 마감으로 나간다.
+ */
+export function recruitmentStatusOf(window: RecruitmentWindow): RecruitmentStatus {
+  if (window.closedAt) {
+    return 'CLOSED';
+  }
+  const now = Date.now();
+  if (window.recruitmentStartAt && new Date(window.recruitmentStartAt).getTime() > now) {
+    return 'UPCOMING';
+  }
+  if (window.alwaysOpen) {
+    return 'RECRUITING';
+  }
+  if (window.recruitmentEndAt && new Date(window.recruitmentEndAt).getTime() < now) {
+    return 'CLOSED';
+  }
+  return 'RECRUITING';
+}
+
+/**
  * 비즈니스 회원이 올린 공고의 검수 상태.
  *
  * 크롤러가 수집한 공고에는 없다(`null`). 크롤링은 우리가 고른 사이트에서 긁어오는 것이라
@@ -49,6 +99,8 @@ export type JobReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export interface AdminJobMeta {
   /** ISO 8601. */
   registeredAt: string;
+  /** 파생값. 저장된 칸이 아니라 마감 일시와 모집 유형에서 계산한다. */
+  recruitmentStatus: RecruitmentStatus;
   source: ContentSource;
   visibility: Visibility;
   /** 크롤러 수집분은 `null` 이다. */
@@ -60,6 +112,13 @@ export type AdminJobDetail = UserJobDetailResponse & AdminJobMeta;
 
 export interface AdminBootcampMeta {
   registeredAt: string;
+  /**
+   * 파생값. 저장된 `status`(`BootcampStatus`)와 별개다.
+   *
+   * `BootcampStatus` 에는 "모집 예정" 이 없어서 시작일이 미래인 과정도 `RECRUITING` 으로
+   * 저장된다. 채용공고와 같은 뱃지를 쓰려면 같은 규칙으로 계산해야 한다.
+   */
+  recruitmentStatus: RecruitmentStatus;
   /** 부트캠프도 비즈니스 회원이 직접 올릴 수 있다. 검수 대상은 그쪽뿐이다. */
   source: ContentSource;
   visibility: Visibility;
@@ -135,11 +194,18 @@ const reviewStatusFor = (id: number, registeredAt: string): JobReviewStatus => {
   return hashId(id, 6) % 5 === 0 ? 'REJECTED' : 'APPROVED';
 };
 
-const jobMetaFor = (id: number): AdminJobMeta => {
+const jobMetaFor = (job: UserJobDetailResponse): AdminJobMeta => {
+  const id = job.id;
   const source = sourceFor(id);
   const registeredAt = registeredAtFor(id);
   return {
     registeredAt,
+    recruitmentStatus: recruitmentStatusOf({
+      closedAt: job.closedAt,
+      recruitmentStartAt: job.recruitmentStartAt,
+      recruitmentEndAt: job.recruitmentEndAt,
+      alwaysOpen: job.recruitmentType === 'ALWAYS_OPEN',
+    }),
     source,
     visibility: visibilityFor(id),
     reviewStatus: source === 'COMPANY' ? reviewStatusFor(id, registeredAt) : null,
@@ -149,7 +215,7 @@ const jobMetaFor = (id: number): AdminJobMeta => {
 /** 사용자 픽스처에 어드민 칸을 얹은 채용공고. 목록·상세가 모두 여기서 나온다. */
 export const ADMIN_JOB_FIXTURES: AdminJobDetail[] = JOB_FIXTURES.map((job) => ({
   ...job,
-  ...jobMetaFor(job.id),
+  ...jobMetaFor(job),
 }));
 
 /**
@@ -165,6 +231,13 @@ export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetail[] = BOOTCAMP_FIXTURES.
   return {
     ...bootcamp,
     registeredAt,
+    recruitmentStatus: recruitmentStatusOf({
+      // 저장된 상태가 마감이면 그것을 따른다. 엔티티가 CLOSED 와 closedAt 을 함께 두기 때문에
+      // (Bootcamp.kt 의 require) 둘 중 하나만 봐도 되지만, 픽스처에는 closedAt 이 비어 있다.
+      closedAt: bootcamp.status === 'CLOSED' ? (bootcamp.closedAt ?? registeredAt) : undefined,
+      recruitmentStartAt: bootcamp.recruitmentStartAt,
+      recruitmentEndAt: bootcamp.recruitmentEndAt,
+    }),
     source,
     visibility: visibilityFor(bootcamp.id + 1000),
     reviewStatus: source === 'COMPANY' ? reviewStatusFor(bootcamp.id + 1000, registeredAt) : null,
