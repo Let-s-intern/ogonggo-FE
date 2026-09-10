@@ -14,19 +14,47 @@ export interface UserBootcampSummaryResponse {
   companyName: string;
   title: string;
   programType: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `ONLINE` | 1 | 온라인 |
+     * | `OFFLINE` | 2 | 오프라인 |
+     * | `HYBRID` | 3 | 온·오프라인 |
+     */
   operationType: UserBootcampSummaryResponseOperationType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 모집 |
+     * | `ALWAYS_OPEN` | 2 | 상시 모집 |
+     */
   recruitmentType: UserBootcampSummaryResponseRecruitmentType;
   recruitmentStartAt?: string;
   recruitmentEndAt?: string;
   programStartDate: string;
   programEndDate: string;
   capacity?: number;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FREE` | 1 | 무료 |
+     * | `PAID` | 2 | 유료 |
+     * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+     */
   tuitionType: UserBootcampSummaryResponseTuitionType;
   tuitionAmount?: number;
   representativeImageUrl: string;
   shortDescription: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `DRAFT` | 1 | 임시저장 |
+     * | `RECRUITING` | 2 | 모집중 |
+     * | `CLOSED` | 3 | 모집 마감 |
+     */
   status: UserBootcampSummaryResponseStatus;
   closedAt?: string;
+  bookmarked: boolean;
   viewCount: number;
   bookmarkCount: number;
   commentCount: number;

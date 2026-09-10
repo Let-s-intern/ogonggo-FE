@@ -5,7 +5,7 @@
  * OpenAPI spec version: v1
  */
 
-export type GetJobCalendarParams = {
+export type ListPublicJobCalendarParams = {
 from: string;
 to: string;
 };

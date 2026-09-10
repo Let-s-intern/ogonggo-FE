@@ -27,7 +27,7 @@ export const TAB_FILTERS: Record<BootcampTab, Record<string, string>> = {
   free: { tuitionType: 'FREE' },
 };
 
-/** API 없음: `getBootcamps`에 `sort` 파라미터가 없다. 목업의 `최신순` 드롭다운용이다. */
+/** 목업의 `최신순` 드롭다운. `listPublicBootcamps`의 `sort`에 대응한다. */
 export const BOOTCAMP_SORTS = ['LATEST', 'VIEW_COUNT'] as const;
 export type BootcampSort = (typeof BOOTCAMP_SORTS)[number];
 

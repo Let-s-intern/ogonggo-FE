@@ -17,19 +17,45 @@ export interface UserBootcampDetailResponse {
   companyName: string;
   title: string;
   programType: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `ONLINE` | 1 | 온라인 |
+     * | `OFFLINE` | 2 | 오프라인 |
+     * | `HYBRID` | 3 | 온·오프라인 |
+     */
   operationType: UserBootcampDetailResponseOperationType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 모집 |
+     * | `ALWAYS_OPEN` | 2 | 상시 모집 |
+     */
   recruitmentType: UserBootcampDetailResponseRecruitmentType;
   recruitmentStartAt?: string;
   recruitmentEndAt?: string;
   programStartDate: string;
   programEndDate: string;
   capacity?: number;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FREE` | 1 | 무료 |
+     * | `PAID` | 2 | 유료 |
+     * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+     */
   tuitionType: UserBootcampDetailResponseTuitionType;
   tuitionAmount?: number;
   representativeImageUrl: string;
   shortDescription: string;
   content: string;
   eligibilityAndSelectionProcess?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+     * | `EMAIL` | 2 | 이메일 |
+     */
   applicationMethod: UserBootcampDetailResponseApplicationMethod;
   applicationUrl?: string;
   managerEmail?: string;
@@ -37,8 +63,16 @@ export interface UserBootcampDetailResponse {
   publicationStartAt?: string;
   publicationEndAt?: string;
   sourceUrl?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `DRAFT` | 1 | 임시저장 |
+     * | `RECRUITING` | 2 | 모집중 |
+     * | `CLOSED` | 3 | 모집 마감 |
+     */
   status: UserBootcampDetailResponseStatus;
   closedAt?: string;
+  bookmarked: boolean;
   viewCount: number;
   bookmarkCount: number;
   commentCount: number;

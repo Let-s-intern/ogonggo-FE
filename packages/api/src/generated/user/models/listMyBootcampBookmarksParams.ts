@@ -4,9 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { GetBootcamps1Sort } from './getBootcamps1Sort';
 
-export type GetBootcamps1Params = {
+export type ListMyBootcampBookmarksParams = {
 /**
  * @minimum 1
  */
@@ -16,5 +15,4 @@ page?: number;
  * @maximum 100
  */
 size?: number;
-sort?: GetBootcamps1Sort;
 };

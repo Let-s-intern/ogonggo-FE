@@ -5,7 +5,7 @@
  * OpenAPI spec version: v1
  */
 
-export type GetBootcampsParams = {
+export type ListMyBootcampsParams = {
 /**
  * @minimum 1
  */

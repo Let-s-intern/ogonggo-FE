@@ -4,9 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { GetJobsSort } from './getJobsSort';
 
-export type GetJobsParams = {
+export type ListMyJobsParams = {
 /**
  * @minimum 1
  */
@@ -16,5 +15,4 @@ page?: number;
  * @maximum 100
  */
 size?: number;
-sort?: GetJobsSort;
 };

@@ -5,7 +5,7 @@
  * OpenAPI spec version: v1
  */
 
-export type GetBookmarksParams = {
+export type ListMyJobBookmarksParams = {
 /**
  * @minimum 1
  */

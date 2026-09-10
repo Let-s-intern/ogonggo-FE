@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getBootcamp1 } from '@ogonggo/api';
+import { getPublicBootcamp } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
@@ -15,8 +15,8 @@ export interface BootcampDetailViewProps {
 }
 
 /**
- * 공개 상세는 `getBootcamp1`(`GET /api/v1/bootcamps/{bootcampId}`)이다 — 이름이 비슷한
- * `getBootcamp`는 기업 회원용 `/api/v1/users/me/bootcamps/{id}`라 이 화면이 쓰지 않는다
+ * 공개 상세는 `getPublicBootcamp`(`GET /api/v1/bootcamps/{bootcampId}`)이다 —
+ * `getMyBootcamp`는 기업 회원용 `/api/v1/users/me/bootcamps/{id}`라 이 화면이 쓰지 않는다
  * (PRD 3절).
  *
  * 응답 언랩과 404 처리는 `widgets/job-detail/ui/JobDetailView.tsx`의 `fetchJobDetail`과 같다 —
@@ -27,7 +27,7 @@ export interface BootcampDetailViewProps {
 async function fetchBootcampDetail(bootcampId: number): Promise<BootcampDetail> {
   let response: SuccessResponseUserBootcampDetailResponse;
   try {
-    response = (await getBootcamp1(
+    response = (await getPublicBootcamp(
       bootcampId,
     )) as unknown as SuccessResponseUserBootcampDetailResponse;
   } catch (error) {

@@ -1,4 +1,4 @@
-import { GetJobsSort } from '@ogonggo/api';
+import { ListPublicJobsSort } from '@ogonggo/api';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 
 /**
@@ -8,7 +8,7 @@ import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/
  */
 export interface JobListQuery {
   page: number;
-  sort: GetJobsSort;
+  sort: ListPublicJobsSort;
   q?: string;
   employmentType?: JobEmploymentType;
   experienceType?: JobExperienceType;
@@ -28,7 +28,7 @@ export function buildJobListHref(
   if (merged.page > 1) {
     params.set('page', String(merged.page));
   }
-  if (merged.sort !== GetJobsSort.LATEST) {
+  if (merged.sort !== ListPublicJobsSort.LATEST) {
     params.set('sort', merged.sort);
   }
   if (merged.q) {

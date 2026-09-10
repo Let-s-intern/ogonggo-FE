@@ -5,6 +5,12 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `PERIOD` | 1 | 기간 채용 |
+ * | `ALWAYS_OPEN` | 2 | 상시 채용 |
+ */
 export type UserJobDetailResponseRecruitmentType = typeof UserJobDetailResponseRecruitmentType[keyof typeof UserJobDetailResponseRecruitmentType];
 
 

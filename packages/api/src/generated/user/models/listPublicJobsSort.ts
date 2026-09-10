@@ -5,10 +5,10 @@
  * OpenAPI spec version: v1
  */
 
-export type GetJobsSort = typeof GetJobsSort[keyof typeof GetJobsSort];
+export type ListPublicJobsSort = typeof ListPublicJobsSort[keyof typeof ListPublicJobsSort];
 
 
-export const GetJobsSort = {
+export const ListPublicJobsSort = {
   LATEST: 'LATEST',
   VIEW_COUNT: 'VIEW_COUNT',
 } as const;

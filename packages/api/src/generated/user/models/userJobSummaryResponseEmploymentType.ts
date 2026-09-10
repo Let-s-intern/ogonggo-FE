@@ -5,6 +5,15 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `FULL_TIME` | 1 | 정규직 |
+ * | `CONTRACT` | 2 | 계약직 |
+ * | `INTERN` | 3 | 인턴 |
+ * | `PART_TIME` | 4 | 파트타임 |
+ * | `ETC` | 5 | 기타 |
+ */
 export type UserJobSummaryResponseEmploymentType = typeof UserJobSummaryResponseEmploymentType[keyof typeof UserJobSummaryResponseEmploymentType];
 
 

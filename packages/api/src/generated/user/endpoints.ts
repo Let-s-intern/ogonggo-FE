@@ -26,26 +26,36 @@ import type {
 import type {
   CompanySignInRequest,
   CompanySignUpRequest,
+  CreateAdvertisementInquiryRequest,
   CreateCompanyBootcampRequest,
+  CreateCompanyJobRequest,
   ErrorResponse,
-  GetBookmarksParams,
-  GetBootcamps1Params,
-  GetBootcampsParams,
-  GetJobCalendarParams,
-  GetJobsParams,
   LetsCareerSignInRequest,
+  ListMyBootcampBookmarksParams,
+  ListMyBootcampsParams,
+  ListMyJobBookmarksParams,
+  ListMyJobsParams,
+  ListPublicBootcampsParams,
+  ListPublicJobCalendarParams,
+  ListPublicJobsParams,
+  ReplaceMyProfileRequest,
   SuccessResponseAuthTokenResponse,
   SuccessResponseCompanyBootcampDetailResponse,
+  SuccessResponseCompanyJobDetailResponse,
   SuccessResponseCreateCompanyBootcampResponse,
+  SuccessResponseCreateCompanyJobResponse,
   SuccessResponseListUserJobCalendarItemResponse,
+  SuccessResponseMyAccountResponse,
   SuccessResponsePageResponseCompanyBootcampSummaryResponse,
+  SuccessResponsePageResponseCompanyJobSummaryResponse,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
   SuccessResponsePageResponseUserJobSummaryResponse,
   SuccessResponseUnit,
   SuccessResponseUserBootcampDetailResponse,
   SuccessResponseUserJobDetailResponse,
   TokenReissueRequest,
-  UpdateCompanyBootcampRequest
+  UpdateCompanyBootcampRequest,
+  UpdateCompanyJobRequest
 } from './models';
 
 import {
@@ -61,6 +71,10 @@ import type {
 } from 'msw';
 
 import { httpClient } from '../../lib/http-client';
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -76,39 +90,152 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type getBootcampResponse200 = {
-  data: SuccessResponseCompanyBootcampDetailResponse
+export type replaceMyProfileResponse200 = {
+  data: SuccessResponseUnit
   status: 200
 }
 
-export type getBootcampResponse404 = {
+export type replaceMyProfileResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceMyProfileResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type replaceMyProfileResponseSuccess = (replaceMyProfileResponse200) & {
+  headers: Headers;
+};
+export type replaceMyProfileResponseError = (replaceMyProfileResponse400 | replaceMyProfileResponse409) & {
+  headers: Headers;
+};
+
+export type replaceMyProfileResponse = (replaceMyProfileResponseSuccess | replaceMyProfileResponseError)
+
+export const getReplaceMyProfileUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/profile`
+}
+
+/**
+ *
+ *             학력(대학교·전공·학년)과 희망 조건(직군·직무·산업·구직 조건·희망 기업)을 교체합니다.
+ *             조회는 내 정보 조회(GET /api/v1/users/me)의 profile에 함께 담깁니다.
+ *
+ *             여덟 값을 함께 교체하므로 보내지 않은 값은 비웁니다.
+ *             일부만 바꿀 때도 바꾸지 않을 값을 함께 보내야 합니다.
+ *
+ *             이름·닉네임·프로필 이미지는 렛츠커리어가 소유해 로그인마다 갱신되므로 여기서 바꿀 수 없습니다.
+ *             반대로 이 여덟 값은 오공고가 소유해 재로그인해도 덮어쓰지 않습니다.
+ * @summary 내 프로필 수정
+ */
+export const replaceMyProfile = async (replaceMyProfileRequest: ReplaceMyProfileRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyProfileResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceMyProfileResponse>(getReplaceMyProfileUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceMyProfileRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceMyProfileMutationKey = () => ['replaceMyProfile'] as const;
+
+export const getReplaceMyProfileMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyProfile>>, TError,ReplaceMyProfileMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMyProfile>>, TError,ReplaceMyProfileMutationVariables, TContext> => {
+
+const mutationKey = getReplaceMyProfileMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMyProfile>>, ReplaceMyProfileMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  replaceMyProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMyProfileMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMyProfile>>>
+    export type ReplaceMyProfileMutationBody = ReplaceMyProfileRequest
+    export type ReplaceMyProfileMutationError = ErrorResponse
+    export type ReplaceMyProfileMutationVariables = {data: ReplaceMyProfileRequest}
+
+    /**
+ * @summary 내 프로필 수정
+ */
+export const useReplaceMyProfile = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyProfile>>, TError,ReplaceMyProfileMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMyProfile>>,
+        TError,
+        ReplaceMyProfileMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceMyProfileMutationOptions(options), queryClient);
+    }
+
+export type getMyJobResponse200 = {
+  data: SuccessResponseCompanyJobDetailResponse
+  status: 200
+}
+
+export type getMyJobResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type getBootcampResponseSuccess = (getBootcampResponse200) & {
+export type getMyJobResponseSuccess = (getMyJobResponse200) & {
   headers: Headers;
 };
-export type getBootcampResponseError = (getBootcampResponse404) & {
+export type getMyJobResponseError = (getMyJobResponse404) & {
   headers: Headers;
 };
 
-export type getBootcampResponse = (getBootcampResponseSuccess | getBootcampResponseError)
+export type getMyJobResponse = (getMyJobResponseSuccess | getMyJobResponseError)
 
-export const getGetBootcampUrl = (bootcampId: number,) => {
-
-
+export const getGetMyJobUrl = (jobId: number,) => {
 
 
-  return `/api/v1/users/me/bootcamps/${bootcampId}`
+
+
+  return `/api/v1/users/me/jobs/${jobId}`
 }
 
 /**
- * @summary 내 부트캠프 상세 조회
+ * @summary 내 채용공고 상세 조회
  */
-export const getBootcamp = async (bootcampId: number, options?: RequestInit): Promise<getBootcampResponse> => {
+export const getMyJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyJobResponse> => {
 
-  return httpClient<getBootcampResponse>(getGetBootcampUrl(bootcampId),
+  return httpClient<getMyJobResponse>(getGetMyJobUrl(jobId),
   {
     ...options,
     method: 'GET'
@@ -121,69 +248,69 @@ export const getBootcamp = async (bootcampId: number, options?: RequestInit): Pr
 
 
 
-export const getGetBootcampQueryKey = (bootcampId: number,) => {
+export const getGetMyJobQueryKey = (jobId: number,) => {
     return [
-    `/api/v1/users/me/bootcamps/${bootcampId}`
+    `/api/v1/users/me/jobs/${jobId}`
     ] as const;
     }
 
 
-export const getGetBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, }
+export const getGetMyJobQueryOptions = <TData = Awaited<ReturnType<typeof getMyJob>>, TError = ErrorResponse>(jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetBootcampQueryKey(bootcampId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBootcamp>>> = ({ signal }) => getBootcamp(bootcampId, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getGetMyJobQueryKey(jobId);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyJob>>> = ({ signal }) => getMyJob(jobId, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, enabled: bootcampId !== null && bootcampId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getBootcamp>>>
-export type GetBootcampQueryError = ErrorResponse
+export type GetMyJobQueryResult = NonNullable<Awaited<ReturnType<typeof getMyJob>>>
+export type GetMyJobQueryError = ErrorResponse
 
 
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>> & Pick<
+export function useGetMyJob<TData = Awaited<ReturnType<typeof getMyJob>>, TError = ErrorResponse>(
+ jobId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJob>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamp>>,
+          Awaited<ReturnType<typeof getMyJob>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamp>>
+          Awaited<ReturnType<typeof getMyJob>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>> & Pick<
+export function useGetMyJob<TData = Awaited<ReturnType<typeof getMyJob>>, TError = ErrorResponse>(
+ jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJob>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamp>>,
+          Awaited<ReturnType<typeof getMyJob>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamp>>
+          Awaited<ReturnType<typeof getMyJob>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, }
+export function useGetMyJob<TData = Awaited<ReturnType<typeof getMyJob>>, TError = ErrorResponse>(
+ jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 내 부트캠프 상세 조회
+ * @summary 내 채용공고 상세 조회
  */
 
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, }
+export function useGetMyJob<TData = Awaited<ReturnType<typeof getMyJob>>, TError = ErrorResponse>(
+ jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetBootcampQueryOptions(bootcampId,options)
+  const queryOptions = getGetMyJobQueryOptions(jobId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -196,31 +323,39 @@ export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, 
 
 
 
-export type updateBootcampResponse200 = {
+export type replaceMyJobResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type updateBootcampResponseSuccess = (updateBootcampResponse200) & {
+export type replaceMyJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceMyJobResponseSuccess = (replaceMyJobResponse200) & {
   headers: Headers;
 };
-;
+export type replaceMyJobResponseError = (replaceMyJobResponse404) & {
+  headers: Headers;
+};
 
-export type updateBootcampResponse = (updateBootcampResponseSuccess)
+export type replaceMyJobResponse = (replaceMyJobResponseSuccess | replaceMyJobResponseError)
 
-export const getUpdateBootcampUrl = (bootcampId: number,) => {
-
-
+export const getReplaceMyJobUrl = (jobId: number,) => {
 
 
-  return `/api/v1/users/me/bootcamps/${bootcampId}`
+
+
+  return `/api/v1/users/me/jobs/${jobId}`
 }
 
 /**
- * @summary 내 부트캠프 수정
+ * 보낸 값으로 공고 전체를 교체합니다.
+ * @summary 내 채용공고 수정
  */
-export const updateBootcamp = async (bootcampId: number,
-    updateCompanyBootcampRequest: UpdateCompanyBootcampRequest, options?: RequestInit): Promise<updateBootcampResponse> => {
+export const replaceMyJob = async (jobId: number,
+    updateCompanyJobRequest: UpdateCompanyJobRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyJobResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -228,12 +363,12 @@ export const updateBootcamp = async (bootcampId: number,
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<updateBootcampResponse>(getUpdateBootcampUrl(bootcampId),
+return httpClient<replaceMyJobResponse>(getReplaceMyJobUrl(jobId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(updateCompanyBootcampRequest)
+    body: JSON.stringify(updateCompanyJobRequest)
   }
 );}
 
@@ -241,26 +376,26 @@ return httpClient<updateBootcampResponse>(getUpdateBootcampUrl(bootcampId),
 
 
 
-export const getUpdateBootcampMutationKey = () => ['updateBootcamp'] as const;
+export const getReplaceMyJobMutationKey = () => ['replaceMyJob'] as const;
 
-export const getUpdateBootcampMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext> => {
+export const getReplaceMyJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyJob>>, TError,ReplaceMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMyJob>>, TError,ReplaceMyJobMutationVariables, TContext> => {
 
-const mutationKey = getUpdateBootcampMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getReplaceMyJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBootcamp>>, UpdateBootcampMutationVariables> = (props) => {
-          const {bootcampId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMyJob>>, ReplaceMyJobMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
 
-          return  updateBootcamp(bootcampId,data,)
+          return  replaceMyJob(jobId,data,requestOptions)
         }
 
 
@@ -270,51 +405,59 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof updateBootcamp>>>
-    export type UpdateBootcampMutationBody = UpdateCompanyBootcampRequest
-    export type UpdateBootcampMutationError = unknown
-    export type UpdateBootcampMutationVariables = {bootcampId: number;data: UpdateCompanyBootcampRequest}
+    export type ReplaceMyJobMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMyJob>>>
+    export type ReplaceMyJobMutationBody = UpdateCompanyJobRequest
+    export type ReplaceMyJobMutationError = ErrorResponse
+    export type ReplaceMyJobMutationVariables = {jobId: number;data: UpdateCompanyJobRequest}
 
     /**
- * @summary 내 부트캠프 수정
+ * @summary 내 채용공고 수정
  */
-export const useUpdateBootcamp = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext>, }
+export const useReplaceMyJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyJob>>, TError,ReplaceMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBootcamp>>,
+        Awaited<ReturnType<typeof replaceMyJob>>,
         TError,
-        UpdateBootcampMutationVariables,
+        ReplaceMyJobMutationVariables,
         TContext
       > => {
-      return useMutation(getUpdateBootcampMutationOptions(options), queryClient);
+      return useMutation(getReplaceMyJobMutationOptions(options), queryClient);
     }
 
-export type deleteBootcampResponse200 = {
+export type deleteMyJobResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type deleteBootcampResponseSuccess = (deleteBootcampResponse200) & {
+export type deleteMyJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMyJobResponseSuccess = (deleteMyJobResponse200) & {
   headers: Headers;
 };
-;
+export type deleteMyJobResponseError = (deleteMyJobResponse404) & {
+  headers: Headers;
+};
 
-export type deleteBootcampResponse = (deleteBootcampResponseSuccess)
+export type deleteMyJobResponse = (deleteMyJobResponseSuccess | deleteMyJobResponseError)
 
-export const getDeleteBootcampUrl = (bootcampId: number,) => {
-
-
+export const getDeleteMyJobUrl = (jobId: number,) => {
 
 
-  return `/api/v1/users/me/bootcamps/${bootcampId}`
+
+
+  return `/api/v1/users/me/jobs/${jobId}`
 }
 
 /**
- * @summary 내 부트캠프 삭제
+ * 여러 번 삭제해도 최초 삭제 일시를 유지합니다.
+ * @summary 내 채용공고 삭제
  */
-export const deleteBootcamp = async (bootcampId: number, options?: RequestInit): Promise<deleteBootcampResponse> => {
+export const deleteMyJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyJobResponse> => {
 
-  return httpClient<deleteBootcampResponse>(getDeleteBootcampUrl(bootcampId),
+  return httpClient<deleteMyJobResponse>(getDeleteMyJobUrl(jobId),
   {
     ...options,
     method: 'DELETE'
@@ -327,26 +470,26 @@ export const deleteBootcamp = async (bootcampId: number, options?: RequestInit):
 
 
 
-export const getDeleteBootcampMutationKey = () => ['deleteBootcamp'] as const;
+export const getDeleteMyJobMutationKey = () => ['deleteMyJob'] as const;
 
-export const getDeleteBootcampMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext> => {
+export const getDeleteMyJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyJob>>, TError,DeleteMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyJob>>, TError,DeleteMyJobMutationVariables, TContext> => {
 
-const mutationKey = getDeleteBootcampMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getDeleteMyJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBootcamp>>, DeleteBootcampMutationVariables> = (props) => {
-          const {bootcampId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyJob>>, DeleteMyJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
 
-          return  deleteBootcamp(bootcampId,)
+          return  deleteMyJob(jobId,requestOptions)
         }
 
 
@@ -356,38 +499,754 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBootcamp>>>
+    export type DeleteMyJobMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyJob>>>
 
-    export type DeleteBootcampMutationError = unknown
-    export type DeleteBootcampMutationVariables = {bootcampId: number}
+    export type DeleteMyJobMutationError = ErrorResponse
+    export type DeleteMyJobMutationVariables = {jobId: number}
 
     /**
- * @summary 내 부트캠프 삭제
+ * @summary 내 채용공고 삭제
  */
-export const useDeleteBootcamp = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext>, }
+export const useDeleteMyJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyJob>>, TError,DeleteMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteBootcamp>>,
+        Awaited<ReturnType<typeof deleteMyJob>>,
         TError,
-        DeleteBootcampMutationVariables,
+        DeleteMyJobMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteBootcampMutationOptions(options), queryClient);
+      return useMutation(getDeleteMyJobMutationOptions(options), queryClient);
     }
 
-export type getBootcampsResponse200 = {
-  data: SuccessResponsePageResponseCompanyBootcampSummaryResponse
+export type getMyBootcampResponse200 = {
+  data: SuccessResponseCompanyBootcampDetailResponse
   status: 200
 }
 
-export type getBootcampsResponseSuccess = (getBootcampsResponse200) & {
+export type getMyBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyBootcampResponseSuccess = (getMyBootcampResponse200) & {
+  headers: Headers;
+};
+export type getMyBootcampResponseError = (getMyBootcampResponse404) & {
+  headers: Headers;
+};
+
+export type getMyBootcampResponse = (getMyBootcampResponseSuccess | getMyBootcampResponseError)
+
+export const getGetMyBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/bootcamps/${bootcampId}`
+}
+
+/**
+ * @summary 내 부트캠프 상세 조회
+ */
+export const getMyBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyBootcampResponse> => {
+
+  return httpClient<getMyBootcampResponse>(getGetMyBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyBootcampQueryKey = (bootcampId: number,) => {
+    return [
+    `/api/v1/users/me/bootcamps/${bootcampId}`
+    ] as const;
+    }
+
+
+export const getGetMyBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getMyBootcamp>>, TError = ErrorResponse>(bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyBootcampQueryKey(bootcampId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyBootcamp>>> = ({ signal }) => getMyBootcamp(bootcampId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: bootcampId !== null && bootcampId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getMyBootcamp>>>
+export type GetMyBootcampQueryError = ErrorResponse
+
+
+export function useGetMyBootcamp<TData = Awaited<ReturnType<typeof getMyBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBootcamp>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyBootcamp>>,
+          TError,
+          Awaited<ReturnType<typeof getMyBootcamp>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyBootcamp<TData = Awaited<ReturnType<typeof getMyBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBootcamp>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyBootcamp>>,
+          TError,
+          Awaited<ReturnType<typeof getMyBootcamp>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyBootcamp<TData = Awaited<ReturnType<typeof getMyBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 부트캠프 상세 조회
+ */
+
+export function useGetMyBootcamp<TData = Awaited<ReturnType<typeof getMyBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyBootcampQueryOptions(bootcampId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type replaceMyBootcampResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceMyBootcampResponseSuccess = (replaceMyBootcampResponse200) & {
   headers: Headers;
 };
 ;
 
-export type getBootcampsResponse = (getBootcampsResponseSuccess)
+export type replaceMyBootcampResponse = (replaceMyBootcampResponseSuccess)
 
-export const getGetBootcampsUrl = (params?: GetBootcampsParams,) => {
+export const getReplaceMyBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/bootcamps/${bootcampId}`
+}
+
+/**
+ * @summary 내 부트캠프 수정
+ */
+export const replaceMyBootcamp = async (bootcampId: number,
+    updateCompanyBootcampRequest: UpdateCompanyBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyBootcampResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceMyBootcampResponse>(getReplaceMyBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateCompanyBootcampRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceMyBootcampMutationKey = () => ['replaceMyBootcamp'] as const;
+
+export const getReplaceMyBootcampMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyBootcamp>>, TError,ReplaceMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMyBootcamp>>, TError,ReplaceMyBootcampMutationVariables, TContext> => {
+
+const mutationKey = getReplaceMyBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMyBootcamp>>, ReplaceMyBootcampMutationVariables> = (props) => {
+          const {bootcampId,data} = props ?? {};
+
+          return  replaceMyBootcamp(bootcampId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMyBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMyBootcamp>>>
+    export type ReplaceMyBootcampMutationBody = UpdateCompanyBootcampRequest
+    export type ReplaceMyBootcampMutationError = unknown
+    export type ReplaceMyBootcampMutationVariables = {bootcampId: number;data: UpdateCompanyBootcampRequest}
+
+    /**
+ * @summary 내 부트캠프 수정
+ */
+export const useReplaceMyBootcamp = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyBootcamp>>, TError,ReplaceMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMyBootcamp>>,
+        TError,
+        ReplaceMyBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceMyBootcampMutationOptions(options), queryClient);
+    }
+
+export type deleteMyBootcampResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteMyBootcampResponseSuccess = (deleteMyBootcampResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteMyBootcampResponse = (deleteMyBootcampResponseSuccess)
+
+export const getDeleteMyBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/bootcamps/${bootcampId}`
+}
+
+/**
+ * @summary 내 부트캠프 삭제
+ */
+export const deleteMyBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyBootcampResponse> => {
+
+  return httpClient<deleteMyBootcampResponse>(getDeleteMyBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyBootcampMutationKey = () => ['deleteMyBootcamp'] as const;
+
+export const getDeleteMyBootcampMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyBootcamp>>, TError,DeleteMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyBootcamp>>, TError,DeleteMyBootcampMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyBootcamp>>, DeleteMyBootcampMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  deleteMyBootcamp(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyBootcamp>>>
+
+    export type DeleteMyBootcampMutationError = unknown
+    export type DeleteMyBootcampMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 내 부트캠프 삭제
+ */
+export const useDeleteMyBootcamp = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyBootcamp>>, TError,DeleteMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyBootcamp>>,
+        TError,
+        DeleteMyBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyBootcampMutationOptions(options), queryClient);
+    }
+
+export type listMyJobsResponse200 = {
+  data: SuccessResponsePageResponseCompanyJobSummaryResponse
+  status: 200
+}
+
+export type listMyJobsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyJobsResponseSuccess = (listMyJobsResponse200) & {
+  headers: Headers;
+};
+export type listMyJobsResponseError = (listMyJobsResponse403) & {
+  headers: Headers;
+};
+
+export type listMyJobsResponse = (listMyJobsResponseSuccess | listMyJobsResponseError)
+
+export const getListMyJobsUrl = (params?: ListMyJobsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users/me/jobs?${stringifiedParams}` : `/api/v1/users/me/jobs`
+}
+
+/**
+ * 최근에 등록한 공고부터 반환합니다.
+ * @summary 내 채용공고 목록 조회
+ */
+export const listMyJobs = async (params?: ListMyJobsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyJobsResponse> => {
+
+  return httpClient<listMyJobsResponse>(getListMyJobsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyJobsQueryKey = (params?: ListMyJobsParams,) => {
+    return [
+    `/api/v1/users/me/jobs`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyJobsQueryOptions = <TData = Awaited<ReturnType<typeof listMyJobs>>, TError = ErrorResponse>(params?: ListMyJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyJobsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyJobs>>> = ({ signal }) => listMyJobs(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyJobs>>>
+export type ListMyJobsQueryError = ErrorResponse
+
+
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = ErrorResponse>(
+ params: undefined |  ListMyJobsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listMyJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = ErrorResponse>(
+ params?: ListMyJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listMyJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = ErrorResponse>(
+ params?: ListMyJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 채용공고 목록 조회
+ */
+
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = ErrorResponse>(
+ params?: ListMyJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyJobsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createMyJobResponse201 = {
+  data: SuccessResponseCreateCompanyJobResponse
+  status: 201
+}
+
+export type createMyJobResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createMyJobResponseSuccess = (createMyJobResponse201) & {
+  headers: Headers;
+};
+export type createMyJobResponseError = (createMyJobResponse403) & {
+  headers: Headers;
+};
+
+export type createMyJobResponse = (createMyJobResponseSuccess | createMyJobResponseError)
+
+export const getCreateMyJobUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/jobs`
+}
+
+/**
+ *
+ *             등록한 공고는 항상 임시저장 상태로 만들어집니다. 지원자에게 노출하려면 게시를 따로 요청해야 합니다.
+ * @summary 채용공고 등록
+ */
+export const createMyJob = async (createCompanyJobRequest: CreateCompanyJobRequest, options?: Parameters<typeof httpClient>[1]): Promise<createMyJobResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createMyJobResponse>(getCreateMyJobUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createCompanyJobRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateMyJobMutationKey = () => ['createMyJob'] as const;
+
+export const getCreateMyJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyJob>>, TError,CreateMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMyJob>>, TError,CreateMyJobMutationVariables, TContext> => {
+
+const mutationKey = getCreateMyJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMyJob>>, CreateMyJobMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMyJob(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMyJobMutationResult = NonNullable<Awaited<ReturnType<typeof createMyJob>>>
+    export type CreateMyJobMutationBody = CreateCompanyJobRequest
+    export type CreateMyJobMutationError = ErrorResponse
+    export type CreateMyJobMutationVariables = {data: CreateCompanyJobRequest}
+
+    /**
+ * @summary 채용공고 등록
+ */
+export const useCreateMyJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyJob>>, TError,CreateMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createMyJob>>,
+        TError,
+        CreateMyJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateMyJobMutationOptions(options), queryClient);
+    }
+
+export type publishMyJobResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type publishMyJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type publishMyJobResponseSuccess = (publishMyJobResponse200) & {
+  headers: Headers;
+};
+export type publishMyJobResponseError = (publishMyJobResponse404) & {
+  headers: Headers;
+};
+
+export type publishMyJobResponse = (publishMyJobResponseSuccess | publishMyJobResponseError)
+
+export const getPublishMyJobUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/jobs/${jobId}/publish`
+}
+
+/**
+ * 임시저장한 공고를 지원자에게 노출합니다. 이미 게시된 공고를 다시 게시해도 성공합니다.
+ * @summary 내 채용공고 게시
+ */
+export const publishMyJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<publishMyJobResponse> => {
+
+  return httpClient<publishMyJobResponse>(getPublishMyJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPublishMyJobMutationKey = () => ['publishMyJob'] as const;
+
+export const getPublishMyJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyJob>>, TError,PublishMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishMyJob>>, TError,PublishMyJobMutationVariables, TContext> => {
+
+const mutationKey = getPublishMyJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishMyJob>>, PublishMyJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  publishMyJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishMyJobMutationResult = NonNullable<Awaited<ReturnType<typeof publishMyJob>>>
+
+    export type PublishMyJobMutationError = ErrorResponse
+    export type PublishMyJobMutationVariables = {jobId: number}
+
+    /**
+ * @summary 내 채용공고 게시
+ */
+export const usePublishMyJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyJob>>, TError,PublishMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publishMyJob>>,
+        TError,
+        PublishMyJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublishMyJobMutationOptions(options), queryClient);
+    }
+
+export type closeMyJobResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type closeMyJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type closeMyJobResponseSuccess = (closeMyJobResponse200) & {
+  headers: Headers;
+};
+export type closeMyJobResponseError = (closeMyJobResponse404) & {
+  headers: Headers;
+};
+
+export type closeMyJobResponse = (closeMyJobResponseSuccess | closeMyJobResponseError)
+
+export const getCloseMyJobUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/jobs/${jobId}/close`
+}
+
+/**
+ * 모집을 마감합니다. 이미 마감한 공고를 다시 마감해도 최초 마감 일시를 유지합니다.
+ * @summary 내 채용공고 마감
+ */
+export const closeMyJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<closeMyJobResponse> => {
+
+  return httpClient<closeMyJobResponse>(getCloseMyJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseMyJobMutationKey = () => ['closeMyJob'] as const;
+
+export const getCloseMyJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyJob>>, TError,CloseMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeMyJob>>, TError,CloseMyJobMutationVariables, TContext> => {
+
+const mutationKey = getCloseMyJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeMyJob>>, CloseMyJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeMyJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseMyJobMutationResult = NonNullable<Awaited<ReturnType<typeof closeMyJob>>>
+
+    export type CloseMyJobMutationError = ErrorResponse
+    export type CloseMyJobMutationVariables = {jobId: number}
+
+    /**
+ * @summary 내 채용공고 마감
+ */
+export const useCloseMyJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyJob>>, TError,CloseMyJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeMyJob>>,
+        TError,
+        CloseMyJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseMyJobMutationOptions(options), queryClient);
+    }
+
+export type listMyBootcampsResponse200 = {
+  data: SuccessResponsePageResponseCompanyBootcampSummaryResponse
+  status: 200
+}
+
+export type listMyBootcampsResponseSuccess = (listMyBootcampsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listMyBootcampsResponse = (listMyBootcampsResponseSuccess)
+
+export const getListMyBootcampsUrl = (params?: ListMyBootcampsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -405,9 +1264,9 @@ export const getGetBootcampsUrl = (params?: GetBootcampsParams,) => {
 /**
  * @summary 내 부트캠프 목록 조회
  */
-export const getBootcamps = async (params?: GetBootcampsParams, options?: RequestInit): Promise<getBootcampsResponse> => {
+export const listMyBootcamps = async (params?: ListMyBootcampsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyBootcampsResponse> => {
 
-  return httpClient<getBootcampsResponse>(getGetBootcampsUrl(params),
+  return httpClient<listMyBootcampsResponse>(getListMyBootcampsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -420,69 +1279,69 @@ export const getBootcamps = async (params?: GetBootcampsParams, options?: Reques
 
 
 
-export const getGetBootcampsQueryKey = (params?: GetBootcampsParams,) => {
+export const getListMyBootcampsQueryKey = (params?: ListMyBootcampsParams,) => {
     return [
     `/api/v1/users/me/bootcamps`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetBootcampsQueryOptions = <TData = Awaited<ReturnType<typeof getBootcamps>>, TError = unknown>(params?: GetBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps>>, TError, TData>>, }
+export const getListMyBootcampsQueryOptions = <TData = Awaited<ReturnType<typeof listMyBootcamps>>, TError = unknown>(params?: ListMyBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcamps>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetBootcampsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBootcamps>>> = ({ signal }) => getBootcamps(params, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getListMyBootcampsQueryKey(params);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyBootcamps>>> = ({ signal }) => listMyBootcamps(params, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBootcamps>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyBootcamps>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetBootcampsQueryResult = NonNullable<Awaited<ReturnType<typeof getBootcamps>>>
-export type GetBootcampsQueryError = unknown
+export type ListMyBootcampsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyBootcamps>>>
+export type ListMyBootcampsQueryError = unknown
 
 
-export function useGetBootcamps<TData = Awaited<ReturnType<typeof getBootcamps>>, TError = unknown>(
- params: undefined |  GetBootcampsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps>>, TError, TData>> & Pick<
+export function useListMyBootcamps<TData = Awaited<ReturnType<typeof listMyBootcamps>>, TError = unknown>(
+ params: undefined |  ListMyBootcampsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcamps>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamps>>,
+          Awaited<ReturnType<typeof listMyBootcamps>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamps>>
+          Awaited<ReturnType<typeof listMyBootcamps>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamps<TData = Awaited<ReturnType<typeof getBootcamps>>, TError = unknown>(
- params?: GetBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps>>, TError, TData>> & Pick<
+export function useListMyBootcamps<TData = Awaited<ReturnType<typeof listMyBootcamps>>, TError = unknown>(
+ params?: ListMyBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcamps>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamps>>,
+          Awaited<ReturnType<typeof listMyBootcamps>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamps>>
+          Awaited<ReturnType<typeof listMyBootcamps>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamps<TData = Awaited<ReturnType<typeof getBootcamps>>, TError = unknown>(
- params?: GetBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps>>, TError, TData>>, }
+export function useListMyBootcamps<TData = Awaited<ReturnType<typeof listMyBootcamps>>, TError = unknown>(
+ params?: ListMyBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcamps>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 내 부트캠프 목록 조회
  */
 
-export function useGetBootcamps<TData = Awaited<ReturnType<typeof getBootcamps>>, TError = unknown>(
- params?: GetBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps>>, TError, TData>>, }
+export function useListMyBootcamps<TData = Awaited<ReturnType<typeof listMyBootcamps>>, TError = unknown>(
+ params?: ListMyBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcamps>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetBootcampsQueryOptions(params,options)
+  const queryOptions = getListMyBootcampsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -495,26 +1354,26 @@ export function useGetBootcamps<TData = Awaited<ReturnType<typeof getBootcamps>>
 
 
 
-export type createBootcampResponse201 = {
+export type createMyBootcampResponse201 = {
   data: SuccessResponseCreateCompanyBootcampResponse
   status: 201
 }
 
-export type createBootcampResponse403 = {
+export type createMyBootcampResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type createBootcampResponseSuccess = (createBootcampResponse201) & {
+export type createMyBootcampResponseSuccess = (createMyBootcampResponse201) & {
   headers: Headers;
 };
-export type createBootcampResponseError = (createBootcampResponse403) & {
+export type createMyBootcampResponseError = (createMyBootcampResponse403) & {
   headers: Headers;
 };
 
-export type createBootcampResponse = (createBootcampResponseSuccess | createBootcampResponseError)
+export type createMyBootcampResponse = (createMyBootcampResponseSuccess | createMyBootcampResponseError)
 
-export const getCreateBootcampUrl = () => {
+export const getCreateMyBootcampUrl = () => {
 
 
 
@@ -525,7 +1384,7 @@ export const getCreateBootcampUrl = () => {
 /**
  * @summary 부트캠프 등록
  */
-export const createBootcamp = async (createCompanyBootcampRequest: CreateCompanyBootcampRequest, options?: RequestInit): Promise<createBootcampResponse> => {
+export const createMyBootcamp = async (createCompanyBootcampRequest: CreateCompanyBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<createMyBootcampResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -533,7 +1392,7 @@ export const createBootcamp = async (createCompanyBootcampRequest: CreateCompany
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<createBootcampResponse>(getCreateBootcampUrl(),
+return httpClient<createMyBootcampResponse>(getCreateMyBootcampUrl(),
   {
     ...options,
     method: 'POST',
@@ -546,26 +1405,26 @@ return httpClient<createBootcampResponse>(getCreateBootcampUrl(),
 
 
 
-export const getCreateBootcampMutationKey = () => ['createBootcamp'] as const;
+export const getCreateMyBootcampMutationKey = () => ['createMyBootcamp'] as const;
 
-export const getCreateBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcamp>>, TError,CreateBootcampMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof createBootcamp>>, TError,CreateBootcampMutationVariables, TContext> => {
+export const getCreateMyBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyBootcamp>>, TError,CreateMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMyBootcamp>>, TError,CreateMyBootcampMutationVariables, TContext> => {
 
-const mutationKey = getCreateBootcampMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getCreateMyBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBootcamp>>, CreateBootcampMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMyBootcamp>>, CreateMyBootcampMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  createBootcamp(data,)
+          return  createMyBootcamp(data,requestOptions)
         }
 
 
@@ -575,38 +1434,38 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof createBootcamp>>>
-    export type CreateBootcampMutationBody = CreateCompanyBootcampRequest
-    export type CreateBootcampMutationError = ErrorResponse
-    export type CreateBootcampMutationVariables = {data: CreateCompanyBootcampRequest}
+    export type CreateMyBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof createMyBootcamp>>>
+    export type CreateMyBootcampMutationBody = CreateCompanyBootcampRequest
+    export type CreateMyBootcampMutationError = ErrorResponse
+    export type CreateMyBootcampMutationVariables = {data: CreateCompanyBootcampRequest}
 
     /**
  * @summary 부트캠프 등록
  */
-export const useCreateBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcamp>>, TError,CreateBootcampMutationVariables, TContext>, }
+export const useCreateMyBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyBootcamp>>, TError,CreateMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createBootcamp>>,
+        Awaited<ReturnType<typeof createMyBootcamp>>,
         TError,
-        CreateBootcampMutationVariables,
+        CreateMyBootcampMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateBootcampMutationOptions(options), queryClient);
+      return useMutation(getCreateMyBootcampMutationOptions(options), queryClient);
     }
 
-export type startRecruitmentResponse200 = {
+export type startMyBootcampRecruitmentResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type startRecruitmentResponseSuccess = (startRecruitmentResponse200) & {
+export type startMyBootcampRecruitmentResponseSuccess = (startMyBootcampRecruitmentResponse200) & {
   headers: Headers;
 };
 ;
 
-export type startRecruitmentResponse = (startRecruitmentResponseSuccess)
+export type startMyBootcampRecruitmentResponse = (startMyBootcampRecruitmentResponseSuccess)
 
-export const getStartRecruitmentUrl = (bootcampId: number,) => {
+export const getStartMyBootcampRecruitmentUrl = (bootcampId: number,) => {
 
 
 
@@ -617,9 +1476,9 @@ export const getStartRecruitmentUrl = (bootcampId: number,) => {
 /**
  * @summary 부트캠프 모집 시작
  */
-export const startRecruitment = async (bootcampId: number, options?: RequestInit): Promise<startRecruitmentResponse> => {
+export const startMyBootcampRecruitment = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<startMyBootcampRecruitmentResponse> => {
 
-  return httpClient<startRecruitmentResponse>(getStartRecruitmentUrl(bootcampId),
+  return httpClient<startMyBootcampRecruitmentResponse>(getStartMyBootcampRecruitmentUrl(bootcampId),
   {
     ...options,
     method: 'POST'
@@ -632,26 +1491,26 @@ export const startRecruitment = async (bootcampId: number, options?: RequestInit
 
 
 
-export const getStartRecruitmentMutationKey = () => ['startRecruitment'] as const;
+export const getStartMyBootcampRecruitmentMutationKey = () => ['startMyBootcampRecruitment'] as const;
 
-export const getStartRecruitmentMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startRecruitment>>, TError,StartRecruitmentMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof startRecruitment>>, TError,StartRecruitmentMutationVariables, TContext> => {
+export const getStartMyBootcampRecruitmentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startMyBootcampRecruitment>>, TError,StartMyBootcampRecruitmentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof startMyBootcampRecruitment>>, TError,StartMyBootcampRecruitmentMutationVariables, TContext> => {
 
-const mutationKey = getStartRecruitmentMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getStartMyBootcampRecruitmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startRecruitment>>, StartRecruitmentMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startMyBootcampRecruitment>>, StartMyBootcampRecruitmentMutationVariables> = (props) => {
           const {bootcampId} = props ?? {};
 
-          return  startRecruitment(bootcampId,)
+          return  startMyBootcampRecruitment(bootcampId,requestOptions)
         }
 
 
@@ -661,45 +1520,45 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type StartRecruitmentMutationResult = NonNullable<Awaited<ReturnType<typeof startRecruitment>>>
+    export type StartMyBootcampRecruitmentMutationResult = NonNullable<Awaited<ReturnType<typeof startMyBootcampRecruitment>>>
 
-    export type StartRecruitmentMutationError = unknown
-    export type StartRecruitmentMutationVariables = {bootcampId: number}
+    export type StartMyBootcampRecruitmentMutationError = unknown
+    export type StartMyBootcampRecruitmentMutationVariables = {bootcampId: number}
 
     /**
  * @summary 부트캠프 모집 시작
  */
-export const useStartRecruitment = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startRecruitment>>, TError,StartRecruitmentMutationVariables, TContext>, }
+export const useStartMyBootcampRecruitment = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startMyBootcampRecruitment>>, TError,StartMyBootcampRecruitmentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof startRecruitment>>,
+        Awaited<ReturnType<typeof startMyBootcampRecruitment>>,
         TError,
-        StartRecruitmentMutationVariables,
+        StartMyBootcampRecruitmentMutationVariables,
         TContext
       > => {
-      return useMutation(getStartRecruitmentMutationOptions(options), queryClient);
+      return useMutation(getStartMyBootcampRecruitmentMutationOptions(options), queryClient);
     }
 
-export type closeBootcampResponse200 = {
+export type closeMyBootcampResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type closeBootcampResponse409 = {
+export type closeMyBootcampResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type closeBootcampResponseSuccess = (closeBootcampResponse200) & {
+export type closeMyBootcampResponseSuccess = (closeMyBootcampResponse200) & {
   headers: Headers;
 };
-export type closeBootcampResponseError = (closeBootcampResponse409) & {
+export type closeMyBootcampResponseError = (closeMyBootcampResponse409) & {
   headers: Headers;
 };
 
-export type closeBootcampResponse = (closeBootcampResponseSuccess | closeBootcampResponseError)
+export type closeMyBootcampResponse = (closeMyBootcampResponseSuccess | closeMyBootcampResponseError)
 
-export const getCloseBootcampUrl = (bootcampId: number,) => {
+export const getCloseMyBootcampUrl = (bootcampId: number,) => {
 
 
 
@@ -710,9 +1569,9 @@ export const getCloseBootcampUrl = (bootcampId: number,) => {
 /**
  * @summary 부트캠프 모집 마감
  */
-export const closeBootcamp = async (bootcampId: number, options?: RequestInit): Promise<closeBootcampResponse> => {
+export const closeMyBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<closeMyBootcampResponse> => {
 
-  return httpClient<closeBootcampResponse>(getCloseBootcampUrl(bootcampId),
+  return httpClient<closeMyBootcampResponse>(getCloseMyBootcampUrl(bootcampId),
   {
     ...options,
     method: 'POST'
@@ -725,26 +1584,26 @@ export const closeBootcamp = async (bootcampId: number, options?: RequestInit): 
 
 
 
-export const getCloseBootcampMutationKey = () => ['closeBootcamp'] as const;
+export const getCloseMyBootcampMutationKey = () => ['closeMyBootcamp'] as const;
 
-export const getCloseBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeBootcamp>>, TError,CloseBootcampMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof closeBootcamp>>, TError,CloseBootcampMutationVariables, TContext> => {
+export const getCloseMyBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyBootcamp>>, TError,CloseMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeMyBootcamp>>, TError,CloseMyBootcampMutationVariables, TContext> => {
 
-const mutationKey = getCloseBootcampMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getCloseMyBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeBootcamp>>, CloseBootcampMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeMyBootcamp>>, CloseMyBootcampMutationVariables> = (props) => {
           const {bootcampId} = props ?? {};
 
-          return  closeBootcamp(bootcampId,)
+          return  closeMyBootcamp(bootcampId,requestOptions)
         }
 
 
@@ -754,50 +1613,50 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CloseBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof closeBootcamp>>>
+    export type CloseMyBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof closeMyBootcamp>>>
 
-    export type CloseBootcampMutationError = ErrorResponse
-    export type CloseBootcampMutationVariables = {bootcampId: number}
+    export type CloseMyBootcampMutationError = ErrorResponse
+    export type CloseMyBootcampMutationVariables = {bootcampId: number}
 
     /**
  * @summary 부트캠프 모집 마감
  */
-export const useCloseBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeBootcamp>>, TError,CloseBootcampMutationVariables, TContext>, }
+export const useCloseMyBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyBootcamp>>, TError,CloseMyBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof closeBootcamp>>,
+        Awaited<ReturnType<typeof closeMyBootcamp>>,
         TError,
-        CloseBootcampMutationVariables,
+        CloseMyBootcampMutationVariables,
         TContext
       > => {
-      return useMutation(getCloseBootcampMutationOptions(options), queryClient);
+      return useMutation(getCloseMyBootcampMutationOptions(options), queryClient);
     }
 
-export type recordSourceUrlClickResponse200 = {
+export type createJobSourceUrlClickResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type recordSourceUrlClickResponse401 = {
+export type createJobSourceUrlClickResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type recordSourceUrlClickResponse404 = {
+export type createJobSourceUrlClickResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type recordSourceUrlClickResponseSuccess = (recordSourceUrlClickResponse200) & {
+export type createJobSourceUrlClickResponseSuccess = (createJobSourceUrlClickResponse200) & {
   headers: Headers;
 };
-export type recordSourceUrlClickResponseError = (recordSourceUrlClickResponse401 | recordSourceUrlClickResponse404) & {
+export type createJobSourceUrlClickResponseError = (createJobSourceUrlClickResponse401 | createJobSourceUrlClickResponse404) & {
   headers: Headers;
 };
 
-export type recordSourceUrlClickResponse = (recordSourceUrlClickResponseSuccess | recordSourceUrlClickResponseError)
+export type createJobSourceUrlClickResponse = (createJobSourceUrlClickResponseSuccess | createJobSourceUrlClickResponseError)
 
-export const getRecordSourceUrlClickUrl = (jobId: number,) => {
+export const getCreateJobSourceUrlClickUrl = (jobId: number,) => {
 
 
 
@@ -809,13 +1668,14 @@ export const getRecordSourceUrlClickUrl = (jobId: number,) => {
  *
  *             사용자가 채용공고 원문으로 이동하는 버튼을 눌렀다는 사실을 기록합니다.
  *
+ *             누가 눌렀는지를 남기는 기록이므로 목록·상세 조회와 달리 로그인이 필요합니다.
  *             같은 사용자가 같은 공고를 여러 번 눌러도 최초 기록만 남기고 항상 성공합니다.
  *             이동할 주소는 상세 조회 응답의 sourceUrl을 사용합니다.
  * @summary 채용공고 원문 이동 기록
  */
-export const recordSourceUrlClick = async (jobId: number, options?: RequestInit): Promise<recordSourceUrlClickResponse> => {
+export const createJobSourceUrlClick = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<createJobSourceUrlClickResponse> => {
 
-  return httpClient<recordSourceUrlClickResponse>(getRecordSourceUrlClickUrl(jobId),
+  return httpClient<createJobSourceUrlClickResponse>(getCreateJobSourceUrlClickUrl(jobId),
   {
     ...options,
     method: 'POST'
@@ -828,26 +1688,26 @@ export const recordSourceUrlClick = async (jobId: number, options?: RequestInit)
 
 
 
-export const getRecordSourceUrlClickMutationKey = () => ['recordSourceUrlClick'] as const;
+export const getCreateJobSourceUrlClickMutationKey = () => ['createJobSourceUrlClick'] as const;
 
-export const getRecordSourceUrlClickMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordSourceUrlClick>>, TError,RecordSourceUrlClickMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof recordSourceUrlClick>>, TError,RecordSourceUrlClickMutationVariables, TContext> => {
+export const getCreateJobSourceUrlClickMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJobSourceUrlClick>>, TError,CreateJobSourceUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJobSourceUrlClick>>, TError,CreateJobSourceUrlClickMutationVariables, TContext> => {
 
-const mutationKey = getRecordSourceUrlClickMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getCreateJobSourceUrlClickMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordSourceUrlClick>>, RecordSourceUrlClickMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJobSourceUrlClick>>, CreateJobSourceUrlClickMutationVariables> = (props) => {
           const {jobId} = props ?? {};
 
-          return  recordSourceUrlClick(jobId,)
+          return  createJobSourceUrlClick(jobId,requestOptions)
         }
 
 
@@ -857,50 +1717,50 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type RecordSourceUrlClickMutationResult = NonNullable<Awaited<ReturnType<typeof recordSourceUrlClick>>>
+    export type CreateJobSourceUrlClickMutationResult = NonNullable<Awaited<ReturnType<typeof createJobSourceUrlClick>>>
 
-    export type RecordSourceUrlClickMutationError = ErrorResponse
-    export type RecordSourceUrlClickMutationVariables = {jobId: number}
+    export type CreateJobSourceUrlClickMutationError = ErrorResponse
+    export type CreateJobSourceUrlClickMutationVariables = {jobId: number}
 
     /**
  * @summary 채용공고 원문 이동 기록
  */
-export const useRecordSourceUrlClick = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordSourceUrlClick>>, TError,RecordSourceUrlClickMutationVariables, TContext>, }
+export const useCreateJobSourceUrlClick = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJobSourceUrlClick>>, TError,CreateJobSourceUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordSourceUrlClick>>,
+        Awaited<ReturnType<typeof createJobSourceUrlClick>>,
         TError,
-        RecordSourceUrlClickMutationVariables,
+        CreateJobSourceUrlClickMutationVariables,
         TContext
       > => {
-      return useMutation(getRecordSourceUrlClickMutationOptions(options), queryClient);
+      return useMutation(getCreateJobSourceUrlClickMutationOptions(options), queryClient);
     }
 
-export type addBookmarkResponse201 = {
+export type createJobBookmarkResponse201 = {
   data: SuccessResponseUnit
   status: 201
 }
 
-export type addBookmarkResponse404 = {
+export type createJobBookmarkResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type addBookmarkResponse409 = {
+export type createJobBookmarkResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type addBookmarkResponseSuccess = (addBookmarkResponse201) & {
+export type createJobBookmarkResponseSuccess = (createJobBookmarkResponse201) & {
   headers: Headers;
 };
-export type addBookmarkResponseError = (addBookmarkResponse404 | addBookmarkResponse409) & {
+export type createJobBookmarkResponseError = (createJobBookmarkResponse404 | createJobBookmarkResponse409) & {
   headers: Headers;
 };
 
-export type addBookmarkResponse = (addBookmarkResponseSuccess | addBookmarkResponseError)
+export type createJobBookmarkResponse = (createJobBookmarkResponseSuccess | createJobBookmarkResponseError)
 
-export const getAddBookmarkUrl = (jobId: number,) => {
+export const getCreateJobBookmarkUrl = (jobId: number,) => {
 
 
 
@@ -911,9 +1771,9 @@ export const getAddBookmarkUrl = (jobId: number,) => {
 /**
  * @summary 채용공고 북마크 등록
  */
-export const addBookmark = async (jobId: number, options?: RequestInit): Promise<addBookmarkResponse> => {
+export const createJobBookmark = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<createJobBookmarkResponse> => {
 
-  return httpClient<addBookmarkResponse>(getAddBookmarkUrl(jobId),
+  return httpClient<createJobBookmarkResponse>(getCreateJobBookmarkUrl(jobId),
   {
     ...options,
     method: 'POST'
@@ -926,26 +1786,26 @@ export const addBookmark = async (jobId: number, options?: RequestInit): Promise
 
 
 
-export const getAddBookmarkMutationKey = () => ['addBookmark'] as const;
+export const getCreateJobBookmarkMutationKey = () => ['createJobBookmark'] as const;
 
-export const getAddBookmarkMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addBookmark>>, TError,AddBookmarkMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof addBookmark>>, TError,AddBookmarkMutationVariables, TContext> => {
+export const getCreateJobBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJobBookmark>>, TError,CreateJobBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJobBookmark>>, TError,CreateJobBookmarkMutationVariables, TContext> => {
 
-const mutationKey = getAddBookmarkMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getCreateJobBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addBookmark>>, AddBookmarkMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJobBookmark>>, CreateJobBookmarkMutationVariables> = (props) => {
           const {jobId} = props ?? {};
 
-          return  addBookmark(jobId,)
+          return  createJobBookmark(jobId,requestOptions)
         }
 
 
@@ -955,45 +1815,45 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AddBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof addBookmark>>>
+    export type CreateJobBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof createJobBookmark>>>
 
-    export type AddBookmarkMutationError = ErrorResponse
-    export type AddBookmarkMutationVariables = {jobId: number}
+    export type CreateJobBookmarkMutationError = ErrorResponse
+    export type CreateJobBookmarkMutationVariables = {jobId: number}
 
     /**
  * @summary 채용공고 북마크 등록
  */
-export const useAddBookmark = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addBookmark>>, TError,AddBookmarkMutationVariables, TContext>, }
+export const useCreateJobBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJobBookmark>>, TError,CreateJobBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof addBookmark>>,
+        Awaited<ReturnType<typeof createJobBookmark>>,
         TError,
-        AddBookmarkMutationVariables,
+        CreateJobBookmarkMutationVariables,
         TContext
       > => {
-      return useMutation(getAddBookmarkMutationOptions(options), queryClient);
+      return useMutation(getCreateJobBookmarkMutationOptions(options), queryClient);
     }
 
-export type deleteBookmarkResponse200 = {
+export type deleteJobBookmarkResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type deleteBookmarkResponse404 = {
+export type deleteJobBookmarkResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type deleteBookmarkResponseSuccess = (deleteBookmarkResponse200) & {
+export type deleteJobBookmarkResponseSuccess = (deleteJobBookmarkResponse200) & {
   headers: Headers;
 };
-export type deleteBookmarkResponseError = (deleteBookmarkResponse404) & {
+export type deleteJobBookmarkResponseError = (deleteJobBookmarkResponse404) & {
   headers: Headers;
 };
 
-export type deleteBookmarkResponse = (deleteBookmarkResponseSuccess | deleteBookmarkResponseError)
+export type deleteJobBookmarkResponse = (deleteJobBookmarkResponseSuccess | deleteJobBookmarkResponseError)
 
-export const getDeleteBookmarkUrl = (jobId: number,) => {
+export const getDeleteJobBookmarkUrl = (jobId: number,) => {
 
 
 
@@ -1004,9 +1864,9 @@ export const getDeleteBookmarkUrl = (jobId: number,) => {
 /**
  * @summary 채용공고 북마크 해제
  */
-export const deleteBookmark = async (jobId: number, options?: RequestInit): Promise<deleteBookmarkResponse> => {
+export const deleteJobBookmark = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteJobBookmarkResponse> => {
 
-  return httpClient<deleteBookmarkResponse>(getDeleteBookmarkUrl(jobId),
+  return httpClient<deleteJobBookmarkResponse>(getDeleteJobBookmarkUrl(jobId),
   {
     ...options,
     method: 'DELETE'
@@ -1019,26 +1879,26 @@ export const deleteBookmark = async (jobId: number, options?: RequestInit): Prom
 
 
 
-export const getDeleteBookmarkMutationKey = () => ['deleteBookmark'] as const;
+export const getDeleteJobBookmarkMutationKey = () => ['deleteJobBookmark'] as const;
 
-export const getDeleteBookmarkMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBookmark>>, TError,DeleteBookmarkMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof deleteBookmark>>, TError,DeleteBookmarkMutationVariables, TContext> => {
+export const getDeleteJobBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteJobBookmark>>, TError,DeleteJobBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteJobBookmark>>, TError,DeleteJobBookmarkMutationVariables, TContext> => {
 
-const mutationKey = getDeleteBookmarkMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getDeleteJobBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBookmark>>, DeleteBookmarkMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteJobBookmark>>, DeleteJobBookmarkMutationVariables> = (props) => {
           const {jobId} = props ?? {};
 
-          return  deleteBookmark(jobId,)
+          return  deleteJobBookmark(jobId,requestOptions)
         }
 
 
@@ -1048,23 +1908,318 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBookmark>>>
+    export type DeleteJobBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteJobBookmark>>>
 
-    export type DeleteBookmarkMutationError = ErrorResponse
-    export type DeleteBookmarkMutationVariables = {jobId: number}
+    export type DeleteJobBookmarkMutationError = ErrorResponse
+    export type DeleteJobBookmarkMutationVariables = {jobId: number}
 
     /**
  * @summary 채용공고 북마크 해제
  */
-export const useDeleteBookmark = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBookmark>>, TError,DeleteBookmarkMutationVariables, TContext>, }
+export const useDeleteJobBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteJobBookmark>>, TError,DeleteJobBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteBookmark>>,
+        Awaited<ReturnType<typeof deleteJobBookmark>>,
         TError,
-        DeleteBookmarkMutationVariables,
+        DeleteJobBookmarkMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteBookmarkMutationOptions(options), queryClient);
+      return useMutation(getDeleteJobBookmarkMutationOptions(options), queryClient);
+    }
+
+export type createBootcampApplicationUrlClickResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type createBootcampApplicationUrlClickResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createBootcampApplicationUrlClickResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createBootcampApplicationUrlClickResponseSuccess = (createBootcampApplicationUrlClickResponse200) & {
+  headers: Headers;
+};
+export type createBootcampApplicationUrlClickResponseError = (createBootcampApplicationUrlClickResponse401 | createBootcampApplicationUrlClickResponse404) & {
+  headers: Headers;
+};
+
+export type createBootcampApplicationUrlClickResponse = (createBootcampApplicationUrlClickResponseSuccess | createBootcampApplicationUrlClickResponseError)
+
+export const getCreateBootcampApplicationUrlClickUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/bootcamps/${bootcampId}/application-url-clicks`
+}
+
+/**
+ *
+ *             사용자가 부트캠프의 외부 지원 페이지로 이동하는 버튼을 눌렀다는 사실을 기록합니다.
+ *
+ *             누가 눌렀는지를 남기는 기록이므로 목록·상세 조회와 달리 로그인이 필요합니다.
+ *             같은 사용자가 같은 부트캠프를 여러 번 눌러도 최초 기록만 남기고 항상 성공합니다.
+ *             이동할 주소는 상세 조회 응답의 applicationUrl을 사용합니다.
+ * @summary 부트캠프 지원 페이지 이동 기록
+ */
+export const createBootcampApplicationUrlClick = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<createBootcampApplicationUrlClickResponse> => {
+
+  return httpClient<createBootcampApplicationUrlClickResponse>(getCreateBootcampApplicationUrlClickUrl(bootcampId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateBootcampApplicationUrlClickMutationKey = () => ['createBootcampApplicationUrlClick'] as const;
+
+export const getCreateBootcampApplicationUrlClickMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, TError,CreateBootcampApplicationUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, TError,CreateBootcampApplicationUrlClickMutationVariables, TContext> => {
+
+const mutationKey = getCreateBootcampApplicationUrlClickMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, CreateBootcampApplicationUrlClickMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  createBootcampApplicationUrlClick(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBootcampApplicationUrlClickMutationResult = NonNullable<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>>
+
+    export type CreateBootcampApplicationUrlClickMutationError = ErrorResponse
+    export type CreateBootcampApplicationUrlClickMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 부트캠프 지원 페이지 이동 기록
+ */
+export const useCreateBootcampApplicationUrlClick = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, TError,CreateBootcampApplicationUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>,
+        TError,
+        CreateBootcampApplicationUrlClickMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateBootcampApplicationUrlClickMutationOptions(options), queryClient);
+    }
+
+export type createBootcampBookmarkResponse201 = {
+  data: SuccessResponseUnit
+  status: 201
+}
+
+export type createBootcampBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createBootcampBookmarkResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createBootcampBookmarkResponseSuccess = (createBootcampBookmarkResponse201) & {
+  headers: Headers;
+};
+export type createBootcampBookmarkResponseError = (createBootcampBookmarkResponse404 | createBootcampBookmarkResponse409) & {
+  headers: Headers;
+};
+
+export type createBootcampBookmarkResponse = (createBootcampBookmarkResponseSuccess | createBootcampBookmarkResponseError)
+
+export const getCreateBootcampBookmarkUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/bootcamp-bookmarks/${bootcampId}`
+}
+
+/**
+ * @summary 부트캠프 북마크 등록
+ */
+export const createBootcampBookmark = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<createBootcampBookmarkResponse> => {
+
+  return httpClient<createBootcampBookmarkResponse>(getCreateBootcampBookmarkUrl(bootcampId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateBootcampBookmarkMutationKey = () => ['createBootcampBookmark'] as const;
+
+export const getCreateBootcampBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampBookmark>>, TError,CreateBootcampBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBootcampBookmark>>, TError,CreateBootcampBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getCreateBootcampBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBootcampBookmark>>, CreateBootcampBookmarkMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  createBootcampBookmark(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBootcampBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof createBootcampBookmark>>>
+
+    export type CreateBootcampBookmarkMutationError = ErrorResponse
+    export type CreateBootcampBookmarkMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 부트캠프 북마크 등록
+ */
+export const useCreateBootcampBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampBookmark>>, TError,CreateBootcampBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createBootcampBookmark>>,
+        TError,
+        CreateBootcampBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateBootcampBookmarkMutationOptions(options), queryClient);
+    }
+
+export type deleteBootcampBookmarkResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteBootcampBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteBootcampBookmarkResponseSuccess = (deleteBootcampBookmarkResponse200) & {
+  headers: Headers;
+};
+export type deleteBootcampBookmarkResponseError = (deleteBootcampBookmarkResponse404) & {
+  headers: Headers;
+};
+
+export type deleteBootcampBookmarkResponse = (deleteBootcampBookmarkResponseSuccess | deleteBootcampBookmarkResponseError)
+
+export const getDeleteBootcampBookmarkUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/bootcamp-bookmarks/${bootcampId}`
+}
+
+/**
+ * @summary 부트캠프 북마크 해제
+ */
+export const deleteBootcampBookmark = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteBootcampBookmarkResponse> => {
+
+  return httpClient<deleteBootcampBookmarkResponse>(getDeleteBootcampBookmarkUrl(bootcampId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteBootcampBookmarkMutationKey = () => ['deleteBootcampBookmark'] as const;
+
+export const getDeleteBootcampBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcampBookmark>>, TError,DeleteBootcampBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBootcampBookmark>>, TError,DeleteBootcampBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getDeleteBootcampBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBootcampBookmark>>, DeleteBootcampBookmarkMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  deleteBootcampBookmark(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBootcampBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBootcampBookmark>>>
+
+    export type DeleteBootcampBookmarkMutationError = ErrorResponse
+    export type DeleteBootcampBookmarkMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 부트캠프 북마크 해제
+ */
+export const useDeleteBootcampBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcampBookmark>>, TError,DeleteBootcampBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBootcampBookmark>>,
+        TError,
+        DeleteBootcampBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteBootcampBookmarkMutationOptions(options), queryClient);
     }
 
 export type reissueAccessTokenResponse400 = {
@@ -1100,7 +2255,7 @@ export const getReissueAccessTokenUrl = () => {
 /**
  * @summary 액세스 토큰 재발급
  */
-export const reissueAccessToken = async (tokenReissueRequest: TokenReissueRequest, options?: RequestInit): Promise<reissueAccessTokenResponse> => {
+export const reissueAccessToken = async (tokenReissueRequest: TokenReissueRequest, options?: Parameters<typeof httpClient>[1]): Promise<reissueAccessTokenResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1124,15 +2279,15 @@ return httpClient<reissueAccessTokenResponse>(getReissueAccessTokenUrl(),
 export const getReissueAccessTokenMutationKey = () => ['reissueAccessToken'] as const;
 
 export const getReissueAccessTokenMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reissueAccessToken>>, TError,ReissueAccessTokenMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reissueAccessToken>>, TError,ReissueAccessTokenMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
 ): UseMutationOptions<Awaited<ReturnType<typeof reissueAccessToken>>, TError,ReissueAccessTokenMutationVariables, TContext> => {
 
 const mutationKey = getReissueAccessTokenMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -1140,7 +2295,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof reissueAccessToken>>, ReissueAccessTokenMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  reissueAccessToken(data,)
+          return  reissueAccessToken(data,requestOptions)
         }
 
 
@@ -1159,7 +2314,7 @@ const {mutation: mutationOptions} = options ?
  * @summary 액세스 토큰 재발급
  */
 export const useReissueAccessToken = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reissueAccessToken>>, TError,ReissueAccessTokenMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reissueAccessToken>>, TError,ReissueAccessTokenMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof reissueAccessToken>>,
         TError,
@@ -1192,7 +2347,7 @@ export const getSignOutUrl = () => {
 /**
  * @summary 로그아웃
  */
-export const signOut = async ( options?: RequestInit): Promise<signOutResponse> => {
+export const signOut = async ( options?: Parameters<typeof httpClient>[1]): Promise<signOutResponse> => {
 
   return httpClient<signOutResponse>(getSignOutUrl(),
   {
@@ -1210,15 +2365,15 @@ export const signOut = async ( options?: RequestInit): Promise<signOutResponse> 
 export const getSignOutMutationKey = () => ['signOut'] as const;
 
 export const getSignOutMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext>, request?: SecondParameter<typeof httpClient>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext> => {
 
 const mutationKey = getSignOutMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -1226,7 +2381,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof signOut>>, void> = () => {
 
 
-          return  signOut()
+          return  signOut(requestOptions)
         }
 
 
@@ -1245,7 +2400,7 @@ const {mutation: mutationOptions} = options ?
  * @summary 로그아웃
  */
 export const useSignOut = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof signOut>>,
         TError,
@@ -1284,7 +2439,7 @@ export const getSignInWithLetsCareerUrl = () => {
  * 최초 로그인은 오공고 계정을 함께 생성하며 신규 여부는 isNewUser로 구분합니다.
  * @summary 렛츠커리어 토큰으로 로그인
  */
-export const signInWithLetsCareer = async (letsCareerSignInRequest: LetsCareerSignInRequest, options?: RequestInit): Promise<signInWithLetsCareerResponse> => {
+export const signInWithLetsCareer = async (letsCareerSignInRequest: LetsCareerSignInRequest, options?: Parameters<typeof httpClient>[1]): Promise<signInWithLetsCareerResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1308,15 +2463,15 @@ return httpClient<signInWithLetsCareerResponse>(getSignInWithLetsCareerUrl(),
 export const getSignInWithLetsCareerMutationKey = () => ['signInWithLetsCareer'] as const;
 
 export const getSignInWithLetsCareerMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signInWithLetsCareer>>, TError,SignInWithLetsCareerMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signInWithLetsCareer>>, TError,SignInWithLetsCareerMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signInWithLetsCareer>>, TError,SignInWithLetsCareerMutationVariables, TContext> => {
 
 const mutationKey = getSignInWithLetsCareerMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -1324,7 +2479,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof signInWithLetsCareer>>, SignInWithLetsCareerMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  signInWithLetsCareer(data,)
+          return  signInWithLetsCareer(data,requestOptions)
         }
 
 
@@ -1343,7 +2498,7 @@ const {mutation: mutationOptions} = options ?
  * @summary 렛츠커리어 토큰으로 로그인
  */
 export const useSignInWithLetsCareer = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signInWithLetsCareer>>, TError,SignInWithLetsCareerMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signInWithLetsCareer>>, TError,SignInWithLetsCareerMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof signInWithLetsCareer>>,
         TError,
@@ -1353,26 +2508,26 @@ export const useSignInWithLetsCareer = <TError = ErrorResponse,
       return useMutation(getSignInWithLetsCareerMutationOptions(options), queryClient);
     }
 
-export type signUpResponse201 = {
+export type signUpCompanyResponse201 = {
   data: SuccessResponseAuthTokenResponse
   status: 201
 }
 
-export type signUpResponse409 = {
+export type signUpCompanyResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type signUpResponseSuccess = (signUpResponse201) & {
+export type signUpCompanyResponseSuccess = (signUpCompanyResponse201) & {
   headers: Headers;
 };
-export type signUpResponseError = (signUpResponse409) & {
+export type signUpCompanyResponseError = (signUpCompanyResponse409) & {
   headers: Headers;
 };
 
-export type signUpResponse = (signUpResponseSuccess | signUpResponseError)
+export type signUpCompanyResponse = (signUpCompanyResponseSuccess | signUpCompanyResponseError)
 
-export const getSignUpUrl = () => {
+export const getSignUpCompanyUrl = () => {
 
 
 
@@ -1384,7 +2539,7 @@ export const getSignUpUrl = () => {
  * 렛츠커리어를 거치지 않고 오공고 계정을 만듭니다. 승인 절차가 없어 가입 즉시 세션을 발급합니다.
  * @summary 기업 회원가입
  */
-export const signUp = async (companySignUpRequest: CompanySignUpRequest, options?: RequestInit): Promise<signUpResponse> => {
+export const signUpCompany = async (companySignUpRequest: CompanySignUpRequest, options?: Parameters<typeof httpClient>[1]): Promise<signUpCompanyResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1392,7 +2547,7 @@ export const signUp = async (companySignUpRequest: CompanySignUpRequest, options
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<signUpResponse>(getSignUpUrl(),
+return httpClient<signUpCompanyResponse>(getSignUpCompanyUrl(),
   {
     ...options,
     method: 'POST',
@@ -1405,26 +2560,26 @@ return httpClient<signUpResponse>(getSignUpUrl(),
 
 
 
-export const getSignUpMutationKey = () => ['signUp'] as const;
+export const getSignUpCompanyMutationKey = () => ['signUpCompany'] as const;
 
-export const getSignUpMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,SignUpMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,SignUpMutationVariables, TContext> => {
+export const getSignUpCompanyMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUpCompany>>, TError,SignUpCompanyMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof signUpCompany>>, TError,SignUpCompanyMutationVariables, TContext> => {
 
-const mutationKey = getSignUpMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getSignUpCompanyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signUp>>, SignUpMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signUpCompany>>, SignUpCompanyMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  signUp(data,)
+          return  signUpCompany(data,requestOptions)
         }
 
 
@@ -1434,50 +2589,50 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SignUpMutationResult = NonNullable<Awaited<ReturnType<typeof signUp>>>
-    export type SignUpMutationBody = CompanySignUpRequest
-    export type SignUpMutationError = ErrorResponse
-    export type SignUpMutationVariables = {data: CompanySignUpRequest}
+    export type SignUpCompanyMutationResult = NonNullable<Awaited<ReturnType<typeof signUpCompany>>>
+    export type SignUpCompanyMutationBody = CompanySignUpRequest
+    export type SignUpCompanyMutationError = ErrorResponse
+    export type SignUpCompanyMutationVariables = {data: CompanySignUpRequest}
 
     /**
  * @summary 기업 회원가입
  */
-export const useSignUp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,SignUpMutationVariables, TContext>, }
+export const useSignUpCompany = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUpCompany>>, TError,SignUpCompanyMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof signUp>>,
+        Awaited<ReturnType<typeof signUpCompany>>,
         TError,
-        SignUpMutationVariables,
+        SignUpCompanyMutationVariables,
         TContext
       > => {
-      return useMutation(getSignUpMutationOptions(options), queryClient);
+      return useMutation(getSignUpCompanyMutationOptions(options), queryClient);
     }
 
-export type signInResponse200 = {
+export type signInCompanyResponse200 = {
   data: SuccessResponseAuthTokenResponse
   status: 200
 }
 
-export type signInResponse401 = {
+export type signInCompanyResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type signInResponse403 = {
+export type signInCompanyResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type signInResponseSuccess = (signInResponse200) & {
+export type signInCompanyResponseSuccess = (signInCompanyResponse200) & {
   headers: Headers;
 };
-export type signInResponseError = (signInResponse401 | signInResponse403) & {
+export type signInCompanyResponseError = (signInCompanyResponse401 | signInCompanyResponse403) & {
   headers: Headers;
 };
 
-export type signInResponse = (signInResponseSuccess | signInResponseError)
+export type signInCompanyResponse = (signInCompanyResponseSuccess | signInCompanyResponseError)
 
-export const getSignInUrl = () => {
+export const getSignInCompanyUrl = () => {
 
 
 
@@ -1488,7 +2643,7 @@ export const getSignInUrl = () => {
 /**
  * @summary 기업 로그인
  */
-export const signIn = async (companySignInRequest: CompanySignInRequest, options?: RequestInit): Promise<signInResponse> => {
+export const signInCompany = async (companySignInRequest: CompanySignInRequest, options?: Parameters<typeof httpClient>[1]): Promise<signInCompanyResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1496,7 +2651,7 @@ export const signIn = async (companySignInRequest: CompanySignInRequest, options
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<signInResponse>(getSignInUrl(),
+return httpClient<signInCompanyResponse>(getSignInCompanyUrl(),
   {
     ...options,
     method: 'POST',
@@ -1509,26 +2664,26 @@ return httpClient<signInResponse>(getSignInUrl(),
 
 
 
-export const getSignInMutationKey = () => ['signIn'] as const;
+export const getSignInCompanyMutationKey = () => ['signInCompany'] as const;
 
-export const getSignInMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,SignInMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,SignInMutationVariables, TContext> => {
+export const getSignInCompanyMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signInCompany>>, TError,SignInCompanyMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof signInCompany>>, TError,SignInCompanyMutationVariables, TContext> => {
 
-const mutationKey = getSignInMutationKey();
-const {mutation: mutationOptions} = options ?
+const mutationKey = getSignInCompanyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signIn>>, SignInMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signInCompany>>, SignInCompanyMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  signIn(data,)
+          return  signInCompany(data,requestOptions)
         }
 
 
@@ -1538,38 +2693,271 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SignInMutationResult = NonNullable<Awaited<ReturnType<typeof signIn>>>
-    export type SignInMutationBody = CompanySignInRequest
-    export type SignInMutationError = ErrorResponse
-    export type SignInMutationVariables = {data: CompanySignInRequest}
+    export type SignInCompanyMutationResult = NonNullable<Awaited<ReturnType<typeof signInCompany>>>
+    export type SignInCompanyMutationBody = CompanySignInRequest
+    export type SignInCompanyMutationError = ErrorResponse
+    export type SignInCompanyMutationVariables = {data: CompanySignInRequest}
 
     /**
  * @summary 기업 로그인
  */
-export const useSignIn = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,SignInMutationVariables, TContext>, }
+export const useSignInCompany = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signInCompany>>, TError,SignInCompanyMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof signIn>>,
+        Awaited<ReturnType<typeof signInCompany>>,
         TError,
-        SignInMutationVariables,
+        SignInCompanyMutationVariables,
         TContext
       > => {
-      return useMutation(getSignInMutationOptions(options), queryClient);
+      return useMutation(getSignInCompanyMutationOptions(options), queryClient);
     }
 
-export type getJobsResponse200 = {
+export type createAdvertisementInquiryResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type createAdvertisementInquiryResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type createAdvertisementInquiryResponseSuccess = (createAdvertisementInquiryResponse200) & {
+  headers: Headers;
+};
+export type createAdvertisementInquiryResponseError = (createAdvertisementInquiryResponse503) & {
+  headers: Headers;
+};
+
+export type createAdvertisementInquiryResponse = (createAdvertisementInquiryResponseSuccess | createAdvertisementInquiryResponseError)
+
+export const getCreateAdvertisementInquiryUrl = () => {
+
+
+
+
+  return `/api/v1/advertisement-inquiries`
+}
+
+/**
+ * 기업 담당자가 광고 소개 페이지에서 남긴 문의를 영업 슬랙 채널로 전달합니다. 문의를 저장하지 않아 생성되는 리소스가 없으므로 201이 아닌 200과 `data: null`로 응답합니다. 슬랙 전달에 실패하면 문의가 남지 않으므로 성공으로 응답하지 않습니다.
+ * @summary B2B 광고 문의 접수
+ */
+export const createAdvertisementInquiry = async (createAdvertisementInquiryRequest: CreateAdvertisementInquiryRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAdvertisementInquiryResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createAdvertisementInquiryResponse>(getCreateAdvertisementInquiryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createAdvertisementInquiryRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateAdvertisementInquiryMutationKey = () => ['createAdvertisementInquiry'] as const;
+
+export const getCreateAdvertisementInquiryMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdvertisementInquiry>>, TError,CreateAdvertisementInquiryMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdvertisementInquiry>>, TError,CreateAdvertisementInquiryMutationVariables, TContext> => {
+
+const mutationKey = getCreateAdvertisementInquiryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdvertisementInquiry>>, CreateAdvertisementInquiryMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdvertisementInquiry(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdvertisementInquiryMutationResult = NonNullable<Awaited<ReturnType<typeof createAdvertisementInquiry>>>
+    export type CreateAdvertisementInquiryMutationBody = CreateAdvertisementInquiryRequest
+    export type CreateAdvertisementInquiryMutationError = ErrorResponse
+    export type CreateAdvertisementInquiryMutationVariables = {data: CreateAdvertisementInquiryRequest}
+
+    /**
+ * @summary B2B 광고 문의 접수
+ */
+export const useCreateAdvertisementInquiry = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdvertisementInquiry>>, TError,CreateAdvertisementInquiryMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAdvertisementInquiry>>,
+        TError,
+        CreateAdvertisementInquiryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAdvertisementInquiryMutationOptions(options), queryClient);
+    }
+
+export type getMyAccountResponse200 = {
+  data: SuccessResponseMyAccountResponse
+  status: 200
+}
+
+export type getMyAccountResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getMyAccountResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyAccountResponseSuccess = (getMyAccountResponse200) & {
+  headers: Headers;
+};
+export type getMyAccountResponseError = (getMyAccountResponse401 | getMyAccountResponse404) & {
+  headers: Headers;
+};
+
+export type getMyAccountResponse = (getMyAccountResponseSuccess | getMyAccountResponseError)
+
+export const getGetMyAccountUrl = () => {
+
+
+
+
+  return `/api/v1/users/me`
+}
+
+/**
+ *
+ *             로그인한 사용자의 역할과 프로필을 반환합니다.
+ *
+ *             액세스 토큰에는 역할이 들어 있지 않으므로 기업 회원 화면을 열지 판단하려면 이 API의 role을 사용합니다.
+ *             role이 COMPANY이면 companyProfile이, 그 밖이면 profile이 채워지고 반대쪽은 null입니다.
+ *
+ *             정지·탈퇴한 계정도 403이 아니라 200으로 응답하며 status에 현재 상태가 담깁니다.
+ *             액세스 토큰은 상태가 바뀌어도 만료까지 유효하므로, 다른 요청이 왜 막히는지 이 값으로 판단합니다.
+ * @summary 내 정보 조회
+ */
+export const getMyAccount = async ( options?: Parameters<typeof httpClient>[1]): Promise<getMyAccountResponse> => {
+
+  return httpClient<getMyAccountResponse>(getGetMyAccountUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyAccountQueryKey = () => {
+    return [
+    `/api/v1/users/me`
+    ] as const;
+    }
+
+
+export const getGetMyAccountQueryOptions = <TData = Awaited<ReturnType<typeof getMyAccount>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAccount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyAccountQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAccount>>> = ({ signal }) => getMyAccount({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyAccount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyAccountQueryResult = NonNullable<Awaited<ReturnType<typeof getMyAccount>>>
+export type GetMyAccountQueryError = ErrorResponse
+
+
+export function useGetMyAccount<TData = Awaited<ReturnType<typeof getMyAccount>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAccount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAccount>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAccount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyAccount<TData = Awaited<ReturnType<typeof getMyAccount>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAccount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAccount>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAccount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyAccount<TData = Awaited<ReturnType<typeof getMyAccount>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAccount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 정보 조회
+ */
+
+export function useGetMyAccount<TData = Awaited<ReturnType<typeof getMyAccount>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAccount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyAccountQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicJobsResponse200 = {
   data: SuccessResponsePageResponseUserJobSummaryResponse
   status: 200
 }
 
-export type getJobsResponseSuccess = (getJobsResponse200) & {
+export type listPublicJobsResponseSuccess = (listPublicJobsResponse200) & {
   headers: Headers;
 };
 ;
 
-export type getJobsResponse = (getJobsResponseSuccess)
+export type listPublicJobsResponse = (listPublicJobsResponseSuccess)
 
-export const getGetJobsUrl = (params?: GetJobsParams,) => {
+export const getListPublicJobsUrl = (params?: ListPublicJobsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1585,12 +2973,23 @@ export const getGetJobsUrl = (params?: GetJobsParams,) => {
 }
 
 /**
- * sort로 정렬을 고릅니다. LATEST는 최신순, VIEW_COUNT는 조회수순이며 조회 수가 같으면 최신순입니다.
+ *
+ *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내면 bookmarked에 해당 사용자의 북마크 여부가 담기고,
+ *             보내지 않으면 항상 false입니다.
+ *
+ *             sort로 정렬을 고릅니다. LATEST는 최신순, VIEW_COUNT는 조회수순이며 조회 수가 같으면 최신순입니다.
+ *
+ *             employmentType과 experienceType으로 목록을 좁힙니다. 각각 하나씩 고를 수 있고,
+ *             보내지 않으면 해당 조건을 적용하지 않습니다. 두 필터와 정렬은 함께 사용할 수 있습니다.
+ *
+ *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
+ *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
+ *             검색도 필터·정렬과 함께 사용할 수 있습니다.
  * @summary 채용공고 목록 조회
  */
-export const getJobs = async (params?: GetJobsParams, options?: RequestInit): Promise<getJobsResponse> => {
+export const listPublicJobs = async (params?: ListPublicJobsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicJobsResponse> => {
 
-  return httpClient<getJobsResponse>(getGetJobsUrl(params),
+  return httpClient<listPublicJobsResponse>(getListPublicJobsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1603,69 +3002,69 @@ export const getJobs = async (params?: GetJobsParams, options?: RequestInit): Pr
 
 
 
-export const getGetJobsQueryKey = (params?: GetJobsParams,) => {
+export const getListPublicJobsQueryKey = (params?: ListPublicJobsParams,) => {
     return [
     `/api/v1/jobs`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetJobsQueryOptions = <TData = Awaited<ReturnType<typeof getJobs>>, TError = unknown>(params?: GetJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobs>>, TError, TData>>, }
+export const getListPublicJobsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicJobs>>, TError = unknown>(params?: ListPublicJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetJobsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobs>>> = ({ signal }) => getJobs(params, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getListPublicJobsQueryKey(params);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicJobs>>> = ({ signal }) => listPublicJobs(params, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetJobsQueryResult = NonNullable<Awaited<ReturnType<typeof getJobs>>>
-export type GetJobsQueryError = unknown
+export type ListPublicJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicJobs>>>
+export type ListPublicJobsQueryError = unknown
 
 
-export function useGetJobs<TData = Awaited<ReturnType<typeof getJobs>>, TError = unknown>(
- params: undefined |  GetJobsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobs>>, TError, TData>> & Pick<
+export function useListPublicJobs<TData = Awaited<ReturnType<typeof listPublicJobs>>, TError = unknown>(
+ params: undefined |  ListPublicJobsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJobs>>,
+          Awaited<ReturnType<typeof listPublicJobs>>,
           TError,
-          Awaited<ReturnType<typeof getJobs>>
+          Awaited<ReturnType<typeof listPublicJobs>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJobs<TData = Awaited<ReturnType<typeof getJobs>>, TError = unknown>(
- params?: GetJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobs>>, TError, TData>> & Pick<
+export function useListPublicJobs<TData = Awaited<ReturnType<typeof listPublicJobs>>, TError = unknown>(
+ params?: ListPublicJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJobs>>,
+          Awaited<ReturnType<typeof listPublicJobs>>,
           TError,
-          Awaited<ReturnType<typeof getJobs>>
+          Awaited<ReturnType<typeof listPublicJobs>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJobs<TData = Awaited<ReturnType<typeof getJobs>>, TError = unknown>(
- params?: GetJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobs>>, TError, TData>>, }
+export function useListPublicJobs<TData = Awaited<ReturnType<typeof listPublicJobs>>, TError = unknown>(
+ params?: ListPublicJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 채용공고 목록 조회
  */
 
-export function useGetJobs<TData = Awaited<ReturnType<typeof getJobs>>, TError = unknown>(
- params?: GetJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobs>>, TError, TData>>, }
+export function useListPublicJobs<TData = Awaited<ReturnType<typeof listPublicJobs>>, TError = unknown>(
+ params?: ListPublicJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetJobsQueryOptions(params,options)
+  const queryOptions = getListPublicJobsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1678,26 +3077,26 @@ export function useGetJobs<TData = Awaited<ReturnType<typeof getJobs>>, TError =
 
 
 
-export type getJobResponse200 = {
+export type getPublicJobResponse200 = {
   data: SuccessResponseUserJobDetailResponse
   status: 200
 }
 
-export type getJobResponse404 = {
+export type getPublicJobResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type getJobResponseSuccess = (getJobResponse200) & {
+export type getPublicJobResponseSuccess = (getPublicJobResponse200) & {
   headers: Headers;
 };
-export type getJobResponseError = (getJobResponse404) & {
+export type getPublicJobResponseError = (getPublicJobResponse404) & {
   headers: Headers;
 };
 
-export type getJobResponse = (getJobResponseSuccess | getJobResponseError)
+export type getPublicJobResponse = (getPublicJobResponseSuccess | getPublicJobResponseError)
 
-export const getGetJobUrl = (jobId: number,) => {
+export const getGetPublicJobUrl = (jobId: number,) => {
 
 
 
@@ -1706,11 +3105,14 @@ export const getGetJobUrl = (jobId: number,) => {
 }
 
 /**
+ *
+ *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내면 bookmarked에 해당 사용자의 북마크 여부가 담기고,
+ *             보내지 않으면 항상 false입니다.
  * @summary 채용공고 상세 조회
  */
-export const getJob = async (jobId: number, options?: RequestInit): Promise<getJobResponse> => {
+export const getPublicJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<getPublicJobResponse> => {
 
-  return httpClient<getJobResponse>(getGetJobUrl(jobId),
+  return httpClient<getPublicJobResponse>(getGetPublicJobUrl(jobId),
   {
     ...options,
     method: 'GET'
@@ -1723,69 +3125,69 @@ export const getJob = async (jobId: number, options?: RequestInit): Promise<getJ
 
 
 
-export const getGetJobQueryKey = (jobId: number,) => {
+export const getGetPublicJobQueryKey = (jobId: number,) => {
     return [
     `/api/v1/jobs/${jobId}`
     ] as const;
     }
 
 
-export const getGetJobQueryOptions = <TData = Awaited<ReturnType<typeof getJob>>, TError = ErrorResponse>(jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, }
+export const getGetPublicJobQueryOptions = <TData = Awaited<ReturnType<typeof getPublicJob>>, TError = ErrorResponse>(jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetJobQueryKey(jobId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJob>>> = ({ signal }) => getJob(jobId, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicJobQueryKey(jobId);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicJob>>> = ({ signal }) => getPublicJob(jobId, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetJobQueryResult = NonNullable<Awaited<ReturnType<typeof getJob>>>
-export type GetJobQueryError = ErrorResponse
+export type GetPublicJobQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicJob>>>
+export type GetPublicJobQueryError = ErrorResponse
 
 
-export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = ErrorResponse>(
- jobId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
+export function useGetPublicJob<TData = Awaited<ReturnType<typeof getPublicJob>>, TError = ErrorResponse>(
+ jobId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJob>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJob>>,
+          Awaited<ReturnType<typeof getPublicJob>>,
           TError,
-          Awaited<ReturnType<typeof getJob>>
+          Awaited<ReturnType<typeof getPublicJob>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = ErrorResponse>(
- jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
+export function useGetPublicJob<TData = Awaited<ReturnType<typeof getPublicJob>>, TError = ErrorResponse>(
+ jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJob>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJob>>,
+          Awaited<ReturnType<typeof getPublicJob>>,
           TError,
-          Awaited<ReturnType<typeof getJob>>
+          Awaited<ReturnType<typeof getPublicJob>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = ErrorResponse>(
- jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, }
+export function useGetPublicJob<TData = Awaited<ReturnType<typeof getPublicJob>>, TError = ErrorResponse>(
+ jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 채용공고 상세 조회
  */
 
-export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = ErrorResponse>(
- jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, }
+export function useGetPublicJob<TData = Awaited<ReturnType<typeof getPublicJob>>, TError = ErrorResponse>(
+ jobId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetJobQueryOptions(jobId,options)
+  const queryOptions = getGetPublicJobQueryOptions(jobId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1798,26 +3200,26 @@ export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = E
 
 
 
-export type getJobCalendarResponse200 = {
+export type listPublicJobCalendarResponse200 = {
   data: SuccessResponseListUserJobCalendarItemResponse
   status: 200
 }
 
-export type getJobCalendarResponse400 = {
+export type listPublicJobCalendarResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type getJobCalendarResponseSuccess = (getJobCalendarResponse200) & {
+export type listPublicJobCalendarResponseSuccess = (listPublicJobCalendarResponse200) & {
   headers: Headers;
 };
-export type getJobCalendarResponseError = (getJobCalendarResponse400) & {
+export type listPublicJobCalendarResponseError = (listPublicJobCalendarResponse400) & {
   headers: Headers;
 };
 
-export type getJobCalendarResponse = (getJobCalendarResponseSuccess | getJobCalendarResponseError)
+export type listPublicJobCalendarResponse = (listPublicJobCalendarResponseSuccess | listPublicJobCalendarResponseError)
 
-export const getGetJobCalendarUrl = (params: GetJobCalendarParams,) => {
+export const getListPublicJobCalendarUrl = (params: ListPublicJobCalendarParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1833,12 +3235,24 @@ export const getGetJobCalendarUrl = (params: GetJobCalendarParams,) => {
 }
 
 /**
- * 모집 기간이 조회 범위와 겹치는 게시 공고를 반환합니다. 조회 기간은 최대 92일입니다.
+ *
+ *             모집 기간이 조회 범위와 **겹치는** 게시 공고를 반환합니다.
+ *             그 기간에 시작하는 공고도, 끝나는 공고도 아니라 그 기간에 모집이 진행 중인 공고입니다.
+ *
+ *             조회 범위는 from 당일 00:00부터 to 당일 끝까지이며, 하루라도 겹치면 포함됩니다.
+ *             예를 들어 from=2026-09-05, to=2026-09-07로 조회하면
+ *             모집 기간이 2026-09-06~2026-09-08인 공고도, 2026-08-25~2026-09-06인 공고도 함께 나옵니다.
+ *             반대로 2026-09-08에 시작하거나 2026-09-04에 끝난 공고는 나오지 않습니다.
+ *
+ *             모집 기간이 없는 ALWAYS_OPEN 공고는 제외합니다.
+ *             시작·종료 일시가 모두 있는 공고만 대상이며 종료 일시, 식별자 오름차순으로 정렬합니다.
+ *
+ *             응답에 페이지네이션이 없어 조회 기간이 곧 응답 크기가 되므로 from부터 to까지 최대 92일만 허용합니다.
  * @summary 채용공고 달력 조회
  */
-export const getJobCalendar = async (params: GetJobCalendarParams, options?: RequestInit): Promise<getJobCalendarResponse> => {
+export const listPublicJobCalendar = async (params: ListPublicJobCalendarParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicJobCalendarResponse> => {
 
-  return httpClient<getJobCalendarResponse>(getGetJobCalendarUrl(params),
+  return httpClient<listPublicJobCalendarResponse>(getListPublicJobCalendarUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1851,69 +3265,69 @@ export const getJobCalendar = async (params: GetJobCalendarParams, options?: Req
 
 
 
-export const getGetJobCalendarQueryKey = (params?: GetJobCalendarParams,) => {
+export const getListPublicJobCalendarQueryKey = (params?: ListPublicJobCalendarParams,) => {
     return [
     `/api/v1/jobs/calendar`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetJobCalendarQueryOptions = <TData = Awaited<ReturnType<typeof getJobCalendar>>, TError = ErrorResponse>(params: GetJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobCalendar>>, TError, TData>>, }
+export const getListPublicJobCalendarQueryOptions = <TData = Awaited<ReturnType<typeof listPublicJobCalendar>>, TError = ErrorResponse>(params: ListPublicJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobCalendar>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetJobCalendarQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobCalendar>>> = ({ signal }) => getJobCalendar(params, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getListPublicJobCalendarQueryKey(params);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicJobCalendar>>> = ({ signal }) => listPublicJobCalendar(params, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJobCalendar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicJobCalendar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetJobCalendarQueryResult = NonNullable<Awaited<ReturnType<typeof getJobCalendar>>>
-export type GetJobCalendarQueryError = ErrorResponse
+export type ListPublicJobCalendarQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicJobCalendar>>>
+export type ListPublicJobCalendarQueryError = ErrorResponse
 
 
-export function useGetJobCalendar<TData = Awaited<ReturnType<typeof getJobCalendar>>, TError = ErrorResponse>(
- params: GetJobCalendarParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobCalendar>>, TError, TData>> & Pick<
+export function useListPublicJobCalendar<TData = Awaited<ReturnType<typeof listPublicJobCalendar>>, TError = ErrorResponse>(
+ params: ListPublicJobCalendarParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobCalendar>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJobCalendar>>,
+          Awaited<ReturnType<typeof listPublicJobCalendar>>,
           TError,
-          Awaited<ReturnType<typeof getJobCalendar>>
+          Awaited<ReturnType<typeof listPublicJobCalendar>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJobCalendar<TData = Awaited<ReturnType<typeof getJobCalendar>>, TError = ErrorResponse>(
- params: GetJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobCalendar>>, TError, TData>> & Pick<
+export function useListPublicJobCalendar<TData = Awaited<ReturnType<typeof listPublicJobCalendar>>, TError = ErrorResponse>(
+ params: ListPublicJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobCalendar>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJobCalendar>>,
+          Awaited<ReturnType<typeof listPublicJobCalendar>>,
           TError,
-          Awaited<ReturnType<typeof getJobCalendar>>
+          Awaited<ReturnType<typeof listPublicJobCalendar>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJobCalendar<TData = Awaited<ReturnType<typeof getJobCalendar>>, TError = ErrorResponse>(
- params: GetJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobCalendar>>, TError, TData>>, }
+export function useListPublicJobCalendar<TData = Awaited<ReturnType<typeof listPublicJobCalendar>>, TError = ErrorResponse>(
+ params: ListPublicJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobCalendar>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 채용공고 달력 조회
  */
 
-export function useGetJobCalendar<TData = Awaited<ReturnType<typeof getJobCalendar>>, TError = ErrorResponse>(
- params: GetJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobCalendar>>, TError, TData>>, }
+export function useListPublicJobCalendar<TData = Awaited<ReturnType<typeof listPublicJobCalendar>>, TError = ErrorResponse>(
+ params: ListPublicJobCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicJobCalendar>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetJobCalendarQueryOptions(params,options)
+  const queryOptions = getListPublicJobCalendarQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1926,19 +3340,19 @@ export function useGetJobCalendar<TData = Awaited<ReturnType<typeof getJobCalend
 
 
 
-export type getBookmarksResponse200 = {
+export type listMyJobBookmarksResponse200 = {
   data: SuccessResponsePageResponseUserJobSummaryResponse
   status: 200
 }
 
-export type getBookmarksResponseSuccess = (getBookmarksResponse200) & {
+export type listMyJobBookmarksResponseSuccess = (listMyJobBookmarksResponse200) & {
   headers: Headers;
 };
 ;
 
-export type getBookmarksResponse = (getBookmarksResponseSuccess)
+export type listMyJobBookmarksResponse = (listMyJobBookmarksResponseSuccess)
 
-export const getGetBookmarksUrl = (params?: GetBookmarksParams,) => {
+export const getListMyJobBookmarksUrl = (params?: ListMyJobBookmarksParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1956,9 +3370,9 @@ export const getGetBookmarksUrl = (params?: GetBookmarksParams,) => {
 /**
  * @summary 채용공고 북마크 목록 조회
  */
-export const getBookmarks = async (params?: GetBookmarksParams, options?: RequestInit): Promise<getBookmarksResponse> => {
+export const listMyJobBookmarks = async (params?: ListMyJobBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyJobBookmarksResponse> => {
 
-  return httpClient<getBookmarksResponse>(getGetBookmarksUrl(params),
+  return httpClient<listMyJobBookmarksResponse>(getListMyJobBookmarksUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1971,69 +3385,69 @@ export const getBookmarks = async (params?: GetBookmarksParams, options?: Reques
 
 
 
-export const getGetBookmarksQueryKey = (params?: GetBookmarksParams,) => {
+export const getListMyJobBookmarksQueryKey = (params?: ListMyJobBookmarksParams,) => {
     return [
     `/api/v1/job-bookmarks`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof getBookmarks>>, TError = unknown>(params?: GetBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookmarks>>, TError, TData>>, }
+export const getListMyJobBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof listMyJobBookmarks>>, TError = unknown>(params?: ListMyJobBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetBookmarksQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBookmarks>>> = ({ signal }) => getBookmarks(params, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getListMyJobBookmarksQueryKey(params);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyJobBookmarks>>> = ({ signal }) => listMyJobBookmarks(params, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBookmarks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyJobBookmarks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof getBookmarks>>>
-export type GetBookmarksQueryError = unknown
+export type ListMyJobBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof listMyJobBookmarks>>>
+export type ListMyJobBookmarksQueryError = unknown
 
 
-export function useGetBookmarks<TData = Awaited<ReturnType<typeof getBookmarks>>, TError = unknown>(
- params: undefined |  GetBookmarksParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookmarks>>, TError, TData>> & Pick<
+export function useListMyJobBookmarks<TData = Awaited<ReturnType<typeof listMyJobBookmarks>>, TError = unknown>(
+ params: undefined |  ListMyJobBookmarksParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobBookmarks>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBookmarks>>,
+          Awaited<ReturnType<typeof listMyJobBookmarks>>,
           TError,
-          Awaited<ReturnType<typeof getBookmarks>>
+          Awaited<ReturnType<typeof listMyJobBookmarks>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBookmarks<TData = Awaited<ReturnType<typeof getBookmarks>>, TError = unknown>(
- params?: GetBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookmarks>>, TError, TData>> & Pick<
+export function useListMyJobBookmarks<TData = Awaited<ReturnType<typeof listMyJobBookmarks>>, TError = unknown>(
+ params?: ListMyJobBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobBookmarks>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBookmarks>>,
+          Awaited<ReturnType<typeof listMyJobBookmarks>>,
           TError,
-          Awaited<ReturnType<typeof getBookmarks>>
+          Awaited<ReturnType<typeof listMyJobBookmarks>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBookmarks<TData = Awaited<ReturnType<typeof getBookmarks>>, TError = unknown>(
- params?: GetBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookmarks>>, TError, TData>>, }
+export function useListMyJobBookmarks<TData = Awaited<ReturnType<typeof listMyJobBookmarks>>, TError = unknown>(
+ params?: ListMyJobBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 채용공고 북마크 목록 조회
  */
 
-export function useGetBookmarks<TData = Awaited<ReturnType<typeof getBookmarks>>, TError = unknown>(
- params?: GetBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookmarks>>, TError, TData>>, }
+export function useListMyJobBookmarks<TData = Awaited<ReturnType<typeof listMyJobBookmarks>>, TError = unknown>(
+ params?: ListMyJobBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetBookmarksQueryOptions(params,options)
+  const queryOptions = getListMyJobBookmarksQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -2046,19 +3460,26 @@ export function useGetBookmarks<TData = Awaited<ReturnType<typeof getBookmarks>>
 
 
 
-export type getBootcamps1Response200 = {
+export type listPublicBootcampsResponse200 = {
   data: SuccessResponsePageResponseUserBootcampSummaryResponse
   status: 200
 }
 
-export type getBootcamps1ResponseSuccess = (getBootcamps1Response200) & {
+export type listPublicBootcampsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicBootcampsResponseSuccess = (listPublicBootcampsResponse200) & {
   headers: Headers;
 };
-;
+export type listPublicBootcampsResponseError = (listPublicBootcampsResponse400) & {
+  headers: Headers;
+};
 
-export type getBootcamps1Response = (getBootcamps1ResponseSuccess)
+export type listPublicBootcampsResponse = (listPublicBootcampsResponseSuccess | listPublicBootcampsResponseError)
 
-export const getGetBootcamps1Url = (params?: GetBootcamps1Params,) => {
+export const getListPublicBootcampsUrl = (params?: ListPublicBootcampsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2074,12 +3495,24 @@ export const getGetBootcamps1Url = (params?: GetBootcamps1Params,) => {
 }
 
 /**
- * sort로 정렬을 고릅니다. LATEST는 최신순, VIEW_COUNT는 조회수순이며 조회 수가 같으면 최신순입니다.
+ *
+ *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내면 bookmarked에 해당 사용자의 북마크 여부가 담기고,
+ *             보내지 않으면 항상 false입니다.
+ *
+ *             sort로 정렬을 고릅니다. LATEST는 최신순, VIEW_COUNT는 조회수순이며 조회 수가 같으면 최신순입니다.
+ *
+ *             tuitionType과 status로 목록을 좁힙니다. 각각 하나씩 고를 수 있고,
+ *             보내지 않으면 해당 조건을 적용하지 않습니다. status는 공개 목록이 다루는
+ *             RECRUITING(모집중)과 CLOSED(모집 마감)만 받으며 그 밖의 값은 400입니다.
+ *
+ *             keyword는 운영 회사명 또는 프로그램명에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
+ *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
+ *             검색도 필터·정렬과 함께 사용할 수 있습니다.
  * @summary 부트캠프 목록 조회
  */
-export const getBootcamps1 = async (params?: GetBootcamps1Params, options?: RequestInit): Promise<getBootcamps1Response> => {
+export const listPublicBootcamps = async (params?: ListPublicBootcampsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicBootcampsResponse> => {
 
-  return httpClient<getBootcamps1Response>(getGetBootcamps1Url(params),
+  return httpClient<listPublicBootcampsResponse>(getListPublicBootcampsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2092,69 +3525,69 @@ export const getBootcamps1 = async (params?: GetBootcamps1Params, options?: Requ
 
 
 
-export const getGetBootcamps1QueryKey = (params?: GetBootcamps1Params,) => {
+export const getListPublicBootcampsQueryKey = (params?: ListPublicBootcampsParams,) => {
     return [
     `/api/v1/bootcamps`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetBootcamps1QueryOptions = <TData = Awaited<ReturnType<typeof getBootcamps1>>, TError = unknown>(params?: GetBootcamps1Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps1>>, TError, TData>>, }
+export const getListPublicBootcampsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicBootcamps>>, TError = ErrorResponse>(params?: ListPublicBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicBootcamps>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetBootcamps1QueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBootcamps1>>> = ({ signal }) => getBootcamps1(params, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getListPublicBootcampsQueryKey(params);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicBootcamps>>> = ({ signal }) => listPublicBootcamps(params, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBootcamps1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicBootcamps>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetBootcamps1QueryResult = NonNullable<Awaited<ReturnType<typeof getBootcamps1>>>
-export type GetBootcamps1QueryError = unknown
+export type ListPublicBootcampsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicBootcamps>>>
+export type ListPublicBootcampsQueryError = ErrorResponse
 
 
-export function useGetBootcamps1<TData = Awaited<ReturnType<typeof getBootcamps1>>, TError = unknown>(
- params: undefined |  GetBootcamps1Params, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps1>>, TError, TData>> & Pick<
+export function useListPublicBootcamps<TData = Awaited<ReturnType<typeof listPublicBootcamps>>, TError = ErrorResponse>(
+ params: undefined |  ListPublicBootcampsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicBootcamps>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamps1>>,
+          Awaited<ReturnType<typeof listPublicBootcamps>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamps1>>
+          Awaited<ReturnType<typeof listPublicBootcamps>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamps1<TData = Awaited<ReturnType<typeof getBootcamps1>>, TError = unknown>(
- params?: GetBootcamps1Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps1>>, TError, TData>> & Pick<
+export function useListPublicBootcamps<TData = Awaited<ReturnType<typeof listPublicBootcamps>>, TError = ErrorResponse>(
+ params?: ListPublicBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicBootcamps>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamps1>>,
+          Awaited<ReturnType<typeof listPublicBootcamps>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamps1>>
+          Awaited<ReturnType<typeof listPublicBootcamps>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamps1<TData = Awaited<ReturnType<typeof getBootcamps1>>, TError = unknown>(
- params?: GetBootcamps1Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps1>>, TError, TData>>, }
+export function useListPublicBootcamps<TData = Awaited<ReturnType<typeof listPublicBootcamps>>, TError = ErrorResponse>(
+ params?: ListPublicBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicBootcamps>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 부트캠프 목록 조회
  */
 
-export function useGetBootcamps1<TData = Awaited<ReturnType<typeof getBootcamps1>>, TError = unknown>(
- params?: GetBootcamps1Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamps1>>, TError, TData>>, }
+export function useListPublicBootcamps<TData = Awaited<ReturnType<typeof listPublicBootcamps>>, TError = ErrorResponse>(
+ params?: ListPublicBootcampsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicBootcamps>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetBootcamps1QueryOptions(params,options)
+  const queryOptions = getListPublicBootcampsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -2167,26 +3600,26 @@ export function useGetBootcamps1<TData = Awaited<ReturnType<typeof getBootcamps1
 
 
 
-export type getBootcamp1Response200 = {
+export type getPublicBootcampResponse200 = {
   data: SuccessResponseUserBootcampDetailResponse
   status: 200
 }
 
-export type getBootcamp1Response404 = {
+export type getPublicBootcampResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type getBootcamp1ResponseSuccess = (getBootcamp1Response200) & {
+export type getPublicBootcampResponseSuccess = (getPublicBootcampResponse200) & {
   headers: Headers;
 };
-export type getBootcamp1ResponseError = (getBootcamp1Response404) & {
+export type getPublicBootcampResponseError = (getPublicBootcampResponse404) & {
   headers: Headers;
 };
 
-export type getBootcamp1Response = (getBootcamp1ResponseSuccess | getBootcamp1ResponseError)
+export type getPublicBootcampResponse = (getPublicBootcampResponseSuccess | getPublicBootcampResponseError)
 
-export const getGetBootcamp1Url = (bootcampId: number,) => {
+export const getGetPublicBootcampUrl = (bootcampId: number,) => {
 
 
 
@@ -2195,11 +3628,14 @@ export const getGetBootcamp1Url = (bootcampId: number,) => {
 }
 
 /**
+ *
+ *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내면 bookmarked에 해당 사용자의 북마크 여부가 담기고,
+ *             보내지 않으면 항상 false입니다.
  * @summary 부트캠프 상세 조회
  */
-export const getBootcamp1 = async (bootcampId: number, options?: RequestInit): Promise<getBootcamp1Response> => {
+export const getPublicBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<getPublicBootcampResponse> => {
 
-  return httpClient<getBootcamp1Response>(getGetBootcamp1Url(bootcampId),
+  return httpClient<getPublicBootcampResponse>(getGetPublicBootcampUrl(bootcampId),
   {
     ...options,
     method: 'GET'
@@ -2212,69 +3648,69 @@ export const getBootcamp1 = async (bootcampId: number, options?: RequestInit): P
 
 
 
-export const getGetBootcamp1QueryKey = (bootcampId: number,) => {
+export const getGetPublicBootcampQueryKey = (bootcampId: number,) => {
     return [
     `/api/v1/bootcamps/${bootcampId}`
     ] as const;
     }
 
 
-export const getGetBootcamp1QueryOptions = <TData = Awaited<ReturnType<typeof getBootcamp1>>, TError = ErrorResponse>(bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp1>>, TError, TData>>, }
+export const getGetPublicBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getPublicBootcamp>>, TError = ErrorResponse>(bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetBootcamp1QueryKey(bootcampId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBootcamp1>>> = ({ signal }) => getBootcamp1(bootcampId, { signal });
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicBootcampQueryKey(bootcampId);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicBootcamp>>> = ({ signal }) => getPublicBootcamp(bootcampId, { signal, ...requestOptions });
 
 
-   return  { queryKey, queryFn, enabled: bootcampId !== null && bootcampId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBootcamp1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+
+   return  { queryKey, queryFn, enabled: bootcampId !== null && bootcampId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetBootcamp1QueryResult = NonNullable<Awaited<ReturnType<typeof getBootcamp1>>>
-export type GetBootcamp1QueryError = ErrorResponse
+export type GetPublicBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicBootcamp>>>
+export type GetPublicBootcampQueryError = ErrorResponse
 
 
-export function useGetBootcamp1<TData = Awaited<ReturnType<typeof getBootcamp1>>, TError = ErrorResponse>(
- bootcampId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp1>>, TError, TData>> & Pick<
+export function useGetPublicBootcamp<TData = Awaited<ReturnType<typeof getPublicBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicBootcamp>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamp1>>,
+          Awaited<ReturnType<typeof getPublicBootcamp>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamp1>>
+          Awaited<ReturnType<typeof getPublicBootcamp>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamp1<TData = Awaited<ReturnType<typeof getBootcamp1>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp1>>, TError, TData>> & Pick<
+export function useGetPublicBootcamp<TData = Awaited<ReturnType<typeof getPublicBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicBootcamp>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamp1>>,
+          Awaited<ReturnType<typeof getPublicBootcamp>>,
           TError,
-          Awaited<ReturnType<typeof getBootcamp1>>
+          Awaited<ReturnType<typeof getPublicBootcamp>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamp1<TData = Awaited<ReturnType<typeof getBootcamp1>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp1>>, TError, TData>>, }
+export function useGetPublicBootcamp<TData = Awaited<ReturnType<typeof getPublicBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 부트캠프 상세 조회
  */
 
-export function useGetBootcamp1<TData = Awaited<ReturnType<typeof getBootcamp1>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp1>>, TError, TData>>, }
+export function useGetPublicBootcamp<TData = Awaited<ReturnType<typeof getPublicBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetBootcamp1QueryOptions(bootcampId,options)
+  const queryOptions = getGetPublicBootcampQueryOptions(bootcampId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -2282,158 +3718,438 @@ export function useGetBootcamp1<TData = Awaited<ReturnType<typeof getBootcamp1>>
 }
 
 
-export const getGetBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
-
-export const getUpdateBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getDeleteBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getGetBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getCreateBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyBootcampResponse, object>> = {}): SuccessResponseCreateCompanyBootcampResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
-
-export const getStartRecruitmentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getCloseBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getRecordSourceUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getAddBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getDeleteBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getSignUpResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
-
-export const getSignInResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
-
-export const getGetJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), ...overrideResponse})
-
-export const getGetJobCalendarResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobCalendarItemResponse, object>> = {}): SuccessResponseListUserJobCalendarItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentStartAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recruitmentEndAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), undefined]), ...overrideResponse})
-
-export const getGetBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getGetBootcamps1ResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getGetBootcamp1ResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserBootcampDetailResponse, object>> = {}): SuccessResponseUserBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 
-export const getGetBootcampMockHandler = (overrideResponse?: SuccessResponseCompanyBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCompanyBootcampDetailResponse> | SuccessResponseCompanyBootcampDetailResponse), options?: RequestHandlerOptions) => {
+
+
+
+export type listMyBootcampBookmarksResponse200 = {
+  data: SuccessResponsePageResponseUserBootcampSummaryResponse
+  status: 200
+}
+
+export type listMyBootcampBookmarksResponseSuccess = (listMyBootcampBookmarksResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listMyBootcampBookmarksResponse = (listMyBootcampBookmarksResponseSuccess)
+
+export const getListMyBootcampBookmarksUrl = (params?: ListMyBootcampBookmarksParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/bootcamp-bookmarks?${stringifiedParams}` : `/api/v1/bootcamp-bookmarks`
+}
+
+/**
+ * @summary 부트캠프 북마크 목록 조회
+ */
+export const listMyBootcampBookmarks = async (params?: ListMyBootcampBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyBootcampBookmarksResponse> => {
+
+  return httpClient<listMyBootcampBookmarksResponse>(getListMyBootcampBookmarksUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyBootcampBookmarksQueryKey = (params?: ListMyBootcampBookmarksParams,) => {
+    return [
+    `/api/v1/bootcamp-bookmarks`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyBootcampBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyBootcampBookmarksQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyBootcampBookmarks>>> = ({ signal }) => listMyBootcampBookmarks(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyBootcampBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof listMyBootcampBookmarks>>>
+export type ListMyBootcampBookmarksQueryError = unknown
+
+
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+ params: undefined |  ListMyBootcampBookmarksParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyBootcampBookmarks>>,
+          TError,
+          Awaited<ReturnType<typeof listMyBootcampBookmarks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+ params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyBootcampBookmarks>>,
+          TError,
+          Awaited<ReturnType<typeof listMyBootcampBookmarks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+ params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 부트캠프 북마크 목록 조회
+ */
+
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+ params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyBootcampBookmarksQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+export const getReplaceMyProfileResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyLogoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
+
+export const getReplaceMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getGetMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getReplaceMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyJobResponse, object>> = {}): SuccessResponseCreateCompanyJobResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getPublishMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCloseMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getListMyBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyBootcampResponse, object>> = {}): SuccessResponseCreateCompanyBootcampResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getStartMyBootcampRecruitmentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCloseMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateJobSourceUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateJobBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteJobBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateBootcampApplicationUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateBootcampBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteBootcampBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getSignUpCompanyResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
+
+export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
+
+export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getGetMyAccountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAccountResponse, object>> = {}): SuccessResponseMyAccountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', profile: faker.helpers.arrayElement([{name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), companyProfile: faker.helpers.arrayElement([{organizationName: faker.string.alpha({length: {min: 10, max: 20}}), managerName: faker.string.alpha({length: {min: 10, max: 20}})}, undefined])}, undefined]), ...overrideResponse})
+
+export const getListPublicJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetPublicJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getListPublicJobCalendarResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobCalendarItemResponse, object>> = {}): SuccessResponseListUserJobCalendarItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentStartAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recruitmentEndAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), undefined]), ...overrideResponse})
+
+export const getListMyJobBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListPublicBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetPublicBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserBootcampDetailResponse, object>> = {}): SuccessResponseUserBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getListMyBootcampBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+
+export const getReplaceMyProfileMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/users/me/profile', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceMyProfileResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyJobMockHandler = (overrideResponse?: SuccessResponseCompanyJobDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCompanyJobDetailResponse> | SuccessResponseCompanyJobDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/jobs/:jobId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceMyJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/users/me/jobs/:jobId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceMyJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteMyJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/users/me/jobs/:jobId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteMyJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyBootcampMockHandler = (overrideResponse?: SuccessResponseCompanyBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCompanyBootcampDetailResponse> | SuccessResponseCompanyBootcampDetailResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/users/me/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetBootcampResponseMock(),
+    : getGetMyBootcampResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getUpdateBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getReplaceMyBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/users/me/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUpdateBootcampResponseMock(),
+    : getReplaceMyBootcampResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getDeleteBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getDeleteMyBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/users/me/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteBootcampResponseMock(),
+    : getDeleteMyBootcampResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetBootcampsMockHandler = (overrideResponse?: SuccessResponsePageResponseCompanyBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseCompanyBootcampSummaryResponse> | SuccessResponsePageResponseCompanyBootcampSummaryResponse), options?: RequestHandlerOptions) => {
+export const getListMyJobsMockHandler = (overrideResponse?: SuccessResponsePageResponseCompanyJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseCompanyJobSummaryResponse> | SuccessResponsePageResponseCompanyJobSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyJobsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateMyJobMockHandler = (overrideResponse?: SuccessResponseCreateCompanyJobResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateCompanyJobResponse> | SuccessResponseCreateCompanyJobResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/users/me/jobs', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateMyJobResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getPublishMyJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/users/me/jobs/:jobId/publish', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPublishMyJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCloseMyJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/users/me/jobs/:jobId/close', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCloseMyJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyBootcampsMockHandler = (overrideResponse?: SuccessResponsePageResponseCompanyBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseCompanyBootcampSummaryResponse> | SuccessResponsePageResponseCompanyBootcampSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/users/me/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetBootcampsResponseMock(),
+    : getListMyBootcampsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getCreateBootcampMockHandler = (overrideResponse?: SuccessResponseCreateCompanyBootcampResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateCompanyBootcampResponse> | SuccessResponseCreateCompanyBootcampResponse), options?: RequestHandlerOptions) => {
+export const getCreateMyBootcampMockHandler = (overrideResponse?: SuccessResponseCreateCompanyBootcampResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateCompanyBootcampResponse> | SuccessResponseCreateCompanyBootcampResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/users/me/bootcamps', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateBootcampResponseMock(),
+    : getCreateMyBootcampResponseMock(),
       { status: 201
       })
   }, options)
 }
 
-export const getStartRecruitmentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getStartMyBootcampRecruitmentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/users/me/bootcamps/:bootcampId/start-recruitment', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStartRecruitmentResponseMock(),
+    : getStartMyBootcampRecruitmentResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getCloseBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getCloseMyBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/users/me/bootcamps/:bootcampId/close', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCloseBootcampResponseMock(),
+    : getCloseMyBootcampResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getRecordSourceUrlClickMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getCreateJobSourceUrlClickMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/jobs/:jobId/source-url-clicks', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getRecordSourceUrlClickResponseMock(),
+    : getCreateJobSourceUrlClickResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getAddBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getCreateJobBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/job-bookmarks/:jobId', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAddBookmarkResponseMock(),
+    : getCreateJobBookmarkResponseMock(),
       { status: 201
       })
   }, options)
 }
 
-export const getDeleteBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getDeleteJobBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/job-bookmarks/:jobId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteBookmarkResponseMock(),
+    : getDeleteJobBookmarkResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateBootcampApplicationUrlClickMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/bootcamps/:bootcampId/application-url-clicks', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateBootcampApplicationUrlClickResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateBootcampBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/bootcamp-bookmarks/:bootcampId', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateBootcampBookmarkResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getDeleteBootcampBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/bootcamp-bookmarks/:bootcampId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteBootcampBookmarkResponseMock(),
       { status: 200
       })
   }, options)
@@ -2469,121 +4185,171 @@ export const getSignInWithLetsCareerMockHandler = (overrideResponse?: unknown | 
   }, options)
 }
 
-export const getSignUpMockHandler = (overrideResponse?: SuccessResponseAuthTokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAuthTokenResponse> | SuccessResponseAuthTokenResponse), options?: RequestHandlerOptions) => {
+export const getSignUpCompanyMockHandler = (overrideResponse?: SuccessResponseAuthTokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAuthTokenResponse> | SuccessResponseAuthTokenResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/company/signup', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSignUpResponseMock(),
+    : getSignUpCompanyResponseMock(),
       { status: 201
       })
   }, options)
 }
 
-export const getSignInMockHandler = (overrideResponse?: SuccessResponseAuthTokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAuthTokenResponse> | SuccessResponseAuthTokenResponse), options?: RequestHandlerOptions) => {
+export const getSignInCompanyMockHandler = (overrideResponse?: SuccessResponseAuthTokenResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAuthTokenResponse> | SuccessResponseAuthTokenResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/company/signin', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSignInResponseMock(),
+    : getSignInCompanyResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetJobsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserJobSummaryResponse> | SuccessResponsePageResponseUserJobSummaryResponse), options?: RequestHandlerOptions) => {
+export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/advertisement-inquiries', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateAdvertisementInquiryResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyAccountMockHandler = (overrideResponse?: SuccessResponseMyAccountResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMyAccountResponse> | SuccessResponseMyAccountResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyAccountResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListPublicJobsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserJobSummaryResponse> | SuccessResponsePageResponseUserJobSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetJobsResponseMock(),
+    : getListPublicJobsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetJobMockHandler = (overrideResponse?: SuccessResponseUserJobDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserJobDetailResponse> | SuccessResponseUserJobDetailResponse), options?: RequestHandlerOptions) => {
+export const getGetPublicJobMockHandler = (overrideResponse?: SuccessResponseUserJobDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserJobDetailResponse> | SuccessResponseUserJobDetailResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/jobs/:jobId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetJobResponseMock(),
+    : getGetPublicJobResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetJobCalendarMockHandler = (overrideResponse?: SuccessResponseListUserJobCalendarItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListUserJobCalendarItemResponse> | SuccessResponseListUserJobCalendarItemResponse), options?: RequestHandlerOptions) => {
+export const getListPublicJobCalendarMockHandler = (overrideResponse?: SuccessResponseListUserJobCalendarItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListUserJobCalendarItemResponse> | SuccessResponseListUserJobCalendarItemResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/jobs/calendar', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetJobCalendarResponseMock(),
+    : getListPublicJobCalendarResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetBookmarksMockHandler = (overrideResponse?: SuccessResponsePageResponseUserJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserJobSummaryResponse> | SuccessResponsePageResponseUserJobSummaryResponse), options?: RequestHandlerOptions) => {
+export const getListMyJobBookmarksMockHandler = (overrideResponse?: SuccessResponsePageResponseUserJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserJobSummaryResponse> | SuccessResponsePageResponseUserJobSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/job-bookmarks', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetBookmarksResponseMock(),
+    : getListMyJobBookmarksResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetBootcamps1MockHandler = (overrideResponse?: SuccessResponsePageResponseUserBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserBootcampSummaryResponse> | SuccessResponsePageResponseUserBootcampSummaryResponse), options?: RequestHandlerOptions) => {
+export const getListPublicBootcampsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserBootcampSummaryResponse> | SuccessResponsePageResponseUserBootcampSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetBootcamps1ResponseMock(),
+    : getListPublicBootcampsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getGetBootcamp1MockHandler = (overrideResponse?: SuccessResponseUserBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserBootcampDetailResponse> | SuccessResponseUserBootcampDetailResponse), options?: RequestHandlerOptions) => {
+export const getGetPublicBootcampMockHandler = (overrideResponse?: SuccessResponseUserBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserBootcampDetailResponse> | SuccessResponseUserBootcampDetailResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetBootcamp1ResponseMock(),
+    : getGetPublicBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyBootcampBookmarksMockHandler = (overrideResponse?: SuccessResponsePageResponseUserBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserBootcampSummaryResponse> | SuccessResponsePageResponseUserBootcampSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/bootcamp-bookmarks', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyBootcampBookmarksResponseMock(),
       { status: 200
       })
   }, options)
 }
 export const getOgonggoUserAPIMock = () => [
-  getGetBootcampMockHandler(),
-  getUpdateBootcampMockHandler(),
-  getDeleteBootcampMockHandler(),
-  getGetBootcampsMockHandler(),
-  getCreateBootcampMockHandler(),
-  getStartRecruitmentMockHandler(),
-  getCloseBootcampMockHandler(),
-  getRecordSourceUrlClickMockHandler(),
-  getAddBookmarkMockHandler(),
-  getDeleteBookmarkMockHandler(),
+  getReplaceMyProfileMockHandler(),
+  getGetMyJobMockHandler(),
+  getReplaceMyJobMockHandler(),
+  getDeleteMyJobMockHandler(),
+  getGetMyBootcampMockHandler(),
+  getReplaceMyBootcampMockHandler(),
+  getDeleteMyBootcampMockHandler(),
+  getListMyJobsMockHandler(),
+  getCreateMyJobMockHandler(),
+  getPublishMyJobMockHandler(),
+  getCloseMyJobMockHandler(),
+  getListMyBootcampsMockHandler(),
+  getCreateMyBootcampMockHandler(),
+  getStartMyBootcampRecruitmentMockHandler(),
+  getCloseMyBootcampMockHandler(),
+  getCreateJobSourceUrlClickMockHandler(),
+  getCreateJobBookmarkMockHandler(),
+  getDeleteJobBookmarkMockHandler(),
+  getCreateBootcampApplicationUrlClickMockHandler(),
+  getCreateBootcampBookmarkMockHandler(),
+  getDeleteBootcampBookmarkMockHandler(),
   getReissueAccessTokenMockHandler(),
   getSignOutMockHandler(),
   getSignInWithLetsCareerMockHandler(),
-  getSignUpMockHandler(),
-  getSignInMockHandler(),
-  getGetJobsMockHandler(),
-  getGetJobMockHandler(),
-  getGetJobCalendarMockHandler(),
-  getGetBookmarksMockHandler(),
-  getGetBootcamps1MockHandler(),
-  getGetBootcamp1MockHandler()
+  getSignUpCompanyMockHandler(),
+  getSignInCompanyMockHandler(),
+  getCreateAdvertisementInquiryMockHandler(),
+  getGetMyAccountMockHandler(),
+  getListPublicJobsMockHandler(),
+  getGetPublicJobMockHandler(),
+  getListPublicJobCalendarMockHandler(),
+  getListMyJobBookmarksMockHandler(),
+  getListPublicBootcampsMockHandler(),
+  getGetPublicBootcampMockHandler(),
+  getListMyBootcampBookmarksMockHandler()
 ]

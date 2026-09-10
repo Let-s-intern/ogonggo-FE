@@ -5,6 +5,13 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `DRAFT` | 1 | 임시저장 |
+ * | `RECRUITING` | 2 | 모집중 |
+ * | `CLOSED` | 3 | 모집 마감 |
+ */
 export type CompanyBootcampDetailResponseStatus = typeof CompanyBootcampDetailResponseStatus[keyof typeof CompanyBootcampDetailResponseStatus];
 
 
