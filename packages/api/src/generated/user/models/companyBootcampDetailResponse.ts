@@ -17,19 +17,45 @@ export interface CompanyBootcampDetailResponse {
   companyName: string;
   title: string;
   programType: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `ONLINE` | 1 | 온라인 |
+     * | `OFFLINE` | 2 | 오프라인 |
+     * | `HYBRID` | 3 | 온·오프라인 |
+     */
   operationType: CompanyBootcampDetailResponseOperationType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 모집 |
+     * | `ALWAYS_OPEN` | 2 | 상시 모집 |
+     */
   recruitmentType: CompanyBootcampDetailResponseRecruitmentType;
   recruitmentStartAt?: string;
   recruitmentEndAt?: string;
   programStartDate: string;
   programEndDate: string;
   capacity?: number;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FREE` | 1 | 무료 |
+     * | `PAID` | 2 | 유료 |
+     * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+     */
   tuitionType: CompanyBootcampDetailResponseTuitionType;
   tuitionAmount?: number;
   representativeImageUrl: string;
   shortDescription: string;
   content: string;
   eligibilityAndSelectionProcess?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+     * | `EMAIL` | 2 | 이메일 |
+     */
   applicationMethod: CompanyBootcampDetailResponseApplicationMethod;
   applicationUrl?: string;
   managerEmail?: string;
@@ -37,6 +63,13 @@ export interface CompanyBootcampDetailResponse {
   publicationStartAt?: string;
   publicationEndAt?: string;
   sourceUrl?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `DRAFT` | 1 | 임시저장 |
+     * | `RECRUITING` | 2 | 모집중 |
+     * | `CLOSED` | 3 | 모집 마감 |
+     */
   status: CompanyBootcampDetailResponseStatus;
   closedAt?: string;
   partners: CompanyBootcampPartnerResponse[];

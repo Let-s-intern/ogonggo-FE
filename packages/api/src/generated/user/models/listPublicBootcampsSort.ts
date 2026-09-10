@@ -5,10 +5,10 @@
  * OpenAPI spec version: v1
  */
 
-export type GetBootcamps1Sort = typeof GetBootcamps1Sort[keyof typeof GetBootcamps1Sort];
+export type ListPublicBootcampsSort = typeof ListPublicBootcampsSort[keyof typeof ListPublicBootcampsSort];
 
 
-export const GetBootcamps1Sort = {
+export const ListPublicBootcampsSort = {
   LATEST: 'LATEST',
   VIEW_COUNT: 'VIEW_COUNT',
 } as const;

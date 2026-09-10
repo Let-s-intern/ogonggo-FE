@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getJob } from '@ogonggo/api';
+import { getPublicJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
@@ -14,7 +14,7 @@ export interface JobDetailViewProps {
 }
 
 /**
- * `getJob`(packages/api/src/generated/user/endpoints.ts)의 선언 타입도
+ * `getPublicJob`(packages/api/src/generated/user/endpoints.ts)의 선언 타입도
  * `widgets/job-list/ui/JobList.tsx`의 `fetchJobPage`와 같은 이유로 `{ data, status, headers }`로
  * 감싼 응답을 가정하지만, 이 저장소의 `httpClient`(packages/api/src/lib/http-client.ts)는 파싱된
  * body를 그대로 반환한다 — 여기서도 같은 방식으로 그 차이를 흡수한다.
@@ -28,7 +28,7 @@ export interface JobDetailViewProps {
 async function fetchJobDetail(jobId: number): Promise<JobDetail> {
   let response: SuccessResponseUserJobDetailResponse;
   try {
-    response = (await getJob(jobId)) as unknown as SuccessResponseUserJobDetailResponse;
+    response = (await getPublicJob(jobId)) as unknown as SuccessResponseUserJobDetailResponse;
   } catch (error) {
     if (error instanceof Error && error.message.endsWith(': 404')) {
       notFound();

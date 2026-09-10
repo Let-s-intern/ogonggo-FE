@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getJobs, GetJobsSort } from '@ogonggo/api';
+import { listPublicJobs, ListPublicJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { JobSummary } from '@/entities/job/model/types';
@@ -17,9 +17,9 @@ const SIMILAR_COUNT = 3;
  * 방식) 현재 공고(`excludeJobId`)를 제외한 상위 몇 건을 그대로 쓴다.
  */
 async function fetchSimilarPool(): Promise<JobSummary[]> {
-  const response = (await getJobs({
+  const response = (await listPublicJobs({
     size: POOL_SIZE,
-    sort: GetJobsSort.LATEST,
+    sort: ListPublicJobsSort.LATEST,
   })) as unknown as SuccessResponsePageResponseUserJobSummaryResponse;
 
   return response.data?.items ?? [];

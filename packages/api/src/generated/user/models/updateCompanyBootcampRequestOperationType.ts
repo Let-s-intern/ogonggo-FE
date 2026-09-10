@@ -5,6 +5,13 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `ONLINE` | 1 | 온라인 |
+ * | `OFFLINE` | 2 | 오프라인 |
+ * | `HYBRID` | 3 | 온·오프라인 |
+ */
 export type UpdateCompanyBootcampRequestOperationType = typeof UpdateCompanyBootcampRequestOperationType[keyof typeof UpdateCompanyBootcampRequestOperationType];
 
 

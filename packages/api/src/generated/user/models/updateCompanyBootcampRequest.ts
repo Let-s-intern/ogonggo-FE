@@ -27,13 +27,33 @@ export interface UpdateCompanyBootcampRequest {
      * @maxLength 50
      */
   programType: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `ONLINE` | 1 | 온라인 |
+     * | `OFFLINE` | 2 | 오프라인 |
+     * | `HYBRID` | 3 | 온·오프라인 |
+     */
   operationType: UpdateCompanyBootcampRequestOperationType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 모집 |
+     * | `ALWAYS_OPEN` | 2 | 상시 모집 |
+     */
   recruitmentType: UpdateCompanyBootcampRequestRecruitmentType;
   recruitmentStartAt?: string;
   recruitmentEndAt?: string;
   programStartDate: string;
   programEndDate: string;
   capacity?: number;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FREE` | 1 | 무료 |
+     * | `PAID` | 2 | 유료 |
+     * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+     */
   tuitionType: UpdateCompanyBootcampRequestTuitionType;
   tuitionAmount?: number;
   /**
@@ -48,6 +68,12 @@ export interface UpdateCompanyBootcampRequest {
   shortDescription: string;
   content: string;
   eligibilityAndSelectionProcess?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+     * | `EMAIL` | 2 | 이메일 |
+     */
   applicationMethod: UpdateCompanyBootcampRequestApplicationMethod;
   /**
      * @minLength 0

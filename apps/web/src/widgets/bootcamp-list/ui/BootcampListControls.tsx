@@ -17,7 +17,7 @@ const TAB_LABELS: Record<BootcampTab, string> = {
   free: '무료특강',
 };
 
-/** API 없음: `getBootcamps`에 `sort` 파라미터가 없다. 목업 우측의 `최신순 ▾` 드롭다운이다. */
+/** 목업 우측의 `최신순 ▾` 드롭다운. `listPublicBootcamps`의 `sort`에 대응한다. */
 const SORT_OPTIONS: SortOption<BootcampSort>[] = [
   { value: 'LATEST', label: '최신순' },
   { value: 'VIEW_COUNT', label: '조회순' },

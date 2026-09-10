@@ -5,6 +5,14 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `NEWCOMER` | 1 | 신입 |
+ * | `EXPERIENCED` | 2 | 경력 |
+ * | `BOTH` | 3 | 신입·경력 |
+ * | `IRRELEVANT` | 4 | 경력 무관 |
+ */
 export type UserJobDetailResponseExperienceType = typeof UserJobDetailResponseExperienceType[keyof typeof UserJobDetailResponseExperienceType];
 
 

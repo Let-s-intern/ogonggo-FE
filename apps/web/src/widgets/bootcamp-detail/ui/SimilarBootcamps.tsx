@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getBootcamps1 } from '@ogonggo/api';
+import { listPublicBootcamps } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '@ogonggo/api';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { TUITION_TYPE_LABELS } from '@/entities/bootcamp/model/labels';
@@ -19,12 +19,12 @@ const SIMILAR_COUNT = 3;
  * 몇 개를 그대로 쓴다. 실제 API로 붙일 때 추천 기준(같은 프로그램 유형 등)이 생기면 여기만
  * 바꾼다.
  *
- * 공개 목록은 **`getBootcamps1`**이다. 접미사 없는 `getBootcamps`는 기업 회원용
+ * 공개 목록은 `listPublicBootcamps`이다. `listMyBootcamps`는 기업 회원용
  * `/api/v1/users/me/bootcamps`라 여기서 부르면 404가 난다(실제로 한 번 그렇게 났다) — 상세가
- * `getBootcamp1`인 것과 같은 규칙이다.
+ * `getPublicBootcamp`인 것과 같은 규칙이다.
  */
 async function fetchSimilarPool(): Promise<BootcampSummary[]> {
-  const response = (await getBootcamps1({
+  const response = (await listPublicBootcamps({
     page: 1,
     size: POOL_SIZE,
   })) as unknown as SuccessResponsePageResponseUserBootcampSummaryResponse;

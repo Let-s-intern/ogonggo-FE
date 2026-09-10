@@ -13,12 +13,45 @@ export interface UserJobSummaryResponse {
   id: number;
   companyName: string;
   title: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FULL_TIME` | 1 | 정규직 |
+     * | `CONTRACT` | 2 | 계약직 |
+     * | `INTERN` | 3 | 인턴 |
+     * | `PART_TIME` | 4 | 파트타임 |
+     * | `ETC` | 5 | 기타 |
+     */
   employmentType: UserJobSummaryResponseEmploymentType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NEWCOMER` | 1 | 신입 |
+     * | `EXPERIENCED` | 2 | 경력 |
+     * | `BOTH` | 3 | 신입·경력 |
+     * | `IRRELEVANT` | 4 | 경력 무관 |
+     */
   experienceType: UserJobSummaryResponseExperienceType;
   experienceMinYears?: number;
   experienceMaxYears?: number;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `ANY` | 1 | 학력 무관 |
+     * | `HIGH_SCHOOL` | 2 | 고등학교 졸업 |
+     * | `ASSOCIATE` | 3 | 전문학사 |
+     * | `BACHELOR` | 4 | 학사 |
+     * | `MASTER` | 5 | 석사 |
+     * | `DOCTORATE` | 6 | 박사 |
+     */
   educationLevel: UserJobSummaryResponseEducationLevel;
   region?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 채용 |
+     * | `ALWAYS_OPEN` | 2 | 상시 채용 |
+     */
   recruitmentType: UserJobSummaryResponseRecruitmentType;
   recruitmentStartAt?: string;
   recruitmentEndAt?: string;

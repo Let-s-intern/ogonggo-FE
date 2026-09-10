@@ -1,4 +1,4 @@
-import { GetJobsSort } from '@ogonggo/api';
+import { ListPublicJobsSort } from '@ogonggo/api';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 import { HomePage } from '@/views/home';
@@ -16,8 +16,10 @@ function parsePage(value: string | undefined): number {
   return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
 }
 
-function parseSort(value: string | undefined): GetJobsSort {
-  return value === GetJobsSort.VIEW_COUNT ? GetJobsSort.VIEW_COUNT : GetJobsSort.LATEST;
+function parseSort(value: string | undefined): ListPublicJobsSort {
+  return value === ListPublicJobsSort.VIEW_COUNT
+    ? ListPublicJobsSort.VIEW_COUNT
+    : ListPublicJobsSort.LATEST;
 }
 
 function parseEmploymentType(value: string | undefined): JobEmploymentType | undefined {

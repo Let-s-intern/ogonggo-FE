@@ -12,8 +12,9 @@ import { BootcampListControls } from './BootcampListControls';
 export type BootcampListProps = BootcampListQuery;
 
 /**
- * API 없음: `sort`·`status`와 탭이 더하는 `programType`/`tuitionType`은 생성 타입
- * `GetBootcampsParams`에 없는 파라미터라 `getBootcamps(params)`로는 보낼 수 없다 —
+ * 백엔드가 필터를 구현해 `ListPublicBootcampsParams`에 `sort`/`status`/`tuitionType`이 생겼다
+ * (2026-09-10 스펙 동기화). 탭이 더하는 `programType`만 아직 없어 `listPublicBootcamps(params)`로는
+ * 한 번에 보낼 수 없다 —
  * `widgets/job-list/ui/JobList.tsx`가 같은 이유로 하던 대로 URL을 직접 만들어 `httpClient`를
  * 부른다. MSW 핸들러가 이들을 처리한다(`packages/api/src/mocks/handlers.ts`, PRD 2절).
  *

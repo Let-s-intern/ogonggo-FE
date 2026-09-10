@@ -8,7 +8,7 @@ export type BootcampSummary = UserBootcampSummaryResponse;
  * `curriculums`/`partners`.
  *
  * 목록·상세는 기업 회원용(`/api/v1/users/me/bootcamps`)이 아니라 공개 화면이 쓰는
- * `getBootcamps`/`getBootcamp1` 쪽 응답이다(PRD 3절). `CompanyBootcamp*`와 헷갈리지 않는다.
+ * `listPublicBootcamps`/`getPublicBootcamp` 쪽 응답이다(PRD 3절). `CompanyBootcamp*`와 헷갈리지 않는다.
  */
 export type BootcampDetail = UserBootcampDetailResponse;
 

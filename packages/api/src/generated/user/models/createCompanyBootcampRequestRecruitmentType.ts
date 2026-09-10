@@ -5,6 +5,12 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `PERIOD` | 1 | 기간 모집 |
+ * | `ALWAYS_OPEN` | 2 | 상시 모집 |
+ */
 export type CreateCompanyBootcampRequestRecruitmentType = typeof CreateCompanyBootcampRequestRecruitmentType[keyof typeof CreateCompanyBootcampRequestRecruitmentType];
 
 

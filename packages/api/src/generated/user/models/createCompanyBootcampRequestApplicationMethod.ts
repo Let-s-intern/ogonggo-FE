@@ -5,6 +5,12 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+ * | `EMAIL` | 2 | 이메일 |
+ */
 export type CreateCompanyBootcampRequestApplicationMethod = typeof CreateCompanyBootcampRequestApplicationMethod[keyof typeof CreateCompanyBootcampRequestApplicationMethod];
 
 

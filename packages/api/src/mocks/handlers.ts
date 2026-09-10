@@ -8,7 +8,7 @@ import {
   type SideStudyListResponse,
   type SideStudySummary,
 } from './fixtures/side-study';
-import { GetJobsSort } from '../generated/user/models/getJobsSort';
+import { ListPublicJobsSort } from '../generated/user/models/listPublicJobsSort';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
@@ -52,12 +52,13 @@ const toSummary = ({
 /** LATEST는 id 역순(생성 역순 근사), VIEW_COUNT는 조회수 내림차순이며 동률이면 최신순(id 역순). */
 const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailResponse[] =>
   [...jobs].sort((a, b) =>
-    sort === GetJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
+    sort === ListPublicJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
   );
 
 /**
  * `q`/`employmentType`/`experienceType`는 실제 백엔드 `GET /api/v1/jobs`에는 없는 파라미터다
- * (PRD 10절) — MSW 위에서만 의미가 있고, 실제 API로 전환할 때 이 필터는 다시 손을 대야 한다.
+ * (PRD 10절). 백엔드가 뒤늦게 같은 필터를 구현했으나 검색 파라미터 이름이 `q`가 아니라
+ * `keyword`라 아직 이름이 어긋난다 — 실제 API로 전환할 때 여기와 `JobList`를 함께 고친다.
  * `q`는 제목+회사명 부분 일치(대소문자 무시)다.
  */
 const filterJobs = (
@@ -89,7 +90,7 @@ const getJobsHandler = http.get('*/api/v1/jobs', ({ request }) => {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
   const size = Number(url.searchParams.get('size') ?? DEFAULT_SIZE);
-  const sort = url.searchParams.get('sort') ?? GetJobsSort.LATEST;
+  const sort = url.searchParams.get('sort') ?? ListPublicJobsSort.LATEST;
   const q = url.searchParams.get('q') ?? undefined;
   const employmentType = url.searchParams.get('employmentType') ?? undefined;
   const experienceType = url.searchParams.get('experienceType') ?? undefined;
@@ -239,10 +240,11 @@ const toBootcampSummary = ({
 }: UserBootcampDetailResponse): UserBootcampSummaryResponse => summary;
 
 /**
- * API 없음: `GET /api/v1/bootcamps`의 생성 타입 `GetBootcampsParams`에는 `page`와 `size`뿐이다
- * (`packages/api/src/generated/user/models/getBootcampsParams.ts`). 목업의 탭 네 개
- * (`전체`/`부트캠프`/`국비지원`/`무료특강`)와 `모집 중만` 토글에 대응하는 파라미터가 없어
- * `programType`/`tuitionType`/`status`를 MSW에서만 처리한다.
+ * `GET /api/v1/bootcamps`의 생성 타입은 `ListPublicBootcampsParams`이고
+ * (`packages/api/src/generated/user/models/listPublicBootcampsParams.ts`) `page`/`size`/`sort`/
+ * `tuitionType`/`status`/`keyword`를 가진다. 목업의 탭 네 개
+ * (`전체`/`부트캠프`/`국비지원`/`무료특강`) 중 `programType`만 대응하는 파라미터가 없어
+ * MSW에서만 처리한다.
  *
  * 실제 API로 전환할 때 손대야 하는 지점이다. Spring은 모르는 쿼리 파라미터를 400이 아니라
  * 무시로 처리하므로, 이 주석이 없으면 탭이 조용히 안 먹는 상태를 아무도 눈치채지 못한다
@@ -273,8 +275,8 @@ const filterBootcamps = (
   });
 
 /**
- * API 없음: `getBootcamps`에는 `sort` 파라미터가 없다(PRD 2절 표). 목업 우측의 `최신순`
- * 드롭다운을 위해 MSW에서만 정렬한다 — 채용공고와 같은 기준으로 LATEST는 id 역순, VIEW_COUNT는
+ * `listPublicBootcamps`의 `sort`에 대응한다(2026-09-10 스펙 동기화로 생겼다). 목업 우측의
+ * `최신순` 드롭다운을 위한 것으로 — 채용공고와 같은 기준으로 LATEST는 id 역순, VIEW_COUNT는
  * 조회수 내림차순이며 동률이면 id 역순이다.
  */
 const sortBootcamps = (
@@ -282,14 +284,14 @@ const sortBootcamps = (
   sort: string,
 ): UserBootcampDetailResponse[] =>
   [...bootcamps].sort((a, b) =>
-    sort === GetJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
+    sort === ListPublicJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
   );
 
 const getBootcampsHandler = http.get('*/api/v1/bootcamps', ({ request }) => {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
   const size = Number(url.searchParams.get('size') ?? DEFAULT_BOOTCAMP_SIZE);
-  const sort = url.searchParams.get('sort') ?? GetJobsSort.LATEST;
+  const sort = url.searchParams.get('sort') ?? ListPublicJobsSort.LATEST;
   const programType = url.searchParams.get('programType') ?? undefined;
   const tuitionType = url.searchParams.get('tuitionType') ?? undefined;
   const status = url.searchParams.get('status') ?? undefined;
@@ -316,8 +318,8 @@ const getBootcampsHandler = http.get('*/api/v1/bootcamps', ({ request }) => {
 });
 
 /**
- * `getBootcamp1`(공개 상세, `GET /api/v1/bootcamps/{bootcampId}`)에 대응한다. 기업 회원용
- * `getBootcamp`(`/api/v1/users/me/bootcamps/{id}`)는 이 화면이 쓰지 않으므로 핸들러도 없다.
+ * `getPublicBootcamp`(공개 상세, `GET /api/v1/bootcamps/{bootcampId}`)에 대응한다. 기업 회원용
+ * `getMyBootcamp`(`/api/v1/users/me/bootcamps/{id}`)는 이 화면이 쓰지 않으므로 핸들러도 없다.
  * 404 본문은 `getJobHandler`와 같은 `ErrorResponse` 모양이다.
  */
 const getBootcampHandler = http.get('*/api/v1/bootcamps/:bootcampId', ({ params }) => {

@@ -5,6 +5,13 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `FREE` | 1 | 무료 |
+ * | `PAID` | 2 | 유료 |
+ * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+ */
 export type CompanyBootcampSummaryResponseTuitionType = typeof CompanyBootcampSummaryResponseTuitionType[keyof typeof CompanyBootcampSummaryResponseTuitionType];
 
 

@@ -1,4 +1,4 @@
-import { getJobCalendar } from '@ogonggo/api';
+import { listPublicJobCalendar } from '@ogonggo/api';
 import { toCalendarParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 import { MonthGrid } from './MonthGrid';
@@ -41,7 +41,7 @@ export function weekGridRange(baseDate: Date): { from: Date; to: Date } {
 }
 
 /**
- * `getJobCalendar`(packages/api/src/generated/user/endpoints.ts)의 선언 타입은
+ * `listPublicJobCalendar`(packages/api/src/generated/user/endpoints.ts)의 선언 타입은
  * `widgets/job-detail/ui/JobDetailView.tsx`와 같은 이유로 `{ data, status, headers }`로 감싼
  * 응답을 가정하지만, 이 저장소의 `httpClient`는 파싱된 body 를 그대로 반환한다.
  */
@@ -49,7 +49,7 @@ async function fetchCalendarItems(
   from: string,
   to: string,
 ): Promise<UserJobCalendarItemResponse[]> {
-  const response = (await getJobCalendar({
+  const response = (await listPublicJobCalendar({
     from,
     to,
   })) as unknown as SuccessResponseListUserJobCalendarItemResponse;
