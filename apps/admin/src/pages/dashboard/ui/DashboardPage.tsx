@@ -1,7 +1,6 @@
 import { Link } from 'react-router';
-import { Callout, Card, CardTitle, StatTile } from '@ogonggo/ui';
+import { Callout, StatTile } from '@ogonggo/ui';
 import { useDashboardSummary } from '@/entities/dashboard';
-import { ViewCountTrend } from '@/widgets/view-count-trend';
 
 /**
  * 운영자가 로그인하면 처음 보는 화면 — **오늘 무엇을 해야 하는가의 요약판이다.**
@@ -70,7 +69,7 @@ export function DashboardPage() {
         )}
       </section>
 
-      <section className="pb-8">
+      <section>
         <h2 className="pb-3 text-base font-bold text-gray-900">오늘 들어온 것</h2>
         <div className="grid grid-cols-4 gap-4">
           <TileLink
@@ -99,13 +98,6 @@ export function DashboardPage() {
           />
         </div>
       </section>
-
-      <Card>
-        <CardTitle>최근 7일 조회 수</CardTitle>
-        <div className="pt-4">
-          <ViewCountTrend points={data.viewCountTrend} />
-        </div>
-      </Card>
     </>
   );
 }

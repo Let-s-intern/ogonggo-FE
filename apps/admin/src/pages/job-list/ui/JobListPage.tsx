@@ -8,10 +8,10 @@ import {
   CONTENT_SORT_OPTIONS,
   CONTENT_SOURCE_OPTIONS,
   ContentSourceBadge,
-  JOB_PUBLICATION_STATUS_OPTIONS,
   JOB_REVIEW_STATUS_OPTIONS,
-  JobPublicationStatusBadge,
   JobReviewStatusBadge,
+  VISIBILITY_OPTIONS,
+  VisibilityBadge,
 } from '@/shared/config/labels';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
@@ -31,7 +31,7 @@ export function JobListPage() {
   const filters = {
     page,
     keyword: get('keyword'),
-    publicationStatus: get('publicationStatus'),
+    visibility: get('visibility'),
     source: get('source'),
     reviewStatus: get('reviewStatus'),
     sort: get('sort', 'REGISTERED_AT'),
@@ -43,10 +43,10 @@ export function JobListPage() {
     { key: 'title', header: '제목', render: (row) => row.title },
     { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
     {
-      key: 'publicationStatus',
-      header: '게시 상태',
-      width: 'w-28',
-      render: (row) => <JobPublicationStatusBadge value={row.publicationStatus} />,
+      key: 'visibility',
+      header: '노출',
+      width: 'w-24',
+      render: (row) => <VisibilityBadge value={row.visibility} />,
     },
     {
       key: 'source',
@@ -86,10 +86,10 @@ export function JobListPage() {
           placeholder="제목·회사 검색"
         />
         <Select
-          options={JOB_PUBLICATION_STATUS_OPTIONS}
-          value={filters.publicationStatus}
-          onChange={(event) => setFilter('publicationStatus', event.target.value)}
-          aria-label="게시 상태"
+          options={VISIBILITY_OPTIONS}
+          value={filters.visibility}
+          onChange={(event) => setFilter('visibility', event.target.value)}
+          aria-label="노출 여부"
         />
         <Select
           options={CONTENT_SOURCE_OPTIONS}

@@ -1,8 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import {
-  ADMIN_VIEW_COUNT_TREND,
-  type AdminDashboardSummaryResponse,
-} from '../fixtures/admin-dashboard';
+import type { AdminDashboardSummaryResponse } from '../fixtures/admin-dashboard';
 import {
   countBootcampsCrawledToday,
   countJobsCrawledToday,
@@ -36,7 +33,6 @@ const dashboardSummaryHandler = http.get('*/api/v1/admin/dashboard/summary', () 
         jobsSubmittedToday: countJobsSubmittedToday(),
         newMembersThisWeek: countMembersJoinedWithinDays(NEW_MEMBER_WINDOW_DAYS),
       },
-      viewCountTrend: ADMIN_VIEW_COUNT_TREND,
     },
   };
   return HttpResponse.json(body, { status: 200 });

@@ -3,10 +3,7 @@ import type {
   CompanyMemberSummary,
   UserMemberSummary,
 } from '@ogonggo/api/src/mocks/fixtures/admin-member';
-import type {
-  JobPublicationStatus,
-  JobReviewStatus,
-} from '@ogonggo/api/src/mocks/fixtures/admin-content';
+import type { JobReviewStatus, Visibility } from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import type { UserMemberActivity } from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
 import { adminGet, type PageResponse } from '@/shared/api/adminClient';
 
@@ -50,7 +47,7 @@ export function useCompanyMemberList(filters: MemberListFilters) {
 export interface CompanyMemberJob {
   id: number;
   title: string;
-  publicationStatus: JobPublicationStatus;
+  visibility: Visibility;
   reviewStatus: JobReviewStatus | null;
   registeredAt: string;
   viewCount: number;

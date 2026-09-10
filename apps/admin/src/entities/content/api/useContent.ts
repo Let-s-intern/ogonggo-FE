@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AdminBootcampDetail,
   AdminBootcampSummary,
@@ -6,7 +6,8 @@ import type {
   AdminJobSummary,
   AdminSideStudy,
 } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import { adminGet, type PageResponse } from '@/shared/api/adminClient';
+import type { AdminJobPatchRequest } from '@ogonggo/api/src/mocks/admin/content';
+import { adminGet, adminWrite, type PageResponse } from '@/shared/api/adminClient';
 
 /**
  * 콘텐츠 목록·상세 조회.
@@ -21,7 +22,7 @@ import { adminGet, type PageResponse } from '@/shared/api/adminClient';
 export interface JobListFilters {
   page: number;
   keyword: string;
-  publicationStatus: string;
+  visibility: string;
   source: string;
   reviewStatus: string;
   sort: string;
@@ -88,3 +89,24 @@ export function useSideStudyDetail(postId: number) {
     enabled: Number.isInteger(postId),
   });
 }
+
+/**
+ * 채용공고의 운영 값(노출·등록 경로·검수 상태)을 고친다.
+ *
+ * 목록과 대시보드가 같은 값을 세고 있으므로 함께 무효화한다. 상세만 갱신하면 목록으로 돌아갔을
+ * 때 예전 상태가 보인다.
+ */
+export function usePatchJob(jobId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminJobPatchRequest) =>
+      adminWrite<AdminJobDetail>('PATCH', `/api/v1/admin/jobs/${jobId}`, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+    },
+  });
+}
+
+export type { AdminJobPatchRequest };

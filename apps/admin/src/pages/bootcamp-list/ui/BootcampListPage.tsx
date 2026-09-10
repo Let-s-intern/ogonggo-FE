@@ -36,7 +36,7 @@ export function BootcampListPage() {
     { key: 'companyName', header: '운영사', width: 'w-40', render: (row) => row.companyName },
     {
       key: 'status',
-      header: '게시 상태',
+      header: '모집 상태',
       width: 'w-28',
       render: (row) => <BootcampStatusBadge value={row.status} />,
     },
@@ -69,7 +69,7 @@ export function BootcampListPage() {
           options={BOOTCAMP_STATUS_OPTIONS}
           value={filters.status}
           onChange={(event) => setFilter('status', event.target.value)}
-          aria-label="게시 상태"
+          aria-label="모집 상태"
         />
         <Select
           options={CONTENT_SORT_OPTIONS}

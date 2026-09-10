@@ -60,7 +60,7 @@ const toBootcampSummary = ({
 const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
   const url = new URL(request.url);
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-  const publicationStatus = url.searchParams.get('publicationStatus') ?? '';
+  const visibility = url.searchParams.get('visibility') ?? '';
   const source = url.searchParams.get('source') ?? '';
   const reviewStatus = url.searchParams.get('reviewStatus') ?? '';
   const { page, size } = readPaging(url);
@@ -69,7 +69,7 @@ const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
     if (keyword && !matches(`${job.title} ${job.companyName}`, keyword)) {
       return false;
     }
-    if (publicationStatus && job.publicationStatus !== publicationStatus) {
+    if (visibility && job.visibility !== visibility) {
       return false;
     }
     if (source && job.source !== source) {
@@ -96,6 +96,48 @@ const getJobHandler = http.get('*/api/v1/admin/jobs/:jobId', ({ params }) => {
   if (!job) {
     return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
   }
+  return HttpResponse.json(ok(job), { status: 200 });
+});
+
+/** 상세 화면에서 고칠 수 있는 것. 본문은 여기서 손대지 않는다 — 올린 사람이 쓴 글이다. */
+export interface AdminJobPatchRequest {
+  visibility?: AdminJobDetail['visibility'];
+  source?: AdminJobDetail['source'];
+  reviewStatus?: AdminJobDetail['reviewStatus'];
+}
+
+/**
+ * 채용공고의 운영 값을 고친다.
+ *
+ * 넘어온 칸만 바꾼다. 세 값을 늘 함께 보내게 하면 화면이 안 건드린 값까지 되돌려 쓰게 되고,
+ * 그 사이 다른 곳에서 바뀐 값이 조용히 덮인다.
+ *
+ * 크롤링 수집분으로 되돌리면 검수 상태를 지운다. 검수는 외부에서 올라온 글에만 있는 개념이라
+ * 등록 경로가 크롤링인데 검수 상태가 남아 있으면 목록의 검수 필터가 이상한 행을 집는다.
+ */
+const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params, request }) => {
+  const job = ADMIN_JOB_FIXTURES.find((fixture) => fixture.id === Number(params.jobId));
+  if (!job) {
+    return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
+  }
+
+  const body = (await request.json()) as AdminJobPatchRequest;
+
+  if (body.visibility !== undefined) {
+    job.visibility = body.visibility;
+  }
+  if (body.source !== undefined) {
+    job.source = body.source;
+    if (body.source === 'CRAWLER') {
+      job.reviewStatus = null;
+    } else if (job.reviewStatus === null) {
+      job.reviewStatus = 'PENDING';
+    }
+  }
+  if (body.reviewStatus !== undefined && job.source === 'COMPANY') {
+    job.reviewStatus = body.reviewStatus;
+  }
+
   return HttpResponse.json(ok(job), { status: 200 });
 });
 
@@ -175,6 +217,7 @@ export const contentHandlers: HttpHandler[] = [
   // 목록 경로가 상세 경로의 접두사라 목록을 먼저 둔다.
   listJobsHandler,
   getJobHandler,
+  patchJobHandler,
   listBootcampsHandler,
   getBootcampHandler,
   listSideStudiesHandler,

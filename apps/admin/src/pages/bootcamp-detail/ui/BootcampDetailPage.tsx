@@ -2,7 +2,7 @@ import { useParams } from 'react-router';
 import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
-import { BootcampStatusBadge, plainLabel } from '@/shared/config/labels';
+import { BootcampStatusBadge, VisibilityBadge, plainLabel } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /** 부트캠프 상세. 읽기 전용이다. */
@@ -40,7 +40,8 @@ export function BootcampDetailPage() {
           columns={3}
           items={[
             { label: '운영사', value: data.companyName },
-            { label: '게시 상태', value: <BootcampStatusBadge value={data.status} /> },
+            { label: '모집 상태', value: <BootcampStatusBadge value={data.status} /> },
+            { label: '노출', value: <VisibilityBadge value={data.visibility} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '프로그램 유형', value: data.programType },
             { label: '진행 방식', value: plainLabel(data.operationType) },

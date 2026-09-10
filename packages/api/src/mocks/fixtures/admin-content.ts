@@ -25,8 +25,17 @@ import { SIDE_STUDY_FIXTURES, type SideStudyDetail } from './side-study';
 /** 크롤러가 수집했는지, 비즈니스 회원이 직접 등록했는지. 부트캠프에는 이 칸이 없다. */
 export type ContentSource = 'CRAWLER' | 'COMPANY';
 
-/** 백엔드 `JobPublicationStatus` 와 같은 값이다. 콘솔은 이 값을 바꾸지 않고 보여주기만 한다. */
-export type JobPublicationStatus = 'DRAFT' | 'PUBLISHED' | 'HIDDEN' | 'ARCHIVED';
+/**
+ * 지면에 나가고 있는지 아닌지, 둘뿐이다.
+ *
+ * 백엔드 `JobPublicationStatus` 는 `DRAFT`/`PUBLISHED`/`HIDDEN`/`ARCHIVED` 네 값이지만 어드민이
+ * 구분해야 하는 것은 "지금 사용자에게 보이는가" 하나다. 초안과 보관은 운영자가 콘솔에서 만들
+ * 수 있는 상태가 아니고, 목록에서 넷을 늘어놓으면 필터만 복잡해진다.
+ *
+ * 백엔드 enum 을 바꾸자는 뜻은 아니다. 계약을 넘길 때 어드민 응답이 네 값을 이 둘로 접어서
+ * 준다 — `PUBLISHED` 만 노출이고 나머지는 비노출이다.
+ */
+export type Visibility = 'VISIBLE' | 'HIDDEN';
 
 /**
  * 비즈니스 회원이 올린 공고의 검수 상태.
@@ -41,7 +50,7 @@ export interface AdminJobMeta {
   /** ISO 8601. */
   registeredAt: string;
   source: ContentSource;
-  publicationStatus: JobPublicationStatus;
+  visibility: Visibility;
   /** 크롤러 수집분은 `null` 이다. */
   reviewStatus: JobReviewStatus | null;
 }
@@ -53,6 +62,7 @@ export interface AdminBootcampMeta {
   registeredAt: string;
   /** 부트캠프도 비즈니스 회원이 직접 올릴 수 있다. 검수 대상은 그쪽뿐이다. */
   source: ContentSource;
+  visibility: Visibility;
   /** 크롤러 수집분은 `null`. */
   reviewStatus: JobReviewStatus | null;
 }
@@ -104,23 +114,8 @@ const registeredAtFor = (id: number): string => {
 /** 셋 중 하나는 비즈니스 회원 등록. 목록의 등록 경로 필터가 양쪽 다 결과를 갖게 하려는 값이다. */
 const sourceFor = (id: number): ContentSource => (hashId(id, 3) % 3 === 0 ? 'COMPANY' : 'CRAWLER');
 
-/**
- * 대부분은 게시 상태다. 나머지 세 값도 한 건씩은 나오게 흩어 둔다 — 상태 필터를 골랐을 때
- * 빈 목록만 나오면 필터가 도는지 알 수 없다.
- */
-const publicationStatusFor = (id: number): JobPublicationStatus => {
-  const bucket = hashId(id, 4) % 11;
-  if (bucket === 4) {
-    return 'HIDDEN';
-  }
-  if (bucket === 7) {
-    return 'DRAFT';
-  }
-  if (bucket === 9) {
-    return 'ARCHIVED';
-  }
-  return 'PUBLISHED';
-};
+/** 대부분은 노출. 비노출도 섞어 둔다 — 필터를 골랐을 때 빈 목록만 나오면 도는지 알 수 없다. */
+const visibilityFor = (id: number): Visibility => (hashId(id, 4) % 11 < 3 ? 'HIDDEN' : 'VISIBLE');
 
 /** 최근 등록분만 검수 대기로 남는다. 이보다 오래된 것은 이미 처리됐다고 본다. */
 const REVIEW_BACKLOG_DAYS = 7;
@@ -146,7 +141,7 @@ const jobMetaFor = (id: number): AdminJobMeta => {
   return {
     registeredAt,
     source,
-    publicationStatus: publicationStatusFor(id),
+    visibility: visibilityFor(id),
     reviewStatus: source === 'COMPANY' ? reviewStatusFor(id, registeredAt) : null,
   };
 };
@@ -158,7 +153,8 @@ export const ADMIN_JOB_FIXTURES: AdminJobDetail[] = JOB_FIXTURES.map((job) => ({
 }));
 
 /**
- * 게시 상태는 `BootcampStatus`(`status`)가 이미 들고 있어 따로 얹지 않는다.
+ * `BootcampStatus`(`status`)는 모집 상태(모집중·마감)이지 노출 여부가 아니다. 둘은 다른 것이라
+ * 노출 여부를 따로 얹는다 — 모집이 끝난 과정을 지면에 남겨 둘 수도, 모집 중인데 내릴 수도 있다.
  *
  * 부트캠프 id 는 1~24 로 채용공고와 겹친다. 같은 해시를 쓰면 id 1 인 공고와 부트캠프가 같은
  * 등록 경로를 갖게 되므로 salt 를 달리해 갈라 둔다.
@@ -170,6 +166,7 @@ export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetail[] = BOOTCAMP_FIXTURES.
     ...bootcamp,
     registeredAt,
     source,
+    visibility: visibilityFor(bootcamp.id + 1000),
     reviewStatus: source === 'COMPANY' ? reviewStatusFor(bootcamp.id + 1000, registeredAt) : null,
   };
 });

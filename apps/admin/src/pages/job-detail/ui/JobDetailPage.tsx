@@ -4,12 +4,13 @@ import { useJobDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import {
   ContentSourceBadge,
-  JobPublicationStatusBadge,
   JobReviewStatusBadge,
+  VisibilityBadge,
   experienceLabel,
   plainLabel,
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
+import { JobOperationEditor } from './JobOperationEditor';
 
 /**
  * 채용공고 상세. 읽기 전용이다.
@@ -55,10 +56,7 @@ export function JobDetailPage() {
           columns={3}
           items={[
             { label: '회사', value: data.companyName },
-            {
-              label: '게시 상태',
-              value: <JobPublicationStatusBadge value={data.publicationStatus} />,
-            },
+            { label: '노출', value: <VisibilityBadge value={data.visibility} /> },
             { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
@@ -109,6 +107,8 @@ export function JobDetailPage() {
           ]}
         />
       </Card>
+
+      <JobOperationEditor job={data} />
 
       {bodyFields.length > 0 ? (
         <Card className="mt-4">

@@ -1,8 +1,8 @@
 import { Badge, type BadgeProps } from '@ogonggo/ui';
 import type {
   ContentSource,
-  JobPublicationStatus,
   JobReviewStatus,
+  Visibility,
 } from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import type { InquiryCategory, InquiryStatus } from '@ogonggo/api/src/mocks/fixtures/admin-inquiry';
 import type { MemberStatus } from '@ogonggo/api/src/mocks/fixtures/admin-member';
@@ -22,11 +22,9 @@ interface LabelSpec {
   tone: Tone;
 }
 
-const JOB_PUBLICATION_STATUS: Record<JobPublicationStatus, LabelSpec> = {
-  DRAFT: { label: '초안', tone: 'neutral' },
-  PUBLISHED: { label: '게시', tone: 'success' },
-  HIDDEN: { label: '숨김', tone: 'danger' },
-  ARCHIVED: { label: '보관', tone: 'neutral' },
+const VISIBILITY: Record<Visibility, LabelSpec> = {
+  VISIBLE: { label: '노출', tone: 'success' },
+  HIDDEN: { label: '비노출', tone: 'danger' },
 };
 
 const JOB_REVIEW_STATUS: Record<JobReviewStatus, LabelSpec> = {
@@ -40,6 +38,7 @@ const CONTENT_SOURCE: Record<ContentSource, LabelSpec> = {
   COMPANY: { label: '비즈니스 등록', tone: 'main' },
 };
 
+/** 모집 상태. 노출 여부와 다른 것이다 — 모집이 끝나도 지면에 남을 수 있다. */
 const BOOTCAMP_STATUS: Record<string, LabelSpec> = {
   DRAFT: { label: '임시저장', tone: 'neutral' },
   RECRUITING: { label: '모집중', tone: 'success' },
@@ -79,8 +78,8 @@ function renderBadge(spec: LabelSpec | undefined, raw: string) {
   return <Badge tone={spec.tone}>{spec.label}</Badge>;
 }
 
-export const JobPublicationStatusBadge = ({ value }: { value: JobPublicationStatus }) =>
-  renderBadge(JOB_PUBLICATION_STATUS[value], value);
+export const VisibilityBadge = ({ value }: { value: Visibility }) =>
+  renderBadge(VISIBILITY[value], value);
 
 /** 크롤링 수집분에는 검수 상태가 없다. 빈 칸 대신 사유가 되는 단어를 남긴다. */
 export const JobReviewStatusBadge = ({ value }: { value: JobReviewStatus | null }) =>
@@ -116,10 +115,10 @@ const toOptions = (entries: Record<string, LabelSpec | string>, allLabel: string
   })),
 ];
 
-export const JOB_PUBLICATION_STATUS_OPTIONS = toOptions(JOB_PUBLICATION_STATUS, '게시 상태 전체');
+export const VISIBILITY_OPTIONS = toOptions(VISIBILITY, '노출 여부 전체');
 export const JOB_REVIEW_STATUS_OPTIONS = toOptions(JOB_REVIEW_STATUS, '검수 상태 전체');
 export const CONTENT_SOURCE_OPTIONS = toOptions(CONTENT_SOURCE, '등록 경로 전체');
-export const BOOTCAMP_STATUS_OPTIONS = toOptions(BOOTCAMP_STATUS, '게시 상태 전체');
+export const BOOTCAMP_STATUS_OPTIONS = toOptions(BOOTCAMP_STATUS, '모집 상태 전체');
 export const MEMBER_STATUS_OPTIONS = toOptions(MEMBER_STATUS, '상태 전체');
 export const INQUIRY_STATUS_OPTIONS = toOptions(INQUIRY_STATUS, '처리 상태 전체');
 export const INQUIRY_CATEGORY_OPTIONS = toOptions(INQUIRY_CATEGORY, '분류 전체');

@@ -9,11 +9,7 @@ import {
 } from '@ogonggo/ui';
 import { useCompanyMemberDetail, type CompanyMemberJob } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
-import {
-  JobPublicationStatusBadge,
-  JobReviewStatusBadge,
-  MemberStatusBadge,
-} from '@/shared/config/labels';
+import { JobReviewStatusBadge, VisibilityBadge, MemberStatusBadge } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /**
@@ -45,16 +41,16 @@ export function CompanyMemberDetailPage() {
 
   // 공고 현황 요약. 상세에 들어온 이유가 대개 "이 회사 것 중 밀린 게 있나"라서 위로 올린다.
   const pendingCount = data.jobs.filter((job) => job.reviewStatus === 'PENDING').length;
-  const publishedCount = data.jobs.filter((job) => job.publicationStatus === 'PUBLISHED').length;
+  const visibleCount = data.jobs.filter((job) => job.visibility === 'VISIBLE').length;
   const totalViewCount = data.jobs.reduce((sum, job) => sum + job.viewCount, 0);
 
   const jobColumns: DataTableColumn<CompanyMemberJob>[] = [
     { key: 'title', header: '제목', render: (row) => row.title },
     {
-      key: 'publicationStatus',
-      header: '게시 상태',
-      width: 'w-28',
-      render: (row) => <JobPublicationStatusBadge value={row.publicationStatus} />,
+      key: 'visibility',
+      header: '노출',
+      width: 'w-24',
+      render: (row) => <VisibilityBadge value={row.visibility} />,
     },
     {
       key: 'reviewStatus',
@@ -114,7 +110,7 @@ export function CompanyMemberDetailPage() {
           items={[
             { label: '전체', value: formatCount(data.jobs.length) },
             { label: '검수 대기', value: formatCount(pendingCount) },
-            { label: '게시 중', value: formatCount(publishedCount) },
+            { label: '노출 중', value: formatCount(visibleCount) },
             { label: '누적 조회', value: formatCount(totalViewCount) },
           ]}
         />

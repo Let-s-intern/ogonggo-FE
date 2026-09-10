@@ -117,7 +117,7 @@ const getCompanyMemberHandler = http.get(
     ).map((job) => ({
       id: job.id,
       title: job.title,
-      publicationStatus: job.publicationStatus,
+      visibility: job.visibility,
       reviewStatus: job.reviewStatus,
       registeredAt: job.registeredAt,
       viewCount: job.viewCount,
