@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router';
 import { cn } from '@ogonggo/ui';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
+import { isMockEnabled } from '@/app/enableMocking';
 
 /**
  * 콘솔의 바깥 틀. 좌측 고정 메뉴와 본문 자리다.
@@ -12,7 +13,18 @@ export function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <nav className="w-56 shrink-0 border-r border-gray-200 bg-white px-3 py-6">
-        <p className="px-3 pb-6 text-lg font-bold text-gray-900">오공고 관리자</p>
+        <p className="px-3 pb-1 text-lg font-bold text-gray-900">오공고 관리자</p>
+        {/*
+          목이 켜져 있으면 화면에 적는다. 실수로 켜둔 채 실서비스가 되면 데이터만 가짜인
+          화면이 멀쩡히 돌아가고, 그건 사람이 눈으로 잡는 수밖에 없다.
+        */}
+        {isMockEnabled ? (
+          <p className="mx-3 mb-5 rounded-sm bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+            목데이터로 동작 중
+          </p>
+        ) : (
+          <div className="pb-5" />
+        )}
         {NAV_SECTIONS.map((section, index) => (
           <div key={section.title ?? index} className="pb-6">
             {section.title ? (
