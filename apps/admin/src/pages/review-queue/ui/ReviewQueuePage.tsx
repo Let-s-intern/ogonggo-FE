@@ -282,13 +282,11 @@ export function ReviewQueuePage() {
 
       <PageHeader title="검수 대기" />
 
-      <ShortcutLegend />
-
       <div className="flex items-center justify-between gap-4 pt-4 pb-3">
         <div className="flex items-center gap-3">
           {/*
-            키보드가 주 조작이지만 버튼도 둔다. 단축키를 처음 보는 사람과 마우스로 오는 사람이
-            있고, 화면에 버튼이 있어야 A/D 가 무엇을 하는 키인지도 짐작이 된다.
+            키보드가 주 조작이지만 버튼도 둔다. 마우스로 오는 사람이 있고, 화면에서 단축키
+            안내를 뺐으니 키 이름은 `title` 로만 남긴다.
           */}
           <div className="flex items-center gap-1">
             <Button
@@ -297,6 +295,7 @@ export function ReviewQueuePage() {
               onClick={() => move(-1)}
               disabled={index === 0}
               aria-label="이전 건"
+              title="이전 건 (A)"
             >
               ← 이전
             </Button>
@@ -306,6 +305,7 @@ export function ReviewQueuePage() {
               onClick={() => move(1)}
               disabled={index >= queue.length - 1}
               aria-label="다음 건"
+              title="다음 건 (D)"
             >
               다음 →
             </Button>
@@ -393,11 +393,15 @@ export function ReviewQueuePage() {
           placeholder="예) 급여 조건이 비어 있습니다. 채우고 다시 등록해 주세요."
         />
         <div className="flex items-center gap-2 pt-4">
-          <Button onClick={submitReject} disabled={reason.trim().length === 0}>
-            반려 (Ctrl+Enter)
+          <Button
+            onClick={submitReject}
+            disabled={reason.trim().length === 0}
+            title="반려 (Ctrl+Enter)"
+          >
+            반려
           </Button>
-          <Button variant="secondary" onClick={cancelReject}>
-            취소 (Esc)
+          <Button variant="secondary" onClick={cancelReject} title="취소 (Esc)">
+            취소
           </Button>
         </div>
       </Modal>
@@ -438,30 +442,6 @@ function SaveBar({
       <Button onClick={onSave} disabled={isSaving}>
         {isSaving ? '저장 중' : '저장하기'}
       </Button>
-    </div>
-  );
-}
-
-const SHORTCUTS = [
-  { keys: 'W / S', label: '본문 위·아래' },
-  { keys: 'A / D', label: '이전·다음 건' },
-  { keys: 'Space', label: '허용' },
-  { keys: 'Backspace', label: '반려' },
-  { keys: 'Ctrl+Enter', label: '반려 사유 제출' },
-];
-
-/** 단축키를 화면에 적어 둔다. 안 보이는 키보드 조작은 아무도 쓰지 않는다. */
-function ShortcutLegend() {
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md border border-gray-200 bg-white px-4 py-3">
-      {SHORTCUTS.map((shortcut) => (
-        <span key={shortcut.keys} className="flex items-center gap-2 text-sm text-gray-600">
-          <kbd className="rounded-xs border border-gray-300 bg-gray-50 px-1.5 py-0.5 font-mono text-xs text-gray-700">
-            {shortcut.keys}
-          </kbd>
-          {shortcut.label}
-        </span>
-      ))}
     </div>
   );
 }
@@ -513,12 +493,12 @@ function ReviewCard({
           <p className="pt-1 text-sm text-gray-500">등록 {formatDateTime(item.registeredAt)}</p>
         </div>
 
-        {/* 키보드가 주 조작이지만 버튼도 둔다. 마우스로 오는 사람과, 단축키를 처음 보는 사람. */}
+        {/* 키보드가 주 조작이지만 버튼도 둔다. 마우스로 오는 사람과, 단축키를 모르는 사람. */}
         <div className="flex shrink-0 gap-2">
-          <Button size="sm" onClick={onApprove}>
+          <Button size="sm" onClick={onApprove} title="허용 (Space)">
             허용
           </Button>
-          <Button size="sm" variant="secondary" onClick={onRejectOpen}>
+          <Button size="sm" variant="secondary" onClick={onRejectOpen} title="반려 (Backspace)">
             반려
           </Button>
           <Button size="sm" variant="ghost" onClick={onEditOpen}>
