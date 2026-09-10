@@ -1,10 +1,11 @@
-import { HomePage } from '../pages/home';
+import { RouterProvider } from 'react-router';
 import { AppProviders } from './providers';
+import { router } from './routes';
 
 export function App() {
   return (
     <AppProviders>
-      <HomePage />
+      <RouterProvider router={router} />
     </AppProviders>
   );
 }

@@ -3,7 +3,12 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "noEmit": true,
-    "types": ["vite/client"]
+    // `@ogonggo/api` 의 http-client 가 브라우저 밖 분기에서 `process.env` 를 읽는다.
+    // 어드민 번들이 그 분기를 타지는 않지만, 타입은 확인되어야 한다.
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

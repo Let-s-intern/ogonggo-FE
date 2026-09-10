@@ -64,3 +64,45 @@
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Pretendard Variable', Pretendard, system-ui, sans-serif;
 }
+
+/*
+ * 알림이 나타나는 동작. `ActionAlert` 가 쓴다.
+ *
+ * 여기 두는 이유는 Tailwind v4 가 `--animate-*` 테마 키를 유틸리티로 만들어 주기 때문이다.
+ * 컴포넌트 파일 안에 `<style>` 을 넣으면 같은 규칙이 화면마다 중복된다.
+ */
+@keyframes ogonggo-alert-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  60% {
+    transform: scale(1.01);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ogonggo-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@theme {
+  --animate-alert-in: ogonggo-alert-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scrim-in: ogonggo-scrim-in 160ms ease-out;
+}
+
+/* 움직임을 줄여 달라고 한 사용자에게는 나타나기만 하고 움직이지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-alert-in,
+  .animate-scrim-in {
+    animation-duration: 1ms;
+  }
+}

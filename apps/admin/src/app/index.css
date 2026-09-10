@@ -1,1 +1,9 @@
 @import '@ogonggo/ui/src/styles/tokens.css';
+
+/*
+ * Tailwind v4 는 node_modules 를 스캔하지 않는다. `@ogonggo/ui` 는 pnpm 심볼릭 링크로
+ * node_modules 를 거쳐 들어오므로, 그 패키지 안에서만 쓰이는 유틸리티가 CSS 에 생성되지
+ * 않는다. `apps/web/src/app/globals.css` 가 같은 이유로 같은 줄을 갖고 있고, 거기 주석에
+ * 이 문제가 어떻게 드러났는지 적혀 있다.
+ */
+@source '../../../../packages/ui/src';
