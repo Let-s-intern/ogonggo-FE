@@ -51,6 +51,10 @@ export type AdminJobDetail = UserJobDetailResponse & AdminJobMeta;
 
 export interface AdminBootcampMeta {
   registeredAt: string;
+  /** 부트캠프도 비즈니스 회원이 직접 올릴 수 있다. 검수 대상은 그쪽뿐이다. */
+  source: ContentSource;
+  /** 크롤러 수집분은 `null`. */
+  reviewStatus: JobReviewStatus | null;
 }
 
 export type AdminBootcampSummary = UserBootcampSummaryResponse & AdminBootcampMeta;
@@ -153,11 +157,22 @@ export const ADMIN_JOB_FIXTURES: AdminJobDetail[] = JOB_FIXTURES.map((job) => ({
   ...jobMetaFor(job.id),
 }));
 
-/** 부트캠프는 크롤러만 넣고 게시 상태는 `BootcampStatus`(`status`)가 이미 들고 있다. */
-export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetail[] = BOOTCAMP_FIXTURES.map((bootcamp) => ({
-  ...bootcamp,
-  registeredAt: registeredAtFor(bootcamp.id),
-}));
+/**
+ * 게시 상태는 `BootcampStatus`(`status`)가 이미 들고 있어 따로 얹지 않는다.
+ *
+ * 부트캠프 id 는 1~24 로 채용공고와 겹친다. 같은 해시를 쓰면 id 1 인 공고와 부트캠프가 같은
+ * 등록 경로를 갖게 되므로 salt 를 달리해 갈라 둔다.
+ */
+export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetail[] = BOOTCAMP_FIXTURES.map((bootcamp) => {
+  const registeredAt = registeredAtFor(bootcamp.id);
+  const source: ContentSource = hashId(bootcamp.id, 31) % 3 === 0 ? 'COMPANY' : 'CRAWLER';
+  return {
+    ...bootcamp,
+    registeredAt,
+    source,
+    reviewStatus: source === 'COMPANY' ? reviewStatusFor(bootcamp.id + 1000, registeredAt) : null,
+  };
+});
 
 /** 사이드·스터디는 백엔드 도메인 자체가 없어 사용자 픽스처가 유일한 원본이다. */
 export const ADMIN_SIDE_STUDY_FIXTURES: AdminSideStudy[] = SIDE_STUDY_FIXTURES.map((study) => ({
@@ -168,9 +183,13 @@ export const ADMIN_SIDE_STUDY_FIXTURES: AdminSideStudy[] = SIDE_STUDY_FIXTURES.m
 const isRegisteredToday = (registeredAt: string): boolean =>
   new Date(registeredAt).getTime() >= startOfToday();
 
-/** 운영자가 통과시켜 줘야 지면에 오르는 공고. 대시보드의 "해야 할 일" 첫 칸이다. */
-export const countJobsPendingReview = (): number =>
-  ADMIN_JOB_FIXTURES.filter((job) => job.reviewStatus === 'PENDING').length;
+/**
+ * 운영자가 통과시켜 줘야 지면에 오르는 콘텐츠. 대시보드의 "해야 할 일" 첫 칸이자 검수 대기
+ * 큐가 세는 값이다. 채용공고와 부트캠프를 합한다 — 둘 다 비즈니스 회원이 올린다.
+ */
+export const countPendingReview = (): number =>
+  ADMIN_JOB_FIXTURES.filter((job) => job.reviewStatus === 'PENDING').length +
+  ADMIN_BOOTCAMP_FIXTURES.filter((bootcamp) => bootcamp.reviewStatus === 'PENDING').length;
 
 /** 오늘 크롤러가 수집한 채용공고. */
 export const countJobsCrawledToday = (): number =>
@@ -184,6 +203,8 @@ export const countJobsSubmittedToday = (): number =>
     (job) => job.source === 'COMPANY' && isRegisteredToday(job.registeredAt),
   ).length;
 
-/** 오늘 새로 들어온 부트캠프. 부트캠프는 크롤러만 넣는다. */
+/** 오늘 크롤러가 수집한 부트캠프. */
 export const countBootcampsCrawledToday = (): number =>
-  ADMIN_BOOTCAMP_FIXTURES.filter((bootcamp) => isRegisteredToday(bootcamp.registeredAt)).length;
+  ADMIN_BOOTCAMP_FIXTURES.filter(
+    (bootcamp) => bootcamp.source === 'CRAWLER' && isRegisteredToday(bootcamp.registeredAt),
+  ).length;

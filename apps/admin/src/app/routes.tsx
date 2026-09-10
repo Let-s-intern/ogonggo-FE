@@ -4,7 +4,6 @@ import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
 import { CompanyMemberListPage } from '@/pages/company-member-list';
-import { StatsPage } from '@/pages/stats';
 import { DashboardPage } from '@/pages/dashboard';
 import { InquiryDetailPage } from '@/pages/inquiry-detail';
 import { InquiryListPage } from '@/pages/inquiry-list';
@@ -12,7 +11,7 @@ import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { NoticeListPage } from '@/pages/notice-list';
 import { NotFoundPage } from '@/pages/not-found';
-import { PlacementsPage } from '@/pages/placements';
+import { ReviewQueuePage } from '@/pages/review-queue';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
@@ -37,8 +36,7 @@ export const router = createBrowserRouter([
       { path: 'content/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
       { path: 'content/side-studies', element: <SideStudyListPage /> },
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
-
-      { path: 'placements', element: <PlacementsPage /> },
+      { path: 'content/review', element: <ReviewQueuePage /> },
 
       { path: 'members/users', element: <UserMemberListPage /> },
       { path: 'members/users/:memberId', element: <UserMemberDetailPage /> },
@@ -48,8 +46,6 @@ export const router = createBrowserRouter([
       { path: 'support/inquiries', element: <InquiryListPage /> },
       { path: 'support/inquiries/:inquiryId', element: <InquiryDetailPage /> },
       { path: 'support/notices', element: <NoticeListPage /> },
-
-      { path: 'stats', element: <StatsPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

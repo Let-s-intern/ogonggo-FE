@@ -6,7 +6,7 @@ import {
 import {
   countBootcampsCrawledToday,
   countJobsCrawledToday,
-  countJobsPendingReview,
+  countPendingReview,
   countJobsSubmittedToday,
 } from '../fixtures/admin-content';
 import { countUnansweredInquiries } from '../fixtures/admin-inquiry';
@@ -27,7 +27,7 @@ const dashboardSummaryHandler = http.get('*/api/v1/admin/dashboard/summary', () 
     message: 'OK',
     data: {
       todo: {
-        jobsPendingReview: countJobsPendingReview(),
+        jobsPendingReview: countPendingReview(),
         unansweredInquiries: countUnansweredInquiries(),
       },
       intake: {

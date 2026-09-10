@@ -22,7 +22,7 @@ export interface AdminDailyViewCount {
 
 /** 운영자가 처리해야 끝나는 일. 0 이 되는 것이 목표인 숫자들이다. */
 export interface AdminDashboardTodo {
-  /** 비즈니스 회원이 올렸고 아직 통과시키지 않은 채용공고. */
+  /** 비즈니스 회원이 올렸고 아직 통과시키지 않은 채용공고와 부트캠프를 합한 수. */
   jobsPendingReview: number;
   /** 접수 + 처리중. 답변 완료는 세지 않는다. */
   unansweredInquiries: number;

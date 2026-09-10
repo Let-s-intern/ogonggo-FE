@@ -10,6 +10,13 @@ export interface NavItem {
   /** 절대 경로. 대시보드만 `/` 이고 나머지는 `/구역/화면` 이다. */
   path: string;
   label: string;
+  /**
+   * 아직 만들지 않은 화면. 회색으로 누를 수 없게 나가고 라우트도 없다.
+   *
+   * 메뉴에서 빼지 않는 이유는, 빼 두면 무엇이 남았는지 화면 위에서 볼 수 없기 때문이다.
+   * 눌러서 빈 화면이 나오는 것보다 눌리지 않는 편이 낫다.
+   */
+  disabled?: boolean;
 }
 
 export interface NavSection {
@@ -31,10 +38,11 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/content/jobs', label: '채용공고' },
       { path: '/content/bootcamps', label: '부트캠프' },
       { path: '/content/side-studies', label: '사이드·스터디' },
+      { path: '/content/review', label: '검수 대기' },
     ],
   },
   {
-    items: [{ path: '/placements', label: '지면' }],
+    items: [{ path: '/placements', label: '지면', disabled: true }],
   },
   {
     title: '회원',
@@ -51,6 +59,6 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    items: [{ path: '/stats', label: '통계' }],
+    items: [{ path: '/stats', label: '통계', disabled: true }],
   },
 ];

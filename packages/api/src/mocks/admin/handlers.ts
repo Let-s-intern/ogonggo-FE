@@ -4,7 +4,7 @@ import { dashboardHandlers } from './dashboard';
 import { inquiryHandlers } from './inquiries';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
-import { statsHandlers } from './stats';
+import { reviewHandlers } from './review';
 
 /**
  * 어드민 콘솔의 MSW 핸들러.
@@ -22,9 +22,9 @@ import { statsHandlers } from './stats';
  */
 export const adminHandlers: HttpHandler[] = [
   ...dashboardHandlers,
+  ...reviewHandlers,
   ...contentHandlers,
   ...memberHandlers,
   ...inquiryHandlers,
   ...noticeHandlers,
-  ...statsHandlers,
 ];

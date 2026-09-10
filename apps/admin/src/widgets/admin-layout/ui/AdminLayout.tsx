@@ -21,21 +21,32 @@ export function AdminLayout() {
             <ul>
               {section.items.map((item) => (
                 <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    // `/` 는 end 가 없으면 모든 경로에 활성으로 걸린다.
-                    end={item.path === '/'}
-                    className={({ isActive }) =>
-                      cn(
-                        'block rounded-sm px-3 py-2 text-sm',
-                        isActive
-                          ? 'bg-blue-50 font-medium text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-100',
-                      )
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
+                  {item.disabled ? (
+                    // 라우트가 없는 항목. 링크로 두면 눌렀을 때 404 가 난다.
+                    <span
+                      aria-disabled="true"
+                      title="아직 만들지 않은 화면입니다"
+                      className="block cursor-not-allowed rounded-sm px-3 py-2 text-sm text-gray-300"
+                    >
+                      {item.label}
+                    </span>
+                  ) : (
+                    <NavLink
+                      to={item.path}
+                      // `/` 는 end 가 없으면 모든 경로에 활성으로 걸린다.
+                      end={item.path === '/'}
+                      className={({ isActive }) =>
+                        cn(
+                          'block rounded-sm px-3 py-2 text-sm',
+                          isActive
+                            ? 'bg-blue-50 font-medium text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-100',
+                        )
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  )}
                 </li>
               ))}
             </ul>
