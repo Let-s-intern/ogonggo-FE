@@ -38,8 +38,17 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/content/jobs', label: '채용공고' },
       { path: '/content/bootcamps', label: '부트캠프' },
       { path: '/content/side-studies', label: '사이드·스터디' },
-      { path: '/content/review', label: '검수 대기' },
-      { path: '/content/rejections', label: '반려 보관' },
+    ],
+  },
+  {
+    /*
+     * 검수와 반려는 비즈니스 회원이 돈을 내고 올린 것을 지면에 올릴지 정하는 일이다. 콘텐츠
+     * 조회와 성격이 달라 따로 묶는다.
+     */
+    title: '광고',
+    items: [
+      { path: '/ads/review', label: '검수 대기' },
+      { path: '/ads/rejections', label: '반려 보관' },
     ],
   },
   {
@@ -53,11 +62,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: '고객 지원',
-    items: [
-      { path: '/support/inquiries', label: '문의' },
-      { path: '/support/notices', label: '공지사항' },
-    ],
+    items: [{ path: '/support/notices', label: '공지사항' }],
   },
   {
     items: [{ path: '/stats', label: '통계', disabled: true }],

@@ -15,7 +15,11 @@ import type {
 } from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
 import { useUserMemberDetail } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
-import { BootcampStatusBadge, MemberStatusBadge, sideStudyKindLabel } from '@/shared/config/labels';
+import {
+  RecruitmentStatusBadge,
+  MemberStatusBadge,
+  sideStudyKindLabel,
+} from '@/shared/config/labels';
 import { formatCount, formatDateTime } from '@/shared/lib/format';
 
 /**
@@ -65,7 +69,7 @@ export function UserMemberDetailPage() {
       key: 'status',
       header: '게시 상태',
       width: 'w-28',
-      render: (row) => <BootcampStatusBadge value={row.status} />,
+      render: (row) => <RecruitmentStatusBadge value={row.status} />,
     },
   ];
 

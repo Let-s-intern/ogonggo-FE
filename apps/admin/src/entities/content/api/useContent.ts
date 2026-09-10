@@ -28,6 +28,7 @@ export interface JobListFilters {
   visibility: string;
   source: string;
   reviewStatus: string;
+  recruitmentStatus: string;
   sort: string;
 }
 
@@ -50,7 +51,10 @@ export function useJobDetail(jobId: number) {
 export interface BootcampListFilters {
   page: number;
   keyword: string;
-  status: string;
+  recruitmentStatus: string;
+  visibility: string;
+  source: string;
+  reviewStatus: string;
   sort: string;
 }
 

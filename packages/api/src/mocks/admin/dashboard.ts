@@ -6,7 +6,6 @@ import {
   countPendingReview,
   countJobsSubmittedToday,
 } from '../fixtures/admin-content';
-import { countUnansweredInquiries } from '../fixtures/admin-inquiry';
 import { countMembersJoinedWithinDays } from '../fixtures/admin-member';
 
 /** 대시보드가 "이번 주 신규 회원"으로 세는 기간. */
@@ -25,7 +24,6 @@ const dashboardSummaryHandler = http.get('*/api/v1/admin/dashboard/summary', () 
     data: {
       todo: {
         jobsPendingReview: countPendingReview(),
-        unansweredInquiries: countUnansweredInquiries(),
       },
       intake: {
         jobsCrawledToday: countJobsCrawledToday(),

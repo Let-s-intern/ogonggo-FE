@@ -4,7 +4,6 @@ import type {
   JobReviewStatus,
   Visibility,
 } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import type { InquiryCategory, InquiryStatus } from '@ogonggo/api/src/mocks/fixtures/admin-inquiry';
 import type { MemberStatus } from '@ogonggo/api/src/mocks/fixtures/admin-member';
 
 /**
@@ -38,9 +37,17 @@ const CONTENT_SOURCE: Record<ContentSource, LabelSpec> = {
   COMPANY: { label: '비즈니스 등록', tone: 'main' },
 };
 
-/** 모집 상태. 노출 여부와 다른 것이다 — 모집이 끝나도 지면에 남을 수 있다. */
-const BOOTCAMP_STATUS: Record<string, LabelSpec> = {
-  DRAFT: { label: '임시저장', tone: 'neutral' },
+/**
+ * 모집 상태. 노출 여부와 다른 것이다 — 모집이 끝나도 지면에 남을 수 있다.
+ *
+ * 채용공고와 부트캠프가 같은 값을 쓴다. 둘 다 모집 일정에서 계산한 값이고, 저장된 enum 을
+ * 그대로 쓰지 않는다 — `BootcampStatus` 에는 모집 예정이 없고 채용공고에는 enum 자체가 없다.
+ *
+ * 임시저장(`DRAFT`)은 두지 않는다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 필터로
+ * 남겨 두면 골라도 늘 0 건이다.
+ */
+const RECRUITMENT_STATUS: Record<string, LabelSpec> = {
+  UPCOMING: { label: '모집 예정', tone: 'main' },
   RECRUITING: { label: '모집중', tone: 'success' },
   CLOSED: { label: '모집 마감', tone: 'neutral' },
 };
@@ -49,20 +56,6 @@ const MEMBER_STATUS: Record<MemberStatus, LabelSpec> = {
   ACTIVE: { label: '활성', tone: 'success' },
   WITHDRAWN: { label: '탈퇴', tone: 'neutral' },
   SUSPENDED: { label: '정지', tone: 'danger' },
-};
-
-const INQUIRY_STATUS: Record<InquiryStatus, LabelSpec> = {
-  RECEIVED: { label: '접수', tone: 'urgent' },
-  IN_PROGRESS: { label: '처리중', tone: 'main' },
-  ANSWERED: { label: '답변 완료', tone: 'success' },
-};
-
-const INQUIRY_CATEGORY: Record<InquiryCategory, string> = {
-  SERVICE: '서비스',
-  JOB_POSTING: '채용공고',
-  ACCOUNT: '계정',
-  ADVERTISEMENT: '광고',
-  ETC: '기타',
 };
 
 const SIDE_STUDY_KIND: Record<string, string> = {
@@ -92,17 +85,11 @@ export const JobReviewStatusBadge = ({ value }: { value: JobReviewStatus | null 
 export const ContentSourceBadge = ({ value }: { value: ContentSource }) =>
   renderBadge(CONTENT_SOURCE[value], value);
 
-export const BootcampStatusBadge = ({ value }: { value: string }) =>
-  renderBadge(BOOTCAMP_STATUS[value], value);
+export const RecruitmentStatusBadge = ({ value }: { value: string }) =>
+  renderBadge(RECRUITMENT_STATUS[value], value);
 
 export const MemberStatusBadge = ({ value }: { value: MemberStatus }) =>
   renderBadge(MEMBER_STATUS[value], value);
-
-export const InquiryStatusBadge = ({ value }: { value: InquiryStatus }) =>
-  renderBadge(INQUIRY_STATUS[value], value);
-
-export const inquiryCategoryLabel = (value: InquiryCategory): string =>
-  INQUIRY_CATEGORY[value] ?? value;
 
 export const sideStudyKindLabel = (value: string): string => SIDE_STUDY_KIND[value] ?? value;
 
@@ -118,10 +105,8 @@ const toOptions = (entries: Record<string, LabelSpec | string>, allLabel: string
 export const VISIBILITY_OPTIONS = toOptions(VISIBILITY, '노출 여부 전체');
 export const JOB_REVIEW_STATUS_OPTIONS = toOptions(JOB_REVIEW_STATUS, '검수 상태 전체');
 export const CONTENT_SOURCE_OPTIONS = toOptions(CONTENT_SOURCE, '등록 경로 전체');
-export const BOOTCAMP_STATUS_OPTIONS = toOptions(BOOTCAMP_STATUS, '모집 상태 전체');
+export const RECRUITMENT_STATUS_OPTIONS = toOptions(RECRUITMENT_STATUS, '모집 상태 전체');
 export const MEMBER_STATUS_OPTIONS = toOptions(MEMBER_STATUS, '상태 전체');
-export const INQUIRY_STATUS_OPTIONS = toOptions(INQUIRY_STATUS, '처리 상태 전체');
-export const INQUIRY_CATEGORY_OPTIONS = toOptions(INQUIRY_CATEGORY, '분류 전체');
 export const SIDE_STUDY_KIND_OPTIONS = toOptions(SIDE_STUDY_KIND, '종류 전체');
 
 export const JOINED_WITHIN_OPTIONS = [

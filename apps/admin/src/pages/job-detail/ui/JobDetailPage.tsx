@@ -1,18 +1,17 @@
-import { useState } from 'react';
 import { useParams } from 'react-router';
-import { Button, Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
+import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useJobDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import {
   ContentSourceBadge,
   JobReviewStatusBadge,
+  RecruitmentStatusBadge,
   VisibilityBadge,
   experienceLabel,
   plainLabel,
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
-import { JobOperationEditor } from './JobOperationEditor';
 
 /**
  * 채용공고 상세. 읽기 전용이다.
@@ -22,7 +21,6 @@ import { JobOperationEditor } from './JobOperationEditor';
  */
 export function JobDetailPage() {
   const { jobId } = useParams();
-  const [isEditingOperation, setIsEditingOperation] = useState(false);
   const { data, isPending, isError } = useJobDetail(Number(jobId));
 
   if (isPending) {
@@ -75,6 +73,10 @@ export function JobDetailPage() {
             },
             { label: '학력', value: plainLabel(data.educationLevel) },
             { label: '모집 유형', value: plainLabel(data.recruitmentType) },
+            {
+              label: '모집 상태',
+              value: <RecruitmentStatusBadge value={data.recruitmentStatus} />,
+            },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
             { label: '마감 처리', value: formatDateTime(data.closedAt) },
@@ -111,26 +113,16 @@ export function JobDetailPage() {
         />
       </Card>
 
-      <JobOperationEditor
-        job={data}
-        open={isEditingOperation}
-        onOpenChange={setIsEditingOperation}
-      />
-
       <ContentActions
         kind="jobs"
         id={data.id}
         title={data.title}
         listPath="/content/jobs"
-        extraActions={
-          <Button
-            variant="secondary"
-            className="rounded-full bg-white shadow-[0_8px_24px_-6px_rgba(17,24,39,0.25)]"
-            onClick={() => setIsEditingOperation(true)}
-          >
-            운영 값 수정
-          </Button>
-        }
+        operation={{
+          visibility: data.visibility,
+          source: data.source,
+          reviewStatus: data.reviewStatus,
+        }}
         fields={[
           {
             field: 'companyAndTeamIntroduction',

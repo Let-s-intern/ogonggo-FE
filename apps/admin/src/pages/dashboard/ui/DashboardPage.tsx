@@ -33,7 +33,7 @@ export function DashboardPage() {
   }
 
   const { todo, intake } = data;
-  const remaining = todo.jobsPendingReview + todo.unansweredInquiries;
+  const remaining = todo.jobsPendingReview;
 
   return (
     <>
@@ -48,22 +48,16 @@ export function DashboardPage() {
         </div>
 
         {remaining === 0 ? (
-          <Callout tone="success">검수 대기와 미답변 문의가 모두 처리됐습니다.</Callout>
+          <Callout tone="success">검수 대기가 모두 처리됐습니다.</Callout>
         ) : (
           <div className="grid grid-cols-2 gap-4">
+            {/* 검수 대기 화면으로 곧장 보낸다. 목록을 거쳐 다시 걸러 들어갈 이유가 없다. */}
             <TileLink
-              to="/content/jobs?reviewStatus=PENDING&source=COMPANY"
-              label="검수 대기 공고"
+              to="/ads/review"
+              label="검수 대기"
               value={todo.jobsPendingReview}
               unit="건"
-              urgent={todo.jobsPendingReview > 0}
-            />
-            <TileLink
-              to="/support/inquiries?status=unanswered"
-              label="미답변 문의"
-              value={todo.unansweredInquiries}
-              unit="건"
-              urgent={todo.unansweredInquiries > 0}
+              urgent
             />
           </div>
         )}
