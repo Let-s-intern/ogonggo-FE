@@ -1,0 +1,63 @@
+import { useQuery } from '@tanstack/react-query';
+import type {
+  CompanyMemberSummary,
+  UserMemberSummary,
+} from '@ogonggo/api/src/mocks/fixtures/admin-member';
+import type {
+  JobPublicationStatus,
+  JobReviewStatus,
+} from '@ogonggo/api/src/mocks/fixtures/admin-content';
+import { adminGet, type PageResponse } from '@/shared/api/adminClient';
+
+export interface MemberListFilters {
+  page: number;
+  keyword: string;
+  status: string;
+  joinedWithinDays: string;
+}
+
+export function useUserMemberList(filters: MemberListFilters) {
+  return useQuery({
+    queryKey: ['admin', 'members', 'users', filters],
+    queryFn: () =>
+      adminGet<PageResponse<UserMemberSummary>>('/api/v1/admin/members/users', { ...filters }),
+  });
+}
+
+export function useUserMemberDetail(memberId: number) {
+  return useQuery({
+    queryKey: ['admin', 'members', 'users', memberId],
+    queryFn: () => adminGet<UserMemberSummary>(`/api/v1/admin/members/users/${memberId}`),
+    enabled: Number.isInteger(memberId),
+  });
+}
+
+export function useCompanyMemberList(filters: MemberListFilters) {
+  return useQuery({
+    queryKey: ['admin', 'members', 'companies', filters],
+    queryFn: () =>
+      adminGet<PageResponse<CompanyMemberSummary>>('/api/v1/admin/members/companies', {
+        ...filters,
+      }),
+  });
+}
+
+/** 비즈니스 회원 상세는 그 회사가 등록한 공고 목록을 함께 준다. */
+export interface CompanyMemberJob {
+  id: number;
+  title: string;
+  publicationStatus: JobPublicationStatus;
+  reviewStatus: JobReviewStatus | null;
+  registeredAt: string;
+  viewCount: number;
+}
+
+export type CompanyMemberDetail = CompanyMemberSummary & { jobs: CompanyMemberJob[] };
+
+export function useCompanyMemberDetail(memberId: number) {
+  return useQuery({
+    queryKey: ['admin', 'members', 'companies', memberId],
+    queryFn: () => adminGet<CompanyMemberDetail>(`/api/v1/admin/members/companies/${memberId}`),
+    enabled: Number.isInteger(memberId),
+  });
+}

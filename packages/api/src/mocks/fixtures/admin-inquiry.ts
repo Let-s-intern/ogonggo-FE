@@ -62,6 +62,15 @@ export interface InquiryDetailResponse {
 const hoursAgo = (hours: number): string =>
   new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
+/**
+ * **이 배열은 목이 실제로 고친다.** 답변 저장 핸들러(`../admin/inquiries.ts`)가 여기 원소를
+ * 직접 바꾸고, 아래 `countUnansweredInquiries` 와 대시보드가 같은 배열을 센다.
+ *
+ * 복사본을 따로 두면 문의에 답한 뒤 대시보드로 돌아왔을 때 미답변 수가 그대로다. 그 어긋남이
+ * 목의 목적 자체를 무너뜨린다 — 화면이 저장을 반영하는지 확인할 수 없게 된다.
+ *
+ * 새로고침하면 되돌아간다. 브라우저 메모리에만 있기 때문이고, 그것으로 충분하다.
+ */
 export const INQUIRY_FIXTURES: InquiryDetail[] = [
   {
     id: 1,

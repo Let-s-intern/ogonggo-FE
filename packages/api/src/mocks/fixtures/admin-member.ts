@@ -8,8 +8,11 @@
  * `status`는 백엔드 `UserStatus`(`ACTIVE`/`WITHDRAWN`/`SUSPENDED`)를 그대로 쓴다. 콘솔은 이
  * 값을 바꾸지 않는다 — 제재는 운영자가 쿼리로 걸고, 화면은 그 결과를 보여주기만 한다.
  *
- * 아래 값은 **전부 지어낸 것이다.** 회사명과 사업자등록번호는 실존하지 않는다.
+ * 닉네임·이메일·담당자 이름·사업자등록번호는 **전부 지어낸 값이다.** 회사명만 예외로, 실제
+ * 공고 픽스처에 있는 회사를 그대로 쓴다 — 이유는 아래 `COMPANY_PROFILES` 주석에 있다.
  */
+
+import { ADMIN_JOB_FIXTURES } from './admin-content';
 
 export type MemberStatus = 'ACTIVE' | 'WITHDRAWN' | 'SUSPENDED';
 
@@ -153,68 +156,113 @@ export const USER_MEMBER_FIXTURES: UserMemberSummary[] = [
   },
 ];
 
-export const COMPANY_MEMBER_FIXTURES: CompanyMemberSummary[] = [
+/**
+ * 비즈니스 회원의 담당자 정보. 회사명은 여기 적지 않는다 — 아래에서 실제 공고 픽스처의 회사와
+ * 짝지어 붙인다.
+ *
+ * 처음에는 회사명까지 지어냈는데, 그러면 목록의 "등록 공고 7건"과 상세의 공고 목록 0건이
+ * 어긋난다. 공고 픽스처의 회사명과 겹치는 이름이 하나도 없기 때문이다. 목이 스스로 모순되면
+ * 화면이 조인을 제대로 하는지 확인할 수 없다.
+ *
+ * 담당자 이름·이메일·사업자등록번호는 여전히 **지어낸 값이다.**
+ */
+const COMPANY_PROFILES = [
   {
     id: 101,
-    companyName: '넥스트웨이브',
-    businessRegistrationNumber: '123-45-67890',
     managerName: '신재현',
     managerEmail: 'jaehyun.shin@example.com',
-    jobPostingCount: 7,
-    joinedAt: daysAgo(3),
-    status: 'ACTIVE',
+    joinedDaysAgo: 3,
+    status: 'ACTIVE' as const,
   },
   {
     id: 102,
-    companyName: '코드그로브',
-    businessRegistrationNumber: '234-56-78901',
     managerName: '배수민',
     managerEmail: 'sumin.bae@example.com',
-    jobPostingCount: 3,
-    joinedAt: daysAgo(5),
-    status: 'ACTIVE',
+    joinedDaysAgo: 5,
+    status: 'ACTIVE' as const,
   },
   {
     id: 103,
-    companyName: '라이트박스',
-    businessRegistrationNumber: '345-67-89012',
     managerName: '오준석',
     managerEmail: 'junseok.oh@example.com',
-    jobPostingCount: 12,
-    joinedAt: daysAgo(19),
-    status: 'ACTIVE',
+    joinedDaysAgo: 19,
+    status: 'ACTIVE' as const,
   },
   {
     id: 104,
-    companyName: '한빛솔루션',
-    businessRegistrationNumber: '456-78-90123',
     managerName: '한예린',
     managerEmail: 'yerin.han@example.com',
-    jobPostingCount: 1,
-    joinedAt: daysAgo(46),
-    status: 'SUSPENDED',
+    joinedDaysAgo: 46,
+    status: 'SUSPENDED' as const,
   },
   {
     id: 105,
-    companyName: '스튜디오무브',
-    businessRegistrationNumber: '567-89-01234',
     managerName: '임태우',
     managerEmail: 'taewoo.lim@example.com',
-    jobPostingCount: 5,
-    joinedAt: daysAgo(88),
-    status: 'ACTIVE',
+    joinedDaysAgo: 88,
+    status: 'ACTIVE' as const,
   },
   {
     id: 106,
-    companyName: '테라데이터랩',
-    businessRegistrationNumber: '678-90-12345',
     managerName: '강도현',
     managerEmail: 'dohyun.kang@example.com',
-    jobPostingCount: 0,
-    joinedAt: daysAgo(141),
-    status: 'WITHDRAWN',
+    joinedDaysAgo: 141,
+    status: 'WITHDRAWN' as const,
+  },
+  {
+    id: 107,
+    managerName: '윤소라',
+    managerEmail: 'sora.yoon@example.com',
+    joinedDaysAgo: 12,
+    status: 'ACTIVE' as const,
+  },
+  {
+    id: 108,
+    managerName: '정하늘',
+    managerEmail: 'haneul.jung@example.com',
+    joinedDaysAgo: 61,
+    status: 'ACTIVE' as const,
   },
 ];
+
+/** 비즈니스 회원이 올린 것으로 되어 있는 공고들의 회사명. 등장 순서를 유지한다. */
+const COMPANY_NAMES_WITH_JOBS = [
+  ...new Set(
+    ADMIN_JOB_FIXTURES.filter((job) => job.source === 'COMPANY').map((job) => job.companyName),
+  ),
+];
+
+/** `000-00-00000` 형식. id 에서 만들어 회사가 늘어도 손으로 적을 것이 없다. */
+const businessRegistrationNumberFor = (id: number): string => {
+  const digits = String(id * 1_234_567)
+    .padStart(10, '0')
+    .slice(-10);
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+};
+
+export const COMPANY_MEMBER_FIXTURES: CompanyMemberSummary[] = COMPANY_PROFILES.flatMap(
+  (profile, index) => {
+    const companyName = COMPANY_NAMES_WITH_JOBS[index];
+    // 공고 픽스처에 비즈니스 등록분이 프로필 수보다 적으면 그만큼만 만든다.
+    if (companyName === undefined) {
+      return [];
+    }
+    return [
+      {
+        id: profile.id,
+        companyName,
+        businessRegistrationNumber: businessRegistrationNumberFor(profile.id),
+        managerName: profile.managerName,
+        managerEmail: profile.managerEmail,
+        jobPostingCount: ADMIN_JOB_FIXTURES.filter(
+          (job) => job.source === 'COMPANY' && job.companyName === companyName,
+        ).length,
+        joinedAt: daysAgo(profile.joinedDaysAgo),
+        status: profile.status,
+      },
+    ];
+  },
+);
 
 /** 대시보드가 세는 "이번 주 신규 회원" — 최근 7일 안에 가입한 일반 + 비즈니스 회원이다. */
 export const countMembersJoinedWithinDays = (days: number): number => {
