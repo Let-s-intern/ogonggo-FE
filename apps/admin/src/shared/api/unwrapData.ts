@@ -6,7 +6,8 @@
  */
 type SuccessEnvelope<R> = Extract<R, { status: 200 | 201 }> extends { data: infer E } ? E : never;
 
-export type UnwrappedData<R> = SuccessEnvelope<R> extends { data?: infer D } ? D | undefined : never;
+export type UnwrappedData<R> =
+  SuccessEnvelope<R> extends { data?: infer D } ? D | undefined : never;
 
 /**
  * 생성 함수(`@ogonggo/api/src/admin`) 를 한 번 부르고 봉투의 `data` 만 꺼낸다.
