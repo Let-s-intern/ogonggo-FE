@@ -10,12 +10,10 @@ import {
   updateJob,
   type ListBootcampsParams,
   type ListJobsParams,
+  type UpdateAdminBootcampRequest,
+  type UpdateAdminJobRequest,
 } from '@ogonggo/api/src/admin';
 import type { AdminSideStudy } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import type {
-  AdminBootcampPatchRequest,
-  AdminJobPatchRequest,
-} from '@ogonggo/api/src/mocks/admin/content';
 import { adminDelete, adminGet, type PageResponse } from '@/shared/api/adminClient';
 import { omitEmpty } from '@/shared/api/omitEmpty';
 import { unwrapData } from '@/shared/api/unwrapData';
@@ -107,7 +105,7 @@ export function useSideStudyDetail(postId: number) {
 }
 
 /**
- * 채용공고의 운영 값(노출·등록 경로·검수 상태)을 고친다.
+ * 채용공고의 운영 값(노출·검수 상태)을 고친다.
  *
  * 목록과 대시보드가 같은 값을 세고 있으므로 함께 무효화한다. 상세만 갱신하면 목록으로 돌아갔을
  * 때 예전 상태가 보인다.
@@ -115,7 +113,7 @@ export function useSideStudyDetail(postId: number) {
 export function usePatchJob(jobId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: AdminJobPatchRequest) => unwrapData(updateJob(jobId, input)),
+    mutationFn: (input: UpdateAdminJobRequest) => unwrapData(updateJob(jobId, input)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
@@ -124,13 +122,12 @@ export function usePatchJob(jobId: number) {
   });
 }
 
-export type { AdminBootcampPatchRequest, AdminJobPatchRequest };
-
 /** 부트캠프의 제목·본문·노출을 고친다. */
 export function usePatchBootcamp(bootcampId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: AdminBootcampPatchRequest) => unwrapData(updateBootcamp(bootcampId, input)),
+    mutationFn: (input: UpdateAdminBootcampRequest) =>
+      unwrapData(updateBootcamp(bootcampId, input)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });

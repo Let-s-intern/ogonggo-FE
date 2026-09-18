@@ -79,13 +79,13 @@
 | 2   | `/content/jobs`              | 진입·검색·필터·정렬·페이지    | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
 | 3   | `/content/jobs`              | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
 | 4   | `/content/jobs/{id}`         | 진입                          | `GET /jobs/{id}`                             | 상세                               |
-| 5   | `/content/jobs/{id}`         | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·등록 경로·검수 상태           |
+| 5   | `/content/jobs/{id}`         | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·검수 상태                     |
 | 6   | `/content/jobs/{id}`         | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
 | 7   | `/content/jobs/{id}`         | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
 | 8   | `/content/bootcamps`         | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
 | 9   | `/content/bootcamps`         | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
 | 10  | `/content/bootcamps/{id}`    | 진입                          | `GET /bootcamps/{id}`                        | 상세                               |
-| 11  | `/content/bootcamps/{id}`    | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·등록 경로·검수 상태           |
+| 11  | `/content/bootcamps/{id}`    | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
 | 12  | `/content/bootcamps/{id}`    | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
 | 13  | `/content/bootcamps/{id}`    | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
 | 14  | `/content/side-studies`      | 진입·검색·필터                | `GET /side-studies`                          | 목록                               |
@@ -284,9 +284,13 @@
 
 `title` 이 빈 문자열이면 400. 제목 없는 공고는 목록에서 집을 수 없다.
 
-**`source` 를 `CRAWLER` 로 바꾸면 `reviewStatus` 를 `null` 로 지운다.** 검수는 외부에서 올라온
-글에만 있는 개념이라, 등록 경로가 크롤링인데 검수 상태가 남으면 목록의 검수 필터가 이상한
-행을 집는다. 반대로 `COMPANY` 로 바꿨는데 검수 상태가 없으면 `PENDING` 으로 넣는다.
+**`source` 는 고칠 수 없다.** `UpdateAdminJobRequest` 에 칸이 없고 보내도 버린다. 화면의 운영 값
+수정에도 등록 경로 칸이 없다.
+
+**`reviewStatus` 는 `APPROVED` · `PENDING` 만 받는다.** `REJECTED` 는 400 `BAD_REQUEST`
+(`[reviewStatus] 반려는 검수 화면에서 사유와 함께 처리해 주세요.`) 다. 반려는 사유가 있어야 해서
+검수 화면(`PATCH /review-queue/{type}/{id}`) 에서만 한다. 운영 값 수정 화면은 바꾼 값만 보내므로
+이미 반려된 글을 저장해도 `REJECTED` 가 나가지 않는다.
 
 **`reviewStatus` 가 `REJECTED` 가 아니게 되면 반려 기록을 지운다.** 남겨 두면 반려 보관에
 허용된 건이 섞인다.
@@ -319,19 +323,14 @@
 `AdminJobSummaryResponse`, `AdminJobDetailResponse` 로 맞췄다. 그 과정에서 목에서 뺀 칸과, 목이
 아직 스펙과 다르게 동작하는 곳이다.
 
-| 항목                                                     | 백엔드 스펙                                                                                                                                                                             | 목                                                                        |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `bookmarked`, `experienceMinYears`, `experienceMaxYears` | 목록·상세 응답에 없다                                                                                                                                                                   | 뺐다. 상세 화면의 경력 칸은 `experienceType` 만 보여 준다                 |
-| `recruitmentStatus`                                      | `RECRUITING` · `CLOSED` 둘                                                                                                                                                              | 있던 `UPCOMING` 을 뺐다. 화면의 "모집 예정" 필터도 뺐다                   |
-| `reviewStatus` (크롤링 수집분)                           | 생성 모델은 선택 칸이고 실제 응답은 `null` 을 싣는다                                                                                                                                    | 칸을 싣지 않는다. 화면은 둘 다 "해당 없음" 으로 그린다                    |
-| `PATCH` 요청 `source`                                    | `UpdateAdminJobRequest` 에 없다. 보내도 무시한다                                                                                                                                        | 화면이 보내고 목이 반영한다. `CRAWLER` 로 바꾸면 `reviewStatus` 를 지운다 |
-| `PATCH` 요청 `reviewStatus`                              | `APPROVED` · `PENDING` 만. `REJECTED` 는 400                                                                                                                                            | 셋 다 받는다                                                              |
-| `PATCH` 의 노출 규칙                                     | 승인하면 곧바로 노출, 검수 대기로 되돌리면 비노출. 기업회원 공고는 승인 전 `VISIBLE` 불가(409 `REVIEW_NOT_APPROVED`), 크롤링 수집분은 검수 상태 변경 불가(409 `CONTENT_NOT_REVIEWABLE`) | 노출과 검수 상태를 따로 바꾼다                                            |
-| `DELETE`                                                 | 소프트 삭제. 반려 기록을 지우지 않고 반려 보관에 `contentExists=false` 로 남긴다                                                                                                        | 배열에서 빼고 반려 기록도 지운다                                          |
-| 없는 id                                                  | 404 `JOB_NOT_FOUND`                                                                                                                                                                     | 404 `NOT_FOUND`                                                           |
-
-`source` 와 `reviewStatus` 요청 차이는 Push 3 에서 화면이 생성 함수(`updateJob`) 를 부르게 바꿀
-때 정리한다.
+| 항목                                                     | 백엔드 스펙                                                                                                                                                                             | 목                                                        |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `bookmarked`, `experienceMinYears`, `experienceMaxYears` | 목록·상세 응답에 없다                                                                                                                                                                   | 뺐다. 상세 화면의 경력 칸은 `experienceType` 만 보여 준다 |
+| `recruitmentStatus`                                      | `RECRUITING` · `CLOSED` 둘                                                                                                                                                              | 있던 `UPCOMING` 을 뺐다. 화면의 "모집 예정" 필터도 뺐다   |
+| `reviewStatus` (크롤링 수집분)                           | 생성 모델은 선택 칸이고 실제 응답은 `null` 을 싣는다                                                                                                                                    | 칸을 싣지 않는다. 화면은 둘 다 "해당 없음" 으로 그린다    |
+| `PATCH` 의 노출 규칙                                     | 승인하면 곧바로 노출, 검수 대기로 되돌리면 비노출. 기업회원 공고는 승인 전 `VISIBLE` 불가(409 `REVIEW_NOT_APPROVED`), 크롤링 수집분은 검수 상태 변경 불가(409 `CONTENT_NOT_REVIEWABLE`) | 노출과 검수 상태를 따로 바꾼다                            |
+| `DELETE`                                                 | 소프트 삭제. 반려 기록을 지우지 않고 반려 보관에 `contentExists=false` 로 남긴다                                                                                                        | 배열에서 빼고 반려 기록도 지운다                          |
+| 없는 id                                                  | 404 `JOB_NOT_FOUND`                                                                                                                                                                     | 404 `NOT_FOUND`                                           |
 
 ---
 
@@ -380,8 +379,8 @@
 
 허용 칸: `content` `eligibilityAndSelectionProcess`
 
-**동작** — 채용공고의 `PATCH` 와 규칙이 같다. 부분 수정이고, `source` 를 `CRAWLER` 로 바꾸면
-`reviewStatus` 를 지우고, 반려가 풀리면 반려 기록도 지운다.
+**동작** — 채용공고의 `PATCH` 와 규칙이 같다. 부분 수정이고, `source` 는 버리고, `reviewStatus` 의
+`REJECTED` 는 400 이고, 반려가 풀리면 반려 기록도 지운다.
 
 커리큘럼과 파트너사는 구조가 있는 값이라 이 API 로 고치지 않는다.
 

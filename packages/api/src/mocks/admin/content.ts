@@ -7,6 +7,8 @@ import type {
   PageResponseAdminBootcampSummaryResponse,
   PageResponseAdminJobSummaryResponse,
   SuccessResponseUnit,
+  UpdateAdminBootcampRequest,
+  UpdateAdminJobRequest,
 } from '../../generated/admin/models';
 import {
   ADMIN_BOOTCAMP_FIXTURES,
@@ -146,17 +148,24 @@ export interface AdminContentPatchRequest {
   fields?: Record<string, string>;
 }
 
-/** 상세 화면에서 고칠 수 있는 운영 값. */
-export interface AdminJobPatchRequest extends AdminContentPatchRequest {
-  visibility?: AdminJobDetailResponse['visibility'];
-  source?: AdminJobDetailResponse['source'];
-  reviewStatus?: AdminJobDetailResponse['reviewStatus'];
-}
-
-export interface AdminBootcampPatchRequest extends AdminContentPatchRequest {
-  visibility?: AdminBootcampDetailResponse['visibility'];
-  source?: AdminBootcampDetailResponse['source'];
-  reviewStatus?: AdminBootcampDetailResponse['reviewStatus'];
+/**
+ * 운영 값 수정으로 반려를 보내면 백엔드처럼 400 을 준다. 반려는 사유가 있어야 해서 검수 화면
+ * (`PATCH /review-queue/{type}/{id}`) 에서만 한다. 메시지는 로컬 백엔드의 응답을 그대로 옮겼다.
+ *
+ * 등록 경로(`source`) 는 스펙의 요청 모델에 없고 백엔드는 보내도 버린다. 목도 읽지 않는다.
+ */
+function rejectedViaPatch(body: UpdateAdminJobRequest | UpdateAdminBootcampRequest) {
+  if (body.reviewStatus !== 'REJECTED') {
+    return null;
+  }
+  return HttpResponse.json(
+    {
+      status: 400,
+      code: 'BAD_REQUEST',
+      message: '[reviewStatus] 반려는 검수 화면에서 사유와 함께 처리해 주세요.',
+    },
+    { status: 400 },
+  );
 }
 
 /** 제목과 본문 칸을 적용한다. 허용 목록에 없는 키는 버린다. */
@@ -184,11 +193,8 @@ function applyContentPatch(
 /**
  * 채용공고의 운영 값을 고친다.
  *
- * 넘어온 칸만 바꾼다. 세 값을 늘 함께 보내게 하면 화면이 안 건드린 값까지 되돌려 쓰게 되고,
+ * 넘어온 칸만 바꾼다. 두 값을 늘 함께 보내게 하면 화면이 안 건드린 값까지 되돌려 쓰게 되고,
  * 그 사이 다른 곳에서 바뀐 값이 조용히 덮인다.
- *
- * 크롤링 수집분으로 되돌리면 검수 상태를 지운다. 검수는 외부에서 올라온 글에만 있는 개념이라
- * 등록 경로가 크롤링인데 검수 상태가 남아 있으면 목록의 검수 필터가 이상한 행을 집는다.
  */
 const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params, request }) => {
   const job = ADMIN_JOB_FIXTURES.find((fixture) => fixture.id === Number(params.jobId));
@@ -196,7 +202,11 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
   }
 
-  const body = (await request.json()) as AdminJobPatchRequest;
+  const body = (await request.json()) as UpdateAdminJobRequest;
+  const rejected = rejectedViaPatch(body);
+  if (rejected) {
+    return rejected;
+  }
 
   const error = applyContentPatch(
     job as unknown as Record<string, unknown>,
@@ -209,14 +219,6 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
 
   if (body.visibility !== undefined) {
     job.visibility = body.visibility;
-  }
-  if (body.source !== undefined) {
-    job.source = body.source;
-    if (body.source === 'CRAWLER') {
-      delete job.reviewStatus;
-    } else if (job.reviewStatus === undefined) {
-      job.reviewStatus = 'PENDING';
-    }
   }
   if (body.reviewStatus !== undefined && job.source === 'COMPANY') {
     job.reviewStatus = body.reviewStatus;
@@ -239,7 +241,11 @@ const patchBootcampHandler = http.patch(
       return HttpResponse.json(notFound('부트캠프를 찾을 수 없습니다.'), { status: 404 });
     }
 
-    const body = (await request.json()) as AdminBootcampPatchRequest;
+    const body = (await request.json()) as UpdateAdminBootcampRequest;
+    const rejected = rejectedViaPatch(body);
+    if (rejected) {
+      return rejected;
+    }
     const error = applyContentPatch(
       bootcamp as unknown as Record<string, unknown>,
       body,
@@ -255,15 +261,7 @@ const patchBootcampHandler = http.patch(
     if (body.visibility !== undefined) {
       bootcamp.visibility = body.visibility;
     }
-    // 등록 경로·검수 상태 규칙은 채용공고와 같다. 이유는 위 patchJobHandler 주석에 있다.
-    if (body.source !== undefined) {
-      bootcamp.source = body.source;
-      if (body.source === 'CRAWLER') {
-        delete bootcamp.reviewStatus;
-      } else if (bootcamp.reviewStatus === undefined) {
-        bootcamp.reviewStatus = 'PENDING';
-      }
-    }
+    // 검수 상태 규칙은 채용공고와 같다.
     if (body.reviewStatus !== undefined && bootcamp.source === 'COMPANY') {
       bootcamp.reviewStatus = body.reviewStatus;
     }
