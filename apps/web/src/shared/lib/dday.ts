@@ -1,3 +1,5 @@
+import { parseLocalDate } from './localDate';
+
 /**
  * 모집 마감 D-day 계산. 원래 `entities/job/model/dday.ts`였는데 채용공고 전용이 아니어서
  * 여기로 옮겼다 — 부트캠프(`entities/bootcamp`)도 같은 계산을 쓴다. 계산은 그대로다.
@@ -22,7 +24,8 @@ export function computeDaysRemaining(
     return null;
   }
 
-  const end = new Date(recruitmentEndAt);
+  // 사이드·스터디는 시각 없는 날짜가 온다 — 시간대 없이 읽는다(`./localDate.ts`).
+  const end = parseLocalDate(recruitmentEndAt);
   const now = new Date();
   const diffDays = Math.ceil(
     (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) -
