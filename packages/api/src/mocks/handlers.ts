@@ -2,15 +2,28 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES } from './fixtures/job';
 import {
+  RECRUITMENT_POST_FIXTURES,
+  type RecruitmentPostFixture,
+} from './fixtures/recruitment-post';
+import {
   SIDE_STUDY_FIXTURES,
   type SideStudyDetail,
   type SideStudyDetailResponse,
   type SideStudyListResponse,
   type SideStudySummary,
 } from './fixtures/side-study';
+import { GetRecruitmentPostsPositionsItem } from '../generated/user/models/getRecruitmentPostsPositionsItem';
+import { GetRecruitmentPostsProgressMethodsItem } from '../generated/user/models/getRecruitmentPostsProgressMethodsItem';
+import { GetRecruitmentPostsRecruitmentStatusesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentStatusesItem';
+import { GetRecruitmentPostsRecruitmentTypesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentTypesItem';
+import { GetRecruitmentPostsSort } from '../generated/user/models/getRecruitmentPostsSort';
 import { ListPublicJobsSort } from '../generated/user/models/listPublicJobsSort';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
+import type { RecruitmentPostDetailResponse } from '../generated/user/models/recruitmentPostDetailResponse';
+import type { RecruitmentPostSummaryResponse } from '../generated/user/models/recruitmentPostSummaryResponse';
+import type { SuccessResponsePageResponseRecruitmentPostSummaryResponse } from '../generated/user/models/successResponsePageResponseRecruitmentPostSummaryResponse';
+import type { SuccessResponseRecruitmentPostDetailResponse } from '../generated/user/models/successResponseRecruitmentPostDetailResponse';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../generated/user/models/successResponsePageResponseUserJobSummaryResponse';
 import type { SuccessResponseListUserJobCalendarItemResponse } from '../generated/user/models/successResponseListUserJobCalendarItemResponse';
@@ -430,6 +443,204 @@ const getSideStudyHandler = http.get('*/api/v1/side-studies/:postId', ({ params 
   return HttpResponse.json(body, { status: 200 });
 });
 
+/** `getRecruitmentPosts` 의 기본 한 페이지 건수. ogonggo-BE 기본값과 같다. 화면은 `size=8` 을 보낸다. */
+const DEFAULT_RECRUITMENT_POST_SIZE = 10;
+const MAX_RECRUITMENT_POST_SIZE = 100;
+
+/**
+ * ogonggo-BE 가 잘못된 파라미터에 주는 400 본문과 같은 모양(`[파라미터명] 사유`) 이다. 범위
+ * 위반의 사유 문구는 백엔드와 같다. 형 변환 실패는 백엔드가 Spring 의 긴 변환 메시지를 그대로
+ * 싣는데, 목은 값만 적은 짧은 문구로 대신한다 — 화면은 상태 코드만 본다.
+ */
+const recruitmentPostBadRequest = (message: string) => {
+  const body: ErrorResponse = { status: 400, code: 'BAD_REQUEST', message };
+  return HttpResponse.json(body, { status: 400 });
+};
+
+const INTEGER_PATTERN = /^-?\d+$/;
+
+/**
+ * 목록 필터 네 개와 각각 받는 값. 모두 반복 쿼리(`recruitmentTypes=STUDY&recruitmentTypes=SIDE_PROJECT`)
+ * 로 온다 — 생성 클라이언트 `getGetRecruitmentPostsUrl` 이 배열을 이렇게 펼쳐 보낸다.
+ */
+const RECRUITMENT_POST_FILTERS = {
+  recruitmentTypes: GetRecruitmentPostsRecruitmentTypesItem,
+  progressMethods: GetRecruitmentPostsProgressMethodsItem,
+  recruitmentStatuses: GetRecruitmentPostsRecruitmentStatusesItem,
+  positions: GetRecruitmentPostsPositionsItem,
+} as const;
+
+type RecruitmentPostFilterName = keyof typeof RECRUITMENT_POST_FILTERS;
+
+/** ogonggo-BE `RecruitmentPostQueryRepository` 의 정렬과 같다. 동률은 모두 id 역순이다. */
+const sortRecruitmentPosts = (
+  posts: RecruitmentPostFixture[],
+  sort: string,
+): RecruitmentPostFixture[] =>
+  [...posts].sort((a, b) => {
+    switch (sort) {
+      case GetRecruitmentPostsSort.DEADLINE:
+        return a.recruitmentEndDate.localeCompare(b.recruitmentEndDate) || b.id - a.id;
+      case GetRecruitmentPostsSort.VIEW_COUNT:
+        return b.viewCount - a.viewCount || b.id - a.id;
+      case GetRecruitmentPostsSort.COMMENT_COUNT:
+        return b.commentCount - a.commentCount || b.id - a.id;
+      default:
+        return b.id - a.id;
+    }
+  });
+
+const toRecruitmentPostSummary = ({
+  id,
+  author,
+  title,
+  recruitmentType,
+  progressMethod,
+  recruitmentStatus,
+  capacity,
+  activityDurationMonths,
+  technologyStacks,
+  recruitmentStartDate,
+  recruitmentEndDate,
+  viewCount,
+  commentCount,
+  applicationCount,
+  bookmarkCount,
+  bookmarked,
+}: RecruitmentPostFixture): RecruitmentPostSummaryResponse => ({
+  id,
+  author,
+  title,
+  recruitmentType,
+  progressMethod,
+  recruitmentStatus,
+  capacity,
+  activityDurationMonths,
+  technologyStacks,
+  recruitmentStartDate,
+  recruitmentEndDate,
+  viewCount,
+  commentCount,
+  applicationCount,
+  bookmarkCount,
+  bookmarked,
+});
+
+const toRecruitmentPostDetail = ({
+  applicationCount: _applicationCount,
+  ...detail
+}: RecruitmentPostFixture): RecruitmentPostDetailResponse => detail;
+
+/**
+ * `getRecruitmentPosts`(`GET /api/v1/recruitment-posts`). 필터 네 개는 각각 반복 쿼리이고, 한
+ * 필터 안의 값은 OR, 필터끼리는 AND 다. `positions` 는 글의 포지션 중 하나라도 겹치면 담는다
+ * (백엔드 `positions.any().in(...)`). `page`·`size` 범위와 enum 밖의 값은 백엔드처럼 400 이다.
+ */
+const getRecruitmentPostsHandler = http.get('*/api/v1/recruitment-posts', ({ request }) => {
+  const { searchParams } = new URL(request.url);
+  const pageParam = searchParams.get('page') ?? String(DEFAULT_PAGE);
+  const sizeParam = searchParams.get('size') ?? String(DEFAULT_RECRUITMENT_POST_SIZE);
+
+  if (!INTEGER_PATTERN.test(pageParam)) {
+    return recruitmentPostBadRequest(`[page] 정수가 아닙니다: ${pageParam}`);
+  }
+  if (!INTEGER_PATTERN.test(sizeParam)) {
+    return recruitmentPostBadRequest(`[size] 정수가 아닙니다: ${sizeParam}`);
+  }
+  const page = Number(pageParam);
+  const size = Number(sizeParam);
+  if (page < 1) {
+    return recruitmentPostBadRequest('[page] must be greater than or equal to 1');
+  }
+  if (size < 1) {
+    return recruitmentPostBadRequest('[size] must be greater than or equal to 1');
+  }
+  if (size > MAX_RECRUITMENT_POST_SIZE) {
+    return recruitmentPostBadRequest(
+      `[size] must be less than or equal to ${MAX_RECRUITMENT_POST_SIZE}`,
+    );
+  }
+
+  const sort = searchParams.get('sort') ?? GetRecruitmentPostsSort.LATEST;
+  if (!(Object.values(GetRecruitmentPostsSort) as string[]).includes(sort)) {
+    return recruitmentPostBadRequest(`[sort] 허용하지 않는 값입니다: ${sort}`);
+  }
+
+  const selected = {} as Record<RecruitmentPostFilterName, string[]>;
+  for (const name of Object.keys(RECRUITMENT_POST_FILTERS) as RecruitmentPostFilterName[]) {
+    const allowed: string[] = Object.values(RECRUITMENT_POST_FILTERS[name]);
+    const values = searchParams.getAll(name);
+    const invalid = values.find((value) => !allowed.includes(value));
+    if (invalid !== undefined) {
+      return recruitmentPostBadRequest(`[${name}] 허용하지 않는 값입니다: ${invalid}`);
+    }
+    selected[name] = values;
+  }
+  const accepts = (name: RecruitmentPostFilterName, values: string[]) =>
+    selected[name].length === 0 || values.some((value) => selected[name].includes(value));
+
+  const filtered = RECRUITMENT_POST_FIXTURES.filter(
+    (post) =>
+      accepts('recruitmentTypes', [post.recruitmentType]) &&
+      accepts('progressMethods', [post.progressMethod]) &&
+      accepts('recruitmentStatuses', [post.recruitmentStatus]) &&
+      accepts('positions', post.positions),
+  );
+  const sorted = sortRecruitmentPosts(filtered, sort);
+  const start = (page - 1) * size;
+  const items = sorted.slice(start, start + size).map(toRecruitmentPostSummary);
+
+  const body: SuccessResponsePageResponseRecruitmentPostSummaryResponse = {
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: {
+      items,
+      pageInfo: {
+        pageNum: page,
+        pageSize: size,
+        totalElements: sorted.length,
+        totalPages: Math.ceil(sorted.length / size),
+      },
+    },
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
+/**
+ * `getPublicRecruitmentPost`(`GET /api/v1/recruitment-posts/{postId}`). 백엔드와 같이 숫자가
+ * 아니거나 1 미만인 id 는 400, 없는 id 는 404 `RECRUITMENT_POST_NOT_FOUND` 다. 본문 문구도
+ * 백엔드 응답에서 옮겼다.
+ */
+const getRecruitmentPostHandler = http.get('*/api/v1/recruitment-posts/:postId', ({ params }) => {
+  const rawPostId = String(params.postId);
+  if (!INTEGER_PATTERN.test(rawPostId)) {
+    return recruitmentPostBadRequest('잘못된 요청입니다.');
+  }
+  const postId = Number(rawPostId);
+  if (postId < 1) {
+    return recruitmentPostBadRequest('[getRecruitmentPost.postId] must be greater than 0');
+  }
+
+  const post = RECRUITMENT_POST_FIXTURES.find((fixture) => fixture.id === postId);
+  if (!post) {
+    const body: ErrorResponse = {
+      status: 404,
+      code: 'RECRUITMENT_POST_NOT_FOUND',
+      message: '모집글을 찾을 수 없습니다.',
+    };
+    return HttpResponse.json(body, { status: 404 });
+  }
+
+  const body: SuccessResponseRecruitmentPostDetailResponse = {
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: toRecruitmentPostDetail(post),
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
 export const handlers: HttpHandler[] = [
   getJobsHandler,
   // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`도 잡는다.
@@ -439,4 +650,6 @@ export const handlers: HttpHandler[] = [
   getBootcampHandler,
   getSideStudiesHandler,
   getSideStudyHandler,
+  getRecruitmentPostsHandler,
+  getRecruitmentPostHandler,
 ];
