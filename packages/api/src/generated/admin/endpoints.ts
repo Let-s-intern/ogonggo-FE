@@ -25,8 +25,10 @@ import type {
 
 import type {
   CrawlerJobRegistrationRequest,
+  CrawlerJobReplaceRequest,
   DecideReviewRequest,
   ErrorResponse,
+  GetCrawlerJobParams,
   ListBootcampsParams,
   ListJobsParams,
   ListRejectionsParams,
@@ -34,6 +36,7 @@ import type {
   SuccessResponseAdminJobDetailResponse,
   SuccessResponseAdminRejectionResponse,
   SuccessResponseAdminReviewDecisionResponse,
+  SuccessResponseCrawlerJobLookupResponse,
   SuccessResponseCrawlerJobRegistrationResponse,
   SuccessResponseListAdminReviewItemResponse,
   SuccessResponsePageResponseAdminBootcampSummaryResponse,
@@ -77,6 +80,363 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export type replaceCrawlerJobResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceCrawlerJobResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceCrawlerJobResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type replaceCrawlerJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceCrawlerJobResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type replaceCrawlerJobResponseSuccess = (replaceCrawlerJobResponse200) & {
+  headers: Headers;
+};
+export type replaceCrawlerJobResponseError = (replaceCrawlerJobResponse400 | replaceCrawlerJobResponse401 | replaceCrawlerJobResponse404 | replaceCrawlerJobResponse409) & {
+  headers: Headers;
+};
+
+export type replaceCrawlerJobResponse = (replaceCrawlerJobResponseSuccess | replaceCrawlerJobResponseError)
+
+export const getReplaceCrawlerJobUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}`
+}
+
+/**
+ *
+ *             다시 수집·분류한 값으로 수집 공고 전체를 바꿉니다. 태그는 바꾸지 않습니다.
+ *             운영자가 관리자 콘솔에서 고친 내용도 이 값으로 덮어씁니다.
+ *
+ *             값이 실제로 바뀌면 승인되었거나 반려된 공고를 검수 대기로 되돌리고, 게시 중이었다면 숨깁니다.
+ *             같은 값을 다시 보내면 검수 상태와 게시 상태를 바꾸지 않습니다.
+ * @summary 크롤러 채용공고 교체
+ */
+export const replaceCrawlerJob = async (jobId: number,
+    crawlerJobReplaceRequest: CrawlerJobReplaceRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerJobResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceCrawlerJobResponse>(getReplaceCrawlerJobUrl(jobId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(crawlerJobReplaceRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceCrawlerJobMutationKey = () => ['replaceCrawlerJob'] as const;
+
+export const getReplaceCrawlerJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJob>>, TError,ReplaceCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJob>>, TError,ReplaceCrawlerJobMutationVariables, TContext> => {
+
+const mutationKey = getReplaceCrawlerJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerJob>>, ReplaceCrawlerJobMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  replaceCrawlerJob(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceCrawlerJobMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerJob>>>
+    export type ReplaceCrawlerJobMutationBody = CrawlerJobReplaceRequest
+    export type ReplaceCrawlerJobMutationError = ErrorResponse
+    export type ReplaceCrawlerJobMutationVariables = {jobId: number;data: CrawlerJobReplaceRequest}
+
+    /**
+ * @summary 크롤러 채용공고 교체
+ */
+export const useReplaceCrawlerJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJob>>, TError,ReplaceCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceCrawlerJob>>,
+        TError,
+        ReplaceCrawlerJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceCrawlerJobMutationOptions(options), queryClient);
+    }
+
+export type deleteCrawlerJobResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteCrawlerJobResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteCrawlerJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteCrawlerJobResponseSuccess = (deleteCrawlerJobResponse200) & {
+  headers: Headers;
+};
+export type deleteCrawlerJobResponseError = (deleteCrawlerJobResponse401 | deleteCrawlerJobResponse404) & {
+  headers: Headers;
+};
+
+export type deleteCrawlerJobResponse = (deleteCrawlerJobResponseSuccess | deleteCrawlerJobResponseError)
+
+export const getDeleteCrawlerJobUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}`
+}
+
+/**
+ *
+ *             직무별로 나뉘어 새 공고로 등록된 원래 공고처럼 더는 쓰지 않는 수집 공고를 소프트 삭제합니다.
+ *             이미 삭제한 공고를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
+ * @summary 크롤러 채용공고 삭제
+ */
+export const deleteCrawlerJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteCrawlerJobResponse> => {
+
+  return httpClient<deleteCrawlerJobResponse>(getDeleteCrawlerJobUrl(jobId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCrawlerJobMutationKey = () => ['deleteCrawlerJob'] as const;
+
+export const getDeleteCrawlerJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerJob>>, TError,DeleteCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerJob>>, TError,DeleteCrawlerJobMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCrawlerJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCrawlerJob>>, DeleteCrawlerJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  deleteCrawlerJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCrawlerJobMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCrawlerJob>>>
+
+    export type DeleteCrawlerJobMutationError = ErrorResponse
+    export type DeleteCrawlerJobMutationVariables = {jobId: number}
+
+    /**
+ * @summary 크롤러 채용공고 삭제
+ */
+export const useDeleteCrawlerJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerJob>>, TError,DeleteCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCrawlerJob>>,
+        TError,
+        DeleteCrawlerJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCrawlerJobMutationOptions(options), queryClient);
+    }
+
+export type getCrawlerJobResponse200 = {
+  data: SuccessResponseCrawlerJobLookupResponse
+  status: 200
+}
+
+export type getCrawlerJobResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getCrawlerJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getCrawlerJobResponseSuccess = (getCrawlerJobResponse200) & {
+  headers: Headers;
+};
+export type getCrawlerJobResponseError = (getCrawlerJobResponse401 | getCrawlerJobResponse404) & {
+  headers: Headers;
+};
+
+export type getCrawlerJobResponse = (getCrawlerJobResponseSuccess | getCrawlerJobResponseError)
+
+export const getGetCrawlerJobUrl = (params: GetCrawlerJobParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/internal/jobs?${stringifiedParams}` : `/api/v1/internal/jobs`
+}
+
+/**
+ *
+ *             원문 URL로 미삭제 수집 공고의 식별자를 찾습니다.
+ *             크롤러가 등록 응답의 식별자를 잃은 채 같은 공고를 다시 등록해 409를 받았을 때 씁니다.
+ * @summary 원문 URL로 크롤러 채용공고 식별자 조회
+ */
+export const getCrawlerJob = async (params: GetCrawlerJobParams, options?: Parameters<typeof httpClient>[1]): Promise<getCrawlerJobResponse> => {
+
+  return httpClient<getCrawlerJobResponse>(getGetCrawlerJobUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCrawlerJobQueryKey = (params?: GetCrawlerJobParams,) => {
+    return [
+    `/api/v1/internal/jobs`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCrawlerJobQueryOptions = <TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCrawlerJobQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrawlerJob>>> = ({ signal }) => getCrawlerJob(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCrawlerJobQueryResult = NonNullable<Awaited<ReturnType<typeof getCrawlerJob>>>
+export type GetCrawlerJobQueryError = ErrorResponse
+
+
+export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
+ params: GetCrawlerJobParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCrawlerJob>>,
+          TError,
+          Awaited<ReturnType<typeof getCrawlerJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
+ params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCrawlerJob>>,
+          TError,
+          Awaited<ReturnType<typeof getCrawlerJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
+ params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 원문 URL로 크롤러 채용공고 식별자 조회
+ */
+
+export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
+ params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCrawlerJobQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type createCrawlerJobResponse201 = {
   data: SuccessResponseCrawlerJobRegistrationResponse
   status: 201
@@ -116,11 +476,11 @@ export const getCreateCrawlerJobUrl = () => {
 
 /**
  *
- *             크롤러가 수집한 채용공고를 게시 상태로 등록합니다.
+ *             크롤러가 수집한 채용공고를 초안·검수 대기 상태로 등록합니다. 운영자가 검수에서 승인하면 게시됩니다.
  *
- *             모집 기간 유형은 모집 시작·종료 일시가 모두 없으면 상시 채용으로, 하나라도 있으면 기간 채용으로 결정합니다.
- *             경력 연수를 모두 생략하면 경력 무관, 요구 학력을 생략하면 학력 무관으로 등록합니다.
- *             이미 같은 원문 URL로 등록된 미삭제 공고가 있으면 409로 거절합니다.
+ *             고용 형태, 경력 유형, 요구 학력, 모집 기간 유형은 크롤러가 판단해 반드시 보냅니다. 서버는 빈 값을 다른 값으로 채우지 않습니다.
+ *             상시 채용에는 모집 종료 일시를 보낼 수 없습니다.
+ *             이미 같은 원문 URL로 등록된 미삭제 공고가 있으면 409로 거절합니다. 이때는 원문 URL로 식별자를 찾아 교체합니다.
  * @summary 크롤러 채용공고 등록
  */
 export const createCrawlerJob = async (crawlerJobRegistrationRequest: CrawlerJobRegistrationRequest, options?: Parameters<typeof httpClient>[1]): Promise<createCrawlerJobResponse> => {
@@ -1741,6 +2101,12 @@ export function useListBootcamps<TData = Awaited<ReturnType<typeof listBootcamps
 }
 
 
+export const getReplaceCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getGetCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerJobLookupResponse, object>> = {}): SuccessResponseCrawlerJobLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
+
 export const getCreateCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerJobRegistrationResponse, object>> = {}): SuccessResponseCrawlerJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getDecideReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminReviewDecisionResponse, object>> = {}): SuccessResponseAdminReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
@@ -1769,6 +2135,42 @@ export const getListJobsResponseMock = (overrideResponse: Partial<Extract<Succes
 
 export const getListBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
+
+export const getReplaceCrawlerJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/internal/jobs/:jobId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceCrawlerJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteCrawlerJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/internal/jobs/:jobId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteCrawlerJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetCrawlerJobMockHandler = (overrideResponse?: SuccessResponseCrawlerJobLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCrawlerJobLookupResponse> | SuccessResponseCrawlerJobLookupResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/internal/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetCrawlerJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 
 export const getCreateCrawlerJobMockHandler = (overrideResponse?: SuccessResponseCrawlerJobRegistrationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCrawlerJobRegistrationResponse> | SuccessResponseCrawlerJobRegistrationResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/internal/jobs', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
@@ -1938,6 +2340,9 @@ export const getListBootcampsMockHandler = (overrideResponse?: SuccessResponsePa
   }, options)
 }
 export const getOgonggoAdminAPIMock = () => [
+  getReplaceCrawlerJobMockHandler(),
+  getDeleteCrawlerJobMockHandler(),
+  getGetCrawlerJobMockHandler(),
   getCreateCrawlerJobMockHandler(),
   getDecideReviewMockHandler(),
   getUndoReviewMockHandler(),

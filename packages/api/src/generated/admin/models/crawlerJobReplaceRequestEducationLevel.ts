@@ -15,10 +15,10 @@
  * | `MASTER` | 5 | 석사 |
  * | `DOCTORATE` | 6 | 박사 |
  */
-export type CrawlerJobRegistrationRequestEducationLevel = typeof CrawlerJobRegistrationRequestEducationLevel[keyof typeof CrawlerJobRegistrationRequestEducationLevel];
+export type CrawlerJobReplaceRequestEducationLevel = typeof CrawlerJobReplaceRequestEducationLevel[keyof typeof CrawlerJobReplaceRequestEducationLevel];
 
 
-export const CrawlerJobRegistrationRequestEducationLevel = {
+export const CrawlerJobReplaceRequestEducationLevel = {
   ANY: 'ANY',
   HIGH_SCHOOL: 'HIGH_SCHOOL',
   ASSOCIATE: 'ASSOCIATE',

@@ -23,11 +23,6 @@ export interface CreateCompanyJobRequest {
   parentCompanyName?: string;
   /**
      * @minLength 0
-     * @maxLength 2048
-     */
-  companyLogoUrl?: string;
-  /**
-     * @minLength 0
      * @maxLength 255
      */
   title: string;
@@ -71,7 +66,6 @@ export interface CreateCompanyJobRequest {
      */
   experienceType: CreateCompanyJobRequestExperienceType;
   experienceMinYears?: number;
-  experienceMaxYears?: number;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

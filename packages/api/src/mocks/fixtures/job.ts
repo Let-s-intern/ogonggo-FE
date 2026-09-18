@@ -56,10 +56,6 @@ const baseJob = (id: number): UserJobDetailResponse => ({
   employmentType: faker.helpers.arrayElement(EMPLOYMENT_TYPES),
   experienceType: faker.helpers.arrayElement(EXPERIENCE_TYPES),
   experienceMinYears: faker.helpers.arrayElement([undefined, faker.number.int({ min: 0, max: 3 })]),
-  experienceMaxYears: faker.helpers.arrayElement([
-    undefined,
-    faker.number.int({ min: 3, max: 10 }),
-  ]),
   educationLevel: faker.helpers.arrayElement(EDUCATION_LEVELS),
   region: faker.location.city(),
   recruitmentType: 'PERIOD',
@@ -138,7 +134,6 @@ const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => 
     employmentType: seed.employmentType,
     experienceType: seed.experienceType,
     experienceMinYears: undefined,
-    experienceMaxYears: undefined,
     educationLevel: 'ANY',
     region: seed.region,
     recruitmentType: 'PERIOD',

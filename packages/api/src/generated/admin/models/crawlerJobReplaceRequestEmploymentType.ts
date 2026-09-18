@@ -14,10 +14,10 @@
  * | `PART_TIME` | 4 | 파트타임 |
  * | `ETC` | 5 | 기타 |
  */
-export type CrawlerJobRegistrationRequestEmploymentType = typeof CrawlerJobRegistrationRequestEmploymentType[keyof typeof CrawlerJobRegistrationRequestEmploymentType];
+export type CrawlerJobReplaceRequestEmploymentType = typeof CrawlerJobReplaceRequestEmploymentType[keyof typeof CrawlerJobReplaceRequestEmploymentType];
 
 
-export const CrawlerJobRegistrationRequestEmploymentType = {
+export const CrawlerJobReplaceRequestEmploymentType = {
   FULL_TIME: 'FULL_TIME',
   CONTRACT: 'CONTRACT',
   INTERN: 'INTERN',

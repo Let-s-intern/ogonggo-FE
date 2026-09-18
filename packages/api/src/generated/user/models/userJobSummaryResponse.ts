@@ -33,7 +33,6 @@ export interface UserJobSummaryResponse {
      */
   experienceType: UserJobSummaryResponseExperienceType;
   experienceMinYears?: number;
-  experienceMaxYears?: number;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

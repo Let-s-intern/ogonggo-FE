@@ -161,7 +161,6 @@ const reviewStatusFor = (id: number, registeredAt: string): JobReviewStatus => {
 const toAdminJob = ({
   bookmarked: _bookmarked,
   experienceMinYears: _experienceMinYears,
-  experienceMaxYears: _experienceMaxYears,
   ...job
 }: UserJobDetailResponse): AdminJobDetailResponse => {
   const id = job.id;

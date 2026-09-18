@@ -16,7 +16,6 @@ export interface CompanyJobDetailResponse {
   id: number;
   companyName: string;
   parentCompanyName?: string;
-  companyLogoUrl?: string;
   title: string;
   jobField?: string;
   jobRole?: string;
@@ -42,7 +41,6 @@ export interface CompanyJobDetailResponse {
      */
   experienceType: CompanyJobDetailResponseExperienceType;
   experienceMinYears?: number;
-  experienceMaxYears?: number;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

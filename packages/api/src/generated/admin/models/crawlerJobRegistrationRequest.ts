@@ -4,8 +4,11 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { CrawlerJobRegistrationRequestApplicationMethod } from './crawlerJobRegistrationRequestApplicationMethod';
 import type { CrawlerJobRegistrationRequestEducationLevel } from './crawlerJobRegistrationRequestEducationLevel';
 import type { CrawlerJobRegistrationRequestEmploymentType } from './crawlerJobRegistrationRequestEmploymentType';
+import type { CrawlerJobRegistrationRequestExperienceType } from './crawlerJobRegistrationRequestExperienceType';
+import type { CrawlerJobRegistrationRequestRecruitmentType } from './crawlerJobRegistrationRequestRecruitmentType';
 
 /**
  * 크롤러가 수집한 채용공고 등록 요청
@@ -24,14 +27,35 @@ export interface CrawlerJobRegistrationRequest {
      */
   parentCompanyName?: string;
   /**
-     * 채용공고 제목
      * @minLength 0
      * @maxLength 255
      */
   title: string;
   /**
-     * 고용 형태
-     *
+     * 직군. 크롤러 직무 분류표의 대분류
+     * @minLength 0
+     * @maxLength 100
+     */
+  jobField?: string;
+  /**
+     * 직무. 크롤러 직무 분류표의 소분류. 비슷한 공고 추천에서 사용자의 희망 직무와 정확히 같은지 비교한다
+     * @minLength 0
+     * @maxLength 100
+     */
+  jobRole?: string;
+  /**
+     * 산업. 크롤러 산업 분류표의 값. 비슷한 공고 추천에서 사용자의 희망 산업과 정확히 같은지 비교한다
+     * @minLength 0
+     * @maxLength 100
+     */
+  industry?: string;
+  /**
+     * 공고 대표 이미지 주소. 회사 로고가 있으면 로고, 없으면 원문 페이지의 대표 이미지
+     * @minLength 0
+     * @maxLength 2048
+     */
+  coverImageUrl?: string;
+  /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `FULL_TIME` | 1 | 정규직 |
@@ -42,22 +66,17 @@ export interface CrawlerJobRegistrationRequest {
      */
   employmentType: CrawlerJobRegistrationRequestEmploymentType;
   /**
-     * 채용공고 원문 URL
-     * @minLength 0
-     * @maxLength 2048
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NEWCOMER` | 1 | 신입 |
+     * | `EXPERIENCED` | 2 | 경력 |
+     * | `BOTH` | 3 | 신입·경력 |
+     * | `IRRELEVANT` | 4 | 경력 무관 |
      */
-  sourceUrl: string;
-  /** 최소 요구 경력 연수. 생략하면 경력 무관으로 등록한다 */
+  experienceType: CrawlerJobRegistrationRequestExperienceType;
+  /** 최소 요구 경력 연수. 원문에 근거가 있을 때만 보낸다 */
   experienceMinYears?: number;
-  /** 최대 요구 경력 연수. 생략하면 경력 무관으로 등록한다 */
-  experienceMaxYears?: number;
-  /** 모집 시작 일시. 생략 가능 */
-  recruitmentStartAt?: string;
-  /** 모집 종료 일시. 생략 가능 */
-  recruitmentEndAt?: string;
   /**
-     * 요구 학력. 생략하면 학력 무관으로 등록한다
-     *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `ANY` | 1 | 학력 무관 |
@@ -67,45 +86,64 @@ export interface CrawlerJobRegistrationRequest {
      * | `MASTER` | 5 | 석사 |
      * | `DOCTORATE` | 6 | 박사 |
      */
-  educationLevel?: CrawlerJobRegistrationRequestEducationLevel;
+  educationLevel: CrawlerJobRegistrationRequestEducationLevel;
   /**
-     * 근무 지역. 생략 가능
+     * 근무 지역
      * @minLength 0
      * @maxLength 100
      */
   region?: string;
   /**
-     * 직군. 생략 가능
-     * @minLength 0
-     * @maxLength 100
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 채용 |
+     * | `ALWAYS_OPEN` | 2 | 상시 채용 |
      */
-  jobField?: string;
+  recruitmentType: CrawlerJobRegistrationRequestRecruitmentType;
+  /** 모집 인원. 원문에 숫자로 적혀 있을 때만 보낸다 */
+  recruitmentHeadcount?: number;
+  /** 모집 시작 일시. 원문에 시각이 없으면 그날 00:00:00 */
+  recruitmentStartAt?: string;
+  /** 모집 종료 일시. 원문에 시각이 없으면 그날 23:59:59. 상시 채용이면 생략한다 */
+  recruitmentEndAt?: string;
+  /** 적합한 지원자를 뽑으면 마감일 전이라도 모집을 끝내는 공고인지 */
+  closesWhenFilled?: boolean;
+  /** 모집 종료 일시가 지나면 별도 조작 없이 마감으로 넘길지 */
+  autoCloseEnabled?: boolean;
+  companyAndTeamIntroduction?: string;
+  responsibilities?: string;
+  qualifications?: string;
+  preferredQualifications?: string;
+  compensation?: string;
+  benefits?: string;
+  hiringProcess?: string;
+  /** 위 칸 어디에도 맞지 않는 이 공고만의 채용 안내사항 */
+  recruitmentNotice?: string;
   /**
-     * 직무. 비슷한 공고 추천에서 사용자의 희망 직무와 정확히 같은지 비교한다. 생략 가능
-     * @minLength 0
-     * @maxLength 100
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+     * | `EMAIL` | 2 | 이메일 |
      */
-  jobRole?: string;
+  applicationMethod?: CrawlerJobRegistrationRequestApplicationMethod;
   /**
-     * 산업. 비슷한 공고 추천에서 사용자의 희망 산업과 정확히 같은지 비교한다. 생략 가능
+     * 지원서를 받는 이메일. 문의 이메일과 같은 주소면 두 칸에 같은 값을 보낸다
      * @minLength 0
-     * @maxLength 100
+     * @maxLength 320
      */
-  industry?: string;
+  applicationEmail?: string;
+  /**
+     * 채용 문의 이메일
+     * @minLength 0
+     * @maxLength 320
+     */
+  inquiryEmail?: string;
+  /**
+     * 채용공고 원문 URL. 직무별로 나눈 공고는 #1, #2처럼 조각이 붙는다
+     * @minLength 0
+     * @maxLength 2048
+     */
+  sourceUrl: string;
   /** AI가 생성한 태그 목록 */
   tags: string[];
-  /** 회사 및 팀 소개 */
-  companyAndTeamIntroduction?: string;
-  /** 주요 업무 */
-  responsibilities?: string;
-  /** 자격 요건 */
-  qualifications?: string;
-  /** 우대 사항 */
-  preferredQualifications?: string;
-  /** 급여 및 처우 */
-  compensation?: string;
-  /** 복지 및 혜택 */
-  benefits?: string;
-  /** 채용 절차 */
-  hiringProcess?: string;
 }
