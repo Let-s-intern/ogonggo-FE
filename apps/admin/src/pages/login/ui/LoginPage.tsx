@@ -16,7 +16,9 @@ import { unwrapData } from '@/shared/api/unwrapData';
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? '/';
+  // `RequireAuth` 와 `app/providers.tsx` 의 401·403 처리가 넘겨준다.
+  const state = location.state as { from?: string; message?: string } | null;
+  const from = state?.from ?? '/';
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +48,11 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <Card className="w-96 p-6">
         <CardTitle className="pb-6">오공고 관리자 로그인</CardTitle>
+        {state?.message ? (
+          <Callout tone="warning" className="mb-4">
+            {state.message}
+          </Callout>
+        ) : null}
         <form onSubmit={handleSubmit}>
           <Field label="이메일" htmlFor="login-email">
             <Input

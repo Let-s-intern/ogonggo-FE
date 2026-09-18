@@ -14,6 +14,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return children;
   }
   return (
-    <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />
+    <Navigate
+      to="/login"
+      replace
+      state={{ from: `${location.pathname}${location.search}`, message: '로그인이 필요합니다' }}
+    />
   );
 }
