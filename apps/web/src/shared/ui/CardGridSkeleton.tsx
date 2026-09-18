@@ -14,6 +14,11 @@ export interface CardGridSkeletonProps {
    * (`entities/side-study/ui/SideStudyCard.tsx`).
    */
   hasCardFooter?: boolean;
+  /**
+   * 썸네일 없이 테두리 안에 글자만 있는 카드인지. 사이드·스터디 카드가 그렇다 — 목록 응답에
+   * 썸네일이 없어 `Card`(`@ogonggo/ui`) 테두리로 감쌌다(`entities/side-study/ui/SideStudyCard.tsx`).
+   */
+  framed?: boolean;
 }
 
 /**
@@ -32,12 +37,16 @@ export function CardGridSkeleton({
   count,
   gapClass,
   hasCardFooter = false,
+  framed = false,
 }: CardGridSkeletonProps) {
   return (
     <ul className={cn('grid grid-cols-2 md:grid-cols-4', gapClass)}>
       {Array.from({ length: count }, (_, index) => (
-        <li key={index} className="flex flex-col gap-2">
-          <div className="aspect-[8/5] w-full rounded-lg bg-gray-100 shadow-sm" />
+        <li
+          key={index}
+          className={cn('flex flex-col gap-2', framed && 'rounded-lg border border-gray-200 p-4')}
+        >
+          {framed ? null : <div className="aspect-[8/5] w-full rounded-lg bg-gray-100 shadow-sm" />}
           {/* 메타 줄 — 배지가 들어 있어 20px이다(`text-xs`의 16px이 아니다). */}
           <div className="h-5 w-full rounded bg-gray-100" />
           <div className="h-5 w-24 rounded bg-gray-100" />
