@@ -17,9 +17,13 @@ export function formatDateTime(iso: string | undefined): string {
   });
 }
 
-/** 천 단위 구분. 없는 값은 `-` 로 둔다 — 0 과 구분되어야 한다. */
-export function formatCount(value: number | undefined): string {
-  return value === undefined ? '-' : value.toLocaleString('ko-KR');
+/**
+ * 천 단위 구분. 없는 값은 `-` 로 둔다 — 0 과 구분되어야 한다.
+ *
+ * 스펙은 빈 칸을 선택 필드(`undefined`) 로 적지만 백엔드는 `null` 로 보낸다. 둘 다 없는 값이다.
+ */
+export function formatCount(value: number | null | undefined): string {
+  return value == null ? '-' : value.toLocaleString('ko-KR');
 }
 
 /** 비율을 소수 한 자리 퍼센트로. 분모가 0 이면 `-`. */

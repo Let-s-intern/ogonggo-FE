@@ -60,7 +60,7 @@ export function BootcampDetailPage() {
             {
               label: '수강료',
               value:
-                data.tuitionAmount === undefined
+                data.tuitionAmount == null
                   ? plainLabel(data.tuitionType)
                   : `${plainLabel(data.tuitionType)} (${formatCount(data.tuitionAmount)}원)`,
             },
