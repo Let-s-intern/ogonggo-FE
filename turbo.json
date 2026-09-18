@@ -17,6 +17,8 @@
       "outputs": []
     },
     "codegen": {
+      "cache": false,
+      "env": ["OGONGGO_USER_API_URL", "OGONGGO_ADMIN_API_URL"],
       "outputs": ["src/generated/**"]
     }
   }
