@@ -20,20 +20,60 @@
  * runs in Node. `OGONGGO_USER_API_ORIGIN` matches next.config.ts's rewrite
  * target so the two agree without a second env var.
  */
+/**
+ * A non-2xx response. `status` lets a screen tell 401 (not logged in) from 403
+ * (logged in, wrong role) without parsing text. The message keeps the older
+ * `"<METHOD> <url> failed: <status>"` shape because apps/web detail views still
+ * match on its `: 404` suffix.
+ */
+export class HttpError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+  }
+}
+
+type AccessTokenProvider = () => string | null | undefined;
+
+let getAccessToken: AccessTokenProvider = () => undefined;
+
+/**
+ * Where the `Authorization: Bearer` token comes from. The app that has a login
+ * registers this once at startup (apps/admin); this file does not know where a
+ * token is stored, for the same reason it does not read env vars. With nothing
+ * registered no header is sent — apps/web, including its Server Components,
+ * never registers one, which also keeps a module-level value from leaking
+ * between server requests.
+ */
+export function setAccessTokenProvider(provider: AccessTokenProvider): void {
+  getAccessToken = provider;
+}
+
 export async function httpClient<T>(url: string, init: RequestInit = {}): Promise<T> {
   const isRelative = !/^https?:\/\//.test(url);
   const resolvedUrl =
     typeof window === 'undefined' && isRelative
       ? `${process.env.OGONGGO_USER_API_ORIGIN ?? 'http://localhost:8080'}${url}`
       : url;
+  const accessToken = getAccessToken();
   const response = await fetch(resolvedUrl, {
     ...init,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...init.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...init.headers,
+    },
   });
 
   if (!response.ok) {
-    throw new Error(`${init.method ?? 'GET'} ${url} failed: ${response.status}`);
+    throw new HttpError(
+      `${init.method ?? 'GET'} ${url} failed: ${response.status}`,
+      response.status,
+    );
   }
 
   if (response.status === 204) {
