@@ -5,6 +5,7 @@ import type {
 } from '@ogonggo/api/src/mocks/fixtures/admin-member';
 import type { JobReviewStatus, Visibility } from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import type { UserMemberActivity } from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
+// 회원 API 는 백엔드에 없고 MSW 목에만 있다. 그래서 생성 함수가 아니라 `adminClient` 로 부른다.
 import { adminGet, type PageResponse } from '@/shared/api/adminClient';
 
 export interface MemberListFilters {

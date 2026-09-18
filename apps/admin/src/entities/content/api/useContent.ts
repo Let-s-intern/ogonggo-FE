@@ -82,6 +82,7 @@ export function useBootcampDetail(bootcampId: number) {
   });
 }
 
+// 사이드·스터디는 백엔드에 없고 MSW 목에만 있다. 그래서 아래 두 훅과 삭제는 `adminClient` 로 부른다.
 export interface SideStudyListFilters {
   page: number;
   keyword: string;
@@ -153,6 +154,7 @@ export function useDeleteContent(kind: 'jobs' | 'bootcamps' | 'side-studies') {
       } else if (kind === 'bootcamps') {
         await deleteBootcamp(id);
       } else {
+        // 사이드·스터디는 목에만 있다.
         await adminDelete(`/api/v1/admin/side-studies/${id}`);
       }
     },

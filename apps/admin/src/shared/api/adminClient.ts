@@ -1,5 +1,13 @@
 import { httpClient } from '@ogonggo/api';
 
+/*
+ * 백엔드 API 가 없어 MSW 목에만 있는 화면(회원, 공지, 사이드·스터디) 이 쓰는 호출.
+ *
+ * admin 스펙에 있는 화면(채용공고, 부트캠프, 검수 대기, 반려 보관) 은 생성 함수
+ * (`@ogonggo/api/src/admin`) 를 부르고 봉투는 `./unwrapData.ts` 가 벗긴다. 목 전용 화면의
+ * 백엔드가 생기면 같은 방식으로 옮기고 여기서 그 호출을 지운다.
+ */
+
 /** 어드민 API 의 공통 응답 봉투. 사용자 API 와 같은 모양이다. */
 export interface AdminResponse<T> {
   status: number;
@@ -19,12 +27,7 @@ export interface PageResponse<T> {
   pageInfo: PageInfo;
 }
 
-/**
- * 어드민 API 한 번 호출하고 `data` 만 꺼낸다.
- *
- * 백엔드가 아직 없어 orval 생성 클라이언트에 어드민 호출이 없다. 생기면 이 함수를 지우고
- * 생성된 훅으로 갈아끼운다 — 그때까지 봉투를 벗기는 자리를 한 곳에 모아 둔다.
- */
+/** 목 전용 어드민 API 를 한 번 호출하고 `data` 만 꺼낸다. */
 export async function adminGet<T>(
   path: string,
   params?: Record<string, string | number | undefined>,
@@ -41,8 +44,8 @@ export async function adminGet<T>(
   return response.data;
 }
 
-/** 쓰기 요청. `PATCH`·`POST`·`PUT` 을 같은 자리에서 처리한다. */
-export async function adminWrite<T>(method: 'POST' | 'PUT' | 'PATCH', path: string, body: unknown) {
+/** 쓰기 요청. 공지의 `POST`·`PUT` 만 남았다. */
+export async function adminWrite<T>(method: 'POST' | 'PUT', path: string, body: unknown) {
   const response = await httpClient<AdminResponse<T>>(path, {
     method,
     body: JSON.stringify(body),
@@ -50,7 +53,7 @@ export async function adminWrite<T>(method: 'POST' | 'PUT' | 'PATCH', path: stri
   return response.data;
 }
 
-/** 삭제. 응답 본문은 지운 id 뿐이라 따로 쓰지 않는다. */
+/** 삭제. 사이드·스터디만 쓴다. 응답 본문은 지운 id 뿐이라 따로 쓰지 않는다. */
 export async function adminDelete(path: string) {
   await httpClient<AdminResponse<{ id: number }>>(path, { method: 'DELETE' });
 }

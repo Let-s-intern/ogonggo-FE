@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Notice } from '@ogonggo/api/src/mocks/fixtures/admin-notice';
+// 공지 API 는 백엔드에 없고 MSW 목에만 있다. 그래서 생성 함수가 아니라 `adminClient` 로 부른다.
 import { adminGet, adminWrite } from '@/shared/api/adminClient';
 
 export interface NoticeWriteInput {
