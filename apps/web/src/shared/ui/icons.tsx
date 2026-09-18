@@ -190,3 +190,41 @@ export function ListIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** `로그인.png` 의 "일반 회원" 탭 앞 사람 모양. */
+export function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <circle cx="10" cy="6.5" r="3.25" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M3.75 17c.6-3.2 3.2-5.25 6.25-5.25S15.65 13.8 16.25 17"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** `로그인.png` 의 "기업 회원" 탭 앞 건물 모양. */
+export function BuildingIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <rect
+        x="2.75"
+        y="6.75"
+        width="14.5"
+        height="10"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M7.25 6.75V3.75h5.5v3M7.25 16.75v-4.5M12.75 16.75v-4.5M7.25 10h5.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
