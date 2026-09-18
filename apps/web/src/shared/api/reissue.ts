@@ -1,4 +1,4 @@
-import { reissueAccessToken } from '@ogonggo/api';
+import { HttpError, reissueAccessToken } from '@ogonggo/api';
 import type { ReissueAccessTokenBody } from './authResponses';
 import { clearTokens, getAccessToken, getRefreshToken, saveAccessToken } from './authTokens';
 
@@ -9,8 +9,10 @@ import { clearTokens, getAccessToken, getRefreshToken, saveAccessToken } from '.
  * 여러 요청이 한꺼번에 401 이어도 재발급은 하나만 나간다. 진행 중인 재발급을 모두가 기다린다.
  * 재발급이 끝난 뒤에 도착한 401 이라도 옛 토큰으로 나갔던 요청이면 다시 재발급하지 않고 그대로 재시도한다.
  *
- * 재발급이 실패하면 두 토큰을 지우고 `/login?redirect=<지금 화면>` 으로 보낸다. 리프레시 토큰(14일) 까지
- * 만료됐으면 다시 로그인하는 수밖에 없다.
+ * 재발급이 리프레시 토큰이 무효하다는 답(401 `EXPIRED_REFRESH_TOKEN` 등, 400 형식 오류) 으로 실패하면 두 토큰을
+ * 지우고 `/login?redirect=<지금 화면>` 으로 보낸다. 리프레시 토큰(14일) 까지 만료됐으면 다시 로그인하는 수밖에 없다.
+ * 5xx·네트워크 오류는 서버 사정이라 토큰을 두고 원 요청의 401 만 올린다 — 서버가 잠깐 흔들렸다고 로그인을 버리면
+ * 사용자는 이유 없이 로그아웃된다.
  */
 
 /**
@@ -57,9 +59,14 @@ async function reissue(): Promise<boolean> {
     const body = (await reissueAccessToken({ refreshToken })) as unknown as ReissueAccessTokenBody;
     saveAccessToken(body.data.accessToken);
     return true;
-  } catch {
-    clearTokens();
-    redirectToLogin();
+  } catch (error) {
+    const refreshRejected =
+      !refreshToken ||
+      (error instanceof HttpError && (error.status === 401 || error.status === 400));
+    if (refreshRejected) {
+      clearTokens();
+      redirectToLogin();
+    }
     return false;
   }
 }
