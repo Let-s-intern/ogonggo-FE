@@ -1,4 +1,9 @@
-import type { SideStudyKind, SideStudyOperationType } from './types';
+import type {
+  SideStudyContactMethod,
+  SideStudyKind,
+  SideStudyOperationType,
+  SideStudyPosition,
+} from './types';
 
 /**
  * 카드 메타 줄(`종류 · 진행방식`)과 목록 탭이 같은 라벨을 쓴다 —
@@ -18,3 +23,19 @@ export const OPERATION_TYPE_LABELS: Record<SideStudyOperationType, string> = {
 
 /** 작성자 닉네임이 없을 때. 모집글 응답의 `author.nickname` 은 선택 필드다. */
 export const AUTHOR_NICKNAME_FALLBACK = '익명';
+
+/** 모집 포지션. 문구는 스펙 설명(`RecruitmentPostDetailResponse.positions`) 그대로다. */
+export const POSITION_LABELS: Record<SideStudyPosition, string> = {
+  BACKEND: '백엔드',
+  FRONTEND: '프론트엔드',
+  DESIGN: '디자인',
+  PM: '기획',
+  MOBILE: '모바일',
+  ETC: '기타',
+};
+
+/** 소통 수단. 문구는 스펙 설명(`RecruitmentPostContactResponse.method`) 그대로다. */
+export const CONTACT_METHOD_LABELS: Record<SideStudyContactMethod, string> = {
+  OPEN_KAKAO: '카카오톡 오픈채팅',
+  EMAIL: '이메일',
+};

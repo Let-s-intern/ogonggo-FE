@@ -1,7 +1,11 @@
+import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { httpClient } from '@ogonggo/api';
-import type { SideStudyDetail, SideStudyDetailResponse } from '@/entities/side-study/model/types';
+import { getPublicRecruitmentPost, HttpError } from '@ogonggo/api';
+import type { SuccessResponseRecruitmentPostDetailResponse } from '@ogonggo/api';
+import type { SideStudyDetail } from '@/entities/side-study/model/types';
+import { hasLexicalText } from '@/shared/lib/lexicalHtml';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { LexicalContent } from '@/shared/ui/LexicalContent';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
 import { SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
 import { SideStudyInfoGrid } from './SideStudyInfoGrid';
@@ -12,20 +16,31 @@ export interface SideStudyDetailViewProps {
 }
 
 /**
- * API 없음: `GET /api/v1/side-studies/{postId}`는 백엔드에 없는 경로다(PRD 5절). 생성된 클라이언트
- * 함수가 있을 리 없어 목록(`widgets/side-study-list/ui/SideStudyList.tsx`)과 같이 `httpClient`로
- * URL을 직접 만들어 부른다 — MSW 핸들러(`packages/api/src/mocks/handlers.ts`)만 이 요청에 답한다.
+ * `신청하러 가기` 의 이동 주소. 사이트 안 지원 API 는 붙이지 않고 출시 알림 신청 페이지로
+ * 보낸다(PRD Push 5 "사용자 결정", 2026-09-18).
+ */
+const APPLY_URL = 'https://biz.ogonggo.co.kr/';
+
+/**
+ * 공개 상세 `getPublicRecruitmentPost`(`GET /api/v1/recruitment-posts/{postId}`).
  *
- * 404는 `httpClient`가 구조화된 응답 대신 `Error("GET /api/v1/side-studies/{id} failed: 404")`를
- * 던지므로 메시지 끝의 상태 코드로 가려내 `notFound()`로 바꾼다 — 채용공고·부트캠프 상세와 같은
- * 처리다. 그 외 오류는 다시 던진다.
+ * 백엔드는 1 미만 id 에 400 을 준다. 경로의 id 가 양의 정수가 아니면 부르지 않고 바로
+ * `notFound()` 로 보낸다 — 없는 글과 같은 화면이 맞고, 400 이 오류 화면으로 새지 않는다.
+ * 404 는 `HttpError.status` 로 가려 `notFound()` 로 바꾸고, 그 외 오류는 다시 던진다.
+ * 응답 언랩은 채용공고·부트캠프 상세와 같다.
  */
 async function fetchSideStudyDetail(postId: number): Promise<SideStudyDetail> {
-  let response: SideStudyDetailResponse;
+  if (!Number.isInteger(postId) || postId < 1) {
+    notFound();
+  }
+
+  let response: SuccessResponseRecruitmentPostDetailResponse;
   try {
-    response = await httpClient<SideStudyDetailResponse>(`/api/v1/side-studies/${postId}`);
+    response = (await getPublicRecruitmentPost(
+      postId,
+    )) as unknown as SuccessResponseRecruitmentPostDetailResponse;
   } catch (error) {
-    if (error instanceof Error && error.message.endsWith(': 404')) {
+    if (error instanceof HttpError && error.status === 404) {
       notFound();
     }
     throw error;
@@ -40,20 +55,25 @@ async function fetchSideStudyDetail(postId: number): Promise<SideStudyDetail> {
 
 /**
  * `사이드스터디 상세페이지.png`가 쓰는 본문 세 섹션 그대로다. 값이 없으면 아래에서 제목째
- * 걸러지므로 `지원 자격 및 전형`은 `eligibility`가 없는 건(픽스처 id 2·3·4)에서 통째로
+ * 걸러지므로 `지원 자격 및 전형`은 `eligibilityAndSelectionProcess`가 없는 글에서 통째로
  * 사라진다 — 채용공고 상세의 `buildSections`와 같은 규칙이다.
  *
- * `content`는 목업의 소제목 다섯(프로젝트 소개 / 목표 및 예상 산출물 / 진행 상황 / 현재 팀
- * 구성 / 모임 방식)을 담은 한 덩어리 문자열이라 `whitespace-pre-line`으로 줄바꿈만 살려
- * 그린다. 소제목을 따로 뽑아 굵게 만들지 않는 것은 그 구조가 타입에 없기 때문이다 —
- * `content: string`뿐이고(`fixtures/side-study.ts`) 소제목은 목데이터를 지어낼 때의 약속이지
- * 응답이 보장하는 형식이 아니다. 실제 API가 구조를 나눠 주면 그때 나눠 그린다.
+ * `content`는 Lexical EditorState JSON 이라 `LexicalContent` 가 서식(제목·목록·링크 등) 을
+ * 살려 그린다. 보일 글자가 없으면 다른 섹션처럼 뺀다.
  */
-function buildSections(sideStudy: SideStudyDetail): { label: string; value?: string }[] {
+function buildSections(sideStudy: SideStudyDetail): { label: string; body?: ReactNode }[] {
+  const plain = (value?: string) =>
+    value ? <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{value}</p> : undefined;
+
   return [
-    { label: '한 줄 소개', value: sideStudy.shortDescription },
-    { label: '모집 상세 내용', value: sideStudy.content },
-    { label: '지원 자격 및 전형', value: sideStudy.eligibility },
+    { label: '한 줄 소개', body: plain(sideStudy.summary) },
+    {
+      label: '모집 상세 내용',
+      body: hasLexicalText(sideStudy.content) ? (
+        <LexicalContent content={sideStudy.content} className="mt-2" />
+      ) : undefined,
+    },
+    { label: '지원 자격 및 전형', body: plain(sideStudy.eligibilityAndSelectionProcess) },
   ];
 }
 
@@ -78,32 +98,24 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
         <div className="flex flex-col gap-8">
           <SideStudyInfoGrid sideStudy={sideStudy} />
           {buildSections(sideStudy)
-            .filter((section) => Boolean(section.value))
+            .filter((section) => section.body !== undefined)
             .map((section) => (
               <section key={section.label}>
                 <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
-                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{section.value}</p>
+                {section.body}
               </section>
             ))}
         </div>
         <aside className="flex flex-col gap-6">
-          {/* API 없음: `applicationUrl`이 픽스처 12건 모두 비어 있다 — 지어낸 모집글이라
-              신청 주소를 만들 수 없고, 실존하지 않는 외부 주소를 지어내 넣지 않았다
-              (PRD 6.2). 그래서 이 화면의 `신청하러 가기`는 항상 비활성 버튼이다
-              (`keepButtonWhenNoHref`). 실제 API가 신청 주소를 주면 그대로 링크가 된다.
-
-              북마크 카운트도 응답에 없다 — 사이드·스터디에는 `bookmarked`(표시 전용)만 있고
-              누적 수 필드가 없어 0으로 둔다. 목록 카드와 같은 이유다(PRD 8절). */}
           <ApplyCta
             label="신청하러 가기"
-            href={sideStudy.applicationUrl}
-            keepButtonWhenNoHref
+            href={APPLY_URL}
             bookmarked={sideStudy.bookmarked}
-            bookmarkCount={0}
+            bookmarkCount={sideStudy.bookmarkCount}
           />
           {/* 목업의 이 자리에 있는 댓글·대댓글 스레드는 그리지 않는다
               (PRD 8절, 2026-09-01 결정). 대신 들어가는 것이 아래 `비슷한 사이드·스터디`다. */}
-          <SimilarSideStudies excludePostId={sideStudy.id} kind={sideStudy.kind} />
+          <SimilarSideStudies excludePostId={sideStudy.id} kind={sideStudy.recruitmentType} />
         </aside>
       </div>
     </div>
