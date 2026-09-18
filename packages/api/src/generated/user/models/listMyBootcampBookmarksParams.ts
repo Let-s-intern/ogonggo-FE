@@ -4,6 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListMyBootcampBookmarksStatus } from './listMyBootcampBookmarksStatus';
+import type { ListMyBootcampBookmarksTuitionType } from './listMyBootcampBookmarksTuitionType';
 
 export type ListMyBootcampBookmarksParams = {
 /**
@@ -15,4 +17,25 @@ page?: number;
  * @maximum 100
  */
 size?: number;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `FREE` | 1 | 무료 |
+ * | `PAID` | 2 | 유료 |
+ * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+ */
+tuitionType?: ListMyBootcampBookmarksTuitionType;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `DRAFT` | 1 | 임시저장 |
+ * | `RECRUITING` | 2 | 모집중 |
+ * | `CLOSED` | 3 | 모집 마감 |
+ */
+status?: ListMyBootcampBookmarksStatus;
+/**
+ * @minLength 2
+ * @maxLength 100
+ */
+keyword?: string;
 };

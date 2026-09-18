@@ -8,12 +8,15 @@ import type { CompanyJobSummaryResponseEmploymentType } from './companyJobSummar
 import type { CompanyJobSummaryResponseExperienceType } from './companyJobSummaryResponseExperienceType';
 import type { CompanyJobSummaryResponsePublicationStatus } from './companyJobSummaryResponsePublicationStatus';
 import type { CompanyJobSummaryResponseRecruitmentType } from './companyJobSummaryResponseRecruitmentType';
+import type { CompanyJobSummaryResponseReviewStatus } from './companyJobSummaryResponseReviewStatus';
 
 export interface CompanyJobSummaryResponse {
   id: number;
   companyName: string;
   title: string;
   jobField?: string;
+  jobRole?: string;
+  industry?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -52,5 +55,15 @@ export interface CompanyJobSummaryResponse {
      * | `ARCHIVED` | 4 | 보관 |
      */
   publicationStatus: CompanyJobSummaryResponsePublicationStatus;
+  /**
+     * 운영자 검수 상태입니다. 승인되어야 게시할 수 있고, 내용을 고치면 다시 검수 대기가 됩니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PENDING` | 1 | 검수 대기 |
+     * | `APPROVED` | 2 | 승인 |
+     * | `REJECTED` | 3 | 반려 |
+     */
+  reviewStatus?: CompanyJobSummaryResponseReviewStatus;
   closedAt?: string;
 }

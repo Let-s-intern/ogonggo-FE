@@ -5,7 +5,9 @@
  * OpenAPI spec version: v1
  */
 import type { CompanyBootcampSummaryResponseOperationType } from './companyBootcampSummaryResponseOperationType';
+import type { CompanyBootcampSummaryResponsePublicationStatus } from './companyBootcampSummaryResponsePublicationStatus';
 import type { CompanyBootcampSummaryResponseRecruitmentType } from './companyBootcampSummaryResponseRecruitmentType';
+import type { CompanyBootcampSummaryResponseReviewStatus } from './companyBootcampSummaryResponseReviewStatus';
 import type { CompanyBootcampSummaryResponseStatus } from './companyBootcampSummaryResponseStatus';
 import type { CompanyBootcampSummaryResponseTuitionType } from './companyBootcampSummaryResponseTuitionType';
 
@@ -53,5 +55,26 @@ export interface CompanyBootcampSummaryResponse {
      * | `CLOSED` | 3 | 모집 마감 |
      */
   status: CompanyBootcampSummaryResponseStatus;
+  /**
+     * 노출 여부입니다. 운영자 검수 승인과 함께 게시되며 모집 상태(status)와는 다른 값입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `DRAFT` | 1 | 초안 |
+     * | `PUBLISHED` | 2 | 게시 |
+     * | `HIDDEN` | 3 | 숨김 |
+     * | `ARCHIVED` | 4 | 보관 |
+     */
+  publicationStatus: CompanyBootcampSummaryResponsePublicationStatus;
+  /**
+     * 운영자 검수 상태입니다. 내용을 고치면 다시 검수 대기가 되고 그동안 노출되지 않습니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PENDING` | 1 | 검수 대기 |
+     * | `APPROVED` | 2 | 승인 |
+     * | `REJECTED` | 3 | 반려 |
+     */
+  reviewStatus?: CompanyBootcampSummaryResponseReviewStatus;
   closedAt?: string;
 }

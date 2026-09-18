@@ -38,6 +38,16 @@ export interface UpdateCompanyJobRequest {
   jobField?: string;
   /**
      * @minLength 0
+     * @maxLength 100
+     */
+  jobRole?: string;
+  /**
+     * @minLength 0
+     * @maxLength 100
+     */
+  industry?: string;
+  /**
+     * @minLength 0
      * @maxLength 2048
      */
   coverImageUrl?: string;

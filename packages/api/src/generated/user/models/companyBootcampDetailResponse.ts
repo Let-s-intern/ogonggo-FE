@@ -7,7 +7,9 @@
 import type { CompanyBootcampCurriculumResponse } from './companyBootcampCurriculumResponse';
 import type { CompanyBootcampDetailResponseApplicationMethod } from './companyBootcampDetailResponseApplicationMethod';
 import type { CompanyBootcampDetailResponseOperationType } from './companyBootcampDetailResponseOperationType';
+import type { CompanyBootcampDetailResponsePublicationStatus } from './companyBootcampDetailResponsePublicationStatus';
 import type { CompanyBootcampDetailResponseRecruitmentType } from './companyBootcampDetailResponseRecruitmentType';
+import type { CompanyBootcampDetailResponseReviewStatus } from './companyBootcampDetailResponseReviewStatus';
 import type { CompanyBootcampDetailResponseStatus } from './companyBootcampDetailResponseStatus';
 import type { CompanyBootcampDetailResponseTuitionType } from './companyBootcampDetailResponseTuitionType';
 import type { CompanyBootcampPartnerResponse } from './companyBootcampPartnerResponse';
@@ -71,6 +73,27 @@ export interface CompanyBootcampDetailResponse {
      * | `CLOSED` | 3 | 모집 마감 |
      */
   status: CompanyBootcampDetailResponseStatus;
+  /**
+     * 노출 여부입니다. 운영자 검수 승인과 함께 게시되며 모집 상태(status)와는 다른 값입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `DRAFT` | 1 | 초안 |
+     * | `PUBLISHED` | 2 | 게시 |
+     * | `HIDDEN` | 3 | 숨김 |
+     * | `ARCHIVED` | 4 | 보관 |
+     */
+  publicationStatus: CompanyBootcampDetailResponsePublicationStatus;
+  /**
+     * 운영자 검수 상태입니다. 내용을 고치면 다시 검수 대기가 되고 그동안 노출되지 않습니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PENDING` | 1 | 검수 대기 |
+     * | `APPROVED` | 2 | 승인 |
+     * | `REJECTED` | 3 | 반려 |
+     */
+  reviewStatus?: CompanyBootcampDetailResponseReviewStatus;
   closedAt?: string;
   partners: CompanyBootcampPartnerResponse[];
   curriculums: CompanyBootcampCurriculumResponse[];

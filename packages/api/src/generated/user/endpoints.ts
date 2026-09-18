@@ -29,33 +29,60 @@ import type {
   CreateAdvertisementInquiryRequest,
   CreateCompanyBootcampRequest,
   CreateCompanyJobRequest,
+  CreateImageBody,
+  CreateRecruitmentPostCommentReportRequest,
+  CreateRecruitmentPostCommentRequest,
+  CreateRecruitmentPostDraftRequest,
+  CreateRecruitmentPostRequest,
   ErrorResponse,
+  GetRecruitmentPostCommentRepliesParams,
+  GetRecruitmentPostCommentsParams,
+  GetRecruitmentPostsParams,
   LetsCareerSignInRequest,
   ListMyBootcampBookmarksParams,
   ListMyBootcampsParams,
   ListMyJobBookmarksParams,
   ListMyJobsParams,
+  ListMyRecruitmentApplicationsParams,
+  ListMyRecruitmentPostBookmarksParams,
+  ListMyRecruitmentPostsParams,
   ListPublicBootcampsParams,
   ListPublicJobCalendarParams,
   ListPublicJobsParams,
+  ListPublicPopularJobsParams,
+  PublishRecruitmentPostRequest,
   ReplaceMyProfileRequest,
   SuccessResponseAuthTokenResponse,
   SuccessResponseCompanyBootcampDetailResponse,
   SuccessResponseCompanyJobDetailResponse,
   SuccessResponseCreateCompanyBootcampResponse,
   SuccessResponseCreateCompanyJobResponse,
+  SuccessResponseCreateRecruitmentPostApplicationResponse,
+  SuccessResponseCreateRecruitmentPostCommentResponse,
+  SuccessResponseCreateRecruitmentPostResponse,
+  SuccessResponseImageUploadResponse,
   SuccessResponseListUserJobCalendarItemResponse,
+  SuccessResponseListUserJobSummaryResponse,
   SuccessResponseMyAccountResponse,
   SuccessResponsePageResponseCompanyBootcampSummaryResponse,
   SuccessResponsePageResponseCompanyJobSummaryResponse,
+  SuccessResponsePageResponseRecruitmentPostCommentResponse,
+  SuccessResponsePageResponseRecruitmentPostCommentRootResponse,
+  SuccessResponsePageResponseRecruitmentPostManagementItemResponse,
+  SuccessResponsePageResponseRecruitmentPostSummaryResponse,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
   SuccessResponsePageResponseUserJobSummaryResponse,
+  SuccessResponseRecruitmentApplicationPageResponse,
+  SuccessResponseRecruitmentPostDetailResponse,
+  SuccessResponseRecruitmentPostFormResponse,
   SuccessResponseUnit,
   SuccessResponseUserBootcampDetailResponse,
   SuccessResponseUserJobDetailResponse,
   TokenReissueRequest,
   UpdateCompanyBootcampRequest,
-  UpdateCompanyJobRequest
+  UpdateCompanyJobRequest,
+  UpdateRecruitmentApplicationStatusRequest,
+  UpdateRecruitmentPostRequest
 } from './models';
 
 import {
@@ -817,6 +844,574 @@ export const useDeleteMyBootcamp = <TError = unknown,
       return useMutation(getDeleteMyBootcampMutationOptions(options), queryClient);
     }
 
+export type getPublicRecruitmentPostResponse200 = {
+  data: SuccessResponseRecruitmentPostDetailResponse
+  status: 200
+}
+
+export type getPublicRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getPublicRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getPublicRecruitmentPostResponseSuccess = (getPublicRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type getPublicRecruitmentPostResponseError = (getPublicRecruitmentPostResponse400 | getPublicRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type getPublicRecruitmentPostResponse = (getPublicRecruitmentPostResponseSuccess | getPublicRecruitmentPostResponseError)
+
+export const getGetPublicRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}`
+}
+
+/**
+ *
+ *             공개된 모집글의 기본 정보와 본문을 조회합니다. 로그인 없이 호출할 수 있습니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 조회 시 조회수 집계 이벤트가 발생합니다.
+ *             - `DRAFT`, `HIDDEN`, 삭제된 글은 조회할 수 없습니다.
+ *             - `CLOSED` 상태의 공개 글은 조회할 수 있습니다.
+ * @summary 사이드 프로젝트·스터디 모집글 상세 조회
+ */
+export const getPublicRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<getPublicRecruitmentPostResponse> => {
+
+  return httpClient<getPublicRecruitmentPostResponse>(getGetPublicRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicRecruitmentPostQueryKey = (postId: number,) => {
+    return [
+    `/api/v1/recruitment-posts/${postId}`
+    ] as const;
+    }
+
+
+export const getGetPublicRecruitmentPostQueryOptions = <TData = Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError = ErrorResponse>(postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicRecruitmentPostQueryKey(postId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicRecruitmentPost>>> = ({ signal }) => getPublicRecruitmentPost(postId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: postId !== null && postId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicRecruitmentPostQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicRecruitmentPost>>>
+export type GetPublicRecruitmentPostQueryError = ErrorResponse
+
+
+export function useGetPublicRecruitmentPost<TData = Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError = ErrorResponse>(
+ postId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicRecruitmentPost>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicRecruitmentPost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicRecruitmentPost<TData = Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicRecruitmentPost>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicRecruitmentPost>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicRecruitmentPost<TData = Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 사이드 프로젝트·스터디 모집글 상세 조회
+ */
+
+export function useGetPublicRecruitmentPost<TData = Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicRecruitmentPost>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicRecruitmentPostQueryOptions(postId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type updateRecruitmentPostResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type updateRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateRecruitmentPostResponseSuccess = (updateRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type updateRecruitmentPostResponseError = (updateRecruitmentPostResponse400 | updateRecruitmentPostResponse403 | updateRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type updateRecruitmentPostResponse = (updateRecruitmentPostResponseSuccess | updateRecruitmentPostResponseError)
+
+export const getUpdateRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}`
+}
+
+/**
+ *
+ *             `saveMode`가 `PUBLISH`면 임시저장 모집글을 갱신 후 게시 상태로 전환합니다. 생략하면 기존 저장 동작을 따릅니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 전체 수정 방식이므로 공개 모집글 수정 시 전체 필드를 전달해야 합니다.
+ *             - `saveMode=PUBLISH`이면 임시저장 글을 수정한 뒤 같은 ID로 게시합니다.
+ *             - 모집 마감 글의 종료일을 기존 값과 다르게 미래로 변경하면 `RECRUITING` 상태로 전환하고 마감 시각을 초기화합니다.
+ *             - 종료일을 바꾸지 않거나 오늘·과거 날짜로 변경하면 마감 상태를 유지합니다.
+ * @summary 사이드 프로젝트·스터디 모집글 수정
+ */
+export const updateRecruitmentPost = async (postId: number,
+    updateRecruitmentPostRequest: UpdateRecruitmentPostRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateRecruitmentPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateRecruitmentPostResponse>(getUpdateRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateRecruitmentPostRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateRecruitmentPostMutationKey = () => ['updateRecruitmentPost'] as const;
+
+export const getUpdateRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPost>>, TError,UpdateRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPost>>, TError,UpdateRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRecruitmentPost>>, UpdateRecruitmentPostMutationVariables> = (props) => {
+          const {postId,data} = props ?? {};
+
+          return  updateRecruitmentPost(postId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof updateRecruitmentPost>>>
+    export type UpdateRecruitmentPostMutationBody = UpdateRecruitmentPostRequest
+    export type UpdateRecruitmentPostMutationError = ErrorResponse
+    export type UpdateRecruitmentPostMutationVariables = {postId: number;data: UpdateRecruitmentPostRequest}
+
+    /**
+ * @summary 사이드 프로젝트·스터디 모집글 수정
+ */
+export const useUpdateRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPost>>, TError,UpdateRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateRecruitmentPost>>,
+        TError,
+        UpdateRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type deleteMyRecruitmentPostResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMyRecruitmentPostResponseSuccess = (deleteMyRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type deleteMyRecruitmentPostResponseError = (deleteMyRecruitmentPostResponse400 | deleteMyRecruitmentPostResponse403 | deleteMyRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type deleteMyRecruitmentPostResponse = (deleteMyRecruitmentPostResponseSuccess | deleteMyRecruitmentPostResponseError)
+
+export const getDeleteMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}`
+}
+
+/**
+ *
+ *             작성자 본인의 모집글을 소프트 삭제합니다. 이미 삭제된 글을 다시 삭제해도 성공합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 실제 데이터 삭제가 아닌 소프트 삭제 방식입니다.
+ *             - 삭제된 글의 첨부 이미지 연결도 해제됩니다.
+ * @summary 내 사이드 프로젝트·스터디 모집글 삭제
+ */
+export const deleteMyRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyRecruitmentPostResponse> => {
+
+  return httpClient<deleteMyRecruitmentPostResponse>(getDeleteMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyRecruitmentPostMutationKey = () => ['deleteMyRecruitmentPost'] as const;
+
+export const getDeleteMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyRecruitmentPost>>, TError,DeleteMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyRecruitmentPost>>, TError,DeleteMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyRecruitmentPost>>, DeleteMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  deleteMyRecruitmentPost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyRecruitmentPost>>>
+
+    export type DeleteMyRecruitmentPostMutationError = ErrorResponse
+    export type DeleteMyRecruitmentPostMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 사이드 프로젝트·스터디 모집글 삭제
+ */
+export const useDeleteMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyRecruitmentPost>>, TError,DeleteMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyRecruitmentPost>>,
+        TError,
+        DeleteMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type createRecruitmentPostBookmarkResponse201 = {
+  data: SuccessResponseUnit
+  status: 201
+}
+
+export type createRecruitmentPostBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createRecruitmentPostBookmarkResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createRecruitmentPostBookmarkResponseSuccess = (createRecruitmentPostBookmarkResponse201) & {
+  headers: Headers;
+};
+export type createRecruitmentPostBookmarkResponseError = (createRecruitmentPostBookmarkResponse404 | createRecruitmentPostBookmarkResponse409) & {
+  headers: Headers;
+};
+
+export type createRecruitmentPostBookmarkResponse = (createRecruitmentPostBookmarkResponseSuccess | createRecruitmentPostBookmarkResponseError)
+
+export const getCreateRecruitmentPostBookmarkUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/bookmarks/me`
+}
+
+/**
+ *
+ *             사이드 프로젝트·스터디 모집글을 북마크합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `CLOSED` 상태의 공개 모집글도 북마크할 수 있습니다.
+ *             - 삭제된 모집글은 북마크할 수 없습니다.
+ *             - 기존 비활성 북마크가 있으면 재활성화됩니다.
+ * @summary 사이드·스터디 모집글 북마크 등록
+ */
+export const createRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<createRecruitmentPostBookmarkResponse> => {
+
+  return httpClient<createRecruitmentPostBookmarkResponse>(getCreateRecruitmentPostBookmarkUrl(postId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateRecruitmentPostBookmarkMutationKey = () => ['createRecruitmentPostBookmark'] as const;
+
+export const getCreateRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecruitmentPostBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, CreateRecruitmentPostBookmarkMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  createRecruitmentPostBookmark(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>>
+
+    export type CreateRecruitmentPostBookmarkMutationError = ErrorResponse
+    export type CreateRecruitmentPostBookmarkMutationVariables = {postId: number}
+
+    /**
+ * @summary 사이드·스터디 모집글 북마크 등록
+ */
+export const useCreateRecruitmentPostBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecruitmentPostBookmark>>,
+        TError,
+        CreateRecruitmentPostBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecruitmentPostBookmarkMutationOptions(options), queryClient);
+    }
+
+export type deleteRecruitmentPostBookmarkResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteRecruitmentPostBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteRecruitmentPostBookmarkResponseSuccess = (deleteRecruitmentPostBookmarkResponse200) & {
+  headers: Headers;
+};
+export type deleteRecruitmentPostBookmarkResponseError = (deleteRecruitmentPostBookmarkResponse404) & {
+  headers: Headers;
+};
+
+export type deleteRecruitmentPostBookmarkResponse = (deleteRecruitmentPostBookmarkResponseSuccess | deleteRecruitmentPostBookmarkResponseError)
+
+export const getDeleteRecruitmentPostBookmarkUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/bookmarks/me`
+}
+
+/**
+ *
+ *             사이드 프로젝트·스터디 모집글의 북마크를 해제합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 삭제된 모집글도 북마크 해제가 가능합니다.
+ *             - 북마크가 없는 상태에서 호출해도 멱등적으로 처리됩니다.
+ * @summary 사이드·스터디 모집글 북마크 해제
+ */
+export const deleteRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostBookmarkResponse> => {
+
+  return httpClient<deleteRecruitmentPostBookmarkResponse>(getDeleteRecruitmentPostBookmarkUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRecruitmentPostBookmarkMutationKey = () => ['deleteRecruitmentPostBookmark'] as const;
+
+export const getDeleteRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRecruitmentPostBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, DeleteRecruitmentPostBookmarkMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  deleteRecruitmentPostBookmark(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>>
+
+    export type DeleteRecruitmentPostBookmarkMutationError = ErrorResponse
+    export type DeleteRecruitmentPostBookmarkMutationVariables = {postId: number}
+
+    /**
+ * @summary 사이드·스터디 모집글 북마크 해제
+ */
+export const useDeleteRecruitmentPostBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>,
+        TError,
+        DeleteRecruitmentPostBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRecruitmentPostBookmarkMutationOptions(options), queryClient);
+    }
+
 export type listMyJobsResponse200 = {
   data: SuccessResponsePageResponseCompanyJobSummaryResponse
   status: 200
@@ -1056,10 +1651,15 @@ export type publishMyJobResponse404 = {
   status: 404
 }
 
+export type publishMyJobResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type publishMyJobResponseSuccess = (publishMyJobResponse200) & {
   headers: Headers;
 };
-export type publishMyJobResponseError = (publishMyJobResponse404) & {
+export type publishMyJobResponseError = (publishMyJobResponse404 | publishMyJobResponse409) & {
   headers: Headers;
 };
 
@@ -1074,7 +1674,12 @@ export const getPublishMyJobUrl = (jobId: number,) => {
 }
 
 /**
- * 임시저장한 공고를 지원자에게 노출합니다. 이미 게시된 공고를 다시 게시해도 성공합니다.
+ *
+ *             공고를 지원자에게 노출합니다. 이미 게시된 공고를 다시 게시해도 성공합니다.
+ *
+ *             운영자 검수에서 승인된 공고만 게시할 수 있습니다. 승인하면 곧바로 게시되므로,
+ *             이 요청은 승인된 뒤 운영자가 숨긴 공고를 다시 올릴 때 씁니다.
+ *             공고를 수정하면 다시 검수 대기가 되고 승인될 때까지 노출되지 않습니다.
  * @summary 내 채용공고 게시
  */
 export const publishMyJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<publishMyJobResponse> => {
@@ -1632,6 +2237,1121 @@ export const useCloseMyBootcamp = <TError = ErrorResponse,
       return useMutation(getCloseMyBootcampMutationOptions(options), queryClient);
     }
 
+export type getRecruitmentPostsResponse200 = {
+  data: SuccessResponsePageResponseRecruitmentPostSummaryResponse
+  status: 200
+}
+
+export type getRecruitmentPostsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getRecruitmentPostsResponseSuccess = (getRecruitmentPostsResponse200) & {
+  headers: Headers;
+};
+export type getRecruitmentPostsResponseError = (getRecruitmentPostsResponse400) & {
+  headers: Headers;
+};
+
+export type getRecruitmentPostsResponse = (getRecruitmentPostsResponseSuccess | getRecruitmentPostsResponseError)
+
+export const getGetRecruitmentPostsUrl = (params?: GetRecruitmentPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["recruitmentTypes","progressMethods","recruitmentStatuses","positions"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/recruitment-posts?${stringifiedParams}` : `/api/v1/recruitment-posts`
+}
+
+/**
+ *
+ *             공개 모집글을 페이지로 페이징하고 모집 구분·진행 방식·모집 상태·포지션으로 필터링합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 공개 게시글만 조회됩니다.
+ *             - 비로그인 사용자는 `bookmarked=false`, `bookmarkCount=0`으로 반환됩니다.
+ *             - 다중 필터는 동일한 Query Parameter를 반복해서 전달합니다.
+ * @summary 사이드 프로젝트·스터디 모집글 목록 조회
+ */
+export const getRecruitmentPosts = async (params?: GetRecruitmentPostsParams, options?: Parameters<typeof httpClient>[1]): Promise<getRecruitmentPostsResponse> => {
+
+  return httpClient<getRecruitmentPostsResponse>(getGetRecruitmentPostsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecruitmentPostsQueryKey = (params?: GetRecruitmentPostsParams,) => {
+    return [
+    `/api/v1/recruitment-posts`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetRecruitmentPostsQueryOptions = <TData = Awaited<ReturnType<typeof getRecruitmentPosts>>, TError = ErrorResponse>(params?: GetRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecruitmentPostsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecruitmentPosts>>> = ({ signal }) => getRecruitmentPosts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRecruitmentPostsQueryResult = NonNullable<Awaited<ReturnType<typeof getRecruitmentPosts>>>
+export type GetRecruitmentPostsQueryError = ErrorResponse
+
+
+export function useGetRecruitmentPosts<TData = Awaited<ReturnType<typeof getRecruitmentPosts>>, TError = ErrorResponse>(
+ params: undefined |  GetRecruitmentPostsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPosts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecruitmentPosts>>,
+          TError,
+          Awaited<ReturnType<typeof getRecruitmentPosts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecruitmentPosts<TData = Awaited<ReturnType<typeof getRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: GetRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPosts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecruitmentPosts>>,
+          TError,
+          Awaited<ReturnType<typeof getRecruitmentPosts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecruitmentPosts<TData = Awaited<ReturnType<typeof getRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: GetRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 사이드 프로젝트·스터디 모집글 목록 조회
+ */
+
+export function useGetRecruitmentPosts<TData = Awaited<ReturnType<typeof getRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: GetRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRecruitmentPostsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createRecruitmentPostResponse201 = {
+  data: SuccessResponseCreateRecruitmentPostResponse
+  status: 201
+}
+
+export type createRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createRecruitmentPostResponseSuccess = (createRecruitmentPostResponse201) & {
+  headers: Headers;
+};
+export type createRecruitmentPostResponseError = (createRecruitmentPostResponse400 | createRecruitmentPostResponse403) & {
+  headers: Headers;
+};
+
+export type createRecruitmentPostResponse = (createRecruitmentPostResponseSuccess | createRecruitmentPostResponseError)
+
+export const getCreateRecruitmentPostUrl = () => {
+
+
+
+
+  return `/api/v1/recruitment-posts`
+}
+
+/**
+ *
+ *             `saveMode`가 `DRAFT`면 제목 중심으로 임시저장하고, `PUBLISH`면 게시 필수값과 운영 정책 동의를 검증한 뒤 공개합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `saveMode` 기본값은 `PUBLISH`입니다. 임시저장 시 반드시 `DRAFT`를 전달해야 합니다.
+ *             - `DRAFT`는 제목만 필수입니다.
+ *             - `PUBLISH`는 전체 게시 필수값과 `agreedToPolicy=true`가 필요합니다.
+ *             - `PUBLISH` 생성 결과의 게시 상태는 `PUBLISHED`, 모집 상태는 `RECRUITING`입니다.
+ * @summary 사이드 프로젝트·스터디 모집글 생성
+ */
+export const createRecruitmentPost = async (createRecruitmentPostRequest: CreateRecruitmentPostRequest, options?: Parameters<typeof httpClient>[1]): Promise<createRecruitmentPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createRecruitmentPostResponse>(getCreateRecruitmentPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecruitmentPostRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateRecruitmentPostMutationKey = () => ['createRecruitmentPost'] as const;
+
+export const getCreateRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPost>>, TError,CreateRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPost>>, TError,CreateRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecruitmentPost>>, CreateRecruitmentPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRecruitmentPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof createRecruitmentPost>>>
+    export type CreateRecruitmentPostMutationBody = CreateRecruitmentPostRequest
+    export type CreateRecruitmentPostMutationError = ErrorResponse
+    export type CreateRecruitmentPostMutationVariables = {data: CreateRecruitmentPostRequest}
+
+    /**
+ * @summary 사이드 프로젝트·스터디 모집글 생성
+ */
+export const useCreateRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPost>>, TError,CreateRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecruitmentPost>>,
+        TError,
+        CreateRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type getRecruitmentPostCommentsResponse200 = {
+  data: SuccessResponsePageResponseRecruitmentPostCommentRootResponse
+  status: 200
+}
+
+export type getRecruitmentPostCommentsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getRecruitmentPostCommentsResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getRecruitmentPostCommentsResponseSuccess = (getRecruitmentPostCommentsResponse200) & {
+  headers: Headers;
+};
+export type getRecruitmentPostCommentsResponseError = (getRecruitmentPostCommentsResponse400 | getRecruitmentPostCommentsResponse404) & {
+  headers: Headers;
+};
+
+export type getRecruitmentPostCommentsResponse = (getRecruitmentPostCommentsResponseSuccess | getRecruitmentPostCommentsResponseError)
+
+export const getGetRecruitmentPostCommentsUrl = (postId: number,
+    params?: GetRecruitmentPostCommentsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/recruitment-posts/${postId}/comments?${stringifiedParams}` : `/api/v1/recruitment-posts/${postId}/comments`
+}
+
+/**
+ *
+ *             부모 댓글을 최신순 페이지로 조회하고 대댓글 미리보기 5건을 함께 반환합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 부모 댓글은 최신순으로 반환됩니다.
+ *             - 대댓글은 최대 5개까지 미리보기로 반환됩니다.
+ *             - `CLOSED` 상태의 공개 모집글도 댓글 조회가 가능합니다.
+ * @summary 사이드 프로젝트·스터디 모집글 부모 댓글 조회
+ */
+export const getRecruitmentPostComments = async (postId: number,
+    params?: GetRecruitmentPostCommentsParams, options?: Parameters<typeof httpClient>[1]): Promise<getRecruitmentPostCommentsResponse> => {
+
+  return httpClient<getRecruitmentPostCommentsResponse>(getGetRecruitmentPostCommentsUrl(postId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecruitmentPostCommentsQueryKey = (postId: number,
+    params?: GetRecruitmentPostCommentsParams,) => {
+    return [
+    `/api/v1/recruitment-posts/${postId}/comments`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetRecruitmentPostCommentsQueryOptions = <TData = Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError = ErrorResponse>(postId: number,
+    params?: GetRecruitmentPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecruitmentPostCommentsQueryKey(postId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecruitmentPostComments>>> = ({ signal }) => getRecruitmentPostComments(postId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: postId !== null && postId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRecruitmentPostCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof getRecruitmentPostComments>>>
+export type GetRecruitmentPostCommentsQueryError = ErrorResponse
+
+
+export function useGetRecruitmentPostComments<TData = Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError = ErrorResponse>(
+ postId: number,
+    params: undefined |  GetRecruitmentPostCommentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecruitmentPostComments>>,
+          TError,
+          Awaited<ReturnType<typeof getRecruitmentPostComments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecruitmentPostComments<TData = Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError = ErrorResponse>(
+ postId: number,
+    params?: GetRecruitmentPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecruitmentPostComments>>,
+          TError,
+          Awaited<ReturnType<typeof getRecruitmentPostComments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecruitmentPostComments<TData = Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError = ErrorResponse>(
+ postId: number,
+    params?: GetRecruitmentPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 사이드 프로젝트·스터디 모집글 부모 댓글 조회
+ */
+
+export function useGetRecruitmentPostComments<TData = Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError = ErrorResponse>(
+ postId: number,
+    params?: GetRecruitmentPostCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostComments>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRecruitmentPostCommentsQueryOptions(postId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createRecruitmentPostCommentResponse201 = {
+  data: SuccessResponseCreateRecruitmentPostCommentResponse
+  status: 201
+}
+
+export type createRecruitmentPostCommentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createRecruitmentPostCommentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createRecruitmentPostCommentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createRecruitmentPostCommentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createRecruitmentPostCommentResponseSuccess = (createRecruitmentPostCommentResponse201) & {
+  headers: Headers;
+};
+export type createRecruitmentPostCommentResponseError = (createRecruitmentPostCommentResponse400 | createRecruitmentPostCommentResponse401 | createRecruitmentPostCommentResponse403 | createRecruitmentPostCommentResponse404) & {
+  headers: Headers;
+};
+
+export type createRecruitmentPostCommentResponse = (createRecruitmentPostCommentResponseSuccess | createRecruitmentPostCommentResponseError)
+
+export const getCreateRecruitmentPostCommentUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/comments`
+}
+
+/**
+ *
+ *             공개된 모집글에 일반 댓글 또는 1단계 대댓글을 작성합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 댓글은 부모 댓글과 1단계 대댓글까지만 지원합니다.
+ *             - 댓글 작성 성공 시 모집글의 `commentCount`가 증가합니다.
+ * @summary 사이드 프로젝트·스터디 모집글 댓글 작성
+ */
+export const createRecruitmentPostComment = async (postId: number,
+    createRecruitmentPostCommentRequest: CreateRecruitmentPostCommentRequest, options?: Parameters<typeof httpClient>[1]): Promise<createRecruitmentPostCommentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createRecruitmentPostCommentResponse>(getCreateRecruitmentPostCommentUrl(postId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecruitmentPostCommentRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateRecruitmentPostCommentMutationKey = () => ['createRecruitmentPostComment'] as const;
+
+export const getCreateRecruitmentPostCommentMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostComment>>, TError,CreateRecruitmentPostCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostComment>>, TError,CreateRecruitmentPostCommentMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecruitmentPostCommentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecruitmentPostComment>>, CreateRecruitmentPostCommentMutationVariables> = (props) => {
+          const {postId,data} = props ?? {};
+
+          return  createRecruitmentPostComment(postId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecruitmentPostCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createRecruitmentPostComment>>>
+    export type CreateRecruitmentPostCommentMutationBody = CreateRecruitmentPostCommentRequest
+    export type CreateRecruitmentPostCommentMutationError = ErrorResponse
+    export type CreateRecruitmentPostCommentMutationVariables = {postId: number;data: CreateRecruitmentPostCommentRequest}
+
+    /**
+ * @summary 사이드 프로젝트·스터디 모집글 댓글 작성
+ */
+export const useCreateRecruitmentPostComment = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostComment>>, TError,CreateRecruitmentPostCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecruitmentPostComment>>,
+        TError,
+        CreateRecruitmentPostCommentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecruitmentPostCommentMutationOptions(options), queryClient);
+    }
+
+export type reportRecruitmentPostCommentResponse201 = {
+  data: SuccessResponseUnit
+  status: 201
+}
+
+export type reportRecruitmentPostCommentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type reportRecruitmentPostCommentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type reportRecruitmentPostCommentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type reportRecruitmentPostCommentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type reportRecruitmentPostCommentResponseSuccess = (reportRecruitmentPostCommentResponse201) & {
+  headers: Headers;
+};
+export type reportRecruitmentPostCommentResponseError = (reportRecruitmentPostCommentResponse400 | reportRecruitmentPostCommentResponse401 | reportRecruitmentPostCommentResponse403 | reportRecruitmentPostCommentResponse404) & {
+  headers: Headers;
+};
+
+export type reportRecruitmentPostCommentResponse = (reportRecruitmentPostCommentResponseSuccess | reportRecruitmentPostCommentResponseError)
+
+export const getReportRecruitmentPostCommentUrl = (postId: number,
+    commentId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/comments/${commentId}/reports`
+}
+
+/**
+ *
+ *             로그인한 활성 사용자가 댓글을 신고합니다. 신고 사유는 생략할 수 있고, 동일 댓글을 중복 신고할 수 있습니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 신고 사유는 생략할 수 있습니다.
+ *             - 동일 댓글에 대한 중복 신고 제한은 없습니다.
+ *             - 성공 시 별도 응답 데이터는 없습니다.
+ * @summary 사이드 프로젝트·스터디 모집글 댓글 신고
+ */
+export const reportRecruitmentPostComment = async (postId: number,
+    commentId: number,
+    createRecruitmentPostCommentReportRequest: CreateRecruitmentPostCommentReportRequest, options?: Parameters<typeof httpClient>[1]): Promise<reportRecruitmentPostCommentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<reportRecruitmentPostCommentResponse>(getReportRecruitmentPostCommentUrl(postId,commentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecruitmentPostCommentReportRequest)
+  }
+);}
+
+
+
+
+
+export const getReportRecruitmentPostCommentMutationKey = () => ['reportRecruitmentPostComment'] as const;
+
+export const getReportRecruitmentPostCommentMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportRecruitmentPostComment>>, TError,ReportRecruitmentPostCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportRecruitmentPostComment>>, TError,ReportRecruitmentPostCommentMutationVariables, TContext> => {
+
+const mutationKey = getReportRecruitmentPostCommentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportRecruitmentPostComment>>, ReportRecruitmentPostCommentMutationVariables> = (props) => {
+          const {postId,commentId,data} = props ?? {};
+
+          return  reportRecruitmentPostComment(postId,commentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportRecruitmentPostCommentMutationResult = NonNullable<Awaited<ReturnType<typeof reportRecruitmentPostComment>>>
+    export type ReportRecruitmentPostCommentMutationBody = CreateRecruitmentPostCommentReportRequest
+    export type ReportRecruitmentPostCommentMutationError = ErrorResponse
+    export type ReportRecruitmentPostCommentMutationVariables = {postId: number;commentId: number;data: CreateRecruitmentPostCommentReportRequest}
+
+    /**
+ * @summary 사이드 프로젝트·스터디 모집글 댓글 신고
+ */
+export const useReportRecruitmentPostComment = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportRecruitmentPostComment>>, TError,ReportRecruitmentPostCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reportRecruitmentPostComment>>,
+        TError,
+        ReportRecruitmentPostCommentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReportRecruitmentPostCommentMutationOptions(options), queryClient);
+    }
+
+export type createRecruitmentPostApplicationResponse200 = {
+  data: SuccessResponseCreateRecruitmentPostApplicationResponse
+  status: 200
+}
+
+export type createRecruitmentPostApplicationResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createRecruitmentPostApplicationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createRecruitmentPostApplicationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createRecruitmentPostApplicationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createRecruitmentPostApplicationResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createRecruitmentPostApplicationResponseSuccess = (createRecruitmentPostApplicationResponse200) & {
+  headers: Headers;
+};
+export type createRecruitmentPostApplicationResponseError = (createRecruitmentPostApplicationResponse400 | createRecruitmentPostApplicationResponse401 | createRecruitmentPostApplicationResponse403 | createRecruitmentPostApplicationResponse404 | createRecruitmentPostApplicationResponse409) & {
+  headers: Headers;
+};
+
+export type createRecruitmentPostApplicationResponse = (createRecruitmentPostApplicationResponseSuccess | createRecruitmentPostApplicationResponseError)
+
+export const getCreateRecruitmentPostApplicationUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/applications`
+}
+
+/**
+ *
+ *             실제 지원서 제출이 아니라 모집글의 외부 지원 연락처를 열었다는 이력을 저장합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 성공 후 FE가 응답의 `contactValue`를 사용해 카카오톡 또는 이메일을 열어야 합니다.
+ *             - 동일 사용자의 재접근은 새 이력을 생성하지 않고 `lastClickedAt`만 갱신합니다.
+ * @summary 모집글 외부 지원 링크 접근 기록
+ */
+export const createRecruitmentPostApplication = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<createRecruitmentPostApplicationResponse> => {
+
+  return httpClient<createRecruitmentPostApplicationResponse>(getCreateRecruitmentPostApplicationUrl(postId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateRecruitmentPostApplicationMutationKey = () => ['createRecruitmentPostApplication'] as const;
+
+export const getCreateRecruitmentPostApplicationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostApplication>>, TError,CreateRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostApplication>>, TError,CreateRecruitmentPostApplicationMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecruitmentPostApplicationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecruitmentPostApplication>>, CreateRecruitmentPostApplicationMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  createRecruitmentPostApplication(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecruitmentPostApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof createRecruitmentPostApplication>>>
+
+    export type CreateRecruitmentPostApplicationMutationError = ErrorResponse
+    export type CreateRecruitmentPostApplicationMutationVariables = {postId: number}
+
+    /**
+ * @summary 모집글 외부 지원 링크 접근 기록
+ */
+export const useCreateRecruitmentPostApplication = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostApplication>>, TError,CreateRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecruitmentPostApplication>>,
+        TError,
+        CreateRecruitmentPostApplicationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecruitmentPostApplicationMutationOptions(options), queryClient);
+    }
+
+export type publishMyRecruitmentPostResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type publishMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type publishMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type publishMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type publishMyRecruitmentPostResponseSuccess = (publishMyRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type publishMyRecruitmentPostResponseError = (publishMyRecruitmentPostResponse400 | publishMyRecruitmentPostResponse403 | publishMyRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type publishMyRecruitmentPostResponse = (publishMyRecruitmentPostResponseSuccess | publishMyRecruitmentPostResponseError)
+
+export const getPublishMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/me/recruitment-posts/${postId}/publish`
+}
+
+/**
+ *
+ *             임시저장 모집글의 필수값과 정책 동의를 검증한 뒤 공개 상태로 전환합니다. 이미 게시된 글은 멱등 성공합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 기존 호환용 게시 API입니다.
+ *             - 신규 수정·게시 흐름에서는 `PUT /api/v1/recruitment-posts/{postId}`와 `saveMode=PUBLISH` 사용을 권장합니다.
+ * @summary 내 모집글 게시
+ */
+export const publishMyRecruitmentPost = async (postId: number,
+    publishRecruitmentPostRequest: PublishRecruitmentPostRequest, options?: Parameters<typeof httpClient>[1]): Promise<publishMyRecruitmentPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<publishMyRecruitmentPostResponse>(getPublishMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(publishRecruitmentPostRequest)
+  }
+);}
+
+
+
+
+
+export const getPublishMyRecruitmentPostMutationKey = () => ['publishMyRecruitmentPost'] as const;
+
+export const getPublishMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getPublishMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, PublishMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId,data} = props ?? {};
+
+          return  publishMyRecruitmentPost(postId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof publishMyRecruitmentPost>>>
+    export type PublishMyRecruitmentPostMutationBody = PublishRecruitmentPostRequest
+    export type PublishMyRecruitmentPostMutationError = ErrorResponse
+    export type PublishMyRecruitmentPostMutationVariables = {postId: number;data: PublishRecruitmentPostRequest}
+
+    /**
+ * @summary 내 모집글 게시
+ */
+export const usePublishMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publishMyRecruitmentPost>>,
+        TError,
+        PublishMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublishMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type copyMyRecruitmentPostResponse201 = {
+  data: SuccessResponseRecruitmentPostFormResponse
+  status: 201
+}
+
+export type copyMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type copyMyRecruitmentPostResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type copyMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type copyMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type copyMyRecruitmentPostResponseSuccess = (copyMyRecruitmentPostResponse201) & {
+  headers: Headers;
+};
+export type copyMyRecruitmentPostResponseError = (copyMyRecruitmentPostResponse400 | copyMyRecruitmentPostResponse401 | copyMyRecruitmentPostResponse403 | copyMyRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type copyMyRecruitmentPostResponse = (copyMyRecruitmentPostResponseSuccess | copyMyRecruitmentPostResponseError)
+
+export const getCopyMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/me/recruitment-posts/${postId}/copies`
+}
+
+/**
+ *
+ *             작성자의 모집글을 새 임시저장 모집글로 복사하고 작성 화면용 데이터를 반환합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 새로운 `postId`를 가진 `DRAFT` 글이 생성됩니다.
+ *             - 본문과 이미지 정보가 복사됩니다.
+ *             - `agreedToPolicy`는 `false`입니다.
+ * @summary 내 모집글 복사
+ */
+export const copyMyRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<copyMyRecruitmentPostResponse> => {
+
+  return httpClient<copyMyRecruitmentPostResponse>(getCopyMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCopyMyRecruitmentPostMutationKey = () => ['copyMyRecruitmentPost'] as const;
+
+export const getCopyMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getCopyMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, CopyMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  copyMyRecruitmentPost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CopyMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof copyMyRecruitmentPost>>>
+
+    export type CopyMyRecruitmentPostMutationError = ErrorResponse
+    export type CopyMyRecruitmentPostMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 모집글 복사
+ */
+export const useCopyMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof copyMyRecruitmentPost>>,
+        TError,
+        CopyMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCopyMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type createMyRecruitmentPostDraftResponse201 = {
+  data: SuccessResponseCreateRecruitmentPostResponse
+  status: 201
+}
+
+export type createMyRecruitmentPostDraftResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createMyRecruitmentPostDraftResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createMyRecruitmentPostDraftResponseSuccess = (createMyRecruitmentPostDraftResponse201) & {
+  headers: Headers;
+};
+export type createMyRecruitmentPostDraftResponseError = (createMyRecruitmentPostDraftResponse400 | createMyRecruitmentPostDraftResponse403) & {
+  headers: Headers;
+};
+
+export type createMyRecruitmentPostDraftResponse = (createMyRecruitmentPostDraftResponseSuccess | createMyRecruitmentPostDraftResponseError)
+
+export const getCreateMyRecruitmentPostDraftUrl = () => {
+
+
+
+
+  return `/api/v1/me/recruitment-posts/drafts`
+}
+
+/**
+ *
+ *             제목만 필수로 받고 나머지 필드는 선택적으로 저장합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 기존 호환용 임시저장 API입니다.
+ *             - 신규 생성 화면에서는 `POST /api/v1/recruitment-posts`에 `saveMode=DRAFT`를 사용하는 것을 권장합니다.
+ * @summary 내 모집글 임시저장 생성
+ */
+export const createMyRecruitmentPostDraft = async (createRecruitmentPostDraftRequest: CreateRecruitmentPostDraftRequest, options?: Parameters<typeof httpClient>[1]): Promise<createMyRecruitmentPostDraftResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createMyRecruitmentPostDraftResponse>(getCreateMyRecruitmentPostDraftUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecruitmentPostDraftRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateMyRecruitmentPostDraftMutationKey = () => ['createMyRecruitmentPostDraft'] as const;
+
+export const getCreateMyRecruitmentPostDraftMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext> => {
+
+const mutationKey = getCreateMyRecruitmentPostDraftMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, CreateMyRecruitmentPostDraftMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMyRecruitmentPostDraft(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMyRecruitmentPostDraftMutationResult = NonNullable<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>>
+    export type CreateMyRecruitmentPostDraftMutationBody = CreateRecruitmentPostDraftRequest
+    export type CreateMyRecruitmentPostDraftMutationError = ErrorResponse
+    export type CreateMyRecruitmentPostDraftMutationVariables = {data: CreateRecruitmentPostDraftRequest}
+
+    /**
+ * @summary 내 모집글 임시저장 생성
+ */
+export const useCreateMyRecruitmentPostDraft = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>,
+        TError,
+        CreateMyRecruitmentPostDraftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateMyRecruitmentPostDraftMutationOptions(options), queryClient);
+    }
+
 export type createJobSourceUrlClickResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -1925,6 +3645,109 @@ export const useDeleteJobBookmark = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteJobBookmarkMutationOptions(options), queryClient);
+    }
+
+export type createImageResponse201 = {
+  data: SuccessResponseImageUploadResponse
+  status: 201
+}
+
+export type createImageResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createImageResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type createImageResponseSuccess = (createImageResponse201) & {
+  headers: Headers;
+};
+export type createImageResponseError = (createImageResponse400 | createImageResponse500) & {
+  headers: Headers;
+};
+
+export type createImageResponse = (createImageResponseSuccess | createImageResponseError)
+
+export const getCreateImageUrl = () => {
+
+
+
+
+  return `/api/v1/images`
+}
+
+/**
+ * 이미지 파일을 S3에 임시 저장하고, 게시글 저장 시 연결할 이미지 식별자와 표시용 URL을 반환합니다.
+ * @summary 이미지 업로드
+ */
+export const createImage = async (createImageBody?: CreateImageBody, options?: Parameters<typeof httpClient>[1]): Promise<createImageResponse> => {
+    const formData = new FormData();
+if(createImageBody?.file !== undefined) {
+ formData.append(`file`, createImageBody.file);
+ }
+
+  return httpClient<createImageResponse>(getCreateImageUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getCreateImageMutationKey = () => ['createImage'] as const;
+
+export const getCreateImageMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createImage>>, TError,CreateImageMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createImage>>, TError,CreateImageMutationVariables, TContext> => {
+
+const mutationKey = getCreateImageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createImage>>, CreateImageMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createImage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateImageMutationResult = NonNullable<Awaited<ReturnType<typeof createImage>>>
+    export type CreateImageMutationBody = CreateImageBody | undefined
+    export type CreateImageMutationError = ErrorResponse
+    export type CreateImageMutationVariables = {data?: CreateImageBody}
+
+    /**
+ * @summary 이미지 업로드
+ */
+export const useCreateImage = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createImage>>, TError,CreateImageMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createImage>>,
+        TError,
+        CreateImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateImageMutationOptions(options), queryClient);
     }
 
 export type createBootcampApplicationUrlClickResponse200 = {
@@ -2812,6 +4635,468 @@ export const useCreateAdvertisementInquiry = <TError = ErrorResponse,
       return useMutation(getCreateAdvertisementInquiryMutationOptions(options), queryClient);
     }
 
+export type reopenMyRecruitmentPostResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type reopenMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type reopenMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type reopenMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type reopenMyRecruitmentPostResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type reopenMyRecruitmentPostResponseSuccess = (reopenMyRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type reopenMyRecruitmentPostResponseError = (reopenMyRecruitmentPostResponse400 | reopenMyRecruitmentPostResponse403 | reopenMyRecruitmentPostResponse404 | reopenMyRecruitmentPostResponse409) & {
+  headers: Headers;
+};
+
+export type reopenMyRecruitmentPostResponse = (reopenMyRecruitmentPostResponseSuccess | reopenMyRecruitmentPostResponseError)
+
+export const getReopenMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/reopen`
+}
+
+/**
+ *
+ *             작성자 본인의 모집글을 모집 중 상태로 설정합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `CLOSED` 글은 모집 종료일이 오늘보다 미래일 때 `RECRUITING` 상태로 변경합니다.
+ *             - 모집 기간이나 게시글 내용은 변경하지 않습니다.
+ *             - 이미 모집 중인 글에 호출하면 성공 처리되며 상태를 변경하지 않습니다.
+ *             - 마감 글의 종료일이 오늘이거나 과거이면 409 오류를 반환합니다.
+ *             - 모집글 수정 시 종료일을 기존 값과 다르게 미래로 변경하면 자동으로 재모집됩니다.
+ * @summary 내 사이드 프로젝트·스터디 모집글 재모집
+ */
+export const reopenMyRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<reopenMyRecruitmentPostResponse> => {
+
+  return httpClient<reopenMyRecruitmentPostResponse>(getReopenMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getReopenMyRecruitmentPostMutationKey = () => ['reopenMyRecruitmentPost'] as const;
+
+export const getReopenMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenMyRecruitmentPost>>, TError,ReopenMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof reopenMyRecruitmentPost>>, TError,ReopenMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getReopenMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reopenMyRecruitmentPost>>, ReopenMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  reopenMyRecruitmentPost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReopenMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof reopenMyRecruitmentPost>>>
+
+    export type ReopenMyRecruitmentPostMutationError = ErrorResponse
+    export type ReopenMyRecruitmentPostMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 사이드 프로젝트·스터디 모집글 재모집
+ */
+export const useReopenMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenMyRecruitmentPost>>, TError,ReopenMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reopenMyRecruitmentPost>>,
+        TError,
+        ReopenMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReopenMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type closeMyRecruitmentPostResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type closeMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type closeMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type closeMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type closeMyRecruitmentPostResponseSuccess = (closeMyRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type closeMyRecruitmentPostResponseError = (closeMyRecruitmentPostResponse400 | closeMyRecruitmentPostResponse403 | closeMyRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type closeMyRecruitmentPostResponse = (closeMyRecruitmentPostResponseSuccess | closeMyRecruitmentPostResponseError)
+
+export const getCloseMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/close`
+}
+
+/**
+ *
+ *             작성자 본인의 모집글을 수동으로 마감합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 수동 조기 마감용 API입니다.
+ *             - 이미 마감된 글에 다시 호출해도 성공 처리됩니다.
+ *             - 모집 종료일 다음 날 스케줄러가 자동 마감합니다.
+ *             - 종료일 당일에는 모집 중 상태가 유지됩니다.
+ * @summary 내 사이드 프로젝트·스터디 모집글 마감
+ */
+export const closeMyRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<closeMyRecruitmentPostResponse> => {
+
+  return httpClient<closeMyRecruitmentPostResponse>(getCloseMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseMyRecruitmentPostMutationKey = () => ['closeMyRecruitmentPost'] as const;
+
+export const getCloseMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyRecruitmentPost>>, TError,CloseMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeMyRecruitmentPost>>, TError,CloseMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getCloseMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeMyRecruitmentPost>>, CloseMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  closeMyRecruitmentPost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof closeMyRecruitmentPost>>>
+
+    export type CloseMyRecruitmentPostMutationError = ErrorResponse
+    export type CloseMyRecruitmentPostMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 사이드 프로젝트·스터디 모집글 마감
+ */
+export const useCloseMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyRecruitmentPost>>, TError,CloseMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeMyRecruitmentPost>>,
+        TError,
+        CloseMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type deleteRecruitmentPostApplicationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteRecruitmentPostApplicationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteRecruitmentPostApplicationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteRecruitmentPostApplicationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteRecruitmentPostApplicationResponseSuccess = (deleteRecruitmentPostApplicationResponse200) & {
+  headers: Headers;
+};
+export type deleteRecruitmentPostApplicationResponseError = (deleteRecruitmentPostApplicationResponse401 | deleteRecruitmentPostApplicationResponse403 | deleteRecruitmentPostApplicationResponse404) & {
+  headers: Headers;
+};
+
+export type deleteRecruitmentPostApplicationResponse = (deleteRecruitmentPostApplicationResponseSuccess | deleteRecruitmentPostApplicationResponseError)
+
+export const getDeleteRecruitmentPostApplicationUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/me/recruitment-applications/${postId}`
+}
+
+/**
+ *
+ *             지원 이력을 개인 목록에서 숨기고 모집글의 활성 `applicationCount` 집계에서도 제외합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 지원 이력은 소프트 삭제됩니다.
+ *             - 이후 다시 외부 지원 링크에 접근하면 기존 이력이 재활성화됩니다.
+ * @summary 내 모집글 지원 이력 삭제
+ */
+export const deleteRecruitmentPostApplication = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostApplicationResponse> => {
+
+  return httpClient<deleteRecruitmentPostApplicationResponse>(getDeleteRecruitmentPostApplicationUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRecruitmentPostApplicationMutationKey = () => ['deleteRecruitmentPostApplication'] as const;
+
+export const getDeleteRecruitmentPostApplicationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRecruitmentPostApplicationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, DeleteRecruitmentPostApplicationMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  deleteRecruitmentPostApplication(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRecruitmentPostApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>>
+
+    export type DeleteRecruitmentPostApplicationMutationError = ErrorResponse
+    export type DeleteRecruitmentPostApplicationMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 모집글 지원 이력 삭제
+ */
+export const useDeleteRecruitmentPostApplication = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>,
+        TError,
+        DeleteRecruitmentPostApplicationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRecruitmentPostApplicationMutationOptions(options), queryClient);
+    }
+
+export type updateRecruitmentPostApplicationStatusResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type updateRecruitmentPostApplicationStatusResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateRecruitmentPostApplicationStatusResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type updateRecruitmentPostApplicationStatusResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateRecruitmentPostApplicationStatusResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateRecruitmentPostApplicationStatusResponseSuccess = (updateRecruitmentPostApplicationStatusResponse200) & {
+  headers: Headers;
+};
+export type updateRecruitmentPostApplicationStatusResponseError = (updateRecruitmentPostApplicationStatusResponse400 | updateRecruitmentPostApplicationStatusResponse401 | updateRecruitmentPostApplicationStatusResponse403 | updateRecruitmentPostApplicationStatusResponse404) & {
+  headers: Headers;
+};
+
+export type updateRecruitmentPostApplicationStatusResponse = (updateRecruitmentPostApplicationStatusResponseSuccess | updateRecruitmentPostApplicationStatusResponseError)
+
+export const getUpdateRecruitmentPostApplicationStatusUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/me/recruitment-applications/${postId}`
+}
+
+/**
+ *
+ *             실제 지원서 처리 상태가 아닌 사용자의 개인 관리 상태를 변경합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 모집글 작성자에게 보이는 지원자 정보에는 영향을 주지 않습니다.
+ *             - 삭제된 지원 이력은 상태를 변경할 수 없습니다.
+ * @summary 내 모집글 지원 상태 변경
+ */
+export const updateRecruitmentPostApplicationStatus = async (postId: number,
+    updateRecruitmentApplicationStatusRequest: UpdateRecruitmentApplicationStatusRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateRecruitmentPostApplicationStatusResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateRecruitmentPostApplicationStatusResponse>(getUpdateRecruitmentPostApplicationStatusUrl(postId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateRecruitmentApplicationStatusRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateRecruitmentPostApplicationStatusMutationKey = () => ['updateRecruitmentPostApplicationStatus'] as const;
+
+export const getUpdateRecruitmentPostApplicationStatusMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRecruitmentPostApplicationStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, UpdateRecruitmentPostApplicationStatusMutationVariables> = (props) => {
+          const {postId,data} = props ?? {};
+
+          return  updateRecruitmentPostApplicationStatus(postId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRecruitmentPostApplicationStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>>
+    export type UpdateRecruitmentPostApplicationStatusMutationBody = UpdateRecruitmentApplicationStatusRequest
+    export type UpdateRecruitmentPostApplicationStatusMutationError = ErrorResponse
+    export type UpdateRecruitmentPostApplicationStatusMutationVariables = {postId: number;data: UpdateRecruitmentApplicationStatusRequest}
+
+    /**
+ * @summary 내 모집글 지원 상태 변경
+ */
+export const useUpdateRecruitmentPostApplicationStatus = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>,
+        TError,
+        UpdateRecruitmentPostApplicationStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRecruitmentPostApplicationStatusMutationOptions(options), queryClient);
+    }
+
 export type getMyAccountResponse200 = {
   data: SuccessResponseMyAccountResponse
   status: 200
@@ -2945,6 +5230,728 @@ export function useGetMyAccount<TData = Awaited<ReturnType<typeof getMyAccount>>
 
 
 
+export type getRecruitmentPostCommentRepliesResponse200 = {
+  data: SuccessResponsePageResponseRecruitmentPostCommentResponse
+  status: 200
+}
+
+export type getRecruitmentPostCommentRepliesResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getRecruitmentPostCommentRepliesResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getRecruitmentPostCommentRepliesResponseSuccess = (getRecruitmentPostCommentRepliesResponse200) & {
+  headers: Headers;
+};
+export type getRecruitmentPostCommentRepliesResponseError = (getRecruitmentPostCommentRepliesResponse400 | getRecruitmentPostCommentRepliesResponse404) & {
+  headers: Headers;
+};
+
+export type getRecruitmentPostCommentRepliesResponse = (getRecruitmentPostCommentRepliesResponseSuccess | getRecruitmentPostCommentRepliesResponseError)
+
+export const getGetRecruitmentPostCommentRepliesUrl = (postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/recruitment-posts/${postId}/comments/${commentId}/replies?${stringifiedParams}` : `/api/v1/recruitment-posts/${postId}/comments/${commentId}/replies`
+}
+
+/**
+ *
+ *             특정 부모 댓글의 대댓글을 오래된 순서의 페이지로 조회합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `commentId`는 부모 댓글이어야 합니다.
+ *             - 대댓글에 다시 답글을 작성할 수 없습니다.
+ * @summary 사이드 프로젝트·스터디 모집글 대댓글 더보기
+ */
+export const getRecruitmentPostCommentReplies = async (postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams, options?: Parameters<typeof httpClient>[1]): Promise<getRecruitmentPostCommentRepliesResponse> => {
+
+  return httpClient<getRecruitmentPostCommentRepliesResponse>(getGetRecruitmentPostCommentRepliesUrl(postId,commentId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecruitmentPostCommentRepliesQueryKey = (postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams,) => {
+    return [
+    `/api/v1/recruitment-posts/${postId}/comments/${commentId}/replies`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetRecruitmentPostCommentRepliesQueryOptions = <TData = Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError = ErrorResponse>(postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecruitmentPostCommentRepliesQueryKey(postId,commentId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>> = ({ signal }) => getRecruitmentPostCommentReplies(postId,commentId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: postId !== null && postId !== undefined && commentId !== null && commentId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRecruitmentPostCommentRepliesQueryResult = NonNullable<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>>
+export type GetRecruitmentPostCommentRepliesQueryError = ErrorResponse
+
+
+export function useGetRecruitmentPostCommentReplies<TData = Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError = ErrorResponse>(
+ postId: number,
+    commentId: number,
+    params: undefined |  GetRecruitmentPostCommentRepliesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>,
+          TError,
+          Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecruitmentPostCommentReplies<TData = Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError = ErrorResponse>(
+ postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>,
+          TError,
+          Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecruitmentPostCommentReplies<TData = Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError = ErrorResponse>(
+ postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 사이드 프로젝트·스터디 모집글 대댓글 더보기
+ */
+
+export function useGetRecruitmentPostCommentReplies<TData = Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError = ErrorResponse>(
+ postId: number,
+    commentId: number,
+    params?: GetRecruitmentPostCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecruitmentPostCommentReplies>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRecruitmentPostCommentRepliesQueryOptions(postId,commentId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listMyRecruitmentPostBookmarksResponse200 = {
+  data: SuccessResponsePageResponseRecruitmentPostSummaryResponse
+  status: 200
+}
+
+export type listMyRecruitmentPostBookmarksResponseSuccess = (listMyRecruitmentPostBookmarksResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listMyRecruitmentPostBookmarksResponse = (listMyRecruitmentPostBookmarksResponseSuccess)
+
+export const getListMyRecruitmentPostBookmarksUrl = (params?: ListMyRecruitmentPostBookmarksParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/recruitment-post-bookmarks?${stringifiedParams}` : `/api/v1/recruitment-post-bookmarks`
+}
+
+/**
+ *
+ *             북마크를 마지막으로 활성화한 순서의 페이지를 조회합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 현재 활성화된 북마크 중 공개 글만 반환합니다.
+ *             - 응답 아이템의 `bookmarked`는 항상 `true`입니다.
+ * @summary 사이드·스터디 모집글 북마크 목록 조회
+ */
+export const listMyRecruitmentPostBookmarks = async (params?: ListMyRecruitmentPostBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentPostBookmarksResponse> => {
+
+  return httpClient<listMyRecruitmentPostBookmarksResponse>(getListMyRecruitmentPostBookmarksUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyRecruitmentPostBookmarksQueryKey = (params?: ListMyRecruitmentPostBookmarksParams,) => {
+    return [
+    `/api/v1/recruitment-post-bookmarks`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyRecruitmentPostBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError = unknown>(params?: ListMyRecruitmentPostBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentPostBookmarksQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>> = ({ signal }) => listMyRecruitmentPostBookmarks(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyRecruitmentPostBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>>
+export type ListMyRecruitmentPostBookmarksQueryError = unknown
+
+
+export function useListMyRecruitmentPostBookmarks<TData = Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError = unknown>(
+ params: undefined |  ListMyRecruitmentPostBookmarksParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPostBookmarks<TData = Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError = unknown>(
+ params?: ListMyRecruitmentPostBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPostBookmarks<TData = Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError = unknown>(
+ params?: ListMyRecruitmentPostBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 사이드·스터디 모집글 북마크 목록 조회
+ */
+
+export function useListMyRecruitmentPostBookmarks<TData = Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError = unknown>(
+ params?: ListMyRecruitmentPostBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyRecruitmentPostBookmarksQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listMyRecruitmentPostsResponse200 = {
+  data: SuccessResponsePageResponseRecruitmentPostManagementItemResponse
+  status: 200
+}
+
+export type listMyRecruitmentPostsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listMyRecruitmentPostsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMyRecruitmentPostsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyRecruitmentPostsResponseSuccess = (listMyRecruitmentPostsResponse200) & {
+  headers: Headers;
+};
+export type listMyRecruitmentPostsResponseError = (listMyRecruitmentPostsResponse400 | listMyRecruitmentPostsResponse401 | listMyRecruitmentPostsResponse403) & {
+  headers: Headers;
+};
+
+export type listMyRecruitmentPostsResponse = (listMyRecruitmentPostsResponseSuccess | listMyRecruitmentPostsResponseError)
+
+export const getListMyRecruitmentPostsUrl = (params?: ListMyRecruitmentPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/me/recruitment-posts?${stringifiedParams}` : `/api/v1/me/recruitment-posts`
+}
+
+/**
+ *
+ *             임시저장·공개·비공개 모집글을 최근 저장순으로 조회합니다.
+ *
+ *             keyword를 보내면 모집글 제목에 포함되는지 대소문자를 구분하지 않고 검색합니다.
+ *             검색어는 2자 이상 100자 이하여야 하며, 게시 상태·모집 상태·지원 이력·모집 유형 필터와 함께 사용할 수 있습니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `keyword`는 앞뒤 공백을 제거한 뒤 검색합니다.
+ *             - `DRAFT` 글의 `recruitmentStatus`는 `null`입니다.
+ *             - `DRAFT` 글의 `continueWriting`은 `true`입니다.
+ * @summary 내 사이드 프로젝트·스터디 모집글 관리 목록 조회
+ */
+export const listMyRecruitmentPosts = async (params?: ListMyRecruitmentPostsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentPostsResponse> => {
+
+  return httpClient<listMyRecruitmentPostsResponse>(getListMyRecruitmentPostsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyRecruitmentPostsQueryKey = (params?: ListMyRecruitmentPostsParams,) => {
+    return [
+    `/api/v1/me/recruitment-posts`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyRecruitmentPostsQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentPostsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentPosts>>> = ({ signal }) => listMyRecruitmentPosts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyRecruitmentPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentPosts>>>
+export type ListMyRecruitmentPostsQueryError = ErrorResponse
+
+
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params: undefined |  ListMyRecruitmentPostsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 사이드 프로젝트·스터디 모집글 관리 목록 조회
+ */
+
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyRecruitmentPostsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getMyRecruitmentPostFormResponse200 = {
+  data: SuccessResponseRecruitmentPostFormResponse
+  status: 200
+}
+
+export type getMyRecruitmentPostFormResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getMyRecruitmentPostFormResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getMyRecruitmentPostFormResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getMyRecruitmentPostFormResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyRecruitmentPostFormResponseSuccess = (getMyRecruitmentPostFormResponse200) & {
+  headers: Headers;
+};
+export type getMyRecruitmentPostFormResponseError = (getMyRecruitmentPostFormResponse400 | getMyRecruitmentPostFormResponse401 | getMyRecruitmentPostFormResponse403 | getMyRecruitmentPostFormResponse404) & {
+  headers: Headers;
+};
+
+export type getMyRecruitmentPostFormResponse = (getMyRecruitmentPostFormResponseSuccess | getMyRecruitmentPostFormResponseError)
+
+export const getGetMyRecruitmentPostFormUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/me/recruitment-posts/${postId}`
+}
+
+/**
+ *
+ *             작성자의 임시저장·공개·비공개 모집글을 작성 화면용 전체 필드로 조회합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 본인이 작성한 `DRAFT`, `PUBLISHED`, `HIDDEN` 글을 조회할 수 있습니다.
+ *             - `content`는 문자열이 아닌 JSON 객체입니다.
+ *             - `agreedToPolicy`는 현재 항상 `false`로 반환됩니다.
+ * @summary 내 모집글 작성 폼 상세 조회
+ */
+export const getMyRecruitmentPostForm = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyRecruitmentPostFormResponse> => {
+
+  return httpClient<getMyRecruitmentPostFormResponse>(getGetMyRecruitmentPostFormUrl(postId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyRecruitmentPostFormQueryKey = (postId: number,) => {
+    return [
+    `/api/v1/me/recruitment-posts/${postId}`
+    ] as const;
+    }
+
+
+export const getGetMyRecruitmentPostFormQueryOptions = <TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyRecruitmentPostFormQueryKey(postId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>> = ({ signal }) => getMyRecruitmentPostForm(postId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: postId !== null && postId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyRecruitmentPostFormQueryResult = NonNullable<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>>
+export type GetMyRecruitmentPostFormQueryError = ErrorResponse
+
+
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>,
+          TError,
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>,
+          TError,
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 모집글 작성 폼 상세 조회
+ */
+
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyRecruitmentPostFormQueryOptions(postId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listMyRecruitmentApplicationsResponse200 = {
+  data: SuccessResponseRecruitmentApplicationPageResponse
+  status: 200
+}
+
+export type listMyRecruitmentApplicationsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listMyRecruitmentApplicationsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMyRecruitmentApplicationsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyRecruitmentApplicationsResponseSuccess = (listMyRecruitmentApplicationsResponse200) & {
+  headers: Headers;
+};
+export type listMyRecruitmentApplicationsResponseError = (listMyRecruitmentApplicationsResponse400 | listMyRecruitmentApplicationsResponse401 | listMyRecruitmentApplicationsResponse403) & {
+  headers: Headers;
+};
+
+export type listMyRecruitmentApplicationsResponse = (listMyRecruitmentApplicationsResponseSuccess | listMyRecruitmentApplicationsResponseError)
+
+export const getListMyRecruitmentApplicationsUrl = (params?: ListMyRecruitmentApplicationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/me/recruitment-applications?${stringifiedParams}` : `/api/v1/me/recruitment-applications`
+}
+
+/**
+ *
+ *             모집글의 외부 지원 링크를 연 이력을 최초 저장 시각 기준 최근 저장순으로 조회합니다. 지원 상태는 사용자의 개인 관리 상태입니다.
+ *
+ *             keyword를 보내면 모집글 제목에 포함되는지 대소문자를 구분하지 않고 검색합니다.
+ *             검색어는 2자 이상 100자 이하여야 하며, 모집 상태·모집 유형·지원 상태 필터와 함께 사용할 수 있습니다.
+ *             countsByRecruitmentType에는 현재 검색·모집 상태·지원 상태 필터를 적용한 SIDE_PROJECT, STUDY 건수를 반환합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `applicationStatus`는 사용자의 개인 관리 상태입니다.
+ *             - 지원 이력은 최초 접근 시각 기준으로 정렬됩니다.
+ *             - `countsByRecruitmentType`는 현재 필터 조건이 적용된 결과입니다.
+ * @summary 내 모집글 지원 이력 목록 조회
+ */
+export const listMyRecruitmentApplications = async (params?: ListMyRecruitmentApplicationsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentApplicationsResponse> => {
+
+  return httpClient<listMyRecruitmentApplicationsResponse>(getListMyRecruitmentApplicationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyRecruitmentApplicationsQueryKey = (params?: ListMyRecruitmentApplicationsParams,) => {
+    return [
+    `/api/v1/me/recruitment-applications`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyRecruitmentApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentApplicationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentApplications>>> = ({ signal }) => listMyRecruitmentApplications(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyRecruitmentApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentApplications>>>
+export type ListMyRecruitmentApplicationsQueryError = ErrorResponse
+
+
+export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
+ params: undefined |  ListMyRecruitmentApplicationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentApplications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentApplications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 모집글 지원 이력 목록 조회
+ */
+
+export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyRecruitmentApplicationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listPublicJobsResponse200 = {
   data: SuccessResponsePageResponseUserJobSummaryResponse
   status: 200
@@ -2979,8 +5986,9 @@ export const getListPublicJobsUrl = (params?: ListPublicJobsParams,) => {
  *
  *             sort로 정렬을 고릅니다. LATEST는 최신순, VIEW_COUNT는 조회수순이며 조회 수가 같으면 최신순입니다.
  *
- *             employmentType과 experienceType으로 목록을 좁힙니다. 각각 하나씩 고를 수 있고,
- *             보내지 않으면 해당 조건을 적용하지 않습니다. 두 필터와 정렬은 함께 사용할 수 있습니다.
+ *             employmentType, experienceType, jobField(직군), jobRole(직무)로 목록을 좁힙니다. 각각 하나씩 고를 수 있고,
+ *             보내지 않으면 해당 조건을 적용하지 않습니다. jobField와 jobRole은 공고의 값과 정확히 같은지로 거릅니다.
+ *             필터끼리, 그리고 정렬과 함께 사용할 수 있습니다.
  *
  *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
  *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
@@ -3200,6 +6208,271 @@ export function useGetPublicJob<TData = Awaited<ReturnType<typeof getPublicJob>>
 
 
 
+export type listMySimilarJobsResponse200 = {
+  data: SuccessResponseListUserJobSummaryResponse
+  status: 200
+}
+
+export type listMySimilarJobsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMySimilarJobsResponseSuccess = (listMySimilarJobsResponse200) & {
+  headers: Headers;
+};
+export type listMySimilarJobsResponseError = (listMySimilarJobsResponse401) & {
+  headers: Headers;
+};
+
+export type listMySimilarJobsResponse = (listMySimilarJobsResponseSuccess | listMySimilarJobsResponseError)
+
+export const getListMySimilarJobsUrl = () => {
+
+
+
+
+  return `/api/v1/jobs/similar`
+}
+
+/**
+ *
+ *             내 정보의 희망 직무(wishJob)와 희망 산업(wishIndustry)에 맞는 채용공고를 최대 4건 반환합니다.
+ *             사용자마다 결과가 다르므로 로그인이 필요합니다.
+ *
+ *             희망 값은 쉼표로 나눠 앞뒤 공백을 지운 뒤, 공고의 직무(jobRole)·산업(industry)과 정확히 같은지 비교합니다.
+ *             직무와 산업이 모두 맞는 공고, 직무만 맞는 공고, 산업만 맞는 공고 순으로 채우며
+ *             각 순서 안에서는 조회 수 내림차순이고 조회 수가 같으면 최신순입니다.
+ *
+ *             게시 중인 공고 중 마감 처리되지 않았고 모집 종료 일시가 지나지 않은 공고만 대상입니다.
+ *             맞는 공고가 4건보다 적으면 있는 만큼만 반환하고 다른 공고로 채우지 않습니다.
+ *             희망 직무와 산업이 모두 비어 있거나 기업 회원이면 빈 목록입니다.
+ * @summary 비슷한 채용공고 조회
+ */
+export const listMySimilarJobs = async ( options?: Parameters<typeof httpClient>[1]): Promise<listMySimilarJobsResponse> => {
+
+  return httpClient<listMySimilarJobsResponse>(getListMySimilarJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMySimilarJobsQueryKey = () => {
+    return [
+    `/api/v1/jobs/similar`
+    ] as const;
+    }
+
+
+export const getListMySimilarJobsQueryOptions = <TData = Awaited<ReturnType<typeof listMySimilarJobs>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySimilarJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMySimilarJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMySimilarJobs>>> = ({ signal }) => listMySimilarJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMySimilarJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMySimilarJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listMySimilarJobs>>>
+export type ListMySimilarJobsQueryError = ErrorResponse
+
+
+export function useListMySimilarJobs<TData = Awaited<ReturnType<typeof listMySimilarJobs>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySimilarJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMySimilarJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listMySimilarJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMySimilarJobs<TData = Awaited<ReturnType<typeof listMySimilarJobs>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySimilarJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMySimilarJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listMySimilarJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMySimilarJobs<TData = Awaited<ReturnType<typeof listMySimilarJobs>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySimilarJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 비슷한 채용공고 조회
+ */
+
+export function useListMySimilarJobs<TData = Awaited<ReturnType<typeof listMySimilarJobs>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMySimilarJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMySimilarJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicPopularJobsResponse200 = {
+  data: SuccessResponseListUserJobSummaryResponse
+  status: 200
+}
+
+export type listPublicPopularJobsResponseSuccess = (listPublicPopularJobsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPublicPopularJobsResponse = (listPublicPopularJobsResponseSuccess)
+
+export const getListPublicPopularJobsUrl = (params?: ListPublicPopularJobsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/jobs/popular?${stringifiedParams}` : `/api/v1/jobs/popular`
+}
+
+/**
+ *
+ *             조회 수가 가장 높은 채용공고를 최대 4건 반환합니다. 페이지 정보는 없습니다.
+ *
+ *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내면 bookmarked에 해당 사용자의 북마크 여부가 담기고,
+ *             보내지 않으면 항상 false입니다.
+ *
+ *             employmentType을 보내면 해당 고용 형태의 공고 중에서 고릅니다. 예를 들어 FULL_TIME은 정규직,
+ *             INTERN은 인턴 인기 공고입니다. 보내지 않으면 고용 형태와 관계없이 전체에서 고릅니다.
+ *
+ *             게시 중인 공고 중 마감 처리되지 않았고 모집 종료 일시가 지나지 않은 공고만 대상입니다.
+ *             모집 종료 일시가 없는 ALWAYS_OPEN 공고는 포함하며, 한 번도 조회되지 않은 공고는 포함하지 않습니다.
+ *             조회 수 내림차순이며 조회 수가 같으면 최신순입니다.
+ *
+ *             조회 수 기록은 비동기이므로 가장 최근 조회가 즉시 반영되지 않을 수 있습니다.
+ * @summary 인기 채용공고 조회
+ */
+export const listPublicPopularJobs = async (params?: ListPublicPopularJobsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicPopularJobsResponse> => {
+
+  return httpClient<listPublicPopularJobsResponse>(getListPublicPopularJobsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicPopularJobsQueryKey = (params?: ListPublicPopularJobsParams,) => {
+    return [
+    `/api/v1/jobs/popular`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicPopularJobsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicPopularJobs>>, TError = unknown>(params?: ListPublicPopularJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicPopularJobsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicPopularJobs>>> = ({ signal }) => listPublicPopularJobs(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicPopularJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicPopularJobs>>>
+export type ListPublicPopularJobsQueryError = unknown
+
+
+export function useListPublicPopularJobs<TData = Awaited<ReturnType<typeof listPublicPopularJobs>>, TError = unknown>(
+ params: undefined |  ListPublicPopularJobsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicPopularJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicPopularJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicPopularJobs<TData = Awaited<ReturnType<typeof listPublicPopularJobs>>, TError = unknown>(
+ params?: ListPublicPopularJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicPopularJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicPopularJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicPopularJobs<TData = Awaited<ReturnType<typeof listPublicPopularJobs>>, TError = unknown>(
+ params?: ListPublicPopularJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 인기 채용공고 조회
+ */
+
+export function useListPublicPopularJobs<TData = Awaited<ReturnType<typeof listPublicPopularJobs>>, TError = unknown>(
+ params?: ListPublicPopularJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularJobs>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicPopularJobsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listPublicJobCalendarResponse200 = {
   data: SuccessResponseListUserJobCalendarItemResponse
   status: 200
@@ -3368,6 +6641,15 @@ export const getListMyJobBookmarksUrl = (params?: ListMyJobBookmarksParams,) => 
 }
 
 /**
+ *
+ *             북마크한 공고 중 게시 중인 공고만 최근 북마크 순으로 반환합니다.
+ *
+ *             채용공고 목록과 같은 필터를 사용할 수 있습니다.
+ *             employmentType, experienceType, jobField(직군), jobRole(직무)로 목록을 좁히며 각각 하나씩 고를 수 있고,
+ *             보내지 않으면 해당 조건을 적용하지 않습니다. jobField와 jobRole은 공고의 값과 정확히 같은지로 거릅니다.
+ *
+ *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
+ *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
  * @summary 채용공고 북마크 목록 조회
  */
 export const listMyJobBookmarks = async (params?: ListMyJobBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyJobBookmarksResponse> => {
@@ -3728,12 +7010,19 @@ export type listMyBootcampBookmarksResponse200 = {
   status: 200
 }
 
+export type listMyBootcampBookmarksResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
 export type listMyBootcampBookmarksResponseSuccess = (listMyBootcampBookmarksResponse200) & {
   headers: Headers;
 };
-;
+export type listMyBootcampBookmarksResponseError = (listMyBootcampBookmarksResponse400) & {
+  headers: Headers;
+};
 
-export type listMyBootcampBookmarksResponse = (listMyBootcampBookmarksResponseSuccess)
+export type listMyBootcampBookmarksResponse = (listMyBootcampBookmarksResponseSuccess | listMyBootcampBookmarksResponseError)
 
 export const getListMyBootcampBookmarksUrl = (params?: ListMyBootcampBookmarksParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -3751,6 +7040,15 @@ export const getListMyBootcampBookmarksUrl = (params?: ListMyBootcampBookmarksPa
 }
 
 /**
+ *
+ *             북마크한 부트캠프 중 지금 공개된 부트캠프만 최근 북마크 순으로 반환합니다.
+ *
+ *             부트캠프 목록과 같은 필터를 사용할 수 있습니다.
+ *             tuitionType과 status로 목록을 좁히며 각각 하나씩 고를 수 있고, 보내지 않으면 해당 조건을 적용하지 않습니다.
+ *             status는 RECRUITING(모집중)과 CLOSED(모집 마감)만 받으며 그 밖의 값은 400입니다.
+ *
+ *             keyword는 운영 회사명 또는 프로그램명에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
+ *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
  * @summary 부트캠프 북마크 목록 조회
  */
 export const listMyBootcampBookmarks = async (params?: ListMyBootcampBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyBootcampBookmarksResponse> => {
@@ -3775,7 +7073,7 @@ export const getListMyBootcampBookmarksQueryKey = (params?: ListMyBootcampBookma
     }
 
 
-export const getListMyBootcampBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getListMyBootcampBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = ErrorResponse>(params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -3794,10 +7092,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListMyBootcampBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof listMyBootcampBookmarks>>>
-export type ListMyBootcampBookmarksQueryError = unknown
+export type ListMyBootcampBookmarksQueryError = ErrorResponse
 
 
-export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = ErrorResponse>(
  params: undefined |  ListMyBootcampBookmarksParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listMyBootcampBookmarks>>,
@@ -3807,7 +7105,7 @@ export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof lis
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = ErrorResponse>(
  params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listMyBootcampBookmarks>>,
@@ -3817,7 +7115,7 @@ export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof lis
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = ErrorResponse>(
  params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -3825,7 +7123,7 @@ export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof lis
  * @summary 부트캠프 북마크 목록 조회
  */
 
-export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = unknown>(
+export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError = ErrorResponse>(
  params?: ListMyBootcampBookmarksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyBootcampBookmarks>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -3838,21 +7136,150 @@ export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof lis
 }
 
 
+
+
+
+
+
+export type deleteRecruitmentPostCommentResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteRecruitmentPostCommentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteRecruitmentPostCommentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteRecruitmentPostCommentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteRecruitmentPostCommentResponseSuccess = (deleteRecruitmentPostCommentResponse200) & {
+  headers: Headers;
+};
+export type deleteRecruitmentPostCommentResponseError = (deleteRecruitmentPostCommentResponse401 | deleteRecruitmentPostCommentResponse403 | deleteRecruitmentPostCommentResponse404) & {
+  headers: Headers;
+};
+
+export type deleteRecruitmentPostCommentResponse = (deleteRecruitmentPostCommentResponseSuccess | deleteRecruitmentPostCommentResponseError)
+
+export const getDeleteRecruitmentPostCommentUrl = (postId: number,
+    commentId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-posts/${postId}/comments/${commentId}`
+}
+
+/**
+ *
+ *             댓글 작성자 본인의 댓글을 소프트 삭제합니다. 부모 댓글 삭제 시 활성 대댓글도 함께 소프트 삭제됩니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 댓글 작성자 본인만 삭제할 수 있습니다.
+ *             - 삭제된 댓글의 내용은 데이터베이스에 보존되며 일반 댓글 조회에서는 제외됩니다.
+ *             - 실제로 활성 상태에서 삭제된 댓글 수만큼 모집글의 `commentCount`가 감소합니다.
+ * @summary 사이드 프로젝트·스터디 모집글 댓글 삭제
+ */
+export const deleteRecruitmentPostComment = async (postId: number,
+    commentId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostCommentResponse> => {
+
+  return httpClient<deleteRecruitmentPostCommentResponse>(getDeleteRecruitmentPostCommentUrl(postId,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRecruitmentPostCommentMutationKey = () => ['deleteRecruitmentPostComment'] as const;
+
+export const getDeleteRecruitmentPostCommentMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostComment>>, TError,DeleteRecruitmentPostCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostComment>>, TError,DeleteRecruitmentPostCommentMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRecruitmentPostCommentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostComment>>, DeleteRecruitmentPostCommentMutationVariables> = (props) => {
+          const {postId,commentId} = props ?? {};
+
+          return  deleteRecruitmentPostComment(postId,commentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRecruitmentPostCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostComment>>>
+
+    export type DeleteRecruitmentPostCommentMutationError = ErrorResponse
+    export type DeleteRecruitmentPostCommentMutationVariables = {postId: number;commentId: number}
+
+    /**
+ * @summary 사이드 프로젝트·스터디 모집글 댓글 삭제
+ */
+export const useDeleteRecruitmentPostComment = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostComment>>, TError,DeleteRecruitmentPostCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRecruitmentPostComment>>,
+        TError,
+        DeleteRecruitmentPostCommentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRecruitmentPostCommentMutationOptions(options), queryClient);
+    }
+
+
 export const getReplaceMyProfileResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyLogoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
+export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyLogoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
 
 export const getReplaceMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getDeleteMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+export const getGetMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getReplaceMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getDeleteMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getGetPublicRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostDetailResponse, object>> = {}): SuccessResponseRecruitmentPostDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MOBILE','ETC'] as const), contact: {method: faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), value: faker.string.alpha({length: {min: 10, max: 20}})}, summary: faker.string.alpha({length: {min: 10, max: 20}}), content: {}, eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), viewCount: faker.number.int(), commentCount: faker.number.int(), bookmarkCount: faker.number.int(), bookmarked: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getUpdateRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyJobResponse, object>> = {}): SuccessResponseCreateCompanyJobResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -3860,7 +7287,7 @@ export const getPublishMyJobResponseMock = (overrideResponse: Partial<Extract<Su
 
 export const getCloseMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getListMyBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListMyBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyBootcampResponse, object>> = {}): SuccessResponseCreateCompanyBootcampResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -3868,11 +7295,31 @@ export const getStartMyBootcampRecruitmentResponseMock = (overrideResponse: Part
 
 export const getCloseMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getGetRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostSummaryResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), viewCount: faker.number.int(), commentCount: faker.number.int(), applicationCount: faker.number.int(), bookmarkCount: faker.number.int(), bookmarked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostResponse, object>> = {}): SuccessResponseCreateRecruitmentPostResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getGetRecruitmentPostCommentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostCommentRootResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostCommentRootResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean(), replies: {items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateRecruitmentPostCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostCommentResponse, object>> = {}): SuccessResponseCreateRecruitmentPostCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getReportRecruitmentPostCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostApplicationResponse, object>> = {}): SuccessResponseCreateRecruitmentPostApplicationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), contactMethod: faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), contactValue: faker.string.alpha({length: {min: 10, max: 20}}), clickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getPublishMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCopyMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MOBILE','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getCreateMyRecruitmentPostDraftResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostResponse, object>> = {}): SuccessResponseCreateRecruitmentPostResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
 export const getCreateJobSourceUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCreateJobBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getDeleteJobBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateImageResponseMock = (overrideResponse: Partial<Extract<SuccessResponseImageUploadResponse, object>> = {}): SuccessResponseImageUploadResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.string.alpha({length: {min: 10, max: 20}}), url: faker.string.alpha({length: {min: 10, max: 20}}), mimeType: faker.string.alpha({length: {min: 10, max: 20}}), size: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateBootcampApplicationUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -3886,11 +7333,35 @@ export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReopenMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCloseMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getUpdateRecruitmentPostApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getGetMyAccountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAccountResponse, object>> = {}): SuccessResponseMyAccountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', profile: faker.helpers.arrayElement([{name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), companyProfile: faker.helpers.arrayElement([{organizationName: faker.string.alpha({length: {min: 10, max: 20}}), managerName: faker.string.alpha({length: {min: 10, max: 20}})}, undefined])}, undefined]), ...overrideResponse})
+
+export const getGetRecruitmentPostCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostCommentResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListMyRecruitmentPostBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostSummaryResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), viewCount: faker.number.int(), commentCount: faker.number.int(), applicationCount: faker.number.int(), bookmarkCount: faker.number.int(), bookmarked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListMyRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostManagementItemResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostManagementItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), applicationCount: faker.number.int(), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), viewCount: faker.number.int(), commentCount: faker.number.int(), lastSavedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', continueWriting: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetMyRecruitmentPostFormResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MOBILE','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getListMyRecruitmentApplicationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentApplicationPageResponse, object>> = {}): SuccessResponseRecruitmentApplicationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), activityDurationMonths: faker.number.int(), applicationStatus: faker.helpers.arrayElement(['PREPARING','COMPLETED','IN_PROGRESS','ENDED'] as const), lastClickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}, countsByRecruitmentType: {
+        [faker.string.alphanumeric(5)]: faker.number.int()
+      }}, undefined]), ...overrideResponse})
 
 export const getListPublicJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getGetPublicJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getListMySimilarJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
+
+export const getListPublicPopularJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), experienceMaxYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
 
 export const getListPublicJobCalendarResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobCalendarItemResponse, object>> = {}): SuccessResponseListUserJobCalendarItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentStartAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recruitmentEndAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), undefined]), ...overrideResponse})
 
@@ -3901,6 +7372,8 @@ export const getListPublicBootcampsResponseMock = (overrideResponse: Partial<Ext
 export const getGetPublicBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserBootcampDetailResponse, object>> = {}): SuccessResponseUserBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getListMyBootcampBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getDeleteRecruitmentPostCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 
 export const getReplaceMyProfileMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
@@ -3982,6 +7455,66 @@ export const getDeleteMyBootcampMockHandler = (overrideResponse?: SuccessRespons
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteMyBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetPublicRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentPostDetailResponse> | SuccessResponseRecruitmentPostDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/recruitment-posts/:postId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetPublicRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/recruitment-posts/:postId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/recruitment-posts/:postId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteMyRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/recruitment-posts/:postId/bookmarks/me', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateRecruitmentPostBookmarkResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getDeleteRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/recruitment-posts/:postId/bookmarks/me', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteRecruitmentPostBookmarkResponseMock(),
       { status: 200
       })
   }, options)
@@ -4083,6 +7616,114 @@ export const getCloseMyBootcampMockHandler = (overrideResponse?: SuccessResponse
   }, options)
 }
 
+export const getGetRecruitmentPostsMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostSummaryResponse> | SuccessResponsePageResponseRecruitmentPostSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/recruitment-posts', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetRecruitmentPostsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseCreateRecruitmentPostResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateRecruitmentPostResponse> | SuccessResponseCreateRecruitmentPostResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-posts', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateRecruitmentPostResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getGetRecruitmentPostCommentsMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostCommentRootResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostCommentRootResponse> | SuccessResponsePageResponseRecruitmentPostCommentRootResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/recruitment-posts/:postId/comments', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetRecruitmentPostCommentsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateRecruitmentPostCommentMockHandler = (overrideResponse?: SuccessResponseCreateRecruitmentPostCommentResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateRecruitmentPostCommentResponse> | SuccessResponseCreateRecruitmentPostCommentResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-posts/:postId/comments', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateRecruitmentPostCommentResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getReportRecruitmentPostCommentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-posts/:postId/comments/:commentId/reports', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReportRecruitmentPostCommentResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateRecruitmentPostApplicationMockHandler = (overrideResponse?: SuccessResponseCreateRecruitmentPostApplicationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateRecruitmentPostApplicationResponse> | SuccessResponseCreateRecruitmentPostApplicationResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-posts/:postId/applications', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateRecruitmentPostApplicationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getPublishMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/me/recruitment-posts/:postId/publish', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPublishMyRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCopyMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostFormResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseRecruitmentPostFormResponse> | SuccessResponseRecruitmentPostFormResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/me/recruitment-posts/:postId/copies', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCopyMyRecruitmentPostResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateMyRecruitmentPostDraftMockHandler = (overrideResponse?: SuccessResponseCreateRecruitmentPostResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateRecruitmentPostResponse> | SuccessResponseCreateRecruitmentPostResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/me/recruitment-posts/drafts', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateMyRecruitmentPostDraftResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
 export const getCreateJobSourceUrlClickMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/jobs/:jobId/source-url-clicks', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
@@ -4115,6 +7756,18 @@ export const getDeleteJobBookmarkMockHandler = (overrideResponse?: SuccessRespon
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteJobBookmarkResponseMock(),
       { status: 200
+      })
+  }, options)
+}
+
+export const getCreateImageMockHandler = (overrideResponse?: SuccessResponseImageUploadResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseImageUploadResponse> | SuccessResponseImageUploadResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/images', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateImageResponseMock(),
+      { status: 201
       })
   }, options)
 }
@@ -4221,6 +7874,54 @@ export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: Succ
   }, options)
 }
 
+export const getReopenMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/recruitment-posts/:postId/reopen', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReopenMyRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCloseMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/recruitment-posts/:postId/close', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCloseMyRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteRecruitmentPostApplicationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/me/recruitment-applications/:postId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteRecruitmentPostApplicationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateRecruitmentPostApplicationStatusMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/me/recruitment-applications/:postId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateRecruitmentPostApplicationStatusResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getGetMyAccountMockHandler = (overrideResponse?: SuccessResponseMyAccountResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMyAccountResponse> | SuccessResponseMyAccountResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/users/me', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -4228,6 +7929,66 @@ export const getGetMyAccountMockHandler = (overrideResponse?: SuccessResponseMyA
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getGetMyAccountResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetRecruitmentPostCommentRepliesMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostCommentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostCommentResponse> | SuccessResponsePageResponseRecruitmentPostCommentResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/recruitment-posts/:postId/comments/:commentId/replies', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetRecruitmentPostCommentRepliesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyRecruitmentPostBookmarksMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostSummaryResponse> | SuccessResponsePageResponseRecruitmentPostSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/recruitment-post-bookmarks', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyRecruitmentPostBookmarksResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyRecruitmentPostsMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostManagementItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostManagementItemResponse> | SuccessResponsePageResponseRecruitmentPostManagementItemResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/me/recruitment-posts', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyRecruitmentPostsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyRecruitmentPostFormMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostFormResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentPostFormResponse> | SuccessResponseRecruitmentPostFormResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/me/recruitment-posts/:postId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyRecruitmentPostFormResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyRecruitmentApplicationsMockHandler = (overrideResponse?: SuccessResponseRecruitmentApplicationPageResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentApplicationPageResponse> | SuccessResponseRecruitmentApplicationPageResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/me/recruitment-applications', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyRecruitmentApplicationsResponseMock(),
       { status: 200
       })
   }, options)
@@ -4252,6 +8013,30 @@ export const getGetPublicJobMockHandler = (overrideResponse?: SuccessResponseUse
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getGetPublicJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMySimilarJobsMockHandler = (overrideResponse?: SuccessResponseListUserJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListUserJobSummaryResponse> | SuccessResponseListUserJobSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/jobs/similar', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMySimilarJobsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListPublicPopularJobsMockHandler = (overrideResponse?: SuccessResponseListUserJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListUserJobSummaryResponse> | SuccessResponseListUserJobSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/jobs/popular', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicPopularJobsResponseMock(),
       { status: 200
       })
   }, options)
@@ -4316,6 +8101,18 @@ export const getListMyBootcampBookmarksMockHandler = (overrideResponse?: Success
       })
   }, options)
 }
+
+export const getDeleteRecruitmentPostCommentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/recruitment-posts/:postId/comments/:commentId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteRecruitmentPostCommentResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 export const getOgonggoUserAPIMock = () => [
   getReplaceMyProfileMockHandler(),
   getGetMyJobMockHandler(),
@@ -4324,6 +8121,11 @@ export const getOgonggoUserAPIMock = () => [
   getGetMyBootcampMockHandler(),
   getReplaceMyBootcampMockHandler(),
   getDeleteMyBootcampMockHandler(),
+  getGetPublicRecruitmentPostMockHandler(),
+  getUpdateRecruitmentPostMockHandler(),
+  getDeleteMyRecruitmentPostMockHandler(),
+  getCreateRecruitmentPostBookmarkMockHandler(),
+  getDeleteRecruitmentPostBookmarkMockHandler(),
   getListMyJobsMockHandler(),
   getCreateMyJobMockHandler(),
   getPublishMyJobMockHandler(),
@@ -4332,9 +8134,19 @@ export const getOgonggoUserAPIMock = () => [
   getCreateMyBootcampMockHandler(),
   getStartMyBootcampRecruitmentMockHandler(),
   getCloseMyBootcampMockHandler(),
+  getGetRecruitmentPostsMockHandler(),
+  getCreateRecruitmentPostMockHandler(),
+  getGetRecruitmentPostCommentsMockHandler(),
+  getCreateRecruitmentPostCommentMockHandler(),
+  getReportRecruitmentPostCommentMockHandler(),
+  getCreateRecruitmentPostApplicationMockHandler(),
+  getPublishMyRecruitmentPostMockHandler(),
+  getCopyMyRecruitmentPostMockHandler(),
+  getCreateMyRecruitmentPostDraftMockHandler(),
   getCreateJobSourceUrlClickMockHandler(),
   getCreateJobBookmarkMockHandler(),
   getDeleteJobBookmarkMockHandler(),
+  getCreateImageMockHandler(),
   getCreateBootcampApplicationUrlClickMockHandler(),
   getCreateBootcampBookmarkMockHandler(),
   getDeleteBootcampBookmarkMockHandler(),
@@ -4344,12 +8156,24 @@ export const getOgonggoUserAPIMock = () => [
   getSignUpCompanyMockHandler(),
   getSignInCompanyMockHandler(),
   getCreateAdvertisementInquiryMockHandler(),
+  getReopenMyRecruitmentPostMockHandler(),
+  getCloseMyRecruitmentPostMockHandler(),
+  getDeleteRecruitmentPostApplicationMockHandler(),
+  getUpdateRecruitmentPostApplicationStatusMockHandler(),
   getGetMyAccountMockHandler(),
+  getGetRecruitmentPostCommentRepliesMockHandler(),
+  getListMyRecruitmentPostBookmarksMockHandler(),
+  getListMyRecruitmentPostsMockHandler(),
+  getGetMyRecruitmentPostFormMockHandler(),
+  getListMyRecruitmentApplicationsMockHandler(),
   getListPublicJobsMockHandler(),
   getGetPublicJobMockHandler(),
+  getListMySimilarJobsMockHandler(),
+  getListPublicPopularJobsMockHandler(),
   getListPublicJobCalendarMockHandler(),
   getListMyJobBookmarksMockHandler(),
   getListPublicBootcampsMockHandler(),
   getGetPublicBootcampMockHandler(),
-  getListMyBootcampBookmarksMockHandler()
+  getListMyBootcampBookmarksMockHandler(),
+  getDeleteRecruitmentPostCommentMockHandler()
 ]

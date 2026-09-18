@@ -45,6 +45,16 @@ employmentType?: ListPublicJobsEmploymentType;
  */
 experienceType?: ListPublicJobsExperienceType;
 /**
+ * @minLength 0
+ * @maxLength 100
+ */
+jobField?: string;
+/**
+ * @minLength 0
+ * @maxLength 100
+ */
+jobRole?: string;
+/**
  * @minLength 2
  * @maxLength 100
  */

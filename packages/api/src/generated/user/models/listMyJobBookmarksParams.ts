@@ -4,6 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListMyJobBookmarksEmploymentType } from './listMyJobBookmarksEmploymentType';
+import type { ListMyJobBookmarksExperienceType } from './listMyJobBookmarksExperienceType';
 
 export type ListMyJobBookmarksParams = {
 /**
@@ -15,4 +17,38 @@ page?: number;
  * @maximum 100
  */
 size?: number;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `FULL_TIME` | 1 | 정규직 |
+ * | `CONTRACT` | 2 | 계약직 |
+ * | `INTERN` | 3 | 인턴 |
+ * | `PART_TIME` | 4 | 파트타임 |
+ * | `ETC` | 5 | 기타 |
+ */
+employmentType?: ListMyJobBookmarksEmploymentType;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `NEWCOMER` | 1 | 신입 |
+ * | `EXPERIENCED` | 2 | 경력 |
+ * | `BOTH` | 3 | 신입·경력 |
+ * | `IRRELEVANT` | 4 | 경력 무관 |
+ */
+experienceType?: ListMyJobBookmarksExperienceType;
+/**
+ * @minLength 0
+ * @maxLength 100
+ */
+jobField?: string;
+/**
+ * @minLength 0
+ * @maxLength 100
+ */
+jobRole?: string;
+/**
+ * @minLength 2
+ * @maxLength 100
+ */
+keyword?: string;
 };

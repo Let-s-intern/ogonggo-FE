@@ -10,6 +10,7 @@ import type { CompanyJobDetailResponseEmploymentType } from './companyJobDetailR
 import type { CompanyJobDetailResponseExperienceType } from './companyJobDetailResponseExperienceType';
 import type { CompanyJobDetailResponsePublicationStatus } from './companyJobDetailResponsePublicationStatus';
 import type { CompanyJobDetailResponseRecruitmentType } from './companyJobDetailResponseRecruitmentType';
+import type { CompanyJobDetailResponseReviewStatus } from './companyJobDetailResponseReviewStatus';
 
 export interface CompanyJobDetailResponse {
   id: number;
@@ -18,6 +19,8 @@ export interface CompanyJobDetailResponse {
   companyLogoUrl?: string;
   title: string;
   jobField?: string;
+  jobRole?: string;
+  industry?: string;
   coverImageUrl?: string;
   /**
      * | 값 | code | 설명 |
@@ -89,5 +92,15 @@ export interface CompanyJobDetailResponse {
      * | `ARCHIVED` | 4 | 보관 |
      */
   publicationStatus: CompanyJobDetailResponsePublicationStatus;
+  /**
+     * 운영자 검수 상태입니다. 승인되어야 게시할 수 있고, 내용을 고치면 다시 검수 대기가 됩니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PENDING` | 1 | 검수 대기 |
+     * | `APPROVED` | 2 | 승인 |
+     * | `REJECTED` | 3 | 반려 |
+     */
+  reviewStatus?: CompanyJobDetailResponseReviewStatus;
   closedAt?: string;
 }

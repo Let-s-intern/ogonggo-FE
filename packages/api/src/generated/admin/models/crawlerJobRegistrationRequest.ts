@@ -74,6 +74,24 @@ export interface CrawlerJobRegistrationRequest {
      * @maxLength 100
      */
   region?: string;
+  /**
+     * 직군. 생략 가능
+     * @minLength 0
+     * @maxLength 100
+     */
+  jobField?: string;
+  /**
+     * 직무. 비슷한 공고 추천에서 사용자의 희망 직무와 정확히 같은지 비교한다. 생략 가능
+     * @minLength 0
+     * @maxLength 100
+     */
+  jobRole?: string;
+  /**
+     * 산업. 비슷한 공고 추천에서 사용자의 희망 산업과 정확히 같은지 비교한다. 생략 가능
+     * @minLength 0
+     * @maxLength 100
+     */
+  industry?: string;
   /** AI가 생성한 태그 목록 */
   tags: string[];
   /** 회사 및 팀 소개 */
