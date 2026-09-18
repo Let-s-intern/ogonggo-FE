@@ -4,6 +4,8 @@
   "scripts": {
     "dev:admin": "pnpm --filter admin dev",
     "dev:web": "pnpm --filter web dev",
+    "mock:admin": "pnpm --filter admin mock",
+    "mock:web": "pnpm --filter web mock",
     "build": "turbo run build",
     "codegen": "turbo run codegen",
     "type-check": "turbo run type-check",

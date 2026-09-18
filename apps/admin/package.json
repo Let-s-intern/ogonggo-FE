@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "VITE_OGONGGO_USE_MOCKS=false OGONGGO_USER_API_ORIGIN=http://localhost:18080 vite",
+    "mock": "vite",
     "build": "tsgo --noEmit && vite build",
     "type-check": "tsgo --noEmit",
     "lint": "oxlint src",
