@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "OGONGGO_USE_MOCKS=false OGONGGO_USER_API_ORIGIN=http://localhost:18080 next dev --turbo --port 4000",
+    "dev": "OGONGGO_USE_MOCKS=false OGONGGO_USER_API_ORIGIN=http://localhost:18080 NEXT_PUBLIC_LETSCAREER_API_ORIGIN=https://3ccm7bgq1b.execute-api.ap-northeast-2.amazonaws.com next dev --turbo --port 4000",
     "mock": "next dev --turbo --port 4000",
     "build": "next build",
     "type-check": "tsgo --noEmit",
