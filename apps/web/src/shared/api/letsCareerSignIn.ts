@@ -76,35 +76,76 @@ export function pathAfterLetsCareerSignIn(isNewUser: boolean, returnPath: string
 }
 
 /**
- * 일반 회원 로그인이 실패했을 때 보일 한 줄. 렛츠커리어 단계(`LetsCareerApiError`) 와 오공고 교환 단계
- * (`HttpError`) 를 함께 받는다.
+ * 일반 회원 로그인이 실패한 까닭. 간편 로그인 콜백이 실패를 로그인 화면으로 넘길 때 `/login?error=` 에 이 값을
+ * 싣는다 — 주소창에 문구를 그대로 실으면 누구나 로그인 화면에 아무 문장이나 띄울 수 있다.
+ */
+export type LetsCareerSignInFailure =
+  | 'invalid-credentials'
+  | 'redirect-mismatch'
+  | 'letscareer-error'
+  | 'rejected-token'
+  | 'suspended'
+  | 'unavailable'
+  | 'already-signed-up'
+  | 'social-error'
+  | 'invalid-callback'
+  | 'unknown';
+
+const FAILURE_MESSAGES: Record<LetsCareerSignInFailure, string> = {
+  'invalid-credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
+  // 렛츠커리어 화이트리스트에 이 주소가 없다. 다시 시도해도 같으므로 운영 쪽 문제라고 말한다.
+  'redirect-mismatch': '등록되지 않은 주소에서 로그인을 시도했습니다. 고객센터로 문의해 주세요.',
+  'letscareer-error': '렛츠커리어 서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요.',
+  'rejected-token': '렛츠커리어 로그인을 확인하지 못했습니다. 다시 로그인해 주세요.',
+  suspended: '이용이 정지되었거나 탈퇴한 계정입니다. 고객센터로 문의해 주세요.',
+  unavailable: '렛츠커리어에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  'already-signed-up': '이미 다른 방법으로 가입한 계정입니다.',
+  'social-error': '간편 로그인에 실패했습니다. 다시 시도해 주세요.',
+  'invalid-callback': '로그인 결과를 읽지 못했습니다. 다시 시도해 주세요.',
+  unknown: '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+};
+
+/** `?error=` 로 받은 값의 문구. 모르는 값이면 `null` 이다. */
+export function letsCareerSignInFailureMessage(failure: string | null | undefined): string | null {
+  return failure && Object.hasOwn(FAILURE_MESSAGES, failure)
+    ? FAILURE_MESSAGES[failure as LetsCareerSignInFailure]
+    : null;
+}
+
+/**
+ * 던져진 오류를 실패 까닭으로 옮긴다. 렛츠커리어 단계(`LetsCareerApiError`) 와 오공고 교환 단계(`HttpError`) 를
+ * 함께 받는다.
  *
  * 교환의 오류는 401 `INVALID_LETSCAREER_TOKEN`, 403 `USER_SUSPENDED`·`USER_WITHDRAWN`, 503
  * `LETSCAREER_UNAVAILABLE` 이다. `HttpError` 가 본문 `code` 를 들고 있지 않아 상태 코드로 가른다.
  */
-export function letsCareerSignInErrorMessage(error: unknown): string {
+export function letsCareerSignInFailureOf(error: unknown): LetsCareerSignInFailure {
   if (error instanceof LetsCareerApiError) {
     if (error.code === 'SSO_INVALID_CREDENTIALS') {
-      return '이메일 또는 비밀번호가 올바르지 않습니다.';
+      return 'invalid-credentials';
     }
     if (error.code === 'SSO_REDIRECT_URI_MISMATCH') {
-      // 렛츠커리어 화이트리스트에 이 주소가 없다. 다시 시도해도 같으므로 운영 쪽 문제라고 말한다.
-      return '등록되지 않은 주소에서 로그인을 시도했습니다. 고객센터로 문의해 주세요.';
+      return 'redirect-mismatch';
     }
     if (error.status >= 500) {
-      return '렛츠커리어 서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요.';
+      return 'letscareer-error';
     }
   }
   if (error instanceof HttpError) {
     if (error.status === 401) {
-      return '렛츠커리어 로그인을 확인하지 못했습니다. 다시 로그인해 주세요.';
+      return 'rejected-token';
     }
     if (error.status === 403) {
-      return '이용이 정지되었거나 탈퇴한 계정입니다. 고객센터로 문의해 주세요.';
+      return 'suspended';
     }
     if (error.status === 503) {
-      return '렛츠커리어에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      return 'unavailable';
     }
   }
-  return '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  return 'unknown';
+}
+
+/** 폼에 보일 한 줄. */
+export function letsCareerSignInErrorMessage(error: unknown): string {
+  return FAILURE_MESSAGES[letsCareerSignInFailureOf(error)];
 }

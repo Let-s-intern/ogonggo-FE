@@ -18,6 +18,8 @@ export interface LoginPageProps {
   initialTab: LoginTab;
   /** `?redirect=` 를 거른 값. 같은 사이트의 경로가 아니면 `null` 이다. */
   returnPath: string | null;
+  /** 간편 로그인 콜백이 실패해 돌아왔을 때의 문구(`?error=` 를 옮긴 것). 있으면 일반 회원 탭에 보인다. */
+  initialError: string | null;
 }
 
 /**
@@ -31,9 +33,10 @@ export interface LoginPageProps {
  * 이미 로그인한 사용자가 오면 돌아갈 화면(없으면 홈) 으로 보낸다. 토큰이 브라우저 저장소에만 있어
  * 서버에서는 알 수 없으므로 첫 렌더 뒤에 본다.
  */
-export function LoginPage({ initialTab, returnPath }: LoginPageProps) {
+export function LoginPage({ initialTab, returnPath, initialError }: LoginPageProps) {
   const router = useRouter();
-  const [tab, setTab] = useState<LoginTab>(initialTab);
+  // 실패 문구는 일반 회원 탭(간편 로그인) 의 것이다.
+  const [tab, setTab] = useState<LoginTab>(initialError ? 'user' : initialTab);
 
   // 들어온 순간 한 번 본다. 이 화면에서 로그인에 성공하면 그 흐름이 직접 이동한다.
   useEffect(() => {
@@ -41,6 +44,15 @@ export function LoginPage({ initialTab, returnPath }: LoginPageProps) {
       router.replace(returnPath ?? '/');
     }
   }, [router, returnPath]);
+
+  // 문구는 한 번 보이면 된다. 주소에 남기면 새로고침할 때마다 다시 뜬다.
+  useEffect(() => {
+    if (initialError) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      window.history.replaceState(window.history.state, '', url);
+    }
+  }, [initialError]);
 
   const handleTabChange = (next: LoginTab) => {
     setTab(next);
@@ -67,7 +79,7 @@ export function LoginPage({ initialTab, returnPath }: LoginPageProps) {
           {tab === 'company' ? (
             <CompanySignInPanel returnPath={returnPath} />
           ) : (
-            <UserSignInPanel returnPath={returnPath} />
+            <UserSignInPanel returnPath={returnPath} initialError={initialError} />
           )}
         </div>
       </div>
