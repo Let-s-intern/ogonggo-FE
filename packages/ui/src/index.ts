@@ -4,6 +4,7 @@ export { Badge, type BadgeProps } from './components/Badge';
 export { Button, type ButtonProps } from './components/Button';
 export { Callout, type CalloutProps } from './components/Callout';
 export { Card, CardDescription, CardTitle, type CardProps } from './components/Card';
+export { CircleIconButton, type CircleIconButtonProps } from './components/CircleIconButton';
 export {
   ConfirmDelete,
   DELETE_CONFIRM_PHRASE,
@@ -21,7 +22,9 @@ export { Input, type InputProps } from './components/Input';
 export { Modal, type ModalProps } from './components/Modal';
 export { Pagination, type PaginationProps } from './components/Pagination';
 export { Select, type SelectOption, type SelectProps } from './components/Select';
+export { SpeechBubble, type SpeechBubbleProps } from './components/SpeechBubble';
 export { StatTile, type StatTileProps } from './components/StatTile';
+export { Tabs, type TabItem, type TabsProps } from './components/Tabs';
 export { Textarea, type TextareaProps } from './components/Textarea';
 export { Toggle, type ToggleProps } from './components/Toggle';
 export { cn } from './lib/cn';
