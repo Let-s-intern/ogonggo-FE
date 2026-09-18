@@ -1,7 +1,12 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import type {
+  AdminRejectionResponse,
+  PageResponseAdminRejectionResponse,
+  UpdateRejectionReasonRequest,
+} from '../../generated/admin/models';
 import { REJECTIONS, findRejection, type RejectionTargetType } from '../fixtures/admin-rejection';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
-import { matches, notFound, ok, paginate, readPaging, type PageResponse } from './paging';
+import { matches, notFound, ok, paginate, readPaging } from './paging';
 
 /**
  * 반려 보관.
@@ -11,24 +16,11 @@ import { matches, notFound, ok, paginate, readPaging, type PageResponse } from '
  *
  * 사유를 지우는 길은 없다. 빈 사유로 남은 반려는 올린 사람이 무엇을 고쳐야 하는지 알 수 없어
  * 같은 글이 다시 올라온다.
+ *
+ * 응답 타입은 admin 스펙의 생성 모델 `AdminRejectionResponse` 다. `contentExists` 는 그 콘텐츠가
+ * 아직 남아 있는지다. 반려한 뒤 삭제됐을 수 있고, 그때 목록에서 통째로 빼지 않고 남겨 둔다 —
+ * "반려하고 지웠다"는 것도 기록이고, 행이 조용히 사라지면 무엇이 어떻게 됐는지 알 수 없다.
  */
-
-export interface RejectionListItem {
-  type: RejectionTargetType;
-  id: number;
-  title: string;
-  companyName: string;
-  reason: string;
-  rejectedAt: string;
-  reasonUpdatedAt?: string;
-  /**
-   * 그 콘텐츠가 아직 남아 있는지.
-   *
-   * 반려한 뒤 삭제됐을 수 있다. 그때 목록에서 통째로 빼지 않고 남겨 둔다 — "반려하고 지웠다"는
-   * 것도 기록이고, 행이 조용히 사라지면 무엇이 어떻게 됐는지 알 수 없다.
-   */
-  contentExists: boolean;
-}
 
 const exists = (type: RejectionTargetType, id: number): boolean =>
   type === 'JOB'
@@ -56,16 +48,12 @@ const listRejectionsHandler = http.get('*/api/v1/admin/rejections', ({ request }
     (a, b) => new Date(b.rejectedAt).getTime() - new Date(a.rejectedAt).getTime(),
   );
   const paged = paginate(sorted, page, size);
-  const body: PageResponse<RejectionListItem> = {
+  const body: PageResponseAdminRejectionResponse = {
     items: paged.items.map((entry) => ({ ...entry, contentExists: exists(entry.type, entry.id) })),
     pageInfo: paged.pageInfo,
   };
   return HttpResponse.json(ok(body), { status: 200 });
 });
-
-interface UpdateReasonRequest {
-  reason: string;
-}
 
 const updateReasonHandler = http.patch(
   '*/api/v1/admin/rejections/:type/:id',
@@ -76,7 +64,7 @@ const updateReasonHandler = http.patch(
       return HttpResponse.json(notFound('반려 기록을 찾을 수 없습니다.'), { status: 404 });
     }
 
-    const body = (await request.json()) as UpdateReasonRequest;
+    const body = (await request.json()) as UpdateRejectionReasonRequest;
     const reason = body.reason?.trim() ?? '';
     if (reason.length === 0) {
       return HttpResponse.json(
@@ -87,7 +75,11 @@ const updateReasonHandler = http.patch(
 
     record.reason = reason;
     record.reasonUpdatedAt = new Date().toISOString();
-    return HttpResponse.json(ok(record), { status: 200 });
+    const updated: AdminRejectionResponse = {
+      ...record,
+      contentExists: exists(record.type, record.id),
+    };
+    return HttpResponse.json(ok(updated), { status: 200 });
   },
 );
 

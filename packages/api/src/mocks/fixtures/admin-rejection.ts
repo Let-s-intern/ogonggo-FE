@@ -12,22 +12,20 @@
  * 빠진다. 새로고침하면 아래 초기값으로 돌아간다.
  */
 
+import type {
+  AdminRejectionResponse,
+  AdminRejectionResponseType,
+} from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from './admin-content';
 
-export type RejectionTargetType = 'JOB' | 'BOOTCAMP';
+export type RejectionTargetType = AdminRejectionResponseType;
 
-export interface RejectionRecord {
-  type: RejectionTargetType;
-  id: number;
-  title: string;
-  companyName: string;
-  /** 올린 사람에게 보낸 말. 비어 있을 수 없다. */
-  reason: string;
-  /** ISO 8601. */
-  rejectedAt: string;
-  /** ISO 8601. 사유를 고친 적이 없으면 없다. */
-  reasonUpdatedAt?: string;
-}
+/**
+ * 저장해 두는 반려 한 건. 응답 모델에서 `contentExists` 만 뺀 모양이다 — 그 값은 저장하지 않고
+ * 응답할 때 콘텐츠가 남아 있는지 보고 계산한다. `reason` 은 비어 있을 수 없고,
+ * `reasonUpdatedAt` 은 사유를 고친 적이 없으면 없다.
+ */
+export type RejectionRecord = Omit<AdminRejectionResponse, 'contentExists'>;
 
 /**
  * 픽스처가 이미 반려 상태로 만들어 둔 건들에 그럴듯한 사유를 붙인다.

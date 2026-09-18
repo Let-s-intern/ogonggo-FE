@@ -2,6 +2,11 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import type {
   AdminBootcampDetailResponse,
   AdminJobDetailResponse,
+  AdminReviewDecisionResponse,
+  AdminReviewItemResponse,
+  AdminReviewItemResponseType,
+  AdminReviewSectionResponse,
+  DecideReviewRequest,
 } from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
 import { clearRejection, recordRejection } from '../fixtures/admin-rejection';
@@ -19,41 +24,12 @@ import { notFound, ok } from './paging';
  *
  * 큐는 등록일 오래된 순이다. 밀린 것부터 처리하는 것이 큐의 뜻이고, 최신순이면 오래된 건이
  * 영영 아래에 남는다.
+ *
+ * 응답·요청 타입은 admin 스펙의 생성 모델(`AdminReviewItemResponse`, `DecideReviewRequest`,
+ * `AdminReviewDecisionResponse`) 이다.
  */
 
-export type ReviewTargetType = 'JOB' | 'BOOTCAMP';
-
-/** 검수 화면이 그리는 본문 한 덩어리. */
-export interface ReviewSection {
-  /** 콘텐츠의 실제 칸 이름. 검수 화면에서 본문을 고칠 때 이 이름으로 되돌려 보낸다. */
-  field: string;
-  label: string;
-  body: string;
-}
-
-/** 본문 위에 표로 붙는 값들. */
-export interface ReviewMetaItem {
-  label: string;
-  value: string;
-}
-
-export interface ReviewQueueItem {
-  type: ReviewTargetType;
-  id: number;
-  title: string;
-  companyName: string;
-  /** ISO 8601. */
-  registeredAt: string;
-  sourceUrl?: string;
-  meta: ReviewMetaItem[];
-  sections: ReviewSection[];
-}
-
-export interface ReviewDecisionRequest {
-  decision: 'APPROVED' | 'REJECTED';
-  /** 반려일 때만 쓰인다. 비어 있으면 400. */
-  reason?: string;
-}
+type ReviewTargetType = AdminReviewItemResponseType;
 
 /**
  * 메타 값은 여기서 한국어로 풀어 내보낸다.
@@ -78,8 +54,8 @@ const VALUE_LABELS: Record<string, string> = {
 
 const label = (value: string): string => VALUE_LABELS[value] ?? value;
 
-function toJobItem(job: AdminJobDetailResponse): ReviewQueueItem {
-  const sections: ReviewSection[] = [
+function toJobItem(job: AdminJobDetailResponse): AdminReviewItemResponse {
+  const sections: AdminReviewSectionResponse[] = [
     {
       field: 'companyAndTeamIntroduction',
       label: '회사·팀 소개',
@@ -91,7 +67,7 @@ function toJobItem(job: AdminJobDetailResponse): ReviewQueueItem {
     { field: 'compensation', label: '보상', body: job.compensation },
     { field: 'benefits', label: '복지', body: job.benefits },
     { field: 'hiringProcess', label: '채용 절차', body: job.hiringProcess },
-  ].filter((section): section is ReviewSection => Boolean(section.body));
+  ].filter((section): section is AdminReviewSectionResponse => Boolean(section.body));
 
   return {
     type: 'JOB',
@@ -109,8 +85,8 @@ function toJobItem(job: AdminJobDetailResponse): ReviewQueueItem {
   };
 }
 
-function toBootcampItem(bootcamp: AdminBootcampDetailResponse): ReviewQueueItem {
-  const sections: ReviewSection[] = [
+function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminReviewItemResponse {
+  const sections: AdminReviewSectionResponse[] = [
     { field: 'content', label: '소개', body: bootcamp.content },
     {
       field: 'eligibilityAndSelectionProcess',
@@ -129,7 +105,7 @@ function toBootcampItem(bootcamp: AdminBootcampDetailResponse): ReviewQueueItem 
         )
         .join('\n'),
     },
-  ].filter((section): section is ReviewSection => Boolean(section.body));
+  ].filter((section): section is AdminReviewSectionResponse => Boolean(section.body));
 
   return {
     type: 'BOOTCAMP',
@@ -148,7 +124,7 @@ function toBootcampItem(bootcamp: AdminBootcampDetailResponse): ReviewQueueItem 
 }
 
 /** 지금 대기 중인 것만. 처리하면 다음 요청에서 사라진다. */
-function pendingQueue(): ReviewQueueItem[] {
+function pendingQueue(): AdminReviewItemResponse[] {
   const jobs = ADMIN_JOB_FIXTURES.filter((job) => job.reviewStatus === 'PENDING').map(toJobItem);
   const bootcamps = ADMIN_BOOTCAMP_FIXTURES.filter(
     (bootcamp) => bootcamp.reviewStatus === 'PENDING',
@@ -188,7 +164,7 @@ const decideHandler = http.patch(
       return HttpResponse.json(notFound('검수 대상을 찾을 수 없습니다.'), { status: 404 });
     }
 
-    const body = (await request.json()) as ReviewDecisionRequest;
+    const body = (await request.json()) as DecideReviewRequest;
 
     if (body.decision === 'REJECTED') {
       const reason = body.reason?.trim() ?? '';
@@ -211,10 +187,13 @@ const decideHandler = http.patch(
       target.reviewStatus = 'APPROVED';
     }
 
-    return HttpResponse.json(
-      ok({ type, id, reviewStatus: target.reviewStatus, remaining: pendingQueue().length }),
-      { status: 200 },
-    );
+    const decision: AdminReviewDecisionResponse = {
+      type,
+      id,
+      reviewStatus: target.reviewStatus,
+      remaining: pendingQueue().length,
+    };
+    return HttpResponse.json(ok(decision), { status: 200 });
   },
 );
 
@@ -239,7 +218,13 @@ const undoHandler = http.patch('*/api/v1/admin/review-queue/:type/:id/undo', ({ 
   clearRejection(type, id);
   target.reviewStatus = 'PENDING';
 
-  return HttpResponse.json(ok({ type, id, remaining: pendingQueue().length }), { status: 200 });
+  const decision: AdminReviewDecisionResponse = {
+    type,
+    id,
+    reviewStatus: target.reviewStatus,
+    remaining: pendingQueue().length,
+  };
+  return HttpResponse.json(ok(decision), { status: 200 });
 });
 
 export const reviewHandlers: HttpHandler[] = [

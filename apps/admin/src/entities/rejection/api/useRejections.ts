@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { RejectionListItem } from '@ogonggo/api/src/mocks/admin/rejections';
-import type { RejectionTargetType } from '@ogonggo/api/src/mocks/fixtures/admin-rejection';
+import type {
+  AdminRejectionResponse as RejectionListItem,
+  AdminRejectionResponseType as RejectionTargetType,
+} from '@ogonggo/api/src/admin';
 import { adminGet, adminWrite, type PageResponse } from '@/shared/api/adminClient';
 
 export type { RejectionListItem, RejectionTargetType };

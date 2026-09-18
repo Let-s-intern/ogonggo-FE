@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ReviewQueueItem, ReviewTargetType } from '@ogonggo/api/src/mocks/admin/review';
+import type {
+  AdminReviewItemResponse as ReviewQueueItem,
+  AdminReviewItemResponseType as ReviewTargetType,
+} from '@ogonggo/api/src/admin';
 import { adminGet, adminWrite } from '@/shared/api/adminClient';
 
 export type { ReviewQueueItem, ReviewTargetType };
