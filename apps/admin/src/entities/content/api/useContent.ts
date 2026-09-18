@@ -1,22 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-  AdminBootcampDetailResponse as AdminBootcampDetail,
-  AdminBootcampSummaryResponse as AdminBootcampSummary,
-  AdminJobDetailResponse as AdminJobDetail,
-  AdminJobSummaryResponse as AdminJobSummary,
+import {
+  deleteBootcamp,
+  deleteJob,
+  getBootcamp,
+  getJob,
+  listBootcamps,
+  listJobs,
+  updateBootcamp,
+  updateJob,
+  type ListBootcampsParams,
+  type ListJobsParams,
 } from '@ogonggo/api/src/admin';
 import type { AdminSideStudy } from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import type {
   AdminBootcampPatchRequest,
   AdminJobPatchRequest,
 } from '@ogonggo/api/src/mocks/admin/content';
-import { adminDelete, adminGet, adminWrite, type PageResponse } from '@/shared/api/adminClient';
+import { adminDelete, adminGet, type PageResponse } from '@/shared/api/adminClient';
+import { omitEmpty } from '@/shared/api/omitEmpty';
+import { unwrapData } from '@/shared/api/unwrapData';
 
 /**
  * 콘텐츠 목록·상세 조회.
  *
- * 채용공고·부트캠프의 응답 타입은 admin 스펙의 생성 모델이다. 사이드·스터디는 백엔드 API 가
- * 없어 MSW 픽스처의 타입을 그대로 쓴다.
+ * 채용공고·부트캠프는 admin 스펙의 생성 함수를 부른다. 사이드·스터디는 백엔드 API 가 없어 MSW
+ * 목에만 있으므로 `adminClient` 로 부르고 픽스처의 타입을 그대로 쓴다.
  *
  * 쿼리 키에 필터를 통째로 넣는다. 필터를 바꿀 때마다 새 키가 되므로 이전 결과가 섞이지 않고,
  * 뒤로 가기로 돌아오면 캐시가 그대로 뜬다.
@@ -35,14 +43,15 @@ export interface JobListFilters {
 export function useJobList(filters: JobListFilters) {
   return useQuery({
     queryKey: ['admin', 'jobs', filters],
-    queryFn: () => adminGet<PageResponse<AdminJobSummary>>('/api/v1/admin/jobs', { ...filters }),
+    // 필터 값은 화면의 선택지에서 오므로 스펙의 enum 과 같다. 빈 값("전체") 만 뺀다.
+    queryFn: () => unwrapData(listJobs(omitEmpty({ ...filters }) as ListJobsParams)),
   });
 }
 
 export function useJobDetail(jobId: number) {
   return useQuery({
     queryKey: ['admin', 'jobs', jobId],
-    queryFn: () => adminGet<AdminJobDetail>(`/api/v1/admin/jobs/${jobId}`),
+    queryFn: () => unwrapData(getJob(jobId)),
     // NaN 이 들어오면 요청을 보내지 않는다. 주소창에 숫자가 아닌 id 가 들어온 경우다.
     enabled: Number.isInteger(jobId),
   });
@@ -61,15 +70,14 @@ export interface BootcampListFilters {
 export function useBootcampList(filters: BootcampListFilters) {
   return useQuery({
     queryKey: ['admin', 'bootcamps', filters],
-    queryFn: () =>
-      adminGet<PageResponse<AdminBootcampSummary>>('/api/v1/admin/bootcamps', { ...filters }),
+    queryFn: () => unwrapData(listBootcamps(omitEmpty({ ...filters }) as ListBootcampsParams)),
   });
 }
 
 export function useBootcampDetail(bootcampId: number) {
   return useQuery({
     queryKey: ['admin', 'bootcamps', bootcampId],
-    queryFn: () => adminGet<AdminBootcampDetail>(`/api/v1/admin/bootcamps/${bootcampId}`),
+    queryFn: () => unwrapData(getBootcamp(bootcampId)),
     enabled: Number.isInteger(bootcampId),
   });
 }
@@ -106,8 +114,7 @@ export function useSideStudyDetail(postId: number) {
 export function usePatchJob(jobId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: AdminJobPatchRequest) =>
-      adminWrite<AdminJobDetail>('PATCH', `/api/v1/admin/jobs/${jobId}`, input),
+    mutationFn: (input: AdminJobPatchRequest) => unwrapData(updateJob(jobId, input)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
@@ -122,8 +129,7 @@ export type { AdminBootcampPatchRequest, AdminJobPatchRequest };
 export function usePatchBootcamp(bootcampId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: AdminBootcampPatchRequest) =>
-      adminWrite<AdminBootcampDetail>('PATCH', `/api/v1/admin/bootcamps/${bootcampId}`, input),
+    mutationFn: (input: AdminBootcampPatchRequest) => unwrapData(updateBootcamp(bootcampId, input)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
@@ -141,7 +147,15 @@ export function useDeleteContent(kind: 'jobs' | 'bootcamps' | 'side-studies') {
   const queryClient = useQueryClient();
   const queryKey = kind === 'side-studies' ? 'side-studies' : kind;
   return useMutation({
-    mutationFn: (id: number) => adminDelete(`/api/v1/admin/${kind}/${id}`),
+    mutationFn: async (id: number) => {
+      if (kind === 'jobs') {
+        await deleteJob(id);
+      } else if (kind === 'bootcamps') {
+        await deleteBootcamp(id);
+      } else {
+        await adminDelete(`/api/v1/admin/side-studies/${id}`);
+      }
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', queryKey] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
