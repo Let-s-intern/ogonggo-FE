@@ -39,9 +39,7 @@ export function CheckAllGroup<T extends string>({
   const toggle = (value: T, next: boolean) => {
     // 항목 순서대로 돌려준다. 누른 순서가 값에 섞이지 않게.
     onCheckedChange(
-      items
-        .map((item) => item.value)
-        .filter((v) => (v === value ? next : checked.includes(v))),
+      items.map((item) => item.value).filter((v) => (v === value ? next : checked.includes(v))),
     );
   };
 
