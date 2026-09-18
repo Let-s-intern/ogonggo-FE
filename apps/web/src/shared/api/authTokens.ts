@@ -14,7 +14,14 @@
 const ACCESS_TOKEN_KEY = 'ogonggo.web.accessToken';
 const REFRESH_TOKEN_KEY = 'ogonggo.web.refreshToken';
 
+/** 같은 탭 안에서의 변경을 알린다. `storage` 이벤트는 다른 탭의 변경에만 온다. */
+const CHANGE_EVENT = 'ogonggo:auth-tokens';
+
 const isBrowser = () => typeof window !== 'undefined';
+
+function notifyChange(): void {
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
 
 export function getAccessToken(): string | null {
   return isBrowser() ? sessionStorage.getItem(ACCESS_TOKEN_KEY) : null;
@@ -28,6 +35,7 @@ export function getRefreshToken(): string | null {
 export function saveTokens(tokens: { accessToken: string; refreshToken: string }): void {
   sessionStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+  notifyChange();
 }
 
 /** 재발급은 액세스 토큰만 바꾼다. 리프레시 토큰은 백엔드가 새로 주지 않는다. */
@@ -38,4 +46,23 @@ export function saveAccessToken(accessToken: string): void {
 export function clearTokens(): void {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  notifyChange();
+}
+
+/**
+ * 로그인 상태로 볼지. 리프레시 토큰이 있으면 로그인이다 — 액세스 토큰은 탭을 닫으면 없어져도 첫 401 에서
+ * 다시 받는다.
+ */
+export function isSignedIn(): boolean {
+  return getRefreshToken() !== null;
+}
+
+/** `useSyncExternalStore` 용 구독. 이 탭의 저장·삭제와 다른 탭의 `localStorage` 변경을 함께 받는다. */
+export function subscribeTokens(listener: () => void): () => void {
+  window.addEventListener(CHANGE_EVENT, listener);
+  window.addEventListener('storage', listener);
+  return () => {
+    window.removeEventListener(CHANGE_EVENT, listener);
+    window.removeEventListener('storage', listener);
+  };
 }

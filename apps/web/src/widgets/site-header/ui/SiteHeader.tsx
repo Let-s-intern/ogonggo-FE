@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useSyncExternalStore } from 'react';
+import { signOut } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
+import { clearTokens, isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 
 /**
  * `matches`는 그 메뉴에 밑줄이 붙는 경로들이다. 채용공고는 목록(`/`)과 상세(`/jobs/1`)가
@@ -31,8 +34,11 @@ const NAV_ITEMS = [
  * 쓰는 클라이언트 컴포넌트다.
  *
  * 우측 메뉴 중 `공고 달력`만 대상 화면(`/calendar`)이 생겨 링크다. `공고 등록`은 아직 화면이
- * 없어(PRD 1절) 비활성 스타일의 `<span>`으로 남는다. "로그인" 버튼도 같은 이유로 `Button`을
- * `Link`로 감싸지 않아 클릭해도 아무 일도 일어나지 않는다.
+ * 없어(PRD 1절) 비활성 스타일의 `<span>`으로 남는다.
+ *
+ * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "로그아웃". 토큰이 브라우저 저장소에만
+ * 있어 서버는 알 수 없으므로 서버 렌더와 첫 하이드레이션은 "로그인" 으로 그리고, 그 직후 저장소를 읽어
+ * 바꾼다(`useSyncExternalStore` 의 서버 스냅샷).
  *
  * 우측 메뉴의 활성 표시는 좌측과 다르다. 좌측은 밑줄(`border-b-2`)인데, 우측은 목업
  * (`docs/asset/공고달력.png`)의 `공고 달력` 화면에서도 밑줄이 없다 — 헤더 높이를 꽉 채우는
@@ -42,6 +48,7 @@ const NAV_ITEMS = [
 export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
+  const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -79,9 +86,42 @@ export function SiteHeader() {
           >
             공고 달력
           </Link>
-          <Button size="sm">로그인</Button>
+          {signedIn ? (
+            <SignOutButton />
+          ) : (
+            <Button size="sm" asChild>
+              <Link href="/login">로그인</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * 서버에 로그아웃(`signOut`, 리프레시 토큰 폐기) 을 알린 뒤 두 토큰을 지운다. `signOut` 이 실패해도(액세스
+ * 토큰 만료, 네트워크) 화면에서는 로그아웃한다 — 사용자가 누른 것은 이 브라우저에서 나가는 일이다.
+ * `signOut` 의 401 은 재발급하지 않는다(`shared/api/reissue.ts` 의 인증 API 제외).
+ */
+function SignOutButton() {
+  const [pending, setPending] = useState(false);
+
+  const handleClick = async () => {
+    setPending(true);
+    try {
+      await signOut();
+    } catch {
+      // 위 주석대로 실패해도 지운다.
+    } finally {
+      clearTokens();
+      setPending(false);
+    }
+  };
+
+  return (
+    <Button size="sm" variant="secondary" disabled={pending} onClick={handleClick}>
+      로그아웃
+    </Button>
   );
 }
