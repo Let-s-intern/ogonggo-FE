@@ -26,3 +26,25 @@ export function sanitizeReturnPath(value: string | null | undefined): string | n
   }
   return value;
 }
+
+const STORAGE_KEY = 'ogonggo.web.signInReturnPath';
+
+/**
+ * 로그인 화면을 떠나기 전에 돌아갈 화면을 적는다. 간편 로그인(렛츠커리어를 다녀온다) 과 첫 로그인 뒤의 커리어
+ * 정보 화면이 꺼내 쓴다. 값이 없으면 전에 적힌 것을 지운다 — 옛 시도의 값으로 돌아가지 않게.
+ */
+export function saveReturnPath(path: string | null): void {
+  const safe = sanitizeReturnPath(path);
+  if (safe) {
+    sessionStorage.setItem(STORAGE_KEY, safe);
+  } else {
+    sessionStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+/** 적어 둔 값을 꺼내고 지운다. 저장소 값도 누가 바꿀 수 있으므로 다시 거른다. */
+export function takeReturnPath(): string | null {
+  const value = sessionStorage.getItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
+  return sanitizeReturnPath(value);
+}

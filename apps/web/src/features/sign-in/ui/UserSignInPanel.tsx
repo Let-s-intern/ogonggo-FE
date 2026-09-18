@@ -1,6 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import {
+  letsCareerSignInErrorMessage,
+  pathAfterLetsCareerSignIn,
+  signInWithLetsCareerEmail,
+} from '@/shared/api/letsCareerSignIn';
 import { SignInForm } from './SignInForm';
 import { SocialSignInButtons } from './SocialSignInButtons';
 
@@ -9,13 +16,34 @@ export interface UserSignInPanelProps {
   returnPath: string | null;
 }
 
-/** 일반 회원 탭. 렛츠커리어 계정의 이메일 로그인과 카카오·네이버 간편 로그인. */
+/**
+ * 일반 회원 탭. 렛츠커리어 계정의 이메일 로그인과 카카오·네이버 간편 로그인.
+ *
+ * 이메일 로그인은 화면을 떠나지 않는다. 렛츠커리어 SSO 로 토큰을 받아 오공고 토큰으로 바꾼 뒤 이동한다
+ * (`shared/api/letsCareerSignIn.ts`).
+ */
 export function UserSignInPanel({ returnPath }: UserSignInPanelProps) {
-  void returnPath;
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (credentials: { email: string; password: string }) => {
+    setPending(true);
+    setError(null);
+    try {
+      const { isNewUser } = await signInWithLetsCareerEmail(credentials);
+      // 성공하면 화면을 떠나므로 pending 을 풀지 않는다.
+      router.replace(pathAfterLetsCareerSignIn(isNewUser, returnPath));
+    } catch (caught) {
+      setError(letsCareerSignInErrorMessage(caught));
+      setPending(false);
+    }
+  };
+
   return (
     <div className="flex flex-col">
       <p className="pb-4 text-sm text-gray-500">개인 계정으로 로그인합니다.</p>
-      <SignInForm onSubmit={() => {}} pending={false} error={null} />
+      <SignInForm onSubmit={handleSubmit} pending={pending} error={error} />
       <p className="pt-8 pb-4 text-center text-sm text-gray-400">또는 간편 로그인</p>
       <SocialSignInButtons onSelect={() => {}} />
       <div className="flex justify-center pt-12 text-sm font-medium text-gray-900">
