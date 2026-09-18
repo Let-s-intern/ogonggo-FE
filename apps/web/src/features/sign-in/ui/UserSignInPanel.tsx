@@ -4,17 +4,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
-  buildSocialLoginUrl,
-  letsCareerCallbackUri,
-  type LetsCareerSocialProvider,
-} from '@/shared/api/letscareer';
-import {
   letsCareerSignInErrorMessage,
   pathAfterLetsCareerSignIn,
   signInWithLetsCareerEmail,
 } from '@/shared/api/letsCareerSignIn';
-import { recordSignInMethod, savePendingSocialMethod } from '@/shared/lib/lastSignInMethod';
-import { saveReturnPath } from '@/shared/lib/returnPath';
+import { recordSignInMethod } from '@/shared/lib/lastSignInMethod';
+import { startSocialSignIn } from '../lib/startSocialSignIn';
 import { SignInForm } from './SignInForm';
 import { SocialSignInButtons } from './SocialSignInButtons';
 
@@ -50,20 +45,12 @@ export function UserSignInPanel({ returnPath, initialError = null }: UserSignInP
     }
   };
 
-  // 간편 로그인은 렛츠커리어를 다녀온다. `redirect_uri` 에 쿼리를 붙일 수 없어(화이트리스트가 쿼리까지 비교한다)
-  // 돌아갈 화면은 떠나기 전에 `sessionStorage` 에 적고 콜백이 꺼낸다.
-  const handleSocialSelect = (provider: LetsCareerSocialProvider) => {
-    saveReturnPath(returnPath);
-    savePendingSocialMethod(provider);
-    window.location.assign(buildSocialLoginUrl(provider, letsCareerCallbackUri()));
-  };
-
   return (
     <div className="flex flex-col">
       <p className="pb-4 text-sm text-gray-500">개인 계정으로 로그인합니다.</p>
       <SignInForm onSubmit={handleSubmit} pending={pending} error={error} />
       <p className="pt-6 pb-11 text-center text-sm text-gray-400">또는 간편 로그인</p>
-      <SocialSignInButtons onSelect={handleSocialSelect} />
+      <SocialSignInButtons onSelect={(provider) => startSocialSignIn(provider, returnPath)} />
       <div className="flex justify-center pt-9 text-sm font-medium text-gray-900">
         <Link href="/signup" className="hover:underline">
           회원가입
