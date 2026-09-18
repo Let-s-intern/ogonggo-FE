@@ -2,6 +2,8 @@
   "name": "ogonggo-fe",
   "private": true,
   "scripts": {
+    "dev": "pnpm --parallel --filter web --filter admin dev",
+    "mock": "pnpm --parallel --filter web --filter admin mock",
     "dev:admin": "pnpm --filter admin dev",
     "dev:web": "pnpm --filter web dev",
     "mock:admin": "pnpm --filter admin mock",

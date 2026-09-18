@@ -9,9 +9,11 @@ pnpm workspace: `apps/admin`(Vite, 내부 관리자), `apps/web`(Next.js + Turbo
 
 ```bash
 pnpm install
-pnpm dev:admin   # apps/admin, http://localhost:4001
-pnpm dev:web     # apps/web, http://localhost:4000
+pnpm dev         # web(http://localhost:4000)·admin(http://localhost:4001) 을 로컬 백엔드에 붙여 함께 띄운다
+pnpm mock        # 같은 두 앱을 목데이터(MSW) 로 띄운다
 ```
+
+한 앱만 띄우려면 `pnpm dev:web`, `pnpm dev:admin`, `pnpm mock:web`, `pnpm mock:admin`.
 
 포트는 3000번대를 피해 4000/4001로 고정했다 — 렛츠커리어 프론트(`lets-intern-client`)가 로컬에서
 3000(web)/3001(admin)/3002(mentor)를 쓰므로, 두 스택을 동시에 띄워도 겹치지 않는다.
