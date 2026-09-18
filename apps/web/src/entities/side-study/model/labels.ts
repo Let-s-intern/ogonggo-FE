@@ -15,3 +15,6 @@ export const OPERATION_TYPE_LABELS: Record<SideStudyOperationType, string> = {
   OFFLINE: '오프라인',
   HYBRID: '온·오프라인',
 };
+
+/** 작성자 닉네임이 없을 때. 모집글 응답의 `author.nickname` 은 선택 필드다. */
+export const AUTHOR_NICKNAME_FALLBACK = '익명';

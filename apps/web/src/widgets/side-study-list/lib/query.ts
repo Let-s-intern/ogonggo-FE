@@ -1,22 +1,22 @@
+import type { GetRecruitmentPostsRecruitmentTypesItem } from '@ogonggo/api';
+
 /**
- * `/side-studies` 목록이 탭과 페이지네이션에서 공유하는 URL 쿼리 상태.
- *
- * API 없음: 사이드·스터디는 백엔드에 엔드포인트가 없어서 `page`도 `kind`도 실제 계약이 아니다
- * (PRD 5절). 지금은 MSW 핸들러(`packages/api/src/mocks/handlers.ts`)만 이 값을 읽는다 —
- * 실제 API가 생기면 파라미터 이름부터 맞춰 봐야 한다.
+ * `/side-studies` 목록이 탭과 페이지네이션에서 공유하는 URL 쿼리 상태. 목록 요청
+ * (`getRecruitmentPosts`) 의 `page`, `recruitmentTypes` 로 옮겨진다(`../ui/SideStudyList.tsx`).
  */
 export const SIDE_STUDY_TABS = ['all', 'project', 'study'] as const;
 export type SideStudyTab = (typeof SIDE_STUDY_TABS)[number];
 
 /**
- * 탭 하나가 목록 요청에 더하는 `kind` 값(PRD 4.3의 탭 세 개). 부트캠프 탭과 달리 파라미터가
- * 하나뿐이라 `Record<탭, 값>`으로 충분하다 — `전체`는 아무것도 붙이지 않는다.
+ * 탭 하나가 목록 요청의 `recruitmentTypes` 에 담는 값(PRD 4.3의 탭 세 개). 부트캠프 탭과 달리
+ * 파라미터가 하나뿐이라 `Record<탭, 값>`으로 충분하다 — `전체`는 아무것도 붙이지 않는다.
  */
-export const TAB_KINDS: Record<SideStudyTab, string | undefined> = {
-  all: undefined,
-  project: 'SIDE_PROJECT',
-  study: 'STUDY',
-};
+export const TAB_KINDS: Record<SideStudyTab, GetRecruitmentPostsRecruitmentTypesItem | undefined> =
+  {
+    all: undefined,
+    project: 'SIDE_PROJECT',
+    study: 'STUDY',
+  };
 
 export interface SideStudyListQuery {
   page: number;

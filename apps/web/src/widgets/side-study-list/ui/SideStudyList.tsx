@@ -1,9 +1,9 @@
-import { httpClient } from '@ogonggo/api';
+import { getRecruitmentPosts } from '@ogonggo/api';
 import type {
-  SideStudyListResponse,
-  SideStudyPageInfo,
-  SideStudySummary,
-} from '@/entities/side-study/model/types';
+  PageInfo,
+  SuccessResponsePageResponseRecruitmentPostSummaryResponse,
+} from '@ogonggo/api';
+import type { SideStudySummary } from '@/entities/side-study/model/types';
 import { SideStudyCard } from '@/entities/side-study/ui/SideStudyCard';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { buildSideStudyListHref, TAB_KINDS, type SideStudyListQuery } from '../lib/query';
@@ -11,33 +11,31 @@ import { SideStudyListControls } from './SideStudyListControls';
 
 export type SideStudyListProps = SideStudyListQuery;
 
-/**
- * API 없음: `GET /api/v1/side-studies`는 백엔드에 없는 경로다(PRD 5절). 생성된 클라이언트
- * 함수가 있을 리 없어 `httpClient`로 URL을 직접 만들어 부른다 — MSW 핸들러
- * (`packages/api/src/mocks/handlers.ts`)만 이 요청에 답한다.
- *
- * `size`는 보내지 않는다 — 한 페이지 건수는 MSW 핸들러의 기본값(`DEFAULT_SIDE_STUDY_SIZE`,
- * 목업의 카드 8장) 한 곳에만 둔다.
- */
-function buildSideStudiesRequestUrl({ page, tab }: SideStudyListQuery): string {
-  const params = new URLSearchParams();
-  params.set('page', String(page));
-  const kind = TAB_KINDS[tab];
-  if (kind) {
-    params.set('kind', kind);
-  }
-  return `/api/v1/side-studies?${params.toString()}`;
-}
+/** 한 페이지 카드 수. 목업 `사이드스터디.png` 의 카드 8장이다. 백엔드 기본값(10) 과 달라 보낸다. */
+const PAGE_SIZE = 8;
 
-async function fetchSideStudyPage(
-  query: SideStudyListQuery,
-): Promise<{ items: SideStudySummary[]; pageInfo: SideStudyPageInfo }> {
-  const response = await httpClient<SideStudyListResponse>(buildSideStudiesRequestUrl(query));
+/**
+ * `getRecruitmentPosts`(`GET /api/v1/recruitment-posts`). 탭이 고른 구분은 `recruitmentTypes`
+ * 배열 하나로 보내고, `전체` 탭은 생략한다. 정렬은 보내지 않는다 — 기본 `LATEST` 가 id 역순이다.
+ *
+ * 언랩은 채용공고·부트캠프 목록과 같다. 생성 타입은 `{ data, status, headers }` 를 선언하지만
+ * `httpClient` 는 응답 봉투를 그대로 준다.
+ */
+async function fetchSideStudyPage({
+  page,
+  tab,
+}: SideStudyListQuery): Promise<{ items: SideStudySummary[]; pageInfo: PageInfo }> {
+  const kind = TAB_KINDS[tab];
+  const response = (await getRecruitmentPosts({
+    page: String(page),
+    size: String(PAGE_SIZE),
+    ...(kind ? { recruitmentTypes: [kind] } : {}),
+  })) as unknown as SuccessResponsePageResponseRecruitmentPostSummaryResponse;
 
   return (
     response.data ?? {
       items: [],
-      pageInfo: { pageNum: query.page, pageSize: 8, totalElements: 0, totalPages: 0 },
+      pageInfo: { pageNum: page, pageSize: PAGE_SIZE, totalElements: 0, totalPages: 0 },
     }
   );
 }

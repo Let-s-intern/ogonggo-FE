@@ -1,27 +1,22 @@
 /**
- * 사이드·스터디 타입만 `packages/api/src/generated/`가 아니라 목데이터 쪽에서 온다.
- * 백엔드에 엔드포인트도 엔티티도 없어 응답 형태가 계약이 아니라 가정이기 때문이다(PRD 5절) —
- * 그 가정을 적어 둔 곳이 `packages/api/src/mocks/fixtures/side-study.ts`다. 실제 API가 생기면
- * 그 파일이 사라지고 이 재노출만 생성 타입을 가리키게 바뀐다.
+ * 목록은 모집글 API 의 생성 타입이다(`getRecruitmentPosts`). 상세는 아직 손으로 쓴 가정
+ * (`packages/api/src/mocks/fixtures/side-study.ts`) 을 쓴다 — 상세 화면이 옮겨 가면 함께 바뀐다.
  *
- * 값이 아니라 타입만 가져오므로(`import type`) 픽스처 12건이 앱 번들에 들어가지는 않는다.
+ * 값이 아니라 타입만 가져오므로(`import type`) 픽스처가 앱 번들에 들어가지는 않는다.
  */
+import type { RecruitmentPostSummaryResponse } from '@ogonggo/api';
 import type {
   SideStudyDetail,
   SideStudyDetailResponse,
-  SideStudyKind,
-  SideStudyListResponse,
-  SideStudyOperationType,
-  SideStudyPageInfo,
-  SideStudySummary,
 } from '@ogonggo/api/src/mocks/fixtures/side-study';
 
-export type {
-  SideStudyDetail,
-  SideStudyDetailResponse,
-  SideStudyKind,
-  SideStudyListResponse,
-  SideStudyOperationType,
-  SideStudyPageInfo,
-  SideStudySummary,
-};
+/** `GET /api/v1/recruitment-posts` 의 목록 항목 하나. 포지션·썸네일은 목록 응답에 없다. */
+export type SideStudySummary = RecruitmentPostSummaryResponse;
+
+/** 사이드 프로젝트인지 스터디인지. 목록 탭 세 개가 이 값으로 갈린다. */
+export type SideStudyKind = SideStudySummary['recruitmentType'];
+
+/** 진행 방식. 부트캠프·채용공고의 `operationType` 과 같은 세 값이다. */
+export type SideStudyOperationType = SideStudySummary['progressMethod'];
+
+export type { SideStudyDetail, SideStudyDetailResponse };
