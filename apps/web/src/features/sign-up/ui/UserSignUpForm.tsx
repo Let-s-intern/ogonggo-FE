@@ -1,7 +1,14 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { Button, CheckAllGroup, Input } from '@ogonggo/ui';
+import { LetsCareerApiError, signUp } from '@/shared/api/letscareer';
+import {
+  pathAfterLetsCareerSignIn,
+  signInWithLetsCareerEmail,
+} from '@/shared/api/letsCareerSignIn';
+import { recordSignInMethod } from '@/shared/lib/lastSignInMethod';
 import {
   formatPhoneNumber,
   isValidLetsCareerEmail,
@@ -47,6 +54,33 @@ function validate(values: Values): Errors {
   return errors;
 }
 
+/**
+ * 렛츠커리어 가입의 `inflowPath`(유입경로). 렛츠커리어가 오공고로 들어온 가입을 구분하도록 고정값을 보낸다
+ * (PRD 결정 기록 2026-09-18). 렛츠커리어가 다른 표기를 원하면 이 값만 바꾼다.
+ */
+const INFLOW_PATH = '오늘의 공고';
+
+/**
+ * 렛츠커리어 가입 오류를 칸으로 옮긴다. `code` 는 `domain/user/error/UserErrorCode.java` 의 이름이고, `message` 는
+ * 서버가 한국어로 준다. 칸에 붙일 수 없는 오류는 `null` 이다.
+ */
+function fieldErrorOf(error: LetsCareerApiError): Errors | null {
+  switch (error.code) {
+    case 'USER_EMAIL_CONFLICT':
+      return { email: '이미 가입된 이메일입니다.' };
+    case 'USER_PHONE_NUMBER_CONFLICT':
+      return { phoneNum: error.message };
+    case 'INVALID_EMAIL':
+      return { email: error.message };
+    case 'INVALID_PHONE_NUMBER':
+      return { phoneNum: error.message };
+    case 'INVALID_PASSWORD':
+      return { password: error.message };
+    default:
+      return null;
+  }
+}
+
 const TERMS_LINK_CLASS = 'shrink-0 text-sm text-gray-400 hover:text-gray-600';
 
 /**
@@ -56,8 +90,15 @@ const TERMS_LINK_CLASS = 'shrink-0 text-sm text-gray-400 hover:text-gray-600';
  *
  * 다섯 칸이 모두 차고 필수 동의 셋이 체크돼야 가입하기가 켜진다(렛츠커리어 가입 화면과 같다). 형식은 제출 때
  * 보고 칸마다 문구를 단다. 고치기 시작한 칸의 문구는 지운다.
+ *
+ * 제출(PRD "흐름 > 일반 회원 가입"): 렛츠커리어 `signup` 은 토큰을 주지 않으므로, 이어서 같은 이메일·비밀번호로
+ * 이메일 로그인(SSO → 오공고 교환) 을 한다. 첫 교환이라 보통 커리어 정보 화면으로 간다. 계정은 만들어졌는데
+ * 로그인만 실패하면 다시 가입하게 두지 않고(409 가 난다) "가입되었습니다" 와 함께 로그인 화면으로 보낸다.
  */
 export function UserSignUpForm() {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [values, setValues] = useState<Values>(INITIAL);
   const [errors, setErrors] = useState<Errors>({});
   const [agreements, setAgreements] = useState<Agreement[]>([]);
@@ -72,13 +113,49 @@ export function UserSignUpForm() {
     setErrors((previous) => ({ ...previous, [name]: undefined }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit) {
+    if (!canSubmit || pending) {
       return;
     }
     const found = validate(values);
     setErrors(found);
+    setFormError(null);
+    if (Object.keys(found).length > 0) {
+      return;
+    }
+
+    const email = values.email.trim();
+    setPending(true);
+    try {
+      await signUp({
+        email,
+        name: values.name.trim(),
+        phoneNum: values.phoneNum,
+        password: values.password,
+        inflowPath: INFLOW_PATH,
+        marketingAgree: agreements.includes('marketing'),
+      });
+    } catch (caught) {
+      const fieldError = caught instanceof LetsCareerApiError ? fieldErrorOf(caught) : null;
+      if (fieldError) {
+        setErrors(fieldError);
+      } else {
+        setFormError('가입하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+      setPending(false);
+      return;
+    }
+
+    // 여기부터는 렛츠커리어 계정이 이미 있다. 무엇이 실패하든 가입 폼으로 되돌리지 않는다.
+    try {
+      const { isNewUser } = await signInWithLetsCareerEmail({ email, password: values.password });
+      recordSignInMethod('email');
+      router.replace(pathAfterLetsCareerSignIn(isNewUser, null));
+    } catch {
+      router.replace('/login?error=signed-up');
+    }
+    // 성공이든 로그인 화면이든 이 화면을 떠나므로 pending 을 풀지 않는다.
   };
 
   const input = (name: FieldName) => ({
@@ -195,8 +272,13 @@ export function UserSignUpForm() {
       />
 
       <div className="flex flex-col gap-3 pt-10">
-        <Button type="submit" className={SIGN_UP_SUBMIT_CLASS} disabled={!canSubmit}>
-          가입하기
+        {formError ? (
+          <p role="alert" className="text-sm text-error">
+            {formError}
+          </p>
+        ) : null}
+        <Button type="submit" className={SIGN_UP_SUBMIT_CLASS} disabled={!canSubmit || pending}>
+          {pending ? '가입하는 중...' : '가입하기'}
         </Button>
       </div>
 

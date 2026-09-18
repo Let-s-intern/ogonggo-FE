@@ -89,6 +89,7 @@ export type LetsCareerSignInFailure =
   | 'already-signed-up'
   | 'social-error'
   | 'invalid-callback'
+  | 'signed-up'
   | 'unknown';
 
 const FAILURE_MESSAGES: Record<LetsCareerSignInFailure, string> = {
@@ -102,6 +103,8 @@ const FAILURE_MESSAGES: Record<LetsCareerSignInFailure, string> = {
   'already-signed-up': '이미 다른 방법으로 가입한 계정입니다.',
   'social-error': '간편 로그인에 실패했습니다. 다시 시도해 주세요.',
   'invalid-callback': '로그인 결과를 읽지 못했습니다. 다시 시도해 주세요.',
+  // 가입(렛츠커리어 계정 생성) 은 됐고 이어진 로그인만 실패했다. 다시 가입하면 409 이므로 로그인으로 보낸다.
+  'signed-up': '가입되었습니다. 로그인해 주세요.',
   unknown: '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
 };
 
