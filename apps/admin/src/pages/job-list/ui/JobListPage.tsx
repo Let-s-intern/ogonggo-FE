@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
-import type { AdminJobSummary } from '@ogonggo/api/src/mocks/fixtures/admin-content';
+import type { AdminJobSummaryResponse as AdminJobSummary } from '@ogonggo/api/src/admin';
 import { useJobList, usePatchJob } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';

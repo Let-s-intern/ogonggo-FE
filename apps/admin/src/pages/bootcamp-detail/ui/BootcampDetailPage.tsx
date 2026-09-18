@@ -49,7 +49,7 @@ export function BootcampDetailPage() {
             { label: '운영사', value: data.companyName },
             {
               label: '모집 상태',
-              value: <RecruitmentStatusBadge value={data.recruitmentStatus} />,
+              value: <RecruitmentStatusBadge value={data.status} />,
             },
             { label: '노출', value: <VisibilityBadge value={data.visibility} /> },
             { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Button, Callout, Field, Modal, Select, Toggle } from '@ogonggo/ui';
 import type {
-  ContentSource,
-  JobReviewStatus,
-  Visibility,
-} from '@ogonggo/api/src/mocks/fixtures/admin-content';
+  AdminJobDetailResponseReviewStatus as JobReviewStatus,
+  AdminJobDetailResponseSource as ContentSource,
+  AdminJobDetailResponseVisibility as Visibility,
+} from '@ogonggo/api/src/admin';
 import { usePatchBootcamp, usePatchJob } from '@/entities/content/api/useContent';
 import { CONTENT_SOURCE_OPTIONS, JOB_REVIEW_STATUS_OPTIONS } from '@/shared/config/labels';
 
@@ -13,7 +13,7 @@ export interface OperationEditorProps {
   id: number;
   visibility: Visibility;
   source: ContentSource;
-  reviewStatus: JobReviewStatus | null;
+  reviewStatus?: JobReviewStatus | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;

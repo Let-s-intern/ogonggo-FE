@@ -1,10 +1,9 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import {
-  ADMIN_BOOTCAMP_FIXTURES,
-  ADMIN_JOB_FIXTURES,
-  type AdminBootcampDetail,
-  type AdminJobDetail,
-} from '../fixtures/admin-content';
+import type {
+  AdminBootcampDetailResponse,
+  AdminJobDetailResponse,
+} from '../../generated/admin/models';
+import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
 import { clearRejection, recordRejection } from '../fixtures/admin-rejection';
 import { notFound, ok } from './paging';
 
@@ -79,7 +78,7 @@ const VALUE_LABELS: Record<string, string> = {
 
 const label = (value: string): string => VALUE_LABELS[value] ?? value;
 
-function toJobItem(job: AdminJobDetail): ReviewQueueItem {
+function toJobItem(job: AdminJobDetailResponse): ReviewQueueItem {
   const sections: ReviewSection[] = [
     {
       field: 'companyAndTeamIntroduction',
@@ -110,7 +109,7 @@ function toJobItem(job: AdminJobDetail): ReviewQueueItem {
   };
 }
 
-function toBootcampItem(bootcamp: AdminBootcampDetail): ReviewQueueItem {
+function toBootcampItem(bootcamp: AdminBootcampDetailResponse): ReviewQueueItem {
   const sections: ReviewSection[] = [
     { field: 'content', label: '소개', body: bootcamp.content },
     {

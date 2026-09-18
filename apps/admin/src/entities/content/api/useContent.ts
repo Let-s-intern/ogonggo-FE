@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
-  AdminBootcampDetail,
-  AdminBootcampSummary,
-  AdminJobDetail,
-  AdminJobSummary,
-  AdminSideStudy,
-} from '@ogonggo/api/src/mocks/fixtures/admin-content';
+  AdminBootcampDetailResponse as AdminBootcampDetail,
+  AdminBootcampSummaryResponse as AdminBootcampSummary,
+  AdminJobDetailResponse as AdminJobDetail,
+  AdminJobSummaryResponse as AdminJobSummary,
+} from '@ogonggo/api/src/admin';
+import type { AdminSideStudy } from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import type {
   AdminBootcampPatchRequest,
   AdminJobPatchRequest,
@@ -15,8 +15,8 @@ import { adminDelete, adminGet, adminWrite, type PageResponse } from '@/shared/a
 /**
  * 콘텐츠 목록·상세 조회.
  *
- * 백엔드 어드민 API 가 아직 없어 응답 타입을 MSW 픽스처가 내보내는 것에서 가져온다 — 그 타입이
- * 지금은 계약 그 자체다. 백엔드가 생기면 orval 생성 타입으로 갈아끼우고 이 import 를 지운다.
+ * 채용공고·부트캠프의 응답 타입은 admin 스펙의 생성 모델이다. 사이드·스터디는 백엔드 API 가
+ * 없어 MSW 픽스처의 타입을 그대로 쓴다.
  *
  * 쿼리 키에 필터를 통째로 넣는다. 필터를 바꿀 때마다 새 키가 되므로 이전 결과가 섞이지 않고,
  * 뒤로 가기로 돌아오면 캐시가 그대로 뜬다.
@@ -51,7 +51,7 @@ export function useJobDetail(jobId: number) {
 export interface BootcampListFilters {
   page: number;
   keyword: string;
-  recruitmentStatus: string;
+  status: string;
   visibility: string;
   source: string;
   reviewStatus: string;

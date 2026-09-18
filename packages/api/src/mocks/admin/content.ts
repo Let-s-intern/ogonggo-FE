@@ -1,12 +1,17 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import type {
+  AdminBootcampDetailResponse,
+  AdminBootcampSummaryResponse,
+  AdminJobDetailResponse,
+  AdminJobSummaryResponse,
+  PageResponseAdminBootcampSummaryResponse,
+  PageResponseAdminJobSummaryResponse,
+  SuccessResponseUnit,
+} from '../../generated/admin/models';
 import {
   ADMIN_BOOTCAMP_FIXTURES,
   ADMIN_JOB_FIXTURES,
   ADMIN_SIDE_STUDY_FIXTURES,
-  type AdminBootcampDetail,
-  type AdminBootcampSummary,
-  type AdminJobDetail,
-  type AdminJobSummary,
   type AdminSideStudy,
 } from '../fixtures/admin-content';
 import { clearRejection } from '../fixtures/admin-rejection';
@@ -15,8 +20,10 @@ import { matches, notFound, ok, paginate, readPaging, type PageResponse } from '
 /**
  * 콘텐츠 목록·상세 핸들러.
  *
- * 세 화면이 칸 구성은 같지만 필터가 다르다. 채용공고에만 등록 경로와 검수 상태가 있고,
- * 부트캠프는 `BootcampStatus`, 사이드·스터디는 종류(`kind`)로 거른다.
+ * 세 화면이 칸 구성은 같지만 필터가 다르다. 채용공고는 계산한 모집 상태(`recruitmentStatus`),
+ * 부트캠프는 저장된 `BootcampStatus`(`status`), 사이드·스터디는 종류(`kind`)로 거른다.
+ *
+ * 채용공고·부트캠프의 응답 타입은 admin 스펙의 생성 모델이다.
  *
  * 정렬은 등록일 역순이 기본이고 조회 수 정렬을 함께 받는다. 목록 화면이 실제로 정렬을 바꾸는지
  * 확인하려면 목이 파라미터를 반영해야 한다 — 받아 두고 무시하면 계약이 검증되지 않는다.
@@ -47,16 +54,24 @@ const toJobSummary = ({
   compensation: _compensation,
   benefits: _benefits,
   hiringProcess: _hiringProcess,
+  sourceUrl: _sourceUrl,
   ...summary
-}: AdminJobDetail): AdminJobSummary => summary;
+}: AdminJobDetailResponse): AdminJobSummaryResponse => summary;
 
 const toBootcampSummary = ({
   content: _content,
   eligibilityAndSelectionProcess: _eligibilityAndSelectionProcess,
+  applicationMethod: _applicationMethod,
+  applicationUrl: _applicationUrl,
+  managerEmail: _managerEmail,
+  inquiryUrl: _inquiryUrl,
+  publicationStartAt: _publicationStartAt,
+  publicationEndAt: _publicationEndAt,
+  sourceUrl: _sourceUrl,
   partners: _partners,
   curriculums: _curriculums,
   ...summary
-}: AdminBootcampDetail): AdminBootcampSummary => summary;
+}: AdminBootcampDetailResponse): AdminBootcampSummaryResponse => summary;
 
 const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
   const url = new URL(request.url);
@@ -88,7 +103,7 @@ const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
 
   const sorted = sortContent(filtered, readSort(url));
   const paged = paginate(sorted, page, size);
-  const body: PageResponse<AdminJobSummary> = {
+  const body: PageResponseAdminJobSummaryResponse = {
     items: paged.items.map(toJobSummary),
     pageInfo: paged.pageInfo,
   };
@@ -133,15 +148,15 @@ export interface AdminContentPatchRequest {
 
 /** 상세 화면에서 고칠 수 있는 운영 값. */
 export interface AdminJobPatchRequest extends AdminContentPatchRequest {
-  visibility?: AdminJobDetail['visibility'];
-  source?: AdminJobDetail['source'];
-  reviewStatus?: AdminJobDetail['reviewStatus'];
+  visibility?: AdminJobDetailResponse['visibility'];
+  source?: AdminJobDetailResponse['source'];
+  reviewStatus?: AdminJobDetailResponse['reviewStatus'];
 }
 
 export interface AdminBootcampPatchRequest extends AdminContentPatchRequest {
-  visibility?: AdminBootcampDetail['visibility'];
-  source?: AdminBootcampDetail['source'];
-  reviewStatus?: AdminBootcampDetail['reviewStatus'];
+  visibility?: AdminBootcampDetailResponse['visibility'];
+  source?: AdminBootcampDetailResponse['source'];
+  reviewStatus?: AdminBootcampDetailResponse['reviewStatus'];
 }
 
 /** 제목과 본문 칸을 적용한다. 허용 목록에 없는 키는 버린다. */
@@ -198,8 +213,8 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (body.source !== undefined) {
     job.source = body.source;
     if (body.source === 'CRAWLER') {
-      job.reviewStatus = null;
-    } else if (job.reviewStatus === null) {
+      delete job.reviewStatus;
+    } else if (job.reviewStatus === undefined) {
       job.reviewStatus = 'PENDING';
     }
   }
@@ -244,8 +259,8 @@ const patchBootcampHandler = http.patch(
     if (body.source !== undefined) {
       bootcamp.source = body.source;
       if (body.source === 'CRAWLER') {
-        bootcamp.reviewStatus = null;
-      } else if (bootcamp.reviewStatus === null) {
+        delete bootcamp.reviewStatus;
+      } else if (bootcamp.reviewStatus === undefined) {
         bootcamp.reviewStatus = 'PENDING';
       }
     }
@@ -261,7 +276,7 @@ const patchBootcampHandler = http.patch(
 );
 
 /**
- * 삭제. 배열에서 실제로 뺀다.
+ * 삭제. 배열에서 실제로 뺀다. 응답은 스펙대로 `SuccessResponseUnit` 이고 `data` 는 빈 객체다.
  *
  * 되돌릴 길을 두지 않는다 — 화면에서 문구를 그대로 입력해야만 버튼이 열리고, 그 확인이
  * 되돌리기를 대신한다. 실제 백엔드에서는 soft delete 로 두는 편이 낫고, 그 결정은 계약을
@@ -282,7 +297,8 @@ const deleteJobHandler = http.delete('*/api/v1/admin/jobs/:jobId', ({ params }) 
     return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
   }
   clearRejection('JOB', id);
-  return HttpResponse.json(ok({ id }), { status: 200 });
+  const body: SuccessResponseUnit = ok({});
+  return HttpResponse.json(body, { status: 200 });
 });
 
 const deleteBootcampHandler = http.delete('*/api/v1/admin/bootcamps/:bootcampId', ({ params }) => {
@@ -291,7 +307,8 @@ const deleteBootcampHandler = http.delete('*/api/v1/admin/bootcamps/:bootcampId'
     return HttpResponse.json(notFound('부트캠프를 찾을 수 없습니다.'), { status: 404 });
   }
   clearRejection('BOOTCAMP', id);
-  return HttpResponse.json(ok({ id }), { status: 200 });
+  const body: SuccessResponseUnit = ok({});
+  return HttpResponse.json(body, { status: 200 });
 });
 
 const deleteSideStudyHandler = http.delete('*/api/v1/admin/side-studies/:postId', ({ params }) => {
@@ -305,7 +322,7 @@ const deleteSideStudyHandler = http.delete('*/api/v1/admin/side-studies/:postId'
 const listBootcampsHandler = http.get('*/api/v1/admin/bootcamps', ({ request }) => {
   const url = new URL(request.url);
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-  const recruitmentStatus = url.searchParams.get('recruitmentStatus') ?? '';
+  const status = url.searchParams.get('status') ?? '';
   const visibility = url.searchParams.get('visibility') ?? '';
   const source = url.searchParams.get('source') ?? '';
   const reviewStatus = url.searchParams.get('reviewStatus') ?? '';
@@ -316,7 +333,7 @@ const listBootcampsHandler = http.get('*/api/v1/admin/bootcamps', ({ request }) 
     if (keyword && !matches(`${bootcamp.title} ${bootcamp.companyName}`, keyword)) {
       return false;
     }
-    if (recruitmentStatus && bootcamp.recruitmentStatus !== recruitmentStatus) {
+    if (status && bootcamp.status !== status) {
       return false;
     }
     if (visibility && bootcamp.visibility !== visibility) {
@@ -333,7 +350,7 @@ const listBootcampsHandler = http.get('*/api/v1/admin/bootcamps', ({ request }) 
 
   const sorted = sortContent(filtered, readSort(url));
   const paged = paginate(sorted, page, size);
-  const body: PageResponse<AdminBootcampSummary> = {
+  const body: PageResponseAdminBootcampSummaryResponse = {
     items: paged.items.map(toBootcampSummary),
     pageInfo: paged.pageInfo,
   };

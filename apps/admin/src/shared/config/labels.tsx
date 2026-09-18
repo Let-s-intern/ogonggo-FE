@@ -1,9 +1,9 @@
 import { Badge, type BadgeProps } from '@ogonggo/ui';
 import type {
-  ContentSource,
-  JobReviewStatus,
-  Visibility,
-} from '@ogonggo/api/src/mocks/fixtures/admin-content';
+  AdminJobDetailResponseReviewStatus as JobReviewStatus,
+  AdminJobDetailResponseSource as ContentSource,
+  AdminJobDetailResponseVisibility as Visibility,
+} from '@ogonggo/api/src/admin';
 import type { MemberStatus } from '@ogonggo/api/src/mocks/fixtures/admin-member';
 
 /**
@@ -40,14 +40,13 @@ const CONTENT_SOURCE: Record<ContentSource, LabelSpec> = {
 /**
  * 모집 상태. 노출 여부와 다른 것이다 — 모집이 끝나도 지면에 남을 수 있다.
  *
- * 채용공고와 부트캠프가 같은 값을 쓴다. 둘 다 모집 일정에서 계산한 값이고, 저장된 enum 을
- * 그대로 쓰지 않는다 — `BootcampStatus` 에는 모집 예정이 없고 채용공고에는 enum 자체가 없다.
+ * 채용공고의 계산값 `recruitmentStatus` 와 부트캠프의 저장값 `status` 가 같은 두 값을 쓴다.
+ * 백엔드에 모집 예정 값은 없다.
  *
  * 임시저장(`DRAFT`)은 두지 않는다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 필터로
  * 남겨 두면 골라도 늘 0 건이다.
  */
 const RECRUITMENT_STATUS: Record<string, LabelSpec> = {
-  UPCOMING: { label: '모집 예정', tone: 'main' },
   RECRUITING: { label: '모집중', tone: 'success' },
   CLOSED: { label: '모집 마감', tone: 'neutral' },
 };
@@ -74,9 +73,13 @@ function renderBadge(spec: LabelSpec | undefined, raw: string) {
 export const VisibilityBadge = ({ value }: { value: Visibility }) =>
   renderBadge(VISIBILITY[value], value);
 
-/** 크롤링 수집분에는 검수 상태가 없다. 빈 칸 대신 사유가 되는 단어를 남긴다. */
-export const JobReviewStatusBadge = ({ value }: { value: JobReviewStatus | null }) =>
-  value === null ? (
+/**
+ * 크롤링 수집분에는 검수 상태가 없다. 빈 칸 대신 사유가 되는 단어를 남긴다.
+ *
+ * 없을 때 생성 모델은 `undefined`, 실제 응답은 `null`, 회원 목은 `null` 이라 셋 다 받는다.
+ */
+export const JobReviewStatusBadge = ({ value }: { value?: JobReviewStatus | null }) =>
+  !value ? (
     <span className="text-gray-400">해당 없음</span>
   ) : (
     renderBadge(JOB_REVIEW_STATUS[value], value)
@@ -166,19 +169,3 @@ const PLAIN_LABELS: Record<string, string> = {
 /** 매핑에 없으면 원래 값을 그대로 보여준다. 빈 칸보다 낫다. */
 export const plainLabel = (value: string | undefined): string =>
   value === undefined ? '-' : (PLAIN_LABELS[value] ?? value);
-
-/** 경력 연차. `experienceMinYears`·`experienceMaxYears` 가 둘 다 없으면 유형만 보여준다. */
-export const experienceLabel = (
-  type: string,
-  minYears: number | undefined,
-  maxYears: number | undefined,
-): string => {
-  const base = plainLabel(type);
-  if (minYears === undefined && maxYears === undefined) {
-    return base;
-  }
-  if (minYears !== undefined && maxYears !== undefined) {
-    return `${base} (${minYears}~${maxYears}년)`;
-  }
-  return minYears !== undefined ? `${base} (${minYears}년 이상)` : `${base} (${maxYears}년 이하)`;
-};

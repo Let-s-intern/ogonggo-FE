@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ActionAlert, Button, ConfirmDelete } from '@ogonggo/ui';
 import type {
-  ContentSource,
-  JobReviewStatus,
-  Visibility,
-} from '@ogonggo/api/src/mocks/fixtures/admin-content';
+  AdminJobDetailResponseReviewStatus as JobReviewStatus,
+  AdminJobDetailResponseSource as ContentSource,
+  AdminJobDetailResponseVisibility as Visibility,
+} from '@ogonggo/api/src/admin';
 import { useDeleteContent, usePatchBootcamp, usePatchJob } from '@/entities/content/api/useContent';
 import { ContentEditor, type ContentEditorField } from '@/widgets/content-editor';
 import { OperationEditor } from '@/widgets/operation-editor';
@@ -28,7 +28,7 @@ export interface ContentActionsProps {
   operation?: {
     visibility: Visibility;
     source: ContentSource;
-    reviewStatus: JobReviewStatus | null;
+    reviewStatus?: JobReviewStatus | null;
   };
 }
 

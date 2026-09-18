@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
-import type { AdminBootcampSummary } from '@ogonggo/api/src/mocks/fixtures/admin-content';
+import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogonggo/api/src/admin';
 import { useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
@@ -33,7 +33,7 @@ export function BootcampListPage() {
   const filters = {
     page,
     keyword: get('keyword'),
-    recruitmentStatus: get('recruitmentStatus'),
+    status: get('status'),
     visibility: get('visibility'),
     source: get('source'),
     reviewStatus: get('reviewStatus'),
@@ -64,10 +64,10 @@ export function BootcampListPage() {
       render: (row) => <JobReviewStatusBadge value={row.reviewStatus} />,
     },
     {
-      key: 'recruitmentStatus',
+      key: 'status',
       header: '모집 상태',
       width: 'w-28',
-      render: (row) => <RecruitmentStatusBadge value={row.recruitmentStatus} />,
+      render: (row) => <RecruitmentStatusBadge value={row.status} />,
     },
     {
       key: 'viewCount',
@@ -114,8 +114,8 @@ export function BootcampListPage() {
         />
         <Select
           options={RECRUITMENT_STATUS_OPTIONS}
-          value={filters.recruitmentStatus}
-          onChange={(event) => setFilter('recruitmentStatus', event.target.value)}
+          value={filters.status}
+          onChange={(event) => setFilter('status', event.target.value)}
           aria-label="모집 상태"
         />
         <Select

@@ -1,9 +1,10 @@
 /**
- * 콘텐츠의 어드민 전용 메타데이터와 목록 타입.
+ * 어드민 채용공고·부트캠프 픽스처.
  *
- * 어드민 목록은 등록일·등록 경로·게시 상태를 칸으로 갖는데(PRD "콘텐츠 · 채용공고"), 사용자
- * API 의 `UserJobDetailResponse` 에는 셋 다 없다. 공개 화면이 쓰지 않는 값이라 스펙에 없는
- * 것이고, 어드민 API 가 생기면 그 응답에 들어올 자리다.
+ * 응답 타입은 admin 스펙의 생성 모델(`AdminJobDetailResponse`, `AdminBootcampDetailResponse`)
+ * 이다. 어드민 목록은 등록일·등록 경로·게시 상태를 칸으로 갖는데 사용자 API 의
+ * `UserJobDetailResponse` 에는 셋 다 없어서, 사용자 픽스처에서 어드민 모델에 없는 칸을 빼고
+ * 어드민 칸을 얹는다.
  *
  * 그렇다고 `fixtures/job.ts` 를 어드민용으로 복사하지 않는다. 두 벌이 되면 어드민에서 본 공고와
  * 사용자 웹에서 본 공고가 달라진다(PRD "픽스처가 놓일 자리"). 대신 여기서 id 를 키로
@@ -14,16 +15,21 @@
  * 같은 이유로 계산해 넣는다.
  */
 
-import type { UserBootcampDetailResponse } from '../../generated/user/models/userBootcampDetailResponse';
-import type { UserBootcampSummaryResponse } from '../../generated/user/models/userBootcampSummaryResponse';
+import type {
+  AdminBootcampDetailResponse,
+  AdminJobDetailResponse,
+  AdminJobDetailResponseRecruitmentStatus,
+  AdminJobDetailResponseReviewStatus,
+  AdminJobDetailResponseSource,
+  AdminJobDetailResponseVisibility,
+} from '../../generated/admin/models';
 import type { UserJobDetailResponse } from '../../generated/user/models/userJobDetailResponse';
-import type { UserJobSummaryResponse } from '../../generated/user/models/userJobSummaryResponse';
 import { BOOTCAMP_FIXTURES } from './bootcamp';
 import { JOB_FIXTURES } from './job';
 import { SIDE_STUDY_FIXTURES, type SideStudyDetail } from './side-study';
 
 /** 크롤러가 수집했는지, 비즈니스 회원이 직접 등록했는지. 부트캠프에는 이 칸이 없다. */
-export type ContentSource = 'CRAWLER' | 'COMPANY';
+export type ContentSource = AdminJobDetailResponseSource;
 
 /**
  * 지면에 나가고 있는지 아닌지, 둘뿐이다.
@@ -35,37 +41,27 @@ export type ContentSource = 'CRAWLER' | 'COMPANY';
  * 백엔드 enum 을 바꾸자는 뜻은 아니다. 계약을 넘길 때 어드민 응답이 네 값을 이 둘로 접어서
  * 준다 — `PUBLISHED` 만 노출이고 나머지는 비노출이다.
  */
-export type Visibility = 'VISIBLE' | 'HIDDEN';
+export type Visibility = AdminJobDetailResponseVisibility;
 
 /**
- * 모집 상태. **채용공고와 부트캠프가 같은 값을 쓴다.**
- *
- * 저장된 칸이 아니라 모집 일정에서 계산한다. `Job` 엔티티에는 모집 상태 enum 이 아예 없고
- * (`closedAt`·`recruitmentStartAt`·`recruitmentEndAt`·`recruitmentType` 뿐이다), 부트캠프의
- * `BootcampStatus` 에는 "모집 예정" 에 해당하는 값이 없다. 둘을 같은 규칙으로 계산해야 두
- * 목록이 같은 뜻의 뱃지를 보여준다.
- *
- * 임시저장(`DRAFT`)은 두지 않는다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 목록에
- * 필터로 남겨 두면 골라도 늘 0 건이다.
+ * 채용공고의 모집 상태. 백엔드가 저장하지 않고 마감 처리 일시와 모집 종료 일시로 계산하는 값이고
+ * `RECRUITING`·`CLOSED` 둘뿐이다. 부트캠프에는 이 칸이 없고 저장된 `status` 를 쓴다.
  */
-export type RecruitmentStatus = 'UPCOMING' | 'RECRUITING' | 'CLOSED';
+export type RecruitmentStatus = AdminJobDetailResponseRecruitmentStatus;
 
-/** 모집 일정. 두 종류가 같은 모양으로 넘겨 같은 규칙을 태운다. */
+/** 채용공고의 모집 일정. */
 interface RecruitmentWindow {
   closedAt?: string;
-  recruitmentStartAt?: string;
   recruitmentEndAt?: string;
-  /** 채용공고에만 있다. 상시 채용은 시작·종료가 없어도 늘 모집 중이다. */
+  /** 상시 채용은 종료일이 있어도 늘 모집 중이다. */
   alwaysOpen?: boolean;
 }
 
 /**
  * 모집 상태를 일정에서 계산한다.
  *
- * 마감이 먼저다. 이미 닫힌 것은 시작일이 미래여도 마감이다 — 잘못 등록해 되돌린 건이 "모집
- * 예정" 으로 다시 올라오면 안 된다.
- *
- * 시작일이 미래면 모집 예정. 종료일이 지났으면 마감. 둘 다 아니면 모집 중이다.
+ * 마감 처리 일시가 있으면 마감. 종료일이 지났으면 마감. 둘 다 아니면 모집 중이다. 시작일이
+ * 미래인 공고도 모집 중이다 — 백엔드에 모집 예정 값이 없다.
  *
  * 날짜가 비어 있으면 모집 중으로 본다. 값이 없다고 닫힌 것으로 보면 수집이 덜 된 공고가
  * 통째로 마감으로 나간다.
@@ -75,9 +71,6 @@ export function recruitmentStatusOf(window: RecruitmentWindow): RecruitmentStatu
     return 'CLOSED';
   }
   const now = Date.now();
-  if (window.recruitmentStartAt && new Date(window.recruitmentStartAt).getTime() > now) {
-    return 'UPCOMING';
-  }
   if (window.alwaysOpen) {
     return 'RECRUITING';
   }
@@ -90,44 +83,11 @@ export function recruitmentStatusOf(window: RecruitmentWindow): RecruitmentStatu
 /**
  * 비즈니스 회원이 올린 공고의 검수 상태.
  *
- * 크롤러가 수집한 공고에는 없다(`null`). 크롤링은 우리가 고른 사이트에서 긁어오는 것이라
+ * 크롤러가 수집한 공고에는 없다(응답에서 빠진다. 실제 백엔드는 `null` 을 싣는다). 크롤링은 우리가 고른 사이트에서 긁어오는 것이라
  * 사람이 한 건씩 통과시킬 대상이 아니고, 검수는 외부에서 올라온 글을 지면에 올릴지 정하는
  * 일이다. 둘을 한 상태값으로 묶으면 대시보드의 "검수 대기"가 크롤링 수집량에 묻힌다.
  */
-export type JobReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
-
-export interface AdminJobMeta {
-  /** ISO 8601. */
-  registeredAt: string;
-  /** 파생값. 저장된 칸이 아니라 마감 일시와 모집 유형에서 계산한다. */
-  recruitmentStatus: RecruitmentStatus;
-  source: ContentSource;
-  visibility: Visibility;
-  /** 크롤러 수집분은 `null` 이다. */
-  reviewStatus: JobReviewStatus | null;
-}
-
-export type AdminJobSummary = UserJobSummaryResponse & AdminJobMeta;
-export type AdminJobDetail = UserJobDetailResponse & AdminJobMeta;
-
-export interface AdminBootcampMeta {
-  registeredAt: string;
-  /**
-   * 파생값. 저장된 `status`(`BootcampStatus`)와 별개다.
-   *
-   * `BootcampStatus` 에는 "모집 예정" 이 없어서 시작일이 미래인 과정도 `RECRUITING` 으로
-   * 저장된다. 채용공고와 같은 뱃지를 쓰려면 같은 규칙으로 계산해야 한다.
-   */
-  recruitmentStatus: RecruitmentStatus;
-  /** 부트캠프도 비즈니스 회원이 직접 올릴 수 있다. 검수 대상은 그쪽뿐이다. */
-  source: ContentSource;
-  visibility: Visibility;
-  /** 크롤러 수집분은 `null`. */
-  reviewStatus: JobReviewStatus | null;
-}
-
-export type AdminBootcampSummary = UserBootcampSummaryResponse & AdminBootcampMeta;
-export type AdminBootcampDetail = UserBootcampDetailResponse & AdminBootcampMeta;
+export type JobReviewStatus = AdminJobDetailResponseReviewStatus;
 
 /**
  * 사이드·스터디에도 등록일이 없다. `SideStudyDetail` 은 모집 시작·마감만 들고 있는데, 어드민
@@ -194,55 +154,59 @@ const reviewStatusFor = (id: number, registeredAt: string): JobReviewStatus => {
   return hashId(id, 6) % 5 === 0 ? 'REJECTED' : 'APPROVED';
 };
 
-const jobMetaFor = (job: UserJobDetailResponse): AdminJobMeta => {
+/**
+ * 사용자 픽스처를 어드민 모델로 옮긴다. 어드민 모델에 없는 칸(`bookmarked`, 경력 연차) 은 뺀다.
+ * 크롤러 수집분의 `reviewStatus` 는 싣지 않는다 — 스펙이 이 칸을 선택으로 둔다.
+ */
+const toAdminJob = ({
+  bookmarked: _bookmarked,
+  experienceMinYears: _experienceMinYears,
+  experienceMaxYears: _experienceMaxYears,
+  ...job
+}: UserJobDetailResponse): AdminJobDetailResponse => {
   const id = job.id;
   const source = sourceFor(id);
   const registeredAt = registeredAtFor(id);
   return {
+    ...job,
     registeredAt,
     recruitmentStatus: recruitmentStatusOf({
       closedAt: job.closedAt,
-      recruitmentStartAt: job.recruitmentStartAt,
       recruitmentEndAt: job.recruitmentEndAt,
       alwaysOpen: job.recruitmentType === 'ALWAYS_OPEN',
     }),
     source,
     visibility: visibilityFor(id),
-    reviewStatus: source === 'COMPANY' ? reviewStatusFor(id, registeredAt) : null,
+    ...(source === 'COMPANY' ? { reviewStatus: reviewStatusFor(id, registeredAt) } : {}),
   };
 };
 
 /** 사용자 픽스처에 어드민 칸을 얹은 채용공고. 목록·상세가 모두 여기서 나온다. */
-export const ADMIN_JOB_FIXTURES: AdminJobDetail[] = JOB_FIXTURES.map((job) => ({
-  ...job,
-  ...jobMetaFor(job),
-}));
+export const ADMIN_JOB_FIXTURES: AdminJobDetailResponse[] = JOB_FIXTURES.map(toAdminJob);
 
 /**
  * `BootcampStatus`(`status`)는 모집 상태(모집중·마감)이지 노출 여부가 아니다. 둘은 다른 것이라
  * 노출 여부를 따로 얹는다 — 모집이 끝난 과정을 지면에 남겨 둘 수도, 모집 중인데 내릴 수도 있다.
+ * 어드민 모델에는 채용공고의 `recruitmentStatus` 같은 계산값이 없고 `status` 를 그대로 쓴다.
  *
  * 부트캠프 id 는 1~24 로 채용공고와 겹친다. 같은 해시를 쓰면 id 1 인 공고와 부트캠프가 같은
  * 등록 경로를 갖게 되므로 salt 를 달리해 갈라 둔다.
  */
-export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetail[] = BOOTCAMP_FIXTURES.map((bootcamp) => {
-  const registeredAt = registeredAtFor(bootcamp.id);
-  const source: ContentSource = hashId(bootcamp.id, 31) % 3 === 0 ? 'COMPANY' : 'CRAWLER';
-  return {
-    ...bootcamp,
-    registeredAt,
-    recruitmentStatus: recruitmentStatusOf({
-      // 저장된 상태가 마감이면 그것을 따른다. 엔티티가 CLOSED 와 closedAt 을 함께 두기 때문에
-      // (Bootcamp.kt 의 require) 둘 중 하나만 봐도 되지만, 픽스처에는 closedAt 이 비어 있다.
-      closedAt: bootcamp.status === 'CLOSED' ? (bootcamp.closedAt ?? registeredAt) : undefined,
-      recruitmentStartAt: bootcamp.recruitmentStartAt,
-      recruitmentEndAt: bootcamp.recruitmentEndAt,
-    }),
-    source,
-    visibility: visibilityFor(bootcamp.id + 1000),
-    reviewStatus: source === 'COMPANY' ? reviewStatusFor(bootcamp.id + 1000, registeredAt) : null,
-  };
-});
+export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetailResponse[] = BOOTCAMP_FIXTURES.map(
+  ({ bookmarked: _bookmarked, ...bootcamp }) => {
+    const registeredAt = registeredAtFor(bootcamp.id);
+    const source: ContentSource = hashId(bootcamp.id, 31) % 3 === 0 ? 'COMPANY' : 'CRAWLER';
+    return {
+      ...bootcamp,
+      registeredAt,
+      source,
+      visibility: visibilityFor(bootcamp.id + 1000),
+      ...(source === 'COMPANY'
+        ? { reviewStatus: reviewStatusFor(bootcamp.id + 1000, registeredAt) }
+        : {}),
+    };
+  },
+);
 
 /** 사이드·스터디는 백엔드 도메인 자체가 없어 사용자 픽스처가 유일한 원본이다. */
 export const ADMIN_SIDE_STUDY_FIXTURES: AdminSideStudy[] = SIDE_STUDY_FIXTURES.map((study) => ({
