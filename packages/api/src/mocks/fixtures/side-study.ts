@@ -1,12 +1,10 @@
 /**
- * 백엔드 계약이 아니라 이 화면(`/side-studies`)을 만들기 위한 가정이다.
+ * 어드민 목 화면(콘텐츠 관리의 사이드·스터디, 회원 활동) 이 쓰는 사이드·스터디 원본이다.
  *
- * 사이드·스터디는 ogonggo-BE에 엔드포인트도 엔티티도 없다(PRD 5절). 그래서 응답 형태를 이
- * 파일이 정한다. 실제 API가 생기면 이 파일은 사라지고 `packages/api/src/generated/`의 생성
- * 타입으로 대체된다 — 그래서 생성 디렉토리 안에 넣지 않았고, 이 파일도 생성 타입을 하나도
- * 임포트하지 않는다. 페이지 래핑(`SideStudyPageInfo`·`SideStudyListResponse`)은 다른
- * 목록 API와 같은 모양을 손으로 다시 적은 것이지 `PageInfo`를 가져다 쓴 것이 아니다 —
- * 가정이 생성 타입에 기대면 계약처럼 보이기 시작한다.
+ * 사용자 웹은 2026-09-18 부터 모집글 API(`getRecruitmentPosts`, `getPublicRecruitmentPost`) 를
+ * 쓰고, 그 목 응답은 이 12 건을 생성 모델로 옮긴 `./recruitment-post.ts` 가 만든다. 이 파일은
+ * 어드민 쪽 사이드·스터디가 아직 백엔드 없이 목에만 있어 남아 있다(`./admin-content.ts`,
+ * `./admin-member-activity.ts`). 필드 모양은 모집글 API 이전의 가정이다.
  *
  * 필드는 목업 `docs/asset/사이드스터디 상세페이지.png`의 정보 그리드 7칸(진행 방식, 모집 인원,
  * 기술 스택, 모집 시작일, 모집 포지션, 모집 마감일, 소통 방법)에 목록 카드가 필요로 하는 것
@@ -64,33 +62,6 @@ export interface SideStudyDetail extends SideStudySummary {
   applicationUrl?: string;
 }
 
-/** `PageInfo`와 같은 모양이지만 가정 쪽에 따로 둔다 — 위 첫 주석 참고. */
-export interface SideStudyPageInfo {
-  pageNum: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-}
-
-export interface SideStudyPageResponse {
-  items: SideStudySummary[];
-  pageInfo: SideStudyPageInfo;
-}
-
-/** `GET /api/v1/side-studies`의 응답 봉투. 다른 목록 API의 `SuccessResponse...`와 같은 모양이다. */
-export interface SideStudyListResponse {
-  status: number;
-  message: string;
-  data?: SideStudyPageResponse;
-}
-
-/** `GET /api/v1/side-studies/{postId}`의 응답 봉투. 위 목록 봉투와 `data`만 다르다. */
-export interface SideStudyDetailResponse {
-  status: number;
-  message: string;
-  data?: SideStudyDetail;
-}
-
 /**
  * 아래 12건은 **전부 지어낸 값이다.** 제목, 닉네임, 본문, 기술 스택, 조회수까지 실존하는
  * 게시글에서 옮겨 온 것이 하나도 없다 — 외부 모집 게시판에서 가져오지 않기로 한
@@ -100,10 +71,7 @@ export interface SideStudyDetailResponse {
  *
  * 같은 이유로 링크가 하나도 없다. `contactMethod`는 "오픈 채팅"처럼 수단 이름만 넣고 실제
  * 주소를 넣지 않으며(PRD 6.2), `applicationUrl`도 전부 비어 있다 — 지어낼 수 없는 값이라
- * 비워 두는 쪽이 맞다. 상세 화면의 `신청하러 가기`는 이 픽스처에서 주소 없는 경로를 탄다.
- *
- * `thumbnailUrl`도 전부 비어 있다. 지어낸 글이라 가져올 이미지가 없어 카드가 회색 박스로
- * 떨어진다(Push 3 task 파일 선행 조건의 결정).
+ * 비워 두는 쪽이 맞다. `thumbnailUrl`도 같은 이유로 전부 비어 있다.
  *
  * 구성은 PRD 6.2의 표 그대로다. 목록 한 페이지가 채워지고 화면의 분기가 전부 한 번씩 나온다.
  *
@@ -118,17 +86,7 @@ export interface SideStudyDetailResponse {
  *
  * id가 클수록 최신이다. 기본 정렬(id 역순)에서 마감 임박·마감·정원 참 세 가지가 1페이지
  * 위쪽에 모이도록 12·11·10에 몰아 두었다 — 배지 세 모양을 한 화면에서 확인할 수 있다.
- *
- * 상세 화면(`/side-studies/{id}`)의 분기도 데이터로 한 번씩 지나간다. 값이 없는 정보 그리드
- * 칸은 빈 칸으로 새지 않고 "정보 없음"이 들어가야 하고(PRD 9절 4번), 값이 없는 본문 섹션은
- * 제목째 사라져야 한다.
- *
- * | 상세의 분기 | 해당 id |
- * |---|---|
- * | `eligibility`가 없어 `지원 자격 및 전형` 섹션이 통째로 사라진다 | 2·3·4 |
- * | `recruitmentEndAt`이 없어 `모집 마감일`이 상시 모집이 된다 | 5 |
- * | `techStack`이 비어 `기술 스택` 칸이 "정보 없음"이 된다 | 3 |
- * | `applicationUrl`이 없어 `신청하러 가기`가 비활성이 된다 | 12건 전부 |
+ * 사용자 웹 상세 화면의 분기는 이제 `./recruitment-post.ts` 의 데이터가 지나간다.
  */
 
 /** 오늘 기준 상대 일수를 날짜 문자열로. `fixtures/bootcamp.ts`의 같은 이름 함수와 같은 계산이다. */
