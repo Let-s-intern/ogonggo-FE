@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-  AdminReviewItemResponse as ReviewQueueItem,
-  AdminReviewItemResponseType as ReviewTargetType,
+import {
+  decideReview,
+  listReviewQueue,
+  type AdminReviewItemResponse as ReviewQueueItem,
+  type AdminReviewItemResponseType as ReviewTargetType,
 } from '@ogonggo/api/src/admin';
-import { adminGet, adminWrite } from '@/shared/api/adminClient';
+import { unwrapData } from '@/shared/api/unwrapData';
 
 export type { ReviewQueueItem, ReviewTargetType };
 
@@ -19,7 +21,7 @@ export type { ReviewQueueItem, ReviewTargetType };
 export function useReviewQueue() {
   return useQuery({
     queryKey: ['admin', 'review-queue'],
-    queryFn: () => adminGet<ReviewQueueItem[]>('/api/v1/admin/review-queue'),
+    queryFn: () => unwrapData(listReviewQueue()),
     staleTime: Number.POSITIVE_INFINITY,
   });
 }
@@ -30,9 +32,6 @@ export interface ReviewDecisionInput {
   decision: 'APPROVED' | 'REJECTED';
   reason?: string;
 }
-
-const pathOf = (type: ReviewTargetType, id: number) =>
-  `/api/v1/admin/review-queue/${type.toLowerCase()}/${id}`;
 
 /**
  * 모아 둔 판정을 한 번에 보낸다.
@@ -49,7 +48,8 @@ export function useSaveReviewDecisions() {
   return useMutation({
     mutationFn: async (decisions: ReviewDecisionInput[]) => {
       for (const entry of decisions) {
-        await adminWrite('PATCH', pathOf(entry.type, entry.id), {
+        // 경로의 종류는 스펙대로 소문자(`job`·`bootcamp`) 다.
+        await decideReview(entry.type.toLowerCase(), entry.id, {
           decision: entry.decision,
           reason: entry.reason,
         });

@@ -1,9 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-  AdminRejectionResponse as RejectionListItem,
-  AdminRejectionResponseType as RejectionTargetType,
+import {
+  listRejections,
+  updateRejection,
+  type AdminRejectionResponse as RejectionListItem,
+  type AdminRejectionResponseType as RejectionTargetType,
+  type ListRejectionsParams,
 } from '@ogonggo/api/src/admin';
-import { adminGet, adminWrite, type PageResponse } from '@/shared/api/adminClient';
+import { omitEmpty } from '@/shared/api/omitEmpty';
+import { unwrapData } from '@/shared/api/unwrapData';
 
 export type { RejectionListItem, RejectionTargetType };
 
@@ -16,8 +20,7 @@ export interface RejectionListFilters {
 export function useRejectionList(filters: RejectionListFilters) {
   return useQuery({
     queryKey: ['admin', 'rejections', filters],
-    queryFn: () =>
-      adminGet<PageResponse<RejectionListItem>>('/api/v1/admin/rejections', { ...filters }),
+    queryFn: () => unwrapData(listRejections(omitEmpty({ ...filters }) as ListRejectionsParams)),
   });
 }
 
@@ -26,7 +29,7 @@ export function useUpdateRejectionReason() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ type, id, reason }: { type: RejectionTargetType; id: number; reason: string }) =>
-      adminWrite('PATCH', `/api/v1/admin/rejections/${type.toLowerCase()}/${id}`, { reason }),
+      unwrapData(updateRejection(type.toLowerCase(), id, { reason })),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'rejections'] });
     },
