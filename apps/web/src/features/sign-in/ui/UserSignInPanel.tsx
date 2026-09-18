@@ -13,6 +13,7 @@ import {
   pathAfterLetsCareerSignIn,
   signInWithLetsCareerEmail,
 } from '@/shared/api/letsCareerSignIn';
+import { recordSignInMethod, savePendingSocialMethod } from '@/shared/lib/lastSignInMethod';
 import { saveReturnPath } from '@/shared/lib/returnPath';
 import { SignInForm } from './SignInForm';
 import { SocialSignInButtons } from './SocialSignInButtons';
@@ -40,6 +41,7 @@ export function UserSignInPanel({ returnPath, initialError = null }: UserSignInP
     setError(null);
     try {
       const { isNewUser } = await signInWithLetsCareerEmail(credentials);
+      recordSignInMethod('email');
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다.
       router.replace(pathAfterLetsCareerSignIn(isNewUser, returnPath));
     } catch (caught) {
@@ -52,6 +54,7 @@ export function UserSignInPanel({ returnPath, initialError = null }: UserSignInP
   // 돌아갈 화면은 떠나기 전에 `sessionStorage` 에 적고 콜백이 꺼낸다.
   const handleSocialSelect = (provider: LetsCareerSocialProvider) => {
     saveReturnPath(returnPath);
+    savePendingSocialMethod(provider);
     window.location.assign(buildSocialLoginUrl(provider, letsCareerCallbackUri()));
   };
 
@@ -59,9 +62,9 @@ export function UserSignInPanel({ returnPath, initialError = null }: UserSignInP
     <div className="flex flex-col">
       <p className="pb-4 text-sm text-gray-500">개인 계정으로 로그인합니다.</p>
       <SignInForm onSubmit={handleSubmit} pending={pending} error={error} />
-      <p className="pt-8 pb-4 text-center text-sm text-gray-400">또는 간편 로그인</p>
+      <p className="pt-6 pb-11 text-center text-sm text-gray-400">또는 간편 로그인</p>
       <SocialSignInButtons onSelect={handleSocialSelect} />
-      <div className="flex justify-center pt-12 text-sm font-medium text-gray-900">
+      <div className="flex justify-center pt-9 text-sm font-medium text-gray-900">
         <Link href="/signup" className="hover:underline">
           회원가입
         </Link>

@@ -9,6 +9,7 @@ import {
   letsCareerSignInFailureOf,
   pathAfterLetsCareerSignIn,
 } from '@/shared/api/letsCareerSignIn';
+import { recordPendingSocialMethod } from '@/shared/lib/lastSignInMethod';
 import { takeReturnPath } from '@/shared/lib/returnPath';
 
 /**
@@ -59,7 +60,10 @@ export function LetsCareerCallbackPage() {
     }
 
     exchangeLetsCareerToken(result.letsCareerAccessToken)
-      .then(({ isNewUser }) => router.replace(pathAfterLetsCareerSignIn(isNewUser, returnPath)))
+      .then(({ isNewUser }) => {
+        recordPendingSocialMethod();
+        router.replace(pathAfterLetsCareerSignIn(isNewUser, returnPath));
+      })
       .catch((error: unknown) => backToLogin(letsCareerSignInFailureOf(error)));
   }, [router]);
 

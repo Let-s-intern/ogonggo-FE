@@ -1,24 +1,26 @@
 'use client';
 
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Button, Input } from '@ogonggo/ui';
+import { RecentSignInBubble } from './RecentSignInBubble';
 
 export interface SignInFormProps {
   /** 제출 중이면 버튼을 막는다. 실패 문구는 `error` 로 받는다. */
   onSubmit: (credentials: { email: string; password: string }) => void;
   pending: boolean;
   error: string | null;
-  /** 로그인 버튼 위에 겹쳐 그릴 것(최근 로그인 말풍선). 버튼 기준 `relative` 안에 들어간다. */
-  submitAdornment?: ReactNode;
 }
 
 /**
  * 이메일·비밀번호 폼. 일반 회원(렛츠커리어) 과 기업 회원(오공고) 탭이 같은 모양을 쓰고, 보내는 곳만
  * 다르다.
  *
+ * 마지막 로그인이 이메일(일반·기업 모두) 이면 로그인 버튼 오른쪽 위에 "최근 로그인" 말풍선이 뜬다. 버튼 바로
+ * 위 가운데는 비밀번호 칸이라 입력 글자를 가리므로 오른쪽에 둔다.
+ *
  * 칸 이름은 디자인대로 자리표시 글자로만 보인다. 화면에 라벨이 없으므로 `aria-label` 로 이름을 준다.
  */
-export function SignInForm({ onSubmit, pending, error, submitAdornment }: SignInFormProps) {
+export function SignInForm({ onSubmit, pending, error }: SignInFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [missing, setMissing] = useState(false);
@@ -68,7 +70,7 @@ export function SignInForm({ onSubmit, pending, error, submitAdornment }: SignIn
         </p>
       ) : null}
       <div className="relative">
-        {submitAdornment}
+        <RecentSignInBubble method="email" className="absolute -top-4 right-4 z-10" />
         <Button type="submit" className="h-12 w-full rounded-xs" disabled={pending}>
           {pending ? '로그인 중...' : '로그인'}
         </Button>

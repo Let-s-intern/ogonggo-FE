@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { HttpError, signInCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
 import { saveTokens } from '@/shared/api/authTokens';
+import { recordSignInMethod } from '@/shared/lib/lastSignInMethod';
 import { SignInForm } from './SignInForm';
 
 export interface CompanySignInPanelProps {
@@ -34,6 +35,7 @@ export function CompanySignInPanel({ returnPath }: CompanySignInPanelProps) {
         throw new Error('기업 로그인 응답에 토큰이 없습니다.');
       }
       saveTokens(body.data);
+      recordSignInMethod('email');
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다. 풀면 이동 전에 버튼이 잠깐 다시 켜진다.
       router.replace(returnPath ?? '/');
     } catch (caught) {
