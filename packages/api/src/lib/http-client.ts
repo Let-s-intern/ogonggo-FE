@@ -53,22 +53,54 @@ export function setAccessTokenProvider(provider: AccessTokenProvider): void {
   getAccessToken = provider;
 }
 
+/**
+ * Called when a request comes back 401, with the request's own `url` and the
+ * access token it carried. Resolving `true` means "a new token is in place" and
+ * the request is sent once more with whatever the provider returns now; a
+ * second 401 is thrown like any other error. Resolving `false` throws the 401
+ * straight away.
+ */
+type UnauthorizedHandler = (url: string, sentAccessToken: string | null) => Promise<boolean>;
+
+let handleUnauthorized: UnauthorizedHandler | undefined;
+
+/**
+ * Registered by an app that can renew its token (apps/web reissues with its
+ * refresh token). Where the refresh token lives and which endpoint renews it
+ * stay in the app, for the same reason the token provider does. With nothing
+ * registered a 401 is thrown as before — apps/admin keeps no refresh token and
+ * sends a 401 to its login screen instead.
+ */
+export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
+  handleUnauthorized = handler;
+}
+
 export async function httpClient<T>(url: string, init: RequestInit = {}): Promise<T> {
   const isRelative = !/^https?:\/\//.test(url);
   const resolvedUrl =
     typeof window === 'undefined' && isRelative
       ? `${process.env.OGONGGO_USER_API_ORIGIN ?? 'http://localhost:8080'}${url}`
       : url;
+  const send = (accessToken: string | null | undefined) =>
+    fetch(resolvedUrl, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...init.headers,
+      },
+    });
+
   const accessToken = getAccessToken();
-  const response = await fetch(resolvedUrl, {
-    ...init,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...init.headers,
-    },
-  });
+  let response = await send(accessToken);
+  if (
+    response.status === 401 &&
+    handleUnauthorized &&
+    (await handleUnauthorized(url, accessToken ?? null))
+  ) {
+    response = await send(getAccessToken());
+  }
 
   if (!response.ok) {
     throw new HttpError(
