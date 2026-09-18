@@ -4,6 +4,8 @@
 > 대상 백엔드: `ogonggo-BE/ogonggo-api-admin`
 > 근거: `packages/api/src/mocks/admin/` 의 MSW 핸들러
 > 관련 PRD: `.claude/tasks/todo/prd-admin-console.md`
+> 스펙 대조: 2026-09-18, `ogonggo-api-admin` 의 `/v3/api-docs` 와 2·3·5·6 절. 각 절 끝의
+> "목과 백엔드 스펙의 차이" 에 남은 차이를 적었다
 
 ## 이 문서가 무엇인가
 
@@ -187,7 +189,6 @@
   "recruitmentEndAt": "2026-09-14",
   "region": "서울 본사",
   "closedAt": null,
-  "bookmarked": false,
   "viewCount": 3254,
   "bookmarkCount": 196,
   "commentCount": 20,
@@ -262,7 +263,6 @@
 ```json
 {
   "visibility": "VISIBLE",
-  "source": "COMPANY",
   "reviewStatus": "APPROVED",
   "title": "고친 제목",
   "fields": { "responsibilities": "고친 본문", "compensation": "" }
@@ -311,6 +311,28 @@
 문구 입력이 되돌리기를 대신하고 있으므로, 되돌릴 길이 생긴다면 화면에도 그것을 붙이는 편이
 낫다.
 
+**응답** — `SuccessResponseUnit`. `data` 에 쓸 값이 없다.
+
+### 목과 백엔드 스펙의 차이
+
+목 핸들러(`packages/api/src/mocks/admin/content.ts`) 의 응답은 생성 모델
+`AdminJobSummaryResponse`, `AdminJobDetailResponse` 로 맞췄다. 그 과정에서 목에서 뺀 칸과, 목이
+아직 스펙과 다르게 동작하는 곳이다.
+
+| 항목                                                     | 백엔드 스펙                                                                                                                                                                             | 목                                                                        |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `bookmarked`, `experienceMinYears`, `experienceMaxYears` | 목록·상세 응답에 없다                                                                                                                                                                   | 뺐다. 상세 화면의 경력 칸은 `experienceType` 만 보여 준다                 |
+| `recruitmentStatus`                                      | `RECRUITING` · `CLOSED` 둘                                                                                                                                                              | 있던 `UPCOMING` 을 뺐다. 화면의 "모집 예정" 필터도 뺐다                   |
+| `reviewStatus` (크롤링 수집분)                           | 생성 모델은 선택 칸이고 실제 응답은 `null` 을 싣는다                                                                                                                                    | 칸을 싣지 않는다. 화면은 둘 다 "해당 없음" 으로 그린다                    |
+| `PATCH` 요청 `source`                                    | `UpdateAdminJobRequest` 에 없다. 보내도 무시한다                                                                                                                                        | 화면이 보내고 목이 반영한다. `CRAWLER` 로 바꾸면 `reviewStatus` 를 지운다 |
+| `PATCH` 요청 `reviewStatus`                              | `APPROVED` · `PENDING` 만. `REJECTED` 는 400                                                                                                                                            | 셋 다 받는다                                                              |
+| `PATCH` 의 노출 규칙                                     | 승인하면 곧바로 노출, 검수 대기로 되돌리면 비노출. 기업회원 공고는 승인 전 `VISIBLE` 불가(409 `REVIEW_NOT_APPROVED`), 크롤링 수집분은 검수 상태 변경 불가(409 `CONTENT_NOT_REVIEWABLE`) | 노출과 검수 상태를 따로 바꾼다                                            |
+| `DELETE`                                                 | 소프트 삭제. 반려 기록을 지우지 않고 반려 보관에 `contentExists=false` 로 남긴다                                                                                                        | 배열에서 빼고 반려 기록도 지운다                                          |
+| 없는 id                                                  | 404 `JOB_NOT_FOUND`                                                                                                                                                                     | 404 `NOT_FOUND`                                                           |
+
+`source` 와 `reviewStatus` 요청 차이는 Push 3 에서 화면이 생성 함수(`updateJob`) 를 부르게 바꿀
+때 정리한다.
+
 ---
 
 ## 3. 콘텐츠 · 부트캠프
@@ -342,8 +364,9 @@
 
 ### `GET /api/v1/admin/bootcamps/{bootcampId}`
 
-**응답** — 요약 + `content` `eligibilityAndSelectionProcess` `partners[]` `curriculums[]`
-`applicationUrl` `sourceUrl` `managerEmail` `tuitionAmount` `capacity`.
+**응답** — 요약 + `content` `eligibilityAndSelectionProcess` `applicationMethod`
+`applicationUrl` `managerEmail` `inquiryUrl` `publicationStartAt` `publicationEndAt` `sourceUrl`
+`partners[]` `curriculums[]`. `tuitionAmount` `capacity` 는 요약에 이미 있다.
 
 ### `PATCH /api/v1/admin/bootcamps/{bootcampId}`
 
@@ -352,7 +375,8 @@
 **부르는 곳** — 목록의 노출 토글, 상세의 "운영 값 수정" 저장, 상세와 검수 화면의 "내용 수정"
 저장.
 
-**요청** — `title` `fields` `visibility` `source` `reviewStatus`. **채용공고와 같다.**
+**요청** — `title` `fields` `visibility` `reviewStatus`. **채용공고와 같다.** `source` 는
+스펙(`UpdateAdminBootcampRequest`) 에 없다.
 
 허용 칸: `content` `eligibilityAndSelectionProcess`
 
@@ -364,6 +388,20 @@
 ### `DELETE /api/v1/admin/bootcamps/{bootcampId}`
 
 채용공고 삭제와 같다.
+
+### 목과 백엔드 스펙의 차이
+
+목의 응답은 생성 모델 `AdminBootcampSummaryResponse`, `AdminBootcampDetailResponse` 로 맞췄다.
+채용공고 절의 `reviewStatus`, `PATCH` 요청, `DELETE` 차이는 부트캠프도 같다. 그 밖의 차이다.
+
+| 항목                 | 백엔드 스펙                                                        | 목                                                                                |
+| -------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| 모집 상태            | 저장된 `status` 를 그대로 준다. 계산한 `recruitmentStatus` 는 없다 | 계산해 싣던 `recruitmentStatus` 를 뺐다. 목록·상세 화면은 `status` 를 보여 준다   |
+| 모집 상태 필터       | 쿼리 `status`. `DRAFT` 는 400                                      | 쿼리 이름을 `recruitmentStatus` 에서 `status` 로 바꿨다. `DRAFT` 도 거르기만 한다 |
+| `bookmarked`         | 없다                                                               | 뺐다                                                                              |
+| 요약의 상세 칸       | 요약 응답에 `applicationMethod` 등 상세 칸이 없다                  | 사용자 픽스처에서 따라오던 상세 칸을 목록 응답에서 뺐다                           |
+| `PATCH` 의 `content` | 비울 수 없다. 빈 문자열이면 400                                    | 빈 문자열이면 칸을 비운다                                                         |
+| 없는 id              | 404 `BOOTCAMP_NOT_FOUND`                                           | 404 `NOT_FOUND`                                                                   |
 
 ---
 
@@ -465,6 +503,7 @@
 하고 보내지 않는다.
 
 **응답** — `{ "type": "JOB", "id": 693, "reviewStatus": "REJECTED", "remaining": 14 }`
+(`AdminReviewDecisionResponse`)
 
 ### `PATCH /api/v1/admin/review-queue/{type}/{id}/undo`
 
@@ -473,8 +512,28 @@
 
 **동작** — `reviewStatus` 를 `PENDING` 으로 되돌리고 반려 기록을 지운다.
 
+**응답** — 판정과 같은 `AdminReviewDecisionResponse`. `reviewStatus` 는 `PENDING` 이다.
+
 키 하나로 통과되는 화면이라 오조작이 실제로 일어난다. 되돌릴 길이 없으면 운영자는 매 건 손을
 멈추고 확인하게 되고, 그러면 키보드 흐름을 만든 이유가 사라진다.
+
+### 목과 백엔드 스펙의 차이
+
+목(`packages/api/src/mocks/admin/review.ts`) 의 응답·요청은 생성 모델
+`AdminReviewItemResponse`, `DecideReviewRequest`, `AdminReviewDecisionResponse` 로 맞췄다.
+
+| 항목                         | 백엔드 스펙                                                                           | 목                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 되돌리기 응답 `reviewStatus` | 있다                                                                                  | 없던 것을 더했다                            |
+| `decision` 값                | 스키마 enum 은 `PENDING` · `APPROVED` · `REJECTED`, 설명은 `APPROVED` 또는 `REJECTED` | `REJECTED` 가 아니면 모두 승인으로 처리한다 |
+| 판정과 노출                  | 승인하면 곧바로 노출, 반려하면 비노출. 되돌리면 비노출                                | 노출을 바꾸지 않는다                        |
+| 크롤링 수집분                | 409 `CONTENT_NOT_REVIEWABLE`                                                          | 거르지 않는다                               |
+| 없는 대상                    | 404 `JOB_NOT_FOUND` 또는 `BOOTCAMP_NOT_FOUND`                                         | 404 `NOT_FOUND`                             |
+
+`meta` 와 `sections` 의 라벨은 스펙이 정하지 않는 값이다. 2026-09-18 로컬 백엔드 응답에서는
+채용공고 `meta` 가 고용 형태·경력·지역·모집 마감, 부트캠프 `meta` 가 진행 방식·수강료·교육 기간·모집
+마감이고 부트캠프 `content` 섹션 라벨이 "상세 내용" 이었다. 목은 채용공고 고용 형태·지역·모집 마감,
+부트캠프 프로그램 유형·진행 방식·수강료, 섹션 라벨 "소개" 를 그대로 둔다.
 
 ---
 
@@ -525,6 +584,20 @@
 
 **고친 사유도 올린 회원에게 다시 전달되어야 한다.** 급하게 보낸 사유가 불친절했거나 사실과
 달랐을 때 다시 설명할 길이 이것뿐이다.
+
+**응답** — 고친 반려 기록 한 건(`AdminRejectionResponse`). 목록 항목과 같은 모양이고
+`contentExists` 를 포함한다.
+
+### 목과 백엔드 스펙의 차이
+
+목(`packages/api/src/mocks/admin/rejections.ts`) 의 응답·요청은 생성 모델
+`AdminRejectionResponse`, `UpdateRejectionReasonRequest` 로 맞췄다.
+
+| 항목                           | 백엔드 스펙                  | 목                                                                  |
+| ------------------------------ | ---------------------------- | ------------------------------------------------------------------- |
+| 사유 수정 응답 `contentExists` | 있다                         | 없던 것을 더했다                                                    |
+| 삭제된 콘텐츠의 반려 기록      | 남기고 `contentExists=false` | 콘텐츠를 삭제할 때 반려 기록도 지워서 `false` 인 행이 생기지 않는다 |
+| 없는 반려 기록                 | 404 `REJECTION_NOT_FOUND`    | 404 `NOT_FOUND`                                                     |
 
 ---
 
