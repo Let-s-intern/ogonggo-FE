@@ -41,12 +41,13 @@ type AccessTokenProvider = () => string | null | undefined;
 let getAccessToken: AccessTokenProvider = () => undefined;
 
 /**
- * Where the `Authorization: Bearer` token comes from. The app that has a login
- * registers this once at startup (apps/admin); this file does not know where a
- * token is stored, for the same reason it does not read env vars. With nothing
- * registered no header is sent — apps/web, including its Server Components,
- * never registers one, which also keeps a module-level value from leaking
- * between server requests.
+ * Where the `Authorization: Bearer` token comes from. Each app that has a
+ * login registers this once at startup (apps/admin: main.tsx, apps/web:
+ * app/providers.tsx); this file does not know where a token is stored, for the
+ * same reason it does not read env vars. With nothing registered no header is
+ * sent. apps/web's provider reads browser storage and returns null on the
+ * server, so its Server Components still send no header and no module-level
+ * value can leak between server requests.
  */
 export function setAccessTokenProvider(provider: AccessTokenProvider): void {
   getAccessToken = provider;
