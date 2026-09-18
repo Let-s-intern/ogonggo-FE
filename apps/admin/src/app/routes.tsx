@@ -7,6 +7,7 @@ import { CompanyMemberListPage } from '@/pages/company-member-list';
 import { DashboardPage } from '@/pages/dashboard';
 import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
+import { LoginPage } from '@/pages/login';
 import { NoticeListPage } from '@/pages/notice-list';
 import { NotFoundPage } from '@/pages/not-found';
 import { RejectionsPage } from '@/pages/rejections';
@@ -15,6 +16,7 @@ import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
+import { RequireAuth } from './RequireAuth';
 
 /**
  * 메뉴 트리가 그대로 경로가 된다(PRD `.claude/tasks/memos/prd-admin-console.md` "라우팅").
@@ -23,9 +25,15 @@ import { UserMemberListPage } from '@/pages/user-member-list';
  * 맞아야 한다. 어긋나면 메뉴를 눌렀을 때 404 가 난다.
  */
 export const router = createBrowserRouter([
+  // 좌측 메뉴 틀 밖에 둔다. 로그인 전에는 메뉴가 부를 API 가 모두 401 이다.
+  { path: '/login', element: <LoginPage /> },
   {
     path: '/',
-    element: <AdminLayout />,
+    element: (
+      <RequireAuth>
+        <AdminLayout />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
 
