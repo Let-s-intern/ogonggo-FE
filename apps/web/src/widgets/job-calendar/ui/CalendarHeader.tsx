@@ -55,7 +55,7 @@ export function CalendarHeader({ query }: CalendarHeaderProps) {
       >
         <ChevronIcon direction="left" className="h-8 w-8" />
       </Link>
-      <span className="text-2xl font-bold text-gray-900">{title}</span>
+      <span className="text-3xl font-bold text-gray-900">{title}</span>
       <MiniCalendarPopover
         selected={query.date}
         // 고른 날이 든 주로 간다(PRD 8.4). 월간에서는 그 날이 든 달을 펴는 것과 같다.

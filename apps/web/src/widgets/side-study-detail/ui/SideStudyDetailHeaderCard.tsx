@@ -75,7 +75,7 @@ export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCa
         </div>
       </div>
       <div className="mt-6 flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">{sideStudy.title}</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{sideStudy.title}</h1>
         <span className="shrink-0 text-sm font-bold text-blue-600">
           {KIND_LABELS[sideStudy.recruitmentType]}
         </span>

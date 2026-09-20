@@ -27,7 +27,7 @@ export const StatTile = forwardRef<HTMLDivElement, StatTileProps>(
       {...props}
     >
       <p className="text-sm text-gray-500">{label}</p>
-      <p className="pt-2 text-3xl font-semibold text-gray-900">
+      <p className="pt-2 text-5xl font-semibold text-gray-900">
         {value.toLocaleString('ko-KR')}
         {unit ? <span className="pl-1 text-lg font-medium text-gray-500">{unit}</span> : null}
       </p>

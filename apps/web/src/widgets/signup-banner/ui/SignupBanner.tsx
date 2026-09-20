@@ -25,7 +25,7 @@ export function SignupBanner({ audience }: SignupBannerProps) {
   return (
     <section className="bg-linear-to-r from-blue-600 to-blue-400">
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-10 md:py-12">
-        <h2 className="text-xl font-bold text-white md:text-2xl">{title}</h2>
+        <h2 className="text-xl font-bold text-white md:text-3xl">{title}</h2>
         <p className="text-sm text-white/90">{description}</p>
       </div>
     </section>
