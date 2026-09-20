@@ -125,7 +125,6 @@ function IconGrid() {
 }
 
 const meta: Meta = {
-  title: 'Foundations/Icons',
   parameters: { layout: 'fullscreen' },
   render: () => <IconGrid />,
 };

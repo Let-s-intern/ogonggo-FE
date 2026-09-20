@@ -276,7 +276,6 @@ function TypeScale() {
 }
 
 const meta: Meta = {
-  title: 'Foundations/Typography',
   parameters: { layout: 'fullscreen' },
   render: () => <TypeScale />,
 };

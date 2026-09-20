@@ -217,7 +217,6 @@ function ColorTokens() {
 }
 
 const meta: Meta = {
-  title: 'Foundations/Colors',
   parameters: { layout: 'fullscreen' },
   render: () => <ColorTokens />,
 };

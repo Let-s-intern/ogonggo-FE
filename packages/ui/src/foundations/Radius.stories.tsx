@@ -156,7 +156,6 @@ function RadiusScale() {
 }
 
 const meta: Meta = {
-  title: 'Foundations/Radius',
   parameters: { layout: 'fullscreen' },
   render: () => <RadiusScale />,
 };

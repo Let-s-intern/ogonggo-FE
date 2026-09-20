@@ -11,9 +11,22 @@ const config: StorybookConfig = {
   // 스토리북은 `packages/ui` 전용 카탈로그가 아니라 저장소 전체 카탈로그다 (2026-09-21 결정).
   // `apps/web` 의 카드·상세 조각은 전부 props 로만 그려서 API 도 라우팅도 필요 없다 —
   // 막던 것은 `next/link` 하나였고 아래 alias 가 그것을 걷어낸다.
+  //
+  // 사이드바를 셋으로 가른다. 재사용 가능한 것(`Components`)과 이 앱 전용인 것(`App`)이 한
+  // 덩어리로 섞이면 다음 사람이 무엇을 가져다 써도 되는지 알 수 없다.
+  //
+  // 제목 규칙. `titlePrefix` 는 자동 제목뿐 아니라 스토리가 명시한 `title` 앞에도 붙는다
+  // (확인: `title: 'Foundations/Colors'` + `titlePrefix: 'Foundations'` 는
+  // `Foundations/Foundations/Colors` 가 됐다). 그래서 어느 쪽도 묶음 이름을 직접 적지 않는다.
+  // - `packages/ui` 스토리는 `title` 을 쓰지 않는다. `titlePrefix` + 파일 이름이 제목이다
+  //   (`Components/Badge`, `Foundations/Colors`).
+  // - `apps/web` 스토리는 `title` 을 쓰되 묶음 이름 아래만 적는다(`'카드 셋/JobCard'`).
+  //   경로가 FSD 라 자동 제목이 `App/entities/job/ui/JobCard` 처럼 네 단계로 깊어지는데,
+  //   이 카탈로그에서 보고 싶은 묶음은 폴더가 아니라 "카드 셋", "공고 상세" 같은 화면 단위다.
   stories: [
-    '../src/**/*.stories.@(ts|tsx)',
-    `${webSrc}/**/*.stories.@(ts|tsx)`,
+    { directory: '../src/foundations', files: '*.stories.@(ts|tsx)', titlePrefix: 'Foundations' },
+    { directory: '../src/components', files: '*.stories.@(ts|tsx)', titlePrefix: 'Components' },
+    { directory: webSrc, files: '**/*.stories.@(ts|tsx)', titlePrefix: 'App' },
   ],
   framework: {
     name: '@storybook/react-vite',
