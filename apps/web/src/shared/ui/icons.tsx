@@ -1,61 +1,78 @@
-import type { SVGProps } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '@ogonggo/ui';
 
 /**
- * 이 저장소에 아이콘 라이브러리가 없다(Push 4 task 파일 "관련 파일" 참고) — 필요한 몇 개만
- * 인라인 SVG로 직접 그린다. 업무 의미가 없는 범용 그래픽이라 `shared/ui`에 둔다.
+ * 아이콘은 Iconify 로 그린다(`packages/ui/src/styles/tokens.css` 의 `@plugin "@iconify/tailwind4"`).
+ * 플러그인이 소스에 적힌 `icon-[세트--이름]` 문자열을 스캔해서 그 아이콘만 CSS 마스크로 뽑으므로
+ * 이름을 변수로 조립하면 안 된다 — 항상 클래스 문자열 안에 그대로 적는다.
+ *
+ * 그려지는 것은 `<svg>` 가 아니라 `background-color: currentColor` 를 마스크로 자른 `<span>` 이다.
+ * 그래서 크기는 `width`/`height` 가 정하고(기본 `1em`), 색은 그대로 `text-*` 가 정한다. 쓰는 쪽이
+ * 전부 `h-4 w-4` 같은 크기 클래스를 붙이고 있어서 교체 전후로 박스 크기와 자리가 같다.
+ *
+ * `block` 이 붙어 있는 이유. Tailwind preflight 가 `svg` 를 `display: block` 으로 만들어 두기
+ * 때문에 전에는 모든 아이콘이 블록이었는데, Iconify 가 주는 클래스는 `display: inline-block` 이다.
+ * 이 차이로 아이콘이 줄상자를 만들어 부모가 세로로 늘어났다(실측: `/calendar` 의 월 이동 화살표
+ * `<a>` 가 32px → 39px, 문서 전체 높이 1477px → 1484px). `block` 을 같이 붙이면 전과 같다.
+ *
+ * 이 파일이 래퍼로 남는 이유는 두 가지다. 하나는 `BookmarkIcon`·`ChevronIcon` 처럼 상태나 방향이
+ * 클래스 하나로 안 끝나는 것이 있어서고, 하나는 쓰는 곳이 열 곳이 넘어 이름을 한 군데서 바꾸기
+ * 위해서다.
  */
 
-export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+export type IconProps = ComponentPropsWithoutRef<'span'>;
+
+export function SearchIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M17 17L13.4 13.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <span aria-hidden="true" className={cn('icon-[lucide--search] block', className)} {...props} />
   );
 }
 
-export interface BookmarkIconProps extends SVGProps<SVGSVGElement> {
+export interface BookmarkIconProps extends IconProps {
   filled?: boolean;
 }
 
-/** `job.bookmarked`를 그대로 반영하는 표시 전용 아이콘 — 클릭해도 상태가 바뀌지 않는다(PRD 7절). */
+/**
+ * `job.bookmarked`를 그대로 반영하는 표시 전용 아이콘 — 클릭해도 상태가 바뀌지 않는다(PRD 7절).
+ *
+ * 세트가 `lucide` 가 아니라 `tabler` 다. PRD 2 절 표는 `lucide--bookmark` 에 "채운 것은 fill
+ * 처리" 라고 적었지만 Iconify 는 아이콘을 마스크로 그리기 때문에 바깥에서 fill 을 줄 수단이
+ * 없고, `lucide` 에는 채운 북마크가 없다(`bookmark`, `bookmark-check`, `bookmark-minus`,
+ * `bookmark-off`, `bookmark-plus`, `bookmark-x` 가 전부다). `tabler` 는 `bookmark` 와
+ * `bookmark-filled` 가 같은 실루엣(24 그리드, 2px 획, 바깥 테두리 x 5~19)이라 두 상태의 폭이
+ * 어긋나지 않는다. 다른 세트의 채운 북마크를 빌려 오면 상태가 바뀔 때 아이콘 폭이 달라진다.
+ *
+ * 비운 상태의 속이 비쳐 보인다. 전에는 `fill="white"` 라 뒤의 썸네일을 가렸다. 마스크에는
+ * 안쪽 면이 없어서 `BootcampCard` 처럼 사진 위에 얹히는 자리에서는 사진이 비친다.
+ */
 export function BookmarkIcon({ filled = false, className, ...props }: BookmarkIconProps) {
   return (
-    <svg
-      viewBox="0 0 20 20"
+    <span
       aria-hidden="true"
-      className={cn(filled ? 'text-blue-500' : 'text-gray-300', className)}
+      className={cn(
+        filled
+          ? 'icon-[tabler--bookmark-filled] block text-blue-500'
+          : 'icon-[tabler--bookmark] block text-gray-300',
+        className,
+      )}
       {...props}
-    >
-      <path
-        d="M5 3.5C5 3.22386 5.22386 3 5.5 3H14.5C14.7761 3 15 3.22386 15 3.5V17L10 13.5L5 17V3.5Z"
-        fill={filled ? 'currentColor' : 'white'}
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
+    />
   );
 }
 
 /** 상세 헤더의 조회수(`viewCount`) 표시에 쓰는 눈 모양 아이콘. */
-export function EyeIcon(props: SVGProps<SVGSVGElement>) {
+export function EyeIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <path
-        d="M1.5 10C1.5 10 4.5 4.5 10 4.5C15.5 4.5 18.5 10 18.5 10C18.5 10 15.5 15.5 10 15.5C4.5 15.5 1.5 10 1.5 10Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="10" cy="10" r="2.25" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
+    <span aria-hidden="true" className={cn('icon-[lucide--eye] block', className)} {...props} />
   );
 }
 
 export type ChevronDirection = 'up' | 'down' | 'left' | 'right';
 
+/**
+ * 방향은 이름이 아니라 회전으로 낸다. `icon-[lucide--chevron-${direction}]` 처럼 조립하면
+ * 플러그인 스캐너가 못 찾아서 아이콘이 통째로 사라진다.
+ */
 const CHEVRON_ROTATION: Record<ChevronDirection, string> = {
   down: 'rotate-0',
   up: 'rotate-180',
@@ -63,153 +80,92 @@ const CHEVRON_ROTATION: Record<ChevronDirection, string> = {
   right: '-rotate-90',
 };
 
-export interface ChevronIconProps extends SVGProps<SVGSVGElement> {
+export interface ChevronIconProps extends IconProps {
   direction?: ChevronDirection;
 }
 
 export function ChevronIcon({ direction = 'down', className, ...props }: ChevronIconProps) {
   return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
+    <span
       aria-hidden="true"
-      className={cn(CHEVRON_ROTATION[direction], className)}
+      className={cn('icon-[lucide--chevron-down] block', CHEVRON_ROTATION[direction], className)}
       {...props}
-    >
-      <path
-        d="M5 7.5L10 12.5L15 7.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    />
   );
 }
 
 /** 사이드·스터디 카드 하단의 댓글 수(`commentCount`) 앞에 붙는 말풍선 아이콘. */
-export function CommentIcon(props: SVGProps<SVGSVGElement>) {
+export function CommentIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <path
-        d="M3 5.5C3 4.67157 3.67157 4 4.5 4H15.5C16.3284 4 17 4.67157 17 5.5V12.5C17 13.3284 16.3284 14 15.5 14H8L4.5 17V14H4.5C3.67157 14 3 13.3284 3 12.5V5.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--message-circle] block', className)}
+      {...props}
+    />
   );
 }
 
 /** 날짜 이동 줄의 달력 아이콘(`docs/asset/공고달력 미니달력 모달.png`). */
-export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
+export function CalendarIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <rect x="3" y="4.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3 8h14" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M7 3v3M13 3v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--calendar] block', className)}
+      {...props}
+    />
   );
 }
 
 /** 오류 화면(`ErrorState`)의 원형 배지 안에 들어가는 느낌표. */
-export function AlertIcon(props: SVGProps<SVGSVGElement>) {
+export function AlertIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 7.5v5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <circle cx="12" cy="16.4" r="1.1" fill="currentColor" />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--circle-alert] block', className)}
+      {...props}
+    />
   );
 }
 
 /** `다시 시도` 버튼의 새로고침 화살표. */
-export function RefreshIcon(props: SVGProps<SVGSVGElement>) {
+export function RefreshIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <path
-        d="M16 10a6 6 0 1 1-1.76-4.24"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16 3.5V7h-3.5"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--refresh-cw] block', className)}
+      {...props}
+    />
   );
 }
 
 /** `홈으로` 버튼의 집 모양. */
-export function HomeIcon(props: SVGProps<SVGSVGElement>) {
+export function HomeIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <path
-        d="M3.5 8.6 10 3.5l6.5 5.1V16a.9.9 0 0 1-.9.9H4.4a.9.9 0 0 1-.9-.9V8.6Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path d="M8 16.9v-4.4h4v4.4" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
+    <span aria-hidden="true" className={cn('icon-[lucide--house] block', className)} {...props} />
   );
 }
 
 /** 목록으로 보내는 버튼의 줄 세 개. */
-export function ListIcon(props: SVGProps<SVGSVGElement>) {
+export function ListIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <path
-        d="M7 5.5h9M7 10h9M7 14.5h9"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-      <circle cx="4" cy="5.5" r="1" fill="currentColor" />
-      <circle cx="4" cy="10" r="1" fill="currentColor" />
-      <circle cx="4" cy="14.5" r="1" fill="currentColor" />
-    </svg>
+    <span aria-hidden="true" className={cn('icon-[lucide--list] block', className)} {...props} />
   );
 }
 
 /** `로그인.png` 의 "일반 회원" 탭 앞 사람 모양. */
-export function UserIcon(props: SVGProps<SVGSVGElement>) {
+export function UserIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <circle cx="10" cy="6.5" r="3.25" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M3.75 17c.6-3.2 3.2-5.25 6.25-5.25S15.65 13.8 16.25 17"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
+    <span aria-hidden="true" className={cn('icon-[lucide--user] block', className)} {...props} />
   );
 }
 
 /** `로그인.png` 의 "기업 회원" 탭 앞 건물 모양. */
-export function BuildingIcon(props: SVGProps<SVGSVGElement>) {
+export function BuildingIcon({ className, ...props }: IconProps) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
-      <rect
-        x="2.75"
-        y="6.75"
-        width="14.5"
-        height="10"
-        rx="1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M7.25 6.75V3.75h5.5v3M7.25 16.75v-4.5M12.75 16.75v-4.5M7.25 10h5.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--building-2] block', className)}
+      {...props}
+    />
   );
 }
