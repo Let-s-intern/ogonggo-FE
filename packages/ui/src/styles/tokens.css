@@ -1,6 +1,21 @@
 @import 'tailwindcss';
 
 /*
+ * Iconify. 아이콘은 이 플러그인이 소스에 적힌 `icon-[세트--이름]` 문자열을 스캔해서 그 아이콘만
+ * CSS 마스크로 뽑는다. 이름을 변수로 조립하면 스캔에 걸리지 않아 아이콘이 사라진다.
+ *
+ * 여기 한 곳이면 세 곳에 다 걸린다. `apps/web/src/app/globals.css` 와
+ * `apps/admin/src/app/index.css` 가 둘 다 이 파일을 `@import` 하고, 스토리북은
+ * `.storybook/preview.ts` 가 직접 부른다. PRD 2 절은 "각 앱의 CSS 진입점" 이라고 적었지만
+ * 진입점이 이미 이 파일로 모여 있어 세 번 적을 이유가 없다(실측 2026-09-21: web·admin·스토리북
+ * 세 곳 모두에서 `icon-[lucide--search]` 가 그려졌다).
+ *
+ * 아이콘 데이터(`@iconify/json`) 는 푼 크기가 462MB 라 `devDependencies` 로만 둔다. 저장소에도
+ * 번들에도 들어가지 않는다.
+ */
+@plugin "@iconify/tailwind4";
+
+/*
  * Design tokens transcribed from docs/design-system.md (Color Parameter System,
  * Spacing Scale, Border Radius Scale) and from docs/asset/v3-1/typography.png
  * (the 12-step type scale). The type scale is no longer a placeholder; see the
