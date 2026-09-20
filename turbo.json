@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["OGONGGO_USE_MOCKS", "OGONGGO_USER_API_ORIGIN", "OGONGGO_ADMIN_API_ORIGIN"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "build:storybook": {
