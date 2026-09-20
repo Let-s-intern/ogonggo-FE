@@ -3,8 +3,9 @@ import { cn } from '@ogonggo/ui';
 
 /**
  * 아이콘은 Iconify 로 그린다(`packages/ui/src/styles/tokens.css` 의 `@plugin "@iconify/tailwind4"`).
- * 플러그인이 소스에 적힌 `icon-[세트--이름]` 문자열을 스캔해서 그 아이콘만 CSS 마스크로 뽑으므로
- * 이름을 변수로 조립하면 안 된다 — 항상 클래스 문자열 안에 그대로 적는다.
+ * 플러그인이 소스에 적힌 `icon-[lucide--search]` 꼴의 문자열을 스캔해서 그 아이콘만 CSS 마스크로
+ * 뽑으므로 이름을 변수로 조립하면 안 된다 — 항상 클래스 문자열 안에 그대로 적는다. 설명에 쓰는
+ * 예시도 실제로 쓰는 이름이어야 한다. 없는 이름을 적어 두면 빌드가 `Invalid icon name` 을 뱉는다.
  *
  * 그려지는 것은 `<svg>` 가 아니라 `background-color: currentColor` 를 마스크로 자른 `<span>` 이다.
  * 그래서 크기는 `width`/`height` 가 정하고(기본 `1em`), 색은 그대로 `text-*` 가 정한다. 쓰는 쪽이

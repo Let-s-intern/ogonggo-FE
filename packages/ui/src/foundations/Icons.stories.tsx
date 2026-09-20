@@ -90,7 +90,7 @@ function IconGrid() {
         {ICONS.filter((i) => i.name.startsWith('tabler--')).length})
       </p>
       <p className="pb-6 text-sm text-gray-500">
-        이름을 누르면 <code className="text-gray-700">{'icon-[세트--이름]'}</code> 꼴로 복사된다.
+        이름을 누르면 <code className="text-gray-700">icon-[lucide--search]</code> 꼴로 복사된다.
         크기는 <code className="text-gray-700">size-5</code> 같은 크기 클래스가 정하고, 색은{' '}
         <code className="text-gray-700">text-*</code> 가 정한다.
       </p>
