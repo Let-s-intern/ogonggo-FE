@@ -34,3 +34,4 @@ export { Tabs, type TabItem, type TabsProps } from './components/Tabs';
 export { Textarea, type TextareaProps } from './components/Textarea';
 export { Toggle, type ToggleProps } from './components/Toggle';
 export { cn } from './lib/cn';
+export { computePageBlock, PAGE_BLOCK_SIZE, type PageBlock } from './lib/pageBlock';

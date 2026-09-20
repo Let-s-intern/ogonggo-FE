@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { PageInfo } from '@ogonggo/api';
-import { cn } from '@ogonggo/ui';
-import { computePageWindow } from '@/shared/lib/pageWindow';
+import { cn, computePageBlock } from '@ogonggo/ui';
 import { ChevronIcon, type ChevronDirection } from '@/shared/ui/icons';
 
 export interface NumberedPaginationProps {
@@ -54,8 +53,13 @@ function PageArrow({
 }
 
 /**
- * `home.png`·`교육부트캠프.png`의 번호 페이지네이션(처음/이전/`1 2 3 … 15`/다음/끝).
- * 경계(첫/끝 페이지)에서는 `Pagination`(이전 구현)과 같은 방식으로 비활성 `<span>`을 보여준다.
+ * 목록 아래 번호 페이지네이션(처음/이전/`1 2 3 … 10`/다음/끝).
+ *
+ * 번호는 10개씩 묶여 나오고 `이전`·`다음`은 묶음 단위로 움직인다. 계산은 `@ogonggo/ui`의
+ * `computePageBlock` 한 곳에 있고 admin이 쓰는 버튼판 `Pagination`도 같은 함수를 쓴다.
+ * 예전에는 양쪽이 접는 칸 수를 따로 정해(1칸 대 2칸) 두 앱의 페이징이 다르게 생겼다.
+ *
+ * `처음`·`끝`은 묶음과 무관하게 언제나 1페이지와 마지막 페이지다.
  * 검색·필터·정렬 상태를 링크에 보존하는 일은 `buildHref`를 넘기는 쪽 몫이다.
  */
 export function NumberedPagination({ pageInfo, buildHref }: NumberedPaginationProps) {
@@ -63,32 +67,36 @@ export function NumberedPagination({ pageInfo, buildHref }: NumberedPaginationPr
   const totalPages = Math.max(pageInfo.totalPages, 1);
   const hasPrev = pageNum > 1;
   const hasNext = pageNum < totalPages;
-  const pageItems = computePageWindow(pageNum, totalPages);
+  const { pages, previousBlockPage, nextBlockPage } = computePageBlock(pageNum, totalPages);
 
   return (
     <nav className="flex items-center justify-center gap-1" aria-label="페이지 이동">
       <PageArrow href={buildHref(1)} disabled={!hasPrev} direction="left" double label="처음" />
-      <PageArrow href={buildHref(pageNum - 1)} disabled={!hasPrev} direction="left" label="이전" />
-      {pageItems.map((item, index) =>
-        item === 'ellipsis' ? (
-          <span key={`ellipsis-${index}`} className="px-1 text-sm text-gray-400">
-            …
-          </span>
-        ) : (
-          <Link
-            key={item}
-            href={buildHref(item)}
-            aria-current={item === pageNum ? 'page' : undefined}
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium',
-              item === pageNum ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50',
-            )}
-          >
-            {item}
-          </Link>
-        ),
-      )}
-      <PageArrow href={buildHref(pageNum + 1)} disabled={!hasNext} direction="right" label="다음" />
+      <PageArrow
+        href={buildHref(previousBlockPage ?? 1)}
+        disabled={previousBlockPage === null}
+        direction="left"
+        label="이전"
+      />
+      {pages.map((item) => (
+        <Link
+          key={item}
+          href={buildHref(item)}
+          aria-current={item === pageNum ? 'page' : undefined}
+          className={cn(
+            'flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium',
+            item === pageNum ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50',
+          )}
+        >
+          {item}
+        </Link>
+      ))}
+      <PageArrow
+        href={buildHref(nextBlockPage ?? totalPages)}
+        disabled={nextBlockPage === null}
+        direction="right"
+        label="다음"
+      />
       <PageArrow
         href={buildHref(totalPages)}
         disabled={!hasNext}
