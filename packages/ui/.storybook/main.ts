@@ -28,6 +28,10 @@ const config: StorybookConfig = {
     { directory: '../src/components', files: '*.stories.@(ts|tsx)', titlePrefix: 'Components' },
     { directory: webSrc, files: '**/*.stories.@(ts|tsx)', titlePrefix: 'App' },
   ],
+  // `apps/web` 카드가 `shared/ui/Thumbnail.tsx` 의 기본 이미지(`/default-thumbnail.jpg`)로
+  // 떨어진다. 이 폴더를 붙이지 않으면 404 라 깨진 이미지가 뜨고, "이미지가 없을 때 어떻게
+  // 보이는가" 를 스토리로 확인할 수가 없다.
+  staticDirs: [resolve(repoRoot, 'apps/web/public')],
   framework: {
     name: '@storybook/react-vite',
     options: {},

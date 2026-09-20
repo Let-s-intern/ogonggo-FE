@@ -1,0 +1,14 @@
+/*
+ * 스토리북의 Tailwind 진입점. `preview.ts` 가 이 파일을 부른다.
+ *
+ * Tailwind v4 의 자동 소스 탐색은 CSS 를 처리하는 빌드 도구의 루트를 기준으로 한다. 스토리북의
+ * Vite 루트는 `packages/ui` 라서, `apps/web` 에서만 쓰는 유틸리티는 한 줄도 생성되지 않았다 —
+ * 카드 스토리에서 `max-w-6xl` 이 먹지 않아 4열 그리드의 카드 폭이 268px 가 아니라 342px 로
+ * 측정됐다. 클래스는 붙는데 규칙이 없는, 눈에 잘 안 띄는 종류의 고장이다.
+ *
+ * `apps/web/src/app/globals.css` 가 반대 방향으로 같은 것을 한다(그쪽은 `packages/ui/src` 를
+ * `@source` 로 더한다). `@source` 를 `src/styles/tokens.css` 에 직접 적지 않는 이유는 그 파일을
+ * web·admin 도 부르기 때문이다 — admin 빌드가 web 소스를 스캔할 이유가 없다.
+ */
+@import '../src/styles/tokens.css';
+@source '../../../apps/web/src';
