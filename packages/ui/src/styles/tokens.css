@@ -61,8 +61,26 @@
   --radius-xl: 24px;
   --radius-full: 999px;
 
+  /*
+   * 프리텐다드가 맨 앞이다. `-apple-system` 이 앞에 있으면 애플 기기에서 로마자와 숫자만 SF 로
+   * 그려지고 한글만 프리텐다드에 닿는다. 실측(2026-09-21, 헤드리스 크롬): 로마자만 있는 줄은
+   * 세 화면 모두 `.SF NS` 가 그렸고 폰트 요청이 0 건이었다. 자간을 크기마다 못 박는 이상
+   * 기준 자형이 둘로 갈려 있으면 안 되므로 순서를 뒤집는다.
+   *
+   * 첫 항목이 이름이 아니라 `var()` 인 이유. apps/web 은 `next/font/local` 로 폰트를 받는데
+   * `next/font` 는 `@font-face` 의 패밀리 이름을 직접 정하게 해주지 않고 `layout.tsx` 의 변수
+   * 이름에서 딴다 — 지금은 `pretendard` 다. 그동안은 그 이름이 아래 `Pretendard` 와 대소문자
+   * 무시 매칭으로 우연히 맞아 동작했고, 변수 이름을 바꾸는 순간 아무 에러 없이 한글까지 SF 로
+   * 떨어지는 상태였다. `next/font` 가 함께 내주는 CSS 변수를 직접 부르면 그쪽이 이름을 무엇으로
+   * 짓든 따라간다.
+   *
+   * 폴백 `'Pretendard Variable'` 은 apps/admin 과 스토리북 몫이다. 둘은 Vite 라 `next/font` 를
+   * 쓸 수 없어 `@font-face` 를 직접 걸고, 그래서 `--font-pretendard` 가 없다. 그쪽에서는 이
+   * 이름으로 잡힌다.
+   */
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+    var(--font-pretendard, 'Pretendard Variable'), Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, sans-serif;
 }
 
 /*

@@ -16,10 +16,12 @@ import './globals.css';
  * 가짜 볼드가 아니라 축 보간으로 그려진다.
  *
  * `next/font/local` 은 패밀리 이름을 직접 정하게 해주지 않는다. 빌드 결과의 `@font-face` 는
- * `font-family: pretendard` 로 나오고(변수 이름에서 딴 것이다), 그래서 이 폰트는
- * `--font-pretendard` 로만 부를 수 있다. `tokens.css` 의 `--font-sans` 에 적힌
- * `'Pretendard Variable'` 이라는 이름으로는 잡히지 않는다. 두 이름을 잇는 일은
- * `--font-sans` 를 고치는 결정이라 이 작업에서 하지 않았다.
+ * `font-family: pretendard` 로 나오고, 그 이름은 아래 `const pretendard` 변수 이름에서 딴
+ * 것이다. 그래서 이 폰트를 이름으로 부르면 변수 이름을 바꾸는 순간 조용히 끊긴다.
+ *
+ * `tokens.css` 의 `--font-sans` 는 그래서 이름 대신 아래 `variable` 이 내주는
+ * `--font-pretendard` 를 부른다. 이름이 무엇으로 바뀌든 그 변수에 담겨 오므로 연결이 끊기지
+ * 않는다. `variable` 값을 바꾸거나 지우는 것은 `--font-sans` 를 함께 고치는 일이다.
  */
 const pretendard = localFont({
   src: '../../../../packages/ui/src/styles/fonts/PretendardVariable.woff2',
