@@ -31,7 +31,7 @@ export function ErrorState({ title, description, hint, actions }: ErrorStateProp
   return (
     <main className="flex min-h-[70vh] flex-col items-center justify-center bg-white px-6 py-24 text-center">
       <AlertIcon className="h-11 w-11 text-gray-300" />
-      <h1 className="mt-6 text-2xl font-bold text-gray-900">{title}</h1>
+      <h1 className="mt-6 text-3xl font-bold text-gray-900">{title}</h1>
       <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-500">
         {description}
       </p>

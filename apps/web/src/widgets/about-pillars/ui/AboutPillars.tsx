@@ -81,13 +81,13 @@ export function AboutPillars() {
             >
               <span
                 data-pillar-index
-                className="about-display text-5xl text-blue-200 opacity-0 sm:text-6xl"
+                className="about-display text-display-48 text-blue-200 opacity-0 sm:text-display-60"
               >
                 {String(index + 1).padStart(2, '0')}
               </span>
               <div className="flex-1">
                 <p className="about-label text-sm text-blue-600">{pillar.label}</p>
-                <p className="about-strong mt-3 text-2xl text-blue-950 sm:text-3xl">
+                <p className="about-strong mt-3 text-display-24 text-blue-950 sm:text-display-30">
                   {pillar.headline}
                 </p>
                 <p className="mt-4 max-w-xl leading-relaxed text-gray-600">{pillar.body}</p>

@@ -16,7 +16,7 @@ function Row({ reverse, speed, muted }: { reverse: boolean; speed: number; muted
       data-marquee-row
       data-marquee-reverse={reverse ? 'true' : 'false'}
       data-marquee-speed={speed}
-      className={`about-display flex w-max items-center gap-8 text-2xl whitespace-nowrap sm:gap-12 sm:text-4xl ${
+      className={`about-display flex w-max items-center gap-8 text-display-24 whitespace-nowrap sm:gap-12 sm:text-display-36 ${
         muted ? 'text-blue-950/35' : 'text-blue-950/70'
       }`}
     >

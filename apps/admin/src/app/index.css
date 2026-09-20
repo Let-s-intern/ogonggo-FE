@@ -7,3 +7,22 @@
  * 이 문제가 어떻게 드러났는지 적혀 있다.
  */
 @source '../../../../packages/ui/src';
+
+/*
+ * 프리텐다드 가변 폰트. admin 은 Vite 라 `next/font` 를 쓸 수 없어서 `@font-face` 로 직접
+ * 건다. 가리키는 파일은 `apps/web` 이 `next/font/local` 로 부르는 것과 같은 한 부다 —
+ * `packages/ui/src/styles/fonts/PretendardVariable.woff2`. 출처와 버전은 그 디렉터리의
+ * README 에 있다.
+ *
+ * `font-weight` 에 범위를 적어야 굵기가 가짜 볼드가 아니라 가변 축 보간으로 그려진다.
+ *
+ * 패밀리 이름은 `tokens.css` 의 `--font-sans` 가 부르는 이름과 같아야 한다. 이름이 어긋나면
+ * 파일은 받아 놓고 아무 데도 쓰이지 않는다.
+ */
+@font-face {
+  font-family: 'Pretendard Variable';
+  src: url('../../../../packages/ui/src/styles/fonts/PretendardVariable.woff2') format('woff2');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}

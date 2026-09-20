@@ -57,7 +57,7 @@ export function AboutOutro() {
 
       <p
         data-outro-line
-        className="about-display relative text-4xl text-blue-950 opacity-0 sm:text-6xl"
+        className="about-display relative text-display-36 text-blue-950 opacity-0 sm:text-display-60"
       >
         곧 만나요
       </p>

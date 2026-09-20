@@ -65,10 +65,12 @@ export function AboutStats() {
         <div className="mt-14 flex flex-col justify-center gap-16 sm:flex-row sm:gap-24">
           {STATS.map((stat) => (
             <div key={stat.label}>
-              <p className="about-display text-6xl text-blue-950 tabular-nums sm:text-7xl">
+              <p className="about-display text-display-60 text-blue-950 tabular-nums sm:text-display-72">
                 {/* 초기값 0. 스크롤이 닿으면 GSAP이 textContent를 갈아 끼운다 */}
                 <span data-stat-value={stat.value}>0</span>
-                <span className="ml-1 text-3xl text-blue-500 sm:text-4xl">{stat.unit}</span>
+                <span className="ml-1 text-display-30 text-blue-500 sm:text-display-36">
+                  {stat.unit}
+                </span>
               </p>
               <p className="about-label mt-4 text-sm text-gray-600">{stat.label}</p>
             </div>

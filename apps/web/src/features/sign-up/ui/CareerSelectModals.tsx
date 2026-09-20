@@ -60,14 +60,7 @@ export function CareerSelectModals({ controls, grade, onGradeComplete }: CareerS
         onClick={closeModal}
         className="absolute top-6 right-6 text-gray-500 hover:text-gray-900"
       >
-        <svg viewBox="0 0 20 20" fill="none" className="size-5" aria-hidden="true">
-          <path
-            d="M15 5 5 15M5 5l10 10"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
+        <span className="icon-[lucide--x] block size-5" aria-hidden="true" />
       </button>
       {modalStep === 'grade' ? (
         <OptionList
@@ -118,15 +111,7 @@ function OptionList<T extends string>({
             >
               <span>{label}</span>
               {isSelected ? (
-                <svg viewBox="0 0 20 20" fill="none" className="size-5" aria-hidden="true">
-                  <path
-                    d="M16.67 5 7.5 14.17 3.33 10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <span className="icon-[lucide--check] block size-5" aria-hidden="true" />
               ) : null}
             </button>
           </li>

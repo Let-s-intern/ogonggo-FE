@@ -21,7 +21,7 @@ export function SignUpLayout({
       <main className="flex justify-center bg-white px-5 pt-14 pb-24 md:pt-20 md:pb-32">
         <div className="flex w-full max-w-112 flex-col">
           <p className="text-sm text-gray-600">{eyebrow}</p>
-          <h1 className="pt-6 pb-10 text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="pt-6 pb-10 text-3xl font-bold text-gray-900">{title}</h1>
           {children}
         </div>
       </main>

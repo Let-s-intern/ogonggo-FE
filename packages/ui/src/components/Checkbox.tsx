@@ -55,15 +55,7 @@ export function Checkbox({
             'peer-disabled:bg-gray-50',
           )}
         >
-          <svg viewBox="0 0 20 20" fill="none" className="size-full">
-            <path
-              d="M5.5 10.2 8.6 13.2 14.5 7"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <span className="icon-[lucide--check] block size-full" />
         </span>
       </span>
       <label

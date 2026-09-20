@@ -32,11 +32,7 @@ export const WithIcon: Story = {
   args: {
     items: ITEMS.map((item) => ({
       ...item,
-      icon: (
-        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="size-5">
-          <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      ),
+      icon: <span aria-hidden="true" className="icon-[lucide--circle] block size-5" />,
     })),
   },
 };

@@ -58,7 +58,7 @@ export function JobDetailHeaderCard({
           {region ? <p className="text-sm text-gray-500">{region}</p> : null}
         </div>
       </div>
-      <h1 className="mt-6 text-2xl font-bold text-gray-900">{title}</h1>
+      <h1 className="mt-6 text-3xl font-bold text-gray-900">{title}</h1>
       <hr className="my-6 border-gray-200" />
       <div className="flex items-center gap-3 text-sm">
         <DdayBadge recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
