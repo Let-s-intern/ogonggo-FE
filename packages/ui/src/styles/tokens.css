@@ -163,6 +163,43 @@
   --text-7xl: 2.25rem;
   --text-7xl--line-height: 3rem;
   --text-7xl--letter-spacing: -0.028em;
+
+  /*
+   * `/about` 전용. 위 12 단계 스케일 밖이고, 그게 의도다.
+   *
+   * 소개 화면은 읽는 화면이 아니라 연출형 랜딩이라 72px 까지 쓴다. 큰 글씨를 쓰는 자리 스물여섯
+   * 곳 중 스무 곳이 이 한 화면이다. 디자인 스케일의 최대는 36px 이므로 스케일 안으로 밀어 넣으면
+   * 제목이 절반이 되어 화면 인상이 달라진다. 그래서 크기를 유지하고 예외로 둔다.
+   *
+   * 이름에 크기를 그대로 적는다. 사다리에 끼워 넣으면 스케일이 12 단계라는 말이 거짓이 되고,
+   * `text-8xl` 같은 이름은 이것이 예외라는 사실을 감춘다. `text-display-*` 가 앱 다른 곳에
+   * 나타나면 그 자체로 잘못 쓴 것이다.
+   *
+   * 자간은 일부러 넣지 않는다. `/about` 은 본문 글꼴부터 프리텐다드가 아니라 나눔스퀘어 네오이고
+   * (`apps/web/src/app/about/about.css`), 자간은 거기 `.about-display`·`.about-strong` 이
+   * 자형에 맞춰 이미 정한다. 여기서 또 정하면 두 곳이 싸우고, 부모의 자간을 물려받아 그려지던
+   * 자리(`AboutStats` 의 단위 span) 가 조용히 바뀐다.
+   *
+   * 행간은 바꾸기 전 Tailwind 기본값을 그대로 옮긴 것이다 — 24/32, 30/36, 36/40 이고 48 부터는
+   * 배수 1 이다.
+   */
+  --text-display-24: 1.5rem;
+  --text-display-24--line-height: 2rem;
+
+  --text-display-30: 1.875rem;
+  --text-display-30--line-height: 2.25rem;
+
+  --text-display-36: 2.25rem;
+  --text-display-36--line-height: 2.5rem;
+
+  --text-display-48: 3rem;
+  --text-display-48--line-height: 3rem;
+
+  --text-display-60: 3.75rem;
+  --text-display-60--line-height: 3.75rem;
+
+  --text-display-72: 4.5rem;
+  --text-display-72--line-height: 4.5rem;
 }
 
 /*

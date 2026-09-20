@@ -125,7 +125,7 @@ export function AboutHero() {
         </span>
 
         <h1
-          className="about-display mt-6 text-4xl leading-tight text-blue-950 sm:text-6xl lg:text-7xl"
+          className="about-display mt-6 text-display-36 leading-tight text-blue-950 sm:text-display-60 lg:text-display-72"
           aria-label={HEADLINE_LINES.join(' ')}
         >
           {HEADLINE_LINES.map((line, index) => (
