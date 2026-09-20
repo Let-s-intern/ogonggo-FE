@@ -11,6 +11,17 @@
 @source '../../../../packages/ui/src';
 
 /*
+ * 스토리 파일은 스캔에서 뺀다. 스토리에만 있는 클래스(`w-[268px]`, `mb-3`, `py-6`)가 앱의
+ * CSS 번들에 섞여 들어갔다 — 실측 115 바이트. 화면 어디에서도 쓰이지 않는 규칙이라 양이
+ * 적고 말고를 떠나 들어갈 자리가 아니다.
+ *
+ * 스토리북은 자기 진입점(`packages/ui/.storybook/tailwind.css`)으로 따로 스캔하므로 스토리
+ * 쪽 클래스는 그대로 나온다.
+ */
+@source not '../**/*.stories.tsx';
+@source not '../../../../packages/ui/src/**/*.stories.tsx';
+
+/*
  * 로딩 폴백(`app` 아래 `loading.tsx` 여섯 개)이 쓰는 규칙. Tailwind 유틸리티로 안 되는 것만
  * 여기 둔다 — 지연 노출, 로고 맥동, 그리고 `prefers-reduced-motion`에서 `animate-pulse`를
  * 끄는 일이다.
