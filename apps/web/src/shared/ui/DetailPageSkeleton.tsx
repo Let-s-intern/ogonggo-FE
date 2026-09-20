@@ -36,7 +36,7 @@ function Bar({ className }: { className: string }) {
  * `widgets/job-detail/ui/JobDetailView.tsx`에서 그대로 가져온 것이다.
  *
  * 스켈레톤의 목적은 "로딩이 끝나는 순간 요소가 움직이지 않는 것"이므로, 회색 막대의 높이는
- * 취향이 아니라 실제 요소의 line-height다. 예를 들어 제목은 `text-2xl`이라 32px,
+ * 취향이 아니라 실제 요소의 line-height다. 예를 들어 제목은 `text-3xl`이라 32px,
  * 브레드크럼은 `text-sm`이라 20px, 사이드바 CTA는 `Button` 기본 크기라 44px(`h-11`)이다.
  *
  * 맞출 수 없는 것이 하나 있다. 본문 문단은 글자 수에 따라 줄 수가 달라져서 데이터를 받기
@@ -76,7 +76,7 @@ export function DetailPageSkeleton({
               <Bar className="h-5 w-24" />
             </div>
           </div>
-          {/* `h1 text-2xl`이라 32px. */}
+          {/* `h1 text-3xl`이라 32px. */}
           <Bar className="mt-6 h-8 w-3/4" />
           <hr className="my-6 border-gray-200" />
           <div className="flex items-center gap-3">
@@ -101,8 +101,10 @@ export function DetailPageSkeleton({
 
             {Array.from({ length: sectionCount }, (_, index) => (
               <div key={index}>
-                {/* 섹션 제목은 `text-lg`라 28px, 문단은 `mt-2` 뒤 `text-sm` 줄들이다. */}
-                <Bar className="h-7 w-32" />
+                {/* 섹션 제목은 `text-lg`라 26px, 문단은 `mt-2` 뒤 `text-sm` 줄들이다.
+                    28px이었는데 타이포 토큰이 들어가며 `text-lg`의 행간이 26px로 바뀌었다.
+                    Tailwind 높이 유틸리티는 4px 단위라 26px에 맞는 이름이 없어 임의값을 쓴다. */}
+                <Bar className="h-[26px] w-32" />
                 <div className="mt-2 flex flex-col">
                   {Array.from({ length: sectionLines }, (_, lineIndex) => (
                     <Bar
