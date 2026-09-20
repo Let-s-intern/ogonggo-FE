@@ -1,4 +1,5 @@
 import { ListPageSkeleton } from '@/shared/ui/ListPageSkeleton';
+import { ForBusinessBanner } from '@/widgets/for-business-banner';
 
 /** 한 페이지 카드 수. MSW 핸들러의 `DEFAULT_BOOTCAMP_SIZE`와 같은 값이다. */
 const CARD_COUNT = 12;
@@ -18,7 +19,7 @@ const CARD_COUNT = 12;
 export default function Loading() {
   return (
     <main className="ogonggo-fallback flex min-h-screen flex-col items-center bg-white">
-      <ListPageSkeleton cardCount={CARD_COUNT} />
+      <ListPageSkeleton screen="bootcamps" cardCount={CARD_COUNT} footer={<ForBusinessBanner />} />
     </main>
   );
 }

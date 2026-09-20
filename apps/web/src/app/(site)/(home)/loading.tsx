@@ -34,7 +34,7 @@ export default function Loading() {
       <div className="flex w-full flex-col items-center" role="status">
         <span className="sr-only">불러오는 중</span>
 
-        <HeroSkeleton />
+        <HeroSkeleton screen="jobs" />
 
         <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
           {/* 인기 공고 — 제목 줄(`text-lg` 28px, 오른쪽 탭 버튼도 `py-1 text-sm`이라 28px)과

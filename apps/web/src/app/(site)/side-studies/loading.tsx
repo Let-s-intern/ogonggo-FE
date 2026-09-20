@@ -1,4 +1,5 @@
 import { ListPageSkeleton } from '@/shared/ui/ListPageSkeleton';
+import { ForBusinessBanner } from '@/widgets/for-business-banner';
 
 /** 한 페이지 카드 수. 목록 요청의 `size`(`widgets/side-study-list/ui/SideStudyList.tsx`) 와 같은 값이다. */
 const CARD_COUNT = 8;
@@ -14,7 +15,13 @@ const CARD_COUNT = 8;
 export default function Loading() {
   return (
     <main className="ogonggo-fallback flex min-h-screen flex-col items-center bg-white">
-      <ListPageSkeleton cardCount={CARD_COUNT} hasCardFooter framed />
+      <ListPageSkeleton
+        screen="side-studies"
+        cardCount={CARD_COUNT}
+        hasCardFooter
+        framed
+        footer={<ForBusinessBanner />}
+      />
     </main>
   );
 }
