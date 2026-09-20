@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore } from 'react';
 import { signOut } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import { clearTokens, isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
+import { Logo } from '@/shared/ui/Logo';
 
 /**
  * `matches`는 그 메뉴에 밑줄이 붙는 경로들이다. 채용공고는 목록(`/`)과 상세(`/jobs/1`)가
@@ -33,6 +34,11 @@ const NAV_ITEMS = [
  * `home.png`·`교육부트캠프.png`의 상단 헤더. 현재 경로에 밑줄이 붙어야 해서 `usePathname`을
  * 쓰는 클라이언트 컴포넌트다.
  *
+ * 왼쪽 로고는 v3에서 글자("오늘의 공고 BY LETS CAREER")가 심볼 마크로 바뀌었다
+ * (`docs/asset/v3 변경사항/오공고 로고.svg`, 목업의 원본 크기 52x25 그대로다). 글자가 사라져
+ * 링크에 읽을 것이 남지 않으므로 이름은 `aria-label`로 붙인다. 목업에서 마크 왼쪽에 있는 회색
+ * 심볼과 세로 구분선은 에셋을 받지 못해 넣지 않았다(PRD "결정 기록").
+ *
  * 우측 메뉴 중 `공고 달력`만 대상 화면(`/calendar`)이 생겨 링크다. `공고 등록`은 아직 화면이
  * 없어(PRD 1절) 비활성 스타일의 `<span>`으로 남는다.
  *
@@ -54,9 +60,8 @@ export function SiteHeader() {
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex h-16 max-w-6xl items-stretch justify-between px-6">
         <div className="flex items-center gap-10">
-          <Link href="/" className="flex items-baseline gap-2">
-            <span className="text-lg font-extrabold text-blue-500">오늘의 공고</span>
-            <span className="text-xs font-medium text-gray-400">BY LETS CAREER</span>
+          <Link href="/" aria-label="오늘의 공고 홈" className="flex items-center">
+            <Logo className="h-[25px] w-[52px] text-blue-500" />
           </Link>
           <nav className="flex items-stretch gap-6 text-sm font-semibold">
             {NAV_ITEMS.map(({ href, label, matches }) => {
