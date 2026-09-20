@@ -2,8 +2,9 @@
 
 /*
  * Design tokens transcribed from docs/design-system.md (Color Parameter System,
- * Spacing Scale, Border Radius Scale). No typography scale was captured in that
- * doc yet — the font tokens below are a placeholder until one is added.
+ * Spacing Scale, Border Radius Scale) and from docs/asset/v3-1/typography.png
+ * (the 12-step type scale). The type scale is no longer a placeholder; see the
+ * comment above the --text-* block for what it is and what is still provisional.
  */
 @theme {
   --color-blue-00: #f5f9ff;
@@ -81,6 +82,87 @@
   --font-sans:
     var(--font-pretendard, 'Pretendard Variable'), Pretendard, -apple-system, BlinkMacSystemFont,
     system-ui, sans-serif;
+
+  /*
+   * 타이포 스케일 12 단계. 출처는 `docs/asset/v3-1/typography.png` 이고 PRD 4 절
+   * "받은 스케일" 표가 같은 값을 옮겨 적고 있다.
+   *
+   * | 토큰 | 크기 | 행간 | 자간  |   | 토큰 | 크기 | 행간 | 자간  |
+   * |------|------|------|-------|---|------|------|------|-------|
+   * | 2xs  | 11   | 14   | -3.3% |   | 2xl  | 22   | 30   | -2.2% |
+   * | xs   | 12   | 16   | -2.5% |   | 3xl  | 24   | 32   | -2.4% |
+   * | sm   | 14   | 20   | -1.5% |   | 4xl  | 26   | 34   | -2.4% |
+   * | base | 16   | 24   | -0.6% |   | 5xl  | 28   | 38   | -2.5% |
+   * | lg   | 18   | 26   | -1.2% |   | 6xl  | 32   | 42   | -2.6% |
+   * | xl   | 20   | 28   | -2%   |   | 7xl  | 36   | 48   | -2.8% |
+   *
+   * 자간을 크기와 같은 토큰에 묶는 것이 이 블록의 핵심이다. 디자인은 모든 크기에 -2% 안팎의
+   * 음수 자간을 요구하는데 저장소 전체에서 `tracking-*` 은 여덟 번밖에 쓰이지 않았다. 자리마다
+   * 손으로 붙이게 두면 그 상태로 돌아간다.
+   *
+   * 크기와 행간은 rem 이다. 사용자가 브라우저 기본 글자 크기를 키웠을 때 같이 커져야 한다.
+   * 루트 16px 기준으로 위 표의 px 와 정확히 같은 값이 나온다. 행간을 Tailwind 기본처럼
+   * `calc(a / b)` 비율로 적지 않은 이유는 26/18 같은 값이 떨어지지 않아 계산에 오차가 남기
+   * 때문이다. 자간은 em 이라 크기를 따라간다.
+   *
+   * 무게는 여기서 정하지 않는다. 디자인이 크기 하나에 무게를 여럿 허용하므로(22px 은 다섯 개)
+   * 토큰에 묶으면 못 쓰는 조합이 생긴다. 디자인의 무게 이름은 Tailwind 기본 유틸리티와 이미
+   * 1:1 이다 — Thin `font-thin` 100, Light `font-light` 300, Regular `font-normal` 400,
+   * Medium `font-medium` 500, Semibold `font-semibold` 600, Bold `font-bold` 700. 프리텐다드
+   * 가변 폰트의 축이 `45 920` 이라 여섯 값이 모두 범위 안이고 가짜 볼드가 생기지 않는다.
+   *
+   * 디자이너 확인 대기 두 건. `lg`(18px) 자간은 에셋이 `-0.12%` 인데 이웃이 -2%, -0.6%,
+   * -1.5% 라 실효 -0.02px 는 사실상 0 이다. `-1.2%` 오타로 보고 그 값으로 넣었다.
+   * `base`(16px)·`sm`(14px) 행간은 에셋이 무게별로 24/26, 20/22 로 갈라지는데, 크기당 토큰
+   * 하나를 유지하려고 굵은 쪽(24, 20)으로 넣었다.
+   */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-2xs--letter-spacing: -0.033em;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-xs--letter-spacing: -0.025em;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-sm--letter-spacing: -0.015em;
+
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-base--letter-spacing: -0.006em;
+
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-lg--letter-spacing: -0.012em;
+
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-xl--letter-spacing: -0.02em;
+
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.875rem;
+  --text-2xl--letter-spacing: -0.022em;
+
+  --text-3xl: 1.5rem;
+  --text-3xl--line-height: 2rem;
+  --text-3xl--letter-spacing: -0.024em;
+
+  --text-4xl: 1.625rem;
+  --text-4xl--line-height: 2.125rem;
+  --text-4xl--letter-spacing: -0.024em;
+
+  --text-5xl: 1.75rem;
+  --text-5xl--line-height: 2.375rem;
+  --text-5xl--letter-spacing: -0.025em;
+
+  --text-6xl: 2rem;
+  --text-6xl--line-height: 2.625rem;
+  --text-6xl--letter-spacing: -0.026em;
+
+  --text-7xl: 2.25rem;
+  --text-7xl--line-height: 3rem;
+  --text-7xl--letter-spacing: -0.028em;
 }
 
 /*
