@@ -121,36 +121,21 @@ export function ActionAlert({
   );
 }
 
-/** 톤을 한눈에 구분하는 표시. 색만으로 구분하지 않기 위한 두 번째 신호다. */
+/**
+ * 톤을 한눈에 구분하는 표시. 색만으로 구분하지 않기 위한 두 번째 신호다.
+ *
+ * `size-7` 은 전에 `width`/`height` 속성으로 박아 두었던 28px 과 같은 값이다.
+ *
+ * `info` 만 `tabler` 다. 배지 자체가 이미 원인데 `lucide--info` 는 동그라미 안에 i 라서 원이
+ * 두 겹이 된다. `lucide` 에는 테두리 없는 i 가 없고, `tabler--info-small` 이 같은 24 그리드에
+ * 2px 획이라 나머지 둘과 굵기가 맞는다.
+ */
 function ToneMark({ tone }: { tone: ActionAlertTone }) {
-  const common = {
-    width: 28,
-    height: 28,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 2.5,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  };
-
   if (tone === 'danger') {
-    return (
-      <svg {...common}>
-        <path d="M7 7l10 10M17 7L7 17" />
-      </svg>
-    );
+    return <span className="icon-[lucide--x] block size-7" />;
   }
   if (tone === 'info') {
-    return (
-      <svg {...common}>
-        <path d="M12 11v6M12 7.5h.01" />
-      </svg>
-    );
+    return <span className="icon-[tabler--info-small] block size-7" />;
   }
-  return (
-    <svg {...common}>
-      <path d="M5 12.5l4.5 4.5L19 7.5" />
-    </svg>
-  );
+  return <span className="icon-[lucide--check] block size-7" />;
 }

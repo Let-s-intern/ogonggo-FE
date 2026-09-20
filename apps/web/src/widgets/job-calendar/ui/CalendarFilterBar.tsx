@@ -46,16 +46,7 @@ function FilterCheckbox({ label, checked }: { label: string; checked: boolean })
         )}
       >
         {checked ? (
-          <svg viewBox="0 0 10 10" aria-hidden="true" className="h-2.5 w-2.5 text-white">
-            <path
-              d="M2 5.2L4.1 7.2L8 3"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <span aria-hidden="true" className="icon-[lucide--check] block h-2.5 w-2.5 text-white" />
         ) : null}
       </span>
       <span className={cn('text-sm', checked ? 'font-bold text-gray-800' : 'text-gray-400')}>
