@@ -19,6 +19,9 @@ export interface JobCardProps {
  * "직무"(`job_major`)는 처음엔 대응 API 필드가 없다고 뺐었는데, 실제 목업(`상세 채용공고.png`
  * 리스트 카드 크롭)을 다시 보니 있었다 — 크롤러 DB엔 이 필드가 실제로 있어서(`job-major.ts`)
  * 넣는다, 없는 공고는 그 세그먼트만 뺀다.
+ *
+ * `h-full`은 같은 행에 제목 한 줄짜리와 두 줄짜리가 섞일 때를 위한 것이다. 없으면 카드가
+ * 내용만큼만 높아 짧은 쪽 아랫변이 20px 떠 보인다(`entities/CardEdgeCases.stories.tsx` 실측).
  */
 export function JobCard({ job }: JobCardProps) {
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
@@ -31,7 +34,7 @@ export function JobCard({ job }: JobCardProps) {
   ].filter((part): part is string => Boolean(part));
 
   return (
-    <Link href={`/jobs/${job.id}`} className="flex flex-col gap-2">
+    <Link href={`/jobs/${job.id}`} className="flex h-full flex-col gap-2">
       <JobThumbnail companyName={job.companyName} bookmarked={job.bookmarked} />
       <p className="flex items-center justify-between text-xs text-gray-400">
         <span>{metaParts.join(' · ')}</span>
