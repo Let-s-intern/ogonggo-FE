@@ -167,6 +167,9 @@ importers:
       '@ogonggo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@storybook/react':
+        specifier: ^10.5.10
+        version: 10.5.10(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@10.5.10(@types/react@19.2.18)(react@19.2.8))(typescript@5.9.3)
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3
