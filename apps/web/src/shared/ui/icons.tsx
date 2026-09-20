@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ComponentPropsWithoutRef, SVGProps } from 'react';
 import { cn } from '@ogonggo/ui';
 
@@ -57,8 +58,17 @@ const BOOKMARK_FILLED_PATH =
  *
  * `filter` 영역은 두 에셋이 각각 27.4997 과 28.005 인데 하나로 합쳤다. `clipPath` 가 어차피
  * 24x24 로 자르므로 충분히 크기만 하면 결과가 같다.
+ *
+ * `filter`·`clipPath` 의 `id` 는 인스턴스마다 다르다. 카드 목록 한 화면에 이 아이콘이 열
+ * 몇 개씩 나오는데 `id` 는 문서에서 유일해야 하고, 겹치면 브라우저가 첫 정의만 쓴다. `useId`
+ * 는 서버 컴포넌트에서도 동작하고 서버·클라이언트가 같은 값을 준다. 콜론 같은 글자를 빼는
+ * 것은 `url(#...)` 참조로 들어가기 때문이다.
  */
 export function BookmarkIcon({ filled = false, className, ...props }: BookmarkIconProps) {
+  const instanceId = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const shadowId = `bookmark-shadow-${instanceId}`;
+  const clipId = `bookmark-clip-${instanceId}`;
+
   return (
     <svg
       viewBox="0 0 24 24"
@@ -67,8 +77,8 @@ export function BookmarkIcon({ filled = false, className, ...props }: BookmarkIc
       className={cn('block', className)}
       {...props}
     >
-      <g clipPath="url(#bookmark-clip)">
-        <g filter="url(#bookmark-shadow)">
+      <g clipPath={`url(#${clipId})`}>
+        <g filter={`url(#${shadowId})`}>
           <path
             d={filled ? BOOKMARK_FILLED_PATH : BOOKMARK_OUTLINE_PATH}
             fill={filled ? '#4A76FF' : '#D1D5DB'}
@@ -77,7 +87,7 @@ export function BookmarkIcon({ filled = false, className, ...props }: BookmarkIc
       </g>
       <defs>
         <filter
-          id="bookmark-shadow"
+          id={shadowId}
           x="0"
           y="-2"
           width="24"
@@ -102,7 +112,7 @@ export function BookmarkIcon({ filled = false, className, ...props }: BookmarkIc
           <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
           <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
         </filter>
-        <clipPath id="bookmark-clip">
+        <clipPath id={clipId}>
           <rect width="24" height="24" fill="white" />
         </clipPath>
       </defs>
