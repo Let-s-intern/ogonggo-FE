@@ -1,4 +1,5 @@
 import { cn } from '../lib/cn';
+import { computePageBlock } from '../lib/pageBlock';
 
 export interface PaginationProps {
   /** 1부터 센다. 백엔드 `PageInfo.pageNum` 과 같은 기준이다. */
@@ -8,14 +9,13 @@ export interface PaginationProps {
   className?: string;
 }
 
-/** 현재 페이지 양옆으로 보여줄 번호 개수. 앞뒤 2개씩이면 최대 5개가 늘어선다. */
-const SIBLING_COUNT = 2;
-
 /**
  * 목록 아래 페이지 번호.
  *
- * 번호를 전부 늘어놓지 않는다. 공고가 수천 건이면 번호가 화면을 덮는다. 현재 페이지 주변만
- * 보이고 처음·끝은 항상 눌러 갈 수 있다.
+ * 번호를 전부 늘어놓지 않는다. 공고가 수천 건이면 번호가 화면을 덮는다. 10개씩 묶어
+ * `1~10`, `11~20` 으로 보여주고 `이전`·`다음` 이 묶음 단위로 움직인다. 계산은
+ * `lib/pageBlock.ts` 한 곳에 있고 `apps/web` 의 링크판 페이지네이션도 같은 함수를 쓴다 —
+ * 예전에는 양쪽이 접는 칸 수를 따로 정해 두 앱의 페이징이 다르게 생겼다.
  *
  * 링크가 아니라 버튼이다. 페이지 상태는 쓰는 쪽의 쿼리스트링에 있고, 이 패키지는 라우터를
  * 모른다 — `onChange` 를 받아 쓰는 쪽이 주소를 바꾼다.
@@ -25,36 +25,35 @@ export function Pagination({ page, totalPages, onChange, className }: Pagination
     return null;
   }
 
-  const pages = visiblePages(page, totalPages);
+  const { pages, previousBlockPage, nextBlockPage } = computePageBlock(page, totalPages);
 
   return (
     <nav
       className={cn('flex items-center justify-center gap-1 py-4', className)}
       aria-label="페이지"
     >
-      <PageButton onClick={() => onChange(page - 1)} disabled={page <= 1}>
+      <PageButton
+        onClick={() => previousBlockPage !== null && onChange(previousBlockPage)}
+        disabled={previousBlockPage === null}
+      >
         이전
       </PageButton>
 
-      {pages.map((entry, index) =>
-        entry === null ? (
-          // 생략 구간. 키에 index 를 쓰는 유일한 자리다 — 값이 없어 구분할 것이 없다.
-          <span key={`gap-${index}`} className="px-2 text-gray-400">
-            …
-          </span>
-        ) : (
-          <PageButton
-            key={entry}
-            onClick={() => onChange(entry)}
-            aria-current={entry === page ? 'page' : undefined}
-            active={entry === page}
-          >
-            {entry}
-          </PageButton>
-        ),
-      )}
+      {pages.map((entry) => (
+        <PageButton
+          key={entry}
+          onClick={() => onChange(entry)}
+          aria-current={entry === page ? 'page' : undefined}
+          active={entry === page}
+        >
+          {entry}
+        </PageButton>
+      ))}
 
-      <PageButton onClick={() => onChange(page + 1)} disabled={page >= totalPages}>
+      <PageButton
+        onClick={() => nextBlockPage !== null && onChange(nextBlockPage)}
+        disabled={nextBlockPage === null}
+      >
         다음
       </PageButton>
     </nav>
@@ -78,34 +77,4 @@ function PageButton({ active = false, className, ...props }: PageButtonProps) {
       {...props}
     />
   );
-}
-
-/** 보여줄 번호 목록. `null` 은 생략 표시 자리다. */
-function visiblePages(page: number, totalPages: number): (number | null)[] {
-  const first = 1;
-  const last = totalPages;
-  const from = Math.max(first, page - SIBLING_COUNT);
-  const to = Math.min(last, page + SIBLING_COUNT);
-
-  const middle = Array.from({ length: to - from + 1 }, (_, index) => from + index);
-  const result: (number | null)[] = [];
-
-  if (from > first) {
-    result.push(first);
-    // 바로 옆이면 생략 표시 대신 그 번호를 그대로 보여준다. `1 … 2` 는 이상하다.
-    if (from > first + 1) {
-      result.push(null);
-    }
-  }
-
-  result.push(...middle);
-
-  if (to < last) {
-    if (to < last - 1) {
-      result.push(null);
-    }
-    result.push(last);
-  }
-
-  return result;
 }
