@@ -68,7 +68,9 @@ export function AboutStats() {
               <p className="about-display text-display-60 text-blue-950 tabular-nums sm:text-display-72">
                 {/* 초기값 0. 스크롤이 닿으면 GSAP이 textContent를 갈아 끼운다 */}
                 <span data-stat-value={stat.value}>0</span>
-                <span className="ml-1 text-display-30 text-blue-500 sm:text-display-36">{stat.unit}</span>
+                <span className="ml-1 text-display-30 text-blue-500 sm:text-display-36">
+                  {stat.unit}
+                </span>
               </p>
               <p className="about-label mt-4 text-sm text-gray-600">{stat.label}</p>
             </div>
