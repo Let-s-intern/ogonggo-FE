@@ -29,9 +29,18 @@ const config: StorybookConfig = {
     { directory: webSrc, files: '**/*.stories.@(ts|tsx)', titlePrefix: 'App' },
   ],
   // `apps/web` 카드가 `shared/ui/Thumbnail.tsx` 의 기본 이미지(`/default-thumbnail.jpg`)로
-  // 떨어진다. 이 폴더를 붙이지 않으면 404 라 깨진 이미지가 뜨고, "이미지가 없을 때 어떻게
+  // 떨어진다. 이것을 붙이지 않으면 404 라 깨진 이미지가 뜨고, "이미지가 없을 때 어떻게
   // 보이는가" 를 스토리로 확인할 수가 없다.
-  staticDirs: [resolve(repoRoot, 'apps/web/public')],
+  //
+  // `apps/web/public` 폴더째 붙이지 않고 파일 하나만 집는다. 폴더에는 히어로 이미지 세 장과
+  // 소개 화면 영상이 들어 있어 5MB 인데 스토리는 그중 어느 것도 쓰지 않는다. 폴더째 붙이면
+  // 배포되는 스토리북이 15MB 가 되고, 그 5MB 는 웹 앱이 이미 자기 도메인에서 서빙한다.
+  staticDirs: [
+    {
+      from: resolve(repoRoot, 'apps/web/public/default-thumbnail.jpg'),
+      to: '/default-thumbnail.jpg',
+    },
+  ],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -39,7 +48,7 @@ const config: StorybookConfig = {
   // 스토리북의 Vite 에는 Tailwind 컴파일러가 없다. 이게 없으면 preview 가 불러오는
   // `src/styles/tokens.css` 의 `@import 'tailwindcss'` 가 컴파일되지 않고 그대로 나가서
   // 유틸리티 클래스가 한 줄도 생성되지 않는다 (apps/admin/vite.config.ts 와 같은 방식).
-  viteFinal: (viteConfig) => {
+  viteFinal: (viteConfig, { configType }) => {
     viteConfig.plugins = [...(viteConfig.plugins ?? []), tailwindcss()];
     viteConfig.resolve = {
       ...viteConfig.resolve,
@@ -58,6 +67,11 @@ const config: StorybookConfig = {
     // 벗겨지고 JSX 가 남은 채 나가 `vite:import-analysis` 가
     // "content contains invalid JS syntax" 로 죽는다 (packages/ui 는 `react-jsx` 라 멀쩡하다).
     // 스토리북 쪽에서만 JSX 변환을 강제한다 — `apps/web/tsconfig.json` 은 건드리지 않는다.
+    //
+    // `development` 를 빌드 모드에 맞춘다. 켜면 JSX 가 `jsxDEV()` 로 변환되는데 그 함수는
+    // `react/jsx-dev-runtime` 에만 있다. 프로덕션 번들은 `react/jsx-runtime` 을 싣기 때문에
+    // 켠 채로 `storybook build` 를 하면 배포된 스토리북에서 `apps/web` 스토리가 전부
+    // `(0, p.jsxDEV) is not a function` 으로 죽는다. dev 서버에서는 멀쩡해서 눈에 띄지 않는다.
     viteConfig.oxc = {
       ...viteConfig.oxc,
       jsx: {
@@ -65,7 +79,7 @@ const config: StorybookConfig = {
           ? viteConfig.oxc.jsx
           : {}),
         runtime: 'automatic',
-        development: true,
+        development: configType === 'DEVELOPMENT',
       },
     };
     viteConfig.server = {
