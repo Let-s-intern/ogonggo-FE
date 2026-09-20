@@ -1,0 +1,18 @@
+/*
+ * 프리텐다드 가변 폰트. `preview.ts` 가 이 파일을 불러온다 — `@font-face` 는 CSS 에만 쓸 수
+ * 있어서 별도 파일이 필요하다.
+ *
+ * 가리키는 파일은 `apps/web`(`next/font/local`)·`apps/admin`(`index.css`) 이 쓰는 것과 같은
+ * 한 부다. 출처와 버전은 `src/styles/fonts/README.md` 에 있다.
+ *
+ * `font-weight` 에 범위를 적어야 굵기가 가짜 볼드가 아니라 가변 축 보간으로 그려진다.
+ *
+ * 패밀리 이름은 `src/styles/tokens.css` 의 `--font-sans` 가 부르는 이름과 같아야 한다.
+ */
+@font-face {
+  font-family: 'Pretendard Variable';
+  src: url('../src/styles/fonts/PretendardVariable.woff2') format('woff2');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}
