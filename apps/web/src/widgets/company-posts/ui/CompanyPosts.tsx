@@ -16,8 +16,18 @@ import { companyPostNewHref } from '../lib/routes';
 import { CompanyPostRow } from './CompanyPostRow';
 import { CompanyPostsCta } from './CompanyPostsCta';
 
-/** 표 머리글. `공고 정보` 는 폭을 주지 않아 남는 폭을 갖는다. */
-const COLUMNS: readonly MyPageListColumn[] = [{ key: 'info', label: '공고 정보' }];
+/**
+ * 표 머리글. `공고 정보` 는 폭을 주지 않아 남는 폭을 갖는다.
+ *
+ * **목업의 `조회수` 열이 빠졌다.** 기업용 목록 응답에 조회수도 북마크수도 없다 — 근거는
+ * `CompanyPostRow` 주석에 있다.
+ */
+const COLUMNS: readonly MyPageListColumn[] = [
+  { key: 'info', label: '공고 정보' },
+  { key: 'capacity', label: '모집 인원', className: 'w-28' },
+  { key: 'period', label: '모집 기간', className: 'w-64' },
+  { key: 'action', label: '관리', className: 'w-44' },
+];
 
 type State = { kind: 'loading' } | { kind: 'ready'; page: CompanyPostsPage } | { kind: 'error' };
 
@@ -120,7 +130,7 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
 
       <MyPageListTable columns={COLUMNS}>
         {rows.length > 0 ? (
-          rows.map((row) => <CompanyPostRow key={row.key} row={row} />)
+          rows.map((row) => <CompanyPostRow key={row.key} row={row} tab={query.tab} />)
         ) : (
           <tr>
             <td colSpan={COLUMNS.length} className="px-4 py-16 text-center text-sm text-gray-500">
