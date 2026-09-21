@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { ListMyRecruitmentApplicationsApplicationStatus } from '@ogonggo/api';
 import {
   PLACEHOLDER_APPLICATION_COUNTS,
   PLACEHOLDER_APPLICATION_STATUSES,
@@ -13,6 +14,7 @@ import {
   type MyPageListTab,
 } from '@/widgets/mypage-list';
 import { fetchMyApplications, type MyApplicationsPage } from '../lib/fetch';
+import { deleteApplication, updateApplicationStatus } from '../lib/mutate';
 import { placeholderRows } from '../lib/placeholderRows';
 import { MyApplicationRow } from './MyApplicationRow';
 import {
@@ -72,6 +74,10 @@ export interface MyApplicationsProps {
  */
 export function MyApplications({ query }: MyApplicationsProps) {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  /** 상태 변경·삭제 뒤 목록을 다시 읽으려고 올리는 값. 주소는 그대로인데 내용만 바뀌는 경우다. */
+  const [reloadToken, setReloadToken] = useState(0);
+  /** 요청이 도는 행. 그 행의 컨트롤을 잠근다. */
+  const [pendingPostId, setPendingPostId] = useState<number | null>(null);
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 탭·필터·페이지를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -100,7 +106,7 @@ export function MyApplications({ query }: MyApplicationsProps) {
     return () => {
       active = false;
     };
-  }, [href]);
+  }, [href, reloadToken]);
 
   const sideStudyCount = state.kind === 'ready' ? state.page.count : undefined;
   const tabs: readonly MyPageListTab<MyApplicationTab>[] = [
@@ -143,14 +149,48 @@ export function MyApplications({ query }: MyApplicationsProps) {
 
       <MyPageListTable columns={columns}>
         {rows.length > 0 ? (
-          rows.map((row) => (
-            <MyApplicationRow
-              key={row.key}
-              row={row}
-              statusOptions={statusOptionsFor(query.tab)}
-              verb={TAB_LABELS[query.tab].verb}
-            />
-          ))
+          rows.map((row) => {
+            const postId = row.postId;
+            /**
+             * 되읽는 API 가 있는 행만 바꾸고 지울 수 있다. 하드코딩한 두 탭의 행에는 `postId`
+             * 가 없어 두 콜백이 모두 `undefined` 이고, 그러면 셀렉트가 비활성이고 `삭제하기`
+             * 메뉴가 나오지 않는다.
+             */
+            const mutate = (run: () => Promise<void>) => {
+              if (postId === undefined) {
+                return;
+              }
+              setPendingPostId(postId);
+              run()
+                .then(() => setReloadToken((token) => token + 1))
+                .catch(() => setState({ kind: 'error' }))
+                .finally(() => setPendingPostId(null));
+            };
+
+            return (
+              <MyApplicationRow
+                key={row.key}
+                row={row}
+                statusOptions={statusOptionsFor(query.tab)}
+                verb={TAB_LABELS[query.tab].verb}
+                pending={postId !== undefined && pendingPostId === postId}
+                onStatusChange={
+                  postId === undefined
+                    ? undefined
+                    : (applicationStatus) =>
+                        mutate(() =>
+                          updateApplicationStatus(
+                            postId,
+                            applicationStatus as ListMyRecruitmentApplicationsApplicationStatus,
+                          ),
+                        )
+                }
+                onDelete={
+                  postId === undefined ? undefined : () => mutate(() => deleteApplication(postId))
+                }
+              />
+            );
+          })
         ) : (
           <tr>
             <td colSpan={columns.length} className="px-4 py-16 text-center text-sm text-gray-500">
