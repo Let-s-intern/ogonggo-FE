@@ -17,3 +17,5 @@ export {
   type ToggleBookmark,
   type UseToggleBookmarkOptions,
 } from './model/useToggleBookmark';
+export { BookmarkButton, type BookmarkButtonProps } from './ui/BookmarkButton';
+export { BookmarkCountButton, type BookmarkCountButtonProps } from './ui/BookmarkCountButton';
