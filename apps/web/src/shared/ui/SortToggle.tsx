@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { cn } from '@ogonggo/ui';
-import { ChevronIcon } from '@/shared/ui/icons';
+import { cn, FilterButton } from '@ogonggo/ui';
 
 export interface SortOption<TValue extends string> {
   value: TValue;
@@ -22,6 +21,14 @@ export interface SortToggleProps<TValue extends string> {
  * `home.png`·`교육부트캠프.png`의 "최신순 ▾" 드롭다운. 동작은 그대로 URL의 `sort` 쿼리
  * 파라미터 — 자바스크립트 없이 `<details>`/`<summary>`로 여닫고, 옵션은 진짜 `<Link>` 이동이다
  * (`buildHref`가 `page`를 생략하면 정렬을 바꿀 때 1페이지로 돌아간다).
+ *
+ * 트리거는 `FilterButton`이 그린다(`docs/asset/v3-1/filter/`). `state`는 언제나 `default`다 —
+ * 정렬은 값이 비는 일이 없어 "선택됨"이 다른 상태와 구분되지 않는다(PRD 5절).
+ *
+ * 그래서 글자가 `gray-600`에서 `gray-400`으로, 꺾쇠와 같은 색이 된다. 에셋 세 장 모두 글자와
+ * 꺾쇠가 같은 색이고, 여기만 둘이 갈려 있었다.
+ *
+ * 꺾쇠 뒤집기는 `FilterDropdown`과 같은 방식이다 — `group-open:[&>span]:rotate-180`.
  */
 export function SortToggle<TValue extends string>({
   options,
@@ -33,10 +40,9 @@ export function SortToggle<TValue extends string>({
 
   return (
     <details className="group relative">
-      <summary className="flex h-9 cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 text-sm font-medium text-gray-600 [&::-webkit-details-marker]:hidden">
+      <FilterButton className="bg-white group-open:[&>span]:rotate-180">
         {currentLabel}
-        <ChevronIcon className="h-4 w-4 text-gray-400 group-open:rotate-180" />
-      </summary>
+      </FilterButton>
       <ul className="absolute right-0 z-10 mt-1 w-24 rounded-md border border-gray-200 bg-white py-1 shadow-md">
         {options.map((option) => (
           <li key={option.value}>
