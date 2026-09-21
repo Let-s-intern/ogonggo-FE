@@ -7,6 +7,7 @@ import {
   toCompanyJobValues,
   type CompanyJobFormValues,
 } from '../model/values';
+import { JobApplySettingsSection } from './JobApplySettingsSection';
 import { JobBasicInfoSection } from './JobBasicInfoSection';
 import { JobContentSection } from './JobContentSection';
 import { JobFormSection } from './JobFormSection';
@@ -105,6 +106,16 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
           onToggle={() => toggle(2)}
         >
           <JobContentSection values={values} onChange={change} />
+        </JobFormSection>
+
+        <JobFormSection
+          step={3}
+          title="모집 · 지원 설정"
+          description="마감일과 지원 방법을 설정해 주세요"
+          open={openSteps.includes(3)}
+          onToggle={() => toggle(3)}
+        >
+          <JobApplySettingsSection values={values} onChange={change} />
         </JobFormSection>
       </div>
 

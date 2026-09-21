@@ -5,6 +5,7 @@ import type {
   CreateCompanyJobRequestEmploymentType,
   CreateCompanyJobRequestExperienceType,
 } from '@ogonggo/api';
+import { toDateInputValue } from '../lib/datetime';
 
 /**
  * 채용공고 작성 화면이 들고 있는 값(v5 PRD 3 절). `CreateCompanyJobRequest` 와 한 칸씩 짝이
@@ -30,7 +31,7 @@ export interface CompanyJobFormValues {
   preferredQualifications: string;
   benefits: string;
   hiringProcess: string;
-  /** `YYYY-MM-DD`. 백엔드는 일시로 받고, 화면은 날짜만 다룬다(`lib/datetime.ts`). */
+  /** `YYYY-MM-DD`. 백엔드는 일시로 받고 화면은 날짜만 다룬다(`lib/datetime.ts`). */
   recruitmentStartAt: string;
   recruitmentEndAt: string;
   applicationMethod: CreateCompanyJobRequestApplicationMethod | '';
@@ -82,9 +83,6 @@ export const EMPTY_COMPANY_JOB_VALUES: CompanyJobFormValues = {
 
 export const EMPTY_COMPANY_JOB_PASSTHROUGH: CompanyJobPassthrough = {};
 
-/** 일시(`2026-09-21T23:59:59`) 에서 달력 날짜만 꺼낸다. 화면의 날짜 칸이 그 모양이다. */
-const dateOnly = (value?: string) => value?.slice(0, 10) ?? '';
-
 /** 읽어 온 공고를 화면 값으로(v5 PRD 3 절). */
 export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFormValues {
   return {
@@ -103,8 +101,8 @@ export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFor
     preferredQualifications: job.preferredQualifications ?? '',
     benefits: job.benefits ?? '',
     hiringProcess: job.hiringProcess ?? '',
-    recruitmentStartAt: dateOnly(job.recruitmentStartAt),
-    recruitmentEndAt: dateOnly(job.recruitmentEndAt),
+    recruitmentStartAt: toDateInputValue(job.recruitmentStartAt),
+    recruitmentEndAt: toDateInputValue(job.recruitmentEndAt),
     applicationMethod: job.applicationMethod ?? '',
     sourceUrl: job.sourceUrl ?? '',
     recruitmentNotice: job.recruitmentNotice ?? '',
