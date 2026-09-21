@@ -27,13 +27,13 @@ const ICONS: IconEntry[] = [
   {
     name: 'lucide--search',
     className: 'icon-[lucide--search]',
-    usedBy: 'SearchIcon, CircleIconButton 스토리',
+    usedBy: 'SearchIcon, SearchInput, CircleIconButton 스토리',
   },
   { name: 'lucide--eye', className: 'icon-[lucide--eye]', usedBy: 'EyeIcon' },
   {
     name: 'lucide--chevron-down',
     className: 'icon-[lucide--chevron-down]',
-    usedBy: 'ChevronIcon (방향은 회전)',
+    usedBy: 'ChevronIcon, FilterButton (방향은 회전)',
   },
   {
     name: 'lucide--message-circle',
@@ -56,6 +56,11 @@ const ICONS: IconEntry[] = [
     name: 'lucide--x',
     className: 'icon-[lucide--x]',
     usedBy: 'CareerSelectModals 닫기, ActionAlert(danger)',
+  },
+  {
+    name: 'lucide--circle-x',
+    className: 'icon-[lucide--circle-x]',
+    usedBy: 'SearchInput 의 지우기 — 동그라미 없는 lucide--x 는 입력 안에서 글자로 읽힌다',
   },
   { name: 'lucide--circle', className: 'icon-[lucide--circle]', usedBy: 'Tabs 스토리' },
   {
