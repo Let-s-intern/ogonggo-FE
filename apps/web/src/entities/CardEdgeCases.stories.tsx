@@ -99,11 +99,11 @@ export const TitleOneLineVsTwo: StoryObj = {
 };
 
 /**
- * 썸네일이 있을 때와 없을 때. 셋이 서로 다르게 떨어진다 —
- * `JobCard` 는 `CompanyLogo` 가 회사 로고를 모르면 오공고 로고 폴백으로,
- * `BootcampCard` 는 `representativeImageUrl` 이 비면 `Thumbnail` 이 같은 폴백으로,
- * `SideStudyCard` 는 `AuthorThumbnail` 이 일부러 회색 사각형만 남긴다
- * ("원래 없다" 가 흔한 선택 필드라서다 — 컴포넌트 주석 참고).
+ * 썸네일이 있을 때와 없을 때. 셋이 같은 폴백으로 떨어진다 — 흰 배경 위 오공고 로고다.
+ * `JobCard` 는 `CompanyLogo` 가 회사 로고를 모를 때, `BootcampCard` 는
+ * `representativeImageUrl` 이 빌 때, `SideStudyCard` 는 `AuthorThumbnail` 이 작성자 프로필
+ * 이미지를 못 받았을 때이고, 셋 다 `shared/ui/Thumbnail.tsx` 를 거친다. 로고 크기만 박스 폭을
+ * 따라 다르다 — 8:5 썸네일에서 96px, 48px 작성자 썸네일에서 24px.
  *
  * `JobCard` 의 로고는 크롤러가 실제로 수집한 회사만 있다
  * (`entities/job/model/company-logo.ts`). 윗줄의 `롯데컬처웍스` 는 그 목록에 있고, 목데이터의
