@@ -81,12 +81,20 @@ export async function httpClient<T>(url: string, init: RequestInit = {}): Promis
     typeof window === 'undefined' && isRelative
       ? `${process.env.OGONGGO_USER_API_ORIGIN ?? 'http://localhost:8080'}${url}`
       : url;
+  /*
+   * A FormData body sets its own `multipart/form-data; boundary=...` header,
+   * and the boundary is generated per body — it cannot be written by hand.
+   * Sending the JSON default over it leaves the server with a multipart body
+   * labelled as JSON, which is how `createImage` (POST /api/v1/images, the one
+   * multipart endpoint) fails with nothing in the request looking wrong.
+   */
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
   const send = (accessToken: string | null | undefined) =>
     fetch(resolvedUrl, {
       ...init,
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...init.headers,
       },
