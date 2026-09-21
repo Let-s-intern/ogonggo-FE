@@ -1,8 +1,10 @@
 import type {
   CompanyBootcampDetailResponse,
+  CreateCompanyBootcampRequestApplicationMethod,
   CreateCompanyBootcampRequestOperationType,
   CreateCompanyBootcampRequestTuitionType,
 } from '@ogonggo/api';
+import { toDateInputValue } from '@/shared/lib/formDateTime';
 
 /**
  * 교육·부트캠프 작성 화면이 들고 있는 값(v5 PRD 4 절). `CreateCompanyBootcampRequest` 와 한
@@ -29,6 +31,15 @@ export interface CompanyBootcampFormValues {
   shortDescription: string;
   /** 목업의 `공고 상세 내용`. 평문 한 덩어리로 저장된다. */
   content: string;
+  /** `YYYY-MM-DD`. 백엔드는 일시로 받고 화면은 날짜만 다룬다(`shared/lib/formDateTime.ts`). */
+  recruitmentStartAt: string;
+  recruitmentEndAt: string;
+  applicationMethod: CreateCompanyBootcampRequestApplicationMethod | '';
+  applicationUrl: string;
+  managerEmail: string;
+  inquiryUrl: string;
+  /** 요청에 실리지 않는다. `공고 등록` 을 막는 데만 쓴다(`ui/BootcampApplySettingsSection.tsx`). */
+  agreedToPolicy: boolean;
 }
 
 export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
@@ -44,6 +55,13 @@ export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
   representativeImageUrl: '',
   shortDescription: '',
   content: '',
+  recruitmentStartAt: '',
+  recruitmentEndAt: '',
+  applicationMethod: '',
+  applicationUrl: '',
+  managerEmail: '',
+  inquiryUrl: '',
+  agreedToPolicy: false,
 };
 
 /** 읽어 온 부트캠프를 화면 값으로(v5 PRD 4 절). */
@@ -63,5 +81,13 @@ export function toCompanyBootcampValues(
     representativeImageUrl: bootcamp.representativeImageUrl,
     shortDescription: bootcamp.shortDescription,
     content: bootcamp.content,
+    recruitmentStartAt: toDateInputValue(bootcamp.recruitmentStartAt),
+    recruitmentEndAt: toDateInputValue(bootcamp.recruitmentEndAt),
+    applicationMethod: bootcamp.applicationMethod,
+    applicationUrl: bootcamp.applicationUrl ?? '',
+    managerEmail: bootcamp.managerEmail ?? '',
+    inquiryUrl: bootcamp.inquiryUrl ?? '',
+    // 저장된 값이 아니다. 고쳐 다시 공개로 만들 때 한 번 더 받는다(v4 모집글 폼과 같다).
+    agreedToPolicy: false,
   };
 }

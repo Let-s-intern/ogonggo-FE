@@ -8,6 +8,7 @@ import {
   toCompanyBootcampValues,
   type CompanyBootcampFormValues,
 } from '../model/values';
+import { BootcampApplySettingsSection } from './BootcampApplySettingsSection';
 import { BootcampBasicInfoSection } from './BootcampBasicInfoSection';
 import { BootcampContentSection } from './BootcampContentSection';
 
@@ -105,6 +106,17 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         onToggle={() => toggle(2)}
       >
         <BootcampContentSection values={values} onChange={change} />
+      </FormSection>
+
+      <FormSection
+        name="company-bootcamp-form"
+        step={3}
+        title="모집 · 지원 설정"
+        description="마감일과 지원 방법을 설정해 주세요"
+        open={openSteps.includes(3)}
+        onToggle={() => toggle(3)}
+      >
+        <BootcampApplySettingsSection values={values} onChange={change} />
       </FormSection>
 
       {formError ? (
