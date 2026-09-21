@@ -8,6 +8,7 @@ import {
 } from '@/features/my-applications/model/placeholder';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
+  MyPageFilterRow,
   MyPageListTable,
   MyPageListTabs,
   type MyPageListColumn,
@@ -17,9 +18,13 @@ import { fetchMyApplications, type MyApplicationsPage } from '../lib/fetch';
 import { deleteApplication, updateApplicationStatus } from '../lib/mutate';
 import { placeholderRows } from '../lib/placeholderRows';
 import { MyApplicationRow } from './MyApplicationRow';
+import { MyApplicationsCta } from './MyApplicationsCta';
+import { MyApplicationsFilters, MyApplicationsSort } from './MyApplicationsFilters';
 import { MyApplicationsNotice } from './MyApplicationsNotice';
 import {
   buildMyApplicationsHref,
+  buildMyApplicationsResetHref,
+  hasMyApplicationsFilter,
   type MyApplicationsQuery,
   type MyApplicationTab,
 } from '../lib/query';
@@ -54,9 +59,9 @@ function columnsFor(tab: MyApplicationTab): readonly MyPageListColumn[] {
   const { verb } = TAB_LABELS[tab];
   return [
     { key: 'info', label: tab === 'side-studies' ? '모집글 정보' : '공고 정보' },
-    { key: 'deadline', label: '마감일', className: 'w-64' },
-    { key: 'status', label: `나의 ${verb} 상태`, className: 'w-44' },
-    { key: 'action', label: verb, className: 'w-32' },
+    { key: 'deadline', label: '마감일', className: 'w-56' },
+    { key: 'status', label: `나의 ${verb} 상태`, className: 'w-40' },
+    { key: 'action', label: verb, className: 'w-40' },
   ];
 }
 
@@ -148,6 +153,21 @@ export function MyApplications({ query }: MyApplicationsProps) {
         aria-label="지원·신청 종류"
       />
 
+      {query.tab === 'side-studies' ? (
+        <MyPageFilterRow
+          resetHref={buildMyApplicationsResetHref(query)}
+          filtered={hasMyApplicationsFilter(query)}
+          search={{
+            placeholder: '모집글 검색',
+            defaultValue: query.keyword,
+            buildHref: (keyword) => buildMyApplicationsHref(query, { keyword }),
+          }}
+          sort={<MyApplicationsSort query={query} />}
+        >
+          <MyApplicationsFilters query={query} />
+        </MyPageFilterRow>
+      ) : null}
+
       <MyApplicationsNotice tab={query.tab} />
 
       <MyPageListTable columns={columns}>
@@ -211,6 +231,8 @@ export function MyApplications({ query }: MyApplicationsProps) {
         pageInfo={pageInfo}
         buildHref={(page) => buildMyApplicationsHref(query, { page })}
       />
+
+      <MyApplicationsCta tab={query.tab} />
     </section>
   );
 }

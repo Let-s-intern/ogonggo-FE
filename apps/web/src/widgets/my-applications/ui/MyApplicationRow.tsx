@@ -65,11 +65,11 @@ export function MyApplicationRow({
       <td className="px-4 py-5">
         <div className="flex items-center justify-center gap-1">
           {row.href && !closed ? (
-            <Button asChild size="sm" className="rounded-md px-4">
+            <Button asChild size="sm" className="rounded-md px-4 whitespace-nowrap">
               <Link href={row.href}>{applyLabel}</Link>
             </Button>
           ) : (
-            <Button size="sm" disabled className="rounded-md px-4">
+            <Button size="sm" disabled className="rounded-md px-4 whitespace-nowrap">
               {applyLabel}
             </Button>
           )}
