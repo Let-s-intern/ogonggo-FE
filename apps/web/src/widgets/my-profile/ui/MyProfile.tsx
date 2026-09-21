@@ -6,9 +6,12 @@ import {
   type MyAccountResponse,
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
+import { Callout } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { BasicInfoSection } from './BasicInfoSection';
 import { CareerInfoSection } from './CareerInfoSection';
+import { MarketingSection, PasswordSection, WithdrawAction } from './PreparingSections';
 
 type State =
   | { kind: 'loading' }
@@ -65,12 +68,30 @@ export function MyProfile() {
         </p>
       ) : null}
 
+      {/* 비활성 칸마다 `title` 로도 같은 말을 달지만, 마우스를 올려야 보인다. 화면에
+          드러나는 한 줄이 먼저 있어야 한다 — 지원·신청 내역의 안내 띠와 같은 판단이다. */}
+      <Callout
+        tone="warning"
+        className="flex items-start gap-2 border-transparent bg-orange-50 text-orange-800"
+      >
+        <span aria-hidden="true" className="icon-[lucide--info] mt-0.5 block h-4 w-4 shrink-0" />
+        <span>
+          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 휴대폰 번호, 정보 수신용 이메일,
+          비밀번호 변경, 마케팅 수신 동의, 회원 탈퇴는 아직 고칠 수 없어요. 지금 저장되는 것은
+          커리어 정보뿐이에요.
+        </span>
+      </Callout>
+
       <BasicInfoSection name={account?.profile?.name} email={account?.email} />
 
       <CareerInfoSection
         profile={account?.profile}
         onSaved={() => setReloadToken((token) => token + 1)}
       />
+
+      <PasswordSection />
+      <MarketingSection />
+      <WithdrawAction />
     </div>
   );
 }
