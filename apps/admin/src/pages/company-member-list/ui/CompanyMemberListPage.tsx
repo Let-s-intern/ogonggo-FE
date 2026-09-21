@@ -9,6 +9,7 @@ import {
   MEMBER_STATUS_OPTIONS,
   MemberStatusBadge,
 } from '@/shared/config/labels';
+import { BACKEND_PENDING_MESSAGE, tableBodyState } from '@/shared/config/backendPending';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
@@ -84,8 +85,11 @@ export function CompanyMemberListPage() {
             rows={data?.items ?? []}
             rowKey={(row) => row.id}
             onRowClick={(row) => navigate(`/members/companies/${row.id}`)}
-            isLoading={isPending}
-            emptyMessage="조건에 맞는 회원이 없습니다."
+            {...tableBodyState(
+              BACKEND_PENDING_MESSAGE.member,
+              isPending,
+              '조건에 맞는 회원이 없습니다.',
+            )}
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>
