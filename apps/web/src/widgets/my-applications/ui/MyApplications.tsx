@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { PLACEHOLDER_APPLICATION_COUNTS } from '@/features/my-applications/model/placeholder';
+import {
+  PLACEHOLDER_APPLICATION_COUNTS,
+  PLACEHOLDER_APPLICATION_STATUSES,
+} from '@/features/my-applications/model/placeholder';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
-  MyPageListRowCells,
   MyPageListTable,
   MyPageListTabs,
   type MyPageListColumn,
@@ -12,6 +14,7 @@ import {
 } from '@/widgets/mypage-list';
 import { fetchMyApplications, type MyApplicationsPage } from '../lib/fetch';
 import { placeholderRows } from '../lib/placeholderRows';
+import { MyApplicationRow } from './MyApplicationRow';
 import {
   buildMyApplicationsHref,
   type MyApplicationsQuery,
@@ -27,6 +30,22 @@ const TAB_LABELS: Record<MyApplicationTab, { label: string; verb: string }> = {
   bootcamps: { label: '교육 · 부트캠프', verb: '신청' },
   'side-studies': { label: '사이드 · 스터디', verb: '지원' },
 };
+
+/**
+ * 사이드·스터디의 네 단계(`RecruitmentApplicationItemResponseApplicationStatus`). **이것만
+ * 실제로 저장된다.** 다른 두 탭의 여섯 단계·세 단계는 저장할 곳이 없어
+ * `features/my-applications/model/placeholder.ts` 에 있다.
+ */
+const SIDE_STUDY_STATUSES = [
+  { value: 'PREPARING', label: '지원 준비 중' },
+  { value: 'COMPLETED', label: '지원 완료' },
+  { value: 'IN_PROGRESS', label: '활동 중' },
+  { value: 'ENDED', label: '활동 종료' },
+] as const;
+
+function statusOptionsFor(tab: MyApplicationTab): readonly { value: string; label: string }[] {
+  return tab === 'side-studies' ? SIDE_STUDY_STATUSES : PLACEHOLDER_APPLICATION_STATUSES[tab];
+}
 
 function columnsFor(tab: MyApplicationTab): readonly MyPageListColumn[] {
   const { verb } = TAB_LABELS[tab];
@@ -125,11 +144,12 @@ export function MyApplications({ query }: MyApplicationsProps) {
       <MyPageListTable columns={columns}>
         {rows.length > 0 ? (
           rows.map((row) => (
-            <tr key={row.key} className="border-t border-gray-100">
-              <MyPageListRowCells row={row} />
-              <td className="px-4 py-5 text-center" />
-              <td className="px-4 py-5 text-center" />
-            </tr>
+            <MyApplicationRow
+              key={row.key}
+              row={row}
+              statusOptions={statusOptionsFor(query.tab)}
+              verb={TAB_LABELS[query.tab].verb}
+            />
           ))
         ) : (
           <tr>
