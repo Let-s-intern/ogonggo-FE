@@ -9,6 +9,7 @@ import {
   withCurrentValue,
 } from '../model/options';
 import type { CompanyBootcampFormValues } from '../model/values';
+import { BootcampPartnersField } from './BootcampPartnersField';
 
 /** `CreateCompanyBootcampRequest` 의 `@maxLength`. */
 const MAX_COMPANY_NAME_LENGTH = 150;
@@ -137,6 +138,11 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
           />
         </Field>
       </div>
+
+      <BootcampPartnersField
+        rows={values.partners}
+        onChange={(partners) => onChange({ partners })}
+      />
 
       <CoverImageField
         value={values.representativeImageUrl}

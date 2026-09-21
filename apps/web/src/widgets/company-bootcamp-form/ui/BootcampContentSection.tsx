@@ -3,6 +3,7 @@
 import { Field, Input } from '@ogonggo/ui';
 import { FormRichTextField } from '@/shared/ui/FormRichTextField';
 import type { CompanyBootcampFormValues } from '../model/values';
+import { BootcampCurriculumField } from './BootcampCurriculumField';
 
 /** `CreateCompanyBootcampRequest.shortDescription` 의 `@maxLength`. */
 const MAX_SHORT_DESCRIPTION_LENGTH = 500;
@@ -39,6 +40,11 @@ export function BootcampContentSection({ values, onChange }: BootcampContentSect
         value={values.content}
         onChange={(content) => onChange({ content })}
         placeholder="프로그램 소개, 교육 내용, 제공 혜택 등을 자유롭게 작성해 주세요."
+      />
+
+      <BootcampCurriculumField
+        rows={values.curriculums}
+        onChange={(curriculums) => onChange({ curriculums })}
       />
     </div>
   );

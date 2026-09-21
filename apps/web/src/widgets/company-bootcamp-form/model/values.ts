@@ -5,6 +5,12 @@ import type {
   CreateCompanyBootcampRequestTuitionType,
 } from '@ogonggo/api';
 import { toDateInputValue } from '@/shared/lib/formDateTime';
+import {
+  EMPTY_CURRICULUM_ROW,
+  EMPTY_PARTNER_ROW,
+  type BootcampCurriculumRow,
+  type BootcampPartnerRow,
+} from './rows';
 
 /**
  * 교육·부트캠프 작성 화면이 들고 있는 값(v5 PRD 4 절). `CreateCompanyBootcampRequest` 와 한
@@ -27,10 +33,13 @@ export interface CompanyBootcampFormValues {
   capacity: string;
   tuitionType: CreateCompanyBootcampRequestTuitionType | '';
   tuitionAmount: string;
+  /** 순서가 값이다. 저장할 때 자리에서 `displayOrder` 를 만든다(`model/rows.ts`). */
+  partners: BootcampPartnerRow[];
   representativeImageUrl: string;
   shortDescription: string;
   /** 목업의 `공고 상세 내용`. 평문 한 덩어리로 저장된다. */
   content: string;
+  curriculums: BootcampCurriculumRow[];
   /** `YYYY-MM-DD`. 백엔드는 일시로 받고 화면은 날짜만 다룬다(`shared/lib/formDateTime.ts`). */
   recruitmentStartAt: string;
   recruitmentEndAt: string;
@@ -52,9 +61,11 @@ export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
   capacity: '',
   tuitionType: '',
   tuitionAmount: '',
+  partners: [EMPTY_PARTNER_ROW],
   representativeImageUrl: '',
   shortDescription: '',
   content: '',
+  curriculums: [EMPTY_CURRICULUM_ROW],
   recruitmentStartAt: '',
   recruitmentEndAt: '',
   applicationMethod: '',
@@ -78,9 +89,11 @@ export function toCompanyBootcampValues(
     capacity: bootcamp.capacity === undefined ? '' : String(bootcamp.capacity),
     tuitionType: bootcamp.tuitionType,
     tuitionAmount: bootcamp.tuitionAmount === undefined ? '' : String(bootcamp.tuitionAmount),
+    partners: toPartnerRows(bootcamp.partners),
     representativeImageUrl: bootcamp.representativeImageUrl,
     shortDescription: bootcamp.shortDescription,
     content: bootcamp.content,
+    curriculums: toCurriculumRows(bootcamp.curriculums),
     recruitmentStartAt: toDateInputValue(bootcamp.recruitmentStartAt),
     recruitmentEndAt: toDateInputValue(bootcamp.recruitmentEndAt),
     applicationMethod: bootcamp.applicationMethod,
@@ -90,4 +103,34 @@ export function toCompanyBootcampValues(
     // 저장된 값이 아니다. 고쳐 다시 공개로 만들 때 한 번 더 받는다(v4 모집글 폼과 같다).
     agreedToPolicy: false,
   };
+}
+
+/**
+ * 읽어 온 배열을 행으로. **`displayOrder` 로 정렬해서 그린다** — 응답 배열의 순서가 그 값과
+ * 같다는 보장이 없고, 공개 상세도 같은 값으로 정렬한다.
+ *
+ * 비어 있으면 빈 행 하나를 둔다. 행이 하나도 없으면 무엇을 적는 자리인지 보이지 않는다.
+ */
+function toPartnerRows(partners: CompanyBootcampDetailResponse['partners']): BootcampPartnerRow[] {
+  if (partners.length === 0) {
+    return [EMPTY_PARTNER_ROW];
+  }
+  return [...partners]
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map(({ partnerName }) => ({ partnerName }));
+}
+
+function toCurriculumRows(
+  curriculums: CompanyBootcampDetailResponse['curriculums'],
+): BootcampCurriculumRow[] {
+  if (curriculums.length === 0) {
+    return [EMPTY_CURRICULUM_ROW];
+  }
+  return [...curriculums]
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map(({ startWeek, endWeek, subtitle }) => ({
+      startWeek: String(startWeek),
+      endWeek: String(endWeek),
+      subtitle,
+    }));
 }
