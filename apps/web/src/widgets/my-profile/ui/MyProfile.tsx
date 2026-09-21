@@ -58,6 +58,13 @@ export function MyProfile() {
   }, [reloadToken]);
 
   const account = state.kind === 'ready' ? state.account : undefined;
+  /**
+   * 커리어 정보 구역에 넘길 값. **`account.profile` 을 그대로 넘기면 안 된다** — 그 필드는
+   * 선택이라 커리어 정보를 한 번도 넣지 않은 계정에는 아예 없는데, 구역 쪽은 `undefined` 를
+   * "아직 안 왔다" 로 읽어 폼을 영영 열지 않는다. 읽기에 성공했으면 값이 비어도 폼을 연다.
+   * `views/signup/ui/CareerSignUpPage.tsx` 가 같은 이유로 같은 `?? {}` 를 쓴다.
+   */
+  const profile = account ? (account.profile ?? {}) : undefined;
 
   return (
     <div className="flex flex-col gap-10">
@@ -86,7 +93,7 @@ export function MyProfile() {
       <BasicInfoSection name={account?.profile?.name} email={account?.email} />
 
       <CareerInfoSection
-        profile={account?.profile}
+        profile={profile}
         onSaved={() => setReloadToken((token) => token + 1)}
       />
 
