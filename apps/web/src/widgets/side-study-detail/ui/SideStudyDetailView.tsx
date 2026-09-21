@@ -95,7 +95,7 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
       <SideStudyDetailBreadcrumb />
       <SideStudyDetailHeaderCard sideStudy={sideStudy} />
       <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-10">
           <SideStudyInfoGrid sideStudy={sideStudy} />
           {buildSections(sideStudy)
             .filter((section) => section.body !== undefined)
