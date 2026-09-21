@@ -1,10 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
+import type { CreateRecruitmentPostRequestSaveMode } from '@ogonggo/api';
 import { Button } from '@ogonggo/ui';
 import { createMyPost } from '@/entities/side-study/api/myRecruitmentPosts';
-import { validateForPublish } from '../model/validate';
+import { validateForDraft, validateForPublish } from '../model/validate';
 import {
   EMPTY_FORM_VALUES,
   toCreateRequest,
@@ -27,6 +28,10 @@ import { FormSection } from './FormSection';
  *
  * 저장에 성공하면 작성한 모집글 목록으로 간다. 방금 쓴 글이 목록에 어떻게 들어갔는지(게시됐는지,
  * 임시저장으로 남았는지) 를 그 자리에서 보여 주는 화면이 거기뿐이다.
+ *
+ * 하단 버튼 둘이 같은 호출을 `saveMode` 만 달리해서 한다 — `임시저장` 이 `DRAFT`,
+ * `모집글 등록` 이 `PUBLISH` 다(PRD 5 절). 별도 발행 API(`/publish`) 도 있지만 생성 타입이
+ * "레거시, PUT + saveMode 권장" 이라고 적고 있어 쓰지 않는다.
  */
 export function RecruitmentPostForm() {
   const router = useRouter();
@@ -44,12 +49,16 @@ export function RecruitmentPostForm() {
       previous.includes(step) ? previous.filter((item) => item !== step) : [...previous, step],
     );
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  /**
+   * 검사하는 것이 `saveMode` 에 따라 다르다. `DRAFT` 는 제목만 보고, `PUBLISH` 는 게시 필수값
+   * 전부와 정책 동의를 본다.
+   */
+  const save = async (saveMode: CreateRecruitmentPostRequestSaveMode) => {
     if (pending) {
       return;
     }
-    const invalid = validateForPublish(values);
+    const invalid =
+      saveMode === 'DRAFT' ? validateForDraft(values) : validateForPublish(values);
     if (invalid) {
       setFormError(invalid);
       return;
@@ -57,16 +66,26 @@ export function RecruitmentPostForm() {
     setFormError(null);
     setPending(true);
     try {
-      await createMyPost(toCreateRequest(values, 'PUBLISH'));
+      await createMyPost(toCreateRequest(values, saveMode));
       router.push('/mypage/posts');
     } catch {
-      setFormError('모집글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      setFormError(
+        saveMode === 'DRAFT'
+          ? '임시저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+          : '모집글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      );
       setPending(false);
     }
   };
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <form
+      className="flex flex-col gap-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void save('PUBLISH');
+      }}
+    >
       <FormSection
         step={1}
         title="기본 정보"
@@ -103,7 +122,16 @@ export function RecruitmentPostForm() {
         </p>
       ) : null}
 
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-center gap-4 pt-2">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={pending}
+          onClick={() => void save('DRAFT')}
+          className="w-full max-w-72"
+        >
+          임시저장
+        </Button>
         <Button type="submit" disabled={pending} className="w-full max-w-80">
           모집글 등록
         </Button>

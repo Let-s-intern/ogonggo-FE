@@ -60,3 +60,13 @@ export function validateForPublish(values: RecruitmentPostFormValues): string | 
   }
   return null;
 }
+
+/**
+ * 임시저장에 필요한 것은 제목 하나다(생성 타입 설명: "`DRAFT` 는 제목만 필수").
+ *
+ * 제목까지 비워 두고 저장하는 것은 막는다. 이름 없는 글이 목록에 생기면 이어서 쓸 글을
+ * 고를 수 없다 — 작성한 모집글 표의 첫 칸이 제목이다.
+ */
+export function validateForDraft(values: RecruitmentPostFormValues): string | null {
+  return values.title.trim() ? null : '사이드 프로젝트 · 스터디명을 입력해 주세요.';
+}
