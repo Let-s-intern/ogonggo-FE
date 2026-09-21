@@ -12,7 +12,9 @@ import type { MyPageListRow } from '../model/row';
  * 마감된 건은 D-day 자리에 회색 `마감` 배지다. `entities/job/ui/JobCard.tsx` 가 목록 카드에서
  * 하는 것과 같은 판단이고 이유도 같다 — 배지를 통째로 빼면 그 자리가 아무 말도 하지 않는다.
  *
- * 제목만 링크다. 행 전체를 링크로 감싸면 뒤 칸의 셀렉트와 버튼이 그 안에 들어간다.
+ * 제목만 링크다. 행 전체를 링크로 감싸면 뒤 칸의 셀렉트와 버튼이 그 안에 들어간다. 갈 곳이
+ * 없는 행(하드코딩한 지원 내역) 은 제목이 그냥 글자다 — 눌리는데 아무 일도 안 일어나는 링크를
+ * 두지 않는다.
  */
 export function MyPageListRowCells({ row }: { row: MyPageListRow }) {
   const dday = computeDday(row.recruitmentType, row.recruitmentEndAt);
@@ -30,12 +32,16 @@ export function MyPageListRowCells({ row }: { row: MyPageListRow }) {
           />
           <div className="min-w-0">
             <p className="truncate text-xs text-gray-500">{row.caption}</p>
-            <Link
-              href={row.href}
-              className="block truncate text-base font-bold text-gray-900 hover:underline"
-            >
-              {row.title}
-            </Link>
+            {row.href ? (
+              <Link
+                href={row.href}
+                className="block truncate text-base font-bold text-gray-900 hover:underline"
+              >
+                {row.title}
+              </Link>
+            ) : (
+              <p className="truncate text-base font-bold text-gray-900">{row.title}</p>
+            )}
             {row.meta.length > 0 ? (
               <p className="truncate text-xs text-gray-400">{row.meta.join(' · ')}</p>
             ) : null}

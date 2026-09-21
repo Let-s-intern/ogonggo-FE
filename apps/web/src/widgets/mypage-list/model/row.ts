@@ -10,8 +10,11 @@ import type { RecruitmentType } from '@/shared/lib/dday';
 export interface MyPageListRow {
   /** 목록 안에서 고유하면 된다. 탭마다 id 종류가 달라 문자열로 둔다. */
   key: string;
-  /** 제목을 눌렀을 때 갈 상세 화면. */
-  href: string;
+  /**
+   * 제목을 눌렀을 때 갈 상세 화면. 없으면 제목이 링크가 아니라 글자다 — 하드코딩한 행
+   * (`features/my-applications/model/placeholder.ts`) 은 갈 곳이 없다.
+   */
+  href?: string;
   thumbnailUrl?: string;
   /** 제목 위 작은 줄. 공고는 회사명, 모집글은 작성자 닉네임이다. */
   caption: string;

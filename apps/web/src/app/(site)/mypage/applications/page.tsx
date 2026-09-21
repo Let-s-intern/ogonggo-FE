@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
+import { MyApplicationsPage } from '@/views/mypage';
+import { parseMyApplicationsQuery } from '@/widgets/my-applications';
 
 export const metadata: Metadata = { title: '지원·신청 내역' };
 
 /**
- * 제목만 있는 자리. 본문은 Push 2 (PRD 3 절) 이 채운다 — Push 1 은 사이드바와 라우트까지다.
- * 네 화면이 다 있어야 메뉴를 눌러 옮겨 다닐 수 있다.
+ * 탭·필터·페이지가 전부 주소에 있다. 이 Next 버전에서 `searchParams` 는 Promise 로 온다 —
+ * 스크랩 화면(`app/(site)/mypage/scraps/page.tsx`) 과 같다.
  */
-export default function Page() {
-  return <h1 className="text-3xl font-bold text-gray-950">지원·신청 내역</h1>;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  return <MyApplicationsPage {...parseMyApplicationsQuery(await searchParams)} />;
 }
