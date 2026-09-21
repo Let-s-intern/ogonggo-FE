@@ -1,4 +1,5 @@
-import { Input } from '@ogonggo/ui';
+import { Checkbox, Input } from '@ogonggo/ui';
+import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import type { CompanyProfileValues } from '../model/values';
 import { CompanyProfileField } from './CompanyProfileField';
 
@@ -11,8 +12,13 @@ export interface CompanyProfileViewProps {
  * 기업/기관 정보를 그린다(v5 PRD 5 절). **계정 응답을 모른다** — 읽는 쪽이
  * `toCompanyProfileValues` 로 뽑아 넘긴 값만 받는다.
  *
- * 세 칸 모두 읽기 전용이다. 기업 프로필 수정 API 가 없어서다
+ * 값이 있는 칸은 셋뿐이고 전부 읽기 전용이다. 기업 프로필 수정 API 가 없어서다
  * (`PUT /api/v1/users/me/profile` 은 개인 회원의 여덟 값만 받는다).
+ *
+ * **나머지 칸 셋은 목업대로 그리되 비활성이다**(v5 PRD 5 절). 기업·기관 로고는 프로필에 로고
+ * 필드가 없고, 담당자 연락처와 수신용 이메일은 `MyCompanyProfileResponse` 에 대응 필드가
+ * 없다. 감추지 않는 이유는 자리가 통째로 비면 "이 서비스에는 그런 값이 없다" 로 읽히기
+ * 때문이다 — v4 `widgets/my-profile/ui/BasicInfoSection.tsx` 와 같은 판단이다.
  */
 export function CompanyProfileView({ values }: CompanyProfileViewProps) {
   return (
@@ -21,6 +27,20 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
 
       <section className="flex flex-col gap-5">
         <h2 className="text-xl font-bold text-gray-950">기본 정보</h2>
+
+        <CompanyProfileField label="기업 · 기관 로고" htmlFor="company-logo">
+          <button
+            id="company-logo"
+            type="button"
+            disabled
+            title={PLACEHOLDER_NOTICE}
+            className="flex h-20 w-20 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-md border border-gray-300 bg-gray-50 text-[10px] leading-tight text-gray-400"
+          >
+            <span aria-hidden="true" className="icon-[lucide--upload] block h-4 w-4" />
+            <span>로고 업로드</span>
+            <span>1:1 비율 권장</span>
+          </button>
+        </CompanyProfileField>
 
         <CompanyProfileField label="기업 · 기관명" htmlFor="company-organization-name">
           <Input
@@ -32,15 +52,51 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
         </CompanyProfileField>
       </section>
 
+      <hr className="border-gray-200" />
+
       <section className="flex flex-col gap-5">
         <h2 className="text-xl font-bold text-gray-950">담당자 정보</h2>
 
         <CompanyProfileField label="담당자 이름" htmlFor="company-manager-name">
-          <Input id="company-manager-name" value={values?.managerName ?? ''} readOnly disabled />
+          <Input
+            id="company-manager-name"
+            value={values?.managerName ?? ''}
+            readOnly
+            disabled
+            className="max-w-70"
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="연락처" htmlFor="company-manager-phone">
+          <Input
+            id="company-manager-phone"
+            value=""
+            readOnly
+            disabled
+            title={PLACEHOLDER_NOTICE}
+            placeholder={PLACEHOLDER_NOTICE}
+            className="max-w-70"
+          />
         </CompanyProfileField>
 
         <CompanyProfileField label="가입한 이메일" htmlFor="company-email">
           <Input id="company-email" value={values?.email ?? ''} readOnly disabled />
+        </CompanyProfileField>
+
+        <CompanyProfileField
+          label="오늘의 공고 정보 수신용 이메일"
+          htmlFor="company-notification-email"
+          note="* 공고 관련 알림을 받아볼 담당자 이메일 주소를 입력해주세요."
+        >
+          <Input
+            id="company-notification-email"
+            value=""
+            readOnly
+            disabled
+            title={PLACEHOLDER_NOTICE}
+            placeholder={PLACEHOLDER_NOTICE}
+          />
+          <Checkbox checked={false} disabled onChange={() => {}} label="가입한 이메일과 동일" />
         </CompanyProfileField>
       </section>
     </div>
