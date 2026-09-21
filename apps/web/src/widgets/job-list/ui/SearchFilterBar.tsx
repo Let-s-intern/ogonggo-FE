@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { cn, Input } from '@ogonggo/ui';
+import { cn, FilterButton, Input } from '@ogonggo/ui';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
-import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
+import { SearchIcon } from '@/shared/ui/icons';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 
 export interface SearchFilterBarProps {
@@ -23,6 +23,14 @@ const EXPERIENCE_TYPE_OPTIONS = Object.entries(EXPERIENCE_TYPE_LABELS) as [
  * 패턴(자바스크립트 없이 여닫힘)으로 통일해, 네이티브 `<select>`가 열 때 OS 기본 팝업으로
  * 렌더되던 것과 달리 항상 같은 커스텀 스타일로 보이게 한다. 옵션을 고르면 그 자리에서 바로
  * 적용되는 `<Link>` 이동이다(제출 버튼 필요 없음).
+ *
+ * 트리거는 `FilterButton`이 그린다(`docs/asset/v3-1/filter/`). 여닫는 `<details>` 껍데기와
+ * 목록은 여기 남는다 — 그것이 그 컴포넌트가 트리거만 맡는 이유다(PRD 5절).
+ *
+ * `state`는 `default`와 `selected` 둘만 쓴다. 에셋의 `open`(파란 테두리)은 `<details>`가 열린
+ * 상태인데, 이 줄은 서버에서 그려져 리액트가 열림을 모른다. 대신 꺾쇠 뒤집기만 CSS로 남긴다 —
+ * `group-open:[&>span]:rotate-180`은 부모 `<details open>` 아래에서 트리거의 유일한 `<span>`
+ * 자식(꺾쇠)을 돌린다. 색은 `state`가, 회전은 CSS가 정해서 둘이 겹치지 않는다.
  */
 function FilterDropdown<TValue extends string>({
   label,
@@ -39,15 +47,12 @@ function FilterDropdown<TValue extends string>({
 
   return (
     <details className="group relative">
-      <summary
-        className={cn(
-          'flex h-9 cursor-pointer list-none items-center gap-1 rounded-full border px-3 text-sm font-medium [&::-webkit-details-marker]:hidden',
-          selected ? 'border-blue-500 text-blue-600' : 'border-gray-200 text-gray-600',
-        )}
+      <FilterButton
+        state={selected ? 'selected' : 'default'}
+        className="group-open:[&>span]:rotate-180"
       >
         {currentLabel}
-        <ChevronIcon className="h-4 w-4 text-gray-400 group-open:rotate-180" />
-      </summary>
+      </FilterButton>
       <ul className="absolute right-0 z-10 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-md">
         <li>
           <Link
