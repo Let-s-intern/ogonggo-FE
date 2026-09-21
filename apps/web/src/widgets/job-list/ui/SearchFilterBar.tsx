@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import { cn, FilterButton, Input } from '@ogonggo/ui';
+import { cn, FilterButton, SearchInput } from '@ogonggo/ui';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
-import { SearchIcon } from '@/shared/ui/icons';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 
 export interface SearchFilterBarProps {
@@ -86,13 +85,18 @@ function FilterDropdown<TValue extends string>({
 }
 
 /**
- * 검색어는 자유 텍스트라 `<Link>` 이동으로는 못 만든다 — `<form method="GET">` + 제출 버튼(검색
- * 아이콘)은 유지한다. 채용형태·경력 드롭다운은 `FilterDropdown`으로 클릭 즉시 적용된다.
+ * 검색어는 자유 텍스트라 `<Link>` 이동으로는 못 만든다 — `<form method="GET">`은 유지한다.
+ * 채용형태·경력 드롭다운은 `FilterDropdown`으로 클릭 즉시 적용된다.
+ *
+ * 입력은 `SearchInput`이 그린다(`docs/asset/v3-1/search/`). 그 컴포넌트의 돋보기는 장식이라
+ * (에셋에도 누를 것이 없다) 제출 버튼이 따로 필요하다. 글자 하나 없는 자리를 만들지 않으려고
+ * `sr-only` 버튼으로 뒀다 — 필드가 하나뿐이라 엔터로도 제출되지만, 그 암묵 제출에만 기대면
+ * 보조기술에서 "검색" 이라는 조작이 사라진다.
  */
 export function SearchFilterBar({ query }: SearchFilterBarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <form action="/" method="GET" className="relative min-w-[220px] flex-1">
+      <form action="/" method="GET" className="min-w-[220px] flex-1">
         <input type="hidden" name="sort" value={query.sort} />
         {query.employmentType ? (
           <input type="hidden" name="employmentType" value={query.employmentType} />
@@ -100,19 +104,9 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
         {query.experienceType ? (
           <input type="hidden" name="experienceType" value={query.experienceType} />
         ) : null}
-        <Input
-          type="text"
-          name="q"
-          defaultValue={query.q}
-          placeholder="공고 검색"
-          className="h-9 pl-9"
-        />
-        <button
-          type="submit"
-          aria-label="검색"
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
-        >
-          <SearchIcon className="h-4 w-4" />
+        <SearchInput name="q" defaultValue={query.q} placeholder="공고 검색" />
+        <button type="submit" className="sr-only">
+          검색
         </button>
       </form>
       <FilterDropdown
