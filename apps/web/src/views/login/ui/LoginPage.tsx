@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Tabs } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { useMyAccount } from '@/shared/api/useMyAccount';
 import { BuildingIcon, UserIcon } from '@/shared/ui/icons';
 import { CompanySignInPanel, UserSignInPanel } from '@/features/sign-in';
 
@@ -32,18 +33,34 @@ export interface LoginPageProps {
  *
  * 이미 로그인한 사용자가 오면 돌아갈 화면(없으면 홈) 으로 보낸다. 토큰이 브라우저 저장소에만 있어
  * 서버에서는 알 수 없으므로 첫 렌더 뒤에 본다.
+ *
+ * 기업 탭(`?tab=company`) 으로 온 경우는 다르다. 이미 기업 회원일 때만 보내고, 일반 회원으로
+ * 로그인한 사람에게는 기업 로그인을 그대로 보인다 — `공고 등록` 버튼이 일반 회원을 여기로 보내는데
+ * (`shared/lib/companyJobRegister.ts`), 로그인했다는 이유로 홈으로 돌려보내면 기업 계정으로 바꿔
+ * 들어갈 길이 없다. 기업 계정으로 로그인하면 일반 회원의 토큰을 덮어쓴다(`saveTokens`).
  */
 export function LoginPage({ initialTab, returnPath, initialError }: LoginPageProps) {
   const router = useRouter();
   // 실패 문구는 일반 회원 탭(간편 로그인) 의 것이다.
   const [tab, setTab] = useState<LoginTab>(initialError ? 'user' : initialTab);
 
+  const companyEntry = initialTab === 'company';
+  const accountState = useMyAccount();
+  const alreadyCompany = accountState.kind === 'ready' && accountState.account.role === 'COMPANY';
+
   // 들어온 순간 한 번 본다. 이 화면에서 로그인에 성공하면 그 흐름이 직접 이동한다.
   useEffect(() => {
-    if (isSignedIn()) {
+    if (!companyEntry && isSignedIn()) {
       router.replace(returnPath ?? '/');
     }
-  }, [router, returnPath]);
+  }, [companyEntry, router, returnPath]);
+
+  // 기업 탭으로 왔으면 역할을 받은 뒤에 정한다. 기업 회원만 보낸다.
+  useEffect(() => {
+    if (companyEntry && alreadyCompany) {
+      router.replace(returnPath ?? '/');
+    }
+  }, [companyEntry, alreadyCompany, router, returnPath]);
 
   // 문구는 한 번 보이면 된다. 주소에 남기면 새로고침할 때마다 다시 뜬다.
   useEffect(() => {
