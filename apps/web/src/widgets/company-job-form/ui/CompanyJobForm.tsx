@@ -36,6 +36,11 @@ export interface CompanyJobFormProps {
  */
 export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
   const [values, setValues] = useState<CompanyJobFormValues>(EMPTY_COMPANY_JOB_VALUES);
+  /**
+   * 읽어 온 공고에 채용 절차가 이미 있었는지. 있으면 그 칸을 행이 아니라 한 덩어리 글로
+   * 그린다 — 합친 문자열은 행으로 되돌리지 않는다(`lib/hiringProcess.ts`).
+   */
+  const [hiringProcessStored, setHiringProcessStored] = useState(false);
   const [loading, setLoading] = useState(jobId !== undefined);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
@@ -54,6 +59,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         }
         if (job) {
           setValues(toCompanyJobValues(job));
+          setHiringProcessStored(Boolean(job.hiringProcess));
         } else {
           setFormError('채용공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         }
@@ -105,7 +111,11 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
           open={openSteps.includes(2)}
           onToggle={() => toggle(2)}
         >
-          <JobContentSection values={values} onChange={change} />
+          <JobContentSection
+            values={values}
+            onChange={change}
+            hiringProcessStored={hiringProcessStored}
+          />
         </JobFormSection>
 
         <JobFormSection

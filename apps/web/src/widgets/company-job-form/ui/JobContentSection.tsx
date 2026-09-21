@@ -1,11 +1,14 @@
 'use client';
 
 import type { CompanyJobFormValues } from '../model/values';
+import { JobHiringProcessField } from './JobHiringProcessField';
 import { JobRichTextField } from './JobRichTextField';
 
 export interface JobContentSectionProps {
   values: CompanyJobFormValues;
   onChange: (patch: Partial<CompanyJobFormValues>) => void;
+  /** 저장된 채용 절차를 읽어 왔는지. 그때는 행이 아니라 한 덩어리 글로 그린다. */
+  hiringProcessStored: boolean;
 }
 
 /**
@@ -15,7 +18,11 @@ export interface JobContentSectionProps {
  * `benefits` 에 그대로 들어간다. 공개 상세가 같은 순서로 그린다
  * (`widgets/job-detail/ui/JobDetailView.tsx` 의 `buildSections`).
  */
-export function JobContentSection({ values, onChange }: JobContentSectionProps) {
+export function JobContentSection({
+  values,
+  onChange,
+  hiringProcessStored,
+}: JobContentSectionProps) {
   return (
     <div>
       <JobRichTextField
@@ -50,6 +57,13 @@ export function JobContentSection({ values, onChange }: JobContentSectionProps) 
         value={values.benefits}
         onChange={(benefits) => onChange({ benefits })}
         placeholder="회사에서 제공하는 혜택 및 복지를 입력해 주세요."
+      />
+
+      <JobHiringProcessField
+        value={values.hiringProcess}
+        steps={values.hiringProcessSteps}
+        stored={hiringProcessStored}
+        onChange={onChange}
       />
     </div>
   );

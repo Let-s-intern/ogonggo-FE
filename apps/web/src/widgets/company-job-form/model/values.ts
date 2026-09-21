@@ -6,6 +6,7 @@ import type {
   CreateCompanyJobRequestExperienceType,
 } from '@ogonggo/api';
 import { toDateInputValue } from '../lib/datetime';
+import { EMPTY_HIRING_PROCESS_STEP, type HiringProcessStep } from '../lib/hiringProcess';
 
 /**
  * 채용공고 작성 화면이 들고 있는 값(v5 PRD 3 절). `CreateCompanyJobRequest` 와 한 칸씩 짝이
@@ -30,7 +31,13 @@ export interface CompanyJobFormValues {
   qualifications: string;
   preferredQualifications: string;
   benefits: string;
+  /**
+   * 저장되는 값. 행으로 적은 것은 `lib/hiringProcess.ts` 가 합쳐 여기에 넣는다 — 요청에
+   * 실리는 것은 언제나 이 문자열 하나다.
+   */
   hiringProcess: string;
+  /** 새 공고에서 채용 절차를 적는 행들. 저장된 공고를 열면 쓰이지 않는다(합치면 되돌릴 수 없다). */
+  hiringProcessSteps: HiringProcessStep[];
   /** `YYYY-MM-DD`. 백엔드는 일시로 받고 화면은 날짜만 다룬다(`lib/datetime.ts`). */
   recruitmentStartAt: string;
   recruitmentEndAt: string;
@@ -73,6 +80,7 @@ export const EMPTY_COMPANY_JOB_VALUES: CompanyJobFormValues = {
   preferredQualifications: '',
   benefits: '',
   hiringProcess: '',
+  hiringProcessSteps: [EMPTY_HIRING_PROCESS_STEP],
   recruitmentStartAt: '',
   recruitmentEndAt: '',
   applicationMethod: '',
@@ -101,6 +109,7 @@ export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFor
     preferredQualifications: job.preferredQualifications ?? '',
     benefits: job.benefits ?? '',
     hiringProcess: job.hiringProcess ?? '',
+    hiringProcessSteps: [EMPTY_HIRING_PROCESS_STEP],
     recruitmentStartAt: toDateInputValue(job.recruitmentStartAt),
     recruitmentEndAt: toDateInputValue(job.recruitmentEndAt),
     applicationMethod: job.applicationMethod ?? '',
