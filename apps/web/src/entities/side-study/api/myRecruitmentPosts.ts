@@ -1,13 +1,19 @@
 import {
   closeMyRecruitmentPost,
   copyMyRecruitmentPost,
+  createRecruitmentPost,
   deleteMyRecruitmentPost,
+  getMyRecruitmentPostForm,
   listMyRecruitmentPosts,
   reopenMyRecruitmentPost,
+  updateRecruitmentPost,
+  type CreateRecruitmentPostRequest,
   type ListMyRecruitmentPostsParams,
   type PageResponseRecruitmentPostManagementItemResponse,
+  type RecruitmentPostFormResponse,
   type SuccessResponsePageResponseRecruitmentPostManagementItemResponse,
   type SuccessResponseRecruitmentPostFormResponse,
+  type UpdateRecruitmentPostRequest,
 } from '@ogonggo/api';
 
 /**
@@ -27,9 +33,8 @@ import {
  * | 마감 | `closeMyRecruitmentPost` | `PATCH /api/v1/recruitment-posts/{postId}/close` |
  * | 재모집 | `reopenMyRecruitmentPost` | `PATCH /api/v1/recruitment-posts/{postId}/reopen` |
  *
- * 표의 여덟 줄 중 다섯만 아래에 있다. 폼 조회·생성·수정은 모집글 작성·수정 화면(PRD 5 절) 의
- * 것이고 그 화면이 아직 없다 — 쓰는 곳이 없는 껍데기를 미리 두지 않는다. 그 화면이 생기면
- * **이 파일에 더한다.** 표에 여덟 줄을 다 적어 둔 이유가 그것이다.
+ * 여덟 줄이 모두 아래에 있다. 폼 조회·생성·수정 셋은 모집글 작성·수정 화면(PRD 5 절) 이
+ * 생기면서 더해졌다.
  *
  * 생성 타입은 응답을 `{ data, status }` 로 감싼 모양이지만 `httpClient` 는 본문을 그대로
  * 돌려준다(`views/mypage/ui/MyPageLayout.tsx` 의 같은 주석). 그래서 한 번 단언한다.
@@ -69,4 +74,47 @@ export async function closeMyPost(postId: number): Promise<void> {
 /** 재모집. 종료일이 오늘이거나 과거면 백엔드가 409 를 준다(생성 타입 설명). */
 export async function reopenMyPost(postId: number): Promise<void> {
   await reopenMyRecruitmentPost(postId);
+}
+
+/**
+ * 작성 화면용 폼 전체(PRD 5 절). 내 글이면 `DRAFT`·`PUBLISHED`·`HIDDEN` 셋 다 읽는다.
+ *
+ * **`agreedToPolicy` 는 항상 `false` 로 온다**(생성 타입 설명). 저장된 값이 아니라 고정값이라,
+ * 수정 화면은 동의 체크를 다시 받아야 한다.
+ */
+export async function fetchMyPostForm(
+  postId: number,
+): Promise<RecruitmentPostFormResponse | undefined> {
+  const body = (await getMyRecruitmentPostForm(
+    postId,
+  )) as unknown as SuccessResponseRecruitmentPostFormResponse;
+  return body.data;
+}
+
+/**
+ * 새 글을 만든다. `saveMode` 가 `DRAFT` 면 제목만 필수이고 `PUBLISH` 면 게시 필수값 전부와
+ * `agreedToPolicy=true` 가 필요하다(생성 타입 설명). 응답은 만들어진 글의 폼이다.
+ */
+export async function createMyPost(
+  request: CreateRecruitmentPostRequest,
+): Promise<RecruitmentPostFormResponse | undefined> {
+  const body = (await createRecruitmentPost(
+    request,
+  )) as unknown as SuccessResponseRecruitmentPostFormResponse;
+  return body.data;
+}
+
+/**
+ * 기존 글을 고친다. **전체 수정이라 보내지 않은 칸은 비워진다**(생성 타입 설명) — 화면이
+ * 읽어 온 값을 그대로 다시 실어야 한다.
+ */
+export async function updateMyPost(
+  postId: number,
+  request: UpdateRecruitmentPostRequest,
+): Promise<RecruitmentPostFormResponse | undefined> {
+  const body = (await updateRecruitmentPost(
+    postId,
+    request,
+  )) as unknown as SuccessResponseRecruitmentPostFormResponse;
+  return body.data;
 }
