@@ -1,3 +1,5 @@
+import { Logo } from '@/shared/ui/Logo';
+
 /**
  * 로고 하나가 천천히 맥동하는 로딩 표시.
  *
@@ -13,19 +15,13 @@
  * `.ogonggo-logo-pulse`(1.2초 주기로 1 → 1.06)가 만든다. `prefers-reduced-motion: reduce`면
  * 맥동이 멈춘다.
  *
- * 로고는 `public/icon-192.png`다. `next/image`를 거치지 않는다 — 로딩 표시 하나 띄우자고
- * `/_next/image` 왕복을 더하면 정작 로딩이 늦어진다.
+ * 로고는 헤더와 같은 인라인 `Logo`(52x25)다. 이미지 요청이 없으니 로딩 표시가 이미지를
+ * 기다리지 않는다.
  */
 export function LogoLoader() {
   return (
     <div className="ogonggo-fallback flex flex-col items-center" role="status">
-      <img
-        src="/icon-192.png"
-        alt=""
-        width={64}
-        height={64}
-        className="ogonggo-logo-pulse h-16 w-16"
-      />
+      <Logo className="ogonggo-logo-pulse h-[31px] w-16 text-blue-500" />
       <span className="sr-only">불러오는 중</span>
     </div>
   );
