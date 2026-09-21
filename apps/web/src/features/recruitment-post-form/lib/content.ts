@@ -55,10 +55,7 @@ export function lexicalToText(content: unknown): string {
   if (!root) {
     return '';
   }
-  return childrenOf(root)
-    .map(collectText)
-    .join('\n')
-    .replace(/\n+$/, '');
+  return childrenOf(root).map(collectText).join('\n').replace(/\n+$/, '');
 }
 
 /** 한 줄이 문단 하나가 된다. 빈 줄은 글자 없는 문단이라 사이 간격으로 남는다. */

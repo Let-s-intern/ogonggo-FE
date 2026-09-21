@@ -47,10 +47,7 @@ export function FormSection({
           <span className="block text-base font-bold text-gray-900">{title}</span>
           <span className="block pt-0.5 text-xs text-gray-400">{description}</span>
         </span>
-        <ChevronIcon
-          direction={open ? 'up' : 'down'}
-          className="size-5 shrink-0 text-gray-400"
-        />
+        <ChevronIcon direction={open ? 'up' : 'down'} className="size-5 shrink-0 text-gray-400" />
       </button>
       <div id={bodyId} className={cn('border-t border-gray-100 px-6 py-5', !open && 'hidden')}>
         {children}

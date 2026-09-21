@@ -85,9 +85,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
             maxLength={MAX_CONTACT_VALUE_LENGTH}
             value={values.contactValue}
             onChange={(event) => onChange({ contactValue: event.target.value })}
-            placeholder={
-              email ? '이메일 주소를 입력해 주세요' : '오픈 카톡방 링크를 입력해 주세요'
-            }
+            placeholder={email ? '이메일 주소를 입력해 주세요' : '오픈 카톡방 링크를 입력해 주세요'}
           />
         </Field>
       </div>

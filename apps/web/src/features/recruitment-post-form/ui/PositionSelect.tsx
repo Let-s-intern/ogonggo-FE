@@ -21,9 +21,7 @@ export interface PositionSelectProps {
  */
 export function PositionSelect({ value, onChange }: PositionSelectProps) {
   const toggle = (position: CreateRecruitmentPostRequestPositionsItem, checked: boolean) =>
-    onChange(
-      checked ? [...value, position] : value.filter((selected) => selected !== position),
-    );
+    onChange(checked ? [...value, position] : value.filter((selected) => selected !== position));
 
   return (
     <details className="relative">
