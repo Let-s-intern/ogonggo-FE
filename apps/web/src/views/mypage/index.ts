@@ -1,4 +1,5 @@
 export { MyPageLayout, type MyPageLayoutProps } from './ui/MyPageLayout';
+export { CompanyJobFormPage, type CompanyJobFormPageProps } from './ui/CompanyJobFormPage';
 export { CompanyPostsPage, type CompanyPostsPageProps } from './ui/CompanyPostsPage';
 export { CompanyProfilePage } from './ui/CompanyProfilePage';
 export { MyApplicationsPage, type MyApplicationsPageProps } from './ui/MyApplicationsPage';
