@@ -63,6 +63,19 @@ export function KakaoChannelBanner() {
         title="오공고 채팅방 입장하기"
         description="관심 있는 직무의 방을 고르세요. 카카오톡이 열립니다."
       >
+        {/*
+          닫기 버튼은 `Modal` 이 아니라 부르는 쪽이 넣는다 — `CareerSelectModals` 와 같은 자리,
+          같은 모양이다. Esc 와 바깥 클릭으로도 닫히지만 그 둘은 눈에 보이지 않아서, 보이는
+          닫는 길이 하나는 있어야 한다.
+        */}
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={() => setOpen(false)}
+          className="absolute top-6 right-6 text-gray-500 hover:text-gray-900"
+        >
+          <span className="icon-[lucide--x] block size-5" aria-hidden="true" />
+        </button>
         <ul className="flex flex-col gap-2">
           {OPEN_CHAT_ROOMS.map((room) => (
             <li key={room.url}>
