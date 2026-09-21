@@ -29,12 +29,25 @@
 백엔드가 메뉴 구성 변화를 따라다니게 된다.
 
 **경로 접두사.** 모두 `/api/v1/admin/` 아래다. 크롤러가 쓰는 `/api/v1/internal/` 과 섞지 않는다 —
-`internal` 은 API 키를 쓰고(`InternalApiKeyAuthenticationFilter.kt`) `admin` 은 관리자 세션을
-쓸 자리라 인증 방식이 다르다.
+`internal` 은 API 키를 쓰고(`InternalApiKeyAuthenticationFilter.kt`) `admin` 은 관리자 토큰을
+검증해(`AdminAuthenticationFilter.kt`) 인증 방식이 다르다.
 
-**인증.** `UserRole.ADMIN` 을 가진 계정만. 콘솔 안에서의 추가 권한 구분은 없다. 지금
-`AdminSecurityConfiguration.kt` 는 `/api/v1/internal/**` 외 전부를 `denyAll()` 로 닫고 있어,
-이 API 들을 열려면 관리자 인증이 함께 붙어야 한다.
+**인증.** 요청마다 `Authorization: Bearer <액세스 토큰>` 을 보낸다. 관리자도 사용자 API 의
+로그인으로 토큰을 받고, 어드민 API 는 발급하지 않고 검증만 한다. `AdminAuthenticationFilter` 가
+서명·만료·`type=access` 를 확인하고 `AdminAuthService` 가 요청마다 역할과 상태를 읽어,
+`UserRole.ADMIN` 이면서 `ACTIVE` 인 계정만 통과한다. 콘솔 안에서의 추가 권한 구분은 없다.
+
+| 상황 | 응답 |
+| --- | --- |
+| 토큰 없음, 서명·만료·종류 불일치 | 401 `UNAUTHORIZED` |
+| 유효한 토큰이지만 활성 관리자가 아님 | 403 `FORBIDDEN` |
+
+역할은 토큰에 없어 요청마다 조회한다. 역할을 회수하면 액세스 토큰이 만료되기 전이라도 다음
+요청부터 막힌다. `ADMIN` 역할은 콘솔이나 API 로 부여하지 않고 운영자가 DB 에서 직접 바꾼다.
+자세한 내용은 `ogonggo-BE/docs/architecture/authentication.md` 7-3 절.
+
+`AdminSecurityConfiguration.kt` 의 `anyRequest().denyAll()` 은 위 두 접두사와 헬스 체크·Swagger
+어디에도 걸리지 않은 경로만 받는다. `/api/v1/admin/**` 는 그 앞에서 관리자 권한으로 열려 있다.
 
 **성공 응답 봉투.** 사용자 API 와 같다.
 
