@@ -1,6 +1,7 @@
 'use client';
 
 import { Field, Input, Select } from '@ogonggo/ui';
+import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import {
   EDUCATION_LEVEL_OPTIONS,
   EMPLOYMENT_TYPE_OPTIONS,
@@ -31,14 +32,38 @@ export interface JobBasicInfoSectionProps {
 export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionProps) {
   return (
     <div>
-      <Field label="기업 · 기관명" htmlFor="company-job-company-name" required>
-        <Input
-          id="company-job-company-name"
-          value={values.companyName}
-          maxLength={MAX_COMPANY_NAME_LENGTH}
-          onChange={(event) => onChange({ companyName: event.target.value })}
-          placeholder="기업 기관명을 입력해 주세요."
-        />
+      <Field
+        label="기업 · 기관명"
+        htmlFor="company-job-company-name"
+        required
+        hint={`기업 로고 업로드는 ${PLACEHOLDER_NOTICE}. 이름만 저장돼요.`}
+      >
+        <div className="flex items-start gap-3">
+          {/*
+            기업 로고 칸. **비활성이다** — `createImage` 로 올리는 것까지는 되지만
+            `CreateCompanyJobRequest` 에 로고를 담을 필드가 없어 버려진다(v5 PRD 3 절).
+            올릴 수 있게 두면 올린 것이 사라진 것으로 읽힌다. 백엔드에 필드가 생기면
+            `disabled` 와 위의 안내 한 줄을 지우고 `JobCoverImageField` 와 같은 모양으로
+            바꾸면 된다.
+          */}
+          <button
+            type="button"
+            disabled
+            title={PLACEHOLDER_NOTICE}
+            className="flex h-11 w-24 shrink-0 cursor-not-allowed flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-300"
+          >
+            <span aria-hidden="true" className="icon-[lucide--upload] block size-3.5" />
+            <span className="pt-0.5 text-[10px] leading-none">로고 업로드</span>
+            <span className="text-[10px] leading-none">1:1 비율 권장</span>
+          </button>
+          <Input
+            id="company-job-company-name"
+            value={values.companyName}
+            maxLength={MAX_COMPANY_NAME_LENGTH}
+            onChange={(event) => onChange({ companyName: event.target.value })}
+            placeholder="기업 기관명을 입력해 주세요."
+          />
+        </div>
       </Field>
 
       <div className="grid gap-x-6 sm:grid-cols-2">
