@@ -1,8 +1,9 @@
 import { useParams } from 'react-router';
-import { Badge, Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
+import { Badge, Callout, Card, CardTitle, DescriptionList, EmptyState } from '@ogonggo/ui';
 import { useSideStudyDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { plainLabel, sideStudyKindLabel } from '@/shared/config/labels';
+import { BACKEND_PENDING_MESSAGE, isBackendPending } from '@/shared/config/backendPending';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
 
@@ -10,6 +11,20 @@ import { ContentActions } from '@/widgets/content-actions';
 export function SideStudyDetailPage() {
   const { postId } = useParams();
   const { data, isPending, isError } = useSideStudyDetail(Number(postId));
+
+  // 실서버 모드에는 사이드·스터디 API 가 없다. 주소를 직접 열었을 때 "글을 찾을 수 없습니다" 로
+  // 읽히면 지워진 글을 찾은 것처럼 보인다.
+  if (isBackendPending) {
+    return (
+      <>
+        <PageHeader
+          title="사이드·스터디"
+          backTo={{ to: '/content/side-studies', label: '사이드·스터디 목록' }}
+        />
+        <EmptyState title={BACKEND_PENDING_MESSAGE.sideStudy} />
+      </>
+    );
+  }
 
   if (isPending) {
     return <p className="text-sm text-gray-500">불러오는 중입니다.</p>;

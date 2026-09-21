@@ -5,11 +5,13 @@ import {
   CardTitle,
   DataTable,
   DescriptionList,
+  EmptyState,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import { useCompanyMemberDetail, type CompanyMemberJob } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
 import { JobReviewStatusBadge, VisibilityBadge, MemberStatusBadge } from '@/shared/config/labels';
+import { BACKEND_PENDING_MESSAGE, isBackendPending } from '@/shared/config/backendPending';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /**
@@ -22,6 +24,20 @@ export function CompanyMemberDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
   const { data, isPending, isError } = useCompanyMemberDetail(Number(memberId));
+
+  // 실서버 모드에는 회원 API 가 없다. 목록이 비어 있어 여기까지 올 길도 없지만, 주소를 직접
+  // 열었을 때 "회원을 찾을 수 없습니다" 로 읽히면 없는 회원을 찾은 것처럼 보인다.
+  if (isBackendPending) {
+    return (
+      <>
+        <PageHeader
+          title="비즈니스 회원"
+          backTo={{ to: '/members/companies', label: '비즈니스 회원 목록' }}
+        />
+        <EmptyState title={BACKEND_PENDING_MESSAGE.member} />
+      </>
+    );
+  }
 
   if (isPending) {
     return <p className="text-sm text-gray-500">불러오는 중입니다.</p>;

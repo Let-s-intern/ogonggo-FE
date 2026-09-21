@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
-import { Callout, StatTile } from '@ogonggo/ui';
+import { Callout, EmptyState, StatTile } from '@ogonggo/ui';
 import { useDashboardSummary } from '@/entities/dashboard';
+import { BACKEND_PENDING_MESSAGE, isBackendPending } from '@/shared/config/backendPending';
 
 /**
  * 운영자가 로그인하면 처음 보는 화면 — **오늘 무엇을 해야 하는가의 요약판이다.**
@@ -13,6 +14,21 @@ import { useDashboardSummary } from '@/entities/dashboard';
  */
 export function DashboardPage() {
   const { data, isPending, isError } = useDashboardSummary();
+
+  /*
+   * 실서버 모드에는 집계 API 가 없다. 목데이터로 채우면 운영자가 가짜 숫자를 보고 판단한다.
+   *
+   * 다른 화면과 달리 남겨 둘 표 머리글도 필터 줄도 없다 — 이 화면의 본문은 숫자 타일이 전부라
+   * 0 이나 대시로 채운 타일만 남는다. 그래서 타일 자리에 안내를 넣는다.
+   */
+  if (isBackendPending) {
+    return (
+      <>
+        <h1 className="pb-6 text-xl font-bold text-gray-900">대시보드</h1>
+        <EmptyState title={BACKEND_PENDING_MESSAGE.dashboard} />
+      </>
+    );
+  }
 
   if (isError) {
     return (

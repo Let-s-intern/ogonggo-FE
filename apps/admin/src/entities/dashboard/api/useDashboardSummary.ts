@@ -4,6 +4,7 @@ import type {
   AdminDashboardSummary,
   AdminDashboardSummaryResponse,
 } from '@ogonggo/api/src/mocks/fixtures/admin-dashboard';
+import { isBackendPending } from '@/shared/config/backendPending';
 
 /**
  * `GET /api/v1/admin/dashboard/summary`.
@@ -21,5 +22,8 @@ export function useDashboardSummary() {
       );
       return response.data;
     },
+    // 실서버 모드에는 부를 API 가 없다. 요청을 보내지 않고 화면이 안내를 그린다
+    // (`@/shared/config/backendPending`).
+    enabled: !isBackendPending,
   });
 }

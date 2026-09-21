@@ -5,8 +5,10 @@ import type {
 } from '@ogonggo/api/src/mocks/fixtures/admin-member';
 import type { JobReviewStatus, Visibility } from '@ogonggo/api/src/mocks/fixtures/admin-content';
 import type { UserMemberActivity } from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
-// 회원 API 는 백엔드에 없고 MSW 목에만 있다. 그래서 생성 함수가 아니라 `adminClient` 로 부른다.
+// 회원 API 는 백엔드에 없고 MSW 목에만 있다. 그래서 생성 함수가 아니라 `adminClient` 로 부르고,
+// 실서버 모드에서는 아예 부르지 않는다 — 화면이 안내를 대신 그린다(`@/shared/config/backendPending`).
 import { adminGet, type PageResponse } from '@/shared/api/adminClient';
+import { isBackendPending } from '@/shared/config/backendPending';
 
 export interface MemberListFilters {
   page: number;
@@ -20,6 +22,7 @@ export function useUserMemberList(filters: MemberListFilters) {
     queryKey: ['admin', 'members', 'users', filters],
     queryFn: () =>
       adminGet<PageResponse<UserMemberSummary>>('/api/v1/admin/members/users', { ...filters }),
+    enabled: !isBackendPending,
   });
 }
 
@@ -30,7 +33,7 @@ export function useUserMemberDetail(memberId: number) {
   return useQuery({
     queryKey: ['admin', 'members', 'users', memberId],
     queryFn: () => adminGet<UserMemberDetail>(`/api/v1/admin/members/users/${memberId}`),
-    enabled: Number.isInteger(memberId),
+    enabled: !isBackendPending && Number.isInteger(memberId),
   });
 }
 
@@ -41,6 +44,7 @@ export function useCompanyMemberList(filters: MemberListFilters) {
       adminGet<PageResponse<CompanyMemberSummary>>('/api/v1/admin/members/companies', {
         ...filters,
       }),
+    enabled: !isBackendPending,
   });
 }
 
@@ -60,6 +64,6 @@ export function useCompanyMemberDetail(memberId: number) {
   return useQuery({
     queryKey: ['admin', 'members', 'companies', memberId],
     queryFn: () => adminGet<CompanyMemberDetail>(`/api/v1/admin/members/companies/${memberId}`),
-    enabled: Number.isInteger(memberId),
+    enabled: !isBackendPending && Number.isInteger(memberId),
   });
 }

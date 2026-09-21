@@ -6,6 +6,8 @@
 > 관련 PRD: `.claude/tasks/todo/prd-admin-console.md`
 > 스펙 대조: 2026-09-18, `ogonggo-api-admin` 의 `/v3/api-docs` 와 2·3·5·6 절. 각 절 끝의
 > "목과 백엔드 스펙의 차이" 에 남은 차이를 적었다
+> 목 기록: 2026-09-21, 1·4·7·8 절. **대조가 아니라 목 핸들러가 하는 일을 옮겨 적은 것이다** —
+> 이 넷은 백엔드가 없어 대조할 상대가 없다
 
 ## 이 문서가 무엇인가
 
@@ -29,12 +31,25 @@
 백엔드가 메뉴 구성 변화를 따라다니게 된다.
 
 **경로 접두사.** 모두 `/api/v1/admin/` 아래다. 크롤러가 쓰는 `/api/v1/internal/` 과 섞지 않는다 —
-`internal` 은 API 키를 쓰고(`InternalApiKeyAuthenticationFilter.kt`) `admin` 은 관리자 세션을
-쓸 자리라 인증 방식이 다르다.
+`internal` 은 API 키를 쓰고(`InternalApiKeyAuthenticationFilter.kt`) `admin` 은 관리자 토큰을
+검증해(`AdminAuthenticationFilter.kt`) 인증 방식이 다르다.
 
-**인증.** `UserRole.ADMIN` 을 가진 계정만. 콘솔 안에서의 추가 권한 구분은 없다. 지금
-`AdminSecurityConfiguration.kt` 는 `/api/v1/internal/**` 외 전부를 `denyAll()` 로 닫고 있어,
-이 API 들을 열려면 관리자 인증이 함께 붙어야 한다.
+**인증.** 요청마다 `Authorization: Bearer <액세스 토큰>` 을 보낸다. 관리자도 사용자 API 의
+로그인으로 토큰을 받고, 어드민 API 는 발급하지 않고 검증만 한다. `AdminAuthenticationFilter` 가
+서명·만료·`type=access` 를 확인하고 `AdminAuthService` 가 요청마다 역할과 상태를 읽어,
+`UserRole.ADMIN` 이면서 `ACTIVE` 인 계정만 통과한다. 콘솔 안에서의 추가 권한 구분은 없다.
+
+| 상황                                 | 응답               |
+| ------------------------------------ | ------------------ |
+| 토큰 없음, 서명·만료·종류 불일치     | 401 `UNAUTHORIZED` |
+| 유효한 토큰이지만 활성 관리자가 아님 | 403 `FORBIDDEN`    |
+
+역할은 토큰에 없어 요청마다 조회한다. 역할을 회수하면 액세스 토큰이 만료되기 전이라도 다음
+요청부터 막힌다. `ADMIN` 역할은 콘솔이나 API 로 부여하지 않고 운영자가 DB 에서 직접 바꾼다.
+자세한 내용은 `ogonggo-BE/docs/architecture/authentication.md` 7-3 절.
+
+`AdminSecurityConfiguration.kt` 의 `anyRequest().denyAll()` 은 위 두 접두사와 헬스 체크·Swagger
+어디에도 걸리지 않은 경로만 받는다. `/api/v1/admin/**` 는 그 앞에서 관리자 권한으로 열려 있다.
 
 **성공 응답 봉투.** 사용자 API 와 같다.
 
@@ -88,7 +103,7 @@
 | 11  | `/content/bootcamps/{id}`    | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
 | 12  | `/content/bootcamps/{id}`    | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
 | 13  | `/content/bootcamps/{id}`    | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
-| 14  | `/content/side-studies`      | 진입·검색·필터                | `GET /side-studies`                          | 목록                               |
+| 14  | `/content/side-studies`      | 진입·검색·필터·정렬·페이지    | `GET /side-studies`                          | 목록                               |
 | 15  | `/content/side-studies/{id}` | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
 | 16  | `/content/side-studies/{id}` | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
 | 17  | `/ads/review`                | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
@@ -98,9 +113,9 @@
 | 20  | `/ads/review`                | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
 | 21  | `/ads/rejections`            | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
 | 22  | `/ads/rejections`            | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
-| 23  | `/members/users`             | 진입·검색·필터                | `GET /members/users`                         | 목록                               |
+| 23  | `/members/users`             | 진입·검색·필터·페이지         | `GET /members/users`                         | 목록                               |
 | 24  | `/members/users/{id}`        | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
-| 25  | `/members/companies`         | 진입·검색·필터                | `GET /members/companies`                     | 목록                               |
+| 25  | `/members/companies`         | 진입·검색·필터·페이지         | `GET /members/companies`                     | 목록                               |
 | 26  | `/members/companies/{id}`    | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
 | 27  | `/support/notices`           | 진입                          | `GET /notices`                               | 전체 (페이지 없음)                 |
 | 28  | `/support/notices`           | 새 공지 → 저장                | `POST /notices`                              | 고정은 하나만                      |
@@ -114,7 +129,10 @@
 
 ### `GET /api/v1/admin/dashboard/summary`
 
-**부르는 곳** — `admin.ogonggo.co.kr/` 진입.
+**부르는 곳** — `admin.ogonggo.co.kr/` 진입. 대시보드 화면이 부르는 API 는 이것 하나다.
+
+**쿼리 파라미터** — 없다. 필터·검색·정렬·페이지를 하나도 받지 않는다. 기간은 아래 "기간 기준"
+으로 서버가 정한다.
 
 **응답 `data`**
 
@@ -137,10 +155,32 @@
 `jobsPendingReview` 는 채용공고와 부트캠프를 **합한** 수다. 둘 다 비즈니스 회원이 올린다.
 `reviewStatus = PENDING` 인 것만 센다.
 
-`intake` 는 **오늘 00:00 이후** 등록된 것이다. 크롤링분과 비즈니스 등록분을 나눠 센다 —
-합치면 "크롤링이 멈춘 것"과 "그날 아무도 안 올린 것"을 구분할 수 없다.
+`intake` 는 크롤링분과 비즈니스 등록분을 나눠 센다 — 합치면 "크롤링이 멈춘 것"과 "그날 아무도
+안 올린 것"을 구분할 수 없다.
 
-`newMembersThisWeek` 는 최근 7일 안에 가입한 일반 + 비즈니스 회원이다.
+**기간 기준.** 칸마다 다르다.
+
+| 칸                      | 기간                        |
+| ----------------------- | --------------------------- |
+| `jobsPendingReview`     | 없다. 남아 있는 전부를 센다 |
+| `jobsCrawledToday`      | 오늘 00:00 이후 등록분      |
+| `bootcampsCrawledToday` | 오늘 00:00 이후 등록분      |
+| `jobsSubmittedToday`    | 오늘 00:00 이후 등록분      |
+| `newMembersThisWeek`    | 지금부터 7×24시간 전까지    |
+
+`jobsPendingReview` 에 기간을 걸지 않는 이유는 이것이 **남은 일**을 세는 숫자이기 때문이다.
+어제 들어온 검수 대기가 오늘 0시에 사라지면 운영자는 그 건을 영영 보지 못한다.
+
+`...Today` 셋은 **그날 자정부터**다. 목은 브라우저의 `setHours(0, 0, 0, 0)` 으로 자르므로 로컬
+자정이고, 백엔드는 KST 자정이어야 한다 — UTC 자정으로 자르면 한국 시간 오전 9시 이전에 등록된
+건이 통째로 "어제"로 빠진다.
+
+`newMembersThisWeek` 는 **달력 주가 아니라 최근 7일 이동 창이다.** 월요일에 0으로 돌아가지
+않는다. 아래 카드 링크가 `joinedWithinDays=7d` 로 목록을 여는데, 그 필터와 계산이 같아야
+숫자와 목록 건수가 맞는다. 일반 회원과 비즈니스 회원을 합한다.
+
+**404 를 주지 않는다.** 집계라 셀 것이 없으면 0 이다. 빈 대시보드를 404 로 알리면 운영자는
+화면이 고장 난 것으로 읽는다.
 
 **카드 링크** — 각 숫자는 조건이 걸린 목록으로 간다. 서버가 관여하지 않지만 필터 파라미터가
 아래 목록 API 와 맞아야 한다.
@@ -149,9 +189,12 @@
 | ------------------ | ------------------------------------ |
 | 검수 대기          | `/ads/review`                        |
 | 크롤링 채용공고    | `/content/jobs?source=CRAWLER`       |
-| 크롤링 부트캠프    | `/content/bootcamps?source=CRAWLER`  |
+| 크롤링 부트캠프    | `/content/bootcamps`                 |
 | 비즈니스 등록 공고 | `/content/jobs?source=COMPANY`       |
 | 이번 주 신규 회원  | `/members/users?joinedWithinDays=7d` |
+
+크롤링 부트캠프만 필터 없이 목록 전체를 연다(`DashboardPage.tsx`). 부트캠프 목록도 `source`
+필터를 받으므로 채용공고와 맞추는 편이 낫지만, 지금 화면이 그렇게 하지 않는다.
 
 ---
 
@@ -406,24 +449,98 @@
 
 ## 4. 콘텐츠 · 사이드·스터디
 
+**이 도메인은 백엔드에 아직 없다.** `ogonggo-core` 의 `StudyPackage.kt` 는 주석 하나뿐이다.
+아래 칸이 그 도메인이 가져야 할 칸이고, 목은 사용자 웹의 사이드·스터디 픽스처에 등록일을
+얹어 쓴다.
+
 ### `GET /api/v1/admin/side-studies`
 
-**쿼리** — `page` `size` `sort`, `keyword`(**제목 + 모집장 닉네임**),
-`kind`(`SIDE_PROJECT` · `STUDY`).
+**부르는 곳** — `/content/side-studies` 진입, 검색·필터·정렬·페이지 변경.
+
+**쿼리 파라미터**
+
+| 이름      | 값                             | 비고                                |
+| --------- | ------------------------------ | ----------------------------------- |
+| `page`    | 1부터                          | 기본 1                              |
+| `size`    | 정수                           | 기본 20                             |
+| `keyword` | 문자열                         | **제목 + 모집장 닉네임** 부분 일치  |
+| `kind`    | `SIDE_PROJECT` · `STUDY`       |                                     |
+| `sort`    | `REGISTERED_AT` · `VIEW_COUNT` | 기본 `REGISTERED_AT`                |
+
+`keyword` 가 보는 칸은 `title` 과 `authorNickname` 둘이다. 본문(`content`)은 보지 않는다.
 
 **응답 `data.items[]`** — 사이드·스터디 항목 + `registeredAt`.
 
+```json
+{
+  "id": 1,
+  "kind": "SIDE_PROJECT",
+  "operationType": "ONLINE",
+  "authorNickname": "문서정리봇",
+  "title": "개발자 회고 모아보는 큐레이션 서비스 팀원 구합니다",
+  "positions": ["프론트엔드", "백엔드"],
+  "techStack": ["React", "TypeScript", "Spring"],
+  "recruitmentStartAt": "2026-09-09T00:00:00Z",
+  "recruitmentEndAt": "2026-10-17T00:00:00Z",
+  "capacity": 5,
+  "appliedCount": 2,
+  "closed": false,
+  "viewCount": 412,
+  "commentCount": 3,
+  "registeredAt": "2026-08-30T14:20:00Z"
+}
+```
+
 **동작**
 
-**이 도메인은 백엔드에 아직 없다.** `ogonggo-core` 의 `StudyPackage.kt` 는 주석 하나뿐이다.
-이 API 의 칸이 그 도메인이 가져야 할 칸이다.
+필터는 AND 다. `kind` 는 정확히 일치하는 것만 남긴다.
 
-`registeredAt` 은 모집 시작·마감과 다른 값이다 — 글이 올라온 시각이고, 목록 정렬 기준이다.
+정렬 기본은 등록일 역순. `VIEW_COUNT` 는 조회 수 내림차순이고 동률이면 등록일 역순으로
+되돌린다 — 기준이 하나뿐이면 같은 조회 수 행들의 순서가 요청마다 달라진다. 채용공고·부트캠프와
+같은 `sort` 값을 쓴다.
 
-### `GET /api/v1/admin/side-studies/{postId}` · `DELETE /api/v1/admin/side-studies/{postId}`
+**`registeredAt` 은 모집 시작·마감과 다른 값이다.** 글이 올라온 시각이고, 목록의 기본 정렬
+기준이다.
 
-상세와 삭제. **내용 수정은 없다** — 사용자가 쓴 모집 글이라 운영자가 고치지 않는다. 문제가
-있으면 지운다.
+페이지는 1부터 세고 마지막을 넘어가면 빈 `items` 를 준다(공통 규칙). `page`·`size` 가 정수가
+아니거나 1 보다 작으면 기본값으로 되돌린다.
+
+**목은 목록에도 상세 칸을 그대로 싣는다.** 채용공고·부트캠프는 목록에서 본문 칸을 빼는데
+(2·3절), 사이드·스터디 목은 사용자 픽스처를 그대로 넘겨 `content`·`shortDescription`·
+`eligibility` 까지 함께 나간다. 백엔드는 다른 둘과 같이 **목록에서 본문을 빼는 편이 맞다** —
+화면이 목록에서 쓰는 칸은 위 예시가 전부다.
+
+`bookmarked` 는 사용자 화면의 칸이라 어드민에서는 뜻이 없다. 목이 사용자 픽스처를 공유해 남아
+있을 뿐이고, 백엔드 응답에는 넣지 않는다.
+
+### `GET /api/v1/admin/side-studies/{postId}`
+
+**부르는 곳** — `/content/side-studies/{id}` 진입.
+
+**응답** — 목록 항목 + `recruitmentStartAt` `contactMethod` `expectedDuration`(선택)
+`shortDescription` `content` `eligibility`(선택) `applicationUrl`(선택).
+
+**동작** — 읽기 전용이다. **내용 수정은 없다** — 사용자가 쓴 모집 글이라 운영자가 고치지
+않는다. 문제가 있으면 지운다.
+
+없는 `postId` 는 404 `NOT_FOUND`, `message` 는 `사이드·스터디 글을 찾을 수 없습니다.`
+
+### `DELETE /api/v1/admin/side-studies/{postId}`
+
+**부르는 곳** — 상세 화면의 삭제. 제목을 그대로 입력해야 열린다.
+
+**응답** — `data` 는 지운 id 하나뿐이다. 화면은 값을 쓰지 않고 목록으로 되돌아간다.
+
+```json
+{ "id": 12 }
+```
+
+없는 `postId` 는 404 `NOT_FOUND`, `message` 는 목록·상세와 같은
+`사이드·스터디 글을 찾을 수 없습니다.`
+
+**삭제의 의미는 아직 정해지지 않았다.** 목은 배열에서 빼기만 해서 새로고침하면 되돌아온다.
+지우는 것인지 감추는 것인지, 작성자에게 알리는지, 되돌릴 수 있는지가 전부 열려 있다
+(아래 "넘길 때 함께 정할 것"). 화면은 어느 쪽이든 같지만, 되돌릴 길이 생기면 화면에도 붙인다.
 
 ---
 
@@ -602,16 +719,59 @@
 
 ## 7. 회원
 
+일반 회원과 비즈니스 회원은 백엔드에서 같은 `users` 테이블을 `UserRole`(`USER` · `COMPANY`)로
+나눈 것이지만, 목록 칸이 서로 달라 화면과 API 가 둘로 갈린다.
+
+**네 API 가 전부 읽기다.** 콘솔은 회원 상태를 바꾸지 않는다 — 제재는 운영자가 DB 쿼리로 걸고
+화면은 결과만 보여준다. 상태를 바꾸는 API 를 만들지 않는다.
+
 ### `GET /api/v1/admin/members/users`
 
-**쿼리** — `page` `size`, `keyword`(**닉네임 + 이메일**), `status`(`ACTIVE` · `WITHDRAWN` ·
-`SUSPENDED`), `joinedWithinDays`(`7d` · `30d` · `90d`).
+**부르는 곳** — `/members/users` 진입, 검색·필터·페이지 변경.
 
-**응답 `data.items[]`** — `id` `nickname` `email` `joinedAt` `status` `lastAccessedAt`.
+**쿼리 파라미터**
 
-**동작** — 가입일 역순. `lastAccessedAt` 은 한 번도 접속하지 않았으면 없다.
+| 이름               | 값                                    | 비고                          |
+| ------------------ | ------------------------------------- | ----------------------------- |
+| `page`             | 1부터                                 | 기본 1                        |
+| `size`             | 정수                                  | 기본 20                       |
+| `keyword`          | 문자열                                | **닉네임 + 이메일** 부분 일치 |
+| `status`           | `ACTIVE` · `WITHDRAWN` · `SUSPENDED`  |                               |
+| `joinedWithinDays` | `7d` · `30d` · `90d`                  | 가입 기간                     |
+
+**정렬 파라미터는 없다.** 가입일 내림차순 하나로 고정이고 화면에도 정렬 컨트롤이 없다.
+
+**응답 `data.items[]`**
+
+```json
+{
+  "id": 1,
+  "nickname": "취준생김씨",
+  "email": "minsu.kim@example.com",
+  "joinedAt": "2026-09-19T08:12:00Z",
+  "status": "ACTIVE",
+  "lastAccessedAt": "2026-09-21T01:40:00Z"
+}
+```
+
+**동작**
+
+필터는 전부 AND 다. `status` 는 정확히 일치하는 것만 남긴다.
+
+`joinedWithinDays` 는 **지금부터 7·30·90×24시간 전까지의 이동 창**이다. 달력 주나 달이 아니다.
+대시보드의 `newMembersThisWeek` 가 `7d` 와 같은 계산이어야 카드 숫자와 목록 건수가 맞는다.
+
+**세 값 밖의 `joinedWithinDays` 는 거르지 않고 전체를 준다.** 목이 그렇게 한다. 모르는 값으로
+0건을 내면 운영자는 그 기간에 가입자가 없다고 읽는다.
+
+`lastAccessedAt` 은 한 번도 접속하지 않은 회원에게 **칸 자체가 없다.** `null` 이 아니다.
+
+정렬은 `joinedAt` 내림차순. 페이지는 1부터 세고 마지막을 넘어가면 빈 `items` 를 준다(공통
+규칙). `page`·`size` 가 정수가 아니거나 1 보다 작으면 기본값으로 되돌린다.
 
 ### `GET /api/v1/admin/members/users/{memberId}`
+
+**부르는 곳** — `/members/users/{id}` 진입.
 
 **응답** — 목록 항목 + 활동.
 
@@ -642,21 +802,41 @@
 **탈퇴 회원은 세 배열이 모두 비어 있다.** 탈퇴하면 작성 글과 북마크가 지워지는 것이 이
 서비스의 전제다.
 
-콘솔은 회원 상태를 **바꾸지 않는다.** 제재는 운영자가 DB 쿼리로 걸고 화면은 결과만 보여준다.
-상태를 바꾸는 API 를 만들지 않는다.
+없는 `memberId` 는 404 `NOT_FOUND`, `message` 는 `회원을 찾을 수 없습니다.`
 
 ### `GET /api/v1/admin/members/companies`
 
-**쿼리** — `page` `size`, `keyword`(**회사명 + 담당자명**), `status`, `joinedWithinDays`.
+**부르는 곳** — `/members/companies` 진입, 검색·필터·페이지 변경.
+
+**쿼리 파라미터** — 일반 회원 목록과 같다. `keyword` 의 대상 칸만 다르다.
+
+| 이름               | 값                                    | 비고                            |
+| ------------------ | ------------------------------------- | ------------------------------- |
+| `page`             | 1부터                                 | 기본 1                          |
+| `size`             | 정수                                  | 기본 20                         |
+| `keyword`          | 문자열                                | **회사명 + 담당자명** 부분 일치 |
+| `status`           | `ACTIVE` · `WITHDRAWN` · `SUSPENDED`  |                                 |
+| `joinedWithinDays` | `7d` · `30d` · `90d`                  | 가입 기간                       |
+
+**`managerEmail` 은 검색 대상이 아니다.** 일반 회원은 이메일로 찾는데 비즈니스 회원은 찾지
+못한다. 목이 그렇게 하고 있을 뿐 의도한 차이가 아니므로, 백엔드에 넘길 때 담당자 이메일을
+넣을지 정한다.
+
+**정렬 파라미터는 없다.** 가입일 내림차순 고정이다.
 
 **응답 `data.items[]`** — `id` `companyName` `businessRegistrationNumber` `managerName`
 `managerEmail` `jobPostingCount` `joinedAt` `status`.
 
 **동작** — `jobPostingCount` 는 그 회사가 등록한 채용공고 수다. 게시 상태를 가리지 않는다.
 **아래 상세가 주는 `jobs` 배열의 길이와 반드시 같아야 한다** — 목록은 7건인데 상세는 0건인
-상태가 되면 화면이 조인을 제대로 하는지 확인할 수 없다.
+상태가 되면 화면이 조인을 제대로 하는지 확인할 수 없다. 목은 두 곳에서 같은 조건
+(`source = COMPANY` 이고 회사명이 같은 공고)으로 세어 이 성질을 지킨다.
+
+페이지 규칙은 일반 회원 목록과 같다.
 
 ### `GET /api/v1/admin/members/companies/{memberId}`
+
+**부르는 곳** — `/members/companies/{id}` 진입.
 
 **응답** — 목록 항목 + `jobs[]`.
 
@@ -668,15 +848,23 @@
       "title": "...",
       "visibility": "VISIBLE",
       "reviewStatus": "PENDING",
-      "registeredAt": "2026-08-20T...",
+      "registeredAt": "2026-08-20T09:00:00Z",
       "viewCount": 873
     }
   ]
 }
 ```
 
-**동작** — 목에서는 회사명으로 잇는다. **백엔드에는 외래키가 있을 자리이므로 `companyId` 로
-바꾼다.** 화면은 이 배열에서 검수 대기 건수와 노출 중 건수를 직접 세어 요약으로 보여준다.
+**동작**
+
+**목은 회사명으로 잇는다.** `source = COMPANY` 이면서 `companyName` 이 그 회원의 회사명과
+똑같은 공고를 모은다. 픽스처에 회사 id 가 없어서 그렇게 했을 뿐이고, **백엔드에는 외래키가
+있을 자리이므로 회원 id(`companyId`)로 잇는다.** 회사명은 동명이거나 표기가 바뀌면 어긋난다.
+
+`jobs` 는 정렬 파라미터도 페이지도 없다. 한 회사의 공고 전부를 그대로 준다. 화면은 이 배열에서
+검수 대기 건수와 노출 중 건수를 직접 세어 요약으로 보여준다.
+
+없는 `memberId` 는 404 `NOT_FOUND`, `message` 는 `비즈니스 회원을 찾을 수 없습니다.`
 
 ---
 
@@ -686,8 +874,11 @@
 
 **부르는 곳** — `/support/notices` 진입.
 
-**응답 `data`** — 배열. **페이지를 나누지 않는다.** 공지는 수십 건을 넘지 않고 고정 순서가
+**쿼리 파라미터** — 없다. **필터·검색·정렬·페이지를 하나도 받지 않는다.** 화면에도 검색 상자와
+필터 줄이 없고, 목록은 받은 배열을 그대로 그린다. 공지는 수십 건을 넘지 않고 고정 순서가
 한눈에 보여야 한다.
+
+**응답 `data`** — 배열. 봉투 안이 `items`·`pageInfo` 가 아니라 배열 그 자체다.
 
 ```json
 {
@@ -698,11 +889,26 @@
   "publicationEndAt": "2026-10-08",
   "pinned": true,
   "active": true,
-  "createdAt": "2026-09-07T..."
+  "createdAt": "2026-09-07T04:12:00Z"
 }
 ```
 
-**동작** — 고정된 것이 먼저, 그다음 작성일 역순.
+**동작**
+
+**정렬은 고정된 것이 먼저, 그다음 `createdAt` 내림차순이다.** 서버가 정렬해서 준다 — 화면은
+받은 순서를 그대로 그린다.
+
+**`active` 로 거르지 않는다.** 비활성 공지도 목록에 그대로 나오고 화면이 배지로 구분한다.
+운영자 화면이라 내려간 공지도 보여야 한다.
+
+`publicationEndAt` 이 없으면 무기한이고 화면이 `무기한` 으로 그린다.
+
+### `GET /api/v1/admin/notices/{noticeId}`
+
+한 건 조회. 목에는 있지만 **화면이 부르지 않는다** — 목록 행을 누르면 그 행의 값으로 수정
+폼을 열기 때문이다. 백엔드 구현 순서에서 뒤로 미뤄도 되는 자리다.
+
+없는 `noticeId` 는 404 `NOT_FOUND`, `message` 는 `공지를 찾을 수 없습니다.`
 
 ### `POST /api/v1/admin/notices` · `PUT /api/v1/admin/notices/{noticeId}`
 
@@ -712,7 +918,7 @@
 
 **동작**
 
-검증. 어긋나면 400 과 화면에 그대로 보여줄 한국어 `message`.
+검증. 어긋나면 400 `BAD_REQUEST` 와 화면에 그대로 보여줄 한국어 `message`.
 
 | 조건             | 문구                                 |
 | ---------------- | ------------------------------------ |
@@ -720,6 +926,9 @@
 | 본문 없음        | `본문을 입력해 주세요.`              |
 | 게시 시작일 없음 | `게시 시작일을 입력해 주세요.`       |
 | 종료일 < 시작일  | `게시 종료일이 시작일보다 빠릅니다.` |
+
+**한 번에 하나만 돌려준다.** 위 순서로 검사하고 처음 걸린 것에서 멈춘다. 제목과 본문이 함께
+비어 있으면 제목 문구만 온다. 제목·본문은 앞뒤 공백을 걷어낸 뒤 비었는지 본다.
 
 **상단 고정은 동시에 하나뿐이다.** `pinned: true` 로 저장하면 먼저 고정돼 있던 공지의 고정을
 푼다. **그리고 무엇이 풀렸는지 응답에 실어 준다.**
@@ -731,12 +940,24 @@
 풀린 것이 없으면 `null`. 조용히 풀지 않는 이유는, 운영자가 새 공지를 고정한 뒤 앞의 공지가
 왜 내려갔는지 모르는 상태가 되기 때문이다.
 
-`pinned: false` 로 저장할 때는 아무것도 풀지 않는다.
+`pinned: false` 로 저장할 때는 아무것도 풀지 않고 `unpinnedNoticeTitle` 도 `null` 이다.
 
-`publicationEndAt` 이 없으면 무기한이다.
+**상태 코드가 다르다.** `POST` 는 201, `PUT` 은 200. 응답 `data` 모양은 둘이 같다.
+
+새로 만들 때 `id` 는 서버가 정한다. 없는 `noticeId` 로 `PUT` 하면 404 `NOT_FOUND`,
+`message` 는 `공지를 찾을 수 없습니다.` 검증보다 먼저 확인한다.
+
+`publicationEndAt` 이 없으면 무기한이다. 빈 문자열을 보내면 목은 값 없음으로 다룬다.
+
+**날짜 형식을 정해야 한다.** 화면은 `<input type="date">` 값을 그대로 실어 `2026-09-08` 로
+보내는데, 목 픽스처의 기존 공지는 ISO 8601 타임스탬프를 들고 있다. 목의 `종료일 < 시작일`
+검사는 문자열 비교라 두 형식이 섞이면 어긋난다. 백엔드는 두 칸을 **날짜로 받고 날짜로 돌려주는
+쪽**이 화면과 맞는다.
 
 **본문 형식은 아직 정하지 않았다.** 지금은 평문이고 화면도 `textarea` 로 받는다. 마크다운이나
 리치 텍스트로 정해지면 이 칸의 타입이 아니라 에디터가 바뀐다.
+
+**삭제 API 는 없다.** 화면에 지우는 버튼이 없고 `active` 를 끄는 것으로 내린다.
 
 ---
 
@@ -750,5 +971,6 @@
 **비즈니스 회원과 공고를 잇는 키.** 목은 회사명으로 잇지만 백엔드에는 `companyId` 가 있을
 자리다.
 
-**관리자 인증.** `AdminSecurityConfiguration.kt` 가 지금 `/api/v1/internal/**` 외 전부를
-`denyAll()` 로 닫고 있다. 이 API 들을 열려면 관리자 세션이 먼저 필요하다.
+**`ADMIN` 역할을 주는 경로.** 인증 자체는 붙었다(위 "공통"의 인증). 남은 것은 역할을 누가
+어떻게 주느냐로, 지금은 운영자가 DB 에서 `users.role` 을 직접 바꾼다 — 부여 API 도 화면도 없고
+부여 이력·감사 기록은 미정이다(`ogonggo-BE/docs/architecture/authentication.md` 8절).
