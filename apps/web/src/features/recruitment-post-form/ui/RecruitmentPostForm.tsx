@@ -1,7 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { EMPTY_FORM_VALUES, type RecruitmentPostFormValues } from '../model/values';
+import { useRouter } from 'next/navigation';
+import { type FormEvent, useState } from 'react';
+import { Button } from '@ogonggo/ui';
+import { createMyPost } from '@/entities/side-study/api/myRecruitmentPosts';
+import { validateForPublish } from '../model/validate';
+import {
+  EMPTY_FORM_VALUES,
+  toCreateRequest,
+  type RecruitmentPostFormValues,
+} from '../model/values';
+import { ApplySettingsSection } from './ApplySettingsSection';
 import { BasicInfoSection } from './BasicInfoSection';
 import { ContentSection } from './ContentSection';
 import { FormSection } from './FormSection';
@@ -14,11 +23,18 @@ import { FormSection } from './FormSection';
  * 두면 저장할 때 세 곳에서 모아야 하고, 접힌 단의 값이 어디 있는지가 화면 구조에 딸리게 된다.
  *
  * 세 단이 처음부터 모두 펼쳐져 있다. 목업이 그렇고, 무엇을 더 채워야 하는지가 한눈에 보여야
- * `모집글 등록` 이 왜 막혀 있는지 알 수 있다.
+ * `모집글 등록` 이 왜 막혔는지 알 수 있다.
+ *
+ * 저장에 성공하면 작성한 모집글 목록으로 간다. 방금 쓴 글이 목록에 어떻게 들어갔는지(게시됐는지,
+ * 임시저장으로 남았는지) 를 그 자리에서 보여 주는 화면이 거기뿐이다.
  */
 export function RecruitmentPostForm() {
+  const router = useRouter();
   const [values, setValues] = useState<RecruitmentPostFormValues>(EMPTY_FORM_VALUES);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
+  /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
+  const [formError, setFormError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   const change = (patch: Partial<RecruitmentPostFormValues>) =>
     setValues((previous) => ({ ...previous, ...patch }));
@@ -28,8 +44,29 @@ export function RecruitmentPostForm() {
       previous.includes(step) ? previous.filter((item) => item !== step) : [...previous, step],
     );
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (pending) {
+      return;
+    }
+    const invalid = validateForPublish(values);
+    if (invalid) {
+      setFormError(invalid);
+      return;
+    }
+    setFormError(null);
+    setPending(true);
+    try {
+      await createMyPost(toCreateRequest(values, 'PUBLISH'));
+      router.push('/mypage/posts');
+    } catch {
+      setFormError('모집글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      setPending(false);
+    }
+  };
+
   return (
-    <form className="flex flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <FormSection
         step={1}
         title="기본 정보"
@@ -49,6 +86,28 @@ export function RecruitmentPostForm() {
       >
         <ContentSection values={values} onChange={change} />
       </FormSection>
+
+      <FormSection
+        step={3}
+        title="지원 설정"
+        description="모집 기간과 지원 방법을 설정해 주세요"
+        open={openSteps.includes(3)}
+        onToggle={() => toggle(3)}
+      >
+        <ApplySettingsSection values={values} onChange={change} />
+      </FormSection>
+
+      {formError ? (
+        <p role="alert" className="text-sm text-error">
+          {formError}
+        </p>
+      ) : null}
+
+      <div className="flex justify-center pt-2">
+        <Button type="submit" disabled={pending} className="w-full max-w-80">
+          모집글 등록
+        </Button>
+      </div>
     </form>
   );
 }
