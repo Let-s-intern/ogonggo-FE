@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { EMPTY_FORM_VALUES, type RecruitmentPostFormValues } from '../model/values';
 import { BasicInfoSection } from './BasicInfoSection';
+import { ContentSection } from './ContentSection';
 import { FormSection } from './FormSection';
 
 /**
@@ -37,6 +38,16 @@ export function RecruitmentPostForm() {
         onToggle={() => toggle(1)}
       >
         <BasicInfoSection values={values} onChange={change} />
+      </FormSection>
+
+      <FormSection
+        step={2}
+        title="모집 내용"
+        description="프로젝트의 모집 공고를 소개해 주세요"
+        open={openSteps.includes(2)}
+        onToggle={() => toggle(2)}
+      >
+        <ContentSection values={values} onChange={change} />
       </FormSection>
     </form>
   );
