@@ -23,13 +23,19 @@ import { CompanyPostsCta } from './CompanyPostsCta';
  * **목업의 `조회수` 열이 빠지고 `심사 · 게시 상태` 열이 늘었다.** 기업용 목록 응답에는
  * 조회수도 북마크수도 없고 대신 `reviewStatus`·`publicationStatus` 가 있다 — 근거는
  * `CompanyPostRow` 와 `model/status.ts` 주석에 있다.
+ *
+ * 폭을 준 네 열이 좁다. v4 표(`widgets/my-posts`) 보다 열이 하나 많아 같은 폭을 쓰면
+ * `공고 정보` 에 제목 한 줄이 들어가지 않는다 — 모집 기간은 날짜 두 줄로 접고 나머지는
+ * 내용 폭까지 줄였다.
  */
 const COLUMNS: readonly MyPageListColumn[] = [
   { key: 'info', label: '공고 정보' },
-  { key: 'capacity', label: '모집 인원', className: 'w-28' },
-  { key: 'period', label: '모집 기간', className: 'w-56' },
-  { key: 'status', label: '심사 · 게시 상태', className: 'w-32' },
-  { key: 'action', label: '관리', className: 'w-40' },
+  { key: 'capacity', label: '모집 인원', className: 'w-24' },
+  { key: 'period', label: '모집 기간', className: 'w-48' },
+  // 머리글이 `심사 · 게시 상태` 면 w-28 안에서 두 줄로 접힌다. 열을 넓히면 `공고 정보` 가
+  // 좁아지므로 머리글을 줄였다 — 어느 배지가 무엇인지는 배지의 `title` 이 말한다.
+  { key: 'status', label: '심사 · 게시', className: 'w-28' },
+  { key: 'action', label: '관리', className: 'w-36' },
 ];
 
 type State = { kind: 'loading' } | { kind: 'ready'; page: CompanyPostsPage } | { kind: 'error' };
