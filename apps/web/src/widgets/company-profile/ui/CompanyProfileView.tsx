@@ -1,7 +1,8 @@
-import { Checkbox, Input } from '@ogonggo/ui';
+import { Button, Callout, Checkbox, Input } from '@ogonggo/ui';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import type { CompanyProfileValues } from '../model/values';
 import { CompanyProfileField } from './CompanyProfileField';
+import { MarketingSection, PasswordSection, WithdrawAction } from './PreparingSections';
 
 export interface CompanyProfileViewProps {
   /** 계정을 아직 못 읽었으면 `undefined`. 칸은 그대로 두고 값만 빈다. */
@@ -19,11 +20,27 @@ export interface CompanyProfileViewProps {
  * 필드가 없고, 담당자 연락처와 수신용 이메일은 `MyCompanyProfileResponse` 에 대응 필드가
  * 없다. 감추지 않는 이유는 자리가 통째로 비면 "이 서비스에는 그런 값이 없다" 로 읽히기
  * 때문이다 — v4 `widgets/my-profile/ui/BasicInfoSection.tsx` 와 같은 판단이다.
+ *
+ * 수정 버튼 둘과 비밀번호 변경·수신 동의·회원 탈퇴도 같은 이유로 목업대로 그리되 비활성이다.
  */
 export function CompanyProfileView({ values }: CompanyProfileViewProps) {
   return (
     <div className="flex flex-col gap-10">
       <h1 className="text-3xl font-bold text-gray-950">기업/기관 정보</h1>
+
+      {/* 비활성 컨트롤마다 `title` 로도 같은 말을 달지만, 마우스를 올려야 보인다. 화면에
+          드러나는 한 줄이 먼저 있어야 한다 — v4 개인 정보 화면과 같은 판단이다. */}
+      <Callout
+        tone="warning"
+        className="flex items-start gap-2 border-transparent bg-orange-50 text-orange-800"
+      >
+        <span aria-hidden="true" className="icon-[lucide--info] mt-0.5 block h-4 w-4 shrink-0" />
+        <span>
+          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 기업/기관 정보는 아직 고칠 수
+          없어요. 로고, 연락처, 정보 수신용 이메일, 비밀번호 변경, 수신 동의, 회원 탈퇴가 전부
+          그래요. 지금은 보기만 할 수 있어요.
+        </span>
+      </Callout>
 
       <section className="flex flex-col gap-5">
         <h2 className="text-xl font-bold text-gray-950">기본 정보</h2>
@@ -50,6 +67,15 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
             disabled
           />
         </CompanyProfileField>
+
+        <Button
+          variant="secondary"
+          disabled
+          title={PLACEHOLDER_NOTICE}
+          className="w-full border-blue-500 text-blue-500"
+        >
+          기본 정보 수정하기
+        </Button>
       </section>
 
       <hr className="border-gray-200" />
@@ -98,7 +124,22 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
           />
           <Checkbox checked={false} disabled onChange={() => {}} label="가입한 이메일과 동일" />
         </CompanyProfileField>
+
+        <Button
+          variant="secondary"
+          disabled
+          title={PLACEHOLDER_NOTICE}
+          className="w-full border-blue-500 text-blue-500"
+        >
+          담당자 정보 수정하기
+        </Button>
       </section>
+
+      <hr className="border-gray-200" />
+
+      <PasswordSection />
+      <MarketingSection />
+      <WithdrawAction />
     </div>
   );
 }
