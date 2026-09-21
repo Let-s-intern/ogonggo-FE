@@ -5,8 +5,8 @@ import { cn } from '@ogonggo/ui';
 import Link from 'next/link';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
-import { BookmarkIcon } from '@/shared/ui/icons';
 import { loadDayJobs, type DayJob } from '../api/load-day-jobs';
 import { weekdayLabel } from '../lib/calendar-grid';
 import { DAY_JOBS_PAGE_SIZE } from '../lib/day-jobs';
@@ -25,8 +25,13 @@ function formatDayTitle(day: string): string {
  * 누르면 공고 상세로 간다. 달력 안에서는 그 이동을 가로채 모달로 띄운다
  * (`app/(site)/calendar/@modal/(..)jobs/[jobId]`).
  *
- * 북마크는 표시만 한다. 누르는 것은 상세의 `ApplyCta`가 맡는다 — 카드 전체가 링크라 그 안에
- * 또 누를 곳을 두면 어느 쪽이 눌렸는지 헷갈린다.
+ * 북마크 버튼은 링크의 형제다. 카드 전체가 링크라 그 안에 버튼을 두면 잘못된 마크업이 되고
+ * 누를 때 이동까지 함께 일어난다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 그래서 뿌리가
+ * `relative`인 `div`이고 버튼이 전에 아이콘이 있던 자리에 겹친다.
+ *
+ * **이 카드의 `job.bookmarked`는 늘 `false`다.** 카드 값을 채우는 `../api/load-day-jobs.ts`가
+ * 서버에서 토큰 없이 상세를 부르기 때문이다. 채워진 아이콘은 전적으로 브라우저의 id 모음에서
+ * 온다(`features/bookmark`).
  */
 function DayJobCard({ job }: { job: DayJob }) {
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
@@ -38,31 +43,42 @@ function DayJobCard({ job }: { job: DayJob }) {
   ].filter((part): part is string => Boolean(part));
 
   return (
-    <Link
-      href={`/jobs/${job.id}`}
-      scroll={false}
-      className="block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]"
-    >
-      <div className="flex items-start gap-3">
-        <CompanyLogo companyName={job.companyName} className="h-10 w-10 rounded-lg" />
-        <p className="flex-1 truncate pt-1 text-sm font-medium text-gray-800">{job.companyName}</p>
-        <BookmarkIcon filled={job.bookmarked} className="h-6 w-6 shrink-0" />
-      </div>
-      <p className="mt-4 truncate text-base font-bold text-gray-900">{job.title}</p>
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="truncate text-xs text-gray-400">{meta.join(' · ')}</span>
-        {dday ? (
-          <span
-            className={cn(
-              'shrink-0 rounded-xs px-1.5 py-0.5 text-xs font-bold',
-              urgent ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-600',
-            )}
-          >
-            {dday}
-          </span>
-        ) : null}
-      </div>
-    </Link>
+    <div className="relative">
+      <Link
+        href={`/jobs/${job.id}`}
+        scroll={false}
+        className="block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]"
+      >
+        <div className="flex items-start gap-3">
+          <CompanyLogo companyName={job.companyName} className="h-10 w-10 rounded-lg" />
+          <p className="flex-1 truncate pt-1 text-sm font-medium text-gray-800">
+            {job.companyName}
+          </p>
+          {/* 북마크 버튼이 겹치는 자리. 빼면 회사명 칸이 36px 넓어져 잘리는 지점이 달라진다. */}
+          <span aria-hidden="true" className="h-6 w-6 shrink-0" />
+        </div>
+        <p className="mt-4 truncate text-base font-bold text-gray-900">{job.title}</p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="truncate text-xs text-gray-400">{meta.join(' · ')}</span>
+          {dday ? (
+            <span
+              className={cn(
+                'shrink-0 rounded-xs px-1.5 py-0.5 text-xs font-bold',
+                urgent ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-600',
+              )}
+            >
+              {dday}
+            </span>
+          ) : null}
+        </div>
+      </Link>
+      <BookmarkButton
+        kind="jobs"
+        id={job.id}
+        bookmarked={job.bookmarked}
+        className="absolute top-3 right-3"
+      />
+    </div>
   );
 }
 
