@@ -6,3 +6,9 @@ export {
   type BookmarkKind,
   type MyBookmarkIdPage,
 } from './api/bookmarkApi';
+export {
+  myBookmarkIdsKey,
+  useBookmarkAccess,
+  useMyBookmarkIds,
+  type BookmarkAccess,
+} from './model/useMyBookmarkIds';
