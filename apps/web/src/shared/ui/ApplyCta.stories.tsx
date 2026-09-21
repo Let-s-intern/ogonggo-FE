@@ -6,7 +6,10 @@ import { ApplyCta } from './ApplyCta';
  * `739fr : 323fr` 로 나눈 오른쪽이다(`widgets/job-detail/ui/JobDetailView.tsx`). 스토리도 같은
  * 격자를 세운다 — 버튼이 `flex-1` 이라 폭이 달라지면 버튼 폭이 달라진다.
  *
- * 북마크 칸은 표시 전용이다. 눌러도 상태가 바뀌지 않는다(PRD 8 절).
+ * 북마크 칸은 `features/bookmark`의 `BookmarkCountButton`이라 react-query·토스트·라우터가 있어야
+ * 그려진다. 스토리북 프리뷰에는 셋 다 없어서 이 스토리는 지금 CTA 버튼까지만 보여준다.
+ * 프로바이더를 붙이는 자리는 `packages/ui/.storybook/preview.ts` 이고, 목록 카드 스토리 셋도
+ * 같은 것을 기다린다 — 스토리마다 따로 감싸지 않는다.
  */
 const meta: Meta<typeof ApplyCta> = {
   title: '상세 조각/ApplyCta',
@@ -15,6 +18,8 @@ const meta: Meta<typeof ApplyCta> = {
   args: {
     href: 'https://recruit.lotte.co.kr/apply/announcement/detail/21931077',
     label: '지원하러 가기',
+    kind: 'jobs',
+    id: 1,
     bookmarked: false,
     bookmarkCount: 114,
   },

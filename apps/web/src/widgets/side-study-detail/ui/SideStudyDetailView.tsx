@@ -110,6 +110,8 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
           <ApplyCta
             label="신청하러 가기"
             href={APPLY_URL}
+            kind="side-studies"
+            id={sideStudy.id}
             bookmarked={sideStudy.bookmarked}
             bookmarkCount={sideStudy.bookmarkCount}
           />
