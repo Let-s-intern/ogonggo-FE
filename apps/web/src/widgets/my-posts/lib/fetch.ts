@@ -44,7 +44,14 @@ export interface MyPostsPage {
  * 행 컴포넌트가 `status` 를 보고 정한다.
  */
 export async function fetchMyPostsPage(query: MyPostsQuery): Promise<MyPostsPage> {
-  const page = await fetchPage({ page: query.page, size: PAGE_SIZE });
+  const page = await fetchPage({
+    page: query.page,
+    size: PAGE_SIZE,
+    recruitmentStatus: query.recruitmentStatus,
+    applicationStatus: query.applicationStatus,
+    keyword: query.keyword,
+    sort: query.sort,
+  });
 
   return {
     pageInfo: page?.pageInfo ?? {

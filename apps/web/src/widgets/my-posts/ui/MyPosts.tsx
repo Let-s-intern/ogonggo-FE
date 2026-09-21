@@ -10,11 +10,17 @@ import {
 } from '@/entities/side-study/api/myRecruitmentPosts';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
-import { MyPageListTable, type MyPageListColumn } from '@/widgets/mypage-list';
+import { MyPageFilterRow, MyPageListTable, type MyPageListColumn } from '@/widgets/mypage-list';
 import { fetchMyPostsPage, type MyPostsPage } from '../lib/fetch';
-import { buildMyPostsHref, type MyPostsQuery } from '../lib/query';
+import {
+  buildMyPostsHref,
+  buildMyPostsResetHref,
+  hasMyPostsFilter,
+  type MyPostsQuery,
+} from '../lib/query';
 import { MyPostRow } from './MyPostRow';
 import { MyPostsCta } from './MyPostsCta';
+import { MyPostsFilters, MyPostsSort } from './MyPostsFilters';
 
 /** 목업의 표 머리글 다섯. 폭을 주지 않은 `모집글 정보` 가 남는 폭을 갖는다. */
 const COLUMNS: readonly MyPageListColumn[] = [
@@ -111,6 +117,19 @@ export function MyPosts({ query }: MyPostsProps) {
           새 모집글 작성하기
         </Button>
       </header>
+
+      <MyPageFilterRow
+        resetHref={buildMyPostsResetHref()}
+        filtered={hasMyPostsFilter(query)}
+        search={{
+          placeholder: '모집글 검색',
+          defaultValue: query.keyword,
+          buildHref: (keyword) => buildMyPostsHref(query, { keyword }),
+        }}
+        sort={<MyPostsSort query={query} />}
+      >
+        <MyPostsFilters query={query} />
+      </MyPageFilterRow>
 
       {actionError ? (
         <p role="alert" className="text-sm text-error">
