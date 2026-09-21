@@ -124,3 +124,14 @@ export function withCurrentValue(options: SelectOption[], value: string): Select
   }
   return [...options, { value, label: value }];
 }
+
+/**
+ * 근무 방식 — **저장되지 않는다.** 대응 필드가 `CreateCompanyJobRequest` 에 없어 칸은 목업대로
+ * 그리되 비활성이다(v5 PRD 3 절). 선택지를 여기 적어 두는 것은 비활성 드롭다운에도 목업의
+ * 선택지가 보여야 무엇을 고르는 칸인지 읽히기 때문이다. 필드가 생기면 이 배열은 그대로 두고
+ * `disabled` 만 지우면 된다.
+ */
+export const WORK_ARRANGEMENT_OPTIONS: SelectOption[] = [
+  placeholder('근무 방식을 선택해 주세요.'),
+  ...['재택', '출근', '하이브리드'].map((value) => ({ value, label: value })),
+];

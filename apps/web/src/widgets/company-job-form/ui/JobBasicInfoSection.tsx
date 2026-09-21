@@ -9,6 +9,7 @@ import {
   JOB_FIELD_OPTIONS,
   REGION_OPTIONS,
   withCurrentValue,
+  WORK_ARRANGEMENT_OPTIONS,
 } from '../model/options';
 import type { CompanyJobFormValues } from '../model/values';
 import { JobCoverImageField } from './JobCoverImageField';
@@ -147,6 +148,27 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
             value={values.recruitmentHeadcount}
             onChange={(event) => onChange({ recruitmentHeadcount: event.target.value })}
             placeholder="모집 인원을 입력해 주세요. (예: 30명)"
+          />
+        </Field>
+
+        {/*
+          근무 방식. **비활성이다** — 재택·출근·하이브리드를 담을 필드가
+          `CreateCompanyJobRequest` 에 없다(v5 PRD 3 절). 고를 수 있게 두면 고른 것이
+          사라진 것으로 읽힌다.
+        */}
+        <Field
+          label="근무 방식"
+          htmlFor="company-job-work-arrangement"
+          hint={`근무 방식 저장은 ${PLACEHOLDER_NOTICE}.`}
+        >
+          <Select
+            id="company-job-work-arrangement"
+            className="h-11 w-full px-4 text-base"
+            disabled
+            title={PLACEHOLDER_NOTICE}
+            options={WORK_ARRANGEMENT_OPTIONS}
+            value=""
+            onChange={() => undefined}
           />
         </Field>
       </div>
