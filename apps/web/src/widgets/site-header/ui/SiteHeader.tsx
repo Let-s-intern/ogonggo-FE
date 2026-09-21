@@ -76,14 +76,11 @@ export function SiteHeader() {
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
 
   /*
-   * 기업 회원이면 공고 등록 폼으로, 그 밖에는 기업 **회원가입**으로 보낸다. 로그아웃 상태도
-   * 가입이다 — 로그인으로 보내면 기업 계정이 없는 사람은 거기서 길이 끊기는데, 가입 화면에는
-   * 로그인으로 가는 길이 있다.
-   *
-   * `ForBusinessBanner` 의 같은 버튼은 로그인으로 보낸다. 그쪽 글이 이미 가입을 권하는
-   * 광고라서다(`shared/lib/companyJobRegister.ts`).
+   * 기업 회원이면 공고 등록 폼으로, 그 밖에는(로그아웃, 일반 회원) 기업 회원 **로그인**으로
+   * 보낸다. `ForBusinessBanner` 의 같은 버튼과 같은 규칙이다(`shared/lib/companyJobRegister.ts`).
+   * 기업 계정이 없는 사람은 로그인 화면의 `회원가입` 으로 간다.
    */
-  const registerHref = companyJobRegisterHref(role, '/signup/company');
+  const registerHref = companyJobRegisterHref(role);
   const registerActive = pathname.startsWith(COMPANY_JOB_REGISTER_HREF);
 
   /*
