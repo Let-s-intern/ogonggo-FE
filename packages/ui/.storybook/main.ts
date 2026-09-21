@@ -28,17 +28,17 @@ const config: StorybookConfig = {
     { directory: '../src/components', files: '*.stories.@(ts|tsx)', titlePrefix: 'Components' },
     { directory: webSrc, files: '**/*.stories.@(ts|tsx)', titlePrefix: 'App' },
   ],
-  // `apps/web` 카드가 `shared/ui/Thumbnail.tsx` 의 기본 이미지(`/default-thumbnail.jpg`)로
-  // 떨어진다. 이것을 붙이지 않으면 404 라 깨진 이미지가 뜨고, "이미지가 없을 때 어떻게
-  // 보이는가" 를 스토리로 확인할 수가 없다.
+  // `카드 셋/카드 경계 상태` 의 `썸네일 있음` 줄이 쓰는 이미지. 이것을 붙이지 않으면 404 라
+  // 깨진 이미지가 뜨고, "이미지가 있을 때" 와 "없을 때" 를 나란히 볼 수가 없다. 없을 때는
+  // 인라인 SVG 폴백(`shared/ui/Thumbnail.tsx`)이라 붙일 파일이 없다.
   //
   // `apps/web/public` 폴더째 붙이지 않고 파일 하나만 집는다. 폴더에는 히어로 이미지 세 장과
   // 소개 화면 영상이 들어 있어 5MB 인데 스토리는 그중 어느 것도 쓰지 않는다. 폴더째 붙이면
   // 배포되는 스토리북이 15MB 가 되고, 그 5MB 는 웹 앱이 이미 자기 도메인에서 서빙한다.
   staticDirs: [
     {
-      from: resolve(repoRoot, 'apps/web/public/default-thumbnail.jpg'),
-      to: '/default-thumbnail.jpg',
+      from: resolve(repoRoot, 'apps/web/public/icon-192.png'),
+      to: '/icon-192.png',
     },
   ],
   framework: {

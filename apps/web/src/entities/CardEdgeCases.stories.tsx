@@ -100,14 +100,17 @@ export const TitleOneLineVsTwo: StoryObj = {
 
 /**
  * 썸네일이 있을 때와 없을 때. 셋이 서로 다르게 떨어진다 —
- * `JobCard` 는 `CompanyLogo` 가 회사 로고를 모르면 기본 썸네일로,
- * `BootcampCard` 는 `representativeImageUrl` 이 비면 `Thumbnail` 이 기본 이미지로,
+ * `JobCard` 는 `CompanyLogo` 가 회사 로고를 모르면 오공고 로고 폴백으로,
+ * `BootcampCard` 는 `representativeImageUrl` 이 비면 `Thumbnail` 이 같은 폴백으로,
  * `SideStudyCard` 는 `AuthorThumbnail` 이 일부러 회색 사각형만 남긴다
  * ("원래 없다" 가 흔한 선택 필드라서다 — 컴포넌트 주석 참고).
  *
  * `JobCard` 의 로고는 크롤러가 실제로 수집한 회사만 있다
  * (`entities/job/model/company-logo.ts`). 윗줄의 `롯데컬처웍스` 는 그 목록에 있고, 목데이터의
- * `넥스트웨이브` 는 없다 — 그래서 다른 스토리의 채용공고 카드는 늘 기본 썸네일로 보인다.
+ * `넥스트웨이브` 는 없다 — 그래서 다른 스토리의 채용공고 카드는 늘 폴백으로 보인다.
+ *
+ * `썸네일 있음` 줄이 쓰는 `/icon-192.png` 는 "이미지가 실제로 있을 때" 를 보여주려고 집은
+ * 아무 이미지다. 스토리북은 이 파일 하나만 붙인다(`packages/ui/.storybook/main.ts`).
  */
 export const NoThumbnail: StoryObj = {
   name: '썸네일 있음 / 없음',
@@ -118,15 +121,13 @@ export const NoThumbnail: StoryObj = {
           <JobCard job={{ ...JOB_MOCK, companyName: '롯데컬처웍스' }} />
         </li>
         <li data-card="bootcamp">
-          <BootcampCard
-            bootcamp={{ ...BOOTCAMP_MOCK, representativeImageUrl: '/default-thumbnail.jpg' }}
-          />
+          <BootcampCard bootcamp={{ ...BOOTCAMP_MOCK, representativeImageUrl: '/icon-192.png' }} />
         </li>
         <li data-card="side-study">
           <SideStudyCard
             sideStudy={{
               ...SIDE_STUDY_MOCK,
-              author: { userId: 1, nickname: '오공고', profileImageUrl: '/default-thumbnail.jpg' },
+              author: { userId: 1, nickname: '오공고', profileImageUrl: '/icon-192.png' },
             }}
           />
         </li>
