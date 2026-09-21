@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Badge, Button } from '@ogonggo/ui';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { formatDeadline } from '@/widgets/mypage-list';
 import type { MyPostRow as Row } from '../lib/fetch';
 
@@ -57,9 +56,9 @@ export interface MyPostRowProps {
  * 읽힌다. 세 칸을 함께 비우는 판단의 근거는 `continueWriting` 이다(생성 타입 설명:
  * `DRAFT` 글의 `continueWriting` 은 `true`).
  *
- * `수정하기`·`이어서 작성하기` 는 둘 다 눌리지 않는다. 모집글 작성·수정 화면이 PRD 5 절이라
- * 아직 없고, 없는 경로로 보내면 404 다 —
- * `widgets/my-applications/ui/MyApplicationsCta.tsx` 의 `모집글 작성하기` 와 같은 이유다.
+ * `수정하기`·`이어서 작성하기` 는 문구만 다르고 가는 곳이 같다. 둘 다 모집글 작성·수정 화면
+ * (PRD 5 절, `/mypage/posts/{postId}/edit`) 이다 — 임시저장 글을 이어 쓰는 것과 게시된 글을
+ * 고치는 것이 백엔드에서 같은 `PUT` 이고, 그 화면도 하나다.
  */
 export function MyPostRow({
   row,
@@ -139,13 +138,14 @@ export function MyPostRow({
         <div className="flex items-center justify-center gap-1">
           {/* 목업의 임시저장 행만 파란 버튼이고 나머지는 흰 버튼이다. */}
           <Button
+            asChild
             variant={row.continueWriting ? 'primary' : 'secondary'}
             size="sm"
-            disabled
-            title={PLACEHOLDER_NOTICE}
             className="rounded-md px-4 whitespace-nowrap"
           >
-            {row.continueWriting ? '이어서 작성하기' : '수정하기'}
+            <Link href={`/mypage/posts/${row.postId}/edit`}>
+              {row.continueWriting ? '이어서 작성하기' : '수정하기'}
+            </Link>
           </Button>
 
           {/* 여닫기는 `<details>` 라 자바스크립트가 없어도 열린다. 지원·신청 내역의 같은 메뉴와 같다. */}

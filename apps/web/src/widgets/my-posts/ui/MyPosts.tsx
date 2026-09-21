@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@ogonggo/ui';
 import {
@@ -8,7 +9,6 @@ import {
   deleteMyPost,
   reopenMyPost,
 } from '@/entities/side-study/api/myRecruitmentPosts';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { MyPageFilterRow, MyPageListTable, type MyPageListColumn } from '@/widgets/mypage-list';
 import { fetchMyPostsPage, type MyPostsPage } from '../lib/fetch';
@@ -112,9 +112,8 @@ export function MyPosts({ query }: MyPostsProps) {
             내가 쓴 모집글의 모집 현황을 한곳에서 확인해요.
           </p>
         </div>
-        {/* 작성 화면이 PRD 5 절이라 아직 없다. 없는 경로로 보내지 않는다. */}
-        <Button disabled title={PLACEHOLDER_NOTICE} className="whitespace-nowrap">
-          새 모집글 작성하기
+        <Button asChild className="whitespace-nowrap">
+          <Link href="/mypage/posts/new">새 모집글 작성하기</Link>
         </Button>
       </header>
 

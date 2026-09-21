@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Button } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 
 /**
  * 표 아래 CTA 배너(목업 `작성한 사이드 프로젝트 스터디 모집글.png` 하단).
@@ -10,8 +9,6 @@ import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
  * 다른 위젯을 임포트하지 않기 때문이다(`widgets/README.md`). 그쪽은 탭마다 다른 세 벌을
  * 들고 있고 이쪽은 한 벌뿐이라, 한 곳으로 합치려면 탭 개념이 없는 이 화면까지 그 표를
  * 알아야 한다.
- *
- * `모집글 작성하기` 는 눌리지 않는다. 그 화면이 PRD 5 절이라 아직 없다.
  */
 export function MyPostsCta() {
   return (
@@ -26,8 +23,8 @@ export function MyPostsCta() {
         <Button asChild>
           <Link href="/side-studies">모집글 보러가기</Link>
         </Button>
-        <Button variant="secondary" disabled title={PLACEHOLDER_NOTICE} className="bg-white">
-          모집글 작성하기
+        <Button asChild variant="secondary" className="bg-white">
+          <Link href="/mypage/posts/new">모집글 작성하기</Link>
         </Button>
       </div>
     </div>
