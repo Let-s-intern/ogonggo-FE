@@ -6,8 +6,11 @@ import { useState, useSyncExternalStore } from 'react';
 import { signOut } from '@ogonggo/api';
 import { Button, MenuItem } from '@ogonggo/ui';
 import { clearTokens, isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
+import { useMyAccount } from '@/shared/api/useMyAccount';
+import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
+import { myPageHomeFor } from '@/widgets/mypage-sidebar';
 
 /**
  * `matches`는 그 메뉴에 밑줄이 붙는 경로들이다. 채용공고는 목록(`/`)과 상세(`/jobs/1`)가
@@ -48,10 +51,10 @@ const NAV_ITEMS = [
  * `gap-3`(12px)이 그 값이다. 구분선은 26px 높이의 1px 선이고 색은 `gray-300`이다(목업의
  * rgb(232,234,237)은 #D1D5DB 1px 선이 두 열에 반씩 걸린 값이다).
  *
- * 우측 메뉴 중 `공고 달력`만 대상 화면(`/calendar`)이 생겨 링크다. `공고 등록`은 아직 화면이
- * 없어(PRD 1절) 비활성 스타일의 `<span>`으로 남는다.
+ * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `마이페이지`·`로그아웃` 이다.
+ * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
  *
- * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "로그아웃". 토큰이 브라우저 저장소에만
+ * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "마이페이지" 와 "로그아웃". 토큰이 브라우저 저장소에만
  * 있어 서버는 알 수 없으므로 서버 렌더와 첫 하이드레이션은 "로그인" 으로 그리고, 그 직후 저장소를 읽어
  * 바꾼다(`useSyncExternalStore` 의 서버 스냅샷).
  *
@@ -69,6 +72,27 @@ export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
+  const accountState = useMyAccount();
+  const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
+
+  /*
+   * 기업 회원이면 공고 등록 폼으로, 그 밖에는 기업 **회원가입**으로 보낸다. 로그아웃 상태도
+   * 가입이다 — 로그인으로 보내면 기업 계정이 없는 사람은 거기서 길이 끊기는데, 가입 화면에는
+   * 로그인으로 가는 길이 있다.
+   *
+   * `ForBusinessBanner` 의 같은 버튼은 로그인으로 보낸다. 그쪽 글이 이미 가입을 권하는
+   * 광고라서다(`shared/lib/companyJobRegister.ts`).
+   */
+  const registerHref = companyJobRegisterHref(role, '/signup/company');
+  const registerActive = pathname.startsWith(COMPANY_JOB_REGISTER_HREF);
+
+  /*
+   * 마이페이지는 역할마다 첫 화면이 다르다(`myPageHomeFor`). 역할을 아직 모르는 동안에는
+   * 일반 회원 쪽으로 보내 둔다 — 기업 계정이 그리 가도 `MyPageLayout` 의 역할 가드가 기업
+   * 마이페이지로 다시 보낸다. 역할이 올 때까지 링크를 감추면 헤더에서 항목이 늦게 나타난다.
+   */
+  const myPageHref = myPageHomeFor(role === 'COMPANY' ? 'COMPANY' : 'USER');
+  const myPageActive = pathname.startsWith('/mypage');
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -93,7 +117,13 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-          <span>공고 등록</span>
+          <Link
+            href={registerHref}
+            aria-current={registerActive ? 'page' : undefined}
+            className={registerActive ? 'font-semibold text-gray-900' : undefined}
+          >
+            공고 등록
+          </Link>
           <Link
             href="/calendar"
             aria-current={calendarActive ? 'page' : undefined}
@@ -102,7 +132,16 @@ export function SiteHeader() {
             공고 달력
           </Link>
           {signedIn ? (
-            <SignOutButton />
+            <>
+              <Link
+                href={myPageHref}
+                aria-current={myPageActive ? 'page' : undefined}
+                className={myPageActive ? 'font-semibold text-gray-900' : undefined}
+              >
+                마이페이지
+              </Link>
+              <SignOutButton />
+            </>
           ) : (
             <Button size="sm" asChild>
               <Link href="/login">로그인</Link>
