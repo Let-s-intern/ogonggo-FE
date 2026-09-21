@@ -71,9 +71,14 @@ export function CompanyPostRow({
   onClose,
   pending = false,
 }: CompanyPostRowProps) {
-  const dday = computeDday(row.recruitmentType, row.recruitmentEndAt);
-  const urgent = isDdayUrgent(row.recruitmentType, row.recruitmentEndAt);
   const closed = isRecruitmentClosed(row.recruitmentType, row.recruitmentEndAt, row.closedAt);
+  /**
+   * 마감된 건에는 D-day 를 그리지 않는다. 마감일이 아직 남았는데 손으로 마감한 공고
+   * (`closedAt` 만 찍힌 상태) 는 `computeDday` 가 그대로 `D-9` 를 돌려주고, 그러면 같은
+   * 행에서 배지는 모집 중이라 하고 메뉴에는 마감하기가 없는 어긋난 화면이 된다.
+   */
+  const dday = closed ? null : computeDday(row.recruitmentType, row.recruitmentEndAt);
+  const urgent = isDdayUrgent(row.recruitmentType, row.recruitmentEndAt);
 
   return (
     <tr className="border-t border-gray-100">
