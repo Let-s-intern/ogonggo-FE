@@ -101,7 +101,7 @@
 | 11  | `/content/bootcamps/{id}`    | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
 | 12  | `/content/bootcamps/{id}`    | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
 | 13  | `/content/bootcamps/{id}`    | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
-| 14  | `/content/side-studies`      | 진입·검색·필터                | `GET /side-studies`                          | 목록                               |
+| 14  | `/content/side-studies`      | 진입·검색·필터·정렬·페이지    | `GET /side-studies`                          | 목록                               |
 | 15  | `/content/side-studies/{id}` | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
 | 16  | `/content/side-studies/{id}` | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
 | 17  | `/ads/review`                | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
@@ -111,9 +111,9 @@
 | 20  | `/ads/review`                | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
 | 21  | `/ads/rejections`            | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
 | 22  | `/ads/rejections`            | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
-| 23  | `/members/users`             | 진입·검색·필터                | `GET /members/users`                         | 목록                               |
+| 23  | `/members/users`             | 진입·검색·필터·페이지         | `GET /members/users`                         | 목록                               |
 | 24  | `/members/users/{id}`        | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
-| 25  | `/members/companies`         | 진입·검색·필터                | `GET /members/companies`                     | 목록                               |
+| 25  | `/members/companies`         | 진입·검색·필터·페이지         | `GET /members/companies`                     | 목록                               |
 | 26  | `/members/companies/{id}`    | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
 | 27  | `/support/notices`           | 진입                          | `GET /notices`                               | 전체 (페이지 없음)                 |
 | 28  | `/support/notices`           | 새 공지 → 저장                | `POST /notices`                              | 고정은 하나만                      |
@@ -447,24 +447,98 @@
 
 ## 4. 콘텐츠 · 사이드·스터디
 
+**이 도메인은 백엔드에 아직 없다.** `ogonggo-core` 의 `StudyPackage.kt` 는 주석 하나뿐이다.
+아래 칸이 그 도메인이 가져야 할 칸이고, 목은 사용자 웹의 사이드·스터디 픽스처에 등록일을
+얹어 쓴다.
+
 ### `GET /api/v1/admin/side-studies`
 
-**쿼리** — `page` `size` `sort`, `keyword`(**제목 + 모집장 닉네임**),
-`kind`(`SIDE_PROJECT` · `STUDY`).
+**부르는 곳** — `/content/side-studies` 진입, 검색·필터·정렬·페이지 변경.
+
+**쿼리 파라미터**
+
+| 이름      | 값                             | 비고                                |
+| --------- | ------------------------------ | ----------------------------------- |
+| `page`    | 1부터                          | 기본 1                              |
+| `size`    | 정수                           | 기본 20                             |
+| `keyword` | 문자열                         | **제목 + 모집장 닉네임** 부분 일치  |
+| `kind`    | `SIDE_PROJECT` · `STUDY`       |                                     |
+| `sort`    | `REGISTERED_AT` · `VIEW_COUNT` | 기본 `REGISTERED_AT`                |
+
+`keyword` 가 보는 칸은 `title` 과 `authorNickname` 둘이다. 본문(`content`)은 보지 않는다.
 
 **응답 `data.items[]`** — 사이드·스터디 항목 + `registeredAt`.
 
+```json
+{
+  "id": 1,
+  "kind": "SIDE_PROJECT",
+  "operationType": "ONLINE",
+  "authorNickname": "문서정리봇",
+  "title": "개발자 회고 모아보는 큐레이션 서비스 팀원 구합니다",
+  "positions": ["프론트엔드", "백엔드"],
+  "techStack": ["React", "TypeScript", "Spring"],
+  "recruitmentStartAt": "2026-09-09T00:00:00Z",
+  "recruitmentEndAt": "2026-10-17T00:00:00Z",
+  "capacity": 5,
+  "appliedCount": 2,
+  "closed": false,
+  "viewCount": 312,
+  "commentCount": 4,
+  "registeredAt": "2026-08-30T14:20:00Z"
+}
+```
+
 **동작**
 
-**이 도메인은 백엔드에 아직 없다.** `ogonggo-core` 의 `StudyPackage.kt` 는 주석 하나뿐이다.
-이 API 의 칸이 그 도메인이 가져야 할 칸이다.
+필터는 AND 다. `kind` 는 정확히 일치하는 것만 남긴다.
 
-`registeredAt` 은 모집 시작·마감과 다른 값이다 — 글이 올라온 시각이고, 목록 정렬 기준이다.
+정렬 기본은 등록일 역순. `VIEW_COUNT` 는 조회 수 내림차순이고 동률이면 등록일 역순으로
+되돌린다 — 기준이 하나뿐이면 같은 조회 수 행들의 순서가 요청마다 달라진다. 채용공고·부트캠프와
+같은 `sort` 값을 쓴다.
 
-### `GET /api/v1/admin/side-studies/{postId}` · `DELETE /api/v1/admin/side-studies/{postId}`
+**`registeredAt` 은 모집 시작·마감과 다른 값이다.** 글이 올라온 시각이고, 목록의 기본 정렬
+기준이다.
 
-상세와 삭제. **내용 수정은 없다** — 사용자가 쓴 모집 글이라 운영자가 고치지 않는다. 문제가
-있으면 지운다.
+페이지는 1부터 세고 마지막을 넘어가면 빈 `items` 를 준다(공통 규칙). `page`·`size` 가 정수가
+아니거나 1 보다 작으면 기본값으로 되돌린다.
+
+**목은 목록에도 상세 칸을 그대로 싣는다.** 채용공고·부트캠프는 목록에서 본문 칸을 빼는데
+(2·3절), 사이드·스터디 목은 사용자 픽스처를 그대로 넘겨 `content`·`shortDescription`·
+`eligibility` 까지 함께 나간다. 백엔드는 다른 둘과 같이 **목록에서 본문을 빼는 편이 맞다** —
+화면이 목록에서 쓰는 칸은 위 예시가 전부다.
+
+`bookmarked` 는 사용자 화면의 칸이라 어드민에서는 뜻이 없다. 목이 사용자 픽스처를 공유해 남아
+있을 뿐이고, 백엔드 응답에는 넣지 않는다.
+
+### `GET /api/v1/admin/side-studies/{postId}`
+
+**부르는 곳** — `/content/side-studies/{id}` 진입.
+
+**응답** — 목록 항목 + `recruitmentStartAt` `contactMethod` `expectedDuration`(선택)
+`shortDescription` `content` `eligibility`(선택) `applicationUrl`(선택).
+
+**동작** — 읽기 전용이다. **내용 수정은 없다** — 사용자가 쓴 모집 글이라 운영자가 고치지
+않는다. 문제가 있으면 지운다.
+
+없는 `postId` 는 404 `NOT_FOUND`, `message` 는 `사이드·스터디 글을 찾을 수 없습니다.`
+
+### `DELETE /api/v1/admin/side-studies/{postId}`
+
+**부르는 곳** — 상세 화면의 삭제. 제목을 그대로 입력해야 열린다.
+
+**응답** — `data` 는 지운 id 하나뿐이다. 화면은 값을 쓰지 않고 목록으로 되돌아간다.
+
+```json
+{ "id": 12 }
+```
+
+없는 `postId` 는 404 `NOT_FOUND`, `message` 는 목록·상세와 같은
+`사이드·스터디 글을 찾을 수 없습니다.`
+
+**삭제의 의미는 아직 정해지지 않았다.** 목은 배열에서 빼기만 해서 새로고침하면 되돌아온다.
+지우는 것인지 감추는 것인지, 작성자에게 알리는지, 되돌릴 수 있는지가 전부 열려 있다
+(아래 "넘길 때 함께 정할 것"). 화면은 어느 쪽이든 같지만, 되돌릴 길이 생기면 화면에도 붙인다.
 
 ---
 
