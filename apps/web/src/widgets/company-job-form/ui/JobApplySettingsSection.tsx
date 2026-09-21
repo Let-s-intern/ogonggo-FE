@@ -1,6 +1,7 @@
 'use client';
 
 import { Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
+import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import type { CompanyJobFormValues } from '../model/values';
 import { JobRadioGroup } from './JobRadioGroup';
 
@@ -90,6 +91,28 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
           />
         </Field>
       </div>
+
+      {/*
+        담당자 이메일. **비활성이다** — `applicationMethod` 에 `EMAIL` 값은 있는데 주소를 담을
+        필드가 `CreateCompanyJobRequest` 에 없다(v5 PRD 3 절). 부트캠프 요청에는
+        `managerEmail` 이 있고 채용공고에만 없다. 선택지는 목업대로 둘 다 그리고 주소 칸만
+        잠근다 — 저장되지 않는 칸에 타이핑하게 두면 입력한 것이 사라진 것으로 읽힌다.
+      */}
+      <Field
+        label="담당자 이메일"
+        htmlFor="company-job-manager-email"
+        hint={`담당자 이메일 저장은 ${PLACEHOLDER_NOTICE}. 지원 링크로 받아 주세요.`}
+      >
+        <Input
+          id="company-job-manager-email"
+          type="email"
+          disabled
+          value=""
+          title={PLACEHOLDER_NOTICE}
+          onChange={() => undefined}
+          placeholder="담당자 이메일을 입력해 주세요."
+        />
+      </Field>
 
       <Field label="채용 안내사항" htmlFor="company-job-notice">
         <Textarea
