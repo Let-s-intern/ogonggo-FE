@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { HttpError } from '@ogonggo/api';
 import { useToast } from '@ogonggo/ui';
+import { isSignedIn } from '@/shared/api/authTokens';
+import { sanitizeReturnPath } from '@/shared/lib/returnPath';
 import { createBookmark, deleteBookmark, type BookmarkKind } from '../api/bookmarkApi';
 import { myBookmarkIdsKey, useMyBookmarkIds } from './useMyBookmarkIds';
 
@@ -83,12 +85,35 @@ export function useToggleBookmark({
     countDelta,
     pending: mutation.isPending,
     toggle: () => {
+      /*
+       * 로그인하지 않았으면 요청을 보내지 않고 로그인 화면으로 보낸다(PRD "로그인하지 않았으면
+       * 로그인 화면으로"). 토스트는 띄우지 않는다 — 화면이 바뀌어 볼 수 없다. 돌아온 뒤 누르려던
+       * 북마크를 자동으로 걸지도 않는다.
+       */
+      if (!isSignedIn()) {
+        router.push(signInHref());
+        return;
+      }
       if (mutation.isPending) {
         return;
       }
       mutation.mutate(!bookmarked);
     },
   };
+}
+
+/**
+ * 로그인 뒤 돌아올 화면을 붙인 로그인 주소. 돌아갈 곳을 거르는 규칙은 `?redirect=` 를 받는
+ * 쪽과 같은 것을 쓴다(`shared/lib/returnPath.ts`) — 거르지 않으면 로그인 화면이 다른 사이트로
+ * 보내는 징검다리가 된다.
+ *
+ * 지금 주소는 `usePathname` 이 아니라 `window.location` 에서 읽는다. 쿼리까지 그대로 필요한데
+ * `useSearchParams` 를 부르면 이 버튼을 단 카드가 있는 정적 화면 전체가 클라이언트 렌더로
+ * 내려간다. 누른 순간에만 필요한 값이라 그때 읽으면 된다(`shared/api/reissue.ts` 와 같다).
+ */
+function signInHref(): string {
+  const current = sanitizeReturnPath(`${window.location.pathname}${window.location.search}`);
+  return current ? `/login?redirect=${encodeURIComponent(current)}` : '/login';
 }
 
 /**
