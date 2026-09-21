@@ -37,10 +37,10 @@
 서명·만료·`type=access` 를 확인하고 `AdminAuthService` 가 요청마다 역할과 상태를 읽어,
 `UserRole.ADMIN` 이면서 `ACTIVE` 인 계정만 통과한다. 콘솔 안에서의 추가 권한 구분은 없다.
 
-| 상황 | 응답 |
-| --- | --- |
-| 토큰 없음, 서명·만료·종류 불일치 | 401 `UNAUTHORIZED` |
-| 유효한 토큰이지만 활성 관리자가 아님 | 403 `FORBIDDEN` |
+| 상황                                 | 응답               |
+| ------------------------------------ | ------------------ |
+| 토큰 없음, 서명·만료·종류 불일치     | 401 `UNAUTHORIZED` |
+| 유효한 토큰이지만 활성 관리자가 아님 | 403 `FORBIDDEN`    |
 
 역할은 토큰에 없어 요청마다 조회한다. 역할을 회수하면 액세스 토큰이 만료되기 전이라도 다음
 요청부터 막힌다. `ADMIN` 역할은 콘솔이나 API 로 부여하지 않고 운영자가 DB 에서 직접 바꾼다.
@@ -643,16 +643,59 @@
 
 ## 7. 회원
 
+일반 회원과 비즈니스 회원은 백엔드에서 같은 `users` 테이블을 `UserRole`(`USER` · `COMPANY`)로
+나눈 것이지만, 목록 칸이 서로 달라 화면과 API 가 둘로 갈린다.
+
+**네 API 가 전부 읽기다.** 콘솔은 회원 상태를 바꾸지 않는다 — 제재는 운영자가 DB 쿼리로 걸고
+화면은 결과만 보여준다. 상태를 바꾸는 API 를 만들지 않는다.
+
 ### `GET /api/v1/admin/members/users`
 
-**쿼리** — `page` `size`, `keyword`(**닉네임 + 이메일**), `status`(`ACTIVE` · `WITHDRAWN` ·
-`SUSPENDED`), `joinedWithinDays`(`7d` · `30d` · `90d`).
+**부르는 곳** — `/members/users` 진입, 검색·필터·페이지 변경.
 
-**응답 `data.items[]`** — `id` `nickname` `email` `joinedAt` `status` `lastAccessedAt`.
+**쿼리 파라미터**
 
-**동작** — 가입일 역순. `lastAccessedAt` 은 한 번도 접속하지 않았으면 없다.
+| 이름               | 값                                    | 비고                          |
+| ------------------ | ------------------------------------- | ----------------------------- |
+| `page`             | 1부터                                 | 기본 1                        |
+| `size`             | 정수                                  | 기본 20                       |
+| `keyword`          | 문자열                                | **닉네임 + 이메일** 부분 일치 |
+| `status`           | `ACTIVE` · `WITHDRAWN` · `SUSPENDED`  |                               |
+| `joinedWithinDays` | `7d` · `30d` · `90d`                  | 가입 기간                     |
+
+**정렬 파라미터는 없다.** 가입일 내림차순 하나로 고정이고 화면에도 정렬 컨트롤이 없다.
+
+**응답 `data.items[]`**
+
+```json
+{
+  "id": 1,
+  "nickname": "취준생김씨",
+  "email": "minsu.kim@example.com",
+  "joinedAt": "2026-09-19T08:12:00Z",
+  "status": "ACTIVE",
+  "lastAccessedAt": "2026-09-21T01:40:00Z"
+}
+```
+
+**동작**
+
+필터는 전부 AND 다. `status` 는 정확히 일치하는 것만 남긴다.
+
+`joinedWithinDays` 는 **지금부터 7·30·90×24시간 전까지의 이동 창**이다. 달력 주나 달이 아니다.
+대시보드의 `newMembersThisWeek` 가 `7d` 와 같은 계산이어야 카드 숫자와 목록 건수가 맞는다.
+
+**세 값 밖의 `joinedWithinDays` 는 거르지 않고 전체를 준다.** 목이 그렇게 한다. 모르는 값으로
+0건을 내면 운영자는 그 기간에 가입자가 없다고 읽는다.
+
+`lastAccessedAt` 은 한 번도 접속하지 않은 회원에게 **칸 자체가 없다.** `null` 이 아니다.
+
+정렬은 `joinedAt` 내림차순. 페이지는 1부터 세고 마지막을 넘어가면 빈 `items` 를 준다(공통
+규칙). `page`·`size` 가 정수가 아니거나 1 보다 작으면 기본값으로 되돌린다.
 
 ### `GET /api/v1/admin/members/users/{memberId}`
+
+**부르는 곳** — `/members/users/{id}` 진입.
 
 **응답** — 목록 항목 + 활동.
 
@@ -683,21 +726,41 @@
 **탈퇴 회원은 세 배열이 모두 비어 있다.** 탈퇴하면 작성 글과 북마크가 지워지는 것이 이
 서비스의 전제다.
 
-콘솔은 회원 상태를 **바꾸지 않는다.** 제재는 운영자가 DB 쿼리로 걸고 화면은 결과만 보여준다.
-상태를 바꾸는 API 를 만들지 않는다.
+없는 `memberId` 는 404 `NOT_FOUND`, `message` 는 `회원을 찾을 수 없습니다.`
 
 ### `GET /api/v1/admin/members/companies`
 
-**쿼리** — `page` `size`, `keyword`(**회사명 + 담당자명**), `status`, `joinedWithinDays`.
+**부르는 곳** — `/members/companies` 진입, 검색·필터·페이지 변경.
+
+**쿼리 파라미터** — 일반 회원 목록과 같다. `keyword` 의 대상 칸만 다르다.
+
+| 이름               | 값                                    | 비고                            |
+| ------------------ | ------------------------------------- | ------------------------------- |
+| `page`             | 1부터                                 | 기본 1                          |
+| `size`             | 정수                                  | 기본 20                         |
+| `keyword`          | 문자열                                | **회사명 + 담당자명** 부분 일치 |
+| `status`           | `ACTIVE` · `WITHDRAWN` · `SUSPENDED`  |                                 |
+| `joinedWithinDays` | `7d` · `30d` · `90d`                  | 가입 기간                       |
+
+**`managerEmail` 은 검색 대상이 아니다.** 일반 회원은 이메일로 찾는데 비즈니스 회원은 찾지
+못한다. 목이 그렇게 하고 있을 뿐 의도한 차이가 아니므로, 백엔드에 넘길 때 담당자 이메일을
+넣을지 정한다.
+
+**정렬 파라미터는 없다.** 가입일 내림차순 고정이다.
 
 **응답 `data.items[]`** — `id` `companyName` `businessRegistrationNumber` `managerName`
 `managerEmail` `jobPostingCount` `joinedAt` `status`.
 
 **동작** — `jobPostingCount` 는 그 회사가 등록한 채용공고 수다. 게시 상태를 가리지 않는다.
 **아래 상세가 주는 `jobs` 배열의 길이와 반드시 같아야 한다** — 목록은 7건인데 상세는 0건인
-상태가 되면 화면이 조인을 제대로 하는지 확인할 수 없다.
+상태가 되면 화면이 조인을 제대로 하는지 확인할 수 없다. 목은 두 곳에서 같은 조건
+(`source = COMPANY` 이고 회사명이 같은 공고)으로 세어 이 성질을 지킨다.
+
+페이지 규칙은 일반 회원 목록과 같다.
 
 ### `GET /api/v1/admin/members/companies/{memberId}`
+
+**부르는 곳** — `/members/companies/{id}` 진입.
 
 **응답** — 목록 항목 + `jobs[]`.
 
@@ -709,15 +772,23 @@
       "title": "...",
       "visibility": "VISIBLE",
       "reviewStatus": "PENDING",
-      "registeredAt": "2026-08-20T...",
+      "registeredAt": "2026-08-20T09:00:00Z",
       "viewCount": 873
     }
   ]
 }
 ```
 
-**동작** — 목에서는 회사명으로 잇는다. **백엔드에는 외래키가 있을 자리이므로 `companyId` 로
-바꾼다.** 화면은 이 배열에서 검수 대기 건수와 노출 중 건수를 직접 세어 요약으로 보여준다.
+**동작**
+
+**목은 회사명으로 잇는다.** `source = COMPANY` 이면서 `companyName` 이 그 회원의 회사명과
+똑같은 공고를 모은다. 픽스처에 회사 id 가 없어서 그렇게 했을 뿐이고, **백엔드에는 외래키가
+있을 자리이므로 회원 id(`companyId`)로 잇는다.** 회사명은 동명이거나 표기가 바뀌면 어긋난다.
+
+`jobs` 는 정렬 파라미터도 페이지도 없다. 한 회사의 공고 전부를 그대로 준다. 화면은 이 배열에서
+검수 대기 건수와 노출 중 건수를 직접 세어 요약으로 보여준다.
+
+없는 `memberId` 는 404 `NOT_FOUND`, `message` 는 `비즈니스 회원을 찾을 수 없습니다.`
 
 ---
 
