@@ -11,6 +11,7 @@ import {
   type MyPageListTab,
 } from '@/widgets/mypage-list';
 import { fetchCompanyPosts, TAB_NOUNS, type CompanyPostsPage } from '../lib/fetch';
+import { deleteCompanyPost } from '../lib/mutate';
 import { buildCompanyPostsHref, type CompanyPostsQuery, type CompanyPostTab } from '../lib/query';
 import { companyPostNewHref } from '../lib/routes';
 import { CompanyPostRow } from './CompanyPostRow';
@@ -61,6 +62,15 @@ export interface CompanyPostsProps {
  */
 export function CompanyPosts({ query }: CompanyPostsProps) {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  /** 삭제 뒤 목록을 다시 읽으려고 올리는 값. 주소는 그대로인데 내용만 바뀐다. */
+  const [reloadToken, setReloadToken] = useState(0);
+  /** 요청이 도는 행. 그 행의 메뉴를 잠근다. */
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  /**
+   * 한 동작이 실패했을 때의 말. 표를 오류 화면으로 바꾸지 않고 표 위에 한 줄 띄운다 —
+   * 읽어 온 목록을 버리면 무엇이 왜 안 됐는지 볼 화면이 사라진다(v4 `MyPosts` 와 같다).
+   */
+  const [actionError, setActionError] = useState<string | null>(null);
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 탭과 페이지를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -86,7 +96,17 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
     return () => {
       active = false;
     };
-  }, [href]);
+  }, [href, reloadToken]);
+
+  /** 한 행에 거는 동작 하나. 도는 동안 그 행을 잠그고, 끝나면 목록을 다시 읽는다. */
+  const mutate = (key: string, failure: string, run: () => Promise<unknown>) => {
+    setPendingId(key);
+    setActionError(null);
+    run()
+      .then(() => setReloadToken((token) => token + 1))
+      .catch(() => setActionError(failure))
+      .finally(() => setPendingId(null));
+  };
 
   const rows = state.kind === 'ready' ? state.page.rows : [];
   const pageInfo =
@@ -130,9 +150,27 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
         aria-label="공고 종류"
       />
 
+      {actionError ? (
+        <p role="alert" className="text-sm text-error">
+          {actionError}
+        </p>
+      ) : null}
+
       <MyPageListTable columns={COLUMNS}>
         {rows.length > 0 ? (
-          rows.map((row) => <CompanyPostRow key={row.key} row={row} tab={query.tab} />)
+          rows.map((row) => (
+            <CompanyPostRow
+              key={row.key}
+              row={row}
+              tab={query.tab}
+              pending={pendingId === row.key}
+              onDelete={() =>
+                mutate(row.key, `${TAB_NOUNS[query.tab]}를 삭제하지 못했습니다.`, () =>
+                  deleteCompanyPost(query.tab, row.id),
+                )
+              }
+            />
+          ))
         ) : (
           <tr>
             <td colSpan={COLUMNS.length} className="px-4 py-16 text-center text-sm text-gray-500">

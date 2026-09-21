@@ -40,6 +40,9 @@ export interface CompanyPostRowProps {
   row: Row;
   /** 수정 폼 주소가 탭마다 다르다. 채용공고와 부트캠프는 폼이 둘이다(`lib/routes.ts`). */
   tab: CompanyPostTab;
+  onDelete: () => void;
+  /** 이 행의 요청이 도는 중. 메뉴를 잠근다. */
+  pending?: boolean;
 }
 
 /**
@@ -54,8 +57,11 @@ export interface CompanyPostRowProps {
  * 이 표의 두 번째 칸은 모집 인원이다 — 앞 칸만 쓰고 뒤 칸을 버릴 수가 없다.
  *
  * 제목만 링크다. 게시되지 않은 공고에는 링크가 없다(`lib/fetch.ts` 의 `href`).
+ *
+ * **점 세 개 메뉴에 `복사하기` 가 없다.** 목업에는 있지만 기업 공고에 복사 API 가 없다
+ * (`lib/mutate.ts` 주석).
  */
-export function CompanyPostRow({ row, tab }: CompanyPostRowProps) {
+export function CompanyPostRow({ row, tab, onDelete, pending = false }: CompanyPostRowProps) {
   const dday = computeDday(row.recruitmentType, row.recruitmentEndAt);
   const urgent = isDdayUrgent(row.recruitmentType, row.recruitmentEndAt);
   const closed = isRecruitmentClosed(row.recruitmentType, row.recruitmentEndAt, row.closedAt);
@@ -150,8 +156,43 @@ export function CompanyPostRow({ row, tab }: CompanyPostRowProps) {
           >
             <Link href={companyPostEditHref(tab, row.id)}>수정하기</Link>
           </Button>
+
+          {/* 여닫기는 `<details>` 라 자바스크립트가 없어도 열린다. v4 의 같은 메뉴와 같다. */}
+          <details className="relative">
+            <summary
+              aria-label={`${row.title} 더보기`}
+              className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 [&::-webkit-details-marker]:hidden"
+            >
+              <span aria-hidden="true" className="icon-[lucide--ellipsis-vertical] block h-4 w-4" />
+            </summary>
+            <div className="absolute right-0 z-10 mt-1 w-28 rounded-md border border-gray-200 bg-white py-1 shadow-md">
+              <MenuAction label="삭제하기" onClick={onDelete} disabled={pending} />
+            </div>
+          </details>
         </div>
       </td>
     </tr>
+  );
+}
+
+/** 점 세 개 메뉴 한 줄. */
+function MenuAction({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="block w-full px-3 py-1.5 text-left text-sm whitespace-nowrap text-gray-600 hover:bg-gray-50 disabled:text-gray-300"
+    >
+      {label}
+    </button>
   );
 }
