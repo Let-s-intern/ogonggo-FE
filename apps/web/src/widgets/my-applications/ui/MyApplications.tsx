@@ -17,6 +17,7 @@ import { fetchMyApplications, type MyApplicationsPage } from '../lib/fetch';
 import { deleteApplication, updateApplicationStatus } from '../lib/mutate';
 import { placeholderRows } from '../lib/placeholderRows';
 import { MyApplicationRow } from './MyApplicationRow';
+import { MyApplicationsNotice } from './MyApplicationsNotice';
 import {
   buildMyApplicationsHref,
   type MyApplicationsQuery,
@@ -146,6 +147,8 @@ export function MyApplications({ query }: MyApplicationsProps) {
         buildHref={(tab) => buildMyApplicationsHref(query, { tab })}
         aria-label="지원·신청 종류"
       />
+
+      <MyApplicationsNotice tab={query.tab} />
 
       <MyPageListTable columns={columns}>
         {rows.length > 0 ? (

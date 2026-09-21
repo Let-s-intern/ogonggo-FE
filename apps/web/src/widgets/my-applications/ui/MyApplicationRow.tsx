@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Button, Select } from '@ogonggo/ui';
+import { PLACEHOLDER_NOTICE } from '@/features/my-applications/model/placeholder';
 import { isRecruitmentClosed } from '@/shared/lib/dday';
 import { MyPageListRowCells } from '@/widgets/mypage-list';
 import type { MyApplicationRow as Row } from '../lib/fetch';
@@ -15,7 +16,7 @@ export interface MyApplicationRowProps {
    * 비활성으로 그려진다 — 눌리는데 아무 일도 안 일어나는 컨트롤을 두지 않는다(PRD 3 절).
    */
   onStatusChange?: (applicationStatus: string) => void;
-  /** 지울 수 있는 행이면 준다. 없으면 `삭제하기` 메뉴 자체가 나오지 않는다. */
+  /** 지울 수 있는 행이면 준다. 없으면 점 세 개 메뉴가 비활성으로 그려진다. */
   onDelete?: () => void;
   /** 이 행의 요청이 도는 중. 컨트롤을 잠근다. */
   pending?: boolean;
@@ -56,6 +57,7 @@ export function MyApplicationRow({
           value={row.applicationStatus}
           options={[...statusOptions]}
           disabled={!onStatusChange || pending}
+          title={onStatusChange ? undefined : PLACEHOLDER_NOTICE}
           onChange={(event) => onStatusChange?.(event.currentTarget.value)}
           className="w-full"
         />
@@ -94,7 +96,19 @@ export function MyApplicationRow({
                 </button>
               </div>
             </details>
-          ) : null}
+          ) : (
+            /* 저장할 곳이 없는 탭. 메뉴를 감추지 않고 비활성으로 남긴다 — 자리가 통째로
+               비면 "이 화면에는 삭제가 없다" 로 읽히는데, 사실은 준비 중이다. */
+            <button
+              type="button"
+              disabled
+              aria-label={`${row.title} 더보기`}
+              title={PLACEHOLDER_NOTICE}
+              className="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-md text-gray-300"
+            >
+              <span aria-hidden="true" className="icon-[lucide--ellipsis-vertical] block h-4 w-4" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
