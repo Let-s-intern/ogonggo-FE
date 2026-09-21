@@ -218,7 +218,7 @@
 }
 
 /*
- * 알림이 나타나는 동작. `ActionAlert` 가 쓴다.
+ * 알림이 나타나는 동작. `ActionAlert` 와 `Toast` 가 쓴다.
  *
  * 여기 두는 이유는 Tailwind v4 가 `--animate-*` 테마 키를 유틸리티로 만들어 주기 때문이다.
  * 컴포넌트 파일 안에 `<style>` 을 넣으면 같은 규칙이 화면마다 중복된다.
@@ -246,15 +246,32 @@
   }
 }
 
+/*
+ * 토스트는 아래에서 살짝 밀려 올라온다. 화면 아래 가운데에 뜨므로 올라오는 방향이 나온 자리를
+ * 가리킨다. 8px 이면 움직임이 보이되 읽기 시작하기 전에 끝난다.
+ */
+@keyframes ogonggo-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @theme {
   --animate-alert-in: ogonggo-alert-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-scrim-in: ogonggo-scrim-in 160ms ease-out;
+  --animate-toast-in: ogonggo-toast-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 움직임을 줄여 달라고 한 사용자에게는 나타나기만 하고 움직이지 않는다. */
 @media (prefers-reduced-motion: reduce) {
   .animate-alert-in,
-  .animate-scrim-in {
+  .animate-scrim-in,
+  .animate-toast-in {
     animation-duration: 1ms;
   }
 }
