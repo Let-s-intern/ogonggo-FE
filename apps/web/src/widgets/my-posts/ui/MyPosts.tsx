@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@ogonggo/ui';
+import {
+  closeMyPost,
+  copyMyPost,
+  deleteMyPost,
+  reopenMyPost,
+} from '@/entities/side-study/api/myRecruitmentPosts';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { MyPageListTable, type MyPageListColumn } from '@/widgets/mypage-list';
@@ -36,6 +42,16 @@ export interface MyPostsProps {
  */
 export function MyPosts({ query }: MyPostsProps) {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  /** 삭제·복사·마감·재모집 뒤 목록을 다시 읽으려고 올리는 값. 주소는 그대로인데 내용만 바뀐다. */
+  const [reloadToken, setReloadToken] = useState(0);
+  /** 요청이 도는 행. 그 행의 메뉴를 잠근다. */
+  const [pendingPostId, setPendingPostId] = useState<number | null>(null);
+  /**
+   * 한 동작이 실패했을 때의 말. 표를 오류 화면으로 바꾸지 않고 표 위에 한 줄 띄운다 —
+   * 재모집은 종료일이 지났으면 백엔드가 409 를 주는 정상적인 실패라, 그때마다 읽어 온 목록을
+   * 버리면 무엇이 왜 안 됐는지 볼 화면이 사라진다.
+   */
+  const [actionError, setActionError] = useState<string | null>(null);
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 페이지와 필터를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -61,7 +77,17 @@ export function MyPosts({ query }: MyPostsProps) {
     return () => {
       active = false;
     };
-  }, [href]);
+  }, [href, reloadToken]);
+
+  /** 한 행에 거는 동작 하나. 도는 동안 그 행을 잠그고, 끝나면 목록을 다시 읽는다. */
+  const mutate = (postId: number, failure: string, run: () => Promise<unknown>) => {
+    setPendingPostId(postId);
+    setActionError(null);
+    run()
+      .then(() => setReloadToken((token) => token + 1))
+      .catch(() => setActionError(failure))
+      .finally(() => setPendingPostId(null));
+  };
 
   const rows = state.kind === 'ready' ? state.page.rows : [];
   const pageInfo =
@@ -86,9 +112,38 @@ export function MyPosts({ query }: MyPostsProps) {
         </Button>
       </header>
 
+      {actionError ? (
+        <p role="alert" className="text-sm text-error">
+          {actionError}
+        </p>
+      ) : null}
+
       <MyPageListTable columns={COLUMNS}>
         {rows.length > 0 ? (
-          rows.map((row) => <MyPostRow key={row.postId} row={row} />)
+          rows.map((row) => (
+            <MyPostRow
+              key={row.postId}
+              row={row}
+              pending={pendingPostId === row.postId}
+              onDelete={() =>
+                mutate(row.postId, '모집글을 삭제하지 못했습니다.', () => deleteMyPost(row.postId))
+              }
+              onCopy={() =>
+                mutate(row.postId, '모집글을 복사하지 못했습니다.', () => copyMyPost(row.postId))
+              }
+              onClose={() =>
+                mutate(row.postId, '모집글을 마감하지 못했습니다.', () => closeMyPost(row.postId))
+              }
+              onReopen={() =>
+                mutate(
+                  row.postId,
+                  // 백엔드가 409 를 주는 조건이 이것 하나다(생성 타입 설명).
+                  '모집 종료일이 지난 글은 다시 모집할 수 없습니다. 종료일을 미래로 고친 뒤 다시 시도해 주세요.',
+                  () => reopenMyPost(row.postId),
+                )
+              }
+            />
+          ))
         ) : (
           <tr>
             <td colSpan={COLUMNS.length} className="px-4 py-16 text-center text-sm text-gray-500">
