@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useSyncExternalStore } from 'react';
 import { signOut } from '@ogonggo/api';
-import { Button, cn } from '@ogonggo/ui';
+import { Button, MenuItem } from '@ogonggo/ui';
 import { clearTokens, isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
@@ -55,7 +55,12 @@ const NAV_ITEMS = [
  * 있어 서버는 알 수 없으므로 서버 렌더와 첫 하이드레이션은 "로그인" 으로 그리고, 그 직후 저장소를 읽어
  * 바꾼다(`useSyncExternalStore` 의 서버 스냅샷).
  *
- * 우측 메뉴의 활성 표시는 좌측과 다르다. 좌측은 밑줄(`border-b-2`)인데, 우측은 목업
+ * 좌측 메뉴는 `MenuItem`이 그린다(`docs/asset/v3-1/menu/`). 밑줄은 그 컴포넌트의 `current`
+ * 상태고, 36px 상자의 맨 아래에 있어 전보다 7px 내려온다 — 목업의 밑줄도 글자에서 그만큼
+ * 떨어져 있다. 글자 크기만 `text-sm`으로 덮어쓰는 이유는
+ * `.claude/tasks/memos/결정-menuitem-글자크기-2026-09-21.md`에 적었다.
+ *
+ * 우측 메뉴의 활성 표시는 좌측과 다르다. 좌측은 밑줄인데, 우측은 목업
  * (`docs/asset/공고달력.png`)의 `공고 달력` 화면에서도 밑줄이 없다 — 헤더 높이를 꽉 채우는
  * 좌측 탭과 달리 우측은 가운데 정렬된 짧은 줄이라 밑줄이 붙을 자리가 없다. 그래서 글자색만
  * 진해진다.
@@ -74,20 +79,14 @@ export function SiteHeader() {
             <span className="h-[26px] w-px bg-gray-300" />
             <Logo className="h-[25px] w-[52px] text-blue-500" />
           </Link>
-          <nav className="flex items-stretch gap-6 text-sm font-semibold">
+          <nav className="flex items-stretch gap-6">
             {NAV_ITEMS.map(({ href, label, matches }) => {
               const active = matches(pathname);
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center',
-                    active ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-400',
-                  )}
-                >
-                  {label}
+                <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
+                  <MenuItem state={active ? 'current' : 'default'} className="text-sm">
+                    {label}
+                  </MenuItem>
                 </Link>
               );
             })}
