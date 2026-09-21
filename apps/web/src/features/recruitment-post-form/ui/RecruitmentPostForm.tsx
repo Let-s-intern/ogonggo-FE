@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { CreateRecruitmentPostRequestSaveMode } from '@ogonggo/api';
-import { Button } from '@ogonggo/ui';
+import { Button, cn } from '@ogonggo/ui';
 import {
   createMyPost,
   fetchMyPostForm,
@@ -22,6 +22,7 @@ import { ApplySettingsSection } from './ApplySettingsSection';
 import { BasicInfoSection } from './BasicInfoSection';
 import { ContentSection } from './ContentSection';
 import { FormSection } from './FormSection';
+import { PostPreview } from './PostPreview';
 
 export interface RecruitmentPostFormProps {
   /** 있으면 수정, 없으면 새 글. 작성한 모집글 표에서 넘어올 때만 있다. */
@@ -55,6 +56,11 @@ export interface RecruitmentPostFormProps {
  *
  * 값을 읽어 오는 동안은 폼을 그리지 않는다. 빈 폼을 먼저 보이면 그 사이에 저장한 사람이
  * 자기 글을 빈 값으로 덮어쓴다.
+ *
+ * 탭 둘 중 `미리보기` 는 같은 값을 상세 화면 모양으로 그릴 뿐 아무것도 저장하지 않는다
+ * (`PostPreview`). 하단 버튼 둘은 탭을 따라가지 않고 늘 자리에 있다 — 3 단의 안내가
+ * "등록 전 미리보기에서 확인해 주세요" 인데, 확인한 자리에서 등록하지 못하면 다시 탭을
+ * 옮겨야 한다.
  */
 export function RecruitmentPostForm({ postId }: RecruitmentPostFormProps) {
   const router = useRouter();
@@ -63,6 +69,7 @@ export function RecruitmentPostForm({ postId }: RecruitmentPostFormProps) {
   const [loadedContent, setLoadedContent] = useState<LoadedContent | undefined>(undefined);
   const [loading, setLoading] = useState(postId !== undefined);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
+  const [tab, setTab] = useState<'write' | 'preview'>('write');
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -116,8 +123,7 @@ export function RecruitmentPostForm({ postId }: RecruitmentPostFormProps) {
     if (pending) {
       return;
     }
-    const invalid =
-      saveMode === 'DRAFT' ? validateForDraft(values) : validateForPublish(values);
+    const invalid = saveMode === 'DRAFT' ? validateForDraft(values) : validateForPublish(values);
     if (invalid) {
       setFormError(invalid);
       return;
@@ -154,35 +160,64 @@ export function RecruitmentPostForm({ postId }: RecruitmentPostFormProps) {
         void save('PUBLISH');
       }}
     >
-      <FormSection
-        step={1}
-        title="기본 정보"
-        description="프로젝트의 기본적인 정보를 입력해 주세요"
-        open={openSteps.includes(1)}
-        onToggle={() => toggle(1)}
-      >
-        <BasicInfoSection values={values} onChange={change} />
-      </FormSection>
+      <div role="tablist" aria-label="모집글 작성" className="flex border-b border-gray-200">
+        {(
+          [
+            { value: 'write', label: '작성' },
+            { value: 'preview', label: '미리보기' },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.value}
+            onClick={() => setTab(item.value)}
+            className={cn(
+              '-mb-px border-b-2 px-4 py-3 text-base',
+              tab === item.value
+                ? 'border-blue-500 font-semibold text-blue-500'
+                : 'border-transparent font-medium text-gray-400 hover:text-gray-600',
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
 
-      <FormSection
-        step={2}
-        title="모집 내용"
-        description="프로젝트의 모집 공고를 소개해 주세요"
-        open={openSteps.includes(2)}
-        onToggle={() => toggle(2)}
-      >
-        <ContentSection values={values} onChange={change} />
-      </FormSection>
+      {tab === 'preview' ? <PostPreview values={values} /> : null}
 
-      <FormSection
-        step={3}
-        title="지원 설정"
-        description="모집 기간과 지원 방법을 설정해 주세요"
-        open={openSteps.includes(3)}
-        onToggle={() => toggle(3)}
-      >
-        <ApplySettingsSection values={values} onChange={change} />
-      </FormSection>
+      <div className={cn('flex flex-col gap-4', tab !== 'write' && 'hidden')}>
+        <FormSection
+          step={1}
+          title="기본 정보"
+          description="프로젝트의 기본적인 정보를 입력해 주세요"
+          open={openSteps.includes(1)}
+          onToggle={() => toggle(1)}
+        >
+          <BasicInfoSection values={values} onChange={change} />
+        </FormSection>
+
+        <FormSection
+          step={2}
+          title="모집 내용"
+          description="프로젝트의 모집 공고를 소개해 주세요"
+          open={openSteps.includes(2)}
+          onToggle={() => toggle(2)}
+        >
+          <ContentSection values={values} onChange={change} />
+        </FormSection>
+
+        <FormSection
+          step={3}
+          title="지원 설정"
+          description="모집 기간과 지원 방법을 설정해 주세요"
+          open={openSteps.includes(3)}
+          onToggle={() => toggle(3)}
+        >
+          <ApplySettingsSection values={values} onChange={change} />
+        </FormSection>
+      </div>
 
       {formError ? (
         <p role="alert" className="text-sm text-error">
