@@ -2,7 +2,7 @@
 
 import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
@@ -14,13 +14,19 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
+import { toCalendarParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY } from '../lib/week';
 
-/** 한 칸에 그대로 다 그리는 최대 개수. 여기까지는 `+N`이 붙지 않는다(PRD 8.2). */
-const MAX_EVENTS_PER_DAY = 8;
+/**
+ * 한 칸에 그대로 다 그리는 최대 개수. 여기까지는 `+N`이 붙지 않는다(PRD 8.2).
+ *
+ * v6(`docs/asset/v6 공고달력/월간 보기.png`)에서 오른쪽에 날짜별 목록이 붙으며 격자가 좁아져
+ * 한 줄이 3개가 됐다 — 두 줄이면 6개다. 20일 칸이 로고 5개와 `+4`다.
+ */
+const MAX_EVENTS_PER_DAY = 6;
 
-/** 위를 넘긴 칸에서 실제로 그리는 로고 수. 남은 한 자리(8번째)를 `+N`이 차지한다. */
-const EVENTS_BESIDE_MORE = 7;
+/** 위를 넘긴 칸에서 실제로 그리는 로고 수. 남은 한 자리(6번째)를 `+N`이 차지한다. */
+const EVENTS_BESIDE_MORE = 5;
 
 /**
  * 날짜별로 묶어 그 칸에 넣을 이벤트를 만든다.
@@ -31,8 +37,8 @@ const EVENTS_BESIDE_MORE = 7;
  * 뿐이라 **8개인 칸만 예외로 다 보여주는** 이 규칙을 표현할 수 없다. `dayMaxEvents={7}`로 두면
  * 8개인 칸이 `7개 + +1`이 되어 버린다. 그래서 자르는 일을 여기서 한다.
  *
- * `+N`도 이벤트 하나로 넣는다. 그래야 로고와 같은 자리 폭(1/4)을 받아 목업처럼 마지막
- * 8번째 칸에 앉는다. 순서는 `order`로 못 박는다 — FullCalendar 의 기본 정렬은 제목순이라
+ * `+N`도 이벤트 하나로 넣는다. 그래야 로고와 같은 자리 폭(1/3)을 받아 목업처럼 마지막
+ * 6번째 칸에 앉는다. 순서는 `order`로 못 박는다 — FullCalendar 의 기본 정렬은 제목순이라
  * `+5` 같은 문자열이 로고들 사이로 끼어든다.
  */
 function buildMonthEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
@@ -77,11 +83,16 @@ export interface MonthGridProps {
   items: UserJobCalendarItemResponse[];
   /** 펼칠 달. `YYYY-MM-DD`. */
   initialDate: string;
+  /** 오른쪽 목록이 보여 주는 날. 그 칸을 파란 판으로 칠한다. `YYYY-MM-DD`. */
+  selectedDay: string;
+  /** 날짜 칸을 누르면 그 날로 부른다. */
+  onSelectDay: (day: string) => void;
 }
 
 /**
- * 월간 격자(`docs/asset/공고달력.png`). FullCalendar 는 클라이언트 컴포넌트다(PRD 6.1) —
- * 데이터는 위에서 props 로 받는다.
+ * 월간 격자(`docs/asset/공고달력.png`, v6 `docs/asset/v6 공고달력/월간 보기.png`). FullCalendar 는
+ * 클라이언트 컴포넌트다(PRD 6.1) — 데이터는 위에서 props 로 받는다. 오른쪽 날짜별 목록과 고른
+ * 날을 함께 쓰므로 그 상태는 위(`MonthCalendar`)가 들고 있다.
  *
  * 항목은 **마감일(`recruitmentEndAt`) 기준**으로 놓는다. 모집 시작일은 월간 뷰에서 쓰지
  * 않는다(PRD 8.2). 칸에 그리는 것은 회사 로고다 — 달력 응답에 로고 URL 이 없어
@@ -93,9 +104,17 @@ export interface MonthGridProps {
  *
  * 스타일을 덮는 방법은 `../lib/calendar-grid`의 `GRID_CLASSES` 주석에 정리했다.
  */
-export function MonthGrid({ items, initialDate }: MonthGridProps) {
+export function MonthGrid({ items, initialDate, selectedDay, onSelectDay }: MonthGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
   useCalendarDate(calendarRef, initialDate);
+
+  // 날짜 칸 클릭은 `dayCellDidMount` 에서 한 번 건다. FullCalendar 의 `dateClick` 은
+  // `@fullcalendar/interaction` 플러그인이 있어야 하는데 날짜 누르기 하나 때문에 의존성을 더하지
+  // 않는다. 칸은 달을 옮겨도 다시 마운트되지 않을 수 있어 콜백을 ref 로 들고 최신 것을 부른다.
+  const onSelectDayRef = useRef(onSelectDay);
+  useEffect(() => {
+    onSelectDayRef.current = onSelectDay;
+  });
 
   return (
     <div
@@ -116,6 +135,13 @@ export function MonthGrid({ items, initialDate }: MonthGridProps) {
         '[&_.fc-daygrid-day-top]:justify-center',
         // 오늘은 파란 글씨다(미니 달력과 같은 규칙).
         '[&_.fc-day-today_.fc-daygrid-day-number]:text-blue-500',
+        // 오른쪽 목록이 보여 주는 날은 칸 안쪽을 `blue-00` 판으로 칠한다(v6, 22일 칸). 칸 전체가
+        // 누를 곳이다.
+        '[&_.fc-daygrid-day]:cursor-pointer',
+        '[&_.ogonggo-selected-day_.fc-daygrid-day-frame]:rounded-lg',
+        '[&_.ogonggo-selected-day_.fc-daygrid-day-frame]:bg-blue-00',
+        // 앞뒤 달의 로고는 흐리게 둔다(v6 첫 줄 26~30일).
+        '[&_.fc-day-other_.fc-daygrid-event-harness]:opacity-40',
         // 날짜 칸은 위에서부터 쌓는다 — 날짜 숫자가 맨 위, 그 아래 로고 타일이다.
         // 칸을 통째로 flex 로 만들었다가 두 가지가 어긋났다. 칸 높이는 그 주에서 가장 많은
         // 칸에 맞춰 늘어나는데 세로 가운데 정렬이 겹쳐 항목이 적은 칸일수록 내용이 아래로
@@ -140,10 +166,10 @@ export function MonthGrid({ items, initialDate }: MonthGridProps) {
         // `display: table` 로 넣어 둔다. flex 컨테이너에서는 그게 폭 0짜리 항목 하나가 되어
         // **첫 줄만 여백 한 칸(4px)만큼 오른쪽으로 밀린다** — 둘째 줄과 왼쪽 끝이 어긋난다.
         '[&_.fc-daygrid-day-events::before]:hidden! [&_.fc-daygrid-day-events::after]:hidden!',
-        // 한 줄에 4개까지다(PRD 5.3). 칸 너비에 기대지 않고 자리 폭을 1/4로 못 박는다 —
-        // 가로 여백 4px 세 칸(12px)에 반올림 여유 4px 을 더 뺀다. 딱 맞게 잡으면 소수점
-        // 반올림에서 한 개가 다음 줄로 밀린다.
-        '[&_.fc-daygrid-event-harness]:basis-[calc(25%-4px)]',
+        // 한 줄에 3개까지다(v6). 칸 너비에 기대지 않고 자리 폭을 1/3로 못 박는다 —
+        // 가로 여백 4px 두 칸(8px)에 반올림 여유를 더해 한 칸마다 4px 을 뺀다. 딱 맞게 잡으면
+        // 소수점 반올림에서 한 개가 다음 줄로 밀린다.
+        '[&_.fc-daygrid-event-harness]:basis-[calc(33.333%-4px)]',
       ].join(' ')}
     >
       <FullCalendar
@@ -159,6 +185,13 @@ export function MonthGrid({ items, initialDate }: MonthGridProps) {
         // 한 칸 안의 순서는 `buildMonthEvents`가 매긴 `order` 그대로다(기본값은 제목순).
         eventOrder="order"
         dayHeaderContent={(arg) => weekdayLabel(arg.date)}
+        dayCellClassNames={(arg) =>
+          toCalendarParam(arg.date) === selectedDay ? ['ogonggo-selected-day'] : []
+        }
+        dayCellDidMount={(arg) => {
+          const day = toCalendarParam(arg.date);
+          arg.el.addEventListener('click', () => onSelectDayRef.current(day));
+        }}
         eventClassNames={EVENT_RESET_CLASSES}
         eventContent={(arg) => {
           const hiddenCount = arg.event.extendedProps.hiddenCount as number | undefined;

@@ -1,3 +1,5 @@
+import { isJobMajorSlug, MAX_JOB_MAJORS } from './job-majors';
+
 /**
  * `/calendar` 이 URL 쿼리에 두는 상태(`?date=2026-08-19&brief=1`). 앞선 화면들의 탭·페이지네이션과
  * 같은 방식이고(`widgets/side-study-list/lib/query.ts`), 새로고침과 뒤로가기가 그대로 동작한다
@@ -5,21 +7,42 @@
  *
  * `brief`(`간략히 보기`)는 주간 뷰 여부다(PRD 8.1). 값을 읽고 쓰는 자리는 여기가 전부이고,
  * 실제로 뷰를 갈아끼우는 것은 Push 3 이다.
+ *
+ * `majors`와 `picker`는 v6(`docs/asset/v6 공고달력/`)의 관심 직무 선택이다. 고른 직무는
+ * `?majors=it,design`, 선택 화면이 열려 있는지는 `?picker=1`이다.
  */
 export interface JobCalendarQuery {
   /** 달력이 펼칠 기준 날짜. `?date=` 가 없거나 읽을 수 없으면 오늘이다. */
   date: Date;
   /** 켜면 주간, 끄면 월간. 기본은 월간이다(PRD 8.1). */
   brief: boolean;
+  /** 고른 관심 직무의 `slug`(`./job-majors`). 최대 3개, 모르는 값은 버린다. */
+  majors: string[];
+  /** 관심 직무 선택 화면이 달력 자리에 열려 있는지. */
+  picker: boolean;
 }
 
 export interface JobCalendarSearchParams {
   date?: string;
   brief?: string;
+  majors?: string;
+  picker?: string;
 }
 
-/** `brief` 가 켜졌다고 인정하는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
+/** `brief`·`picker` 가 켜졌다고 인정하는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
 const BRIEF_ON = '1';
+
+/**
+ * `?majors=` 를 아는 값만, 중복 없이, 최대 개수까지 읽는다. 손으로 고친 URL 에 네 개가
+ * 들어와도 선택 화면의 규칙(최대 3개)과 어긋나지 않게 앞에서부터 자른다.
+ */
+export function parseJobMajors(value: string | undefined): string[] {
+  if (!value) {
+    return [];
+  }
+  const slugs = value.split(',').filter(isJobMajorSlug);
+  return [...new Set(slugs)].slice(0, MAX_JOB_MAJORS);
+}
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -67,6 +90,8 @@ export function parseJobCalendarQuery(
   return {
     date: parseCalendarDate(searchParams.date) ?? today,
     brief: searchParams.brief === BRIEF_ON,
+    majors: parseJobMajors(searchParams.majors),
+    picker: searchParams.picker === BRIEF_ON,
   };
 }
 
@@ -91,6 +116,12 @@ export function buildJobCalendarHref(
   }
   if (merged.brief) {
     params.set('brief', BRIEF_ON);
+  }
+  if (merged.majors.length > 0) {
+    params.set('majors', merged.majors.join(','));
+  }
+  if (merged.picker) {
+    params.set('picker', BRIEF_ON);
   }
 
   const query = params.toString();

@@ -92,10 +92,7 @@ export function MyProfile() {
 
       <BasicInfoSection name={account?.profile?.name} email={account?.email} />
 
-      <CareerInfoSection
-        profile={profile}
-        onSaved={() => setReloadToken((token) => token + 1)}
-      />
+      <CareerInfoSection profile={profile} onSaved={() => setReloadToken((token) => token + 1)} />
 
       <PasswordSection />
       <KakaoChannelBanner />

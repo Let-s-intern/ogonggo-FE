@@ -54,7 +54,10 @@ export function hasMyPostsFilter(query: MyPostsQuery): boolean {
 }
 
 /** 기본값은 주소에서 뺀다. 필터를 바꾸면 1 페이지로 돌아간다 — 목록 화면 넷과 같다. */
-export function buildMyPostsHref(base: MyPostsQuery, overrides: Partial<MyPostsQuery> = {}): string {
+export function buildMyPostsHref(
+  base: MyPostsQuery,
+  overrides: Partial<MyPostsQuery> = {},
+): string {
   const changedKeys = (Object.keys(overrides) as (keyof MyPostsQuery)[]).filter(
     (key) => key !== 'page' && overrides[key] !== base[key],
   );
