@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore } from 'react';
 import { signOut } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import { clearTokens, isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
+import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
 
 /**
@@ -36,8 +37,16 @@ const NAV_ITEMS = [
  *
  * 왼쪽 로고는 v3에서 글자("오늘의 공고 BY LETS CAREER")가 심볼 마크로 바뀌었다
  * (`docs/asset/v3 변경사항/오공고 로고.svg`, 목업의 원본 크기 52x25 그대로다). 글자가 사라져
- * 링크에 읽을 것이 남지 않으므로 이름은 `aria-label`로 붙인다. 목업에서 마크 왼쪽에 있는 회색
- * 심볼과 세로 구분선은 에셋을 받지 못해 넣지 않았다(PRD "결정 기록").
+ * 링크에 읽을 것이 남지 않으므로 이름은 `aria-label`로 붙인다.
+ *
+ * 그 왼쪽의 회색 렛츠커리어 마크와 세로 구분선은 v3에서 에셋이 없어 미뤘던 것이고
+ * (`docs/asset/v3-1/icon/렛츠커리어.svg`), 셋이 하나의 로고 잠금이라 같은 링크 안에 있다.
+ * 새 마크도 구분선도 읽을 것이 없으므로 이름은 그대로 링크의 `aria-label` 하나뿐이다.
+ *
+ * 간격은 목업(`docs/asset/v3 변경사항/사이드 스터디 디자인변경.png`, 1440px)을 픽셀로 재서
+ * 맞췄다 — 회색 마크 x 130~155, 구분선 x 167, 파란 로고 x 180~231이라 사이가 11~12px다.
+ * `gap-3`(12px)이 그 값이다. 구분선은 26px 높이의 1px 선이고 색은 `gray-300`이다(목업의
+ * rgb(232,234,237)은 #D1D5DB 1px 선이 두 열에 반씩 걸린 값이다).
  *
  * 우측 메뉴 중 `공고 달력`만 대상 화면(`/calendar`)이 생겨 링크다. `공고 등록`은 아직 화면이
  * 없어(PRD 1절) 비활성 스타일의 `<span>`으로 남는다.
@@ -60,7 +69,9 @@ export function SiteHeader() {
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex h-16 max-w-6xl items-stretch justify-between px-6">
         <div className="flex items-center gap-10">
-          <Link href="/" aria-label="오늘의 공고 홈" className="flex items-center">
+          <Link href="/" aria-label="오늘의 공고 홈" className="flex items-center gap-3">
+            <LetsCareerMark className="h-[26px] w-[26px]" />
+            <span className="h-[26px] w-px bg-gray-300" />
             <Logo className="h-[25px] w-[52px] text-blue-500" />
           </Link>
           <nav className="flex items-stretch gap-6 text-sm font-semibold">
