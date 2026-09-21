@@ -19,14 +19,16 @@ import { CompanyPostsCta } from './CompanyPostsCta';
 /**
  * 표 머리글. `공고 정보` 는 폭을 주지 않아 남는 폭을 갖는다.
  *
- * **목업의 `조회수` 열이 빠졌다.** 기업용 목록 응답에 조회수도 북마크수도 없다 — 근거는
- * `CompanyPostRow` 주석에 있다.
+ * **목업의 `조회수` 열이 빠지고 `심사 · 게시 상태` 열이 늘었다.** 기업용 목록 응답에는
+ * 조회수도 북마크수도 없고 대신 `reviewStatus`·`publicationStatus` 가 있다 — 근거는
+ * `CompanyPostRow` 와 `model/status.ts` 주석에 있다.
  */
 const COLUMNS: readonly MyPageListColumn[] = [
   { key: 'info', label: '공고 정보' },
   { key: 'capacity', label: '모집 인원', className: 'w-28' },
-  { key: 'period', label: '모집 기간', className: 'w-64' },
-  { key: 'action', label: '관리', className: 'w-44' },
+  { key: 'period', label: '모집 기간', className: 'w-56' },
+  { key: 'status', label: '심사 · 게시 상태', className: 'w-32' },
+  { key: 'action', label: '관리', className: 'w-40' },
 ];
 
 type State = { kind: 'loading' } | { kind: 'ready'; page: CompanyPostsPage } | { kind: 'error' };

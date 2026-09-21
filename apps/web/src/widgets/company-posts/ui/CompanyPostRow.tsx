@@ -3,6 +3,12 @@ import { Badge, Button } from '@ogonggo/ui';
 import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { formatDeadline } from '@/widgets/mypage-list';
+import {
+  PUBLICATION_STATUS_LABELS,
+  PUBLICATION_STATUS_TONES,
+  REVIEW_STATUS_LABELS,
+  REVIEW_STATUS_TONES,
+} from '../model/status';
 import { companyPostEditHref } from '../lib/routes';
 import type { CompanyPostRow as Row } from '../lib/fetch';
 import type { CompanyPostTab } from '../lib/query';
@@ -37,7 +43,8 @@ export interface CompanyPostRowProps {
 }
 
 /**
- * 작성한 공고 표 한 줄(v5 PRD 2 절). 칸은 공고 정보 · 모집 인원 · 모집 기간 · 관리다.
+ * 작성한 공고 표 한 줄(v5 PRD 2 절). 칸은 공고 정보 · 모집 인원 · 모집 기간 ·
+ * 심사 · 게시 상태 · 관리다.
  *
  * **목업의 `조회수` 열이 없다.** `CompanyJobSummaryResponse` 와
  * `CompanyBootcampSummaryResponse` 에 조회수도 북마크수도 없다 — 그 수치는 사용자용 응답
@@ -105,6 +112,31 @@ export function CompanyPostRow({ row, tab }: CompanyPostRowProps) {
             </Badge>
           ) : null}
           <span className="text-sm text-gray-500">{formatPeriod(row)}</span>
+        </div>
+      </td>
+
+      {/* 심사와 게시를 한 칸에 위아래로 둔다. 열을 둘로 가르면 `공고 정보` 가 가져갈 폭이
+          제목 한 줄도 안 되게 줄어든다. 어느 배지가 무엇인지는 `title` 이 말한다. */}
+      <td className="px-4 py-5">
+        <div className="flex flex-col items-center gap-1">
+          {row.reviewStatus ? (
+            <Badge
+              tone={REVIEW_STATUS_TONES[row.reviewStatus]}
+              title="심사 상태"
+              className="rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+            >
+              {REVIEW_STATUS_LABELS[row.reviewStatus]}
+            </Badge>
+          ) : (
+            <span className="text-sm text-gray-500">{EMPTY_CELL}</span>
+          )}
+          <Badge
+            tone={PUBLICATION_STATUS_TONES[row.publicationStatus]}
+            title="게시 상태"
+            className="rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+          >
+            {PUBLICATION_STATUS_LABELS[row.publicationStatus]}
+          </Badge>
         </div>
       </td>
 
