@@ -8,6 +8,7 @@ import {
   type CompanyJobFormValues,
 } from '../model/values';
 import { JobBasicInfoSection } from './JobBasicInfoSection';
+import { JobContentSection } from './JobContentSection';
 import { JobFormSection } from './JobFormSection';
 
 export interface CompanyJobFormProps {
@@ -94,6 +95,16 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
           onToggle={() => toggle(1)}
         >
           <JobBasicInfoSection values={values} onChange={change} />
+        </JobFormSection>
+
+        <JobFormSection
+          step={2}
+          title="상세 내용"
+          description="커리큘럼과 지원 자격을 입력해 주세요"
+          open={openSteps.includes(2)}
+          onToggle={() => toggle(2)}
+        >
+          <JobContentSection values={values} onChange={change} />
         </JobFormSection>
       </div>
 
