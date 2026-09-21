@@ -26,6 +26,9 @@ export interface CompanyBootcampFormValues {
   tuitionType: CreateCompanyBootcampRequestTuitionType | '';
   tuitionAmount: string;
   representativeImageUrl: string;
+  shortDescription: string;
+  /** 목업의 `공고 상세 내용`. 평문 한 덩어리로 저장된다. */
+  content: string;
 }
 
 export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
@@ -39,6 +42,8 @@ export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
   tuitionType: '',
   tuitionAmount: '',
   representativeImageUrl: '',
+  shortDescription: '',
+  content: '',
 };
 
 /** 읽어 온 부트캠프를 화면 값으로(v5 PRD 4 절). */
@@ -56,5 +61,7 @@ export function toCompanyBootcampValues(
     tuitionType: bootcamp.tuitionType,
     tuitionAmount: bootcamp.tuitionAmount === undefined ? '' : String(bootcamp.tuitionAmount),
     representativeImageUrl: bootcamp.representativeImageUrl,
+    shortDescription: bootcamp.shortDescription,
+    content: bootcamp.content,
   };
 }

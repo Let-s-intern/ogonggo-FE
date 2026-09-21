@@ -9,6 +9,7 @@ import {
   type CompanyBootcampFormValues,
 } from '../model/values';
 import { BootcampBasicInfoSection } from './BootcampBasicInfoSection';
+import { BootcampContentSection } from './BootcampContentSection';
 
 export interface CompanyBootcampFormProps {
   /** 있으면 수정, 없으면 새 공고. 작성한 공고 표에서 넘어올 때만 있다. */
@@ -93,6 +94,17 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         onToggle={() => toggle(1)}
       >
         <BootcampBasicInfoSection values={values} onChange={change} />
+      </FormSection>
+
+      <FormSection
+        name="company-bootcamp-form"
+        step={2}
+        title="교육 상세"
+        description="프로그램의 특징과 커리큘럼을 입력해 주세요"
+        open={openSteps.includes(2)}
+        onToggle={() => toggle(2)}
+      >
+        <BootcampContentSection values={values} onChange={change} />
       </FormSection>
 
       {formError ? (
