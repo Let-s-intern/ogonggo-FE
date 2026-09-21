@@ -10,6 +10,7 @@ export {
   type CheckAllItem,
 } from './components/CheckAllGroup';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
+export { Chip, type ChipProps } from './components/Chip';
 export { CircleIconButton, type CircleIconButtonProps } from './components/CircleIconButton';
 export {
   ConfirmDelete,
@@ -24,10 +25,13 @@ export {
 } from './components/DescriptionList';
 export { EmptyState, type EmptyStateProps } from './components/EmptyState';
 export { Field, type FieldProps } from './components/Field';
+export { FilterButton, type FilterButtonProps } from './components/FilterButton';
 export { Input, type InputProps } from './components/Input';
+export { MenuItem, type MenuItemProps } from './components/MenuItem';
 export { Modal, type ModalProps } from './components/Modal';
 export { Pagination, type PaginationProps } from './components/Pagination';
 export { Select, type SelectOption, type SelectProps } from './components/Select';
+export { SearchInput, type SearchInputProps } from './components/SearchInput';
 export { SpeechBubble, type SpeechBubbleProps } from './components/SpeechBubble';
 export { StatTile, type StatTileProps } from './components/StatTile';
 export { Tabs, type TabItem, type TabsProps } from './components/Tabs';
