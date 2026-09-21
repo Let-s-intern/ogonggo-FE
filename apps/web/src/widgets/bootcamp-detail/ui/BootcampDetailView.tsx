@@ -74,7 +74,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
       <BootcampDetailBreadcrumb />
       <BootcampDetailHeaderCard bootcamp={bootcamp} />
       <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-10">
           <BootcampInfoGrid bootcamp={bootcamp} />
           <BootcampCurriculum curriculums={bootcamp.curriculums} />
           {/* `지원 자격 · 전형`도 값이 없으면 제목째 사라진다 — 커리큘럼과 같은 규칙이다.
