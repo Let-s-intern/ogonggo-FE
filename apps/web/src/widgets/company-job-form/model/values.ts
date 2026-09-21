@@ -1,11 +1,12 @@
 import type {
   CompanyJobDetailResponse,
+  CreateCompanyJobRequest,
   CreateCompanyJobRequestApplicationMethod,
   CreateCompanyJobRequestEducationLevel,
   CreateCompanyJobRequestEmploymentType,
   CreateCompanyJobRequestExperienceType,
 } from '@ogonggo/api';
-import { toDateInputValue } from '../lib/datetime';
+import { toDateInputValue, toEndDateTime, toStartDateTime } from '../lib/datetime';
 import { EMPTY_HIRING_PROCESS_STEP, type HiringProcessStep } from '../lib/hiringProcess';
 
 /**
@@ -129,5 +130,56 @@ export function toCompanyJobPassthrough(job: CompanyJobDetailResponse): CompanyJ
     companyAndTeamIntroduction: job.companyAndTeamIntroduction,
     compensation: job.compensation,
     closesWhenFilled: job.closesWhenFilled,
+  };
+}
+
+/** 빈 칸은 보내지 않는다. 적지 않은 숫자 칸은 값이 없다. */
+const textOrUndefined = (value: string) => value.trim() || undefined;
+const numberOrUndefined = (value: string) => (value.trim() === '' ? undefined : Number(value));
+
+/**
+ * 화면 값을 요청 바디로(v5 PRD 3 절). 생성과 수정이 같은 모양이라
+ * (`CreateCompanyJobRequest` 와 `UpdateCompanyJobRequest` 의 칸이 같다) 한 함수가 만든다.
+ *
+ * **`recruitmentType` 은 화면에 칸이 없다.** 목업에 그 선택지가 없는데 요청에는 필수라,
+ * 모집 마감일이 있으면 `PERIOD`, 없으면 `ALWAYS_OPEN` 으로 정한다 — 마감일 없는 공고가
+ * 곧 상시 채용이다. 크롤러가 넣은 공고를 열어 고칠 때도 같은 규칙이 원래 값을 되돌려 준다.
+ *
+ * 목업에 칸이 없는 나머지 값들은 읽어 온 그대로 다시 싣는다(`CompanyJobPassthrough`).
+ * 수정이 전체 교체라 빼면 지워진다.
+ */
+export function toCompanyJobRequest(
+  values: CompanyJobFormValues,
+  passthrough: CompanyJobPassthrough,
+): CreateCompanyJobRequest {
+  return {
+    companyName: values.companyName.trim(),
+    parentCompanyName: passthrough.parentCompanyName,
+    title: values.title.trim(),
+    jobField: textOrUndefined(values.jobField),
+    jobRole: passthrough.jobRole,
+    industry: passthrough.industry,
+    coverImageUrl: textOrUndefined(values.coverImageUrl),
+    employmentType: values.employmentType as CreateCompanyJobRequest['employmentType'],
+    experienceType: values.experienceType as CreateCompanyJobRequest['experienceType'],
+    experienceMinYears: passthrough.experienceMinYears,
+    educationLevel: values.educationLevel || undefined,
+    region: textOrUndefined(values.region),
+    recruitmentType: values.recruitmentEndAt ? 'PERIOD' : 'ALWAYS_OPEN',
+    recruitmentHeadcount: numberOrUndefined(values.recruitmentHeadcount),
+    recruitmentStartAt: toStartDateTime(values.recruitmentStartAt),
+    recruitmentEndAt: toEndDateTime(values.recruitmentEndAt),
+    closesWhenFilled: passthrough.closesWhenFilled,
+    autoCloseEnabled: values.autoCloseEnabled,
+    companyAndTeamIntroduction: passthrough.companyAndTeamIntroduction,
+    responsibilities: textOrUndefined(values.responsibilities),
+    qualifications: textOrUndefined(values.qualifications),
+    preferredQualifications: textOrUndefined(values.preferredQualifications),
+    compensation: passthrough.compensation,
+    benefits: textOrUndefined(values.benefits),
+    hiringProcess: textOrUndefined(values.hiringProcess),
+    recruitmentNotice: textOrUndefined(values.recruitmentNotice),
+    applicationMethod: values.applicationMethod || undefined,
+    sourceUrl: textOrUndefined(values.sourceUrl),
   };
 }
