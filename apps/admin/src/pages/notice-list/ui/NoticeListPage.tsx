@@ -14,6 +14,11 @@ import {
 import type { Notice } from '@ogonggo/api/src/mocks/fixtures/admin-notice';
 import { useNoticeList, useSaveNotice } from '@/entities/notice/api/useNotices';
 import { PageHeader } from '@/widgets/page-header';
+import {
+  BACKEND_PENDING_MESSAGE,
+  isBackendPending,
+  tableBodyState,
+} from '@/shared/config/backendPending';
 import { formatDate, toDateInputValue } from '@/shared/lib/format';
 
 /**
@@ -65,15 +70,19 @@ export function NoticeListPage() {
       <PageHeader
         title="공지사항"
         action={
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditing(null);
-              setIsWriting(true);
-            }}
-          >
-            새 공지
-          </Button>
+          // 저장할 곳이 없는 모드에서는 작성 버튼을 내린다. 눌러서 저장이 실패하는 것보다
+          // 쓸 수 없다는 것이 먼저 보이는 편이 낫다.
+          isBackendPending ? undefined : (
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setIsWriting(true);
+              }}
+            >
+              새 공지
+            </Button>
+          )
         }
       />
 
@@ -98,8 +107,7 @@ export function NoticeListPage() {
           setEditing(row);
           setIsWriting(true);
         }}
-        isLoading={isPending}
-        emptyMessage="등록된 공지가 없습니다."
+        {...tableBodyState(BACKEND_PENDING_MESSAGE.notice, isPending, '등록된 공지가 없습니다.')}
       />
     </>
   );
