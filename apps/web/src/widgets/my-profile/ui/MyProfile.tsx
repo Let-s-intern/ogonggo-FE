@@ -8,6 +8,7 @@ import {
 } from '@ogonggo/api';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { BasicInfoSection } from './BasicInfoSection';
+import { CareerInfoSection } from './CareerInfoSection';
 
 type State =
   | { kind: 'loading' }
@@ -26,6 +27,8 @@ type State =
  */
 export function MyProfile() {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  /** 커리어 정보를 저장한 뒤 계정을 다시 읽으려고 올리는 값. */
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (!isSignedIn()) {
@@ -48,7 +51,7 @@ export function MyProfile() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadToken]);
 
   const account = state.kind === 'ready' ? state.account : undefined;
 
@@ -63,6 +66,11 @@ export function MyProfile() {
       ) : null}
 
       <BasicInfoSection name={account?.profile?.name} email={account?.email} />
+
+      <CareerInfoSection
+        profile={account?.profile}
+        onSaved={() => setReloadToken((token) => token + 1)}
+      />
     </div>
   );
 }

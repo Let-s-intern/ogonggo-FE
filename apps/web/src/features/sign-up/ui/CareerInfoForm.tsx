@@ -44,6 +44,17 @@ export interface CareerInfoFormProps {
    * 빈 칸으로 덮어쓴다.
    */
   initialProfile: MyProfileResponse;
+  /** 학교·학년·전공 세 칸 위의 소제목. 마이페이지는 구역 제목이 따로 있어 다른 말을 넘긴다. */
+  heading?: string;
+  /** 저장 버튼 문구. */
+  submitLabel?: string;
+  /**
+   * 저장에 성공한 뒤 할 일. 기본은 로그인 전에 있던 화면으로 돌아가기 — 가입 흐름의 마지막 화면이라 그렇다.
+   * 마이페이지는 같은 화면에 머물러야 해서 자기 것을 넘긴다.
+   */
+  onSaved?: () => void;
+  /** 저장 버튼 아래 `다음에 하기`. 가입 흐름에만 뜻이 있다. */
+  showSkip?: boolean;
 }
 
 /**
@@ -54,8 +65,17 @@ export interface CareerInfoFormProps {
  * "다음에 하기" 는 아무것도 보내지 않는다. 둘 다 로그인 전에 있던 화면(없으면 홈) 으로 간다.
  *
  * 칸이 모두 비면 "입력 완료" 가 꺼진다(디자인의 회색 버튼).
+ *
+ * **마이페이지 개인 정보(PRD 6 절) 도 이 폼을 쓴다.** 고치는 값이 같은 여덟이고, 저장하기 전에 지금 값으로
+ * 채워야 한다는 제약도 같다. 두 화면의 차이는 소제목·버튼 문구·저장 뒤 행동 셋뿐이라 그것만 인자로 받는다.
  */
-export function CareerInfoForm({ initialProfile }: CareerInfoFormProps) {
+export function CareerInfoForm({
+  initialProfile,
+  heading = '기본 정보',
+  submitLabel = '입력 완료',
+  onSaved,
+  showSkip = true,
+}: CareerInfoFormProps) {
   const router = useRouter();
   const controls = useCareerModals({
     field: initialProfile.wishField || null,
@@ -110,6 +130,12 @@ export function CareerInfoForm({ initialProfile }: CareerInfoFormProps) {
         wishEmploymentType: joinOrUndefined(employmentTypes),
         wishCompany: textOrUndefined(wishCompany),
       });
+      if (onSaved) {
+        // 같은 화면에 머무는 쪽(마이페이지). 다시 저장할 수 있어야 하므로 pending 을 푼다.
+        setPending(false);
+        onSaved();
+        return;
+      }
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다.
       leave();
     } catch (caught) {
@@ -124,7 +150,7 @@ export function CareerInfoForm({ initialProfile }: CareerInfoFormProps) {
 
   return (
     <form className="flex flex-col" onSubmit={handleSubmit} noValidate>
-      <h2 className="pb-8 text-lg font-semibold text-gray-900">기본 정보</h2>
+      <h2 className="pb-8 text-lg font-semibold text-gray-900">{heading}</h2>
       <div className="flex flex-col gap-5">
         <SignUpField label="학교" htmlFor="career-university">
           <Input
@@ -211,16 +237,18 @@ export function CareerInfoForm({ initialProfile }: CareerInfoFormProps) {
           </p>
         ) : null}
         <Button type="submit" className={SIGN_UP_SUBMIT_CLASS} disabled={!filled || pending}>
-          {pending ? '저장하는 중...' : '입력 완료'}
+          {pending ? '저장하는 중...' : submitLabel}
         </Button>
-        <button
-          type="button"
-          onClick={leave}
-          disabled={pending}
-          className="self-center py-2 text-base text-gray-500 hover:text-gray-700"
-        >
-          다음에 하기
-        </button>
+        {showSkip ? (
+          <button
+            type="button"
+            onClick={leave}
+            disabled={pending}
+            className="self-center py-2 text-base text-gray-500 hover:text-gray-700"
+          >
+            다음에 하기
+          </button>
+        ) : null}
       </div>
 
       <CareerSelectModals
