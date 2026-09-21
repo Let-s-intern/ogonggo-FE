@@ -6,7 +6,7 @@ import { cn } from '@ogonggo/ui';
 import { useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
-import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import Link from 'next/link';
 import { ChevronIcon } from '@/shared/ui/icons';
 import {
   EVENT_RESET_CLASSES,
@@ -20,28 +20,24 @@ import { parseCalendarDate, toCalendarParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 
 /**
- * 주간 뷰의 막대. 공고 하나가 가로 막대 하나이고 **모집 시작일부터 마감일까지** 걸친다
- * (PRD 5.2). FullCalendar 의 `end`는 열린 구간이라 마감일 다음 날을 넣어야 마감일 칸까지
- * 칠해진다. 주 경계에서 자르는 일은 FullCalendar 가 한다 — 보이는 범위 밖은 그리지 않는다.
+ * 주간 뷰의 막대. 공고 하나가 가로 막대 하나이고 **마감일 하루에만** 놓인다.
  *
- * 시작일이 없는 공고(`recruitmentStartAt`이 마감일과 같은 값으로 채워져 오는 경우가 대부분이다,
- * `packages/api/src/mocks/handlers.ts`)는 하루짜리 막대가 된다.
+ * 처음에는 모집 시작일부터 마감일까지 걸쳤다(PRD 5.2). v6(`docs/asset/v6 공고달력/주간 보기.png`)
+ * 는 막대가 한 칸 폭이고 필터 줄에 `마감일 기준`이 켜져 있어 마감일 칸에만 둔다 — 월간과 같은
+ * 기준이 됐다(2026-09-21). FullCalendar 의 `end`는 열린 구간이라 마감일 다음 날을 넣는다.
  *
  * **`+N`은 주간에 없다**(2026-09-02 결정, PRD 가 정하지 않은 부분이다). 월간의 `+N`은 날짜
- * 칸이 로고 4개씩 두 줄로 크기가 정해진 상자라서 필요한 것인데, 주간의 막대는 한 줄을 통째로
- * 쓰고 아래로 얼마든지 쌓이므로 자를 이유가 없다. 게다가 막대는 여러 날에 걸치므로 "몇 건이
- * 가려졌다"를 어느 날짜 칸에 적을지 정할 수가 없다 — FullCalendar 의 `dayMaxEvents`도 주간에
- * 켜면 가려진 줄에 걸친 모든 요일 칸마다 `+N` 링크를 하나씩 만든다. 목업
- * (`docs/asset/공고달력 간략히.png`)에도 `+N`이 없고 막대 아래는 그냥 빈 자리다.
+ * 칸이 로고 3개씩 두 줄로 크기가 정해진 상자라서 필요한 것인데, 주간의 막대는 아래로 얼마든지
+ * 쌓이므로 자를 이유가 없다. 넘치는 주는 아래 `전체 보기`로 접고 편다. 목업
+ * (`docs/asset/공고달력 간략히.png`, v6 `주간 보기.png`)에도 `+N`이 없다.
  */
 function buildWeekEvents(items: UserJobCalendarItemResponse[], today: string): EventInput[] {
   return items.map((item) => {
     const deadline = item.recruitmentEndAt.slice(0, 10);
-    const start = item.recruitmentStartAt.slice(0, 10);
     return {
       id: String(item.id),
       title: item.companyName,
-      start: start <= deadline ? start : deadline,
+      start: deadline,
       end: exclusiveEnd(deadline),
       allDay: true,
       // `dueToday` 는 색과 정렬에 같이 쓰인다. `eventOrder` 는 `extendedProps` 를 비교 객체에
@@ -73,9 +69,8 @@ const EVENT_BAR_CLASSES = [...EVENT_RESET_CLASSES, 'rounded-none!'];
 const COLLAPSED_ROWS = 7;
 
 /**
- * 한 주가 몇 줄이 되는지. **한 날에 가장 많이 겹치는 막대 수**가 곧 줄 수다 — 겹치지 않는
- * 막대를 같은 줄에 넣는 배치에서 그 수는 하한이고, FullCalendar 의 시작일 순 그리디가 그
- * 하한을 그대로 달성한다(2026-09-02 실측, `eventOrder` 주석 참고).
+ * 한 주가 몇 줄이 되는지. 막대가 마감일 하루짜리라 **한 날에 마감하는 공고 수의 최댓값**이
+ * 곧 줄 수다.
  *
  * 렌더된 격자를 재지 않고 데이터로 세는 이유는 FullCalendar 가 막대 높이를 잰 뒤에야 줄
  * 자리를 정하기 때문이다 — 마운트 직후에 재면 아직 배치 전이라 틀린 값이 나온다.
@@ -90,11 +85,7 @@ function countWeekRows(items: UserJobCalendarItemResponse[], weekStart: Date): n
     const day = toCalendarParam(
       new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + offset),
     );
-    const covering = items.filter((item) => {
-      const deadline = item.recruitmentEndAt.slice(0, 10);
-      const start = item.recruitmentStartAt.slice(0, 10);
-      return (start <= deadline ? start : deadline) <= day && day <= deadline;
-    }).length;
+    const covering = items.filter((item) => item.recruitmentEndAt.slice(0, 10) === day).length;
     max = Math.max(max, covering);
   }
   return max;
@@ -108,12 +99,12 @@ export interface WeekGridProps {
 }
 
 /**
- * 주간 격자(`docs/asset/공고달력 간략히.png`). `간략히 보기`가 켜졌을 때 월간 대신 그려진다
+ * 주간 격자(`docs/asset/공고달력 간략히.png`, v6 `docs/asset/v6 공고달력/주간 보기.png`). `간략히 보기`가 켜졌을 때 월간 대신 그려진다
  * (PRD 8.1). 월간과 같은 라이브러리를 감싸지만 렌더 규칙이 전혀 달라 컴포넌트가 갈린다 —
- * 월간은 마감일 칸에 로고와 `+N`, 주간은 시작일부터 마감일까지 이어지는 가로 막대다.
+ * 월간은 마감일 칸에 로고와 `+N`, 주간은 마감일 칸의 가로 막대다.
  *
  * 주간은 날짜 칸이 상자가 아니다. 요일·날짜 머리글과 그 아래 가로선 하나가 전부이고, 막대는
- * 칸 경계를 무시하고 걸친 날 수만큼 이어진다. 그래서 월간이 칸에 준 안쪽 여백과 최소 높이를
+ * 칸 폭을 끝까지 채운다. 그래서 월간이 칸에 준 안쪽 여백과 최소 높이를
  * 여기서는 전부 0 으로 되돌린다.
  *
  * 날짜 숫자는 머리글 안에 직접 그린다. `dayGridWeek` 은 줄이 하나뿐이라 FullCalendar 가
@@ -217,33 +208,23 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
           return (
             // 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
             // 있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
-            <span className="block pb-2">
+            //
+            // 누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다(`app/(site)/calendar/@modal`).
+            <Link href={`/jobs/${arg.event.id}`} scroll={false} className="block pb-2">
               <span
                 // 호버 문구는 마감일이고 월간과 같다(PRD 8.5).
                 title={formatDeadlineHint(deadline)}
                 className={cn(
-                  'flex h-9 items-center gap-2 rounded-[6px] px-3 text-sm text-gray-800',
+                  // v6 막대는 로고 없이 기업명만 있고 오른쪽 끝에 2px 세로선이 있다.
+                  'flex h-9 items-center rounded-[6px] border-r-2 px-3 text-sm text-gray-800',
                   // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
                   // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
-                  deadline === today ? 'bg-blue-50' : 'bg-gray-100',
+                  deadline === today ? 'border-blue-100 bg-blue-50' : 'border-gray-200 bg-gray-100',
                 )}
               >
-                {/*
-                  기업명 왼쪽에 회사 로고를 둔다. 월간 타일과 같은 출처이고(달력 응답에 로고
-                  URL 이 없어 회사명으로 찾는다) 못 찾으면 기본 썸네일로 떨어진다. `p-0` 으로
-                  안쪽 여백만 없애고 `object-contain` 은 그대로 둔다 — `object-cover` 로
-                  채우면 마크가 치우친 로고에서 글자가 잘린다(`CompanyLogo.tsx` 주석).
-                  36px 막대 안에 20px 이면 위아래로 8px 씩 남는다.
-                */}
-                <CompanyLogo companyName={arg.event.title} className="h-5 w-5 rounded-xs p-0" />
-                {/*
-                  말줄임은 이 자식이 맡는다. flex 항목은 기본 최소 너비가 내용 크기라 그냥 두면
-                  좁은 막대에서 로고를 밀어내는데, `truncate` 의 `overflow: hidden` 이 그 최소
-                  너비를 0 으로 만들어 준다.
-                */}
                 <span className="truncate">{arg.event.title}</span>
               </span>
-            </span>
+            </Link>
           );
         }}
         events={buildWeekEvents(items, today)}

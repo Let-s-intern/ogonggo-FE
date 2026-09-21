@@ -45,29 +45,45 @@ export function CalendarHeader({ query }: CalendarHeaderProps) {
   const unit = query.brief ? '주' : '달';
 
   return (
-    // 화살표 아이콘은 32px 상자 안에 8px 짜리 글리프라 좌우로 12px 씩 비어 있다. 그만큼 당겨야
-    // 왼쪽 화살표가 제목 줄(`공고 달력`)과 같은 세로선에서 시작한다(목업 x=161 대 163).
-    <div className="-ml-3 flex items-center gap-3">
-      <Link
-        href={buildJobCalendarHref(query, { date: step(-1) })}
-        aria-label={`이전 ${unit}`}
-        className="rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-      >
-        <ChevronIcon direction="left" className="h-8 w-8" />
-      </Link>
-      <span className="text-3xl font-bold text-gray-900">{title}</span>
-      <MiniCalendarPopover
-        selected={query.date}
-        // 고른 날이 든 주로 간다(PRD 8.4). 월간에서는 그 날이 든 달을 펴는 것과 같다.
-        onSelect={(date) => router.push(buildJobCalendarHref(query, { date }))}
-      />
-      <Link
-        href={buildJobCalendarHref(query, { date: step(1) })}
-        aria-label={`다음 ${unit}`}
-        className="rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-      >
-        <ChevronIcon direction="right" className="h-8 w-8" />
-      </Link>
+    <div className="flex items-center justify-between">
+      {/*
+        화살표 아이콘은 32px 상자 안에 8px 짜리 글리프라 좌우로 12px 씩 비어 있다. 그만큼 당겨야
+        왼쪽 화살표가 제목 줄(`공고 달력`)과 같은 세로선에서 시작한다(목업 x=161 대 163).
+      */}
+      <div className="-ml-3 flex items-center gap-3">
+        <Link
+          href={buildJobCalendarHref(query, { date: step(-1) })}
+          aria-label={`이전 ${unit}`}
+          className="rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        >
+          <ChevronIcon direction="left" className="h-8 w-8" />
+        </Link>
+        <span className="text-3xl font-bold text-gray-900">{title}</span>
+        <MiniCalendarPopover
+          selected={query.date}
+          // 고른 날이 든 주로 간다(PRD 8.4). 월간에서는 그 날이 든 달을 펴는 것과 같다.
+          onSelect={(date) => router.push(buildJobCalendarHref(query, { date }))}
+        />
+        <Link
+          href={buildJobCalendarHref(query, { date: step(1) })}
+          aria-label={`다음 ${unit}`}
+          className="rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        >
+          <ChevronIcon direction="right" className="h-8 w-8" />
+        </Link>
+      </div>
+      {/*
+        오늘이 든 달로 돌아가는 버튼. v6 월간(`docs/asset/v6 공고달력/월간 보기.png`)에만 있다 —
+        주간 목업에는 없다. 기본값이 오늘이라 `date` 가 URL 에서 빠진다.
+      */}
+      {query.brief ? null : (
+        <Link
+          href={buildJobCalendarHref(query, { date: new Date() })}
+          className="flex h-9 items-center rounded-full bg-gray-800 px-4 text-sm font-bold text-white transition-colors hover:bg-gray-900"
+        >
+          Today
+        </Link>
+      )}
     </div>
   );
 }

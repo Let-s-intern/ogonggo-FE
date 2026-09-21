@@ -11,6 +11,12 @@ import { SimilarJobs } from './SimilarJobs';
 
 export interface JobDetailViewProps {
   jobId: number;
+  /**
+   * `page`는 `/jobs/[jobId]` 화면, `modal`은 공고 달력에서 여는 모달이다
+   * (`docs/asset/v6 공고달력/공고 상세 모달.png`). 모달은 브레드크럼이 없고 헤더 카드와 정보
+   * 그리드가 본문과 같은 왼쪽 열에 들어간다.
+   */
+  layout?: 'page' | 'modal';
 }
 
 /**
@@ -65,20 +71,71 @@ function buildSections(job: JobDetail): { label: string; value?: string }[] {
  * (값 있는 것만) → 사이드바)로 조합한다. 본문(왼쪽)과 사이드바(오른쪽)는 데스크톱에서 2단,
  * 좁은 화면에서는 세로로 쌓인다.
  */
-export async function JobDetailView({ jobId }: JobDetailViewProps) {
+export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
+
+  const headerCard = (
+    <JobDetailHeaderCard
+      companyName={job.companyName}
+      region={job.region}
+      title={job.title}
+      recruitmentType={job.recruitmentType}
+      recruitmentEndAt={job.recruitmentEndAt}
+      viewCount={job.viewCount}
+    />
+  );
+  const infoGrid = (
+    <JobInfoGrid
+      experienceType={job.experienceType}
+      employmentType={job.employmentType}
+      educationLevel={job.educationLevel}
+      region={job.region}
+    />
+  );
+  const sections = buildSections(job)
+    .filter((section) => Boolean(section.value))
+    .map((section) => (
+      <div key={section.label}>
+        <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
+        <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{section.value}</p>
+      </div>
+    ));
+  const applyCta = (
+    <ApplyCta
+      href={job.sourceUrl}
+      label="지원하러 가기"
+      bookmarked={job.bookmarked}
+      bookmarkCount={job.bookmarkCount}
+    />
+  );
+
+  if (layout === 'modal') {
+    return (
+      // 모달 목업의 2단은 본문 640px : 사이드바 300px, 사이 20px 이다. 본문 섹션은 헤더 카드보다
+      // 20px 안쪽에서 시작한다.
+      //
+      // 목업 오른쪽 맨 위의 `오늘의 공고의 코멘트`는 그리지 않는다. API 없음: 상세 응답에 코멘트
+      // 필드가 없다. 그 아래 회색 판은 광고 자리라 목업대로 자리만 잡는다(홈의 배너 자리와 같다).
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,640fr)_minmax(0,300fr)]">
+        <div className="flex min-w-0 flex-col gap-5">
+          {headerCard}
+          {infoGrid}
+          <div className="flex flex-col gap-10 px-5 pt-5">{sections}</div>
+        </div>
+        <aside className="flex min-w-0 flex-col gap-6">
+          {applyCta}
+          <div className="h-30 w-full rounded-lg bg-gray-100" aria-hidden="true" />
+          <SimilarJobs excludeJobId={job.id} />
+          <CrossSellWidget />
+        </aside>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full max-w-6xl flex-col gap-4">
       <JobDetailBreadcrumb />
-      <JobDetailHeaderCard
-        companyName={job.companyName}
-        region={job.region}
-        title={job.title}
-        recruitmentType={job.recruitmentType}
-        recruitmentEndAt={job.recruitmentEndAt}
-        viewCount={job.viewCount}
-      />
+      {headerCard}
       {/* 좌우 `px-8`은 아래 `ForBusinessBanner`(`rounded-lg bg-blue-50 px-8 py-8`)의 안쪽 여백과
           위 헤더 카드(`p-8`)에 맞춘 값이다 — 이 세 블록의 글자 시작 x가 한 줄로 맞아야 한다.
           본문 2단만 여백 없이 컨테이너 끝까지 붙어 있어서 어긋나 보였다. */}
@@ -87,28 +144,11 @@ export async function JobDetailView({ jobId }: JobDetailViewProps) {
           본문이 좁았다. */}
       <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
-          <JobInfoGrid
-            experienceType={job.experienceType}
-            employmentType={job.employmentType}
-            educationLevel={job.educationLevel}
-            region={job.region}
-          />
-          {buildSections(job)
-            .filter((section) => Boolean(section.value))
-            .map((section) => (
-              <div key={section.label}>
-                <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
-                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{section.value}</p>
-              </div>
-            ))}
+          {infoGrid}
+          {sections}
         </div>
         <aside className="flex flex-col gap-6">
-          <ApplyCta
-            href={job.sourceUrl}
-            label="지원하러 가기"
-            bookmarked={job.bookmarked}
-            bookmarkCount={job.bookmarkCount}
-          />
+          {applyCta}
           <SimilarJobs excludeJobId={job.id} />
           <CrossSellWidget />
         </aside>
