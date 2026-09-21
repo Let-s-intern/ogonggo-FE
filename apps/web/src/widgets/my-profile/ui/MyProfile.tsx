@@ -11,6 +11,7 @@ import { isSignedIn } from '@/shared/api/authTokens';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { BasicInfoSection } from './BasicInfoSection';
 import { CareerInfoSection } from './CareerInfoSection';
+import { KakaoChannelBanner } from './KakaoChannelBanner';
 import { MarketingSection, PasswordSection, WithdrawAction } from './PreparingSections';
 
 type State =
@@ -90,6 +91,7 @@ export function MyProfile() {
       />
 
       <PasswordSection />
+      <KakaoChannelBanner />
       <MarketingSection />
       <WithdrawAction />
     </div>
