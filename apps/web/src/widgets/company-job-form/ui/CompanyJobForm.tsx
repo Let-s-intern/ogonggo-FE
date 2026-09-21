@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, cn } from '@ogonggo/ui';
+import { FormSection } from '@/shared/ui/FormSection';
 import { createJob, fetchMyJob, publishJob, replaceJob } from '../lib/api';
 import { validateForDraft, validateForPublish } from '../model/validate';
 import {
@@ -17,7 +18,6 @@ import {
 import { JobApplySettingsSection } from './JobApplySettingsSection';
 import { JobBasicInfoSection } from './JobBasicInfoSection';
 import { JobContentSection } from './JobContentSection';
-import { JobFormSection } from './JobFormSection';
 import { JobPreview } from './JobPreview';
 
 export interface CompanyJobFormProps {
@@ -191,7 +191,8 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
       {tab === 'preview' ? <JobPreview values={values} /> : null}
 
       <div className={cn('flex flex-col gap-4', tab !== 'write' && 'hidden')}>
-        <JobFormSection
+        <FormSection
+          name="company-job-form"
           step={1}
           title="기본 정보"
           description="공고를 소개하는 기본 정보를 입력해 주세요"
@@ -199,9 +200,10 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
           onToggle={() => toggle(1)}
         >
           <JobBasicInfoSection values={values} onChange={change} />
-        </JobFormSection>
+        </FormSection>
 
-        <JobFormSection
+        <FormSection
+          name="company-job-form"
           step={2}
           title="상세 내용"
           description="커리큘럼과 지원 자격을 입력해 주세요"
@@ -213,9 +215,10 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
             onChange={change}
             hiringProcessStored={hiringProcessStored}
           />
-        </JobFormSection>
+        </FormSection>
 
-        <JobFormSection
+        <FormSection
+          name="company-job-form"
           step={3}
           title="모집 · 지원 설정"
           description="마감일과 지원 방법을 설정해 주세요"
@@ -223,7 +226,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
           onToggle={() => toggle(3)}
         >
           <JobApplySettingsSection values={values} onChange={change} />
-        </JobFormSection>
+        </FormSection>
       </div>
 
       {formError ? (

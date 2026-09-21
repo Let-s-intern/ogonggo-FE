@@ -2,8 +2,8 @@
 
 import { Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
+import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
 import type { CompanyJobFormValues } from '../model/values';
-import { JobRadioGroup } from './JobRadioGroup';
 
 /** `CreateCompanyJobRequest.sourceUrl` 의 `@maxLength`. */
 const MAX_SOURCE_URL_LENGTH = 2048;
@@ -63,7 +63,7 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
         </Field>
 
         <Field label="지원 방법" required>
-          <JobRadioGroup
+          <FormRadioGroup
             name="company-job-application-method"
             options={APPLICATION_METHOD_OPTIONS}
             value={values.applicationMethod}

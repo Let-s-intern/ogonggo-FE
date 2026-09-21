@@ -1,8 +1,8 @@
 'use client';
 
+import { FormRichTextField } from '@/shared/ui/FormRichTextField';
 import type { CompanyJobFormValues } from '../model/values';
 import { JobHiringProcessField } from './JobHiringProcessField';
-import { JobRichTextField } from './JobRichTextField';
 
 export interface JobContentSectionProps {
   values: CompanyJobFormValues;
@@ -25,7 +25,7 @@ export function JobContentSection({
 }: JobContentSectionProps) {
   return (
     <div>
-      <JobRichTextField
+      <FormRichTextField
         id="company-job-responsibilities"
         label="주요 업무"
         required
@@ -34,7 +34,7 @@ export function JobContentSection({
         placeholder="담당하게 될 주요 업무 내용을 입력해 주세요."
       />
 
-      <JobRichTextField
+      <FormRichTextField
         id="company-job-qualifications"
         label="자격 요건"
         required
@@ -43,7 +43,7 @@ export function JobContentSection({
         placeholder="지원자에게 필요한 자격 요건을 입력해 주세요."
       />
 
-      <JobRichTextField
+      <FormRichTextField
         id="company-job-preferred-qualifications"
         label="우대 사항"
         value={values.preferredQualifications}
@@ -51,7 +51,7 @@ export function JobContentSection({
         placeholder="우대되는 경험이나 역량을 입력해 주세요."
       />
 
-      <JobRichTextField
+      <FormRichTextField
         id="company-job-benefits"
         label="혜택 및 복지"
         value={values.benefits}

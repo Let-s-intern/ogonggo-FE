@@ -6,7 +6,7 @@ import type {
   CreateCompanyJobRequestEmploymentType,
   CreateCompanyJobRequestExperienceType,
 } from '@ogonggo/api';
-import { toDateInputValue, toEndDateTime, toStartDateTime } from '../lib/datetime';
+import { toDateInputValue, toEndDateTime, toStartDateTime } from '@/shared/lib/formDateTime';
 import { EMPTY_HIRING_PROCESS_STEP, type HiringProcessStep } from '../lib/hiringProcess';
 
 /**

@@ -11,8 +11,8 @@ import {
   withCurrentValue,
   WORK_ARRANGEMENT_OPTIONS,
 } from '../model/options';
+import { CoverImageField } from '@/shared/ui/CoverImageField';
 import type { CompanyJobFormValues } from '../model/values';
-import { JobCoverImageField } from './JobCoverImageField';
 
 /** `CreateCompanyJobRequest` 의 `@maxLength`. */
 const MAX_COMPANY_NAME_LENGTH = 150;
@@ -173,7 +173,7 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
         </Field>
       </div>
 
-      <JobCoverImageField
+      <CoverImageField
         value={values.coverImageUrl}
         onChange={(coverImageUrl) => onChange({ coverImageUrl })}
       />
