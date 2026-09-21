@@ -173,12 +173,29 @@ export function ToastProvider({ children }: { children: ReactNode }) {
    * 같은 문구를 다시 띄워도 `key` 가 달라 컴포넌트가 새로 마운트된다. 그래야 타이머가 처음부터
    * 다시 걸린다.
    */
+  /*
+   * `action` 을 누르면 토스트도 닫는다. 할 일을 한 알림은 남을 이유가 없고, 남으면 사라지지도
+   * 않는다 — 누른 버튼이 초점을 쥔 채로 타이머가 멈추는데, `보기` 처럼 화면을 옮기는 동작이면
+   * 그 초점이 풀릴 일이 없어 다음 토스트가 올 때까지 화면에 붙어 있는다(북마크 등록 토스트에서
+   * 실제로 그랬다).
+   */
+  const action = current?.action;
+  const actionWithDismiss = action
+    ? {
+        label: action.label,
+        onClick: () => {
+          action.onClick();
+          dismiss();
+        },
+      }
+    : undefined;
+
   const toast = current ? (
     <Toast
       key={current.id}
       message={current.message}
       tone={current.tone}
-      action={current.action}
+      action={actionWithDismiss}
       onDismiss={dismiss}
     />
   ) : null;
