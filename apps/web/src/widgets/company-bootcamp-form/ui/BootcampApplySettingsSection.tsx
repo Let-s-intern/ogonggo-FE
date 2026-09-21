@@ -121,6 +121,44 @@ export function BootcampApplySettingsSection({
         </Field>
       </div>
 
+      {/*
+        공고 공개 기간(v5 PRD 4 절). 체크는 `publicationEndAt` 을 `recruitmentEndAt` 과 같게
+        두는 것으로 만든다 — 요청에 "모집 마감까지" 를 뜻하는 값이 따로 없고 두 날짜뿐이다.
+        체크를 풀면 그 두 날짜를 직접 적는 칸이 나온다. 목업에는 체크만 있지만, 풀었을 때
+        적을 곳이 없으면 체크를 풀 이유도 없다.
+      */}
+      <p className="pb-1.5 text-sm font-medium text-gray-700">공고 공개 기간</p>
+      <Checkbox
+        checked={values.publishUntilRecruitmentEnd}
+        onChange={(publishUntilRecruitmentEnd) => onChange({ publishUntilRecruitmentEnd })}
+        label="모집 마감일까지 공개"
+      />
+      <p className="pt-1.5 pb-4 text-sm text-gray-500">
+        마감 이후에는 '모집 마감' 상태로 전환됩니다.
+      </p>
+
+      {values.publishUntilRecruitmentEnd ? null : (
+        <div className="grid gap-x-6 sm:grid-cols-2">
+          <Field label="공개 시작일" htmlFor="company-bootcamp-publication-start">
+            <Input
+              id="company-bootcamp-publication-start"
+              type="date"
+              value={values.publicationStartAt}
+              onChange={(event) => onChange({ publicationStartAt: event.target.value })}
+            />
+          </Field>
+
+          <Field label="공개 종료일" htmlFor="company-bootcamp-publication-end">
+            <Input
+              id="company-bootcamp-publication-end"
+              type="date"
+              value={values.publicationEndAt}
+              onChange={(event) => onChange({ publicationEndAt: event.target.value })}
+            />
+          </Field>
+        </div>
+      )}
+
       <Checkbox
         checked={values.agreedToPolicy}
         onChange={(agreedToPolicy) => onChange({ agreedToPolicy })}
