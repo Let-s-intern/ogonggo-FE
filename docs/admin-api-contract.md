@@ -483,8 +483,8 @@
   "capacity": 5,
   "appliedCount": 2,
   "closed": false,
-  "viewCount": 312,
-  "commentCount": 4,
+  "viewCount": 412,
+  "commentCount": 3,
   "registeredAt": "2026-08-30T14:20:00Z"
 }
 ```
@@ -969,5 +969,6 @@
 **비즈니스 회원과 공고를 잇는 키.** 목은 회사명으로 잇지만 백엔드에는 `companyId` 가 있을
 자리다.
 
-**관리자 인증.** `AdminSecurityConfiguration.kt` 가 지금 `/api/v1/internal/**` 외 전부를
-`denyAll()` 로 닫고 있다. 이 API 들을 열려면 관리자 세션이 먼저 필요하다.
+**`ADMIN` 역할을 주는 경로.** 인증 자체는 붙었다(위 "공통"의 인증). 남은 것은 역할을 누가
+어떻게 주느냐로, 지금은 운영자가 DB 에서 `users.role` 을 직접 바꾼다 — 부여 API 도 화면도 없고
+부여 이력·감사 기록은 미정이다(`ogonggo-BE/docs/architecture/authentication.md` 8절).
