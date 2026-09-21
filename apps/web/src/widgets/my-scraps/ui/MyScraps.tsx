@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '@ogonggo/ui';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
   MyPageFilterRow,
@@ -18,6 +19,7 @@ import {
   type MyScrapsQuery,
   type MyScrapTab,
 } from '../lib/query';
+import { unbookmark } from '../lib/unbookmark';
 import { MyScrapsFilters } from './MyScrapsFilters';
 
 const TABS: readonly MyPageListTab<MyScrapTab>[] = [
@@ -70,6 +72,10 @@ export interface MyScrapsProps {
  */
 export function MyScraps({ query }: MyScrapsProps) {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  /** 해제한 뒤 목록을 다시 읽으려고 올리는 값. 주소는 그대로인데 내용만 바뀌는 경우다. */
+  const [reloadToken, setReloadToken] = useState(0);
+  /** 해제 요청이 도는 동안의 행. 두 번 누르는 것을 막고 버튼을 비활성으로 그린다. */
+  const [removing, setRemoving] = useState<number | null>(null);
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 탭·필터·페이지를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -96,7 +102,7 @@ export function MyScraps({ query }: MyScrapsProps) {
     return () => {
       active = false;
     };
-  }, [href]);
+  }, [href, reloadToken]);
 
   const placeholder = SEARCH_PLACEHOLDER[query.tab];
   const columns = columnsFor(query.tab);
@@ -138,7 +144,22 @@ export function MyScraps({ query }: MyScrapsProps) {
           state.page.rows.map((row) => (
             <tr key={row.key} className="border-t border-gray-100">
               <MyPageListRowCells row={row} />
-              <td className="px-4 py-5 text-center" />
+              <td className="px-4 py-5 text-center">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={removing !== null}
+                  onClick={() => {
+                    setRemoving(row.id);
+                    unbookmark(query.tab, row.id)
+                      .then(() => setReloadToken((token) => token + 1))
+                      .catch(() => setState({ kind: 'error' }))
+                      .finally(() => setRemoving(null));
+                  }}
+                >
+                  해제
+                </Button>
+              </td>
             </tr>
           ))
         ) : (
