@@ -1,6 +1,7 @@
 'use client';
 
-import { Field, Input, Select } from '@ogonggo/ui';
+import { Checkbox, Field, Input, Select } from '@ogonggo/ui';
+import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
 import {
   OPERATION_TYPE_OPTIONS,
@@ -31,15 +32,52 @@ export interface BootcampBasicInfoSectionProps {
 export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfoSectionProps) {
   return (
     <div>
-      <Field label="기업 · 기관명" htmlFor="company-bootcamp-company-name" required>
-        <Input
-          id="company-bootcamp-company-name"
-          value={values.companyName}
-          maxLength={MAX_COMPANY_NAME_LENGTH}
-          onChange={(event) => onChange({ companyName: event.target.value })}
-          placeholder="기업 기관명을 입력해 주세요."
-        />
+      <Field
+        label="기업 · 기관명"
+        htmlFor="company-bootcamp-company-name"
+        required
+        hint={`기업 로고 업로드는 ${PLACEHOLDER_NOTICE}. 이름만 저장돼요.`}
+      >
+        <div className="flex items-start gap-3">
+          {/*
+            기업 로고 칸. **비활성이다** — `createImage` 로 올리는 것까지는 되지만
+            `CreateCompanyBootcampRequest` 에 로고를 담을 필드가 없어 버려진다(v5 PRD 4 절).
+            올릴 수 있게 두면 올린 것이 사라진 것으로 읽힌다. 채용공고 폼의 같은 칸과 같다.
+          */}
+          <button
+            type="button"
+            disabled
+            title={PLACEHOLDER_NOTICE}
+            className="flex h-11 w-24 shrink-0 cursor-not-allowed flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-300"
+          >
+            <span aria-hidden="true" className="icon-[lucide--upload] block size-3.5" />
+            <span className="pt-0.5 text-[10px] leading-none">로고 업로드</span>
+            <span className="text-[10px] leading-none">1:1 비율 권장</span>
+          </button>
+          <Input
+            id="company-bootcamp-company-name"
+            value={values.companyName}
+            maxLength={MAX_COMPANY_NAME_LENGTH}
+            onChange={(event) => onChange({ companyName: event.target.value })}
+            placeholder="기업 기관명을 입력해 주세요."
+          />
+        </div>
       </Field>
+
+      {/*
+        `가입한 내용 동일 및 기본 정보로 저장`. **비활성이다** — 기업 프로필에는 기관명과
+        담당자 이름 둘뿐이고 **수정 API 가 없다**(v5 PRD 표). 적은 값을 기본 정보로 저장할
+        곳이 없다. 채용공고 목업에는 없고 이 목업에만 있는 칸이다.
+      */}
+      <div className="pb-4">
+        <Checkbox
+          checked={false}
+          disabled
+          onChange={() => undefined}
+          label="가입한 내용 동일 및 기본 정보로 저장"
+        />
+        <p className="pt-1.5 text-sm text-gray-500">기본 정보로 저장은 {PLACEHOLDER_NOTICE}.</p>
+      </div>
 
       <Field label="프로그램명" htmlFor="company-bootcamp-title" required>
         <Input
