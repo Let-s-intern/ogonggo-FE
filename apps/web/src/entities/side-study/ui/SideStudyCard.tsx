@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Badge, Card } from '@ogonggo/ui';
 import { computeDaysRemaining } from '@/shared/lib/dday';
+import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { BookmarkIcon, CommentIcon, EyeIcon } from '@/shared/ui/icons';
 import { AUTHOR_NICKNAME_FALLBACK, KIND_LABELS, OPERATION_TYPE_LABELS } from '../model/labels';
 import type { SideStudySummary } from '../model/types';
@@ -84,7 +85,7 @@ export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
 function AuthorThumbnail({ src }: { src?: string }) {
   return (
     <span className="block h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
-      {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : null}
+      <Thumbnail src={src} alt="" className="h-full w-full" />
     </span>
   );
 }
