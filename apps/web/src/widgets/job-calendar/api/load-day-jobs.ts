@@ -30,11 +30,16 @@ export interface DayJob {
  * 백엔드로 나간다 — 달력은 목데이터인데 카드만 실데이터가 되어 id 가 서로 맞지 않는다. 서버에서
  * 부르면 달력과 같은 쪽을 본다.
  *
- * 누구나 부를 수 있는 끝점이 되므로 받은 값을 믿지 않는다. 정수만, 한 번에 다섯 건까지만
- * 부른다. 그 사이 내려간 공고(404)는 목록에서 빠질 뿐 전체를 실패시키지 않는다.
+ * 누구나 부를 수 있는 끝점이 되므로 받은 값을 믿지 않는다. 타입은 `number[]` 지만 실제로는
+ * 브라우저가 무엇이든 보낼 수 있다 — `"1/../admin"` 같은 문자열이 그대로 주소에 들어가지 않도록
+ * 먼저 숫자로 바꾸고 양의 정수만 남긴다. 한 번에 다섯 건까지만 부른다. 그 사이 내려간
+ * 공고(404)는 목록에서 빠질 뿐 전체를 실패시키지 않는다.
  */
 export async function loadDayJobs(ids: number[]): Promise<DayJob[]> {
-  const safeIds = ids.filter((id) => Number.isInteger(id) && id > 0).slice(0, DAY_JOBS_PAGE_SIZE);
+  const safeIds = ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isSafeInteger(id) && id > 0)
+    .slice(0, DAY_JOBS_PAGE_SIZE);
 
   const results = await Promise.allSettled(
     safeIds.map(
