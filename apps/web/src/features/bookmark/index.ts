@@ -12,3 +12,8 @@ export {
   useMyBookmarkIds,
   type BookmarkAccess,
 } from './model/useMyBookmarkIds';
+export {
+  useToggleBookmark,
+  type ToggleBookmark,
+  type UseToggleBookmarkOptions,
+} from './model/useToggleBookmark';
