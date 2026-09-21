@@ -177,10 +177,13 @@ export const Closed: StoryObj = {
 };
 
 /**
- * 북마크 켜짐·꺼짐. 표시 전용이라 눌러도 바뀌지 않는다(PRD 8 절).
+ * 북마크 켜짐·꺼짐. 세 카드 모두 응답의 `bookmarked` 로 첫 모양이 정해지고, 누르면 바뀐다
+ * (`features/bookmark`).
  *
- * `BootcampCard` 는 두 행이 같다 — `UserBootcampSummaryResponse` 에 북마크 여부 필드가 아예
- * 없어서 아이콘이 항상 빈 모양이다(컴포넌트 주석의 "API 없음").
+ * 스토리북에는 로그인 토큰이 없어 버튼이 비로그인 상태로 그려진다. 여기서 누르면 요청 대신
+ * 로그인 화면으로 가려 하고, 스텁 라우터가 그 이동을 콘솔에 남긴다
+ * (`packages/ui/.storybook/next-navigation.tsx`). 이 화면에서 볼 것은 눌리는 동작이 아니라
+ * 켜짐·꺼짐 두 모양과 그때의 카드 높이다.
  */
 export const Bookmark: StoryObj = {
   name: '북마크 켜짐 / 꺼짐',
@@ -191,7 +194,7 @@ export const Bookmark: StoryObj = {
           <JobCard job={{ ...JOB_MOCK, bookmarked: false }} />
         </li>
         <li data-card="bootcamp">
-          <BootcampCard bootcamp={BOOTCAMP_MOCK} />
+          <BootcampCard bootcamp={{ ...BOOTCAMP_MOCK, bookmarked: false }} />
         </li>
         <li data-card="side-study">
           <SideStudyCard sideStudy={{ ...SIDE_STUDY_MOCK, bookmarked: false }} />
@@ -202,7 +205,7 @@ export const Bookmark: StoryObj = {
           <JobCard job={{ ...JOB_MOCK, bookmarked: true }} />
         </li>
         <li data-card="bootcamp">
-          <BootcampCard bootcamp={BOOTCAMP_MOCK} />
+          <BootcampCard bootcamp={{ ...BOOTCAMP_MOCK, bookmarked: true }} />
         </li>
         <li data-card="side-study">
           <SideStudyCard sideStudy={{ ...SIDE_STUDY_MOCK, bookmarked: true }} />
