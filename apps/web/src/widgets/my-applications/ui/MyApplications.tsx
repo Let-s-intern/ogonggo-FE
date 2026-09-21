@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { PLACEHOLDER_APPLICATION_COUNTS } from '@/features/my-applications/model/placeholder';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
   MyPageListRowCells,
@@ -10,6 +11,7 @@ import {
   type MyPageListTab,
 } from '@/widgets/mypage-list';
 import { fetchMyApplications, type MyApplicationsPage } from '../lib/fetch';
+import { placeholderRows } from '../lib/placeholderRows';
 import {
   buildMyApplicationsHref,
   type MyApplicationsQuery,
@@ -83,13 +85,22 @@ export function MyApplications({ query }: MyApplicationsProps) {
 
   const sideStudyCount = state.kind === 'ready' ? state.page.count : undefined;
   const tabs: readonly MyPageListTab<MyApplicationTab>[] = [
-    { value: 'jobs', label: TAB_LABELS.jobs.label },
-    { value: 'bootcamps', label: TAB_LABELS.bootcamps.label },
+    { value: 'jobs', label: TAB_LABELS.jobs.label, count: PLACEHOLDER_APPLICATION_COUNTS.jobs },
+    {
+      value: 'bootcamps',
+      label: TAB_LABELS.bootcamps.label,
+      count: PLACEHOLDER_APPLICATION_COUNTS.bootcamps,
+    },
     { value: 'side-studies', label: TAB_LABELS['side-studies'].label, count: sideStudyCount },
   ];
 
   const columns = columnsFor(query.tab);
-  const rows = query.tab === 'side-studies' && state.kind === 'ready' ? state.page.rows : [];
+  const rows =
+    query.tab === 'side-studies'
+      ? state.kind === 'ready'
+        ? state.page.rows
+        : []
+      : placeholderRows(query.tab);
   const pageInfo =
     query.tab === 'side-studies' && state.kind === 'ready'
       ? state.page.pageInfo
