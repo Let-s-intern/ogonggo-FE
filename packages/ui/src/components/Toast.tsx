@@ -11,7 +11,16 @@
  * `useRouter` 를 쓰는 순간 어드민 쪽 빌드가 깨진다. 그래서 `action` 은 링크가 아니라
  * `{ label, onClick }` 이고, 화면 이동은 부르는 쪽이 한다.
  */
-import { useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { cn } from '../lib/cn';
 
 export type ToastTone = 'default' | 'error';
@@ -121,4 +130,84 @@ export function Toast({
       ) : null}
     </div>
   );
+}
+
+export interface ToastOptions {
+  message: string;
+  tone?: ToastTone;
+  action?: ToastAction;
+}
+
+export interface ToastContextValue {
+  show: (options: ToastOptions) => void;
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+/**
+ * 토스트 하나가 뜨는 자리. 앱 전체를 감싼다.
+ *
+ * 한 번에 하나만 뜬다. 새 토스트가 오면 앞의 것을 바로 바꾼다. 북마크를 연달아 누르면 토스트가
+ * 쌓여 화면을 덮는 일이 없어야 하고, 보이는 것은 늘 마지막 결과다.
+ *
+ * `aria-live` 영역 둘을 늘 그려 둔다. 비어 있는 동안에도 접근성 트리에 있어야 스크린 리더가
+ * 나중에 들어온 내용을 읽는다 — 뜰 때 영역째 만들면 읽지 않는다. 톤에 따라 한 영역의 역할을
+ * 바꾸지 않고 영역을 둘로 나눈 이유는, 이미 관찰 중인 영역의 `role` 을 도중에 바꾸면 그 변경을
+ * 반영하지 않는 스크린 리더가 있기 때문이다. 빈 영역은 크기가 0 이라 자리를 차지하지 않는다.
+ *
+ * 초점을 빼앗지 않는다. 카드를 연달아 누르는 흐름을 끊지 않는다.
+ */
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [current, setCurrent] = useState<(ToastOptions & { id: number }) | null>(null);
+  const lastId = useRef(0);
+
+  const show = useCallback((options: ToastOptions) => {
+    lastId.current += 1;
+    setCurrent({ ...options, id: lastId.current });
+  }, []);
+
+  const dismiss = useCallback(() => setCurrent(null), []);
+  const value = useMemo(() => ({ show }), [show]);
+
+  /*
+   * 같은 문구를 다시 띄워도 `key` 가 달라 컴포넌트가 새로 마운트된다. 그래야 타이머가 처음부터
+   * 다시 걸린다.
+   */
+  const toast = current ? (
+    <Toast
+      key={current.id}
+      message={current.message}
+      tone={current.tone}
+      action={current.action}
+      onDismiss={dismiss}
+    />
+  ) : null;
+  const isError = current?.tone === 'error';
+
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      {/* 바닥에서 24px 위, 가로 가운데. 모바일에서도 손가락이 닿고 카드 오른쪽 위의 북마크
+          아이콘을 가리지 않는 자리다. 껍데기는 `pointer-events-none` 이라 토스트가 떠 있어도
+          뒤 화면을 누를 수 있다. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+        <div role="status">{isError ? null : toast}</div>
+        <div role="alert">{isError ? toast : null}</div>
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+/**
+ * 토스트를 띄운다. `ToastProvider` 안에서만 쓴다.
+ *
+ * Provider 가 없으면 조용히 아무 일도 일어나지 않는 대신 바로 던진다. 알림이 뜨지 않는 것은
+ * 화면에서 알아차리기 어렵고, 알아차렸을 때는 왜인지 알 방법이 없다.
+ */
+export function useToast(): ToastContextValue {
+  const value = useContext(ToastContext);
+  if (!value) {
+    throw new Error('useToast 는 ToastProvider 안에서만 쓸 수 있다.');
+  }
+  return value;
 }
