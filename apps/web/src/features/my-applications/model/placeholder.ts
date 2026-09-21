@@ -151,8 +151,11 @@ export const PLACEHOLDER_APPLICATION_COUNTS: Record<PlaceholderApplicationTab, n
  * 행마다 한 줄씩 반복하지 않고 표 위에 한 줄 둔다. 같은 문장이 행 수만큼 반복되면 표가
  * 읽히지 않고, 목업에도 그 자리에 안내 띠가 있다. 대신 비활성 컨트롤마다 `title` 로 같은
  * 말을 달아 띠를 못 본 사람이 그 자리에서 답을 얻는다.
+ *
+ * 문구 자체는 `shared/lib/placeholderNotice.ts` 로 옮겼다 — 마이페이지의 다른 두 화면도
+ * 같은 말을 쓴다. 이 이름으로 부르던 곳을 그대로 두려고 여기서 다시 내보낸다.
  */
-export const PLACEHOLDER_NOTICE = '준비 중인 기능이에요';
+export { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 
 /** 위 안내 한 줄에 이어 붙는 설명. 왜 비활성인지와 무엇이 가짜인지를 말한다. */
 export const PLACEHOLDER_NOTICE_DESCRIPTION =
