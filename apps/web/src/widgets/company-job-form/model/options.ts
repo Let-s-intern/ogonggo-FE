@@ -34,7 +34,7 @@ export const EMPLOYMENT_TYPE_OPTIONS: SelectOption[] = [
   ).map((value) => ({ value, label: EMPLOYMENT_TYPE_LABELS[value] })),
 ];
 
-const EXPERIENCE_TYPE_LABELS: Record<CreateCompanyJobRequestExperienceType, string> = {
+export const EXPERIENCE_TYPE_LABELS: Record<CreateCompanyJobRequestExperienceType, string> = {
   NEWCOMER: '신입',
   EXPERIENCED: '경력',
   BOTH: '신입·경력',

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@ogonggo/ui';
+import { Button, cn } from '@ogonggo/ui';
 import { createJob, fetchMyJob, publishJob, replaceJob } from '../lib/api';
 import { validateForDraft, validateForPublish } from '../model/validate';
 import {
@@ -18,6 +18,7 @@ import { JobApplySettingsSection } from './JobApplySettingsSection';
 import { JobBasicInfoSection } from './JobBasicInfoSection';
 import { JobContentSection } from './JobContentSection';
 import { JobFormSection } from './JobFormSection';
+import { JobPreview } from './JobPreview';
 
 export interface CompanyJobFormProps {
   /** 있으면 수정, 없으면 새 공고. 작성한 공고 표에서 넘어올 때만 있다. */
@@ -45,6 +46,10 @@ export interface CompanyJobFormProps {
  * 등록은 언제나 초안으로 만들어지고, 게시는 운영자 검수를 통과한 공고만 된다(생성 타입 설명).
  * 그래서 검수 전 게시 실패(409) 는 실패로 보지 않는다(`lib/api.ts` 의 `publishJob`).
  *
+ * 탭 둘 중 `미리보기` 는 같은 값을 공개 상세 모양으로 그릴 뿐 아무것도 저장하지 않는다
+ * (`JobPreview`). 하단 버튼 둘은 탭을 따라가지 않고 늘 자리에 있다 — 확인한 자리에서 등록하지
+ * 못하면 탭을 다시 옮겨야 한다(v4 모집글 폼이 같은 판단을 했다).
+ *
  * 저장에 성공하면 작성한 공고 목록으로 간다. 방금 쓴 공고가 어떤 상태로 들어갔는지(검수
  * 대기인지 게시됐는지) 를 그 자리에서 보여 주는 화면이 거기뿐이다.
  */
@@ -62,6 +67,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
   const [hiringProcessStored, setHiringProcessStored] = useState(false);
   const [loading, setLoading] = useState(jobId !== undefined);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
+  const [tab, setTab] = useState<'write' | 'preview'>('write');
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -157,7 +163,34 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         void save(true);
       }}
     >
-      <div className="flex flex-col gap-4">
+      <div role="tablist" aria-label="채용공고 작성" className="flex border-b border-gray-200">
+        {(
+          [
+            { value: 'write', label: '작성' },
+            { value: 'preview', label: '미리보기' },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.value}
+            onClick={() => setTab(item.value)}
+            className={cn(
+              '-mb-px border-b-2 px-4 py-3 text-base',
+              tab === item.value
+                ? 'border-blue-500 font-semibold text-blue-500'
+                : 'border-transparent font-medium text-gray-400 hover:text-gray-600',
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'preview' ? <JobPreview values={values} /> : null}
+
+      <div className={cn('flex flex-col gap-4', tab !== 'write' && 'hidden')}>
         <JobFormSection
           step={1}
           title="기본 정보"
