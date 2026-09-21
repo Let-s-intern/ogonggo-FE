@@ -7,9 +7,12 @@ import { ApplyCta } from './ApplyCta';
  * 격자를 세운다 — 버튼이 `flex-1` 이라 폭이 달라지면 버튼 폭이 달라진다.
  *
  * 북마크 칸은 `features/bookmark`의 `BookmarkCountButton`이라 react-query·토스트·라우터가 있어야
- * 그려진다. 스토리북 프리뷰에는 셋 다 없어서 이 스토리는 지금 CTA 버튼까지만 보여준다.
- * 프로바이더를 붙이는 자리는 `packages/ui/.storybook/preview.ts` 이고, 목록 카드 스토리 셋도
- * 같은 것을 기다린다 — 스토리마다 따로 감싸지 않는다.
+ * 그려진다. 셋은 `packages/ui/.storybook/` 이 전역으로 댄다 — `preview.tsx` 가 앞의 둘을
+ * 데코레이터로, `main.ts` 의 alias 가 `next/navigation` 을 스텁으로 준다. 목록 카드 스토리 셋도
+ * 같은 것을 쓴다.
+ *
+ * 스토리북에는 로그인 토큰이 없어 버튼은 비로그인 상태로 그려진다. 누르면 요청 대신 로그인
+ * 화면으로 가려 하고, 스텁 라우터가 그 이동을 콘솔에 남긴다.
  */
 const meta: Meta<typeof ApplyCta> = {
   title: '상세 조각/ApplyCta',
