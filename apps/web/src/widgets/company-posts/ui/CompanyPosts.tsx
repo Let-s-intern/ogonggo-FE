@@ -11,7 +11,7 @@ import {
   type MyPageListTab,
 } from '@/widgets/mypage-list';
 import { fetchCompanyPosts, TAB_NOUNS, type CompanyPostsPage } from '../lib/fetch';
-import { deleteCompanyPost } from '../lib/mutate';
+import { closeCompanyPost, deleteCompanyPost } from '../lib/mutate';
 import { buildCompanyPostsHref, type CompanyPostsQuery, type CompanyPostTab } from '../lib/query';
 import { companyPostNewHref } from '../lib/routes';
 import { CompanyPostRow } from './CompanyPostRow';
@@ -167,6 +167,11 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
               onDelete={() =>
                 mutate(row.key, `${TAB_NOUNS[query.tab]}를 삭제하지 못했습니다.`, () =>
                   deleteCompanyPost(query.tab, row.id),
+                )
+              }
+              onClose={() =>
+                mutate(row.key, `${TAB_NOUNS[query.tab]}를 마감하지 못했습니다.`, () =>
+                  closeCompanyPost(query.tab, row.id),
                 )
               }
             />

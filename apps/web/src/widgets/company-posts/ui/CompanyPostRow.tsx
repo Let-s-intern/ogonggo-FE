@@ -41,6 +41,7 @@ export interface CompanyPostRowProps {
   /** 수정 폼 주소가 탭마다 다르다. 채용공고와 부트캠프는 폼이 둘이다(`lib/routes.ts`). */
   tab: CompanyPostTab;
   onDelete: () => void;
+  onClose: () => void;
   /** 이 행의 요청이 도는 중. 메뉴를 잠근다. */
   pending?: boolean;
 }
@@ -59,9 +60,17 @@ export interface CompanyPostRowProps {
  * 제목만 링크다. 게시되지 않은 공고에는 링크가 없다(`lib/fetch.ts` 의 `href`).
  *
  * **점 세 개 메뉴에 `복사하기` 가 없다.** 목업에는 있지만 기업 공고에 복사 API 가 없다
- * (`lib/mutate.ts` 주석).
+ * (`lib/mutate.ts` 주석). 대신 목업에 없는 `마감하기` 가 있다 — PRD 2 절 표가 탭마다 마감
+ * API(`closeMyJob`·`closeMyBootcamp`) 를 적고 있고, 관리 칸에는 수정 버튼과 이 메뉴뿐이라
+ * 마감을 걸 자리가 여기밖에 없다.
  */
-export function CompanyPostRow({ row, tab, onDelete, pending = false }: CompanyPostRowProps) {
+export function CompanyPostRow({
+  row,
+  tab,
+  onDelete,
+  onClose,
+  pending = false,
+}: CompanyPostRowProps) {
   const dday = computeDday(row.recruitmentType, row.recruitmentEndAt);
   const urgent = isDdayUrgent(row.recruitmentType, row.recruitmentEndAt);
   const closed = isRecruitmentClosed(row.recruitmentType, row.recruitmentEndAt, row.closedAt);
@@ -167,6 +176,9 @@ export function CompanyPostRow({ row, tab, onDelete, pending = false }: CompanyP
             </summary>
             <div className="absolute right-0 z-10 mt-1 w-28 rounded-md border border-gray-200 bg-white py-1 shadow-md">
               <MenuAction label="삭제하기" onClick={onDelete} disabled={pending} />
+              {/* 이미 마감한 건에는 그리지 않는다. 다시 눌러도 바뀌는 것이 없고, 부트캠프는
+                  409 로 실패한다. */}
+              {closed ? null : <MenuAction label="마감하기" onClick={onClose} disabled={pending} />}
             </div>
           </details>
         </div>

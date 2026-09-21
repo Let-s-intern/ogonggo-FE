@@ -1,4 +1,4 @@
-import { deleteMyBootcamp, deleteMyJob } from '@ogonggo/api';
+import { closeMyBootcamp, closeMyJob, deleteMyBootcamp, deleteMyJob } from '@ogonggo/api';
 import type { CompanyPostTab } from './query';
 
 /**
@@ -15,4 +15,19 @@ export async function deleteCompanyPost(tab: CompanyPostTab, id: number): Promis
     return;
   }
   await deleteMyBootcamp(id);
+}
+
+/**
+ * 모집을 마감한다. `POST /api/v1/users/me/jobs/{jobId}/close`,
+ * `POST /api/v1/users/me/bootcamps/{bootcampId}/close`.
+ *
+ * 채용공고는 이미 마감한 것을 다시 마감해도 최초 마감 일시를 지킨다(생성 타입 설명).
+ * 부트캠프는 마감할 수 없는 상태면 409 를 준다 — 그 실패는 화면이 표 위 한 줄로 알린다.
+ */
+export async function closeCompanyPost(tab: CompanyPostTab, id: number): Promise<void> {
+  if (tab === 'jobs') {
+    await closeMyJob(id);
+    return;
+  }
+  await closeMyBootcamp(id);
 }
