@@ -47,11 +47,19 @@ export function hasMyScrapsFilter(query: MyScrapsQuery): boolean {
  *
  * 탭이나 필터가 바뀌면 `page` 를 1 로 되돌린다. 안 그러면 3 페이지에서 필터를 걸었을 때 결과가
  * 한 페이지뿐인데 3 페이지에 머물러 빈 표가 나온다.
+ *
+ * **탭을 옮기면 필터를 전부 지운다.** 탭마다 고를 수 있는 필터가 달라 셋 중 `keyword` 하나만
+ * 따라가는데, 그러면 검색어를 지운 기억이 없는 사람이 빈 표를 보게 된다. 탭을 옮기는 것은
+ * 다른 목록으로 가는 일이지 같은 목록을 좁히는 일이 아니다.
  */
 export function buildMyScrapsHref(
   base: MyScrapsQuery,
   overrides: Partial<MyScrapsQuery> = {},
 ): string {
+  if (overrides.tab !== undefined && overrides.tab !== base.tab) {
+    return buildMyScrapsHref({ tab: overrides.tab, page: 1 });
+  }
+
   const changedKeys = (Object.keys(overrides) as (keyof MyScrapsQuery)[]).filter(
     (key) => key !== 'page' && overrides[key] !== base[key],
   );

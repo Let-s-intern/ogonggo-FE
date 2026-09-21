@@ -18,6 +18,7 @@ import {
   type MyScrapsQuery,
   type MyScrapTab,
 } from '../lib/query';
+import { MyScrapsFilters } from './MyScrapsFilters';
 
 const TABS: readonly MyPageListTab<MyScrapTab>[] = [
   { value: 'jobs', label: '채용 공고' },
@@ -127,7 +128,9 @@ export function MyScraps({ query }: MyScrapsProps) {
             defaultValue: query.keyword,
             buildHref: (keyword) => buildMyScrapsHref(query, { keyword }),
           }}
-        />
+        >
+          <MyScrapsFilters query={query} />
+        </MyPageFilterRow>
       ) : null}
 
       <MyPageListTable columns={columns}>
