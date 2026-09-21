@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
 import { setAccessTokenProvider, setUnauthorizedHandler } from '@ogonggo/api';
+import { ToastProvider } from '@ogonggo/ui';
 import { getAccessToken } from '@/shared/api/authTokens';
 import { handleUnauthorized } from '@/shared/api/reissue';
 
@@ -14,5 +15,12 @@ setUnauthorizedHandler(handleUnauthorized);
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {/* 화면 아래 가운데에 잠깐 뜨는 알림. 빈 aria-live 영역이 늘 그려져 있어야 스크린 리더가
+          나중에 뜨는 토스트를 읽는다. 어드민에는 걸지 않는다 — 운영자가 놓치면 안 되는 결과는
+          화면에 남는 `Callout` 이다. */}
+      <ToastProvider>{children}</ToastProvider>
+    </QueryClientProvider>
+  );
 }

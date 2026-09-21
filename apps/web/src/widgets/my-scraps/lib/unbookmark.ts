@@ -1,27 +1,21 @@
-import {
-  deleteBootcampBookmark,
-  deleteJobBookmark,
-  deleteRecruitmentPostBookmark,
-} from '@ogonggo/api';
+import type { QueryClient } from '@tanstack/react-query';
+import { deleteBookmark, myBookmarkIdsKey } from '@/features/bookmark';
 import type { MyScrapTab } from './query';
 
 /**
- * 스크랩 해제(PRD 2 절). 탭마다 경로가 다르다 — 북마크를 만든 자원이 다르기 때문이고,
- * `/me/` 아래로 통일돼 있지도 않다(`DELETE /api/v1/job-bookmarks/{jobId}`,
- * `DELETE /api/v1/bootcamp-bookmarks/{bootcampId}`,
- * `DELETE /api/v1/recruitment-posts/{postId}/bookmarks/me`). 백엔드가 그런 것이고 고치지
- * 않는다 — 호출부가 헷갈리지 않게 이 한 곳에 모은다.
+ * 스크랩 해제(PRD 2 절). 탭마다 경로가 다르고 `/me/` 아래로 통일돼 있지도 않은데, 그것을 가르는
+ * 일은 `features/bookmark/api/bookmarkApi.ts` 하나가 한다 — 해제 경로가 두 곳에 적혀 있으면
+ * 한쪽만 고쳐지는 날이 온다. 탭 이름이 그대로 북마크 종류 이름이라(`BookmarkKind`) 옮길 것이
+ * 없다.
+ *
+ * 푼 뒤 id 모음도 무효화한다. 목록·상세의 북마크 아이콘은 서버가 준 `bookmarked` 가 아니라 그
+ * 모음을 보고 그리므로, 여기서 푼 항목은 돌아갔을 때 빈 아이콘이어야 한다.
  */
-export async function unbookmark(tab: MyScrapTab, id: number): Promise<void> {
-  switch (tab) {
-    case 'jobs':
-      await deleteJobBookmark(id);
-      return;
-    case 'bootcamps':
-      await deleteBootcampBookmark(id);
-      return;
-    case 'side-studies':
-      await deleteRecruitmentPostBookmark(id);
-      return;
-  }
+export async function unbookmark(
+  queryClient: QueryClient,
+  tab: MyScrapTab,
+  id: number,
+): Promise<void> {
+  await deleteBookmark(tab, id);
+  await queryClient.invalidateQueries({ queryKey: myBookmarkIdsKey(tab) });
 }

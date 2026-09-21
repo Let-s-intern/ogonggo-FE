@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@ogonggo/ui';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
@@ -72,6 +73,8 @@ export interface MyScrapsProps {
  */
 export function MyScraps({ query }: MyScrapsProps) {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  /** 해제한 항목의 아이콘이 목록·상세에서도 비워지도록 id 모음을 무효화한다(`unbookmark`). */
+  const queryClient = useQueryClient();
   /** 해제한 뒤 목록을 다시 읽으려고 올리는 값. 주소는 그대로인데 내용만 바뀌는 경우다. */
   const [reloadToken, setReloadToken] = useState(0);
   /** 해제 요청이 도는 동안의 행. 두 번 누르는 것을 막고 버튼을 비활성으로 그린다. */
@@ -151,7 +154,7 @@ export function MyScraps({ query }: MyScrapsProps) {
                   disabled={removing !== null}
                   onClick={() => {
                     setRemoving(row.id);
-                    unbookmark(query.tab, row.id)
+                    unbookmark(queryClient, query.tab, row.id)
                       .then(() => setReloadToken((token) => token + 1))
                       .catch(() => setState({ kind: 'error' }))
                       .finally(() => setRemoving(null));

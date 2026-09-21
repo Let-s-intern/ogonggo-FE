@@ -92,10 +92,9 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
           <ApplyCta
             href={buildApplicationHref(bootcamp)}
             label="신청하러 가기"
-            /* API 없음: 부트캠프 응답에는 북마크 여부 필드가 없다(`bookmarkCount`만 있다).
-               목록 카드와 같은 이유로 항상 빈 아이콘이다 — `entities/bootcamp/ui/BootcampCard.tsx`
-               참고. */
-            bookmarked={false}
+            kind="bootcamps"
+            id={bootcamp.id}
+            bookmarked={bootcamp.bookmarked}
             bookmarkCount={bootcamp.bookmarkCount}
           />
           <SimilarBootcamps excludeBootcampId={bootcamp.id} />

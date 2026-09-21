@@ -57,6 +57,9 @@ const config: StorybookConfig = {
         // `next/link` 는 Next 런타임 없이는 모듈 평가 자체가 실패한다. `<a>` 스텁으로 낮춘다.
         // 스텁이 무엇을 흉내내지 않는지는 `next-link.tsx` 상단에 적었다.
         'next/link': resolve(here, 'next-link.tsx'),
+        // `next/navigation` 의 `useRouter` 도 앱 라우터 컨텍스트가 없으면 던진다. 북마크
+        // 버튼이 이것을 쓴다 — 자세한 것은 `next-navigation.tsx` 상단에 적었다.
+        'next/navigation': resolve(here, 'next-navigation.tsx'),
         // `apps/web` 의 `@/` 별칭 (apps/web/tsconfig.json 의 `paths`). 스토리가 컴포넌트를
         // 불러오면 그 컴포넌트가 다시 `@/shared/...` 를 부르므로 스토리 쪽만 고쳐서는 안 된다.
         '@/': `${webSrc}/`,

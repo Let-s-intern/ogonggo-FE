@@ -45,7 +45,8 @@ const BOOKMARK_FILLED_PATH =
   'M18 2H6C4.9 2 4 2.9 4 4V21C4 21.36 4.19 21.69 4.5 21.87C4.81 22.05 5.19 22.05 5.5 21.87L12 18.15L18.5 21.87C18.65 21.96 18.83 22 19 22C19.17 22 19.35 21.96 19.5 21.87C19.81 21.69 20 21.36 20 21V4C20 2.9 19.1 2 18 2Z';
 
 /**
- * `job.bookmarked`를 그대로 반영하는 표시 전용 아이콘 — 클릭해도 상태가 바뀌지 않는다(PRD 7절).
+ * 북마크 아이콘. `filled` 가 정하는 것은 생김새뿐이고, 누를 수 있게 만드는 것은 이것을 감싸는
+ * `features/bookmark` 의 버튼 둘(`BookmarkButton`, `BookmarkCountButton`)이다.
  *
  * 이 아이콘만 Iconify 가 아니라 인라인 SVG 다(`docs/asset/v3-1/bookmark/state=off.svg`,
  * `state=on.svg`). Iconify 는 아이콘을 `mask-image` 로 그리는데 마스크는 단색 실루엣이라

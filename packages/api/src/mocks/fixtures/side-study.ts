@@ -42,7 +42,7 @@ export interface SideStudySummary {
   closed: boolean;
   viewCount: number;
   commentCount: number;
-  /** 표시 전용. 토글은 이 PRD의 범위 밖이다(PRD 8절). */
+  /** 내가 북마크한 글인지. 누르는 것은 `features/bookmark` 가 맡는다. */
   bookmarked: boolean;
 }
 

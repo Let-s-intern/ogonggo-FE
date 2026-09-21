@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { Badge, Card } from '@ogonggo/ui';
+import { BookmarkButton } from '@/features/bookmark';
 import { computeDaysRemaining } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
-import { BookmarkIcon, CommentIcon, EyeIcon } from '@/shared/ui/icons';
+import { CommentIcon, EyeIcon } from '@/shared/ui/icons';
 import { AUTHOR_NICKNAME_FALLBACK, KIND_LABELS, OPERATION_TYPE_LABELS } from '../model/labels';
 import type { SideStudySummary } from '../model/types';
 
@@ -26,6 +27,11 @@ const HASHTAG_LIMIT = 3;
  * 목업의 해시태그 속 모집 포지션은 없다. 목록 응답(`RecruitmentPostSummaryResponse`)에 없어
  * 화면을 응답에 맞췄다(PRD Push 5 "사용자 결정"). 같은 행의 카드는 높이를 맞추고(`h-full`)
  * 해시태그 줄을 바닥에 붙인다 — 제목이 한 줄인 카드에서 아래 줄이 떠 보이지 않게.
+ *
+ * 뿌리가 `<Link>`가 아니라 `relative`인 `div`인 이유는 북마크 버튼이다. 링크와 버튼을 형제로
+ * 두고 버튼을 첫 줄 오른쪽 끝에 겹친다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 세 카드 가운데
+ * 여기만 아이콘이 흐름 안에 있었어서, 그 자리는 빈 칸(`BookmarkSlot`)으로 남겨 둔다 — 빼면
+ * 옆 칸이 32px 넓어져 닉네임이 잘리는 지점이 달라지고 긴 닉네임이 버튼 밑으로 들어간다.
  */
 export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
   const metaParts = [
@@ -35,37 +41,63 @@ export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
   const hashtags = sideStudy.technologyStacks.slice(0, HASHTAG_LIMIT);
 
   return (
-    <Link href={`/side-studies/${sideStudy.id}`} className="block h-full">
-      <Card className="flex h-full flex-col gap-3 border-gray-100 transition-shadow hover:shadow-md">
-        <div className="flex items-center gap-3">
-          <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs text-gray-400">{metaParts.join(' · ')}</p>
-            <p className="truncate text-sm text-gray-600">
-              {sideStudy.author.nickname ?? AUTHOR_NICKNAME_FALLBACK}
-            </p>
+    <div className="relative h-full">
+      <Link href={`/side-studies/${sideStudy.id}`} className="block h-full">
+        <Card className="flex h-full flex-col gap-3 border-gray-100 transition-shadow hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs text-gray-400">{metaParts.join(' · ')}</p>
+              <p className="truncate text-sm text-gray-600">
+                {sideStudy.author.nickname ?? AUTHOR_NICKNAME_FALLBACK}
+              </p>
+            </div>
+            <BookmarkSlot />
           </div>
-          {/* 표시 전용이다. 북마크 토글은 이 PRD의 범위 밖이다(PRD 8절). */}
-          <BookmarkIcon filled={sideStudy.bookmarked} className="h-5 w-5 shrink-0" />
-        </div>
-        <p className="line-clamp-2 text-sm font-bold text-gray-900">{sideStudy.title}</p>
-        <SideStudyBadge sideStudy={sideStudy} />
-        <p className="mt-auto flex items-center justify-between gap-2 text-xs text-gray-400">
-          <span className="truncate">{hashtags.map((tag) => `#${tag}`).join(' ')}</span>
-          <span className="flex shrink-0 items-center gap-2">
-            <span className="flex items-center gap-1">
-              <CommentIcon className="h-3.5 w-3.5" />
-              {sideStudy.commentCount}
+          <p className="line-clamp-2 text-sm font-bold text-gray-900">{sideStudy.title}</p>
+          <SideStudyBadge sideStudy={sideStudy} />
+          <p className="mt-auto flex items-center justify-between gap-2 text-xs text-gray-400">
+            <span className="truncate">{hashtags.map((tag) => `#${tag}`).join(' ')}</span>
+            <span className="flex shrink-0 items-center gap-2">
+              <span className="flex items-center gap-1">
+                <CommentIcon className="h-3.5 w-3.5" />
+                {sideStudy.commentCount}
+              </span>
+              <span className="flex items-center gap-1">
+                <EyeIcon className="h-3.5 w-3.5" />
+                {sideStudy.viewCount}
+              </span>
             </span>
-            <span className="flex items-center gap-1">
-              <EyeIcon className="h-3.5 w-3.5" />
-              {sideStudy.viewCount}
-            </span>
-          </span>
-        </p>
-      </Card>
-    </Link>
+          </p>
+        </Card>
+      </Link>
+      {/*
+       * 첫 줄 오른쪽 끝, `BookmarkSlot`이 비워 둔 자리에 정확히 겹친다. 카드 안쪽 여백이 16px
+       * 이고 첫 줄이 48px(작성자 썸네일)이라, 16px 에서 시작하는 48px 상자 안에서 세로 가운데가
+       * 아이콘의 원래 자리다.
+       */}
+      <BookmarkButton
+        kind="side-studies"
+        id={sideStudy.id}
+        bookmarked={sideStudy.bookmarked}
+        className="absolute top-4 right-4 flex h-12 items-center"
+        iconClassName="h-5 w-5"
+      />
+    </div>
   );
+}
+
+/**
+ * 북마크 버튼이 겹치는 자리. 버튼은 링크 밖에 있어야 해서(PRD "카드 안의 버튼은 링크 밖에
+ * 둔다") 이 줄에는 빈 칸만 남는다.
+ *
+ * 빈 칸을 남기는 이유는 옆 칸의 폭이다. 이 자리를 빼면 닉네임·메타 줄이 32px(아이콘 20px +
+ * 간격 12px) 넓어져 잘리는 지점이 달라지고, 긴 닉네임이 버튼 밑으로 들어간다. 그래서 버튼을
+ * 그리지 않는 기업 회원에게도 이 칸은 남는다 — 보이지 않는 여백이라 빈 버튼과 달리 누를 것이
+ * 있어 보이지 않는다.
+ */
+function BookmarkSlot() {
+  return <span aria-hidden="true" className="h-5 w-5 shrink-0" />;
 }
 
 /**

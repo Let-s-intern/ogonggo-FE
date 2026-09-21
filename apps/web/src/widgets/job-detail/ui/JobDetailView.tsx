@@ -104,6 +104,8 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
     <ApplyCta
       href={job.sourceUrl}
       label="지원하러 가기"
+      kind="jobs"
+      id={job.id}
       bookmarked={job.bookmarked}
       bookmarkCount={job.bookmarkCount}
     />
