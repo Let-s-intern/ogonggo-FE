@@ -17,6 +17,7 @@ import type { AdminSideStudy } from '@ogonggo/api/src/mocks/fixtures/admin-conte
 import { adminDelete, adminGet, type PageResponse } from '@/shared/api/adminClient';
 import { omitEmpty } from '@/shared/api/omitEmpty';
 import { unwrapData } from '@/shared/api/unwrapData';
+import { isBackendPending } from '@/shared/config/backendPending';
 
 /**
  * 콘텐츠 목록·상세 조회.
@@ -80,7 +81,10 @@ export function useBootcampDetail(bootcampId: number) {
   });
 }
 
-// 사이드·스터디는 백엔드에 없고 MSW 목에만 있다. 그래서 아래 두 훅과 삭제는 `adminClient` 로 부른다.
+// 사이드·스터디는 백엔드에 없고 MSW 목에만 있다. 그래서 아래 두 훅과 삭제는 `adminClient` 로
+// 부르고, 실서버 모드에서는 아예 부르지 않는다 — 화면이 안내를 대신 그린다
+// (`@/shared/config/backendPending`). 같은 파일의 채용공고·부트캠프는 백엔드가 있어 두 모드에서
+// 모두 데이터가 나온다.
 export interface SideStudyListFilters {
   page: number;
   keyword: string;
@@ -93,6 +97,7 @@ export function useSideStudyList(filters: SideStudyListFilters) {
     queryKey: ['admin', 'side-studies', filters],
     queryFn: () =>
       adminGet<PageResponse<AdminSideStudy>>('/api/v1/admin/side-studies', { ...filters }),
+    enabled: !isBackendPending,
   });
 }
 
@@ -100,7 +105,7 @@ export function useSideStudyDetail(postId: number) {
   return useQuery({
     queryKey: ['admin', 'side-studies', postId],
     queryFn: () => adminGet<AdminSideStudy>(`/api/v1/admin/side-studies/${postId}`),
-    enabled: Number.isInteger(postId),
+    enabled: !isBackendPending && Number.isInteger(postId),
   });
 }
 

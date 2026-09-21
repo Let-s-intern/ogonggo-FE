@@ -9,6 +9,7 @@ import {
   SIDE_STUDY_KIND_OPTIONS,
   sideStudyKindLabel,
 } from '@/shared/config/labels';
+import { BACKEND_PENDING_MESSAGE, tableBodyState } from '@/shared/config/backendPending';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
@@ -105,8 +106,11 @@ export function SideStudyListPage() {
             rows={data?.items ?? []}
             rowKey={(row) => row.id}
             onRowClick={(row) => navigate(`/content/side-studies/${row.id}`)}
-            isLoading={isPending}
-            emptyMessage="조건에 맞는 글이 없습니다."
+            {...tableBodyState(
+              BACKEND_PENDING_MESSAGE.sideStudy,
+              isPending,
+              '조건에 맞는 글이 없습니다.',
+            )}
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>
