@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Badge } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
+import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
 import type { JobSummary } from '../model/types';
@@ -19,10 +19,19 @@ export interface JobCardProps {
  * "직무"(`job_major`)는 처음엔 대응 API 필드가 없다고 뺐었는데, 실제 목업(`상세 채용공고.png`
  * 리스트 카드 크롭)을 다시 보니 있었다 — 크롤러 DB엔 이 필드가 실제로 있어서(`job-major.ts`)
  * 넣는다, 없는 공고는 그 세그먼트만 뺀다.
+ *
+ * `h-full`은 같은 행에 제목 한 줄짜리와 두 줄짜리가 섞일 때를 위한 것이다. 없으면 카드가
+ * 내용만큼만 높아 짧은 쪽 아랫변이 20px 떠 보인다(`entities/CardEdgeCases.stories.tsx` 실측).
+ *
+ * 마감된 공고는 D-day 자리에 회색 `마감` 배지가 들어간다. 전에는 배지가 통째로 빠져 메타 줄이
+ * 20px에서 16px로 줄었다. 빈 자리로 두는 쪽도 높이는 맞지만 읽는 사람에게 아무 말도 하지
+ * 않는다 — `BootcampCard`·`SideStudyCard`가 이미 같은 자리에 `마감`을 그린다.
+ * 상시채용과 마감일 미정은 지금처럼 배지가 없다.
  */
 export function JobCard({ job }: JobCardProps) {
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
   const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
+  const closed = isRecruitmentClosed(job.recruitmentType, job.recruitmentEndAt, job.closedAt);
   const jobMajor = getJobMajor(job.id);
   const metaParts = [
     EMPLOYMENT_TYPE_LABELS[job.employmentType],
@@ -31,7 +40,7 @@ export function JobCard({ job }: JobCardProps) {
   ].filter((part): part is string => Boolean(part));
 
   return (
-    <Link href={`/jobs/${job.id}`} className="flex flex-col gap-2">
+    <Link href={`/jobs/${job.id}`} className="flex h-full flex-col gap-2">
       <JobThumbnail companyName={job.companyName} bookmarked={job.bookmarked} />
       <p className="flex items-center justify-between text-xs text-gray-400">
         <span>{metaParts.join(' · ')}</span>
@@ -41,6 +50,10 @@ export function JobCard({ job }: JobCardProps) {
             className="rounded-full px-2 py-0.5 text-xs font-bold"
           >
             {dday}
+          </Badge>
+        ) : closed ? (
+          <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
+            마감
           </Badge>
         ) : null}
       </p>

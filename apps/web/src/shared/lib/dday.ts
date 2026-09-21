@@ -48,6 +48,26 @@ export function computeDday(
   return diffDays === 0 ? 'D-DAY' : `D-${diffDays}`;
 }
 
+/**
+ * 마감된 건인가. `closedAt`이 찍혔거나, 기간 채용인데 마감일이 이미 지났으면 마감이다.
+ *
+ * `computeDday`가 `null`을 돌려주는 경우는 셋인데(상시채용, 마감일 없음, 지난 마감) 그중
+ * 마지막 하나만 마감이다. 배지 자리에 `마감`을 넣을지 아무것도 넣지 않을지가 이걸로 갈린다.
+ */
+export function isRecruitmentClosed(
+  recruitmentType: RecruitmentType,
+  recruitmentEndAt?: string,
+  closedAt?: string,
+): boolean {
+  if (closedAt) {
+    return true;
+  }
+  if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
+    return false;
+  }
+  return computeDaysRemaining(recruitmentType, recruitmentEndAt) === null;
+}
+
 /** 마감까지 하루 이하로 남았으면(D-DAY·D-1) 급함 — Figma의 두 배지 색 기준(D-1 주황 / D-10 파랑). */
 export function isDdayUrgent(recruitmentType: RecruitmentType, recruitmentEndAt?: string): boolean {
   const diffDays = computeDaysRemaining(recruitmentType, recruitmentEndAt);

@@ -12,7 +12,10 @@ import type { Meta, StoryObj } from '@storybook/react';
  * 걸리기 때문이다. 조립하면 이 스토리의 아이콘이 통째로 빈칸이 된다.
  *
  * 세트가 두 개인 이유는 `usedBy` 에 적어 두었다 — `lucide` 가 기본이고, `lucide` 에 맞는 모양이
- * 없는 세 개만 `tabler` 다. 둘 다 24 그리드에 2px 획이라 같은 줄에 놓아도 굵기가 맞는다.
+ * 없는 하나만 `tabler` 다. 둘 다 24 그리드에 2px 획이라 같은 줄에 놓아도 굵기가 맞는다.
+ *
+ * 북마크는 여기 없다. 그림자를 마스크로는 그릴 수 없어 `apps/web/src/shared/ui/icons.tsx` 의
+ * `BookmarkIcon` 만 인라인 SVG 로 되돌렸다(`docs/asset/v3-1/bookmark/`).
  */
 interface IconEntry {
   name: string;
@@ -24,13 +27,13 @@ const ICONS: IconEntry[] = [
   {
     name: 'lucide--search',
     className: 'icon-[lucide--search]',
-    usedBy: 'SearchIcon, CircleIconButton 스토리',
+    usedBy: 'SearchIcon, SearchInput, CircleIconButton 스토리',
   },
   { name: 'lucide--eye', className: 'icon-[lucide--eye]', usedBy: 'EyeIcon' },
   {
     name: 'lucide--chevron-down',
     className: 'icon-[lucide--chevron-down]',
-    usedBy: 'ChevronIcon (방향은 회전)',
+    usedBy: 'ChevronIcon, FilterButton (방향은 회전)',
   },
   {
     name: 'lucide--message-circle',
@@ -54,17 +57,12 @@ const ICONS: IconEntry[] = [
     className: 'icon-[lucide--x]',
     usedBy: 'CareerSelectModals 닫기, ActionAlert(danger)',
   },
+  {
+    name: 'lucide--circle-x',
+    className: 'icon-[lucide--circle-x]',
+    usedBy: 'SearchInput 의 지우기 — 동그라미 없는 lucide--x 는 입력 안에서 글자로 읽힌다',
+  },
   { name: 'lucide--circle', className: 'icon-[lucide--circle]', usedBy: 'Tabs 스토리' },
-  {
-    name: 'tabler--bookmark',
-    className: 'icon-[tabler--bookmark]',
-    usedBy: 'BookmarkIcon 비움 — lucide 에 짝이 되는 채운 북마크가 없다',
-  },
-  {
-    name: 'tabler--bookmark-filled',
-    className: 'icon-[tabler--bookmark-filled]',
-    usedBy: 'BookmarkIcon 채움',
-  },
   {
     name: 'tabler--info-small',
     className: 'icon-[tabler--info-small]',

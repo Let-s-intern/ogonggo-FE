@@ -14,6 +14,8 @@ export interface BootcampCardProps {
  * 줄 + 배지 → 회사명 → 제목. 여백·라운드·글자 크기는 `entities/job/ui/JobCard.tsx`와 같다
  * (두 목록의 카드가 같은 그리드 안에서 같은 크기로 보여야 한다).
  *
+ * `h-full`은 `JobCard`와 같은 이유다 — 같은 행에 제목 줄 수가 갈릴 때 아랫변을 맞춘다.
+ *
  * 채용공고 카드와 다른 곳은 썸네일뿐이다. 부트캠프는 `representativeImageUrl`이라는 진짜
  * 대표 이미지가 응답에 있어서 `JobThumbnail`(회사 로고를 대신 쓰는 박스)을 재사용하지 않고
  * 그 URL을 그대로 그린다. `CompanyLogo`와 같은 이유로 `next/image`가 아니라 `<img>`다 —
@@ -24,7 +26,7 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
 
   return (
-    <Link href={`/bootcamps/${bootcamp.id}`} className="flex flex-col gap-2">
+    <Link href={`/bootcamps/${bootcamp.id}`} className="flex h-full flex-col gap-2">
       <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
         <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-full w-full" />
         {/* API 없음: `UserBootcampSummaryResponse`에 북마크 여부 필드가 없다(채용공고의

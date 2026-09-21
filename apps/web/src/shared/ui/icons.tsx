@@ -1,4 +1,5 @@
-import type { ComponentPropsWithoutRef } from 'react';
+import { useId } from 'react';
+import type { ComponentPropsWithoutRef, SVGProps } from 'react';
 import { cn } from '@ogonggo/ui';
 
 /**
@@ -19,6 +20,8 @@ import { cn } from '@ogonggo/ui';
  * 이 파일이 래퍼로 남는 이유는 두 가지다. 하나는 `BookmarkIcon`·`ChevronIcon` 처럼 상태나 방향이
  * 클래스 하나로 안 끝나는 것이 있어서고, 하나는 쓰는 곳이 열 곳이 넘어 이름을 한 군데서 바꾸기
  * 위해서다.
+ *
+ * 예외가 하나 있다. `BookmarkIcon` 은 인라인 `<svg>` 다 — 이유는 그 컴포넌트 주석에 적었다.
  */
 
 export type IconProps = ComponentPropsWithoutRef<'span'>;
@@ -29,35 +32,91 @@ export function SearchIcon({ className, ...props }: IconProps) {
   );
 }
 
-export interface BookmarkIconProps extends IconProps {
+export interface BookmarkIconProps extends SVGProps<SVGSVGElement> {
   filled?: boolean;
 }
+
+/** `state=off.svg` 의 윤곽선 패스. 안쪽이 비어 있어 뒤의 썸네일이 비친다 — 그것이 디자인이다. */
+const BOOKMARK_OUTLINE_PATH =
+  'M17.25 2H6.75C6.02106 2.00132 5.32236 2.29148 4.80692 2.80692C4.29148 3.32236 4.00132 4.02106 4 4.75V20.75C4 21.01 4.135 21.25 4.35 21.385C4.57 21.52 4.845 21.535 5.075 21.425L12 18.085L18.925 21.425C19.0393 21.4803 19.1659 21.5056 19.2927 21.4986C19.4195 21.4916 19.5424 21.4525 19.65 21.385C19.7579 21.3181 19.8468 21.2245 19.9081 21.1133C19.9694 21.0021 20.001 20.877 20 20.75V4.75C19.9987 4.02106 19.7085 3.32236 19.1931 2.80692C18.6776 2.29148 17.9789 2.00132 17.25 2ZM18.5 19.555L12 16.415L5.5 19.555V4.75C5.5 4.06 6.06 3.5 6.75 3.5H17.25C17.94 3.5 18.5 4.06 18.5 4.75V19.555Z';
+
+/** `state=on.svg` 의 채운 패스. */
+const BOOKMARK_FILLED_PATH =
+  'M18 2H6C4.9 2 4 2.9 4 4V21C4 21.36 4.19 21.69 4.5 21.87C4.81 22.05 5.19 22.05 5.5 21.87L12 18.15L18.5 21.87C18.65 21.96 18.83 22 19 22C19.17 22 19.35 21.96 19.5 21.87C19.81 21.69 20 21.36 20 21V4C20 2.9 19.1 2 18 2Z';
 
 /**
  * `job.bookmarked`를 그대로 반영하는 표시 전용 아이콘 — 클릭해도 상태가 바뀌지 않는다(PRD 7절).
  *
- * 세트가 `lucide` 가 아니라 `tabler` 다. PRD 2 절 표는 `lucide--bookmark` 에 "채운 것은 fill
- * 처리" 라고 적었지만 Iconify 는 아이콘을 마스크로 그리기 때문에 바깥에서 fill 을 줄 수단이
- * 없고, `lucide` 에는 채운 북마크가 없다(`bookmark`, `bookmark-check`, `bookmark-minus`,
- * `bookmark-off`, `bookmark-plus`, `bookmark-x` 가 전부다). `tabler` 는 `bookmark` 와
- * `bookmark-filled` 가 같은 실루엣(24 그리드, 2px 획, 바깥 테두리 x 5~19)이라 두 상태의 폭이
- * 어긋나지 않는다. 다른 세트의 채운 북마크를 빌려 오면 상태가 바뀔 때 아이콘 폭이 달라진다.
+ * 이 아이콘만 Iconify 가 아니라 인라인 SVG 다(`docs/asset/v3-1/bookmark/state=off.svg`,
+ * `state=on.svg`). Iconify 는 아이콘을 `mask-image` 로 그리는데 마스크는 단색 실루엣이라
+ * **그림자를 살릴 수 없다.** 비운 상태의 안쪽은 새 에셋에서도 비어 있고, 사진 위에서 윤곽을
+ * 읽히게 하는 것은 흰 면이 아니라 그 그림자다. 그림자가 이 아이콘의 핵심이므로 마스크로는 못
+ * 그린다.
  *
- * 비운 상태의 속이 비쳐 보인다. 전에는 `fill="white"` 라 뒤의 썸네일을 가렸다. 마스크에는
- * 안쪽 면이 없어서 `BootcampCard` 처럼 사진 위에 얹히는 자리에서는 사진이 비친다.
+ * 색을 `currentColor` 로 바꾸지 않는다. 두 상태의 색(`#D1D5DB`, `#4A76FF`)이 에셋에 박혀 있고
+ * 그것이 디자인이다. 크기와 자리는 전과 같이 쓰는 쪽의 클래스가 정한다.
+ *
+ * `filter` 영역은 두 에셋이 각각 27.4997 과 28.005 인데 하나로 합쳤다. `clipPath` 가 어차피
+ * 24x24 로 자르므로 충분히 크기만 하면 결과가 같다.
+ *
+ * `filter`·`clipPath` 의 `id` 는 인스턴스마다 다르다. 카드 목록 한 화면에 이 아이콘이 열
+ * 몇 개씩 나오는데 `id` 는 문서에서 유일해야 하고, 겹치면 브라우저가 첫 정의만 쓴다. `useId`
+ * 는 서버 컴포넌트에서도 동작하고 서버·클라이언트가 같은 값을 준다. 콜론 같은 글자를 빼는
+ * 것은 `url(#...)` 참조로 들어가기 때문이다.
  */
 export function BookmarkIcon({ filled = false, className, ...props }: BookmarkIconProps) {
+  const instanceId = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const shadowId = `bookmark-shadow-${instanceId}`;
+  const clipId = `bookmark-clip-${instanceId}`;
+
   return (
-    <span
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
       aria-hidden="true"
-      className={cn(
-        filled
-          ? 'icon-[tabler--bookmark-filled] block text-blue-500'
-          : 'icon-[tabler--bookmark] block text-gray-300',
-        className,
-      )}
+      className={cn('block', className)}
       {...props}
-    />
+    >
+      <g clipPath={`url(#${clipId})`}>
+        <g filter={`url(#${shadowId})`}>
+          <path
+            d={filled ? BOOKMARK_FILLED_PATH : BOOKMARK_OUTLINE_PATH}
+            fill={filled ? '#4A76FF' : '#D1D5DB'}
+          />
+        </g>
+      </g>
+      <defs>
+        <filter
+          id={shadowId}
+          x="0"
+          y="-2"
+          width="24"
+          height="28"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset />
+          <feGaussianBlur stdDeviation="2" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0.152941 0 0 0 0 0.152941 0 0 0 0 0.176471 0 0 0 0.08 0"
+          />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+        </filter>
+        <clipPath id={clipId}>
+          <rect width="24" height="24" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
   );
 }
 

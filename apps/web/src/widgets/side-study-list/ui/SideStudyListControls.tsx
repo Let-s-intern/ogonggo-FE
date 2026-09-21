@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button, cn } from '@ogonggo/ui';
+import { Button, MenuItem } from '@ogonggo/ui';
 import {
   buildSideStudyListHref,
   SIDE_STUDY_TABS,
@@ -24,21 +24,23 @@ export interface SideStudyListControlsProps {
  *
  * 부트캠프 목록과 달리 오른쪽에 정렬 드롭다운도 `모집 중만` 토글도 없다 — 목업의 그 자리에는
  * `모집글 쓰기` 버튼이 있다(PRD 4.3).
+ *
+ * 탭 글자는 `BootcampListControls`와 같이 `MenuItem`이 그린다 — 현재 탭에 밑줄이 생기고,
+ * 글자 크기만 `text-lg`로 덮어쓴다. 이유는 그쪽 주석에 적었다.
  */
 export function SideStudyListControls({ query }: SideStudyListControlsProps) {
   return (
     <div className="flex w-full flex-wrap items-center justify-between gap-4">
-      <nav className="flex items-center gap-5 text-lg" aria-label="모집글 종류">
+      <nav className="flex items-center gap-5" aria-label="모집글 종류">
         {SIDE_STUDY_TABS.map((tab) => (
           <Link
             key={tab}
             href={buildSideStudyListHref(query, { tab })}
             aria-current={tab === query.tab ? 'page' : undefined}
-            className={cn(
-              tab === query.tab ? 'font-bold text-gray-900' : 'font-medium text-gray-400',
-            )}
           >
-            {TAB_LABELS[tab]}
+            <MenuItem state={tab === query.tab ? 'current' : 'default'} className="text-lg">
+              {TAB_LABELS[tab]}
+            </MenuItem>
           </Link>
         ))}
       </nav>
