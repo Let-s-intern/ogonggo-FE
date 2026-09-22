@@ -75,10 +75,10 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
   return {
     title: form.title,
     recruitmentType: form.recruitmentType ?? '',
-    capacity: form.capacity === undefined ? '' : String(form.capacity),
+    capacity: form.capacity == null ? '' : String(form.capacity),
     progressMethod: form.progressMethod ?? '',
     activityDurationMonths:
-      form.activityDurationMonths === undefined ? '' : String(form.activityDurationMonths),
+      form.activityDurationMonths == null ? '' : String(form.activityDurationMonths),
     technologyStacks: form.technologyStacks,
     summary: form.summary ?? '',
     contentText: lexicalToText(form.content),

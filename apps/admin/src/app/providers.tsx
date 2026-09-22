@@ -1,18 +1,8 @@
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
-import { HttpError } from '@ogonggo/api';
 import { clearAccessToken } from '@/shared/api/accessToken';
+import { authErrorMessage } from '@/shared/api/authErrorMessages';
 import { router } from './routes';
-
-/** 401·403 을 받았을 때 로그인 화면에 띄울 문구. */
-const AUTH_ERROR_MESSAGES: Record<number, string> = {
-  401: '로그인이 필요합니다',
-  403: '관리자 계정이 아닙니다',
-};
-
-function authErrorMessage(error: unknown): string | undefined {
-  return error instanceof HttpError ? AUTH_ERROR_MESSAGES[error.status] : undefined;
-}
 
 /**
  * 어느 화면에서든 401·403 이 오면 토큰을 버리고 로그인 화면으로 보낸다.

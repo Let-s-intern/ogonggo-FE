@@ -102,8 +102,7 @@ export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFor
     experienceType: job.experienceType,
     educationLevel: job.educationLevel,
     region: job.region ?? '',
-    recruitmentHeadcount:
-      job.recruitmentHeadcount === undefined ? '' : String(job.recruitmentHeadcount),
+    recruitmentHeadcount: job.recruitmentHeadcount == null ? '' : String(job.recruitmentHeadcount),
     coverImageUrl: job.coverImageUrl ?? '',
     responsibilities: job.responsibilities ?? '',
     qualifications: job.qualifications ?? '',
