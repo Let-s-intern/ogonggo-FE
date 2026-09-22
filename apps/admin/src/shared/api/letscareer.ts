@@ -7,8 +7,9 @@
  * `apps/web/src/shared/api/letscareer.ts` 가 같은 서버를 부르지만 파일을 따로 둔다. 근거는
  * `.claude/tasks/memos/결정-어드민-렛츠커리어-클라이언트-위치-2026-09-22.md` 에 적었다.
  *
- * `/letscareer-api/**` 는 dev 에서 `vite.config.ts` 의 프록시, 배포본에서 `vercel.json` 의 rewrite 가
- * 렛츠커리어로 넘긴다.
+ * `/letscareer-api/**` 는 dev 에서 `vite.config.ts` 의 프록시가, 배포본에서 `vercel.json` 의 rewrite 가
+ * 부르는 서버리스 함수(`api/letscareer-sso.ts`) 가 렛츠커리어로 넘긴다. 양쪽 다 브라우저가 붙인 `Origin`
+ * 을 떼고 보낸다 — 떼지 않으면 렛츠커리어가 403 `Invalid CORS request` 로 막는다.
  */
 
 const API_PREFIX = '/letscareer-api';
