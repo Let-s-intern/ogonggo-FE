@@ -1,5 +1,6 @@
 export {
   fetchApplicationBoardPage,
+  isMovableStageId,
   moveApplicationStage,
   type ApplicationBoardFilters,
   type ApplicationBoardItem,

@@ -43,6 +43,16 @@ export interface ApplicationBoardItem {
   recruitmentType: 'PERIOD' | 'ALWAYS_OPEN';
   recruitmentEndAt?: string;
   closedAt?: string;
+  /**
+   * 활동 기간. 리스트 보기의 활동 단계 행이 마감일시 대신 이것을 그린다(PRD "리스트 보기").
+   *
+   * **부트캠프에만 있다.** `UserBootcampSummaryResponse` 의 `programStartDate`·`programEndDate`
+   * 가 그것이고, 사이드·스터디 지원 이력(`RecruitmentApplicationItemResponse`) 에는 대응하는
+   * 칸이 없다 — 있는 것은 `activityDurationMonths`(`3개월`) 뿐이라 이미 `meta` 에 들어가 있다.
+   * 채용공고에는 활동 단계 자체가 없다.
+   */
+  activityStartDate?: string;
+  activityEndDate?: string;
 }
 
 export interface ApplicationBoardPage {
@@ -184,6 +194,8 @@ async function fetchBootcampStage(
       recruitmentType: bootcamp.recruitmentType,
       recruitmentEndAt: bootcamp.recruitmentEndAt,
       closedAt: bootcamp.closedAt,
+      activityStartDate: bootcamp.programStartDate,
+      activityEndDate: bootcamp.programEndDate,
     })),
   };
 }
@@ -281,6 +293,16 @@ function emptyPageInfo(params: ApplicationBoardPageParams): PageInfo {
  * (`stages.ts` 의 `movableTo`). 백엔드가 전이를 열면 여기와 그 표가 함께 늘어난다.
  */
 export type MovableStageId = 'SCRAPPED' | 'PREPARING';
+
+/**
+ * 지금 열린 전이의 도착 단계인가.
+ *
+ * 리스트 보기의 상태 셀렉트가 고른 값을 좁히는 자리다. 셀렉트는 그 탭의 단계를 전부 늘어놓고
+ * (목업이 그렇다) 옮길 수 없는 것만 비활성으로 두므로, 고른 값은 `string` 으로 돌아온다.
+ */
+export function isMovableStageId(value: string): value is MovableStageId {
+  return value === 'SCRAPPED' || value === 'PREPARING';
+}
 
 /**
  * 한 건의 단계를 옮긴다.

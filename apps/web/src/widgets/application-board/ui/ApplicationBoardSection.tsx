@@ -8,6 +8,7 @@ import {
   type ApplicationBoardTab,
   type ApplicationStage,
   type ApplicationStageId,
+  type MoveStage,
 } from '@/features/application-board';
 import { ApplicationBoardRow } from './ApplicationBoardRow';
 import { ApplicationBoardSectionHead } from './ApplicationBoardSectionHead';
@@ -16,6 +17,8 @@ export interface ApplicationBoardSectionProps {
   tab: ApplicationBoardTab;
   stage: ApplicationStage<ApplicationStageId>;
   filters: ApplicationBoardFilters;
+  /** 리스트 전체가 나눠 쓰는 이동 훅. 칸반과 같은 이유로 하나다(`ApplicationBoardList`). */
+  move: MoveStage;
   /** 첫 섹션인가. 섹션 머리의 바탕색만 이걸로 갈린다. */
   first: boolean;
 }
@@ -37,6 +40,7 @@ export function ApplicationBoardSection({
   tab,
   stage,
   filters,
+  move,
   first,
 }: ApplicationBoardSectionProps) {
   const list = useApplicationStage(tab, stage.id, filters);
@@ -58,7 +62,7 @@ export function ApplicationBoardSection({
       />
       <div id={panelId} hidden={collapsed}>
         {list.items.map((item) => (
-          <ApplicationBoardRow key={item.key} item={item} />
+          <ApplicationBoardRow key={item.key} tab={tab} stage={stage} item={item} move={move} />
         ))}
         {list.items.length === 0 ? <ApplicationBoardSectionPlaceholder list={list} /> : null}
         {list.hasMore ? (
