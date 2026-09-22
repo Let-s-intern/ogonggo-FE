@@ -51,6 +51,7 @@ import type {
   ListPublicJobsParams,
   ListPublicPopularJobsParams,
   PublishRecruitmentPostRequest,
+  ReplaceMyCompanyProfileRequest,
   ReplaceMyProfileRequest,
   SuccessResponseAuthTokenResponse,
   SuccessResponseCompanyBootcampDetailResponse,
@@ -543,6 +544,116 @@ export const useDeleteMyJob = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteMyJobMutationOptions(options), queryClient);
+    }
+
+export type replaceMyCompanyProfileResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceMyCompanyProfileResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceMyCompanyProfileResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type replaceMyCompanyProfileResponseSuccess = (replaceMyCompanyProfileResponse200) & {
+  headers: Headers;
+};
+export type replaceMyCompanyProfileResponseError = (replaceMyCompanyProfileResponse400 | replaceMyCompanyProfileResponse403) & {
+  headers: Headers;
+};
+
+export type replaceMyCompanyProfileResponse = (replaceMyCompanyProfileResponseSuccess | replaceMyCompanyProfileResponseError)
+
+export const getReplaceMyCompanyProfileUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/company-profile`
+}
+
+/**
+ *
+ *             기업 회원의 기관명과 담당자 이름을 교체합니다.
+ *             조회는 내 정보 조회(GET /api/v1/users/me)의 companyProfile에 함께 담깁니다.
+ *
+ *             두 값을 함께 교체하므로 하나만 바꿀 때도 바꾸지 않을 값을 함께 보내야 합니다.
+ *             로그인 이메일과 비밀번호는 여기서 바꿀 수 없습니다.
+ * @summary 내 기업 정보 수정
+ */
+export const replaceMyCompanyProfile = async (replaceMyCompanyProfileRequest: ReplaceMyCompanyProfileRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyCompanyProfileResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceMyCompanyProfileResponse>(getReplaceMyCompanyProfileUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceMyCompanyProfileRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceMyCompanyProfileMutationKey = () => ['replaceMyCompanyProfile'] as const;
+
+export const getReplaceMyCompanyProfileMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyCompanyProfile>>, TError,ReplaceMyCompanyProfileMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMyCompanyProfile>>, TError,ReplaceMyCompanyProfileMutationVariables, TContext> => {
+
+const mutationKey = getReplaceMyCompanyProfileMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMyCompanyProfile>>, ReplaceMyCompanyProfileMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  replaceMyCompanyProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMyCompanyProfileMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMyCompanyProfile>>>
+    export type ReplaceMyCompanyProfileMutationBody = ReplaceMyCompanyProfileRequest
+    export type ReplaceMyCompanyProfileMutationError = ErrorResponse
+    export type ReplaceMyCompanyProfileMutationVariables = {data: ReplaceMyCompanyProfileRequest}
+
+    /**
+ * @summary 내 기업 정보 수정
+ */
+export const useReplaceMyCompanyProfile = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyCompanyProfile>>, TError,ReplaceMyCompanyProfileMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMyCompanyProfile>>,
+        TError,
+        ReplaceMyCompanyProfileMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceMyCompanyProfileMutationOptions(options), queryClient);
     }
 
 export type getMyBootcampResponse200 = {
@@ -3008,6 +3119,219 @@ export const useCreateRecruitmentPostApplication = <TError = ErrorResponse,
       return useMutation(getCreateRecruitmentPostApplicationMutationOptions(options), queryClient);
     }
 
+export type prepareMyRecruitmentPostBookmarkResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type prepareMyRecruitmentPostBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type prepareMyRecruitmentPostBookmarkResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type prepareMyRecruitmentPostBookmarkResponseSuccess = (prepareMyRecruitmentPostBookmarkResponse200) & {
+  headers: Headers;
+};
+export type prepareMyRecruitmentPostBookmarkResponseError = (prepareMyRecruitmentPostBookmarkResponse404 | prepareMyRecruitmentPostBookmarkResponse409) & {
+  headers: Headers;
+};
+
+export type prepareMyRecruitmentPostBookmarkResponse = (prepareMyRecruitmentPostBookmarkResponseSuccess | prepareMyRecruitmentPostBookmarkResponseError)
+
+export const getPrepareMyRecruitmentPostBookmarkUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-post-bookmarks/${postId}/prepare`
+}
+
+/**
+ *
+ *             스크랩 칸의 모집글을 지원 준비 중 칸으로 옮깁니다.
+ *             북마크를 해제하고 지원 준비 중(PREPARING) 지원 이력을 만듭니다. 외부 연락처를 열지 않아도 됩니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 이미 지원 준비 중 이력이 있으면 북마크만 해제하고 200으로 응답합니다.
+ *             - 지원 완료·활동 중·활동 완료 이력이 있으면 409입니다.
+ *             - 지운 지원 이력이 있으면 새로 만들지 않고 지원 준비 중으로 되살립니다.
+ * @summary 사이드·스터디 북마크를 지원 준비 중으로 이동
+ */
+export const prepareMyRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<prepareMyRecruitmentPostBookmarkResponse> => {
+
+  return httpClient<prepareMyRecruitmentPostBookmarkResponse>(getPrepareMyRecruitmentPostBookmarkUrl(postId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrepareMyRecruitmentPostBookmarkMutationKey = () => ['prepareMyRecruitmentPostBookmark'] as const;
+
+export const getPrepareMyRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareMyRecruitmentPostBookmark>>, TError,PrepareMyRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareMyRecruitmentPostBookmark>>, TError,PrepareMyRecruitmentPostBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getPrepareMyRecruitmentPostBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareMyRecruitmentPostBookmark>>, PrepareMyRecruitmentPostBookmarkMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  prepareMyRecruitmentPostBookmark(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareMyRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof prepareMyRecruitmentPostBookmark>>>
+
+    export type PrepareMyRecruitmentPostBookmarkMutationError = ErrorResponse
+    export type PrepareMyRecruitmentPostBookmarkMutationVariables = {postId: number}
+
+    /**
+ * @summary 사이드·스터디 북마크를 지원 준비 중으로 이동
+ */
+export const usePrepareMyRecruitmentPostBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareMyRecruitmentPostBookmark>>, TError,PrepareMyRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareMyRecruitmentPostBookmark>>,
+        TError,
+        PrepareMyRecruitmentPostBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrepareMyRecruitmentPostBookmarkMutationOptions(options), queryClient);
+    }
+
+export type cancelMyRecruitmentPostBookmarkPreparationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type cancelMyRecruitmentPostBookmarkPreparationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type cancelMyRecruitmentPostBookmarkPreparationResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type cancelMyRecruitmentPostBookmarkPreparationResponseSuccess = (cancelMyRecruitmentPostBookmarkPreparationResponse200) & {
+  headers: Headers;
+};
+export type cancelMyRecruitmentPostBookmarkPreparationResponseError = (cancelMyRecruitmentPostBookmarkPreparationResponse404 | cancelMyRecruitmentPostBookmarkPreparationResponse409) & {
+  headers: Headers;
+};
+
+export type cancelMyRecruitmentPostBookmarkPreparationResponse = (cancelMyRecruitmentPostBookmarkPreparationResponseSuccess | cancelMyRecruitmentPostBookmarkPreparationResponseError)
+
+export const getCancelMyRecruitmentPostBookmarkPreparationUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-post-bookmarks/${postId}/cancel-preparation`
+}
+
+/**
+ *
+ *             지원 준비 중 칸의 모집글을 스크랩 칸으로 되돌립니다.
+ *             지원 이력을 지우고, 북마크가 없으면 다시 북마크합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 지원 이력이 없고 북마크만 있으면 아무것도 바꾸지 않고 200으로 응답합니다.
+ *             - 지원 완료·활동 중·활동 완료 이력이 있으면 409입니다.
+ * @summary 사이드·스터디 지원 준비 중을 스크랩으로 되돌리기
+ */
+export const cancelMyRecruitmentPostBookmarkPreparation = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<cancelMyRecruitmentPostBookmarkPreparationResponse> => {
+
+  return httpClient<cancelMyRecruitmentPostBookmarkPreparationResponse>(getCancelMyRecruitmentPostBookmarkPreparationUrl(postId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCancelMyRecruitmentPostBookmarkPreparationMutationKey = () => ['cancelMyRecruitmentPostBookmarkPreparation'] as const;
+
+export const getCancelMyRecruitmentPostBookmarkPreparationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMyRecruitmentPostBookmarkPreparation>>, TError,CancelMyRecruitmentPostBookmarkPreparationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelMyRecruitmentPostBookmarkPreparation>>, TError,CancelMyRecruitmentPostBookmarkPreparationMutationVariables, TContext> => {
+
+const mutationKey = getCancelMyRecruitmentPostBookmarkPreparationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelMyRecruitmentPostBookmarkPreparation>>, CancelMyRecruitmentPostBookmarkPreparationMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  cancelMyRecruitmentPostBookmarkPreparation(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelMyRecruitmentPostBookmarkPreparationMutationResult = NonNullable<Awaited<ReturnType<typeof cancelMyRecruitmentPostBookmarkPreparation>>>
+
+    export type CancelMyRecruitmentPostBookmarkPreparationMutationError = ErrorResponse
+    export type CancelMyRecruitmentPostBookmarkPreparationMutationVariables = {postId: number}
+
+    /**
+ * @summary 사이드·스터디 지원 준비 중을 스크랩으로 되돌리기
+ */
+export const useCancelMyRecruitmentPostBookmarkPreparation = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMyRecruitmentPostBookmarkPreparation>>, TError,CancelMyRecruitmentPostBookmarkPreparationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelMyRecruitmentPostBookmarkPreparation>>,
+        TError,
+        CancelMyRecruitmentPostBookmarkPreparationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelMyRecruitmentPostBookmarkPreparationMutationOptions(options), queryClient);
+    }
+
 export type publishMyRecruitmentPostResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -3647,6 +3971,210 @@ export const useDeleteJobBookmark = <TError = ErrorResponse,
       return useMutation(getDeleteJobBookmarkMutationOptions(options), queryClient);
     }
 
+export type prepareMyJobBookmarkResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type prepareMyJobBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type prepareMyJobBookmarkResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type prepareMyJobBookmarkResponseSuccess = (prepareMyJobBookmarkResponse200) & {
+  headers: Headers;
+};
+export type prepareMyJobBookmarkResponseError = (prepareMyJobBookmarkResponse404 | prepareMyJobBookmarkResponse409) & {
+  headers: Headers;
+};
+
+export type prepareMyJobBookmarkResponse = (prepareMyJobBookmarkResponseSuccess | prepareMyJobBookmarkResponseError)
+
+export const getPrepareMyJobBookmarkUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/job-bookmarks/${jobId}/prepare`
+}
+
+/**
+ *
+ *             스크랩 단계의 북마크를 지원 준비 중으로 옮깁니다.
+ *             이미 지원 준비 중이면 아무것도 바꾸지 않고 200으로 응답합니다.
+ *             옮긴 북마크는 해당 단계 목록의 맨 앞에 옵니다.
+ * @summary 채용공고 북마크를 지원 준비 중으로 이동
+ */
+export const prepareMyJobBookmark = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<prepareMyJobBookmarkResponse> => {
+
+  return httpClient<prepareMyJobBookmarkResponse>(getPrepareMyJobBookmarkUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrepareMyJobBookmarkMutationKey = () => ['prepareMyJobBookmark'] as const;
+
+export const getPrepareMyJobBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareMyJobBookmark>>, TError,PrepareMyJobBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareMyJobBookmark>>, TError,PrepareMyJobBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getPrepareMyJobBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareMyJobBookmark>>, PrepareMyJobBookmarkMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  prepareMyJobBookmark(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareMyJobBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof prepareMyJobBookmark>>>
+
+    export type PrepareMyJobBookmarkMutationError = ErrorResponse
+    export type PrepareMyJobBookmarkMutationVariables = {jobId: number}
+
+    /**
+ * @summary 채용공고 북마크를 지원 준비 중으로 이동
+ */
+export const usePrepareMyJobBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareMyJobBookmark>>, TError,PrepareMyJobBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareMyJobBookmark>>,
+        TError,
+        PrepareMyJobBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrepareMyJobBookmarkMutationOptions(options), queryClient);
+    }
+
+export type cancelMyJobBookmarkPreparationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type cancelMyJobBookmarkPreparationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type cancelMyJobBookmarkPreparationResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type cancelMyJobBookmarkPreparationResponseSuccess = (cancelMyJobBookmarkPreparationResponse200) & {
+  headers: Headers;
+};
+export type cancelMyJobBookmarkPreparationResponseError = (cancelMyJobBookmarkPreparationResponse404 | cancelMyJobBookmarkPreparationResponse409) & {
+  headers: Headers;
+};
+
+export type cancelMyJobBookmarkPreparationResponse = (cancelMyJobBookmarkPreparationResponseSuccess | cancelMyJobBookmarkPreparationResponseError)
+
+export const getCancelMyJobBookmarkPreparationUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/job-bookmarks/${jobId}/cancel-preparation`
+}
+
+/**
+ *
+ *             지원 준비 중인 북마크를 스크랩 단계로 되돌립니다.
+ *             이미 스크랩 단계면 아무것도 바꾸지 않고 200으로 응답합니다.
+ *             옮긴 북마크는 해당 단계 목록의 맨 앞에 옵니다.
+ * @summary 채용공고 북마크를 스크랩으로 되돌리기
+ */
+export const cancelMyJobBookmarkPreparation = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<cancelMyJobBookmarkPreparationResponse> => {
+
+  return httpClient<cancelMyJobBookmarkPreparationResponse>(getCancelMyJobBookmarkPreparationUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCancelMyJobBookmarkPreparationMutationKey = () => ['cancelMyJobBookmarkPreparation'] as const;
+
+export const getCancelMyJobBookmarkPreparationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMyJobBookmarkPreparation>>, TError,CancelMyJobBookmarkPreparationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelMyJobBookmarkPreparation>>, TError,CancelMyJobBookmarkPreparationMutationVariables, TContext> => {
+
+const mutationKey = getCancelMyJobBookmarkPreparationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelMyJobBookmarkPreparation>>, CancelMyJobBookmarkPreparationMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  cancelMyJobBookmarkPreparation(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelMyJobBookmarkPreparationMutationResult = NonNullable<Awaited<ReturnType<typeof cancelMyJobBookmarkPreparation>>>
+
+    export type CancelMyJobBookmarkPreparationMutationError = ErrorResponse
+    export type CancelMyJobBookmarkPreparationMutationVariables = {jobId: number}
+
+    /**
+ * @summary 채용공고 북마크를 스크랩으로 되돌리기
+ */
+export const useCancelMyJobBookmarkPreparation = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMyJobBookmarkPreparation>>, TError,CancelMyJobBookmarkPreparationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelMyJobBookmarkPreparation>>,
+        TError,
+        CancelMyJobBookmarkPreparationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelMyJobBookmarkPreparationMutationOptions(options), queryClient);
+    }
+
 export type createImageResponse201 = {
   data: SuccessResponseImageUploadResponse
   status: 201
@@ -4043,6 +4571,210 @@ export const useDeleteBootcampBookmark = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteBootcampBookmarkMutationOptions(options), queryClient);
+    }
+
+export type prepareMyBootcampBookmarkResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type prepareMyBootcampBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type prepareMyBootcampBookmarkResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type prepareMyBootcampBookmarkResponseSuccess = (prepareMyBootcampBookmarkResponse200) & {
+  headers: Headers;
+};
+export type prepareMyBootcampBookmarkResponseError = (prepareMyBootcampBookmarkResponse404 | prepareMyBootcampBookmarkResponse409) & {
+  headers: Headers;
+};
+
+export type prepareMyBootcampBookmarkResponse = (prepareMyBootcampBookmarkResponseSuccess | prepareMyBootcampBookmarkResponseError)
+
+export const getPrepareMyBootcampBookmarkUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/bootcamp-bookmarks/${bootcampId}/prepare`
+}
+
+/**
+ *
+ *             스크랩 단계의 북마크를 신청 전으로 옮깁니다.
+ *             이미 신청 전이면 아무것도 바꾸지 않고 200으로 응답합니다.
+ *             옮긴 북마크는 해당 단계 목록의 맨 앞에 옵니다.
+ * @summary 부트캠프 북마크를 신청 전으로 이동
+ */
+export const prepareMyBootcampBookmark = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<prepareMyBootcampBookmarkResponse> => {
+
+  return httpClient<prepareMyBootcampBookmarkResponse>(getPrepareMyBootcampBookmarkUrl(bootcampId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrepareMyBootcampBookmarkMutationKey = () => ['prepareMyBootcampBookmark'] as const;
+
+export const getPrepareMyBootcampBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareMyBootcampBookmark>>, TError,PrepareMyBootcampBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareMyBootcampBookmark>>, TError,PrepareMyBootcampBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getPrepareMyBootcampBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareMyBootcampBookmark>>, PrepareMyBootcampBookmarkMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  prepareMyBootcampBookmark(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareMyBootcampBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof prepareMyBootcampBookmark>>>
+
+    export type PrepareMyBootcampBookmarkMutationError = ErrorResponse
+    export type PrepareMyBootcampBookmarkMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 부트캠프 북마크를 신청 전으로 이동
+ */
+export const usePrepareMyBootcampBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareMyBootcampBookmark>>, TError,PrepareMyBootcampBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareMyBootcampBookmark>>,
+        TError,
+        PrepareMyBootcampBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrepareMyBootcampBookmarkMutationOptions(options), queryClient);
+    }
+
+export type cancelMyBootcampBookmarkPreparationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type cancelMyBootcampBookmarkPreparationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type cancelMyBootcampBookmarkPreparationResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type cancelMyBootcampBookmarkPreparationResponseSuccess = (cancelMyBootcampBookmarkPreparationResponse200) & {
+  headers: Headers;
+};
+export type cancelMyBootcampBookmarkPreparationResponseError = (cancelMyBootcampBookmarkPreparationResponse404 | cancelMyBootcampBookmarkPreparationResponse409) & {
+  headers: Headers;
+};
+
+export type cancelMyBootcampBookmarkPreparationResponse = (cancelMyBootcampBookmarkPreparationResponseSuccess | cancelMyBootcampBookmarkPreparationResponseError)
+
+export const getCancelMyBootcampBookmarkPreparationUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/bootcamp-bookmarks/${bootcampId}/cancel-preparation`
+}
+
+/**
+ *
+ *             신청 전인 북마크를 스크랩 단계로 되돌립니다.
+ *             이미 스크랩 단계면 아무것도 바꾸지 않고 200으로 응답합니다.
+ *             옮긴 북마크는 해당 단계 목록의 맨 앞에 옵니다.
+ * @summary 부트캠프 북마크를 스크랩으로 되돌리기
+ */
+export const cancelMyBootcampBookmarkPreparation = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<cancelMyBootcampBookmarkPreparationResponse> => {
+
+  return httpClient<cancelMyBootcampBookmarkPreparationResponse>(getCancelMyBootcampBookmarkPreparationUrl(bootcampId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCancelMyBootcampBookmarkPreparationMutationKey = () => ['cancelMyBootcampBookmarkPreparation'] as const;
+
+export const getCancelMyBootcampBookmarkPreparationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMyBootcampBookmarkPreparation>>, TError,CancelMyBootcampBookmarkPreparationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelMyBootcampBookmarkPreparation>>, TError,CancelMyBootcampBookmarkPreparationMutationVariables, TContext> => {
+
+const mutationKey = getCancelMyBootcampBookmarkPreparationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelMyBootcampBookmarkPreparation>>, CancelMyBootcampBookmarkPreparationMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  cancelMyBootcampBookmarkPreparation(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelMyBootcampBookmarkPreparationMutationResult = NonNullable<Awaited<ReturnType<typeof cancelMyBootcampBookmarkPreparation>>>
+
+    export type CancelMyBootcampBookmarkPreparationMutationError = ErrorResponse
+    export type CancelMyBootcampBookmarkPreparationMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 부트캠프 북마크를 스크랩으로 되돌리기
+ */
+export const useCancelMyBootcampBookmarkPreparation = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMyBootcampBookmarkPreparation>>, TError,CancelMyBootcampBookmarkPreparationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelMyBootcampBookmarkPreparation>>,
+        TError,
+        CancelMyBootcampBookmarkPreparationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelMyBootcampBookmarkPreparationMutationOptions(options), queryClient);
     }
 
 export type reissueAccessTokenResponse400 = {
@@ -5414,7 +6146,13 @@ export const getListMyRecruitmentPostBookmarksUrl = (params?: ListMyRecruitmentP
 
 /**
  *
- *             북마크를 마지막으로 활성화한 순서의 페이지를 조회합니다.
+ *             북마크 목록을 조회합니다. 마이페이지 지원·신청 관리의 스크랩 칸에도 이 목록을 씁니다.
+ *             지원 준비 중 이후 칸은 `GET /api/v1/me/recruitment-applications`의 지원 이력을 씁니다.
+ *
+ *             recruitmentStatus(RECRUITING 모집 중, CLOSED 마감), recruitmentType(SIDE_PROJECT, STUDY)으로 좁히며
+ *             보내지 않으면 해당 조건을 적용하지 않습니다.
+ *             keyword는 모집글 제목에 포함되는지로 찾으며 대소문자를 가리지 않고, 2자 이상 100자 이하여야 합니다.
+ *             sort는 지금 RECENTLY_SAVED(최근 저장순)만 있으며 북마크를 마지막으로 활성화한 순서입니다.
  *
  *             ### 추가사항
  *
@@ -6642,7 +7380,7 @@ export const getListMyJobBookmarksUrl = (params?: ListMyJobBookmarksParams,) => 
 
 /**
  *
- *             북마크한 공고 중 게시 중인 공고만 최근 북마크 순으로 반환합니다.
+ *             북마크한 공고 중 게시 중인 공고만 반환합니다.
  *
  *             채용공고 목록과 같은 필터를 사용할 수 있습니다.
  *             employmentType, experienceType, jobField(직군), jobRole(직무)로 목록을 좁히며 각각 하나씩 고를 수 있고,
@@ -6650,6 +7388,16 @@ export const getListMyJobBookmarksUrl = (params?: ListMyJobBookmarksParams,) => 
  *
  *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
  *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
+ *
+ *             applicationStatus는 지원·신청 관리 단계로 SCRAPPED(스크랩), PREPARING(지원 준비 중), APPLIED(지원 완료),
+ *             INTERVIEWING(면접), PASSED(합격), FAILED(불합격) 중 하나입니다.
+ *             보내면 그 단계의 북마크만 반환하고, 보내지 않으면 모든 단계를 반환합니다.
+ *
+ *             recruitmentStatus는 RECRUITING(모집 중), CLOSED(모집 마감) 중 하나입니다.
+ *             마감 처리됐거나 모집 종료 일시가 지났으면 CLOSED, 그 밖에는 RECRUITING이며 상시 채용은 마감 처리 전까지 RECRUITING입니다.
+ *
+ *             sort로 정렬을 고릅니다. 지금은 RECENTLY_SAVED(최근 저장순)만 있으며 보내지 않으면 RECENTLY_SAVED입니다.
+ *             북마크를 등록·재등록하거나 지원 단계를 옮긴 시각이 최근인 순서입니다.
  * @summary 채용공고 북마크 목록 조회
  */
 export const listMyJobBookmarks = async (params?: ListMyJobBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyJobBookmarksResponse> => {
@@ -7041,7 +7789,7 @@ export const getListMyBootcampBookmarksUrl = (params?: ListMyBootcampBookmarksPa
 
 /**
  *
- *             북마크한 부트캠프 중 지금 공개된 부트캠프만 최근 북마크 순으로 반환합니다.
+ *             북마크한 부트캠프 중 지금 공개된 부트캠프만 반환합니다.
  *
  *             부트캠프 목록과 같은 필터를 사용할 수 있습니다.
  *             tuitionType과 status로 목록을 좁히며 각각 하나씩 고를 수 있고, 보내지 않으면 해당 조건을 적용하지 않습니다.
@@ -7049,6 +7797,13 @@ export const getListMyBootcampBookmarksUrl = (params?: ListMyBootcampBookmarksPa
  *
  *             keyword는 운영 회사명 또는 프로그램명에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
  *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
+ *
+ *             applicationStatus는 지원·신청 관리 단계로 SCRAPPED(스크랩), PREPARING(신청 전), APPLIED(신청 완료),
+ *             IN_PROGRESS(활동 중), COMPLETED(활동 완료) 중 하나입니다.
+ *             보내면 그 단계의 북마크만 반환하고, 보내지 않으면 모든 단계를 반환합니다.
+ *
+ *             sort로 정렬을 고릅니다. 지금은 RECENTLY_SAVED(최근 저장순)만 있으며 보내지 않으면 RECENTLY_SAVED입니다.
+ *             북마크를 등록·재등록하거나 신청 단계를 옮긴 시각이 최근인 순서입니다.
  * @summary 부트캠프 북마크 목록 조회
  */
 export const listMyBootcampBookmarks = async (params?: ListMyBootcampBookmarksParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyBootcampBookmarksResponse> => {
@@ -7263,6 +8018,8 @@ export const getReplaceMyJobResponseMock = (overrideResponse: Partial<Extract<Su
 
 export const getDeleteMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReplaceMyCompanyProfileResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getGetMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getReplaceMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -7307,6 +8064,10 @@ export const getReportRecruitmentPostCommentResponseMock = (overrideResponse: Pa
 
 export const getCreateRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostApplicationResponse, object>> = {}): SuccessResponseCreateRecruitmentPostApplicationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), contactMethod: faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), contactValue: faker.string.alpha({length: {min: 10, max: 20}}), clickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
+export const getPrepareMyRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCancelMyRecruitmentPostBookmarkPreparationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getPublishMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCopyMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MOBILE','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
@@ -7319,6 +8080,10 @@ export const getCreateJobBookmarkResponseMock = (overrideResponse: Partial<Extra
 
 export const getDeleteJobBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getPrepareMyJobBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCancelMyJobBookmarkPreparationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getCreateImageResponseMock = (overrideResponse: Partial<Extract<SuccessResponseImageUploadResponse, object>> = {}): SuccessResponseImageUploadResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.string.alpha({length: {min: 10, max: 20}}), url: faker.string.alpha({length: {min: 10, max: 20}}), mimeType: faker.string.alpha({length: {min: 10, max: 20}}), size: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateBootcampApplicationUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -7326,6 +8091,10 @@ export const getCreateBootcampApplicationUrlClickResponseMock = (overrideRespons
 export const getCreateBootcampBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getDeleteBootcampBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getPrepareMyBootcampBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCancelMyBootcampBookmarkPreparationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getSignUpCompanyResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
 
@@ -7419,6 +8188,18 @@ export const getDeleteMyJobMockHandler = (overrideResponse?: SuccessResponseUnit
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteMyJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceMyCompanyProfileMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/users/me/company-profile', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceMyCompanyProfileResponseMock(),
       { status: 200
       })
   }, options)
@@ -7688,6 +8469,30 @@ export const getCreateRecruitmentPostApplicationMockHandler = (overrideResponse?
   }, options)
 }
 
+export const getPrepareMyRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-post-bookmarks/:postId/prepare', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPrepareMyRecruitmentPostBookmarkResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCancelMyRecruitmentPostBookmarkPreparationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-post-bookmarks/:postId/cancel-preparation', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCancelMyRecruitmentPostBookmarkPreparationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getPublishMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/me/recruitment-posts/:postId/publish', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
@@ -7760,6 +8565,30 @@ export const getDeleteJobBookmarkMockHandler = (overrideResponse?: SuccessRespon
   }, options)
 }
 
+export const getPrepareMyJobBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/job-bookmarks/:jobId/prepare', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPrepareMyJobBookmarkResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCancelMyJobBookmarkPreparationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/job-bookmarks/:jobId/cancel-preparation', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCancelMyJobBookmarkPreparationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getCreateImageMockHandler = (overrideResponse?: SuccessResponseImageUploadResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseImageUploadResponse> | SuccessResponseImageUploadResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/images', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
@@ -7803,6 +8632,30 @@ export const getDeleteBootcampBookmarkMockHandler = (overrideResponse?: SuccessR
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteBootcampBookmarkResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getPrepareMyBootcampBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/bootcamp-bookmarks/:bootcampId/prepare', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPrepareMyBootcampBookmarkResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCancelMyBootcampBookmarkPreparationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/bootcamp-bookmarks/:bootcampId/cancel-preparation', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCancelMyBootcampBookmarkPreparationResponseMock(),
       { status: 200
       })
   }, options)
@@ -8118,6 +8971,7 @@ export const getOgonggoUserAPIMock = () => [
   getGetMyJobMockHandler(),
   getReplaceMyJobMockHandler(),
   getDeleteMyJobMockHandler(),
+  getReplaceMyCompanyProfileMockHandler(),
   getGetMyBootcampMockHandler(),
   getReplaceMyBootcampMockHandler(),
   getDeleteMyBootcampMockHandler(),
@@ -8140,16 +8994,22 @@ export const getOgonggoUserAPIMock = () => [
   getCreateRecruitmentPostCommentMockHandler(),
   getReportRecruitmentPostCommentMockHandler(),
   getCreateRecruitmentPostApplicationMockHandler(),
+  getPrepareMyRecruitmentPostBookmarkMockHandler(),
+  getCancelMyRecruitmentPostBookmarkPreparationMockHandler(),
   getPublishMyRecruitmentPostMockHandler(),
   getCopyMyRecruitmentPostMockHandler(),
   getCreateMyRecruitmentPostDraftMockHandler(),
   getCreateJobSourceUrlClickMockHandler(),
   getCreateJobBookmarkMockHandler(),
   getDeleteJobBookmarkMockHandler(),
+  getPrepareMyJobBookmarkMockHandler(),
+  getCancelMyJobBookmarkPreparationMockHandler(),
   getCreateImageMockHandler(),
   getCreateBootcampApplicationUrlClickMockHandler(),
   getCreateBootcampBookmarkMockHandler(),
   getDeleteBootcampBookmarkMockHandler(),
+  getPrepareMyBootcampBookmarkMockHandler(),
+  getCancelMyBootcampBookmarkPreparationMockHandler(),
   getReissueAccessTokenMockHandler(),
   getSignOutMockHandler(),
   getSignInWithLetsCareerMockHandler(),

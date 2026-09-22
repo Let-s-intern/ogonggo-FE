@@ -24,10 +24,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CrawlerBootcampRequest,
   CrawlerJobRegistrationRequest,
   CrawlerJobReplaceRequest,
   DecideReviewRequest,
   ErrorResponse,
+  GetCrawlerBootcampParams,
   GetCrawlerJobParams,
   ListBootcampsParams,
   ListJobsParams,
@@ -36,6 +38,8 @@ import type {
   SuccessResponseAdminJobDetailResponse,
   SuccessResponseAdminRejectionResponse,
   SuccessResponseAdminReviewDecisionResponse,
+  SuccessResponseCrawlerBootcampLookupResponse,
+  SuccessResponseCrawlerBootcampRegistrationResponse,
   SuccessResponseCrawlerJobLookupResponse,
   SuccessResponseCrawlerJobRegistrationResponse,
   SuccessResponseListAdminReviewItemResponse,
@@ -125,10 +129,7 @@ export const getReplaceCrawlerJobUrl = (jobId: number,) => {
 /**
  *
  *             다시 수집·분류한 값으로 수집 공고 전체를 바꿉니다. 태그는 바꾸지 않습니다.
- *             운영자가 관리자 콘솔에서 고친 내용도 이 값으로 덮어씁니다.
- *
- *             값이 실제로 바뀌면 승인되었거나 반려된 공고를 검수 대기로 되돌리고, 게시 중이었다면 숨깁니다.
- *             같은 값을 다시 보내면 검수 상태와 게시 상태를 바꾸지 않습니다.
+ *             운영자가 관리자 콘솔에서 고친 내용도 이 값으로 덮어씁니다. 게시 상태는 바꾸지 않습니다.
  * @summary 크롤러 채용공고 교체
  */
 export const replaceCrawlerJob = async (jobId: number,
@@ -300,6 +301,229 @@ export const useDeleteCrawlerJob = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteCrawlerJobMutationOptions(options), queryClient);
+    }
+
+export type replaceCrawlerBootcampResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceCrawlerBootcampResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceCrawlerBootcampResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type replaceCrawlerBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceCrawlerBootcampResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type replaceCrawlerBootcampResponseSuccess = (replaceCrawlerBootcampResponse200) & {
+  headers: Headers;
+};
+export type replaceCrawlerBootcampResponseError = (replaceCrawlerBootcampResponse400 | replaceCrawlerBootcampResponse401 | replaceCrawlerBootcampResponse404 | replaceCrawlerBootcampResponse409) & {
+  headers: Headers;
+};
+
+export type replaceCrawlerBootcampResponse = (replaceCrawlerBootcampResponseSuccess | replaceCrawlerBootcampResponseError)
+
+export const getReplaceCrawlerBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/internal/bootcamps/${bootcampId}`
+}
+
+/**
+ *
+ *             다시 수집한 값으로 수집 부트캠프 전체를 바꾸고, 커리큘럼은 기존 것을 지운 뒤 보낸 목록으로 바꿉니다.
+ *             운영자가 관리자 콘솔에서 고친 내용도 이 값으로 덮어씁니다. 게시 상태는 바꾸지 않습니다.
+ *
+ *             모집 상태(status)를 보내면 그 값으로 맞춥니다. RECRUITING에서 CLOSED로 바뀌면 교체 시각으로 마감하고,
+ *             CLOSED에서 RECRUITING으로 바뀌면 마감 일시를 지우고 다시 모집 중으로 둡니다. 지금과 같으면 그대로 둡니다.
+ *             보내지 않으면 모집 상태를 바꾸지 않습니다.
+ * @summary 크롤러 부트캠프 교체
+ */
+export const replaceCrawlerBootcamp = async (bootcampId: number,
+    crawlerBootcampRequest: CrawlerBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerBootcampResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceCrawlerBootcampResponse>(getReplaceCrawlerBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(crawlerBootcampRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceCrawlerBootcampMutationKey = () => ['replaceCrawlerBootcamp'] as const;
+
+export const getReplaceCrawlerBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, TError,ReplaceCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, TError,ReplaceCrawlerBootcampMutationVariables, TContext> => {
+
+const mutationKey = getReplaceCrawlerBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, ReplaceCrawlerBootcampMutationVariables> = (props) => {
+          const {bootcampId,data} = props ?? {};
+
+          return  replaceCrawlerBootcamp(bootcampId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceCrawlerBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>>
+    export type ReplaceCrawlerBootcampMutationBody = CrawlerBootcampRequest
+    export type ReplaceCrawlerBootcampMutationError = ErrorResponse
+    export type ReplaceCrawlerBootcampMutationVariables = {bootcampId: number;data: CrawlerBootcampRequest}
+
+    /**
+ * @summary 크롤러 부트캠프 교체
+ */
+export const useReplaceCrawlerBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, TError,ReplaceCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceCrawlerBootcamp>>,
+        TError,
+        ReplaceCrawlerBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceCrawlerBootcampMutationOptions(options), queryClient);
+    }
+
+export type deleteCrawlerBootcampResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteCrawlerBootcampResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteCrawlerBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteCrawlerBootcampResponseSuccess = (deleteCrawlerBootcampResponse200) & {
+  headers: Headers;
+};
+export type deleteCrawlerBootcampResponseError = (deleteCrawlerBootcampResponse401 | deleteCrawlerBootcampResponse404) & {
+  headers: Headers;
+};
+
+export type deleteCrawlerBootcampResponse = (deleteCrawlerBootcampResponseSuccess | deleteCrawlerBootcampResponseError)
+
+export const getDeleteCrawlerBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/internal/bootcamps/${bootcampId}`
+}
+
+/**
+ *
+ *             더는 쓰지 않는 수집 부트캠프를 소프트 삭제합니다.
+ *             이미 삭제한 부트캠프를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
+ * @summary 크롤러 부트캠프 삭제
+ */
+export const deleteCrawlerBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteCrawlerBootcampResponse> => {
+
+  return httpClient<deleteCrawlerBootcampResponse>(getDeleteCrawlerBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCrawlerBootcampMutationKey = () => ['deleteCrawlerBootcamp'] as const;
+
+export const getDeleteCrawlerBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, TError,DeleteCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, TError,DeleteCrawlerBootcampMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCrawlerBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, DeleteCrawlerBootcampMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  deleteCrawlerBootcamp(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCrawlerBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>>
+
+    export type DeleteCrawlerBootcampMutationError = ErrorResponse
+    export type DeleteCrawlerBootcampMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 크롤러 부트캠프 삭제
+ */
+export const useDeleteCrawlerBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, TError,DeleteCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCrawlerBootcamp>>,
+        TError,
+        DeleteCrawlerBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCrawlerBootcampMutationOptions(options), queryClient);
     }
 
 export type getCrawlerJobResponse200 = {
@@ -476,7 +700,7 @@ export const getCreateCrawlerJobUrl = () => {
 
 /**
  *
- *             크롤러가 수집한 채용공고를 초안·검수 대기 상태로 등록합니다. 운영자가 검수에서 승인하면 게시됩니다.
+ *             크롤러가 수집한 채용공고를 게시 상태로 등록합니다. 검수는 기업회원이 올린 공고만 거칩니다.
  *
  *             고용 형태, 경력 유형, 요구 학력, 모집 기간 유형은 크롤러가 판단해 반드시 보냅니다. 서버는 빈 값을 다른 값으로 채우지 않습니다.
  *             상시 채용에는 모집 종료 일시를 보낼 수 없습니다.
@@ -550,6 +774,260 @@ export const useCreateCrawlerJob = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCreateCrawlerJobMutationOptions(options), queryClient);
+    }
+
+export type getCrawlerBootcampResponse200 = {
+  data: SuccessResponseCrawlerBootcampLookupResponse
+  status: 200
+}
+
+export type getCrawlerBootcampResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getCrawlerBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getCrawlerBootcampResponseSuccess = (getCrawlerBootcampResponse200) & {
+  headers: Headers;
+};
+export type getCrawlerBootcampResponseError = (getCrawlerBootcampResponse401 | getCrawlerBootcampResponse404) & {
+  headers: Headers;
+};
+
+export type getCrawlerBootcampResponse = (getCrawlerBootcampResponseSuccess | getCrawlerBootcampResponseError)
+
+export const getGetCrawlerBootcampUrl = (params: GetCrawlerBootcampParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/internal/bootcamps?${stringifiedParams}` : `/api/v1/internal/bootcamps`
+}
+
+/**
+ *
+ *             원문 URL로 미삭제 수집 부트캠프의 식별자를 찾습니다.
+ *             크롤러가 등록 응답의 식별자를 잃은 채 같은 부트캠프를 다시 등록해 409를 받았을 때 씁니다.
+ * @summary 원문 URL로 크롤러 부트캠프 식별자 조회
+ */
+export const getCrawlerBootcamp = async (params: GetCrawlerBootcampParams, options?: Parameters<typeof httpClient>[1]): Promise<getCrawlerBootcampResponse> => {
+
+  return httpClient<getCrawlerBootcampResponse>(getGetCrawlerBootcampUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCrawlerBootcampQueryKey = (params?: GetCrawlerBootcampParams,) => {
+    return [
+    `/api/v1/internal/bootcamps`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCrawlerBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCrawlerBootcampQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrawlerBootcamp>>> = ({ signal }) => getCrawlerBootcamp(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCrawlerBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getCrawlerBootcamp>>>
+export type GetCrawlerBootcampQueryError = ErrorResponse
+
+
+export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
+ params: GetCrawlerBootcampParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCrawlerBootcamp>>,
+          TError,
+          Awaited<ReturnType<typeof getCrawlerBootcamp>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
+ params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCrawlerBootcamp>>,
+          TError,
+          Awaited<ReturnType<typeof getCrawlerBootcamp>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
+ params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 원문 URL로 크롤러 부트캠프 식별자 조회
+ */
+
+export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
+ params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCrawlerBootcampQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createCrawlerBootcampResponse201 = {
+  data: SuccessResponseCrawlerBootcampRegistrationResponse
+  status: 201
+}
+
+export type createCrawlerBootcampResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createCrawlerBootcampResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createCrawlerBootcampResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createCrawlerBootcampResponseSuccess = (createCrawlerBootcampResponse201) & {
+  headers: Headers;
+};
+export type createCrawlerBootcampResponseError = (createCrawlerBootcampResponse400 | createCrawlerBootcampResponse401 | createCrawlerBootcampResponse409) & {
+  headers: Headers;
+};
+
+export type createCrawlerBootcampResponse = (createCrawlerBootcampResponseSuccess | createCrawlerBootcampResponseError)
+
+export const getCreateCrawlerBootcampUrl = () => {
+
+
+
+
+  return `/api/v1/internal/bootcamps`
+}
+
+/**
+ *
+ *             크롤러가 수집한 부트캠프를 게시 상태로 등록합니다. 검수는 기업회원이 올린 부트캠프만 거칩니다.
+ *
+ *             모집 상태(status)는 RECRUITING(모집 중) 또는 CLOSED(모집 마감)만 받고, 보내지 않으면 RECRUITING으로 등록합니다.
+ *             CLOSED로 보내면 모집 마감 상태로 게시하며 마감 일시는 등록 시각입니다.
+ *
+ *             기간 모집은 모집 시작·종료 일시가 모두 필요하고, 상시 모집에는 모집 종료 일시를 보낼 수 없습니다.
+ *             외부 페이지 지원은 지원 페이지 주소가 필요하고, 이메일 지원에는 보낼 수 없습니다.
+ *             커리큘럼은 보낸 순서대로 노출합니다.
+ *             이미 같은 원문 URL로 등록된 미삭제 부트캠프가 있으면 409로 거절합니다. 이때는 원문 URL로 식별자를 찾아 교체합니다.
+ * @summary 크롤러 부트캠프 등록
+ */
+export const createCrawlerBootcamp = async (crawlerBootcampRequest: CrawlerBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<createCrawlerBootcampResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createCrawlerBootcampResponse>(getCreateCrawlerBootcampUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(crawlerBootcampRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateCrawlerBootcampMutationKey = () => ['createCrawlerBootcamp'] as const;
+
+export const getCreateCrawlerBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCrawlerBootcamp>>, TError,CreateCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCrawlerBootcamp>>, TError,CreateCrawlerBootcampMutationVariables, TContext> => {
+
+const mutationKey = getCreateCrawlerBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCrawlerBootcamp>>, CreateCrawlerBootcampMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCrawlerBootcamp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCrawlerBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof createCrawlerBootcamp>>>
+    export type CreateCrawlerBootcampMutationBody = CrawlerBootcampRequest
+    export type CreateCrawlerBootcampMutationError = ErrorResponse
+    export type CreateCrawlerBootcampMutationVariables = {data: CrawlerBootcampRequest}
+
+    /**
+ * @summary 크롤러 부트캠프 등록
+ */
+export const useCreateCrawlerBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCrawlerBootcamp>>, TError,CreateCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCrawlerBootcamp>>,
+        TError,
+        CreateCrawlerBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCrawlerBootcampMutationOptions(options), queryClient);
     }
 
 export type decideReviewResponse200 = {
@@ -2105,9 +2583,17 @@ export const getReplaceCrawlerJobResponseMock = (overrideResponse: Partial<Extra
 
 export const getDeleteCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReplaceCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getGetCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerJobLookupResponse, object>> = {}): SuccessResponseCrawlerJobLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerJobRegistrationResponse, object>> = {}): SuccessResponseCrawlerJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getGetCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerBootcampLookupResponse, object>> = {}): SuccessResponseCrawlerBootcampLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getCreateCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerBootcampRegistrationResponse, object>> = {}): SuccessResponseCrawlerBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getDecideReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminReviewDecisionResponse, object>> = {}): SuccessResponseAdminReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -2160,6 +2646,30 @@ export const getDeleteCrawlerJobMockHandler = (overrideResponse?: SuccessRespons
   }, options)
 }
 
+export const getReplaceCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/internal/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceCrawlerBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/internal/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteCrawlerBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getGetCrawlerJobMockHandler = (overrideResponse?: SuccessResponseCrawlerJobLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCrawlerJobLookupResponse> | SuccessResponseCrawlerJobLookupResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -2179,6 +2689,30 @@ export const getCreateCrawlerJobMockHandler = (overrideResponse?: SuccessRespons
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateCrawlerJobResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getGetCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseCrawlerBootcampLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCrawlerBootcampLookupResponse> | SuccessResponseCrawlerBootcampLookupResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/internal/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetCrawlerBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseCrawlerBootcampRegistrationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCrawlerBootcampRegistrationResponse> | SuccessResponseCrawlerBootcampRegistrationResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/internal/bootcamps', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateCrawlerBootcampResponseMock(),
       { status: 201
       })
   }, options)
@@ -2342,8 +2876,12 @@ export const getListBootcampsMockHandler = (overrideResponse?: SuccessResponsePa
 export const getOgonggoAdminAPIMock = () => [
   getReplaceCrawlerJobMockHandler(),
   getDeleteCrawlerJobMockHandler(),
+  getReplaceCrawlerBootcampMockHandler(),
+  getDeleteCrawlerBootcampMockHandler(),
   getGetCrawlerJobMockHandler(),
   getCreateCrawlerJobMockHandler(),
+  getGetCrawlerBootcampMockHandler(),
+  getCreateCrawlerBootcampMockHandler(),
   getDecideReviewMockHandler(),
   getUndoReviewMockHandler(),
   getUpdateRejectionMockHandler(),

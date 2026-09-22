@@ -15,12 +15,13 @@ export function SiteFooter() {
             오늘의 공고는 렛츠커리어가 만든 채용·교육·모집 정보 서비스에요
           </p>
           <div className="flex flex-col gap-1 text-xs text-gray-400">
-            <p>사업자 정보</p>
-            <p>대표자 | 사업자등록번호 871-11-02829</p>
-            <p>통신판매업신고번호 제 2024호</p>
-            <p>주소: 서울특별시</p>
+            <p>아이엔지 사업자 정보</p>
+            <p>대표자: 송다예 | 사업자 등록번호: 871-11-02629</p>
+            <p>통신판매업신고번호 제 2026-서울성동-1456호</p>
+            <p>주소: 서울특별시 성동구 왕십리로 137, 성동창업이룸센터 2층 206호</p>
             <p>이메일: official@letscareer.co.kr</p>
-            <p>Copyright© 2024 오늘의 공고. All rights reserved</p>
+            <p>고객센터: 0507-0178-8541</p>
+            <p>Copyright ©2024 아이엔지. All rights reserved.</p>
           </div>
           <div className="flex gap-4 text-xs text-gray-400">
             <span>서비스 이용약관</span>

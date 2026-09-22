@@ -4,8 +4,11 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListMyJobBookmarksApplicationStatus } from './listMyJobBookmarksApplicationStatus';
 import type { ListMyJobBookmarksEmploymentType } from './listMyJobBookmarksEmploymentType';
 import type { ListMyJobBookmarksExperienceType } from './listMyJobBookmarksExperienceType';
+import type { ListMyJobBookmarksRecruitmentStatus } from './listMyJobBookmarksRecruitmentStatus';
+import type { ListMyJobBookmarksSort } from './listMyJobBookmarksSort';
 
 export type ListMyJobBookmarksParams = {
 /**
@@ -17,6 +20,12 @@ page?: number;
  * @maximum 100
  */
 size?: number;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `RECENTLY_SAVED` | 1 | 최근 저장순 |
+ */
+sort?: ListMyJobBookmarksSort;
 /**
  * | 값 | code | 설명 |
  * | --- | --- | --- |
@@ -51,4 +60,22 @@ jobRole?: string;
  * @maxLength 100
  */
 keyword?: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `SCRAPPED` | 1 | 스크랩 |
+ * | `PREPARING` | 2 | 지원 준비 중 |
+ * | `APPLIED` | 3 | 지원 완료 |
+ * | `INTERVIEWING` | 4 | 면접 |
+ * | `PASSED` | 5 | 합격 |
+ * | `FAILED` | 6 | 불합격 |
+ */
+applicationStatus?: ListMyJobBookmarksApplicationStatus;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `RECRUITING` | 1 | 모집 중 |
+ * | `CLOSED` | 2 | 모집 마감 |
+ */
+recruitmentStatus?: ListMyJobBookmarksRecruitmentStatus;
 };
