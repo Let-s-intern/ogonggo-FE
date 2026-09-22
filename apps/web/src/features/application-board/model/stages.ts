@@ -39,6 +39,15 @@ export interface ApplicationStage<Id extends string = string> {
   readonly id: Id;
   /** 칸 머리에 쓰는 문구. 목업 그대로다. */
   readonly label: string;
+  /**
+   * 이 단계에서 **옮겨 갈 수 있는** 단계. 비어 있으면 그 칸의 카드는 움직이지 않는다.
+   *
+   * 백엔드 `JobApplicationStatus.movableFrom()` 과 같은 규칙인데 방향이 반대다 — 백엔드 쪽은
+   * "이 단계로 들어올 수 있는 출발 단계" 를 준다. 지금 열린 전이가 `SCRAPPED ↔ PREPARING`
+   * 하나뿐이고 양방향이라 두 표의 값이 같다. **한쪽만 열린 전이가 생기면 그때부터 갈린다** —
+   * 그때 `movableFrom()` 을 다시 읽어 뒤집어 적어야 한다.
+   */
+  readonly movableTo: readonly Id[];
 }
 
 type StageTable<Id extends string> = Readonly<Record<Id, Omit<ApplicationStage<Id>, 'id'>>>;
@@ -69,21 +78,21 @@ function toOrderedStages<Id extends string>(
  * `면접 진행`/`최종 합격`, `스크랩` 대신 `스크랩한 공고`). 화면 문구는 목업을 따른다.
  */
 const JOB_STAGES = {
-  SCRAPPED: { label: '스크랩한 공고' },
-  PREPARING: { label: '지원 준비 중' },
-  APPLIED: { label: '지원 완료' },
-  INTERVIEWING: { label: '면접 진행' },
-  PASSED: { label: '최종 합격' },
-  FAILED: { label: '불합격' },
+  SCRAPPED: { label: '스크랩한 공고', movableTo: ['PREPARING'] },
+  PREPARING: { label: '지원 준비 중', movableTo: ['SCRAPPED'] },
+  APPLIED: { label: '지원 완료', movableTo: [] },
+  INTERVIEWING: { label: '면접 진행', movableTo: [] },
+  PASSED: { label: '최종 합격', movableTo: [] },
+  FAILED: { label: '불합격', movableTo: [] },
 } as const satisfies StageTable<ApplicationStageIds['jobs']>;
 
 /** 교육·부트캠프 다섯 단계. `PREPARING` 만 `신청 전` 이고 나머지는 enum 의 `desc` 와 같다. */
 const BOOTCAMP_STAGES = {
-  SCRAPPED: { label: '스크랩한 교육 · 부트캠프' },
-  PREPARING: { label: '신청 전' },
-  APPLIED: { label: '신청 완료' },
-  IN_PROGRESS: { label: '활동 중' },
-  COMPLETED: { label: '활동 완료' },
+  SCRAPPED: { label: '스크랩한 교육 · 부트캠프', movableTo: ['PREPARING'] },
+  PREPARING: { label: '신청 전', movableTo: ['SCRAPPED'] },
+  APPLIED: { label: '신청 완료', movableTo: [] },
+  IN_PROGRESS: { label: '활동 중', movableTo: [] },
+  COMPLETED: { label: '활동 완료', movableTo: [] },
 } as const satisfies StageTable<ApplicationStageIds['bootcamps']>;
 
 /**
@@ -93,11 +102,11 @@ const BOOTCAMP_STAGES = {
  * 그렇게 적는다 — 문구를 탭마다 따로 두는 이유가 이것이다.
  */
 const SIDE_STUDY_STAGES = {
-  SCRAPPED: { label: '스크랩한 사이드 · 스터디' },
-  PREPARING: { label: '지원 준비 중' },
-  COMPLETED: { label: '지원 완료' },
-  IN_PROGRESS: { label: '활동 중' },
-  ENDED: { label: '활동 완료' },
+  SCRAPPED: { label: '스크랩한 사이드 · 스터디', movableTo: ['PREPARING'] },
+  PREPARING: { label: '지원 준비 중', movableTo: ['SCRAPPED'] },
+  COMPLETED: { label: '지원 완료', movableTo: [] },
+  IN_PROGRESS: { label: '활동 중', movableTo: [] },
+  ENDED: { label: '활동 완료', movableTo: [] },
 } as const satisfies StageTable<ApplicationStageIds['side-studies']>;
 
 type ApplicationStageTables = {
@@ -115,12 +124,43 @@ export function stagesOf<Tab extends ApplicationBoardTab>(tab: Tab): Application
   return APPLICATION_BOARD_STAGES[tab];
 }
 
+function findStage(
+  tab: ApplicationBoardTab,
+  stageId: ApplicationStageId,
+): ApplicationStage<ApplicationStageId> | undefined {
+  const stages: readonly ApplicationStage<ApplicationStageId>[] = APPLICATION_BOARD_STAGES[tab];
+  return stages.find((stage) => stage.id === stageId);
+}
+
 /** 한 단계의 화면 문구. 모르는 값이면 값 자체를 돌려준다 — 빈 칸 머리보다는 낫다. */
 export function stageLabel(tab: ApplicationBoardTab, stageId: ApplicationStageId): string {
-  for (const stage of APPLICATION_BOARD_STAGES[tab] as readonly ApplicationStage[]) {
-    if (stage.id === stageId) {
-      return stage.label;
-    }
-  }
-  return stageId;
+  return findStage(tab, stageId)?.label ?? stageId;
+}
+
+/**
+ * 이 단계에서 옮겨 갈 수 있는 단계들. 리스트 뷰의 상태 셀렉트가 고를 수 있는 것이 이것뿐이고,
+ * 나머지는 비활성이다(PRD 결정 기록 "옮기는 조작만 막는다").
+ */
+export function movableTargets(
+  tab: ApplicationBoardTab,
+  from: ApplicationStageId,
+): readonly ApplicationStageId[] {
+  return findStage(tab, from)?.movableTo ?? [];
+}
+
+/**
+ * 이 전이를 보내도 되는가. **요청을 보내기 전에 이것을 먼저 본다** — 막힌 전이를 보내면
+ * 백엔드가 409 로 거절하고, 그 왕복은 사용자에게 아무것도 알려 주지 않는다.
+ */
+export function canMoveStage(
+  tab: ApplicationBoardTab,
+  from: ApplicationStageId,
+  to: ApplicationStageId,
+): boolean {
+  return movableTargets(tab, from).includes(to);
+}
+
+/** 이 단계에서 나갈 길이 하나라도 있는가. 카드에 `X` 를 그릴지가 이걸로 갈린다. */
+export function isMovableStage(tab: ApplicationBoardTab, from: ApplicationStageId): boolean {
+  return movableTargets(tab, from).length > 0;
 }
