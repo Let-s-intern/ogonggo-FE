@@ -8,3 +8,4 @@ export {
   type ApplicationBoardQuery,
 } from './lib/query';
 export { ApplicationBoard, type ApplicationBoardProps } from './ui/ApplicationBoard';
+export { ApplicationBoardList, type ApplicationBoardListProps } from './ui/ApplicationBoardList';

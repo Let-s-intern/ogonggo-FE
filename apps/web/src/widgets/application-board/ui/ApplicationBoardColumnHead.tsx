@@ -13,7 +13,7 @@ import { useToast } from '@ogonggo/ui';
  * 비활성 버튼으로 두지 않는다. 회색으로 꺼 둔 버튼은 아직 안 열린 것인지 내 계정이 못 하는
  * 것인지 알려 주지 않는다 — PRD 완료 조건이 "왜 막혔는지 알 수 있다" 이다.
  */
-const NOT_OPEN_MESSAGE = '아직 옮길 수 없는 단계예요';
+export const STAGE_NOT_OPEN_MESSAGE = '아직 옮길 수 없는 단계예요';
 
 export interface ApplicationBoardColumnHeadProps {
   label: string;
@@ -48,7 +48,7 @@ export function ApplicationBoardColumnHead({
         <button
           type="button"
           className="ml-auto text-sm font-semibold text-blue-500"
-          onClick={() => toast.show({ message: NOT_OPEN_MESSAGE, tone: 'error' })}
+          onClick={() => toast.show({ message: STAGE_NOT_OPEN_MESSAGE, tone: 'error' })}
         >
           완료
         </button>
