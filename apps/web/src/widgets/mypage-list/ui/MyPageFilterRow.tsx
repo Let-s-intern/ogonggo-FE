@@ -25,6 +25,11 @@ export interface MyPageFilterRowProps {
   search?: MyPageFilterRowSearch;
   /** 오른쪽 끝 정렬 드롭다운. */
   sort?: ReactNode;
+  /**
+   * 정렬 뒤에 붙는 것. `지원 · 신청 관리` 의 보기 전환 아이콘이 여기 온다
+   * (`widgets/application-board/ui/ApplicationBoardViewToggle.tsx`).
+   */
+  trailing?: ReactNode;
 }
 
 /**
@@ -45,6 +50,7 @@ export function MyPageFilterRow({
   children,
   search,
   sort,
+  trailing,
 }: MyPageFilterRowProps) {
   const router = useRouter();
 
@@ -79,6 +85,7 @@ export function MyPageFilterRow({
           </form>
         ) : null}
         {sort}
+        {trailing}
       </div>
     </div>
   );

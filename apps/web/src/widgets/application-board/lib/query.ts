@@ -12,6 +12,10 @@ import {
  */
 const BOARD_PATH = '/mypage/scraps';
 
+/** 두 보기(PRD "칸반과 리스트 두 보기를 오른쪽 위 아이콘으로 전환한다"). */
+export const APPLICATION_BOARD_VIEWS = ['kanban', 'list'] as const;
+export type ApplicationBoardView = (typeof APPLICATION_BOARD_VIEWS)[number];
+
 /**
  * `지원 · 신청 관리` 의 URL 상태. 탭과 필터가 전부 주소에 있다 — 마이페이지 목록 화면들이
  * 이미 그렇고(`widgets/my-scraps/lib/query.ts`), 그래야 뒤로가기와 새로고침이 보던 화면으로
@@ -22,6 +26,12 @@ const BOARD_PATH = '/mypage/scraps';
  */
 export interface ApplicationBoardQuery {
   tab: ApplicationBoardTab;
+  /**
+   * 칸반이냐 리스트냐. **주소에 둔다** — 탭과 필터가 이미 전부 여기 있고, 보기만 따로
+   * `localStorage` 에 두면 첫 그림과 저장된 값이 어긋나 한 번 깜빡인다. 근거는
+   * `.claude/tasks/memos/결정-지원신청-관리-push3-2026-09-22.md` 1 절.
+   */
+  view: ApplicationBoardView;
   /** `마감 상태` 드롭다운. 목록 요청에 그대로 실린다. */
   recruitmentStatus?: ApplicationBoardFilters['recruitmentStatus'];
   /**
@@ -33,7 +43,10 @@ export interface ApplicationBoardQuery {
   keyword?: string;
 }
 
-export const DEFAULT_APPLICATION_BOARD_QUERY: ApplicationBoardQuery = { tab: 'jobs' };
+export const DEFAULT_APPLICATION_BOARD_QUERY: ApplicationBoardQuery = {
+  tab: 'jobs',
+  view: 'kanban',
+};
 
 /** 목록 요청에 실리는 값만 뽑는다. `stage` 는 칸을 고르는 값이라 여기 들어가지 않는다. */
 export function boardFilters(query: ApplicationBoardQuery): ApplicationBoardFilters {
@@ -68,6 +81,9 @@ export function buildApplicationBoardHref(
   if (merged.tab !== DEFAULT_APPLICATION_BOARD_QUERY.tab) {
     params.set('tab', merged.tab);
   }
+  if (merged.view !== DEFAULT_APPLICATION_BOARD_QUERY.view) {
+    params.set('view', merged.view);
+  }
   if (merged.recruitmentStatus !== undefined) {
     params.set('recruitmentStatus', merged.recruitmentStatus);
   }
@@ -84,7 +100,7 @@ export function buildApplicationBoardHref(
 
 /** 그 탭의 필터를 전부 지운 주소. 필터 줄의 `전체` 칩이 간다. */
 export function buildApplicationBoardResetHref(query: ApplicationBoardQuery): string {
-  return buildApplicationBoardHref({ tab: query.tab });
+  return buildApplicationBoardHref({ tab: query.tab, view: query.view });
 }
 
 function pick<T extends string>(value: string | undefined, allowed: readonly T[]): T | undefined {
@@ -113,6 +129,7 @@ export function parseApplicationBoardQuery(
 
   return {
     tab,
+    view: pick(searchParams.view, APPLICATION_BOARD_VIEWS) ?? DEFAULT_APPLICATION_BOARD_QUERY.view,
     recruitmentStatus: pick(searchParams.recruitmentStatus, RECRUITMENT_STATUSES),
     stage: pick(searchParams.stage, stageIds),
     keyword: pickKeyword(searchParams.keyword),

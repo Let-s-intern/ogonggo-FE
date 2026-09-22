@@ -5,6 +5,7 @@ import { MyPageListTabs, type MyPageListTab } from '@/widgets/mypage-list';
 import { buildApplicationBoardHref, type ApplicationBoardQuery } from '../lib/query';
 import { ApplicationBoardFilterRow } from './ApplicationBoardFilterRow';
 import { ApplicationBoardKanban } from './ApplicationBoardKanban';
+import { ApplicationBoardList } from './ApplicationBoardList';
 
 /** 목업의 탭 이름. v4 스크랩 화면과 같은 셋이다. */
 const TABS: readonly MyPageListTab<ApplicationBoardTab>[] = [
@@ -18,7 +19,10 @@ export interface ApplicationBoardProps {
 }
 
 /**
- * `지원 · 신청 관리` 본문(PRD "화면"). 탭 셋 + 필터 줄 + 칸반이다.
+ * `지원 · 신청 관리` 본문(PRD "화면"). 탭 셋 + 필터 줄 + 칸반 또는 리스트다.
+ *
+ * **두 보기가 같은 것을 다르게 늘어놓는다.** 어느 단계를 그릴지도, 무엇으로 거를지도, 어떻게
+ * 옮길지도 같다 — 갈리는 것은 배치와 조작 모양뿐이다. 무엇을 그릴지는 주소의 `view` 가 정한다.
  *
  * **제목과 하단 배너는 여기 없다.** 그 둘은 이 본문을 `/mypage/scraps` 에 끼우는 쪽의 것이고,
  * 이 위젯은 어느 자리에 놓이든 같은 것을 그린다.
@@ -37,7 +41,11 @@ export function ApplicationBoard({ query }: ApplicationBoardProps) {
         aria-label="지원 · 신청 종류"
       />
       <ApplicationBoardFilterRow query={query} />
-      <ApplicationBoardKanban query={query} />
+      {query.view === 'list' ? (
+        <ApplicationBoardList query={query} />
+      ) : (
+        <ApplicationBoardKanban query={query} />
+      )}
     </div>
   );
 }

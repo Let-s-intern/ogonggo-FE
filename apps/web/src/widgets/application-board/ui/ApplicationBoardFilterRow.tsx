@@ -9,6 +9,7 @@ import {
   hasApplicationBoardFilter,
   type ApplicationBoardQuery,
 } from '../lib/query';
+import { ApplicationBoardViewToggle } from './ApplicationBoardViewToggle';
 
 /** `마감 상태` 드롭다운. 세 탭이 같은 두 값을 보낸다(부트캠프만 파라미터 이름이 `status` 다). */
 const RECRUITMENT_STATUS_OPTIONS = [
@@ -38,7 +39,7 @@ export interface ApplicationBoardFilterRowProps {
  * `keyword` 가 있고 v4 스크랩 화면이 이미 보내고 있다(Push 1 이 확인).
  *
  * **`지원 상태` 만 요청이 아니다.** 단계는 칸 자체라 이미 칸마다 요청이 갈라져 있어, 고르면
- * 그 칸만 남긴다. 보기 전환 아이콘은 Push 3 이 이 줄 오른쪽 끝에 붙인다.
+ * 그 칸만 남긴다. 오른쪽 끝의 보기 전환은 `MyPageFilterRow` 의 `trailing` 자리에 온다.
  */
 export function ApplicationBoardFilterRow({ query }: ApplicationBoardFilterRowProps) {
   const stageOptions = stagesOf(query.tab).map(
@@ -61,6 +62,7 @@ export function ApplicationBoardFilterRow({ query }: ApplicationBoardFilterRowPr
           buildHref={() => buildApplicationBoardHref(query)}
         />
       }
+      trailing={<ApplicationBoardViewToggle query={query} />}
     >
       <MyPageFilterDropdown
         label="마감 상태"
