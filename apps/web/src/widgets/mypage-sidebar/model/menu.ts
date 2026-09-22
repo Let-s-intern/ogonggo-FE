@@ -11,12 +11,18 @@ export interface MyPageMenuItem {
 }
 
 /**
- * 일반 회원 메뉴 넷(PRD 1 절). 순서는 목업
- * (`docs/asset/v4 마이페이지/개인정보/image.png`) 그대로다.
+ * 일반 회원 메뉴 넷. 순서와 문구는 v7 목업
+ * (`docs/asset/v7 스크랩한 공고 칸반/image.png`) 과 v7 PRD 결정 기록의 표 그대로다.
+ *
+ * v4 의 `지원·신청 내역` 이 `신청 현황` 으로 바뀌고 맨 위로 올라왔다. 목업 사이드바의
+ * `활동 관리` 는 넣지 않고 `작성한 모집글` 은 남긴다 — 둘 다 PRD 결정 기록이 정한다.
+ *
+ * **첫 항목이 바뀌면 `/mypage` 가 보내는 곳도 바뀐다**(`myPageHomeFor`). v7 부터는
+ * `신청 현황` 이다.
  */
 export const USER_MYPAGE_MENU: readonly MyPageMenuItem[] = [
+  { href: '/mypage/applications', label: '신청 현황' },
   { href: '/mypage/scraps', label: '스크랩한 공고' },
-  { href: '/mypage/applications', label: '지원·신청 내역' },
   { href: '/mypage/posts', label: '작성한 모집글' },
   { href: '/mypage/profile', label: '개인 정보' },
 ];

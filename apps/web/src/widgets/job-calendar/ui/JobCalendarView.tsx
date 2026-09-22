@@ -62,7 +62,8 @@ async function fetchCalendarItems(
 }
 
 /**
- * 고른 관심 직무로 공고를 거를 때 이 공고를 남길지.
+ * 고른 관심 직무로 공고를 거를 때 이 공고를 남길지. `slugs` 는 항상 하나 이상이다 — 비면
+ * 달력을 부르지 않고 선택 화면을 그린다.
  *
  * **직무를 아는 공고만 거른다.** 백엔드에는 직무 필드가 없고(2026-09-21 ogonggo-BE main 기준),
  * 직무를 아는 곳은 목데이터의 매핑(`entities/job/model/job-major.ts`)뿐이다. 직무를 모르는 공고까지
@@ -72,9 +73,6 @@ async function fetchCalendarItems(
  * 서버에서만 부른다. 매핑이 목데이터 전체를 끌고 와서 클라이언트 번들에 넣지 않는다.
  */
 function matchesJobMajors(jobId: number, slugs: string[]): boolean {
-  if (slugs.length === 0) {
-    return true;
-  }
   const major = getJobMajor(jobId);
   if (!major) {
     return true;
@@ -93,7 +91,11 @@ export interface JobCalendarViewProps {
  * 날짜 이동 줄(`CalendarHeader`)도 여기서 놓는다. 월간은 v6 에서 오른쪽에 날짜별 목록이 붙어
  * 이동 줄이 격자와 같은 왼쪽 열에 들어가고(`MonthCalendar`), 주간은 전과 같이 전체 폭이다.
  *
- * 관심 직무 선택이 열려 있으면(`?picker=1`) 격자 대신 선택 화면을 그리고 달력은 부르지 않는다.
+ * 관심 직무 선택이 열려 있거나(`?picker=1`) **고른 직무가 없으면** 격자 대신 선택 화면을 그리고
+ * 달력은 부르지 않는다. 달력은 직무를 고른 뒤에 보인다 — 전체 공고를 한 달력에 놓으면 한 칸에
+ * 수십 건이 쌓여 읽을 수 없다(`prd-calendar-major-gate.md`). `?majors=foo` 처럼 아는 slug 가
+ * 하나도 없을 때도 파싱 결과가 비므로 여기로 온다.
+ *
  * 주간이면 요일·날짜 머리글은 남긴다 — 목업(`v6 공고달력/관심직무 선택.png`)이 그렇다.
  */
 export async function JobCalendarView({ query }: JobCalendarViewProps) {
@@ -102,7 +104,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   // `key` 는 이 요소가 클라이언트 컴포넌트(`MonthCalendar`)의 prop 으로 넘어갈 때 React 가 요구한다.
   const header = <CalendarHeader key="calendar-header" query={query} />;
 
-  if (query.picker) {
+  if (query.picker || query.majors.length === 0) {
     return (
       <div className="flex flex-col gap-4">
         {header}

@@ -1,11 +1,17 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import type { ListMyRecruitmentApplicationsApplicationStatus } from '@ogonggo/api';
+import type { UpdateRecruitmentApplicationStatusRequestApplicationStatus } from '@ogonggo/api';
+import { useToast, type SelectOption } from '@ogonggo/ui';
 import {
-  PLACEHOLDER_APPLICATION_COUNTS,
-  PLACEHOLDER_APPLICATION_STATUSES,
-} from '@/features/my-applications/model/placeholder';
+  canMoveStage,
+  isMovableStageId,
+  moveApplicationStage,
+  movableTargets,
+  stagesOf,
+  type ApplicationStageId,
+} from '@/features/application-board';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
   MyPageFilterRow,
@@ -14,9 +20,13 @@ import {
   type MyPageListColumn,
   type MyPageListTab,
 } from '@/widgets/mypage-list';
-import { fetchMyApplications, type MyApplicationsPage } from '../lib/fetch';
-import { deleteApplication, updateApplicationStatus } from '../lib/mutate';
-import { placeholderRows } from '../lib/placeholderRows';
+import {
+  fetchMyApplications,
+  fetchMyBookmarkApplications,
+  type MyApplicationRow as Row,
+  type MyApplicationsPage,
+} from '../lib/fetch';
+import { deleteApplication, unbookmarkApplication, updateApplicationStatus } from '../lib/mutate';
 import { MyApplicationRow } from './MyApplicationRow';
 import { MyApplicationsCta } from './MyApplicationsCta';
 import { MyApplicationsFilters, MyApplicationsSort } from './MyApplicationsFilters';
@@ -25,6 +35,7 @@ import {
   buildMyApplicationsHref,
   buildMyApplicationsResetHref,
   hasMyApplicationsFilter,
+  stageOf,
   type MyApplicationsQuery,
   type MyApplicationTab,
 } from '../lib/query';
@@ -40,19 +51,20 @@ const TAB_LABELS: Record<MyApplicationTab, { label: string; verb: string }> = {
 };
 
 /**
- * 사이드·스터디의 네 단계(`RecruitmentApplicationItemResponseApplicationStatus`). **이것만
- * 실제로 저장된다.** 다른 두 탭의 여섯 단계·세 단계는 저장할 곳이 없어
- * `features/my-applications/model/placeholder.ts` 에 있다.
+ * 사이드·스터디의 네 단계는 **모두 고를 수 있다** — `updateRecruitmentApplicationStatus` 가
+ * 넷을 다 받는다. 북마크 두 탭은 열린 전이가 `스크랩 ↔ 지원 준비 중` 뿐이라 나머지가 비활성이다
+ * (`features/application-board/model/stages.ts` 의 `movableTo`).
  */
-const SIDE_STUDY_STATUSES = [
-  { value: 'PREPARING', label: '지원 준비 중' },
-  { value: 'COMPLETED', label: '지원 완료' },
-  { value: 'IN_PROGRESS', label: '활동 중' },
-  { value: 'ENDED', label: '활동 완료' },
-] as const;
-
-function statusOptionsFor(tab: MyApplicationTab): readonly { value: string; label: string }[] {
-  return tab === 'side-studies' ? SIDE_STUDY_STATUSES : PLACEHOLDER_APPLICATION_STATUSES[tab];
+function statusOptionsFor(tab: MyApplicationTab, stage: ApplicationStageId): SelectOption[] {
+  const targets: readonly ApplicationStageId[] =
+    tab === 'side-studies' ? stagesOf(tab).map((option) => option.id) : movableTargets(tab, stage);
+  return stagesOf(tab)
+    .filter((option) => tab !== 'side-studies' || option.id !== 'SCRAPPED')
+    .map((option) => ({
+      value: option.id,
+      label: option.label,
+      disabled: option.id !== stage && !targets.includes(option.id),
+    }));
 }
 
 function columnsFor(tab: MyApplicationTab): readonly MyPageListColumn[] {
@@ -72,18 +84,23 @@ export interface MyApplicationsProps {
 }
 
 /**
- * `지원·신청 내역`(PRD 3 절). 탭 셋 + 필터 한 줄 + 표 + 페이지네이션 + 하단 CTA 배너다.
+ * `신청 현황`(`/mypage/applications`). 탭 셋 + 필터 한 줄 + 표 + 페이지네이션 + 하단 CTA 다.
  *
- * **데이터 출처가 탭마다 갈린다.** 사이드·스터디만 `listMyRecruitmentApplications` 실연동이고,
- * 채용공고·부트캠프는 되읽는 API 가 없어 하드코딩이다 — 근거와 백엔드에 요청한 것은
- * `.claude/tasks/memos/백엔드-요청-마이페이지.md` 1·2 번에 있다.
+ * **셋 다 실연동이다.** v4 때 채용공고·부트캠프 탭을 채우던 하드코딩은 v7 에서 지웠다 —
+ * 북마크가 단계를 갖게 되면서(`LC-3359`) 되읽을 곳이 생겼다.
+ *
+ * 데이터 출처는 아직 탭마다 갈린다. 사이드·스터디는 지원 이력
+ * (`listMyRecruitmentApplications`) 이고 나머지 둘은 북마크 목록이다. 북마크 쪽은 응답에 단계
+ * 칸이 없어 **한 번에 한 단계만** 그린다 — 근거는 `lib/query.ts` 의 `DEFAULT_STAGE`.
  */
 export function MyApplications({ query }: MyApplicationsProps) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   /** 상태 변경·삭제 뒤 목록을 다시 읽으려고 올리는 값. 주소는 그대로인데 내용만 바뀌는 경우다. */
   const [reloadToken, setReloadToken] = useState(0);
   /** 요청이 도는 행. 그 행의 컨트롤을 잠근다. */
-  const [pendingPostId, setPendingPostId] = useState<number | null>(null);
+  const [pendingId, setPendingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  const toast = useToast();
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 탭·필터·페이지를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -93,12 +110,15 @@ export function MyApplications({ query }: MyApplicationsProps) {
   queryRef.current = query;
 
   useEffect(() => {
-    if (queryRef.current.tab !== 'side-studies') {
-      return;
-    }
     let active = true;
     setState({ kind: 'loading' });
-    fetchMyApplications(queryRef.current)
+    const current = queryRef.current;
+    const stage = stageOf(current);
+    const request =
+      current.tab === 'side-studies' || stage === undefined
+        ? fetchMyApplications(current)
+        : fetchMyBookmarkApplications(current.tab, stage, current);
+    request
       .then((page) => {
         if (active) {
           setState({ kind: 'ready', page });
@@ -114,33 +134,64 @@ export function MyApplications({ query }: MyApplicationsProps) {
     };
   }, [href, reloadToken]);
 
-  const sideStudyCount = state.kind === 'ready' ? state.page.count : undefined;
+  const page = state.kind === 'ready' ? state.page : undefined;
   const tabs: readonly MyPageListTab<MyApplicationTab>[] = [
-    { value: 'jobs', label: TAB_LABELS.jobs.label, count: PLACEHOLDER_APPLICATION_COUNTS.jobs },
+    { value: 'jobs', label: TAB_LABELS.jobs.label },
+    { value: 'bootcamps', label: TAB_LABELS.bootcamps.label },
     {
-      value: 'bootcamps',
-      label: TAB_LABELS.bootcamps.label,
-      count: PLACEHOLDER_APPLICATION_COUNTS.bootcamps,
+      value: 'side-studies',
+      label: TAB_LABELS['side-studies'].label,
+      count: query.tab === 'side-studies' ? page?.count : undefined,
     },
-    { value: 'side-studies', label: TAB_LABELS['side-studies'].label, count: sideStudyCount },
   ];
 
   const columns = columnsFor(query.tab);
-  const rows =
-    query.tab === 'side-studies'
-      ? state.kind === 'ready'
-        ? state.page.rows
-        : []
-      : placeholderRows(query.tab);
-  const pageInfo =
-    query.tab === 'side-studies' && state.kind === 'ready'
-      ? state.page.pageInfo
-      : { pageNum: query.page, pageSize: 0, totalElements: 0, totalPages: 0 };
+  const rows = page?.rows ?? [];
+  const pageInfo = page?.pageInfo ?? {
+    pageNum: query.page,
+    pageSize: 0,
+    totalElements: 0,
+    totalPages: 0,
+  };
+
+  /** 한 행의 요청. 도는 동안 그 행을 잠그고, 끝나면 목록을 다시 읽는다. */
+  const mutate = (id: number, run: () => Promise<void>) => {
+    setPendingId(id);
+    run()
+      .then(() => setReloadToken((token) => token + 1))
+      .catch(() => setState({ kind: 'error' }))
+      .finally(() => setPendingId(null));
+  };
+
+  /**
+   * 상태 셀렉트가 고른 값. 탭마다 저장하는 곳이 다르다 — 사이드·스터디는 지원 이력의 상태를
+   * 고치고, 북마크 두 탭은 단계 이동(`prepare`/`cancel-preparation`) 이다.
+   *
+   * **열리지 않은 전이는 요청을 보내지 않고 왜 막혔는지 알린다**(PRD 완료 조건). 셀렉트가
+   * 애초에 비활성으로 그리지만, 목록을 받아 둔 사이에 다른 화면에서 단계가 바뀌면 여기까지 온다.
+   */
+  const changeStatus = (row: Row, value: string) => {
+    if (query.tab === 'side-studies') {
+      mutate(row.id, () =>
+        updateApplicationStatus(
+          row.id,
+          value as UpdateRecruitmentApplicationStatusRequestApplicationStatus,
+        ),
+      );
+      return;
+    }
+    const tab = query.tab;
+    if (!isMovableStageId(value) || !canMoveStage(tab, row.applicationStatus, value)) {
+      toast.show({ message: '아직 옮길 수 없는 단계예요', tone: 'error' });
+      return;
+    }
+    mutate(row.id, () => moveApplicationStage(tab, row.id, value));
+  };
 
   return (
     <section className="flex flex-col gap-6">
       <header>
-        <h1 className="text-3xl font-bold text-gray-950">지원·신청 내역</h1>
+        <h1 className="text-3xl font-bold text-gray-950">신청 현황</h1>
         <p className="pt-2 text-sm text-gray-500">
           지원하거나 신청한 공고의 진행 상태를 한곳에서 확인해요.
         </p>
@@ -153,73 +204,46 @@ export function MyApplications({ query }: MyApplicationsProps) {
         aria-label="지원·신청 종류"
       />
 
-      {query.tab === 'side-studies' ? (
-        <MyPageFilterRow
-          resetHref={buildMyApplicationsResetHref(query)}
-          filtered={hasMyApplicationsFilter(query)}
-          search={{
-            placeholder: '모집글 검색',
-            defaultValue: query.keyword,
-            buildHref: (keyword) => buildMyApplicationsHref(query, { keyword }),
-          }}
-          sort={<MyApplicationsSort query={query} />}
-        >
-          <MyApplicationsFilters query={query} />
-        </MyPageFilterRow>
-      ) : null}
+      <MyPageFilterRow
+        resetHref={buildMyApplicationsResetHref(query)}
+        filtered={hasMyApplicationsFilter(query)}
+        search={{
+          placeholder: query.tab === 'side-studies' ? '모집글 검색' : '공고 검색',
+          defaultValue: query.keyword,
+          buildHref: (keyword) => buildMyApplicationsHref(query, { keyword }),
+        }}
+        sort={query.tab === 'side-studies' ? <MyApplicationsSort query={query} /> : undefined}
+      >
+        <MyApplicationsFilters query={query} />
+      </MyPageFilterRow>
 
       <MyApplicationsNotice tab={query.tab} />
 
       <MyPageListTable columns={columns}>
         {rows.length > 0 ? (
-          rows.map((row) => {
-            const postId = row.postId;
-            /**
-             * 되읽는 API 가 있는 행만 바꾸고 지울 수 있다. 하드코딩한 두 탭의 행에는 `postId`
-             * 가 없어 두 콜백이 모두 `undefined` 이고, 그러면 셀렉트가 비활성이고 `삭제하기`
-             * 메뉴가 나오지 않는다.
-             */
-            const mutate = (run: () => Promise<void>) => {
-              if (postId === undefined) {
-                return;
+          rows.map((row) => (
+            <MyApplicationRow
+              key={row.key}
+              row={row}
+              statusOptions={statusOptionsFor(query.tab, row.applicationStatus)}
+              verb={TAB_LABELS[query.tab].verb}
+              pending={pendingId === row.id}
+              onStatusChange={(value) => changeStatus(row, value)}
+              onDelete={() =>
+                mutate(row.id, () =>
+                  query.tab === 'side-studies'
+                    ? deleteApplication(row.id)
+                    : unbookmarkApplication(queryClient, query.tab, row.id),
+                )
               }
-              setPendingPostId(postId);
-              run()
-                .then(() => setReloadToken((token) => token + 1))
-                .catch(() => setState({ kind: 'error' }))
-                .finally(() => setPendingPostId(null));
-            };
-
-            return (
-              <MyApplicationRow
-                key={row.key}
-                row={row}
-                statusOptions={statusOptionsFor(query.tab)}
-                verb={TAB_LABELS[query.tab].verb}
-                pending={postId !== undefined && pendingPostId === postId}
-                onStatusChange={
-                  postId === undefined
-                    ? undefined
-                    : (applicationStatus) =>
-                        mutate(() =>
-                          updateApplicationStatus(
-                            postId,
-                            applicationStatus as ListMyRecruitmentApplicationsApplicationStatus,
-                          ),
-                        )
-                }
-                onDelete={
-                  postId === undefined ? undefined : () => mutate(() => deleteApplication(postId))
-                }
-              />
-            );
-          })
+            />
+          ))
         ) : (
           <tr>
             <td colSpan={columns.length} className="px-4 py-16 text-center text-sm text-gray-500">
-              {query.tab === 'side-studies' && state.kind === 'loading'
+              {state.kind === 'loading'
                 ? '불러오는 중입니다.'
-                : query.tab === 'side-studies' && state.kind === 'error'
+                : state.kind === 'error'
                   ? '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
                   : `${TAB_LABELS[query.tab].verb}한 내역이 없습니다.`}
             </td>
