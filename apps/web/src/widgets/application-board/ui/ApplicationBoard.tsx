@@ -3,6 +3,7 @@
 import type { ApplicationBoardTab } from '@/features/application-board';
 import { MyPageListTabs, type MyPageListTab } from '@/widgets/mypage-list';
 import { buildApplicationBoardHref, type ApplicationBoardQuery } from '../lib/query';
+import { ApplicationBoardFilterRow } from './ApplicationBoardFilterRow';
 import { ApplicationBoardKanban } from './ApplicationBoardKanban';
 
 /** 목업의 탭 이름. v4 스크랩 화면과 같은 셋이다. */
@@ -35,6 +36,7 @@ export function ApplicationBoard({ query }: ApplicationBoardProps) {
         buildHref={(tab) => buildApplicationBoardHref(query, { tab })}
         aria-label="지원 · 신청 종류"
       />
+      <ApplicationBoardFilterRow query={query} />
       <ApplicationBoardKanban query={query} />
     </div>
   );

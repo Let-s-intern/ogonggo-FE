@@ -23,7 +23,12 @@ export interface ApplicationBoardKanbanProps {
  * 바깥 `-mx-1 px-1` 은 칸의 포커스 테두리가 스크롤 상자에 잘리지 않게 두는 여백이다.
  */
 export function ApplicationBoardKanban({ query }: ApplicationBoardKanbanProps) {
-  const stages: readonly ApplicationStage<ApplicationStageId>[] = stagesOf(query.tab);
+  /*
+   * `지원 상태` 를 고르면 그 칸만 남는다. 단계는 요청 파라미터가 아니라 칸 자체라, 거르는
+   * 자리가 목록이 아니라 여기다(`lib/query.ts`).
+   */
+  const all: readonly ApplicationStage<ApplicationStageId>[] = stagesOf(query.tab);
+  const stages = query.stage ? all.filter((stage) => stage.id === query.stage) : all;
   const filters = boardFilters(query);
   /*
    * 이동 훅은 칸이 아니라 여기 하나다. 한 번에 한 건만 옮기게 하려는 것이고(`pending` 이 같은
