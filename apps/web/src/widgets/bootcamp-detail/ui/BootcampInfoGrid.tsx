@@ -36,10 +36,17 @@ function formatDuration(bootcamp: BootcampDetail): string {
   return `${weeks}주 과정`;
 }
 
-/** `수강료` 칸 — 구분 라벨이 먼저, 금액이 있으면 뒤에 붙인다(픽스처 24건은 전부 금액이 없다). */
+/**
+ * `수강료` 칸 — 구분 라벨이 먼저, 금액이 있으면 뒤에 붙인다(픽스처 24건은 전부 금액이 없다).
+ *
+ * `== null` 로 거르는 것은 **`null` 과 `undefined` 를 같이 잡기 위해서다.** 생성 타입은
+ * `tuitionAmount?: number` 라 값이 없으면 칸이 빠진다고 말하지만, 백엔드는 칸을 두고 `null` 을
+ * 보낸다. `=== undefined` 로 거르면 `null` 이 통과해 `null.toLocaleString()` 에서 터진다 —
+ * 서버 컴포넌트라 화면 전체가 React #441 로 깨졌다(공개 목록 100건 중 100건이 이 값이 `null`).
+ */
 function formatTuition(bootcamp: BootcampDetail): string {
   const label = TUITION_TYPE_LABELS[bootcamp.tuitionType];
-  if (bootcamp.tuitionAmount === undefined) {
+  if (bootcamp.tuitionAmount == null) {
     return label;
   }
   return `${label} ${bootcamp.tuitionAmount.toLocaleString('ko-KR')}원`;
@@ -80,7 +87,7 @@ export function BootcampInfoGrid({ bootcamp }: BootcampInfoGridProps) {
       <InfoCell label="기간" value={formatDuration(bootcamp)} />
       <InfoCell
         label="모집 인원"
-        value={bootcamp.capacity === undefined ? NO_VALUE : `${bootcamp.capacity}명`}
+        value={bootcamp.capacity == null ? NO_VALUE : `${bootcamp.capacity}명`}
       />
       <InfoCell label="수강료" value={formatTuition(bootcamp)} />
       <InfoCell label="수료 후 파트너사" value={formatPartners(bootcamp)} />
