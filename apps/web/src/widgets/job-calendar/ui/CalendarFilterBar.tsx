@@ -107,21 +107,31 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
           trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />}
         />
         {/*
-          관심 직무 선택 화면을 여닫는다(v6). 선택 화면이 열려 있거나 이미 고른 직무가 있으면
-          파랗게 켜진다 — 지금 달력이 걸러져 있다는 표시다. 상태가 URL 에 있어 `간략히 보기`와
-          같이 링크 한 줄이다.
+          관심 직무 선택 화면을 여닫는다(v6). **고른 직무가 있을 때만 링크다.** 고른 것이 없으면
+          선택 화면이 언제나 열려 있어(`JobCalendarView`) 닫고 돌아갈 달력이 없다 — 누를 수 있게
+          두면 주소만 바뀌고 화면은 그대로라 눌린 것이 먹지 않은 것처럼 보인다. 그때는 옆의
+          못 누르는 알약들과 같은 회색 알약이다(목업 `관심직무 선택.png`).
+
+          고른 직무가 있으면 파랗게 켜진다 — 지금 달력이 걸러져 있다는 표시다. 상태가 URL 에 있어
+          `간략히 보기`와 같이 링크 한 줄이다.
         */}
-        <Link
-          href={buildJobCalendarHref(query, { picker: !query.picker })}
-          aria-expanded={query.picker}
-          className="rounded-full"
-        >
-          <FilterPill
-            label="직무"
-            active={query.picker || query.majors.length > 0}
-            trailing={<ChevronIcon direction={query.picker ? 'up' : 'down'} className="h-4 w-4" />}
-          />
-        </Link>
+        {query.majors.length > 0 ? (
+          <Link
+            href={buildJobCalendarHref(query, { picker: !query.picker })}
+            aria-expanded={query.picker}
+            className="rounded-full"
+          >
+            <FilterPill
+              label="직무"
+              active
+              trailing={
+                <ChevronIcon direction={query.picker ? 'up' : 'down'} className="h-4 w-4" />
+              }
+            />
+          </Link>
+        ) : (
+          <FilterPill label="직무" trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />} />
+        )}
         {/* API 없음: 응답에 `experienceType`이 없다. 신입·경력을 구분할 값이 없다. */}
         <FilterPill label="경력" trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />} />
       </div>

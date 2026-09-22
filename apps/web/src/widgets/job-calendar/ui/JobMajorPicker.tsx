@@ -21,13 +21,17 @@ export interface JobMajorPickerProps {
  * 세 개를 고른 뒤에는 고르지 않은 칸을 막는다. 네 번째를 누르면 가장 먼저 고른 것을 밀어내는
  * 방식도 있지만, 누른 사람이 모르는 사이에 선택이 바뀐다.
  *
- * `공고보기`는 아무것도 고르지 않아도 누를 수 있다 — 걸려 있던 직무를 풀고 전체 공고를 보는
- * 길이 이것뿐이다. 고른 것이 없을 때는 목업처럼 회색 글자로 둔다.
+ * `공고보기`는 하나 이상 골라야 눌린다. 빈 선택으로 전체를 보는 길은 없앴다 — 전체 공고를 한
+ * 달력에 놓으면 한 칸에 수십 건이 쌓여 읽을 수 없다(`prd-calendar-major-gate.md`). 고른 것이
+ * 없는 동안은 목업(`관심직무 선택.png`)처럼 회색 글자다.
+ *
+ * `초기화`는 선택만 비운다. 달력은 그대로 두고 이어서 다른 직무를 고르게 한다.
  */
 export function JobMajorPicker({ query }: JobMajorPickerProps) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>(query.majors);
   const full = selected.length >= MAX_JOB_MAJORS;
+  const empty = selected.length === 0;
 
   const toggle = (slug: string) =>
     setSelected((previous) =>
@@ -77,14 +81,15 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
       <div className="flex justify-center gap-2 border-t border-gray-200 pt-3">
         <button
           type="button"
+          disabled={empty}
           onClick={() =>
             router.push(buildJobCalendarHref(query, { majors: selected, picker: false }))
           }
           className={cn(
             'h-9 w-full max-w-[710px] rounded-xs border text-sm transition-colors',
-            selected.length > 0
-              ? 'border-blue-500 text-blue-500 hover:bg-blue-50'
-              : 'border-gray-200 text-gray-400 hover:bg-gray-50',
+            empty
+              ? 'cursor-not-allowed border-gray-200 text-gray-400'
+              : 'border-blue-500 text-blue-500 hover:bg-blue-50',
           )}
         >
           공고보기
@@ -94,7 +99,7 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
           onClick={() => setSelected([])}
           className={cn(
             'h-9 w-[202px] shrink-0 rounded-xs bg-gray-100 text-sm transition-colors hover:bg-gray-200',
-            selected.length > 0 ? 'text-gray-800' : 'text-gray-400',
+            empty ? 'text-gray-400' : 'text-gray-800',
           )}
         >
           초기화
