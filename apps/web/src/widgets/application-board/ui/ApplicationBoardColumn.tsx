@@ -1,12 +1,14 @@
 'use client';
 
 import {
+  canMoveStage,
   useApplicationStage,
   type ApplicationBoardFilters,
   type ApplicationBoardTab,
   type ApplicationStage,
   type ApplicationStageId,
 } from '@/features/application-board';
+import { ApplicationBoardColumnHead } from './ApplicationBoardColumnHead';
 
 export interface ApplicationBoardColumnProps {
   tab: ApplicationBoardTab;
@@ -26,10 +28,20 @@ export interface ApplicationBoardColumnProps {
  */
 export function ApplicationBoardColumn({ tab, stage, filters }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
+  /*
+   * `지원 준비 중` 칸을 가리키는 조건이다. 단계 이름을 직접 적지 않는 이유는 탭마다 문구가
+   * 달라서다 — 부트캠프에서는 같은 `PREPARING` 이 `신청 전` 이다. 스크랩으로 되돌아갈 수
+   * 있는 칸이 그 칸 하나이고, 카드의 `X` 도 같은 조건으로 갈린다(2.2).
+   */
+  const returnsToScrap = canMoveStage(tab, stage.id, 'SCRAPPED');
 
   return (
     <section className="flex w-76 shrink-0 flex-col rounded-xl bg-gray-50 p-3">
-      <h3 className="px-1 pb-3 text-base font-bold text-gray-900">{stage.label}</h3>
+      <ApplicationBoardColumnHead
+        label={stage.label}
+        total={list.total}
+        showComplete={returnsToScrap}
+      />
       <div className="flex flex-col gap-3">
         {list.items.map((item) => (
           <p key={item.key} className="line-clamp-2 rounded-xl bg-white p-4 text-sm font-bold">
