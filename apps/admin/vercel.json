@@ -12,6 +12,10 @@
     {
       "source": "/letscareer-api/v1/sso/authenticate",
       "destination": "/api/letscareer-sso"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
     }
   ]
 }
