@@ -69,7 +69,7 @@ const JOB_STATUSES = [
 const BOOTCAMP_STATUSES = [
   { value: 'NOT_APPLIED', label: '신청 전' },
   { value: 'COMPLETED', label: '신청 완료' },
-  { value: 'ENDED', label: '활동 종료' },
+  { value: 'ENDED', label: '활동 완료' },
 ] as const;
 
 export const PLACEHOLDER_APPLICATION_STATUSES: Record<
