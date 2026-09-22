@@ -1,5 +1,6 @@
 export {
   fetchApplicationBoardPage,
+  type ApplicationBoardFilters,
   type ApplicationBoardItem,
   type ApplicationBoardPage,
   type ApplicationBoardPageParams,

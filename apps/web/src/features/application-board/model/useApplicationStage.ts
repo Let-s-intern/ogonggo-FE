@@ -6,6 +6,7 @@ import { subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import {
   fetchApplicationBoardPage,
+  type ApplicationBoardFilters,
   type ApplicationBoardItem,
   type ApplicationBoardPage,
 } from '../api/applicationBoardApi';
@@ -14,9 +15,25 @@ import type { ApplicationBoardTab, ApplicationStageId } from './stages';
 /** 칸 하나가 한 번에 받아 오는 건수. 칸 하단의 `더보기` 가 이만큼씩 더 받는다. */
 const DEFAULT_PAGE_SIZE = 10;
 
-/** 무효화하는 쪽(단계 이동) 도 이것을 쓴다. 탭까지가 접두사라 탭 하나만 통째로 버릴 수 있다. */
-export function applicationStageKey(tab: ApplicationBoardTab, stageId: string, pageSize: number) {
-  return ['application-board', tab, stageId, pageSize] as const;
+/**
+ * 무효화하는 쪽(단계 이동) 도 이것을 쓴다. 탭까지가 접두사라 탭 하나만 통째로 버릴 수 있다.
+ *
+ * 필터가 키에 들어간다. 같은 칸이어도 검색어가 다르면 다른 목록이다.
+ */
+export function applicationStageKey(
+  tab: ApplicationBoardTab,
+  stageId: string,
+  pageSize: number,
+  filters: ApplicationBoardFilters = {},
+) {
+  return [
+    'application-board',
+    tab,
+    stageId,
+    pageSize,
+    filters.recruitmentStatus ?? null,
+    filters.keyword ?? null,
+  ] as const;
 }
 
 export interface ApplicationStageList {
@@ -45,9 +62,9 @@ export interface ApplicationStageList {
 export function useApplicationStage<Tab extends ApplicationBoardTab>(
   tab: Tab,
   stageId: ApplicationStageId<Tab>,
-  options: { pageSize?: number } = {},
+  options: ApplicationBoardFilters & { pageSize?: number } = {},
 ): ApplicationStageList {
-  const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
+  const { pageSize = DEFAULT_PAGE_SIZE, ...filters } = options;
   const account = useMyAccount();
   const enabled = account.kind === 'ready' && account.account.role !== 'COMPANY';
   const queryClient = useQueryClient();
@@ -62,9 +79,9 @@ export function useApplicationStage<Tab extends ApplicationBoardTab>(
   );
 
   const query = useInfiniteQuery({
-    queryKey: applicationStageKey(tab, stageId, pageSize),
+    queryKey: applicationStageKey(tab, stageId, pageSize, filters),
     queryFn: ({ pageParam }) =>
-      fetchApplicationBoardPage(tab, stageId, { page: pageParam, size: pageSize }),
+      fetchApplicationBoardPage(tab, stageId, { ...filters, page: pageParam, size: pageSize }),
     initialPageParam: 1,
     getNextPageParam: (last: ApplicationBoardPage) =>
       last.pageInfo.pageNum < last.pageInfo.totalPages ? last.pageInfo.pageNum + 1 : undefined,

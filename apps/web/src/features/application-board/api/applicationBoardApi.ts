@@ -44,7 +44,36 @@ export interface ApplicationBoardPage {
   pageInfo: PageInfo;
 }
 
-export interface ApplicationBoardPageParams {
+/**
+ * 필터 줄이 거는 값(PRD "필터 줄").
+ *
+ * **`applicationStatus` 는 여기 없다.** 그것은 칸 자체라 `fetchApplicationBoardPage` 의
+ * `stageId` 로 들어간다. 필터 줄의 `지원 상태` 드롭다운은 어느 칸을 보일지를 고르는 것이므로
+ * 요청이 아니라 화면에서 갈린다.
+ */
+export interface ApplicationBoardFilters {
+  /** `마감 상태` 드롭다운. 부트캠프만 백엔드 파라미터 이름이 `status` 다. */
+  recruitmentStatus?: 'RECRUITING' | 'CLOSED';
+  /**
+   * `공고 검색`.
+   *
+   * task 파일은 이 파라미터가 아직 없다고 적었지만 **생성 클라이언트의 세 목록 모두에 있다**
+   * (BE `3467f4a`). 비활성으로 두지 않고 그대로 보낸다 —
+   * `.claude/tasks/memos/결정-지원신청-관리-push1-2026-09-22.md` 1 절.
+   */
+  keyword?: string;
+}
+
+/**
+ * 백엔드가 `keyword` 를 2~100자로 받는다. 범위를 벗어난 값은 없는 것으로 친다 —
+ * 한 글자 쳤을 때 400 을 받는 것보다 안 거른 목록을 보이는 편이 낫다.
+ */
+function pickKeyword(keyword: string | undefined): string | undefined {
+  const trimmed = keyword?.trim();
+  return trimmed && trimmed.length >= 2 && trimmed.length <= 100 ? trimmed : undefined;
+}
+
+export interface ApplicationBoardPageParams extends ApplicationBoardFilters {
   page: number;
   size: number;
 }
@@ -87,6 +116,9 @@ async function fetchJobStage(
     page: params.page,
     size: params.size,
     applicationStatus: stageId,
+    recruitmentStatus: params.recruitmentStatus,
+    keyword: pickKeyword(params.keyword),
+    sort: 'RECENTLY_SAVED',
   })) as unknown as SuccessResponsePageResponseUserJobSummaryResponse;
 
   const page = response.data;
@@ -115,10 +147,17 @@ async function fetchBootcampStage(
   stageId: ApplicationStageId<'bootcamps'>,
   params: ApplicationBoardPageParams,
 ): Promise<ApplicationBoardPage> {
+  /*
+   * 부트캠프만 마감 상태의 파라미터 이름이 `status` 다. 생성 타입에는 `DRAFT` 도 있지만
+   * 설명이 "RECRUITING 과 CLOSED 만 받으며 그 밖의 값은 400" 이라 필터 타입에서 뺐다.
+   */
   const response = (await listMyBootcampBookmarks({
     page: params.page,
     size: params.size,
     applicationStatus: stageId,
+    status: params.recruitmentStatus,
+    keyword: pickKeyword(params.keyword),
+    sort: 'RECENTLY_SAVED',
   })) as unknown as SuccessResponsePageResponseUserBootcampSummaryResponse;
 
   const page = response.data;
@@ -158,6 +197,9 @@ async function fetchSideStudyBookmarks(
   const response = (await listMyRecruitmentPostBookmarks({
     page: params.page,
     size: params.size,
+    recruitmentStatus: params.recruitmentStatus,
+    keyword: pickKeyword(params.keyword),
+    sort: 'RECENTLY_SAVED',
   })) as unknown as SuccessResponsePageResponseRecruitmentPostSummaryResponse;
 
   const page = response.data;
@@ -187,10 +229,14 @@ async function fetchSideStudyApplications(
   stageId: Exclude<ApplicationStageId<'side-studies'>, 'SCRAPPED'>,
   params: ApplicationBoardPageParams,
 ): Promise<ApplicationBoardPage> {
+  /* 지원 이력은 정렬 이름이 다르다 — 북마크의 `RECENTLY_SAVED` 에 해당하는 값이 `LATEST` 다. */
   const response = (await listMyRecruitmentApplications({
     page: params.page,
     size: params.size,
     applicationStatus: stageId,
+    recruitmentStatus: params.recruitmentStatus,
+    keyword: pickKeyword(params.keyword),
+    sort: 'LATEST',
   })) as unknown as SuccessResponseRecruitmentApplicationPageResponse;
 
   const page = response.data;
