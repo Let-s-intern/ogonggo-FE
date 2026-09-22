@@ -37,12 +37,21 @@ interface LetsCareerSuccessBody<T> {
 export class LetsCareerApiError extends Error {
   readonly status: number;
   readonly code: string;
+  /**
+   * 받은 본문 그대로. `''` 은 읽지 못했다는 뜻이다.
+   *
+   * `code` 만으로는 부족하다. 렛츠커리어 앞단이 우리 JSON 오류가 아닌 평문으로 막는 경우가 있고
+   * (허용 목록에 없는 `Origin` 을 막는 403 `Invalid CORS request`), 그때는 `code` 가 비어 있어
+   * 상태 코드만 남는다. `HttpError.body`(`packages/api/src/lib/http-client.ts`) 와 같은 이유다.
+   */
+  readonly body: string;
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, body = '') {
     super(message);
     this.name = 'LetsCareerApiError';
     this.status = status;
     this.code = code;
+    this.body = body;
   }
 }
 
@@ -52,7 +61,13 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const json: unknown = await response.json().catch(() => undefined);
+  const text = await response.text().catch(() => '');
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // JSON 이 아닌 본문이다. 위 `body` 주석의 경우이고, 그대로 들고 간다.
+  }
 
   if (!response.ok) {
     const error = json as Partial<LetsCareerErrorBody> | undefined;
@@ -60,6 +75,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
       response.status,
       error?.code ?? '',
       error?.message ?? `POST ${path} failed: ${response.status}`,
+      text,
     );
   }
   return (json as LetsCareerSuccessBody<T> | undefined)?.data as T;

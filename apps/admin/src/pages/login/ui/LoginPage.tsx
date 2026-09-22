@@ -82,6 +82,11 @@ function letsCareerErrorMessage(error: LetsCareerApiError): string {
   if (error.code === 'SSO_REDIRECT_URI_MISMATCH') {
     return `렛츠커리어에 등록되지 않은 주소(${letsCareerCallbackUri()}) 입니다. 렛츠커리어 SSO 허용 목록에 이 주소를 추가해야 합니다`;
   }
+  // 오공고 쪽 `isCorsRejection` 과 같은 거절이 렛츠커리어에서도 온다. 평문이라 `code` 가 비어 있고,
+  // 문구가 없으면 "failed: 403" 만 남아 계정 문제로 읽힌다.
+  if (error.status === 403 && error.body.includes('Invalid CORS request')) {
+    return `렛츠커리어가 이 주소(${window.location.origin}) 에서 오는 요청을 막았습니다(CORS). 렛츠커리어의 CORS 허용 목록에 이 도메인을 추가해야 합니다`;
+  }
   if (error.status >= 500) {
     return '렛츠커리어 서버에 문제가 있습니다. 잠시 후 다시 시도해 주세요';
   }
