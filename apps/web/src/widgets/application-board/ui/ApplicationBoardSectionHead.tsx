@@ -49,10 +49,7 @@ export function ApplicationBoardSectionHead({
 
   return (
     <div
-      className={cn(
-        'flex h-12 items-center rounded-lg px-4',
-        first ? 'bg-blue-00' : 'bg-gray-50',
-      )}
+      className={cn('flex h-12 items-center rounded-lg px-4', first ? 'bg-blue-00' : 'bg-gray-50')}
     >
       <button
         type="button"
