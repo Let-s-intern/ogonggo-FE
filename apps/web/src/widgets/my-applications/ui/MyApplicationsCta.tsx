@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Button } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/features/my-applications/model/placeholder';
 import type { MyApplicationTab } from '../lib/query';
 
 /** 탭마다 다른 문구와 버튼. 목업 세 장의 하단 배너 그대로다. */
@@ -31,8 +30,8 @@ const BANNERS: Record<
 /**
  * 표 아래 CTA 배너(목업 `docs/asset/v4 마이페이지/지원 신청내역/` 세 장).
  *
- * 사이드·스터디 탭에만 `모집글 작성하기` 가 하나 더 붙는다. 그 화면은 아직 없어서
- * (PRD 5 절이 뒤 Push 에서 만든다) 비활성으로 둔다 — 없는 경로로 보내면 404 다.
+ * 사이드·스터디 탭에만 `모집글 작성하기` 가 하나 더 붙는다. v4 때는 그 화면이 없어 비활성
+ * 이었고, 지금은 `/mypage/posts/new` 가 있어 그리로 보낸다.
  */
 export function MyApplicationsCta({ tab }: { tab: MyApplicationTab }) {
   const banner = BANNERS[tab];
@@ -48,8 +47,8 @@ export function MyApplicationsCta({ tab }: { tab: MyApplicationTab }) {
           <Link href={banner.href}>{banner.label}</Link>
         </Button>
         {tab === 'side-studies' ? (
-          <Button variant="secondary" disabled title={PLACEHOLDER_NOTICE} className="bg-white">
-            모집글 작성하기
+          <Button asChild variant="secondary" className="bg-white">
+            <Link href="/mypage/posts/new">모집글 작성하기</Link>
           </Button>
         ) : null}
       </div>
