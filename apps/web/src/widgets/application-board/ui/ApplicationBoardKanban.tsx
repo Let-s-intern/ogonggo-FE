@@ -21,6 +21,9 @@ export interface ApplicationBoardKanbanProps {
  * 칸의 차례(스크랩 → 지원 준비 중 → …) 가 읽히지 않는다.
  *
  * 바깥 `-mx-1 px-1` 은 칸의 포커스 테두리가 스크롤 상자에 잘리지 않게 두는 여백이다.
+ *
+ * 칸 사이는 `gap-5`(20px) 다. 목업에서 첫 칸 오른쪽 끝 783px, 둘째 칸 왼쪽 끝 803px 로
+ * 19px 이 읽힌다(2026-09-22 실측).
  */
 export function ApplicationBoardKanban({ query }: ApplicationBoardKanbanProps) {
   /*
@@ -39,7 +42,7 @@ export function ApplicationBoardKanban({ query }: ApplicationBoardKanbanProps) {
 
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-2">
-      <div className="flex w-max items-start gap-6">
+      <div className="flex w-max items-start gap-5">
         {stages.map((stage) => (
           <ApplicationBoardColumn
             key={stage.id}

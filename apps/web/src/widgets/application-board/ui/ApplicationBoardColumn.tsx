@@ -28,7 +28,18 @@ export interface ApplicationBoardColumnProps {
  * 자리가 칸 컴포넌트이고, 탭을 옮기면 칸 집합이 통째로 바뀌므로 각 칸이 자기 훅을 들고
  * 마운트·언마운트된다.
  *
- * 칸 폭은 `w-76`(304px) 이다. 목업 1440px 폭에서 칸이 305px, 칸 사이가 24px 로 읽힌다.
+ * 치수는 목업 `image.png`(1440px 폭) 의 픽셀에서 읽은 값이다(2026-09-22 실측).
+ *
+ * | 자리 | 목업 | 여기 |
+ * |---|---|---|
+ * | 칸 폭 | 307px | `w-76`(304px) |
+ * | 칸 바탕 | `#F5F9FF` | `bg-blue-00`(같은 값) |
+ * | 안쪽 여백 | 9px | `p-3`(12px) |
+ * | 카드 높이 | 128px | 131px(제목 한 줄) |
+ * | 카드 사이 | 16px | `gap-4`(16px) |
+ *
+ * 바탕이 `gray-50` 이 아니다. 목업의 `#F5F9FF` 는 파랑이 섞인 값이고 토큰에 이름이 있다
+ * (`--color-blue-00`). 회색 계열로 두면 칸이 카드와 같은 무채색 층으로 읽힌다.
  */
 export function ApplicationBoardColumn({ tab, stage, filters, move }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
@@ -40,13 +51,13 @@ export function ApplicationBoardColumn({ tab, stage, filters, move }: Applicatio
   const returnsToScrap = canMoveStage(tab, stage.id, 'SCRAPPED');
 
   return (
-    <section className="flex w-76 shrink-0 flex-col rounded-xl bg-gray-50 p-3">
+    <section className="flex w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3">
       <ApplicationBoardColumnHead
         label={stage.label}
         total={list.total}
         showComplete={returnsToScrap}
       />
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {list.items.map((item) => (
           <ApplicationBoardCard
             key={item.key}
