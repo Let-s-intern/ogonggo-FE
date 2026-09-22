@@ -59,6 +59,16 @@ export function ApplicationBoardColumn({ tab, stage, filters, move }: Applicatio
         ))}
       </div>
       {list.items.length === 0 ? <ApplicationBoardColumnPlaceholder list={list} /> : null}
+      {list.hasMore ? (
+        <button
+          type="button"
+          disabled={list.loadingMore}
+          onClick={list.loadMore}
+          className="pt-3 text-sm text-gray-500 disabled:text-gray-400"
+        >
+          {list.loadingMore ? '불러오는 중이에요' : '더보기'}
+        </button>
+      ) : null}
     </section>
   );
 }
