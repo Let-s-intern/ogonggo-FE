@@ -8,6 +8,7 @@ import {
   type ApplicationStage,
   type ApplicationStageId,
 } from '@/features/application-board';
+import { ApplicationBoardCard } from './ApplicationBoardCard';
 import { ApplicationBoardColumnHead } from './ApplicationBoardColumnHead';
 
 export interface ApplicationBoardColumnProps {
@@ -44,9 +45,7 @@ export function ApplicationBoardColumn({ tab, stage, filters }: ApplicationBoard
       />
       <div className="flex flex-col gap-3">
         {list.items.map((item) => (
-          <p key={item.key} className="line-clamp-2 rounded-xl bg-white p-4 text-sm font-bold">
-            {item.title}
-          </p>
+          <ApplicationBoardCard key={item.key} item={item} />
         ))}
       </div>
       {list.items.length === 0 ? <ApplicationBoardColumnPlaceholder list={list} /> : null}
