@@ -2,6 +2,7 @@
 
 import {
   stagesOf,
+  useMoveStage,
   type ApplicationStage,
   type ApplicationStageId,
 } from '@/features/application-board';
@@ -24,12 +25,24 @@ export interface ApplicationBoardKanbanProps {
 export function ApplicationBoardKanban({ query }: ApplicationBoardKanbanProps) {
   const stages: readonly ApplicationStage<ApplicationStageId>[] = stagesOf(query.tab);
   const filters = boardFilters(query);
+  /*
+   * 이동 훅은 칸이 아니라 여기 하나다. 한 번에 한 건만 옮기게 하려는 것이고(`pending` 이 같은
+   * 훅의 다른 이동을 막는다), 낙관적 갱신이 출발 칸과 도착 칸을 함께 고치므로 칸마다 따로
+   * 두면 같은 캐시를 둘이 건드린다.
+   */
+  const move = useMoveStage(query.tab);
 
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-2">
       <div className="flex w-max items-start gap-6">
         {stages.map((stage) => (
-          <ApplicationBoardColumn key={stage.id} tab={query.tab} stage={stage} filters={filters} />
+          <ApplicationBoardColumn
+            key={stage.id}
+            tab={query.tab}
+            stage={stage}
+            filters={filters}
+            move={move}
+          />
         ))}
       </div>
     </div>

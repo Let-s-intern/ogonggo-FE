@@ -7,6 +7,7 @@ import {
   type ApplicationBoardTab,
   type ApplicationStage,
   type ApplicationStageId,
+  type MoveStage,
 } from '@/features/application-board';
 import { ApplicationBoardCard } from './ApplicationBoardCard';
 import { ApplicationBoardColumnHead } from './ApplicationBoardColumnHead';
@@ -15,6 +16,8 @@ export interface ApplicationBoardColumnProps {
   tab: ApplicationBoardTab;
   stage: ApplicationStage<ApplicationStageId>;
   filters: ApplicationBoardFilters;
+  /** 칸 전체가 나눠 쓰는 이동 훅. 한 번에 한 건만 옮긴다(`ApplicationBoardKanban`). */
+  move: MoveStage;
 }
 
 /**
@@ -27,7 +30,7 @@ export interface ApplicationBoardColumnProps {
  *
  * 칸 폭은 `w-76`(304px) 이다. 목업 1440px 폭에서 칸이 305px, 칸 사이가 24px 로 읽힌다.
  */
-export function ApplicationBoardColumn({ tab, stage, filters }: ApplicationBoardColumnProps) {
+export function ApplicationBoardColumn({ tab, stage, filters, move }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
   /*
    * `지원 준비 중` 칸을 가리키는 조건이다. 단계 이름을 직접 적지 않는 이유는 탭마다 문구가
@@ -45,7 +48,14 @@ export function ApplicationBoardColumn({ tab, stage, filters }: ApplicationBoard
       />
       <div className="flex flex-col gap-3">
         {list.items.map((item) => (
-          <ApplicationBoardCard key={item.key} item={item} />
+          <ApplicationBoardCard
+            key={item.key}
+            item={item}
+            onRemove={
+              returnsToScrap ? () => move.move({ item, from: stage.id, to: 'SCRAPPED' }) : undefined
+            }
+            removing={move.pending}
+          />
         ))}
       </div>
       {list.items.length === 0 ? <ApplicationBoardColumnPlaceholder list={list} /> : null}
