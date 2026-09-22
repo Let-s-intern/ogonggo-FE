@@ -48,7 +48,7 @@ const SIDE_STUDY_STATUSES = [
   { value: 'PREPARING', label: '지원 준비 중' },
   { value: 'COMPLETED', label: '지원 완료' },
   { value: 'IN_PROGRESS', label: '활동 중' },
-  { value: 'ENDED', label: '활동 종료' },
+  { value: 'ENDED', label: '활동 완료' },
 ] as const;
 
 function statusOptionsFor(tab: MyApplicationTab): readonly { value: string; label: string }[] {

@@ -21,7 +21,7 @@ const APPLICATION_STATUS_LABELS: Record<(typeof APPLICATION_STATUSES)[number], s
   PREPARING: '지원 준비 중',
   COMPLETED: '지원 완료',
   IN_PROGRESS: '활동 중',
-  ENDED: '활동 종료',
+  ENDED: '활동 완료',
 };
 
 const SORT_LABELS: Record<(typeof SORTS)[number], string> = {
