@@ -1,4 +1,8 @@
-import { ApplicationBoard, type ApplicationBoardQuery } from '@/widgets/application-board';
+import {
+  ApplicationBoard,
+  ApplicationBoardCta,
+  type ApplicationBoardQuery,
+} from '@/widgets/application-board';
 
 export type MyScrapsPageProps = ApplicationBoardQuery;
 
@@ -23,6 +27,8 @@ export function MyScrapsPage(query: MyScrapsPageProps) {
       </header>
 
       <ApplicationBoard query={query} />
+
+      <ApplicationBoardCta />
     </section>
   );
 }
