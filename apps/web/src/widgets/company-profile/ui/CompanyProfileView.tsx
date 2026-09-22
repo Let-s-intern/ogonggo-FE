@@ -134,9 +134,9 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
       >
         <span aria-hidden="true" className="icon-[lucide--info] mt-0.5 block h-4 w-4 shrink-0" />
         <span>
-          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 기업/기관 정보는 아직 고칠 수
-          없어요. 로고, 연락처, 정보 수신용 이메일, 비밀번호 변경, 수신 동의, 회원 탈퇴가 전부
-          그래요. 지금은 보기만 할 수 있어요.
+          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 지금 고칠 수 있는 것은 기업 ·
+          기관명과 담당자 이름뿐이에요. 로고, 연락처, 정보 수신용 이메일, 비밀번호 변경, 수신
+          동의, 회원 탈퇴는 아직 준비 중이에요.
         </span>
       </Callout>
 
