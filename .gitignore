@@ -32,3 +32,6 @@ pnpm-debug.log*
 
 # OS
 .DS_Store
+
+# `vercel build` 산출물. 로컬에서 라우팅을 확인할 때 생기고 커밋할 것이 아니다.
+.vercel
