@@ -1,6 +1,6 @@
 /**
- * 렛츠커리어 SSO 요청을 `Origin` 없이 대신 보내는 서버리스 함수. 어드민 배포본의 `/letscareer-api/**` 가
- * `vercel.json` 의 rewrite 로 여기에 들어온다.
+ * 렛츠커리어 통합로그인 요청을 `Origin` 없이 대신 보내는 서버리스 함수. 어드민 배포본의
+ * `POST /letscareer-api/v1/sso/authenticate` 가 `vercel.json` 의 rewrite 로 여기에 들어온다.
  *
  * 브라우저는 같은 오리진 POST 에도 `Origin: https://admin.ogonggo.co.kr` 을 붙이고, 버셀 rewrite 는 요청
  * 헤더를 고칠 수 없어 그대로 넘어간다. 렛츠커리어 CORS 허용 목록에 오공고 도메인이 하나도 없어, 스프링이
@@ -14,24 +14,17 @@
  * `apps/web` 은 같은 일을 `src/proxy.ts` 가 하고, 로컬 어드민은 `vite.config.ts` 의 프록시가 한다.
  */
 
-/** 렛츠커리어 API 오리진. 버셀 rewrite 는 환경변수를 읽지 못해 주소를 파일에 적는다(`vercel.json` 과 같다). */
+/** 렛츠커리어 API 오리진. 버셀 rewrite 가 환경변수를 읽지 못해 주소를 파일에 적는다(`vercel.json` 과 같다). */
 const LETSCAREER_API_ORIGIN = 'https://3ccm7bgq1b.execute-api.ap-northeast-2.amazonaws.com';
 
 /**
- * 지나갈 수 있는 경로. `vercel.json` 의 rewrite 가 넘겨준 `path` 쿼리와 맞춘다.
+ * 부를 수 있는 렛츠커리어 주소. 하나뿐이고, 요청에서 읽지 않고 여기 적은 값을 쓴다.
  *
- * 이 목록이 없으면 누구나 이 주소로 렛츠커리어의 아무 API 나 부를 수 있는 열린 프록시가 된다. 어드민이
- * 부르는 것은 통합로그인 하나뿐이라(`src/shared/api/letscareer.ts`) 목록도 하나다.
+ * 요청이 가리키는 곳으로 보내면 누구나 이 주소로 렛츠커리어의 아무 API 나 부를 수 있는 열린 프록시가
+ * 된다. 어드민이 부르는 것은 통합로그인 하나뿐이다(`src/shared/api/letscareer.ts`). 하나 더 필요해지면
+ * 함수와 `vercel.json` 의 rewrite 를 함께 늘린다 — 늘리지 않은 경로는 이리로 들어오지 못한다.
  */
-const ALLOWED_PATHS = new Set(['v1/sso/authenticate']);
-
-/** 렛츠커리어 오류 응답과 같은 봉투. 로그인 화면이 `code` 로 문구를 가른다. */
-function errorResponse(status: number, code: string, message: string): Response {
-  return new Response(JSON.stringify({ status, code, message }), {
-    status,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-  });
-}
+const LETSCAREER_SSO_URL = `${LETSCAREER_API_ORIGIN}/api/v1/sso/authenticate`;
 
 /**
  * `Origin` 을 떼고 렛츠커리어로 보낸 뒤 상태 코드와 본문을 그대로 돌려준다.
@@ -41,28 +34,23 @@ function errorResponse(status: number, code: string, message: string): Response 
  * (`src/shared/api/letscareer.ts` 가 `@ogonggo/api` 의 `httpClient` 를 쓰지 않는 것과 같은 이유다).
  */
 export async function POST(request: Request): Promise<Response> {
-  const path = new URL(request.url).searchParams.get('path') ?? '';
-  if (!ALLOWED_PATHS.has(path)) {
-    return errorResponse(
-      404,
-      'PROXY_PATH_NOT_ALLOWED',
-      `이 프록시로는 지날 수 없는 경로입니다: ${path}`,
-    );
-  }
-
   let upstream: Response;
   try {
-    upstream = await fetch(`${LETSCAREER_API_ORIGIN}/api/${path}`, {
+    upstream = await fetch(LETSCAREER_SSO_URL, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: await request.text(),
     });
   } catch {
-    // 렛츠커리어에 닿지 못했다. 502 로 가르지 않으면 로그인 화면이 계정 문제로 보이게 된다.
-    return errorResponse(
-      502,
-      'PROXY_UPSTREAM_UNREACHABLE',
-      '렛츠커리어 서버에 연결하지 못했습니다.',
+    // 렛츠커리어에 닿지 못했다. 렛츠커리어 오류와 같은 봉투로 답한다 — 로그인 화면이 `code` 로 문구를
+    // 가르고, 502 로 가르지 않으면 이 실패가 계정 문제로 보인다.
+    return new Response(
+      JSON.stringify({
+        status: 502,
+        code: 'PROXY_UPSTREAM_UNREACHABLE',
+        message: '렛츠커리어 서버에 연결하지 못했습니다.',
+      }),
+      { status: 502, headers: { 'content-type': 'application/json; charset=utf-8' } },
     );
   }
 
