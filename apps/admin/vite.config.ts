@@ -3,6 +3,12 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+// dev 서버가 `/api/**` 를 넘길 어드민 백엔드. 기본값은 로컬 도커의 어드민 API 다(`ogonggo-BE` 의
+// `ogonggo-api-admin`). 배포본은 이 값을 읽지 못하고 `vercel.json` 의 rewrite 가 주소를 직접 들고
+// 있는데, 그쪽은 2026-09-22 부터 새 게이트웨이
+// (https://p5itn5nbm4.execute-api.ap-northeast-2.amazonaws.com) 다 — 기존 ALB(`:8081`, HTTP) 의
+// 21개 operation 을 모두 포함하고 공지사항 CRUD 5개가 더 있으며 HTTPS 다. 로컬에서 그 서버를 보려면
+// 이 변수에 같은 주소를 넣는다.
 const ADMIN_API_ORIGIN = process.env.OGONGGO_ADMIN_API_ORIGIN ?? 'http://localhost:8081';
 // 로그인과 토큰 재발급은 admin API 가 아니라 user API 에 있다. 관리자도 사용자 API 로그인으로
 // 토큰을 받는다. 로컬 `dev` 스크립트가 18080 을 넘긴다(8080 은 다른 서버가 쓴다).
