@@ -6,6 +6,7 @@ import { listJobs } from '@ogonggo/api/src/admin';
 import { Button, Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
 import { isMockEnabled } from '@/app/enableMocking';
 import { saveAccessToken } from '@/shared/api/accessToken';
+import { setAdminTokenUnverified } from '@/shared/api/adminTokenUnverified';
 import {
   NOT_ADMIN_MESSAGE,
   corsRejectedMessage,
@@ -19,15 +20,16 @@ import { signInWithLetsCareerEmail } from '@/shared/api/letsCareerSignIn';
 const SIGN_IN_FAILED_MESSAGE = '로그인하지 못했습니다. 이메일과 비밀번호를 확인해 주세요.';
 
 /**
- * 토큰은 받았는데 어드민 API 가 그것을 받아 주지 않았다는 실패. 문구를 그대로 들고 다닌다.
+ * 토큰은 받았는데 어드민 API 가 관리자가 아니라고 한 실패(403). 문구를 그대로 들고 다닌다.
  *
- * 비밀번호 오류와 같은 401 이라서 상태 코드만으로는 가를 수 없다. 어느 단계에서 실패했는지는
+ * 렛츠커리어 단계의 거절도 403 이라 상태 코드만으로는 가를 수 없다. 어느 단계에서 실패했는지는
  * 여기서만 알 수 있으므로, 그 자리에서 문구를 정해 담는다.
  */
 class AdminAccessDenied extends Error {}
 
 /**
- * 받은 토큰이 어드민 API 에 통하는지 한 번 확인한다. 통하지 않으면 던진다.
+ * 받은 토큰이 어드민 API 에 통하는지 한 번 확인한다. 어드민이 아니라고 하면 던지고, 판단하지
+ * 못했으면 `true`(확인 못 함) 를 돌려준다.
  *
  * 로그인만으로는 관리자인지 알 수 없다 — 토큰은 사용자 API 가 주고, 역할을 보는 쪽은 어드민 API 다.
  * 확인 없이 저장하면 어느 계정이든 로그인한 것처럼 보이다가 메뉴를 누르는 순간 로그인 화면으로
@@ -39,12 +41,13 @@ class AdminAccessDenied extends Error {}
  * 목 모드에서는 건너뛴다. 목 핸들러는 토큰을 보지 않는다(`app/RequireAuth.tsx` 가 목 모드에서
  * 검사를 건너뛰는 것과 같은 이유다).
  */
-async function checkAdminAccess(accessToken: string): Promise<void> {
+async function checkAdminAccess(accessToken: string): Promise<boolean> {
   if (isMockEnabled) {
-    return;
+    return false;
   }
   try {
     await listJobs({ page: 1, size: 1 }, { headers: { Authorization: `Bearer ${accessToken}` } });
+    return false;
   } catch (error) {
     if (!(error instanceof HttpError)) {
       throw error;
@@ -53,16 +56,16 @@ async function checkAdminAccess(accessToken: string): Promise<void> {
     if (isCorsRejection(error)) {
       throw new AdminAccessDenied(corsRejectedMessage());
     }
-    // 403 은 로그인한 계정의 역할이 ADMIN 이 아니라는 뜻이다.
+    // 403 은 서버가 확실히 아니라고 한 것이다. 로그인한 계정의 역할이 ADMIN 이 아니다. 막는다.
     if (error.status === 403) {
       throw new AdminAccessDenied(NOT_ADMIN_MESSAGE);
     }
-    // 401 은 방금 로그인한 토큰을 어드민 API 가 검증하지 못했다는 뜻이다. 두 API 의 JWT 시크릿이
-    // 다르면 이렇게 된다. 비밀번호를 다시 쳐 봐야 소용없으므로 그렇게 들리지 않는 말을 쓴다.
+    // 401 은 "관리자가 아니다" 가 아니라 "서버가 판단하지 못했다" 이므로 막지 않는다. 어드민 서버에
+    // JWT 시크릿이 없으면 어떤 토큰이든 401 이고(`shared/api/adminTokenUnverified.ts`), 모르는 것을
+    // 근거로 막으면 관리자도 프런트를 볼 수 없다. 통과시키되 왜 데이터가 없는지는 콘솔 전체에
+    // 남긴다 — 그 기록이 이 `true` 다.
     if (error.status === 401) {
-      throw new AdminAccessDenied(
-        '로그인은 됐지만 관리자 서버가 인증을 받지 못했습니다. 관리자에게 문의하세요',
-      );
+      return true;
     }
     throw error;
   }
@@ -131,6 +134,7 @@ function signInErrorMessage(error: unknown): string {
  * 입력 칸은 이메일과 비밀번호 그대로고, 카카오·네이버 간편 로그인은 두지 않는다.
  *
  * 역할이 ADMIN 인지는 받은 토큰으로 어드민 API 를 한 번 불러서 가린다(`checkAdminAccess`).
+ * 아니라고 한 것(403) 만 막는다. 판단하지 못한 것(401) 은 통과시키고 콘솔에 이유를 남긴다.
  */
 export function LoginPage() {
   const navigate = useNavigate();
@@ -145,11 +149,13 @@ export function LoginPage() {
   const signIn = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
       const accessToken = await signInWithLetsCareerEmail(credentials);
-      // 확인이 실패하면 여기서 던진다. 토큰은 저장되지 않는다.
-      await checkAdminAccess(accessToken);
-      return accessToken;
+      // 관리자가 아니면(403) 여기서 던진다. 토큰은 저장되지 않는다.
+      const tokenUnverified = await checkAdminAccess(accessToken);
+      return { accessToken, tokenUnverified };
     },
-    onSuccess: (accessToken) => {
+    onSuccess: ({ accessToken, tokenUnverified }) => {
+      // 매번 다시 적는다. 지난 로그인의 판정이 남아 안내만 떠 있는 일이 없게 한다.
+      setAdminTokenUnverified(tokenUnverified);
       saveAccessToken(accessToken);
       // 다른 계정으로 받아 둔 응답이 남아 있으면 새 계정 화면에 섞여 나온다.
       queryClient.clear();

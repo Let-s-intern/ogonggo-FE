@@ -1,5 +1,9 @@
 import { NavLink, Outlet } from 'react-router';
-import { cn } from '@ogonggo/ui';
+import { Callout, cn } from '@ogonggo/ui';
+import {
+  ADMIN_TOKEN_UNVERIFIED_MESSAGE,
+  isAdminTokenUnverified,
+} from '@/shared/api/adminTokenUnverified';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { isMockEnabled } from '@/app/enableMocking';
 
@@ -8,6 +12,9 @@ import { isMockEnabled } from '@/app/enableMocking';
  *
  * 운영자 한 명이 넓은 화면에서 쓰는 도구라 메뉴를 접는 동작을 넣지 않는다(PRD "이 서비스가
  * 무엇인가" — 익명 트래픽을 위한 화면이 아니다). 좁은 화면 대응이 필요해지면 그때 넣는다.
+ *
+ * 어드민 API 가 토큰을 판단하지 못한 상태의 안내도 여기서 그린다. 그때는 어느 메뉴를 눌러도
+ * 비어 있으므로 한 화면에 두면 나머지 여덟 화면은 이유 없이 빈 채로 남는다.
  */
 export function AdminLayout() {
   return (
@@ -66,6 +73,11 @@ export function AdminLayout() {
         ))}
       </nav>
       <main className="min-w-0 flex-1 px-8 py-6">
+        {isAdminTokenUnverified() ? (
+          <Callout tone="warning" className="mb-6">
+            {ADMIN_TOKEN_UNVERIFIED_MESSAGE}
+          </Callout>
+        ) : null}
         <Outlet />
       </main>
     </div>
