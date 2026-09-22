@@ -1,6 +1,8 @@
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
+import { HttpError } from '@ogonggo/api';
 import { clearAccessToken } from '@/shared/api/accessToken';
+import { isAdminTokenUnverified } from '@/shared/api/adminTokenUnverified';
 import { authErrorMessage } from '@/shared/api/authErrorMessages';
 import { router } from './routes';
 
@@ -11,11 +13,19 @@ import { router } from './routes';
  * 전부 403 이다. 화면에 남아 봐야 모든 목록이 오류를 낸다.
  *
  * 로그인 화면 자신의 실패(틀린 비밀번호의 401) 는 그 화면이 보여준다.
+ *
+ * 예외가 하나 있다. 로그인 때 어드민 API 가 토큰을 판단하지 못했다면(`isAdminTokenUnverified`),
+ * 그 뒤의 401 은 만료도 위조도 아니라 서버가 계속 판단하지 못하고 있다는 뜻이다. 그것으로 로그인
+ * 화면에 돌려보내면 통과시킨 의미가 없어진다 — 첫 화면이 첫 요청과 함께 로그인으로 튕긴다.
+ * 남아서 빈 화면과 안내(`widgets/admin-layout`) 를 보이는 편이 낫다.
  */
 function handleAuthError(error: unknown) {
   const message = authErrorMessage(error);
   const { pathname, search } = router.state.location;
   if (!message || pathname === '/login') {
+    return;
+  }
+  if (error instanceof HttpError && error.status === 401 && isAdminTokenUnverified()) {
     return;
   }
   clearAccessToken();

@@ -7,7 +7,7 @@
     },
     {
       "source": "/api/v1/:path*",
-      "destination": "http://ogonggo-alb-1441877515.ap-northeast-2.elb.amazonaws.com:8081/api/v1/:path*"
+      "destination": "https://p5itn5nbm4.execute-api.ap-northeast-2.amazonaws.com/api/v1/:path*"
     },
     {
       "source": "/letscareer-api/v1/sso/authenticate",
