@@ -35,6 +35,15 @@ export default defineConfig({
         target: LETSCAREER_API_ORIGIN,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/letscareer-api/, '/api'),
+        // 브라우저가 붙인 `Origin: http://localhost:4001` 을 떼고 보낸다. 렛츠커리어는 허용 목록에 없는
+        // `Origin` 을 인증보다 먼저 403 `Invalid CORS request` 로 막아, 떼지 않으면 로컬에서는 SSO 응답을
+        // 한 번도 볼 수 없다(2026-09-22 확인). `apps/web` 이 같은 요청으로 400 을 받는 것은 Next 의
+        // rewrite 가 이 헤더를 넘기지 않기 때문이고, 여기서 맞추는 것은 그 동작이다.
+        // CORS 는 브라우저를 보호하는 장치라 서버 대 서버인 프록시에는 해당하지 않는다. 렛츠커리어가
+        // 실제로 거는 제한은 `redirectUri` 화이트리스트이고 그것은 그대로 걸린다.
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => proxyReq.removeHeader('origin'));
+        },
       },
     },
   },
