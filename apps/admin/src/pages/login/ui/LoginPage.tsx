@@ -6,10 +6,15 @@ import { listJobs } from '@ogonggo/api/src/admin';
 import { Button, Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
 import { isMockEnabled } from '@/app/enableMocking';
 import { saveAccessToken } from '@/shared/api/accessToken';
-import { NOT_ADMIN_MESSAGE } from '@/shared/api/authErrorMessages';
+import {
+  NOT_ADMIN_MESSAGE,
+  corsRejectedMessage,
+  isCorsRejection,
+  serverErrorMessage,
+} from '@/shared/api/authErrorMessages';
 import { unwrapData } from '@/shared/api/unwrapData';
 
-/** 비밀번호가 틀렸을 때(`INVALID_COMPANY_CREDENTIALS`) 와 그 밖의 로그인 실패. */
+/** 원인을 가릴 단서가 하나도 없는 로그인 실패. */
 const SIGN_IN_FAILED_MESSAGE = '로그인하지 못했습니다. 이메일과 비밀번호를 확인해 주세요.';
 
 /**
@@ -43,6 +48,10 @@ async function checkAdminAccess(accessToken: string): Promise<void> {
     if (!(error instanceof HttpError)) {
       throw error;
     }
+    // CORS 거절도 403 이다. 역할 문제로 읽히면 계정을 고치러 가게 되므로 먼저 가른다.
+    if (isCorsRejection(error)) {
+      throw new AdminAccessDenied(corsRejectedMessage());
+    }
     // 403 은 로그인한 계정의 역할이 ADMIN 이 아니라는 뜻이다.
     if (error.status === 403) {
       throw new AdminAccessDenied(NOT_ADMIN_MESSAGE);
@@ -56,6 +65,30 @@ async function checkAdminAccess(accessToken: string): Promise<void> {
     }
     throw error;
   }
+}
+
+/**
+ * 로그인 실패를 원인별 문구로 바꾼다. 모두 "비밀번호를 확인해 주세요" 로 뭉치면 CORS 거절이나 서버
+ * 오류에도 비밀번호만 다시 치게 된다.
+ *
+ * 백엔드 JSON 오류는 그 `message` 를 그대로 쓴다 — 틀린 비밀번호(401 `INVALID_COMPANY_CREDENTIALS`),
+ * 정지·탈퇴 계정(403 `USER_SUSPENDED`·`USER_WITHDRAWN`) 을 서버가 이미 사람이 읽을 말로 준다.
+ */
+function signInErrorMessage(error: unknown): string {
+  if (error instanceof AdminAccessDenied) {
+    return error.message;
+  }
+  if (isCorsRejection(error)) {
+    return corsRejectedMessage();
+  }
+  if (error instanceof HttpError) {
+    return serverErrorMessage(error) ?? `로그인 요청이 실패했습니다 (HTTP ${error.status})`;
+  }
+  // `fetch` 는 응답을 받지 못하면(네트워크 끊김, 서버 다운) `TypeError` 를 던진다.
+  if (error instanceof TypeError) {
+    return '서버에 연결하지 못했습니다. 네트워크나 서버 상태를 확인해 주세요';
+  }
+  return error instanceof Error && error.message ? error.message : SIGN_IN_FAILED_MESSAGE;
 }
 
 /**
@@ -130,9 +163,7 @@ export function LoginPage() {
           </Field>
           {signIn.isError ? (
             <Callout tone="error" className="mb-4">
-              {signIn.error instanceof AdminAccessDenied
-                ? signIn.error.message
-                : SIGN_IN_FAILED_MESSAGE}
+              {signInErrorMessage(signIn.error)}
             </Callout>
           ) : null}
           <Button type="submit" className="w-full" disabled={signIn.isPending}>

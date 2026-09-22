@@ -28,11 +28,19 @@
  */
 export class HttpError extends Error {
   readonly status: number;
+  /**
+   * The raw response body, `''` when it could not be read. Two 403s can mean
+   * different things: the backend's JSON error (`{ code, message }`) or
+   * Spring's plain-text `Invalid CORS request`, which never reaches our code.
+   * The status alone cannot tell them apart.
+   */
+  readonly body: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, body = '') {
     super(message);
     this.name = 'HttpError';
     this.status = status;
+    this.body = body;
   }
 }
 
@@ -114,6 +122,7 @@ export async function httpClient<T>(url: string, init: RequestInit = {}): Promis
     throw new HttpError(
       `${init.method ?? 'GET'} ${url} failed: ${response.status}`,
       response.status,
+      await response.text().catch(() => ''),
     );
   }
 
