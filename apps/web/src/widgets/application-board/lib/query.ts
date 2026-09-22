@@ -67,16 +67,20 @@ export function hasApplicationBoardFilter(query: ApplicationBoardQuery): boolean
  *
  * **탭을 옮기면 필터를 전부 지운다.** `stage` 는 탭마다 값이 아예 달라 그대로 들고 가면 없는
  * 칸을 고른 주소가 되고, 그러면 칸이 하나도 남지 않은 빈 화면이 나온다.
+ *
+ * **보기는 탭을 옮겨도 따라간다.** 필터는 그 탭에 건 조건이지만 보기는 화면을 어떻게 보는지라
+ * 탭에 매인 값이 아니다 — 리스트로 보다가 탭을 옮겼는데 칸반으로 돌아오면 매번 다시 눌러야
+ * 한다.
  */
 export function buildApplicationBoardHref(
   base: ApplicationBoardQuery,
   overrides: Partial<ApplicationBoardQuery> = {},
 ): string {
-  if (overrides.tab !== undefined && overrides.tab !== base.tab) {
-    return BOARD_PATH;
-  }
-
-  const merged: ApplicationBoardQuery = { ...base, ...overrides };
+  const next: ApplicationBoardQuery = { ...base, ...overrides };
+  const merged: ApplicationBoardQuery =
+    overrides.tab !== undefined && overrides.tab !== base.tab
+      ? { tab: overrides.tab, view: next.view }
+      : next;
   const params = new URLSearchParams();
   if (merged.tab !== DEFAULT_APPLICATION_BOARD_QUERY.tab) {
     params.set('tab', merged.tab);
