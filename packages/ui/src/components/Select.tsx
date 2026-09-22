@@ -4,6 +4,11 @@ import { cn } from '../lib/cn';
 export interface SelectOption {
   value: string;
   label: string;
+  /**
+   * 고를 수 없는 항목. 목록에서 빼지 않고 회색으로 둘 때 쓴다 — 지금 못 가는 곳이 어디까지
+   * 있는지 자체가 정보인 자리가 있다(`ApplicationBoardRow` 의 단계 셀렉트).
+   */
+  disabled?: boolean;
 }
 
 export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
@@ -29,7 +34,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       {...props}
     >
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option key={option.value} value={option.value} disabled={option.disabled}>
           {option.label}
         </option>
       ))}
