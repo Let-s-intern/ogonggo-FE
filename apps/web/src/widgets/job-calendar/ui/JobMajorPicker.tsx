@@ -4,6 +4,7 @@ import { cn } from '@ogonggo/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { JOB_MAJORS, MAX_JOB_MAJORS } from '../lib/job-majors';
+import { writeJobMajorCookie } from '../lib/major-cookie';
 import { buildJobCalendarHref, type JobCalendarQuery } from '../lib/query';
 import { CalendarPanel } from './CalendarPanel';
 
@@ -82,9 +83,12 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
         <button
           type="button"
           disabled={empty}
-          onClick={() =>
-            router.push(buildJobCalendarHref(query, { majors: selected, picker: false }))
-          }
+          onClick={() => {
+            // 주소를 바꾸기 전에 적는다. 다음에 `/calendar`로 그냥 들어와도 라우트가 이 값을
+            // 읽어 같은 직무의 달력을 편다(`lib/major-cookie.ts`).
+            writeJobMajorCookie(selected);
+            router.push(buildJobCalendarHref(query, { majors: selected, picker: false }));
+          }}
           className={cn(
             'h-9 w-full max-w-[710px] rounded-xs border text-sm transition-colors',
             empty
