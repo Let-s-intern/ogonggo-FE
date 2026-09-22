@@ -1,9 +1,11 @@
 export {
   fetchApplicationBoardPage,
+  moveApplicationStage,
   type ApplicationBoardFilters,
   type ApplicationBoardItem,
   type ApplicationBoardPage,
   type ApplicationBoardPageParams,
+  type MovableStageId,
 } from './api/applicationBoardApi';
 export {
   APPLICATION_BOARD_STAGES,
@@ -23,3 +25,4 @@ export {
   useApplicationStage,
   type ApplicationStageList,
 } from './model/useApplicationStage';
+export { useMoveStage, type MoveStage, type MoveStageRequest } from './model/useMoveStage';

@@ -1,8 +1,14 @@
 import {
+  cancelMyBootcampBookmarkPreparation,
+  cancelMyJobBookmarkPreparation,
+  cancelMyRecruitmentPostBookmarkPreparation,
   listMyBootcampBookmarks,
   listMyJobBookmarks,
   listMyRecruitmentApplications,
   listMyRecruitmentPostBookmarks,
+  prepareMyBootcampBookmark,
+  prepareMyJobBookmark,
+  prepareMyRecruitmentPostBookmark,
   type PageInfo,
   type SuccessResponsePageResponseRecruitmentPostSummaryResponse,
   type SuccessResponsePageResponseUserBootcampSummaryResponse,
@@ -268,4 +274,41 @@ function emptyPageInfo(params: ApplicationBoardPageParams): PageInfo {
     totalElements: 0,
     totalPages: 0,
   };
+}
+
+/**
+ * 지금 열려 있는 전이의 도착 단계. 셋 다 `SCRAPPED ↔ PREPARING` 뿐이라 두 값이다
+ * (`stages.ts` 의 `movableTo`). 백엔드가 전이를 열면 여기와 그 표가 함께 늘어난다.
+ */
+export type MovableStageId = 'SCRAPPED' | 'PREPARING';
+
+/**
+ * 한 건의 단계를 옮긴다.
+ *
+ * 경로가 둘뿐이다 — `prepare` 가 `지원 준비 중` 으로, `cancel-preparation` 이 `스크랩` 으로
+ * 되돌린다. 나머지 단계로 가는 길은 백엔드에 아예 없다.
+ *
+ * **부르기 전에 `canMoveStage` 로 막는다.** 여기서는 막지 않는다 — 막힌 전이를 요청하면
+ * 백엔드가 409 를 주는데, 그 왕복은 누른 사람에게 아무것도 알려 주지 않는다.
+ */
+export async function moveApplicationStage(
+  tab: ApplicationBoardTab,
+  id: number,
+  to: MovableStageId,
+): Promise<void> {
+  switch (tab) {
+    case 'jobs':
+      await (to === 'PREPARING' ? prepareMyJobBookmark(id) : cancelMyJobBookmarkPreparation(id));
+      return;
+    case 'bootcamps':
+      await (to === 'PREPARING'
+        ? prepareMyBootcampBookmark(id)
+        : cancelMyBootcampBookmarkPreparation(id));
+      return;
+    case 'side-studies':
+      await (to === 'PREPARING'
+        ? prepareMyRecruitmentPostBookmark(id)
+        : cancelMyRecruitmentPostBookmarkPreparation(id));
+      return;
+  }
 }
