@@ -10,5 +10,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  // 배포본의 서버리스 함수도 타입이 확인되어야 한다(`api/letscareer-sso.ts`).
+  "include": ["src", "api"]
 }

@@ -8,7 +8,7 @@
     "mock": "vite",
     "build": "tsgo --noEmit && vite build",
     "type-check": "tsgo --noEmit",
-    "lint": "oxlint src",
+    "lint": "oxlint src api",
     "preview": "vite preview"
   },
   "dependencies": {
