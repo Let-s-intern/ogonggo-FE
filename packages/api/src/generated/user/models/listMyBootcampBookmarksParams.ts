@@ -4,6 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListMyBootcampBookmarksApplicationStatus } from './listMyBootcampBookmarksApplicationStatus';
+import type { ListMyBootcampBookmarksSort } from './listMyBootcampBookmarksSort';
 import type { ListMyBootcampBookmarksStatus } from './listMyBootcampBookmarksStatus';
 import type { ListMyBootcampBookmarksTuitionType } from './listMyBootcampBookmarksTuitionType';
 
@@ -17,6 +19,12 @@ page?: number;
  * @maximum 100
  */
 size?: number;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `RECENTLY_SAVED` | 1 | 최근 저장순 |
+ */
+sort?: ListMyBootcampBookmarksSort;
 /**
  * | 값 | code | 설명 |
  * | --- | --- | --- |
@@ -38,4 +46,14 @@ status?: ListMyBootcampBookmarksStatus;
  * @maxLength 100
  */
 keyword?: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `SCRAPPED` | 1 | 스크랩 |
+ * | `PREPARING` | 2 | 신청 전 |
+ * | `APPLIED` | 3 | 신청 완료 |
+ * | `IN_PROGRESS` | 4 | 활동 중 |
+ * | `COMPLETED` | 5 | 활동 완료 |
+ */
+applicationStatus?: ListMyBootcampBookmarksApplicationStatus;
 };

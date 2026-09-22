@@ -4,6 +4,9 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListMyRecruitmentPostBookmarksRecruitmentStatus } from './listMyRecruitmentPostBookmarksRecruitmentStatus';
+import type { ListMyRecruitmentPostBookmarksRecruitmentType } from './listMyRecruitmentPostBookmarksRecruitmentType';
+import type { ListMyRecruitmentPostBookmarksSort } from './listMyRecruitmentPostBookmarksSort';
 
 export type ListMyRecruitmentPostBookmarksParams = {
 /**
@@ -15,4 +18,29 @@ page?: number;
  * @maximum 100
  */
 size?: number;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `RECRUITING` | 1 | 모집 중 |
+ * | `CLOSED` | 2 | 마감 |
+ */
+recruitmentStatus?: ListMyRecruitmentPostBookmarksRecruitmentStatus;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `SIDE_PROJECT` | 1 | 사이드 프로젝트 |
+ * | `STUDY` | 2 | 스터디 |
+ */
+recruitmentType?: ListMyRecruitmentPostBookmarksRecruitmentType;
+/**
+ * @minLength 2
+ * @maxLength 100
+ */
+keyword?: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `RECENTLY_SAVED` | 1 | 최근 저장순 |
+ */
+sort?: ListMyRecruitmentPostBookmarksSort;
 };
