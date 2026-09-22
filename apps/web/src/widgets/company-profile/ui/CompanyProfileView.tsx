@@ -14,6 +14,32 @@ import { MarketingSection, PasswordSection, WithdrawAction } from './PreparingSe
 export interface CompanyProfileViewProps {
   /** 계정을 아직 못 읽었으면 `undefined`. 칸은 그대로 두고 값만 빈다. */
   values?: CompanyProfileValues;
+  /** 두 칸을 저장한다. 실패하면 던진다 — 문구는 이 화면이 고른다. */
+  onSave?: (draft: CompanyProfileDraft) => Promise<void>;
+}
+
+/** 저장 버튼 둘 중 어느 쪽을 눌렀는지. 누른 버튼 밑에만 결과를 띄운다. */
+type SaveSection = 'basic' | 'manager';
+
+interface SaveStatus {
+  section: SaveSection;
+  tone: 'success' | 'error';
+  message: string;
+}
+
+function SaveMessage({ status }: { status: SaveStatus | null }) {
+  if (!status) {
+    return null;
+  }
+  return status.tone === 'error' ? (
+    <p role="alert" className="text-sm text-error">
+      {status.message}
+    </p>
+  ) : (
+    <p role="status" className="text-sm text-gray-500">
+      {status.message}
+    </p>
+  );
 }
 
 /**
@@ -31,8 +57,10 @@ export interface CompanyProfileViewProps {
  *
  * 비밀번호 변경·수신 동의·회원 탈퇴도 같은 이유로 목업대로 그리되 비활성이다.
  */
-export function CompanyProfileView({ values }: CompanyProfileViewProps) {
+export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) {
   const [draft, setDraft] = useState<CompanyProfileDraft>(EMPTY_COMPANY_PROFILE_DRAFT);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<SaveStatus | null>(null);
 
   /**
    * 읽어 온 값이 바뀌면 폼을 그 값으로 되맞춘다. 저장 뒤 읽는 쪽이 계정을 다시 읽으므로, 이
@@ -52,6 +80,47 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
 
   const change = (patch: Partial<CompanyProfileDraft>) =>
     setDraft((previous) => ({ ...previous, ...patch }));
+
+  /**
+   * 버튼 둘이 같은 저장을 한다. 수정 API 가 두 값을 **함께 교체하기** 때문이다 — 하나만 보낼
+   * 수 없으므로 어느 버튼을 눌러도 화면에 있는 두 값이 같이 올라간다. 버튼을 하나로 합치지
+   * 않는 이유는 목업의 칸 배치를 지키기 위해서다(`docs/asset/v5 기업회원 마이페이지/기업 기관
+   * 정보.png`). 누른 버튼 밑에만 결과 문구가 붙어 어느 쪽을 눌렀는지는 드러난다.
+   *
+   * 빈 값은 보내지 않는다. 백엔드가 빈 문자열을 받아 주므로(`@minLength 0`) 막지 않으면
+   * 기관명이 지워진 채로 저장된다.
+   */
+  const submit = async (section: SaveSection) => {
+    const trimmed: CompanyProfileDraft = {
+      organizationName: draft.organizationName.trim(),
+      managerName: draft.managerName.trim(),
+    };
+    if (!trimmed.organizationName) {
+      setStatus({ section, tone: 'error', message: '기업 · 기관명을 입력해 주세요.' });
+      return;
+    }
+    if (!trimmed.managerName) {
+      setStatus({ section, tone: 'error', message: '담당자 이름을 입력해 주세요.' });
+      return;
+    }
+    if (!onSave) {
+      return;
+    }
+    setSaving(true);
+    setStatus(null);
+    try {
+      await onSave(trimmed);
+      setStatus({ section, tone: 'success', message: '저장했습니다.' });
+    } catch {
+      setStatus({
+        section,
+        tone: 'error',
+        message: '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-10">
@@ -99,12 +168,13 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
 
         <Button
           variant="secondary"
-          disabled
-          title={PLACEHOLDER_NOTICE}
+          disabled={saving}
+          onClick={() => void submit('basic')}
           className="w-full border-blue-500 text-blue-500"
         >
           기본 정보 수정하기
         </Button>
+        <SaveMessage status={status?.section === 'basic' ? status : null} />
       </section>
 
       <hr className="border-gray-200" />
@@ -156,12 +226,13 @@ export function CompanyProfileView({ values }: CompanyProfileViewProps) {
 
         <Button
           variant="secondary"
-          disabled
-          title={PLACEHOLDER_NOTICE}
+          disabled={saving}
+          onClick={() => void submit('manager')}
           className="w-full border-blue-500 text-blue-500"
         >
           담당자 정보 수정하기
         </Button>
+        <SaveMessage status={status?.section === 'manager' ? status : null} />
       </section>
 
       <hr className="border-gray-200" />
