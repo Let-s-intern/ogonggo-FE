@@ -7,6 +7,12 @@ const ADMIN_API_ORIGIN = process.env.OGONGGO_ADMIN_API_ORIGIN ?? 'http://localho
 // 로그인과 토큰 재발급은 admin API 가 아니라 user API 에 있다. 관리자도 사용자 API 로그인으로
 // 토큰을 받는다. 로컬 `dev` 스크립트가 18080 을 넘긴다(8080 은 다른 서버가 쓴다).
 const USER_API_ORIGIN = process.env.OGONGGO_USER_API_ORIGIN ?? 'http://localhost:8080';
+// 관리자 로그인의 앞부분(렛츠커리어 SSO) 이 부르는 서버. 로컬도 렛츠커리어 prod 를 본다 — SSO 화이트리스트와
+// 오공고 백엔드의 검증 대상이 prod 라 토큰을 발급한 곳과 검증하러 가는 곳이 같아야 교환이 된다
+// (`apps/web/.env.example` 의 `NEXT_PUBLIC_LETSCAREER_API_ORIGIN` 과 같은 값·같은 이유다).
+const LETSCAREER_API_ORIGIN =
+  process.env.OGONGGO_LETSCAREER_API_ORIGIN ??
+  'https://3ccm7bgq1b.execute-api.ap-northeast-2.amazonaws.com';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -23,6 +29,22 @@ export default defineConfig({
     proxy: {
       '/api/v1/auth': { target: USER_API_ORIGIN, changeOrigin: true },
       '/api': { target: ADMIN_API_ORIGIN, changeOrigin: true },
+      // 오공고의 `/api/**` 와 겹치지 않게 접두사를 따로 둔다(`apps/web` 의 next.config.ts 와 같은 이름이다).
+      // 렛츠커리어 쪽 실제 경로는 `/api/**` 라 접두사만 바꿔 넘긴다.
+      '/letscareer-api': {
+        target: LETSCAREER_API_ORIGIN,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/letscareer-api/, '/api'),
+        // 브라우저가 붙인 `Origin: http://localhost:4001` 을 떼고 보낸다. 렛츠커리어는 허용 목록에 없는
+        // `Origin` 을 인증보다 먼저 403 `Invalid CORS request` 로 막아, 떼지 않으면 로컬에서는 SSO 응답을
+        // 한 번도 볼 수 없다(2026-09-22 확인). `apps/web` 이 같은 요청으로 400 을 받는 것은 Next 의
+        // rewrite 가 이 헤더를 넘기지 않기 때문이고, 여기서 맞추는 것은 그 동작이다.
+        // CORS 는 브라우저를 보호하는 장치라 서버 대 서버인 프록시에는 해당하지 않는다. 렛츠커리어가
+        // 실제로 거는 제한은 `redirectUri` 화이트리스트이고 그것은 그대로 걸린다.
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => proxyReq.removeHeader('origin'));
+        },
+      },
     },
   },
 });

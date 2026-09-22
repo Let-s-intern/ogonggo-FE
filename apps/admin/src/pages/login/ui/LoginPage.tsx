@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { HttpError, signInCompany, type CompanySignInRequest } from '@ogonggo/api';
+import { HttpError } from '@ogonggo/api';
 import { listJobs } from '@ogonggo/api/src/admin';
 import { Button, Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
 import { isMockEnabled } from '@/app/enableMocking';
@@ -12,7 +12,8 @@ import {
   isCorsRejection,
   serverErrorMessage,
 } from '@/shared/api/authErrorMessages';
-import { unwrapData } from '@/shared/api/unwrapData';
+import { LetsCareerApiError, letsCareerCallbackUri } from '@/shared/api/letscareer';
+import { signInWithLetsCareerEmail } from '@/shared/api/letsCareerSignIn';
 
 /** 원인을 가릴 단서가 하나도 없는 로그인 실패. */
 const SIGN_IN_FAILED_MESSAGE = '로그인하지 못했습니다. 이메일과 비밀번호를 확인해 주세요.';
@@ -68,15 +69,45 @@ async function checkAdminAccess(accessToken: string): Promise<void> {
 }
 
 /**
+ * 렛츠커리어 단계(`ssoAuthenticate`) 의 실패 문구. 오공고 단계의 401·403 과 같은 말을 쓰지 않는다 —
+ * 어느 서버가 거절했는지에 따라 할 일이 다르다.
+ *
+ * 두 `code` 모두 400 이라 상태 코드로는 가를 수 없다.
+ */
+function letsCareerErrorMessage(error: LetsCareerApiError): string {
+  if (error.code === 'SSO_INVALID_CREDENTIALS') {
+    return '렛츠커리어 이메일 또는 비밀번호가 올바르지 않습니다';
+  }
+  // 화이트리스트는 렛츠커리어 운영 쪽이 등록한다. 다시 시도해도 같으므로 계정 이야기를 하지 않는다.
+  if (error.code === 'SSO_REDIRECT_URI_MISMATCH') {
+    return `렛츠커리어에 등록되지 않은 주소(${letsCareerCallbackUri()}) 입니다. 렛츠커리어 SSO 허용 목록에 이 주소를 추가해야 합니다`;
+  }
+  // 오공고 쪽 `isCorsRejection` 과 같은 거절이 렛츠커리어에서도 온다. 평문이라 `code` 가 비어 있고,
+  // 문구가 없으면 "failed: 403" 만 남아 계정 문제로 읽힌다.
+  if (error.status === 403 && error.body.includes('Invalid CORS request')) {
+    return `렛츠커리어가 이 주소(${window.location.origin}) 에서 오는 요청을 막았습니다(CORS). 렛츠커리어의 CORS 허용 목록에 이 도메인을 추가해야 합니다`;
+  }
+  if (error.status >= 500) {
+    return '렛츠커리어 서버에 문제가 있습니다. 잠시 후 다시 시도해 주세요';
+  }
+  // 그 밖의 400 대. 렛츠커리어가 한국어 문구를 주므로 그대로 보인다.
+  return error.message;
+}
+
+/**
  * 로그인 실패를 원인별 문구로 바꾼다. 모두 "비밀번호를 확인해 주세요" 로 뭉치면 CORS 거절이나 서버
  * 오류에도 비밀번호만 다시 치게 된다.
  *
- * 백엔드 JSON 오류는 그 `message` 를 그대로 쓴다 — 틀린 비밀번호(401 `INVALID_COMPANY_CREDENTIALS`),
- * 정지·탈퇴 계정(403 `USER_SUSPENDED`·`USER_WITHDRAWN`) 을 서버가 이미 사람이 읽을 말로 준다.
+ * 백엔드 JSON 오류는 그 `message` 를 그대로 쓴다 — 거절된 렛츠커리어 토큰(401
+ * `INVALID_LETSCAREER_TOKEN`), 정지·탈퇴 계정(403 `USER_SUSPENDED`·`USER_WITHDRAWN`) 을 서버가 이미
+ * 사람이 읽을 말로 준다.
  */
 function signInErrorMessage(error: unknown): string {
   if (error instanceof AdminAccessDenied) {
     return error.message;
+  }
+  if (error instanceof LetsCareerApiError) {
+    return letsCareerErrorMessage(error);
   }
   if (isCorsRejection(error)) {
     return corsRejectedMessage();
@@ -94,9 +125,12 @@ function signInErrorMessage(error: unknown): string {
 /**
  * 관리자 로그인.
  *
- * 어드민 API 는 토큰을 발급하지 않는다. 관리자도 사용자 API 의 기업 로그인(`signInCompany`) 으로
- * 토큰을 받는다(`vite.config.ts` 의 `/api/v1/auth` 프록시). 역할이 ADMIN 인지는 그 토큰으로
- * 어드민 API 를 한 번 불러서 가린다(`checkAdminAccess`).
+ * 어드민 API 는 토큰을 발급하지 않는다. 관리자도 웹과 같은 렛츠커리어 통합로그인(SSO) 으로 토큰을 받는다 —
+ * 렛츠커리어에 이메일·비밀번호를 보내고, 받은 렛츠커리어 토큰을 사용자 API 가 오공고 토큰으로 바꿔 준다
+ * (`shared/api/letsCareerSignIn.ts`, `vite.config.ts` 의 `/letscareer-api`·`/api/v1/auth` 프록시).
+ * 입력 칸은 이메일과 비밀번호 그대로고, 카카오·네이버 간편 로그인은 두지 않는다.
+ *
+ * 역할이 ADMIN 인지는 받은 토큰으로 어드민 API 를 한 번 불러서 가린다(`checkAdminAccess`).
  */
 export function LoginPage() {
   const navigate = useNavigate();
@@ -109,14 +143,11 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
 
   const signIn = useMutation({
-    mutationFn: async (body: CompanySignInRequest) => {
-      const data = await unwrapData(signInCompany(body));
-      if (!data?.accessToken) {
-        throw new Error('로그인 응답에 accessToken 이 없습니다.');
-      }
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const accessToken = await signInWithLetsCareerEmail(credentials);
       // 확인이 실패하면 여기서 던진다. 토큰은 저장되지 않는다.
-      await checkAdminAccess(data.accessToken);
-      return data.accessToken;
+      await checkAdminAccess(accessToken);
+      return accessToken;
     },
     onSuccess: (accessToken) => {
       saveAccessToken(accessToken);

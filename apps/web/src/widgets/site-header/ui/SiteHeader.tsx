@@ -16,6 +16,14 @@ import { myPageHomeFor } from '@/widgets/mypage-sidebar';
  * `matches`는 그 메뉴에 밑줄이 붙는 경로들이다. 채용공고는 목록(`/`)과 상세(`/jobs/1`)가
  * 경로 접두사를 공유하지 않아 따로 적는다 — 접두사만 보면 `/`가 모든 경로에 걸린다.
  */
+/**
+ * 어드민 콘솔 주소(`apps/admin`). 웹과 다른 도메인이라 경로가 아니라 오리진을 통째로 받는다.
+ *
+ * 비어 있으면 `어드민` 항목을 그리지 않는다. `undefined/` 로 가는 링크를 두면 누르는 순간 이 도메인의
+ * 404 가 떠서 원인이 주소 설정이라는 것이 보이지 않는다. 값을 넣는 방법은 `.env.example` 에 적었다.
+ */
+const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
+
 const NAV_ITEMS = [
   {
     href: '/',
@@ -53,6 +61,7 @@ const NAV_ITEMS = [
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `마이페이지`·`로그아웃` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
+ * 관리자에게는 `마이페이지` 옆에 어드민 콘솔로 가는 `어드민` 이 하나 더 붙는다(`showAdmin`).
  *
  * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "마이페이지" 와 "로그아웃". 토큰이 브라우저 저장소에만
  * 있어 서버는 알 수 없으므로 서버 렌더와 첫 하이드레이션은 "로그인" 으로 그리고, 그 직후 저장소를 읽어
@@ -90,6 +99,14 @@ export function SiteHeader() {
    */
   const myPageHref = myPageHomeFor(role === 'COMPANY' ? 'COMPANY' : 'USER');
   const myPageActive = pathname.startsWith('/mypage');
+
+  /*
+   * 관리자에게만 어드민 콘솔로 가는 항목을 보인다. 역할을 아직 모르는 동안에는 그리지 않는다 —
+   * 마이페이지처럼 한쪽으로 찍어 둘 수 없다. 마이페이지는 틀려도 `MyPageLayout` 의 역할 가드가
+   * 되돌려 주지만, 여기서 찍는 쪽이 `ADMIN` 이면 일반·기업 회원 모두에게 관리자 입구가 잠깐
+   * 보이고 그것을 되돌려 줄 가드가 헤더에는 없다. 그래서 늦게 나타나는 쪽을 택한다.
+   */
+  const showAdmin = role === 'ADMIN' && Boolean(ADMIN_ORIGIN);
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -137,6 +154,8 @@ export function SiteHeader() {
               >
                 마이페이지
               </Link>
+              {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. 밑줄·굵기로 표시할 현재 경로도 없다. */}
+              {showAdmin ? <a href={ADMIN_ORIGIN}>어드민</a> : null}
               <SignOutButton />
             </>
           ) : (
