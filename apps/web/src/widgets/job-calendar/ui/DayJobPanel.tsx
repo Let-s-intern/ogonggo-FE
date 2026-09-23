@@ -38,8 +38,11 @@ function formatDayTitle(day: string): string {
  * `fetchCalendarItemsForMajors` 주석, `packages/api/src/mocks/handlers.ts`의
  * `getJobCalendarHandler`). 상시채용이 `ALWAYS_OPEN`으로 마감일이 없는 것과 대비되므로, 여기
  * 있는 항목은 전부 기간제(`PERIOD`)로 볼 수 있다.
+ *
+ * `export`하는 이유는 `DayHoverCard.tsx`가 격자 호버 카드에서도 같은 카드 마크업을 그대로 쓰기
+ * 위해서다(Push 2, PRD 3절) — 카드 한 장의 모양은 오른쪽 목록이든 호버 카드든 같아야 한다.
  */
-function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
+export function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
   const dday = computeDday('PERIOD', job.recruitmentEndAt);
   const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
   const meta = [
