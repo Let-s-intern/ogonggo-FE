@@ -202,18 +202,36 @@ export function FilterCheckbox({ label, checked }: { label: string; checked: boo
 }
 
 /**
- * 목업의 `마감일 기준` 토글(v6). 켜진 모양 그대로 그리고 **누를 수 없다** — 달력은 지금도 마감일
- * 기준으로만 놓이고(`MonthGrid`·`WeekGrid`), 끄면 무엇 기준이 되는지 목업도 정하지 않았다.
- * 옆의 체크박스들과 같은 처리다.
+ * 목업의 `마감일 기준` 토글(v6). 켜짐(마감일 기준)은 파란 배경 + 오른쪽 원이고 이미 그려져
+ * 있던 모양이다. 꺼짐(시작일 기준) 모양은 이 화면 목업에 없어
+ * `packages/ui/src/components/Toggle.tsx`(저장소의 범용 스위치)의 꺼짐 색(`bg-gray-300`)과
+ * 원 위치(왼쪽)를 그대로 따랐다(`.claude/tasks/memos/결정-calendar-date-basis-toggle-push1-2026-09-23.md`
+ * 1절).
+ *
+ * 상태가 URL 쿼리에 있어(`dateBasis`) `간략히 보기`·`마감공고 제외`와 같이 링크 한 줄이다.
  */
-function DeadlineBasisToggle() {
+function DeadlineBasisToggle({ query }: { query: JobCalendarQuery }) {
+  const isDeadlineBasis = query.dateBasis !== 'start';
+
   return (
-    <span className="flex items-center gap-2">
-      <span className="flex h-5 w-9 items-center justify-end rounded-full bg-blue-500 p-0.5">
+    <Link
+      href={buildJobCalendarHref(query, { dateBasis: isDeadlineBasis ? 'start' : 'deadline' })}
+      role="checkbox"
+      aria-checked={isDeadlineBasis}
+      className="flex items-center gap-2 rounded-full"
+    >
+      <span
+        className={cn(
+          'flex h-5 w-9 items-center rounded-full p-0.5',
+          isDeadlineBasis ? 'justify-end bg-blue-500' : 'justify-start bg-gray-300',
+        )}
+      >
         <span className="h-4 w-4 rounded-full bg-white" />
       </span>
-      <span className="text-sm font-bold text-gray-800">마감일 기준</span>
-    </span>
+      <span className="text-sm font-bold text-gray-800">
+        {isDeadlineBasis ? '마감일 기준' : '시작일 기준'}
+      </span>
+    </Link>
   );
 }
 
@@ -223,9 +241,7 @@ export interface CalendarFilterBarProps {
 
 /**
  * 공고 달력 상단의 필터 줄. `채용 형태`·`경력`·`마감공고 제외`·`공고 검색`·`스크랩 공고만`·
- * `간략히 보기`·`직무`가 실제로 동작한다(Push 1). **`마감일 기준` 토글만 동작하지 않는다** —
- * 달력은 지금도 마감일 기준으로만 놓이고, 끄면 무엇 기준이 되는지 목업이 정하지 않았다
- * (`DeadlineBasisToggle`).
+ * `간략히 보기`·`직무`·`마감일 기준`이 실제로 동작한다(Push 1).
  */
 export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
   return (
@@ -302,7 +318,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
           <FilterCheckbox label="마감공고 제외" checked={query.excludeClosed} />
         </Link>
         <BookmarkedOnlyFilterPill query={query} />
-        <DeadlineBasisToggle />
+        <DeadlineBasisToggle query={query} />
       </div>
     </div>
   );
