@@ -1,13 +1,13 @@
 'use client';
 
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import Link from 'next/link';
+import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
-import { loadDayJobs, type DayJob } from '../api/load-day-jobs';
 import { weekdayLabel } from '../lib/calendar-grid';
 import { DAY_JOBS_PAGE_SIZE } from '../lib/day-jobs';
 import { parseCalendarDate } from '../lib/query';
@@ -29,16 +29,22 @@ function formatDayTitle(day: string): string {
  * 누를 때 이동까지 함께 일어난다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 그래서 뿌리가
  * `relative`인 `div`이고 버튼이 전에 아이콘이 있던 자리에 겹친다.
  *
- * **이 카드의 `job.bookmarked`는 늘 `false`다.** 카드 값을 채우는 `../api/load-day-jobs.ts`가
- * 서버에서 토큰 없이 상세를 부르기 때문이다. 채워진 아이콘은 전적으로 브라우저의 id 모음에서
- * 온다(`features/bookmark`).
+ * **`item.bookmarked`는 늘 `false`다.** 달력을 받는 서버 컴포넌트가 토큰 없이 부르기 때문이다
+ * (`../lib/query.ts`). 채워진 아이콘은 전적으로 브라우저의 id 모음에서 온다
+ * (`features/bookmark`) — `BookmarkButton`이 그 값으로 덮어쓴다.
+ *
+ * **`recruitmentType`은 응답에 없어 `'PERIOD'`로 둔다.** 달력에 담기는 항목은 마감일이 있는
+ * 공고뿐이다 — 마감일 없는 상시채용은 조회에서 제외된다(`JobCalendarView`의
+ * `fetchCalendarItemsForMajors` 주석, `packages/api/src/mocks/handlers.ts`의
+ * `getJobCalendarHandler`). 상시채용이 `ALWAYS_OPEN`으로 마감일이 없는 것과 대비되므로, 여기
+ * 있는 항목은 전부 기간제(`PERIOD`)로 볼 수 있다.
  */
-function DayJobCard({ job }: { job: DayJob }) {
-  const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
-  const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
+function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
+  const dday = computeDday('PERIOD', job.recruitmentEndAt);
+  const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
   const meta = [
     EMPLOYMENT_TYPE_LABELS[job.employmentType],
-    job.jobMajor,
+    job.jobField,
     EXPERIENCE_TYPE_LABELS[job.experienceType],
   ].filter((part): part is string => Boolean(part));
 
@@ -85,39 +91,43 @@ function DayJobCard({ job }: { job: DayJob }) {
 export interface DayJobPanelProps {
   /** 고른 날. `YYYY-MM-DD`. */
   day: string;
-  /** 그 날 마감하는 공고의 id. 달력 응답에서 온 순서 그대로다. */
-  jobIds: number[];
+  /**
+   * 그 날 마감하는 공고. **달력이 이미 받아 둔 값이다** — 제목·고용형태·경력·북마크까지 여기
+   * 있는 칸으로 카드가 다 채워져(2026-09-23 스펙 동기화) 상세를 따로 부르지 않는다. 예전에는
+   * `api/load-day-jobs.ts`가 하루 5건씩 상세를 불렀는데, 그 파일은 지웠다(Push 1 task 3.2, 커밋
+   * 메시지 참고).
+   */
+  items: UserJobCalendarItemResponse[];
 }
 
 /**
  * 월간 오른쪽의 날짜별 공고 목록(v6). 격자에서 날짜를 누르면 그 날 마감하는 공고를 보인다.
  *
- * 카드 값은 상세를 다섯 건씩 불러 채운다(`../api/load-day-jobs.ts`). 쿼리 키에 날짜와 id 목록을
- * 같이 넣어, 다른 날을 눌렀다 돌아오면 이미 불러온 카드를 다시 부르지 않는다.
+ * `더보기`는 이제 네트워크 요청이 아니라 이미 받은 `items`를 더 드러내는 것뿐이다 — 그래서
+ * 지역 상태(`visibleCount`) 하나로 끝난다.
  */
-export function DayJobPanel({ day, jobIds }: DayJobPanelProps) {
-  const query = useInfiniteQuery({
-    queryKey: ['calendar-day-jobs', day, jobIds.join(',')],
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      loadDayJobs(jobIds.slice(pageParam, pageParam + DAY_JOBS_PAGE_SIZE)),
-    getNextPageParam: (_last, pages) => {
-      const next = pages.length * DAY_JOBS_PAGE_SIZE;
-      return next < jobIds.length ? next : undefined;
-    },
-    enabled: jobIds.length > 0,
-  });
-  const jobs = query.data?.pages.flat() ?? [];
+export function DayJobPanel({ day, items }: DayJobPanelProps) {
+  const [visibleCount, setVisibleCount] = useState(DAY_JOBS_PAGE_SIZE);
+  // 날이 바뀌면 다시 5건부터 보인다. 렌더 중에 맞추는 것은 `MonthCalendar`의 `selectedDay`와
+  // 같은 방법이다 — 이펙트로 미루면 한 프레임 이전 날의 나머지가 보였다가 접힌다.
+  const [renderedDay, setRenderedDay] = useState(day);
+  if (renderedDay !== day) {
+    setRenderedDay(day);
+    setVisibleCount(DAY_JOBS_PAGE_SIZE);
+  }
+
+  const jobs = items.slice(0, visibleCount);
+  const hasMore = visibleCount < items.length;
 
   return (
     <section aria-label={`${formatDayTitle(day)} 마감 공고`} className="flex flex-col">
       {/* 제목 줄은 왼쪽 달력의 `2026.08` 줄과 같은 높이에 온다. */}
       <h2 className="flex h-10 items-center gap-3">
         <span className="text-xl font-bold text-gray-900">{formatDayTitle(day)}</span>
-        <span className="text-xl text-gray-400">({jobIds.length})</span>
+        <span className="text-xl text-gray-400">({items.length})</span>
       </h2>
 
-      {jobIds.length === 0 ? (
+      {items.length === 0 ? (
         <p className="mt-6 text-sm text-gray-400">이 날 마감하는 공고가 없어요</p>
       ) : (
         <ul className="mt-4 flex flex-col">
@@ -126,22 +136,13 @@ export function DayJobPanel({ day, jobIds }: DayJobPanelProps) {
               <DayJobCard job={job} />
             </li>
           ))}
-          {query.isPending || query.isFetchingNextPage ? (
-            <li aria-hidden="true" className="ogonggo-skeleton animate-pulse py-2">
-              <div className="h-[116px] rounded-xl bg-gray-100" />
-            </li>
-          ) : null}
         </ul>
       )}
 
-      {query.isError ? (
-        <p className="mt-4 text-sm text-gray-500">공고를 불러오지 못했어요</p>
-      ) : null}
-
-      {query.hasNextPage && !query.isFetchingNextPage ? (
+      {hasMore ? (
         <button
           type="button"
-          onClick={() => void query.fetchNextPage()}
+          onClick={() => setVisibleCount((count) => count + DAY_JOBS_PAGE_SIZE)}
           className="mt-4 self-center py-2 text-sm text-gray-400 transition-colors hover:text-gray-600"
         >
           더보기

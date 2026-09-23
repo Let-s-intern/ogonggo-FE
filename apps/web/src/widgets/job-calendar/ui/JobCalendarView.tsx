@@ -7,6 +7,7 @@ import { JobMajorPicker } from './JobMajorPicker';
 import { MonthCalendar } from './MonthCalendar';
 import { WeekGrid } from './WeekGrid';
 import type {
+  ListPublicJobCalendarParams,
   SuccessResponseListUserJobCalendarItemResponse,
   UserJobCalendarItemResponse,
 } from '@ogonggo/api';
@@ -49,18 +50,22 @@ export function weekGridRange(baseDate: Date): { from: Date; to: Date } {
  * 응답을 가정하지만, 이 저장소의 `httpClient`는 파싱된 body 를 그대로 반환한다.
  */
 async function fetchCalendarItems(
-  from: string,
-  to: string,
-  jobField: string,
+  params: ListPublicJobCalendarParams,
 ): Promise<UserJobCalendarItemResponse[]> {
-  const response = (await listPublicJobCalendar({
-    from,
-    to,
-    jobField,
-  })) as unknown as SuccessResponseListUserJobCalendarItemResponse;
+  const response = (await listPublicJobCalendar(
+    params,
+  )) as unknown as SuccessResponseListUserJobCalendarItemResponse;
 
   return response.data ?? [];
 }
+
+/**
+ * 직무 말고 필터 줄이 거는 것들. `from`·`to`·`jobField` 는 부르는 쪽이 정하므로 뺀다.
+ *
+ * **요청 수를 늘리지 않는다.** 직무만 요청을 나누고(`fetchCalendarItemsForMajors`) 이 값들은
+ * 나뉜 요청마다 똑같이 얹힌다 — 알약을 몇 개 걸든 요청은 고른 직무 수 그대로 1~3 이다.
+ */
+type CalendarFilters = Omit<ListPublicJobCalendarParams, 'from' | 'to' | 'jobField' | 'jobRole'>;
 
 /**
  * 고른 관심 직무의 공고를 받는다. `slugs` 는 항상 하나 이상이다 — 비면 달력을 부르지 않고
@@ -79,9 +84,12 @@ async function fetchCalendarItemsForMajors(
   from: string,
   to: string,
   slugs: string[],
+  filters: CalendarFilters,
 ): Promise<UserJobCalendarItemResponse[]> {
   const fields = slugs.map(jobMajorLabel).filter((label): label is string => label !== undefined);
-  const responses = await Promise.all(fields.map((field) => fetchCalendarItems(from, to, field)));
+  const responses = await Promise.all(
+    fields.map((field) => fetchCalendarItems({ ...filters, from, to, jobField: field })),
+  );
 
   const byId = new Map<number, UserJobCalendarItemResponse>();
   for (const items of responses) {
@@ -123,7 +131,9 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     return (
       <div className="flex flex-col gap-4">
         {header}
-        {query.brief ? <WeekGrid items={[]} initialDate={initialDate} /> : null}
+        {query.brief ? (
+          <WeekGrid items={[]} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
+        ) : null}
         <JobMajorPicker query={query} />
       </div>
     );
@@ -134,6 +144,25 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     toCalendarParam(from),
     toCalendarParam(to),
     query.majors,
+    {
+      employmentType: query.employmentType,
+      experienceType: query.experienceType,
+      // 꺼져 있으면 아예 보내지 않는다. `false` 도 파라미터로는 실리므로(`getListPublicJobCalendarUrl`)
+      // 걸지 않은 필터가 주소에 남는다.
+      excludeClosed: query.excludeClosed || undefined,
+      keyword: query.keyword,
+      // `bookmarkedOnly` 는 여기서 보내지 않는다 — 서버 컴포넌트는 로그인 상태를 모른다
+      // (`../lib/query.ts`). `query.bookmarkedOnly` 는 아래로 그대로 내려 클라이언트가 거른다.
+      //
+      // `deadlineOnly` 는 알약이 아니라 항상 켠다(Push 1 task 2.1). 실 BE 의 질의는 모집 기간이
+      // 조회 범위와 겹치기만 하면 담아서, 조회 범위 밖에서 마감하는 공고까지 올 수 있다 — 격자는
+      // 마감일 칸에만 그리므로(`MonthCalendar`·`WeekGrid`) 그런 항목은 아예 그려지지 않고,
+      // 주간 뷰는 그 항목까지 "이번 주 공고 N개"에 세어 수를 부풀린다. `deadlineOnly=true` 로
+      // 보내면 서버가 마감일 기준으로 미리 걸러 준다. 2026-09-23 실서버(35건)로 켜고 끈 응답을
+      // 대조하니 차이가 0건이었지만(지금 데이터가 전부 조회 범위 안에서 마감해서), 우연에 기대는
+      // 것과 질의로 보장하는 것은 다르다 — 데이터가 늘면 언제든 벌어질 수 있는 차이라 계속 켠다.
+      deadlineOnly: true,
+    },
   );
 
   // 뷰를 컴포넌트 통째로 갈아끼운다(2026-09-02 결정). 한 인스턴스에서 `changeView()` 를 부르는
@@ -144,9 +173,14 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   return query.brief ? (
     <div className="flex flex-col gap-4">
       {header}
-      <WeekGrid items={items} initialDate={initialDate} />
+      <WeekGrid items={items} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
     </div>
   ) : (
-    <MonthCalendar items={items} initialDate={initialDate} header={header} />
+    <MonthCalendar
+      items={items}
+      initialDate={initialDate}
+      header={header}
+      bookmarkedOnly={query.bookmarkedOnly}
+    />
   );
 }

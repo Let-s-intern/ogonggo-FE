@@ -1,4 +1,14 @@
+import {
+  ListPublicJobCalendarEmploymentType,
+  ListPublicJobCalendarExperienceType,
+} from '@ogonggo/api';
 import { isJobMajorSlug, MAX_JOB_MAJORS } from './job-majors';
+
+/** 달력 필터 줄의 `채용 형태`. 서버가 한 번에 하나만 받는다(`ListPublicJobCalendarParams`). */
+export type JobCalendarEmploymentType = ListPublicJobCalendarEmploymentType;
+
+/** 달력 필터 줄의 `경력`. 마찬가지로 하나만 받는다. */
+export type JobCalendarExperienceType = ListPublicJobCalendarExperienceType;
 
 /**
  * `/calendar` 이 URL 쿼리에 두는 상태(`?date=2026-08-19&brief=1`). 앞선 화면들의 탭·페이지네이션과
@@ -10,6 +20,10 @@ import { isJobMajorSlug, MAX_JOB_MAJORS } from './job-majors';
  *
  * `majors`와 `picker`는 v6(`docs/asset/v6 공고달력/`)의 관심 직무 선택이다. 고른 직무는
  * `?majors=it,design`, 선택 화면이 열려 있는지는 `?picker=1`이다.
+ *
+ * `employmentType`·`experienceType` 은 필터 줄의 알약 둘이다. **직무와 같은 자리에 둔다** —
+ * 값은 주소에 싣고 서버 컴포넌트가 읽어 달력 요청의 파라미터로 넘긴다. 직무처럼 여럿을 고를 수
+ * 없는 것은 서버가 값 하나만 받기 때문이고, 알약도 목업에서 하나만 고르는 드롭다운이다.
  */
 export interface JobCalendarQuery {
   /** 달력이 펼칠 기준 날짜. `?date=` 가 없거나 읽을 수 없으면 오늘이다. */
@@ -20,6 +34,22 @@ export interface JobCalendarQuery {
   majors: string[];
   /** 관심 직무 선택 화면이 달력 자리에 열려 있는지. */
   picker: boolean;
+  /** `채용 형태` 알약. 고르지 않았으면 없고, 그때는 파라미터를 보내지 않는다. */
+  employmentType?: JobCalendarEmploymentType;
+  /** `경력` 알약. 같은 규칙이다. */
+  experienceType?: JobCalendarExperienceType;
+  /** `마감공고 제외` 체크박스. **기본은 꺼짐이다** — 켜야 줄어든다. */
+  excludeClosed: boolean;
+  /**
+   * `스크랩 공고만` 체크박스. **서버로 보내지 않는다** — 토큰이 브라우저에만 있어 달력을 받는
+   * 서버 컴포넌트는 로그인 상태를 모른다(`packages/api/src/lib/http-client.ts`의
+   * `setAccessTokenProvider` 주석). 값은 다른 알약과 같이 URL 에 싣고, 거르는 일은 클라이언트가
+   * 맡는다 — 카드의 북마크 아이콘과 같은 방식이다(`lib/bookmarked-only.ts`,
+   * `features/bookmark/model/useMyBookmarkIds.ts`).
+   */
+  bookmarkedOnly: boolean;
+  /** `공고 검색` 알약. 두 글자 미만이면 없는 것으로 읽는다. */
+  keyword?: string;
 }
 
 export interface JobCalendarSearchParams {
@@ -27,10 +57,42 @@ export interface JobCalendarSearchParams {
   brief?: string;
   majors?: string;
   picker?: string;
+  employmentType?: string;
+  experienceType?: string;
+  excludeClosed?: string;
+  bookmarkedOnly?: string;
+  keyword?: string;
 }
 
-/** `brief`·`picker` 가 켜졌다고 인정하는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
-const BRIEF_ON = '1';
+/** 켜짐을 나타내는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
+const FLAG_ON = '1';
+
+/**
+ * 검색어 길이. 서버가 `2` 이상 `100` 이하만 받고, 벗어나면 400 이라 달력 전체가 빈다
+ * (`ListPublicJobCalendarParams`). 그래서 **보내기 전에 여기서 거른다.**
+ */
+export const KEYWORD_MIN_LENGTH = 2;
+export const KEYWORD_MAX_LENGTH = 100;
+
+/**
+ * 앞뒤 공백을 떼고 길이를 본다. 두 글자가 안 되면 검색어가 없는 것으로 읽는다 — 손으로 고친
+ * 주소(`?keyword=a`)가 그대로 서버로 가면 400 이 되고, 필터 하나가 화면 전체를 비운다.
+ */
+export function parseKeyword(value: string | undefined): string | undefined {
+  const trimmed = value?.trim().slice(0, KEYWORD_MAX_LENGTH) ?? '';
+  return trimmed.length >= KEYWORD_MIN_LENGTH ? trimmed : undefined;
+}
+
+/**
+ * 아는 값만 통과시킨다. 주소는 손으로 고칠 수 있고, 모르는 값을 그대로 파라미터로 실어 보내면
+ * 서버가 400 을 돌려줘 달력 전체가 빈다 — 그럴 바에는 그 필터를 걸지 않은 것으로 읽는다.
+ */
+function parseEnumParam<TValue extends string>(
+  allowed: Readonly<Record<string, TValue>>,
+  value: string | undefined,
+): TValue | undefined {
+  return value !== undefined && Object.hasOwn(allowed, value) ? allowed[value] : undefined;
+}
 
 /**
  * `?majors=` 를 아는 값만, 중복 없이, 최대 개수까지 읽는다. 손으로 고친 URL 에 네 개가
@@ -89,9 +151,20 @@ export function parseJobCalendarQuery(
 ): JobCalendarQuery {
   return {
     date: parseCalendarDate(searchParams.date) ?? today,
-    brief: searchParams.brief === BRIEF_ON,
+    brief: searchParams.brief === FLAG_ON,
     majors: parseJobMajors(searchParams.majors),
-    picker: searchParams.picker === BRIEF_ON,
+    picker: searchParams.picker === FLAG_ON,
+    employmentType: parseEnumParam(
+      ListPublicJobCalendarEmploymentType,
+      searchParams.employmentType,
+    ),
+    experienceType: parseEnumParam(
+      ListPublicJobCalendarExperienceType,
+      searchParams.experienceType,
+    ),
+    excludeClosed: searchParams.excludeClosed === FLAG_ON,
+    bookmarkedOnly: searchParams.bookmarkedOnly === FLAG_ON,
+    keyword: parseKeyword(searchParams.keyword),
   };
 }
 
@@ -115,13 +188,28 @@ export function buildJobCalendarHref(
     params.set('date', toCalendarParam(merged.date));
   }
   if (merged.brief) {
-    params.set('brief', BRIEF_ON);
+    params.set('brief', FLAG_ON);
   }
   if (merged.majors.length > 0) {
     params.set('majors', merged.majors.join(','));
   }
   if (merged.picker) {
-    params.set('picker', BRIEF_ON);
+    params.set('picker', FLAG_ON);
+  }
+  if (merged.employmentType) {
+    params.set('employmentType', merged.employmentType);
+  }
+  if (merged.experienceType) {
+    params.set('experienceType', merged.experienceType);
+  }
+  if (merged.excludeClosed) {
+    params.set('excludeClosed', FLAG_ON);
+  }
+  if (merged.bookmarkedOnly) {
+    params.set('bookmarkedOnly', FLAG_ON);
+  }
+  if (merged.keyword) {
+    params.set('keyword', merged.keyword);
   }
 
   const query = params.toString();
