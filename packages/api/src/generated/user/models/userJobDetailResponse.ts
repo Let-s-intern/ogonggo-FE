@@ -13,6 +13,7 @@ export interface UserJobDetailResponse {
   id: number;
   companyName: string;
   title: string;
+  coverImageUrl?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

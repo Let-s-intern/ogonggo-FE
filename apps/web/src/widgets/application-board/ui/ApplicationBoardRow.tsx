@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge, Select, useToast } from '@ogonggo/ui';
+import { Badge, Select } from '@ogonggo/ui';
 import {
   canMoveStage,
-  isMovableStageId,
+  isStageId,
   movableTargets,
   stagesOf,
   type ApplicationBoardItem,
@@ -16,7 +16,6 @@ import {
 import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { formatDeadline } from '@/widgets/mypage-list';
-import { STAGE_NOT_OPEN_MESSAGE } from './ApplicationBoardColumnHead';
 
 /**
  * `지원하기` 를 그리는 마지막 단계. PRD "리스트 보기" 가 "`지원 완료` 뒤 섹션들은 `지원하기`
@@ -97,7 +96,6 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
   const dday = computeDday(item.recruitmentType, item.recruitmentEndAt);
   const urgent = isDdayUrgent(item.recruitmentType, item.recruitmentEndAt);
   const closed = isRecruitmentClosed(item.recruitmentType, item.recruitmentEndAt, item.closedAt);
-  const toast = useToast();
   /*
    * 셀렉트는 그 탭의 단계를 전부 늘어놓고 **옮길 수 없는 단계만 비활성**으로 둔다
    * (PRD 결정 기록 "칸·섹션은 목업대로 그리고 옮기는 조작만 막는다"). 목록에서 빼지 않는
@@ -112,15 +110,13 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
   }));
 
   /*
-   * 셀렉트가 고른 값. 열리지 않은 전이는 이동 훅까지 가기 전에 여기서 막고 왜 막혔는지
-   * 알린다 — 칸 머리의 `완료` 와 같은 문구다. 열린 전이인지까지는 훅이 다시 본다.
+   * 셀렉트가 고른 값. `isStageId` 는 `string` 을 이 탭의 단계 이름으로 좁히기만 한다 — 열리지
+   * 않은 전이를 막고 왜 막혔는지 알리는 것은 이동 훅(`useMoveStage`) 한 곳이다.
    */
   const pick = (value: string) => {
-    if (!isMovableStageId(value)) {
-      toast.show({ message: STAGE_NOT_OPEN_MESSAGE, tone: 'error' });
-      return;
+    if (isStageId(tab, value)) {
+      move.move({ item, from: stage.id, to: value });
     }
-    move.move({ item, from: stage.id, to: value });
   };
 
   return (

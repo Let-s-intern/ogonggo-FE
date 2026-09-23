@@ -2,7 +2,6 @@
 
 import { useId, useState } from 'react';
 import {
-  canMoveStage,
   useApplicationStage,
   type ApplicationBoardFilters,
   type ApplicationBoardTab,
@@ -46,15 +45,12 @@ export function ApplicationBoardSection({
   const list = useApplicationStage(tab, stage.id, filters);
   const [collapsed, setCollapsed] = useState(false);
   const panelId = useId();
-  /* 칸반의 칸과 같은 판정이다 — 이유는 `ApplicationBoardColumn` 에 적혀 있다. */
-  const returnsToScrap = canMoveStage(tab, stage.id, 'SCRAPPED');
 
   return (
     <section>
       <ApplicationBoardSectionHead
         label={stage.label}
         total={list.total}
-        showComplete={returnsToScrap}
         collapsed={collapsed}
         onToggle={() => setCollapsed((previous) => !previous)}
         controls={panelId}

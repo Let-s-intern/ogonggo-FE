@@ -4,8 +4,47 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListPublicJobCalendarEmploymentType } from './listPublicJobCalendarEmploymentType';
+import type { ListPublicJobCalendarExperienceType } from './listPublicJobCalendarExperienceType';
 
 export type ListPublicJobCalendarParams = {
 from: string;
 to: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `FULL_TIME` | 1 | 정규직 |
+ * | `CONTRACT` | 2 | 계약직 |
+ * | `INTERN` | 3 | 인턴 |
+ * | `PART_TIME` | 4 | 파트타임 |
+ * | `ETC` | 5 | 기타 |
+ */
+employmentType?: ListPublicJobCalendarEmploymentType;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `NEWCOMER` | 1 | 신입 |
+ * | `EXPERIENCED` | 2 | 경력 |
+ * | `BOTH` | 3 | 신입·경력 |
+ * | `IRRELEVANT` | 4 | 경력 무관 |
+ */
+experienceType?: ListPublicJobCalendarExperienceType;
+/**
+ * @minLength 0
+ * @maxLength 100
+ */
+jobField?: string;
+/**
+ * @minLength 0
+ * @maxLength 100
+ */
+jobRole?: string;
+/**
+ * @minLength 2
+ * @maxLength 100
+ */
+keyword?: string;
+excludeClosed?: boolean;
+bookmarkedOnly?: boolean;
+deadlineOnly?: boolean;
 };
