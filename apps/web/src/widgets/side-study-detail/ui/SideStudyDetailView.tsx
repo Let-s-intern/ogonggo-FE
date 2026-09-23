@@ -29,7 +29,7 @@ const APPLY_URL = 'https://biz.ogonggo.co.kr/';
  * 404 는 `HttpError.status` 로 가려 `notFound()` 로 바꾸고, 그 외 오류는 다시 던진다.
  * 응답 언랩은 채용공고·부트캠프 상세와 같다.
  */
-async function fetchSideStudyDetail(postId: number): Promise<SideStudyDetail> {
+export async function fetchSideStudyDetail(postId: number): Promise<SideStudyDetail> {
   if (!Number.isInteger(postId) || postId < 1) {
     notFound();
   }

@@ -1,1 +1,1 @@
-export { BootcampDetailView } from './ui/BootcampDetailView';
+export { fetchBootcampDetail, BootcampDetailView } from './ui/BootcampDetailView';

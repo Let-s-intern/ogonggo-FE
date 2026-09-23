@@ -84,6 +84,12 @@ const isObject = (value: unknown): value is JsonObject =>
 const childrenOf = (node: JsonObject): unknown[] =>
   Array.isArray(node.children) ? node.children : [];
 
+/**
+ * 문단·목록처럼 여러 블록을 담는 노드 — 자식을 이어 붙일 때 사이에 빈칸을 넣는다. 그 밖(문단
+ * 안의 글자 노드 등)은 빈칸 없이 그대로 이어 붙인다.
+ */
+const BLOCK_CONTAINER_TYPES = new Set(['root', 'list']);
+
 /** 노드 아래의 글자를 모두 모은다. 모르는 노드를 글자로 떨어뜨릴 때와 마지막 대체 경로가 쓴다. */
 function collectText(node: unknown): string {
   if (!isObject(node)) {
@@ -93,7 +99,9 @@ function collectText(node: unknown): string {
     return '\n';
   }
   const own = typeof node.text === 'string' ? node.text : '';
-  return own + childrenOf(node).map(collectText).join('');
+  const separator =
+    typeof node.type === 'string' && BLOCK_CONTAINER_TYPES.has(node.type) ? ' ' : '';
+  return own + childrenOf(node).map(collectText).join(separator);
 }
 
 const textNode = (value: string): JsonObject => ({
@@ -215,4 +223,27 @@ export function hasLexicalText(content: unknown): boolean {
     return content.trim().length > 0;
   }
   return isObject(state) && collectText(state.root).trim().length > 0;
+}
+
+/**
+ * EditorState JSON(객체 또는 문자열)에서 서식 없이 글자만 뽑는다. `<meta name="description">`처럼
+ * 한 줄 요약이 필요한 곳이 쓴다 — 평문이 와도(`parseState`가 JSON으로 못 읽으면) 그 문자열
+ * 자체를 돌려주므로 깨지지 않는다.
+ *
+ * 최상위 블록(문단 등)마다 따로 글자를 모아 공백 하나로 이어 붙인다 — `collectText`를 루트에
+ * 바로 쓰면 문단 경계 없이 글자가 붙어버린다("반갑습니다" 다음 문단이 "채용..."으로 시작하면
+ * "반갑습니다채용..."처럼 이어져 읽을 수 없다). 블록 안 연속 공백·줄바꿈도 한 칸으로 모은다.
+ */
+export function lexicalToPlainText(content: unknown): string {
+  const state = parseState(content);
+  if (state === undefined && typeof content === 'string') {
+    return content.replace(/\s+/g, ' ').trim();
+  }
+  if (!isObject(state) || !isObject(state.root)) {
+    return '';
+  }
+  return childrenOf(state.root)
+    .map((child) => collectText(child).replace(/\s+/g, ' ').trim())
+    .filter((text) => text.length > 0)
+    .join(' ');
 }

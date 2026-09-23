@@ -24,7 +24,7 @@ export interface BootcampDetailViewProps {
  * 주고, 404는 `Error("GET /api/v1/bootcamps/{id} failed: 404")`로 던져지므로 메시지 끝의 상태
  * 코드로 가려내 `notFound()`로 바꾼다. 그 외 오류는 다시 던진다.
  */
-async function fetchBootcampDetail(bootcampId: number): Promise<BootcampDetail> {
+export async function fetchBootcampDetail(bootcampId: number): Promise<BootcampDetail> {
   let response: SuccessResponseUserBootcampDetailResponse;
   try {
     response = (await getPublicBootcamp(

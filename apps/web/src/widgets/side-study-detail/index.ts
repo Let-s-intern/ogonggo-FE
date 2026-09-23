@@ -1,1 +1,1 @@
-export { SideStudyDetailView } from './ui/SideStudyDetailView';
+export { fetchSideStudyDetail, SideStudyDetailView } from './ui/SideStudyDetailView';
