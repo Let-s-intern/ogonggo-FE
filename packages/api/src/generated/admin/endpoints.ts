@@ -27,15 +27,18 @@ import type {
   CrawlerBootcampRequest,
   CrawlerJobRegistrationRequest,
   CrawlerJobReplaceRequest,
+  CreateAdminNoticeRequest,
   DecideReviewRequest,
   ErrorResponse,
   GetCrawlerBootcampParams,
   GetCrawlerJobParams,
   ListBootcampsParams,
   ListJobsParams,
+  ListNoticesParams,
   ListRejectionsParams,
   SuccessResponseAdminBootcampDetailResponse,
   SuccessResponseAdminJobDetailResponse,
+  SuccessResponseAdminNoticeDetailResponse,
   SuccessResponseAdminRejectionResponse,
   SuccessResponseAdminReviewDecisionResponse,
   SuccessResponseCrawlerBootcampLookupResponse,
@@ -45,10 +48,12 @@ import type {
   SuccessResponseListAdminReviewItemResponse,
   SuccessResponsePageResponseAdminBootcampSummaryResponse,
   SuccessResponsePageResponseAdminJobSummaryResponse,
+  SuccessResponsePageResponseAdminNoticeSummaryResponse,
   SuccessResponsePageResponseAdminRejectionResponse,
   SuccessResponseUnit,
   UpdateAdminBootcampRequest,
   UpdateAdminJobRequest,
+  UpdateAdminNoticeRequest,
   UpdateRejectionReasonRequest
 } from './models';
 
@@ -1030,6 +1035,241 @@ export const useCreateCrawlerBootcamp = <TError = ErrorResponse,
       return useMutation(getCreateCrawlerBootcampMutationOptions(options), queryClient);
     }
 
+export type listNoticesResponse200 = {
+  data: SuccessResponsePageResponseAdminNoticeSummaryResponse
+  status: 200
+}
+
+export type listNoticesResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listNoticesResponseSuccess = (listNoticesResponse200) & {
+  headers: Headers;
+};
+export type listNoticesResponseError = (listNoticesResponse400) & {
+  headers: Headers;
+};
+
+export type listNoticesResponse = (listNoticesResponseSuccess | listNoticesResponseError)
+
+export const getListNoticesUrl = (params?: ListNoticesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/notices?${stringifiedParams}` : `/api/v1/admin/notices`
+}
+
+/**
+ *
+ *             노출 여부와 무관하게 삭제되지 않은 공지를 반환합니다. 상단 고정 공지가 먼저 오고 그 안에서 최신순입니다.
+ *
+ *             keyword는 제목에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
+ *             필터는 모두 AND로 묶이고 값을 보내지 않거나 빈 값을 보내면 그 조건을 적용하지 않습니다.
+ *             목록에는 본문을 싣지 않습니다.
+ * @summary 공지사항 목록 조회
+ */
+export const listNotices = async (params?: ListNoticesParams, options?: Parameters<typeof httpClient>[1]): Promise<listNoticesResponse> => {
+
+  return httpClient<listNoticesResponse>(getListNoticesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNoticesQueryKey = (params?: ListNoticesParams,) => {
+    return [
+    `/api/v1/admin/notices`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListNoticesQueryOptions = <TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNoticesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNotices>>> = ({ signal }) => listNotices(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListNoticesQueryResult = NonNullable<Awaited<ReturnType<typeof listNotices>>>
+export type ListNoticesQueryError = ErrorResponse
+
+
+export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
+ params: undefined |  ListNoticesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listNotices>>,
+          TError,
+          Awaited<ReturnType<typeof listNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
+ params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listNotices>>,
+          TError,
+          Awaited<ReturnType<typeof listNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
+ params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공지사항 목록 조회
+ */
+
+export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
+ params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListNoticesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createNoticeResponse201 = {
+  data: SuccessResponseAdminNoticeDetailResponse
+  status: 201
+}
+
+export type createNoticeResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createNoticeResponseSuccess = (createNoticeResponse201) & {
+  headers: Headers;
+};
+export type createNoticeResponseError = (createNoticeResponse400) & {
+  headers: Headers;
+};
+
+export type createNoticeResponse = (createNoticeResponseSuccess | createNoticeResponseError)
+
+export const getCreateNoticeUrl = () => {
+
+
+
+
+  return `/api/v1/admin/notices`
+}
+
+/**
+ *
+ *             등록한 공지 전체를 반환합니다. visibility가 VISIBLE이면 곧바로 사용자에게 노출됩니다.
+ *             content는 Lexical EditorState JSON 문자열이며 200,000자 이하여야 합니다.
+ * @summary 공지사항 등록
+ */
+export const createNotice = async (createAdminNoticeRequest: CreateAdminNoticeRequest, options?: Parameters<typeof httpClient>[1]): Promise<createNoticeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createNoticeResponse>(getCreateNoticeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createAdminNoticeRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateNoticeMutationKey = () => ['createNotice'] as const;
+
+export const getCreateNoticeMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNotice>>, TError,CreateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createNotice>>, TError,CreateNoticeMutationVariables, TContext> => {
+
+const mutationKey = getCreateNoticeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNotice>>, CreateNoticeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createNotice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof createNotice>>>
+    export type CreateNoticeMutationBody = CreateAdminNoticeRequest
+    export type CreateNoticeMutationError = ErrorResponse
+    export type CreateNoticeMutationVariables = {data: CreateAdminNoticeRequest}
+
+    /**
+ * @summary 공지사항 등록
+ */
+export const useCreateNotice = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNotice>>, TError,CreateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createNotice>>,
+        TError,
+        CreateNoticeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateNoticeMutationOptions(options), queryClient);
+    }
+
 export type decideReviewResponse200 = {
   data: SuccessResponseAdminReviewDecisionResponse
   status: 200
@@ -1356,6 +1596,328 @@ export const useUpdateRejection = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateRejectionMutationOptions(options), queryClient);
+    }
+
+export type getNoticeResponse200 = {
+  data: SuccessResponseAdminNoticeDetailResponse
+  status: 200
+}
+
+export type getNoticeResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNoticeResponseSuccess = (getNoticeResponse200) & {
+  headers: Headers;
+};
+export type getNoticeResponseError = (getNoticeResponse404) & {
+  headers: Headers;
+};
+
+export type getNoticeResponse = (getNoticeResponseSuccess | getNoticeResponseError)
+
+export const getGetNoticeUrl = (noticeId: number,) => {
+
+
+
+
+  return `/api/v1/admin/notices/${noticeId}`
+}
+
+/**
+ * @summary 공지사항 상세 조회
+ */
+export const getNotice = async (noticeId: number, options?: Parameters<typeof httpClient>[1]): Promise<getNoticeResponse> => {
+
+  return httpClient<getNoticeResponse>(getGetNoticeUrl(noticeId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNoticeQueryKey = (noticeId: number,) => {
+    return [
+    `/api/v1/admin/notices/${noticeId}`
+    ] as const;
+    }
+
+
+export const getGetNoticeQueryOptions = <TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNoticeQueryKey(noticeId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotice>>> = ({ signal }) => getNotice(noticeId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: noticeId !== null && noticeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNoticeQueryResult = NonNullable<Awaited<ReturnType<typeof getNotice>>>
+export type GetNoticeQueryError = ErrorResponse
+
+
+export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
+ noticeId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotice>>,
+          TError,
+          Awaited<ReturnType<typeof getNotice>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
+ noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotice>>,
+          TError,
+          Awaited<ReturnType<typeof getNotice>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
+ noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공지사항 상세 조회
+ */
+
+export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
+ noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNoticeQueryOptions(noticeId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type deleteNoticeResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteNoticeResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteNoticeResponseSuccess = (deleteNoticeResponse200) & {
+  headers: Headers;
+};
+export type deleteNoticeResponseError = (deleteNoticeResponse404) & {
+  headers: Headers;
+};
+
+export type deleteNoticeResponse = (deleteNoticeResponseSuccess | deleteNoticeResponseError)
+
+export const getDeleteNoticeUrl = (noticeId: number,) => {
+
+
+
+
+  return `/api/v1/admin/notices/${noticeId}`
+}
+
+/**
+ * 소프트 삭제합니다. 이미 삭제한 공지를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
+ * @summary 공지사항 삭제
+ */
+export const deleteNotice = async (noticeId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteNoticeResponse> => {
+
+  return httpClient<deleteNoticeResponse>(getDeleteNoticeUrl(noticeId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteNoticeMutationKey = () => ['deleteNotice'] as const;
+
+export const getDeleteNoticeMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNotice>>, TError,DeleteNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteNotice>>, TError,DeleteNoticeMutationVariables, TContext> => {
+
+const mutationKey = getDeleteNoticeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteNotice>>, DeleteNoticeMutationVariables> = (props) => {
+          const {noticeId} = props ?? {};
+
+          return  deleteNotice(noticeId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteNotice>>>
+
+    export type DeleteNoticeMutationError = ErrorResponse
+    export type DeleteNoticeMutationVariables = {noticeId: number}
+
+    /**
+ * @summary 공지사항 삭제
+ */
+export const useDeleteNotice = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNotice>>, TError,DeleteNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteNotice>>,
+        TError,
+        DeleteNoticeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteNoticeMutationOptions(options), queryClient);
+    }
+
+export type updateNoticeResponse200 = {
+  data: SuccessResponseAdminNoticeDetailResponse
+  status: 200
+}
+
+export type updateNoticeResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateNoticeResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateNoticeResponseSuccess = (updateNoticeResponse200) & {
+  headers: Headers;
+};
+export type updateNoticeResponseError = (updateNoticeResponse400 | updateNoticeResponse404) & {
+  headers: Headers;
+};
+
+export type updateNoticeResponse = (updateNoticeResponseSuccess | updateNoticeResponseError)
+
+export const getUpdateNoticeUrl = (noticeId: number,) => {
+
+
+
+
+  return `/api/v1/admin/notices/${noticeId}`
+}
+
+/**
+ *
+ *             보낸 값만 바꾸고 수정된 공지 전체를 반환합니다. 제목과 본문은 비울 수 없습니다.
+ *             노출(visibility)과 상단 고정(pinned)도 이 API로 바꿉니다.
+ * @summary 공지사항 수정
+ */
+export const updateNotice = async (noticeId: number,
+    updateAdminNoticeRequest: UpdateAdminNoticeRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateNoticeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateNoticeResponse>(getUpdateNoticeUrl(noticeId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateAdminNoticeRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateNoticeMutationKey = () => ['updateNotice'] as const;
+
+export const getUpdateNoticeMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotice>>, TError,UpdateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateNotice>>, TError,UpdateNoticeMutationVariables, TContext> => {
+
+const mutationKey = getUpdateNoticeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateNotice>>, UpdateNoticeMutationVariables> = (props) => {
+          const {noticeId,data} = props ?? {};
+
+          return  updateNotice(noticeId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof updateNotice>>>
+    export type UpdateNoticeMutationBody = UpdateAdminNoticeRequest
+    export type UpdateNoticeMutationError = ErrorResponse
+    export type UpdateNoticeMutationVariables = {noticeId: number;data: UpdateAdminNoticeRequest}
+
+    /**
+ * @summary 공지사항 수정
+ */
+export const useUpdateNotice = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotice>>, TError,UpdateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateNotice>>,
+        TError,
+        UpdateNoticeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateNoticeMutationOptions(options), queryClient);
     }
 
 export type getJobResponse200 = {
@@ -2595,11 +3157,21 @@ export const getGetCrawlerBootcampResponseMock = (overrideResponse: Partial<Extr
 
 export const getCreateCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerBootcampRegistrationResponse, object>> = {}): SuccessResponseCrawlerBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
+export const getListNoticesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminNoticeSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminNoticeSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNoticeDetailResponse, object>> = {}): SuccessResponseAdminNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
 export const getDecideReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminReviewDecisionResponse, object>> = {}): SuccessResponseAdminReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getUndoReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminReviewDecisionResponse, object>> = {}): SuccessResponseAdminReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getUpdateRejectionResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminRejectionResponse, object>> = {}): SuccessResponseAdminRejectionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), reason: faker.string.alpha({length: {min: 10, max: 20}}), rejectedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reasonUpdatedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentExists: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getGetNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNoticeDetailResponse, object>> = {}): SuccessResponseAdminNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getDeleteNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getUpdateNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNoticeDetailResponse, object>> = {}): SuccessResponseAdminNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
@@ -2718,6 +3290,30 @@ export const getCreateCrawlerBootcampMockHandler = (overrideResponse?: SuccessRe
   }, options)
 }
 
+export const getListNoticesMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminNoticeSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminNoticeSummaryResponse> | SuccessResponsePageResponseAdminNoticeSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/notices', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListNoticesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateNoticeMockHandler = (overrideResponse?: SuccessResponseAdminNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAdminNoticeDetailResponse> | SuccessResponseAdminNoticeDetailResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/notices', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateNoticeResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
 export const getDecideReviewMockHandler = (overrideResponse?: SuccessResponseAdminReviewDecisionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminReviewDecisionResponse> | SuccessResponseAdminReviewDecisionResponse), options?: RequestHandlerOptions) => {
   return http.patch('*/api/v1/admin/review-queue/:type/:id', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
 
@@ -2749,6 +3345,42 @@ export const getUpdateRejectionMockHandler = (overrideResponse?: SuccessResponse
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getUpdateRejectionResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetNoticeMockHandler = (overrideResponse?: SuccessResponseAdminNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminNoticeDetailResponse> | SuccessResponseAdminNoticeDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/notices/:noticeId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetNoticeResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteNoticeMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/notices/:noticeId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteNoticeResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateNoticeMockHandler = (overrideResponse?: SuccessResponseAdminNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminNoticeDetailResponse> | SuccessResponseAdminNoticeDetailResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/notices/:noticeId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateNoticeResponseMock(),
       { status: 200
       })
   }, options)
@@ -2882,9 +3514,14 @@ export const getOgonggoAdminAPIMock = () => [
   getCreateCrawlerJobMockHandler(),
   getGetCrawlerBootcampMockHandler(),
   getCreateCrawlerBootcampMockHandler(),
+  getListNoticesMockHandler(),
+  getCreateNoticeMockHandler(),
   getDecideReviewMockHandler(),
   getUndoReviewMockHandler(),
   getUpdateRejectionMockHandler(),
+  getGetNoticeMockHandler(),
+  getDeleteNoticeMockHandler(),
+  getUpdateNoticeMockHandler(),
   getGetJobMockHandler(),
   getDeleteJobMockHandler(),
   getUpdateJobMockHandler(),

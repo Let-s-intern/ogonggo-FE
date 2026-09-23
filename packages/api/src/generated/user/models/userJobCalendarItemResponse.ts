@@ -4,10 +4,38 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { UserJobCalendarItemResponseEmploymentType } from './userJobCalendarItemResponseEmploymentType';
+import type { UserJobCalendarItemResponseExperienceType } from './userJobCalendarItemResponseExperienceType';
 
 export interface UserJobCalendarItemResponse {
   id: number;
   companyName: string;
+  title: string;
+  /** 공고 대표 이미지 주소. 달력 칸과 카드의 로고 자리에 쓴다. 없으면 null */
+  coverImageUrl?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FULL_TIME` | 1 | 정규직 |
+     * | `CONTRACT` | 2 | 계약직 |
+     * | `INTERN` | 3 | 인턴 |
+     * | `PART_TIME` | 4 | 파트타임 |
+     * | `ETC` | 5 | 기타 |
+     */
+  employmentType: UserJobCalendarItemResponseEmploymentType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NEWCOMER` | 1 | 신입 |
+     * | `EXPERIENCED` | 2 | 경력 |
+     * | `BOTH` | 3 | 신입·경력 |
+     * | `IRRELEVANT` | 4 | 경력 무관 |
+     */
+  experienceType: UserJobCalendarItemResponseExperienceType;
+  jobField?: string;
+  jobRole?: string;
   recruitmentStartAt: string;
   recruitmentEndAt: string;
+  /** 로그인한 사용자의 북마크 여부. 토큰이 없으면 항상 false */
+  bookmarked: boolean;
 }
