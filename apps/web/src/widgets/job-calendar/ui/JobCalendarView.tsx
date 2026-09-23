@@ -132,7 +132,12 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       <div className="flex flex-col gap-4">
         {header}
         {query.brief ? (
-          <WeekGrid items={[]} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
+          <WeekGrid
+            items={[]}
+            initialDate={initialDate}
+            bookmarkedOnly={query.bookmarkedOnly}
+            dateBasis={query.dateBasis}
+          />
         ) : null}
         <JobMajorPicker query={query} />
       </div>
@@ -179,7 +184,12 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   return query.brief ? (
     <div className="flex flex-col gap-4">
       {header}
-      <WeekGrid items={items} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
+      <WeekGrid
+        items={items}
+        initialDate={initialDate}
+        bookmarkedOnly={query.bookmarkedOnly}
+        dateBasis={query.dateBasis}
+      />
     </div>
   ) : (
     <MonthCalendar
