@@ -14,7 +14,7 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
-import { toCalendarParam } from '../lib/query';
+import { toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
 import { CALENDAR_FIRST_DAY } from '../lib/week';
 
 /**
@@ -41,10 +41,16 @@ const EVENTS_BESIDE_MORE = 5;
  * 6번째 칸에 앉는다. 순서는 `order`로 못 박는다 — FullCalendar 의 기본 정렬은 제목순이라
  * `+5` 같은 문자열이 로고들 사이로 끼어든다.
  */
-function buildMonthEvents(items: UserJobCalendarItemResponse[]): EventInput[] {
+function buildMonthEvents(
+  items: UserJobCalendarItemResponse[],
+  dateBasis: JobCalendarDateBasis,
+): EventInput[] {
   const byDay = new Map<string, UserJobCalendarItemResponse[]>();
   for (const item of items) {
-    const day = item.recruitmentEndAt.slice(0, 10);
+    const day = (dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt).slice(
+      0,
+      10,
+    );
     byDay.set(day, [...(byDay.get(day) ?? []), item]);
   }
 
@@ -87,6 +93,8 @@ export interface MonthGridProps {
   selectedDay: string;
   /** 날짜 칸을 누르면 그 날로 부른다. */
   onSelectDay: (day: string) => void;
+  /** `마감일 기준` 토글 값. 날짜 칸을 묶는 필드를 정한다(`buildMonthEvents`). */
+  dateBasis: JobCalendarDateBasis;
 }
 
 /**
@@ -94,8 +102,9 @@ export interface MonthGridProps {
  * 클라이언트 컴포넌트다(PRD 6.1) — 데이터는 위에서 props 로 받는다. 오른쪽 날짜별 목록과 고른
  * 날을 함께 쓰므로 그 상태는 위(`MonthCalendar`)가 들고 있다.
  *
- * 항목은 **마감일(`recruitmentEndAt`) 기준**으로 놓는다. 모집 시작일은 월간 뷰에서 쓰지
- * 않는다(PRD 8.2). 칸에 그리는 것은 회사 로고다 — 달력 응답에 로고 URL 이 없어
+ * 항목은 `dateBasis` 에 따라 **마감일(`recruitmentEndAt`) 또는 시작일(`recruitmentStartAt`)
+ * 기준**으로 놓는다(`prd-calendar-date-basis-toggle.md`). 칸에 그리는 것은 회사 로고다 —
+ * 달력 응답에 로고 URL 이 없어
  * `entities/job/ui/CompanyLogo`가 회사명으로 찾고, 못 찾거나 이미지가 실패하면 기본
  * 썸네일(`shared/ui/Thumbnail`)로 떨어진다.
  *
@@ -104,7 +113,13 @@ export interface MonthGridProps {
  *
  * 스타일을 덮는 방법은 `../lib/calendar-grid`의 `GRID_CLASSES` 주석에 정리했다.
  */
-export function MonthGrid({ items, initialDate, selectedDay, onSelectDay }: MonthGridProps) {
+export function MonthGrid({
+  items,
+  initialDate,
+  selectedDay,
+  onSelectDay,
+  dateBasis,
+}: MonthGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
   useCalendarDate(calendarRef, initialDate);
 
@@ -218,7 +233,7 @@ export function MonthGrid({ items, initialDate, selectedDay, onSelectDay }: Mont
             </span>
           );
         }}
-        events={buildMonthEvents(items)}
+        events={buildMonthEvents(items, dateBasis)}
       />
     </div>
   );

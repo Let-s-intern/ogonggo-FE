@@ -187,6 +187,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       initialDate={initialDate}
       header={header}
       bookmarkedOnly={query.bookmarkedOnly}
+      dateBasis={query.dateBasis}
     />
   );
 }
