@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  canMoveStage,
   useApplicationStage,
   type ApplicationBoardFilters,
   type ApplicationBoardTab,
@@ -35,7 +34,7 @@ export interface ApplicationBoardColumnProps {
  * | 칸 폭 | 307px | `w-76`(304px) |
  * | 칸 바탕 | `#F5F9FF` | `bg-blue-00`(같은 값) |
  * | 안쪽 여백 | 9px | `p-3`(12px) |
- * | 카드 높이 | 128px | 131px(제목 한 줄) |
+ * | 카드 높이 | 128px | 175px(제목 한 줄 + 상태 셀렉트) |
  * | 카드 사이 | 16px | `gap-4`(16px) |
  *
  * 바탕이 `gray-50` 이 아니다. 목업의 `#F5F9FF` 는 파랑이 섞인 값이고 토큰에 이름이 있다
@@ -43,28 +42,13 @@ export interface ApplicationBoardColumnProps {
  */
 export function ApplicationBoardColumn({ tab, stage, filters, move }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
-  /*
-   * 카드의 `X`(`스크랩으로 되돌리기`)를 그릴 칸인가. 단계 이름을 직접 적지 않는 이유는 탭마다
-   * 문구가 달라서다 — 부트캠프에서는 같은 `PREPARING` 이 `신청 전` 이다.
-   *
-   * 전이가 전면 개방되면서 **스크랩 칸을 뺀 모든 칸**이 여기 해당한다(예전에는 `지원 준비 중`
-   * 하나였다). 사이드·스터디만 `지원 완료` 뒤로는 되돌리는 호출이 없어 여전히 갈린다.
-   */
-  const returnsToScrap = canMoveStage(tab, stage.id, 'SCRAPPED');
 
   return (
     <section className="flex w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3">
       <ApplicationBoardColumnHead label={stage.label} total={list.total} />
       <div className="flex flex-col gap-4">
         {list.items.map((item) => (
-          <ApplicationBoardCard
-            key={item.key}
-            item={item}
-            onRemove={
-              returnsToScrap ? () => move.move({ item, from: stage.id, to: 'SCRAPPED' }) : undefined
-            }
-            removing={move.pending}
-          />
+          <ApplicationBoardCard key={item.key} tab={tab} stage={stage} item={item} move={move} />
         ))}
       </div>
       {list.items.length === 0 ? <ApplicationBoardColumnPlaceholder list={list} /> : null}

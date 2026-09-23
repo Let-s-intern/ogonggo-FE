@@ -5,7 +5,7 @@ import { Badge, Select } from '@ogonggo/ui';
 import {
   canMoveStage,
   isStageId,
-  movableTargets,
+  stageOptions,
   stagesOf,
   type ApplicationBoardItem,
   type ApplicationBoardTab,
@@ -97,19 +97,6 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
   const urgent = isDdayUrgent(item.recruitmentType, item.recruitmentEndAt);
   const closed = isRecruitmentClosed(item.recruitmentType, item.recruitmentEndAt, item.closedAt);
   /*
-   * 셀렉트는 그 탭의 단계를 전부 늘어놓고 **옮길 수 없는 단계만 비활성**으로 둔다
-   * (PRD 결정 기록 "칸·섹션은 목업대로 그리고 옮기는 조작만 막는다"). 목록에서 빼지 않는
-   * 이유는 어디까지 있는 흐름인지가 그 자체로 정보이기 때문이고, 지금 단계는 현재 값이라
-   * 언제나 고를 수 있다.
-   */
-  const targets = movableTargets(tab, stage.id);
-  const stageOptions = stagesOf(tab).map((option) => ({
-    value: option.id,
-    label: option.label,
-    disabled: option.id !== stage.id && !targets.includes(option.id),
-  }));
-
-  /*
    * 셀렉트가 고른 값. `isStageId` 는 `string` 을 이 탭의 단계 이름으로 좁히기만 한다 — 열리지
    * 않은 전이를 막고 왜 막혔는지 알리는 것은 이동 훅(`useMoveStage`) 한 곳이다.
    */
@@ -171,7 +158,7 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
         value={stage.id}
         disabled={move.pending}
         onChange={(event) => pick(event.target.value)}
-        options={stageOptions}
+        options={stageOptions(tab, stage.id)}
         className="ml-6 h-8 w-30 shrink-0 rounded-sm border-gray-150 px-3 text-gray-600"
       />
       {showsApply(tab, stage.id) ? (

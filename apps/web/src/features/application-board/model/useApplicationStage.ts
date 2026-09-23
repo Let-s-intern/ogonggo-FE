@@ -13,7 +13,7 @@ import {
 import type { ApplicationBoardTab, ApplicationStageId } from './stages';
 
 /** 칸 하나가 한 번에 받아 오는 건수. 칸 하단의 `더보기` 가 이만큼씩 더 받는다. */
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 12;
 
 /**
  * 무효화하는 쪽(단계 이동) 도 이것을 쓴다. 탭까지가 접두사라 탭 하나만 통째로 버릴 수 있다.
