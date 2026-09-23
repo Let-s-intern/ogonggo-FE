@@ -22,7 +22,7 @@ export interface NoticeDetailViewProps {
  * 그 404 는 `HttpError.status` 로 가려 `notFound()` 로 바꾼다. 그 밖의 오류는 다시 던져
  * 오류 화면(`app/(site)/error.tsx`) 이 받는다.
  */
-async function fetchNoticeDetail(noticeId: number): Promise<UserNoticeDetailResponse> {
+export async function fetchNoticeDetail(noticeId: number): Promise<UserNoticeDetailResponse> {
   if (!Number.isInteger(noticeId) || noticeId < 1) {
     notFound();
   }
