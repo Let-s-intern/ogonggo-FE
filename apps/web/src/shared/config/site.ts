@@ -16,3 +16,12 @@ const CONFIGURED_ORIGIN = process.env.OGONGGO_SITE_ORIGIN?.trim();
 const LOCAL_ORIGIN = 'http://localhost:4000';
 
 export const SITE_ORIGIN = CONFIGURED_ORIGIN || LOCAL_ORIGIN;
+
+/**
+ * 이 배포본을 검색 엔진에 내줄지. `robots`(`app/robots.ts`)가 이걸로 갈린다.
+ *
+ * 값을 준 배포본만 색인 대상이다 — 운영에만 값을 넣으라는 것이 `.env.example` 의 지시이고,
+ * 프리뷰와 로컬은 값이 없어 전부 막힌다. 프리뷰 주소가 수집되면 운영과 같은 내용이 두 벌
+ * 쌓이고, 지우는 것은 색인에서 빼 달라고 기다리는 일이라 막는 쪽으로 기울여 둔다.
+ */
+export const IS_INDEXABLE_DEPLOYMENT = CONFIGURED_ORIGIN !== undefined && CONFIGURED_ORIGIN !== '';

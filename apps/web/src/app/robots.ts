@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { SITE_ORIGIN } from '@/shared/config/site';
+import { IS_INDEXABLE_DEPLOYMENT, SITE_ORIGIN } from '@/shared/config/site';
 
 /**
  * `app/robots.ts`는 Next가 `/robots.txt`로 내보내는 파일 규칙이다
@@ -21,8 +21,19 @@ import { SITE_ORIGIN } from '@/shared/config/site';
  * 겹치지 않는다 — **막히면 사이트 소유 확인이 실패한다.**
  *
  * 사이트맵은 아직 없다. 주소만 먼저 정해 둔다.
+ *
+ * **운영이 아닌 배포본은 전부 막는다.** 프리뷰가 수집되면 운영과 같은 내용이 두 벌 쌓이고,
+ * 어느 쪽이 정식인지는 검색 엔진이 정한다. 가르는 기준은 `OGONGGO_SITE_ORIGIN` 이 있는지다
+ * (`shared/config/site.ts`).
+ *
+ * 이 파일은 빌드 때 한 번 실행돼 `/robots.txt` 로 구워진다 — 환경변수를 나중에 바꿔도 다시
+ * 빌드하지 않으면 이전 내용이 그대로 나간다.
  */
 export default function robots(): MetadataRoute.Robots {
+  if (!IS_INDEXABLE_DEPLOYMENT) {
+    return { rules: { userAgent: '*', disallow: '/' } };
+  }
+
   return {
     rules: {
       userAgent: '*',
