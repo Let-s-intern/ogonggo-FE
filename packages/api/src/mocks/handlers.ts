@@ -6,6 +6,7 @@ import {
   RECRUITMENT_POST_FIXTURES,
   type RecruitmentPostFixture,
 } from './fixtures/recruitment-post';
+import { USER_NOTICE_FIXTURES } from './fixtures/user-notice';
 import { GetRecruitmentPostsPositionsItem } from '../generated/user/models/getRecruitmentPostsPositionsItem';
 import { GetRecruitmentPostsProgressMethodsItem } from '../generated/user/models/getRecruitmentPostsProgressMethodsItem';
 import { GetRecruitmentPostsRecruitmentStatusesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentStatusesItem';
@@ -20,6 +21,9 @@ import type { SuccessResponsePageResponseRecruitmentPostSummaryResponse } from '
 import type { SuccessResponseRecruitmentPostDetailResponse } from '../generated/user/models/successResponseRecruitmentPostDetailResponse';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../generated/user/models/successResponsePageResponseUserJobSummaryResponse';
+import type { SuccessResponsePageResponseUserNoticeSummaryResponse } from '../generated/user/models/successResponsePageResponseUserNoticeSummaryResponse';
+import type { SuccessResponseUserNoticeDetailResponse } from '../generated/user/models/successResponseUserNoticeDetailResponse';
+import type { UserNoticeSummaryResponse } from '../generated/user/models/userNoticeSummaryResponse';
 import type { SuccessResponseListUserJobCalendarItemResponse } from '../generated/user/models/successResponseListUserJobCalendarItemResponse';
 import type { SuccessResponseUserBootcampDetailResponse } from '../generated/user/models/successResponseUserBootcampDetailResponse';
 import type { SuccessResponseUserJobDetailResponse } from '../generated/user/models/successResponseUserJobDetailResponse';
@@ -179,6 +183,11 @@ const calendarBadRequest = (parameterName: string, reason: string) => {
  * 마감일이 없는 상시채용은 BE 질의의 `recruitmentEndAt is not null`과 같게 제외한다.
  * `recruitmentStartAt`은 응답 타입이 필수인데 실데이터 픽스처 대부분이 비어 있어 없으면
  * 마감일로 채운다 — 하루짜리 일정이 된다.
+ *
+ * 2026-09-23 스펙 동기화(`2de3c3a`)로 응답에 `title`·`employmentType`·`experienceType`·
+ * `bookmarked` 가 필수로 붙었다. 넷 다 `JOB_FIXTURES`(`UserJobDetailResponse`) 에 같은 이름으로
+ * 있어 그대로 옮긴다. `coverImageUrl` 은 선택이라 값이 있을 때만 싣는다. `jobField`·`jobRole` 은
+ * 선택이고 픽스처에 없어 싣지 않는다.
  */
 const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) => {
   const url = new URL(request.url);
@@ -576,6 +585,69 @@ const getRecruitmentPostHandler = http.get('*/api/v1/recruitment-posts/:postId',
   return HttpResponse.json(body, { status: 200 });
 });
 
+/** 공지 목록 한 페이지 건수. 백엔드 기본값이자 `widgets/notice-list` 가 보내는 값이다. */
+const DEFAULT_NOTICE_SIZE = 10;
+
+const toNoticeSummary = ({
+  content: _content,
+  ...summary
+}: (typeof USER_NOTICE_FIXTURES)[number]): UserNoticeSummaryResponse => summary;
+
+/**
+ * `listPublicNotices`(`GET /api/v1/notices`). 픽스처가 이미 백엔드 정렬 순서(고정 먼저, 그 안에서
+ * id 역순) 로 놓여 있어 여기서 다시 정렬하지 않는다 — 화면도 받은 순서를 그대로 그린다.
+ */
+const getNoticesHandler = http.get('*/api/v1/notices', ({ request }) => {
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
+  const size = Number(url.searchParams.get('size') ?? DEFAULT_NOTICE_SIZE);
+
+  const start = (page - 1) * size;
+  const items = USER_NOTICE_FIXTURES.slice(start, start + size).map(toNoticeSummary);
+
+  const body: SuccessResponsePageResponseUserNoticeSummaryResponse = {
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: {
+      items,
+      pageInfo: {
+        pageNum: page,
+        pageSize: size,
+        totalElements: USER_NOTICE_FIXTURES.length,
+        totalPages: Math.ceil(USER_NOTICE_FIXTURES.length / size),
+      },
+    },
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
+/**
+ * `getPublicNotice`(`GET /api/v1/notices/{noticeId}`). 404 본문은 운영 응답을 그대로 옮긴 것이다
+ * (2026-09-23 확인: `{"status":404,"code":"NOTICE_NOT_FOUND","message":"공지사항을 찾을 수 없습니다."}`).
+ */
+const getNoticeHandler = http.get('*/api/v1/notices/:noticeId', ({ params }) => {
+  const noticeId = Number(params.noticeId);
+  const notice = USER_NOTICE_FIXTURES.find((fixture) => fixture.id === noticeId);
+
+  if (!notice) {
+    const body: ErrorResponse = {
+      status: 404,
+      code: 'NOTICE_NOT_FOUND',
+      message: '공지사항을 찾을 수 없습니다.',
+    };
+    return HttpResponse.json(body, { status: 404 });
+  }
+
+  const body: SuccessResponseUserNoticeDetailResponse = {
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: notice,
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
 export const handlers: HttpHandler[] = [
   getJobsHandler,
   // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`도 잡는다.
@@ -585,4 +657,6 @@ export const handlers: HttpHandler[] = [
   getBootcampHandler,
   getRecruitmentPostsHandler,
   getRecruitmentPostHandler,
+  getNoticesHandler,
+  getNoticeHandler,
 ];
