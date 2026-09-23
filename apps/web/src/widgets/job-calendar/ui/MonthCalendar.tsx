@@ -76,7 +76,7 @@ export function MonthCalendar({
           dateBasis={dateBasis}
         />
       </div>
-      <DayJobPanel day={selectedDay} items={dayItems} />
+      <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
     </div>
   );
 }

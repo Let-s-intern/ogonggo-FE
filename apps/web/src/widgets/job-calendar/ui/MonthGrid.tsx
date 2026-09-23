@@ -221,7 +221,7 @@ export function MonthGrid({
             );
           }
           return (
-            <span title={formatDeadlineHint(arg.event.extendedProps.deadline as string)}>
+            <span title={formatDeadlineHint(arg.event.extendedProps.deadline as string, dateBasis)}>
               {/*
                 `CompanyLogo` 의 기본 안쪽 여백(`p-1`)을 여기서만 없앤다. 28px 타일에서 4px 씩
                 빼면 그림이 들어갈 자리가 20px 밖에 남지 않아 로고가 상자 안에서 너무 작아

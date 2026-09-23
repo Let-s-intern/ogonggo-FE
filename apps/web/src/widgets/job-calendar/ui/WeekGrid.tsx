@@ -239,8 +239,8 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
             // 누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다(`app/(site)/calendar/@modal`).
             <Link href={`/jobs/${arg.event.id}`} scroll={false} className="block pb-2">
               <span
-                // 호버 문구는 마감일이고 월간과 같다(PRD 8.5).
-                title={formatDeadlineHint(deadline)}
+                // 호버 문구는 `dateBasis` 기준일이고 월간과 같다(PRD 8.5).
+                title={formatDeadlineHint(deadline, dateBasis)}
                 className={cn(
                   // v6 막대는 로고 없이 기업명만 있고 오른쪽 끝에 2px 세로선이 있다.
                   'flex h-9 items-center rounded-[6px] border-r-2 px-3 text-sm text-gray-800',
