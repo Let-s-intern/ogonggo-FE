@@ -1,6 +1,11 @@
+import Link from 'next/link';
+
 /**
  * `home.png` 하단 푸터. 회사 정보와 링크 목록 전부 대상 화면이 없는 정적 콘텐츠라(PRD 10절)
  * 링크는 `<span>`으로 두고 진짜 라우팅을 걸지 않는다.
+ *
+ * 예외는 `공지사항` 하나다. `/notices` 가 생겨(#105) 링크로 바꿨다. 나머지 여섯은 화면이 있는
+ * 것도 있지만 이 작업의 범위가 아니라 `<span>` 으로 둔다.
  */
 export function SiteFooter() {
   return (
@@ -31,7 +36,9 @@ export function SiteFooter() {
         </div>
         <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm text-gray-600">
           <span>채용 공고</span>
-          <span>공지사항</span>
+          <Link href="/notices" className="hover:text-gray-900">
+            공지사항
+          </Link>
           <span>교육/부트캠프</span>
           <span>자주 묻는 질문</span>
           <span>사이드/스터디</span>
