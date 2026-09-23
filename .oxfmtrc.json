@@ -2,5 +2,5 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "singleQuote": true,
   "printWidth": 100,
-  "ignorePatterns": ["packages/api/src/generated/**"]
+  "ignorePatterns": ["packages/api/src/generated/**", "apps/web/public/naver*.html"]
 }

@@ -5,6 +5,7 @@ import {
   GoogleTagManagerNoScript,
   GoogleTagManagerScript,
 } from '@/shared/analytics/GoogleTagManager';
+import { SITE_ORIGIN } from '@/shared/config/site';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -38,8 +39,17 @@ const pretendard = localFont({
  * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/01-metadata/app-icons.md).
  *
  * `title.template`은 하위 화면이 자기 제목만 넘기면 뒤에 서비스명이 붙게 한다.
+ *
+ * `metadataBase`는 하위 화면이 `alternates.canonical`·`openGraph.images`를 `/jobs/1` 처럼
+ * 상대 주소로 적어도 Next가 절대 주소로 펴 주는 기준이다. 값은 배포본마다 다르므로
+ * `shared/config/site.ts`가 환경변수에서 읽는다.
+ *
+ * **여기에 `alternates.canonical`을 적지 않는다.** 루트에 적으면 자기 값을 내지 않는 모든
+ * 화면이 그것을 물려받아 서로 다른 페이지가 전부 같은 정식 주소를 주장하게 된다. canonical은
+ * 화면마다 자기 `generateMetadata`에서 낸다.
  */
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: '오늘의 공고',
     template: '%s | 오늘의 공고',
