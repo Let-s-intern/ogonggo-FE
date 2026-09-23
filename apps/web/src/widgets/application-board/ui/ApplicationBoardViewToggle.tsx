@@ -26,6 +26,11 @@ export interface ApplicationBoardViewToggleProps {
  * 글리프는 에셋 PNG 가 아니라 lucide 다. 에셋은 바탕색까지 구워진 64px 그림이라 두 상태의
  * 색을 클래스로 바꿀 수 없고, 저장소의 아이콘은 전부 Iconify 마스크다
  * (`packages/ui/src/styles/tokens.css`).
+ *
+ * 모바일에서는 칸반 보기 자체가 없다(`.claude/tasks/memos/결정-모바일-칸반-차단-브레이크포인트-2026-09-23.md`)
+ * — `hidden md:flex` 로 `md`(768px) 미만에서 안 보인다. `ApplicationBoard.tsx` 가 같은 지점
+ * 아래에서 `query.view` 와 무관하게 리스트를 강제 렌더하므로, 이 버튼이 보였다면 눌러도 갈 곳이
+ * 실제로 있다.
  */
 export function ApplicationBoardViewToggle({ query }: ApplicationBoardViewToggleProps) {
   const kanban = query.view === 'kanban';
@@ -35,7 +40,7 @@ export function ApplicationBoardViewToggle({ query }: ApplicationBoardViewToggle
       href={buildApplicationBoardHref(query, { view: kanban ? 'list' : 'kanban' })}
       aria-label={kanban ? '리스트 보기로 바꾸기' : '칸반 보기로 바꾸기'}
       className={cn(
-        'ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm',
+        'ml-3 hidden h-8 w-8 shrink-0 items-center justify-center rounded-sm md:flex',
         kanban ? 'bg-blue-50 text-blue-500' : 'bg-gray-600 text-gray-200',
       )}
     >
