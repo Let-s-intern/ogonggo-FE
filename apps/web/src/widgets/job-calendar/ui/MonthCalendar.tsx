@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { filterBookmarkedOnly } from '../lib/bookmarked-only';
-import { parseCalendarDate, toCalendarParam } from '../lib/query';
+import { parseCalendarDate, toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
 import { useBookmarkedIds } from './BookmarkedOnlyFilterPill';
 import { DayJobPanel } from './DayJobPanel';
 import { MonthGrid } from './MonthGrid';
@@ -28,6 +28,8 @@ export interface MonthCalendarProps {
   header: ReactNode;
   /** `스크랩 공고만` 알약. 서버가 거르지 않은 값이라 여기서 거른다(`../lib/bookmarked-only.ts`). */
   bookmarkedOnly: boolean;
+  /** `마감일 기준` 토글 값. 격자·오른쪽 목록이 묶는 날짜 필드를 정한다. */
+  dateBasis: JobCalendarDateBasis;
 }
 
 /**
@@ -39,7 +41,13 @@ export interface MonthCalendarProps {
  * 달을 옮기면 고른 날을 그 달의 기본값으로 되돌린다. 화살표 이동은 같은 라우트 안이라 이
  * 컴포넌트가 다시 마운트되지 않으므로 렌더 중에 맞춘다(`WeekGrid`와 같은 방법).
  */
-export function MonthCalendar({ items, initialDate, header, bookmarkedOnly }: MonthCalendarProps) {
+export function MonthCalendar({
+  items,
+  initialDate,
+  header,
+  bookmarkedOnly,
+  dateBasis,
+}: MonthCalendarProps) {
   const [selectedDay, setSelectedDay] = useState(() => defaultDay(initialDate));
   const [renderedMonth, setRenderedMonth] = useState(initialDate);
   if (renderedMonth !== initialDate) {
@@ -50,9 +58,10 @@ export function MonthCalendar({ items, initialDate, header, bookmarkedOnly }: Mo
   const bookmarkedIds = useBookmarkedIds();
   const visibleItems = filterBookmarkedOnly(items, bookmarkedOnly, bookmarkedIds);
 
-  const dayItems = visibleItems.filter(
-    (item) => item.recruitmentEndAt.slice(0, 10) === selectedDay,
-  );
+  const dayItems = visibleItems.filter((item) => {
+    const day = dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt;
+    return day.slice(0, 10) === selectedDay;
+  });
 
   return (
     // 목업의 격자는 791px, 목록은 290px, 사이는 40px 이다.
@@ -64,9 +73,10 @@ export function MonthCalendar({ items, initialDate, header, bookmarkedOnly }: Mo
           initialDate={initialDate}
           selectedDay={selectedDay}
           onSelectDay={setSelectedDay}
+          dateBasis={dateBasis}
         />
       </div>
-      <DayJobPanel day={selectedDay} items={dayItems} />
+      <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
     </div>
   );
 }

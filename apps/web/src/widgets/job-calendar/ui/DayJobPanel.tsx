@@ -10,7 +10,7 @@ import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { weekdayLabel } from '../lib/calendar-grid';
 import { DAY_JOBS_PAGE_SIZE } from '../lib/day-jobs';
-import { parseCalendarDate } from '../lib/query';
+import { parseCalendarDate, type JobCalendarDateBasis } from '../lib/query';
 
 /** 목록 제목의 `08. 22. SAT`. */
 function formatDayTitle(day: string): string {
@@ -38,8 +38,11 @@ function formatDayTitle(day: string): string {
  * `fetchCalendarItemsForMajors` 주석, `packages/api/src/mocks/handlers.ts`의
  * `getJobCalendarHandler`). 상시채용이 `ALWAYS_OPEN`으로 마감일이 없는 것과 대비되므로, 여기
  * 있는 항목은 전부 기간제(`PERIOD`)로 볼 수 있다.
+ *
+ * `export`하는 이유는 `DayHoverCard.tsx`가 격자 호버 카드에서도 같은 카드 마크업을 그대로 쓰기
+ * 위해서다(Push 2, PRD 3절) — 카드 한 장의 모양은 오른쪽 목록이든 호버 카드든 같아야 한다.
  */
-function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
+export function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
   const dday = computeDday('PERIOD', job.recruitmentEndAt);
   const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
   const meta = [
@@ -98,15 +101,22 @@ export interface DayJobPanelProps {
    * 메시지 참고).
    */
   items: UserJobCalendarItemResponse[];
+  /**
+   * `마감일 기준` 토글 값. 제목 옆 배지·`aria-label`·빈 상태 문구가 "마감"/"시작" 중 어느
+   * 쪽을 쓸지 정한다 — `items` 를 고르는 기준(`MonthCalendar`)과 항상 같은 값이어야 한다.
+   */
+  dateBasis: JobCalendarDateBasis;
 }
 
 /**
- * 월간 오른쪽의 날짜별 공고 목록(v6). 격자에서 날짜를 누르면 그 날 마감하는 공고를 보인다.
+ * 월간 오른쪽의 날짜별 공고 목록(v6). 격자에서 날짜를 누르면 그 날 마감하는(시작일 기준이면
+ * 시작하는) 공고를 보인다.
  *
  * `더보기`는 이제 네트워크 요청이 아니라 이미 받은 `items`를 더 드러내는 것뿐이다 — 그래서
  * 지역 상태(`visibleCount`) 하나로 끝난다.
  */
-export function DayJobPanel({ day, items }: DayJobPanelProps) {
+export function DayJobPanel({ day, items, dateBasis }: DayJobPanelProps) {
+  const basisLabel = dateBasis === 'start' ? '시작' : '마감';
   const [visibleCount, setVisibleCount] = useState(DAY_JOBS_PAGE_SIZE);
   // 날이 바뀌면 다시 5건부터 보인다. 렌더 중에 맞추는 것은 `MonthCalendar`의 `selectedDay`와
   // 같은 방법이다 — 이펙트로 미루면 한 프레임 이전 날의 나머지가 보였다가 접힌다.
@@ -120,15 +130,24 @@ export function DayJobPanel({ day, items }: DayJobPanelProps) {
   const hasMore = visibleCount < items.length;
 
   return (
-    <section aria-label={`${formatDayTitle(day)} 마감 공고`} className="flex flex-col">
+    <section aria-label={`${formatDayTitle(day)} ${basisLabel} 공고`} className="flex flex-col">
       {/* 제목 줄은 왼쪽 달력의 `2026.08` 줄과 같은 높이에 온다. */}
       <h2 className="flex h-10 items-center gap-3">
         <span className="text-xl font-bold text-gray-900">{formatDayTitle(day)}</span>
         <span className="text-xl text-gray-400">({items.length})</span>
+        {/*
+          어느 기준으로 고른 날짜별 목록인지 알려주는 작은 배지. `aria-label`·빈 상태 문구가
+          이미 "마감"/"시작"을 말로 알려주므로, 눈으로 보는 사람에게도 같은 정보를 준다
+          (`.claude/tasks/memos/결정-calendar-date-basis-toggle-push1-2026-09-23.md` 2절 — 이
+          자리의 목업이 아직 없어 저장소의 회색 알약 색(`gray-100`/`gray-500`)을 그대로 썼다).
+        */}
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+          {basisLabel}
+        </span>
       </h2>
 
       {items.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-400">이 날 마감하는 공고가 없어요</p>
+        <p className="mt-6 text-sm text-gray-400">이 날 {basisLabel}하는 공고가 없어요</p>
       ) : (
         <ul className="mt-4 flex flex-col">
           {jobs.map((job) => (

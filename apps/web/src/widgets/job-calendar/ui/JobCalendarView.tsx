@@ -132,7 +132,12 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       <div className="flex flex-col gap-4">
         {header}
         {query.brief ? (
-          <WeekGrid items={[]} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
+          <WeekGrid
+            items={[]}
+            initialDate={initialDate}
+            bookmarkedOnly={query.bookmarkedOnly}
+            dateBasis={query.dateBasis}
+          />
         ) : null}
         <JobMajorPicker query={query} />
       </div>
@@ -140,30 +145,36 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   }
 
   const { from, to } = query.brief ? weekGridRange(baseDate) : monthGridRange(baseDate);
-  const items = await fetchCalendarItemsForMajors(
-    toCalendarParam(from),
-    toCalendarParam(to),
-    query.majors,
-    {
-      employmentType: query.employmentType,
-      experienceType: query.experienceType,
-      // 꺼져 있으면 아예 보내지 않는다. `false` 도 파라미터로는 실리므로(`getListPublicJobCalendarUrl`)
-      // 걸지 않은 필터가 주소에 남는다.
-      excludeClosed: query.excludeClosed || undefined,
-      keyword: query.keyword,
-      // `bookmarkedOnly` 는 여기서 보내지 않는다 — 서버 컴포넌트는 로그인 상태를 모른다
-      // (`../lib/query.ts`). `query.bookmarkedOnly` 는 아래로 그대로 내려 클라이언트가 거른다.
-      //
-      // `deadlineOnly` 는 알약이 아니라 항상 켠다(Push 1 task 2.1). 실 BE 의 질의는 모집 기간이
-      // 조회 범위와 겹치기만 하면 담아서, 조회 범위 밖에서 마감하는 공고까지 올 수 있다 — 격자는
-      // 마감일 칸에만 그리므로(`MonthCalendar`·`WeekGrid`) 그런 항목은 아예 그려지지 않고,
-      // 주간 뷰는 그 항목까지 "이번 주 공고 N개"에 세어 수를 부풀린다. `deadlineOnly=true` 로
-      // 보내면 서버가 마감일 기준으로 미리 걸러 준다. 2026-09-23 실서버(35건)로 켜고 끈 응답을
-      // 대조하니 차이가 0건이었지만(지금 데이터가 전부 조회 범위 안에서 마감해서), 우연에 기대는
-      // 것과 질의로 보장하는 것은 다르다 — 데이터가 늘면 언제든 벌어질 수 있는 차이라 계속 켠다.
-      deadlineOnly: true,
-    },
-  );
+  const fromParam = toCalendarParam(from);
+  const toParam = toCalendarParam(to);
+  const fetchedItems = await fetchCalendarItemsForMajors(fromParam, toParam, query.majors, {
+    employmentType: query.employmentType,
+    experienceType: query.experienceType,
+    // 꺼져 있으면 아예 보내지 않는다. `false` 도 파라미터로는 실리므로(`getListPublicJobCalendarUrl`)
+    // 걸지 않은 필터가 주소에 남는다.
+    excludeClosed: query.excludeClosed || undefined,
+    keyword: query.keyword,
+    // `bookmarkedOnly` 는 여기서 보내지 않는다 — 서버 컴포넌트는 로그인 상태를 모른다
+    // (`../lib/query.ts`). `query.bookmarkedOnly` 는 아래로 그대로 내려 클라이언트가 거른다.
+    //
+    // `deadlineOnly` 는 마감일 기준일 때만 켠다(PRD `prd-calendar-date-basis-toggle.md` 1절).
+    // 실 BE 의 질의는 모집 기간이 조회 범위와 겹치기만 하면 담아서, 조회 범위 밖에서 마감하는
+    // 공고까지 올 수 있다 — 격자는 마감일 칸에만 그리므로(`MonthCalendar`·`WeekGrid`) 그런
+    // 항목은 아예 그려지지 않고, 주간 뷰는 그 항목까지 "이번 주 공고 N개"에 세어 수를 부풀린다.
+    // `deadlineOnly=true` 로 보내면 서버가 마감일 기준으로 미리 걸러 준다.
+    //
+    // 시작일 기준일 때 이 옵션을 그대로 켜 두면 시작일이 범위 안인데 마감은 몇 달 뒤인 공고까지
+    // 서버가 먼저 걸러 버린다 — 그래서 끈다. 그러면 서버는 모집 기간이 범위와 겹치는 초과집합을
+    // 주므로, 아래에서 `recruitmentStartAt` 이 범위 밖인 항목을 한 번 더 거른다.
+    deadlineOnly: query.dateBasis === 'deadline',
+  });
+  const items =
+    query.dateBasis === 'start'
+      ? fetchedItems.filter((item) => {
+          const start = item.recruitmentStartAt.slice(0, 10);
+          return start >= fromParam && start <= toParam;
+        })
+      : fetchedItems;
 
   // 뷰를 컴포넌트 통째로 갈아끼운다(2026-09-02 결정). 한 인스턴스에서 `changeView()` 를 부르는
   // 방법도 되지만, `initialDate`/`initialView` 처럼 마운트 때만 읽히는 값을 명령형 API 로
@@ -173,7 +184,12 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   return query.brief ? (
     <div className="flex flex-col gap-4">
       {header}
-      <WeekGrid items={items} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
+      <WeekGrid
+        items={items}
+        initialDate={initialDate}
+        bookmarkedOnly={query.bookmarkedOnly}
+        dateBasis={query.dateBasis}
+      />
     </div>
   ) : (
     <MonthCalendar
@@ -181,6 +197,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       initialDate={initialDate}
       header={header}
       bookmarkedOnly={query.bookmarkedOnly}
+      dateBasis={query.dateBasis}
     />
   );
 }

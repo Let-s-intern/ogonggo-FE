@@ -11,6 +11,13 @@ export type JobCalendarEmploymentType = ListPublicJobCalendarEmploymentType;
 export type JobCalendarExperienceType = ListPublicJobCalendarExperienceType;
 
 /**
+ * `마감일 기준` 토글의 값. 격자가 `recruitmentEndAt`(마감일)과 `recruitmentStartAt`(시작일) 중
+ * 어느 것으로 날짜 칸을 묶을지 정한다. 기본은 `'deadline'`이다
+ * (`prd-calendar-date-basis-toggle.md`).
+ */
+export type JobCalendarDateBasis = 'deadline' | 'start';
+
+/**
  * `/calendar` 이 URL 쿼리에 두는 상태(`?date=2026-08-19&brief=1`). 앞선 화면들의 탭·페이지네이션과
  * 같은 방식이고(`widgets/side-study-list/lib/query.ts`), 새로고침과 뒤로가기가 그대로 동작한다
  * (PRD 7절).
@@ -50,6 +57,8 @@ export interface JobCalendarQuery {
   bookmarkedOnly: boolean;
   /** `공고 검색` 알약. 두 글자 미만이면 없는 것으로 읽는다. */
   keyword?: string;
+  /** `마감일 기준` 토글. 기본은 `'deadline'`이고, 그때는 주소에서 생략한다. */
+  dateBasis: JobCalendarDateBasis;
 }
 
 export interface JobCalendarSearchParams {
@@ -62,6 +71,7 @@ export interface JobCalendarSearchParams {
   excludeClosed?: string;
   bookmarkedOnly?: string;
   keyword?: string;
+  dateBasis?: string;
 }
 
 /** 켜짐을 나타내는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
@@ -165,6 +175,8 @@ export function parseJobCalendarQuery(
     excludeClosed: searchParams.excludeClosed === FLAG_ON,
     bookmarkedOnly: searchParams.bookmarkedOnly === FLAG_ON,
     keyword: parseKeyword(searchParams.keyword),
+    // 모르는 값(손으로 고친 주소 포함)은 전부 기본값인 마감일 기준으로 읽는다.
+    dateBasis: searchParams.dateBasis === 'start' ? 'start' : 'deadline',
   };
 }
 
@@ -210,6 +222,9 @@ export function buildJobCalendarHref(
   }
   if (merged.keyword) {
     params.set('keyword', merged.keyword);
+  }
+  if (merged.dateBasis === 'start') {
+    params.set('dateBasis', 'start');
   }
 
   const query = params.toString();
