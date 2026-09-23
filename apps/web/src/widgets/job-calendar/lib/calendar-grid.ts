@@ -9,7 +9,6 @@
 import { useEffect, type RefObject } from 'react';
 import type FullCalendar from '@fullcalendar/react';
 import type { CSSProperties } from 'react';
-import type { JobCalendarDateBasis } from './query';
 
 /** 목업의 요일 머리글은 `MON`~`SUN`이다. FullCalendar 기본값은 로케일 약어라 직접 넘긴다. */
 const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -62,20 +61,6 @@ export const GRID_CLASSES = [
  * 한 줄에 4개가 안 들어가게 만들고, 주간 막대에서는 막대가 칸 끝에 닿지 못하게 만든다.
  */
 export const EVENT_RESET_CLASSES = ['border-0!', 'bg-transparent!', 'p-0!', 'm-0!'];
-
-/**
- * 항목에 마우스를 올리면 뜨는 문구. `dateBasis` 에 따라 마감일 또는 시작일이다 — 기업명도
- * 제목도 아니다(PRD 8.5). 월간과 주간이 같은 문구여야 해서 여기 있다. 격자가 앞뒤 달을 함께
- * 보여주므로 연도까지 적는다.
- *
- * 받는 값이 `Date` 가 아니라 `YYYY-MM-DD` 문자열인 것은 주간 때문이다. 주간 막대의
- * `event.start` 는 `dateBasis` 가 시작일이면 모집 시작일, 마감일이면 마감일이라 값이 오락가락
- * 한다 — 두 뷰가 같은 값을 넣도록 기준일을 `extendedProps.deadline` 에 담아 여기로 넘긴다.
- */
-export function formatDeadlineHint(day: string, dateBasis: JobCalendarDateBasis): string {
-  const label = dateBasis === 'start' ? '시작' : '마감';
-  return `${day.slice(0, 4)}.${day.slice(5, 7)}.${day.slice(8, 10)} ${label}`;
-}
 
 /**
  * 보고 있는 날짜를 FullCalendar 인스턴스에 따라붙게 한다.
