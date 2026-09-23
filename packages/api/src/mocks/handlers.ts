@@ -160,6 +160,11 @@ const calendarBadRequest = (parameterName: string, reason: string) => {
  * 마감일이 없는 상시채용은 BE 질의의 `recruitmentEndAt is not null`과 같게 제외한다.
  * `recruitmentStartAt`은 응답 타입이 필수인데 실데이터 픽스처 대부분이 비어 있어 없으면
  * 마감일로 채운다 — 하루짜리 일정이 된다.
+ *
+ * 2026-09-23 스펙 동기화(`2de3c3a`)로 응답에 `title`·`employmentType`·`experienceType`·
+ * `bookmarked` 가 필수로 붙었다. 넷 다 `JOB_FIXTURES`(`UserJobDetailResponse`) 에 같은 이름으로
+ * 있어 그대로 옮긴다. `coverImageUrl` 은 선택이라 값이 있을 때만 싣는다. `jobField`·`jobRole` 은
+ * 선택이고 픽스처에 없어 싣지 않는다.
  */
 const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) => {
   const url = new URL(request.url);
@@ -195,8 +200,13 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
     .map((job) => ({
       id: job.id,
       companyName: job.companyName,
+      title: job.title,
+      ...(job.coverImageUrl ? { coverImageUrl: job.coverImageUrl } : {}),
+      employmentType: job.employmentType,
+      experienceType: job.experienceType,
       recruitmentStartAt: job.recruitmentStartAt ?? (job.recruitmentEndAt as string),
       recruitmentEndAt: job.recruitmentEndAt as string,
+      bookmarked: job.bookmarked,
     }));
 
   const body: SuccessResponseListUserJobCalendarItemResponse = {
