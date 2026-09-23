@@ -1,39 +1,85 @@
-import Image from 'next/image';
-import { HERO_IMAGES, type HeroScreen } from '@/shared/lib/heroImages';
+import { cn } from '@ogonggo/ui';
+import { HERO_CONTENT, type HeroScreen } from '@/shared/lib/heroContent';
+import { SearchIcon } from '@/shared/ui/icons';
 
 export interface HomeHeroProps {
-  /** 어느 화면의 히어로인지. 이미지 경로와 크기는 `HERO_IMAGES`가 안다. */
+  /** 어느 화면의 히어로인지. 문구와 색은 `HERO_CONTENT`가 안다. */
   screen: HeroScreen;
-  /**
-   * 이미지 안에 그려져 있는 헤드라인. 화면에는 보이지 않고 `<h1>`으로만 남는다.
-   * 줄바꿈은 이미지가 하고 있어서 한 줄로 받는다.
-   */
-  headline: string;
 }
 
 /**
- * 화면 최상단 히어로 — v3에서 배경·배지 pill·헤드라인이 전부 한 장의 이미지가 됐다
- * (`docs/asset/v3 변경사항/hero/`). 데이터에 의존하지 않아 서버 컴포넌트로 둔다.
+ * 화면 최상단 히어로 — v3에서 배경·배지 pill·헤드라인이 합성 PNG 한 장이 됐던 것을
+ * (`docs/asset/v3 변경사항/hero/`) 벡터 소스가 없어 CSS로 다시 짰다. 데이터에 의존하지 않아
+ * 서버 컴포넌트로 둔다.
  *
  * 목업에서 이 블록은 화면 끝까지 채운 띠가 아니라 좌우 40px 떨어진 박스다(실측 1440px 기준
- * 42~1400). 아래 콘텐츠(`max-w-6xl`)보다 넓어서 그 폭에 맞추지 않는다. 둥근 모서리는 이미지가
- * 투명으로 들고 있다.
+ * 42~1400). 아래 콘텐츠(`max-w-6xl`)보다 넓어서 그 폭에 맞추지 않는다.
  *
- * `next/image`를 쓴다. `Thumbnail`·`LogoLoader`가 피한 이유(등록해야 하는 외부 호스트, 로딩
- * 표시의 왕복 지연)가 여기에는 없고, 1.2~1.5MB짜리 PNG를 그대로 내보내지 않는 쪽이 낫다.
- * 첫 화면에 보이므로 `priority`다.
+ * 배경의 흐릿한 원형 블롭 세 개는 재현하지만, PNG 하단에 아주 옅게 깔려 있던 마스코트 실루엣은
+ * 옮기지 않았다 — 벡터 소스 없이 정확히 그릴 수 없다(`shared/lib/heroContent.ts`).
  *
- * 문구가 이미지 안에 있어 그대로 두면 화면 낭독기와 검색 엔진에 아무것도 남지 않는다. 그래서
- * `<h1>`을 `sr-only`로 남기고 이미지는 `alt=""`다 — 양쪽에 문구를 넣으면 같은 말이 두 번
- * 읽힌다.
+ * 문구가 화면에도, `<h1>`에도 있다. PNG였을 때는 문구가 이미지 안에만 있어 `sr-only` `<h1>`이
+ * 따로 필요했지만, 지금은 헤드라인 자체가 텍스트라 그 `<h1>`이 화면에 보이는 헤드라인을 감싼다.
  */
-export function HomeHero({ screen, headline }: HomeHeroProps) {
-  const { src, width, height } = HERO_IMAGES[screen];
+export function HomeHero({ screen }: HomeHeroProps) {
+  const { badge, lines, theme } = HERO_CONTENT[screen];
 
   return (
-    <section className="mx-10 mt-6 self-stretch">
-      <h1 className="sr-only">{headline}</h1>
-      <Image src={src} alt="" width={width} height={height} priority className="h-auto w-full" />
+    <section
+      className={cn(
+        'relative mx-10 mt-6 self-stretch overflow-hidden rounded-3xl px-4 py-8 sm:px-6 sm:py-10 lg:py-14',
+        theme.background,
+      )}
+    >
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className={cn(
+            'absolute top-1/2 left-[18%] h-56 w-56 -translate-y-1/2 rounded-full opacity-60 blur-3xl',
+            theme.blob,
+          )}
+        />
+        <div
+          className={cn(
+            'absolute top-1/2 left-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60 blur-3xl',
+            theme.blob,
+          )}
+        />
+        <div
+          className={cn(
+            'absolute top-1/2 right-[18%] h-56 w-56 -translate-y-1/2 rounded-full opacity-60 blur-3xl',
+            theme.blob,
+          )}
+        />
+      </div>
+
+      <div className="relative flex flex-col items-center gap-4 text-center">
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium',
+            theme.badgeBg,
+            theme.badgeText,
+          )}
+        >
+          <SearchIcon className="h-4 w-4" />
+          {badge}
+        </span>
+
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-4xl lg:text-6xl">
+          {lines.map((line, lineIndex) => (
+            <span key={lineIndex} className="block">
+              {line.map((segment, segmentIndex) =>
+                segment.accent ? (
+                  <span key={segmentIndex} className="text-success">
+                    {segment.text}
+                  </span>
+                ) : (
+                  segment.text
+                ),
+              )}
+            </span>
+          ))}
+        </h1>
+      </div>
     </section>
   );
 }

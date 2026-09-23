@@ -15,7 +15,7 @@ export type SideStudyListPageProps = SideStudyListQuery;
 export function SideStudyListPage(query: SideStudyListPageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center bg-white">
-      <HomeHero screen="side-studies" headline="혼자 말고, 함께할 사람을 찾아보세요" />
+      <HomeHero screen="side-studies" />
       <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
         <SideStudyList {...query} />
         <div className="w-full border-t border-gray-100" />

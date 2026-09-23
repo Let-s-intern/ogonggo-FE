@@ -8,7 +8,7 @@ export type HomePageProps = JobListQuery;
 export function HomePage(query: HomePageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center bg-white">
-      <HomeHero screen="jobs" headline="커리어 여정에 딱! 맞는 채용공고만 쏙! 보여드려요" />
+      <HomeHero screen="jobs" />
       <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
         {/* 인기 공고는 첫 페이지에서만 보인다. 2페이지부터도 위에 고정해 두면 넘길 때마다 같은
             네 건을 지나야 목록이 나온다. 사이 배너 자리도 인기 공고와 전체 공고 사이라 같이 뺀다. */}
