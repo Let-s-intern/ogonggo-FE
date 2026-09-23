@@ -9,6 +9,7 @@ import {
 } from '@ogonggo/api';
 import { isSignedIn } from '@/shared/api/authTokens';
 import {
+  type MyPageAudience,
   MyPageSidebar,
   myPageAudienceOf,
   myPageHomeFor,
@@ -39,6 +40,9 @@ export interface MyPageLayoutProps {
  * 역할이 경로와 어긋나면 자기 마이페이지로 보낸다 — 일반 회원이 기업 화면에 들어오면 일반
  * 마이페이지로, 기업 회원이 일반 화면에 들어오면 기업 마이페이지로. `/mypage` 는 일반 회원의
  * 첫 화면으로 보내므로 기업 계정은 거기서 한 번 더 튕겨 기업 마이페이지에 닿는다.
+ * **관리자는 일반 회원과 같게 다룬다**(`prd-mypage-admin-access.md`). 관리자도 스크랩과
+ * 모집글을 쌓으므로 볼 자리가 있어야 하고, 관리자 계정으로 화면을 확인할 수 없는 것이
+ * 개발을 막고 있었다. 기업 마이페이지만은 열지 않는다.
  *
  * 본문(`children`) 은 계정을 기다리지 않고 바로 그린다. 계정은 사이드바의 프로필 카드만
  * 쓰고, 그 카드는 값이 올 때까지 회색 막대로 자리를 잡는다.
@@ -71,11 +75,15 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           return;
         }
         const { role } = body.data;
-        if (role !== audience) {
-          // 일반 회원과 기업 회원은 서로의 마이페이지로 보낸다. 홈으로 보내면 자기 마이페이지가
-          // 어디인지 알려 주지 않은 채 쫓아내는 것이 된다. 관리자는 `apps/admin` 을 쓰므로
-          // 여기에 자기 자리가 없어 홈으로 보낸다.
-          router.replace(role === 'USER' || role === 'COMPANY' ? myPageHomeFor(role) : '/');
+        // 기업 회원이면 기업 마이페이지, 그 밖에는 일반 마이페이지가 자기 자리다. 역할을
+        // 나열하지 않고 기업만 가려내는 이유는 관리자도 오공고 회원이어서다 — 스크랩과
+        // 모집글 기록이 일반 회원과 같은 자리에 쌓이고, 관리자 전용 마이페이지는 없다.
+        // 기업 마이페이지만은 열지 않는다. 관리자는 기업 회원이 아니다.
+        const home: MyPageAudience = role === 'COMPANY' ? 'COMPANY' : 'USER';
+        if (home !== audience) {
+          // 자기 마이페이지로 보낸다. 홈으로 보내면 자기 마이페이지가 어디인지 알려 주지
+          // 않은 채 쫓아내는 것이 된다.
+          router.replace(myPageHomeFor(home));
           return;
         }
         setState({ kind: 'ready', account: body.data });
