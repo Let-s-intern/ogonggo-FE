@@ -1,1 +1,1 @@
-export { JobDetailView } from './ui/JobDetailView';
+export { fetchJobDetail, JobDetailView } from './ui/JobDetailView';

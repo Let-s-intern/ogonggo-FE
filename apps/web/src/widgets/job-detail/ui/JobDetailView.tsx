@@ -31,7 +31,7 @@ export interface JobDetailViewProps {
  * 03-api-reference/04-functions/not-found.md)로 변환한다. 그 외 오류(전송 실패 등)는 그대로
  * 다시 던진다.
  */
-async function fetchJobDetail(jobId: number): Promise<JobDetail> {
+export async function fetchJobDetail(jobId: number): Promise<JobDetail> {
   let response: SuccessResponseUserJobDetailResponse;
   try {
     response = (await getPublicJob(jobId)) as unknown as SuccessResponseUserJobDetailResponse;
