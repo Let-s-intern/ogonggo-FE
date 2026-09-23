@@ -131,7 +131,9 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     return (
       <div className="flex flex-col gap-4">
         {header}
-        {query.brief ? <WeekGrid items={[]} initialDate={initialDate} /> : null}
+        {query.brief ? (
+          <WeekGrid items={[]} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
+        ) : null}
         <JobMajorPicker query={query} />
       </div>
     );
@@ -149,6 +151,8 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       // 걸지 않은 필터가 주소에 남는다.
       excludeClosed: query.excludeClosed || undefined,
       keyword: query.keyword,
+      // `bookmarkedOnly` 는 여기서 보내지 않는다 — 서버 컴포넌트는 로그인 상태를 모른다
+      // (`../lib/query.ts`). `query.bookmarkedOnly` 는 아래로 그대로 내려 클라이언트가 거른다.
     },
   );
 
@@ -160,9 +164,14 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   return query.brief ? (
     <div className="flex flex-col gap-4">
       {header}
-      <WeekGrid items={items} initialDate={initialDate} />
+      <WeekGrid items={items} initialDate={initialDate} bookmarkedOnly={query.bookmarkedOnly} />
     </div>
   ) : (
-    <MonthCalendar items={items} initialDate={initialDate} header={header} />
+    <MonthCalendar
+      items={items}
+      initialDate={initialDate}
+      header={header}
+      bookmarkedOnly={query.bookmarkedOnly}
+    />
   );
 }

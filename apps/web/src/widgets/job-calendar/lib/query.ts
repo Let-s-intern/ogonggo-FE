@@ -40,6 +40,14 @@ export interface JobCalendarQuery {
   experienceType?: JobCalendarExperienceType;
   /** `마감공고 제외` 체크박스. **기본은 꺼짐이다** — 켜야 줄어든다. */
   excludeClosed: boolean;
+  /**
+   * `스크랩 공고만` 체크박스. **서버로 보내지 않는다** — 토큰이 브라우저에만 있어 달력을 받는
+   * 서버 컴포넌트는 로그인 상태를 모른다(`packages/api/src/lib/http-client.ts`의
+   * `setAccessTokenProvider` 주석). 값은 다른 알약과 같이 URL 에 싣고, 거르는 일은 클라이언트가
+   * 맡는다 — 카드의 북마크 아이콘과 같은 방식이다(`lib/bookmarked-only.ts`,
+   * `features/bookmark/model/useMyBookmarkIds.ts`).
+   */
+  bookmarkedOnly: boolean;
   /** `공고 검색` 알약. 두 글자 미만이면 없는 것으로 읽는다. */
   keyword?: string;
 }
@@ -52,6 +60,7 @@ export interface JobCalendarSearchParams {
   employmentType?: string;
   experienceType?: string;
   excludeClosed?: string;
+  bookmarkedOnly?: string;
   keyword?: string;
 }
 
@@ -154,6 +163,7 @@ export function parseJobCalendarQuery(
       searchParams.experienceType,
     ),
     excludeClosed: searchParams.excludeClosed === FLAG_ON,
+    bookmarkedOnly: searchParams.bookmarkedOnly === FLAG_ON,
     keyword: parseKeyword(searchParams.keyword),
   };
 }
@@ -194,6 +204,9 @@ export function buildJobCalendarHref(
   }
   if (merged.excludeClosed) {
     params.set('excludeClosed', FLAG_ON);
+  }
+  if (merged.bookmarkedOnly) {
+    params.set('bookmarkedOnly', FLAG_ON);
   }
   if (merged.keyword) {
     params.set('keyword', merged.keyword);

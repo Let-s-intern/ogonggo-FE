@@ -2,7 +2,9 @@
 
 import { useState, type ReactNode } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { filterBookmarkedOnly } from '../lib/bookmarked-only';
 import { parseCalendarDate, toCalendarParam } from '../lib/query';
+import { useBookmarkedIds } from './BookmarkedOnlyFilterPill';
 import { DayJobPanel } from './DayJobPanel';
 import { MonthGrid } from './MonthGrid';
 
@@ -24,6 +26,8 @@ export interface MonthCalendarProps {
   initialDate: string;
   /** 격자 위의 날짜 이동 줄(`CalendarHeader`). 격자와 같은 열에 놓인다. */
   header: ReactNode;
+  /** `스크랩 공고만` 알약. 서버가 거르지 않은 값이라 여기서 거른다(`../lib/bookmarked-only.ts`). */
+  bookmarkedOnly: boolean;
 }
 
 /**
@@ -35,7 +39,7 @@ export interface MonthCalendarProps {
  * 달을 옮기면 고른 날을 그 달의 기본값으로 되돌린다. 화살표 이동은 같은 라우트 안이라 이
  * 컴포넌트가 다시 마운트되지 않으므로 렌더 중에 맞춘다(`WeekGrid`와 같은 방법).
  */
-export function MonthCalendar({ items, initialDate, header }: MonthCalendarProps) {
+export function MonthCalendar({ items, initialDate, header, bookmarkedOnly }: MonthCalendarProps) {
   const [selectedDay, setSelectedDay] = useState(() => defaultDay(initialDate));
   const [renderedMonth, setRenderedMonth] = useState(initialDate);
   if (renderedMonth !== initialDate) {
@@ -43,9 +47,12 @@ export function MonthCalendar({ items, initialDate, header }: MonthCalendarProps
     setSelectedDay(defaultDay(initialDate));
   }
 
-  const jobIds = items
-    .filter((item) => item.recruitmentEndAt.slice(0, 10) === selectedDay)
-    .map((item) => item.id);
+  const bookmarkedIds = useBookmarkedIds();
+  const visibleItems = filterBookmarkedOnly(items, bookmarkedOnly, bookmarkedIds);
+
+  const dayItems = visibleItems.filter(
+    (item) => item.recruitmentEndAt.slice(0, 10) === selectedDay,
+  );
 
   return (
     // 목업의 격자는 791px, 목록은 290px, 사이는 40px 이다.
@@ -53,13 +60,13 @@ export function MonthCalendar({ items, initialDate, header }: MonthCalendarProps
       <div className="flex min-w-0 flex-col gap-4">
         {header}
         <MonthGrid
-          items={items}
+          items={visibleItems}
           initialDate={initialDate}
           selectedDay={selectedDay}
           onSelectDay={setSelectedDay}
         />
       </div>
-      <DayJobPanel day={selectedDay} jobIds={jobIds} />
+      <DayJobPanel day={selectedDay} items={dayItems} />
     </div>
   );
 }

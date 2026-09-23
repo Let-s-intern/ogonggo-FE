@@ -16,8 +16,10 @@ import {
   useCalendarDate,
   weekdayLabel,
 } from '../lib/calendar-grid';
+import { filterBookmarkedOnly } from '../lib/bookmarked-only';
 import { parseCalendarDate, toCalendarParam } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
+import { useBookmarkedIds } from './BookmarkedOnlyFilterPill';
 
 /**
  * 주간 뷰의 막대. 공고 하나가 가로 막대 하나이고 **마감일 하루에만** 놓인다.
@@ -96,6 +98,8 @@ export interface WeekGridProps {
   items: UserJobCalendarItemResponse[];
   /** 펼칠 주에 든 아무 날짜. `YYYY-MM-DD`. */
   initialDate: string;
+  /** `스크랩 공고만` 알약. 서버가 거르지 않은 값이라 여기서 거른다(`../lib/bookmarked-only.ts`). */
+  bookmarkedOnly: boolean;
 }
 
 /**
@@ -112,9 +116,12 @@ export interface WeekGridProps {
  *
  * 스타일을 덮는 방법은 `../lib/calendar-grid`의 `GRID_CLASSES` 주석에 정리했다.
  */
-export function WeekGrid({ items, initialDate }: WeekGridProps) {
+export function WeekGrid({ items, initialDate, bookmarkedOnly }: WeekGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
   useCalendarDate(calendarRef, initialDate);
+
+  const bookmarkedIds = useBookmarkedIds();
+  const visibleItems = filterBookmarkedOnly(items, bookmarkedOnly, bookmarkedIds);
 
   // 막대 색을 가르는 기준(PRD 8.3). 조회 범위가 이 주 7일이라 그려진 막대는 전부 "이번 주
   // 마감"이고, 그 중 마감일이 오늘인 것만 파랑이다. FullCalendar 의 `arg.isToday` 로는 안
@@ -136,7 +143,7 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
   }
 
   const weekStart = startOfCalendarWeek(parseCalendarDate(initialDate) ?? new Date());
-  const rowCount = countWeekRows(items, weekStart);
+  const rowCount = countWeekRows(visibleItems, weekStart);
   const collapsed = rowCount > COLLAPSED_ROWS && !expanded;
 
   return (
@@ -227,7 +234,7 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
             </Link>
           );
         }}
-        events={buildWeekEvents(items, today)}
+        events={buildWeekEvents(visibleItems, today)}
       />
       {rowCount > COLLAPSED_ROWS ? (
         <button
@@ -241,7 +248,7 @@ export function WeekGrid({ items, initialDate }: WeekGridProps) {
             코드에 그대로 옮겨 적는 일이다 — 라이브러리 내부가 바뀌면 조용히 틀린 수가 뜬다.
             주의 공고 수는 데이터에서 바로 나오고 "얼마나 더 있나"라는 같은 질문에 답한다.
           */}
-          {expanded ? '접기' : `공고 ${items.length}개 전체 보기`}
+          {expanded ? '접기' : `공고 ${visibleItems.length}개 전체 보기`}
           <ChevronIcon direction={expanded ? 'up' : 'down'} className="h-4 w-4" />
         </button>
       ) : null}

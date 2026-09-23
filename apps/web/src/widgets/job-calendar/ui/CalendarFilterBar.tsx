@@ -10,6 +10,7 @@ import {
   type JobCalendarExperienceType,
   type JobCalendarQuery,
 } from '../lib/query';
+import { BookmarkedOnlyFilterPill } from './BookmarkedOnlyFilterPill';
 
 /**
  * 목업의 알약 하나(`docs/asset/공고달력.png`). 생김새만 맡는다 — 누를 수 있는지는 감싸는 쪽이
@@ -180,7 +181,7 @@ function KeywordFilter({ query }: { query: JobCalendarQuery }) {
  * 켜짐은 `gray-800`(31,41,55) 채움 + 굵은 글씨, 꺼짐은 `gray-400`(156,163,175) 테두리 + 같은
  * 색 글씨다. 상자는 14px 정사각형이다. 전부 목업 실측값이다.
  */
-function FilterCheckbox({ label, checked }: { label: string; checked: boolean }) {
+export function FilterCheckbox({ label, checked }: { label: string; checked: boolean }) {
   return (
     <span className="flex items-center gap-2">
       <span
@@ -221,14 +222,10 @@ export interface CalendarFilterBarProps {
 }
 
 /**
- * 공고 달력 상단의 필터 줄. `간략히 보기`와 `직무`를 뺀 나머지는 **동작하지 않는다**(PRD 3절·8.7).
- * 사이드·스터디의 `모집글 쓰기` 버튼과 같은 처리다 — 목업대로 그리되 클릭 핸들러를 붙이지 않는다.
- *
- * `GET /api/v1/jobs/calendar`의 응답은 `id`·`companyName`·`recruitmentStartAt`·
- * `recruitmentEndAt` 넷뿐이라(PRD 2절) 서버에서도 클라이언트에서도 거를 값이 없다. 무엇이
- * 없어서 못 거는지는 각 요소 위에 적었다.
- *
- * 실제로 동작하는 것은 `간략히 보기`(주간 뷰 전환)와 `직무`(관심 직무 선택 화면, v6)다.
+ * 공고 달력 상단의 필터 줄. `채용 형태`·`경력`·`마감공고 제외`·`공고 검색`·`스크랩 공고만`·
+ * `간략히 보기`·`직무`가 실제로 동작한다(Push 1). **`마감일 기준` 토글만 동작하지 않는다** —
+ * 달력은 지금도 마감일 기준으로만 놓이고, 끄면 무엇 기준이 되는지 목업이 정하지 않았다
+ * (`DeadlineBasisToggle`).
  */
 export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
   return (
@@ -304,8 +301,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         >
           <FilterCheckbox label="마감공고 제외" checked={query.excludeClosed} />
         </Link>
-        {/* API 없음: 응답에 `bookmarked`가 없다. 스크랩 여부를 알 방법이 없다. */}
-        <FilterCheckbox label="스크랩 공고만" checked={false} />
+        <BookmarkedOnlyFilterPill query={query} />
         <DeadlineBasisToggle />
       </div>
     </div>
