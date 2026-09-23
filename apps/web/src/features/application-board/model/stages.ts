@@ -193,6 +193,35 @@ export function movableTargets(
   return findStage(tab, from)?.movableTo ?? [];
 }
 
+/** 상태 셀렉트에 늘어놓는 항목 하나. `@ogonggo/ui` 의 `SelectOption` 과 같은 모양이다. */
+export interface ApplicationStageOption {
+  value: ApplicationStageId;
+  label: string;
+  disabled: boolean;
+}
+
+/**
+ * 상태 셀렉트가 그리는 항목들. **그 탭의 단계를 전부 늘어놓고 옮길 수 없는 것만 비활성**으로
+ * 둔다(PRD 결정 기록 "칸·섹션은 목업대로 그리고 옮기는 조작만 막는다"). 목록에서 빼지 않는
+ * 이유는 어디까지 있는 흐름인지가 그 자체로 정보이기 때문이고, 지금 단계는 현재 값이라 언제나
+ * 고를 수 있다.
+ *
+ * 리스트의 행과 칸반의 카드가 같은 것을 부른다. 두 곳이 각자 계산하면 한쪽만 고쳐 둔 채로
+ * 보기를 바꿨을 때 고를 수 있는 단계가 달라진다.
+ */
+export function stageOptions(
+  tab: ApplicationBoardTab,
+  from: ApplicationStageId,
+): ApplicationStageOption[] {
+  const targets = movableTargets(tab, from);
+  const stages: readonly ApplicationStage<ApplicationStageId>[] = APPLICATION_BOARD_STAGES[tab];
+  return stages.map((stage) => ({
+    value: stage.id,
+    label: stage.label,
+    disabled: stage.id !== from && !targets.includes(stage.id),
+  }));
+}
+
 /**
  * 이 전이를 보내도 되는가. **요청을 보내기 전에 이것을 먼저 본다** — 막힌 전이를 보내면
  * 백엔드가 409 로 거절하고, 그 왕복은 사용자에게 아무것도 알려 주지 않는다.

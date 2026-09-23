@@ -14,11 +14,13 @@ export {
   isStageId,
   movableTargets,
   stageLabel,
+  stageOptions,
   stagesOf,
   type ApplicationBoardTab,
   type ApplicationStage,
   type ApplicationStageId,
   type ApplicationStageIds,
+  type ApplicationStageOption,
 } from './model/stages';
 export {
   applicationStageKey,
