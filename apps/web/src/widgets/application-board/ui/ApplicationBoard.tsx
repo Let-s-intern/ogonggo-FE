@@ -1,6 +1,7 @@
 'use client';
 
 import type { ApplicationBoardTab } from '@/features/application-board';
+import { useMediaQuery } from '@/shared/lib/useMediaQuery';
 import { MyPageListTabs, type MyPageListTab } from '@/widgets/mypage-list';
 import { buildApplicationBoardHref, type ApplicationBoardQuery } from '../lib/query';
 import { ApplicationBoardFilterRow } from './ApplicationBoardFilterRow';
@@ -30,8 +31,16 @@ export interface ApplicationBoardProps {
  * 탭 줄은 v4 목록 화면들이 쓰는 `MyPageListTabs` 다. 목업의 탭 뒤에는 건수가 붙어 있지만
  * 넘기지 않는다 — 그 수는 필터와 무관한 탭 전체 건수이고, 단계별로 갈린 지금 요청들로는 셀 수
  * 없다(Push 1 결과보고서 "Push 2·3 이 풀어야 할 것"). 0 을 그리면 "비었다" 로 읽힌다.
+ *
+ * **모바일에는 칸반이 없다**(`.claude/tasks/memos/결정-모바일-칸반-차단-브레이크포인트-2026-09-23.md`).
+ * `md`(768px) 미만이면 `query.view`가 `kanban`이어도 리스트를 그린다 — 주소창에
+ * `?view=kanban`을 직접 쳐도 마찬가지다. 칸반 컴포넌트 자체가 마운트되지 않으므로 칸별
+ * `useApplicationStage` 요청도 나가지 않는다.
  */
 export function ApplicationBoard({ query }: ApplicationBoardProps) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const showKanban = query.view === 'kanban' && isDesktop;
+
   return (
     <div className="flex flex-col gap-6">
       <MyPageListTabs
@@ -41,10 +50,10 @@ export function ApplicationBoard({ query }: ApplicationBoardProps) {
         aria-label="지원 · 신청 종류"
       />
       <ApplicationBoardFilterRow query={query} />
-      {query.view === 'list' ? (
-        <ApplicationBoardList query={query} />
-      ) : (
+      {showKanban ? (
         <ApplicationBoardKanban query={query} />
+      ) : (
+        <ApplicationBoardList query={query} />
       )}
     </div>
   );

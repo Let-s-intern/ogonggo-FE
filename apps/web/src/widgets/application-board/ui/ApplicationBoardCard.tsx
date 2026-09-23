@@ -1,5 +1,6 @@
 'use client';
 
+import { useDraggable } from '@dnd-kit/core';
 import Link from 'next/link';
 import { Badge, Select, cn } from '@ogonggo/ui';
 import {
@@ -65,9 +66,41 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
     }
   };
 
+  /*
+   * 드래그 소스. `id`는 이 카드의 `item.key` 그대로 — `ApplicationBoardKanban`의 `onDragEnd`가
+   * `active.data.current`에서 `item`과 `from`을 그대로 꺼내 `move.move`에 넘긴다.
+   *
+   * `setNodeRef`·`transform`은 카드 전체(이 바깥 `div`)에 둔다. `listeners`·`attributes`는
+   * 아래 손잡이 하나에만 건다 — 카드 전체가 잡히면 `Link`를 누르는 클릭과 드래그 시작이
+   * 겹친다. 손잡이가 눌린 지점만 드래그를 시작하고, 옮기는 동안 움직이는 것은(`style`) 카드
+   * 전체다.
+   */
+  const draggable = useDraggable({ id: item.key, data: { item, from: stage.id } });
+  const style = draggable.transform
+    ? {
+        transform: `translate3d(${draggable.transform.x}px, ${draggable.transform.y}px, 0)`,
+      }
+    : undefined;
+
   return (
-    <div className="relative rounded-xl bg-white">
-      <Link href={item.href} className="block p-4 pb-3">
+    <div
+      ref={draggable.setNodeRef}
+      style={style}
+      className={cn(
+        'relative rounded-xl bg-white',
+        draggable.isDragging && 'z-10 opacity-90 shadow-lg',
+      )}
+    >
+      <div
+        {...draggable.listeners}
+        {...draggable.attributes}
+        role="button"
+        aria-label={`${item.title} 드래그해서 단계 옮기기`}
+        className="flex h-5 cursor-grab touch-none items-center justify-center text-gray-300 active:cursor-grabbing"
+      >
+        <span aria-hidden="true" className="icon-[lucide--grip-horizontal] block h-4 w-4" />
+      </div>
+      <Link href={item.href} className="block px-4 pt-1 pb-3">
         <div className={cn('flex items-center gap-2', removable && 'pr-6')}>
           <Thumbnail
             src={item.thumbnailUrl}
@@ -109,7 +142,7 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
           aria-label={`${item.title} 칸에서 빼기`}
           disabled={move.pending}
           onClick={() => move.move({ item, from: stage.id, to: 'SCRAPPED' })}
-          className="absolute top-4 right-4 flex h-5 w-5 items-center justify-center text-gray-400 disabled:text-gray-200"
+          className="absolute top-6 right-4 flex h-5 w-5 items-center justify-center text-gray-400 disabled:text-gray-200"
         >
           <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
         </button>
