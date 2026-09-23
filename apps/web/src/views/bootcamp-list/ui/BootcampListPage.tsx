@@ -15,7 +15,7 @@ export type BootcampListPageProps = BootcampListQuery;
 export function BootcampListPage(query: BootcampListPageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center bg-white">
-      <HomeHero screen="bootcamps" headline="실무를 배울 수 있는 교육만 골라 모았어요" />
+      <HomeHero screen="bootcamps" />
       <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
         <BootcampList {...query} />
         <div className="w-full border-t border-gray-100" />

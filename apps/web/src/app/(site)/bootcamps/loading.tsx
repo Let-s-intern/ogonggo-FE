@@ -19,7 +19,7 @@ const CARD_COUNT = 12;
 export default function Loading() {
   return (
     <main className="ogonggo-fallback flex min-h-screen flex-col items-center bg-white">
-      <ListPageSkeleton screen="bootcamps" cardCount={CARD_COUNT} footer={<ForBusinessBanner />} />
+      <ListPageSkeleton cardCount={CARD_COUNT} footer={<ForBusinessBanner />} />
     </main>
   );
 }

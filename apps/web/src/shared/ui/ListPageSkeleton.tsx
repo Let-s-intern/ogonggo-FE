@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react';
-import type { HeroScreen } from '@/shared/lib/heroImages';
 import { CardGridSkeleton } from '@/shared/ui/CardGridSkeleton';
 import { HeroSkeleton } from '@/shared/ui/HeroSkeleton';
 
 export interface ListPageSkeletonProps {
-  /** 어느 화면의 히어로 자리인지(`HeroSkeleton`의 같은 이름 prop). */
-  screen: HeroScreen;
   /** 카드 수. 한 페이지 건수는 MSW 핸들러가 정한다 — 부트캠프 12장, 사이드·스터디 8장이다. */
   cardCount: number;
   /**
@@ -37,7 +34,6 @@ export interface ListPageSkeletonProps {
  * `prefers-reduced-motion: reduce`에서 그 맥동을 끄기 위한 표식이다(`app/globals.css`).
  */
 export function ListPageSkeleton({
-  screen,
   cardCount,
   hasCardFooter = false,
   framed = false,
@@ -47,7 +43,7 @@ export function ListPageSkeleton({
     <div className="flex w-full flex-col items-center" role="status">
       <span className="sr-only">불러오는 중</span>
 
-      <HeroSkeleton screen={screen} />
+      <HeroSkeleton />
 
       <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
         <div

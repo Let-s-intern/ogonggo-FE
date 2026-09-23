@@ -16,7 +16,6 @@ export default function Loading() {
   return (
     <main className="ogonggo-fallback flex min-h-screen flex-col items-center bg-white">
       <ListPageSkeleton
-        screen="side-studies"
         cardCount={CARD_COUNT}
         hasCardFooter
         framed
