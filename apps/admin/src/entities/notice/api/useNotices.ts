@@ -88,3 +88,23 @@ export function useDeleteNotice() {
     },
   });
 }
+
+/**
+ * 목록에서 노출만 바꾼다. 본문을 보내지 않으므로 평문 ↔ Lexical 왕복을 거치지 않는다.
+ *
+ * `useSaveNotice` 는 폼이 네 칸을 다 들고 있어 전부 보내지만, 여기는 고칠 것이 한 칸이다.
+ * 본문까지 보내면 요약 응답에 본문이 없어 목록에서는 보낼 값 자체가 없고, 다시 받아 오면
+ * 토글 한 번에 요청이 둘이 된다. `PATCH` 라 보낸 칸만 바뀐다.
+ *
+ * 채용공고·부트캠프 목록이 같은 자리에서 같은 일을 한다(`pages/job-list` 의 `VisibilityToggle`).
+ */
+export function usePatchNoticeVisibility(noticeId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (visibility: NoticeVisibility) =>
+      unwrapData(updateNotice(noticeId, { visibility })),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] });
+    },
+  });
+}

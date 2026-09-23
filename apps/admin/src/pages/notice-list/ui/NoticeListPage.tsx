@@ -11,19 +11,20 @@ import {
   Input,
   Pagination,
   Textarea,
+  Toggle,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import {
   useDeleteNotice,
   useNoticeDetail,
   useNoticeList,
+  usePatchNoticeVisibility,
   useSaveNotice,
   type NoticeDetail,
   type NoticeSummary,
 } from '@/entities/notice/api/useNotices';
 import { lexicalToText } from '@/entities/notice/lib/content';
 import { PageHeader } from '@/widgets/page-header';
-import { VisibilityBadge } from '@/shared/config/labels';
 import { formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
@@ -62,7 +63,7 @@ export function NoticeListPage() {
       key: 'visibility',
       header: '노출',
       width: 'w-24',
-      render: (row) => <VisibilityBadge value={row.visibility} />,
+      render: (row) => <VisibilityToggle notice={row} />,
     },
     {
       key: 'registeredAt',
@@ -273,5 +274,28 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
         />
       ) : null}
     </Card>
+  );
+}
+
+/**
+ * 목록에서 노출을 바로 끈다. 상세로 들어가 고치고 나오는 것이 노출 하나 때문이면 왕복이 아깝다.
+ *
+ * 클릭을 행에서 멈춘다. 행 전체가 상세를 여는 자리라 멈추지 않으면 토글을 누르는 순간 폼이 열린다.
+ * 채용공고·부트캠프 목록이 같은 모양이다(`pages/job-list` 의 `VisibilityToggle`).
+ */
+function VisibilityToggle({ notice }: { notice: NoticeSummary }) {
+  const patchMutation = usePatchNoticeVisibility(notice.id);
+  const visible = notice.visibility === 'VISIBLE';
+
+  return (
+    // 라벨이 줄바꿈되면 행 높이가 들쭉날쭉해진다.
+    <span className="whitespace-nowrap" onClick={(event) => event.stopPropagation()}>
+      <Toggle
+        checked={visible}
+        disabled={patchMutation.isPending}
+        label={visible ? '노출' : '비노출'}
+        onChange={(next) => patchMutation.mutate(next ? 'VISIBLE' : 'HIDDEN')}
+      />
+    </span>
   );
 }
