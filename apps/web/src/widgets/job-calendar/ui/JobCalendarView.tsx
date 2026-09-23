@@ -7,6 +7,7 @@ import { JobMajorPicker } from './JobMajorPicker';
 import { MonthCalendar } from './MonthCalendar';
 import { WeekGrid } from './WeekGrid';
 import type {
+  ListPublicJobCalendarParams,
   SuccessResponseListUserJobCalendarItemResponse,
   UserJobCalendarItemResponse,
 } from '@ogonggo/api';
@@ -49,18 +50,22 @@ export function weekGridRange(baseDate: Date): { from: Date; to: Date } {
  * 응답을 가정하지만, 이 저장소의 `httpClient`는 파싱된 body 를 그대로 반환한다.
  */
 async function fetchCalendarItems(
-  from: string,
-  to: string,
-  jobField: string,
+  params: ListPublicJobCalendarParams,
 ): Promise<UserJobCalendarItemResponse[]> {
-  const response = (await listPublicJobCalendar({
-    from,
-    to,
-    jobField,
-  })) as unknown as SuccessResponseListUserJobCalendarItemResponse;
+  const response = (await listPublicJobCalendar(
+    params,
+  )) as unknown as SuccessResponseListUserJobCalendarItemResponse;
 
   return response.data ?? [];
 }
+
+/**
+ * 직무 말고 필터 줄이 거는 것들. `from`·`to`·`jobField` 는 부르는 쪽이 정하므로 뺀다.
+ *
+ * **요청 수를 늘리지 않는다.** 직무만 요청을 나누고(`fetchCalendarItemsForMajors`) 이 값들은
+ * 나뉜 요청마다 똑같이 얹힌다 — 알약을 몇 개 걸든 요청은 고른 직무 수 그대로 1~3 이다.
+ */
+type CalendarFilters = Omit<ListPublicJobCalendarParams, 'from' | 'to' | 'jobField' | 'jobRole'>;
 
 /**
  * 고른 관심 직무의 공고를 받는다. `slugs` 는 항상 하나 이상이다 — 비면 달력을 부르지 않고
@@ -79,9 +84,12 @@ async function fetchCalendarItemsForMajors(
   from: string,
   to: string,
   slugs: string[],
+  filters: CalendarFilters,
 ): Promise<UserJobCalendarItemResponse[]> {
   const fields = slugs.map(jobMajorLabel).filter((label): label is string => label !== undefined);
-  const responses = await Promise.all(fields.map((field) => fetchCalendarItems(from, to, field)));
+  const responses = await Promise.all(
+    fields.map((field) => fetchCalendarItems({ ...filters, from, to, jobField: field })),
+  );
 
   const byId = new Map<number, UserJobCalendarItemResponse>();
   for (const items of responses) {
@@ -134,6 +142,10 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     toCalendarParam(from),
     toCalendarParam(to),
     query.majors,
+    {
+      employmentType: query.employmentType,
+      experienceType: query.experienceType,
+    },
   );
 
   // 뷰를 컴포넌트 통째로 갈아끼운다(2026-09-02 결정). 한 인스턴스에서 `changeView()` 를 부르는

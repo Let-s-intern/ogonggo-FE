@@ -1,11 +1,17 @@
 import { cn } from '@ogonggo/ui';
 import Link from 'next/link';
+import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
-import { buildJobCalendarHref, type JobCalendarQuery } from '../lib/query';
+import {
+  buildJobCalendarHref,
+  type JobCalendarEmploymentType,
+  type JobCalendarExperienceType,
+  type JobCalendarQuery,
+} from '../lib/query';
 
 /**
- * 목업의 알약 하나(`docs/asset/공고달력.png`). **누를 수 없다** — `<button>`도 `<a>`도 아닌
- * `<div>`다. 필터를 걸 수 없다는 것을 생김새가 아니라 마크업으로 못 박는다.
+ * 목업의 알약 하나(`docs/asset/공고달력.png`). 생김새만 맡는다 — 누를 수 있는지는 감싸는 쪽이
+ * 정한다(`<summary>`, `<Link>`, `<form>`).
  *
  * 크기·색은 목업에서 실측했다. 높이 36px(`h-9`), 테두리 `gray-200`(229,231,235),
  * 글자 `gray-400`(156,163,175) — 전체 공고 화면의 `SearchFilterBar`와 같은 값이다.
@@ -16,14 +22,14 @@ function FilterPill({
   trailing,
   active = false,
 }: {
-  label: string;
+  label: React.ReactNode;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   /** 켜진 알약은 파란 테두리와 글자다(`v6 공고달력/관심직무 선택됨.png`의 `직무`). */
   active?: boolean;
 }) {
   return (
-    <div
+    <span
       className={cn(
         'flex h-9 items-center gap-1 rounded-full border px-3 text-sm',
         active ? 'border-blue-500 text-blue-500' : 'border-gray-200 text-gray-400',
@@ -32,7 +38,90 @@ function FilterPill({
       {leading}
       {label}
       {trailing}
-    </div>
+    </span>
+  );
+}
+
+const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPE_LABELS) as [
+  JobCalendarEmploymentType,
+  string,
+][];
+
+/**
+ * `경력` 알약의 값과 이름. `entities/job/model/labels.ts` 의 `EXPERIENCE_TYPE_LABELS` 를 쓰지
+ * 않는 이유는 그쪽이 `BOTH` 와 `IRRELEVANT` 를 둘 다 `경력무관` 으로 부르기 때문이다 — 배지
+ * 한 칸에는 문제가 없지만 목록으로 펼치면 같은 이름이 두 줄이 되어 무엇이 다른지 알 수 없다.
+ * 이름은 API 문서의 표(`ListPublicJobCalendarParams`)를 그대로 옮겼다.
+ */
+const EXPERIENCE_TYPE_OPTIONS: [JobCalendarExperienceType, string][] = [
+  ['NEWCOMER', '신입'],
+  ['EXPERIENCED', '경력'],
+  ['BOTH', '신입·경력'],
+  ['IRRELEVANT', '경력무관'],
+];
+
+/**
+ * 값 하나를 고르는 알약. `<details>`/`<summary>` 로 여닫고 고르는 순간 이동하는
+ * `widgets/job-list/ui/SearchFilterBar.tsx` 의 `FilterDropdown` 과 같은 방식이다 —
+ * 자바스크립트 없이 열리고, 이 줄이 클라이언트 컴포넌트가 될 이유가 없다.
+ *
+ * 맨 위 줄은 "고르지 않음" 으로 돌아가는 길이다. 고른 뒤에 필터를 뺄 방법이 없으면 알약이
+ * 한 번 걸리고 나서 되돌아갈 수 없다.
+ */
+function FilterDropdown<TValue extends string>({
+  label,
+  selected,
+  options,
+  buildHref,
+}: {
+  label: string;
+  selected: TValue | undefined;
+  options: [TValue, string][];
+  buildHref: (value: TValue | undefined) => string;
+}) {
+  const currentLabel = options.find(([value]) => value === selected)?.[1] ?? label;
+
+  return (
+    <details className="group relative">
+      {/* 기본 삼각형 표식을 지운다. 꺾쇠는 알약 안에 따로 있다. */}
+      <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+        <FilterPill
+          label={currentLabel}
+          active={selected !== undefined}
+          trailing={<ChevronIcon className="h-4 w-4 group-open:rotate-180" />}
+        />
+      </summary>
+      <ul className="absolute right-0 z-10 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-md">
+        <li>
+          <Link
+            href={buildHref(undefined)}
+            className={cn(
+              'block px-3 py-1.5 text-sm',
+              selected === undefined
+                ? 'font-semibold text-blue-500'
+                : 'text-gray-600 hover:bg-gray-50',
+            )}
+          >
+            {label}
+          </Link>
+        </li>
+        {options.map(([value, optionLabel]) => (
+          <li key={value}>
+            <Link
+              href={buildHref(value)}
+              className={cn(
+                'block px-3 py-1.5 text-sm',
+                value === selected
+                  ? 'font-semibold text-blue-500'
+                  : 'text-gray-600 hover:bg-gray-50',
+              )}
+            >
+              {optionLabel}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -101,10 +190,11 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
       <div className="flex items-center gap-2">
         {/* API 없음: 달력 응답에 제목도 본문도 없고 `q` 파라미터도 없다. 검색할 대상이 없다. */}
         <FilterPill label="공고 검색" leading={<SearchIcon className="h-4 w-4 text-gray-400" />} />
-        {/* API 없음: 응답에 `employmentType`이 없다. 정규직·인턴을 구분할 값 자체가 없다. */}
-        <FilterPill
+        <FilterDropdown
           label="채용 형태"
-          trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />}
+          selected={query.employmentType}
+          options={EMPLOYMENT_TYPE_OPTIONS}
+          buildHref={(value) => buildJobCalendarHref(query, { employmentType: value })}
         />
         {/*
           관심 직무 선택 화면을 여닫는다(v6). **고른 직무가 있을 때만 링크다.** 고른 것이 없으면
@@ -132,8 +222,12 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         ) : (
           <FilterPill label="직무" trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />} />
         )}
-        {/* API 없음: 응답에 `experienceType`이 없다. 신입·경력을 구분할 값이 없다. */}
-        <FilterPill label="경력" trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />} />
+        <FilterDropdown
+          label="경력"
+          selected={query.experienceType}
+          options={EXPERIENCE_TYPE_OPTIONS}
+          buildHref={(value) => buildJobCalendarHref(query, { experienceType: value })}
+        />
       </div>
       {/* 체크박스끼리는 목업에서 18px 이다. */}
       <div className="flex items-center gap-[18px]">
