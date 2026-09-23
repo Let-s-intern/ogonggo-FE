@@ -7,7 +7,6 @@ import {
   moveApplicationStage,
   type ApplicationBoardItem,
   type ApplicationBoardPage,
-  type MovableStageId,
 } from '../api/applicationBoardApi';
 import { canMoveStage, type ApplicationBoardTab, type ApplicationStageId } from './stages';
 
@@ -16,7 +15,7 @@ type StageData = InfiniteData<ApplicationBoardPage, number>;
 export interface MoveStageRequest {
   item: ApplicationBoardItem;
   from: ApplicationStageId;
-  to: MovableStageId;
+  to: ApplicationStageId;
 }
 
 export interface MoveStage {
@@ -30,7 +29,7 @@ export interface MoveStage {
 }
 
 /**
- * 카드 한 장을 다른 단계로 옮긴다(PRD "스크랩 ↔ 지원 준비 중을 옮길 수 있다").
+ * 카드 한 장을 다른 단계로 옮긴다.
  *
  * 누르는 즉시 두 칸의 캐시를 고쳐 카드를 옮기고 요청을 보낸다. 응답을 기다린 뒤에 옮기면 누를
  * 때마다 한 박자 늦어 두 번 누르게 된다 — 북마크 토글과 같은 방식이다
@@ -45,7 +44,8 @@ export function useMoveStage(tab: ApplicationBoardTab): MoveStage {
   const tabKey = ['application-board', tab];
 
   const mutation = useMutation({
-    mutationFn: ({ item, to }: MoveStageRequest) => moveApplicationStage(tab, item.id, to),
+    mutationFn: ({ item, from, to }: MoveStageRequest) =>
+      moveApplicationStage(tab, item.id, from, to),
     onMutate: async ({ item, from, to }) => {
       await queryClient.cancelQueries({ queryKey: tabKey });
       const previous = queryClient.getQueriesData<StageData>({ queryKey: tabKey });
@@ -87,8 +87,9 @@ export function useMoveStage(tab: ApplicationBoardTab): MoveStage {
 }
 
 /**
- * 막힌 전이를 눌렀을 때. 화면은 애초에 그 선택지를 비활성으로 그리지만, 목록을 받아 둔 사이에
- * 다른 탭에서 단계가 바뀌면 여기까지 올 수 있다.
+ * 막힌 전이를 눌렀을 때. 채용공고·부트캠프는 전이가 전부 열려 있어 여기 오지 않고,
+ * 사이드·스터디의 `스크랩 ↔ 지원 완료` 처럼 백엔드에 호출이 없는 자리에서만 나온다
+ * (`stages.ts` 의 `movableTo`).
  */
 const BLOCKED_MESSAGE = '아직 옮길 수 없는 단계예요';
 
@@ -107,7 +108,7 @@ function withItem(data: StageData, item: ApplicationBoardItem): StageData {
   if (!first || first.items.some((existing) => existing.id === item.id)) {
     return data;
   }
-  // 옮긴 것은 그 칸의 맨 앞에 온다 — 백엔드의 `prepare` 설명이 그렇게 적고 있다.
+  // 옮긴 것은 그 칸의 맨 앞에 온다 — 백엔드의 전이 API 설명이 그렇게 적고 있다.
   const pages = [{ ...first, items: [item, ...first.items] }, ...rest];
   return withTotalDelta({ ...data, pages }, 1);
 }
@@ -135,7 +136,7 @@ function withTotalDelta(data: StageData, delta: number): StageData {
 
 /**
  * 409 는 백엔드가 막은 전이다 — 사이드·스터디에서 이미 지원 완료·활동 중·활동 완료인 건을
- * 되돌리려 할 때 온다. 404 는 그사이 내려간 글이다.
+ * `cancel-preparation` 으로 되돌리려 할 때 온다. 404 는 그사이 내려간 글이다.
  */
 function failureMessage(error: unknown): string {
   if (!(error instanceof HttpError)) {
