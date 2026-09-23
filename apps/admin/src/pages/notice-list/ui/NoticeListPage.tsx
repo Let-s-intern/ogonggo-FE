@@ -5,37 +5,49 @@ import {
   Callout,
   Card,
   CardTitle,
+  ConfirmDelete,
   DataTable,
   Field,
   Input,
+  Pagination,
   Textarea,
   type DataTableColumn,
 } from '@ogonggo/ui';
-import type { Notice } from '@ogonggo/api/src/mocks/fixtures/admin-notice';
-import { useNoticeList, useSaveNotice } from '@/entities/notice/api/useNotices';
-import { PageHeader } from '@/widgets/page-header';
 import {
-  BACKEND_PENDING_MESSAGE,
-  isBackendPending,
-  tableBodyState,
-} from '@/shared/config/backendPending';
-import { formatDate, toDateInputValue } from '@/shared/lib/format';
+  useDeleteNotice,
+  useNoticeDetail,
+  useNoticeList,
+  useSaveNotice,
+  type NoticeDetail,
+  type NoticeSummary,
+} from '@/entities/notice/api/useNotices';
+import { lexicalToText } from '@/entities/notice/lib/content';
+import { PageHeader } from '@/widgets/page-header';
+import { VisibilityBadge } from '@/shared/config/labels';
+import { formatDate } from '@/shared/lib/format';
+import { useListQuery } from '@/shared/lib/useListQuery';
 
 /**
- * 공지사항 목록과 작성·수정.
+ * 공지사항 목록과 작성·수정·삭제.
  *
- * 목록과 폼을 한 화면에 둔다. 공지는 수십 건을 넘지 않고, 상단 고정이 하나뿐이라 무엇이 고정돼
- * 있는지 보면서 쓰는 편이 낫다.
+ * 목록과 폼을 한 화면에 둔다. 공지는 수십 건을 넘지 않고, 무엇이 고정돼 있는지 보면서 쓰는
+ * 편이 낫다.
  *
- * 고정을 옮기면 먼저 걸린 공지가 풀린다. 조용히 풀지 않고 무엇이 풀렸는지 알린다
- * (PRD "고객 지원 · 공지사항"). 그 판단은 목 핸들러가 하고 화면은 응답에 실려 온 제목을 보여준다.
+ * 목록에는 본문이 없다(`GET /notices` 는 요약만 준다). 그래서 행을 누르면 그 행의 값으로 폼을
+ * 채우지 않고 상세를 한 번 더 받는다.
  */
 export function NoticeListPage() {
-  const { data, isPending, isError } = useNoticeList();
-  const [editing, setEditing] = useState<Notice | null>(null);
+  const { page, setPage } = useListQuery();
+  const { data, isPending, isError } = useNoticeList(page);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [isWriting, setIsWriting] = useState(false);
 
-  const columns: DataTableColumn<Notice>[] = [
+  const closeForm = () => {
+    setIsWriting(false);
+    setEditingId(null);
+  };
+
+  const columns: DataTableColumn<NoticeSummary>[] = [
     {
       key: 'title',
       header: '제목',
@@ -47,21 +59,22 @@ export function NoticeListPage() {
       ),
     },
     {
-      key: 'publication',
-      header: '게시 기간',
-      width: 'w-56',
-      render: (row) =>
-        `${formatDate(row.publicationStartAt)} ~ ${
-          row.publicationEndAt ? formatDate(row.publicationEndAt) : '무기한'
-        }`,
+      key: 'visibility',
+      header: '노출',
+      width: 'w-24',
+      render: (row) => <VisibilityBadge value={row.visibility} />,
     },
     {
-      key: 'active',
-      header: '활성',
-      width: 'w-24',
-      render: (row) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? '활성' : '비활성'}</Badge>
-      ),
+      key: 'registeredAt',
+      header: '등록일',
+      width: 'w-32',
+      render: (row) => formatDate(row.registeredAt),
+    },
+    {
+      key: 'updatedAt',
+      header: '수정일',
+      width: 'w-32',
+      render: (row) => formatDate(row.updatedAt),
     },
   ];
 
@@ -70,79 +83,97 @@ export function NoticeListPage() {
       <PageHeader
         title="공지사항"
         action={
-          // 저장할 곳이 없는 모드에서는 작성 버튼을 내린다. 눌러서 저장이 실패하는 것보다
-          // 쓸 수 없다는 것이 먼저 보이는 편이 낫다.
-          isBackendPending ? undefined : (
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditing(null);
-                setIsWriting(true);
-              }}
-            >
-              새 공지
-            </Button>
-          )
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingId(null);
+              setIsWriting(true);
+            }}
+          >
+            새 공지
+          </Button>
         }
       />
 
       {isError ? <Callout tone="error">목록을 불러오지 못했습니다.</Callout> : null}
 
       {isWriting ? (
-        <NoticeForm
-          notice={editing}
-          onClose={() => {
-            setIsWriting(false);
-            setEditing(null);
-          }}
-        />
+        <NoticeEditor key={editingId ?? 'new'} noticeId={editingId} onClose={closeForm} />
       ) : null}
 
       <DataTable
         className={isWriting ? 'mt-4' : undefined}
         columns={columns}
-        rows={data ?? []}
+        rows={data?.items ?? []}
         rowKey={(row) => row.id}
         onRowClick={(row) => {
-          setEditing(row);
+          setEditingId(row.id);
           setIsWriting(true);
         }}
-        {...tableBodyState(BACKEND_PENDING_MESSAGE.notice, isPending, '등록된 공지가 없습니다.')}
+        isLoading={isPending}
+        emptyMessage="등록된 공지가 없습니다."
       />
+      <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
     </>
   );
 }
 
-interface NoticeFormProps {
+interface NoticeEditorProps {
   /** `null` 이면 새 공지다. */
-  notice: Notice | null;
+  noticeId: number | null;
+  onClose: () => void;
+}
+
+/**
+ * 수정 폼에 넣을 본문을 받아 온다.
+ *
+ * 폼은 처음 그려질 때 칸의 초기값을 잡으므로 본문이 도착하기 전에 폼을 띄우면 빈 칸으로 고정된다.
+ * 그래서 받아 온 뒤에 폼을 그린다.
+ */
+function NoticeEditor({ noticeId, onClose }: NoticeEditorProps) {
+  const { data, isPending, isError } = useNoticeDetail(noticeId);
+
+  if (noticeId !== null) {
+    if (isPending) {
+      return (
+        <Card>
+          <CardTitle>공지 수정</CardTitle>
+          <p className="pt-4 text-sm text-gray-500">불러오는 중입니다.</p>
+        </Card>
+      );
+    }
+    if (isError || !data) {
+      return <Callout tone="error">공지를 불러오지 못했습니다.</Callout>;
+    }
+  }
+
+  return <NoticeForm notice={data ?? null} onClose={onClose} />;
+}
+
+interface NoticeFormProps {
+  notice: NoticeDetail | null;
   onClose: () => void;
 }
 
 function NoticeForm({ notice, onClose }: NoticeFormProps) {
   const saveMutation = useSaveNotice(notice?.id ?? null);
+  const deleteMutation = useDeleteNotice();
 
   const [title, setTitle] = useState(notice?.title ?? '');
-  const [content, setContent] = useState(notice?.content ?? '');
-  const [startAt, setStartAt] = useState(
-    toDateInputValue(notice?.publicationStartAt ?? new Date().toISOString()),
-  );
-  const [endAt, setEndAt] = useState(toDateInputValue(notice?.publicationEndAt));
+  const [content, setContent] = useState(notice ? lexicalToText(notice.content) : '');
   const [pinned, setPinned] = useState(notice?.pinned ?? false);
-  const [active, setActive] = useState(notice?.active ?? true);
+  const [visible, setVisible] = useState(notice ? notice.visibility === 'VISIBLE' : true);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const canSave = title.trim().length > 0 && content.trim().length > 0 && startAt.length > 0;
-  const unpinnedTitle = saveMutation.data?.unpinnedNoticeTitle;
+  const canSave = title.trim().length > 0 && content.trim().length > 0;
 
   return (
     <Card>
       <CardTitle>{notice ? '공지 수정' : '새 공지'}</CardTitle>
 
       {saveMutation.isSuccess ? (
-        <Callout tone={unpinnedTitle ? 'warning' : 'success'} className="mt-4">
-          {unpinnedTitle
-            ? `저장했습니다. 고정이 옮겨지면서 "${unpinnedTitle}" 의 고정이 풀렸습니다.`
-            : '저장했습니다.'}
+        <Callout tone="success" className="mt-4">
+          저장했습니다.
         </Callout>
       ) : null}
 
@@ -164,7 +195,7 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
         <Field
           label="본문"
           htmlFor="notice-content"
-          hint="본문 형식(마크다운 여부)은 아직 정해지지 않아 지금은 평문입니다."
+          hint="지금은 평문으로 씁니다. 저장할 때 사용자 화면이 읽는 에디터 JSON 으로 바뀝니다."
           required
         >
           <Textarea
@@ -175,25 +206,6 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="게시 시작" htmlFor="notice-start" required>
-            <Input
-              id="notice-start"
-              type="date"
-              value={startAt}
-              onChange={(event) => setStartAt(event.target.value)}
-            />
-          </Field>
-          <Field label="게시 종료" htmlFor="notice-end" hint="비우면 무기한입니다.">
-            <Input
-              id="notice-end"
-              type="date"
-              value={endAt}
-              onChange={(event) => setEndAt(event.target.value)}
-            />
-          </Field>
-        </div>
-
         <div className="flex gap-6 pb-4">
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
@@ -201,15 +213,15 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
               checked={pinned}
               onChange={(event) => setPinned(event.target.checked)}
             />
-            상단 고정 (동시에 하나만 가능)
+            상단 고정
           </label>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
-              checked={active}
-              onChange={(event) => setActive(event.target.checked)}
+              checked={visible}
+              onChange={(event) => setVisible(event.target.checked)}
             />
-            활성
+            사용자에게 노출
           </label>
         </div>
 
@@ -219,10 +231,8 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
               saveMutation.mutate({
                 title: title.trim(),
                 content: content.trim(),
-                publicationStartAt: startAt,
-                publicationEndAt: endAt || undefined,
                 pinned,
-                active,
+                visibility: visible ? 'VISIBLE' : 'HIDDEN',
               })
             }
             disabled={!canSave || saveMutation.isPending}
@@ -232,8 +242,36 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
           <Button variant="secondary" onClick={onClose}>
             닫기
           </Button>
+          {notice ? (
+            <Button
+              variant="secondary"
+              className="border-red-200 text-error hover:bg-red-50"
+              onClick={() => setIsConfirmingDelete(true)}
+            >
+              삭제
+            </Button>
+          ) : null}
         </div>
       </div>
+
+      {notice ? (
+        <ConfirmDelete
+          open={isConfirmingDelete}
+          targetName={notice.title}
+          description="사용자 화면에서도 즉시 사라집니다."
+          isDeleting={deleteMutation.isPending}
+          errorMessage={deleteMutation.isError ? '삭제하지 못했습니다.' : undefined}
+          onClose={() => setIsConfirmingDelete(false)}
+          onConfirm={() =>
+            deleteMutation.mutate(notice.id, {
+              onSuccess: () => {
+                setIsConfirmingDelete(false);
+                onClose();
+              },
+            })
+          }
+        />
+      ) : null}
     </Card>
   );
 }
