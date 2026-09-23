@@ -50,13 +50,13 @@ export async function fetchJobDetail(jobId: number): Promise<JobDetail> {
 }
 
 /**
- * `상세 채용공고.png`가 실제로 쓰는 6개 라벨(띄어쓰기 포함) 그대로다 — "회사소개"는 이
- * 목업에 섹션으로 없다(헤더의 회사명 한 줄이 전부). 최초 AC 문구가 7개 본문 필드 중
- * `companyAndTeamIntroduction`을 포함하고 `responsibilities`를 빠뜨렸던 건 목업과 어긋난
- * 오기였다 — 목업을 기준으로 바로잡는다.
+ * `상세 채용공고.png`가 실제로 쓰는 6개 라벨(띄어쓰기 포함) 그대로다. 어드민에서 수정한
+ * 회사/팀소개가 화면에 전혀 반영되지 않는다는 제보로 `companyAndTeamIntroduction`을 다시
+ * 추가한다(#123) — 본문 맨 앞에 둔다.
  */
 function buildSections(job: JobDetail): { label: string; value?: string }[] {
   return [
+    { label: '회사 및 팀 소개', value: job.companyAndTeamIntroduction },
     { label: '주요 업무', value: job.responsibilities },
     { label: '자격 요건', value: job.qualifications },
     { label: '우대 사항', value: job.preferredQualifications },
