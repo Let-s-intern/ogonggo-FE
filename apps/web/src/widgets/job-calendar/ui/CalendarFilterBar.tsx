@@ -4,6 +4,8 @@ import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
 import {
   buildJobCalendarHref,
+  KEYWORD_MAX_LENGTH,
+  KEYWORD_MIN_LENGTH,
   type JobCalendarEmploymentType,
   type JobCalendarExperienceType,
   type JobCalendarQuery,
@@ -126,9 +128,54 @@ function FilterDropdown<TValue extends string>({
 }
 
 /**
- * 목업의 체크박스 하나. 진짜 `<input type="checkbox">`가 아니다 — 세 개 중 둘은 누를 곳이
- * 없고(걸 값이 없다), 동작하는 `간략히 보기`는 상태가 URL 에 있어 링크로 옮기는 편이 맞다.
- * 그래서 이 함수는 생김새만 맡고, 누를 수 있는지는 부르는 쪽이 정한다.
+ * 검색어 알약. 자유 텍스트라 `<Link>` 로는 못 만들어 `<form method="GET">` 하나를 쓴다 —
+ * 전체 공고 화면(`SearchFilterBar`)과 같은 방법이다.
+ *
+ * 나머지 상태를 실어 보내는 `<input type="hidden">` 은 **`buildJobCalendarHref` 가 만든 주소를
+ * 되읽어** 만든다. 손으로 나열하면 필터가 하나 늘 때마다 여기 한 줄을 빠뜨리게 되고, 검색하는
+ * 순간 다른 필터가 조용히 풀린다.
+ *
+ * `minLength` 는 서버가 두 글자 이상만 받기 때문이다(`parseKeyword`). 한 글자로 제출하면
+ * 브라우저가 막고, 비우고 제출하면 검색어가 빠진다 — 그것이 검색을 푸는 길이다.
+ */
+function KeywordFilter({ query }: { query: JobCalendarQuery }) {
+  const carried = new URLSearchParams(
+    buildJobCalendarHref(query, { keyword: undefined }).split('?')[1] ?? '',
+  );
+
+  return (
+    <form action="/calendar" method="GET" className="flex items-center">
+      {[...carried].map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
+      <FilterPill
+        active={query.keyword !== undefined}
+        leading={<SearchIcon className="h-4 w-4" />}
+        label={
+          <input
+            type="search"
+            name="keyword"
+            defaultValue={query.keyword}
+            placeholder="공고 검색"
+            minLength={KEYWORD_MIN_LENGTH}
+            maxLength={KEYWORD_MAX_LENGTH}
+            aria-label="공고 검색"
+            className="w-24 bg-transparent text-gray-800 outline-none placeholder:text-gray-400"
+          />
+        }
+      />
+      {/* 돋보기는 장식이라 제출할 곳이 따로 있어야 한다. 입력이 하나라 엔터로도 제출되지만
+          그 암묵 제출에만 기대면 보조기술에서 `검색` 이라는 조작이 사라진다. */}
+      <button type="submit" className="sr-only">
+        검색
+      </button>
+    </form>
+  );
+}
+
+/**
+ * 목업의 체크박스 하나. 진짜 `<input type="checkbox">`가 아니다 — 상태가 전부 URL 에 있어
+ * 링크로 옮기는 편이 맞다. 그래서 이 함수는 생김새만 맡고, 누를 수 있는지는 부르는 쪽이 정한다.
  *
  * 켜짐은 `gray-800`(31,41,55) 채움 + 굵은 글씨, 꺼짐은 `gray-400`(156,163,175) 테두리 + 같은
  * 색 글씨다. 상자는 14px 정사각형이다. 전부 목업 실측값이다.
@@ -188,8 +235,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
     // v6 목업은 알약 줄 아래에 체크박스 줄을 오른쪽 끝에 맞춰 둔다. 두 줄 사이는 목업 실측 16px 이다.
     <div className="flex flex-col items-end gap-4">
       <div className="flex items-center gap-2">
-        {/* API 없음: 달력 응답에 제목도 본문도 없고 `q` 파라미터도 없다. 검색할 대상이 없다. */}
-        <FilterPill label="공고 검색" leading={<SearchIcon className="h-4 w-4 text-gray-400" />} />
+        <KeywordFilter query={query} />
         <FilterDropdown
           label="채용 형태"
           selected={query.employmentType}
@@ -245,8 +291,19 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         >
           <FilterCheckbox label="간략히 보기" checked={query.brief} />
         </Link>
-        {/* API 없음: `recruitmentEndAt`으로 판단할 수는 있으나 PRD 3절이 그리기만 하기로 정했다. */}
-        <FilterCheckbox label="마감공고 제외" checked />
+        {/*
+          `excludeClosed`. **기본은 꺼짐이다** — 목업은 켜진 모양으로 그려 두었지만, 기본으로
+          켜면 달력이 처음부터 데이터를 숨기고 그 사실이 주소에도 남지 않는다. 다른 필터와 같이
+          "걸어야 줄어든다" 로 맞춘다.
+        */}
+        <Link
+          href={buildJobCalendarHref(query, { excludeClosed: !query.excludeClosed })}
+          role="checkbox"
+          aria-checked={query.excludeClosed}
+          className="rounded-xs"
+        >
+          <FilterCheckbox label="마감공고 제외" checked={query.excludeClosed} />
+        </Link>
         {/* API 없음: 응답에 `bookmarked`가 없다. 스크랩 여부를 알 방법이 없다. */}
         <FilterCheckbox label="스크랩 공고만" checked={false} />
         <DeadlineBasisToggle />

@@ -38,6 +38,10 @@ export interface JobCalendarQuery {
   employmentType?: JobCalendarEmploymentType;
   /** `경력` 알약. 같은 규칙이다. */
   experienceType?: JobCalendarExperienceType;
+  /** `마감공고 제외` 체크박스. **기본은 꺼짐이다** — 켜야 줄어든다. */
+  excludeClosed: boolean;
+  /** `공고 검색` 알약. 두 글자 미만이면 없는 것으로 읽는다. */
+  keyword?: string;
 }
 
 export interface JobCalendarSearchParams {
@@ -47,10 +51,28 @@ export interface JobCalendarSearchParams {
   picker?: string;
   employmentType?: string;
   experienceType?: string;
+  excludeClosed?: string;
+  keyword?: string;
 }
 
-/** `brief`·`picker` 가 켜졌다고 인정하는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
-const BRIEF_ON = '1';
+/** 켜짐을 나타내는 유일한 값. 그 밖의 값은 전부 꺼짐이다. */
+const FLAG_ON = '1';
+
+/**
+ * 검색어 길이. 서버가 `2` 이상 `100` 이하만 받고, 벗어나면 400 이라 달력 전체가 빈다
+ * (`ListPublicJobCalendarParams`). 그래서 **보내기 전에 여기서 거른다.**
+ */
+export const KEYWORD_MIN_LENGTH = 2;
+export const KEYWORD_MAX_LENGTH = 100;
+
+/**
+ * 앞뒤 공백을 떼고 길이를 본다. 두 글자가 안 되면 검색어가 없는 것으로 읽는다 — 손으로 고친
+ * 주소(`?keyword=a`)가 그대로 서버로 가면 400 이 되고, 필터 하나가 화면 전체를 비운다.
+ */
+export function parseKeyword(value: string | undefined): string | undefined {
+  const trimmed = value?.trim().slice(0, KEYWORD_MAX_LENGTH) ?? '';
+  return trimmed.length >= KEYWORD_MIN_LENGTH ? trimmed : undefined;
+}
 
 /**
  * 아는 값만 통과시킨다. 주소는 손으로 고칠 수 있고, 모르는 값을 그대로 파라미터로 실어 보내면
@@ -120,9 +142,9 @@ export function parseJobCalendarQuery(
 ): JobCalendarQuery {
   return {
     date: parseCalendarDate(searchParams.date) ?? today,
-    brief: searchParams.brief === BRIEF_ON,
+    brief: searchParams.brief === FLAG_ON,
     majors: parseJobMajors(searchParams.majors),
-    picker: searchParams.picker === BRIEF_ON,
+    picker: searchParams.picker === FLAG_ON,
     employmentType: parseEnumParam(
       ListPublicJobCalendarEmploymentType,
       searchParams.employmentType,
@@ -131,6 +153,8 @@ export function parseJobCalendarQuery(
       ListPublicJobCalendarExperienceType,
       searchParams.experienceType,
     ),
+    excludeClosed: searchParams.excludeClosed === FLAG_ON,
+    keyword: parseKeyword(searchParams.keyword),
   };
 }
 
@@ -154,19 +178,25 @@ export function buildJobCalendarHref(
     params.set('date', toCalendarParam(merged.date));
   }
   if (merged.brief) {
-    params.set('brief', BRIEF_ON);
+    params.set('brief', FLAG_ON);
   }
   if (merged.majors.length > 0) {
     params.set('majors', merged.majors.join(','));
   }
   if (merged.picker) {
-    params.set('picker', BRIEF_ON);
+    params.set('picker', FLAG_ON);
   }
   if (merged.employmentType) {
     params.set('employmentType', merged.employmentType);
   }
   if (merged.experienceType) {
     params.set('experienceType', merged.experienceType);
+  }
+  if (merged.excludeClosed) {
+    params.set('excludeClosed', FLAG_ON);
+  }
+  if (merged.keyword) {
+    params.set('keyword', merged.keyword);
   }
 
   const query = params.toString();

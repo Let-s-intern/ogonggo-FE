@@ -145,6 +145,10 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     {
       employmentType: query.employmentType,
       experienceType: query.experienceType,
+      // 꺼져 있으면 아예 보내지 않는다. `false` 도 파라미터로는 실리므로(`getListPublicJobCalendarUrl`)
+      // 걸지 않은 필터가 주소에 남는다.
+      excludeClosed: query.excludeClosed || undefined,
+      keyword: query.keyword,
     },
   );
 
