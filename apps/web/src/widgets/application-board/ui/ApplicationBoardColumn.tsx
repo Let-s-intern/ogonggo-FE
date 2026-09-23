@@ -1,5 +1,7 @@
 'use client';
 
+import { useDroppable } from '@dnd-kit/core';
+import { cn } from '@ogonggo/ui';
 import {
   useApplicationStage,
   type ApplicationBoardFilters,
@@ -42,9 +44,17 @@ export interface ApplicationBoardColumnProps {
  */
 export function ApplicationBoardColumn({ tab, stage, filters, move }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
+  // 드롭 대상. `id` 는 이 칸의 단계 이름 — `ApplicationBoardKanban`의 `onDragEnd`가 그대로 `to`로 쓴다.
+  const droppable = useDroppable({ id: stage.id });
 
   return (
-    <section className="flex w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3">
+    <section
+      ref={droppable.setNodeRef}
+      className={cn(
+        'flex w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3',
+        droppable.isOver && 'ring-2 ring-blue-400',
+      )}
+    >
       <ApplicationBoardColumnHead label={stage.label} total={list.total} />
       <div className="flex flex-col gap-4">
         {list.items.map((item) => (

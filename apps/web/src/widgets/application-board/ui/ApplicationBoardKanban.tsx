@@ -1,5 +1,6 @@
 'use client';
 
+import { DndContext } from '@dnd-kit/core';
 import {
   stagesOf,
   useMoveStage,
@@ -41,18 +42,20 @@ export function ApplicationBoardKanban({ query }: ApplicationBoardKanbanProps) {
   const move = useMoveStage(query.tab);
 
   return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-2">
-      <div className="flex w-max items-start gap-5">
-        {stages.map((stage) => (
-          <ApplicationBoardColumn
-            key={stage.id}
-            tab={query.tab}
-            stage={stage}
-            filters={filters}
-            move={move}
-          />
-        ))}
+    <DndContext>
+      <div className="-mx-1 overflow-x-auto px-1 pb-2">
+        <div className="flex w-max items-start gap-5">
+          {stages.map((stage) => (
+            <ApplicationBoardColumn
+              key={stage.id}
+              tab={query.tab}
+              stage={stage}
+              filters={filters}
+              move={move}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
