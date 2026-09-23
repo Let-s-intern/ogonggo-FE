@@ -20,6 +20,7 @@ export interface AdminNotice {
   content: string;
   pinned: boolean;
   visibility: NoticeVisibility;
+  /** `2026-09-20T10:20:00`. 시간대가 붙지 않는다 — `localDateTime` 머리 주석. */
   registeredAt: string;
   updatedAt: string;
   /** 소프트 삭제. 값이 있으면 목록에도 상세에도 나오지 않는다. */
@@ -66,8 +67,24 @@ export function lexical(text: string): string {
   });
 }
 
+/**
+ * `2026-09-20T10:20:00` — 백엔드가 내보내는 모양.
+ *
+ * 공지의 두 날짜는 `LocalDateTime` 이라 `Z` 도 오프셋도 붙지 않는다
+ * (`AdminNoticeSummaryResponse`). 다른 어드민 픽스처는 `toISOString()` 으로 `Z` 를 붙이는데,
+ * 공지는 여기서만 맞춘다 — 형식이 다르면 `new Date(...)` 가 시간대만큼 옮겨 읽어 목 모드와
+ * 실서버의 등록일이 하루 어긋날 수 있다.
+ */
+export function localDateTime(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  );
+}
+
 const daysFromNow = (days: number): string =>
-  new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+  localDateTime(new Date(Date.now() + days * 24 * 60 * 60 * 1000));
 
 export const NOTICE_FIXTURES: AdminNotice[] = [
   {

@@ -1,5 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import { NOTICE_FIXTURES, type AdminNotice } from '../fixtures/admin-notice';
+import { localDateTime, NOTICE_FIXTURES, type AdminNotice } from '../fixtures/admin-notice';
 import { matches, ok, paginate, readPaging } from './paging';
 
 /**
@@ -108,7 +108,7 @@ const createNoticeHandler = http.post('*/api/v1/admin/notices', async ({ request
     return badRequest('에디터 내용 JSON 형식이 올바르지 않습니다.');
   }
 
-  const now = new Date().toISOString();
+  const now = localDateTime(new Date());
   const notice: AdminNotice = {
     id: Math.max(0, ...notices.map((entry) => entry.id)) + 1,
     title: body.title.trim(),
@@ -157,7 +157,7 @@ const updateNoticeHandler = http.patch(
     if (body.visibility !== undefined) {
       notice.visibility = body.visibility;
     }
-    notice.updatedAt = new Date().toISOString();
+    notice.updatedAt = localDateTime(new Date());
 
     return HttpResponse.json(ok(toDetail(notice)), { status: 200 });
   },
@@ -169,7 +169,7 @@ const deleteNoticeHandler = http.delete('*/api/v1/admin/notices/:noticeId', ({ p
   if (!notice) {
     return noticeNotFound();
   }
-  notice.deletedAt ??= new Date().toISOString();
+  notice.deletedAt ??= localDateTime(new Date());
   return HttpResponse.json(ok(null), { status: 200 });
 });
 

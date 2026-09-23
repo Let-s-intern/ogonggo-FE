@@ -907,8 +907,8 @@
       "title": "개인정보 처리방침 개정 안내",
       "pinned": true,
       "visibility": "VISIBLE",
-      "registeredAt": "2026-09-20T04:11:17Z",
-      "updatedAt": "2026-09-21T04:11:17Z"
+      "registeredAt": "2026-09-20T10:20:00",
+      "updatedAt": "2026-09-21T09:05:00"
     }
   ],
   "pageInfo": { "pageNum": 1, "pageSize": 20, "totalElements": 4, "totalPages": 1 }
@@ -926,6 +926,10 @@
 `keyword` 는 제목에서 대소문자를 가리지 않는 부분 일치다. 필터는 모두 AND 로 묶이고, 보내지
 않거나 빈 값을 보내면 그 조건을 적용하지 않는다.
 
+**두 날짜에 시간대가 없다.** `registeredAt`·`updatedAt` 은 `LocalDateTime` 이라 `Z` 도
+오프셋도 붙지 않는다. 받는 쪽의 시간대로 읽히므로 서버와 브라우저가 다르면 하루가 어긋난다.
+어드민 화면은 브라우저에서만 그려 문제가 없고, 목 픽스처도 같은 모양을 낸다.
+
 ### `GET /api/v1/admin/notices/{noticeId}`
 
 **부르는 곳** — 목록 행 클릭. **목록에 본문이 없어서 반드시 부른다.** 행의 값으로 폼을 채우던
@@ -940,8 +944,8 @@
   "content": "{\"root\":{\"type\":\"root\",\"children\":[]}}",
   "pinned": true,
   "visibility": "VISIBLE",
-  "registeredAt": "2026-09-20T04:11:17Z",
-  "updatedAt": "2026-09-21T04:11:17Z"
+  "registeredAt": "2026-09-20T10:20:00",
+  "updatedAt": "2026-09-21T09:05:00"
 }
 ```
 
