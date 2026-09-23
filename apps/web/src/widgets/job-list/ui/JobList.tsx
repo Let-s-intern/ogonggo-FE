@@ -22,6 +22,8 @@ export type JobListProps = JobListQuery;
  * `{ data, status, headers }`로 감싸지 않음) — 실제 런타임 값은 `listPublicJobs`가 감싸는 `data` 필드
  * 하나(`SuccessResponsePageResponseUserJobSummaryResponse`)와 같다.
  */
+const PAGE_SIZE = 12;
+
 function buildJobsRequestUrl({
   page,
   sort,
@@ -31,6 +33,7 @@ function buildJobsRequestUrl({
 }: JobListQuery): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
+  params.set('size', String(PAGE_SIZE));
   params.set('sort', sort);
   if (q) {
     params.set('q', q);
@@ -54,7 +57,7 @@ async function fetchJobPage(
   return (
     response.data ?? {
       items: [],
-      pageInfo: { pageNum: query.page, pageSize: 10, totalElements: 0, totalPages: 0 },
+      pageInfo: { pageNum: query.page, pageSize: PAGE_SIZE, totalElements: 0, totalPages: 0 },
     }
   );
 }

@@ -17,13 +17,13 @@ export type BootcampListProps = BootcampListQuery;
  * 한 번에 보낼 수 없다 —
  * `widgets/job-list/ui/JobList.tsx`가 같은 이유로 하던 대로 URL을 직접 만들어 `httpClient`를
  * 부른다. MSW 핸들러가 이들을 처리한다(`packages/api/src/mocks/handlers.ts`, PRD 2절).
- *
- * `size`는 보내지 않는다 — 한 페이지 건수는 아직 결정 전이라 MSW 핸들러의 기본값
- * (`DEFAULT_BOOTCAMP_SIZE`) 한 곳에만 둔다.
  */
+const PAGE_SIZE = 12;
+
 function buildBootcampsRequestUrl({ page, sort, tab, openOnly }: BootcampListQuery): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
+  params.set('size', String(PAGE_SIZE));
   params.set('sort', sort);
   for (const [key, value] of Object.entries(TAB_FILTERS[tab])) {
     params.set(key, value);
@@ -44,7 +44,7 @@ async function fetchBootcampPage(
   return (
     response.data ?? {
       items: [],
-      pageInfo: { pageNum: query.page, pageSize: 12, totalElements: 0, totalPages: 0 },
+      pageInfo: { pageNum: query.page, pageSize: PAGE_SIZE, totalElements: 0, totalPages: 0 },
     }
   );
 }
