@@ -1,5 +1,4 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
-import { getJobMajor } from '@/entities/job/model/job-major';
 import { jobMajorLabel } from '../lib/job-majors';
 import { toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
@@ -52,32 +51,48 @@ export function weekGridRange(baseDate: Date): { from: Date; to: Date } {
 async function fetchCalendarItems(
   from: string,
   to: string,
+  jobField: string,
 ): Promise<UserJobCalendarItemResponse[]> {
   const response = (await listPublicJobCalendar({
     from,
     to,
+    jobField,
   })) as unknown as SuccessResponseListUserJobCalendarItemResponse;
 
   return response.data ?? [];
 }
 
 /**
- * 고른 관심 직무로 공고를 거를 때 이 공고를 남길지. `slugs` 는 항상 하나 이상이다 — 비면
- * 달력을 부르지 않고 선택 화면을 그린다.
+ * 고른 관심 직무의 공고를 받는다. `slugs` 는 항상 하나 이상이다 — 비면 달력을 부르지 않고
+ * 선택 화면을 그린다.
  *
- * **직무를 아는 공고만 거른다.** 백엔드에는 직무 필드가 없고(2026-09-21 ogonggo-BE main 기준),
- * 직무를 아는 곳은 목데이터의 매핑(`entities/job/model/job-major.ts`)뿐이다. 직무를 모르는 공고까지
- * 빼면 실제 백엔드에 붙었을 때 달력이 통째로 비고, 그건 "고른 직무의 공고가 없다"는 틀린 말이
- * 된다. 모르는 공고는 남겨 두고 아는 공고만 고른 직무인지 본다.
+ * **고른 직무마다 한 번씩 부르고 합친다.** 백엔드 `jobField` 는 값 하나만 받는데 화면은 최대
+ * 세 개를 고를 수 있다. 세 요청은 동시에 나가고, 공고 하나의 `jobField` 도 하나라 세 응답은
+ * 서로 겹치지 않는다 — 그래도 id 로 한 번 접어 두는 것은 겹쳐 올 때 같은 날짜 칸에 카드가
+ * 두 장 그려지는 것을 막기 위해서다. 고른 것과 그 근거는
+ * `.claude/tasks/memos/결정-달력-직무-필터-여러개-2026-09-23.md` 에 있다.
  *
- * 서버에서만 부른다. 매핑이 목데이터 전체를 끌고 와서 클라이언트 번들에 넣지 않는다.
+ * 차례는 서버가 주는 차례(`마감 일시, 식별자` 오름차순)와 같게 다시 맞춘다. 합치면서 어긋나면
+ * 같은 날 칸 안의 공고 차례가 직무를 고른 순서에 따라 달라진다.
  */
-function matchesJobMajors(jobId: number, slugs: string[]): boolean {
-  const major = getJobMajor(jobId);
-  if (!major) {
-    return true;
+async function fetchCalendarItemsForMajors(
+  from: string,
+  to: string,
+  slugs: string[],
+): Promise<UserJobCalendarItemResponse[]> {
+  const fields = slugs.map(jobMajorLabel).filter((label): label is string => label !== undefined);
+  const responses = await Promise.all(fields.map((field) => fetchCalendarItems(from, to, field)));
+
+  const byId = new Map<number, UserJobCalendarItemResponse>();
+  for (const items of responses) {
+    for (const item of items) {
+      byId.set(item.id, item);
+    }
   }
-  return slugs.some((slug) => jobMajorLabel(slug) === major);
+
+  return [...byId.values()].sort(
+    (a, b) => a.recruitmentEndAt.localeCompare(b.recruitmentEndAt) || a.id - b.id,
+  );
 }
 
 export interface JobCalendarViewProps {
@@ -115,8 +130,10 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   }
 
   const { from, to } = query.brief ? weekGridRange(baseDate) : monthGridRange(baseDate);
-  const items = (await fetchCalendarItems(toCalendarParam(from), toCalendarParam(to))).filter(
-    (item) => matchesJobMajors(item.id, query.majors),
+  const items = await fetchCalendarItemsForMajors(
+    toCalendarParam(from),
+    toCalendarParam(to),
+    query.majors,
   );
 
   // 뷰를 컴포넌트 통째로 갈아끼운다(2026-09-02 결정). 한 인스턴스에서 `changeView()` 를 부르는
