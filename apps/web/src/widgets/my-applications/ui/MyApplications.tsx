@@ -6,7 +6,7 @@ import type { UpdateRecruitmentApplicationStatusRequestApplicationStatus } from 
 import { useToast, type SelectOption } from '@ogonggo/ui';
 import {
   canMoveStage,
-  isMovableStageId,
+  isStageId,
   moveApplicationStage,
   movableTargets,
   stagesOf,
@@ -51,13 +51,12 @@ const TAB_LABELS: Record<MyApplicationTab, { label: string; verb: string }> = {
 };
 
 /**
- * 사이드·스터디의 네 단계는 **모두 고를 수 있다** — `updateRecruitmentApplicationStatus` 가
- * 넷을 다 받는다. 북마크 두 탭은 열린 전이가 `스크랩 ↔ 지원 준비 중` 뿐이라 나머지가 비활성이다
- * (`features/application-board/model/stages.ts` 의 `movableTo`).
+ * 고를 수 있는 단계. 전이 표(`features/application-board/model/stages.ts` 의 `movableTo`)가
+ * 그대로 답이다 — 채용공고·부트캠프는 전부 열려 있고, 사이드·스터디는 이 화면에 없는
+ * `스크랩` 만 빠진다.
  */
 function statusOptionsFor(tab: MyApplicationTab, stage: ApplicationStageId): SelectOption[] {
-  const targets: readonly ApplicationStageId[] =
-    tab === 'side-studies' ? stagesOf(tab).map((option) => option.id) : movableTargets(tab, stage);
+  const targets = movableTargets(tab, stage);
   return stagesOf(tab)
     .filter((option) => tab !== 'side-studies' || option.id !== 'SCRAPPED')
     .map((option) => ({
@@ -165,7 +164,7 @@ export function MyApplications({ query }: MyApplicationsProps) {
 
   /**
    * 상태 셀렉트가 고른 값. 탭마다 저장하는 곳이 다르다 — 사이드·스터디는 지원 이력의 상태를
-   * 고치고, 북마크 두 탭은 단계 이동(`prepare`/`cancel-preparation`) 이다.
+   * 고치고, 북마크 두 탭은 단계 이동(`PUT .../application-status`) 이다.
    *
    * **열리지 않은 전이는 요청을 보내지 않고 왜 막혔는지 알린다**(PRD 완료 조건). 셀렉트가
    * 애초에 비활성으로 그리지만, 목록을 받아 둔 사이에 다른 화면에서 단계가 바뀌면 여기까지 온다.
@@ -181,11 +180,11 @@ export function MyApplications({ query }: MyApplicationsProps) {
       return;
     }
     const tab = query.tab;
-    if (!isMovableStageId(value) || !canMoveStage(tab, row.applicationStatus, value)) {
+    if (!isStageId(tab, value) || !canMoveStage(tab, row.applicationStatus, value)) {
       toast.show({ message: '아직 옮길 수 없는 단계예요', tone: 'error' });
       return;
     }
-    mutate(row.id, () => moveApplicationStage(tab, row.id, value));
+    mutate(row.id, () => moveApplicationStage(tab, row.id, row.applicationStatus, value));
   };
 
   return (

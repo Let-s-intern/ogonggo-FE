@@ -1,14 +1,13 @@
 import {
-  cancelMyBootcampBookmarkPreparation,
-  cancelMyJobBookmarkPreparation,
   cancelMyRecruitmentPostBookmarkPreparation,
   listMyBootcampBookmarks,
   listMyJobBookmarks,
   listMyRecruitmentApplications,
   listMyRecruitmentPostBookmarks,
-  prepareMyBootcampBookmark,
-  prepareMyJobBookmark,
   prepareMyRecruitmentPostBookmark,
+  replaceMyBootcampBookmarkApplicationStatus,
+  replaceMyJobBookmarkApplicationStatus,
+  updateRecruitmentPostApplicationStatus,
   type PageInfo,
   type SuccessResponsePageResponseRecruitmentPostSummaryResponse,
   type SuccessResponsePageResponseUserBootcampSummaryResponse,
@@ -289,26 +288,14 @@ function emptyPageInfo(params: ApplicationBoardPageParams): PageInfo {
 }
 
 /**
- * 지금 열려 있는 전이의 도착 단계. 셋 다 `SCRAPPED ↔ PREPARING` 뿐이라 두 값이다
- * (`stages.ts` 의 `movableTo`). 백엔드가 전이를 열면 여기와 그 표가 함께 늘어난다.
- */
-export type MovableStageId = 'SCRAPPED' | 'PREPARING';
-
-/**
- * 지금 열린 전이의 도착 단계인가.
- *
- * 리스트 보기의 상태 셀렉트가 고른 값을 좁히는 자리다. 셀렉트는 그 탭의 단계를 전부 늘어놓고
- * (목업이 그렇다) 옮길 수 없는 것만 비활성으로 두므로, 고른 값은 `string` 으로 돌아온다.
- */
-export function isMovableStageId(value: string): value is MovableStageId {
-  return value === 'SCRAPPED' || value === 'PREPARING';
-}
-
-/**
  * 한 건의 단계를 옮긴다.
  *
- * 경로가 둘뿐이다 — `prepare` 가 `지원 준비 중` 으로, `cancel-preparation` 이 `스크랩` 으로
- * 되돌린다. 나머지 단계로 가는 길은 백엔드에 아예 없다.
+ * **채용공고·부트캠프는 호출 하나다.** `PUT .../application-status` 가 도착 단계를 그대로 받고,
+ * 출발 단계가 무엇이든 상관하지 않는다(BE `9e80b9f` 이후). 그래서 `from` 도 쓰지 않는다.
+ *
+ * **사이드·스터디만 출발 단계를 본다.** 스크랩은 북마크 테이블이고 나머지 넷은 지원 이력이라
+ * 같은 도착 단계라도 부를 것이 갈린다 — `스크랩 → 지원 준비 중` 은 `prepare`(북마크를 지우고
+ * 이력을 만든다) 이고 `지원 완료 → 지원 준비 중` 은 이력 상태만 고치는 것이다.
  *
  * **부르기 전에 `canMoveStage` 로 막는다.** 여기서는 막지 않는다 — 막힌 전이를 요청하면
  * 백엔드가 409 를 주는데, 그 왕복은 누른 사람에게 아무것도 알려 주지 않는다.
@@ -316,21 +303,43 @@ export function isMovableStageId(value: string): value is MovableStageId {
 export async function moveApplicationStage(
   tab: ApplicationBoardTab,
   id: number,
-  to: MovableStageId,
+  from: ApplicationStageId,
+  to: ApplicationStageId,
 ): Promise<void> {
   switch (tab) {
     case 'jobs':
-      await (to === 'PREPARING' ? prepareMyJobBookmark(id) : cancelMyJobBookmarkPreparation(id));
+      await replaceMyJobBookmarkApplicationStatus(id, {
+        applicationStatus: to as ApplicationStageId<'jobs'>,
+      });
       return;
     case 'bootcamps':
-      await (to === 'PREPARING'
-        ? prepareMyBootcampBookmark(id)
-        : cancelMyBootcampBookmarkPreparation(id));
+      await replaceMyBootcampBookmarkApplicationStatus(id, {
+        applicationStatus: to as ApplicationStageId<'bootcamps'>,
+      });
       return;
     case 'side-studies':
-      await (to === 'PREPARING'
-        ? prepareMyRecruitmentPostBookmark(id)
-        : cancelMyRecruitmentPostBookmarkPreparation(id));
+      await moveSideStudyStage(
+        id,
+        from as ApplicationStageId<'side-studies'>,
+        to as ApplicationStageId<'side-studies'>,
+      );
       return;
   }
+}
+
+async function moveSideStudyStage(
+  id: number,
+  from: ApplicationStageId<'side-studies'>,
+  to: ApplicationStageId<'side-studies'>,
+): Promise<void> {
+  if (to === 'SCRAPPED') {
+    await cancelMyRecruitmentPostBookmarkPreparation(id);
+    return;
+  }
+  if (from === 'SCRAPPED') {
+    // 표가 스크랩에서 여는 도착 단계는 `지원 준비 중` 하나다(`stages.ts`).
+    await prepareMyRecruitmentPostBookmark(id);
+    return;
+  }
+  await updateRecruitmentPostApplicationStatus(id, { applicationStatus: to });
 }

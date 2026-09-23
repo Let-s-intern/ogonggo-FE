@@ -44,19 +44,17 @@ export interface ApplicationBoardColumnProps {
 export function ApplicationBoardColumn({ tab, stage, filters, move }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
   /*
-   * `지원 준비 중` 칸을 가리키는 조건이다. 단계 이름을 직접 적지 않는 이유는 탭마다 문구가
-   * 달라서다 — 부트캠프에서는 같은 `PREPARING` 이 `신청 전` 이다. 스크랩으로 되돌아갈 수
-   * 있는 칸이 그 칸 하나이고, 카드의 `X` 도 같은 조건으로 갈린다(2.2).
+   * 카드의 `X`(`스크랩으로 되돌리기`)를 그릴 칸인가. 단계 이름을 직접 적지 않는 이유는 탭마다
+   * 문구가 달라서다 — 부트캠프에서는 같은 `PREPARING` 이 `신청 전` 이다.
+   *
+   * 전이가 전면 개방되면서 **스크랩 칸을 뺀 모든 칸**이 여기 해당한다(예전에는 `지원 준비 중`
+   * 하나였다). 사이드·스터디만 `지원 완료` 뒤로는 되돌리는 호출이 없어 여전히 갈린다.
    */
   const returnsToScrap = canMoveStage(tab, stage.id, 'SCRAPPED');
 
   return (
     <section className="flex w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3">
-      <ApplicationBoardColumnHead
-        label={stage.label}
-        total={list.total}
-        showComplete={returnsToScrap}
-      />
+      <ApplicationBoardColumnHead label={stage.label} total={list.total} />
       <div className="flex flex-col gap-4">
         {list.items.map((item) => (
           <ApplicationBoardCard

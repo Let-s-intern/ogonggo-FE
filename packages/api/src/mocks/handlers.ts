@@ -1,6 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES } from './fixtures/job';
+import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
 import {
   RECRUITMENT_POST_FIXTURES,
   type RecruitmentPostFixture,
@@ -127,6 +128,20 @@ const MAX_CALENDAR_RANGE_DAYS = 92;
 
 const CALENDAR_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * 픽스처 공고의 직군(`jobField`). 실데이터 시드의 `job_major` 가 그 값이고, 배포 서버가 돌려주는
+ * `jobField` 와 **글자까지 같은 집합**이다(2026-09-23 배포 응답 대조: `영업`·`건설·건축`·
+ * `엔지니어링·R&D` 등 열 값 모두 관심 직무 25개 이름과 일치).
+ *
+ * `entities/job/model/job-major.ts` 가 같은 시드를 같은 방식으로 읽는다. 그쪽은 카드 메타 줄에
+ * 쓰고 여기는 달력 응답의 칸을 채운다.
+ */
+const JOB_FIELD_BY_FIXTURE_ID = new Map<number, string>(
+  REAL_JOB_SEEDS.flatMap((seed) =>
+    seed.jobMajor ? [[seed.fixtureId, seed.jobMajor] as const] : [],
+  ),
+);
+
 /** `YYYY-MM-DD` 하루의 UTC 자정 epoch. 날짜 문자열만 다뤄 실행 시간대의 영향을 받지 않는다. */
 const toCalendarDay = (value: string): number => Date.parse(`${value}T00:00:00Z`);
 
@@ -148,8 +163,12 @@ const calendarBadRequest = (parameterName: string, reason: string) => {
  * `GET /api/v1/jobs/calendar`. `getJobHandler`의 경로 패턴이 `/api/v1/jobs/:jobId`라 이 경로도
  * 삼키므로 `handlers` 배열에서 반드시 그보다 앞에 있어야 한다 — MSW는 먼저 맞는 핸들러를 쓴다.
  *
- * 응답은 `UserJobCalendarItemResponse` 네 필드뿐이다(PRD 2절). 제목도 로고 URL도 없어서
- * 달력 화면은 `companyName`으로 로고를 찾는다.
+ * 응답 칸은 실 API 를 따른다 — 2026-09-23 스펙에서 제목·대표 이미지·고용형태·경력·직군·
+ * 북마크 여부가 붙었다. 직군은 위 표에서 채우고, 시드에 값이 없는 공고는 비운다(실서버도
+ * `jobField` 가 `null` 인 공고가 있다).
+ *
+ * **`jobField` 만 거른다.** 화면이 보내는 파라미터가 그것뿐이라 `employmentType`·`keyword`·
+ * `excludeClosed` 따위는 받아도 무시한다 — 안 쓰는 필터를 목에서 먼저 구현하지 않는다.
  *
  * 담는 기준은 **`recruitmentEndAt`이 `from`~`to`에 드는 공고**다(Push 1 task 1.1). 실제 BE의
  * `findPublishedCalendarJobs`는 모집 기간이 조회 범위와 겹치기만 하면 담는 질의라 실 API로
@@ -184,9 +203,12 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
     );
   }
 
+  const jobField = url.searchParams.get('jobField');
+
   const items: UserJobCalendarItemResponse[] = JOB_FIXTURES.filter((job) => {
     const endDay = job.recruitmentEndAt?.slice(0, 10);
-    return endDay !== undefined && endDay >= from && endDay <= to;
+    const inRange = endDay !== undefined && endDay >= from && endDay <= to;
+    return inRange && (jobField === null || JOB_FIELD_BY_FIXTURE_ID.get(job.id) === jobField);
   })
     // BE 질의의 `order by job.recruitmentEndAt asc, job.id asc`와 같은 순서다.
     .sort(
@@ -195,8 +217,14 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
     .map((job) => ({
       id: job.id,
       companyName: job.companyName,
+      title: job.title,
+      coverImageUrl: job.coverImageUrl,
+      employmentType: job.employmentType,
+      experienceType: job.experienceType,
+      jobField: JOB_FIELD_BY_FIXTURE_ID.get(job.id),
       recruitmentStartAt: job.recruitmentStartAt ?? (job.recruitmentEndAt as string),
       recruitmentEndAt: job.recruitmentEndAt as string,
+      bookmarked: job.bookmarked,
     }));
 
   const body: SuccessResponseListUserJobCalendarItemResponse = {

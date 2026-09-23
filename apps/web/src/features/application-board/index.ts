@@ -1,18 +1,17 @@
 export {
   fetchApplicationBoardPage,
-  isMovableStageId,
   moveApplicationStage,
   type ApplicationBoardFilters,
   type ApplicationBoardItem,
   type ApplicationBoardPage,
   type ApplicationBoardPageParams,
-  type MovableStageId,
 } from './api/applicationBoardApi';
 export {
   APPLICATION_BOARD_STAGES,
   APPLICATION_BOARD_TABS,
   canMoveStage,
   isMovableStage,
+  isStageId,
   movableTargets,
   stageLabel,
   stagesOf,
