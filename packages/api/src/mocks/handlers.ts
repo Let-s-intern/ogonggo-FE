@@ -171,14 +171,16 @@ const calendarBadRequest = (parameterName: string, reason: string) => {
  * 북마크 여부가 붙었다. 직군은 위 표에서 채우고, 시드에 값이 없는 공고는 비운다(실서버도
  * `jobField` 가 `null` 인 공고가 있다).
  *
- * **`jobField` 만 거른다.** 화면이 보내는 파라미터가 그것뿐이라 `employmentType`·`keyword`·
- * `excludeClosed` 따위는 받아도 무시한다 — 안 쓰는 필터를 목에서 먼저 구현하지 않는다.
+ * `jobField`·`employmentType`·`experienceType`·`excludeClosed`·`keyword`를 거른다(Push 1
+ * task 4.1). `bookmarkedOnly`는 화면이 보내지 않아(서버 컴포넌트가 로그인 상태를 모른다,
+ * `widgets/job-calendar/lib/query.ts`) 받아도 무시한다.
  *
- * 담는 기준은 **`recruitmentEndAt`이 `from`~`to`에 드는 공고**다(Push 1 task 1.1). 실제 BE의
- * `findPublishedCalendarJobs`는 모집 기간이 조회 범위와 겹치기만 하면 담는 질의라 실 API로
- * 바꾸면 여기서 안 오던 공고(범위 밖에서 마감하는 공고)가 더 온다 — 화면은 마감일 칸에만
- * 그리므로 그때도 격자에 나타나지는 않지만, 주간 뷰 막대 색 규칙(PRD 8.3, "이번 주 마감")과는
- * 어긋나므로 그 시점에 한 번 정해야 한다.
+ * `deadlineOnly`도 받아서 거를 값이 따로 없다 — **이 핸들러는 항상 `recruitmentEndAt`이
+ * `from`~`to`에 드는 공고만 담아서**(Push 1 task 1.1), `deadlineOnly=true`를 보내나 안 보내나
+ * 결과가 같다. Push 1 task 2.1 에서 화면이 이 파라미터를 **항상 켜기로** 정했다
+ * (`widgets/job-calendar/ui/JobCalendarView.tsx`) — 실제 BE의 `findPublishedCalendarJobs`는
+ * 모집 기간이 조회 범위와 겹치기만 하면 담는 질의라, 그 파라미터가 없으면 범위 밖에서 마감하는
+ * 공고까지 올 수 있다. 이 목은 처음부터 마감일 기준으로만 담아 왔으니 그 결정과 이미 맞다.
  *
  * 마감일이 없는 상시채용은 BE 질의의 `recruitmentEndAt is not null`과 같게 제외한다.
  * `recruitmentStartAt`은 응답 타입이 필수인데 실데이터 픽스처 대부분이 비어 있어 없으면
@@ -213,11 +215,39 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
   }
 
   const jobField = url.searchParams.get('jobField');
+  const employmentType = url.searchParams.get('employmentType');
+  const experienceType = url.searchParams.get('experienceType');
+  const excludeClosed = url.searchParams.get('excludeClosed') === 'true';
+  const keyword = url.searchParams.get('keyword')?.trim().toLowerCase() || undefined;
 
   const items: UserJobCalendarItemResponse[] = JOB_FIXTURES.filter((job) => {
     const endDay = job.recruitmentEndAt?.slice(0, 10);
     const inRange = endDay !== undefined && endDay >= from && endDay <= to;
-    return inRange && (jobField === null || JOB_FIELD_BY_FIXTURE_ID.get(job.id) === jobField);
+    if (!inRange) {
+      return false;
+    }
+    if (jobField !== null && JOB_FIELD_BY_FIXTURE_ID.get(job.id) !== jobField) {
+      return false;
+    }
+    if (employmentType && job.employmentType !== employmentType) {
+      return false;
+    }
+    if (experienceType && job.experienceType !== experienceType) {
+      return false;
+    }
+    // 픽스처는 전부 `closedAt`이 없어(`fixtures/job.ts`) 이 조건이 실제로 무언가를 빼는 날은
+    // 없다 — 실서버도 마찬가지였다(Push 1 task 1.2.V, 실데이터 35건이 전부 미래 마감). 그래도
+    // 파라미터를 무시하지 않고 실서버와 같은 조건(`closedAt`이 찍혔는가)을 그대로 둔다.
+    if (excludeClosed && job.closedAt) {
+      return false;
+    }
+    if (keyword) {
+      const haystack = `${job.title} ${job.companyName}`.toLowerCase();
+      if (!haystack.includes(keyword)) {
+        return false;
+      }
+    }
+    return true;
   })
     // BE 질의의 `order by job.recruitmentEndAt asc, job.id asc`와 같은 순서다.
     .sort(

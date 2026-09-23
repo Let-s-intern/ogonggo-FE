@@ -153,6 +153,15 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       keyword: query.keyword,
       // `bookmarkedOnly` 는 여기서 보내지 않는다 — 서버 컴포넌트는 로그인 상태를 모른다
       // (`../lib/query.ts`). `query.bookmarkedOnly` 는 아래로 그대로 내려 클라이언트가 거른다.
+      //
+      // `deadlineOnly` 는 알약이 아니라 항상 켠다(Push 1 task 2.1). 실 BE 의 질의는 모집 기간이
+      // 조회 범위와 겹치기만 하면 담아서, 조회 범위 밖에서 마감하는 공고까지 올 수 있다 — 격자는
+      // 마감일 칸에만 그리므로(`MonthCalendar`·`WeekGrid`) 그런 항목은 아예 그려지지 않고,
+      // 주간 뷰는 그 항목까지 "이번 주 공고 N개"에 세어 수를 부풀린다. `deadlineOnly=true` 로
+      // 보내면 서버가 마감일 기준으로 미리 걸러 준다. 2026-09-23 실서버(35건)로 켜고 끈 응답을
+      // 대조하니 차이가 0건이었지만(지금 데이터가 전부 조회 범위 안에서 마감해서), 우연에 기대는
+      // 것과 질의로 보장하는 것은 다르다 — 데이터가 늘면 언제든 벌어질 수 있는 차이라 계속 켠다.
+      deadlineOnly: true,
     },
   );
 
