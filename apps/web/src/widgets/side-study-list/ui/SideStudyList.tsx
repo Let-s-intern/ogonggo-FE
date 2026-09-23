@@ -11,8 +11,8 @@ import { SideStudyListControls } from './SideStudyListControls';
 
 export type SideStudyListProps = SideStudyListQuery;
 
-/** 한 페이지 카드 수. 목업 `사이드스터디.png` 의 카드 8장이다. 백엔드 기본값(10) 과 달라 보낸다. */
-const PAGE_SIZE = 8;
+/** 한 페이지 카드 수. 채용공고·부트캠프와 12로 통일한다. 백엔드 기본값(10)과 달라 보낸다. */
+const PAGE_SIZE = 12;
 
 /**
  * `getRecruitmentPosts`(`GET /api/v1/recruitment-posts`). 탭이 고른 구분은 `recruitmentTypes`
