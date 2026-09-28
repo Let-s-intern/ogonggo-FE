@@ -5,9 +5,11 @@ import type { SuccessResponseRecruitmentPostDetailResponse } from '@ogonggo/api'
 import type { SideStudyDetail } from '@/entities/side-study/model/types';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { LexicalContent } from '@/shared/ui/LexicalContent';
+import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
-import { SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
+import { formatRecruitmentPeriod, SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
 import { SideStudyInfoGrid } from './SideStudyInfoGrid';
 import { SimilarSideStudies } from './SimilarSideStudies';
 
@@ -94,7 +96,7 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
     <div className="flex w-full max-w-6xl flex-col gap-4">
       <SideStudyDetailBreadcrumb />
       <SideStudyDetailHeaderCard sideStudy={sideStudy} />
-      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
+      <div className="grid grid-cols-1 gap-6 md:px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
           <SideStudyInfoGrid sideStudy={sideStudy} />
           {buildSections(sideStudy)
@@ -107,14 +109,26 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
             ))}
         </div>
         <aside className="flex flex-col gap-6">
-          <ApplyCta
-            label="신청하러 가기"
-            href={APPLY_URL}
-            kind="side-studies"
-            id={sideStudy.id}
-            bookmarked={sideStudy.bookmarked}
-            bookmarkCount={sideStudy.bookmarkCount}
-          />
+          <StickyApplyBar
+            summary={
+              <>
+                <span>{formatRecruitmentPeriod(sideStudy)}</span>
+                <DdayBadge
+                  recruitmentType="PERIOD"
+                  recruitmentEndAt={sideStudy.recruitmentEndDate}
+                />
+              </>
+            }
+          >
+            <ApplyCta
+              label="신청하러 가기"
+              href={APPLY_URL}
+              kind="side-studies"
+              id={sideStudy.id}
+              bookmarked={sideStudy.bookmarked}
+              bookmarkCount={sideStudy.bookmarkCount}
+            />
+          </StickyApplyBar>
           {/* 목업의 이 자리에 있는 댓글·대댓글 스레드는 그리지 않는다
               (PRD 8절, 2026-09-01 결정). 대신 들어가는 것이 아래 `비슷한 사이드·스터디`다. */}
           <SimilarSideStudies excludePostId={sideStudy.id} kind={sideStudy.recruitmentType} />

@@ -16,7 +16,7 @@ const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
  * 위젯끼리 임포트하지 않으므로(`widgets/README.md`) 여기에 따로 둔다. 상시 모집은
  * `recruitmentType`이 `ALWAYS_OPEN`인 건(픽스처 9번)이다.
  */
-function formatDeadlineText(
+export function formatDeadlineText(
   recruitmentType: BootcampDetail['recruitmentType'],
   recruitmentEndAt?: string,
 ): string {
@@ -47,7 +47,7 @@ function formatDeadlineText(
  */
 export function BootcampDetailHeaderCard({ bootcamp }: BootcampDetailHeaderCardProps) {
   return (
-    <Card className="bg-gray-50 p-8">
+    <Card className="bg-gray-50 p-4 md:p-8">
       <div className="flex items-center gap-3">
         <Thumbnail
           src={bootcamp.representativeImageUrl}
@@ -59,8 +59,8 @@ export function BootcampDetailHeaderCard({ bootcamp }: BootcampDetailHeaderCardP
           <p className="text-sm text-gray-500">교육 · {bootcamp.programType}</p>
         </div>
       </div>
-      <h1 className="mt-6 text-3xl font-bold text-gray-900">{bootcamp.title}</h1>
-      <hr className="my-6 border-gray-200" />
+      <h1 className="mt-4 text-xl font-bold text-gray-900 md:mt-6 md:text-3xl">{bootcamp.title}</h1>
+      <hr className="my-4 border-gray-200 md:my-6" />
       <div className="flex items-center gap-3 text-sm">
         <DdayBadge
           recruitmentType={bootcamp.recruitmentType}

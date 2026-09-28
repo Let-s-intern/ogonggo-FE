@@ -3,10 +3,12 @@ import { getPublicBootcamp } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { DdayBadge } from '@/shared/ui/DdayBadge';
+import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { CrossSellWidget } from '@/widgets/cross-sell';
 import { BootcampCurriculum } from './BootcampCurriculum';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
-import { BootcampDetailHeaderCard } from './BootcampDetailHeaderCard';
+import { BootcampDetailHeaderCard, formatDeadlineText } from './BootcampDetailHeaderCard';
 import { BootcampInfoGrid } from './BootcampInfoGrid';
 import { SimilarBootcamps } from './SimilarBootcamps';
 
@@ -73,7 +75,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
     <div className="flex w-full max-w-6xl flex-col gap-4">
       <BootcampDetailBreadcrumb />
       <BootcampDetailHeaderCard bootcamp={bootcamp} />
-      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
+      <div className="grid grid-cols-1 gap-6 md:px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
           <BootcampInfoGrid bootcamp={bootcamp} />
           <BootcampCurriculum curriculums={bootcamp.curriculums} />
@@ -89,14 +91,28 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
           ) : null}
         </div>
         <aside className="flex flex-col gap-6">
-          <ApplyCta
-            href={buildApplicationHref(bootcamp)}
-            label="신청하러 가기"
-            kind="bootcamps"
-            id={bootcamp.id}
-            bookmarked={bootcamp.bookmarked}
-            bookmarkCount={bootcamp.bookmarkCount}
-          />
+          <StickyApplyBar
+            summary={
+              <>
+                <span>
+                  {formatDeadlineText(bootcamp.recruitmentType, bootcamp.recruitmentEndAt)}
+                </span>
+                <DdayBadge
+                  recruitmentType={bootcamp.recruitmentType}
+                  recruitmentEndAt={bootcamp.recruitmentEndAt}
+                />
+              </>
+            }
+          >
+            <ApplyCta
+              href={buildApplicationHref(bootcamp)}
+              label="신청하러 가기"
+              kind="bootcamps"
+              id={bootcamp.id}
+              bookmarked={bootcamp.bookmarked}
+              bookmarkCount={bootcamp.bookmarkCount}
+            />
+          </StickyApplyBar>
           <SimilarBootcamps excludeBootcampId={bootcamp.id} />
           <CrossSellWidget />
         </aside>

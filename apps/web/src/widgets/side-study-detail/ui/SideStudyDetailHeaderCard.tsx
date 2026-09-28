@@ -24,7 +24,7 @@ const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
  * 채용공고·부트캠프 헤더의 같은 자리를 만드는 `formatDeadlineText`와 같은 역할이고, 위젯끼리
  * 임포트하지 않으므로(`widgets/README.md`) 여기에 따로 둔다.
  */
-function formatRecruitmentPeriod(sideStudy: SideStudyDetail): string {
+export function formatRecruitmentPeriod(sideStudy: SideStudyDetail): string {
   const formatDate = (value: string, withYear: boolean): string => {
     const date = parseLocalDate(value);
     const weekday = WEEKDAY_LABELS[date.getDay()];
@@ -60,7 +60,7 @@ export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCa
   ];
 
   return (
-    <Card className="bg-gray-50 p-8">
+    <Card className="bg-gray-50 p-4 md:p-8">
       <div className="flex items-center gap-3">
         <Thumbnail
           src={sideStudy.author.profileImageUrl}
@@ -74,13 +74,13 @@ export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCa
           <p className="text-sm text-gray-500">{subtitleParts.join(' · ')}</p>
         </div>
       </div>
-      <div className="mt-6 flex items-start justify-between gap-4">
-        <h1 className="text-3xl font-bold text-gray-900">{sideStudy.title}</h1>
+      <div className="mt-4 flex items-start justify-between gap-4 md:mt-6">
+        <h1 className="text-xl font-bold text-gray-900 md:text-3xl">{sideStudy.title}</h1>
         <span className="shrink-0 text-sm font-bold text-blue-600">
           {KIND_LABELS[sideStudy.recruitmentType]}
         </span>
       </div>
-      <hr className="my-6 border-gray-200" />
+      <hr className="my-4 border-gray-200 md:my-6" />
       <div className="flex items-center gap-3 text-sm">
         {/* 모집글에는 상시 모집이 없다 — 마감일이 필수라 `PERIOD`를 고정으로 넘긴다. 마감일이
             지났으면 `DdayBadge`가 아무것도 그리지 않는다(`shared/lib/dday.ts`). */}
