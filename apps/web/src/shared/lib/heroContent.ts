@@ -4,6 +4,8 @@ export type HeroScreen = 'jobs' | 'bootcamps' | 'side-studies';
 export interface HeroSegment {
   text: string;
   accent?: boolean;
+  /** 강조 조각을 살짝 돌려 띄운다. 목업에서 "딱!"만 그렇고 "쏙!"은 똑바로 서 있다. */
+  tilted?: boolean;
 }
 
 export interface HeroTheme {
@@ -33,7 +35,7 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
   jobs: {
     badge: '지원해볼 만한 공고만 엄선했어요',
     lines: [
-      [{ text: '커리어 여정에 ' }, { text: '딱!', accent: true }, { text: ' 맞는' }],
+      [{ text: '커리어 여정에 ' }, { text: '딱!', accent: true, tilted: true }, { text: ' 맞는' }],
       [{ text: '채용공고만 ' }, { text: '쏙!', accent: true }, { text: ' 보여드려요' }],
     ],
     theme: {

@@ -61,7 +61,10 @@ export function HomeHero({ screen }: HomeHeroProps) {
                 segment.accent ? (
                   <span
                     key={segmentIndex}
-                    className="inline-block -skew-x-12 text-[1.2em] leading-none text-[#1BC47D]"
+                    className={cn(
+                      'inline-block text-[1.2em] leading-none text-[#1BC47D]',
+                      segment.tilted && 'mx-[0.1em] -translate-y-[0.15em] rotate-[10deg]',
+                    )}
                   >
                     {segment.text}
                   </span>
