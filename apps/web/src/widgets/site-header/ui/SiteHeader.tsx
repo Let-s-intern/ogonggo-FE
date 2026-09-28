@@ -2,20 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useSyncExternalStore } from 'react';
-import { signOut } from '@ogonggo/api';
+import { useSyncExternalStore } from 'react';
 import { Button, MenuItem } from '@ogonggo/ui';
-import { clearTokens, isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
+import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
 import { myPageHomeFor } from '@/widgets/mypage-sidebar';
+import { MobileSiteHeader } from './MobileSiteHeader';
+import { NAV_ITEMS } from './navItems';
+import { SignOutButton } from './SignOutButton';
 
-/**
- * `matches`는 그 메뉴에 밑줄이 붙는 경로들이다. 채용공고는 목록(`/`)과 상세(`/jobs/1`)가
- * 경로 접두사를 공유하지 않아 따로 적는다 — 접두사만 보면 `/`가 모든 경로에 걸린다.
- */
 /**
  * 어드민 콘솔 주소(`apps/admin`). 웹과 다른 도메인이라 경로가 아니라 오리진을 통째로 받는다.
  *
@@ -23,24 +21,6 @@ import { myPageHomeFor } from '@/widgets/mypage-sidebar';
  * 404 가 떠서 원인이 주소 설정이라는 것이 보이지 않는다. 값을 넣는 방법은 `.env.example` 에 적었다.
  */
 const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
-
-const NAV_ITEMS = [
-  {
-    href: '/',
-    label: '채용공고',
-    matches: (path: string) => path === '/' || path.startsWith('/jobs'),
-  },
-  {
-    href: '/bootcamps',
-    label: '교육·부트캠프',
-    matches: (path: string) => path.startsWith('/bootcamps'),
-  },
-  {
-    href: '/side-studies',
-    label: '사이드·스터디',
-    matches: (path: string) => path.startsWith('/side-studies'),
-  },
-] as const;
 
 /**
  * `home.png`·`교육부트캠프.png`의 상단 헤더. 현재 경로에 밑줄이 붙어야 해서 `usePathname`을
@@ -71,6 +51,10 @@ const NAV_ITEMS = [
  * 상태고, 36px 상자의 맨 아래에 있어 전보다 7px 내려온다 — 목업의 밑줄도 글자에서 그만큼
  * 떨어져 있다. 글자 크기만 `text-sm`으로 덮어쓰는 이유는
  * `.claude/tasks/memos/결정-menuitem-글자크기-2026-09-21.md`에 적었다.
+ *
+ * 모바일(`md` 미만)은 이 줄을 숨기고 `MobileSiteHeader` 가 그린다 — 두 줄 헤더와 햄버거 메뉴
+ * (`docs/asset/v9 mobile/`). 경로와 역할로 정하는 값(`registerHref` 등)은 여기서 한 번만 계산해
+ * 넘긴다.
  *
  * 우측 메뉴의 활성 표시는 좌측과 다르다. 좌측은 밑줄인데, 우측은 목업
  * (`docs/asset/공고달력.png`)의 `공고 달력` 화면에서도 밑줄이 없다 — 헤더 높이를 꽉 채우는
@@ -110,7 +94,14 @@ export function SiteHeader() {
 
   return (
     <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex h-16 max-w-6xl items-stretch justify-between px-6">
+      <MobileSiteHeader
+        pathname={pathname}
+        signedIn={signedIn}
+        registerHref={registerHref}
+        myPageHref={myPageHref}
+        adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+      />
+      <div className="mx-auto hidden h-16 max-w-6xl items-stretch justify-between px-6 md:flex">
         <div className="flex items-center gap-10">
           <Link href="/" aria-label="오늘의 공고 홈" className="flex items-center gap-3">
             <LetsCareerMark className="h-[26px] w-[26px]" />
@@ -166,32 +157,5 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
-  );
-}
-
-/**
- * 서버에 로그아웃(`signOut`, 리프레시 토큰 폐기) 을 알린 뒤 두 토큰을 지운다. `signOut` 이 실패해도(액세스
- * 토큰 만료, 네트워크) 화면에서는 로그아웃한다 — 사용자가 누른 것은 이 브라우저에서 나가는 일이다.
- * `signOut` 의 401 은 재발급하지 않는다(`shared/api/reissue.ts` 의 인증 API 제외).
- */
-function SignOutButton() {
-  const [pending, setPending] = useState(false);
-
-  const handleClick = async () => {
-    setPending(true);
-    try {
-      await signOut();
-    } catch {
-      // 위 주석대로 실패해도 지운다.
-    } finally {
-      clearTokens();
-      setPending(false);
-    }
-  };
-
-  return (
-    <Button size="sm" variant="secondary" disabled={pending} onClick={handleClick}>
-      로그아웃
-    </Button>
   );
 }

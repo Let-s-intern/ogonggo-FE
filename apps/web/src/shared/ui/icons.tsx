@@ -166,6 +166,13 @@ export function CommentIcon({ className, ...props }: IconProps) {
   );
 }
 
+/** 모바일 헤더의 햄버거 버튼(`docs/asset/v9 mobile/채용공고 상세  플로팅버튼.png`). */
+export function MenuIcon({ className, ...props }: IconProps) {
+  return (
+    <span aria-hidden="true" className={cn('icon-[lucide--menu] block', className)} {...props} />
+  );
+}
+
 /** 날짜 이동 줄의 달력 아이콘(`docs/asset/공고달력 미니달력 모달.png`). */
 export function CalendarIcon({ className, ...props }: IconProps) {
   return (
