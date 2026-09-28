@@ -162,6 +162,25 @@ const PLAIN_LABELS: Record<string, string> = {
   // 지원 방법
   EXTERNAL_PAGE: '외부 페이지',
   EMAIL: '이메일',
+  // 근무 지역(시·도). 사용자 웹의 `REGION_LABELS` 와 같은 말이다
+  NATIONWIDE: '전국',
+  SEOUL: '서울',
+  GYEONGGI: '경기',
+  INCHEON: '인천',
+  BUSAN: '부산',
+  DAEGU: '대구',
+  JEONNAM_GWANGJU: '전남광주',
+  DAEJEON: '대전',
+  ULSAN: '울산',
+  SEJONG: '세종',
+  GANGWON: '강원',
+  GYEONGNAM: '경남',
+  GYEONGBUK: '경북',
+  CHUNGNAM: '충남',
+  CHUNGBUK: '충북',
+  JEONBUK: '전북',
+  JEJU: '제주',
+  OVERSEAS: '해외',
   // 공통
   ETC: '기타',
 };
