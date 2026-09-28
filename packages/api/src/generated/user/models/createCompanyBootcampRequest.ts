@@ -70,6 +70,14 @@ export interface CreateCompanyBootcampRequest {
   content: string;
   eligibilityAndSelectionProcess?: string;
   /**
+     * @minLength 0
+     * @maxLength 2048
+     */
+  logoUrl?: string;
+  instructorInfo?: string;
+  programFeatures?: string;
+  completionRequirements?: string;
+  /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |

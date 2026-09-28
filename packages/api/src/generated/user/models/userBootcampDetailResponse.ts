@@ -50,6 +50,10 @@ export interface UserBootcampDetailResponse {
   shortDescription: string;
   content: string;
   eligibilityAndSelectionProcess?: string;
+  logoUrl?: string;
+  instructorInfo?: string;
+  programFeatures?: string;
+  completionRequirements?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

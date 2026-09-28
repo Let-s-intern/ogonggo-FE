@@ -116,7 +116,7 @@ export interface CrawlerJobReplaceRequest {
      * @minLength 0
      * @maxLength 320
      */
-  applicationEmail?: string;
+  applyEmail?: string;
   /**
      * @minLength 0
      * @maxLength 320
