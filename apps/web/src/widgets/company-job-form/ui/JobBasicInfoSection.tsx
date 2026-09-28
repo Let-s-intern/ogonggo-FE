@@ -84,7 +84,9 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
             className="h-11 w-full px-4 text-base"
             options={withCurrentValue(JOB_FIELD_OPTIONS, values.jobField)}
             value={values.jobField}
-            onChange={(event) => onChange({ jobField: event.target.value })}
+            onChange={(event) =>
+              onChange({ jobField: event.target.value as CompanyJobFormValues['jobField'] })
+            }
           />
         </Field>
 

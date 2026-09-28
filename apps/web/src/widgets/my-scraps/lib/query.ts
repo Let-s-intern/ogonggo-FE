@@ -3,7 +3,10 @@ import type {
   ListMyBootcampBookmarksTuitionType,
   ListMyJobBookmarksEmploymentType,
   ListMyJobBookmarksExperienceType,
+  ListMyJobBookmarksJobField,
+  ListMyJobBookmarksJobRole,
 } from '@ogonggo/api';
+import { JOB_FIELD_LABELS, jobRolesOf } from '@/entities/job/model/labels';
 
 /**
  * `/mypage/scraps` 의 URL 쿼리 상태(PRD 2 절). 탭·필터·페이지가 전부 주소에 있다 — 목록
@@ -18,8 +21,8 @@ export interface MyScrapsQuery {
   /** 채용 공고 탭 전용. */
   employmentType?: ListMyJobBookmarksEmploymentType;
   experienceType?: ListMyJobBookmarksExperienceType;
-  jobField?: string;
-  jobRole?: string;
+  jobField?: ListMyJobBookmarksJobField;
+  jobRole?: ListMyJobBookmarksJobRole;
   /** 교육·부트캠프 탭 전용. */
   tuitionType?: ListMyBootcampBookmarksTuitionType;
   status?: ListMyBootcampBookmarksStatus;
@@ -141,8 +144,14 @@ export function parseMyScrapsQuery(
   if (keys.includes('employmentType')) {
     parsed.employmentType = pick(searchParams.employmentType, EMPLOYMENT_TYPES);
     parsed.experienceType = pick(searchParams.experienceType, EXPERIENCE_TYPES);
-    parsed.jobField = searchParams.jobField?.trim() || undefined;
-    parsed.jobRole = searchParams.jobRole?.trim() || undefined;
+    parsed.jobField = pick(
+      searchParams.jobField,
+      Object.keys(JOB_FIELD_LABELS) as ListMyJobBookmarksJobField[],
+    );
+    // 직무는 고른 직군에 속한 것만 받는다. 직군 없이 온 직무는 필터 줄에 그릴 자리가 없다.
+    parsed.jobRole = parsed.jobField
+      ? pick(searchParams.jobRole, jobRolesOf(parsed.jobField))
+      : undefined;
   }
   if (keys.includes('tuitionType')) {
     parsed.tuitionType = pick(searchParams.tuitionType, TUITION_TYPES);

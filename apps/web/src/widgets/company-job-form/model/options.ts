@@ -3,12 +3,13 @@ import type {
   CreateCompanyJobRequestEducationLevel,
   CreateCompanyJobRequestEmploymentType,
   CreateCompanyJobRequestExperienceType,
+  CreateCompanyJobRequestJobField,
   CreateCompanyJobRequestRegion,
 } from '@ogonggo/api';
-import { ANY_JOB_FIELD, JOB_FIELD_ROLES } from '@/features/sign-up/lib/careerOptions';
 import {
   EDUCATION_LEVEL_LABELS,
   EMPLOYMENT_TYPE_LABELS,
+  JOB_FIELD_LABELS,
   REGION_LABELS,
 } from '@/entities/job/model/labels';
 
@@ -68,18 +69,15 @@ export const EDUCATION_LEVEL_OPTIONS: SelectOption[] = [
 ];
 
 /**
- * 직무 분야. `jobField` 는 자유 문자열이고 고를 수 있는 값을 주는 API 가 없어, 이 저장소에
- * 있는 유일한 직군 열거(커리어 정보 화면) 를 쓴다 — 스크랩 목록의 직군 필터와 같은 목록이다
- * (`widgets/my-scraps/lib/query.ts`). 거기와 같은 값이어야 기업이 고른 직군으로 실제로
- * 걸러진다.
- *
- * `직군 무관` 은 뺀다. 그 값은 "내 희망 직무" 를 적는 칸의 것이지 공고에 붙는 값이 아니다.
+ * 직무 분야 — 백엔드의 직군 enum 이다(ogonggo-BE LC-3385). 라벨은 공개 화면과 같은
+ * `JOB_FIELD_LABELS` 에서 온다. 스크랩 목록의 직군 필터와 같은 목록이라 기업이 고른 직군으로
+ * 실제로 걸러진다.
  */
 export const JOB_FIELD_OPTIONS: SelectOption[] = [
   placeholder('직무 분야를 선택해 주세요.'),
-  ...JOB_FIELD_ROLES.filter(({ jobField }) => jobField !== ANY_JOB_FIELD).map(({ jobField }) => ({
-    value: jobField,
-    label: jobField,
+  ...(Object.keys(JOB_FIELD_LABELS) as CreateCompanyJobRequestJobField[]).map((value) => ({
+    value,
+    label: JOB_FIELD_LABELS[value],
   })),
 ];
 

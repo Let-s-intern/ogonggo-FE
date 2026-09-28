@@ -30,6 +30,7 @@ import type { SuccessResponseUserJobDetailResponse } from '../generated/user/mod
 import type { UserBootcampDetailResponse } from '../generated/user/models/userBootcampDetailResponse';
 import type { UserBootcampSummaryResponse } from '../generated/user/models/userBootcampSummaryResponse';
 import type { UserJobCalendarItemResponse } from '../generated/user/models/userJobCalendarItemResponse';
+import type { UserJobCalendarItemResponseJobField } from '../generated/user/models/userJobCalendarItemResponseJobField';
 import type { UserJobDetailResponse } from '../generated/user/models/userJobDetailResponse';
 import type { UserJobSummaryResponse } from '../generated/user/models/userJobSummaryResponse';
 
@@ -133,17 +134,50 @@ const MAX_CALENDAR_RANGE_DAYS = 92;
 const CALENDAR_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * 픽스처 공고의 직군(`jobField`). 실데이터 시드의 `job_major` 가 그 값이고, 배포 서버가 돌려주는
- * `jobField` 와 **글자까지 같은 집합**이다(2026-09-23 배포 응답 대조: `영업`·`건설·건축`·
- * `엔지니어링·R&D` 등 열 값 모두 관심 직무 25개 이름과 일치).
+ * 직군 라벨 → enum. 실데이터 시드의 `job_major` 는 라벨이고, 백엔드는 직군을 enum 으로 주고
+ * 받는다(ogonggo-BE LC-3385). 라벨은 `GET /api/v1/enums` 의 `JobField` 설명 그대로다.
+ */
+const JOB_FIELD_BY_LABEL: Record<string, UserJobCalendarItemResponseJobField> = {
+  IT·개발: 'IT_DEVELOPMENT',
+  AI·데이터: 'AI_DATA',
+  게임: 'GAME',
+  디자인: 'DESIGN',
+  기획·전략: 'PLANNING_STRATEGY',
+  마케팅·광고: 'MARKETING_ADVERTISING',
+  상품기획·MD: 'MERCHANDISING',
+  영업: 'SALES',
+  무역·물류: 'TRADE_LOGISTICS',
+  운송·배송: 'TRANSPORT_DELIVERY',
+  법률·법무: 'LEGAL',
+  HR·총무: 'HR_GENERAL_AFFAIRS',
+  회계·세무·재무: 'ACCOUNTING_TAX_FINANCE',
+  증권·운용: 'SECURITIES_ASSET_MANAGEMENT',
+  은행·카드·보험: 'BANKING_CARD_INSURANCE',
+  '엔지니어링·R&D': 'ENGINEERING_RND',
+  건설·건축: 'CONSTRUCTION_ARCHITECTURE',
+  생산·기능직: 'PRODUCTION_SKILLED_TRADES',
+  의료·보건: 'MEDICAL_HEALTH',
+  공공·복지: 'PUBLIC_WELFARE',
+  교육: 'EDUCATION',
+  미디어·엔터: 'MEDIA_ENTERTAINMENT',
+  고객상담·TM: 'CUSTOMER_SERVICE_TM',
+  서비스: 'SERVICE',
+  식음료: 'FOOD_BEVERAGE',
+};
+
+/**
+ * 픽스처 공고의 직군(`jobField`). 실데이터 시드의 `job_major` 를 위 표로 enum 으로 옮긴다. 시드의
+ * 라벨은 배포 서버의 직군 라벨과 **글자까지 같은 집합**이다(2026-09-23 배포 응답 대조: `영업`·
+ * `건설·건축`·`엔지니어링·R&D` 등 열 값 모두 관심 직무 25개 이름과 일치).
  *
  * `entities/job/model/job-major.ts` 가 같은 시드를 같은 방식으로 읽는다. 그쪽은 카드 메타 줄에
  * 쓰고 여기는 달력 응답의 칸을 채운다.
  */
-const JOB_FIELD_BY_FIXTURE_ID = new Map<number, string>(
-  REAL_JOB_SEEDS.flatMap((seed) =>
-    seed.jobMajor ? [[seed.fixtureId, seed.jobMajor] as const] : [],
-  ),
+const JOB_FIELD_BY_FIXTURE_ID = new Map<number, UserJobCalendarItemResponseJobField>(
+  REAL_JOB_SEEDS.flatMap((seed) => {
+    const field = seed.jobMajor ? JOB_FIELD_BY_LABEL[seed.jobMajor] : undefined;
+    return field ? [[seed.fixtureId, field] as const] : [];
+  }),
 );
 
 /** `YYYY-MM-DD` 하루의 UTC 자정 epoch. 날짜 문자열만 다뤄 실행 시간대의 영향을 받지 않는다. */

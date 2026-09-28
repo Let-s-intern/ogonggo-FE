@@ -1,5 +1,5 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
-import { jobMajorLabel } from '../lib/job-majors';
+import { jobMajorField } from '../lib/job-majors';
 import { toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 import { CalendarHeader } from './CalendarHeader';
@@ -7,6 +7,7 @@ import { JobMajorPicker } from './JobMajorPicker';
 import { MonthCalendar } from './MonthCalendar';
 import { WeekGrid } from './WeekGrid';
 import type {
+  ListPublicJobCalendarJobField,
   ListPublicJobCalendarParams,
   SuccessResponseListUserJobCalendarItemResponse,
   UserJobCalendarItemResponse,
@@ -86,7 +87,9 @@ async function fetchCalendarItemsForMajors(
   slugs: string[],
   filters: CalendarFilters,
 ): Promise<UserJobCalendarItemResponse[]> {
-  const fields = slugs.map(jobMajorLabel).filter((label): label is string => label !== undefined);
+  const fields = slugs
+    .map(jobMajorField)
+    .filter((field): field is ListPublicJobCalendarJobField => field !== undefined);
   const responses = await Promise.all(
     fields.map((field) => fetchCalendarItems({ ...filters, from, to, jobField: field })),
   );
