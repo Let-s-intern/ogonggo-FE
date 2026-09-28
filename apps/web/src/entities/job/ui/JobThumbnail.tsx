@@ -1,4 +1,15 @@
-import { CompanyLogo } from './CompanyLogo';
+import { CompanyLogo, type LogoBalance } from './CompanyLogo';
+
+/**
+ * 8:5 카드에서 로고 넓이와 상한. 시드 로고 32장을 이 값으로 그려 맞췄다 — 2:1 로고(LG)는 폭 절반쯤,
+ * 4:1 로고(LG CNS)는 폭 70% 상한에 걸리고, 정사각 로고(카카오톡)는 높이 55% 상한에 걸린다.
+ */
+const CARD_LOGO_BALANCE: LogoBalance = {
+  boxAspect: 8 / 5,
+  area: 0.2,
+  maxWidth: 0.7,
+  maxHeight: 0.55,
+};
 
 export interface JobThumbnailProps {
   companyName: string;
@@ -26,7 +37,8 @@ export function JobThumbnail({ companyName }: JobThumbnailProps) {
     <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm">
       <CompanyLogo
         companyName={companyName}
-        className="absolute inset-0 h-full w-full p-4 shadow-none"
+        className="absolute inset-0 h-full w-full p-0 shadow-none"
+        balance={CARD_LOGO_BALANCE}
       />
     </div>
   );
