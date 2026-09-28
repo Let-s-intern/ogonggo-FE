@@ -70,14 +70,15 @@ export function MyPageFilterRow({
         전체
       </Chip>
       {children}
-      <div className="ml-auto flex items-center gap-2">
+      {/* 모바일은 검색칸이 남는 폭을 다 쓰고 정렬이 그 옆에 선다. */}
+      <div className="flex w-full items-center gap-2 md:ml-auto md:w-auto">
         {search ? (
-          <form onSubmit={submitSearch}>
+          <form onSubmit={submitSearch} className="min-w-0 flex-1 md:flex-none">
             <SearchInput
               name="keyword"
               defaultValue={search.defaultValue}
               placeholder={search.placeholder}
-              wrapperClassName="w-45"
+              wrapperClassName="w-full md:w-45"
             />
             <button type="submit" className="sr-only">
               검색

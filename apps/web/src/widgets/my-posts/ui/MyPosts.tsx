@@ -11,7 +11,7 @@ import {
 } from '@/entities/side-study/api/myRecruitmentPosts';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { MyPageFilterRow, MyPageListTable, type MyPageListColumn } from '@/widgets/mypage-list';
-import { fetchMyPostsPage, type MyPostsPage } from '../lib/fetch';
+import { fetchMyPostsPage, type MyPostRow as MyPostRowData, type MyPostsPage } from '../lib/fetch';
 import {
   buildMyPostsHref,
   buildMyPostsResetHref,
@@ -19,7 +19,8 @@ import {
   type MyPostsQuery,
 } from '../lib/query';
 import { MyPostRow } from './MyPostRow';
-import { MyPostsCta } from './MyPostsCta';
+import { MyPostCard } from './MyPostCard';
+import { MyPostsCta, MyPostsWriteCard } from './MyPostsCta';
 import { MyPostsFilters, MyPostsSort } from './MyPostsFilters';
 
 /** 목업의 표 머리글 다섯. 폭을 주지 않은 `모집글 정보` 가 남는 폭을 갖는다. */
@@ -95,6 +96,31 @@ export function MyPosts({ query }: MyPostsProps) {
       .finally(() => setPendingPostId(null));
   };
 
+  /** 표의 행과 모바일 카드가 같은 동작을 건다. */
+  const rowProps = (row: MyPostRowData) => ({
+    row,
+    pending: pendingPostId === row.postId,
+    onDelete: () =>
+      mutate(row.postId, '모집글을 삭제하지 못했습니다.', () => deleteMyPost(row.postId)),
+    onCopy: () => mutate(row.postId, '모집글을 복사하지 못했습니다.', () => copyMyPost(row.postId)),
+    onClose: () =>
+      mutate(row.postId, '모집글을 마감하지 못했습니다.', () => closeMyPost(row.postId)),
+    onReopen: () =>
+      mutate(
+        row.postId,
+        // 백엔드가 409 를 주는 조건이 이것 하나다(생성 타입 설명).
+        '모집 종료일이 지난 글은 다시 모집할 수 없습니다. 종료일을 미래로 고친 뒤 다시 시도해 주세요.',
+        () => reopenMyPost(row.postId),
+      ),
+  });
+
+  const emptyMessage =
+    state.kind === 'loading'
+      ? '불러오는 중입니다.'
+      : state.kind === 'error'
+        ? '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+        : '작성한 모집글이 없습니다.';
+
   const rows = state.kind === 'ready' ? state.page.rows : [];
   const pageInfo =
     state.kind === 'ready'
@@ -103,7 +129,9 @@ export function MyPosts({ query }: MyPostsProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      {/* 모바일은 `< 작성한 모집글` 머리(`MyPageLayout`)가 제목을 대신하고, 작성 버튼은 아래
+          카드 하나로 모은다. */}
+      <header className="hidden flex-wrap items-start justify-between gap-4 md:flex">
         <div>
           <h1 className="text-3xl font-bold text-gray-950">
             작성한 사이드 프로젝트 · 스터디 모집글
@@ -116,6 +144,10 @@ export function MyPosts({ query }: MyPostsProps) {
           <Link href="/mypage/posts/new">새 모집글 작성하기</Link>
         </Button>
       </header>
+
+      <div className="md:hidden">
+        <MyPostsWriteCard />
+      </div>
 
       <MyPageFilterRow
         resetHref={buildMyPostsResetHref()}
@@ -136,51 +168,36 @@ export function MyPosts({ query }: MyPostsProps) {
         </p>
       ) : null}
 
-      <MyPageListTable columns={COLUMNS}>
+      <div className="hidden md:block">
+        <MyPageListTable columns={COLUMNS}>
+          {rows.length > 0 ? (
+            rows.map((row) => <MyPostRow key={row.postId} {...rowProps(row)} />)
+          ) : (
+            <tr>
+              <td colSpan={COLUMNS.length} className="px-4 py-16 text-center text-sm text-gray-500">
+                {emptyMessage}
+              </td>
+            </tr>
+          )}
+        </MyPageListTable>
+      </div>
+
+      <ul className="flex flex-col gap-3 md:hidden">
         {rows.length > 0 ? (
-          rows.map((row) => (
-            <MyPostRow
-              key={row.postId}
-              row={row}
-              pending={pendingPostId === row.postId}
-              onDelete={() =>
-                mutate(row.postId, '모집글을 삭제하지 못했습니다.', () => deleteMyPost(row.postId))
-              }
-              onCopy={() =>
-                mutate(row.postId, '모집글을 복사하지 못했습니다.', () => copyMyPost(row.postId))
-              }
-              onClose={() =>
-                mutate(row.postId, '모집글을 마감하지 못했습니다.', () => closeMyPost(row.postId))
-              }
-              onReopen={() =>
-                mutate(
-                  row.postId,
-                  // 백엔드가 409 를 주는 조건이 이것 하나다(생성 타입 설명).
-                  '모집 종료일이 지난 글은 다시 모집할 수 없습니다. 종료일을 미래로 고친 뒤 다시 시도해 주세요.',
-                  () => reopenMyPost(row.postId),
-                )
-              }
-            />
-          ))
+          rows.map((row) => <MyPostCard key={row.postId} {...rowProps(row)} />)
         ) : (
-          <tr>
-            <td colSpan={COLUMNS.length} className="px-4 py-16 text-center text-sm text-gray-500">
-              {state.kind === 'loading'
-                ? '불러오는 중입니다.'
-                : state.kind === 'error'
-                  ? '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
-                  : '작성한 모집글이 없습니다.'}
-            </td>
-          </tr>
+          <li className="py-16 text-center text-sm text-gray-500">{emptyMessage}</li>
         )}
-      </MyPageListTable>
+      </ul>
 
       <NumberedPagination
         pageInfo={pageInfo}
         buildHref={(page) => buildMyPostsHref(query, { page })}
       />
 
-      <MyPostsCta />
+      <div className="hidden md:block">
+        <MyPostsCta />
+      </div>
     </section>
   );
 }
