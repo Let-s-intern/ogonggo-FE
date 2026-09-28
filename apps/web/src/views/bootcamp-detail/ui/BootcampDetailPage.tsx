@@ -12,7 +12,7 @@ export interface BootcampDetailPageProps {
  */
 export function BootcampDetailPage({ bootcampId }: BootcampDetailPageProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center gap-10 bg-white px-6 py-10">
+    <main className="flex min-h-screen flex-col items-center gap-10 bg-white px-4 pt-4 pb-40 md:px-6 md:py-10">
       <BootcampDetailView bootcampId={bootcampId} />
       <div className="w-full max-w-6xl">
         <ForBusinessBanner />

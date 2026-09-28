@@ -95,8 +95,11 @@ function FilterDropdown<TValue extends string>({
  */
 export function SearchFilterBar({ query }: SearchFilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <form action="/" method="GET" className="min-w-[220px] flex-1">
+    // 모바일에서는 `contents` 로 풀려 검색칸이 한 줄을 다 쓰고 필터와 정렬이 그 아래 한 줄에
+    // 선다. 시안(`docs/asset/v9 mobile/채용공고 목록.png`)은 한 줄 가로 스크롤인데, 필터 목록이
+    // 버튼 아래로 떨어지는 드롭다운이라 스크롤 상자 안에 두면 잘린다.
+    <div className="contents md:flex md:flex-wrap md:items-center md:gap-2">
+      <form action="/" method="GET" className="w-full md:w-auto md:min-w-[220px] md:flex-1">
         <input type="hidden" name="sort" value={query.sort} />
         {query.employmentType ? (
           <input type="hidden" name="employmentType" value={query.employmentType} />

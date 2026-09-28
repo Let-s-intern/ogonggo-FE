@@ -20,7 +20,7 @@ const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
  * `formatDeadline`은 목록 카드용 짧은 표기("~7.25 마감")라 요일·시각이 없다 — 이 화면
  * 전용으로 로컬에 둔다.
  */
-function formatDeadlineText(
+export function formatDeadlineText(
   recruitmentType: JobRecruitmentType,
   recruitmentEndAt?: string,
 ): string {
@@ -50,16 +50,16 @@ export function JobDetailHeaderCard({
   viewCount,
 }: JobDetailHeaderCardProps) {
   return (
-    <Card className="bg-gray-50 p-8">
+    <Card className="bg-gray-50 p-4 md:p-8">
       <div className="flex items-center gap-3">
-        <CompanyLogo companyName={companyName} className="h-16 w-16" />
+        <CompanyLogo companyName={companyName} className="h-10 w-10 md:h-16 md:w-16" />
         <div>
           <p className="font-bold text-gray-900">{companyName}</p>
           {region ? <p className="text-sm text-gray-500">{region}</p> : null}
         </div>
       </div>
-      <h1 className="mt-6 text-3xl font-bold text-gray-900">{title}</h1>
-      <hr className="my-6 border-gray-200" />
+      <h1 className="mt-4 text-xl font-bold text-gray-900 md:mt-6 md:text-3xl">{title}</h1>
+      <hr className="my-4 border-gray-200 md:my-6" />
       <div className="flex items-center gap-3 text-sm">
         <DdayBadge recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
         <span className="text-gray-500">

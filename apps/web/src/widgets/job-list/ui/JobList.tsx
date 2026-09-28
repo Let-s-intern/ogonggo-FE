@@ -70,7 +70,7 @@ export async function JobList(query: JobListProps) {
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
           <SearchFilterBar query={query} />
           <SortToggle
             options={SORT_OPTIONS}

@@ -28,7 +28,8 @@ function HeroSearchIcon() {
  * 목업 SVG에서 색과 크기를 읽어 텍스트로 그린다. 데이터에 의존하지 않아 서버 컴포넌트로 둔다.
  *
  * 목업에서 이 블록은 화면 끝까지 채운 띠가 아니라 좌우 40px 떨어진 박스다(1440px 기준 폭
- * 1360). 아래 콘텐츠(`max-w-6xl`)보다 넓어서 그 폭에 맞추지 않는다. 데스크톱 위아래 여백
+ * 1360). 아래 콘텐츠(`max-w-6xl`)보다 넓어서 그 폭에 맞추지 않는다. 모바일은 좌우 16px 이고
+ * (`docs/asset/v9 mobile/`), 배경은 `bg-cover` 라 비율을 지킨 채 좌우가 잘린다. 데스크톱 위아래 여백
  * 80px도 목업 PNG 높이에서 SVG 높이를 뺀 절반이다.
  *
  * 배경은 장식이라 `<img>`가 아니라 CSS 배경이다 — 대체 텍스트를 가질 이유가 없고, 문구는
@@ -39,7 +40,7 @@ export function HomeHero({ screen }: HomeHeroProps) {
 
   return (
     <section
-      className="relative mx-10 mt-6 self-stretch overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 sm:py-12 lg:py-20"
+      className="relative mx-4 mt-4 self-stretch overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 sm:py-12 md:mx-10 md:mt-6 lg:py-20"
       style={{ backgroundImage: `url(${theme.backgroundImage})` }}
     >
       <div className="relative flex flex-col items-center gap-6 text-center">
@@ -54,7 +55,7 @@ export function HomeHero({ screen }: HomeHeroProps) {
           {badge}
         </span>
 
-        <h1 className="text-2xl leading-[1.125] font-bold tracking-tight text-gray-800 sm:text-[32px] lg:text-[40px]">
+        <h1 className="text-[22px] leading-[1.6] font-bold tracking-tight text-gray-800 sm:text-[32px] md:leading-[1.125] lg:text-[40px]">
           {lines.map((line, lineIndex) => (
             <span key={lineIndex} className="block">
               {line.map((segment, segmentIndex) =>

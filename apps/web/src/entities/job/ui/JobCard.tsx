@@ -49,24 +49,27 @@ export function JobCard({ job }: JobCardProps) {
   // (예: "※ 근무 지역은 서울입니다."). 카드의 지역 자리에는 싣지 않는다.
   const region = job.region?.startsWith('※') ? undefined : job.region;
 
+  /*
+   * 데스크톱은 메타 줄 오른쪽, 모바일은 제목 아래다(`docs/asset/v9 mobile/채용공고 목록.png`).
+   * 카드 폭이 158px 안팎이라 메타 줄 끝에 두면 `D-102` 가 두 줄로 꺾인다.
+   */
+  const deadlineBadge = dday ? (
+    <Badge tone={urgent ? 'urgent' : 'main'} className="rounded-full px-2 py-0.5 text-xs font-bold">
+      {dday}
+    </Badge>
+  ) : closed ? (
+    <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
+      마감
+    </Badge>
+  ) : null;
+
   return (
     <div className="relative h-full">
       <Link href={`/jobs/${job.id}`} className="flex h-full flex-col gap-2">
         <JobThumbnail companyName={job.companyName} />
         <p className="flex items-center justify-between text-xs text-gray-400">
           <span>{metaParts.join(' · ')}</span>
-          {dday ? (
-            <Badge
-              tone={urgent ? 'urgent' : 'main'}
-              className="rounded-full px-2 py-0.5 text-xs font-bold"
-            >
-              {dday}
-            </Badge>
-          ) : closed ? (
-            <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
-              마감
-            </Badge>
-          ) : null}
+          {deadlineBadge ? <span className="hidden md:inline-flex">{deadlineBadge}</span> : null}
         </p>
         <JobMeta
           companyName={job.companyName}
@@ -76,6 +79,7 @@ export function JobCard({ job }: JobCardProps) {
           showDeadline={false}
         />
         <p className="line-clamp-2 text-sm font-bold text-gray-900">{job.title}</p>
+        {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
       </Link>
       <BookmarkButton
         kind="jobs"

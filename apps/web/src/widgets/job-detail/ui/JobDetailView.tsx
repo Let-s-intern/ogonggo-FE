@@ -3,9 +3,11 @@ import { getPublicJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import type { JobDetail } from '@/entities/job/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { DdayBadge } from '@/shared/ui/DdayBadge';
+import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { CrossSellWidget } from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
-import { JobDetailHeaderCard } from './JobDetailHeaderCard';
+import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobInfoGrid } from './JobInfoGrid';
 import { SimilarJobs } from './SimilarJobs';
 
@@ -144,13 +146,25 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       {/* 2단 비율은 `상세 채용공고.png` 실측값(본문 739px : 사이드바 323px, 사이 간격 60px,
           1440px 기준)을 그대로 `fr`로 옮긴 것이다. 3:2로 뒀을 때 사이드바가 목업보다 넓고
           본문이 좁았다. */}
-      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
+      <div className="grid grid-cols-1 gap-6 md:px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
           {infoGrid}
           {sections}
         </div>
         <aside className="flex flex-col gap-6">
-          {applyCta}
+          <StickyApplyBar
+            summary={
+              <>
+                <span>{formatDeadlineText(job.recruitmentType, job.recruitmentEndAt)}</span>
+                <DdayBadge
+                  recruitmentType={job.recruitmentType}
+                  recruitmentEndAt={job.recruitmentEndAt}
+                />
+              </>
+            }
+          >
+            {applyCta}
+          </StickyApplyBar>
           <SimilarJobs excludeJobId={job.id} />
           <CrossSellWidget />
         </aside>

@@ -13,7 +13,7 @@ import { ForBusinessBanner } from '@/widgets/for-business-banner';
  */
 export default function Loading() {
   return (
-    <main className="ogonggo-fallback flex min-h-screen flex-col items-center gap-10 bg-white px-6 py-10">
+    <main className="ogonggo-fallback flex min-h-screen flex-col items-center gap-10 bg-white px-4 pt-4 pb-40 md:px-6 md:py-10">
       <DetailPageSkeleton
         avatarClass="h-16 w-16"
         infoRows={3}
