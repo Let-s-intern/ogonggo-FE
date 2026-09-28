@@ -1,8 +1,8 @@
 import { Button } from '@ogonggo/ui';
 import { BookmarkCountButton, type BookmarkKind } from '@/features/bookmark';
 import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLayer';
-import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { withApplyUtm } from '@/shared/lib/applyUtm';
+import { ApplyLink } from './ApplyLink';
 
 export interface ApplyCtaProps {
   /** 지원·신청 링크. 없으면 버튼 자체를 그리지 않고 북마크 칸만 남는다. */
@@ -54,7 +54,9 @@ export function ApplyCta({
     <div className="flex items-center gap-2">
       {outboundUrl ? (
         <Button asChild className="flex-1">
-          <TrackedLink
+          <ApplyLink
+            kind={kind}
+            contentId={id}
             href={outboundUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -70,7 +72,7 @@ export function ApplyCta({
             }
           >
             {label}
-          </TrackedLink>
+          </ApplyLink>
         </Button>
       ) : null}
       <BookmarkCountButton
