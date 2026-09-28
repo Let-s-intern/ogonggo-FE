@@ -21,6 +21,11 @@ export { onRouterTransitionStart };
 
 const APPLICATION_ID = process.env.NEXT_PUBLIC_DATADOG_APPLICATION_ID;
 const CLIENT_TOKEN = process.env.NEXT_PUBLIC_DATADOG_CLIENT_TOKEN;
+/**
+ * Datadog 화면에서 리플레이 비율·가림 수준 같은 설정을 배포 없이 바꾸게 하는 원격 설정 ID.
+ * 없으면 아래 코드 값만 쓴다. 있으면 원격 값이 그 위를 덮는다.
+ */
+const REMOTE_CONFIGURATION_ID = process.env.NEXT_PUBLIC_DATADOG_REMOTE_CONFIGURATION_ID;
 
 const SITE = 'datadoghq.com';
 const SERVICE = 'ogonggo-web';
@@ -33,6 +38,7 @@ if (APPLICATION_ID && CLIENT_TOKEN) {
   datadogRum.init({
     applicationId: APPLICATION_ID,
     clientToken: CLIENT_TOKEN,
+    remoteConfiguration: REMOTE_CONFIGURATION_ID ? { id: REMOTE_CONFIGURATION_ID } : undefined,
     site: SITE,
     service: SERVICE,
     env: ENV,
