@@ -14,6 +14,7 @@ export interface UserJobDetailResponse {
   companyName: string;
   title: string;
   coverImageUrl?: string;
+  logoUrl?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -63,6 +64,7 @@ export interface UserJobDetailResponse {
   benefits?: string;
   hiringProcess?: string;
   sourceUrl?: string;
+  applyEmail?: string;
   closedAt?: string;
   bookmarked: boolean;
   viewCount: number;

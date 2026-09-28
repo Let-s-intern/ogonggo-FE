@@ -21,6 +21,7 @@ export interface CompanyJobDetailResponse {
   jobRole?: string;
   industry?: string;
   coverImageUrl?: string;
+  logoUrl?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -80,6 +81,7 @@ export interface CompanyJobDetailResponse {
      * | `EMAIL` | 2 | 이메일 |
      */
   applicationMethod?: CompanyJobDetailResponseApplicationMethod;
+  applyEmail?: string;
   sourceUrl?: string;
   /**
      * | 값 | code | 설명 |

@@ -32,6 +32,7 @@ import type {
   ErrorResponse,
   GetCrawlerBootcampParams,
   GetCrawlerJobParams,
+  GetWork24ApiResponseParams,
   ListBootcampsParams,
   ListJobsParams,
   ListNoticesParams,
@@ -45,6 +46,7 @@ import type {
   SuccessResponseCrawlerBootcampRegistrationResponse,
   SuccessResponseCrawlerJobLookupResponse,
   SuccessResponseCrawlerJobRegistrationResponse,
+  SuccessResponseJsonNode,
   SuccessResponseListAdminReviewItemResponse,
   SuccessResponsePageResponseAdminBootcampSummaryResponse,
   SuccessResponsePageResponseAdminJobSummaryResponse,
@@ -2589,6 +2591,187 @@ export const useUpdateBootcamp = <TError = ErrorResponse,
       return useMutation(getUpdateBootcampMutationOptions(options), queryClient);
     }
 
+export type getWork24ApiResponseResponse200 = {
+  data: SuccessResponseJsonNode
+  status: 200
+}
+
+export type getWork24ApiResponseResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getWork24ApiResponseResponse502 = {
+  data: ErrorResponse
+  status: 502
+}
+
+export type getWork24ApiResponseResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type getWork24ApiResponseResponseSuccess = (getWork24ApiResponseResponse200) & {
+  headers: Headers;
+};
+export type getWork24ApiResponseResponseError = (getWork24ApiResponseResponse400 | getWork24ApiResponseResponse502 | getWork24ApiResponseResponse503) & {
+  headers: Headers;
+};
+
+export type getWork24ApiResponseResponse = (getWork24ApiResponseResponseSuccess | getWork24ApiResponseResponseError)
+
+export const getGetWork24ApiResponseUrl = (apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/work24/${apiName}?${stringifiedParams}` : `/api/v1/admin/work24/${apiName}`
+}
+
+/**
+ *
+ *             고용24 Open API를 서버의 인증키로 호출하고 응답을 JSON으로 바꿔 돌려줍니다. 저장하지 않습니다.
+ *
+ *             요청 파라미터는 고용24 개발명세(고용24 > 고객센터 > OPEN-API > 서비스 소개 및 신청)의 이름 그대로 query로 보냅니다.
+ *             인증키(authKey)와 응답 형식(returnType), 명세가 값을 고정한 파라미터(훈련과정 outType, 직업정보 target·jobGb)는
+ *             서버가 채우므로 보내도 무시합니다. 값이 빈 파라미터는 보내지 않은 것으로 봅니다.
+ *
+ *             XML 응답은 최상위 요소를 벗겨 JSON 객체로 바꿉니다. 같은 이름의 요소가 여러 개면 배열이 되지만
+ *             한 개뿐이면 배열이 아닌 객체이므로, 목록을 읽을 때 두 경우를 모두 처리해야 합니다.
+ *             직무정보는 고용24가 준 JSON을 그대로 돌려줍니다.
+ *
+ *             | apiName | 고용24 API |
+ *             | --- | --- |
+ *             | recruitments | 채용정보 목록·상세 (callTp=L·D) |
+ *             | tomorrow-learning-card-courses | 국민내일배움카드 훈련과정 목록 |
+ *             | tomorrow-learning-card-course-detail | 국민내일배움카드 훈련과정 과정·기관정보 |
+ *             | tomorrow-learning-card-course-schedules | 국민내일배움카드 훈련과정 훈련일정 |
+ *             | work-study-courses | 일학습병행 훈련과정 목록 |
+ *             | work-study-course-detail | 일학습병행 훈련과정 과정·기관정보 |
+ *             | work-study-course-schedules | 일학습병행 훈련과정 훈련일정 |
+ *             | government-job-recruitments | 정부지원일자리 참여자모집정보 |
+ *             | government-job-recruitment-detail | 정부지원일자리 참여자모집상세정보 |
+ *             | government-job-programs | 정부지원일자리 일자리사업정보 |
+ *             | government-job-program-detail | 정부지원일자리 일자리사업상세정보 |
+ *             | government-job-institutions | 정부지원일자리 기관기본정보 |
+ *             | government-job-participant-statistics | 정부지원일자리 참여자통계 |
+ *             | job-seeker-programs | 구직자취업역량 강화프로그램 |
+ *             | occupations | 직업정보 목록 |
+ *             | occupation-detail | 직업정보 상세 |
+ *             | occupation-dictionary | 직업사전 |
+ *             | standard-job-descriptions | 표준직무기술서 |
+ *             | duty-data-dictionary | 직무데이터사전 |
+ *             | small-giant-companies | 강소기업 |
+ *             | small-giant-company-visits | 강소기업 현장탐방기 |
+ *             | youth-small-giant-company-experiences | 청년강소기업체험 |
+ *             | youth-friendly-small-giant-companies | 청년친화강소기업 |
+ * @summary 고용24 Open API 조회
+ */
+export const getWork24ApiResponse = async (apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams, options?: Parameters<typeof httpClient>[1]): Promise<getWork24ApiResponseResponse> => {
+
+  return httpClient<getWork24ApiResponseResponse>(getGetWork24ApiResponseUrl(apiName,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWork24ApiResponseQueryKey = (apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params?: GetWork24ApiResponseParams,) => {
+    return [
+    `/api/v1/admin/work24/${apiName}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetWork24ApiResponseQueryOptions = <TData = Awaited<ReturnType<typeof getWork24ApiResponse>>, TError = ErrorResponse>(apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24ApiResponse>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWork24ApiResponseQueryKey(apiName,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWork24ApiResponse>>> = ({ signal }) => getWork24ApiResponse(apiName,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: apiName !== null && apiName !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWork24ApiResponse>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWork24ApiResponseQueryResult = NonNullable<Awaited<ReturnType<typeof getWork24ApiResponse>>>
+export type GetWork24ApiResponseQueryError = ErrorResponse
+
+
+export function useGetWork24ApiResponse<TData = Awaited<ReturnType<typeof getWork24ApiResponse>>, TError = ErrorResponse>(
+ apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24ApiResponse>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWork24ApiResponse>>,
+          TError,
+          Awaited<ReturnType<typeof getWork24ApiResponse>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWork24ApiResponse<TData = Awaited<ReturnType<typeof getWork24ApiResponse>>, TError = ErrorResponse>(
+ apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24ApiResponse>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWork24ApiResponse>>,
+          TError,
+          Awaited<ReturnType<typeof getWork24ApiResponse>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWork24ApiResponse<TData = Awaited<ReturnType<typeof getWork24ApiResponse>>, TError = ErrorResponse>(
+ apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24ApiResponse>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 고용24 Open API 조회
+ */
+
+export function useGetWork24ApiResponse<TData = Awaited<ReturnType<typeof getWork24ApiResponse>>, TError = ErrorResponse>(
+ apiName: 'recruitments' | 'tomorrow-learning-card-courses' | 'tomorrow-learning-card-course-detail' | 'tomorrow-learning-card-course-schedules' | 'work-study-courses' | 'work-study-course-detail' | 'work-study-course-schedules' | 'government-job-recruitments' | 'government-job-recruitment-detail' | 'government-job-programs' | 'government-job-program-detail' | 'government-job-institutions' | 'government-job-participant-statistics' | 'job-seeker-programs' | 'occupations' | 'occupation-detail' | 'occupation-dictionary' | 'standard-job-descriptions' | 'duty-data-dictionary' | 'small-giant-companies' | 'small-giant-company-visits' | 'youth-small-giant-company-experiences' | 'youth-friendly-small-giant-companies',
+    params: GetWork24ApiResponseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24ApiResponse>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWork24ApiResponseQueryOptions(apiName,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listReviewQueueResponse200 = {
   data: SuccessResponseListAdminReviewItemResponse
   status: 200
@@ -3179,11 +3362,13 @@ export const getDeleteJobResponseMock = (overrideResponse: Partial<Extract<Succe
 
 export const getUpdateJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
-export const getGetBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+export const getGetBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getDeleteBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getUpdateBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+export const getUpdateBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getGetWork24ApiResponseResponseMock = (overrideResponse: Partial<Extract<SuccessResponseJsonNode, object>> = {}): SuccessResponseJsonNode => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getListReviewQueueResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminReviewItemResponse, object>> = {}): SuccessResponseListAdminReviewItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), meta: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), sections: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({field: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}})}))})), undefined]), ...overrideResponse})
 
@@ -3458,6 +3643,18 @@ export const getUpdateBootcampMockHandler = (overrideResponse?: SuccessResponseA
   }, options)
 }
 
+export const getGetWork24ApiResponseMockHandler = (overrideResponse?: SuccessResponseJsonNode | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseJsonNode> | SuccessResponseJsonNode), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/work24/:apiName', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetWork24ApiResponseResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListReviewQueueMockHandler = (overrideResponse?: SuccessResponseListAdminReviewItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAdminReviewItemResponse> | SuccessResponseListAdminReviewItemResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/review-queue', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -3528,6 +3725,7 @@ export const getOgonggoAdminAPIMock = () => [
   getGetBootcampMockHandler(),
   getDeleteBootcampMockHandler(),
   getUpdateBootcampMockHandler(),
+  getGetWork24ApiResponseMockHandler(),
   getListReviewQueueMockHandler(),
   getListRejectionsMockHandler(),
   getListJobsMockHandler(),

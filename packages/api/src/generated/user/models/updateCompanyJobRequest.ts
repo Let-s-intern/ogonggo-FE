@@ -47,6 +47,11 @@ export interface UpdateCompanyJobRequest {
      */
   coverImageUrl?: string;
   /**
+     * @minLength 0
+     * @maxLength 2048
+     */
+  logoUrl?: string;
+  /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `FULL_TIME` | 1 | 정규직 |
@@ -109,6 +114,11 @@ export interface UpdateCompanyJobRequest {
      * | `EMAIL` | 2 | 이메일 |
      */
   applicationMethod?: UpdateCompanyJobRequestApplicationMethod;
+  /**
+     * @minLength 0
+     * @maxLength 320
+     */
+  applyEmail?: string;
   /**
      * @minLength 0
      * @maxLength 2048

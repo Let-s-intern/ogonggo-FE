@@ -131,7 +131,7 @@ export interface CrawlerJobRegistrationRequest {
      * @minLength 0
      * @maxLength 320
      */
-  applicationEmail?: string;
+  applyEmail?: string;
   /**
      * 채용 문의 이메일
      * @minLength 0
