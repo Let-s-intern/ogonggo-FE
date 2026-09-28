@@ -1,6 +1,10 @@
 'use client';
 
-import { EDUCATION_LEVEL_LABELS, EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EDUCATION_LEVEL_LABELS,
+  EMPLOYMENT_TYPE_LABELS,
+  formatRegion,
+} from '@/entities/job/model/labels';
 import { EXPERIENCE_TYPE_LABELS } from '../model/options';
 import type { CompanyJobFormValues } from '../model/values';
 
@@ -45,7 +49,9 @@ export function JobPreview({ values }: JobPreviewProps) {
     <div className="flex flex-col gap-8 rounded-lg border border-gray-200 bg-white p-8">
       <header>
         <p className="text-sm text-gray-500">
-          {[values.companyName, values.region].filter(Boolean).join(' · ') || NO_VALUE}
+          {[values.companyName, formatRegion(values.region || undefined)]
+            .filter(Boolean)
+            .join(' · ') || NO_VALUE}
         </p>
         <h2 className="pt-2 text-2xl font-bold text-gray-950">
           {values.title || '공고 제목을 입력하면 여기에 보여요.'}
@@ -78,7 +84,7 @@ export function JobPreview({ values }: JobPreviewProps) {
           label="학력"
           value={values.educationLevel ? EDUCATION_LEVEL_LABELS[values.educationLevel] : NO_VALUE}
         />
-        <InfoCell label="지역" value={values.region || NO_VALUE} />
+        <InfoCell label="지역" value={formatRegion(values.region || undefined) ?? NO_VALUE} />
         <InfoCell label="직무 분야" value={values.jobField || NO_VALUE} />
         <InfoCell
           label="모집 인원"

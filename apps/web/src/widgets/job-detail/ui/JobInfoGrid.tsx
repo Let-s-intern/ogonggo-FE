@@ -27,7 +27,7 @@ function InfoCell({ label, value }: { label: string; value: string }) {
 
 /**
  * 경력/채용유형/학력/지역 2x2 정보 그리드. 라벨 매핑은 `entities/job/model/labels.ts`(`JobBadge`
- * 가 쓰는 것과 같은 맵)를 재사용한다. `region`은 자유 문자열이라 라벨 맵이 없다 — 없으면
+ * 가 쓰는 것과 같은 맵)를 재사용한다. `region`은 부르는 쪽이 `formatRegion`으로 바꿔 넘긴다 — 없으면
  * 빈 칸 대신 "정보 없음"으로 대체한다(`.claude/rules/writing.md`).
  */
 export function JobInfoGrid({

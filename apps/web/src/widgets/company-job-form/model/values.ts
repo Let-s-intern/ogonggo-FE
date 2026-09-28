@@ -5,6 +5,7 @@ import type {
   CreateCompanyJobRequestEducationLevel,
   CreateCompanyJobRequestEmploymentType,
   CreateCompanyJobRequestExperienceType,
+  CreateCompanyJobRequestRegion,
 } from '@ogonggo/api';
 import { toDateInputValue, toEndDateTime, toStartDateTime } from '@/shared/lib/formDateTime';
 import { EMPTY_HIRING_PROCESS_STEP, type HiringProcessStep } from '../lib/hiringProcess';
@@ -25,7 +26,7 @@ export interface CompanyJobFormValues {
   employmentType: CreateCompanyJobRequestEmploymentType | '';
   experienceType: CreateCompanyJobRequestExperienceType | '';
   educationLevel: CreateCompanyJobRequestEducationLevel | '';
-  region: string;
+  region: CreateCompanyJobRequestRegion | '';
   recruitmentHeadcount: string;
   coverImageUrl: string;
   responsibilities: string;
@@ -163,7 +164,7 @@ export function toCompanyJobRequest(
     experienceType: values.experienceType as CreateCompanyJobRequest['experienceType'],
     experienceMinYears: passthrough.experienceMinYears,
     educationLevel: values.educationLevel || undefined,
-    region: textOrUndefined(values.region),
+    region: values.region || undefined,
     recruitmentType: values.recruitmentEndAt ? 'PERIOD' : 'ALWAYS_OPEN',
     recruitmentHeadcount: numberOrUndefined(values.recruitmentHeadcount),
     recruitmentStartAt: toStartDateTime(values.recruitmentStartAt),

@@ -34,6 +34,7 @@ import type {
   CreateRecruitmentPostCommentRequest,
   CreateRecruitmentPostDraftRequest,
   CreateRecruitmentPostRequest,
+  CreateServiceFeedbackRequest,
   ErrorResponse,
   GetRecruitmentPostCommentRepliesParams,
   GetRecruitmentPostCommentsParams,
@@ -62,9 +63,12 @@ import type {
   SuccessResponseCreateRecruitmentPostApplicationResponse,
   SuccessResponseCreateRecruitmentPostCommentResponse,
   SuccessResponseCreateRecruitmentPostResponse,
+  SuccessResponseCreateServiceFeedbackResponse,
   SuccessResponseImageUploadResponse,
   SuccessResponseListUserJobCalendarItemResponse,
   SuccessResponseListUserJobSummaryResponse,
+  SuccessResponseListUserRecommendedChallengeResponse,
+  SuccessResponseMapStringListUserEnumOptionResponse,
   SuccessResponseMyAccountResponse,
   SuccessResponsePageResponseCompanyBootcampSummaryResponse,
   SuccessResponsePageResponseCompanyJobSummaryResponse,
@@ -585,10 +589,11 @@ export const getReplaceMyCompanyProfileUrl = () => {
 
 /**
  *
- *             기업 회원의 기관명과 담당자 이름을 교체합니다.
+ *             기업 회원의 기관명, 담당자 이름, 기업 로고, 담당자 연락처, 정보 수신용 이메일을 교체합니다.
  *             조회는 내 정보 조회(GET /api/v1/users/me)의 companyProfile에 함께 담깁니다.
  *
- *             두 값을 함께 교체하므로 하나만 바꿀 때도 바꾸지 않을 값을 함께 보내야 합니다.
+ *             모든 값을 함께 교체하므로 하나만 바꿀 때도 바꾸지 않을 값을 함께 보내야 합니다.
+ *             로고·연락처·수신 이메일은 선택 값이며, 빼거나 null로 보내면 저장된 값을 비웁니다.
  *             로그인 이메일과 비밀번호는 여기서 바꿀 수 없습니다.
  * @summary 내 기업 정보 수정
  */
@@ -2571,6 +2576,111 @@ export const useCloseMyBootcamp = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCloseMyBootcampMutationOptions(options), queryClient);
+    }
+
+export type createServiceFeedbackResponse201 = {
+  data: SuccessResponseCreateServiceFeedbackResponse
+  status: 201
+}
+
+export type createServiceFeedbackResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createServiceFeedbackResponseSuccess = (createServiceFeedbackResponse201) & {
+  headers: Headers;
+};
+export type createServiceFeedbackResponseError = (createServiceFeedbackResponse400) & {
+  headers: Headers;
+};
+
+export type createServiceFeedbackResponse = (createServiceFeedbackResponseSuccess | createServiceFeedbackResponseError)
+
+export const getCreateServiceFeedbackUrl = () => {
+
+
+
+
+  return `/api/v1/service-feedbacks`
+}
+
+/**
+ *
+ *             만족스러운 점(satisfaction)과 아쉬운 점(improvement)을 남깁니다. 두 문항 모두 선택이지만 하나 이상은 채워야 하며,
+ *             공백만 있는 문항은 비운 것으로 봅니다. 각 문항은 1000자 이하입니다.
+ *
+ *             로그인 없이 작성할 수 있습니다. 액세스 토큰을 보내면 작성자를 함께 기록합니다.
+ *             한 사용자가 여러 번 작성할 수 있으며 작성할 때마다 새 의견이 생깁니다.
+ * @summary 서비스 개선 의견 작성
+ */
+export const createServiceFeedback = async (createServiceFeedbackRequest: CreateServiceFeedbackRequest, options?: Parameters<typeof httpClient>[1]): Promise<createServiceFeedbackResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createServiceFeedbackResponse>(getCreateServiceFeedbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createServiceFeedbackRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateServiceFeedbackMutationKey = () => ['createServiceFeedback'] as const;
+
+export const getCreateServiceFeedbackMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createServiceFeedback>>, TError,CreateServiceFeedbackMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createServiceFeedback>>, TError,CreateServiceFeedbackMutationVariables, TContext> => {
+
+const mutationKey = getCreateServiceFeedbackMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createServiceFeedback>>, CreateServiceFeedbackMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createServiceFeedback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateServiceFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof createServiceFeedback>>>
+    export type CreateServiceFeedbackMutationBody = CreateServiceFeedbackRequest
+    export type CreateServiceFeedbackMutationError = ErrorResponse
+    export type CreateServiceFeedbackMutationVariables = {data: CreateServiceFeedbackRequest}
+
+    /**
+ * @summary 서비스 개선 의견 작성
+ */
+export const useCreateServiceFeedback = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createServiceFeedback>>, TError,CreateServiceFeedbackMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createServiceFeedback>>,
+        TError,
+        CreateServiceFeedbackMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateServiceFeedbackMutationOptions(options), queryClient);
     }
 
 export type getRecruitmentPostsResponse200 = {
@@ -6067,6 +6177,126 @@ export function useListMyRecruitmentPostBookmarks<TData = Awaited<ReturnType<typ
 
 
 
+export type listPublicRecommendedChallengesResponse200 = {
+  data: SuccessResponseListUserRecommendedChallengeResponse
+  status: 200
+}
+
+export type listPublicRecommendedChallengesResponseSuccess = (listPublicRecommendedChallengesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPublicRecommendedChallengesResponse = (listPublicRecommendedChallengesResponseSuccess)
+
+export const getListPublicRecommendedChallengesUrl = () => {
+
+
+
+
+  return `/api/v1/recommended-challenges`
+}
+
+/**
+ *
+ *             렛츠커리어에서 모집 중인 챌린지 중 최대 3개를 반환합니다. 페이지 정보는 없습니다.
+ *             지금은 렛츠커리어가 무작위로 고르며, 사용자에 맞춘 추천으로 바뀌어도 이 계약은 그대로입니다.
+ *
+ *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내면 그 사용자의 렛츠커리어 계정을 추천에 넘깁니다.
+ *
+ *             렛츠커리어가 응답하지 않으면 오류 대신 빈 목록으로 응답합니다. 빈 목록이면 추천 구역을 숨깁니다.
+ * @summary 추천 렛츠커리어 챌린지 조회
+ */
+export const listPublicRecommendedChallenges = async ( options?: Parameters<typeof httpClient>[1]): Promise<listPublicRecommendedChallengesResponse> => {
+
+  return httpClient<listPublicRecommendedChallengesResponse>(getListPublicRecommendedChallengesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicRecommendedChallengesQueryKey = () => {
+    return [
+    `/api/v1/recommended-challenges`
+    ] as const;
+    }
+
+
+export const getListPublicRecommendedChallengesQueryOptions = <TData = Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicRecommendedChallengesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>> = ({ signal }) => listPublicRecommendedChallenges({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicRecommendedChallengesQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>>
+export type ListPublicRecommendedChallengesQueryError = unknown
+
+
+export function useListPublicRecommendedChallenges<TData = Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicRecommendedChallenges>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicRecommendedChallenges>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicRecommendedChallenges<TData = Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicRecommendedChallenges>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicRecommendedChallenges>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicRecommendedChallenges<TData = Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 추천 렛츠커리어 챌린지 조회
+ */
+
+export function useListPublicRecommendedChallenges<TData = Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicRecommendedChallenges>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicRecommendedChallengesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listPublicNoticesResponse200 = {
   data: SuccessResponsePageResponseUserNoticeSummaryResponse
   status: 200
@@ -6792,8 +7022,10 @@ export const getListPublicJobsUrl = (params?: ListPublicJobsParams,) => {
  *
  *             sort로 정렬을 고릅니다. LATEST는 최신순, VIEW_COUNT는 조회수순이며 조회 수가 같으면 최신순입니다.
  *
- *             employmentType, experienceType, jobField(직군), jobRole(직무)로 목록을 좁힙니다. 각각 하나씩 고를 수 있고,
+ *             employmentType, experienceType, jobField(직군), jobRole(직무), region, subRegion으로 목록을 좁힙니다. 각각 하나씩 고를 수 있고,
  *             보내지 않으면 해당 조건을 적용하지 않습니다. jobField와 jobRole은 공고의 값과 정확히 같은지로 거릅니다.
+ *             region(시·도), subRegion(시·군·구)은 GET /api/v1/enums의 Region·SubRegion 값을 보냅니다.
+ *             region만 보내면 그 시·도의 시·군·구 공고도 함께 걸립니다.
  *             필터끼리, 그리고 정렬과 함께 사용할 수 있습니다.
  *
  *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
@@ -7331,7 +7563,7 @@ export const getListPublicJobCalendarUrl = (params: ListPublicJobCalendarParams,
  *             모집 기간이 없는 ALWAYS_OPEN 공고는 제외합니다.
  *             시작·종료 일시가 모두 있는 공고만 대상이며 종료 일시, 식별자 오름차순으로 정렬합니다.
  *
- *             employmentType, experienceType, jobField(직군), jobRole(직무), keyword는 채용공고 목록 조회와 같습니다.
+ *             employmentType, experienceType, jobField(직군), jobRole(직무), region, subRegion, keyword는 채용공고 목록 조회와 같습니다.
  *             각각 하나씩 고를 수 있고, 보내지 않으면 해당 조건을 적용하지 않으며 서로 함께 사용할 수 있습니다.
  *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않고 2자 이상 100자 이하여야 합니다.
  *
@@ -7469,8 +7701,10 @@ export const getListMyJobBookmarksUrl = (params?: ListMyJobBookmarksParams,) => 
  *             북마크한 공고 중 게시 중인 공고만 반환합니다.
  *
  *             채용공고 목록과 같은 필터를 사용할 수 있습니다.
- *             employmentType, experienceType, jobField(직군), jobRole(직무)로 목록을 좁히며 각각 하나씩 고를 수 있고,
+ *             employmentType, experienceType, jobField(직군), jobRole(직무), region, subRegion으로 목록을 좁히며 각각 하나씩 고를 수 있고,
  *             보내지 않으면 해당 조건을 적용하지 않습니다. jobField와 jobRole은 공고의 값과 정확히 같은지로 거릅니다.
+ *             region(시·도), subRegion(시·군·구)은 GET /api/v1/enums의 Region·SubRegion 값을 보냅니다.
+ *             region만 보내면 그 시·도의 시·군·구 공고도 함께 걸립니다.
  *
  *             keyword는 회사명 또는 공고 제목에 포함되는지로 찾으며 대소문자를 가리지 않습니다.
  *             2자 이상 100자 이하여야 하며, 검색하지 않을 때는 보내지 않습니다.
@@ -7564,6 +7798,125 @@ export function useListMyJobBookmarks<TData = Awaited<ReturnType<typeof listMyJo
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListMyJobBookmarksQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicEnumsResponse200 = {
+  data: SuccessResponseMapStringListUserEnumOptionResponse
+  status: 200
+}
+
+export type listPublicEnumsResponseSuccess = (listPublicEnumsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPublicEnumsResponse = (listPublicEnumsResponseSuccess)
+
+export const getListPublicEnumsUrl = () => {
+
+
+
+
+  return `/api/v1/enums`
+}
+
+/**
+ *
+ *             로그인 없이 조회할 수 있습니다. 사용자 API의 요청·응답에 나오는 enum을 enum 이름별로 묶어
+ *             선언 순서대로 반환합니다. 예: `data.EmploymentType[0]`은 `{"name": "FULL_TIME", "desc": "정규직", "parent": null}`입니다.
+ *             요청에는 `name`을 보내고 `desc`는 화면 라벨로만 씁니다.
+ *             `parent`는 SubRegion처럼 다른 enum 값에 속하는 값의 상위 값 name이며, 그 밖에는 null입니다.
+ *             값은 enum의 전체 값이며, 목록 필터처럼 일부 값만 받는 곳의 범위는 해당 API 명세를 따릅니다.
+ * @summary enum 선택지 조회
+ */
+export const listPublicEnums = async ( options?: Parameters<typeof httpClient>[1]): Promise<listPublicEnumsResponse> => {
+
+  return httpClient<listPublicEnumsResponse>(getListPublicEnumsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicEnumsQueryKey = () => {
+    return [
+    `/api/v1/enums`
+    ] as const;
+    }
+
+
+export const getListPublicEnumsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicEnums>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicEnums>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicEnumsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicEnums>>> = ({ signal }) => listPublicEnums({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicEnums>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicEnumsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicEnums>>>
+export type ListPublicEnumsQueryError = unknown
+
+
+export function useListPublicEnums<TData = Awaited<ReturnType<typeof listPublicEnums>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicEnums>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicEnums>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicEnums>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicEnums<TData = Awaited<ReturnType<typeof listPublicEnums>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicEnums>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicEnums>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicEnums>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicEnums<TData = Awaited<ReturnType<typeof listPublicEnums>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicEnums>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary enum 선택지 조회
+ */
+
+export function useListPublicEnums<TData = Awaited<ReturnType<typeof listPublicEnums>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicEnums>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicEnumsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -8098,7 +8451,7 @@ export const useDeleteRecruitmentPostComment = <TError = ErrorResponse,
 
 export const getReplaceMyProfileResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
+export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
 
 export const getReplaceMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -8126,7 +8479,7 @@ export const getReplaceMyJobBookmarkApplicationStatusResponseMock = (overrideRes
 
 export const getReplaceMyBootcampBookmarkApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyJobResponse, object>> = {}): SuccessResponseCreateCompanyJobResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -8141,6 +8494,8 @@ export const getCreateMyBootcampResponseMock = (overrideResponse: Partial<Extrac
 export const getStartMyBootcampRecruitmentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCloseMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCreateServiceFeedbackResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateServiceFeedbackResponse, object>> = {}): SuccessResponseCreateServiceFeedbackResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getGetRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostSummaryResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), viewCount: faker.number.int(), commentCount: faker.number.int(), applicationCount: faker.number.int(), bookmarkCount: faker.number.int(), bookmarked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -8192,11 +8547,13 @@ export const getDeleteRecruitmentPostApplicationResponseMock = (overrideResponse
 
 export const getUpdateRecruitmentPostApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetMyAccountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAccountResponse, object>> = {}): SuccessResponseMyAccountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', profile: faker.helpers.arrayElement([{name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), companyProfile: faker.helpers.arrayElement([{organizationName: faker.string.alpha({length: {min: 10, max: 20}}), managerName: faker.string.alpha({length: {min: 10, max: 20}})}, undefined])}, undefined]), ...overrideResponse})
+export const getGetMyAccountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAccountResponse, object>> = {}): SuccessResponseMyAccountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', profile: faker.helpers.arrayElement([{name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), companyProfile: faker.helpers.arrayElement([{organizationName: faker.string.alpha({length: {min: 10, max: 20}}), managerName: faker.string.alpha({length: {min: 10, max: 20}}), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerPhone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined])}, undefined]), ...overrideResponse})
 
 export const getGetRecruitmentPostCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostCommentResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListMyRecruitmentPostBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostSummaryResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), viewCount: faker.number.int(), commentCount: faker.number.int(), applicationCount: faker.number.int(), bookmarkCount: faker.number.int(), bookmarked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListPublicRecommendedChallengesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserRecommendedChallengeResponse, object>> = {}): SuccessResponseListUserRecommendedChallengeResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({challengeId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
 export const getListPublicNoticesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserNoticeSummaryResponse, object>> = {}): SuccessResponsePageResponseUserNoticeSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -8210,17 +8567,21 @@ export const getListMyRecruitmentApplicationsResponseMock = (overrideResponse: P
         [faker.string.alphanumeric(5)]: faker.number.int()
       }}, undefined]), ...overrideResponse})
 
-export const getListPublicJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListPublicJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getGetPublicJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), ...overrideResponse})
+export const getGetPublicJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getListMySimilarJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
+export const getListMySimilarJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
 
-export const getListPublicPopularJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
+export const getListPublicPopularJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
 
 export const getListPublicJobCalendarResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobCalendarItemResponse, object>> = {}): SuccessResponseListUserJobCalendarItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobRole: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recruitmentEndAt: faker.date.past().toISOString().slice(0, 19) + 'Z', bookmarked: faker.datatype.boolean()})), undefined]), ...overrideResponse})
 
-export const getListMyJobBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListMyJobBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListPublicEnumsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMapStringListUserEnumOptionResponse, object>> = {}): SuccessResponseMapStringListUserEnumOptionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{
+        [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), desc: faker.string.alpha({length: {min: 10, max: 20}}), parent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}))
+      }, undefined]), ...overrideResponse})
 
 export const getListPublicBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -8503,6 +8864,18 @@ export const getCloseMyBootcampMockHandler = (overrideResponse?: SuccessResponse
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCloseMyBootcampResponseMock(),
       { status: 200
+      })
+  }, options)
+}
+
+export const getCreateServiceFeedbackMockHandler = (overrideResponse?: SuccessResponseCreateServiceFeedbackResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateServiceFeedbackResponse> | SuccessResponseCreateServiceFeedbackResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/service-feedbacks', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateServiceFeedbackResponseMock(),
+      { status: 201
       })
   }, options)
 }
@@ -8873,6 +9246,18 @@ export const getListMyRecruitmentPostBookmarksMockHandler = (overrideResponse?: 
   }, options)
 }
 
+export const getListPublicRecommendedChallengesMockHandler = (overrideResponse?: SuccessResponseListUserRecommendedChallengeResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListUserRecommendedChallengeResponse> | SuccessResponseListUserRecommendedChallengeResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/recommended-challenges', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicRecommendedChallengesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListPublicNoticesMockHandler = (overrideResponse?: SuccessResponsePageResponseUserNoticeSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserNoticeSummaryResponse> | SuccessResponsePageResponseUserNoticeSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/notices', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -9005,6 +9390,18 @@ export const getListMyJobBookmarksMockHandler = (overrideResponse?: SuccessRespo
   }, options)
 }
 
+export const getListPublicEnumsMockHandler = (overrideResponse?: SuccessResponseMapStringListUserEnumOptionResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMapStringListUserEnumOptionResponse> | SuccessResponseMapStringListUserEnumOptionResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/enums', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicEnumsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListPublicBootcampsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserBootcampSummaryResponse> | SuccessResponsePageResponseUserBootcampSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -9076,6 +9473,7 @@ export const getOgonggoUserAPIMock = () => [
   getCreateMyBootcampMockHandler(),
   getStartMyBootcampRecruitmentMockHandler(),
   getCloseMyBootcampMockHandler(),
+  getCreateServiceFeedbackMockHandler(),
   getGetRecruitmentPostsMockHandler(),
   getCreateRecruitmentPostMockHandler(),
   getGetRecruitmentPostCommentsMockHandler(),
@@ -9107,6 +9505,7 @@ export const getOgonggoUserAPIMock = () => [
   getGetMyAccountMockHandler(),
   getGetRecruitmentPostCommentRepliesMockHandler(),
   getListMyRecruitmentPostBookmarksMockHandler(),
+  getListPublicRecommendedChallengesMockHandler(),
   getListPublicNoticesMockHandler(),
   getGetPublicNoticeMockHandler(),
   getListMyRecruitmentPostsMockHandler(),
@@ -9118,6 +9517,7 @@ export const getOgonggoUserAPIMock = () => [
   getListPublicPopularJobsMockHandler(),
   getListPublicJobCalendarMockHandler(),
   getListMyJobBookmarksMockHandler(),
+  getListPublicEnumsMockHandler(),
   getListPublicBootcampsMockHandler(),
   getGetPublicBootcampMockHandler(),
   getListMyBootcampBookmarksMockHandler(),

@@ -47,7 +47,7 @@ export const JOB_MOCK: JobSummary = {
   employmentType: 'FULL_TIME',
   experienceType: 'NEWCOMER',
   educationLevel: 'BACHELOR',
-  region: '서울 강남구',
+  region: 'SEOUL',
   recruitmentType: 'PERIOD',
   recruitmentEndAt: endAt(7),
   bookmarked: false,

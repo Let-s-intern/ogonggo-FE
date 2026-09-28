@@ -136,7 +136,9 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
             className="h-11 w-full px-4 text-base"
             options={withCurrentValue(REGION_OPTIONS, values.region)}
             value={values.region}
-            onChange={(event) => onChange({ region: event.target.value })}
+            onChange={(event) =>
+              onChange({ region: event.target.value as CompanyJobFormValues['region'] })
+            }
           />
         </Field>
 

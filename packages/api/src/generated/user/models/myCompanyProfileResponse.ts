@@ -11,4 +11,10 @@
 export interface MyCompanyProfileResponse {
   organizationName: string;
   managerName: string;
+  /** 기업 로고 이미지 주소. 입력하지 않았으면 null이다. */
+  logoUrl?: string;
+  /** 담당자 연락처. 입력하지 않았으면 null이다. */
+  managerPhone?: string;
+  /** 로그인 이메일과 따로 받는 정보 수신용 이메일. 입력하지 않았으면 null이다. */
+  notificationEmail?: string;
 }

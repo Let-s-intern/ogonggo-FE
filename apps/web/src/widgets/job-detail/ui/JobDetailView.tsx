@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getPublicJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
+import { formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -83,7 +84,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
   const headerCard = (
     <JobDetailHeaderCard
       companyName={job.companyName}
-      region={job.region}
+      region={formatRegion(job.region)}
       title={job.title}
       recruitmentType={job.recruitmentType}
       recruitmentEndAt={job.recruitmentEndAt}
@@ -95,7 +96,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       experienceType={job.experienceType}
       employmentType={job.employmentType}
       educationLevel={job.educationLevel}
-      region={job.region}
+      region={formatRegion(job.region)}
     />
   );
   const sections = buildSections(job)

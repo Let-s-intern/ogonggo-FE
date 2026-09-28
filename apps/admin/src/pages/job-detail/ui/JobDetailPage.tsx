@@ -60,7 +60,7 @@ export function JobDetailPage() {
             { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
-            { label: '지역', value: data.region ?? '-' },
+            { label: '지역', value: plainLabel(data.region) },
             { label: '고용 형태', value: plainLabel(data.employmentType) },
             { label: '경력', value: plainLabel(data.experienceType) },
             { label: '학력', value: plainLabel(data.educationLevel) },

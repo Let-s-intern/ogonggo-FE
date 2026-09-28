@@ -9,7 +9,11 @@ import {
 } from '@ogonggo/api';
 import { OPERATION_TYPE_LABELS } from '@/entities/bootcamp/model/labels';
 import { getCompanyLogoUrl } from '@/entities/job/model/company-logo';
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  formatRegion,
+} from '@/entities/job/model/labels';
 import { parseLocalDate } from '@/shared/lib/localDate';
 import type { MyPageListRow } from '@/widgets/mypage-list';
 import type { CompanyPostsQuery } from './query';
@@ -93,7 +97,7 @@ async function fetchJobs(query: CompanyPostsQuery): Promise<CompanyPostsPage> {
       meta: [
         EMPLOYMENT_TYPE_LABELS[job.employmentType],
         EXPERIENCE_TYPE_LABELS[job.experienceType],
-        job.region,
+        formatRegion(job.region),
       ].filter((part): part is string => Boolean(part)),
       recruitmentType: job.recruitmentType,
       recruitmentStartAt: job.recruitmentStartAt,
