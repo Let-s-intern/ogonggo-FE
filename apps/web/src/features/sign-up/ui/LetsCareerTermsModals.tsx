@@ -10,13 +10,14 @@ import { Button, Modal } from '@ogonggo/ui';
  * 모달로 띄운다. 주소와 문구는 `lets-intern-client` origin/main 의
  * `apps/web/src/domain/auth/section/AgreementSection.tsx`, `modal/PrivacyPolicyModal.tsx`,
  * `modal/MarketingModal.tsx` 에서 글자 그대로 옮겼다. 렛츠커리어가 문서를 바꾸면 여기도 바꾼다.
+ * 약관과 개인정보처리방침 주소는 푸터(`widgets/site-footer/ui/SiteFooter.tsx`)와 같은 새 문서로 맞췄다.
  */
 
 export const LETSCAREER_TERMS_URL =
-  'https://letsintern.notion.site/251208-2c35e77cbee1800bb2b5cfbd4c2f1525?pvs=21';
+  'https://letsintern.notion.site/3e95e77cbee180f993a3c70e3bce5a21?source=copy_link';
 
 const LETSCAREER_PRIVACY_POLICY_URL =
-  'https://letsintern.notion.site/c3af485bfced49ab9601f2d7bf07657d?pvs=4';
+  'https://letsintern.notion.site/3e95e77cbee18074a1c7dc485644d737?pvs=74';
 
 const CELL = 'border border-gray-200 p-2 align-top break-keep';
 const HEAD = 'border border-gray-200 px-2 py-1 text-start font-semibold';
