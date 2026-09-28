@@ -140,7 +140,7 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-3xl font-bold text-gray-950">작성한 공고</h1>
           <p className="pt-2 text-sm text-gray-500">등록한 공고의 상태를 한곳에서 확인해요.</p>
         </div>

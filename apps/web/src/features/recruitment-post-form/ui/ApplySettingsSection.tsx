@@ -31,7 +31,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
 
   return (
     <div>
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="모집 시작일" htmlFor="post-start-date" required>
           <Input
             id="post-start-date"
@@ -63,7 +63,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
         />
       </Field>
 
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="소통 방법" htmlFor="post-contact-method" required>
           <Select
             id="post-contact-method"

@@ -68,7 +68,7 @@ export function MyProfile() {
 
   return (
     <div className="flex flex-col gap-10">
-      <h1 className="text-3xl font-bold text-gray-950">개인 정보</h1>
+      <h1 className="hidden text-3xl font-bold text-gray-950 md:block">개인 정보</h1>
 
       {state.kind === 'error' ? (
         <p role="alert" className="text-sm text-error">

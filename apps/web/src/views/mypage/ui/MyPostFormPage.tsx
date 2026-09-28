@@ -20,7 +20,7 @@ export function MyPostFormPage({ postId }: MyPostFormPageProps) {
   return (
     <section className="flex flex-col gap-6">
       <header>
-        <h1 className="text-3xl font-bold text-gray-950">
+        <h1 className="text-xl font-bold text-gray-950 md:text-3xl">
           사이드 프로젝트 · 스터디 모집글 {editing ? '수정' : '작성'}
         </h1>
         <p className="pt-2 text-sm text-gray-500">

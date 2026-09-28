@@ -38,7 +38,7 @@ export interface JobApplySettingsSectionProps {
 export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSectionProps) {
   return (
     <div>
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="접수 시작일" htmlFor="company-job-start-at">
           <Input
             id="company-job-start-at"

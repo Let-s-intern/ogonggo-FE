@@ -27,8 +27,10 @@ export interface MyPageListTableProps {
  */
 export function MyPageListTable({ columns, children }: MyPageListTableProps) {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
-      <table className="w-full table-fixed border-collapse">
+    // 모바일은 표를 줄이지 않고 옆으로 넘긴다. 칸이 다섯이라 360px 에 맞추면 글자가 세로로
+    // 꺾인다. 시안이 카드로 바꾼 화면(작성한 모집글)은 그 화면이 표 대신 카드를 그린다.
+    <div className="overflow-x-auto rounded-lg border border-gray-200 md:overflow-hidden">
+      <table className="w-full min-w-[640px] table-fixed border-collapse md:min-w-0">
         <thead>
           <tr className="border-b border-gray-200">
             {columns.map((column) => (

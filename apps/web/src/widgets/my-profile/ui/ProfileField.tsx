@@ -18,8 +18,9 @@ export interface ProfileFieldProps {
  */
 export function ProfileField({ label, htmlFor, note, children }: ProfileFieldProps) {
   return (
-    <div className="flex items-start gap-6">
-      <label htmlFor={htmlFor} className="w-36 shrink-0 pt-3 text-sm text-gray-700">
+    // 모바일은 이름이 칸 위에 선다(`docs/asset/v10 mobile/개인정보 페이지.png`).
+    <div className="flex flex-col gap-2 md:flex-row md:items-start md:gap-6">
+      <label htmlFor={htmlFor} className="text-sm text-gray-700 md:w-36 md:shrink-0 md:pt-3">
         {label}
       </label>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
