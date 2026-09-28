@@ -16,7 +16,14 @@ import type { MyPageListRow } from '../model/row';
  * 없는 행(하드코딩한 지원 내역) 은 제목이 그냥 글자다 — 눌리는데 아무 일도 안 일어나는 링크를
  * 두지 않는다.
  */
-export function MyPageListRowCells({ row }: { row: MyPageListRow }) {
+export function MyPageListRowCells({
+  row,
+  onTitleClick,
+}: {
+  row: MyPageListRow;
+  /** 제목 링크를 누를 때. 스크랩 표가 GTM 이벤트를 보내는 데 쓴다. */
+  onTitleClick?: () => void;
+}) {
   const dday = computeDday(row.recruitmentType, row.recruitmentEndAt);
   const urgent = isDdayUrgent(row.recruitmentType, row.recruitmentEndAt);
   const closed = isRecruitmentClosed(row.recruitmentType, row.recruitmentEndAt, row.closedAt);
@@ -35,6 +42,7 @@ export function MyPageListRowCells({ row }: { row: MyPageListRow }) {
             {row.href ? (
               <Link
                 href={row.href}
+                onClick={onTitleClick}
                 className="block truncate text-base font-bold text-gray-900 hover:underline"
               >
                 {row.title}

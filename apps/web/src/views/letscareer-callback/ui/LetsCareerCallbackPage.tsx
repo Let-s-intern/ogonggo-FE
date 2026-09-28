@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { track } from '@/shared/analytics/dataLayer';
 import { LETSCAREER_CALLBACK_PATH, parseLetsCareerRedirect } from '@/shared/api/letscareer';
 import {
   exchangeLetsCareerToken,
@@ -61,7 +62,12 @@ export function LetsCareerCallbackPage() {
 
     exchangeLetsCareerToken(result.letsCareerAccessToken)
       .then(({ isNewUser }) => {
-        recordPendingSocialMethod();
+        const method = recordPendingSocialMethod() ?? '';
+        // 간편 로그인으로 처음 들어오면 이 교환에서 오공고 계정이 생긴다. 그것이 가입이다.
+        if (isNewUser) {
+          track('sign_up', { method });
+        }
+        track('login', { method });
         router.replace(pathAfterLetsCareerSignIn(isNewUser, returnPath));
       })
       .catch((error: unknown) => backToLogin(letsCareerSignInFailureOf(error)));

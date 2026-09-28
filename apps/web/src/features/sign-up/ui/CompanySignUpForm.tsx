@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { HttpError, signUpCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
 import { Button, Input } from '@ogonggo/ui';
+import { track } from '@/shared/analytics/dataLayer';
 import { saveTokens } from '@/shared/api/authTokens';
 import { recordSignInMethod } from '@/shared/lib/lastSignInMethod';
 import { SIGN_UP_INPUT_CLASS, SIGN_UP_SUBMIT_CLASS, SignUpField } from './SignUpField';
@@ -95,6 +96,8 @@ export function CompanySignUpForm() {
       }
       saveTokens(body.data);
       recordSignInMethod('email');
+      // 가입 응답이 토큰까지 준다. 로그인 API 를 따로 부르지 않으므로 `login` 은 보내지 않는다.
+      track('sign_up', { method: 'email' });
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다.
       router.replace('/');
     } catch (caught) {

@@ -1,7 +1,8 @@
-import Link from 'next/link';
 import { listPublicJobs, ListPublicJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
+import { toJobInfo } from '@/entities/job/model/analytics';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import type { JobSummary } from '@/entities/job/model/types';
 
 export interface SimilarJobsProps {
@@ -37,15 +38,21 @@ export async function SimilarJobs({ excludeJobId }: SimilarJobsProps) {
     <section>
       <h2 className="text-sm font-bold text-gray-900">지금 보고 있는 공고와 비슷한 공고에요</h2>
       <ul className="mt-3 flex flex-col gap-3">
-        {items.map((job) => (
+        {items.map((job, index) => (
           <li key={job.id}>
-            <Link href={`/jobs/${job.id}`} className="flex items-center gap-3">
+            <JobCardLink
+              href={`/jobs/${job.id}`}
+              className="flex items-center gap-3"
+              jobId={job.id}
+              jobInfo={toJobInfo(job)}
+              tracking={{ listSource: 'similar', listPosition: index + 1, pageNumber: 1 }}
+            >
               <CompanyLogo companyName={job.companyName} className="h-12 w-12" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-gray-900">{job.title}</p>
                 <p className="text-xs text-gray-500">{job.companyName}</p>
               </div>
-            </Link>
+            </JobCardLink>
           </li>
         ))}
       </ul>

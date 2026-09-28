@@ -6,6 +6,7 @@ import {
   GoogleTagManagerNoScript,
   GoogleTagManagerScript,
 } from '@/shared/analytics/GoogleTagManager';
+import { PageContextTracker } from '@/shared/analytics/PageContextTracker';
 import { SITE_ORIGIN } from '@/shared/config/site';
 import { AppProviders } from './providers';
 import './globals.css';
@@ -93,6 +94,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <GoogleTagManagerNoScript />
         {/* 화면 이동이 끝날 때마다 Datadog 조회를 연다. 초기화는 `instrumentation-client.ts`. */}
         <DatadogAppRouter />
+        {/* 화면 이동·로그인 상태가 바뀔 때마다 GTM 에 `page_context` 를 보낸다. */}
+        <PageContextTracker />
         {/*
           헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
           그룹 밖이라 껍데기 없이 렌더된다.

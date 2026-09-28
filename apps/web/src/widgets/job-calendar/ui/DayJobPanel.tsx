@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { cn } from '@ogonggo/ui';
-import Link from 'next/link';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { toJobInfo } from '@/entities/job/model/analytics';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
@@ -42,7 +43,15 @@ function formatDayTitle(day: string): string {
  * `export`하는 이유는 `DayHoverCard.tsx`가 격자 호버 카드에서도 같은 카드 마크업을 그대로 쓰기
  * 위해서다(Push 2, PRD 3절) — 카드 한 장의 모양은 오른쪽 목록이든 호버 카드든 같아야 한다.
  */
-export function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
+export function DayJobCard({
+  job,
+  listPosition,
+}: {
+  job: UserJobCalendarItemResponse;
+  /** 이 카드가 놓인 목록 안의 순서, 1부터. `job_card_click` 에 실린다. */
+  listPosition: number;
+}) {
+  const jobInfo = toJobInfo(job);
   const dday = computeDday('PERIOD', job.recruitmentEndAt);
   const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
   const meta = [
@@ -53,9 +62,12 @@ export function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
 
   return (
     <div className="relative">
-      <Link
+      <JobCardLink
         href={`/jobs/${job.id}`}
         scroll={false}
+        jobId={job.id}
+        jobInfo={jobInfo}
+        tracking={{ listSource: 'calendar', listPosition, pageNumber: 1 }}
         className="block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]"
       >
         <div className="flex items-start gap-3">
@@ -80,11 +92,12 @@ export function DayJobCard({ job }: { job: UserJobCalendarItemResponse }) {
             </span>
           ) : null}
         </div>
-      </Link>
+      </JobCardLink>
       <BookmarkButton
         kind="jobs"
         id={job.id}
         bookmarked={job.bookmarked}
+        scrapParams={{ ...jobInfo, click_location: 'card' }}
         className="absolute top-3 right-3"
       />
     </div>
@@ -150,9 +163,9 @@ export function DayJobPanel({ day, items, dateBasis }: DayJobPanelProps) {
         <p className="mt-6 text-sm text-gray-400">이 날 {basisLabel}하는 공고가 없어요</p>
       ) : (
         <ul className="mt-4 flex flex-col">
-          {jobs.map((job) => (
+          {jobs.map((job, index) => (
             <li key={job.id} className="border-b border-gray-200 py-2 first:pt-0 last:border-b-0">
-              <DayJobCard job={job} />
+              <DayJobCard job={job} listPosition={index + 1} />
             </li>
           ))}
         </ul>

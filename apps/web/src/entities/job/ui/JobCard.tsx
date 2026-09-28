@@ -1,15 +1,18 @@
-import Link from 'next/link';
 import { Badge } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
+import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
 import type { JobSummary } from '../model/types';
+import { JobCardLink, type JobCardTracking } from './JobCardLink';
 import { JobMeta } from './JobMeta';
 import { JobThumbnail } from './JobThumbnail';
 
 export interface JobCardProps {
   job: JobSummary;
+  /** 목록 안의 자리. 주면 누를 때 `job_card_click` 이 나간다. 스토리처럼 목록 밖이면 뺀다. */
+  tracking?: JobCardTracking;
 }
 
 /**
@@ -35,11 +38,12 @@ export interface JobCardProps {
  * 자리 그대로라 생김새는 바뀌지 않는다. `h-full`은 링크와 뿌리 둘 다에 있어야 한다 — 칸을
  * 채우는 것은 뿌리이고, 그 높이를 카드 내용에 넘기는 것은 링크다.
  */
-export function JobCard({ job }: JobCardProps) {
+export function JobCard({ job, tracking }: JobCardProps) {
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
   const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
   const closed = isRecruitmentClosed(job.recruitmentType, job.recruitmentEndAt, job.closedAt);
   const jobMajor = getJobMajor(job.id);
+  const jobInfo = toJobInfo(job);
   const metaParts = [
     EMPLOYMENT_TYPE_LABELS[job.employmentType],
     jobMajor,
@@ -65,7 +69,13 @@ export function JobCard({ job }: JobCardProps) {
 
   return (
     <div className="relative h-full">
-      <Link href={`/jobs/${job.id}`} className="flex h-full flex-col gap-2">
+      <JobCardLink
+        href={`/jobs/${job.id}`}
+        className="flex h-full flex-col gap-2"
+        jobId={job.id}
+        jobInfo={jobInfo}
+        tracking={tracking}
+      >
         <JobThumbnail companyName={job.companyName} />
         <p className="flex items-center justify-between text-xs text-gray-400">
           <span>{metaParts.join(' · ')}</span>
@@ -80,11 +90,12 @@ export function JobCard({ job }: JobCardProps) {
         />
         <p className="line-clamp-2 text-sm font-bold text-gray-900">{job.title}</p>
         {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
-      </Link>
+      </JobCardLink>
       <BookmarkButton
         kind="jobs"
         id={job.id}
         bookmarked={job.bookmarked}
+        scrapParams={{ ...jobInfo, click_location: 'card' }}
         className="absolute top-2 right-2"
       />
     </div>

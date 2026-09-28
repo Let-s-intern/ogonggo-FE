@@ -51,9 +51,12 @@ export async function SideStudyList(query: SideStudyListProps) {
         <p className="py-16 text-center text-sm text-gray-500">모집 중인 글이 없습니다.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
-          {items.map((sideStudy) => (
+          {items.map((sideStudy, index) => (
             <li key={sideStudy.id}>
-              <SideStudyCard sideStudy={sideStudy} />
+              <SideStudyCard
+                sideStudy={sideStudy}
+                tracking={{ listPosition: index + 1, pageNumber: pageInfo.pageNum }}
+              />
             </li>
           ))}
         </ul>

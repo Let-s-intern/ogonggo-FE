@@ -1,5 +1,7 @@
 import { Button } from '@ogonggo/ui';
 import { BookmarkCountButton, type BookmarkKind } from '@/features/bookmark';
+import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLayer';
+import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { withApplyUtm } from '@/shared/lib/applyUtm';
 
 export interface ApplyCtaProps {
@@ -13,6 +15,13 @@ export interface ApplyCtaProps {
   /** 서버가 준 값. 브라우저의 id 모음이 도착하면 그쪽이 이긴다. */
   bookmarked: boolean;
   bookmarkCount: number;
+  /**
+   * 버튼을 누를 때 보낼 GTM 이벤트(`apply_click`, `program_apply_click`). `outbound_url` 은 여기서
+   * UTM 까지 붙은, 실제로 여는 주소로 채운다(명세 "쿼리 포함 전체").
+   */
+  applyEvent?: DataLayerEvent;
+  /** 북마크를 누를 때 보낼 `scrap` 이벤트의 공고 정보. 채용공고만 넘긴다. */
+  scrapParams?: DataLayerParams;
 }
 
 /**
@@ -30,14 +39,38 @@ export interface ApplyCtaProps {
  * 것을 쓰게 되어(`교육부트캠프 상세페이지.png`의 "신청하러 가기") 호출부가 둘이 된 지금
  * 여기로 옮겼다(PRD 7절 — 두 곳 이상일 때만 옮긴다).
  */
-export function ApplyCta({ href, label, kind, id, bookmarked, bookmarkCount }: ApplyCtaProps) {
+export function ApplyCta({
+  href,
+  label,
+  kind,
+  id,
+  bookmarked,
+  bookmarkCount,
+  applyEvent,
+  scrapParams,
+}: ApplyCtaProps) {
+  const outboundUrl = href ? withApplyUtm(href, kind) : undefined;
   return (
     <div className="flex items-center gap-2">
-      {href ? (
+      {outboundUrl ? (
         <Button asChild className="flex-1">
-          <a href={withApplyUtm(href, kind)} target="_blank" rel="noopener noreferrer">
+          <TrackedLink
+            href={outboundUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            events={
+              applyEvent
+                ? [
+                    {
+                      event: applyEvent.event,
+                      params: { ...applyEvent.params, outbound_url: outboundUrl },
+                    },
+                  ]
+                : []
+            }
+          >
             {label}
-          </a>
+          </TrackedLink>
         </Button>
       ) : null}
       <BookmarkCountButton
@@ -45,6 +78,7 @@ export function ApplyCta({ href, label, kind, id, bookmarked, bookmarkCount }: A
         id={id}
         bookmarked={bookmarked}
         bookmarkCount={bookmarkCount}
+        scrapParams={scrapParams}
       />
     </div>
   );

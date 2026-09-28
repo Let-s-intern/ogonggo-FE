@@ -6,7 +6,8 @@ import { cn } from '@ogonggo/ui';
 import { useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
-import Link from 'next/link';
+import { toJobInfo } from '@/entities/job/model/analytics';
+import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import { ChevronIcon } from '@/shared/ui/icons';
 import {
   EVENT_RESET_CLASSES,
@@ -232,6 +233,7 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
         eventClassNames={EVENT_BAR_CLASSES}
         eventContent={(arg) => {
           const deadline = arg.event.extendedProps.deadline as string;
+          const job = visibleItems.find((item) => String(item.id) === arg.event.id);
           return (
             // 막대에 마우스를 올리거나 포커스하면 이 날짜(마감일 또는 시작일)의 공고 목록이 뜬다
             // (`DayHoverCard`, PRD 3절). 예전에는 `title` 속성 한 줄 툴팁이었다.
@@ -240,7 +242,15 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
                   있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
 
                   누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다(`app/(site)/calendar/@modal`). */}
-              <Link href={`/jobs/${arg.event.id}`} scroll={false} className="block pb-2">
+              <JobCardLink
+                href={`/jobs/${arg.event.id}`}
+                scroll={false}
+                className="block pb-2"
+                jobId={Number(arg.event.id)}
+                jobInfo={job ? toJobInfo(job) : undefined}
+                // 막대는 목록이 아니라 격자에 흩어져 있어 순서가 없다.
+                tracking={{ listSource: 'calendar', listPosition: null, pageNumber: 1 }}
+              >
                 <span
                   className={cn(
                     // v6 막대는 로고 없이 기업명만 있고 오른쪽 끝에 2px 세로선이 있다.
@@ -254,7 +264,7 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
                 >
                   <span className="truncate">{arg.event.title}</span>
                 </span>
-              </Link>
+              </JobCardLink>
             </DayHoverCard>
           );
         }}

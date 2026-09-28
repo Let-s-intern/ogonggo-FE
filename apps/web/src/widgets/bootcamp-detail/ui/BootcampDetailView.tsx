@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPublicBootcamp } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
+import { toBootcampInfo } from '@/entities/bootcamp/model/analytics';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -111,6 +112,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               id={bootcamp.id}
               bookmarked={bootcamp.bookmarked}
               bookmarkCount={bootcamp.bookmarkCount}
+              applyEvent={{ event: 'program_apply_click', params: toBootcampInfo(bootcamp) }}
             />
           </StickyApplyBar>
           <SimilarBootcamps excludeBootcampId={bootcamp.id} />

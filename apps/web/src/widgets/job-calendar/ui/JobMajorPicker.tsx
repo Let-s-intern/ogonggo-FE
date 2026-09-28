@@ -3,6 +3,7 @@
 import { cn } from '@ogonggo/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { track } from '@/shared/analytics/dataLayer';
 import { JOB_MAJORS, MAX_JOB_MAJORS } from '../lib/job-majors';
 import { writeJobMajorCookie } from '../lib/major-cookie';
 import { buildJobCalendarHref, type JobCalendarQuery } from '../lib/query';
@@ -87,6 +88,7 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
             // 주소를 바꾸기 전에 적는다. 다음에 `/calendar`로 그냥 들어와도 라우트가 이 값을
             // 읽어 같은 직무의 달력을 편다(`lib/major-cookie.ts`).
             writeJobMajorCookie(selected);
+            trackMajorChange(query.majors, selected);
             router.push(buildJobCalendarHref(query, { majors: selected, picker: false }));
           }}
           className={cn(
@@ -111,4 +113,23 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
       </div>
     </div>
   );
+}
+
+/** 직무 선택을 바꿔 달력이 새로 걸러질 때, 빠진 직무와 더해진 직무마다 `filter_apply` 한 건씩. */
+function trackMajorChange(previous: string[], next: string[]): void {
+  const label = (slug: string) => JOB_MAJORS.find((major) => major.slug === slug)?.label ?? slug;
+  for (const slug of previous.filter((value) => !next.includes(value))) {
+    track('filter_apply', {
+      filter_type: 'category',
+      filter_value: label(slug),
+      filter_action: 'deselect',
+    });
+  }
+  for (const slug of next.filter((value) => !previous.includes(value))) {
+    track('filter_apply', {
+      filter_type: 'category',
+      filter_value: label(slug),
+      filter_action: 'select',
+    });
+  }
 }
