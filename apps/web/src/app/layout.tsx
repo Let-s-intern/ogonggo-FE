@@ -1,3 +1,4 @@
+import { DatadogAppRouter } from '@datadog/browser-rum-nextjs';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
@@ -90,6 +91,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <GoogleTagManagerScript />
       <body>
         <GoogleTagManagerNoScript />
+        {/* 화면 이동이 끝날 때마다 Datadog 조회를 연다. 초기화는 `instrumentation-client.ts`. */}
+        <DatadogAppRouter />
         {/*
           헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
           그룹 밖이라 껍데기 없이 렌더된다.

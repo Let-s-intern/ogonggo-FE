@@ -1,5 +1,7 @@
 'use client';
 
+import { addNextjsError } from '@datadog/browser-rum-nextjs';
+import { useEffect } from 'react';
 import { ERROR_ACTION_CLASS, ErrorState } from '@/shared/ui/ErrorState';
 import { RefreshIcon } from '@/shared/ui/icons';
 import './globals.css';
@@ -25,6 +27,12 @@ export default function GlobalError({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  // 경계가 잡은 오류는 전역 오류 처리기까지 가지 않아 Datadog 에 직접 넘긴다.
+  // 서버 컴포넌트 오류는 메시지가 가려져 오고, `digest` 로 서버 로그와 잇는다.
+  useEffect(() => {
+    addNextjsError(error);
+  }, [error]);
+
   return (
     <html lang="ko">
       <body>
