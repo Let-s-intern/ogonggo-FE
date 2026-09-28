@@ -1,5 +1,6 @@
 import { Button } from '@ogonggo/ui';
 import { BookmarkCountButton, type BookmarkKind } from '@/features/bookmark';
+import { withApplyUtm } from '@/shared/lib/applyUtm';
 
 export interface ApplyCtaProps {
   /** 지원·신청 링크. 없으면 버튼 자체를 그리지 않고 북마크 칸만 남는다. */
@@ -34,7 +35,7 @@ export function ApplyCta({ href, label, kind, id, bookmarked, bookmarkCount }: A
     <div className="flex items-center gap-2">
       {href ? (
         <Button asChild className="flex-1">
-          <a href={href} target="_blank" rel="noopener noreferrer">
+          <a href={withApplyUtm(href, kind)} target="_blank" rel="noopener noreferrer">
             {label}
           </a>
         </Button>
