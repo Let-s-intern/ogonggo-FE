@@ -12,6 +12,8 @@ export interface FormSectionProps {
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
+  /** 모바일에서 지금 단계가 아니면 숨기는 데 쓴다(`RecruitmentPostForm`). */
+  className?: string;
 }
 
 /**
@@ -28,11 +30,12 @@ export function FormSection({
   open,
   onToggle,
   children,
+  className,
 }: FormSectionProps) {
   const bodyId = `recruitment-post-form-section-${step}`;
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white">
+    <section className={cn('rounded-lg border border-gray-200 bg-white', className)}>
       <button
         type="button"
         onClick={onToggle}

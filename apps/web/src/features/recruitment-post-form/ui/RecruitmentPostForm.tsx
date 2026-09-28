@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CreateRecruitmentPostRequestSaveMode } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import {
@@ -23,6 +23,7 @@ import { BasicInfoSection } from './BasicInfoSection';
 import { ContentSection } from './ContentSection';
 import { FormSection } from './FormSection';
 import { PostPreview } from './PostPreview';
+import { useMediaQuery } from '@/shared/lib/useMediaQuery';
 
 export interface RecruitmentPostFormProps {
   /** 있으면 수정, 없으면 새 글. 작성한 모집글 표에서 넘어올 때만 있다. */
@@ -75,6 +76,18 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
   const [loading, setLoading] = useState(postId !== undefined);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
   const [tab, setTab] = useState<'write' | 'preview'>('write');
+  /**
+   * 모바일은 세 단계를 한 번에 하나씩 보인다(`docs/asset/v10 mobile/모집글작성/`). 하단 바의
+   * `다음` 이 넘기고, 마지막 단계에서 그 자리가 `모집글 등록` 이 된다. 데스크톱은 전처럼 세 칸을
+   * 모두 펼친 접기 목록이다.
+   */
+  const [mobileStep, setMobileStep] = useState(1);
+  const desktop = useMediaQuery('(min-width: 768px)');
+  const formRef = useRef<HTMLFormElement>(null);
+  const goToStep = (step: number) => {
+    setMobileStep(step);
+    formRef.current?.scrollIntoView({ block: 'start' });
+  };
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -163,7 +176,8 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
 
   return (
     <form
-      className="flex flex-col gap-4"
+      ref={formRef}
+      className="flex flex-col gap-4 pb-24 md:pb-0"
       onSubmit={(event) => {
         event.preventDefault();
         void save('PUBLISH');
@@ -197,31 +211,44 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
       {tab === 'preview' ? <PostPreview values={values} /> : null}
 
       <div className={cn('flex flex-col gap-4', tab !== 'write' && 'hidden')}>
+        {mobileStep > 1 ? (
+          <button
+            type="button"
+            onClick={() => goToStep(mobileStep - 1)}
+            className="flex items-center gap-1 self-start text-sm text-gray-500 md:hidden"
+          >
+            <span aria-hidden="true" className="icon-[lucide--chevron-left] block h-4 w-4" />
+            이전 단계
+          </button>
+        ) : null}
         <FormSection
+          className={cn(mobileStep !== 1 && 'hidden md:block')}
           step={1}
           title="기본 정보"
           description="프로젝트의 기본적인 정보를 입력해 주세요"
-          open={openSteps.includes(1)}
+          open={!desktop || openSteps.includes(1)}
           onToggle={() => toggle(1)}
         >
           <BasicInfoSection values={values} onChange={change} />
         </FormSection>
 
         <FormSection
+          className={cn(mobileStep !== 2 && 'hidden md:block')}
           step={2}
           title="모집 내용"
           description="프로젝트의 모집 공고를 소개해 주세요"
-          open={openSteps.includes(2)}
+          open={!desktop || openSteps.includes(2)}
           onToggle={() => toggle(2)}
         >
           <ContentSection values={values} onChange={change} />
         </FormSection>
 
         <FormSection
+          className={cn(mobileStep !== 3 && 'hidden md:block')}
           step={3}
           title="지원 설정"
           description="모집 기간과 지원 방법을 설정해 주세요"
-          open={openSteps.includes(3)}
+          open={!desktop || openSteps.includes(3)}
           onToggle={() => toggle(3)}
         >
           <ApplySettingsSection values={values} onChange={change} />
@@ -234,7 +261,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         </p>
       ) : null}
 
-      <div className="flex justify-center gap-4 pt-2">
+      <div className="hidden justify-center gap-4 pt-2 md:flex">
         <Button
           type="button"
           variant="secondary"
@@ -247,6 +274,26 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         <Button type="submit" disabled={pending} className="w-full max-w-80">
           모집글 등록
         </Button>
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={pending}
+          onClick={() => void save('DRAFT')}
+          className="flex-1 border-0 bg-gray-100"
+        >
+          임시저장
+        </Button>
+        {mobileStep < 3 && tab === 'write' ? (
+          <Button type="button" onClick={() => goToStep(mobileStep + 1)} className="flex-1">
+            다음
+          </Button>
+        ) : (
+          <Button type="submit" disabled={pending} className="flex-1">
+            모집글 등록
+          </Button>
+        )}
       </div>
     </form>
   );

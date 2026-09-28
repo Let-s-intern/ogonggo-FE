@@ -20,6 +20,9 @@ export interface RouteModalProps {
  *
  * 바깥(어두운 배경)을 눌러도 닫힌다. 클릭 대상이 `<dialog>` 자신이면 안쪽 판이 아니라 배경을
  * 누른 것이다.
+ *
+ * 모바일(`md` 미만)은 화면 전체를 덮는다. 폭 360px 에서 가장자리 여백을 남기면 폼과 상세의
+ * 폭이 그만큼 더 줄고, 배경을 눌러 닫을 자리도 거의 남지 않는다.
  */
 export function RouteModal({ label, children }: RouteModalProps) {
   const router = useRouter();
@@ -47,7 +50,7 @@ export function RouteModal({ label, children }: RouteModalProps) {
           dialogRef.current?.close();
         }
       }}
-      className="m-auto max-h-[calc(100dvh-4rem)] w-[min(1000px,calc(100vw-2rem))] overflow-y-auto rounded-3xl bg-white p-5 backdrop:bg-gray-950/50"
+      className="m-0 h-dvh max-h-none w-screen max-w-none overflow-y-auto bg-white p-4 backdrop:bg-gray-950/50 md:m-auto md:h-auto md:max-h-[calc(100dvh-4rem)] md:w-[min(1000px,calc(100vw-2rem))] md:rounded-3xl md:p-5"
     >
       <div className="flex justify-end">
         <button
