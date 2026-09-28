@@ -30,3 +30,22 @@ export function MyPostsCta() {
     </div>
   );
 }
+
+/**
+ * 모바일 목록 맨 위의 작성 카드(`docs/asset/v10 mobile/작성한 모집글.png`). 모바일은 머리의
+ * `새 모집글 작성하기` 와 표 아래 배너를 숨기고 이것 하나를 둔다. 시안 문구는 기업 공고
+ * 문구("새로운 공고를 등록해 보세요")라 모집글에 맞게 고쳤다(2026-09-28, 사용자).
+ */
+export function MyPostsWriteCard() {
+  return (
+    <div className="rounded-xl bg-blue-50/60 p-4">
+      <p className="text-base font-bold text-gray-900">새로운 모집글을 등록해 보세요.</p>
+      <p className="pt-1 text-sm text-gray-500">
+        사이드 프로젝트 · 스터디를 함께할 메이트를 모집할 수 있어요.
+      </p>
+      <Button asChild className="mt-4 w-full">
+        <Link href="/mypage/posts/new">모집글 작성하기</Link>
+      </Button>
+    </div>
+  );
+}

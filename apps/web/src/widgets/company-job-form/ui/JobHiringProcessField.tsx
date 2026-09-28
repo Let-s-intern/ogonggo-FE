@@ -67,11 +67,13 @@ export function JobHiringProcessField({
         {steps.map((step, index) => (
           // 행에는 지울 때 말고 바뀌지 않는 식별자가 없다. 지우면 그 뒤 행이 한 칸씩
           // 당겨지는데, 값은 모두 부모가 들고 있어 자리만 옮겨 그리면 된다.
-          <div key={index} className="flex items-center gap-2">
+          // 모바일은 날짜가 한 줄을 다 쓰고 내용·삭제가 그 아래에 선다. 한 줄에 셋이면 내용 칸이
+          // 글자 몇 개 폭으로 줄었다.
+          <div key={index} className="flex flex-wrap items-center gap-2 md:flex-nowrap">
             <Input
               type="date"
               aria-label={`채용 절차 ${index + 1}단계 날짜`}
-              className="w-44 shrink-0"
+              className="w-full md:w-44 md:shrink-0"
               value={step.date}
               onChange={(event) =>
                 changeSteps(
@@ -83,6 +85,7 @@ export function JobHiringProcessField({
             />
             <Input
               aria-label={`채용 절차 ${index + 1}단계 내용`}
+              className="w-auto min-w-0 flex-1"
               value={step.description}
               onChange={(event) =>
                 changeSteps(

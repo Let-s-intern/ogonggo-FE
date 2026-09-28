@@ -41,7 +41,7 @@ export function BootcampApplySettingsSection({
 }: BootcampApplySettingsSectionProps) {
   return (
     <div>
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="모집 시작일" htmlFor="company-bootcamp-recruitment-start" required>
           <Input
             id="company-bootcamp-recruitment-start"
@@ -97,7 +97,7 @@ export function BootcampApplySettingsSection({
       </Field>
 
       <p className="pb-1.5 text-sm font-medium text-gray-700">문의처</p>
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="담당자 이메일" htmlFor="company-bootcamp-manager-email">
           <Input
             id="company-bootcamp-manager-email"
@@ -138,7 +138,7 @@ export function BootcampApplySettingsSection({
       </p>
 
       {values.publishUntilRecruitmentEnd ? null : (
-        <div className="grid gap-x-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
           <Field label="공개 시작일" htmlFor="company-bootcamp-publication-start">
             <Input
               id="company-bootcamp-publication-start"

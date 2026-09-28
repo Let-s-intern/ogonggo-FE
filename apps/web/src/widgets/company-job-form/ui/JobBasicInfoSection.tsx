@@ -67,7 +67,7 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
         </div>
       </Field>
 
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="공고 제목" htmlFor="company-job-title" required>
           <Input
             id="company-job-title"

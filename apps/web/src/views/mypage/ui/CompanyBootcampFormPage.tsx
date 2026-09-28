@@ -24,7 +24,7 @@ export function CompanyBootcampFormPage({ bootcampId }: CompanyBootcampFormPageP
   return (
     <section className="flex flex-col gap-6">
       <header>
-        <h1 className="text-3xl font-bold text-gray-950">
+        <h1 className="text-xl font-bold text-gray-950 md:text-3xl">
           교육 · 부트캠프 공고 {editing ? '수정' : '등록'}
         </h1>
         <p className="pt-2 text-sm text-gray-500">지원자에게 필요한 정보를 입력해 주세요.</p>

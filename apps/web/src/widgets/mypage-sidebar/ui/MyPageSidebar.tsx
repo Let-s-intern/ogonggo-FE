@@ -28,7 +28,7 @@ export function MyPageSidebar({ menuItems, ...profile }: MyPageSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex w-64 shrink-0 flex-col gap-7">
+    <div className="flex w-full shrink-0 flex-col gap-7 md:w-64">
       <MyPageProfileCard {...profile} />
 
       <nav aria-label="마이페이지 메뉴">

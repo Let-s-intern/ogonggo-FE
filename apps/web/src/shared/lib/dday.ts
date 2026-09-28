@@ -12,6 +12,20 @@ import { parseLocalDate } from './localDate';
  */
 export type RecruitmentType = 'PERIOD' | 'ALWAYS_OPEN';
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/**
+ * 한국 시간으로 오늘인 날짜를 `Date.UTC` 자정 값으로 돌려준다.
+ *
+ * `new Date()` 의 연·월·일은 실행하는 쪽 시간대를 따른다. 서버 컴포넌트는 Vercel(UTC)에서 그려서
+ * 한국 시간 0시~9시에는 아직 어제라, D-day 가 하루 크게 나오고 마감 당일이 `D-1` 로 보였다.
+ * 지금 순간에 9시간을 더한 뒤 UTC 로 읽으면 어디서 그리든 한국의 오늘이 나온다.
+ */
+function todayInKst(): number {
+  const kst = new Date(Date.now() + KST_OFFSET_MS);
+  return Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate());
+}
+
 /**
  * 마감까지 남은 일수. 상시채용·마감일 없음·이미 지난 마감이면 `null`(배지 자체를 숨긴다,
  * "D--3" 같은 표기는 목업에 없다).
@@ -24,12 +38,11 @@ export function computeDaysRemaining(
     return null;
   }
 
-  // 사이드·스터디는 시각 없는 날짜가 온다 — 시간대 없이 읽는다(`./localDate.ts`).
+  // 사이드·스터디는 시각 없는 날짜가 온다 — 시간대 없이 읽는다(`./localDate.ts`). 마감 일시도
+  // 시간대 없는 `LocalDateTime` 이라 어디서 읽든 적힌 날짜 그대로다. 오늘만 한국 시간으로 맞춘다.
   const end = parseLocalDate(recruitmentEndAt);
-  const now = new Date();
   const diffDays = Math.ceil(
-    (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) -
-      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) /
+    (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) - todayInKst()) /
       (1000 * 60 * 60 * 24),
   );
 

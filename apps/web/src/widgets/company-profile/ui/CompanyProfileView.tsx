@@ -124,7 +124,7 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
 
   return (
     <div className="flex flex-col gap-10">
-      <h1 className="text-3xl font-bold text-gray-950">기업/기관 정보</h1>
+      <h1 className="hidden text-3xl font-bold text-gray-950 md:block">기업/기관 정보</h1>
 
       {/* 비활성 컨트롤마다 `title` 로도 같은 말을 달지만, 마우스를 올려야 보인다. 화면에
           드러나는 한 줄이 먼저 있어야 한다 — v4 개인 정보 화면과 같은 판단이다. */}

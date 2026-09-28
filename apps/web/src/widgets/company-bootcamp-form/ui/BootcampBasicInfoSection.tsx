@@ -89,7 +89,7 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
         />
       </Field>
 
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="프로그램 유형" htmlFor="company-bootcamp-program-type" required>
           <Select
             id="company-bootcamp-program-type"
@@ -127,6 +127,7 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
               id="company-bootcamp-program-start"
               type="date"
               aria-label="교육 시작일"
+              className="w-auto min-w-0 flex-1 px-3"
               value={values.programStartDate}
               onChange={(event) => onChange({ programStartDate: event.target.value })}
             />
@@ -134,6 +135,7 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
             <Input
               type="date"
               aria-label="교육 종료일"
+              className="w-auto min-w-0 flex-1 px-3"
               value={values.programEndDate}
               onChange={(event) => onChange({ programEndDate: event.target.value })}
             />

@@ -44,8 +44,9 @@ export function SideStudyListControls({ query }: SideStudyListControlsProps) {
           </Link>
         ))}
       </nav>
-      {/* 작성 화면은 마이페이지 안에 있다(`/mypage/posts/new`, v4 PRD 5 절). 로그인하지 않았으면
-          `MyPageLayout` 의 가드가 `/login?redirect=` 로 보내고, 로그인하면 이 자리로 돌아온다. */}
+      {/* 작성 화면은 마이페이지 안에 있다(`/mypage/posts/new`, v4 PRD 5 절). 이 목록에서 누르면
+          `app/(site)/side-studies/@modal` 이 가로채 목록 위에 모달로 연다. 로그인 가드는 그
+          모달(`SideStudyPostFormModal`)이 한다. */}
       <Button size="sm" className="rounded-full px-4" asChild>
         <Link href="/mypage/posts/new">모집글 쓰기</Link>
       </Button>

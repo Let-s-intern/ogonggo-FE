@@ -5,7 +5,7 @@ import { formatDeadline } from '@/widgets/mypage-list';
 import type { MyPostRow as Row } from '../lib/fetch';
 
 /** 값이 없는 칸. 목업 첫 행(임시저장) 의 인원·기간·조회수가 전부 이 글자다. */
-const EMPTY_CELL = '-';
+export const EMPTY_CELL = '-';
 
 /**
  * 모집 기간 문구. 두 날짜 모두 `YYYY-MM-DD` 라 `formatDeadline` 이 시각 없이 그려 준다 —
@@ -15,7 +15,7 @@ const EMPTY_CELL = '-';
  * 백엔드가 주는 것은 날짜뿐이라 시각을 그리지 않는다(`widgets/mypage-list/lib/deadline.ts`
  * 가 같은 이유로 그렇게 한다).
  */
-function formatPeriod(startDate?: string, endDate?: string): string {
+export function formatPeriod(startDate?: string, endDate?: string): string {
   const start = startDate ? formatDeadline('PERIOD', startDate) : undefined;
   const end = endDate ? formatDeadline('PERIOD', endDate) : undefined;
   if (!start && !end) {
@@ -176,7 +176,7 @@ export function MyPostRow({
 }
 
 /** 점 세 개 메뉴 한 줄. 넷이 같은 모양이라 여기 한 번만 적는다. */
-function MenuAction({
+export function MenuAction({
   label,
   onClick,
   disabled,

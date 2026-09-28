@@ -1,3 +1,4 @@
+export { MyPageIndex, type MyPageIndexProps } from './ui/MyPageIndex';
 export { MyPageLayout, type MyPageLayoutProps } from './ui/MyPageLayout';
 export {
   CompanyBootcampFormPage,

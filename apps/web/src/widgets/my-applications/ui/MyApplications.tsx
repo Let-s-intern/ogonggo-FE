@@ -189,7 +189,7 @@ export function MyApplications({ query }: MyApplicationsProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <header>
+      <header className="hidden md:block">
         <h1 className="text-3xl font-bold text-gray-950">신청 현황</h1>
         <p className="pt-2 text-sm text-gray-500">
           지원하거나 신청한 공고의 진행 상태를 한곳에서 확인해요.

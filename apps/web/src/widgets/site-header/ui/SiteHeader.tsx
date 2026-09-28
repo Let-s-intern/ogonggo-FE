@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
-import { Button, MenuItem } from '@ogonggo/ui';
+import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
-import { myPageHomeFor } from '@/widgets/mypage-sidebar';
+import { isMyPageIndex, myPageHomeFor, myPageIndexFor } from '@/widgets/mypage-sidebar';
 import { MobileSiteHeader } from './MobileSiteHeader';
 import { NAV_ITEMS } from './navItems';
 import { SignOutButton } from './SignOutButton';
@@ -83,6 +83,12 @@ export function SiteHeader() {
    */
   const myPageHref = myPageHomeFor(role === 'COMPANY' ? 'COMPANY' : 'USER');
   const myPageActive = pathname.startsWith('/mypage');
+  /*
+   * 모바일은 마이페이지 첫 화면(메뉴)으로 보낸다. 하위 화면에서는 이 헤더가 숨고
+   * `MyPageLayout` 의 `< 제목` 머리가 대신한다(`docs/asset/v10 mobile/`).
+   */
+  const myPageMobileHref = myPageIndexFor(role === 'COMPANY' ? 'COMPANY' : 'USER');
+  const hiddenOnMobile = pathname.startsWith('/mypage/') && !isMyPageIndex(pathname);
 
   /*
    * 관리자에게만 어드민 콘솔로 가는 항목을 보인다. 역할을 아직 모르는 동안에는 그리지 않는다 —
@@ -93,12 +99,14 @@ export function SiteHeader() {
   const showAdmin = role === 'ADMIN' && Boolean(ADMIN_ORIGIN);
 
   return (
-    <header className="border-b border-gray-200 bg-white">
+    <header
+      className={cn('border-b border-gray-200 bg-white', hiddenOnMobile && 'hidden md:block')}
+    >
       <MobileSiteHeader
         pathname={pathname}
         signedIn={signedIn}
         registerHref={registerHref}
-        myPageHref={myPageHref}
+        myPageHref={myPageMobileHref}
         adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
       />
       <div className="mx-auto hidden h-16 max-w-6xl items-stretch justify-between px-6 md:flex">

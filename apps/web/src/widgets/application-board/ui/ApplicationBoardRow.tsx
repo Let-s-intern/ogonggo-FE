@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { Badge, Select } from '@ogonggo/ui';
 import {
   canMoveStage,
@@ -106,69 +107,152 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
     }
   };
 
+  const deadlineBadge = activity ? null : dday ? (
+    <Badge
+      tone={urgent ? 'urgent' : 'main'}
+      className="shrink-0 rounded-full px-2 py-1 text-xs font-bold"
+    >
+      {dday}
+    </Badge>
+  ) : closed ? (
+    <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
+      마감
+    </Badge>
+  ) : null;
+  const stageSelect = (className: string) => (
+    <Select
+      aria-label={`${item.title} 단계`}
+      value={stage.id}
+      disabled={move.pending}
+      onChange={(event) => pick(event.target.value)}
+      options={stageOptions(tab, stage.id)}
+      className={className}
+    />
+  );
+
   return (
-    <div className="flex items-center border-b border-gray-200 px-6 py-5.5">
-      {removable ? (
-        <button
-          type="button"
-          aria-label={`${item.title} 스크랩으로 되돌리기`}
-          disabled={move.pending}
-          onClick={() => move.move({ item, from: stage.id, to: 'SCRAPPED' })}
-          className="mr-5 flex h-3.5 w-3.5 shrink-0 items-center justify-center text-gray-400 disabled:text-gray-200"
-        >
-          <span aria-hidden="true" className="icon-[lucide--x] block h-3.5 w-3.5" />
-        </button>
-      ) : null}
-      <Thumbnail
-        src={item.thumbnailUrl}
-        alt=""
-        className="mr-5 h-10 w-10 shrink-0 rounded-md border border-gray-100"
+    <>
+      <MobileCard
+        item={item}
+        badge={deadlineBadge}
+        period={activity ? activityPeriod(item) : undefined}
+        select={stageSelect('h-10 w-full rounded-md border-gray-200 px-3 text-sm text-gray-700')}
+        showApply={showsApply(tab, stage.id)}
+        onRemove={removable ? () => move.move({ item, from: stage.id, to: 'SCRAPPED' }) : undefined}
+        pending={move.pending}
       />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold text-gray-600">{item.caption}</p>
-        <Link
-          href={item.href}
-          className="block truncate text-base font-bold text-gray-900 hover:underline"
-        >
-          {item.title}
-        </Link>
-        <p className="truncate text-xs text-gray-400">{item.meta.join(' · ')}</p>
-      </div>
-      <div className="ml-6 flex flex-1 items-center gap-5">
-        {activity ? null : dday ? (
-          <Badge
-            tone={urgent ? 'urgent' : 'main'}
-            className="shrink-0 rounded-full px-2 py-1 text-xs font-bold"
+      <div className="hidden items-center border-b border-gray-200 px-6 py-5.5 md:flex">
+        {removable ? (
+          <button
+            type="button"
+            aria-label={`${item.title} 스크랩으로 되돌리기`}
+            disabled={move.pending}
+            onClick={() => move.move({ item, from: stage.id, to: 'SCRAPPED' })}
+            className="mr-5 flex h-3.5 w-3.5 shrink-0 items-center justify-center text-gray-400 disabled:text-gray-200"
           >
-            {dday}
-          </Badge>
-        ) : closed ? (
-          <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
-            마감
-          </Badge>
+            <span aria-hidden="true" className="icon-[lucide--x] block h-3.5 w-3.5" />
+          </button>
         ) : null}
-        <span className="truncate text-xs text-gray-400">
-          {activity
-            ? activityPeriod(item)
-            : formatDeadline(item.recruitmentType, item.recruitmentEndAt)}
-        </span>
+        <Thumbnail
+          src={item.thumbnailUrl}
+          alt=""
+          className="mr-5 h-10 w-10 shrink-0 rounded-md border border-gray-100"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-gray-600">{item.caption}</p>
+          <Link
+            href={item.href}
+            className="block truncate text-base font-bold text-gray-900 hover:underline"
+          >
+            {item.title}
+          </Link>
+          <p className="truncate text-xs text-gray-400">{item.meta.join(' · ')}</p>
+        </div>
+        <div className="ml-6 flex flex-1 items-center gap-5">
+          {deadlineBadge}
+          <span className="truncate text-xs text-gray-400">
+            {activity
+              ? activityPeriod(item)
+              : formatDeadline(item.recruitmentType, item.recruitmentEndAt)}
+          </span>
+        </div>
+        {stageSelect('ml-6 h-8 w-30 shrink-0 rounded-sm border-gray-150 px-3 text-gray-600')}
+        {showsApply(tab, stage.id) ? (
+          <Link
+            href={item.href}
+            className="ml-10 flex h-8 w-20 shrink-0 items-center justify-center rounded-sm bg-blue-500 text-sm font-semibold text-white"
+          >
+            지원하기
+          </Link>
+        ) : null}
       </div>
-      <Select
-        aria-label={`${item.title} 단계`}
-        value={stage.id}
-        disabled={move.pending}
-        onChange={(event) => pick(event.target.value)}
-        options={stageOptions(tab, stage.id)}
-        className="ml-6 h-8 w-30 shrink-0 rounded-sm border-gray-150 px-3 text-gray-600"
-      />
-      {showsApply(tab, stage.id) ? (
-        <Link
-          href={item.href}
-          className="ml-10 flex h-8 w-20 shrink-0 items-center justify-center rounded-sm bg-blue-500 text-sm font-semibold text-white"
-        >
-          지원하기
-        </Link>
-      ) : null}
+    </>
+  );
+}
+
+/**
+ * 모바일 카드(`docs/asset/v10 mobile/지원신청내역.png`). 데스크톱 한 줄에 늘어놓은 값을 카드로
+ * 쌓는다 — 위에 D-day, 가운데 회사·제목·메타와 썸네일, 아래에 단계 선택과 `지원하기`.
+ * 단계 선택은 같은 `Select` 라 행과 카드가 같은 값을 보고 같은 이동을 건다.
+ */
+function MobileCard({
+  item,
+  badge,
+  period,
+  select,
+  showApply,
+  onRemove,
+  pending,
+}: {
+  item: ApplicationBoardItem;
+  badge: ReactNode;
+  period?: string;
+  select: ReactNode;
+  showApply: boolean;
+  onRemove?: () => void;
+  pending: boolean;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4 md:hidden">
+      <div className="flex min-h-7 items-start justify-between gap-2">
+        {badge ?? (period ? <span className="text-xs text-gray-400">{period}</span> : <span />)}
+        {onRemove ? (
+          <button
+            type="button"
+            aria-label={`${item.title} 스크랩으로 되돌리기`}
+            disabled={pending}
+            onClick={onRemove}
+            className="-mr-1 p-1 text-gray-400 disabled:text-gray-200"
+          >
+            <span aria-hidden="true" className="icon-[lucide--x] block h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-gray-700">{item.caption}</p>
+          <Link href={item.href} className="line-clamp-2 text-base font-semibold text-gray-900">
+            {item.title}
+          </Link>
+          <p className="truncate pt-0.5 text-sm text-gray-400">{item.meta.join(' · ')}</p>
+        </div>
+        <Thumbnail
+          src={item.thumbnailUrl}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-md border border-gray-100"
+        />
+      </div>
+      <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-3">
+        <div className="flex-1">{select}</div>
+        {showApply ? (
+          <Link
+            href={item.href}
+            className="flex h-10 flex-1 items-center justify-center rounded-md bg-blue-500 text-sm font-semibold text-white"
+          >
+            지원하기
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }

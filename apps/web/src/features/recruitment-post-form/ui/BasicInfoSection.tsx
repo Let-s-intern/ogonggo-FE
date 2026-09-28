@@ -40,7 +40,7 @@ export function BasicInfoSection({ values, onChange }: BasicInfoSectionProps) {
         />
       </Field>
 
-      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="모집 구분" htmlFor="post-recruitment-type" required>
           <Select
             id="post-recruitment-type"
