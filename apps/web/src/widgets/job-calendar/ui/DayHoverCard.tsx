@@ -79,9 +79,9 @@ export function DayHoverCard({ day, items, dateBasis, children }: DayHoverCardPr
             {day.slice(0, 4)}.{day.slice(5, 7)}.{day.slice(8, 10)} {basisLabel}
           </p>
           <ul className="flex flex-col gap-2">
-            {dayItems.map((item) => (
+            {dayItems.map((item, index) => (
               <li key={item.id}>
-                <DayJobCard job={item} />
+                <DayJobCard job={item} listPosition={index + 1} />
               </li>
             ))}
           </ul>

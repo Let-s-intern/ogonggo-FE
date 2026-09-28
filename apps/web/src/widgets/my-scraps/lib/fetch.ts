@@ -7,6 +7,7 @@ import {
   type SuccessResponsePageResponseUserBootcampSummaryResponse,
   type SuccessResponsePageResponseUserJobSummaryResponse,
 } from '@ogonggo/api';
+import { toJobInfo } from '@/entities/job/model/analytics';
 import { getCompanyLogoUrl } from '@/entities/job/model/company-logo';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import {
@@ -18,6 +19,7 @@ import {
   KIND_LABELS,
   OPERATION_TYPE_LABELS,
 } from '@/entities/side-study/model/labels';
+import type { DataLayerParams } from '@/shared/analytics/dataLayer';
 import type { MyPageListRow } from '@/widgets/mypage-list';
 import type { MyScrapsQuery, MyScrapTab } from './query';
 
@@ -30,6 +32,8 @@ const PAGE_SIZE = 10;
  */
 export interface MyScrapRow extends MyPageListRow {
   id: number;
+  /** 채용공고 탭만 있다. 제목·해제를 누를 때 GTM 이벤트에 싣는 공고 정보(`toJobInfo`). */
+  jobInfo?: DataLayerParams;
 }
 
 export interface MyScrapsPage {
@@ -90,6 +94,7 @@ async function fetchJobScraps(query: MyScrapsQuery): Promise<MyScrapsPage> {
       recruitmentType: job.recruitmentType,
       recruitmentEndAt: job.recruitmentEndAt,
       closedAt: job.closedAt,
+      jobInfo: toJobInfo(job),
     })),
   };
 }

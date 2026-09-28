@@ -1,14 +1,23 @@
-import Link from 'next/link';
 import { Badge, Card } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
+import {
+  isPromoted,
+  type DataLayerEvent,
+  type ProgramCardTracking,
+} from '@/shared/analytics/dataLayer';
+import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
+import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { computeDaysRemaining } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { CommentIcon, EyeIcon } from '@/shared/ui/icons';
+import { toSideStudyInfo } from '../model/analytics';
 import { AUTHOR_NICKNAME_FALLBACK, KIND_LABELS, OPERATION_TYPE_LABELS } from '../model/labels';
 import type { SideStudySummary } from '../model/types';
 
 export interface SideStudyCardProps {
   sideStudy: SideStudySummary;
+  /** 목록 안의 자리. 주면 누를 때 `program_card_click`, 광고 카드면 노출 때 `program_impression` 이 나간다. */
+  tracking?: ProgramCardTracking;
 }
 
 /** 카드 해시태그는 기술 스택에서 앞의 세 개만 쓴다 — 목업의 태그 줄이 한 줄이다. */
@@ -33,16 +42,28 @@ const HASHTAG_LIMIT = 3;
  * 여기만 아이콘이 흐름 안에 있었어서, 그 자리는 빈 칸(`BookmarkSlot`)으로 남겨 둔다 — 빼면
  * 옆 칸이 32px 넓어져 닉네임이 잘리는 지점이 달라지고 긴 닉네임이 버튼 밑으로 들어간다.
  */
-export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
+export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
   const metaParts = [
     KIND_LABELS[sideStudy.recruitmentType],
     OPERATION_TYPE_LABELS[sideStudy.progressMethod],
   ];
   const hashtags = sideStudy.technologyStacks.slice(0, HASHTAG_LIMIT);
 
-  return (
+  const info = toSideStudyInfo(sideStudy);
+  const listParams = tracking
+    ? { ...info, list_position: tracking.listPosition, page_number: tracking.pageNumber }
+    : null;
+  const clickEvents: DataLayerEvent[] = listParams
+    ? [{ event: 'program_card_click', params: listParams }]
+    : [];
+
+  const card = (
     <div className="relative h-full">
-      <Link href={`/side-studies/${sideStudy.id}`} className="block h-full">
+      <TrackedLink
+        href={`/side-studies/${sideStudy.id}`}
+        className="block h-full"
+        events={clickEvents}
+      >
         <Card className="flex h-full flex-col gap-3 border-gray-100 transition-shadow hover:shadow-md">
           {/* 모바일은 카드가 좁아 로고 아래로 메타·작성자를 내린다(`docs/asset/v9 mobile/사이드 스터디.png`). */}
           <div className="flex flex-col items-start gap-3 md:flex-row md:items-center">
@@ -75,7 +96,7 @@ export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
             </span>
           </p>
         </Card>
-      </Link>
+      </TrackedLink>
       {/*
        * 첫 줄 오른쪽 끝, `BookmarkSlot`이 비워 둔 자리에 정확히 겹친다. 카드 안쪽 여백이 16px
        * 이고 첫 줄이 48px(작성자 썸네일)이라, 16px 에서 시작하는 48px 상자 안에서 세로 가운데가
@@ -89,6 +110,14 @@ export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
         iconClassName="h-5 w-5"
       />
     </div>
+  );
+
+  return listParams && isPromoted(info) ? (
+    <ImpressionTracker event="program_impression" params={listParams}>
+      {card}
+    </ImpressionTracker>
+  ) : (
+    card
   );
 }
 

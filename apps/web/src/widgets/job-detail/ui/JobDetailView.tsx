@@ -1,12 +1,14 @@
 import { notFound } from 'next/navigation';
 import { getPublicJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
+import { toJobInfo } from '@/entities/job/model/analytics';
 import type { JobDetail } from '@/entities/job/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { CrossSellWidget } from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
+import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobInfoGrid } from './JobInfoGrid';
 import { SimilarJobs } from './SimilarJobs';
@@ -75,6 +77,8 @@ function buildSections(job: JobDetail): { label: string; value?: string }[] {
  */
 export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
+  const jobInfo = toJobInfo(job);
+  const viewTracker = <JobDetailViewTracker jobId={job.id} jobInfo={jobInfo} />;
 
   const headerCard = (
     <JobDetailHeaderCard
@@ -110,6 +114,8 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       id={job.id}
       bookmarked={job.bookmarked}
       bookmarkCount={job.bookmarkCount}
+      applyEvent={{ event: 'apply_click', params: { ...jobInfo, click_location: 'detail' } }}
+      scrapParams={{ ...jobInfo, click_location: 'detail' }}
     />
   );
 
@@ -122,6 +128,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       // 필드가 없다. 그 아래 회색 판은 광고 자리라 목업대로 자리만 잡는다(홈의 배너 자리와 같다).
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,640fr)_minmax(0,300fr)]">
         <div className="flex min-w-0 flex-col gap-5">
+          {viewTracker}
           {headerCard}
           {infoGrid}
           <div className="flex flex-col gap-10 px-5 pt-5">{sections}</div>
@@ -138,6 +145,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
 
   return (
     <div className="flex w-full max-w-6xl flex-col gap-4">
+      {viewTracker}
       <JobDetailBreadcrumb />
       {headerCard}
       {/* 좌우 `px-8`은 아래 `ForBusinessBanner`(`rounded-lg bg-blue-50 px-8 py-8`)의 안쪽 여백과

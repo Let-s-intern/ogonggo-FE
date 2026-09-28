@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import { cn, FilterButton, SearchInput } from '@ogonggo/ui';
+import { filterApplyEvents } from '@/shared/analytics/dataLayer';
+import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
@@ -33,11 +34,14 @@ const EXPERIENCE_TYPE_OPTIONS = Object.entries(EXPERIENCE_TYPE_LABELS) as [
  */
 function FilterDropdown<TValue extends string>({
   label,
+  filterType,
   selected,
   options,
   buildHref,
 }: {
   label: string;
+  /** GTM `filter_apply` 의 `filter_type`. `employment` | `experience` */
+  filterType: string;
   selected?: TValue;
   options: [TValue, string][];
   buildHref: (value: TValue | undefined) => string;
@@ -54,20 +58,22 @@ function FilterDropdown<TValue extends string>({
       </FilterButton>
       <ul className="absolute right-0 z-10 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-md">
         <li>
-          <Link
+          <TrackedLink
             href={buildHref(undefined)}
+            events={filterApplyEvents(filterType, selected, undefined)}
             className={cn(
               'block px-3 py-1.5 text-sm',
               !selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50',
             )}
           >
             {label}
-          </Link>
+          </TrackedLink>
         </li>
         {options.map(([value, optionLabel]) => (
           <li key={value}>
-            <Link
+            <TrackedLink
               href={buildHref(value)}
+              events={filterApplyEvents(filterType, selected, value)}
               className={cn(
                 'block px-3 py-1.5 text-sm',
                 value === selected
@@ -76,7 +82,7 @@ function FilterDropdown<TValue extends string>({
               )}
             >
               {optionLabel}
-            </Link>
+            </TrackedLink>
           </li>
         ))}
       </ul>
@@ -114,12 +120,14 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
       </form>
       <FilterDropdown
         label="채용 형태"
+        filterType="employment"
         selected={query.employmentType}
         options={EMPLOYMENT_TYPE_OPTIONS}
         buildHref={(value) => buildJobListHref(query, { employmentType: value })}
       />
       <FilterDropdown
         label="경력"
+        filterType="experience"
         selected={query.experienceType}
         options={EXPERIENCE_TYPE_OPTIONS}
         buildHref={(value) => buildJobListHref(query, { experienceType: value })}

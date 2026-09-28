@@ -82,7 +82,7 @@ export async function JobList(query: JobListProps) {
       {items.length === 0 ? (
         <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
       ) : (
-        <JobListItems items={items} />
+        <JobListItems items={items} pageNumber={pageInfo.pageNum} />
       )}
       <NumberedPagination
         pageInfo={pageInfo}
@@ -96,12 +96,15 @@ export async function JobList(query: JobListProps) {
  * `home.png`의 "전체 공고" 4열 그리드(3.4절) — `entities/job/ui/JobCard.tsx`를 그대로 써서
  * "인기 공고"(`widgets/popular-jobs`)와 완전히 같은 카드 디자인을 보장한다.
  */
-function JobListItems({ items }: { items: JobSummary[] }) {
+function JobListItems({ items, pageNumber }: { items: JobSummary[]; pageNumber: number }) {
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
-      {items.map((job) => (
+      {items.map((job, index) => (
         <li key={job.id}>
-          <JobCard job={job} />
+          <JobCard
+            job={job}
+            tracking={{ listSource: 'main', listPosition: index + 1, pageNumber }}
+          />
         </li>
       ))}
     </ul>

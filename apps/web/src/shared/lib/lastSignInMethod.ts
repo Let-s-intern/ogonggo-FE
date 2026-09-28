@@ -29,11 +29,13 @@ export function savePendingSocialMethod(method: 'kakao' | 'naver'): void {
   sessionStorage.setItem(PENDING_SOCIAL_KEY, method);
 }
 
-/** 콜백이 교환에 성공했을 때 부른다. 꺼낸 값을 최근 로그인으로 남긴다. */
-export function recordPendingSocialMethod(): void {
+/** 콜백이 교환에 성공했을 때 부른다. 꺼낸 값을 최근 로그인으로 남기고 돌려준다(GTM `login` 의 `method`). */
+export function recordPendingSocialMethod(): SignInMethod | null {
   const value = sessionStorage.getItem(PENDING_SOCIAL_KEY);
   sessionStorage.removeItem(PENDING_SOCIAL_KEY);
   if (value === 'kakao' || value === 'naver') {
     recordSignInMethod(value);
+    return value;
   }
+  return null;
 }

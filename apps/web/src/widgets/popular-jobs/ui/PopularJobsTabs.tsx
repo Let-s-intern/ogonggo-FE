@@ -55,9 +55,12 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
         // 모바일은 가로로 넘긴다(`docs/asset/v9 mobile/채용공고 목록.png`). 화면 끝까지 넘기도록
         // 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다.
         <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
-          {items.map((job) => (
+          {items.map((job, index) => (
             <li key={job.id} className="w-[158px] shrink-0 snap-start md:w-auto">
-              <JobCard job={job} />
+              <JobCard
+                job={job}
+                tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
+              />
             </li>
           ))}
         </ul>

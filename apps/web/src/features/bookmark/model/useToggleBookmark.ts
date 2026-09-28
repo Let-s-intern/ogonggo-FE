@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { HttpError } from '@ogonggo/api';
 import { useToast } from '@ogonggo/ui';
+import { track, type DataLayerParams } from '@/shared/analytics/dataLayer';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { sanitizeReturnPath } from '@/shared/lib/returnPath';
 import { createBookmark, deleteBookmark, type BookmarkKind } from '../api/bookmarkApi';
@@ -15,6 +16,11 @@ export interface UseToggleBookmarkOptions {
   id: number;
   /** 서버가 준 `bookmarked`. id 모음이 오기 전까지 이것을 그린다. */
   bookmarked: boolean;
+  /**
+   * 주면 GTM `scrap` 이벤트를 보낸다. 공고 정보와 `click_location` 을 담아 온다. 명세의 `scrap` 은
+   * 채용공고 것뿐이라 부트캠프·사이드·스터디는 넘기지 않는다.
+   */
+  scrapParams?: DataLayerParams;
 }
 
 export interface ToggleBookmark {
@@ -43,6 +49,7 @@ export function useToggleBookmark({
   kind,
   id,
   bookmarked: serverBookmarked,
+  scrapParams,
 }: UseToggleBookmarkOptions): ToggleBookmark {
   const ids = useMyBookmarkIds(kind);
   const bookmarked = ids ? ids.has(id) : serverBookmarked;
@@ -68,6 +75,9 @@ export function useToggleBookmark({
       toast.show({ message: failureMessage(error), tone: 'error' });
     },
     onSuccess: (_data, next) => {
+      if (scrapParams) {
+        track('scrap', { ...scrapParams, action: next ? 'add' : 'remove' });
+      }
       // 해제에는 토스트를 띄우지 않는다. 비워진 아이콘으로 충분하다(PRD "북마크에서 쓰는 문구").
       if (next) {
         toast.show({
@@ -91,6 +101,9 @@ export function useToggleBookmark({
        * 북마크를 자동으로 걸지도 않는다.
        */
       if (!isSignedIn()) {
+        if (scrapParams) {
+          track('scrap', { ...scrapParams, action: 'login_required' });
+        }
         router.push(signInHref());
         return;
       }

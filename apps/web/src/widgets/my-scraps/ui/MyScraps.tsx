@@ -3,6 +3,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@ogonggo/ui';
+import { rememberListSource } from '@/entities/job/model/listSource';
+import { track } from '@/shared/analytics/dataLayer';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
   MyPageFilterRow,
@@ -144,9 +146,22 @@ export function MyScraps({ query }: MyScrapsProps) {
 
       <MyPageListTable columns={columns}>
         {state.kind === 'ready' && state.page.rows.length > 0 ? (
-          state.page.rows.map((row) => (
+          state.page.rows.map((row, index) => (
             <tr key={row.key} className="border-t border-gray-100">
-              <MyPageListRowCells row={row} />
+              <MyPageListRowCells
+                row={row}
+                onTitleClick={() => {
+                  if (row.jobInfo) {
+                    track('job_card_click', {
+                      ...row.jobInfo,
+                      list_source: 'scrap',
+                      list_position: index + 1,
+                      page_number: state.page.pageInfo.pageNum,
+                    });
+                    rememberListSource(row.id, 'scrap');
+                  }
+                }}
+              />
               <td className="px-4 py-5 text-center">
                 <Button
                   variant="secondary"
@@ -155,7 +170,16 @@ export function MyScraps({ query }: MyScrapsProps) {
                   onClick={() => {
                     setRemoving(row.id);
                     unbookmark(queryClient, query.tab, row.id)
-                      .then(() => setReloadToken((token) => token + 1))
+                      .then(() => {
+                        if (row.jobInfo) {
+                          track('scrap', {
+                            ...row.jobInfo,
+                            action: 'remove',
+                            click_location: 'list',
+                          });
+                        }
+                        setReloadToken((token) => token + 1);
+                      })
                       .catch(() => setState({ kind: 'error' }))
                       .finally(() => setRemoving(null));
                   }}

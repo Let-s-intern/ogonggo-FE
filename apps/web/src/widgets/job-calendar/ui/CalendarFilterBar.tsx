@@ -1,6 +1,8 @@
 import { cn } from '@ogonggo/ui';
 import Link from 'next/link';
 import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import { filterApplyEvents } from '@/shared/analytics/dataLayer';
+import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
 import {
   buildJobCalendarHref,
@@ -73,11 +75,14 @@ const EXPERIENCE_TYPE_OPTIONS: [JobCalendarExperienceType, string][] = [
  */
 function FilterDropdown<TValue extends string>({
   label,
+  filterType,
   selected,
   options,
   buildHref,
 }: {
   label: string;
+  /** GTM `filter_apply` 의 `filter_type`. `employment` | `experience` */
+  filterType: string;
   selected: TValue | undefined;
   options: [TValue, string][];
   buildHref: (value: TValue | undefined) => string;
@@ -96,8 +101,9 @@ function FilterDropdown<TValue extends string>({
       </summary>
       <ul className="absolute right-0 z-10 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-md">
         <li>
-          <Link
+          <TrackedLink
             href={buildHref(undefined)}
+            events={filterApplyEvents(filterType, selected, undefined)}
             className={cn(
               'block px-3 py-1.5 text-sm',
               selected === undefined
@@ -106,12 +112,13 @@ function FilterDropdown<TValue extends string>({
             )}
           >
             {label}
-          </Link>
+          </TrackedLink>
         </li>
         {options.map(([value, optionLabel]) => (
           <li key={value}>
-            <Link
+            <TrackedLink
               href={buildHref(value)}
+              events={filterApplyEvents(filterType, selected, value)}
               className={cn(
                 'block px-3 py-1.5 text-sm',
                 value === selected
@@ -120,7 +127,7 @@ function FilterDropdown<TValue extends string>({
               )}
             >
               {optionLabel}
-            </Link>
+            </TrackedLink>
           </li>
         ))}
       </ul>
@@ -253,6 +260,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         <KeywordFilter query={query} />
         <FilterDropdown
           label="채용 형태"
+          filterType="employment"
           selected={query.employmentType}
           options={EMPLOYMENT_TYPE_OPTIONS}
           buildHref={(value) => buildJobCalendarHref(query, { employmentType: value })}
@@ -285,6 +293,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         )}
         <FilterDropdown
           label="경력"
+          filterType="experience"
           selected={query.experienceType}
           options={EXPERIENCE_TYPE_OPTIONS}
           buildHref={(value) => buildJobCalendarHref(query, { experienceType: value })}

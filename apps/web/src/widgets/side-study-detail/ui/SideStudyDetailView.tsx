@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { getPublicRecruitmentPost, HttpError } from '@ogonggo/api';
 import type { SuccessResponseRecruitmentPostDetailResponse } from '@ogonggo/api';
+import { toSideStudyInfo } from '@/entities/side-study/model/analytics';
 import type { SideStudyDetail } from '@/entities/side-study/model/types';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
@@ -127,6 +128,10 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
               id={sideStudy.id}
               bookmarked={sideStudy.bookmarked}
               bookmarkCount={sideStudy.bookmarkCount}
+              applyEvent={{
+                event: 'program_apply_click',
+                params: toSideStudyInfo(sideStudy),
+              }}
             />
           </StickyApplyBar>
           {/* 목업의 이 자리에 있는 댓글·대댓글 스레드는 그리지 않는다

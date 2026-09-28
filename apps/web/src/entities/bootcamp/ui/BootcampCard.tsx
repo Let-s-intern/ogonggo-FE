@@ -1,12 +1,21 @@
-import Link from 'next/link';
 import { BookmarkButton } from '@/features/bookmark';
+import {
+  isPromoted,
+  type DataLayerEvent,
+  type ProgramCardTracking,
+} from '@/shared/analytics/dataLayer';
+import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
+import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
+import { toBootcampInfo } from '../model/analytics';
 import { TUITION_TYPE_LABELS } from '../model/labels';
 import type { BootcampSummary } from '../model/types';
 import { BootcampBadge } from './BootcampBadge';
 
 export interface BootcampCardProps {
   bootcamp: BootcampSummary;
+  /** 목록 안의 자리. 주면 누를 때 `program_card_click`, 광고 카드면 노출 때 `program_impression` 이 나간다. */
+  tracking?: ProgramCardTracking;
 }
 
 /**
@@ -24,7 +33,7 @@ export interface BootcampCardProps {
  * 외부 호스트(`sesac.seoul.kr`)라 `next.config.ts`에 도메인을 등록해야 하고, 목데이터 단계에서
  * 그 설정을 늘릴 이유가 없다. 로드에 실패하면 뒤의 회색 박스가 그대로 보인다.
  */
-export function BootcampCard({ bootcamp }: BootcampCardProps) {
+export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
   const badge = (
     <BootcampBadge
@@ -34,9 +43,21 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
     />
   );
 
-  return (
+  const info = toBootcampInfo(bootcamp);
+  const listParams = tracking
+    ? { ...info, list_position: tracking.listPosition, page_number: tracking.pageNumber }
+    : null;
+  const clickEvents: DataLayerEvent[] = listParams
+    ? [{ event: 'program_card_click', params: listParams }]
+    : [];
+
+  const card = (
     <div className="relative h-full">
-      <Link href={`/bootcamps/${bootcamp.id}`} className="flex h-full flex-col gap-2">
+      <TrackedLink
+        href={`/bootcamps/${bootcamp.id}`}
+        className="flex h-full flex-col gap-2"
+        events={clickEvents}
+      >
         <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
           <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-full w-full" />
         </div>
@@ -48,7 +69,7 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
         <p className="line-clamp-2 text-sm font-bold text-gray-900">{bootcamp.title}</p>
         {/* 모바일은 제목 아래다(`docs/asset/v9 mobile/부트캠프.png`). `JobCard` 와 같은 이유다. */}
         <span className="flex md:hidden">{badge}</span>
-      </Link>
+      </TrackedLink>
       <BookmarkButton
         kind="bootcamps"
         id={bootcamp.id}
@@ -56,5 +77,13 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
         className="absolute top-2 right-2"
       />
     </div>
+  );
+
+  return listParams && isPromoted(info) ? (
+    <ImpressionTracker event="program_impression" params={listParams}>
+      {card}
+    </ImpressionTracker>
+  ) : (
+    card
   );
 }

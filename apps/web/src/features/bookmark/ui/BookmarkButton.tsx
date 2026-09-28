@@ -2,6 +2,7 @@
 
 import { cn } from '@ogonggo/ui';
 import { BookmarkIcon } from '@/shared/ui/icons';
+import type { DataLayerParams } from '@/shared/analytics/dataLayer';
 import type { BookmarkKind } from '../api/bookmarkApi';
 import { useBookmarkAccess } from '../model/useMyBookmarkIds';
 import { useToggleBookmark } from '../model/useToggleBookmark';
@@ -11,6 +12,8 @@ export interface BookmarkButtonProps {
   id: number;
   /** 서버가 준 `bookmarked`. id 모음이 도착하면 그쪽이 이긴다. */
   bookmarked: boolean;
+  /** GTM `scrap` 이벤트에 실을 공고 정보와 누른 자리. 채용공고만 넘긴다(`useToggleBookmark`). */
+  scrapParams?: DataLayerParams;
   /** 카드가 정하는 자리. 카드마다 아이콘이 놓이는 곳이 달라 바깥이 준다. */
   className?: string;
   /** 아이콘 크기. 카드는 `h-6 w-6`, 사이드·스터디 카드처럼 작은 자리는 `h-5 w-5` 다. */
@@ -38,12 +41,14 @@ export function BookmarkButton({
   bookmarked: serverBookmarked,
   className,
   iconClassName,
+  scrapParams,
 }: BookmarkButtonProps) {
   const access = useBookmarkAccess();
   const { bookmarked, pending, toggle } = useToggleBookmark({
     kind,
     id,
     bookmarked: serverBookmarked,
+    scrapParams,
   });
 
   if (access === 'company' || access === 'unknown') {

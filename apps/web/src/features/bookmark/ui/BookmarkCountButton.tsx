@@ -1,6 +1,7 @@
 'use client';
 
 import { BookmarkIcon } from '@/shared/ui/icons';
+import type { DataLayerParams } from '@/shared/analytics/dataLayer';
 import type { BookmarkKind } from '../api/bookmarkApi';
 import { useBookmarkAccess } from '../model/useMyBookmarkIds';
 import { useToggleBookmark } from '../model/useToggleBookmark';
@@ -10,6 +11,8 @@ export interface BookmarkCountButtonProps {
   id: number;
   /** 서버가 준 `bookmarked`. id 모음이 도착하면 그쪽이 이긴다. */
   bookmarked: boolean;
+  /** GTM `scrap` 이벤트에 실을 공고 정보와 누른 자리. 채용공고만 넘긴다(`useToggleBookmark`). */
+  scrapParams?: DataLayerParams;
   /** 서버가 준 북마크 개수. */
   bookmarkCount: number;
 }
@@ -29,12 +32,14 @@ export function BookmarkCountButton({
   id,
   bookmarked: serverBookmarked,
   bookmarkCount,
+  scrapParams,
 }: BookmarkCountButtonProps) {
   const access = useBookmarkAccess();
   const { bookmarked, countDelta, pending, toggle } = useToggleBookmark({
     kind,
     id,
     bookmarked: serverBookmarked,
+    scrapParams,
   });
 
   if (access === 'company' || access === 'unknown') {

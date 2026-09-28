@@ -60,9 +60,12 @@ export async function BootcampList(query: BootcampListProps) {
         <p className="py-16 text-center text-sm text-gray-500">교육·부트캠프가 없습니다.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
-          {items.map((bootcamp) => (
+          {items.map((bootcamp, index) => (
             <li key={bootcamp.id}>
-              <BootcampCard bootcamp={bootcamp} />
+              <BootcampCard
+                bootcamp={bootcamp}
+                tracking={{ listPosition: index + 1, pageNumber: pageInfo.pageNum }}
+              />
             </li>
           ))}
         </ul>
