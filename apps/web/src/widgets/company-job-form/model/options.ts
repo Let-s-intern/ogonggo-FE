@@ -3,9 +3,14 @@ import type {
   CreateCompanyJobRequestEducationLevel,
   CreateCompanyJobRequestEmploymentType,
   CreateCompanyJobRequestExperienceType,
+  CreateCompanyJobRequestRegion,
 } from '@ogonggo/api';
 import { ANY_JOB_FIELD, JOB_FIELD_ROLES } from '@/features/sign-up/lib/careerOptions';
-import { EDUCATION_LEVEL_LABELS, EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EDUCATION_LEVEL_LABELS,
+  EMPLOYMENT_TYPE_LABELS,
+  REGION_LABELS,
+} from '@/entities/job/model/labels';
 
 /**
  * 채용공고 작성 폼 드롭다운의 선택지(v5 PRD 3 절).
@@ -79,36 +84,18 @@ export const JOB_FIELD_OPTIONS: SelectOption[] = [
 ];
 
 /**
- * 지역 — 17 개 시·도에 `전국`·`해외` 둘을 더한 것이다.
+ * 지역 — 백엔드의 시·도 enum 이다(`전국`·`해외` 포함, 광주는 `전남광주`로 묶인다). 라벨은
+ * 공개 상세와 같은 `REGION_LABELS` 에서 온다.
  *
- * `region` 도 자유 문자열이고 목록을 주는 API 가 없는데 목업이 드롭다운이라 고를 목록이
- * 필요하다. 시·군·구까지 고르게 하지 않는 이유는 공개 목록에 지역 필터가 없어 그 아래가
- * 쓰이는 곳이 없기 때문이다. 자유 입력으로 두면 같은 지역이 `서울`·`서울시`·`서울특별시` 로
- * 갈린다.
+ * 시·군·구(`subRegion`)까지 고르게 하지 않는 이유는 공개 목록에 그 아래 필터가 없어 쓰이는
+ * 곳이 없기 때문이다.
  */
 export const REGION_OPTIONS: SelectOption[] = [
   placeholder('채용시 근무 지역을 선택해 주세요.'),
-  ...[
-    '서울',
-    '경기',
-    '인천',
-    '부산',
-    '대구',
-    '광주',
-    '대전',
-    '울산',
-    '세종',
-    '강원',
-    '충북',
-    '충남',
-    '전북',
-    '전남',
-    '경북',
-    '경남',
-    '제주',
-    '전국',
-    '해외',
-  ].map((value) => ({ value, label: value })),
+  ...(Object.keys(REGION_LABELS) as CreateCompanyJobRequestRegion[]).map((value) => ({
+    value,
+    label: REGION_LABELS[value],
+  })),
 ];
 
 /**

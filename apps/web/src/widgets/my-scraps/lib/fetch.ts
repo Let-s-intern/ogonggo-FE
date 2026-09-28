@@ -9,7 +9,11 @@ import {
 } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { getCompanyLogoUrl } from '@/entities/job/model/company-logo';
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  formatRegion,
+} from '@/entities/job/model/labels';
 import {
   OPERATION_TYPE_LABELS as BOOTCAMP_OPERATION_TYPE_LABELS,
   TUITION_TYPE_LABELS,
@@ -89,7 +93,7 @@ async function fetchJobScraps(query: MyScrapsQuery): Promise<MyScrapsPage> {
       meta: [
         EMPLOYMENT_TYPE_LABELS[job.employmentType],
         EXPERIENCE_TYPE_LABELS[job.experienceType],
-        job.region,
+        formatRegion(job.region),
       ].filter((part): part is string => Boolean(part)),
       recruitmentType: job.recruitmentType,
       recruitmentEndAt: job.recruitmentEndAt,

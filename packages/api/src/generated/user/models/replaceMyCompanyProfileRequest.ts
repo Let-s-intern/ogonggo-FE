@@ -18,4 +18,23 @@ export interface ReplaceMyCompanyProfileRequest {
      * @maxLength 100
      */
   managerName: string;
+  /**
+     * 기업 로고 이미지 주소
+     * @minLength 0
+     * @maxLength 2048
+     */
+  logoUrl?: string;
+  /**
+     * 담당자 연락처. 숫자와 하이픈(-)만 받는다.
+     * @minLength 0
+     * @maxLength 20
+     * @pattern ^[0-9-]+$
+     */
+  managerPhone?: string;
+  /**
+     * 로그인 이메일과 따로 받는 정보 수신용 이메일
+     * @minLength 0
+     * @maxLength 320
+     */
+  notificationEmail?: string;
 }

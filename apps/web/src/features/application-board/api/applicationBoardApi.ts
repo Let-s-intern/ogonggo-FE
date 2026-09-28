@@ -19,7 +19,11 @@ import {
   TUITION_TYPE_LABELS,
 } from '@/entities/bootcamp/model/labels';
 import { getCompanyLogoUrl } from '@/entities/job/model/company-logo';
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  formatRegion,
+} from '@/entities/job/model/labels';
 import {
   AUTHOR_NICKNAME_FALLBACK,
   KIND_LABELS,
@@ -149,7 +153,7 @@ async function fetchJobStage(
       meta: [
         EMPLOYMENT_TYPE_LABELS[job.employmentType],
         EXPERIENCE_TYPE_LABELS[job.experienceType],
-        job.region,
+        formatRegion(job.region),
       ].filter((part): part is string => Boolean(part)),
       recruitmentType: job.recruitmentType,
       recruitmentEndAt: job.recruitmentEndAt,

@@ -3,7 +3,7 @@ import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
+import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS, formatRegion } from '../model/labels';
 import type { JobSummary } from '../model/types';
 import { JobCardLink, type JobCardTracking } from './JobCardLink';
 import { JobMeta } from './JobMeta';
@@ -49,9 +49,7 @@ export function JobCard({ job, tracking }: JobCardProps) {
     jobMajor,
     EXPERIENCE_TYPE_LABELS[job.experienceType],
   ].filter((part): part is string => Boolean(part));
-  // 크롤링된 region에 지역명 대신 공고의 안내 문장이 들어오는 경우가 있다
-  // (예: "※ 근무 지역은 서울입니다."). 카드의 지역 자리에는 싣지 않는다.
-  const region = job.region?.startsWith('※') ? undefined : job.region;
+  const region = formatRegion(job.region);
 
   /*
    * 데스크톱은 메타 줄 오른쪽, 모바일은 제목 아래다(`docs/asset/v9 mobile/채용공고 목록.png`).

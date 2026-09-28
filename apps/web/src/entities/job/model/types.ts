@@ -9,4 +9,5 @@ export type JobDetail = UserJobDetailResponse;
 export type JobEmploymentType = JobSummary['employmentType'];
 export type JobExperienceType = JobSummary['experienceType'];
 export type JobEducationLevel = JobSummary['educationLevel'];
+export type JobRegion = NonNullable<JobSummary['region']>;
 export type JobRecruitmentType = JobSummary['recruitmentType'];

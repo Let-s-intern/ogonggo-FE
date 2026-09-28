@@ -3,6 +3,7 @@ import type { UserJobDetailResponse } from '../../generated/user/models/userJobD
 import type { UserJobDetailResponseEducationLevel } from '../../generated/user/models/userJobDetailResponseEducationLevel';
 import type { UserJobDetailResponseEmploymentType } from '../../generated/user/models/userJobDetailResponseEmploymentType';
 import type { UserJobDetailResponseExperienceType } from '../../generated/user/models/userJobDetailResponseExperienceType';
+import { UserJobDetailResponseRegion } from '../../generated/user/models/userJobDetailResponseRegion';
 import { REAL_JOB_SEEDS } from './real-jobs-seed';
 
 /**
@@ -57,7 +58,7 @@ const baseJob = (id: number): UserJobDetailResponse => ({
   experienceType: faker.helpers.arrayElement(EXPERIENCE_TYPES),
   experienceMinYears: faker.helpers.arrayElement([undefined, faker.number.int({ min: 0, max: 3 })]),
   educationLevel: faker.helpers.arrayElement(EDUCATION_LEVELS),
-  region: faker.location.city(),
+  region: faker.helpers.arrayElement(Object.values(UserJobDetailResponseRegion)),
   recruitmentType: 'PERIOD',
   recruitmentStartAt: isoDate(faker.date.recent({ days: 30 })),
   recruitmentEndAt: isoDate(faker.date.soon({ days: 30 })),
@@ -75,7 +76,7 @@ const full: UserJobDetailResponse = {
   ...baseJob(1),
   companyName: '오공고',
   title: '프론트엔드 엔지니어',
-  region: '서울 강남구',
+  region: 'SEOUL',
   sourceUrl: 'https://example.com/careers/frontend-engineer',
   viewCount: 1234,
 };
@@ -121,6 +122,31 @@ const alwaysOpen: UserJobDetailResponse = {
  * 지어내지 않고 비워둔다 — `educationLevel`은 신호가 없어 전부 `ANY`,
  * `compensation`/`benefits`는 전부 `undefined`(해당 섹션은 화면에서 자연히 숨는다).
  */
+/**
+ * 시드의 `region` 은 크롤링 원문 그대로의 문장이다. 백엔드는 이제 시·도 enum 을 주므로, 문장에서
+ * 먼저 보이는 지명으로 하나를 고른다. 못 고르면 비운다 — 목업이 지어낸 지역을 보여주지 않게.
+ */
+const REGION_KEYWORDS: [UserJobDetailResponseRegion, RegExp][] = [
+  ['NATIONWIDE', /전국|국내 전역|NationWide/i],
+  ['SEOUL', /서울|Seoul|신도림|구로|잠실|송파|역삼|선릉|논현|마곡/i],
+  ['INCHEON', /인천|송도/],
+  ['GYEONGGI', /경기|분당|판교|성남|용인|하남|부천|안산|이천|평촌|곤지암|Gyeonggi/i],
+  ['BUSAN', /부산/],
+  ['DAEJEON', /대전|Daejeon/i],
+  ['ULSAN', /울산|Ulsan/i],
+  ['CHUNGBUK', /충북|청주|보은/],
+  ['CHUNGNAM', /천안|당진/],
+  ['GYEONGBUK', /안동/],
+  ['GYEONGNAM', /고성/],
+  ['JEONNAM_GWANGJU', /전남|영광/],
+  ['JEJU', /제주/],
+  ['OVERSEAS', /브라질|미국|Alabama/i],
+];
+
+function toRegion(text: string | undefined): UserJobDetailResponseRegion | undefined {
+  return text ? REGION_KEYWORDS.find(([, pattern]) => pattern.test(text))?.[0] : undefined;
+}
+
 const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => {
   const id = 6 + index;
   const endAt = new Date();
@@ -135,7 +161,7 @@ const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => 
     experienceType: seed.experienceType,
     experienceMinYears: undefined,
     educationLevel: 'ANY',
-    region: seed.region,
+    region: toRegion(seed.region),
     recruitmentType: 'PERIOD',
     recruitmentStartAt: undefined,
     recruitmentEndAt: isoDate(endAt),
