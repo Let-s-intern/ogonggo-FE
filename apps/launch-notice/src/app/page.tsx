@@ -207,6 +207,24 @@ export default function Page() {
           렛츠커리어 · 주식회사 아이엔지
           <br />
           광고·제휴 문의 official@letscareer.co.kr
+          <br />
+          직업정보제공사업 신고번호: J1202020260026
+          <br />
+          <a
+            href="https://letsintern.notion.site/3e95e77cbee180f993a3c70e3bce5a21?source=copy_link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            서비스 이용약관
+          </a>
+          {' · '}
+          <a
+            href="https://letsintern.notion.site/3e95e77cbee18074a1c7dc485644d737?pvs=74"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            개인정보처리방침
+          </a>
         </div>
       </footer>
 
