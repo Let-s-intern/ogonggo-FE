@@ -3,6 +3,7 @@ import {
   ApplicationBoardCta,
   type ApplicationBoardQuery,
 } from '@/widgets/application-board';
+import { WebPromptToast } from '@/shared/ui/WebPromptToast';
 
 export type MyScrapsPageProps = ApplicationBoardQuery;
 
@@ -19,7 +20,8 @@ export type MyScrapsPageProps = ApplicationBoardQuery;
 export function MyScrapsPage(query: MyScrapsPageProps) {
   return (
     <section className="flex flex-col gap-6">
-      <header>
+      {/* 모바일은 `< 지원 · 신청 관리` 머리(`MyPageLayout`)가 제목을 대신한다. */}
+      <header className="hidden md:block">
         <h1 className="text-3xl font-bold text-gray-950">지원 · 신청 관리</h1>
         <p className="pt-2 text-sm text-gray-500">
           지원하거나 신청한 공고의 진행 상태를 한곳에서 확인해요.
@@ -29,6 +31,8 @@ export function MyScrapsPage(query: MyScrapsPageProps) {
       <ApplicationBoard query={query} />
 
       <ApplicationBoardCta />
+
+      <WebPromptToast message="오공고 웹에서 한눈에 내역을 관리하세요." />
     </section>
   );
 }
