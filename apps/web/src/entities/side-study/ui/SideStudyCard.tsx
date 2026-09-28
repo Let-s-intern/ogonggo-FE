@@ -44,20 +44,25 @@ export function SideStudyCard({ sideStudy }: SideStudyCardProps) {
     <div className="relative h-full">
       <Link href={`/side-studies/${sideStudy.id}`} className="block h-full">
         <Card className="flex h-full flex-col gap-3 border-gray-100 transition-shadow hover:shadow-md">
-          <div className="flex items-center gap-3">
+          {/* 모바일은 카드가 좁아 로고 아래로 메타·작성자를 내린다(`docs/asset/v9 mobile/사이드 스터디.png`). */}
+          <div className="flex flex-col items-start gap-3 md:flex-row md:items-center">
             <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
-            <div className="min-w-0 flex-1">
+            <div className="w-full min-w-0 md:w-auto md:flex-1">
               <p className="truncate text-xs text-gray-400">{metaParts.join(' · ')}</p>
               <p className="truncate text-sm text-gray-600">
                 {sideStudy.author.nickname ?? AUTHOR_NICKNAME_FALLBACK}
               </p>
             </div>
-            <BookmarkSlot />
+            <span className="hidden md:block">
+              <BookmarkSlot />
+            </span>
           </div>
           <p className="line-clamp-2 text-sm font-bold text-gray-900">{sideStudy.title}</p>
           <SideStudyBadge sideStudy={sideStudy} />
-          <p className="mt-auto flex items-center justify-between gap-2 text-xs text-gray-400">
-            <span className="truncate">{hashtags.map((tag) => `#${tag}`).join(' ')}</span>
+          <p className="mt-auto flex flex-col items-start gap-1 text-xs text-gray-400 md:flex-row md:items-center md:justify-between md:gap-2">
+            <span className="max-w-full truncate">
+              {hashtags.map((tag) => `#${tag}`).join(' ')}
+            </span>
             <span className="flex shrink-0 items-center gap-2">
               <span className="flex items-center gap-1">
                 <CommentIcon className="h-3.5 w-3.5" />

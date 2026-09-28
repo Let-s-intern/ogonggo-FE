@@ -24,7 +24,7 @@ export function ForBusinessBanner() {
   const registerHref = companyJobRegisterHref(role);
 
   return (
-    <section className="rounded-lg bg-blue-50 px-8 py-8">
+    <section className="rounded-lg bg-blue-50 px-5 py-6 md:px-8 md:py-8">
       <p className="text-xs font-semibold text-blue-600">FOR BUSINESS</p>
       <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -33,7 +33,7 @@ export function ForBusinessBanner() {
             월 8만 취준생에게 공고를 직접 등록하고, 배너 광고로 더 크게 알려보세요
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <Button asChild>
             <Link href={registerHref}>무료로 공고 등록하기</Link>
           </Button>

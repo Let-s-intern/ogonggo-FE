@@ -31,7 +31,7 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 className="text-lg font-bold text-gray-900">인기 공고</h2>
         <div className="flex gap-2">
           {TABS.map((tab) => (
@@ -52,9 +52,11 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
       {items.length === 0 ? (
         <p className="py-8 text-center text-sm text-gray-500">표시할 공고가 없습니다.</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        // 모바일은 가로로 넘긴다(`docs/asset/v9 mobile/채용공고 목록.png`). 화면 끝까지 넘기도록
+        // 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다.
+        <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
           {items.map((job) => (
-            <li key={job.id}>
+            <li key={job.id} className="w-[158px] shrink-0 snap-start md:w-auto">
               <JobCard job={job} />
             </li>
           ))}

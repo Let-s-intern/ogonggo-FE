@@ -26,6 +26,13 @@ export interface BootcampCardProps {
  */
 export function BootcampCard({ bootcamp }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
+  const badge = (
+    <BootcampBadge
+      recruitmentType={bootcamp.recruitmentType}
+      recruitmentEndAt={bootcamp.recruitmentEndAt}
+      status={bootcamp.status}
+    />
+  );
 
   return (
     <div className="relative h-full">
@@ -35,14 +42,12 @@ export function BootcampCard({ bootcamp }: BootcampCardProps) {
         </div>
         <p className="flex items-center justify-between gap-2 text-xs text-gray-400">
           <span className="truncate">{metaParts.join(' · ')}</span>
-          <BootcampBadge
-            recruitmentType={bootcamp.recruitmentType}
-            recruitmentEndAt={bootcamp.recruitmentEndAt}
-            status={bootcamp.status}
-          />
+          <span className="hidden md:inline-flex">{badge}</span>
         </p>
         <p className="text-sm text-gray-500">{bootcamp.companyName}</p>
         <p className="line-clamp-2 text-sm font-bold text-gray-900">{bootcamp.title}</p>
+        {/* 모바일은 제목 아래다(`docs/asset/v9 mobile/부트캠프.png`). `JobCard` 와 같은 이유다. */}
+        <span className="flex md:hidden">{badge}</span>
       </Link>
       <BookmarkButton
         kind="bootcamps"
