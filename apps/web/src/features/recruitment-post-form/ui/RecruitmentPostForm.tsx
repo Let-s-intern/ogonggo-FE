@@ -27,6 +27,11 @@ import { PostPreview } from './PostPreview';
 export interface RecruitmentPostFormProps {
   /** 있으면 수정, 없으면 새 글. 작성한 모집글 표에서 넘어올 때만 있다. */
   postId?: number;
+  /**
+   * 저장이 끝난 뒤 할 일. 없으면 작성한 모집글 목록으로 간다. 사이드스터디 목록의 모달은 목록에
+   * 남아야 해서 모달을 닫는다(`app/(site)/side-studies/@modal`).
+   */
+  onSaved?: () => void;
 }
 
 /**
@@ -62,7 +67,7 @@ export interface RecruitmentPostFormProps {
  * "등록 전 미리보기에서 확인해 주세요" 인데, 확인한 자리에서 등록하지 못하면 다시 탭을
  * 옮겨야 한다.
  */
-export function RecruitmentPostForm({ postId }: RecruitmentPostFormProps) {
+export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<RecruitmentPostFormValues>(EMPTY_FORM_VALUES);
   /** 수정 진입 때 읽어 온 본문. 글자를 건드리지 않았으면 이 JSON 을 그대로 돌려보낸다. */
@@ -137,7 +142,11 @@ export function RecruitmentPostForm({ postId }: RecruitmentPostFormProps) {
       } else {
         await updateMyPost(postId, request);
       }
-      router.push('/mypage/posts');
+      if (onSaved) {
+        onSaved();
+      } else {
+        router.push('/mypage/posts');
+      }
     } catch {
       setFormError(
         saveMode === 'DRAFT'
