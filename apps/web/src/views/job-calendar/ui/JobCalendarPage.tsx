@@ -17,10 +17,11 @@ export type JobCalendarPageProps = JobCalendarQuery;
  */
 export function JobCalendarPage(query: JobCalendarPageProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center bg-white px-6 py-10">
-      <div className="flex w-full max-w-6xl flex-col gap-6 px-8">
+    <main className="flex min-h-screen flex-col items-center bg-white px-4 py-6 md:px-6 md:py-10">
+      <div className="flex w-full max-w-6xl flex-col gap-6 md:px-8">
         {/* 목업에서 제목은 알약 줄과 세로 가운데가 맞고, 체크박스 줄은 그 아래에 있다. */}
-        <div className="flex items-start justify-between">
+        {/* 모바일은 제목 아래로 필터가 내려간다(`docs/asset/v10 mobile/공고달력 먼슬리.png`). */}
+        <div className="flex flex-col items-start gap-4 md:flex-row md:justify-between">
           <h1 className="flex h-9 items-center text-lg font-bold text-gray-900">공고 달력</h1>
           <CalendarFilterBar query={query} />
         </div>

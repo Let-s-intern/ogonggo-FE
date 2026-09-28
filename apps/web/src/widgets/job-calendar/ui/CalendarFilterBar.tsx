@@ -246,8 +246,10 @@ export interface CalendarFilterBarProps {
 export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
   return (
     // v6 목업은 알약 줄 아래에 체크박스 줄을 오른쪽 끝에 맞춰 둔다. 두 줄 사이는 목업 실측 16px 이다.
-    <div className="flex flex-col items-end gap-4">
-      <div className="flex items-center gap-2">
+    // 모바일은 알약이 줄바꿈하고 체크박스가 두 칸 두 줄이 된다. 시안은 알약 한 줄 가로 스크롤인데,
+    // 드롭다운이 알약 아래로 떨어져서 스크롤 상자 안에 두면 잘린다.
+    <div className="flex w-full flex-col items-start gap-4 md:w-auto md:items-end">
+      <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
         <KeywordFilter query={query} />
         <FilterDropdown
           label="채용 형태"
@@ -289,7 +291,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         />
       </div>
       {/* 체크박스끼리는 목업에서 18px 이다. */}
-      <div className="flex items-center gap-[18px]">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:flex md:items-center md:gap-[18px]">
         {/*
           체크박스 중 유일하게 동작한다 — 켜면 주간, 끄면 월간이고 기본은 월간이다(PRD 8.1).
           상태가 URL 쿼리에 있어서(PRD 7절) 토글이 링크 한 줄로 끝나고, 이 줄이 클라이언트

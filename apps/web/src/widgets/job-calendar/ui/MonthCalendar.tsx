@@ -50,6 +50,16 @@ export function MonthCalendar({
 }: MonthCalendarProps) {
   const [selectedDay, setSelectedDay] = useState(() => defaultDay(initialDate));
   const [renderedMonth, setRenderedMonth] = useState(initialDate);
+  /**
+   * 모바일은 오른쪽 목록 자리가 없어 날짜를 누르면 그날 공고를 달력 위에 카드로 띄운다
+   * (`docs/asset/v10 mobile/먼슬리 날짜 클릭시.png`). 처음에는 닫혀 있다 — 들어오자마자 달력을
+   * 가리면 달력을 볼 수 없다.
+   */
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const selectDay = (day: string) => {
+    setSelectedDay(day);
+    setMobilePanelOpen(true);
+  };
   if (renderedMonth !== initialDate) {
     setRenderedMonth(initialDate);
     setSelectedDay(defaultDay(initialDate));
@@ -72,11 +82,36 @@ export function MonthCalendar({
           items={visibleItems}
           initialDate={initialDate}
           selectedDay={selectedDay}
-          onSelectDay={setSelectedDay}
+          onSelectDay={selectDay}
           dateBasis={dateBasis}
         />
       </div>
-      <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
+      <div className="hidden md:block">
+        <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
+      </div>
+      {mobilePanelOpen ? (
+        <div
+          className="fixed inset-0 z-40 bg-gray-950/10 md:hidden"
+          onClick={() => setMobilePanelOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-label="이 날의 공고"
+            className="absolute inset-x-4 top-1/2 max-h-[70dvh] -translate-y-1/2 overflow-y-auto rounded-2xl bg-white p-4 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              aria-label="닫기"
+              onClick={() => setMobilePanelOpen(false)}
+              className="absolute top-4 right-4 p-1 text-gray-400"
+            >
+              <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
+            </button>
+            <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
