@@ -3,6 +3,7 @@
 import {
   EDUCATION_LEVEL_LABELS,
   EMPLOYMENT_TYPE_LABELS,
+  formatJobField,
   formatRegion,
 } from '@/entities/job/model/labels';
 import { EXPERIENCE_TYPE_LABELS } from '../model/options';
@@ -85,7 +86,10 @@ export function JobPreview({ values }: JobPreviewProps) {
           value={values.educationLevel ? EDUCATION_LEVEL_LABELS[values.educationLevel] : NO_VALUE}
         />
         <InfoCell label="지역" value={formatRegion(values.region || undefined) ?? NO_VALUE} />
-        <InfoCell label="직무 분야" value={values.jobField || NO_VALUE} />
+        <InfoCell
+          label="직무 분야"
+          value={formatJobField(values.jobField || undefined) ?? NO_VALUE}
+        />
         <InfoCell
           label="모집 인원"
           value={values.recruitmentHeadcount ? `${values.recruitmentHeadcount}명` : NO_VALUE}

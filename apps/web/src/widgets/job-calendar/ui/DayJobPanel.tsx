@@ -6,7 +6,11 @@ import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import { JobCardLink } from '@/entities/job/ui/JobCardLink';
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  formatJobField,
+} from '@/entities/job/model/labels';
 import { BookmarkButton } from '@/features/bookmark';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { weekdayLabel } from '../lib/calendar-grid';
@@ -56,7 +60,7 @@ export function DayJobCard({
   const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
   const meta = [
     EMPLOYMENT_TYPE_LABELS[job.employmentType],
-    job.jobField,
+    formatJobField(job.jobField),
     EXPERIENCE_TYPE_LABELS[job.experienceType],
   ].filter((part): part is string => Boolean(part));
 

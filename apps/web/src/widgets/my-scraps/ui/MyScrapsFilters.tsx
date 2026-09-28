@@ -1,10 +1,11 @@
 import { STATUS_LABELS, TUITION_TYPE_LABELS } from '@/entities/bootcamp/model/labels';
-import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import type { ListMyJobBookmarksJobField } from '@ogonggo/api';
 import {
-  ALL_ROLES_SUFFIX,
-  ANY_JOB_FIELD,
-  JOB_FIELD_ROLES,
-} from '@/features/sign-up/lib/careerOptions';
+  EMPLOYMENT_TYPE_LABELS,
+  JOB_FIELD_LABELS,
+  JOB_ROLES,
+  jobRolesOf,
+} from '@/entities/job/model/labels';
 import { MyPageFilterDropdown } from '@/widgets/mypage-list';
 import {
   buildMyScrapsHref,
@@ -34,23 +35,15 @@ const EXPERIENCE_TYPE_OPTIONS = [
 ] as const;
 
 /**
- * 직군 목록. `jobField` 는 자유 문자열이고 고를 수 있는 값을 주는 API 가 없어, 이 저장소에
- * 있는 유일한 직군·직무 열거인 커리어 정보 화면의 목록을 쓴다.
- *
- * `직군 무관` 과 `<직군> 직무 전체` 는 뺀다. 그 둘은 "내 희망 직무" 를 적는 칸의 값이지 공고에
- * 붙는 값이 아니고, API 설명이 "공고의 값과 정확히 같은지로 거릅니다" 라고 적고 있어 공고에
- * 없는 값을 보내면 언제나 0 건이다. 근거는
- * `.claude/tasks/memos/결정-마이페이지-push2-2026-09-21.md` 3 절.
+ * 직군·직무 목록. 백엔드의 직군·직무 enum 이다(ogonggo-BE LC-3385) — 공고에 붙는 값과 같은
+ * 목록이라 고른 값으로 실제로 걸러진다. 직무는 고른 직군에 속한 것만 보인다.
  */
-const JOB_FIELD_OPTIONS = JOB_FIELD_ROLES.filter(({ jobField }) => jobField !== ANY_JOB_FIELD).map(
-  ({ jobField }) => [jobField, jobField] as const,
+const JOB_FIELD_OPTIONS = (Object.keys(JOB_FIELD_LABELS) as ListMyJobBookmarksJobField[]).map(
+  (value) => [value, JOB_FIELD_LABELS[value]] as const,
 );
 
-function jobRoleOptions(jobField?: string): readonly (readonly [string, string])[] {
-  const field = JOB_FIELD_ROLES.find((entry) => entry.jobField === jobField);
-  return (field?.jobRoles ?? [])
-    .filter((jobRole) => !jobRole.endsWith(ALL_ROLES_SUFFIX))
-    .map((jobRole) => [jobRole, jobRole] as const);
+function jobRoleOptions(jobField: ListMyJobBookmarksJobField) {
+  return jobRolesOf(jobField).map((jobRole) => [jobRole, JOB_ROLES[jobRole].label] as const);
 }
 
 const TUITION_TYPE_OPTIONS = TUITION_TYPES.map(
