@@ -1,4 +1,18 @@
-import { CompanyLogo } from './CompanyLogo';
+import { CompanyLogo, type LogoBalance } from './CompanyLogo';
+
+/**
+ * 8:5 카드에서 로고 넓이와 상한. 시드 로고 32장을 이 값으로 그려 맞췄다.
+ *
+ * 넓이는 시드에서 가장 긴 로고(토스증권, 8:1)가 폭 80% 상한에 겨우 닿는 크기로 잡는다. 이보다 크면
+ * 4:1 넘는 로고가 전부 폭 상한에 걸려 폭이 같아지고, 그러면 높이가 비율만큼 벌어져 짧은 로고(토스,
+ * 4:1)가 긴 로고(토스증권)의 두 배 높이로 보인다 — 처음에 0.2 로 잡았다가 실제로 그렇게 보였다.
+ */
+const CARD_LOGO_BALANCE: LogoBalance = {
+  boxAspect: 8 / 5,
+  area: 0.13,
+  maxWidth: 0.8,
+  maxHeight: 0.5,
+};
 
 export interface JobThumbnailProps {
   companyName: string;
@@ -26,7 +40,8 @@ export function JobThumbnail({ companyName }: JobThumbnailProps) {
     <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm">
       <CompanyLogo
         companyName={companyName}
-        className="absolute inset-0 h-full w-full p-4 shadow-none"
+        className="absolute inset-0 h-full w-full p-0 shadow-none"
+        balance={CARD_LOGO_BALANCE}
       />
     </div>
   );
