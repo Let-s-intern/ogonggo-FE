@@ -1,5 +1,11 @@
 import { cn } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent, type RecruitmentType } from '@/shared/lib/dday';
+import {
+  computeDday,
+  isDdayUrgent,
+  type RecruitmentType,
+  ALWAYS_OPEN_LABEL,
+  isAlwaysOpen,
+} from '@/shared/lib/dday';
 
 export interface DdayBadgeProps {
   recruitmentType: RecruitmentType;
@@ -20,7 +26,7 @@ export interface DdayBadgeProps {
  */
 export function DdayBadge({ recruitmentType, recruitmentEndAt }: DdayBadgeProps) {
   const dday = computeDday(recruitmentType, recruitmentEndAt);
-  if (!dday) {
+  if (!dday && !isAlwaysOpen(recruitmentType, recruitmentEndAt)) {
     return null;
   }
   const urgent = isDdayUrgent(recruitmentType, recruitmentEndAt);
@@ -31,7 +37,7 @@ export function DdayBadge({ recruitmentType, recruitmentEndAt }: DdayBadgeProps)
         urgent ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-600',
       )}
     >
-      {dday}
+      {dday ?? ALWAYS_OPEN_LABEL}
     </span>
   );
 }

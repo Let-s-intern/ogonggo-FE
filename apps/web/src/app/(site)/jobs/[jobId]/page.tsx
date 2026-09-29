@@ -2,15 +2,16 @@ import type { Metadata } from 'next';
 import { fetchJobDetail } from '@/widgets/job-detail';
 import { formatDateDots } from '@/shared/lib/localDate';
 import { JobDetailPage } from '@/views/job-detail';
+import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
 
 type PageParams = { params: Promise<{ jobId: string }> };
 
 /** 헤더 카드(`JobDetailHeaderCard.tsx`)의 마감 문구보다 짧게 — 메타 설명 한 줄에 들어갈 분량이다. */
 function formatDeadlineForDescription(recruitmentType: string, recruitmentEndAt?: string): string {
-  if (recruitmentType === 'ALWAYS_OPEN') {
-    return '상시채용';
+  if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
+    return ALWAYS_OPEN_LABEL;
   }
-  return recruitmentEndAt ? `${formatDateDots(recruitmentEndAt)} 마감` : '마감일 미정';
+  return `${formatDateDots(recruitmentEndAt)} 마감`;
 }
 
 /**
