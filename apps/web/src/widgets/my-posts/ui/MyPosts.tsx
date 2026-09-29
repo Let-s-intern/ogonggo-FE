@@ -1,8 +1,6 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@ogonggo/ui';
 import {
   closeMyPost,
   copyMyPost,
@@ -39,7 +37,8 @@ export interface MyPostsProps {
 }
 
 /**
- * `작성한 모집글`(PRD 4 절). 제목 줄 + 표 + 페이지네이션 + 하단 CTA 배너다.
+ * `작성한 모집글`(PRD 4 절). 필터 줄 + 표 + 페이지네이션 + 하단 CTA 배너다. 제목과 작성 버튼은
+ * v11 부터 `MyPageLayout` 의 상단 탭 줄에 있다.
  *
  * 탭이 없다 — 목업에도 없고 `listMyRecruitmentPosts` 도 한 목록만 준다. 그래서
  * `MyPageListTabs` 를 쓰지 않고 표와 필터 줄만 `widgets/mypage-list` 에서 가져온다.
@@ -129,22 +128,8 @@ export function MyPosts({ query }: MyPostsProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      {/* 모바일은 `< 작성한 모집글` 머리(`MyPageLayout`)가 제목을 대신하고, 작성 버튼은 아래
-          카드 하나로 모은다. */}
-      <header className="hidden flex-wrap items-start justify-between gap-4 md:flex">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-950">
-            작성한 사이드 프로젝트 · 스터디 모집글
-          </h1>
-          <p className="pt-2 text-sm text-gray-500">
-            내가 쓴 모집글의 모집 현황을 한곳에서 확인해요.
-          </p>
-        </div>
-        <Button asChild className="whitespace-nowrap">
-          <Link href="/mypage/posts/new">새 모집글 작성하기</Link>
-        </Button>
-      </header>
-
+      {/* 제목은 없다(v11). 데스크톱은 `MyPageLayout` 의 상단 탭이 제목을 대신하고 작성 버튼도 그 줄
+          오른쪽에 있다. 모바일은 `< 작성한 모집글` 머리가 제목이고 작성 버튼은 아래 카드다. */}
       <div className="md:hidden">
         <MyPostsWriteCard />
       </div>

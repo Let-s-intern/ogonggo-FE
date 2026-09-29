@@ -13,6 +13,12 @@ export interface MyPageListTabsProps<TValue extends string> {
   current: TValue;
   buildHref: (value: TValue) => string;
   'aria-label': string;
+  /**
+   * `underline`(기본)은 파란 밑줄 탭, `segment` 는 회색 바탕 안의 흰 칸이다. v11 에서
+   * `지원 · 신청 관리` 의 종류 탭이 `segment` 로 바뀌었다 — 바로 위에 마이페이지 상단 탭
+   * (`MyPageTabs`)이 밑줄 모양으로 생겨서, 같은 모양이 두 줄 겹치지 않게 한 것이다.
+   */
+  variant?: 'underline' | 'segment';
 }
 
 /**
@@ -31,7 +37,33 @@ export function MyPageListTabs<TValue extends string>({
   current,
   buildHref,
   'aria-label': ariaLabel,
+  variant = 'underline',
 }: MyPageListTabsProps<TValue>) {
+  if (variant === 'segment') {
+    return (
+      <nav aria-label={ariaLabel} className="flex w-fit items-center rounded-lg bg-gray-100 p-1">
+        {items.map((item) => {
+          const selected = item.value === current;
+          return (
+            <Link
+              key={item.value}
+              href={buildHref(item.value)}
+              aria-current={selected ? 'page' : undefined}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-4 py-2 text-lg',
+                selected
+                  ? 'bg-white font-bold text-gray-900 shadow-sm'
+                  : 'font-medium text-gray-400 hover:text-gray-600',
+              )}
+            >
+              {item.label}
+              {item.count === undefined ? null : <span>{item.count}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  }
   return (
     <nav aria-label={ariaLabel} className="flex items-center gap-8 border-b border-gray-100">
       {items.map((item) => {

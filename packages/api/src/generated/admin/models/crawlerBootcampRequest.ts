@@ -75,6 +75,12 @@ export interface CrawlerBootcampRequest {
      */
   representativeImageUrl: string;
   /**
+     * 운영 회사 로고 주소. 크롤러에 등록한 로고가 있을 때만 보낸다. 교체할 때 보내지 않으면 로고를 지운다
+     * @minLength 0
+     * @maxLength 2048
+     */
+  logoUrl?: string;
+  /**
      * 공고 한 줄 소개
      * @minLength 0
      * @maxLength 500
