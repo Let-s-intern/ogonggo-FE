@@ -1,0 +1,63 @@
+# Storybook 을 Chromatic 에 올려 화면 스냅샷을 비교한다. 결과는 Chromatic 이 PR 에
+# `UI Tests`·`UI Review` 체크로 붙인다(프로젝트가 GitHub 에 연결돼 있다).
+#
+# main push 에서도 돈다. Chromatic 은 PR 의 스냅샷을 main 의 마지막 빌드와 비교하므로,
+# main 빌드가 없으면 PR 마다 전부 "새 스토리" 로 나온다.
+name: Chromatic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # 스토리북은 `packages/ui` 에 있지만 `apps/web/src` 의 스토리와 아이콘 한 장도 불러온다
+      # (`packages/ui/.storybook/main.ts`).
+      - 'packages/**'
+      - 'apps/web/src/**'
+      - 'apps/web/public/icon-192.png'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/chromatic.yml'
+  pull_request:
+    branches: [main]
+    # 위 push 의 paths 와 같은 목록이다. 하나를 고치면 둘 다 고친다.
+    paths:
+      - 'packages/**'
+      - 'apps/web/src/**'
+      - 'apps/web/public/icon-192.png'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/chromatic.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chromatic-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Chromatic 은 git 이력으로 비교할 기준 빌드를 찾는다. 얕게 받으면 기준을 못 찾는다.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: chromaui/action@v18.10.1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: packages/ui
+          # 이 저장소의 스크립트 이름은 `build-storybook` 이 아니라 `build:storybook` 이다.
+          buildScriptName: build:storybook
+          # 화면이 바뀐 것은 실패가 아니라 검토할 거리다. 승인은 Chromatic 의 `UI Review` 가 받는다.
+          exitZeroOnChanges: true
+          # 올리기만 하고 끝낸다. 스냅샷 결과는 Chromatic 이 PR 체크로 따로 알린다.
+          exitOnceUploaded: true
+          # main 에 들어온 화면은 이미 PR 에서 검토한 것이라 그대로 기준으로 삼는다.
+          autoAcceptChanges: main
