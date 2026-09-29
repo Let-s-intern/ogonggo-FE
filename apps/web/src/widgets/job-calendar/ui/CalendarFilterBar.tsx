@@ -11,6 +11,7 @@ import {
   type JobCalendarEmploymentType,
   type JobCalendarExperienceType,
   type JobCalendarQuery,
+  toggleEnumValue,
 } from '../lib/query';
 import { BookmarkedOnlyFilterPill } from './BookmarkedOnlyFilterPill';
 
@@ -66,12 +67,13 @@ const EXPERIENCE_TYPE_OPTIONS: [JobCalendarExperienceType, string][] = [
 ];
 
 /**
- * 값 하나를 고르는 알약. `<details>`/`<summary>` 로 여닫고 고르는 순간 이동하는
- * `widgets/job-list/ui/SearchFilterBar.tsx` 의 `FilterDropdown` 과 같은 방식이다 —
- * 자바스크립트 없이 열리고, 이 줄이 클라이언트 컴포넌트가 될 이유가 없다.
+ * 여럿을 고르는 알약. 항목을 누를 때마다 켜고 끈다(`toggleEnumValue`). 맨 위 `전체` 는 모두 해제다 —
+ * 전부 고른 것도 전체와 같아 `전체` 에 체크가 간다. `<details>`/`<summary>` 로 여닫고 항목은 링크라
+ * 이 줄이 클라이언트 컴포넌트가 될 이유가 없다. 여럿을 고르는 동안 닫히지 않게
+ * `data-dropdown="keep-on-select"` 다(`shared/ui/DropdownDismiss.tsx`). 바깥을 누르거나 Esc 로 닫는다.
  *
- * 맨 위 줄은 "고르지 않음" 으로 돌아가는 길이다. 고른 뒤에 필터를 뺄 방법이 없으면 알약이
- * 한 번 걸리고 나서 되돌아갈 수 없다.
+ * 알약 글자는 고른 수에 따라 셋이다 — 없으면 이름(`채용 형태`), 하나면 그 값(`정규직`), 여럿이면
+ * `정규직 외 1`.
  */
 function FilterDropdown<TValue extends string>({
   label,
@@ -83,53 +85,77 @@ function FilterDropdown<TValue extends string>({
   label: string;
   /** GTM `filter_apply` 의 `filter_type`. `employment` | `experience` */
   filterType: string;
-  selected: TValue | undefined;
+  selected: readonly TValue[];
   options: [TValue, string][];
-  buildHref: (value: TValue | undefined) => string;
+  buildHref: (values: TValue[]) => string;
 }) {
-  const currentLabel = options.find(([value]) => value === selected)?.[1] ?? label;
+  const labelOf = (value: TValue) => options.find(([option]) => option === value)?.[1] ?? value;
+  const allValues = options.map(([value]) => value);
+  const currentLabel =
+    selected.length === 0
+      ? label
+      : selected.length === 1
+        ? labelOf(selected[0]!)
+        : `${labelOf(selected[0]!)} 외 ${selected.length - 1}`;
+  const itemClass = (checked: boolean) =>
+    cn(
+      'flex items-center justify-between gap-2 px-3 py-1.5 text-sm',
+      checked ? 'font-semibold text-blue-500' : 'text-gray-600 hover:bg-gray-50',
+    );
+  const check = (checked: boolean) => (
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--check] block h-4 w-4 shrink-0', !checked && 'invisible')}
+    />
+  );
 
   return (
-    <details data-dropdown className="group relative">
+    <details data-dropdown="keep-on-select" className="group relative">
       {/* 기본 삼각형 표식을 지운다. 꺾쇠는 알약 안에 따로 있다. */}
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <FilterPill
           label={currentLabel}
-          active={selected !== undefined}
+          active={selected.length > 0}
           trailing={<ChevronIcon className="h-4 w-4 group-open:rotate-180" />}
         />
       </summary>
-      <ul className="absolute right-0 z-10 mt-1 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-md">
+      <ul className="absolute right-0 z-10 mt-1 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-md">
         <li>
           <TrackedLink
-            href={buildHref(undefined)}
-            events={filterApplyEvents(filterType, selected, undefined)}
-            className={cn(
-              'block px-3 py-1.5 text-sm',
-              selected === undefined
-                ? 'font-semibold text-blue-500'
-                : 'text-gray-600 hover:bg-gray-50',
-            )}
+            href={buildHref([])}
+            scroll={false}
+            role="menuitemcheckbox"
+            aria-checked={selected.length === 0}
+            events={filterApplyEvents(filterType, selected.join(',') || undefined, undefined)}
+            className={itemClass(selected.length === 0)}
           >
-            {label}
+            전체
+            {check(selected.length === 0)}
           </TrackedLink>
         </li>
-        {options.map(([value, optionLabel]) => (
-          <li key={value}>
-            <TrackedLink
-              href={buildHref(value)}
-              events={filterApplyEvents(filterType, selected, value)}
-              className={cn(
-                'block px-3 py-1.5 text-sm',
-                value === selected
-                  ? 'font-semibold text-blue-500'
-                  : 'text-gray-600 hover:bg-gray-50',
-              )}
-            >
-              {optionLabel}
-            </TrackedLink>
-          </li>
-        ))}
+        {options.map(([value, optionLabel]) => {
+          const checked = selected.includes(value);
+          return (
+            <li key={value}>
+              <TrackedLink
+                href={buildHref(toggleEnumValue(allValues, selected, value))}
+                // 여러 개를 연달아 고르는 동안 화면이 맨 위로 튀지 않게 한다.
+                scroll={false}
+                role="menuitemcheckbox"
+                aria-checked={checked}
+                events={
+                  checked
+                    ? filterApplyEvents(filterType, value, undefined)
+                    : filterApplyEvents(filterType, undefined, value)
+                }
+                className={itemClass(checked)}
+              >
+                {optionLabel}
+                {check(checked)}
+              </TrackedLink>
+            </li>
+          );
+        })}
       </ul>
     </details>
   );
@@ -261,9 +287,9 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         <FilterDropdown
           label="채용 형태"
           filterType="employment"
-          selected={query.employmentType}
+          selected={query.employmentTypes}
           options={EMPLOYMENT_TYPE_OPTIONS}
-          buildHref={(value) => buildJobCalendarHref(query, { employmentType: value })}
+          buildHref={(values) => buildJobCalendarHref(query, { employmentTypes: values })}
         />
         {/*
           관심 직무 선택 화면을 여닫는다(v6). **고른 직무가 있을 때만 링크다.** 고른 것이 없으면
@@ -294,9 +320,9 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         <FilterDropdown
           label="경력"
           filterType="experience"
-          selected={query.experienceType}
+          selected={query.experienceTypes}
           options={EXPERIENCE_TYPE_OPTIONS}
-          buildHref={(value) => buildJobCalendarHref(query, { experienceType: value })}
+          buildHref={(values) => buildJobCalendarHref(query, { experienceTypes: values })}
         />
       </div>
       {/* 체크박스끼리는 목업에서 18px 이다. */}
