@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
+import { SignOutButton } from '@/features/sign-out';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
 import { NAV_ITEMS } from './navItems';
-import { SignOutButton } from './SignOutButton';
 
 export interface MobileSiteHeaderProps {
   pathname: string;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Callout, Checkbox, Input } from '@ogonggo/ui';
+import { SignOutButton } from '@/features/sign-out';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import {
   EMPTY_COMPANY_PROFILE_DRAFT,
@@ -239,6 +240,9 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
 
       <PasswordSection />
       <MarketingSection />
+      <div className="flex justify-center">
+        <SignOutButton redirectTo="/" />
+      </div>
       <WithdrawAction />
     </div>
   );

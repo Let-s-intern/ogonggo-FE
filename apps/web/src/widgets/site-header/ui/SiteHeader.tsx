@@ -13,7 +13,6 @@ import { isMyPageIndex, myPageHomeFor, myPageIndexFor } from '@/widgets/mypage-s
 import { AccountMenu } from './AccountMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
 import { NAV_ITEMS } from './navItems';
-import { SignOutButton } from './SignOutButton';
 
 /**
  * 어드민 콘솔 주소(`apps/admin`). 웹과 다른 도메인이라 경로가 아니라 오리진을 통째로 받는다.
@@ -40,12 +39,13 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * `gap-3`(12px)이 그 값이다. 구분선은 26px 높이의 1px 선이고 색은 `gray-300`이다(목업의
  * rgb(232,234,237)은 #D1D5DB 1px 선이 두 열에 반씩 걸린 값이다).
  *
- * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님`·`로그아웃` 이다.
+ * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다. `로그아웃` 은
+ * 헤더에서 빠져 마이페이지의 `개인 정보`·`기업/기관 정보` 화면 아래로 갔다(모바일 햄버거 메뉴에는 남아 있다).
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
  * `{이름} 님` 은 마이페이지로 가는 링크고, 관리자에게만 `마이페이지`·`어드민` 을 펼치는
  * 드롭다운이다(`AccountMenu`, `showAdmin`).
  *
- * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "{이름} 님" 과 "로그아웃". 토큰이 브라우저 저장소에만
+ * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "{이름} 님". 토큰이 브라우저 저장소에만
  * 있어 서버는 알 수 없으므로 서버 렌더와 첫 하이드레이션은 "로그인" 으로 그리고, 그 직후 저장소를 읽어
  * 바꾼다(`useSyncExternalStore` 의 서버 스냅샷).
  *
@@ -152,15 +152,12 @@ export function SiteHeader() {
             공고 달력
           </Link>
           {signedIn ? (
-            <>
-              <AccountMenu
-                name={accountName}
-                myPageHref={myPageHref}
-                myPageActive={myPageActive}
-                adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
-              />
-              <SignOutButton />
-            </>
+            <AccountMenu
+              name={accountName}
+              myPageHref={myPageHref}
+              myPageActive={myPageActive}
+              adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+            />
           ) : (
             <Button size="sm" asChild>
               <Link href="/login">로그인</Link>
