@@ -6,6 +6,7 @@ import { setAccessTokenProvider, setUnauthorizedHandler } from '@ogonggo/api';
 import { ToastProvider } from '@ogonggo/ui';
 import { getAccessToken } from '@/shared/api/authTokens';
 import { handleUnauthorized } from '@/shared/api/reissue';
+import { DropdownDismiss } from '@/shared/ui/DropdownDismiss';
 
 // 브라우저의 API 호출에 로그인 토큰을 붙인다. 서버에서는 `getAccessToken` 이 null 이라 서버 컴포넌트의
 // 요청은 지금처럼 토큰 없이 간다. 보관 방식은 authTokens.ts 주석에 있다.
@@ -21,6 +22,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           나중에 뜨는 토스트를 읽는다. 어드민에는 걸지 않는다 — 운영자가 놓치면 안 되는 결과는
           화면에 남는 `Callout` 이다. */}
       <ToastProvider>{children}</ToastProvider>
+      <DropdownDismiss />
     </QueryClientProvider>
   );
 }

@@ -66,7 +66,7 @@ export function MyApplicationRow({
             </Button>
           )}
 
-          <details className="relative">
+          <details data-dropdown className="relative">
             <summary
               aria-label={`${row.title} 더보기`}
               className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 [&::-webkit-details-marker]:hidden"

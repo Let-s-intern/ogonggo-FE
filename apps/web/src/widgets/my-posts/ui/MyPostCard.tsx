@@ -45,7 +45,7 @@ export function MyPostCard({
             </Badge>
           ) : null}
         </div>
-        <details className="relative -mr-2">
+        <details data-dropdown className="relative -mr-2">
           <summary
             aria-label={`${row.title} 더보기`}
             className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-md text-gray-400 [&::-webkit-details-marker]:hidden"
