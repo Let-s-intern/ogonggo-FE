@@ -20,14 +20,8 @@ export type MyScrapsPageProps = ApplicationBoardQuery;
 export function MyScrapsPage(query: MyScrapsPageProps) {
   return (
     <section className="flex flex-col gap-6">
-      {/* 모바일은 `< 지원 · 신청 관리` 머리(`MyPageLayout`)가 제목을 대신한다. */}
-      <header className="hidden md:block">
-        <h1 className="text-3xl font-bold text-gray-950">지원 · 신청 관리</h1>
-        <p className="pt-2 text-sm text-gray-500">
-          지원하거나 신청한 공고의 진행 상태를 한곳에서 확인해요.
-        </p>
-      </header>
-
+      {/* 제목은 없다(v11). 데스크톱은 `MyPageLayout` 의 상단 탭이, 모바일은 `< 지원 · 신청 관리`
+          머리가 제목을 대신한다. */}
       <ApplicationBoard query={query} />
 
       <ApplicationBoardCta />
