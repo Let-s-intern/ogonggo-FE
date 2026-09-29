@@ -76,7 +76,8 @@ async function fetchJobScraps(query: MyScrapsQuery): Promise<MyScrapsPage> {
     employmentType: query.employmentType,
     experienceType: query.experienceType,
     jobField: query.jobField,
-    jobRole: query.jobRole,
+    // 직무는 여러 개를 받게 바뀌었다(LC-3393). 이 화면은 하나만 고른다.
+    jobRole: query.jobRole ? [query.jobRole] : undefined,
     keyword: query.keyword,
   })) as unknown as SuccessResponsePageResponseUserJobSummaryResponse;
 

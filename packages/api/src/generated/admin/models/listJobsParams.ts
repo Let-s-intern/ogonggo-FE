@@ -44,6 +44,7 @@ visibility?: ListJobsVisibility;
  * | --- | --- | --- |
  * | `CRAWLER` | 1 | 크롤링 |
  * | `COMPANY` | 2 | 비즈니스 등록 |
+ * | `WORK24` | 3 | 고용24 |
  */
 source?: ListJobsSource;
 /**

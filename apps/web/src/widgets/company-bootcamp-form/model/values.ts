@@ -114,7 +114,8 @@ export function toCompanyBootcampValues(
     tuitionType: bootcamp.tuitionType,
     tuitionAmount: bootcamp.tuitionAmount == null ? '' : String(bootcamp.tuitionAmount),
     partners: toPartnerRows(bootcamp.partners),
-    representativeImageUrl: bootcamp.representativeImageUrl,
+    // 고용24 로 수집한 부트캠프는 대표 이미지가 없다(LC-3197). 빈 칸은 이미지를 고르지 않은 상태다.
+    representativeImageUrl: bootcamp.representativeImageUrl ?? '',
     shortDescription: bootcamp.shortDescription,
     content: bootcamp.content,
     curriculums: toCurriculumRows(bootcamp.curriculums),

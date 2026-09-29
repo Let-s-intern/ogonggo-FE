@@ -331,10 +331,11 @@ export interface AdminJobSummaryResponse {
      * | --- | --- | --- |
      * | `CRAWLER` | 1 | 크롤링 |
      * | `COMPANY` | 2 | 비즈니스 등록 |
+     * | `WORK24` | 3 | 고용24 |
      */
   source: AdminJobSummaryResponseSource;
   /**
-     * 크롤링 수집분은 null입니다.
+     * 크롤링·고용24 수집분은 null입니다.
      *
      * | 값 | code | 설명 |
      * | --- | --- | --- |

@@ -46,7 +46,8 @@ export interface AdminBootcampSummaryResponse {
      */
   tuitionType: AdminBootcampSummaryResponseTuitionType;
   tuitionAmount?: number;
-  representativeImageUrl: string;
+  /** 고용24에서 수집한 과정은 이미지가 없어 null입니다. 클라이언트가 기본 이미지를 보여 줍니다. */
+  representativeImageUrl?: string;
   shortDescription: string;
   /**
      * 모집 상태입니다. 콘솔에서는 RECRUITING·CLOSED만 다룹니다.
@@ -74,10 +75,11 @@ export interface AdminBootcampSummaryResponse {
      * | --- | --- | --- |
      * | `CRAWLER` | 1 | 크롤링 |
      * | `COMPANY` | 2 | 비즈니스 등록 |
+     * | `WORK24` | 3 | 고용24 |
      */
   source: AdminBootcampSummaryResponseSource;
   /**
-     * 크롤링 수집분은 null입니다.
+     * 크롤링·고용24 수집분은 null입니다.
      *
      * | 값 | code | 설명 |
      * | --- | --- | --- |

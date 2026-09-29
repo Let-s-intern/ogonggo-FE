@@ -16,6 +16,7 @@ export interface UserJobSummaryResponse {
   companyName: string;
   title: string;
   coverImageUrl?: string;
+  logoUrl?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

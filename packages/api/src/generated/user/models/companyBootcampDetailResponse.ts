@@ -48,7 +48,7 @@ export interface CompanyBootcampDetailResponse {
      */
   tuitionType: CompanyBootcampDetailResponseTuitionType;
   tuitionAmount?: number;
-  representativeImageUrl: string;
+  representativeImageUrl?: string;
   shortDescription: string;
   content: string;
   eligibilityAndSelectionProcess?: string;
