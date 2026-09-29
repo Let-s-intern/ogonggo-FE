@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, type DataTableColumn } from '@ogonggo/ui';
-import type { UserMemberSummary } from '@ogonggo/api/src/mocks/fixtures/admin-member';
+import type { AdminGeneralMemberResponse } from '@ogonggo/api/src/admin';
 import { useUserMemberList } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
@@ -9,7 +9,6 @@ import {
   MEMBER_STATUS_OPTIONS,
   MemberStatusBadge,
 } from '@/shared/config/labels';
-import { BACKEND_PENDING_MESSAGE, tableBodyState } from '@/shared/config/backendPending';
 import { formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
@@ -17,6 +16,11 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * 일반 회원 목록. 읽기 전용이다.
  *
  * 제재는 운영자가 쿼리로 걸고 이 화면은 결과를 상태 뱃지로 보여준다(PRD "하지 않는 것").
+ *
+ * 칸은 API(`AdminGeneralMemberResponse`) 가 주는 것만 둔다. 목 시절의 "최근 접속" 은 응답에
+ * 없어 뺐다. 정렬 파라미터도 없어 정렬 선택은 두지 않는다 — 순서는 서버가 정한다.
+ *
+ * 행을 누르면 상세로 가지만 상세 API 는 아직 없다. 실서버 모드의 상세는 안내만 그린다.
  */
 export function UserMemberListPage() {
   const navigate = useNavigate();
@@ -31,9 +35,9 @@ export function UserMemberListPage() {
 
   const { data, isPending, isError } = useUserMemberList(filters);
 
-  const columns: DataTableColumn<UserMemberSummary>[] = [
-    { key: 'nickname', header: '닉네임', render: (row) => row.nickname },
-    { key: 'email', header: '이메일', render: (row) => row.email },
+  const columns: DataTableColumn<AdminGeneralMemberResponse>[] = [
+    { key: 'nickname', header: '닉네임', render: (row) => row.nickname ?? '-' },
+    { key: 'email', header: '이메일', render: (row) => row.email ?? '-' },
     {
       key: 'status',
       header: '상태',
@@ -41,12 +45,6 @@ export function UserMemberListPage() {
       render: (row) => <MemberStatusBadge value={row.status} />,
     },
     { key: 'joinedAt', header: '가입일', width: 'w-32', render: (row) => formatDate(row.joinedAt) },
-    {
-      key: 'lastAccessedAt',
-      header: '최근 접속',
-      width: 'w-32',
-      render: (row) => formatDate(row.lastAccessedAt),
-    },
   ];
 
   return (
@@ -80,13 +78,10 @@ export function UserMemberListPage() {
           <DataTable
             columns={columns}
             rows={data?.items ?? []}
-            rowKey={(row) => row.id}
-            onRowClick={(row) => navigate(`/members/users/${row.id}`)}
-            {...tableBodyState(
-              BACKEND_PENDING_MESSAGE.member,
-              isPending,
-              '조건에 맞는 회원이 없습니다.',
-            )}
+            rowKey={(row) => row.userId}
+            onRowClick={(row) => navigate(`/members/users/${row.userId}`)}
+            isLoading={isPending}
+            emptyMessage="조건에 맞는 회원이 없습니다."
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>

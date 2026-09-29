@@ -10,6 +10,8 @@
 > 이 셋은 백엔드가 없어 대조할 상대가 없다
 > 스펙 대조: 2026-09-23, 8 절. 배포된 `ogonggo-api-admin` 의 `/v3/api-docs` 와 대조하고 목
 > 핸들러를 스펙에 맞춰 고쳤다
+> 스펙 대조: 2026-09-29, 7 절의 회원 목록 둘. 생성물에 맞춰 목 핸들러와 화면을 고쳤다. 회원
+> 상세 둘은 여전히 백엔드가 없다
 
 ## 이 문서가 무엇인가
 
@@ -115,9 +117,9 @@
 | 20  | `/ads/review`                | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
 | 21  | `/ads/rejections`            | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
 | 22  | `/ads/rejections`            | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
-| 23  | `/members/users`             | 진입·검색·필터·페이지         | `GET /members/users`                         | 목록                               |
+| 23  | `/members/users`             | 진입·검색·필터·페이지         | `GET /general-members`                       | 목록. 백엔드 있음                  |
 | 24  | `/members/users/{id}`        | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
-| 25  | `/members/companies`         | 진입·검색·필터·페이지         | `GET /members/companies`                     | 목록                               |
+| 25  | `/members/companies`         | 진입·검색·필터·페이지         | `GET /company-members`                       | 목록. 백엔드 있음                  |
 | 26  | `/members/companies/{id}`    | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
 | 27  | `/support/notices`           | 진입·페이지                   | `GET /notices`                               | 목록. 본문은 싣지 않음             |
 | 28  | `/support/notices`           | 행 클릭                       | `GET /notices/{id}`                          | 본문을 받아 수정 폼을 연다         |
@@ -734,55 +736,54 @@
 **네 API 가 전부 읽기다.** 콘솔은 회원 상태를 바꾸지 않는다 — 제재는 운영자가 DB 쿼리로 걸고
 화면은 결과만 보여준다. 상태를 바꾸는 API 를 만들지 않는다.
 
-### `GET /api/v1/admin/members/users`
+**목록 둘은 백엔드가 있다.** 아래 두 목록 절은 배포된 `ogonggo-api-admin` 의 생성물
+(`listGeneralMembers`·`listCompanyMembers`, 2026-09-29) 을 옮긴 것이고, 목 핸들러
+(`packages/api/src/mocks/admin/members.ts`) 를 거기에 맞췄다. 경로가 목 시절의
+`/members/users`·`/members/companies` 에서 바뀌었다. **상세 둘은 아직 백엔드가 없다** — 목
+핸들러가 하는 일을 옮겨 적은 것이고, 실서버 모드의 상세 화면은 준비 중 안내만 그린다.
+
+### `GET /api/v1/admin/general-members`
 
 **부르는 곳** — `/members/users` 진입, 검색·필터·페이지 변경.
 
-**쿼리 파라미터**
+**쿼리 파라미터** — `ListGeneralMembersParams`.
 
-| 이름               | 값                                   | 비고                          |
-| ------------------ | ------------------------------------ | ----------------------------- |
-| `page`             | 1부터                                | 기본 1                        |
-| `size`             | 정수                                 | 기본 20                       |
-| `keyword`          | 문자열                               | **닉네임 + 이메일** 부분 일치 |
-| `status`           | `ACTIVE` · `WITHDRAWN` · `SUSPENDED` |                               |
-| `joinedWithinDays` | `7d` · `30d` · `90d`                 | 가입 기간                     |
+| 이름         | 값                                   | 화면                                               |
+| ------------ | ------------------------------------ | -------------------------------------------------- |
+| `page`       | 1부터                                | 페이지                                             |
+| `size`       | 1~100                                | 보내지 않는다                                      |
+| `keyword`    | 문자열, 100자까지                    | 검색 상자. **닉네임 + 이메일** 부분 일치           |
+| `status`     | `ACTIVE` · `WITHDRAWN` · `SUSPENDED` | 상태 드롭다운                                      |
+| `joinedFrom` | `YYYY-MM-DD`, 포함                   | 가입 기간 드롭다운. 오늘에서 7·30·90일 전 날짜     |
+| `joinedTo`   | `YYYY-MM-DD`, 포함                   | 보내지 않는다. 끝을 열어 두어 오늘 가입자까지 본다 |
 
-**정렬 파라미터는 없다.** 가입일 내림차순 하나로 고정이고 화면에도 정렬 컨트롤이 없다.
+**정렬 파라미터는 없다.** 백엔드가 최근 가입 순으로 준다. 화면에도 정렬 컨트롤이 없다.
 
-**응답 `data.items[]`**
+화면 주소의 `joinedWithinDays=7d` 는 그대로다(대시보드 카드가 링크로 건다). 요청을 만들 때
+`joinedFrom` 으로 바꾼다(`apps/admin/src/entities/member/api/useMembers.ts`).
 
-```json
-{
-  "id": 1,
-  "nickname": "취준생김씨",
-  "email": "minsu.kim@example.com",
-  "joinedAt": "2026-09-19T08:12:00Z",
-  "status": "ACTIVE",
-  "lastAccessedAt": "2026-09-21T01:40:00Z"
-}
-```
+**응답 `data.items[]`** — `AdminGeneralMemberResponse`. `userId` `status` `joinedAt` 만 필수이고
+`withdrawnAt` `name` `nickname` `email` `letsCareerUserId` `profileImageUrl` `university` `major`
+`grade` `wishField` `wishJob` `wishIndustry` `wishEmploymentType` `wishCompany` 는 선택이다. 화면은
+닉네임·이메일·상태·가입일을 그린다. 목 시절의 `lastAccessedAt`(최근 접속) 은 응답에 없어 칸을
+뺐다.
 
-**동작**
+### 목과 백엔드 스펙의 차이 — 일반 회원 목록
 
-필터는 전부 AND 다. `status` 는 정확히 일치하는 것만 남긴다.
-
-`joinedWithinDays` 는 **지금부터 7·30·90×24시간 전까지의 이동 창**이다. 달력 주나 달이 아니다.
-대시보드의 `newMembersThisWeek` 가 `7d` 와 같은 계산이어야 카드 숫자와 목록 건수가 맞는다.
-
-**세 값 밖의 `joinedWithinDays` 는 거르지 않고 전체를 준다.** 목이 그렇게 한다. 모르는 값으로
-0건을 내면 운영자는 그 기간에 가입자가 없다고 읽는다.
-
-`lastAccessedAt` 은 한 번도 접속하지 않은 회원에게 **칸 자체가 없다.** `null` 이 아니다.
-
-정렬은 `joinedAt` 내림차순. 페이지는 1부터 세고 마지막을 넘어가면 빈 `items` 를 준다(공통
-규칙). `page`·`size` 가 정수가 아니거나 1 보다 작으면 기본값으로 되돌린다.
+| 항목                         | 백엔드 스펙                                        | 목                                                           |
+| ---------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| 응답의 선택 칸               | 이름·학교·희망 조건 등을 싣는다                    | `userId` `status` `joinedAt` `nickname` `email` 만 싣는다    |
+| 가입일 범위의 날짜 기준      | 서버 시각의 날짜                                   | 브라우저 로컬 날짜                                           |
+| 대시보드 "이번 주 신규 회원" | 대시보드 API 가 아직 없다                          | 7×24시간 이동 창으로 센다. 목록은 날짜 단위라 하루치 더 넓다 |
+| 잘못된 파라미터              | 400 `BAD_REQUEST` (시작일이 끝보다 늦은 경우 포함) | 거르지 않고 무시한다                                         |
 
 ### `GET /api/v1/admin/members/users/{memberId}`
 
 **부르는 곳** — `/members/users/{id}` 진입.
 
-**응답** — 목록 항목 + 활동.
+**응답** — 픽스처의 회원 요약(`UserMemberSummary`: `id` `nickname` `email` `joinedAt` `status`
+`lastAccessedAt`) + 활동. 목록 API 의 `AdminGeneralMemberResponse` 와 모양이 다르다 — 상세 API 를
+만들 때 목록 응답에 맞춰 정한다.
 
 ```json
 {
@@ -813,41 +814,33 @@
 
 없는 `memberId` 는 404 `NOT_FOUND`, `message` 는 `회원을 찾을 수 없습니다.`
 
-### `GET /api/v1/admin/members/companies`
+### `GET /api/v1/admin/company-members`
 
 **부르는 곳** — `/members/companies` 진입, 검색·필터·페이지 변경.
 
-**쿼리 파라미터** — 일반 회원 목록과 같다. `keyword` 의 대상 칸만 다르다.
+**쿼리 파라미터** — `ListCompanyMembersParams`. 일반 회원 목록과 같고 `keyword` 의 대상 칸만
+다르다 — **회사명 + 담당자 이름** 부분 일치. 로그인 이메일로는 찾지 못한다.
 
-| 이름               | 값                                   | 비고                            |
-| ------------------ | ------------------------------------ | ------------------------------- |
-| `page`             | 1부터                                | 기본 1                          |
-| `size`             | 정수                                 | 기본 20                         |
-| `keyword`          | 문자열                               | **회사명 + 담당자명** 부분 일치 |
-| `status`           | `ACTIVE` · `WITHDRAWN` · `SUSPENDED` |                                 |
-| `joinedWithinDays` | `7d` · `30d` · `90d`                 | 가입 기간                       |
+**정렬 파라미터는 없다.** 백엔드가 최근 가입 순으로 준다.
 
-**`managerEmail` 은 검색 대상이 아니다.** 일반 회원은 이메일로 찾는데 비즈니스 회원은 찾지
-못한다. 목이 그렇게 하고 있을 뿐 의도한 차이가 아니므로, 백엔드에 넘길 때 담당자 이메일을
-넣을지 정한다.
+**응답 `data.items[]`** — `AdminCompanyMemberResponse`. `userId` `status` `joinedAt` 만 필수이고
+`email`(로그인 이메일) `withdrawnAt` `organizationName`(회사명) `managerName` `managerPhone`
+`notificationEmail` `logoUrl` 은 선택이다. 화면은 회사명·이메일·담당자·상태·가입일을 그린다.
 
-**정렬 파라미터는 없다.** 가입일 내림차순 고정이다.
+목 시절의 `businessRegistrationNumber`(사업자등록번호) 와 `jobPostingCount`(등록 공고 수) 는
+응답에 없어 칸을 뺐다. 등록 공고는 상세에서만 본다.
 
-**응답 `data.items[]`** — `id` `companyName` `businessRegistrationNumber` `managerName`
-`managerEmail` `jobPostingCount` `joinedAt` `status`.
-
-**동작** — `jobPostingCount` 는 그 회사가 등록한 채용공고 수다. 게시 상태를 가리지 않는다.
-**아래 상세가 주는 `jobs` 배열의 길이와 반드시 같아야 한다** — 목록은 7건인데 상세는 0건인
-상태가 되면 화면이 조인을 제대로 하는지 확인할 수 없다. 목은 두 곳에서 같은 조건
-(`source = COMPANY` 이고 회사명이 같은 공고)으로 세어 이 성질을 지킨다.
-
-페이지 규칙은 일반 회원 목록과 같다.
+목은 픽스처의 담당자 이메일을 `email` 에 넣는다. 둘 다 지어낸 값이다. 나머지 차이는 일반 회원
+목록과 같다.
 
 ### `GET /api/v1/admin/members/companies/{memberId}`
 
 **부르는 곳** — `/members/companies/{id}` 진입.
 
-**응답** — 목록 항목 + `jobs[]`.
+**응답** — 픽스처의 회원 요약(`CompanyMemberSummary`: `id` `companyName`
+`businessRegistrationNumber` `managerName` `managerEmail` `jobPostingCount` `joinedAt` `status`) +
+`jobs[]`. 목록 API 의 `AdminCompanyMemberResponse` 와 모양이 다르다. `jobPostingCount` 는 `jobs`
+배열의 길이와 같다 — 목은 두 곳을 같은 조건(`source = COMPANY` 이고 회사명이 같은 공고)으로 센다.
 
 ```json
 {

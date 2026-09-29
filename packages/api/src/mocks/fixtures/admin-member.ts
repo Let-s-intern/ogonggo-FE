@@ -10,6 +10,10 @@
  *
  * 닉네임·이메일·담당자 이름·사업자등록번호는 **전부 지어낸 값이다.** 회사명만 예외로, 실제
  * 공고 픽스처에 있는 회사를 그대로 쓴다 — 이유는 아래 `COMPANY_PROFILES` 주석에 있다.
+ *
+ * 목록 API 는 admin 스펙에 생겨 응답 모양이 생성 모델(`AdminGeneralMemberResponse`·
+ * `AdminCompanyMemberResponse`) 로 정해졌다. 목록 핸들러가 이 픽스처를 그 모양으로 옮긴다
+ * (`../admin/members.ts`). 아래 두 타입은 아직 백엔드에 없는 상세 목의 모양으로만 남는다.
  */
 
 import { ADMIN_JOB_FIXTURES } from './admin-content';
@@ -38,37 +42,6 @@ export interface CompanyMemberSummary {
   jobPostingCount: number;
   joinedAt: string;
   status: MemberStatus;
-}
-
-export interface MemberPageInfo {
-  pageNum: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-}
-
-export interface UserMemberPageResponse {
-  items: UserMemberSummary[];
-  pageInfo: MemberPageInfo;
-}
-
-export interface CompanyMemberPageResponse {
-  items: CompanyMemberSummary[];
-  pageInfo: MemberPageInfo;
-}
-
-/** `GET /api/v1/admin/members/users`의 응답 봉투. */
-export interface UserMemberListResponse {
-  status: number;
-  message: string;
-  data?: UserMemberPageResponse;
-}
-
-/** `GET /api/v1/admin/members/companies`의 응답 봉투. */
-export interface CompanyMemberListResponse {
-  status: number;
-  message: string;
-  data?: CompanyMemberPageResponse;
 }
 
 const daysAgo = (days: number): string =>
