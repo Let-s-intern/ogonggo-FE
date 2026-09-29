@@ -36,11 +36,14 @@ export interface ApplicationBoardColumnProps {
  * | 칸 폭 | 307px | `w-76`(304px) |
  * | 칸 바탕 | `#F5F9FF` | `bg-blue-00`(같은 값) |
  * | 안쪽 여백 | 9px | `p-3`(12px) |
- * | 카드 높이 | 128px | 175px(제목 한 줄 + 상태 셀렉트) |
+ * | 카드 높이 | 128px | 내용 높이(상태 셀렉트 없음) |
  * | 카드 사이 | 16px | `gap-4`(16px) |
  *
  * 바탕이 `gray-50` 이 아니다. 목업의 `#F5F9FF` 는 파랑이 섞인 값이고 토큰에 이름이 있다
  * (`--color-blue-00`). 회색 계열로 두면 칸이 카드와 같은 무채색 층으로 읽힌다.
+ *
+ * 칸 전체가 드롭 대상이다. 카드가 적은 칸도 놓을 자리가 넉넉하도록 최소 높이를 두고, 칸들은
+ * 가장 긴 칸의 높이에 맞춰 늘어난다(`ApplicationBoardKanban` 의 `items-stretch`).
  */
 export function ApplicationBoardColumn({ tab, stage, filters, move }: ApplicationBoardColumnProps) {
   const list = useApplicationStage(tab, stage.id, filters);
@@ -51,7 +54,7 @@ export function ApplicationBoardColumn({ tab, stage, filters, move }: Applicatio
     <section
       ref={droppable.setNodeRef}
       className={cn(
-        'flex w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3',
+        'flex min-h-[70vh] w-76 shrink-0 flex-col rounded-xl bg-blue-00 p-3',
         droppable.isOver && 'ring-2 ring-blue-400',
       )}
     >
