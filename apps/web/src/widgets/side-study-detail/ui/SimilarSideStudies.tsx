@@ -20,8 +20,7 @@ const POOL_SIZE = SIMILAR_COUNT + 1;
  * 부트캠프 상세의 `SimilarBootcamps`가 하는 것과 같은 처리다. 실제 API에 추천 기준(기술 스택
  * 겹침, 모집 포지션 등)이 생기면 여기만 바꾼다.
  *
- * 이 블록이 목업의 댓글·대댓글 자리를 대신한다. 댓글은 이 PRD의 범위 밖이다
- * (PRD 8절, 2026-09-01 결정).
+ * 사이드바에서 댓글 영역 아래에 온다 — 목업의 댓글 목록 아래 회색 칸 자리다.
  */
 async function fetchSimilarPool(kind: SideStudyKind): Promise<SideStudySummary[]> {
   const response = (await getRecruitmentPosts({

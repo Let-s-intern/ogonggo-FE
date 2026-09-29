@@ -4,6 +4,7 @@ import { getPublicRecruitmentPost, HttpError } from '@ogonggo/api';
 import type { SuccessResponseRecruitmentPostDetailResponse } from '@ogonggo/api';
 import { toSideStudyInfo } from '@/entities/side-study/model/analytics';
 import type { SideStudyDetail } from '@/entities/side-study/model/types';
+import { RecruitmentPostComments } from '@/features/recruitment-post-comments';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -134,8 +135,13 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
               }}
             />
           </StickyApplyBar>
-          {/* 목업의 이 자리에 있는 댓글·대댓글 스레드는 그리지 않는다
-              (PRD 8절, 2026-09-01 결정). 대신 들어가는 것이 아래 `비슷한 사이드·스터디`다. */}
+          {/* 목업의 이 자리에 있는 댓글·대댓글 스레드(#183). 좁은 화면에서는 사이드바가 본문
+              아래로 내려가므로 모바일 목업처럼 본문 뒤에 온다. */}
+          <RecruitmentPostComments
+            postId={sideStudy.id}
+            postAuthorId={sideStudy.author.userId}
+            commentCount={sideStudy.commentCount}
+          />
           <SimilarSideStudies excludePostId={sideStudy.id} kind={sideStudy.recruitmentType} />
         </aside>
       </div>

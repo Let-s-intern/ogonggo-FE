@@ -6,6 +6,7 @@ import {
   OPERATION_TYPE_LABELS,
 } from '@/entities/side-study/model/labels';
 import type { SideStudyDetail } from '@/entities/side-study/model/types';
+import { CommentCount } from '@/features/recruitment-post-comments';
 import { parseLocalDate } from '@/shared/lib/localDate';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
@@ -48,10 +49,8 @@ export function formatRecruitmentPeriod(sideStudy: SideStudyDetail): string {
  * 않는다. 우측 라벨이 이미 종류를 말하고 있으므로 남은 두 가지, 진행 방식과 활동 기간
  * (`activityDurationMonths` 개월) 을 넣는다.
  *
- * API 없음: 목업 우측 하단에는 조회수와 나란히 댓글 수도 있으나 그리지 않는다. 댓글·대댓글이
- * 이 PRD의 범위 밖이고(PRD 8절, 2026-09-01 결정) 사이드바의 댓글 영역 자리도 `비슷한
- * 사이드·스터디`로 대체했다 — 스레드가 없는 화면에 개수만 남으면 눌러도 갈 곳이 없다.
- * 목록 카드는 카드 안에서 정보 한 줄로 끝나므로 거기서는 그대로 그린다.
+ * 우측 하단은 목업대로 댓글 수와 조회수다. 댓글 수는 사이드바 댓글 영역에서 쓰고 지우면 같이
+ * 바뀌어야 해서 클라이언트 컴포넌트(`CommentCount`) 로 그린다.
  */
 export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCardProps) {
   const subtitleParts = [
@@ -86,9 +85,12 @@ export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCa
             지났으면 `DdayBadge`가 아무것도 그리지 않는다(`shared/lib/dday.ts`). */}
         <DdayBadge recruitmentType="PERIOD" recruitmentEndAt={sideStudy.recruitmentEndDate} />
         <span className="text-gray-500">{formatRecruitmentPeriod(sideStudy)}</span>
-        <span className="ml-auto flex items-center gap-1 text-gray-400">
-          <EyeIcon className="h-4 w-4" />
-          {sideStudy.viewCount}
+        <span className="ml-auto flex items-center gap-3 text-gray-400">
+          <CommentCount postId={sideStudy.id} commentCount={sideStudy.commentCount} />
+          <span className="flex items-center gap-1">
+            <EyeIcon className="h-4 w-4" />
+            {sideStudy.viewCount}
+          </span>
         </span>
       </div>
     </Card>

@@ -6,6 +6,13 @@ import {
   RECRUITMENT_POST_FIXTURES,
   type RecruitmentPostFixture,
 } from './fixtures/recruitment-post';
+import {
+  MOCK_VIEWER_NICKNAME,
+  MOCK_VIEWER_USER_ID,
+  RECRUITMENT_POST_COMMENT_FIXTURES,
+  minutesAgo,
+  type RecruitmentPostCommentFixture,
+} from './fixtures/recruitment-post-comment';
 import { USER_NOTICE_FIXTURES } from './fixtures/user-notice';
 import { GetRecruitmentPostsPositionsItem } from '../generated/user/models/getRecruitmentPostsPositionsItem';
 import { GetRecruitmentPostsProgressMethodsItem } from '../generated/user/models/getRecruitmentPostsProgressMethodsItem';
@@ -13,10 +20,16 @@ import { GetRecruitmentPostsRecruitmentStatusesItem } from '../generated/user/mo
 import { GetRecruitmentPostsRecruitmentTypesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentTypesItem';
 import { GetRecruitmentPostsSort } from '../generated/user/models/getRecruitmentPostsSort';
 import { ListPublicJobsSort } from '../generated/user/models/listPublicJobsSort';
+import type { CreateRecruitmentPostCommentRequest } from '../generated/user/models/createRecruitmentPostCommentRequest';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
+import type { RecruitmentPostCommentResponse } from '../generated/user/models/recruitmentPostCommentResponse';
+import type { RecruitmentPostCommentRootResponse } from '../generated/user/models/recruitmentPostCommentRootResponse';
 import type { RecruitmentPostDetailResponse } from '../generated/user/models/recruitmentPostDetailResponse';
 import type { RecruitmentPostSummaryResponse } from '../generated/user/models/recruitmentPostSummaryResponse';
+import type { SuccessResponseCreateRecruitmentPostCommentResponse } from '../generated/user/models/successResponseCreateRecruitmentPostCommentResponse';
+import type { SuccessResponsePageResponseRecruitmentPostCommentResponse } from '../generated/user/models/successResponsePageResponseRecruitmentPostCommentResponse';
+import type { SuccessResponsePageResponseRecruitmentPostCommentRootResponse } from '../generated/user/models/successResponsePageResponseRecruitmentPostCommentRootResponse';
 import type { SuccessResponsePageResponseRecruitmentPostSummaryResponse } from '../generated/user/models/successResponsePageResponseRecruitmentPostSummaryResponse';
 import type { SuccessResponseRecruitmentPostDetailResponse } from '../generated/user/models/successResponseRecruitmentPostDetailResponse';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
@@ -41,7 +54,9 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * task file for why that can't drive real sort/pagination/404 checks) — the jobs handlers below
  * are written by hand against the fixed fixtures in ./fixtures/job.ts instead. The bootcamp
  * list handler below follows the same shape against ./fixtures/bootcamp.ts. Bookmark and auth
- * endpoints stay unhandled: this feature does not call them.
+ * endpoints stay unhandled: this feature does not call them. The recruitment-post comment
+ * handlers keep an in-memory store over ./fixtures/recruitment-post-comment.ts so writes and
+ * deletes show up until the server restarts.
  */
 
 const DEFAULT_PAGE = 1;
@@ -649,6 +664,274 @@ const getRecruitmentPostHandler = http.get('*/api/v1/recruitment-posts/:postId',
   return HttpResponse.json(body, { status: 200 });
 });
 
+/** 부모 댓글·대댓글 조회의 기본 건수와 상한. 백엔드 `RecruitmentPostCommentApi` 의 값이다. */
+const DEFAULT_COMMENT_SIZE = 10;
+const DEFAULT_REPLY_SIZE = 5;
+const MAX_COMMENT_SIZE = 30;
+/** 부모 댓글에 붙는 대댓글 미리보기 건수. 백엔드 `REPLY_PREVIEW_SIZE`. */
+const REPLY_PREVIEW_SIZE = 5;
+/** 삭제된 부모 댓글 자리에 백엔드가 넣는 문구(`DELETED_COMMENT_CONTENT`). */
+const DELETED_COMMENT_CONTENT = '삭제된 댓글입니다';
+
+/**
+ * 목 모드의 댓글 저장소. 작성·삭제가 이 배열을 고쳐 서버 프로세스가 도는 동안 남는다 — 다시
+ * 띄우면 픽스처로 돌아간다. 픽스처 배열을 직접 고치지 않도록 복사해 둔다.
+ */
+const commentStore: RecruitmentPostCommentFixture[] = RECRUITMENT_POST_COMMENT_FIXTURES.map(
+  (comment) => ({ ...comment }),
+);
+let nextCommentId = 10_000;
+
+const commentNotFound = () => {
+  const body: ErrorResponse = {
+    status: 404,
+    code: 'RECRUITMENT_POST_COMMENT_NOT_FOUND',
+    message: '댓글을 찾을 수 없습니다.',
+  };
+  return HttpResponse.json(body, { status: 404 });
+};
+
+const commentUnauthorized = () => {
+  const body: ErrorResponse = { status: 401, code: 'UNAUTHORIZED', message: '인증이 필요합니다.' };
+  return HttpResponse.json(body, { status: 401 });
+};
+
+/** 토큰은 검사하지 않는다. `Authorization` 이 실려 오면 목 사용자로 본다(픽스처 설명). */
+const commentViewer = (request: Request): number | null =>
+  request.headers.get('Authorization') ? MOCK_VIEWER_USER_ID : null;
+
+/** 댓글을 다는 모집글. 숫자가 아니거나 없는 글이면 `undefined` 다. */
+const findCommentPost = (rawPostId: string) =>
+  INTEGER_PATTERN.test(rawPostId)
+    ? RECRUITMENT_POST_FIXTURES.find((post) => post.id === Number(rawPostId))
+    : undefined;
+
+const readCommentPage = (
+  searchParams: URLSearchParams,
+  defaultSize: number,
+): { page: number; size: number } | string => {
+  const pageParam = searchParams.get('page') ?? String(DEFAULT_PAGE);
+  const sizeParam = searchParams.get('size') ?? String(defaultSize);
+  if (!INTEGER_PATTERN.test(pageParam) || Number(pageParam) < 1) {
+    return '[page] must be greater than or equal to 1';
+  }
+  if (!INTEGER_PATTERN.test(sizeParam) || Number(sizeParam) < 1) {
+    return '[size] must be greater than or equal to 1';
+  }
+  if (Number(sizeParam) > MAX_COMMENT_SIZE) {
+    return `[size] must be less than or equal to ${MAX_COMMENT_SIZE}`;
+  }
+  return { page: Number(pageParam), size: Number(sizeParam) };
+};
+
+const toCommentResponse = (
+  comment: RecruitmentPostCommentFixture,
+  viewer: number | null,
+): RecruitmentPostCommentResponse => ({
+  id: comment.id,
+  parentId: comment.parentId,
+  author: {
+    userId: comment.userId,
+    nickname: comment.nickname,
+    profileImageUrl: comment.profileImageUrl,
+  },
+  content: comment.deletedAt ? DELETED_COMMENT_CONTENT : comment.content,
+  createdAt: comment.createdAt,
+  updatedAt: comment.createdAt,
+  mine: viewer === comment.userId,
+});
+
+const pageOf = <T>(items: T[], page: number, size: number) => ({
+  items: items.slice((page - 1) * size, page * size),
+  pageInfo: {
+    pageNum: page,
+    pageSize: size,
+    totalElements: items.length,
+    totalPages: Math.ceil(items.length / size),
+  },
+});
+
+/** 살아 있는 대댓글, 오래된 순. 삭제된 대댓글은 백엔드처럼 빼고 센다. */
+const activeReplies = (postId: number, parentId: number) =>
+  commentStore
+    .filter((c) => c.postId === postId && c.parentId === parentId && !c.deletedAt)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id - b.id);
+
+/**
+ * `getRecruitmentPostComments`(`GET /api/v1/recruitment-posts/{postId}/comments`). 부모 댓글
+ * 최신순 + 대댓글 미리보기 5 건. 삭제된 부모도 목록에 남고 본문만 바뀐다(백엔드와 같다).
+ */
+const getRecruitmentPostCommentsHandler = http.get(
+  '*/api/v1/recruitment-posts/:postId/comments',
+  ({ params, request }) => {
+    const post = findCommentPost(String(params.postId));
+    if (!post) {
+      return commentNotFound();
+    }
+    const paging = readCommentPage(new URL(request.url).searchParams, DEFAULT_COMMENT_SIZE);
+    if (typeof paging === 'string') {
+      return recruitmentPostBadRequest(paging);
+    }
+    const viewer = commentViewer(request);
+    const roots = commentStore
+      .filter((c) => c.postId === post.id && c.parentId === undefined)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id - a.id);
+    const page = pageOf(roots, paging.page, paging.size);
+
+    const toRoot = (comment: RecruitmentPostCommentFixture): RecruitmentPostCommentRootResponse => {
+      const preview = pageOf(activeReplies(post.id, comment.id), 1, REPLY_PREVIEW_SIZE);
+      return {
+        ...toCommentResponse(comment, viewer),
+        replies: {
+          items: preview.items.map((reply) => toCommentResponse(reply, viewer)),
+          pageInfo: preview.pageInfo,
+        },
+      };
+    };
+
+    const body: SuccessResponsePageResponseRecruitmentPostCommentRootResponse = {
+      status: 200,
+      message: '요청이 성공했습니다.',
+      data: { items: page.items.map(toRoot), pageInfo: page.pageInfo },
+    };
+    return HttpResponse.json(body, { status: 200 });
+  },
+);
+
+/** `getRecruitmentPostCommentReplies`(`GET .../comments/{commentId}/replies`). 오래된 순. */
+const getRecruitmentPostCommentRepliesHandler = http.get(
+  '*/api/v1/recruitment-posts/:postId/comments/:commentId/replies',
+  ({ params, request }) => {
+    const post = findCommentPost(String(params.postId));
+    const parentId = Number(params.commentId);
+    const parent = commentStore.find(
+      (c) => c.id === parentId && c.postId === post?.id && c.parentId === undefined,
+    );
+    if (!post || !parent) {
+      return commentNotFound();
+    }
+    const paging = readCommentPage(new URL(request.url).searchParams, DEFAULT_REPLY_SIZE);
+    if (typeof paging === 'string') {
+      return recruitmentPostBadRequest(paging);
+    }
+    const viewer = commentViewer(request);
+    const page = pageOf(activeReplies(post.id, parentId), paging.page, paging.size);
+
+    const body: SuccessResponsePageResponseRecruitmentPostCommentResponse = {
+      status: 200,
+      message: '요청이 성공했습니다.',
+      data: {
+        items: page.items.map((reply) => toCommentResponse(reply, viewer)),
+        pageInfo: page.pageInfo,
+      },
+    };
+    return HttpResponse.json(body, { status: 200 });
+  },
+);
+
+/**
+ * `createRecruitmentPostComment`(`POST .../comments`). 대댓글의 부모는 살아 있는 부모 댓글이어야
+ * 한다 — 대댓글에 다시 답글은 400, 지워진 부모는 404 다. 모집글의 `commentCount` 를 1 늘린다.
+ */
+const createRecruitmentPostCommentHandler = http.post(
+  '*/api/v1/recruitment-posts/:postId/comments',
+  async ({ params, request }) => {
+    const viewer = commentViewer(request);
+    if (viewer === null) {
+      return commentUnauthorized();
+    }
+    const post = findCommentPost(String(params.postId));
+    if (!post) {
+      return commentNotFound();
+    }
+    const { content, parentId } = (await request.json()) as CreateRecruitmentPostCommentRequest;
+    if (!content?.trim() || content.length > 1000) {
+      return recruitmentPostBadRequest('[content] 1자 이상 1000자 이하로 입력해 주세요.');
+    }
+    if (parentId !== undefined) {
+      const parent = commentStore.find(
+        (c) => c.id === parentId && c.postId === post.id && !c.deletedAt,
+      );
+      if (!parent) {
+        return commentNotFound();
+      }
+      if (parent.parentId !== undefined) {
+        return recruitmentPostBadRequest('대댓글에는 다시 답글을 작성할 수 없습니다.');
+      }
+    }
+
+    const id = nextCommentId++;
+    commentStore.push({
+      id,
+      postId: post.id,
+      parentId,
+      userId: viewer,
+      nickname: MOCK_VIEWER_NICKNAME,
+      content,
+      createdAt: minutesAgo(0),
+    });
+    post.commentCount += 1;
+
+    const body: SuccessResponseCreateRecruitmentPostCommentResponse = {
+      status: 201,
+      message: '요청이 성공했습니다.',
+      data: { id },
+    };
+    return HttpResponse.json(body, { status: 201 });
+  },
+);
+
+/**
+ * `deleteRecruitmentPostComment`(`DELETE .../comments/{commentId}`). 작성자 본인만 지운다(403).
+ * 소프트 삭제라 부모의 대댓글은 남는다. 모집글의 `commentCount` 를 1 줄인다.
+ */
+const deleteRecruitmentPostCommentHandler = http.delete(
+  '*/api/v1/recruitment-posts/:postId/comments/:commentId',
+  ({ params, request }) => {
+    const viewer = commentViewer(request);
+    if (viewer === null) {
+      return commentUnauthorized();
+    }
+    const post = findCommentPost(String(params.postId));
+    const comment = commentStore.find(
+      (c) => c.id === Number(params.commentId) && c.postId === post?.id && !c.deletedAt,
+    );
+    if (!post || !comment) {
+      return commentNotFound();
+    }
+    if (comment.userId !== viewer) {
+      const body: ErrorResponse = {
+        status: 403,
+        code: 'RECRUITMENT_POST_COMMENT_PERMISSION_DENIED',
+        message: '댓글을 삭제할 권한이 없습니다.',
+      };
+      return HttpResponse.json(body, { status: 403 });
+    }
+
+    comment.deletedAt = minutesAgo(0);
+    post.commentCount = Math.max(0, post.commentCount - 1);
+    return HttpResponse.json({ status: 200, message: '요청이 성공했습니다.' }, { status: 200 });
+  },
+);
+
+/** `reportRecruitmentPostComment`(`POST .../comments/{commentId}/reports`). 저장하지 않는다. */
+const reportRecruitmentPostCommentHandler = http.post(
+  '*/api/v1/recruitment-posts/:postId/comments/:commentId/reports',
+  ({ params, request }) => {
+    if (commentViewer(request) === null) {
+      return commentUnauthorized();
+    }
+    const post = findCommentPost(String(params.postId));
+    const comment = commentStore.find(
+      (c) => c.id === Number(params.commentId) && c.postId === post?.id && !c.deletedAt,
+    );
+    if (!comment) {
+      return commentNotFound();
+    }
+    return HttpResponse.json({ status: 201, message: '요청이 성공했습니다.' }, { status: 201 });
+  },
+);
+
 /** 공지 목록 한 페이지 건수. 백엔드 기본값이자 `widgets/notice-list` 가 보내는 값이다. */
 const DEFAULT_NOTICE_SIZE = 10;
 
@@ -721,6 +1004,11 @@ export const handlers: HttpHandler[] = [
   getBootcampHandler,
   getRecruitmentPostsHandler,
   getRecruitmentPostHandler,
+  getRecruitmentPostCommentsHandler,
+  getRecruitmentPostCommentRepliesHandler,
+  createRecruitmentPostCommentHandler,
+  deleteRecruitmentPostCommentHandler,
+  reportRecruitmentPostCommentHandler,
   getNoticesHandler,
   getNoticeHandler,
 ];
