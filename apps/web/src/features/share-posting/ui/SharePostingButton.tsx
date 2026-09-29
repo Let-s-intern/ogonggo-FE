@@ -201,7 +201,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
             />
           </ShareIcon>
           <ShareIcon
-            label="blog"
+            label="네이버 블로그"
             className="bg-black"
             onClick={() => openWindow(naverBlogShareUrl(url, posting.title))}
           >
@@ -250,7 +250,7 @@ function ShareIcon({
 }) {
   return (
     <li className={cn('shrink-0', itemClassName)}>
-      <button type="button" onClick={onClick} className="flex w-15 flex-col items-center gap-2">
+      <button type="button" onClick={onClick} className="flex min-w-15 flex-col items-center gap-2">
         <span className={cn('flex h-15 w-15 items-center justify-center rounded-full', className)}>
           {children}
         </span>
