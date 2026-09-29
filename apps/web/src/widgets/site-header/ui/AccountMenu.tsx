@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@ogonggo/ui';
+import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { AccountIcon, ChevronIcon } from '@/shared/ui/icons';
 
 export interface AccountMenuProps {
@@ -93,8 +94,13 @@ export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: Acc
             </Link>
           </li>
           <li role="none">
-            {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. */}
-            <a role="menuitem" href={adminOrigin} className={itemClass}>
+            {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. 누르면 웹 로그인을 들고 간다(`adminHandoff`). */}
+            <a
+              role="menuitem"
+              href={adminOrigin}
+              onClick={onAdminLinkClick(adminOrigin)}
+              className={itemClass}
+            >
               어드민
             </a>
           </li>

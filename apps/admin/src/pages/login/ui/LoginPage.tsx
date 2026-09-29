@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { HttpError } from '@ogonggo/api';
 import { listJobs } from '@ogonggo/api/src/admin';
@@ -126,6 +126,22 @@ function signInErrorMessage(error: unknown): string {
 }
 
 /**
+ * 오공고 웹이 넘겨준 액세스 토큰을 주소에서 꺼내고, 꺼내는 즉시 주소에서 지운다.
+ *
+ * 웹과 어드민은 도메인이 달라 토큰 저장소를 같이 쓰지 못한다. 그래서 웹 헤더의 `어드민` 이
+ * `/login#accessToken=...` 으로 보낸다(`apps/web/src/shared/api/adminHandoff.ts`). 쿼리가 아니라
+ * 프래그먼트인 이유는 서버 로그와 `Referer` 에 실리지 않아서다. 지우지 않으면 토큰이 주소창과
+ * 방문 기록에 남는다.
+ */
+function takeHandoffToken(): string | null {
+  const token = new URLSearchParams(window.location.hash.slice(1)).get('accessToken');
+  if (window.location.hash) {
+    window.history.replaceState(window.history.state, '', window.location.pathname);
+  }
+  return token;
+}
+
+/**
  * 관리자 로그인.
  *
  * 어드민 API 는 토큰을 발급하지 않는다. 관리자도 웹과 같은 렛츠커리어 통합로그인(SSO) 으로 토큰을 받는다 —
@@ -145,10 +161,18 @@ export function LoginPage() {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // 첫 렌더에서 한 번만 꺼낸다. 꺼내면서 주소를 지우므로 두 번째 호출은 언제나 `null` 이다.
+  const [handoffToken] = useState(takeHandoffToken);
 
   const signIn = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const accessToken = await signInWithLetsCareerEmail(credentials);
+    mutationFn: async (
+      credentials: { email: string; password: string } | { accessToken: string },
+    ) => {
+      // 웹에서 넘어온 토큰이면 렛츠커리어 단계를 건너뛴다. 관리자 확인은 똑같이 거친다.
+      const accessToken =
+        'accessToken' in credentials
+          ? credentials.accessToken
+          : await signInWithLetsCareerEmail(credentials);
       // 관리자가 아니면(403) 여기서 던진다. 토큰은 저장되지 않는다.
       const tokenUnverified = await checkAdminAccess(accessToken);
       return { accessToken, tokenUnverified };
@@ -162,6 +186,16 @@ export function LoginPage() {
       void navigate(from, { replace: true });
     },
   });
+
+  // StrictMode 는 효과를 두 번 돌린다. 확인 요청이 두 번 나가지 않게 막는다.
+  const handoffStarted = useRef(false);
+  const { mutate } = signIn;
+  useEffect(() => {
+    if (handoffToken && !handoffStarted.current) {
+      handoffStarted.current = true;
+      mutate({ accessToken: handoffToken });
+    }
+  }, [handoffToken, mutate]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
