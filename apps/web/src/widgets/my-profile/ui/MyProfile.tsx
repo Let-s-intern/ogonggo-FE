@@ -7,6 +7,7 @@ import {
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
 import { Callout } from '@ogonggo/ui';
+import { SignOutButton } from '@/features/sign-out';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { BasicInfoSection } from './BasicInfoSection';
@@ -97,6 +98,9 @@ export function MyProfile() {
       <PasswordSection />
       <KakaoChannelBanner />
       <MarketingSection />
+      <div className="flex justify-center">
+        <SignOutButton redirectTo="/" />
+      </div>
       <WithdrawAction />
     </div>
   );

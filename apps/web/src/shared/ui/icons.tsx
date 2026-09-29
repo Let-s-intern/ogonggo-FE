@@ -227,6 +227,17 @@ export function UserIcon({ className, ...props }: IconProps) {
   );
 }
 
+/** 헤더 우측 `{이름} 님` 앞의 채워진 사람 모양. `UserIcon` 은 선만 있어 시안과 다르다. */
+export function AccountIcon({ className, ...props }: IconProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn('icon-[material-symbols--person-rounded] block', className)}
+      {...props}
+    />
+  );
+}
+
 /** `로그인.png` 의 "기업 회원" 탭 앞 건물 모양. */
 export function BuildingIcon({ className, ...props }: IconProps) {
   return (
