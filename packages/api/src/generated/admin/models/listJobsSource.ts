@@ -11,4 +11,5 @@ export type ListJobsSource = typeof ListJobsSource[keyof typeof ListJobsSource];
 export const ListJobsSource = {
   CRAWLER: 'CRAWLER',
   COMPANY: 'COMPANY',
+  WORK24: 'WORK24',
 } as const;

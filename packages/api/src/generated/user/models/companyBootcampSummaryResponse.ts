@@ -45,7 +45,7 @@ export interface CompanyBootcampSummaryResponse {
      */
   tuitionType: CompanyBootcampSummaryResponseTuitionType;
   tuitionAmount?: number;
-  representativeImageUrl: string;
+  representativeImageUrl?: string;
   shortDescription: string;
   /**
      * | 값 | code | 설명 |
