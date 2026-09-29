@@ -1,5 +1,5 @@
 import { parseLocalDate } from '@/shared/lib/localDate';
-import type { RecruitmentType } from '@/shared/lib/dday';
+import { ALWAYS_OPEN_LABEL, type RecruitmentType } from '@/shared/lib/dday';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -21,11 +21,8 @@ export function formatDeadline(
   recruitmentType: RecruitmentType,
   recruitmentEndAt?: string,
 ): string {
-  if (recruitmentType === 'ALWAYS_OPEN') {
-    return '상시 모집';
-  }
-  if (!recruitmentEndAt) {
-    return '마감일 미정';
+  if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
+    return ALWAYS_OPEN_LABEL;
   }
 
   const end = parseLocalDate(recruitmentEndAt);

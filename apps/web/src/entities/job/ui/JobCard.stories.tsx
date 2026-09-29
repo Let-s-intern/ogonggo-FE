@@ -27,7 +27,7 @@ type Story = StoryObj<typeof JobCard>;
 
 export const Default: Story = {};
 
-/** 상시채용은 D-day 배지가 아예 없다 — 메타 줄 오른쪽이 빈다. */
+/** 상시채용은 D-day 자리에 `상시모집` 배지가 뜬다. */
 export const AlwaysOpen: Story = {
   args: { job: { ...JOB_MOCK, recruitmentType: 'ALWAYS_OPEN', recruitmentEndAt: undefined } },
 };

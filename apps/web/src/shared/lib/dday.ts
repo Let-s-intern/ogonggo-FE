@@ -12,6 +12,19 @@ import { parseLocalDate } from './localDate';
  */
 export type RecruitmentType = 'PERIOD' | 'ALWAYS_OPEN';
 
+/**
+ * 마감일이 없는 건의 표기. 상시 채용(`ALWAYS_OPEN`)과 마감일을 적지 않은 기간 채용 둘 다다.
+ * 전에는 화면마다 `상시채용`·`상시 모집`·`상시 채용`·`마감일 미정` 으로 갈렸고, 카드·목록은
+ * 배지를 통째로 빼서 아무 말도 하지 않았다. 사용자에게는 둘 다 "마감 없이 받는 중" 이라 한
+ * 문구로 모았다.
+ */
+export const ALWAYS_OPEN_LABEL = '상시모집';
+
+/** 마감일이 없는 건인가(상시 채용이거나 마감일 미정). 마감 여부와는 따로 본다. */
+export function isAlwaysOpen(recruitmentType: RecruitmentType, recruitmentEndAt?: string): boolean {
+  return recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt;
+}
+
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 /**

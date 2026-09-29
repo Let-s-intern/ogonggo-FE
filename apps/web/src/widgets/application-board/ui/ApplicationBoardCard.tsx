@@ -13,7 +13,13 @@ import {
   type ApplicationStageId,
   type MoveStage,
 } from '@/features/application-board';
-import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
+import {
+  computeDday,
+  isDdayUrgent,
+  isRecruitmentClosed,
+  ALWAYS_OPEN_LABEL,
+  isAlwaysOpen,
+} from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 
 export interface ApplicationBoardCardProps {
@@ -122,6 +128,10 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
           ) : closed ? (
             <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
               마감
+            </Badge>
+          ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
+            <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
+              {ALWAYS_OPEN_LABEL}
             </Badge>
           ) : null}
         </div>

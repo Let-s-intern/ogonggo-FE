@@ -3,6 +3,7 @@ import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { JobRecruitmentType } from '@/entities/job/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
+import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
 
 export interface JobDetailHeaderCardProps {
   companyName: string;
@@ -24,11 +25,8 @@ export function formatDeadlineText(
   recruitmentType: JobRecruitmentType,
   recruitmentEndAt?: string,
 ): string {
-  if (recruitmentType === 'ALWAYS_OPEN') {
-    return '상시채용';
-  }
-  if (!recruitmentEndAt) {
-    return '마감일 미정';
+  if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
+    return ALWAYS_OPEN_LABEL;
   }
   const end = new Date(recruitmentEndAt);
   const weekday = WEEKDAY_LABELS[end.getDay()];

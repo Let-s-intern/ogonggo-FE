@@ -14,7 +14,13 @@ import {
   type ApplicationStageId,
   type MoveStage,
 } from '@/features/application-board';
-import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
+import {
+  computeDday,
+  isDdayUrgent,
+  isRecruitmentClosed,
+  ALWAYS_OPEN_LABEL,
+  isAlwaysOpen,
+} from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { formatDeadline } from '@/widgets/mypage-list';
 
@@ -117,6 +123,10 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
   ) : closed ? (
     <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
       마감
+    </Badge>
+  ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
+    <Badge tone="main" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
+      {ALWAYS_OPEN_LABEL}
     </Badge>
   ) : null;
   const stageSelect = (className: string) => (

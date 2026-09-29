@@ -1,6 +1,12 @@
 import { Badge } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
-import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
+import {
+  computeDday,
+  isDdayUrgent,
+  isRecruitmentClosed,
+  ALWAYS_OPEN_LABEL,
+  isAlwaysOpen,
+} from '@/shared/lib/dday';
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
@@ -30,7 +36,7 @@ export interface JobCardProps {
  * 마감된 공고는 D-day 자리에 회색 `마감` 배지가 들어간다. 전에는 배지가 통째로 빠져 메타 줄이
  * 20px에서 16px로 줄었다. 빈 자리로 두는 쪽도 높이는 맞지만 읽는 사람에게 아무 말도 하지
  * 않는다 — `BootcampCard`·`SideStudyCard`가 이미 같은 자리에 `마감`을 그린다.
- * 상시채용과 마감일 미정은 지금처럼 배지가 없다.
+ * 마감일이 없는 공고(상시채용·마감일 미정)는 같은 자리에 `상시모집` 배지다(`ALWAYS_OPEN_LABEL`).
  *
  * 뿌리가 `<Link>`가 아니라 `relative`인 `div`인 이유는 북마크 버튼이다. 링크 안에 버튼을 두면
  * 잘못된 마크업이고 누를 때 이동까지 함께 일어난다 — 링크와 버튼을 형제로 두고 버튼을 썸네일
@@ -61,6 +67,10 @@ export function JobCard({ job, tracking }: JobCardProps) {
   ) : closed ? (
     <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
       마감
+    </Badge>
+  ) : isAlwaysOpen(job.recruitmentType, job.recruitmentEndAt) ? (
+    <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
+      {ALWAYS_OPEN_LABEL}
     </Badge>
   ) : null;
 

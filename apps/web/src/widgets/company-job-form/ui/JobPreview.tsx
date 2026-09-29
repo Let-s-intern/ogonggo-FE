@@ -8,6 +8,7 @@ import {
 } from '@/entities/job/model/labels';
 import { EXPERIENCE_TYPE_LABELS } from '../model/options';
 import type { CompanyJobFormValues } from '../model/values';
+import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
 
 const NO_VALUE = '정보 없음';
 
@@ -58,7 +59,7 @@ export function JobPreview({ values }: JobPreviewProps) {
           {values.title || '공고 제목을 입력하면 여기에 보여요.'}
         </h2>
         <p className="pt-2 text-sm text-gray-500">
-          {values.recruitmentEndAt ? `${values.recruitmentEndAt} 마감` : '상시 채용'}
+          {values.recruitmentEndAt ? `${values.recruitmentEndAt} 마감` : ALWAYS_OPEN_LABEL}
         </p>
       </header>
 

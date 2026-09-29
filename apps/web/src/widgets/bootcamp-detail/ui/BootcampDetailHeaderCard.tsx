@@ -3,6 +3,7 @@ import { Thumbnail } from '@/shared/ui/Thumbnail';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
+import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
 
 export interface BootcampDetailHeaderCardProps {
   bootcamp: BootcampDetail;
@@ -20,11 +21,8 @@ export function formatDeadlineText(
   recruitmentType: BootcampDetail['recruitmentType'],
   recruitmentEndAt?: string,
 ): string {
-  if (recruitmentType === 'ALWAYS_OPEN') {
-    return '상시 모집';
-  }
-  if (!recruitmentEndAt) {
-    return '마감일 미정';
+  if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
+    return ALWAYS_OPEN_LABEL;
   }
   const end = new Date(recruitmentEndAt);
   const weekday = WEEKDAY_LABELS[end.getDay()];
