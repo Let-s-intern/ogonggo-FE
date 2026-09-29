@@ -29,8 +29,9 @@ export type JobCalendarDateBasis = 'deadline' | 'start';
  * `?majors=it,design`, 선택 화면이 열려 있는지는 `?picker=1`이다.
  *
  * `employmentType`·`experienceType` 은 필터 줄의 알약 둘이다. **직무와 같은 자리에 둔다** —
- * 값은 주소에 싣고 서버 컴포넌트가 읽어 달력 요청의 파라미터로 넘긴다. 직무처럼 여럿을 고를 수
- * 없는 것은 서버가 값 하나만 받기 때문이고, 알약도 목업에서 하나만 고르는 드롭다운이다.
+ * 값은 주소에 싣고(`?employmentType=FULL_TIME,INTERN`) 서버 컴포넌트가 읽는다. 여럿을 고를 수 있다.
+ * 서버는 값 하나만 받으므로, 하나를 골랐으면 달력 요청의 파라미터로 넘기고 여럿이면 그 필터를 빼고
+ * 받아 받은 목록에서 거른다(`ui/JobCalendarView.tsx`). 전부 고른 것은 안 고른 것과 같아 비워 둔다.
  */
 export interface JobCalendarQuery {
   /** 달력이 펼칠 기준 날짜. `?date=` 가 없거나 읽을 수 없으면 오늘이다. */
@@ -41,10 +42,10 @@ export interface JobCalendarQuery {
   majors: string[];
   /** 관심 직무 선택 화면이 달력 자리에 열려 있는지. */
   picker: boolean;
-  /** `채용 형태` 알약. 고르지 않았으면 없고, 그때는 파라미터를 보내지 않는다. */
-  employmentType?: JobCalendarEmploymentType;
+  /** `채용 형태` 알약에서 고른 값들. 비었으면 전체다. */
+  employmentTypes: JobCalendarEmploymentType[];
   /** `경력` 알약. 같은 규칙이다. */
-  experienceType?: JobCalendarExperienceType;
+  experienceTypes: JobCalendarExperienceType[];
   /** `마감공고 제외` 체크박스. **기본은 꺼짐이다** — 켜야 줄어든다. */
   excludeClosed: boolean;
   /**
@@ -97,11 +98,37 @@ export function parseKeyword(value: string | undefined): string | undefined {
  * 아는 값만 통과시킨다. 주소는 손으로 고칠 수 있고, 모르는 값을 그대로 파라미터로 실어 보내면
  * 서버가 400 을 돌려줘 달력 전체가 빈다 — 그럴 바에는 그 필터를 걸지 않은 것으로 읽는다.
  */
-function parseEnumParam<TValue extends string>(
+/**
+ * 쉼표로 이은 값들을 읽는다. 모르는 값과 겹친 값은 버리고, 전부 골랐으면 비운다 — 전부와 전체는 같은
+ * 필터라 주소도 같아야 한다. 값 하나짜리 옛 주소(`?employmentType=FULL_TIME`)도 그대로 읽힌다.
+ */
+function parseEnumListParam<TValue extends string>(
   allowed: Readonly<Record<string, TValue>>,
   value: string | undefined,
-): TValue | undefined {
-  return value !== undefined && Object.hasOwn(allowed, value) ? allowed[value] : undefined;
+): TValue[] {
+  if (!value) {
+    return [];
+  }
+  const values = [...new Set(value.split(',').filter((part) => Object.hasOwn(allowed, part)))].map(
+    (part) => allowed[part]!,
+  );
+  return values.length === Object.keys(allowed).length ? [] : values;
+}
+
+/**
+ * 알약의 항목 하나를 켜거나 끈 결과. 켜서 전부가 되면 비운다(`parseEnumListParam` 과 같은 규칙).
+ * 순서는 보기 목록 순서로 맞춘다 — 누른 순서대로 두면 같은 필터가 주소 두 개로 갈린다.
+ */
+export function toggleEnumValue<TValue extends string>(
+  allowed: readonly TValue[],
+  selected: readonly TValue[],
+  value: TValue,
+): TValue[] {
+  const next = selected.includes(value)
+    ? selected.filter((item) => item !== value)
+    : [...selected, value];
+  const ordered = allowed.filter((item) => next.includes(item));
+  return ordered.length === allowed.length ? [] : ordered;
 }
 
 /**
@@ -164,11 +191,11 @@ export function parseJobCalendarQuery(
     brief: searchParams.brief === FLAG_ON,
     majors: parseJobMajors(searchParams.majors),
     picker: searchParams.picker === FLAG_ON,
-    employmentType: parseEnumParam(
+    employmentTypes: parseEnumListParam(
       ListPublicJobCalendarEmploymentType,
       searchParams.employmentType,
     ),
-    experienceType: parseEnumParam(
+    experienceTypes: parseEnumListParam(
       ListPublicJobCalendarExperienceType,
       searchParams.experienceType,
     ),
@@ -208,11 +235,11 @@ export function buildJobCalendarHref(
   if (merged.picker) {
     params.set('picker', FLAG_ON);
   }
-  if (merged.employmentType) {
-    params.set('employmentType', merged.employmentType);
+  if (merged.employmentTypes.length > 0) {
+    params.set('employmentType', merged.employmentTypes.join(','));
   }
-  if (merged.experienceType) {
-    params.set('experienceType', merged.experienceType);
+  if (merged.experienceTypes.length > 0) {
+    params.set('experienceType', merged.experienceTypes.join(','));
   }
   if (merged.excludeClosed) {
     params.set('excludeClosed', FLAG_ON);
