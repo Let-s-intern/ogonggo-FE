@@ -27,12 +27,13 @@ interface SignInWithLetsCareerBody {
  * 2. 오공고 `POST /api/v1/auth/letscareer` — 렛츠커리어 토큰을 오공고 토큰으로 바꾼다. 렛츠커리어 토큰은
  *    여기서 쓰고 버린다.
  *
- * 리프레시 토큰은 쓰지 않는다. 어드민은 재발급을 만들지 않았다(`accessToken.ts`).
+ * 오공고 리프레시 토큰도 함께 돌려준다. 어드민은 재발급에 쓰지 않고, `오공고 웹으로` 가 웹에 로그인을 넘길 때만
+ * 쓴다(`accessToken.ts`).
  */
 export async function signInWithLetsCareerEmail(credentials: {
   email: string;
   password: string;
-}): Promise<string> {
+}): Promise<{ accessToken: string; refreshToken: string | null }> {
   const { redirectUrl } = await ssoAuthenticate({
     ...credentials,
     redirectUri: letsCareerCallbackUri(),
@@ -50,5 +51,5 @@ export async function signInWithLetsCareerEmail(credentials: {
   if (!accessToken) {
     throw new Error('로그인 응답에 accessToken 이 없습니다.');
   }
-  return accessToken;
+  return { accessToken, refreshToken: body.data.refreshToken || null };
 }
