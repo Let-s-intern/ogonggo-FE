@@ -112,8 +112,23 @@ export const JOB_MAJORS = [
   icon: string;
 }[];
 
-/** 한 번에 고를 수 있는 수. 목업의 `* 최대 3개 선택 가능`. */
-export const MAX_JOB_MAJORS = 3;
+/**
+ * 전부 고른 것을 주소·쿠키에 적는 값(`?majors=all`). 25개 slug 를 다 늘어놓지 않는다.
+ *
+ * 전에는 최대 3개였다(목업의 `* 최대 3개 선택 가능`). 백엔드 `jobField` 가 값 하나만 받아 직무마다
+ * 요청을 나눠 보냈기 때문인데, 이제 여럿이면 한 번에 받아 거르므로(`ui/JobCalendarView.tsx`) 수를
+ * 막을 이유가 없다.
+ */
+export const ALL_JOB_MAJORS_PARAM = 'all';
+
+/** 목업 순서대로 늘어놓은 모든 slug. */
+export const ALL_JOB_MAJOR_SLUGS: readonly string[] = JOB_MAJORS.map((major) => major.slug);
+
+/** 고른 직무를 주소·쿠키에 적는 모양. 목록 순서로 맞추고, 전부면 `all` 이다. */
+export function serializeJobMajors(slugs: readonly string[]): string {
+  const ordered = ALL_JOB_MAJOR_SLUGS.filter((slug) => slugs.includes(slug));
+  return ordered.length === ALL_JOB_MAJOR_SLUGS.length ? ALL_JOB_MAJORS_PARAM : ordered.join(',');
+}
 
 const FIELD_BY_SLUG = new Map<string, ListPublicJobCalendarJobField>(
   JOB_MAJORS.map((major) => [major.slug, major.field]),

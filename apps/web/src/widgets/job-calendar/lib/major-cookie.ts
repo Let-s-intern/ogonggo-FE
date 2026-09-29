@@ -1,3 +1,5 @@
+import { serializeJobMajors } from './job-majors';
+
 /**
  * 마지막으로 고른 관심 직무를 기억하는 쿠키
  * (`.claude/tasks/memos/결정-달력-직무-쿠키-2026-09-22.md`).
@@ -25,7 +27,7 @@ const JOB_MAJOR_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
  */
 export function writeJobMajorCookie(slugs: string[]): void {
   document.cookie = [
-    `${JOB_MAJOR_COOKIE_NAME}=${slugs.join(',')}`,
+    `${JOB_MAJOR_COOKIE_NAME}=${serializeJobMajors(slugs)}`,
     'path=/',
     `max-age=${JOB_MAJOR_COOKIE_MAX_AGE_SECONDS}`,
     'samesite=lax',
