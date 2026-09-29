@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { SignOutButton } from '@/features/sign-out';
+import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
@@ -113,7 +114,7 @@ function TopRow({ signedIn, children }: { signedIn: boolean; children: ReactNode
 interface MenuLink {
   label: string;
   href: string;
-  /** 다른 도메인(어드민)이면 `Link` 가 아니라 `a` 로 그린다. */
+  /** 다른 도메인(어드민)이면 `Link` 가 아니라 `a` 로 그리고, 웹 로그인을 들고 간다(`adminHandoff`). */
   external?: boolean;
 }
 
@@ -214,7 +215,7 @@ function MenuSection({
         {links.map(({ label, href, external }) => (
           <li key={label}>
             {external ? (
-              <a href={href} className={itemClass}>
+              <a href={href} onClick={onAdminLinkClick(href)} className={itemClass}>
                 {label}
               </a>
             ) : (
