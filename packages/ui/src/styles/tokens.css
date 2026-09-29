@@ -275,3 +275,44 @@
     animation-duration: 1ms;
   }
 }
+
+/*
+ * 스크롤바. 웹·어드민·스토리북 전체에 얇은 회색 막대와 투명한 트랙을 쓴다. 기본 스크롤바는 윈도우처럼
+ * 늘 보이는 환경에서 굵고 화면과 어울리지 않았다(모집글 작성 모달 안이 특히 그랬다).
+ *
+ * 모양만 바꾸고 스크롤 동작은 브라우저에 맡긴다. JS 스크롤 라이브러리는 관성 스크롤과 모달의 스크롤
+ * 잠금을 건드리기 쉬워 쓰지 않는다.
+ *
+ * 표준 속성(`scrollbar-width`·`scrollbar-color`)을 먼저 둔다. 크롬 121 이상·파이어폭스는 이것만 보고,
+ * 이 값이 있으면 `::-webkit-scrollbar` 를 무시한다. 아래 `::-webkit-scrollbar` 는 표준 속성을 모르는
+ * 사파리와 옛 크롬용이다. `scrollbar-width` 는 상속되지 않아 모든 요소에 준다.
+ *
+ * `@layer base` 에 두어 필요한 곳에서 유틸리티 클래스로 덮을 수 있게 한다.
+ */
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-300) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* 투명한 테두리로 막대를 트랙 안쪽으로 들이고(`background-clip`), 끝을 둥글린다. */
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--color-gray-300);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-gray-400);
+  }
+}

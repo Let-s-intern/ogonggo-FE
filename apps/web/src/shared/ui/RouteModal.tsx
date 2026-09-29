@@ -50,19 +50,27 @@ export function RouteModal({ label, children }: RouteModalProps) {
           dialogRef.current?.close();
         }
       }}
-      className="m-0 h-dvh max-h-none w-screen max-w-none overflow-y-auto bg-white p-4 backdrop:bg-gray-950/50 md:m-auto md:h-auto md:max-h-[calc(100dvh-4rem)] md:w-[min(1000px,calc(100vw-2rem))] md:rounded-3xl md:p-5"
+      className="m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden bg-white p-0 backdrop:bg-gray-950/50 md:m-auto md:h-auto md:max-h-[calc(100dvh-4rem)] md:w-[min(1000px,calc(100vw-2rem))] md:rounded-3xl md:py-3"
     >
-      <div className="flex justify-end">
-        <button
-          type="button"
-          aria-label={`${label} 닫기`}
-          onClick={() => dialogRef.current?.close()}
-          className="rounded-sm p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-        >
-          <span aria-hidden="true" className="icon-[lucide--x] block h-6 w-6" />
-        </button>
+      {/*
+        스크롤은 안쪽 이 상자가 한다. 전에는 둥근 `dialog` 자신이 스크롤해서 스크롤바가 모서리 끝까지
+        그려져 오른쪽 위·아래 모서리가 깨졌다. 바깥은 둥글게 자르기만 하고(`overflow-hidden`), 데스크톱은
+        위아래를 `py-3` 만큼 띄워 스크롤바가 둥근 자리에 닿지 않게 한다. `max-h` 는 바깥 높이에서 그
+        여백을 뺀 값이다.
+      */}
+      <div className="h-full overflow-y-auto overscroll-contain p-4 md:h-auto md:max-h-[calc(100dvh-5.5rem)] md:px-5 md:py-2">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            aria-label={`${label} 닫기`}
+            onClick={() => dialogRef.current?.close()}
+            className="rounded-sm p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <span aria-hidden="true" className="icon-[lucide--x] block h-6 w-6" />
+          </button>
+        </div>
+        <div className="pt-1">{children}</div>
       </div>
-      <div className="pt-1">{children}</div>
     </dialog>
   );
 }
