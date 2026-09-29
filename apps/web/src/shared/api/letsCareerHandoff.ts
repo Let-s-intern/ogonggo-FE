@@ -53,3 +53,16 @@ export function letsCareerWebHref(): string {
 
 /** 토큰을 붙이지 않은(UTM 만 붙인) 주소. 서버 렌더와 새 탭 열기(가운데 버튼 등)의 `href` 로 쓴다. */
 export const LETSCAREER_WEB_HOME = letsCareerHomeUrl().toString();
+
+/**
+ * 렛츠커리어 챌린지 상세 주소(`lets-intern-client` 의 `app/(user)/program/challenge/[id]`). 상세 화면의
+ * `함께 보면 좋아요`(`widgets/cross-sell`)가 쓴다. 헤더 로고와 같은 UTM 이되 캠페인과 자리를 가른다.
+ */
+export function letsCareerChallengeUrl(challengeId: number): string {
+  const url = new URL(`/program/challenge/${challengeId}`, LETSCAREER_WEB_ORIGIN);
+  url.searchParams.set('utm_source', UTM_PARAMS.utm_source);
+  url.searchParams.set('utm_medium', UTM_PARAMS.utm_medium);
+  url.searchParams.set('utm_campaign', 'cross_sell');
+  url.searchParams.set('utm_content', 'detail_sidebar');
+  return url.toString();
+}

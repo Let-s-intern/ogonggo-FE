@@ -120,6 +120,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       share={{
         kind: 'jobs',
         title: job.title,
+        organizationName: job.companyName,
         path: `/jobs/${job.id}`,
         // 상시채용은 마감일이 없어 캘린더에 넣을 날이 없다.
         recruitmentEndAt: job.recruitmentType === 'ALWAYS_OPEN' ? undefined : job.recruitmentEndAt,

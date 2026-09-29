@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn, useToast } from '@ogonggo/ui';
+import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import {
   googleCalendarUrl,
   linkedInShareUrl,
@@ -87,17 +88,19 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
       .catch(() => toast.show({ message: '링크를 복사하지 못했습니다.', tone: 'error' }));
 
   /**
-   * 인스타그램은 웹에서 링크를 넘길 공유 주소가 없다. 휴대폰이면 기기 공유 창을 열어 인스타그램을
-   * 고르게 하고, 공유 창이 없으면(대부분의 데스크톱) 링크를 복사해 붙여 넣게 한다.
+   * 인스타그램은 웹에서 링크를 넘겨받는 공유 주소가 없다. 휴대폰이면 기기 공유 창을 열어 인스타그램
+   * DM 을 고르게 한다. 공유 창이 없으면(대부분의 데스크톱) 링크를 복사하고 인스타그램 DM 화면을 새
+   * 창으로 열어 붙여 넣게 한다. 전에는 복사만 해서 누른 사람에게는 아무 일도 안 일어난 것처럼 보였다.
    */
   const shareToInstagram = () => {
-    if (typeof navigator.share === 'function') {
+    if (typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches) {
       navigator.share({ title: posting.title, url }).catch(() => {
         // 공유 창을 닫은 것도 여기로 온다. 알릴 것이 없다.
       });
       return;
     }
-    void copyLink('링크를 복사했어요. 인스타그램에 붙여 넣어 주세요.');
+    void copyLink('링크를 복사했어요. 인스타그램 DM 에 붙여 넣어 주세요.');
+    openWindow('https://www.instagram.com/direct/inbox/');
   };
 
   const openWindow = (href: string) => window.open(href, '_blank', 'noopener,noreferrer');
@@ -135,6 +138,17 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           </button>
         </div>
 
+        {/* 무엇을 공유하는지 먼저 보인다 — 상세 헤더와 같은 로고, 이름, 제목. */}
+        <div className="mt-5 flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+          <CompanyLogo companyName={posting.organizationName} className="h-12 w-12 shrink-0" />
+          <div className="min-w-0">
+            <p className="truncate text-xs text-gray-500">
+              {posting.organizationName} · {label}
+            </p>
+            <p className="truncate text-sm font-bold text-gray-900">{posting.title}</p>
+          </div>
+        </div>
+
         <hr className="mt-5 border-gray-200" />
 
         <p className="mt-5 text-sm text-gray-500">링크 공유</p>
@@ -153,7 +167,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
             onClick={() => openWindow(calendarUrl)}
             className="mt-5 flex h-16 w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 text-base text-gray-600 hover:bg-gray-100"
           >
-            <span aria-hidden="true" className="icon-[logos--google-calendar] block h-5 w-5" />
+            <span aria-hidden="true" className="icon-[logos--google-calendar-2020] block h-5 w-5" />
             Google Calendar에 일정 추가하기
           </button>
         ) : null}
@@ -170,7 +184,10 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
               itemClassName="md:hidden"
               onClick={() => openWindow(calendarUrl)}
             >
-              <span aria-hidden="true" className="icon-[logos--google-calendar] block h-7 w-7" />
+              <span
+                aria-hidden="true"
+                className="icon-[logos--google-calendar-2020] block h-7 w-7"
+              />
             </ShareIcon>
           ) : null}
           <ShareIcon

@@ -6,6 +6,8 @@ export type SharePostingKind = 'jobs' | 'bootcamps' | 'side-studies';
 export interface SharePosting {
   kind: SharePostingKind;
   title: string;
+  /** 공유 창 맨 위 카드의 이름. 채용·부트캠프는 회사명, 사이드·스터디는 작성자 이름이다. */
+  organizationName: string;
   /** 사이트 안 경로(`/jobs/12`). 주소는 누르는 순간의 `window.location.origin` 에 붙인다. */
   path: string;
   /** 모집 마감 일시. 없으면(상시모집) 캘린더에 넣을 날이 없어 그 버튼을 감춘다. */
