@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
-import { useAdInquiryNotice } from '@/shared/lib/useAdInquiryNotice';
+import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 
 /**
  * `home.png` 하단 "FOR BUSINESS" CTA 배너. 홈 화면 하단에 쓰고 상세 페이지에도 재사용한다
@@ -17,13 +18,13 @@ import { useAdInquiryNotice } from '@/shared/lib/useAdInquiryNotice';
  * 역할을 알려면 `getMyAccount` 를 불러야 해서 클라이언트 경계다. 로딩 스켈레톤들도 이 컴포넌트를
  * 그대로 쓰므로 함께 클라이언트가 된다 — 그림만 그리는 조각이라 값은 치르지 않는다.
  *
- * `광고 상품 문의하기` 는 문의할 이메일을 토스트로 알린다(`useAdInquiryNotice`).
+ * `광고 상품 문의하기` 는 문의할 이메일을 모달로 알린다(`ContactEmailDialog`).
  */
 export function ForBusinessBanner() {
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
   const registerHref = companyJobRegisterHref(role);
-  const showAdInquiry = useAdInquiryNotice();
+  const [adInquiryOpen, setAdInquiryOpen] = useState(false);
 
   return (
     <section className="rounded-lg bg-blue-50 px-5 py-6 md:px-8 md:py-8">
@@ -39,11 +40,16 @@ export function ForBusinessBanner() {
           <Button asChild>
             <Link href={registerHref}>무료로 공고 등록하기</Link>
           </Button>
-          <Button variant="secondary" onClick={showAdInquiry}>
+          <Button variant="secondary" onClick={() => setAdInquiryOpen(true)}>
             광고 상품 문의하기
           </Button>
         </div>
       </div>
+      <ContactEmailDialog
+        open={adInquiryOpen}
+        onClose={() => setAdInquiryOpen(false)}
+        {...CONTACT_DIALOG_COPY.advertisement}
+      />
     </section>
   );
 }
