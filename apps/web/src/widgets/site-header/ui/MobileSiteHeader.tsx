@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { SignOutButton } from '@/features/sign-out';
-import { useAdInquiryNotice } from '@/shared/lib/useAdInquiryNotice';
+import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
 import { NAV_ITEMS } from './navItems';
@@ -35,6 +35,8 @@ export function MobileSiteHeader({
   adminOrigin,
 }: MobileSiteHeaderProps) {
   const [open, setOpen] = useState(false);
+  // 메뉴는 누르면 닫히며 사라지므로 광고 문의 모달은 메뉴 밖, 여기서 띄운다.
+  const [adInquiryOpen, setAdInquiryOpen] = useState(false);
   const calendarActive = pathname.startsWith('/calendar');
 
   return (
@@ -84,8 +86,14 @@ export function MobileSiteHeader({
           myPageHref={myPageHref}
           adminOrigin={adminOrigin}
           onClose={() => setOpen(false)}
+          onAdInquiry={() => setAdInquiryOpen(true)}
         />
       ) : null}
+      <ContactEmailDialog
+        open={adInquiryOpen}
+        onClose={() => setAdInquiryOpen(false)}
+        {...CONTACT_DIALOG_COPY.advertisement}
+      />
     </div>
   );
 }
@@ -117,8 +125,8 @@ interface MenuLink {
 /**
  * 햄버거 메뉴. 화면 전체를 덮는다(`상단 햄버거 버튼.png`). 항목을 누르면 이동하면서 닫힌다.
  *
- * `광고 상품 문의하기` 는 메뉴를 닫고 문의할 이메일을 토스트로 알린다 — `ForBusinessBanner` 의 같은
- * 버튼과 같다(`useAdInquiryNotice`).
+ * `광고 상품 문의하기` 는 메뉴를 닫고 문의할 이메일을 모달로 알린다 — `ForBusinessBanner` 의 같은
+ * 버튼과 같다(`ContactEmailDialog`).
  *
  * 로그인했으면 `내 계정` 묶음이 더해진다. 데스크톱 우측의 `마이페이지`·`어드민`·`로그아웃` 이
  * 모바일에서 갈 곳이 여기다.
@@ -129,8 +137,8 @@ function MobileMenu({
   myPageHref,
   adminOrigin,
   onClose,
-}: Omit<MobileSiteHeaderProps, 'pathname'> & { onClose: () => void }) {
-  const showAdInquiry = useAdInquiryNotice();
+  onAdInquiry,
+}: Omit<MobileSiteHeaderProps, 'pathname'> & { onClose: () => void; onAdInquiry: () => void }) {
   // 메뉴가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다. Esc 로도 닫는다.
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -184,7 +192,7 @@ function MobileMenu({
               type="button"
               onClick={() => {
                 onClose();
-                showAdInquiry();
+                onAdInquiry();
               }}
               className="flex h-[58px] w-full items-center text-base text-gray-900"
             >
