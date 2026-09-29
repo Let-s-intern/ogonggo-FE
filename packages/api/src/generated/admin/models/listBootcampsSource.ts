@@ -11,4 +11,5 @@ export type ListBootcampsSource = typeof ListBootcampsSource[keyof typeof ListBo
 export const ListBootcampsSource = {
   CRAWLER: 'CRAWLER',
   COMPANY: 'COMPANY',
+  WORK24: 'WORK24',
 } as const;

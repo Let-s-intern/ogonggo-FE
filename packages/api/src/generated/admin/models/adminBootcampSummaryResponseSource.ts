@@ -10,6 +10,7 @@
  * | --- | --- | --- |
  * | `CRAWLER` | 1 | 크롤링 |
  * | `COMPANY` | 2 | 비즈니스 등록 |
+ * | `WORK24` | 3 | 고용24 |
  */
 export type AdminBootcampSummaryResponseSource = typeof AdminBootcampSummaryResponseSource[keyof typeof AdminBootcampSummaryResponseSource];
 
@@ -17,4 +18,5 @@ export type AdminBootcampSummaryResponseSource = typeof AdminBootcampSummaryResp
 export const AdminBootcampSummaryResponseSource = {
   CRAWLER: 'CRAWLER',
   COMPANY: 'COMPANY',
+  WORK24: 'WORK24',
 } as const;

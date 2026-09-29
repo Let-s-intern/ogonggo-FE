@@ -35,6 +35,8 @@ const JOB_REVIEW_STATUS: Record<JobReviewStatus, LabelSpec> = {
 const CONTENT_SOURCE: Record<ContentSource, LabelSpec> = {
   CRAWLER: { label: '크롤링', tone: 'neutral' },
   COMPANY: { label: '비즈니스 등록', tone: 'main' },
+  // 고용24 Open API 일일 수집으로 들어온 공고(LC-3197).
+  WORK24: { label: '고용24', tone: 'neutral' },
 };
 
 /**

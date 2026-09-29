@@ -1,4 +1,10 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import type {
+  AdminCompanyMemberResponse,
+  AdminGeneralMemberResponse,
+  PageResponseAdminCompanyMemberResponse,
+  PageResponseAdminGeneralMemberResponse,
+} from '../../generated/admin/models';
 import {
   COMPANY_MEMBER_FIXTURES,
   USER_MEMBER_FIXTURES,
@@ -7,36 +13,73 @@ import {
 } from '../fixtures/admin-member';
 import { ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
 import { activityFor } from '../fixtures/admin-member-activity';
-import { matches, notFound, ok, paginate, readPaging, type PageResponse } from './paging';
+import { matches, notFound, ok, paginate, readPaging } from './paging';
 
 /**
  * 회원 목록·상세 핸들러.
  *
  * 두 화면 모두 읽기 전용이다. 제재는 운영자가 쿼리로 걸고 콘솔은 그 결과를 보여주기만 한다
  * (PRD "하지 않는 것"). 그래서 상태를 바꾸는 핸들러가 없다.
+ *
+ * 목록 둘은 admin 스펙에 있다(`GET /api/v1/admin/general-members`·`company-members`). 경로·
+ * 파라미터·응답 타입을 생성물에 맞춘다. 상세 둘은 백엔드에 없어 예전 경로
+ * (`/api/v1/admin/members/...`) 와 픽스처 모양 그대로 남는다. 목록의 `userId` 가 픽스처의 `id`
+ * 라서 목 모드에서는 목록에서 상세로 이어진다.
  */
 
-/** 가입 기간 필터. 화면 드롭다운의 값과 1:1 이다. */
-const JOINED_WITHIN_DAYS: Record<string, number> = {
-  '7d': 7,
-  '30d': 30,
-  '90d': 90,
-};
-
-function joinedWithin(joinedAt: string, key: string): boolean {
-  const days = JOINED_WITHIN_DAYS[key];
-  if (days === undefined) {
-    return true;
-  }
-  return new Date(joinedAt).getTime() >= Date.now() - days * 24 * 60 * 60 * 1000;
+/**
+ * 가입일 범위 필터. API 처럼 `YYYY-MM-DD` 를 받고 양끝을 포함한다.
+ *
+ * 날짜끼리 비교하려고 가입 시각을 로컬 날짜로 자른다. 문자열 비교로 충분하다.
+ */
+function joinedBetween(joinedAt: string, from: string, to: string): boolean {
+  const date = new Date(joinedAt);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const joinedDate = `${date.getFullYear()}-${month}-${day}`;
+  return (!from || joinedDate >= from) && (!to || joinedDate <= to);
 }
 
-const listUserMembersHandler = http.get('*/api/v1/admin/members/users', ({ request }) => {
-  const url = new URL(request.url);
-  const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-  const status = url.searchParams.get('status') ?? '';
-  const joinedWithinDays = url.searchParams.get('joinedWithinDays') ?? '';
-  const { page, size } = readPaging(url);
+/** 목록 둘이 같이 읽는 파라미터. 스펙에 없는 이름은 읽지 않는다. */
+function readMemberFilters(url: URL) {
+  return {
+    keyword: url.searchParams.get('keyword')?.trim() ?? '',
+    status: url.searchParams.get('status') ?? '',
+    joinedFrom: url.searchParams.get('joinedFrom') ?? '',
+    joinedTo: url.searchParams.get('joinedTo') ?? '',
+    ...readPaging(url),
+  };
+}
+
+const byJoinedAtDesc = (a: { joinedAt: string }, b: { joinedAt: string }) =>
+  new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime();
+
+/**
+ * 픽스처를 목록 응답 한 행으로 옮긴다. 픽스처에 없는 칸(이름·학교·희망 조건 등) 은 비워 둔다 —
+ * 스펙에서 전부 선택 필드다.
+ */
+const toGeneralMember = (member: UserMemberSummary): AdminGeneralMemberResponse => ({
+  userId: member.id,
+  status: member.status,
+  joinedAt: member.joinedAt,
+  nickname: member.nickname,
+  email: member.email,
+});
+
+/** 픽스처의 담당자 이메일을 로그인 이메일 자리에 넣는다. 둘 다 지어낸 값이다. */
+const toCompanyMember = (member: CompanyMemberSummary): AdminCompanyMemberResponse => ({
+  userId: member.id,
+  email: member.managerEmail,
+  status: member.status,
+  joinedAt: member.joinedAt,
+  organizationName: member.companyName,
+  managerName: member.managerName,
+});
+
+const listGeneralMembersHandler = http.get('*/api/v1/admin/general-members', ({ request }) => {
+  const { keyword, status, joinedFrom, joinedTo, page, size } = readMemberFilters(
+    new URL(request.url),
+  );
 
   const filtered = USER_MEMBER_FIXTURES.filter((member) => {
     if (keyword && !matches(`${member.nickname} ${member.email}`, keyword)) {
@@ -45,17 +88,14 @@ const listUserMembersHandler = http.get('*/api/v1/admin/members/users', ({ reque
     if (status && member.status !== status) {
       return false;
     }
-    if (joinedWithinDays && !joinedWithin(member.joinedAt, joinedWithinDays)) {
-      return false;
-    }
-    return true;
+    return joinedBetween(member.joinedAt, joinedFrom, joinedTo);
   });
 
-  const sorted = [...filtered].sort(
-    (a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime(),
+  const body: PageResponseAdminGeneralMemberResponse = paginate(
+    [...filtered].sort(byJoinedAtDesc).map(toGeneralMember),
+    page,
+    size,
   );
-  const paged = paginate(sorted, page, size);
-  const body: PageResponse<UserMemberSummary> = paged;
   return HttpResponse.json(ok(body), { status: 200 });
 });
 
@@ -69,12 +109,10 @@ const getUserMemberHandler = http.get('*/api/v1/admin/members/users/:memberId', 
   return HttpResponse.json(ok({ ...member, ...activityFor(memberId) }), { status: 200 });
 });
 
-const listCompanyMembersHandler = http.get('*/api/v1/admin/members/companies', ({ request }) => {
-  const url = new URL(request.url);
-  const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-  const status = url.searchParams.get('status') ?? '';
-  const joinedWithinDays = url.searchParams.get('joinedWithinDays') ?? '';
-  const { page, size } = readPaging(url);
+const listCompanyMembersHandler = http.get('*/api/v1/admin/company-members', ({ request }) => {
+  const { keyword, status, joinedFrom, joinedTo, page, size } = readMemberFilters(
+    new URL(request.url),
+  );
 
   const filtered = COMPANY_MEMBER_FIXTURES.filter((member) => {
     if (keyword && !matches(`${member.companyName} ${member.managerName}`, keyword)) {
@@ -83,17 +121,14 @@ const listCompanyMembersHandler = http.get('*/api/v1/admin/members/companies', (
     if (status && member.status !== status) {
       return false;
     }
-    if (joinedWithinDays && !joinedWithin(member.joinedAt, joinedWithinDays)) {
-      return false;
-    }
-    return true;
+    return joinedBetween(member.joinedAt, joinedFrom, joinedTo);
   });
 
-  const sorted = [...filtered].sort(
-    (a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime(),
+  const body: PageResponseAdminCompanyMemberResponse = paginate(
+    [...filtered].sort(byJoinedAtDesc).map(toCompanyMember),
+    page,
+    size,
   );
-  const paged = paginate(sorted, page, size);
-  const body: PageResponse<CompanyMemberSummary> = paged;
   return HttpResponse.json(ok(body), { status: 200 });
 });
 
@@ -128,7 +163,7 @@ const getCompanyMemberHandler = http.get(
 );
 
 export const memberHandlers: HttpHandler[] = [
-  listUserMembersHandler,
+  listGeneralMembersHandler,
   getUserMemberHandler,
   listCompanyMembersHandler,
   getCompanyMemberHandler,
