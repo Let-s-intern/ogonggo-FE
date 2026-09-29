@@ -5,7 +5,7 @@ import { HttpError } from '@ogonggo/api';
 import { listJobs } from '@ogonggo/api/src/admin';
 import { Button, Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
 import { isMockEnabled } from '@/app/enableMocking';
-import { saveAccessToken } from '@/shared/api/accessToken';
+import { saveAccessToken, saveRefreshToken } from '@/shared/api/accessToken';
 import { setAdminTokenUnverified } from '@/shared/api/adminTokenUnverified';
 import {
   NOT_ADMIN_MESSAGE,
@@ -133,12 +133,14 @@ function signInErrorMessage(error: unknown): string {
  * 프래그먼트인 이유는 서버 로그와 `Referer` 에 실리지 않아서다. 지우지 않으면 토큰이 주소창과
  * 방문 기록에 남는다.
  */
-function takeHandoffToken(): string | null {
-  const token = new URLSearchParams(window.location.hash.slice(1)).get('accessToken');
+function takeHandoffToken(): { accessToken: string; refreshToken: string | null } | null {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = params.get('accessToken');
   if (window.location.hash) {
     window.history.replaceState(window.history.state, '', window.location.pathname);
   }
-  return token;
+  // 리프레시 토큰은 `오공고 웹으로` 가 웹에 로그인을 되돌려 줄 때 쓴다(`shared/api/webHandoff.ts`).
+  return accessToken ? { accessToken, refreshToken: params.get('refreshToken') } : null;
 }
 
 /**
@@ -166,21 +168,22 @@ export function LoginPage() {
 
   const signIn = useMutation({
     mutationFn: async (
-      credentials: { email: string; password: string } | { accessToken: string },
+      credentials:
+        | { email: string; password: string }
+        | { accessToken: string; refreshToken: string | null },
     ) => {
       // 웹에서 넘어온 토큰이면 렛츠커리어 단계를 건너뛴다. 관리자 확인은 똑같이 거친다.
-      const accessToken =
-        'accessToken' in credentials
-          ? credentials.accessToken
-          : await signInWithLetsCareerEmail(credentials);
+      const { accessToken, refreshToken } =
+        'accessToken' in credentials ? credentials : await signInWithLetsCareerEmail(credentials);
       // 관리자가 아니면(403) 여기서 던진다. 토큰은 저장되지 않는다.
       const tokenUnverified = await checkAdminAccess(accessToken);
-      return { accessToken, tokenUnverified };
+      return { accessToken, refreshToken, tokenUnverified };
     },
-    onSuccess: ({ accessToken, tokenUnverified }) => {
+    onSuccess: ({ accessToken, refreshToken, tokenUnverified }) => {
       // 매번 다시 적는다. 지난 로그인의 판정이 남아 안내만 떠 있는 일이 없게 한다.
       setAdminTokenUnverified(tokenUnverified);
       saveAccessToken(accessToken);
+      saveRefreshToken(refreshToken);
       // 다른 계정으로 받아 둔 응답이 남아 있으면 새 계정 화면에 섞여 나온다.
       queryClient.clear();
       void navigate(from, { replace: true });
@@ -193,7 +196,7 @@ export function LoginPage() {
   useEffect(() => {
     if (handoffToken && !handoffStarted.current) {
       handoffStarted.current = true;
-      mutate({ accessToken: handoffToken });
+      mutate(handoffToken);
     }
   }, [handoffToken, mutate]);
 
