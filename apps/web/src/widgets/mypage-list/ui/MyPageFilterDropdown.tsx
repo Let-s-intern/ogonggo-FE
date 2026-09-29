@@ -33,7 +33,7 @@ export function MyPageFilterDropdown<TValue extends string>({
   const currentLabel = options.find(([value]) => value === selected)?.[1] ?? label;
 
   return (
-    <details className="group relative">
+    <details data-dropdown className="group relative">
       <FilterButton
         state={selected ? 'selected' : 'default'}
         className="bg-white group-open:[&>span]:rotate-180"

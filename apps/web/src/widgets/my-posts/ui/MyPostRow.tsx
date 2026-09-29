@@ -149,7 +149,7 @@ export function MyPostRow({
           </Button>
 
           {/* 여닫기는 `<details>` 라 자바스크립트가 없어도 열린다. 지원·신청 내역의 같은 메뉴와 같다. */}
-          <details className="relative">
+          <details data-dropdown className="relative">
             <summary
               aria-label={`${row.title} 더보기`}
               className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 [&::-webkit-details-marker]:hidden"

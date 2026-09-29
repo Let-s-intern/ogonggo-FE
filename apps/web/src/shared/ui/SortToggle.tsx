@@ -39,7 +39,7 @@ export function SortToggle<TValue extends string>({
     options.find((option) => option.value === current)?.label ?? options[0]?.label;
 
   return (
-    <details className="group relative">
+    <details data-dropdown className="group relative">
       <FilterButton className="bg-white group-open:[&>span]:rotate-180">
         {currentLabel}
       </FilterButton>
