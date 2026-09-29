@@ -7,12 +7,11 @@ import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
-import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
-import { Logo } from '@/shared/ui/Logo';
 import { isMyPageIndex, myPageHomeFor, myPageIndexFor } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
 import { NAV_ITEMS } from './navItems';
+import { ServiceLogoToggle } from './ServiceLogoToggle';
 
 /**
  * 어드민 콘솔 주소(`apps/admin`). 웹과 다른 도메인이라 경로가 아니라 오리진을 통째로 받는다.
@@ -30,9 +29,10 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * (`docs/asset/v3 변경사항/오공고 로고.svg`, 목업의 원본 크기 52x25 그대로다). 글자가 사라져
  * 링크에 읽을 것이 남지 않으므로 이름은 `aria-label`로 붙인다.
  *
- * 그 왼쪽의 회색 렛츠커리어 마크와 세로 구분선은 v3에서 에셋이 없어 미뤘던 것이고
- * (`docs/asset/v3-1/icon/렛츠커리어.svg`), 셋이 하나의 로고 잠금이라 같은 링크 안에 있다.
- * 새 마크도 구분선도 읽을 것이 없으므로 이름은 그대로 링크의 `aria-label` 하나뿐이다.
+ * 그 왼쪽의 회색 렛츠커리어 마크와 세로 구분선은 v3에서 에셋이 없어 미뤘던 것이다
+ * (`docs/asset/v3-1/icon/렛츠커리어.svg`). 전에는 셋이 한 링크로 홈에 갔는데, 이제 두 서비스를
+ * 오가는 토글이다 — 렛츠커리어 마크는 렛츠커리어 웹으로 로그인을 이어 가고 오공고 로고는 홈이다
+ * (`ServiceLogoToggle`).
  *
  * 간격은 목업(`docs/asset/v3 변경사항/사이드 스터디 디자인변경.png`, 1440px)을 픽셀로 재서
  * 맞췄다 — 회색 마크 x 130~155, 구분선 x 167, 파란 로고 x 180~231이라 사이가 11~12px다.
@@ -118,11 +118,7 @@ export function SiteHeader() {
       />
       <div className="mx-auto hidden h-16 max-w-6xl items-stretch justify-between px-6 md:flex">
         <div className="flex items-center gap-10">
-          <Link href="/" aria-label="오늘의 공고 홈" className="flex items-center gap-3">
-            <LetsCareerMark className="h-[26px] w-[26px]" />
-            <span className="h-[26px] w-px bg-gray-300" />
-            <Logo className="h-[25px] w-[52px] text-blue-500" />
-          </Link>
+          <ServiceLogoToggle size="desktop" />
           <nav className="flex items-stretch gap-6">
             {NAV_ITEMS.map(({ href, label, matches }) => {
               const active = matches(pathname);

@@ -162,7 +162,12 @@ export function buildSocialLoginUrl(
  * - `invalid`: 토큰도 오류도 읽을 수 없다(직접 연 주소, 잘린 주소 등).
  */
 export type LetsCareerRedirectResult =
-  | { kind: 'token'; letsCareerAccessToken: string }
+  | {
+      kind: 'token';
+      letsCareerAccessToken: string;
+      /** 렛츠커리어 웹으로 로그인을 넘길 때 쓴다(`./letsCareerHandoff.ts`). 없으면 넘기지 못할 뿐이다. */
+      letsCareerRefreshToken?: string;
+    }
   | { kind: 'already-signed-up' }
   | { kind: 'error'; reason: string }
   | { kind: 'invalid' };
@@ -198,16 +203,26 @@ export function parseLetsCareerRedirect(url: string): LetsCareerRedirectResult {
 
   const token = params.get('token');
   if (token) {
-    return { kind: 'token', letsCareerAccessToken: token };
+    return {
+      kind: 'token',
+      letsCareerAccessToken: token,
+      letsCareerRefreshToken: params.get('refreshToken') ?? undefined,
+    };
   }
 
   const result = params.get('result');
   if (result) {
     try {
       const parsed: unknown = JSON.parse(result);
-      const accessToken = (parsed as { accessToken?: unknown } | null)?.accessToken;
+      const { accessToken, refreshToken } =
+        (parsed as { accessToken?: unknown; refreshToken?: unknown } | null) ?? {};
       if (typeof accessToken === 'string' && accessToken) {
-        return { kind: 'token', letsCareerAccessToken: accessToken };
+        return {
+          kind: 'token',
+          letsCareerAccessToken: accessToken,
+          letsCareerRefreshToken:
+            typeof refreshToken === 'string' && refreshToken ? refreshToken : undefined,
+        };
       }
     } catch {
       // 아래 invalid 로 떨어진다.

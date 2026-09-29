@@ -27,7 +27,12 @@ export async function goToAdmin(adminOrigin: string): Promise<void> {
         refreshToken,
       })) as unknown as ReissueAccessTokenBody;
       saveAccessToken(body.data.accessToken);
-      target.hash = new URLSearchParams({ accessToken: body.data.accessToken }).toString();
+      // 리프레시 토큰도 넘긴다. 어드민의 `오공고 웹으로` 가 웹에 로그인을 되돌려 줄 때 쓴다
+      // (`apps/admin/src/shared/api/webHandoff.ts`).
+      target.hash = new URLSearchParams({
+        accessToken: body.data.accessToken,
+        refreshToken,
+      }).toString();
     } catch {
       // 위 주석대로 토큰 없이 간다.
     }
