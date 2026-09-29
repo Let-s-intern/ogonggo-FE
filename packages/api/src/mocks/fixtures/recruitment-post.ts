@@ -294,7 +294,8 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     }),
     eligibilityAndSelectionProcess: '자바스크립트 기본 문법을 알고 있으면 따라올 수 있습니다.',
     viewCount: 918,
-    commentCount: 11,
+    // 댓글 픽스처(`./recruitment-post-comment.ts`) 의 살아 있는 댓글 수와 맞춘다.
+    commentCount: 20,
     bookmarkCount: 21,
     bookmarked: true,
   },
