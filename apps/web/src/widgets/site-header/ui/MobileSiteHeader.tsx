@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { SignOutButton } from '@/features/sign-out';
+import { useAdInquiryNotice } from '@/shared/lib/useAdInquiryNotice';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
 import { NAV_ITEMS } from './navItems';
@@ -116,8 +117,8 @@ interface MenuLink {
 /**
  * 햄버거 메뉴. 화면 전체를 덮는다(`상단 햄버거 버튼.png`). 항목을 누르면 이동하면서 닫힌다.
  *
- * `광고 상품 문의하기` 는 시안에 있지만 갈 곳이 아직 없다 — `ForBusinessBanner` 의 같은 버튼과
- * 같은 처지라 글자만 두고 누를 수 없게 한다.
+ * `광고 상품 문의하기` 는 메뉴를 닫고 문의할 이메일을 토스트로 알린다 — `ForBusinessBanner` 의 같은
+ * 버튼과 같다(`useAdInquiryNotice`).
  *
  * 로그인했으면 `내 계정` 묶음이 더해진다. 데스크톱 우측의 `마이페이지`·`어드민`·`로그아웃` 이
  * 모바일에서 갈 곳이 여기다.
@@ -129,6 +130,7 @@ function MobileMenu({
   adminOrigin,
   onClose,
 }: Omit<MobileSiteHeaderProps, 'pathname'> & { onClose: () => void }) {
+  const showAdInquiry = useAdInquiryNotice();
   // 메뉴가 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다. Esc 로도 닫는다.
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -177,7 +179,18 @@ function MobileMenu({
           links={[{ label: '공고 등록하기', href: registerHref }]}
           onNavigate={onClose}
         >
-          <li className="flex h-[58px] items-center text-base text-gray-400">광고 상품 문의하기</li>
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                showAdInquiry();
+              }}
+              className="flex h-[58px] w-full items-center text-base text-gray-900"
+            >
+              광고 상품 문의하기
+            </button>
+          </li>
         </MenuSection>
         {signedIn ? (
           <MenuSection title="내 계정" links={account} onNavigate={onClose}>
