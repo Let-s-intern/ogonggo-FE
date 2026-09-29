@@ -48,6 +48,7 @@ export function ApplicationBoard({ query }: ApplicationBoardProps) {
         current={query.tab}
         buildHref={(tab) => buildApplicationBoardHref(query, { tab })}
         aria-label="지원 · 신청 종류"
+        variant="segment"
       />
       <ApplicationBoardFilterRow query={query} />
       {showKanban ? (

@@ -7,12 +7,14 @@ import {
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
 import { Callout } from '@ogonggo/ui';
+import { SignOutButton } from '@/features/sign-out';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { BasicInfoSection } from './BasicInfoSection';
 import { CareerInfoSection } from './CareerInfoSection';
 import { KakaoChannelBanner } from './KakaoChannelBanner';
-import { MarketingSection, PasswordSection, WithdrawAction } from './PreparingSections';
+import { PasswordSection } from './PasswordSection';
+import { MarketingSection, WithdrawAction } from './PreparingSections';
 
 type State =
   | { kind: 'loading' }
@@ -68,8 +70,6 @@ export function MyProfile() {
 
   return (
     <div className="flex flex-col gap-10">
-      <h1 className="hidden text-3xl font-bold text-gray-950 md:block">개인 정보</h1>
-
       {state.kind === 'error' ? (
         <p role="alert" className="text-sm text-error">
           내 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
@@ -84,19 +84,36 @@ export function MyProfile() {
       >
         <span aria-hidden="true" className="icon-[lucide--info] mt-0.5 block h-4 w-4 shrink-0" />
         <span>
-          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 휴대폰 번호, 정보 수신용 이메일,
-          비밀번호 변경, 마케팅 수신 동의, 회원 탈퇴는 아직 고칠 수 없어요. 지금 저장되는 것은
-          커리어 정보뿐이에요.
+          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 프로필 사진, 마케팅 수신 동의, 회원
+          탈퇴는 아직 고칠 수 없어요.
         </span>
       </Callout>
 
-      <BasicInfoSection name={account?.profile?.name} email={account?.email} />
+      <BasicInfoSection
+        name={account?.profile?.name}
+        phoneNum={account?.profile?.phoneNum}
+        email={account?.email}
+        notificationEmail={account?.profile?.notificationEmail}
+        authProvider={account?.profile?.authProvider}
+        profileImageUrl={account?.profile?.profileImageUrl}
+        loaded={Boolean(account)}
+        onSaved={() => setReloadToken((token) => token + 1)}
+      />
 
       <CareerInfoSection profile={profile} onSaved={() => setReloadToken((token) => token + 1)} />
 
-      <PasswordSection />
+      {/* 소셜로 가입한 계정은 비밀번호가 없다. 계정을 읽기 전에는 그리지 않는다. */}
+      {account?.passwordChangeable ? (
+        <>
+          <hr className="border-gray-200" />
+          <PasswordSection />
+        </>
+      ) : null}
       <KakaoChannelBanner />
       <MarketingSection />
+      <div className="flex justify-center">
+        <SignOutButton redirectTo="/" />
+      </div>
       <WithdrawAction />
     </div>
   );

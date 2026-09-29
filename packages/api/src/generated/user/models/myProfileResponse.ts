@@ -4,13 +4,29 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { MyProfileResponseAuthProvider } from './myProfileResponseAuthProvider';
 import type { MyProfileResponseGrade } from './myProfileResponseGrade';
 
 /**
- * 이름·닉네임·프로필 이미지는 렛츠커리어가 소유해 로그인마다 갱신되고, 학력과 희망 조건은 오공고가 소유해 PUT /api/v1/users/me/profile로 고친다.
+ * 이름·휴대폰 번호·닉네임·프로필 이미지는 렛츠커리어가 소유해 로그인마다 갱신되고 오공고에서 바꿀 수 없다. 학력과 희망 조건은 PUT /api/v1/users/me/profile, 수신 이메일은 PUT /api/v1/users/me/notification-email로 고친다.
  */
 export interface MyProfileResponse {
   name?: string;
+  /** 렛츠커리어에 등록된 휴대폰 번호. 조회만 한다. */
+  phoneNum?: string;
+  /**
+     * 렛츠커리어 가입 경로. 렛츠커리어에 값이 없는 과거 계정은 null이다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `KAKAO` | 1 | 카카오톡 |
+     * | `NAVER` | 2 | 네이버 |
+     * | `GOOGLE` | 3 | 구글 |
+     * | `SERVICE` | 4 | 이메일 |
+     */
+  authProvider?: MyProfileResponseAuthProvider;
+  /** 오늘의 공고 정보를 받을 이메일. 가입 이메일과 따로 두며 입력하지 않았으면 null이다. */
+  notificationEmail?: string;
   nickname?: string;
   profileImageUrl?: string;
   university?: string;

@@ -8,11 +8,12 @@ import {
   type SuccessResponseMyAccountResponse,
   getMyAccount,
 } from '@ogonggo/api';
-import { cn } from '@ogonggo/ui';
+import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
 import {
   type MyPageAudience,
   MyPageSidebar,
+  MyPageTabs,
   isMyPageIndex,
   myPageAudienceOf,
   myPageHomeFor,
@@ -53,6 +54,10 @@ export interface MyPageLayoutProps {
  * `/mypage/company`)은 사이드바가 곧 메뉴 화면이고, 하위 화면은 사이드바를 숨기고 `< 제목`
  * 머리를 단다. 사이트 헤더도 하위 화면에서는 숨는다(`SiteHeader`) — 시안의 하위 화면은 그
  * 머리 한 줄뿐이다.
+ *
+ * **데스크톱 일반 회원은 사이드바 대신 상단 탭이다**(v11 `docs/asset/v11/`). 제목 아래 탭 셋이
+ * 가로로 놓이고 본문이 폭을 다 쓴다. 기업 회원은 v11 시안이 없어 전처럼 사이드바다. 모바일은
+ * 둘 다 그대로다 — 첫 화면에서 사이드바가 메뉴 역할을 한다.
  *
  * 본문(`children`) 은 계정을 기다리지 않고 바로 그린다. 계정은 사이드바의 프로필 카드만
  * 쓰고, 그 카드는 값이 올 때까지 회색 막대로 자리를 잡는다.
@@ -116,6 +121,8 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
   const isCompany = audience === 'COMPANY';
   const isIndex = isMyPageIndex(pathname);
   const mobileHeader = myPageMobileHeaderOf(pathname);
+  /** 데스크톱에서 사이드바 대신 상단 탭을 쓰는지(v11). */
+  const tabbed = !isCompany;
 
   return (
     <main className={cn('mx-auto w-full max-w-6xl px-4 md:py-12', isIndex ? 'py-6' : 'pb-12')}>
@@ -130,8 +137,25 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           <p className="text-lg font-bold text-gray-950">{mobileHeader.title}</p>
         </div>
       ) : null}
-      <div className="flex flex-col md:mt-6 md:flex-row md:gap-10">
-        <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block')}>
+      {tabbed ? (
+        <div className="mt-6 hidden md:block">
+          <MyPageTabs
+            menuItems={myPageMenuFor(audience)}
+            action={
+              pathname === '/mypage/posts' ? (
+                <Button asChild className="gap-1 whitespace-nowrap">
+                  <Link href="/mypage/posts/new">
+                    <span aria-hidden="true" className="icon-[lucide--plus] block h-5 w-5" />새
+                    모집글 작성하기
+                  </Link>
+                </Button>
+              ) : undefined
+            }
+          />
+        </div>
+      ) : null}
+      <div className={cn('flex flex-col md:mt-6 md:flex-row', !tabbed && 'md:gap-10')}>
+        <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block', tabbed && 'md:hidden')}>
           <MyPageSidebar
             menuItems={myPageMenuFor(audience)}
             name={isCompany ? companyProfile?.managerName : profile?.name}

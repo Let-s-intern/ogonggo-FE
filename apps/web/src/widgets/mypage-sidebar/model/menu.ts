@@ -11,18 +11,17 @@ export interface MyPageMenuItem {
 }
 
 /**
- * 일반 회원 메뉴 넷. 순서와 문구는 v7 목업
- * (`docs/asset/v7 스크랩한 공고 칸반/image.png`) 과 v7 PRD 결정 기록의 표 그대로다.
+ * 일반 회원 메뉴 셋. 순서와 문구는 v11 목업(`docs/asset/v11/`)의 상단 탭 그대로다.
  *
- * v4 의 `지원·신청 내역` 이 `신청 현황` 으로 바뀌고 맨 위로 올라왔다. 목업 사이드바의
- * `활동 관리` 는 넣지 않고 `작성한 모집글` 은 남긴다 — 둘 다 PRD 결정 기록이 정한다.
+ * v7 의 넷 가운데 `신청 현황`(`/mypage/applications`)이 빠지고, `스크랩한 공고` 가 칸반의 제목이던
+ * `지원 · 신청 관리` 로 이름을 바꿔 맨 앞에 왔다. 칸반이 스크랩부터 최종 합격까지 한 화면에서
+ * 다루므로 v11 은 신청 현황을 따로 두지 않는다. 경로는 지우지 않아 주소로는 들어갈 수 있다.
  *
- * **첫 항목이 바뀌면 `/mypage` 가 보내는 곳도 바뀐다**(`myPageHomeFor`). v7 부터는
- * `신청 현황` 이다.
+ * **첫 항목이 바뀌면 `/mypage` 가 보내는 곳도 바뀐다**(`myPageHomeFor`). v11 부터는
+ * `지원 · 신청 관리`(`/mypage/scraps`)다.
  */
 export const USER_MYPAGE_MENU: readonly MyPageMenuItem[] = [
-  { href: '/mypage/applications', label: '신청 현황' },
-  { href: '/mypage/scraps', label: '스크랩한 공고' },
+  { href: '/mypage/scraps', label: '지원 · 신청 관리' },
   { href: '/mypage/posts', label: '작성한 모집글' },
   { href: '/mypage/profile', label: '개인 정보' },
 ];
