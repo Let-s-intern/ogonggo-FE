@@ -6,10 +6,9 @@ import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { SignOutButton } from '@/features/sign-out';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
-import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
-import { Logo } from '@/shared/ui/Logo';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
 import { NAV_ITEMS } from './navItems';
+import { ServiceLogoToggle } from './ServiceLogoToggle';
 
 export interface MobileSiteHeaderProps {
   pathname: string;
@@ -94,11 +93,7 @@ export function MobileSiteHeader({
 function TopRow({ signedIn, children }: { signedIn: boolean; children: ReactNode }) {
   return (
     <div className="flex h-14 items-center justify-between px-4">
-      <Link href="/" aria-label="오늘의 공고 홈" className="flex items-center gap-3">
-        <LetsCareerMark className="h-[22px] w-[22px]" />
-        <span className="h-[22px] w-px bg-gray-300" />
-        <Logo className="h-[21px] w-[44px] text-blue-500" />
-      </Link>
+      <ServiceLogoToggle size="mobile" />
       <div className="flex items-center gap-4">
         {signedIn ? null : (
           <Button size="sm" asChild className="rounded-full px-4">

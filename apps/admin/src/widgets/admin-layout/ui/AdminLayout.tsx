@@ -1,9 +1,11 @@
+import type { MouseEvent } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { Callout, cn } from '@ogonggo/ui';
 import {
   ADMIN_TOKEN_UNVERIFIED_MESSAGE,
   isAdminTokenUnverified,
 } from '@/shared/api/adminTokenUnverified';
+import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { isMockEnabled } from '@/app/enableMocking';
 
@@ -13,9 +15,22 @@ import { isMockEnabled } from '@/app/enableMocking';
  * 운영자 한 명이 넓은 화면에서 쓰는 도구라 메뉴를 접는 동작을 넣지 않는다(PRD "이 서비스가
  * 무엇인가" — 익명 트래픽을 위한 화면이 아니다). 좁은 화면 대응이 필요해지면 그때 넣는다.
  *
+ * 메뉴 맨 아래 `오공고 웹으로` 는 로그인을 이어 웹으로 돌아간다(`shared/api/webHandoff.ts`). 주소는 누르는
+ * 순간 만든다 — 토큰이 `sessionStorage` 에만 있어 미리 `href` 에 박으면 로그아웃 뒤에도 옛 토큰이 남는다.
+ * 새 탭으로 열면(Cmd·Ctrl·가운데 버튼) `href` 대로 로그인 없이 열린다.
+ *
  * 어드민 API 가 토큰을 판단하지 못한 상태의 안내도 여기서 그린다. 그때는 어느 메뉴를 눌러도
  * 비어 있으므로 한 화면에 두면 나머지 여덟 화면은 이유 없이 빈 채로 남는다.
  */
+/** 그냥 누른 것만 가로채 토큰을 붙인다. */
+function goToWeb(event: MouseEvent<HTMLAnchorElement>) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+  event.preventDefault();
+  window.location.assign(webHandoffHref());
+}
+
 export function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -71,6 +86,14 @@ export function AdminLayout() {
             </ul>
           </div>
         ))}
+        <a
+          href={WEB_HOME}
+          onClick={goToWeb}
+          className="mx-3 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          오공고 웹으로
+          <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
+        </a>
       </nav>
       <main className="min-w-0 flex-1 px-8 py-6">
         {isAdminTokenUnverified() ? (

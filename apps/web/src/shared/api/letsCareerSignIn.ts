@@ -1,7 +1,7 @@
 import { HttpError, signInWithLetsCareer } from '@ogonggo/api';
 import { saveReturnPath } from '@/shared/lib/returnPath';
 import type { SignInWithLetsCareerBody } from './authResponses';
-import { saveTokens } from './authTokens';
+import { saveLetsCareerTokens, saveTokens } from './authTokens';
 import {
   LetsCareerApiError,
   letsCareerCallbackUri,
@@ -17,13 +17,15 @@ import {
  */
 
 /**
- * `signInWithLetsCareer` 로 교환하고 두 토큰을 저장한다. 렛츠커리어 토큰은 여기서 쓰고 버린다.
+ * `signInWithLetsCareer` 로 교환하고 두 토큰을 저장한다. 렛츠커리어 토큰도 리프레시 토큰이 함께 왔으면
+ * 저장한다 — 헤더의 렛츠커리어 마크가 렛츠커리어 웹으로 로그인을 넘길 때 쓴다(`./letsCareerHandoff.ts`).
  *
  * 409 `USER_ALREADY_EXISTS` 는 같은 사용자의 첫 교환이 동시에 두 번 들어와 계정 생성이 겹쳤다는 뜻이고,
  * 다시 보내면 성공한다(PRD "쓰는 API"). 한 번만 다시 보낸다.
  */
 export async function exchangeLetsCareerToken(
   letsCareerAccessToken: string,
+  letsCareerRefreshToken?: string,
 ): Promise<{ isNewUser: boolean }> {
   // 성공 응답이 스펙에 빠져 생성 타입이 오류 응답뿐이다. authResponses.ts 주석에 이유가 있다.
   const exchange = async () =>
@@ -39,6 +41,12 @@ export async function exchangeLetsCareerToken(
     body = await exchange();
   }
   saveTokens(body.data);
+  if (letsCareerRefreshToken) {
+    saveLetsCareerTokens({
+      accessToken: letsCareerAccessToken,
+      refreshToken: letsCareerRefreshToken,
+    });
+  }
   return { isNewUser: body.data.isNewUser };
 }
 
@@ -60,7 +68,7 @@ export async function signInWithLetsCareerEmail(credentials: {
   if (result.kind !== 'token') {
     throw new Error('렛츠커리어 로그인 응답에서 토큰을 읽지 못했습니다.');
   }
-  return exchangeLetsCareerToken(result.letsCareerAccessToken);
+  return exchangeLetsCareerToken(result.letsCareerAccessToken, result.letsCareerRefreshToken);
 }
 
 /**
