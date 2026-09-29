@@ -90,7 +90,7 @@ function FilterDropdown<TValue extends string>({
   const currentLabel = options.find(([value]) => value === selected)?.[1] ?? label;
 
   return (
-    <details className="group relative">
+    <details data-dropdown className="group relative">
       {/* 기본 삼각형 표식을 지운다. 꺾쇠는 알약 안에 따로 있다. */}
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <FilterPill

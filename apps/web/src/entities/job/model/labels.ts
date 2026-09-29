@@ -22,7 +22,7 @@ export const EMPLOYMENT_TYPE_LABELS: Record<JobEmploymentType, string> = {
 export const EXPERIENCE_TYPE_LABELS: Record<JobExperienceType, string> = {
   NEWCOMER: '신입',
   EXPERIENCED: '경력',
-  BOTH: '경력무관',
+  BOTH: '신입·경력',
   IRRELEVANT: '경력무관',
 };
 

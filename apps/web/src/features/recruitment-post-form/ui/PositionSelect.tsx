@@ -24,7 +24,7 @@ export function PositionSelect({ value, onChange }: PositionSelectProps) {
     onChange(checked ? [...value, position] : value.filter((selected) => selected !== position));
 
   return (
-    <details className="relative">
+    <details data-dropdown="keep-on-select" className="relative">
       <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-md border border-gray-300 px-4 text-base [&::-webkit-details-marker]:hidden">
         <span className={value.length > 0 ? 'truncate text-gray-900' : 'truncate text-gray-400'}>
           {value.length > 0
