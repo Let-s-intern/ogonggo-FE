@@ -113,6 +113,15 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               bookmarked={bootcamp.bookmarked}
               bookmarkCount={bootcamp.bookmarkCount}
               applyEvent={{ event: 'program_apply_click', params: toBootcampInfo(bootcamp) }}
+              share={{
+                kind: 'bootcamps',
+                title: bootcamp.title,
+                path: `/bootcamps/${bootcamp.id}`,
+                recruitmentEndAt:
+                  bootcamp.recruitmentType === 'ALWAYS_OPEN'
+                    ? undefined
+                    : bootcamp.recruitmentEndAt,
+              }}
             />
           </StickyApplyBar>
           <SimilarBootcamps excludeBootcampId={bootcamp.id} />

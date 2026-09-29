@@ -133,6 +133,12 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
                 event: 'program_apply_click',
                 params: toSideStudyInfo(sideStudy),
               }}
+              share={{
+                kind: 'side-studies',
+                title: sideStudy.title,
+                path: `/side-studies/${sideStudy.id}`,
+                recruitmentEndAt: sideStudy.recruitmentEndDate,
+              }}
             />
           </StickyApplyBar>
           {/* 목업의 이 자리에 있는 댓글·대댓글 스레드(#183). 좁은 화면에서는 사이드바가 본문
