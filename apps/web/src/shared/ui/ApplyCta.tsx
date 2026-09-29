@@ -1,5 +1,6 @@
 import { Button } from '@ogonggo/ui';
 import { BookmarkCountButton, type BookmarkKind } from '@/features/bookmark';
+import { SharePostingButton, type SharePosting } from '@/features/share-posting';
 import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLayer';
 import { withApplyUtm } from '@/shared/lib/applyUtm';
 import { ApplyLink } from './ApplyLink';
@@ -22,6 +23,8 @@ export interface ApplyCtaProps {
   applyEvent?: DataLayerEvent;
   /** 북마크를 누를 때 보낼 `scrap` 이벤트의 공고 정보. 채용공고만 넘긴다. */
   scrapParams?: DataLayerParams;
+  /** 넘기면 신청 버튼 줄 아래에 `공고 공유하기` 가 붙는다(`features/share-posting`). */
+  share?: SharePosting;
 }
 
 /**
@@ -48,40 +51,54 @@ export function ApplyCta({
   bookmarkCount,
   applyEvent,
   scrapParams,
+  share,
 }: ApplyCtaProps) {
   const outboundUrl = href ? withApplyUtm(href, kind) : undefined;
   return (
-    <div className="flex items-center gap-2">
-      {outboundUrl ? (
-        <Button asChild className="flex-1">
-          <ApplyLink
-            kind={kind}
-            contentId={id}
-            href={outboundUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            events={
-              applyEvent
-                ? [
-                    {
-                      event: applyEvent.event,
-                      params: { ...applyEvent.params, outbound_url: outboundUrl },
-                    },
-                  ]
-                : []
-            }
-          >
-            {label}
-          </ApplyLink>
-        </Button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        {outboundUrl ? (
+          <Button asChild className="flex-1">
+            <ApplyLink
+              kind={kind}
+              contentId={id}
+              href={outboundUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              events={
+                applyEvent
+                  ? [
+                      {
+                        event: applyEvent.event,
+                        params: { ...applyEvent.params, outbound_url: outboundUrl },
+                      },
+                    ]
+                  : []
+              }
+            >
+              {label}
+            </ApplyLink>
+          </Button>
+        ) : null}
+        <BookmarkCountButton
+          kind={kind}
+          id={id}
+          bookmarked={bookmarked}
+          bookmarkCount={bookmarkCount}
+          scrapParams={scrapParams}
+        />
+        {/* 모바일은 화면 아래 고정 바라 한 줄로 둔다. 데스크톱은 아래 줄의 넓은 버튼이다(시안). */}
+        {share ? (
+          <div className="md:hidden">
+            <SharePostingButton posting={share} compact />
+          </div>
+        ) : null}
+      </div>
+      {share ? (
+        <div className="hidden md:block">
+          <SharePostingButton posting={share} />
+        </div>
       ) : null}
-      <BookmarkCountButton
-        kind={kind}
-        id={id}
-        bookmarked={bookmarked}
-        bookmarkCount={bookmarkCount}
-        scrapParams={scrapParams}
-      />
     </div>
   );
 }

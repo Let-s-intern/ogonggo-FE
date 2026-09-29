@@ -117,6 +117,13 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       bookmarkCount={job.bookmarkCount}
       applyEvent={{ event: 'apply_click', params: { ...jobInfo, click_location: 'detail' } }}
       scrapParams={{ ...jobInfo, click_location: 'detail' }}
+      share={{
+        kind: 'jobs',
+        title: job.title,
+        path: `/jobs/${job.id}`,
+        // 상시채용은 마감일이 없어 캘린더에 넣을 날이 없다.
+        recruitmentEndAt: job.recruitmentType === 'ALWAYS_OPEN' ? undefined : job.recruitmentEndAt,
+      }}
     />
   );
 
