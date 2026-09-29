@@ -60,6 +60,16 @@ async function fetchCalendarItems(
   return response.data ?? [];
 }
 
+/** 하나만 골랐으면 그 값, 아니면 `undefined`(서버에 보내지 않는다). */
+function onlyValue<TValue>(values: readonly TValue[]): TValue | undefined {
+  return values.length === 1 ? values[0] : undefined;
+}
+
+/** 고른 것이 없으면(전체) 통과, 있으면 그중 하나여야 통과. */
+function matchesAny(selected: readonly string[], value: string): boolean {
+  return selected.length === 0 || selected.includes(value);
+}
+
 /**
  * 직무 말고 필터 줄이 거는 것들. `from`·`to`·`jobField` 는 부르는 쪽이 정하므로 뺀다.
  *
@@ -151,8 +161,9 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   const fromParam = toCalendarParam(from);
   const toParam = toCalendarParam(to);
   const fetchedItems = await fetchCalendarItemsForMajors(fromParam, toParam, query.majors, {
-    employmentType: query.employmentType,
-    experienceType: query.experienceType,
+    // 하나만 골랐을 때만 서버가 거른다. 여럿이면 빼고 받아 아래에서 거른다 — 서버는 값 하나만 받는다.
+    employmentType: onlyValue(query.employmentTypes),
+    experienceType: onlyValue(query.experienceTypes),
     // 꺼져 있으면 아예 보내지 않는다. `false` 도 파라미터로는 실리므로(`getListPublicJobCalendarUrl`)
     // 걸지 않은 필터가 주소에 남는다.
     excludeClosed: query.excludeClosed || undefined,
@@ -171,13 +182,18 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     // 주므로, 아래에서 `recruitmentStartAt` 이 범위 밖인 항목을 한 번 더 거른다.
     deadlineOnly: query.dateBasis === 'deadline',
   });
-  const items =
-    query.dateBasis === 'start'
-      ? fetchedItems.filter((item) => {
-          const start = item.recruitmentStartAt.slice(0, 10);
-          return start >= fromParam && start <= toParam;
-        })
-      : fetchedItems;
+  const items = fetchedItems.filter((item) => {
+    if (query.dateBasis === 'start') {
+      const start = item.recruitmentStartAt.slice(0, 10);
+      if (start < fromParam || start > toParam) {
+        return false;
+      }
+    }
+    return (
+      matchesAny(query.employmentTypes, item.employmentType) &&
+      matchesAny(query.experienceTypes, item.experienceType)
+    );
+  });
 
   // 뷰를 컴포넌트 통째로 갈아끼운다(2026-09-02 결정). 한 인스턴스에서 `changeView()` 를 부르는
   // 방법도 되지만, `initialDate`/`initialView` 처럼 마운트 때만 읽히는 값을 명령형 API 로
