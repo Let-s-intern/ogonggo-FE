@@ -25,8 +25,9 @@ export function CompanyMemberDetailPage() {
   const navigate = useNavigate();
   const { data, isPending, isError } = useCompanyMemberDetail(Number(memberId));
 
-  // 실서버 모드에는 회원 API 가 없다. 목록이 비어 있어 여기까지 올 길도 없지만, 주소를 직접
-  // 열었을 때 "회원을 찾을 수 없습니다" 로 읽히면 없는 회원을 찾은 것처럼 보인다.
+  // 실서버 모드에는 회원 상세 API 가 없다(목록 API 만 있다). 목록의 행을 누르면 여기로 오는데,
+  // "회원을 찾을 수 없습니다" 로 읽히면 없는 회원을 찾은 것처럼 보이고 목데이터를 그리면 실데이터로
+  // 읽힌다. 그래서 준비 중 안내만 그린다.
   if (isBackendPending) {
     return (
       <>
