@@ -32,10 +32,13 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     description,
     alternates: { canonical },
     openGraph: {
-      title: job.title,
+      // 하위 화면의 `openGraph` 는 루트 것과 합쳐지지 않고 통째로 바뀐다. 사이트 이름과 형식을 다시
+      // 적어야 공유 미리보기에 `오늘의 공고` 가 나온다. 이미지는 옆의 `opengraph-image.tsx` 가 만든다.
+      type: 'website',
+      siteName: '오늘의 공고',
+      title: `[${job.companyName}] ${job.title} | 오늘의 공고`,
       description,
       url: canonical,
-      images: job.coverImageUrl ? [job.coverImageUrl] : undefined,
     },
   };
 }

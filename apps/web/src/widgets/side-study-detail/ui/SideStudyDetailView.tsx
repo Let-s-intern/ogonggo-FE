@@ -135,6 +135,7 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
               share={{
                 kind: 'side-studies',
                 title: sideStudy.title,
+                organizationName: sideStudy.author.nickname ?? '익명',
                 path: `/side-studies/${sideStudy.id}`,
                 recruitmentEndAt: sideStudy.recruitmentEndDate,
               }}

@@ -116,6 +116,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               share={{
                 kind: 'bootcamps',
                 title: bootcamp.title,
+                organizationName: bootcamp.companyName,
                 path: `/bootcamps/${bootcamp.id}`,
                 recruitmentEndAt:
                   bootcamp.recruitmentType === 'ALWAYS_OPEN'
