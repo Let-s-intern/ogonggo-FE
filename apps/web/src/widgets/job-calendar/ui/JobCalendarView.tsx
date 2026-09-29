@@ -1,5 +1,5 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
-import { jobMajorField } from '../lib/job-majors';
+import { ALL_JOB_MAJOR_SLUGS, jobMajorField } from '../lib/job-majors';
 import { toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 import { CalendarHeader } from './CalendarHeader';
@@ -70,26 +70,20 @@ function matchesAny(selected: readonly string[], value: string): boolean {
   return selected.length === 0 || selected.includes(value);
 }
 
-/**
- * 직무 말고 필터 줄이 거는 것들. `from`·`to`·`jobField` 는 부르는 쪽이 정하므로 뺀다.
- *
- * **요청 수를 늘리지 않는다.** 직무만 요청을 나누고(`fetchCalendarItemsForMajors`) 이 값들은
- * 나뉜 요청마다 똑같이 얹힌다 — 알약을 몇 개 걸든 요청은 고른 직무 수 그대로 1~3 이다.
- */
+/** 직무 말고 필터 줄이 거는 것들. `from`·`to`·`jobField` 는 부르는 쪽이 정하므로 뺀다. */
 type CalendarFilters = Omit<ListPublicJobCalendarParams, 'from' | 'to' | 'jobField' | 'jobRole'>;
 
 /**
  * 고른 관심 직무의 공고를 받는다. `slugs` 는 항상 하나 이상이다 — 비면 달력을 부르지 않고
  * 선택 화면을 그린다.
  *
- * **고른 직무마다 한 번씩 부르고 합친다.** 백엔드 `jobField` 는 값 하나만 받는데 화면은 최대
- * 세 개를 고를 수 있다. 세 요청은 동시에 나가고, 공고 하나의 `jobField` 도 하나라 세 응답은
- * 서로 겹치지 않는다 — 그래도 id 로 한 번 접어 두는 것은 겹쳐 올 때 같은 날짜 칸에 카드가
- * 두 장 그려지는 것을 막기 위해서다. 고른 것과 그 근거는
- * `.claude/tasks/memos/결정-달력-직무-필터-여러개-2026-09-23.md` 에 있다.
- *
- * 차례는 서버가 주는 차례(`마감 일시, 식별자` 오름차순)와 같게 다시 맞춘다. 합치면서 어긋나면
- * 같은 날 칸 안의 공고 차례가 직무를 고른 순서에 따라 달라진다.
+ * **요청은 언제나 한 번이다.** 백엔드 `jobField` 는 값 하나만 받는다.
+ * - 하나를 골랐으면 서버가 거른다(`jobField`).
+ * - 여럿이면 `jobField` 없이 받고 여기서 공고의 `jobField` 로 거른다. 전에는 직무마다 요청을 나눠
+ *   보내 최대 3개로 막았는데(`.claude/tasks/memos/결정-달력-직무-필터-여러개-2026-09-23.md`), 25개를
+ *   다 고를 수 있게 되면서 요청 수가 고른 수만큼 늘지 않게 바꿨다.
+ * - 전부면 거르지 않는다. 직군이 비어 있는 공고도 그때만 보인다 — 어느 직무를 고른 것도 아닌데
+ *   고른 목록에 끼면 이상하다.
  */
 async function fetchCalendarItemsForMajors(
   from: string,
@@ -97,23 +91,18 @@ async function fetchCalendarItemsForMajors(
   slugs: string[],
   filters: CalendarFilters,
 ): Promise<UserJobCalendarItemResponse[]> {
-  const fields = slugs
-    .map(jobMajorField)
-    .filter((field): field is ListPublicJobCalendarJobField => field !== undefined);
-  const responses = await Promise.all(
-    fields.map((field) => fetchCalendarItems({ ...filters, from, to, jobField: field })),
+  const fields = new Set(
+    slugs
+      .map(jobMajorField)
+      .filter((field): field is ListPublicJobCalendarJobField => field !== undefined),
   );
+  const onlyField = fields.size === 1 ? [...fields][0] : undefined;
+  const items = await fetchCalendarItems({ ...filters, from, to, jobField: onlyField });
 
-  const byId = new Map<number, UserJobCalendarItemResponse>();
-  for (const items of responses) {
-    for (const item of items) {
-      byId.set(item.id, item);
-    }
+  if (onlyField !== undefined || fields.size === ALL_JOB_MAJOR_SLUGS.length) {
+    return items;
   }
-
-  return [...byId.values()].sort(
-    (a, b) => a.recruitmentEndAt.localeCompare(b.recruitmentEndAt) || a.id - b.id,
-  );
+  return items.filter((item) => item.jobField !== undefined && fields.has(item.jobField));
 }
 
 export interface JobCalendarViewProps {

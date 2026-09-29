@@ -2,7 +2,12 @@ import {
   ListPublicJobCalendarEmploymentType,
   ListPublicJobCalendarExperienceType,
 } from '@ogonggo/api';
-import { isJobMajorSlug, MAX_JOB_MAJORS } from './job-majors';
+import {
+  ALL_JOB_MAJOR_SLUGS,
+  ALL_JOB_MAJORS_PARAM,
+  isJobMajorSlug,
+  serializeJobMajors,
+} from './job-majors';
 
 /** 달력 필터 줄의 `채용 형태`. 서버가 한 번에 하나만 받는다(`ListPublicJobCalendarParams`). */
 export type JobCalendarEmploymentType = ListPublicJobCalendarEmploymentType;
@@ -38,7 +43,7 @@ export interface JobCalendarQuery {
   date: Date;
   /** 켜면 주간, 끄면 월간. 기본은 월간이다(PRD 8.1). */
   brief: boolean;
-  /** 고른 관심 직무의 `slug`(`./job-majors`). 최대 3개, 모르는 값은 버린다. */
+  /** 고른 관심 직무의 `slug`(`./job-majors`). 수 제한은 없고 모르는 값은 버린다. 전부면 25개다. */
   majors: string[];
   /** 관심 직무 선택 화면이 달력 자리에 열려 있는지. */
   picker: boolean;
@@ -132,15 +137,17 @@ export function toggleEnumValue<TValue extends string>(
 }
 
 /**
- * `?majors=` 를 아는 값만, 중복 없이, 최대 개수까지 읽는다. 손으로 고친 URL 에 네 개가
- * 들어와도 선택 화면의 규칙(최대 3개)과 어긋나지 않게 앞에서부터 자른다.
+ * `?majors=` 를 아는 값만, 중복 없이 읽는다. `all` 이면 전부다(`ALL_JOB_MAJORS_PARAM`).
  */
 export function parseJobMajors(value: string | undefined): string[] {
   if (!value) {
     return [];
   }
+  if (value === ALL_JOB_MAJORS_PARAM) {
+    return [...ALL_JOB_MAJOR_SLUGS];
+  }
   const slugs = value.split(',').filter(isJobMajorSlug);
-  return [...new Set(slugs)].slice(0, MAX_JOB_MAJORS);
+  return [...new Set(slugs)];
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -230,7 +237,7 @@ export function buildJobCalendarHref(
     params.set('brief', FLAG_ON);
   }
   if (merged.majors.length > 0) {
-    params.set('majors', merged.majors.join(','));
+    params.set('majors', serializeJobMajors(merged.majors));
   }
   if (merged.picker) {
     params.set('picker', FLAG_ON);
