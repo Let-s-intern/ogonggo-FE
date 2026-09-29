@@ -13,8 +13,10 @@ export interface UserJobCalendarItemResponse {
   id: number;
   companyName: string;
   title: string;
-  /** 공고 대표 이미지 주소. 달력 칸과 카드의 로고 자리에 쓴다. 없으면 null */
+  /** 공고 대표 이미지 주소. 없으면 null */
   coverImageUrl?: string;
+  /** 기업 로고 이미지 주소. 없으면 null */
+  logoUrl?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

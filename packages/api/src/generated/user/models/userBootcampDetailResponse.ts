@@ -46,7 +46,8 @@ export interface UserBootcampDetailResponse {
      */
   tuitionType: UserBootcampDetailResponseTuitionType;
   tuitionAmount?: number;
-  representativeImageUrl: string;
+  /** 고용24에서 수집한 과정은 이미지가 없어 null입니다. 클라이언트가 기본 이미지를 보여 줍니다. */
+  representativeImageUrl?: string;
   shortDescription: string;
   content: string;
   eligibilityAndSelectionProcess?: string;
