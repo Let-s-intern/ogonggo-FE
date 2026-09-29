@@ -60,7 +60,7 @@ export function LetsCareerCallbackPage() {
       return;
     }
 
-    exchangeLetsCareerToken(result.letsCareerAccessToken)
+    exchangeLetsCareerToken(result.letsCareerAccessToken, result.letsCareerRefreshToken)
       .then(({ isNewUser }) => {
         const method = recordPendingSocialMethod() ?? '';
         // 간편 로그인으로 처음 들어오면 이 교환에서 오공고 계정이 생긴다. 그것이 가입이다.
