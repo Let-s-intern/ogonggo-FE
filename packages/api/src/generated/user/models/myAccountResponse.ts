@@ -30,6 +30,8 @@ export interface MyAccountResponse {
   /** 기업 회원은 로그인 이메일, 일반 회원은 렛츠커리어 프로필의 이메일이다. */
   email?: string;
   joinedAt: string;
+  /** 비밀번호 변경란을 보여줄지 여부. 기업 회원과 이메일로 가입한 일반 회원은 true, 카카오·네이버·구글로 가입한 일반 회원은 false다. 가입 경로를 아직 모르면 true다. */
+  passwordChangeable: boolean;
   profile?: MyProfileResponse;
   companyProfile?: MyCompanyProfileResponse;
 }
