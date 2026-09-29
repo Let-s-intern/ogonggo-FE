@@ -1,11 +1,5 @@
 import { cn } from '@ogonggo/ui';
-import {
-  computeDday,
-  isDdayUrgent,
-  type RecruitmentType,
-  ALWAYS_OPEN_LABEL,
-  isAlwaysOpen,
-} from '@/shared/lib/dday';
+import { computeDday, isDdayUrgent, type RecruitmentType } from '@/shared/lib/dday';
 
 export interface DdayBadgeProps {
   recruitmentType: RecruitmentType;
@@ -26,7 +20,9 @@ export interface DdayBadgeProps {
  */
 export function DdayBadge({ recruitmentType, recruitmentEndAt }: DdayBadgeProps) {
   const dday = computeDday(recruitmentType, recruitmentEndAt);
-  if (!dday && !isAlwaysOpen(recruitmentType, recruitmentEndAt)) {
+  // 마감일이 없으면(상시모집) 그리지 않는다. 이 배지를 쓰는 상세 헤더·모바일 하단 바는 바로 옆에
+  // 마감 문구(`상시모집`)를 이미 적어서, 배지까지 그리면 같은 말이 두 번 나온다.
+  if (!dday) {
     return null;
   }
   const urgent = isDdayUrgent(recruitmentType, recruitmentEndAt);
@@ -37,7 +33,7 @@ export function DdayBadge({ recruitmentType, recruitmentEndAt }: DdayBadgeProps)
         urgent ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-600',
       )}
     >
-      {dday ?? ALWAYS_OPEN_LABEL}
+      {dday}
     </span>
   );
 }

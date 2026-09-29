@@ -43,7 +43,7 @@ type Story = StoryObj<typeof JobDetailHeaderCard>;
 
 export const Default: Story = {};
 
-/** 상시채용. D-day 배지와 마감일시 문구가 둘 다 `상시모집` 이 된다. */
+/** 상시채용. D-day 배지는 없고 마감일시 문구가 `상시모집` 이 된다. */
 export const AlwaysOpen: Story = {
   args: { recruitmentType: 'ALWAYS_OPEN', recruitmentEndAt: undefined },
 };
