@@ -13,7 +13,6 @@ import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
 import { formatRecruitmentPeriod, SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
 import { SideStudyInfoGrid } from './SideStudyInfoGrid';
-import { SimilarSideStudies } from './SimilarSideStudies';
 
 export interface SideStudyDetailViewProps {
   postId: number;
@@ -148,7 +147,6 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
             postAuthorId={sideStudy.author.userId}
             commentCount={sideStudy.commentCount}
           />
-          <SimilarSideStudies excludePostId={sideStudy.id} kind={sideStudy.recruitmentType} />
         </aside>
       </div>
     </div>
