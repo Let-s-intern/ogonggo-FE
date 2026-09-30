@@ -38,7 +38,12 @@ export interface ContentSectionProps {
 export function ContentSection({ values, onChange }: ContentSectionProps) {
   return (
     <div>
-      <Field label="한 줄 소개" htmlFor="post-summary" required>
+      <Field
+        label="한 줄 소개"
+        htmlFor="post-summary"
+        required
+        done={Boolean(values.summary.trim())}
+      >
         <Textarea
           id="post-summary"
           rows={1}
@@ -53,6 +58,7 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
         label="모집 상세 내용"
         htmlFor="post-content"
         required
+        done={Boolean(values.contentText.trim())}
         hint="줄바꿈은 적은 그대로 저장돼요."
       >
         <div className="flex items-center gap-1 rounded-t-md border border-b-0 border-gray-300 px-3 py-2">
@@ -78,7 +84,12 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
         />
       </Field>
 
-      <Field label="지원 자격 · 전형" htmlFor="post-eligibility" className="pb-0">
+      <Field
+        label="지원 자격 · 전형"
+        htmlFor="post-eligibility"
+        done={Boolean(values.eligibilityAndSelectionProcess.trim())}
+        className="pb-0"
+      >
         <Textarea
           id="post-eligibility"
           rows={4}

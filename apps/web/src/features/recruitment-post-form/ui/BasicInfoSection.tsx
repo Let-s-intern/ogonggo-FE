@@ -31,7 +31,12 @@ export interface BasicInfoSectionProps {
 export function BasicInfoSection({ values, onChange }: BasicInfoSectionProps) {
   return (
     <div>
-      <Field label="사이드 프로젝트 · 스터디명" htmlFor="post-title" required>
+      <Field
+        label="사이드 프로젝트 · 스터디명"
+        htmlFor="post-title"
+        required
+        done={Boolean(values.title.trim())}
+      >
         <Input
           id="post-title"
           value={values.title}
@@ -42,7 +47,12 @@ export function BasicInfoSection({ values, onChange }: BasicInfoSectionProps) {
       </Field>
 
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-        <Field label="모집 구분" htmlFor="post-recruitment-type" required>
+        <Field
+          label="모집 구분"
+          htmlFor="post-recruitment-type"
+          required
+          done={Boolean(values.recruitmentType)}
+        >
           <FormSelect
             id="post-recruitment-type"
             options={RECRUITMENT_TYPE_OPTIONS}
@@ -55,7 +65,7 @@ export function BasicInfoSection({ values, onChange }: BasicInfoSectionProps) {
           />
         </Field>
 
-        <Field label="모집 인원" htmlFor="post-capacity" required>
+        <Field label="모집 인원" htmlFor="post-capacity" required done={Boolean(values.capacity)}>
           <FormSelect
             id="post-capacity"
             options={CAPACITY_OPTIONS}
@@ -64,7 +74,12 @@ export function BasicInfoSection({ values, onChange }: BasicInfoSectionProps) {
           />
         </Field>
 
-        <Field label="진행 방식" htmlFor="post-progress-method" required>
+        <Field
+          label="진행 방식"
+          htmlFor="post-progress-method"
+          required
+          done={Boolean(values.progressMethod)}
+        >
           <FormSelect
             id="post-progress-method"
             options={PROGRESS_METHOD_OPTIONS}
@@ -78,7 +93,12 @@ export function BasicInfoSection({ values, onChange }: BasicInfoSectionProps) {
         </Field>
 
         {/* 목업은 시작·종료 날짜 쌍인데 백엔드는 개월 정수 하나다(PRD 5 절). */}
-        <Field label="진행 기간" htmlFor="post-duration" required>
+        <Field
+          label="진행 기간"
+          htmlFor="post-duration"
+          required
+          done={Boolean(values.activityDurationMonths)}
+        >
           <FormSelect
             id="post-duration"
             options={DURATION_OPTIONS}

@@ -72,10 +72,14 @@ export function SideStudyDetailHeaderCard({ sideStudy }: SideStudyDetailHeaderCa
           </p>
           <p className="text-sm text-gray-500">{subtitleParts.join(' · ')}</p>
         </div>
+        {/* 모바일은 구분을 작성자 줄 오른쪽 끝에 둔다. 제목 옆에 두면 좁은 폭에서 제목이 더 꺾인다. */}
+        <span className="ml-auto shrink-0 text-sm font-bold text-blue-600 md:hidden">
+          {KIND_LABELS[sideStudy.recruitmentType]}
+        </span>
       </div>
       <div className="mt-4 flex items-start justify-between gap-4 md:mt-6">
         <h1 className="text-xl font-bold text-gray-900 md:text-3xl">{sideStudy.title}</h1>
-        <span className="shrink-0 text-sm font-bold text-blue-600">
+        <span className="hidden shrink-0 text-sm font-bold text-blue-600 md:inline">
           {KIND_LABELS[sideStudy.recruitmentType]}
         </span>
       </div>

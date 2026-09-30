@@ -9,7 +9,7 @@ import {
   fetchMyPostForm,
   updateMyPost,
 } from '@/entities/side-study/api/myRecruitmentPosts';
-import { completionPercent } from '../model/progress';
+import { stepPercents } from '../model/progress';
 import { validateForDraft, validateForPublish } from '../model/validate';
 import {
   EMPTY_FORM_VALUES,
@@ -73,7 +73,7 @@ export interface RecruitmentPostFormProps {
  * "등록 전 미리보기에서 확인해 주세요" 인데, 확인한 자리에서 등록하지 못하면 다시 탭을
  * 옮겨야 한다. 스크롤해도 화면 아래에 붙어 있다(데스크톱 `sticky`, 모바일 `fixed`).
  *
- * 폼 위에는 게시에 필요한 칸을 몇 퍼센트 채웠는지 보인다(`completionPercent`).
+ * 단계 머리마다 그 단계의 필수 칸을 몇 퍼센트 채웠는지 원으로 보인다(`stepPercents`).
  */
 export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProps) {
   const router = useRouter();
@@ -191,7 +191,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
     return <p className="py-16 text-center text-sm text-gray-500">불러오는 중입니다.</p>;
   }
 
-  const percent = completionPercent(values);
+  const percents = stepPercents(values);
 
   return (
     <form
@@ -202,23 +202,6 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         void save('PUBLISH');
       }}
     >
-      <div className="flex items-center gap-3">
-        <div
-          role="progressbar"
-          aria-label="작성 진행률"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100"
-        >
-          <div
-            className="h-full rounded-full bg-blue-500 transition-[width]"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-        <p className="shrink-0 text-sm font-semibold text-blue-500">{percent}% 완료</p>
-      </div>
-
       <div role="tablist" aria-label="모집글 작성" className="flex border-b border-gray-200">
         {(
           [
@@ -260,6 +243,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         <FormSection
           className={cn(mobileStep !== 1 && 'hidden md:block')}
           step={1}
+          percent={percents[0]}
           title="기본 정보"
           description="프로젝트의 기본적인 정보를 입력해 주세요"
           open={!desktop || openSteps.includes(1)}
@@ -271,6 +255,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         <FormSection
           className={cn(mobileStep !== 2 && 'hidden md:block')}
           step={2}
+          percent={percents[1]}
           title="모집 내용"
           description="프로젝트의 모집 공고를 소개해 주세요"
           open={!desktop || openSteps.includes(2)}
@@ -282,6 +267,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         <FormSection
           className={cn(mobileStep !== 3 && 'hidden md:block')}
           step={3}
+          percent={percents[2]}
           title="지원 설정"
           description="모집 기간과 지원 방법을 설정해 주세요"
           open={!desktop || openSteps.includes(3)}

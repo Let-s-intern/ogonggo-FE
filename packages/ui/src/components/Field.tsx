@@ -10,6 +10,8 @@ export interface FieldProps {
   /** 있으면 hint 대신 빨간 문구가 나간다. */
   error?: string;
   required?: boolean;
+  /** 값을 채웠는가. 켜지면 라벨 옆에 파란 체크가 붙는다. */
+  done?: boolean;
   children: ReactNode;
   className?: string;
 }
@@ -21,14 +23,25 @@ export function Field({
   hint,
   error,
   required = false,
+  done = false,
   children,
   className,
 }: FieldProps) {
   return (
     <div className={cn('pb-4', className)}>
-      <label htmlFor={htmlFor} className="block pb-1.5 text-sm font-medium text-gray-700">
+      <label
+        htmlFor={htmlFor}
+        className="flex items-center pb-1.5 text-sm font-medium text-gray-700"
+      >
         {label}
         {required ? <span className="pl-0.5 text-error">*</span> : null}
+        {done ? (
+          <span
+            role="img"
+            aria-label="입력 완료"
+            className="icon-[lucide--circle-check] ml-1.5 block h-4 w-4 text-blue-500"
+          />
+        ) : null}
       </label>
       {children}
       {error ? <p className="pt-1.5 text-sm text-error">{error}</p> : null}
