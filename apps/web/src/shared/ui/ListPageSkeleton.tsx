@@ -27,7 +27,7 @@ export interface ListPageSkeletonProps {
  * 배너만 맥동하지 않는다. 데이터가 필요 없는 정적 위젯이라 로딩 중에 이미 최종 모습으로 둘 수
  * 있고, 그러면 그 부분은 높이가 어긋날 여지가 없다(`app/(home)/loading.tsx`와 같은 판단이다).
  *
- * 홈(`app/(home)/loading.tsx`)은 이 화면 위에 인기 공고 섹션과 광고 자리가 하나씩 더 있어서
+ * 홈(`app/(home)/loading.tsx`)은 이 화면 위에 인기 공고 섹션이 하나 더 있어서
  * 이걸 그대로 쓰지 못한다. 겹치는 두 조각(`HeroSkeleton`, `CardGridSkeleton`)만 나눠 쓴다.
  *
  * 맥동은 Tailwind `animate-pulse`이고, 같이 붙은 `ogonggo-skeleton`은
