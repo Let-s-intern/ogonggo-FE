@@ -79,14 +79,13 @@ export function myPageIndexFor(audience: MyPageAudience): string {
  * 모바일 하위 화면 머리(`< 작성한 모집글`)의 제목과 `<` 가 가는 곳
  * (`docs/asset/v10 mobile/작성한 모집글.png`). 제목은 각 `page.tsx` 의 `metadata.title` 과 같다.
  * 작성·수정 화면은 자기 목록으로, 목록 화면은 메뉴 첫 화면으로 돌아간다.
+ *
+ * 일반 회원의 탭 화면(`지원 · 신청 관리`·`작성한 모집글`·`개인 정보`)은 여기 없다. 모바일도
+ * 데스크톱처럼 `마이페이지` 제목과 상단 탭을 달고, 머리는 작성·수정 화면에만 붙는다.
  */
 const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[] = [
-  { pattern: /^\/mypage\/applications$/, title: '신청 현황', back: '/mypage' },
-  { pattern: /^\/mypage\/scraps$/, title: '지원 · 신청 관리', back: '/mypage' },
-  { pattern: /^\/mypage\/posts$/, title: '작성한 모집글', back: '/mypage' },
   { pattern: /^\/mypage\/posts\/new$/, title: '모집글 작성', back: '/mypage/posts' },
   { pattern: /^\/mypage\/posts\/[^/]+\/edit$/, title: '모집글 수정', back: '/mypage/posts' },
-  { pattern: /^\/mypage\/profile$/, title: '개인 정보', back: '/mypage' },
   { pattern: /^\/mypage\/company\/posts$/, title: '작성한 공고', back: COMPANY_MYPAGE_ROOT },
   {
     pattern: /^\/mypage\/company\/posts\/jobs\/new$/,

@@ -41,7 +41,12 @@ export function MyPageListTabs<TValue extends string>({
 }: MyPageListTabsProps<TValue>) {
   if (variant === 'segment') {
     return (
-      <nav aria-label={ariaLabel} className="flex w-fit items-center rounded-lg bg-gray-100 p-1">
+      // 모바일은 셋이 폭을 똑같이 나누고 글자를 줄인다. 데스크톱 크기 그대로면 `채용 공고`가
+      // 두 줄로 꺾인다.
+      <nav
+        aria-label={ariaLabel}
+        className="flex w-full items-center rounded-lg bg-gray-100 p-1 md:w-fit"
+      >
         {items.map((item) => {
           const selected = item.value === current;
           return (
@@ -50,7 +55,7 @@ export function MyPageListTabs<TValue extends string>({
               href={buildHref(item.value)}
               aria-current={selected ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-1.5 rounded-md px-4 py-2 text-lg',
+                'flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm whitespace-nowrap md:flex-none md:px-4 md:text-lg',
                 selected
                   ? 'bg-white font-bold text-gray-900 shadow-sm'
                   : 'font-medium text-gray-400 hover:text-gray-600',
