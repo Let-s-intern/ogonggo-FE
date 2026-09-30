@@ -15,14 +15,21 @@ const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = [
 export type JobListProps = JobListQuery;
 
 /**
- * 백엔드가 필터·검색을 구현해 `ListPublicJobsParams`에 `employmentType`/`experienceType`/`keyword`가
- * 생겼다(2026-09-10 스펙 동기화). 다만 이 화면이 보내는 검색 파라미터 이름은 `q`이고 API는
- * `keyword`라, 아직 `listPublicJobs(params)`로 바꾸지 않았다 — URL을 직접 구성해
- * `httpClient`를 부른다. `httpClient`는 파싱된 body를 그대로 반환한다(orval 목 mutator 컨벤션인
- * `{ data, status, headers }`로 감싸지 않음) — 실제 런타임 값은 `listPublicJobs`가 감싸는 `data` 필드
- * 하나(`SuccessResponsePageResponseUserJobSummaryResponse`)와 같다.
+ * URL을 직접 구성해 `httpClient`를 부른다. `httpClient`는 파싱된 body를 그대로 반환한다(orval 목
+ * mutator 컨벤션인 `{ data, status, headers }`로 감싸지 않음) — 실제 런타임 값은 `listPublicJobs`가
+ * 감싸는 `data` 필드 하나(`SuccessResponsePageResponseUserJobSummaryResponse`)와 같다.
+ *
+ * 화면 주소의 검색어 이름은 `q`, API 는 `keyword` 다. 전에는 `q` 를 그대로 보내 백엔드가 모르는
+ * 파라미터로 무시했다 — 검색해도 전체 목록이 왔다(2026-09-30 실측, 5,198건 그대로). 주소의 `q` 는
+ * 바깥에 공유된 링크가 쓰는 이름이라 두고, 보내는 이름만 바꾼다.
  */
 const PAGE_SIZE = 12;
+
+/** 백엔드가 2~100자만 받는다. 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
+function pickKeyword(q: string | undefined): string | undefined {
+  const keyword = q?.trim();
+  return keyword && keyword.length >= 2 && keyword.length <= 100 ? keyword : undefined;
+}
 
 function buildJobsRequestUrl({
   page,
@@ -35,8 +42,9 @@ function buildJobsRequestUrl({
   params.set('page', String(page));
   params.set('size', String(PAGE_SIZE));
   params.set('sort', sort);
-  if (q) {
-    params.set('q', q);
+  const keyword = pickKeyword(q);
+  if (keyword) {
+    params.set('keyword', keyword);
   }
   if (employmentType) {
     params.set('employmentType', employmentType);
