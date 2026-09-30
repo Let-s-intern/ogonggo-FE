@@ -85,6 +85,9 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
 /**
  * 실제 백엔드 `GET /api/v1/jobs` 와 같은 이름의 파라미터를 거른다. `keyword`는 제목+회사명 부분
  * 일치(대소문자 무시)다.
+ *
+ * `jobField` 는 픽스처의 직군(`JOB_FIELD_BY_FIXTURE_ID`)으로 거른다. `jobRole` 은 거르지 않는다 —
+ * 픽스처에 직무가 없어서, 거르면 무엇을 골라도 0건이 된다.
  */
 const filterJobs = (
   jobs: UserJobDetailResponse[],
@@ -92,7 +95,8 @@ const filterJobs = (
     keyword,
     employmentType,
     experienceType,
-  }: { keyword?: string; employmentType?: string; experienceType?: string },
+    jobField,
+  }: { keyword?: string; employmentType?: string; experienceType?: string; jobField?: string },
 ): UserJobDetailResponse[] =>
   jobs.filter((job) => {
     if (keyword) {
@@ -108,6 +112,9 @@ const filterJobs = (
     if (experienceType && job.experienceType !== experienceType) {
       return false;
     }
+    if (jobField && JOB_FIELD_BY_FIXTURE_ID.get(job.id) !== jobField) {
+      return false;
+    }
     return true;
   });
 
@@ -119,8 +126,9 @@ const getJobsHandler = http.get('*/api/v1/jobs', ({ request }) => {
   const keyword = url.searchParams.get('keyword') ?? undefined;
   const employmentType = url.searchParams.get('employmentType') ?? undefined;
   const experienceType = url.searchParams.get('experienceType') ?? undefined;
+  const jobField = url.searchParams.get('jobField') ?? undefined;
 
-  const filtered = filterJobs(JOB_FIXTURES, { keyword, employmentType, experienceType });
+  const filtered = filterJobs(JOB_FIXTURES, { keyword, employmentType, experienceType, jobField });
   const sorted = sortJobs(filtered, sort);
   const start = (page - 1) * size;
   const items = sorted.slice(start, start + size).map(toSummary);
