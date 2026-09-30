@@ -83,22 +83,24 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
   );
 
 /**
- * `q`/`employmentType`/`experienceType`는 실제 백엔드 `GET /api/v1/jobs`에는 없는 파라미터다
- * (PRD 10절). 백엔드가 뒤늦게 같은 필터를 구현했으나 검색 파라미터 이름이 `q`가 아니라
- * `keyword`라 아직 이름이 어긋난다 — 실제 API로 전환할 때 여기와 `JobList`를 함께 고친다.
- * `q`는 제목+회사명 부분 일치(대소문자 무시)다.
+ * 실제 백엔드 `GET /api/v1/jobs` 와 같은 이름의 파라미터를 거른다. `keyword`는 제목+회사명 부분
+ * 일치(대소문자 무시)다.
+ *
+ * `jobField` 는 픽스처의 직군(`JOB_FIELD_BY_FIXTURE_ID`)으로 거른다. `jobRole` 은 거르지 않는다 —
+ * 픽스처에 직무가 없어서, 거르면 무엇을 골라도 0건이 된다.
  */
 const filterJobs = (
   jobs: UserJobDetailResponse[],
   {
-    q,
+    keyword,
     employmentType,
     experienceType,
-  }: { q?: string; employmentType?: string; experienceType?: string },
+    jobField,
+  }: { keyword?: string; employmentType?: string; experienceType?: string; jobField?: string },
 ): UserJobDetailResponse[] =>
   jobs.filter((job) => {
-    if (q) {
-      const needle = q.toLowerCase();
+    if (keyword) {
+      const needle = keyword.toLowerCase();
       const haystack = `${job.title} ${job.companyName}`.toLowerCase();
       if (!haystack.includes(needle)) {
         return false;
@@ -110,6 +112,9 @@ const filterJobs = (
     if (experienceType && job.experienceType !== experienceType) {
       return false;
     }
+    if (jobField && JOB_FIELD_BY_FIXTURE_ID.get(job.id) !== jobField) {
+      return false;
+    }
     return true;
   });
 
@@ -118,11 +123,12 @@ const getJobsHandler = http.get('*/api/v1/jobs', ({ request }) => {
   const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
   const size = Number(url.searchParams.get('size') ?? DEFAULT_SIZE);
   const sort = url.searchParams.get('sort') ?? ListPublicJobsSort.LATEST;
-  const q = url.searchParams.get('q') ?? undefined;
+  const keyword = url.searchParams.get('keyword') ?? undefined;
   const employmentType = url.searchParams.get('employmentType') ?? undefined;
   const experienceType = url.searchParams.get('experienceType') ?? undefined;
+  const jobField = url.searchParams.get('jobField') ?? undefined;
 
-  const filtered = filterJobs(JOB_FIXTURES, { q, employmentType, experienceType });
+  const filtered = filterJobs(JOB_FIXTURES, { keyword, employmentType, experienceType, jobField });
   const sorted = sortJobs(filtered, sort);
   const start = (page - 1) * size;
   const items = sorted.slice(start, start + size).map(toSummary);

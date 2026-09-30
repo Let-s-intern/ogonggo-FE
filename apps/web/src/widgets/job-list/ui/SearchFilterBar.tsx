@@ -4,6 +4,7 @@ import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
+import { JobRoleFilter } from './JobRoleFilter';
 
 export interface SearchFilterBarProps {
   query: JobListQuery;
@@ -113,11 +114,18 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
         {query.experienceType ? (
           <input type="hidden" name="experienceType" value={query.experienceType} />
         ) : null}
+        {query.jobFields?.map((field) => (
+          <input key={field} type="hidden" name="jobField" value={field} />
+        ))}
+        {query.jobRoles?.map((role) => (
+          <input key={role} type="hidden" name="jobRole" value={role} />
+        ))}
         <SearchInput name="q" defaultValue={query.q} placeholder="공고 검색" />
         <button type="submit" className="sr-only">
           검색
         </button>
       </form>
+      <JobRoleFilter query={query} />
       <FilterDropdown
         label="채용 형태"
         filterType="employment"

@@ -4,7 +4,7 @@ import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
-import { buildJobListHref, type JobListQuery } from '../lib/query';
+import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { SearchFilterBar } from './SearchFilterBar';
 
 const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = [
@@ -15,43 +15,17 @@ const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = [
 export type JobListProps = JobListQuery;
 
 /**
- * 백엔드가 필터·검색을 구현해 `ListPublicJobsParams`에 `employmentType`/`experienceType`/`keyword`가
- * 생겼다(2026-09-10 스펙 동기화). 다만 이 화면이 보내는 검색 파라미터 이름은 `q`이고 API는
- * `keyword`라, 아직 `listPublicJobs(params)`로 바꾸지 않았다 — URL을 직접 구성해
- * `httpClient`를 부른다. `httpClient`는 파싱된 body를 그대로 반환한다(orval 목 mutator 컨벤션인
- * `{ data, status, headers }`로 감싸지 않음) — 실제 런타임 값은 `listPublicJobs`가 감싸는 `data` 필드
- * 하나(`SuccessResponsePageResponseUserJobSummaryResponse`)와 같다.
+ * `httpClient`는 파싱된 body를 그대로 반환한다(orval 목 mutator 컨벤션인 `{ data, status, headers }`로
+ * 감싸지 않음) — 실제 런타임 값은 `listPublicJobs`가 감싸는 `data` 필드 하나
+ * (`SuccessResponsePageResponseUserJobSummaryResponse`)와 같다. 요청 주소는 `buildJobsApiUrl`.
  */
 const PAGE_SIZE = 12;
-
-function buildJobsRequestUrl({
-  page,
-  sort,
-  q,
-  employmentType,
-  experienceType,
-}: JobListQuery): string {
-  const params = new URLSearchParams();
-  params.set('page', String(page));
-  params.set('size', String(PAGE_SIZE));
-  params.set('sort', sort);
-  if (q) {
-    params.set('q', q);
-  }
-  if (employmentType) {
-    params.set('employmentType', employmentType);
-  }
-  if (experienceType) {
-    params.set('experienceType', experienceType);
-  }
-  return `/api/v1/jobs?${params.toString()}`;
-}
 
 async function fetchJobPage(
   query: JobListQuery,
 ): Promise<{ items: JobSummary[]; pageInfo: PageInfo }> {
   const response = await httpClient<SuccessResponsePageResponseUserJobSummaryResponse>(
-    buildJobsRequestUrl(query),
+    buildJobsApiUrl(query, PAGE_SIZE),
   );
 
   return (
