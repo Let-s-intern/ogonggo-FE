@@ -32,7 +32,7 @@ function FilterPill({
   label: React.ReactNode;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
-  /** 켜진 알약은 파란 테두리와 글자다(`v6 공고달력/관심직무 선택됨.png`의 `직무`). */
+  /** 켜진 알약은 파란 바탕과 글자다. 사이트의 다른 드롭다운과 같게 맞췄다(2026-09-30). */
   active?: boolean;
   className?: string;
 }) {
@@ -40,7 +40,10 @@ function FilterPill({
     <span
       className={cn(
         'flex h-9 items-center gap-1 rounded-full border px-3 text-sm',
-        active ? 'border-blue-500 text-blue-500' : 'border-gray-200 text-gray-400',
+        // 켜진 모양은 사이트의 다른 드롭다운(`FilterButton` 의 선택됨)과 같은 파란 바탕이다.
+        active
+          ? 'border-transparent bg-blue-50 font-semibold text-blue-500'
+          : 'border-gray-200 text-gray-400',
         className,
       )}
     >

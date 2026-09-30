@@ -44,7 +44,6 @@ export async function JobList(query: JobListProps) {
       options={SORT_OPTIONS}
       current={query.sort}
       buildHref={(value) => buildJobListHref(query, { sort: value })}
-      defaultLabel="정렬 기준"
     />
   );
 
