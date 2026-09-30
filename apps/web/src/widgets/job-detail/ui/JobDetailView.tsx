@@ -54,6 +54,10 @@ export async function fetchJobDetail(jobId: number): Promise<JobDetail> {
   return response.data;
 }
 
+/** 좁은 화면에서 사이드바 묶음마다 위에 두는 회색 띠. 아래 페이지 레이아웃 주석 참고. */
+const SIDEBAR_SECTION_CLASS =
+  'empty:hidden max-lg:-mx-4 max-lg:border-t-8 max-lg:border-gray-100 max-lg:px-4 max-lg:pt-8 md:max-lg:-mx-6 md:max-lg:px-6';
+
 /**
  * `상세 채용공고.png`가 실제로 쓰는 6개 라벨(띄어쓰기 포함) 그대로다. 어드민에서 수정한
  * 회사/팀소개가 화면에 전혀 반영되지 않는다는 제보로 `companyAndTeamIntroduction`을 다시
@@ -184,8 +188,16 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           >
             {applyCta}
           </StickyApplyBar>
-          <SimilarJobs excludeJobId={job.id} />
-          <CrossSellWidget />
+          {/* 좁은 화면에서는 사이드바가 본문 아래로 내려와 본문·비슷한 공고·함께 보면 좋아요가
+              한 흐름으로 이어져 구분되지 않았다. 2단이 풀리는 폭에서만 각 묶음 위에 화면 끝까지
+              닿는 회색 띠를 둔다. 띠가 `<main>` 좌우 여백(`px-4 md:px-6`) 밖까지 닿도록 같은 값만큼
+              밖으로 뺀다. 목록이 비면 위젯이 아무것도 그리지 않으므로 `empty:hidden` 으로 띠도 숨긴다. */}
+          <div className={SIDEBAR_SECTION_CLASS}>
+            <SimilarJobs excludeJobId={job.id} />
+          </div>
+          <div className={SIDEBAR_SECTION_CLASS}>
+            <CrossSellWidget />
+          </div>
         </aside>
       </div>
     </div>
