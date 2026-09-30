@@ -91,7 +91,7 @@ export function useMoveStage(tab: ApplicationBoardTab): MoveStage {
  * 사이드·스터디의 `스크랩 ↔ 지원 완료` 처럼 백엔드에 호출이 없는 자리에서만 나온다
  * (`stages.ts` 의 `movableTo`).
  */
-const BLOCKED_MESSAGE = '아직 옮길 수 없는 단계예요';
+const BLOCKED_MESSAGE = '이 단계로는 옮길 수 없어 변경되지 않았습니다.';
 
 function withoutItem(data: StageData, id: number): StageData {
   let removed = 0;
