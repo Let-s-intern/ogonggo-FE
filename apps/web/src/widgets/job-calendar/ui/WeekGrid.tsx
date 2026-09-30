@@ -81,6 +81,39 @@ const EVENT_BAR_CLASSES = [...EVENT_RESET_CLASSES, 'rounded-none!'];
 /** 접었을 때 보여 주는 줄 수. */
 const COLLAPSED_ROWS = 7;
 
+/** `더 보기` 한 번에 늘리는 줄 수. */
+const MORE_ROWS = 30;
+
+/**
+ * 날마다 위에서 `rows`개만 남긴다. 막대가 하루짜리라 한 날의 막대는 그 날 칸에만 쌓이므로,
+ * 날마다 앞 `rows`개가 곧 격자의 앞 `rows`줄이다.
+ *
+ * **보이지 않는 막대는 아예 그리지 않는다.** 예전에는 전부 그린 뒤 높이로 잘랐는데, 시작일
+ * 기준에서 직무를 여럿 고르면 한 주가 막대 4,902개가 되어(운영, 2026-09-30) FullCalendar 가
+ * 그리는 동안 탭이 1분 넘게 멈췄다.
+ *
+ * 순서는 FullCalendar 의 `eventOrder`와 같아야 한다. 한 날의 막대는 `dueToday`·`start`·
+ * `duration`이 모두 같아 결국 `title`(회사명) 순이고, FullCalendar 는 문자열을
+ * `localeCompare`로 비교한다(`flexibleCompare`, `@fullcalendar/core`).
+ */
+function limitRowsPerDay(
+  items: UserJobCalendarItemResponse[],
+  rows: number,
+  dateBasis: JobCalendarDateBasis,
+): UserJobCalendarItemResponse[] {
+  const byDay = new Map<string, UserJobCalendarItemResponse[]>();
+  for (const item of items) {
+    const day = (dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt).slice(
+      0,
+      10,
+    );
+    byDay.set(day, [...(byDay.get(day) ?? []), item]);
+  }
+  return [...byDay.values()].flatMap((dayItems) =>
+    dayItems.sort((a, b) => a.companyName.localeCompare(b.companyName)).slice(0, rows),
+  );
+}
+
 /**
  * 한 주가 몇 줄이 되는지. 막대가 `dateBasis` 기준 하루짜리라 **한 날에 그 기준이 겹치는 공고
  * 수의 최댓값**이 곧 줄 수다.
@@ -149,23 +182,25 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
   // 지나가는지이지 오늘 끝나는지가 아니다.
   const today = toCalendarParam(new Date());
 
-  // 접힘은 지역 상태다. `date`·`brief` 와 달리 공유하거나 새로고침 뒤 되살릴 값이 아니라
+  // 보이는 줄 수는 지역 상태다. `date`·`brief` 와 달리 공유하거나 새로고침 뒤 되살릴 값이 아니라
   // URL 에 두지 않는다.
   //
   // 주를 옮기면 접힌 채로 시작해야 하는데, 화살표는 같은 라우트 안의 이동이라 이 컴포넌트가
-  // 다시 마운트되지 않는다(`useCalendarDate` 가 있는 이유와 같다) — 그냥 두면 펼친 상태가
+  // 다시 마운트되지 않는다(`useCalendarDate` 가 있는 이유와 같다) — 그냥 두면 펼친 줄 수가
   // 다음 주까지 따라간다. 렌더 중에 되돌리는 것은 React 가 "프로퍼티가 바뀔 때 상태를
   // 맞추는" 방법으로 안내하는 형태다. 이펙트로 미루면 한 프레임 펼쳐진 채 그려졌다가 접힌다.
-  const [expanded, setExpanded] = useState(false);
+  const [shownRows, setShownRows] = useState(COLLAPSED_ROWS);
   const [renderedWeek, setRenderedWeek] = useState(initialDate);
   if (renderedWeek !== initialDate) {
     setRenderedWeek(initialDate);
-    setExpanded(false);
+    setShownRows(COLLAPSED_ROWS);
   }
 
   const weekStart = startOfCalendarWeek(parseCalendarDate(initialDate) ?? new Date());
   const rowCount = countWeekRows(visibleItems, weekStart, dateBasis);
-  const collapsed = rowCount > COLLAPSED_ROWS && !expanded;
+  const drawnItems = limitRowsPerDay(visibleItems, shownRows, dateBasis);
+  // 막대마다 `find`로 찾으면 막대 수의 제곱이 된다.
+  const itemById = new Map(visibleItems.map((item) => [String(item.id), item]));
 
   const dayHover = useDayHover();
 
@@ -186,16 +221,6 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
         // `min-height: 2em`·`margin-bottom: 1em` 이 함께 붙어 있어 셋 다 덮는다.
         '[&_.fc-daygrid-day-events]:mt-3! [&_.fc-daygrid-day-events]:mb-0!',
         '[&_.fc-daygrid-day-events]:min-h-0!',
-        // 접었을 때는 격자를 7줄 높이에서 자른다. FullCalendar 의 `dayMaxEventRows` 를 쓰지
-        // 않는 이유는 그 옵션이 가려진 줄에 걸친 **모든 요일 칸마다** `+N` 링크를 하나씩
-        // 만들기 때문이다 — 주간에 `+N` 을 두지 않기로 한 판단(`buildWeekEvents` 주석)과
-        // 어긋난다. 높이로 자르면 배치는 그대로 두고 보이는 데까지만 보여줄 수 있다.
-        //
-        // 320px = 12px + 44px × 7. 12px 은 머리글 아래 첫 막대까지의 간격
-        // (`.fc-daygrid-day-events` 의 `mt-3`)이고 44px 은 한 줄(막대 36px + 아래 여백 8px)이다.
-        // **줄 높이의 정확한 배수여야 한다** — 7번째 줄 막대가 312px 에서 끝나므로 320px 에서
-        // 자르면 그 줄은 온전히 보이고 8번째 줄(320px 에서 시작)은 1px 도 보이지 않는다.
-        collapsed ? '[&_.fc-daygrid-body]:max-h-[320px] [&_.fc-daygrid-body]:overflow-hidden' : '',
       ].join(' ')}
     >
       <FullCalendar
@@ -206,7 +231,7 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
         firstDay={CALENDAR_FIRST_DAY}
         headerToolbar={false}
         height="auto"
-        // **오늘 마감이 맨 위다.** 7줄만 먼저 보여주므로(아래 `collapsed`) 가장 급한 공고가
+        // **오늘 마감이 맨 위다.** 7줄만 먼저 보여주므로(`limitRowsPerDay`) 가장 급한 공고가
         // 8번째 줄에 있으면 파랑으로 칠한 의미가 없다. 그 다음은 먼저 시작하고 긴 막대 순이고,
         // 줄을 쌓는 일은 FullCalendar 가 한다.
         //
@@ -238,7 +263,7 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
         eventClassNames={EVENT_BAR_CLASSES}
         eventContent={(arg) => {
           const deadline = arg.event.extendedProps.deadline as string;
-          const job = visibleItems.find((item) => String(item.id) === arg.event.id);
+          const job = itemById.get(arg.event.id);
           return (
             // 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
             // 있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
@@ -267,23 +292,23 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
             </JobCardLink>
           );
         }}
-        events={buildWeekEvents(visibleItems, today, dateBasis)}
+        events={buildWeekEvents(drawnItems, today, dateBasis)}
       />
       <DayHoverPopover hover={dayHover} items={visibleItems} dateBasis={dateBasis} side="right" />
       {rowCount > COLLAPSED_ROWS ? (
         <button
           type="button"
-          onClick={() => setExpanded((previous) => !previous)}
+          onClick={() =>
+            setShownRows(rowCount > shownRows ? shownRows + MORE_ROWS : COLLAPSED_ROWS)
+          }
           className="flex w-full items-center justify-center gap-1 py-3 text-sm text-gray-500 transition-colors hover:text-gray-700"
         >
           {/*
-            숫자는 **이 주의 공고 수**다. "몇 개가 가려졌는지"가 더 친절하지만 그 수를 알려면
-            어느 막대가 앞 7줄에 놓였는지를 알아야 하고, 그건 FullCalendar 의 줄 쌓기를 우리
-            코드에 그대로 옮겨 적는 일이다 — 라이브러리 내부가 바뀌면 조용히 틀린 수가 뜬다.
-            주의 공고 수는 데이터에서 바로 나오고 "얼마나 더 있나"라는 같은 질문에 답한다.
+            한 번에 다 펼치지 않고 `MORE_ROWS`줄씩 늘린다. 막대가 수천 개인 주에 전체를 그리면
+            접었을 때와 같은 이유로 탭이 멈춘다(`limitRowsPerDay`).
           */}
-          {expanded ? '접기' : `공고 ${visibleItems.length}개 전체 보기`}
-          <ChevronIcon direction={expanded ? 'up' : 'down'} className="h-4 w-4" />
+          {rowCount > shownRows ? `더 보기 (${drawnItems.length}/${visibleItems.length})` : '접기'}
+          <ChevronIcon direction={rowCount > shownRows ? 'down' : 'up'} className="h-4 w-4" />
         </button>
       ) : null}
     </div>
