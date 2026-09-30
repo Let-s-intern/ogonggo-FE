@@ -9,6 +9,8 @@ export interface FormSectionProps {
   step: number;
   title: string;
   description: string;
+  /** 이 단계의 필수 칸을 채운 비율, 0~100(`stepPercents`). 머리 오른쪽 원으로 보인다. */
+  percent: number;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -27,6 +29,7 @@ export function FormSection({
   step,
   title,
   description,
+  percent,
   open,
   onToggle,
   children,
@@ -50,11 +53,49 @@ export function FormSection({
           <span className="block text-base font-bold text-gray-900">{title}</span>
           <span className="block pt-0.5 text-xs text-gray-400">{description}</span>
         </span>
+        <ProgressRing percent={percent} />
         <ChevronIcon direction={open ? 'up' : 'down'} className="size-5 shrink-0 text-gray-400" />
       </button>
       <div id={bodyId} className={cn('border-t border-gray-100 px-6 py-5', !open && 'hidden')}>
         {children}
       </div>
     </section>
+  );
+}
+
+/**
+ * 단계 머리 오른쪽의 원형 진행률. 둘레 길이를 `pathLength` 100 으로 두어 퍼센트를 그대로
+ * `stroke-dasharray` 에 넣는다. 다 채우면 가운데 숫자 대신 체크다.
+ */
+function ProgressRing({ percent }: { percent: number }) {
+  const done = percent >= 100;
+  return (
+    <span
+      role="img"
+      aria-label={`${percent}% 완료`}
+      className="relative flex size-10 shrink-0 items-center justify-center"
+    >
+      <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+        <circle cx="18" cy="18" r="15" fill="none" strokeWidth="3" className="stroke-gray-100" />
+        <circle
+          cx="18"
+          cy="18"
+          r="15"
+          fill="none"
+          strokeWidth="3"
+          strokeLinecap="round"
+          pathLength={100}
+          strokeDasharray={`${percent} 100`}
+          className="stroke-blue-500 transition-[stroke-dasharray]"
+        />
+      </svg>
+      {done ? (
+        <span aria-hidden="true" className="icon-[lucide--check] block size-4 text-blue-500" />
+      ) : (
+        <span aria-hidden="true" className="text-[10px] font-bold text-gray-600">
+          {percent}%
+        </span>
+      )}
+    </span>
   );
 }

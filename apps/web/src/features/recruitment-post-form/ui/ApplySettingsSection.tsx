@@ -34,7 +34,12 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
   return (
     <div>
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-        <Field label="모집 시작일" htmlFor="post-start-date" required>
+        <Field
+          label="모집 시작일"
+          htmlFor="post-start-date"
+          required
+          done={Boolean(values.recruitmentStartDate)}
+        >
           <Input
             id="post-start-date"
             type="date"
@@ -47,6 +52,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
           label="모집 마감일"
           htmlFor="post-end-date"
           required
+          done={Boolean(values.recruitmentEndDate)}
           hint="마감 시간은 23:59로 설정됩니다."
         >
           <Input
@@ -58,14 +64,18 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
         </Field>
       </div>
 
-      <Field label="모집 포지션" required>
+      <Field label="모집 포지션" required done={values.positions.length > 0}>
         <PositionSelect
           value={values.positions}
           onChange={(positions) => onChange({ positions })}
         />
       </Field>
 
-      <Field label="기술 스택" htmlFor="post-technology-stacks">
+      <Field
+        label="기술 스택"
+        htmlFor="post-technology-stacks"
+        done={values.technologyStacks.length > 0}
+      >
         <TechnologyStackInput
           id="post-technology-stacks"
           value={values.technologyStacks}
@@ -74,7 +84,12 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
       </Field>
 
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-        <Field label="소통 방법" htmlFor="post-contact-method" required>
+        <Field
+          label="소통 방법"
+          htmlFor="post-contact-method"
+          required
+          done={Boolean(values.contactMethod)}
+        >
           <FormSelect
             id="post-contact-method"
             options={CONTACT_METHOD_OPTIONS}
@@ -87,7 +102,11 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
           />
         </Field>
 
-        <Field label={email ? '이메일 주소' : '오픈 카톡방 링크'} htmlFor="post-contact-value">
+        <Field
+          label={email ? '이메일 주소' : '오픈 카톡방 링크'}
+          htmlFor="post-contact-value"
+          done={Boolean(values.contactValue.trim())}
+        >
           <Input
             id="post-contact-value"
             type={email ? 'email' : 'url'}
