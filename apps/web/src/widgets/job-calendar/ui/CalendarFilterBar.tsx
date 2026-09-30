@@ -27,18 +27,21 @@ function FilterPill({
   leading,
   trailing,
   active = false,
+  className,
 }: {
   label: React.ReactNode;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   /** 켜진 알약은 파란 테두리와 글자다(`v6 공고달력/관심직무 선택됨.png`의 `직무`). */
   active?: boolean;
+  className?: string;
 }) {
   return (
     <span
       className={cn(
         'flex h-9 items-center gap-1 rounded-full border px-3 text-sm',
         active ? 'border-blue-500 text-blue-500' : 'border-gray-200 text-gray-400',
+        className,
       )}
     >
       {leading}
@@ -54,7 +57,7 @@ const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPE_LABELS) as [
 ][];
 
 /**
- * `경력` 알약의 값과 이름. `entities/job/model/labels.ts` 의 `EXPERIENCE_TYPE_LABELS` 를 쓰지
+ * `요구 경력` 알약의 값과 이름. `entities/job/model/labels.ts` 의 `EXPERIENCE_TYPE_LABELS` 를 쓰지
  * 않는 이유는 그쪽이 `BOTH` 와 `IRRELEVANT` 를 둘 다 `경력무관` 으로 부르기 때문이다 — 배지
  * 한 칸에는 문제가 없지만 목록으로 펼치면 같은 이름이 두 줄이 되어 무엇이 다른지 알 수 없다.
  * 이름은 API 문서의 표(`ListPublicJobCalendarParams`)를 그대로 옮겼다.
@@ -119,7 +122,8 @@ function FilterDropdown<TValue extends string>({
           trailing={<ChevronIcon className="h-4 w-4 group-open:rotate-180" />}
         />
       </summary>
-      <ul className="absolute right-0 z-10 mt-1 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-md">
+      {/* 모바일은 알약이 왼쪽부터 쌓여 오른쪽 맞춤이면 목록이 화면 왼쪽 밖으로 잘린다. */}
+      <ul className="absolute left-0 z-10 mt-1 w-36 md:right-0 md:left-auto rounded-md border border-gray-200 bg-white py-1 shadow-md">
         <li>
           <TrackedLink
             href={buildHref([])}
@@ -178,11 +182,13 @@ function KeywordFilter({ query }: { query: JobCalendarQuery }) {
   );
 
   return (
-    <form action="/calendar" method="GET" className="flex items-center">
+    // 모바일은 검색이 한 줄을 다 쓰고 필터 알약들이 다음 줄로 내려간다.
+    <form action="/calendar" method="GET" className="flex w-full items-center md:w-auto">
       {[...carried].map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <FilterPill
+        className="flex-1 md:flex-none"
         active={query.keyword !== undefined}
         leading={<SearchIcon className="h-4 w-4" />}
         label={
@@ -194,7 +200,7 @@ function KeywordFilter({ query }: { query: JobCalendarQuery }) {
             minLength={KEYWORD_MIN_LENGTH}
             maxLength={KEYWORD_MAX_LENGTH}
             aria-label="공고 검색"
-            className="w-24 bg-transparent text-gray-800 outline-none placeholder:text-gray-400"
+            className="w-full min-w-0 bg-transparent text-gray-800 md:w-24 outline-none placeholder:text-gray-400"
           />
         }
       />
@@ -251,7 +257,8 @@ function DeadlineBasisToggle({ query }: { query: JobCalendarQuery }) {
       href={buildJobCalendarHref(query, { dateBasis: isDeadlineBasis ? 'start' : 'deadline' })}
       role="checkbox"
       aria-checked={isDeadlineBasis}
-      className="flex items-center gap-2 rounded-full"
+      // 모바일은 체크박스 줄 오른쪽 끝에 붙는다.
+      className="ml-auto flex items-center gap-2 rounded-full md:ml-0"
     >
       <span
         className={cn(
@@ -273,16 +280,17 @@ export interface CalendarFilterBarProps {
 }
 
 /**
- * 공고 달력 상단의 필터 줄. `채용 형태`·`경력`·`마감공고 제외`·`공고 검색`·`스크랩 공고만`·
+ * 공고 달력 상단의 필터 줄. `채용 형태`·`요구 경력`·`마감공고 제외`·`공고 검색`·`스크랩 공고만`·
  * `간략히 보기`·`직무`·`마감일 기준`이 실제로 동작한다(Push 1).
  */
 export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
   return (
     // v6 목업은 알약 줄 아래에 체크박스 줄을 오른쪽 끝에 맞춰 둔다. 두 줄 사이는 목업 실측 16px 이다.
-    // 모바일은 알약이 줄바꿈하고 체크박스가 두 칸 두 줄이 된다. 시안은 알약 한 줄 가로 스크롤인데,
-    // 드롭다운이 알약 아래로 떨어져서 스크롤 상자 안에 두면 잘린다.
+    // 모바일은 검색 한 줄, 알약 셋 한 줄, 체크박스 한 줄이고 `마감일 기준`이 체크박스 줄 오른쪽
+    // 끝이다. 시안은 알약 한 줄 가로 스크롤인데, 드롭다운이 알약 아래로 떨어져서 스크롤 상자 안에
+    // 두면 잘린다.
     <div className="flex w-full flex-col items-start gap-4 md:w-auto md:items-end">
-      <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
+      <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
         <KeywordFilter query={query} />
         <FilterDropdown
           label="채용 형태"
@@ -318,7 +326,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
           <FilterPill label="직무" trailing={<ChevronIcon className="h-4 w-4 text-gray-400" />} />
         )}
         <FilterDropdown
-          label="경력"
+          label="요구 경력"
           filterType="experience"
           selected={query.experienceTypes}
           options={EXPERIENCE_TYPE_OPTIONS}
@@ -326,7 +334,7 @@ export function CalendarFilterBar({ query }: CalendarFilterBarProps) {
         />
       </div>
       {/* 체크박스끼리는 목업에서 18px 이다. */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:flex md:items-center md:gap-[18px]">
+      <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-3 md:w-auto md:gap-[18px]">
         {/*
           체크박스 중 유일하게 동작한다 — 켜면 주간, 끄면 월간이고 기본은 월간이다(PRD 8.1).
           상태가 URL 쿼리에 있어서(PRD 7절) 토글이 링크 한 줄로 끝나고, 이 줄이 클라이언트
