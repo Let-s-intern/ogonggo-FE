@@ -64,10 +64,19 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
         className="block h-full"
         events={clickEvents}
       >
-        <Card className="flex h-full flex-col gap-3 border-gray-100 transition-shadow hover:shadow-md">
-          {/* 모바일은 카드가 좁아 로고 아래로 메타·작성자를 내린다(`docs/asset/v9 mobile/사이드 스터디.png`). */}
-          <div className="flex flex-col items-start gap-3 md:flex-row md:items-center">
-            <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
+        <Card className="flex h-full flex-col gap-2 border-gray-100 transition-shadow hover:shadow-md md:gap-3">
+          {/*
+            모바일은 카드가 좁아 로고 아래로 메타·작성자를 내린다(`docs/asset/v9 mobile/사이드 스터디.png`).
+            모집 상태 배지는 모바일에서 썸네일 오른쪽 빈자리에 둔다 — 제목 아래 한 줄을 따로 쓰면
+            채용공고·부트캠프 카드보다 카드가 길어진다.
+          */}
+          <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="flex items-center gap-2">
+              <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
+              <span className="flex md:hidden">
+                <SideStudyBadge sideStudy={sideStudy} />
+              </span>
+            </div>
             <div className="w-full min-w-0 md:w-auto md:flex-1">
               <p className="truncate text-xs text-gray-400">{metaParts.join(' · ')}</p>
               <p className="truncate text-sm text-gray-600">
@@ -79,7 +88,9 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
             </span>
           </div>
           <p className="line-clamp-2 text-sm font-bold text-gray-900">{sideStudy.title}</p>
-          <SideStudyBadge sideStudy={sideStudy} />
+          <span className="hidden md:flex">
+            <SideStudyBadge sideStudy={sideStudy} />
+          </span>
           <p className="mt-auto flex flex-col items-start gap-1 text-xs text-gray-400 md:flex-row md:items-center md:justify-between md:gap-2">
             <span className="max-w-full truncate">
               {hashtags.map((tag) => `#${tag}`).join(' ')}
@@ -99,14 +110,14 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
       </TrackedLink>
       {/*
        * 첫 줄 오른쪽 끝, `BookmarkSlot`이 비워 둔 자리에 정확히 겹친다. 카드 안쪽 여백이 16px
-       * 이고 첫 줄이 48px(작성자 썸네일)이라, 16px 에서 시작하는 48px 상자 안에서 세로 가운데가
-       * 아이콘의 원래 자리다.
+       * 이고 첫 줄이 작성자 썸네일 높이(모바일 40px, 데스크톱 48px)라, 16px 에서 시작하는 그
+       * 높이의 상자 안에서 세로 가운데가 아이콘의 원래 자리다.
        */}
       <BookmarkButton
         kind="side-studies"
         id={sideStudy.id}
         bookmarked={sideStudy.bookmarked}
-        className="absolute top-4 right-4 flex h-12 items-center"
+        className="absolute top-4 right-4 flex h-10 items-center md:h-12"
         iconClassName="h-5 w-5"
       />
     </div>
@@ -135,7 +146,7 @@ function BookmarkSlot() {
 }
 
 /**
- * 작성자 프로필 이미지. 48px 정사각이고, 값이 없거나 주소가 깨지면 `shared/ui/Thumbnail.tsx`가
+ * 작성자 프로필 이미지. 정사각(모바일 40px, 데스크톱 48px)이고, 값이 없거나 주소가 깨지면 `shared/ui/Thumbnail.tsx`가
  * 흰 배경 위 오공고 로고로 떨어진다. 상세 헤더(`widgets/side-study-detail`)와 같은 폴백이다.
  *
  * 로고 크기를 여기서 덮어쓰지 않는다. `Thumbnail`이 로고 폭을 박스 폭의 절반이되 24~96px로
@@ -153,7 +164,7 @@ function BookmarkSlot() {
  */
 function AuthorThumbnail({ src }: { src?: string }) {
   return (
-    <span className="block h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
+    <span className="block h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-100 md:h-12 md:w-12">
       <Thumbnail src={src} alt="" className="h-full w-full" />
     </span>
   );
@@ -164,9 +175,8 @@ function AuthorThumbnail({ src }: { src?: string }) {
  * 마감이 하루 이하로 남았으면 문구는 그대로 두고 색만 주황으로 바꾼다. 채용공고·부트캠프
  * 카드가 그 자리에 D-day를 넣는 것과 다른데, 여기서는 남은 자리 수가 더 중요한 정보다.
  *
- * v3에서 모양이 `Badge` 기본값(`rounded-sm px-2 py-1`)과 같아져 덮어쓸 것이 글자 크기뿐이다.
- * 제목 아래 자기 줄에 혼자 있어서 `self-start`로 폭을 글자에 맞춘다 — 없으면 `flex-col`의
- * 기본 늘이기에 걸려 카드 폭만큼 늘어난다.
+ * 모양은 채용공고·부트캠프 카드의 D-day 배지와 같은 작은 알약이다(`rounded-full px-2 py-0.5`).
+ * 모바일은 썸네일 오른쪽, 데스크톱은 제목 아래에 놓인다(`SideStudyCard`).
  *
  * `CLOSED`는 모집장이 마감한 글과 마감일이 지나 자동 마감된 글을 모두 포함한다. `N`은
  * 삭제되지 않은 지원 전체 건수(`applicationCount`)이고 수락 여부와 무관하다.
@@ -174,7 +184,7 @@ function AuthorThumbnail({ src }: { src?: string }) {
 function SideStudyBadge({ sideStudy }: { sideStudy: SideStudySummary }) {
   if (sideStudy.recruitmentStatus === 'CLOSED') {
     return (
-      <Badge tone="neutral" className="self-start text-xs font-bold">
+      <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
         마감
       </Badge>
     );
@@ -184,7 +194,10 @@ function SideStudyBadge({ sideStudy }: { sideStudy: SideStudySummary }) {
   const urgent = daysRemaining !== null && daysRemaining <= 1;
 
   return (
-    <Badge tone={urgent ? 'urgent' : 'main'} className="self-start text-xs font-bold">
+    <Badge
+      tone={urgent ? 'urgent' : 'main'}
+      className="rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+    >
       {`모집 중 ${sideStudy.applicationCount}/${sideStudy.capacity}`}
     </Badge>
   );
