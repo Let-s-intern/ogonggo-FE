@@ -1,8 +1,9 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
 import { ALL_JOB_MAJOR_SLUGS, jobMajorField } from '../lib/job-majors';
-import { toCalendarParam, type JobCalendarQuery } from '../lib/query';
-import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
+import { buildJobCalendarHref, toCalendarParam, type JobCalendarQuery } from '../lib/query';
+import { CALENDAR_FIRST_DAY, shiftMonths, shiftWeeks, startOfCalendarWeek } from '../lib/week';
 import { CalendarHeader } from './CalendarHeader';
+import { CalendarSwipe } from './CalendarSwipe';
 import { JobMajorPicker } from './JobMajorPicker';
 import { MonthCalendar } from './MonthCalendar';
 import { WeekGrid } from './WeekGrid';
@@ -189,23 +190,33 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   // 따라가게 하는 자리가 하나 더 늘어난다. 어차피 조회 범위가 7일과 42일로 달라 토글하면
   // 서버가 다시 렌더하므로 리마운트가 추가 비용도 아니다. 두 뷰의 렌더 규칙이 서로 겹치지
   // 않는다는 점이 더 크다 — 로고와 `+N` 은 월간, 가로 막대는 주간이다.
-  return query.brief ? (
-    <div className="flex flex-col gap-4">
-      {header}
-      <WeekGrid
-        items={items}
-        initialDate={initialDate}
-        bookmarkedOnly={query.bookmarkedOnly}
-        dateBasis={query.dateBasis}
-      />
-    </div>
-  ) : (
-    <MonthCalendar
-      items={items}
-      initialDate={initialDate}
-      header={header}
-      bookmarkedOnly={query.bookmarkedOnly}
-      dateBasis={query.dateBasis}
-    />
+  // 모바일에서 좌우로 밀면 위 화살표와 같은 곳으로 간다(`CalendarSwipe`).
+  const step = (delta: number) =>
+    query.brief ? shiftWeeks(baseDate, delta) : shiftMonths(baseDate, delta);
+  const prevHref = buildJobCalendarHref(query, { date: step(-1) });
+  const nextHref = buildJobCalendarHref(query, { date: step(1) });
+
+  return (
+    <CalendarSwipe prevHref={prevHref} nextHref={nextHref}>
+      {query.brief ? (
+        <div className="flex flex-col gap-4">
+          {header}
+          <WeekGrid
+            items={items}
+            initialDate={initialDate}
+            bookmarkedOnly={query.bookmarkedOnly}
+            dateBasis={query.dateBasis}
+          />
+        </div>
+      ) : (
+        <MonthCalendar
+          items={items}
+          initialDate={initialDate}
+          header={header}
+          bookmarkedOnly={query.bookmarkedOnly}
+          dateBasis={query.dateBasis}
+        />
+      )}
+    </CalendarSwipe>
   );
 }
