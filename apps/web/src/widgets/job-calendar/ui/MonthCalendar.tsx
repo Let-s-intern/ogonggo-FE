@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { useScrollLock } from '@/shared/lib/useScrollLock';
 import { filterBookmarkedOnly } from '../lib/bookmarked-only';
 import { parseCalendarDate, toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
 import { useBookmarkedIds } from './BookmarkedOnlyFilterPill';
@@ -56,6 +57,8 @@ export function MonthCalendar({
    * 가리면 달력을 볼 수 없다.
    */
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  // 카드가 떠 있는 동안 뒤 달력이 스크롤되지 않게 한다.
+  useScrollLock(mobilePanelOpen);
   const selectDay = (day: string) => {
     setSelectedDay(day);
     setMobilePanelOpen(true);
