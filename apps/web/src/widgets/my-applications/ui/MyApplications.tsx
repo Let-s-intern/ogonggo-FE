@@ -181,7 +181,7 @@ export function MyApplications({ query }: MyApplicationsProps) {
     }
     const tab = query.tab;
     if (!isStageId(tab, value) || !canMoveStage(tab, row.applicationStatus, value)) {
-      toast.show({ message: '아직 옮길 수 없는 단계예요', tone: 'error' });
+      toast.show({ message: '이 단계로는 옮길 수 없어 변경되지 않았습니다.', tone: 'error' });
       return;
     }
     mutate(row.id, () => moveApplicationStage(tab, row.id, row.applicationStatus, value));
