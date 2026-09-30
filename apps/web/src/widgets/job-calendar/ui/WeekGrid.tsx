@@ -280,11 +280,14 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
             >
               <span
                 className={cn(
-                  // v6 막대는 로고 없이 기업명만 있고 오른쪽 끝에 2px 세로선이 있다.
-                  'flex h-9 items-center rounded-[6px] border-r-2 px-3 text-sm text-gray-800',
-                  // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
+                  // v6 막대는 로고 없이 기업명만 있고 한쪽 끝에 세로 띠가 있다. 띠의 자리가 기준을
+                  // 말한다 — 마감일 기준이면 오른쪽 끝(여기서 끝난다), 시작일 기준이면 왼쪽
+                  // 끝(여기서 시작한다). 목업의 2px 선은 너무 옅어 4px 로 굵히고 색을 진하게 했다.
+                  'flex h-9 items-center rounded-[6px] px-3 text-sm text-gray-800',
+                  dateBasis === 'start' ? 'border-l-4' : 'border-r-4',
+                  // 바탕은 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
                   // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
-                  deadline === today ? 'border-blue-100 bg-blue-50' : 'border-gray-200 bg-gray-100',
+                  deadline === today ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-100',
                 )}
               >
                 <span className="truncate">{arg.event.title}</span>
