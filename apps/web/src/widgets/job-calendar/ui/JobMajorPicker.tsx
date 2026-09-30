@@ -42,7 +42,7 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
     );
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-20 md:pb-0">
       <CalendarPanel className="items-center px-6 pt-12 pb-10">
         <h2 className="text-2xl font-bold text-gray-900">관심 직무를 골라주세요</h2>
         <div className="mt-3 flex items-center gap-3">
@@ -88,8 +88,16 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
           })}
         </ul>
       </CalendarPanel>
-      {/* 목업에서 버튼 줄 위에는 가로선이 있고, 두 버튼은 가운데 모여 있다(공고보기 710px, 초기화 202px). */}
-      <div className="flex justify-center gap-2 border-t border-gray-200 pt-3">
+      {/*
+        목업에서 버튼 줄 위에는 가로선이 있고, 두 버튼은 가운데 모여 있다(공고보기 710px, 초기화 202px).
+        모바일은 직무 목록이 길어 끝까지 내려야 버튼이 보여서 화면 아래에 띄워 둔다. 목록 끝이
+        버튼에 가리지 않게 그만큼 아래 여백(`pb-20`)을 둔다. `data-sticky-apply-bar` 는 의견 버튼이
+        이 바 위로 올라가게 하는 표시다(`features/service-feedback`) — 공고 상세 신청하기 바와 같다.
+      */}
+      <div
+        data-sticky-apply-bar
+        className="fixed inset-x-0 bottom-0 z-30 flex justify-center gap-2 border-t border-gray-200 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:px-0 md:pb-0"
+      >
         <button
           type="button"
           disabled={empty}
@@ -101,7 +109,7 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
             router.push(buildJobCalendarHref(query, { majors: selected, picker: false }));
           }}
           className={cn(
-            'h-9 w-full max-w-[710px] rounded-xs border text-sm transition-colors',
+            'h-11 w-full max-w-[710px] rounded-xs border text-sm transition-colors md:h-9',
             empty
               ? 'cursor-not-allowed border-gray-200 text-gray-400'
               : 'border-blue-500 text-blue-500 hover:bg-blue-50',
@@ -113,7 +121,7 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
           type="button"
           onClick={() => setSelected([])}
           className={cn(
-            'h-9 w-[202px] shrink-0 rounded-xs bg-gray-100 text-sm transition-colors hover:bg-gray-200',
+            'h-11 w-28 shrink-0 rounded-xs bg-gray-100 text-sm transition-colors hover:bg-gray-200 md:h-9 md:w-[202px]',
             empty ? 'text-gray-400' : 'text-gray-800',
           )}
         >

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
+import { useScrollLock } from '@/shared/lib/useScrollLock';
 
 export interface RouteModalProps {
   /** 닫기 버튼과 대화상자의 이름. 보조기술이 읽는다. */
@@ -33,12 +34,8 @@ export function RouteModal({ label, children }: RouteModalProps) {
     if (dialog && !dialog.open) {
       dialog.showModal();
     }
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previous;
-    };
   }, []);
+  useScrollLock(true);
 
   return (
     <dialog
