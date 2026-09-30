@@ -1,4 +1,5 @@
 import type { RecruitmentType } from '@/shared/lib/dday';
+import type { ThumbnailSrc } from '@/shared/ui/Thumbnail';
 
 /**
  * 마이페이지 표 한 행에서 **종류와 무관한 부분**. `스크랩한 공고` 의 탭 셋과 `지원·신청 내역`
@@ -15,7 +16,7 @@ export interface MyPageListRow {
    * (`features/my-applications/model/placeholder.ts`) 은 갈 곳이 없다.
    */
   href?: string;
-  thumbnailUrl?: string;
+  thumbnailUrl?: ThumbnailSrc;
   /** 제목 위 작은 줄. 공고는 회사명, 모집글은 작성자 닉네임이다. */
   caption: string;
   title: string;

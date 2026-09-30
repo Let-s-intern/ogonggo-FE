@@ -7,6 +7,7 @@ import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
 
 export interface JobDetailHeaderCardProps {
   companyName: string;
+  logoUrl?: string;
   region?: string;
   title: string;
   recruitmentType: JobRecruitmentType;
@@ -41,6 +42,7 @@ export function formatDeadlineText(
  */
 export function JobDetailHeaderCard({
   companyName,
+  logoUrl,
   region,
   title,
   recruitmentType,
@@ -50,7 +52,11 @@ export function JobDetailHeaderCard({
   return (
     <Card className="bg-gray-50 p-4 md:p-8">
       <div className="flex items-center gap-3">
-        <CompanyLogo companyName={companyName} className="h-10 w-10 md:h-16 md:w-16" />
+        <CompanyLogo
+          companyName={companyName}
+          logoUrl={logoUrl}
+          className="h-10 w-10 md:h-16 md:w-16"
+        />
         <div>
           <p className="font-bold text-gray-900">{companyName}</p>
           {region ? <p className="text-sm text-gray-500">{region}</p> : null}

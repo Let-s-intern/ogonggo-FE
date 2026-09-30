@@ -88,7 +88,7 @@ async function fetchJobScraps(query: MyScrapsQuery): Promise<MyScrapsPage> {
       id: job.id,
       key: `job-${job.id}`,
       href: `/jobs/${job.id}`,
-      thumbnailUrl: getCompanyLogoUrl(job.companyName),
+      thumbnailUrl: [job.coverImageUrl, job.logoUrl, getCompanyLogoUrl(job.companyName)],
       caption: job.companyName,
       title: job.title,
       meta: [

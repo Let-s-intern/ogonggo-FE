@@ -83,7 +83,11 @@ export function JobCard({ job, tracking }: JobCardProps) {
         jobInfo={jobInfo}
         tracking={tracking}
       >
-        <JobThumbnail companyName={job.companyName} />
+        <JobThumbnail
+          companyName={job.companyName}
+          coverImageUrl={job.coverImageUrl}
+          logoUrl={job.logoUrl}
+        />
         <p className="flex items-center justify-between text-xs text-gray-400">
           <span>{metaParts.join(' · ')}</span>
           {deadlineBadge ? <span className="hidden md:inline-flex">{deadlineBadge}</span> : null}

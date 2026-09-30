@@ -75,7 +75,11 @@ export function DayJobCard({
         className="block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]"
       >
         <div className="flex items-start gap-3">
-          <CompanyLogo companyName={job.companyName} className="h-10 w-10 rounded-lg" />
+          <CompanyLogo
+            companyName={job.companyName}
+            logoUrl={job.logoUrl}
+            className="h-10 w-10 rounded-lg"
+          />
           <p className="flex-1 truncate pt-1 text-sm font-medium text-gray-800">
             {job.companyName}
           </p>

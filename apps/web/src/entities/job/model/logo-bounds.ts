@@ -123,11 +123,30 @@ function settle(url: string, measure: LogoMeasure) {
  * 로고 호스트(구글 이미지 캐시)가 `access-control-allow-origin: *` 를 보내서 캔버스로 픽셀을 읽을
  * 수 있다. 그 헤더가 빠져 픽셀을 못 읽으면 이미지 전체를 범위로 둔다 — 여백 제거 전과 같은 모습이다.
  * 이미지 자체가 안 뜨면 `error` 로 두고, 컴포넌트가 기본 썸네일로 떨어진다.
+ *
+ * `crossOrigin` 을 켠 채로는 그 헤더가 없는 호스트의 이미지가 로드부터 실패한다(API 로고가 있는
+ * S3 버킷, 2026-09-30 실측). 그래서 실패하면 `crossOrigin` 없이 한 번 더 받아 보고, 뜨면 전체를
+ * 범위로 둔다. 두 번째도 실패해야 `error` 다.
  */
+function measureWhole(url: string) {
+  const img = new Image();
+  img.onerror = () => settle(url, { status: 'error' });
+  img.onload = () => {
+    const { naturalWidth, naturalHeight } = img;
+    settle(url, {
+      status: 'ready',
+      naturalWidth,
+      naturalHeight,
+      bounds: { x: 0, y: 0, width: naturalWidth, height: naturalHeight },
+    });
+  };
+  img.src = url;
+}
+
 function measure(url: string) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
-  img.onerror = () => settle(url, { status: 'error' });
+  img.onerror = () => measureWhole(url);
   img.onload = () => {
     const naturalWidth = img.naturalWidth;
     const naturalHeight = img.naturalHeight;

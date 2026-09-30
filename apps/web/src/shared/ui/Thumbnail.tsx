@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import { Logo } from './Logo';
 
+/** 이미지 주소 하나, 또는 앞에서부터 차례로 시도할 후보들. 빈 값은 건너뛴다. */
+export type ThumbnailSrc = string | readonly (string | undefined)[];
+
 export interface ThumbnailProps {
-  /** 없으면 오공고 로고 폴백을 그린다. */
-  src?: string;
+  /** 없거나 후보가 모두 실패하면 오공고 로고 폴백을 그린다. */
+  src?: ThumbnailSrc;
   alt: string;
   className?: string;
 }
@@ -40,22 +43,41 @@ function ThumbnailFallback({ className }: { className?: string }) {
  * `next/image`를 쓰지 않는 이유는 기존 `CompanyLogo`와 같다 — 외부 호스트(새싹 등) 이미지가
  * 섞여 있어 도메인을 미리 등록해야 하고, 목데이터 단계에서 그 목록이 계속 바뀐다.
  *
- * 로드 실패를 `useState`로 한 번만 잡는다. 폴백은 이미지가 아니라 인라인 SVG라 그 자체가 다시
- * 실패할 일이 없다.
+ * 후보가 여럿이면 실패할 때마다 다음 후보로 넘어간다 — 공고 행은 썸네일, API 로고, 회사명
+ * 목록의 로고 순이다. 폴백은 이미지가 아니라 인라인 SVG라 그 자체가 다시 실패할 일이 없다.
+ *
+ * 서버가 그린 이미지는 하이드레이션 전에 실패할 수 있고, 그러면 `onError` 가 불리지 않는다.
+ * 마운트 직후 `complete && naturalWidth === 0` 을 한 번 더 본다
+ * (`.claude/tasks/memos/메모-썸네일-SSR-깨진이미지-폴백-2026-09-21.md`).
  */
 export function Thumbnail({ src, alt, className }: ThumbnailProps) {
-  const [failed, setFailed] = useState(false);
+  // 실패를 주소로 기록한다. `onError` 와 마운트 직후 확인이 같은 실패를 둘 다 잡아도 한 번이다.
+  const [failed, setFailed] = useState<readonly string[]>([]);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const candidates = typeof src === 'string' ? [src] : (src ?? []);
+  const current = candidates.find((url): url is string => !!url && !failed.includes(url));
+  const markFailed = (url: string) =>
+    setFailed((prev) => (prev.includes(url) ? prev : [...prev, url]));
 
-  if (!src || failed) {
+  useEffect(() => {
+    const img = imgRef.current;
+    if (current && img?.complete && img.naturalWidth === 0) {
+      markFailed(current);
+    }
+  }, [current]);
+
+  if (!current) {
     return <ThumbnailFallback className={className} />;
   }
 
   return (
     <img
-      src={src}
+      key={current}
+      ref={imgRef}
+      src={current}
       alt={alt}
       className={cn('object-cover', className)}
-      onError={() => setFailed(true)}
+      onError={() => markFailed(current)}
     />
   );
 }
