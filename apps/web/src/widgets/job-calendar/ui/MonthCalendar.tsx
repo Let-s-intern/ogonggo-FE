@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { useMediaQuery } from '@/shared/lib/useMediaQuery';
 import { useScrollLock } from '@/shared/lib/useScrollLock';
 import { filterBookmarkedOnly } from '../lib/bookmarked-only';
 import { parseCalendarDate, toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
@@ -57,11 +58,20 @@ export function MonthCalendar({
    * 가리면 달력을 볼 수 없다.
    */
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  /*
+   * 카드는 모바일에서만 연다. 데스크톱은 오른쪽 목록이 그날을 보여 준다. 예전에는 화면 크기와
+   * 상관없이 열림 상태를 켰고(카드는 `md:hidden` 이라 안 보였다), 거기에 스크롤 잠금이 걸려
+   * 데스크톱에서 날짜를 누르면 보이지 않는 카드 때문에 페이지 스크롤이 잠겼다(#244).
+   */
+  const desktop = useMediaQuery('(min-width: 768px)');
+  const panelVisible = mobilePanelOpen && !desktop;
   // 카드가 떠 있는 동안 뒤 달력이 스크롤되지 않게 한다.
-  useScrollLock(mobilePanelOpen);
+  useScrollLock(panelVisible);
   const selectDay = (day: string) => {
     setSelectedDay(day);
-    setMobilePanelOpen(true);
+    if (!desktop) {
+      setMobilePanelOpen(true);
+    }
   };
   if (renderedMonth !== initialDate) {
     setRenderedMonth(initialDate);
@@ -92,7 +102,7 @@ export function MonthCalendar({
       <div className="hidden md:block">
         <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
       </div>
-      {mobilePanelOpen ? (
+      {panelVisible ? (
         <div
           className="fixed inset-0 z-40 bg-gray-950/10 md:hidden"
           onClick={() => setMobilePanelOpen(false)}

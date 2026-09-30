@@ -3,16 +3,19 @@
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useRef, useState } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
-import { DayJobCard } from './DayJobPanel';
+import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { JobCalendarDateBasis } from '../lib/query';
 
 /**
- * 카드에 그리는 최대 수. 시작일 기준에서는 한 날이 수백 건일 수 있어(운영, 2026-09-30) 다
- * 그리면 올릴 때마다 멈춘다. 나머지는 `외 N건`으로 센다.
+ * 미리보기에 그리는 최대 줄 수. 한눈에 훑을 만큼만 두고 나머지는 `외 N건`으로 센다. 시작일
+ * 기준에서는 한 날이 수백 건일 수 있어(운영, 2026-09-30) 다 그리면 올릴 때마다 멈추기도 한다.
  */
-const MAX_CARD_ITEMS = 20;
+const MAX_PREVIEW_ITEMS = 12;
 
-/** 칸에서 카드로 마우스를 옮기는 동안(`sideOffset` 8px 틈) 카드를 닫지 않고 기다리는 시간. */
+/**
+ * 칸에서 나간 뒤 닫기까지 기다리는 시간. 옆 칸으로 옮겨 가는 사이에 카드가 닫혔다 다시 열리며
+ * 깜빡이지 않게 한다 — 옆 칸에 들어오면 기다리던 닫기를 취소한다.
+ */
 const HOVER_CLOSE_DELAY_MS = 120;
 
 /**
@@ -37,15 +40,16 @@ function itemsOnDay(
 }
 
 /**
- * 격자의 날짜 칸에 마우스를 올리면 그 날짜의 공고를 `DayJobCard` 목록으로 띄우는 카드
+ * 격자의 날짜 칸에 마우스를 올리면 그 날짜의 공고를 한 줄씩 훑어보게 띄우는 미리보기
  * (PRD 3절). 월간(`MonthGrid`)과 주간(`WeekGrid`)이 같이 쓴다.
  *
  * **카드는 날짜 칸 하나에 하나다.** 예전에는 로고(월간)·막대(주간)마다 카드가 붙어 있어 같은
  * 칸 안에서 옮겨 다닐 때마다 카드가 닫혔다 열렸다. 격자가 칸마다 `bindDayCell`로 마우스 출입을
  * 걸고, 카드 하나(`DayHoverPopover`)가 지금 올라간 칸을 앵커로 삼는다.
  *
- * 칸에서 나갈 때는 잠깐 기다렸다 닫고, 그 사이 카드로 들어오면 열린 채로 둔다 — 바로 닫으면
- * 카드로 옮겨 가기 전에 닫힌다.
+ * **누를 수 없는 미리보기다.** 클릭하기 전에 어떤 공고가 있는지 빠르게 보려는 것이라, 카드는
+ * 마우스를 받지 않고(`pointer-events-none`) 칸에서 나가면 닫힌다. 공고는 날짜를 눌러 오른쪽
+ * 목록(`DayJobPanel`)에서 연다.
  */
 export function useDayHover() {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
@@ -77,8 +81,6 @@ export function useDayHover() {
   return {
     hoveredDay,
     anchorRef,
-    keepOpen,
-    closeSoon,
     bindDayCell,
     close: () => setHoveredDay(null),
   };
@@ -98,7 +100,7 @@ export interface DayHoverPopoverProps {
 }
 
 export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopoverProps) {
-  const { hoveredDay, anchorRef, keepOpen, closeSoon, close } = hover;
+  const { hoveredDay, anchorRef, close } = hover;
   const dayItems = hoveredDay ? itemsOnDay(items, hoveredDay, dateBasis) : [];
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
 
@@ -119,23 +121,30 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
             onOpenAutoFocus={(event) => event.preventDefault()}
             // 앵커가 칸이라 돌려줄 트리거가 없다. 포커스를 옮기지 않는다.
             onCloseAutoFocus={(event) => event.preventDefault()}
-            onMouseEnter={keepOpen}
-            onMouseLeave={closeSoon}
-            className="z-50 max-h-96 w-72 overflow-y-auto rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200"
+            // 마우스를 받지 않는다. 카드 밑의 칸들로 그대로 옮겨 가며 훑을 수 있다.
+            className="pointer-events-none z-50 w-80 rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200"
           >
             <p className="mb-2 px-1 text-xs font-medium text-gray-500">
               {hoveredDay.slice(0, 4)}.{hoveredDay.slice(5, 7)}.{hoveredDay.slice(8, 10)}{' '}
-              {basisLabel}
+              {basisLabel} · {dayItems.length}건
             </p>
-            <ul className="flex flex-col gap-2">
-              {dayItems.slice(0, MAX_CARD_ITEMS).map((item, index) => (
-                <li key={item.id}>
-                  <DayJobCard job={item} listPosition={index + 1} />
+            <ul className="flex flex-col">
+              {dayItems.slice(0, MAX_PREVIEW_ITEMS).map((item) => (
+                <li key={item.id} className="flex min-w-0 items-center gap-2 px-1 py-1">
+                  <CompanyLogo
+                    companyName={item.companyName}
+                    logoUrl={item.logoUrl}
+                    className="h-5 w-5 shrink-0 rounded-xs p-0"
+                  />
+                  <span className="max-w-24 shrink-0 truncate text-xs font-semibold text-gray-900">
+                    {item.companyName}
+                  </span>
+                  <span className="min-w-0 truncate text-xs text-gray-500">{item.title}</span>
                 </li>
               ))}
-              {dayItems.length > MAX_CARD_ITEMS ? (
-                <li className="px-1 text-xs text-gray-500">
-                  외 {dayItems.length - MAX_CARD_ITEMS}건
+              {dayItems.length > MAX_PREVIEW_ITEMS ? (
+                <li className="px-1 pt-1 text-xs text-gray-400">
+                  외 {dayItems.length - MAX_PREVIEW_ITEMS}건 · 날짜를 누르면 전부 볼 수 있어요
                 </li>
               ) : null}
             </ul>
