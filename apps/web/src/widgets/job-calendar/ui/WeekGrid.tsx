@@ -20,7 +20,7 @@ import { filterBookmarkedOnly } from '../lib/bookmarked-only';
 import { parseCalendarDate, toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
 import { CALENDAR_FIRST_DAY, startOfCalendarWeek } from '../lib/week';
 import { useBookmarkedIds } from './BookmarkedOnlyFilterPill';
-import { DayHoverCard } from './DayHoverCard';
+import { DayHoverPopover, useDayHover } from './DayHoverCard';
 
 /**
  * 주간 뷰의 막대. 공고 하나가 가로 막대 하나이고 `dateBasis`가 가리키는 날(마감일 또는 시작일)
@@ -167,6 +167,8 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
   const rowCount = countWeekRows(visibleItems, weekStart, dateBasis);
   const collapsed = rowCount > COLLAPSED_ROWS && !expanded;
 
+  const dayHover = useDayHover();
+
   return (
     <div
       style={GRID_STYLE}
@@ -230,46 +232,44 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
             </span>
           </span>
         )}
+        // 날짜 칸(요일 한 줄)에 마우스를 올리면 그 날짜의 공고 목록이 뜬다(`DayHoverPopover`,
+        // PRD 3절). 월간 `MonthGrid`와 같은 방식이다.
+        dayCellDidMount={(arg) => dayHover.bindDayCell(arg.el, toCalendarParam(arg.date))}
         eventClassNames={EVENT_BAR_CLASSES}
         eventContent={(arg) => {
           const deadline = arg.event.extendedProps.deadline as string;
           const job = visibleItems.find((item) => String(item.id) === arg.event.id);
           return (
-            // 막대에 마우스를 올리거나 포커스하면 이 날짜(마감일 또는 시작일)의 공고 목록이 뜬다
-            // (`DayHoverCard`, PRD 3절). 예전에는 `title` 속성 한 줄 툴팁이었다.
-            <DayHoverCard day={deadline} items={visibleItems} dateBasis={dateBasis}>
-              {/* 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
-                  있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
-
-                  누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다(`app/(site)/calendar/@modal`). */}
-              <JobCardLink
-                href={`/jobs/${arg.event.id}`}
-                scroll={false}
-                className="block pb-2"
-                jobId={Number(arg.event.id)}
-                jobInfo={job ? toJobInfo(job) : undefined}
-                // 막대는 목록이 아니라 격자에 흩어져 있어 순서가 없다.
-                tracking={{ listSource: 'calendar', listPosition: null, pageNumber: 1 }}
+            // 아래 여백이 막대 사이 간격이다. margin 이 아닌 이유는 `EVENT_BAR_CLASSES` 주석에
+            // 있다. 라벨은 기업명이고 칸을 넘치면 말줄임이다(PRD 5.2).
+            //
+            // 누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다(`app/(site)/calendar/@modal`).
+            <JobCardLink
+              href={`/jobs/${arg.event.id}`}
+              scroll={false}
+              className="block pb-2"
+              jobId={Number(arg.event.id)}
+              jobInfo={job ? toJobInfo(job) : undefined}
+              // 막대는 목록이 아니라 격자에 흩어져 있어 순서가 없다.
+              tracking={{ listSource: 'calendar', listPosition: null, pageNumber: 1 }}
+            >
+              <span
+                className={cn(
+                  // v6 막대는 로고 없이 기업명만 있고 오른쪽 끝에 2px 세로선이 있다.
+                  'flex h-9 items-center rounded-[6px] border-r-2 px-3 text-sm text-gray-800',
+                  // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
+                  // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
+                  deadline === today ? 'border-blue-100 bg-blue-50' : 'border-gray-200 bg-gray-100',
+                )}
               >
-                <span
-                  className={cn(
-                    // v6 막대는 로고 없이 기업명만 있고 오른쪽 끝에 2px 세로선이 있다.
-                    'flex h-9 items-center rounded-[6px] border-r-2 px-3 text-sm text-gray-800',
-                    // 목업 실측값 그대로다 — 파랑 막대가 `blue-50`(235,241,255), 회색 막대가
-                    // `gray-100`(243,244,246)이고 글자색은 둘 다 `gray-800`(31,41,55)이다.
-                    deadline === today
-                      ? 'border-blue-100 bg-blue-50'
-                      : 'border-gray-200 bg-gray-100',
-                  )}
-                >
-                  <span className="truncate">{arg.event.title}</span>
-                </span>
-              </JobCardLink>
-            </DayHoverCard>
+                <span className="truncate">{arg.event.title}</span>
+              </span>
+            </JobCardLink>
           );
         }}
         events={buildWeekEvents(visibleItems, today, dateBasis)}
       />
+      <DayHoverPopover hover={dayHover} items={visibleItems} dateBasis={dateBasis} side="right" />
       {rowCount > COLLAPSED_ROWS ? (
         <button
           type="button"

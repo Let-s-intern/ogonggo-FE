@@ -2,8 +2,7 @@
 
 import type { EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import * as Popover from '@radix-ui/react-popover';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
@@ -16,7 +15,7 @@ import {
 } from '../lib/calendar-grid';
 import { toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
 import { CALENDAR_FIRST_DAY } from '../lib/week';
-import { canHover, DayHoverCardContent, HOVER_CLOSE_DELAY_MS, itemsOnDay } from './DayHoverCard';
+import { DayHoverPopover, useDayHover } from './DayHoverCard';
 
 /**
  * 한 칸에 그대로 다 그리는 최대 개수. 여기까지는 `+N`이 붙지 않는다(PRD 8.2).
@@ -132,18 +131,7 @@ export function MonthGrid({
     onSelectDayRef.current = onSelectDay;
   });
 
-  // 호버 카드는 날짜 칸 하나에 하나다. 예전에는 로고마다 카드가 붙어 있어 같은 칸의 로고 사이를
-  // 옮겨 다닐 때마다 카드가 닫혔다 열렸다. 칸 요소를 앵커로 두고 카드 하나를 격자 전체가 같이 쓴다.
-  const [hoveredDay, setHoveredDay] = useState<string | null>(null);
-  const hoverAnchorRef = useRef<HTMLElement | null>(null);
-  const closeTimerRef = useRef<number | undefined>(undefined);
-  const keepHoverOpen = () => window.clearTimeout(closeTimerRef.current);
-  const closeHoverSoon = () => {
-    window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = window.setTimeout(() => setHoveredDay(null), HOVER_CLOSE_DELAY_MS);
-  };
-  useEffect(() => () => window.clearTimeout(closeTimerRef.current), []);
-  const hoveredItems = hoveredDay ? itemsOnDay(items, hoveredDay, dateBasis) : [];
+  const dayHover = useDayHover();
 
   return (
     <div
@@ -220,13 +208,7 @@ export function MonthGrid({
         dayCellDidMount={(arg) => {
           const day = toCalendarParam(arg.date);
           arg.el.addEventListener('click', () => onSelectDayRef.current(day));
-          arg.el.addEventListener('mouseenter', () => {
-            if (!canHover()) return;
-            keepHoverOpen();
-            hoverAnchorRef.current = arg.el;
-            setHoveredDay(day);
-          });
-          arg.el.addEventListener('mouseleave', closeHoverSoon);
+          dayHover.bindDayCell(arg.el, day);
         }}
         eventClassNames={EVENT_RESET_CLASSES}
         eventContent={(arg) => {
@@ -241,7 +223,7 @@ export function MonthGrid({
               </span>
             );
           }
-          // 날짜 칸에 마우스를 올리면 그 날짜의 공고 목록이 뜬다(아래 `Popover`, PRD 3절).
+          // 날짜 칸에 마우스를 올리면 그 날짜의 공고 목록이 뜬다(아래 `DayHoverPopover`, PRD 3절).
           return (
             // `CompanyLogo` 의 기본 안쪽 여백(`p-1`)을 여기서만 없앤다. 28px 타일에서 4px 씩
             // 빼면 그림이 들어갈 자리가 20px 밖에 남지 않아 로고가 상자 안에서 너무 작아
@@ -257,23 +239,7 @@ export function MonthGrid({
         }}
         events={buildMonthEvents(items, dateBasis)}
       />
-      <Popover.Root
-        open={hoveredDay !== null && hoveredItems.length > 0}
-        onOpenChange={(open) => {
-          if (!open) setHoveredDay(null);
-        }}
-      >
-        <Popover.Anchor virtualRef={hoverAnchorRef} />
-        {hoveredDay ? (
-          <DayHoverCardContent
-            day={hoveredDay}
-            dayItems={hoveredItems}
-            dateBasis={dateBasis}
-            onMouseEnter={keepHoverOpen}
-            onMouseLeave={closeHoverSoon}
-          />
-        ) : null}
-      </Popover.Root>
+      <DayHoverPopover hover={dayHover} items={items} dateBasis={dateBasis} side="bottom" />
     </div>
   );
 }
