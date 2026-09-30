@@ -9,6 +9,7 @@ import { SignOutButton } from '@/features/sign-out';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
+import { hasBottomNav } from './MobileBottomNav';
 import { NAV_ITEMS } from './navItems';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
@@ -55,31 +56,35 @@ export function MobileSiteHeader({
         </button>
       </TopRow>
 
-      <div className="flex h-11 items-stretch justify-between px-4">
-        <nav className="flex items-stretch gap-4">
-          {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
-            const active = matches(pathname);
-            return (
-              <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
-                <MenuItem
-                  state={active ? 'current' : 'default'}
-                  className={cn('h-full text-base', active && 'font-semibold')}
-                >
-                  {mobileLabel}
-                </MenuItem>
-              </Link>
-            );
-          })}
-        </nav>
-        <Link
-          href="/calendar"
-          aria-label="공고 달력"
-          aria-current={calendarActive ? 'page' : undefined}
-          className={cn('flex items-center', calendarActive ? 'text-gray-900' : 'text-gray-700')}
-        >
-          <CalendarIcon className="h-6 w-6" />
-        </Link>
-      </div>
+      {/* 로그인해 하단 내비게이션(`MobileBottomNav`)이 떠 있으면 같은 탭이 위아래로 두 번 보이지 않게
+          이 줄을 숨긴다. 공고 달력은 하단 채용공고 탭의 서브 메뉴로 간다. */}
+      {hasBottomNav(signedIn, pathname) ? null : (
+        <div className="flex h-11 items-stretch justify-between px-4">
+          <nav className="flex items-stretch gap-4">
+            {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
+              const active = matches(pathname);
+              return (
+                <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
+                  <MenuItem
+                    state={active ? 'current' : 'default'}
+                    className={cn('h-full text-base', active && 'font-semibold')}
+                  >
+                    {mobileLabel}
+                  </MenuItem>
+                </Link>
+              );
+            })}
+          </nav>
+          <Link
+            href="/calendar"
+            aria-label="공고 달력"
+            aria-current={calendarActive ? 'page' : undefined}
+            className={cn('flex items-center', calendarActive ? 'text-gray-900' : 'text-gray-700')}
+          >
+            <CalendarIcon className="h-6 w-6" />
+          </Link>
+        </div>
+      )}
 
       {open ? (
         <MobileMenu

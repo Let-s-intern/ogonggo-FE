@@ -23,6 +23,17 @@ type Answers = Record<(typeof QUESTIONS)[number]['name'], string>;
 
 const EMPTY: Answers = { satisfaction: '', improvement: '' };
 
+const OPEN_EVENT = 'ogonggo:open-service-feedback';
+
+/**
+ * 의견 작성 창을 연다. 로그인해 하단 내비게이션이 떠 있으면 플로팅 버튼은 숨고(아래 `FloatingButton`),
+ * 내비게이션의 서브 메뉴가 이것을 불러 창을 연다. 창을 가진 `ServiceFeedbackButton` 은 사이트 레이아웃에
+ * 늘 붙어 있어 이벤트 하나로 충분하다.
+ */
+export function openServiceFeedback() {
+  window.dispatchEvent(new Event(OPEN_EVENT));
+}
+
 /**
  * 모바일에서 화면 아래에 붙는 것들 위로 올린다. 공고 상세의 신청하기 바(`data-sticky-apply-bar`)와,
  * 로그인했을 때의 하단 내비게이션(`data-bottom-nav`, 떠 있는 동그라미까지 약 84px)이다. 둘은 같은
@@ -60,6 +71,13 @@ export function ServiceFeedbackButton() {
   const [open, setOpen] = useState(false);
   const [prompting, setPrompting] = useState(false);
   const [answers, setAnswers] = useState<Answers>(EMPTY);
+
+  // 다른 곳(하단 내비게이션의 서브 메뉴)에서 작성 창을 열 수 있게 한다(`openServiceFeedback`).
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen);
+  }, []);
 
   // 한 번 본 주소는 한 번만 센다. 개발 모드의 StrictMode 는 효과를 두 번 돌리는데, 그때마다 세면
   // 한 번 방문이 두 번으로 세이고 띄우기로 한 판정도 두 번째 실행에서 사라진다.
@@ -172,6 +190,9 @@ function FloatingButton({ onClick }: { onClick: () => void }) {
       className={cn(
         'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 focus-visible:outline-none md:right-8 md:bottom-8',
         ABOVE_STICKY_BAR,
+        // 하단 내비게이션이 떠 있으면(모바일 로그인) 탭을 가리므로 숨긴다. 그때는 마이페이지 탭의
+        // 서브 메뉴 `의견 보내기` 가 이 창을 연다(`openServiceFeedback`).
+        'max-md:[body:has([data-bottom-nav])_&]:hidden',
       )}
     >
       {/* 그림자는 `box-shadow` 가 아니라 `drop-shadow` 로 바깥 한 겹에 건다. 몸통과 꼬리가 따로
