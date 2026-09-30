@@ -141,8 +141,8 @@ interface MenuLink {
  * `광고 상품 문의하기` 는 메뉴를 닫고 문의할 이메일을 모달로 알린다 — `ForBusinessBanner` 의 같은
  * 버튼과 같다(`ContactEmailDialog`).
  *
- * `내 계정` 묶음은 로그인했으면 `마이페이지`·`어드민`·`로그아웃`(데스크톱 우측의 것들), 안 했으면
- * `로그인` 이다 — 헤더 윗줄의 로그인 자리는 `앱 다운로드` 가 쓴다.
+ * `내 계정` 묶음이 맨 위에 온다. 로그인했으면 `마이페이지`·`어드민`·`로그아웃`(데스크톱 우측의 것들),
+ * 안 했으면 `로그인` 이다 — 헤더 윗줄의 로그인 자리는 `앱 다운로드` 가 쓴다.
  */
 function MobileMenu({
   signedIn,
@@ -194,6 +194,20 @@ function MobileMenu({
       </TopRow>
 
       <nav className="flex flex-col gap-6 px-5 pt-4 pb-10">
+        {/* 내 계정이 맨 위다 — 로그인 안 했으면 `로그인`, 했으면 `마이페이지` 가 첫 항목으로 먼저 보인다. */}
+        {signedIn ? (
+          <MenuSection title="내 계정" links={account} onNavigate={onClose}>
+            <li className="flex h-[58px] items-center">
+              <SignOutButton />
+            </li>
+          </MenuSection>
+        ) : (
+          <MenuSection
+            title="내 계정"
+            links={[{ label: '로그인', href: '/login' }]}
+            onNavigate={onClose}
+          />
+        )}
         <MenuSection title="공고" links={postings} onNavigate={onClose} />
         <MenuSection
           title="기업 서비스"
@@ -213,19 +227,6 @@ function MobileMenu({
             </button>
           </li>
         </MenuSection>
-        {signedIn ? (
-          <MenuSection title="내 계정" links={account} onNavigate={onClose}>
-            <li className="flex h-[58px] items-center">
-              <SignOutButton />
-            </li>
-          </MenuSection>
-        ) : (
-          <MenuSection
-            title="내 계정"
-            links={[{ label: '로그인', href: '/login' }]}
-            onNavigate={onClose}
-          />
-        )}
       </nav>
     </div>
   );
