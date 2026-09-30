@@ -196,18 +196,23 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
   // 맞추는" 방법으로 안내하는 형태다. 이펙트로 미루면 한 프레임 펼쳐진 채 그려졌다가 접힌다.
   const [shownRows, setShownRows] = useState(COLLAPSED_ROWS);
   /**
-   * 모바일에서 누른 막대. 모바일은 막대를 눌러도 바로 상세로 가지 않고, 주간 아래에 그날
-   * 공고 목록(`MobileDayList`)을 펼친다 — 막대가 좁아 로고만 보여서 무엇인지 먼저 보게 한다.
-   * 목록의 한 줄을 누르면 상세로 간다.
+   * 모바일에서 고른 날. 모바일은 막대나 날짜 칸을 누르면 바로 상세로 가지 않고 그 날을 고른다 —
+   * 날짜 칸을 강조하고 주간 아래에 그날 공고 목록(`MobileDayList`)을 펼친다. 막대가 좁아 로고만
+   * 보여서, 무엇이 있는지 목록에서 보고 골라 누르면 상세로 간다.
    */
-  const [mobilePick, setMobilePick] = useState<{ day: string; itemId: number } | null>(null);
+  const [mobileDay, setMobileDay] = useState<string | null>(null);
   const [renderedWeek, setRenderedWeek] = useState(initialDate);
   if (renderedWeek !== initialDate) {
     setRenderedWeek(initialDate);
     setShownRows(COLLAPSED_ROWS);
-    setMobilePick(null);
+    setMobileDay(null);
   }
   const desktop = useMediaQuery('(min-width: 768px)');
+  // 날짜 칸의 클릭 리스너는 칸이 마운트될 때 한 번 걸려 첫 렌더 값을 붙든다. 최신 값을 ref 로 본다.
+  const desktopRef = useRef(desktop);
+  useEffect(() => {
+    desktopRef.current = desktop;
+  });
 
   const weekStart = startOfCalendarWeek(parseCalendarDate(initialDate) ?? new Date());
   const rowCount = countWeekRows(visibleItems, weekStart, dateBasis);
@@ -234,6 +239,8 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
         // `min-height: 2em`·`margin-bottom: 1em` 이 함께 붙어 있어 셋 다 덮는다.
         '[&_.fc-daygrid-day-events]:mt-3! [&_.fc-daygrid-day-events]:mb-0!',
         '[&_.fc-daygrid-day-events]:min-h-0!',
+        // 모바일에서 고른 날(`mobileDay`)의 칸을 옅은 파랑으로 칠한다.
+        '[&_.ogonggo-picked-day]:bg-blue-50/70',
       ].join(' ')}
     >
       <FullCalendar
@@ -260,19 +267,36 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
         eventOrder="-dueToday,start,-duration,title"
         dayHeaderContent={(arg) => (
           // 머리글은 `MON` 아래 날짜 두 줄이고 오늘은 파란 숫자다(PRD 5.2). 두 줄 사이는
-          // 목업 실측 26px 이다.
+          // 목업 실측 26px 이다. 모바일에서 고른 날은 숫자를 파란 원으로 감싼다.
           <span className="flex flex-col items-center gap-[26px]">
             <span className="text-xs font-medium text-gray-400">{weekdayLabel(arg.date)}</span>
             <span
-              className={cn('text-sm font-bold', arg.isToday ? 'text-blue-500' : 'text-gray-900')}
+              className={cn(
+                'text-sm font-bold',
+                !desktop && toCalendarParam(arg.date) === mobileDay
+                  ? '-my-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-white'
+                  : arg.isToday
+                    ? 'text-blue-500'
+                    : 'text-gray-900',
+              )}
             >
               {arg.date.getDate()}
             </span>
           </span>
         )}
+        dayCellClassNames={(arg) =>
+          !desktop && toCalendarParam(arg.date) === mobileDay ? ['ogonggo-picked-day'] : []
+        }
         // 날짜 칸(요일 한 줄)에 마우스를 올리면 그 날짜의 공고 목록이 뜬다(`DayHoverPopover`,
         // PRD 3절). 월간 `MonthGrid`와 같은 방식이다.
-        dayCellDidMount={(arg) => dayHover.bindDayCell(arg.el, toCalendarParam(arg.date))}
+        // 모바일은 날짜 칸을 누르면(막대가 없는 빈 곳도) 그 날을 고른다.
+        dayCellDidMount={(arg) => {
+          const day = toCalendarParam(arg.date);
+          dayHover.bindDayCell(arg.el, day);
+          arg.el.addEventListener('click', () => {
+            if (!desktopRef.current) setMobileDay(day);
+          });
+        }}
         eventClassNames={EVENT_BAR_CLASSES}
         eventContent={(arg) => {
           const deadline = arg.event.extendedProps.deadline as string;
@@ -285,19 +309,16 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
               : 'border-gray-300 bg-gray-100 hover:bg-gray-200',
           );
           if (!desktop) {
-            // 모바일은 막대가 좁아 회사명이 한두 글자로 잘려서 로고만 둔다. 누르면 아래에 그날
-            // 목록을 펼친다(`mobilePick`).
-            const picked = mobilePick?.itemId === Number(arg.event.id);
+            // 모바일은 막대가 좁아 회사명이 한두 글자로 잘려서 로고만 둔다. 누르면 그 날을 고르고
+            // 아래에 그날 목록을 펼친다(`mobileDay`).
             return (
               <button
                 type="button"
-                aria-label={`${arg.event.title} 공고 미리보기`}
-                onClick={() => setMobilePick({ day: deadline, itemId: Number(arg.event.id) })}
+                aria-label={`${arg.event.title}, ${Number(deadline.slice(5, 7))}월 ${Number(deadline.slice(8, 10))}일 공고 보기`}
+                onClick={() => setMobileDay(deadline)}
                 className="block w-full pb-2"
               >
-                <span
-                  className={cn(barClass, 'justify-center px-1', picked && 'ring-2 ring-blue-400')}
-                >
+                <span className={cn(barClass, 'justify-center px-1')}>
                   <CompanyLogo
                     companyName={arg.event.title}
                     logoUrl={job?.logoUrl}
@@ -356,12 +377,11 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
           <ChevronIcon direction={rowCount > shownRows ? 'down' : 'up'} className="h-4 w-4" />
         </button>
       ) : null}
-      {!desktop && mobilePick ? (
+      {!desktop && mobileDay ? (
         <MobileDayList
-          key={mobilePick.day}
-          day={mobilePick.day}
-          pickedId={mobilePick.itemId}
-          items={itemsOnDay(visibleItems, mobilePick.day, dateBasis)}
+          key={mobileDay}
+          day={mobileDay}
+          items={itemsOnDay(visibleItems, mobileDay, dateBasis)}
           dateBasis={dateBasis}
         />
       ) : null}
@@ -370,8 +390,8 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
 }
 
 /**
- * 모바일 주간 아래의 그날 공고 목록. 막대를 누르면 펼쳐지고(`WeekGrid` 의 `mobilePick`), 누른
- * 공고의 줄을 강조한다. 한 줄을 누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다
+ * 모바일 주간 아래의 그날 공고 목록. 막대나 날짜 칸을 누르면 펼쳐진다(`WeekGrid` 의
+ * `mobileDay`). 한 줄을 누르면 공고 상세로 가고, 달력 안에서는 모달로 뜬다
  * (`app/(site)/calendar/@modal`). 줄 모양은 데스크톱 호버 미리보기와 같다(`DayPreviewRow`).
  *
  * 처음에는 `MOBILE_DAY_PAGE` 건만 그리고 `더 보기`로 늘린다. 시작일 기준에서는 한 날이 수백 건일
@@ -382,12 +402,10 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
  */
 function MobileDayList({
   day,
-  pickedId,
   items,
   dateBasis,
 }: {
   day: string;
-  pickedId: number;
   items: UserJobCalendarItemResponse[];
   dateBasis: JobCalendarDateBasis;
 }) {
@@ -395,7 +413,7 @@ function MobileDayList({
   const [limit, setLimit] = useState(MOBILE_DAY_PAGE);
   useEffect(() => {
     ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [day, pickedId]);
+  }, [day]);
 
   return (
     <section
@@ -407,6 +425,9 @@ function MobileDayList({
         {day.slice(0, 4)}.{day.slice(5, 7)}.{day.slice(8, 10)}{' '}
         {dateBasis === 'start' ? '시작' : '마감'} · {items.length}건
       </p>
+      {items.length === 0 ? (
+        <p className="px-1 py-2 text-sm text-gray-400">이 날은 공고가 없어요.</p>
+      ) : null}
       <ul className="flex flex-col">
         {items.slice(0, limit).map((item, index) => (
           <li key={item.id}>
@@ -418,7 +439,7 @@ function MobileDayList({
               jobInfo={toJobInfo(item)}
               tracking={{ listSource: 'calendar', listPosition: index + 1, pageNumber: 1 }}
             >
-              <DayPreviewRow item={item} dateBasis={dateBasis} highlighted={item.id === pickedId} />
+              <DayPreviewRow item={item} dateBasis={dateBasis} highlighted={false} />
             </JobCardLink>
           </li>
         ))}
