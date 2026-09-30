@@ -50,14 +50,15 @@ export interface MyPageLayoutProps {
  * 모집글을 쌓으므로 볼 자리가 있어야 하고, 관리자 계정으로 화면을 확인할 수 없는 것이
  * 개발을 막고 있었다. 기업 마이페이지만은 열지 않는다.
  *
- * 모바일(`md` 미만)은 화면이 둘로 갈린다(`docs/asset/v10 mobile/`). 첫 화면(`/mypage`,
- * `/mypage/company`)은 사이드바가 곧 메뉴 화면이고, 하위 화면은 사이드바를 숨기고 `< 제목`
- * 머리를 단다. 사이트 헤더도 하위 화면에서는 숨는다(`SiteHeader`) — 시안의 하위 화면은 그
- * 머리 한 줄뿐이다.
+ * **일반 회원은 사이드바 대신 상단 탭이다**(v11 `docs/asset/v11/`). 제목 아래 탭 셋이 가로로
+ * 놓이고 본문이 폭을 다 쓴다. 모바일도 같다 — 메뉴 화면을 한 번 거쳐야 내용이 보이는 것이 불편해
+ * 데스크톱과 맞췄다(`/mypage` 는 첫 탭으로 보낸다). 작성·수정 화면만 모바일에서 탭 대신 `< 제목`
+ * 머리를 단다(`myPageMobileHeaderOf`).
  *
- * **데스크톱 일반 회원은 사이드바 대신 상단 탭이다**(v11 `docs/asset/v11/`). 제목 아래 탭 셋이
- * 가로로 놓이고 본문이 폭을 다 쓴다. 기업 회원은 v11 시안이 없어 전처럼 사이드바다. 모바일은
- * 둘 다 그대로다 — 첫 화면에서 사이드바가 메뉴 역할을 한다.
+ * 기업 회원은 v11 시안이 없어 전처럼 사이드바다. 모바일은 화면이 둘로 갈린다
+ * (`docs/asset/v10 mobile/`). 첫 화면(`/mypage/company`)은 사이드바가 곧 메뉴 화면이고, 하위
+ * 화면은 사이드바를 숨기고 `< 제목` 머리를 단다. `< 제목` 머리가 붙는 화면에서는 사이트 헤더도
+ * 숨는다(`SiteHeader`) — 시안의 하위 화면은 그 머리 한 줄뿐이다.
  *
  * 본문(`children`) 은 계정을 기다리지 않고 바로 그린다. 계정은 사이드바의 프로필 카드만
  * 쓰고, 그 카드는 값이 올 때까지 회색 막대로 자리를 잡는다.
@@ -125,8 +126,8 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
   const tabbed = !isCompany;
 
   return (
-    <main className={cn('mx-auto w-full max-w-6xl px-4 md:py-12', isIndex ? 'py-6' : 'pb-12')}>
-      <h1 className={cn('text-2xl font-bold text-gray-950', !isIndex && 'hidden md:block')}>
+    <main className={cn('mx-auto w-full max-w-6xl px-4 md:py-12', mobileHeader ? 'pb-12' : 'py-6')}>
+      <h1 className={cn('text-2xl font-bold text-gray-950', mobileHeader && 'hidden md:block')}>
         마이페이지
       </h1>
       {mobileHeader ? (
@@ -138,7 +139,7 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
         </div>
       ) : null}
       {tabbed ? (
-        <div className="mt-6 hidden md:block">
+        <div className={cn('mt-6', mobileHeader && 'hidden md:block')}>
           <MyPageTabs
             menuItems={myPageMenuFor(audience)}
             action={
@@ -154,7 +155,13 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           />
         </div>
       ) : null}
-      <div className={cn('flex flex-col md:mt-6 md:flex-row', !tabbed && 'md:gap-10')}>
+      <div
+        className={cn(
+          'flex flex-col md:mt-6 md:flex-row',
+          !tabbed && 'md:gap-10',
+          tabbed && !mobileHeader && 'mt-6',
+        )}
+      >
         <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block', tabbed && 'md:hidden')}>
           <MyPageSidebar
             menuItems={myPageMenuFor(audience)}
