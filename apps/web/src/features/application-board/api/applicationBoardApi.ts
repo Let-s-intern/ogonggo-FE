@@ -29,6 +29,7 @@ import {
   KIND_LABELS,
   OPERATION_TYPE_LABELS,
 } from '@/entities/side-study/model/labels';
+import type { ThumbnailSrc } from '@/shared/ui/Thumbnail';
 import type { ApplicationBoardTab, ApplicationStageId } from '../model/stages';
 
 /** 칸 하나에 놓이는 카드 한 장. 리스트 뷰의 행도 같은 값을 쓴다. */
@@ -37,7 +38,8 @@ export interface ApplicationBoardItem {
   id: number;
   key: string;
   href: string;
-  thumbnailUrl?: string;
+  /** 앞에서부터 시도할 이미지. 공고는 썸네일, API 로고, 회사명 목록의 로고 순이다. */
+  thumbnailUrl?: ThumbnailSrc;
   /** 제목 위 작은 줄. 회사명 또는 모집글 작성자다. */
   caption: string;
   title: string;
@@ -147,7 +149,7 @@ async function fetchJobStage(
       id: job.id,
       key: `job-${job.id}`,
       href: `/jobs/${job.id}`,
-      thumbnailUrl: getCompanyLogoUrl(job.companyName),
+      thumbnailUrl: [job.coverImageUrl, job.logoUrl, getCompanyLogoUrl(job.companyName)],
       caption: job.companyName,
       title: job.title,
       meta: [

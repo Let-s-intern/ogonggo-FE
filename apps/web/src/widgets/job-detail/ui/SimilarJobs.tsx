@@ -47,7 +47,11 @@ export async function SimilarJobs({ excludeJobId }: SimilarJobsProps) {
               jobInfo={toJobInfo(job)}
               tracking={{ listSource: 'similar', listPosition: index + 1, pageNumber: 1 }}
             >
-              <CompanyLogo companyName={job.companyName} className="h-12 w-12" />
+              <CompanyLogo
+                companyName={job.companyName}
+                logoUrl={job.logoUrl}
+                className="h-12 w-12"
+              />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-gray-900">{job.title}</p>
                 <p className="text-xs text-gray-500">{job.companyName}</p>

@@ -140,7 +140,11 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
 
         {/* 무엇을 공유하는지 먼저 보인다 — 상세 헤더와 같은 로고, 이름, 제목. */}
         <div className="mt-5 flex items-center gap-3 rounded-lg border border-gray-200 p-3">
-          <CompanyLogo companyName={posting.organizationName} className="h-12 w-12 shrink-0" />
+          <CompanyLogo
+            companyName={posting.organizationName}
+            logoUrl={posting.logoUrl}
+            className="h-12 w-12 shrink-0"
+          />
           <div className="min-w-0">
             <p className="truncate text-xs text-gray-500">
               {posting.organizationName} · {label}

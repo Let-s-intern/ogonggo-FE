@@ -48,8 +48,8 @@ function balancedSize(bounds: LogoBounds, { boxAspect, area, maxWidth, maxHeight
 }
 
 /**
- * `getCompanyLogoUrl`이 아는 회사면 실제 로고 이미지, 모르면(또는 로고 서비스가 그 도메인에
- * 이미지를 못 주면) 기본 썸네일(`Thumbnail`) — 확신 없는 도메인을 지어내지 않는다
+ * API 가 준 로고(`logoUrl`), 그다음 `getCompanyLogoUrl`이 아는 회사면 실제 로고 이미지, 둘 다
+ * 없거나 안 뜨면 기본 썸네일(`Thumbnail`) — 확신 없는 도메인을 지어내지 않는다
  * (`company-logo.ts` 참고). 로드 실패는 깨진 이미지 아이콘 대신 항상 같은 기본 이미지로 떨어진다.
  *
  * 로고는 구글 이미지 캐시 썸네일이라 이미지마다 안쪽 여백이 제각각이다(캔버스의 8%만 로고인
@@ -78,6 +78,11 @@ export function CompanyLogo({
     () => (logoUrl ? getLogoMeasure(logoUrl) : getServerLogoMeasure()),
     getServerLogoMeasure,
   );
+
+  // API 로고가 안 뜨면 회사명 목록의 로고를 한 번 더 본다. 같은 주소면 다시 볼 이유가 없다.
+  if (measure.status === 'error' && apiLogoUrl && getCompanyLogoUrl(companyName) !== apiLogoUrl) {
+    return <CompanyLogo companyName={companyName} className={className} balance={balance} />;
+  }
 
   if (!logoUrl || measure.status === 'error') {
     return <Thumbnail alt="" className={cn('shrink-0 rounded-md shadow-sm', className)} />;
