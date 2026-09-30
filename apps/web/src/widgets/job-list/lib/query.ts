@@ -101,3 +101,42 @@ export function toJobRoleParams({
   }
   return { jobRole: [...jobFields.flatMap(jobRolesOf), ...jobRoles] };
 }
+
+/** 백엔드가 2~100자만 받는다. 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
+function pickKeyword(q: string | undefined): string | undefined {
+  const keyword = q?.trim();
+  return keyword && keyword.length >= 2 && keyword.length <= 100 ? keyword : undefined;
+}
+
+/**
+ * `GET /api/v1/jobs` 요청 주소. 목록과 직무 창의 건수(`size=1`)가 같이 쓴다 — 둘이 따로 만들면
+ * 창에 보인 건수와 누른 뒤 목록 건수가 어긋난다.
+ *
+ * 화면 주소의 검색어 이름은 `q`, API 는 `keyword` 다. 전에는 `q` 를 그대로 보내 백엔드가 모르는
+ * 파라미터로 무시했다 — 검색해도 전체 목록이 왔다(2026-09-30 실측, 5,198건 그대로). 주소의 `q` 는
+ * 바깥에 공유된 링크가 쓰는 이름이라 두고, 보내는 이름만 바꾼다.
+ */
+export function buildJobsApiUrl(query: JobListQuery, size: number): string {
+  const params = new URLSearchParams();
+  params.set('page', String(query.page));
+  params.set('size', String(size));
+  params.set('sort', query.sort);
+  const keyword = pickKeyword(query.q);
+  if (keyword) {
+    params.set('keyword', keyword);
+  }
+  if (query.employmentType) {
+    params.set('employmentType', query.employmentType);
+  }
+  if (query.experienceType) {
+    params.set('experienceType', query.experienceType);
+  }
+  const { jobField, jobRole } = toJobRoleParams(query);
+  if (jobField) {
+    params.set('jobField', jobField);
+  }
+  for (const role of jobRole) {
+    params.append('jobRole', role);
+  }
+  return `/api/v1/jobs?${params.toString()}`;
+}
