@@ -310,7 +310,8 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
           );
           if (!desktop) {
             // 모바일은 막대가 좁아 회사명이 한두 글자로 잘려서 로고만 둔다. 누르면 그 날을 고르고
-            // 아래에 그날 목록을 펼친다(`mobileDay`).
+            // 아래에 그날 목록을 펼친다(`mobileDay`). 손가락으로 누르기 쉽게 데스크톱(36px)보다
+            // 높이고(48px), 누르는 동안 파란 테두리와 함께 살짝 줄어 무엇을 누르는지 보인다.
             return (
               <button
                 type="button"
@@ -318,11 +319,16 @@ export function WeekGrid({ items, initialDate, bookmarkedOnly, dateBasis }: Week
                 onClick={() => setMobileDay(deadline)}
                 className="block w-full pb-2"
               >
-                <span className={cn(barClass, 'justify-center px-1')}>
+                <span
+                  className={cn(
+                    barClass,
+                    'h-12 justify-center px-1 transition-transform active:scale-95 active:ring-2 active:ring-blue-400',
+                  )}
+                >
                   <CompanyLogo
                     companyName={arg.event.title}
                     logoUrl={job?.logoUrl}
-                    className="h-6 w-6 rounded-xs p-0"
+                    className="h-8 w-8 rounded-xs p-0"
                   />
                 </span>
               </button>
@@ -434,7 +440,8 @@ function MobileDayList({
             <JobCardLink
               href={`/jobs/${item.id}`}
               scroll={false}
-              className="block"
+              // 누르는 동안 줄에 바탕을 깔아 무엇을 눌렀는지 보인다. 줄 높이도 손가락에 맞게 키운다.
+              className="block rounded-md py-1.5 active:bg-blue-50"
               jobId={item.id}
               jobInfo={toJobInfo(item)}
               tracking={{ listSource: 'calendar', listPosition: index + 1, pageNumber: 1 }}
