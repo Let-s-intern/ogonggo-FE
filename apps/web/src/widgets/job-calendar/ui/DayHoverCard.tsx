@@ -3,6 +3,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useRef, useState } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { cn } from '@ogonggo/ui';
 import { formatJobField, JOB_ROLES } from '@/entities/job/model/labels';
 import type { JobField, JobRole } from '@/entities/job/model/types';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
@@ -18,6 +19,19 @@ const MAX_PREVIEW_ITEMS = 30;
 function jobLabel(item: UserJobCalendarItemResponse): string {
   const role = item.jobRole ? JOB_ROLES[item.jobRole as JobRole]?.label : undefined;
   return role ?? formatJobField(item.jobField as JobField | undefined) ?? item.title;
+}
+
+/**
+ * 미리보기에 그릴 공고. 앞에서부터 `MAX_PREVIEW_ITEMS` 개이되, 마우스가 올라간 공고가 그 밖에
+ * 있으면 맨 앞에 넣어 강조한 줄이 늘 보이게 한다.
+ */
+function previewItems(
+  dayItems: UserJobCalendarItemResponse[],
+  hoveredItemId: number | null,
+): UserJobCalendarItemResponse[] {
+  const shown = dayItems.slice(0, MAX_PREVIEW_ITEMS);
+  const hovered = dayItems.find((item) => item.id === hoveredItemId);
+  return hovered && !shown.includes(hovered) ? [hovered, ...shown.slice(0, -1)] : shown;
 }
 
 /** `YYYY-MM-DD…` → `9/25`. */
@@ -70,6 +84,8 @@ function itemsOnDay(
  */
 export function useDayHover() {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
+  /** 칸 안에서 마우스가 올라간 공고(월간 로고, 주간 막대). 미리보기에서 그 줄을 강조한다. */
+  const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
   /** 올라간 칸이 화면 세로 가운데보다 아래에 있는가. 그러면 카드를 칸 위로 띄운다. */
   const [inLowerHalf, setInLowerHalf] = useState(false);
   const anchorRef = useRef<HTMLElement | null>(null);
@@ -101,6 +117,9 @@ export function useDayHover() {
 
   return {
     hoveredDay,
+    hoveredItemId,
+    /** 격자의 로고·막대가 마우스 출입 때 부른다. 나가면 `null`. */
+    hoverItem: setHoveredItemId,
     inLowerHalf,
     anchorRef,
     bindDayCell,
@@ -123,7 +142,7 @@ export interface DayHoverPopoverProps {
 }
 
 export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopoverProps) {
-  const { hoveredDay, inLowerHalf, anchorRef, close } = hover;
+  const { hoveredDay, hoveredItemId, inLowerHalf, anchorRef, close } = hover;
   /*
    * 위아래로 띄우는 월간은 칸이 화면 아래쪽이면 위로, 위쪽이면 아래로 띄운다. Radix 는 공간이
    * 정말 모자랄 때만 뒤집어서, 아래쪽 칸에서도 아래로 떠 달력 아래를 가렸다.
@@ -159,8 +178,14 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
               {basisLabel} · {dayItems.length}건
             </p>
             <ul className="grid grid-cols-2 gap-x-4">
-              {dayItems.slice(0, MAX_PREVIEW_ITEMS).map((item) => (
-                <li key={item.id} className="flex min-w-0 items-center gap-2 px-1 py-1">
+              {previewItems(dayItems, hoveredItemId).map((item) => (
+                <li
+                  key={item.id}
+                  className={cn(
+                    'flex min-w-0 items-center gap-2 rounded-sm px-1 py-1',
+                    item.id === hoveredItemId && 'bg-blue-50 ring-1 ring-blue-200',
+                  )}
+                >
                   <CompanyLogo
                     companyName={item.companyName}
                     logoUrl={item.logoUrl}

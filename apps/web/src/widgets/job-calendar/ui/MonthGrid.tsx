@@ -230,11 +230,18 @@ export function MonthGrid({
             // 보였다(상자 넓이 대비 그림 넓이 평균 29.9%). `object-contain` 은 그대로 둔다 —
             // `object-cover` 로 채우면 마크가 치우친 로고에서 글자가 잘린다
             // (`entities/job/ui/CompanyLogo.tsx` 주석).
-            <CompanyLogo
-              companyName={arg.event.title}
-              logoUrl={arg.event.extendedProps.logoUrl as string | undefined}
-              className="h-7 w-7 rounded-xs p-0"
-            />
+            // 로고에 올리면 미리보기에서 그 공고 줄을 강조한다.
+            <span
+              className="block"
+              onMouseEnter={() => dayHover.hoverItem(Number(arg.event.id))}
+              onMouseLeave={() => dayHover.hoverItem(null)}
+            >
+              <CompanyLogo
+                companyName={arg.event.title}
+                logoUrl={arg.event.extendedProps.logoUrl as string | undefined}
+                className="h-7 w-7 rounded-xs p-0"
+              />
+            </span>
           );
         }}
         events={buildMonthEvents(items, dateBasis)}
