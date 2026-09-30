@@ -1,5 +1,4 @@
 import { DetailPageSkeleton } from '@/shared/ui/DetailPageSkeleton';
-import { ForBusinessBanner } from '@/widgets/for-business-banner';
 
 /**
  * `app/side-studies/[postId]/loading.tsx`는 같은 세그먼트의 `page.tsx`를 Suspense 경계로 감싸
@@ -27,9 +26,6 @@ export default function Loading() {
         sidebarListCount={1}
         bodyGapClass="gap-8"
       />
-      <div className="w-full max-w-6xl">
-        <ForBusinessBanner />
-      </div>
     </main>
   );
 }
