@@ -1,92 +1,136 @@
 'use client';
 
 import * as Popover from '@radix-ui/react-popover';
-import { useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { DayJobCard } from './DayJobPanel';
 import type { JobCalendarDateBasis } from '../lib/query';
 
-export interface DayHoverCardProps {
-  /** 카드가 보여줄 날. `YYYY-MM-DD`. `items`를 이 날로 거른다. */
-  day: string;
-  /**
-   * 그 날의 후보 전체(달력이 받아 둔 전체 항목, 또는 격자가 이미 거른 목록). `dateBasis` 기준
-   * 필드가 `day`와 같은 것만 카드에 남는다 — 호출부가 미리 하루치로 잘라 넘길 필요는 없다.
-   */
-  items: UserJobCalendarItemResponse[];
-  /** `마감일 기준` 토글 값. `day`와 짝지어 필터링 기준 필드(마감일/시작일)를 정한다. */
-  dateBasis: JobCalendarDateBasis;
-  /** 카드를 띄우는 자리(로고 타일, 막대). 단일 엘리먼트여야 한다 — `Popover.Trigger`의 `asChild`. */
-  children: ReactElement;
-}
+/** 칸에서 카드로 마우스를 옮기는 동안(`sideOffset` 8px 틈) 카드를 닫지 않고 기다리는 시간. */
+const HOVER_CLOSE_DELAY_MS = 120;
 
 /**
- * 격자의 로고 타일(월간)·막대(주간)에 마우스를 올리거나 포커스하면 그 날짜의 공고를
- * `DayJobCard` 목록으로 보여주는 카드(PRD 3절). `title` 속성 한 줄 툴팁을 대신한다.
- *
- * 포커스에서도 여는 이유는
- * `.claude/tasks/memos/결정-calendar-date-basis-toggle-push2-2026-09-23.md`에 있다 — 카드 **안**
- * (링크·북마크 버튼)까지 Tab으로 들어가는 동선은 이번 Push 범위 밖이고, 오른쪽 `DayJobPanel`이
- * 이미 같은 날짜의 항목을 키보드로 닿을 수 있는 자리에 나열해 둔다.
- *
- * `Popover.Trigger`에 `tabIndex={0}`을 주는 것은 트리거로 넘어오는 `children`(예:
- * `MonthGrid`의 로고 칸 `span`)이 원래 포커스를 받지 않는 엘리먼트일 수 있어서다. Radix의
- * `Slot`은 자식이 이미 값을 갖고 있으면 자식 값을 우선하므로, 이미 포커스 가능한 `Link`(주간
- * 막대)에도 안전하게 얹을 수 있다.
- *
- * 열림 계기를 `Popover.Root`의 `open`/`onOpenChange`로 손수 관리하는 것은 Radix Popover가
- * 기본으로는 클릭에만 반응하기 때문이다. 카드 자체(`Popover.Content`)에도 같은 핸들러를 걸어
- * 트리거에서 카드로 마우스가 넘어가는 순간에도 열린 채로 있게 한다 — 그러지 않으면 카드를 읽기도
- * 전에 닫힌다.
+ * 마우스처럼 호버가 되는 기기인가. 터치 기기는 탭할 때도 `mouseenter`를 흉내 내 보내므로 이것으로
+ * 걸러야 모바일에서 탭 한 번에 호버 카드가 함께 뜨지 않는다.
  */
-export function DayHoverCard({ day, items, dateBasis, children }: DayHoverCardProps) {
-  const [open, setOpen] = useState(false);
-  const dayItems = items.filter(
+function canHover(): boolean {
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
+
+/** `items` 중 `dateBasis` 기준 날짜가 `day`인 것. */
+function itemsOnDay(
+  items: UserJobCalendarItemResponse[],
+  day: string,
+  dateBasis: JobCalendarDateBasis,
+): UserJobCalendarItemResponse[] {
+  return items.filter(
     (item) =>
       (dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt).slice(0, 10) ===
       day,
   );
+}
+
+/**
+ * 격자의 날짜 칸에 마우스를 올리면 그 날짜의 공고를 `DayJobCard` 목록으로 띄우는 카드
+ * (PRD 3절). 월간(`MonthGrid`)과 주간(`WeekGrid`)이 같이 쓴다.
+ *
+ * **카드는 날짜 칸 하나에 하나다.** 예전에는 로고(월간)·막대(주간)마다 카드가 붙어 있어 같은
+ * 칸 안에서 옮겨 다닐 때마다 카드가 닫혔다 열렸다. 격자가 칸마다 `bindDayCell`로 마우스 출입을
+ * 걸고, 카드 하나(`DayHoverPopover`)가 지금 올라간 칸을 앵커로 삼는다.
+ *
+ * 칸에서 나갈 때는 잠깐 기다렸다 닫고, 그 사이 카드로 들어오면 열린 채로 둔다 — 바로 닫으면
+ * 카드로 옮겨 가기 전에 닫힌다.
+ */
+export function useDayHover() {
+  const [hoveredDay, setHoveredDay] = useState<string | null>(null);
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(closeTimerRef.current), []);
+
+  const keepOpen = () => window.clearTimeout(closeTimerRef.current);
+  const closeSoon = () => {
+    window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(() => setHoveredDay(null), HOVER_CLOSE_DELAY_MS);
+  };
+
+  /**
+   * FullCalendar 의 `dayCellDidMount`에서 부른다. 칸은 FullCalendar 가 그린 DOM 이라 React
+   * 핸들러를 달 수 없어 리스너를 직접 건다. 여기 쓰이는 것은 ref 와 상태 설정 함수뿐이라 칸이
+   * 첫 렌더의 함수를 붙들고 있어도 된다.
+   */
+  const bindDayCell = (el: HTMLElement, day: string) => {
+    el.addEventListener('mouseenter', () => {
+      if (!canHover()) return;
+      keepOpen();
+      anchorRef.current = el;
+      setHoveredDay(day);
+    });
+    el.addEventListener('mouseleave', closeSoon);
+  };
+
+  return {
+    hoveredDay,
+    anchorRef,
+    keepOpen,
+    closeSoon,
+    bindDayCell,
+    close: () => setHoveredDay(null),
+  };
+}
+
+export interface DayHoverPopoverProps {
+  hover: ReturnType<typeof useDayHover>;
+  /** 격자가 그리고 있는 항목 전체. 올라간 날로 여기서 거른다. */
+  items: UserJobCalendarItemResponse[];
+  /** `마감일 기준` 토글 값. 거르는 기준 필드(마감일/시작일)를 정한다. */
+  dateBasis: JobCalendarDateBasis;
+  /**
+   * 칸의 어느 쪽에 띄울지. 월간 칸은 짧아 아래(`bottom`)고, 주간 칸은 막대가 쌓여 세로로 길어
+   * 옆(`right`)이다 — 아래에 두면 카드가 칸 맨 아래로 떨어진다.
+   */
+  side: 'bottom' | 'right';
+}
+
+export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopoverProps) {
+  const { hoveredDay, anchorRef, keepOpen, closeSoon, close } = hover;
+  const dayItems = hoveredDay ? itemsOnDay(items, hoveredDay, dateBasis) : [];
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
 
-  // 그 날 항목이 없으면(이론상 호출부가 이미 걸러 왔겠지만) 카드를 띄울 것이 없다 — 트리거만
-  // 그대로 그린다.
-  if (dayItems.length === 0) {
-    return children;
-  }
-
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger
-        asChild
-        tabIndex={0}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-      >
-        {children}
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          align="start"
-          sideOffset={8}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
-          className="z-50 max-h-96 w-72 overflow-y-auto rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200"
-        >
-          <p className="mb-2 px-1 text-xs font-medium text-gray-500">
-            {day.slice(0, 4)}.{day.slice(5, 7)}.{day.slice(8, 10)} {basisLabel}
-          </p>
-          <ul className="flex flex-col gap-2">
-            {dayItems.map((item, index) => (
-              <li key={item.id}>
-                <DayJobCard job={item} listPosition={index + 1} />
-              </li>
-            ))}
-          </ul>
-        </Popover.Content>
-      </Popover.Portal>
+    <Popover.Root
+      open={hoveredDay !== null && dayItems.length > 0}
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <Popover.Anchor virtualRef={anchorRef} />
+      {hoveredDay ? (
+        <Popover.Portal>
+          <Popover.Content
+            side={side}
+            align="start"
+            sideOffset={8}
+            onOpenAutoFocus={(event) => event.preventDefault()}
+            // 앵커가 칸이라 돌려줄 트리거가 없다. 포커스를 옮기지 않는다.
+            onCloseAutoFocus={(event) => event.preventDefault()}
+            onMouseEnter={keepOpen}
+            onMouseLeave={closeSoon}
+            className="z-50 max-h-96 w-72 overflow-y-auto rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200"
+          >
+            <p className="mb-2 px-1 text-xs font-medium text-gray-500">
+              {hoveredDay.slice(0, 4)}.{hoveredDay.slice(5, 7)}.{hoveredDay.slice(8, 10)}{' '}
+              {basisLabel}
+            </p>
+            <ul className="flex flex-col gap-2">
+              {dayItems.map((item, index) => (
+                <li key={item.id}>
+                  <DayJobCard job={item} listPosition={index + 1} />
+                </li>
+              ))}
+            </ul>
+          </Popover.Content>
+        </Popover.Portal>
+      ) : null}
     </Popover.Root>
   );
 }
