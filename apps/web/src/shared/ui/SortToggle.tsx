@@ -15,6 +15,12 @@ export interface SortToggleProps<TValue extends string> {
    * 쓸 수 없었다. 보존할 쿼리 파라미터와 옵션 목록은 목록마다 달라 호출부가 정한다.
    */
   buildHref: (value: TValue) => string;
+  /**
+   * 첫 옵션(기본 정렬)을 고른 동안 트리거에 보일 이름. 넘기면 기본 정렬일 때 `최신순` 대신
+   * 이 이름(`정렬 기준`)이 보이고, 다른 정렬을 고르면 그 값이 보인다 — 필터 드롭다운이 고르기
+   * 전에는 이름, 고른 뒤에는 값을 보이는 것과 같다. 없으면 늘 지금 값이다.
+   */
+  defaultLabel?: string;
 }
 
 /**
@@ -34,9 +40,12 @@ export function SortToggle<TValue extends string>({
   options,
   current,
   buildHref,
+  defaultLabel,
 }: SortToggleProps<TValue>) {
   const currentLabel =
-    options.find((option) => option.value === current)?.label ?? options[0]?.label;
+    defaultLabel && current === options[0]?.value
+      ? defaultLabel
+      : (options.find((option) => option.value === current)?.label ?? options[0]?.label);
 
   return (
     <details data-dropdown className="group relative">

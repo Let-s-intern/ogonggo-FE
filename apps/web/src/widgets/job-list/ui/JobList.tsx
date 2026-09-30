@@ -39,18 +39,26 @@ async function fetchJobPage(
 /** 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다. */
 export async function JobList(query: JobListProps) {
   const { items, pageInfo } = await fetchJobPage(query);
+  const sort = (
+    <SortToggle
+      options={SORT_OPTIONS}
+      current={query.sort}
+      buildHref={(value) => buildJobListHref(query, { sort: value })}
+      defaultLabel="정렬 기준"
+    />
+  );
 
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
+        {/* 모바일은 정렬을 제목 줄 오른쪽 끝에 둔다. 필터 뒤에 두면 혼자 한 줄을 차지한다. */}
+        <div className="flex w-full items-center justify-between md:w-auto">
+          <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
+          <div className="md:hidden">{sort}</div>
+        </div>
         <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
           <SearchFilterBar query={query} />
-          <SortToggle
-            options={SORT_OPTIONS}
-            current={query.sort}
-            buildHref={(sort) => buildJobListHref(query, { sort })}
-          />
+          <div className="hidden md:block">{sort}</div>
         </div>
       </div>
       {items.length === 0 ? (
