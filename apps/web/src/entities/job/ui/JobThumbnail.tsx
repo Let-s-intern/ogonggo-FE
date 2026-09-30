@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CompanyLogo, type LogoBalance } from './CompanyLogo';
 
 /**
@@ -31,6 +31,10 @@ export interface JobThumbnailProps {
  * 로드 실패를 `Thumbnail` 에 맡기지 않는 이유 — `Thumbnail` 은 실패하면 오공고 로고로 바로
  * 떨어진다. 여기서는 그 사이에 회사 로고가 한 단계 더 있다.
  *
+ * 서버가 그린 이미지는 하이드레이션 전에 실패할 수 있고, 그러면 `onError` 가 불리지 않아 깨진
+ * 이미지가 그대로 남는다. 마운트 직후 `complete && naturalWidth === 0` 을 한 번 더 본다 — 수집된
+ * 주소에 `%PUBLIC_URL%` 처럼 채워지지 않은 값이 실제로 섞여 있다(LG 공고, 2026-09-30).
+ *
  * 북마크 버튼은 이 박스가 아니라 `JobCard`가 그린다. 카드 전체가 `<Link>`라 버튼을 그 안에
  * 두면 잘못된 마크업이 되고 누를 때 이동까지 함께 일어난다 — 카드 뿌리에서 링크의 형제로 두고
  * 이 박스의 오른쪽 위에 겹친다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 이 박스는 카드의 첫
@@ -44,11 +48,20 @@ export interface JobThumbnailProps {
  */
 export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbnailProps) {
   const [coverFailed, setCoverFailed] = useState(false);
+  const coverRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const img = coverRef.current;
+    if (img?.complete && img.naturalWidth === 0) {
+      setCoverFailed(true);
+    }
+  }, [coverImageUrl]);
 
   return (
     <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm">
       {coverImageUrl && !coverFailed ? (
         <img
+          ref={coverRef}
           src={coverImageUrl}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
