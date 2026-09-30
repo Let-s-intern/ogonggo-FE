@@ -1,4 +1,4 @@
-import { proxiableLogoUrl } from '@/entities/job/model/logo-proxy';
+import { LOGO_PROXY_HOSTS, proxiableLogoUrl } from '@/entities/job/model/logo-proxy';
 
 /**
  * CORS 헤더를 주지 않는 호스트의 로고를 같은 출처로 돌려준다. 브라우저가 픽셀을 읽어 여백을 재는
@@ -14,10 +14,13 @@ const MAX_BYTES = 2 * 1024 * 1024;
 const ONE_DAY = 86400;
 
 export async function GET(request: Request) {
-  const target = proxiableLogoUrl(new URL(request.url).searchParams.get('url') ?? '');
-  if (!target) {
+  const requested = proxiableLogoUrl(new URL(request.url).searchParams.get('url') ?? '');
+  // 요청 주소의 호스트는 받은 값이 아니라 목록의 상수로 채운다. 받은 값에서는 경로만 쓴다.
+  const host = LOGO_PROXY_HOSTS.find((allowed) => allowed === requested?.hostname);
+  if (!requested || !host) {
     return new Response('허용하지 않는 로고 주소입니다.', { status: 400 });
   }
+  const target = `https://${host}${requested.pathname}${requested.search}`;
 
   let upstream: Response;
   try {
