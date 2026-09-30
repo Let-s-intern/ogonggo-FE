@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, type ReactNode } from 'react';
 import { useScrollLock } from '@/shared/lib/useScrollLock';
+import { LogoLoader } from './LogoLoader';
 
 export interface RouteModalProps {
   /** 닫기 버튼과 대화상자의 이름. 보조기술이 읽는다. */
@@ -69,7 +70,23 @@ export function RouteModal({ label, children }: RouteModalProps) {
             <span aria-hidden="true" className="icon-[lucide--x] block h-6 w-6" />
           </button>
         </div>
-        <div className="pt-1">{children}</div>
+        {/*
+          내용(상세 화면)은 서버에서 받아 오는 데 오래 걸릴 수 있다. 여기서 끊어 두면 모달 틀과 닫기
+          버튼이 먼저 뜨고 내용 자리에 로딩 표시가 보인다 — 끊지 않으면 누른 뒤 내용이 다 올 때까지
+          아무 반응이 없어 누른 게 먹지 않은 것처럼 보였다. `LogoLoader` 는 300ms 뒤에 나타나 빠른
+          응답에서는 깜빡이지 않는다.
+        */}
+        <div className="pt-1">
+          <Suspense
+            fallback={
+              <div className="flex h-[60dvh] items-center justify-center">
+                <LogoLoader />
+              </div>
+            }
+          >
+            {children}
+          </Suspense>
+        </div>
       </div>
     </dialog>
   );
