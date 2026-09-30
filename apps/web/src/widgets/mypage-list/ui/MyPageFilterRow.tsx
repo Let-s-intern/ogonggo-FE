@@ -70,10 +70,13 @@ export function MyPageFilterRow({
         전체
       </Chip>
       {children}
-      {/* 모바일은 검색칸이 남는 폭을 다 쓰고 정렬이 그 옆에 선다. */}
-      <div className="flex w-full items-center gap-2 md:ml-auto md:w-auto">
+      {/*
+        모바일은 `전체`·드롭다운 한 줄, 검색 한 줄, 정렬 한 줄로 쌓는다. 데스크톱은 전처럼 한 줄
+        오른쪽 끝에 검색과 정렬이 선다.
+      */}
+      <div className="flex w-full flex-col gap-2 md:ml-auto md:w-auto md:flex-row md:items-center">
         {search ? (
-          <form onSubmit={submitSearch} className="min-w-0 flex-1 md:flex-none">
+          <form onSubmit={submitSearch} className="w-full min-w-0 md:w-auto">
             <SearchInput
               name="keyword"
               defaultValue={search.defaultValue}
@@ -85,8 +88,12 @@ export function MyPageFilterRow({
             </button>
           </form>
         ) : null}
-        {sort}
-        {trailing}
+        {sort || trailing ? (
+          <div className="flex items-center justify-end gap-2">
+            {sort}
+            {trailing}
+          </div>
+        ) : null}
       </div>
     </div>
   );

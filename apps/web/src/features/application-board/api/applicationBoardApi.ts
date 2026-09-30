@@ -18,7 +18,6 @@ import {
   OPERATION_TYPE_LABELS as BOOTCAMP_OPERATION_TYPE_LABELS,
   TUITION_TYPE_LABELS,
 } from '@/entities/bootcamp/model/labels';
-import { getCompanyLogoUrl } from '@/entities/job/model/company-logo';
 import {
   EMPLOYMENT_TYPE_LABELS,
   EXPERIENCE_TYPE_LABELS,
@@ -38,8 +37,13 @@ export interface ApplicationBoardItem {
   id: number;
   key: string;
   href: string;
-  /** 앞에서부터 시도할 이미지. 공고는 썸네일, API 로고, 회사명 목록의 로고 순이다. */
+  /** 앞에서부터 시도할 이미지. 부트캠프는 대표 이미지, 모집글은 작성자 프로필이다. */
   thumbnailUrl?: ThumbnailSrc;
+  /**
+   * 채용공고의 회사 로고. 있으면 `thumbnailUrl` 대신 이것을 그린다 — 공고 썸네일은 배너
+   * 이미지라 작은 칸에서 무엇인지 알아볼 수 없다.
+   */
+  logo?: { companyName: string; logoUrl?: string };
   /** 제목 위 작은 줄. 회사명 또는 모집글 작성자다. */
   caption: string;
   title: string;
@@ -149,7 +153,7 @@ async function fetchJobStage(
       id: job.id,
       key: `job-${job.id}`,
       href: `/jobs/${job.id}`,
-      thumbnailUrl: [job.coverImageUrl, job.logoUrl, getCompanyLogoUrl(job.companyName)],
+      logo: { companyName: job.companyName, logoUrl: job.logoUrl },
       caption: job.companyName,
       title: job.title,
       meta: [

@@ -1,6 +1,8 @@
 'use client';
 
+import { useDroppable } from '@dnd-kit/core';
 import { useId, useState } from 'react';
+import { cn } from '@ogonggo/ui';
 import {
   useApplicationStage,
   type ApplicationBoardFilters,
@@ -45,9 +47,14 @@ export function ApplicationBoardSection({
   const list = useApplicationStage(tab, stage.id, filters);
   const [collapsed, setCollapsed] = useState(false);
   const panelId = useId();
+  /* 섹션 하나가 놓는 곳이다. 접힌 섹션도 머리에 놓을 수 있다(`ApplicationBoardList`). */
+  const droppable = useDroppable({ id: stage.id });
 
   return (
-    <section>
+    <section
+      ref={droppable.setNodeRef}
+      className={cn('rounded-xl', droppable.isOver && 'ring-2 ring-blue-400')}
+    >
       <ApplicationBoardSectionHead
         label={stage.label}
         total={list.total}
