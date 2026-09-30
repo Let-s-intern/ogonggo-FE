@@ -297,7 +297,12 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
           모집글 등록
         </Button>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden">
+      {/*
+        모바일 하단 내비게이션(`data-bottom-nav`, 앱 설치 + 로그인)이 떠 있으면 그 위로 올라앉는다
+        (`shared/ui/StickyApplyBar.tsx` 와 같은 방법). 올리지 않으면 내비게이션이 이 바를 덮어
+        버튼이 보이지 않았다.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(64px+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:pb-3">
         <Button
           type="button"
           variant="secondary"
