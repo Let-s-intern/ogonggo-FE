@@ -9,6 +9,7 @@ import { SignOutButton } from '@/features/sign-out';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
+import { hasBottomNav } from './MobileBottomNav';
 import { NAV_ITEMS } from './navItems';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
@@ -40,6 +41,7 @@ export function MobileSiteHeader({
   // 메뉴는 누르면 닫히며 사라지므로 광고 문의 모달은 메뉴 밖, 여기서 띄운다.
   const [adInquiryOpen, setAdInquiryOpen] = useState(false);
   const calendarActive = pathname.startsWith('/calendar');
+  const install = useInstallState();
 
   return (
     <div className="md:hidden">
@@ -55,31 +57,35 @@ export function MobileSiteHeader({
         </button>
       </TopRow>
 
-      <div className="flex h-11 items-stretch justify-between px-4">
-        <nav className="flex items-stretch gap-4">
-          {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
-            const active = matches(pathname);
-            return (
-              <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
-                <MenuItem
-                  state={active ? 'current' : 'default'}
-                  className={cn('h-full text-base', active && 'font-semibold')}
-                >
-                  {mobileLabel}
-                </MenuItem>
-              </Link>
-            );
-          })}
-        </nav>
-        <Link
-          href="/calendar"
-          aria-label="공고 달력"
-          aria-current={calendarActive ? 'page' : undefined}
-          className={cn('flex items-center', calendarActive ? 'text-gray-900' : 'text-gray-700')}
-        >
-          <CalendarIcon className="h-6 w-6" />
-        </Link>
-      </div>
+      {/* 앱을 설치하고 로그인해 하단 내비게이션(`MobileBottomNav`)이 떠 있으면 같은 탭이 위아래로 두 번 보이지 않게
+          이 줄을 숨긴다. 공고 달력은 하단 채용공고 탭의 서브 메뉴로 간다. */}
+      {hasBottomNav(install.kind === 'installed', signedIn) ? null : (
+        <div className="flex h-11 items-stretch justify-between px-4">
+          <nav className="flex items-stretch gap-4">
+            {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
+              const active = matches(pathname);
+              return (
+                <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
+                  <MenuItem
+                    state={active ? 'current' : 'default'}
+                    className={cn('h-full text-base', active && 'font-semibold')}
+                  >
+                    {mobileLabel}
+                  </MenuItem>
+                </Link>
+              );
+            })}
+          </nav>
+          <Link
+            href="/calendar"
+            aria-label="공고 달력"
+            aria-current={calendarActive ? 'page' : undefined}
+            className={cn('flex items-center', calendarActive ? 'text-gray-900' : 'text-gray-700')}
+          >
+            <CalendarIcon className="h-6 w-6" />
+          </Link>
+        </div>
+      )}
 
       {open ? (
         <MobileMenu

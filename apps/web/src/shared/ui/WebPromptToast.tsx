@@ -46,9 +46,10 @@ export function WebPromptToast({ message }: { message: string }) {
   }
 
   return (
+    // 로그인해 하단 내비게이션(`data-bottom-nav`)이 떠 있으면 그 위로 올린다.
     <div
       role="status"
-      className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex items-center gap-3 rounded-xl bg-gray-700/95 px-4 py-3 text-sm text-white shadow-lg md:hidden"
+      className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex [body:has([data-bottom-nav])_&]:bottom-[calc(5.5rem+env(safe-area-inset-bottom))] items-center gap-3 rounded-xl bg-gray-700/95 px-4 py-3 text-sm text-white shadow-lg md:hidden"
     >
       <span className="flex h-7 w-9 shrink-0 items-center justify-center rounded-md bg-blue-100">
         <Logo className="h-[9px] w-[19px] text-blue-500" />

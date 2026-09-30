@@ -1,1 +1,1 @@
-export { ServiceFeedbackButton } from './ui/ServiceFeedbackButton';
+export { ServiceFeedbackButton, openServiceFeedback } from './ui/ServiceFeedbackButton';
