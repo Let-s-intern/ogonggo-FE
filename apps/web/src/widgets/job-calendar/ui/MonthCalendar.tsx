@@ -130,13 +130,11 @@ export function MonthCalendar({
             >
               <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
             </button>
-            {/* 머리에 이미 기준 날짜(마감일)가 있어 카드에는 반대쪽 날짜(시작일)를 적는다. */}
             <DayJobPanel
               day={selectedDay}
               items={dayItems}
               dateBasis={dateBasis}
               highlightId={pickedJobId}
-              showOtherDate
             />
           </div>
         </div>

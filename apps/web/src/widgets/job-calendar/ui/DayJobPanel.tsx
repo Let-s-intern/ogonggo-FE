@@ -147,11 +147,6 @@ export interface DayJobPanelProps {
   dateBasis: JobCalendarDateBasis;
   /** 격자에서 누른 로고의 공고. 그 카드를 강조하고, `더보기` 뒤에 있으면 거기까지 펼친다. */
   highlightId?: number | null;
-  /**
-   * 카드마다 반대쪽 날짜를 적는가. 모바일 날짜 카드는 머리가 이미 기준 날짜(마감일 기준이면
-   * 마감일)라 카드에는 시작일을 적는다(시작일 기준이면 마감일).
-   */
-  showOtherDate?: boolean;
 }
 
 /** `YYYY-MM-DD…` → `9/25`. */
@@ -166,13 +161,7 @@ function shortDate(value: string): string {
  * `더보기`는 이제 네트워크 요청이 아니라 이미 받은 `items`를 더 드러내는 것뿐이다 — 그래서
  * 지역 상태(`visibleCount`) 하나로 끝난다.
  */
-export function DayJobPanel({
-  day,
-  items,
-  dateBasis,
-  highlightId = null,
-  showOtherDate = false,
-}: DayJobPanelProps) {
+export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJobPanelProps) {
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
   const [visibleCount, setVisibleCount] = useState(DAY_JOBS_PAGE_SIZE);
   // 날이 바뀌면 다시 5건부터 보인다. 렌더 중에 맞추는 것은 `MonthCalendar`의 `selectedDay`와
@@ -219,12 +208,11 @@ export function DayJobPanel({
                 job={job}
                 listPosition={index + 1}
                 highlighted={job.id === highlightId}
+                // 목록 머리가 이미 기준 날짜(마감일 기준이면 마감일)라 카드에는 반대쪽 날짜를 적는다.
                 otherDate={
-                  showOtherDate
-                    ? dateBasis === 'start'
-                      ? `마감 ${shortDate(job.recruitmentEndAt)}`
-                      : `시작 ${shortDate(job.recruitmentStartAt)}`
-                    : undefined
+                  dateBasis === 'start'
+                    ? `마감 ${shortDate(job.recruitmentEndAt)}`
+                    : `시작 ${shortDate(job.recruitmentStartAt)}`
                 }
               />
             </li>
