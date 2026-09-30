@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Button } from '@ogonggo/ui';
+import { useState, useSyncExternalStore } from 'react';
+import { Button, cn } from '@ogonggo/ui';
+import { useInstallState } from '@/features/install-app';
+import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
@@ -25,9 +27,26 @@ export function ForBusinessBanner() {
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
   const registerHref = companyJobRegisterHref(role);
   const [adInquiryOpen, setAdInquiryOpen] = useState(false);
+  const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
+  const installed = useInstallState().kind === 'installed';
+  /*
+   * 모바일에서 웹 앱을 설치하고 로그인한 일반 회원에게는 숨긴다 — 기업·교육기관 담당자에게 하는 말이라
+   * 그 사람에게는 쓸모가 없고, 앱처럼 쓰는 화면에서 자리만 차지한다. 역할을 아직 모르면 숨겨 둔다
+   * (기업 회원이면 알고 나서 나타난다). 데스크톱은 그대로다.
+   *
+   * 배너를 감싼 페이지의 칸까지 없애야 빈 틈이 남지 않는다. 그래서 숨길 때는 `data-for-business-hidden`
+   * 을 달고, 모바일에서 그것을 바로 품은 칸을 `app/globals.css` 가 접는다.
+   */
+  const hiddenOnMobile = installed && signedIn && role !== 'COMPANY';
 
   return (
-    <section className="rounded-lg bg-blue-50 px-5 py-6 md:px-8 md:py-8">
+    <section
+      data-for-business-hidden={hiddenOnMobile ? '' : undefined}
+      className={cn(
+        'rounded-lg bg-blue-50 px-5 py-6 md:px-8 md:py-8',
+        hiddenOnMobile && 'max-md:hidden',
+      )}
+    >
       <p className="text-xs font-semibold text-blue-600">FOR BUSINESS</p>
       <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>

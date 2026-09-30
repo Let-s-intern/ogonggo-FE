@@ -26,8 +26,56 @@ export function shareKindLabel(kind: SharePostingKind): string {
   return KIND_LABEL[kind];
 }
 
-export function shareUrl(posting: SharePosting): string {
-  return new URL(posting.path, window.location.origin).toString();
+/**
+ * 공유 버튼과 창의 제목·설명. 전에는 셋 다 `공고 공유하기` 와 "기업의 공고 소식" 으로 고정이라
+ * 부트캠프·사이드스터디에서도 채용공고 문구가 보였다.
+ */
+const SHARE_COPY: Record<SharePostingKind, { title: string; description: string }> = {
+  jobs: {
+    title: '공고 공유하기',
+    description: '내가 관심 있게 보고 있는 기업의 공고 소식을 공유해보세요.',
+  },
+  bootcamps: {
+    title: '교육 공유하기',
+    description: '관심 있게 보고 있는 교육·부트캠프 소식을 공유해보세요.',
+  },
+  'side-studies': {
+    title: '모집글 공유하기',
+    description: '함께할 사람을 찾는 사이드·스터디 모집글을 공유해보세요.',
+  },
+};
+
+export function shareCopy(kind: SharePostingKind): { title: string; description: string } {
+  return SHARE_COPY[kind];
+}
+
+const CAMPAIGN_BY_KIND: Record<SharePostingKind, string> = {
+  jobs: 'job_share',
+  bootcamps: 'bootcamp_share',
+  'side-studies': 'side_study_share',
+};
+
+/** 공유한 곳. 공유 주소의 `utm_source` 로 들어가 어디서 공유된 링크로 들어왔는지 나눠 볼 수 있다. */
+export type ShareChannel =
+  | 'link_copy'
+  | 'native_share'
+  | 'naver_blog'
+  | 'linkedin'
+  | 'x'
+  | 'google_calendar';
+
+/**
+ * 공유할 주소. 공유한 곳마다 UTM 을 붙인다(`utm_source`=공유한 곳, `utm_medium=share`,
+ * `utm_campaign`=종류). 상세의 지원 링크에 붙이는 UTM(`shared/lib/applyUtm.ts`)과 같은 이름 규칙이다.
+ */
+export function shareUrl(posting: SharePosting, channel: ShareChannel): string {
+  const url = new URL(posting.path, window.location.origin);
+  url.search = new URLSearchParams({
+    utm_source: channel,
+    utm_medium: 'share',
+    utm_campaign: CAMPAIGN_BY_KIND[posting.kind],
+  }).toString();
+  return url.toString();
 }
 
 function compactDate(date: Date): string {

@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cn, useToast } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import {
   googleCalendarUrl,
   linkedInShareUrl,
   naverBlogShareUrl,
+  shareCopy,
   shareKindLabel,
   shareUrl,
   xShareUrl,
@@ -23,7 +25,8 @@ export interface SharePostingButtonProps {
 }
 
 /**
- * 상세 화면 신청 버튼 아래의 `공고 공유하기`. 누르면 공유 창이 뜬다 — 데스크톱은 가운데 모달, 모바일은
+ * 상세 화면 신청 버튼 아래의 `공고 공유하기`(부트캠프는 `교육`, 사이드스터디는 `모집글` — `shareCopy`).
+ * 누르면 공유 창이 뜬다 — 데스크톱은 가운데 모달, 모바일은
  * 아래에서 올라오는 시트다(시안 `공고 공유하기` 데스크톱·모바일).
  *
  * 창을 `<dialog>` 로 만들지 않는다. `showModal()` 은 브라우저 최상위 층에 그려져서, 링크를 복사했다는
@@ -32,13 +35,14 @@ export interface SharePostingButtonProps {
  */
 export function SharePostingButton({ posting, compact = false }: SharePostingButtonProps) {
   const [open, setOpen] = useState(false);
+  const { title } = shareCopy(posting.kind);
 
   return (
     <>
       {compact ? (
         <button
           type="button"
-          aria-label="공고 공유하기"
+          aria-label={title}
           onClick={() => setOpen(true)}
           className="flex h-11 shrink-0 items-center justify-center rounded-md border border-gray-300 px-3 text-gray-500"
         >
@@ -51,7 +55,7 @@ export function SharePostingButton({ posting, compact = false }: SharePostingBut
           className="flex h-12 w-full items-center justify-center gap-2 rounded-md border border-gray-200 bg-white text-sm text-gray-700 transition-colors hover:bg-gray-50"
         >
           <span aria-hidden="true" className="icon-[lucide--share-2] block h-4 w-4" />
-          공고 공유하기
+          {title}
         </button>
       )}
       {open ? <ShareSheet posting={posting} onClose={() => setOpen(false)} /> : null}
@@ -77,35 +81,40 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
     };
   }, [onClose]);
 
-  const url = shareUrl(posting);
-  const calendarUrl = googleCalendarUrl(posting, url);
+  const linkUrl = shareUrl(posting, 'link_copy');
+  const calendarUrl = googleCalendarUrl(posting, shareUrl(posting, 'google_calendar'));
   const label = shareKindLabel(posting.kind);
+  const copy = shareCopy(posting.kind);
 
-  const copyLink = (message = `${label} 링크가 클립보드에 복사되었습니다.`) =>
+  const copyLink = (text = linkUrl, message = `${label} 링크가 클립보드에 복사되었습니다.`) =>
     navigator.clipboard
-      .writeText(url)
+      .writeText(text)
       .then(() => toast.show({ message }))
       .catch(() => toast.show({ message: '링크를 복사하지 못했습니다.', tone: 'error' }));
 
   /**
-   * 인스타그램은 웹에서 링크를 넘겨받는 공유 주소가 없다. 휴대폰이면 기기 공유 창을 열어 인스타그램
-   * DM 을 고르게 한다. 공유 창이 없으면(대부분의 데스크톱) 링크를 복사하고 인스타그램 DM 화면을 새
-   * 창으로 열어 붙여 넣게 한다. 전에는 복사만 해서 누른 사람에게는 아무 일도 안 일어난 것처럼 보였다.
+   * 기기 공유 창(`navigator.share`)으로 링크를 넘긴다. 인스타그램·카카오톡·문자처럼 휴대폰에 깔린 앱으로
+   * 보낼 수 있다. 전에는 이 자리가 `instagram` 아이콘이었는데, 인스타그램은 웹에서 링크를 넘겨받는 공유
+   * 주소가 없어 결국 이 창이 떴고 "URL로 공유하기" 라는 제목이 헷갈렸다 — 그래서 이름을 그대로 붙인다.
+   * 공유 창이 없는 브라우저(대부분의 데스크톱)에서는 링크를 복사한다.
    */
-  const shareToInstagram = () => {
-    if (typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches) {
+  const shareWithDevice = () => {
+    const url = shareUrl(posting, 'native_share');
+    if (typeof navigator.share === 'function') {
       navigator.share({ title: posting.title, url }).catch(() => {
         // 공유 창을 닫은 것도 여기로 온다. 알릴 것이 없다.
       });
       return;
     }
-    void copyLink('링크를 복사했어요. 인스타그램 DM 에 붙여 넣어 주세요.');
-    openWindow('https://www.instagram.com/direct/inbox/');
+    void copyLink(url);
   };
 
   const openWindow = (href: string) => window.open(href, '_blank', 'noopener,noreferrer');
 
-  return (
+  // `document.body` 에 바로 그린다. 이 창을 여는 버튼은 신청하기 바(`StickyApplyBar`, `z-30`) 안에
+  // 있어서 그 안에 그리면 창의 `z-40` 이 그 바의 층에 묶였다 — 하단 내비게이션과 의견 버튼이 창 위로
+  // 올라와 아래쪽이 가려졌다.
+  return createPortal(
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-gray-950/50 md:items-center"
       onClick={(event) => {
@@ -121,16 +130,14 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 id="share-posting-title" className="text-lg font-bold text-gray-900">
-              공고 공유하기
+              {copy.title}
             </h2>
-            <p className="mt-2 text-sm break-keep text-gray-800">
-              내가 관심 있게 보고 있는 기업의 공고 소식을 공유해보세요.
-            </p>
+            <p className="mt-2 text-sm break-keep text-gray-800">{copy.description}</p>
           </div>
           <button
             ref={closeRef}
             type="button"
-            aria-label="공고 공유하기 닫기"
+            aria-label={`${copy.title} 닫기`}
             onClick={onClose}
             className="-mt-1 -mr-1 rounded-sm p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           >
@@ -155,37 +162,39 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
 
         <hr className="mt-5 border-gray-200" />
 
-        <p className="mt-5 text-sm text-gray-500">링크 공유</p>
-        <button
-          type="button"
-          onClick={() => void copyLink()}
-          className="mt-3 flex h-12 w-full items-center justify-between rounded-lg bg-gray-100 px-3 text-left text-base text-gray-900 hover:bg-gray-200"
-        >
-          오공고 링크
-          <span aria-hidden="true" className="icon-[lucide--copy] block h-5 w-5 text-gray-900" />
-        </button>
-
-        {calendarUrl ? (
+        <p className="mt-5 text-sm text-gray-500">링크 복사하기</p>
+        {/* 주소를 그대로 보여 준다. 눌러서 전체를 골라 직접 복사할 수도 있고, 오른쪽 버튼으로 복사한다. */}
+        <div className="mt-3 flex h-12 w-full items-center gap-2 rounded-lg bg-gray-100 pr-1 pl-3">
+          <input
+            readOnly
+            value={linkUrl}
+            aria-label={`${label} 링크`}
+            onFocus={(event) => event.currentTarget.select()}
+            className="min-w-0 flex-1 truncate bg-transparent text-sm text-gray-700 outline-none"
+          />
           <button
             type="button"
-            onClick={() => openWindow(calendarUrl)}
-            className="mt-5 flex h-16 w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 text-base text-gray-600 hover:bg-gray-100"
+            onClick={() => void copyLink()}
+            aria-label="링크 복사"
+            className="flex h-10 shrink-0 items-center gap-1 rounded-md px-2 text-sm font-semibold text-gray-900 hover:bg-gray-200"
           >
-            <span aria-hidden="true" className="icon-[logos--google-calendar-2020] block h-5 w-5" />
-            Google Calendar에 일정 추가하기
+            <span aria-hidden="true" className="icon-[lucide--copy] block h-5 w-5" />
+            복사
           </button>
-        ) : null}
+        </div>
 
         {/*
           카카오톡은 숨겨 둔다. 공유하려면 카카오 JS 앱 키와 SDK 가 있어야 하는데 아직 없다.
-          모바일은 한 줄에 다 들어가지 않아 가로로 넘긴다. 시안의 모바일 줄은 맨 앞에 `캘린더 추가` 가 있다.
+          모바일은 한 줄에 다 들어가지 않아 가로로 넘긴다. 맨 앞은 기기 공유 창을 여는 `링크로 공유` 다.
         */}
         <ul className="-mx-5 mt-8 flex gap-5 overflow-x-auto px-5 md:mx-0 md:justify-between md:gap-0 md:px-0">
+          <ShareIcon label="링크로 공유" className="bg-blue-500" onClick={shareWithDevice}>
+            <span aria-hidden="true" className="icon-[lucide--share-2] block h-7 w-7 text-white" />
+          </ShareIcon>
           {calendarUrl ? (
             <ShareIcon
               label="캘린더 추가"
               className="bg-gray-100"
-              itemClassName="md:hidden"
               onClick={() => openWindow(calendarUrl)}
             >
               <span
@@ -195,19 +204,11 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
             </ShareIcon>
           ) : null}
           <ShareIcon
-            label="instagram"
-            className="bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fd5949_45%,#d6249f_60%,#285AEB_90%)]"
-            onClick={shareToInstagram}
-          >
-            <span
-              aria-hidden="true"
-              className="icon-[simple-icons--instagram] block h-7 w-7 text-white"
-            />
-          </ShareIcon>
-          <ShareIcon
             label="네이버 블로그"
             className="bg-black"
-            onClick={() => openWindow(naverBlogShareUrl(url, posting.title))}
+            onClick={() =>
+              openWindow(naverBlogShareUrl(shareUrl(posting, 'naver_blog'), posting.title))
+            }
           >
             {/* 시안의 네이버 블로그 표식(`b|`)이다. 아이콘 세트에 같은 모양이 없어 글자로 그린다. */}
             <span aria-hidden="true" className="text-2xl font-extrabold text-[#03C75A]">
@@ -217,7 +218,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="linkedin"
             className="bg-[#0A66C2]"
-            onClick={() => openWindow(linkedInShareUrl(url))}
+            onClick={() => openWindow(linkedInShareUrl(shareUrl(posting, 'linkedin')))}
           >
             <span
               aria-hidden="true"
@@ -227,33 +228,31 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="twitter"
             className="bg-black"
-            onClick={() => openWindow(xShareUrl(url, posting.title))}
+            onClick={() => openWindow(xShareUrl(shareUrl(posting, 'x'), posting.title))}
           >
             <span aria-hidden="true" className="icon-[simple-icons--x] block h-6 w-6 text-white" />
           </ShareIcon>
         </ul>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 function ShareIcon({
   label,
   className,
-  itemClassName,
   onClick,
   children,
 }: {
   label: string;
   /** 동그라미의 바탕. */
   className: string;
-  /** 항목 전체. 모바일에만 보이는 `캘린더 추가` 가 `md:hidden` 을 준다. */
-  itemClassName?: string;
   onClick: () => void;
   children: ReactNode;
 }) {
   return (
-    <li className={cn('shrink-0', itemClassName)}>
+    <li className="shrink-0">
       <button type="button" onClick={onClick} className="flex min-w-15 flex-col items-center gap-2">
         <span className={cn('flex h-15 w-15 items-center justify-center rounded-full', className)}>
           {children}

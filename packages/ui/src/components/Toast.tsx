@@ -97,7 +97,7 @@ export function Toast({
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
       className={cn(
-        'animate-toast-in pointer-events-auto flex max-w-md items-start gap-3',
+        'max-md:animate-toast-in-down md:animate-toast-in pointer-events-auto flex max-w-md items-start gap-3',
         'rounded-md bg-gray-900 px-4 py-3 text-sm text-white',
         'shadow-[0_12px_32px_-8px_rgba(17,24,39,0.45)]',
         className,
@@ -204,10 +204,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {/* 바닥에서 24px 위, 가로 가운데. 모바일에서도 손가락이 닿고 카드 오른쪽 위의 북마크
-          아이콘을 가리지 않는 자리다. 껍데기는 `pointer-events-none` 이라 토스트가 떠 있어도
-          뒤 화면을 누를 수 있다. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+      {/* 데스크톱은 바닥에서 24px 위, 가로 가운데. 카드 오른쪽 위의 북마크 아이콘을 가리지 않는
+          자리다. 모바일은 화면 위(안전 영역 바로 아래)에 띄운다 — 아래에는 신청하기 바·하단
+          내비게이션·의견 버튼이 붙어 있어 토스트가 그것들을 가렸다. 껍데기는 `pointer-events-none`
+          이라 토스트가 떠 있어도 뒤 화면을 누를 수 있다. */}
+      <div className="pointer-events-none fixed inset-x-0 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 flex justify-center px-4 md:top-auto md:bottom-6">
         <div role="status">{isError ? null : toast}</div>
         <div role="alert">{isError ? toast : null}</div>
       </div>
