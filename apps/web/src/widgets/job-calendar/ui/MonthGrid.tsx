@@ -91,8 +91,8 @@ export interface MonthGridProps {
   initialDate: string;
   /** 오른쪽 목록이 보여 주는 날. 그 칸을 파란 판으로 칠한다. `YYYY-MM-DD`. */
   selectedDay: string;
-  /** 날짜 칸을 누르면 그 날로 부른다. */
-  onSelectDay: (day: string) => void;
+  /** 날짜 칸을 누르면 그 날로 부른다. 칸 안의 로고를 눌렀으면 그 공고 id 도 넘긴다. */
+  onSelectDay: (day: string, jobId: number | null) => void;
   /** `마감일 기준` 토글 값. 날짜 칸을 묶는 필드를 정한다(`buildMonthEvents`). */
   dateBasis: JobCalendarDateBasis;
 }
@@ -130,6 +130,11 @@ export function MonthGrid({
   useEffect(() => {
     onSelectDayRef.current = onSelectDay;
   });
+  /*
+   * 칸 안에서 누른 로고. 칸의 클릭 리스너(네이티브)가 React 의 `onClick` 보다 먼저 불려서, 로고는
+   * 그보다 앞선 `pointerdown` 에 적어 두고 칸 리스너가 꺼내 쓴 뒤 비운다.
+   */
+  const pressedJobRef = useRef<number | null>(null);
 
   const dayHover = useDayHover();
 
@@ -207,7 +212,19 @@ export function MonthGrid({
         }
         dayCellDidMount={(arg) => {
           const day = toCalendarParam(arg.date);
-          arg.el.addEventListener('click', () => onSelectDayRef.current(day));
+          // 칸을 누르기 시작하면 먼저 비운다(캡처라 로고의 `pointerdown` 보다 앞선다). 로고를
+          // 누른 채 끌어 놓치면 적어 둔 값이 다음 클릭에 남는 일이 없게 한다.
+          arg.el.addEventListener(
+            'pointerdown',
+            () => {
+              pressedJobRef.current = null;
+            },
+            true,
+          );
+          arg.el.addEventListener('click', () => {
+            onSelectDayRef.current(day, pressedJobRef.current);
+            pressedJobRef.current = null;
+          });
           dayHover.bindDayCell(arg.el, day);
         }}
         eventClassNames={EVENT_RESET_CLASSES}
@@ -235,6 +252,10 @@ export function MonthGrid({
               className="block"
               onMouseEnter={() => dayHover.hoverItem(Number(arg.event.id))}
               onMouseLeave={() => dayHover.hoverItem(null)}
+              // 로고를 누르면 오른쪽 목록에서 그 공고를 강조한다(`MonthCalendar`).
+              onPointerDown={() => {
+                pressedJobRef.current = Number(arg.event.id);
+              }}
             >
               <CompanyLogo
                 companyName={arg.event.title}

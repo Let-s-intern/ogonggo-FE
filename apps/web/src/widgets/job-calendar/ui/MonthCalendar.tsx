@@ -67,8 +67,11 @@ export function MonthCalendar({
   const panelVisible = mobilePanelOpen && !desktop;
   // 카드가 떠 있는 동안 뒤 달력이 스크롤되지 않게 한다.
   useScrollLock(panelVisible);
-  const selectDay = (day: string) => {
+  /** 날짜 칸에서 누른 로고의 공고. 목록에서 그 카드를 강조한다. 칸 빈 곳을 누르면 비운다. */
+  const [pickedJobId, setPickedJobId] = useState<number | null>(null);
+  const selectDay = (day: string, jobId: number | null) => {
     setSelectedDay(day);
+    setPickedJobId(jobId);
     if (!desktop) {
       setMobilePanelOpen(true);
     }
@@ -76,6 +79,7 @@ export function MonthCalendar({
   if (renderedMonth !== initialDate) {
     setRenderedMonth(initialDate);
     setSelectedDay(defaultDay(initialDate));
+    setPickedJobId(null);
   }
 
   const bookmarkedIds = useBookmarkedIds();
@@ -100,7 +104,12 @@ export function MonthCalendar({
         />
       </div>
       <div className="hidden md:block">
-        <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
+        <DayJobPanel
+          day={selectedDay}
+          items={dayItems}
+          dateBasis={dateBasis}
+          highlightId={pickedJobId}
+        />
       </div>
       {panelVisible ? (
         <div
@@ -121,7 +130,14 @@ export function MonthCalendar({
             >
               <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
             </button>
-            <DayJobPanel day={selectedDay} items={dayItems} dateBasis={dateBasis} />
+            {/* 머리에 이미 기준 날짜(마감일)가 있어 카드에는 반대쪽 날짜(시작일)를 적는다. */}
+            <DayJobPanel
+              day={selectedDay}
+              items={dayItems}
+              dateBasis={dateBasis}
+              highlightId={pickedJobId}
+              showOtherDate
+            />
           </div>
         </div>
       ) : null}

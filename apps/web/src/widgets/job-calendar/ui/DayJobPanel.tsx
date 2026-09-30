@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
@@ -50,11 +50,23 @@ function formatDayTitle(day: string): string {
 export function DayJobCard({
   job,
   listPosition,
+  highlighted = false,
+  otherDate,
 }: {
   job: UserJobCalendarItemResponse;
   /** 이 카드가 놓인 목록 안의 순서, 1부터. `job_card_click` 에 실린다. */
   listPosition: number;
+  /** 격자에서 누른 로고의 공고. 파란 테두리로 강조하고 목록에서 보이게 스크롤한다. */
+  highlighted?: boolean;
+  /** 메타 줄 끝에 적는 반대쪽 날짜(`시작 9/25`). 목록 머리가 이미 기준 날짜일 때 쓴다. */
+  otherDate?: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (highlighted) {
+      ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [highlighted]);
   const jobInfo = toJobInfo(job);
   const dday = computeDday('PERIOD', job.recruitmentEndAt);
   const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
@@ -65,14 +77,17 @@ export function DayJobCard({
   ].filter((part): part is string => Boolean(part));
 
   return (
-    <div className="relative">
+    <div ref={ref} className="relative">
       <JobCardLink
         href={`/jobs/${job.id}`}
         scroll={false}
         jobId={job.id}
         jobInfo={jobInfo}
         tracking={{ listSource: 'calendar', listPosition, pageNumber: 1 }}
-        className="block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]"
+        className={cn(
+          'block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]',
+          highlighted && 'ring-2 ring-blue-400',
+        )}
       >
         <div className="flex items-start gap-3">
           <CompanyLogo
@@ -89,6 +104,9 @@ export function DayJobCard({
         <p className="mt-4 truncate text-base font-bold text-gray-900">{job.title}</p>
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="truncate text-xs text-gray-400">{meta.join(' · ')}</span>
+          {otherDate ? (
+            <span className="ml-auto shrink-0 text-xs text-gray-500">{otherDate}</span>
+          ) : null}
           {dday ? (
             <span
               className={cn(
@@ -127,6 +145,18 @@ export interface DayJobPanelProps {
    * 쪽을 쓸지 정한다 — `items` 를 고르는 기준(`MonthCalendar`)과 항상 같은 값이어야 한다.
    */
   dateBasis: JobCalendarDateBasis;
+  /** 격자에서 누른 로고의 공고. 그 카드를 강조하고, `더보기` 뒤에 있으면 거기까지 펼친다. */
+  highlightId?: number | null;
+  /**
+   * 카드마다 반대쪽 날짜를 적는가. 모바일 날짜 카드는 머리가 이미 기준 날짜(마감일 기준이면
+   * 마감일)라 카드에는 시작일을 적는다(시작일 기준이면 마감일).
+   */
+  showOtherDate?: boolean;
+}
+
+/** `YYYY-MM-DD…` → `9/25`. */
+function shortDate(value: string): string {
+  return `${Number(value.slice(5, 7))}/${Number(value.slice(8, 10))}`;
 }
 
 /**
@@ -136,7 +166,13 @@ export interface DayJobPanelProps {
  * `더보기`는 이제 네트워크 요청이 아니라 이미 받은 `items`를 더 드러내는 것뿐이다 — 그래서
  * 지역 상태(`visibleCount`) 하나로 끝난다.
  */
-export function DayJobPanel({ day, items, dateBasis }: DayJobPanelProps) {
+export function DayJobPanel({
+  day,
+  items,
+  dateBasis,
+  highlightId = null,
+  showOtherDate = false,
+}: DayJobPanelProps) {
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
   const [visibleCount, setVisibleCount] = useState(DAY_JOBS_PAGE_SIZE);
   // 날이 바뀌면 다시 5건부터 보인다. 렌더 중에 맞추는 것은 `MonthCalendar`의 `selectedDay`와
@@ -147,8 +183,14 @@ export function DayJobPanel({ day, items, dateBasis }: DayJobPanelProps) {
     setVisibleCount(DAY_JOBS_PAGE_SIZE);
   }
 
-  const jobs = items.slice(0, visibleCount);
-  const hasMore = visibleCount < items.length;
+  // 강조할 카드가 `더보기` 뒤에 있으면 그 카드가 든 묶음까지 펼친다.
+  const highlightIndex = items.findIndex((item) => item.id === highlightId);
+  const shownCount =
+    highlightIndex < visibleCount
+      ? visibleCount
+      : Math.ceil((highlightIndex + 1) / DAY_JOBS_PAGE_SIZE) * DAY_JOBS_PAGE_SIZE;
+  const jobs = items.slice(0, shownCount);
+  const hasMore = shownCount < items.length;
 
   return (
     <section aria-label={`${formatDayTitle(day)} ${basisLabel} 공고`} className="flex flex-col">
@@ -173,7 +215,18 @@ export function DayJobPanel({ day, items, dateBasis }: DayJobPanelProps) {
         <ul className="mt-4 flex flex-col">
           {jobs.map((job, index) => (
             <li key={job.id} className="border-b border-gray-200 py-2 first:pt-0 last:border-b-0">
-              <DayJobCard job={job} listPosition={index + 1} />
+              <DayJobCard
+                job={job}
+                listPosition={index + 1}
+                highlighted={job.id === highlightId}
+                otherDate={
+                  showOtherDate
+                    ? dateBasis === 'start'
+                      ? `마감 ${shortDate(job.recruitmentEndAt)}`
+                      : `시작 ${shortDate(job.recruitmentStartAt)}`
+                    : undefined
+                }
+              />
             </li>
           ))}
         </ul>
@@ -182,7 +235,7 @@ export function DayJobPanel({ day, items, dateBasis }: DayJobPanelProps) {
       {hasMore ? (
         <button
           type="button"
-          onClick={() => setVisibleCount((count) => count + DAY_JOBS_PAGE_SIZE)}
+          onClick={() => setVisibleCount(shownCount + DAY_JOBS_PAGE_SIZE)}
           className="mt-4 self-center py-2 text-sm text-gray-400 transition-colors hover:text-gray-600"
         >
           더보기
