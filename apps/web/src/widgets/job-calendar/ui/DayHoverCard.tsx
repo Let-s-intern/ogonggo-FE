@@ -54,7 +54,7 @@ function canHover(): boolean {
 }
 
 /** `items` 중 `dateBasis` 기준 날짜가 `day`인 것. */
-function itemsOnDay(
+export function itemsOnDay(
   items: UserJobCalendarItemResponse[],
   day: string,
   dateBasis: JobCalendarDateBasis,
@@ -150,8 +150,6 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
   const placement = side === 'bottom' && inLowerHalf ? 'top' : side;
   const dayItems = hoveredDay ? itemsOnDay(items, hoveredDay, dateBasis) : [];
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
-  /** 줄마다 적는 나머지 날짜의 이름. 호버한 날짜가 기준 날짜라 반대쪽을 적는다. */
-  const otherLabel = dateBasis === 'start' ? '마감' : '시작';
 
   return (
     <Popover.Root
@@ -179,30 +177,12 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
             </p>
             <ul className="grid grid-cols-2 gap-x-4">
               {previewItems(dayItems, hoveredItemId).map((item) => (
-                <li
-                  key={item.id}
-                  className={cn(
-                    'flex min-w-0 items-center gap-2 rounded-sm px-1 py-1',
-                    item.id === hoveredItemId && 'bg-blue-50 ring-1 ring-blue-200',
-                  )}
-                >
-                  <CompanyLogo
-                    companyName={item.companyName}
-                    logoUrl={item.logoUrl}
-                    className="h-5 w-5 shrink-0 rounded-xs p-0"
+                <li key={item.id}>
+                  <DayPreviewRow
+                    item={item}
+                    dateBasis={dateBasis}
+                    highlighted={item.id === hoveredItemId}
                   />
-                  <span className="max-w-24 shrink-0 truncate text-xs font-semibold text-gray-900">
-                    {item.companyName}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-xs text-gray-500">
-                    {jobLabel(item)}
-                  </span>
-                  <span className="shrink-0 text-[11px] text-gray-400">
-                    {otherLabel}{' '}
-                    {shortDate(
-                      dateBasis === 'start' ? item.recruitmentEndAt : item.recruitmentStartAt,
-                    )}
-                  </span>
                 </li>
               ))}
             </ul>
@@ -215,5 +195,44 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
         </Popover.Portal>
       ) : null}
     </Popover.Root>
+  );
+}
+
+/**
+ * 미리보기 한 줄 — `로고 · 회사 · 직무 · 다른 기준 날짜`. 데스크톱 호버 카드와 모바일 주간 아래
+ * 목록(`WeekGrid`)이 같이 쓴다. 날짜 칸이 이미 기준 날짜(마감일 기준이면 마감일)라 줄에는 반대쪽
+ * 날짜를 적는다.
+ */
+export function DayPreviewRow({
+  item,
+  dateBasis,
+  highlighted,
+}: {
+  item: UserJobCalendarItemResponse;
+  dateBasis: JobCalendarDateBasis;
+  /** 마우스를 올리거나 누른 공고. 파랗게 강조한다. */
+  highlighted: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        'flex min-w-0 items-center gap-2 rounded-sm px-1 py-1',
+        highlighted && 'bg-blue-50 ring-1 ring-blue-200',
+      )}
+    >
+      <CompanyLogo
+        companyName={item.companyName}
+        logoUrl={item.logoUrl}
+        className="h-5 w-5 shrink-0 rounded-xs p-0"
+      />
+      <span className="max-w-24 shrink-0 truncate text-xs font-semibold text-gray-900">
+        {item.companyName}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-xs text-gray-500">{jobLabel(item)}</span>
+      <span className="shrink-0 text-[11px] text-gray-400">
+        {dateBasis === 'start' ? '마감' : '시작'}{' '}
+        {shortDate(dateBasis === 'start' ? item.recruitmentEndAt : item.recruitmentStartAt)}
+      </span>
+    </span>
   );
 }
