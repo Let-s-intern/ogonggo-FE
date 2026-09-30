@@ -59,7 +59,10 @@ export function RouteModal({ label, children }: RouteModalProps) {
         여백을 뺀 값이다.
       */}
       <div className="h-full overflow-y-auto overscroll-contain p-4 md:h-auto md:max-h-[calc(100dvh-5.5rem)] md:px-5 md:py-2">
-        <div className="flex justify-end">
+        {/* 닫기 줄은 스크롤해도 위에 붙어 있다. 긴 상세·폼을 내려 읽다가 닫으려고 다시 맨 위까지
+            올라가지 않게 한다. 배경을 칠해 아래로 지나가는 내용을 가린다. 붙는 자리는 스크롤 상자의
+            안쪽 여백만큼 위(`-top-4`·`md:-top-2`)다 — `top-0` 이면 그 여백 틈으로 글이 비친다. */}
+        <div className="sticky -top-4 z-20 -mx-4 -mt-4 flex justify-end bg-white px-4 pt-4 md:-top-2 md:-mx-5 md:-mt-2 md:px-5 md:pt-2">
           <button
             type="button"
             aria-label={`${label} 닫기`}

@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { CreateRecruitmentPostRequestSaveMode } from '@ogonggo/api';
-import { Button, cn } from '@ogonggo/ui';
+import { Button, cn, useToast } from '@ogonggo/ui';
 import {
   createMyPost,
   fetchMyPostForm,
   updateMyPost,
 } from '@/entities/side-study/api/myRecruitmentPosts';
+import { completionPercent } from '../model/progress';
 import { validateForDraft, validateForPublish } from '../model/validate';
 import {
   EMPTY_FORM_VALUES,
@@ -29,8 +30,8 @@ export interface RecruitmentPostFormProps {
   /** 있으면 수정, 없으면 새 글. 작성한 모집글 표에서 넘어올 때만 있다. */
   postId?: number;
   /**
-   * 저장이 끝난 뒤 할 일. 없으면 작성한 모집글 목록으로 간다. 사이드스터디 목록의 모달은 목록에
-   * 남아야 해서 모달을 닫는다(`app/(site)/side-studies/@modal`).
+   * 등록이 끝난 뒤 할 일. 없으면 작성한 모집글 목록으로 간다. 사이드스터디 목록의 모달은 목록에
+   * 남아야 해서 모달을 닫는다(`app/(site)/side-studies/@modal`). 임시저장은 부르지 않는다.
    */
   onSaved?: () => void;
 }
@@ -45,8 +46,12 @@ export interface RecruitmentPostFormProps {
  * 세 단이 처음부터 모두 펼쳐져 있다. 목업이 그렇고, 무엇을 더 채워야 하는지가 한눈에 보여야
  * `모집글 등록` 이 왜 막혔는지 알 수 있다.
  *
- * 저장에 성공하면 작성한 모집글 목록으로 간다. 방금 쓴 글이 목록에 어떻게 들어갔는지(게시됐는지,
- * 임시저장으로 남았는지) 를 그 자리에서 보여 주는 화면이 거기뿐이다.
+ * 등록에 성공하면 작성한 모집글 목록으로 간다. 방금 쓴 글이 목록에 어떻게 들어갔는지를 그 자리에서
+ * 보여 주는 화면이 거기뿐이다.
+ *
+ * **임시저장은 화면에 남는다.** 쓰다가 저장해 두고 이어서 쓰는 것이 임시저장이라, 나가 버리면 다시
+ * 목록에서 찾아 들어와야 했다. 새 글을 처음 임시저장하면 받은 `postId` 를 들고 있다가 그 뒤의
+ * 저장은 같은 글을 고친다 — 그러지 않으면 누를 때마다 글이 하나씩 새로 생긴다.
  *
  * 하단 버튼 둘이 같은 호출을 `saveMode` 만 달리해서 한다 — `임시저장` 이 `DRAFT`,
  * `모집글 등록` 이 `PUBLISH` 다(PRD 5 절). 별도 발행 API(`/publish`) 도 있지만 생성 타입이
@@ -66,10 +71,15 @@ export interface RecruitmentPostFormProps {
  * 탭 둘 중 `미리보기` 는 같은 값을 상세 화면 모양으로 그릴 뿐 아무것도 저장하지 않는다
  * (`PostPreview`). 하단 버튼 둘은 탭을 따라가지 않고 늘 자리에 있다 — 3 단의 안내가
  * "등록 전 미리보기에서 확인해 주세요" 인데, 확인한 자리에서 등록하지 못하면 다시 탭을
- * 옮겨야 한다.
+ * 옮겨야 한다. 스크롤해도 화면 아래에 붙어 있다(데스크톱 `sticky`, 모바일 `fixed`).
+ *
+ * 폼 위에는 게시에 필요한 칸을 몇 퍼센트 채웠는지 보인다(`completionPercent`).
  */
 export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProps) {
   const router = useRouter();
+  const toast = useToast();
+  /** 저장할 글. 새 글은 처음 임시저장한 뒤부터 생긴다. */
+  const [savedPostId, setSavedPostId] = useState(postId);
   const [values, setValues] = useState<RecruitmentPostFormValues>(EMPTY_FORM_VALUES);
   /** 수정 진입 때 읽어 온 본문. 글자를 건드리지 않았으면 이 JSON 을 그대로 돌려보낸다. */
   const [loadedContent, setLoadedContent] = useState<LoadedContent | undefined>(undefined);
@@ -150,10 +160,17 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
     setPending(true);
     const request = toCreateRequest(values, saveMode, loadedContent);
     try {
-      if (postId === undefined) {
-        await createMyPost(request);
-      } else {
-        await updateMyPost(postId, request);
+      const saved =
+        savedPostId === undefined
+          ? await createMyPost(request)
+          : await updateMyPost(savedPostId, request);
+      if (saveMode === 'DRAFT') {
+        if (saved) {
+          setSavedPostId(saved.postId);
+        }
+        toast.show({ message: '임시저장했어요.' });
+        setPending(false);
+        return;
       }
       if (onSaved) {
         onSaved();
@@ -174,6 +191,8 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
     return <p className="py-16 text-center text-sm text-gray-500">불러오는 중입니다.</p>;
   }
 
+  const percent = completionPercent(values);
+
   return (
     <form
       ref={formRef}
@@ -183,6 +202,23 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         void save('PUBLISH');
       }}
     >
+      <div className="flex items-center gap-3">
+        <div
+          role="progressbar"
+          aria-label="작성 진행률"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+          className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100"
+        >
+          <div
+            className="h-full rounded-full bg-blue-500 transition-[width]"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <p className="shrink-0 text-sm font-semibold text-blue-500">{percent}% 완료</p>
+      </div>
+
       <div role="tablist" aria-label="모집글 작성" className="flex border-b border-gray-200">
         {(
           [
@@ -261,7 +297,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         </p>
       ) : null}
 
-      <div className="hidden justify-center gap-4 pt-2 md:flex">
+      <div className="sticky bottom-0 z-10 hidden justify-center gap-4 border-t border-gray-100 bg-white py-3 md:flex">
         <Button
           type="button"
           variant="secondary"
