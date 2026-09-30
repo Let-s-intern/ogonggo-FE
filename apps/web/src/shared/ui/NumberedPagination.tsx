@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { PageInfo } from '@ogonggo/api';
-import { cn, computePageBlock } from '@ogonggo/ui';
+import { PAGE_BLOCK_SIZE, cn, computePageBlock } from '@ogonggo/ui';
 import { ChevronIcon, type ChevronDirection } from '@/shared/ui/icons';
 
 export interface NumberedPaginationProps {
@@ -52,25 +52,59 @@ function PageArrow({
   );
 }
 
+/** 모바일(`md` 미만)에서 한 묶음에 보이는 번호 수. 360px 폭에 10개를 두면 화살표까지 넘친다. */
+const MOBILE_BLOCK_SIZE = 5;
+
 /**
  * 목록 아래 번호 페이지네이션(처음/이전/`1 2 3 … 10`/다음/끝).
  *
- * 번호는 10개씩 묶여 나오고 `이전`·`다음`은 묶음 단위로 움직인다. 계산은 `@ogonggo/ui`의
- * `computePageBlock` 한 곳에 있고 admin이 쓰는 버튼판 `Pagination`도 같은 함수를 쓴다.
+ * 번호는 데스크톱에서 10개, 모바일에서 5개씩 묶여 나오고 `이전`·`다음`은 묶음 단위로 움직인다. 계산은
+ * `@ogonggo/ui`의 `computePageBlock` 한 곳에 있고 admin이 쓰는 버튼판 `Pagination`도 같은 함수를 쓴다.
  * 예전에는 양쪽이 접는 칸 수를 따로 정해(1칸 대 2칸) 두 앱의 페이징이 다르게 생겼다.
+ *
+ * 서버에서 그리는 컴포넌트라 화면 폭을 모른다. 그래서 두 묶음을 다 그리고 CSS 로 폭에 맞는 쪽만 보인다.
+ * 숨긴 쪽은 `display: none` 이라 보조기술에도 읽히지 않는다.
  *
  * `처음`·`끝`은 묶음과 무관하게 언제나 1페이지와 마지막 페이지다.
  * 검색·필터·정렬 상태를 링크에 보존하는 일은 `buildHref`를 넘기는 쪽 몫이다.
  */
 export function NumberedPagination({ pageInfo, buildHref }: NumberedPaginationProps) {
+  return (
+    <>
+      <PaginationRow
+        pageInfo={pageInfo}
+        buildHref={buildHref}
+        blockSize={MOBILE_BLOCK_SIZE}
+        className="flex md:hidden"
+      />
+      <PaginationRow
+        pageInfo={pageInfo}
+        buildHref={buildHref}
+        blockSize={PAGE_BLOCK_SIZE}
+        className="hidden md:flex"
+      />
+    </>
+  );
+}
+
+function PaginationRow({
+  pageInfo,
+  buildHref,
+  blockSize,
+  className,
+}: NumberedPaginationProps & { blockSize: number; className: string }) {
   const { pageNum } = pageInfo;
   const totalPages = Math.max(pageInfo.totalPages, 1);
   const hasPrev = pageNum > 1;
   const hasNext = pageNum < totalPages;
-  const { pages, previousBlockPage, nextBlockPage } = computePageBlock(pageNum, totalPages);
+  const { pages, previousBlockPage, nextBlockPage } = computePageBlock(
+    pageNum,
+    totalPages,
+    blockSize,
+  );
 
   return (
-    <nav className="flex items-center justify-center gap-1" aria-label="페이지 이동">
+    <nav className={cn('items-center justify-center gap-1', className)} aria-label="페이지 이동">
       <PageArrow href={buildHref(1)} disabled={!hasPrev} direction="left" double label="처음" />
       <PageArrow
         href={buildHref(previousBlockPage ?? 1)}
