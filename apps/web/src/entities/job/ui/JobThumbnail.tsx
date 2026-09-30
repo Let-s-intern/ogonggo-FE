@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { CompanyLogo, type LogoBalance } from './CompanyLogo';
 
 /**
@@ -16,13 +19,17 @@ const CARD_LOGO_BALANCE: LogoBalance = {
 
 export interface JobThumbnailProps {
   companyName: string;
+  coverImageUrl?: string;
+  logoUrl?: string;
 }
 
 /**
- * 카드 상단 썸네일. 채용공고 자체의 사진은 크롤러가 아예 수집하지 않는 데이터라(어떤 필드에도
- * 없다) 지어내지 않는다 — 대신 실제로 있는 유일한 이미지인 회사 로고(`CompanyLogo`, 없으면
- * 회색 placeholder로 이미 알아서 떨어진다)를 재사용한다. 목업 실측 비율은 4:3보다 낮은(더
- * 납작한) `8:5`에 가깝다.
+ * 카드 상단 썸네일. 공고 대표 이미지(`coverImageUrl`)를 박스에 꽉 채워 그린다. 없거나 불러오지
+ * 못하면 그 자리에 회사 로고(`CompanyLogo`)를 그리고, 로고도 없으면 `CompanyLogo` 가 오공고
+ * 로고(`Thumbnail` 폴백)로 떨어진다.
+ *
+ * 로드 실패를 `Thumbnail` 에 맡기지 않는 이유 — `Thumbnail` 은 실패하면 오공고 로고로 바로
+ * 떨어진다. 여기서는 그 사이에 회사 로고가 한 단계 더 있다.
  *
  * 북마크 버튼은 이 박스가 아니라 `JobCard`가 그린다. 카드 전체가 `<Link>`라 버튼을 그 안에
  * 두면 잘못된 마크업이 되고 누를 때 이동까지 함께 일어난다 — 카드 뿌리에서 링크의 형제로 두고
@@ -35,14 +42,26 @@ export interface JobThumbnailProps {
  * 라운드는 `rounded-lg` — 페이지의 다른 큰 박스(`Card`, `JobInfoGrid`, `ForBusinessBanner`)가
  * 전부 이 값이다. 작은 로고·버튼만 `rounded-md`을 쓴다.
  */
-export function JobThumbnail({ companyName }: JobThumbnailProps) {
+export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbnailProps) {
+  const [coverFailed, setCoverFailed] = useState(false);
+
   return (
     <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm">
-      <CompanyLogo
-        companyName={companyName}
-        className="absolute inset-0 h-full w-full p-0 shadow-none"
-        balance={CARD_LOGO_BALANCE}
-      />
+      {coverImageUrl && !coverFailed ? (
+        <img
+          src={coverImageUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setCoverFailed(true)}
+        />
+      ) : (
+        <CompanyLogo
+          companyName={companyName}
+          logoUrl={logoUrl}
+          className="absolute inset-0 h-full w-full p-0 shadow-none"
+          balance={CARD_LOGO_BALANCE}
+        />
+      )}
     </div>
   );
 }

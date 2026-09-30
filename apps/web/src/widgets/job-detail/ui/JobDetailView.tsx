@@ -84,6 +84,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
   const headerCard = (
     <JobDetailHeaderCard
       companyName={job.companyName}
+      logoUrl={job.logoUrl}
       region={formatRegion(job.region)}
       title={job.title}
       recruitmentType={job.recruitmentType}

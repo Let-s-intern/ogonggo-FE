@@ -29,6 +29,8 @@ export interface LogoBalance {
 
 export interface CompanyLogoProps {
   companyName: string;
+  /** API 가 준 로고 주소. 없으면 회사명으로 `getCompanyLogoUrl` 에서 찾는다. */
+  logoUrl?: string;
   className?: string;
   /** 없으면 여백을 뺀 로고를 박스(안쪽 여백 제외)에 꽉 맞춘다. */
   balance?: LogoBalance;
@@ -59,8 +61,13 @@ function balancedSize(bounds: LogoBounds, { boxAspect, area, maxWidth, maxHeight
  *
  * 재는 동안에는 빈 박스만 둔다. 원본 크기로 그렸다가 바꾸면 로고가 한 번 튄다.
  */
-export function CompanyLogo({ companyName, className, balance }: CompanyLogoProps) {
-  const logoUrl = getCompanyLogoUrl(companyName);
+export function CompanyLogo({
+  companyName,
+  logoUrl: apiLogoUrl,
+  className,
+  balance,
+}: CompanyLogoProps) {
+  const logoUrl = apiLogoUrl ?? getCompanyLogoUrl(companyName);
   const clipId = useId();
   const subscribe = useCallback(
     (notify: () => void) => (logoUrl ? subscribeLogoMeasure(logoUrl, notify) : () => {}),
