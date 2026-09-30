@@ -93,10 +93,11 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
         직무 목록이 길어 끝까지 내려야 버튼이 보여서 모바일·데스크톱 모두 화면 아래에 띄워 둔다.
         목록 끝이 버튼에 가리지 않게 그만큼 아래 여백(`pb-20`)을 둔다. `data-sticky-apply-bar` 는 의견 버튼이
         이 바 위로 올라가게 하는 표시다(`features/service-feedback`) — 공고 상세 신청하기 바와 같다.
+        모바일 하단 내비게이션(`data-bottom-nav`)이 떠 있으면 이 바가 그 위로 올라앉는다.
       */}
       <div
         data-sticky-apply-bar
-        className="fixed inset-x-0 bottom-0 z-30 flex justify-center gap-2 border-t border-gray-200 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+        className="fixed inset-x-0 bottom-0 z-30 flex justify-center gap-2 border-t border-gray-200 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(64px+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:pb-3"
       >
         <button
           type="button"
