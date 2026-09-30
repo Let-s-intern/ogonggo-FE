@@ -49,3 +49,15 @@ export function formatWeekTitle(date: Date): string {
 export function formatMonthTitle(date: Date): string {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
+
+/**
+ * 월간에서 화살표 한 번이 옮기는 만큼. 달 단위이고, 옮긴 달의 1일로 맞춘다 —
+ * 날짜를 그대로 들고 옮기면 1월 31일에서 다음 달을 누를 때 `new Date(2026, 1, 31)`이
+ * 3월 3일이 되어 2월을 건너뛴다. 월간 뷰는 달만 보므로 며칠인지는 쓰지 않는다.
+ *
+ * 주간의 이동은 `shiftWeeks`다. 그쪽은 요일을 그대로 들고 7일씩 옮긴다 —
+ * 월간과 달리 며칠인지가 곧 보고 있는 주를 정한다.
+ */
+export function shiftMonths(date: Date, delta: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+}
