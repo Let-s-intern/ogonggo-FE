@@ -19,7 +19,10 @@ export interface StickyApplyBarProps {
  */
 export function StickyApplyBar({ summary, children }: StickyApplyBarProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:z-auto md:border-0 md:bg-transparent md:p-0">
+    <div
+      data-sticky-apply-bar
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:z-auto md:border-0 md:bg-transparent md:p-0"
+    >
       {summary ? (
         <div className="mb-2 flex items-center justify-center gap-2 text-sm text-gray-500 md:hidden">
           {summary}

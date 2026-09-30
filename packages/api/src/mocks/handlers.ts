@@ -21,6 +21,7 @@ import { GetRecruitmentPostsRecruitmentTypesItem } from '../generated/user/model
 import { GetRecruitmentPostsSort } from '../generated/user/models/getRecruitmentPostsSort';
 import { ListPublicJobsSort } from '../generated/user/models/listPublicJobsSort';
 import type { CreateRecruitmentPostCommentRequest } from '../generated/user/models/createRecruitmentPostCommentRequest';
+import type { CreateServiceFeedbackRequest } from '../generated/user/models/createServiceFeedbackRequest';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
 import type { RecruitmentPostCommentResponse } from '../generated/user/models/recruitmentPostCommentResponse';
@@ -1001,6 +1002,33 @@ const getNoticeHandler = http.get('*/api/v1/notices/:noticeId', ({ params }) => 
   return HttpResponse.json(body, { status: 200 });
 });
 
+/**
+ * `createServiceFeedback`(`POST /api/v1/service-feedbacks`). 저장하지 않는다. 백엔드처럼 두 문항이
+ * 모두 비었거나(공백만 있어도 빈 것) 1000자를 넘으면 400 이다.
+ */
+let serviceFeedbackId = 0;
+const createServiceFeedbackHandler = http.post(
+  '*/api/v1/service-feedbacks',
+  async ({ request }) => {
+    const { satisfaction, improvement } = (await request.json()) as CreateServiceFeedbackRequest;
+    const answers = [satisfaction, improvement].map((answer) => answer?.trim() ?? '');
+    const empty = answers.every((answer) => answer === '');
+    if (empty || answers.some((answer) => answer.length > 1000)) {
+      const body: ErrorResponse = {
+        status: 400,
+        code: 'BAD_REQUEST',
+        message: '만족스러운 점과 아쉬운 점 중 하나 이상을 1000자 이하로 입력해 주세요.',
+      };
+      return HttpResponse.json(body, { status: 400 });
+    }
+    serviceFeedbackId += 1;
+    return HttpResponse.json(
+      { status: 201, message: '요청이 성공했습니다.', data: { id: serviceFeedbackId } },
+      { status: 201 },
+    );
+  },
+);
+
 export const handlers: HttpHandler[] = [
   getJobsHandler,
   // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`도 잡는다.
@@ -1017,4 +1045,5 @@ export const handlers: HttpHandler[] = [
   reportRecruitmentPostCommentHandler,
   getNoticesHandler,
   getNoticeHandler,
+  createServiceFeedbackHandler,
 ];
