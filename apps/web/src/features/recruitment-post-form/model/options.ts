@@ -26,7 +26,7 @@ import {
 const placeholder = (label: string): SelectOption => ({ value: '', label });
 
 export const RECRUITMENT_TYPE_OPTIONS: SelectOption[] = [
-  placeholder('사이드 프로젝트/스터디'),
+  placeholder('모집 구분을 선택해 주세요.'),
   ...(['SIDE_PROJECT', 'STUDY'] as CreateRecruitmentPostRequestRecruitmentType[]).map((value) => ({
     value,
     label: KIND_LABELS[value],
@@ -34,14 +34,14 @@ export const RECRUITMENT_TYPE_OPTIONS: SelectOption[] = [
 ];
 
 export const PROGRESS_METHOD_OPTIONS: SelectOption[] = [
-  placeholder('온라인/오프라인'),
+  placeholder('진행 방식을 선택해 주세요.'),
   ...(['ONLINE', 'OFFLINE', 'HYBRID'] as CreateRecruitmentPostRequestProgressMethod[]).map(
     (value) => ({ value, label: OPERATION_TYPE_LABELS[value] }),
   ),
 ];
 
 export const CONTACT_METHOD_OPTIONS: SelectOption[] = [
-  placeholder('카카오톡 오픈 채팅/이메일'),
+  placeholder('소통 방법을 선택해 주세요.'),
   ...(['OPEN_KAKAO', 'EMAIL'] as CreateRecruitmentPostRequestContactMethod[]).map((value) => ({
     value,
     label: CONTACT_METHOD_LABELS[value],

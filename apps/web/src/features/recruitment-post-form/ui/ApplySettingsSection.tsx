@@ -1,9 +1,11 @@
 'use client';
 
-import { Callout, Checkbox, Field, Input, Select } from '@ogonggo/ui';
+import { Callout, Checkbox, Field, Input } from '@ogonggo/ui';
 import { CONTACT_METHOD_OPTIONS } from '../model/options';
 import type { RecruitmentPostFormValues } from '../model/values';
+import { FormSelect } from './FormSelect';
 import { PositionSelect } from './PositionSelect';
+import { TechnologyStackInput } from './TechnologyStackInput';
 
 /** `CreateRecruitmentPostRequest.contactValue` 의 `@maxLength`. */
 const MAX_CONTACT_VALUE_LENGTH = 2048;
@@ -14,7 +16,7 @@ export interface ApplySettingsSectionProps {
 }
 
 /**
- * 3 단 지원 설정(PRD 5 절). 모집 시작일 · 모집 마감일 · 모집 포지션 · 소통 방법 ·
+ * 3 단 지원 설정(PRD 5 절). 모집 시작일 · 모집 마감일 · 모집 포지션 · 기술 스택 · 소통 방법 ·
  * 오픈 카톡방 링크 · 정책 동의.
  *
  * **포지션별 인원 칸이 없다**(PRD 5 절). 인원은 1 단의 `capacity` 하나뿐이다.
@@ -63,11 +65,18 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
         />
       </Field>
 
+      <Field label="기술 스택" htmlFor="post-technology-stacks">
+        <TechnologyStackInput
+          id="post-technology-stacks"
+          value={values.technologyStacks}
+          onChange={(technologyStacks) => onChange({ technologyStacks })}
+        />
+      </Field>
+
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="소통 방법" htmlFor="post-contact-method" required>
-          <Select
+          <FormSelect
             id="post-contact-method"
-            className="h-11 w-full px-4 text-base"
             options={CONTACT_METHOD_OPTIONS}
             value={values.contactMethod}
             onChange={(event) =>
