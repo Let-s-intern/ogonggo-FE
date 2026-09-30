@@ -6,6 +6,12 @@ import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { DayJobCard } from './DayJobPanel';
 import type { JobCalendarDateBasis } from '../lib/query';
 
+/**
+ * 카드에 그리는 최대 수. 시작일 기준에서는 한 날이 수백 건일 수 있어(운영, 2026-09-30) 다
+ * 그리면 올릴 때마다 멈춘다. 나머지는 `외 N건`으로 센다.
+ */
+const MAX_CARD_ITEMS = 20;
+
 /** 칸에서 카드로 마우스를 옮기는 동안(`sideOffset` 8px 틈) 카드를 닫지 않고 기다리는 시간. */
 const HOVER_CLOSE_DELAY_MS = 120;
 
@@ -122,11 +128,16 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
               {basisLabel}
             </p>
             <ul className="flex flex-col gap-2">
-              {dayItems.map((item, index) => (
+              {dayItems.slice(0, MAX_CARD_ITEMS).map((item, index) => (
                 <li key={item.id}>
                   <DayJobCard job={item} listPosition={index + 1} />
                 </li>
               ))}
+              {dayItems.length > MAX_CARD_ITEMS ? (
+                <li className="px-1 text-xs text-gray-500">
+                  외 {dayItems.length - MAX_CARD_ITEMS}건
+                </li>
+              ) : null}
             </ul>
           </Popover.Content>
         </Popover.Portal>
