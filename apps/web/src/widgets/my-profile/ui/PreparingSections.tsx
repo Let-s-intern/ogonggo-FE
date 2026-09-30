@@ -1,5 +1,4 @@
 import { Toggle } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 
 /**
  * 목업에는 있지만 받을 곳이 없는 구역들(PRD 6 절). 전부 비활성이고 저장 호출을 만들지 않는다.
@@ -31,7 +30,6 @@ export function WithdrawAction() {
       <button
         type="button"
         disabled
-        title={PLACEHOLDER_NOTICE}
         className="cursor-not-allowed py-2 text-sm text-gray-300 underline"
       >
         회원 탈퇴

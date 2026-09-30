@@ -1,5 +1,4 @@
 import { Button, Input, Toggle } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { CompanyProfileField } from './CompanyProfileField';
 
 /**
@@ -18,47 +17,18 @@ export function PasswordSection() {
       <h2 className="text-xl font-bold text-gray-950">비밀번호 변경</h2>
 
       <CompanyProfileField label="기존 비밀번호" htmlFor="company-current-password">
-        <Input
-          id="company-current-password"
-          type="password"
-          value=""
-          readOnly
-          disabled
-          title={PLACEHOLDER_NOTICE}
-          placeholder={PLACEHOLDER_NOTICE}
-        />
+        <Input id="company-current-password" type="password" value="" readOnly disabled />
       </CompanyProfileField>
 
       <CompanyProfileField label="새로운 비밀번호" htmlFor="company-new-password">
-        <Input
-          id="company-new-password"
-          type="password"
-          value=""
-          readOnly
-          disabled
-          title={PLACEHOLDER_NOTICE}
-          placeholder={PLACEHOLDER_NOTICE}
-        />
+        <Input id="company-new-password" type="password" value="" readOnly disabled />
       </CompanyProfileField>
 
       <CompanyProfileField label="비밀번호 확인" htmlFor="company-confirm-password">
-        <Input
-          id="company-confirm-password"
-          type="password"
-          value=""
-          readOnly
-          disabled
-          title={PLACEHOLDER_NOTICE}
-          placeholder={PLACEHOLDER_NOTICE}
-        />
+        <Input id="company-confirm-password" type="password" value="" readOnly disabled />
       </CompanyProfileField>
 
-      <Button
-        variant="secondary"
-        disabled
-        title={PLACEHOLDER_NOTICE}
-        className="w-full border-blue-500 text-blue-500"
-      >
+      <Button variant="secondary" disabled className="w-full border-blue-500 text-blue-500">
         비밀번호 변경
       </Button>
     </section>
@@ -87,7 +57,6 @@ export function WithdrawAction() {
       <button
         type="button"
         disabled
-        title={PLACEHOLDER_NOTICE}
         className="cursor-not-allowed py-2 text-sm text-gray-300 underline"
       >
         회원 탈퇴

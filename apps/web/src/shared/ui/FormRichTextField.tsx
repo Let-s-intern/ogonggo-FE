@@ -1,7 +1,6 @@
 'use client';
 
 import { Field, Textarea } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 
 /**
  * 목업의 서식 도구 막대. **전부 비활성이다.**
@@ -46,7 +45,7 @@ export function FormRichTextField({
   onChange,
   placeholder,
   rows = 5,
-  hint = '서식은 준비 중이에요. 줄바꿈은 적은 그대로 저장돼요.',
+  hint = '줄바꿈은 적은 그대로 저장돼요.',
   maxLength,
 }: FormRichTextFieldProps) {
   return (
@@ -58,7 +57,6 @@ export function FormRichTextField({
             type="button"
             disabled
             aria-label={button.label}
-            title={PLACEHOLDER_NOTICE}
             className="flex size-7 cursor-not-allowed items-center justify-center rounded text-gray-300"
           >
             <span aria-hidden="true" className={`${button.icon} block size-4`} />
