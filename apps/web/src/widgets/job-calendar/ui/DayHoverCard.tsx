@@ -3,14 +3,27 @@
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useRef, useState } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { formatJobField, JOB_ROLES } from '@/entities/job/model/labels';
+import type { JobField, JobRole } from '@/entities/job/model/types';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { JobCalendarDateBasis } from '../lib/query';
 
 /**
- * 미리보기에 그리는 최대 줄 수. 한눈에 훑을 만큼만 두고 나머지는 `외 N건`으로 센다. 시작일
+ * 미리보기에 그리는 최대 수. 두 열로 한눈에 훑을 만큼 두고 나머지는 `외 N건`으로 센다. 시작일
  * 기준에서는 한 날이 수백 건일 수 있어(운영, 2026-09-30) 다 그리면 올릴 때마다 멈추기도 한다.
  */
-const MAX_PREVIEW_ITEMS = 12;
+const MAX_PREVIEW_ITEMS = 30;
+
+/** 미리보기 한 줄의 직무. 세부 직무가 있으면 그것, 없으면 직군, 둘 다 없으면 공고 제목이다. */
+function jobLabel(item: UserJobCalendarItemResponse): string {
+  const role = item.jobRole ? JOB_ROLES[item.jobRole as JobRole]?.label : undefined;
+  return role ?? formatJobField(item.jobField as JobField | undefined) ?? item.title;
+}
+
+/** `YYYY-MM-DD…` → `9/25`. */
+function shortDate(value: string): string {
+  return `${Number(value.slice(5, 7))}/${Number(value.slice(8, 10))}`;
+}
 
 /**
  * 칸에서 나간 뒤 닫기까지 기다리는 시간. 옆 칸으로 옮겨 가는 사이에 카드가 닫혔다 다시 열리며
@@ -46,6 +59,10 @@ function itemsOnDay(
  * **카드는 날짜 칸 하나에 하나다.** 예전에는 로고(월간)·막대(주간)마다 카드가 붙어 있어 같은
  * 칸 안에서 옮겨 다닐 때마다 카드가 닫혔다 열렸다. 격자가 칸마다 `bindDayCell`로 마우스 출입을
  * 걸고, 카드 하나(`DayHoverPopover`)가 지금 올라간 칸을 앵커로 삼는다.
+ *
+ * 한 줄에 `로고 · 회사 · 직무 · 다른 기준 날짜`만 둔다. 호버한 날짜가 이미 기준 날짜(마감일
+ * 기준이면 마감일)라, 날짜 칸에는 나머지 하나(시작일)를 적는다. 공고 제목은 빼고 두 열로 늘어놓아
+ * 한 번에 많이 보이게 한다.
  *
  * **누를 수 없는 미리보기다.** 클릭하기 전에 어떤 공고가 있는지 빠르게 보려는 것이라, 카드는
  * 마우스를 받지 않고(`pointer-events-none`) 칸에서 나가면 닫힌다. 공고는 날짜를 눌러 오른쪽
@@ -103,6 +120,8 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
   const { hoveredDay, anchorRef, close } = hover;
   const dayItems = hoveredDay ? itemsOnDay(items, hoveredDay, dateBasis) : [];
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
+  /** 줄마다 적는 나머지 날짜의 이름. 호버한 날짜가 기준 날짜라 반대쪽을 적는다. */
+  const otherLabel = dateBasis === 'start' ? '마감' : '시작';
 
   return (
     <Popover.Root
@@ -122,13 +141,13 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
             // 앵커가 칸이라 돌려줄 트리거가 없다. 포커스를 옮기지 않는다.
             onCloseAutoFocus={(event) => event.preventDefault()}
             // 마우스를 받지 않는다. 카드 밑의 칸들로 그대로 옮겨 가며 훑을 수 있다.
-            className="pointer-events-none z-50 w-80 rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200"
+            className="pointer-events-none z-50 w-[36rem] max-w-[calc(100vw-2rem)] rounded-lg bg-white p-4 shadow-lg ring-1 ring-gray-200"
           >
             <p className="mb-2 px-1 text-xs font-medium text-gray-500">
               {hoveredDay.slice(0, 4)}.{hoveredDay.slice(5, 7)}.{hoveredDay.slice(8, 10)}{' '}
               {basisLabel} · {dayItems.length}건
             </p>
-            <ul className="flex flex-col">
+            <ul className="grid grid-cols-2 gap-x-4">
               {dayItems.slice(0, MAX_PREVIEW_ITEMS).map((item) => (
                 <li key={item.id} className="flex min-w-0 items-center gap-2 px-1 py-1">
                   <CompanyLogo
@@ -139,15 +158,23 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
                   <span className="max-w-24 shrink-0 truncate text-xs font-semibold text-gray-900">
                     {item.companyName}
                   </span>
-                  <span className="min-w-0 truncate text-xs text-gray-500">{item.title}</span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-gray-500">
+                    {jobLabel(item)}
+                  </span>
+                  <span className="shrink-0 text-[11px] text-gray-400">
+                    {otherLabel}{' '}
+                    {shortDate(
+                      dateBasis === 'start' ? item.recruitmentEndAt : item.recruitmentStartAt,
+                    )}
+                  </span>
                 </li>
               ))}
-              {dayItems.length > MAX_PREVIEW_ITEMS ? (
-                <li className="px-1 pt-1 text-xs text-gray-400">
-                  외 {dayItems.length - MAX_PREVIEW_ITEMS}건 · 날짜를 누르면 전부 볼 수 있어요
-                </li>
-              ) : null}
             </ul>
+            {dayItems.length > MAX_PREVIEW_ITEMS ? (
+              <p className="px-1 pt-2 text-xs text-gray-400">
+                외 {dayItems.length - MAX_PREVIEW_ITEMS}건 · 날짜를 누르면 전부 볼 수 있어요
+              </p>
+            ) : null}
           </Popover.Content>
         </Popover.Portal>
       ) : null}
