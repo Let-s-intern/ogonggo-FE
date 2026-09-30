@@ -38,35 +38,11 @@ function InfoCell({
 }
 
 /**
- * 소통 방법 칸 — 수단 이름 아래에 실제 주소(`contact.value`) 를 공개로 보이고 링크로 건다
- * (PRD Push 5 "사용자 결정"). 이메일은 `mailto:`, 오픈채팅은 백엔드가 http(s) 주소만 받지만
- * 그 밖의 값이 오면 링크 없이 글자로만 둔다.
+ * 소통 방법 칸 — 수단 이름(`이메일`·`카카오톡 오픈채팅`)만 보인다. 실제 주소는 `신청하러 가기`를
+ * 누른 회원에게만 보여 준다(`SideStudyContactButton`).
  */
 function ContactValue({ contact }: { contact: SideStudyDetail['contact'] }) {
-  const href =
-    contact.method === 'EMAIL'
-      ? `mailto:${contact.value}`
-      : /^https?:\/\//i.test(contact.value)
-        ? contact.value
-        : undefined;
-
-  return (
-    <>
-      <p>{CONTACT_METHOD_LABELS[contact.method]}</p>
-      {href ? (
-        <a
-          href={href}
-          target={contact.method === 'EMAIL' ? undefined : '_blank'}
-          rel={contact.method === 'EMAIL' ? undefined : 'noopener noreferrer'}
-          className="break-all font-normal text-blue-600 underline"
-        >
-          {contact.value}
-        </a>
-      ) : (
-        <p className="break-all font-normal">{contact.value}</p>
-      )}
-    </>
-  );
+  return <p>{CONTACT_METHOD_LABELS[contact.method]}</p>;
 }
 
 /**

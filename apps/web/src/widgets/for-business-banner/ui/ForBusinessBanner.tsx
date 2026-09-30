@@ -36,7 +36,8 @@ export function ForBusinessBanner() {
             월 8만 취준생에게 공고를 직접 등록하고, 배너 광고로 더 크게 알려보세요
           </p>
         </div>
-        <div className="flex gap-2 whitespace-nowrap">
+        {/* 모바일은 둘을 한 줄에 두면 `광고 상품 문의하기`가 카드 밖으로 밀려 위아래로 쌓는다. */}
+        <div className="flex flex-col gap-2 whitespace-nowrap md:flex-row">
           <Button asChild>
             <Link href={registerHref}>무료로 공고 등록하기</Link>
           </Button>
