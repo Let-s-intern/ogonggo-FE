@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { type MouseEvent, useState } from 'react';
 import { cn } from '@ogonggo/ui';
+import { useInstallState } from '@/features/install-app';
 import { LETSCAREER_WEB_HOME, letsCareerWebHref } from '@/shared/api/letsCareerHandoff';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
@@ -27,10 +28,16 @@ export interface ServiceLogoToggleProps {
  *
  * 누르면 떠나기 전까지 토글이 넘어간 모양을 보인다. 렛츠커리어 마크가 렛츠커리어 색(`#4D55F5`,
  * `lets-intern-client` `apps/web/public/logo/logo-simple.svg`)으로 칠해지고 오공고 로고가 연해진다.
+ *
+ * 모바일에서 웹 앱을 설치했으면 렛츠커리어 마크와 구분선을 빼고 오공고 로고만 둔다. 설치된 앱 안에서
+ * 누르면 다른 사이트로 넘어가 앱에서 벗어나는 것이 어색하다. 설치 여부는 브라우저에서만 알 수 있어
+ * 알기 전에는 모바일 마크를 그리지 않는다 — 설치된 앱에서 마크가 잠깐 보였다 사라지지 않게 한다.
  */
 export function ServiceLogoToggle({ size }: ServiceLogoToggleProps) {
   const [leaving, setLeaving] = useState(false);
   const sizes = SIZES[size];
+  const install = useInstallState();
+  const showLetsCareer = size === 'desktop' || install.kind === 'not-installed';
 
   const goToLetsCareer = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
@@ -43,13 +50,17 @@ export function ServiceLogoToggle({ size }: ServiceLogoToggleProps) {
 
   return (
     <div className="flex items-center gap-3">
-      <a href={LETSCAREER_WEB_HOME} aria-label="렛츠커리어로 이동" onClick={goToLetsCareer}>
-        <LetsCareerMark
-          flat={leaving}
-          className={cn(sizes.mark, 'transition-colors', leaving && 'text-[#4D55F5]')}
-        />
-      </a>
-      <span className={cn('w-px bg-gray-300', sizes.divider)} />
+      {showLetsCareer ? (
+        <>
+          <a href={LETSCAREER_WEB_HOME} aria-label="렛츠커리어로 이동" onClick={goToLetsCareer}>
+            <LetsCareerMark
+              flat={leaving}
+              className={cn(sizes.mark, 'transition-colors', leaving && 'text-[#4D55F5]')}
+            />
+          </a>
+          <span className={cn('w-px bg-gray-300', sizes.divider)} />
+        </>
+      ) : null}
       <Link href="/" aria-label="오늘의 공고 홈">
         <Logo
           className={cn(
