@@ -7,6 +7,7 @@ import type { JobDetail } from '@/entities/job/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { CrossSellWidget } from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
@@ -184,8 +185,12 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           >
             {applyCta}
           </StickyApplyBar>
-          <SimilarJobs excludeJobId={job.id} />
-          <CrossSellWidget />
+          <DetailSidebarSection>
+            <SimilarJobs excludeJobId={job.id} />
+          </DetailSidebarSection>
+          <DetailSidebarSection>
+            <CrossSellWidget />
+          </DetailSidebarSection>
         </aside>
       </div>
     </div>
