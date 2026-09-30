@@ -132,9 +132,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
             <h2 id="share-posting-title" className="text-lg font-bold text-gray-900">
               {copy.title}
             </h2>
-            <p className="mt-2 text-sm break-keep text-gray-800">
-              {copy.description}
-            </p>
+            <p className="mt-2 text-sm break-keep text-gray-800">{copy.description}</p>
           </div>
           <button
             ref={closeRef}
