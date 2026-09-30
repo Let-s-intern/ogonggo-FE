@@ -70,6 +70,8 @@ function itemsOnDay(
  */
 export function useDayHover() {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
+  /** 올라간 칸이 화면 세로 가운데보다 아래에 있는가. 그러면 카드를 칸 위로 띄운다. */
+  const [inLowerHalf, setInLowerHalf] = useState(false);
   const anchorRef = useRef<HTMLElement | null>(null);
   const closeTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(closeTimerRef.current), []);
@@ -90,6 +92,8 @@ export function useDayHover() {
       if (!canHover()) return;
       keepOpen();
       anchorRef.current = el;
+      const rect = el.getBoundingClientRect();
+      setInLowerHalf(rect.top + rect.height / 2 > window.innerHeight / 2);
       setHoveredDay(day);
     });
     el.addEventListener('mouseleave', closeSoon);
@@ -97,6 +101,7 @@ export function useDayHover() {
 
   return {
     hoveredDay,
+    inLowerHalf,
     anchorRef,
     bindDayCell,
     close: () => setHoveredDay(null),
@@ -110,14 +115,20 @@ export interface DayHoverPopoverProps {
   /** `마감일 기준` 토글 값. 거르는 기준 필드(마감일/시작일)를 정한다. */
   dateBasis: JobCalendarDateBasis;
   /**
-   * 칸의 어느 쪽에 띄울지. 월간 칸은 짧아 아래(`bottom`)고, 주간 칸은 막대가 쌓여 세로로 길어
-   * 옆(`right`)이다 — 아래에 두면 카드가 칸 맨 아래로 떨어진다.
+   * 칸의 어느 쪽에 띄울지. 월간 칸은 짧아 위아래(`bottom`)다 — 칸이 화면 아래쪽이면 위로
+   * 뒤집는다. 주간 칸은 막대가 쌓여 세로로 길어 옆(`right`)이다 — 아래에 두면 카드가 칸 맨
+   * 아래로 떨어진다.
    */
   side: 'bottom' | 'right';
 }
 
 export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopoverProps) {
-  const { hoveredDay, anchorRef, close } = hover;
+  const { hoveredDay, inLowerHalf, anchorRef, close } = hover;
+  /*
+   * 위아래로 띄우는 월간은 칸이 화면 아래쪽이면 위로, 위쪽이면 아래로 띄운다. Radix 는 공간이
+   * 정말 모자랄 때만 뒤집어서, 아래쪽 칸에서도 아래로 떠 달력 아래를 가렸다.
+   */
+  const placement = side === 'bottom' && inLowerHalf ? 'top' : side;
   const dayItems = hoveredDay ? itemsOnDay(items, hoveredDay, dateBasis) : [];
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
   /** 줄마다 적는 나머지 날짜의 이름. 호버한 날짜가 기준 날짜라 반대쪽을 적는다. */
@@ -134,7 +145,7 @@ export function DayHoverPopover({ hover, items, dateBasis, side }: DayHoverPopov
       {hoveredDay ? (
         <Popover.Portal>
           <Popover.Content
-            side={side}
+            side={placement}
             align="start"
             sideOffset={8}
             onOpenAutoFocus={(event) => event.preventDefault()}
