@@ -132,13 +132,13 @@ const BUBBLE_MESSAGES = [
   '한 줄 의견도 큰 힘이 돼요',
 ];
 /** 한 문구가 보이는 시간. */
-const BUBBLE_HOLD_MS = 4000;
-/** 사라졌다 나타나는 전환 시간. `duration-500` 과 맞춘다. */
-const BUBBLE_FADE_MS = 500;
+const BUBBLE_HOLD_MS = 6000;
+/** 사라졌다 나타나는 전환 시간. `duration-700` 과 맞춘다. */
+const BUBBLE_FADE_MS = 700;
 
 /**
- * 버튼 왼쪽 위 대각선에 뜨는 말풍선. 오른쪽 아래 모서리만 덜 둥글게 해 버튼을 가리키는 채팅
- * 말풍선처럼 보이게 한다. 버튼 바로 옆에 붙이면 버튼과 한 덩어리처럼 보여 답답했다.
+ * 버튼 왼쪽 위 대각선에 뜨는 말풍선. 오른쪽 아래에서 버튼 쪽으로 휘어 내려가는 꼬리를 달아 버튼이
+ * 말하는 것처럼 보이게 한다. 버튼 바로 옆에 붙이면 버튼과 한 덩어리처럼 보여 답답했다.
  *
  * 문구는 몇 초마다 서서히 사라졌다가 다음 문구로 바뀌어 나타난다. 모션 줄이기를 켠 사람에게는
  * 페이드 없이 글자만 바뀐다(`motion-safe`). 스크린 리더에는 버튼 이름(`aria-label`)만 읽히도록
@@ -164,14 +164,25 @@ function RotatingBubble() {
   }, []);
 
   return (
+    // 그림자는 `box-shadow` 가 아니라 `drop-shadow` 로 바깥 한 겹에 건다. 몸통과 꼬리가 따로 그림자를
+    // 가지면 둘이 겹치는 자리에 선이 생겨 한 덩어리로 보이지 않는다.
     <span
       aria-hidden="true"
       className={cn(
-        'absolute right-13 bottom-13 rounded-2xl rounded-br-sm bg-white px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-gray-700 shadow-md ring-1 ring-gray-100 group-hover:text-blue-500 motion-safe:transition-opacity motion-safe:duration-500 md:px-4 md:py-2.5 md:text-sm',
+        'absolute right-14 bottom-14 drop-shadow-[0_4px_10px_rgba(17,24,39,0.12)] motion-safe:transition-opacity motion-safe:duration-700',
         visible ? 'opacity-100' : 'opacity-0',
       )}
     >
-      {BUBBLE_MESSAGES[index]}
+      <span className="block rounded-2xl bg-white px-4 py-2.5 text-xs font-semibold whitespace-nowrap text-gray-700 group-hover:text-blue-500 md:text-sm">
+        {BUBBLE_MESSAGES[index]}
+      </span>
+      {/* 꼬리. 오른쪽 아래 버튼 쪽으로 휘어 내려가는 삼각형이다. 몸통 아래 변에 1px 겹쳐 틈을 없앤다. */}
+      <svg
+        viewBox="0 0 18 14"
+        className="absolute right-2 -bottom-[13px] h-3.5 w-[18px] fill-white"
+      >
+        <path d="M0 0H14C14 6 15.5 10.5 18 14C11 12.5 5 8 0 0Z" />
+      </svg>
     </span>
   );
 }
