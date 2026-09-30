@@ -5,14 +5,15 @@
  * 브라우저(시크릿 창 등)에서는 창을 띄우지 않는 쪽으로 떨어진다 — 매번 뜨는 것보다 안 뜨는 편이 낫다.
  *
  * - 상세를 `VIEWS_BEFORE_PROMPT` 번 볼 때마다 한 번 띄운다. 첫 방문자에게 바로 묻지 않는다.
- * - `다음에`·닫기를 누르면 `SNOOZE_DAYS` 동안 다시 띄우지 않는다.
+ * - 닫기(X)는 1시간, `하루 동안 보지 않기` 는 하루 동안 띄우지 않는다. 그 시간이 지나면 다음에
+ *   상세를 볼 때 바로 다시 띄운다 — 이미 세 번을 채웠던 사람에게 다시 세 번을 세게 하지 않는다.
  * - 의견을 보내면 `SENT_SNOOZE_DAYS` 동안 띄우지 않는다. 버튼으로 직접 보낸 것도 같다.
  */
 const STORAGE_KEY = 'ogonggo.serviceFeedbackPrompt';
 const VIEWS_BEFORE_PROMPT = 3;
-const SNOOZE_DAYS = 7;
 const SENT_SNOOZE_DAYS = 30;
-const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
 
 interface PromptState {
   views: number;
@@ -53,9 +54,14 @@ export function recordJobViewAndCheckPrompt(now = Date.now()): boolean {
   return true;
 }
 
-/** `다음에`·닫기. */
-export function snoozePrompt(now = Date.now()) {
-  write({ views: 0, quietUntil: now + SNOOZE_DAYS * DAY });
+/** 닫기(X). 1시간 뒤 다음 상세에서 다시 띄운다. */
+export function snoozePromptForHour(now = Date.now()) {
+  write({ views: VIEWS_BEFORE_PROMPT - 1, quietUntil: now + HOUR });
+}
+
+/** `하루 동안 보지 않기`. 하루 뒤 다음 상세에서 다시 띄운다. */
+export function snoozePromptForDay(now = Date.now()) {
+  write({ views: VIEWS_BEFORE_PROMPT - 1, quietUntil: now + DAY });
 }
 
 /** 의견을 보냈다. */

@@ -4,7 +4,12 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { createServiceFeedback } from '@ogonggo/api';
 import { Button, Textarea, cn, useToast } from '@ogonggo/ui';
-import { markFeedbackSent, recordJobViewAndCheckPrompt, snoozePrompt } from '../model/prompt';
+import {
+  markFeedbackSent,
+  recordJobViewAndCheckPrompt,
+  snoozePromptForDay,
+  snoozePromptForHour,
+} from '../model/prompt';
 
 /** 백엔드가 문항마다 받는 최대 글자 수(`POST /api/v1/service-feedbacks`). */
 const MAX_LENGTH = 1000;
@@ -49,8 +54,18 @@ export function ServiceFeedbackButton() {
   const [prompting, setPrompting] = useState(false);
   const [answers, setAnswers] = useState<Answers>(EMPTY);
 
+  // 한 번 본 주소는 한 번만 센다. 개발 모드의 StrictMode 는 효과를 두 번 돌리는데, 그때마다 세면
+  // 한 번 방문이 두 번으로 세이고 띄우기로 한 판정도 두 번째 실행에서 사라진다.
+  const viewRef = useRef<{ pathname: string; prompt: boolean } | undefined>(undefined);
+
   useEffect(() => {
-    if (!JOB_DETAIL_PATH.test(pathname) || !recordJobViewAndCheckPrompt()) {
+    if (!JOB_DETAIL_PATH.test(pathname)) {
+      return;
+    }
+    if (viewRef.current?.pathname !== pathname) {
+      viewRef.current = { pathname, prompt: recordJobViewAndCheckPrompt() };
+    }
+    if (!viewRef.current.prompt) {
       return;
     }
     const timer = window.setTimeout(() => setPrompting(true), PROMPT_DELAY_MS);
@@ -62,6 +77,7 @@ export function ServiceFeedbackButton() {
       {prompting ? null : (
         <button
           type="button"
+          aria-label="서비스 개선 의견 보내기"
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
           className={cn(
@@ -69,14 +85,17 @@ export function ServiceFeedbackButton() {
             ABOVE_STICKY_BAR,
           )}
         >
-          <span className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-md ring-1 ring-gray-100 transition group-hover:text-blue-500 md:px-4 md:text-sm">
-            오공고, 어떠셨나요? 의견 들려주세요
-          </span>
-          <span className="flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
+          {/* 말풍선. 꼬리는 버튼 쪽(오른쪽)을 가리키는 45도 돌린 네모이고, 위·오른쪽 변만 테두리를
+              그려 말풍선 테두리와 이어 보이게 한다. */}
+          <span className="relative rounded-2xl bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 shadow-md ring-1 ring-gray-100 transition group-hover:text-blue-500 md:px-4 md:py-2.5 md:text-sm">
+            오공고 어떠셨나요?
             <span
               aria-hidden="true"
-              className="icon-[lucide--message-circle-heart] block h-7 w-7"
+              className="absolute top-1/2 -right-1.5 size-3 -translate-y-1/2 rotate-45 border-t border-r border-gray-100 bg-white"
             />
+          </span>
+          <span className="flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
+            <span aria-hidden="true" className="icon-[lucide--pen-line] block h-6 w-6" />
           </span>
         </button>
       )}
@@ -86,8 +105,12 @@ export function ServiceFeedbackButton() {
             setPrompting(false);
             setOpen(true);
           }}
-          onDismiss={() => {
-            snoozePrompt();
+          onClose={() => {
+            snoozePromptForHour();
+            setPrompting(false);
+          }}
+          onSnoozeDay={() => {
+            snoozePromptForDay();
             setPrompting(false);
           }}
         />
@@ -110,9 +133,18 @@ export function ServiceFeedbackButton() {
 
 /**
  * 화면 아래에서 올라오는 의견 요청 창. 뒤 화면을 막지 않는다 — 공고를 계속 읽다가 무시해도 된다.
- * 모바일은 좌우 끝까지, 데스크톱은 가운데에 좁게 뜬다.
+ * 모바일은 좌우 끝까지, 데스크톱은 가운데에 좁게 뜬다. 닫기(X)는 1시간, `하루 동안 보지 않기` 는
+ * 하루 동안 다시 띄우지 않는다(`model/prompt.ts`).
  */
-function FeedbackPrompt({ onAccept, onDismiss }: { onAccept: () => void; onDismiss: () => void }) {
+function FeedbackPrompt({
+  onAccept,
+  onClose,
+  onSnoozeDay,
+}: {
+  onAccept: () => void;
+  onClose: () => void;
+  onSnoozeDay: () => void;
+}) {
   const [shown, setShown] = useState(false);
 
   // 처음 그린 다음 프레임에 올려야 아래에서 올라오는 전환이 보인다.
@@ -133,7 +165,7 @@ function FeedbackPrompt({ onAccept, onDismiss }: { onAccept: () => void; onDismi
     >
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-          <span aria-hidden="true" className="icon-[lucide--message-circle-heart] block h-5 w-5" />
+          <span aria-hidden="true" className="icon-[lucide--pen-line] block h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p id="service-feedback-prompt-title" className="font-bold text-gray-900">
@@ -146,15 +178,15 @@ function FeedbackPrompt({ onAccept, onDismiss }: { onAccept: () => void; onDismi
         <button
           type="button"
           aria-label="의견 요청 닫기"
-          onClick={onDismiss}
+          onClick={onClose}
           className="-mt-1 -mr-1 rounded-sm p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
           <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
         </button>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={onDismiss}>
-          다음에
+        <Button variant="ghost" size="sm" onClick={onSnoozeDay}>
+          하루 동안 보지 않기
         </Button>
         <Button size="sm" onClick={onAccept}>
           의견 남기기
