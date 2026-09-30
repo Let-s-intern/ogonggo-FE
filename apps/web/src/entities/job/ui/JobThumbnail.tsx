@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { cn } from '@ogonggo/ui';
 import { CompanyLogo, type LogoBalance } from './CompanyLogo';
 
 /**
@@ -17,6 +18,28 @@ const CARD_LOGO_BALANCE: LogoBalance = {
   maxHeight: 0.5,
 };
 
+/**
+ * 썸네일이 사진이 아니라 로고인지 가르는 기준. 크롤러가 원문의 대표 이미지(og:image)를 썸네일로
+ * 넣는데, 그리팅 공고는 그 자리가 회사 프로필 아이콘이다 — KOROT 100x101, 에코마케팅 500x500
+ * (2026-09-30). 8:5 박스를 꽉 채우면 몇 배로 늘어나고 위아래가 잘려 뿌옇게 큰 글자가 된다.
+ * 폭이 이보다 작거나 가로세로 비가 이보다 정사각형에 가까우면 로고로 본다. 4:3 사진(1.33)은
+ * 사진으로 남는다.
+ */
+const MIN_PHOTO_WIDTH = 300;
+const MIN_PHOTO_ASPECT = 1.2;
+
+type CoverState = 'pending' | 'photo' | 'logo' | 'failed';
+
+function judgeCover(img: HTMLImageElement): CoverState {
+  const { naturalWidth: width, naturalHeight: height } = img;
+  if (width === 0 || height === 0) {
+    return 'failed';
+  }
+  return width >= MIN_PHOTO_WIDTH && width / height >= MIN_PHOTO_ASPECT ? 'photo' : 'logo';
+}
+
+const BOX_CLASS = 'relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm';
+
 export interface JobThumbnailProps {
   companyName: string;
   coverImageUrl?: string;
@@ -31,9 +54,12 @@ export interface JobThumbnailProps {
  * 로드 실패를 `Thumbnail` 에 맡기지 않는 이유 — `Thumbnail` 은 실패하면 오공고 로고로 바로
  * 떨어진다. 여기서는 그 사이에 회사 로고가 한 단계 더 있다.
  *
- * 서버가 그린 이미지는 하이드레이션 전에 실패할 수 있고, 그러면 `onError` 가 불리지 않아 깨진
- * 이미지가 그대로 남는다. 마운트 직후 `complete && naturalWidth === 0` 을 한 번 더 본다 — 수집된
- * 주소에 `%PUBLIC_URL%` 처럼 채워지지 않은 값이 실제로 섞여 있다(LG 공고, 2026-09-30).
+ * 썸네일이 작거나 정사각형에 가까우면 사진이 아니라 로고로 보고 로고 규칙으로 작게 그린다
+ * (`MIN_PHOTO_WIDTH`). 그래서 불러온 뒤에야 어느 쪽인지 정해진다.
+ *
+ * 서버가 그린 이미지는 하이드레이션 전에 이미 뜨거나 실패할 수 있고, 그러면 `onLoad`·`onError` 가
+ * 불리지 않는다. 마운트 직후 `complete` 면 한 번 더 판정한다 — 수집된 주소에 `%PUBLIC_URL%` 처럼
+ * 채워지지 않은 값이 실제로 섞여 있다(LG 공고, 2026-09-30).
  *
  * 북마크 버튼은 이 박스가 아니라 `JobCard`가 그린다. 카드 전체가 `<Link>`라 버튼을 그 안에
  * 두면 잘못된 마크업이 되고 누를 때 이동까지 함께 일어난다 — 카드 뿌리에서 링크의 형제로 두고
@@ -47,34 +73,44 @@ export interface JobThumbnailProps {
  * 전부 이 값이다. 작은 로고·버튼만 `rounded-md`을 쓴다.
  */
 export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbnailProps) {
-  const [coverFailed, setCoverFailed] = useState(false);
+  const [cover, setCover] = useState<CoverState>('pending');
   const coverRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const img = coverRef.current;
-    if (img?.complete && img.naturalWidth === 0) {
-      setCoverFailed(true);
+    if (img?.complete) {
+      setCover(judgeCover(img));
     }
   }, [coverImageUrl]);
 
-  return (
-    <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm">
-      {coverImageUrl && !coverFailed ? (
+  if (coverImageUrl && (cover === 'pending' || cover === 'photo')) {
+    return (
+      <div className={BOX_CLASS}>
         <img
           ref={coverRef}
           src={coverImageUrl}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          onError={() => setCoverFailed(true)}
+          // 사진인지 가리기 전에는 숨긴다. 로고로 판정되면 크게 번쩍였다가 작아진다.
+          className={cn(
+            'absolute inset-0 h-full w-full object-cover',
+            cover === 'pending' && 'opacity-0',
+          )}
+          onLoad={(event) => setCover(judgeCover(event.currentTarget))}
+          onError={() => setCover('failed')}
         />
-      ) : (
-        <CompanyLogo
-          companyName={companyName}
-          logoUrl={logoUrl}
-          className="absolute inset-0 h-full w-full p-0 shadow-none"
-          balance={CARD_LOGO_BALANCE}
-        />
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={BOX_CLASS}>
+      <CompanyLogo
+        companyName={companyName}
+        // 썸네일이 로고였으면 진짜 로고를 먼저 쓰고, 없으면 그 썸네일을 로고처럼 그린다.
+        logoUrl={cover === 'logo' ? (logoUrl ?? coverImageUrl) : logoUrl}
+        className="absolute inset-0 h-full w-full p-0 shadow-none"
+        balance={CARD_LOGO_BALANCE}
+      />
     </div>
   );
 }

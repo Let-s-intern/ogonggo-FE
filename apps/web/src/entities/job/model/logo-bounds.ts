@@ -1,3 +1,5 @@
+import { logoProxyUrl } from './logo-proxy';
+
 /**
  * 로고 이미지 안에서 실제 그림이 있는 범위(여백을 뺀 사각형). 원본 픽셀 좌표다.
  */
@@ -19,6 +21,40 @@ const FRAME_FILL = 0.85;
 /** 테두리 선 바로 안쪽 줄은 이 비율 이하만 그림이어야 한다(선과 로고 사이의 여백). */
 const FRAME_GAP_FILL = 0.1;
 
+/** 배경색을 볼 자리. 모서리에서 변 길이의 이 비율만큼 안쪽이다 — 1~2px 테두리 선을 건너뛴다. */
+const CORNER_INSET = 0.03;
+
+/**
+ * 네 모서리가 흰색이 아닌 같은 색으로 칠해져 있으면 그 배경까지 로고다(수면밀도의 베이지 사각형).
+ * 이런 로고의 여백을 자르면 배경이 글자에 딱 붙게 잘려 오히려 어색하다 — 2026-09-30 프록시로
+ * 픽셀을 읽게 되자 실제로 그렇게 보였다. 흰 바탕이나 투명 바탕은 여기 걸리지 않는다.
+ */
+function hasSolidBackground(data: Uint8ClampedArray, width: number, height: number): boolean {
+  const at = (i: number) => data[i] ?? 0;
+  const pixel = (x: number, y: number) => {
+    const i = (Math.round(y) * width + Math.round(x)) * 4;
+    return [at(i), at(i + 1), at(i + 2), at(i + 3)] as const;
+  };
+  const dx = (width - 1) * CORNER_INSET;
+  const dy = (height - 1) * CORNER_INSET;
+  const corners = [
+    pixel(dx, dy),
+    pixel(width - 1 - dx, dy),
+    pixel(dx, height - 1 - dy),
+    pixel(width - 1 - dx, height - 1 - dy),
+  ];
+  const distance = (a: readonly number[], b: readonly number[]) =>
+    Math.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[1] ?? 0) - (b[1] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
+  const [first] = corners;
+  return (
+    first !== undefined &&
+    corners.every(
+      (corner) => corner[3] >= 255 - MIN_ALPHA && distance(corner, first) <= COLOR_DISTANCE,
+    ) &&
+    distance(first, [255, 255, 255]) > COLOR_DISTANCE
+  );
+}
+
 /**
  * RGBA 픽셀 배열에서 그림이 있는 범위를 구한다. 좌표는 입력 배열 기준이다.
  *
@@ -31,6 +67,7 @@ const FRAME_GAP_FILL = 0.1;
  *    32장으로 확인했다.
  * 2. 남은 영역에서 배경색(왼쪽 위 모서리 픽셀)과 다른 픽셀의 경계 사각형을 구한다.
  *
+ * 배경이 칠해진 로고(`hasSolidBackground`)는 자르지 않고 이미지 전체를 돌려준다.
  * 그림이 하나도 없으면(단색 이미지) `null`.
  */
 export function findContentBounds(
@@ -43,6 +80,10 @@ export function findContentBounds(
   const bgG = at(1);
   const bgB = at(2);
   const bgTransparent = at(3) < MIN_ALPHA;
+
+  if (hasSolidBackground(data, width, height)) {
+    return { x: 0, y: 0, width, height };
+  }
 
   const isContent = (x: number, y: number) => {
     const i = (y * width + x) * 4;
@@ -127,6 +168,9 @@ function settle(url: string, measure: LogoMeasure) {
  * `crossOrigin` 을 켠 채로는 그 헤더가 없는 호스트의 이미지가 로드부터 실패한다(API 로고가 있는
  * S3 버킷, 2026-09-30 실측). 그래서 실패하면 `crossOrigin` 없이 한 번 더 받아 보고, 뜨면 전체를
  * 범위로 둔다. 두 번째도 실패해야 `error` 다.
+ *
+ * 그런 호스트 중 목록에 든 것(`logo-proxy.ts`)은 처음부터 우리 서버를 거쳐 같은 출처로 받는다.
+ * 그러면 픽셀을 읽을 수 있어 여백이 잘린다 — 여백이 넓은 로고가 다른 로고보다 작아 보이던 원인이다.
  */
 function measureWhole(url: string) {
   const img = new Image();
@@ -144,8 +188,12 @@ function measureWhole(url: string) {
 }
 
 function measure(url: string) {
+  const proxied = logoProxyUrl(url);
   const img = new Image();
-  img.crossOrigin = 'anonymous';
+  // 프록시는 같은 출처라 `crossOrigin` 이 필요 없다.
+  if (!proxied) {
+    img.crossOrigin = 'anonymous';
+  }
   img.onerror = () => measureWhole(url);
   img.onload = () => {
     const naturalWidth = img.naturalWidth;
@@ -179,7 +227,7 @@ function measure(url: string) {
     }
     settle(url, { status: 'ready', naturalWidth, naturalHeight, bounds });
   };
-  img.src = url;
+  img.src = proxied ?? url;
 }
 
 /** `useSyncExternalStore` 용. 처음 구독될 때 한 번만 잰다 — 같은 로고를 쓰는 카드끼리 결과를 나눈다. */
