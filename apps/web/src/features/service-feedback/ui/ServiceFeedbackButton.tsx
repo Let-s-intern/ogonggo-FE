@@ -35,7 +35,7 @@ const PROMPT_DELAY_MS = 2500;
 
 /**
  * 화면 오른쪽 아래에 떠 있는 `의견 보내기` 버튼. 누르면 서비스 개선 의견 두 문항을 적는 창이 뜬다.
- * 버튼 왼쪽 위에 말풍선(`RotatingBubble`)을 띄워 무엇을 하는 버튼인지 아이콘만으로 짐작하지 않아도
+ * 버튼 왼쪽 위에 말풍선(`FloatingButton`)을 띄워 무엇을 하는 버튼인지 아이콘만으로 짐작하지 않아도
  * 되게 한다.
  *
  * 채용공고 상세를 몇 번 본 사람에게는 가끔 화면 아래에 의견을 요청하는 창을 띄운다
@@ -75,23 +75,7 @@ export function ServiceFeedbackButton() {
 
   return (
     <>
-      {prompting ? null : (
-        <button
-          type="button"
-          aria-label="서비스 개선 의견 보내기"
-          aria-haspopup="dialog"
-          onClick={() => setOpen(true)}
-          className={cn(
-            'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 focus-visible:outline-none md:right-8 md:bottom-8',
-            ABOVE_STICKY_BAR,
-          )}
-        >
-          <RotatingBubble />
-          <span className="relative flex size-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
-            <span aria-hidden="true" className="icon-[lucide--pen-line] block h-5 w-5" />
-          </span>
-        </button>
-      )}
+      {prompting ? null : <FloatingButton onClick={() => setOpen(true)} />}
       {prompting ? (
         <FeedbackPrompt
           onAccept={() => {
@@ -124,28 +108,31 @@ export function ServiceFeedbackButton() {
   );
 }
 
-/** 버튼 위 말풍선에 차례로 보일 문구. */
+/**
+ * 버튼 위 말풍선에 차례로 보일 문구와, 그때 버튼에 보일 아이콘. 아이콘 클래스는 이렇게 글자 그대로
+ * 적어야 한다 — Iconify 플러그인이 소스의 이 문자열을 찾아 그린다(`packages/ui/src/styles/tokens.css`).
+ */
 const BUBBLE_MESSAGES = [
-  '오공고, 써 보니 어떠셨나요?',
-  '원하시는 기능이 있으신가요?',
-  '불편하셨던 점도 편하게 알려 주세요',
-  '한 줄 의견도 저희에겐 큰 힘이 돼요',
-  '언제나 여러분을 위해 노력하는 오공고가 될게요',
-];
+  { text: '오공고, 써 보니 어떠셨나요?', icon: 'icon-[lucide--smile-plus]' },
+  { text: '원하시는 기능이 있으신가요?', icon: 'icon-[lucide--lightbulb]' },
+  { text: '불편하셨던 점도 편하게 알려 주세요', icon: 'icon-[lucide--message-circle-more]' },
+  { text: '한 줄 의견도 저희에겐 큰 힘이 돼요', icon: 'icon-[lucide--heart]' },
+  { text: '언제나 여러분을 위해 노력하는 오공고가 될게요', icon: 'icon-[lucide--hand-heart]' },
+] as const;
 /** 한 문구가 보이는 시간. */
 const BUBBLE_HOLD_MS = 6000;
 /** 사라졌다 나타나는 전환 시간. `duration-700` 과 맞춘다. */
 const BUBBLE_FADE_MS = 700;
 
 /**
- * 버튼 왼쪽 위 대각선에 뜨는 말풍선. 오른쪽 아래에서 버튼 쪽으로 휘어 내려가는 꼬리를 달아 버튼이
- * 말하는 것처럼 보이게 한다. 버튼 바로 옆에 붙이면 버튼과 한 덩어리처럼 보여 답답했다.
+ * 오른쪽 아래 둥근 버튼과 그 왼쪽 위 대각선의 말풍선. 오른쪽 아래에서 버튼 쪽으로 휘어 내려가는 꼬리를
+ * 달아 버튼이 말하는 것처럼 보이게 한다. 버튼 바로 옆에 붙이면 버튼과 한 덩어리처럼 보여 답답했다.
  *
- * 문구는 몇 초마다 서서히 사라졌다가 다음 문구로 바뀌어 나타난다. 모션 줄이기를 켠 사람에게는
- * 페이드 없이 글자만 바뀐다(`motion-safe`). 스크린 리더에는 버튼 이름(`aria-label`)만 읽히도록
- * 말풍선은 숨긴다 — 바뀔 때마다 다시 읽히면 방해가 된다.
+ * 문구는 몇 초마다 서서히 사라졌다가 다음 문구로 바뀌어 나타나고, 버튼 아이콘도 같은 순간에 그 문구에
+ * 맞는 것으로 바뀐다. 모션 줄이기를 켠 사람에게는 페이드 없이 바뀌기만 한다(`motion-safe`). 스크린
+ * 리더에는 버튼 이름(`aria-label`)만 읽히도록 말풍선은 숨긴다 — 바뀔 때마다 다시 읽히면 방해가 된다.
  */
-function RotatingBubble() {
+function FloatingButton({ onClick }: { onClick: () => void }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -164,27 +151,50 @@ function RotatingBubble() {
     };
   }, []);
 
+  const { text, icon } = BUBBLE_MESSAGES[index] ?? BUBBLE_MESSAGES[0];
+  const fadeClass = cn(
+    'motion-safe:transition motion-safe:duration-700',
+    visible ? 'opacity-100' : 'opacity-0',
+  );
+
   return (
-    // 그림자는 `box-shadow` 가 아니라 `drop-shadow` 로 바깥 한 겹에 건다. 몸통과 꼬리가 따로 그림자를
-    // 가지면 둘이 겹치는 자리에 선이 생겨 한 덩어리로 보이지 않는다.
-    <span
-      aria-hidden="true"
+    <button
+      type="button"
+      aria-label="서비스 개선 의견 보내기"
+      aria-haspopup="dialog"
+      onClick={onClick}
       className={cn(
-        'absolute right-12 bottom-12 drop-shadow-[0_4px_10px_rgba(17,24,39,0.12)] motion-safe:transition-opacity motion-safe:duration-700',
-        visible ? 'opacity-100' : 'opacity-0',
+        'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 focus-visible:outline-none md:right-8 md:bottom-8',
+        ABOVE_STICKY_BAR,
       )}
     >
-      <span className="block rounded-2xl bg-white px-4 py-2.5 text-xs font-semibold whitespace-nowrap text-gray-700 group-hover:text-blue-500 md:text-sm">
-        {BUBBLE_MESSAGES[index]}
-      </span>
-      {/* 꼬리. 오른쪽 아래 버튼 쪽으로 휘어 내려가는 삼각형이다. 몸통 아래 변에 1px 겹쳐 틈을 없앤다. */}
-      <svg
-        viewBox="0 0 18 14"
-        className="absolute right-2 -bottom-[13px] h-3.5 w-[18px] fill-white"
+      {/* 그림자는 `box-shadow` 가 아니라 `drop-shadow` 로 바깥 한 겹에 건다. 몸통과 꼬리가 따로
+          그림자를 가지면 둘이 겹치는 자리에 선이 생겨 한 덩어리로 보이지 않는다. */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          'absolute right-12 bottom-12 drop-shadow-[0_4px_10px_rgba(17,24,39,0.12)]',
+          fadeClass,
+        )}
       >
-        <path d="M0 0H14C14 6 15.5 10.5 18 14C11 12.5 5 8 0 0Z" />
-      </svg>
-    </span>
+        <span className="block rounded-2xl bg-white px-4 py-2.5 text-xs font-semibold whitespace-nowrap text-gray-700 group-hover:text-blue-500 md:text-sm">
+          {text}
+        </span>
+        {/* 꼬리. 오른쪽 아래 버튼 쪽으로 휘어 내려가는 삼각형이다. 몸통 아래 변에 1px 겹쳐 틈을 없앤다. */}
+        <svg
+          viewBox="0 0 18 14"
+          className="absolute right-2 -bottom-[13px] h-3.5 w-[18px] fill-white"
+        >
+          <path d="M0 0H14C14 6 15.5 10.5 18 14C11 12.5 5 8 0 0Z" />
+        </svg>
+      </span>
+      <span className="relative flex size-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
+        <span
+          aria-hidden="true"
+          className={cn(icon, 'block h-5 w-5', fadeClass, visible ? 'scale-100' : 'scale-75')}
+        />
+      </span>
+    </button>
   );
 }
 
@@ -222,7 +232,7 @@ function FeedbackPrompt({
     >
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-          <span aria-hidden="true" className="icon-[lucide--pen-line] block h-5 w-5" />
+          <span aria-hidden="true" className="icon-[lucide--smile-plus] block h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p id="service-feedback-prompt-title" className="font-bold text-gray-900">
