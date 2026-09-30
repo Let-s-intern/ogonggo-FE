@@ -12,14 +12,15 @@ import { Button } from '@ogonggo/ui';
  */
 export function MyPostsCta() {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-50 px-8 py-7">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-50 px-5 py-6 md:px-8 md:py-7">
       <div>
         <p className="text-lg font-bold text-gray-900">새로운 프로젝트를 시작해 보세요.</p>
         <p className="pt-1 text-sm text-gray-500">
           목표와 취향에 딱 맞는 든든한 커리어 메이트들을 만나보세요!
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      {/* 모바일은 버튼 둘이 폭을 나눠 가져 글자가 꺾이지 않게 한다. */}
+      <div className="flex w-full items-center gap-2 md:w-auto [&>*]:flex-1 [&>*]:whitespace-nowrap md:[&>*]:flex-none">
         <Button asChild>
           <Link href="/side-studies">모집글 보러가기</Link>
         </Button>

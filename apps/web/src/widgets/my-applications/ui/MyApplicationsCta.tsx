@@ -37,12 +37,13 @@ export function MyApplicationsCta({ tab }: { tab: MyApplicationTab }) {
   const banner = BANNERS[tab];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-50 px-8 py-7">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-50 px-5 py-6 md:px-8 md:py-7">
       <div>
         <p className="text-lg font-bold text-gray-900">{banner.title}</p>
         <p className="pt-1 text-sm text-gray-500">{banner.description}</p>
       </div>
-      <div className="flex items-center gap-2">
+      {/* 모바일은 버튼 둘이 폭을 나눠 가져 글자가 꺾이지 않게 한다. */}
+      <div className="flex w-full items-center gap-2 md:w-auto [&>*]:flex-1 [&>*]:whitespace-nowrap md:[&>*]:flex-none">
         <Button asChild>
           <Link href={banner.href}>{banner.label}</Link>
         </Button>

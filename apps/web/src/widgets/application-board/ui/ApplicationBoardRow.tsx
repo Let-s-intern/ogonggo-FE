@@ -1,8 +1,9 @@
 'use client';
 
+import { useDraggable } from '@dnd-kit/core';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Badge, Select } from '@ogonggo/ui';
+import { Badge, cn, Select } from '@ogonggo/ui';
 import {
   canMoveStage,
   isStageId,
@@ -21,8 +22,8 @@ import {
   ALWAYS_OPEN_LABEL,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
-import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { formatDeadline } from '@/widgets/mypage-list';
+import { ApplicationBoardItemImage } from './ApplicationBoardItemImage';
 
 /**
  * `지원하기` 를 그리는 마지막 단계. PRD "리스트 보기" 가 "`지원 완료` 뒤 섹션들은 `지원하기`
@@ -144,9 +145,9 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
     <>
       <MobileCard
         item={item}
+        from={stage.id}
         badge={deadlineBadge}
         period={activity ? activityPeriod(item) : undefined}
-        select={stageSelect('h-10 w-full rounded-md border-gray-200 px-3 text-sm text-gray-700')}
         showApply={showsApply(tab, stage.id)}
         onRemove={removable ? () => move.move({ item, from: stage.id, to: 'SCRAPPED' }) : undefined}
         pending={move.pending}
@@ -163,9 +164,8 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
             <span aria-hidden="true" className="icon-[lucide--x] block h-3.5 w-3.5" />
           </button>
         ) : null}
-        <Thumbnail
-          src={item.thumbnailUrl}
-          alt=""
+        <ApplicationBoardItemImage
+          item={item}
           className="mr-5 h-10 w-10 shrink-0 rounded-md border border-gray-100"
         />
         <div className="min-w-0 flex-1">
@@ -202,28 +202,44 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
 
 /**
  * 모바일 카드(`docs/asset/v10 mobile/지원신청내역.png`). 데스크톱 한 줄에 늘어놓은 값을 카드로
- * 쌓는다 — 위에 D-day, 가운데 회사·제목·메타와 썸네일, 아래에 단계 선택과 `지원하기`.
- * 단계 선택은 같은 `Select` 라 행과 카드가 같은 값을 보고 같은 이동을 건다.
+ * 쌓는다 — 위에 D-day, 가운데 회사·제목·메타와 로고, 아래에 `지원하기`.
+ *
+ * **단계는 드롭다운이 아니라 끌어서 옮긴다.** 카드를 길게 눌러 다른 섹션에 놓는다
+ * (`ApplicationBoardList` 의 `useBoardDrag`). 칸반 카드와 같은 `id`·`data` 를 싣는다.
  */
 function MobileCard({
   item,
+  from,
   badge,
   period,
-  select,
   showApply,
   onRemove,
   pending,
 }: {
   item: ApplicationBoardItem;
+  from: ApplicationStageId;
   badge: ReactNode;
   period?: string;
-  select: ReactNode;
   showApply: boolean;
   onRemove?: () => void;
   pending: boolean;
 }) {
+  const draggable = useDraggable({ id: item.key, data: { item, from } });
+  const style = draggable.transform
+    ? { transform: `translate3d(${draggable.transform.x}px, ${draggable.transform.y}px, 0)` }
+    : undefined;
   return (
-    <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4 md:hidden">
+    <div
+      ref={draggable.setNodeRef}
+      style={style}
+      {...draggable.listeners}
+      {...draggable.attributes}
+      aria-label={`${item.title}, 길게 눌러 끌어서 단계 옮기기`}
+      className={cn(
+        'relative mt-3 touch-manipulation rounded-xl border border-gray-200 bg-white p-4 md:hidden',
+        draggable.isDragging && 'z-10 opacity-90 shadow-lg',
+      )}
+    >
       <div className="flex min-h-7 items-start justify-between gap-2">
         {badge ?? (period ? <span className="text-xs text-gray-400">{period}</span> : <span />)}
         {onRemove ? (
@@ -246,23 +262,21 @@ function MobileCard({
           </Link>
           <p className="truncate pt-0.5 text-sm text-gray-400">{item.meta.join(' · ')}</p>
         </div>
-        <Thumbnail
-          src={item.thumbnailUrl}
-          alt=""
+        <ApplicationBoardItemImage
+          item={item}
           className="h-10 w-10 shrink-0 rounded-md border border-gray-100"
         />
       </div>
-      <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-3">
-        <div className="flex-1">{select}</div>
-        {showApply ? (
+      {showApply ? (
+        <div className="mt-4 border-t border-gray-100 pt-3">
           <Link
             href={item.href}
-            className="flex h-10 flex-1 items-center justify-center rounded-md bg-blue-500 text-sm font-semibold text-white"
+            className="flex h-10 w-full items-center justify-center rounded-md bg-blue-500 text-sm font-semibold text-white"
           >
             지원하기
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

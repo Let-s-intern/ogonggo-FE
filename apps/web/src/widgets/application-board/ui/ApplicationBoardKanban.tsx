@@ -1,24 +1,15 @@
 'use client';
 
+import { DndContext } from '@dnd-kit/core';
 import {
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  isStageId,
   stagesOf,
   useMoveStage,
-  type ApplicationBoardItem,
   type ApplicationStage,
   type ApplicationStageId,
 } from '@/features/application-board';
 import { boardFilters, type ApplicationBoardQuery } from '../lib/query';
 import { ApplicationBoardColumn } from './ApplicationBoardColumn';
+import { useBoardDrag } from './useBoardDrag';
 
 export interface ApplicationBoardKanbanProps {
   query: ApplicationBoardQuery;
@@ -51,40 +42,11 @@ export function ApplicationBoardKanban({ query }: ApplicationBoardKanbanProps) {
    */
   const move = useMoveStage(query.tab);
 
-  /*
-   * 카드 전체가 드래그 영역이라 누름(상세 모달)과 끌기를 센서가 가른다.
-   * 마우스는 5px 움직여야 끌기다. 터치는 250ms 눌러야 끌기다 — 거리로 가르면 칸반을 가로로
-   * 밀어 스크롤하는 손가락이 전부 끌기가 된다. 키보드는 Space 로만 시작한다. Enter 는 카드가
-   * 상세 열기로 쓴다(`ApplicationBoardCard`).
-   */
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(KeyboardSensor, {
-      keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space', 'Enter', 'Tab'] },
-    }),
-  );
-
-  /*
-   * 놓았을 때 그대로 이동 훅을 부른다. `over`가 없으면(칸 밖에 놓았다) 아무 일도 하지 않는다.
-   * 막힌 전이를 놓아도 여기서 막지 않는다 — `move.move`가 이미 `canMoveStage`로 걸러 토스트를
-   * 띄운다(리스트 셀렉트와 같은 한 경로). 드롭 지점에서 또 판정하면 판정이 두 곳에 흩어진다.
-   */
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) {
-      return;
-    }
-    const data = active.data.current as { item: ApplicationBoardItem; from: ApplicationStageId };
-    const to = String(over.id);
-    if (!isStageId(query.tab, to)) {
-      return;
-    }
-    move.move({ item: data.item, from: data.from, to });
-  };
+  /* 끄는 센서와 놓았을 때의 이동은 리스트와 같다(`useBoardDrag`). */
+  const { sensors, onDragEnd } = useBoardDrag(query.tab, move);
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
       <div className="-mx-1 overflow-x-auto px-1 pb-2">
         <div className="flex w-max items-stretch gap-5">
           {stages.map((stage) => (

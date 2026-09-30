@@ -1,5 +1,6 @@
 'use client';
 
+import { DndContext } from '@dnd-kit/core';
 import {
   stagesOf,
   useMoveStage,
@@ -8,6 +9,7 @@ import {
 } from '@/features/application-board';
 import { boardFilters, type ApplicationBoardQuery } from '../lib/query';
 import { ApplicationBoardSection } from './ApplicationBoardSection';
+import { useBoardDrag } from './useBoardDrag';
 
 export interface ApplicationBoardListProps {
   query: ApplicationBoardQuery;
@@ -21,6 +23,10 @@ export interface ApplicationBoardListProps {
  * 이유도 같다(`ApplicationBoardKanban`).
  *
  * 섹션 사이는 12px 다(목업 실측 2026-09-22).
+ *
+ * **카드를 끌어 다른 섹션에 놓으면 단계를 옮긴다.** 칸반과 같은 끌기(`useBoardDrag`)이고 섹션
+ * 하나가 놓는 곳이다. 모바일은 칸반이 없어 이 리스트만 보므로, 카드의 단계 드롭다운 대신
+ * 이것으로 옮긴다. 터치는 길게 눌러야 끌기라 화면 스크롤과 겹치지 않는다.
  */
 export function ApplicationBoardList({ query }: ApplicationBoardListProps) {
   const all: readonly ApplicationStage<ApplicationStageId>[] = stagesOf(query.tab);
@@ -28,19 +34,22 @@ export function ApplicationBoardList({ query }: ApplicationBoardListProps) {
   const filters = boardFilters(query);
   /* 이동 훅이 하나인 이유는 칸반과 같다(`ApplicationBoardKanban`). */
   const move = useMoveStage(query.tab);
+  const { sensors, onDragEnd } = useBoardDrag(query.tab, move);
 
   return (
-    <div className="flex flex-col gap-3">
-      {stages.map((stage, index) => (
-        <ApplicationBoardSection
-          key={stage.id}
-          tab={query.tab}
-          stage={stage}
-          filters={filters}
-          move={move}
-          first={index === 0}
-        />
-      ))}
-    </div>
+    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+      <div className="flex flex-col gap-3">
+        {stages.map((stage, index) => (
+          <ApplicationBoardSection
+            key={stage.id}
+            tab={query.tab}
+            stage={stage}
+            filters={filters}
+            move={move}
+            first={index === 0}
+          />
+        ))}
+      </div>
+    </DndContext>
   );
 }

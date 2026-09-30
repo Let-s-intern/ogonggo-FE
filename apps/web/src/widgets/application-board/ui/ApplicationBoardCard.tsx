@@ -19,7 +19,7 @@ import {
   ALWAYS_OPEN_LABEL,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
-import { Thumbnail } from '@/shared/ui/Thumbnail';
+import { ApplicationBoardItemImage } from './ApplicationBoardItemImage';
 
 export interface ApplicationBoardCardProps {
   tab: ApplicationBoardTab;
@@ -110,9 +110,8 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
     >
       <div className="px-4 py-4">
         <div className={cn('flex items-center gap-2', removable && 'pr-6')}>
-          <Thumbnail
-            src={item.thumbnailUrl}
-            alt=""
+          <ApplicationBoardItemImage
+            item={item}
             className="h-9 w-9 shrink-0 rounded-lg border border-gray-100"
           />
           <p className="truncate text-sm font-semibold text-gray-600">{item.caption}</p>
