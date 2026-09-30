@@ -87,8 +87,8 @@ export function ServiceFeedbackButton() {
           )}
         >
           <RotatingBubble />
-          <span className="relative flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
-            <span aria-hidden="true" className="icon-[lucide--pen-line] block h-6 w-6" />
+          <span className="relative flex size-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
+            <span aria-hidden="true" className="icon-[lucide--pen-line] block h-5 w-5" />
           </span>
         </button>
       )}
@@ -170,7 +170,7 @@ function RotatingBubble() {
     <span
       aria-hidden="true"
       className={cn(
-        'absolute right-14 bottom-14 drop-shadow-[0_4px_10px_rgba(17,24,39,0.12)] motion-safe:transition-opacity motion-safe:duration-700',
+        'absolute right-12 bottom-12 drop-shadow-[0_4px_10px_rgba(17,24,39,0.12)] motion-safe:transition-opacity motion-safe:duration-700',
         visible ? 'opacity-100' : 'opacity-0',
       )}
     >
