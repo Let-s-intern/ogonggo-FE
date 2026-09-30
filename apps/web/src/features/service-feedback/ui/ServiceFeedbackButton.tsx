@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { createServiceFeedback } from '@ogonggo/api';
-import { Button, Textarea, useToast } from '@ogonggo/ui';
+import { Button, Textarea, cn, useToast } from '@ogonggo/ui';
+import { markFeedbackSent, recordJobViewAndCheckPrompt, snoozePrompt } from '../model/prompt';
 
 /** 백엔드가 문항마다 받는 최대 글자 수(`POST /api/v1/service-feedbacks`). */
 const MAX_LENGTH = 1000;
@@ -16,47 +18,149 @@ type Answers = Record<(typeof QUESTIONS)[number]['name'], string>;
 
 const EMPTY: Answers = { satisfaction: '', improvement: '' };
 
+/** 모바일 공고 상세에서는 화면 아래 신청하기 바(`data-sticky-apply-bar`) 위로 올린다. */
+const ABOVE_STICKY_BAR =
+  'max-md:[body:has([data-sticky-apply-bar])_&]:bottom-[calc(8.5rem+env(safe-area-inset-bottom))]';
+
+/** 공고 상세 주소. 달력에서 여는 상세 모달도 같은 주소라 함께 센다. */
+const JOB_DETAIL_PATH = /^\/jobs\/\d+$/;
+
+/** 공고 상세에 들어와 바로 띄우면 본문을 보기도 전에 가린다. 조금 읽은 뒤에 올린다. */
+const PROMPT_DELAY_MS = 2500;
+
 /**
  * 화면 오른쪽 아래에 떠 있는 `의견 보내기` 버튼. 누르면 서비스 개선 의견 두 문항을 적는 창이 뜬다.
+ * 버튼 왼쪽에 문구를 붙여 무엇을 하는 버튼인지 아이콘만으로 짐작하지 않아도 되게 한다.
+ *
+ * 채용공고 상세를 몇 번 본 사람에게는 가끔 화면 아래에 의견을 요청하는 창을 띄운다
+ * (`model/prompt.ts` 가 언제 띄울지 정한다). 거기서 `의견 남기기` 를 누르면 같은 작성 창이 열린다.
  *
  * 로그인하지 않아도 보낼 수 있다. 로그인했으면 `httpClient` 가 토큰을 실어 백엔드가 작성자를 함께
  * 남긴다. 두 문항 중 하나 이상이 차야 보내진다 — 공백만 적은 문항은 백엔드가 빈 것으로 본다.
  *
  * 적다가 창을 닫아도 쓴 글은 남는다. 보내는 데 성공했을 때만 비운다.
  *
- * 모바일 공고 상세에는 신청하기 바가 화면 아래에 붙어 있다(`shared/ui/StickyApplyBar.tsx`,
- * `data-sticky-apply-bar`). 그 화면에서는 버튼을 바 위로 올린다.
- *
  * 창은 공유 창(`features/share-posting/ui/SharePostingButton.tsx`)과 같은 틀이다. 모바일은 아래에서
  * 올라오고, 데스크톱은 버튼 바로 위 오른쪽에 붙는다.
  */
 export function ServiceFeedbackButton() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [prompting, setPrompting] = useState(false);
   const [answers, setAnswers] = useState<Answers>(EMPTY);
+
+  useEffect(() => {
+    if (!JOB_DETAIL_PATH.test(pathname) || !recordJobViewAndCheckPrompt()) {
+      return;
+    }
+    const timer = window.setTimeout(() => setPrompting(true), PROMPT_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [pathname]);
 
   return (
     <>
-      <button
-        type="button"
-        aria-label="서비스 개선 의견 보내기"
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-        className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition hover:bg-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 focus-visible:outline-none max-md:[body:has([data-sticky-apply-bar])_&]:bottom-[calc(8.5rem+env(safe-area-inset-bottom))] md:right-8 md:bottom-8"
-      >
-        <span aria-hidden="true" className="icon-[lucide--message-square-heart] block h-6 w-6" />
-      </button>
+      {prompting ? null : (
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => setOpen(true)}
+          className={cn(
+            'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-2 focus-visible:outline-none md:right-8 md:bottom-8',
+            ABOVE_STICKY_BAR,
+          )}
+        >
+          <span className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-md ring-1 ring-gray-100 transition group-hover:text-blue-500 md:px-4 md:text-sm">
+            오공고, 어떠셨나요? 의견 들려주세요
+          </span>
+          <span className="flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
+            <span
+              aria-hidden="true"
+              className="icon-[lucide--message-circle-heart] block h-7 w-7"
+            />
+          </span>
+        </button>
+      )}
+      {prompting ? (
+        <FeedbackPrompt
+          onAccept={() => {
+            setPrompting(false);
+            setOpen(true);
+          }}
+          onDismiss={() => {
+            snoozePrompt();
+            setPrompting(false);
+          }}
+        />
+      ) : null}
       {open ? (
         <FeedbackSheet
           answers={answers}
           onChange={setAnswers}
           onClose={() => setOpen(false)}
           onSent={() => {
+            markFeedbackSent();
             setAnswers(EMPTY);
             setOpen(false);
           }}
         />
       ) : null}
     </>
+  );
+}
+
+/**
+ * 화면 아래에서 올라오는 의견 요청 창. 뒤 화면을 막지 않는다 — 공고를 계속 읽다가 무시해도 된다.
+ * 모바일은 좌우 끝까지, 데스크톱은 가운데에 좁게 뜬다.
+ */
+function FeedbackPrompt({ onAccept, onDismiss }: { onAccept: () => void; onDismiss: () => void }) {
+  const [shown, setShown] = useState(false);
+
+  // 처음 그린 다음 프레임에 올려야 아래에서 올라오는 전환이 보인다.
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setShown(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <div
+      role="dialog"
+      aria-labelledby="service-feedback-prompt-title"
+      className={cn(
+        'fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 rounded-2xl bg-white p-5 shadow-xl ring-1 ring-gray-100 transition duration-300 ease-out md:inset-x-auto md:bottom-8 md:left-1/2 md:w-[440px] md:-translate-x-1/2',
+        ABOVE_STICKY_BAR,
+        shown ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0',
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500">
+          <span aria-hidden="true" className="icon-[lucide--message-circle-heart] block h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p id="service-feedback-prompt-title" className="font-bold text-gray-900">
+            오공고 쓰시면서 어떠셨어요?
+          </p>
+          <p className="mt-1 text-sm break-keep text-gray-500">
+            한 줄이라도 남겨 주시면 더 나은 서비스를 만드는 데 큰 힘이 돼요.
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="의견 요청 닫기"
+          onClick={onDismiss}
+          className="-mt-1 -mr-1 rounded-sm p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        >
+          <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
+        </button>
+      </div>
+      <div className="mt-4 flex justify-end gap-2">
+        <Button variant="ghost" size="sm" onClick={onDismiss}>
+          다음에
+        </Button>
+        <Button size="sm" onClick={onAccept}>
+          의견 남기기
+        </Button>
+      </div>
+    </div>
   );
 }
 
