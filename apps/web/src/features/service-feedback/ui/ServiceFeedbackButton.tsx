@@ -35,7 +35,8 @@ const PROMPT_DELAY_MS = 2500;
 
 /**
  * 화면 오른쪽 아래에 떠 있는 `의견 보내기` 버튼. 누르면 서비스 개선 의견 두 문항을 적는 창이 뜬다.
- * 버튼 왼쪽에 문구를 붙여 무엇을 하는 버튼인지 아이콘만으로 짐작하지 않아도 되게 한다.
+ * 버튼 왼쪽 위에 말풍선(`RotatingBubble`)을 띄워 무엇을 하는 버튼인지 아이콘만으로 짐작하지 않아도
+ * 되게 한다.
  *
  * 채용공고 상세를 몇 번 본 사람에게는 가끔 화면 아래에 의견을 요청하는 창을 띄운다
  * (`model/prompt.ts` 가 언제 띄울지 정한다). 거기서 `의견 남기기` 를 누르면 같은 작성 창이 열린다.
@@ -81,20 +82,12 @@ export function ServiceFeedbackButton() {
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
           className={cn(
-            'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-2 focus-visible:outline-none md:right-8 md:bottom-8',
+            'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 focus-visible:outline-none md:right-8 md:bottom-8',
             ABOVE_STICKY_BAR,
           )}
         >
-          {/* 말풍선. 꼬리는 버튼 쪽(오른쪽)을 가리키는 45도 돌린 네모이고, 위·오른쪽 변만 테두리를
-              그려 말풍선 테두리와 이어 보이게 한다. */}
-          <span className="relative rounded-2xl bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 shadow-md ring-1 ring-gray-100 transition group-hover:text-blue-500 md:px-4 md:py-2.5 md:text-sm">
-            오공고 어떠셨나요?
-            <span
-              aria-hidden="true"
-              className="absolute top-1/2 -right-1.5 size-3 -translate-y-1/2 rotate-45 border-t border-r border-gray-100 bg-white"
-            />
-          </span>
-          <span className="flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
+          <RotatingBubble />
+          <span className="relative flex size-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition group-hover:bg-blue-600 group-focus-visible:ring-4 group-focus-visible:ring-blue-100">
             <span aria-hidden="true" className="icon-[lucide--pen-line] block h-6 w-6" />
           </span>
         </button>
@@ -128,6 +121,58 @@ export function ServiceFeedbackButton() {
         />
       ) : null}
     </>
+  );
+}
+
+/** 버튼 위 말풍선에 차례로 보일 문구. */
+const BUBBLE_MESSAGES = [
+  '오공고 어떠셨나요?',
+  '불편한 점은 없으셨어요?',
+  '바라는 기능이 있나요?',
+  '한 줄 의견도 큰 힘이 돼요',
+];
+/** 한 문구가 보이는 시간. */
+const BUBBLE_HOLD_MS = 4000;
+/** 사라졌다 나타나는 전환 시간. `duration-500` 과 맞춘다. */
+const BUBBLE_FADE_MS = 500;
+
+/**
+ * 버튼 왼쪽 위 대각선에 뜨는 말풍선. 오른쪽 아래 모서리만 덜 둥글게 해 버튼을 가리키는 채팅
+ * 말풍선처럼 보이게 한다. 버튼 바로 옆에 붙이면 버튼과 한 덩어리처럼 보여 답답했다.
+ *
+ * 문구는 몇 초마다 서서히 사라졌다가 다음 문구로 바뀌어 나타난다. 모션 줄이기를 켠 사람에게는
+ * 페이드 없이 글자만 바뀐다(`motion-safe`). 스크린 리더에는 버튼 이름(`aria-label`)만 읽히도록
+ * 말풍선은 숨긴다 — 바뀔 때마다 다시 읽히면 방해가 된다.
+ */
+function RotatingBubble() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    let fade: number | undefined;
+    const hold = window.setInterval(() => {
+      setVisible(false);
+      fade = window.setTimeout(() => {
+        setIndex((current) => (current + 1) % BUBBLE_MESSAGES.length);
+        setVisible(true);
+      }, BUBBLE_FADE_MS);
+    }, BUBBLE_HOLD_MS + BUBBLE_FADE_MS);
+    return () => {
+      window.clearInterval(hold);
+      window.clearTimeout(fade);
+    };
+  }, []);
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'absolute right-13 bottom-13 rounded-2xl rounded-br-sm bg-white px-3.5 py-2 text-xs font-semibold whitespace-nowrap text-gray-700 shadow-md ring-1 ring-gray-100 group-hover:text-blue-500 motion-safe:transition-opacity motion-safe:duration-500 md:px-4 md:py-2.5 md:text-sm',
+        visible ? 'opacity-100' : 'opacity-0',
+      )}
+    >
+      {BUBBLE_MESSAGES[index]}
+    </span>
   );
 }
 
