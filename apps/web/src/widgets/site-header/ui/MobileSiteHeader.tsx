@@ -41,6 +41,7 @@ export function MobileSiteHeader({
   // 메뉴는 누르면 닫히며 사라지므로 광고 문의 모달은 메뉴 밖, 여기서 띄운다.
   const [adInquiryOpen, setAdInquiryOpen] = useState(false);
   const calendarActive = pathname.startsWith('/calendar');
+  const install = useInstallState();
 
   return (
     <div className="md:hidden">
@@ -56,9 +57,9 @@ export function MobileSiteHeader({
         </button>
       </TopRow>
 
-      {/* 로그인해 하단 내비게이션(`MobileBottomNav`)이 떠 있으면 같은 탭이 위아래로 두 번 보이지 않게
+      {/* 앱을 설치하고 로그인해 하단 내비게이션(`MobileBottomNav`)이 떠 있으면 같은 탭이 위아래로 두 번 보이지 않게
           이 줄을 숨긴다. 공고 달력은 하단 채용공고 탭의 서브 메뉴로 간다. */}
-      {hasBottomNav(signedIn, pathname) ? null : (
+      {hasBottomNav(install.kind === 'installed', signedIn, pathname) ? null : (
         <div className="flex h-11 items-stretch justify-between px-4">
           <nav className="flex items-stretch gap-4">
             {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {

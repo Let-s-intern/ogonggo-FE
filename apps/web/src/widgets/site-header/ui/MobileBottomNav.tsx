@@ -10,6 +10,7 @@ import {
   type MouseEvent,
 } from 'react';
 import { cn } from '@ogonggo/ui';
+import { useInstallState } from '@/features/install-app';
 import { openServiceFeedback } from '@/features/service-feedback';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
@@ -22,11 +23,13 @@ import { myPageIndexFor } from '@/widgets/mypage-sidebar';
 const DETAIL_PATH = /^\/(jobs|bootcamps|side-studies)\/[^/]+/;
 
 /**
- * 이 화면에 하단 내비게이션이 뜨는지. 모바일 헤더가 이것을 보고 둘째 줄 탭을 숨긴다 — 같은 탭이 위아래로
- * 두 번 보이지 않게 한다(`MobileSiteHeader`).
+ * 이 화면에 하단 내비게이션이 뜨는지. 웹 앱을 설치했고(`features/install-app`) 로그인했을 때만이다 —
+ * 설치 → 로그인 → 하단 내비게이션 순서로 앱처럼 쓰는 사람을 위한 것이다. 모바일(`md` 미만)인지는 CSS 가
+ * 가린다(`md:hidden`). 모바일 헤더가 이것을 보고 둘째 줄 탭을 숨긴다 — 같은 탭이 위아래로 두 번 보이지
+ * 않게 한다(`MobileSiteHeader`).
  */
-export function hasBottomNav(signedIn: boolean, pathname: string): boolean {
-  return signedIn && !DETAIL_PATH.test(pathname);
+export function hasBottomNav(installed: boolean, signedIn: boolean, pathname: string): boolean {
+  return installed && signedIn && !DETAIL_PATH.test(pathname);
 }
 
 interface SubMenuItem {
@@ -129,7 +132,7 @@ function buildTabs(pathname: string, company: boolean): Tab[] {
 }
 
 /**
- * 모바일에서 로그인했을 때 화면 아래에 붙는 내비게이션. 채용공고·교육·부트캠프·사이드·스터디·
+ * 모바일에서 웹 앱을 설치하고 로그인했을 때 화면 아래에 붙는 내비게이션. 채용공고·교육·부트캠프·사이드·스터디·
  * 마이페이지 네 탭이다. 로그인 전에는 헤더의 `앱 다운로드`·`로그인` 이 먼저이고(`MobileSiteHeader`),
  * 데스크톱은 헤더 탭이 이 일을 한다.
  *
@@ -148,6 +151,7 @@ function buildTabs(pathname: string, company: boolean): Tab[] {
 export function MobileBottomNav() {
   const pathname = usePathname();
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
+  const installed = useInstallState().kind === 'installed';
   const accountState = useMyAccount();
   const company = accountState.kind === 'ready' && accountState.account.role === 'COMPANY';
   const [subMenuOpen, setSubMenuOpen] = useState(false);
@@ -164,7 +168,7 @@ export function MobileBottomNav() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [subMenuOpen]);
 
-  if (!hasBottomNav(signedIn, pathname)) {
+  if (!hasBottomNav(installed, signedIn, pathname)) {
     return null;
   }
 
