@@ -1,7 +1,6 @@
 'use client';
 
 import { Checkbox, Field, Input, Select } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
 import {
   OPERATION_TYPE_OPTIONS,
@@ -32,12 +31,7 @@ export interface BootcampBasicInfoSectionProps {
 export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfoSectionProps) {
   return (
     <div>
-      <Field
-        label="기업 · 기관명"
-        htmlFor="company-bootcamp-company-name"
-        required
-        hint={`기업 로고 업로드는 ${PLACEHOLDER_NOTICE}. 이름만 저장돼요.`}
-      >
+      <Field label="기업 · 기관명" htmlFor="company-bootcamp-company-name" required>
         <div className="flex items-start gap-3">
           {/*
             기업 로고 칸. **비활성이다** — `createImage` 로 올리는 것까지는 되지만
@@ -47,7 +41,6 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
           <button
             type="button"
             disabled
-            title={PLACEHOLDER_NOTICE}
             className="flex h-11 w-24 shrink-0 cursor-not-allowed flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-300"
           >
             <span aria-hidden="true" className="icon-[lucide--upload] block size-3.5" />
@@ -76,7 +69,6 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
           onChange={() => undefined}
           label="가입한 내용 동일 및 기본 정보로 저장"
         />
-        <p className="pt-1.5 text-sm text-gray-500">기본 정보로 저장은 {PLACEHOLDER_NOTICE}.</p>
       </div>
 
       <Field label="프로그램명" htmlFor="company-bootcamp-title" required>

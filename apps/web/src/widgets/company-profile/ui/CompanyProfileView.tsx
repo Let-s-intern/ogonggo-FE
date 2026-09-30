@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button, Callout, Checkbox, Input } from '@ogonggo/ui';
+import { Button, Checkbox, Input } from '@ogonggo/ui';
 import { SignOutButton } from '@/features/sign-out';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import {
   EMPTY_COMPANY_PROFILE_DRAFT,
   type CompanyProfileDraft,
@@ -127,20 +126,6 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
     <div className="flex flex-col gap-10">
       <h1 className="hidden text-3xl font-bold text-gray-950 md:block">기업/기관 정보</h1>
 
-      {/* 비활성 컨트롤마다 `title` 로도 같은 말을 달지만, 마우스를 올려야 보인다. 화면에
-          드러나는 한 줄이 먼저 있어야 한다 — v4 개인 정보 화면과 같은 판단이다. */}
-      <Callout
-        tone="warning"
-        className="flex items-start gap-2 border-transparent bg-orange-50 text-orange-800"
-      >
-        <span aria-hidden="true" className="icon-[lucide--info] mt-0.5 block h-4 w-4 shrink-0" />
-        <span>
-          <b className="font-semibold">{PLACEHOLDER_NOTICE}</b> 지금 고칠 수 있는 것은 기업 ·
-          기관명과 담당자 이름뿐이에요. 로고, 연락처, 정보 수신용 이메일, 비밀번호 변경, 수신 동의,
-          회원 탈퇴는 아직 준비 중이에요.
-        </span>
-      </Callout>
-
       <section className="flex flex-col gap-5">
         <h2 className="text-xl font-bold text-gray-950">기본 정보</h2>
 
@@ -149,7 +134,6 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
             id="company-logo"
             type="button"
             disabled
-            title={PLACEHOLDER_NOTICE}
             className="flex h-20 w-20 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-md border border-gray-300 bg-gray-50 text-[10px] leading-tight text-gray-400"
           >
             <span aria-hidden="true" className="icon-[lucide--upload] block h-4 w-4" />
@@ -194,15 +178,7 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
         </CompanyProfileField>
 
         <CompanyProfileField label="연락처" htmlFor="company-manager-phone">
-          <Input
-            id="company-manager-phone"
-            value=""
-            readOnly
-            disabled
-            title={PLACEHOLDER_NOTICE}
-            placeholder={PLACEHOLDER_NOTICE}
-            className="max-w-70"
-          />
+          <Input id="company-manager-phone" value="" readOnly disabled className="max-w-70" />
         </CompanyProfileField>
 
         <CompanyProfileField label="가입한 이메일" htmlFor="company-email">
@@ -214,14 +190,7 @@ export function CompanyProfileView({ values, onSave }: CompanyProfileViewProps) 
           htmlFor="company-notification-email"
           note="* 공고 관련 알림을 받아볼 담당자 이메일 주소를 입력해주세요."
         >
-          <Input
-            id="company-notification-email"
-            value=""
-            readOnly
-            disabled
-            title={PLACEHOLDER_NOTICE}
-            placeholder={PLACEHOLDER_NOTICE}
-          />
+          <Input id="company-notification-email" value="" readOnly disabled />
           <Checkbox checked={false} disabled onChange={() => {}} label="가입한 이메일과 동일" />
         </CompanyProfileField>
 

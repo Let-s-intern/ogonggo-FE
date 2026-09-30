@@ -54,7 +54,8 @@ export function MyPageFilterDropdown<TValue extends string>({
               selected ? 'text-gray-600 hover:bg-gray-50' : 'font-semibold text-blue-600',
             )}
           >
-            {label}
+            {/* 라벨을 그대로 쓰면 선택지와 이름이 겹칠 수 있다(`경력`). 해제는 `전체`로 부른다. */}
+            전체
           </Link>
         </li>
         {options.map(([value, optionLabel]) => (

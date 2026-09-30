@@ -92,7 +92,7 @@ export function MyScrapsFilters({ query }: MyScrapsFiltersProps) {
         buildHref={(employmentType) => buildMyScrapsHref(query, { employmentType })}
       />
       <MyPageFilterDropdown
-        label="경력"
+        label="요구 경력"
         selected={query.experienceType}
         options={EXPERIENCE_TYPE_OPTIONS}
         buildHref={(experienceType) => buildMyScrapsHref(query, { experienceType })}

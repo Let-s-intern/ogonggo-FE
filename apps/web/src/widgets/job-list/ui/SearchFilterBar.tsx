@@ -67,7 +67,8 @@ function FilterDropdown<TValue extends string>({
               !selected ? 'font-semibold text-blue-600' : 'text-gray-600 hover:bg-gray-50',
             )}
           >
-            {label}
+            {/* 라벨(`경력`)을 그대로 쓰면 선택지 `경력`과 같은 이름이 두 줄이 되어 걸렸는지 알 수 없다. */}
+            전체
           </TrackedLink>
         </li>
         {options.map(([value, optionLabel]) => (
@@ -134,7 +135,7 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
         buildHref={(value) => buildJobListHref(query, { employmentType: value })}
       />
       <FilterDropdown
-        label="경력"
+        label="요구 경력"
         filterType="experience"
         selected={query.experienceType}
         options={EXPERIENCE_TYPE_OPTIONS}

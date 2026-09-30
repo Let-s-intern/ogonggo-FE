@@ -1,7 +1,6 @@
 'use client';
 
 import { Field, Input, Select } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import {
   EDUCATION_LEVEL_OPTIONS,
   EMPLOYMENT_TYPE_OPTIONS,
@@ -33,24 +32,18 @@ export interface JobBasicInfoSectionProps {
 export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionProps) {
   return (
     <div>
-      <Field
-        label="기업 · 기관명"
-        htmlFor="company-job-company-name"
-        required
-        hint={`기업 로고 업로드는 ${PLACEHOLDER_NOTICE}. 이름만 저장돼요.`}
-      >
+      <Field label="기업 · 기관명" htmlFor="company-job-company-name" required>
         <div className="flex items-start gap-3">
           {/*
             기업 로고 칸. **비활성이다** — `createImage` 로 올리는 것까지는 되지만
             `CreateCompanyJobRequest` 에 로고를 담을 필드가 없어 버려진다(v5 PRD 3 절).
             올릴 수 있게 두면 올린 것이 사라진 것으로 읽힌다. 백엔드에 필드가 생기면
-            `disabled` 와 위의 안내 한 줄을 지우고 `JobCoverImageField` 와 같은 모양으로
+            `disabled` 를 지우고 `JobCoverImageField` 와 같은 모양으로
             바꾸면 된다.
           */}
           <button
             type="button"
             disabled
-            title={PLACEHOLDER_NOTICE}
             className="flex h-11 w-24 shrink-0 cursor-not-allowed flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-300"
           >
             <span aria-hidden="true" className="icon-[lucide--upload] block size-3.5" />
@@ -160,16 +153,11 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
           `CreateCompanyJobRequest` 에 없다(v5 PRD 3 절). 고를 수 있게 두면 고른 것이
           사라진 것으로 읽힌다.
         */}
-        <Field
-          label="근무 방식"
-          htmlFor="company-job-work-arrangement"
-          hint={`근무 방식 저장은 ${PLACEHOLDER_NOTICE}.`}
-        >
+        <Field label="근무 방식" htmlFor="company-job-work-arrangement">
           <Select
             id="company-job-work-arrangement"
             className="h-11 w-full px-4 text-base"
             disabled
-            title={PLACEHOLDER_NOTICE}
             options={WORK_ARRANGEMENT_OPTIONS}
             value=""
             onChange={() => undefined}

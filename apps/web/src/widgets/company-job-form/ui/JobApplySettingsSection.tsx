@@ -1,7 +1,6 @@
 'use client';
 
 import { Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
 import type { CompanyJobFormValues } from '../model/values';
 
@@ -101,14 +100,13 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
       <Field
         label="담당자 이메일"
         htmlFor="company-job-manager-email"
-        hint={`담당자 이메일 저장은 ${PLACEHOLDER_NOTICE}. 지원 링크로 받아 주세요.`}
+        hint="지원 링크로 받아 주세요."
       >
         <Input
           id="company-job-manager-email"
           type="email"
           disabled
           value=""
-          title={PLACEHOLDER_NOTICE}
           onChange={() => undefined}
           placeholder="담당자 이메일을 입력해 주세요."
         />

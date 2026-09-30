@@ -1,7 +1,6 @@
 'use client';
 
 import { Field, Textarea } from '@ogonggo/ui';
-import { PLACEHOLDER_NOTICE } from '@/shared/lib/placeholderNotice';
 import type { RecruitmentPostFormValues } from '../model/values';
 
 /** `CreateRecruitmentPostRequest.summary` 의 `@maxLength`. */
@@ -54,7 +53,7 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
         label="모집 상세 내용"
         htmlFor="post-content"
         required
-        hint="서식은 준비 중이에요. 줄바꿈은 적은 그대로 저장돼요."
+        hint="줄바꿈은 적은 그대로 저장돼요."
       >
         <div className="flex items-center gap-1 rounded-t-md border border-b-0 border-gray-300 px-3 py-2">
           {TOOLBAR_BUTTONS.map((button) => (
@@ -63,7 +62,6 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
               type="button"
               disabled
               aria-label={button.label}
-              title={PLACEHOLDER_NOTICE}
               className="flex size-7 cursor-not-allowed items-center justify-center rounded text-gray-300"
             >
               <span aria-hidden="true" className={`${button.icon} block size-4`} />
