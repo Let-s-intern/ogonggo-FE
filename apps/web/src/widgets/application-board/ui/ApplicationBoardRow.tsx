@@ -202,7 +202,11 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
 
 /**
  * 모바일 카드(`docs/asset/v10 mobile/지원신청내역.png`). 데스크톱 한 줄에 늘어놓은 값을 카드로
- * 쌓는다 — 위에 D-day, 가운데 회사·제목·메타와 로고, 아래에 `지원하기`.
+ * 쌓는다 — 위에 D-day, 가운데 회사·제목·메타와 로고, 아래에 `자세히 보기`·`지원하기`.
+ *
+ * `자세히 보기` 는 단계 드롭다운이 있던 자리다. 누르면 상세가 모달로 뜬다 — 마이페이지
+ * 스크랩 화면이 상세 경로를 가로채 띄운다(`app/(site)/mypage/scraps/@modal`), 칸반 카드를
+ * 눌렀을 때와 같다. `지원하기` 가 없는 단계는 이 버튼이 한 줄을 다 쓴다.
  *
  * **단계는 드롭다운이 아니라 끌어서 옮긴다.** 카드를 길게 눌러 다른 섹션에 놓는다
  * (`ApplicationBoardList` 의 `useBoardDrag`). 칸반 카드와 같은 `id`·`data` 를 싣는다.
@@ -267,16 +271,23 @@ function MobileCard({
           className="h-10 w-10 shrink-0 rounded-md border border-gray-100"
         />
       </div>
-      {showApply ? (
-        <div className="mt-4 border-t border-gray-100 pt-3">
+      <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-3">
+        <Link
+          href={item.href}
+          scroll={false}
+          className="flex h-10 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-semibold text-gray-700"
+        >
+          자세히 보기
+        </Link>
+        {showApply ? (
           <Link
             href={item.href}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-blue-500 text-sm font-semibold text-white"
+            className="flex h-10 flex-1 items-center justify-center rounded-md bg-blue-500 text-sm font-semibold text-white"
           >
             지원하기
           </Link>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
