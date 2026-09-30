@@ -19,14 +19,14 @@ const JOB_CARD_COUNT = 10;
  * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route-groups.md).
  * 루트 layout은 그대로 하나뿐이라 그룹 간 전체 새로고침 문제(같은 문서 Caveats)는 없다.
  *
- * 목록 화면과 달리 `ListPageSkeleton`을 쓰지 않는다. 홈은 그 구성 위에 인기 공고 섹션과 광고
- * 자리가 하나씩 더 있고, 쓰는 곳이 이 파일 하나뿐이라 컴포넌트로 빼지 않았다. 겹치는 두
+ * 목록 화면과 달리 `ListPageSkeleton`을 쓰지 않는다. 홈은 그 구성 위에 인기 공고 섹션이 하나
+ * 더 있고, 쓰는 곳이 이 파일 하나뿐이라 컴포넌트로 빼지 않았다. 겹치는 두
  * 조각(`HeroSkeleton`, `CardGridSkeleton`)만 나눠 쓴다.
  *
- * 맥동이 네 덩어리에 따로 붙는다. 하나로 감싸지 못하는 것은 맨 아래 `FOR BUSINESS` 배너가
+ * 맥동이 세 덩어리에 따로 붙는다. 하나로 감싸지 못하는 것은 맨 아래 `FOR BUSINESS` 배너가
  * 진짜 위젯이기 때문이다 — 데이터가 필요 없는 정적 위젯이라 로딩 중에 이미 최종 모습으로 둘
  * 수 있고, 그러면 그 부분은 높이가 어긋날 여지가 없다. 같은 시점에 만들어진 요소들이라
- * `animate-pulse`는 넷이 같은 위상으로 돈다.
+ * `animate-pulse`는 셋이 같은 위상으로 돈다.
  */
 export default function Loading() {
   return (
@@ -52,13 +52,6 @@ export default function Loading() {
               <CardGridSkeleton count={POPULAR_CARD_COUNT} gapClass="gap-4" />
             </div>
           </section>
-
-          {/* 광고 자리 — 실제 화면에도 같은 크기의 회색 박스가 있다
-              (`views/home/ui/HomePage.tsx`). 채울 내용이 없어 클래스를 그대로 쓴다. */}
-          <div
-            aria-hidden="true"
-            className="ogonggo-skeleton h-40 w-full animate-pulse rounded-lg bg-gray-100"
-          />
 
           {/* 전체 공고 — 제목 + 검색·필터 줄(`h-9`라 36px), 카드 그리드, 페이지네이션. */}
           <div

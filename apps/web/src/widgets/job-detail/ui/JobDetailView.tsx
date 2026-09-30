@@ -137,7 +137,8 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       // 20px 안쪽에서 시작한다.
       //
       // 목업 오른쪽 맨 위의 `오늘의 공고의 코멘트`는 그리지 않는다. API 없음: 상세 응답에 코멘트
-      // 필드가 없다. 그 아래 회색 판은 광고 자리라 목업대로 자리만 잡는다(홈의 배너 자리와 같다).
+      // 필드가 없다. 그 아래 회색 판은 광고 자리인데, 내용이 정해지지 않아 빈 상자만 보여서
+      // 그리지 않는다(홈의 배너 자리와 같다).
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,640fr)_minmax(0,300fr)]">
         <div className="flex min-w-0 flex-col gap-5">
           {viewTracker}
@@ -147,7 +148,6 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         </div>
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
-          <div className="h-30 w-full rounded-lg bg-gray-100" aria-hidden="true" />
           <SimilarJobs excludeJobId={job.id} />
           <CrossSellWidget />
         </aside>

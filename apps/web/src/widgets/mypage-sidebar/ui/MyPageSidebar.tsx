@@ -12,8 +12,9 @@ export interface MyPageSidebarProps extends MyPageProfileCardProps {
 }
 
 /**
- * 마이페이지 좌측 사이드바. 세 조각이 위에서부터 프로필 카드 · 메뉴 · 광고 자리다
- * (PRD 1 절, 목업 `docs/asset/v4 마이페이지/개인정보/image.png`).
+ * 마이페이지 좌측 사이드바. 위에서부터 프로필 카드 · 메뉴다(PRD 1 절, 목업
+ * `docs/asset/v4 마이페이지/개인정보/image.png`). 목업의 셋째 조각인 광고 자리는 내용이 정해지지
+ * 않아 빈 회색 상자만 보여서 그리지 않는다(2026-09-30, 사용자).
  *
  * **v5(기업 회원 마이페이지) 가 이 컴포넌트를 그대로 쓴다.** 그래서 메뉴 목록도 프로필 카드의
  * 값도 prop 이다 — 이 파일은 어떤 메뉴가 있는지, 이름 아래 무엇이 오는지 모른다.
@@ -52,10 +53,6 @@ export function MyPageSidebar({ menuItems, ...profile }: MyPageSidebarProps) {
           })}
         </ul>
       </nav>
-
-      {/* 목업의 회색 박스. 광고 콘텐츠는 이 PRD 범위 밖이라 홈(`views/home/ui/HomePage.tsx`)과
-          같이 자리만 잡는다. */}
-      <div className="h-30 w-full bg-gray-200" aria-hidden="true" />
     </div>
   );
 }
