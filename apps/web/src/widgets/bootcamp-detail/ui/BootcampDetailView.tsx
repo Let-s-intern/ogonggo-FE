@@ -6,6 +6,7 @@ import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { CrossSellWidget } from '@/widgets/cross-sell';
 import { BootcampCurriculum } from './BootcampCurriculum';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
@@ -125,8 +126,12 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               }}
             />
           </StickyApplyBar>
-          <SimilarBootcamps excludeBootcampId={bootcamp.id} />
-          <CrossSellWidget />
+          <DetailSidebarSection>
+            <SimilarBootcamps excludeBootcampId={bootcamp.id} />
+          </DetailSidebarSection>
+          <DetailSidebarSection>
+            <CrossSellWidget />
+          </DetailSidebarSection>
         </aside>
       </div>
     </div>
