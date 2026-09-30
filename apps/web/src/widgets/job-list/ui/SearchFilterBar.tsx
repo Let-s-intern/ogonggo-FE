@@ -113,6 +113,12 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
         {query.experienceType ? (
           <input type="hidden" name="experienceType" value={query.experienceType} />
         ) : null}
+        {query.jobFields?.map((field) => (
+          <input key={field} type="hidden" name="jobField" value={field} />
+        ))}
+        {query.jobRoles?.map((role) => (
+          <input key={role} type="hidden" name="jobRole" value={role} />
+        ))}
         <SearchInput name="q" defaultValue={query.q} placeholder="공고 검색" />
         <button type="submit" className="sr-only">
           검색

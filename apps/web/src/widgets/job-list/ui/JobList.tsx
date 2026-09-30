@@ -4,7 +4,7 @@ import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
-import { buildJobListHref, type JobListQuery } from '../lib/query';
+import { buildJobListHref, toJobRoleParams, type JobListQuery } from '../lib/query';
 import { SearchFilterBar } from './SearchFilterBar';
 
 const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = [
@@ -31,13 +31,8 @@ function pickKeyword(q: string | undefined): string | undefined {
   return keyword && keyword.length >= 2 && keyword.length <= 100 ? keyword : undefined;
 }
 
-function buildJobsRequestUrl({
-  page,
-  sort,
-  q,
-  employmentType,
-  experienceType,
-}: JobListQuery): string {
+function buildJobsRequestUrl(query: JobListQuery): string {
+  const { page, sort, q, employmentType, experienceType } = query;
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('size', String(PAGE_SIZE));
@@ -51,6 +46,13 @@ function buildJobsRequestUrl({
   }
   if (experienceType) {
     params.set('experienceType', experienceType);
+  }
+  const { jobField, jobRole } = toJobRoleParams(query);
+  if (jobField) {
+    params.set('jobField', jobField);
+  }
+  for (const role of jobRole) {
+    params.append('jobRole', role);
   }
   return `/api/v1/jobs?${params.toString()}`;
 }

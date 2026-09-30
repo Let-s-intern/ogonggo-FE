@@ -2,6 +2,7 @@ import { ListPublicJobsSort } from '@ogonggo/api';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
 import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 import { HomePage } from '@/views/home';
+import { parseJobRoleSelection } from '@/widgets/job-list';
 
 interface HomeSearchParams {
   page?: string;
@@ -9,6 +10,9 @@ interface HomeSearchParams {
   q?: string;
   employmentType?: string;
   experienceType?: string;
+  /** 직무 필터. 여럿이면 같은 이름이 되풀이돼 배열로 온다. */
+  jobField?: string | string[];
+  jobRole?: string | string[];
 }
 
 function parsePage(value: string | undefined): number {
@@ -31,7 +35,7 @@ function parseExperienceType(value: string | undefined): JobExperienceType | und
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<HomeSearchParams> }) {
-  const { page, sort, q, employmentType, experienceType } = await searchParams;
+  const { page, sort, q, employmentType, experienceType, jobField, jobRole } = await searchParams;
 
   return (
     <HomePage
@@ -40,6 +44,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Hom
       q={q || undefined}
       employmentType={parseEmploymentType(employmentType)}
       experienceType={parseExperienceType(experienceType)}
+      {...parseJobRoleSelection(jobField, jobRole)}
     />
   );
 }
