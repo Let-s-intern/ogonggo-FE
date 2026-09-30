@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ServiceFeedbackButton } from '@/features/service-feedback';
 import { SiteFooter } from '@/widgets/site-footer';
-import { SiteHeader } from '@/widgets/site-header';
+import { MobileBottomNav, SiteHeader } from '@/widgets/site-header';
 
 /**
  * 서비스 본 화면들의 껍데기. 헤더와 푸터가 여기 붙는다.
@@ -25,6 +25,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       {children}
       <SiteFooter />
       <ServiceFeedbackButton />
+      <MobileBottomNav />
     </>
   );
 }

@@ -23,9 +23,15 @@ type Answers = Record<(typeof QUESTIONS)[number]['name'], string>;
 
 const EMPTY: Answers = { satisfaction: '', improvement: '' };
 
-/** 모바일 공고 상세에서는 화면 아래 신청하기 바(`data-sticky-apply-bar`) 위로 올린다. */
-const ABOVE_STICKY_BAR =
-  'max-md:[body:has([data-sticky-apply-bar])_&]:bottom-[calc(8.5rem+env(safe-area-inset-bottom))]';
+/**
+ * 모바일에서 화면 아래에 붙는 것들 위로 올린다. 공고 상세의 신청하기 바(`data-sticky-apply-bar`)와,
+ * 로그인했을 때의 하단 내비게이션(`data-bottom-nav`, 떠 있는 동그라미까지 약 84px)이다. 둘은 같은
+ * 화면에 함께 나오지 않는다 — 내비게이션은 상세 화면에서 물러난다.
+ */
+const ABOVE_STICKY_BAR = cn(
+  'max-md:[body:has([data-sticky-apply-bar])_&]:bottom-[calc(8.5rem+env(safe-area-inset-bottom))]',
+  'max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(6rem+env(safe-area-inset-bottom))]',
+);
 
 /** 공고 상세 주소. 달력에서 여는 상세 모달도 같은 주소라 함께 센다. */
 const JOB_DETAIL_PATH = /^\/jobs\/\d+$/;
