@@ -17,8 +17,9 @@ import { useMyAccount } from '@/shared/api/useMyAccount';
 import { myPageIndexFor } from '@/widgets/mypage-sidebar';
 
 /**
- * 상세 화면. 화면 아래에 신청하기 바(`shared/ui/StickyApplyBar.tsx`)가 붙어 있어 내비게이션을 두면
- * 둘이 겹친다. 앱의 탭 바가 상세 화면에서 물러나는 것과 같이 여기서는 그리지 않는다.
+ * 상세 화면. 신청하기 바(`shared/ui/StickyApplyBar.tsx`)가 내비게이션 바로 위에 올라앉는다. 떠 있는
+ * 동그라미가 그 바를 가리지 않도록 상세 화면에서는 파인 자리와 동그라미 없이 평평한 바로 두고, 그 공고가
+ * 속한 탭만 파랗게 칠한다. 그 탭을 누르면 서브 메뉴가 아니라 목록으로 돌아간다.
  */
 const DETAIL_PATH = /^\/(jobs|bootcamps|side-studies)\/[^/]+/;
 
@@ -28,8 +29,8 @@ const DETAIL_PATH = /^\/(jobs|bootcamps|side-studies)\/[^/]+/;
  * 가린다(`md:hidden`). 모바일 헤더가 이것을 보고 둘째 줄 탭을 숨긴다 — 같은 탭이 위아래로 두 번 보이지
  * 않게 한다(`MobileSiteHeader`).
  */
-export function hasBottomNav(installed: boolean, signedIn: boolean, pathname: string): boolean {
-  return installed && signedIn && !DETAIL_PATH.test(pathname);
+export function hasBottomNav(installed: boolean, signedIn: boolean): boolean {
+  return installed && signedIn;
 }
 
 interface SubMenuItem {
@@ -168,20 +169,22 @@ export function MobileBottomNav() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [subMenuOpen]);
 
-  if (!hasBottomNav(installed, signedIn, pathname)) {
+  if (!hasBottomNav(installed, signedIn)) {
     return null;
   }
 
+  const detail = DETAIL_PATH.test(pathname);
   const tabs = buildTabs(pathname, company);
   const activeIndex = tabs.findIndex((tab) => tab.active);
-  const activeTab = tabs[activeIndex];
+  // 상세 화면에서는 파인 자리·동그라미·서브 메뉴를 쓰지 않는다(`DETAIL_PATH`).
+  const activeTab = detail ? undefined : tabs[activeIndex];
   const style = {
     '--notch-x': `${((Math.max(activeIndex, 0) + 0.5) / tabs.length) * 100}%`,
   } as CSSProperties;
 
   /** 지금 탭을 다시 누르면 이동하지 않고 서브 메뉴를 여닫는다. 다른 탭은 그대로 이동한다. */
   const onTabClick = (tab: Tab) => (event: MouseEvent) => {
-    if (!tab.active || tab.subMenu.length === 0) return;
+    if (detail || !tab.active || tab.subMenu.length === 0) return;
     event.preventDefault();
     setSubMenuOpen((open) => !open);
   };
@@ -254,14 +257,20 @@ export function MobileBottomNav() {
               <Link
                 href={tab.href}
                 aria-current={tab.active ? 'page' : undefined}
-                aria-expanded={tab.active && tab.subMenu.length > 0 ? subMenuOpen : undefined}
+                aria-expanded={
+                  !detail && tab.active && tab.subMenu.length > 0 ? subMenuOpen : undefined
+                }
                 onClick={onTabClick(tab)}
                 className="flex h-full flex-col items-center justify-end gap-1 pb-2.5"
               >
                 {/* 지금 탭의 아이콘은 위 동그라미가 보여 준다. 자리만 남겨 글자 높이를 맞춘다. */}
                 <span
                   aria-hidden="true"
-                  className={cn(tab.icon, 'block h-6 w-6 text-gray-400', tab.active && 'invisible')}
+                  className={cn(
+                    tab.icon,
+                    'block h-6 w-6',
+                    tab.active ? (detail ? 'text-blue-500' : 'invisible') : 'text-gray-400',
+                  )}
                 />
                 <span
                   className={cn(
