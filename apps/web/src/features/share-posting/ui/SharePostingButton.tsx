@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cn, useToast } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import {
@@ -77,13 +78,13 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
     };
   }, [onClose]);
 
-  const url = shareUrl(posting);
-  const calendarUrl = googleCalendarUrl(posting, url);
+  const linkUrl = shareUrl(posting, 'link_copy');
+  const calendarUrl = googleCalendarUrl(posting, shareUrl(posting, 'google_calendar'));
   const label = shareKindLabel(posting.kind);
 
-  const copyLink = (message = `${label} 링크가 클립보드에 복사되었습니다.`) =>
+  const copyLink = (text = linkUrl, message = `${label} 링크가 클립보드에 복사되었습니다.`) =>
     navigator.clipboard
-      .writeText(url)
+      .writeText(text)
       .then(() => toast.show({ message }))
       .catch(() => toast.show({ message: '링크를 복사하지 못했습니다.', tone: 'error' }));
 
@@ -93,19 +94,23 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
    * 창으로 열어 붙여 넣게 한다. 전에는 복사만 해서 누른 사람에게는 아무 일도 안 일어난 것처럼 보였다.
    */
   const shareToInstagram = () => {
+    const url = shareUrl(posting, 'instagram');
     if (typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches) {
       navigator.share({ title: posting.title, url }).catch(() => {
         // 공유 창을 닫은 것도 여기로 온다. 알릴 것이 없다.
       });
       return;
     }
-    void copyLink('링크를 복사했어요. 인스타그램 DM 에 붙여 넣어 주세요.');
+    void copyLink(url, '링크를 복사했어요. 인스타그램 DM 에 붙여 넣어 주세요.');
     openWindow('https://www.instagram.com/direct/inbox/');
   };
 
   const openWindow = (href: string) => window.open(href, '_blank', 'noopener,noreferrer');
 
-  return (
+  // `document.body` 에 바로 그린다. 이 창을 여는 버튼은 신청하기 바(`StickyApplyBar`, `z-30`) 안에
+  // 있어서 그 안에 그리면 창의 `z-40` 이 그 바의 층에 묶였다 — 하단 내비게이션과 의견 버튼이 창 위로
+  // 올라와 아래쪽이 가려졌다.
+  return createPortal(
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-gray-950/50 md:items-center"
       onClick={(event) => {
@@ -156,14 +161,25 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
         <hr className="mt-5 border-gray-200" />
 
         <p className="mt-5 text-sm text-gray-500">링크 공유</p>
-        <button
-          type="button"
-          onClick={() => void copyLink()}
-          className="mt-3 flex h-12 w-full items-center justify-between rounded-lg bg-gray-100 px-3 text-left text-base text-gray-900 hover:bg-gray-200"
-        >
-          오공고 링크
-          <span aria-hidden="true" className="icon-[lucide--copy] block h-5 w-5 text-gray-900" />
-        </button>
+        {/* 주소를 그대로 보여 준다. 눌러서 전체를 골라 직접 복사할 수도 있고, 오른쪽 버튼으로 복사한다. */}
+        <div className="mt-3 flex h-12 w-full items-center gap-2 rounded-lg bg-gray-100 pr-1 pl-3">
+          <input
+            readOnly
+            value={linkUrl}
+            aria-label={`${label} 링크`}
+            onFocus={(event) => event.currentTarget.select()}
+            className="min-w-0 flex-1 truncate bg-transparent text-sm text-gray-700 outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => void copyLink()}
+            aria-label="링크 복사"
+            className="flex h-10 shrink-0 items-center gap-1 rounded-md px-2 text-sm font-semibold text-gray-900 hover:bg-gray-200"
+          >
+            <span aria-hidden="true" className="icon-[lucide--copy] block h-5 w-5" />
+            복사
+          </button>
+        </div>
 
         {calendarUrl ? (
           <button
@@ -207,7 +223,9 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="네이버 블로그"
             className="bg-black"
-            onClick={() => openWindow(naverBlogShareUrl(url, posting.title))}
+            onClick={() =>
+              openWindow(naverBlogShareUrl(shareUrl(posting, 'naver_blog'), posting.title))
+            }
           >
             {/* 시안의 네이버 블로그 표식(`b|`)이다. 아이콘 세트에 같은 모양이 없어 글자로 그린다. */}
             <span aria-hidden="true" className="text-2xl font-extrabold text-[#03C75A]">
@@ -217,7 +235,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="linkedin"
             className="bg-[#0A66C2]"
-            onClick={() => openWindow(linkedInShareUrl(url))}
+            onClick={() => openWindow(linkedInShareUrl(shareUrl(posting, 'linkedin')))}
           >
             <span
               aria-hidden="true"
@@ -227,13 +245,14 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="twitter"
             className="bg-black"
-            onClick={() => openWindow(xShareUrl(url, posting.title))}
+            onClick={() => openWindow(xShareUrl(shareUrl(posting, 'x'), posting.title))}
           >
             <span aria-hidden="true" className="icon-[simple-icons--x] block h-6 w-6 text-white" />
           </ShareIcon>
         </ul>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

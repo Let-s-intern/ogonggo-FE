@@ -26,8 +26,33 @@ export function shareKindLabel(kind: SharePostingKind): string {
   return KIND_LABEL[kind];
 }
 
-export function shareUrl(posting: SharePosting): string {
-  return new URL(posting.path, window.location.origin).toString();
+const CAMPAIGN_BY_KIND: Record<SharePostingKind, string> = {
+  jobs: 'job_share',
+  bootcamps: 'bootcamp_share',
+  'side-studies': 'side_study_share',
+};
+
+/** 공유한 곳. 공유 주소의 `utm_source` 로 들어가 어디서 공유된 링크로 들어왔는지 나눠 볼 수 있다. */
+export type ShareChannel =
+  | 'link_copy'
+  | 'instagram'
+  | 'naver_blog'
+  | 'linkedin'
+  | 'x'
+  | 'google_calendar';
+
+/**
+ * 공유할 주소. 공유한 곳마다 UTM 을 붙인다(`utm_source`=공유한 곳, `utm_medium=share`,
+ * `utm_campaign`=종류). 상세의 지원 링크에 붙이는 UTM(`shared/lib/applyUtm.ts`)과 같은 이름 규칙이다.
+ */
+export function shareUrl(posting: SharePosting, channel: ShareChannel): string {
+  const url = new URL(posting.path, window.location.origin);
+  url.search = new URLSearchParams({
+    utm_source: channel,
+    utm_medium: 'share',
+    utm_campaign: CAMPAIGN_BY_KIND[posting.kind],
+  }).toString();
+  return url.toString();
 }
 
 function compactDate(date: Date): string {
