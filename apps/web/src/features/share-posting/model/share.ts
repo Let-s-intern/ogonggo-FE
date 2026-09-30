@@ -35,7 +35,7 @@ const CAMPAIGN_BY_KIND: Record<SharePostingKind, string> = {
 /** 공유한 곳. 공유 주소의 `utm_source` 로 들어가 어디서 공유된 링크로 들어왔는지 나눠 볼 수 있다. */
 export type ShareChannel =
   | 'link_copy'
-  | 'instagram'
+  | 'native_share'
   | 'naver_blog'
   | 'linkedin'
   | 'x'

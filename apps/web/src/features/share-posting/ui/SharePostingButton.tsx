@@ -89,20 +89,20 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
       .catch(() => toast.show({ message: '링크를 복사하지 못했습니다.', tone: 'error' }));
 
   /**
-   * 인스타그램은 웹에서 링크를 넘겨받는 공유 주소가 없다. 휴대폰이면 기기 공유 창을 열어 인스타그램
-   * DM 을 고르게 한다. 공유 창이 없으면(대부분의 데스크톱) 링크를 복사하고 인스타그램 DM 화면을 새
-   * 창으로 열어 붙여 넣게 한다. 전에는 복사만 해서 누른 사람에게는 아무 일도 안 일어난 것처럼 보였다.
+   * 기기 공유 창(`navigator.share`)으로 링크를 넘긴다. 인스타그램·카카오톡·문자처럼 휴대폰에 깔린 앱으로
+   * 보낼 수 있다. 전에는 이 자리가 `instagram` 아이콘이었는데, 인스타그램은 웹에서 링크를 넘겨받는 공유
+   * 주소가 없어 결국 이 창이 떴고 "URL로 공유하기" 라는 제목이 헷갈렸다 — 그래서 이름을 그대로 붙인다.
+   * 공유 창이 없는 브라우저(대부분의 데스크톱)에서는 링크를 복사한다.
    */
-  const shareToInstagram = () => {
-    const url = shareUrl(posting, 'instagram');
-    if (typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches) {
+  const shareWithDevice = () => {
+    const url = shareUrl(posting, 'native_share');
+    if (typeof navigator.share === 'function') {
       navigator.share({ title: posting.title, url }).catch(() => {
         // 공유 창을 닫은 것도 여기로 온다. 알릴 것이 없다.
       });
       return;
     }
-    void copyLink(url, '링크를 복사했어요. 인스타그램 DM 에 붙여 넣어 주세요.');
-    openWindow('https://www.instagram.com/direct/inbox/');
+    void copyLink(url);
   };
 
   const openWindow = (href: string) => window.open(href, '_blank', 'noopener,noreferrer');
@@ -194,9 +194,12 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
 
         {/*
           카카오톡은 숨겨 둔다. 공유하려면 카카오 JS 앱 키와 SDK 가 있어야 하는데 아직 없다.
-          모바일은 한 줄에 다 들어가지 않아 가로로 넘긴다. 시안의 모바일 줄은 맨 앞에 `캘린더 추가` 가 있다.
+          모바일은 한 줄에 다 들어가지 않아 가로로 넘긴다. 맨 앞은 기기 공유 창을 여는 `링크로 공유` 다.
         */}
         <ul className="-mx-5 mt-8 flex gap-5 overflow-x-auto px-5 md:mx-0 md:justify-between md:gap-0 md:px-0">
+          <ShareIcon label="링크로 공유" className="bg-blue-500" onClick={shareWithDevice}>
+            <span aria-hidden="true" className="icon-[lucide--share-2] block h-7 w-7 text-white" />
+          </ShareIcon>
           {calendarUrl ? (
             <ShareIcon
               label="캘린더 추가"
@@ -210,16 +213,6 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
               />
             </ShareIcon>
           ) : null}
-          <ShareIcon
-            label="instagram"
-            className="bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fd5949_45%,#d6249f_60%,#285AEB_90%)]"
-            onClick={shareToInstagram}
-          >
-            <span
-              aria-hidden="true"
-              className="icon-[simple-icons--instagram] block h-7 w-7 text-white"
-            />
-          </ShareIcon>
           <ShareIcon
             label="네이버 블로그"
             className="bg-black"
