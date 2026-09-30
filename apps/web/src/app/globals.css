@@ -83,3 +83,35 @@
     animation: none;
   }
 }
+
+/*
+ * 모바일 헤더 `앱 다운로드` 버튼의 화살표(`features/install-app/ui/InstallAppButton.tsx`). 위에서
+ * 내려와 받침대에 닿고, 잠깐 머문 뒤 받침대 속으로 스며들듯 사라진다. 나머지 시간은 쉬어서 계속
+ * 움직이는 것처럼 산만하지 않게 한다. 모션 줄이기에서는 멈춘 화살표만 보인다.
+ */
+@keyframes ogonggo-download-drop {
+  0% {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+  25%,
+  55% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translateY(40%);
+    opacity: 0;
+  }
+}
+
+.ogonggo-download-arrow {
+  animation: ogonggo-download-drop 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ogonggo-download-arrow {
+    animation: none;
+  }
+}

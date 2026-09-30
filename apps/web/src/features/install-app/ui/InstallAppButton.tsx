@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@ogonggo/ui';
 import { promptInstall } from '../model/install';
 
 /**
@@ -13,17 +12,31 @@ export function InstallAppButton() {
 
   return (
     <>
-      <Button
-        size="sm"
-        className="rounded-full px-4"
+      {/* 헤더에서 가장 눈에 띄어야 하는 버튼이라 그대로의 `Button` 대신 따로 그린다. 파랑 두 단계
+          그라데이션에 같은 파랑의 옅은 그림자를 깔고, 앞 흰 동그라미 안에서 화살표가 받침대로
+          떨어지기를 되풀이한다. 누르면 살짝 눌려 들어간다. */}
+      <button
+        type="button"
         onClick={() => {
           void promptInstall().then((prompted) => {
             if (!prompted) setGuideOpen(true);
           });
         }}
+        className="flex h-9 items-center gap-1.5 rounded-full bg-linear-to-r from-blue-600 to-blue-400 pr-3.5 pl-1.5 text-sm font-semibold text-white shadow-md shadow-blue-500/30 transition active:scale-95 motion-reduce:active:scale-100"
       >
+        {/* 내려받는 모양. 화살표만 받침대로 떨어지도록 둘을 따로 그린다(`ogonggo-download-arrow`,
+            `app/globals.css`). 떨어지는 동안 동그라미 밖으로 삐져나오지 않게 안쪽 칸을 자른다. */}
+        <span
+          aria-hidden="true"
+          className="flex size-6 items-center justify-center rounded-full bg-white text-blue-500"
+        >
+          <span className="relative block h-3.5 w-3 overflow-hidden">
+            <span className="ogonggo-download-arrow absolute inset-x-0 top-0 mx-auto block icon-[lucide--arrow-down] h-2.5 w-3" />
+            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-blue-500" />
+          </span>
+        </span>
         앱 다운로드
-      </Button>
+      </button>
       {guideOpen ? <InstallGuideSheet onClose={() => setGuideOpen(false)} /> : null}
     </>
   );
