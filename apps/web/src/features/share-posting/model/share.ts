@@ -26,6 +26,29 @@ export function shareKindLabel(kind: SharePostingKind): string {
   return KIND_LABEL[kind];
 }
 
+/**
+ * 공유 버튼과 창의 제목·설명. 전에는 셋 다 `공고 공유하기` 와 "기업의 공고 소식" 으로 고정이라
+ * 부트캠프·사이드스터디에서도 채용공고 문구가 보였다.
+ */
+const SHARE_COPY: Record<SharePostingKind, { title: string; description: string }> = {
+  jobs: {
+    title: '공고 공유하기',
+    description: '내가 관심 있게 보고 있는 기업의 공고 소식을 공유해보세요.',
+  },
+  bootcamps: {
+    title: '교육 공유하기',
+    description: '관심 있게 보고 있는 교육·부트캠프 소식을 공유해보세요.',
+  },
+  'side-studies': {
+    title: '모집글 공유하기',
+    description: '함께할 사람을 찾는 사이드·스터디 모집글을 공유해보세요.',
+  },
+};
+
+export function shareCopy(kind: SharePostingKind): { title: string; description: string } {
+  return SHARE_COPY[kind];
+}
+
 const CAMPAIGN_BY_KIND: Record<SharePostingKind, string> = {
   jobs: 'job_share',
   bootcamps: 'bootcamp_share',
