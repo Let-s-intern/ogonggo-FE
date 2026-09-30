@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Button } from '@ogonggo/ui';
 import { BookmarkCountButton, type BookmarkKind } from '@/features/bookmark';
 import { SharePostingButton, type SharePosting } from '@/features/share-posting';
@@ -8,6 +9,11 @@ import { ApplyLink } from './ApplyLink';
 export interface ApplyCtaProps {
   /** 지원·신청 링크. 없으면 버튼 자체를 그리지 않고 북마크 칸만 남는다. */
   href?: string;
+  /**
+   * 링크 대신 그릴 신청 버튼. 사이드·스터디는 밖으로 나가지 않고 연락처 모달을 연다
+   * (`widgets/side-study-detail`). 넘기면 `href`·`applyEvent`는 쓰지 않는다.
+   */
+  action?: ReactNode;
   /** 채용공고는 "지원하러 가기", 부트캠프는 "신청하러 가기"다(목업 문구). */
   label: string;
   /** 북마크할 대상. 종류마다 등록·해제 경로가 달라 `BookmarkCountButton`이 이것으로 가른다. */
@@ -44,6 +50,7 @@ export interface ApplyCtaProps {
  */
 export function ApplyCta({
   href,
+  action,
   label,
   kind,
   id,
@@ -57,29 +64,30 @@ export function ApplyCta({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        {outboundUrl ? (
-          <Button asChild className="flex-1">
-            <ApplyLink
-              kind={kind}
-              contentId={id}
-              href={outboundUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              events={
-                applyEvent
-                  ? [
-                      {
-                        event: applyEvent.event,
-                        params: { ...applyEvent.params, outbound_url: outboundUrl },
-                      },
-                    ]
-                  : []
-              }
-            >
-              {label}
-            </ApplyLink>
-          </Button>
-        ) : null}
+        {action ??
+          (outboundUrl ? (
+            <Button asChild className="flex-1">
+              <ApplyLink
+                kind={kind}
+                contentId={id}
+                href={outboundUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                events={
+                  applyEvent
+                    ? [
+                        {
+                          event: applyEvent.event,
+                          params: { ...applyEvent.params, outbound_url: outboundUrl },
+                        },
+                      ]
+                    : []
+                }
+              >
+                {label}
+              </ApplyLink>
+            </Button>
+          ) : null)}
         <BookmarkCountButton
           kind={kind}
           id={id}

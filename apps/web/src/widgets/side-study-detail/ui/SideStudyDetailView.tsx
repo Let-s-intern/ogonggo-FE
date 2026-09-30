@@ -10,6 +10,7 @@ import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { LexicalContent } from '@/shared/ui/LexicalContent';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { SideStudyContactButton } from './SideStudyContactButton';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
 import { formatRecruitmentPeriod, SideStudyDetailHeaderCard } from './SideStudyDetailHeaderCard';
 import { SideStudyInfoGrid } from './SideStudyInfoGrid';
@@ -17,12 +18,6 @@ import { SideStudyInfoGrid } from './SideStudyInfoGrid';
 export interface SideStudyDetailViewProps {
   postId: number;
 }
-
-/**
- * `신청하러 가기` 의 이동 주소. 사이트 안 지원 API 는 붙이지 않고 출시 알림 신청 페이지로
- * 보낸다(PRD Push 5 "사용자 결정", 2026-09-18).
- */
-const APPLY_URL = 'https://biz.ogonggo.co.kr/';
 
 /**
  * 공개 상세 `getPublicRecruitmentPost`(`GET /api/v1/recruitment-posts/{postId}`).
@@ -123,15 +118,21 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
           >
             <ApplyCta
               label="신청하러 가기"
-              href={APPLY_URL}
+              // 밖으로 나가지 않고 작성자의 연락처를 모달로 보여 준다.
+              action={
+                <SideStudyContactButton
+                  label="신청하러 가기"
+                  contact={sideStudy.contact}
+                  applyEvent={{
+                    event: 'program_apply_click',
+                    params: toSideStudyInfo(sideStudy),
+                  }}
+                />
+              }
               kind="side-studies"
               id={sideStudy.id}
               bookmarked={sideStudy.bookmarked}
               bookmarkCount={sideStudy.bookmarkCount}
-              applyEvent={{
-                event: 'program_apply_click',
-                params: toSideStudyInfo(sideStudy),
-              }}
               share={{
                 kind: 'side-studies',
                 title: sideStudy.title,
