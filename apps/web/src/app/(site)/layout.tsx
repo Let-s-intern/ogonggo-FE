@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ServiceFeedbackButton } from '@/features/service-feedback';
 import { SiteFooter } from '@/widgets/site-footer';
 import { SiteHeader } from '@/widgets/site-header';
 
@@ -23,6 +24,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       <SiteHeader />
       {children}
       <SiteFooter />
+      <ServiceFeedbackButton />
     </>
   );
 }
