@@ -190,7 +190,9 @@ function FloatingButton({ onClick }: { onClick: () => void }) {
       aria-haspopup="dialog"
       onClick={onClick}
       className={cn(
-        'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 focus-visible:outline-none md:right-8 md:bottom-8',
+        // `z-20` 이다. 신청하기 바(`z-30`) 안에서 열리는 공유 창이 그 바의 층에 묶여 있어, 이 버튼이
+        // 같은 `z-30` 이면 나중에 그려지는 이 버튼이 공유 창 위로 올라왔다.
+        'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 focus-visible:outline-none md:right-8 md:bottom-8',
         ABOVE_STICKY_BAR,
         // 하단 내비게이션이 떠 있으면(모바일 로그인) 탭을 가리므로 숨긴다. 그때는 마이페이지 탭의
         // 서브 메뉴 `의견 보내기` 가 이 창을 연다(`openServiceFeedback`).
@@ -254,7 +256,7 @@ function FeedbackPrompt({
       role="dialog"
       aria-labelledby="service-feedback-prompt-title"
       className={cn(
-        'fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 rounded-2xl bg-white p-5 shadow-xl ring-1 ring-gray-100 transition duration-300 ease-out md:inset-x-auto md:bottom-8 md:left-1/2 md:w-[440px] md:-translate-x-1/2',
+        'fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 rounded-2xl bg-white p-5 shadow-xl ring-1 ring-gray-100 transition duration-300 ease-out md:inset-x-auto md:bottom-8 md:left-1/2 md:w-[440px] md:-translate-x-1/2',
         ABOVE_STICKY_BAR,
         shown ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0',
       )}
