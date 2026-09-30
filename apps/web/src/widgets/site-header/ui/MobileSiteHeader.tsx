@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
+import { InstallAppButton, useInstallState } from '@/features/install-app';
 import { SignOutButton } from '@/features/sign-out';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
@@ -24,8 +25,9 @@ export interface MobileSiteHeaderProps {
  * 모바일 헤더(`md` 미만). 시안은 `docs/asset/v9 mobile/채용공고 상세  플로팅버튼.png` 과
  * `상단 햄버거 버튼.png` 이다(360px 폭의 두 배로 그려져 있어 값은 절반으로 읽었다).
  *
- * 두 줄이다. 윗줄은 로고와 `로그인`·햄버거, 아랫줄은 세 목록 탭과 달력 아이콘이다. 데스크톱
- * 우측에 있던 `공고 등록`·`마이페이지`·`로그아웃` 은 햄버거 메뉴 안으로 들어간다.
+ * 두 줄이다. 윗줄은 로고와 `앱 다운로드`(또는 `로그인`)·햄버거, 아랫줄은 세 목록 탭과 달력
+ * 아이콘이다. 데스크톱 우측에 있던 `공고 등록`·`마이페이지`·`로그아웃` 은 햄버거 메뉴 안으로 들어간다.
+ * 로그인하지 않았으면 `로그인` 도 메뉴 안에 있다.
  */
 export function MobileSiteHeader({
   pathname,
@@ -98,16 +100,27 @@ export function MobileSiteHeader({
   );
 }
 
-/** 로고와 `로그인`, 그리고 오른쪽 끝 버튼 하나. 헤더와 메뉴가 같은 줄을 쓴다. */
+/**
+ * 로고와 가운데 버튼 하나, 그리고 오른쪽 끝 버튼 하나. 헤더와 메뉴가 같은 줄을 쓴다.
+ *
+ * 가운데 버튼은 로그인하지 않았을 때만 있다. 웹 앱을 아직 설치하지 않았으면 `앱 다운로드` 이고,
+ * 설치했으면(설치된 앱으로 열었거나 이 브라우저에서 설치함) 그 자리에 `로그인` 이 돌아온다
+ * (`features/install-app`). 설치 여부는 브라우저에서만 알 수 있어 서버 렌더와 첫 하이드레이션에서는
+ * 비워 둔다 — 설치한 사람에게 `앱 다운로드` 가 잠깐 보였다 바뀌는 것을 막는다.
+ */
 function TopRow({ signedIn, children }: { signedIn: boolean; children: ReactNode }) {
+  const install = useInstallState();
+
   return (
     <div className="flex h-14 items-center justify-between px-4">
       <ServiceLogoToggle size="mobile" />
       <div className="flex items-center gap-4">
-        {signedIn ? null : (
+        {signedIn || install.kind === 'unknown' ? null : install.kind === 'installed' ? (
           <Button size="sm" asChild className="rounded-full px-4">
             <Link href="/login">로그인</Link>
           </Button>
+        ) : (
+          <InstallAppButton />
         )}
         {children}
       </div>
@@ -128,8 +141,8 @@ interface MenuLink {
  * `광고 상품 문의하기` 는 메뉴를 닫고 문의할 이메일을 모달로 알린다 — `ForBusinessBanner` 의 같은
  * 버튼과 같다(`ContactEmailDialog`).
  *
- * 로그인했으면 `내 계정` 묶음이 더해진다. 데스크톱 우측의 `마이페이지`·`어드민`·`로그아웃` 이
- * 모바일에서 갈 곳이 여기다.
+ * `내 계정` 묶음이 맨 위에 온다. 로그인했으면 `마이페이지`·`어드민`·`로그아웃`(데스크톱 우측의 것들),
+ * 안 했으면 `로그인` 이다 — 헤더 윗줄의 로그인 자리는 `앱 다운로드` 가 쓴다.
  */
 function MobileMenu({
   signedIn,
@@ -181,6 +194,20 @@ function MobileMenu({
       </TopRow>
 
       <nav className="flex flex-col gap-6 px-5 pt-4 pb-10">
+        {/* 내 계정이 맨 위다 — 로그인 안 했으면 `로그인`, 했으면 `마이페이지` 가 첫 항목으로 먼저 보인다. */}
+        {signedIn ? (
+          <MenuSection title="내 계정" links={account} onNavigate={onClose}>
+            <li className="flex h-[58px] items-center">
+              <SignOutButton />
+            </li>
+          </MenuSection>
+        ) : (
+          <MenuSection
+            title="내 계정"
+            links={[{ label: '로그인', href: '/login' }]}
+            onNavigate={onClose}
+          />
+        )}
         <MenuSection title="공고" links={postings} onNavigate={onClose} />
         <MenuSection
           title="기업 서비스"
@@ -200,13 +227,6 @@ function MobileMenu({
             </button>
           </li>
         </MenuSection>
-        {signedIn ? (
-          <MenuSection title="내 계정" links={account} onNavigate={onClose}>
-            <li className="flex h-[58px] items-center">
-              <SignOutButton />
-            </li>
-          </MenuSection>
-        ) : null}
       </nav>
     </div>
   );
