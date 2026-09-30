@@ -12,7 +12,7 @@ import {
 /** 달력 필터 줄의 `채용 형태`. 서버가 한 번에 하나만 받는다(`ListPublicJobCalendarParams`). */
 export type JobCalendarEmploymentType = ListPublicJobCalendarEmploymentType;
 
-/** 달력 필터 줄의 `경력`. 마찬가지로 하나만 받는다. */
+/** 달력 필터 줄의 `요구 경력`. 마찬가지로 하나만 받는다. */
 export type JobCalendarExperienceType = ListPublicJobCalendarExperienceType;
 
 /**
@@ -49,7 +49,7 @@ export interface JobCalendarQuery {
   picker: boolean;
   /** `채용 형태` 알약에서 고른 값들. 비었으면 전체다. */
   employmentTypes: JobCalendarEmploymentType[];
-  /** `경력` 알약. 같은 규칙이다. */
+  /** `요구 경력` 알약. 같은 규칙이다. */
   experienceTypes: JobCalendarExperienceType[];
   /** `마감공고 제외` 체크박스. **기본은 꺼짐이다** — 켜야 줄어든다. */
   excludeClosed: boolean;
