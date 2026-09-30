@@ -216,3 +216,14 @@
     padding-bottom: calc(64px + env(safe-area-inset-bottom));
   }
 }
+
+/*
+ * 모바일에서 웹 앱을 설치하고 로그인한 일반 회원에게는 `FOR BUSINESS` 배너를 숨긴다
+ * (`widgets/for-business-banner/ui/ForBusinessBanner.tsx`). 배너를 감싼 페이지의 칸도 함께 접어야
+ * 칸 사이 간격(`gap`)이 빈자리로 남지 않는다.
+ */
+@media (max-width: 767.98px) {
+  :has(> [data-for-business-hidden]) {
+    display: none;
+  }
+}
