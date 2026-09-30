@@ -13,8 +13,9 @@ export function InstallAppButton() {
   return (
     <>
       {/* 버튼 틀(배경·테두리) 없이 파란 글자와 아이콘만 둔다 — 알약 버튼은 헤더에서 너무 무거웠다.
-          아이콘은 화살표가 받침대로 떨어지기를 되풀이한다(`ogonggo-download-arrow`, `app/globals.css`).
-          화살표만 움직이도록 받침대와 따로 그리고, 떨어지는 동안 칸 밖으로 삐져나오지 않게 자른다. */}
+          아이콘은 휴대폰에 화살표가 내려오는 모양이라 "앱 설치" 가 바로 읽힌다. 한 덩어리 그림이라
+          화살표만 따로 움직일 수 없어, 몇 초마다 아이콘 전체가 아래로 톡 튕긴다
+          (`ogonggo-download-bounce`, `app/globals.css`). */}
       <button
         type="button"
         onClick={() => {
@@ -24,10 +25,10 @@ export function InstallAppButton() {
         }}
         className="flex items-center gap-1 py-1 text-sm font-semibold text-blue-500 active:opacity-70"
       >
-        <span aria-hidden="true" className="relative block h-4 w-3.5 overflow-hidden">
-          <span className="ogonggo-download-arrow absolute inset-x-0 top-0 mx-auto block icon-[lucide--arrow-down] h-3 w-3.5" />
-          <span className="absolute inset-x-0.5 bottom-0 h-0.5 rounded-full bg-blue-500" />
-        </span>
+        <span
+          aria-hidden="true"
+          className="ogonggo-download-bounce block icon-[material-symbols--install-mobile-rounded] h-[18px] w-[18px]"
+        />
         앱 다운로드
       </button>
       {guideOpen ? <InstallGuideSheet onClose={() => setGuideOpen(false)} /> : null}
