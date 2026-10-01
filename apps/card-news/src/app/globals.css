@@ -1,0 +1,8 @@
+@import '@ogonggo/ui/src/styles/tokens.css';
+
+/* Tailwind v4 는 node_modules 를 스캔하지 않는다 — apps/web/src/app/globals.css 와 같은 이유. */
+@source '../../../../packages/ui/src';
+
+body {
+  background: var(--color-gray-50, #f9fafb);
+}

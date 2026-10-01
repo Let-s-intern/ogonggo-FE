@@ -1,0 +1,33 @@
+{
+  "name": "card-news",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "OGONGGO_USER_API_ORIGIN=https://qi9peez04m.execute-api.ap-northeast-2.amazonaws.com next dev --turbo --port 4200",
+    "build": "next build",
+    "type-check": "tsgo --noEmit",
+    "lint": "oxlint src",
+    "start": "next start --port 4200"
+  },
+  "dependencies": {
+    "@ogonggo/api": "workspace:*",
+    "@ogonggo/ui": "workspace:*",
+    "@resvg/resvg-js": "^2.6.2",
+    "@shuding/opentype.js": "1.4.0-beta.0",
+    "fflate": "^0.8.2",
+    "next": "^16.3.8",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "satori": "^0.33.5"
+  },
+  "devDependencies": {
+    "@ogonggo/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}
