@@ -1,7 +1,7 @@
 import { ListPublicBootcampsCategory } from '@ogonggo/api';
 
 /**
- * `/bootcamps` 목록이 탭·정렬·페이지네이션에서 공유하는 URL 쿼리 상태. 셋 다
+ * `/bootcamps` 목록이 탭·검색·정렬·페이지네이션에서 공유하는 URL 쿼리 상태. 전부
  * `GET /api/v1/bootcamps`(`listPublicBootcamps`)의 파라미터에 대응한다.
  */
 export const BOOTCAMP_TABS = ['all', 'bootcamp', 'sesac'] as const;
@@ -28,6 +28,8 @@ export interface BootcampListQuery {
   page: number;
   sort: BootcampSort;
   tab: BootcampTab;
+  /** 검색어. 주소의 이름은 채용공고 목록과 같은 `q`, API 로는 `keyword` 로 나간다. */
+  q?: string;
 }
 
 export const DEFAULT_BOOTCAMP_QUERY: BootcampListQuery = {
@@ -48,7 +50,8 @@ export function buildBootcampListHref(
 ): string {
   const resetsPage =
     (overrides.tab !== undefined && overrides.tab !== base.tab) ||
-    (overrides.sort !== undefined && overrides.sort !== base.sort);
+    (overrides.sort !== undefined && overrides.sort !== base.sort) ||
+    ('q' in overrides && overrides.q !== base.q);
   const merged: BootcampListQuery = {
     ...base,
     ...(resetsPage ? { page: 1 } : {}),
@@ -65,24 +68,36 @@ export function buildBootcampListHref(
   if (merged.tab !== DEFAULT_BOOTCAMP_QUERY.tab) {
     params.set('tab', merged.tab);
   }
+  if (merged.q) {
+    params.set('q', merged.q);
+  }
 
   const query = params.toString();
   return query ? `/bootcamps?${query}` : '/bootcamps';
 }
 
-/** `?page=`/`?sort=`/`?tab=` 문자열을 그대로 믿지 않고 아는 값만 통과시킨다. */
+/** `?page=`/`?sort=`/`?tab=`/`?q=` 문자열을 그대로 믿지 않고 아는 값만 통과시킨다. */
 export function parseBootcampListQuery(searchParams: {
   page?: string;
   sort?: string;
   tab?: string;
+  q?: string;
 }): BootcampListQuery {
   const page = Number(searchParams.page);
   const sort = BOOTCAMP_SORTS.find((value) => value === searchParams.sort);
   const tab = BOOTCAMP_TABS.find((value) => value === searchParams.tab);
+  const q = searchParams.q?.trim();
 
   return {
     page: Number.isInteger(page) && page >= 1 ? page : DEFAULT_BOOTCAMP_QUERY.page,
     sort: sort ?? DEFAULT_BOOTCAMP_QUERY.sort,
     tab: tab ?? DEFAULT_BOOTCAMP_QUERY.tab,
+    q: q || undefined,
   };
+}
+
+/** 백엔드가 2~100자만 받는다. 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
+export function pickBootcampKeyword(q: string | undefined): string | undefined {
+  const keyword = q?.trim();
+  return keyword && keyword.length >= 2 && keyword.length <= 100 ? keyword : undefined;
 }

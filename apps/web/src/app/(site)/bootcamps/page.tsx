@@ -5,6 +5,7 @@ interface BootcampSearchParams {
   page?: string;
   sort?: string;
   tab?: string;
+  q?: string;
 }
 
 /**

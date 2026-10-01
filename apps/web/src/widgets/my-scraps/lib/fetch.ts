@@ -108,6 +108,7 @@ async function fetchBootcampScraps(query: MyScrapsQuery): Promise<MyScrapsPage> 
   const response = (await listMyBootcampBookmarks({
     page: query.page,
     size: PAGE_SIZE,
+    category: query.category,
     keyword: query.keyword,
   })) as unknown as SuccessResponsePageResponseUserBootcampSummaryResponse;
 

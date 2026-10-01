@@ -6,19 +6,24 @@ import type {
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampCard } from '@/entities/bootcamp/ui/BootcampCard';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
-import { buildBootcampListHref, TAB_CATEGORIES, type BootcampListQuery } from '../lib/query';
+import {
+  buildBootcampListHref,
+  pickBootcampKeyword,
+  TAB_CATEGORIES,
+  type BootcampListQuery,
+} from '../lib/query';
 import { BootcampListControls } from './BootcampListControls';
 
 export type BootcampListProps = BootcampListQuery;
 
 /**
- * `ListPublicBootcampsParams`의 `page`/`size`/`sort`/`category`를 보낸다. URL을 직접 만들어
+ * `ListPublicBootcampsParams`의 `page`/`size`/`sort`/`category`/`keyword`를 보낸다. URL을 직접 만들어
  * `httpClient`를 부르는 것은 `widgets/job-list/ui/JobList.tsx`와 같은 방식이다. 목업 모드에서는
  * MSW 핸들러가 같은 파라미터로 거른다(`packages/api/src/mocks/handlers.ts`).
  */
 const PAGE_SIZE = 12;
 
-function buildBootcampsRequestUrl({ page, sort, tab }: BootcampListQuery): string {
+function buildBootcampsRequestUrl({ page, sort, tab, q }: BootcampListQuery): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('size', String(PAGE_SIZE));
@@ -26,6 +31,10 @@ function buildBootcampsRequestUrl({ page, sort, tab }: BootcampListQuery): strin
   const category = TAB_CATEGORIES[tab];
   if (category) {
     params.set('category', category);
+  }
+  const keyword = pickBootcampKeyword(q);
+  if (keyword) {
+    params.set('keyword', keyword);
   }
   return `/api/v1/bootcamps?${params.toString()}`;
 }

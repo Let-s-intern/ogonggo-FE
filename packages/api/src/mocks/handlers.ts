@@ -377,14 +377,25 @@ const toBootcampSummary = ({
  * 픽스처에는 등록 경로가 없어 대신 쓰는 값으로 가른다. `SESAC`은 원문이 새싹 사이트인 과정,
  * `KDT`는 프로그램 유형이 `K-디지털 트레이닝`인 과정이다. 지금 픽스처는 전부 새싹 과정이라
  * 목업에서는 `KDT`가 비어 있다.
+ *
+ * `keyword`는 백엔드처럼 운영 회사명이나 프로그램명에 들어 있는지를 대소문자 없이 본다.
  */
 const KDT_PROGRAM_TYPE = 'K-디지털 트레이닝';
 
 const filterBootcamps = (
   bootcamps: UserBootcampDetailResponse[],
   category: string | undefined,
+  keyword: string | undefined,
 ): UserBootcampDetailResponse[] =>
   bootcamps.filter((bootcamp) => {
+    if (
+      keyword &&
+      ![bootcamp.companyName, bootcamp.title].some((text) =>
+        text.toLowerCase().includes(keyword.toLowerCase()),
+      )
+    ) {
+      return false;
+    }
     if (category === ListPublicBootcampsCategory.KDT) {
       return bootcamp.programType === KDT_PROGRAM_TYPE;
     }
@@ -413,8 +424,9 @@ const getBootcampsHandler = http.get('*/api/v1/bootcamps', ({ request }) => {
   const size = Number(url.searchParams.get('size') ?? DEFAULT_BOOTCAMP_SIZE);
   const sort = url.searchParams.get('sort') ?? ListPublicJobsSort.LATEST;
   const category = url.searchParams.get('category') ?? undefined;
+  const keyword = url.searchParams.get('keyword') ?? undefined;
 
-  const filtered = filterBootcamps(BOOTCAMP_FIXTURES, category);
+  const filtered = filterBootcamps(BOOTCAMP_FIXTURES, category, keyword);
   const sorted = sortBootcamps(filtered, sort);
   const start = (page - 1) * size;
   const items = sorted.slice(start, start + size).map(toBootcampSummary);
