@@ -41,7 +41,7 @@ export const PROGRESS_METHOD_OPTIONS: SelectOption[] = [
 ];
 
 export const CONTACT_METHOD_OPTIONS: SelectOption[] = [
-  placeholder('소통 방법을 선택해 주세요.'),
+  placeholder('지원 및 소통 방법을 선택해 주세요.'),
   ...(['OPEN_KAKAO', 'EMAIL'] as CreateRecruitmentPostRequestContactMethod[]).map((value) => ({
     value,
     label: CONTACT_METHOD_LABELS[value],

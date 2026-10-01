@@ -95,7 +95,7 @@ export function PostPreview({ values }: PostPreviewProps) {
           }
         />
         <InfoCell
-          label="소통 방법"
+          label="지원 및 소통 방법"
           value={
             values.contactMethod ? (
               <>

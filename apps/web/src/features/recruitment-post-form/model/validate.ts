@@ -48,7 +48,7 @@ export function validateForPublish(values: RecruitmentPostFormValues): string | 
     return '모집 포지션을 한 개 이상 선택해 주세요.';
   }
   if (!values.contactMethod) {
-    return '소통 방법을 선택해 주세요.';
+    return '지원 및 소통 방법을 선택해 주세요.';
   }
   if (!values.contactValue.trim()) {
     return values.contactMethod === 'EMAIL'
