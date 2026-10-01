@@ -4,10 +4,7 @@ import type { ChangeEvent } from 'react';
 import { Button } from '@ogonggo/ui';
 import type { CardSettings, HighlightPreset, LogoStyle } from '@/lib/card/types';
 import { fileToDataUrl } from '@/lib/client/image';
-import { IMAGE_OPACITY } from '@/lib/client/useCardEditor';
-import type { ImageCandidates } from '@/lib/server/images';
 import { ColorField, Segmented } from './fields';
-import { ImagePicker } from './ImagePicker';
 
 interface SettingsPanelProps {
   settings: CardSettings;
@@ -17,7 +14,6 @@ interface SettingsPanelProps {
   onResetBrandColor: () => void;
   logo?: string;
   onLogoChange: (logo: string | undefined) => void;
-  candidates: ImageCandidates | null;
 }
 
 const HIGHLIGHTS: { value: HighlightPreset; label: string }[] = [
@@ -42,7 +38,6 @@ export function SettingsPanel({
   onResetBrandColor,
   logo,
   onLogoChange,
-  candidates,
 }: SettingsPanelProps) {
   const uploadLogo = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -119,23 +114,6 @@ export function SettingsPanel({
             ) : null}
           </span>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-4 border-t border-gray-100 pt-3">
-        <ImagePicker
-          label="관련 이미지 시안 배경"
-          image={settings.photo}
-          candidates={candidates?.photo ?? null}
-          defaultOpacity={IMAGE_OPACITY.photo}
-          onChange={(photo) => onChange({ photo })}
-        />
-        <ImagePicker
-          label="회사 건물 시안 배경"
-          image={settings.building}
-          candidates={candidates?.building ?? null}
-          defaultOpacity={IMAGE_OPACITY.building}
-          onChange={(building) => onChange({ building })}
-        />
       </div>
     </section>
   );

@@ -77,29 +77,13 @@ export type HighlightPreset = 'tint' | 'brand' | 'black' | 'custom';
  */
 export type LogoStyle = 'auto' | 'mono' | 'original' | 'plate';
 
-export interface CardImage {
-  /** data URL. 편집 화면이 긴 변 1350px 이하 JPEG 로 줄여 둔다. */
-  dataUrl: string;
-  /** 0~1. 글자가 읽히도록 흐리게 깐다. */
-  opacity: number;
-  /**
-   * 위쪽(제목 자리)과 아래쪽(목록 자리)의 평균 밝기(0~1). 편집 화면이 올릴 때 재고, 시안이 글자색을
-   * 고르는 데 쓴다.
-   */
-  tone: { top: number; bottom: number };
-}
-
-/** 모든 시안에 같이 걸리는 설정. 한 번 바꾸면 다섯 시안이 같이 바뀐다. */
+/** 모든 시안에 같이 걸리는 설정. 한 번 바꾸면 모든 시안이 같이 바뀐다. */
 export interface CardSettings {
   /** 처음 값은 로고에서 뽑은 색이다. */
   brandColor: string;
   highlight: HighlightPreset;
   highlightColor: string;
   logoStyle: LogoStyle;
-  /** 관련 이미지 시안의 배경. */
-  photo?: CardImage;
-  /** 건물 시안의 배경. */
-  building?: CardImage;
 }
 
 /** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */
@@ -107,9 +91,11 @@ export interface CardLogo {
   original: string;
   white?: string;
   black?: string;
+  /** 가로÷세로. 렌더가 로고 상자를 로고 크기에 꼭 맞추는 데 쓴다(흰 판이 남지 않게). */
+  aspect?: number;
 }
 
-export type VariantId = 'wave' | 'watermark' | 'photo' | 'building' | 'tab';
+export type VariantId = 'wave' | 'watermark' | 'frame' | 'panel' | 'tab';
 
 export interface CardSpec {
   variant: VariantId;

@@ -96,7 +96,13 @@ export function defaultSettings(brandColor: string): CardSettings {
  * 로고는 알파를 그대로 쓰고, 흰 판 같은 불투명 배경 로고는 네 귀퉁이 색을 배경으로 보고 그 색과 먼
  * 픽셀만 남긴다 — 원래 색 로고도 흰 네모 없이 바탕 위에 놓인다.
  */
-export async function processLogo(dataUrl: string, color?: string): Promise<string> {
+export interface ProcessedLogo {
+  dataUrl: string;
+  /** 가로÷세로. */
+  aspect: number;
+}
+
+export async function processLogo(dataUrl: string, color?: string): Promise<ProcessedLogo> {
   const image = await loadImage(dataUrl);
   const scale = Math.min(1, 800 / Math.max(image.width, image.height));
   const width = Math.max(1, Math.round(image.width * scale));
@@ -106,7 +112,7 @@ export async function processLogo(dataUrl: string, color?: string): Promise<stri
   canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) {
-    return dataUrl;
+    return { dataUrl, aspect: image.width / image.height };
   }
   context.drawImage(image, 0, 0, width, height);
   const pixels = context.getImageData(0, 0, width, height);
@@ -155,7 +161,7 @@ export async function processLogo(dataUrl: string, color?: string): Promise<stri
     }
   }
   if (right < 0) {
-    return dataUrl;
+    return { dataUrl, aspect: image.width / image.height };
   }
   // 로고가 색 네모 안에 흰 글자인 모양(모두닥 등)이면, 한 색으로 칠할 때 글자까지 같은 색이 돼
   // 네모만 남는다. 남은 픽셀이 테두리 상자의 6할을 넘으면 칠하지 않고 원래 색으로 돌려준다.
@@ -175,5 +181,5 @@ export async function processLogo(dataUrl: string, color?: string): Promise<stri
   cropped.width = right - left + 1;
   cropped.height = bottom - top + 1;
   cropped.getContext('2d')?.drawImage(canvas, -left, -top);
-  return cropped.toDataURL('image/png');
+  return { dataUrl: cropped.toDataURL('image/png'), aspect: cropped.width / cropped.height };
 }

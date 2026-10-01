@@ -157,12 +157,18 @@ export interface SlideBox {
   footer: boolean;
 }
 
+/** 위 여백. 스토리는 인스타 화면 요소가 덮는 위쪽을 비운다. */
+function slidePadTop(size: CardSize): number {
+  const story = size.height > size.width * 1.5;
+  return story ? 230 : size.height <= size.width ? 56 : 72;
+}
+
 export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): SlideMetrics {
   const { sections, note, contentWidth } = box;
   const headline = box.headline ?? '';
   const story = size.height > size.width * 1.5;
   const square = size.height <= size.width;
-  const padTop = story ? 230 : square ? 56 : 72;
+  const padTop = slidePadTop(size);
   const padBottom = story ? 230 : square ? 40 : 56;
   const headlineMax = square ? 92 : story ? 112 : 104;
   const bodyMax = square ? 36 : story ? 44 : 40;
@@ -170,8 +176,18 @@ export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): S
   const hasNote = Boolean(note.trim());
 
   const withHeadline = box.headline !== null;
-  let headlineSize = withHeadline ? headlineSizeFor(measure, headline, headlineMax) : 0;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  const fullHeadline = withHeadline ? headlineSizeFor(measure, headline, headlineMax) : 0;
+  // 높이가 모자라면 본문보다 제목을 먼저 줄인다 — 본문이 28px 아래로 내려가면 읽히지 않는다.
+  // 단계마다 [제목 배율, 본문 최소 크기]. 마지막 단계만 본문을 22px 까지 내린다.
+  const tiers: [number, number][] = [
+    [1, 30],
+    [0.86, 30],
+    [0.74, 28],
+    [0.74, 22],
+  ];
+  let headlineSize = fullHeadline;
+  for (const [headlineScale, bodyMin] of tiers) {
+    headlineSize = withHeadline ? Math.max(52, Math.round(fullHeadline * headlineScale)) : 0;
     const available =
       size.height - fixed - (withHeadline ? headlineHeight(headline, headlineSize) : 0);
     const fits = (bodySize: number, singleOnly: boolean) => {
@@ -182,13 +198,13 @@ export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): S
         : null;
     };
     // 먼저 항목이 모두 한 줄에 들어가는 크기를 찾는다. 한두 글자만 다음 줄로 넘어가는 모양이 글자가
-    // 조금 작은 것보다 눈에 띈다. 28 아래로 내려가야 한다면 줄바꿈을 받아들인다.
+    // 조금 작은 것보다 눈에 띈다. 그래도 안 되면 줄바꿈을 받아들인다.
     let chosen: { bodySize: number; body: Body; gaps: ReturnType<typeof baseGaps> } | null = null;
-    for (let bodySize = bodyMax; bodySize >= 28 && !chosen; bodySize -= 1) {
+    for (let bodySize = bodyMax; bodySize >= bodyMin && !chosen; bodySize -= 1) {
       const fit = fits(bodySize, true);
       chosen = fit ? { bodySize, ...fit } : null;
     }
-    for (let bodySize = bodyMax; bodySize >= 22 && !chosen; bodySize -= 1) {
+    for (let bodySize = bodyMax; bodySize >= bodyMin && !chosen; bodySize -= 1) {
       const fit = fits(bodySize, false);
       chosen = fit ? { bodySize, ...fit } : null;
     }
@@ -210,8 +226,6 @@ export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): S
         overflow: false,
       };
     }
-    // 본문이 가장 작아도 안 들어가면 제목을 한 번 줄여 본다.
-    headlineSize = withHeadline ? Math.max(52, Math.round(headlineSize * 0.82)) : 0;
   }
   return {
     contentWidth,

@@ -7,14 +7,11 @@ import {
   CARD_SIZES,
   SLIDE_COUNT,
   SLIDE_LABELS,
-  type CardImage,
   type CardSizeId,
   type CardSpec,
 } from '@/lib/card/types';
 import { variantOf } from '@/lib/card/variants';
-import { toCardImage } from '@/lib/client/image';
 import { downloadSlides } from '@/lib/client/render';
-import { IMAGE_OPACITY } from '@/lib/client/useCardEditor';
 import { usePreviews } from '@/lib/client/usePreviews';
 
 const SLIDES = Array.from({ length: SLIDE_COUNT }, (_, slide) => slide);
@@ -23,16 +20,7 @@ const SLIDES = Array.from({ length: SLIDE_COUNT }, (_, slide) => slide);
  * 고른 시안 하나의 세 장 미리보기와 받기. 왼쪽 설정을 바꾸면 이 세 장만 다시 그린다. 장을 골라
  * 원하는 크기로 받는다(처음엔 세 장 모두 골라 둔다).
  */
-export function VariantPreview({
-  spec,
-  onRepick,
-  onImage,
-}: {
-  spec: CardSpec;
-  onRepick: () => void;
-  /** 이미지가 빠진 시안에서 바로 올린 사진. 공통 설정의 같은 칸에 들어간다. */
-  onImage: (patch: { photo?: CardImage; building?: CardImage }) => void;
-}) {
+export function VariantPreview({ spec, onRepick }: { spec: CardSpec; onRepick: () => void }) {
   const variant = variantOf(spec.variant);
   const [size, setSize] = useState<CardSizeId>('post');
   const [sizes, setSizes] = useState<Set<CardSizeId>>(() => new Set(['post']));
@@ -70,16 +58,6 @@ export function VariantPreview({
     }
   };
 
-  const uploadMissing = (file: File) => {
-    const kind = variant.image;
-    if (!kind) {
-      return;
-    }
-    void toCardImage(file, IMAGE_OPACITY[kind])
-      .then((image) => onImage({ [kind]: image }))
-      .catch(() => setError('이미지를 읽지 못했습니다. 다른 이미지를 골라 주세요.'));
-  };
-
   const { width, height } = CARD_SIZES[size];
 
   return (
@@ -107,30 +85,6 @@ export function VariantPreview({
         </div>
       </div>
 
-      {variant.image && !spec.settings[variant.image] ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <span>
-            {variant.image === 'building'
-              ? '회사 건물 사진을 찾지 못해 사진 없이 그렸어요. 건물 사진을 올리면 이 시안이 완성됩니다.'
-              : '관련 이미지를 찾지 못해 이미지 없이 그렸어요. 이미지를 올리면 이 시안이 완성됩니다.'}
-          </span>
-          <label className="cursor-pointer rounded-md border border-amber-300 bg-white px-2 py-1 font-semibold hover:bg-amber-100">
-            사진 올리기
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = '';
-                if (file) {
-                  uploadMissing(file);
-                }
-              }}
-            />
-          </label>
-        </div>
-      ) : null}
       {renderError ? (
         <p className="text-sm text-error">
           미리보기를 그리지 못했습니다. 잠시 뒤 다시 시도해 주세요.

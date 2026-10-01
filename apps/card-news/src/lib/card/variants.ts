@@ -1,5 +1,5 @@
-import { contrastRatio, luminance, mix, readableText } from './color';
-import type { CardImage, CardSettings, VariantId } from './types';
+import { contrastRatio, mix, readableText } from './color';
+import type { CardSettings, VariantId } from './types';
 
 /**
  * 시안 목록과 시안마다의 색. 렌더(서버)와 편집 화면(브라우저)이 같이 쓴다.
@@ -9,8 +9,8 @@ import type { CardImage, CardSettings, VariantId } from './types';
  */
 
 /**
- * 섹션을 어떻게 놓는가. `open` 은 바탕에 바로, `panel` 은 반투명 흰 판 안에, `tab` 은 로고 탭이
- * 달린 큰 흰 카드 안에(카카오스타일 예시).
+ * 섹션을 어떻게 놓는가. `open` 은 바탕에 바로, `panel` 은 흰 판 안에, `tab` 은 로고 탭이 달린 큰
+ * 흰 카드 안에(카카오스타일 예시).
  */
 export type VariantLayout = 'open' | 'panel' | 'tab';
 
@@ -19,8 +19,6 @@ export interface VariantDefinition {
   label: string;
   description: string;
   layout: VariantLayout;
-  /** 이 시안이 쓰는 배경 이미지. 없으면 이미지 없이 그린다. */
-  image?: 'photo' | 'building';
 }
 
 export const VARIANTS: VariantDefinition[] = [
@@ -32,18 +30,16 @@ export const VARIANTS: VariantDefinition[] = [
     layout: 'open',
   },
   {
-    id: 'photo',
-    label: '관련 이미지',
-    description: '연한 바탕에 이미지를 흐리게. 글자색은 밝기로 자동',
+    id: 'frame',
+    label: '브랜드색 테두리',
+    description: '브랜드색 테두리 안에 흰 카드',
     layout: 'open',
-    image: 'photo',
   },
   {
-    id: 'building',
-    label: '회사 건물',
-    description: '위는 밝게, 아래에 건물 사진, 목록은 흰 판 안에',
+    id: 'panel',
+    label: '흰 판 목록',
+    description: '연한 회색 바탕에 렛츠커리어 심볼, 목록은 흰 판 안에',
     layout: 'panel',
-    image: 'building',
   },
   {
     id: 'tab',
@@ -125,15 +121,6 @@ function logoFor(settings: CardSettings, onBrand: boolean, text: string): Palett
 }
 
 /**
- * 연한 바탕에 이미지를 `opacity` 로 얹었을 때 그 자리의 밝기. 바탕 밝기와 이미지 밝기를 진하기로
- * 섞는다 — 이미지를 진하게 올리면 글자색이 저절로 흰색으로 바뀐다.
- */
-function blendedTone(background: string, image: CardImage | undefined, part: 'top' | 'bottom') {
-  const base = luminance(background) ** (1 / 2.2);
-  return image ? base * (1 - image.opacity) + image.tone[part] * image.opacity : base;
-}
-
-/**
  * 브랜드색 바탕 위 글자색. 흰 글자와 대비가 3 이상이면 흰색이다 — 초록(DB)·파랑(토스)처럼 중간 밝기
  * 색에서 검은 글자가 나오면 탁해 보인다. 노랑·민트처럼 밝은 색만 검은 글자다.
  */
@@ -153,10 +140,12 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
   const base = highlightBase(settings);
 
   if (id === 'wave') {
-    const text = textOnBrand(brand);
-    const box = visibleOn(base, brand, text);
+    // 로고 색 그대로는 너무 진해 흰색을 조금 섞는다.
+    const background = mix(brand, WHITE, 0.15);
+    const text = textOnBrand(background);
+    const box = visibleOn(base, background, text);
     return {
-      background: brand,
+      background,
       headlineText: text,
       bodyText: text,
       ctaText: text,
@@ -165,7 +154,7 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
       chip: box,
       chipText: readableText(box),
       border: box,
-      accent: text === WHITE ? mix(brand, WHITE, 0.45) : INK,
+      accent: text === WHITE ? mix(brand, WHITE, 0.55) : INK,
       badge: INK,
       badgeText: WHITE,
       logo: logoFor(settings, true, text),
@@ -195,32 +184,8 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
     };
   }
 
-  if (id === 'photo') {
-    const background = mix(brand, WHITE, 0.9);
-    const headlineText = blendedTone(background, settings.photo, 'top') > 0.55 ? INK : WHITE;
-    const bodyText = blendedTone(background, settings.photo, 'bottom') > 0.55 ? INK : WHITE;
-    const box = visibleOn(base, background, headlineText);
-    return {
-      background,
-      headlineText,
-      bodyText,
-      ctaText: headlineText,
-      box,
-      boxText: readableText(box),
-      chip: box,
-      chipText: readableText(box),
-      border: box,
-      accent: headlineText === WHITE ? mix(brand, WHITE, 0.45) : brand,
-      badge: INK,
-      badgeText: WHITE,
-      logo: logoFor(settings, false, headlineText),
-      mark: bodyText === WHITE ? 'white' : 'color',
-      markText: bodyText === WHITE ? WHITE : MARK_TEXT,
-    };
-  }
-
-  // 밝은 바탕 시안(워터마크·건물).
-  const background = id === 'watermark' ? mix(brand, WHITE, 0.9) : '#F4F5F7';
+  // 밝은 바탕 시안(워터마크·테두리·흰 판). 테두리 시안의 글은 브랜드색 테두리 안 흰 카드 위에 있다.
+  const background = id === 'panel' ? '#F4F5F7' : id === 'frame' ? WHITE : mix(brand, WHITE, 0.9);
   const box = visibleOn(base, background, INK);
   return {
     background,
@@ -236,13 +201,7 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
     badge: INK,
     badgeText: WHITE,
     logo: logoFor(settings, false, INK),
-    mark: id === 'building' && settings.building ? 'white' : 'color',
-    markText: id === 'building' && settings.building ? WHITE : MARK_TEXT,
+    mark: 'color',
+    markText: MARK_TEXT,
   };
-}
-
-/** 시안이 쓰는 이미지. 설정에 이미지가 없으면 `undefined`. */
-export function variantImage(id: VariantId, settings: CardSettings): CardImage | undefined {
-  const image = variantOf(id).image;
-  return image ? settings[image] : undefined;
 }

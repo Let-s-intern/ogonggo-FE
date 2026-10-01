@@ -410,15 +410,23 @@ export function CompanyLogo({
     );
   }
   const plate = palette.logo === 'plate';
-  const image = (
+  const boxWidth = plate ? maxWidth - 52 : maxWidth;
+  const boxHeight = plate ? height - 28 : height;
+  // 비율을 알면 상자에 맞춘 크기를 직접 정한다. 이미지 생성기는 maxWidth·maxHeight 만 주면 그 상자를
+  // 통째로 잡아, 흰 판 양옆에 빈 자리가 크게 남는다.
+  const aspect = logo?.aspect;
+  const fitted = aspect
+    ? aspect > boxWidth / boxHeight
+      ? { width: boxWidth, height: Math.round(boxWidth / aspect) }
+      : { width: Math.round(boxHeight * aspect), height: boxHeight }
+    : null;
+  const image = fitted ? (
+    <img src={source} alt="" width={fitted.width} height={fitted.height} />
+  ) : (
     <img
       src={source}
       alt=""
-      style={{
-        maxWidth: plate ? maxWidth - 52 : maxWidth,
-        maxHeight: plate ? height - 28 : height,
-        objectFit: 'contain',
-      }}
+      style={{ maxWidth: boxWidth, maxHeight: boxHeight, objectFit: 'contain' }}
     />
   );
   return plate ? (

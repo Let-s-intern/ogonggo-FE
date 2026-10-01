@@ -75,7 +75,6 @@ export function CardEditor() {
                 onResetBrandColor={editor.resetBrandColor}
                 logo={loaded.logo}
                 onLogoChange={editor.setLogo}
-                candidates={editor.candidates}
               />
               <ContentPanel content={loaded.content} onChange={editor.setContent} />
             </>
@@ -101,11 +100,7 @@ export function CardEditor() {
                 ) : null}
               </div>
               {variant ? (
-                <VariantPreview
-                  spec={specs[variant]}
-                  onRepick={() => setVariant(null)}
-                  onImage={editor.setSettings}
-                />
+                <VariantPreview spec={specs[variant]} onRepick={() => setVariant(null)} />
               ) : (
                 <VariantPicker specs={specs} current={variant} onPick={setVariant} />
               )}
