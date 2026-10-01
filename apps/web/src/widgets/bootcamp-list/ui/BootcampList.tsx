@@ -6,30 +6,26 @@ import type {
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampCard } from '@/entities/bootcamp/ui/BootcampCard';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
-import { buildBootcampListHref, TAB_FILTERS, type BootcampListQuery } from '../lib/query';
+import { buildBootcampListHref, TAB_CATEGORIES, type BootcampListQuery } from '../lib/query';
 import { BootcampListControls } from './BootcampListControls';
 
 export type BootcampListProps = BootcampListQuery;
 
 /**
- * 백엔드가 필터를 구현해 `ListPublicBootcampsParams`에 `sort`/`status`/`tuitionType`이 생겼다
- * (2026-09-10 스펙 동기화). 탭이 더하는 `programType`만 아직 없어 `listPublicBootcamps(params)`로는
- * 한 번에 보낼 수 없다 —
- * `widgets/job-list/ui/JobList.tsx`가 같은 이유로 하던 대로 URL을 직접 만들어 `httpClient`를
- * 부른다. MSW 핸들러가 이들을 처리한다(`packages/api/src/mocks/handlers.ts`, PRD 2절).
+ * `ListPublicBootcampsParams`의 `page`/`size`/`sort`/`category`를 보낸다. URL을 직접 만들어
+ * `httpClient`를 부르는 것은 `widgets/job-list/ui/JobList.tsx`와 같은 방식이다. 목업 모드에서는
+ * MSW 핸들러가 같은 파라미터로 거른다(`packages/api/src/mocks/handlers.ts`).
  */
 const PAGE_SIZE = 12;
 
-function buildBootcampsRequestUrl({ page, sort, tab, openOnly }: BootcampListQuery): string {
+function buildBootcampsRequestUrl({ page, sort, tab }: BootcampListQuery): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('size', String(PAGE_SIZE));
   params.set('sort', sort);
-  for (const [key, value] of Object.entries(TAB_FILTERS[tab])) {
-    params.set(key, value);
-  }
-  if (openOnly) {
-    params.set('status', 'RECRUITING');
+  const category = TAB_CATEGORIES[tab];
+  if (category) {
+    params.set('category', category);
   }
   return `/api/v1/bootcamps?${params.toString()}`;
 }
