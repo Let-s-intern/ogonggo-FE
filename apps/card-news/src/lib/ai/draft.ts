@@ -1,4 +1,5 @@
 import type { UserJobDetailResponse } from '@ogonggo/api';
+import { captionDeadline } from '../card/fromJob';
 
 /**
  * AI 가 쓰는 카드뉴스 초안. 마감 기한은 데이터로 정확히 계산되므로 AI 에 맡기지 않는다
@@ -11,6 +12,8 @@ export interface AiDraft {
   qualifications: string[];
   preferred: string[];
   note: string;
+  /** 인스타그램 게시물 본문. */
+  caption: string;
 }
 
 export interface DraftResult {
@@ -66,8 +69,77 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 
 ~단어~ 는 강조색 글자다. 꼭 필요할 때 한두 단어에만 쓴다.
 
+[caption 규칙 — 인스타그램 게시물 본문]
+- 아래 예시의 말투·구성·길이를 그대로 따른다. 첫 줄은 "[오늘의 공고 속보🚨]".
+- 회사 소개 한 줄(원문에 근거가 있을 때만 "~ 1위" 같은 수식) → 무엇을 채용하는지 → 독자가 끌릴 포인트(전환 기회, 직무 무관, 대규모 등 원문에 있는 것만) → 지원 권유 순서. 문단 사이는 빈 줄.
+- 이모지는 예시처럼 문단 끝이나 줄 머리에 한두 개만.
+- 마감 줄은 "⏰ " 뒤에 [마감 문구]를 글자 그대로 쓴다. 날짜를 바꾸거나 지어내지 않는다.
+- 끝은 늘 아래 세 줄이다.
+🔗자세한 공고 내용은 프로필 링크에서!
+
+👇더 많은 취업·공고 컨텐츠는
+@letscareer.job
+- 원문에 없는 사실(연봉, 규모, 순위, 전환 조건)을 지어내지 않는다. 확실하지 않으면 뺀다.
+
+[caption 예시]
+[오늘의 공고 속보🚨]
+
+뷰티 기업 시총 1위🌟
+에이피알에서 2026 하반기 대규모 인턴 채용해요!
+
+경영지원, 마케팅, 영업, 상품기획 등 다양한 직군에서 채용 중이며
+특히 해외 마케팅은 무려 10개 직무 채용 중이에요!
+
+3개월 인턴 근무 후 기간 내 우수 근무자에 한해
+정규직 전환 기회가 주어집니다!
+
+엄청난 기세로 성장 중인 뷰티 기업에서 커리어를 쌓고 싶다면
+이번 공고 놓치지 말고 꼭 지원해 보세요!
+
+⏰ ~ 9월 20일(일) 23:59
+
+🔗자세한 공고 내용은 프로필 링크에서!
+
+👇더 많은 취업·공고 컨텐츠는
+@letscareer.job
+---
+[오늘의 공고 속보🚨]
+
+운동하는 사람이라면 무조건 해봤을
+인바디 검사! 체성분 분석기 분야 TOP1 인바디에서
+전공, 경력, 나이 무관 통합직무 채용중!
+
+통합직무는 입사 후 개인의 역량, 적성, 수행 과제에 따라
+직무를 정할 수 있는 직무에요!
+아직 직무 확정하지 못한 분이라면 주목! 🔥
+
+⏰ ~ 9월 14일(월) 11:00
+
+🔗자세한 공고 내용은 프로필 링크에서!
+
+👇더 많은 취업·공고 컨텐츠는
+@letscareer.job
+---
+[오늘의 공고 속보🚨]
+
+LG전자 신입 공채 떴다⭐️
+오공고에서 문과 공고만 모아 왔어요!
+
+총 5개의 사업본부에서
+HR, 영업/마케팅, 구매, SCM, Finance 등
+다양한 직무 신입을 채용 중이에요.
+
+자세한 요건은 채용공고 링크에서 꼭 확인하세요!
+
+⏰ ~ 9월 13일(일) 23:00
+
+🔗자세한 공고 내용은 프로필 링크에서!
+
+👇더 많은 취업·공고 컨텐츠는
+@letscareer.job
+
 [출력]
-{"headline": string, "roles": string[], "responsibilities": string[], "qualifications": string[], "preferred": string[], "note": string} 형태의 JSON 하나만. 설명을 붙이지 않는다.`;
+{"headline": string, "roles": string[], "responsibilities": string[], "qualifications": string[], "preferred": string[], "note": string, "caption": string} 형태의 JSON 하나만. caption 안의 줄바꿈은 "\\n". 설명을 붙이지 않는다.`;
 
 function jobBrief(job: UserJobDetailResponse): string {
   const fields: [string, string | undefined][] = [
@@ -118,6 +190,7 @@ export function parseDraft(raw: string): AiDraft | null {
     qualifications: strings(parsed.qualifications, 4),
     preferred: strings(parsed.preferred, 4),
     note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
+    caption: typeof parsed.caption === 'string' ? parsed.caption.replace(/\\n/g, '\n').trim() : '',
   };
 }
 
@@ -157,7 +230,27 @@ export function fallbackDraft(job: UserJobDetailResponse): AiDraft {
     qualifications: lines(job.qualifications, 3),
     preferred: lines(job.preferredQualifications, 3),
     note: '',
+    caption: fallbackCaption(job, name),
   };
+}
+
+/** AI 없이 쓰는 인스타 본문. 예시와 같은 틀에 회사명·직무·마감만 채운다. */
+function fallbackCaption(job: UserJobDetailResponse, role: string): string {
+  return [
+    '[오늘의 공고 속보🚨]',
+    '',
+    `${job.companyName}에서 ${role} 채용 중이에요!`,
+    '',
+    '자세한 요건은 채용공고 링크에서 꼭 확인하시고',
+    '이번 공고 놓치지 말고 꼭 지원해 보세요!',
+    '',
+    `⏰ ${captionDeadline(job)}`,
+    '',
+    '🔗자세한 공고 내용은 프로필 링크에서!',
+    '',
+    '👇더 많은 취업·공고 컨텐츠는',
+    '@letscareer.job',
+  ].join('\n');
 }
 
 export async function generateDraft(
@@ -173,7 +266,7 @@ export async function generateDraft(
     };
   }
 
-  const userParts = [`[공고 원문]\n${jobBrief(job)}`];
+  const userParts = [`[공고 원문]\n${jobBrief(job)}`, `[마감 문구]\n${captionDeadline(job)}`];
   if (options.current) {
     userParts.push(`[지금 초안]\n${JSON.stringify(options.current)}`);
   }

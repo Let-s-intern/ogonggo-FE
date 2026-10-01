@@ -5,7 +5,8 @@ import { VARIANTS } from '@/lib/card/variants';
 import { usePreviews } from '@/lib/client/usePreviews';
 
 /**
- * 시안 고르기. 시안마다 1장만 그려 나란히 보여 준다 — 설정을 바꿔도 금방 다시 그린다.
+ * 시안 고르기. 시안마다 한 장(대개 1장, 특징이 2장에 있으면 2장)만 그려 나란히 보여 준다 — 설정을
+ * 바꿔도 금방 다시 그린다.
  * 하나를 누르면 그 시안만 세 장으로 편집한다.
  */
 export function VariantPicker({
@@ -17,7 +18,10 @@ export function VariantPicker({
   current: VariantId | null;
   onPick: (variant: VariantId) => void;
 }) {
-  const targets = VARIANTS.map((variant) => ({ spec: specs[variant.id], slide: 0 }));
+  const targets = VARIANTS.map((variant) => ({
+    spec: specs[variant.id],
+    slide: variant.previewSlide ?? 0,
+  }));
   const { previews, error } = usePreviews(targets, 'post', specs);
   const { width, height } = CARD_SIZES.post;
 

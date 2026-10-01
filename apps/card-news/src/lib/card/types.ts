@@ -63,6 +63,8 @@ export interface CardContent {
   ctaHeadline: string;
   ctaSub: string;
   profile: CardProfile;
+  /** 인스타그램 게시물 본문. 카드에는 그리지 않고 편집 화면에서 복사한다. */
+  caption: string;
 }
 
 /**

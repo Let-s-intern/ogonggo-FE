@@ -23,6 +23,8 @@ export interface VariantDefinition {
   layout: VariantLayout;
   /** 2장만 다른 배치로 그릴 때. */
   detailLayout?: VariantLayout;
+  /** 시안 고르기에서 보여 줄 장. 시안의 특징이 2장에 있으면 1. 없으면 0(1장). */
+  previewSlide?: number;
   /**
    * 썸네일(`settings.photo`)을 어떻게 쓰는가. `background` 는 배경으로 깔고, `card` 는 2장의 제목
    * 자리에 둥근 카드로 통째로 보여 준다. 썸네일이 없으면 이미지 없이 그린다.
@@ -62,6 +64,7 @@ export const VARIANTS: VariantDefinition[] = [
     description: '2장 제목 자리에 썸네일을 잘리지 않게 카드로',
     layout: 'open',
     image: 'card',
+    previewSlide: 1,
   },
   { id: 'wave', label: '브랜드색 물결', description: '로고 색 바탕에 밝은 물결', layout: 'open' },
   {

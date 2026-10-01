@@ -5,6 +5,7 @@ import type { VariantId } from '@/lib/card/types';
 import { DEFAULT_VARIANT } from '@/lib/card/variants';
 import { Button } from '@ogonggo/ui';
 import { useCardEditor } from '@/lib/client/useCardEditor';
+import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
 import { JobPicker } from './JobPicker';
 import { RegenerateModal } from './RegenerateModal';
@@ -106,6 +107,10 @@ export function CardEditor() {
               ) : (
                 <VariantPicker specs={specs} current={variant} onPick={setVariant} />
               )}
+              <CaptionPanel
+                caption={loaded.content.caption ?? ''}
+                onChange={(caption) => editor.setContent({ ...loaded.content, caption })}
+              />
             </>
           ) : (
             <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-gray-300 text-sm text-gray-500">

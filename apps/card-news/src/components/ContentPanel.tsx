@@ -98,7 +98,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
         )}
       </Labeled>
 
-      <Labeled label="직무명 (도형 시안 프레임 제목)">
+      <Labeled label="직무명 (로고 탭 카드·썸네일 + 흰 판 2장의 제목)">
         {(id) => (
           <Input
             id={id}
