@@ -522,7 +522,8 @@ export function Header({
   right: ReactNode;
 }) {
   // 예전 편집본은 뱃지 끝에 확성기 이모지가 붙어 있다. 아이콘을 따로 그리므로 뗀다.
-  const badge = spec.content.badge.replace(/\s*📢\s*$/u, '');
+  const trimmed = spec.content.badge.trimEnd();
+  const badge = trimmed.endsWith('📢') ? trimmed.slice(0, -'📢'.length).trimEnd() : trimmed;
   return (
     <div
       style={{

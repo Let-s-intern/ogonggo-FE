@@ -11,5 +11,5 @@ export async function GET(request: Request) {
   if (!job) {
     return Response.json({ message: '공고를 찾지 못했습니다.' }, { status: 404 });
   }
-  return Response.json(await findImages(job.sourceUrl));
+  return Response.json(await findImages(job.id, job.sourceUrl));
 }

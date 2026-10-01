@@ -4,7 +4,7 @@ import { loadBrandSvg, loadEmoji, loadFonts, loadIcon } from '@/lib/card/assets'
 import { loadMeasure } from '@/lib/card/measure';
 import type { SlideAssets } from '@/lib/card/render/primitives';
 import { buildSlide } from '@/lib/card/render/slides';
-import { CARD_SIZES, SLIDE_COUNT, type RenderRequest } from '@/lib/card/types';
+import { CARD_SIZES, type CardSpec, SLIDE_COUNT, type RenderRequest } from '@/lib/card/types';
 import { VARIANT_IDS } from '@/lib/card/variants';
 
 export const runtime = 'nodejs';
@@ -14,6 +14,37 @@ const WHITE = '#FFFFFF';
 
 /** 렛츠커리어 심볼을 밝은 바탕에 놓을 때의 파랑 그라데이션(원본은 회색이다). */
 const MARK_GRADIENT: [string, string] = ['#7C8CFF', '#3D5AFE'];
+
+/** 렌더에 넣을 수 있는 이미지 값. 편집 화면이 만드는 base64 data URL 이미지만 받는다. */
+const IMAGE_DATA_URL = /^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+function safeImage(value: unknown): string | undefined {
+  return typeof value === 'string' && IMAGE_DATA_URL.test(value) ? value : undefined;
+}
+
+/**
+ * 요청에 실린 이미지(로고·썸네일)를 검사한다. data URL 이미지가 아니면 버린다 — 바깥 주소를
+ * 이미지 생성기에 넘기면 서버가 그 주소로 요청을 보내고, 미리보기 SVG 에도 그대로 실린다.
+ */
+function sanitizeSpec(spec: CardSpec): CardSpec {
+  const original = safeImage(spec.logo?.original);
+  const photo = safeImage(spec.settings.photo?.dataUrl);
+  return {
+    ...spec,
+    logo: original
+      ? {
+          original,
+          white: safeImage(spec.logo?.white),
+          black: safeImage(spec.logo?.black),
+          aspect: spec.logo?.aspect,
+        }
+      : undefined,
+    settings: {
+      ...spec.settings,
+      photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
+    },
+  };
+}
 
 async function loadAssets(): Promise<SlideAssets> {
   const [
@@ -93,7 +124,13 @@ export async function POST(request: Request) {
   const scale = Math.min(1, Math.max(0.25, body.scale ?? 1));
 
   const [fonts, measure, assets] = await Promise.all([loadFonts(), loadMeasure(), loadAssets()]);
-  const { element, overflow } = buildSlide(body.spec, body.slide, size, measure, assets);
+  const { element, overflow } = buildSlide(
+    sanitizeSpec(body.spec),
+    body.slide,
+    size,
+    measure,
+    assets,
+  );
 
   // next/og 의 ImageResponse 는 이모지를 외부 CDN 에서만 받는다. 받아 둔 Noto 이모지를 쓰려고 같은
   // 엔진(satori)을 직접 부르고 resvg 로 PNG 를 만든다.
@@ -115,6 +152,10 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'image/svg+xml',
         'Cache-Control': 'no-store',
+        // SVG 를 문서로 열어도 스크립트가 돌지 않게 잠근다. 미리보기는 <img> 로만 쓴다.
+        'Content-Security-Policy':
+          "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox",
+        'X-Content-Type-Options': 'nosniff',
         'X-Card-Overflow': overflow ? '1' : '0',
       },
     });

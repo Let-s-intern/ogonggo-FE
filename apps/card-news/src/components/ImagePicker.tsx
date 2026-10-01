@@ -78,12 +78,12 @@ export function ImagePicker({
               title={candidate.source}
               disabled={busy}
               onClick={() =>
-                void apply(() => candidateToImage(candidate.url, image?.opacity ?? defaultOpacity))
+                void apply(() => candidateToImage(candidate, image?.opacity ?? defaultOpacity))
               }
               className="size-16 shrink-0 overflow-hidden rounded border border-gray-200 hover:border-blue-500"
             >
               <img
-                src={`/api/images/proxy?url=${encodeURIComponent(candidate.url)}`}
+                src={candidate.proxyPath}
                 alt={candidate.source}
                 className="size-full object-cover"
               />

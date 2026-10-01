@@ -5,7 +5,7 @@ import type { AiDraft, DraftResult } from '../ai/draft';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
 import type { CardContent, CardImage, CardSettings, CardSpec, VariantId } from '../card/types';
 import { VARIANTS } from '../card/variants';
-import type { ImageCandidates } from '../server/images';
+import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { toCardImage } from './image';
 import { clearCard, loadCard, saveCard } from './storage';
 import {
@@ -44,9 +44,9 @@ const REWRITE_INSTRUCTION = '지금 초안과 다른 표현으로 새로 써 줘
 /** 썸네일의 처음 진하기. 시안마다 이 값에 자기 배율을 곱한다. */
 export const PHOTO_OPACITY = 1;
 
-/** 후보 URL 을 카드 이미지로. 다른 출처 이미지는 이 앱의 프록시를 거쳐야 캔버스로 읽힌다. */
-export function candidateToImage(url: string, opacity: number): Promise<CardImage> {
-  return toCardImage(`/api/images/proxy?url=${encodeURIComponent(url)}`, opacity);
+/** 후보를 카드 이미지로. 다른 출처 이미지는 이 앱의 프록시를 거쳐야 캔버스로 읽힌다. */
+export function candidateToImage(candidate: ImageCandidate, opacity: number): Promise<CardImage> {
+  return toCardImage(candidate.proxyPath, opacity);
 }
 
 async function requestDraft(body: {
@@ -98,9 +98,7 @@ export function useCardEditor() {
       const found = (await response.json()) as ImageCandidates;
       setCandidates(found);
       const first = found.photo[0];
-      const image = first
-        ? await candidateToImage(first.url, PHOTO_OPACITY).catch(() => null)
-        : null;
+      const image = first ? await candidateToImage(first, PHOTO_OPACITY).catch(() => null) : null;
       if (image) {
         setLoaded((current) =>
           current?.job.id === jobId && !current.settings.photo
