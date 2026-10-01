@@ -4,7 +4,10 @@ import type { ChangeEvent } from 'react';
 import { Button } from '@ogonggo/ui';
 import type { CardSettings, HighlightPreset, LogoStyle } from '@/lib/card/types';
 import { fileToDataUrl } from '@/lib/client/image';
+import { PHOTO_OPACITY } from '@/lib/client/useCardEditor';
+import type { ImageCandidates } from '@/lib/server/images';
 import { ColorField, Segmented } from './fields';
+import { ImagePicker } from './ImagePicker';
 
 interface SettingsPanelProps {
   settings: CardSettings;
@@ -14,6 +17,7 @@ interface SettingsPanelProps {
   onResetBrandColor: () => void;
   logo?: string;
   onLogoChange: (logo: string | undefined) => void;
+  candidates: ImageCandidates | null;
 }
 
 const HIGHLIGHTS: { value: HighlightPreset; label: string }[] = [
@@ -38,6 +42,7 @@ export function SettingsPanel({
   onResetBrandColor,
   logo,
   onLogoChange,
+  candidates,
 }: SettingsPanelProps) {
   const uploadLogo = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,6 +119,15 @@ export function SettingsPanel({
             ) : null}
           </span>
         </div>
+      </div>
+      <div className="border-t border-gray-100 pt-3">
+        <ImagePicker
+          label="썸네일 (썸네일 시안)"
+          image={settings.photo}
+          candidates={candidates?.photo ?? null}
+          defaultOpacity={PHOTO_OPACITY}
+          onChange={(photo) => onChange({ photo })}
+        />
       </div>
     </section>
   );

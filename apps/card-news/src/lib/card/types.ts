@@ -77,6 +77,15 @@ export type HighlightPreset = 'tint' | 'brand' | 'black' | 'custom';
  */
 export type LogoStyle = 'auto' | 'mono' | 'original' | 'plate';
 
+export interface CardImage {
+  /** data URL. 편집 화면이 긴 변 1350px 이하 JPEG 로 줄여 둔다. */
+  dataUrl: string;
+  /** 0~1. 시안마다 이 값에 자기 배율을 곱해 쓴다(연한 시안은 더 흐리게). */
+  opacity: number;
+  /** 가로÷세로. 썸네일 카드가 이미지를 자르지 않고 통째로 보여 주는 데 쓴다. */
+  aspect: number;
+}
+
 /** 모든 시안에 같이 걸리는 설정. 한 번 바꾸면 모든 시안이 같이 바뀐다. */
 export interface CardSettings {
   /** 처음 값은 로고에서 뽑은 색이다. */
@@ -84,6 +93,8 @@ export interface CardSettings {
   highlight: HighlightPreset;
   highlightColor: string;
   logoStyle: LogoStyle;
+  /** 썸네일 시안들의 이미지. 처음엔 공고 원문 대표 이미지이고, 사람이 바꾸거나 올릴 수 있다. */
+  photo?: CardImage;
 }
 
 /** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */
@@ -95,7 +106,17 @@ export interface CardLogo {
   aspect?: number;
 }
 
-export type VariantId = 'wave' | 'watermark' | 'frame' | 'panel' | 'tab';
+export type VariantId =
+  | 'thumb'
+  | 'thumbFade'
+  | 'thumbDark'
+  | 'thumbCard'
+  | 'wave'
+  | 'watermark'
+  | 'frame'
+  | 'panel'
+  | 'tab'
+  | 'dark';
 
 export interface CardSpec {
   variant: VariantId;

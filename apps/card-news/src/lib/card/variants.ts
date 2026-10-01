@@ -1,5 +1,5 @@
 import { contrastRatio, mix, readableText } from './color';
-import type { CardSettings, VariantId } from './types';
+import type { CardImage, CardSettings, VariantId } from './types';
 
 /**
  * 시안 목록과 시안마다의 색. 렌더(서버)와 편집 화면(브라우저)이 같이 쓴다.
@@ -10,18 +10,59 @@ import type { CardSettings, VariantId } from './types';
 
 /**
  * 섹션을 어떻게 놓는가. `open` 은 바탕에 바로, `panel` 은 흰 판 안에, `tab` 은 로고 탭이 달린 큰
- * 흰 카드 안에(카카오스타일 예시).
+ * 흰 카드 안에(카카오스타일 예시), `labels` 는 가운데 로고·브랜드색 머리 카드·왼쪽 항목명 표(LG생활건강
+ * 예시 2장).
  */
-export type VariantLayout = 'open' | 'panel' | 'tab';
+export type VariantLayout = 'open' | 'panel' | 'tab' | 'labels';
 
 export interface VariantDefinition {
   id: VariantId;
   label: string;
   description: string;
+  /** 1장(과 `detailLayout` 이 없으면 2장)의 배치. */
   layout: VariantLayout;
+  /** 2장만 다른 배치로 그릴 때. */
+  detailLayout?: VariantLayout;
+  /**
+   * 썸네일(`settings.photo`)을 어떻게 쓰는가. `background` 는 배경으로 깔고, `card` 는 2장의 제목
+   * 자리에 둥근 카드로 통째로 보여 준다. 썸네일이 없으면 이미지 없이 그린다.
+   */
+  image?: 'background' | 'card';
 }
 
+/** 처음 여는 시안. 공고 썸네일이 들어가는 LG생활건강형이다. */
+export const DEFAULT_VARIANT: VariantId = 'thumb';
+
 export const VARIANTS: VariantDefinition[] = [
+  {
+    id: 'thumb',
+    label: '썸네일 + 흰 판',
+    description: '아래쪽에 썸네일, 목록은 흰 판 안. 2장은 항목명 표',
+    layout: 'panel',
+    detailLayout: 'labels',
+    image: 'background',
+  },
+  {
+    id: 'thumbFade',
+    label: '썸네일 연하게',
+    description: '연한 바탕에 썸네일을 흐리게 깔기',
+    layout: 'open',
+    image: 'background',
+  },
+  {
+    id: 'thumbDark',
+    label: '썸네일 어둡게',
+    description: '썸네일 위를 어둡게 덮고 흰 글자',
+    layout: 'open',
+    image: 'background',
+  },
+  {
+    id: 'thumbCard',
+    label: '썸네일 카드',
+    description: '2장 제목 자리에 썸네일을 잘리지 않게 카드로',
+    layout: 'open',
+    image: 'card',
+  },
   { id: 'wave', label: '브랜드색 물결', description: '로고 색 바탕에 밝은 물결', layout: 'open' },
   {
     id: 'watermark',
@@ -46,6 +87,12 @@ export const VARIANTS: VariantDefinition[] = [
     label: '로고 탭 카드',
     description: '브랜드색 바탕에 로고 탭이 달린 큰 흰 카드',
     layout: 'tab',
+  },
+  {
+    id: 'dark',
+    label: '다크',
+    description: '검정 바탕에 브랜드색 강조',
+    layout: 'open',
   },
 ];
 
@@ -184,8 +231,37 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
     };
   }
 
-  // 밝은 바탕 시안(워터마크·테두리·흰 판). 테두리 시안의 글은 브랜드색 테두리 안 흰 카드 위에 있다.
-  const background = id === 'panel' ? '#F4F5F7' : id === 'frame' ? WHITE : mix(brand, WHITE, 0.9);
+  if (id === 'thumbDark' || id === 'dark') {
+    // 어두운 바탕 시안. 썸네일 어둡게는 썸네일 위를 검정으로 덮는다(현대자동차 예시).
+    const background = id === 'dark' ? '#121212' : '#1A1A1A';
+    const box = visibleOn(base, background, WHITE);
+    const chip = id === 'thumbDark' ? WHITE : box;
+    return {
+      background,
+      headlineText: WHITE,
+      bodyText: WHITE,
+      ctaText: WHITE,
+      box,
+      boxText: readableText(box),
+      chip,
+      chipText: readableText(chip),
+      border: box,
+      accent: mix(brand, WHITE, 0.4),
+      badge: WHITE,
+      badgeText: INK,
+      logo: logoFor(settings, true, WHITE),
+      mark: 'white',
+      markText: WHITE,
+    };
+  }
+
+  // 밝은 바탕 시안(썸네일 + 흰 판·썸네일 연하게·썸네일 카드·워터마크·테두리·흰 판).
+  const background =
+    id === 'frame'
+      ? WHITE
+      : id === 'watermark' || id === 'thumbFade'
+        ? mix(brand, WHITE, 0.9)
+        : '#F4F5F7';
   const box = visibleOn(base, background, INK);
   return {
     background,
@@ -204,4 +280,9 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
     mark: 'color',
     markText: MARK_TEXT,
   };
+}
+
+/** 시안이 쓰는 썸네일. 설정에 없으면 `undefined`. */
+export function variantImage(id: VariantId, settings: CardSettings): CardImage | undefined {
+  return variantOf(id).image ? settings.photo : undefined;
 }

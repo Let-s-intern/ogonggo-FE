@@ -10,7 +10,7 @@ import {
 } from '../layout';
 import type { Measure } from '../measure';
 import type { CardSection, CardSize, CardSpec } from '../types';
-import { type Palette, resolvePalette, variantOf } from '../variants';
+import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
 import { Background } from './backgrounds';
 import {
   BOXED_BORDER,
@@ -19,6 +19,7 @@ import {
   COLUMN_CHIP_WIDTH,
   COLUMN_GAP,
   CompanyLogo,
+  LABEL_WIDTH,
   Header,
   Headline,
   Icon,
@@ -35,6 +36,9 @@ import {
  * - `panel`: 목록만 흰 판 안에 넣는다(흰 판 목록).
  * - `tab`: 로고 탭이 달린 큰 흰 카드 안에 직무명과 목록을 넣는다(카카오스타일 예시). 1장은 알약 칩
  *   아래 테두리 상자, 2장은 왼쪽 칩·오른쪽 목록 두 칸이다.
+ * - `labels`: 가운데 로고, 브랜드색 띠 머리 카드, 왼쪽 항목명·오른쪽 목록 표(LG생활건강형 2장).
+ *
+ * 시안이 `detailLayout` 을 가지면 2장만 그 배치로 그린다.
  */
 
 /** 흰 판 안쪽 여백. */
@@ -236,6 +240,134 @@ function TabSlide({
   return { element, overflow: metrics.overflow };
 }
 
+/** LG생활건강형 2장. 가운데 로고, 브랜드색 띠 머리 카드, 왼쪽 항목명·오른쪽 목록 표. */
+const LABELS_LOGO = 96;
+const LABELS_BAR = 40;
+const LABELS_ROLE_MAX = 54;
+const LABELS_CARD_PAD_X = 44;
+const LABELS_CARD_PAD_Y = 48;
+
+function LabelsSlide({
+  spec,
+  palette,
+  size,
+  slide,
+  measure,
+  assets,
+}: {
+  spec: CardSpec;
+  palette: Palette;
+  size: CardSize;
+  slide: number;
+  measure: Measure;
+  assets: SlideAssets;
+}): Built {
+  const sections = slideSections(spec, slide, false);
+  const count = visibleCount(sections);
+  const brand = spec.settings.brandColor;
+  const role = spec.content.roleTitle.trim();
+  const roleSize = Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role));
+  const headCard = Math.round(LABELS_BAR * 1.2) + 28 + (role ? Math.round(roleSize * 1.2) + 36 : 0);
+  // 머리 자리(뱃지 줄) 대신 로고·머리 카드·표 안쪽 여백을 잡는다. 표는 항목명이 목록 옆에 있어 칩
+  // 높이를 다시 돌려준다.
+  const chrome =
+    LABELS_LOGO + 36 + headCard + 40 + LABELS_CARD_PAD_Y * 2 - HEADER_HEIGHT - count * 60;
+  const metrics = measureSlide(measure, size, {
+    headline: null,
+    sections,
+    note: '',
+    contentWidth: CONTENT_WIDTH - LABELS_CARD_PAD_X * 2 - LABEL_WIDTH - COLUMN_GAP,
+    chrome,
+    footer: false,
+  });
+
+  const card: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    width: CONTENT_WIDTH,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 32,
+  };
+  const element = (
+    <Canvas size={size}>
+      <Background spec={spec} palette={palette} size={size} assets={assets} />
+      <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
+        <LetsCareer palette={palette} assets={assets} size={52} />
+      </div>
+      <Column size={size} metrics={metrics} justify="flex-start">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: LABELS_LOGO,
+            marginTop: 24,
+          }}
+        >
+          <CompanyLogo
+            spec={spec}
+            palette={{ ...palette, logo: palette.logo === 'plate' ? 'original' : palette.logo }}
+            height={LABELS_LOGO}
+            maxWidth={520}
+          />
+        </div>
+        <div style={{ ...card, marginTop: 36, overflow: 'hidden' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              backgroundColor: brand,
+              color: textOnBrand(brand),
+              fontSize: LABELS_BAR,
+              fontWeight: 800,
+              lineHeight: 1.2,
+              padding: '14px 0',
+            }}
+          >
+            {spec.companyName}
+          </div>
+          {role ? (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                fontSize: roleSize,
+                fontWeight: 800,
+                lineHeight: 1.2,
+                letterSpacing: roleSize * HEADLINE_TRACKING,
+                color: palette.headlineText,
+                padding: '18px 0',
+              }}
+            >
+              {role}
+            </div>
+          ) : null}
+        </div>
+        <div
+          style={{
+            ...card,
+            marginTop: 40,
+            padding: `${LABELS_CARD_PAD_Y}px ${LABELS_CARD_PAD_X}px`,
+          }}
+        >
+          <Sections palette={palette} sections={sections} note="" metrics={metrics} mode="labels" />
+        </div>
+      </Column>
+    </Canvas>
+  );
+  return { element, overflow: metrics.overflow };
+}
+
+/**
+ * 썸네일 카드 크기. 이미지 비율 그대로 콘텐츠 폭에 맞추되, 세로는 카드 높이의 3할까지. 그보다 길면
+ * 세로에 맞춰 폭을 줄인다 — 배너 속 글자가 잘리지 않게 통째로 보여 준다.
+ */
+function thumbCardSize(size: CardSize, aspect: number): { width: number; height: number } {
+  const maxHeight = Math.round(size.height * 0.3);
+  const height = Math.min(maxHeight, Math.round(CONTENT_WIDTH / aspect));
+  return { width: Math.min(CONTENT_WIDTH, Math.round(height * aspect)), height };
+}
+
 function InfoSlide({
   spec,
   palette,
@@ -251,21 +383,32 @@ function InfoSlide({
   measure: Measure;
   assets: SlideAssets;
 }): Built {
-  const { layout } = variantOf(spec.variant);
+  const definition = variantOf(spec.variant);
+  const layout =
+    slide === 1 && definition.detailLayout ? definition.detailLayout : definition.layout;
   if (layout === 'tab') {
     return TabSlide({ spec, palette, size, slide, measure, assets });
   }
+  if (layout === 'labels') {
+    return LabelsSlide({ spec, palette, size, slide, measure, assets });
+  }
   const panel = layout === 'panel';
+  // 썸네일 카드 시안은 2장의 제목(1장과 같은 문구) 자리에 썸네일 카드를 둔다.
+  const thumbnail =
+    definition.image === 'card' && slide === 1
+      ? variantImage(spec.variant, spec.settings)
+      : undefined;
+  const card = thumbnail ? thumbCardSize(size, thumbnail.aspect) : null;
   const sections = slideSections(spec, slide, false);
   const note = slide === 0 ? spec.content.note : '';
-  const headline = spec.content.headline;
+  const headline = thumbnail ? null : spec.content.headline;
 
   const metrics = measureSlide(measure, size, {
     headline,
     sections,
     note,
     contentWidth: panel ? CONTENT_WIDTH - PANEL_PAD * 2 : CONTENT_WIDTH,
-    chrome: panel ? PANEL_PAD * 2 : 0,
+    chrome: (panel ? PANEL_PAD * 2 : 0) + (card ? card.height + 32 : 0),
     footer: true,
   });
 
@@ -278,23 +421,38 @@ function InfoSlide({
           <Header
             spec={spec}
             palette={palette}
+            assets={assets}
             width={CONTENT_WIDTH}
             right={<CompanyLogo spec={spec} palette={palette} />}
           />
-          <div style={{ display: 'flex', marginTop: metrics.headlineGap }}>
-            <Headline
-              palette={palette}
-              text={headline}
-              size={metrics.headlineSize}
-              color={palette.headlineText}
-            />
-          </div>
+          {thumbnail && card ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+              <img
+                src={thumbnail.dataUrl}
+                alt=""
+                width={card.width}
+                height={card.height}
+                style={{ borderRadius: 32, opacity: thumbnail.opacity }}
+              />
+            </div>
+          ) : null}
+          {headline !== null ? (
+            <div style={{ display: 'flex', marginTop: metrics.headlineGap }}>
+              <Headline
+                palette={palette}
+                text={headline}
+                size={metrics.headlineSize}
+                color={palette.headlineText}
+              />
+            </div>
+          ) : null}
           <div style={{ display: 'flex', marginTop: metrics.sectionsGap }}>
             {panel ? (
               <div
                 style={{
                   display: 'flex',
-                  backgroundColor: 'rgba(255,255,255,0.86)',
+                  // 썸네일 위에 놓이므로 불투명하게 — 배너 속 글자가 비치지 않게.
+                  backgroundColor: '#FFFFFF',
                   borderRadius: 36,
                   padding: PANEL_PAD,
                 }}

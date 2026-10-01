@@ -8,7 +8,7 @@ import path from 'node:path';
  * - 폰트: Pretendard 1.3.9 static woff(OFL). 이미지 생성기(satori)는 woff2 를 읽지 못한다.
  * - 이모지: Noto Color Emoji v2.047 SVG(Apache-2.0). 받아 두지 않은 것은 같은 판을 jsDelivr 에서
  *   받는다.
- * - 아이콘: Tabler Icons 3.34.0 outline SVG(MIT). 3장 프로필 카드와 화살표에 쓴다.
+ * - 아이콘: Tabler Icons 3.34.0 outline SVG(MIT). 뱃지의 확성기, 3장 프로필 카드와 화살표에 쓴다.
  * - 로고: 오공고·렛츠커리어 심볼(`docs/asset/v3-1/icon/`).
  */
 const ASSETS_DIR = path.join(process.cwd(), 'assets');
@@ -95,6 +95,7 @@ export type IconName =
   | 'dots'
   | 'menu-2'
   | 'plus'
+  | 'speakerphone'
   | 'square-plus';
 
 const iconCache = new Map<string, Promise<string>>();

@@ -27,6 +27,9 @@ export interface SlideAssets {
   markColor: string;
   markWhite: string;
   ogonggoLogo: string;
+  /** 뱃지 확성기. 검정 뱃지용(흰색)과 흰 뱃지용(검정). */
+  speakerLight: string;
+  speakerDark: string;
   /** 3장 맨 위 화살표. 밝은 바탕용(검정)과 어두운 바탕용(흰색). */
   arrowDark: string;
   arrowLight: string;
@@ -226,6 +229,8 @@ export const BOXED_PAD_X = 32;
 export const BOXED_PAD_Y = 20;
 /** 탭 시안 2장의 칩 칸 폭과 칩·목록 사이. */
 export const COLUMN_CHIP_WIDTH = 230;
+/** `labels` 배치의 항목명 칸 폭. 칩 여백이 없어 칩 칸보다 좁다. */
+export const LABEL_WIDTH = 170;
 export const COLUMN_GAP = 28;
 
 /**
@@ -234,6 +239,7 @@ export const COLUMN_GAP = 28;
  * - `list`: 칩 아래 왼쪽 정렬 목록(기본).
  * - `boxed`: 가운데 알약 칩 아래 테두리 상자, 항목 가운데 정렬(탭 시안 1장).
  * - `columns`: 왼쪽 알약 칩, 오른쪽 목록 두 칸(탭 시안 2장).
+ * - `labels`: `columns` 와 같되 칩 대신 굵은 항목명(LG생활건강형 2장).
  *
  * `metrics.contentWidth` 는 `list`·`columns` 에서 목록 폭, `boxed` 에서 상자 안 글자 폭에
  * `BULLET_INDENT` 를 더한 값이다(높이 계산이 그 폭에서 들여쓰기를 빼고 줄 수를 센다).
@@ -249,7 +255,7 @@ export function Sections({
   sections: CardSection[];
   note: string;
   metrics: SlideMetrics;
-  mode?: 'list' | 'boxed' | 'columns';
+  mode?: 'list' | 'boxed' | 'columns' | 'labels';
 }) {
   const { bodySize: size, contentWidth } = metrics;
   const visible = visibleSections(sections);
@@ -274,13 +280,32 @@ export function Sections({
               {section.label}
             </Chip>
           ) : null;
-          if (mode === 'columns') {
+          if (mode === 'columns' || mode === 'labels') {
+            const label =
+              mode === 'labels' ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    width: LABEL_WIDTH,
+                    flexShrink: 0,
+                    fontSize: Math.round(metrics.chipSize * 1.08),
+                    fontWeight: 800,
+                    lineHeight: BODY_LINE_HEIGHT,
+                    letterSpacing: -metrics.chipSize * 0.02,
+                    color: palette.bodyText,
+                  }}
+                >
+                  {section.label}
+                </div>
+              ) : (
+                chip
+              );
             return (
               <div
                 key={sectionIndex}
                 style={{ display: 'flex', gap: COLUMN_GAP, alignItems: 'flex-start' }}
               >
-                {chip ?? <div style={{ display: 'flex', width: COLUMN_CHIP_WIDTH }} />}
+                {label ?? <div style={{ display: 'flex', width: COLUMN_CHIP_WIDTH }} />}
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {section.items.map((item, index) => (
                     <Bullet
@@ -486,14 +511,18 @@ export function LetsCareer({
 export function Header({
   spec,
   palette,
+  assets,
   width,
   right,
 }: {
   spec: CardSpec;
   palette: Palette;
+  assets: SlideAssets;
   width: number;
   right: ReactNode;
 }) {
+  // 예전 편집본은 뱃지 끝에 확성기 이모지가 붙어 있다. 아이콘을 따로 그리므로 뗀다.
+  const badge = spec.content.badge.replace(/\s*📢\s*$/u, '');
   return (
     <div
       style={{
@@ -508,6 +537,7 @@ export function Header({
         style={{
           display: 'flex',
           alignItems: 'center',
+          gap: 8,
           backgroundColor: palette.badge,
           color: palette.badgeText,
           fontSize: 30,
@@ -518,7 +548,11 @@ export function Header({
           border: `2px solid ${palette.badgeText === '#FFFFFF' ? palette.badge : '#111111'}`,
         }}
       >
-        {spec.content.badge}
+        {badge}
+        <Icon
+          src={palette.badgeText === '#FFFFFF' ? assets.speakerLight : assets.speakerDark}
+          size={32}
+        />
       </div>
       {right}
     </div>

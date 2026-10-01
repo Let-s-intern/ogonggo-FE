@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
-import type { CardContent, CardSettings, CardSpec, VariantId } from '../card/types';
+import type { CardContent, CardImage, CardSettings, CardSpec, VariantId } from '../card/types';
 import { VARIANTS } from '../card/variants';
+import type { ImageCandidates } from '../server/images';
+import { toCardImage } from './image';
 import { clearCard, loadCard, saveCard } from './storage';
 import {
   FALLBACK_COLOR,
@@ -39,6 +41,14 @@ export type EditorStatus =
 /** 다시 쓰기에서 지시를 비웠을 때 보내는 말. 빈 지시는 첫 초안 캐시를 돌려받으므로 넣는다. */
 const REWRITE_INSTRUCTION = '지금 초안과 다른 표현으로 새로 써 줘.';
 
+/** 썸네일의 처음 진하기. 시안마다 이 값에 자기 배율을 곱한다. */
+export const PHOTO_OPACITY = 1;
+
+/** 후보 URL 을 카드 이미지로. 다른 출처 이미지는 이 앱의 프록시를 거쳐야 캔버스로 읽힌다. */
+export function candidateToImage(url: string, opacity: number): Promise<CardImage> {
+  return toCardImage(`/api/images/proxy?url=${encodeURIComponent(url)}`, opacity);
+}
+
 async function requestDraft(body: {
   jobId: number;
   instruction?: string;
@@ -61,6 +71,7 @@ export function useCardEditor() {
   const [status, setStatus] = useState<EditorStatus>({ kind: 'idle' });
   const [notice, setNotice] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [candidates, setCandidates] = useState<ImageCandidates | null>(null);
 
   const update = useCallback(
     (patch: Partial<LoadedCard>) =>
@@ -76,47 +87,77 @@ export function useCardEditor() {
     [],
   );
 
-  const selectJob = useCallback(async (jobId: number) => {
-    setStatus({ kind: 'loading', message: '공고를 읽는 중' });
-    setNotice(null);
+  /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
+  const loadCandidates = useCallback(async (jobId: number) => {
+    setCandidates(null);
     try {
-      const response = await fetch(`/api/jobs/${jobId}`);
-      const body = (await response.json()) as {
-        job?: CardJob;
-        logoDataUrl?: string | null;
-        message?: string;
-      };
-      if (!response.ok || !body.job) {
-        throw new Error(body.message ?? '공고를 불러오지 못했습니다.');
+      const response = await fetch(`/api/images?jobId=${jobId}`);
+      if (!response.ok) {
+        return;
       }
-      const job = body.job;
-      const logo = body.logoDataUrl ?? undefined;
-      const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
-
-      const saved = loadCard(jobId);
-      if (saved) {
-        setLoaded({ job, logo, brandColor, content: saved.content, settings: saved.settings });
-        setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
-      } else {
-        setStatus({ kind: 'loading', message: 'AI가 초안을 쓰는 중' });
-        const result = await requestDraft({ jobId });
-        setLoaded({
-          job,
-          logo,
-          brandColor,
-          content: contentFromDraft(job, result.draft),
-          settings: defaultSettings(brandColor ?? FALLBACK_COLOR),
-        });
-        setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
+      const found = (await response.json()) as ImageCandidates;
+      setCandidates(found);
+      const first = found.photo[0];
+      const image = first
+        ? await candidateToImage(first.url, PHOTO_OPACITY).catch(() => null)
+        : null;
+      if (image) {
+        setLoaded((current) =>
+          current?.job.id === jobId && !current.settings.photo
+            ? { ...current, settings: { ...current.settings, photo: image } }
+            : current,
+        );
       }
-      setStatus({ kind: 'idle' });
-    } catch (error) {
-      setStatus({
-        kind: 'error',
-        message: error instanceof Error ? error.message : '공고를 불러오지 못했습니다.',
-      });
+    } catch {
+      // 후보가 없어도 시안은 썸네일 없이 그린다.
     }
   }, []);
+
+  const selectJob = useCallback(
+    async (jobId: number) => {
+      setStatus({ kind: 'loading', message: '공고를 읽는 중' });
+      setNotice(null);
+      try {
+        const response = await fetch(`/api/jobs/${jobId}`);
+        const body = (await response.json()) as {
+          job?: CardJob;
+          logoDataUrl?: string | null;
+          message?: string;
+        };
+        if (!response.ok || !body.job) {
+          throw new Error(body.message ?? '공고를 불러오지 못했습니다.');
+        }
+        const job = body.job;
+        const logo = body.logoDataUrl ?? undefined;
+        const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
+
+        const saved = loadCard(jobId);
+        if (saved) {
+          setLoaded({ job, logo, brandColor, content: saved.content, settings: saved.settings });
+          setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
+        } else {
+          setStatus({ kind: 'loading', message: 'AI가 초안을 쓰는 중' });
+          const result = await requestDraft({ jobId });
+          setLoaded({
+            job,
+            logo,
+            brandColor,
+            content: contentFromDraft(job, result.draft),
+            settings: defaultSettings(brandColor ?? FALLBACK_COLOR),
+          });
+          setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
+        }
+        setStatus({ kind: 'idle' });
+        void loadCandidates(jobId);
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: error instanceof Error ? error.message : '공고를 불러오지 못했습니다.',
+        });
+      }
+    },
+    [loadCandidates],
+  );
 
   const regenerate = useCallback(
     async (instruction: string): Promise<boolean> => {
@@ -203,13 +244,15 @@ export function useCardEditor() {
             aspect: tinted.original.aspect,
           }
         : undefined;
+    // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
+    const { photo, ...shared } = loaded.settings;
     return Object.fromEntries(
       VARIANTS.map((variant) => [
         variant.id,
         {
           variant: variant.id,
           content: loaded.content,
-          settings: loaded.settings,
+          settings: variant.image && photo ? { ...shared, photo } : shared,
           logo: logoSet,
           companyName: loaded.job.companyName,
         } satisfies CardSpec,
@@ -220,6 +263,7 @@ export function useCardEditor() {
   return {
     loaded,
     status,
+    candidates,
     notice,
     regenerating,
     specs,

@@ -46,7 +46,7 @@ export function contentFromDraft(
   previous?: CardContent,
 ): CardContent {
   return {
-    badge: previous?.badge ?? '오늘의 공고 속보 📢',
+    badge: previous?.badge ?? '오늘의 공고 속보',
     headline: draft.headline,
     roleTitle: draft.roles[0] ?? job.title,
     summarySections: [
