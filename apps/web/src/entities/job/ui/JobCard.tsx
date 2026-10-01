@@ -78,7 +78,7 @@ export function JobCard({ job, tracking }: JobCardProps) {
     <div className="relative h-full">
       <JobCardLink
         href={`/jobs/${job.id}`}
-        className="flex h-full flex-col gap-2"
+        className="group flex h-full flex-col gap-2"
         jobId={job.id}
         jobInfo={jobInfo}
         tracking={tracking}

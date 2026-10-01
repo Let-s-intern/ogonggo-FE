@@ -55,10 +55,10 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
     <div className="relative h-full">
       <TrackedLink
         href={`/bootcamps/${bootcamp.id}`}
-        className="flex h-full flex-col gap-2"
+        className="group flex h-full flex-col gap-2"
         events={clickEvents}
       >
-        <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
+        <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
           <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-full w-full" />
         </div>
         <p className="flex items-center justify-between gap-2 text-xs text-gray-400">

@@ -40,8 +40,10 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
               type="button"
               onClick={() => setActive(tab.key)}
               className={cn(
-                'rounded-full px-3 py-1 text-sm font-medium',
-                active === tab.key ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600',
+                'cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors',
+                active === tab.key
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
               )}
             >
               {tab.label}
