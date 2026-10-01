@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import type { VariantId } from '@/lib/card/types';
-import { DEFAULT_VARIANT } from '@/lib/card/variants';
 import { Button } from '@ogonggo/ui';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { CaptionPanel } from './CaptionPanel';
@@ -15,19 +14,19 @@ import { VariantPreview } from './VariantPreview';
 
 /**
  * 편집 화면 배치. 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
- * 왼쪽: 공고 고르기 → 설정 → 문구. 오른쪽: 처음엔 기본 시안(썸네일)의 세 장과 받기. "다른 시안
- * 고르기"를 누르면 열 시안의 1장을 나란히 보여 준다. 한 시안만 그리므로 설정이 바로 보인다.
+ * 왼쪽: 공고 고르기 → 설정 → 문구. 오른쪽: 처음엔 시안 고르기(열 시안을 한 장씩 나란히), 하나를
+ * 고르면 그 시안의 세 장과 받기. 고른 뒤에는 한 시안만 그리므로 설정이 바로 보인다.
  */
 export function CardEditor() {
   const editor = useCardEditor();
   const { loaded, status, notice, specs } = editor;
   const [regenerateOpen, setRegenerateOpen] = useState(false);
-  const [variant, setVariant] = useState<VariantId | null>(DEFAULT_VARIANT);
+  const [variant, setVariant] = useState<VariantId | null>(null);
 
-  // 다른 공고를 고르면 기본 시안(썸네일)으로 다시 연다. "다른 시안 고르기"로 바꿀 수 있다.
+  // 다른 공고를 고르면 시안부터 다시 고른다.
   const jobId = loaded?.job.id;
   useEffect(() => {
-    setVariant(DEFAULT_VARIANT);
+    setVariant(null);
   }, [jobId]);
 
   return (
@@ -36,8 +35,8 @@ export function CardEditor() {
         <div>
           <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
           <p className="text-sm text-gray-500">
-            공고를 고르면 AI가 초안을 쓰고 썸네일 시안으로 카드를 만듭니다. 시안은 바꿀 수 있고,
-            고친 뒤 원하는 장만 받습니다.
+            공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 고친 뒤 원하는 장만
+            받습니다.
           </p>
         </div>
         {loaded ? (

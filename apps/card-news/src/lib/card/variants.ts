@@ -32,9 +32,6 @@ export interface VariantDefinition {
   image?: 'background' | 'card';
 }
 
-/** 처음 여는 시안. 공고 썸네일이 들어가는 LG생활건강형이다. */
-export const DEFAULT_VARIANT: VariantId = 'thumb';
-
 export const VARIANTS: VariantDefinition[] = [
   {
     id: 'thumb',
