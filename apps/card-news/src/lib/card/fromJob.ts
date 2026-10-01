@@ -48,6 +48,7 @@ export function contentFromDraft(
   return {
     badge: previous?.badge ?? '오늘의 공고 속보 📢',
     headline: draft.headline,
+    roleTitle: draft.roles[0] ?? job.title,
     summarySections: [
       { label: '채용 직무', items: draft.roles.length ? draft.roles : [job.title] },
       { label: '마감 기한', items: [deadlineText(job)] },

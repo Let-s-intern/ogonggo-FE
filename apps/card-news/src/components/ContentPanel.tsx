@@ -85,7 +85,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
       </Labeled>
       <Labeled
         label="제목 (1·2장)"
-        hint="줄바꿈으로 줄을 나눕니다. *단어* 는 검은 상자, ~단어~ 는 강조색 글자입니다."
+        hint="줄바꿈으로 줄을 나눕니다. *단어* 는 강조 상자, ~단어~ 는 강조색 글자입니다."
       >
         {(id) => (
           <Textarea
@@ -94,6 +94,16 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
             className="font-semibold"
             value={content.headline}
             onChange={(event) => set('headline', event.target.value)}
+          />
+        )}
+      </Labeled>
+
+      <Labeled label="직무명 (도형 시안 프레임 제목)">
+        {(id) => (
+          <Input
+            id={id}
+            value={content.roleTitle}
+            onChange={(event) => set('roleTitle', event.target.value)}
           />
         )}
       </Labeled>

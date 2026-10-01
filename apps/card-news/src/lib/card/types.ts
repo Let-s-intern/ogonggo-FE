@@ -1,6 +1,9 @@
 /**
- * 카드뉴스 한 벌을 그리는 데 필요한 값. 편집 화면이 들고 있다가 렌더 API(`/api/render`)에 그대로
+ * 카드뉴스 한 벌을 그리는 데 필요한 값. 편집 화면이 들고 있다가 렌더 API(`/api/render`)에 시안마다
  * 보낸다. 서버는 이 값만 보고 그린다 — 공고를 다시 읽지 않는다.
+ *
+ * 문구(`CardContent`)와 설정(`CardSettings`)은 모든 시안이 같이 쓴다. 시안마다 다른 것은 배경과
+ * 배치뿐이고, 그건 `./variants.ts` 가 정한다.
  */
 
 export type CardSizeId = 'post' | 'square' | 'story';
@@ -25,7 +28,7 @@ export const SLIDE_COUNT = 3;
 export const SLIDE_LABELS = ['1. 공고 요약', '2. 자격·우대 요건', '3. 프로필 안내'] as const;
 
 export interface CardSection {
-  /** 검은 칩에 들어가는 제목(`채용 직무`, `마감 기한`). */
+  /** 칩에 들어가는 제목(`채용 직무`, `마감 기한`). */
   label: string;
   /** 점 목록. 빈 줄은 그리지 않는다. */
   items: string[];
@@ -45,10 +48,12 @@ export interface CardContent {
   /** 왼쪽 위 칩. */
   badge: string;
   /**
-   * 큰 제목. 줄은 `\n` 으로 나눈다. `*단어*` 는 검은 상자, `~단어~` 는 강조색 글자다
+   * 큰 제목. 줄은 `\n` 으로 나눈다. `*단어*` 는 강조 상자, `~단어~` 는 강조색 글자다
    * (`./markup.ts`).
    */
   headline: string;
+  /** 탭 카드 시안의 흰 카드 맨 위 큰 제목(`[카카오스타일] 인플루언서 마케터`). */
+  roleTitle: string;
   /** 1장의 섹션(채용 직무·마감 기한·담당 업무). */
   summarySections: CardSection[];
   /** 1장 맨 아래 작은 안내. 비우면 그리지 않는다. */
@@ -60,33 +65,58 @@ export interface CardContent {
   profile: CardProfile;
 }
 
-export type BackgroundKind = 'solid' | 'gradient' | 'image';
+/**
+ * 강조 상자(`*단어*`)와 섹션 칩의 색. `tint` 는 연한 브랜드색 바탕에 검은 글자(아누아·오늘의집
+ * 예시), `brand` 는 브랜드색 바탕에 흰 글자(동원 예시), `custom` 은 `highlightColor` 다.
+ */
+export type HighlightPreset = 'tint' | 'brand' | 'black' | 'custom';
 
-export interface CardTheme {
-  background: {
-    kind: BackgroundKind;
-    color: string;
-    /** 그라데이션의 아래쪽 색. */
-    color2: string;
-    /** 배경 이미지(data URL). 색 위에 `imageOpacity` 로 얹는다. */
-    imageDataUrl?: string;
-    imageOpacity: number;
-  };
-  textColor: string;
-  /** `*단어*` 상자와 섹션 칩의 바탕색. */
-  boxColor: string;
-  boxTextColor: string;
-  /** `~단어~` 의 글자색. */
-  accentColor: string;
-  /** 로고 뒤에 흰 판을 깐다. 바탕을 로고 색으로 칠하면 로고가 묻히는 것을 막는다. */
-  logoPlate: boolean;
+/**
+ * 로고를 그리는 방식. `auto` 는 시안이 고른다 — 브랜드색 바탕에서는 흰 판 위에 원래 색, 밝은
+ * 바탕에서는 원래 색 그대로. `plate` 는 늘 흰 판 위에, `mono` 는 글자색 한 색으로 칠한다.
+ */
+export type LogoStyle = 'auto' | 'mono' | 'original' | 'plate';
+
+export interface CardImage {
+  /** data URL. 편집 화면이 긴 변 1350px 이하 JPEG 로 줄여 둔다. */
+  dataUrl: string;
+  /** 0~1. 글자가 읽히도록 흐리게 깐다. */
+  opacity: number;
+  /**
+   * 위쪽(제목 자리)과 아래쪽(목록 자리)의 평균 밝기(0~1). 편집 화면이 올릴 때 재고, 시안이 글자색을
+   * 고르는 데 쓴다.
+   */
+  tone: { top: number; bottom: number };
 }
 
+/** 모든 시안에 같이 걸리는 설정. 한 번 바꾸면 다섯 시안이 같이 바뀐다. */
+export interface CardSettings {
+  /** 처음 값은 로고에서 뽑은 색이다. */
+  brandColor: string;
+  highlight: HighlightPreset;
+  highlightColor: string;
+  logoStyle: LogoStyle;
+  /** 관련 이미지 시안의 배경. */
+  photo?: CardImage;
+  /** 건물 시안의 배경. */
+  building?: CardImage;
+}
+
+/** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */
+export interface CardLogo {
+  original: string;
+  white?: string;
+  black?: string;
+}
+
+export type VariantId = 'wave' | 'watermark' | 'photo' | 'building' | 'tab';
+
 export interface CardSpec {
+  variant: VariantId;
   content: CardContent;
-  theme: CardTheme;
-  /** 기업 로고(data URL). 없으면 회사명을 글자로 쓴다. */
-  logoDataUrl?: string;
+  settings: CardSettings;
+  /** 없으면 회사명을 글자로 쓴다. */
+  logo?: CardLogo;
   companyName: string;
 }
 
@@ -94,4 +124,8 @@ export interface RenderRequest {
   spec: CardSpec;
   slide: number;
   size: CardSizeId;
+  /** PNG 축척. 다운로드는 1. */
+  scale?: number;
+  /** `svg` 면 PNG 로 굽지 않고 SVG 를 돌려준다(미리보기). */
+  format?: 'png' | 'svg';
 }

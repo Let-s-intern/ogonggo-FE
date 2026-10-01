@@ -1,5 +1,6 @@
 import { zipSync } from 'fflate';
-import { CARD_SIZES, SLIDE_COUNT, type CardSizeId, type CardSpec } from '../card/types';
+import { CARD_SIZES, type CardSizeId, type CardSpec } from '../card/types';
+import { variantOf } from '../card/variants';
 
 export interface RenderedSlide {
   blob: Blob;
@@ -10,13 +11,13 @@ export async function renderSlide(
   spec: CardSpec,
   slide: number,
   size: CardSizeId,
-  signal?: AbortSignal,
+  options: { scale?: number; format?: 'png' | 'svg'; signal?: AbortSignal } = {},
 ): Promise<RenderedSlide> {
   const response = await fetch('/api/render', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ spec, slide, size }),
-    signal,
+    body: JSON.stringify({ spec, slide, size, scale: options.scale, format: options.format }),
+    signal: options.signal,
   });
   if (!response.ok) {
     throw new Error(`render ${response.status}`);
@@ -36,37 +37,49 @@ function save(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function baseName(spec: CardSpec): string {
-  return `${spec.companyName}-카드뉴스`.replace(/[\\/:*?"<>|\s]+/g, '_');
+function safe(name: string): string {
+  return name.replace(/[\\/:*?"<>|\s]+/g, '_');
 }
 
-function slideFileName(spec: CardSpec, slide: number, size: CardSizeId): string {
+/** 받을 한 장. 시안마다 `spec` 이 다르다(배경 이미지가 시안에만 실린다). */
+export interface SlideTarget {
+  spec: CardSpec;
+  slide: number;
+}
+
+function fileName(target: SlideTarget, size: CardSizeId): string {
   const { width, height } = CARD_SIZES[size];
-  return `${baseName(spec)}-${slide + 1}-${width}x${height}.png`;
-}
-
-export async function downloadSlide(spec: CardSpec, slide: number, size: CardSizeId) {
-  const { blob } = await renderSlide(spec, slide, size);
-  save(blob, slideFileName(spec, slide, size));
+  const variant = variantOf(target.spec.variant).label;
+  return safe(`${target.spec.companyName}-${variant}-${target.slide + 1}-${width}x${height}.png`);
 }
 
 /**
- * 여러 장을 zip 하나로. 브라우저는 다운로드가 여러 개 연달아 나가면 허용을 묻는다 — selumo-card
- * 와 같은 이유로 묶는다.
+ * 고른 장들을 받는다. 한 장이면 PNG 하나, 여러 장이면 zip 하나 — 브라우저는 다운로드가 여러 개
+ * 연달아 나가면 허용을 묻는다.
  */
-export async function downloadZip(spec: CardSpec, sizes: CardSizeId[]) {
+export async function downloadSlides(
+  targets: SlideTarget[],
+  sizes: CardSizeId[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<void> {
+  const total = targets.length * sizes.length;
   const files: Record<string, Uint8Array> = {};
+  let done = 0;
   for (const size of sizes) {
-    for (let slide = 0; slide < SLIDE_COUNT; slide += 1) {
-      const { blob } = await renderSlide(spec, slide, size);
-      files[slideFileName(spec, slide, size)] = new Uint8Array(await blob.arrayBuffer());
+    for (const target of targets) {
+      const { blob } = await renderSlide(target.spec, target.slide, size);
+      if (total === 1) {
+        save(blob, fileName(target, size));
+        return;
+      }
+      files[fileName(target, size)] = new Uint8Array(await blob.arrayBuffer());
+      done += 1;
+      onProgress?.(done, total);
     }
   }
-  const zipped = zipSync(files, { level: 0 });
-  const only = sizes.length === 1 ? CARD_SIZES[sizes[0]!] : null;
-  const suffix = only ? `${only.width}x${only.height}` : '전체크기';
+  const company = targets[0]?.spec.companyName ?? '카드뉴스';
   save(
-    new Blob([zipped as BlobPart], { type: 'application/zip' }),
-    `${baseName(spec)}-${suffix}.zip`,
+    new Blob([zipSync(files, { level: 0 }) as BlobPart], { type: 'application/zip' }),
+    safe(`${company}-카드뉴스-${total}장.zip`),
   );
 }

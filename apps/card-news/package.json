@@ -14,6 +14,7 @@
     "@ogonggo/api": "workspace:*",
     "@ogonggo/ui": "workspace:*",
     "@resvg/resvg-js": "^2.6.2",
+    "@shuding/opentype.js": "1.4.0-beta.0",
     "fflate": "^0.8.2",
     "next": "^16.3.8",
     "react": "^19.2.8",

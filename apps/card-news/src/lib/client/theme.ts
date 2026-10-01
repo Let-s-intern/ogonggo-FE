@@ -1,5 +1,5 @@
-import { contrastRatio, hexToRgb, mix, readableText, rgbToHex } from '../card/color';
-import type { CardTheme } from '../card/types';
+import { hexToRgb, rgbToHex } from '../card/color';
+import type { CardSettings } from '../card/types';
 
 /** 로고에서 색을 못 뽑았을 때(흑백 로고 등)의 바탕. 오공고 인스타 계정의 민트다. */
 export const FALLBACK_COLOR = '#9CF6EE';
@@ -79,29 +79,101 @@ export async function extractBrandColor(dataUrl: string): Promise<string | null>
 }
 
 /**
- * 대표 색으로 카드 색 묶음을 만든다. 바탕은 그 색 그대로, 글자는 더 잘 읽히는 검정·흰색이다.
- * 상자와 칩은 검정 바탕에 흰 글자 — 예시 카드(배민·와이어트·에르메스)가 모두 그렇다. 바탕이
- * 검정에 가까우면 상자가 묻히므로 브랜드 색을 밝혀 상자로 쓴다.
+ * 처음 설정. 강조 상자는 연한 브랜드색이다 — 검정 상자만 쓰면 시안이 다 비슷해 보이고, 예시
+ * (아누아·오늘의집)도 연한 브랜드색을 쓴다. 로고는 시안이 알아서 고른다.
  */
-export function themeFromColor(color: string): CardTheme {
-  const textColor = readableText(color);
-  const boxColor = contrastRatio(color, '#111111') < 2.2 ? mix(color, '#FFFFFF', 0.85) : '#111111';
-  const boxTextColor = readableText(boxColor);
-  const [r, g, b] = hexToRgb(color);
-  const accentColor =
-    textColor === '#FFFFFF' ? mix(rgbToHex([r, g, b]), '#FFFFFF', 0.35) : '#111111';
+export function defaultSettings(brandColor: string): CardSettings {
   return {
-    background: {
-      kind: 'solid',
-      color,
-      color2: '#000000',
-      imageOpacity: 0.18,
-    },
-    textColor,
-    boxColor,
-    boxTextColor,
-    accentColor,
-    // 바탕이 로고 색이라 어두운 바탕에서는 로고가 묻힌다(토스 파랑 위의 파란 로고).
-    logoPlate: textColor === '#FFFFFF',
+    brandColor,
+    highlight: 'tint',
+    highlightColor: '#111111',
+    logoStyle: 'auto',
   };
+}
+
+/**
+ * 로고의 배경을 걷어 내고 빈 테두리를 잘라 낸다. `color` 를 주면 그 한 색으로 칠한다. 투명 배경
+ * 로고는 알파를 그대로 쓰고, 흰 판 같은 불투명 배경 로고는 네 귀퉁이 색을 배경으로 보고 그 색과 먼
+ * 픽셀만 남긴다 — 원래 색 로고도 흰 네모 없이 바탕 위에 놓인다.
+ */
+export async function processLogo(dataUrl: string, color?: string): Promise<string> {
+  const image = await loadImage(dataUrl);
+  const scale = Math.min(1, 800 / Math.max(image.width, image.height));
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return dataUrl;
+  }
+  context.drawImage(image, 0, 0, width, height);
+  const pixels = context.getImageData(0, 0, width, height);
+  const { data } = pixels;
+
+  let transparent = 0;
+  for (let index = 3; index < data.length; index += 4) {
+    if (data[index]! < 200) {
+      transparent += 1;
+    }
+  }
+  const opaque = transparent < (width * height) / 20;
+  const corners = [0, width - 1, (height - 1) * width, height * width - 1].map((pixel) => [
+    data[pixel * 4]!,
+    data[pixel * 4 + 1]!,
+    data[pixel * 4 + 2]!,
+  ]);
+  const background = [0, 1, 2].map(
+    (channel) => corners.reduce((sum, corner) => sum + corner[channel]!, 0) / corners.length,
+  ) as [number, number, number];
+
+  const tint = color ? hexToRgb(color) : null;
+  let [left, top, right, bottom] = [width, height, -1, -1];
+  for (let pixel = 0; pixel < width * height; pixel += 1) {
+    const offset = pixel * 4;
+    let alpha = data[offset + 3]!;
+    if (opaque) {
+      const distance = Math.hypot(
+        data[offset]! - background[0],
+        data[offset + 1]! - background[1],
+        data[offset + 2]! - background[2],
+      );
+      alpha = Math.round(Math.max(0, Math.min(1, (distance - 24) / 72)) * 255);
+    }
+    if (tint) {
+      [data[offset], data[offset + 1], data[offset + 2]] = tint;
+    }
+    data[offset + 3] = alpha;
+    if (alpha > 24) {
+      const x = pixel % width;
+      const y = Math.floor(pixel / width);
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+      top = Math.min(top, y);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  if (right < 0) {
+    return dataUrl;
+  }
+  // 로고가 색 네모 안에 흰 글자인 모양(모두닥 등)이면, 한 색으로 칠할 때 글자까지 같은 색이 돼
+  // 네모만 남는다. 남은 픽셀이 테두리 상자의 6할을 넘으면 칠하지 않고 원래 색으로 돌려준다.
+  if (color) {
+    let covered = 0;
+    for (let y = top; y <= bottom; y += 1) {
+      for (let x = left; x <= right; x += 1) {
+        covered += data[(y * width + x) * 4 + 3]! / 255;
+      }
+    }
+    if (covered / ((right - left + 1) * (bottom - top + 1)) > 0.6) {
+      return processLogo(dataUrl);
+    }
+  }
+  context.putImageData(pixels, 0, 0);
+  const cropped = document.createElement('canvas');
+  cropped.width = right - left + 1;
+  cropped.height = bottom - top + 1;
+  cropped.getContext('2d')?.drawImage(canvas, -left, -top);
+  return cropped.toDataURL('image/png');
 }

@@ -45,8 +45,9 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 2장: 같은 제목 + 자격 요건(qualifications) + 우대 요건(preferred)
 
 [headline 규칙]
-- 정확히 2줄. 줄바꿈은 "\\n". 한 줄은 공백 포함 15자 이내.
-- 첫 줄에 회사명을 넣는다. 회사명과 직무(또는 독자가 끌릴 핵심 키워드)를 *별표*로 감싸 검은 상자로 강조한다. 강조는 2~3곳.
+- 정확히 2줄. 줄바꿈은 "\\n". 한 줄은 공백 포함 12자 이내 — 카드 폭을 꽉 채우는 큰 글자로 들어가야 한다. 두 줄 길이를 비슷하게 맞춘다.
+- 회사명은 [공고 원문]의 '회사명' 값을 그대로 쓴다. 계열사·영문명·서비스명으로 바꾸지 않는다.
+- 첫 줄에 회사명을 넣는다. 회사명과 직무(또는 독자가 끌릴 핵심 키워드)를 *별표*로 감싸 강조 상자로 강조한다. 강조는 2~3곳.
 - 끝맺음은 "채용 중이에요!", "채용!", "채용중!" 처럼 짧고 경쾌하게. 독자의 눈을 끄는 포인트(첫 인턴, 대규모 채용, 경험 우대 등)가 원문에 있으면 살린다.
 - 원문에 없는 사실(연봉, 규모, 혜택)을 지어내지 않는다.
 
@@ -63,7 +64,7 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 {"headline":"*인턴 한번도 못 해봤다면* ~추천~\\n*와이어트 대규모 인턴* ~채용!~","roles":["경영본부/브랜드개발실 등 다양한 조직에서 실무 경험"],"responsibilities":["시장/경쟁사 리서치 및 분석 자료 정리","데이터 입력 & 자료 취합 및 정리","콘텐츠 및 광고 소재 제작 보조"],"qualifications":[],"preferred":[],"note":"※ 상기 항목은 대표 예시입니다.\\n실제 담당 업무는 배치되는 팀에 따라 다르게 구성될 수 있습니다."}
 {"headline":"*에르메스*에서 *동아리/학회 협업*\\n*프로젝트 경험 있는 HR* 채용중!","roles":["HR Assistant"],"responsibilities":["채용 프로세스 운영 서포트","후보자 커뮤니케이션 (폰스크리닝, 인터뷰 일정 조율)","채용 데이터 관리"],"qualifications":[],"preferred":[],"note":""}
 
-~단어~ 는 강조색 글자다. 바탕이 어두울 때 한두 단어에만 쓴다.
+~단어~ 는 강조색 글자다. 꼭 필요할 때 한두 단어에만 쓴다.
 
 [출력]
 {"headline": string, "roles": string[], "responsibilities": string[], "qualifications": string[], "preferred": string[], "note": string} 형태의 JSON 하나만. 설명을 붙이지 않는다.`;
@@ -85,7 +86,8 @@ function jobBrief(job: UserJobDetailResponse): string {
     .join('\n\n');
 }
 
-function strings(value: unknown, max: number, maxLength: number): string[] {
+/** 문자열 목록. 길이로 자르지 않는다 — 말줄임표로 끊긴 문장이 카드에 그대로 나갔다. 긴 항목은 렌더가 줄을 바꾼다. */
+function strings(value: unknown, max: number): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -93,8 +95,7 @@ function strings(value: unknown, max: number, maxLength: number): string[] {
     .filter((item): item is string => typeof item === 'string')
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(0, max)
-    .map((item) => (item.length > maxLength ? `${item.slice(0, maxLength - 1)}…` : item));
+    .slice(0, max);
 }
 
 /** 모델 답을 초안으로. 모양이 틀리면 `null` 이고, 부르는 쪽이 원문 초안으로 대신한다. */
@@ -112,10 +113,10 @@ export function parseDraft(raw: string): AiDraft | null {
   }
   return {
     headline: headline.replace(/\\n/g, '\n'),
-    roles: strings(parsed.roles, 2, 40),
-    responsibilities: strings(parsed.responsibilities, 5, 40),
-    qualifications: strings(parsed.qualifications, 4, 48),
-    preferred: strings(parsed.preferred, 4, 48),
+    roles: strings(parsed.roles, 2),
+    responsibilities: strings(parsed.responsibilities, 5),
+    qualifications: strings(parsed.qualifications, 4),
+    preferred: strings(parsed.preferred, 4),
     note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
   };
 }
@@ -133,8 +134,7 @@ function lines(text: string | undefined, max: number): string[] {
         .trim(),
     )
     .filter((line) => line.length >= 4)
-    .slice(0, max)
-    .map((line) => (line.length > 34 ? `${line.slice(0, 33)}…` : line));
+    .slice(0, max);
 }
 
 /** 공고 제목에서 `[체험형/월350만원]` 같은 머리말과 회사명을 뗀 직무 이름. */

@@ -52,26 +52,3 @@ export function stripMarkup(text: string): string {
     .map((line) => line.map((segment) => segment.text).join(''))
     .join('\n');
 }
-
-/**
- * 글자 폭을 em 으로 어림한다. 한글·한자는 0.98(Pretendard 굵은 체 실측), 영문 대문자는 0.74, 소문자·숫자는 0.6, 공백·문장부호는 0.3 이다. 실제
- * 폭을 재지 않고 글자 크기를 고르는 데만 쓴다(`./layout.ts`).
- */
-export function estimateEm(text: string): number {
-  let em = 0;
-  for (const char of text) {
-    const code = char.codePointAt(0) ?? 0;
-    if (code >= 0x1100 && code <= 0xffdc && !(code >= 0x2000 && code <= 0x2bff)) {
-      em += 0.98;
-    } else if (/[A-Z]/.test(char)) {
-      em += 0.74;
-    } else if (/[a-z0-9]/.test(char)) {
-      em += 0.6;
-    } else if (code > 0xffff) {
-      em += 1.1;
-    } else {
-      em += 0.32;
-    }
-  }
-  return em;
-}

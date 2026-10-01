@@ -92,6 +92,9 @@ importers:
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
+      '@shuding/opentype.js':
+        specifier: 1.4.0-beta.0
+        version: 1.4.0-beta.0
       fflate:
         specifier: ^0.8.2
         version: 0.8.3
