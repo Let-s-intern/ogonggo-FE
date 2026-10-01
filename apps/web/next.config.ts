@@ -9,6 +9,9 @@ const LETSCAREER_API_ORIGIN = process.env.NEXT_PUBLIC_LETSCAREER_API_ORIGIN;
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@ogonggo/ui', '@ogonggo/api'],
+  // 목데이터 여부를 브라우저에도 알린다(`src/shared/config/mocks.ts`). 서버는 그대로
+  // `OGONGGO_USE_MOCKS` 를 읽고, 브라우저는 빌드 때 박힌 이 값을 본다.
+  env: { NEXT_PUBLIC_OGONGGO_USE_MOCKS: process.env.OGONGGO_USE_MOCKS ?? '' },
   // Same-origin from the browser avoids CORS and keeps packages/api free of
   // any base-URL config — see packages/api/src/lib/http-client.ts.
   async rewrites() {

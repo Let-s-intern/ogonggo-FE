@@ -1,3 +1,5 @@
+import { isMockEnabled } from '@/shared/config/mocks';
+
 /**
  * 오공고가 발급한 토큰을 보관한다. 일반 회원(렛츠커리어 교환) 과 기업 회원이 같은 토큰을 받는다.
  *
@@ -88,9 +90,13 @@ export function clearTokens(): void {
 /**
  * 로그인 상태로 볼지. 리프레시 토큰이 있으면 로그인이다 — 액세스 토큰은 탭을 닫으면 없어져도 첫 401 에서
  * 다시 받는다.
+ *
+ * 목데이터 모드에서는 늘 로그인이다. 목 핸들러는 토큰을 보지 않고, 마이페이지 같은 화면을 확인하는 데
+ * 로그인을 끼울 이유가 없다(어드민 `RequireAuth` 와 같은 판단). 어느 회원으로 볼지는
+ * `shared/config/mocks.ts` 의 `readMockRole` 이 정한다.
  */
 export function isSignedIn(): boolean {
-  return getRefreshToken() !== null;
+  return isMockEnabled || getRefreshToken() !== null;
 }
 
 /** `useSyncExternalStore` 용 구독. 이 탭의 저장·삭제와 다른 탭의 `localStorage` 변경을 함께 받는다. */

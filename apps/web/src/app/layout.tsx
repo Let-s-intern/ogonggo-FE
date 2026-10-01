@@ -8,6 +8,7 @@ import {
 } from '@/shared/analytics/GoogleTagManager';
 import { PageContextTracker } from '@/shared/analytics/PageContextTracker';
 import { SITE_ORIGIN } from '@/shared/config/site';
+import { MockGate } from './MockGate';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -100,7 +101,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
           그룹 밖이라 껍데기 없이 렌더된다.
         */}
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <MockGate>{children}</MockGate>
+        </AppProviders>
       </body>
     </html>
   );
