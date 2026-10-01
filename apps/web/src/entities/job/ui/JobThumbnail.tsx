@@ -38,7 +38,8 @@ function judgeCover(img: HTMLImageElement): CoverState {
   return width >= MIN_PHOTO_WIDTH && width / height >= MIN_PHOTO_ASPECT ? 'photo' : 'logo';
 }
 
-const BOX_CLASS = 'relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm';
+const BOX_CLASS =
+  'relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow group-hover:shadow-lg';
 
 export interface JobThumbnailProps {
   companyName: string;

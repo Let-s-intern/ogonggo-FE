@@ -42,7 +42,7 @@ export async function SimilarJobs({ excludeJobId }: SimilarJobsProps) {
           <li key={job.id}>
             <JobCardLink
               href={`/jobs/${job.id}`}
-              className="flex items-center gap-3"
+              className="group flex items-center gap-3"
               jobId={job.id}
               jobInfo={toJobInfo(job)}
               tracking={{ listSource: 'similar', listPosition: index + 1, pageNumber: 1 }}
@@ -53,7 +53,9 @@ export async function SimilarJobs({ excludeJobId }: SimilarJobsProps) {
                 className="h-12 w-12"
               />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-gray-900">{job.title}</p>
+                <p className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-500">
+                  {job.title}
+                </p>
                 <p className="text-xs text-gray-500">{job.companyName}</p>
               </div>
             </JobCardLink>

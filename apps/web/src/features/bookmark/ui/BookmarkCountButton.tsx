@@ -53,7 +53,7 @@ export function BookmarkCountButton({
       aria-pressed={bookmarked}
       aria-disabled={pending || undefined}
       onClick={toggle}
-      className="flex h-11 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 px-3 text-xs text-gray-500"
+      className="flex h-11 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 px-3 text-xs text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50"
     >
       <BookmarkIcon filled={bookmarked} className="h-4 w-4" />
       {/* 서버 값이 오래됐을 때 음수가 보이지 않게 막는다. 개수가 0 인 공고를 푸는 경우다. */}

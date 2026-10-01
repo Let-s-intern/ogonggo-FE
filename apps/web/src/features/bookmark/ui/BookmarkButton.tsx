@@ -62,7 +62,7 @@ export function BookmarkButton({
       aria-pressed={bookmarked}
       aria-disabled={pending || undefined}
       onClick={toggle}
-      className={cn('cursor-pointer', className)}
+      className={cn('cursor-pointer transition-opacity hover:opacity-70', className)}
     >
       <BookmarkIcon filled={bookmarked} className={cn('h-6 w-6', iconClassName)} />
     </button>

@@ -78,7 +78,7 @@ export function JobCard({ job, tracking }: JobCardProps) {
     <div className="relative h-full">
       <JobCardLink
         href={`/jobs/${job.id}`}
-        className="flex h-full flex-col gap-2"
+        className="group flex h-full flex-col gap-2"
         jobId={job.id}
         jobInfo={jobInfo}
         tracking={tracking}
@@ -98,7 +98,9 @@ export function JobCard({ job, tracking }: JobCardProps) {
           recruitmentEndAt={job.recruitmentEndAt}
           showDeadline={false}
         />
-        <p className="line-clamp-2 text-sm font-bold text-gray-900">{job.title}</p>
+        <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
+          {job.title}
+        </p>
         {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
       </JobCardLink>
       <BookmarkButton

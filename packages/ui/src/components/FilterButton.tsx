@@ -18,9 +18,9 @@ import { cn } from '../lib/cn';
  * `l` 과 `t` 가 붙는다.
  */
 const STATE_CLASSES = {
-  default: 'border-gray-200 text-gray-400',
+  default: 'border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-500',
   open: 'border-blue-500 text-blue-500',
-  selected: 'border-transparent bg-blue-50 font-semibold text-blue-500',
+  selected: 'border-transparent bg-blue-50 font-semibold text-blue-500 hover:bg-blue-100',
 } as const;
 
 export interface FilterButtonProps extends HTMLAttributes<HTMLElement> {
@@ -47,7 +47,7 @@ export const FilterButton = forwardRef<HTMLElement, FilterButtonProps>(
     <summary
       ref={ref}
       className={cn(
-        'flex h-9 cursor-pointer list-none items-center gap-1 rounded-full border px-4',
+        'flex h-9 cursor-pointer list-none items-center gap-1 rounded-full border px-4 transition-colors',
         'text-sm font-normal [&::-webkit-details-marker]:hidden',
         STATE_CLASSES[state],
         className,

@@ -13,9 +13,9 @@ import { cn } from '../lib/cn';
  * 테두리 유무로 안쪽 폭이 1px 씩 달라지면 칩을 나란히 놓았을 때 글자 자리가 어긋난다.
  */
 const TONE_CLASSES = {
-  blue: 'border-transparent bg-blue-500 text-blue-00',
-  gray: 'border-gray-200 bg-gray-100 text-gray-500',
-  ghost: 'border-transparent bg-transparent text-gray-900',
+  blue: 'border-transparent bg-blue-500 text-blue-00 hover:bg-blue-600',
+  gray: 'border-gray-200 bg-gray-100 text-gray-500 hover:bg-gray-200',
+  ghost: 'border-transparent bg-transparent text-gray-900 hover:bg-gray-50',
 } as const;
 
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {

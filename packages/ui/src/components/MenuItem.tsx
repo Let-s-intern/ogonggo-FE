@@ -18,7 +18,7 @@ import { cn } from '../lib/cn';
  * `.claude/tasks/memos/결정-menuitem-굵기-2026-09-21.md`.
  */
 const STATE_CLASSES = {
-  default: 'border-transparent text-gray-500',
+  default: 'border-transparent text-gray-500 hover:text-gray-700',
   active: 'border-transparent text-gray-700',
   current: 'border-gray-950 text-gray-950',
 } as const;
@@ -45,7 +45,7 @@ export const MenuItem = forwardRef<HTMLSpanElement, MenuItemProps>(
     <span
       ref={ref}
       className={cn(
-        'inline-flex h-9 items-center border-b-[1.5px] text-base font-medium',
+        'inline-flex h-9 items-center border-b-[1.5px] text-base font-medium transition-colors',
         STATE_CLASSES[state],
         className,
       )}
