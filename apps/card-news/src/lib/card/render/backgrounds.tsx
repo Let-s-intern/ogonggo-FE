@@ -142,7 +142,8 @@ export function Background({
                 width: size.width,
                 height: size.height - top,
                 objectFit: 'cover',
-                opacity: image.opacity,
+                // 목록 판 뒤에서 튀지 않게 진하기의 절반으로 깐다.
+                opacity: image.opacity * 0.5,
               }}
             />
             <div

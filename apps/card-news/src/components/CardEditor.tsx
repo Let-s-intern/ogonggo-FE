@@ -23,6 +23,11 @@ export function CardEditor() {
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [variant, setVariant] = useState<VariantId | null>(null);
 
+  const logout = async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  };
+
   // 다른 공고를 고르면 시안부터 다시 고른다.
   const jobId = loaded?.job.id;
   useEffect(() => {
@@ -39,16 +44,21 @@ export function CardEditor() {
             받습니다.
           </p>
         </div>
-        {loaded ? (
-          <div className="flex gap-2">
-            <Button size="sm" variant="secondary" onClick={editor.startOver}>
-              처음부터 다시
-            </Button>
-            <Button size="sm" onClick={() => setRegenerateOpen(true)}>
-              AI로 다시 쓰기
-            </Button>
-          </div>
-        ) : null}
+        <div className="flex gap-2">
+          <Button size="sm" variant="ghost" onClick={() => void logout()}>
+            로그아웃
+          </Button>
+          {loaded ? (
+            <>
+              <Button size="sm" variant="secondary" onClick={editor.startOver}>
+                처음부터 다시
+              </Button>
+              <Button size="sm" onClick={() => setRegenerateOpen(true)}>
+                AI로 다시 쓰기
+              </Button>
+            </>
+          ) : null}
+        </div>
       </header>
 
       {status.kind === 'loading' ? (
