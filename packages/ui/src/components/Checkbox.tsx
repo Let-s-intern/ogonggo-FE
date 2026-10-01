@@ -52,7 +52,7 @@ export function Checkbox({
             'pointer-events-none absolute inset-0 rounded-[3px] border border-gray-300 bg-white text-gray-300 transition-colors',
             'peer-checked:border-blue-500 peer-checked:bg-blue-500 peer-checked:text-white',
             'peer-focus-visible:ring-2 peer-focus-visible:ring-blue-100',
-            'peer-disabled:bg-gray-50',
+            'peer-[:hover:not(:checked):not(:disabled)]:border-gray-400 peer-disabled:bg-gray-50',
           )}
         >
           <span className="icon-[lucide--check] block size-full" />

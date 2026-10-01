@@ -81,10 +81,10 @@ export function JobRoleFilter({ query }: { query: JobListQuery }) {
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          'flex h-9 items-center gap-1 rounded-full border px-4 text-sm font-normal',
+          'flex h-9 cursor-pointer items-center gap-1 rounded-full border px-4 text-sm font-normal transition-colors',
           labels.length > 0
-            ? 'border-transparent bg-blue-50 font-semibold text-blue-500'
-            : 'border-gray-200 text-gray-400',
+            ? 'border-transparent bg-blue-50 font-semibold text-blue-500 hover:bg-blue-100'
+            : 'border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-500',
         )}
       >
         <span className="max-w-40 truncate">

@@ -77,7 +77,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           }}
           className={cn(
             'h-9 w-full rounded-full border border-gray-200 bg-white pl-10 text-sm text-gray-800',
-            'placeholder:text-gray-400 focus:outline-none',
+            'placeholder:text-gray-400 transition-colors enabled:hover:border-gray-400 focus:outline-none',
             /* 브라우저가 붙이는 `search` 기본 지우기 아이콘. 우리 것과 둘이 겹친다. */
             '[&::-webkit-search-cancel-button]:hidden',
             filled ? 'pr-10' : 'pr-4',

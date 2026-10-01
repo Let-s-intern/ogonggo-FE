@@ -39,11 +39,11 @@ function FilterPill({
   return (
     <span
       className={cn(
-        'flex h-9 items-center gap-1 rounded-full border px-3 text-sm',
+        'flex h-9 items-center gap-1 rounded-full border px-3 text-sm transition-colors',
         // 켜진 모양은 사이트의 다른 드롭다운(`FilterButton` 의 선택됨)과 같은 파란 바탕이다.
         active
-          ? 'border-transparent bg-blue-50 font-semibold text-blue-500'
-          : 'border-gray-200 text-gray-400',
+          ? 'border-transparent bg-blue-50 font-semibold text-blue-500 hover:bg-blue-100'
+          : 'border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-500',
         className,
       )}
     >
