@@ -12,11 +12,30 @@ interface JobPickerProps {
 
 type Source = { kind: 'today' } | { kind: 'search'; keyword: string };
 
-/** 공고 고르기. 처음에는 오늘의 공고를 보이고, 검색하면 공개 공고에서 찾는다. 번호로도 연다. */
+/**
+ * 오공고 공고 링크(`https://ogonggo.co.kr/jobs/5364`, 미리보기 `preview.ogonggo.co.kr`)에서 공고
+ * 번호를 꺼낸다. 오공고 링크가 아니면 `null`.
+ */
+export function jobIdFromLink(link: string): number | null {
+  let url: URL;
+  try {
+    url = new URL(link.trim().replace(/^(?!https?:\/\/)/, 'https://'));
+  } catch {
+    return null;
+  }
+  if (!/(^|\.)ogonggo\.co\.kr$/.test(url.hostname)) {
+    return null;
+  }
+  const match = /\/jobs\/(\d+)(?:\/|$)/.exec(url.pathname);
+  return match ? Number(match[1]) : null;
+}
+
+/** 공고 고르기. 처음에는 오늘의 공고를 보이고, 검색하면 공개 공고에서 찾는다. 오공고 링크로도 연다. */
 export function JobPicker({ selectedId, onSelect }: JobPickerProps) {
   const [source, setSource] = useState<Source>({ kind: 'today' });
   const [keyword, setKeyword] = useState('');
-  const [jobIdInput, setJobIdInput] = useState('');
+  const [link, setLink] = useState('');
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [items, setItems] = useState<JobListItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,11 +66,14 @@ export function JobPicker({ selectedId, onSelect }: JobPickerProps) {
     setSource(keyword.trim() ? { kind: 'search', keyword: keyword.trim() } : { kind: 'today' });
   };
 
-  const openById = (event: FormEvent) => {
+  const openByLink = (event: FormEvent) => {
     event.preventDefault();
-    const jobId = Number(jobIdInput);
-    if (Number.isInteger(jobId) && jobId > 0) {
+    const jobId = jobIdFromLink(link);
+    if (jobId) {
+      setLinkError(null);
       onSelect(jobId);
+    } else {
+      setLinkError('오공고 공고 링크(ogonggo.co.kr/jobs/번호)를 넣어 주세요.');
     }
   };
 
@@ -80,20 +102,26 @@ export function JobPicker({ selectedId, onSelect }: JobPickerProps) {
         >
           오늘의 공고 보기
         </button>
-        <form onSubmit={openById} className="flex items-center gap-1">
-          <Input
-            aria-label="공고 번호"
-            placeholder="공고 번호"
-            inputMode="numeric"
-            className="h-9 w-28 text-sm"
-            value={jobIdInput}
-            onChange={(event) => setJobIdInput(event.target.value.replace(/\D/g, ''))}
-          />
-          <Button type="submit" size="sm" variant="secondary">
-            열기
-          </Button>
-        </form>
       </div>
+      <form onSubmit={openByLink} className="flex flex-col gap-1">
+        <div className="flex gap-2">
+          <Input
+            aria-label="오공고 링크"
+            placeholder="오공고 공고 링크 붙여넣기"
+            inputMode="url"
+            className="h-9 text-sm"
+            value={link}
+            onChange={(event) => {
+              setLink(event.target.value);
+              setLinkError(null);
+            }}
+          />
+          <Button type="submit" size="sm" variant="secondary" className="shrink-0">
+            링크로 열기
+          </Button>
+        </div>
+        {linkError ? <p className="text-xs text-error">{linkError}</p> : null}
+      </form>
       <ul className="flex max-h-80 flex-col overflow-y-auto">
         {error ? <li className="py-3 text-sm text-error">{error}</li> : null}
         {!error && items === null ? (
