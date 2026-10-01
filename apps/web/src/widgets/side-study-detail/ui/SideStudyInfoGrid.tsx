@@ -89,7 +89,7 @@ export function SideStudyInfoGrid({ sideStudy }: SideStudyInfoGridProps) {
             : NO_VALUE
         }
       />
-      <InfoCell label="소통 방법" value={<ContactValue contact={sideStudy.contact} />} />
+      <InfoCell label="지원 및 소통 방법" value={<ContactValue contact={sideStudy.contact} />} />
     </div>
   );
 }

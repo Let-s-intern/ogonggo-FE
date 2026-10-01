@@ -85,7 +85,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
 
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field
-          label="소통 방법"
+          label="지원 및 소통 방법"
           htmlFor="post-contact-method"
           required
           done={Boolean(values.contactMethod)}
