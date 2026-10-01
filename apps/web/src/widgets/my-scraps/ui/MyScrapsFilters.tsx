@@ -1,4 +1,3 @@
-import { STATUS_LABELS, TUITION_TYPE_LABELS } from '@/entities/bootcamp/model/labels';
 import type { ListMyJobBookmarksJobField } from '@ogonggo/api';
 import {
   EMPLOYMENT_TYPE_LABELS,
@@ -9,9 +8,8 @@ import {
 import { MyPageFilterDropdown } from '@/widgets/mypage-list';
 import {
   buildMyScrapsHref,
-  BOOTCAMP_STATUSES,
+  BOOTCAMP_CATEGORIES,
   EMPLOYMENT_TYPES,
-  TUITION_TYPES,
   type MyScrapsQuery,
 } from '../lib/query';
 
@@ -46,10 +44,14 @@ function jobRoleOptions(jobField: ListMyJobBookmarksJobField) {
   return jobRolesOf(jobField).map((jobRole) => [jobRole, JOB_ROLES[jobRole].label] as const);
 }
 
-const TUITION_TYPE_OPTIONS = TUITION_TYPES.map(
-  (value) => [value, TUITION_TYPE_LABELS[value]] as const,
+/**
+ * 부트캠프 분류. 이름은 공개 목록의 탭과 같다(`widgets/bootcamp-list/ui/BootcampListControls.tsx`) —
+ * `KDT` 가 `부트캠프`, `SESAC` 이 `새싹` 이다.
+ */
+const CATEGORY_LABELS = { KDT: '부트캠프', SESAC: '새싹' } as const;
+const CATEGORY_OPTIONS = BOOTCAMP_CATEGORIES.map(
+  (value) => [value, CATEGORY_LABELS[value]] as const,
 );
-const STATUS_OPTIONS = BOOTCAMP_STATUSES.map((value) => [value, STATUS_LABELS[value]] as const);
 
 export interface MyScrapsFiltersProps {
   query: MyScrapsQuery;
@@ -66,20 +68,12 @@ export interface MyScrapsFiltersProps {
 export function MyScrapsFilters({ query }: MyScrapsFiltersProps) {
   if (query.tab === 'bootcamps') {
     return (
-      <>
-        <MyPageFilterDropdown
-          label="수강료"
-          selected={query.tuitionType}
-          options={TUITION_TYPE_OPTIONS}
-          buildHref={(tuitionType) => buildMyScrapsHref(query, { tuitionType })}
-        />
-        <MyPageFilterDropdown
-          label="모집 상태"
-          selected={query.status}
-          options={STATUS_OPTIONS}
-          buildHref={(status) => buildMyScrapsHref(query, { status })}
-        />
-      </>
+      <MyPageFilterDropdown
+        label="분류"
+        selected={query.category}
+        options={CATEGORY_OPTIONS}
+        buildHref={(category) => buildMyScrapsHref(query, { category })}
+      />
     );
   }
 

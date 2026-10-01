@@ -19,6 +19,7 @@ import { GetRecruitmentPostsProgressMethodsItem } from '../generated/user/models
 import { GetRecruitmentPostsRecruitmentStatusesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentStatusesItem';
 import { GetRecruitmentPostsRecruitmentTypesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentTypesItem';
 import { GetRecruitmentPostsSort } from '../generated/user/models/getRecruitmentPostsSort';
+import { ListPublicBootcampsCategory } from '../generated/user/models/listPublicBootcampsCategory';
 import { ListPublicJobsSort } from '../generated/user/models/listPublicJobsSort';
 import type { CreateRecruitmentPostCommentRequest } from '../generated/user/models/createRecruitmentPostCommentRequest';
 import type { CreateServiceFeedbackRequest } from '../generated/user/models/createServiceFeedbackRequest';
@@ -369,36 +370,37 @@ const toBootcampSummary = ({
 }: UserBootcampDetailResponse): UserBootcampSummaryResponse => summary;
 
 /**
- * `GET /api/v1/bootcamps`의 생성 타입은 `ListPublicBootcampsParams`이고
- * (`packages/api/src/generated/user/models/listPublicBootcampsParams.ts`) `page`/`size`/`sort`/
- * `tuitionType`/`status`/`keyword`를 가진다. 목업의 탭 네 개
- * (`전체`/`부트캠프`/`국비지원`/`무료특강`) 중 `programType`만 대응하는 파라미터가 없어
- * MSW에서만 처리한다.
+ * `listPublicBootcamps`의 `category`를 백엔드와 같은 기준으로 거른다. 백엔드는 분류를 저장하지 않고
+ * 등록 경로로 가른다(`ogonggo-BE` 의 `BootcampCategory`) — `KDT`는 고용24의 K-디지털 트레이닝
+ * 과정, `SESAC`은 크롤러가 등록한 과정이다.
  *
- * 실제 API로 전환할 때 손대야 하는 지점이다. Spring은 모르는 쿼리 파라미터를 400이 아니라
- * 무시로 처리하므로, 이 주석이 없으면 탭이 조용히 안 먹는 상태를 아무도 눈치채지 못한다
- * (PRD 2절).
+ * 픽스처에는 등록 경로가 없어 대신 쓰는 값으로 가른다. `SESAC`은 원문이 새싹 사이트인 과정,
+ * `KDT`는 프로그램 유형이 `K-디지털 트레이닝`인 과정이다. 지금 픽스처는 전부 새싹 과정이라
+ * 목업에서는 `KDT`가 비어 있다.
  *
- * 탭 매핑은 PRD 4.1 표 그대로다 — `부트캠프`만 `programType`이고 `국비지원`·`무료특강`은
- * `tuitionType`이다. 한 파라미터로 묶이지 않아 둘 다 받는다.
+ * `keyword`는 백엔드처럼 운영 회사명이나 프로그램명에 들어 있는지를 대소문자 없이 본다.
  */
+const KDT_PROGRAM_TYPE = 'K-디지털 트레이닝';
+
 const filterBootcamps = (
   bootcamps: UserBootcampDetailResponse[],
-  {
-    programType,
-    tuitionType,
-    status,
-  }: { programType?: string; tuitionType?: string; status?: string },
+  category: string | undefined,
+  keyword: string | undefined,
 ): UserBootcampDetailResponse[] =>
   bootcamps.filter((bootcamp) => {
-    if (programType && bootcamp.programType !== programType) {
+    if (
+      keyword &&
+      ![bootcamp.companyName, bootcamp.title].some((text) =>
+        text.toLowerCase().includes(keyword.toLowerCase()),
+      )
+    ) {
       return false;
     }
-    if (tuitionType && bootcamp.tuitionType !== tuitionType) {
-      return false;
+    if (category === ListPublicBootcampsCategory.KDT) {
+      return bootcamp.programType === KDT_PROGRAM_TYPE;
     }
-    if (status && bootcamp.status !== status) {
-      return false;
+    if (category === ListPublicBootcampsCategory.SESAC) {
+      return bootcamp.sourceUrl ? new URL(bootcamp.sourceUrl).hostname === 'sesac.seoul.kr' : false;
     }
     return true;
   });
@@ -421,11 +423,10 @@ const getBootcampsHandler = http.get('*/api/v1/bootcamps', ({ request }) => {
   const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
   const size = Number(url.searchParams.get('size') ?? DEFAULT_BOOTCAMP_SIZE);
   const sort = url.searchParams.get('sort') ?? ListPublicJobsSort.LATEST;
-  const programType = url.searchParams.get('programType') ?? undefined;
-  const tuitionType = url.searchParams.get('tuitionType') ?? undefined;
-  const status = url.searchParams.get('status') ?? undefined;
+  const category = url.searchParams.get('category') ?? undefined;
+  const keyword = url.searchParams.get('keyword') ?? undefined;
 
-  const filtered = filterBootcamps(BOOTCAMP_FIXTURES, { programType, tuitionType, status });
+  const filtered = filterBootcamps(BOOTCAMP_FIXTURES, category, keyword);
   const sorted = sortBootcamps(filtered, sort);
   const start = (page - 1) * size;
   const items = sorted.slice(start, start + size).map(toBootcampSummary);

@@ -5,7 +5,7 @@ interface BootcampSearchParams {
   page?: string;
   sort?: string;
   tab?: string;
-  openOnly?: string;
+  q?: string;
 }
 
 /**

@@ -39,10 +39,6 @@ export const TUITION_TYPE_OPTIONS: SelectOption[] = [
  * 프로그램 유형 — `programType` 은 자유 문자열(최대 50 자) 이고 고를 값을 주는 API 가 없는데
  * 목업이 드롭다운이라 고를 목록이 필요하다.
  *
- * `부트캠프` 가 첫 줄인 이유는 공개 목록의 `부트캠프` 탭이 **그 글자와 정확히 같은 값만**
- * 거르기 때문이다(`widgets/bootcamp-list/lib/query.ts` 의 `TAB_FILTERS`). 다른 말로 적으면
- * 그 탭에 걸리지 않는다.
- *
  * 자유 입력으로 두지 않은 이유는 같은 과정이 `부트캠프`·`부트 캠프`·`Bootcamp` 로 갈리기
  * 때문이다. 크롤러가 넣은 값(`AI`, `파이썬` 같은 카테고리 표기) 은 목록에 없으므로
  * `withCurrentValue` 가 한 줄 더해 준다.

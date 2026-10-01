@@ -1,6 +1,5 @@
 import type {
-  ListMyBootcampBookmarksStatus,
-  ListMyBootcampBookmarksTuitionType,
+  ListMyBootcampBookmarksCategory,
   ListMyJobBookmarksEmploymentType,
   ListMyJobBookmarksExperienceType,
   ListMyJobBookmarksJobField,
@@ -24,8 +23,7 @@ export interface MyScrapsQuery {
   jobField?: ListMyJobBookmarksJobField;
   jobRole?: ListMyJobBookmarksJobRole;
   /** 교육·부트캠프 탭 전용. */
-  tuitionType?: ListMyBootcampBookmarksTuitionType;
-  status?: ListMyBootcampBookmarksStatus;
+  category?: ListMyBootcampBookmarksCategory;
   /** 두 탭이 함께 쓴다. 사이드·스터디 탭은 받지 않는다. */
   keyword?: string;
 }
@@ -35,7 +33,7 @@ export const DEFAULT_MY_SCRAPS_QUERY: MyScrapsQuery = { tab: 'jobs', page: 1 };
 /** 그 탭에서 실제로 쓰이는 필터 키. 탭을 옮기면 남은 값은 주소에서 지운다. */
 const TAB_FILTER_KEYS = {
   jobs: ['employmentType', 'experienceType', 'jobField', 'jobRole', 'keyword'],
-  bootcamps: ['tuitionType', 'status', 'keyword'],
+  bootcamps: ['category', 'keyword'],
   'side-studies': [],
 } as const satisfies Record<MyScrapTab, readonly (keyof MyScrapsQuery)[]>;
 
@@ -112,16 +110,7 @@ const EXPERIENCE_TYPES: readonly ListMyJobBookmarksExperienceType[] = [
   'BOTH',
   'IRRELEVANT',
 ];
-const TUITION_TYPES: readonly ListMyBootcampBookmarksTuitionType[] = [
-  'FREE',
-  'PAID',
-  'GOVERNMENT_FUNDED',
-];
-/**
- * `DRAFT` 는 뺀다. 생성 타입에는 세 값이 있지만 설명이 "RECRUITING 과 CLOSED 만 받으며 그 밖의
- * 값은 400" 이라고 적고 있다(`listMyBootcampBookmarks`).
- */
-const BOOTCAMP_STATUSES: readonly ListMyBootcampBookmarksStatus[] = ['RECRUITING', 'CLOSED'];
+const BOOTCAMP_CATEGORIES: readonly ListMyBootcampBookmarksCategory[] = ['KDT', 'SESAC'];
 
 /** 백엔드가 `keyword` 를 2~100자로 받는다. 범위를 벗어난 값은 없는 것으로 친다. */
 function pickKeyword(value: string | undefined): string | undefined {
@@ -153,9 +142,8 @@ export function parseMyScrapsQuery(
       ? pick(searchParams.jobRole, jobRolesOf(parsed.jobField))
       : undefined;
   }
-  if (keys.includes('tuitionType')) {
-    parsed.tuitionType = pick(searchParams.tuitionType, TUITION_TYPES);
-    parsed.status = pick(searchParams.status, BOOTCAMP_STATUSES);
+  if (keys.includes('category')) {
+    parsed.category = pick(searchParams.category, BOOTCAMP_CATEGORIES);
   }
   if (keys.includes('keyword')) {
     parsed.keyword = pickKeyword(searchParams.keyword);
@@ -164,4 +152,4 @@ export function parseMyScrapsQuery(
   return parsed;
 }
 
-export { BOOTCAMP_STATUSES, EMPLOYMENT_TYPES, EXPERIENCE_TYPES, TUITION_TYPES };
+export { BOOTCAMP_CATEGORIES, EMPLOYMENT_TYPES, EXPERIENCE_TYPES };
