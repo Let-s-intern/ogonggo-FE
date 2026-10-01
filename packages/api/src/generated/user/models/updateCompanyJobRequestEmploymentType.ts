@@ -12,6 +12,7 @@
  * | `CONTRACT` | 2 | 계약직 |
  * | `INTERN` | 3 | 인턴 |
  * | `PART_TIME` | 4 | 파트타임 |
+ * | `WORK_STUDY` | 6 | 일학습병행 |
  * | `ETC` | 5 | 기타 |
  */
 export type UpdateCompanyJobRequestEmploymentType = typeof UpdateCompanyJobRequestEmploymentType[keyof typeof UpdateCompanyJobRequestEmploymentType];
@@ -22,5 +23,6 @@ export const UpdateCompanyJobRequestEmploymentType = {
   CONTRACT: 'CONTRACT',
   INTERN: 'INTERN',
   PART_TIME: 'PART_TIME',
+  WORK_STUDY: 'WORK_STUDY',
   ETC: 'ETC',
 } as const;

@@ -8,7 +8,7 @@ import type { MyProfileResponseAuthProvider } from './myProfileResponseAuthProvi
 import type { MyProfileResponseGrade } from './myProfileResponseGrade';
 
 /**
- * 이름·휴대폰 번호·닉네임·프로필 이미지는 렛츠커리어가 소유해 로그인마다 갱신되고 오공고에서 바꿀 수 없다. 학력과 희망 조건은 PUT /api/v1/users/me/profile, 수신 이메일은 PUT /api/v1/users/me/notification-email로 고친다.
+ * 이름·휴대폰 번호·닉네임은 렛츠커리어가 소유해 로그인마다 갱신되고 오공고에서 바꿀 수 없다. 학력과 희망 조건은 PUT /api/v1/users/me/profile, 수신 이메일은 PUT /api/v1/users/me/notification-email, 프로필 이미지는 PUT /api/v1/users/me/profile-image로 고친다.
  */
 export interface MyProfileResponse {
   name?: string;
@@ -28,6 +28,7 @@ export interface MyProfileResponse {
   /** 오늘의 공고 정보를 받을 이메일. 가입 이메일과 따로 두며 입력하지 않았으면 null이다. */
   notificationEmail?: string;
   nickname?: string;
+  /** 오공고에서 바꾼 프로필 이미지가 있으면 그 주소, 없으면 렛츠커리어 프로필 이미지 주소. 둘 다 없으면 null이다. */
   profileImageUrl?: string;
   university?: string;
   major?: string;

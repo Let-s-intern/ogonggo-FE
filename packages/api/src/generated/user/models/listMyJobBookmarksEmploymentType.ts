@@ -13,5 +13,6 @@ export const ListMyJobBookmarksEmploymentType = {
   CONTRACT: 'CONTRACT',
   INTERN: 'INTERN',
   PART_TIME: 'PART_TIME',
+  WORK_STUDY: 'WORK_STUDY',
   ETC: 'ETC',
 } as const;

@@ -1,4 +1,4 @@
-import type { MyAccountResponse, ReplaceMyCompanyProfileRequest } from '@ogonggo/api';
+import type { MyAccountResponse } from '@ogonggo/api';
 
 /**
  * 기업/기관 정보 화면이 그리는 값(v5 PRD 5 절). 계정 응답에서 뽑아 두는 것은 이 셋뿐이다 —
@@ -29,8 +29,8 @@ export function toCompanyProfileValues(account: MyAccountResponse): CompanyProfi
 }
 
 /**
- * 고쳐 저장할 수 있는 두 칸. 생성된 수정 요청과 같은 모양이라 폼 상태를 그대로 실어 보낸다
- * (`PUT /api/v1/users/me/company-profile`).
+ * 고쳐 저장할 수 있는 두 칸. 기관명은 기본 정보 수정(`replaceMyCompanyBasicInfo`)으로, 담당자
+ * 이름은 담당자 정보 수정(`replaceMyCompanyManagerInfo`)으로 나눠 보낸다.
  *
  * **이 둘뿐인 것이 백엔드가 받는 전부다.** 로고·연락처·수신용 이메일은 저장할 곳이 없어 칸을
  * 비활성 그대로 둔다 — 없는 필드를 열면 고쳐 저장한 값이 조용히 사라진다
@@ -38,7 +38,10 @@ export function toCompanyProfileValues(account: MyAccountResponse): CompanyProfi
  *
  * 가입한 이메일은 요청에 없다. 로그인 이메일은 여기서 바꿀 수 없다(생성 타입 설명).
  */
-export type CompanyProfileDraft = ReplaceMyCompanyProfileRequest;
+export interface CompanyProfileDraft {
+  organizationName: string;
+  managerName: string;
+}
 
 /** 계정을 아직 못 읽었을 때의 폼 값. 칸은 그리되 비어 있다. */
 export const EMPTY_COMPANY_PROFILE_DRAFT: CompanyProfileDraft = {
