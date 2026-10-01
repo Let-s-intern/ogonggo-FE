@@ -50,7 +50,10 @@ export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: Acc
       <span>{name ? `${name} 님` : '마이페이지'}</span>
     </>
   );
-  const labelClass = cn('flex items-center gap-1.5 text-gray-900', myPageActive && 'font-semibold');
+  const labelClass = cn(
+    'flex cursor-pointer items-center gap-1.5 text-gray-900 transition-opacity hover:opacity-60',
+    myPageActive && 'font-semibold',
+  );
 
   if (!adminOrigin) {
     return (

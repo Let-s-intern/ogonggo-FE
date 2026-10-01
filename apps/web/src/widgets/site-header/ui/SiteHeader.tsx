@@ -137,14 +137,20 @@ export function SiteHeader() {
           <Link
             href={registerHref}
             aria-current={registerActive ? 'page' : undefined}
-            className={registerActive ? 'font-semibold text-gray-900' : undefined}
+            className={cn(
+              'transition-colors hover:text-gray-900',
+              registerActive && 'font-semibold text-gray-900',
+            )}
           >
             공고 등록
           </Link>
           <Link
             href="/calendar"
             aria-current={calendarActive ? 'page' : undefined}
-            className={calendarActive ? 'font-semibold text-gray-900' : undefined}
+            className={cn(
+              'transition-colors hover:text-gray-900',
+              calendarActive && 'font-semibold text-gray-900',
+            )}
           >
             공고 달력
           </Link>
