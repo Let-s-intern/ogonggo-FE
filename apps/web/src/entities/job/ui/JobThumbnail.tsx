@@ -39,7 +39,7 @@ function judgeCover(img: HTMLImageElement): CoverState {
 }
 
 const BOX_CLASS =
-  'relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow group-hover:shadow-md';
+  'relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow group-hover:shadow-lg';
 
 export interface JobThumbnailProps {
   companyName: string;

@@ -98,7 +98,9 @@ export function JobCard({ job, tracking }: JobCardProps) {
           recruitmentEndAt={job.recruitmentEndAt}
           showDeadline={false}
         />
-        <p className="line-clamp-2 text-sm font-bold text-gray-900">{job.title}</p>
+        <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
+          {job.title}
+        </p>
         {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
       </JobCardLink>
       <BookmarkButton
