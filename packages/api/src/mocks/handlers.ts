@@ -400,7 +400,7 @@ const filterBootcamps = (
       return bootcamp.programType === KDT_PROGRAM_TYPE;
     }
     if (category === ListPublicBootcampsCategory.SESAC) {
-      return bootcamp.sourceUrl?.startsWith('https://sesac.seoul.kr') ?? false;
+      return bootcamp.sourceUrl ? new URL(bootcamp.sourceUrl).hostname === 'sesac.seoul.kr' : false;
     }
     return true;
   });
