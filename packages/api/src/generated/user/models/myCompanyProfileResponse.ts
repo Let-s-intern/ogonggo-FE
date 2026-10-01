@@ -11,7 +11,9 @@
 export interface MyCompanyProfileResponse {
   organizationName: string;
   managerName: string;
-  /** 기업 로고 이미지 주소. 입력하지 않았으면 null이다. */
+  /** 기업 로고 이미지 식별자. 로고를 바꾸지 않고 기본 정보를 고칠 때 그대로 보낸다. 로고가 없으면 null이다. */
+  logoImageId?: string;
+  /** 기업 로고 이미지 주소. 로고가 없으면 null이다. */
   logoUrl?: string;
   /** 담당자 연락처. 입력하지 않았으면 null이다. */
   managerPhone?: string;

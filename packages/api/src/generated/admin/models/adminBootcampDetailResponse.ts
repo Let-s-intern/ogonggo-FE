@@ -13,6 +13,7 @@ import type { AdminBootcampDetailResponseSource } from './adminBootcampDetailRes
 import type { AdminBootcampDetailResponseStatus } from './adminBootcampDetailResponseStatus';
 import type { AdminBootcampDetailResponseTuitionType } from './adminBootcampDetailResponseTuitionType';
 import type { AdminBootcampDetailResponseVisibility } from './adminBootcampDetailResponseVisibility';
+import type { AdminBootcampImageResponse } from './adminBootcampImageResponse';
 import type { AdminBootcampPartnerResponse } from './adminBootcampPartnerResponse';
 
 export interface AdminBootcampDetailResponse {
@@ -113,4 +114,6 @@ export interface AdminBootcampDetailResponse {
   sourceUrl?: string;
   partners: AdminBootcampPartnerResponse[];
   curriculums: AdminBootcampCurriculumResponse[];
+  /** 상세에서만 보여 주는 사진입니다. 고용24에서 수집한 과정은 훈련기관 시설 사진이 들어 있고, 그 밖에는 빈 배열입니다. */
+  images: AdminBootcampImageResponse[];
 }

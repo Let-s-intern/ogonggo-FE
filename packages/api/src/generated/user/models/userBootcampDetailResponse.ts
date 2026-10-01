@@ -10,6 +10,7 @@ import type { UserBootcampDetailResponseOperationType } from './userBootcampDeta
 import type { UserBootcampDetailResponseRecruitmentType } from './userBootcampDetailResponseRecruitmentType';
 import type { UserBootcampDetailResponseStatus } from './userBootcampDetailResponseStatus';
 import type { UserBootcampDetailResponseTuitionType } from './userBootcampDetailResponseTuitionType';
+import type { UserBootcampImageResponse } from './userBootcampImageResponse';
 import type { UserBootcampPartnerResponse } from './userBootcampPartnerResponse';
 
 export interface UserBootcampDetailResponse {
@@ -83,4 +84,6 @@ export interface UserBootcampDetailResponse {
   commentCount: number;
   partners: UserBootcampPartnerResponse[];
   curriculums: UserBootcampCurriculumResponse[];
+  /** 상세에서만 보여 주는 사진입니다. 고용24에서 수집한 과정은 훈련기관 시설 사진이 들어 있고, 그 밖에는 빈 배열입니다. */
+  images: UserBootcampImageResponse[];
 }

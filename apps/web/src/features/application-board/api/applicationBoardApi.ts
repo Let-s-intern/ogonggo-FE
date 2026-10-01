@@ -172,15 +172,11 @@ async function fetchBootcampStage(
   stageId: ApplicationStageId<'bootcamps'>,
   params: ApplicationBoardPageParams,
 ): Promise<ApplicationBoardPage> {
-  /*
-   * 부트캠프만 마감 상태의 파라미터 이름이 `status` 다. 생성 타입에는 `DRAFT` 도 있지만
-   * 설명이 "RECRUITING 과 CLOSED 만 받으며 그 밖의 값은 400" 이라 필터 타입에서 뺐다.
-   */
+  // 부트캠프 스크랩 목록은 모집 상태 필터를 받지 않는다(ogonggo-BE LC-3426 에서 빠졌다).
   const response = (await listMyBootcampBookmarks({
     page: params.page,
     size: params.size,
     applicationStatus: stageId,
-    status: params.recruitmentStatus,
     keyword: pickKeyword(params.keyword),
     sort: 'RECENTLY_SAVED',
   })) as unknown as SuccessResponsePageResponseUserBootcampSummaryResponse;

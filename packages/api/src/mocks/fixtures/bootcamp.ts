@@ -84,6 +84,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 79,
     commentCount: 2,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'AI 시대의 시작', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: 'AI의 원리', displayOrder: 2 },
@@ -128,6 +129,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 88,
     commentCount: 4,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'AI의 원리', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '프롬프트 엔지니어링', displayOrder: 2 },
@@ -169,6 +171,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 55,
     commentCount: 3,
     partners: [],
+    images: [],
     curriculums: [
       {
         startWeek: 1,
@@ -236,6 +239,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 54,
     commentCount: 2,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '프로그래밍 언어와 파이썬', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '파이썬 입문', displayOrder: 2 },
@@ -299,6 +303,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 70,
     commentCount: 2,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'AICE 오리엔테이션 및 환경설정', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '라이브러리 활용 및 데이터 획득', displayOrder: 2 },
@@ -371,6 +376,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 322,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '과정소개', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '환경세팅', displayOrder: 2 },
@@ -422,6 +428,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 292,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '강의를 시작하기 전에', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '웹 기술, 개발 배경 지식 정리하기', displayOrder: 2 },
@@ -498,6 +505,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 73,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '인공지능  사물탑재 기술 개요', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '강의소개', displayOrder: 2 },
@@ -546,6 +554,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 207,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '과정소개', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '자바스크립트 기초', displayOrder: 2 },
@@ -589,6 +598,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 111,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '강의소개', displayOrder: 1 },
       {
@@ -738,6 +748,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 124,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '과정소개', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '자연어 처리 개요', displayOrder: 2 },
@@ -785,6 +796,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 48,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '강의소개', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '사물지능 정의 프로세스', displayOrder: 2 },
@@ -844,6 +856,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
       { name: '예시커머스', displayOrder: 2 },
       { name: '목업코스메틱', displayOrder: 3 },
     ],
+    images: [],
     curriculums: [
       {
         startWeek: 1,
@@ -929,6 +942,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 11,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'IT 이해', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: 'Database', displayOrder: 2 },
@@ -973,6 +987,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 7,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       {
         startWeek: 1,
@@ -1056,6 +1071,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 11,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'Python 환경 세팅과 자료형', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: 'Python 제어문과 함수', displayOrder: 2 },
@@ -1146,6 +1162,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 35,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '비즈니스 설계', displayOrder: 1 },
       { startWeek: 2, endWeek: 3, subtitle: '브랜드 설계', displayOrder: 2 },
@@ -1190,6 +1207,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 26,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '오리엔테이션', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '데이터분석', displayOrder: 2 },
@@ -1234,6 +1252,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 14,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'Python 기초', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '딥러닝 기초', displayOrder: 2 },
@@ -1297,6 +1316,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 9,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '디지털 패션디자인, 3D CLO', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '디지털 패션디자인, 창업 기본교육', displayOrder: 2 },
@@ -1350,6 +1370,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 9,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '2D YUKA CAD', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '2D YUKA CAD, 창업 기본교육', displayOrder: 2 },
@@ -1393,6 +1414,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 17,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '오리엔테이션', displayOrder: 1 },
       {
@@ -1470,6 +1492,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 9,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: '창업실무특강', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: '반도체 개론', displayOrder: 2 },
@@ -1540,6 +1563,7 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 16,
     commentCount: 0,
     partners: [],
+    images: [],
     curriculums: [],
   },
 ];

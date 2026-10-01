@@ -5,9 +5,8 @@
  * OpenAPI spec version: v1
  */
 import type { ListMyBootcampBookmarksApplicationStatus } from './listMyBootcampBookmarksApplicationStatus';
+import type { ListMyBootcampBookmarksCategory } from './listMyBootcampBookmarksCategory';
 import type { ListMyBootcampBookmarksSort } from './listMyBootcampBookmarksSort';
-import type { ListMyBootcampBookmarksStatus } from './listMyBootcampBookmarksStatus';
-import type { ListMyBootcampBookmarksTuitionType } from './listMyBootcampBookmarksTuitionType';
 
 export type ListMyBootcampBookmarksParams = {
 /**
@@ -28,19 +27,10 @@ sort?: ListMyBootcampBookmarksSort;
 /**
  * | 값 | code | 설명 |
  * | --- | --- | --- |
- * | `FREE` | 1 | 무료 |
- * | `PAID` | 2 | 유료 |
- * | `GOVERNMENT_FUNDED` | 3 | 국비 지원 |
+ * | `KDT` | 1 | KDT |
+ * | `SESAC` | 2 | 새싹 |
  */
-tuitionType?: ListMyBootcampBookmarksTuitionType;
-/**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `DRAFT` | 1 | 임시저장 |
- * | `RECRUITING` | 2 | 모집중 |
- * | `CLOSED` | 3 | 모집 마감 |
- */
-status?: ListMyBootcampBookmarksStatus;
+category?: ListMyBootcampBookmarksCategory;
 /**
  * @minLength 2
  * @maxLength 100
