@@ -4,6 +4,7 @@ import type {
   AdminBootcampSummaryResponse,
   AdminJobDetailResponse,
   AdminJobSummaryResponse,
+  ChangeAdminJobVisibilityRequest,
   PageResponseAdminBootcampSummaryResponse,
   PageResponseAdminJobSummaryResponse,
   SuccessResponseUnit,
@@ -274,6 +275,69 @@ const patchBootcampHandler = http.patch(
 );
 
 /**
+ * 노출 일괄 변경(`PATCH /api/v1/admin/{jobs|bootcamps}/visibility`). 백엔드(LC-3429)와 같은 규칙이다.
+ *
+ * - 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다.
+ * - 없는 id 가 있으면 404 이고 메시지 끝에 그 id 를 담는다.
+ * - 승인 전 기업회원 콘텐츠를 노출로 바꾸려 하면 409 다.
+ *
+ * `:jobId` 핸들러보다 앞에 둬야 한다. 뒤에 두면 `visibility` 가 id 로 잡혀 404 가 난다.
+ */
+function changeVisibilities<
+  T extends { id: number; visibility: string; source: string; reviewStatus?: string | null },
+>(rows: T[], body: ChangeAdminJobVisibilityRequest, noun: string) {
+  const ids = [...new Set(body.ids)];
+  const targets = ids.map((id) => rows.find((row) => row.id === id));
+  const missing = ids.filter((_, index) => !targets[index]);
+  if (missing.length > 0) {
+    return HttpResponse.json(notFound(`${noun}를 찾을 수 없습니다: ${missing.join(', ')}`), {
+      status: 404,
+    });
+  }
+
+  const found = targets as T[];
+  const unapproved = found.filter(
+    (row) => row.source === 'COMPANY' && row.reviewStatus !== 'APPROVED',
+  );
+  if (body.visibility === 'VISIBLE' && unapproved.length > 0) {
+    return HttpResponse.json(
+      {
+        status: 409,
+        code: 'CONFLICT',
+        message: `승인 전 ${noun}는 노출할 수 없습니다: ${unapproved.map((row) => row.id).join(', ')}`,
+      },
+      { status: 409 },
+    );
+  }
+
+  for (const row of found) {
+    row.visibility = body.visibility;
+  }
+  const response: SuccessResponseUnit = ok({});
+  return HttpResponse.json(response, { status: 200 });
+}
+
+const changeJobVisibilitiesHandler = http.patch(
+  '*/api/v1/admin/jobs/visibility',
+  async ({ request }) =>
+    changeVisibilities(
+      ADMIN_JOB_FIXTURES,
+      (await request.json()) as ChangeAdminJobVisibilityRequest,
+      '채용공고',
+    ),
+);
+
+const changeBootcampVisibilitiesHandler = http.patch(
+  '*/api/v1/admin/bootcamps/visibility',
+  async ({ request }) =>
+    changeVisibilities(
+      ADMIN_BOOTCAMP_FIXTURES,
+      (await request.json()) as ChangeAdminJobVisibilityRequest,
+      '부트캠프',
+    ),
+);
+
+/**
  * 삭제. 배열에서 실제로 뺀다. 응답은 스펙대로 `SuccessResponseUnit` 이고 `data` 는 빈 객체다.
  *
  * 되돌릴 길을 두지 않는다 — 화면에서 문구를 그대로 입력해야만 버튼이 열리고, 그 확인이
@@ -406,9 +470,11 @@ export const contentHandlers: HttpHandler[] = [
   // 목록 경로가 상세 경로의 접두사라 목록을 먼저 둔다.
   listJobsHandler,
   getJobHandler,
+  changeJobVisibilitiesHandler,
   patchJobHandler,
   listBootcampsHandler,
   getBootcampHandler,
+  changeBootcampVisibilitiesHandler,
   patchBootcampHandler,
   deleteJobHandler,
   deleteBootcampHandler,

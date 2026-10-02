@@ -3,6 +3,7 @@ import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } 
 import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogonggo/api/src/admin';
 import { useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
+import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   RECRUITMENT_STATUS_OPTIONS,
@@ -41,8 +42,10 @@ export function BootcampListPage() {
   };
 
   const { data, isPending, isError } = useBootcampList(filters);
+  const selection = useRowSelection((data?.items ?? []).map((row) => row.id));
 
   const columns: DataTableColumn<AdminBootcampSummary>[] = [
+    selectionColumn<AdminBootcampSummary>(selection),
     { key: 'title', header: '과정명', render: (row) => row.title },
     { key: 'companyName', header: '운영사', width: 'w-40', render: (row) => row.companyName },
     {
@@ -131,6 +134,7 @@ export function BootcampListPage() {
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
+          <BulkVisibilityBar kind="bootcamps" selection={selection} />
           <DataTable
             columns={columns}
             rows={data?.items ?? []}
