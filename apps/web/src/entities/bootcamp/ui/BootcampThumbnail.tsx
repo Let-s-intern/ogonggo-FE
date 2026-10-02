@@ -11,12 +11,15 @@ export interface BootcampThumbnailProps {
 }
 
 /**
- * 부트캠프 썸네일. 대표 이미지(`representativeImageUrl`)가 있으면 그것을 박스에 꽉 채우고, 없으면
- * 운영 회사 로고(`logoUrl`)를 흰 바탕에 여백을 두고 잘리지 않게 그린다. 둘 다 없으면 `Thumbnail`의
+ * 부트캠프 썸네일. 대표 이미지(`representativeImageUrl`)가 있으면 그것을 박스 안에 통째로 넣고,
+ * 없으면 운영 회사 로고(`logoUrl`)를 흰 바탕에 여백을 두고 그린다. 둘 다 없으면 `Thumbnail`의
  * 오공고 로고다.
  *
+ * 대표 이미지는 자르지 않는다(`object-contain`). 박스를 꽉 채우면(`object-cover`) 비율이 다른
+ * 이미지는 가장자리가 잘려 글자가 끊긴다. 남는 위아래·양옆은 같은 이미지를 흐리게 깔아 채운다 —
+ * 채용공고 카드(`entities/job/ui/JobThumbnail.tsx`)와 같은 방식이다.
+ *
  * 고용24에서 수집한 과정은 대표 이미지가 늘 비어 있고 훈련기관 로고만 온다(백엔드 응답 설명).
- * 로고를 대표 이미지처럼 `object-cover`로 채우면 글자가 잘려서, 로고일 때만 `object-contain`이다.
  */
 export function BootcampThumbnail({
   representativeImageUrl,
@@ -24,8 +27,25 @@ export function BootcampThumbnail({
   className,
   logoClassName,
 }: BootcampThumbnailProps) {
-  if (representativeImageUrl || !logoUrl) {
-    return <Thumbnail src={representativeImageUrl} alt="" className={className} />;
+  if (representativeImageUrl) {
+    return (
+      <div className={cn('relative overflow-hidden bg-white', className)}>
+        <img
+          src={representativeImageUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
+        />
+        <Thumbnail
+          src={representativeImageUrl}
+          alt=""
+          className="relative h-full w-full object-contain"
+        />
+      </div>
+    );
+  }
+  if (!logoUrl) {
+    return <Thumbnail alt="" className={className} />;
   }
   return (
     <Thumbnail
