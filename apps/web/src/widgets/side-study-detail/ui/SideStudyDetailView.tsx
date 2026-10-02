@@ -96,14 +96,18 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
           <SideStudyInfoGrid sideStudy={sideStudy} />
-          {buildSections(sideStudy)
-            .filter((section) => section.body !== undefined)
-            .map((section) => (
-              <section key={section.label}>
-                <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
-                {section.body}
-              </section>
-            ))}
+          {/* 본문 글자는 위 정보 박스 안 글자와 같은 자리에서 시작한다 — 박스의 `p-4` 와 테두리 1px 를
+              더한 17px 만큼 들인다. */}
+          <div className="flex flex-col gap-10 px-[17px]">
+            {buildSections(sideStudy)
+              .filter((section) => section.body !== undefined)
+              .map((section) => (
+                <section key={section.label}>
+                  <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
+                  {section.body}
+                </section>
+              ))}
+          </div>
         </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar

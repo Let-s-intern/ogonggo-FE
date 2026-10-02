@@ -81,18 +81,22 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
           <BootcampInfoGrid bootcamp={bootcamp} />
-          <BootcampCurriculum curriculums={bootcamp.curriculums} />
-          {/* `지원 자격 · 전형`도 값이 없으면 제목째 사라진다 — 커리큘럼과 같은 규칙이다.
+          {/* 본문 글자는 위 정보 박스 안 글자와 같은 자리에서 시작한다 — 박스의 `p-4` 와 테두리 1px 를
+              더한 17px 만큼 들인다. */}
+          <div className="flex flex-col gap-10 px-[17px]">
+            <BootcampCurriculum curriculums={bootcamp.curriculums} />
+            {/* `지원 자격 · 전형`도 값이 없으면 제목째 사라진다 — 커리큘럼과 같은 규칙이다.
               본문 섹션이 하나뿐이라 `job-detail`처럼 목록으로 만들지 않는다. */}
-          {bootcamp.eligibilityAndSelectionProcess ? (
-            <section>
-              <h2 className="text-lg font-bold text-gray-900">지원 자격 · 전형</h2>
-              <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
-                {bootcamp.eligibilityAndSelectionProcess}
-              </p>
-            </section>
-          ) : null}
-          <BootcampPhotos images={bootcamp.images} />
+            {bootcamp.eligibilityAndSelectionProcess ? (
+              <section>
+                <h2 className="text-lg font-bold text-gray-900">지원 자격 · 전형</h2>
+                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
+                  {bootcamp.eligibilityAndSelectionProcess}
+                </p>
+              </section>
+            ) : null}
+            <BootcampPhotos images={bootcamp.images} />
+          </div>
         </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
