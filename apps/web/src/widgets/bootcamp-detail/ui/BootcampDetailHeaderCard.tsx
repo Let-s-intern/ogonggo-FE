@@ -1,5 +1,5 @@
 import { Card } from '@ogonggo/ui';
-import { BootcampThumbnail } from '@/entities/bootcamp/ui/BootcampThumbnail';
+import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
@@ -36,9 +36,9 @@ export function formatDeadlineText(
  * 제목 + 구분선 + D-day 배지 · 마감 일시 · 조회수. 여백(`p-8`)과 구성은 채용공고 상세 헤더
  * 카드와 같은 값이다.
  *
- * 목업의 로고 자리는 회색 사각형이다. 대표 이미지(`representativeImageUrl`)를 그리고, 없으면
- * 운영 회사 로고(`logoUrl`)를 그린다 — 목록 카드(`BootcampCard`)와 같은 `BootcampThumbnail`이다.
- * 고용24 과정은 대표 이미지 없이 로고만 온다.
+ * 목업의 로고 자리는 회색 사각형이다. 운영 회사 로고(`logoUrl`)를 채용공고 상세 헤더와 같은
+ * `CompanyLogo`로 그린다. 로고가 없으면(새싹 과정) 대표 이미지(`representativeImageUrl`)를 로고
+ * 자리에 맞춰 넣는다 — 잘리거나 늘어나지 않는다.
  *
  * API 없음: 목업 헤더 우측의 "댓글" 아이콘·수는 그리지 않는다 — 응답의 `commentCount`는 새싹의
  * 수강후기 수라 목업의 댓글과 다른 값이고, 채용공고 상세에서도 같은 이유로 뺐다(PRD 8절).
@@ -47,11 +47,10 @@ export function BootcampDetailHeaderCard({ bootcamp }: BootcampDetailHeaderCardP
   return (
     <Card className="bg-gray-50 p-4 md:p-8">
       <div className="flex items-center gap-3">
-        <BootcampThumbnail
-          representativeImageUrl={bootcamp.representativeImageUrl}
-          logoUrl={bootcamp.logoUrl}
-          className="h-16 w-16 shrink-0 rounded-md shadow-sm"
-          logoClassName="p-1.5"
+        <CompanyLogo
+          companyName={bootcamp.companyName}
+          logoUrl={bootcamp.logoUrl ?? bootcamp.representativeImageUrl}
+          className="h-10 w-10 shrink-0 md:h-16 md:w-16"
         />
         <div>
           <p className="font-bold text-gray-900">{bootcamp.companyName}</p>
