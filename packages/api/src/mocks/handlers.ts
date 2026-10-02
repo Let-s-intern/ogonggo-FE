@@ -522,6 +522,10 @@ const sortRecruitmentPosts = (
     }
   });
 
+/**
+ * 목록 항목. `positions` 는 백엔드가 목록 응답에 더하는 중이라(LC-3434) 생성 타입에 아직 없어
+ * 덧붙여 둔다. codegen 뒤 생성 타입에 생기면 이 덧붙임을 지운다.
+ */
 const toRecruitmentPostSummary = ({
   id,
   author,
@@ -532,6 +536,7 @@ const toRecruitmentPostSummary = ({
   capacity,
   activityDurationMonths,
   technologyStacks,
+  positions,
   recruitmentStartDate,
   recruitmentEndDate,
   viewCount,
@@ -539,7 +544,8 @@ const toRecruitmentPostSummary = ({
   applicationCount,
   bookmarkCount,
   bookmarked,
-}: RecruitmentPostFixture): RecruitmentPostSummaryResponse => ({
+}: RecruitmentPostFixture): RecruitmentPostSummaryResponse &
+  Pick<RecruitmentPostFixture, 'positions'> => ({
   id,
   author,
   title,
@@ -549,6 +555,7 @@ const toRecruitmentPostSummary = ({
   capacity,
   activityDurationMonths,
   technologyStacks,
+  positions,
   recruitmentStartDate,
   recruitmentEndDate,
   viewCount,

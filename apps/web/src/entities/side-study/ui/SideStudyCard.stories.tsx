@@ -31,3 +31,18 @@ export const Default: Story = {};
 export const Closed: Story = {
   args: { sideStudy: { ...SIDE_STUDY_MOCK, recruitmentStatus: 'CLOSED' } },
 };
+
+/** 모집 직무가 많은 글. 배지는 그대로 두고 직무 줄만 말줄임으로 자른다. */
+export const ManyPositions: Story = {
+  args: {
+    sideStudy: {
+      ...SIDE_STUDY_MOCK,
+      positions: ['BACKEND', 'FRONTEND', 'DESIGN', 'PM', 'MOBILE', 'ETC'],
+    },
+  },
+};
+
+/** 모집 직무가 없는 글(목록 응답에 아직 없을 때도 같다). 배지만 남는다. */
+export const NoPositions: Story = {
+  args: { sideStudy: { ...SIDE_STUDY_MOCK, positions: undefined } },
+};

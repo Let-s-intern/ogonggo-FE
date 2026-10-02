@@ -87,6 +87,7 @@ export const SIDE_STUDY_MOCK: SideStudySummary = {
   capacity: 6,
   activityDurationMonths: 3,
   technologyStacks: ['React', 'TypeScript', 'Next.js'],
+  positions: ['FRONTEND', 'DESIGN'],
   recruitmentStartDate: endDate(-7),
   recruitmentEndDate: endDate(7),
   viewCount: 412,
