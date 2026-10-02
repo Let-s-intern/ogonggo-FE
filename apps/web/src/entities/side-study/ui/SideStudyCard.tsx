@@ -1,4 +1,4 @@
-import { Badge, Card } from '@ogonggo/ui';
+import { Badge, Card, cn } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
 import {
   isPromoted,
@@ -11,7 +11,12 @@ import { computeDaysRemaining } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { CommentIcon, EyeIcon } from '@/shared/ui/icons';
 import { toSideStudyInfo } from '../model/analytics';
-import { AUTHOR_NICKNAME_FALLBACK, KIND_LABELS, OPERATION_TYPE_LABELS } from '../model/labels';
+import {
+  AUTHOR_NICKNAME_FALLBACK,
+  KIND_LABELS,
+  OPERATION_TYPE_LABELS,
+  POSITION_LABELS,
+} from '../model/labels';
 import type { SideStudySummary } from '../model/types';
 
 export interface SideStudyCardProps {
@@ -33,9 +38,14 @@ const HASHTAG_LIMIT = 3;
  * `Card` 기본값(`gray-200`)보다 한 단계 옅어졌다. `Card` 쪽 기본값은 그대로 둔다 — 바꾸면
  * 채용공고·부트캠프 카드까지 같이 옅어진다.
  *
- * 목업의 해시태그 속 모집 포지션은 없다. 목록 응답(`RecruitmentPostSummaryResponse`)에 없어
- * 화면을 응답에 맞췄다(PRD Push 5 "사용자 결정"). 같은 행의 카드는 높이를 맞추고(`h-full`)
- * 해시태그 줄을 바닥에 붙인다 — 제목이 한 줄인 카드에서 아래 줄이 떠 보이지 않게.
+ * 모집 직무(포지션)는 모집 배지와 붙여 둔다(`SideStudyStatus`). 무슨 사람을 찾는지가 남은
+ * 자리 수와 함께 읽혀야 지원할지 고를 수 있다. 목업은 해시태그 속에 넣었지만 해시태그는 기술
+ * 스택 앞 세 개만 담아 포지션이 밀려난다. 데스크톱은 배지 오른쪽, 모바일은 썸네일 옆 좁은
+ * 자리라 직무를 배지 위에 세로로 쌓는다.
+ *
+ * 데스크톱 제목은 한 줄이어도 두 줄 높이를 잡는다(`md:min-h-10`, `text-sm` 의 줄 높이 20px 두 줄).
+ * 그래야 제목 아래 배지 줄이 같은 행의 카드끼리 같은 높이에 온다. 같은 행의 카드는 높이를
+ * 맞추고(`h-full`) 해시태그 줄을 바닥에 붙인다 — 제목이 한 줄인 카드에서 아래 줄이 떠 보이지 않게.
  *
  * 뿌리가 `<Link>`가 아니라 `relative`인 `div`인 이유는 북마크 버튼이다. 링크와 버튼을 형제로
  * 두고 버튼을 첫 줄 오른쪽 끝에 겹친다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 세 카드 가운데
@@ -71,10 +81,11 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
             채용공고·부트캠프 카드보다 카드가 길어진다.
           */}
           <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-3">
-            <div className="flex items-center gap-2">
+            {/* 모바일은 오른쪽 위에 겹치는 북마크(20px)만큼 비워 둔다. */}
+            <div className="flex w-full min-w-0 items-center gap-2 pr-7 md:w-auto md:pr-0">
               <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
-              <span className="flex md:hidden">
-                <SideStudyBadge sideStudy={sideStudy} />
+              <span className="flex min-w-0 md:hidden">
+                <SideStudyStatus sideStudy={sideStudy} stacked />
               </span>
             </div>
             <div className="w-full min-w-0 md:w-auto md:flex-1">
@@ -87,9 +98,11 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
               <BookmarkSlot />
             </span>
           </div>
-          <p className="line-clamp-2 text-sm font-bold text-gray-900">{sideStudy.title}</p>
-          <span className="hidden md:flex">
-            <SideStudyBadge sideStudy={sideStudy} />
+          <p className="line-clamp-2 text-sm font-bold text-gray-900 md:min-h-10">
+            {sideStudy.title}
+          </p>
+          <span className="hidden min-w-0 md:flex">
+            <SideStudyStatus sideStudy={sideStudy} />
           </span>
           <p className="mt-auto flex flex-col items-start gap-1 text-xs text-gray-400 md:flex-row md:items-center md:justify-between md:gap-2">
             <span className="max-w-full truncate">
@@ -166,6 +179,38 @@ function AuthorThumbnail({ src }: { src?: string }) {
   return (
     <span className="block h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-100 md:h-12 md:w-12">
       <Thumbnail src={src} alt="" className="h-full w-full" />
+    </span>
+  );
+}
+
+/**
+ * 모집 배지와 모집 직무(`백엔드 · 마케팅`). 데스크톱은 배지 오른쪽에 한 줄로, 모바일
+ * (`stacked`)은 직무를 배지 위에 둔다. 직무가 길면 한 줄에서 자르고 배지는 줄어들지 않는다.
+ * 직무가 없는 글(응답에 아직 없거나 빈 배열)은 배지만 남는다.
+ */
+function SideStudyStatus({
+  sideStudy,
+  stacked = false,
+}: {
+  sideStudy: SideStudySummary;
+  stacked?: boolean;
+}) {
+  const positions = (sideStudy.positions ?? []).map((position) => POSITION_LABELS[position]);
+  return (
+    <span
+      className={cn(
+        'flex min-w-0',
+        stacked ? 'flex-col-reverse items-start gap-1' : 'items-center gap-2',
+      )}
+    >
+      <span className="shrink-0">
+        <SideStudyBadge sideStudy={sideStudy} />
+      </span>
+      {positions.length > 0 ? (
+        <span className="max-w-full truncate text-xs font-medium text-gray-600">
+          {positions.join(' · ')}
+        </span>
+      ) : null}
     </span>
   );
 }
