@@ -17,6 +17,7 @@ export const EMPLOYMENT_TYPE_LABELS: Record<JobEmploymentType, string> = {
   INTERN: '인턴',
   PART_TIME: '파트타임',
   WORK_STUDY: '일학습병행',
+  WORK_EXPERIENCE: '미래내일 일경험',
   ETC: '기타',
 };
 

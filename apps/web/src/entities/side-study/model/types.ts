@@ -1,14 +1,7 @@
 import type { RecruitmentPostDetailResponse, RecruitmentPostSummaryResponse } from '@ogonggo/api';
 
-/**
- * `GET /api/v1/recruitment-posts` 의 목록 항목 하나. 썸네일은 목록 응답에 없다.
- *
- * `positions` 는 백엔드가 목록 응답에 더하는 중이다(LC-3434). 생성 타입에 들어오기 전과 배포 전
- * 응답에는 없어 선택으로 둔다. codegen 뒤 생성 타입에 생기면 이 덧붙임을 지운다.
- */
-export type SideStudySummary = RecruitmentPostSummaryResponse & {
-  positions?: RecruitmentPostDetailResponse['positions'];
-};
+/** `GET /api/v1/recruitment-posts` 의 목록 항목 하나. 썸네일은 목록 응답에 없다. */
+export type SideStudySummary = RecruitmentPostSummaryResponse;
 
 /**
  * `GET /api/v1/recruitment-posts/{postId}` 의 공개 상세. 목록에 없는 포지션·소통 수단·본문이

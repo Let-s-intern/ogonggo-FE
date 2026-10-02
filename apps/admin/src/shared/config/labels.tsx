@@ -3,6 +3,7 @@ import type {
   AdminJobDetailResponseReviewStatus as JobReviewStatus,
   AdminJobDetailResponseSource as ContentSource,
   AdminJobDetailResponseVisibility as Visibility,
+  AdminRecruitmentPostSummaryResponsePositionsItem as RecruitmentPosition,
 } from '@ogonggo/api/src/admin';
 import type { MemberStatus } from '@ogonggo/api/src/mocks/fixtures/admin-member';
 
@@ -64,6 +65,19 @@ const SIDE_STUDY_KIND: Record<string, string> = {
   STUDY: '스터디',
 };
 
+/**
+ * 사이드·스터디 모집 직무. 사용자 웹의 `POSITION_LABELS` 와 같은 말이다 — `MOBILE` 은 마케팅
+ * 자리를 빌려 쓰고 있어 `마케팅` 으로 보인다.
+ */
+const RECRUITMENT_POSITION: Record<RecruitmentPosition, string> = {
+  BACKEND: '백엔드',
+  FRONTEND: '프론트엔드',
+  DESIGN: '디자인',
+  PM: '기획',
+  MOBILE: '마케팅',
+  ETC: '기타',
+};
+
 /** 값이 매핑에 없으면 원래 문자열을 그대로 보여준다. 빈 칸보다 낫다. */
 function renderBadge(spec: LabelSpec | undefined, raw: string) {
   if (!spec) {
@@ -97,6 +111,9 @@ export const MemberStatusBadge = ({ value }: { value: MemberStatus }) =>
   renderBadge(MEMBER_STATUS[value], value);
 
 export const sideStudyKindLabel = (value: string): string => SIDE_STUDY_KIND[value] ?? value;
+
+export const recruitmentPositionLabel = (value: RecruitmentPosition): string =>
+  RECRUITMENT_POSITION[value] ?? value;
 
 /** 필터 드롭다운 옵션. 첫 칸은 항상 "전체"이고 값이 빈 문자열이다. */
 const toOptions = (entries: Record<string, LabelSpec | string>, allLabel: string) => [

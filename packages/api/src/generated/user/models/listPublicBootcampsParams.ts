@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { ListPublicBootcampsCategory } from './listPublicBootcampsCategory';
+import type { ListPublicBootcampsRecruitmentStatus } from './listPublicBootcampsRecruitmentStatus';
 import type { ListPublicBootcampsSort } from './listPublicBootcampsSort';
 
 export type ListPublicBootcampsParams = {
@@ -36,4 +37,12 @@ category?: ListPublicBootcampsCategory;
  * @maxLength 100
  */
 keyword?: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `DRAFT` | 1 | 임시저장 |
+ * | `RECRUITING` | 2 | 모집중 |
+ * | `CLOSED` | 3 | 모집 마감 |
+ */
+recruitmentStatus?: ListPublicBootcampsRecruitmentStatus;
 };

@@ -8,6 +8,7 @@ import type { ListPublicJobsEmploymentType } from './listPublicJobsEmploymentTyp
 import type { ListPublicJobsExperienceType } from './listPublicJobsExperienceType';
 import type { ListPublicJobsJobField } from './listPublicJobsJobField';
 import type { ListPublicJobsJobRoleItem } from './listPublicJobsJobRoleItem';
+import type { ListPublicJobsRecruitmentStatus } from './listPublicJobsRecruitmentStatus';
 import type { ListPublicJobsRegion } from './listPublicJobsRegion';
 import type { ListPublicJobsSort } from './listPublicJobsSort';
 import type { ListPublicJobsSubRegion } from './listPublicJobsSubRegion';
@@ -37,6 +38,7 @@ sort?: ListPublicJobsSort;
  * | `INTERN` | 3 | 인턴 |
  * | `PART_TIME` | 4 | 파트타임 |
  * | `WORK_STUDY` | 6 | 일학습병행 |
+ * | `WORK_EXPERIENCE` | 7 | 미래내일 일경험 |
  * | `ETC` | 5 | 기타 |
  */
 employmentType?: ListPublicJobsEmploymentType;
@@ -342,4 +344,11 @@ subRegion?: ListPublicJobsSubRegion;
  * @maxLength 100
  */
 keyword?: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `RECRUITING` | 1 | 모집 중 |
+ * | `CLOSED` | 2 | 모집 마감 |
+ */
+recruitmentStatus?: ListPublicJobsRecruitmentStatus;
 };

@@ -6,18 +6,21 @@ import {
   getJob,
   listBootcamps,
   listJobs,
+  listRecruitmentPosts,
   updateBootcamp,
   updateBootcampVisibilities,
   updateJob,
   updateJobVisibilities,
+  updateRecruitmentPostVisibilities,
   type ChangeAdminJobVisibilityRequest,
   type ListBootcampsParams,
   type ListJobsParams,
+  type ListRecruitmentPostsParams,
   type UpdateAdminBootcampRequest,
   type UpdateAdminJobRequest,
 } from '@ogonggo/api/src/admin';
 import type { AdminSideStudy } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import { adminDelete, adminGet, type PageResponse } from '@/shared/api/adminClient';
+import { adminDelete, adminGet } from '@/shared/api/adminClient';
 import { omitEmpty } from '@/shared/api/omitEmpty';
 import { unwrapData } from '@/shared/api/unwrapData';
 import { isBackendPending } from '@/shared/config/backendPending';
@@ -25,8 +28,8 @@ import { isBackendPending } from '@/shared/config/backendPending';
 /**
  * 콘텐츠 목록·상세 조회.
  *
- * 채용공고·부트캠프는 admin 스펙의 생성 함수를 부른다. 사이드·스터디는 백엔드 API 가 없어 MSW
- * 목에만 있으므로 `adminClient` 로 부르고 픽스처의 타입을 그대로 쓴다.
+ * admin 스펙의 생성 함수를 부른다. 사이드·스터디의 상세·삭제는 백엔드 API 가 없어 MSW 목에만
+ * 있으므로 `adminClient` 로 부르고 픽스처의 타입을 그대로 쓴다.
  *
  * 쿼리 키에 필터를 통째로 넣는다. 필터를 바꿀 때마다 새 키가 되므로 이전 결과가 섞이지 않고,
  * 뒤로 가기로 돌아오면 캐시가 그대로 뜬다.
@@ -58,8 +61,8 @@ const ALL_IDS_PAGE_SIZE = 100;
  * 한꺼번에 바꿀 때 쓴다. 페이지 번호는 필터에서 무시한다.
  */
 export async function listAllIds(
-  kind: 'jobs' | 'bootcamps',
-  filters: JobListFilters | BootcampListFilters,
+  kind: VisibilityContentKind,
+  filters: JobListFilters | BootcampListFilters | SideStudyListFilters,
   limit: number,
 ): Promise<number[]> {
   const ids: number[] = [];
@@ -68,7 +71,9 @@ export async function listAllIds(
     const data =
       kind === 'jobs'
         ? await unwrapData(listJobs(params as ListJobsParams))
-        : await unwrapData(listBootcamps(params as ListBootcampsParams));
+        : kind === 'bootcamps'
+          ? await unwrapData(listBootcamps(params as ListBootcampsParams))
+          : await unwrapData(listRecruitmentPosts(params as ListRecruitmentPostsParams));
     ids.push(...(data?.items ?? []).map((row) => row.id));
     if (!data || ids.length >= limit || page >= data.pageInfo.totalPages)
       return ids.slice(0, limit);
@@ -109,14 +114,12 @@ export function useBootcampDetail(bootcampId: number) {
   });
 }
 
-// 사이드·스터디는 백엔드에 없고 MSW 목에만 있다. 그래서 아래 두 훅과 삭제는 `adminClient` 로
-// 부르고, 실서버 모드에서는 아예 부르지 않는다 — 화면이 안내를 대신 그린다
-// (`@/shared/config/backendPending`). 같은 파일의 채용공고·부트캠프는 백엔드가 있어 두 모드에서
-// 모두 데이터가 나온다.
 export interface SideStudyListFilters {
   page: number;
   keyword: string;
-  kind: string;
+  visibility: string;
+  recruitmentType: string;
+  recruitmentStatus: string;
   sort: string;
 }
 
@@ -124,11 +127,12 @@ export function useSideStudyList(filters: SideStudyListFilters) {
   return useQuery({
     queryKey: ['admin', 'side-studies', filters],
     queryFn: () =>
-      adminGet<PageResponse<AdminSideStudy>>('/api/v1/admin/side-studies', { ...filters }),
-    enabled: !isBackendPending,
+      unwrapData(listRecruitmentPosts(omitEmpty({ ...filters }) as ListRecruitmentPostsParams)),
   });
 }
 
+// 사이드·스터디 상세와 삭제는 백엔드에 없고 MSW 목에만 있다. 그래서 `adminClient` 로 부르고,
+// 실서버 모드에서는 아예 부르지 않는다 — 화면이 안내를 대신 그린다(`@/shared/config/backendPending`).
 export function useSideStudyDetail(postId: number) {
   return useQuery({
     queryKey: ['admin', 'side-studies', postId],
@@ -168,16 +172,19 @@ export function usePatchBootcamp(bootcampId: number) {
   });
 }
 
+/** 노출을 한꺼번에 바꿀 수 있는 콘텐츠. 사이드·스터디의 API 경로는 `recruitment-posts` 다. */
+export type VisibilityContentKind = 'jobs' | 'bootcamps' | 'side-studies';
+
 /**
- * 여러 건의 노출을 한꺼번에 바꾼다(`PATCH /api/v1/admin/{jobs|bootcamps}/visibility`).
+ * 여러 건의 노출을 한꺼번에 바꾼다(`PATCH /api/v1/admin/{jobs|bootcamps|recruitment-posts}/visibility`).
  *
  * 백엔드는 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다. 그래서 실패해도 목록을 다시 받을
  * 필요가 없다. 성공하면 건별 수정(`usePatchJob`)과 같은 캐시를 무효화한다.
  */
-export function useChangeVisibilities(kind: 'jobs' | 'bootcamps') {
+export function useChangeVisibilities(kind: VisibilityContentKind) {
   const queryClient = useQueryClient();
   return useMutation({
-    // 두 요청의 본문 모양이 같다(`ids`, `visibility`). 검색 결과 전체를 고른 경우 ids 는 함수로
+    // 세 요청의 본문 모양이 같다(`ids`, `visibility`). 검색 결과 전체를 고른 경우 ids 는 함수로
     // 와서 보내기 직전에 받는다 — 받는 동안도 같은 진행 중·실패 상태로 보인다.
     mutationFn: async ({
       ids,
@@ -188,7 +195,11 @@ export function useChangeVisibilities(kind: 'jobs' | 'bootcamps') {
     }) => {
       const input = { ids: typeof ids === 'function' ? await ids() : ids, visibility };
       return unwrapData(
-        kind === 'jobs' ? updateJobVisibilities(input) : updateBootcampVisibilities(input),
+        kind === 'jobs'
+          ? updateJobVisibilities(input)
+          : kind === 'bootcamps'
+            ? updateBootcampVisibilities(input)
+            : updateRecruitmentPostVisibilities(input),
       );
     },
     onSuccess: () => {

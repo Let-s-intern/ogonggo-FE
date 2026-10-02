@@ -14,5 +14,6 @@ export const ListPublicJobsEmploymentType = {
   INTERN: 'INTERN',
   PART_TIME: 'PART_TIME',
   WORK_STUDY: 'WORK_STUDY',
+  WORK_EXPERIENCE: 'WORK_EXPERIENCE',
   ETC: 'ETC',
 } as const;
