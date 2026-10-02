@@ -50,6 +50,29 @@ export function useJobList(filters: JobListFilters) {
   });
 }
 
+/** 목록 API 의 페이지 크기 상한이다(백엔드 `validatePageRequest`). */
+const ALL_IDS_PAGE_SIZE = 100;
+
+/**
+ * 필터에 맞는 모든 id 를 페이지를 넘겨 가며 모은다. 검색 결과 전체의 노출을 바꿀 때 쓴다.
+ * 페이지 번호는 필터에서 무시한다.
+ */
+export async function listAllIds(
+  kind: 'jobs' | 'bootcamps',
+  filters: JobListFilters | BootcampListFilters,
+): Promise<number[]> {
+  const ids: number[] = [];
+  for (let page = 1; ; page += 1) {
+    const params = omitEmpty({ ...filters, page, size: ALL_IDS_PAGE_SIZE });
+    const data =
+      kind === 'jobs'
+        ? await unwrapData(listJobs(params as ListJobsParams))
+        : await unwrapData(listBootcamps(params as ListBootcampsParams));
+    ids.push(...(data?.items ?? []).map((row) => row.id));
+    if (!data || page >= data.pageInfo.totalPages) return ids;
+  }
+}
+
 export function useJobDetail(jobId: number) {
   return useQuery({
     queryKey: ['admin', 'jobs', jobId],
@@ -152,11 +175,20 @@ export function usePatchBootcamp(bootcampId: number) {
 export function useChangeVisibilities(kind: 'jobs' | 'bootcamps') {
   const queryClient = useQueryClient();
   return useMutation({
-    // 두 요청의 본문 모양이 같다(`ids`, `visibility`).
-    mutationFn: (input: ChangeAdminJobVisibilityRequest) =>
-      unwrapData(
+    // 두 요청의 본문 모양이 같다(`ids`, `visibility`). 검색 결과 전체를 고른 경우 ids 는 함수로
+    // 와서 보내기 직전에 받는다 — 받는 동안도 같은 진행 중·실패 상태로 보인다.
+    mutationFn: async ({
+      ids,
+      visibility,
+    }: {
+      ids: number[] | (() => Promise<number[]>);
+      visibility: ChangeAdminJobVisibilityRequest['visibility'];
+    }) => {
+      const input = { ids: typeof ids === 'function' ? await ids() : ids, visibility };
+      return unwrapData(
         kind === 'jobs' ? updateJobVisibilities(input) : updateBootcampVisibilities(input),
-      ),
+      );
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', kind] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });

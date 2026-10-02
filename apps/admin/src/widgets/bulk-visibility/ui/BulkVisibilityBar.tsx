@@ -4,26 +4,35 @@ import { useChangeVisibilities } from '@/entities/content/api/useContent';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 
 /**
- * 목록에서 고른 행의 id. 지금 페이지에 보이는 행만 고를 수 있다.
+ * 목록에서 고른 행의 id, 또는 검색 결과 전체.
  *
- * 페이지나 필터가 바뀌면 고른 것을 비운다. 남겨 두면 화면에 없는 행까지 함께 바뀌는데, 운영자는
- * 무엇이 바뀌는지 볼 수 없다. 보이는 행 id 를 이어 붙인 값이 바뀌는 것으로 그때를 안다.
+ * 행은 지금 페이지에 보이는 것만 고를 수 있고, 페이지나 필터가 바뀌면 비운다. 남겨 두면 화면에
+ * 없는 행까지 함께 바뀌는데, 운영자는 무엇이 바뀌는지 볼 수 없다. 보이는 행 id 를 이어 붙인 값이
+ * 바뀌는 것으로 그때를 안다.
+ *
+ * 검색 결과 전체는 필터(`scopeKey`, 페이지 번호는 빼고)에 묶는다. 페이지를 넘겨도 남고 필터가
+ * 바뀌면 풀린다 — 건수가 표 위에 보이므로 무엇이 바뀌는지 운영자가 안다.
  */
-export function useRowSelection(rowIds: number[]) {
+export function useRowSelection(rowIds: number[], scopeKey: string) {
   const rowsKey = rowIds.join(',');
-  const [state, setState] = useState<{ rowsKey: string; ids: Set<number> }>({
-    rowsKey,
-    ids: new Set(),
-  });
+  const [state, setState] = useState<{
+    rowsKey: string;
+    ids: Set<number>;
+    allScope: string | null;
+  }>({ rowsKey, ids: new Set(), allScope: null });
+  const allMatching = state.allScope === scopeKey;
   const selected = state.rowsKey === rowsKey ? state.ids : new Set<number>();
 
-  const update = (next: Set<number>) => setState({ rowsKey, ids: next });
+  const update = (next: Set<number>) => setState({ rowsKey, ids: next, allScope: null });
 
   return {
     selected,
-    allSelected: rowIds.length > 0 && rowIds.every((id) => selected.has(id)),
+    allMatching,
+    isSelected: (id: number) => allMatching || selected.has(id),
+    allSelected: allMatching || (rowIds.length > 0 && rowIds.every((id) => selected.has(id))),
     toggle: (id: number, checked: boolean) => {
-      const next = new Set(selected);
+      // 전체를 고른 채 한 행을 빼면 이 페이지의 나머지 행만 남긴다.
+      const next = new Set(allMatching ? rowIds : selected);
       if (checked) {
         next.add(id);
       } else {
@@ -32,6 +41,7 @@ export function useRowSelection(rowIds: number[]) {
       update(next);
     },
     toggleAll: (checked: boolean) => update(checked ? new Set(rowIds) : new Set()),
+    selectAllMatching: () => setState({ rowsKey, ids: new Set(), allScope: scopeKey }),
     clear: () => update(new Set()),
   };
 }
@@ -54,7 +64,7 @@ export function selectionColumn<T extends { id: number; title: string }>(
     render: (row) => (
       <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
         <Checkbox
-          checked={selection.selected.has(row.id)}
+          checked={selection.isSelected(row.id)}
           onChange={(checked) => selection.toggle(row.id, checked)}
           label={<span className="sr-only">{row.title} 선택</span>}
         />
@@ -63,26 +73,38 @@ export function selectionColumn<T extends { id: number; title: string }>(
   };
 }
 
+/** 노출 일괄 변경 API 가 한 번에 받는 id 수 상한이다. */
+const MAX_IDS = 1000;
+
 export interface BulkVisibilityBarProps {
   kind: 'jobs' | 'bootcamps';
   selection: RowSelection;
+  /** 지금 필터에 맞는 전체 건수. */
+  total: number;
+  /** 지금 필터에 맞는 모든 id 를 받는다. 검색 결과 전체를 고르고 바꿀 때 부른다. */
+  loadAllIds: () => Promise<number[]>;
 }
 
 /**
- * 표 위 한 줄. 이 페이지 전체 선택, 고른 건수, 노출·비노출 버튼이다.
+ * 표 위 한 줄. 이 페이지 전체 선택, 검색 결과 전체 선택, 고른 건수, 노출·비노출 버튼이다.
+ *
+ * 이 페이지를 모두 고르고 결과가 더 있으면 검색 결과 전체를 고를 수 있다. 바꾸는 순간 그 필터의
+ * id 를 모두 받아 한 요청으로 보낸다. 요청을 나누면 백엔드가 지키는 "전부 아니면 아무것도"가
+ * 깨지므로, 상한을 넘으면 나누지 않고 필터를 좁히게 한다.
  *
  * 백엔드는 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다(404 없는 id, 409 승인 전 기업회원
  * 공고의 노출). 그 문구에 어느 id 인지가 들어 있어 그대로 보여 준다. 실패해도 고른 것은 남겨 둔다 —
  * 문제인 행만 빼고 다시 누르면 된다.
  */
-export function BulkVisibilityBar({ kind, selection }: BulkVisibilityBarProps) {
+export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVisibilityBarProps) {
   const mutation = useChangeVisibilities(kind);
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
-  const count = selection.selected.size;
+  const count = selection.allMatching ? total : selection.selected.size;
+  const overLimit = count > MAX_IDS;
 
   const change = (visibility: 'VISIBLE' | 'HIDDEN') => {
     mutation.mutate(
-      { ids: [...selection.selected], visibility },
+      { ids: selection.allMatching ? loadAllIds : [...selection.selected], visibility },
       {
         onSuccess: () => {
           selection.clear();
@@ -107,12 +129,19 @@ export function BulkVisibilityBar({ kind, selection }: BulkVisibilityBarProps) {
           onChange={selection.toggleAll}
           label="이 페이지 전체 선택"
         />
-        <span className="text-sm text-gray-500">{count}건 선택</span>
+        <span className="text-sm text-gray-500">
+          {selection.allMatching ? `검색 결과 전체 ${count}건 선택` : `${count}건 선택`}
+        </span>
+        {selection.allSelected && !selection.allMatching && total > count ? (
+          <Button size="sm" variant="ghost" onClick={selection.selectAllMatching}>
+            검색 결과 전체 {total}건 선택
+          </Button>
+        ) : null}
         <div className="ml-auto flex items-center gap-2">
           <Button
             size="sm"
             variant="secondary"
-            disabled={count === 0 || mutation.isPending}
+            disabled={count === 0 || overLimit || mutation.isPending}
             onClick={() => change('VISIBLE')}
           >
             노출로 바꾸기
@@ -120,13 +149,19 @@ export function BulkVisibilityBar({ kind, selection }: BulkVisibilityBarProps) {
           <Button
             size="sm"
             variant="secondary"
-            disabled={count === 0 || mutation.isPending}
+            disabled={count === 0 || overLimit || mutation.isPending}
             onClick={() => change('HIDDEN')}
           >
             비노출로 바꾸기
           </Button>
         </div>
       </div>
+
+      {overLimit ? (
+        <Callout tone="warning" className="mb-3">
+          한 번에 {MAX_IDS}건까지 바꿀 수 있습니다. 필터를 좁혀 주세요.
+        </Callout>
+      ) : null}
 
       {mutation.isError ? (
         <Callout tone="error" className="mb-3">

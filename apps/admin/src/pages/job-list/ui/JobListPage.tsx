@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminJobSummaryResponse as AdminJobSummary } from '@ogonggo/api/src/admin';
-import { useJobList, usePatchJob } from '@/entities/content/api/useContent';
+import { listAllIds, useJobList, usePatchJob } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
@@ -41,7 +41,11 @@ export function JobListPage() {
   };
 
   const { data, isPending, isError } = useJobList(filters);
-  const selection = useRowSelection((data?.items ?? []).map((row) => row.id));
+  // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
+  const selection = useRowSelection(
+    (data?.items ?? []).map((row) => row.id),
+    JSON.stringify({ ...filters, page: undefined }),
+  );
 
   const columns: DataTableColumn<AdminJobSummary>[] = [
     selectionColumn<AdminJobSummary>(selection),
@@ -133,7 +137,12 @@ export function JobListPage() {
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
-          <BulkVisibilityBar kind="jobs" selection={selection} />
+          <BulkVisibilityBar
+            kind="jobs"
+            selection={selection}
+            total={data?.pageInfo.totalElements ?? 0}
+            loadAllIds={() => listAllIds('jobs', filters)}
+          />
           <DataTable
             columns={columns}
             rows={data?.items ?? []}
