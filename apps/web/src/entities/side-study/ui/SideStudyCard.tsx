@@ -77,17 +77,14 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
         <Card className="flex h-full flex-col gap-2 border-gray-100 transition-shadow hover:shadow-md md:gap-3">
           {/*
             모바일은 카드가 좁아 로고 아래로 메타·작성자를 내린다(`docs/asset/v9 mobile/사이드 스터디.png`).
-            모집 상태 배지는 모바일에서 썸네일 오른쪽 빈자리에 둔다 — 제목 아래 한 줄을 따로 쓰면
-            채용공고·부트캠프 카드보다 카드가 길어진다.
+            모집 직무와 배지도 썸네일 아래 카드 폭 전체를 쓰는 줄에 직무 위·배지 아래로 둔다.
+            썸네일 오른쪽에 두면 북마크와 나눠 쓰는 자리가 70px 남짓이라 직무가 두세 글자에서 잘렸다.
           */}
           <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-3">
-            {/* 모바일은 오른쪽 위에 겹치는 북마크(20px)만큼 비워 둔다. */}
-            <div className="flex w-full min-w-0 items-center gap-2 pr-7 md:w-auto md:pr-0">
-              <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
-              <span className="flex min-w-0 md:hidden">
-                <SideStudyStatus sideStudy={sideStudy} stacked />
-              </span>
-            </div>
+            <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
+            <span className="flex w-full min-w-0 md:hidden">
+              <SideStudyStatus sideStudy={sideStudy} stacked />
+            </span>
             <div className="w-full min-w-0 md:w-auto md:flex-1">
               <p className="truncate text-xs text-gray-400">{metaParts.join(' · ')}</p>
               <p className="truncate text-sm text-gray-600">
