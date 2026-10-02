@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { listPublicBootcamps } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '@ogonggo/api';
-import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 import { TUITION_TYPE_LABELS } from '@/entities/bootcamp/model/labels';
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampBadge } from '@/entities/bootcamp/ui/BootcampBadge';
@@ -32,7 +32,11 @@ async function fetchSimilarPool(): Promise<BootcampSummary[]> {
   return response.data?.items ?? [];
 }
 
-/** `교육부트캠프 상세페이지.png` 사이드바의 목록 — 썸네일 + 제목 + `수강료 · 유형` + 배지. */
+/**
+ * 사이드바의 비슷한 교육 목록. 옆의 `함께 보면 좋아요`(`widgets/cross-sell`)와 같은 틀이다 —
+ * 왼쪽에 `수강료 · 유형`·배지(회색 줄)와 제목(굵게, 두 줄까지), 오른쪽에 썸네일, 항목 사이에
+ * 가는 선. 썸네일은 목록 카드와 같은 `JobThumbnail`(대표 이미지, 없으면 로고)을 폭만 줄여 쓴다.
+ */
 export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsProps) {
   const pool = await fetchSimilarPool();
   const items = pool
@@ -46,26 +50,34 @@ export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsPr
   return (
     <section>
       <h2 className="text-sm font-bold text-gray-900">지금 보고 있는 교육과 비슷한 교육이에요</h2>
-      <ul className="mt-3 flex flex-col gap-3">
+      <ul className="mt-1 divide-y divide-gray-100">
         {items.map((bootcamp) => (
           <li key={bootcamp.id}>
-            <Link href={`/bootcamps/${bootcamp.id}`} className="flex items-center gap-3">
-              <CompanyLogo
-                companyName={bootcamp.companyName}
-                logoUrl={bootcamp.logoUrl ?? bootcamp.representativeImageUrl}
-                className="h-12 w-12 shrink-0"
-              />
+            <Link href={`/bootcamps/${bootcamp.id}`} className="group flex items-center gap-4 py-4">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-900">{bootcamp.title}</p>
-                <p className="truncate text-xs text-gray-500">
-                  {TUITION_TYPE_LABELS[bootcamp.tuitionType]} · {bootcamp.programType}
+                <p className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="truncate">
+                    {TUITION_TYPE_LABELS[bootcamp.tuitionType]} · {bootcamp.programType}
+                  </span>
+                  <span className="shrink-0">
+                    <BootcampBadge
+                      recruitmentType={bootcamp.recruitmentType}
+                      recruitmentEndAt={bootcamp.recruitmentEndAt}
+                      status={bootcamp.status}
+                    />
+                  </span>
+                </p>
+                <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-800 group-hover:text-blue-500">
+                  {bootcamp.title}
                 </p>
               </div>
-              <BootcampBadge
-                recruitmentType={bootcamp.recruitmentType}
-                recruitmentEndAt={bootcamp.recruitmentEndAt}
-                status={bootcamp.status}
-              />
+              <div className="w-24 shrink-0">
+                <JobThumbnail
+                  companyName={bootcamp.companyName}
+                  coverImageUrl={bootcamp.representativeImageUrl}
+                  logoUrl={bootcamp.logoUrl}
+                />
+              </div>
             </Link>
           </li>
         ))}
