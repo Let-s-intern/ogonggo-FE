@@ -3,14 +3,10 @@ import type { JsonNode } from '@ogonggo/api';
 /**
  * 모집 상세 내용(`content`) 의 평문 ↔ Lexical EditorState JSON 변환.
  *
- * 읽는 쪽(`shared/ui/LexicalContent.tsx`, `shared/lib/lexicalHtml.ts`) 은 서버에서만 도는
- * 모듈이다 — `@lexical/headless` 와 happy-dom 을 끌고 오기 때문에 작성 화면(클라이언트) 이
- * 가져다 쓸 수 없다. 그래서 이 파일은 Lexical 을 임포트하지 않고 JSON 을 직접 만든다.
- * 만드는 모양은 `lexicalHtml.ts` 가 읽을 수 있는 최소 집합(루트 · 문단 · 글자) 이다.
- *
- * 작성 칸이 평문 한 칸인 이유는 저장소에 편집기가 없기 때문이다. `@lexical/react` 는 설치돼
- * 있지 않고, 읽기용 여섯 패키지만 있다. 목업의 서식 도구 막대는 그려 두되 비활성이다
- * (`ui/ContentSection.tsx`).
+ * 작성 칸은 Lexical 편집기(`ui/ContentEditor.tsx`)라 평소에는 JSON 을 그대로 다룬다. 여기는 두
+ * 경우만 쓴다 — 칸이 채워졌는지 보려고 글자를 뽑을 때(`lexicalToText`), 그리고 읽어 온 본문을
+ * 편집기가 읽지 못할 때 글자만 문단으로 옮길 때(`textToLexical`). 만드는 모양은 루트 · 문단 ·
+ * 글자뿐이라 Lexical 을 임포트하지 않고 JSON 을 직접 만든다.
  */
 
 type JsonObject = Record<string, unknown>;

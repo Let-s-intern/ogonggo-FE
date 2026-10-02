@@ -36,6 +36,7 @@ import type { SuccessResponsePageResponseRecruitmentPostSummaryResponse } from '
 import type { SuccessResponseRecruitmentPostDetailResponse } from '../generated/user/models/successResponseRecruitmentPostDetailResponse';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../generated/user/models/successResponsePageResponseUserJobSummaryResponse';
+import type { SuccessResponseImageUploadResponse } from '../generated/user/models/successResponseImageUploadResponse';
 import type { SuccessResponsePageResponseUserNoticeSummaryResponse } from '../generated/user/models/successResponsePageResponseUserNoticeSummaryResponse';
 import type { SuccessResponseUserNoticeDetailResponse } from '../generated/user/models/successResponseUserNoticeDetailResponse';
 import type { UserNoticeSummaryResponse } from '../generated/user/models/userNoticeSummaryResponse';
@@ -1030,7 +1031,29 @@ const createServiceFeedbackHandler = http.post(
   },
 );
 
+/**
+ * `POST /api/v1/images`(이미지 업로드). 파일은 받지 않고 늘 같은 실제 이미지 주소를 준다 — 목업에는
+ * 올린 파일을 둘 곳이 없다. 식별자는 요청마다 다르게 준다. 본문 이미지 노드가 이 둘을 담는다.
+ */
+const MOCK_UPLOADED_IMAGE_URL =
+  'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg';
+
+const uploadImageHandler = http.post('*/api/v1/images', () => {
+  const body: SuccessResponseImageUploadResponse = {
+    status: 201,
+    message: 'Created',
+    data: {
+      id: crypto.randomUUID(),
+      url: MOCK_UPLOADED_IMAGE_URL,
+      mimeType: 'image/jpeg',
+      size: 0,
+    },
+  };
+  return HttpResponse.json(body, { status: 201 });
+});
+
 export const handlers: HttpHandler[] = [
+  uploadImageHandler,
   getJobsHandler,
   // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`도 잡는다.
   getJobCalendarHandler,

@@ -1,4 +1,4 @@
-import type { RecruitmentPostFormValues } from './values';
+import { hasContentBody, type RecruitmentPostFormValues } from './values';
 
 /**
  * 게시(`PUBLISH`) 에 필요한 값이 다 있는지 본다. 모자라면 첫 한 줄을 돌려준다.
@@ -32,7 +32,7 @@ export function validateForPublish(values: RecruitmentPostFormValues): string | 
   if (!values.summary.trim()) {
     return '한 줄 소개를 입력해 주세요.';
   }
-  if (!values.contentText.trim()) {
+  if (!hasContentBody(values)) {
     return '모집 상세 내용을 입력해 주세요.';
   }
   if (!values.recruitmentStartDate) {

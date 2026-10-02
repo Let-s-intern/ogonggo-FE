@@ -11,6 +11,16 @@ import { createImage, type SuccessResponseImageUploadResponse } from '@ogonggo/a
  * 그대로 돌려준다(`widgets/company-posts/lib/fetch.ts` 의 같은 주석). 그래서 한 번 단언한다.
  */
 export async function uploadImage(file: File): Promise<string | undefined> {
+  return (await uploadImageAsset(file))?.url;
+}
+
+/**
+ * `uploadImage` 와 같고 이미지 식별자(`id`)도 함께 돌려준다. 모집글 본문 이미지가 쓴다 — 백엔드는
+ * 본문 JSON 의 이미지 노드에 담긴 `imageId` 로 올린 이미지를 글에 연결한다(`lexicalImageNode.tsx`).
+ */
+export async function uploadImageAsset(
+  file: File,
+): Promise<{ id: string; url: string } | undefined> {
   const body = (await createImage({ file })) as unknown as SuccessResponseImageUploadResponse;
-  return body.data?.url;
+  return body.data ? { id: body.data.id, url: body.data.url } : undefined;
 }

@@ -1,4 +1,4 @@
-import type { RecruitmentPostFormValues } from './values';
+import { hasContentBody, type RecruitmentPostFormValues } from './values';
 
 /**
  * 단계(1 기본 정보, 2 모집 내용, 3 지원 설정)마다 게시에 필요한 칸 중 채운 비율, 0~100.
@@ -18,7 +18,7 @@ export function stepPercents(values: RecruitmentPostFormValues): [number, number
       values.progressMethod,
       values.activityDurationMonths,
     ]),
-    percent([values.summary.trim(), values.contentText.trim()]),
+    percent([values.summary.trim(), hasContentBody(values)]),
     percent([
       values.recruitmentStartDate,
       values.recruitmentEndDate,

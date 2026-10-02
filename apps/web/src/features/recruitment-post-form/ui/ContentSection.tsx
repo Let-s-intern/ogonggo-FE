@@ -1,28 +1,11 @@
 'use client';
 
 import { Field, Textarea } from '@ogonggo/ui';
-import type { RecruitmentPostFormValues } from '../model/values';
+import { hasContentBody, type RecruitmentPostFormValues } from '../model/values';
+import { ContentEditor } from './ContentEditor';
 
 /** `CreateRecruitmentPostRequest.summary` 의 `@maxLength`. */
 const MAX_SUMMARY_LENGTH = 500;
-
-/**
- * 목업의 서식 도구 막대 일곱. **전부 비활성이다.**
- *
- * 저장소에 편집기가 없다 — `@lexical/react` 는 설치돼 있지 않고 읽기용 여섯 패키지만 있어,
- * 본문 칸은 평문 한 칸이고 저장할 때 문단으로 나눠 `content` JSON 을 만든다
- * (`lib/content.ts`). 막대를 아예 안 그리지 않고 비활성으로 남기는 것은 PRD 의 결정이다 —
- * 자리가 통째로 비면 "이 화면에는 서식이 없다" 로 읽히는데 사실은 준비 중이다.
- */
-const TOOLBAR_BUTTONS: readonly { label: string; icon: string }[] = [
-  { label: '굵게', icon: 'icon-[lucide--bold]' },
-  { label: '기울임', icon: 'icon-[lucide--italic]' },
-  { label: '밑줄', icon: 'icon-[lucide--underline]' },
-  { label: '글머리 기호 목록', icon: 'icon-[lucide--list]' },
-  { label: '번호 매기기 목록', icon: 'icon-[lucide--list-ordered]' },
-  { label: '링크', icon: 'icon-[lucide--link]' },
-  { label: '이미지', icon: 'icon-[lucide--image]' },
-];
 
 export interface ContentSectionProps {
   values: RecruitmentPostFormValues;
@@ -32,8 +15,8 @@ export interface ContentSectionProps {
 /**
  * 2 단 모집 내용(PRD 5 절). 한 줄 소개 · 모집 상세 내용 · 지원 자격 · 전형.
  *
- * 모집 상세 내용은 `content`(JSON) 이고 `shared/ui/LexicalContent.tsx` 가 읽는 형식을 따른다.
- * 그 형식을 만드는 것은 `lib/content.ts` 이고, 여기서 다루는 값은 평문이다.
+ * 모집 상세 내용은 Lexical 편집기(`ContentEditor`)이고 값은 EditorState JSON(`content`) 그대로다.
+ * 상세 화면(`shared/ui/LexicalContent.tsx`)이 같은 노드로 읽는다.
  */
 export function ContentSection({ values, onChange }: ContentSectionProps) {
   return (
@@ -54,32 +37,13 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
         />
       </Field>
 
-      <Field
-        label="모집 상세 내용"
-        htmlFor="post-content"
-        required
-        done={Boolean(values.contentText.trim())}
-        hint="줄바꿈은 적은 그대로 저장돼요."
-      >
-        <div className="flex items-center gap-1 rounded-t-md border border-b-0 border-gray-300 px-3 py-2">
-          {TOOLBAR_BUTTONS.map((button) => (
-            <button
-              key={button.label}
-              type="button"
-              disabled
-              aria-label={button.label}
-              className="flex size-7 cursor-not-allowed items-center justify-center rounded text-gray-300"
-            >
-              <span aria-hidden="true" className={`${button.icon} block size-4`} />
-            </button>
-          ))}
-        </div>
-        <Textarea
+      <Field label="모집 상세 내용" htmlFor="post-content" required done={hasContentBody(values)}>
+        <ContentEditor
           id="post-content"
-          rows={8}
-          value={values.contentText}
-          onChange={(event) => onChange({ contentText: event.target.value })}
-          className="rounded-t-none"
+          initialContent={values.content}
+          onChange={(content, contentText, contentHasImage) =>
+            onChange({ content, contentText, contentHasImage })
+          }
           placeholder="프로젝트 소개, 목표 및 예상 산출물, 진행 상황, 참고자료, 포지션별 담당 업무, 현재 팀 구성, 모임 방식 등을 자유롭게 작성해 주세요."
         />
       </Field>
