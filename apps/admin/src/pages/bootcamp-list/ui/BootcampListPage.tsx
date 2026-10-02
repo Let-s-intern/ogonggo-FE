@@ -142,7 +142,7 @@ export function BootcampListPage() {
             kind="bootcamps"
             selection={selection}
             total={data?.pageInfo.totalElements ?? 0}
-            loadAllIds={() => listAllIds('bootcamps', filters)}
+            loadAllIds={(limit) => listAllIds('bootcamps', filters, limit)}
           />
           <DataTable
             columns={columns}
