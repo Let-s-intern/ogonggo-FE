@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { ActionAlert, Button, Callout, Checkbox, type DataTableColumn } from '@ogonggo/ui';
-import { useChangeVisibilities } from '@/entities/content/api/useContent';
+import {
+  useChangeVisibilities,
+  type VisibilityContentKind,
+} from '@/entities/content/api/useContent';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 
 /**
@@ -78,7 +81,7 @@ export function selectionColumn<T extends { id: number; title: string }>(
 const MAX_IDS = 1000;
 
 export interface BulkVisibilityBarProps {
-  kind: 'jobs' | 'bootcamps';
+  kind: VisibilityContentKind;
   selection: RowSelection;
   /** 지금 필터에 맞는 전체 건수. */
   total: number;

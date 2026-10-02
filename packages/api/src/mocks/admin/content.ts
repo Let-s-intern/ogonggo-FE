@@ -4,9 +4,12 @@ import type {
   AdminBootcampSummaryResponse,
   AdminJobDetailResponse,
   AdminJobSummaryResponse,
+  AdminRecruitmentPostSummaryResponse,
   ChangeAdminJobVisibilityRequest,
+  ChangeAdminRecruitmentPostVisibilityRequest,
   PageResponseAdminBootcampSummaryResponse,
   PageResponseAdminJobSummaryResponse,
+  PageResponseAdminRecruitmentPostSummaryResponse,
   SuccessResponseUnit,
   UpdateAdminBootcampRequest,
   UpdateAdminJobRequest,
@@ -15,16 +18,20 @@ import {
   ADMIN_BOOTCAMP_FIXTURES,
   ADMIN_JOB_FIXTURES,
   ADMIN_SIDE_STUDY_FIXTURES,
-  type AdminSideStudy,
 } from '../fixtures/admin-content';
+import {
+  RECRUITMENT_POST_FIXTURES,
+  type RecruitmentPostFixture,
+} from '../fixtures/recruitment-post';
 import { clearRejection } from '../fixtures/admin-rejection';
-import { matches, notFound, ok, paginate, readPaging, type PageResponse } from './paging';
+import { matches, notFound, ok, paginate, readPaging } from './paging';
 
 /**
  * 콘텐츠 목록·상세 핸들러.
  *
  * 세 화면이 칸 구성은 같지만 필터가 다르다. 채용공고는 계산한 모집 상태(`recruitmentStatus`),
- * 부트캠프는 저장된 `BootcampStatus`(`status`), 사이드·스터디는 종류(`kind`)로 거른다.
+ * 부트캠프는 저장된 `BootcampStatus`(`status`), 사이드·스터디는 종류(`recruitmentType`)와 모집 상태로
+ * 거른다.
  *
  * 채용공고·부트캠프의 응답 타입은 admin 스펙의 생성 모델이다.
  *
@@ -429,33 +436,96 @@ const getBootcampHandler = http.get('*/api/v1/admin/bootcamps/:bootcampId', ({ p
 });
 
 /**
- * 사이드·스터디는 백엔드 도메인 자체가 없다(`ogonggo-core` 의 `StudyPackage.kt` 는 주석
- * 하나뿐이다). 사용자 웹이 쓰는 픽스처에 등록일만 얹어 쓴다.
+ * 사이드·스터디 목록(`GET /api/v1/admin/recruitment-posts`).
+ *
+ * 사용자 웹 모집글 목의 12 건(`RECRUITMENT_POST_FIXTURES`)을 admin 모델로 옮긴다. 상세·삭제는
+ * 아직 백엔드가 없어 `ADMIN_SIDE_STUDY_FIXTURES` 에 남아 있다. 두 픽스처는 id 가 같으므로 거기서
+ * 지워진 글은 목록에서도 빼고, 등록일도 거기서 가져온다. 노출은 목록 픽스처에 없는 값이라 따로 든다.
  */
-const listSideStudiesHandler = http.get('*/api/v1/admin/side-studies', ({ request }) => {
+const recruitmentPostVisibility = new Map<
+  number,
+  AdminRecruitmentPostSummaryResponse['visibility']
+>();
+
+const toAdminRecruitmentPost = (
+  post: RecruitmentPostFixture,
+  registeredAt: string,
+): AdminRecruitmentPostSummaryResponse => ({
+  id: post.id,
+  title: post.title,
+  recruitmentType: post.recruitmentType,
+  progressMethod: post.progressMethod,
+  capacity: post.capacity,
+  activityDurationMonths: post.activityDurationMonths,
+  positions: post.positions,
+  technologyStacks: post.technologyStacks,
+  recruitmentStartDate: post.recruitmentStartDate,
+  recruitmentEndDate: post.recruitmentEndDate,
+  recruitmentStatus: post.recruitmentStatus,
+  viewCount: post.viewCount,
+  bookmarkCount: post.bookmarkCount,
+  commentCount: post.commentCount,
+  visibility: recruitmentPostVisibility.get(post.id) ?? 'VISIBLE',
+  authorUserId: post.author.userId,
+  authorNickname: post.author.nickname,
+  registeredAt,
+});
+
+const adminRecruitmentPosts = (): AdminRecruitmentPostSummaryResponse[] =>
+  RECRUITMENT_POST_FIXTURES.flatMap((post) => {
+    const study = ADMIN_SIDE_STUDY_FIXTURES.find((fixture) => fixture.id === post.id);
+    return study ? [toAdminRecruitmentPost(post, study.registeredAt)] : [];
+  });
+
+const listRecruitmentPostsHandler = http.get('*/api/v1/admin/recruitment-posts', ({ request }) => {
   const url = new URL(request.url);
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-  const kind = url.searchParams.get('kind') ?? '';
+  const visibility = url.searchParams.get('visibility') ?? '';
+  const recruitmentType = url.searchParams.get('recruitmentType') ?? '';
+  const recruitmentStatus = url.searchParams.get('recruitmentStatus') ?? '';
   const { page, size } = readPaging(url);
 
-  const filtered = ADMIN_SIDE_STUDY_FIXTURES.filter((study) => {
-    if (keyword && !matches(`${study.title} ${study.authorNickname}`, keyword)) {
+  const filtered = adminRecruitmentPosts().filter((post) => {
+    if (keyword && !matches(`${post.title} ${post.authorNickname ?? ''}`, keyword)) {
       return false;
     }
-    if (kind && study.kind !== kind) {
+    if (visibility && post.visibility !== visibility) {
+      return false;
+    }
+    if (recruitmentType && post.recruitmentType !== recruitmentType) {
+      return false;
+    }
+    if (recruitmentStatus && post.recruitmentStatus !== recruitmentStatus) {
       return false;
     }
     return true;
   });
 
   const sorted = sortContent(filtered, readSort(url));
-  const paged = paginate(sorted, page, size);
-  const body: PageResponse<AdminSideStudy> = {
-    items: paged.items,
-    pageInfo: paged.pageInfo,
-  };
+  const body: PageResponseAdminRecruitmentPostSummaryResponse = paginate(sorted, page, size);
   return HttpResponse.json(ok(body), { status: 200 });
 });
+
+/** 하나라도 없는 id 가 있으면 아무것도 바꾸지 않는다. 채용공고·부트캠프와 같다. */
+const changeRecruitmentPostVisibilitiesHandler = http.patch(
+  '*/api/v1/admin/recruitment-posts/visibility',
+  async ({ request }) => {
+    const body = (await request.json()) as ChangeAdminRecruitmentPostVisibilityRequest;
+    const known = new Set(adminRecruitmentPosts().map((post) => post.id));
+    const missing = body.ids.filter((id) => !known.has(id));
+    if (missing.length > 0) {
+      return HttpResponse.json(
+        notFound(`사이드·스터디 글을 찾을 수 없습니다: ${missing.join(', ')}`),
+        { status: 404 },
+      );
+    }
+    for (const id of body.ids) {
+      recruitmentPostVisibility.set(id, body.visibility);
+    }
+    const response: SuccessResponseUnit = ok({});
+    return HttpResponse.json(response, { status: 200 });
+  },
+);
 
 const getSideStudyHandler = http.get('*/api/v1/admin/side-studies/:postId', ({ params }) => {
   const postId = Number(params.postId);
@@ -479,6 +549,7 @@ export const contentHandlers: HttpHandler[] = [
   deleteJobHandler,
   deleteBootcampHandler,
   deleteSideStudyHandler,
-  listSideStudiesHandler,
+  listRecruitmentPostsHandler,
+  changeRecruitmentPostVisibilitiesHandler,
   getSideStudyHandler,
 ];
