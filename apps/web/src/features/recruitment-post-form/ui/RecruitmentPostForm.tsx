@@ -72,6 +72,9 @@ export interface RecruitmentPostFormProps {
  * 옮겨야 한다. 스크롤해도 화면 아래에 붙어 있다(데스크톱 `sticky`, 모바일 `fixed`).
  *
  * 단계 머리마다 그 단계의 필수 칸을 몇 퍼센트 채웠는지 원으로 보인다(`stepPercents`).
+ *
+ * 이미 게시한 글을 고칠 때는 `임시저장` 이 없고 `저장하기` 하나다. 게시된 글을 임시저장으로
+ * 되돌릴 일이 없다.
  */
 export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProps) {
   const router = useRouter();
@@ -80,6 +83,8 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
   const [savedPostId, setSavedPostId] = useState(postId);
   const [values, setValues] = useState<RecruitmentPostFormValues>(EMPTY_FORM_VALUES);
   const [loading, setLoading] = useState(postId !== undefined);
+  /** 이미 게시한 글을 고치는 중. 임시저장 글을 이어 쓸 때는 아니다. */
+  const [editingPublished, setEditingPublished] = useState(false);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
   const [tab, setTab] = useState<'write' | 'preview'>('write');
   /**
@@ -111,6 +116,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         }
         if (form) {
           setValues(toFormValues(form));
+          setEditingPublished(form.status !== 'DRAFT');
         } else {
           setFormError('모집글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         }
@@ -176,7 +182,9 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
       setFormError(
         saveMode === 'DRAFT'
           ? '임시저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'
-          : '모집글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+          : editingPublished
+            ? '모집글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+            : '모집글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.',
       );
       setPending(false);
     }
@@ -187,6 +195,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
   }
 
   const percents = stepPercents(values);
+  const submitLabel = editingPublished ? '저장하기' : '모집글 등록';
 
   return (
     <form
@@ -279,17 +288,19 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
       ) : null}
 
       <div className="sticky bottom-0 z-10 hidden justify-center gap-4 border-t border-gray-100 bg-white py-3 md:flex">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={pending}
-          onClick={() => void save('DRAFT')}
-          className="w-full max-w-72"
-        >
-          임시저장
-        </Button>
+        {editingPublished ? null : (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={pending}
+            onClick={() => void save('DRAFT')}
+            className="w-full max-w-72"
+          >
+            임시저장
+          </Button>
+        )}
         <Button type="submit" disabled={pending} className="w-full max-w-80">
-          모집글 등록
+          {submitLabel}
         </Button>
       </div>
       {/*
@@ -298,22 +309,24 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         버튼이 보이지 않았다.
       */}
       <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(64px+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:pb-3">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={pending}
-          onClick={() => void save('DRAFT')}
-          className="flex-1 border-0 bg-gray-100"
-        >
-          임시저장
-        </Button>
+        {editingPublished ? null : (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={pending}
+            onClick={() => void save('DRAFT')}
+            className="flex-1 border-0 bg-gray-100"
+          >
+            임시저장
+          </Button>
+        )}
         {mobileStep < 3 && tab === 'write' ? (
           <Button type="button" onClick={() => goToStep(mobileStep + 1)} className="flex-1">
             다음
           </Button>
         ) : (
           <Button type="submit" disabled={pending} className="flex-1">
-            모집글 등록
+            {submitLabel}
           </Button>
         )}
       </div>
