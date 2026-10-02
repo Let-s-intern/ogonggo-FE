@@ -24,13 +24,17 @@ export const OPERATION_TYPE_LABELS: Record<SideStudyOperationType, string> = {
 /** 작성자 닉네임이 없을 때. 모집글 응답의 `author.nickname` 은 선택 필드다. */
 export const AUTHOR_NICKNAME_FALLBACK = '익명';
 
-/** 모집 포지션. 문구는 스펙 설명(`RecruitmentPostDetailResponse.positions`) 그대로다. */
+/**
+ * 모집 포지션. 문구는 스펙 설명(`RecruitmentPostDetailResponse.positions`) 그대로다. 단 `MOBILE` 은
+ * `마케팅` 으로 보인다 — 모바일 포지션은 쓰지 않고 마케팅이 필요한데, 백엔드 enum 을 바꾸기 전까지
+ * 그 자리를 빌려 쓴다. 저장되는 값은 여전히 `MOBILE` 이다.
+ */
 export const POSITION_LABELS: Record<SideStudyPosition, string> = {
   BACKEND: '백엔드',
   FRONTEND: '프론트엔드',
   DESIGN: '디자인',
   PM: '기획',
-  MOBILE: '모바일',
+  MOBILE: '마케팅',
   ETC: '기타',
 };
 
