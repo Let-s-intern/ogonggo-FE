@@ -396,6 +396,7 @@ export interface CrawlerJobRegistrationRequest {
      * | `INTERN` | 3 | 인턴 |
      * | `PART_TIME` | 4 | 파트타임 |
      * | `WORK_STUDY` | 6 | 일학습병행 |
+     * | `WORK_EXPERIENCE` | 7 | 미래내일 일경험 |
      * | `ETC` | 5 | 기타 |
      */
   employmentType: CrawlerJobRegistrationRequestEmploymentType;

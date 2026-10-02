@@ -42,7 +42,7 @@ export const ManyPositions: Story = {
   },
 };
 
-/** 모집 직무가 없는 글(목록 응답에 아직 없을 때도 같다). 배지만 남는다. */
+/** 모집 직무가 없는 글. 배지만 남는다. */
 export const NoPositions: Story = {
-  args: { sideStudy: { ...SIDE_STUDY_MOCK, positions: undefined } },
+  args: { sideStudy: { ...SIDE_STUDY_MOCK, positions: [] } },
 };

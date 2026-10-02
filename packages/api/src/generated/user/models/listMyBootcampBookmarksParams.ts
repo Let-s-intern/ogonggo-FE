@@ -6,6 +6,7 @@
  */
 import type { ListMyBootcampBookmarksApplicationStatus } from './listMyBootcampBookmarksApplicationStatus';
 import type { ListMyBootcampBookmarksCategory } from './listMyBootcampBookmarksCategory';
+import type { ListMyBootcampBookmarksRecruitmentStatus } from './listMyBootcampBookmarksRecruitmentStatus';
 import type { ListMyBootcampBookmarksSort } from './listMyBootcampBookmarksSort';
 
 export type ListMyBootcampBookmarksParams = {
@@ -46,4 +47,12 @@ keyword?: string;
  * | `COMPLETED` | 5 | 활동 완료 |
  */
 applicationStatus?: ListMyBootcampBookmarksApplicationStatus;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `DRAFT` | 1 | 임시저장 |
+ * | `RECRUITING` | 2 | 모집중 |
+ * | `CLOSED` | 3 | 모집 마감 |
+ */
+recruitmentStatus?: ListMyBootcampBookmarksRecruitmentStatus;
 };

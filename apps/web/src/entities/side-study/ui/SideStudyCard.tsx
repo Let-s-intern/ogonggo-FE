@@ -175,10 +175,10 @@ function AuthorThumbnail({ src }: { src?: string }) {
 /**
  * 모집 배지와 모집 직무(`백엔드 · 마케팅`). 제목 바로 아래에 온다. 데스크톱은 배지 오른쪽에
  * 한 줄로, 모바일은 카드가 좁아 직무를 배지 위에 쌓는다. 직무가 길면 한 줄에서 자르고 배지는
- * 줄어들지 않는다. 직무가 없는 글(응답에 아직 없거나 빈 배열)은 배지만 남는다.
+ * 줄어들지 않는다. 직무가 없는 글(빈 배열)은 배지만 남는다.
  */
 function SideStudyStatus({ sideStudy }: { sideStudy: SideStudySummary }) {
-  const positions = (sideStudy.positions ?? []).map((position) => POSITION_LABELS[position]);
+  const positions = sideStudy.positions.map((position) => POSITION_LABELS[position]);
   return (
     <span className="flex min-w-0 flex-col-reverse items-start gap-1 md:flex-row md:items-center md:gap-2">
       <span className="shrink-0">

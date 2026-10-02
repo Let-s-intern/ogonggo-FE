@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { RecruitmentPostAuthorResponse } from './recruitmentPostAuthorResponse';
+import type { RecruitmentPostSummaryResponsePositionsItem } from './recruitmentPostSummaryResponsePositionsItem';
 import type { RecruitmentPostSummaryResponseProgressMethod } from './recruitmentPostSummaryResponseProgressMethod';
 import type { RecruitmentPostSummaryResponseRecruitmentStatus } from './recruitmentPostSummaryResponseRecruitmentStatus';
 import type { RecruitmentPostSummaryResponseRecruitmentType } from './recruitmentPostSummaryResponseRecruitmentType';
@@ -38,6 +39,7 @@ export interface RecruitmentPostSummaryResponse {
   capacity: number;
   activityDurationMonths: number;
   technologyStacks: string[];
+  positions: RecruitmentPostSummaryResponsePositionsItem[];
   recruitmentStartDate: string;
   recruitmentEndDate: string;
   viewCount: number;
