@@ -3,6 +3,7 @@ import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } 
 import type { AdminJobSummaryResponse as AdminJobSummary } from '@ogonggo/api/src/admin';
 import { useJobList, usePatchJob } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
+import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   CONTENT_SORT_OPTIONS,
@@ -40,8 +41,10 @@ export function JobListPage() {
   };
 
   const { data, isPending, isError } = useJobList(filters);
+  const selection = useRowSelection((data?.items ?? []).map((row) => row.id));
 
   const columns: DataTableColumn<AdminJobSummary>[] = [
+    selectionColumn<AdminJobSummary>(selection),
     { key: 'title', header: '제목', render: (row) => row.title },
     { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
     {
@@ -130,6 +133,7 @@ export function JobListPage() {
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
+          <BulkVisibilityBar kind="jobs" selection={selection} />
           <DataTable
             columns={columns}
             rows={data?.items ?? []}

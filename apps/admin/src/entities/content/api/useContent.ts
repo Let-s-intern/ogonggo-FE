@@ -7,7 +7,10 @@ import {
   listBootcamps,
   listJobs,
   updateBootcamp,
+  updateBootcampVisibilities,
   updateJob,
+  updateJobVisibilities,
+  type ChangeAdminJobVisibilityRequest,
   type ListBootcampsParams,
   type ListJobsParams,
   type UpdateAdminBootcampRequest,
@@ -136,6 +139,30 @@ export function usePatchBootcamp(bootcampId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+    },
+  });
+}
+
+/**
+ * 여러 건의 노출을 한꺼번에 바꾼다(`PATCH /api/v1/admin/{jobs|bootcamps}/visibility`).
+ *
+ * 백엔드는 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다. 그래서 실패해도 목록을 다시 받을
+ * 필요가 없다. 성공하면 건별 수정(`usePatchJob`)과 같은 캐시를 무효화한다.
+ */
+export function useChangeVisibilities(kind: 'jobs' | 'bootcamps') {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // 두 요청의 본문 모양이 같다(`ids`, `visibility`).
+    mutationFn: (input: ChangeAdminJobVisibilityRequest) =>
+      unwrapData(
+        kind === 'jobs' ? updateJobVisibilities(input) : updateBootcampVisibilities(input),
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', kind] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+      if (kind === 'jobs') {
+        void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
+      }
     },
   });
 }
