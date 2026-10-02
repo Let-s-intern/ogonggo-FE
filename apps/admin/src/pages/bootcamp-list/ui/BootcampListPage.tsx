@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogonggo/api/src/admin';
-import { useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
+import { listAllIds, useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
@@ -42,7 +42,11 @@ export function BootcampListPage() {
   };
 
   const { data, isPending, isError } = useBootcampList(filters);
-  const selection = useRowSelection((data?.items ?? []).map((row) => row.id));
+  // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
+  const selection = useRowSelection(
+    (data?.items ?? []).map((row) => row.id),
+    JSON.stringify({ ...filters, page: undefined }),
+  );
 
   const columns: DataTableColumn<AdminBootcampSummary>[] = [
     selectionColumn<AdminBootcampSummary>(selection),
@@ -134,7 +138,12 @@ export function BootcampListPage() {
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
-          <BulkVisibilityBar kind="bootcamps" selection={selection} />
+          <BulkVisibilityBar
+            kind="bootcamps"
+            selection={selection}
+            total={data?.pageInfo.totalElements ?? 0}
+            loadAllIds={() => listAllIds('bootcamps', filters)}
+          />
           <DataTable
             columns={columns}
             rows={data?.items ?? []}
