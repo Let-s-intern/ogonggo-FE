@@ -30,7 +30,7 @@ export function BootcampPhotos({ images }: BootcampPhotosProps) {
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-gray-900">시설 사진</h2>
+      <h2 className="text-lg font-bold text-gray-900">관련 사진</h2>
       <ul className="-mx-4 mt-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
         {ordered.map((image) => (
           <li key={image.url} className="w-[220px] shrink-0 snap-start md:w-auto">
