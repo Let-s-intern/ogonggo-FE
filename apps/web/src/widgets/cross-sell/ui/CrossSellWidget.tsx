@@ -99,13 +99,14 @@ function ChallengeTitle({ title }: { title: string }) {
 }
 
 /**
- * 챌린지 한 줄 소개. 첫 쉼표 뒤에서 줄을 바꾼다 — `루틴 있는 취업 준비 속 성장하는 나,` /
+ * 챌린지 한 줄 소개. 첫 쉼표 자리에서 줄을 바꾼다 — `루틴 있는 취업 준비 속 성장하는 나` /
  * `feat. 손에 꼭 쥔 …` 처럼 쉼표 앞뒤가 다른 말이라 이어 쓰면 줄 끝에서 아무 데서나 끊긴다.
  * 두 줄을 넘으면 자른다.
  */
 function ChallengeDescription({ description }: { description: string }) {
   const comma = description.indexOf(',');
-  const head = comma >= 0 ? description.slice(0, comma + 1) : description;
+  // 줄을 바꾼 자리의 쉼표는 지운다. 줄바꿈이 쉼표를 대신한다.
+  const head = comma >= 0 ? description.slice(0, comma) : description;
   const tail = comma >= 0 ? description.slice(comma + 1).trim() : '';
   return (
     <p className="line-clamp-2 text-xs text-gray-500">
