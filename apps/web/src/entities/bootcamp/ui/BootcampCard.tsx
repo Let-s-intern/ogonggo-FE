@@ -10,7 +10,7 @@ import { toBootcampInfo } from '../model/analytics';
 import { TUITION_TYPE_LABELS } from '../model/labels';
 import type { BootcampSummary } from '../model/types';
 import { BootcampBadge } from './BootcampBadge';
-import { BootcampThumbnail } from './BootcampThumbnail';
+import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 
 export interface BootcampCardProps {
   bootcamp: BootcampSummary;
@@ -27,12 +27,10 @@ export interface BootcampCardProps {
  * `<Link>`가 아니라 `relative`인 `div`인 것도 `JobCard`와 같은 이유다 — 링크와 북마크 버튼을
  * 형제로 둔다(PRD "카드 안의 버튼은 링크 밖에 둔다").
  *
- * 채용공고 카드와 다른 곳은 썸네일뿐이다. 부트캠프는 `representativeImageUrl`이라는 진짜
- * 대표 이미지가 응답에 있어서 `JobThumbnail`(회사 로고를 대신 쓰는 박스)을 재사용하지 않고
- * 그 URL을 그대로 그린다. `CompanyLogo`와 같은 이유로 `next/image`가 아니라 `<img>`다 —
- * 외부 호스트(`sesac.seoul.kr`)라 `next.config.ts`에 도메인을 등록해야 하고, 목데이터 단계에서
- * 그 설정을 늘릴 이유가 없다. 로드에 실패하면 뒤의 회색 박스가 그대로 보인다. 대표 이미지가 없는
- * 고용24 과정은 운영 회사 로고를 그린다(`BootcampThumbnail`).
+ * 썸네일은 채용공고 카드와 같은 `JobThumbnail`이다. 대표 이미지(`representativeImageUrl`)를
+ * 사진으로 볼지 로고로 볼지 같은 기준으로 가르고, 로고는 같은 넓이로 맞춰 그린다. 대표 이미지가
+ * 없는 고용24 과정은 운영 회사 로고(`logoUrl`)다. 두 카드가 같은 그리드·같은 지면에 놓이므로
+ * 규칙이 갈리면 로고 크기가 카드마다 달라 보인다(2026-10-02, 부트캠프 로고만 제각각 컸다).
  */
 export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
@@ -59,14 +57,11 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
         className="group flex h-full flex-col gap-2"
         events={clickEvents}
       >
-        <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm transition-shadow group-hover:shadow-lg">
-          <BootcampThumbnail
-            representativeImageUrl={bootcamp.representativeImageUrl}
-            logoUrl={bootcamp.logoUrl}
-            className="h-full w-full"
-            logoClassName="px-[15%] py-[10%]"
-          />
-        </div>
+        <JobThumbnail
+          companyName={bootcamp.companyName}
+          coverImageUrl={bootcamp.representativeImageUrl}
+          logoUrl={bootcamp.logoUrl}
+        />
         <p className="flex items-center justify-between gap-2 text-xs text-gray-400">
           <span className="truncate">{metaParts.join(' · ')}</span>
           <span className="hidden md:inline-flex">{badge}</span>
