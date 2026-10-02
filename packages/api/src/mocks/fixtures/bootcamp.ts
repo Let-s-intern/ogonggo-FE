@@ -41,6 +41,8 @@ import type { UserBootcampDetailResponse } from '../../generated/user/models/use
 
 const SESAC_BASE = 'https://sesac.seoul.kr';
 const SESAC_IMAGE_BASE = 'https://sesac.seoul.kr';
+/** 고용24 과정 사진을 백엔드가 옮겨 둔 저장소. */
+const WORK24_IMAGE_BASE = 'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24';
 
 /** 오늘 기준 상대 일수를 `UserBootcampDetailResponse`의 날짜 문자열로. */
 const daysFromToday = (days: number): string => {
@@ -84,7 +86,29 @@ export const BOOTCAMP_FIXTURES: UserBootcampDetailResponse[] = [
     bookmarkCount: 79,
     commentCount: 2,
     partners: [],
-    images: [],
+    // 실서버의 고용24 과정(2767번)에 들어 있는 사진이다. 비율이 제각각인 것까지 그대로 옮겼다.
+    images: [
+      {
+        url: `${WORK24_IMAGE_BASE}/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg`,
+        caption: '강의실, 휴게실, 사무실 외',
+        displayOrder: 0,
+      },
+      {
+        url: `${WORK24_IMAGE_BASE}/0afdd2b6f6a6f0147503e668a600c34e89dc37a8.jpg`,
+        caption: '코로나19대비-열화상카메라',
+        displayOrder: 1,
+      },
+      {
+        url: `${WORK24_IMAGE_BASE}/28b7639bf2779bb2fed1ab3dcb2141490ecebf57.png`,
+        caption: 'KMAC 비즈니스스쿨',
+        displayOrder: 2,
+      },
+      {
+        url: `${WORK24_IMAGE_BASE}/7fb08093b4c22423f00cbcff41d80559f0068395.jpg`,
+        caption: null,
+        displayOrder: 3,
+      },
+    ],
     curriculums: [
       { startWeek: 1, endWeek: 1, subtitle: 'AI 시대의 시작', displayOrder: 1 },
       { startWeek: 2, endWeek: 2, subtitle: 'AI의 원리', displayOrder: 2 },
