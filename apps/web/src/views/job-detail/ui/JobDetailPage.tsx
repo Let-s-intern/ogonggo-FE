@@ -1,3 +1,4 @@
+import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { ForBusinessBanner } from '@/widgets/for-business-banner';
 import { JobDetailView } from '@/widgets/job-detail';
 
@@ -14,7 +15,10 @@ export function JobDetailPage({ jobId }: JobDetailPageProps) {
     <main className="flex min-h-screen flex-col items-center gap-10 bg-white px-4 pt-4 pb-40 md:px-6 md:py-10">
       <JobDetailView jobId={jobId} />
       <div className="w-full max-w-6xl">
-        <ForBusinessBanner />
+        {/* 2단이 풀리는 폭에서는 바로 위 사이드바(함께 보면 좋아요)와 이어져 보여 같은 회색 띠로 가른다. */}
+        <DetailSidebarSection>
+          <ForBusinessBanner />
+        </DetailSidebarSection>
       </div>
     </main>
   );
