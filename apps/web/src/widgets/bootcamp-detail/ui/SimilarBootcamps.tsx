@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { listPublicBootcamps } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '@ogonggo/api';
-import { Thumbnail } from '@/shared/ui/Thumbnail';
+import { BootcampThumbnail } from '@/entities/bootcamp/ui/BootcampThumbnail';
 import { TUITION_TYPE_LABELS } from '@/entities/bootcamp/model/labels';
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampBadge } from '@/entities/bootcamp/ui/BootcampBadge';
@@ -50,10 +50,11 @@ export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsPr
         {items.map((bootcamp) => (
           <li key={bootcamp.id}>
             <Link href={`/bootcamps/${bootcamp.id}`} className="flex items-center gap-3">
-              <Thumbnail
-                src={bootcamp.representativeImageUrl}
-                alt=""
+              <BootcampThumbnail
+                representativeImageUrl={bootcamp.representativeImageUrl}
+                logoUrl={bootcamp.logoUrl}
                 className="h-12 w-12 shrink-0 rounded-md shadow-sm"
+                logoClassName="p-1"
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-gray-900">{bootcamp.title}</p>

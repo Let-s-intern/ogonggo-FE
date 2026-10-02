@@ -1,6 +1,8 @@
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 
+const LOGO_CAPTION = '로고';
+
 export interface BootcampPhotosProps {
   images: BootcampDetail['images'];
 }
@@ -11,16 +13,20 @@ export interface BootcampPhotosProps {
  *
  * 값이 없으면 섹션을 통째로 그리지 않는다 — `BootcampCurriculum`과 같은 규칙이다.
  *
+ * 설명이 `로고`인 사진은 뺀다. 일부 훈련기관이 고용24 시설 사진 자리에 로고를 올려 두었다
+ * (예: 2689). 로고는 백엔드가 `logoUrl`로 따로 주고 헤더가 그린다.
+ *
  * 사진의 비율이 제각각이다(실서버 기준 정사각 로고, 4:3 시설 사진, 세로 배너가 섞인다). 4:3 칸에
  * `object-contain`으로 넣어 어느 쪽도 잘리지 않게 한다. 칸 크기가 먼저 정해져 있어 사진이 늦게
  * 떠도 아래 섹션이 밀리지 않는다. 모바일은 가로로 넘긴다.
  */
 export function BootcampPhotos({ images }: BootcampPhotosProps) {
-  if (images.length === 0) {
+  const ordered = images
+    .filter((image) => image.caption?.trim() !== LOGO_CAPTION)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+  if (ordered.length === 0) {
     return null;
   }
-
-  const ordered = [...images].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
     <section>
