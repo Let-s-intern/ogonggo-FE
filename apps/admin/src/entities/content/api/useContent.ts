@@ -54,12 +54,13 @@ export function useJobList(filters: JobListFilters) {
 const ALL_IDS_PAGE_SIZE = 100;
 
 /**
- * 필터에 맞는 모든 id 를 페이지를 넘겨 가며 모은다. 검색 결과 전체의 노출을 바꿀 때 쓴다.
- * 페이지 번호는 필터에서 무시한다.
+ * 필터에 맞는 id 를 정렬 순서대로 페이지를 넘겨 가며 `limit` 건까지 모은다. 검색 결과의 노출을
+ * 한꺼번에 바꿀 때 쓴다. 페이지 번호는 필터에서 무시한다.
  */
 export async function listAllIds(
   kind: 'jobs' | 'bootcamps',
   filters: JobListFilters | BootcampListFilters,
+  limit: number,
 ): Promise<number[]> {
   const ids: number[] = [];
   for (let page = 1; ; page += 1) {
@@ -69,7 +70,8 @@ export async function listAllIds(
         ? await unwrapData(listJobs(params as ListJobsParams))
         : await unwrapData(listBootcamps(params as ListBootcampsParams));
     ids.push(...(data?.items ?? []).map((row) => row.id));
-    if (!data || page >= data.pageInfo.totalPages) return ids;
+    if (!data || ids.length >= limit || page >= data.pageInfo.totalPages)
+      return ids.slice(0, limit);
   }
 }
 

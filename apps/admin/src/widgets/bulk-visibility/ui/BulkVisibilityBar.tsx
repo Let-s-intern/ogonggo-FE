@@ -27,6 +27,7 @@ export function useRowSelection(rowIds: number[], scopeKey: string) {
 
   return {
     selected,
+    rowCount: rowIds.length,
     allMatching,
     isSelected: (id: number) => allMatching || selected.has(id),
     allSelected: allMatching || (rowIds.length > 0 && rowIds.every((id) => selected.has(id))),
@@ -81,16 +82,16 @@ export interface BulkVisibilityBarProps {
   selection: RowSelection;
   /** 지금 필터에 맞는 전체 건수. */
   total: number;
-  /** 지금 필터에 맞는 모든 id 를 받는다. 검색 결과 전체를 고르고 바꿀 때 부른다. */
-  loadAllIds: () => Promise<number[]>;
+  /** 지금 필터·정렬 순서로 앞에서부터 `limit` 건의 id 를 받는다. 검색 결과를 고르고 바꿀 때 부른다. */
+  loadAllIds: (limit: number) => Promise<number[]>;
 }
 
 /**
- * 표 위 한 줄. 이 페이지 전체 선택, 검색 결과 전체 선택, 고른 건수, 노출·비노출 버튼이다.
+ * 표 위 한 줄. 이 페이지 전체 선택, 검색 결과 선택, 고른 건수, 노출·비노출 버튼이다.
  *
- * 이 페이지를 모두 고르고 결과가 더 있으면 검색 결과 전체를 고를 수 있다. 바꾸는 순간 그 필터의
- * id 를 모두 받아 한 요청으로 보낸다. 요청을 나누면 백엔드가 지키는 "전부 아니면 아무것도"가
- * 깨지므로, 상한을 넘으면 나누지 않고 필터를 좁히게 한다.
+ * 고르는 방법은 둘이다. 이 페이지 전체, 또는 검색 결과를 지금 정렬 순서로 앞에서부터 상한(1000건)
+ * 까지. 결과가 상한 이하면 검색 결과 전체가 된다. 바꾸는 순간 그 id 를 받아 한 요청으로 보낸다.
+ * 요청을 나누면 백엔드가 지키는 "전부 아니면 아무것도"가 깨지므로 상한을 넘겨 나눠 보내지 않는다.
  *
  * 백엔드는 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다(404 없는 id, 409 승인 전 기업회원
  * 공고의 노출). 그 문구에 어느 id 인지가 들어 있어 그대로 보여 준다. 실패해도 고른 것은 남겨 둔다 —
@@ -99,12 +100,15 @@ export interface BulkVisibilityBarProps {
 export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVisibilityBarProps) {
   const mutation = useChangeVisibilities(kind);
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
-  const count = selection.allMatching ? total : selection.selected.size;
-  const overLimit = count > MAX_IDS;
+  const matchingCount = Math.min(total, MAX_IDS);
+  const count = selection.allMatching ? matchingCount : selection.selected.size;
 
   const change = (visibility: 'VISIBLE' | 'HIDDEN') => {
     mutation.mutate(
-      { ids: selection.allMatching ? loadAllIds : [...selection.selected], visibility },
+      {
+        ids: selection.allMatching ? () => loadAllIds(MAX_IDS) : [...selection.selected],
+        visibility,
+      },
       {
         onSuccess: () => {
           selection.clear();
@@ -130,9 +134,13 @@ export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVi
           label="이 페이지 전체 선택"
         />
         <span className="text-sm text-gray-500">
-          {selection.allMatching ? `검색 결과 전체 ${count}건 선택` : `${count}건 선택`}
+          {selection.allMatching
+            ? total > MAX_IDS
+              ? `검색 결과 ${total}건 중 앞에서 ${count}건 선택`
+              : `검색 결과 전체 ${count}건 선택`
+            : `${count}건 선택`}
         </span>
-        {selection.allSelected && !selection.allMatching && total > count ? (
+        {!selection.allMatching && total > selection.rowCount ? (
           // 이 페이지만 고른 것과 검색 결과 전체를 고르는 것은 결과가 크게 다르다. 눈에 띄게 둔다.
           <Button
             size="sm"
@@ -140,14 +148,14 @@ export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVi
             className="border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100"
             onClick={selection.selectAllMatching}
           >
-            검색 결과 전체 {total}건 선택
+            {total > MAX_IDS ? `최대 ${MAX_IDS}건 선택` : `검색 결과 전체 ${total}건 선택`}
           </Button>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
           <Button
             size="sm"
             variant="secondary"
-            disabled={count === 0 || overLimit || mutation.isPending}
+            disabled={count === 0 || mutation.isPending}
             onClick={() => change('VISIBLE')}
           >
             노출로 바꾸기
@@ -155,19 +163,13 @@ export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVi
           <Button
             size="sm"
             variant="secondary"
-            disabled={count === 0 || overLimit || mutation.isPending}
+            disabled={count === 0 || mutation.isPending}
             onClick={() => change('HIDDEN')}
           >
             비노출로 바꾸기
           </Button>
         </div>
       </div>
-
-      {overLimit ? (
-        <Callout tone="warning" className="mb-3">
-          한 번에 {MAX_IDS}건까지 바꿀 수 있습니다. 필터를 좁혀 주세요.
-        </Callout>
-      ) : null}
 
       {mutation.isError ? (
         <Callout tone="error" className="mb-3">

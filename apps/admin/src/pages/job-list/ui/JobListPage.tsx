@@ -141,7 +141,7 @@ export function JobListPage() {
             kind="jobs"
             selection={selection}
             total={data?.pageInfo.totalElements ?? 0}
-            loadAllIds={() => listAllIds('jobs', filters)}
+            loadAllIds={(limit) => listAllIds('jobs', filters, limit)}
           />
           <DataTable
             columns={columns}
