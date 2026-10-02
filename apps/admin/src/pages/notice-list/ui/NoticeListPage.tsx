@@ -10,7 +10,6 @@ import {
   Field,
   Input,
   Pagination,
-  Textarea,
   Toggle,
   type DataTableColumn,
 } from '@ogonggo/ui';
@@ -23,6 +22,7 @@ import {
   type NoticeDetail,
   type NoticeSummary,
 } from '@/entities/notice/api/useNotices';
+import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
 import { lexicalToText } from '@/entities/notice/lib/content';
 import { PageHeader } from '@/widgets/page-header';
 import { formatDate } from '@/shared/lib/format';
@@ -161,12 +161,14 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
   const deleteMutation = useDeleteNotice();
 
   const [title, setTitle] = useState(notice?.title ?? '');
-  const [content, setContent] = useState(notice ? lexicalToText(notice.content) : '');
+  /** 본문은 편집기의 EditorState JSON 문자열이다. 글자는 비었는지 볼 때만 쓴다. */
+  const [content, setContent] = useState(notice?.content ?? '');
+  const [contentText, setContentText] = useState(notice ? lexicalToText(notice.content) : '');
   const [pinned, setPinned] = useState(notice?.pinned ?? false);
   const [visible, setVisible] = useState(notice ? notice.visibility === 'VISIBLE' : true);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const canSave = title.trim().length > 0 && content.trim().length > 0;
+  const canSave = title.trim().length > 0 && contentText.trim().length > 0;
 
   return (
     <Card>
@@ -193,17 +195,15 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
           />
         </Field>
 
-        <Field
-          label="본문"
-          htmlFor="notice-content"
-          hint="지금은 평문으로 씁니다. 저장할 때 사용자 화면이 읽는 에디터 JSON 으로 바뀝니다."
-          required
-        >
-          <Textarea
+        <Field label="본문" htmlFor="notice-content" required>
+          <RichTextEditor
             id="notice-content"
-            rows={6}
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
+            initialContent={notice?.content}
+            onChange={(state, text) => {
+              setContent(JSON.stringify(state));
+              setContentText(text);
+            }}
+            placeholder="공지 내용을 입력해 주세요."
           />
         </Field>
 
@@ -231,7 +231,7 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
             onClick={() =>
               saveMutation.mutate({
                 title: title.trim(),
-                content: content.trim(),
+                content,
                 pinned,
                 visibility: visible ? 'VISIBLE' : 'HIDDEN',
               })

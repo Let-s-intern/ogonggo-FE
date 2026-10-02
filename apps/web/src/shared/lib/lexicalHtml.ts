@@ -1,11 +1,11 @@
-import { CodeHighlightNode, CodeNode } from '@lexical/code';
 import { createHeadlessEditor } from '@lexical/headless';
 import { withDOM } from '@lexical/headless/dom';
 import { $generateHtmlFromNodes } from '@lexical/html';
-import { AutoLinkNode, LinkNode } from '@lexical/link';
-import { ListItemNode, ListNode } from '@lexical/list';
-import { HeadingNode, QuoteNode } from '@lexical/rich-text';
-import type { EditorThemeClasses, SerializedEditorState } from 'lexical';
+import type { SerializedEditorState } from 'lexical';
+import {
+  LEXICAL_NODES as NODES,
+  LEXICAL_THEME as THEME,
+} from '@ogonggo/ui/src/editor/lexicalConfig';
 
 /**
  * Lexical EditorState JSON 을 읽기 전용 HTML 로 바꾼다. 모집글 본문(`RecruitmentPostDetailResponse
@@ -18,23 +18,13 @@ import type { EditorThemeClasses, SerializedEditorState } from 'lexical';
  * 브라우저로 보내는 것은 결과 HTML 뿐이다(Lexical·happy-dom 이 클라이언트 번들에 들어가지 않는다).
  * 그래서 이 파일은 서버 컴포넌트에서만 가져온다.
  *
- * 그리는 노드는 문단·제목·목록·인용·링크·코드와 줄바꿈·탭이다. 그 밖의 노드는 Lexical 이
- * 파싱하다 던지므로 미리 바꿔 둔다(`replaceUnknownNodes`) — 글자를 가진 노드는 글자로 남기고,
- * 글자가 없는 노드(이미지 등) 는 뺀다. 그래도 파싱이 실패하면 글자만 모은 문단을 돌려준다.
+ * 그리는 노드는 문단·제목·목록·인용·링크·코드·이미지와 줄바꿈·탭이다. 이미지는 작성 화면의
+ * 편집기와 같은 노드다(`packages/ui/src/editor/lexicalImageNode.tsx`). 그 밖의 노드는 Lexical 이 파싱하다 던지므로
+ * 미리 바꿔 둔다(`replaceUnknownNodes`) — 글자를 가진 노드는 글자로 남기고, 글자가 없는 노드는
+ * 뺀다. 그래도 파싱이 실패하면 글자만 모은 문단을 돌려준다.
  */
 
-const NODES = [
-  HeadingNode,
-  QuoteNode,
-  ListNode,
-  ListItemNode,
-  LinkNode,
-  AutoLinkNode,
-  CodeNode,
-  CodeHighlightNode,
-];
-
-/** `lexical` 이 기본으로 아는 노드와 위에서 등록한 노드. */
+/** `lexical` 이 기본으로 아는 노드와 공용 편집기 설정(`lexicalConfig.ts`)이 등록한 노드. */
 const KNOWN_TYPES = new Set([
   'root',
   'paragraph',
@@ -43,38 +33,6 @@ const KNOWN_TYPES = new Set([
   'tab',
   ...NODES.map((node) => node.getType()),
 ]);
-
-/**
- * 노드별 클래스. 상세 본문 섹션의 글자(`text-sm text-gray-700`) 를 바탕에 두고 서식이 드러날
- * 만큼만 준다. 제목은 섹션 제목(`text-lg`) 보다 작게 둔다.
- */
-const THEME: EditorThemeClasses = {
-  paragraph: 'my-2',
-  heading: {
-    h1: 'mt-4 mb-2 text-base font-bold text-gray-900',
-    h2: 'mt-4 mb-2 text-base font-bold text-gray-900',
-    h3: 'mt-3 mb-1 font-bold text-gray-900',
-    h4: 'mt-3 mb-1 font-bold text-gray-900',
-    h5: 'mt-3 mb-1 font-bold text-gray-900',
-    h6: 'mt-3 mb-1 font-bold text-gray-900',
-  },
-  list: {
-    ul: 'my-2 list-disc pl-5',
-    ol: 'my-2 list-decimal pl-5',
-    nested: { listitem: 'list-none' },
-  },
-  quote: 'my-2 border-l-4 border-gray-200 pl-3 text-gray-600',
-  link: 'text-blue-600 underline',
-  code: 'my-2 block overflow-x-auto whitespace-pre rounded-md bg-gray-50 p-3 font-mono text-xs',
-  text: {
-    bold: 'font-bold',
-    italic: 'italic',
-    underline: 'underline',
-    strikethrough: 'line-through',
-    underlineStrikethrough: 'underline line-through',
-    code: 'rounded bg-gray-100 px-1 font-mono text-xs',
-  },
-};
 
 type JsonObject = Record<string, unknown>;
 
@@ -216,13 +174,18 @@ export function renderLexicalContent(content: unknown): LexicalRenderResult {
   }
 }
 
-/** 본문에 보일 글자가 하나라도 있는지. 빈 본문이면 섹션을 제목째 뺀다. */
+/** 노드 아래에 이미지 노드가 있는지. */
+function hasImage(node: unknown): boolean {
+  return isObject(node) && (node.type === 'image' || childrenOf(node).some(hasImage));
+}
+
+/** 본문에 보일 글자나 이미지가 하나라도 있는지. 빈 본문이면 섹션을 제목째 뺀다. */
 export function hasLexicalText(content: unknown): boolean {
   const state = parseState(content);
   if (state === undefined && typeof content === 'string') {
     return content.trim().length > 0;
   }
-  return isObject(state) && collectText(state.root).trim().length > 0;
+  return isObject(state) && (collectText(state.root).trim().length > 0 || hasImage(state.root));
 }
 
 /**

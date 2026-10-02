@@ -7,7 +7,7 @@ import type {
   JsonNode,
   RecruitmentPostFormResponse,
 } from '@ogonggo/api';
-import { lexicalToText, textToLexical } from '../lib/content';
+import { lexicalToText } from '../lib/content';
 
 /**
  * 작성 화면이 들고 있는 값(PRD 5 절). `CreateRecruitmentPostRequest` 와 한 칸씩 짝이 맞되,
@@ -26,8 +26,12 @@ export interface RecruitmentPostFormValues {
   activityDurationMonths: string;
   technologyStacks: string[];
   summary: string;
-  /** 모집 상세 내용을 평문으로 들고 있는다. 저장할 때 Lexical JSON 으로 바꾼다. */
+  /** 모집 상세 내용. 공용 편집기(`RichTextEditor`)의 EditorState JSON 그대로다. */
+  content?: JsonNode;
+  /** `content` 의 서식 없는 글자. 칸이 채워졌는지 볼 때 쓴다. */
   contentText: string;
+  /** `content` 에 이미지가 있는지. 이미지만 넣은 본문도 채워진 것으로 본다. */
+  contentHasImage: boolean;
   eligibilityAndSelectionProcess: string;
   recruitmentStartDate: string;
   recruitmentEndDate: string;
@@ -35,18 +39,6 @@ export interface RecruitmentPostFormValues {
   contactMethod: CreateRecruitmentPostRequestContactMethod | '';
   contactValue: string;
   agreedToPolicy: boolean;
-}
-
-/**
- * 수정 진입 때 읽어 온 본문을 그대로 들고 있는 자리.
- *
- * 작성 칸이 평문이라, 서식을 가진 글을 열었다가 본문을 건드리지 않고 저장하면 서식이 사라진다.
- * 글자가 그대로면 읽어 온 JSON 을 그대로 돌려보내 그 일을 막는다 — PRD 검증 항목의
- * "수정 후 건드리지 않은 값이 남아 있는지" 가 본문에도 걸린다.
- */
-export interface LoadedContent {
-  json?: JsonNode;
-  text: string;
 }
 
 export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
@@ -58,6 +50,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
   technologyStacks: [],
   summary: '',
   contentText: '',
+  contentHasImage: false,
   eligibilityAndSelectionProcess: '',
   recruitmentStartDate: '',
   recruitmentEndDate: '',
@@ -81,7 +74,9 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
       form.activityDurationMonths == null ? '' : String(form.activityDurationMonths),
     technologyStacks: form.technologyStacks,
     summary: form.summary ?? '',
+    content: form.content,
     contentText: lexicalToText(form.content),
+    contentHasImage: JSON.stringify(form.content ?? null).includes('"type":"image"'),
     eligibilityAndSelectionProcess: form.eligibilityAndSelectionProcess ?? '',
     recruitmentStartDate: form.recruitmentStartDate ?? '',
     recruitmentEndDate: form.recruitmentEndDate ?? '',
@@ -92,8 +87,9 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
   };
 }
 
-export function toLoadedContent(form: RecruitmentPostFormResponse): LoadedContent {
-  return { json: form.content, text: lexicalToText(form.content) };
+/** 모집 상세 내용이 채워졌는지. 글자나 이미지가 하나라도 있으면 채워진 것이다. */
+export function hasContentBody(values: RecruitmentPostFormValues): boolean {
+  return values.contentText.trim().length > 0 || values.contentHasImage;
 }
 
 /** 빈 칸은 보내지 않는다. 숫자 칸은 고르지 않았으면 값이 없다. */
@@ -111,7 +107,6 @@ const numberOrUndefined = (value: string) => (value === '' ? undefined : Number(
 export function toCreateRequest(
   values: RecruitmentPostFormValues,
   saveMode: CreateRecruitmentPostRequest['saveMode'],
-  loaded?: LoadedContent,
 ): CreateRecruitmentPostRequest {
   return {
     title: values.title.trim(),
@@ -121,7 +116,7 @@ export function toCreateRequest(
     activityDurationMonths: numberOrUndefined(values.activityDurationMonths),
     technologyStacks: values.technologyStacks.length > 0 ? values.technologyStacks : undefined,
     summary: textOrUndefined(values.summary),
-    content: buildContent(values.contentText, loaded),
+    content: hasContentBody(values) ? values.content : undefined,
     eligibilityAndSelectionProcess: textOrUndefined(values.eligibilityAndSelectionProcess),
     recruitmentStartDate: textOrUndefined(values.recruitmentStartDate),
     recruitmentEndDate: textOrUndefined(values.recruitmentEndDate),
@@ -131,12 +126,4 @@ export function toCreateRequest(
     agreedToPolicy: values.agreedToPolicy,
     saveMode,
   };
-}
-
-/** 글자를 건드리지 않았으면 읽어 온 JSON 을 그대로 돌려보낸다(`LoadedContent` 주석). */
-function buildContent(text: string, loaded?: LoadedContent): JsonNode | undefined {
-  if (loaded?.json !== undefined && loaded.text === text) {
-    return loaded.json;
-  }
-  return text.trim() ? textToLexical(text) : undefined;
 }

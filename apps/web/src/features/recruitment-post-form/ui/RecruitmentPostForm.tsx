@@ -15,8 +15,6 @@ import {
   EMPTY_FORM_VALUES,
   toCreateRequest,
   toFormValues,
-  toLoadedContent,
-  type LoadedContent,
   type RecruitmentPostFormValues,
 } from '../model/values';
 import { ApplySettingsSection } from './ApplySettingsSection';
@@ -81,8 +79,6 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
   /** 저장할 글. 새 글은 처음 임시저장한 뒤부터 생긴다. */
   const [savedPostId, setSavedPostId] = useState(postId);
   const [values, setValues] = useState<RecruitmentPostFormValues>(EMPTY_FORM_VALUES);
-  /** 수정 진입 때 읽어 온 본문. 글자를 건드리지 않았으면 이 JSON 을 그대로 돌려보낸다. */
-  const [loadedContent, setLoadedContent] = useState<LoadedContent | undefined>(undefined);
   const [loading, setLoading] = useState(postId !== undefined);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
   const [tab, setTab] = useState<'write' | 'preview'>('write');
@@ -115,7 +111,6 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         }
         if (form) {
           setValues(toFormValues(form));
-          setLoadedContent(toLoadedContent(form));
         } else {
           setFormError('모집글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         }
@@ -158,7 +153,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
     }
     setFormError(null);
     setPending(true);
-    const request = toCreateRequest(values, saveMode, loadedContent);
+    const request = toCreateRequest(values, saveMode);
     try {
       const saved =
         savedPostId === undefined

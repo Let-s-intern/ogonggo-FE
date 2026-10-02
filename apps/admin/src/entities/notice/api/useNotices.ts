@@ -9,7 +9,6 @@ import {
   type AdminNoticeSummaryResponse,
   type CreateAdminNoticeRequestVisibility,
 } from '@ogonggo/api/src/admin';
-import { textToLexical } from '@/entities/notice/lib/content';
 import { unwrapData } from '@/shared/api/unwrapData';
 
 export type NoticeSummary = AdminNoticeSummaryResponse;
@@ -18,7 +17,7 @@ export type NoticeVisibility = CreateAdminNoticeRequestVisibility;
 
 export interface NoticeWriteInput {
   title: string;
-  /** 평문. 저장 직전에 Lexical EditorState JSON 으로 바꾼다(`../lib/content`). */
+  /** Lexical EditorState JSON 문자열. 공용 편집기(`RichTextEditor`)가 만든 그대로다. */
   content: string;
   pinned: boolean;
   visibility: NoticeVisibility;
@@ -62,7 +61,7 @@ export function useSaveNotice(noticeId: number | null) {
     mutationFn: (input: NoticeWriteInput) => {
       const body = {
         title: input.title,
-        content: textToLexical(input.content),
+        content: input.content,
         pinned: input.pinned,
         visibility: input.visibility,
       };
