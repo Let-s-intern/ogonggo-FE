@@ -1,4 +1,4 @@
-import { Badge, Card, cn } from '@ogonggo/ui';
+import { Badge, Card } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
 import {
   isPromoted,
@@ -40,10 +40,10 @@ const HASHTAG_LIMIT = 3;
  *
  * 모집 직무(포지션)는 모집 배지와 붙여 둔다(`SideStudyStatus`). 무슨 사람을 찾는지가 남은
  * 자리 수와 함께 읽혀야 지원할지 고를 수 있다. 목업은 해시태그 속에 넣었지만 해시태그는 기술
- * 스택 앞 세 개만 담아 포지션이 밀려난다. 데스크톱은 배지 오른쪽, 모바일은 썸네일 옆 좁은
- * 자리라 직무를 배지 위에 세로로 쌓는다.
+ * 스택 앞 세 개만 담아 포지션이 밀려난다. 데스크톱은 배지 오른쪽, 모바일은 카드가 좁아 직무를
+ * 배지 위에 세로로 쌓는다.
  *
- * 데스크톱 제목은 한 줄이어도 두 줄 높이를 잡는다(`md:min-h-10`, `text-sm` 의 줄 높이 20px 두 줄).
+ * 제목은 한 줄이어도 두 줄 높이를 잡는다(`min-h-10`, `text-sm` 의 줄 높이 20px 두 줄).
  * 그래야 제목 아래 배지 줄이 같은 행의 카드끼리 같은 높이에 온다. 같은 행의 카드는 높이를
  * 맞추고(`h-full`) 해시태그 줄을 바닥에 붙인다 — 제목이 한 줄인 카드에서 아래 줄이 떠 보이지 않게.
  *
@@ -77,14 +77,10 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
         <Card className="flex h-full flex-col gap-2 border-gray-100 transition-shadow hover:shadow-md md:gap-3">
           {/*
             모바일은 카드가 좁아 로고 아래로 메타·작성자를 내린다(`docs/asset/v9 mobile/사이드 스터디.png`).
-            모집 직무와 배지도 썸네일 아래 카드 폭 전체를 쓰는 줄에 직무 위·배지 아래로 둔다.
-            썸네일 오른쪽에 두면 북마크와 나눠 쓰는 자리가 70px 남짓이라 직무가 두세 글자에서 잘렸다.
+            그 밖의 순서는 데스크톱과 같다 — 제목 아래에 모집 직무와 배지가 온다.
           */}
           <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-3">
             <AuthorThumbnail src={sideStudy.author.profileImageUrl} />
-            <span className="flex w-full min-w-0 md:hidden">
-              <SideStudyStatus sideStudy={sideStudy} stacked />
-            </span>
             <div className="w-full min-w-0 md:w-auto md:flex-1">
               <p className="truncate text-xs text-gray-400">{metaParts.join(' · ')}</p>
               <p className="truncate text-sm text-gray-600">
@@ -95,12 +91,8 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
               <BookmarkSlot />
             </span>
           </div>
-          <p className="line-clamp-2 text-sm font-bold text-gray-900 md:min-h-10">
-            {sideStudy.title}
-          </p>
-          <span className="hidden min-w-0 md:flex">
-            <SideStudyStatus sideStudy={sideStudy} />
-          </span>
+          <p className="line-clamp-2 text-sm font-bold text-gray-900 min-h-10">{sideStudy.title}</p>
+          <SideStudyStatus sideStudy={sideStudy} />
           <p className="mt-auto flex flex-col items-start gap-1 text-xs text-gray-400 md:flex-row md:items-center md:justify-between md:gap-2">
             <span className="max-w-full truncate">
               {hashtags.map((tag) => `#${tag}`).join(' ')}
@@ -181,25 +173,14 @@ function AuthorThumbnail({ src }: { src?: string }) {
 }
 
 /**
- * 모집 배지와 모집 직무(`백엔드 · 마케팅`). 데스크톱은 배지 오른쪽에 한 줄로, 모바일
- * (`stacked`)은 직무를 배지 위에 둔다. 직무가 길면 한 줄에서 자르고 배지는 줄어들지 않는다.
- * 직무가 없는 글(응답에 아직 없거나 빈 배열)은 배지만 남는다.
+ * 모집 배지와 모집 직무(`백엔드 · 마케팅`). 제목 바로 아래에 온다. 데스크톱은 배지 오른쪽에
+ * 한 줄로, 모바일은 카드가 좁아 직무를 배지 위에 쌓는다. 직무가 길면 한 줄에서 자르고 배지는
+ * 줄어들지 않는다. 직무가 없는 글(응답에 아직 없거나 빈 배열)은 배지만 남는다.
  */
-function SideStudyStatus({
-  sideStudy,
-  stacked = false,
-}: {
-  sideStudy: SideStudySummary;
-  stacked?: boolean;
-}) {
+function SideStudyStatus({ sideStudy }: { sideStudy: SideStudySummary }) {
   const positions = (sideStudy.positions ?? []).map((position) => POSITION_LABELS[position]);
   return (
-    <span
-      className={cn(
-        'flex min-w-0',
-        stacked ? 'flex-col-reverse items-start gap-1' : 'items-center gap-2',
-      )}
-    >
+    <span className="flex min-w-0 flex-col-reverse items-start gap-1 md:flex-row md:items-center md:gap-2">
       <span className="shrink-0">
         <SideStudyBadge sideStudy={sideStudy} />
       </span>
