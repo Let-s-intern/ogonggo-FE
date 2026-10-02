@@ -48,7 +48,7 @@ export interface JobThumbnailProps {
 }
 
 /**
- * 카드 상단 썸네일. 공고 대표 이미지(`coverImageUrl`)를 박스에 꽉 채워 그린다. 없거나 불러오지
+ * 카드 상단 썸네일. 공고 대표 이미지(`coverImageUrl`)를 박스 안에 통째로 그린다. 없거나 불러오지
  * 못하면 그 자리에 회사 로고(`CompanyLogo`)를 그리고, 로고도 없으면 `CompanyLogo` 가 오공고
  * 로고(`Thumbnail` 폴백)로 떨어진다.
  *
@@ -57,6 +57,11 @@ export interface JobThumbnailProps {
  *
  * 썸네일이 작거나 정사각형에 가까우면 사진이 아니라 로고로 보고 로고 규칙으로 작게 그린다
  * (`MIN_PHOTO_WIDTH`). 그래서 불러온 뒤에야 어느 쪽인지 정해진다.
+ *
+ * 대표 이미지는 자르지 않는다(`object-contain`). 전에는 박스를 꽉 채웠는데(`object-cover`) 비율이
+ * 8:5 와 다르면 가장자리가 잘렸다 — GS건설(600x297)은 로고가 가장자리까지 차 있어 "GS건" 까지만
+ * 보였다(2026-10-02). 남는 위아래·양옆은 같은 이미지를 흐리게 깔아 채운다. 사진은 이어져 보이고,
+ * 흰 바탕 로고 이미지는 흰 바탕으로 보인다.
  *
  * 서버가 그린 이미지는 하이드레이션 전에 이미 뜨거나 실패할 수 있고, 그러면 `onLoad`·`onError` 가
  * 불리지 않는다. 마운트 직후 `complete` 면 한 번 더 판정한다 — 수집된 주소에 `%PUBLIC_URL%` 처럼
@@ -87,13 +92,21 @@ export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbna
   if (coverImageUrl && (cover === 'pending' || cover === 'photo')) {
     return (
       <div className={BOX_CLASS}>
+        {cover === 'photo' ? (
+          <img
+            src={coverImageUrl}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
+          />
+        ) : null}
         <img
           ref={coverRef}
           src={coverImageUrl}
           alt=""
           // 사진인지 가리기 전에는 숨긴다. 로고로 판정되면 크게 번쩍였다가 작아진다.
           className={cn(
-            'absolute inset-0 h-full w-full object-cover',
+            'absolute inset-0 h-full w-full object-contain',
             cover === 'pending' && 'opacity-0',
           )}
           onLoad={(event) => setCover(judgeCover(event.currentTarget))}
