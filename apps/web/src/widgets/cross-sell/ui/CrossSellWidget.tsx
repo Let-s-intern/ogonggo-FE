@@ -31,7 +31,8 @@ async function fetchRecommendedChallenges(): Promise<UserRecommendedChallengeRes
  *
  * 항목은 왼쪽에 한 줄 소개(회색)와 제목(굵게), 오른쪽에 4:3 썸네일이고 항목 사이에 가는 선이
  * 있다. 제목은 두 줄까지 보이고 넘치면 자른다 — 챌린지 이름은 기수까지 붙어 길다. 제목 앞의
- * `[...]` 머리말은 따로 한 줄로 둔다(`ChallengeTitle`).
+ * `[...]` 머리말은 따로 한 줄로 둔다(`ChallengeTitle`). 한 줄 소개는 첫 쉼표 뒤에서 줄을 바꾸고
+ * 두 줄까지 보인다(`ChallengeDescription`).
  *
  * 빈 목록이면 구역 전체를 그리지 않는다(API 설명의 규칙).
  *
@@ -57,7 +58,7 @@ export async function CrossSellWidget() {
             >
               <div className="min-w-0 flex-1">
                 {challenge.shortDescription ? (
-                  <p className="truncate text-xs text-gray-500">{challenge.shortDescription}</p>
+                  <ChallengeDescription description={challenge.shortDescription} />
                 ) : null}
                 <ChallengeTitle title={challenge.title} />
               </div>
@@ -93,6 +94,28 @@ function ChallengeTitle({ title }: { title: string }) {
     <p className="mt-1 text-sm font-bold text-gray-800 group-hover:text-blue-500">
       {split ? <span className="block truncate">{prefix?.trim()}</span> : null}
       <span className="line-clamp-2">{split ? rest : title}</span>
+    </p>
+  );
+}
+
+/**
+ * 챌린지 한 줄 소개. 첫 쉼표 뒤에서 줄을 바꾼다 — `루틴 있는 취업 준비 속 성장하는 나,` /
+ * `feat. 손에 꼭 쥔 …` 처럼 쉼표 앞뒤가 다른 말이라 이어 쓰면 줄 끝에서 아무 데서나 끊긴다.
+ * 두 줄을 넘으면 자른다.
+ */
+function ChallengeDescription({ description }: { description: string }) {
+  const comma = description.indexOf(',');
+  const head = comma >= 0 ? description.slice(0, comma + 1) : description;
+  const tail = comma >= 0 ? description.slice(comma + 1).trim() : '';
+  return (
+    <p className="line-clamp-2 text-xs text-gray-500">
+      {head}
+      {tail ? (
+        <>
+          <br />
+          {tail}
+        </>
+      ) : null}
     </p>
   );
 }
