@@ -6,11 +6,11 @@ import {
 } from '@/shared/analytics/dataLayer';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
-import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { toBootcampInfo } from '../model/analytics';
 import { TUITION_TYPE_LABELS } from '../model/labels';
 import type { BootcampSummary } from '../model/types';
 import { BootcampBadge } from './BootcampBadge';
+import { BootcampThumbnail } from './BootcampThumbnail';
 
 export interface BootcampCardProps {
   bootcamp: BootcampSummary;
@@ -31,7 +31,8 @@ export interface BootcampCardProps {
  * 대표 이미지가 응답에 있어서 `JobThumbnail`(회사 로고를 대신 쓰는 박스)을 재사용하지 않고
  * 그 URL을 그대로 그린다. `CompanyLogo`와 같은 이유로 `next/image`가 아니라 `<img>`다 —
  * 외부 호스트(`sesac.seoul.kr`)라 `next.config.ts`에 도메인을 등록해야 하고, 목데이터 단계에서
- * 그 설정을 늘릴 이유가 없다. 로드에 실패하면 뒤의 회색 박스가 그대로 보인다.
+ * 그 설정을 늘릴 이유가 없다. 로드에 실패하면 뒤의 회색 박스가 그대로 보인다. 대표 이미지가 없는
+ * 고용24 과정은 운영 회사 로고를 그린다(`BootcampThumbnail`).
  */
 export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
@@ -59,7 +60,12 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
         events={clickEvents}
       >
         <div className="relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm transition-shadow group-hover:shadow-lg">
-          <Thumbnail src={bootcamp.representativeImageUrl} alt="" className="h-full w-full" />
+          <BootcampThumbnail
+            representativeImageUrl={bootcamp.representativeImageUrl}
+            logoUrl={bootcamp.logoUrl}
+            className="h-full w-full"
+            logoClassName="px-[15%] py-[10%]"
+          />
         </div>
         <p className="flex items-center justify-between gap-2 text-xs text-gray-400">
           <span className="truncate">{metaParts.join(' · ')}</span>
