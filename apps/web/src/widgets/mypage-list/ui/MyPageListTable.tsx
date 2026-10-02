@@ -29,7 +29,9 @@ export function MyPageListTable({ columns, children }: MyPageListTableProps) {
   return (
     // 모바일은 표를 줄이지 않고 옆으로 넘긴다. 칸이 다섯이라 360px 에 맞추면 글자가 세로로
     // 꺾인다. 시안이 카드로 바꾼 화면(작성한 모집글)은 그 화면이 표 대신 카드를 그린다.
-    <div className="overflow-x-auto rounded-lg border border-gray-200 md:overflow-hidden">
+    // 데스크톱은 넘침을 자르지 않는다. 행의 `더보기` 메뉴가 표 아래로 펼쳐지는데, 자르면 마지막
+    // 행의 메뉴가 가려진다.
+    <div className="overflow-x-auto rounded-lg border border-gray-200 md:overflow-visible">
       <table className="w-full min-w-[640px] table-fixed border-collapse md:min-w-0">
         <thead>
           <tr className="border-b border-gray-200">

@@ -33,6 +33,9 @@ export function TechnologyStackInput({ id, value, onChange }: TechnologyStackInp
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    // 한글은 글자를 조합하는 중에 Enter 를 누르면 keydown 이 두 번 온다. 조합 중의 첫 번째에서
+    // 담으면 조합이 끝나며 마지막 글자가 칸에 다시 남아 `램`·`획` 같은 한 글자 태그가 하나 더 생긴다.
+    if (event.nativeEvent.isComposing) return;
     if (event.key === 'Enter' || event.key === ',') {
       // Enter 가 폼 제출로 새는 것을 막는다. 이 칸의 Enter 는 "한 개 담기" 다.
       event.preventDefault();
