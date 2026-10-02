@@ -133,7 +133,13 @@ export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVi
           {selection.allMatching ? `검색 결과 전체 ${count}건 선택` : `${count}건 선택`}
         </span>
         {selection.allSelected && !selection.allMatching && total > count ? (
-          <Button size="sm" variant="ghost" onClick={selection.selectAllMatching}>
+          // 이 페이지만 고른 것과 검색 결과 전체를 고르는 것은 결과가 크게 다르다. 눈에 띄게 둔다.
+          <Button
+            size="sm"
+            variant="secondary"
+            className="border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100"
+            onClick={selection.selectAllMatching}
+          >
             검색 결과 전체 {total}건 선택
           </Button>
         ) : null}
