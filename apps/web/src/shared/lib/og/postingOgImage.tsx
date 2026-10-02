@@ -12,7 +12,7 @@ export const POSTING_OG_SIZE = { width: 1200, height: 630 };
  */
 const FONT_BASE = 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static';
 
-async function loadFont(weight: 'Bold' | 'Medium'): Promise<ArrayBuffer> {
+export async function loadFont(weight: 'Bold' | 'Medium'): Promise<ArrayBuffer> {
   const response = await fetch(`${FONT_BASE}/Pretendard-${weight}.otf`, { cache: 'force-cache' });
   return response.arrayBuffer();
 }
