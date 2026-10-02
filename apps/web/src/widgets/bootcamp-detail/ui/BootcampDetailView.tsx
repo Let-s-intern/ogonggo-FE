@@ -12,6 +12,7 @@ import { BootcampCurriculum } from './BootcampCurriculum';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
 import { BootcampDetailHeaderCard, formatDeadlineText } from './BootcampDetailHeaderCard';
 import { BootcampInfoGrid } from './BootcampInfoGrid';
+import { BootcampPhotos } from './BootcampPhotos';
 import { SimilarBootcamps } from './SimilarBootcamps';
 
 export interface BootcampDetailViewProps {
@@ -91,6 +92,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               </p>
             </section>
           ) : null}
+          <BootcampPhotos images={bootcamp.images} />
         </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
