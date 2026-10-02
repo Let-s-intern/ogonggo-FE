@@ -1,5 +1,15 @@
-import { useNavigate } from 'react-router';
-import { Callout, DataTable, Pagination, Select, type DataTableColumn } from '@ogonggo/ui';
+import { useState } from 'react';
+import {
+  Avatar,
+  Button,
+  Callout,
+  DataTable,
+  DescriptionList,
+  Modal,
+  Pagination,
+  Select,
+  type DataTableColumn,
+} from '@ogonggo/ui';
 import type { AdminCompanyMemberResponse } from '@ogonggo/api/src/admin';
 import { useCompanyMemberList } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
@@ -9,7 +19,7 @@ import {
   MEMBER_STATUS_OPTIONS,
   MemberStatusBadge,
 } from '@/shared/config/labels';
-import { formatDate } from '@/shared/lib/format';
+import { formatDate, formatDateTime } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
 /**
@@ -17,10 +27,10 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  *
  * 칸은 API(`AdminCompanyMemberResponse`) 가 주는 것만 둔다. 목 시절의 "사업자등록번호" 와
  * "등록 공고" 수는 응답에 없어 뺐고, 대신 계정을 알아볼 로그인 이메일을 둔다. 정렬 파라미터가
- * 없는 것과 상세가 아직 목에만 있는 것은 일반 회원 목록과 같다.
+ * 없는 것과 행을 누르면 목록 응답을 모달로 보여 주는 것은 일반 회원 목록과 같다.
  */
 export function CompanyMemberListPage() {
-  const navigate = useNavigate();
+  const [selected, setSelected] = useState<AdminCompanyMemberResponse | null>(null);
   const { get, page, setFilter, setPage } = useListQuery();
 
   const filters = {
@@ -82,13 +92,56 @@ export function CompanyMemberListPage() {
             columns={columns}
             rows={data?.items ?? []}
             rowKey={(row) => row.userId}
-            onRowClick={(row) => navigate(`/members/companies/${row.userId}`)}
+            onRowClick={setSelected}
             isLoading={isPending}
             emptyMessage="조건에 맞는 회원이 없습니다."
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>
       )}
+
+      {selected ? <MemberModal member={selected} onClose={() => setSelected(null)} /> : null}
     </>
+  );
+}
+
+/** 응답에 없는 값은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. */
+const orDash = (value: string | undefined) => value ?? '-';
+
+function MemberModal({
+  member,
+  onClose,
+}: {
+  member: AdminCompanyMemberResponse;
+  onClose: () => void;
+}) {
+  return (
+    <Modal open title={member.organizationName ?? '비즈니스 회원'} onClose={onClose}>
+      <div className="flex items-center gap-3 pb-4">
+        <Avatar
+          src={member.logoUrl}
+          alt=""
+          fallback={(member.organizationName ?? '?').slice(0, 1)}
+        />
+        <MemberStatusBadge value={member.status} />
+      </div>
+      <DescriptionList
+        items={[
+          { label: '회원 ID', value: member.userId },
+          { label: '회사명', value: orDash(member.organizationName) },
+          { label: '계정 이메일', value: orDash(member.email), full: true },
+          { label: '알림 이메일', value: orDash(member.notificationEmail), full: true },
+          { label: '담당자', value: orDash(member.managerName) },
+          { label: '담당자 연락처', value: orDash(member.managerPhone) },
+          { label: '가입일', value: formatDateTime(member.joinedAt) },
+          { label: '탈퇴일', value: member.withdrawnAt ? formatDateTime(member.withdrawnAt) : '-' },
+        ]}
+      />
+      <div className="flex justify-end pt-6">
+        <Button variant="secondary" onClick={onClose}>
+          닫기
+        </Button>
+      </div>
+    </Modal>
   );
 }
