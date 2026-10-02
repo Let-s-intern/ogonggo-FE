@@ -133,8 +133,8 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
 
   if (layout === 'modal') {
     return (
-      // 모달 목업의 2단은 본문 640px : 사이드바 300px, 사이 20px 이다. 본문 섹션은 헤더 카드보다
-      // 20px 안쪽에서 시작한다.
+      // 모달 목업의 2단은 본문 640px : 사이드바 300px, 사이 20px 이다. 본문 섹션은 페이지와 같이
+      // 정보 박스 안 글자 자리(17px 안쪽)에서 시작한다.
       //
       // 목업 오른쪽 맨 위의 `오늘의 공고의 코멘트`는 그리지 않는다. API 없음: 상세 응답에 코멘트
       // 필드가 없다. 그 아래 회색 판은 광고 자리인데, 내용이 정해지지 않아 빈 상자만 보여서
@@ -144,7 +144,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           {viewTracker}
           {headerCard}
           {infoGrid}
-          <div className="flex flex-col gap-10 px-5 pt-5">{sections}</div>
+          <div className="flex flex-col gap-10 px-[17px] pt-5">{sections}</div>
         </div>
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
@@ -169,7 +169,9 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="flex flex-col gap-10">
           {infoGrid}
-          {sections}
+          {/* 본문 글자는 위 정보 박스 안 글자와 같은 자리에서 시작한다 — 박스의 `p-4` 와 테두리 1px 를
+              더한 17px 만큼 들인다. */}
+          <div className="flex flex-col gap-10 px-[17px]">{sections}</div>
         </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
