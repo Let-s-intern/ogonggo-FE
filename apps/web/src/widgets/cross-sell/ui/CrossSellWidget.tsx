@@ -30,7 +30,8 @@ async function fetchRecommendedChallenges(): Promise<UserRecommendedChallengeRes
  * 위젯은 서버 컴포넌트라 토큰이 없다. 지금은 렛츠커리어가 무작위로 고르므로 차이가 없다.
  *
  * 항목은 왼쪽에 한 줄 소개(회색)와 제목(굵게), 오른쪽에 4:3 썸네일이고 항목 사이에 가는 선이
- * 있다. 제목은 두 줄까지 보이고 넘치면 자른다 — 챌린지 이름은 기수까지 붙어 길다.
+ * 있다. 제목은 두 줄까지 보이고 넘치면 자른다 — 챌린지 이름은 기수까지 붙어 길다. 제목 앞의
+ * `[...]` 머리말은 따로 한 줄로 둔다(`ChallengeTitle`).
  *
  * 빈 목록이면 구역 전체를 그리지 않는다(API 설명의 규칙).
  *
@@ -58,9 +59,7 @@ export async function CrossSellWidget() {
                 {challenge.shortDescription ? (
                   <p className="truncate text-xs text-gray-500">{challenge.shortDescription}</p>
                 ) : null}
-                <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-800 group-hover:text-blue-500">
-                  {challenge.title}
-                </p>
+                <ChallengeTitle title={challenge.title} />
               </div>
               {challenge.thumbnailUrl ? (
                 <img
@@ -76,5 +75,24 @@ export async function CrossSellWidget() {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** 제목 맨 앞의 `[...]` 머리말(여러 개면 이어진 것 전부)과 나머지. */
+const TITLE_PREFIX = /^((?:\[[^\]]*\]\s*)+)(.*)$/;
+
+/**
+ * 챌린지 제목. `[인턴·실무 경험자 Ver.] 포트폴리오 2주 완성 챌린지 41기` 처럼 머리말이 붙으면
+ * 머리말을 첫 줄에 두고 본 제목을 다음 줄부터 두 줄까지 보인다. 이어 쓰면 머리말이 줄 끝에서
+ * 아무 데서나 끊겨 본 제목이 어디서 시작하는지 읽히지 않는다.
+ */
+function ChallengeTitle({ title }: { title: string }) {
+  const [, prefix, rest] = TITLE_PREFIX.exec(title) ?? [];
+  const split = Boolean(prefix && rest);
+  return (
+    <p className="mt-1 text-sm font-bold text-gray-800 group-hover:text-blue-500">
+      {split ? <span className="block truncate">{prefix?.trim()}</span> : null}
+      <span className="line-clamp-2">{split ? rest : title}</span>
+    </p>
   );
 }
