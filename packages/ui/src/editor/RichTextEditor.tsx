@@ -7,6 +7,11 @@ import {
   INSERT_UNORDERED_LIST_COMMAND,
   REMOVE_LIST_COMMAND,
 } from '@lexical/list';
+import {
+  ELEMENT_TRANSFORMERS,
+  MULTILINE_ELEMENT_TRANSFORMERS,
+  TEXT_FORMAT_TRANSFORMERS,
+} from '@lexical/markdown';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -14,6 +19,7 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import {
@@ -40,7 +46,7 @@ import { $createImageNode, $isImageNode } from './lexicalImageNode';
  * 그린다(`lexicalConfig.ts`). 웹의 모집글 본문과 어드민의 공지 본문이 함께 쓴다.
  *
  * 도구 막대는 굵게·기울임·밑줄·글머리 목록·번호 목록·링크, 그리고 `onUploadImage` 를 넘기면
- * 이미지. 이미지는 고르는 즉시 그 함수로 올리고 돌려받은 `id`·`url` 을 이미지 노드에 담는다.
+ * 이미지. 제목·인용·코드 등은 마크다운으로 입력한다(`MARKDOWN_TRANSFORMERS`). 이미지는 고르는 즉시 그 함수로 올리고 돌려받은 `id`·`url` 을 이미지 노드에 담는다.
  * 업로드 API 는 앱마다 달라 이 패키지가 부르지 않는다 — 어드민에는 업로드 API 가 없어 버튼이 없다.
  */
 
@@ -48,6 +54,16 @@ const NAMESPACE = 'ogonggo-rich-text';
 
 /** 이미지 업로드가 받는 형식. 백엔드가 그 밖의 형식은 400 으로 거절한다. */
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp';
+
+/**
+ * 입력하는 마크다운을 곧바로 서식으로 바꾼다(`# `, `> `, `- `, `1. `, ```` ``` ````, `**굵게**` 등).
+ * 링크(`[글](주소)`)는 뺀다 — 도구 막대의 링크와 달리 주소를 거르지 않아 `javascript:` 가 들어갈 수 있다.
+ */
+const MARKDOWN_TRANSFORMERS = [
+  ...ELEMENT_TRANSFORMERS,
+  ...MULTILINE_ELEMENT_TRANSFORMERS,
+  ...TEXT_FORMAT_TRANSFORMERS,
+];
 
 const throwError = (error: Error) => {
   throw error;
@@ -178,6 +194,7 @@ export function RichTextEditor({
       <HistoryPlugin />
       <ListPlugin />
       <LinkPlugin validateUrl={isHttpUrl} />
+      <MarkdownShortcutPlugin transformers={MARKDOWN_TRANSFORMERS} />
       <OnChangePlugin
         ignoreSelectionChange
         onChange={(editorState: EditorState) => {
