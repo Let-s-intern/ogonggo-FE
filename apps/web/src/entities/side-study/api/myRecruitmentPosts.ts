@@ -11,6 +11,7 @@ import {
   type ListMyRecruitmentPostsParams,
   type PageResponseRecruitmentPostManagementItemResponse,
   type RecruitmentPostFormResponse,
+  type SuccessResponseCreateRecruitmentPostResponse,
   type SuccessResponsePageResponseRecruitmentPostManagementItemResponse,
   type SuccessResponseRecruitmentPostFormResponse,
   type UpdateRecruitmentPostRequest,
@@ -93,28 +94,24 @@ export async function fetchMyPostForm(
 
 /**
  * 새 글을 만든다. `saveMode` 가 `DRAFT` 면 제목만 필수이고 `PUBLISH` 면 게시 필수값 전부와
- * `agreedToPolicy=true` 가 필요하다(생성 타입 설명). 응답은 만들어진 글의 폼이다.
+ * `agreedToPolicy=true` 가 필요하다(생성 타입 설명). 응답은 만들어진 글의 식별자(`{ id }`) 뿐이다.
  */
 export async function createMyPost(
   request: CreateRecruitmentPostRequest,
-): Promise<RecruitmentPostFormResponse | undefined> {
+): Promise<number | undefined> {
   const body = (await createRecruitmentPost(
     request,
-  )) as unknown as SuccessResponseRecruitmentPostFormResponse;
-  return body.data;
+  )) as unknown as SuccessResponseCreateRecruitmentPostResponse;
+  return body.data?.id;
 }
 
 /**
  * 기존 글을 고친다. **전체 수정이라 보내지 않은 칸은 비워진다**(생성 타입 설명) — 화면이
- * 읽어 온 값을 그대로 다시 실어야 한다.
+ * 읽어 온 값을 그대로 다시 실어야 한다. 응답 본문에 돌려줄 값이 없다.
  */
 export async function updateMyPost(
   postId: number,
   request: UpdateRecruitmentPostRequest,
-): Promise<RecruitmentPostFormResponse | undefined> {
-  const body = (await updateRecruitmentPost(
-    postId,
-    request,
-  )) as unknown as SuccessResponseRecruitmentPostFormResponse;
-  return body.data;
+): Promise<void> {
+  await updateRecruitmentPost(postId, request);
 }

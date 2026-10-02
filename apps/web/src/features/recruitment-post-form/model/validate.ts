@@ -3,8 +3,8 @@ import { hasContentBody, type RecruitmentPostFormValues } from './values';
 /**
  * 게시(`PUBLISH`) 에 필요한 값이 다 있는지 본다. 모자라면 첫 한 줄을 돌려준다.
  *
- * `DRAFT` 는 검사하지 않는다 — 생성 타입이 "`DRAFT` 는 제목만 필수" 라고 적고 있어, 쓰다 만
- * 글을 그대로 담아 두는 것이 임시저장의 일이다.
+ * `DRAFT` 는 제목과 연락처 형식만 본다(`validateForDraft`) — 생성 타입이 "`DRAFT` 는 제목만
+ * 필수" 라고 적고 있어, 쓰다 만 글을 그대로 담아 두는 것이 임시저장의 일이다.
  *
  * 필수 칸의 목록은 목업의 별표(`*`) 그대로다. 두 곳만 목업에서 읽어낼 수 없어 여기서 정한다.
  *
@@ -55,6 +55,10 @@ export function validateForPublish(values: RecruitmentPostFormValues): string | 
       ? '이메일 주소를 입력해 주세요.'
       : '오픈 카톡방 링크를 입력해 주세요.';
   }
+  const contactError = validateContactValue(values);
+  if (contactError) {
+    return contactError;
+  }
   if (!values.agreedToPolicy) {
     return '정보 제공 및 운영 정책에 동의해 주세요.';
   }
@@ -68,5 +72,39 @@ export function validateForPublish(values: RecruitmentPostFormValues): string | 
  * 고를 수 없다 — 작성한 모집글 표의 첫 칸이 제목이다.
  */
 export function validateForDraft(values: RecruitmentPostFormValues): string | null {
-  return values.title.trim() ? null : '사이드 프로젝트 · 스터디명을 입력해 주세요.';
+  if (!values.title.trim()) {
+    return '사이드 프로젝트 · 스터디명을 입력해 주세요.';
+  }
+  return validateContactValue(values);
+}
+
+/**
+ * 적어 둔 연락처가 형식에 맞는지. 비어 있으면 보지 않는다. 백엔드는 임시저장에서도 값이 있으면
+ * 형식을 본다(`RecruitmentPostRequests.kt`) — 여기서 먼저 막지 않으면 400 이 와서
+ * `임시저장하지 못했습니다` 만 보이고 무엇이 틀렸는지 알 수 없다.
+ *
+ * 오픈 카톡방은 `http`·`https` 이고 호스트가 있는 주소, 이메일은 백엔드와 같은 식이다.
+ */
+function validateContactValue(values: RecruitmentPostFormValues): string | null {
+  const value = values.contactValue.trim();
+  if (!values.contactMethod || !value) {
+    return null;
+  }
+  if (values.contactMethod === 'EMAIL') {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? null : '이메일 형식으로 입력해 주세요.';
+  }
+  return isHttpUrl(value) ? null : '오픈 카톡방 링크를 https:// 로 시작하는 주소로 입력해 주세요.';
+}
+
+function isHttpUrl(value: string): boolean {
+  // `new URL` 은 `https:/host` 도 고쳐 읽지만 백엔드의 `URI` 는 호스트가 없다고 본다.
+  if (!/^https?:\/\//.test(value)) {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname !== '';
+  } catch {
+    return false;
+  }
 }

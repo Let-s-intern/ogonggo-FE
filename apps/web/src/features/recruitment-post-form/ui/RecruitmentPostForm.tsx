@@ -161,14 +161,13 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
     setPending(true);
     const request = toCreateRequest(values, saveMode);
     try {
-      const saved =
-        savedPostId === undefined
-          ? await createMyPost(request)
-          : await updateMyPost(savedPostId, request);
+      if (savedPostId === undefined) {
+        // 만든 글의 식별자를 들고 있어야 다음 저장이 새 글을 또 만들지 않고 이 글을 고친다.
+        setSavedPostId(await createMyPost(request));
+      } else {
+        await updateMyPost(savedPostId, request);
+      }
       if (saveMode === 'DRAFT') {
-        if (saved) {
-          setSavedPostId(saved.postId);
-        }
         toast.show({ message: '임시저장했어요.' });
         setPending(false);
         return;
