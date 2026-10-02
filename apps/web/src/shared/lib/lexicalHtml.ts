@@ -2,7 +2,10 @@ import { createHeadlessEditor } from '@lexical/headless';
 import { withDOM } from '@lexical/headless/dom';
 import { $generateHtmlFromNodes } from '@lexical/html';
 import type { SerializedEditorState } from 'lexical';
-import { LEXICAL_NODES as NODES, LEXICAL_THEME as THEME } from './lexicalConfig';
+import {
+  LEXICAL_NODES as NODES,
+  LEXICAL_THEME as THEME,
+} from '@ogonggo/ui/src/editor/lexicalConfig';
 
 /**
  * Lexical EditorState JSON 을 읽기 전용 HTML 로 바꾼다. 모집글 본문(`RecruitmentPostDetailResponse
@@ -16,12 +19,12 @@ import { LEXICAL_NODES as NODES, LEXICAL_THEME as THEME } from './lexicalConfig'
  * 그래서 이 파일은 서버 컴포넌트에서만 가져온다.
  *
  * 그리는 노드는 문단·제목·목록·인용·링크·코드·이미지와 줄바꿈·탭이다. 이미지는 작성 화면의
- * 편집기와 같은 노드다(`lexicalImageNode.tsx`). 그 밖의 노드는 Lexical 이 파싱하다 던지므로
+ * 편집기와 같은 노드다(`packages/ui/src/editor/lexicalImageNode.tsx`). 그 밖의 노드는 Lexical 이 파싱하다 던지므로
  * 미리 바꿔 둔다(`replaceUnknownNodes`) — 글자를 가진 노드는 글자로 남기고, 글자가 없는 노드는
  * 뺀다. 그래도 파싱이 실패하면 글자만 모은 문단을 돌려준다.
  */
 
-/** `lexical` 이 기본으로 아는 노드와 `lexicalConfig.ts` 가 등록한 노드. */
+/** `lexical` 이 기본으로 아는 노드와 공용 편집기 설정(`lexicalConfig.ts`)이 등록한 노드. */
 const KNOWN_TYPES = new Set([
   'root',
   'paragraph',

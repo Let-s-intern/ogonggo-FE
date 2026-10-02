@@ -1,12 +1,7 @@
-import type { JsonNode } from '@ogonggo/api';
-
 /**
- * 모집 상세 내용(`content`) 의 평문 ↔ Lexical EditorState JSON 변환.
- *
- * 작성 칸은 Lexical 편집기(`ui/ContentEditor.tsx`)라 평소에는 JSON 을 그대로 다룬다. 여기는 두
- * 경우만 쓴다 — 칸이 채워졌는지 보려고 글자를 뽑을 때(`lexicalToText`), 그리고 읽어 온 본문을
- * 편집기가 읽지 못할 때 글자만 문단으로 옮길 때(`textToLexical`). 만드는 모양은 루트 · 문단 ·
- * 글자뿐이라 Lexical 을 임포트하지 않고 JSON 을 직접 만든다.
+ * 모집 상세 내용(`content`, Lexical EditorState JSON) 에서 서식 없는 글자를 뽑는다. 수정 화면에서
+ * 칸이 채워졌는지 볼 때 쓴다. 편집 자체는 공용 편집기(`@ogonggo/ui/src/editor/RichTextEditor`)가
+ * JSON 을 그대로 다룬다.
  */
 
 type JsonObject = Record<string, unknown>;
@@ -52,41 +47,4 @@ export function lexicalToText(content: unknown): string {
     return '';
   }
   return childrenOf(root).map(collectText).join('\n').replace(/\n+$/, '');
-}
-
-/** 한 줄이 문단 하나가 된다. 빈 줄은 글자 없는 문단이라 사이 간격으로 남는다. */
-export function textToLexical(text: string): JsonNode {
-  const paragraphs = text.split('\n').map((line) => ({
-    type: 'paragraph',
-    version: 1,
-    direction: null,
-    format: '',
-    indent: 0,
-    textFormat: 0,
-    textStyle: '',
-    children: line
-      ? [
-          {
-            type: 'text',
-            version: 1,
-            text: line,
-            format: 0,
-            detail: 0,
-            mode: 'normal',
-            style: '',
-          },
-        ]
-      : [],
-  }));
-
-  return {
-    root: {
-      type: 'root',
-      version: 1,
-      direction: null,
-      format: '',
-      indent: 0,
-      children: paragraphs,
-    },
-  };
 }

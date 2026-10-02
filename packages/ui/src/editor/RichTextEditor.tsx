@@ -16,8 +16,6 @@ import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
-import type { JsonNode } from '@ogonggo/api';
-import { cn } from '@ogonggo/ui';
 import {
   $getRoot,
   $getSelection,
@@ -29,24 +27,24 @@ import {
   type EditorState,
   type LexicalEditor,
   type LexicalNode,
+  type SerializedEditorState,
   type TextFormatType,
 } from 'lexical';
 import { useEffect, useRef, useState } from 'react';
-import { LEXICAL_NODES, LEXICAL_THEME } from '@/shared/lib/lexicalConfig';
-import { $createImageNode, $isImageNode } from '@/shared/lib/lexicalImageNode';
-import { uploadImageAsset } from '@/shared/lib/uploadImage';
-import { lexicalToText, textToLexical } from '../lib/content';
+import { cn } from '../lib/cn';
+import { LEXICAL_NODES, LEXICAL_THEME } from './lexicalConfig';
+import { $createImageNode, $isImageNode } from './lexicalImageNode';
 
 /**
- * 모집 상세 내용의 편집기(Lexical). 저장되는 값은 EditorState JSON 그대로이고, 상세 화면이 같은
- * 노드·클래스로 읽는다(`shared/lib/lexicalConfig.ts`).
+ * 본문 편집기(Lexical). 저장되는 값은 EditorState JSON 그대로이고, 읽는 쪽이 같은 노드·클래스로
+ * 그린다(`lexicalConfig.ts`). 웹의 모집글 본문과 어드민의 공지 본문이 함께 쓴다.
  *
- * 도구 막대는 목업의 일곱 — 굵게·기울임·밑줄·글머리 목록·번호 목록·링크·이미지. 이미지는 고르는
- * 즉시 올리고(`POST /api/v1/images`) 응답의 `id`·`url` 을 이미지 노드에 담는다. 저장할 때
- * 백엔드가 그 노드로 글에 연결한다.
+ * 도구 막대는 굵게·기울임·밑줄·글머리 목록·번호 목록·링크, 그리고 `onUploadImage` 를 넘기면
+ * 이미지. 이미지는 고르는 즉시 그 함수로 올리고 돌려받은 `id`·`url` 을 이미지 노드에 담는다.
+ * 업로드 API 는 앱마다 달라 이 패키지가 부르지 않는다 — 어드민에는 업로드 API 가 없어 버튼이 없다.
  */
 
-const NAMESPACE = 'recruitment-post-content';
+const NAMESPACE = 'ogonggo-rich-text';
 
 /** 이미지 업로드가 받는 형식. 백엔드가 그 밖의 형식은 400 으로 거절한다. */
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp';
@@ -59,8 +57,8 @@ const throwError = (error: Error) => {
  * 읽어 온 본문을 편집기의 처음 상태로. Lexical 이 모르는 노드가 섞여 있으면 편집기가 통째로
  * 깨지므로, 미리 한 번 읽어 보고 실패하면 글자만 문단으로 옮긴다 — 화면은 살리고 글자는 잃지 않는다.
  */
-function initialState(content: JsonNode | undefined): string | undefined {
-  if (content === undefined || content === null) {
+function initialState(content: unknown): string | undefined {
+  if (content === undefined || content === null || content === '') {
     return undefined;
   }
   const json = typeof content === 'string' ? content : JSON.stringify(content);
@@ -72,11 +70,60 @@ function initialState(content: JsonNode | undefined): string | undefined {
     }).parseEditorState(json);
     return json;
   } catch {
-    return JSON.stringify(textToLexical(lexicalToText(content)));
+    return plainTextState(json);
   }
 }
 
-function composerConfig(content: JsonNode | undefined, editable: boolean) {
+type JsonObject = Record<string, unknown>;
+
+const isObject = (value: unknown): value is JsonObject =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** 노드 아래의 글자를 모두 모은다. */
+function collectText(node: unknown): string {
+  if (!isObject(node)) {
+    return '';
+  }
+  const own = typeof node.text === 'string' ? node.text : node.type === 'linebreak' ? '\n' : '';
+  const children = Array.isArray(node.children) ? node.children : [];
+  return own + children.map(collectText).join('');
+}
+
+/** 읽지 못한 본문의 글자만 문단으로 옮긴 상태. JSON 이 아니면 그 문자열을 글자로 쓴다. */
+function plainTextState(json: string): string {
+  let lines: string[];
+  try {
+    const parsed: unknown = JSON.parse(json);
+    const root = isObject(parsed) && isObject(parsed.root) ? parsed.root : undefined;
+    lines = root && Array.isArray(root.children) ? root.children.map(collectText) : [];
+  } catch {
+    lines = json.split('\n');
+  }
+  const paragraphs = lines.map((line) => ({
+    type: 'paragraph',
+    version: 1,
+    direction: null,
+    format: '',
+    indent: 0,
+    textFormat: 0,
+    textStyle: '',
+    children: line
+      ? [{ type: 'text', version: 1, text: line, format: 0, detail: 0, mode: 'normal', style: '' }]
+      : [],
+  }));
+  return JSON.stringify({
+    root: {
+      type: 'root',
+      version: 1,
+      direction: null,
+      format: '',
+      indent: 0,
+      children: paragraphs,
+    },
+  });
+}
+
+function composerConfig(content: unknown, editable: boolean) {
   return {
     namespace: NAMESPACE,
     nodes: LEXICAL_NODES,
@@ -87,19 +134,30 @@ function composerConfig(content: JsonNode | undefined, editable: boolean) {
   };
 }
 
-export interface ContentEditorProps {
+export interface RichTextEditorProps {
   id: string;
-  /** 처음 상태. 편집기는 처음에 한 번만 읽는다 — 이후 값은 편집기가 들고 있다. */
-  initialContent?: JsonNode;
+  /**
+   * 처음 상태. EditorState JSON 객체나 그 문자열. 편집기는 처음에 한 번만 읽는다 — 이후 값은
+   * 편집기가 들고 있다. 다른 글로 바꾸려면 `key` 를 바꿔 새로 띄운다.
+   */
+  initialContent?: unknown;
   /** 본문이 바뀔 때마다. `text` 는 서식 없는 글자, `hasImage` 는 이미지가 하나라도 있는지. */
-  onChange: (content: JsonNode, text: string, hasImage: boolean) => void;
+  onChange: (content: SerializedEditorState, text: string, hasImage: boolean) => void;
   placeholder: string;
+  /** 이미지 한 장을 올리고 식별자와 주소를 돌려준다. 넘기지 않으면 이미지 버튼이 없다. */
+  onUploadImage?: (file: File) => Promise<{ id: string; url: string } | undefined>;
 }
 
-export function ContentEditor({ id, initialContent, onChange, placeholder }: ContentEditorProps) {
+export function RichTextEditor({
+  id,
+  initialContent,
+  onChange,
+  placeholder,
+  onUploadImage,
+}: RichTextEditorProps) {
   return (
     <LexicalComposer initialConfig={composerConfig(initialContent, true)}>
-      <Toolbar />
+      <Toolbar onUploadImage={onUploadImage} />
       <div className="relative rounded-b-md border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
         <RichTextPlugin
           contentEditable={
@@ -129,7 +187,7 @@ export function ContentEditor({ id, initialContent, onChange, placeholder }: Con
             const root = $getRoot();
             return { text: root.getTextContent(), hasImage: $hasImage(root) };
           });
-          onChange(json as unknown as JsonNode, text, hasImage);
+          onChange(json, text, hasImage);
         }}
       />
     </LexicalComposer>
@@ -137,11 +195,11 @@ export function ContentEditor({ id, initialContent, onChange, placeholder }: Con
 }
 
 /**
- * 읽기 전용으로 그린다. 미리보기 탭이 쓴다 — 상세 화면의 `LexicalContent` 는 서버 전용이라 이
- * 클라이언트 화면이 부를 수 없어 같은 노드·클래스의 편집기를 편집 없이 띄운다. `key` 로 내용이
- * 바뀔 때마다 새로 띄운다(편집기는 처음 상태를 한 번만 읽는다).
+ * 읽기 전용으로 그린다. 작성 화면의 미리보기가 쓴다 — 웹 상세 화면의 읽기(`lexicalHtml.ts`)는
+ * 서버 전용이라 클라이언트 화면이 부를 수 없어, 같은 노드·클래스의 편집기를 편집 없이 띄운다.
+ * `key` 로 내용이 바뀔 때마다 새로 띄운다(편집기는 처음 상태를 한 번만 읽는다).
  */
-export function ContentView({ content }: { content: JsonNode | undefined }) {
+export function RichTextView({ content }: { content: unknown }) {
   return (
     <LexicalComposer key={JSON.stringify(content)} initialConfig={composerConfig(content, false)}>
       <RichTextPlugin
@@ -198,7 +256,7 @@ function readActiveState(editor: LexicalEditor): ActiveState {
   });
 }
 
-function Toolbar() {
+function Toolbar({ onUploadImage }: Pick<RichTextEditorProps, 'onUploadImage'>) {
   const [editor] = useLexicalComposerContext();
   const [active, setActive] = useState<ActiveState>(INACTIVE);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -249,10 +307,13 @@ function Toolbar() {
   };
 
   const insertImage = async (file: File) => {
+    if (!onUploadImage) {
+      return;
+    }
     setError(null);
     setUploading(true);
     try {
-      const asset = await uploadImageAsset(file);
+      const asset = await onUploadImage(file);
       if (!asset) {
         throw new Error('empty upload response');
       }
@@ -322,28 +383,32 @@ function Toolbar() {
             <span aria-hidden="true" className={`${button.icon} block size-4`} />
           </button>
         ))}
-        <button
-          type="button"
-          aria-label="이미지"
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          className="flex size-7 cursor-pointer items-center justify-center rounded text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-wait disabled:text-gray-300"
-        >
-          <span aria-hidden="true" className="icon-[lucide--image] block size-4" />
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept={IMAGE_ACCEPT}
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            event.target.value = '';
-            if (file) {
-              void insertImage(file);
-            }
-          }}
-        />
+        {onUploadImage ? (
+          <>
+            <button
+              type="button"
+              aria-label="이미지"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              className="flex size-7 cursor-pointer items-center justify-center rounded text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-wait disabled:text-gray-300"
+            >
+              <span aria-hidden="true" className="icon-[lucide--image] block size-4" />
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept={IMAGE_ACCEPT}
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (file) {
+                  void insertImage(file);
+                }
+              }}
+            />
+          </>
+        ) : null}
         {uploading ? (
           <span className="ml-2 text-xs text-gray-500">이미지를 올리는 중이에요.</span>
         ) : null}

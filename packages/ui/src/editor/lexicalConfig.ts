@@ -6,9 +6,9 @@ import type { EditorThemeClasses } from 'lexical';
 import { ImageNode } from './lexicalImageNode';
 
 /**
- * 모집글 본문(Lexical)의 노드와 서식 클래스. 상세 화면의 읽기(`lexicalHtml.ts`, 서버)와 작성
- * 화면의 편집기·미리보기(`features/recruitment-post-form`, 클라이언트)가 함께 쓴다 — 셋이 같은
- * 노드를 알아야 쓴 것이 그대로 읽히고, 같은 클래스여야 작성 중에 본 모양이 상세와 같다.
+ * 본문(Lexical)의 노드와 서식 클래스. 웹 상세 화면의 읽기(`apps/web/src/shared/lib/lexicalHtml.ts`,
+ * 서버)와 편집기·미리보기(`RichTextEditor.tsx`, 클라이언트)가 함께 쓴다 — 같은 노드를 알아야 쓴
+ * 것이 그대로 읽히고, 같은 클래스여야 작성 중에 본 모양이 상세와 같다.
  *
  * 이 파일은 `@lexical/headless`·happy-dom 을 가져오지 않는다. 그래서 클라이언트에서도 쓸 수 있다.
  */

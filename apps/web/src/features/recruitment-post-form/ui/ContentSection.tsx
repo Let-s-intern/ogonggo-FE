@@ -1,8 +1,10 @@
 'use client';
 
+import type { JsonNode } from '@ogonggo/api';
 import { Field, Textarea } from '@ogonggo/ui';
+import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
+import { uploadImageAsset } from '@/shared/lib/uploadImage';
 import { hasContentBody, type RecruitmentPostFormValues } from '../model/values';
-import { ContentEditor } from './ContentEditor';
 
 /** `CreateRecruitmentPostRequest.summary` 의 `@maxLength`. */
 const MAX_SUMMARY_LENGTH = 500;
@@ -15,7 +17,8 @@ export interface ContentSectionProps {
 /**
  * 2 단 모집 내용(PRD 5 절). 한 줄 소개 · 모집 상세 내용 · 지원 자격 · 전형.
  *
- * 모집 상세 내용은 Lexical 편집기(`ContentEditor`)이고 값은 EditorState JSON(`content`) 그대로다.
+ * 모집 상세 내용은 공용 Lexical 편집기(`RichTextEditor`)이고 값은 EditorState JSON(`content`)
+ * 그대로다. 본문 이미지는 `POST /api/v1/images` 로 올린다(`uploadImageAsset`).
  * 상세 화면(`shared/ui/LexicalContent.tsx`)이 같은 노드로 읽는다.
  */
 export function ContentSection({ values, onChange }: ContentSectionProps) {
@@ -38,12 +41,13 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
       </Field>
 
       <Field label="모집 상세 내용" htmlFor="post-content" required done={hasContentBody(values)}>
-        <ContentEditor
+        <RichTextEditor
           id="post-content"
           initialContent={values.content}
           onChange={(content, contentText, contentHasImage) =>
-            onChange({ content, contentText, contentHasImage })
+            onChange({ content: content as unknown as JsonNode, contentText, contentHasImage })
           }
+          onUploadImage={uploadImageAsset}
           placeholder="프로젝트 소개, 목표 및 예상 산출물, 진행 상황, 참고자료, 포지션별 담당 업무, 현재 팀 구성, 모임 방식 등을 자유롭게 작성해 주세요."
         />
       </Field>

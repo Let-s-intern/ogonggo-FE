@@ -15,8 +15,8 @@ import type { JSX } from 'react';
  * 그래서 JSON 의 이름과 칸은 그 모양 그대로다 — `src` 가 업로드 응답의 `url` 과 다르면 저장이
  * 거절된다.
  *
- * 편집기(`features/recruitment-post-form`)와 상세 화면의 읽기(`lexicalHtml.ts`)가 같은 노드를
- * 쓴다. 읽기는 서버에서 `exportDOM` 으로 `<img>` 를 만들고, 편집기는 `decorate` 로 그린다.
+ * 편집기(`RichTextEditor.tsx`)와 웹 상세 화면의 읽기(`apps/web/src/shared/lib/lexicalHtml.ts`)가
+ * 같은 노드를 쓴다. 읽기는 서버에서 `exportDOM` 으로 `<img>` 를 만들고, 편집기는 `decorate` 로 그린다.
  *
  * 주소는 `http(s)` 만 받는다. 본문은 작성자가 보낸 JSON 이라 `javascript:` 같은 주소가 올 수 있다.
  */

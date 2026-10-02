@@ -26,7 +26,7 @@ export interface RecruitmentPostFormValues {
   activityDurationMonths: string;
   technologyStacks: string[];
   summary: string;
-  /** 모집 상세 내용. 편집기의 EditorState JSON 그대로다(`ui/ContentEditor.tsx`). */
+  /** 모집 상세 내용. 공용 편집기(`RichTextEditor`)의 EditorState JSON 그대로다. */
   content?: JsonNode;
   /** `content` 의 서식 없는 글자. 칸이 채워졌는지 볼 때 쓴다. */
   contentText: string;

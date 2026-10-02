@@ -5,7 +5,7 @@ import { KIND_LABELS, OPERATION_TYPE_LABELS } from '@/entities/side-study/model/
 import { parseLocalDate } from '@/shared/lib/localDate';
 import { POSITION_OPTION_LABELS } from '../model/options';
 import { hasContentBody, type RecruitmentPostFormValues } from '../model/values';
-import { ContentView } from './ContentEditor';
+import { RichTextView } from '@ogonggo/ui/src/editor/RichTextEditor';
 
 const NO_VALUE = '정보 없음';
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -49,7 +49,7 @@ export interface PostPreviewProps {
  * 스크랩 수·비슷한 글처럼 아직 없는 값을 전제한다. 여기서 맞추는 것은 **읽는 사람에게 무엇이
  * 어떤 자리에 보이는가** 이고, 그 자리 일곱 칸과 본문 세 구역은 그쪽과 같은 순서다.
  *
- * 모집 상세 내용은 편집기와 같은 노드·클래스로 읽기 전용으로 그린다(`ContentView`). 상세 화면의
+ * 모집 상세 내용은 편집기와 같은 노드·클래스로 읽기 전용으로 그린다(`RichTextView`). 상세 화면의
  * `LexicalContent` 는 서버 전용 모듈이라 이 클라이언트 화면이 부를 수 없다.
  */
 export function PostPreview({ values }: PostPreviewProps) {
@@ -68,7 +68,7 @@ export function PostPreview({ values }: PostPreviewProps) {
     {
       label: '모집 상세 내용',
       filled: hasContentBody(values),
-      body: <ContentView content={values.content} />,
+      body: <RichTextView content={values.content} />,
     },
     {
       label: '지원 자격 및 전형',
