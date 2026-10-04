@@ -248,3 +248,10 @@ export function BuildingIcon({ className, ...props }: IconProps) {
     />
   );
 }
+
+/** 어드민에게만 보이는 카드뉴스 바로가기(`features/card-news-link`). */
+export function CardNewsIcon({ className, ...props }: IconProps) {
+  return (
+    <span aria-hidden="true" className={cn('icon-[lucide--images] block', className)} {...props} />
+  );
+}

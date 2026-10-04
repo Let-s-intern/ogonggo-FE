@@ -17,11 +17,18 @@ import { VariantPreview } from './VariantPreview';
  * 왼쪽: 공고 고르기 → 설정 → 문구. 오른쪽: 처음엔 시안 고르기(열 시안을 한 장씩 나란히), 하나를
  * 고르면 그 시안의 세 장과 받기. 고른 뒤에는 한 시안만 그리므로 설정이 바로 보인다.
  */
-export function CardEditor() {
+export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const editor = useCardEditor();
-  const { loaded, status, notice, specs } = editor;
+  const { loaded, status, notice, specs, selectJob } = editor;
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [variant, setVariant] = useState<VariantId | null>(null);
+
+  // 주소에 공고 번호가 있으면 처음 한 번 그 공고를 고른다.
+  useEffect(() => {
+    if (initialJobId) {
+      void selectJob(initialJobId);
+    }
+  }, [initialJobId, selectJob]);
 
   const logout = async () => {
     await fetch('/api/logout', { method: 'POST' });
