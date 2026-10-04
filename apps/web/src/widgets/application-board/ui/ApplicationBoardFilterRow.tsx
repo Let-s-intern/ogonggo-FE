@@ -1,5 +1,7 @@
 'use client';
 
+import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import type { JobEmploymentType } from '@/entities/job/model/types';
 import { stagesOf, type ApplicationStageId } from '@/features/application-board';
 import { SortToggle } from '@/shared/ui/SortToggle';
 import { MyPageFilterDropdown, MyPageFilterRow } from '@/widgets/mypage-list';
@@ -17,6 +19,12 @@ const RECRUITMENT_STATUS_OPTIONS = [
   ['CLOSED', '마감'],
 ] as const;
 
+/** `고용 형태` 드롭다운. 채용공고 목록 필터와 같은 라벨 맵에서 만든다. */
+const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPE_LABELS) as [
+  JobEmploymentType,
+  string,
+][];
+
 /**
  * `최근 저장순` 하나뿐이다. `BookmarkSortType` 에 값이 이것 하나라 고를 것이 없고, v4 의 정렬
  * 드롭다운도 같은 처지였다(PRD "필터 줄"). 값이 늘면 여기에 줄을 더한다.
@@ -29,7 +37,8 @@ export interface ApplicationBoardFilterRowProps {
 
 /**
  * 칸반 위 필터 한 줄(목업 `docs/asset/v7 스크랩한 공고 칸반/image.png`).
- * `전체` 칩 + `마감 상태` · `지원 상태`, 오른쪽에 `공고 검색` + `최근 저장순` 이다.
+ * `전체` 칩 + `마감 상태` · `지원 상태`, 오른쪽에 `공고 검색` + `최근 저장순` 이다. 채용공고 탭에는
+ * `고용 형태` 가 더 붙는다 — 미래내일 일경험처럼 고용24 공고를 골라 보려는 것이다.
  *
  * 줄 자체는 v4 가 만든 `MyPageFilterRow` 다 — 목업의 구성이 v4 필터 줄과 같고, 검색이
  * `<form method="GET">` 이 아니라 `onSubmit` 이어야 하는 이유도 같다(로그인 토큰을 브라우저에서
@@ -77,6 +86,14 @@ export function ApplicationBoardFilterRow({ query }: ApplicationBoardFilterRowPr
         buildHref={(stage) => buildApplicationBoardHref(query, { stage })}
         className="w-52"
       />
+      {query.tab === 'jobs' ? (
+        <MyPageFilterDropdown
+          label="고용 형태"
+          selected={query.employmentType}
+          options={EMPLOYMENT_TYPE_OPTIONS}
+          buildHref={(employmentType) => buildApplicationBoardHref(query, { employmentType })}
+        />
+      ) : null}
     </MyPageFilterRow>
   );
 }

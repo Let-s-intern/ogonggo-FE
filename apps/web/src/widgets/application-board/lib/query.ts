@@ -5,6 +5,8 @@ import {
   type ApplicationBoardTab,
   type ApplicationStageId,
 } from '@/features/application-board';
+import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import type { JobEmploymentType } from '@/entities/job/model/types';
 
 /**
  * 칸반이 사는 주소. PRD 결정 기록의 표가 `스크랩한 공고` 메뉴를 이 경로에 붙였고, v4 스크랩
@@ -41,6 +43,8 @@ export interface ApplicationBoardQuery {
   stage?: ApplicationStageId;
   /** `공고 검색`. 목록 요청에 실린다. */
   keyword?: string;
+  /** `고용 형태` 드롭다운. 채용공고 탭에만 있고 목록 요청에 실린다. */
+  employmentType?: ApplicationBoardFilters['employmentType'];
 }
 
 export const DEFAULT_APPLICATION_BOARD_QUERY: ApplicationBoardQuery = {
@@ -50,7 +54,11 @@ export const DEFAULT_APPLICATION_BOARD_QUERY: ApplicationBoardQuery = {
 
 /** 목록 요청에 실리는 값만 뽑는다. `stage` 는 칸을 고르는 값이라 여기 들어가지 않는다. */
 export function boardFilters(query: ApplicationBoardQuery): ApplicationBoardFilters {
-  return { recruitmentStatus: query.recruitmentStatus, keyword: query.keyword };
+  return {
+    recruitmentStatus: query.recruitmentStatus,
+    keyword: query.keyword,
+    employmentType: query.employmentType,
+  };
 }
 
 /** 지금 탭에 걸린 필터가 하나라도 있는가. 필터 줄의 `전체` 칩 색이 이걸로 갈린다. */
@@ -58,7 +66,8 @@ export function hasApplicationBoardFilter(query: ApplicationBoardQuery): boolean
   return (
     query.recruitmentStatus !== undefined ||
     query.stage !== undefined ||
-    query.keyword !== undefined
+    query.keyword !== undefined ||
+    query.employmentType !== undefined
   );
 }
 
@@ -97,6 +106,9 @@ export function buildApplicationBoardHref(
   if (merged.keyword !== undefined) {
     params.set('keyword', merged.keyword);
   }
+  if (merged.employmentType !== undefined) {
+    params.set('employmentType', merged.employmentType);
+  }
 
   const search = params.toString();
   return search ? `${BOARD_PATH}?${search}` : BOARD_PATH;
@@ -112,6 +124,8 @@ function pick<T extends string>(value: string | undefined, allowed: readonly T[]
 }
 
 const RECRUITMENT_STATUSES = ['RECRUITING', 'CLOSED'] as const;
+
+const EMPLOYMENT_TYPES = Object.keys(EMPLOYMENT_TYPE_LABELS) as JobEmploymentType[];
 
 /** 백엔드가 `keyword` 를 2~100자로 받는다. 범위를 벗어난 값은 없는 것으로 친다. */
 function pickKeyword(value: string | undefined): string | undefined {
@@ -137,5 +151,8 @@ export function parseApplicationBoardQuery(
     recruitmentStatus: pick(searchParams.recruitmentStatus, RECRUITMENT_STATUSES),
     stage: pick(searchParams.stage, stageIds),
     keyword: pickKeyword(searchParams.keyword),
+    // 고용 형태는 채용공고에만 있다. 다른 탭 주소에 적혀 있으면 지울 칩이 없으니 버린다.
+    employmentType:
+      tab === 'jobs' ? pick(searchParams.employmentType, EMPLOYMENT_TYPES) : undefined,
   };
 }

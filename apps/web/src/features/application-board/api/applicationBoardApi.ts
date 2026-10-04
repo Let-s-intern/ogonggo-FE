@@ -28,6 +28,7 @@ import {
   KIND_LABELS,
   OPERATION_TYPE_LABELS,
 } from '@/entities/side-study/model/labels';
+import type { JobEmploymentType } from '@/entities/job/model/types';
 import type { ThumbnailSrc } from '@/shared/ui/Thumbnail';
 import type { ApplicationBoardTab, ApplicationStageId } from '../model/stages';
 
@@ -87,6 +88,8 @@ export interface ApplicationBoardFilters {
    * `.claude/tasks/memos/결정-지원신청-관리-push1-2026-09-22.md` 1 절.
    */
   keyword?: string;
+  /** `고용 형태` 드롭다운. 채용공고 탭에만 있다 — 부트캠프·사이드·스터디에는 이 값이 없다. */
+  employmentType?: JobEmploymentType;
 }
 
 /**
@@ -142,6 +145,7 @@ async function fetchJobStage(
     size: params.size,
     applicationStatus: stageId,
     recruitmentStatus: params.recruitmentStatus,
+    employmentType: params.employmentType,
     keyword: pickKeyword(params.keyword),
     sort: 'RECENTLY_SAVED',
   })) as unknown as SuccessResponsePageResponseUserJobSummaryResponse;
