@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '@ogonggo/ui';
 import { BookmarkCountButton, type BookmarkKind } from '@/features/bookmark';
+import { CardNewsLinkButton } from '@/features/card-news-link';
 import { SharePostingButton, type SharePosting } from '@/features/share-posting';
 import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLayer';
 import { withApplyUtm } from '@/shared/lib/applyUtm';
@@ -95,6 +96,8 @@ export function ApplyCta({
           bookmarkCount={bookmarkCount}
           scrapParams={scrapParams}
         />
+        {/* 카드뉴스는 채용공고로만 만든다. 어드민에게만 보인다. */}
+        {kind === 'jobs' ? <CardNewsLinkButton jobId={id} variant="detail" /> : null}
         {/* 모바일은 화면 아래 고정 바라 한 줄로 둔다. 데스크톱은 아래 줄의 넓은 버튼이다(시안). */}
         {share ? (
           <div className="md:hidden">

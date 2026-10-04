@@ -1,5 +1,6 @@
 import { Badge } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
+import { CardNewsLinkButton } from '@/features/card-news-link';
 import {
   computeDday,
   isDdayUrgent,
@@ -103,13 +104,16 @@ export function JobCard({ job, tracking }: JobCardProps) {
         </p>
         {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
       </JobCardLink>
-      <BookmarkButton
-        kind="jobs"
-        id={job.id}
-        bookmarked={job.bookmarked}
-        scrapParams={{ ...jobInfo, click_location: 'card' }}
-        className="absolute top-2 right-2"
-      />
+      {/* 카드뉴스 버튼은 어드민에게만 보인다. 없으면 북마크가 원래 자리(오른쪽 위 끝)에 남는다. */}
+      <div className="absolute top-2 right-2 flex items-center gap-1">
+        <BookmarkButton
+          kind="jobs"
+          id={job.id}
+          bookmarked={job.bookmarked}
+          scrapParams={{ ...jobInfo, click_location: 'card' }}
+        />
+        <CardNewsLinkButton jobId={job.id} variant="card" />
+      </div>
     </div>
   );
 }
