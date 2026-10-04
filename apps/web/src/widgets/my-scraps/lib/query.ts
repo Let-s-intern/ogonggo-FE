@@ -102,6 +102,8 @@ const EMPLOYMENT_TYPES: readonly ListMyJobBookmarksEmploymentType[] = [
   'CONTRACT',
   'INTERN',
   'PART_TIME',
+  'WORK_STUDY',
+  'WORK_EXPERIENCE',
   'ETC',
 ];
 const EXPERIENCE_TYPES: readonly ListMyJobBookmarksExperienceType[] = [
