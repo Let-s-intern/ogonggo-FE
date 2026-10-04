@@ -155,6 +155,8 @@ const PLAIN_LABELS: Record<string, string> = {
   CONTRACT: '계약직',
   INTERN: '인턴',
   PART_TIME: '파트타임',
+  WORK_STUDY: '일학습병행',
+  WORK_EXPERIENCE: '미래내일 일경험',
   // 경력
   NEWCOMER: '신입',
   EXPERIENCED: '경력',

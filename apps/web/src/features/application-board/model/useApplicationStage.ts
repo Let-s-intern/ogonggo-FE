@@ -33,6 +33,7 @@ export function applicationStageKey(
     pageSize,
     filters.recruitmentStatus ?? null,
     filters.keyword ?? null,
+    filters.employmentType ?? null,
   ] as const;
 }
 
