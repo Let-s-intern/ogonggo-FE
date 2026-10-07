@@ -83,7 +83,7 @@ export const POSITION_VALUES: readonly CreateRecruitmentPostRequestPositionsItem
   'FRONTEND',
   'DESIGN',
   'PM',
-  'MOBILE',
+  'MARKETING',
   'ETC',
 ];
 

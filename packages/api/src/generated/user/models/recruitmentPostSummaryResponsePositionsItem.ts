@@ -12,7 +12,7 @@
  * | `FRONTEND` | 2 | 프론트엔드 |
  * | `DESIGN` | 3 | 디자인 |
  * | `PM` | 4 | 기획 |
- * | `MOBILE` | 5 | 모바일 |
+ * | `MARKETING` | 5 | 마케팅 |
  * | `ETC` | 6 | 기타 |
  */
 export type RecruitmentPostSummaryResponsePositionsItem = typeof RecruitmentPostSummaryResponsePositionsItem[keyof typeof RecruitmentPostSummaryResponsePositionsItem];
@@ -23,6 +23,6 @@ export const RecruitmentPostSummaryResponsePositionsItem = {
   FRONTEND: 'FRONTEND',
   DESIGN: 'DESIGN',
   PM: 'PM',
-  MOBILE: 'MOBILE',
+  MARKETING: 'MARKETING',
   ETC: 'ETC',
 } as const;
