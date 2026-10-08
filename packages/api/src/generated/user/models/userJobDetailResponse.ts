@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { UserJobAnalysisResponse } from './userJobAnalysisResponse';
 import type { UserJobDetailResponseEducationLevel } from './userJobDetailResponseEducationLevel';
 import type { UserJobDetailResponseEmploymentType } from './userJobDetailResponseEmploymentType';
 import type { UserJobDetailResponseExperienceType } from './userJobDetailResponseExperienceType';
@@ -656,6 +657,8 @@ export interface UserJobDetailResponse {
   compensation?: string;
   benefits?: string;
   hiringProcess?: string;
+  /** 채용 안내사항. 제출 서류·근무 조건·유의사항 등 */
+  recruitmentNotice?: string;
   sourceUrl?: string;
   applyEmail?: string;
   closedAt?: string;
@@ -663,4 +666,5 @@ export interface UserJobDetailResponse {
   viewCount: number;
   bookmarkCount: number;
   commentCount: number;
+  analysis?: UserJobAnalysisResponse;
 }

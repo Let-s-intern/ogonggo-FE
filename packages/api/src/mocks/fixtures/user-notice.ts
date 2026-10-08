@@ -1,15 +1,15 @@
-import type { UserNoticeDetailResponse } from '../../generated/user/models/userNoticeDetailResponse';
+import type { UserAnnouncementDetailResponse } from '../../generated/user/models/userAnnouncementDetailResponse';
 
 /**
- * `GET /api/v1/notices`, `GET /api/v1/notices/{noticeId}` 목 응답의 원본.
+ * `GET /api/v1/announcements`, `GET /api/v1/announcements/{noticeId}` 목 응답의 원본.
  *
  * 어드민 공지 픽스처(`./admin-notice.ts`) 와 별개다. 그쪽은 백엔드 도메인이 없던 시절의 모양
  * (`publicationStartAt`, `active`) 이고 이쪽은 배포된 사용자 스펙
- * (`UserNoticeDetailResponse`) 그대로다. 사용자 목록에는 노출 중인 공지만 오므로 비노출 건은
+ * (`UserAnnouncementDetailResponse`) 그대로다. 사용자 목록에는 노출 중인 공지만 오므로 비노출 건은
  * 여기 없다.
  *
  * **아래 값은 전부 지어낸 것이다.** 2026-09-23 기준 운영 DB 에 공지가 한 건도 없어
- * (`GET /api/v1/notices` → `totalElements: 0`) 화면을 볼 수 있는 데이터가 이것뿐이다.
+ * (`GET /api/v1/announcements` → `totalElements: 0`) 화면을 볼 수 있는 데이터가 이것뿐이다.
  *
  * `content` 는 Lexical EditorState JSON 문자열이다 — 생성 모델의 설명과 백엔드
  * `UserNoticeResponses.kt` 가 그렇게 적고 있다. 백엔드는 이 문자열을 검사하지 않고 어드민이
@@ -78,7 +78,7 @@ const daysAgo = (days: number, time = '09:00:00'): string => {
  * 순서는 백엔드 정렬과 같다 — 고정 먼저, 그 안에서 id 역순
  * (`core/notice/persistence/NoticeRepositories.kt` 의 `pinned.desc(), id.desc()`).
  */
-export const USER_NOTICE_FIXTURES: UserNoticeDetailResponse[] = [
+export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 12,
     title: '개인정보 처리방침 개정 안내',

@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { listPublicNotices } from '@ogonggo/api';
+import { listPublicAnnouncements } from '@ogonggo/api';
 import type {
   PageInfo,
-  SuccessResponsePageResponseUserNoticeSummaryResponse,
-  UserNoticeSummaryResponse,
+  SuccessResponsePageResponseUserAnnouncementSummaryResponse,
+  UserAnnouncementSummaryResponse,
 } from '@ogonggo/api';
 import { formatDateDots } from '@/shared/lib/localDate';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
@@ -15,7 +15,7 @@ export type NoticeListProps = NoticeListQuery;
 const PAGE_SIZE = 10;
 
 /**
- * `listPublicNotices`(`GET /api/v1/notices`). 정렬은 보내지 않는다 — 백엔드가 고정 공지를 먼저
+ * `listPublicAnnouncements`(`GET /api/v1/announcements`). 정렬은 보내지 않는다 — 백엔드가 고정 공지를 먼저
  * 두고 그 안에서 최신순으로 준다(스펙 설명과 `core/notice/persistence/NoticeRepositories.kt` 의
  * `pinned.desc(), id.desc()`). 받은 순서를 그대로 그리므로 화면에서 다시 정렬하지 않는다.
  *
@@ -24,11 +24,11 @@ const PAGE_SIZE = 10;
  */
 async function fetchNoticePage({
   page,
-}: NoticeListQuery): Promise<{ items: UserNoticeSummaryResponse[]; pageInfo: PageInfo }> {
-  const response = (await listPublicNotices({
+}: NoticeListQuery): Promise<{ items: UserAnnouncementSummaryResponse[]; pageInfo: PageInfo }> {
+  const response = (await listPublicAnnouncements({
     page,
     size: PAGE_SIZE,
-  })) as unknown as SuccessResponsePageResponseUserNoticeSummaryResponse;
+  })) as unknown as SuccessResponsePageResponseUserAnnouncementSummaryResponse;
 
   return (
     response.data ?? {
@@ -43,7 +43,7 @@ async function fetchNoticePage({
  * 제목만 남기면 되기 때문이다. 고정 자리는 고정이 아닐 때도 폭을 잡아 두어 제목 시작 x 가
  * 줄마다 흔들리지 않는다.
  */
-function NoticeRow({ notice }: { notice: UserNoticeSummaryResponse }) {
+function NoticeRow({ notice }: { notice: UserAnnouncementSummaryResponse }) {
   return (
     <li className="border-b border-gray-100">
       <Link

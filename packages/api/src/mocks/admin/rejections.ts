@@ -1,7 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import type {
-  AdminRejectionResponse,
-  PageResponseAdminRejectionResponse,
+  AdminContentRejectionResponse,
+  PageResponseAdminContentRejectionResponse,
   UpdateRejectionReasonRequest,
 } from '../../generated/admin/models';
 import { REJECTIONS, findRejection, type RejectionTargetType } from '../fixtures/admin-rejection';
@@ -17,7 +17,7 @@ import { matches, notFound, ok, paginate, readPaging } from './paging';
  * 사유를 지우는 길은 없다. 빈 사유로 남은 반려는 올린 사람이 무엇을 고쳐야 하는지 알 수 없어
  * 같은 글이 다시 올라온다.
  *
- * 응답 타입은 admin 스펙의 생성 모델 `AdminRejectionResponse` 다. `contentExists` 는 그 콘텐츠가
+ * 응답 타입은 admin 스펙의 생성 모델 `AdminContentRejectionResponse` 다. `contentExists` 는 그 콘텐츠가
  * 아직 남아 있는지다. 반려한 뒤 삭제됐을 수 있고, 그때 목록에서 통째로 빼지 않고 남겨 둔다 —
  * "반려하고 지웠다"는 것도 기록이고, 행이 조용히 사라지면 무엇이 어떻게 됐는지 알 수 없다.
  */
@@ -27,7 +27,7 @@ const exists = (type: RejectionTargetType, id: number): boolean =>
     ? ADMIN_JOB_FIXTURES.some((job) => job.id === id)
     : ADMIN_BOOTCAMP_FIXTURES.some((bootcamp) => bootcamp.id === id);
 
-const listRejectionsHandler = http.get('*/api/v1/admin/rejections', ({ request }) => {
+const listRejectionsHandler = http.get('*/api/v1/admin/content-rejections', ({ request }) => {
   const url = new URL(request.url);
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
   const type = url.searchParams.get('type') ?? '';
@@ -48,7 +48,7 @@ const listRejectionsHandler = http.get('*/api/v1/admin/rejections', ({ request }
     (a, b) => new Date(b.rejectedAt).getTime() - new Date(a.rejectedAt).getTime(),
   );
   const paged = paginate(sorted, page, size);
-  const body: PageResponseAdminRejectionResponse = {
+  const body: PageResponseAdminContentRejectionResponse = {
     items: paged.items.map((entry) => ({ ...entry, contentExists: exists(entry.type, entry.id) })),
     pageInfo: paged.pageInfo,
   };
@@ -56,7 +56,7 @@ const listRejectionsHandler = http.get('*/api/v1/admin/rejections', ({ request }
 });
 
 const updateReasonHandler = http.patch(
-  '*/api/v1/admin/rejections/:type/:id',
+  '*/api/v1/admin/content-rejections/:type/:id',
   async ({ params, request }) => {
     const type = String(params.type).toUpperCase() as RejectionTargetType;
     const record = findRejection(type, Number(params.id));
@@ -75,7 +75,7 @@ const updateReasonHandler = http.patch(
 
     record.reason = reason;
     record.reasonUpdatedAt = new Date().toISOString();
-    const updated: AdminRejectionResponse = {
+    const updated: AdminContentRejectionResponse = {
       ...record,
       contentExists: exists(record.type, record.id),
     };

@@ -34,9 +34,9 @@ export type ContentSource = AdminJobDetailResponseSource;
 /**
  * 지면에 나가고 있는지 아닌지, 둘뿐이다.
  *
- * 백엔드 `JobPublicationStatus` 는 `DRAFT`/`PUBLISHED`/`HIDDEN`/`ARCHIVED` 네 값이지만 어드민이
- * 구분해야 하는 것은 "지금 사용자에게 보이는가" 하나다. 초안과 보관은 운영자가 콘솔에서 만들
- * 수 있는 상태가 아니고, 목록에서 넷을 늘어놓으면 필터만 복잡해진다.
+ * 백엔드 `JobPublicationStatus` 는 `DRAFT`/`PUBLISHED`/`HIDDEN` 세 값이지만 어드민이
+ * 구분해야 하는 것은 "지금 사용자에게 보이는가" 하나다. 초안은 운영자가 콘솔에서 만들
+ * 수 있는 상태가 아니고, 목록에서 셋을 늘어놓으면 필터만 복잡해진다.
  *
  * 백엔드 enum 을 바꾸자는 뜻은 아니다. 계약을 넘길 때 어드민 응답이 네 값을 이 둘로 접어서
  * 준다 — `PUBLISHED` 만 노출이고 나머지는 비노출이다.

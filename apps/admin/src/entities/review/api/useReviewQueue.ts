@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  decideReview,
-  listReviewQueue,
-  type AdminReviewItemResponse as ReviewQueueItem,
-  type AdminReviewItemResponseType as ReviewTargetType,
+  decideContentReview,
+  listContentReviews,
+  type AdminContentReviewItemResponse as ReviewQueueItem,
+  type AdminContentReviewItemResponseType as ReviewTargetType,
 } from '@ogonggo/api/src/admin';
 import { unwrapData } from '@/shared/api/unwrapData';
 
@@ -21,7 +21,7 @@ export type { ReviewQueueItem, ReviewTargetType };
 export function useReviewQueue() {
   return useQuery({
     queryKey: ['admin', 'review-queue'],
-    queryFn: () => unwrapData(listReviewQueue()),
+    queryFn: () => unwrapData(listContentReviews()),
     staleTime: Number.POSITIVE_INFINITY,
   });
 }
@@ -49,7 +49,7 @@ export function useSaveReviewDecisions() {
     mutationFn: async (decisions: ReviewDecisionInput[]) => {
       for (const entry of decisions) {
         // 경로의 종류는 스펙대로 소문자(`job`·`bootcamp`) 다.
-        await decideReview(entry.type.toLowerCase(), entry.id, {
+        await decideContentReview(entry.type.toLowerCase(), entry.id, {
           decision: entry.decision,
           reason: entry.reason,
         });

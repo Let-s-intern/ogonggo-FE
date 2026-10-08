@@ -2,7 +2,7 @@ import {
   cancelMyRecruitmentPostBookmarkPreparation,
   listMyBootcampBookmarks,
   listMyJobBookmarks,
-  listMyRecruitmentApplications,
+  listMyRecruitmentPostApplications,
   listMyRecruitmentPostBookmarks,
   prepareMyRecruitmentPostBookmark,
   replaceMyBootcampBookmarkApplicationStatus,
@@ -12,7 +12,7 @@ import {
   type SuccessResponsePageResponseRecruitmentPostSummaryResponse,
   type SuccessResponsePageResponseUserBootcampSummaryResponse,
   type SuccessResponsePageResponseUserJobSummaryResponse,
-  type SuccessResponseRecruitmentApplicationPageResponse,
+  type SuccessResponseRecruitmentPostApplicationPageResponse,
 } from '@ogonggo/api';
 import {
   OPERATION_TYPE_LABELS as BOOTCAMP_OPERATION_TYPE_LABELS,
@@ -57,7 +57,7 @@ export interface ApplicationBoardItem {
    * 활동 기간. 리스트 보기의 활동 단계 행이 마감일시 대신 이것을 그린다(PRD "리스트 보기").
    *
    * **부트캠프에만 있다.** `UserBootcampSummaryResponse` 의 `programStartDate`·`programEndDate`
-   * 가 그것이고, 사이드·스터디 지원 이력(`RecruitmentApplicationItemResponse`) 에는 대응하는
+   * 가 그것이고, 사이드·스터디 지원 이력(`RecruitmentPostApplicationItemResponse`) 에는 대응하는
    * 칸이 없다 — 있는 것은 `activityDurationMonths`(`3개월`) 뿐이라 이미 `meta` 에 들어가 있다.
    * 채용공고에는 활동 단계 자체가 없다.
    */
@@ -115,7 +115,7 @@ export interface ApplicationBoardPageParams extends ApplicationBoardFilters {
  * 근거는 `.claude/tasks/memos/결정-지원신청-관리-push1-2026-09-22.md` 3 절.
  *
  * **사이드·스터디만 출처가 둘이다.** `SCRAPPED` 는 북마크 목록이고 나머지 넷은 지원 이력
- * (`listMyRecruitmentApplications`) 이다. 백엔드에서 두 테이블이고
+ * (`listMyRecruitmentPostApplications`) 이다. 백엔드에서 두 테이블이고
  * `RecruitmentPostBookmarkService.prepare()` 가 북마크를 지우며 지원 이력을 만든다.
  *
  * 응답 언랩은 목록 화면들과 같다 — 생성 타입은 `{ data, status, headers }` 를 선언하지만
@@ -257,14 +257,14 @@ async function fetchSideStudyApplications(
   params: ApplicationBoardPageParams,
 ): Promise<ApplicationBoardPage> {
   /* 지원 이력은 정렬 이름이 다르다 — 북마크의 `RECENTLY_SAVED` 에 해당하는 값이 `LATEST` 다. */
-  const response = (await listMyRecruitmentApplications({
+  const response = (await listMyRecruitmentPostApplications({
     page: params.page,
     size: params.size,
     applicationStatus: stageId,
     recruitmentStatus: params.recruitmentStatus,
     keyword: pickKeyword(params.keyword),
     sort: 'LATEST',
-  })) as unknown as SuccessResponseRecruitmentApplicationPageResponse;
+  })) as unknown as SuccessResponseRecruitmentPostApplicationPageResponse;
 
   const page = response.data;
   return {

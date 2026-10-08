@@ -399,6 +399,8 @@ export interface CreateCompanyJobRequest {
   experienceType: CreateCompanyJobRequestExperienceType;
   experienceMinYears?: number;
   /**
+     * 학력 조건입니다. 보내지 않으면 학력 무관(ANY)으로 저장합니다.
+     *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `ANY` | 1 | 학력 무관 |

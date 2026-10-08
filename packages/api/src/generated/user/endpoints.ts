@@ -30,6 +30,7 @@ import type {
   CreateAdvertisementInquiryRequest,
   CreateCompanyBootcampRequest,
   CreateCompanyJobRequest,
+  CreateConcernCommentRequest,
   CreateImageBody,
   CreateRecruitmentPostCommentReportRequest,
   CreateRecruitmentPostCommentRequest,
@@ -46,13 +47,17 @@ import type {
   ListMyBootcampsParams,
   ListMyJobBookmarksParams,
   ListMyJobsParams,
-  ListMyRecruitmentApplicationsParams,
+  ListMyRecruitmentPostApplicationsParams,
   ListMyRecruitmentPostBookmarksParams,
   ListMyRecruitmentPostsParams,
+  ListPublicAnnouncementsParams,
   ListPublicBootcampsParams,
+  ListPublicConcernCommentRepliesParams,
+  ListPublicConcernCommentsParams,
+  ListPublicConcernsParams,
   ListPublicJobCalendarParams,
   ListPublicJobsParams,
-  ListPublicNoticesParams,
+  ListPublicPopularConcernsParams,
   ListPublicPopularJobsParams,
   PublishRecruitmentPostRequest,
   ReplaceMyCompanyBasicInfoRequest,
@@ -60,17 +65,22 @@ import type {
   ReplaceMyNotificationEmailRequest,
   ReplaceMyProfileImageRequest,
   ReplaceMyProfileRequest,
+  SaveConcernRequest,
   SuccessResponseAuthTokenResponse,
   SuccessResponseCompanyBootcampDetailResponse,
   SuccessResponseCompanyJobDetailResponse,
+  SuccessResponseConcernDetailResponse,
   SuccessResponseCreateCompanyBootcampResponse,
   SuccessResponseCreateCompanyJobResponse,
+  SuccessResponseCreateConcernCommentResponse,
+  SuccessResponseCreateConcernResponse,
   SuccessResponseCreateRecruitmentPostApplicationResponse,
   SuccessResponseCreateRecruitmentPostCommentResponse,
   SuccessResponseCreateRecruitmentPostResponse,
   SuccessResponseCreateServiceFeedbackResponse,
   SuccessResponseImageUploadResponse,
   SuccessResponseLetsCareerJobProfileSyncResponse,
+  SuccessResponseListConcernSummaryResponse,
   SuccessResponseListUserJobCalendarItemResponse,
   SuccessResponseListUserJobSummaryResponse,
   SuccessResponseListUserRecommendedChallengeResponse,
@@ -78,26 +88,29 @@ import type {
   SuccessResponseMyAccountResponse,
   SuccessResponsePageResponseCompanyBootcampSummaryResponse,
   SuccessResponsePageResponseCompanyJobSummaryResponse,
+  SuccessResponsePageResponseConcernCommentResponse,
+  SuccessResponsePageResponseConcernCommentRootResponse,
+  SuccessResponsePageResponseConcernSummaryResponse,
   SuccessResponsePageResponseRecruitmentPostCommentResponse,
   SuccessResponsePageResponseRecruitmentPostCommentRootResponse,
   SuccessResponsePageResponseRecruitmentPostManagementItemResponse,
   SuccessResponsePageResponseRecruitmentPostSummaryResponse,
+  SuccessResponsePageResponseUserAnnouncementSummaryResponse,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
   SuccessResponsePageResponseUserJobSummaryResponse,
-  SuccessResponsePageResponseUserNoticeSummaryResponse,
-  SuccessResponseRecruitmentApplicationPageResponse,
+  SuccessResponseRecruitmentPostApplicationPageResponse,
   SuccessResponseRecruitmentPostDetailResponse,
   SuccessResponseRecruitmentPostFormResponse,
   SuccessResponseUnit,
+  SuccessResponseUserAnnouncementDetailResponse,
   SuccessResponseUserBootcampDetailResponse,
   SuccessResponseUserJobDetailResponse,
-  SuccessResponseUserNoticeDetailResponse,
   TokenReissueRequest,
   UpdateBootcampApplicationStatusRequest,
   UpdateCompanyBootcampRequest,
   UpdateCompanyJobRequest,
   UpdateJobApplicationStatusRequest,
-  UpdateRecruitmentApplicationStatusRequest,
+  UpdateRecruitmentPostApplicationStatusRequest,
   UpdateRecruitmentPostRequest
 } from './models';
 
@@ -1778,212 +1791,6 @@ export const useDeleteMyRecruitmentPost = <TError = ErrorResponse,
       return useMutation(getDeleteMyRecruitmentPostMutationOptions(options), queryClient);
     }
 
-export type createRecruitmentPostBookmarkResponse201 = {
-  data: SuccessResponseUnit
-  status: 201
-}
-
-export type createRecruitmentPostBookmarkResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type createRecruitmentPostBookmarkResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type createRecruitmentPostBookmarkResponseSuccess = (createRecruitmentPostBookmarkResponse201) & {
-  headers: Headers;
-};
-export type createRecruitmentPostBookmarkResponseError = (createRecruitmentPostBookmarkResponse404 | createRecruitmentPostBookmarkResponse409) & {
-  headers: Headers;
-};
-
-export type createRecruitmentPostBookmarkResponse = (createRecruitmentPostBookmarkResponseSuccess | createRecruitmentPostBookmarkResponseError)
-
-export const getCreateRecruitmentPostBookmarkUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/recruitment-posts/${postId}/bookmarks/me`
-}
-
-/**
- *
- *             사이드 프로젝트·스터디 모집글을 북마크합니다.
- *
- *             ### 추가사항
- *
- *             - `CLOSED` 상태의 공개 모집글도 북마크할 수 있습니다.
- *             - 삭제된 모집글은 북마크할 수 없습니다.
- *             - 기존 비활성 북마크가 있으면 재활성화됩니다.
- * @summary 사이드·스터디 모집글 북마크 등록
- */
-export const createRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<createRecruitmentPostBookmarkResponse> => {
-
-  return httpClient<createRecruitmentPostBookmarkResponse>(getCreateRecruitmentPostBookmarkUrl(postId),
-  {
-    ...options,
-    method: 'PUT'
-
-
-  }
-);}
-
-
-
-
-
-export const getCreateRecruitmentPostBookmarkMutationKey = () => ['createRecruitmentPostBookmark'] as const;
-
-export const getCreateRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext> => {
-
-const mutationKey = getCreateRecruitmentPostBookmarkMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, CreateRecruitmentPostBookmarkMutationVariables> = (props) => {
-          const {postId} = props ?? {};
-
-          return  createRecruitmentPostBookmark(postId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>>
-
-    export type CreateRecruitmentPostBookmarkMutationError = ErrorResponse
-    export type CreateRecruitmentPostBookmarkMutationVariables = {postId: number}
-
-    /**
- * @summary 사이드·스터디 모집글 북마크 등록
- */
-export const useCreateRecruitmentPostBookmark = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createRecruitmentPostBookmark>>,
-        TError,
-        CreateRecruitmentPostBookmarkMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreateRecruitmentPostBookmarkMutationOptions(options), queryClient);
-    }
-
-export type deleteRecruitmentPostBookmarkResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type deleteRecruitmentPostBookmarkResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteRecruitmentPostBookmarkResponseSuccess = (deleteRecruitmentPostBookmarkResponse200) & {
-  headers: Headers;
-};
-export type deleteRecruitmentPostBookmarkResponseError = (deleteRecruitmentPostBookmarkResponse404) & {
-  headers: Headers;
-};
-
-export type deleteRecruitmentPostBookmarkResponse = (deleteRecruitmentPostBookmarkResponseSuccess | deleteRecruitmentPostBookmarkResponseError)
-
-export const getDeleteRecruitmentPostBookmarkUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/recruitment-posts/${postId}/bookmarks/me`
-}
-
-/**
- *
- *             사이드 프로젝트·스터디 모집글의 북마크를 해제합니다.
- *
- *             ### 추가사항
- *
- *             - 삭제된 모집글도 북마크 해제가 가능합니다.
- *             - 북마크가 없는 상태에서 호출해도 멱등적으로 처리됩니다.
- * @summary 사이드·스터디 모집글 북마크 해제
- */
-export const deleteRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostBookmarkResponse> => {
-
-  return httpClient<deleteRecruitmentPostBookmarkResponse>(getDeleteRecruitmentPostBookmarkUrl(postId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteRecruitmentPostBookmarkMutationKey = () => ['deleteRecruitmentPostBookmark'] as const;
-
-export const getDeleteRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext> => {
-
-const mutationKey = getDeleteRecruitmentPostBookmarkMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, DeleteRecruitmentPostBookmarkMutationVariables> = (props) => {
-          const {postId} = props ?? {};
-
-          return  deleteRecruitmentPostBookmark(postId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>>
-
-    export type DeleteRecruitmentPostBookmarkMutationError = ErrorResponse
-    export type DeleteRecruitmentPostBookmarkMutationVariables = {postId: number}
-
-    /**
- * @summary 사이드·스터디 모집글 북마크 해제
- */
-export const useDeleteRecruitmentPostBookmark = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>,
-        TError,
-        DeleteRecruitmentPostBookmarkMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteRecruitmentPostBookmarkMutationOptions(options), queryClient);
-    }
-
 export type replaceMyJobBookmarkApplicationStatusResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -2207,6 +2014,561 @@ export const useReplaceLetsCareerJobProfile = <TError = ErrorResponse,
       return useMutation(getReplaceLetsCareerJobProfileMutationOptions(options), queryClient);
     }
 
+export type getPublicConcernResponse200 = {
+  data: SuccessResponseConcernDetailResponse
+  status: 200
+}
+
+export type getPublicConcernResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getPublicConcernResponseSuccess = (getPublicConcernResponse200) & {
+  headers: Headers;
+};
+export type getPublicConcernResponseError = (getPublicConcernResponse404) & {
+  headers: Headers;
+};
+
+export type getPublicConcernResponse = (getPublicConcernResponseSuccess | getPublicConcernResponseError)
+
+export const getGetPublicConcernUrl = (concernId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}`
+}
+
+/**
+ *
+ *             고민글을 조회합니다. 로그인 없이 호출할 수 있고, 토큰을 보내면 `mine`이 채워집니다.
+ *
+ *             - 조회할 때마다 조회 수가 1 늘지만 비동기라 이번 응답의 `viewCount`에는 반영되지 않습니다.
+ *             - 삭제된 고민글은 404입니다.
+ * @summary 고민글 상세 조회
+ */
+export const getPublicConcern = async (concernId: number, options?: Parameters<typeof httpClient>[1]): Promise<getPublicConcernResponse> => {
+
+  return httpClient<getPublicConcernResponse>(getGetPublicConcernUrl(concernId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicConcernQueryKey = (concernId: number,) => {
+    return [
+    `/api/v1/concerns/${concernId}`
+    ] as const;
+    }
+
+
+export const getGetPublicConcernQueryOptions = <TData = Awaited<ReturnType<typeof getPublicConcern>>, TError = ErrorResponse>(concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicConcern>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicConcernQueryKey(concernId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicConcern>>> = ({ signal }) => getPublicConcern(concernId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: concernId !== null && concernId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicConcern>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicConcernQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicConcern>>>
+export type GetPublicConcernQueryError = ErrorResponse
+
+
+export function useGetPublicConcern<TData = Awaited<ReturnType<typeof getPublicConcern>>, TError = ErrorResponse>(
+ concernId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicConcern>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicConcern>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicConcern>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicConcern<TData = Awaited<ReturnType<typeof getPublicConcern>>, TError = ErrorResponse>(
+ concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicConcern>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicConcern>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicConcern>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicConcern<TData = Awaited<ReturnType<typeof getPublicConcern>>, TError = ErrorResponse>(
+ concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicConcern>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 고민글 상세 조회
+ */
+
+export function useGetPublicConcern<TData = Awaited<ReturnType<typeof getPublicConcern>>, TError = ErrorResponse>(
+ concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicConcern>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicConcernQueryOptions(concernId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type replaceMyConcernResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceMyConcernResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceMyConcernResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type replaceMyConcernResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type replaceMyConcernResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceMyConcernResponseSuccess = (replaceMyConcernResponse200) & {
+  headers: Headers;
+};
+export type replaceMyConcernResponseError = (replaceMyConcernResponse400 | replaceMyConcernResponse401 | replaceMyConcernResponse403 | replaceMyConcernResponse404) & {
+  headers: Headers;
+};
+
+export type replaceMyConcernResponse = (replaceMyConcernResponseSuccess | replaceMyConcernResponseError)
+
+export const getReplaceMyConcernUrl = (concernId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}`
+}
+
+/**
+ * 작성자 본인이 카테고리·제목·본문을 모두 보내 고민글을 바꿉니다.
+ * @summary 내 고민글 수정
+ */
+export const replaceMyConcern = async (concernId: number,
+    saveConcernRequest: SaveConcernRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyConcernResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceMyConcernResponse>(getReplaceMyConcernUrl(concernId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveConcernRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceMyConcernMutationKey = () => ['replaceMyConcern'] as const;
+
+export const getReplaceMyConcernMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyConcern>>, TError,ReplaceMyConcernMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMyConcern>>, TError,ReplaceMyConcernMutationVariables, TContext> => {
+
+const mutationKey = getReplaceMyConcernMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMyConcern>>, ReplaceMyConcernMutationVariables> = (props) => {
+          const {concernId,data} = props ?? {};
+
+          return  replaceMyConcern(concernId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMyConcernMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMyConcern>>>
+    export type ReplaceMyConcernMutationBody = SaveConcernRequest
+    export type ReplaceMyConcernMutationError = ErrorResponse
+    export type ReplaceMyConcernMutationVariables = {concernId: number;data: SaveConcernRequest}
+
+    /**
+ * @summary 내 고민글 수정
+ */
+export const useReplaceMyConcern = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyConcern>>, TError,ReplaceMyConcernMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMyConcern>>,
+        TError,
+        ReplaceMyConcernMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceMyConcernMutationOptions(options), queryClient);
+    }
+
+export type deleteMyConcernResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteMyConcernResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteMyConcernResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteMyConcernResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMyConcernResponseSuccess = (deleteMyConcernResponse200) & {
+  headers: Headers;
+};
+export type deleteMyConcernResponseError = (deleteMyConcernResponse401 | deleteMyConcernResponse403 | deleteMyConcernResponse404) & {
+  headers: Headers;
+};
+
+export type deleteMyConcernResponse = (deleteMyConcernResponseSuccess | deleteMyConcernResponseError)
+
+export const getDeleteMyConcernUrl = (concernId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}`
+}
+
+/**
+ *
+ *             작성자 본인의 고민글을 소프트 삭제합니다. 이미 지운 고민글을 다시 지워도 200입니다.
+ *
+ *             - 고민글에 달린 답변·답글은 그대로 남지만 고민글이 보이지 않아 조회할 수 없습니다.
+ * @summary 내 고민글 삭제
+ */
+export const deleteMyConcern = async (concernId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyConcernResponse> => {
+
+  return httpClient<deleteMyConcernResponse>(getDeleteMyConcernUrl(concernId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyConcernMutationKey = () => ['deleteMyConcern'] as const;
+
+export const getDeleteMyConcernMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcern>>, TError,DeleteMyConcernMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcern>>, TError,DeleteMyConcernMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyConcernMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyConcern>>, DeleteMyConcernMutationVariables> = (props) => {
+          const {concernId} = props ?? {};
+
+          return  deleteMyConcern(concernId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyConcernMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyConcern>>>
+
+    export type DeleteMyConcernMutationError = ErrorResponse
+    export type DeleteMyConcernMutationVariables = {concernId: number}
+
+    /**
+ * @summary 내 고민글 삭제
+ */
+export const useDeleteMyConcern = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcern>>, TError,DeleteMyConcernMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyConcern>>,
+        TError,
+        DeleteMyConcernMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyConcernMutationOptions(options), queryClient);
+    }
+
+export type replaceMyConcernCommentLikeResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceMyConcernCommentLikeResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type replaceMyConcernCommentLikeResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type replaceMyConcernCommentLikeResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceMyConcernCommentLikeResponseSuccess = (replaceMyConcernCommentLikeResponse200) & {
+  headers: Headers;
+};
+export type replaceMyConcernCommentLikeResponseError = (replaceMyConcernCommentLikeResponse401 | replaceMyConcernCommentLikeResponse403 | replaceMyConcernCommentLikeResponse404) & {
+  headers: Headers;
+};
+
+export type replaceMyConcernCommentLikeResponse = (replaceMyConcernCommentLikeResponseSuccess | replaceMyConcernCommentLikeResponseError)
+
+export const getReplaceMyConcernCommentLikeUrl = (concernId: number,
+    commentId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}/comments/${commentId}/likes/me`
+}
+
+/**
+ * 답변·답글에 좋아요를 누릅니다. 이미 누른 상태에서 다시 보내도 200이며 한 번으로 셉니다.
+ * @summary 좋아요 누르기
+ */
+export const replaceMyConcernCommentLike = async (concernId: number,
+    commentId: number, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyConcernCommentLikeResponse> => {
+
+  return httpClient<replaceMyConcernCommentLikeResponse>(getReplaceMyConcernCommentLikeUrl(concernId,commentId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getReplaceMyConcernCommentLikeMutationKey = () => ['replaceMyConcernCommentLike'] as const;
+
+export const getReplaceMyConcernCommentLikeMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyConcernCommentLike>>, TError,ReplaceMyConcernCommentLikeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMyConcernCommentLike>>, TError,ReplaceMyConcernCommentLikeMutationVariables, TContext> => {
+
+const mutationKey = getReplaceMyConcernCommentLikeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMyConcernCommentLike>>, ReplaceMyConcernCommentLikeMutationVariables> = (props) => {
+          const {concernId,commentId} = props ?? {};
+
+          return  replaceMyConcernCommentLike(concernId,commentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMyConcernCommentLikeMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMyConcernCommentLike>>>
+
+    export type ReplaceMyConcernCommentLikeMutationError = ErrorResponse
+    export type ReplaceMyConcernCommentLikeMutationVariables = {concernId: number;commentId: number}
+
+    /**
+ * @summary 좋아요 누르기
+ */
+export const useReplaceMyConcernCommentLike = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMyConcernCommentLike>>, TError,ReplaceMyConcernCommentLikeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMyConcernCommentLike>>,
+        TError,
+        ReplaceMyConcernCommentLikeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceMyConcernCommentLikeMutationOptions(options), queryClient);
+    }
+
+export type deleteMyConcernCommentLikeResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteMyConcernCommentLikeResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteMyConcernCommentLikeResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMyConcernCommentLikeResponseSuccess = (deleteMyConcernCommentLikeResponse200) & {
+  headers: Headers;
+};
+export type deleteMyConcernCommentLikeResponseError = (deleteMyConcernCommentLikeResponse401 | deleteMyConcernCommentLikeResponse404) & {
+  headers: Headers;
+};
+
+export type deleteMyConcernCommentLikeResponse = (deleteMyConcernCommentLikeResponseSuccess | deleteMyConcernCommentLikeResponseError)
+
+export const getDeleteMyConcernCommentLikeUrl = (concernId: number,
+    commentId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}/comments/${commentId}/likes/me`
+}
+
+/**
+ * 누른 좋아요를 취소합니다. 누르지 않은 상태에서 보내도 200입니다.
+ * @summary 좋아요 취소
+ */
+export const deleteMyConcernCommentLike = async (concernId: number,
+    commentId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyConcernCommentLikeResponse> => {
+
+  return httpClient<deleteMyConcernCommentLikeResponse>(getDeleteMyConcernCommentLikeUrl(concernId,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyConcernCommentLikeMutationKey = () => ['deleteMyConcernCommentLike'] as const;
+
+export const getDeleteMyConcernCommentLikeMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcernCommentLike>>, TError,DeleteMyConcernCommentLikeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcernCommentLike>>, TError,DeleteMyConcernCommentLikeMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyConcernCommentLikeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyConcernCommentLike>>, DeleteMyConcernCommentLikeMutationVariables> = (props) => {
+          const {concernId,commentId} = props ?? {};
+
+          return  deleteMyConcernCommentLike(concernId,commentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyConcernCommentLikeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyConcernCommentLike>>>
+
+    export type DeleteMyConcernCommentLikeMutationError = ErrorResponse
+    export type DeleteMyConcernCommentLikeMutationVariables = {concernId: number;commentId: number}
+
+    /**
+ * @summary 좋아요 취소
+ */
+export const useDeleteMyConcernCommentLike = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcernCommentLike>>, TError,DeleteMyConcernCommentLikeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyConcernCommentLike>>,
+        TError,
+        DeleteMyConcernCommentLikeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyConcernCommentLikeMutationOptions(options), queryClient);
+    }
+
 export type replaceMyBootcampBookmarkApplicationStatusResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -2315,6 +2677,350 @@ export const useReplaceMyBootcampBookmarkApplicationStatus = <TError = ErrorResp
         TContext
       > => {
       return useMutation(getReplaceMyBootcampBookmarkApplicationStatusMutationOptions(options), queryClient);
+    }
+
+export type publishMyRecruitmentPostResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type publishMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type publishMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type publishMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type publishMyRecruitmentPostResponseSuccess = (publishMyRecruitmentPostResponse200) & {
+  headers: Headers;
+};
+export type publishMyRecruitmentPostResponseError = (publishMyRecruitmentPostResponse400 | publishMyRecruitmentPostResponse403 | publishMyRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type publishMyRecruitmentPostResponse = (publishMyRecruitmentPostResponseSuccess | publishMyRecruitmentPostResponseError)
+
+export const getPublishMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/recruitment-posts/${postId}/publish`
+}
+
+/**
+ *
+ *             임시저장 모집글의 필수값과 정책 동의를 검증한 뒤 공개 상태로 전환합니다. 이미 게시된 글은 멱등 성공합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 기존 호환용 게시 API입니다.
+ *             - 신규 수정·게시 흐름에서는 `PUT /api/v1/recruitment-posts/{postId}`와 `saveMode=PUBLISH` 사용을 권장합니다.
+ * @summary 내 모집글 게시
+ */
+export const publishMyRecruitmentPost = async (postId: number,
+    publishRecruitmentPostRequest: PublishRecruitmentPostRequest, options?: Parameters<typeof httpClient>[1]): Promise<publishMyRecruitmentPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<publishMyRecruitmentPostResponse>(getPublishMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(publishRecruitmentPostRequest)
+  }
+);}
+
+
+
+
+
+export const getPublishMyRecruitmentPostMutationKey = () => ['publishMyRecruitmentPost'] as const;
+
+export const getPublishMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getPublishMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, PublishMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId,data} = props ?? {};
+
+          return  publishMyRecruitmentPost(postId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof publishMyRecruitmentPost>>>
+    export type PublishMyRecruitmentPostMutationBody = PublishRecruitmentPostRequest
+    export type PublishMyRecruitmentPostMutationError = ErrorResponse
+    export type PublishMyRecruitmentPostMutationVariables = {postId: number;data: PublishRecruitmentPostRequest}
+
+    /**
+ * @summary 내 모집글 게시
+ */
+export const usePublishMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publishMyRecruitmentPost>>,
+        TError,
+        PublishMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublishMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type copyMyRecruitmentPostResponse201 = {
+  data: SuccessResponseRecruitmentPostFormResponse
+  status: 201
+}
+
+export type copyMyRecruitmentPostResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type copyMyRecruitmentPostResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type copyMyRecruitmentPostResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type copyMyRecruitmentPostResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type copyMyRecruitmentPostResponseSuccess = (copyMyRecruitmentPostResponse201) & {
+  headers: Headers;
+};
+export type copyMyRecruitmentPostResponseError = (copyMyRecruitmentPostResponse400 | copyMyRecruitmentPostResponse401 | copyMyRecruitmentPostResponse403 | copyMyRecruitmentPostResponse404) & {
+  headers: Headers;
+};
+
+export type copyMyRecruitmentPostResponse = (copyMyRecruitmentPostResponseSuccess | copyMyRecruitmentPostResponseError)
+
+export const getCopyMyRecruitmentPostUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/recruitment-posts/${postId}/copies`
+}
+
+/**
+ *
+ *             작성자의 모집글을 새 임시저장 모집글로 복사하고 작성 화면용 데이터를 반환합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 새로운 `postId`를 가진 `DRAFT` 글이 생성됩니다.
+ *             - 본문과 이미지 정보가 복사됩니다.
+ *             - `agreedToPolicy`는 `false`입니다.
+ * @summary 내 모집글 복사
+ */
+export const copyMyRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<copyMyRecruitmentPostResponse> => {
+
+  return httpClient<copyMyRecruitmentPostResponse>(getCopyMyRecruitmentPostUrl(postId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCopyMyRecruitmentPostMutationKey = () => ['copyMyRecruitmentPost'] as const;
+
+export const getCopyMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext> => {
+
+const mutationKey = getCopyMyRecruitmentPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, CopyMyRecruitmentPostMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  copyMyRecruitmentPost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CopyMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof copyMyRecruitmentPost>>>
+
+    export type CopyMyRecruitmentPostMutationError = ErrorResponse
+    export type CopyMyRecruitmentPostMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 모집글 복사
+ */
+export const useCopyMyRecruitmentPost = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof copyMyRecruitmentPost>>,
+        TError,
+        CopyMyRecruitmentPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCopyMyRecruitmentPostMutationOptions(options), queryClient);
+    }
+
+export type createMyRecruitmentPostDraftResponse201 = {
+  data: SuccessResponseCreateRecruitmentPostResponse
+  status: 201
+}
+
+export type createMyRecruitmentPostDraftResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createMyRecruitmentPostDraftResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createMyRecruitmentPostDraftResponseSuccess = (createMyRecruitmentPostDraftResponse201) & {
+  headers: Headers;
+};
+export type createMyRecruitmentPostDraftResponseError = (createMyRecruitmentPostDraftResponse400 | createMyRecruitmentPostDraftResponse403) & {
+  headers: Headers;
+};
+
+export type createMyRecruitmentPostDraftResponse = (createMyRecruitmentPostDraftResponseSuccess | createMyRecruitmentPostDraftResponseError)
+
+export const getCreateMyRecruitmentPostDraftUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/recruitment-posts/drafts`
+}
+
+/**
+ *
+ *             제목만 필수로 받고 나머지 필드는 선택적으로 저장합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 기존 호환용 임시저장 API입니다.
+ *             - 신규 생성 화면에서는 `POST /api/v1/recruitment-posts`에 `saveMode=DRAFT`를 사용하는 것을 권장합니다.
+ * @summary 내 모집글 임시저장 생성
+ */
+export const createMyRecruitmentPostDraft = async (createRecruitmentPostDraftRequest: CreateRecruitmentPostDraftRequest, options?: Parameters<typeof httpClient>[1]): Promise<createMyRecruitmentPostDraftResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createMyRecruitmentPostDraftResponse>(getCreateMyRecruitmentPostDraftUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRecruitmentPostDraftRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateMyRecruitmentPostDraftMutationKey = () => ['createMyRecruitmentPostDraft'] as const;
+
+export const getCreateMyRecruitmentPostDraftMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext> => {
+
+const mutationKey = getCreateMyRecruitmentPostDraftMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, CreateMyRecruitmentPostDraftMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMyRecruitmentPostDraft(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMyRecruitmentPostDraftMutationResult = NonNullable<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>>
+    export type CreateMyRecruitmentPostDraftMutationBody = CreateRecruitmentPostDraftRequest
+    export type CreateMyRecruitmentPostDraftMutationError = ErrorResponse
+    export type CreateMyRecruitmentPostDraftMutationVariables = {data: CreateRecruitmentPostDraftRequest}
+
+    /**
+ * @summary 내 모집글 임시저장 생성
+ */
+export const useCreateMyRecruitmentPostDraft = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>,
+        TError,
+        CreateMyRecruitmentPostDraftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateMyRecruitmentPostDraftMutationOptions(options), queryClient);
     }
 
 export type listMyJobsResponse200 = {
@@ -4018,6 +4724,212 @@ export const useCreateRecruitmentPostApplication = <TError = ErrorResponse,
       return useMutation(getCreateRecruitmentPostApplicationMutationOptions(options), queryClient);
     }
 
+export type createRecruitmentPostBookmarkResponse201 = {
+  data: SuccessResponseUnit
+  status: 201
+}
+
+export type createRecruitmentPostBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createRecruitmentPostBookmarkResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createRecruitmentPostBookmarkResponseSuccess = (createRecruitmentPostBookmarkResponse201) & {
+  headers: Headers;
+};
+export type createRecruitmentPostBookmarkResponseError = (createRecruitmentPostBookmarkResponse404 | createRecruitmentPostBookmarkResponse409) & {
+  headers: Headers;
+};
+
+export type createRecruitmentPostBookmarkResponse = (createRecruitmentPostBookmarkResponseSuccess | createRecruitmentPostBookmarkResponseError)
+
+export const getCreateRecruitmentPostBookmarkUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-post-bookmarks/${postId}`
+}
+
+/**
+ *
+ *             사이드 프로젝트·스터디 모집글을 북마크합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `CLOSED` 상태의 공개 모집글도 북마크할 수 있습니다.
+ *             - 삭제된 모집글은 북마크할 수 없습니다.
+ *             - 기존 비활성 북마크가 있으면 재활성화됩니다.
+ * @summary 사이드·스터디 모집글 북마크 등록
+ */
+export const createRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<createRecruitmentPostBookmarkResponse> => {
+
+  return httpClient<createRecruitmentPostBookmarkResponse>(getCreateRecruitmentPostBookmarkUrl(postId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateRecruitmentPostBookmarkMutationKey = () => ['createRecruitmentPostBookmark'] as const;
+
+export const getCreateRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getCreateRecruitmentPostBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, CreateRecruitmentPostBookmarkMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  createRecruitmentPostBookmark(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>>
+
+    export type CreateRecruitmentPostBookmarkMutationError = ErrorResponse
+    export type CreateRecruitmentPostBookmarkMutationVariables = {postId: number}
+
+    /**
+ * @summary 사이드·스터디 모집글 북마크 등록
+ */
+export const useCreateRecruitmentPostBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRecruitmentPostBookmark>>, TError,CreateRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRecruitmentPostBookmark>>,
+        TError,
+        CreateRecruitmentPostBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRecruitmentPostBookmarkMutationOptions(options), queryClient);
+    }
+
+export type deleteRecruitmentPostBookmarkResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteRecruitmentPostBookmarkResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteRecruitmentPostBookmarkResponseSuccess = (deleteRecruitmentPostBookmarkResponse200) & {
+  headers: Headers;
+};
+export type deleteRecruitmentPostBookmarkResponseError = (deleteRecruitmentPostBookmarkResponse404) & {
+  headers: Headers;
+};
+
+export type deleteRecruitmentPostBookmarkResponse = (deleteRecruitmentPostBookmarkResponseSuccess | deleteRecruitmentPostBookmarkResponseError)
+
+export const getDeleteRecruitmentPostBookmarkUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/recruitment-post-bookmarks/${postId}`
+}
+
+/**
+ *
+ *             사이드 프로젝트·스터디 모집글의 북마크를 해제합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 삭제된 모집글도 북마크 해제가 가능합니다.
+ *             - 북마크가 없는 상태에서 호출해도 멱등적으로 처리됩니다.
+ * @summary 사이드·스터디 모집글 북마크 해제
+ */
+export const deleteRecruitmentPostBookmark = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostBookmarkResponse> => {
+
+  return httpClient<deleteRecruitmentPostBookmarkResponse>(getDeleteRecruitmentPostBookmarkUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRecruitmentPostBookmarkMutationKey = () => ['deleteRecruitmentPostBookmark'] as const;
+
+export const getDeleteRecruitmentPostBookmarkMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRecruitmentPostBookmarkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, DeleteRecruitmentPostBookmarkMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  deleteRecruitmentPostBookmark(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRecruitmentPostBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>>
+
+    export type DeleteRecruitmentPostBookmarkMutationError = ErrorResponse
+    export type DeleteRecruitmentPostBookmarkMutationVariables = {postId: number}
+
+    /**
+ * @summary 사이드·스터디 모집글 북마크 해제
+ */
+export const useDeleteRecruitmentPostBookmark = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>, TError,DeleteRecruitmentPostBookmarkMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRecruitmentPostBookmark>>,
+        TError,
+        DeleteRecruitmentPostBookmarkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRecruitmentPostBookmarkMutationOptions(options), queryClient);
+    }
+
 export type prepareMyRecruitmentPostBookmarkResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -4229,350 +5141,6 @@ export const useCancelMyRecruitmentPostBookmarkPreparation = <TError = ErrorResp
         TContext
       > => {
       return useMutation(getCancelMyRecruitmentPostBookmarkPreparationMutationOptions(options), queryClient);
-    }
-
-export type publishMyRecruitmentPostResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type publishMyRecruitmentPostResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type publishMyRecruitmentPostResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type publishMyRecruitmentPostResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type publishMyRecruitmentPostResponseSuccess = (publishMyRecruitmentPostResponse200) & {
-  headers: Headers;
-};
-export type publishMyRecruitmentPostResponseError = (publishMyRecruitmentPostResponse400 | publishMyRecruitmentPostResponse403 | publishMyRecruitmentPostResponse404) & {
-  headers: Headers;
-};
-
-export type publishMyRecruitmentPostResponse = (publishMyRecruitmentPostResponseSuccess | publishMyRecruitmentPostResponseError)
-
-export const getPublishMyRecruitmentPostUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/me/recruitment-posts/${postId}/publish`
-}
-
-/**
- *
- *             임시저장 모집글의 필수값과 정책 동의를 검증한 뒤 공개 상태로 전환합니다. 이미 게시된 글은 멱등 성공합니다.
- *
- *             ### 추가사항
- *
- *             - 기존 호환용 게시 API입니다.
- *             - 신규 수정·게시 흐름에서는 `PUT /api/v1/recruitment-posts/{postId}`와 `saveMode=PUBLISH` 사용을 권장합니다.
- * @summary 내 모집글 게시
- */
-export const publishMyRecruitmentPost = async (postId: number,
-    publishRecruitmentPostRequest: PublishRecruitmentPostRequest, options?: Parameters<typeof httpClient>[1]): Promise<publishMyRecruitmentPostResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<publishMyRecruitmentPostResponse>(getPublishMyRecruitmentPostUrl(postId),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(publishRecruitmentPostRequest)
-  }
-);}
-
-
-
-
-
-export const getPublishMyRecruitmentPostMutationKey = () => ['publishMyRecruitmentPost'] as const;
-
-export const getPublishMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext> => {
-
-const mutationKey = getPublishMyRecruitmentPostMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, PublishMyRecruitmentPostMutationVariables> = (props) => {
-          const {postId,data} = props ?? {};
-
-          return  publishMyRecruitmentPost(postId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PublishMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof publishMyRecruitmentPost>>>
-    export type PublishMyRecruitmentPostMutationBody = PublishRecruitmentPostRequest
-    export type PublishMyRecruitmentPostMutationError = ErrorResponse
-    export type PublishMyRecruitmentPostMutationVariables = {postId: number;data: PublishRecruitmentPostRequest}
-
-    /**
- * @summary 내 모집글 게시
- */
-export const usePublishMyRecruitmentPost = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishMyRecruitmentPost>>, TError,PublishMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof publishMyRecruitmentPost>>,
-        TError,
-        PublishMyRecruitmentPostMutationVariables,
-        TContext
-      > => {
-      return useMutation(getPublishMyRecruitmentPostMutationOptions(options), queryClient);
-    }
-
-export type copyMyRecruitmentPostResponse201 = {
-  data: SuccessResponseRecruitmentPostFormResponse
-  status: 201
-}
-
-export type copyMyRecruitmentPostResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type copyMyRecruitmentPostResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type copyMyRecruitmentPostResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type copyMyRecruitmentPostResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type copyMyRecruitmentPostResponseSuccess = (copyMyRecruitmentPostResponse201) & {
-  headers: Headers;
-};
-export type copyMyRecruitmentPostResponseError = (copyMyRecruitmentPostResponse400 | copyMyRecruitmentPostResponse401 | copyMyRecruitmentPostResponse403 | copyMyRecruitmentPostResponse404) & {
-  headers: Headers;
-};
-
-export type copyMyRecruitmentPostResponse = (copyMyRecruitmentPostResponseSuccess | copyMyRecruitmentPostResponseError)
-
-export const getCopyMyRecruitmentPostUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/me/recruitment-posts/${postId}/copies`
-}
-
-/**
- *
- *             작성자의 모집글을 새 임시저장 모집글로 복사하고 작성 화면용 데이터를 반환합니다.
- *
- *             ### 추가사항
- *
- *             - 새로운 `postId`를 가진 `DRAFT` 글이 생성됩니다.
- *             - 본문과 이미지 정보가 복사됩니다.
- *             - `agreedToPolicy`는 `false`입니다.
- * @summary 내 모집글 복사
- */
-export const copyMyRecruitmentPost = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<copyMyRecruitmentPostResponse> => {
-
-  return httpClient<copyMyRecruitmentPostResponse>(getCopyMyRecruitmentPostUrl(postId),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-
-export const getCopyMyRecruitmentPostMutationKey = () => ['copyMyRecruitmentPost'] as const;
-
-export const getCopyMyRecruitmentPostMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext> => {
-
-const mutationKey = getCopyMyRecruitmentPostMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, CopyMyRecruitmentPostMutationVariables> = (props) => {
-          const {postId} = props ?? {};
-
-          return  copyMyRecruitmentPost(postId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CopyMyRecruitmentPostMutationResult = NonNullable<Awaited<ReturnType<typeof copyMyRecruitmentPost>>>
-
-    export type CopyMyRecruitmentPostMutationError = ErrorResponse
-    export type CopyMyRecruitmentPostMutationVariables = {postId: number}
-
-    /**
- * @summary 내 모집글 복사
- */
-export const useCopyMyRecruitmentPost = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof copyMyRecruitmentPost>>, TError,CopyMyRecruitmentPostMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof copyMyRecruitmentPost>>,
-        TError,
-        CopyMyRecruitmentPostMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCopyMyRecruitmentPostMutationOptions(options), queryClient);
-    }
-
-export type createMyRecruitmentPostDraftResponse201 = {
-  data: SuccessResponseCreateRecruitmentPostResponse
-  status: 201
-}
-
-export type createMyRecruitmentPostDraftResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type createMyRecruitmentPostDraftResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type createMyRecruitmentPostDraftResponseSuccess = (createMyRecruitmentPostDraftResponse201) & {
-  headers: Headers;
-};
-export type createMyRecruitmentPostDraftResponseError = (createMyRecruitmentPostDraftResponse400 | createMyRecruitmentPostDraftResponse403) & {
-  headers: Headers;
-};
-
-export type createMyRecruitmentPostDraftResponse = (createMyRecruitmentPostDraftResponseSuccess | createMyRecruitmentPostDraftResponseError)
-
-export const getCreateMyRecruitmentPostDraftUrl = () => {
-
-
-
-
-  return `/api/v1/me/recruitment-posts/drafts`
-}
-
-/**
- *
- *             제목만 필수로 받고 나머지 필드는 선택적으로 저장합니다.
- *
- *             ### 추가사항
- *
- *             - 기존 호환용 임시저장 API입니다.
- *             - 신규 생성 화면에서는 `POST /api/v1/recruitment-posts`에 `saveMode=DRAFT`를 사용하는 것을 권장합니다.
- * @summary 내 모집글 임시저장 생성
- */
-export const createMyRecruitmentPostDraft = async (createRecruitmentPostDraftRequest: CreateRecruitmentPostDraftRequest, options?: Parameters<typeof httpClient>[1]): Promise<createMyRecruitmentPostDraftResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<createMyRecruitmentPostDraftResponse>(getCreateMyRecruitmentPostDraftUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(createRecruitmentPostDraftRequest)
-  }
-);}
-
-
-
-
-
-export const getCreateMyRecruitmentPostDraftMutationKey = () => ['createMyRecruitmentPostDraft'] as const;
-
-export const getCreateMyRecruitmentPostDraftMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext> => {
-
-const mutationKey = getCreateMyRecruitmentPostDraftMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, CreateMyRecruitmentPostDraftMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  createMyRecruitmentPostDraft(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateMyRecruitmentPostDraftMutationResult = NonNullable<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>>
-    export type CreateMyRecruitmentPostDraftMutationBody = CreateRecruitmentPostDraftRequest
-    export type CreateMyRecruitmentPostDraftMutationError = ErrorResponse
-    export type CreateMyRecruitmentPostDraftMutationVariables = {data: CreateRecruitmentPostDraftRequest}
-
-    /**
- * @summary 내 모집글 임시저장 생성
- */
-export const useCreateMyRecruitmentPostDraft = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>, TError,CreateMyRecruitmentPostDraftMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createMyRecruitmentPostDraft>>,
-        TError,
-        CreateMyRecruitmentPostDraftMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreateMyRecruitmentPostDraftMutationOptions(options), queryClient);
     }
 
 export type createJobSourceUrlClickResponse200 = {
@@ -4973,36 +5541,546 @@ export const useCreateImage = <TError = ErrorResponse,
       return useMutation(getCreateImageMutationOptions(options), queryClient);
     }
 
-export type createBootcampApplicationUrlClickResponse200 = {
-  data: SuccessResponseUnit
+export type listPublicConcernsResponse200 = {
+  data: SuccessResponsePageResponseConcernSummaryResponse
   status: 200
 }
 
-export type createBootcampApplicationUrlClickResponse401 = {
+export type listPublicConcernsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicConcernsResponseSuccess = (listPublicConcernsResponse200) & {
+  headers: Headers;
+};
+export type listPublicConcernsResponseError = (listPublicConcernsResponse400) & {
+  headers: Headers;
+};
+
+export type listPublicConcernsResponse = (listPublicConcernsResponseSuccess | listPublicConcernsResponseError)
+
+export const getListPublicConcernsUrl = (params?: ListPublicConcernsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/concerns?${stringifiedParams}` : `/api/v1/concerns`
+}
+
+/**
+ *
+ *             삭제되지 않은 고민글을 페이지로 조회합니다. 로그인 없이 호출할 수 있습니다.
+ *
+ *             - `category`를 보내지 않으면 전체 카테고리입니다.
+ *             - `sort`는 `LATEST`(최신순, 기본값), `VIEW_COUNT`(조회 많은 순), `COMMENT_COUNT`(답변 많은 순)입니다.
+ *             - 조회 수는 비동기로 집계되어 정렬에 바로 반영되지 않을 수 있습니다.
+ * @summary 고민글 목록 조회
+ */
+export const listPublicConcerns = async (params?: ListPublicConcernsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicConcernsResponse> => {
+
+  return httpClient<listPublicConcernsResponse>(getListPublicConcernsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicConcernsQueryKey = (params?: ListPublicConcernsParams,) => {
+    return [
+    `/api/v1/concerns`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicConcernsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicConcerns>>, TError = ErrorResponse>(params?: ListPublicConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicConcernsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicConcerns>>> = ({ signal }) => listPublicConcerns(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicConcerns>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicConcernsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicConcerns>>>
+export type ListPublicConcernsQueryError = ErrorResponse
+
+
+export function useListPublicConcerns<TData = Awaited<ReturnType<typeof listPublicConcerns>>, TError = ErrorResponse>(
+ params: undefined |  ListPublicConcernsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcerns>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicConcerns>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicConcerns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicConcerns<TData = Awaited<ReturnType<typeof listPublicConcerns>>, TError = ErrorResponse>(
+ params?: ListPublicConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcerns>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicConcerns>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicConcerns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicConcerns<TData = Awaited<ReturnType<typeof listPublicConcerns>>, TError = ErrorResponse>(
+ params?: ListPublicConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 고민글 목록 조회
+ */
+
+export function useListPublicConcerns<TData = Awaited<ReturnType<typeof listPublicConcerns>>, TError = ErrorResponse>(
+ params?: ListPublicConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicConcernsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createConcernResponse201 = {
+  data: SuccessResponseCreateConcernResponse
+  status: 201
+}
+
+export type createConcernResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createConcernResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type createBootcampApplicationUrlClickResponse404 = {
+export type createConcernResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createConcernResponseSuccess = (createConcernResponse201) & {
+  headers: Headers;
+};
+export type createConcernResponseError = (createConcernResponse400 | createConcernResponse401 | createConcernResponse403) & {
+  headers: Headers;
+};
+
+export type createConcernResponse = (createConcernResponseSuccess | createConcernResponseError)
+
+export const getCreateConcernUrl = () => {
+
+
+
+
+  return `/api/v1/concerns`
+}
+
+/**
+ * 로그인한 활성 사용자가 고민글을 작성합니다. 본문은 일반 텍스트입니다.
+ * @summary 고민글 작성
+ */
+export const createConcern = async (saveConcernRequest: SaveConcernRequest, options?: Parameters<typeof httpClient>[1]): Promise<createConcernResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createConcernResponse>(getCreateConcernUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveConcernRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateConcernMutationKey = () => ['createConcern'] as const;
+
+export const getCreateConcernMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConcern>>, TError,CreateConcernMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createConcern>>, TError,CreateConcernMutationVariables, TContext> => {
+
+const mutationKey = getCreateConcernMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createConcern>>, CreateConcernMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createConcern(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateConcernMutationResult = NonNullable<Awaited<ReturnType<typeof createConcern>>>
+    export type CreateConcernMutationBody = SaveConcernRequest
+    export type CreateConcernMutationError = ErrorResponse
+    export type CreateConcernMutationVariables = {data: SaveConcernRequest}
+
+    /**
+ * @summary 고민글 작성
+ */
+export const useCreateConcern = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConcern>>, TError,CreateConcernMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createConcern>>,
+        TError,
+        CreateConcernMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateConcernMutationOptions(options), queryClient);
+    }
+
+export type listPublicConcernCommentsResponse200 = {
+  data: SuccessResponsePageResponseConcernCommentRootResponse
+  status: 200
+}
+
+export type listPublicConcernCommentsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicConcernCommentsResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type createBootcampApplicationUrlClickResponseSuccess = (createBootcampApplicationUrlClickResponse200) & {
+export type listPublicConcernCommentsResponseSuccess = (listPublicConcernCommentsResponse200) & {
   headers: Headers;
 };
-export type createBootcampApplicationUrlClickResponseError = (createBootcampApplicationUrlClickResponse401 | createBootcampApplicationUrlClickResponse404) & {
+export type listPublicConcernCommentsResponseError = (listPublicConcernCommentsResponse400 | listPublicConcernCommentsResponse404) & {
   headers: Headers;
 };
 
-export type createBootcampApplicationUrlClickResponse = (createBootcampApplicationUrlClickResponseSuccess | createBootcampApplicationUrlClickResponseError)
+export type listPublicConcernCommentsResponse = (listPublicConcernCommentsResponseSuccess | listPublicConcernCommentsResponseError)
 
-export const getCreateBootcampApplicationUrlClickUrl = (bootcampId: number,) => {
+export const getListPublicConcernCommentsUrl = (concernId: number,
+    params?: ListPublicConcernCommentsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/concerns/${concernId}/comments?${stringifiedParams}` : `/api/v1/concerns/${concernId}/comments`
+}
+
+/**
+ *
+ *             답변(부모 댓글)을 페이지로 조회하고 답변마다 앞쪽 답글 5개를 함께 줍니다. 로그인 없이 호출할 수 있고,
+ *             토큰을 보내면 `mine`, `liked`가 채워집니다.
+ *
+ *             - 운영자 답변도 구분 없이 먼저 단 답변부터 줍니다.
+ *             - 삭제된 답변은 남은 답글이 있을 때만 `"삭제된 댓글입니다"`로 남고, 없으면 목록에서 빠집니다.
+ *             - 답글 수는 `replies.pageInfo.totalElements`입니다.
+ * @summary 고민글 답변 목록 조회
+ */
+export const listPublicConcernComments = async (concernId: number,
+    params?: ListPublicConcernCommentsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicConcernCommentsResponse> => {
+
+  return httpClient<listPublicConcernCommentsResponse>(getListPublicConcernCommentsUrl(concernId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
 
 
 
 
-  return `/api/v1/bootcamps/${bootcampId}/application-url-clicks`
+
+export const getListPublicConcernCommentsQueryKey = (concernId: number,
+    params?: ListPublicConcernCommentsParams,) => {
+    return [
+    `/api/v1/concerns/${concernId}/comments`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicConcernCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicConcernComments>>, TError = ErrorResponse>(concernId: number,
+    params?: ListPublicConcernCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernComments>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicConcernCommentsQueryKey(concernId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicConcernComments>>> = ({ signal }) => listPublicConcernComments(concernId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: concernId !== null && concernId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernComments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicConcernCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicConcernComments>>>
+export type ListPublicConcernCommentsQueryError = ErrorResponse
+
+
+export function useListPublicConcernComments<TData = Awaited<ReturnType<typeof listPublicConcernComments>>, TError = ErrorResponse>(
+ concernId: number,
+    params: undefined |  ListPublicConcernCommentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernComments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicConcernComments>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicConcernComments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicConcernComments<TData = Awaited<ReturnType<typeof listPublicConcernComments>>, TError = ErrorResponse>(
+ concernId: number,
+    params?: ListPublicConcernCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernComments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicConcernComments>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicConcernComments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicConcernComments<TData = Awaited<ReturnType<typeof listPublicConcernComments>>, TError = ErrorResponse>(
+ concernId: number,
+    params?: ListPublicConcernCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernComments>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 고민글 답변 목록 조회
+ */
+
+export function useListPublicConcernComments<TData = Awaited<ReturnType<typeof listPublicConcernComments>>, TError = ErrorResponse>(
+ concernId: number,
+    params?: ListPublicConcernCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernComments>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicConcernCommentsQueryOptions(concernId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createConcernCommentResponse201 = {
+  data: SuccessResponseCreateConcernCommentResponse
+  status: 201
+}
+
+export type createConcernCommentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createConcernCommentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createConcernCommentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createConcernCommentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createConcernCommentResponseSuccess = (createConcernCommentResponse201) & {
+  headers: Headers;
+};
+export type createConcernCommentResponseError = (createConcernCommentResponse400 | createConcernCommentResponse401 | createConcernCommentResponse403 | createConcernCommentResponse404) & {
+  headers: Headers;
+};
+
+export type createConcernCommentResponse = (createConcernCommentResponseSuccess | createConcernCommentResponseError)
+
+export const getCreateConcernCommentUrl = (concernId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}/comments`
+}
+
+/**
+ *
+ *             `parentId`가 없으면 답변을, 있으면 그 답변에 답글을 작성합니다. 답글에는 다시 답글을 달 수 없습니다.
+ *
+ *             - 관리자 계정으로 작성하면 운영자 답변(`official=true`)이 됩니다.
+ *             - 답변을 작성하면 고민글의 `commentCount`가 1 늘고, 답글은 세지 않습니다.
+ * @summary 고민글 답변·답글 작성
+ */
+export const createConcernComment = async (concernId: number,
+    createConcernCommentRequest: CreateConcernCommentRequest, options?: Parameters<typeof httpClient>[1]): Promise<createConcernCommentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createConcernCommentResponse>(getCreateConcernCommentUrl(concernId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createConcernCommentRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateConcernCommentMutationKey = () => ['createConcernComment'] as const;
+
+export const getCreateConcernCommentMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConcernComment>>, TError,CreateConcernCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createConcernComment>>, TError,CreateConcernCommentMutationVariables, TContext> => {
+
+const mutationKey = getCreateConcernCommentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createConcernComment>>, CreateConcernCommentMutationVariables> = (props) => {
+          const {concernId,data} = props ?? {};
+
+          return  createConcernComment(concernId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateConcernCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createConcernComment>>>
+    export type CreateConcernCommentMutationBody = CreateConcernCommentRequest
+    export type CreateConcernCommentMutationError = ErrorResponse
+    export type CreateConcernCommentMutationVariables = {concernId: number;data: CreateConcernCommentRequest}
+
+    /**
+ * @summary 고민글 답변·답글 작성
+ */
+export const useCreateConcernComment = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConcernComment>>, TError,CreateConcernCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createConcernComment>>,
+        TError,
+        CreateConcernCommentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateConcernCommentMutationOptions(options), queryClient);
+    }
+
+export type createBootcampSourceUrlClickResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type createBootcampSourceUrlClickResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createBootcampSourceUrlClickResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createBootcampSourceUrlClickResponseSuccess = (createBootcampSourceUrlClickResponse200) & {
+  headers: Headers;
+};
+export type createBootcampSourceUrlClickResponseError = (createBootcampSourceUrlClickResponse401 | createBootcampSourceUrlClickResponse404) & {
+  headers: Headers;
+};
+
+export type createBootcampSourceUrlClickResponse = (createBootcampSourceUrlClickResponseSuccess | createBootcampSourceUrlClickResponseError)
+
+export const getCreateBootcampSourceUrlClickUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/bootcamps/${bootcampId}/source-url-clicks`
 }
 
 /**
@@ -5014,9 +6092,9 @@ export const getCreateBootcampApplicationUrlClickUrl = (bootcampId: number,) => 
  *             이동할 주소는 상세 조회 응답의 applicationUrl을 사용합니다.
  * @summary 부트캠프 지원 페이지 이동 기록
  */
-export const createBootcampApplicationUrlClick = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<createBootcampApplicationUrlClickResponse> => {
+export const createBootcampSourceUrlClick = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<createBootcampSourceUrlClickResponse> => {
 
-  return httpClient<createBootcampApplicationUrlClickResponse>(getCreateBootcampApplicationUrlClickUrl(bootcampId),
+  return httpClient<createBootcampSourceUrlClickResponse>(getCreateBootcampSourceUrlClickUrl(bootcampId),
   {
     ...options,
     method: 'POST'
@@ -5029,13 +6107,13 @@ export const createBootcampApplicationUrlClick = async (bootcampId: number, opti
 
 
 
-export const getCreateBootcampApplicationUrlClickMutationKey = () => ['createBootcampApplicationUrlClick'] as const;
+export const getCreateBootcampSourceUrlClickMutationKey = () => ['createBootcampSourceUrlClick'] as const;
 
-export const getCreateBootcampApplicationUrlClickMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, TError,CreateBootcampApplicationUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, TError,CreateBootcampApplicationUrlClickMutationVariables, TContext> => {
+export const getCreateBootcampSourceUrlClickMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampSourceUrlClick>>, TError,CreateBootcampSourceUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBootcampSourceUrlClick>>, TError,CreateBootcampSourceUrlClickMutationVariables, TContext> => {
 
-const mutationKey = getCreateBootcampApplicationUrlClickMutationKey();
+const mutationKey = getCreateBootcampSourceUrlClickMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5045,10 +6123,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, CreateBootcampApplicationUrlClickMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBootcampSourceUrlClick>>, CreateBootcampSourceUrlClickMutationVariables> = (props) => {
           const {bootcampId} = props ?? {};
 
-          return  createBootcampApplicationUrlClick(bootcampId,requestOptions)
+          return  createBootcampSourceUrlClick(bootcampId,requestOptions)
         }
 
 
@@ -5058,23 +6136,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateBootcampApplicationUrlClickMutationResult = NonNullable<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>>
+    export type CreateBootcampSourceUrlClickMutationResult = NonNullable<Awaited<ReturnType<typeof createBootcampSourceUrlClick>>>
 
-    export type CreateBootcampApplicationUrlClickMutationError = ErrorResponse
-    export type CreateBootcampApplicationUrlClickMutationVariables = {bootcampId: number}
+    export type CreateBootcampSourceUrlClickMutationError = ErrorResponse
+    export type CreateBootcampSourceUrlClickMutationVariables = {bootcampId: number}
 
     /**
  * @summary 부트캠프 지원 페이지 이동 기록
  */
-export const useCreateBootcampApplicationUrlClick = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>, TError,CreateBootcampApplicationUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useCreateBootcampSourceUrlClick = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBootcampSourceUrlClick>>, TError,CreateBootcampSourceUrlClickMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createBootcampApplicationUrlClick>>,
+        Awaited<ReturnType<typeof createBootcampSourceUrlClick>>,
         TError,
-        CreateBootcampApplicationUrlClickMutationVariables,
+        CreateBootcampSourceUrlClickMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateBootcampApplicationUrlClickMutationOptions(options), queryClient);
+      return useMutation(getCreateBootcampSourceUrlClickMutationOptions(options), queryClient);
     }
 
 export type createBootcampBookmarkResponse201 = {
@@ -5858,6 +6936,238 @@ export const useCreateAdvertisementInquiry = <TError = ErrorResponse,
       return useMutation(getCreateAdvertisementInquiryMutationOptions(options), queryClient);
     }
 
+export type deleteRecruitmentPostApplicationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteRecruitmentPostApplicationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteRecruitmentPostApplicationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteRecruitmentPostApplicationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteRecruitmentPostApplicationResponseSuccess = (deleteRecruitmentPostApplicationResponse200) & {
+  headers: Headers;
+};
+export type deleteRecruitmentPostApplicationResponseError = (deleteRecruitmentPostApplicationResponse401 | deleteRecruitmentPostApplicationResponse403 | deleteRecruitmentPostApplicationResponse404) & {
+  headers: Headers;
+};
+
+export type deleteRecruitmentPostApplicationResponse = (deleteRecruitmentPostApplicationResponseSuccess | deleteRecruitmentPostApplicationResponseError)
+
+export const getDeleteRecruitmentPostApplicationUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/recruitment-post-applications/${postId}`
+}
+
+/**
+ *
+ *             지원 이력을 개인 목록에서 숨기고 모집글의 활성 `applicationCount` 집계에서도 제외합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 지원 이력은 소프트 삭제됩니다.
+ *             - 이후 다시 외부 지원 링크에 접근하면 기존 이력이 재활성화됩니다.
+ * @summary 내 모집글 지원 이력 삭제
+ */
+export const deleteRecruitmentPostApplication = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostApplicationResponse> => {
+
+  return httpClient<deleteRecruitmentPostApplicationResponse>(getDeleteRecruitmentPostApplicationUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRecruitmentPostApplicationMutationKey = () => ['deleteRecruitmentPostApplication'] as const;
+
+export const getDeleteRecruitmentPostApplicationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRecruitmentPostApplicationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, DeleteRecruitmentPostApplicationMutationVariables> = (props) => {
+          const {postId} = props ?? {};
+
+          return  deleteRecruitmentPostApplication(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRecruitmentPostApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>>
+
+    export type DeleteRecruitmentPostApplicationMutationError = ErrorResponse
+    export type DeleteRecruitmentPostApplicationMutationVariables = {postId: number}
+
+    /**
+ * @summary 내 모집글 지원 이력 삭제
+ */
+export const useDeleteRecruitmentPostApplication = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>,
+        TError,
+        DeleteRecruitmentPostApplicationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRecruitmentPostApplicationMutationOptions(options), queryClient);
+    }
+
+export type updateRecruitmentPostApplicationStatusResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type updateRecruitmentPostApplicationStatusResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateRecruitmentPostApplicationStatusResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type updateRecruitmentPostApplicationStatusResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateRecruitmentPostApplicationStatusResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateRecruitmentPostApplicationStatusResponseSuccess = (updateRecruitmentPostApplicationStatusResponse200) & {
+  headers: Headers;
+};
+export type updateRecruitmentPostApplicationStatusResponseError = (updateRecruitmentPostApplicationStatusResponse400 | updateRecruitmentPostApplicationStatusResponse401 | updateRecruitmentPostApplicationStatusResponse403 | updateRecruitmentPostApplicationStatusResponse404) & {
+  headers: Headers;
+};
+
+export type updateRecruitmentPostApplicationStatusResponse = (updateRecruitmentPostApplicationStatusResponseSuccess | updateRecruitmentPostApplicationStatusResponseError)
+
+export const getUpdateRecruitmentPostApplicationStatusUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/recruitment-post-applications/${postId}`
+}
+
+/**
+ *
+ *             실제 지원서 처리 상태가 아닌 사용자의 개인 관리 상태를 변경합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 모집글 작성자에게 보이는 지원자 정보에는 영향을 주지 않습니다.
+ *             - 삭제된 지원 이력은 상태를 변경할 수 없습니다.
+ * @summary 내 모집글 지원 상태 변경
+ */
+export const updateRecruitmentPostApplicationStatus = async (postId: number,
+    updateRecruitmentPostApplicationStatusRequest: UpdateRecruitmentPostApplicationStatusRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateRecruitmentPostApplicationStatusResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateRecruitmentPostApplicationStatusResponse>(getUpdateRecruitmentPostApplicationStatusUrl(postId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateRecruitmentPostApplicationStatusRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateRecruitmentPostApplicationStatusMutationKey = () => ['updateRecruitmentPostApplicationStatus'] as const;
+
+export const getUpdateRecruitmentPostApplicationStatusMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRecruitmentPostApplicationStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, UpdateRecruitmentPostApplicationStatusMutationVariables> = (props) => {
+          const {postId,data} = props ?? {};
+
+          return  updateRecruitmentPostApplicationStatus(postId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRecruitmentPostApplicationStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>>
+    export type UpdateRecruitmentPostApplicationStatusMutationBody = UpdateRecruitmentPostApplicationStatusRequest
+    export type UpdateRecruitmentPostApplicationStatusMutationError = ErrorResponse
+    export type UpdateRecruitmentPostApplicationStatusMutationVariables = {postId: number;data: UpdateRecruitmentPostApplicationStatusRequest}
+
+    /**
+ * @summary 내 모집글 지원 상태 변경
+ */
+export const useUpdateRecruitmentPostApplicationStatus = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>,
+        TError,
+        UpdateRecruitmentPostApplicationStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRecruitmentPostApplicationStatusMutationOptions(options), queryClient);
+    }
+
 export type changeMyPasswordResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -6108,10 +7418,15 @@ export type closeMyRecruitmentPostResponse404 = {
   status: 404
 }
 
+export type closeMyRecruitmentPostResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type closeMyRecruitmentPostResponseSuccess = (closeMyRecruitmentPostResponse200) & {
   headers: Headers;
 };
-export type closeMyRecruitmentPostResponseError = (closeMyRecruitmentPostResponse400 | closeMyRecruitmentPostResponse403 | closeMyRecruitmentPostResponse404) & {
+export type closeMyRecruitmentPostResponseError = (closeMyRecruitmentPostResponse400 | closeMyRecruitmentPostResponse403 | closeMyRecruitmentPostResponse404 | closeMyRecruitmentPostResponse409) & {
   headers: Headers;
 };
 
@@ -6198,238 +7513,6 @@ export const useCloseMyRecruitmentPost = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCloseMyRecruitmentPostMutationOptions(options), queryClient);
-    }
-
-export type deleteRecruitmentPostApplicationResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type deleteRecruitmentPostApplicationResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type deleteRecruitmentPostApplicationResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type deleteRecruitmentPostApplicationResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteRecruitmentPostApplicationResponseSuccess = (deleteRecruitmentPostApplicationResponse200) & {
-  headers: Headers;
-};
-export type deleteRecruitmentPostApplicationResponseError = (deleteRecruitmentPostApplicationResponse401 | deleteRecruitmentPostApplicationResponse403 | deleteRecruitmentPostApplicationResponse404) & {
-  headers: Headers;
-};
-
-export type deleteRecruitmentPostApplicationResponse = (deleteRecruitmentPostApplicationResponseSuccess | deleteRecruitmentPostApplicationResponseError)
-
-export const getDeleteRecruitmentPostApplicationUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/me/recruitment-applications/${postId}`
-}
-
-/**
- *
- *             지원 이력을 개인 목록에서 숨기고 모집글의 활성 `applicationCount` 집계에서도 제외합니다.
- *
- *             ### 추가사항
- *
- *             - 지원 이력은 소프트 삭제됩니다.
- *             - 이후 다시 외부 지원 링크에 접근하면 기존 이력이 재활성화됩니다.
- * @summary 내 모집글 지원 이력 삭제
- */
-export const deleteRecruitmentPostApplication = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteRecruitmentPostApplicationResponse> => {
-
-  return httpClient<deleteRecruitmentPostApplicationResponse>(getDeleteRecruitmentPostApplicationUrl(postId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteRecruitmentPostApplicationMutationKey = () => ['deleteRecruitmentPostApplication'] as const;
-
-export const getDeleteRecruitmentPostApplicationMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext> => {
-
-const mutationKey = getDeleteRecruitmentPostApplicationMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, DeleteRecruitmentPostApplicationMutationVariables> = (props) => {
-          const {postId} = props ?? {};
-
-          return  deleteRecruitmentPostApplication(postId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteRecruitmentPostApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>>
-
-    export type DeleteRecruitmentPostApplicationMutationError = ErrorResponse
-    export type DeleteRecruitmentPostApplicationMutationVariables = {postId: number}
-
-    /**
- * @summary 내 모집글 지원 이력 삭제
- */
-export const useDeleteRecruitmentPostApplication = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>, TError,DeleteRecruitmentPostApplicationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteRecruitmentPostApplication>>,
-        TError,
-        DeleteRecruitmentPostApplicationMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteRecruitmentPostApplicationMutationOptions(options), queryClient);
-    }
-
-export type updateRecruitmentPostApplicationStatusResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type updateRecruitmentPostApplicationStatusResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type updateRecruitmentPostApplicationStatusResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type updateRecruitmentPostApplicationStatusResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type updateRecruitmentPostApplicationStatusResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type updateRecruitmentPostApplicationStatusResponseSuccess = (updateRecruitmentPostApplicationStatusResponse200) & {
-  headers: Headers;
-};
-export type updateRecruitmentPostApplicationStatusResponseError = (updateRecruitmentPostApplicationStatusResponse400 | updateRecruitmentPostApplicationStatusResponse401 | updateRecruitmentPostApplicationStatusResponse403 | updateRecruitmentPostApplicationStatusResponse404) & {
-  headers: Headers;
-};
-
-export type updateRecruitmentPostApplicationStatusResponse = (updateRecruitmentPostApplicationStatusResponseSuccess | updateRecruitmentPostApplicationStatusResponseError)
-
-export const getUpdateRecruitmentPostApplicationStatusUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/me/recruitment-applications/${postId}`
-}
-
-/**
- *
- *             실제 지원서 처리 상태가 아닌 사용자의 개인 관리 상태를 변경합니다.
- *
- *             ### 추가사항
- *
- *             - 모집글 작성자에게 보이는 지원자 정보에는 영향을 주지 않습니다.
- *             - 삭제된 지원 이력은 상태를 변경할 수 없습니다.
- * @summary 내 모집글 지원 상태 변경
- */
-export const updateRecruitmentPostApplicationStatus = async (postId: number,
-    updateRecruitmentApplicationStatusRequest: UpdateRecruitmentApplicationStatusRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateRecruitmentPostApplicationStatusResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<updateRecruitmentPostApplicationStatusResponse>(getUpdateRecruitmentPostApplicationStatusUrl(postId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(updateRecruitmentApplicationStatusRequest)
-  }
-);}
-
-
-
-
-
-export const getUpdateRecruitmentPostApplicationStatusMutationKey = () => ['updateRecruitmentPostApplicationStatus'] as const;
-
-export const getUpdateRecruitmentPostApplicationStatusMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext> => {
-
-const mutationKey = getUpdateRecruitmentPostApplicationStatusMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, UpdateRecruitmentPostApplicationStatusMutationVariables> = (props) => {
-          const {postId,data} = props ?? {};
-
-          return  updateRecruitmentPostApplicationStatus(postId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateRecruitmentPostApplicationStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>>
-    export type UpdateRecruitmentPostApplicationStatusMutationBody = UpdateRecruitmentApplicationStatusRequest
-    export type UpdateRecruitmentPostApplicationStatusMutationError = ErrorResponse
-    export type UpdateRecruitmentPostApplicationStatusMutationVariables = {postId: number;data: UpdateRecruitmentApplicationStatusRequest}
-
-    /**
- * @summary 내 모집글 지원 상태 변경
- */
-export const useUpdateRecruitmentPostApplicationStatus = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>, TError,UpdateRecruitmentPostApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateRecruitmentPostApplicationStatus>>,
-        TError,
-        UpdateRecruitmentPostApplicationStatusMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateRecruitmentPostApplicationStatusMutationOptions(options), queryClient);
     }
 
 export type getMyAccountResponse200 = {
@@ -6553,6 +7636,446 @@ export function useGetMyAccount<TData = Awaited<ReturnType<typeof getMyAccount>>
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetMyAccountQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listMyRecruitmentPostsResponse200 = {
+  data: SuccessResponsePageResponseRecruitmentPostManagementItemResponse
+  status: 200
+}
+
+export type listMyRecruitmentPostsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listMyRecruitmentPostsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMyRecruitmentPostsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyRecruitmentPostsResponseSuccess = (listMyRecruitmentPostsResponse200) & {
+  headers: Headers;
+};
+export type listMyRecruitmentPostsResponseError = (listMyRecruitmentPostsResponse400 | listMyRecruitmentPostsResponse401 | listMyRecruitmentPostsResponse403) & {
+  headers: Headers;
+};
+
+export type listMyRecruitmentPostsResponse = (listMyRecruitmentPostsResponseSuccess | listMyRecruitmentPostsResponseError)
+
+export const getListMyRecruitmentPostsUrl = (params?: ListMyRecruitmentPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users/me/recruitment-posts?${stringifiedParams}` : `/api/v1/users/me/recruitment-posts`
+}
+
+/**
+ *
+ *             임시저장·공개·비공개 모집글을 최근 저장순으로 조회합니다.
+ *
+ *             keyword를 보내면 모집글 제목에 포함되는지 대소문자를 구분하지 않고 검색합니다.
+ *             검색어는 2자 이상 100자 이하여야 하며, 게시 상태·모집 상태·지원 이력·모집 유형 필터와 함께 사용할 수 있습니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `keyword`는 앞뒤 공백을 제거한 뒤 검색합니다.
+ *             - `DRAFT` 글의 `recruitmentStatus`는 `null`입니다.
+ *             - `DRAFT` 글의 `continueWriting`은 `true`입니다.
+ * @summary 내 사이드 프로젝트·스터디 모집글 관리 목록 조회
+ */
+export const listMyRecruitmentPosts = async (params?: ListMyRecruitmentPostsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentPostsResponse> => {
+
+  return httpClient<listMyRecruitmentPostsResponse>(getListMyRecruitmentPostsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyRecruitmentPostsQueryKey = (params?: ListMyRecruitmentPostsParams,) => {
+    return [
+    `/api/v1/users/me/recruitment-posts`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyRecruitmentPostsQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentPostsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentPosts>>> = ({ signal }) => listMyRecruitmentPosts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyRecruitmentPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentPosts>>>
+export type ListMyRecruitmentPostsQueryError = ErrorResponse
+
+
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params: undefined |  ListMyRecruitmentPostsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPosts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 사이드 프로젝트·스터디 모집글 관리 목록 조회
+ */
+
+export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyRecruitmentPostsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getMyRecruitmentPostFormResponse200 = {
+  data: SuccessResponseRecruitmentPostFormResponse
+  status: 200
+}
+
+export type getMyRecruitmentPostFormResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getMyRecruitmentPostFormResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getMyRecruitmentPostFormResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getMyRecruitmentPostFormResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyRecruitmentPostFormResponseSuccess = (getMyRecruitmentPostFormResponse200) & {
+  headers: Headers;
+};
+export type getMyRecruitmentPostFormResponseError = (getMyRecruitmentPostFormResponse400 | getMyRecruitmentPostFormResponse401 | getMyRecruitmentPostFormResponse403 | getMyRecruitmentPostFormResponse404) & {
+  headers: Headers;
+};
+
+export type getMyRecruitmentPostFormResponse = (getMyRecruitmentPostFormResponseSuccess | getMyRecruitmentPostFormResponseError)
+
+export const getGetMyRecruitmentPostFormUrl = (postId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/recruitment-posts/${postId}`
+}
+
+/**
+ *
+ *             작성자의 임시저장·공개·비공개 모집글을 작성 화면용 전체 필드로 조회합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - 본인이 작성한 `DRAFT`, `PUBLISHED`, `HIDDEN` 글을 조회할 수 있습니다.
+ *             - `content`는 문자열이 아닌 JSON 객체입니다.
+ *             - `agreedToPolicy`는 현재 항상 `false`로 반환됩니다.
+ * @summary 내 모집글 작성 폼 상세 조회
+ */
+export const getMyRecruitmentPostForm = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyRecruitmentPostFormResponse> => {
+
+  return httpClient<getMyRecruitmentPostFormResponse>(getGetMyRecruitmentPostFormUrl(postId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyRecruitmentPostFormQueryKey = (postId: number,) => {
+    return [
+    `/api/v1/users/me/recruitment-posts/${postId}`
+    ] as const;
+    }
+
+
+export const getGetMyRecruitmentPostFormQueryOptions = <TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyRecruitmentPostFormQueryKey(postId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>> = ({ signal }) => getMyRecruitmentPostForm(postId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: postId !== null && postId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyRecruitmentPostFormQueryResult = NonNullable<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>>
+export type GetMyRecruitmentPostFormQueryError = ErrorResponse
+
+
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>,
+          TError,
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>,
+          TError,
+          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 모집글 작성 폼 상세 조회
+ */
+
+export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
+ postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyRecruitmentPostFormQueryOptions(postId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listMyRecruitmentPostApplicationsResponse200 = {
+  data: SuccessResponseRecruitmentPostApplicationPageResponse
+  status: 200
+}
+
+export type listMyRecruitmentPostApplicationsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listMyRecruitmentPostApplicationsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMyRecruitmentPostApplicationsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyRecruitmentPostApplicationsResponseSuccess = (listMyRecruitmentPostApplicationsResponse200) & {
+  headers: Headers;
+};
+export type listMyRecruitmentPostApplicationsResponseError = (listMyRecruitmentPostApplicationsResponse400 | listMyRecruitmentPostApplicationsResponse401 | listMyRecruitmentPostApplicationsResponse403) & {
+  headers: Headers;
+};
+
+export type listMyRecruitmentPostApplicationsResponse = (listMyRecruitmentPostApplicationsResponseSuccess | listMyRecruitmentPostApplicationsResponseError)
+
+export const getListMyRecruitmentPostApplicationsUrl = (params?: ListMyRecruitmentPostApplicationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users/me/recruitment-post-applications?${stringifiedParams}` : `/api/v1/users/me/recruitment-post-applications`
+}
+
+/**
+ *
+ *             모집글의 외부 지원 링크를 연 이력을 최초 저장 시각 기준 최근 저장순으로 조회합니다. 지원 상태는 사용자의 개인 관리 상태입니다.
+ *
+ *             keyword를 보내면 모집글 제목에 포함되는지 대소문자를 구분하지 않고 검색합니다.
+ *             검색어는 2자 이상 100자 이하여야 하며, 모집 상태·모집 유형·지원 상태 필터와 함께 사용할 수 있습니다.
+ *             countsByRecruitmentType에는 현재 검색·모집 상태·지원 상태 필터를 적용한 SIDE_PROJECT, STUDY 건수를 반환합니다.
+ *
+ *             ### 추가사항
+ *
+ *             - `applicationStatus`는 사용자의 개인 관리 상태입니다.
+ *             - 지원 이력은 최초 접근 시각 기준으로 정렬됩니다.
+ *             - `countsByRecruitmentType`는 현재 필터 조건이 적용된 결과입니다.
+ * @summary 내 모집글 지원 이력 목록 조회
+ */
+export const listMyRecruitmentPostApplications = async (params?: ListMyRecruitmentPostApplicationsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentPostApplicationsResponse> => {
+
+  return httpClient<listMyRecruitmentPostApplicationsResponse>(getListMyRecruitmentPostApplicationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyRecruitmentPostApplicationsQueryKey = (params?: ListMyRecruitmentPostApplicationsParams,) => {
+    return [
+    `/api/v1/users/me/recruitment-post-applications`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyRecruitmentPostApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError = ErrorResponse>(params?: ListMyRecruitmentPostApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentPostApplicationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>> = ({ signal }) => listMyRecruitmentPostApplications(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyRecruitmentPostApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>>
+export type ListMyRecruitmentPostApplicationsQueryError = ErrorResponse
+
+
+export function useListMyRecruitmentPostApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError = ErrorResponse>(
+ params: undefined |  ListMyRecruitmentPostApplicationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPostApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyRecruitmentPostApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 모집글 지원 이력 목록 조회
+ */
+
+export function useListMyRecruitmentPostApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError = ErrorResponse>(
+ params?: ListMyRecruitmentPostApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPostApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyRecruitmentPostApplicationsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -6750,7 +8273,7 @@ export const getListMyRecruitmentPostBookmarksUrl = (params?: ListMyRecruitmentP
 /**
  *
  *             북마크 목록을 조회합니다. 마이페이지 지원·신청 관리의 스크랩 칸에도 이 목록을 씁니다.
- *             지원 준비 중 이후 칸은 `GET /api/v1/me/recruitment-applications`의 지원 이력을 씁니다.
+ *             지원 준비 중 이후 칸은 `GET /api/v1/users/me/recruitment-post-applications`의 지원 이력을 씁니다.
  *
  *             recruitmentStatus(RECRUITING 모집 중, CLOSED 마감), recruitmentType(SIDE_PROJECT, STUDY)으로 좁히며
  *             보내지 않으면 해당 조건을 적용하지 않습니다.
@@ -6961,697 +8484,6 @@ export function useListPublicRecommendedChallenges<TData = Awaited<ReturnType<ty
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListPublicRecommendedChallengesQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type listPublicNoticesResponse200 = {
-  data: SuccessResponsePageResponseUserNoticeSummaryResponse
-  status: 200
-}
-
-export type listPublicNoticesResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type listPublicNoticesResponseSuccess = (listPublicNoticesResponse200) & {
-  headers: Headers;
-};
-export type listPublicNoticesResponseError = (listPublicNoticesResponse400) & {
-  headers: Headers;
-};
-
-export type listPublicNoticesResponse = (listPublicNoticesResponseSuccess | listPublicNoticesResponseError)
-
-export const getListPublicNoticesUrl = (params?: ListPublicNoticesParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/v1/notices?${stringifiedParams}` : `/api/v1/notices`
-}
-
-/**
- *
- *             로그인 없이 조회할 수 있습니다. 노출 중인 공지만 반환하며 목록에는 본문을 싣지 않습니다.
- *             상단 고정 공지가 먼저 오고 그 안에서 최신순입니다.
- * @summary 공지사항 목록 조회
- */
-export const listPublicNotices = async (params?: ListPublicNoticesParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicNoticesResponse> => {
-
-  return httpClient<listPublicNoticesResponse>(getListPublicNoticesUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListPublicNoticesQueryKey = (params?: ListPublicNoticesParams,) => {
-    return [
-    `/api/v1/notices`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getListPublicNoticesQueryOptions = <TData = Awaited<ReturnType<typeof listPublicNotices>>, TError = ErrorResponse>(params?: ListPublicNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListPublicNoticesQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicNotices>>> = ({ signal }) => listPublicNotices(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicNotices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListPublicNoticesQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicNotices>>>
-export type ListPublicNoticesQueryError = ErrorResponse
-
-
-export function useListPublicNotices<TData = Awaited<ReturnType<typeof listPublicNotices>>, TError = ErrorResponse>(
- params: undefined |  ListPublicNoticesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicNotices>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listPublicNotices>>,
-          TError,
-          Awaited<ReturnType<typeof listPublicNotices>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListPublicNotices<TData = Awaited<ReturnType<typeof listPublicNotices>>, TError = ErrorResponse>(
- params?: ListPublicNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicNotices>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listPublicNotices>>,
-          TError,
-          Awaited<ReturnType<typeof listPublicNotices>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListPublicNotices<TData = Awaited<ReturnType<typeof listPublicNotices>>, TError = ErrorResponse>(
- params?: ListPublicNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 공지사항 목록 조회
- */
-
-export function useListPublicNotices<TData = Awaited<ReturnType<typeof listPublicNotices>>, TError = ErrorResponse>(
- params?: ListPublicNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListPublicNoticesQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type getPublicNoticeResponse200 = {
-  data: SuccessResponseUserNoticeDetailResponse
-  status: 200
-}
-
-export type getPublicNoticeResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type getPublicNoticeResponseSuccess = (getPublicNoticeResponse200) & {
-  headers: Headers;
-};
-export type getPublicNoticeResponseError = (getPublicNoticeResponse404) & {
-  headers: Headers;
-};
-
-export type getPublicNoticeResponse = (getPublicNoticeResponseSuccess | getPublicNoticeResponseError)
-
-export const getGetPublicNoticeUrl = (noticeId: number,) => {
-
-
-
-
-  return `/api/v1/notices/${noticeId}`
-}
-
-/**
- * 로그인 없이 조회할 수 있습니다. 비노출이거나 삭제된 공지는 404입니다.
- * @summary 공지사항 상세 조회
- */
-export const getPublicNotice = async (noticeId: number, options?: Parameters<typeof httpClient>[1]): Promise<getPublicNoticeResponse> => {
-
-  return httpClient<getPublicNoticeResponse>(getGetPublicNoticeUrl(noticeId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetPublicNoticeQueryKey = (noticeId: number,) => {
-    return [
-    `/api/v1/notices/${noticeId}`
-    ] as const;
-    }
-
-
-export const getGetPublicNoticeQueryOptions = <TData = Awaited<ReturnType<typeof getPublicNotice>>, TError = ErrorResponse>(noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetPublicNoticeQueryKey(noticeId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicNotice>>> = ({ signal }) => getPublicNotice(noticeId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: noticeId !== null && noticeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicNotice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetPublicNoticeQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicNotice>>>
-export type GetPublicNoticeQueryError = ErrorResponse
-
-
-export function useGetPublicNotice<TData = Awaited<ReturnType<typeof getPublicNotice>>, TError = ErrorResponse>(
- noticeId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicNotice>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPublicNotice>>,
-          TError,
-          Awaited<ReturnType<typeof getPublicNotice>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPublicNotice<TData = Awaited<ReturnType<typeof getPublicNotice>>, TError = ErrorResponse>(
- noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicNotice>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPublicNotice>>,
-          TError,
-          Awaited<ReturnType<typeof getPublicNotice>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPublicNotice<TData = Awaited<ReturnType<typeof getPublicNotice>>, TError = ErrorResponse>(
- noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 공지사항 상세 조회
- */
-
-export function useGetPublicNotice<TData = Awaited<ReturnType<typeof getPublicNotice>>, TError = ErrorResponse>(
- noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetPublicNoticeQueryOptions(noticeId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type listMyRecruitmentPostsResponse200 = {
-  data: SuccessResponsePageResponseRecruitmentPostManagementItemResponse
-  status: 200
-}
-
-export type listMyRecruitmentPostsResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type listMyRecruitmentPostsResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type listMyRecruitmentPostsResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type listMyRecruitmentPostsResponseSuccess = (listMyRecruitmentPostsResponse200) & {
-  headers: Headers;
-};
-export type listMyRecruitmentPostsResponseError = (listMyRecruitmentPostsResponse400 | listMyRecruitmentPostsResponse401 | listMyRecruitmentPostsResponse403) & {
-  headers: Headers;
-};
-
-export type listMyRecruitmentPostsResponse = (listMyRecruitmentPostsResponseSuccess | listMyRecruitmentPostsResponseError)
-
-export const getListMyRecruitmentPostsUrl = (params?: ListMyRecruitmentPostsParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/v1/me/recruitment-posts?${stringifiedParams}` : `/api/v1/me/recruitment-posts`
-}
-
-/**
- *
- *             임시저장·공개·비공개 모집글을 최근 저장순으로 조회합니다.
- *
- *             keyword를 보내면 모집글 제목에 포함되는지 대소문자를 구분하지 않고 검색합니다.
- *             검색어는 2자 이상 100자 이하여야 하며, 게시 상태·모집 상태·지원 이력·모집 유형 필터와 함께 사용할 수 있습니다.
- *
- *             ### 추가사항
- *
- *             - `keyword`는 앞뒤 공백을 제거한 뒤 검색합니다.
- *             - `DRAFT` 글의 `recruitmentStatus`는 `null`입니다.
- *             - `DRAFT` 글의 `continueWriting`은 `true`입니다.
- * @summary 내 사이드 프로젝트·스터디 모집글 관리 목록 조회
- */
-export const listMyRecruitmentPosts = async (params?: ListMyRecruitmentPostsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentPostsResponse> => {
-
-  return httpClient<listMyRecruitmentPostsResponse>(getListMyRecruitmentPostsUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListMyRecruitmentPostsQueryKey = (params?: ListMyRecruitmentPostsParams,) => {
-    return [
-    `/api/v1/me/recruitment-posts`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getListMyRecruitmentPostsQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentPostsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentPosts>>> = ({ signal }) => listMyRecruitmentPosts(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListMyRecruitmentPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentPosts>>>
-export type ListMyRecruitmentPostsQueryError = ErrorResponse
-
-
-export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
- params: undefined |  ListMyRecruitmentPostsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listMyRecruitmentPosts>>,
-          TError,
-          Awaited<ReturnType<typeof listMyRecruitmentPosts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
- params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listMyRecruitmentPosts>>,
-          TError,
-          Awaited<ReturnType<typeof listMyRecruitmentPosts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
- params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 내 사이드 프로젝트·스터디 모집글 관리 목록 조회
- */
-
-export function useListMyRecruitmentPosts<TData = Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError = ErrorResponse>(
- params?: ListMyRecruitmentPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentPosts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListMyRecruitmentPostsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type getMyRecruitmentPostFormResponse200 = {
-  data: SuccessResponseRecruitmentPostFormResponse
-  status: 200
-}
-
-export type getMyRecruitmentPostFormResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type getMyRecruitmentPostFormResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getMyRecruitmentPostFormResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getMyRecruitmentPostFormResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type getMyRecruitmentPostFormResponseSuccess = (getMyRecruitmentPostFormResponse200) & {
-  headers: Headers;
-};
-export type getMyRecruitmentPostFormResponseError = (getMyRecruitmentPostFormResponse400 | getMyRecruitmentPostFormResponse401 | getMyRecruitmentPostFormResponse403 | getMyRecruitmentPostFormResponse404) & {
-  headers: Headers;
-};
-
-export type getMyRecruitmentPostFormResponse = (getMyRecruitmentPostFormResponseSuccess | getMyRecruitmentPostFormResponseError)
-
-export const getGetMyRecruitmentPostFormUrl = (postId: number,) => {
-
-
-
-
-  return `/api/v1/me/recruitment-posts/${postId}`
-}
-
-/**
- *
- *             작성자의 임시저장·공개·비공개 모집글을 작성 화면용 전체 필드로 조회합니다.
- *
- *             ### 추가사항
- *
- *             - 본인이 작성한 `DRAFT`, `PUBLISHED`, `HIDDEN` 글을 조회할 수 있습니다.
- *             - `content`는 문자열이 아닌 JSON 객체입니다.
- *             - `agreedToPolicy`는 현재 항상 `false`로 반환됩니다.
- * @summary 내 모집글 작성 폼 상세 조회
- */
-export const getMyRecruitmentPostForm = async (postId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyRecruitmentPostFormResponse> => {
-
-  return httpClient<getMyRecruitmentPostFormResponse>(getGetMyRecruitmentPostFormUrl(postId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetMyRecruitmentPostFormQueryKey = (postId: number,) => {
-    return [
-    `/api/v1/me/recruitment-posts/${postId}`
-    ] as const;
-    }
-
-
-export const getGetMyRecruitmentPostFormQueryOptions = <TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetMyRecruitmentPostFormQueryKey(postId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>> = ({ signal }) => getMyRecruitmentPostForm(postId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: postId !== null && postId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetMyRecruitmentPostFormQueryResult = NonNullable<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>>
-export type GetMyRecruitmentPostFormQueryError = ErrorResponse
-
-
-export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
- postId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>,
-          TError,
-          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
- postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>,
-          TError,
-          Awaited<ReturnType<typeof getMyRecruitmentPostForm>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
- postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 내 모집글 작성 폼 상세 조회
- */
-
-export function useGetMyRecruitmentPostForm<TData = Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError = ErrorResponse>(
- postId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyRecruitmentPostForm>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetMyRecruitmentPostFormQueryOptions(postId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type listMyRecruitmentApplicationsResponse200 = {
-  data: SuccessResponseRecruitmentApplicationPageResponse
-  status: 200
-}
-
-export type listMyRecruitmentApplicationsResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type listMyRecruitmentApplicationsResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type listMyRecruitmentApplicationsResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type listMyRecruitmentApplicationsResponseSuccess = (listMyRecruitmentApplicationsResponse200) & {
-  headers: Headers;
-};
-export type listMyRecruitmentApplicationsResponseError = (listMyRecruitmentApplicationsResponse400 | listMyRecruitmentApplicationsResponse401 | listMyRecruitmentApplicationsResponse403) & {
-  headers: Headers;
-};
-
-export type listMyRecruitmentApplicationsResponse = (listMyRecruitmentApplicationsResponseSuccess | listMyRecruitmentApplicationsResponseError)
-
-export const getListMyRecruitmentApplicationsUrl = (params?: ListMyRecruitmentApplicationsParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/v1/me/recruitment-applications?${stringifiedParams}` : `/api/v1/me/recruitment-applications`
-}
-
-/**
- *
- *             모집글의 외부 지원 링크를 연 이력을 최초 저장 시각 기준 최근 저장순으로 조회합니다. 지원 상태는 사용자의 개인 관리 상태입니다.
- *
- *             keyword를 보내면 모집글 제목에 포함되는지 대소문자를 구분하지 않고 검색합니다.
- *             검색어는 2자 이상 100자 이하여야 하며, 모집 상태·모집 유형·지원 상태 필터와 함께 사용할 수 있습니다.
- *             countsByRecruitmentType에는 현재 검색·모집 상태·지원 상태 필터를 적용한 SIDE_PROJECT, STUDY 건수를 반환합니다.
- *
- *             ### 추가사항
- *
- *             - `applicationStatus`는 사용자의 개인 관리 상태입니다.
- *             - 지원 이력은 최초 접근 시각 기준으로 정렬됩니다.
- *             - `countsByRecruitmentType`는 현재 필터 조건이 적용된 결과입니다.
- * @summary 내 모집글 지원 이력 목록 조회
- */
-export const listMyRecruitmentApplications = async (params?: ListMyRecruitmentApplicationsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyRecruitmentApplicationsResponse> => {
-
-  return httpClient<listMyRecruitmentApplicationsResponse>(getListMyRecruitmentApplicationsUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListMyRecruitmentApplicationsQueryKey = (params?: ListMyRecruitmentApplicationsParams,) => {
-    return [
-    `/api/v1/me/recruitment-applications`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getListMyRecruitmentApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListMyRecruitmentApplicationsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyRecruitmentApplications>>> = ({ signal }) => listMyRecruitmentApplications(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListMyRecruitmentApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyRecruitmentApplications>>>
-export type ListMyRecruitmentApplicationsQueryError = ErrorResponse
-
-
-export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
- params: undefined |  ListMyRecruitmentApplicationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listMyRecruitmentApplications>>,
-          TError,
-          Awaited<ReturnType<typeof listMyRecruitmentApplications>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
- params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listMyRecruitmentApplications>>,
-          TError,
-          Awaited<ReturnType<typeof listMyRecruitmentApplications>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
- params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 내 모집글 지원 이력 목록 조회
- */
-
-export function useListMyRecruitmentApplications<TData = Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError = ErrorResponse>(
- params?: ListMyRecruitmentApplicationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyRecruitmentApplications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListMyRecruitmentApplicationsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -8669,7 +9501,7 @@ export const getListPublicEnumsUrl = () => {
 /**
  *
  *             로그인 없이 조회할 수 있습니다. 사용자 API의 요청·응답에 나오는 enum을 enum 이름별로 묶어
- *             선언 순서대로 반환합니다. 예: `data.EmploymentType[0]`은 `{"name": "FULL_TIME", "desc": "정규직", "parent": null}`입니다.
+ *             선언 순서대로 반환합니다. 예: `data.JobEmploymentType[0]`은 `{"name": "FULL_TIME", "desc": "정규직", "parent": null}`입니다.
  *             요청에는 `name`을 보내고 `desc`는 화면 라벨로만 씁니다.
  *             `parent`는 SubRegion처럼 다른 enum 값에 속하는 값의 상위 값 name이며, 그 밖에는 null입니다.
  *             값은 enum의 전체 값이며, 목록 필터처럼 일부 값만 받는 곳의 범위는 해당 API 명세를 따릅니다.
@@ -8753,6 +9585,292 @@ export function useListPublicEnums<TData = Awaited<ReturnType<typeof listPublicE
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListPublicEnumsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicConcernCommentRepliesResponse200 = {
+  data: SuccessResponsePageResponseConcernCommentResponse
+  status: 200
+}
+
+export type listPublicConcernCommentRepliesResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicConcernCommentRepliesResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type listPublicConcernCommentRepliesResponseSuccess = (listPublicConcernCommentRepliesResponse200) & {
+  headers: Headers;
+};
+export type listPublicConcernCommentRepliesResponseError = (listPublicConcernCommentRepliesResponse400 | listPublicConcernCommentRepliesResponse404) & {
+  headers: Headers;
+};
+
+export type listPublicConcernCommentRepliesResponse = (listPublicConcernCommentRepliesResponseSuccess | listPublicConcernCommentRepliesResponseError)
+
+export const getListPublicConcernCommentRepliesUrl = (concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/concerns/${concernId}/comments/${commentId}/replies?${stringifiedParams}` : `/api/v1/concerns/${concernId}/comments/${commentId}/replies`
+}
+
+/**
+ *
+ *             답변 하나의 답글을 먼저 단 순서로 조회합니다. 삭제된 답변의 남은 답글도 조회할 수 있습니다.
+ *
+ *             - `commentId`는 답변(부모 댓글)이어야 합니다.
+ * @summary 고민글 답글 더보기
+ */
+export const listPublicConcernCommentReplies = async (concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicConcernCommentRepliesResponse> => {
+
+  return httpClient<listPublicConcernCommentRepliesResponse>(getListPublicConcernCommentRepliesUrl(concernId,commentId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicConcernCommentRepliesQueryKey = (concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams,) => {
+    return [
+    `/api/v1/concerns/${concernId}/comments/${commentId}/replies`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicConcernCommentRepliesQueryOptions = <TData = Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError = ErrorResponse>(concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicConcernCommentRepliesQueryKey(concernId,commentId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>> = ({ signal }) => listPublicConcernCommentReplies(concernId,commentId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: concernId !== null && concernId !== undefined && commentId !== null && commentId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicConcernCommentRepliesQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>>
+export type ListPublicConcernCommentRepliesQueryError = ErrorResponse
+
+
+export function useListPublicConcernCommentReplies<TData = Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError = ErrorResponse>(
+ concernId: number,
+    commentId: number,
+    params: undefined |  ListPublicConcernCommentRepliesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicConcernCommentReplies>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicConcernCommentReplies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicConcernCommentReplies<TData = Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError = ErrorResponse>(
+ concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicConcernCommentReplies>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicConcernCommentReplies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicConcernCommentReplies<TData = Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError = ErrorResponse>(
+ concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 고민글 답글 더보기
+ */
+
+export function useListPublicConcernCommentReplies<TData = Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError = ErrorResponse>(
+ concernId: number,
+    commentId: number,
+    params?: ListPublicConcernCommentRepliesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicConcernCommentReplies>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicConcernCommentRepliesQueryOptions(concernId,commentId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicPopularConcernsResponse200 = {
+  data: SuccessResponseListConcernSummaryResponse
+  status: 200
+}
+
+export type listPublicPopularConcernsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicPopularConcernsResponseSuccess = (listPublicPopularConcernsResponse200) & {
+  headers: Headers;
+};
+export type listPublicPopularConcernsResponseError = (listPublicPopularConcernsResponse400) & {
+  headers: Headers;
+};
+
+export type listPublicPopularConcernsResponse = (listPublicPopularConcernsResponseSuccess | listPublicPopularConcernsResponseError)
+
+export const getListPublicPopularConcernsUrl = (params?: ListPublicPopularConcernsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/concerns/popular?${stringifiedParams}` : `/api/v1/concerns/popular`
+}
+
+/**
+ *
+ *             최근 일주일(조회 시각부터 7일 전까지) 안에 등록한 고민글 중 `sort` 기준 값이 큰 것을 최대 3건 반환합니다.
+ *             페이지 정보는 없습니다. 로그인 없이 호출할 수 있습니다.
+ *
+ *             - `sort`는 `VIEW_COUNT`(조회 많은 순, 기본값) 또는 `COMMENT_COUNT`(답변 많은 순)입니다.
+ *             - 값이 같으면 최근에 등록한 고민글이 앞입니다. 조회·답변이 없는 고민글도 대상입니다.
+ *             - 조회 수는 비동기로 집계되어 순서에 바로 반영되지 않을 수 있습니다.
+ * @summary 지금 가장 핫한 고민 조회
+ */
+export const listPublicPopularConcerns = async (params?: ListPublicPopularConcernsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicPopularConcernsResponse> => {
+
+  return httpClient<listPublicPopularConcernsResponse>(getListPublicPopularConcernsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicPopularConcernsQueryKey = (params?: ListPublicPopularConcernsParams,) => {
+    return [
+    `/api/v1/concerns/popular`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicPopularConcernsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError = ErrorResponse>(params?: ListPublicPopularConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicPopularConcernsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicPopularConcerns>>> = ({ signal }) => listPublicPopularConcerns(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicPopularConcernsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicPopularConcerns>>>
+export type ListPublicPopularConcernsQueryError = ErrorResponse
+
+
+export function useListPublicPopularConcerns<TData = Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError = ErrorResponse>(
+ params: undefined |  ListPublicPopularConcernsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicPopularConcerns>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicPopularConcerns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicPopularConcerns<TData = Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError = ErrorResponse>(
+ params?: ListPublicPopularConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicPopularConcerns>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicPopularConcerns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicPopularConcerns<TData = Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError = ErrorResponse>(
+ params?: ListPublicPopularConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 지금 가장 핫한 고민 조회
+ */
+
+export function useListPublicPopularConcerns<TData = Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError = ErrorResponse>(
+ params?: ListPublicPopularConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicPopularConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicPopularConcernsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -9163,6 +10281,257 @@ export function useListMyBootcampBookmarks<TData = Awaited<ReturnType<typeof lis
 
 
 
+export type listPublicAnnouncementsResponse200 = {
+  data: SuccessResponsePageResponseUserAnnouncementSummaryResponse
+  status: 200
+}
+
+export type listPublicAnnouncementsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicAnnouncementsResponseSuccess = (listPublicAnnouncementsResponse200) & {
+  headers: Headers;
+};
+export type listPublicAnnouncementsResponseError = (listPublicAnnouncementsResponse400) & {
+  headers: Headers;
+};
+
+export type listPublicAnnouncementsResponse = (listPublicAnnouncementsResponseSuccess | listPublicAnnouncementsResponseError)
+
+export const getListPublicAnnouncementsUrl = (params?: ListPublicAnnouncementsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/announcements?${stringifiedParams}` : `/api/v1/announcements`
+}
+
+/**
+ *
+ *             로그인 없이 조회할 수 있습니다. 노출 중인 공지만 반환하며 목록에는 본문을 싣지 않습니다.
+ *             상단 고정 공지가 먼저 오고 그 안에서 최신순입니다.
+ * @summary 공지사항 목록 조회
+ */
+export const listPublicAnnouncements = async (params?: ListPublicAnnouncementsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicAnnouncementsResponse> => {
+
+  return httpClient<listPublicAnnouncementsResponse>(getListPublicAnnouncementsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicAnnouncementsQueryKey = (params?: ListPublicAnnouncementsParams,) => {
+    return [
+    `/api/v1/announcements`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicAnnouncementsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorResponse>(params?: ListPublicAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicAnnouncementsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicAnnouncements>>> = ({ signal }) => listPublicAnnouncements(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicAnnouncementsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicAnnouncements>>>
+export type ListPublicAnnouncementsQueryError = ErrorResponse
+
+
+export function useListPublicAnnouncements<TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorResponse>(
+ params: undefined |  ListPublicAnnouncementsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAnnouncements>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAnnouncements>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAnnouncements<TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorResponse>(
+ params?: ListPublicAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAnnouncements>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAnnouncements>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAnnouncements<TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorResponse>(
+ params?: ListPublicAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공지사항 목록 조회
+ */
+
+export function useListPublicAnnouncements<TData = Awaited<ReturnType<typeof listPublicAnnouncements>>, TError = ErrorResponse>(
+ params?: ListPublicAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicAnnouncementsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getPublicAnnouncementResponse200 = {
+  data: SuccessResponseUserAnnouncementDetailResponse
+  status: 200
+}
+
+export type getPublicAnnouncementResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getPublicAnnouncementResponseSuccess = (getPublicAnnouncementResponse200) & {
+  headers: Headers;
+};
+export type getPublicAnnouncementResponseError = (getPublicAnnouncementResponse404) & {
+  headers: Headers;
+};
+
+export type getPublicAnnouncementResponse = (getPublicAnnouncementResponseSuccess | getPublicAnnouncementResponseError)
+
+export const getGetPublicAnnouncementUrl = (announcementId: number,) => {
+
+
+
+
+  return `/api/v1/announcements/${announcementId}`
+}
+
+/**
+ * 로그인 없이 조회할 수 있습니다. 비노출이거나 삭제된 공지는 404입니다.
+ * @summary 공지사항 상세 조회
+ */
+export const getPublicAnnouncement = async (announcementId: number, options?: Parameters<typeof httpClient>[1]): Promise<getPublicAnnouncementResponse> => {
+
+  return httpClient<getPublicAnnouncementResponse>(getGetPublicAnnouncementUrl(announcementId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicAnnouncementQueryKey = (announcementId: number,) => {
+    return [
+    `/api/v1/announcements/${announcementId}`
+    ] as const;
+    }
+
+
+export const getGetPublicAnnouncementQueryOptions = <TData = Awaited<ReturnType<typeof getPublicAnnouncement>>, TError = ErrorResponse>(announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicAnnouncementQueryKey(announcementId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicAnnouncement>>> = ({ signal }) => getPublicAnnouncement(announcementId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: announcementId !== null && announcementId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicAnnouncement>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicAnnouncementQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicAnnouncement>>>
+export type GetPublicAnnouncementQueryError = ErrorResponse
+
+
+export function useGetPublicAnnouncement<TData = Awaited<ReturnType<typeof getPublicAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicAnnouncement>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicAnnouncement>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicAnnouncement>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicAnnouncement<TData = Awaited<ReturnType<typeof getPublicAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicAnnouncement>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicAnnouncement>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicAnnouncement>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicAnnouncement<TData = Awaited<ReturnType<typeof getPublicAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공지사항 상세 조회
+ */
+
+export function useGetPublicAnnouncement<TData = Awaited<ReturnType<typeof getPublicAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicAnnouncementQueryOptions(announcementId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type deleteRecruitmentPostCommentResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -9278,6 +10647,116 @@ export const useDeleteRecruitmentPostComment = <TError = ErrorResponse,
       return useMutation(getDeleteRecruitmentPostCommentMutationOptions(options), queryClient);
     }
 
+export type deleteMyConcernCommentResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteMyConcernCommentResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteMyConcernCommentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteMyConcernCommentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMyConcernCommentResponseSuccess = (deleteMyConcernCommentResponse200) & {
+  headers: Headers;
+};
+export type deleteMyConcernCommentResponseError = (deleteMyConcernCommentResponse401 | deleteMyConcernCommentResponse403 | deleteMyConcernCommentResponse404) & {
+  headers: Headers;
+};
+
+export type deleteMyConcernCommentResponse = (deleteMyConcernCommentResponseSuccess | deleteMyConcernCommentResponseError)
+
+export const getDeleteMyConcernCommentUrl = (concernId: number,
+    commentId: number,) => {
+
+
+
+
+  return `/api/v1/concerns/${concernId}/comments/${commentId}`
+}
+
+/**
+ *
+ *             작성자 본인의 답변이나 답글을 소프트 삭제합니다.
+ *
+ *             - 답변을 지우면 고민글의 `commentCount`가 1 줄어듭니다. 남은 답글은 그대로 보입니다.
+ *             - 이미 지운 댓글은 404입니다.
+ * @summary 내 답변·답글 삭제
+ */
+export const deleteMyConcernComment = async (concernId: number,
+    commentId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyConcernCommentResponse> => {
+
+  return httpClient<deleteMyConcernCommentResponse>(getDeleteMyConcernCommentUrl(concernId,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyConcernCommentMutationKey = () => ['deleteMyConcernComment'] as const;
+
+export const getDeleteMyConcernCommentMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcernComment>>, TError,DeleteMyConcernCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcernComment>>, TError,DeleteMyConcernCommentMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyConcernCommentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyConcernComment>>, DeleteMyConcernCommentMutationVariables> = (props) => {
+          const {concernId,commentId} = props ?? {};
+
+          return  deleteMyConcernComment(concernId,commentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyConcernCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyConcernComment>>>
+
+    export type DeleteMyConcernCommentMutationError = ErrorResponse
+    export type DeleteMyConcernCommentMutationVariables = {concernId: number;commentId: number}
+
+    /**
+ * @summary 내 답변·답글 삭제
+ */
+export const useDeleteMyConcernComment = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyConcernComment>>, TError,DeleteMyConcernCommentMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyConcernComment>>,
+        TError,
+        DeleteMyConcernCommentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyConcernCommentMutationOptions(options), queryClient);
+    }
+
 
 export const getReplaceMyProfileResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -9287,7 +10766,7 @@ export const getDeleteMyProfileImageResponseMock = (overrideResponse: Partial<Ex
 
 export const getReplaceMyNotificationEmailResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
+export const getGetMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyJobDetailResponse, object>> = {}): SuccessResponseCompanyJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
 
 export const getReplaceMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -9297,7 +10776,7 @@ export const getReplaceMyCompanyManagerInfoResponseMock = (overrideResponse: Par
 
 export const getReplaceMyCompanyBasicInfoResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+export const getGetMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCompanyBootcampDetailResponse, object>> = {}): SuccessResponseCompanyBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({partnerName: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getReplaceMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -9309,17 +10788,29 @@ export const getUpdateRecruitmentPostResponseMock = (overrideResponse: Partial<E
 
 export const getDeleteMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getCreateRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getDeleteRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
 export const getReplaceMyJobBookmarkApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getReplaceLetsCareerJobProfileResponseMock = (overrideResponse: Partial<Extract<SuccessResponseLetsCareerJobProfileSyncResponse, object>> = {}): SuccessResponseLetsCareerJobProfileSyncResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{applied: faker.datatype.boolean()}, undefined]), ...overrideResponse})
 
+export const getGetPublicConcernResponseMock = (overrideResponse: Partial<Extract<SuccessResponseConcernDetailResponse, object>> = {}): SuccessResponseConcernDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean(), mine: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getReplaceMyConcernResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteMyConcernResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getReplaceMyConcernCommentLikeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteMyConcernCommentLikeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getReplaceMyBootcampBookmarkApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getPublishMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getCopyMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MARKETING','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getCreateMyRecruitmentPostDraftResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostResponse, object>> = {}): SuccessResponseCreateRecruitmentPostResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getListMyJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyJobSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyJobResponse, object>> = {}): SuccessResponseCreateCompanyJobResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -9327,7 +10818,7 @@ export const getPublishMyJobResponseMock = (overrideResponse: Partial<Extract<Su
 
 export const getCloseMyJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getListMyBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN','ARCHIVED'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListMyBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseCompanyBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseCompanyBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), publicationStatus: faker.helpers.arrayElement(['DRAFT','PUBLISHED','HIDDEN'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateMyBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateCompanyBootcampResponse, object>> = {}): SuccessResponseCreateCompanyBootcampResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -9349,15 +10840,13 @@ export const getReportRecruitmentPostCommentResponseMock = (overrideResponse: Pa
 
 export const getCreateRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostApplicationResponse, object>> = {}): SuccessResponseCreateRecruitmentPostApplicationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), contactMethod: faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), contactValue: faker.string.alpha({length: {min: 10, max: 20}}), clickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
+export const getCreateRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getPrepareMyRecruitmentPostBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCancelMyRecruitmentPostBookmarkPreparationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getPublishMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getCopyMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MARKETING','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
-
-export const getCreateMyRecruitmentPostDraftResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateRecruitmentPostResponse, object>> = {}): SuccessResponseCreateRecruitmentPostResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateJobSourceUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -9367,7 +10856,15 @@ export const getDeleteJobBookmarkResponseMock = (overrideResponse: Partial<Extra
 
 export const getCreateImageResponseMock = (overrideResponse: Partial<Extract<SuccessResponseImageUploadResponse, object>> = {}): SuccessResponseImageUploadResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.string.alpha({length: {min: 10, max: 20}}), url: faker.string.alpha({length: {min: 10, max: 20}}), mimeType: faker.string.alpha({length: {min: 10, max: 20}}), size: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getCreateBootcampApplicationUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getListPublicConcernsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseConcernSummaryResponse, object>> = {}): SuccessResponsePageResponseConcernSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateConcernResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateConcernResponse, object>> = {}): SuccessResponseCreateConcernResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getListPublicConcernCommentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseConcernCommentRootResponse, object>> = {}): SuccessResponsePageResponseConcernCommentRootResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, official: faker.datatype.boolean(), concernAuthor: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), deleted: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean(), likeCount: faker.number.int(), liked: faker.datatype.boolean(), replies: {items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, official: faker.datatype.boolean(), concernAuthor: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), deleted: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean(), likeCount: faker.number.int(), liked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getCreateConcernCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateConcernCommentResponse, object>> = {}): SuccessResponseCreateConcernCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getCreateBootcampSourceUrlClickResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCreateBootcampBookmarkResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -9379,17 +10876,25 @@ export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getDeleteRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getUpdateRecruitmentPostApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getChangeMyPasswordResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getReopenMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCloseMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getDeleteRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getUpdateRecruitmentPostApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
 export const getGetMyAccountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAccountResponse, object>> = {}): SuccessResponseMyAccountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', passwordChangeable: faker.datatype.boolean(), profile: faker.helpers.arrayElement([{name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), phoneNum: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), authProvider: faker.helpers.arrayElement([faker.helpers.arrayElement(['KAKAO','NAVER','GOOGLE','SERVICE'] as const), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), companyProfile: faker.helpers.arrayElement([{organizationName: faker.string.alpha({length: {min: 10, max: 20}}), managerName: faker.string.alpha({length: {min: 10, max: 20}}), logoImageId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerPhone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined])}, undefined]), ...overrideResponse})
+
+export const getListMyRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostManagementItemResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostManagementItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), applicationCount: faker.number.int(), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), viewCount: faker.number.int(), commentCount: faker.number.int(), lastSavedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', continueWriting: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetMyRecruitmentPostFormResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MARKETING','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getListMyRecruitmentPostApplicationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostApplicationPageResponse, object>> = {}): SuccessResponseRecruitmentPostApplicationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), activityDurationMonths: faker.number.int(), applicationStatus: faker.helpers.arrayElement(['PREPARING','COMPLETED','IN_PROGRESS','ENDED'] as const), lastClickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}, countsByRecruitmentType: {
+        [faker.string.alphanumeric(5)]: faker.number.int()
+      }}, undefined]), ...overrideResponse})
 
 export const getGetRecruitmentPostCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostCommentResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -9397,21 +10902,9 @@ export const getListMyRecruitmentPostBookmarksResponseMock = (overrideResponse: 
 
 export const getListPublicRecommendedChallengesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserRecommendedChallengeResponse, object>> = {}): SuccessResponseListUserRecommendedChallengeResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({challengeId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), shortDescription: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
-export const getListPublicNoticesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserNoticeSummaryResponse, object>> = {}): SuccessResponsePageResponseUserNoticeSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getGetPublicNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserNoticeDetailResponse, object>> = {}): SuccessResponseUserNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
-
-export const getListMyRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostManagementItemResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostManagementItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), recruitmentStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), applicationCount: faker.number.int(), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), viewCount: faker.number.int(), commentCount: faker.number.int(), lastSavedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', continueWriting: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getGetMyRecruitmentPostFormResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostFormResponse, object>> = {}): SuccessResponseRecruitmentPostFormResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{postId: faker.number.int(), status: faker.helpers.arrayElement(['ALL','DRAFT','PUBLISHED','HIDDEN'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement([faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), undefined]), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), progressMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), undefined]), activityDurationMonths: faker.helpers.arrayElement([faker.number.int(), undefined]), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), content: faker.helpers.arrayElement([{}, undefined]), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentStartDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), recruitmentEndDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MARKETING','ETC'] as const), contactMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['OPEN_KAKAO','EMAIL'] as const), undefined]), contactValue: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), agreedToPolicy: faker.datatype.boolean()}, undefined]), ...overrideResponse})
-
-export const getListMyRecruitmentApplicationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentApplicationPageResponse, object>> = {}): SuccessResponseRecruitmentApplicationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), activityDurationMonths: faker.number.int(), applicationStatus: faker.helpers.arrayElement(['PREPARING','COMPLETED','IN_PROGRESS','ENDED'] as const), lastClickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}, countsByRecruitmentType: {
-        [faker.string.alphanumeric(5)]: faker.number.int()
-      }}, undefined]), ...overrideResponse})
-
 export const getListPublicJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserJobSummaryResponse, object>> = {}): SuccessResponsePageResponseUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getGetPublicJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), ...overrideResponse})
+export const getGetPublicJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserJobDetailResponse, object>> = {}): SuccessResponseUserJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), analysis: faker.helpers.arrayElement([{tasks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({tag: faker.string.alpha({length: {min: 10, max: 20}}), text: faker.string.alpha({length: {min: 10, max: 20}})})), required: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), preferred: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), employment: {type: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, conversion: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, salary: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, affiliation: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}}, submission: {documents: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, essay: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, process: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, deadline: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}}, competencies: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), quote: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.string.alpha({length: {min: 10, max: 20}}), experiences: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}})))}))}, undefined])}, undefined]), ...overrideResponse})
 
 export const getListPublicTodayJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserJobSummaryResponse, object>> = {}): SuccessResponseListUserJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), undefined]), ...overrideResponse})
 
@@ -9427,13 +10920,23 @@ export const getListPublicEnumsResponseMock = (overrideResponse: Partial<Extract
         [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), desc: faker.string.alpha({length: {min: 10, max: 20}}), parent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}))
       }, undefined]), ...overrideResponse})
 
+export const getListPublicConcernCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseConcernCommentResponse, object>> = {}): SuccessResponsePageResponseConcernCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, official: faker.datatype.boolean(), concernAuthor: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), deleted: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean(), likeCount: faker.number.int(), liked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListPublicPopularConcernsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListConcernSummaryResponse, object>> = {}): SuccessResponseListConcernSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean()})), undefined]), ...overrideResponse})
+
 export const getListPublicBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getGetPublicBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserBootcampDetailResponse, object>> = {}): SuccessResponseUserBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getListMyBootcampBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
+export const getListPublicAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseUserAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetPublicAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserAnnouncementDetailResponse, object>> = {}): SuccessResponseUserAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
 export const getDeleteRecruitmentPostCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getDeleteMyConcernCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 
 export const getReplaceMyProfileMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
@@ -9616,30 +11119,6 @@ export const getDeleteMyRecruitmentPostMockHandler = (overrideResponse?: Success
   }, options)
 }
 
-export const getCreateRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.put('*/api/v1/recruitment-posts/:postId/bookmarks/me', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateRecruitmentPostBookmarkResponseMock(),
-      { status: 201
-      })
-  }, options)
-}
-
-export const getDeleteRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/recruitment-posts/:postId/bookmarks/me', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteRecruitmentPostBookmarkResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
 export const getReplaceMyJobBookmarkApplicationStatusMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/job-bookmarks/:jobId/application-status', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
@@ -9664,6 +11143,66 @@ export const getReplaceLetsCareerJobProfileMockHandler = (overrideResponse?: Suc
   }, options)
 }
 
+export const getGetPublicConcernMockHandler = (overrideResponse?: SuccessResponseConcernDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseConcernDetailResponse> | SuccessResponseConcernDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/concerns/:concernId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetPublicConcernResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceMyConcernMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/concerns/:concernId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceMyConcernResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteMyConcernMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/concerns/:concernId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteMyConcernResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceMyConcernCommentLikeMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/concerns/:concernId/comments/:commentId/likes/me', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceMyConcernCommentLikeResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteMyConcernCommentLikeMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/concerns/:concernId/comments/:commentId/likes/me', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteMyConcernCommentLikeResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getReplaceMyBootcampBookmarkApplicationStatusMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/bootcamp-bookmarks/:bootcampId/application-status', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
@@ -9672,6 +11211,42 @@ export const getReplaceMyBootcampBookmarkApplicationStatusMockHandler = (overrid
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getReplaceMyBootcampBookmarkApplicationStatusResponseMock(),
       { status: 200
+      })
+  }, options)
+}
+
+export const getPublishMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/users/me/recruitment-posts/:postId/publish', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPublishMyRecruitmentPostResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCopyMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostFormResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseRecruitmentPostFormResponse> | SuccessResponseRecruitmentPostFormResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/users/me/recruitment-posts/:postId/copies', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCopyMyRecruitmentPostResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateMyRecruitmentPostDraftMockHandler = (overrideResponse?: SuccessResponseCreateRecruitmentPostResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateRecruitmentPostResponse> | SuccessResponseCreateRecruitmentPostResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/users/me/recruitment-posts/drafts', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateMyRecruitmentPostDraftResponseMock(),
+      { status: 201
       })
   }, options)
 }
@@ -9856,6 +11431,30 @@ export const getCreateRecruitmentPostApplicationMockHandler = (overrideResponse?
   }, options)
 }
 
+export const getCreateRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/recruitment-post-bookmarks/:postId', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateRecruitmentPostBookmarkResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getDeleteRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/recruitment-post-bookmarks/:postId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteRecruitmentPostBookmarkResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getPrepareMyRecruitmentPostBookmarkMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/recruitment-post-bookmarks/:postId/prepare', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
@@ -9876,42 +11475,6 @@ export const getCancelMyRecruitmentPostBookmarkPreparationMockHandler = (overrid
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCancelMyRecruitmentPostBookmarkPreparationResponseMock(),
       { status: 200
-      })
-  }, options)
-}
-
-export const getPublishMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/me/recruitment-posts/:postId/publish', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPublishMyRecruitmentPostResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getCopyMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostFormResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseRecruitmentPostFormResponse> | SuccessResponseRecruitmentPostFormResponse), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/me/recruitment-posts/:postId/copies', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCopyMyRecruitmentPostResponseMock(),
-      { status: 201
-      })
-  }, options)
-}
-
-export const getCreateMyRecruitmentPostDraftMockHandler = (overrideResponse?: SuccessResponseCreateRecruitmentPostResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateRecruitmentPostResponse> | SuccessResponseCreateRecruitmentPostResponse), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/me/recruitment-posts/drafts', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateMyRecruitmentPostDraftResponseMock(),
-      { status: 201
       })
   }, options)
 }
@@ -9964,13 +11527,61 @@ export const getCreateImageMockHandler = (overrideResponse?: SuccessResponseImag
   }, options)
 }
 
-export const getCreateBootcampApplicationUrlClickMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/bootcamps/:bootcampId/application-url-clicks', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+export const getListPublicConcernsMockHandler = (overrideResponse?: SuccessResponsePageResponseConcernSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseConcernSummaryResponse> | SuccessResponsePageResponseConcernSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/concerns', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateBootcampApplicationUrlClickResponseMock(),
+    : getListPublicConcernsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateConcernMockHandler = (overrideResponse?: SuccessResponseCreateConcernResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateConcernResponse> | SuccessResponseCreateConcernResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/concerns', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateConcernResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getListPublicConcernCommentsMockHandler = (overrideResponse?: SuccessResponsePageResponseConcernCommentRootResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseConcernCommentRootResponse> | SuccessResponsePageResponseConcernCommentRootResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/concerns/:concernId/comments', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicConcernCommentsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCreateConcernCommentMockHandler = (overrideResponse?: SuccessResponseCreateConcernCommentResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateConcernCommentResponse> | SuccessResponseCreateConcernCommentResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/concerns/:concernId/comments', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateConcernCommentResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateBootcampSourceUrlClickMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/bootcamps/:bootcampId/source-url-clicks', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateBootcampSourceUrlClickResponseMock(),
       { status: 200
       })
   }, options)
@@ -10066,6 +11677,30 @@ export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: Succ
   }, options)
 }
 
+export const getDeleteRecruitmentPostApplicationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/users/me/recruitment-post-applications/:postId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteRecruitmentPostApplicationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateRecruitmentPostApplicationStatusMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/users/me/recruitment-post-applications/:postId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateRecruitmentPostApplicationStatusResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getChangeMyPasswordMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.patch('*/api/v1/users/me/password', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
 
@@ -10102,30 +11737,6 @@ export const getCloseMyRecruitmentPostMockHandler = (overrideResponse?: SuccessR
   }, options)
 }
 
-export const getDeleteRecruitmentPostApplicationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/me/recruitment-applications/:postId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteRecruitmentPostApplicationResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getUpdateRecruitmentPostApplicationStatusMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/me/recruitment-applications/:postId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUpdateRecruitmentPostApplicationStatusResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
 export const getGetMyAccountMockHandler = (overrideResponse?: SuccessResponseMyAccountResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMyAccountResponse> | SuccessResponseMyAccountResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/users/me', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -10133,6 +11744,42 @@ export const getGetMyAccountMockHandler = (overrideResponse?: SuccessResponseMyA
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getGetMyAccountResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyRecruitmentPostsMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostManagementItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostManagementItemResponse> | SuccessResponsePageResponseRecruitmentPostManagementItemResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/recruitment-posts', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyRecruitmentPostsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyRecruitmentPostFormMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostFormResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentPostFormResponse> | SuccessResponseRecruitmentPostFormResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/recruitment-posts/:postId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyRecruitmentPostFormResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyRecruitmentPostApplicationsMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostApplicationPageResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentPostApplicationPageResponse> | SuccessResponseRecruitmentPostApplicationPageResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/recruitment-post-applications', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyRecruitmentPostApplicationsResponseMock(),
       { status: 200
       })
   }, options)
@@ -10169,66 +11816,6 @@ export const getListPublicRecommendedChallengesMockHandler = (overrideResponse?:
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getListPublicRecommendedChallengesResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListPublicNoticesMockHandler = (overrideResponse?: SuccessResponsePageResponseUserNoticeSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserNoticeSummaryResponse> | SuccessResponsePageResponseUserNoticeSummaryResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/notices', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListPublicNoticesResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getGetPublicNoticeMockHandler = (overrideResponse?: SuccessResponseUserNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserNoticeDetailResponse> | SuccessResponseUserNoticeDetailResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/notices/:noticeId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetPublicNoticeResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListMyRecruitmentPostsMockHandler = (overrideResponse?: SuccessResponsePageResponseRecruitmentPostManagementItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseRecruitmentPostManagementItemResponse> | SuccessResponsePageResponseRecruitmentPostManagementItemResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/me/recruitment-posts', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListMyRecruitmentPostsResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getGetMyRecruitmentPostFormMockHandler = (overrideResponse?: SuccessResponseRecruitmentPostFormResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentPostFormResponse> | SuccessResponseRecruitmentPostFormResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/me/recruitment-posts/:postId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetMyRecruitmentPostFormResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListMyRecruitmentApplicationsMockHandler = (overrideResponse?: SuccessResponseRecruitmentApplicationPageResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseRecruitmentApplicationPageResponse> | SuccessResponseRecruitmentApplicationPageResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/me/recruitment-applications', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListMyRecruitmentApplicationsResponseMock(),
       { status: 200
       })
   }, options)
@@ -10330,6 +11917,30 @@ export const getListPublicEnumsMockHandler = (overrideResponse?: SuccessResponse
   }, options)
 }
 
+export const getListPublicConcernCommentRepliesMockHandler = (overrideResponse?: SuccessResponsePageResponseConcernCommentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseConcernCommentResponse> | SuccessResponsePageResponseConcernCommentResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/concerns/:concernId/comments/:commentId/replies', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicConcernCommentRepliesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListPublicPopularConcernsMockHandler = (overrideResponse?: SuccessResponseListConcernSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListConcernSummaryResponse> | SuccessResponseListConcernSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/concerns/popular', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicPopularConcernsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListPublicBootcampsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserBootcampSummaryResponse> | SuccessResponsePageResponseUserBootcampSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -10366,6 +11977,30 @@ export const getListMyBootcampBookmarksMockHandler = (overrideResponse?: Success
   }, options)
 }
 
+export const getListPublicAnnouncementsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserAnnouncementSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserAnnouncementSummaryResponse> | SuccessResponsePageResponseUserAnnouncementSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/announcements', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicAnnouncementsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetPublicAnnouncementMockHandler = (overrideResponse?: SuccessResponseUserAnnouncementDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserAnnouncementDetailResponse> | SuccessResponseUserAnnouncementDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/announcements/:announcementId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetPublicAnnouncementResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getDeleteRecruitmentPostCommentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/recruitment-posts/:postId/comments/:commentId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
@@ -10373,6 +12008,18 @@ export const getDeleteRecruitmentPostCommentMockHandler = (overrideResponse?: Su
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteRecruitmentPostCommentResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteMyConcernCommentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/concerns/:concernId/comments/:commentId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteMyConcernCommentResponseMock(),
       { status: 200
       })
   }, options)
@@ -10393,11 +12040,17 @@ export const getOgonggoUserAPIMock = () => [
   getGetPublicRecruitmentPostMockHandler(),
   getUpdateRecruitmentPostMockHandler(),
   getDeleteMyRecruitmentPostMockHandler(),
-  getCreateRecruitmentPostBookmarkMockHandler(),
-  getDeleteRecruitmentPostBookmarkMockHandler(),
   getReplaceMyJobBookmarkApplicationStatusMockHandler(),
   getReplaceLetsCareerJobProfileMockHandler(),
+  getGetPublicConcernMockHandler(),
+  getReplaceMyConcernMockHandler(),
+  getDeleteMyConcernMockHandler(),
+  getReplaceMyConcernCommentLikeMockHandler(),
+  getDeleteMyConcernCommentLikeMockHandler(),
   getReplaceMyBootcampBookmarkApplicationStatusMockHandler(),
+  getPublishMyRecruitmentPostMockHandler(),
+  getCopyMyRecruitmentPostMockHandler(),
+  getCreateMyRecruitmentPostDraftMockHandler(),
   getListMyJobsMockHandler(),
   getCreateMyJobMockHandler(),
   getPublishMyJobMockHandler(),
@@ -10413,16 +12066,19 @@ export const getOgonggoUserAPIMock = () => [
   getCreateRecruitmentPostCommentMockHandler(),
   getReportRecruitmentPostCommentMockHandler(),
   getCreateRecruitmentPostApplicationMockHandler(),
+  getCreateRecruitmentPostBookmarkMockHandler(),
+  getDeleteRecruitmentPostBookmarkMockHandler(),
   getPrepareMyRecruitmentPostBookmarkMockHandler(),
   getCancelMyRecruitmentPostBookmarkPreparationMockHandler(),
-  getPublishMyRecruitmentPostMockHandler(),
-  getCopyMyRecruitmentPostMockHandler(),
-  getCreateMyRecruitmentPostDraftMockHandler(),
   getCreateJobSourceUrlClickMockHandler(),
   getCreateJobBookmarkMockHandler(),
   getDeleteJobBookmarkMockHandler(),
   getCreateImageMockHandler(),
-  getCreateBootcampApplicationUrlClickMockHandler(),
+  getListPublicConcernsMockHandler(),
+  getCreateConcernMockHandler(),
+  getListPublicConcernCommentsMockHandler(),
+  getCreateConcernCommentMockHandler(),
+  getCreateBootcampSourceUrlClickMockHandler(),
   getCreateBootcampBookmarkMockHandler(),
   getDeleteBootcampBookmarkMockHandler(),
   getReissueAccessTokenMockHandler(),
@@ -10431,20 +12087,18 @@ export const getOgonggoUserAPIMock = () => [
   getSignUpCompanyMockHandler(),
   getSignInCompanyMockHandler(),
   getCreateAdvertisementInquiryMockHandler(),
+  getDeleteRecruitmentPostApplicationMockHandler(),
+  getUpdateRecruitmentPostApplicationStatusMockHandler(),
   getChangeMyPasswordMockHandler(),
   getReopenMyRecruitmentPostMockHandler(),
   getCloseMyRecruitmentPostMockHandler(),
-  getDeleteRecruitmentPostApplicationMockHandler(),
-  getUpdateRecruitmentPostApplicationStatusMockHandler(),
   getGetMyAccountMockHandler(),
+  getListMyRecruitmentPostsMockHandler(),
+  getGetMyRecruitmentPostFormMockHandler(),
+  getListMyRecruitmentPostApplicationsMockHandler(),
   getGetRecruitmentPostCommentRepliesMockHandler(),
   getListMyRecruitmentPostBookmarksMockHandler(),
   getListPublicRecommendedChallengesMockHandler(),
-  getListPublicNoticesMockHandler(),
-  getGetPublicNoticeMockHandler(),
-  getListMyRecruitmentPostsMockHandler(),
-  getGetMyRecruitmentPostFormMockHandler(),
-  getListMyRecruitmentApplicationsMockHandler(),
   getListPublicJobsMockHandler(),
   getGetPublicJobMockHandler(),
   getListPublicTodayJobsMockHandler(),
@@ -10453,8 +12107,13 @@ export const getOgonggoUserAPIMock = () => [
   getListPublicJobCalendarMockHandler(),
   getListMyJobBookmarksMockHandler(),
   getListPublicEnumsMockHandler(),
+  getListPublicConcernCommentRepliesMockHandler(),
+  getListPublicPopularConcernsMockHandler(),
   getListPublicBootcampsMockHandler(),
   getGetPublicBootcampMockHandler(),
   getListMyBootcampBookmarksMockHandler(),
-  getDeleteRecruitmentPostCommentMockHandler()
+  getListPublicAnnouncementsMockHandler(),
+  getGetPublicAnnouncementMockHandler(),
+  getDeleteRecruitmentPostCommentMockHandler(),
+  getDeleteMyConcernCommentMockHandler()
 ]

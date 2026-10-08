@@ -643,7 +643,6 @@ export interface CompanyJobSummaryResponse {
      * | `DRAFT` | 1 | 초안 |
      * | `PUBLISHED` | 2 | 게시 |
      * | `HIDDEN` | 3 | 숨김 |
-     * | `ARCHIVED` | 4 | 보관 |
      */
   publicationStatus: CompanyJobSummaryResponsePublicationStatus;
   /**

@@ -1,6 +1,6 @@
 import type {
   ListPublicJobsJobField,
-  ListPublicJobsJobRole,
+  ListPublicJobsJobRoleItem,
   UserJobDetailResponse,
   UserJobSummaryResponse,
 } from '@ogonggo/api';
@@ -22,4 +22,4 @@ export type JobRecruitmentType = JobSummary['recruitmentType'];
  * 생성 타입마다 이름만 다르고 값은 같은 enum 이다(ogonggo-BE LC-3385).
  */
 export type JobField = ListPublicJobsJobField;
-export type JobRole = ListPublicJobsJobRole;
+export type JobRole = ListPublicJobsJobRoleItem;

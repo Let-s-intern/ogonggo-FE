@@ -1,7 +1,7 @@
 import type {
   ListMyBootcampBookmarksApplicationStatus,
   ListMyJobBookmarksApplicationStatus,
-  ListMyRecruitmentApplicationsApplicationStatus,
+  ListMyRecruitmentPostApplicationsApplicationStatus,
 } from '@ogonggo/api';
 
 /**
@@ -28,7 +28,7 @@ export type ApplicationBoardTab = (typeof APPLICATION_BOARD_TABS)[number];
 export interface ApplicationStageIds {
   jobs: ListMyJobBookmarksApplicationStatus;
   bootcamps: ListMyBootcampBookmarksApplicationStatus;
-  'side-studies': 'SCRAPPED' | ListMyRecruitmentApplicationsApplicationStatus;
+  'side-studies': 'SCRAPPED' | ListMyRecruitmentPostApplicationsApplicationStatus;
 }
 
 export type ApplicationStageId<Tab extends ApplicationBoardTab = ApplicationBoardTab> =

@@ -25,9 +25,9 @@ import {
  *
  * | 하는 일 | 생성 함수 | 경로 |
  * |---|---|---|
- * | 목록 | `listMyRecruitmentPosts` | `GET /api/v1/me/recruitment-posts` |
- * | 복사 | `copyMyRecruitmentPost` | `POST /api/v1/me/recruitment-posts/{postId}/copies` |
- * | 폼 조회 | `getMyRecruitmentPostForm` | `GET /api/v1/me/recruitment-posts/{postId}` |
+ * | 목록 | `listMyRecruitmentPosts` | `GET /api/v1/users/me/recruitment-posts` |
+ * | 복사 | `copyMyRecruitmentPost` | `POST /api/v1/users/me/recruitment-posts/{postId}/copies` |
+ * | 폼 조회 | `getMyRecruitmentPostForm` | `GET /api/v1/users/me/recruitment-posts/{postId}` |
  * | 생성 | `createRecruitmentPost` | `POST /api/v1/recruitment-posts` |
  * | 수정 | `updateRecruitmentPost` | `PUT /api/v1/recruitment-posts/{postId}` |
  * | 삭제 | `deleteMyRecruitmentPost` | `DELETE /api/v1/recruitment-posts/{postId}` |

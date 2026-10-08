@@ -22,7 +22,7 @@ function buildDescription(title: string, content: unknown): string {
 
 /**
  * `fetchNoticeDetail`(`widgets/notice-detail/ui/NoticeDetailView.tsx`)을 그대로 재사용한다 —
- * 404 판별(`HttpError.status === 404` → `notFound()`)이 본문과 갈리면 안 된다. `getPublicNotice`는
+ * 404 판별(`HttpError.status === 404` → `notFound()`)이 본문과 갈리면 안 된다. `getPublicAnnouncement`는
  * `fetch`로 나가므로 같은 렌더 안에서 본문과 이 호출이 자동으로 합쳐진다(요청 한 번).
  */
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {

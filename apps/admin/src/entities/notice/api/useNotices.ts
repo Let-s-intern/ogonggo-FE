@@ -1,19 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  createNotice,
-  deleteNotice,
-  getNotice,
-  listNotices,
-  updateNotice,
-  type AdminNoticeDetailResponse,
-  type AdminNoticeSummaryResponse,
-  type CreateAdminNoticeRequestVisibility,
+  createAnnouncement,
+  deleteAnnouncement,
+  getAnnouncement,
+  listAnnouncements,
+  updateAnnouncement,
+  type AdminAnnouncementDetailResponse,
+  type AdminAnnouncementSummaryResponse,
+  type CreateAdminAnnouncementRequestVisibility,
 } from '@ogonggo/api/src/admin';
 import { unwrapData } from '@/shared/api/unwrapData';
 
-export type NoticeSummary = AdminNoticeSummaryResponse;
-export type NoticeDetail = AdminNoticeDetailResponse;
-export type NoticeVisibility = CreateAdminNoticeRequestVisibility;
+export type NoticeSummary = AdminAnnouncementSummaryResponse;
+export type NoticeDetail = AdminAnnouncementDetailResponse;
+export type NoticeVisibility = CreateAdminAnnouncementRequestVisibility;
 
 export interface NoticeWriteInput {
   title: string;
@@ -32,7 +32,7 @@ export interface NoticeWriteInput {
 export function useNoticeList(page: number) {
   return useQuery({
     queryKey: ['admin', 'notices', page],
-    queryFn: () => unwrapData(listNotices({ page })),
+    queryFn: () => unwrapData(listAnnouncements({ page })),
   });
 }
 
@@ -44,7 +44,7 @@ export function useNoticeList(page: number) {
 export function useNoticeDetail(noticeId: number | null) {
   return useQuery({
     queryKey: ['admin', 'notices', 'detail', noticeId],
-    queryFn: () => unwrapData(getNotice(noticeId as number)),
+    queryFn: () => unwrapData(getAnnouncement(noticeId as number)),
     enabled: noticeId !== null,
   });
 }
@@ -66,8 +66,8 @@ export function useSaveNotice(noticeId: number | null) {
         visibility: input.visibility,
       };
       return noticeId === null
-        ? unwrapData(createNotice(body))
-        : unwrapData(updateNotice(noticeId, body));
+        ? unwrapData(createAnnouncement(body))
+        : unwrapData(updateAnnouncement(noticeId, body));
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] });
@@ -80,7 +80,7 @@ export function useDeleteNotice() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (noticeId: number) => {
-      await deleteNotice(noticeId);
+      await deleteAnnouncement(noticeId);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] });
@@ -101,7 +101,7 @@ export function usePatchNoticeVisibility(noticeId: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (visibility: NoticeVisibility) =>
-      unwrapData(updateNotice(noticeId, { visibility })),
+      unwrapData(updateAnnouncement(noticeId, { visibility })),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] });
     },

@@ -1,6 +1,6 @@
 'use client';
 
-import { createBootcampApplicationUrlClick, createJobSourceUrlClick } from '@ogonggo/api';
+import { createBootcampSourceUrlClick, createJobSourceUrlClick } from '@ogonggo/api';
 import type { BookmarkKind } from '@/features/bookmark';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { TrackedLink, type TrackedLinkProps } from '@/shared/analytics/TrackedLink';
@@ -26,7 +26,7 @@ function recordApplyClick(kind: BookmarkKind, id: number, href: string): void {
     kind === 'jobs'
       ? createJobSourceUrlClick(id)
       : kind === 'bootcamps'
-        ? createBootcampApplicationUrlClick(id)
+        ? createBootcampSourceUrlClick(id)
         : null;
   request?.catch(() => {});
 }

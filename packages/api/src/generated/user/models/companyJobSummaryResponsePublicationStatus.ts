@@ -11,7 +11,6 @@
  * | `DRAFT` | 1 | 초안 |
  * | `PUBLISHED` | 2 | 게시 |
  * | `HIDDEN` | 3 | 숨김 |
- * | `ARCHIVED` | 4 | 보관 |
  */
 export type CompanyJobSummaryResponsePublicationStatus = typeof CompanyJobSummaryResponsePublicationStatus[keyof typeof CompanyJobSummaryResponsePublicationStatus];
 
@@ -20,5 +19,4 @@ export const CompanyJobSummaryResponsePublicationStatus = {
   DRAFT: 'DRAFT',
   PUBLISHED: 'PUBLISHED',
   HIDDEN: 'HIDDEN',
-  ARCHIVED: 'ARCHIVED',
 } as const;

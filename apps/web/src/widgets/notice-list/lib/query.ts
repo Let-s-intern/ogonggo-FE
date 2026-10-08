@@ -1,5 +1,5 @@
 /**
- * `/notices` 목록이 페이지네이션에서 쓰는 URL 쿼리 상태. 목록 요청(`listPublicNotices`) 의
+ * `/notices` 목록이 페이지네이션에서 쓰는 URL 쿼리 상태. 목록 요청(`listPublicAnnouncements`) 의
  * `page` 로 옮겨진다(`../ui/NoticeList.tsx`).
  *
  * 다른 목록(`/bootcamps`, `/side-studies`) 은 탭·정렬도 같이 실어 나르는데 공지 목록에는 그런

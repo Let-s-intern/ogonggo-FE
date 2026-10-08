@@ -2,21 +2,21 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   deleteRecruitmentPostApplication,
   updateRecruitmentPostApplicationStatus,
-  type UpdateRecruitmentApplicationStatusRequestApplicationStatus,
+  type UpdateRecruitmentPostApplicationStatusRequestApplicationStatus,
 } from '@ogonggo/api';
 import { deleteBookmark, myBookmarkIdsKey } from '@/features/bookmark';
 import type { BookmarkApplicationTab } from './query';
 
 /**
  * 사이드·스터디 지원 이력의 상태 변경과 삭제(v4 PRD 3 절). 둘 다 경로가
- * `/api/v1/me/recruitment-applications/{postId}` 로 같고 메서드만 다르다.
+ * `/api/v1/users/me/recruitment-post-applications/{postId}` 로 같고 메서드만 다르다.
  *
  * **실제 지원서 처리 상태가 아니라 사용자의 개인 관리 상태다**(생성 타입 설명). 모집글
  * 작성자에게 보이는 지원자 정보는 바뀌지 않는다.
  */
 export async function updateApplicationStatus(
   postId: number,
-  applicationStatus: UpdateRecruitmentApplicationStatusRequestApplicationStatus,
+  applicationStatus: UpdateRecruitmentPostApplicationStatusRequestApplicationStatus,
 ): Promise<void> {
   await updateRecruitmentPostApplicationStatus(postId, { applicationStatus });
 }

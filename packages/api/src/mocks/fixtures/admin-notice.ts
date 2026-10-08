@@ -1,7 +1,7 @@
 /**
  * 어드민 공지사항 픽스처.
  *
- * 모양은 배포된 어드민 스펙(`AdminNoticeDetailResponse`) 을 따른다. 게시 기간(`publicationStartAt`
+ * 모양은 배포된 어드민 스펙(`AdminAnnouncementDetailResponse`) 을 따른다. 게시 기간(`publicationStartAt`
  * ·`publicationEndAt`) 과 `active` 를 들고 있던 예전 픽스처는 백엔드가 생기기 전에 화면에서
  * 지어낸 것이고, 실제 백엔드는 노출 여부 하나(`visibility`) 만 둔다.
  *
@@ -71,7 +71,7 @@ export function lexical(text: string): string {
  * `2026-09-20T10:20:00` — 백엔드가 내보내는 모양.
  *
  * 공지의 두 날짜는 `LocalDateTime` 이라 `Z` 도 오프셋도 붙지 않는다
- * (`AdminNoticeSummaryResponse`). 다른 어드민 픽스처는 `toISOString()` 으로 `Z` 를 붙이는데,
+ * (`AdminAnnouncementSummaryResponse`). 다른 어드민 픽스처는 `toISOString()` 으로 `Z` 를 붙이는데,
  * 공지는 여기서만 맞춘다 — 형식이 다르면 `new Date(...)` 가 시간대만큼 옮겨 읽어 목 모드와
  * 실서버의 등록일이 하루 어긋날 수 있다.
  */
