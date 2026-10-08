@@ -34,7 +34,7 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * 목록과 폼을 한 화면에 둔다. 공지는 수십 건을 넘지 않고, 무엇이 고정돼 있는지 보면서 쓰는
  * 편이 낫다.
  *
- * 목록에는 본문이 없다(`GET /notices` 는 요약만 준다). 그래서 행을 누르면 그 행의 값으로 폼을
+ * 목록에는 본문이 없다(`GET /announcements` 는 요약만 준다). 그래서 행을 누르면 그 행의 값으로 폼을
  * 채우지 않고 상세를 한 번 더 받는다.
  */
 export function NoticeListPage() {

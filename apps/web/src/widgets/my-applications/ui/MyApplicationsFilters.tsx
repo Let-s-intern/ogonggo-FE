@@ -42,7 +42,7 @@ export interface MyApplicationsFiltersProps {
  * 단계가 골라져 있다 — 이유는 `lib/query.ts` 의 `DEFAULT_STAGE` 에 적었다.
  *
  * `모집 구분` 은 사이드·스터디 탭에만 둔다. 목업 필터 줄에는 없지만
- * `listMyRecruitmentApplications` 가 `recruitmentType` 을 받고, 이 탭이 사이드 프로젝트와
+ * `listMyRecruitmentPostApplications` 가 `recruitmentType` 을 받고, 이 탭이 사이드 프로젝트와
  * 스터디를 함께 담고 있어 가르는 수단이 필요하다.
  */
 export function MyApplicationsFilters({ query }: MyApplicationsFiltersProps) {

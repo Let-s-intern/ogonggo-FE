@@ -2,7 +2,7 @@ import {
   getRecruitmentPosts,
   listPublicBootcamps,
   listPublicJobs,
-  listPublicNotices,
+  listPublicAnnouncements,
 } from '@ogonggo/api';
 import type {
   PageInfo,
@@ -10,10 +10,10 @@ import type {
   SuccessResponsePageResponseRecruitmentPostSummaryResponse,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
   SuccessResponsePageResponseUserJobSummaryResponse,
-  SuccessResponsePageResponseUserNoticeSummaryResponse,
+  SuccessResponsePageResponseUserAnnouncementSummaryResponse,
   UserBootcampSummaryResponse,
   UserJobSummaryResponse,
-  UserNoticeSummaryResponse,
+  UserAnnouncementSummaryResponse,
 } from '@ogonggo/api';
 
 /**
@@ -104,13 +104,13 @@ export async function fetchAllSideStudies(): Promise<RecruitmentPostSummaryRespo
   });
 }
 
-/** 공지 상세 전체. `listPublicNotices`(`GET /api/v1/notices`)를 돈다. 2026-09-23 실측 0건. */
-export async function fetchAllNotices(): Promise<UserNoticeSummaryResponse[]> {
+/** 공지 상세 전체. `listPublicAnnouncements`(`GET /api/v1/announcements`)를 돈다. 2026-09-23 실측 0건. */
+export async function fetchAllNotices(): Promise<UserAnnouncementSummaryResponse[]> {
   return fetchAllPages(async (page) => {
-    const response = (await listPublicNotices({
+    const response = (await listPublicAnnouncements({
       page,
       size: PAGE_SIZE,
-    })) as unknown as SuccessResponsePageResponseUserNoticeSummaryResponse;
+    })) as unknown as SuccessResponsePageResponseUserAnnouncementSummaryResponse;
     return response.data ?? { items: [], pageInfo: emptyPageInfo(page) };
   });
 }

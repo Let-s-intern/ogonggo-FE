@@ -32,10 +32,9 @@ export const PUBLICATION_STATUS_LABELS: Record<CompanyJobSummaryResponsePublicat
     DRAFT: '초안',
     PUBLISHED: '게시',
     HIDDEN: '숨김',
-    ARCHIVED: '보관',
   };
 
-/** 지금 노출되고 있는 것만 파랑이다. 나머지 셋은 "안 보이는 상태" 라 한 색으로 묶는다. */
+/** 지금 노출되고 있는 것만 파랑이다. 나머지 둘은 "안 보이는 상태" 라 한 색으로 묶는다. */
 export const PUBLICATION_STATUS_TONES: Record<
   CompanyJobSummaryResponsePublicationStatus,
   'neutral' | 'main'
@@ -43,5 +42,4 @@ export const PUBLICATION_STATUS_TONES: Record<
   DRAFT: 'neutral',
   PUBLISHED: 'main',
   HIDDEN: 'neutral',
-  ARCHIVED: 'neutral',
 };

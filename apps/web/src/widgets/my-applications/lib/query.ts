@@ -1,7 +1,7 @@
 import type {
-  ListMyRecruitmentApplicationsRecruitmentStatus,
-  ListMyRecruitmentApplicationsRecruitmentType,
-  ListMyRecruitmentApplicationsSort,
+  ListMyRecruitmentPostApplicationsRecruitmentStatus,
+  ListMyRecruitmentPostApplicationsRecruitmentType,
+  ListMyRecruitmentPostApplicationsSort,
 } from '@ogonggo/api';
 import {
   stagesOf,
@@ -24,14 +24,14 @@ export type BookmarkApplicationTab = Exclude<MyApplicationTab, 'side-studies'>;
 export interface MyApplicationsQuery {
   tab: MyApplicationTab;
   page: number;
-  recruitmentStatus?: ListMyRecruitmentApplicationsRecruitmentStatus;
+  recruitmentStatus?: ListMyRecruitmentPostApplicationsRecruitmentStatus;
   /** 사이드 프로젝트인지 스터디인지. 그 둘을 한 탭에 담는 사이드·스터디 탭 전용이다. */
-  recruitmentType?: ListMyRecruitmentApplicationsRecruitmentType;
+  recruitmentType?: ListMyRecruitmentPostApplicationsRecruitmentType;
   /** `지원 상태` 드롭다운. 값은 탭마다 다르다(`stagesOf`). */
   applicationStatus?: ApplicationStageId;
   keyword?: string;
   /** 사이드·스터디 탭 전용. 북마크 목록은 정렬이 `RECENTLY_SAVED` 하나뿐이라 고를 것이 없다. */
-  sort?: ListMyRecruitmentApplicationsSort;
+  sort?: ListMyRecruitmentPostApplicationsSort;
 }
 
 export const DEFAULT_MY_APPLICATIONS_QUERY: MyApplicationsQuery = { tab: 'jobs', page: 1 };
@@ -44,7 +44,7 @@ export const DEFAULT_MY_APPLICATIONS_QUERY: MyApplicationsQuery = { tab: 'jobs',
  * 어느 행이 어느 단계인지 알 수 없다 — 단계가 곧 요청 파라미터다. 그래서 첫 화면은
  * `지원 준비 중`(부트캠프는 `신청 전`) 이고, 다른 단계는 `지원 상태` 에서 고른다.
  *
- * 사이드·스터디는 `undefined` 다. 지원 이력 응답(`RecruitmentApplicationItemResponse`) 에는
+ * 사이드·스터디는 `undefined` 다. 지원 이력 응답(`RecruitmentPostApplicationItemResponse`) 에는
  * 행마다 `applicationStatus` 가 있어 네 단계를 섞어 그릴 수 있다.
  */
 const DEFAULT_STAGE: Record<MyApplicationTab, ApplicationStageId | undefined> = {
@@ -76,16 +76,16 @@ function filterKeysFor(tab: MyApplicationTab): readonly (keyof MyApplicationsQue
     : ['recruitmentStatus', 'applicationStatus', 'keyword'];
 }
 
-export const RECRUITMENT_STATUSES: readonly ListMyRecruitmentApplicationsRecruitmentStatus[] = [
+export const RECRUITMENT_STATUSES: readonly ListMyRecruitmentPostApplicationsRecruitmentStatus[] = [
   'RECRUITING',
   'CLOSED',
 ];
-export const RECRUITMENT_TYPES: readonly ListMyRecruitmentApplicationsRecruitmentType[] = [
+export const RECRUITMENT_TYPES: readonly ListMyRecruitmentPostApplicationsRecruitmentType[] = [
   'SIDE_PROJECT',
   'STUDY',
 ];
 /** 생성 타입에 정렬 값이 `LATEST` 하나뿐이다. 목업의 `최근 저장순` 이 이것이다. */
-export const SORTS: readonly ListMyRecruitmentApplicationsSort[] = ['LATEST'];
+export const SORTS: readonly ListMyRecruitmentPostApplicationsSort[] = ['LATEST'];
 
 /** 지금 걸려 있는 필터가 있는가. 필터 줄의 `전체` 칩 색이 이걸로 갈린다. */
 export function hasMyApplicationsFilter(query: MyApplicationsQuery): boolean {

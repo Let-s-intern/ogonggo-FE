@@ -2,7 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import type { UpdateRecruitmentApplicationStatusRequestApplicationStatus } from '@ogonggo/api';
+import type { UpdateRecruitmentPostApplicationStatusRequestApplicationStatus } from '@ogonggo/api';
 import { useToast, type SelectOption } from '@ogonggo/ui';
 import {
   canMoveStage,
@@ -89,7 +89,7 @@ export interface MyApplicationsProps {
  * 북마크가 단계를 갖게 되면서(`LC-3359`) 되읽을 곳이 생겼다.
  *
  * 데이터 출처는 아직 탭마다 갈린다. 사이드·스터디는 지원 이력
- * (`listMyRecruitmentApplications`) 이고 나머지 둘은 북마크 목록이다. 북마크 쪽은 응답에 단계
+ * (`listMyRecruitmentPostApplications`) 이고 나머지 둘은 북마크 목록이다. 북마크 쪽은 응답에 단계
  * 칸이 없어 **한 번에 한 단계만** 그린다 — 근거는 `lib/query.ts` 의 `DEFAULT_STAGE`.
  */
 export function MyApplications({ query }: MyApplicationsProps) {
@@ -174,7 +174,7 @@ export function MyApplications({ query }: MyApplicationsProps) {
       mutate(row.id, () =>
         updateApplicationStatus(
           row.id,
-          value as UpdateRecruitmentApplicationStatusRequestApplicationStatus,
+          value as UpdateRecruitmentPostApplicationStatusRequestApplicationStatus,
         ),
       );
       return;

@@ -158,7 +158,7 @@ export interface AdminContentPatchRequest {
 
 /**
  * 운영 값 수정으로 반려를 보내면 백엔드처럼 400 을 준다. 반려는 사유가 있어야 해서 검수 화면
- * (`PATCH /review-queue/{type}/{id}`) 에서만 한다. 메시지는 로컬 백엔드의 응답을 그대로 옮겼다.
+ * (`PATCH /content-reviews/{type}/{id}`) 에서만 한다. 메시지는 로컬 백엔드의 응답을 그대로 옮겼다.
  *
  * 등록 경로(`source`) 는 스펙의 요청 모델에 없고 백엔드는 보내도 버린다. 목도 읽지 않는다.
  */

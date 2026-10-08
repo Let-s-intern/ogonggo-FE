@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getPublicNotice, HttpError } from '@ogonggo/api';
+import { getPublicAnnouncement, HttpError } from '@ogonggo/api';
 import type {
-  SuccessResponseUserNoticeDetailResponse,
-  UserNoticeDetailResponse,
+  SuccessResponseUserAnnouncementDetailResponse,
+  UserAnnouncementDetailResponse,
 } from '@ogonggo/api';
 import { formatDateDots } from '@/shared/lib/localDate';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
@@ -15,23 +15,23 @@ export interface NoticeDetailViewProps {
 }
 
 /**
- * 공개 상세 `getPublicNotice`(`GET /api/v1/notices/{noticeId}`).
+ * 공개 상세 `getPublicAnnouncement`(`GET /api/v1/announcements/{noticeId}`).
  *
  * 경로의 id 가 양의 정수가 아니면 부르지 않고 바로 `notFound()` 로 보낸다 — 사이드·스터디
  * 상세와 같은 판단이다. 비노출·삭제된 공지는 백엔드가 404 로 주고(`NoticeReader.readPublic`),
  * 그 404 는 `HttpError.status` 로 가려 `notFound()` 로 바꾼다. 그 밖의 오류는 다시 던져
  * 오류 화면(`app/(site)/error.tsx`) 이 받는다.
  */
-export async function fetchNoticeDetail(noticeId: number): Promise<UserNoticeDetailResponse> {
+export async function fetchNoticeDetail(noticeId: number): Promise<UserAnnouncementDetailResponse> {
   if (!Number.isInteger(noticeId) || noticeId < 1) {
     notFound();
   }
 
-  let response: SuccessResponseUserNoticeDetailResponse;
+  let response: SuccessResponseUserAnnouncementDetailResponse;
   try {
-    response = (await getPublicNotice(
+    response = (await getPublicAnnouncement(
       noticeId,
-    )) as unknown as SuccessResponseUserNoticeDetailResponse;
+    )) as unknown as SuccessResponseUserAnnouncementDetailResponse;
   } catch (error) {
     if (error instanceof HttpError && error.status === 404) {
       notFound();

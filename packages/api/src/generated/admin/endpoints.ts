@@ -25,50 +25,58 @@ import type {
 
 import type {
   ChangeAdminBootcampVisibilityRequest,
+  ChangeAdminConcernVisibilityRequest,
   ChangeAdminJobVisibilityRequest,
   ChangeAdminRecruitmentPostVisibilityRequest,
   CrawlerBootcampRequest,
+  CrawlerJobAnalysisRequest,
   CrawlerJobRegistrationRequest,
   CrawlerJobReplaceRequest,
-  CreateAdminNoticeRequest,
+  CreateAdminAnnouncementRequest,
   DecideReviewRequest,
   ErrorResponse,
   GetCrawlerBootcampParams,
   GetCrawlerJobParams,
   GetWork24ApiResponseParams,
+  ListAnnouncementsParams,
   ListBootcampsParams,
   ListCompanyMembersParams,
+  ListConcernsParams,
+  ListContentRejectionsParams,
+  ListCrawlerJobAnalysisTargetsParams,
   ListGeneralMembersParams,
   ListJobsParams,
-  ListNoticesParams,
   ListRecruitmentPostsParams,
-  ListRejectionsParams,
   ListServiceFeedbacksParams,
   ReplaceAdminTodayJobsRequest,
+  SuccessResponseAdminAnnouncementDetailResponse,
   SuccessResponseAdminBootcampDetailResponse,
+  SuccessResponseAdminConcernDetailResponse,
+  SuccessResponseAdminContentRejectionResponse,
+  SuccessResponseAdminContentReviewDecisionResponse,
   SuccessResponseAdminJobDetailResponse,
-  SuccessResponseAdminNoticeDetailResponse,
-  SuccessResponseAdminRejectionResponse,
-  SuccessResponseAdminReviewDecisionResponse,
   SuccessResponseCrawlerBootcampLookupResponse,
   SuccessResponseCrawlerBootcampRegistrationResponse,
   SuccessResponseCrawlerJobLookupResponse,
   SuccessResponseCrawlerJobRegistrationResponse,
   SuccessResponseJsonNode,
+  SuccessResponseListAdminContentReviewItemResponse,
   SuccessResponseListAdminJobSummaryResponse,
-  SuccessResponseListAdminReviewItemResponse,
+  SuccessResponseListCrawlerJobAnalysisTargetResponse,
+  SuccessResponseMapStringListAdminEnumOptionResponse,
+  SuccessResponsePageResponseAdminAnnouncementSummaryResponse,
   SuccessResponsePageResponseAdminBootcampSummaryResponse,
   SuccessResponsePageResponseAdminCompanyMemberResponse,
+  SuccessResponsePageResponseAdminConcernSummaryResponse,
+  SuccessResponsePageResponseAdminContentRejectionResponse,
   SuccessResponsePageResponseAdminGeneralMemberResponse,
   SuccessResponsePageResponseAdminJobSummaryResponse,
-  SuccessResponsePageResponseAdminNoticeSummaryResponse,
   SuccessResponsePageResponseAdminRecruitmentPostSummaryResponse,
-  SuccessResponsePageResponseAdminRejectionResponse,
   SuccessResponsePageResponseAdminServiceFeedbackResponse,
   SuccessResponseUnit,
+  UpdateAdminAnnouncementRequest,
   UpdateAdminBootcampRequest,
   UpdateAdminJobRequest,
-  UpdateAdminNoticeRequest,
   UpdateRejectionReasonRequest
 } from './models';
 
@@ -321,6 +329,125 @@ export const useDeleteCrawlerJob = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteCrawlerJobMutationOptions(options), queryClient);
+    }
+
+export type replaceCrawlerJobAnalysisResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceCrawlerJobAnalysisResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceCrawlerJobAnalysisResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type replaceCrawlerJobAnalysisResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceCrawlerJobAnalysisResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type replaceCrawlerJobAnalysisResponseSuccess = (replaceCrawlerJobAnalysisResponse200) & {
+  headers: Headers;
+};
+export type replaceCrawlerJobAnalysisResponseError = (replaceCrawlerJobAnalysisResponse400 | replaceCrawlerJobAnalysisResponse401 | replaceCrawlerJobAnalysisResponse404 | replaceCrawlerJobAnalysisResponse409) & {
+  headers: Headers;
+};
+
+export type replaceCrawlerJobAnalysisResponse = (replaceCrawlerJobAnalysisResponseSuccess | replaceCrawlerJobAnalysisResponseError)
+
+export const getReplaceCrawlerJobAnalysisUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}/analysis`
+}
+
+/**
+ *
+ *             크롤러가 만든 공고 분석을 저장합니다. 이미 있으면 바꿉니다.
+ *             분석 대상을 받은 뒤 운영자가 본문을 고쳤으면 `contentHash`가 지금 본문과 달라 409로 거절합니다.
+ *             그 공고는 다음 대상 조회에 다시 나옵니다.
+ * @summary 공고 분석 저장
+ */
+export const replaceCrawlerJobAnalysis = async (jobId: number,
+    crawlerJobAnalysisRequest: CrawlerJobAnalysisRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerJobAnalysisResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceCrawlerJobAnalysisResponse>(getReplaceCrawlerJobAnalysisUrl(jobId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(crawlerJobAnalysisRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceCrawlerJobAnalysisMutationKey = () => ['replaceCrawlerJobAnalysis'] as const;
+
+export const getReplaceCrawlerJobAnalysisMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, TError,ReplaceCrawlerJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, TError,ReplaceCrawlerJobAnalysisMutationVariables, TContext> => {
+
+const mutationKey = getReplaceCrawlerJobAnalysisMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, ReplaceCrawlerJobAnalysisMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  replaceCrawlerJobAnalysis(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceCrawlerJobAnalysisMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>>
+    export type ReplaceCrawlerJobAnalysisMutationBody = CrawlerJobAnalysisRequest
+    export type ReplaceCrawlerJobAnalysisMutationError = ErrorResponse
+    export type ReplaceCrawlerJobAnalysisMutationVariables = {jobId: number;data: CrawlerJobAnalysisRequest}
+
+    /**
+ * @summary 공고 분석 저장
+ */
+export const useReplaceCrawlerJobAnalysis = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, TError,ReplaceCrawlerJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>,
+        TError,
+        ReplaceCrawlerJobAnalysisMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceCrawlerJobAnalysisMutationOptions(options), queryClient);
     }
 
 export type replaceCrawlerBootcampResponse200 = {
@@ -1277,26 +1404,26 @@ export const useCreateCrawlerBootcamp = <TError = ErrorResponse,
       return useMutation(getCreateCrawlerBootcampMutationOptions(options), queryClient);
     }
 
-export type listNoticesResponse200 = {
-  data: SuccessResponsePageResponseAdminNoticeSummaryResponse
+export type listAnnouncementsResponse200 = {
+  data: SuccessResponsePageResponseAdminAnnouncementSummaryResponse
   status: 200
 }
 
-export type listNoticesResponse400 = {
+export type listAnnouncementsResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type listNoticesResponseSuccess = (listNoticesResponse200) & {
+export type listAnnouncementsResponseSuccess = (listAnnouncementsResponse200) & {
   headers: Headers;
 };
-export type listNoticesResponseError = (listNoticesResponse400) & {
+export type listAnnouncementsResponseError = (listAnnouncementsResponse400) & {
   headers: Headers;
 };
 
-export type listNoticesResponse = (listNoticesResponseSuccess | listNoticesResponseError)
+export type listAnnouncementsResponse = (listAnnouncementsResponseSuccess | listAnnouncementsResponseError)
 
-export const getListNoticesUrl = (params?: ListNoticesParams,) => {
+export const getListAnnouncementsUrl = (params?: ListAnnouncementsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1308,7 +1435,7 @@ export const getListNoticesUrl = (params?: ListNoticesParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/admin/notices?${stringifiedParams}` : `/api/v1/admin/notices`
+  return stringifiedParams.length > 0 ? `/api/v1/admin/announcements?${stringifiedParams}` : `/api/v1/admin/announcements`
 }
 
 /**
@@ -1320,9 +1447,9 @@ export const getListNoticesUrl = (params?: ListNoticesParams,) => {
  *             목록에는 본문을 싣지 않습니다.
  * @summary 공지사항 목록 조회
  */
-export const listNotices = async (params?: ListNoticesParams, options?: Parameters<typeof httpClient>[1]): Promise<listNoticesResponse> => {
+export const listAnnouncements = async (params?: ListAnnouncementsParams, options?: Parameters<typeof httpClient>[1]): Promise<listAnnouncementsResponse> => {
 
-  return httpClient<listNoticesResponse>(getListNoticesUrl(params),
+  return httpClient<listAnnouncementsResponse>(getListAnnouncementsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1335,69 +1462,69 @@ export const listNotices = async (params?: ListNoticesParams, options?: Paramete
 
 
 
-export const getListNoticesQueryKey = (params?: ListNoticesParams,) => {
+export const getListAnnouncementsQueryKey = (params?: ListAnnouncementsParams,) => {
     return [
-    `/api/v1/admin/notices`, ...(params ? [params] : [])
+    `/api/v1/admin/announcements`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListNoticesQueryOptions = <TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getListAnnouncementsQueryOptions = <TData = Awaited<ReturnType<typeof listAnnouncements>>, TError = ErrorResponse>(params?: ListAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListNoticesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListAnnouncementsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNotices>>> = ({ signal }) => listNotices(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnnouncements>>> = ({ signal }) => listAnnouncements(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListNoticesQueryResult = NonNullable<Awaited<ReturnType<typeof listNotices>>>
-export type ListNoticesQueryError = ErrorResponse
+export type ListAnnouncementsQueryResult = NonNullable<Awaited<ReturnType<typeof listAnnouncements>>>
+export type ListAnnouncementsQueryError = ErrorResponse
 
 
-export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
- params: undefined |  ListNoticesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>> & Pick<
+export function useListAnnouncements<TData = Awaited<ReturnType<typeof listAnnouncements>>, TError = ErrorResponse>(
+ params: undefined |  ListAnnouncementsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listNotices>>,
+          Awaited<ReturnType<typeof listAnnouncements>>,
           TError,
-          Awaited<ReturnType<typeof listNotices>>
+          Awaited<ReturnType<typeof listAnnouncements>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
- params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>> & Pick<
+export function useListAnnouncements<TData = Awaited<ReturnType<typeof listAnnouncements>>, TError = ErrorResponse>(
+ params?: ListAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listNotices>>,
+          Awaited<ReturnType<typeof listAnnouncements>>,
           TError,
-          Awaited<ReturnType<typeof listNotices>>
+          Awaited<ReturnType<typeof listAnnouncements>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
- params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAnnouncements<TData = Awaited<ReturnType<typeof listAnnouncements>>, TError = ErrorResponse>(
+ params?: ListAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 공지사항 목록 조회
  */
 
-export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, TError = ErrorResponse>(
- params?: ListNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listNotices>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAnnouncements<TData = Awaited<ReturnType<typeof listAnnouncements>>, TError = ErrorResponse>(
+ params?: ListAnnouncementsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAnnouncements>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListNoticesQueryOptions(params,options)
+  const queryOptions = getListAnnouncementsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1410,31 +1537,31 @@ export function useListNotices<TData = Awaited<ReturnType<typeof listNotices>>, 
 
 
 
-export type createNoticeResponse201 = {
-  data: SuccessResponseAdminNoticeDetailResponse
+export type createAnnouncementResponse201 = {
+  data: SuccessResponseAdminAnnouncementDetailResponse
   status: 201
 }
 
-export type createNoticeResponse400 = {
+export type createAnnouncementResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type createNoticeResponseSuccess = (createNoticeResponse201) & {
+export type createAnnouncementResponseSuccess = (createAnnouncementResponse201) & {
   headers: Headers;
 };
-export type createNoticeResponseError = (createNoticeResponse400) & {
+export type createAnnouncementResponseError = (createAnnouncementResponse400) & {
   headers: Headers;
 };
 
-export type createNoticeResponse = (createNoticeResponseSuccess | createNoticeResponseError)
+export type createAnnouncementResponse = (createAnnouncementResponseSuccess | createAnnouncementResponseError)
 
-export const getCreateNoticeUrl = () => {
-
-
+export const getCreateAnnouncementUrl = () => {
 
 
-  return `/api/v1/admin/notices`
+
+
+  return `/api/v1/admin/announcements`
 }
 
 /**
@@ -1443,7 +1570,7 @@ export const getCreateNoticeUrl = () => {
  *             content는 Lexical EditorState JSON 문자열이며 200,000자 이하여야 합니다.
  * @summary 공지사항 등록
  */
-export const createNotice = async (createAdminNoticeRequest: CreateAdminNoticeRequest, options?: Parameters<typeof httpClient>[1]): Promise<createNoticeResponse> => {
+export const createAnnouncement = async (createAdminAnnouncementRequest: CreateAdminAnnouncementRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAnnouncementResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1451,12 +1578,12 @@ export const createNotice = async (createAdminNoticeRequest: CreateAdminNoticeRe
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<createNoticeResponse>(getCreateNoticeUrl(),
+return httpClient<createAnnouncementResponse>(getCreateAnnouncementUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(createAdminNoticeRequest)
+    body: JSON.stringify(createAdminAnnouncementRequest)
   }
 );}
 
@@ -1464,13 +1591,13 @@ return httpClient<createNoticeResponse>(getCreateNoticeUrl(),
 
 
 
-export const getCreateNoticeMutationKey = () => ['createNotice'] as const;
+export const getCreateAnnouncementMutationKey = () => ['createAnnouncement'] as const;
 
-export const getCreateNoticeMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNotice>>, TError,CreateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof createNotice>>, TError,CreateNoticeMutationVariables, TContext> => {
+export const getCreateAnnouncementMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAnnouncement>>, TError,CreateAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAnnouncement>>, TError,CreateAnnouncementMutationVariables, TContext> => {
 
-const mutationKey = getCreateNoticeMutationKey();
+const mutationKey = getCreateAnnouncementMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1480,10 +1607,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNotice>>, CreateNoticeMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAnnouncement>>, CreateAnnouncementMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  createNotice(data,requestOptions)
+          return  createAnnouncement(data,requestOptions)
         }
 
 
@@ -1493,351 +1620,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof createNotice>>>
-    export type CreateNoticeMutationBody = CreateAdminNoticeRequest
-    export type CreateNoticeMutationError = ErrorResponse
-    export type CreateNoticeMutationVariables = {data: CreateAdminNoticeRequest}
+    export type CreateAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof createAnnouncement>>>
+    export type CreateAnnouncementMutationBody = CreateAdminAnnouncementRequest
+    export type CreateAnnouncementMutationError = ErrorResponse
+    export type CreateAnnouncementMutationVariables = {data: CreateAdminAnnouncementRequest}
 
     /**
  * @summary 공지사항 등록
  */
-export const useCreateNotice = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNotice>>, TError,CreateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useCreateAnnouncement = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAnnouncement>>, TError,CreateAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createNotice>>,
+        Awaited<ReturnType<typeof createAnnouncement>>,
         TError,
-        CreateNoticeMutationVariables,
+        CreateAnnouncementMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateNoticeMutationOptions(options), queryClient);
-    }
-
-export type decideReviewResponse200 = {
-  data: SuccessResponseAdminReviewDecisionResponse
-  status: 200
-}
-
-export type decideReviewResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type decideReviewResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type decideReviewResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type decideReviewResponseSuccess = (decideReviewResponse200) & {
-  headers: Headers;
-};
-export type decideReviewResponseError = (decideReviewResponse400 | decideReviewResponse404 | decideReviewResponse409) & {
-  headers: Headers;
-};
-
-export type decideReviewResponse = (decideReviewResponseSuccess | decideReviewResponseError)
-
-export const getDecideReviewUrl = (type: string,
-    id: number,) => {
-
-
-
-
-  return `/api/v1/admin/review-queue/${type}/${id}`
-}
-
-/**
- *
- *             decision은 APPROVED 또는 REJECTED입니다. REJECTED에는 reason이 필요합니다.
- *             승인하면 곧바로 노출되고 반려 기록을 지웁니다. 반려하면 비노출로 두고 반려 기록을 남기며,
- *             이미 반려한 대상을 다시 반려하면 사유를 바꿉니다.
- *             반려 사유를 기업회원에게 전달하는 기능은 아직 없습니다.
- * @summary 검수 판정
- */
-export const decideReview = async (type: string,
-    id: number,
-    decideReviewRequest: DecideReviewRequest, options?: Parameters<typeof httpClient>[1]): Promise<decideReviewResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<decideReviewResponse>(getDecideReviewUrl(type,id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(decideReviewRequest)
-  }
-);}
-
-
-
-
-
-export const getDecideReviewMutationKey = () => ['decideReview'] as const;
-
-export const getDecideReviewMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideReview>>, TError,DecideReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof decideReview>>, TError,DecideReviewMutationVariables, TContext> => {
-
-const mutationKey = getDecideReviewMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideReview>>, DecideReviewMutationVariables> = (props) => {
-          const {type,id,data} = props ?? {};
-
-          return  decideReview(type,id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DecideReviewMutationResult = NonNullable<Awaited<ReturnType<typeof decideReview>>>
-    export type DecideReviewMutationBody = DecideReviewRequest
-    export type DecideReviewMutationError = ErrorResponse
-    export type DecideReviewMutationVariables = {type: string;id: number;data: DecideReviewRequest}
-
-    /**
- * @summary 검수 판정
- */
-export const useDecideReview = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideReview>>, TError,DecideReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof decideReview>>,
-        TError,
-        DecideReviewMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDecideReviewMutationOptions(options), queryClient);
-    }
-
-export type undoReviewResponse200 = {
-  data: SuccessResponseAdminReviewDecisionResponse
-  status: 200
-}
-
-export type undoReviewResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type undoReviewResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type undoReviewResponseSuccess = (undoReviewResponse200) & {
-  headers: Headers;
-};
-export type undoReviewResponseError = (undoReviewResponse404 | undoReviewResponse409) & {
-  headers: Headers;
-};
-
-export type undoReviewResponse = (undoReviewResponseSuccess | undoReviewResponseError)
-
-export const getUndoReviewUrl = (type: string,
-    id: number,) => {
-
-
-
-
-  return `/api/v1/admin/review-queue/${type}/${id}/undo`
-}
-
-/**
- * 저장한 판정을 검수 대기로 되돌립니다. 비노출로 바뀌고 반려 기록을 지웁니다.
- * @summary 검수 판정 되돌리기
- */
-export const undoReview = async (type: string,
-    id: number, options?: Parameters<typeof httpClient>[1]): Promise<undoReviewResponse> => {
-
-  return httpClient<undoReviewResponse>(getUndoReviewUrl(type,id),
-  {
-    ...options,
-    method: 'PATCH'
-
-
-  }
-);}
-
-
-
-
-
-export const getUndoReviewMutationKey = () => ['undoReview'] as const;
-
-export const getUndoReviewMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoReview>>, TError,UndoReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof undoReview>>, TError,UndoReviewMutationVariables, TContext> => {
-
-const mutationKey = getUndoReviewMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoReview>>, UndoReviewMutationVariables> = (props) => {
-          const {type,id} = props ?? {};
-
-          return  undoReview(type,id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UndoReviewMutationResult = NonNullable<Awaited<ReturnType<typeof undoReview>>>
-
-    export type UndoReviewMutationError = ErrorResponse
-    export type UndoReviewMutationVariables = {type: string;id: number}
-
-    /**
- * @summary 검수 판정 되돌리기
- */
-export const useUndoReview = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoReview>>, TError,UndoReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof undoReview>>,
-        TError,
-        UndoReviewMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUndoReviewMutationOptions(options), queryClient);
-    }
-
-export type updateRejectionResponse200 = {
-  data: SuccessResponseAdminRejectionResponse
-  status: 200
-}
-
-export type updateRejectionResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type updateRejectionResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type updateRejectionResponseSuccess = (updateRejectionResponse200) & {
-  headers: Headers;
-};
-export type updateRejectionResponseError = (updateRejectionResponse400 | updateRejectionResponse404) & {
-  headers: Headers;
-};
-
-export type updateRejectionResponse = (updateRejectionResponseSuccess | updateRejectionResponseError)
-
-export const getUpdateRejectionUrl = (type: string,
-    id: number,) => {
-
-
-
-
-  return `/api/v1/admin/rejections/${type}/${id}`
-}
-
-/**
- *
- *             반려 사유를 바꾸고 사유 수정 일시(reasonUpdatedAt)를 기록합니다. 사유를 비울 수는 없습니다.
- *             고친 사유를 기업회원에게 다시 전달하는 기능은 아직 없습니다.
- * @summary 반려 사유 수정
- */
-export const updateRejection = async (type: string,
-    id: number,
-    updateRejectionReasonRequest: UpdateRejectionReasonRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateRejectionResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<updateRejectionResponse>(getUpdateRejectionUrl(type,id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(updateRejectionReasonRequest)
-  }
-);}
-
-
-
-
-
-export const getUpdateRejectionMutationKey = () => ['updateRejection'] as const;
-
-export const getUpdateRejectionMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRejection>>, TError,UpdateRejectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateRejection>>, TError,UpdateRejectionMutationVariables, TContext> => {
-
-const mutationKey = getUpdateRejectionMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRejection>>, UpdateRejectionMutationVariables> = (props) => {
-          const {type,id,data} = props ?? {};
-
-          return  updateRejection(type,id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateRejectionMutationResult = NonNullable<Awaited<ReturnType<typeof updateRejection>>>
-    export type UpdateRejectionMutationBody = UpdateRejectionReasonRequest
-    export type UpdateRejectionMutationError = ErrorResponse
-    export type UpdateRejectionMutationVariables = {type: string;id: number;data: UpdateRejectionReasonRequest}
-
-    /**
- * @summary 반려 사유 수정
- */
-export const useUpdateRejection = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRejection>>, TError,UpdateRejectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateRejection>>,
-        TError,
-        UpdateRejectionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateRejectionMutationOptions(options), queryClient);
+      return useMutation(getCreateAnnouncementMutationOptions(options), queryClient);
     }
 
 export type updateRecruitmentPostVisibilitiesResponse200 = {
@@ -1946,328 +1745,6 @@ export const useUpdateRecruitmentPostVisibilities = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateRecruitmentPostVisibilitiesMutationOptions(options), queryClient);
-    }
-
-export type getNoticeResponse200 = {
-  data: SuccessResponseAdminNoticeDetailResponse
-  status: 200
-}
-
-export type getNoticeResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type getNoticeResponseSuccess = (getNoticeResponse200) & {
-  headers: Headers;
-};
-export type getNoticeResponseError = (getNoticeResponse404) & {
-  headers: Headers;
-};
-
-export type getNoticeResponse = (getNoticeResponseSuccess | getNoticeResponseError)
-
-export const getGetNoticeUrl = (noticeId: number,) => {
-
-
-
-
-  return `/api/v1/admin/notices/${noticeId}`
-}
-
-/**
- * @summary 공지사항 상세 조회
- */
-export const getNotice = async (noticeId: number, options?: Parameters<typeof httpClient>[1]): Promise<getNoticeResponse> => {
-
-  return httpClient<getNoticeResponse>(getGetNoticeUrl(noticeId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetNoticeQueryKey = (noticeId: number,) => {
-    return [
-    `/api/v1/admin/notices/${noticeId}`
-    ] as const;
-    }
-
-
-export const getGetNoticeQueryOptions = <TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetNoticeQueryKey(noticeId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotice>>> = ({ signal }) => getNotice(noticeId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: noticeId !== null && noticeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetNoticeQueryResult = NonNullable<Awaited<ReturnType<typeof getNotice>>>
-export type GetNoticeQueryError = ErrorResponse
-
-
-export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
- noticeId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNotice>>,
-          TError,
-          Awaited<ReturnType<typeof getNotice>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
- noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNotice>>,
-          TError,
-          Awaited<ReturnType<typeof getNotice>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
- noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 공지사항 상세 조회
- */
-
-export function useGetNotice<TData = Awaited<ReturnType<typeof getNotice>>, TError = ErrorResponse>(
- noticeId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotice>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetNoticeQueryOptions(noticeId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type deleteNoticeResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type deleteNoticeResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteNoticeResponseSuccess = (deleteNoticeResponse200) & {
-  headers: Headers;
-};
-export type deleteNoticeResponseError = (deleteNoticeResponse404) & {
-  headers: Headers;
-};
-
-export type deleteNoticeResponse = (deleteNoticeResponseSuccess | deleteNoticeResponseError)
-
-export const getDeleteNoticeUrl = (noticeId: number,) => {
-
-
-
-
-  return `/api/v1/admin/notices/${noticeId}`
-}
-
-/**
- * 소프트 삭제합니다. 이미 삭제한 공지를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
- * @summary 공지사항 삭제
- */
-export const deleteNotice = async (noticeId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteNoticeResponse> => {
-
-  return httpClient<deleteNoticeResponse>(getDeleteNoticeUrl(noticeId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteNoticeMutationKey = () => ['deleteNotice'] as const;
-
-export const getDeleteNoticeMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNotice>>, TError,DeleteNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteNotice>>, TError,DeleteNoticeMutationVariables, TContext> => {
-
-const mutationKey = getDeleteNoticeMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteNotice>>, DeleteNoticeMutationVariables> = (props) => {
-          const {noticeId} = props ?? {};
-
-          return  deleteNotice(noticeId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteNotice>>>
-
-    export type DeleteNoticeMutationError = ErrorResponse
-    export type DeleteNoticeMutationVariables = {noticeId: number}
-
-    /**
- * @summary 공지사항 삭제
- */
-export const useDeleteNotice = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNotice>>, TError,DeleteNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteNotice>>,
-        TError,
-        DeleteNoticeMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteNoticeMutationOptions(options), queryClient);
-    }
-
-export type updateNoticeResponse200 = {
-  data: SuccessResponseAdminNoticeDetailResponse
-  status: 200
-}
-
-export type updateNoticeResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type updateNoticeResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type updateNoticeResponseSuccess = (updateNoticeResponse200) & {
-  headers: Headers;
-};
-export type updateNoticeResponseError = (updateNoticeResponse400 | updateNoticeResponse404) & {
-  headers: Headers;
-};
-
-export type updateNoticeResponse = (updateNoticeResponseSuccess | updateNoticeResponseError)
-
-export const getUpdateNoticeUrl = (noticeId: number,) => {
-
-
-
-
-  return `/api/v1/admin/notices/${noticeId}`
-}
-
-/**
- *
- *             보낸 값만 바꾸고 수정된 공지 전체를 반환합니다. 제목과 본문은 비울 수 없습니다.
- *             노출(visibility)과 상단 고정(pinned)도 이 API로 바꿉니다.
- * @summary 공지사항 수정
- */
-export const updateNotice = async (noticeId: number,
-    updateAdminNoticeRequest: UpdateAdminNoticeRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateNoticeResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<updateNoticeResponse>(getUpdateNoticeUrl(noticeId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(updateAdminNoticeRequest)
-  }
-);}
-
-
-
-
-
-export const getUpdateNoticeMutationKey = () => ['updateNotice'] as const;
-
-export const getUpdateNoticeMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotice>>, TError,UpdateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateNotice>>, TError,UpdateNoticeMutationVariables, TContext> => {
-
-const mutationKey = getUpdateNoticeMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateNotice>>, UpdateNoticeMutationVariables> = (props) => {
-          const {noticeId,data} = props ?? {};
-
-          return  updateNotice(noticeId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof updateNotice>>>
-    export type UpdateNoticeMutationBody = UpdateAdminNoticeRequest
-    export type UpdateNoticeMutationError = ErrorResponse
-    export type UpdateNoticeMutationVariables = {noticeId: number;data: UpdateAdminNoticeRequest}
-
-    /**
- * @summary 공지사항 수정
- */
-export const useUpdateNotice = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotice>>, TError,UpdateNoticeMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateNotice>>,
-        TError,
-        UpdateNoticeMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateNoticeMutationOptions(options), queryClient);
     }
 
 export type getJobResponse200 = {
@@ -2527,7 +2004,7 @@ export const getUpdateJobUrl = (jobId: number,) => {
  *
  *             보낸 값만 바꾸고 수정된 공고 전체를 반환합니다.
  *
- *             reviewStatus는 APPROVED나 PENDING만 보낼 수 있습니다. 반려는 검수 화면(PATCH /review-queue)에서 사유와 함께 처리합니다.
+ *             reviewStatus는 APPROVED나 PENDING만 보낼 수 있습니다. 반려는 검수 화면(PATCH /api/v1/admin/content-reviews)에서 사유와 함께 처리합니다.
  *             승인하면 곧바로 노출되고, 검수 대기로 되돌리면 노출이 꺼지며 반려 기록이 지워집니다.
  *             검수 상태를 먼저 반영한 뒤 visibility를 반영합니다.
  *             기업회원 공고는 승인 전에 VISIBLE로 바꿀 수 없습니다. 크롤링·고용24 수집분은 검수 상태를 바꿀 수 없습니다.
@@ -2650,7 +2127,7 @@ export const getUpdateJobVisibilitiesUrl = () => {
  *             성공하면 data 없이 응답합니다. 이미 그 노출인 공고는 건드리지 않고 성공으로 보며, 같은 요청을 반복해도 결과가 같습니다.
  *
  *             하나라도 바꿀 수 없으면 아무것도 바꾸지 않습니다. 없거나 삭제된 공고가 있으면 404이며 message 끝에 그 식별자를 담습니다.
- *             승인 전 기업회원 공고나 보관된 공고를 VISIBLE로 바꾸려 하면 409입니다.
+ *             승인 전 기업회원 공고를 VISIBLE로 바꾸려 하면 409입니다.
  *             검수 상태는 바꾸지 않습니다.
  * @summary 채용공고 노출 일괄 변경
  */
@@ -2721,6 +2198,442 @@ export const useUpdateJobVisibilities = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateJobVisibilitiesMutationOptions(options), queryClient);
+    }
+
+export type decideContentReviewResponse200 = {
+  data: SuccessResponseAdminContentReviewDecisionResponse
+  status: 200
+}
+
+export type decideContentReviewResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type decideContentReviewResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type decideContentReviewResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type decideContentReviewResponseSuccess = (decideContentReviewResponse200) & {
+  headers: Headers;
+};
+export type decideContentReviewResponseError = (decideContentReviewResponse400 | decideContentReviewResponse404 | decideContentReviewResponse409) & {
+  headers: Headers;
+};
+
+export type decideContentReviewResponse = (decideContentReviewResponseSuccess | decideContentReviewResponseError)
+
+export const getDecideContentReviewUrl = (type: string,
+    id: number,) => {
+
+
+
+
+  return `/api/v1/admin/content-reviews/${type}/${id}`
+}
+
+/**
+ *
+ *             decision은 APPROVED 또는 REJECTED입니다. REJECTED에는 reason이 필요합니다.
+ *             승인하면 곧바로 노출되고 반려 기록을 지웁니다. 반려하면 비노출로 두고 반려 기록을 남기며,
+ *             이미 반려한 대상을 다시 반려하면 사유를 바꿉니다.
+ *             반려 사유를 기업회원에게 전달하는 기능은 아직 없습니다.
+ * @summary 검수 판정
+ */
+export const decideContentReview = async (type: string,
+    id: number,
+    decideReviewRequest: DecideReviewRequest, options?: Parameters<typeof httpClient>[1]): Promise<decideContentReviewResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<decideContentReviewResponse>(getDecideContentReviewUrl(type,id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(decideReviewRequest)
+  }
+);}
+
+
+
+
+
+export const getDecideContentReviewMutationKey = () => ['decideContentReview'] as const;
+
+export const getDecideContentReviewMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideContentReview>>, TError,DecideContentReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideContentReview>>, TError,DecideContentReviewMutationVariables, TContext> => {
+
+const mutationKey = getDecideContentReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideContentReview>>, DecideContentReviewMutationVariables> = (props) => {
+          const {type,id,data} = props ?? {};
+
+          return  decideContentReview(type,id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideContentReviewMutationResult = NonNullable<Awaited<ReturnType<typeof decideContentReview>>>
+    export type DecideContentReviewMutationBody = DecideReviewRequest
+    export type DecideContentReviewMutationError = ErrorResponse
+    export type DecideContentReviewMutationVariables = {type: string;id: number;data: DecideReviewRequest}
+
+    /**
+ * @summary 검수 판정
+ */
+export const useDecideContentReview = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideContentReview>>, TError,DecideContentReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof decideContentReview>>,
+        TError,
+        DecideContentReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDecideContentReviewMutationOptions(options), queryClient);
+    }
+
+export type undoContentReviewResponse200 = {
+  data: SuccessResponseAdminContentReviewDecisionResponse
+  status: 200
+}
+
+export type undoContentReviewResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type undoContentReviewResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type undoContentReviewResponseSuccess = (undoContentReviewResponse200) & {
+  headers: Headers;
+};
+export type undoContentReviewResponseError = (undoContentReviewResponse404 | undoContentReviewResponse409) & {
+  headers: Headers;
+};
+
+export type undoContentReviewResponse = (undoContentReviewResponseSuccess | undoContentReviewResponseError)
+
+export const getUndoContentReviewUrl = (type: string,
+    id: number,) => {
+
+
+
+
+  return `/api/v1/admin/content-reviews/${type}/${id}/undo`
+}
+
+/**
+ * 저장한 판정을 검수 대기로 되돌립니다. 비노출로 바뀌고 반려 기록을 지웁니다.
+ * @summary 검수 판정 되돌리기
+ */
+export const undoContentReview = async (type: string,
+    id: number, options?: Parameters<typeof httpClient>[1]): Promise<undoContentReviewResponse> => {
+
+  return httpClient<undoContentReviewResponse>(getUndoContentReviewUrl(type,id),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getUndoContentReviewMutationKey = () => ['undoContentReview'] as const;
+
+export const getUndoContentReviewMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoContentReview>>, TError,UndoContentReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof undoContentReview>>, TError,UndoContentReviewMutationVariables, TContext> => {
+
+const mutationKey = getUndoContentReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoContentReview>>, UndoContentReviewMutationVariables> = (props) => {
+          const {type,id} = props ?? {};
+
+          return  undoContentReview(type,id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoContentReviewMutationResult = NonNullable<Awaited<ReturnType<typeof undoContentReview>>>
+
+    export type UndoContentReviewMutationError = ErrorResponse
+    export type UndoContentReviewMutationVariables = {type: string;id: number}
+
+    /**
+ * @summary 검수 판정 되돌리기
+ */
+export const useUndoContentReview = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoContentReview>>, TError,UndoContentReviewMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof undoContentReview>>,
+        TError,
+        UndoContentReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUndoContentReviewMutationOptions(options), queryClient);
+    }
+
+export type updateContentRejectionResponse200 = {
+  data: SuccessResponseAdminContentRejectionResponse
+  status: 200
+}
+
+export type updateContentRejectionResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateContentRejectionResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateContentRejectionResponseSuccess = (updateContentRejectionResponse200) & {
+  headers: Headers;
+};
+export type updateContentRejectionResponseError = (updateContentRejectionResponse400 | updateContentRejectionResponse404) & {
+  headers: Headers;
+};
+
+export type updateContentRejectionResponse = (updateContentRejectionResponseSuccess | updateContentRejectionResponseError)
+
+export const getUpdateContentRejectionUrl = (type: string,
+    id: number,) => {
+
+
+
+
+  return `/api/v1/admin/content-rejections/${type}/${id}`
+}
+
+/**
+ *
+ *             반려 사유를 바꾸고 사유 수정 일시(reasonUpdatedAt)를 기록합니다. 사유를 비울 수는 없습니다.
+ *             고친 사유를 기업회원에게 다시 전달하는 기능은 아직 없습니다.
+ * @summary 반려 사유 수정
+ */
+export const updateContentRejection = async (type: string,
+    id: number,
+    updateRejectionReasonRequest: UpdateRejectionReasonRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateContentRejectionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateContentRejectionResponse>(getUpdateContentRejectionUrl(type,id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateRejectionReasonRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateContentRejectionMutationKey = () => ['updateContentRejection'] as const;
+
+export const getUpdateContentRejectionMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContentRejection>>, TError,UpdateContentRejectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateContentRejection>>, TError,UpdateContentRejectionMutationVariables, TContext> => {
+
+const mutationKey = getUpdateContentRejectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateContentRejection>>, UpdateContentRejectionMutationVariables> = (props) => {
+          const {type,id,data} = props ?? {};
+
+          return  updateContentRejection(type,id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateContentRejectionMutationResult = NonNullable<Awaited<ReturnType<typeof updateContentRejection>>>
+    export type UpdateContentRejectionMutationBody = UpdateRejectionReasonRequest
+    export type UpdateContentRejectionMutationError = ErrorResponse
+    export type UpdateContentRejectionMutationVariables = {type: string;id: number;data: UpdateRejectionReasonRequest}
+
+    /**
+ * @summary 반려 사유 수정
+ */
+export const useUpdateContentRejection = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContentRejection>>, TError,UpdateContentRejectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateContentRejection>>,
+        TError,
+        UpdateContentRejectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateContentRejectionMutationOptions(options), queryClient);
+    }
+
+export type updateConcernVisibilitiesResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type updateConcernVisibilitiesResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateConcernVisibilitiesResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateConcernVisibilitiesResponseSuccess = (updateConcernVisibilitiesResponse200) & {
+  headers: Headers;
+};
+export type updateConcernVisibilitiesResponseError = (updateConcernVisibilitiesResponse400 | updateConcernVisibilitiesResponse404) & {
+  headers: Headers;
+};
+
+export type updateConcernVisibilitiesResponse = (updateConcernVisibilitiesResponseSuccess | updateConcernVisibilitiesResponseError)
+
+export const getUpdateConcernVisibilitiesUrl = () => {
+
+
+
+
+  return `/api/v1/admin/concerns/visibility`
+}
+
+/**
+ *
+ *             ids의 고민글을 모두 visibility로 바꿉니다. 규칙은 채용공고 노출 일괄 변경과 같습니다.
+ *             한 번에 1~1000건을 보낼 수 있고, 하나라도 바꿀 수 없으면 아무것도 바꾸지 않습니다.
+ *             숨긴 고민글은 사용자 목록·인기 고민·상세·답변에서 없는 글과 같이 다루며, 운영자가 VISIBLE로 바꿔야 다시 나옵니다.
+ * @summary 취준고민 고민글 노출 일괄 변경
+ */
+export const updateConcernVisibilities = async (changeAdminConcernVisibilityRequest: ChangeAdminConcernVisibilityRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateConcernVisibilitiesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateConcernVisibilitiesResponse>(getUpdateConcernVisibilitiesUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(changeAdminConcernVisibilityRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateConcernVisibilitiesMutationKey = () => ['updateConcernVisibilities'] as const;
+
+export const getUpdateConcernVisibilitiesMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConcernVisibilities>>, TError,UpdateConcernVisibilitiesMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateConcernVisibilities>>, TError,UpdateConcernVisibilitiesMutationVariables, TContext> => {
+
+const mutationKey = getUpdateConcernVisibilitiesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateConcernVisibilities>>, UpdateConcernVisibilitiesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateConcernVisibilities(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateConcernVisibilitiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateConcernVisibilities>>>
+    export type UpdateConcernVisibilitiesMutationBody = ChangeAdminConcernVisibilityRequest
+    export type UpdateConcernVisibilitiesMutationError = ErrorResponse
+    export type UpdateConcernVisibilitiesMutationVariables = {data: ChangeAdminConcernVisibilityRequest}
+
+    /**
+ * @summary 취준고민 고민글 노출 일괄 변경
+ */
+export const useUpdateConcernVisibilities = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConcernVisibilities>>, TError,UpdateConcernVisibilitiesMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateConcernVisibilities>>,
+        TError,
+        UpdateConcernVisibilitiesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateConcernVisibilitiesMutationOptions(options), queryClient);
     }
 
 export type getBootcampResponse200 = {
@@ -3168,6 +3081,459 @@ export const useUpdateBootcampVisibilities = <TError = ErrorResponse,
       return useMutation(getUpdateBootcampVisibilitiesMutationOptions(options), queryClient);
     }
 
+export type getAnnouncementResponse200 = {
+  data: SuccessResponseAdminAnnouncementDetailResponse
+  status: 200
+}
+
+export type getAnnouncementResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getAnnouncementResponseSuccess = (getAnnouncementResponse200) & {
+  headers: Headers;
+};
+export type getAnnouncementResponseError = (getAnnouncementResponse404) & {
+  headers: Headers;
+};
+
+export type getAnnouncementResponse = (getAnnouncementResponseSuccess | getAnnouncementResponseError)
+
+export const getGetAnnouncementUrl = (announcementId: number,) => {
+
+
+
+
+  return `/api/v1/admin/announcements/${announcementId}`
+}
+
+/**
+ * @summary 공지사항 상세 조회
+ */
+export const getAnnouncement = async (announcementId: number, options?: Parameters<typeof httpClient>[1]): Promise<getAnnouncementResponse> => {
+
+  return httpClient<getAnnouncementResponse>(getGetAnnouncementUrl(announcementId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAnnouncementQueryKey = (announcementId: number,) => {
+    return [
+    `/api/v1/admin/announcements/${announcementId}`
+    ] as const;
+    }
+
+
+export const getGetAnnouncementQueryOptions = <TData = Awaited<ReturnType<typeof getAnnouncement>>, TError = ErrorResponse>(announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAnnouncementQueryKey(announcementId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnnouncement>>> = ({ signal }) => getAnnouncement(announcementId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: announcementId !== null && announcementId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAnnouncement>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAnnouncementQueryResult = NonNullable<Awaited<ReturnType<typeof getAnnouncement>>>
+export type GetAnnouncementQueryError = ErrorResponse
+
+
+export function useGetAnnouncement<TData = Awaited<ReturnType<typeof getAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnouncement>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnnouncement>>,
+          TError,
+          Awaited<ReturnType<typeof getAnnouncement>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAnnouncement<TData = Awaited<ReturnType<typeof getAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnouncement>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAnnouncement>>,
+          TError,
+          Awaited<ReturnType<typeof getAnnouncement>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAnnouncement<TData = Awaited<ReturnType<typeof getAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공지사항 상세 조회
+ */
+
+export function useGetAnnouncement<TData = Awaited<ReturnType<typeof getAnnouncement>>, TError = ErrorResponse>(
+ announcementId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnnouncement>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAnnouncementQueryOptions(announcementId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type deleteAnnouncementResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteAnnouncementResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteAnnouncementResponseSuccess = (deleteAnnouncementResponse200) & {
+  headers: Headers;
+};
+export type deleteAnnouncementResponseError = (deleteAnnouncementResponse404) & {
+  headers: Headers;
+};
+
+export type deleteAnnouncementResponse = (deleteAnnouncementResponseSuccess | deleteAnnouncementResponseError)
+
+export const getDeleteAnnouncementUrl = (announcementId: number,) => {
+
+
+
+
+  return `/api/v1/admin/announcements/${announcementId}`
+}
+
+/**
+ * 소프트 삭제합니다. 이미 삭제한 공지를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
+ * @summary 공지사항 삭제
+ */
+export const deleteAnnouncement = async (announcementId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteAnnouncementResponse> => {
+
+  return httpClient<deleteAnnouncementResponse>(getDeleteAnnouncementUrl(announcementId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAnnouncementMutationKey = () => ['deleteAnnouncement'] as const;
+
+export const getDeleteAnnouncementMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAnnouncement>>, TError,DeleteAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAnnouncement>>, TError,DeleteAnnouncementMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAnnouncementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAnnouncement>>, DeleteAnnouncementMutationVariables> = (props) => {
+          const {announcementId} = props ?? {};
+
+          return  deleteAnnouncement(announcementId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAnnouncement>>>
+
+    export type DeleteAnnouncementMutationError = ErrorResponse
+    export type DeleteAnnouncementMutationVariables = {announcementId: number}
+
+    /**
+ * @summary 공지사항 삭제
+ */
+export const useDeleteAnnouncement = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAnnouncement>>, TError,DeleteAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAnnouncement>>,
+        TError,
+        DeleteAnnouncementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAnnouncementMutationOptions(options), queryClient);
+    }
+
+export type updateAnnouncementResponse200 = {
+  data: SuccessResponseAdminAnnouncementDetailResponse
+  status: 200
+}
+
+export type updateAnnouncementResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateAnnouncementResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateAnnouncementResponseSuccess = (updateAnnouncementResponse200) & {
+  headers: Headers;
+};
+export type updateAnnouncementResponseError = (updateAnnouncementResponse400 | updateAnnouncementResponse404) & {
+  headers: Headers;
+};
+
+export type updateAnnouncementResponse = (updateAnnouncementResponseSuccess | updateAnnouncementResponseError)
+
+export const getUpdateAnnouncementUrl = (announcementId: number,) => {
+
+
+
+
+  return `/api/v1/admin/announcements/${announcementId}`
+}
+
+/**
+ *
+ *             보낸 값만 바꾸고 수정된 공지 전체를 반환합니다. 제목과 본문은 비울 수 없습니다.
+ *             노출(visibility)과 상단 고정(pinned)도 이 API로 바꿉니다.
+ * @summary 공지사항 수정
+ */
+export const updateAnnouncement = async (announcementId: number,
+    updateAdminAnnouncementRequest: UpdateAdminAnnouncementRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateAnnouncementResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateAnnouncementResponse>(getUpdateAnnouncementUrl(announcementId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateAdminAnnouncementRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateAnnouncementMutationKey = () => ['updateAnnouncement'] as const;
+
+export const getUpdateAnnouncementMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAnnouncement>>, TError,UpdateAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAnnouncement>>, TError,UpdateAnnouncementMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAnnouncementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAnnouncement>>, UpdateAnnouncementMutationVariables> = (props) => {
+          const {announcementId,data} = props ?? {};
+
+          return  updateAnnouncement(announcementId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof updateAnnouncement>>>
+    export type UpdateAnnouncementMutationBody = UpdateAdminAnnouncementRequest
+    export type UpdateAnnouncementMutationError = ErrorResponse
+    export type UpdateAnnouncementMutationVariables = {announcementId: number;data: UpdateAdminAnnouncementRequest}
+
+    /**
+ * @summary 공지사항 수정
+ */
+export const useUpdateAnnouncement = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAnnouncement>>, TError,UpdateAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateAnnouncement>>,
+        TError,
+        UpdateAnnouncementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAnnouncementMutationOptions(options), queryClient);
+    }
+
+export type listCrawlerJobAnalysisTargetsResponse200 = {
+  data: SuccessResponseListCrawlerJobAnalysisTargetResponse
+  status: 200
+}
+
+export type listCrawlerJobAnalysisTargetsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listCrawlerJobAnalysisTargetsResponseSuccess = (listCrawlerJobAnalysisTargetsResponse200) & {
+  headers: Headers;
+};
+export type listCrawlerJobAnalysisTargetsResponseError = (listCrawlerJobAnalysisTargetsResponse401) & {
+  headers: Headers;
+};
+
+export type listCrawlerJobAnalysisTargetsResponse = (listCrawlerJobAnalysisTargetsResponseSuccess | listCrawlerJobAnalysisTargetsResponseError)
+
+export const getListCrawlerJobAnalysisTargetsUrl = (params?: ListCrawlerJobAnalysisTargetsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/internal/jobs/analysis-targets?${stringifiedParams}` : `/api/v1/internal/jobs/analysis-targets`
+}
+
+/**
+ *
+ *             게시 중인 모집 중 채용공고 가운데 분석이 없거나 분석한 뒤로 본문이 바뀐 공고를 최근 것부터 줍니다.
+ *             크롤러가 등록한 공고만이 아니라 고용24·기업회원 공고도 들어 있습니다.
+ *             본문은 제목과 본문 여덟 칸이며, 응답의 `contentHash`를 분석을 보낼 때 그대로 돌려줍니다.
+ * @summary 공고 분석 대상 조회
+ */
+export const listCrawlerJobAnalysisTargets = async (params?: ListCrawlerJobAnalysisTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listCrawlerJobAnalysisTargetsResponse> => {
+
+  return httpClient<listCrawlerJobAnalysisTargetsResponse>(getListCrawlerJobAnalysisTargetsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCrawlerJobAnalysisTargetsQueryKey = (params?: ListCrawlerJobAnalysisTargetsParams,) => {
+    return [
+    `/api/v1/internal/jobs/analysis-targets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCrawlerJobAnalysisTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCrawlerJobAnalysisTargetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>> = ({ signal }) => listCrawlerJobAnalysisTargets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCrawlerJobAnalysisTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>>
+export type ListCrawlerJobAnalysisTargetsQueryError = ErrorResponse
+
+
+export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
+ params: undefined |  ListCrawlerJobAnalysisTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
+ params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
+ params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공고 분석 대상 조회
+ */
+
+export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
+ params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCrawlerJobAnalysisTargetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type getWork24ApiResponseResponse200 = {
   data: SuccessResponseJsonNode
   status: 200
@@ -3478,271 +3844,6 @@ export function useListServiceFeedbacks<TData = Awaited<ReturnType<typeof listSe
 
 
 
-export type listReviewQueueResponse200 = {
-  data: SuccessResponseListAdminReviewItemResponse
-  status: 200
-}
-
-export type listReviewQueueResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type listReviewQueueResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type listReviewQueueResponseSuccess = (listReviewQueueResponse200) & {
-  headers: Headers;
-};
-export type listReviewQueueResponseError = (listReviewQueueResponse401 | listReviewQueueResponse403) & {
-  headers: Headers;
-};
-
-export type listReviewQueueResponse = (listReviewQueueResponseSuccess | listReviewQueueResponseError)
-
-export const getListReviewQueueUrl = () => {
-
-
-
-
-  return `/api/v1/admin/review-queue`
-}
-
-/**
- *
- *             기업회원이 올린 채용공고와 부트캠프 중 검수 대기인 것을 페이지 없이 모두 반환합니다.
- *             등록일이 오래된 순이며, 두 종류를 같은 모양(제목·회사·meta·sections·원문)으로 맞춰 줍니다.
- * @summary 검수 대기 목록 조회
- */
-export const listReviewQueue = async ( options?: Parameters<typeof httpClient>[1]): Promise<listReviewQueueResponse> => {
-
-  return httpClient<listReviewQueueResponse>(getListReviewQueueUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListReviewQueueQueryKey = () => {
-    return [
-    `/api/v1/admin/review-queue`
-    ] as const;
-    }
-
-
-export const getListReviewQueueQueryOptions = <TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListReviewQueueQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewQueue>>> = ({ signal }) => listReviewQueue({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListReviewQueueQueryResult = NonNullable<Awaited<ReturnType<typeof listReviewQueue>>>
-export type ListReviewQueueQueryError = ErrorResponse
-
-
-export function useListReviewQueue<TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorResponse>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listReviewQueue>>,
-          TError,
-          Awaited<ReturnType<typeof listReviewQueue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListReviewQueue<TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listReviewQueue>>,
-          TError,
-          Awaited<ReturnType<typeof listReviewQueue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListReviewQueue<TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 검수 대기 목록 조회
- */
-
-export function useListReviewQueue<TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListReviewQueueQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type listRejectionsResponse200 = {
-  data: SuccessResponsePageResponseAdminRejectionResponse
-  status: 200
-}
-
-export type listRejectionsResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type listRejectionsResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type listRejectionsResponseSuccess = (listRejectionsResponse200) & {
-  headers: Headers;
-};
-export type listRejectionsResponseError = (listRejectionsResponse401 | listRejectionsResponse403) & {
-  headers: Headers;
-};
-
-export type listRejectionsResponse = (listRejectionsResponseSuccess | listRejectionsResponseError)
-
-export const getListRejectionsUrl = (params?: ListRejectionsParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/v1/admin/rejections?${stringifiedParams}` : `/api/v1/admin/rejections`
-}
-
-/**
- *
- *             반려 중인 채용공고와 부트캠프의 반려 기록을 최근 반려 순으로 반환합니다.
- *             반려한 뒤 삭제된 콘텐츠도 남기며 contentExists=false로 표시합니다.
- *             keyword는 제목·회사명·사유에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
- *             type(JOB·BOOTCAMP)을 보내지 않거나 빈 값을 보내면 두 종류를 모두 반환합니다.
- * @summary 반려 기록 목록 조회
- */
-export const listRejections = async (params?: ListRejectionsParams, options?: Parameters<typeof httpClient>[1]): Promise<listRejectionsResponse> => {
-
-  return httpClient<listRejectionsResponse>(getListRejectionsUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListRejectionsQueryKey = (params?: ListRejectionsParams,) => {
-    return [
-    `/api/v1/admin/rejections`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getListRejectionsQueryOptions = <TData = Awaited<ReturnType<typeof listRejections>>, TError = ErrorResponse>(params?: ListRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRejections>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListRejectionsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRejections>>> = ({ signal }) => listRejections(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRejections>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListRejectionsQueryResult = NonNullable<Awaited<ReturnType<typeof listRejections>>>
-export type ListRejectionsQueryError = ErrorResponse
-
-
-export function useListRejections<TData = Awaited<ReturnType<typeof listRejections>>, TError = ErrorResponse>(
- params: undefined |  ListRejectionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRejections>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listRejections>>,
-          TError,
-          Awaited<ReturnType<typeof listRejections>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListRejections<TData = Awaited<ReturnType<typeof listRejections>>, TError = ErrorResponse>(
- params?: ListRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRejections>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listRejections>>,
-          TError,
-          Awaited<ReturnType<typeof listRejections>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListRejections<TData = Awaited<ReturnType<typeof listRejections>>, TError = ErrorResponse>(
- params?: ListRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRejections>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 반려 기록 목록 조회
- */
-
-export function useListRejections<TData = Awaited<ReturnType<typeof listRejections>>, TError = ErrorResponse>(
- params?: ListRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRejections>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListRejectionsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
 export type listRecruitmentPostsResponse200 = {
   data: SuccessResponsePageResponseAdminRecruitmentPostSummaryResponse
   status: 200
@@ -3945,7 +4046,7 @@ export const getListJobsUrl = (params?: ListJobsParams,) => {
  *
  *             필터는 모두 AND로 묶이며 값을 보내지 않거나 빈 값을 보내면 그 조건을 적용하지 않습니다.
  *             keyword는 제목과 회사명에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
- *             visibility는 게시 중이면 VISIBLE, 초안·숨김·보관이면 HIDDEN입니다.
+ *             visibility는 게시 중이면 VISIBLE, 초안·숨김이면 HIDDEN입니다.
  *             source는 등록 경로입니다. COMPANY 비즈니스 등록, CRAWLER 크롤링, WORK24 고용24 수집입니다.
  *             recruitmentStatus는 마감 처리됐거나 모집 종료 일시가 지났으면 CLOSED, 그 밖에는 RECRUITING입니다. 종료 일시가 지난 공고는 매시 정각 자동 마감 작업이 CLOSED로 바꾸므로 그 전까지는 RECRUITING일 수 있습니다.
  *             jobField(직군), jobRole(직무)은 GET /api/v1/enums(사용자 API)의 JobField·JobRole 값을 보냅니다.
@@ -4168,6 +4269,654 @@ export function useListGeneralMembers<TData = Awaited<ReturnType<typeof listGene
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListGeneralMembersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listAdminEnumsResponse200 = {
+  data: SuccessResponseMapStringListAdminEnumOptionResponse
+  status: 200
+}
+
+export type listAdminEnumsResponseSuccess = (listAdminEnumsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listAdminEnumsResponse = (listAdminEnumsResponseSuccess)
+
+export const getListAdminEnumsUrl = () => {
+
+
+
+
+  return `/api/v1/admin/enums`
+}
+
+/**
+ *
+ *             관리자 API의 요청·응답에 나오는 enum을 enum 이름별로 묶어 선언 순서대로 반환합니다.
+ *             예: `data.JobEmploymentType[0]`은 `{"name": "FULL_TIME", "desc": "정규직", "parent": null}`입니다.
+ *             요청에는 `name`을 보내고 `desc`는 화면 라벨로만 씁니다.
+ *             `parent`는 JobRole처럼 다른 enum 값에 속하는 값의 상위 값 name이며, 그 밖에는 null입니다.
+ *             값은 enum의 전체 값이며, 목록 필터처럼 일부 값만 받는 곳의 범위는 해당 API 명세를 따릅니다.
+ * @summary enum 선택지 조회
+ */
+export const listAdminEnums = async ( options?: Parameters<typeof httpClient>[1]): Promise<listAdminEnumsResponse> => {
+
+  return httpClient<listAdminEnumsResponse>(getListAdminEnumsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminEnumsQueryKey = () => {
+    return [
+    `/api/v1/admin/enums`
+    ] as const;
+    }
+
+
+export const getListAdminEnumsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminEnums>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminEnums>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminEnumsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminEnums>>> = ({ signal }) => listAdminEnums({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminEnums>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAdminEnumsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminEnums>>>
+export type ListAdminEnumsQueryError = unknown
+
+
+export function useListAdminEnums<TData = Awaited<ReturnType<typeof listAdminEnums>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminEnums>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminEnums>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminEnums>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAdminEnums<TData = Awaited<ReturnType<typeof listAdminEnums>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminEnums>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdminEnums>>,
+          TError,
+          Awaited<ReturnType<typeof listAdminEnums>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAdminEnums<TData = Awaited<ReturnType<typeof listAdminEnums>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminEnums>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary enum 선택지 조회
+ */
+
+export function useListAdminEnums<TData = Awaited<ReturnType<typeof listAdminEnums>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdminEnums>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAdminEnumsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listContentReviewsResponse200 = {
+  data: SuccessResponseListAdminContentReviewItemResponse
+  status: 200
+}
+
+export type listContentReviewsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listContentReviewsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listContentReviewsResponseSuccess = (listContentReviewsResponse200) & {
+  headers: Headers;
+};
+export type listContentReviewsResponseError = (listContentReviewsResponse401 | listContentReviewsResponse403) & {
+  headers: Headers;
+};
+
+export type listContentReviewsResponse = (listContentReviewsResponseSuccess | listContentReviewsResponseError)
+
+export const getListContentReviewsUrl = () => {
+
+
+
+
+  return `/api/v1/admin/content-reviews`
+}
+
+/**
+ *
+ *             기업회원이 올린 채용공고와 부트캠프 중 검수 대기인 것을 페이지 없이 모두 반환합니다.
+ *             등록일이 오래된 순이며, 두 종류를 같은 모양(제목·회사·meta·sections·원문)으로 맞춰 줍니다.
+ * @summary 검수 대기 목록 조회
+ */
+export const listContentReviews = async ( options?: Parameters<typeof httpClient>[1]): Promise<listContentReviewsResponse> => {
+
+  return httpClient<listContentReviewsResponse>(getListContentReviewsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListContentReviewsQueryKey = () => {
+    return [
+    `/api/v1/admin/content-reviews`
+    ] as const;
+    }
+
+
+export const getListContentReviewsQueryOptions = <TData = Awaited<ReturnType<typeof listContentReviews>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentReviews>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListContentReviewsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listContentReviews>>> = ({ signal }) => listContentReviews({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listContentReviews>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListContentReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof listContentReviews>>>
+export type ListContentReviewsQueryError = ErrorResponse
+
+
+export function useListContentReviews<TData = Awaited<ReturnType<typeof listContentReviews>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentReviews>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listContentReviews>>,
+          TError,
+          Awaited<ReturnType<typeof listContentReviews>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListContentReviews<TData = Awaited<ReturnType<typeof listContentReviews>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentReviews>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listContentReviews>>,
+          TError,
+          Awaited<ReturnType<typeof listContentReviews>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListContentReviews<TData = Awaited<ReturnType<typeof listContentReviews>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentReviews>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 검수 대기 목록 조회
+ */
+
+export function useListContentReviews<TData = Awaited<ReturnType<typeof listContentReviews>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentReviews>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListContentReviewsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listContentRejectionsResponse200 = {
+  data: SuccessResponsePageResponseAdminContentRejectionResponse
+  status: 200
+}
+
+export type listContentRejectionsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listContentRejectionsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listContentRejectionsResponseSuccess = (listContentRejectionsResponse200) & {
+  headers: Headers;
+};
+export type listContentRejectionsResponseError = (listContentRejectionsResponse401 | listContentRejectionsResponse403) & {
+  headers: Headers;
+};
+
+export type listContentRejectionsResponse = (listContentRejectionsResponseSuccess | listContentRejectionsResponseError)
+
+export const getListContentRejectionsUrl = (params?: ListContentRejectionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/content-rejections?${stringifiedParams}` : `/api/v1/admin/content-rejections`
+}
+
+/**
+ *
+ *             반려 중인 채용공고와 부트캠프의 반려 기록을 최근 반려 순으로 반환합니다.
+ *             반려한 뒤 삭제된 콘텐츠도 남기며 contentExists=false로 표시합니다.
+ *             keyword는 제목·회사명·사유에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
+ *             type(JOB·BOOTCAMP)을 보내지 않거나 빈 값을 보내면 두 종류를 모두 반환합니다.
+ * @summary 반려 기록 목록 조회
+ */
+export const listContentRejections = async (params?: ListContentRejectionsParams, options?: Parameters<typeof httpClient>[1]): Promise<listContentRejectionsResponse> => {
+
+  return httpClient<listContentRejectionsResponse>(getListContentRejectionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListContentRejectionsQueryKey = (params?: ListContentRejectionsParams,) => {
+    return [
+    `/api/v1/admin/content-rejections`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListContentRejectionsQueryOptions = <TData = Awaited<ReturnType<typeof listContentRejections>>, TError = ErrorResponse>(params?: ListContentRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentRejections>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListContentRejectionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listContentRejections>>> = ({ signal }) => listContentRejections(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listContentRejections>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListContentRejectionsQueryResult = NonNullable<Awaited<ReturnType<typeof listContentRejections>>>
+export type ListContentRejectionsQueryError = ErrorResponse
+
+
+export function useListContentRejections<TData = Awaited<ReturnType<typeof listContentRejections>>, TError = ErrorResponse>(
+ params: undefined |  ListContentRejectionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentRejections>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listContentRejections>>,
+          TError,
+          Awaited<ReturnType<typeof listContentRejections>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListContentRejections<TData = Awaited<ReturnType<typeof listContentRejections>>, TError = ErrorResponse>(
+ params?: ListContentRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentRejections>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listContentRejections>>,
+          TError,
+          Awaited<ReturnType<typeof listContentRejections>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListContentRejections<TData = Awaited<ReturnType<typeof listContentRejections>>, TError = ErrorResponse>(
+ params?: ListContentRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentRejections>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 반려 기록 목록 조회
+ */
+
+export function useListContentRejections<TData = Awaited<ReturnType<typeof listContentRejections>>, TError = ErrorResponse>(
+ params?: ListContentRejectionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentRejections>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListContentRejectionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listConcernsResponse200 = {
+  data: SuccessResponsePageResponseAdminConcernSummaryResponse
+  status: 200
+}
+
+export type listConcernsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listConcernsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listConcernsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listConcernsResponseSuccess = (listConcernsResponse200) & {
+  headers: Headers;
+};
+export type listConcernsResponseError = (listConcernsResponse400 | listConcernsResponse401 | listConcernsResponse403) & {
+  headers: Headers;
+};
+
+export type listConcernsResponse = (listConcernsResponseSuccess | listConcernsResponseError)
+
+export const getListConcernsUrl = (params?: ListConcernsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/concerns?${stringifiedParams}` : `/api/v1/admin/concerns`
+}
+
+/**
+ *
+ *             노출 여부와 무관하게 삭제되지 않은 고민글을 반환합니다. 정렬은 채용공고·부트캠프 목록과 같습니다.
+ *
+ *             keyword는 제목에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
+ *             필터는 모두 AND로 묶이고 값을 보내지 않거나 빈 값을 보내면 그 조건을 적용하지 않습니다.
+ *             목록에는 본문을 싣지 않습니다. 마지막 페이지를 넘는 page는 빈 items를 반환합니다.
+ * @summary 취준고민 고민글 목록 조회
+ */
+export const listConcerns = async (params?: ListConcernsParams, options?: Parameters<typeof httpClient>[1]): Promise<listConcernsResponse> => {
+
+  return httpClient<listConcernsResponse>(getListConcernsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConcernsQueryKey = (params?: ListConcernsParams,) => {
+    return [
+    `/api/v1/admin/concerns`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListConcernsQueryOptions = <TData = Awaited<ReturnType<typeof listConcerns>>, TError = ErrorResponse>(params?: ListConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConcernsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConcerns>>> = ({ signal }) => listConcerns(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConcerns>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListConcernsQueryResult = NonNullable<Awaited<ReturnType<typeof listConcerns>>>
+export type ListConcernsQueryError = ErrorResponse
+
+
+export function useListConcerns<TData = Awaited<ReturnType<typeof listConcerns>>, TError = ErrorResponse>(
+ params: undefined |  ListConcernsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listConcerns>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listConcerns>>,
+          TError,
+          Awaited<ReturnType<typeof listConcerns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListConcerns<TData = Awaited<ReturnType<typeof listConcerns>>, TError = ErrorResponse>(
+ params?: ListConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listConcerns>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listConcerns>>,
+          TError,
+          Awaited<ReturnType<typeof listConcerns>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListConcerns<TData = Awaited<ReturnType<typeof listConcerns>>, TError = ErrorResponse>(
+ params?: ListConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 취준고민 고민글 목록 조회
+ */
+
+export function useListConcerns<TData = Awaited<ReturnType<typeof listConcerns>>, TError = ErrorResponse>(
+ params?: ListConcernsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listConcerns>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListConcernsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getConcernResponse200 = {
+  data: SuccessResponseAdminConcernDetailResponse
+  status: 200
+}
+
+export type getConcernResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getConcernResponseSuccess = (getConcernResponse200) & {
+  headers: Headers;
+};
+export type getConcernResponseError = (getConcernResponse404) & {
+  headers: Headers;
+};
+
+export type getConcernResponse = (getConcernResponseSuccess | getConcernResponseError)
+
+export const getGetConcernUrl = (concernId: number,) => {
+
+
+
+
+  return `/api/v1/admin/concerns/${concernId}`
+}
+
+/**
+ * 숨긴 고민글도 반환합니다. 사용자 상세와 달리 조회 수를 올리지 않습니다.
+ * @summary 취준고민 고민글 상세 조회
+ */
+export const getConcern = async (concernId: number, options?: Parameters<typeof httpClient>[1]): Promise<getConcernResponse> => {
+
+  return httpClient<getConcernResponse>(getGetConcernUrl(concernId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConcernQueryKey = (concernId: number,) => {
+    return [
+    `/api/v1/admin/concerns/${concernId}`
+    ] as const;
+    }
+
+
+export const getGetConcernQueryOptions = <TData = Awaited<ReturnType<typeof getConcern>>, TError = ErrorResponse>(concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConcern>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConcernQueryKey(concernId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConcern>>> = ({ signal }) => getConcern(concernId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: concernId !== null && concernId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConcern>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetConcernQueryResult = NonNullable<Awaited<ReturnType<typeof getConcern>>>
+export type GetConcernQueryError = ErrorResponse
+
+
+export function useGetConcern<TData = Awaited<ReturnType<typeof getConcern>>, TError = ErrorResponse>(
+ concernId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConcern>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getConcern>>,
+          TError,
+          Awaited<ReturnType<typeof getConcern>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetConcern<TData = Awaited<ReturnType<typeof getConcern>>, TError = ErrorResponse>(
+ concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConcern>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getConcern>>,
+          TError,
+          Awaited<ReturnType<typeof getConcern>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetConcern<TData = Awaited<ReturnType<typeof getConcern>>, TError = ErrorResponse>(
+ concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConcern>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 취준고민 고민글 상세 조회
+ */
+
+export function useGetConcern<TData = Awaited<ReturnType<typeof getConcern>>, TError = ErrorResponse>(
+ concernId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConcern>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetConcernQueryOptions(concernId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4457,6 +5206,8 @@ export const getReplaceCrawlerJobResponseMock = (overrideResponse: Partial<Extra
 
 export const getDeleteCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReplaceCrawlerJobAnalysisResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getReplaceCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getDeleteCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -4473,23 +5224,11 @@ export const getGetCrawlerBootcampResponseMock = (overrideResponse: Partial<Extr
 
 export const getCreateCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerBootcampRegistrationResponse, object>> = {}): SuccessResponseCrawlerBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getListNoticesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminNoticeSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminNoticeSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getCreateNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNoticeDetailResponse, object>> = {}): SuccessResponseAdminNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
-
-export const getDecideReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminReviewDecisionResponse, object>> = {}): SuccessResponseAdminReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
-
-export const getUndoReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminReviewDecisionResponse, object>> = {}): SuccessResponseAdminReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
-
-export const getUpdateRejectionResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminRejectionResponse, object>> = {}): SuccessResponseAdminRejectionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), reason: faker.string.alpha({length: {min: 10, max: 20}}), rejectedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reasonUpdatedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentExists: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getUpdateRecruitmentPostVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getGetNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNoticeDetailResponse, object>> = {}): SuccessResponseAdminNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
-
-export const getDeleteNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getUpdateNoticeResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNoticeDetailResponse, object>> = {}): SuccessResponseAdminNoticeDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
@@ -4499,6 +5238,14 @@ export const getUpdateJobResponseMock = (overrideResponse: Partial<Extract<Succe
 
 export const getUpdateJobVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getDecideContentReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminContentReviewDecisionResponse, object>> = {}): SuccessResponseAdminContentReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getUndoContentReviewResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminContentReviewDecisionResponse, object>> = {}): SuccessResponseAdminContentReviewDecisionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), reviewStatus: faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), remaining: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getUpdateContentRejectionResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminContentRejectionResponse, object>> = {}): SuccessResponseAdminContentRejectionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), reason: faker.string.alpha({length: {min: 10, max: 20}}), rejectedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reasonUpdatedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentExists: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getUpdateConcernVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getGetBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getDeleteBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -4507,19 +5254,35 @@ export const getUpdateBootcampResponseMock = (overrideResponse: Partial<Extract<
 
 export const getUpdateBootcampVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getGetAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getDeleteAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getListCrawlerJobAnalysisTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListCrawlerJobAnalysisTargetResponse, object>> = {}): SuccessResponseListCrawlerJobAnalysisTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), contentHash: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), undefined]), ...overrideResponse})
+
 export const getGetWork24ApiResponseResponseMock = (overrideResponse: Partial<Extract<SuccessResponseJsonNode, object>> = {}): SuccessResponseJsonNode => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getListServiceFeedbacksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminServiceFeedbackResponse, object>> = {}): SuccessResponsePageResponseAdminServiceFeedbackResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), satisfaction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), improvement: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
-
-export const getListReviewQueueResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminReviewItemResponse, object>> = {}): SuccessResponseListAdminReviewItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), meta: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), sections: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({field: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}})}))})), undefined]), ...overrideResponse})
-
-export const getListRejectionsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminRejectionResponse, object>> = {}): SuccessResponsePageResponseAdminRejectionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), reason: faker.string.alpha({length: {min: 10, max: 20}}), rejectedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reasonUpdatedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentExists: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminRecruitmentPostSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminRecruitmentPostSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MARKETING','ETC'] as const), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), authorUserId: faker.number.int(), authorNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminJobSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','AI_DATA','GAME','DESIGN','PLANNING_STRATEGY','MARKETING_ADVERTISING','MERCHANDISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','ACCOUNTING_TAX_FINANCE','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','MEDIA_ENTERTAINMENT','CUSTOMER_SERVICE_TM','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND','IT_FULLSTACK','IT_ANDROID','IT_IOS','IT_CROSS_PLATFORM','IT_DBA','IT_DEVOPS_SRE','IT_SYSTEM_NETWORK','IT_SYSTEM_SOFTWARE','IT_SOFTWARE_ENGINEER','IT_SECURITY','IT_EMBEDDED','IT_ROBOTICS_SOFTWARE','IT_QA','IT_IOT','IT_APPLICATION','IT_BLOCKCHAIN','IT_DEV_PM','IT_WEB_PUBLISHING','IT_XR_3D','IT_ERP_SAP','IT_GRAPHICS','IT_HARDWARE_ENGINEER','IT_ETC','AI_DATA_ANALYST','AI_DATA_SCIENTIST','AI_DATA_ENGINEER','AI_ML_ENGINEER','AI_MULTIMODAL_ENGINEER','AI_GENERATIVE_AI','AI_VISION_SPEECH','AI_AUTONOMOUS_DRIVING','AI_COMPUTER_VISION','AI_BUSINESS','AI_SERVICE_PLANNING','AI_RESEARCH','AI_NLP','AI_LLM','AI_MLOPS','AI_RAG','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_WEB','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','DESIGN_GRAPHIC_VISUAL','DESIGN_ILLUSTRATOR','DESIGN_BRANDING','DESIGN_SPACE_INTERIOR_VMD','DESIGN_INDUSTRIAL_PRODUCT','DESIGN_PACKAGE','DESIGN_ADVERTISING_CONTENT','DESIGN_VIDEO_MOTION','DESIGN_VFX_3D','DESIGN_PUBLISHING_EDITORIAL','DESIGN_ARCHITECTURE_LANDSCAPE','DESIGN_FASHION_TEXTILE','DESIGN_ETC','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_TECH_PLANNING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_FINANCE_INSURANCE','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_RECRUITER','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_IR_DISCLOSURE','ACCOUNTING_BOOKKEEPING','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_BROADCAST_WRITER','MEDIA_CINEMATOGRAPHER','MEDIA_VIDEO_EDITOR','MEDIA_CG_MOTION_GRAPHICS','MEDIA_SOUND_DESIGNER','MEDIA_REPORTER','MEDIA_ANNOUNCER_SHOW_HOST','MEDIA_VOICE_ACTOR_NARRATOR','MEDIA_CREATOR_INFLUENCER','MEDIA_MODEL_ACTOR','MEDIA_PHOTOGRAPHER','MEDIA_BROADCAST_ENGINEERING','MEDIA_TRANSMISSION_PROGRAMMING','MEDIA_ARTIST_MANAGEMENT','MEDIA_DISTRIBUTION_PRODUCTION','MEDIA_MUSIC_RECORDS','MEDIA_WEBTOON_WEB_NOVEL','MEDIA_PUBLISHING','MEDIA_TRANSLATION_INTERPRETATION','MEDIA_EXHIBITION_CURATOR','MEDIA_ETC','CS_INBOUND','CS_OUTBOUND','CS_CS','CS_CX_MANAGER','CS_ETC','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListGeneralMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminGeneralMemberResponse, object>> = {}): SuccessResponsePageResponseAdminGeneralMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), letsCareerUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListAdminEnumsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMapStringListAdminEnumOptionResponse, object>> = {}): SuccessResponseMapStringListAdminEnumOptionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{
+        [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), desc: faker.string.alpha({length: {min: 10, max: 20}}), parent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}))
+      }, undefined]), ...overrideResponse})
+
+export const getListContentReviewsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminContentReviewItemResponse, object>> = {}): SuccessResponseListAdminContentReviewItemResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), meta: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), sections: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({field: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}})}))})), undefined]), ...overrideResponse})
+
+export const getListContentRejectionsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminContentRejectionResponse, object>> = {}): SuccessResponsePageResponseAdminContentRejectionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), reason: faker.string.alpha({length: {min: 10, max: 20}}), rejectedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reasonUpdatedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentExists: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListConcernsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminConcernSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminConcernSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), authorUserId: faker.number.int(), authorNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetConcernResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminConcernDetailResponse, object>> = {}): SuccessResponseAdminConcernDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), authorUserId: faker.number.int(), authorNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getListCompanyMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminCompanyMemberResponse, object>> = {}): SuccessResponsePageResponseAdminCompanyMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), organizationName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerPhone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -4545,6 +5308,18 @@ export const getDeleteCrawlerJobMockHandler = (overrideResponse?: SuccessRespons
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteCrawlerJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceCrawlerJobAnalysisMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/internal/jobs/:jobId/analysis', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceCrawlerJobAnalysisResponseMock(),
       { status: 200
       })
   }, options)
@@ -4646,62 +5421,26 @@ export const getCreateCrawlerBootcampMockHandler = (overrideResponse?: SuccessRe
   }, options)
 }
 
-export const getListNoticesMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminNoticeSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminNoticeSummaryResponse> | SuccessResponsePageResponseAdminNoticeSummaryResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/notices', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+export const getListAnnouncementsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminAnnouncementSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminAnnouncementSummaryResponse> | SuccessResponsePageResponseAdminAnnouncementSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/announcements', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListNoticesResponseMock(),
+    : getListAnnouncementsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getCreateNoticeMockHandler = (overrideResponse?: SuccessResponseAdminNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAdminNoticeDetailResponse> | SuccessResponseAdminNoticeDetailResponse), options?: RequestHandlerOptions) => {
-  return http.post('*/api/v1/admin/notices', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+export const getCreateAnnouncementMockHandler = (overrideResponse?: SuccessResponseAdminAnnouncementDetailResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAdminAnnouncementDetailResponse> | SuccessResponseAdminAnnouncementDetailResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/announcements', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateNoticeResponseMock(),
+    : getCreateAnnouncementResponseMock(),
       { status: 201
-      })
-  }, options)
-}
-
-export const getDecideReviewMockHandler = (overrideResponse?: SuccessResponseAdminReviewDecisionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminReviewDecisionResponse> | SuccessResponseAdminReviewDecisionResponse), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/review-queue/:type/:id', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDecideReviewResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getUndoReviewMockHandler = (overrideResponse?: SuccessResponseAdminReviewDecisionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminReviewDecisionResponse> | SuccessResponseAdminReviewDecisionResponse), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/review-queue/:type/:id/undo', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUndoReviewResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getUpdateRejectionMockHandler = (overrideResponse?: SuccessResponseAdminRejectionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminRejectionResponse> | SuccessResponseAdminRejectionResponse), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/rejections/:type/:id', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUpdateRejectionResponseMock(),
-      { status: 200
       })
   }, options)
 }
@@ -4713,42 +5452,6 @@ export const getUpdateRecruitmentPostVisibilitiesMockHandler = (overrideResponse
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getUpdateRecruitmentPostVisibilitiesResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getGetNoticeMockHandler = (overrideResponse?: SuccessResponseAdminNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminNoticeDetailResponse> | SuccessResponseAdminNoticeDetailResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/notices/:noticeId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetNoticeResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getDeleteNoticeMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/admin/notices/:noticeId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteNoticeResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getUpdateNoticeMockHandler = (overrideResponse?: SuccessResponseAdminNoticeDetailResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminNoticeDetailResponse> | SuccessResponseAdminNoticeDetailResponse), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/notices/:noticeId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUpdateNoticeResponseMock(),
       { status: 200
       })
   }, options)
@@ -4802,6 +5505,54 @@ export const getUpdateJobVisibilitiesMockHandler = (overrideResponse?: SuccessRe
   }, options)
 }
 
+export const getDecideContentReviewMockHandler = (overrideResponse?: SuccessResponseAdminContentReviewDecisionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminContentReviewDecisionResponse> | SuccessResponseAdminContentReviewDecisionResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/content-reviews/:type/:id', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDecideContentReviewResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUndoContentReviewMockHandler = (overrideResponse?: SuccessResponseAdminContentReviewDecisionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminContentReviewDecisionResponse> | SuccessResponseAdminContentReviewDecisionResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/content-reviews/:type/:id/undo', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUndoContentReviewResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateContentRejectionMockHandler = (overrideResponse?: SuccessResponseAdminContentRejectionResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminContentRejectionResponse> | SuccessResponseAdminContentRejectionResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/content-rejections/:type/:id', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateContentRejectionResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateConcernVisibilitiesMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/concerns/visibility', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateConcernVisibilitiesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getGetBootcampMockHandler = (overrideResponse?: SuccessResponseAdminBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminBootcampDetailResponse> | SuccessResponseAdminBootcampDetailResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -4850,6 +5601,54 @@ export const getUpdateBootcampVisibilitiesMockHandler = (overrideResponse?: Succ
   }, options)
 }
 
+export const getGetAnnouncementMockHandler = (overrideResponse?: SuccessResponseAdminAnnouncementDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminAnnouncementDetailResponse> | SuccessResponseAdminAnnouncementDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/announcements/:announcementId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetAnnouncementResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteAnnouncementMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/announcements/:announcementId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteAnnouncementResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateAnnouncementMockHandler = (overrideResponse?: SuccessResponseAdminAnnouncementDetailResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminAnnouncementDetailResponse> | SuccessResponseAdminAnnouncementDetailResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/announcements/:announcementId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateAnnouncementResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListCrawlerJobAnalysisTargetsMockHandler = (overrideResponse?: SuccessResponseListCrawlerJobAnalysisTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListCrawlerJobAnalysisTargetResponse> | SuccessResponseListCrawlerJobAnalysisTargetResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/internal/jobs/analysis-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListCrawlerJobAnalysisTargetsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getGetWork24ApiResponseMockHandler = (overrideResponse?: SuccessResponseJsonNode | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseJsonNode> | SuccessResponseJsonNode), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/work24/:apiName', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -4869,30 +5668,6 @@ export const getListServiceFeedbacksMockHandler = (overrideResponse?: SuccessRes
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getListServiceFeedbacksResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListReviewQueueMockHandler = (overrideResponse?: SuccessResponseListAdminReviewItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAdminReviewItemResponse> | SuccessResponseListAdminReviewItemResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/review-queue', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListReviewQueueResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListRejectionsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminRejectionResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminRejectionResponse> | SuccessResponsePageResponseAdminRejectionResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/rejections', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListRejectionsResponseMock(),
       { status: 200
       })
   }, options)
@@ -4934,6 +5709,66 @@ export const getListGeneralMembersMockHandler = (overrideResponse?: SuccessRespo
   }, options)
 }
 
+export const getListAdminEnumsMockHandler = (overrideResponse?: SuccessResponseMapStringListAdminEnumOptionResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMapStringListAdminEnumOptionResponse> | SuccessResponseMapStringListAdminEnumOptionResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/enums', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListAdminEnumsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListContentReviewsMockHandler = (overrideResponse?: SuccessResponseListAdminContentReviewItemResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAdminContentReviewItemResponse> | SuccessResponseListAdminContentReviewItemResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/content-reviews', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListContentReviewsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListContentRejectionsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminContentRejectionResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminContentRejectionResponse> | SuccessResponsePageResponseAdminContentRejectionResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/content-rejections', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListContentRejectionsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListConcernsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminConcernSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminConcernSummaryResponse> | SuccessResponsePageResponseAdminConcernSummaryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/concerns', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListConcernsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetConcernMockHandler = (overrideResponse?: SuccessResponseAdminConcernDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminConcernDetailResponse> | SuccessResponseAdminConcernDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/concerns/:concernId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetConcernResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListCompanyMembersMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminCompanyMemberResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminCompanyMemberResponse> | SuccessResponsePageResponseAdminCompanyMemberResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/company-members', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -4960,6 +5795,7 @@ export const getListBootcampsMockHandler = (overrideResponse?: SuccessResponsePa
 export const getOgonggoAdminAPIMock = () => [
   getReplaceCrawlerJobMockHandler(),
   getDeleteCrawlerJobMockHandler(),
+  getReplaceCrawlerJobAnalysisMockHandler(),
   getReplaceCrawlerBootcampMockHandler(),
   getDeleteCrawlerBootcampMockHandler(),
   getListTodayJobsMockHandler(),
@@ -4968,30 +5804,35 @@ export const getOgonggoAdminAPIMock = () => [
   getCreateCrawlerJobMockHandler(),
   getGetCrawlerBootcampMockHandler(),
   getCreateCrawlerBootcampMockHandler(),
-  getListNoticesMockHandler(),
-  getCreateNoticeMockHandler(),
-  getDecideReviewMockHandler(),
-  getUndoReviewMockHandler(),
-  getUpdateRejectionMockHandler(),
+  getListAnnouncementsMockHandler(),
+  getCreateAnnouncementMockHandler(),
   getUpdateRecruitmentPostVisibilitiesMockHandler(),
-  getGetNoticeMockHandler(),
-  getDeleteNoticeMockHandler(),
-  getUpdateNoticeMockHandler(),
   getGetJobMockHandler(),
   getDeleteJobMockHandler(),
   getUpdateJobMockHandler(),
   getUpdateJobVisibilitiesMockHandler(),
+  getDecideContentReviewMockHandler(),
+  getUndoContentReviewMockHandler(),
+  getUpdateContentRejectionMockHandler(),
+  getUpdateConcernVisibilitiesMockHandler(),
   getGetBootcampMockHandler(),
   getDeleteBootcampMockHandler(),
   getUpdateBootcampMockHandler(),
   getUpdateBootcampVisibilitiesMockHandler(),
+  getGetAnnouncementMockHandler(),
+  getDeleteAnnouncementMockHandler(),
+  getUpdateAnnouncementMockHandler(),
+  getListCrawlerJobAnalysisTargetsMockHandler(),
   getGetWork24ApiResponseMockHandler(),
   getListServiceFeedbacksMockHandler(),
-  getListReviewQueueMockHandler(),
-  getListRejectionsMockHandler(),
   getListRecruitmentPostsMockHandler(),
   getListJobsMockHandler(),
   getListGeneralMembersMockHandler(),
+  getListAdminEnumsMockHandler(),
+  getListContentReviewsMockHandler(),
+  getListContentRejectionsMockHandler(),
+  getListConcernsMockHandler(),
+  getGetConcernMockHandler(),
   getListCompanyMembersMockHandler(),
   getListBootcampsMockHandler()
 ]

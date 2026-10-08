@@ -3,7 +3,7 @@ import type {
   ListMyJobBookmarksEmploymentType,
   ListMyJobBookmarksExperienceType,
   ListMyJobBookmarksJobField,
-  ListMyJobBookmarksJobRole,
+  ListMyJobBookmarksJobRoleItem,
 } from '@ogonggo/api';
 import { JOB_FIELD_LABELS, jobRolesOf } from '@/entities/job/model/labels';
 
@@ -21,7 +21,7 @@ export interface MyScrapsQuery {
   employmentType?: ListMyJobBookmarksEmploymentType;
   experienceType?: ListMyJobBookmarksExperienceType;
   jobField?: ListMyJobBookmarksJobField;
-  jobRole?: ListMyJobBookmarksJobRole;
+  jobRole?: ListMyJobBookmarksJobRoleItem;
   /** 교육·부트캠프 탭 전용. */
   category?: ListMyBootcampBookmarksCategory;
   /** 두 탭이 함께 쓴다. 사이드·스터디 탭은 받지 않는다. */

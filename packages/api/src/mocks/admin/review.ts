@@ -2,10 +2,10 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import type {
   AdminBootcampDetailResponse,
   AdminJobDetailResponse,
-  AdminReviewDecisionResponse,
-  AdminReviewItemResponse,
-  AdminReviewItemResponseType,
-  AdminReviewSectionResponse,
+  AdminContentReviewDecisionResponse,
+  AdminContentReviewItemResponse,
+  AdminContentReviewItemResponseType,
+  AdminContentReviewSectionResponse,
   DecideReviewRequest,
 } from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
@@ -25,11 +25,11 @@ import { notFound, ok } from './paging';
  * 큐는 등록일 오래된 순이다. 밀린 것부터 처리하는 것이 큐의 뜻이고, 최신순이면 오래된 건이
  * 영영 아래에 남는다.
  *
- * 응답·요청 타입은 admin 스펙의 생성 모델(`AdminReviewItemResponse`, `DecideReviewRequest`,
- * `AdminReviewDecisionResponse`) 이다.
+ * 응답·요청 타입은 admin 스펙의 생성 모델(`AdminContentReviewItemResponse`, `DecideReviewRequest`,
+ * `AdminContentReviewDecisionResponse`) 이다.
  */
 
-type ReviewTargetType = AdminReviewItemResponseType;
+type ReviewTargetType = AdminContentReviewItemResponseType;
 
 /**
  * 메타 값은 여기서 한국어로 풀어 내보낸다.
@@ -54,8 +54,8 @@ const VALUE_LABELS: Record<string, string> = {
 
 const label = (value: string): string => VALUE_LABELS[value] ?? value;
 
-function toJobItem(job: AdminJobDetailResponse): AdminReviewItemResponse {
-  const sections: AdminReviewSectionResponse[] = [
+function toJobItem(job: AdminJobDetailResponse): AdminContentReviewItemResponse {
+  const sections: AdminContentReviewSectionResponse[] = [
     {
       field: 'companyAndTeamIntroduction',
       label: '회사·팀 소개',
@@ -67,7 +67,7 @@ function toJobItem(job: AdminJobDetailResponse): AdminReviewItemResponse {
     { field: 'compensation', label: '보상', body: job.compensation },
     { field: 'benefits', label: '복지', body: job.benefits },
     { field: 'hiringProcess', label: '채용 절차', body: job.hiringProcess },
-  ].filter((section): section is AdminReviewSectionResponse => Boolean(section.body));
+  ].filter((section): section is AdminContentReviewSectionResponse => Boolean(section.body));
 
   return {
     type: 'JOB',
@@ -85,8 +85,8 @@ function toJobItem(job: AdminJobDetailResponse): AdminReviewItemResponse {
   };
 }
 
-function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminReviewItemResponse {
-  const sections: AdminReviewSectionResponse[] = [
+function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminContentReviewItemResponse {
+  const sections: AdminContentReviewSectionResponse[] = [
     { field: 'content', label: '소개', body: bootcamp.content },
     {
       field: 'eligibilityAndSelectionProcess',
@@ -105,7 +105,7 @@ function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminReviewItemR
         )
         .join('\n'),
     },
-  ].filter((section): section is AdminReviewSectionResponse => Boolean(section.body));
+  ].filter((section): section is AdminContentReviewSectionResponse => Boolean(section.body));
 
   return {
     type: 'BOOTCAMP',
@@ -124,7 +124,7 @@ function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminReviewItemR
 }
 
 /** 지금 대기 중인 것만. 처리하면 다음 요청에서 사라진다. */
-function pendingQueue(): AdminReviewItemResponse[] {
+function pendingQueue(): AdminContentReviewItemResponse[] {
   const jobs = ADMIN_JOB_FIXTURES.filter((job) => job.reviewStatus === 'PENDING').map(toJobItem);
   const bootcamps = ADMIN_BOOTCAMP_FIXTURES.filter(
     (bootcamp) => bootcamp.reviewStatus === 'PENDING',
@@ -135,7 +135,7 @@ function pendingQueue(): AdminReviewItemResponse[] {
   );
 }
 
-const listQueueHandler = http.get('*/api/v1/admin/review-queue', () =>
+const listQueueHandler = http.get('*/api/v1/admin/content-reviews', () =>
   HttpResponse.json(ok(pendingQueue()), { status: 200 }),
 );
 
@@ -150,7 +150,7 @@ const listQueueHandler = http.get('*/api/v1/admin/review-queue', () =>
  * 실제로 알림이 가는 경로는 백엔드가 정할 일이라 여기서 지어내지 않는다.
  */
 const decideHandler = http.patch(
-  '*/api/v1/admin/review-queue/:type/:id',
+  '*/api/v1/admin/content-reviews/:type/:id',
   async ({ params, request }) => {
     const type = String(params.type).toUpperCase() as ReviewTargetType;
     const id = Number(params.id);
@@ -187,7 +187,7 @@ const decideHandler = http.patch(
       target.reviewStatus = 'APPROVED';
     }
 
-    const decision: AdminReviewDecisionResponse = {
+    const decision: AdminContentReviewDecisionResponse = {
       type,
       id,
       reviewStatus: target.reviewStatus,
@@ -203,7 +203,7 @@ const decideHandler = http.patch(
  * 키 하나로 통과되는 화면이라 잘못 누르는 일이 실제로 일어난다. 되돌릴 길이 없으면 운영자는
  * 매 건 손을 멈추고 확인하게 되고, 그러면 키보드 흐름을 만든 이유가 사라진다.
  */
-const undoHandler = http.patch('*/api/v1/admin/review-queue/:type/:id/undo', ({ params }) => {
+const undoHandler = http.patch('*/api/v1/admin/content-reviews/:type/:id/undo', ({ params }) => {
   const type = String(params.type).toUpperCase() as ReviewTargetType;
   const id = Number(params.id);
   const target =
@@ -218,7 +218,7 @@ const undoHandler = http.patch('*/api/v1/admin/review-queue/:type/:id/undo', ({ 
   clearRejection(type, id);
   target.reviewStatus = 'PENDING';
 
-  const decision: AdminReviewDecisionResponse = {
+  const decision: AdminContentReviewDecisionResponse = {
     type,
     id,
     reviewStatus: target.reviewStatus,

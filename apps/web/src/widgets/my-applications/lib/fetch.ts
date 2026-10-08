@@ -1,8 +1,8 @@
 import {
-  listMyRecruitmentApplications,
+  listMyRecruitmentPostApplications,
   type PageInfo,
-  type ListMyRecruitmentApplicationsApplicationStatus,
-  type SuccessResponseRecruitmentApplicationPageResponse,
+  type ListMyRecruitmentPostApplicationsApplicationStatus,
+  type SuccessResponseRecruitmentPostApplicationPageResponse,
 } from '@ogonggo/api';
 import { fetchApplicationBoardPage, type ApplicationStageId } from '@/features/application-board';
 import {
@@ -37,8 +37,8 @@ export interface MyApplicationsPage {
 }
 
 /**
- * 사이드·스터디 지원 내역. `listMyRecruitmentApplications`
- * (`GET /api/v1/me/recruitment-applications`) 하나로 그린다.
+ * 사이드·스터디 지원 내역. `listMyRecruitmentPostApplications`
+ * (`GET /api/v1/users/me/recruitment-post-applications`) 하나로 그린다.
  *
  * 탭의 건수는 `countsByRecruitmentType` 에서 나오는데, 그 맵의 키는 탭이 아니라 **모집 구분**
  * (`SIDE_PROJECT`, `STUDY`) 이다. 사이드·스터디 탭 하나가 두 구분을 다 담으므로 둘을 더한다.
@@ -49,7 +49,7 @@ export interface MyApplicationsPage {
  * 필터와 무관한 전체 건수여야 한다.
  */
 export async function fetchMyApplications(query: MyApplicationsQuery): Promise<MyApplicationsPage> {
-  const response = (await listMyRecruitmentApplications({
+  const response = (await listMyRecruitmentPostApplications({
     page: query.page,
     size: PAGE_SIZE,
     recruitmentStatus: query.recruitmentStatus,
@@ -57,7 +57,7 @@ export async function fetchMyApplications(query: MyApplicationsQuery): Promise<M
     applicationStatus: sideStudyStatus(query.applicationStatus),
     keyword: query.keyword,
     sort: query.sort,
-  })) as unknown as SuccessResponseRecruitmentApplicationPageResponse;
+  })) as unknown as SuccessResponseRecruitmentPostApplicationPageResponse;
 
   const page = response.data;
   const counts = page?.countsByRecruitmentType ?? {};
@@ -140,7 +140,7 @@ export async function fetchMyBookmarkApplications(
 /** 사이드·스터디 지원 이력이 받는 네 단계인가. 그 탭의 단계에서 `스크랩` 만 빠진 것이다. */
 function sideStudyStatus(
   stage: ApplicationStageId | undefined,
-): ListMyRecruitmentApplicationsApplicationStatus | undefined {
+): ListMyRecruitmentPostApplicationsApplicationStatus | undefined {
   return stage === 'PREPARING' ||
     stage === 'COMPLETED' ||
     stage === 'IN_PROGRESS' ||

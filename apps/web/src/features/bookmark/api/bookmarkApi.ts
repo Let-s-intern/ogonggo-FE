@@ -26,11 +26,9 @@ export type BookmarkKind = (typeof BOOKMARK_KINDS)[number];
 /**
  * 종류별 등록·해제·내 목록 호출을 가르는 유일한 자리(PRD "한 곳에 모은다").
  *
- * **세 경로가 `/me/` 아래로 통일돼 있지 않다.** 채용공고와 부트캠프는
- * `POST/DELETE /api/v1/{job|bootcamp}-bookmarks/{id}` 인데 모집글은
- * `PUT/DELETE /api/v1/recruitment-posts/{postId}/bookmarks/me` 이고, 내 목록만 셋 다 다른
- * 컬렉션(`/api/v1/recruitment-post-bookmarks`) 이다. 백엔드가 그런 것이고 고치지 않는다 —
- * 부르는 쪽이 종류만 알면 되도록 이 파일이 전부 흡수한다.
+ * 경로는 셋 다 `POST/DELETE /api/v1/{job|bootcamp|recruitment-post}-bookmarks/{id}` 이고 내 목록은
+ * `GET /api/v1/{...}-bookmarks` 다. 생성 함수 이름만 종류마다 달라, 부르는 쪽이 종류만 알면 되도록
+ * 이 파일이 흡수한다.
  */
 
 /** 등록. 이미 북마크돼 있으면 409 로 실패한다 — 그것을 성공으로 볼지는 부르는 쪽이 정한다. */
