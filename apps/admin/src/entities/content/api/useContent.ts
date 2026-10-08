@@ -3,17 +3,21 @@ import {
   deleteBootcamp,
   deleteJob,
   getBootcamp,
+  getConcern,
   getJob,
   listBootcamps,
+  listConcerns,
   listJobs,
   listRecruitmentPosts,
   updateBootcamp,
   updateBootcampVisibilities,
+  updateConcernVisibilities,
   updateJob,
   updateJobVisibilities,
   updateRecruitmentPostVisibilities,
   type ChangeAdminJobVisibilityRequest,
   type ListBootcampsParams,
+  type ListConcernsParams,
   type ListJobsParams,
   type ListRecruitmentPostsParams,
   type UpdateAdminBootcampRequest,
@@ -62,7 +66,7 @@ const ALL_IDS_PAGE_SIZE = 100;
  */
 export async function listAllIds(
   kind: VisibilityContentKind,
-  filters: JobListFilters | BootcampListFilters | SideStudyListFilters,
+  filters: JobListFilters | BootcampListFilters | SideStudyListFilters | ConcernListFilters,
   limit: number,
 ): Promise<number[]> {
   const ids: number[] = [];
@@ -73,7 +77,9 @@ export async function listAllIds(
         ? await unwrapData(listJobs(params as ListJobsParams))
         : kind === 'bootcamps'
           ? await unwrapData(listBootcamps(params as ListBootcampsParams))
-          : await unwrapData(listRecruitmentPosts(params as ListRecruitmentPostsParams));
+          : kind === 'concerns'
+            ? await unwrapData(listConcerns(params as ListConcernsParams))
+            : await unwrapData(listRecruitmentPosts(params as ListRecruitmentPostsParams));
     ids.push(...(data?.items ?? []).map((row) => row.id));
     if (!data || ids.length >= limit || page >= data.pageInfo.totalPages)
       return ids.slice(0, limit);
@@ -159,6 +165,30 @@ export function usePatchJob(jobId: number) {
   });
 }
 
+export interface ConcernListFilters {
+  page: number;
+  keyword: string;
+  visibility: string;
+  category: string;
+  sort: string;
+}
+
+/** 취준고민 고민글 목록(`GET /api/v1/admin/concerns`). */
+export function useConcernList(filters: ConcernListFilters) {
+  return useQuery({
+    queryKey: ['admin', 'concerns', filters],
+    queryFn: () => unwrapData(listConcerns(omitEmpty({ ...filters }) as ListConcernsParams)),
+  });
+}
+
+export function useConcernDetail(concernId: number) {
+  return useQuery({
+    queryKey: ['admin', 'concerns', concernId],
+    queryFn: () => unwrapData(getConcern(concernId)),
+    enabled: Number.isInteger(concernId),
+  });
+}
+
 /** 부트캠프의 제목·본문·노출을 고친다. */
 export function usePatchBootcamp(bootcampId: number) {
   const queryClient = useQueryClient();
@@ -173,10 +203,10 @@ export function usePatchBootcamp(bootcampId: number) {
 }
 
 /** 노출을 한꺼번에 바꿀 수 있는 콘텐츠. 사이드·스터디의 API 경로는 `recruitment-posts` 다. */
-export type VisibilityContentKind = 'jobs' | 'bootcamps' | 'side-studies';
+export type VisibilityContentKind = 'jobs' | 'bootcamps' | 'side-studies' | 'concerns';
 
 /**
- * 여러 건의 노출을 한꺼번에 바꾼다(`PATCH /api/v1/admin/{jobs|bootcamps|recruitment-posts}/visibility`).
+ * 여러 건의 노출을 한꺼번에 바꾼다(`PATCH /api/v1/admin/{jobs|bootcamps|recruitment-posts|concerns}/visibility`).
  *
  * 백엔드는 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다. 그래서 실패해도 목록을 다시 받을
  * 필요가 없다. 성공하면 건별 수정(`usePatchJob`)과 같은 캐시를 무효화한다.
@@ -184,7 +214,7 @@ export type VisibilityContentKind = 'jobs' | 'bootcamps' | 'side-studies';
 export function useChangeVisibilities(kind: VisibilityContentKind) {
   const queryClient = useQueryClient();
   return useMutation({
-    // 세 요청의 본문 모양이 같다(`ids`, `visibility`). 검색 결과 전체를 고른 경우 ids 는 함수로
+    // 네 요청의 본문 모양이 같다(`ids`, `visibility`). 검색 결과 전체를 고른 경우 ids 는 함수로
     // 와서 보내기 직전에 받는다 — 받는 동안도 같은 진행 중·실패 상태로 보인다.
     mutationFn: async ({
       ids,
@@ -199,7 +229,9 @@ export function useChangeVisibilities(kind: VisibilityContentKind) {
           ? updateJobVisibilities(input)
           : kind === 'bootcamps'
             ? updateBootcampVisibilities(input)
-            : updateRecruitmentPostVisibilities(input),
+            : kind === 'concerns'
+              ? updateConcernVisibilities(input)
+              : updateRecruitmentPostVisibilities(input),
       );
     },
     onSuccess: () => {

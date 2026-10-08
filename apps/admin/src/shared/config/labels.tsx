@@ -1,5 +1,6 @@
 import { Badge, type BadgeProps } from '@ogonggo/ui';
 import type {
+  AdminConcernSummaryResponseCategory as ConcernCategory,
   AdminJobDetailResponseReviewStatus as JobReviewStatus,
   AdminJobDetailResponseSource as ContentSource,
   AdminJobDetailResponseVisibility as Visibility,
@@ -75,6 +76,15 @@ const RECRUITMENT_POSITION: Record<RecruitmentPosition, string> = {
   ETC: '기타',
 };
 
+/** 취준고민 카테고리. 백엔드 `ConcernCategory` 의 설명 그대로다. */
+const CONCERN_CATEGORY: Record<ConcernCategory, string> = {
+  JOB_POSTING: '공고 질문',
+  CAREER: '직무·커리어',
+  APPLICATION_INTERVIEW: '서류·면접',
+  SIDE_EXPERIENCE: '사이드·경험',
+  ETC: '기타',
+};
+
 /** 값이 매핑에 없으면 원래 문자열을 그대로 보여준다. 빈 칸보다 낫다. */
 function renderBadge(spec: LabelSpec | undefined, raw: string) {
   if (!spec) {
@@ -112,6 +122,9 @@ export const sideStudyKindLabel = (value: string): string => SIDE_STUDY_KIND[val
 export const recruitmentPositionLabel = (value: RecruitmentPosition): string =>
   RECRUITMENT_POSITION[value] ?? value;
 
+export const concernCategoryLabel = (value: ConcernCategory): string =>
+  CONCERN_CATEGORY[value] ?? value;
+
 /** 필터 드롭다운 옵션. 첫 칸은 항상 "전체"이고 값이 빈 문자열이다. */
 const toOptions = (entries: Record<string, LabelSpec | string>, allLabel: string) => [
   { value: '', label: allLabel },
@@ -127,6 +140,7 @@ export const CONTENT_SOURCE_OPTIONS = toOptions(CONTENT_SOURCE, '등록 경로 �
 export const RECRUITMENT_STATUS_OPTIONS = toOptions(RECRUITMENT_STATUS, '모집 상태 전체');
 export const MEMBER_STATUS_OPTIONS = toOptions(MEMBER_STATUS, '상태 전체');
 export const SIDE_STUDY_KIND_OPTIONS = toOptions(SIDE_STUDY_KIND, '종류 전체');
+export const CONCERN_CATEGORY_OPTIONS = toOptions(CONCERN_CATEGORY, '카테고리 전체');
 
 export const JOINED_WITHIN_OPTIONS = [
   { value: '', label: '가입 기간 전체' },
