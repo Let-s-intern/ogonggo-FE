@@ -3,6 +3,8 @@ import { AdminLayout } from '@/widgets/admin-layout';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
+import { ConcernDetailPage } from '@/pages/concern-detail';
+import { ConcernListPage } from '@/pages/concern-list';
 import { CompanyMemberListPage } from '@/pages/company-member-list';
 import { DashboardPage } from '@/pages/dashboard';
 import { JobDetailPage } from '@/pages/job-detail';
@@ -43,6 +45,8 @@ export const router = createBrowserRouter([
       { path: 'content/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
       { path: 'content/side-studies', element: <SideStudyListPage /> },
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
+      { path: 'content/concerns', element: <ConcernListPage /> },
+      { path: 'content/concerns/:concernId', element: <ConcernDetailPage /> },
 
       { path: 'ads/review', element: <ReviewQueuePage /> },
       { path: 'ads/rejections', element: <RejectionsPage /> },
