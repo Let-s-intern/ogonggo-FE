@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router';
+import { Navigate, createBrowserRouter } from 'react-router';
 import { AdminLayout } from '@/widgets/admin-layout';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
@@ -6,7 +6,6 @@ import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
 import { ConcernDetailPage } from '@/pages/concern-detail';
 import { ConcernListPage } from '@/pages/concern-list';
 import { CompanyMemberListPage } from '@/pages/company-member-list';
-import { DashboardPage } from '@/pages/dashboard';
 import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { LoginPage } from '@/pages/login';
@@ -37,7 +36,8 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
+      // 대시보드는 집계 API 가 없어 숨겼다. 로그인 뒤와 404 의 `/` 는 첫 메뉴로 보낸다.
+      { index: true, element: <Navigate to="/content/jobs" replace /> },
 
       { path: 'content/jobs', element: <JobListPage /> },
       { path: 'content/jobs/:jobId', element: <JobDetailPage /> },

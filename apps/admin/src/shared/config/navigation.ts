@@ -30,9 +30,6 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
-    items: [{ path: '/', label: '대시보드' }],
-  },
-  {
     title: '콘텐츠',
     items: [
       { path: '/content/jobs', label: '채용공고' },
