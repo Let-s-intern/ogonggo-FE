@@ -65,16 +65,13 @@ const SIDE_STUDY_KIND: Record<string, string> = {
   STUDY: '스터디',
 };
 
-/**
- * 사이드·스터디 모집 직무. 사용자 웹의 `POSITION_LABELS` 와 같은 말이다 — `MOBILE` 은 마케팅
- * 자리를 빌려 쓰고 있어 `마케팅` 으로 보인다.
- */
+/** 사이드·스터디 모집 직무. 사용자 웹의 `POSITION_LABELS` 와 같은 말이다. */
 const RECRUITMENT_POSITION: Record<RecruitmentPosition, string> = {
   BACKEND: '백엔드',
   FRONTEND: '프론트엔드',
   DESIGN: '디자인',
   PM: '기획',
-  MOBILE: '마케팅',
+  MARKETING: '마케팅',
   ETC: '기타',
 };
 

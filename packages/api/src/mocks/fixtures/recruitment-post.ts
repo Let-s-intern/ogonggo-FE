@@ -8,7 +8,7 @@ import type { RecruitmentPostDetailResponse } from '../../generated/user/models/
  * 그대로다. 옮기면서 바뀐 것은 이렇다.
  *
  * - `positions` 는 스펙 enum 이다. `디자이너` 는 `DESIGN`, `기획자`·`PM` 은 `PM`,
- *   `안드로이드`·`iOS` 는 `MOBILE` 로 합쳤다.
+ *   `안드로이드`·`iOS` 는 `FRONTEND` 로 합쳤다.
  * - `contact` 는 수단과 값이 필수다. 값은 남의 연락처가 되지 않도록 예약 도메인
  *   `example.com` 만 쓴다. 옛 `구글 폼`(id 4, 9) 은 enum 에 없어 각각 오픈채팅·이메일로 바꿨다.
  * - `recruitmentEndDate` 가 필수가 되어 상시 모집이던 id 5 에도 마감일을 넣었다.
@@ -253,7 +253,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     applicationCount: 2,
     activityDurationMonths: 3,
     technologyStacks: ['Flutter', 'Kotlin'],
-    positions: ['MOBILE'],
+    positions: ['FRONTEND'],
     contact: { method: 'OPEN_KAKAO', value: 'https://example.com/open-chat/5' },
     summary: '유통기한이 지나기 전에 알려 주는 냉장고 재료 관리 앱입니다.',
     content: buildContent({
@@ -342,7 +342,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     applicationCount: 3,
     activityDurationMonths: 3,
     technologyStacks: ['Flutter', 'Figma'],
-    positions: ['MOBILE', 'PM'],
+    positions: ['FRONTEND', 'PM'],
     contact: { method: 'OPEN_KAKAO', value: 'https://example.com/open-chat/8' },
     summary: '작은 전시회를 위한 음성 도슨트를 손쉽게 만드는 앱입니다.',
     content: buildContent({
@@ -430,7 +430,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     applicationCount: 4,
     activityDurationMonths: 4,
     technologyStacks: ['Kotlin', 'Spring'],
-    positions: ['MOBILE', 'BACKEND'],
+    positions: ['FRONTEND', 'BACKEND'],
     contact: { method: 'EMAIL', value: 'side-study-11@example.com' },
     summary: '러닝 크루의 출석과 기록을 한곳에서 관리하는 앱입니다.',
     content: buildContent({

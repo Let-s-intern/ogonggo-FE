@@ -37,7 +37,7 @@ export const ManyPositions: Story = {
   args: {
     sideStudy: {
       ...SIDE_STUDY_MOCK,
-      positions: ['BACKEND', 'FRONTEND', 'DESIGN', 'PM', 'MOBILE', 'ETC'],
+      positions: ['BACKEND', 'FRONTEND', 'DESIGN', 'PM', 'MARKETING', 'ETC'],
     },
   },
 };
