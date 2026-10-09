@@ -22,9 +22,31 @@ async function fetchRecommendedChallenges(): Promise<UserRecommendedChallengeRes
   }
 }
 
+/** 챌린지 앞에 고정으로 두는 카드 하나. 링크와 문구는 API 가 아니라 코드가 정한다. */
+export interface CrossSellCard {
+  /** 카드 맨 위의 종류 글자. 예) `무료 자료집`, `블로그`. */
+  label: string;
+  title: string;
+  description: string;
+  /** 누르면 새 탭으로 연다. */
+  href: string;
+}
+
+export interface CrossSellWidgetProps {
+  /** 구역 제목. 기본은 `함께 보면 좋아요`. */
+  title?: string;
+  /** 챌린지 앞에 두는 고정 카드. 기본은 빈 목록이라 챌린지만 보인다. */
+  leadingCards?: readonly CrossSellCard[];
+}
+
+const DEFAULT_TITLE = '함께 보면 좋아요';
+
 /**
  * "함께 보면 좋아요" — 렛츠커리어에서 모집 중인 챌린지 최대 3개(`GET /api/v1/recommended-challenges`).
  * 전에는 목업 문구를 하드코딩했다. 누르면 렛츠커리어 챌린지 상세를 새 탭으로 연다.
+ *
+ * 제목과 앞쪽 고정 카드는 prop 으로 받는다. 넘기지 않으면 지금 모양 그대로다 — 교육·부트캠프 상세가
+ * 이 상태로 쓴다. 채용공고 상세는 제목을 바꾸고 고정 카드를 챌린지 앞에 둔다.
  *
  * 서버에서 토큰 없이 부른다. 로그인한 사람에게 맞춘 추천은 백엔드가 토큰을 받을 때 주는데, 이
  * 위젯은 서버 컴포넌트라 토큰이 없다. 지금은 렛츠커리어가 무작위로 고르므로 차이가 없다.
@@ -34,20 +56,33 @@ async function fetchRecommendedChallenges(): Promise<UserRecommendedChallengeRes
  * `[...]` 머리말은 따로 한 줄로 둔다(`ChallengeTitle`). 한 줄 소개는 첫 쉼표 뒤에서 줄을 바꾸고
  * 두 줄까지 보인다(`ChallengeDescription`).
  *
- * 빈 목록이면 구역 전체를 그리지 않는다(API 설명의 규칙).
+ * 챌린지도 고정 카드도 없으면 구역 전체를 그리지 않는다(API 설명의 규칙).
  *
  * 채용공고 상세와 교육·부트캠프 상세가 같은 것을 쓴다.
  */
-export async function CrossSellWidget() {
+export async function CrossSellWidget({
+  title = DEFAULT_TITLE,
+  leadingCards = [],
+}: CrossSellWidgetProps) {
   const challenges = await fetchRecommendedChallenges();
-  if (challenges.length === 0) {
+  if (challenges.length === 0 && leadingCards.length === 0) {
     return null;
   }
 
   return (
     <section>
-      <h2 className="text-sm font-bold text-gray-900">함께 보면 좋아요</h2>
-      <ul className="mt-1 divide-y divide-gray-100">
+      <h2 className="text-sm font-bold text-gray-900">{title}</h2>
+      {leadingCards.length > 0 ? (
+        <ul className="mt-1 divide-y divide-gray-100">
+          {leadingCards.map((card) => (
+            <li key={card.href}>
+              <LeadingCard card={card} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {/* 챌린지가 없고 고정 카드만 있을 때 빈 목록이 여백을 만들지 않게 한다. */}
+      <ul className="mt-1 divide-y divide-gray-100 empty:hidden">
         {challenges.map((challenge) => (
           <li key={challenge.challengeId}>
             <a
@@ -76,6 +111,19 @@ export async function CrossSellWidget() {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** 고정 카드 하나. 종류 글자, 제목, 설명을 위에서 아래로 쌓는다. */
+function LeadingCard({ card }: { card: CrossSellCard }) {
+  return (
+    <a href={card.href} target="_blank" rel="noopener noreferrer" className="group block py-4">
+      <p className="text-xs text-gray-500">{card.label}</p>
+      <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-800 group-hover:text-blue-500">
+        {card.title}
+      </p>
+      <p className="mt-1 line-clamp-2 text-xs text-gray-500">{card.description}</p>
+    </a>
   );
 }
 
