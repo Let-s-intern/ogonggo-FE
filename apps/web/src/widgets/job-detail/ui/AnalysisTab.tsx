@@ -4,7 +4,7 @@ import { EMPLOYMENT_TYPE_LABELS, formatRegion } from '@/entities/job/model/label
 import type { JobDetail } from '@/entities/job/model/types';
 import { splitLines } from '../lib/splitLines';
 import { CompetencySection } from './CompetencySection';
-import { Condition, hasFact } from './ConditionRow';
+import { Condition, hasFact, NO_VALUE_TEXT } from './ConditionRow';
 import { EmploymentRows } from './EmploymentRows';
 import { JobInfoGrid } from './JobInfoGrid';
 import { QualificationChecklist } from './QualificationChecklist';
@@ -21,6 +21,9 @@ import { TaskList } from './TaskList';
  *
  * `layout="modal"` 이면 요약 박스가 v12 이전 2x2 모양이고(`JobInfoGrid`), 본문 섹션은 전처럼 요약 박스 안 글자
  * 자리(17px 안쪽)에서 시작한다. 페이지는 시안대로 섹션 제목이 요약 박스의 바깥 가장자리에서 시작한다.
+ *
+ * 맨 아래 안내 문구(`원문에 없는 내용은 추측하지 않고…`)는 `analysis` 가 있는 공고에만 둔다. 분석이 만든 값이
+ * 아닌 공고에는 그 말이 맞지 않는다.
  *
  * 시안에 있는 지원 서류의 필수·선택 배지는 응답에 구분이 없어 그리지 않는다. 혜택·회사 소개는 `공고 원문`
  * 탭에 있다.
@@ -105,6 +108,11 @@ export function AnalysisTab({
         ) : null}
         {competencies.length > 0 ? (
           <CompetencySection key={job.id} competencies={competencies} />
+        ) : null}
+        {job.analysis ? (
+          <p className="text-xs text-gray-400">
+            {`* 원문에 없는 내용은 추측하지 않고 "${NO_VALUE_TEXT}"으로 표시해요. 지원 전 공고 원문과 기업 채용 페이지를 함께 확인하세요.`}
+          </p>
         ) : null}
       </div>
     </div>
