@@ -48,12 +48,16 @@ export function ConcernOwnerActions({
   const remove = useMutation({
     mutationFn: () => deleteMyConcern(concernId),
     onSuccess: () => {
+      // 확인 창을 닫는다. 열어 두면 요청이 끝나 `삭제` 가 다시 눌리고(문구가 입력된 채라), 두 번째 요청이 404 를 받아
+      // 성공한 삭제 위에 오류가 뜬다. 바깥 토스트도 최상위 층에 올라온 모달 뒤에 가려진다.
+      setConfirming(false);
       toast.show({ message: '고민글을 삭제했어요' });
       router.replace('/concerns');
     },
   });
 
-  if (!mine) {
+  // 지운 뒤에는 목록으로 옮겨 가는 동안에도 `수정`·`삭제` 를 다시 누를 수 없게 거둔다.
+  if (!mine || remove.isSuccess) {
     return null;
   }
 
