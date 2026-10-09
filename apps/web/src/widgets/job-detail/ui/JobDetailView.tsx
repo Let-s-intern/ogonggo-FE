@@ -143,10 +143,13 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       {/* 본문 2단은 좌우 여백 없이 위 헤더 카드와 아래 `ForBusinessBanner`의 바깥 가장자리에 맞춘다.
           전에는 카드 안쪽 글자 위치에 맞춰 `md:px-8`을 뒀는데, 블록 가장자리가 어긋나 보인다는
           요청으로 가장자리 기준으로 바꿨다(2026-09-30). */}
+      {/* 헤더 마지막 줄 아래에서 탭 줄까지는 시안 실측 약 72px 이다(탭 글자까지는 약 76px, 모바일·데스크톱
+          모두). 헤더의 아래 여백(`p-4`, `md:py-6`)과 위 `gap-4` 가 이미 32·40px 이라 모자란 만큼을 2단 위에
+          더한다. */}
       {/* 2단 비율은 `상세 채용공고.png` 실측값(본문 739px : 사이드바 323px, 사이 간격 60px,
           1440px 기준)을 그대로 `fr`로 옮긴 것이다. 3:2로 뒀을 때 사이드바가 목업보다 넓고
           본문이 좁았다. */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
+      <div className="mt-10 grid grid-cols-1 gap-6 md:mt-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
         <div className="min-w-0">{tabs}</div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar

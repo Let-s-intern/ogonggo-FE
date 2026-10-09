@@ -112,7 +112,7 @@ function TabView({ tab, onSelect, analysis, original }: TabViewProps) {
           );
         })}
       </div>
-      <div id={panelId} role="tabpanel" aria-labelledby={tabId(tab)} className="pt-8">
+      <div id={panelId} role="tabpanel" aria-labelledby={tabId(tab)} className="pt-5 md:pt-9">
         {tab === 'original' ? original : analysis}
       </div>
     </div>
