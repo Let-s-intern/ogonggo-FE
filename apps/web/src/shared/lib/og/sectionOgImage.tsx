@@ -5,25 +5,32 @@ import { HERO_CONTENT, type HeroScreen } from '@/shared/lib/heroContent';
 import { loadFont, POSTING_OG_SIZE } from './postingOgImage';
 
 /**
+ * 미리보기 카드가 있는 화면. 취준고민(`concerns`) 히어로는 배경이 이미지 파일이 아니라 단색이고
+ * 미리보기 카드를 만들지 않기로 했다(v13 PRD "하지 않는 것"). 히어로 화면이 늘 때마다 아래 표를
+ * 채우게 되지 않도록 뺀다.
+ */
+type OgScreen = Exclude<HeroScreen, 'concerns'>;
+
+/**
  * 목록 화면의 배지 색. 히어로(`HERO_CONTENT`)는 Tailwind 클래스로 들고 있어 이미지 생성기에
  * 넘길 수 없다. 같은 색을 hex 로 적는다 — `blue-100`·`blue-500`·`gray-600` 은 `tokens.css`,
  * 민트 둘과 틸은 히어로가 쓰는 hex 그대로다.
  */
-const BADGE_COLORS: Record<HeroScreen, { background: string; color: string }> = {
+const BADGE_COLORS: Record<OgScreen, { background: string; color: string }> = {
   jobs: { background: '#D6E3FF', color: '#4A76FF' },
   bootcamps: { background: '#BBEDD8', color: '#009C89' },
   'side-studies': { background: '#D1F3E5', color: '#4B5563' },
 };
 
 /** 오른쪽 위 칩. 상세 미리보기(`renderPostingOgImage`)의 `kindLabel` 과 같은 말이다. */
-const KIND_LABELS: Record<HeroScreen, string> = {
+const KIND_LABELS: Record<OgScreen, string> = {
   jobs: '채용공고',
   bootcamps: '교육·부트캠프',
   'side-studies': '사이드·스터디',
 };
 
 /** 히어로 배경 PNG(`public/hero/`)를 data URL 로. 목록 미리보기는 빌드 때 한 번 그려진다. */
-async function loadBackground(screen: HeroScreen): Promise<string> {
+async function loadBackground(screen: OgScreen): Promise<string> {
   const path = join(process.cwd(), 'public', HERO_CONTENT[screen].theme.backgroundImage);
   return `data:image/png;base64,${(await readFile(path)).toString('base64')}`;
 }
@@ -36,7 +43,7 @@ async function loadBackground(screen: HeroScreen): Promise<string> {
  * (`widgets/home-hero`) 를 옮긴 것이다 — 같은 배경, 같은 배지, 같은 헤드라인이라 링크를 열었을 때
  * 처음 보이는 것과 미리보기가 같다.
  */
-export async function renderSectionOgImage(screen: HeroScreen): Promise<ImageResponse> {
+export async function renderSectionOgImage(screen: OgScreen): Promise<ImageResponse> {
   const { badge, lines } = HERO_CONTENT[screen];
   const badgeColors = BADGE_COLORS[screen];
   const [bold, medium, background] = await Promise.all([
