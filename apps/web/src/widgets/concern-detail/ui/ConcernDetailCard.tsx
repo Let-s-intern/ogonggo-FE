@@ -36,7 +36,12 @@ export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
         <span className="min-w-0 truncate text-sm font-bold text-gray-900">
           {getAuthorName(concern.author)}
         </span>
-        <ConcernOwnerActions concernId={concern.id} title={concern.title} />
+        <ConcernOwnerActions
+          concernId={concern.id}
+          title={concern.title}
+          category={concern.category}
+          content={concern.content}
+        />
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
         <RelativeTime value={concern.createdAt} className="shrink-0" />
