@@ -16,7 +16,7 @@ export interface ConcernFormModalProps {
   /** 있으면 수정 모드로 이 글의 값으로 시작한다. 없으면 새 글이다. */
   initial?: ConcernFormInitial;
   /**
-   * 저장에 성공한 뒤(`onClose` 다음) 불린다. 작성은 새 글의 id, 수정은 고친 글의 id 다. 주면 기본 동작을
+   * 저장에 성공해 모달을 닫은 뒤 불린다. 작성은 새 글의 id, 수정은 고친 글의 id 다. 주면 기본 동작을
    * 대신한다 — 기본은 작성이면 `/concerns/<새 id>` 로 이동, 수정이면 `router.refresh()` 로 보던 상세를
    * 다시 읽는 것이다.
    */
@@ -124,8 +124,7 @@ function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
         <ToastProvider>
           <ConcernFormBody
             initial={initial}
-            onCancel={() => dialogRef.current?.close()}
-            onClose={onClose}
+            closeDialog={() => dialogRef.current?.close()}
             onSuccess={onSuccess}
             onPendingChange={setPending}
           />
@@ -137,15 +136,18 @@ function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
 
 interface BodyProps {
   initial?: ConcernFormInitial;
-  onCancel: () => void;
-  onClose: () => void;
+  /**
+   * `<dialog>` 의 `close()` 를 부른다. 닫힘 이벤트가 부르는 쪽의 `onClose` 로 이어진다. 부르는 쪽이 모달을 걷어내기만 하면
+   * 네이티브 `<dialog>` 가 열기 전에 초점이 있던 요소(수정 버튼 등)로 초점을 돌려주지 않고 문서 처음으로 떨어뜨린다.
+   */
+  closeDialog: () => void;
   onSuccess?: (id: number) => void;
   /** 저장을 보내기 시작하면 `true`, 성공이든 실패든 끝나면 `false`. 바깥의 X·Esc 를 막는 데 쓴다. */
   onPendingChange: (pending: boolean) => void;
 }
 
 /** 폼과 저장. 안쪽 `ToastProvider` 아래라야 `useToast` 가 모달 안의 토스트 영역을 쓴다. */
-function ConcernFormBody({ initial, onCancel, onClose, onSuccess, onPendingChange }: BodyProps) {
+function ConcernFormBody({ initial, closeDialog, onSuccess, onPendingChange }: BodyProps) {
   const router = useRouter();
   const toast = useToast();
   const editing = initial !== undefined;
@@ -161,7 +163,7 @@ function ConcernFormBody({ initial, onCancel, onClose, onSuccess, onPendingChang
     onMutate: () => onPendingChange(true),
     onSettled: () => onPendingChange(false),
     onSuccess: (id) => {
-      onClose();
+      closeDialog();
       if (onSuccess) {
         onSuccess(id);
       } else if (editing) {
@@ -180,7 +182,7 @@ function ConcernFormBody({ initial, onCancel, onClose, onSuccess, onPendingChang
       pendingLabel={editing ? '수정 중' : '등록 중'}
       pending={save.isPending}
       onSubmit={(values) => save.mutate(values)}
-      onCancel={onCancel}
+      onCancel={closeDialog}
     />
   );
 }
