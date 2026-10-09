@@ -40,3 +40,8 @@ export const Default: Story = {};
 export const NoRegion: Story = {
   args: { region: undefined },
 };
+
+/** 공고 달력의 상세 모달. v12 이전 2x2 모양이다. */
+export const Modal: Story = {
+  args: { layout: 'modal' },
+};

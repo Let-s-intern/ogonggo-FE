@@ -52,3 +52,8 @@ export const AlwaysOpen: Story = {
 export const NoRegion: Story = {
   args: { region: undefined },
 };
+
+/** 공고 달력의 상세 모달. 회색 카드와 구분선이 있는 v12 이전 모양이다. */
+export const Modal: Story = {
+  args: { layout: 'modal' },
+};
