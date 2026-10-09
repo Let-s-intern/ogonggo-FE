@@ -1,4 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { userConcernHandlers } from './concerns';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
@@ -1074,6 +1075,7 @@ export const handlers: HttpHandler[] = [
   createRecruitmentPostCommentHandler,
   deleteRecruitmentPostCommentHandler,
   reportRecruitmentPostCommentHandler,
+  ...userConcernHandlers,
   getNoticesHandler,
   getNoticeHandler,
   createServiceFeedbackHandler,
