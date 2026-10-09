@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ToastProvider, useToast } from '@ogonggo/ui';
 import { useScrollLock } from '@/shared/lib/useScrollLock';
 import { createConcernPost, saveFailureMessage, updateConcernPost } from '../api/concernFormApi';
@@ -49,6 +49,10 @@ type DialogProps = Omit<ConcernFormModalProps, 'open'>;
  * 바깥(어두운 배경) 을 눌러도 닫지 않는다. `RouteModal` 은 닫지만 이쪽은 쓰던 글이 있는 폼이라, 스크롤바나
  * 가장자리를 잘못 눌러 2000 자가 사라지면 되돌릴 수 없다. 닫기는 버튼·취소·Esc 로 한다.
  *
+ * 저장하는 동안은 오른쪽 위 X 와 Esc 로도 닫지 못한다(취소 버튼처럼). 닫으면 모달이 사라지면서 안쪽 토스트 영역도
+ * 같이 사라져, 이어서 저장이 실패해도 알릴 곳이 없고 쓰던 글만 잃는다. 성공하면 닫은 뒤에 새 글로 이동하는 것도
+ * 어색하다. 저장 중인지는 저장을 들고 있는 `ConcernFormBody` 가 알려 준다.
+ *
  * 토스트 영역(`ToastProvider`)을 안에 하나 더 둔다. `showModal()` 은 브라우저 최상위 층에 그려져서 앱
  * 바깥의 토스트(`z-50`)가 모달 뒤에 가려진다(`features/share-posting` 이 같은 이유로 `<dialog>` 를 피했다).
  * 안쪽 영역은 모달과 같은 층에 있어 실패 토스트가 모달 위에 보인다.
@@ -56,6 +60,7 @@ type DialogProps = Omit<ConcernFormModalProps, 'open'>;
 function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [pending, setPending] = useState(false);
   useScrollLock(true);
 
   useEffect(() => {
@@ -70,12 +75,34 @@ function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
     dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
   }, []);
 
+  // Esc 를 두 번 이상 누르면 브라우저는 `cancel` 을 막을 수 없게 두고 그대로 닫는다(열린 창에 가두지 않으려는
+  // 규칙). 저장 중에는 키 입력 자체를 막는다. 저장하는 동안 버튼이 꺼져 초점이 문서로 떨어지므로 창이 아니라
+  // 문서에서 받는다.
+  useEffect(() => {
+    if (!pending) {
+      return;
+    }
+    const blockEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener('keydown', blockEscape, true);
+    return () => document.removeEventListener('keydown', blockEscape, true);
+  }, [pending]);
+
   const editing = initial !== undefined;
 
   return (
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
+      onCancel={(event) => {
+        // Esc. 저장 중에는 닫지 않는다.
+        if (pending) {
+          event.preventDefault();
+        }
+      }}
       onClose={onClose}
       className="m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden bg-white p-0 backdrop:bg-gray-950/50 md:m-auto md:h-fit md:max-h-[calc(100dvh-4rem)] md:w-[min(720px,calc(100vw-2rem))] md:rounded-3xl md:py-3"
     >
@@ -87,8 +114,9 @@ function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
           <button
             type="button"
             aria-label="닫기"
+            disabled={pending}
             onClick={() => dialogRef.current?.close()}
-            className="-m-1 rounded-sm p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="-m-1 rounded-sm p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-400"
           >
             <span aria-hidden="true" className="icon-[lucide--x] block h-6 w-6" />
           </button>
@@ -99,6 +127,7 @@ function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
             onCancel={() => dialogRef.current?.close()}
             onClose={onClose}
             onSuccess={onSuccess}
+            onPendingChange={setPending}
           />
         </ToastProvider>
       </div>
@@ -111,10 +140,12 @@ interface BodyProps {
   onCancel: () => void;
   onClose: () => void;
   onSuccess?: (id: number) => void;
+  /** 저장을 보내기 시작하면 `true`, 성공이든 실패든 끝나면 `false`. 바깥의 X·Esc 를 막는 데 쓴다. */
+  onPendingChange: (pending: boolean) => void;
 }
 
 /** 폼과 저장. 안쪽 `ToastProvider` 아래라야 `useToast` 가 모달 안의 토스트 영역을 쓴다. */
-function ConcernFormBody({ initial, onCancel, onClose, onSuccess }: BodyProps) {
+function ConcernFormBody({ initial, onCancel, onClose, onSuccess, onPendingChange }: BodyProps) {
   const router = useRouter();
   const toast = useToast();
   const editing = initial !== undefined;
@@ -127,6 +158,8 @@ function ConcernFormBody({ initial, onCancel, onClose, onSuccess }: BodyProps) {
       }
       return createConcernPost(values);
     },
+    onMutate: () => onPendingChange(true),
+    onSettled: () => onPendingChange(false),
     onSuccess: (id) => {
       onClose();
       if (onSuccess) {
