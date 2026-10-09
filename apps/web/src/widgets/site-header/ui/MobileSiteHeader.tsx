@@ -63,8 +63,11 @@ export function MobileSiteHeader({
         <div className="flex h-11 items-stretch justify-between px-4">
           {/* 탭 넷이 360px 에서도 한 줄에 들어가도록 글자 14px, 간격 8px 이다(Pretendard 로 잰 글자 폭 합 266px +
               간격 24px 가 쓸 수 있는 폭 304px 안에 든다). 그보다 좁은 폰에서만 이 묶음이 가로로 밀리고, 달력
-              아이콘은 제자리에 있다. `whitespace-nowrap` 이 없으면 좁을 때 글자가 음절 사이에서 줄바꿈된다. */}
-          <nav className="flex min-w-0 items-stretch gap-2 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              아이콘은 제자리에 있다. `whitespace-nowrap` 이 없으면 좁을 때 글자가 음절 사이에서 줄바꿈된다.
+              `overflow-x-auto` 는 세로도 잘라서 탭의 키보드 포커스 링이 위·아래·왼쪽에서 잘리므로 사방 4px 안쪽 여백을
+              두고 위·아래·왼쪽은 같은 크기의 음수 바깥 여백으로 되돌려 자리를 그대로 둔다. 오른쪽은 되돌리지 않는다 —
+              되돌리면 좁은 폰에서 묶음의 잘리는 경계가 달력 아이콘 안으로 4px 들어가 글자가 아이콘에 닿는다. */}
+          <nav className="-my-1 -ml-1 flex min-w-0 items-stretch gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
               const active = matches(pathname);
               return (
