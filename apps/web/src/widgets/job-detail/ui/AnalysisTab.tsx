@@ -7,6 +7,7 @@ import { Condition, hasFact } from './ConditionRow';
 import { EmploymentRows } from './EmploymentRows';
 import { JobInfoGrid } from './JobInfoGrid';
 import { QualificationChecklist } from './QualificationChecklist';
+import { SubmissionBlock } from './SubmissionBlock';
 import { TaskList } from './TaskList';
 
 /**
@@ -44,6 +45,10 @@ export function AnalysisTab({
   const analyzedEmployment =
     employment && Object.values(employment).some((fact) => hasFact(fact)) ? employment : null;
   const compensation = splitLines(job.compensation);
+  // 네 값 모두 값도 설명도 없으면 분석이 알려 주는 것이 없으므로 응답의 전형 절차 글로 그린다.
+  const submission = job.analysis?.submission;
+  const analyzedSubmission =
+    submission && Object.values(submission).some((fact) => hasFact(fact)) ? submission : null;
   const hiringProcess = splitLines(job.hiringProcess);
 
   return (
@@ -87,9 +92,13 @@ export function AnalysisTab({
             </dl>
           )}
         </Section>
-        {hiringProcess.length > 0 ? (
+        {analyzedSubmission || hiringProcess.length > 0 ? (
           <Section title="지원 서류 및 전형 절차">
-            <LineList lines={hiringProcess} />
+            {analyzedSubmission ? (
+              <SubmissionBlock submission={analyzedSubmission} />
+            ) : (
+              <LineList lines={hiringProcess} />
+            )}
           </Section>
         ) : null}
       </div>
