@@ -5,19 +5,21 @@ import type { JobDetail } from '@/entities/job/model/types';
 import { splitLines } from '../lib/splitLines';
 import { JobInfoGrid } from './JobInfoGrid';
 import { QualificationChecklist } from './QualificationChecklist';
+import { TaskList } from './TaskList';
 
 /**
  * `공고 분석` 탭(`docs/asset/v12 채용공고 상세/상세 기본.webp`). 요약 박스 아래에 담당 업무, 자격 요건
  * 체크리스트, 근무 조건, 지원 서류 및 전형 절차 순으로 쌓는다.
  *
- * 응답의 본문 필드는 전부 글 덩어리라(`splitLines` 주석) 줄 단위로 나눠 항목으로 보여 준다. 값이 없는
- * 섹션은 그리지 않고, 비어 있다는 안내 문구도 두지 않는다.
+ * 응답의 본문 필드는 전부 글 덩어리라(`splitLines` 주석) 줄 단위로 나눠 항목으로 보여 준다. 일부 공고에는
+ * 응답에 `analysis`(분석 결과)가 함께 오는데, 있는 섹션은 그 값으로 그리고 없는 섹션과 없는 공고는 글 덩어리를
+ * 나눠 그린다. 값이 없는 섹션은 그리지 않고, 비어 있다는 안내 문구도 두지 않는다.
  *
  * `layout="modal"` 이면 요약 박스가 v12 이전 2x2 모양이고(`JobInfoGrid`), 본문 섹션은 전처럼 요약 박스 안 글자
  * 자리(17px 안쪽)에서 시작한다. 페이지는 시안대로 섹션 제목이 요약 박스의 바깥 가장자리에서 시작한다.
  *
- * 시안에 있는 담당 업무의 분류 태그, 근무 조건의 전환·소속, 지원 서류의 필수·선택, 이력서에 담을 경험은
- * 응답에 대응하는 필드가 없어 그리지 않는다. 혜택·회사 소개는 `공고 원문` 탭에 있다.
+ * 시안에 있는 지원 서류의 필수·선택 배지는 응답에 구분이 없어 그리지 않는다. 혜택·회사 소개는 `공고 원문`
+ * 탭에 있다.
  */
 export function AnalysisTab({
   job,
@@ -26,6 +28,7 @@ export function AnalysisTab({
   job: JobDetail;
   layout?: 'page' | 'modal';
 }) {
+  const tasks = job.analysis?.tasks ?? [];
   const responsibilities = splitLines(job.responsibilities);
   const required = splitLines(job.qualifications);
   const preferred = splitLines(job.preferredQualifications);
@@ -42,9 +45,9 @@ export function AnalysisTab({
         layout={layout}
       />
       <div className={cn('flex flex-col gap-10', layout === 'modal' && 'px-[17px]')}>
-        {responsibilities.length > 0 ? (
+        {tasks.length > 0 || responsibilities.length > 0 ? (
           <Section title="담당 업무">
-            <LineList lines={responsibilities} />
+            {tasks.length > 0 ? <TaskList tasks={tasks} /> : <LineList lines={responsibilities} />}
           </Section>
         ) : null}
         {required.length > 0 || preferred.length > 0 ? (
