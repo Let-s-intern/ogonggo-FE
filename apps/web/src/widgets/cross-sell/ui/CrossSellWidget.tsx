@@ -41,6 +41,17 @@ export interface CrossSellWidgetProps {
 
 const DEFAULT_TITLE = '함께 보면 좋아요';
 
+/** 채용공고 상세가 이 위젯에 넘기는 제목. */
+export const JOB_PREPARATION_TITLE = '이 공고, 더 탄탄하게 준비하고 싶다면?';
+
+/**
+ * 채용공고 상세가 챌린지 앞에 두는 고정 카드 — 무료 자료집, 블로그 순서.
+ *
+ * 링크·제목·설명을 아직 받지 못해 비워 둔다. 비어 있으면 카드를 그리지 않고 챌린지만 보인다.
+ * 링크를 미리 지어 넣지 않는다 — 받으면 이 배열에 `CrossSellCard` 를 채운다.
+ */
+export const JOB_PREPARATION_CARDS: readonly CrossSellCard[] = [];
+
 /**
  * "함께 보면 좋아요" — 렛츠커리어에서 모집 중인 챌린지 최대 3개(`GET /api/v1/recommended-challenges`).
  * 전에는 목업 문구를 하드코딩했다. 누르면 렛츠커리어 챌린지 상세를 새 탭으로 연다.
@@ -73,7 +84,7 @@ export async function CrossSellWidget({
     <section>
       <h2 className="text-sm font-bold text-gray-900">{title}</h2>
       {leadingCards.length > 0 ? (
-        <ul className="mt-1 divide-y divide-gray-100">
+        <ul className="mt-3 flex flex-col gap-3">
           {leadingCards.map((card) => (
             <li key={card.href}>
               <LeadingCard card={card} />
@@ -114,14 +125,21 @@ export async function CrossSellWidget({
   );
 }
 
-/** 고정 카드 하나. 종류 글자, 제목, 설명을 위에서 아래로 쌓는다. */
+/**
+ * 고정 카드 하나. 시안의 카드처럼 아주 옅은 파란 바탕에 모서리를 둥글게 하고, 맨 위에 종류 글자
+ * (`무료 자료집`, `블로그`)를 파랗게, 그 아래 제목(굵게)과 설명(작은 회색)을 둔다. 시안의 종류 앞
+ * 그림은 그리지 않고 글자로만 구분한다. 제목과 설명은 두 줄까지 보이고 넘치면 자른다.
+ */
 function LeadingCard({ card }: { card: CrossSellCard }) {
   return (
-    <a href={card.href} target="_blank" rel="noopener noreferrer" className="group block py-4">
-      <p className="text-xs text-gray-500">{card.label}</p>
-      <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-800 group-hover:text-blue-500">
-        {card.title}
-      </p>
+    <a
+      href={card.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-xl bg-blue-00 px-4 py-4 transition-colors hover:bg-blue-50"
+    >
+      <p className="truncate text-xs font-bold text-blue-500">{card.label}</p>
+      <p className="mt-2 line-clamp-2 text-sm font-bold text-gray-900">{card.title}</p>
       <p className="mt-1 line-clamp-2 text-xs text-gray-500">{card.description}</p>
     </a>
   );
