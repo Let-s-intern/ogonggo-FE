@@ -8,10 +8,15 @@ import {
 
 export interface QualificationChecklistProps {
   jobId: number;
-  /** 자격 요건을 항목으로 나눈 것. `splitLines` 의 결과다. 없으면 빈 배열. */
+  /** 자격 요건을 항목으로 나눈 것. `splitLines` 의 결과이거나 `analysis.required` 다. 없으면 빈 배열. */
   required: string[];
-  /** 우대 사항을 항목으로 나눈 것. 없으면 빈 배열. */
+  /** 우대 사항을 항목으로 나눈 것. `splitLines` 의 결과이거나 `analysis.preferred` 다. 없으면 빈 배열. */
   preferred: string[];
+  /**
+   * 두 배열이 이미 항목으로 나뉘어 온 값(`analysis`)이면 true. 항목이 하나뿐이어도 체크박스로 보인다.
+   * false(기본)는 글 덩어리를 `splitLines` 로 나눈 결과라 하나뿐이면 나뉜 것이 아니라 글 한 줄로 본다.
+   */
+  itemized?: boolean;
 }
 
 /**
@@ -19,8 +24,8 @@ export interface QualificationChecklistProps {
  * 나누고, 항목마다 체크박스를 둔다. 맨 위 배지가 `필수 2/3 · 우대 2/4 충족` 처럼 체크한 만큼 바뀐다.
  * 체크는 이 브라우저에만 남는다(`useQualificationChecklist`).
  *
- * 나눈 결과가 항목 하나뿐인 묶음은 체크할 것이 없는 글이라 체크박스 대신 글로 보이고 배지에서 빠진다.
- * 두 묶음이 모두 글이면 배지와 안내 문구도 없다.
+ * 글 덩어리를 나눈 결과가 항목 하나뿐인 묶음은 체크할 것이 없는 글이라 체크박스 대신 글로 보이고 배지에서
+ * 빠진다(`itemized` 가 아닐 때). 두 묶음이 모두 글이면 배지와 안내 문구도 없다.
  *
  * 둘 다 비어 있으면 부르는 쪽이 이 구역을 그리지 않는다.
  */
@@ -28,9 +33,11 @@ export function QualificationChecklist({
   jobId,
   required,
   preferred,
+  itemized = false,
 }: QualificationChecklistProps) {
-  const requiredChecks = required.length > 1;
-  const preferredChecks = preferred.length > 1;
+  const minChecks = itemized ? 0 : 1;
+  const requiredChecks = required.length > minChecks;
+  const preferredChecks = preferred.length > minChecks;
   const checklist = useQualificationChecklist(
     jobId,
     requiredChecks ? required.length : 0,

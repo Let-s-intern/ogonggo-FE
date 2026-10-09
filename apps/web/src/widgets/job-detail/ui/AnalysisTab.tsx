@@ -29,9 +29,14 @@ export function AnalysisTab({
   layout?: 'page' | 'modal';
 }) {
   const tasks = job.analysis?.tasks ?? [];
+  const analyzedRequired = job.analysis?.required ?? [];
+  const analyzedPreferred = job.analysis?.preferred ?? [];
+  // 분석에 필수·우대가 하나라도 있으면 두 묶음을 모두 분석에서 가져온다. 한쪽만 글 덩어리에서 가져오면
+  // 같은 공고 안에서 항목을 나눈 방식이 섞인다. 둘 다 비면 글 덩어리를 나눈다.
+  const itemized = analyzedRequired.length + analyzedPreferred.length > 0;
   const responsibilities = splitLines(job.responsibilities);
-  const required = splitLines(job.qualifications);
-  const preferred = splitLines(job.preferredQualifications);
+  const required = itemized ? analyzedRequired : splitLines(job.qualifications);
+  const preferred = itemized ? analyzedPreferred : splitLines(job.preferredQualifications);
   const compensation = splitLines(job.compensation);
   const hiringProcess = splitLines(job.hiringProcess);
 
@@ -51,7 +56,12 @@ export function AnalysisTab({
           </Section>
         ) : null}
         {required.length > 0 || preferred.length > 0 ? (
-          <QualificationChecklist jobId={job.id} required={required} preferred={preferred} />
+          <QualificationChecklist
+            jobId={job.id}
+            required={required}
+            preferred={preferred}
+            itemized={itemized}
+          />
         ) : null}
         <Section title="근무 조건">
           <dl className="flex flex-col gap-3 text-sm">
