@@ -26,7 +26,7 @@ export interface MobileSiteHeaderProps {
  * 모바일 헤더(`md` 미만). 시안은 `docs/asset/v9 mobile/채용공고 상세  플로팅버튼.png` 과
  * `상단 햄버거 버튼.png` 이다(360px 폭의 두 배로 그려져 있어 값은 절반으로 읽었다).
  *
- * 두 줄이다. 윗줄은 로고와 `앱 다운로드`(또는 `로그인`)·햄버거, 아랫줄은 세 목록 탭과 달력
+ * 두 줄이다. 윗줄은 로고와 `앱 다운로드`(또는 `로그인`)·햄버거, 아랫줄은 목록 탭 넷과 달력
  * 아이콘이다. 데스크톱 우측에 있던 `공고 등록`·`마이페이지`·`로그아웃` 은 햄버거 메뉴 안으로 들어간다.
  * 로그인하지 않았으면 `로그인` 도 메뉴 안에 있다.
  */
@@ -61,14 +61,17 @@ export function MobileSiteHeader({
           이 줄을 숨긴다. 공고 달력은 하단 채용공고 탭의 서브 메뉴로 간다. */}
       {hasBottomNav(install.kind === 'installed', signedIn) ? null : (
         <div className="flex h-11 items-stretch justify-between px-4">
-          <nav className="flex items-stretch gap-4">
+          {/* 탭 넷이 360px 에서도 한 줄에 들어가도록 글자 14px, 간격 8px 이다(Pretendard 로 잰 글자 폭 합 266px +
+              간격 24px 가 쓸 수 있는 폭 304px 안에 든다). 그보다 좁은 폰에서만 이 묶음이 가로로 밀리고, 달력
+              아이콘은 제자리에 있다. `whitespace-nowrap` 이 없으면 좁을 때 글자가 음절 사이에서 줄바꿈된다. */}
+          <nav className="flex min-w-0 items-stretch gap-2 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
               const active = matches(pathname);
               return (
                 <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
                   <MenuItem
                     state={active ? 'current' : 'default'}
-                    className={cn('h-full text-base', active && 'font-semibold')}
+                    className={cn('h-full text-sm', active && 'font-semibold')}
                   >
                     {mobileLabel}
                   </MenuItem>
