@@ -1,3 +1,4 @@
+import { cn } from '@ogonggo/ui';
 import type { JobDetail } from '@/entities/job/model/types';
 
 /**
@@ -23,13 +24,21 @@ function buildSections(job: JobDetail): { label: string; value?: string }[] {
  * 유일한 대용이다.
  *
  * 링크는 `http(s)` 주소일 때만 건다. 값이 없거나 다른 형식이면 링크만 빼고 그린다.
+ *
+ * `layout="modal"` 이면 전처럼 본문이 17px 안쪽에서 시작한다(`AnalysisTab` 과 같다).
  */
-export function OriginalTab({ job }: { job: JobDetail }) {
+export function OriginalTab({
+  job,
+  layout = 'page',
+}: {
+  job: JobDetail;
+  layout?: 'page' | 'modal';
+}) {
   const sections = buildSections(job).filter((section) => Boolean(section.value));
   const sourceUrl = job.sourceUrl && /^https?:\/\//.test(job.sourceUrl) ? job.sourceUrl : undefined;
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className={cn('flex flex-col gap-10', layout === 'modal' && 'px-[17px]')}>
       {sections.map((section) => (
         <div key={section.label}>
           <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>

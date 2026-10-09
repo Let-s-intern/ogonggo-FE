@@ -80,14 +80,15 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       recruitmentType={job.recruitmentType}
       recruitmentEndAt={job.recruitmentEndAt}
       viewCount={job.viewCount}
+      layout={layout}
     />
   );
   // 페이지는 탭을 주소(`?tab=original`)와 맞춘다. 모달은 아래 화면의 주소를 건드리지 않도록 상태로만 둔다.
   const tabs = (
     <JobDetailTabs
       syncUrl={layout === 'page'}
-      analysis={<AnalysisTab job={job} />}
-      original={<OriginalTab job={job} />}
+      analysis={<AnalysisTab job={job} layout={layout} />}
+      original={<OriginalTab job={job} layout={layout} />}
     />
   );
   const applyCta = (

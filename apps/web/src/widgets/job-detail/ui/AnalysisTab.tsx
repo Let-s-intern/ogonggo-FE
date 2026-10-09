@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@ogonggo/ui';
 import { EMPLOYMENT_TYPE_LABELS, formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
 import { splitLines } from '../lib/splitLines';
@@ -12,10 +13,19 @@ import { QualificationChecklist } from './QualificationChecklist';
  * 응답의 본문 필드는 전부 글 덩어리라(`splitLines` 주석) 줄 단위로 나눠 항목으로 보여 준다. 값이 없는
  * 섹션은 그리지 않고, 비어 있다는 안내 문구도 두지 않는다.
  *
+ * `layout="modal"` 이면 요약 박스가 v12 이전 2x2 모양이고(`JobInfoGrid`), 본문 섹션은 전처럼 요약 박스 안 글자
+ * 자리(17px 안쪽)에서 시작한다. 페이지는 시안대로 섹션 제목이 요약 박스의 바깥 가장자리에서 시작한다.
+ *
  * 시안에 있는 담당 업무의 분류 태그, 근무 조건의 전환·소속, 지원 서류의 필수·선택, 이력서에 담을 경험은
  * 응답에 대응하는 필드가 없어 그리지 않는다. 혜택·회사 소개는 `공고 원문` 탭에 있다.
  */
-export function AnalysisTab({ job }: { job: JobDetail }) {
+export function AnalysisTab({
+  job,
+  layout = 'page',
+}: {
+  job: JobDetail;
+  layout?: 'page' | 'modal';
+}) {
   const responsibilities = splitLines(job.responsibilities);
   const required = splitLines(job.qualifications);
   const preferred = splitLines(job.preferredQualifications);
@@ -29,34 +39,37 @@ export function AnalysisTab({ job }: { job: JobDetail }) {
         employmentType={job.employmentType}
         educationLevel={job.educationLevel}
         region={formatRegion(job.region)}
+        layout={layout}
       />
-      {responsibilities.length > 0 ? (
-        <Section title="담당 업무">
-          <LineList lines={responsibilities} />
-        </Section>
-      ) : null}
-      {required.length > 0 || preferred.length > 0 ? (
-        <QualificationChecklist jobId={job.id} required={required} preferred={preferred} />
-      ) : null}
-      <Section title="근무 조건">
-        <dl className="flex flex-col gap-3 text-sm">
-          <Condition label="형태">
-            <p>{EMPLOYMENT_TYPE_LABELS[job.employmentType]}</p>
-          </Condition>
-          {compensation.length > 0 ? (
-            <Condition label="급여">
-              {compensation.map((line, index) => (
-                <p key={`${index}-${line}`}>{line}</p>
-              ))}
+      <div className={cn('flex flex-col gap-10', layout === 'modal' && 'px-[17px]')}>
+        {responsibilities.length > 0 ? (
+          <Section title="담당 업무">
+            <LineList lines={responsibilities} />
+          </Section>
+        ) : null}
+        {required.length > 0 || preferred.length > 0 ? (
+          <QualificationChecklist jobId={job.id} required={required} preferred={preferred} />
+        ) : null}
+        <Section title="근무 조건">
+          <dl className="flex flex-col gap-3 text-sm">
+            <Condition label="형태">
+              <p>{EMPLOYMENT_TYPE_LABELS[job.employmentType]}</p>
             </Condition>
-          ) : null}
-        </dl>
-      </Section>
-      {hiringProcess.length > 0 ? (
-        <Section title="지원 서류 및 전형 절차">
-          <LineList lines={hiringProcess} />
+            {compensation.length > 0 ? (
+              <Condition label="급여">
+                {compensation.map((line, index) => (
+                  <p key={`${index}-${line}`}>{line}</p>
+                ))}
+              </Condition>
+            ) : null}
+          </dl>
         </Section>
-      ) : null}
+        {hiringProcess.length > 0 ? (
+          <Section title="지원 서류 및 전형 절차">
+            <LineList lines={hiringProcess} />
+          </Section>
+        ) : null}
+      </div>
     </div>
   );
 }
