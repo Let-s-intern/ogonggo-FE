@@ -21,9 +21,13 @@ export function ConcernListBanner() {
             어떤 공고에 지원할지, 내 경험을 어떻게 담을지, 다른 취준생들과 함께 이야기해요.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 whitespace-nowrap">
-          <ConcernWriteButton>고민 올리기</ConcernWriteButton>
-          <Button variant="secondary" className="bg-white" asChild>
+        {/*
+          한 줄 유지(`whitespace-nowrap`)는 버튼에만 건다. 감싸는 div 에 걸면 `고민 올리기` 가 이 div 안에 그리는
+          작성 모달(`<dialog>`)이 글 줄바꿈 금지를 물려받아, 모달 안의 실패 토스트가 줄바꿈되지 않고 잘린다.
+        */}
+        <div className="flex flex-wrap gap-2">
+          <ConcernWriteButton className="whitespace-nowrap">고민 올리기</ConcernWriteButton>
+          <Button variant="secondary" className="bg-white whitespace-nowrap" asChild>
             <Link href="/concerns">다른 고민 둘러보기</Link>
           </Button>
         </div>
