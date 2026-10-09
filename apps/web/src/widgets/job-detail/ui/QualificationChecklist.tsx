@@ -108,12 +108,13 @@ function Group({ label, group, lines, checklist, checkable }: GroupProps) {
     );
   }
 
+  // 줄 글자만 읽는 체크박스가 필수인지 우대인지 알 수 있도록 묶음에 눈에 보이는 라벨을 이름으로 준다.
+  const title = `${label} · ${lines.length}개`;
+
   return (
     <div>
-      <p className="text-xs text-gray-500">
-        {label} · {lines.length}개
-      </p>
-      <ul className="mt-2 rounded-lg bg-gray-50 py-1">
+      <p className="text-xs text-gray-500">{title}</p>
+      <ul role="group" aria-label={title} className="mt-2 rounded-lg bg-gray-50 py-1">
         {lines.map((line, index) => {
           const checked = checklist.isChecked(group, index);
           return (
