@@ -1,4 +1,6 @@
 import {
+  createConcernComment,
+  deleteMyConcernComment,
   listPublicConcernCommentReplies,
   listPublicConcernComments,
   type PageInfo,
@@ -7,6 +9,9 @@ import {
   type SuccessResponsePageResponseConcernCommentResponse,
   type SuccessResponsePageResponseConcernCommentRootResponse,
 } from '@ogonggo/api';
+
+/** 답변·답글 본문 최대 길이. 백엔드 `CreateConcernCommentRequest.content` 의 `@Size(max = 1000)` 과 같다. */
+export const COMMENT_MAX_LENGTH = 1000;
 
 /** 답변(부모 댓글) 한 번에 읽는 건수. 최대는 30 이다. */
 export const COMMENT_PAGE_SIZE = 10;
@@ -71,6 +76,20 @@ export async function fetchReplies(
     size: REPLY_PAGE_SIZE,
   })) as unknown as SuccessResponsePageResponseConcernCommentResponse;
   return response.data ?? emptyPage();
+}
+
+/** 답변 작성. `parentId` 를 주면 답글이다 — 답글에 다시 답글은 달 수 없다(400). */
+export async function createComment(
+  concernId: number,
+  content: string,
+  parentId?: number,
+): Promise<void> {
+  await createConcernComment(concernId, { content, parentId });
+}
+
+/** 답변·답글 삭제. 작성자 본인만 된다(403). 이미 지운 것은 404 다. */
+export async function deleteComment(concernId: number, commentId: number): Promise<void> {
+  await deleteMyConcernComment(concernId, commentId);
 }
 
 function emptyPage<T>(): { items: T[]; pageInfo: PageInfo } {

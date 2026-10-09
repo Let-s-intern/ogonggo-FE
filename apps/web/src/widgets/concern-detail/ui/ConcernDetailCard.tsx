@@ -1,10 +1,9 @@
 import type { ConcernDetailResponse } from '@ogonggo/api';
 import { getAuthorName } from '@/entities/concern/model/author';
 import { ConcernCategoryBadge } from '@/entities/concern/ui/ConcernCategoryBadge';
-import { ConcernStats } from '@/entities/concern/ui/ConcernStats';
 import { OfficialAnswerBadge } from '@/entities/concern/ui/OfficialAnswerBadge';
 import { RelativeTime } from '@/entities/concern/ui/RelativeTime';
-import { AuthorAvatar } from '@/features/concern-comments';
+import { AuthorAvatar, ConcernMetaStats } from '@/features/concern-comments';
 import { ConcernOwnerActions } from './ConcernOwnerActions';
 
 export interface ConcernDetailCardProps {
@@ -20,7 +19,7 @@ export interface ConcernDetailCardProps {
  * 작성자 줄 오른쪽 끝의 `수정 | 삭제` 는 내 글일 때만, 마운트 뒤에 나타난다(`ConcernOwnerActions`).
  *
  * 조회수는 서버가 읽은 값 그대로다. 이번 조회는 들어 있지 않고(PRD 결정 7) 화면에서 1 을 더하지도
- * 않는다.
+ * 않는다. 답변 수는 답변 영역에서 쓰고 지우면 같이 바뀐다(`ConcernMetaStats`).
  */
 export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
   return (
@@ -41,7 +40,11 @@ export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
         <RelativeTime value={concern.createdAt} className="shrink-0" />
-        <ConcernStats viewCount={concern.viewCount} commentCount={concern.commentCount} />
+        <ConcernMetaStats
+          concernId={concern.id}
+          viewCount={concern.viewCount}
+          commentCount={concern.commentCount}
+        />
       </div>
       <hr className="my-4 border-gray-200" />
       <p className="text-sm leading-relaxed break-words whitespace-pre-line text-gray-800">
