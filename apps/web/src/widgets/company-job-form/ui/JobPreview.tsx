@@ -32,8 +32,9 @@ export interface JobPreviewProps {
  * 공개 상세(`widgets/job-detail/`) 를 가져다 쓰지 않는다. 그쪽은 저장된 공고
  * (`UserJobDetailResponse`) 와 조회수·북마크·비슷한 공고처럼 작성 중에는 없는 값을 전제하고,
  * 서버에서 공고를 읽어 오는 것부터 시작한다. 맞춘 것은 **읽는 사람에게 무엇이 어떤 자리에
- * 보이는가** 이고, 정보 그리드 네 칸과 본문 구역의 순서가 그쪽과 같다
- * (`widgets/job-detail/ui/JobInfoGrid.tsx`, `JobDetailView.tsx` 의 `buildSections`).
+ * 보이는가** 이고, 정보 그리드 네 칸(`widgets/job-detail/ui/JobInfoGrid.tsx`)과 본문 구역의 순서가
+ * 그쪽 `공고 원문` 탭(`OriginalTab.tsx` 의 `buildSections`)과 같다. 공개 상세는 `공고 분석`·
+ * `공고 원문` 두 탭이 됐지만(`JobDetailTabs.tsx`) 이 미리보기는 탭 없이 이전의 단일 열 모양 그대로다.
  *
  * 급여 및 처우는 그리지 않는다. 공개 상세에는 있지만 이 폼에 칸이 없어(목업에 없다) 언제나
  * 빈 자리가 된다. 채용 안내사항도 같은 이유로 없다 — 공개 상세가 그 값을 그리지 않는다.

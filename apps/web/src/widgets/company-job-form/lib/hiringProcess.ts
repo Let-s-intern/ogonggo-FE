@@ -22,8 +22,9 @@ export interface HiringProcessStep {
 export const EMPTY_HIRING_PROCESS_STEP: HiringProcessStep = { date: '', description: '' };
 
 /**
- * 한 줄이 한 단계다(`2026-03-02 서류 전형`). 공개 상세가 `whitespace-pre-line` 으로 그려
- * 줄바꿈이 그대로 보인다(`widgets/job-detail/ui/JobDetailView.tsx`).
+ * 한 줄이 한 단계다(`2026-03-02 서류 전형`). 공개 상세의 `공고 원문` 탭은 `whitespace-pre-line` 으로
+ * 그려 줄바꿈이 그대로 보이고(`widgets/job-detail/ui/OriginalTab.tsx`), 기본 탭인 `공고 분석`
+ * (`AnalysisTab.tsx`)은 `splitLines` 로 줄 단위로 나눠 한 줄씩 항목으로 보여 준다.
  *
  * 날짜만 있고 내용이 없는 행은 버린다. 날짜 하나만 적힌 줄은 읽는 사람에게 아무것도
  * 말해 주지 않는다.
