@@ -1,4 +1,4 @@
-export type HeroScreen = 'jobs' | 'bootcamps' | 'side-studies';
+export type HeroScreen = 'jobs' | 'bootcamps' | 'side-studies' | 'concerns';
 
 /** 헤드라인 한 조각. `accent`가 있으면 강조색으로 그린다(지금은 jobs의 "딱!"·"쏙!"뿐이다). */
 export interface HeroSegment {
@@ -24,7 +24,17 @@ export interface HeroConfig {
 }
 
 /**
- * 히어로 세 화면의 문구·색. v8 목업(`docs/asset/v8 히어로/`)에서 배경은 PNG 그대로 쓰고,
+ * 배경 이미지가 아직 없는 화면에 까는 단색. `HomeHero` 는 `backgroundImage` 를 `url(...)` 에 넣어 그리므로
+ * 한 칸짜리 SVG 를 data URL 로 만들어 넘기면 같은 자리에서 단색이 된다 — 이미지가 오면 `/hero/<이름>.png`
+ * 한 줄로 바꾼다.
+ */
+function solidBackground(color: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="${color}"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * 히어로 네 화면의 문구·색. v8 목업(`docs/asset/v8 히어로/`)에서 배경은 PNG 그대로 쓰고,
  * 배지와 헤드라인은 같은 폴더의 SVG(글자가 윤곽선으로 변환돼 있다)에서 색과 크기를 읽어
  * 코드로 옮겼다 — 문구가 이미지 안에 있으면 검색 봇이 `<h1>`을 읽지 못한다.
  *
@@ -60,6 +70,20 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
       backgroundImage: '/hero/side-studies.png',
       badgeBg: 'bg-[#D1F3E5]',
       badgeText: 'text-gray-600',
+    },
+  },
+  /**
+   * `docs/asset/v13 취준고민/목록.webp`. 시안의 초록 배경 이미지는 아직 받지 못해 시안 오른쪽 면의
+   * 연한 민트(`#EBFAF2`) 단색으로 둔다. 배지 바탕은 시안 그대로(`#D1F3E6`)이고, 글자는 시안의 옅은
+   * 초록이 이 바탕에서 읽히지 않아 `오공고 답변` 배지와 같은 `emerald-700` 으로 둔다.
+   */
+  concerns: {
+    badge: '공고부터 면접까지, 취준생들의 이야기를 살펴보세요.',
+    lines: [[{ text: '취업 준비하다 막히는 순간' }], [{ text: '여기서 물어보세요' }]],
+    theme: {
+      backgroundImage: solidBackground('#EBFAF2'),
+      badgeBg: 'bg-[#D1F3E6]',
+      badgeText: 'text-emerald-700',
     },
   },
 };
