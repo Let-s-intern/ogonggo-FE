@@ -129,7 +129,9 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
           <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
-          <CrossSellWidget title={JOB_PREPARATION_TITLE} leadingCards={JOB_PREPARATION_CARDS} />
+          {/* 준비 위젯의 제목·고정 카드는 페이지 전용이다. 모달은 v6 시안대로 `함께 보면 좋아요` 와
+              챌린지 목록만 둔다(헤더·요약 박스를 옛 모양으로 둔 것과 같은 기준). */}
+          <CrossSellWidget />
         </aside>
       </div>
     );
