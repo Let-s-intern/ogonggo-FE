@@ -3,6 +3,8 @@ import { cn } from '@ogonggo/ui';
 import { EMPLOYMENT_TYPE_LABELS, formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
 import { splitLines } from '../lib/splitLines';
+import { Condition, hasFact } from './ConditionRow';
+import { EmploymentRows } from './EmploymentRows';
 import { JobInfoGrid } from './JobInfoGrid';
 import { QualificationChecklist } from './QualificationChecklist';
 import { TaskList } from './TaskList';
@@ -37,6 +39,10 @@ export function AnalysisTab({
   const responsibilities = splitLines(job.responsibilities);
   const required = itemized ? analyzedRequired : splitLines(job.qualifications);
   const preferred = itemized ? analyzedPreferred : splitLines(job.preferredQualifications);
+  // 네 줄 모두 값도 설명도 없으면 분석이 알려 주는 것이 없으므로 응답의 형태·급여로 그린다.
+  const employment = job.analysis?.employment;
+  const analyzedEmployment =
+    employment && Object.values(employment).some((fact) => hasFact(fact)) ? employment : null;
   const compensation = splitLines(job.compensation);
   const hiringProcess = splitLines(job.hiringProcess);
 
@@ -64,18 +70,22 @@ export function AnalysisTab({
           />
         ) : null}
         <Section title="근무 조건">
-          <dl className="flex flex-col gap-3 text-sm">
-            <Condition label="형태">
-              <p>{EMPLOYMENT_TYPE_LABELS[job.employmentType]}</p>
-            </Condition>
-            {compensation.length > 0 ? (
-              <Condition label="급여">
-                {compensation.map((line, index) => (
-                  <p key={`${index}-${line}`}>{line}</p>
-                ))}
+          {analyzedEmployment ? (
+            <EmploymentRows employment={analyzedEmployment} />
+          ) : (
+            <dl className="flex flex-col gap-3 text-sm">
+              <Condition label="형태">
+                <p>{EMPLOYMENT_TYPE_LABELS[job.employmentType]}</p>
               </Condition>
-            ) : null}
-          </dl>
+              {compensation.length > 0 ? (
+                <Condition label="급여">
+                  {compensation.map((line, index) => (
+                    <p key={`${index}-${line}`}>{line}</p>
+                  ))}
+                </Condition>
+              ) : null}
+            </dl>
+          )}
         </Section>
         {hiringProcess.length > 0 ? (
           <Section title="지원 서류 및 전형 절차">
@@ -111,14 +121,5 @@ function LineList({ lines }: { lines: string[] }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-function Condition({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex gap-4">
-      <dt className="w-8 shrink-0 text-xs leading-5 text-gray-400">{label}</dt>
-      <dd className="min-w-0 text-gray-900">{children}</dd>
-    </div>
   );
 }
