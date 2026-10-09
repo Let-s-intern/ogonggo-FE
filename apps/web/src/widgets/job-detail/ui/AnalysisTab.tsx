@@ -3,6 +3,7 @@ import { cn } from '@ogonggo/ui';
 import { EMPLOYMENT_TYPE_LABELS, formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
 import { splitLines } from '../lib/splitLines';
+import { CompetencySection } from './CompetencySection';
 import { Condition, hasFact } from './ConditionRow';
 import { EmploymentRows } from './EmploymentRows';
 import { JobInfoGrid } from './JobInfoGrid';
@@ -50,6 +51,7 @@ export function AnalysisTab({
   const analyzedSubmission =
     submission && Object.values(submission).some((fact) => hasFact(fact)) ? submission : null;
   const hiringProcess = splitLines(job.hiringProcess);
+  const competencies = job.analysis?.competencies ?? [];
 
   return (
     <div className="flex flex-col gap-10">
@@ -100,6 +102,9 @@ export function AnalysisTab({
               <LineList lines={hiringProcess} />
             )}
           </Section>
+        ) : null}
+        {competencies.length > 0 ? (
+          <CompetencySection key={job.id} competencies={competencies} />
         ) : null}
       </div>
     </div>
