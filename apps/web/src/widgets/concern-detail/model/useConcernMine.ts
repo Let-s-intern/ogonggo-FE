@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { ensureAccessToken } from '@/shared/api/reissue';
 import { useSignedIn } from '@/shared/api/useSignedIn';
 import { readConcernDetail } from '../api/concernDetail';
 
@@ -13,13 +14,19 @@ import { readConcernDetail } from '../api/concernDetail';
  *   조회수를 올린다(`refetchOnWindowFocus`, `refetchOnReconnect`, `retry`).
  * - 캐시에 남기지 않는다(`gcTime: 0`). 같은 탭에서 다른 계정으로 바꿔 로그인했을 때 앞 사람의 `mine` 이
  *   보이면 안 된다. 키에 로그인 여부를 넣은 것도 같은 이유다.
+ * 읽기 전에 액세스 토큰을 확보한다(`ensureAccessToken`). 이 읽기는 공개 API 라 토큰이 없거나 만료돼도 401 이 아니라
+ * 비로그인 응답(`mine=false`) 을 받는다. 그 값을 한 번 받으면 다시 읽지 않으므로(위) 새 탭·브라우저 재시작·30분
+ * 만료 뒤에는 내 글인데도 수정·삭제 버튼이 나타나지 않는다.
  * 읽지 못하면(그 사이 지워진 글 등) 내 글이 아닌 것으로 본다. 버튼이 없을 뿐 화면은 그대로다.
  */
 export function useConcernMine(concernId: number): boolean {
   const signedIn = useSignedIn();
   const { data } = useQuery({
     queryKey: ['concern-detail-mine', concernId, signedIn],
-    queryFn: () => readConcernDetail(concernId),
+    queryFn: async () => {
+      await ensureAccessToken();
+      return readConcernDetail(concernId);
+    },
     select: (detail) => detail?.mine ?? false,
     enabled: signedIn,
     gcTime: 0,

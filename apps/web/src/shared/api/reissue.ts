@@ -1,6 +1,12 @@
 import { HttpError, reissueAccessToken } from '@ogonggo/api';
 import type { ReissueAccessTokenBody } from './authResponses';
-import { clearTokens, getAccessToken, getRefreshToken, saveAccessToken } from './authTokens';
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  hasUsableAccessToken,
+  saveAccessToken,
+} from './authTokens';
 
 /**
  * 401 을 받은 요청을 위해 액세스 토큰을 한 번 재발급한다. `providers.tsx` 가 `setUnauthorizedHandler` 로
@@ -43,6 +49,30 @@ export async function handleUnauthorized(
     return true;
   }
 
+  return reissueOnce();
+}
+
+/**
+ * 토큰을 보내야 `mine`·`liked` 가 채워지는 공개 GET(`GET /api/v1/concerns/**` 등) 을 보내기 전에 쓸 수 있는
+ * 액세스 토큰을 확보한다. 읽기를 보내는 쪽이 요청 직전에 부른다.
+ *
+ * 이런 읽기는 토큰이 없거나 만료돼도 401 이 아니라 비로그인 응답(200, `mine=false`) 을 받는다. 그래서 401 에서
+ * 재발급하는 `handleUnauthorized` 가 걸리지 않고, 로그인했는데도 새 탭·브라우저 재시작(액세스 토큰은
+ * `sessionStorage`) 이나 30분 만료 뒤에는 내 글·내 답변이 남의 것으로 읽힌다. 리프레시 토큰이 있는데 액세스
+ * 토큰이 없거나 곧 만료되면 먼저 재발급하고 요청한다. 진행 중인 재발급이 있으면 그것을 기다린다.
+ *
+ * 재발급이 실패해도 던지지 않는다. 리프레시 토큰이 무효하면 `reissue` 가 로그인 화면으로 보내고, 서버 사정이면
+ * 읽기는 비로그인 응답으로라도 그려야 한다. 비로그인(리프레시 토큰 없음) 과 서버에서는 아무것도 하지 않는다.
+ */
+export async function ensureAccessToken(): Promise<void> {
+  if (typeof window === 'undefined' || !getRefreshToken() || hasUsableAccessToken()) {
+    return;
+  }
+  await (pendingReissue ?? reissueOnce());
+}
+
+/** 재발급은 하나만 나간다. 401 흐름과 `ensureAccessToken` 이 같은 진행 중인 재발급을 기다린다. */
+function reissueOnce(): Promise<boolean> {
   pendingReissue = reissue().finally(() => {
     pendingReissue = null;
   });

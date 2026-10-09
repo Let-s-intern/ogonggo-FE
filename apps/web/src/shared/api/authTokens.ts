@@ -80,6 +80,39 @@ export function saveAccessToken(accessToken: string): void {
   sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
 }
 
+/** 만료 시각이 이 안으로 다가온 토큰은 요청이 서버에 닿기 전에 만료될 수 있어 쓸 수 없는 것으로 본다. */
+const EXPIRY_MARGIN_MS = 30 * 1000;
+
+/**
+ * 액세스 토큰이 있고 곧 만료되지 않는지. 토큰은 서버가 만든 JWT 라 본문의 `exp`(초 단위 유닉스 시각) 를 읽는다.
+ * `exp` 를 읽지 못하면 쓸 수 있는 것으로 본다 — 판단은 서버가 한다. 목 모드의 임의 문자열 토큰이 그렇다.
+ *
+ * 서명은 확인하지 않는다. 이 값은 재발급이 필요한지를 가르는 데만 쓰고, 토큰이 유효한지는 서버가 정한다.
+ */
+export function hasUsableAccessToken(): boolean {
+  const token = getAccessToken();
+  if (!token) {
+    return false;
+  }
+  const expiresAt = readExpiry(token);
+  return expiresAt === null || expiresAt - EXPIRY_MARGIN_MS > Date.now();
+}
+
+/** JWT 본문의 `exp` 를 밀리초로. JWT 가 아니거나 `exp` 가 숫자가 아니면 `null`. */
+function readExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) {
+      return null;
+    }
+    const claims: unknown = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    const exp = (claims as { exp?: unknown } | null)?.exp;
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function clearTokens(): void {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
