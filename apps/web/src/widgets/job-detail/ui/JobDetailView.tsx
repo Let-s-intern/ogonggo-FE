@@ -8,7 +8,11 @@ import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
-import { CrossSellWidget } from '@/widgets/cross-sell';
+import {
+  CrossSellWidget,
+  JOB_PREPARATION_CARDS,
+  JOB_PREPARATION_TITLE,
+} from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { AnalysisTab } from './AnalysisTab';
@@ -124,7 +128,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
           <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
-          <CrossSellWidget />
+          <CrossSellWidget title={JOB_PREPARATION_TITLE} leadingCards={JOB_PREPARATION_CARDS} />
         </aside>
       </div>
     );
@@ -161,7 +165,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
             <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
           </DetailSidebarSection>
           <DetailSidebarSection>
-            <CrossSellWidget />
+            <CrossSellWidget title={JOB_PREPARATION_TITLE} leadingCards={JOB_PREPARATION_CARDS} />
           </DetailSidebarSection>
         </aside>
       </div>
