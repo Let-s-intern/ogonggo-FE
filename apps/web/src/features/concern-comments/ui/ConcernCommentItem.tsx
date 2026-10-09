@@ -7,8 +7,10 @@ import { CommentIcon } from '@/shared/ui/icons';
 import { DELETED_COMMENT_CONTENT } from '../api/concernCommentsApi';
 import { AuthorAvatar } from './AuthorAvatar';
 import { ConcernAuthorBadge, ManagerBadge } from './CommentBadges';
+import { CommentLikeButton } from './CommentLikeButton';
 
 export interface ConcernCommentItemProps {
+  concernId: number;
   /** 답변(`ConcernCommentRootResponse`) 도 이 모양에 들어간다 — 답글 쪽에만 있는 `parentId` 는 선택 값이다. */
   comment: ConcernCommentResponse;
   /** 답변에만 준다. 답글 수를 보이고, 답글에는 다시 답글을 달 수 없어(백엔드 400) 답글은 주지 않는다. */
@@ -18,8 +20,8 @@ export interface ConcernCommentItemProps {
   /** 내 것(`mine`) 에만 `삭제` 가 보인다. */
   onDelete?: () => void;
   /**
-   * 로그인하지 않았으면 답글 자리를 이 주소(로그인 화면) 로 보낸다. 삭제는 내 것에만 보이므로 로그인한
-   * 상태다.
+   * 로그인하지 않았으면 도움돼요와 답글 자리를 이 주소(로그인 화면) 로 보낸다. 삭제는 내 것에만 보이므로
+   * 로그인한 상태다.
    */
   signInHref?: string | null;
 }
@@ -63,6 +65,7 @@ function TimeAndDelete({
  * 남아 있어 자리는 지켜야 하지만 지운 사람의 이름을 그 자리에 둘 이유는 없다.
  */
 export function ConcernCommentItem({
+  concernId,
   comment,
   replyCount,
   onReply,
@@ -96,7 +99,7 @@ export function ConcernCommentItem({
         {comment.content}
       </p>
       <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
-        <span>도움돼요 {comment.likeCount}</span>
+        <CommentLikeButton concernId={concernId} comment={comment} signInHref={signInHref} />
         {replyCount === undefined ? null : onReply && signInHref ? (
           <Link
             href={signInHref}

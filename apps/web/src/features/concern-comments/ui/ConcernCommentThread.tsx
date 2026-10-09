@@ -79,6 +79,7 @@ export function ConcernCommentThread({
       )}
     >
       <ConcernCommentItem
+        concernId={concernId}
         comment={root}
         replyCount={totalReplies}
         signInHref={signInHref}
@@ -93,7 +94,9 @@ export function ConcernCommentThread({
               {replies.map((reply) => (
                 <li key={reply.id}>
                   <ConcernCommentItem
+                    concernId={concernId}
                     comment={reply}
+                    signInHref={signInHref}
                     onDelete={() => onDelete(reply, false, false)}
                   />
                 </li>

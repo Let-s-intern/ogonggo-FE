@@ -1,8 +1,10 @@
 import {
   createConcernComment,
   deleteMyConcernComment,
+  deleteMyConcernCommentLike,
   listPublicConcernCommentReplies,
   listPublicConcernComments,
+  replaceMyConcernCommentLike,
   type PageInfo,
   type PageResponseConcernCommentResponse,
   type PageResponseConcernCommentRootResponse,
@@ -90,6 +92,22 @@ export async function createComment(
 /** 답변·답글 삭제. 작성자 본인만 된다(403). 이미 지운 것은 404 다. */
 export async function deleteComment(concernId: number, commentId: number): Promise<void> {
   await deleteMyConcernComment(concernId, commentId);
+}
+
+/**
+ * 도움돼요 켜기(`PUT`)·끄기(`DELETE`) `.../comments/{commentId}/likes/me`. 이미 그 상태에서 다시 보내도
+ * 200 이고 한 번으로 센다(생성 타입 설명) 라 연타해도 숫자가 어긋나지 않는다.
+ */
+export async function setCommentLike(
+  concernId: number,
+  commentId: number,
+  liked: boolean,
+): Promise<void> {
+  if (liked) {
+    await replaceMyConcernCommentLike(concernId, commentId);
+  } else {
+    await deleteMyConcernCommentLike(concernId, commentId);
+  }
 }
 
 function emptyPage<T>(): { items: T[]; pageInfo: PageInfo } {
