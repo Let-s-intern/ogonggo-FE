@@ -1,8 +1,9 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '@ogonggo/ui';
+import { nextTabIndex } from '../lib/tabKeyboard';
 
 export type JobDetailTab = 'analysis' | 'original';
 
@@ -80,11 +81,26 @@ function StateTabs({ analysis, original }: Pick<TabViewProps, 'analysis' | 'orig
 /**
  * 모바일은 두 탭이 폭을 반씩 나눠 글자가 가운데에 오고, 데스크톱은 왼쪽에 붙어 나란히 선다. 탭 줄 아래
  * 가는 선은 전체 폭이고, 고른 탭의 파란 밑줄이 그 선 위에 겹친다.
+ *
+ * 키보드는 탭 패턴을 따른다. 고른 탭만 Tab 순서에 들고, 왼쪽·오른쪽 화살표와 Home·End 로 옮기면 클릭과
+ * 같이 `onSelect` 로 탭이 바뀌고 포커스가 따라간다.
  */
 function TabView({ tab, onSelect, analysis, original }: TabViewProps) {
   const id = useId();
   const tabId = (value: JobDetailTab) => `${id}-tab-${value}`;
   const panelId = `${id}-panel`;
+  const selectedIndex = TAB_ITEMS.findIndex((item) => item.value === tab);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const next = nextTabIndex(event, selectedIndex, TAB_ITEMS.length);
+    const item = next === null ? undefined : TAB_ITEMS[next];
+    if (!item) {
+      return;
+    }
+    event.preventDefault();
+    onSelect(item.value);
+    document.getElementById(tabId(item.value))?.focus();
+  };
 
   return (
     <div>
@@ -99,7 +115,9 @@ function TabView({ tab, onSelect, analysis, original }: TabViewProps) {
               role="tab"
               aria-selected={selected}
               aria-controls={panelId}
+              tabIndex={selected ? 0 : -1}
               onClick={() => onSelect(item.value)}
+              onKeyDown={handleKeyDown}
               className={cn(
                 '-mb-px flex-1 border-b-2 pb-3 text-center text-sm transition-colors md:flex-none md:px-0.5 md:text-base',
                 selected

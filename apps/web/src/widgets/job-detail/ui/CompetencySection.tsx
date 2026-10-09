@@ -1,8 +1,9 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useState, type KeyboardEvent } from 'react';
 import type { Competency } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
+import { nextTabIndex } from '../lib/tabKeyboard';
 
 /**
  * 이력서에 담을 경험(`docs/asset/v12 채용공고 상세/상세 기본.webp`). 역량 이름 칩을 하나 고르면 그 역량을
@@ -14,6 +15,9 @@ import { cn } from '@ogonggo/ui';
  * 둔다.
  *
  * 칩이 하나도 없으면 아무것도 그리지 않는다. 다른 공고로 넘어갈 때는 부르는 쪽이 `key` 로 새로 시작시킨다.
+ *
+ * 칩은 탭 패턴의 키보드를 따른다. 고른 칩만 Tab 순서에 들고, 왼쪽·오른쪽 화살표와 Home·End 로 옮기면 클릭과
+ * 같이 칩이 골라지고 포커스가 따라간다.
  */
 export function CompetencySection({ competencies }: { competencies: Competency[] }) {
   const id = useId();
@@ -26,6 +30,16 @@ export function CompetencySection({ competencies }: { competencies: Competency[]
   const tabId = (index: number) => `${id}-tab-${index}`;
   const panelId = `${id}-panel`;
   const selectedIndex = competencies.indexOf(current);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const next = nextTabIndex(event, selectedIndex, competencies.length);
+    if (next === null) {
+      return;
+    }
+    event.preventDefault();
+    setSelected(next);
+    document.getElementById(tabId(next))?.focus();
+  };
 
   return (
     <section>
@@ -46,7 +60,9 @@ export function CompetencySection({ competencies }: { competencies: Competency[]
               role="tab"
               aria-selected={isSelected}
               aria-controls={panelId}
+              tabIndex={isSelected ? 0 : -1}
               onClick={() => setSelected(index)}
+              onKeyDown={handleKeyDown}
               className={cn(
                 'rounded-md border px-3 py-2 text-sm transition-colors',
                 isSelected
