@@ -45,13 +45,15 @@ export function ConcernCommentThread({
   const [expanded, setExpanded] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const more = useMoreReplies(concernId, root.id, expanded);
-  const { hasNextPage, isFetching, fetchNextPage } = more;
+  const { hasNextPage, isFetching, isError, fetchNextPage } = more;
 
+  // 읽기가 실패하면 멈춘다. 실패해도 `hasNextPage` 는 그대로라 멈추지 않으면 같은 요청을 끝없이 다시 보낸다.
+  // 되살아난 `답글 N개 더보기` 를 누르면 이어서 읽는다.
   useEffect(() => {
-    if (showAll && hasNextPage && !isFetching) {
+    if (showAll && hasNextPage && !isFetching && !isError) {
       void fetchNextPage();
     }
-  }, [showAll, hasNextPage, isFetching, fetchNextPage]);
+  }, [showAll, hasNextPage, isFetching, isError, fetchNextPage]);
 
   const replies = uniqueById([
     ...root.replies.items,

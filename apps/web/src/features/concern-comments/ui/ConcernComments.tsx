@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { ConcernCommentResponse } from '@ogonggo/api';
-import { ConfirmDelete } from '@ogonggo/ui';
+import { ConfirmDelete, cn } from '@ogonggo/ui';
 import { useSignedIn } from '@/shared/api/useSignedIn';
 import { sanitizeReturnPath } from '@/shared/lib/returnPath';
 import {
@@ -41,7 +41,7 @@ export function ConcernComments({ concernId, commentCount }: ConcernCommentsProp
   const count = useCommentCount(concernId, commentCount);
   const roots = useRootComments(concernId);
   const { create, remove } = useCommentActions(concernId, commentCount);
-  const { hasNextPage, isFetching, fetchNextPage } = roots;
+  const { hasNextPage, isFetching, isError, fetchNextPage } = roots;
 
   const [deleting, setDeleting] = useState<{
     comment: ConcernCommentResponse;
@@ -49,20 +49,24 @@ export function ConcernComments({ concernId, commentCount }: ConcernCommentsProp
     hasReplies: boolean;
   } | null>(null);
   // 답변을 쓴 뒤 끝까지 이어 읽는다. 새 답변은 목록 끝에 붙어서, 다음 페이지가 남아 있으면 방금 쓴 글이
-  // `답변 더보기` 뒤에 숨는다.
+  // `답변 더보기` 뒤에 숨는다. 읽기가 실패하면 멈춘다 — 실패해도 `hasNextPage` 는 그대로라 멈추지 않으면 같은
+  // 요청을 끝없이 다시 보낸다. 사용자가 `다시 시도` 하면 이어서 읽는다.
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    if (showAll && hasNextPage && !isFetching) {
+    if (showAll && hasNextPage && !isFetching && !isError) {
       void fetchNextPage();
     }
-  }, [showAll, hasNextPage, isFetching, fetchNextPage]);
+  }, [showAll, hasNextPage, isFetching, isError, fetchNextPage]);
 
   const items = roots.data?.pages.flatMap((page) => page.items) ?? [];
   // 다음 페이지 첫 줄이 앞 페이지 끝 줄과 겹치는 경우를 위해 id 로 한 번 거른다.
   const uniqueItems = items.filter(
     (item, index) => items.findIndex((other) => other.id === item.id) === index,
   );
+  // 이미 읽은 목록이 있는데 다음 쪽이나 다시 읽기가 실패한 경우. 목록은 그대로 두고 그 아래에 알린다.
+  const loadFailed = isError && roots.data !== undefined;
+  const retry = () => void (roots.isFetchNextPageError ? fetchNextPage() : roots.refetch());
 
   return (
     <section aria-labelledby="concern-comments-title">
@@ -73,17 +77,8 @@ export function ConcernComments({ concernId, commentCount }: ConcernCommentsProp
       <div className="mt-4 flex flex-col gap-4">
         {roots.isPending ? (
           <p className="py-8 text-center text-sm text-gray-400">답변을 불러오는 중입니다.</p>
-        ) : roots.isError ? (
-          <div className="py-8 text-center text-sm text-gray-500">
-            <p>답변을 불러오지 못했습니다.</p>
-            <button
-              type="button"
-              onClick={() => void roots.refetch()}
-              className="mt-1 font-semibold text-blue-600 hover:underline"
-            >
-              다시 시도
-            </button>
-          </div>
+        ) : isError && roots.data === undefined ? (
+          <LoadError className="py-8" onRetry={() => void roots.refetch()} />
         ) : uniqueItems.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">
             아직 답변이 없어요. 첫 답변을 남겨보세요.
@@ -107,7 +102,9 @@ export function ConcernComments({ concernId, commentCount }: ConcernCommentsProp
           </ul>
         )}
 
-        {hasNextPage ? (
+        {loadFailed ? (
+          <LoadError className="py-2" onRetry={retry} />
+        ) : hasNextPage ? (
           <button
             type="button"
             disabled={roots.isFetchingNextPage}
@@ -152,6 +149,22 @@ export function ConcernComments({ concernId, commentCount }: ConcernCommentsProp
         onClose={() => setDeleting(null)}
       />
     </section>
+  );
+}
+
+/** 답변을 읽지 못했을 때의 안내와 `다시 시도`. 문구와 모양은 사이드·스터디 댓글 영역(`댓글을 불러오지 못했습니다`) 의 관례를 따른다. */
+function LoadError({ className, onRetry }: { className: string; onRetry: () => void }) {
+  return (
+    <div className={cn('text-center text-sm text-gray-500', className)}>
+      <p>답변을 불러오지 못했습니다.</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-1 font-semibold text-blue-600 hover:underline"
+      >
+        다시 시도
+      </button>
+    </div>
   );
 }
 
