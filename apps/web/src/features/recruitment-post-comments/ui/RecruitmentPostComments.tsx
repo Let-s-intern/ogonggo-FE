@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import type { RecruitmentPostCommentResponse } from '@ogonggo/api';
 import { ConfirmDelete } from '@ogonggo/ui';
+import { useSignedIn } from '@/shared/api/useSignedIn';
 import { sanitizeReturnPath } from '@/shared/lib/returnPath';
 import {
   failureMessage,
   useCommentActions,
   useCommentCount,
   useRootComments,
-  useSignedIn,
 } from '../model/useComments';
 import { CommentComposer } from './CommentComposer';
 import { CommentThread } from './CommentThread';
