@@ -117,10 +117,13 @@ export function SiteHeader() {
         myPageHref={myPageMobileHref}
         adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
       />
-      <div className="mx-auto hidden h-16 max-w-6xl items-stretch justify-between px-6 md:flex">
+      {/* 탭이 넷이 되어 md 경계(768px)의 여유가 줄었다. 이름이 5자 이상이거나 관리자 계정이면 768px 에서 탭과
+          우측 글자가 음절 사이에서 줄바꿈되므로(실측) `whitespace-nowrap` 으로 막고, 탭 사이는 lg 미만에서만
+          16px 로 좁힌다. */}
+      <div className="mx-auto hidden h-16 max-w-6xl items-stretch justify-between px-6 whitespace-nowrap md:flex">
         <div className="flex items-center gap-10">
           <ServiceLogoToggle size="desktop" />
-          <nav className="flex items-stretch gap-6">
+          <nav className="flex items-stretch gap-4 lg:gap-6">
             {NAV_ITEMS.map(({ href, label, matches }) => {
               const active = matches(pathname);
               return (

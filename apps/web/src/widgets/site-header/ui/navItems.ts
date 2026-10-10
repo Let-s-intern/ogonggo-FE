@@ -23,4 +23,10 @@ export const NAV_ITEMS = [
     mobileLabel: '사이드 · 스터디',
     matches: (path: string) => path.startsWith('/side-studies'),
   },
+  {
+    href: '/concerns',
+    label: '취준 고민',
+    mobileLabel: '취준 고민',
+    matches: (path: string) => path.startsWith('/concerns'),
+  },
 ] as const;
