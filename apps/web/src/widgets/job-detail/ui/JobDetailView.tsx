@@ -8,11 +8,17 @@ import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
-import { CrossSellWidget } from '@/widgets/cross-sell';
+import {
+  CrossSellWidget,
+  JOB_PREPARATION_CARDS,
+  JOB_PREPARATION_TITLE,
+} from '@/widgets/cross-sell';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
+import { AnalysisTab } from './AnalysisTab';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
-import { JobInfoGrid } from './JobInfoGrid';
+import { JobDetailTabs } from './JobDetailTabs';
+import { OriginalTab } from './OriginalTab';
 import { SimilarJobs } from './SimilarJobs';
 
 export interface JobDetailViewProps {
@@ -56,26 +62,9 @@ export async function fetchJobDetail(jobId: number): Promise<JobDetail> {
 }
 
 /**
- * `상세 채용공고.png`가 실제로 쓰는 6개 라벨(띄어쓰기 포함) 그대로다. 어드민에서 수정한
- * 회사/팀소개가 화면에 전혀 반영되지 않는다는 제보로 `companyAndTeamIntroduction`을 다시
- * 추가한다(#123) — 본문 맨 앞에 둔다.
- */
-function buildSections(job: JobDetail): { label: string; value?: string }[] {
-  return [
-    { label: '회사 및 팀 소개', value: job.companyAndTeamIntroduction },
-    { label: '주요 업무', value: job.responsibilities },
-    { label: '자격 요건', value: job.qualifications },
-    { label: '우대 사항', value: job.preferredQualifications },
-    { label: '급여 및 처우', value: job.compensation },
-    { label: '혜택 및 복지', value: job.benefits },
-    { label: '채용 절차', value: job.hiringProcess },
-  ];
-}
-
-/**
- * 채용공고 상세 — `docs/asset/상세 채용공고.png` 순서(헤더 카드 → 정보 그리드 → 본문 섹션
- * (값 있는 것만) → 사이드바)로 조합한다. 본문(왼쪽)과 사이드바(오른쪽)는 데스크톱에서 2단,
- * 좁은 화면에서는 세로로 쌓인다.
+ * 채용공고 상세 — `docs/asset/v12 채용공고 상세/` 순서(헤더 카드 → `공고 분석`·`공고 원문` 탭 →
+ * 사이드바)로 조합한다. 요약 박스와 본문 섹션은 탭 안에 있다(`AnalysisTab`, `OriginalTab`). 본문
+ * (왼쪽)과 사이드바(오른쪽)는 데스크톱에서 2단, 좁은 화면에서는 세로로 쌓인다.
  */
 export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
@@ -91,24 +80,17 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       recruitmentType={job.recruitmentType}
       recruitmentEndAt={job.recruitmentEndAt}
       viewCount={job.viewCount}
+      layout={layout}
     />
   );
-  const infoGrid = (
-    <JobInfoGrid
-      experienceType={job.experienceType}
-      employmentType={job.employmentType}
-      educationLevel={job.educationLevel}
-      region={formatRegion(job.region)}
+  // 페이지는 탭을 주소(`?tab=original`)와 맞춘다. 모달은 아래 화면의 주소를 건드리지 않도록 상태로만 둔다.
+  const tabs = (
+    <JobDetailTabs
+      syncUrl={layout === 'page'}
+      analysis={<AnalysisTab job={job} layout={layout} />}
+      original={<OriginalTab job={job} layout={layout} />}
     />
   );
-  const sections = buildSections(job)
-    .filter((section) => Boolean(section.value))
-    .map((section) => (
-      <div key={section.label}>
-        <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
-        <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{section.value}</p>
-      </div>
-    ));
   const applyCta = (
     <ApplyCta
       href={job.sourceUrl}
@@ -133,8 +115,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
 
   if (layout === 'modal') {
     return (
-      // 모달 목업의 2단은 본문 640px : 사이드바 300px, 사이 20px 이다. 본문 섹션은 페이지와 같이
-      // 정보 박스 안 글자 자리(17px 안쪽)에서 시작한다.
+      // 모달 목업의 2단은 본문 640px : 사이드바 300px, 사이 20px 이다.
       //
       // 목업 오른쪽 맨 위의 `오늘의 공고의 코멘트`는 그리지 않는다. API 없음: 상세 응답에 코멘트
       // 필드가 없다. 그 아래 회색 판은 광고 자리인데, 내용이 정해지지 않아 빈 상자만 보여서
@@ -143,12 +124,13 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <div className="flex min-w-0 flex-col gap-5">
           {viewTracker}
           {headerCard}
-          {infoGrid}
-          <div className="flex flex-col gap-10 px-[17px] pt-5">{sections}</div>
+          {tabs}
         </div>
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
-          <SimilarJobs excludeJobId={job.id} />
+          <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          {/* 준비 위젯의 제목·고정 카드는 페이지 전용이다. 모달은 v6 시안대로 `함께 보면 좋아요` 와
+              챌린지 목록만 둔다(헤더·요약 박스를 옛 모양으로 둔 것과 같은 기준). */}
           <CrossSellWidget />
         </aside>
       </div>
@@ -163,16 +145,14 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       {/* 본문 2단은 좌우 여백 없이 위 헤더 카드와 아래 `ForBusinessBanner`의 바깥 가장자리에 맞춘다.
           전에는 카드 안쪽 글자 위치에 맞춰 `md:px-8`을 뒀는데, 블록 가장자리가 어긋나 보인다는
           요청으로 가장자리 기준으로 바꿨다(2026-09-30). */}
+      {/* 헤더 마지막 줄 아래에서 탭 줄까지는 시안 실측 약 72px 이다(탭 글자까지는 약 76px, 모바일·데스크톱
+          모두). 헤더의 아래 여백(`p-4`, `md:py-6`)과 위 `gap-4` 가 이미 32·40px 이라 모자란 만큼을 2단 위에
+          더한다. */}
       {/* 2단 비율은 `상세 채용공고.png` 실측값(본문 739px : 사이드바 323px, 사이 간격 60px,
           1440px 기준)을 그대로 `fr`로 옮긴 것이다. 3:2로 뒀을 때 사이드바가 목업보다 넓고
           본문이 좁았다. */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
-        <div className="flex flex-col gap-10">
-          {infoGrid}
-          {/* 본문 글자는 위 정보 박스 안 글자와 같은 자리에서 시작한다 — 박스의 `p-4` 와 테두리 1px 를
-              더한 17px 만큼 들인다. */}
-          <div className="flex flex-col gap-10 px-[17px]">{sections}</div>
-        </div>
+      <div className="mt-10 grid grid-cols-1 gap-6 md:mt-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
+        <div className="min-w-0">{tabs}</div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
             summary={
@@ -188,10 +168,10 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
             {applyCta}
           </StickyApplyBar>
           <DetailSidebarSection>
-            <SimilarJobs excludeJobId={job.id} />
+            <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
           </DetailSidebarSection>
           <DetailSidebarSection>
-            <CrossSellWidget />
+            <CrossSellWidget title={JOB_PREPARATION_TITLE} leadingCards={JOB_PREPARATION_CARDS} />
           </DetailSidebarSection>
         </aside>
       </div>

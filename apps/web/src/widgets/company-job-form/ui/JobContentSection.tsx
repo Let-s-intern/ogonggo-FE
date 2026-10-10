@@ -15,8 +15,9 @@ export interface JobContentSectionProps {
  * 2 단 상세 내용(v5 PRD 3 절). 주요 업무 · 자격 요건 · 우대 사항 · 혜택 및 복지 · 채용 절차.
  *
  * 앞의 넷은 평문 한 칸씩이고 `responsibilities`·`qualifications`·`preferredQualifications`·
- * `benefits` 에 그대로 들어간다. 공개 상세가 같은 순서로 그린다
- * (`widgets/job-detail/ui/JobDetailView.tsx` 의 `buildSections`).
+ * `benefits` 에 그대로 들어간다. 공개 상세는 `공고 분석`·`공고 원문` 두 탭인데(`JobDetailTabs.tsx`),
+ * 이 글들을 그대로 보여 주는 `공고 원문` 탭이 같은 순서로 그린다
+ * (`widgets/job-detail/ui/OriginalTab.tsx` 의 `buildSections`).
  */
 export function JobContentSection({
   values,
