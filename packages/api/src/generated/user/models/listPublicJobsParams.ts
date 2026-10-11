@@ -4,8 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { ListPublicJobsEmploymentType } from './listPublicJobsEmploymentType';
-import type { ListPublicJobsExperienceType } from './listPublicJobsExperienceType';
+import type { ListPublicJobsEmploymentTypeItem } from './listPublicJobsEmploymentTypeItem';
+import type { ListPublicJobsExperienceTypeItem } from './listPublicJobsExperienceTypeItem';
 import type { ListPublicJobsJobField } from './listPublicJobsJobField';
 import type { ListPublicJobsJobRoleItem } from './listPublicJobsJobRoleItem';
 import type { ListPublicJobsRecruitmentStatus } from './listPublicJobsRecruitmentStatus';
@@ -30,27 +30,8 @@ size?: number;
  * | `VIEW_COUNT` | 2 | 조회수순 |
  */
 sort?: ListPublicJobsSort;
-/**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `FULL_TIME` | 1 | 정규직 |
- * | `CONTRACT` | 2 | 계약직 |
- * | `INTERN` | 3 | 인턴 |
- * | `PART_TIME` | 4 | 파트타임 |
- * | `WORK_STUDY` | 6 | 일학습병행 |
- * | `WORK_EXPERIENCE` | 7 | 미래내일 일경험 |
- * | `ETC` | 5 | 기타 |
- */
-employmentType?: ListPublicJobsEmploymentType;
-/**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `NEWCOMER` | 1 | 신입 |
- * | `EXPERIENCED` | 2 | 경력 |
- * | `BOTH` | 3 | 신입·경력 |
- * | `IRRELEVANT` | 4 | 경력 무관 |
- */
-experienceType?: ListPublicJobsExperienceType;
+employmentType?: ListPublicJobsEmploymentTypeItem[];
+experienceType?: ListPublicJobsExperienceTypeItem[];
 /**
  * | 값 | code | 설명 |
  * | --- | --- | --- |
