@@ -1,15 +1,20 @@
 import { ListPublicJobsSort } from '@ogonggo/api';
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
-import type { JobEmploymentType, JobExperienceType } from '@/entities/job/model/types';
 import { HomePage } from '@/views/home';
-import { parseJobRoleSelection } from '@/widgets/job-list';
+import {
+  parseEmploymentTypes,
+  parseExperienceTypes,
+  parseJobRoleSelection,
+  parseKeywordParam,
+} from '@/widgets/job-list';
 
 interface HomeSearchParams {
   page?: string;
   sort?: string;
-  q?: string;
-  employmentType?: string;
-  experienceType?: string;
+  /** 같은 이름이 되풀이되면 배열로 온다. 첫 값만 쓴다. */
+  q?: string | string[];
+  /** 채용 형태·요구 경력. 여럿이면 같은 이름이 되풀이돼 배열로 온다. */
+  employmentType?: string | string[];
+  experienceType?: string | string[];
   /** 직무 필터. 여럿이면 같은 이름이 되풀이돼 배열로 온다. */
   jobField?: string | string[];
   jobRole?: string | string[];
@@ -26,14 +31,6 @@ function parseSort(value: string | undefined): ListPublicJobsSort {
     : ListPublicJobsSort.LATEST;
 }
 
-function parseEmploymentType(value: string | undefined): JobEmploymentType | undefined {
-  return value && value in EMPLOYMENT_TYPE_LABELS ? (value as JobEmploymentType) : undefined;
-}
-
-function parseExperienceType(value: string | undefined): JobExperienceType | undefined {
-  return value && value in EXPERIENCE_TYPE_LABELS ? (value as JobExperienceType) : undefined;
-}
-
 export default async function Page({ searchParams }: { searchParams: Promise<HomeSearchParams> }) {
   const { page, sort, q, employmentType, experienceType, jobField, jobRole } = await searchParams;
 
@@ -41,9 +38,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Hom
     <HomePage
       page={parsePage(page)}
       sort={parseSort(sort)}
-      q={q || undefined}
-      employmentType={parseEmploymentType(employmentType)}
-      experienceType={parseExperienceType(experienceType)}
+      q={parseKeywordParam(q)}
+      employmentTypes={parseEmploymentTypes(employmentType)}
+      experienceTypes={parseExperienceTypes(experienceType)}
       {...parseJobRoleSelection(jobField, jobRole)}
     />
   );
