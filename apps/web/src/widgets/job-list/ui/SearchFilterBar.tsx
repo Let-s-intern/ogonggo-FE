@@ -50,7 +50,8 @@ function FilterDropdown<TValue extends string>({
   const currentLabel = options.find(([value]) => value === selected)?.[1] ?? label;
 
   return (
-    <details data-dropdown className="group relative">
+    // lg 이상은 왼쪽 필터 열이 같은 필터를 체크박스로 보인다.
+    <details data-dropdown className="group relative lg:hidden">
       <FilterButton
         state={selected ? 'selected' : 'default'}
         className="group-open:[&>span]:rotate-180"
@@ -113,7 +114,12 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
     // 선다. 시안(`docs/asset/v9 mobile/채용공고 목록.png`)은 한 줄 가로 스크롤인데, 필터 목록이
     // 버튼 아래로 떨어지는 드롭다운이라 스크롤 상자 안에 두면 잘린다.
     <div className="contents md:flex md:flex-wrap md:items-center md:gap-2">
-      <form action="/" method="GET" className="w-full md:w-auto md:min-w-[220px] md:flex-1">
+      {/* lg 이상은 왼쪽 필터 열(`JobFilterSidebar`)의 검색창을 쓴다. */}
+      <form
+        action="/"
+        method="GET"
+        className="w-full md:w-auto md:min-w-[220px] md:flex-1 lg:hidden"
+      >
         {[...carried].map(([name, value]) => (
           <input key={`${name}=${value}`} type="hidden" name={name} value={value} />
         ))}
