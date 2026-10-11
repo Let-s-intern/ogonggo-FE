@@ -65,8 +65,10 @@ export async function TodayJobs() {
             <JobCard
               job={job}
               recommendation={{
-                title: job.recommendationTitle,
-                description: job.recommendationDescription,
+                // 스펙은 필수 문자열이지만 `null` 이 오면 `JobCard` 의 `trim()` 이 렌더 중에 터져 홈 전체가
+                // 오류 화면이 된다. 이 구역의 실패가 홈으로 번지지 않게 응답 경계에서 빈 문자열로 만든다.
+                title: job.recommendationTitle ?? '',
+                description: job.recommendationDescription ?? '',
               }}
               tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
             />
