@@ -1,7 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { userConcernHandlers } from './concerns';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
-import { JOB_FIXTURES } from './fixtures/job';
+import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
 import {
   RECRUITMENT_POST_FIXTURES,
@@ -42,6 +42,7 @@ import type { SuccessResponsePageResponseUserAnnouncementSummaryResponse } from 
 import type { SuccessResponseUserAnnouncementDetailResponse } from '../generated/user/models/successResponseUserAnnouncementDetailResponse';
 import type { UserAnnouncementSummaryResponse } from '../generated/user/models/userAnnouncementSummaryResponse';
 import type { SuccessResponseListUserJobCalendarItemResponse } from '../generated/user/models/successResponseListUserJobCalendarItemResponse';
+import type { SuccessResponseListUserTodayJobSummaryResponse } from '../generated/user/models/successResponseListUserTodayJobSummaryResponse';
 import type { SuccessResponseUserBootcampDetailResponse } from '../generated/user/models/successResponseUserBootcampDetailResponse';
 import type { SuccessResponseUserJobDetailResponse } from '../generated/user/models/successResponseUserJobDetailResponse';
 import type { UserBootcampDetailResponse } from '../generated/user/models/userBootcampDetailResponse';
@@ -329,6 +330,49 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
     status: 200,
     message: '채용공고 달력을 조회했습니다.',
     data: items,
+  };
+
+  return HttpResponse.json(body, { status: 200 });
+});
+
+/**
+ * 오늘의 추천 공고에 붙는 추천 문구. 길이는 어드민 한도(제목 30자, 설명 50자) 안이다.
+ * 항목 수만큼의 공고에 앞에서부터 하나씩 붙는다.
+ */
+const TODAY_JOB_RECOMMENDATIONS = [
+  { title: '경력 없이 시작하고 싶다면', description: '실무 중심 프로젝트로 빠른 성장' },
+  { title: '첫 직무를 찾고 있다면', description: '신입도 지원할 수 있는 채용을 모았어요' },
+  { title: '포트폴리오를 쌓고 싶다면', description: '실제 서비스에 참여하는 인턴 경험' },
+  { title: '지금 지원하면 늦지 않아요', description: '마감이 가까운 공고예요' },
+] as const;
+
+/**
+ * `GET /api/v1/jobs/today`. 운영자가 고른 공고를 고른 순서대로 주고 페이지 정보는 없다. 목은
+ * 마감 전인 실데이터 공고(id 6 이상, 앞의 다섯 건은 faker 시나리오 픽스처다) 앞에서부터
+ * `TODAY_JOB_RECOMMENDATIONS` 개수만큼 고른다.
+ *
+ * `getJobHandler`의 경로 패턴이 `/api/v1/jobs/:jobId`라 `today`를 삼켜 404 `JOB_NOT_FOUND`를
+ * 내므로 `handlers` 배열에서 반드시 그보다 앞에 있어야 한다 — `getJobCalendarHandler`와 같다.
+ */
+const getTodayJobsHandler = http.get('*/api/v1/jobs/today', () => {
+  const now = Date.now();
+  const data = JOB_FIXTURES.filter(
+    (job) =>
+      job.id > JOB_SCENARIO_IDS.alwaysOpen &&
+      job.recruitmentEndAt !== undefined &&
+      Date.parse(job.recruitmentEndAt) > now,
+  )
+    .slice(0, TODAY_JOB_RECOMMENDATIONS.length)
+    .map((job, index) => ({
+      ...toSummary(job),
+      recommendationTitle: TODAY_JOB_RECOMMENDATIONS[index]?.title ?? '',
+      recommendationDescription: TODAY_JOB_RECOMMENDATIONS[index]?.description ?? '',
+    }));
+
+  const body: SuccessResponseListUserTodayJobSummaryResponse = {
+    status: 200,
+    message: '오늘의 채용공고를 조회했습니다.',
+    data,
   };
 
   return HttpResponse.json(body, { status: 200 });
@@ -1063,8 +1107,9 @@ const uploadImageHandler = http.post('*/api/v1/images', () => {
 export const handlers: HttpHandler[] = [
   uploadImageHandler,
   getJobsHandler,
-  // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`도 잡는다.
+  // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`, `/jobs/today`도 잡는다.
   getJobCalendarHandler,
+  getTodayJobsHandler,
   getJobHandler,
   getBootcampsHandler,
   getBootcampHandler,
