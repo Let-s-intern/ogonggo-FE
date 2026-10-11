@@ -1,5 +1,11 @@
 import { ListPublicJobsSort } from '@ogonggo/api';
-import { JOB_FIELD_LABELS, JOB_ROLES, jobRolesOf } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  JOB_FIELD_LABELS,
+  JOB_ROLES,
+  jobRolesOf,
+} from '@/entities/job/model/labels';
 import type {
   JobEmploymentType,
   JobExperienceType,
@@ -15,8 +21,10 @@ export interface JobListQuery {
   page: number;
   sort: ListPublicJobsSort;
   q?: string;
-  employmentType?: JobEmploymentType;
-  experienceType?: JobExperienceType;
+  /** 채용 형태. 여럿이면 하나라도 맞는 공고를 보이고, 없으면 걸지 않는다. */
+  employmentTypes?: JobEmploymentType[];
+  /** 요구 경력. `employmentTypes` 와 같은 규칙이다. */
+  experienceTypes?: JobExperienceType[];
   /** 직무 필터에서 `전체` 로 고른 직군들. */
   jobFields?: JobField[];
   /** 하나씩 고른 직무들. `jobFields` 에 든 직군의 직무는 싣지 않는다 — 이미 전부 골랐다. */
@@ -46,11 +54,11 @@ export function buildJobListHref(
   if (merged.q) {
     params.set('q', merged.q);
   }
-  if (merged.employmentType) {
-    params.set('employmentType', merged.employmentType);
+  for (const type of merged.employmentTypes ?? []) {
+    params.append('employmentType', type);
   }
-  if (merged.experienceType) {
-    params.set('experienceType', merged.experienceType);
+  for (const type of merged.experienceTypes ?? []) {
+    params.append('experienceType', type);
   }
   for (const field of merged.jobFields ?? []) {
     params.append('jobField', field);
@@ -61,6 +69,43 @@ export function buildJobListHref(
 
   const query = params.toString();
   return query ? `/?${query}` : '/';
+}
+
+/**
+ * 주소의 채용 형태·요구 경력을 읽는다. 값 하나(`?employmentType=FULL_TIME`)도, 같은 이름을 되풀이한
+ * 것(`?employmentType=INTERN&employmentType=FULL_TIME`)도 읽힌다.
+ *
+ * 아는 값만 남긴다. `value in LABELS` 로 가르면 `toString` 같은 프로토타입 키가 통과해 API 가 400 을
+ * 돌려주고 홈 전체가 에러 화면이 되므로 `Object.hasOwn` 으로 가른다. 겹친 값은 하나로 합치고 순서는
+ * 옵션 순서로 맞춘다 — 같은 필터가 주소 두 개로 갈리지 않게. 하나도 안 남았거나 전부 골랐으면
+ * `undefined`(걸지 않음)다.
+ */
+function parseEnumList<TValue extends string>(
+  labels: Record<TValue, string>,
+  value: string | string[] | undefined,
+): TValue[] | undefined {
+  const given = new Set([value ?? []].flat().filter((item) => Object.hasOwn(labels, item)));
+  const options = Object.keys(labels) as TValue[];
+  const picked = options.filter((option) => given.has(option));
+  return picked.length > 0 && picked.length < options.length ? picked : undefined;
+}
+
+export function parseEmploymentTypes(
+  value: string | string[] | undefined,
+): JobEmploymentType[] | undefined {
+  return parseEnumList(EMPLOYMENT_TYPE_LABELS, value);
+}
+
+export function parseExperienceTypes(
+  value: string | string[] | undefined,
+): JobExperienceType[] | undefined {
+  return parseEnumList(EXPERIENCE_TYPE_LABELS, value);
+}
+
+/** 주소의 `q`. 같은 이름이 되풀이돼 배열로 와도 첫 값만 쓴다. */
+export function parseKeywordParam(value: string | string[] | undefined): string | undefined {
+  const first = Array.isArray(value) ? value[0] : value;
+  return first || undefined;
 }
 
 /**
@@ -102,10 +147,16 @@ export function toJobRoleParams({
   return { jobRole: [...jobFields.flatMap(jobRolesOf), ...jobRoles] };
 }
 
-/** 백엔드가 2~100자만 받는다. 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
+/** 백엔드가 받는 검색어 길이(2~100자). 입력창의 `minLength`·`maxLength` 도 이 값을 쓴다. */
+export const KEYWORD_MIN_LENGTH = 2;
+export const KEYWORD_MAX_LENGTH = 100;
+
+/** 길이를 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
 function pickKeyword(q: string | undefined): string | undefined {
   const keyword = q?.trim();
-  return keyword && keyword.length >= 2 && keyword.length <= 100 ? keyword : undefined;
+  return keyword && keyword.length >= KEYWORD_MIN_LENGTH && keyword.length <= KEYWORD_MAX_LENGTH
+    ? keyword
+    : undefined;
 }
 
 /**
@@ -125,11 +176,12 @@ export function buildJobsApiUrl(query: JobListQuery, size: number): string {
   if (keyword) {
     params.set('keyword', keyword);
   }
-  if (query.employmentType) {
-    params.set('employmentType', query.employmentType);
+  // 같은 이름을 되풀이해 싣는다. 쉼표로 이으면 백엔드가 400 을 돌려준다(2026-10-11 운영 실측).
+  for (const type of query.employmentTypes ?? []) {
+    params.append('employmentType', type);
   }
-  if (query.experienceType) {
-    params.set('experienceType', query.experienceType);
+  for (const type of query.experienceTypes ?? []) {
+    params.append('experienceType', type);
   }
   const { jobField, jobRole } = toJobRoleParams(query);
   if (jobField) {

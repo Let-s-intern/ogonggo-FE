@@ -5,8 +5,8 @@ import { ForBusinessBanner } from '@/widgets/for-business-banner';
 /** `인기 공고`는 조회수 상위 네 건이다(`widgets/popular-jobs/ui/PopularJobs.tsx`의 `TOP_COUNT`). */
 const POPULAR_CARD_COUNT = 4;
 
-/** `전체 공고` 한 페이지 건수. MSW 핸들러의 `DEFAULT_SIZE`와 같은 값이다. */
-const JOB_CARD_COUNT = 10;
+/** `전체 공고` 한 페이지 건수. `widgets/job-list/ui/JobList.tsx` 의 `PAGE_SIZE` 와 같은 값이다. */
+const JOB_CARD_COUNT = 12;
 
 /**
  * `app/(home)/loading.tsx`는 같은 세그먼트의 `page.tsx`를 Suspense 경계로 감싸
@@ -53,25 +53,49 @@ export default function Loading() {
             </div>
           </section>
 
-          {/* 전체 공고 — 제목 + 검색·필터 줄(`h-9`라 36px), 카드 그리드, 페이지네이션. */}
+          {/* 전체 공고 — lg 이상은 왼쪽 열(제목 + 필터)과 오른쪽 열(직무·정렬 줄, 카드 3열, 페이지네이션)의
+              두 칸이다(`JobList.tsx`). 그 아래는 제목 + 검색·필터 줄(`h-9`라 36px), 카드 그리드,
+              페이지네이션을 쌓는다. */}
           <div
             aria-hidden="true"
-            className="ogonggo-skeleton flex w-full animate-pulse flex-col gap-4"
+            className="ogonggo-skeleton flex w-full animate-pulse flex-col gap-4 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-8"
           >
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="h-7 w-20 rounded bg-gray-100" />
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="h-9 w-56 rounded-md bg-gray-100" />
+            <div className="flex flex-wrap items-center justify-between gap-4 lg:contents">
+              <div className="flex items-center lg:col-start-1 lg:row-start-1">
+                <div className="h-7 w-20 rounded bg-gray-100" />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:w-full lg:justify-between">
+                <div className="h-9 w-56 rounded-md bg-gray-100 lg:hidden" />
                 <div className="h-9 w-24 rounded-full bg-gray-100" />
-                <div className="h-9 w-20 rounded-full bg-gray-100" />
+                <div className="h-9 w-20 rounded-full bg-gray-100 lg:hidden" />
+                <div className="hidden h-9 w-40 rounded-full bg-gray-100 lg:block" />
               </div>
             </div>
-            <CardGridSkeleton count={JOB_CARD_COUNT} gapClass="gap-x-4 gap-y-8" />
-            {/* 페이지네이션 — 링크 한 칸이 `h-8 w-8`이다. */}
-            <div className="flex items-center justify-center gap-1">
-              {Array.from({ length: 9 }, (_, index) => (
-                <div key={index} className="h-8 w-8 rounded-md bg-gray-100" />
+            {/* 왼쪽 필터 열 — 검색창, 채용 형태(전체 + 7), 요구 경력(전체 + 4), 초기화 버튼. */}
+            <div className="hidden flex-col gap-6 lg:col-start-1 lg:row-start-2 lg:flex">
+              <div className="h-9 w-full rounded-full bg-gray-100" />
+              {[8, 5].map((rows) => (
+                <div key={rows} className="flex flex-col gap-3">
+                  <div className="mb-3 h-5 w-16 rounded bg-gray-100" />
+                  {Array.from({ length: rows }, (_, index) => (
+                    <div key={index} className="h-5 w-24 rounded bg-gray-100" />
+                  ))}
+                </div>
               ))}
+              <div className="h-9 w-full rounded-full bg-gray-100" />
+            </div>
+            <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
+              <CardGridSkeleton
+                count={JOB_CARD_COUNT}
+                gapClass="gap-x-4 gap-y-8"
+                columnsClass="md:grid-cols-4 lg:grid-cols-3"
+              />
+              {/* 페이지네이션 — 링크 한 칸이 `h-8 w-8`이다. */}
+              <div className="flex items-center justify-center gap-1">
+                {Array.from({ length: 9 }, (_, index) => (
+                  <div key={index} className="h-8 w-8 rounded-md bg-gray-100" />
+                ))}
+              </div>
             </div>
           </div>
 
