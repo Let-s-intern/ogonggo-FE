@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
 import { setAccessTokenProvider, setUnauthorizedHandler } from '@ogonggo/api';
 import { ToastProvider } from '@ogonggo/ui';
+import { PushTokenSync } from '@/features/push-notification';
 import { getAccessToken } from '@/shared/api/authTokens';
 import { handleUnauthorized } from '@/shared/api/reissue';
 import { DropdownDismiss } from '@/shared/ui/DropdownDismiss';
@@ -23,6 +24,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           화면에 남는 `Callout` 이다. */}
       <ToastProvider>{children}</ToastProvider>
       <DropdownDismiss />
+      <PushTokenSync />
     </QueryClientProvider>
   );
 }
