@@ -8,6 +8,15 @@ import type {
 /** `GET /api/v1/jobs`의 목록 항목 하나 — 본문 필드는 없다. */
 export type JobSummary = UserJobSummaryResponse;
 
+/**
+ * 오늘의 추천 공고가 카드에 붙이는 추천 문구. `GET /api/v1/jobs/today` 항목의
+ * `recommendationTitle`/`recommendationDescription` 이다.
+ */
+export interface JobRecommendation {
+  title: string;
+  description: string;
+}
+
 /** `GET /api/v1/jobs/{jobId}`의 상세 — JobSummary의 모든 필드 + 본문 필드. */
 export type JobDetail = UserJobDetailResponse;
 

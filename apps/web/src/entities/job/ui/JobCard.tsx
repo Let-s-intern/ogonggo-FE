@@ -11,7 +11,7 @@ import {
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
-import type { JobSummary } from '../model/types';
+import type { JobRecommendation, JobSummary } from '../model/types';
 import { JobCardLink, type JobCardTracking } from './JobCardLink';
 import { JobMeta } from './JobMeta';
 import { JobThumbnail } from './JobThumbnail';
@@ -20,6 +20,11 @@ export interface JobCardProps {
   job: JobSummary;
   /** 목록 안의 자리. 주면 누를 때 `job_card_click` 이 나간다. 스토리처럼 목록 밖이면 뺀다. */
   tracking?: JobCardTracking;
+  /**
+   * 오늘의 추천 공고가 붙이는 추천 문구. 주면 제목 아래에 박스가 생긴다. 제목·설명이 모두 비면
+   * 박스 없이 일반 카드다.
+   */
+  recommendation?: JobRecommendation;
 }
 
 /**
@@ -39,18 +44,24 @@ export interface JobCardProps {
  * 않는다 — `BootcampCard`·`SideStudyCard`가 이미 같은 자리에 `마감`을 그린다.
  * 마감일이 없는 공고(상시채용·마감일 미정)는 같은 자리에 `상시모집` 배지다(`ALWAYS_OPEN_LABEL`).
  *
+ * 추천 문구(`recommendation`)가 있으면 제목 아래, 모바일 `마감` 배지 위에 박스를 그린다. 박스는
+ * 링크 안쪽이라 누르면 상세로 간다. 제목은 굵은 파랑, 설명은 회색이고 각각 한 줄에서 자른다 —
+ * 카드 폭(모바일 158px)에서 두 줄로 늘어나면 같은 줄의 카드와 높이가 어긋난다.
+ *
  * 뿌리가 `<Link>`가 아니라 `relative`인 `div`인 이유는 북마크 버튼이다. 링크 안에 버튼을 두면
  * 잘못된 마크업이고 누를 때 이동까지 함께 일어난다 — 링크와 버튼을 형제로 두고 버튼을 썸네일
  * 오른쪽 위에 겹친다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 겹치는 자리는 전에 아이콘이 있던
  * 자리 그대로라 생김새는 바뀌지 않는다. `h-full`은 링크와 뿌리 둘 다에 있어야 한다 — 칸을
  * 채우는 것은 뿌리이고, 그 높이를 카드 내용에 넘기는 것은 링크다.
  */
-export function JobCard({ job, tracking }: JobCardProps) {
+export function JobCard({ job, tracking, recommendation }: JobCardProps) {
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
   const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
   const closed = isRecruitmentClosed(job.recruitmentType, job.recruitmentEndAt, job.closedAt);
   const jobMajor = getJobMajor(job.id);
   const jobInfo = toJobInfo(job);
+  const recommendationTitle = recommendation?.title.trim();
+  const recommendationDescription = recommendation?.description.trim();
   const metaParts = [
     EMPLOYMENT_TYPE_LABELS[job.employmentType],
     jobMajor,
@@ -102,6 +113,16 @@ export function JobCard({ job, tracking }: JobCardProps) {
         <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
           {job.title}
         </p>
+        {recommendationTitle || recommendationDescription ? (
+          <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-blue-00 px-3 py-2">
+            {recommendationTitle ? (
+              <p className="truncate text-xs font-bold text-blue-500">{recommendationTitle}</p>
+            ) : null}
+            {recommendationDescription ? (
+              <p className="truncate text-xs text-gray-500">{recommendationDescription}</p>
+            ) : null}
+          </div>
+        ) : null}
         {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
       </JobCardLink>
       {/* 카드뉴스 버튼은 어드민에게만 보인다. 없으면 북마크가 원래 자리(오른쪽 위 끝)에 남는다. */}
