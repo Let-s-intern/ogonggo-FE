@@ -102,24 +102,20 @@ function FilterDropdown<TValue extends string>({
  * 보조기술에서 "검색" 이라는 조작이 사라진다.
  */
 export function SearchFilterBar({ query }: SearchFilterBarProps) {
+  // 검색 form 이 실어 보낼 나머지 상태. 손으로 나열하면 필터가 늘 때마다 빠진다 — 검색어만 뺀 주소를
+  // 되읽어 만든다(공고 달력의 `KeywordFilter` 와 같은 방법).
+  const carried = new URLSearchParams(
+    buildJobListHref(query, { q: undefined }).split('?')[1] ?? '',
+  );
+
   return (
     // 모바일에서는 `contents` 로 풀려 검색칸이 한 줄을 다 쓰고 필터와 정렬이 그 아래 한 줄에
     // 선다. 시안(`docs/asset/v9 mobile/채용공고 목록.png`)은 한 줄 가로 스크롤인데, 필터 목록이
     // 버튼 아래로 떨어지는 드롭다운이라 스크롤 상자 안에 두면 잘린다.
     <div className="contents md:flex md:flex-wrap md:items-center md:gap-2">
       <form action="/" method="GET" className="w-full md:w-auto md:min-w-[220px] md:flex-1">
-        <input type="hidden" name="sort" value={query.sort} />
-        {query.employmentType ? (
-          <input type="hidden" name="employmentType" value={query.employmentType} />
-        ) : null}
-        {query.experienceType ? (
-          <input type="hidden" name="experienceType" value={query.experienceType} />
-        ) : null}
-        {query.jobFields?.map((field) => (
-          <input key={field} type="hidden" name="jobField" value={field} />
-        ))}
-        {query.jobRoles?.map((role) => (
-          <input key={role} type="hidden" name="jobRole" value={role} />
+        {[...carried].map(([name, value]) => (
+          <input key={`${name}=${value}`} type="hidden" name={name} value={value} />
         ))}
         <SearchInput name="q" defaultValue={query.q} placeholder="공고 검색" />
         <button type="submit" className="sr-only">
@@ -130,16 +126,20 @@ export function SearchFilterBar({ query }: SearchFilterBarProps) {
       <FilterDropdown
         label="채용 형태"
         filterType="employment"
-        selected={query.employmentType}
+        selected={query.employmentTypes?.length === 1 ? query.employmentTypes[0] : undefined}
         options={EMPLOYMENT_TYPE_OPTIONS}
-        buildHref={(value) => buildJobListHref(query, { employmentType: value })}
+        buildHref={(value) =>
+          buildJobListHref(query, { employmentTypes: value ? [value] : undefined })
+        }
       />
       <FilterDropdown
         label="요구 경력"
         filterType="experience"
-        selected={query.experienceType}
+        selected={query.experienceTypes?.length === 1 ? query.experienceTypes[0] : undefined}
         options={EXPERIENCE_TYPE_OPTIONS}
-        buildHref={(value) => buildJobListHref(query, { experienceType: value })}
+        buildHref={(value) =>
+          buildJobListHref(query, { experienceTypes: value ? [value] : undefined })
+        }
       />
     </div>
   );
