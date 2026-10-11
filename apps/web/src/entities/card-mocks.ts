@@ -1,5 +1,5 @@
 import type { BootcampSummary } from './bootcamp/model/types';
-import type { JobSummary } from './job/model/types';
+import type { JobRecommendation, JobSummary } from './job/model/types';
 import type { SideStudySummary } from './side-study/model/types';
 
 /**
@@ -54,6 +54,12 @@ export const JOB_MOCK: JobSummary = {
   viewCount: 1284,
   bookmarkCount: 42,
   commentCount: 7,
+};
+
+/** 오늘의 추천 공고 카드가 제목 아래에 붙이는 추천 문구. 문구 길이는 어드민 한도(30자·50자) 안이다. */
+export const JOB_RECOMMENDATION_MOCK: JobRecommendation = {
+  title: '경력 없이 시작하고 싶다면',
+  description: '실무 중심 프로젝트로 빠른 성장',
 };
 
 export const BOOTCAMP_MOCK: BootcampSummary = {

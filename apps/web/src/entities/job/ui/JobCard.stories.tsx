@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { JOB_MOCK } from '@/entities/card-mocks';
+import { JOB_MOCK, JOB_RECOMMENDATION_MOCK } from '@/entities/card-mocks';
 import { JobCard } from './JobCard';
 
 /**
@@ -30,4 +30,25 @@ export const Default: Story = {};
 /** 상시채용은 D-day 자리에 `상시모집` 배지가 뜬다. */
 export const AlwaysOpen: Story = {
   args: { job: { ...JOB_MOCK, recruitmentType: 'ALWAYS_OPEN', recruitmentEndAt: undefined } },
+};
+
+/** 오늘의 추천 공고. 제목 아래에 굵은 파란 제목 한 줄과 회색 설명 한 줄이 든 박스가 붙는다. */
+export const WithRecommendation: Story = {
+  args: { recommendation: JOB_RECOMMENDATION_MOCK },
+};
+
+/** 문구가 길어도 박스는 각각 한 줄에서 자른다. 카드 높이가 늘지 않는다. */
+export const LongRecommendation: Story = {
+  args: {
+    recommendation: {
+      title: '경력 없이 시작하고 싶다면 이 공고부터 눌러 보세요 정말로 추천합니다',
+      description:
+        '실무 중심 프로젝트와 멘토링으로 빠르게 성장할 수 있는 환경입니다 지금 바로 확인해 보세요',
+    },
+  },
+};
+
+/** 제목·설명이 모두 비면 박스 없이 일반 카드다. */
+export const EmptyRecommendation: Story = {
+  args: { recommendation: { title: '', description: '' } },
 };
