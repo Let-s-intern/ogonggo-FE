@@ -4,8 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { ListPublicJobCalendarEmploymentType } from './listPublicJobCalendarEmploymentType';
-import type { ListPublicJobCalendarExperienceType } from './listPublicJobCalendarExperienceType';
+import type { ListPublicJobCalendarEmploymentTypeItem } from './listPublicJobCalendarEmploymentTypeItem';
+import type { ListPublicJobCalendarExperienceTypeItem } from './listPublicJobCalendarExperienceTypeItem';
 import type { ListPublicJobCalendarJobField } from './listPublicJobCalendarJobField';
 import type { ListPublicJobCalendarJobRoleItem } from './listPublicJobCalendarJobRoleItem';
 import type { ListPublicJobCalendarRegion } from './listPublicJobCalendarRegion';
@@ -14,27 +14,8 @@ import type { ListPublicJobCalendarSubRegion } from './listPublicJobCalendarSubR
 export type ListPublicJobCalendarParams = {
 from: string;
 to: string;
-/**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `FULL_TIME` | 1 | 정규직 |
- * | `CONTRACT` | 2 | 계약직 |
- * | `INTERN` | 3 | 인턴 |
- * | `PART_TIME` | 4 | 파트타임 |
- * | `WORK_STUDY` | 6 | 일학습병행 |
- * | `WORK_EXPERIENCE` | 7 | 미래내일 일경험 |
- * | `ETC` | 5 | 기타 |
- */
-employmentType?: ListPublicJobCalendarEmploymentType;
-/**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `NEWCOMER` | 1 | 신입 |
- * | `EXPERIENCED` | 2 | 경력 |
- * | `BOTH` | 3 | 신입·경력 |
- * | `IRRELEVANT` | 4 | 경력 무관 |
- */
-experienceType?: ListPublicJobCalendarExperienceType;
+employmentType?: ListPublicJobCalendarEmploymentTypeItem[];
+experienceType?: ListPublicJobCalendarExperienceTypeItem[];
 /**
  * | 값 | code | 설명 |
  * | --- | --- | --- |

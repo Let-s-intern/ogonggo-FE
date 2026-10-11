@@ -4,7 +4,8 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { AdminTodayJobRequest } from './adminTodayJobRequest';
 
 export interface ReplaceAdminTodayJobsRequest {
-  jobIds: number[];
+  jobs: AdminTodayJobRequest[];
 }
