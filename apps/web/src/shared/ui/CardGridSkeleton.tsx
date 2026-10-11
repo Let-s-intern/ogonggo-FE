@@ -10,6 +10,11 @@ export interface CardGridSkeletonProps {
    */
   gapClass: 'gap-x-4 gap-y-8' | 'gap-4';
   /**
+   * 넓은 화면의 열 수. 기본은 md 부터 4열이다. 홈의 `전체 공고` 는 lg 부터 왼쪽 필터 열이 생겨 3열이다
+   * (`widgets/job-list/ui/JobList.tsx`). 이 값도 문자열 리터럴인 이유는 `gapClass` 와 같다.
+   */
+  columnsClass?: 'md:grid-cols-4' | 'md:grid-cols-4 lg:grid-cols-3';
+  /**
    * 카드 아래쪽에 해시태그·댓글·조회수 줄이 한 줄 더 있는지. 사이드·스터디 카드만 있다
    * (`entities/side-study/ui/SideStudyCard.tsx`).
    */
@@ -36,11 +41,12 @@ export interface CardGridSkeletonProps {
 export function CardGridSkeleton({
   count,
   gapClass,
+  columnsClass = 'md:grid-cols-4',
   hasCardFooter = false,
   framed = false,
 }: CardGridSkeletonProps) {
   return (
-    <ul className={cn('grid grid-cols-2 md:grid-cols-4', gapClass)}>
+    <ul className={cn('grid grid-cols-2', columnsClass, gapClass)}>
       {Array.from({ length: count }, (_, index) => (
         <li
           key={index}
