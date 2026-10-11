@@ -66,6 +66,11 @@ function onlyValue<TValue>(values: readonly TValue[]): TValue | undefined {
   return values.length === 1 ? values[0] : undefined;
 }
 
+/** 요청 파라미터가 배열로 바뀌어 하나짜리 값을 배열로 감싼다. */
+function asList<TValue>(value: TValue | undefined): TValue[] | undefined {
+  return value === undefined ? undefined : [value];
+}
+
 /** 고른 것이 없으면(전체) 통과, 있으면 그중 하나여야 통과. */
 function matchesAny(selected: readonly string[], value: string): boolean {
   return selected.length === 0 || selected.includes(value);
@@ -151,9 +156,10 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   const fromParam = toCalendarParam(from);
   const toParam = toCalendarParam(to);
   const fetchedItems = await fetchCalendarItemsForMajors(fromParam, toParam, query.majors, {
-    // 하나만 골랐을 때만 서버가 거른다. 여럿이면 빼고 받아 아래에서 거른다 — 서버는 값 하나만 받는다.
-    employmentType: onlyValue(query.employmentTypes),
-    experienceType: onlyValue(query.experienceTypes),
+    // 하나만 골랐을 때만 서버가 거른다. 여럿이면 빼고 받아 아래에서 거른다. 서버는 배열도 받지만
+    // 이 화면의 거르기 동작은 그대로 둔다.
+    employmentType: asList(onlyValue(query.employmentTypes)),
+    experienceType: asList(onlyValue(query.experienceTypes)),
     // 꺼져 있으면 아예 보내지 않는다. `false` 도 파라미터로는 실리므로(`getListPublicJobCalendarUrl`)
     // 걸지 않은 필터가 주소에 남는다.
     excludeClosed: query.excludeClosed || undefined,

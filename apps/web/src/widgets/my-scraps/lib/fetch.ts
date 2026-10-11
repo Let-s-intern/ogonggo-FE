@@ -73,8 +73,9 @@ async function fetchJobScraps(query: MyScrapsQuery): Promise<MyScrapsPage> {
   const response = (await listMyJobBookmarks({
     page: query.page,
     size: PAGE_SIZE,
-    employmentType: query.employmentType,
-    experienceType: query.experienceType,
+    // 채용 형태·경력은 배열로 받는다. 이 화면은 하나만 고르므로 하나짜리 배열로 보낸다.
+    employmentType: query.employmentType ? [query.employmentType] : undefined,
+    experienceType: query.experienceType ? [query.experienceType] : undefined,
     jobField: query.jobField,
     // 직무는 여러 개를 받게 바뀌었다(LC-3393). 이 화면은 하나만 고른다.
     jobRole: query.jobRole ? [query.jobRole] : undefined,

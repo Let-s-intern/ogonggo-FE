@@ -145,7 +145,8 @@ async function fetchJobStage(
     size: params.size,
     applicationStatus: stageId,
     recruitmentStatus: params.recruitmentStatus,
-    employmentType: params.employmentType,
+    // 채용 형태는 배열로 받는다. 이 보드는 하나만 고르므로 하나짜리 배열로 보낸다.
+    employmentType: params.employmentType ? [params.employmentType] : undefined,
     keyword: pickKeyword(params.keyword),
     sort: 'RECENTLY_SAVED',
   })) as unknown as SuccessResponsePageResponseUserJobSummaryResponse;
