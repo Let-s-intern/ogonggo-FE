@@ -2,6 +2,7 @@ import { ForBusinessBanner } from '@/widgets/for-business-banner';
 import { HomeHero } from '@/widgets/home-hero';
 import { JobList, type JobListQuery } from '@/widgets/job-list';
 import { PopularJobs } from '@/widgets/popular-jobs';
+import { TodayJobs } from '@/widgets/today-jobs';
 
 export type HomePageProps = JobListQuery;
 
@@ -16,6 +17,9 @@ export function HomePage(query: HomePageProps) {
             home.png 는 인기 공고와 전체 공고 사이에 배너 광고 자리가 있다. 광고 내용이 정해지지
             않아 빈 회색 상자만 보여서 그리지 않는다(2026-09-30, 사용자). 내용이 생기면 여기 둔다. */}
         {query.page === 1 ? <PopularJobs /> : null}
+        {/* 오늘의 추천 공고도 첫 페이지에서만 보인다. 오류이거나 고른 공고가 없으면 위젯이 null 을
+            돌려줘 자리도 간격도 남지 않는다. */}
+        {query.page === 1 ? <TodayJobs /> : null}
         <JobList {...query} />
         <div className="w-full">
           <ForBusinessBanner />
