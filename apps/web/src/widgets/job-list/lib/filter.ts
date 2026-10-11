@@ -77,6 +77,15 @@ export function isSelectionEmpty(selection: FilterSelection): boolean {
   return selection.employmentTypes.length === 0 && selection.experienceTypes.length === 0;
 }
 
+/** 두 선택이 같은지. 값은 옵션 순서로 정렬돼 있어 자리별로 비교하면 된다. */
+export function isSameSelection(a: FilterSelection, b: FilterSelection): boolean {
+  return (Object.keys(FILTER_GROUPS) as FilterKey[]).every((key) => {
+    const left: readonly string[] = a[key];
+    const right: readonly string[] = b[key];
+    return left.length === right.length && left.every((value, index) => value === right[index]);
+  });
+}
+
 /**
  * 고른 값 하나를 GTM 으로 보낸다. `filter_type` 은 기존 이름(`employment`, `experience`)을 그대로
  * 쓴다. 복수 선택에서는 추가된 값마다 한 건이고, 해제와 초기화는 보내지 않는다.

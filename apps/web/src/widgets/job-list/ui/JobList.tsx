@@ -60,7 +60,7 @@ export async function JobList(query: JobListProps) {
           <div className="md:hidden">{sort}</div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 md:w-auto lg:col-start-2 lg:row-start-1 lg:w-full lg:justify-between">
-          <SearchFilterBar query={query} />
+          <SearchFilterBar query={query} totalCount={pageInfo.totalElements} />
           <div className="hidden md:block">{sort}</div>
         </div>
       </div>
