@@ -13,15 +13,27 @@ import {
   type FilterKey,
   type FilterSelection,
 } from '../lib/filter';
-import { buildJobListHref, type JobListQuery } from '../lib/query';
+import {
+  buildJobListHref,
+  KEYWORD_MAX_LENGTH,
+  KEYWORD_MIN_LENGTH,
+  type JobListQuery,
+} from '../lib/query';
 import { FilterCheckGroup } from './FilterCheckGroup';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
 const DEBOUNCE_MS = 300;
 
-/** 백엔드가 2~100자만 받는다(`pickKeyword`). */
-const KEYWORD_MIN_LENGTH = 2;
-const KEYWORD_MAX_LENGTH = 100;
+/**
+ * 검색 입력칸의 값을 직접 쓴다. 칸은 비제어라 주소가 바뀌어도 따라가지 않는다. `key` 로 새로 만들면
+ * 제출할 때마다 초점을 잃으므로 칸은 그대로 두고 값만 맞춘다.
+ */
+function writeKeyword(form: HTMLFormElement | null, value: string) {
+  const input = form?.elements.namedItem('q');
+  if (input instanceof HTMLInputElement) {
+    input.value = value;
+  }
+}
 
 interface SidebarState extends FilterSelection {
   q: string | undefined;
@@ -45,6 +57,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
   const view = draft ?? applied;
 
   // 타이머와 요청 중 여부는 렌더와 무관해야 해서 ref 에 둔다. 타이머 안에서 읽을 때 옛 값이면 안 된다.
+  const formRef = useRef<HTMLFormElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const latestQuery = useRef(query);
   const pending = useRef(false);
@@ -61,12 +74,20 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
+  // 뒤로 가기처럼 주소의 검색어가 밖에서 바뀌면 입력칸도 그 값으로 맞춘다.
+  useEffect(() => {
+    writeKeyword(formRef.current, query.q ?? '');
+  }, [query.q]);
+
   const cancelTimer = () => {
     window.clearTimeout(timer.current);
     timer.current = undefined;
   };
 
-  /** 필터를 주소로 옮긴다. 쪽은 1쪽으로 돌아가고, 다시 그릴 필요가 없으면 가지 않는다. */
+  /**
+   * 필터를 주소로 옮긴다. 쪽은 1쪽으로 돌아가고, 필터가 그대로면 가지 않는다 — 2쪽 이상에서도
+   * 바뀐 것이 없는 조작이 1쪽으로 보내서는 안 된다.
+   */
   const go = (next: SidebarState, reset: Partial<JobListQuery> = {}) => {
     const base = latestQuery.current;
     const href = buildJobListHref(base, {
@@ -75,7 +96,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
       q: next.q,
       ...reset,
     });
-    if (href === buildJobListHref(base, { page: base.page }) && !pending.current) {
+    if (href === buildJobListHref(base) && !pending.current) {
       setDraft(null);
       return;
     }
@@ -114,6 +135,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   const reset = () => {
     cancelTimer();
+    writeKeyword(formRef.current, '');
     setDraft({ employmentTypes: [], experienceTypes: [], q: undefined });
     go(
       { employmentTypes: [], experienceTypes: [], q: undefined },
@@ -134,13 +156,11 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   return (
     <aside aria-label="공고 필터" className="flex flex-col gap-6">
-      <form action="/" method="GET" onSubmit={submit}>
+      <form ref={formRef} action="/" method="GET" onSubmit={submit}>
         {[...carried].map(([name, value]) => (
           <input key={`${name}=${value}`} type="hidden" name={name} value={value} />
         ))}
-        {/* 주소가 바뀌면(초기화, 뒤로 가기) 입력도 그 값으로 다시 시작해야 해서 `key` 로 새로 만든다. */}
         <SearchInput
-          key={view.q ?? ''}
           name="q"
           defaultValue={view.q}
           placeholder="공고 검색"

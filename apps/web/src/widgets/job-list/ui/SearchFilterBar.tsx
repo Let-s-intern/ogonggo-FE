@@ -1,5 +1,10 @@
 import { SearchInput } from '@ogonggo/ui';
-import { buildJobListHref, type JobListQuery } from '../lib/query';
+import {
+  buildJobListHref,
+  KEYWORD_MAX_LENGTH,
+  KEYWORD_MIN_LENGTH,
+  type JobListQuery,
+} from '../lib/query';
 import { JobFilterButton } from './JobFilterSheet';
 import { JobRoleFilter } from './JobRoleFilter';
 
@@ -40,7 +45,13 @@ export function SearchFilterBar({ query, totalCount }: SearchFilterBarProps) {
         {[...carried].map(([name, value]) => (
           <input key={`${name}=${value}`} type="hidden" name={name} value={value} />
         ))}
-        <SearchInput name="q" defaultValue={query.q} placeholder="공고 검색" />
+        <SearchInput
+          name="q"
+          defaultValue={query.q}
+          placeholder="공고 검색"
+          minLength={KEYWORD_MIN_LENGTH}
+          maxLength={KEYWORD_MAX_LENGTH}
+        />
         <button type="submit" className="sr-only">
           검색
         </button>

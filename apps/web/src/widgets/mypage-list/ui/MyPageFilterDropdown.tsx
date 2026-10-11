@@ -16,10 +16,6 @@ export interface MyPageFilterDropdownProps<TValue extends string> {
  * 여닫는 `<details>` 껍데기와 목록은 여기 있다 — 그 컴포넌트가 트리거만 맡는 이유는 그쪽
  * 주석에 있다.
  *
- * `widgets/job-list/ui/SearchFilterBar.tsx` 안에 같은 모양의 `FilterDropdown` 이 있다. 그쪽은
- * 파일 안에 숨은 함수라 가져다 쓸 수 없는데, 그 파일을 고치는 것은 이 Push 의 범위가 아니라
- * 건드리지 않았다. 둘 중 하나를 지울 일이 생기면 이쪽이 내보내고 있으니 그쪽을 지운다.
- *
  * 옵션은 `<Link>` 다. 고르는 순간 주소가 바뀌고, 목록은 주소를 보고 다시 읽는다 — 필터 상태를
  * 리액트 상태로 따로 들면 뒤로가기가 어긋난다.
  */

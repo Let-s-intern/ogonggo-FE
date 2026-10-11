@@ -98,6 +98,7 @@ function JobFilterSheet({
 }) {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [initial] = useState(() => selectionOf(query));
   const [draft, setDraft] = useState<FilterSelection>(initial);
   const [tab, setTab] = useState<FilterKey>('experienceTypes');
@@ -106,10 +107,38 @@ function JobFilterSheet({
 
   useScrollLock(true);
 
+  // 열면 초점을 닫기 버튼으로 옮기고, 닫으면 시트를 연 버튼으로 돌려 놓는다. 부모가 다시 그려져
+  // `onClose` 가 바뀌어도 되돌리지 않도록 아래 키 입력 효과와 나눴다.
   useEffect(() => {
+    const opener = document.activeElement;
     closeRef.current?.focus();
+    return () => {
+      if (opener instanceof HTMLElement) opener.focus();
+    };
+  }, []);
+
+  // `aria-modal` 은 보조기술에게 뒤쪽을 숨기라고 알릴 뿐 Tab 이 창 밖으로 나가는 것을 막지 않는다.
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      const first = focusable?.item(0);
+      const last = focusable?.item(focusable.length - 1);
+      if (!first || !last) return;
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !dialogRef.current?.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !dialogRef.current?.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -122,6 +151,8 @@ function JobFilterSheet({
       setCount(totalCount);
       return;
     }
+    // 새 건수가 오기 전까지 옛 초안의 건수가 남지 않게 먼저 비운다.
+    setCount(undefined);
     let current = true;
     const timer = window.setTimeout(() => {
       fetchCount(query, draft)
@@ -154,6 +185,7 @@ function JobFilterSheet({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="job-filter-title"
@@ -183,6 +215,7 @@ function JobFilterSheet({
 
         <div
           role="tabpanel"
+          aria-label={FILTER_GROUPS[tab].label}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5"
         >
           <FilterCheckGroup

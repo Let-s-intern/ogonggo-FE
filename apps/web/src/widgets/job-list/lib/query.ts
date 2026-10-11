@@ -147,10 +147,16 @@ export function toJobRoleParams({
   return { jobRole: [...jobFields.flatMap(jobRolesOf), ...jobRoles] };
 }
 
-/** 백엔드가 2~100자만 받는다. 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
+/** 백엔드가 받는 검색어 길이(2~100자). 입력창의 `minLength`·`maxLength` 도 이 값을 쓴다. */
+export const KEYWORD_MIN_LENGTH = 2;
+export const KEYWORD_MAX_LENGTH = 100;
+
+/** 길이를 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
 function pickKeyword(q: string | undefined): string | undefined {
   const keyword = q?.trim();
-  return keyword && keyword.length >= 2 && keyword.length <= 100 ? keyword : undefined;
+  return keyword && keyword.length >= KEYWORD_MIN_LENGTH && keyword.length <= KEYWORD_MAX_LENGTH
+    ? keyword
+    : undefined;
 }
 
 /**
