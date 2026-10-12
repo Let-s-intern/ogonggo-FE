@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Callout, DataTable, type DataTableColumn } from '@ogonggo/ui';
+import { Button, Callout, DataTable, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
 import { useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { PageHeader } from '@/widgets/page-header';
@@ -62,7 +62,25 @@ export function TodayJobsPage() {
 }
 
 function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryResponse[] }) {
-  const [rows] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
+  const [rows, setRows] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
+
+  /** 한 칸 위(`-1`)나 아래(`1`)로 옮긴다. 끝에서는 옮기지 않는다. */
+  const moveRow = (index: number, delta: -1 | 1) => {
+    setRows((current) => {
+      const target = index + delta;
+      if (target < 0 || target >= current.length) {
+        return current;
+      }
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  /** 화면 상태에서만 지운다. 서버는 저장할 때까지 그대로다. */
+  const removeRow = (id: number) => {
+    setRows((current) => current.filter((row) => row.id !== id));
+  };
 
   const columns: DataTableColumn<TodayJobRow>[] = [
     {
@@ -101,6 +119,45 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       header: '상태',
       width: 'w-28',
       render: (row) => <StatusBadges row={row} />,
+    },
+    {
+      key: 'actions',
+      header: '관리',
+      width: 'w-56',
+      render: (row) => {
+        const index = rows.indexOf(row);
+        return (
+          <span className="flex gap-1 whitespace-nowrap">
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={`${row.title} 위로`}
+              disabled={index === 0}
+              onClick={() => moveRow(index, -1)}
+            >
+              위로
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={`${row.title} 아래로`}
+              disabled={index === rows.length - 1}
+              onClick={() => moveRow(index, 1)}
+            >
+              아래로
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={`${row.title} 빼기`}
+              className="border-red-200 text-error hover:bg-red-50"
+              onClick={() => removeRow(row.id)}
+            >
+              빼기
+            </Button>
+          </span>
+        );
+      },
     },
   ];
 
