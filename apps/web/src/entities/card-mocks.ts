@@ -56,6 +56,25 @@ export const JOB_MOCK: JobSummary = {
   commentCount: 7,
 };
 
+/**
+ * `featured` 모바일 카드의 제목 `line-clamp-3` 을 채우고 넘기는 긴 제목. PC 는 `line-clamp-2` 에서
+ * 말줄임이 된다.
+ */
+export const JOB_LONG_TITLE_MOCK: JobSummary = {
+  ...JOB_MOCK,
+  title: '[신사업] 콘텐츠 마케팅 인턴 체험형 채용 서울 본사 근무 정규직 전환 가능 신입 경력 무관',
+};
+
+/** 마감된 공고. D-day 자리에 회색 `마감` 배지가 뜬다(`entities/CardEdgeCases.stories.tsx` 와 같은 값). */
+export const JOB_CLOSED_MOCK: JobSummary = { ...JOB_MOCK, closedAt: '2026-01-02T00:00:00Z' };
+
+/**
+ * 로고가 있는 공고. `JOB_MOCK` 은 `logoUrl` 이 없고 회사명도 로고 목록에 없어 기본 로고(오공고)로
+ * 떨어진다 — 로고가 있을 때와 나란히 보려고 스토리북이 서빙하는 `/icon-192.png` 를 건다
+ * (`packages/ui/.storybook/main.ts` 의 `staticDirs`).
+ */
+export const JOB_WITH_LOGO_MOCK: JobSummary = { ...JOB_MOCK, logoUrl: '/icon-192.png' };
+
 /** 오늘의 추천 공고 카드가 제목 아래에 붙이는 추천 문구. 문구 길이는 어드민 한도(30자·50자) 안이다. */
 export const JOB_RECOMMENDATION_MOCK: JobRecommendation = {
   title: '경력 없이 시작하고 싶다면',
