@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Button, Callout, DataTable, type DataTableColumn } from '@ogonggo/ui';
+import { Button, Callout, DataTable, cn, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
 import { useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
+import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
+import { isRecommendationValid } from '@/features/today-job/lib/validate';
 import { PageHeader } from '@/widgets/page-header';
 import { RecruitmentStatusBadge, VisibilityBadge } from '@/shared/config/labels';
 
@@ -33,6 +35,44 @@ const toRow = (job: TodayJobRow): TodayJobRow => ({
   recommendationDescription: job.recommendationDescription,
 });
 
+/** 비교할 때 앞뒤 공백은 보지 않는다. 서버에는 공백을 뺀 값을 보낸다. */
+const sameText = (a: string, b: string): boolean => a.trim() === b.trim();
+
+/**
+ * 서버에서 받은 목록(`baseline`)과 화면 상태(`rows`)가 얼마나 다른지 센다.
+ *
+ * 새로 든 행, 빠진 행, 문구가 바뀐 행을 한 건씩 세고, 남은 행들의 순서가 달라졌으면 한 건을
+ * 더한다. 한 행을 옮기면 이웃한 행의 자리도 함께 바뀌므로 자리가 바뀐 행마다 세지 않는다.
+ */
+function countChanges(baseline: TodayJobRow[], rows: TodayJobRow[]): number {
+  const baselineById = new Map(baseline.map((row) => [row.id, row]));
+  const rowIds = new Set(rows.map((row) => row.id));
+
+  let count = 0;
+  for (const row of rows) {
+    const before = baselineById.get(row.id);
+    if (
+      !before ||
+      !sameText(before.recommendationTitle, row.recommendationTitle) ||
+      !sameText(before.recommendationDescription, row.recommendationDescription)
+    ) {
+      count += 1;
+    }
+  }
+  for (const before of baseline) {
+    if (!rowIds.has(before.id)) {
+      count += 1;
+    }
+  }
+
+  const keptBefore = baseline.filter((row) => rowIds.has(row.id)).map((row) => row.id);
+  const keptNow = rows.filter((row) => baselineById.has(row.id)).map((row) => row.id);
+  if (keptBefore.some((id, index) => id !== keptNow[index])) {
+    count += 1;
+  }
+  return count;
+}
+
 /**
  * 오늘의 공고(사용자 홈의 오공고 PICK) 관리.
  *
@@ -62,7 +102,29 @@ export function TodayJobsPage() {
 }
 
 function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryResponse[] }) {
+  // 서버 상태. 저장하지 않은 변경을 세는 기준이다.
+  const [baseline] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
   const [rows, setRows] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
+
+  const changeCount = countChanges(baseline, rows);
+  const canSave =
+    changeCount > 0 &&
+    rows.every((row) =>
+      isRecommendationValid({
+        title: row.recommendationTitle,
+        description: row.recommendationDescription,
+      }),
+    );
+
+  const updateRecommendation = (id: number, title: string, description: string) => {
+    setRows((current) =>
+      current.map((row) =>
+        row.id === id
+          ? { ...row, recommendationTitle: title, recommendationDescription: description }
+          : row,
+      ),
+    );
+  };
 
   /** 한 칸 위(`-1`)나 아래(`1`)로 옮긴다. 끝에서는 옮기지 않는다. */
   const moveRow = (index: number, delta: -1 | 1) => {
@@ -108,14 +170,16 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
     },
     { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
     {
-      key: 'recommendationTitle',
-      header: '추천 제목',
-      render: (row) => row.recommendationTitle,
-    },
-    {
-      key: 'recommendationDescription',
-      header: '추천 설명',
-      render: (row) => row.recommendationDescription,
+      key: 'recommendation',
+      header: '추천 문구',
+      width: 'w-80',
+      render: (row) => (
+        <RecommendationFields
+          idPrefix={`today-job-${row.id}`}
+          value={{ title: row.recommendationTitle, description: row.recommendationDescription }}
+          onChange={(next) => updateRecommendation(row.id, next.title, next.description)}
+        />
+      ),
     },
     {
       key: 'status',
@@ -166,7 +230,24 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
 
   return (
     <>
-      <PageHeader title="오늘의 공고" />
+      <PageHeader
+        title="오늘의 공고"
+        action={
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                'text-sm',
+                changeCount > 0 ? 'font-medium text-orange-600' : 'text-gray-500',
+              )}
+            >
+              저장하지 않은 변경 {changeCount}건
+            </span>
+            <Button size="sm" disabled={!canSave}>
+              저장
+            </Button>
+          </div>
+        }
+      />
       <DataTable
         columns={columns}
         rows={rows}
