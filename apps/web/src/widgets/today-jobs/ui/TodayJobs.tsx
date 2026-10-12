@@ -61,8 +61,12 @@ export async function TodayJobs() {
       {/* 모바일은 가로로 넘긴다. 화면 끝까지 넘기도록 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다. */}
       <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
         {jobs.map((job, index) => (
-          <li key={job.id} className="w-[158px] shrink-0 snap-start md:w-auto">
+          <li
+            key={job.id}
+            className="w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0"
+          >
             <JobCard
+              variant="featured"
               job={job}
               recommendation={{
                 // 스펙은 필수 문자열이지만 `null` 이 오면 `JobCard` 의 `trim()` 이 렌더 중에 터져 홈 전체가
