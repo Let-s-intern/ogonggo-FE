@@ -12,6 +12,11 @@ export interface RecommendationFieldsProps {
   onChange: (next: RecommendationValue) => void;
   /** 한 화면에 이 컴포넌트가 여럿일 때 라벨과 입력을 잇는 id 를 가른다. 행 id 를 넘긴다. */
   idPrefix: string;
+  /**
+   * 입력칸이 어느 공고의 것인지. 표처럼 같은 칸이 여러 행에 있을 때 넘기면 접근 가능한 이름이
+   * `${subject} 추천 제목` 이 된다. 칸이 하나뿐이면 비운다.
+   */
+  subject?: string;
   disabled?: boolean;
   className?: string;
 }
@@ -28,6 +33,7 @@ export function RecommendationFields({
   value,
   onChange,
   idPrefix,
+  subject,
   disabled = false,
   className,
 }: RecommendationFieldsProps) {
@@ -38,6 +44,7 @@ export function RecommendationFields({
       <TextRow
         id={`${idPrefix}-recommendation-title`}
         label="추천 제목"
+        subject={subject}
         text={value.title}
         max={RECOMMENDATION_TITLE_MAX}
         error={errors.title}
@@ -47,6 +54,7 @@ export function RecommendationFields({
       <TextRow
         id={`${idPrefix}-recommendation-description`}
         label="추천 설명"
+        subject={subject}
         text={value.description}
         max={RECOMMENDATION_DESCRIPTION_MAX}
         error={errors.description}
@@ -60,6 +68,7 @@ export function RecommendationFields({
 interface TextRowProps {
   id: string;
   label: string;
+  subject: string | undefined;
   text: string;
   max: number;
   error: string | undefined;
@@ -67,7 +76,7 @@ interface TextRowProps {
   onChange: (text: string) => void;
 }
 
-function TextRow({ id, label, text, max, error, disabled, onChange }: TextRowProps) {
+function TextRow({ id, label, subject, text, max, error, disabled, onChange }: TextRowProps) {
   const length = recommendationLength(text);
   const errorId = `${id}-error`;
 
@@ -89,6 +98,7 @@ function TextRow({ id, label, text, max, error, disabled, onChange }: TextRowPro
       <Input
         id={id}
         value={text}
+        aria-label={subject ? `${subject} ${label}` : undefined}
         disabled={disabled}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}

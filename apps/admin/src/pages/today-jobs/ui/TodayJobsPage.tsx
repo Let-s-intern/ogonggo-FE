@@ -353,6 +353,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       render: (row) => (
         <RecommendationFields
           idPrefix={`today-job-${row.id}`}
+          subject={row.title}
           disabled={isSaving}
           value={{ title: row.recommendationTitle, description: row.recommendationDescription }}
           onChange={(next) => updateRecommendation(row.id, next.title, next.description)}
