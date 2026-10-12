@@ -1,0 +1,91 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { cn } from '@ogonggo/ui';
+import type { JobField } from '@/entities/job/model/types';
+import { buildJobListHref, type JobListQuery } from '../lib/query';
+
+/**
+ * 칩과 직군의 대응. 시안(`docs/asset/v12 채용공고 상세/목록.webp`)에는 칩 이름만 있고 어느 직군인지
+ * 적혀 있지 않아 PRD(`prd-v12-home-list.md`) 결정 4 의 제안을 그대로 둔다. 바뀌면 이 상수만 고친다.
+ */
+const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
+  { label: '마케팅', field: 'MARKETING_ADVERTISING' },
+  { label: '인사', field: 'HR_GENERAL_AFFAIRS' },
+  { label: '기획', field: 'PLANNING_STRATEGY' },
+  { label: '세일즈', field: 'SALES' },
+  { label: '개발', field: 'IT_DEVELOPMENT' },
+];
+
+/**
+ * 목록 줄의 직무 칩 `전체 · 마케팅 · 인사 · 기획 · 세일즈 · 개발`(md 이상). 새 주소 상태를 만들지
+ * 않고 `직무` 창이 쓰는 `jobFields`·`jobRoles` 위에 올린다.
+ *
+ * 칩 하나를 누르면 `jobFields` 를 그 직군 하나로 바꾸고 `jobRoles` 는 비운다. `전체` 는 둘 다
+ * 비운다. 켜진 칩은 `jobFields` 가 정확히 그 직군 하나이고 `jobRoles` 가 비어 있을 때다 — `직무`
+ * 창에서 직군을 둘 이상 고르거나 세부 직무를 고르면 칩은 모두 꺼지고, 그 선택은 `직무` 버튼이 보인다.
+ *
+ * 이미 켜진 칩을 다시 누르면 목록이 바뀌지 않으므로 아무 일도 하지 않는다.
+ */
+export function JobRoleChips({ query }: { query: JobListQuery }) {
+  const router = useRouter();
+  const fields = query.jobFields ?? [];
+  const roles = query.jobRoles ?? [];
+  const allOn = fields.length === 0 && roles.length === 0;
+
+  const select = (field: JobField | undefined) => {
+    router.push(
+      buildJobListHref(query, { jobFields: field ? [field] : undefined, jobRoles: undefined }),
+      { scroll: false },
+    );
+  };
+
+  return (
+    // 한 줄에 안 들어가면 줄바꿈이 아니라 가로로 넘긴다. 안쪽 여백은 맨 끝 칩의 포커스 링이 잘리지
+    // 않게 하는 것이고, 음수 바깥 여백으로 되돌린다(`MobileSiteHeader` 의 가로 넘김과 같다).
+    <div
+      role="group"
+      aria-label="직무"
+      className="-my-1 -ml-1 hidden min-w-0 items-center gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] md:flex md:w-full lg:w-auto [&::-webkit-scrollbar]:hidden"
+    >
+      <RoleChip label="전체" active={allOn} onSelect={() => select(undefined)} />
+      {JOB_ROLE_CHIPS.map(({ label, field }) => (
+        <RoleChip
+          key={field}
+          label={label}
+          active={fields.length === 1 && fields[0] === field && roles.length === 0}
+          onSelect={() => select(field)}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** 알약 하나. 모양은 `PopularJobsTabs` 의 탭 알약과 같고, 꺼짐은 시안대로 흰 바탕이다. */
+function RoleChip({
+  label,
+  active,
+  onSelect,
+}: {
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={() => {
+        if (!active) onSelect();
+      }}
+      className={cn(
+        'inline-flex h-7 shrink-0 cursor-pointer items-center rounded-full border px-3 text-sm font-medium transition-colors',
+        active
+          ? 'border-blue-500 bg-blue-500 text-white'
+          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800',
+      )}
+    >
+      {label}
+    </button>
+  );
+}
