@@ -33,7 +33,6 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
   const tabs: TabKey[] = [firstTab, 'intern', 'newcomer'];
   const [active, setActive] = useState<TabKey>(firstTab);
   const itemsByTab: Record<TabKey, JobSummary[]> = { pick: picks, popular, intern, newcomer };
-  const items = itemsByTab[active];
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -57,30 +56,20 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
           ))}
         </div>
       </div>
-      {items.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-500">표시할 공고가 없습니다.</p>
-      ) : (
-        // 모바일은 가로로 넘긴다(`docs/asset/v12 채용공고 상세/모바일 목록.webp`). 화면 끝까지 넘기도록
-        // 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다. 카드 폭은 시안(375px 에서 249px)을 따라 이 목록
-        // 안쪽 폭의 72% 다(화면의 72% 가 아니다). 375px 에서 박스 안쪽 311px 의 72% 는 224px 라 최소
-        // 폭 240px 가 되고, 같은 모양인 오늘의 추천 공고(343px)는 247px 다. 범위를 둬서 320px 폰과 큰
-        // 폰 모두 옆 카드가 보인다.
-        <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
-          {items.map((job, index) => (
-            <li
-              key={job.id}
-              className="w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0"
-            >
-              <JobCard
-                variant="featured"
-                job={job}
-                recommendation={active === 'pick' ? recommendationOf(job) : undefined}
-                tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* 세 탭 목록을 같은 칸에 겹쳐 두고 고른 탭만 보인다. 칸 높이가 가장 높은 탭에 맞춰져, 탭을 바꿔도
+          히어로 박스가 줄었다 늘었다 하지 않는다 — 오공고 PICK 카드에만 추천 이유 상자가 붙어 탭마다 높이가
+          달랐다(2026-10-12, 사용자). 숨긴 탭은 `inert` 로 포커스·스크린 리더에서 뺀다. */}
+      <div className="grid">
+        {tabs.map((tab) => (
+          <div
+            key={tab}
+            inert={tab !== active}
+            className={cn('col-start-1 row-start-1 min-w-0', tab !== active && 'invisible')}
+          >
+            <TabList tab={tab} items={itemsByTab[tab]} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -95,4 +84,33 @@ function recommendationOf(job: JobSummary) {
     title: pick.recommendationTitle ?? '',
     description: pick.recommendationDescription ?? '',
   };
+}
+
+function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
+  if (items.length === 0) {
+    return <p className="py-8 text-center text-sm text-gray-500">표시할 공고가 없습니다.</p>;
+  }
+
+  return (
+    // 모바일은 가로로 넘긴다(`docs/asset/v12 채용공고 상세/모바일 목록.webp`). 화면 끝까지 넘기도록
+    // 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다. 카드 폭은 시안(375px 에서 249px)을 따라 이 목록
+    // 안쪽 폭의 72% 다(화면의 72% 가 아니다). 375px 에서 박스 안쪽 311px 의 72% 는 224px 라 최소
+    // 폭 240px 가 되고, 같은 모양인 오늘의 추천 공고(343px)는 247px 다. 범위를 둬서 320px 폰과 큰
+    // 폰 모두 옆 카드가 보인다.
+    <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
+      {items.map((job, index) => (
+        <li
+          key={job.id}
+          className="w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0"
+        >
+          <JobCard
+            variant="featured"
+            job={job}
+            recommendation={tab === 'pick' ? recommendationOf(job) : undefined}
+            tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
+          />
+        </li>
+      ))}
+    </ul>
+  );
 }
