@@ -533,7 +533,7 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isPending, isError } = useJobList({
+  const { data, isError } = useJobList({
     page,
     keyword,
     visibility: 'VISIBLE',
@@ -542,6 +542,15 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
     recruitmentStatus: '',
     sort: 'REGISTERED_AT',
   });
+
+  // 쪽이나 검색어가 바뀌면 새 쿼리 키라 `data` 가 비는 동안이 생긴다. 그동안 표와 쪽 번호가
+  // 사라지면 모달이 접혔다 펴지고 방금 누른 번호 버튼이 DOM 에서 빠져 초점을 잃는다. 마지막으로
+  // 받은 목록을 들고 있다가 새 목록이 올 때까지 흐리게 둔다.
+  const [shown, setShown] = useState(data);
+  if (data && data !== shown) {
+    setShown(data);
+  }
+  const isRefreshing = !data && shown !== undefined;
 
   const columns: DataTableColumn<AdminJobSummaryResponse>[] = [
     { key: 'title', header: '제목', render: (row) => row.title },
@@ -552,13 +561,20 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
       width: 'w-24',
       render: (row) => {
         const isSelected = selectedIds.has(row.id);
+        // `disabled` 로 두면 누르는 즉시 초점을 잃어, 여러 건을 연달아 고를 때마다 모달 처음부터 다시
+        // 탭해야 한다. 초점은 남기고 눌려도 아무 일 없게 한다.
         return (
           <Button
             size="sm"
             variant="secondary"
             aria-label={`${row.title} ${isSelected ? '선택됨' : '추가'}`}
-            disabled={isSelected}
-            onClick={() => onAdd(row)}
+            aria-disabled={isSelected}
+            className={cn(isSelected && 'cursor-not-allowed text-gray-400 hover:bg-transparent')}
+            onClick={() => {
+              if (!isSelected) {
+                onAdd(row);
+              }
+            }}
           >
             {isSelected ? '선택됨' : '추가'}
           </Button>
@@ -584,16 +600,21 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
-          <div className="max-h-[50vh] overflow-y-auto rounded-lg">
+          <div
+            className={cn(
+              'max-h-[50vh] overflow-y-auto rounded-lg transition-opacity',
+              isRefreshing && 'opacity-50',
+            )}
+          >
             <DataTable
               columns={columns}
-              rows={data?.items ?? []}
+              rows={shown?.items ?? []}
               rowKey={(row) => row.id}
-              isLoading={isPending}
+              isLoading={shown === undefined}
               emptyMessage="조건에 맞는 공고가 없습니다."
             />
           </div>
-          <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
+          <Pagination page={page} totalPages={shown?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>
       )}
 
