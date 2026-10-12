@@ -10,6 +10,9 @@ import { buildRssFeed } from '@/shared/lib/rss';
  * 마감된 과정도 싣는다 — `shared/lib/publicListings.ts`의 `fetchAllBootcamps`가 상태 필터 없이
  * 돈다.
  */
+/** 1시간마다 다시 만든다. 없으면 요청마다 목록 API 를 끝까지 넘겨 읽는다. */
+export const revalidate = 3600;
+
 export async function GET() {
   const bootcamps = await fetchAllBootcamps();
 

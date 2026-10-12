@@ -10,6 +10,7 @@ import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
+import { Logo } from '@/shared/ui/Logo';
 import { NAV_ITEMS } from './navItems';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
@@ -25,19 +26,11 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * `home.png`·`교육부트캠프.png`의 상단 헤더. 현재 경로에 밑줄이 붙어야 해서 `usePathname`을
  * 쓰는 클라이언트 컴포넌트다.
  *
- * 왼쪽 로고는 v3에서 글자("오늘의 공고 BY LETS CAREER")가 심볼 마크로 바뀌었다
- * (`docs/asset/v3 변경사항/오공고 로고.svg`, 목업의 원본 크기 52x25 그대로다). 글자가 사라져
- * 링크에 읽을 것이 남지 않으므로 이름은 `aria-label`로 붙인다.
+ * 데스크톱은 두 줄이다. 맨 위 얇은 띠에 서비스 토글 `[렛츠커리어 | 오늘의 공고]`(`ServiceLogoToggle`)가
+ * 있고, 그 아래 줄에 오공고 심볼 로고(`docs/asset/v3 변경사항/오공고 로고.svg`, 52x25)와 메뉴, 우측 링크가
+ * 있다. 글자가 없는 마크라 로고 링크의 이름은 `aria-label`로 붙인다.
  *
- * 그 왼쪽의 회색 렛츠커리어 마크와 세로 구분선은 v3에서 에셋이 없어 미뤘던 것이다
- * (`docs/asset/v3-1/icon/렛츠커리어.svg`). 전에는 셋이 한 링크로 홈에 갔는데, 이제 두 서비스를
- * 오가는 토글이다 — 렛츠커리어 마크는 렛츠커리어 웹으로 로그인을 이어 가고 오공고 로고는 홈이다
- * (`ServiceLogoToggle`).
- *
- * 간격은 목업(`docs/asset/v3 변경사항/사이드 스터디 디자인변경.png`, 1440px)을 픽셀로 재서
- * 맞췄다 — 회색 마크 x 130~155, 구분선 x 167, 파란 로고 x 180~231이라 사이가 11~12px다.
- * `gap-3`(12px)이 그 값이다. 구분선은 26px 높이의 1px 선이고 색은 `gray-300`이다(목업의
- * rgb(232,234,237)은 #D1D5DB 1px 선이 두 열에 반씩 걸린 값이다).
+ * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다.
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다. `로그아웃` 은
  * 헤더에서 빠져 마이페이지의 `개인 정보`·`기업/기관 정보` 화면 아래로 갔다(모바일 햄버거 메뉴에는 남아 있다).
@@ -120,15 +113,23 @@ export function SiteHeader() {
       {/* 탭이 넷이 되어 md 경계(768px)의 여유가 줄었다. 이름이 5자 이상이거나 관리자 계정이면 768px 에서 탭과
           우측 글자가 음절 사이에서 줄바꿈되므로(실측) `whitespace-nowrap` 으로 막고, 탭 사이는 lg 미만에서만
           16px 로 좁힌다. */}
-      <div className="mx-auto hidden h-16 max-w-6xl items-stretch justify-between px-6 whitespace-nowrap md:flex">
+      <div className="mx-auto hidden h-8 max-w-6xl items-center px-6 whitespace-nowrap md:flex">
+        <ServiceLogoToggle size="desktop" />
+      </div>
+      <div className="mx-auto hidden h-14 max-w-6xl items-stretch justify-between px-6 whitespace-nowrap md:flex">
         <div className="flex items-center gap-10">
-          <ServiceLogoToggle size="desktop" />
+          <Link href="/" aria-label="오늘의 공고 홈">
+            <Logo className="h-[25px] w-[52px] text-blue-500" />
+          </Link>
           <nav className="flex items-stretch gap-4 lg:gap-6">
             {NAV_ITEMS.map(({ href, label, matches }) => {
               const active = matches(pathname);
               return (
                 <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
-                  <MenuItem state={active ? 'current' : 'default'} className="text-sm">
+                  <MenuItem
+                    state={active ? 'current' : 'default'}
+                    className={cn('text-sm', active && 'font-semibold')}
+                  >
                     {label}
                   </MenuItem>
                 </Link>

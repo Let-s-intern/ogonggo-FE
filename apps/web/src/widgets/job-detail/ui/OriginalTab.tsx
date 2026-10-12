@@ -6,7 +6,7 @@ import type { JobDetail } from '@/entities/job/model/types';
  * 회사/팀소개가 화면에 전혀 반영되지 않는다는 제보로 `companyAndTeamIntroduction`을 다시
  * 추가한다(#123) — 본문 맨 앞에 둔다.
  */
-function buildSections(job: JobDetail): { label: string; value?: string }[] {
+export function buildSections(job: JobDetail): { label: string; value?: string }[] {
   return [
     { label: '회사 및 팀 소개', value: job.companyAndTeamIntroduction },
     { label: '주요 업무', value: job.responsibilities },
