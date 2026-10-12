@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminJobSummaryResponse as AdminJobSummary } from '@ogonggo/api/src/admin';
 import { listAllIds, useJobList, usePatchJob } from '@/entities/content/api/useContent';
+import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
@@ -17,6 +19,7 @@ import {
 } from '@/shared/config/labels';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
+import { PickToggle, type PickNotice } from './PickToggle';
 
 /**
  * 채용공고 목록.
@@ -41,6 +44,16 @@ export function JobListPage() {
   };
 
   const { data, isPending, isError } = useJobList(filters);
+  // 채용공고 목록 응답에는 PICK 여부가 없다. 오늘의 공고를 따로 받아 id 로 맞춘다.
+  const todayJobs = useTodayJobList();
+  const pickedIds = new Set((todayJobs.data ?? []).map((job) => job.id));
+  // 오늘의 공고를 한 번도 받지 못했으면 켜졌는지 꺼졌는지를 모른다.
+  const isPickUnknown = todayJobs.data === undefined;
+  const replaceMutation = useReplaceTodayJobs();
+  // 한 건만 더하고 빼는 API 가 없어 요청마다 목록을 통째로 받고 보낸다. 요청이 오가는 동안은 어느
+  // 행이든 PICK 을 못 바꾸게 한다. 두 요청이 겹치면 먼저 보낸 변경을 나중 것이 덮어쓴다.
+  const isPickLocked = isPickUnknown || todayJobs.isFetching || replaceMutation.isPending;
+  const [pickNotice, setPickNotice] = useState<PickNotice | null>(null);
   // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
   const selection = useRowSelection(
     (data?.items ?? []).map((row) => row.id),
@@ -56,6 +69,20 @@ export function JobListPage() {
       header: '노출',
       width: 'w-32',
       render: (row) => <VisibilityToggle job={row} />,
+    },
+    {
+      key: 'pick',
+      header: 'PICK',
+      width: 'w-24',
+      render: (row) => (
+        <PickToggle
+          job={row}
+          picked={pickedIds.has(row.id)}
+          disabled={isPickLocked}
+          replace={replaceMutation.mutateAsync}
+          onNotice={setPickNotice}
+        />
+      ),
     },
     {
       key: 'source',
@@ -132,6 +159,18 @@ export function JobListPage() {
           aria-label="정렬"
         />
       </ListToolbar>
+
+      {isPickUnknown && todayJobs.isError ? (
+        <Callout tone="warning" className="mb-4">
+          오늘의 공고를 불러오지 못해 PICK 을 바꿀 수 없습니다. 나머지 목록은 그대로 쓸 수 있습니다.
+        </Callout>
+      ) : null}
+
+      {pickNotice ? (
+        <Callout tone={pickNotice.tone} className="mb-4">
+          {pickNotice.message}
+        </Callout>
+      ) : null}
 
       {isError ? (
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>

@@ -36,6 +36,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/content/bootcamps', label: '부트캠프' },
       { path: '/content/side-studies', label: '사이드·스터디' },
       { path: '/content/concerns', label: '취준고민' },
+      { path: '/content/today-jobs', label: '오늘의 공고' },
     ],
   },
   {

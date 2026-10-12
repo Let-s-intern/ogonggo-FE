@@ -16,6 +16,7 @@ import { ReviewQueuePage } from '@/pages/review-queue';
 import { ServiceFeedbackListPage } from '@/pages/service-feedback-list';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
+import { TodayJobsPage } from '@/pages/today-jobs';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
 import { RequireAuth } from './RequireAuth';
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
       { path: 'content/concerns', element: <ConcernListPage /> },
       { path: 'content/concerns/:concernId', element: <ConcernDetailPage /> },
+      { path: 'content/today-jobs', element: <TodayJobsPage /> },
 
       { path: 'ads/review', element: <ReviewQueuePage /> },
       { path: 'ads/rejections', element: <RejectionsPage /> },
