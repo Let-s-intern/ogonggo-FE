@@ -5,9 +5,7 @@ import {
   DataTable,
   Modal,
   Pagination,
-  ToastProvider,
   cn,
-  useToast,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import type { AdminJobSummaryResponse, AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
@@ -137,15 +135,6 @@ function isSameList(server: AdminTodayJobSummaryResponse[], baseline: TodayJobRo
  * 같은 이유다).
  */
 export function TodayJobsPage() {
-  // 어드민 앱에는 `ToastProvider` 가 없다. 저장 결과를 알릴 이 화면만 직접 감싼다.
-  return (
-    <ToastProvider>
-      <TodayJobsContent />
-    </ToastProvider>
-  );
-}
-
-function TodayJobsContent() {
   const { data, isError } = useTodayJobList();
 
   if (data) {
@@ -165,7 +154,6 @@ function TodayJobsContent() {
 }
 
 function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryResponse[] }) {
-  const toast = useToast();
   const { data, refetch } = useTodayJobList();
   const replaceMutation = useReplaceTodayJobs();
 
@@ -177,6 +165,8 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   const [isChecking, setIsChecking] = useState(false);
   const [isConflict, setIsConflict] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  /** 저장이 끝났음을 화면에 남긴다. 다음 변경이나 저장 시도에서 사라진다. */
+  const [isSaved, setIsSaved] = useState(false);
 
   const isSaving = isChecking || replaceMutation.isPending;
 
@@ -206,6 +196,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   }, [data, baseline, changeCount]);
 
   const updateRecommendation = (id: number, title: string, description: string) => {
+    setIsSaved(false);
     setRows((current) =>
       current.map((row) =>
         row.id === id
@@ -232,6 +223,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   const save = async () => {
     setSaveError(null);
     setIsConflict(false);
+    setIsSaved(false);
     setIsChecking(true);
     const latest = await refetch();
     setIsChecking(false);
@@ -260,7 +252,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       { jobs },
       {
         onSuccess: async () => {
-          toast.show({ message: '저장했습니다.' });
+          setIsSaved(true);
           // 서버가 정한 값(공고의 현재 상태 포함)으로 화면을 맞춘다. 맞추기 전에 다시 눌리지 않게
           // 받는 동안도 요청 중으로 둔다.
           setIsChecking(true);
@@ -286,6 +278,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   /** 서버 목록을 다시 받아 화면을 그것으로 바꾼다. */
   const reload = async () => {
     setSaveError(null);
+    setIsSaved(false);
     setIsChecking(true);
     const latest = await refetch();
     setIsChecking(false);
@@ -298,6 +291,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
 
   /** 한 칸 위(`-1`)나 아래(`1`)로 옮긴다. 끝에서는 옮기지 않는다. */
   const moveRow = (index: number, delta: -1 | 1) => {
+    setIsSaved(false);
     setRows((current) => {
       const target = index + delta;
       const moving = current[index];
@@ -314,6 +308,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
 
   /** 맨 끝에 붙인다. 문구는 비어 있어 저장하기 전에 채워야 한다. */
   const addRow = (job: AdminJobSummaryResponse) => {
+    setIsSaved(false);
     setRows((current) =>
       current.some((row) => row.id === job.id)
         ? current
@@ -334,6 +329,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
 
   /** 화면 상태에서만 지운다. 서버는 저장할 때까지 그대로다. */
   const removeRow = (id: number) => {
+    setIsSaved(false);
     setRows((current) => current.filter((row) => row.id !== id));
   };
 
@@ -470,6 +466,11 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       {saveError ? (
         <Callout tone="error" className="mb-4">
           {saveError}
+        </Callout>
+      ) : null}
+      {isSaved ? (
+        <Callout tone="success" className="mb-4">
+          저장했습니다.
         </Callout>
       ) : null}
       <DataTable
