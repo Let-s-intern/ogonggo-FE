@@ -68,11 +68,14 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   const moveRow = (index: number, delta: -1 | 1) => {
     setRows((current) => {
       const target = index + delta;
-      if (target < 0 || target >= current.length) {
+      const moving = current[index];
+      const neighbor = current[target];
+      if (!moving || !neighbor) {
         return current;
       }
       const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
+      next[index] = neighbor;
+      next[target] = moving;
       return next;
     });
   };
