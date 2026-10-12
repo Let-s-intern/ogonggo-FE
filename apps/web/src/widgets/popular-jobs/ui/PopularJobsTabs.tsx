@@ -1,19 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import type { UserTodayJobSummaryResponse } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
 
-type TabKey = 'popular' | 'intern' | 'newcomer';
+type TabKey = 'pick' | 'popular' | 'intern' | 'newcomer';
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'popular', label: '인기 공고' },
-  { key: 'intern', label: '인턴 TOP4' },
-  { key: 'newcomer', label: '신입 TOP4' },
-];
+const TAB_LABELS: Record<TabKey, string> = {
+  pick: '오공고 PICK',
+  popular: '인기 공고',
+  intern: '인턴 TOP4',
+  newcomer: '신입 TOP4',
+};
 
 export interface PopularJobsTabsProps {
+  /** 운영자가 고른 공고. 비면 첫 탭이 `인기 공고` 로 바뀐다. */
+  picks: UserTodayJobSummaryResponse[];
   popular: JobSummary[];
   intern: JobSummary[];
   newcomer: JobSummary[];
@@ -24,29 +28,31 @@ export interface PopularJobsTabsProps {
  * 시 유지할 필요가 없는 화면 상태다(Push 4 task 파일 2.2절). 세 리스트는 서버 컴포넌트
  * (`PopularJobs`)가 이미 나눠 내려준다.
  */
-export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsProps) {
-  const [active, setActive] = useState<TabKey>('popular');
-  const itemsByTab: Record<TabKey, JobSummary[]> = { popular, intern, newcomer };
+export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJobsTabsProps) {
+  const firstTab: TabKey = picks.length > 0 ? 'pick' : 'popular';
+  const tabs: TabKey[] = [firstTab, 'intern', 'newcomer'];
+  const [active, setActive] = useState<TabKey>(firstTab);
+  const itemsByTab: Record<TabKey, JobSummary[]> = { pick: picks, popular, intern, newcomer };
   const items = itemsByTab[active];
 
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-lg font-bold text-gray-900">인기 공고</h2>
+        <h2 className="text-lg font-bold text-gray-900">오늘의 추천 공고</h2>
         <div className="flex gap-2">
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
-              key={tab.key}
+              key={tab}
               type="button"
-              onClick={() => setActive(tab.key)}
+              onClick={() => setActive(tab)}
               className={cn(
                 'cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors',
-                active === tab.key
+                active === tab
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800',
               )}
             >
-              {tab.label}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </div>
@@ -68,6 +74,7 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
               <JobCard
                 variant="featured"
                 job={job}
+                recommendation={active === 'pick' ? recommendationOf(job) : undefined}
                 tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
               />
             </li>
@@ -76,4 +83,16 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
       )}
     </div>
   );
+}
+
+/**
+ * 오공고 PICK 카드의 추천 문구. 스펙은 필수 문자열이지만 `null` 이 오면 `JobCard` 의 `trim()` 이 렌더
+ * 중에 터져 홈 전체가 오류 화면이 된다. 응답 경계에서 빈 문자열로 만든다.
+ */
+function recommendationOf(job: JobSummary) {
+  const pick = job as Partial<UserTodayJobSummaryResponse>;
+  return {
+    title: pick.recommendationTitle ?? '',
+    description: pick.recommendationDescription ?? '',
+  };
 }
