@@ -238,7 +238,11 @@ function JobFilterSheet({
             <span aria-hidden="true" className="icon-[lucide--rotate-cw] block h-4 w-4" />
             초기화
           </Button>
-          <Button onClick={apply} className="min-w-40">
+          <Button
+            variant="secondary"
+            onClick={apply}
+            className="min-w-40 border-blue-500 bg-white text-blue-500 hover:bg-blue-50"
+          >
             {count === undefined ? '공고보기' : `${count.toLocaleString('ko-KR')}개 공고보기`}
           </Button>
         </div>
