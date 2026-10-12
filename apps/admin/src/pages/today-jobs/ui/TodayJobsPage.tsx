@@ -5,12 +5,14 @@ import {
   DataTable,
   Modal,
   Pagination,
+  ToastProvider,
   cn,
+  useToast,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import type { AdminJobSummaryResponse, AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
 import { useJobList } from '@/entities/content/api/useContent';
-import { useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
+import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { isRecommendationValid } from '@/features/today-job/lib/validate';
 import { PageHeader } from '@/widgets/page-header';
@@ -84,6 +86,27 @@ function countChanges(baseline: TodayJobRow[], rows: TodayJobRow[]): number {
 }
 
 /**
+ * 서버에서 새로 받은 목록이 화면을 연 뒤(또는 마지막으로 맞춘 뒤)의 서버 상태와 같은지 본다.
+ *
+ * 순서와 문구가 같으면 같다. 노출·모집 상태는 다른 화면(채용공고 목록)에서도 바뀌는 값이고
+ * 이 저장이 덮어쓰는 것이 아니라서 보지 않는다.
+ */
+function isSameList(server: AdminTodayJobSummaryResponse[], baseline: TodayJobRow[]): boolean {
+  return (
+    server.length === baseline.length &&
+    server.every((job, index) => {
+      const before = baseline[index];
+      return (
+        before !== undefined &&
+        job.id === before.id &&
+        job.recommendationTitle === before.recommendationTitle &&
+        job.recommendationDescription === before.recommendationDescription
+      );
+    })
+  );
+}
+
+/**
  * 오늘의 공고(사용자 홈의 오공고 PICK) 관리.
  *
  * 운영자가 홈에 나올 공고와 공고마다 붙는 추천 문구를 정한다.
@@ -93,6 +116,15 @@ function countChanges(baseline: TodayJobRow[], rows: TodayJobRow[]): number {
  * 같은 이유다).
  */
 export function TodayJobsPage() {
+  // 어드민 앱에는 `ToastProvider` 가 없다. 저장 결과를 알릴 이 화면만 직접 감싼다.
+  return (
+    <ToastProvider>
+      <TodayJobsContent />
+    </ToastProvider>
+  );
+}
+
+function TodayJobsContent() {
   const { data, isError } = useTodayJobList();
 
   if (data) {
@@ -112,10 +144,20 @@ export function TodayJobsPage() {
 }
 
 function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryResponse[] }) {
-  // 서버 상태. 저장하지 않은 변경을 세는 기준이다.
-  const [baseline] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
+  const toast = useToast();
+  const { refetch } = useTodayJobList();
+  const replaceMutation = useReplaceTodayJobs();
+
+  // 서버 상태. 저장하지 않은 변경을 세고, 저장 직전에 다른 곳에서 바뀌었는지 보는 기준이다.
+  const [baseline, setBaseline] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
   const [rows, setRows] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  /** 저장 직전 목록 확인과 `새로 불러오기` 의 요청 중. */
+  const [isChecking, setIsChecking] = useState(false);
+  const [isConflict, setIsConflict] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const isSaving = isChecking || replaceMutation.isPending;
 
   const changeCount = countChanges(baseline, rows);
   const canSave =
@@ -135,6 +177,87 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
           : row,
       ),
     );
+  };
+
+  /** 화면 상태와 비교 기준을 서버 목록으로 맞춘다. 고치던 내용은 사라진다. */
+  const syncWithServer = (list: AdminTodayJobSummaryResponse[]) => {
+    const next = list.map(toRow);
+    setBaseline(next);
+    setRows(next);
+    setIsConflict(false);
+  };
+
+  /**
+   * 저장한다. 먼저 목록을 다시 받아, 화면을 연 뒤에 서버 목록이 바뀌었으면 보내지 않고 알린다.
+   *
+   * 전체 교체 API 라 그대로 보내면 다른 운영자가 그 사이에 한 일을 덮어쓴다. 확인과 전송 사이의
+   * 틈은 남는다 — 이 확인은 덮어쓰기 창을 줄일 뿐 막지는 못한다.
+   */
+  const save = async () => {
+    setSaveError(null);
+    setIsConflict(false);
+    setIsChecking(true);
+    const latest = await refetch();
+    setIsChecking(false);
+
+    if (latest.isError || !latest.data) {
+      setSaveError('저장하기 전에 최신 목록을 확인하지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
+      return;
+    }
+    if (!isSameList(latest.data, baseline)) {
+      setIsConflict(true);
+      return;
+    }
+
+    // 서버에는 앞뒤 공백을 뺀 문구를 보낸다. 검증이 그 길이로 판정했다.
+    const trimmed = rows.map((row) => ({
+      ...row,
+      recommendationTitle: row.recommendationTitle.trim(),
+      recommendationDescription: row.recommendationDescription.trim(),
+    }));
+    const jobs = trimmed.map((row) => ({
+      jobId: row.id,
+      recommendationTitle: row.recommendationTitle,
+      recommendationDescription: row.recommendationDescription,
+    }));
+    replaceMutation.mutate(
+      { jobs },
+      {
+        onSuccess: async () => {
+          toast.show({ message: '저장했습니다.' });
+          // 서버가 정한 값(공고의 현재 상태 포함)으로 화면을 맞춘다. 맞추기 전에 다시 눌리지 않게
+          // 받는 동안도 요청 중으로 둔다.
+          setIsChecking(true);
+          const saved = await refetch();
+          setIsChecking(false);
+          if (!saved.isError && saved.data) {
+            syncWithServer(saved.data);
+            return;
+          }
+          // 저장은 됐는데 다시 받지 못했다. 보낸 값을 서버 상태로 본다.
+          setBaseline(trimmed);
+          setRows(trimmed);
+        },
+        onError: () => {
+          setSaveError(
+            '저장하지 못했습니다. 고치던 내용은 그대로 두었습니다. 문구 길이와 공고를 확인한 뒤 다시 시도해 주세요.',
+          );
+        },
+      },
+    );
+  };
+
+  /** 서버 목록을 다시 받아 화면을 그것으로 바꾼다. */
+  const reload = async () => {
+    setSaveError(null);
+    setIsChecking(true);
+    const latest = await refetch();
+    setIsChecking(false);
+    if (latest.isError || !latest.data) {
+      setSaveError('목록을 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
+      return;
+    }
+    syncWithServer(latest.data);
   };
 
   /** 한 칸 위(`-1`)나 아래(`1`)로 옮긴다. 끝에서는 옮기지 않는다. */
@@ -207,6 +330,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       render: (row) => (
         <RecommendationFields
           idPrefix={`today-job-${row.id}`}
+          disabled={isSaving}
           value={{ title: row.recommendationTitle, description: row.recommendationDescription }}
           onChange={(next) => updateRecommendation(row.id, next.title, next.description)}
         />
@@ -230,7 +354,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
               size="sm"
               variant="secondary"
               aria-label={`${row.title} 위로`}
-              disabled={index === 0}
+              disabled={isSaving || index === 0}
               onClick={() => moveRow(index, -1)}
             >
               위로
@@ -239,7 +363,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
               size="sm"
               variant="secondary"
               aria-label={`${row.title} 아래로`}
-              disabled={index === rows.length - 1}
+              disabled={isSaving || index === rows.length - 1}
               onClick={() => moveRow(index, 1)}
             >
               아래로
@@ -249,6 +373,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
               variant="secondary"
               aria-label={`${row.title} 빼기`}
               className="border-red-200 text-error hover:bg-red-50"
+              disabled={isSaving}
               onClick={() => removeRow(row.id)}
             >
               빼기
@@ -273,15 +398,42 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
             >
               저장하지 않은 변경 {changeCount}건
             </span>
-            <Button size="sm" variant="secondary" onClick={() => setIsPickerOpen(true)}>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={isSaving}
+              onClick={() => setIsPickerOpen(true)}
+            >
               공고 추가
             </Button>
-            <Button size="sm" disabled={!canSave}>
-              저장
+            <Button size="sm" disabled={!canSave || isSaving} onClick={() => void save()}>
+              {isSaving ? '저장 중' : '저장'}
             </Button>
           </div>
         }
       />
+      {isConflict ? (
+        <Callout tone="warning" className="mb-4 flex items-center justify-between gap-4">
+          <span>
+            다른 곳에서 목록이 바뀌었습니다. 저장하지 않았습니다. 새로 불러오면 지금 고치고 있는
+            내용은 사라집니다.
+          </span>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="shrink-0"
+            disabled={isSaving}
+            onClick={() => void reload()}
+          >
+            새로 불러오기
+          </Button>
+        </Callout>
+      ) : null}
+      {saveError ? (
+        <Callout tone="error" className="mb-4">
+          {saveError}
+        </Callout>
+      ) : null}
       <DataTable
         columns={columns}
         rows={rows}
