@@ -6,6 +6,7 @@ import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
 import { rejectionHandlers } from './rejections';
 import { reviewHandlers } from './review';
+import { serviceFeedbackHandlers } from './serviceFeedbacks';
 import { todayJobHandlers } from './today-jobs';
 
 /**
@@ -32,4 +33,5 @@ export const adminHandlers: HttpHandler[] = [
   ...concernHandlers,
   ...memberHandlers,
   ...noticeHandlers,
+  ...serviceFeedbackHandlers,
 ];

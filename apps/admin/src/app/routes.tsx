@@ -13,6 +13,7 @@ import { NoticeListPage } from '@/pages/notice-list';
 import { NotFoundPage } from '@/pages/not-found';
 import { RejectionsPage } from '@/pages/rejections';
 import { ReviewQueuePage } from '@/pages/review-queue';
+import { ServiceFeedbackListPage } from '@/pages/service-feedback-list';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
 import { TodayJobsPage } from '@/pages/today-jobs';
@@ -59,6 +60,7 @@ export const router = createBrowserRouter([
       { path: 'members/companies/:memberId', element: <CompanyMemberDetailPage /> },
 
       { path: 'support/notices', element: <NoticeListPage /> },
+      { path: 'support/feedbacks', element: <ServiceFeedbackListPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

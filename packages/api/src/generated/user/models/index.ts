@@ -6,6 +6,7 @@
  */
 
 export * from './authTokenResponse';
+export * from './changeMyNicknameRequest';
 export * from './changeMyPasswordRequest';
 export * from './companyBootcampCurriculumRequest';
 export * from './companyBootcampCurriculumResponse';

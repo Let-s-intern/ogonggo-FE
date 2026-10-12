@@ -9,6 +9,12 @@ export interface AdminServiceFeedbackResponse {
   id: number;
   /** 작성한 사용자 식별자. 로그인 없이 작성했으면 null입니다. */
   userId?: number;
+  /** 작성한 사용자 이름. 비로그인 작성이거나 프로필이 없으면 null입니다. */
+  userName?: string;
+  /** 작성한 사용자 닉네임. 비로그인 작성이거나 프로필이 없으면 null입니다. */
+  userNickname?: string;
+  /** 작성한 사용자의 렛츠커리어 이메일. 비로그인 작성이거나 프로필이 없으면 null입니다. */
+  userEmail?: string;
   /** 이용 중 가장 만족스러운 점. 비워 두었으면 null입니다. */
   satisfaction?: string;
   /** 아쉬운 점이나 개선됐으면 하는 점. 비워 두었으면 null입니다. */
