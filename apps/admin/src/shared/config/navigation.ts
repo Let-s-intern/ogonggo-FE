@@ -60,7 +60,11 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    items: [{ path: '/support/notices', label: '공지사항' }],
+    title: '고객지원',
+    items: [
+      { path: '/support/notices', label: '공지사항' },
+      { path: '/support/feedbacks', label: '서비스 의견' },
+    ],
   },
   {
     items: [{ path: '/stats', label: '통계', disabled: true }],
