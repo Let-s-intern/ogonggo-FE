@@ -6,6 +6,7 @@ import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
 import { rejectionHandlers } from './rejections';
 import { reviewHandlers } from './review';
+import { todayJobHandlers } from './today-jobs';
 
 /**
  * 어드민 콘솔의 MSW 핸들러.
@@ -25,6 +26,8 @@ export const adminHandlers: HttpHandler[] = [
   ...dashboardHandlers,
   ...reviewHandlers,
   ...rejectionHandlers,
+  // `contentHandlers` 의 `:jobId` 가 `today` 를 id 로 삼키므로 그보다 앞에 둔다.
+  ...todayJobHandlers,
   ...contentHandlers,
   ...concernHandlers,
   ...memberHandlers,
