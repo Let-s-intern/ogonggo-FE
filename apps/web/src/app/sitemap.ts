@@ -10,7 +10,8 @@ import {
 /**
  * `app/sitemap.ts`는 Next가 `/sitemap.xml`로 내보내는 파일 규칙이다
  * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/01-metadata/sitemap.md).
- * 빌드 시점에 한 번 실행돼 정적 파일로 구워진다 — `robots.ts`와 같다.
+ * 빌드 때 구워지고, 그 뒤로는 `revalidate` 마다 다시 만든다. 빌드 때만 만들면 배포 사이에 올라온
+ * 공고가 다음 배포까지 빠진다.
  *
  * `robots`가 막는 경로(`/mypage`, `/login`, `/signup`, `/auth`, `/calendar`)는 여기서도 내지
  * 않는다. 사이트맵이 알려 주고 robots가 막는 주소가 있으면 크롤러가 둘 중 뭘 믿을지 갈린다.
@@ -29,6 +30,9 @@ import {
  * 오는 주기를 틀어지게 한다(task 1.3). 사이드·스터디 목록 응답에는 그런 필드가 없어 항상 비운다.
  * 공지는 `createdAt`이 항상 있는 진짜 필드라 그대로 쓴다.
  */
+/** 1시간. 공고는 하루에도 여러 번 들어오고, 한 번 만들 때 목록 API 를 수십 번 부른다. */
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [bootcamps, jobs, sideStudies, notices] = await Promise.all([
     fetchAllBootcamps(),
