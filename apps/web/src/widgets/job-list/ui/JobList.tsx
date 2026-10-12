@@ -64,7 +64,8 @@ export async function JobList(query: JobListProps) {
           <div className="hidden md:block">{sort}</div>
         </div>
       </div>
-      <div className="hidden lg:col-start-1 lg:row-start-2 lg:block">
+      {/* 목록을 내려도 필터가 화면에 남도록 붙인다. `self-start` 가 없으면 칸이 행 높이만큼 늘어나 붙을 자리가 없다. */}
+      <div className="hidden lg:sticky lg:top-6 lg:col-start-1 lg:row-start-2 lg:block lg:self-start">
         <JobFilterSidebar query={query} />
       </div>
       <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
