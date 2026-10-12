@@ -102,14 +102,23 @@ function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
   const current = Math.min(page, lastPage);
   const start = current * PAGE_SIZE;
 
+  // 화살표는 목록 양옆 자기 칸에 둔다. 전에는 목록 양 끝에 반쯤 걸쳐 카드를 가리고 작아서 잘 안
+  // 보였다(2026-10-12, 사용자). 넘길 쪽이 없는 탭도 칸은 남겨 둔다 — 탭끼리 같은 자리에 겹쳐 있어서
+  // 칸이 없어지면 탭을 바꿀 때 카드 폭이 달라진다.
   return (
-    <div className="relative">
+    <div className="md:flex md:items-center md:gap-4">
+      <PageArrow
+        direction="prev"
+        hidden={lastPage === 0}
+        disabled={current === 0}
+        onClick={() => setPage(current - 1)}
+      />
       {/* 모바일은 가로로 넘긴다(`docs/asset/v12 채용공고 상세/모바일 목록.webp`). 화면 끝까지 넘기도록
           좌우 여백만큼 밖으로 빼고 안에서 다시 들인다. 카드 폭은 시안(375px 에서 249px)을 따라 이 목록
           안쪽 폭의 72% 다(화면의 72% 가 아니다). 375px 에서 박스 안쪽 311px 의 72% 는 224px 라 최소
           폭 240px 가 되고, 같은 모양인 오늘의 추천 공고(343px)는 247px 다. 범위를 둬서 320px 폰과 큰
           폰 모두 옆 카드가 보인다. */}
-      <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
+      <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:min-w-0 md:flex-1 md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
         {items.map((job, index) => (
           <li
             key={job.id}
@@ -127,48 +136,45 @@ function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
           </li>
         ))}
       </ul>
-      {lastPage > 0 ? (
-        <>
-          <PageArrow
-            direction="prev"
-            disabled={current === 0}
-            onClick={() => setPage(current - 1)}
-          />
-          <PageArrow
-            direction="next"
-            disabled={current === lastPage}
-            onClick={() => setPage(current + 1)}
-          />
-        </>
-      ) : null}
+      <PageArrow
+        direction="next"
+        hidden={lastPage === 0}
+        disabled={current === lastPage}
+        onClick={() => setPage(current + 1)}
+      />
     </div>
   );
 }
 
-/** PC 의 좌우 넘김 화살표. 목록 양 끝 가운데에 반쯤 걸쳐 놓인다. 모바일은 손가락으로 넘겨 그리지 않는다. */
+/**
+ * PC 의 좌우 넘김 화살표. 목록 양옆에 놓인다. 모바일은 손가락으로 넘겨 그리지 않는다.
+ * `hidden` 이면 자리만 차지하고 보이지 않는다.
+ */
 function PageArrow({
   direction,
+  hidden,
   disabled,
   onClick,
 }: {
   direction: 'prev' | 'next';
+  hidden: boolean;
   disabled: boolean;
   onClick: () => void;
 }) {
   return (
     <CircleIconButton
       label={direction === 'prev' ? '이전 추천 공고' : '다음 추천 공고'}
-      disabled={disabled}
+      disabled={disabled || hidden}
       onClick={onClick}
       className={cn(
-        'absolute top-1/2 hidden size-10 -translate-y-1/2 border border-gray-200 bg-white shadow-md disabled:invisible md:flex',
-        direction === 'prev' ? '-left-5' : '-right-5',
+        'hidden size-12 cursor-pointer border border-gray-200 bg-white text-gray-800 shadow-md hover:border-gray-300 hover:bg-gray-50 hover:brightness-100 disabled:cursor-default disabled:border-gray-100 disabled:text-gray-300 disabled:opacity-100 disabled:shadow-none disabled:hover:bg-white md:inline-flex',
+        hidden && 'invisible',
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'block h-5 w-5 text-gray-700',
+          'block size-7',
           direction === 'prev' ? 'icon-[lucide--chevron-left]' : 'icon-[lucide--chevron-right]',
         )}
       />
