@@ -25,7 +25,22 @@ export interface JobCardProps {
    * 박스 없이 일반 카드다.
    */
   recommendation?: JobRecommendation;
+  /**
+   * `grid` 는 전체 공고가 쓰는 테두리 없는 카드(기본)이고, `featured` 는 인기 공고·오늘의 추천 공고가
+   * 쓰는 흰 상자 카드다. 껍데기 클래스와 배치만 다르고 북마크·추적·추천 박스는 같은 코드다.
+   */
+  variant?: 'grid' | 'featured';
 }
+
+/**
+ * `featured` 카드의 껍데기. 시안이 645px(PC)라 치수를 못 재서 디자인 토큰에서 가장 가까운 값으로
+ * 잡았다 — 원본을 받으면 이 줄과 `FEATURED_ACTIONS_CLASS` 만 고친다.
+ */
+const FEATURED_LINK_CLASS =
+  'group flex h-full flex-col gap-2 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm';
+
+/** 북마크·카드뉴스 버튼 자리. 썸네일이 카드 안쪽 여백(`p-3`)만큼 들어가 있어 그만큼 더 안쪽이다. */
+const FEATURED_ACTIONS_CLASS = 'absolute top-5 right-5 flex items-center gap-1';
 
 /**
  * "인기 공고"와 "전체 공고" 두 섹션이 완전히 같은 카드 디자인을 쓰도록 만든 단일 컴포넌트다
@@ -54,7 +69,8 @@ export interface JobCardProps {
  * 자리 그대로라 생김새는 바뀌지 않는다. `h-full`은 링크와 뿌리 둘 다에 있어야 한다 — 칸을
  * 채우는 것은 뿌리이고, 그 높이를 카드 내용에 넘기는 것은 링크다.
  */
-export function JobCard({ job, tracking, recommendation }: JobCardProps) {
+export function JobCard({ job, tracking, recommendation, variant = 'grid' }: JobCardProps) {
+  const featured = variant === 'featured';
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
   const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
   const closed = isRecruitmentClosed(job.recruitmentType, job.recruitmentEndAt, job.closedAt);
@@ -90,7 +106,7 @@ export function JobCard({ job, tracking, recommendation }: JobCardProps) {
     <div className="relative h-full">
       <JobCardLink
         href={`/jobs/${job.id}`}
-        className="group flex h-full flex-col gap-2"
+        className={featured ? FEATURED_LINK_CLASS : 'group flex h-full flex-col gap-2'}
         jobId={job.id}
         jobInfo={jobInfo}
         tracking={tracking}
@@ -126,7 +142,11 @@ export function JobCard({ job, tracking, recommendation }: JobCardProps) {
         {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
       </JobCardLink>
       {/* 카드뉴스 버튼은 어드민에게만 보인다. 없으면 북마크가 원래 자리(오른쪽 위 끝)에 남는다. */}
-      <div className="absolute top-2 right-2 flex items-center gap-1">
+      <div
+        className={
+          featured ? FEATURED_ACTIONS_CLASS : 'absolute top-2 right-2 flex items-center gap-1'
+        }
+      >
         <BookmarkButton
           kind="jobs"
           id={job.id}
