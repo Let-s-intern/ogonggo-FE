@@ -30,9 +30,22 @@ export function ServiceFeedbackListPage() {
       key: 'registeredAt',
       header: '등록 일시',
       width: 'w-44',
-      render: (row) => formatDateTime(row.registeredAt),
+      render: (row) => (
+        <span className="whitespace-nowrap">{formatDateTime(row.registeredAt)}</span>
+      ),
     },
-    { key: 'author', header: '작성자', width: 'w-28', render: (row) => authorLabel(row.userId) },
+    {
+      key: 'author',
+      header: '작성자',
+      width: 'w-32',
+      render: (row) => <span className="whitespace-nowrap">{authorLabel(row)}</span>,
+    },
+    {
+      key: 'email',
+      header: '이메일',
+      width: 'w-48',
+      render: (row) => <OneLine text={row.userEmail} />,
+    },
     {
       key: 'satisfaction',
       header: '만족한 점',
@@ -70,13 +83,19 @@ export function ServiceFeedbackListPage() {
   );
 }
 
-/** 로그인 없이 보낸 의견은 `userId` 가 없다. */
-const authorLabel = (userId: number | undefined) =>
-  userId === undefined ? '비로그인' : `회원 ${userId}`;
+/**
+ * 작성자 칸. 닉네임, 없으면 이름, 그것도 없으면 회원 ID 다. 로그인 없이 보낸 의견은 `userId` 도 없다.
+ * 프로필이 없는 회원(탈퇴 등)은 닉네임·이름이 모두 비어 회원 ID 로 떨어진다.
+ */
+const authorLabel = ({ userId, userNickname, userName }: AdminServiceFeedbackResponse) =>
+  userNickname ?? userName ?? (userId === undefined ? '비로그인' : `회원 ${userId}`);
 
-/** 비운 문항은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. */
+/**
+ * 비운 문항은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. 표는 내용 폭으로 칸을
+ * 나누므로, 긴 글 칸의 상한이 넓으면 등록 일시·작성자 칸이 한 글자씩 꺾일 만큼 좁아진다.
+ */
 function OneLine({ text }: { text: string | undefined }) {
-  return <span className="block max-w-sm truncate">{text ?? '-'}</span>;
+  return <span className="block max-w-56 truncate">{text ?? '-'}</span>;
 }
 
 function FeedbackModal({
@@ -90,7 +109,10 @@ function FeedbackModal({
     <Modal open title={`의견 #${feedback.id}`} onClose={onClose}>
       <DescriptionList
         items={[
-          { label: '작성자', value: authorLabel(feedback.userId) },
+          { label: '닉네임', value: feedback.userNickname ?? '-' },
+          { label: '이름', value: feedback.userName ?? '-' },
+          { label: '이메일', value: feedback.userEmail ?? '-', full: true },
+          { label: '회원 ID', value: feedback.userId ?? '비로그인' },
           { label: '등록 일시', value: formatDateTime(feedback.registeredAt) },
           {
             label: '만족한 점',
