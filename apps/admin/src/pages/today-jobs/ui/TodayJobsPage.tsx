@@ -9,7 +9,7 @@ import {
   type DataTableColumn,
 } from '@ogonggo/ui';
 import type { AdminJobSummaryResponse, AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
-import { useJobList } from '@/entities/content/api/useContent';
+import { useJobIdLookup, useJobList } from '@/entities/content/api/useContent';
 import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { isRecommendationValid } from '@/features/today-job/lib/validate';
@@ -551,16 +551,44 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
   if (data && data !== shown) {
     setShown(data);
   }
-  const isRefreshing = !data && shown !== undefined;
+
+  // 검색어가 공고 번호면 그 공고도 찾아 1쪽 맨 위에 붙인다. 목록 API 는 노출 중인 공고만 주므로
+  // 번호로 찾은 공고는 비노출일 수 있다 — 그것은 아래 `선택` 칸에서 막는다. 쪽 계산은 건드리지 않는다.
+  const idLookup = useJobIdLookup(keyword);
+  const foundJob = page === 1 ? idLookup.job : undefined;
+  const shownItems = shown?.items ?? [];
+  const rows = foundJob
+    ? [foundJob, ...shownItems.filter((row) => row.id !== foundJob.id)]
+    : shownItems;
+
+  const isRefreshing =
+    (!data && shown !== undefined) || (page === 1 && shown !== undefined && idLookup.isLookingUp);
 
   const columns: DataTableColumn<AdminJobSummaryResponse>[] = [
-    { key: 'title', header: '제목', render: (row) => row.title },
+    {
+      key: 'title',
+      header: '제목',
+      render: (row) => (
+        <>
+          {row.title}
+          {row.visibility === 'HIDDEN' ? (
+            <span className="block pt-1 text-xs text-orange-600">
+              비노출 공고는 오늘의 공고에 넣을 수 없습니다.
+            </span>
+          ) : null}
+        </>
+      ),
+    },
     { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
     {
       key: 'select',
       header: '선택',
       width: 'w-24',
       render: (row) => {
+        // 사용자 화면은 노출 중인 공고만 보여 준다. 번호로 찾은 공고가 비노출이면 고를 수 없다.
+        if (row.visibility === 'HIDDEN') {
+          return <VisibilityBadge value="HIDDEN" />;
+        }
         const isSelected = selectedIds.has(row.id);
         // `disabled` 로 두면 누르는 즉시 초점을 잃어, 여러 건을 연달아 고를 때마다 모달 처음부터 다시
         // 탭해야 한다. 초점은 남기고 눌려도 아무 일 없게 한다.
@@ -593,7 +621,7 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
             setKeyword(next);
             setPage(1);
           }}
-          placeholder="제목·회사 검색"
+          placeholder="제목·회사·공고 번호 검색"
         />
       </div>
 
@@ -609,7 +637,7 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
           >
             <DataTable
               columns={columns}
-              rows={shown?.items ?? []}
+              rows={rows}
               rowKey={(row) => row.id}
               isLoading={shown === undefined}
               emptyMessage="조건에 맞는 공고가 없습니다."
