@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminJobSummaryResponse as AdminJobSummary } from '@ogonggo/api/src/admin';
-import { listAllIds, useJobList, usePatchJob } from '@/entities/content/api/useContent';
+import {
+  listAllIds,
+  useJobIdLookup,
+  useJobList,
+  usePatchJob,
+} from '@/entities/content/api/useContent';
 import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
@@ -44,6 +49,16 @@ export function JobListPage() {
   };
 
   const { data, isPending, isError } = useJobList(filters);
+  // 목록 API 의 검색어는 제목·회사명만 맞춘다. 숫자만 적었으면 그 번호의 공고도 따로 찾는다.
+  const idLookup = useJobIdLookup(filters.keyword);
+  // 찾은 공고는 1쪽 맨 위에 붙인다. 총 건수와 쪽 계산은 목록 응답 그대로 두고, 노출·검수 같은
+  // 필터를 화면에서 흉내 내지 않는다 — 번호로 찾은 공고는 필터와 무관하게 보인다.
+  const foundJob = page === 1 ? idLookup.job : undefined;
+  const items = data?.items ?? [];
+  const rows = foundJob ? [foundJob, ...items.filter((row) => row.id !== foundJob.id)] : items;
+  // 목록 결과에 없던 공고. 일괄 선택은 목록 결과(총 건수와 검색 결과 전체)를 기준으로 하므로 이
+  // 행은 선택 칸을 비운다. 노출은 행의 토글로 바꾼다.
+  const extraJobId = foundJob && !items.some((row) => row.id === foundJob.id) ? foundJob.id : null;
   // 채용공고 목록 응답에는 PICK 여부가 없다. 오늘의 공고를 따로 받아 id 로 맞춘다.
   const todayJobs = useTodayJobList();
   const pickedIds = new Set((todayJobs.data ?? []).map((job) => job.id));
@@ -56,13 +71,33 @@ export function JobListPage() {
   const [pickNotice, setPickNotice] = useState<PickNotice | null>(null);
   // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
   const selection = useRowSelection(
-    (data?.items ?? []).map((row) => row.id),
+    items.map((row) => row.id),
     JSON.stringify({ ...filters, page: undefined }),
   );
+  const checkboxColumn = selectionColumn<AdminJobSummary>(selection);
 
   const columns: DataTableColumn<AdminJobSummary>[] = [
-    selectionColumn<AdminJobSummary>(selection),
-    { key: 'title', header: '제목', render: (row) => row.title },
+    {
+      ...checkboxColumn,
+      render: (row) =>
+        row.id === extraJobId ? (
+          <span className="text-gray-400">-</span>
+        ) : (
+          checkboxColumn.render(row)
+        ),
+    },
+    {
+      key: 'title',
+      header: '제목',
+      render: (row) => (
+        <>
+          {row.title}
+          {row.id === foundJob?.id ? (
+            <span className="block pt-1 text-xs text-gray-500">공고 번호로 찾은 공고입니다.</span>
+          ) : null}
+        </>
+      ),
+    },
     { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
     {
       key: 'visibility',
@@ -125,7 +160,7 @@ export function JobListPage() {
         <SearchBox
           value={filters.keyword}
           onSubmit={(keyword) => setFilter('keyword', keyword)}
-          placeholder="제목·회사 검색"
+          placeholder="제목·회사·공고 번호 검색"
         />
         <Select
           options={VISIBILITY_OPTIONS}
@@ -184,10 +219,10 @@ export function JobListPage() {
           />
           <DataTable
             columns={columns}
-            rows={data?.items ?? []}
+            rows={rows}
             rowKey={(row) => row.id}
             onRowClick={(row) => navigate(`/content/jobs/${row.id}`)}
-            isLoading={isPending}
+            isLoading={isPending || (page === 1 && idLookup.isLookingUp)}
             emptyMessage="조건에 맞는 채용공고가 없습니다."
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />

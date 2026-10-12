@@ -11,9 +11,10 @@ import {
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
+import { TodayJobCard } from './TodayJobCard';
 
 /**
- * 채용공고 상세. 읽기 전용이다.
+ * 채용공고 상세. 오늘의 공고(PICK) 카드와 운영 값·본문 수정(`ContentActions`)을 빼면 읽기 전용이다.
  *
  * 본문 칸이 여럿이고 대부분 비어 있을 수 있어(크롤링 수집분은 원문 구조에 따라 다르다) 값이
  * 있는 칸만 그린다. 빈 제목만 늘어서면 무엇이 실제로 수집됐는지 알아볼 수 없다.
@@ -91,6 +92,8 @@ export function JobDetailPage() {
           ]}
         />
       </Card>
+
+      <TodayJobCard key={data.id} jobId={data.id} isHidden={data.visibility === 'HIDDEN'} />
 
       <Card className="mt-4">
         <CardTitle>지표</CardTitle>

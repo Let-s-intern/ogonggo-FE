@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Button, Callout, Modal, Toggle } from '@ogonggo/ui';
-import {
-  listTodayJobs,
-  type AdminJobSummaryResponse as AdminJobSummary,
-  type AdminTodayJobSummaryResponse,
-  type ReplaceAdminTodayJobsRequest,
+import type {
+  AdminJobSummaryResponse as AdminJobSummary,
+  ReplaceAdminTodayJobsRequest,
 } from '@ogonggo/api/src/admin';
-import { unwrapData } from '@/shared/api/unwrapData';
 import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
+import { useTodayJobWriter } from '@/features/today-job/lib/useTodayJobWriter';
 import { isRecommendationValid, type RecommendationValue } from '@/features/today-job/lib/validate';
 
 /** 이 칸이 목록 위에 남기는 안내. 모달이 닫힌 뒤에도 읽을 수 있어야 하는 것만 여기로 보낸다. */
@@ -30,13 +27,6 @@ export interface PickToggleProps {
 
 const EMPTY_RECOMMENDATION: RecommendationValue = { title: '', description: '' };
 
-/** 서버가 준 한 건을 `PUT` 본문의 한 건으로. 다른 곳에서 정한 문구를 그대로 둔다. */
-const toRequestJob = (job: AdminTodayJobSummaryResponse) => ({
-  jobId: job.id,
-  recommendationTitle: job.recommendationTitle,
-  recommendationDescription: job.recommendationDescription,
-});
-
 /**
  * 채용공고 목록의 `PICK` 칸. 오늘의 공고에 든 공고는 켜져 있다.
  *
@@ -52,31 +42,13 @@ const toRequestJob = (job: AdminTodayJobSummaryResponse) => ({
  * 자리에서 멈춘다.
  */
 export function PickToggle({ job, picked, disabled, replace, onNotice }: PickToggleProps) {
-  const queryClient = useQueryClient();
+  const writer = useTodayJobWriter(replace);
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState<RecommendationValue>(EMPTY_RECOMMENDATION);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
   const isLocked = disabled || isSubmitting;
-
-  /**
-   * 오늘의 공고를 지금 서버 기준으로 다시 받는다. 캐시에 신선한 값이 있어도 쓰지 않는다.
-   *
-   * 쿼리 키와 요청은 `useTodayJobList`(`entities/today-job/api/useTodayJobs.ts`)와 같다. 같은
-   * 키라 화면의 토글도 이 응답으로 바로 맞춰진다.
-   */
-  const fetchLatest = async (): Promise<AdminTodayJobSummaryResponse[]> => {
-    const latest = await queryClient.fetchQuery({
-      queryKey: ['admin', 'today-jobs'],
-      queryFn: () => unwrapData(listTodayJobs()),
-      staleTime: 0,
-    });
-    if (!latest) {
-      throw new Error('오늘의 공고 응답에 목록이 없다.');
-    }
-    return latest;
-  };
 
   const openModal = () => {
     onNotice(null);
@@ -96,28 +68,15 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
     setModalError(null);
     setIsSubmitting(true);
     try {
-      const latest = await fetchLatest();
-      if (latest.some((item) => item.id === job.id)) {
+      const result = await writer.add(job.id, value);
+      closeModal();
+      if (result === 'exists') {
         // 다른 곳에서 먼저 켰다. 그쪽 문구를 덮어쓰지 않는다.
-        closeModal();
         onNotice({
           tone: 'warning',
           message: `"${job.title}" 은 다른 곳에서 먼저 오늘의 공고에 들어갔습니다. 입력한 문구는 저장하지 않았습니다.`,
         });
-        return;
       }
-      await replace({
-        jobs: [
-          ...latest.map(toRequestJob),
-          {
-            jobId: job.id,
-            // 서버에는 앞뒤 공백을 뺀 문구를 보낸다. 검증이 그 길이로 판정했다.
-            recommendationTitle: value.title.trim(),
-            recommendationDescription: value.description.trim(),
-          },
-        ],
-      });
-      closeModal();
     } catch {
       setModalError(
         '저장하지 못했습니다. 적은 문구는 그대로 두었습니다. 문구 길이와 공고를 확인한 뒤 다시 시도해 주세요.',
@@ -136,14 +95,8 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
     onNotice(null);
     setIsSubmitting(true);
     try {
-      const latest = await fetchLatest();
-      if (!latest.some((item) => item.id === job.id)) {
-        // 다른 곳에서 이미 뺐다. 목록을 방금 받아 토글이 그에 맞춰 꺼진다. 보낼 것이 없다.
-        return;
-      }
-      await replace({
-        jobs: latest.filter((item) => item.id !== job.id).map(toRequestJob),
-      });
+      // 다른 곳에서 이미 뺐다면 보낼 것이 없다. 목록을 방금 받아 토글이 그에 맞춰 꺼진다.
+      await writer.remove(job.id);
     } catch {
       onNotice({
         tone: 'error',

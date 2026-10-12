@@ -95,6 +95,46 @@ export function useJobDetail(jobId: number) {
   });
 }
 
+/**
+ * 검색어가 공고 번호로 읽히면 그 숫자를, 아니면 `null`.
+ *
+ * 숫자로만 이뤄진 입력만 본다. `2026 상반기` 처럼 글이 섞이면 제목 검색이다. 번호는 앞자리가
+ * 0 이 아닌 양의 정수라, `05` 나 `0` 은 번호가 아니라 글자로만 찾는다.
+ */
+export function parseJobId(keyword: string): number | null {
+  const text = keyword.trim();
+  if (!/^[1-9]\d*$/.test(text)) {
+    return null;
+  }
+  const id = Number(text);
+  return Number.isSafeInteger(id) ? id : null;
+}
+
+/**
+ * 검색어가 공고 번호면 `GET /api/v1/admin/jobs/{id}` 로 그 공고를 찾는다.
+ *
+ * 목록 API 의 `keyword` 는 제목·회사명만 맞춰 번호로는 찾을 수 없다. 번호가 제목에 든 공고(예:
+ * 2026)도 있으므로 목록 검색을 대신하지 않고 곁들인다.
+ *
+ * 없으면(404) 조용히 비운다. 이 칸에서 "찾지 못함" 은 오류가 아니라 보통의 결과이고, 기본 재시도
+ * (3회)를 기다리면 목록 결과까지 그만큼 늦게 보인다. 쿼리 키가 `useJobDetail` 과 같아 상세로
+ * 들어가면 캐시가 이어지고, 공고를 고치면 `['admin', 'jobs']` 무효화로 함께 다시 받아진다.
+ */
+export function useJobIdLookup(keyword: string) {
+  const jobId = parseJobId(keyword);
+  const query = useQuery({
+    queryKey: ['admin', 'jobs', jobId],
+    queryFn: () => unwrapData(getJob(jobId ?? 0)),
+    enabled: jobId !== null,
+    retry: false,
+  });
+  return {
+    job: jobId === null ? undefined : query.data,
+    /** 번호로 찾는 요청이 오가는 중. 번호가 아닌 검색어이면 항상 `false`. */
+    isLookingUp: jobId !== null && query.isPending,
+  };
+}
+
 export interface BootcampListFilters {
   page: number;
   keyword: string;
