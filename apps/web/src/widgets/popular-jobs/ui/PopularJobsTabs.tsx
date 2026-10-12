@@ -54,12 +54,17 @@ export function PopularJobsTabs({ popular, intern, newcomer }: PopularJobsTabsPr
       {items.length === 0 ? (
         <p className="py-8 text-center text-sm text-gray-500">표시할 공고가 없습니다.</p>
       ) : (
-        // 모바일은 가로로 넘긴다(`docs/asset/v9 mobile/채용공고 목록.png`). 화면 끝까지 넘기도록
-        // 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다.
+        // 모바일은 가로로 넘긴다(`docs/asset/v12 채용공고 상세/모바일 목록.webp`). 화면 끝까지 넘기도록
+        // 좌우 여백만큼 밖으로 빼고 안에서 다시 들인다. 카드 폭은 시안(375px 에서 249px)을 따라
+        // 화면의 72% 이고, 범위를 둬서 320px 폰과 큰 폰 모두 옆 카드가 보인다.
         <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
           {items.map((job, index) => (
-            <li key={job.id} className="w-[158px] shrink-0 snap-start md:w-auto">
+            <li
+              key={job.id}
+              className="w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0"
+            >
               <JobCard
+                variant="featured"
                 job={job}
                 tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
               />
