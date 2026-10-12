@@ -19,6 +19,7 @@ import {
   KEYWORD_MIN_LENGTH,
   type JobListQuery,
 } from '../lib/query';
+import { pendingFilter } from '../lib/pendingFilter';
 import { FilterCheckGroup } from './FilterCheckGroup';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
@@ -61,18 +62,38 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
   const timer = useRef<number | undefined>(undefined);
   const latestQuery = useRef(query);
   const pending = useRef(false);
+  const draftRef = useRef<SidebarState | null>(null);
   useEffect(() => {
     latestQuery.current = query;
     pending.current = isPending;
+    draftRef.current = draft;
   });
 
+  // `query` 도 본다. 직무 칩이 이 쪽의 미적용 선택을 가져가 이동하면 타이머가 취소돼 `isPending` 도
+  // `draft` 도 그대로인 채 주소만 바뀐다. 그때 남은 `draft` 가 뒤로 가기 같은 바깥 변경을 가리지 않게 한다.
   useEffect(() => {
     if (!isPending && timer.current === undefined) {
       setDraft(null);
     }
-  }, [isPending, draft]);
+  }, [isPending, draft, query]);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  // 직무 칩이 이동하기 전에 이 쪽의 미적용 선택을 가져가 자기 주소에 합친다(`lib/pendingFilter.ts`).
+  // 합친 이동이 이 쪽 몫까지 하므로 대기 중인 타이머는 취소한다.
+  useEffect(() => {
+    pendingFilter.takeSidebarDraft = () => {
+      const unapplied = draftRef.current;
+      if (unapplied) {
+        window.clearTimeout(timer.current);
+        timer.current = undefined;
+      }
+      return unapplied;
+    };
+    return () => {
+      pendingFilter.takeSidebarDraft = () => null;
+    };
+  }, []);
 
   // 뒤로 가기처럼 주소의 검색어가 밖에서 바뀌면 입력칸도 그 값으로 맞춘다.
   useEffect(() => {
@@ -89,7 +110,8 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
    * 바뀐 것이 없는 조작이 1쪽으로 보내서는 안 된다.
    */
   const go = (next: SidebarState, reset: Partial<JobListQuery> = {}) => {
-    const base = latestQuery.current;
+    // 칩 이동이 끝나기 전이면 칩이 고른 직무를 얹는다. 옛 `query` 만 쓰면 이 이동이 칩 선택을 지운다.
+    const base = { ...latestQuery.current, ...pendingFilter.roleInFlight() };
     const href = buildJobListHref(base, {
       employmentTypes: next.employmentTypes,
       experienceTypes: next.experienceTypes,

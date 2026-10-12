@@ -1,10 +1,11 @@
 'use client';
 
-import { useOptimistic, useTransition } from 'react';
+import { useEffect, useOptimistic, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
 import type { JobField } from '@/entities/job/model/types';
 import { track } from '@/shared/analytics/dataLayer';
+import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 
 /**
@@ -44,6 +45,20 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
   const roles = shown.roles;
   const allOn = fields.length === 0 && roles.length === 0;
 
+  // 이동이 끝나기 전에는 사이드바가 이 쪽 선택을 알아야 한다(`lib/pendingFilter.ts`). 진행 중 여부는
+  // 렌더 값이라 타이머 안에서 읽을 수 있게 ref 에 옮겨 둔다.
+  const lastMove = useRef<RoleSelection | undefined>(undefined);
+  const movePending = useRef(false);
+  useEffect(() => {
+    movePending.current = isPending;
+  });
+  useEffect(() => {
+    pendingFilter.roleInFlight = () => (movePending.current ? lastMove.current : undefined);
+    return () => {
+      pendingFilter.roleInFlight = () => undefined;
+    };
+  }, []);
+
   const move = (field: JobField | undefined, announce: boolean) => {
     if (announce && field) {
       track('filter_apply', {
@@ -52,12 +67,13 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
         filter_action: 'select',
       });
     }
+    const next: RoleSelection = { jobFields: field ? [field] : undefined, jobRoles: undefined };
+    // 사이드바에 아직 주소로 안 나간 선택이 있으면 같이 실어 보낸다. 안 그러면 이 이동이 그 선택을 지운다.
+    const unapplied = pendingFilter.takeSidebarDraft();
+    lastMove.current = next;
     startTransition(() => {
       showOptimistically({ fields: field ? [field] : [], roles: [] });
-      router.push(
-        buildJobListHref(query, { jobFields: field ? [field] : undefined, jobRoles: undefined }),
-        { scroll: false },
-      );
+      router.push(buildJobListHref(query, { ...unapplied, ...next }), { scroll: false });
     });
   };
 
