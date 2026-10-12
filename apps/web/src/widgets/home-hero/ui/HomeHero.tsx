@@ -1,9 +1,15 @@
+import type { ReactNode } from 'react';
 import { cn } from '@ogonggo/ui';
 import { HERO_CONTENT, type HeroScreen } from '@/shared/lib/heroContent';
 
 export interface HomeHeroProps {
   /** 어느 화면의 히어로인지. 문구와 색은 `HERO_CONTENT`가 안다. */
   screen: HeroScreen;
+  /**
+   * 헤드라인 아래, 박스 안쪽에 그릴 내용. 홈이 인기 공고를 여기에 넣는다. 없으면(`null` 포함) 지금과
+   * 같은 마크업·간격이고, 있을 때만 안쪽 여백과 헤드라인 아래 간격이 시안대로 바뀐다.
+   */
+  children?: ReactNode;
 }
 
 /**
@@ -34,13 +40,24 @@ function HeroSearchIcon() {
  *
  * 배경은 장식이라 `<img>`가 아니라 CSS 배경이다 — 대체 텍스트를 가질 이유가 없고, 문구는
  * `<h1>`이 이미 말한다.
+ *
+ * `children` 이 있으면 헤드라인 아래에 같이 그린다(`docs/asset/v12 채용공고 상세/목록.webp`, `모바일 목록.webp`
+ * 의 인기 공고). 시안에서 잰 값은 이렇다 — PC 는 위아래 안쪽 여백 약 64px, 헤드라인과 내용 사이 약
+ * 104px 이고, 모바일은 위아래 약 24~28px, 헤드라인과 내용 사이 약 32px 이다. 박스 아래에서 다음 구역까지는
+ * 약 40~46px 이라 페이지의 `py-10` 이 이미 맞아 여기서 더하지 않는다.
  */
-export function HomeHero({ screen }: HomeHeroProps) {
+export function HomeHero({ screen, children }: HomeHeroProps) {
   const { badge, lines, theme } = HERO_CONTENT[screen];
+  const hasChildren = Boolean(children);
 
   return (
     <section
-      className="relative mx-4 mt-4 self-stretch overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 sm:py-12 md:mx-10 md:mt-6 lg:py-20"
+      className={cn(
+        'relative mx-4 mt-4 self-stretch overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 sm:py-12 md:mx-10 md:mt-6 lg:py-20',
+        // 모바일 가로 넘김 목록(`PopularJobsTabs`)이 `-mx-4` 로 박스 가장자리까지 번지려면 md 미만의
+        // 가로 안쪽 여백이 16px 이어야 한다. 그래서 `sm:px-6` 을 md 로 미룬다.
+        hasChildren && 'py-6 sm:px-4 sm:py-10 md:px-6 lg:py-16',
+      )}
       style={{ backgroundImage: `url(${theme.backgroundImage})` }}
     >
       <div className="relative flex flex-col items-center gap-6 text-center">
@@ -77,6 +94,14 @@ export function HomeHero({ screen }: HomeHeroProps) {
           ))}
         </h1>
       </div>
+
+      {hasChildren ? (
+        // 폭은 아래 콘텐츠 열(`max-w-6xl` 에서 좌우 `px-4` 를 뺀 1120px)과 맞춘다. 자식이 아무것도 그리지
+        // 않으면(`empty:hidden`) 간격도 같이 사라져 박스가 헤드라인만 남은 모양이 된다.
+        <div className="mx-auto mt-8 w-full max-w-280 empty:hidden md:mt-16 lg:mt-26">
+          {children}
+        </div>
+      ) : null}
     </section>
   );
 }
