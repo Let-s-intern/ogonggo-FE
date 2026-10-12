@@ -238,33 +238,23 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
     }
 
     // 서버에는 앞뒤 공백을 뺀 문구를 보낸다. 검증이 그 길이로 판정했다.
-    const trimmed = rows.map((row) => ({
-      ...row,
+    const jobs = rows.map((row) => ({
+      jobId: row.id,
       recommendationTitle: row.recommendationTitle.trim(),
       recommendationDescription: row.recommendationDescription.trim(),
-    }));
-    const jobs = trimmed.map((row) => ({
-      jobId: row.id,
-      recommendationTitle: row.recommendationTitle,
-      recommendationDescription: row.recommendationDescription,
     }));
     replaceMutation.mutate(
       { jobs },
       {
-        onSuccess: async () => {
+        onSuccess: async (changed) => {
           setIsSaved(true);
-          // 서버가 정한 값(공고의 현재 상태 포함)으로 화면을 맞춘다. 맞추기 전에 다시 눌리지 않게
-          // 받는 동안도 요청 중으로 둔다.
-          setIsChecking(true);
-          const saved = await refetch();
-          setIsChecking(false);
-          if (!saved.isError && saved.data) {
-            syncWithServer(saved.data);
+          // 저장 응답이 서버가 정한 값(공고의 현재 상태 포함)의 바뀐 목록이다. 훅이 쿼리 캐시도 이
+          // 목록으로 맞춰 두었으므로, 이어지는 재조회가 실패해도 화면이 예전 목록으로 돌아가지 않는다.
+          if (changed) {
+            syncWithServer(changed);
             return;
           }
-          // 저장은 됐는데 다시 받지 못했다. 보낸 값을 서버 상태로 본다.
-          setBaseline(trimmed);
-          setRows(trimmed);
+          await reload();
         },
         onError: () => {
           setSaveError(
@@ -278,7 +268,6 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   /** 서버 목록을 다시 받아 화면을 그것으로 바꾼다. */
   const reload = async () => {
     setSaveError(null);
-    setIsSaved(false);
     setIsChecking(true);
     const latest = await refetch();
     setIsChecking(false);

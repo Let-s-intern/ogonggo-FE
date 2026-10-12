@@ -29,14 +29,18 @@ export function useTodayJobList() {
 /**
  * 오늘의 공고를 `{ jobs }` 로 통째로 바꾼다. 배열 순서가 노출 순서이고 빈 배열이면 비운다.
  *
- * 성공하면 오늘의 공고 쿼리만 무효화한다. 공고 한 건의 문구를 바꿔도 채용공고 목록 응답에는
- * 반영될 칸이 없다.
+ * 성공하면 응답이 돌려준 바뀐 목록으로 오늘의 공고 캐시를 맞추고, 그 쿼리만 무효화한다. 응답을
+ * 캐시에 두지 않으면 다시 받는 동안(또는 다시 받기에 실패하면) 화면이 저장 전 목록을 본다. 공고
+ * 한 건의 문구를 바꿔도 채용공고 목록 응답에는 반영될 칸이 없다.
  */
 export function useReplaceTodayJobs() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: ReplaceAdminTodayJobsRequest) => unwrapData(replaceTodayJobs(input)),
-    onSuccess: () => {
+    onSuccess: (changed) => {
+      if (changed) {
+        queryClient.setQueryData(['admin', 'today-jobs'], changed);
+      }
       void queryClient.invalidateQueries({ queryKey: ['admin', 'today-jobs'] });
     },
   });
