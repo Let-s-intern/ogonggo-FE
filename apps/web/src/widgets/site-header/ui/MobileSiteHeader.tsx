@@ -107,7 +107,7 @@ export function MobileSiteHeader({
             ref={tabsRef}
             className="-my-1 -ml-1 flex min-w-0 items-stretch gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {NAV_ITEMS.map(({ href, mobileLabel, matches }) => {
+            {NAV_ITEMS.map(({ href, label, matches }) => {
               const active = matches(pathname);
               return (
                 <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
@@ -115,7 +115,7 @@ export function MobileSiteHeader({
                     state={active ? 'current' : 'default'}
                     className={cn('h-full text-sm', active && 'font-semibold')}
                   >
-                    {mobileLabel}
+                    {label}
                   </MenuItem>
                 </Link>
               );
