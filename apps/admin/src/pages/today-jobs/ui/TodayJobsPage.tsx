@@ -17,13 +17,6 @@ import { PageHeader } from '@/widgets/page-header';
 import { SearchBox } from '@/widgets/list-toolbar';
 import { RecruitmentStatusBadge, VisibilityBadge } from '@/shared/config/labels';
 
-/**
- * 사용자 홈이 위에서부터 몇 건을 보여 주는가. 웹의 `TodayJobs` 가 앞 네 건만 쓴다
- * (`apps/web/src/widgets/today-jobs/ui/TodayJobs.tsx` 의 `TOP_COUNT`). 사용자용 API 가 숨긴
- * 공고를 먼저 빼므로 이 네 건은 표의 앞 네 행이 아니라 노출 중인 앞 네 건이다.
- */
-const USER_VISIBLE_COUNT = 4;
-
 /** 화면이 들고 있는 한 행. 서버 응답에서 이 화면이 쓰는 칸만 남긴다. */
 type TodayJobRow = Pick<
   AdminTodayJobSummaryResponse,
@@ -85,24 +78,13 @@ function countChanges(baseline: TodayJobRow[], rows: TodayJobRow[]): number {
 }
 
 /**
- * 사용자 홈의 네 건에 들지 못하는 노출 공고의 id.
+ * 마감되어 사용자 홈에 나오지 않는 노출 공고인가. 웹 홈은 개수 제한 없이 고른 공고를 모두 보이되 마감
+ * 공고는 뺀다(`apps/web/src/widgets/popular-jobs/api/fetchTodayJobs.ts`).
  *
- * 비노출 공고는 세지 않고 담지도 않는다. 사용자용 API 가 먼저 빼고, 표에는 이미 비노출 배지가 있다.
+ * 비노출 공고는 표에 이미 비노출 배지가 있어 따로 적지 않는다.
  */
-function idsBeyondUserView(rows: TodayJobRow[]): Set<number> {
-  const ids = new Set<number>();
-  let visibleBefore = 0;
-  for (const row of rows) {
-    if (row.visibility === 'HIDDEN') {
-      continue;
-    }
-    if (visibleBefore >= USER_VISIBLE_COUNT) {
-      ids.add(row.id);
-    }
-    visibleBefore += 1;
-  }
-  return ids;
-}
+const isHiddenAsClosed = (row: TodayJobRow) =>
+  row.visibility !== 'HIDDEN' && row.recruitmentStatus === 'CLOSED';
 
 /**
  * 서버에서 새로 받은 목록이 화면을 연 뒤(또는 마지막으로 맞춘 뒤)의 서버 상태와 같은지 본다.
@@ -322,8 +304,6 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
     setRows((current) => current.filter((row) => row.id !== id));
   };
 
-  const beyondUserView = idsBeyondUserView(rows);
-
   const columns: DataTableColumn<TodayJobRow>[] = [
     {
       key: 'order',
@@ -337,9 +317,9 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       render: (row) => (
         <>
           {row.title}
-          {beyondUserView.has(row.id) ? (
+          {isHiddenAsClosed(row) ? (
             <span className="block pt-1 text-xs text-orange-600">
-              사용자 화면 네 건에 들지 않습니다.
+              마감되어 사용자 홈에 나오지 않습니다.
             </span>
           ) : null}
         </>
