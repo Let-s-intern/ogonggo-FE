@@ -12,6 +12,7 @@ import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
 import type { JobRecommendation, JobSummary } from '../model/types';
+import { CompanyLogo } from './CompanyLogo';
 import { JobCardLink, type JobCardTracking } from './JobCardLink';
 import { JobMeta } from './JobMeta';
 import { JobThumbnail } from './JobThumbnail';
@@ -33,14 +34,22 @@ export interface JobCardProps {
 }
 
 /**
- * `featured` 카드의 껍데기. 시안이 645px(PC)라 치수를 못 재서 디자인 토큰에서 가장 가까운 값으로
- * 잡았다 — 원본을 받으면 이 줄과 `FEATURED_ACTIONS_CLASS` 만 고친다.
+ * `featured` 카드의 껍데기. 시안이 645px(PC)·185px(모바일)라 치수를 못 재서 디자인 토큰에서 가장
+ * 가까운 값으로 잡았다 — 원본을 받으면 이 줄과 `FEATURED_ACTIONS_CLASS` 만 고친다.
+ *
+ * 안쪽 여백은 모바일 `p-4`, PC `p-3` 이다. PC 는 8:5 썸네일이 여백만큼 들어가 있고, 모바일은 제목이
+ * 바로 여백 안쪽에서 시작한다. 간격(`gap`)도 모바일이 한 단계 넓다(`gap-3`).
  */
 const FEATURED_LINK_CLASS =
-  'group flex h-full flex-col gap-2 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm';
+  'group flex h-full flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:gap-2 md:p-3';
 
-/** 북마크·카드뉴스 버튼 자리. 썸네일이 카드 안쪽 여백(`p-3`)만큼 들어가 있어 그만큼 더 안쪽이다. */
-const FEATURED_ACTIONS_CLASS = 'absolute top-5 right-5 flex items-center gap-1';
+/**
+ * 북마크·카드뉴스 버튼 자리. 카드 안쪽 여백만큼 더 안쪽이다 — 모바일은 제목 오른쪽 끝, PC 는 안쪽에
+ * 들어간 썸네일의 오른쪽 위다. 모바일에서는 버튼이 둘일 때(어드민) 세로로 쌓는다. 가로로 놓으면
+ * 카드뉴스 버튼이 제목 끝을 덮는다. 제목의 오른쪽 여백(`pr-8`)이 이 한 칸 폭이다.
+ */
+const FEATURED_ACTIONS_CLASS =
+  'absolute top-4 right-4 flex flex-col items-end gap-1 md:top-5 md:right-5 md:flex-row md:items-center';
 
 /**
  * "인기 공고"와 "전체 공고" 두 섹션이 완전히 같은 카드 디자인을 쓰도록 만든 단일 컴포넌트다
@@ -63,6 +72,15 @@ const FEATURED_ACTIONS_CLASS = 'absolute top-5 right-5 flex items-center gap-1';
  * 링크 안쪽이라 누르면 상세로 간다. 제목은 굵은 파랑, 설명은 회색이고 각각 한 줄에서 자른다 —
  * 카드 폭(모바일 158px)에서 두 줄로 늘어나면 같은 줄의 카드와 높이가 어긋난다.
  *
+ * `featured` 는 PC 와 모바일이 한 컴포넌트의 반응형이다(두 모양을 따로 만들면 북마크·추적 코드가
+ * 둘이 된다). md 이상은 `grid` 와 같은 세로 카드를 흰 상자에 담고, md 미만은 위에 제목(`line-clamp-3`),
+ * 아래 한 줄에 작은 정사각 로고·직무·기업명·D-day 를 두는 가로로 넓은 카드다. 서버 렌더가 화면 폭을
+ * 몰라 한쪽만 그릴 수 없으므로 두 모양의 글을 모두 그리고 CSS 로 가린다. 모바일의 작은 로고는
+ * `JobThumbnail` 이 아니라 `CompanyLogo` 를 쓴다 — `JobThumbnail` 은 상자가 8:5 로 고정이고 로고
+ * 크기 규칙도 그 비율 기준이라 정사각 칸에 쓸 수 없다. `CompanyLogo` 는 같은 로고 판독·여백 자르기
+ * 규칙을 그대로 쓰고 칸에 맞춰 키운다(달력·스크랩 카드가 같은 방식이다). 이 카드만의 이미지 규칙을
+ * 새로 만들지 않는다.
+ *
  * 뿌리가 `<Link>`가 아니라 `relative`인 `div`인 이유는 북마크 버튼이다. 링크 안에 버튼을 두면
  * 잘못된 마크업이고 누를 때 이동까지 함께 일어난다 — 링크와 버튼을 형제로 두고 버튼을 썸네일
  * 오른쪽 위에 겹친다(PRD "카드 안의 버튼은 링크 밖에 둔다"). 겹치는 자리는 전에 아이콘이 있던
@@ -83,6 +101,8 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
     jobMajor,
     EXPERIENCE_TYPE_LABELS[job.experienceType],
   ].filter((part): part is string => Boolean(part));
+  // 모바일 `featured` 의 회색 작은 글. 직무가 없는 공고는 같은 자리에 고용형태·경력을 둔다.
+  const roleLabel = jobMajor ?? metaParts.join(' · ');
 
   /*
    * 데스크톱은 메타 줄 오른쪽, 모바일은 제목 아래다(`docs/asset/v9 mobile/채용공고 목록.png`).
@@ -102,6 +122,30 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
     </Badge>
   ) : null;
 
+  /** 썸네일 → 메타 줄 → 회사명 → 제목. `grid` 의 전부이고 `featured` 의 md 이상 모양이다. */
+  const verticalBody = (
+    <>
+      <JobThumbnail
+        companyName={job.companyName}
+        coverImageUrl={job.coverImageUrl}
+        logoUrl={job.logoUrl}
+      />
+      <p className="flex items-center justify-between text-xs text-gray-400">
+        <span>{metaParts.join(' · ')}</span>
+        {deadlineBadge ? <span className="hidden md:inline-flex">{deadlineBadge}</span> : null}
+      </p>
+      <JobMeta
+        companyName={job.companyName}
+        recruitmentType={job.recruitmentType}
+        recruitmentEndAt={job.recruitmentEndAt}
+        showDeadline={false}
+      />
+      <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
+        {job.title}
+      </p>
+    </>
+  );
+
   return (
     <div className="relative h-full">
       <JobCardLink
@@ -111,24 +155,28 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         jobInfo={jobInfo}
         tracking={tracking}
       >
-        <JobThumbnail
-          companyName={job.companyName}
-          coverImageUrl={job.coverImageUrl}
-          logoUrl={job.logoUrl}
-        />
-        <p className="flex items-center justify-between text-xs text-gray-400">
-          <span>{metaParts.join(' · ')}</span>
-          {deadlineBadge ? <span className="hidden md:inline-flex">{deadlineBadge}</span> : null}
-        </p>
-        <JobMeta
-          companyName={job.companyName}
-          recruitmentType={job.recruitmentType}
-          recruitmentEndAt={job.recruitmentEndAt}
-          showDeadline={false}
-        />
-        <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
-          {job.title}
-        </p>
+        {featured ? (
+          <>
+            <p className="line-clamp-3 pr-8 text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:hidden">
+              {job.title}
+            </p>
+            <div className="flex items-center gap-3 md:hidden">
+              <CompanyLogo
+                companyName={job.companyName}
+                logoUrl={job.logoUrl}
+                className="size-13 rounded-lg"
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <p className="truncate text-xs text-gray-400">{roleLabel}</p>
+                <p className="truncate text-sm font-bold text-gray-900">{job.companyName}</p>
+              </div>
+              {deadlineBadge ? <span className="flex shrink-0">{deadlineBadge}</span> : null}
+            </div>
+            <div className="hidden md:contents">{verticalBody}</div>
+          </>
+        ) : (
+          verticalBody
+        )}
         {recommendationTitle || recommendationDescription ? (
           <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-blue-00 px-3 py-2">
             {recommendationTitle ? (
@@ -139,7 +187,9 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
             ) : null}
           </div>
         ) : null}
-        {deadlineBadge ? <span className="flex md:hidden">{deadlineBadge}</span> : null}
+        {!featured && deadlineBadge ? (
+          <span className="flex md:hidden">{deadlineBadge}</span>
+        ) : null}
       </JobCardLink>
       {/* 카드뉴스 버튼은 어드민에게만 보인다. 없으면 북마크가 원래 자리(오른쪽 위 끝)에 남는다. */}
       <div
