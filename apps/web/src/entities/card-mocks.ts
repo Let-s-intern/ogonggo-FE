@@ -57,12 +57,15 @@ export const JOB_MOCK: JobSummary = {
 };
 
 /**
- * `featured` 모바일 카드의 제목 `line-clamp-3` 을 채우고 넘기는 긴 제목. PC 는 `line-clamp-2` 에서
- * 말줄임이 된다.
+ * `featured` 모바일 카드의 제목 `line-clamp-3` 을 넘기는 긴 제목. 헤드리스 Chrome 에서 잰 자연 줄 수는
+ * 카드 폭 240px(375px 폰의 인기 공고)에서 5줄, 247px(오늘의 추천 공고)와 268px(스토리 데코레이터)에서
+ * 4줄이라 세 번째 줄에서 말줄임이 된다. 모바일 카드 최대 폭인 320px 에서는 3줄에 들어간다. PC 는
+ * `line-clamp-2` 에서 말줄임이 된다.
  */
 export const JOB_LONG_TITLE_MOCK: JobSummary = {
   ...JOB_MOCK,
-  title: '[신사업] 콘텐츠 마케팅 인턴 체험형 채용 서울 본사 근무 정규직 전환 가능 신입 경력 무관',
+  title:
+    '[신사업] 콘텐츠 마케팅 인턴 체험형 채용 서울 본사 근무 정규직 전환 가능 신입 경력 무관 해외 대학 졸업자 및 졸업 예정자 지원 가능',
 };
 
 /**
