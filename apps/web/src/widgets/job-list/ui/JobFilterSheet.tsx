@@ -38,9 +38,10 @@ async function fetchCount(
 
 /**
  * lg 미만의 `필터` 버튼. 누르면 채용 형태·요구 경력을 고르는 시트가 열린다. 고른 값이 있으면 개수를
- * 달고 파랗게 켜진다 — `직무` 버튼(`JobRoleFilter`)과 같은 모양이다.
+ * 달고 파랗게 켜진다.
  *
- * 직무는 시트 안으로 옮기지 않았다. 직군·직무 선택 창이 이미 진입점이고, 이 줄의 `직무` 버튼이 그것이다.
+ * 직무는 시트 안으로 옮기지 않았다. 직군·직무 선택 창(`JobRoleSheet`)은 위의 직무 칩(`JobRoleChips`)이
+ * 연다.
  */
 export function JobFilterButton({
   query,
@@ -82,7 +83,7 @@ export function JobFilterButton({
  *
  * 시트 안에서 고르는 것은 초안이다. `공고보기` 를 눌러야 주소가 바뀐다 — 값 하나마다 페이지를 다시
  * 그리면 시트가 닫힌다. `초기화` 는 초안만 비운다. 건수는 초안이 바뀔 때마다 한 번 받는다
- * (`JobRoleFilter` 의 창과 같은 방식). 닫으면 초안은 버려지고 다음에 열면 주소의 값에서 다시 시작한다.
+ * (`JobRoleSheet` 와 같은 방식). 닫으면 초안은 버려지고 다음에 열면 주소의 값에서 다시 시작한다.
  *
  * PC 사이드바(`JobFilterSidebar`)와 같은 체크박스 묶음(`FilterCheckGroup`)·같은 선택 규칙
  * (`lib/filter.ts`)·같은 주소 만들기(`buildJobListHref`)를 쓴다.

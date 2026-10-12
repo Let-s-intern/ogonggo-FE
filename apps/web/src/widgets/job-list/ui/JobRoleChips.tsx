@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useOptimistic, useRef, useTransition } from 'react';
+import { useCallback, useEffect, useOptimistic, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
+import { JOB_FIELD_LABELS, JOB_ROLES } from '@/entities/job/model/labels';
 import type { JobField } from '@/entities/job/model/types';
-import { track } from '@/shared/analytics/dataLayer';
 import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
+import { JobRoleSheet, type JobRoleSelection } from './JobRoleSheet';
 
 /**
  * 칩과 직군의 대응. 시안(`docs/asset/v12 채용공고 상세/목록.webp`)에는 칩 이름만 있고 어느 직군인지
@@ -21,29 +22,35 @@ const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
 ];
 
 /**
- * 목록 줄의 직무 칩 `전체 · 마케팅 · 인사 · 기획 · 세일즈 · 개발`(md 이상). 새 주소 상태를 만들지
- * 않고 `직무` 창이 쓰는 `jobFields`·`jobRoles` 위에 올린다.
+ * 목록 줄의 직무 칩 `전체 · 마케팅 · 인사 · 기획 · 세일즈 · 개발`. 새 주소 상태를 만들지 않고
+ * `jobFields`·`jobRoles` 위에 올린다.
  *
- * 칩 하나를 누르면 `jobFields` 를 그 직군 하나로 바꾸고 `jobRoles` 는 비운다. `전체` 는 둘 다
- * 비운다. 켜진 칩은 `jobFields` 가 정확히 그 직군 하나이고 `jobRoles` 가 비어 있을 때다 — `직무`
- * 창에서 직군을 둘 이상 고르거나 세부 직무를 고르면 칩은 모두 꺼지고, 그 선택은 `직무` 버튼이 보인다.
+ * 직군 칩을 누르면 바로 이동하지 않고 직무 창(`JobRoleSheet`)이 그 직군을 펼친 채 뜬다. 거기서
+ * 세부 직무를 고르고 `N개 공고보기` 를 눌러야 주소가 바뀐다. `전체` 는 창 없이 직무 조건을 비운다.
+ * 별도 `직무` 버튼은 없다 — 이 칩이 창의 유일한 입구다.
  *
- * 이미 켜진 칩을 다시 누르면 직무 조건이 그대로라 이벤트는 없다. 1쪽이면 아무 일도 없고, 2쪽
- * 이상이면 이벤트 없이 1쪽으로만 돌아간다 — 쪽이 바뀌므로 보이는 목록도 바뀐다. 이벤트는 기존
- * `직무` 창과 같은 `filter_apply`(`filter_type: 'job_field'`)이고, 해제인 `전체` 는 보내지 않는다.
+ * 켜진 칩은 그 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 고른 칩이다. 창에서는 칩이 없는
+ * 직군(디자인 등)도 고를 수 있어서, 그런 직군을 고르면 칩 뒤에 그 직군 칩이 켜진 채 붙는다 — 안
+ * 그러면 목록이 걸러졌는데 어디서 걸렀는지 보이지 않는다.
+ *
+ * 이미 `전체` 인데 `전체` 를 다시 누르면 직무 조건이 그대로라 이벤트는 없다. 1쪽이면 아무 일도 없고,
+ * 2쪽 이상이면 1쪽으로만 돌아간다 — 쪽이 바뀌므로 보이는 목록도 바뀐다. `filter_apply` 이벤트는
+ * 창이 보낸다(`filter_type: 'job_field'`·`'job_role'`).
  */
 export function JobRoleChips({ query }: { query: JobListQuery }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  // 켜짐은 서버가 새 `query` 를 내려준 뒤에야 바뀐다. 그 사이 눌린 칩이 꺼져 보이면 다시 누르게 되므로
-  // 이동 중에는 누른 칩을 먼저 켜 보인다. 이동이 끝나면 서버 값으로 돌아간다.
-  const [shown, showOptimistically] = useOptimistic({
+  // 켜짐은 서버가 새 `query` 를 내려준 뒤에야 바뀐다. 그 사이 칩이 꺼져 보이면 다시 누르게 되므로
+  // 이동 중에는 고른 값을 먼저 보인다. 이동이 끝나면 서버 값으로 돌아간다.
+  const [shown, showOptimistically] = useOptimistic<JobRoleSelection>({
     fields: query.jobFields ?? [],
     roles: query.jobRoles ?? [],
   });
-  const fields = shown.fields;
-  const roles = shown.roles;
+  const { fields, roles } = shown;
   const allOn = fields.length === 0 && roles.length === 0;
+  // 열린 창이 펼쳐 둘 직군. 닫혀 있으면 `undefined` 다.
+  const [sheetField, setSheetField] = useState<JobField | undefined>();
+  const closeSheet = useCallback(() => setSheetField(undefined), []);
 
   // 이동이 끝나기 전에는 사이드바가 이 쪽 선택을 알아야 한다(`lib/pendingFilter.ts`). 진행 중 여부는
   // 렌더 값이라 타이머 안에서 읽을 수 있게 ref 에 옮겨 둔다.
@@ -59,54 +66,64 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
     };
   }, []);
 
-  const move = (field: JobField | undefined, announce: boolean) => {
-    if (announce && field) {
-      track('filter_apply', {
-        filter_type: 'job_field',
-        filter_value: field,
-        filter_action: 'select',
-      });
-    }
-    const next: RoleSelection = { jobFields: field ? [field] : undefined, jobRoles: undefined };
+  const move = (next: JobRoleSelection) => {
+    const target: RoleSelection = {
+      jobFields: next.fields.length > 0 ? next.fields : undefined,
+      jobRoles: next.roles.length > 0 ? next.roles : undefined,
+    };
     // 사이드바에 아직 주소로 안 나간 선택이 있으면 같이 실어 보낸다. 안 그러면 이 이동이 그 선택을 지운다.
     const unapplied = pendingFilter.takeSidebarDraft();
-    lastMove.current = next;
+    lastMove.current = target;
     startTransition(() => {
-      showOptimistically({ fields: field ? [field] : [], roles: [] });
-      router.push(buildJobListHref(query, { ...unapplied, ...next }), { scroll: false });
+      showOptimistically(next);
+      router.push(buildJobListHref(query, { ...unapplied, ...target }), { scroll: false });
     });
   };
 
-  const press = (field: JobField | undefined, active: boolean) => {
-    if (!active) {
-      move(field, true);
-    } else if (query.page > 1 && !isPending) {
-      // 직무 조건은 그대로이므로 이벤트 없이 쪽만 1쪽으로 돌린다. 이동 중이면 이미 1쪽으로 가는 중이다.
-      move(field, false);
-    }
+  const pressAll = () => {
+    // 이미 `전체` 인데 2쪽 이상이면 직무 조건은 그대로이므로 쪽만 1쪽으로 돌린다. 이동 중이면 이미 1쪽으로 가는 중이다.
+    if (!allOn || (query.page > 1 && !isPending)) move({ fields: [], roles: [] });
   };
 
+  // 고른 직군들. 칩에 없는 직군은 칩 뒤에 붙인다.
+  const selectedFields = [...new Set([...fields, ...roles.map((role) => JOB_ROLES[role].field)])];
+  const chips = [
+    ...JOB_ROLE_CHIPS,
+    ...selectedFields
+      .filter((field) => !JOB_ROLE_CHIPS.some((chip) => chip.field === field))
+      .map((field) => ({ label: JOB_FIELD_LABELS[field], field })),
+  ];
+
   return (
-    // 한 줄에 안 들어가면 줄바꿈이 아니라 가로로 넘긴다. 안쪽 여백은 맨 끝 칩의 포커스 링이 잘리지
-    // 않게 하는 것이고, 음수 바깥 여백으로 되돌린다(`MobileSiteHeader` 의 가로 넘김과 같다).
-    <div
-      role="group"
-      aria-label="직무"
-      className="-my-1 -ml-1 hidden min-w-0 items-center gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] md:flex md:w-full lg:w-auto [&::-webkit-scrollbar]:hidden"
-    >
-      <RoleChip label="전체" active={allOn} onSelect={() => press(undefined, allOn)} />
-      {JOB_ROLE_CHIPS.map(({ label, field }) => {
-        const active = fields.length === 1 && fields[0] === field && roles.length === 0;
-        return (
+    <>
+      {/* 한 줄에 안 들어가면 줄바꿈이 아니라 가로로 넘긴다. 안쪽 여백은 맨 끝 칩의 포커스 링이 잘리지
+          않게 하는 것이고, 음수 바깥 여백으로 되돌린다(`MobileSiteHeader` 의 가로 넘김과 같다). */}
+      <div
+        role="group"
+        aria-label="직무"
+        className="-my-1 -ml-1 flex w-full min-w-0 items-center gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] lg:w-auto [&::-webkit-scrollbar]:hidden"
+      >
+        <RoleChip label="전체" active={allOn} onSelect={pressAll} />
+        {chips.map(({ label, field }) => (
           <RoleChip
             key={field}
             label={label}
-            active={active}
-            onSelect={() => press(field, active)}
+            active={selectedFields.includes(field)}
+            haspopup
+            onSelect={() => setSheetField(field)}
           />
-        );
-      })}
-    </div>
+        ))}
+      </div>
+      {sheetField ? (
+        <JobRoleSheet
+          query={query}
+          initial={shown}
+          initialField={sheetField}
+          onApply={move}
+          onClose={closeSheet}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -114,16 +131,20 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
 function RoleChip({
   label,
   active,
+  haspopup = false,
   onSelect,
 }: {
   label: string;
   active: boolean;
+  /** 누르면 창이 뜨는 칩이다. */
+  haspopup?: boolean;
   onSelect: () => void;
 }) {
   return (
     <button
       type="button"
       aria-pressed={active}
+      aria-haspopup={haspopup ? 'dialog' : undefined}
       onClick={onSelect}
       className={cn(
         'inline-flex h-7 shrink-0 cursor-pointer items-center rounded-full border px-3 text-sm font-medium transition-colors',
