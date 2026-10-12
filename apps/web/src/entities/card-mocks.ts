@@ -65,8 +65,16 @@ export const JOB_LONG_TITLE_MOCK: JobSummary = {
   title: '[신사업] 콘텐츠 마케팅 인턴 체험형 채용 서울 본사 근무 정규직 전환 가능 신입 경력 무관',
 };
 
-/** 마감된 공고. D-day 자리에 회색 `마감` 배지가 뜬다(`entities/CardEdgeCases.stories.tsx` 와 같은 값). */
-export const JOB_CLOSED_MOCK: JobSummary = { ...JOB_MOCK, closedAt: '2026-01-02T00:00:00Z' };
+/**
+ * 마감된 공고. D-day 자리에 회색 `마감` 배지가 뜬다(`entities/CardEdgeCases.stories.tsx` 와 같은
+ * 값). `closedAt` 만 얹으면 모집 마감일이 아직 남아 D-day 가 먼저 그려지므로(`JobCard` 는 D-day,
+ * `마감` 순으로 고른다) 마감일도 함께 과거로 둔다.
+ */
+export const JOB_CLOSED_MOCK: JobSummary = {
+  ...JOB_MOCK,
+  recruitmentEndAt: '2026-01-01T23:59:00Z',
+  closedAt: '2026-01-02T00:00:00Z',
+};
 
 /**
  * 로고가 있는 공고. `JOB_MOCK` 은 `logoUrl` 이 없고 회사명도 로고 목록에 없어 기본 로고(오공고)로
