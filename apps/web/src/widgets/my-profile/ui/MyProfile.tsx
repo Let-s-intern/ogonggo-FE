@@ -6,6 +6,7 @@ import {
   type MyAccountResponse,
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
+import { PushNotificationToggle } from '@/features/push-notification';
 import { SignOutButton } from '@/features/sign-out';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { BasicInfoSection } from './BasicInfoSection';
@@ -95,6 +96,7 @@ export function MyProfile() {
         </>
       ) : null}
       <KakaoChannelBanner />
+      <PushNotificationToggle />
       <MarketingSection />
       <div className="flex justify-center">
         <SignOutButton redirectTo="/" />
