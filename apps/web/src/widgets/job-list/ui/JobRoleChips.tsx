@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
 import type { JobField } from '@/entities/job/model/types';
+import { track } from '@/shared/analytics/dataLayer';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 
 /**
@@ -25,7 +26,8 @@ const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
  * 비운다. 켜진 칩은 `jobFields` 가 정확히 그 직군 하나이고 `jobRoles` 가 비어 있을 때다 — `직무`
  * 창에서 직군을 둘 이상 고르거나 세부 직무를 고르면 칩은 모두 꺼지고, 그 선택은 `직무` 버튼이 보인다.
  *
- * 이미 켜진 칩을 다시 누르면 목록이 바뀌지 않으므로 아무 일도 하지 않는다.
+ * 이미 켜진 칩을 다시 누르면 목록이 바뀌지 않으므로 이동도 이벤트도 없다. 이벤트는 기존 `직무`
+ * 창과 같은 `filter_apply`(`filter_type: 'job_field'`)이고, 해제인 `전체` 는 보내지 않는다.
  */
 export function JobRoleChips({ query }: { query: JobListQuery }) {
   const router = useRouter();
@@ -34,6 +36,13 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
   const allOn = fields.length === 0 && roles.length === 0;
 
   const select = (field: JobField | undefined) => {
+    if (field) {
+      track('filter_apply', {
+        filter_type: 'job_field',
+        filter_value: field,
+        filter_action: 'select',
+      });
+    }
     router.push(
       buildJobListHref(query, { jobFields: field ? [field] : undefined, jobRoles: undefined }),
       { scroll: false },
