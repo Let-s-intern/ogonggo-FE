@@ -65,7 +65,9 @@ export async function JobList(query: JobListProps) {
         <div className="flex w-full flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:flex-nowrap">
           <JobRoleChips query={query} />
           <SearchFilterBar query={query} totalCount={pageInfo.totalElements} />
-          <div className="hidden md:ml-auto md:block">{sort}</div>
+          {/* 한 줄이 넘치면 칩 줄(`min-w-0`, 가로 넘김)이 넘친 만큼을 받는다. 정렬은 줄어들지 않고 라벨도
+              음절 사이에서 꺾이지 않는다. */}
+          <div className="hidden whitespace-nowrap md:ml-auto md:block md:shrink-0">{sort}</div>
         </div>
       </div>
       <div className="hidden lg:col-start-1 lg:row-start-2 lg:block">
