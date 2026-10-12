@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { fetchJobDetail } from '@/widgets/job-detail';
+import { buildJobPostingJsonLd, fetchJobDetail, serializeJsonLd } from '@/widgets/job-detail';
 import { formatDateDots } from '@/shared/lib/localDate';
 import { JobDetailPage } from '@/views/job-detail';
 import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
@@ -51,6 +51,18 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
  */
 export default async function Page({ params }: PageParams) {
   const { jobId } = await params;
+  // `generateMetadata` 와 같은 요청이라 Next 가 한 번만 보낸다(fetch 메모이제이션).
+  const jsonLd = buildJobPostingJsonLd(await fetchJobDetail(Number(jobId)));
 
-  return <JobDetailPage jobId={Number(jobId)} />;
+  return (
+    <>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        />
+      ) : null}
+      <JobDetailPage jobId={Number(jobId)} />
+    </>
+  );
 }
