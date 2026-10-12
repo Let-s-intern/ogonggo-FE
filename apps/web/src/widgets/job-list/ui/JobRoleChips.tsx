@@ -27,12 +27,13 @@ const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
  * 비운다. 켜진 칩은 `jobFields` 가 정확히 그 직군 하나이고 `jobRoles` 가 비어 있을 때다 — `직무`
  * 창에서 직군을 둘 이상 고르거나 세부 직무를 고르면 칩은 모두 꺼지고, 그 선택은 `직무` 버튼이 보인다.
  *
- * 이미 켜진 칩을 다시 누르면 목록이 바뀌지 않으므로 이동도 이벤트도 없다. 이벤트는 기존 `직무`
- * 창과 같은 `filter_apply`(`filter_type: 'job_field'`)이고, 해제인 `전체` 는 보내지 않는다.
+ * 이미 켜진 칩을 다시 누르면 직무 조건이 그대로라 이벤트는 없다. 1쪽이면 아무 일도 없고, 2쪽
+ * 이상이면 이벤트 없이 1쪽으로만 돌아간다 — 쪽이 바뀌므로 보이는 목록도 바뀐다. 이벤트는 기존
+ * `직무` 창과 같은 `filter_apply`(`filter_type: 'job_field'`)이고, 해제인 `전체` 는 보내지 않는다.
  */
 export function JobRoleChips({ query }: { query: JobListQuery }) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   // 켜짐은 서버가 새 `query` 를 내려준 뒤에야 바뀐다. 그 사이 눌린 칩이 꺼져 보이면 다시 누르게 되므로
   // 이동 중에는 누른 칩을 먼저 켜 보인다. 이동이 끝나면 서버 값으로 돌아간다.
   const [shown, showOptimistically] = useOptimistic({
@@ -43,8 +44,8 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
   const roles = shown.roles;
   const allOn = fields.length === 0 && roles.length === 0;
 
-  const select = (field: JobField | undefined) => {
-    if (field) {
+  const move = (field: JobField | undefined, announce: boolean) => {
+    if (announce && field) {
       track('filter_apply', {
         filter_type: 'job_field',
         filter_value: field,
@@ -60,6 +61,15 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
     });
   };
 
+  const press = (field: JobField | undefined, active: boolean) => {
+    if (!active) {
+      move(field, true);
+    } else if (query.page > 1 && !isPending) {
+      // 직무 조건은 그대로이므로 이벤트 없이 쪽만 1쪽으로 돌린다. 이동 중이면 이미 1쪽으로 가는 중이다.
+      move(field, false);
+    }
+  };
+
   return (
     // 한 줄에 안 들어가면 줄바꿈이 아니라 가로로 넘긴다. 안쪽 여백은 맨 끝 칩의 포커스 링이 잘리지
     // 않게 하는 것이고, 음수 바깥 여백으로 되돌린다(`MobileSiteHeader` 의 가로 넘김과 같다).
@@ -68,15 +78,18 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
       aria-label="직무"
       className="-my-1 -ml-1 hidden min-w-0 items-center gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] md:flex md:w-full lg:w-auto [&::-webkit-scrollbar]:hidden"
     >
-      <RoleChip label="전체" active={allOn} onSelect={() => select(undefined)} />
-      {JOB_ROLE_CHIPS.map(({ label, field }) => (
-        <RoleChip
-          key={field}
-          label={label}
-          active={fields.length === 1 && fields[0] === field && roles.length === 0}
-          onSelect={() => select(field)}
-        />
-      ))}
+      <RoleChip label="전체" active={allOn} onSelect={() => press(undefined, allOn)} />
+      {JOB_ROLE_CHIPS.map(({ label, field }) => {
+        const active = fields.length === 1 && fields[0] === field && roles.length === 0;
+        return (
+          <RoleChip
+            key={field}
+            label={label}
+            active={active}
+            onSelect={() => press(field, active)}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -95,9 +108,7 @@ function RoleChip({
     <button
       type="button"
       aria-pressed={active}
-      onClick={() => {
-        if (!active) onSelect();
-      }}
+      onClick={onSelect}
       className={cn(
         'inline-flex h-7 shrink-0 cursor-pointer items-center rounded-full border px-3 text-sm font-medium transition-colors',
         active
