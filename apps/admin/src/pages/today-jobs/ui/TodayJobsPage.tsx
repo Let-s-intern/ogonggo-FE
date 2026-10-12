@@ -360,11 +360,11 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
         </>
       ),
     },
-    { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
+    { key: 'companyName', header: '회사', width: 'w-32', render: (row) => row.companyName },
     {
       key: 'recommendation',
       header: '추천 문구',
-      width: 'w-80',
+      width: 'w-72',
       render: (row) => (
         <RecommendationFields
           idPrefix={`today-job-${row.id}`}
@@ -377,13 +377,13 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
     {
       key: 'status',
       header: '상태',
-      width: 'w-28',
+      width: 'w-24',
       render: (row) => <StatusBadges row={row} />,
     },
     {
       key: 'actions',
       header: '관리',
-      width: 'w-56',
+      width: 'w-52',
       render: (row) => {
         const index = rows.indexOf(row);
         return (
@@ -427,7 +427,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       <PageHeader
         title="오늘의 공고"
         action={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-3">
             <span
               className={cn(
                 'text-sm',
