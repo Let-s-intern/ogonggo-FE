@@ -21,7 +21,8 @@ import { RecruitmentStatusBadge, VisibilityBadge } from '@/shared/config/labels'
 
 /**
  * 사용자 홈이 위에서부터 몇 건을 보여 주는가. 웹의 `TodayJobs` 가 앞 네 건만 쓴다
- * (`apps/web/src/widgets/today-jobs/ui/TodayJobs.tsx` 의 `TOP_COUNT`).
+ * (`apps/web/src/widgets/today-jobs/ui/TodayJobs.tsx` 의 `TOP_COUNT`). 사용자용 API 가 숨긴
+ * 공고를 먼저 빼므로 이 네 건은 표의 앞 네 행이 아니라 노출 중인 앞 네 건이다.
  */
 const USER_VISIBLE_COUNT = 4;
 
@@ -83,6 +84,26 @@ function countChanges(baseline: TodayJobRow[], rows: TodayJobRow[]): number {
     count += 1;
   }
   return count;
+}
+
+/**
+ * 사용자 홈의 네 건에 들지 못하는 노출 공고의 id.
+ *
+ * 비노출 공고는 세지 않고 담지도 않는다. 사용자용 API 가 먼저 빼고, 표에는 이미 비노출 배지가 있다.
+ */
+function idsBeyondUserView(rows: TodayJobRow[]): Set<number> {
+  const ids = new Set<number>();
+  let visibleBefore = 0;
+  for (const row of rows) {
+    if (row.visibility === 'HIDDEN') {
+      continue;
+    }
+    if (visibleBefore >= USER_VISIBLE_COUNT) {
+      ids.add(row.id);
+    }
+    visibleBefore += 1;
+  }
+  return ids;
 }
 
 /**
@@ -316,6 +337,8 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
     setRows((current) => current.filter((row) => row.id !== id));
   };
 
+  const beyondUserView = idsBeyondUserView(rows);
+
   const columns: DataTableColumn<TodayJobRow>[] = [
     {
       key: 'order',
@@ -329,9 +352,9 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       render: (row) => (
         <>
           {row.title}
-          {rows.indexOf(row) >= USER_VISIBLE_COUNT ? (
+          {beyondUserView.has(row.id) ? (
             <span className="block pt-1 text-xs text-orange-600">
-              사용자 화면에는 나오지 않습니다.
+              사용자 화면 네 건에 들지 않습니다.
             </span>
           ) : null}
         </>
