@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Callout,
@@ -145,7 +145,7 @@ function TodayJobsContent() {
 
 function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryResponse[] }) {
   const toast = useToast();
-  const { refetch } = useTodayJobList();
+  const { data, refetch } = useTodayJobList();
   const replaceMutation = useReplaceTodayJobs();
 
   // 서버 상태. 저장하지 않은 변경을 세고, 저장 직전에 다른 곳에서 바뀌었는지 보는 기준이다.
@@ -168,6 +168,21 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
         description: row.recommendationDescription,
       }),
     );
+
+  // 고친 것이 없는 동안은 서버 목록이 바뀌면 따라간다. 다른 화면에서 돌아오면 캐시에 남은 예전
+  // 목록이 먼저 그려지고 새 목록은 그 뒤에 도착한다. 이 상태가 처음 값만 들고 있으면 예전 목록을
+  // 계속 보게 된다. 고치는 중이면 건드리지 않고 저장할 때 `isConflict` 로 알린다.
+  useEffect(() => {
+    if (!data || changeCount > 0) {
+      return;
+    }
+    const fresh = data.map(toRow);
+    if (JSON.stringify(fresh) !== JSON.stringify(baseline)) {
+      setBaseline(fresh);
+      setRows(fresh);
+      setIsConflict(false);
+    }
+  }, [data, baseline, changeCount]);
 
   const updateRecommendation = (id: number, title: string, description: string) => {
     setRows((current) =>
