@@ -7,19 +7,8 @@ import { JOB_ROLES } from '@/entities/job/model/labels';
 import type { JobField } from '@/entities/job/model/types';
 import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
+import { JOB_ROLE_CHIPS } from '../lib/roleChips';
 import { JobRoleSheet, type JobRoleSelection } from './JobRoleSheet';
-
-/**
- * 칩과 직군의 대응. 시안(`docs/asset/v12 채용공고 상세/목록.webp`)에는 칩 이름만 있고 어느 직군인지
- * 적혀 있지 않아 PRD(`prd-v12-home-list.md`) 결정 4 의 제안을 그대로 둔다. 바뀌면 이 상수만 고친다.
- */
-const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
-  { label: '마케팅', field: 'MARKETING_ADVERTISING' },
-  { label: '인사', field: 'HR_GENERAL_AFFAIRS' },
-  { label: '기획', field: 'PLANNING_STRATEGY' },
-  { label: '세일즈', field: 'SALES' },
-  { label: '개발', field: 'IT_DEVELOPMENT' },
-];
 
 /**
  * 목록 줄의 직무 칩 `전체 · 마케팅 · 인사 · 기획 · 세일즈 · 개발`. 새 주소 상태를 만들지 않고
@@ -29,9 +18,8 @@ const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
  * 세부 직무를 고르고 `N개 공고보기` 를 눌러야 주소가 바뀐다. `전체` 는 창 없이 직무 조건을 비운다.
  * 별도 `직무` 버튼은 없다 — 이 칩이 창의 유일한 입구다.
  *
- * 켜진 칩은 그 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 고른 칩이다. 창에서는 칩이 없는
- * 직군(디자인 등)도 고를 수 있지만, 그 직군은 칩으로 보이지 않는다 — 목록은 걸러지고 칩은 `전체`
- * 도 어느 것도 켜지지 않는다. 칩 줄을 다섯 직군으로 고정하려는 결정이다.
+ * 켜진 칩은 그 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 고른 칩이다. 창은 한 번에 한 직군만
+ * 고르게 하므로 칩도 하나만 켜진다(2026-10-12, 사용자). 칩에 없는 직군은 창에도 없다(`lib/roleChips.ts`).
  *
  * 이미 `전체` 인데 `전체` 를 다시 누르면 직무 조건이 그대로라 이벤트는 없다. 1쪽이면 아무 일도 없고,
  * 2쪽 이상이면 1쪽으로만 돌아간다 — 쪽이 바뀌므로 보이는 목록도 바뀐다. `filter_apply` 이벤트는
