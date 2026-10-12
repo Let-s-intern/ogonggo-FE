@@ -19,6 +19,9 @@ import { unwrapData } from '@/shared/api/unwrapData';
  * `staleTime` 을 주거나 다른 화면이 캐시를 그대로 읽게 하면 공고 쪽 변경에서 이 키도 무효화해야 한다.
  */
 
+/** 오늘의 공고 쿼리 키. 목록을 직접 다시 받는 쪽(`features/today-job`)이 같은 키를 쓰도록 내보낸다. */
+export const TODAY_JOBS_QUERY_KEY = ['admin', 'today-jobs'] as const;
+
 /**
  * 고른 순서대로의 오늘의 공고. 페이지 정보가 없는 배열이고 `data` 는 로딩 중에 `undefined` 다.
  * 게시 상태와 무관하게 삭제되지 않은 공고를 주므로 `visibility`·`recruitmentStatus` 로 걸러
@@ -26,7 +29,7 @@ import { unwrapData } from '@/shared/api/unwrapData';
  */
 export function useTodayJobList() {
   return useQuery({
-    queryKey: ['admin', 'today-jobs'],
+    queryKey: TODAY_JOBS_QUERY_KEY,
     queryFn: () => unwrapData(listTodayJobs()),
   });
 }
@@ -44,9 +47,9 @@ export function useReplaceTodayJobs() {
     mutationFn: (input: ReplaceAdminTodayJobsRequest) => unwrapData(replaceTodayJobs(input)),
     onSuccess: (changed) => {
       if (changed) {
-        queryClient.setQueryData(['admin', 'today-jobs'], changed);
+        queryClient.setQueryData(TODAY_JOBS_QUERY_KEY, changed);
       }
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'today-jobs'] });
+      void queryClient.invalidateQueries({ queryKey: TODAY_JOBS_QUERY_KEY });
     },
   });
 }
