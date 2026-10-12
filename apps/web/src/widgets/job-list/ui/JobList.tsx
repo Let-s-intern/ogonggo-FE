@@ -6,6 +6,7 @@ import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { JobFilterSidebar } from './JobFilterSidebar';
+import { JobRoleChips } from './JobRoleChips';
 import { SearchFilterBar } from './SearchFilterBar';
 
 const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = [
@@ -49,7 +50,7 @@ export async function JobList(query: JobListProps) {
   );
 
   return (
-    // lg 이상은 왼쪽 열(제목, 필터)과 오른쪽 열(직무·정렬 줄, 카드, 쪽 번호)의 두 칸 그리드다.
+    // lg 이상은 왼쪽 열(제목, 필터)과 오른쪽 열(칩·직무·정렬 줄, 카드, 쪽 번호)의 두 칸 그리드다.
     // 그 아래는 지금처럼 위에서 아래로 쌓는다.
     <div className="flex w-full flex-col gap-4 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-8">
       {/* lg 이상에서는 `contents` 로 풀려 제목과 컨트롤 줄이 그리드 칸이 된다. */}
@@ -59,9 +60,12 @@ export async function JobList(query: JobListProps) {
           <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
           <div className="md:hidden">{sort}</div>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto lg:col-start-2 lg:row-start-1 lg:w-full lg:justify-between">
+        {/* 모바일은 검색·직무·필터 줄 그대로다(칩은 md 이상). md 는 칩이 한 줄을 다 쓰고 그 아래에
+            검색·직무·필터와 정렬이 선다. lg 이상은 한 줄에 `칩 직무 … 정렬` 이고 정렬이 오른쪽 끝이다. */}
+        <div className="flex w-full flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:flex-nowrap">
+          <JobRoleChips query={query} />
           <SearchFilterBar query={query} totalCount={pageInfo.totalElements} />
-          <div className="hidden md:block">{sort}</div>
+          <div className="hidden md:ml-auto md:block">{sort}</div>
         </div>
       </div>
       <div className="hidden lg:col-start-1 lg:row-start-2 lg:block">
