@@ -16,7 +16,7 @@ const toRequestJob = (job: AdminTodayJobSummaryResponse) => ({
 });
 
 /**
- * 오늘의 공고에 한 건을 더하고 빼는 쓰기.
+ * 오늘의 공고에 한 건을 더하고 빼고 문구를 바꾸는 쓰기.
  *
  * 한 건만 더하고 빼는 API 가 없고 `PUT` 이 목록을 통째로 바꾼다. 그래서 보내기 직전에 목록을
  * 다시 받아 그 위에서 더하고 뺀다. 화면이 들고 있는 목록(오래됐을 수 있다)으로 보내면 다른
@@ -91,6 +91,31 @@ export function useTodayJobWriter(
         jobs: latest.filter((item) => item.id !== jobId).map(toRequestJob),
       });
       return 'removed';
+    },
+
+    /**
+     * `jobId` 의 문구만 바꾸고 나머지 순서와 문구는 그대로 두어 목록 전체를 보낸다.
+     *
+     * 이미 빠져 있으면 보내지 않고 `'absent'` 를 돌려준다. 다른 곳에서 뺀 공고를 문구 저장이 되살리지
+     * 않는다.
+     */
+    editCopy: async (jobId: number, value: RecommendationValue): Promise<'saved' | 'absent'> => {
+      const latest = await fetchLatest();
+      if (!latest.some((item) => item.id === jobId)) {
+        return 'absent';
+      }
+      await replace({
+        jobs: latest.map((item) =>
+          item.id === jobId
+            ? {
+                jobId,
+                recommendationTitle: value.title.trim(),
+                recommendationDescription: value.description.trim(),
+              }
+            : toRequestJob(item),
+        ),
+      });
+      return 'saved';
     },
   };
 }
