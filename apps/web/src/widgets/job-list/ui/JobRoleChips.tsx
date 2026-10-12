@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useOptimistic, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
-import { JOB_FIELD_LABELS, JOB_ROLES } from '@/entities/job/model/labels';
+import { JOB_ROLES } from '@/entities/job/model/labels';
 import type { JobField } from '@/entities/job/model/types';
 import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
@@ -30,8 +30,8 @@ const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
  * 별도 `직무` 버튼은 없다 — 이 칩이 창의 유일한 입구다.
  *
  * 켜진 칩은 그 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 고른 칩이다. 창에서는 칩이 없는
- * 직군(디자인 등)도 고를 수 있어서, 그런 직군을 고르면 칩 뒤에 그 직군 칩이 켜진 채 붙는다 — 안
- * 그러면 목록이 걸러졌는데 어디서 걸렀는지 보이지 않는다.
+ * 직군(디자인 등)도 고를 수 있지만, 그 직군은 칩으로 보이지 않는다 — 목록은 걸러지고 칩은 `전체`
+ * 도 어느 것도 켜지지 않는다. 칩 줄을 다섯 직군으로 고정하려는 결정이다.
  *
  * 이미 `전체` 인데 `전체` 를 다시 누르면 직무 조건이 그대로라 이벤트는 없다. 1쪽이면 아무 일도 없고,
  * 2쪽 이상이면 1쪽으로만 돌아간다 — 쪽이 바뀌므로 보이는 목록도 바뀐다. `filter_apply` 이벤트는
@@ -85,14 +85,8 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
     if (!allOn || (query.page > 1 && !isPending)) move({ fields: [], roles: [] });
   };
 
-  // 고른 직군들. 칩에 없는 직군은 칩 뒤에 붙인다.
-  const selectedFields = [...new Set([...fields, ...roles.map((role) => JOB_ROLES[role].field)])];
-  const chips = [
-    ...JOB_ROLE_CHIPS,
-    ...selectedFields
-      .filter((field) => !JOB_ROLE_CHIPS.some((chip) => chip.field === field))
-      .map((field) => ({ label: JOB_FIELD_LABELS[field], field })),
-  ];
+  // 고른 직군들. 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 골랐으면 담긴다.
+  const selectedFields = new Set([...fields, ...roles.map((role) => JOB_ROLES[role].field)]);
 
   return (
     <>
@@ -104,11 +98,11 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
         className="-my-1 -ml-1 flex w-full min-w-0 items-center gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] lg:w-auto [&::-webkit-scrollbar]:hidden"
       >
         <RoleChip label="전체" active={allOn} onSelect={pressAll} />
-        {chips.map(({ label, field }) => (
+        {JOB_ROLE_CHIPS.map(({ label, field }) => (
           <RoleChip
             key={field}
             label={label}
-            active={selectedFields.includes(field)}
+            active={selectedFields.has(field)}
             haspopup
             onSelect={() => setSheetField(field)}
           />
