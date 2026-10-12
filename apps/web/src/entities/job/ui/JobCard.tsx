@@ -104,7 +104,9 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
     jobMajor,
     EXPERIENCE_TYPE_LABELS[job.experienceType],
   ].filter((part): part is string => Boolean(part));
-  // 모바일 `featured` 의 회색 작은 글. 직무가 없는 공고는 같은 자리에 고용형태·경력을 둔다.
+  // 모바일 `featured` 의 회색 작은 글. 직무는 id 로 시드 표를 찾는 `getJobMajor` 만 쓴다. 목록 응답이
+  // 이미 주는 `jobField`·`jobRole` 은 쓰지 않는다(2026-10-12 배포 응답 12건 모두 값이 있었다). 표에 없는
+  // 공고는 같은 자리에 고용형태·경력을 둔다.
   const roleLabel = jobMajor ?? metaParts.join(' · ');
 
   /*
