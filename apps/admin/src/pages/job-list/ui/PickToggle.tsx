@@ -127,6 +127,33 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
     }
   };
 
+  /**
+   * 확인 없이 이 공고를 뺀 목록으로 보낸다. 다시 켜면 되고, 잃는 것은 적어 둔 문구뿐이다.
+   *
+   * 실패하면 토글은 켜진 채로 남는다(켜짐은 서버 목록에서 오고 목록은 바뀌지 않았다).
+   */
+  const turnOff = async () => {
+    onNotice(null);
+    setIsSubmitting(true);
+    try {
+      const latest = await fetchLatest();
+      if (!latest.some((item) => item.id === job.id)) {
+        // 다른 곳에서 이미 뺐다. 목록을 방금 받아 토글이 그에 맞춰 꺼진다. 보낼 것이 없다.
+        return;
+      }
+      await replace({
+        jobs: latest.filter((item) => item.id !== job.id).map(toRequestJob),
+      });
+    } catch {
+      onNotice({
+        tone: 'error',
+        message: `"${job.title}" 을 오늘의 공고에서 빼지 못했습니다. 잠시 뒤 다시 시도해 주세요.`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div onClick={(event) => event.stopPropagation()}>
       {/* 라벨이 줄바꿈되면 행 높이가 들쭉날쭉해진다. */}
@@ -138,6 +165,8 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
           onChange={(next) => {
             if (next) {
               openModal();
+            } else {
+              void turnOff();
             }
           }}
         />
