@@ -310,18 +310,23 @@ function FeedbackSheet({
   const firstRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState(false);
 
+  // 열 때 한 번만 첫 칸에 포커스를 준다. `onClose` 는 부모가 렌더할 때마다 새로 만들어져, 아래
+  // Esc effect 와 함께 두면 글자를 칠 때마다 다시 돌아 포커스가 첫 칸으로 튄다.
   useEffect(() => {
     firstRef.current?.focus();
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener('keydown', onKeyDown);
-    };
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
   const satisfaction = answers.satisfaction.trim();
