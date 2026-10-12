@@ -77,6 +77,7 @@ export function MyProfile() {
 
       <BasicInfoSection
         name={account?.profile?.name}
+        nickname={account?.profile?.nickname}
         phoneNum={account?.profile?.phoneNum}
         email={account?.email}
         notificationEmail={account?.profile?.notificationEmail}

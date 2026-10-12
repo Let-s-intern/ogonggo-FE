@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  changeMyNickname,
   createImage,
   deleteMyProfileImage,
   type MyProfileResponseAuthProvider,
@@ -18,6 +19,8 @@ import { SaveMessage, type SaveStatus } from './SaveMessage';
 export interface BasicInfoSectionProps {
   /** `profile.name`. 렛츠커리어가 소유해 여기서 고칠 수 없다. */
   name?: string;
+  /** `profile.nickname`. 렛츠커리어와 함께 쓰며 여기서 고칠 수 있다. */
+  nickname?: string;
   /** `profile.phoneNum`. 렛츠커리어가 소유해 조회만 한다. */
   phoneNum?: string;
   /** `email`. 일반 회원은 렛츠커리어 프로필의 이메일이다. */
@@ -28,7 +31,7 @@ export interface BasicInfoSectionProps {
   profileImageUrl?: string;
   /** 계정을 읽었는지. 읽기 전에는 수신용 이메일 칸을 채울 값을 모른다. */
   loaded: boolean;
-  /** 수신용 이메일을 저장한 뒤 계정을 다시 읽게 한다. */
+  /** 닉네임·수신용 이메일을 저장한 뒤 계정을 다시 읽게 한다. */
   onSaved: () => void;
 }
 
@@ -44,10 +47,18 @@ const PROVIDER_BADGES: Record<MyProfileResponseAuthProvider, { label: string; cl
     SERVICE: { label: '이메일 로그인', className: 'bg-blue-50 text-blue-500' },
   };
 
+/** 백엔드가 받는 닉네임 최대 글자 수(`ChangeMyNicknameRequest`). */
+const NICKNAME_MAX_LENGTH = 20;
+
 /**
  * 기본 정보 구역(v11). 이름·휴대폰 번호·가입한 이메일은 렛츠커리어가 소유해 **읽기 전용**이고,
- * 이 화면에서 고칠 수 있는 것은 오늘의 공고 정보 수신용 이메일 하나다
- * (`PUT /api/v1/users/me/notification-email`). `기본 정보 수정하기` 가 그 값을 보낸다.
+ * 이 화면에서 고칠 수 있는 것은 닉네임과 오늘의 공고 정보 수신용 이메일이다. `기본 정보 수정하기`
+ * 가 둘을 보낸다.
+ *
+ * 닉네임(`PUT /api/v1/users/me/nickname`)은 바뀌었을 때만 보낸다. 렛츠커리어와 함께 쓰는 값이라
+ * 백엔드가 렛츠커리어에도 넘긴다 — 손대지 않은 닉네임을 매번 보내면 렛츠커리어에서 나중에 고친
+ * 값을 이 화면의 옛 값으로 덮는다. 수신용 이메일(`PUT /api/v1/users/me/notification-email`)은
+ * 예전처럼 늘 보낸다. 닉네임을 먼저 보내고, 실패하면 이메일은 보내지 않는다.
  *
  * `가입한 이메일과 동일` 을 켜면 칸이 가입한 이메일로 채워지고 잠긴다. 저장할 때 그 값을 그대로
  * 보낸다 — 서버는 "비어 있음" 과 "가입한 이메일과 같음" 을 따로 저장하지 않으므로, 켠 상태를
@@ -65,6 +76,7 @@ const PROVIDER_BADGES: Record<MyProfileResponseAuthProvider, { label: string; cl
  */
 export function BasicInfoSection({
   name,
+  nickname,
   phoneNum,
   email,
   notificationEmail,
@@ -75,6 +87,7 @@ export function BasicInfoSection({
 }: BasicInfoSectionProps) {
   const [sameAsEmail, setSameAsEmail] = useState(false);
   const [draft, setDraft] = useState('');
+  const [nicknameDraft, setNicknameDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<SaveStatus | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -89,10 +102,22 @@ export function BasicInfoSection({
     setDraft(same ? '' : (notificationEmail ?? ''));
   }, [loaded, email, notificationEmail]);
 
+  useEffect(() => {
+    if (!loaded) return;
+    setNicknameDraft(nickname ?? '');
+  }, [loaded, nickname]);
+
   const value = sameAsEmail ? (email ?? '') : draft;
   const badge = authProvider ? PROVIDER_BADGES[authProvider] : undefined;
 
   const submit = async () => {
+    const trimmedNickname = nicknameDraft.trim();
+    // 백엔드는 닉네임을 비우지 못한다. 처음부터 없던 회원이 비워 둔 채 이메일만 고치는 것은 막지 않는다.
+    const nicknameChanged = trimmedNickname !== (nickname ?? '');
+    if (nicknameChanged && !trimmedNickname) {
+      setStatus({ tone: 'error', message: '닉네임을 입력해 주세요.' });
+      return;
+    }
     const trimmed = value.trim();
     if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setStatus({ tone: 'error', message: '이메일 주소 형식을 확인해 주세요.' });
@@ -101,6 +126,9 @@ export function BasicInfoSection({
     setSaving(true);
     setStatus(null);
     try {
+      if (nicknameChanged) {
+        await changeMyNickname({ nickname: trimmedNickname });
+      }
       // 비우면 서버가 수신용 이메일을 지운다.
       await replaceMyNotificationEmail(trimmed ? { notificationEmail: trimmed } : {});
       setStatus({ tone: 'success', message: '저장했습니다.' });
@@ -216,6 +244,17 @@ export function BasicInfoSection({
         <div className="flex min-w-0 flex-1 flex-col gap-5">
           <ProfileField label="이름" htmlFor="profile-name">
             <Input id="profile-name" value={name ?? ''} readOnly disabled />
+          </ProfileField>
+
+          <ProfileField label="닉네임" htmlFor="profile-nickname">
+            <Input
+              id="profile-nickname"
+              value={nicknameDraft}
+              maxLength={NICKNAME_MAX_LENGTH}
+              disabled={!loaded}
+              placeholder="닉네임을 입력해 주세요."
+              onChange={(event) => setNicknameDraft(event.target.value)}
+            />
           </ProfileField>
 
           <ProfileField label="휴대폰 번호" htmlFor="profile-phone">
