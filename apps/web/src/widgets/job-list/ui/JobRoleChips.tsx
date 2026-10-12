@@ -1,5 +1,6 @@
 'use client';
 
+import { useOptimistic, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
 import type { JobField } from '@/entities/job/model/types';
@@ -31,8 +32,15 @@ const JOB_ROLE_CHIPS: { label: string; field: JobField }[] = [
  */
 export function JobRoleChips({ query }: { query: JobListQuery }) {
   const router = useRouter();
-  const fields = query.jobFields ?? [];
-  const roles = query.jobRoles ?? [];
+  const [, startTransition] = useTransition();
+  // 켜짐은 서버가 새 `query` 를 내려준 뒤에야 바뀐다. 그 사이 눌린 칩이 꺼져 보이면 다시 누르게 되므로
+  // 이동 중에는 누른 칩을 먼저 켜 보인다. 이동이 끝나면 서버 값으로 돌아간다.
+  const [shown, showOptimistically] = useOptimistic({
+    fields: query.jobFields ?? [],
+    roles: query.jobRoles ?? [],
+  });
+  const fields = shown.fields;
+  const roles = shown.roles;
   const allOn = fields.length === 0 && roles.length === 0;
 
   const select = (field: JobField | undefined) => {
@@ -43,10 +51,13 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
         filter_action: 'select',
       });
     }
-    router.push(
-      buildJobListHref(query, { jobFields: field ? [field] : undefined, jobRoles: undefined }),
-      { scroll: false },
-    );
+    startTransition(() => {
+      showOptimistically({ fields: field ? [field] : [], roles: [] });
+      router.push(
+        buildJobListHref(query, { jobFields: field ? [field] : undefined, jobRoles: undefined }),
+        { scroll: false },
+      );
+    });
   };
 
   return (
