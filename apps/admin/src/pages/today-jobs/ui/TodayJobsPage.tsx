@@ -1,10 +1,20 @@
 import { useState } from 'react';
-import { Button, Callout, DataTable, cn, type DataTableColumn } from '@ogonggo/ui';
-import type { AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
+import {
+  Button,
+  Callout,
+  DataTable,
+  Modal,
+  Pagination,
+  cn,
+  type DataTableColumn,
+} from '@ogonggo/ui';
+import type { AdminJobSummaryResponse, AdminTodayJobSummaryResponse } from '@ogonggo/api/src/admin';
+import { useJobList } from '@/entities/content/api/useContent';
 import { useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { isRecommendationValid } from '@/features/today-job/lib/validate';
 import { PageHeader } from '@/widgets/page-header';
+import { SearchBox } from '@/widgets/list-toolbar';
 import { RecruitmentStatusBadge, VisibilityBadge } from '@/shared/config/labels';
 
 /**
@@ -105,6 +115,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   // 서버 상태. 저장하지 않은 변경을 세는 기준이다.
   const [baseline] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
   const [rows, setRows] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const changeCount = countChanges(baseline, rows);
   const canSave =
@@ -140,6 +151,26 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       next[target] = moving;
       return next;
     });
+  };
+
+  /** 맨 끝에 붙인다. 문구는 비어 있어 저장하기 전에 채워야 한다. */
+  const addRow = (job: AdminJobSummaryResponse) => {
+    setRows((current) =>
+      current.some((row) => row.id === job.id)
+        ? current
+        : [
+            ...current,
+            {
+              id: job.id,
+              title: job.title,
+              companyName: job.companyName,
+              visibility: job.visibility,
+              recruitmentStatus: job.recruitmentStatus,
+              recommendationTitle: '',
+              recommendationDescription: '',
+            },
+          ],
+    );
   };
 
   /** 화면 상태에서만 지운다. 서버는 저장할 때까지 그대로다. */
@@ -242,6 +273,9 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
             >
               저장하지 않은 변경 {changeCount}건
             </span>
+            <Button size="sm" variant="secondary" onClick={() => setIsPickerOpen(true)}>
+              공고 추가
+            </Button>
             <Button size="sm" disabled={!canSave}>
               저장
             </Button>
@@ -253,6 +287,12 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
         rows={rows}
         rowKey={(row) => row.id}
         emptyMessage="선택한 공고가 없습니다."
+      />
+      <JobPickerModal
+        open={isPickerOpen}
+        selectedIds={new Set(rows.map((row) => row.id))}
+        onAdd={addRow}
+        onClose={() => setIsPickerOpen(false)}
       />
     </>
   );
@@ -276,5 +316,112 @@ function StatusBadges({ row }: { row: TodayJobRow }) {
       {isHidden ? <VisibilityBadge value="HIDDEN" /> : null}
       {isClosed ? <RecruitmentStatusBadge value="CLOSED" /> : null}
     </span>
+  );
+}
+
+interface JobPickerModalProps {
+  open: boolean;
+  /** 이미 표에 든 공고. 다시 고를 수 없다. */
+  selectedIds: Set<number>;
+  onAdd: (job: AdminJobSummaryResponse) => void;
+  onClose: () => void;
+}
+
+/**
+ * 노출 중인 공고를 검색해 표에 더한다.
+ *
+ * 고르고도 닫지 않는다. 여러 건을 연달아 고르는 자리라 한 건마다 열고 닫게 하면 번거롭다.
+ *
+ * 안쪽은 열려 있을 때만 그린다. 닫혀 있는 동안 공고 목록을 부르지 않고, 다시 열면 검색어와
+ * 페이지가 처음으로 돌아온다.
+ */
+function JobPickerModal({ open, selectedIds, onAdd, onClose }: JobPickerModalProps) {
+  return (
+    <Modal
+      open={open}
+      title="공고 추가"
+      description="노출 중인 공고를 검색해 고릅니다. 고른 공고는 표 맨 끝에 붙습니다."
+      onClose={onClose}
+      className="w-[min(48rem,calc(100vw-2rem))]"
+    >
+      {open ? <JobPicker selectedIds={selectedIds} onAdd={onAdd} onClose={onClose} /> : null}
+    </Modal>
+  );
+}
+
+function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'open'>) {
+  const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(1);
+
+  const { data, isPending, isError } = useJobList({
+    page,
+    keyword,
+    visibility: 'VISIBLE',
+    source: '',
+    reviewStatus: '',
+    recruitmentStatus: '',
+    sort: 'REGISTERED_AT',
+  });
+
+  const columns: DataTableColumn<AdminJobSummaryResponse>[] = [
+    { key: 'title', header: '제목', render: (row) => row.title },
+    { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
+    {
+      key: 'select',
+      header: '선택',
+      width: 'w-24',
+      render: (row) => {
+        const isSelected = selectedIds.has(row.id);
+        return (
+          <Button
+            size="sm"
+            variant="secondary"
+            aria-label={`${row.title} ${isSelected ? '선택됨' : '추가'}`}
+            disabled={isSelected}
+            onClick={() => onAdd(row)}
+          >
+            {isSelected ? '선택됨' : '추가'}
+          </Button>
+        );
+      },
+    },
+  ];
+
+  return (
+    <>
+      <div className="pb-3">
+        <SearchBox
+          value={keyword}
+          onSubmit={(next) => {
+            setKeyword(next);
+            setPage(1);
+          }}
+          placeholder="제목·회사 검색"
+        />
+      </div>
+
+      {isError ? (
+        <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
+      ) : (
+        <>
+          <div className="max-h-[50vh] overflow-y-auto rounded-lg">
+            <DataTable
+              columns={columns}
+              rows={data?.items ?? []}
+              rowKey={(row) => row.id}
+              isLoading={isPending}
+              emptyMessage="조건에 맞는 공고가 없습니다."
+            />
+          </div>
+          <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
+        </>
+      )}
+
+      <div className="flex justify-end">
+        <Button variant="secondary" onClick={onClose}>
+          닫기
+        </Button>
+      </div>
+    </>
   );
 }
