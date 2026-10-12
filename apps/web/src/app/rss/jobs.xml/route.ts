@@ -15,6 +15,9 @@ import { buildRssFeed } from '@/shared/lib/rss';
  * 마감된 공고도 싣는다 — `shared/lib/publicListings.ts`의 `fetchAllJobs`가 상태 필터 없이 돌기
  * 때문이고, 이유는 그 파일 주석과 위 메모에 있다.
  */
+/** 1시간마다 다시 만든다. 없으면 요청마다 목록 API 를 끝까지 넘겨 읽는다. */
+export const revalidate = 3600;
+
 export async function GET() {
   const jobs = await fetchAllJobs();
 
