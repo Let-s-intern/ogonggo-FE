@@ -9,8 +9,10 @@ import type { JobField, JobRole } from '@/entities/job/model/types';
 import { track } from '@/shared/analytics/dataLayer';
 import { JOB_MAJORS } from '@/widgets/job-calendar/lib/job-majors';
 import { buildJobsApiUrl, type JobListQuery } from '../lib/query';
+import { JOB_ROLE_CHIPS } from '../lib/roleChips';
 
-const JOB_FIELDS = Object.keys(JOB_FIELD_LABELS) as JobField[];
+/** 왼쪽 목록. 직무 칩에 있는 직군만, 칩 순서대로다. */
+const JOB_FIELDS = JOB_ROLE_CHIPS.map(({ field }) => field);
 
 /** 직군 아이콘. 공고 달력의 관심 직무 칸과 같은 그림을 쓴다. */
 const FIELD_ICONS = new Map<string, string>(JOB_MAJORS.map(({ field, icon }) => [field, icon]));
@@ -54,8 +56,9 @@ function trackChanges(filterType: string, before: string[], after: string[]) {
 
 /**
  * 직무 선택 창. 직무 칩(`JobRoleChips`)의 직군 칩을 누르면 뜬다. 왼쪽에 직군, 오른쪽에 그 직군의
- * 직무 칩이 있고, 눌린 칩의 직군이 펼쳐진 채 열린다. 여러 직군에 걸쳐 중복으로 고를 수 있고,
- * `전체` 는 그 직군을 통째로 고른다.
+ * 직무 칩이 있고, 눌린 칩의 직군이 펼쳐진 채 열린다. 한 직군 안에서는 직무를 여러 개 고를 수 있고,
+ * `전체` 는 그 직군을 통째로 고른다. 다른 직군에서 고르면 앞 직군의 선택은 지운다 — 직무 칩이 한 번에
+ * 하나만 켜지게 한다(2026-10-12, 사용자).
  *
  * 창 안에서 고르는 것은 초안이다. `N개 공고보기` 를 눌러야 `onApply` 로 넘어가 주소가 바뀐다 —
  * 칩 하나마다 페이지를 다시 그리면 창이 닫히고 스크롤이 튄다. 건수는 초안이 바뀔 때마다 한 번
@@ -121,29 +124,24 @@ export function JobRoleSheet({
   const fieldSelected = selection.fields.includes(activeField);
   const empty = selection.fields.length === 0 && selection.roles.length === 0;
 
+  // 직군을 통째로 고르면 다른 선택은 모두 지운다(한 직군만). 끄면 아무것도 고르지 않은 상태다.
   const toggleField = () =>
-    setSelection(({ fields, roles: picked }) =>
-      fieldSelected
-        ? { fields: fields.filter((field) => field !== activeField), roles: picked }
-        : {
-            // 직군을 통째로 고르면 그 직군에서 하나씩 고른 직무는 겹치므로 뺀다.
-            fields: [...fields, activeField],
-            roles: picked.filter((role) => JOB_ROLES[role].field !== activeField),
-          },
+    setSelection(() =>
+      fieldSelected ? { fields: [], roles: [] } : { fields: [activeField], roles: [] },
     );
 
   const toggleRole = (role: JobRole) =>
     setSelection(({ fields, roles: picked }) => {
-      if (fields.includes(activeField)) {
-        // `전체` 가 켜진 채 직무 하나를 누르면 그 직무만 고르는 것으로 바꾼다.
-        return {
-          fields: fields.filter((field) => field !== activeField),
-          roles: [...picked, role],
-        };
-      }
-      return picked.includes(role)
-        ? { fields, roles: picked.filter((item) => item !== role) }
-        : { fields, roles: [...picked, role] };
+      // 이 직군에서 고른 직무만 남긴다. 다른 직군의 선택과 이 직군의 `전체` 는 지운다.
+      const sameField = fields.includes(activeField)
+        ? []
+        : picked.filter((item) => JOB_ROLES[item].field === activeField);
+      return {
+        fields: [],
+        roles: sameField.includes(role)
+          ? sameField.filter((item) => item !== role)
+          : [...sameField, role],
+      };
     });
 
   const apply = () => {
