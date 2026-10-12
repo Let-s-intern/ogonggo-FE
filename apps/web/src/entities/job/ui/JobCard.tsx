@@ -1,4 +1,4 @@
-import { Badge } from '@ogonggo/ui';
+import { Badge, cn } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
 import { CardNewsLinkButton } from '@/features/card-news-link';
 import {
@@ -160,7 +160,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
             <p className="line-clamp-3 pr-8 text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:hidden">
               {job.title}
             </p>
-            <div className="flex items-center gap-3 md:hidden">
+            <div className="mt-auto flex items-center gap-3 md:hidden">
               <CompanyLogo
                 companyName={job.companyName}
                 logoUrl={job.logoUrl}
@@ -178,7 +178,12 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
           verticalBody
         )}
         {recommendationTitle || recommendationDescription ? (
-          <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-blue-00 px-3 py-2">
+          <div
+            className={cn(
+              'flex min-w-0 flex-col gap-0.5 rounded-lg bg-blue-00 px-3 py-2',
+              featured && 'md:mt-auto',
+            )}
+          >
             {recommendationTitle ? (
               <p className="truncate text-xs font-bold text-blue-500">{recommendationTitle}</p>
             ) : null}
