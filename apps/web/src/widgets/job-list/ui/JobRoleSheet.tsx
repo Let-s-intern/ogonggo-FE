@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { httpClient } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { Button, CircleIconButton, cn } from '@ogonggo/ui';
@@ -9,24 +8,24 @@ import { JOB_FIELD_LABELS, JOB_ROLES, jobRolesOf } from '@/entities/job/model/la
 import type { JobField, JobRole } from '@/entities/job/model/types';
 import { track } from '@/shared/analytics/dataLayer';
 import { JOB_MAJORS } from '@/widgets/job-calendar/lib/job-majors';
-import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
+import { buildJobsApiUrl, type JobListQuery } from '../lib/query';
 
 const JOB_FIELDS = Object.keys(JOB_FIELD_LABELS) as JobField[];
 
 /** 직군 아이콘. 공고 달력의 관심 직무 칸과 같은 그림을 쓴다. */
 const FIELD_ICONS = new Map<string, string>(JOB_MAJORS.map(({ field, icon }) => [field, icon]));
 
-interface Selection {
+/** 창에서 고르는 직무. `fields` 는 통째로 고른 직군이고 `roles` 는 하나씩 고른 직무다. */
+export interface JobRoleSelection {
   fields: JobField[];
   roles: JobRole[];
 }
 
-function selectionOf(query: JobListQuery): Selection {
-  return { fields: query.jobFields ?? [], roles: query.jobRoles ?? [] };
-}
-
 /** 창 버튼의 `N개 공고보기`. 목록과 같은 필터에 고르는 중인 직무만 바꿔 건수만 받는다. */
-async function fetchCount(query: JobListQuery, selection: Selection): Promise<number | undefined> {
+async function fetchCount(
+  query: JobListQuery,
+  selection: JobRoleSelection,
+): Promise<number | undefined> {
   const response = await httpClient<SuccessResponsePageResponseUserJobSummaryResponse>(
     buildJobsApiUrl(
       { ...query, page: 1, jobFields: selection.fields, jobRoles: selection.roles },
@@ -54,74 +53,36 @@ function trackChanges(filterType: string, before: string[], after: string[]) {
 }
 
 /**
- * 필터 줄의 `직무`. 누르면 왼쪽에 직군, 오른쪽에 그 직군의 직무 칩이 있는 창이 뜬다. 여러 직군에
- * 걸쳐 중복으로 고를 수 있고, `전체` 는 그 직군을 통째로 고른다.
+ * 직무 선택 창. 직무 칩(`JobRoleChips`)의 직군 칩을 누르면 뜬다. 왼쪽에 직군, 오른쪽에 그 직군의
+ * 직무 칩이 있고, 눌린 칩의 직군이 펼쳐진 채 열린다. 여러 직군에 걸쳐 중복으로 고를 수 있고,
+ * `전체` 는 그 직군을 통째로 고른다.
  *
- * 창 안에서 고르는 것은 초안이다. `N개 공고보기` 를 눌러야 주소가 바뀐다 — 칩 하나마다 페이지를
- * 다시 그리면 창이 닫히고 스크롤이 튄다. 건수는 초안이 바뀔 때마다 한 번 받는다.
- *
- * 트리거가 `FilterButton` 이 아닌 이유 — 그 컴포넌트는 `<details>` 안의 `<summary>` 라 창을
- * 여는 버튼이 될 수 없다. 모양만 같게 맞춘다(`packages/ui/src/components/FilterButton.tsx`).
+ * 창 안에서 고르는 것은 초안이다. `N개 공고보기` 를 눌러야 `onApply` 로 넘어가 주소가 바뀐다 —
+ * 칩 하나마다 페이지를 다시 그리면 창이 닫히고 스크롤이 튄다. 건수는 초안이 바뀔 때마다 한 번
+ * 받는다. 주소를 바꾸는 것은 부르는 쪽이다(`JobRoleChips`) — 사이드바의 미적용 선택을 합치는 일이
+ * 거기 있다.
  *
  * 창은 공유 창(`features/share-posting/ui/SharePostingButton.tsx`)과 같은 틀이다. 데스크톱은
  * 가운데, 모바일은 아래에서 올라온다.
  */
-export function JobRoleFilter({ query }: { query: JobListQuery }) {
-  const applied = selectionOf(query);
-  // 고른 것을 첫 이름과 나머지 개수로 적는다(`IT·개발 외 2`). 직군 `전체` 는 직군 이름 하나로 센다.
-  const labels = [
-    ...applied.fields.map((field) => JOB_FIELD_LABELS[field]),
-    ...applied.roles.map((role) => JOB_ROLES[role].label),
-  ];
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          'flex h-9 cursor-pointer items-center gap-1 rounded-full border px-4 text-sm font-normal transition-colors',
-          labels.length > 0
-            ? 'border-transparent bg-blue-50 font-semibold text-blue-500 hover:bg-blue-100'
-            : 'border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-500',
-        )}
-      >
-        <span className="max-w-40 truncate">
-          {labels.length === 0
-            ? '직무'
-            : labels.length === 1
-              ? labels[0]
-              : `${labels[0]} 외 ${labels.length - 1}`}
-        </span>
-        <span aria-hidden="true" className="icon-[lucide--chevron-down] block h-4 w-4" />
-      </button>
-      {open ? (
-        <JobRoleSheet query={query} initial={applied} onClose={() => setOpen(false)} />
-      ) : null}
-    </>
-  );
-}
-
-function JobRoleSheet({
+export function JobRoleSheet({
   query,
   initial,
+  initialField,
+  onApply,
   onClose,
 }: {
   query: JobListQuery;
-  initial: Selection;
+  /** 지금 주소에 반영된 직무. `N개 공고보기` 를 누를 때 이것과 비교해 달라진 것만 이벤트로 보낸다. */
+  initial: JobRoleSelection;
+  /** 창을 열었을 때 오른쪽에 펼쳐 둘 직군. 누른 칩의 직군이다. */
+  initialField: JobField;
+  onApply: (selection: JobRoleSelection) => void;
   onClose: () => void;
 }) {
-  const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [selection, setSelection] = useState<Selection>(initial);
-  // 창을 열면 이미 고른 직군부터 보인다. 고른 것이 없으면 첫 직군이다.
-  const [activeField, setActiveField] = useState<JobField>(
-    () =>
-      initial.fields[0] ??
-      (initial.roles[0] ? JOB_ROLES[initial.roles[0]].field : undefined) ??
-      'IT_DEVELOPMENT',
-  );
+  const [selection, setSelection] = useState<JobRoleSelection>(initial);
+  const [activeField, setActiveField] = useState<JobField>(initialField);
   const [count, setCount] = useState<number | undefined>();
 
   useEffect(() => {
@@ -188,12 +149,7 @@ function JobRoleSheet({
   const apply = () => {
     trackChanges('job_field', initial.fields, selection.fields);
     trackChanges('job_role', initial.roles, selection.roles);
-    router.push(
-      buildJobListHref(query, {
-        jobFields: selection.fields.length > 0 ? selection.fields : undefined,
-        jobRoles: selection.roles.length > 0 ? selection.roles : undefined,
-      }),
-    );
+    onApply(selection);
     onClose();
   };
 

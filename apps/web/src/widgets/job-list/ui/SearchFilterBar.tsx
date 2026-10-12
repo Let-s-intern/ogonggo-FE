@@ -6,7 +6,6 @@ import {
   type JobListQuery,
 } from '../lib/query';
 import { JobFilterButton } from './JobFilterSheet';
-import { JobRoleFilter } from './JobRoleFilter';
 
 export interface SearchFilterBarProps {
   query: JobListQuery;
@@ -15,9 +14,9 @@ export interface SearchFilterBarProps {
 }
 
 /**
- * lg 미만의 검색·필터 줄. 검색어 form, `직무` 버튼(`JobRoleFilter`), `필터` 버튼(`JobFilterButton`)이다.
- * 채용 형태·요구 경력은 `필터` 시트 안에 있다. lg 이상은 왼쪽 열의 `JobFilterSidebar` 가 검색과 필터를
- * 맡고, 이 줄에는 `직무` 버튼만 남는다.
+ * lg 미만의 검색·필터 줄. 검색어 form 과 `필터` 버튼(`JobFilterButton`)이다. 채용 형태·요구 경력은
+ * `필터` 시트 안에 있다. lg 이상은 왼쪽 열의 `JobFilterSidebar` 가 검색과 필터를 맡아 이 줄은 비어
+ * 있다. 직무는 이 줄이 아니라 위의 직무 칩(`JobRoleChips`)이 맡는다.
  *
  * 검색어는 자유 텍스트라 `<Link>` 이동으로는 못 만든다 — `<form method="GET">`은 유지한다.
  *
@@ -56,7 +55,6 @@ export function SearchFilterBar({ query, totalCount }: SearchFilterBarProps) {
           검색
         </button>
       </form>
-      <JobRoleFilter query={query} />
       <JobFilterButton query={query} totalCount={totalCount} />
     </div>
   );

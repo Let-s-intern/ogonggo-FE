@@ -45,10 +45,10 @@ export default function Loading() {
         </HomeHero>
 
         <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
-          {/* 전체 공고 — lg 이상은 왼쪽 열(제목 + 필터)과 오른쪽 열(칩·직무·정렬 줄, 카드 3열, 페이지네이션)의
-              두 칸이다(`JobList.tsx`). 그 아래는 제목(모바일은 정렬 포함), 칩 줄(md 이상), 검색·직무·필터
-              줄을 쌓고 카드 그리드, 페이지네이션이 이어진다. md 는 칩 줄이 한 줄을 다 쓰고 그 아래에
-              검색·직무·필터와 정렬이 선다. */}
+          {/* 전체 공고 — lg 이상은 왼쪽 열(제목 + 필터)과 오른쪽 열(칩·정렬 줄, 카드 3열, 페이지네이션)의
+              두 칸이다(`JobList.tsx`). 그 아래는 제목(모바일은 정렬 포함), 칩 줄, 검색·필터 줄을 쌓고
+              카드 그리드, 페이지네이션이 이어진다. md 는 칩 줄이 한 줄을 다 쓰고 그 아래에 검색·필터와
+              정렬이 선다. */}
           <div
             aria-hidden="true"
             className="ogonggo-skeleton flex w-full animate-pulse flex-col gap-4 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-8"
@@ -61,7 +61,7 @@ export default function Loading() {
               </div>
               <div className="flex w-full flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:flex-nowrap">
                 {/* 직무 칩 — `전체` 와 다섯 개, 한 칸 `h-7`. 폭은 칩 글자 길이에 맞춰 잰 값(약 370px)이다. */}
-                <div className="hidden h-7 w-full items-center gap-2 md:flex lg:w-auto">
+                <div className="flex h-7 w-full items-center gap-2 lg:w-auto">
                   {[44, 60, 48, 48, 60, 48].map((width, index) => (
                     <div
                       key={index}
@@ -72,7 +72,6 @@ export default function Loading() {
                 </div>
                 {/* 검색은 lg 이상에서 왼쪽 열의 검색창이 맡는다. 필터 버튼도 lg 미만에만 있다. */}
                 <div className="h-9 w-full rounded-full bg-gray-100 md:w-[220px] lg:hidden" />
-                <div className="h-9 w-24 rounded-full bg-gray-100" />
                 <div className="h-9 w-20 rounded-full bg-gray-100 lg:hidden" />
                 <div className="hidden h-9 w-40 rounded-full bg-gray-100 md:ml-auto md:block" />
               </div>

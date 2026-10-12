@@ -60,8 +60,8 @@ export async function JobList(query: JobListProps) {
           <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
           <div className="md:hidden">{sort}</div>
         </div>
-        {/* 모바일은 검색·직무·필터 줄 그대로다(칩은 md 이상). md 는 칩이 한 줄을 다 쓰고 그 아래에
-            검색·직무·필터와 정렬이 선다. lg 이상은 한 줄에 `칩 직무 … 정렬` 이고 정렬이 오른쪽 끝이다. */}
+        {/* 칩은 모바일에서도 한 줄을 다 쓰고(가로로 넘긴다) 그 아래에 검색·필터가 선다. md 는 그 아래에
+            검색·필터와 정렬이 선다. lg 이상은 한 줄에 `칩 … 정렬` 이고 정렬이 오른쪽 끝이다. */}
         <div className="flex w-full flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:flex-nowrap">
           <JobRoleChips query={query} />
           <SearchFilterBar query={query} totalCount={pageInfo.totalElements} />
