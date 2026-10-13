@@ -46,8 +46,8 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
         <RichTextEditor
           id="post-content"
           initialContent={values.content}
-          onChange={(content, contentText, contentHasImage) =>
-            onChange({ content: content as unknown as JsonNode, contentText, contentHasImage })
+          onChange={(content, contentText) =>
+            onChange({ content: content as unknown as JsonNode, contentText })
           }
           placeholder="프로젝트 소개, 목표 및 예상 산출물, 진행 상황, 참고자료, 포지션별 담당 업무, 현재 팀 구성, 모임 방식 등을 자유롭게 작성해 주세요."
         />
