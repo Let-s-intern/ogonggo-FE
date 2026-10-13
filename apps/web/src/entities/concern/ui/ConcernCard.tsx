@@ -38,7 +38,9 @@ export function ConcernCard({ concern }: ConcernCardProps) {
         <p className="mt-3 line-clamp-2 text-sm font-bold text-gray-900 md:text-base">
           {concern.title}
         </p>
-        <p className="mt-1 line-clamp-1 text-xs text-gray-500 md:text-sm">{lexicalToPlainText(concern.content)}</p>
+        <p className="mt-1 line-clamp-1 text-xs text-gray-500 md:text-sm">
+          {lexicalToPlainText(concern.content)}
+        </p>
         <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
           <span className="min-w-0 truncate">{getAuthorName(concern.author)}</span>
           <RelativeTime value={concern.createdAt} className="shrink-0" />
