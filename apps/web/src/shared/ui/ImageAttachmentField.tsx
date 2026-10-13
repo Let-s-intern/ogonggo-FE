@@ -146,7 +146,7 @@ export function ImageAttachmentField({
 
   return (
     <div>
-      <p className="pb-3 text-sm font-medium text-gray-900 md:text-base">
+      <p className="pb-1.5 text-sm font-medium text-gray-700">
         {label} <span className="text-xs font-normal text-gray-400">선택</span>
       </p>
       {value.length > 0 && (
