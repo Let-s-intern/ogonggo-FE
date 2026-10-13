@@ -12,7 +12,7 @@ import {
   toImageIds,
   type ImageAttachment,
 } from '@/shared/ui/ImageAttachmentField';
-import { lexicalToText } from '../lib/content';
+import { lexicalToText, stripContentImages } from '../lib/content';
 
 /**
  * 작성 화면이 들고 있는 값(PRD 5 절). `CreateRecruitmentPostRequest` 와 한 칸씩 짝이 맞되,
@@ -35,6 +35,11 @@ export interface RecruitmentPostFormValues {
   content?: JsonNode;
   /** `content` 의 서식 없는 글자. 칸이 채워졌는지 볼 때 쓴다. */
   contentText: string;
+  /**
+   * 읽어 온 본문에서 이미지 노드를 지웠는지(`stripContentImages`). 요청에는 실리지 않고, 켜져 있으면
+   * 첨부 칸 위에 사진을 다시 첨부하라는 안내를 띄운다.
+   */
+  contentImagesRemoved: boolean;
   eligibilityAndSelectionProcess: string;
   recruitmentStartDate: string;
   recruitmentEndDate: string;
@@ -58,6 +63,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
   technologyStacks: [],
   summary: '',
   contentText: '',
+  contentImagesRemoved: false,
   eligibilityAndSelectionProcess: '',
   recruitmentStartDate: '',
   recruitmentEndDate: '',
@@ -73,6 +79,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
  * 그대로 받는다 — 수정 화면에서도 동의를 다시 받는다.
  */
 export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPostFormValues {
+  const { content, removed } = stripContentImages(form.content);
   return {
     title: form.title,
     recruitmentType: form.recruitmentType ?? '',
@@ -82,8 +89,9 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
       form.activityDurationMonths == null ? '' : String(form.activityDurationMonths),
     technologyStacks: form.technologyStacks,
     summary: form.summary ?? '',
-    content: form.content,
-    contentText: lexicalToText(form.content),
+    content: content as JsonNode | undefined,
+    contentText: lexicalToText(content),
+    contentImagesRemoved: removed,
     eligibilityAndSelectionProcess: form.eligibilityAndSelectionProcess ?? '',
     recruitmentStartDate: form.recruitmentStartDate ?? '',
     recruitmentEndDate: form.recruitmentEndDate ?? '',

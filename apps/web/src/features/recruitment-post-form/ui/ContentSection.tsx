@@ -1,7 +1,7 @@
 'use client';
 
 import type { JsonNode } from '@ogonggo/api';
-import { Field, Textarea } from '@ogonggo/ui';
+import { Callout, Field, Textarea } from '@ogonggo/ui';
 import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
 import { ImageAttachmentField } from '@/shared/ui/ImageAttachmentField';
 import { hasContentBody, type RecruitmentPostFormValues } from '../model/values';
@@ -22,6 +22,7 @@ export interface ContentSectionProps {
  *
  * 편집기에 사진 버튼이 없다(`onUploadImage` 를 넘기지 않는다). 백엔드가 본문 이미지 노드를 400 으로
  * 거절해서, 사진은 그 아래 첨부 칸(`ImageAttachmentField`)으로 붙인다. 첫 장이 목록 썸네일이다.
+ * 예전 글의 본문 사진은 읽을 때 이미 빠져 있고(`stripContentImages`), 그랬으면 첨부 칸 위에 알린다.
  */
 export function ContentSection({ values, onChange }: ContentSectionProps) {
   return (
@@ -54,6 +55,11 @@ export function ContentSection({ values, onChange }: ContentSectionProps) {
       </Field>
 
       <div className="pb-4">
+        {values.contentImagesRemoved ? (
+          <Callout tone="warning" className="mb-3">
+            본문에 넣었던 사진은 저장할 때 빠져요. 필요한 사진은 아래에 다시 첨부해 주세요.
+          </Callout>
+        ) : null}
         <ImageAttachmentField
           value={values.attachments}
           onChange={(attachments) => onChange({ attachments })}
