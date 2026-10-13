@@ -113,9 +113,13 @@ export function SiteHeader() {
       {/* 탭이 넷이 되어 md 경계(768px)의 여유가 줄었다. 이름이 5자 이상이거나 관리자 계정이면 768px 에서 탭과
           우측 글자가 음절 사이에서 줄바꿈되므로(실측) `whitespace-nowrap` 으로 막고, 탭 사이는 lg 미만에서만
           16px 로 좁힌다. */}
-      {/* 화면 맨 위에 붙어 보여 위에만 8px 를 더 둔다(`pt-2`). 아래 로고 줄과의 간격은 그대로다. */}
-      <div className="mx-auto hidden h-10 max-w-6xl items-center px-6 pt-2 whitespace-nowrap md:flex">
-        <ServiceLogoToggle size="desktop" />
+      {/* 화면 맨 위에 붙어 보여 위에만 8px 를 더 둔다(`pt-2`). 아래 로고 줄과의 간격은 그대로다.
+          아래의 아주 연한 가로선(`gray-100`)은 화면 끝까지 닿아야 해서 폭을 제한한 안쪽 상자가 아니라
+          이 바깥 상자에 둔다. */}
+      <div className="hidden border-b border-gray-100 md:block">
+        <div className="mx-auto flex h-10 max-w-6xl items-center px-6 pt-2 whitespace-nowrap">
+          <ServiceLogoToggle size="desktop" />
+        </div>
       </div>
       <div className="mx-auto hidden h-14 max-w-6xl items-stretch justify-between px-6 whitespace-nowrap md:flex">
         <div className="flex items-center gap-10">
