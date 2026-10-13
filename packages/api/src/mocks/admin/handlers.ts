@@ -4,6 +4,7 @@ import { contentHandlers } from './content';
 import { dashboardHandlers } from './dashboard';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
+import { recommendWeightsHandlers } from './recommend-weights';
 import { rejectionHandlers } from './rejections';
 import { reviewHandlers } from './review';
 import { serviceFeedbackHandlers } from './serviceFeedbacks';
@@ -34,4 +35,5 @@ export const adminHandlers: HttpHandler[] = [
   ...memberHandlers,
   ...noticeHandlers,
   ...serviceFeedbackHandlers,
+  ...recommendWeightsHandlers,
 ];
