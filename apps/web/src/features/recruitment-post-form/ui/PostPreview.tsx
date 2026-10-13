@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { KIND_LABELS, OPERATION_TYPE_LABELS } from '@/entities/side-study/model/labels';
 import { parseLocalDate } from '@/shared/lib/localDate';
+import { AttachedImages } from '@/shared/ui/AttachedImages';
 import { POSITION_OPTION_LABELS } from '../model/options';
 import { hasContentBody, type RecruitmentPostFormValues } from '../model/values';
 import { RichTextView } from '@ogonggo/ui/src/editor/RichTextEditor';
@@ -50,7 +51,9 @@ export interface PostPreviewProps {
  * 어떤 자리에 보이는가** 이고, 그 자리 일곱 칸과 본문 세 구역은 그쪽과 같은 순서다.
  *
  * 모집 상세 내용은 편집기와 같은 노드·클래스로 읽기 전용으로 그린다(`RichTextView`). 상세 화면의
- * `LexicalContent` 는 서버 전용 모듈이라 이 클라이언트 화면이 부를 수 없다.
+ * `LexicalContent` 는 서버 전용 모듈이라 이 클라이언트 화면이 부를 수 없다. 첨부 사진은 그 아래에
+ * 상세 화면과 같은 `AttachedImages` 로, 첨부 칸 순서대로 그린다. 다 올라간 것만 보인다 — 저장 요청
+ * `imageIds` 에 실리는 것이 그것뿐이다.
  */
 export function PostPreview({ values }: PostPreviewProps) {
   const meta = [
@@ -58,6 +61,9 @@ export function PostPreview({ values }: PostPreviewProps) {
     values.progressMethod ? OPERATION_TYPE_LABELS[values.progressMethod] : undefined,
     values.activityDurationMonths ? `${values.activityDurationMonths}개월` : undefined,
   ].filter((value): value is string => value !== undefined);
+  const images = values.attachments.flatMap((item) =>
+    item.status === 'done' && item.id ? [{ id: item.id, url: item.url }] : [],
+  );
 
   const sections: { label: string; filled: boolean; body: ReactNode }[] = [
     {
@@ -67,8 +73,13 @@ export function PostPreview({ values }: PostPreviewProps) {
     },
     {
       label: '모집 상세 내용',
-      filled: hasContentBody(values),
-      body: <RichTextView content={values.content} />,
+      filled: hasContentBody(values) || images.length > 0,
+      body: (
+        <div className="flex flex-col gap-6">
+          {hasContentBody(values) && <RichTextView content={values.content} />}
+          <AttachedImages images={images} />
+        </div>
+      ),
     },
     {
       label: '지원 자격 및 전형',
