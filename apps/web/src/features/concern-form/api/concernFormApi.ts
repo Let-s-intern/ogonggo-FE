@@ -12,9 +12,15 @@ import type { ConcernFormValues } from '../model/values';
  * 생성 함수의 반환 타입은 `{ data, status, headers }` 봉투지만 `httpClient` 는 본문을 그대로 돌려준다.
  * 2xx 가 아니면 `HttpError` 로 던진다.
  */
-export async function createConcernPost(values: ConcernFormValues): Promise<number> {
+export async function createConcernPost({
+  category,
+  title,
+  content,
+}: ConcernFormValues): Promise<number> {
   const response = (await createConcern({
-    ...values,
+    category,
+    title,
+    content,
     imageIds: [],
   })) as unknown as SuccessResponseCreateConcernResponse;
   const id = response.data?.id;
@@ -30,10 +36,10 @@ export async function createConcernPost(values: ConcernFormValues): Promise<numb
  */
 export async function updateConcernPost(
   id: number,
-  values: ConcernFormValues,
+  { category, title, content }: ConcernFormValues,
   imageIds: string[],
 ): Promise<void> {
-  await replaceMyConcern(id, { ...values, imageIds });
+  await replaceMyConcern(id, { category, title, content, imageIds });
 }
 
 /**
