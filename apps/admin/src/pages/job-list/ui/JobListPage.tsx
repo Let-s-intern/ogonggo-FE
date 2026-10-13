@@ -197,7 +197,8 @@ export function JobListPage() {
 
       {isPickUnknown && todayJobs.isError ? (
         <Callout tone="warning" className="mb-4">
-          오공고 PICK을 불러오지 못해 PICK 칸을 바꿀 수 없습니다. 나머지 목록은 그대로 쓸 수 있습니다.
+          오공고 PICK을 불러오지 못해 PICK 칸을 바꿀 수 없습니다. 나머지 목록은 그대로 쓸 수
+          있습니다.
         </Callout>
       ) : null}
 

@@ -94,40 +94,40 @@
 
 ## 한눈에 보기
 
-| #   | 페이지                       | 조작                          | 메서드 · 경로                                | 동작                               |
-| --- | ---------------------------- | ----------------------------- | -------------------------------------------- | ---------------------------------- |
-| 1   | `/` 대시보드                 | 진입                          | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
-| 2   | `/content/jobs`              | 진입·검색·필터·정렬·페이지    | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
-| 3   | `/content/jobs`              | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
-| 4   | `/content/jobs/{id}`         | 진입                          | `GET /jobs/{id}`                             | 상세                               |
-| 5   | `/content/jobs/{id}`         | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·검수 상태                     |
-| 6   | `/content/jobs/{id}`         | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
-| 7   | `/content/jobs/{id}`         | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
-| 8   | `/content/bootcamps`         | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
-| 9   | `/content/bootcamps`         | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
-| 10  | `/content/bootcamps/{id}`    | 진입                          | `GET /bootcamps/{id}`                        | 상세                               |
-| 11  | `/content/bootcamps/{id}`    | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
-| 12  | `/content/bootcamps/{id}`    | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
-| 13  | `/content/bootcamps/{id}`    | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
-| 14  | `/content/side-studies`      | 진입·검색·필터·정렬·페이지    | `GET /side-studies`                          | 목록                               |
-| 15  | `/content/side-studies/{id}` | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
-| 16  | `/content/side-studies/{id}` | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
-| 17  | `/ads/review`                | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
-| —   | `/ads/review`                | 이전·다음 (버튼 또는 `A`/`D`) | 없음                                         | 화면 안에서만 이동한다             |
-| 18  | `/ads/review`                | Space·Backspace 후 저장하기   | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
-| 19  | `/ads/review`                | 되돌리기                      | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
-| 20  | `/ads/review`                | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
-| 21  | `/ads/rejections`            | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
-| 22  | `/ads/rejections`            | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
-| 23  | `/members/users`             | 진입·검색·필터·페이지         | `GET /general-members`                       | 목록. 백엔드 있음                  |
-| 24  | `/members/users/{id}`        | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
-| 25  | `/members/companies`         | 진입·검색·필터·페이지         | `GET /company-members`                       | 목록. 백엔드 있음                  |
-| 26  | `/members/companies/{id}`    | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
-| 27  | `/support/notices`           | 진입·페이지                   | `GET /notices`                               | 목록. 본문은 싣지 않음             |
-| 28  | `/support/notices`           | 행 클릭                       | `GET /notices/{id}`                          | 본문을 받아 수정 폼을 연다         |
-| 29  | `/support/notices`           | 새 공지 → 저장                | `POST /notices`                              | 등록                               |
-| 30  | `/support/notices`           | 수정 폼 → 저장                | `PATCH /notices/{id}`                        | 보낸 값만 수정                     |
-| 31  | `/support/notices`           | 수정 폼 → 삭제                | `DELETE /notices/{id}`                       | 소프트 삭제                        |
+| #   | 페이지                          | 조작                          | 메서드 · 경로                                | 동작                               |
+| --- | ------------------------------- | ----------------------------- | -------------------------------------------- | ---------------------------------- |
+| 1   | `/` 대시보드                    | 진입                          | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
+| 2   | `/content/jobs`                 | 진입·검색·필터·정렬·페이지    | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
+| 3   | `/content/jobs`                 | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
+| 4   | `/content/jobs/{id}`            | 진입                          | `GET /jobs/{id}`                             | 상세                               |
+| 5   | `/content/jobs/{id}`            | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·검수 상태                     |
+| 6   | `/content/jobs/{id}`            | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
+| 7   | `/content/jobs/{id}`            | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
+| 8   | `/content/bootcamps`            | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
+| 9   | `/content/bootcamps`            | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
+| 10  | `/content/bootcamps/{id}`       | 진입                          | `GET /bootcamps/{id}`                        | 상세                               |
+| 11  | `/content/bootcamps/{id}`       | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
+| 12  | `/content/bootcamps/{id}`       | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
+| 13  | `/content/bootcamps/{id}`       | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
+| 14  | `/content/side-studies`         | 진입·검색·필터·정렬·페이지    | `GET /side-studies`                          | 목록                               |
+| 15  | `/content/side-studies/{id}`    | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
+| 16  | `/content/side-studies/{id}`    | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
+| 17  | `/ads/review`                   | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
+| —   | `/ads/review`                   | 이전·다음 (버튼 또는 `A`/`D`) | 없음                                         | 화면 안에서만 이동한다             |
+| 18  | `/ads/review`                   | Space·Backspace 후 저장하기   | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
+| 19  | `/ads/review`                   | 되돌리기                      | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
+| 20  | `/ads/review`                   | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
+| 21  | `/ads/rejections`               | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
+| 22  | `/ads/rejections`               | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
+| 23  | `/members/users`                | 진입·검색·필터·페이지         | `GET /general-members`                       | 목록. 백엔드 있음                  |
+| 24  | `/members/users/{id}`           | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
+| 25  | `/members/companies`            | 진입·검색·필터·페이지         | `GET /company-members`                       | 목록. 백엔드 있음                  |
+| 26  | `/members/companies/{id}`       | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
+| 27  | `/support/notices`              | 진입·페이지                   | `GET /notices`                               | 목록. 본문은 싣지 않음             |
+| 28  | `/support/notices`              | 행 클릭                       | `GET /notices/{id}`                          | 본문을 받아 수정 폼을 연다         |
+| 29  | `/support/notices`              | 새 공지 → 저장                | `POST /notices`                              | 등록                               |
+| 30  | `/support/notices`              | 수정 폼 → 저장                | `PATCH /notices/{id}`                        | 보낸 값만 수정                     |
+| 31  | `/support/notices`              | 수정 폼 → 삭제                | `DELETE /notices/{id}`                       | 소프트 삭제                        |
 | 32  | `/placements/recommend-weights` | 진입                          | `GET /lets-career-content-recommend-weights` | 추천 점수 여덟 칸                  |
 | 33  | `/placements/recommend-weights` | 저장                          | `PUT /lets-career-content-recommend-weights` | 여덟 칸 전체 교체                  |
 
