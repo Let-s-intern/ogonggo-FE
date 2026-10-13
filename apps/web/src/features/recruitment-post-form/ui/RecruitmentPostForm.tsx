@@ -23,6 +23,7 @@ import { ContentSection } from './ContentSection';
 import { FormSection } from './FormSection';
 import { PostPreview } from './PostPreview';
 import { useMediaQuery } from '@/shared/lib/useMediaQuery';
+import { isUploadingAttachments } from '@/shared/ui/ImageAttachmentField';
 
 export interface RecruitmentPostFormProps {
   /** 있으면 수정, 없으면 새 글. 작성한 모집글 표에서 넘어올 때만 있다. */
@@ -102,6 +103,8 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  /** 첨부 사진을 올리는 중. 끝나기 전에 저장하면 그 사진이 `imageIds` 에서 빠지므로 저장 버튼을 막는다. */
+  const uploading = isUploadingAttachments(values.attachments);
 
   useEffect(() => {
     if (postId === undefined) {
@@ -149,7 +152,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
    * 전부와 정책 동의를 본다.
    */
   const save = async (saveMode: CreateRecruitmentPostRequestSaveMode) => {
-    if (pending) {
+    if (pending || uploading) {
       return;
     }
     const invalid = saveMode === 'DRAFT' ? validateForDraft(values) : validateForPublish(values);
@@ -291,14 +294,14 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
           <Button
             type="button"
             variant="secondary"
-            disabled={pending}
+            disabled={pending || uploading}
             onClick={() => void save('DRAFT')}
             className="w-full max-w-72"
           >
             임시저장
           </Button>
         )}
-        <Button type="submit" disabled={pending} className="w-full max-w-80">
+        <Button type="submit" disabled={pending || uploading} className="w-full max-w-80">
           {submitLabel}
         </Button>
       </div>
@@ -312,7 +315,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
           <Button
             type="button"
             variant="secondary"
-            disabled={pending}
+            disabled={pending || uploading}
             onClick={() => void save('DRAFT')}
             className="flex-1 border-0 bg-gray-100"
           >
@@ -324,7 +327,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
             다음
           </Button>
         ) : (
-          <Button type="submit" disabled={pending} className="flex-1">
+          <Button type="submit" disabled={pending || uploading} className="flex-1">
             {submitLabel}
           </Button>
         )}

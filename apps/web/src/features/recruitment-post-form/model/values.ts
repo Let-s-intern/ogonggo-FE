@@ -7,6 +7,7 @@ import type {
   JsonNode,
   RecruitmentPostFormResponse,
 } from '@ogonggo/api';
+import { toImageAttachments, type ImageAttachment } from '@/shared/ui/ImageAttachmentField';
 import { lexicalToText } from '../lib/content';
 
 /**
@@ -44,6 +45,8 @@ export interface RecruitmentPostFormValues {
    * 빈 배열을 보내면 사진이 지워진다.
    */
   imageIds: string[];
+  /** 첨부 칸의 사진. 미리보기 순서가 곧 `imageIds` 순서이고 첫 장이 목록 썸네일이다. */
+  attachments: ImageAttachment[];
 }
 
 export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
@@ -64,6 +67,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
   contactValue: '',
   agreedToPolicy: false,
   imageIds: [],
+  attachments: [],
 };
 
 /**
@@ -91,6 +95,7 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
     contactValue: form.contactValue ?? '',
     agreedToPolicy: form.agreedToPolicy,
     imageIds: form.images.map((image) => image.id),
+    attachments: toImageAttachments(form.images),
   };
 }
 
