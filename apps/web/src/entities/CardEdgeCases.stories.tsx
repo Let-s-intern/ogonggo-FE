@@ -26,6 +26,9 @@ import { SideStudyCard } from './side-study/ui/SideStudyCard';
  * | 마감된 글 | 251.5px | 251.5 / 251.5 / 251.5 | 일치 |
  * | 북마크 꺼짐·켜짐 | 251.5px | 251.5 / 251.5 / 251.5 | 일치 |
  *
+ * 2026-10-13 `SideStudyCard` 에 8:5 글 썸네일이 생긴 뒤로는 사이드·스터디 카드(356.3px)가 모든 행에서
+ * 가장 높아 칸 높이가 전부 356.3px 이고, 세 카드(썸네일 있음 줄은 넷)가 모두 그만큼 늘어 아랫변이 일치한다.
+ *
  * 이 화면이 처음 찾아낸 어긋남은 둘이었고 둘 다 `JobCard` 였다. 하나는 `h-full` 이 없어 칸을
  * 채우지 않은 것(한 줄·두 줄이 섞인 행에서 20px), 하나는 마감된 공고에서 D-day 배지가 통째로
  * 사라져 메타 줄이 20px 에서 16px 이 된 것(4px)이다. 둘 다
@@ -101,9 +104,12 @@ export const TitleOneLineVsTwo: StoryObj = {
 /**
  * 썸네일이 있을 때와 없을 때. 셋이 같은 폴백으로 떨어진다 — 흰 배경 위 오공고 로고다.
  * `JobCard` 는 `CompanyLogo` 가 회사 로고를 모를 때, `BootcampCard` 는
- * `representativeImageUrl` 이 빌 때, `SideStudyCard` 는 `AuthorThumbnail` 이 작성자 프로필
- * 이미지를 못 받았을 때이고, 셋 다 `shared/ui/Thumbnail.tsx` 를 거친다. 로고 크기만 박스 폭을
- * 따라 다르다 — 8:5 썸네일에서 96px, 48px 작성자 썸네일에서 24px.
+ * `representativeImageUrl` 이 빌 때, `SideStudyCard` 는 작성자 프로필(`AuthorThumbnail`)과 글
+ * 썸네일(`PostThumbnail`, `thumbnailUrl`)이 비었을 때이고, 셋 다 `shared/ui/Thumbnail.tsx` 를
+ * 거친다. 로고 크기만 박스 폭을 따라 다르다 — 8:5 썸네일에서 96px, 48px 작성자 썸네일에서 24px.
+ *
+ * `SideStudyCard` 는 사진이 두 자리라 `썸네일 있음` 줄 넷째 칸에 글 사진만 있는 카드를 더 둔다.
+ * 사진이 있어도 없어도 8:5 상자가 남아 같은 행의 높이가 같다.
  *
  * `JobCard` 의 로고는 크롤러가 실제로 수집한 회사만 있다
  * (`entities/job/model/company-logo.ts`). 윗줄의 `롯데컬처웍스` 는 그 목록에 있고, 목데이터의
@@ -128,8 +134,12 @@ export const NoThumbnail: StoryObj = {
             sideStudy={{
               ...SIDE_STUDY_MOCK,
               author: { userId: 1, nickname: '오공고', profileImageUrl: '/icon-192.png' },
+              thumbnailUrl: '/icon-192.png',
             }}
           />
+        </li>
+        <li data-card="side-study-photo-only">
+          <SideStudyCard sideStudy={{ ...SIDE_STUDY_MOCK, thumbnailUrl: '/icon-192.png' }} />
         </li>
       </Row>
       <Row label="썸네일 없음">

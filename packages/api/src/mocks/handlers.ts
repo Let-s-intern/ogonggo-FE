@@ -588,6 +588,9 @@ const sortRecruitmentPosts = (
 /**
  * 목록 항목. `positions` 는 백엔드가 목록 응답에 더하는 중이라(LC-3434) 생성 타입에 아직 없어
  * 덧붙여 둔다. codegen 뒤 생성 타입에 생기면 이 덧붙임을 지운다.
+ *
+ * `thumbnailUrl` 은 백엔드처럼 첫 번째 첨부 사진이다. 픽스처에서 사진이 있는 글은 id 1·3·12 라
+ * 목록에 사진 있는 카드와 없는 카드가 섞인다.
  */
 const toRecruitmentPostSummary = ({
   id,
@@ -607,6 +610,7 @@ const toRecruitmentPostSummary = ({
   applicationCount,
   bookmarkCount,
   bookmarked,
+  images,
 }: RecruitmentPostFixture): RecruitmentPostSummaryResponse &
   Pick<RecruitmentPostFixture, 'positions'> => ({
   id,
@@ -621,6 +625,7 @@ const toRecruitmentPostSummary = ({
   positions,
   recruitmentStartDate,
   recruitmentEndDate,
+  thumbnailUrl: images[0]?.url,
   viewCount,
   commentCount,
   applicationCount,
