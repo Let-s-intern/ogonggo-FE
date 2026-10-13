@@ -7,6 +7,7 @@ import type { SideStudyDetail } from '@/entities/side-study/model/types';
 import { RecruitmentPostComments } from '@/features/recruitment-post-comments';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
+import { AttachedImages } from '@/shared/ui/AttachedImages';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { LexicalContent } from '@/shared/ui/LexicalContent';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
@@ -58,19 +59,26 @@ export async function fetchSideStudyDetail(postId: number): Promise<SideStudyDet
  * 사라진다 — 채용공고 상세의 `buildSections`와 같은 규칙이다.
  *
  * `content`는 Lexical EditorState JSON 이라 `LexicalContent` 가 서식(제목·목록·링크 등) 을
- * 살려 그린다. 보일 글자가 없으면 다른 섹션처럼 뺀다.
+ * 살려 그린다. 예전 글의 본문 사진도 그 안에서 지금처럼 그린다. 첨부 사진(`images`)은 본문 아래
+ * `AttachedImages` 가 그린다. 보일 글자도 첨부 사진도 없을 때만 다른 섹션처럼 뺀다 — 사진만 있는
+ * 글도 섹션이 남는다.
  */
 function buildSections(sideStudy: SideStudyDetail): { label: string; body?: ReactNode }[] {
   const plain = (value?: string) =>
     value ? <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{value}</p> : undefined;
+  const hasText = hasLexicalText(sideStudy.content);
 
   return [
     { label: '한 줄 소개', body: plain(sideStudy.summary) },
     {
       label: '모집 상세 내용',
-      body: hasLexicalText(sideStudy.content) ? (
-        <LexicalContent content={sideStudy.content} className="mt-2" />
-      ) : undefined,
+      body:
+        hasText || sideStudy.images.length > 0 ? (
+          <div className="mt-2 flex flex-col gap-6">
+            {hasText && <LexicalContent content={sideStudy.content} />}
+            <AttachedImages images={sideStudy.images} />
+          </div>
+        ) : undefined,
     },
     { label: '지원 자격 및 전형', body: plain(sideStudy.eligibilityAndSelectionProcess) },
   ];
