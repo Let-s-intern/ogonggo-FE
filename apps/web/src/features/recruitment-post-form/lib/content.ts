@@ -48,3 +48,46 @@ export function lexicalToText(content: unknown): string {
   }
   return childrenOf(root).map(collectText).join('\n').replace(/\n+$/, '');
 }
+
+/** 이미지 노드를 뺀 노드. 아래에 이미지가 있으면 `removed` 를 켠다. */
+function withoutImages(node: unknown, removed: { value: boolean }): unknown {
+  if (!isObject(node) || !Array.isArray(node.children)) {
+    return node;
+  }
+  const children = node.children.flatMap((child: unknown) => {
+    if (isObject(child) && child.type === 'image') {
+      removed.value = true;
+      return [];
+    }
+    return [withoutImages(child, removed)];
+  });
+  return { ...node, children };
+}
+
+/**
+ * 본문에서 이미지 노드를 지운다. 예전 글은 편집기 사진 버튼으로 본문에 사진을 넣었는데, 백엔드가 이제
+ * 본문 이미지 노드를 400 으로 거절한다. 그대로 두면 그 글을 고쳐 저장할 수 없다.
+ *
+ * 지운 사진을 첨부로 옮기지는 않는다 — 이미 글에 붙은 이미지라 `imageIds` 로 보내도 백엔드가 받지
+ * 않는다(`IMAGE_ASSET_NOT_AVAILABLE`). 지웠는지(`removed`)를 돌려줘 폼이 다시 첨부하라고 알린다.
+ *
+ * 문자열로 온 EditorState 도 받는다(`lexicalToText` 와 같은 이유). 읽지 못하면 그대로 돌려준다.
+ */
+export function stripContentImages(content: unknown): { content: unknown; removed: boolean } {
+  let state: unknown = content;
+  if (typeof content === 'string') {
+    try {
+      state = JSON.parse(content) as unknown;
+    } catch {
+      return { content, removed: false };
+    }
+  }
+  if (!isObject(state) || !isObject(state.root)) {
+    return { content, removed: false };
+  }
+  const removed = { value: false };
+  const root = withoutImages(state.root, removed);
+  return removed.value
+    ? { content: { ...state, root }, removed: true }
+    : { content, removed: false };
+}

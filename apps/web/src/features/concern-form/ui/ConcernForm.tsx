@@ -5,9 +5,16 @@ import { ConcernSummaryResponseCategory } from '@ogonggo/api';
 import { Button, Chip, Input, Textarea, cn } from '@ogonggo/ui';
 import { CONCERN_CATEGORIES, CONCERN_CATEGORY_LABELS } from '@/entities/concern/model/labels';
 import {
+  ImageAttachmentField,
+  isUploadingAttachments,
+  toImageAttachments,
+  type ImageAttachment,
+} from '@/shared/ui/ImageAttachmentField';
+import {
   CONTENT_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   checkConcernForm,
+  type ConcernFormInitial,
   type ConcernFormValues,
 } from '../model/values';
 
@@ -19,7 +26,7 @@ const CONTENT_PLACEHOLDER =
 
 export interface ConcernFormProps {
   /** 수정 모드의 처음 값. 없으면 첫 주제(`공고 질문`) 를 고른 빈 폼이다. */
-  initial?: ConcernFormValues;
+  initial?: ConcernFormInitial;
   /** 등록 버튼 글자. 작성은 `등록하기`, 수정은 `수정하기`. */
   submitLabel: string;
   /** 보내는 동안 등록 버튼 글자. 작성은 `등록 중`, 수정은 `수정 중`. */
@@ -32,8 +39,9 @@ export interface ConcernFormProps {
 }
 
 /**
- * 고민 작성·수정 폼(시안 `고민 올리기 모달.png`). 주제 칩 다섯에서 하나, 제목, 내용, 취소·등록.
- * 시안의 이미지 첨부 칸은 그리지 않는다 — 저장 요청에 이미지 필드가 없다(PRD 결정 9).
+ * 고민 작성·수정 폼(시안 `고민 올리기 모달.png`). 주제 칩 다섯에서 하나, 제목, 내용, 이미지 첨부, 취소·등록.
+ * 사진은 고르는 즉시 올라가고(`ImageAttachmentField`), 올리는 중에는 등록을 막는다 — 끝나기 전에 보내면 그
+ * 사진이 `imageIds` 에서 빠진다.
  *
  * 값은 이 안에서 들고 있고 마운트될 때의 `initial` 로 시작한다. 모달이 열릴 때마다 새로 마운트되어
  * 앞서 쓰던 글이 남지 않는다.
@@ -57,16 +65,20 @@ export function ConcernForm({
   const [category, setCategory] = useState(initial?.category ?? DEFAULT_CATEGORY);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [content, setContent] = useState(initial?.content ?? '');
+  const [attachments, setAttachments] = useState<ImageAttachment[]>(() =>
+    toImageAttachments(initial?.images ?? []),
+  );
 
-  const values: ConcernFormValues = { category, title, content };
+  const values: ConcernFormValues = { category, title, content, attachments };
   const check = checkConcernForm(values);
+  const uploading = isUploadingAttachments(attachments);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!check.submittable || pending) {
+    if (!check.submittable || uploading || pending) {
       return;
     }
-    onSubmit({ category, title: title.trim(), content: content.trim() });
+    onSubmit({ category, title: title.trim(), content: content.trim(), attachments });
   };
 
   return (
@@ -143,6 +155,15 @@ export function ConcernForm({
         ) : null}
       </div>
 
+      <ImageAttachmentField
+        value={attachments}
+        onChange={setAttachments}
+        usage="CONCERN"
+        label="이미지 첨부"
+        labelClassName="pb-3 text-gray-900 md:text-base"
+        notice="이름, 연락처 등 개인정보는 가린 뒤 첨부해주세요."
+      />
+
       <div className="flex gap-2.5">
         <Button
           type="button"
@@ -153,7 +174,11 @@ export function ConcernForm({
         >
           취소
         </Button>
-        <Button type="submit" disabled={!check.submittable || pending} className="h-12 flex-1">
+        <Button
+          type="submit"
+          disabled={!check.submittable || uploading || pending}
+          className="h-12 flex-1"
+        >
           {pending ? pendingLabel : submitLabel}
         </Button>
       </div>

@@ -7,7 +7,12 @@ import type {
   JsonNode,
   RecruitmentPostFormResponse,
 } from '@ogonggo/api';
-import { lexicalToText } from '../lib/content';
+import {
+  toImageAttachments,
+  toImageIds,
+  type ImageAttachment,
+} from '@/shared/ui/ImageAttachmentField';
+import { lexicalToText, stripContentImages } from '../lib/content';
 
 /**
  * 작성 화면이 들고 있는 값(PRD 5 절). `CreateRecruitmentPostRequest` 와 한 칸씩 짝이 맞되,
@@ -30,8 +35,11 @@ export interface RecruitmentPostFormValues {
   content?: JsonNode;
   /** `content` 의 서식 없는 글자. 칸이 채워졌는지 볼 때 쓴다. */
   contentText: string;
-  /** `content` 에 이미지가 있는지. 이미지만 넣은 본문도 채워진 것으로 본다. */
-  contentHasImage: boolean;
+  /**
+   * 읽어 온 본문에서 이미지 노드를 지웠는지(`stripContentImages`). 요청에는 실리지 않고, 켜져 있으면
+   * 첨부 칸 위에 사진을 다시 첨부하라는 안내를 띄운다.
+   */
+  contentImagesRemoved: boolean;
   eligibilityAndSelectionProcess: string;
   recruitmentStartDate: string;
   recruitmentEndDate: string;
@@ -40,10 +48,10 @@ export interface RecruitmentPostFormValues {
   contactValue: string;
   agreedToPolicy: boolean;
   /**
-   * 첨부 사진의 id. 읽어 온 글의 `images` 를 그대로 들고 있다가 저장 때 보낸다 — 수정은 전체 교체라
-   * 빈 배열을 보내면 사진이 지워진다.
+   * 첨부 칸의 사진. 읽어 온 글의 `images` 로 시작한다. 미리보기 순서가 곧 `imageIds` 순서이고 첫 장이
+   * 목록 썸네일이다. 수정은 전체 교체라 남은 사진을 모두 보내야 한다 — 빈 배열이면 사진이 지워진다.
    */
-  imageIds: string[];
+  attachments: ImageAttachment[];
 }
 
 export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
@@ -55,7 +63,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
   technologyStacks: [],
   summary: '',
   contentText: '',
-  contentHasImage: false,
+  contentImagesRemoved: false,
   eligibilityAndSelectionProcess: '',
   recruitmentStartDate: '',
   recruitmentEndDate: '',
@@ -63,7 +71,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
   contactMethod: '',
   contactValue: '',
   agreedToPolicy: false,
-  imageIds: [],
+  attachments: [],
 };
 
 /**
@@ -71,6 +79,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
  * 그대로 받는다 — 수정 화면에서도 동의를 다시 받는다.
  */
 export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPostFormValues {
+  const { content, removed } = stripContentImages(form.content);
   return {
     title: form.title,
     recruitmentType: form.recruitmentType ?? '',
@@ -80,9 +89,9 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
       form.activityDurationMonths == null ? '' : String(form.activityDurationMonths),
     technologyStacks: form.technologyStacks,
     summary: form.summary ?? '',
-    content: form.content,
-    contentText: lexicalToText(form.content),
-    contentHasImage: JSON.stringify(form.content ?? null).includes('"type":"image"'),
+    content: content as JsonNode | undefined,
+    contentText: lexicalToText(content),
+    contentImagesRemoved: removed,
     eligibilityAndSelectionProcess: form.eligibilityAndSelectionProcess ?? '',
     recruitmentStartDate: form.recruitmentStartDate ?? '',
     recruitmentEndDate: form.recruitmentEndDate ?? '',
@@ -90,13 +99,13 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
     contactMethod: form.contactMethod ?? '',
     contactValue: form.contactValue ?? '',
     agreedToPolicy: form.agreedToPolicy,
-    imageIds: form.images.map((image) => image.id),
+    attachments: toImageAttachments(form.images),
   };
 }
 
-/** 모집 상세 내용이 채워졌는지. 글자나 이미지가 하나라도 있으면 채워진 것이다. */
+/** 모집 상세 내용이 채워졌는지. 사진은 본문이 아니라 첨부라 글자만 본다. */
 export function hasContentBody(values: RecruitmentPostFormValues): boolean {
-  return values.contentText.trim().length > 0 || values.contentHasImage;
+  return values.contentText.trim().length > 0;
 }
 
 /** 빈 칸은 보내지 않는다. 숫자 칸은 고르지 않았으면 값이 없다. */
@@ -131,7 +140,7 @@ export function toCreateRequest(
     contactMethod: values.contactMethod || undefined,
     contactValue: textOrUndefined(values.contactValue),
     agreedToPolicy: values.agreedToPolicy,
-    imageIds: values.imageIds,
+    imageIds: toImageIds(values.attachments),
     saveMode,
   };
 }

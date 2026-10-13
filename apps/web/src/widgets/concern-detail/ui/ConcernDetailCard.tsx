@@ -4,6 +4,7 @@ import { ConcernCategoryBadge } from '@/entities/concern/ui/ConcernCategoryBadge
 import { OfficialAnswerBadge } from '@/entities/concern/ui/OfficialAnswerBadge';
 import { RelativeTime } from '@/entities/concern/ui/RelativeTime';
 import { AuthorAvatar, ConcernMetaStats } from '@/features/concern-comments';
+import { AttachedImages } from '@/shared/ui/AttachedImages';
 import { ConcernOwnerActions } from './ConcernOwnerActions';
 
 export interface ConcernDetailCardProps {
@@ -14,7 +15,7 @@ export interface ConcernDetailCardProps {
  * `v13 취준고민/상세.webp`, `모바일 상세.webp` 의 본문 카드 — 카테고리 배지와 `오공고 답변` → 제목 →
  * 작성자 → 시각·조회수·답변 수 → 가는 선 → 본문. 본문은 일반 텍스트라 줄바꿈만 살려 그린다.
  *
- * 시안에 있는 본문 이미지 세 장은 이미지 API 가 없어 그리지 않는다(PRD 결정 9).
+ * 첨부 사진(`images`)은 본문 아래 `AttachedImages` 가 그린다. 사진이 없으면 그 자리의 간격도 두지 않는다.
  *
  * 작성자 줄 오른쪽 끝의 `수정 | 삭제` 는 내 글일 때만, 마운트 뒤에 나타난다(`ConcernOwnerActions`).
  *
@@ -41,7 +42,7 @@ export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
           title={concern.title}
           category={concern.category}
           content={concern.content}
-          imageIds={concern.images.map((image) => image.id)}
+          images={concern.images}
         />
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
@@ -56,6 +57,11 @@ export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
       <p className="text-sm leading-relaxed break-words whitespace-pre-line text-gray-800">
         {concern.content}
       </p>
+      {concern.images.length > 0 ? (
+        <div className="mt-4">
+          <AttachedImages images={concern.images} />
+        </div>
+      ) : null}
     </article>
   );
 }

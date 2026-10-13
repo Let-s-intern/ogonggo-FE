@@ -1,4 +1,6 @@
+import type { ConcernImageResponse } from '@ogonggo/api';
 import type { ConcernCategory } from '@/entities/concern/model/types';
+import type { ImageAttachment } from '@/shared/ui/ImageAttachmentField';
 
 /** 제목 최대 길이. 스펙(`SaveConcernRequest.title` 의 `@maxLength 100`) 과 같다. */
 export const TITLE_MAX_LENGTH = 100;
@@ -6,18 +8,25 @@ export const TITLE_MAX_LENGTH = 100;
 /** 본문 최대 길이. 스펙(`SaveConcernRequest.content` 의 `@maxLength 2000`) 과 같다. */
 export const CONTENT_MAX_LENGTH = 2000;
 
-/** 폼이 들고 있는 값. 저장 요청(`SaveConcernRequest`) 과 한 칸씩 짝이 맞는다. */
+/**
+ * 폼이 들고 있는 값. 저장 요청(`SaveConcernRequest`) 과 한 칸씩 짝이 맞는다. `attachments` 는 첨부 칸의
+ * 사진이고 다 올라간 것의 id 가 `imageIds` 가 된다.
+ */
 export interface ConcernFormValues {
   category: ConcernCategory;
   title: string;
   content: string;
+  attachments: ImageAttachment[];
 }
 
 /** 수정할 고민글. 모달을 수정 모드로 여는 값이고, 폼의 처음 값이 된다. */
-export interface ConcernFormInitial extends ConcernFormValues {
+export interface ConcernFormInitial extends Omit<ConcernFormValues, 'attachments'> {
   id: number;
-  /** 글에 붙은 사진의 id. 수정 저장 때 그대로 보낸다 — 빈 배열을 보내면 사진이 지워진다. */
-  imageIds: string[];
+  /**
+   * 글에 붙은 사진. 첨부 칸의 처음 미리보기가 되고, 저장 때 남은 것의 id 를 보낸다 — 빠진 사진은 백엔드가
+   * 지운다.
+   */
+  images: ConcernImageResponse[];
 }
 
 export interface ConcernFormCheck {
