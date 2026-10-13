@@ -39,6 +39,11 @@ export interface RecruitmentPostFormValues {
   contactMethod: CreateRecruitmentPostRequestContactMethod | '';
   contactValue: string;
   agreedToPolicy: boolean;
+  /**
+   * 첨부 사진의 id. 읽어 온 글의 `images` 를 그대로 들고 있다가 저장 때 보낸다 — 수정은 전체 교체라
+   * 빈 배열을 보내면 사진이 지워진다.
+   */
+  imageIds: string[];
 }
 
 export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
@@ -58,6 +63,7 @@ export const EMPTY_FORM_VALUES: RecruitmentPostFormValues = {
   contactMethod: '',
   contactValue: '',
   agreedToPolicy: false,
+  imageIds: [],
 };
 
 /**
@@ -84,6 +90,7 @@ export function toFormValues(form: RecruitmentPostFormResponse): RecruitmentPost
     contactMethod: form.contactMethod ?? '',
     contactValue: form.contactValue ?? '',
     agreedToPolicy: form.agreedToPolicy,
+    imageIds: form.images.map((image) => image.id),
   };
 }
 
@@ -124,6 +131,7 @@ export function toCreateRequest(
     contactMethod: values.contactMethod || undefined,
     contactValue: textOrUndefined(values.contactValue),
     agreedToPolicy: values.agreedToPolicy,
+    imageIds: values.imageIds,
     saveMode,
   };
 }
