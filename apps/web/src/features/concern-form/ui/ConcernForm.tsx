@@ -90,80 +90,85 @@ export function ConcernForm({
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-6">
-      <div>
-        <p id={ids.category} className="pb-3 text-sm font-medium text-gray-900 md:text-base">
-          주제
-        </p>
-        {/* 한 개만 고르는 칩이라 라디오처럼 보이지만 화살표 키 이동은 두지 않았다. 누름 상태를 가진 단추 묶음이다. */}
-        <div role="group" aria-labelledby={ids.category} className="flex flex-wrap gap-2">
-          {CONCERN_CATEGORIES.map((value) => {
-            const selected = value === category;
-            return (
-              <Chip
-                key={value}
-                tone={selected ? 'blue' : 'ghost'}
-                aria-pressed={selected}
-                onClick={() => setCategory(value)}
-                className={cn(
-                  !selected && 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50',
-                )}
-              >
-                {CONCERN_CATEGORY_LABELS[value]}
-              </Chip>
-            );
-          })}
-        </div>
-      </div>
-
-      <div>
-        <div className="flex items-baseline justify-between pb-3">
-          <label htmlFor={ids.title} className="text-sm font-medium text-gray-900 md:text-base">
-            제목
-          </label>
-          <Counter length={title.length} max={TITLE_MAX_LENGTH} />
-        </div>
-        <Input
-          id={ids.title}
-          value={title}
-          placeholder={TITLE_PLACEHOLDER}
-          aria-invalid={check.titleTooLong}
-          aria-describedby={check.titleTooLong ? `${ids.title}-error` : undefined}
-          data-autofocus
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        {check.titleTooLong ? (
-          <p id={`${ids.title}-error`} className="pt-1.5 text-sm text-error">
-            제목은 {TITLE_MAX_LENGTH}자까지 쓸 수 있어요.
+    <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+      {/* 입력 칸만 스크롤하고 아래 버튼 줄은 늘 보이게 둔다(`ConcernFormModal`). */}
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-5 py-1 md:px-7">
+        <div>
+          <p id={ids.category} className="pb-3 text-sm font-medium text-gray-900 md:text-base">
+            주제
           </p>
-        ) : null}
-      </div>
+          {/* 한 개만 고르는 칩이라 라디오처럼 보이지만 화살표 키 이동은 두지 않았다. 누름 상태를 가진 단추 묶음이다. */}
+          <div role="group" aria-labelledby={ids.category} className="flex flex-wrap gap-2">
+            {CONCERN_CATEGORIES.map((value) => {
+              const selected = value === category;
+              return (
+                <Chip
+                  key={value}
+                  tone={selected ? 'blue' : 'ghost'}
+                  aria-pressed={selected}
+                  onClick={() => setCategory(value)}
+                  className={cn(
+                    !selected && 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50',
+                  )}
+                >
+                  {CONCERN_CATEGORY_LABELS[value]}
+                </Chip>
+              );
+            })}
+          </div>
+        </div>
 
-      <div>
-        <label
-          htmlFor={ids.content}
-          className="block pb-3 text-sm font-medium text-gray-900 md:text-base"
-        >
-          내용
-        </label>
-        <RichTextEditor
-          id={ids.content}
-          initialContent={body.content || undefined}
-          onChange={(state, text) => setBody({ content: JSON.stringify(state), contentText: text })}
-          placeholder={CONTENT_PLACEHOLDER}
+        <div>
+          <div className="flex items-baseline justify-between pb-3">
+            <label htmlFor={ids.title} className="text-sm font-medium text-gray-900 md:text-base">
+              제목
+            </label>
+            <Counter length={title.length} max={TITLE_MAX_LENGTH} />
+          </div>
+          <Input
+            id={ids.title}
+            value={title}
+            placeholder={TITLE_PLACEHOLDER}
+            aria-invalid={check.titleTooLong}
+            aria-describedby={check.titleTooLong ? `${ids.title}-error` : undefined}
+            data-autofocus
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          {check.titleTooLong ? (
+            <p id={`${ids.title}-error`} className="pt-1.5 text-sm text-error">
+              제목은 {TITLE_MAX_LENGTH}자까지 쓸 수 있어요.
+            </p>
+          ) : null}
+        </div>
+
+        <div>
+          <label
+            htmlFor={ids.content}
+            className="block pb-3 text-sm font-medium text-gray-900 md:text-base"
+          >
+            내용
+          </label>
+          <RichTextEditor
+            id={ids.content}
+            initialContent={body.content || undefined}
+            onChange={(state, text) =>
+              setBody({ content: JSON.stringify(state), contentText: text })
+            }
+            placeholder={CONTENT_PLACEHOLDER}
+          />
+        </div>
+
+        <ImageAttachmentField
+          value={attachments}
+          onChange={setAttachments}
+          usage="CONCERN"
+          label="이미지 첨부"
+          labelClassName="pb-3 text-gray-900 md:text-base"
+          notice="이름, 연락처 등 개인정보는 가린 뒤 첨부해주세요."
         />
       </div>
 
-      <ImageAttachmentField
-        value={attachments}
-        onChange={setAttachments}
-        usage="CONCERN"
-        label="이미지 첨부"
-        labelClassName="pb-3 text-gray-900 md:text-base"
-        notice="이름, 연락처 등 개인정보는 가린 뒤 첨부해주세요."
-      />
-
-      <div className="flex gap-2.5">
+      <div className="flex shrink-0 gap-2.5 px-5 pt-5 md:px-7">
         <Button
           type="button"
           variant="secondary"
