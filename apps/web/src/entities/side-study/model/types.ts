@@ -1,6 +1,6 @@
 import type { RecruitmentPostDetailResponse, RecruitmentPostSummaryResponse } from '@ogonggo/api';
 
-/** `GET /api/v1/recruitment-posts` 의 목록 항목 하나. 썸네일은 목록 응답에 없다. */
+/** `GET /api/v1/recruitment-posts` 의 목록 항목 하나. 목록 응답의 `thumbnailUrl` 이 첫 첨부 사진이다. */
 export type SideStudySummary = RecruitmentPostSummaryResponse;
 
 /**
