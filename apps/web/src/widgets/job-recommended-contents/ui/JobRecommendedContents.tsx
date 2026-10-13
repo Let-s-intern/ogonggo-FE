@@ -38,6 +38,9 @@ async function fetchRecommendedContents(
   }
 }
 
+/** 채용공고 상세 페이지가 이 위젯에 넘기는 제목. 모달은 `함께 보면 좋아요` 를 넘긴다. */
+export const JOB_PREPARATION_TITLE = '이 공고, 더 탄탄하게 준비하고 싶다면?';
+
 export interface JobRecommendedContentsProps {
   jobId: number;
   /** 구역 제목. 페이지와 모달이 다르다. */
