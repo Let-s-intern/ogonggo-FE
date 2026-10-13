@@ -22,6 +22,8 @@ import { MOCK_VIEWER_NICKNAME, MOCK_VIEWER_USER_ID, minutesAgo } from './recruit
  * - 목 사용자(`MOCK_VIEWER_USER_ID`) 가 쓴 글(id 11) 과 답변(id 1 의 답변 5) — 로그인 상태면
  *   수정·삭제가 보인다.
  * - 사진이 붙은 글: id 1(1장), 2(2장), 11(3장 — 내 글이라 수정해도 사진이 남는지 본다). 나머지는 사진 없음.
+ * - 본문은 Lexical EditorState JSON 문자열이다. id 11 은 굵게·목록·링크가 든 본문이고, id 3 은 Lexical 로
+ *   바꾸기 전에 쓴 예전 글처럼 일반 텍스트 그대로다 — 읽는 쪽이 둘 다 견디는지 본다.
  *   주소는 `apps/web/public/hero/` 의 이미지다.
  * - 고민글 1 번이 답변 화면의 모든 분기를 모았다: 운영자 답변, 글쓴이 답변(`concernAuthor`),
  *   삭제된 답변(남은 답글이 있어 자리를 지킨다), 답글 7 개짜리 답변(미리보기 5 개 뒤에 더보기 2 개).
@@ -97,6 +99,64 @@ const NICKNAMES: Record<number, string | undefined> = {
   [MOCK_VIEWER_USER_ID]: MOCK_VIEWER_NICKNAME,
 };
 
+type LexicalNode = Record<string, unknown>;
+
+const BLOCK = { version: 1, direction: null, format: '', indent: 0 };
+
+const text = (value: string, format = 0): LexicalNode => ({
+  type: 'text',
+  version: 1,
+  text: value,
+  format,
+  detail: 0,
+  mode: 'normal',
+  style: '',
+});
+
+/** `text` 의 `format` 비트. Lexical `IS_BOLD`. */
+const BOLD = 1;
+
+const paragraph = (...children: LexicalNode[]): LexicalNode => ({
+  type: 'paragraph',
+  ...BLOCK,
+  textFormat: 0,
+  textStyle: '',
+  children,
+});
+
+const bulletList = (...items: string[]): LexicalNode => ({
+  type: 'list',
+  ...BLOCK,
+  listType: 'bullet',
+  start: 1,
+  tag: 'ul',
+  children: items.map((item, index) => ({
+    type: 'listitem',
+    ...BLOCK,
+    value: index + 1,
+    children: [text(item)],
+  })),
+});
+
+const link = (url: string, label: string): LexicalNode => ({
+  type: 'link',
+  ...BLOCK,
+  url,
+  rel: 'noreferrer',
+  target: null,
+  title: null,
+  children: [text(label)],
+});
+
+/** Lexical EditorState JSON 문자열. 백엔드가 저장해 그대로 돌려주는 본문 모양이다. */
+const editorState = (...blocks: LexicalNode[]): string =>
+  JSON.stringify({ root: { type: 'root', ...BLOCK, children: blocks } });
+
+/** 줄마다 문단 하나인 본문. 빈 줄은 빈 문단이다. */
+const paragraphs = (body: string): string =>
+  editorState(...body.split('\n').map((line) => (line ? paragraph(text(line)) : paragraph())));
+
+/** `content` 는 줄바꿈으로 문단을 나눈 글이고, 문단마다 한 줄인 EditorState JSON 으로 바꿔 담는다. */
 const concern = (
   id: number,
   category: ConcernCategory,
@@ -109,7 +169,7 @@ const concern = (
   id,
   category,
   title,
-  content,
+  content: paragraphs(content),
   userId,
   nickname: NICKNAMES[userId],
   createdAt: minutesAgo(ago),
@@ -144,19 +204,24 @@ export const CONCERN_FIXTURES: ConcernFixture[] = [
       { id: 'concern-2-image-2', url: '/hero/side-studies.png' },
     ],
   },
-  concern(
-    3,
-    'APPLICATION_INTERVIEW',
-    303,
-    5 * DAY,
-    1530,
-    '자소서 "입사 후 포부" 항목은 어디까지 구체적으로 써야 하나요?',
-    '회사 사업을 잘 모르는 상태에서 포부를 쓰려니 막연한 말만 나옵니다.\n' +
+  // 본문을 Lexical 로 바꾸기 전에 쓴 예전 글. 운영의 id 3 처럼 본문이 일반 텍스트 그대로다.
+  {
+    ...concern(
+      3,
+      'APPLICATION_INTERVIEW',
+      303,
+      5 * DAY,
+      1530,
+      '자소서 "입사 후 포부" 항목은 어디까지 구체적으로 써야 하나요?',
+      '',
+    ),
+    content:
+      '회사 사업을 잘 모르는 상태에서 포부를 쓰려니 막연한 말만 나옵니다.\n' +
       '어느 정도까지 조사해서 써야 하는지 기준이 있을까요?\n\n' +
       '지금은 채용 공고의 우대사항과 회사 홈페이지의 사업 소개를 읽고, 제가 해본 일 중에서 그 사업과 이어지는 것을 두세 가지 골라 포부 첫 문단에 적고 있어요. ' +
       '그런데 이렇게 쓰면 지원하는 곳마다 문장만 바꾼 것처럼 보일까 봐 걱정이 됩니다. ' +
       '면접관이 보기에 회사를 정말 조사한 사람의 글과 검색해서 베낀 글은 어디서 갈리는지, 실제로 서류를 보신 분들의 이야기가 궁금합니다.',
-  ),
+  },
   concern(
     4,
     'SIDE_EXPERIENCE',
@@ -228,7 +293,20 @@ export const CONCERN_FIXTURES: ConcernFixture[] = [
       3 * HOUR,
       18,
       '데이터 직무 신입 포트폴리오에는 어떤 프로젝트를 넣는 게 좋을까요?',
-      '목 모드에서 내가 쓴 고민글입니다. 로그인 상태에서 상세를 열면 수정·삭제가 보여야 합니다.',
+      '',
+    ),
+    // 서식이 든 본문(굵게·글머리 목록·링크). 상세가 서식을 그리고 수정 폼이 서식째 여는지 본다.
+    content: editorState(
+      paragraph(
+        text('목 모드에서 내가 쓴 고민글입니다. '),
+        text('로그인 상태에서 상세를 열면 수정·삭제가 보여야 합니다.', BOLD),
+      ),
+      paragraph(text('지금 넣으려는 프로젝트는 이렇습니다.')),
+      bulletList('공공데이터로 만든 대시보드', '캐글 대회 상위 20%', '학회 추천 시스템 발표'),
+      paragraph(
+        text('참고한 글: '),
+        link('https://example.com/data-portfolio', '데이터 직무 포트폴리오 가이드'),
+      ),
     ),
     images: [
       { id: 'concern-11-image-1', url: '/hero/concerns.png' },
