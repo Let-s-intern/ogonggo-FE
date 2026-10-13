@@ -47,7 +47,10 @@ type DialogProps = Omit<ConcernFormModalProps, 'open'>;
  * 위아래가 모두 잡혀 내용이 짧아도 화면 높이까지 늘어난다.
  *
  * 바깥(어두운 배경) 을 눌러도 닫지 않는다. `RouteModal` 은 닫지만 이쪽은 쓰던 글이 있는 폼이라, 스크롤바나
- * 가장자리를 잘못 눌러 2000 자가 사라지면 되돌릴 수 없다. 닫기는 버튼·취소·Esc 로 한다.
+ * 가장자리를 잘못 눌러 쓰던 글이 사라지면 되돌릴 수 없다. 닫기는 버튼·취소·Esc 로 한다.
+ *
+ * 제목 줄과 취소·등록 버튼 줄은 늘 보이고, 그 사이 폼 칸만 스크롤한다(`ConcernForm`). 내용 칸이 편집기가 되며
+ * 길어져, 낮은 화면에서는 버튼까지 모달을 스크롤해야 했다.
  *
  * 저장하는 동안은 오른쪽 위 X 와 Esc 로도 닫지 못한다(취소 버튼처럼). 닫으면 모달이 사라지면서 안쪽 토스트 영역도
  * 같이 사라져, 이어서 저장이 실패해도 알릴 곳이 없고 쓰던 글만 잃는다. 성공하면 닫은 뒤에 새 글로 이동하는 것도
@@ -106,8 +109,8 @@ function ConcernFormDialog({ onClose, initial, onSuccess }: DialogProps) {
       onClose={onClose}
       className="m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden bg-white p-0 backdrop:bg-gray-950/50 md:m-auto md:h-fit md:max-h-[calc(100dvh-4rem)] md:w-[min(720px,calc(100vw-2rem))] md:rounded-3xl md:py-3"
     >
-      <div className="h-full overflow-y-auto overscroll-contain px-5 py-5 md:h-auto md:max-h-[calc(100dvh-5.5rem)] md:px-7 md:py-4">
-        <div className="flex items-start justify-between gap-4 pb-6">
+      <div className="flex h-full flex-col py-5 md:h-auto md:max-h-[calc(100dvh-5.5rem)] md:py-4">
+        <div className="flex shrink-0 items-start justify-between gap-4 px-5 pb-6 md:px-7">
           <h2 id={titleId} className="text-lg font-bold text-gray-950">
             {editing ? '취준 고민 수정하기' : '취준 고민 올리기'}
           </h2>
