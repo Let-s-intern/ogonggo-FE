@@ -53,7 +53,7 @@ export function OriginalTab({
             '[&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_:is(h1,h2,h3,h4,h5,h6)]:text-gray-900',
             '[&_ul]:list-disc [&_ol]:list-decimal [&_:is(ul,ol)]:pl-5',
             '[&_img]:h-auto [&_img]:max-w-full',
-            '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto',
+            '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',
             '[&_:is(td,th)]:border [&_:is(td,th)]:border-gray-200 [&_:is(td,th)]:px-2 [&_:is(td,th)]:py-1',
             '[&_a]:text-blue-500 [&_a]:underline',
           )}
