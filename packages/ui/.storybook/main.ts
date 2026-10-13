@@ -85,6 +85,14 @@ const config: StorybookConfig = {
         development: configType === 'DEVELOPMENT',
       },
     };
+    // `apps/web/src/shared/config/mocks.ts` 가 `process.env.NEXT_PUBLIC_OGONGGO_USE_MOCKS` 를 읽는다.
+    // Next 는 빌드 때 값을 박지만 스토리북의 Vite 는 `process` 를 두지 않아, 북마크 버튼을 가진
+    // 카드 스토리가 전부 `process is not defined` 로 죽는다. 값이 없는 것으로 박는다 — 그 파일이
+    // 정한 대로 "스토리북에서는 목이 꺼진 것" 이 된다.
+    viteConfig.define = {
+      ...viteConfig.define,
+      'process.env.NEXT_PUBLIC_OGONGGO_USE_MOCKS': 'undefined',
+    };
     viteConfig.server = {
       ...viteConfig.server,
       fs: {
