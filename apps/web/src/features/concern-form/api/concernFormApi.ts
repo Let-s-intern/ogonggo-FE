@@ -4,10 +4,11 @@ import {
   replaceMyConcern,
   type SuccessResponseCreateConcernResponse,
 } from '@ogonggo/api';
+import { toImageIds } from '@/shared/ui/ImageAttachmentField';
 import type { ConcernFormValues } from '../model/values';
 
 /**
- * 고민글 작성. 만든 글의 id 를 돌려준다.
+ * 고민글 작성. 만든 글의 id 를 돌려준다. `imageIds` 는 첨부 칸에서 다 올라간 사진의 id 를 미리보기 순서대로다.
  *
  * 생성 함수의 반환 타입은 `{ data, status, headers }` 봉투지만 `httpClient` 는 본문을 그대로 돌려준다.
  * 2xx 가 아니면 `HttpError` 로 던진다.
@@ -16,12 +17,13 @@ export async function createConcernPost({
   category,
   title,
   content,
+  attachments,
 }: ConcernFormValues): Promise<number> {
   const response = (await createConcern({
     category,
     title,
     content,
-    imageIds: [],
+    imageIds: toImageIds(attachments),
   })) as unknown as SuccessResponseCreateConcernResponse;
   const id = response.data?.id;
   if (id === undefined) {
