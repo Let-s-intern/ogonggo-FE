@@ -19,9 +19,9 @@ export function buildSections(job: JobDetail): { label: string; value?: string }
 }
 
 /**
- * `공고 원문` 탭. 탭이 생기기 전 상세 본문 그대로 값이 있는 섹션만 글 덩어리로 보여 주고, 맨 아래에
- * 원문 사이트 링크(`sourceUrl`)를 둔다. 원문 HTML 은 없어서(API 가 글만 준다) 이 글 덩어리가 원문의
- * 유일한 대용이다.
+ * `공고 원문` 탭. 크롤러가 원문 페이지에서 읽은 글(`sourceText`)이 있으면 그 글을 줄바꿈 그대로
+ * 보여 준다. 원문 저장 전에 받은 공고와 기업회원 공고는 값이 없어, 그때는 탭이 생기기 전 상세 본문
+ * 그대로 값이 있는 섹션만 글 덩어리로 보여 준다. 맨 아래에는 원문 사이트 링크(`sourceUrl`)를 둔다.
  *
  * 링크는 `http(s)` 주소일 때만 건다. 값이 없거나 다른 형식이면 링크만 빼고 그린다.
  *
@@ -34,11 +34,15 @@ export function OriginalTab({
   job: JobDetail;
   layout?: 'page' | 'modal';
 }) {
-  const sections = buildSections(job).filter((section) => Boolean(section.value));
+  const sourceText = job.sourceText?.trim();
+  const sections = sourceText ? [] : buildSections(job).filter((section) => Boolean(section.value));
   const sourceUrl = job.sourceUrl && /^https?:\/\//.test(job.sourceUrl) ? job.sourceUrl : undefined;
 
   return (
     <div className={cn('flex flex-col gap-10', layout === 'modal' && 'px-[17px]')}>
+      {sourceText ? (
+        <p className="whitespace-pre-line break-words text-sm text-gray-700">{sourceText}</p>
+      ) : null}
       {sections.map((section) => (
         <div key={section.label}>
           <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>

@@ -728,6 +728,8 @@ export interface CrawlerJobRegistrationRequest {
      * @maxLength 2048
      */
   sourceUrl: string;
+  /** 원문 페이지에서 읽은 글 그대로. 이미지로 된 공고는 이미지에서 읽은 글이다 */
+  sourceText?: string;
   /** AI가 생성한 태그 목록 */
   tags: string[];
 }
