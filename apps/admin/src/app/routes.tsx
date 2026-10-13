@@ -11,6 +11,7 @@ import { JobListPage } from '@/pages/job-list';
 import { LoginPage } from '@/pages/login';
 import { NoticeListPage } from '@/pages/notice-list';
 import { NotFoundPage } from '@/pages/not-found';
+import { RecommendWeightsPage } from '@/pages/recommend-weights';
 import { RejectionsPage } from '@/pages/rejections';
 import { ReviewQueuePage } from '@/pages/review-queue';
 import { ServiceFeedbackListPage } from '@/pages/service-feedback-list';
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
       { path: 'content/concerns', element: <ConcernListPage /> },
       { path: 'content/concerns/:concernId', element: <ConcernDetailPage /> },
       { path: 'content/today-jobs', element: <TodayJobsPage /> },
+      { path: 'content/recommend-weights', element: <RecommendWeightsPage /> },
 
       { path: 'ads/review', element: <ReviewQueuePage /> },
       { path: 'ads/rejections', element: <RejectionsPage /> },
