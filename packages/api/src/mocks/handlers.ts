@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { userConcernHandlers } from './concerns';
+import { imageUploadHandlers } from './images';
 import { getJobRecommendedContentsHandler } from './job-recommended-contents';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
@@ -1122,6 +1123,7 @@ const uploadImageHandler = http.post('*/api/v1/images', () => {
 
 export const handlers: HttpHandler[] = [
   uploadImageHandler,
+  ...imageUploadHandlers,
   getJobsHandler,
   // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`, `/jobs/today`도 잡는다.
   getJobCalendarHandler,
