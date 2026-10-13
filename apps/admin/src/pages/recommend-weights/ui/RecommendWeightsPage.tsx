@@ -1,7 +1,10 @@
-import { Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
+import { useState } from 'react';
+import { Button, Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
 import {
   useRecommendWeights,
+  useSaveRecommendWeights,
   type RecommendWeights,
+  type RecommendWeightsInput,
 } from '@/entities/recommend-weights/api/useRecommendWeights';
 import { PageHeader } from '@/widgets/page-header';
 
@@ -144,10 +147,74 @@ function RecommendWeightsEditor() {
   return <RecommendWeightsForm weights={data} />;
 }
 
+const ALL_FIELDS = WEIGHT_GROUPS.flatMap((group) => group.fields);
+
+type Draft = Record<WeightKey, string>;
+
+function toDraft(weights: RecommendWeights): Draft {
+  return Object.fromEntries(
+    ALL_FIELDS.map((field) => [field.key, String(weights[field.key])]),
+  ) as Draft;
+}
+
+/** 비었거나 정수가 아니거나 범위 밖이면 범위 문구. 맞으면 `undefined`. */
+function rangeError(field: WeightField, raw: string): string | undefined {
+  const value = Number(raw);
+  if (!/^\d+$/.test(raw.trim()) || value < field.min || value > field.max) {
+    return `${field.min}~${field.max} 사이의 정수를 입력해 주세요.`;
+  }
+  return undefined;
+}
+
 function RecommendWeightsForm({ weights }: { weights: RecommendWeights }) {
+  const saveMutation = useSaveRecommendWeights();
+  /** 서버에 저장된 값. 저장에 성공하면 응답으로 바꾼다. `저장` 을 켤지 이것과 비교해 정한다. */
+  const [saved, setSaved] = useState(weights);
+  const [draft, setDraft] = useState(() => toDraft(weights));
+
+  const errors = Object.fromEntries(
+    ALL_FIELDS.map((field) => [field.key, rangeError(field, draft[field.key])]),
+  ) as Record<WeightKey, string | undefined>;
+  const hasError = ALL_FIELDS.some((field) => errors[field.key] !== undefined);
+  const isChanged = ALL_FIELDS.some((field) => Number(draft[field.key]) !== saved[field.key]);
+
+  const change = (key: WeightKey, value: string) => {
+    // 다시 고치기 시작하면 앞선 저장 결과는 지금 입력과 상관이 없다.
+    saveMutation.reset();
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const save = () => {
+    // PUT 이라 여덟 칸을 모두 보낸다. 하나만 바꿔도 전체다.
+    const input: RecommendWeightsInput = Object.fromEntries(
+      ALL_FIELDS.map((field) => [field.key, Number(draft[field.key])]),
+    ) as Record<WeightKey, number>;
+    saveMutation.mutate(input, {
+      // 응답의 `data` 가 서버에 저장된 값이다. 봉투에 `data` 가 없으면 보낸 값이 저장된 것으로 본다.
+      onSuccess: (data) => {
+        const next = data ?? input;
+        setSaved(next);
+        setDraft(toDraft(next));
+      },
+    });
+  };
+
   return (
     <Card>
       <CardTitle>추천 점수</CardTitle>
+
+      {saveMutation.isSuccess ? (
+        <Callout tone="success" className="mt-4">
+          저장했습니다.
+        </Callout>
+      ) : null}
+
+      {saveMutation.isError ? (
+        <Callout tone="error" className="mt-4">
+          저장하지 못했습니다. 입력값을 확인해 주세요.
+        </Callout>
+      ) : null}
+
       <div className="pt-4">
         {WEIGHT_GROUPS.map((group) => (
           <section key={group.title} className="pb-2">
@@ -159,17 +226,24 @@ function RecommendWeightsForm({ weights }: { weights: RecommendWeights }) {
                   label={field.label}
                   htmlFor={`recommend-weight-${field.key}`}
                   hint={`${field.description} (${field.min}~${field.max})`}
+                  error={errors[field.key]}
                 >
                   <Input
                     id={`recommend-weight-${field.key}`}
-                    value={String(weights[field.key])}
-                    readOnly
+                    inputMode="numeric"
+                    value={draft[field.key]}
+                    onChange={(event) => change(field.key, event.target.value)}
+                    aria-invalid={errors[field.key] !== undefined}
                   />
                 </Field>
               ))}
             </div>
           </section>
         ))}
+
+        <Button onClick={save} disabled={hasError || !isChanged || saveMutation.isPending}>
+          {saveMutation.isPending ? '저장 중' : '저장'}
+        </Button>
       </div>
     </Card>
   );
