@@ -34,14 +34,13 @@ export async function createConcernPost({
 
 /**
  * 고민글 수정. 카테고리·제목·본문을 모두 보낸다. 작성자 본인만 된다(403).
- * `imageIds` 는 읽어 온 글의 사진 그대로다 — 남길 사진을 모두 보내야 하고, 빈 배열이면 사진이 지워진다.
+ * `imageIds` 는 첨부 칸에 남은 사진이다 — 남길 사진을 모두 보내야 하고, 빠진 사진은 지워진다.
  */
 export async function updateConcernPost(
   id: number,
-  { category, title, content }: ConcernFormValues,
-  imageIds: string[],
+  { category, title, content, attachments }: ConcernFormValues,
 ): Promise<void> {
-  await replaceMyConcern(id, { category, title, content, imageIds });
+  await replaceMyConcern(id, { category, title, content, imageIds: toImageIds(attachments) });
 }
 
 /**

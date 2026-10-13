@@ -7,12 +7,14 @@ import { CONCERN_CATEGORIES, CONCERN_CATEGORY_LABELS } from '@/entities/concern/
 import {
   ImageAttachmentField,
   isUploadingAttachments,
+  toImageAttachments,
   type ImageAttachment,
 } from '@/shared/ui/ImageAttachmentField';
 import {
   CONTENT_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   checkConcernForm,
+  type ConcernFormInitial,
   type ConcernFormValues,
 } from '../model/values';
 
@@ -24,7 +26,7 @@ const CONTENT_PLACEHOLDER =
 
 export interface ConcernFormProps {
   /** 수정 모드의 처음 값. 없으면 첫 주제(`공고 질문`) 를 고른 빈 폼이다. */
-  initial?: Omit<ConcernFormValues, 'attachments'>;
+  initial?: ConcernFormInitial;
   /** 등록 버튼 글자. 작성은 `등록하기`, 수정은 `수정하기`. */
   submitLabel: string;
   /** 보내는 동안 등록 버튼 글자. 작성은 `등록 중`, 수정은 `수정 중`. */
@@ -63,7 +65,9 @@ export function ConcernForm({
   const [category, setCategory] = useState(initial?.category ?? DEFAULT_CATEGORY);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [content, setContent] = useState(initial?.content ?? '');
-  const [attachments, setAttachments] = useState<ImageAttachment[]>([]);
+  const [attachments, setAttachments] = useState<ImageAttachment[]>(() =>
+    toImageAttachments(initial?.images ?? []),
+  );
 
   const values: ConcernFormValues = { category, title, content, attachments };
   const check = checkConcernForm(values);

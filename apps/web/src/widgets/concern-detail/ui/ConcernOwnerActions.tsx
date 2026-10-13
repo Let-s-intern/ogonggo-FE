@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { deleteMyConcern, HttpError } from '@ogonggo/api';
+import { deleteMyConcern, HttpError, type ConcernImageResponse } from '@ogonggo/api';
 import { ConfirmDelete, useToast } from '@ogonggo/ui';
 import type { ConcernCategory } from '@/entities/concern/model/types';
 import { ConcernFormModal } from '@/features/concern-form';
@@ -16,8 +16,8 @@ export interface ConcernOwnerActionsProps {
   /** 수정 모달의 처음 값. 서버가 그린 글의 값이라 수정한 뒤 화면이 다시 그려지면 새 값으로 바뀐다. */
   category: ConcernCategory;
   content: string;
-  /** 글에 붙은 사진의 id. 수정 저장 때 그대로 보내 사진이 지워지지 않게 한다. */
-  imageIds: string[];
+  /** 글에 붙은 사진. 수정 모달 첨부 칸의 처음 미리보기다. */
+  images: ConcernImageResponse[];
 }
 
 /** 확인 창에 보일 제목 앞부분 길이. 긴 제목을 통째로 넣으면 확인 창이 본문이 된다. */
@@ -40,7 +40,7 @@ export function ConcernOwnerActions({
   title,
   category,
   content,
-  imageIds,
+  images,
 }: ConcernOwnerActionsProps) {
   const mine = useConcernMine(concernId);
   const router = useRouter();
@@ -99,7 +99,7 @@ export function ConcernOwnerActions({
       <ConcernFormModal
         open={editing}
         onClose={() => setEditing(false)}
-        initial={{ id: concernId, category, title, content, imageIds }}
+        initial={{ id: concernId, category, title, content, images }}
       />
     </>
   );

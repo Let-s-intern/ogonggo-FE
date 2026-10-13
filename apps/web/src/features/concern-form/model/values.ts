@@ -1,3 +1,4 @@
+import type { ConcernImageResponse } from '@ogonggo/api';
 import type { ConcernCategory } from '@/entities/concern/model/types';
 import type { ImageAttachment } from '@/shared/ui/ImageAttachmentField';
 
@@ -21,8 +22,11 @@ export interface ConcernFormValues {
 /** 수정할 고민글. 모달을 수정 모드로 여는 값이고, 폼의 처음 값이 된다. */
 export interface ConcernFormInitial extends Omit<ConcernFormValues, 'attachments'> {
   id: number;
-  /** 글에 붙은 사진의 id. 수정 저장 때 그대로 보낸다 — 빈 배열을 보내면 사진이 지워진다. */
-  imageIds: string[];
+  /**
+   * 글에 붙은 사진. 첨부 칸의 처음 미리보기가 되고, 저장 때 남은 것의 id 를 보낸다 — 빠진 사진은 백엔드가
+   * 지운다.
+   */
+  images: ConcernImageResponse[];
 }
 
 export interface ConcernFormCheck {
