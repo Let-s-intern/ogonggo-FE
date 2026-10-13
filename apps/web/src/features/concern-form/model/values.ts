@@ -56,3 +56,72 @@ export function checkConcernForm(values: ConcernFormValues): ConcernFormCheck {
     submittable: values.title.trim() !== '' && values.contentText.trim() !== '' && !titleTooLong,
   };
 }
+
+type JsonObject = Record<string, unknown>;
+
+const isObject = (value: unknown): value is JsonObject =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const childrenOf = (node: JsonObject): unknown[] =>
+  Array.isArray(node.children) ? node.children : [];
+
+/** 노드 아래의 글자를 모두 모은다. */
+function collectText(node: unknown): string {
+  if (!isObject(node)) {
+    return '';
+  }
+  if (node.type === 'linebreak') {
+    return '\n';
+  }
+  const own = typeof node.text === 'string' ? node.text : '';
+  return own + childrenOf(node).map(collectText).join('');
+}
+
+/** 줄마다 문단 하나인 EditorState JSON 문자열. 편집기가 읽지 못한 본문을 여는 모양(`RichTextEditor`)과 같다. */
+function plainTextToEditorState(text: string): string {
+  const paragraphs = text.split('\n').map((line) => ({
+    type: 'paragraph',
+    version: 1,
+    direction: null,
+    format: '',
+    indent: 0,
+    textFormat: 0,
+    textStyle: '',
+    children: line
+      ? [{ type: 'text', version: 1, text: line, format: 0, detail: 0, mode: 'normal', style: '' }]
+      : [],
+  }));
+  return JSON.stringify({
+    root: {
+      type: 'root',
+      version: 1,
+      direction: null,
+      format: '',
+      indent: 0,
+      children: paragraphs,
+    },
+  });
+}
+
+/**
+ * 수정할 글의 본문을 폼의 처음 `content`·`contentText` 로. Lexical 로 바꾸기 전에 쓴 예전 글은 본문이
+ * 일반 텍스트라 줄마다 문단인 EditorState JSON 으로 바꾼다.
+ *
+ * 편집기는 처음 값을 `onChange` 로 알리지 않는다(`OnChangePlugin`). 바꾸지 않고 두면 본문을 건드리지 않은 채
+ * 제목만 고쳐 저장할 때 일반 텍스트가 그대로 나가고, 백엔드가 JSON 이 아니라며 400 을 준다.
+ */
+export function toInitialContent(
+  content: string,
+): Pick<ConcernFormValues, 'content' | 'contentText'> {
+  let state: unknown;
+  try {
+    state = JSON.parse(content);
+  } catch {
+    state = undefined;
+  }
+  const root = isObject(state) && isObject(state.root) ? state.root : undefined;
+  if (!root) {
+    return { content: plainTextToEditorState(content), contentText: content };
+  }
+  return { content, contentText: childrenOf(root).map(collectText).join('\n') };
+}
