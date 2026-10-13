@@ -123,10 +123,6 @@ const MERGED_SLUGS: Readonly<Record<string, string>> = {
   media: 'marketing',
 };
 
-export function isJobMajorSlug(value: string): boolean {
-  return FIELD_BY_SLUG.has(value);
-}
-
 /** 주소·쿠키의 slug 를 지금 칸으로 읽는다. 옛 slug 는 옮긴 칸, 모르는 값은 `undefined`. */
 export function toJobMajorSlug(value: string): string | undefined {
   if (FIELD_BY_SLUG.has(value)) {

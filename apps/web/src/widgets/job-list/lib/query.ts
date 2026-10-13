@@ -2,9 +2,9 @@ import { ListPublicJobsSort } from '@ogonggo/api';
 import {
   EMPLOYMENT_TYPE_LABELS,
   EXPERIENCE_TYPE_LABELS,
-  JOB_FIELD_LABELS,
   JOB_ROLES,
   jobRolesOf,
+  toJobField,
 } from '@/entities/job/model/labels';
 import type {
   JobEmploymentType,
@@ -110,7 +110,8 @@ export function parseKeywordParam(value: string | string[] | undefined): string 
 
 /**
  * 주소의 `jobField`·`jobRole` 을 검증해 고른 상태로 만든다. 모르는 값은 버리고, `전체` 로 고른
- * 직군에 속한 직무도 버린다 — 겹쳐 적힌 주소를 한 모양으로 맞춘다.
+ * 직군에 속한 직무도 버린다 — 겹쳐 적힌 주소를 한 모양으로 맞춘다. 없어진 직군은 합쳐진 직군으로
+ * 읽고(`toJobField`), 그래서 겹친 직군은 하나로 합친다.
  */
 export function parseJobRoleSelection(
   jobField: string | string[] | undefined,
@@ -118,7 +119,9 @@ export function parseJobRoleSelection(
 ): Pick<JobListQuery, 'jobFields' | 'jobRoles'> {
   const list = (value: string | string[] | undefined) =>
     [value ?? []].flat().filter((item, index, all) => all.indexOf(item) === index);
-  const jobFields = list(jobField).filter((value): value is JobField => value in JOB_FIELD_LABELS);
+  const jobFields = [...new Set(list(jobField).map(toJobField))].filter(
+    (value): value is JobField => value !== undefined,
+  );
   const jobRoles = list(jobRole).filter(
     (value): value is JobRole =>
       value in JOB_ROLES && !jobFields.includes(JOB_ROLES[value as JobRole].field),
