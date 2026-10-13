@@ -50,6 +50,11 @@ export interface ImageAttachmentFieldProps {
   usage: AttachmentUsage;
   /** 칸 제목. 시안의 `이미지 첨부`. 뒤에 회색 `선택` 이 붙는다. */
   label?: string;
+  /**
+   * 칸 제목의 모양을 폼의 다른 제목에 맞춘다. 기본은 모집글 폼 `Field` 라벨(14px·500·gray-700)이고,
+   * 넘긴 클래스가 그 위에 덮인다. 취준고민 모달은 `주제`·`제목`·`내용` 과 같은 16px·gray-900·`pb-3` 을 넘긴다.
+   */
+  labelClassName?: string;
   /** 상자 아래 회색 안내. 취준고민은 개인정보 안내, 사이드·스터디는 썸네일 안내를 더한다. */
   notice?: ReactNode;
   /** 첫 칸에 `대표` 를 붙인다. 첫 사진이 목록 썸네일이 되는 사이드·스터디가 켠다. */
@@ -74,6 +79,7 @@ export function ImageAttachmentField({
   onChange,
   usage,
   label = '이미지 첨부',
+  labelClassName,
   notice,
   markCover = false,
 }: ImageAttachmentFieldProps) {
@@ -146,7 +152,7 @@ export function ImageAttachmentField({
 
   return (
     <div>
-      <p className="pb-1.5 text-sm font-medium text-gray-700">
+      <p className={cn('pb-1.5 text-sm font-medium text-gray-700', labelClassName)}>
         {label} <span className="text-xs font-normal text-gray-400">선택</span>
       </p>
       {value.length > 0 && (

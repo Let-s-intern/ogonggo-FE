@@ -160,6 +160,7 @@ export function ConcernForm({
         onChange={setAttachments}
         usage="CONCERN"
         label="이미지 첨부"
+        labelClassName="pb-3 text-gray-900 md:text-base"
         notice="이름, 연락처 등 개인정보는 가린 뒤 첨부해주세요."
       />
 
