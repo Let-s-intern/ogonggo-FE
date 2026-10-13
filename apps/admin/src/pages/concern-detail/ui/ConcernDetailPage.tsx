@@ -1,5 +1,6 @@
 import { useParams } from 'react-router';
 import { Badge, Callout, Card, CardTitle, DescriptionList, Toggle } from '@ogonggo/ui';
+import { RichTextView } from '@ogonggo/ui/src/editor/RichTextEditor';
 import type { AdminConcernImageResponse } from '@ogonggo/api/src/admin';
 import { useChangeVisibilities, useConcernDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
@@ -14,6 +15,9 @@ const BACK_TO = { to: '/content/concerns', label: '취준고민 목록' };
  * 운영자가 바꿀 수 있는 것은 노출 하나다. 건별 수정 API 가 없어 목록과 같이 일괄 변경 API 에 id
  * 하나를 실어 보낸다. 답변은 어드민 API 가 아직 주지 않아 수만 보인다. 첨부 사진은 노출 여부를
  * 판단할 때 함께 봐야 해서 본문 아래에 둔다.
+ *
+ * 본문은 Lexical EditorState JSON 문자열이고 읽기 전용 편집기(`RichTextView`)로 그린다. JSON 전환
+ * 전에 저장된 일반 텍스트 글은 `RichTextView` 가 줄마다 문단으로 연다.
  */
 export function ConcernDetailPage() {
   const { concernId } = useParams();
@@ -92,7 +96,10 @@ export function ConcernDetailPage() {
 
       <Card className="mt-4">
         <CardTitle>본문</CardTitle>
-        <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">{data.content}</p>
+        {/* `RichTextView` 의 글자색(gray-700)을 예전 본문 문단과 같은 gray-900 으로 덮는다. */}
+        <div className="pt-4 [&_[contenteditable]]:text-gray-900">
+          <RichTextView content={data.content} />
+        </div>
         {data.images.length > 0 ? <ConcernImages images={data.images} /> : null}
       </Card>
     </>
