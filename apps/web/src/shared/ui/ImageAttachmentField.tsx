@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef, type ReactNode } from 'react';
-import { cn } from '@ogonggo/ui';
+import { cn, useToast } from '@ogonggo/ui';
 import {
   ATTACHMENT_CONTENT_TYPES,
+  checkAttachment,
   uploadAttachment,
   type AttachmentUsage,
 } from '@/shared/lib/uploadAttachment';
@@ -77,6 +78,7 @@ export function ImageAttachmentField({
   markCover = false,
 }: ImageAttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
   const latest = useRef(value);
   latest.current = value;
 
@@ -97,15 +99,25 @@ export function ImageAttachmentField({
     }
   };
 
+  /**
+   * 형식·크기를 먼저 거르고, 남은 칸보다 많으면 앞에서부터 칸만큼만 올린다. 걸러진 것이 있으면
+   * 토스트로 알린다 — 토스트는 한 번에 하나만 떠서 첫 사유 하나만 띄운다.
+   */
   const pick = (files: File[]) => {
-    const added = files
-      .slice(0, MAX_ATTACHMENTS - latest.current.length)
-      .map((file): ImageAttachment => ({
-        key: crypto.randomUUID(),
-        status: 'uploading',
-        url: URL.createObjectURL(file),
-        file,
-      }));
+    const rejected = files.map(checkAttachment).find((error) => error !== null);
+    const accepted = files.filter((file) => checkAttachment(file) === null);
+    const room = MAX_ATTACHMENTS - latest.current.length;
+    if (rejected) {
+      toast.show({ message: rejected.message, tone: 'error' });
+    } else if (accepted.length > room) {
+      toast.show({ message: `사진은 ${MAX_ATTACHMENTS}장까지 올릴 수 있어요`, tone: 'error' });
+    }
+    const added = accepted.slice(0, room).map((file): ImageAttachment => ({
+      key: crypto.randomUUID(),
+      status: 'uploading',
+      url: URL.createObjectURL(file),
+      file,
+    }));
     if (added.length === 0) {
       return;
     }
