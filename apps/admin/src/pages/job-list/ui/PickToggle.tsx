@@ -74,7 +74,7 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
         // 다른 곳에서 먼저 켰다. 그쪽 문구를 덮어쓰지 않는다.
         onNotice({
           tone: 'warning',
-          message: `"${job.title}" 은 다른 곳에서 먼저 오늘의 공고에 들어갔습니다. 입력한 문구는 저장하지 않았습니다.`,
+          message: `"${job.title}" 은 다른 곳에서 먼저 오공고 PICK에 들어갔습니다. 입력한 문구는 저장하지 않았습니다.`,
         });
       }
     } catch {
@@ -100,7 +100,7 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
     } catch {
       onNotice({
         tone: 'error',
-        message: `"${job.title}" 을 오늘의 공고에서 빼지 못했습니다. 잠시 뒤 다시 시도해 주세요.`,
+        message: `"${job.title}" 을 오공고 PICK에서 빼지 못했습니다. 잠시 뒤 다시 시도해 주세요.`,
       });
     } finally {
       setIsSubmitting(false);
@@ -127,8 +127,8 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
 
       <Modal
         open={isOpen}
-        title="오늘의 공고에 추가"
-        description={`${job.title} (${job.companyName}). 저장하면 오늘의 공고 맨 끝에 붙습니다.`}
+        title="오공고 PICK에 추가"
+        description={`${job.title} (${job.companyName}). 저장하면 오공고 PICK 맨 끝에 붙습니다.`}
         onClose={closeModal}
       >
         {isOpen ? (

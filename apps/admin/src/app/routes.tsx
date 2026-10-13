@@ -50,11 +50,12 @@ export const router = createBrowserRouter([
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
       { path: 'content/concerns', element: <ConcernListPage /> },
       { path: 'content/concerns/:concernId', element: <ConcernDetailPage /> },
-      { path: 'content/today-jobs', element: <TodayJobsPage /> },
-      { path: 'content/recommend-weights', element: <RecommendWeightsPage /> },
 
       { path: 'ads/review', element: <ReviewQueuePage /> },
       { path: 'ads/rejections', element: <RejectionsPage /> },
+
+      { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
+      { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },
 
       { path: 'members/users', element: <UserMemberListPage /> },
       { path: 'members/users/:memberId', element: <UserMemberDetailPage /> },

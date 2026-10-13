@@ -95,13 +95,13 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
           notice: {
             tone: 'warning',
             message:
-              '다른 곳에서 먼저 오늘의 공고에 들어갔습니다. 보내지 않았습니다. 입력한 문구는 칸에 남겨 두었습니다. 저장하면 이 문구로 바뀝니다.',
+              '다른 곳에서 먼저 오공고 PICK에 들어갔습니다. 보내지 않았습니다. 입력한 문구는 칸에 남겨 두었습니다. 저장하면 이 문구로 바뀝니다.',
           },
         };
       }
       return {
         keepDraft: false,
-        notice: { tone: 'success', message: '오늘의 공고 맨 끝에 넣었습니다.' },
+        notice: { tone: 'success', message: '오공고 PICK 맨 끝에 넣었습니다.' },
       };
     }, SAVE_FAILED);
 
@@ -115,7 +115,7 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
           notice: {
             tone: 'warning',
             message:
-              '다른 곳에서 이미 오늘의 공고에서 뺐습니다. 문구를 저장하지 않았습니다. 입력한 문구는 칸에 남겨 두었습니다.',
+              '다른 곳에서 이미 오공고 PICK에서 뺐습니다. 문구를 저장하지 않았습니다. 입력한 문구는 칸에 남겨 두었습니다.',
           },
         };
       }
@@ -132,19 +132,19 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
         keepDraft: false,
         notice:
           result === 'absent'
-            ? { tone: 'warning', message: '이미 오늘의 공고에서 빠져 있습니다.' }
-            : { tone: 'success', message: '오늘의 공고에서 뺐습니다.' },
+            ? { tone: 'warning', message: '이미 오공고 PICK에서 빠져 있습니다.' }
+            : { tone: 'success', message: '오공고 PICK에서 뺐습니다.' },
       };
-    }, '오늘의 공고에서 빼지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
+    }, '오공고 PICK에서 빼지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
 
   return (
     <Card className="mt-4">
-      <CardTitle>오늘의 공고</CardTitle>
+      <CardTitle>오공고 PICK</CardTitle>
 
       {list === undefined ? (
         todayJobs.isError ? (
           <Callout tone="error" className="mt-4">
-            오늘의 공고를 불러오지 못해 넣고 뺄 수 없습니다. 나머지 정보는 그대로 쓸 수 있습니다.
+            오공고 PICK을 불러오지 못해 넣고 뺄 수 없습니다. 나머지 정보는 그대로 쓸 수 있습니다.
           </Callout>
         ) : (
           <p className="pt-4 text-sm text-gray-500">불러오는 중입니다.</p>
@@ -153,13 +153,13 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
         <div className="flex flex-col gap-4 pt-4">
           <p className="text-sm text-gray-900">
             {picked
-              ? `오늘의 공고 ${list.length}건 중 ${index + 1}번째에 들어 있습니다.`
-              : '오늘의 공고에 들어 있지 않습니다.'}
+              ? `오공고 PICK ${list.length}건 중 ${index + 1}번째에 들어 있습니다.`
+              : '오공고 PICK에 들어 있지 않습니다.'}
           </p>
 
           {isHidden ? (
             <Callout tone="warning">
-              비노출 공고는 오늘의 공고에 들어 있어도 사용자 화면에 나오지 않습니다. 노출로 바꾸면
+              비노출 공고는 오공고 PICK에 들어 있어도 사용자 화면에 나오지 않습니다. 노출로 바꾸면
               나옵니다.
             </Callout>
           ) : null}
@@ -183,7 +183,7 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
                   disabled={isLocked}
                   onClick={() => void remove()}
                 >
-                  오늘의 공고에서 빼기
+                  오공고 PICK에서 빼기
                 </Button>
                 <Button disabled={isLocked || !isValid || !isChanged} onClick={() => void save()}>
                   {isSubmitting ? '저장 중' : '문구 저장'}
@@ -191,7 +191,7 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
               </>
             ) : (
               <Button disabled={isLocked || !isValid} onClick={() => void add()}>
-                {isSubmitting ? '저장 중' : '오늘의 공고에 넣기'}
+                {isSubmitting ? '저장 중' : '오공고 PICK에 넣기'}
               </Button>
             )}
           </div>
