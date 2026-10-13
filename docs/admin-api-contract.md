@@ -12,6 +12,8 @@
 > 핸들러를 스펙에 맞춰 고쳤다
 > 스펙 대조: 2026-09-29, 7 절의 회원 목록 둘. 생성물에 맞춰 목 핸들러와 화면을 고쳤다. 회원
 > 상세 둘은 여전히 백엔드가 없다
+> 스펙 대조: 2026-10-13, 9 절. `ogonggo-BE` 의 `LetsCareerContentRecommend*` 소스와 배포된
+> `ogonggo-api-admin` 의 `/v3/api-docs` 를 읽고 목 핸들러를 맞췄다. 화면은 아직 없다
 
 ## 이 문서가 무엇인가
 
@@ -126,6 +128,8 @@
 | 29  | `/support/notices`           | 새 공지 → 저장                | `POST /notices`                              | 등록                               |
 | 30  | `/support/notices`           | 수정 폼 → 저장                | `PATCH /notices/{id}`                        | 보낸 값만 수정                     |
 | 31  | `/support/notices`           | 수정 폼 → 삭제                | `DELETE /notices/{id}`                       | 소프트 삭제                        |
+| 32  | `/content/recommend-weights` | 진입                          | `GET /lets-career-content-recommend-weights` | 추천 점수 여덟 칸                  |
+| 33  | `/content/recommend-weights` | 저장                          | `PUT /lets-career-content-recommend-weights` | 여덟 칸 전체 교체                  |
 
 지면(`/placements`)과 통계(`/stats`)는 만들지 않는다. 메뉴에 회색 비활성으로 자리만 있다.
 
@@ -991,6 +995,97 @@
 
 **`id` 를 목이 정한다.** 배열에서 가장 큰 `id` 에 1 을 더한다. 목을 다시 띄우면 처음부터
 시작하므로 실서버의 `id` 와 이어지지 않는다.
+
+---
+
+## 9. 콘텐츠 · 추천 점수
+
+백엔드가 있다. 아래는 `ogonggo-BE` 의 `ogonggo-api-admin`
+(`letscareercontent/presentation/`)과 `ogonggo-core` 의 `LetsCareerContentRecommendWeights.kt`,
+배포된 `/v3/api-docs`(2026-10-13 조회)를 읽고 적은 것이다. 8 절처럼 목 핸들러
+(`packages/api/src/mocks/admin/recommend-weights.ts`)가 스펙을 따라간다.
+
+화면은 `/content/recommend-weights` 로 계획돼 있고 아직 없다
+(`.claude/tasks/todo/prd-admin-recommend-weights.md`).
+
+**채용공고 상세의 렛츠커리어 콘텐츠 추천(공고마다 3개)을 고르는 점수다.** 값은 서버에 한 벌만
+있고 id 도 페이지도 없다. 바꾼 적이 없으면 기본값이고, 한 번 바꾸면 마지막에 바꾼 값이다.
+
+점수는 이렇게 쓰인다.
+
+- 콘텐츠마다 공고와 직무가 같으면 `roleScore`, 직군이 같으면 `fieldScore`, 준비 단계가 겹치면
+  하나당 `topicScore` 를 더한다. 준비 단계는 `maxTopicMatches` 개까지만 센다.
+- 그 합이 0보다 큰 콘텐츠에만 갈래 가산점(`programBonus`·`materialBonus`·`blogBonus`)을 더한다.
+- 점수가 높은 순으로 고르되 한 갈래(프로그램·자료집·블로그)는 `maxPerGroup` 개까지만 고른다.
+  모자라면 다른 갈래로 채운다. 다른 직군 전용 콘텐츠는 점수와 상관없이 뺀다.
+
+응답과 요청의 칸이 같다.
+
+| 칸                | 뜻                                                                         | 범위  | 기본값 |
+| ----------------- | -------------------------------------------------------------------------- | ----- | ------ |
+| `roleScore`       | 공고와 직무가 같을 때 더하는 점수                                          | 0~100 | 5      |
+| `fieldScore`      | 공고와 직군이 같을 때 더하는 점수                                          | 0~100 | 3      |
+| `topicScore`      | 공고가 요구하는 준비 단계(자기소개서·면접 등)와 하나가 겹칠 때 더하는 점수 | 0~100 | 2      |
+| `maxTopicMatches` | 준비 단계 점수를 셀 최대 개수                                              | 0~10  | 2      |
+| `programBonus`    | 프로그램 가산점. 공고와 하나라도 맞는 프로그램에만 더한다                  | 0~100 | 2      |
+| `materialBonus`   | 무료 자료집 가산점. 공고와 하나라도 맞는 자료집에만 더한다                 | 0~100 | 1      |
+| `blogBonus`       | 블로그 가산점. 공고와 하나라도 맞는 블로그에만 더한다                      | 0~100 | 0      |
+| `maxPerGroup`     | 한 갈래에서 고르는 최대 개수. 모자라면 다른 갈래로 채운다                  | 1~10  | 2      |
+
+기본값은 `LetsCareerContentRecommendWeights.DEFAULT` 다. 점수 상한 100 은 `MAX_SCORE`, 갈래별
+상한 10 은 `MAX_PER_GROUP` 이다. `maxTopicMatches` 의 상한은 도메인이 준비 단계 종류 수
+(`LetsCareerContentTopic`, 지금 10개)로 잡고 요청 검증은 10 으로 고정돼 있다. 지금은 같다.
+
+### `GET /api/v1/admin/lets-career-content-recommend-weights`
+
+**부르는 곳** — `/content/recommend-weights` 진입.
+
+**응답 `data`** — 여덟 칸이 모두 들어 있다. 바꾼 적이 없으면 기본값이다.
+
+```json
+{
+  "roleScore": 5,
+  "fieldScore": 3,
+  "topicScore": 2,
+  "maxTopicMatches": 2,
+  "programBonus": 2,
+  "materialBonus": 1,
+  "blogBonus": 0,
+  "maxPerGroup": 2
+}
+```
+
+### `PUT /api/v1/admin/lets-career-content-recommend-weights`
+
+**부르는 곳** — `/content/recommend-weights` 저장.
+
+**요청** — 위 여덟 칸이 모두 필수다. 부분 전송은 없고, 하나만 바꿔도 여덟 칸을 모두 보낸다.
+서버는 전체를 교체한다.
+
+**응답** — 200 이고 `data` 는 `GET` 과 같은 모양의 바뀐 값이다. 같은 요청을 반복해도 결과가
+같다.
+
+**동작**
+
+바꾼 값은 다음 추천 요청부터 바로 쓰인다. 운영 추천에 곧바로 반영되므로 시험 삼아 저장하지
+않는다.
+
+칸이 빠졌거나 범위를 벗어나면 400 `BAD_REQUEST` 다. 위 표의 범위가 그대로 검사 조건이다.
+스펙의 400 설명은 "칸이 빠졌거나 범위를 벗어났습니다." 한 줄이고 칸별 `message` 문구는 적혀
+있지 않다.
+
+### 목과 백엔드 스펙의 차이
+
+목은 위 동작을 그대로 흉내 낸다. 남은 차이는 셋이다.
+
+**정수가 아닌 값.** 목은 `5.5` 나 문자열을 400 으로 막는다. 실서버가 어떻게 답하는지는 스펙에
+없고 확인하지 못했다.
+
+**400 의 `message`.** 목은 첫 번째로 어긋난 칸의 이름과 범위를 적은 문구를 준다. 서버의
+문구는 스펙에 없어 맞추지 못했다.
+
+**값이 어디에 있는가.** 목은 메모리에 두어 다시 띄우면 기본값으로 돌아간다. 서버는 한 행으로
+저장한다(`lets_career_content_recommend_settings`).
 
 ---
 
