@@ -22,7 +22,7 @@ export interface NavItem {
 export interface NavSection {
   /**
    * 상위 묶음 제목. 하위가 하나뿐인 구역은 제목을 두지 않는다 — 제목과 항목이 같은 말을 두 번
-   * 하게 되고, 메뉴만 한 단 깊어진다. 대시보드·지면·통계가 그렇다.
+   * 하게 되고, 메뉴만 한 단 깊어진다. 대시보드·통계가 그렇다.
    */
   title?: string;
   items: NavItem[];
@@ -36,8 +36,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/content/bootcamps', label: '부트캠프' },
       { path: '/content/side-studies', label: '사이드·스터디' },
       { path: '/content/concerns', label: '취준고민' },
-      { path: '/content/today-jobs', label: '오늘의 공고' },
-      { path: '/content/recommend-weights', label: '추천 점수' },
     ],
   },
   {
@@ -52,7 +50,15 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    items: [{ path: '/placements', label: '지면', disabled: true }],
+    /*
+     * 사용자 화면의 어느 자리에 무엇을 보일지 정하는 곳이다. 콘텐츠 하나하나를 보고 고치는
+     * 콘텐츠 구역과 달라 따로 묶는다.
+     */
+    title: '지면',
+    items: [
+      { path: '/placements/pick-jobs', label: '오공고 PICK 공고' },
+      { path: '/placements/recommend-weights', label: '추천 로직 가중치' },
+    ],
   },
   {
     title: '회원',

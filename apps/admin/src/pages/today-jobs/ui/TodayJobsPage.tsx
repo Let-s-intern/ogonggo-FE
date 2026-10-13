@@ -125,7 +125,7 @@ export function TodayJobsPage() {
 
   return (
     <>
-      <PageHeader title="오늘의 공고" />
+      <PageHeader title="오공고 PICK 공고" />
       {isError ? (
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
@@ -391,7 +391,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
   return (
     <>
       <PageHeader
-        title="오늘의 공고"
+        title="오공고 PICK 공고"
         action={
           <div className="flex flex-wrap items-center justify-end gap-3">
             <span

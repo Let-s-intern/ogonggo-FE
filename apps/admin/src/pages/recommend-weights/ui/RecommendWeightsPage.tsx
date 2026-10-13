@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Button, Callout, Card, CardTitle, Field, Input } from '@ogonggo/ui';
+import {
+  Button,
+  Callout,
+  Card,
+  CardDescription,
+  CardTitle,
+  DataTable,
+  Field,
+  Input,
+} from '@ogonggo/ui';
 import {
   useRecommendWeights,
   useSaveRecommendWeights,
@@ -64,7 +73,7 @@ const WEIGHT_GROUPS: WeightGroup[] = [
     ],
   },
   {
-    title: '갈래 가산점',
+    title: '종류 가산점',
     fields: [
       {
         key: 'programBonus',
@@ -94,8 +103,8 @@ const WEIGHT_GROUPS: WeightGroup[] = [
     fields: [
       {
         key: 'maxPerGroup',
-        label: '갈래별 최대 개수',
-        description: '한 갈래에서 고르는 최대 개수',
+        label: '한 종류 최대 개수',
+        description: '프로그램·자료집·블로그 중 한 종류에서 고르는 최대 개수',
         min: 1,
         max: 10,
       },
@@ -104,21 +113,27 @@ const WEIGHT_GROUPS: WeightGroup[] = [
 ];
 
 /**
- * 채용공고 상세의 렛츠커리어 콘텐츠 추천(공고마다 3개)을 고르는 점수 여덟 칸.
+ * 사용자 화면의 추천을 고르는 가중치. 추천 대상마다 카드 하나다.
  *
- * 바꾼 값은 다음 추천 요청부터 운영에 바로 쓰인다. 시험 저장을 할 곳이 없다.
+ * 지금 대상은 채용공고 상세의 렛츠커리어 콘텐츠 추천(공고마다 3개) 하나다. 대상이 늘면 카드를
+ * 더한다. 바꾼 값은 다음 추천 요청부터 운영에 바로 쓰인다. 시험 저장을 할 곳이 없다.
  */
 export function RecommendWeightsPage() {
   return (
     <>
-      <PageHeader title="렛츠커리어 콘텐츠 추천 점수" />
-      <p className="max-w-3xl pb-6 text-sm leading-6 text-gray-700">
-        채용공고 상세에 보이는 렛츠커리어 콘텐츠 3개는 이 점수로 고릅니다. 콘텐츠마다 공고와
-        직무·직군·준비 단계가 맞는 만큼 점수를 더하고, 하나라도 맞는 콘텐츠에만 갈래 가산점을 더한
-        뒤, 높은 순으로 한 갈래에서 정한 개수까지만 고릅니다. 저장한 값은 다음 추천 요청부터 운영에
-        바로 쓰입니다.
-      </p>
+      <PageHeader title="추천 로직 가중치" />
       <RecommendWeightsEditor />
+    </>
+  );
+}
+
+function LetsCareerCardHeader() {
+  return (
+    <>
+      <CardTitle>렛츠커리어 콘텐츠</CardTitle>
+      <CardDescription className="pt-1">
+        채용공고 상세에 공고마다 3개를 보여 줍니다.
+      </CardDescription>
     </>
   );
 }
@@ -135,7 +150,7 @@ function RecommendWeightsEditor() {
   if (isPending) {
     return (
       <Card>
-        <CardTitle>추천 점수</CardTitle>
+        <LetsCareerCardHeader />
         <p className="pt-4 text-sm text-gray-500">불러오는 중입니다.</p>
       </Card>
     );
@@ -201,7 +216,8 @@ function RecommendWeightsForm({ weights }: { weights: RecommendWeights }) {
 
   return (
     <Card>
-      <CardTitle>추천 점수</CardTitle>
+      <LetsCareerCardHeader />
+      <RecommendGuide weights={saved} />
 
       {saveMutation.isSuccess ? (
         <Callout tone="success" className="mt-4">
@@ -246,5 +262,116 @@ function RecommendWeightsForm({ weights }: { weights: RecommendWeights }) {
         </Button>
       </div>
     </Card>
+  );
+}
+
+/** 가산점처럼 0 일 수 있는 점수를 `+2`·`0` 으로 적는다. */
+function signed(score: number): string {
+  return score === 0 ? '0' : `+${score}`;
+}
+
+interface ExampleRow {
+  title: string;
+  /** 공고와 맞는 정도의 항목. 이 예시 콘텐츠가 공고와 맞는 것만 적는다. */
+  matches: { label: string; score: number }[];
+  bonus: number;
+}
+
+/**
+ * 예시 공고(마케팅 신입, 서류에 자소서·포트폴리오)에 콘텐츠 셋을 견준 계산.
+ *
+ * 숫자는 저장된 값으로 다시 센다. 고정 숫자로 적어 두면 운영자가 값을 바꾸는 순간 설명이 틀린다.
+ * 가산점은 맞는 정도가 0 보다 클 때만 더한다(백엔드 `LetsCareerContentRecommendWeights` 와 같다).
+ */
+function exampleRows(weights: RecommendWeights) {
+  const topics = (count: number) => weights.topicScore * Math.min(count, weights.maxTopicMatches);
+  const rows: ExampleRow[] = [
+    {
+      title: '마케팅 포트폴리오 예시 (블로그)',
+      matches: [
+        { label: '직군', score: weights.fieldScore },
+        { label: '준비 단계', score: topics(2) },
+      ],
+      bonus: weights.blogBonus,
+    },
+    {
+      title: '자소서 2주 완성 챌린지 (프로그램)',
+      matches: [{ label: '준비 단계', score: topics(2) }],
+      bonus: weights.programBonus,
+    },
+    {
+      title: '마케팅 직무 자료집 (자료집)',
+      matches: [
+        { label: '직군', score: weights.fieldScore },
+        { label: '준비 단계', score: topics(1) },
+      ],
+      bonus: weights.materialBonus,
+    },
+  ];
+
+  return rows
+    .map((row) => {
+      const matchScore = row.matches.reduce((sum, match) => sum + match.score, 0);
+      const bonus = matchScore > 0 ? row.bonus : 0;
+      const parts = row.matches.map((match) => `${match.label} ${match.score}`);
+      const formula =
+        matchScore > 0
+          ? [...parts, String(bonus)].join(' + ')
+          : `${parts.join(' + ')} (가산점 없음)`;
+      return { title: row.title, formula, score: matchScore + bonus };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+/** 운영자가 값을 바꾸기 전에 읽는 설명. 저장된 값을 보여 준다(입력 중인 값이 아니다). */
+function RecommendGuide({ weights }: { weights: RecommendWeights }) {
+  return (
+    <section className="mt-4 rounded-lg bg-gray-50 p-4 text-sm leading-6 text-gray-700">
+      <h2 className="pb-1 text-base font-bold text-gray-900">추천은 이렇게 골라요</h2>
+      <p>공고마다 렛츠커리어 콘텐츠 중 점수가 높은 3개를 보여 줘요. 바꾼 점수는 바로 적용돼요.</p>
+
+      <p className="pt-3 font-semibold text-gray-900">점수 = 공고와 맞는 정도 + 종류 가산점</p>
+      <ul className="list-disc pl-5">
+        <li>
+          맞는 정도: 직무가 같으면 {signed(weights.roleScore)}, 직군이 같으면{' '}
+          {signed(weights.fieldScore)}, 준비 단계(자소서·포트폴리오·면접 등)가 겹치면 하나당{' '}
+          {signed(weights.topicScore)} (최대 {weights.maxTopicMatches}개)
+        </li>
+        <li>
+          종류 가산점: 프로그램 {signed(weights.programBonus)}, 자료집{' '}
+          {signed(weights.materialBonus)}, 블로그 {signed(weights.blogBonus)}. 공고와 하나라도 맞을
+          때만 더해요.
+        </li>
+        <li>
+          다른 직군 전용 콘텐츠는 빼요. 한 종류는 최대 {weights.maxPerGroup}
+          개까지만 골라요.
+        </li>
+      </ul>
+
+      <h3 className="pt-3 pb-2 font-semibold text-gray-900">
+        예시: 마케팅 신입 공고 (서류에 자소서·포트폴리오)
+      </h3>
+      <DataTable
+        columns={[
+          { key: 'title', header: '콘텐츠', render: (row) => row.title },
+          { key: 'formula', header: '계산', render: (row) => row.formula },
+          {
+            key: 'score',
+            header: '점수',
+            align: 'right',
+            render: (row) => row.score,
+          },
+        ]}
+        rows={exampleRows(weights)}
+        rowKey={(row) => row.title}
+      />
+
+      <h3 className="pt-3 font-semibold text-gray-900">이럴 땐</h3>
+      <ul className="list-disc pl-5">
+        <li>프로그램을 더 보이고 싶으면 프로그램 가산점을 올려요.</li>
+        <li>세 종류를 골고루 섞고 싶으면 한 종류 최대 개수를 1로 둬요.</li>
+        <li>바꾼 뒤에는 공고 몇 개를 열어 결과를 확인해 주세요.</li>
+      </ul>
+    </section>
   );
 }

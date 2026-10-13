@@ -13,7 +13,7 @@
 > 스펙 대조: 2026-09-29, 7 절의 회원 목록 둘. 생성물에 맞춰 목 핸들러와 화면을 고쳤다. 회원
 > 상세 둘은 여전히 백엔드가 없다
 > 스펙 대조: 2026-10-13, 9 절. `ogonggo-BE` 의 `LetsCareerContentRecommend*` 소스와 배포된
-> `ogonggo-api-admin` 의 `/v3/api-docs` 를 읽고 목 핸들러를 맞췄다. 화면은 `/content/recommend-weights`
+> `ogonggo-api-admin` 의 `/v3/api-docs` 를 읽고 목 핸들러를 맞췄다. 화면은 `/placements/recommend-weights`
 
 ## 이 문서가 무엇인가
 
@@ -128,8 +128,8 @@
 | 29  | `/support/notices`           | 새 공지 → 저장                | `POST /notices`                              | 등록                               |
 | 30  | `/support/notices`           | 수정 폼 → 저장                | `PATCH /notices/{id}`                        | 보낸 값만 수정                     |
 | 31  | `/support/notices`           | 수정 폼 → 삭제                | `DELETE /notices/{id}`                       | 소프트 삭제                        |
-| 32  | `/content/recommend-weights` | 진입                          | `GET /lets-career-content-recommend-weights` | 추천 점수 여덟 칸                  |
-| 33  | `/content/recommend-weights` | 저장                          | `PUT /lets-career-content-recommend-weights` | 여덟 칸 전체 교체                  |
+| 32  | `/placements/recommend-weights` | 진입                          | `GET /lets-career-content-recommend-weights` | 추천 점수 여덟 칸                  |
+| 33  | `/placements/recommend-weights` | 저장                          | `PUT /lets-career-content-recommend-weights` | 여덟 칸 전체 교체                  |
 
 지면(`/placements`)과 통계(`/stats`)는 만들지 않는다. 메뉴에 회색 비활성으로 자리만 있다.
 
@@ -1005,7 +1005,7 @@
 배포된 `/v3/api-docs`(2026-10-13 조회)를 읽고 적은 것이다. 8 절처럼 목 핸들러
 (`packages/api/src/mocks/admin/recommend-weights.ts`)가 스펙을 따라간다.
 
-화면은 `/content/recommend-weights`(좌측 메뉴 `콘텐츠 > 추천 점수`)다
+화면은 `/placements/recommend-weights`(좌측 메뉴 `지면 > 추천 로직 가중치`)다
 (`apps/admin/src/pages/recommend-weights`).
 
 **채용공고 상세의 렛츠커리어 콘텐츠 추천(공고마다 3개)을 고르는 점수다.** 값은 서버에 한 벌만
@@ -1038,7 +1038,7 @@
 
 ### `GET /api/v1/admin/lets-career-content-recommend-weights`
 
-**부르는 곳** — `/content/recommend-weights` 진입.
+**부르는 곳** — `/placements/recommend-weights` 진입.
 
 **응답 `data`** — 여덟 칸이 모두 들어 있다. 바꾼 적이 없으면 기본값이다.
 
@@ -1057,7 +1057,7 @@
 
 ### `PUT /api/v1/admin/lets-career-content-recommend-weights`
 
-**부르는 곳** — `/content/recommend-weights` 저장.
+**부르는 곳** — `/placements/recommend-weights` 저장.
 
 **요청** — 위 여덟 칸이 모두 필수다. 부분 전송은 없고, 하나만 바꿔도 여덟 칸을 모두 보낸다.
 서버는 전체를 교체한다.
