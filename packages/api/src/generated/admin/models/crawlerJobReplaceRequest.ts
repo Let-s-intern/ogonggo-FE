@@ -705,6 +705,6 @@ export interface CrawlerJobReplaceRequest {
      * @maxLength 2048
      */
   sourceUrl: string;
-  /** 원문 페이지에서 읽은 글 그대로. 생략하면 저장된 원문을 그대로 둔다 */
-  sourceText?: string;
+  /** 원문 페이지의 본문 영역 HTML. 생략하면 저장된 원문을 그대로 둔다 */
+  sourceHtml?: string;
 }

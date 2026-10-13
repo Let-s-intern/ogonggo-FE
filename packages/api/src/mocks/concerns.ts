@@ -57,7 +57,8 @@ const REPLY_PREVIEW_SIZE = 5;
 const POPULAR_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
 const POPULAR_LIMIT = 3;
 const TITLE_MAX_LENGTH = 100;
-const CONTENT_MAX_LENGTH = 2000;
+/** 본문(EditorState JSON 문자열) 직렬화 길이 상한. 백엔드 `LexicalEditorStateJson.MAX_SERIALIZED_LENGTH`. */
+const CONTENT_MAX_LENGTH = 200_000;
 const COMMENT_MAX_LENGTH = 1000;
 const DELETED_COMMENT_CONTENT = '삭제된 댓글입니다';
 /** 목 모드에서 새로 쓰는 글·답변이 받는 id. 픽스처 id 와 겹치지 않는다. */
@@ -303,7 +304,20 @@ const getConcernHandler = http.get('*/api/v1/concerns/:concernId', ({ params, re
   return HttpResponse.json(body, { status: 200 });
 });
 
-/** 제목·본문 검증. 비었거나(공백만 포함) 길이를 넘으면 사유 문자열을 돌려준다. */
+/** 본문이 JSON 으로 읽히는지. 백엔드(`LexicalEditorStateJson.isValid`)처럼 형식만 보고 노드는 따지지 않는다. */
+const isJson = (value: string): boolean => {
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * 제목·본문 검증. 제목이 비었거나(공백만 포함) 길이를 넘으면, 본문이 비었거나 JSON 이 아니거나 길이를
+ * 넘으면 사유 문자열을 돌려준다. 저장은 받은 본문 문자열을 그대로 둔다.
+ */
 const validateConcernBody = (body: Partial<SaveConcernRequest>): string | null => {
   if (!isConcernCategory(body.category)) {
     return '[category] 올바른 카테고리가 아닙니다.';
@@ -311,8 +325,11 @@ const validateConcernBody = (body: Partial<SaveConcernRequest>): string | null =
   if (!body.title?.trim() || body.title.length > TITLE_MAX_LENGTH) {
     return `[title] 1자 이상 ${TITLE_MAX_LENGTH}자 이하로 입력해 주세요.`;
   }
-  if (!body.content?.trim() || body.content.length > CONTENT_MAX_LENGTH) {
-    return `[content] 1자 이상 ${CONTENT_MAX_LENGTH}자 이하로 입력해 주세요.`;
+  if (!body.content?.trim() || !isJson(body.content)) {
+    return '[content] 에디터 내용 JSON 형식이 올바르지 않습니다.';
+  }
+  if (body.content.length > CONTENT_MAX_LENGTH) {
+    return `[content] 본문 JSON은 ${CONTENT_MAX_LENGTH}자 이하여야 합니다.`;
   }
   return null;
 };

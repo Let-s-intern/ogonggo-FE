@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { lexicalToPlainText } from '@/shared/lib/lexicalHtml';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { getAuthorName } from '../model/author';
 import type { ConcernSummary } from '../model/types';
@@ -17,8 +18,9 @@ export interface ConcernCardProps {
  * 오른쪽에 첫 첨부 사진(`images[0]`) 정사각 썸네일을 둔다. 사진이 없으면 칸 자체를 그리지 않고
  * 글자 줄이 행 폭을 다 쓴다. 썸네일 크기는 시안 비율로 모바일 64px, PC 96px 이다.
  *
- * 본문은 일반 텍스트이고 응답에 전체가 실려 온다. 한 줄로 줄이는 것은 화면의 `line-clamp-1` 이다 —
- * 줄바꿈은 공백으로 접힌다. 제목은 길면 두 줄까지 보인다.
+ * 본문은 Lexical EditorState JSON 문자열이고 응답에 전체가 실려 온다. 서식 없는 글자만 뽑아(`lexicalToPlainText`,
+ * 문단 사이는 공백 하나) 화면의 `line-clamp-1` 로 한 줄로 줄인다. 예전 글의 일반 텍스트 본문은 그 문자열을 그대로
+ * 쓴다. 제목은 길면 두 줄까지 보인다.
  */
 export function ConcernCard({ concern }: ConcernCardProps) {
   const thumbnail = concern.images[0];
@@ -36,7 +38,9 @@ export function ConcernCard({ concern }: ConcernCardProps) {
         <p className="mt-3 line-clamp-2 text-sm font-bold text-gray-900 md:text-base">
           {concern.title}
         </p>
-        <p className="mt-1 line-clamp-1 text-xs text-gray-500 md:text-sm">{concern.content}</p>
+        <p className="mt-1 line-clamp-1 text-xs text-gray-500 md:text-sm">
+          {lexicalToPlainText(concern.content)}
+        </p>
         <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
           <span className="min-w-0 truncate">{getAuthorName(concern.author)}</span>
           <RelativeTime value={concern.createdAt} className="shrink-0" />

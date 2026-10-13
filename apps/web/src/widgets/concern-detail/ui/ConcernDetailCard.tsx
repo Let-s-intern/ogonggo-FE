@@ -5,6 +5,7 @@ import { OfficialAnswerBadge } from '@/entities/concern/ui/OfficialAnswerBadge';
 import { RelativeTime } from '@/entities/concern/ui/RelativeTime';
 import { AuthorAvatar, ConcernMetaStats } from '@/features/concern-comments';
 import { AttachedImages } from '@/shared/ui/AttachedImages';
+import { LexicalContent } from '@/shared/ui/LexicalContent';
 import { ConcernOwnerActions } from './ConcernOwnerActions';
 
 export interface ConcernDetailCardProps {
@@ -13,7 +14,9 @@ export interface ConcernDetailCardProps {
 
 /**
  * `v13 취준고민/상세.webp`, `모바일 상세.webp` 의 본문 카드 — 카테고리 배지와 `오공고 답변` → 제목 →
- * 작성자 → 시각·조회수·답변 수 → 가는 선 → 본문. 본문은 일반 텍스트라 줄바꿈만 살려 그린다.
+ * 작성자 → 시각·조회수·답변 수 → 가는 선 → 본문. 본문은 Lexical EditorState JSON 이라 `LexicalContent` 가 서버에서
+ * 그린다. 예전 글의 일반 텍스트 본문은 줄바꿈을 살린 문단 하나가 된다. 글자 크기·색·줄 간격은 예전 문단과 같게 두고,
+ * 첫 블록의 위 여백과 마지막 블록의 아래 여백은 빼서 가는 선·사진과의 간격도 예전과 같다.
  *
  * 첨부 사진(`images`)은 본문 아래 `AttachedImages` 가 그린다. 사진이 없으면 그 자리의 간격도 두지 않는다.
  *
@@ -54,9 +57,10 @@ export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
         />
       </div>
       <hr className="my-4 border-gray-200" />
-      <p className="text-sm leading-relaxed break-words whitespace-pre-line text-gray-800">
-        {concern.content}
-      </p>
+      <LexicalContent
+        content={concern.content}
+        className="leading-relaxed break-words text-gray-800 [&>:first-child]:mt-0 [&>:last-child]:mb-0"
+      />
       {concern.images.length > 0 ? (
         <div className="mt-4">
           <AttachedImages images={concern.images} />

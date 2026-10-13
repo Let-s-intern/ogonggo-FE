@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { lexicalToPlainText } from '@/shared/lib/lexicalHtml';
 import { fetchConcernDetail } from '@/widgets/concern-detail';
 import { ConcernDetailPage } from '@/views/concern-detail';
 
@@ -7,7 +8,10 @@ type PageParams = { params: Promise<{ concernId: string }> };
 /** 메타 설명 한 줄 분량. 초과하면 말줄임표를 붙인다. */
 const DESCRIPTION_MAX_LENGTH = 150;
 
-/** 본문은 줄바꿈이 많은 일반 텍스트라 공백으로 접어 한 줄로 만든다. */
+/**
+ * 본문의 서식 없는 글자(`lexicalToPlainText`)를 받는다. 줄바꿈이 남아 있을 수 있어 공백으로 접어 한 줄로
+ * 만든다.
+ */
 function buildDescription(content: string): string {
   const description = content.replace(/\s+/g, ' ').trim();
   return description.length > DESCRIPTION_MAX_LENGTH
@@ -27,7 +31,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const { concernId } = await params;
   const concern = await fetchConcernDetail(Number(concernId));
 
-  const description = buildDescription(concern.content);
+  const description = buildDescription(lexicalToPlainText(concern.content));
   const canonical = `/concerns/${concernId}`;
 
   return {

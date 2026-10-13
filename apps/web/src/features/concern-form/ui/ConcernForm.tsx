@@ -2,7 +2,8 @@
 
 import { useId, useState, type FormEvent } from 'react';
 import { ConcernSummaryResponseCategory } from '@ogonggo/api';
-import { Button, Chip, Input, Textarea, cn } from '@ogonggo/ui';
+import { Button, Chip, Input, cn } from '@ogonggo/ui';
+import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
 import { CONCERN_CATEGORIES, CONCERN_CATEGORY_LABELS } from '@/entities/concern/model/labels';
 import {
   ImageAttachmentField,
@@ -11,9 +12,9 @@ import {
   type ImageAttachment,
 } from '@/shared/ui/ImageAttachmentField';
 import {
-  CONTENT_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   checkConcernForm,
+  toInitialContent,
   type ConcernFormInitial,
   type ConcernFormValues,
 } from '../model/values';
@@ -33,7 +34,7 @@ export interface ConcernFormProps {
   pendingLabel: string;
   /** 보내는 중. 버튼을 막고 글자를 바꾼다. */
   pending?: boolean;
-  /** 제목·본문은 앞뒤 공백을 뗀 값이다. 보낼 수 없는 상태에서는 불리지 않는다. */
+  /** 제목은 앞뒤 공백을 뗀 값, 본문은 EditorState JSON 문자열이다. 보낼 수 없는 상태에서는 불리지 않는다. */
   onSubmit: (values: ConcernFormValues) => void;
   onCancel: () => void;
 }
@@ -46,7 +47,11 @@ export interface ConcernFormProps {
  * 값은 이 안에서 들고 있고 마운트될 때의 `initial` 로 시작한다. 모달이 열릴 때마다 새로 마운트되어
  * 앞서 쓰던 글이 남지 않는다.
  *
- * 글자 수는 입력을 잘라내지 않고 센다. 길이를 넘으면 카운터가 빨개지고 등록이 막힌다. 입력을 자르면
+ * 내용은 모집글과 같은 공용 Lexical 편집기(`RichTextEditor`)이고, 값은 EditorState JSON 을 문자열로 만든
+ * 것이다(저장 요청의 `content` 가 문자열이다). 편집기에 사진 버튼은 없다(`onUploadImage` 를 넘기지 않는다) —
+ * 백엔드가 본문 이미지 노드를 400 으로 거절해서, 사진은 아래 첨부 칸으로 붙인다. 본문 길이는 세지 않는다.
+ *
+ * 제목 글자 수는 입력을 잘라내지 않고 센다. 길이를 넘으면 카운터가 빨개지고 등록이 막힌다. 입력을 자르면
  * 긴 글을 붙여 넣었을 때 뒤가 말없이 사라진다.
  */
 export function ConcernForm({
@@ -64,12 +69,14 @@ export function ConcernForm({
   };
   const [category, setCategory] = useState(initial?.category ?? DEFAULT_CATEGORY);
   const [title, setTitle] = useState(initial?.title ?? '');
-  const [content, setContent] = useState(initial?.content ?? '');
+  const [body, setBody] = useState(() =>
+    initial ? toInitialContent(initial.content) : { content: '', contentText: '' },
+  );
   const [attachments, setAttachments] = useState<ImageAttachment[]>(() =>
     toImageAttachments(initial?.images ?? []),
   );
 
-  const values: ConcernFormValues = { category, title, content, attachments };
+  const values: ConcernFormValues = { category, title, ...body, attachments };
   const check = checkConcernForm(values);
   const uploading = isUploadingAttachments(attachments);
 
@@ -78,7 +85,8 @@ export function ConcernForm({
     if (!check.submittable || uploading || pending) {
       return;
     }
-    onSubmit({ category, title: title.trim(), content: content.trim(), attachments });
+    // 본문은 JSON 이라 다듬지 않는다.
+    onSubmit({ ...values, title: title.trim() });
   };
 
   return (
@@ -132,27 +140,18 @@ export function ConcernForm({
       </div>
 
       <div>
-        <div className="flex items-baseline justify-between pb-3">
-          <label htmlFor={ids.content} className="text-sm font-medium text-gray-900 md:text-base">
-            내용
-          </label>
-          <Counter length={content.length} max={CONTENT_MAX_LENGTH} />
-        </div>
-        <Textarea
+        <label
+          htmlFor={ids.content}
+          className="block pb-3 text-sm font-medium text-gray-900 md:text-base"
+        >
+          내용
+        </label>
+        <RichTextEditor
           id={ids.content}
-          rows={6}
-          value={content}
+          initialContent={body.content || undefined}
+          onChange={(state, text) => setBody({ content: JSON.stringify(state), contentText: text })}
           placeholder={CONTENT_PLACEHOLDER}
-          aria-invalid={check.contentTooLong}
-          aria-describedby={check.contentTooLong ? `${ids.content}-error` : undefined}
-          onChange={(event) => setContent(event.target.value)}
-          className="resize-none text-base"
         />
-        {check.contentTooLong ? (
-          <p id={`${ids.content}-error`} className="pt-1.5 text-sm text-error">
-            내용은 {CONTENT_MAX_LENGTH}자까지 쓸 수 있어요.
-          </p>
-        ) : null}
       </div>
 
       <ImageAttachmentField

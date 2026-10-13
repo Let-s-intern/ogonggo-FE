@@ -145,6 +145,7 @@ export * from './crawlerJobReplaceRequestJobRole';
 export * from './crawlerJobReplaceRequestRecruitmentType';
 export * from './crawlerJobReplaceRequestRegion';
 export * from './crawlerJobReplaceRequestSubRegion';
+export * from './crawlerJobSourceHtmlRequest';
 export * from './crawlerJobSourceTextRequest';
 export * from './crawlerLetsCareerContentResponse';
 export * from './crawlerLetsCareerContentResponseJobFieldsItem';
