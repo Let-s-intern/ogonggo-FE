@@ -13,7 +13,7 @@
 > 스펙 대조: 2026-09-29, 7 절의 회원 목록 둘. 생성물에 맞춰 목 핸들러와 화면을 고쳤다. 회원
 > 상세 둘은 여전히 백엔드가 없다
 > 스펙 대조: 2026-10-13, 9 절. `ogonggo-BE` 의 `LetsCareerContentRecommend*` 소스와 배포된
-> `ogonggo-api-admin` 의 `/v3/api-docs` 를 읽고 목 핸들러를 맞췄다. 화면은 아직 없다
+> `ogonggo-api-admin` 의 `/v3/api-docs` 를 읽고 목 핸들러를 맞췄다. 화면은 `/content/recommend-weights`
 
 ## 이 문서가 무엇인가
 
@@ -1005,8 +1005,8 @@
 배포된 `/v3/api-docs`(2026-10-13 조회)를 읽고 적은 것이다. 8 절처럼 목 핸들러
 (`packages/api/src/mocks/admin/recommend-weights.ts`)가 스펙을 따라간다.
 
-화면은 `/content/recommend-weights` 로 계획돼 있고 아직 없다
-(`.claude/tasks/todo/prd-admin-recommend-weights.md`).
+화면은 `/content/recommend-weights`(좌측 메뉴 `콘텐츠 > 추천 점수`)다
+(`apps/admin/src/pages/recommend-weights`).
 
 **채용공고 상세의 렛츠커리어 콘텐츠 추천(공고마다 3개)을 고르는 점수다.** 값은 서버에 한 벌만
 있고 id 도 페이지도 없다. 바꾼 적이 없으면 기본값이고, 한 번 바꾸면 마지막에 바꾼 값이다.
