@@ -20,6 +20,8 @@ import { SideStudyCard } from './side-study/ui/SideStudyCard';
  * 같은 행의 칸이 전부 가장 높은 카드만큼 늘어나서, 그 상태로 재면 세 카드가 원래 얼마나
  * 높은지를 알 수 없다. 같은 행에 놓았을 때 어떻게 보이는지는 `카드 경계/같은 행` 에 있다.
  *
+ * 넷째 칸은 첫 첨부 사진(`thumbnailUrl`)이 있는 `SideStudyCard` 다. 사진이 없는 셋째 칸과 높이가 같다.
+ *
  * 실측 (2026-09-21, 헤드리스 크롬 1400x1000, `getComputedStyle` + `getBoundingClientRect`):
  *
  * | 항목 | JobCard | BootcampCard | SideStudyCard |
@@ -33,7 +35,7 @@ import { SideStudyCard } from './side-study/ui/SideStudyCard';
  * | 테두리 | 없음 | 없음 | 1px rgb(243,244,246) |
  * | 모서리 | 0 (썸네일만 8px) | 0 (썸네일만 8px) | 16px |
  * | 배지 높이 | 20px | 20px | 24px |
- * | 카드 높이 | 251.5px | 251.5px | 198px |
+ * | 카드 높이 | 251.5px | 251.5px | 356.3px (2026-10-13, 8:5 글 썸네일이 생긴 뒤. 전에는 198px) |
  *
  * 글자 크기는 세 주석의 주장대로 셋이 정확히 같다. 같지 않은 것은 글자가 아니라 상자다 —
  * 안쪽 여백, 요소 간격, 배지 높이, 그리고 카드 높이. 고치지 않는다(이 PRD 의 비목표).
@@ -57,6 +59,9 @@ export const SideBySide: StoryObj = {
         </li>
         <li data-card="side-study">
           <SideStudyCard sideStudy={SIDE_STUDY_MOCK} />
+        </li>
+        <li data-card="side-study-photo">
+          <SideStudyCard sideStudy={{ ...SIDE_STUDY_MOCK, thumbnailUrl: '/icon-192.png' }} />
         </li>
       </ul>
     </div>

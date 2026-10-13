@@ -30,8 +30,11 @@ const HASHTAG_LIMIT = 3;
 
 /**
  * `사이드 스터디 디자인변경.png`(v3)의 목록 카드 — 작성자 썸네일 + `종류 · 진행방식`·닉네임 +
- * 북마크 → 제목 → 모집 배지 → 해시태그·댓글·조회수. 글자 크기는 `entities/job/ui/JobCard.tsx`,
+ * 북마크 → 글 썸네일 → 제목 → 모집 배지 → 해시태그·댓글·조회수. 글자 크기는 `entities/job/ui/JobCard.tsx`,
  * `entities/bootcamp/ui/BootcampCard.tsx`와 같다.
+ *
+ * 글 썸네일(`PostThumbnail`)은 v3 목업에 없고 사용자가 정한 자리다("프로필 밑에 썸네일, 이미지 두 개",
+ * 2026-10-13). 작성자 프로필은 그대로 두어 사진이 두 개 들어간다.
  *
  * v1에서 바뀐 곳은 셋이다. 작성자 프로필 이미지가 왼쪽에 생기면서 메타 줄과 닉네임 줄이 그
  * 오른쪽으로 묶였고, 오른쪽 위에 있던 모집 배지가 제목 아래 자기 줄로 내려왔고, 테두리가
@@ -91,6 +94,7 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
               <BookmarkSlot />
             </span>
           </div>
+          <PostThumbnail src={sideStudy.thumbnailUrl} />
           <p className="line-clamp-2 text-sm font-bold text-gray-900 min-h-10">{sideStudy.title}</p>
           <SideStudyStatus sideStudy={sideStudy} />
           <p className="mt-auto flex flex-col items-start gap-1 text-xs text-gray-400 md:flex-row md:items-center md:justify-between md:gap-2">
@@ -169,6 +173,24 @@ function AuthorThumbnail({ src }: { src?: string }) {
     <span className="block h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-100 md:h-12 md:w-12">
       <Thumbnail src={src} alt="" className="h-full w-full" />
     </span>
+  );
+}
+
+/**
+ * 글 썸네일. 백엔드가 첫 번째 첨부 사진의 주소를 `thumbnailUrl` 로 준다. 상자는 채용공고 카드
+ * 썸네일(`entities/job/ui/JobThumbnail.tsx`)과 같은 8:5 이고 카드 폭을 채운다.
+ *
+ * 사진이 없는 글도 상자를 둔다. 빼면 같은 행에서 사진 있는 카드와 없는 카드의 제목·배지 줄 높이가
+ * 어긋난다. 빈 자리와 깨진 주소는 `Thumbnail` 이 오공고 로고로 떨어뜨린다 — 맞춤(`object-cover`)과
+ * 로고 크기를 여기서 덮어쓰지 않는다. 폴백 바탕이 카드와 같은 흰색이라 상자 경계는 테두리로 보인다.
+ *
+ * 북마크 버튼(`absolute top-4`)은 첫 줄에 겹치므로 이 상자가 생겨도 자리가 그대로다.
+ */
+function PostThumbnail({ src }: { src?: string }) {
+  return (
+    <div className="aspect-[8/5] w-full overflow-hidden rounded-lg border border-gray-100 bg-white">
+      <Thumbnail src={src} alt="" className="h-full w-full" />
+    </div>
   );
 }
 
