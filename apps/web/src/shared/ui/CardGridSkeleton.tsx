@@ -52,16 +52,16 @@ export function CardGridSkeleton({
           key={index}
           className={cn(
             'flex flex-col',
-            framed ? 'gap-3 rounded-lg border border-gray-100 p-4' : 'gap-2',
+            framed ? 'gap-2 rounded-lg border border-gray-100 p-4 md:gap-3' : 'gap-2',
           )}
         >
           {framed ? (
             <>
               {/* 작성자 썸네일 48px + 그 오른쪽의 메타(16px)·닉네임(20px) 두 줄. 행 높이는
-                  썸네일이 정한다. */}
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 shrink-0 rounded-md bg-gray-100" />
-                <div className="flex flex-1 flex-col gap-1">
+                  썸네일이 정한다. 모바일은 카드처럼 40px 썸네일 아래로 두 줄을 내린다. */}
+              <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-3">
+                <div className="h-10 w-10 shrink-0 rounded-md bg-gray-100 md:h-12 md:w-12" />
+                <div className="flex w-full flex-col md:flex-1 md:gap-1">
                   <div className="h-4 w-20 rounded bg-gray-100" />
                   <div className="h-5 w-24 rounded bg-gray-100" />
                 </div>
@@ -83,9 +83,21 @@ export function CardGridSkeleton({
             <div className="h-4 rounded bg-gray-100" />
             <div className="h-4 w-2/3 rounded bg-gray-100" />
           </div>
-          {/* 모집 배지 줄 — `Badge` 기본값(`px-2 py-1` + `text-xs`)이라 24px이다. */}
-          {framed ? <div className="h-6 w-20 rounded-sm bg-gray-100" /> : null}
-          {hasCardFooter ? <div className="h-4 w-full rounded bg-gray-100" /> : null}
+          {/* 모집 배지 줄 — `Badge` 기본값(`px-2 py-1` + `text-xs`)이라 24px이다. 모바일은 카드가
+              모집 직무(16px)를 배지 위에 쌓는다. */}
+          {framed ? (
+            <div className="flex flex-col gap-1">
+              <div className="h-4 w-24 rounded bg-gray-100 md:hidden" />
+              <div className="h-6 w-20 rounded-sm bg-gray-100" />
+            </div>
+          ) : null}
+          {/* 해시태그·댓글·조회수 줄. 모바일 카드는 해시태그와 숫자를 두 줄로 쌓는다. */}
+          {hasCardFooter ? (
+            <div className="flex flex-col gap-1">
+              <div className="h-4 w-full rounded bg-gray-100" />
+              <div className="h-4 w-16 rounded bg-gray-100 md:hidden" />
+            </div>
+          ) : null}
         </li>
       ))}
     </ul>
