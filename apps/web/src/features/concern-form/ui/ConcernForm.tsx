@@ -11,7 +11,6 @@ import {
   type ImageAttachment,
 } from '@/shared/ui/ImageAttachmentField';
 import {
-  CONTENT_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   checkConcernForm,
   type ConcernFormInitial,
@@ -69,7 +68,7 @@ export function ConcernForm({
     toImageAttachments(initial?.images ?? []),
   );
 
-  const values: ConcernFormValues = { category, title, content, attachments };
+  const values: ConcernFormValues = { category, title, content, contentText: content, attachments };
   const check = checkConcernForm(values);
   const uploading = isUploadingAttachments(attachments);
 
@@ -78,7 +77,7 @@ export function ConcernForm({
     if (!check.submittable || uploading || pending) {
       return;
     }
-    onSubmit({ category, title: title.trim(), content: content.trim(), attachments });
+    onSubmit({ ...values, title: title.trim(), content: content.trim() });
   };
 
   return (
@@ -132,27 +131,20 @@ export function ConcernForm({
       </div>
 
       <div>
-        <div className="flex items-baseline justify-between pb-3">
-          <label htmlFor={ids.content} className="text-sm font-medium text-gray-900 md:text-base">
-            내용
-          </label>
-          <Counter length={content.length} max={CONTENT_MAX_LENGTH} />
-        </div>
+        <label
+          htmlFor={ids.content}
+          className="block pb-3 text-sm font-medium text-gray-900 md:text-base"
+        >
+          내용
+        </label>
         <Textarea
           id={ids.content}
           rows={6}
           value={content}
           placeholder={CONTENT_PLACEHOLDER}
-          aria-invalid={check.contentTooLong}
-          aria-describedby={check.contentTooLong ? `${ids.content}-error` : undefined}
           onChange={(event) => setContent(event.target.value)}
           className="resize-none text-base"
         />
-        {check.contentTooLong ? (
-          <p id={`${ids.content}-error`} className="pt-1.5 text-sm text-error">
-            내용은 {CONTENT_MAX_LENGTH}자까지 쓸 수 있어요.
-          </p>
-        ) : null}
       </div>
 
       <ImageAttachmentField
