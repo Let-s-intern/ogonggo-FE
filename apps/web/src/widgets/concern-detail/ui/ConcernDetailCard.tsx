@@ -41,6 +41,7 @@ export function ConcernDetailCard({ concern }: ConcernDetailCardProps) {
           title={concern.title}
           category={concern.category}
           content={concern.content}
+          imageIds={concern.images.map((image) => image.id)}
         />
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">

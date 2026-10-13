@@ -16,6 +16,8 @@ export interface ConcernFormValues {
 /** 수정할 고민글. 모달을 수정 모드로 여는 값이고, 폼의 처음 값이 된다. */
 export interface ConcernFormInitial extends ConcernFormValues {
   id: number;
+  /** 글에 붙은 사진의 id. 수정 저장 때 그대로 보낸다 — 빈 배열을 보내면 사진이 지워진다. */
+  imageIds: string[];
 }
 
 export interface ConcernFormCheck {

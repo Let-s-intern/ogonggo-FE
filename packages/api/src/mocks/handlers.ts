@@ -174,21 +174,24 @@ const CALENDAR_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * 직군 라벨 → enum. 실데이터 시드의 `job_major` 는 라벨이고, 백엔드는 직군을 enum 으로 주고
  * 받는다(ogonggo-BE LC-3385). 라벨은 `GET /api/v1/enums` 의 `JobField` 설명 그대로다.
+ *
+ * 백엔드가 직군 여섯 개를 합쳤다(ogonggo-BE #86). 시드에는 옛 라벨이 남아 있어 그 라벨은 합쳐진
+ * 직군으로 옮긴다 — 운영 DB 의 공고도 같은 방식으로 옮겨졌다.
  */
 const JOB_FIELD_BY_LABEL: Record<string, UserJobCalendarItemResponseJobField> = {
   IT·개발: 'IT_DEVELOPMENT',
-  AI·데이터: 'AI_DATA',
+  AI·데이터: 'IT_DEVELOPMENT',
   게임: 'GAME',
-  디자인: 'DESIGN',
+  디자인: 'PLANNING_STRATEGY',
   기획·전략: 'PLANNING_STRATEGY',
   마케팅·광고: 'MARKETING_ADVERTISING',
-  상품기획·MD: 'MERCHANDISING',
+  상품기획·MD: 'PLANNING_STRATEGY',
   영업: 'SALES',
   무역·물류: 'TRADE_LOGISTICS',
   운송·배송: 'TRANSPORT_DELIVERY',
   법률·법무: 'LEGAL',
   HR·총무: 'HR_GENERAL_AFFAIRS',
-  회계·세무·재무: 'ACCOUNTING_TAX_FINANCE',
+  회계·세무·재무: 'HR_GENERAL_AFFAIRS',
   증권·운용: 'SECURITIES_ASSET_MANAGEMENT',
   은행·카드·보험: 'BANKING_CARD_INSURANCE',
   '엔지니어링·R&D': 'ENGINEERING_RND',
@@ -197,8 +200,8 @@ const JOB_FIELD_BY_LABEL: Record<string, UserJobCalendarItemResponseJobField> = 
   의료·보건: 'MEDICAL_HEALTH',
   공공·복지: 'PUBLIC_WELFARE',
   교육: 'EDUCATION',
-  미디어·엔터: 'MEDIA_ENTERTAINMENT',
-  고객상담·TM: 'CUSTOMER_SERVICE_TM',
+  미디어·엔터: 'MARKETING_ADVERTISING',
+  고객상담·TM: 'HR_GENERAL_AFFAIRS',
   서비스: 'SERVICE',
   식음료: 'FOOD_BEVERAGE',
 };

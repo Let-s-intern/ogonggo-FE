@@ -27,4 +27,10 @@ export interface SaveConcernRequest {
      * @maxLength 2000
      */
   content: string;
+  /**
+     * 첨부할 사진의 이미지 식별자를 보일 순서대로. `usage=CONCERN`으로 올리고 완료한 JPG·PNG만 됩니다. 수정할 때도 남길 사진을 모두 보내며, 보내지 않으면 사진이 없는 글이 됩니다.
+     * @minItems 0
+     * @maxItems 3
+     */
+  imageIds: string[];
 }

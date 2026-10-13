@@ -5,7 +5,7 @@ import type {
   ListMyJobBookmarksJobField,
   ListMyJobBookmarksJobRoleItem,
 } from '@ogonggo/api';
-import { JOB_FIELD_LABELS, jobRolesOf } from '@/entities/job/model/labels';
+import { jobRolesOf, toJobField } from '@/entities/job/model/labels';
 
 /**
  * `/mypage/scraps` 의 URL 쿼리 상태(PRD 2 절). 탭·필터·페이지가 전부 주소에 있다 — 목록
@@ -133,10 +133,8 @@ export function parseMyScrapsQuery(
   if (keys.includes('employmentType')) {
     parsed.employmentType = pick(searchParams.employmentType, EMPLOYMENT_TYPES);
     parsed.experienceType = pick(searchParams.experienceType, EXPERIENCE_TYPES);
-    parsed.jobField = pick(
-      searchParams.jobField,
-      Object.keys(JOB_FIELD_LABELS) as ListMyJobBookmarksJobField[],
-    );
+    // 없어진 직군(옛 주소)은 합쳐진 직군으로 읽는다.
+    parsed.jobField = searchParams.jobField ? toJobField(searchParams.jobField) : undefined;
     // 직무는 고른 직군에 속한 것만 받는다. 직군 없이 온 직무는 필터 줄에 그릴 자리가 없다.
     parsed.jobRole = parsed.jobField
       ? pick(searchParams.jobRole, jobRolesOf(parsed.jobField))

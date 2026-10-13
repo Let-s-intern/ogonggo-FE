@@ -64,4 +64,10 @@ export interface CreateRecruitmentPostDraftRequest {
      * @maxLength 2048
      */
   contactValue?: string;
+  /**
+     * 첨부할 사진의 이미지 식별자를 보일 순서대로. `usage=RECRUITMENT_POST`로 올리고 완료한 JPG·PNG만 됩니다. 본문에는 사진을 넣지 않습니다. 수정할 때도 남길 사진을 모두 보내며, 보내지 않으면 사진이 없는 글이 됩니다.
+     * @minItems 0
+     * @maxItems 3
+     */
+  imageIds: string[];
 }

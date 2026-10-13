@@ -19,6 +19,8 @@ import type { RecruitmentPostDetailResponse } from '../../generated/user/models/
  * 상세 화면 분기를 지나가는 건: 닉네임 없음(id 2), 프로필 이미지 있음(id 1), 본문에 목록·링크·
  * 인용·코드·굵은 글씨와 렌더러가 모르는 노드가 섞인 것(id 12), 기술 스택 없음(id 3),
  * `eligibilityAndSelectionProcess` 없음(id 2, 3, 4), 마감(id 11).
+ *
+ * 첨부 사진(`images`)은 id 1(3장), 3(1장), 12(2장)에만 있다. 주소는 `apps/web/public/hero/` 의 이미지다.
  */
 export type RecruitmentPostFixture = RecruitmentPostDetailResponse & {
   /** 목록 응답의 `applicationCount`. 상세 응답에는 없는 값이다. */
@@ -155,6 +157,11 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 3,
     bookmarkCount: 7,
     bookmarked: false,
+    images: [
+      { id: 'recruitment-post-1-image-1', url: '/hero/side-studies.png' },
+      { id: 'recruitment-post-1-image-2', url: '/hero/jobs.png' },
+      { id: 'recruitment-post-1-image-3', url: '/hero/concerns.png' },
+    ],
   },
   {
     id: 2,
@@ -183,6 +190,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 1,
     bookmarkCount: 2,
     bookmarked: false,
+    images: [],
   },
   {
     id: 3,
@@ -211,6 +219,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 5,
     bookmarkCount: 12,
     bookmarked: true,
+    images: [{ id: 'recruitment-post-3-image-1', url: '/hero/side-studies.png' }],
   },
   {
     id: 4,
@@ -239,6 +248,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 7,
     bookmarkCount: 9,
     bookmarked: false,
+    images: [],
   },
   {
     id: 5,
@@ -268,6 +278,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 2,
     bookmarkCount: 4,
     bookmarked: false,
+    images: [],
   },
   {
     id: 6,
@@ -298,6 +309,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 20,
     bookmarkCount: 21,
     bookmarked: true,
+    images: [],
   },
   {
     id: 7,
@@ -328,6 +340,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 6,
     bookmarkCount: 8,
     bookmarked: false,
+    images: [],
   },
   {
     id: 8,
@@ -357,6 +370,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 4,
     bookmarkCount: 5,
     bookmarked: false,
+    images: [],
   },
   {
     id: 9,
@@ -387,6 +401,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 9,
     bookmarkCount: 30,
     bookmarked: true,
+    images: [],
   },
   {
     id: 10,
@@ -416,6 +431,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 14,
     bookmarkCount: 26,
     bookmarked: false,
+    images: [],
   },
   {
     id: 11,
@@ -445,6 +461,7 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 8,
     bookmarkCount: 6,
     bookmarked: false,
+    images: [],
   },
   {
     id: 12,
@@ -477,5 +494,9 @@ export const RECRUITMENT_POST_FIXTURES: RecruitmentPostFixture[] = [
     commentCount: 10,
     bookmarkCount: 15,
     bookmarked: false,
+    images: [
+      { id: 'recruitment-post-12-image-1', url: '/hero/jobs.png' },
+      { id: 'recruitment-post-12-image-2', url: '/hero/side-studies.png' },
+    ],
   },
 ];

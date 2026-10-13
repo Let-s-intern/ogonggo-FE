@@ -1,3 +1,4 @@
+import type { ConcernImageResponse } from '../../generated/user/models/concernImageResponse';
 import type { ConcernSummaryResponseCategory } from '../../generated/user/models/concernSummaryResponseCategory';
 import { MOCK_VIEWER_NICKNAME, MOCK_VIEWER_USER_ID, minutesAgo } from './recruitment-post-comment';
 
@@ -20,6 +21,8 @@ import { MOCK_VIEWER_NICKNAME, MOCK_VIEWER_USER_ID, minutesAgo } from './recruit
  * - 최근 7 일(인기 고민 대상) 안의 글 7 건과 그보다 오래된 글 7 건. 인기 고민은 앞쪽에서만 나온다.
  * - 목 사용자(`MOCK_VIEWER_USER_ID`) 가 쓴 글(id 11) 과 답변(id 1 의 답변 5) — 로그인 상태면
  *   수정·삭제가 보인다.
+ * - 사진이 붙은 글: id 1(1장), 2(2장), 11(3장 — 내 글이라 수정해도 사진이 남는지 본다). 나머지는 사진 없음.
+ *   주소는 `apps/web/public/hero/` 의 이미지다.
  * - 고민글 1 번이 답변 화면의 모든 분기를 모았다: 운영자 답변, 글쓴이 답변(`concernAuthor`),
  *   삭제된 답변(남은 답글이 있어 자리를 지킨다), 답글 7 개짜리 답변(미리보기 5 개 뒤에 더보기 2 개).
  *
@@ -42,6 +45,8 @@ export interface ConcernFixture {
   viewCount: number;
   /** 삭제 시각. 있으면 삭제된 글이다. */
   deletedAt?: string;
+  /** 첨부 사진, 첨부 순서. 없으면 사진 없는 글이다. */
+  images?: ConcernImageResponse[];
 }
 
 export interface ConcernCommentFixture {
@@ -112,24 +117,33 @@ const concern = (
 });
 
 export const CONCERN_FIXTURES: ConcernFixture[] = [
-  concern(
-    1,
-    'JOB_POSTING',
-    301,
-    3 * DAY,
-    5310,
-    '콘텐츠 마케터 공고는 많은데 어떤 공고가 좋은지 모르겠어요',
-    '요즘 콘텐츠 마케터 공고가 정말 많은데, 어떤 기준으로 골라야 할지 모르겠어요.\n혹시 추천하시는 콘텐츠 마케터 공고가 있나요?',
-  ),
-  concern(
-    2,
-    'CAREER',
-    302,
-    2 * DAY,
-    2870,
-    '마케팅 직무로 가고 싶은데 데이터 분석 공부를 먼저 해야 할까요?',
-    '퍼포먼스 마케팅 공고를 보면 SQL 이나 GA 경험을 자주 요구합니다.\n비전공자인데 자격증부터 준비할지, 작은 프로젝트로 경험을 만들지 고민입니다.',
-  ),
+  {
+    ...concern(
+      1,
+      'JOB_POSTING',
+      301,
+      3 * DAY,
+      5310,
+      '콘텐츠 마케터 공고는 많은데 어떤 공고가 좋은지 모르겠어요',
+      '요즘 콘텐츠 마케터 공고가 정말 많은데, 어떤 기준으로 골라야 할지 모르겠어요.\n혹시 추천하시는 콘텐츠 마케터 공고가 있나요?',
+    ),
+    images: [{ id: 'concern-1-image-1', url: '/hero/concerns.png' }],
+  },
+  {
+    ...concern(
+      2,
+      'CAREER',
+      302,
+      2 * DAY,
+      2870,
+      '마케팅 직무로 가고 싶은데 데이터 분석 공부를 먼저 해야 할까요?',
+      '퍼포먼스 마케팅 공고를 보면 SQL 이나 GA 경험을 자주 요구합니다.\n비전공자인데 자격증부터 준비할지, 작은 프로젝트로 경험을 만들지 고민입니다.',
+    ),
+    images: [
+      { id: 'concern-2-image-1', url: '/hero/jobs.png' },
+      { id: 'concern-2-image-2', url: '/hero/side-studies.png' },
+    ],
+  },
   concern(
     3,
     'APPLICATION_INTERVIEW',
@@ -206,15 +220,22 @@ export const CONCERN_FIXTURES: ConcernFixture[] = [
     '공고에 연봉이 "회사 내규에 따름"이라고만 적혀 있는데 면접에서 연봉을 먼저 물어봐도 되는지, 물어본다면 언제 어떻게 말을 꺼내는 게 좋은지 궁금합니다',
     '제목이 길어서 목록에서 두 줄로 잘리는지 확인하려고 만든 글입니다. 실제 질문은 연봉을 언제 물어보면 좋은가입니다.',
   ),
-  concern(
-    11,
-    'CAREER',
-    MOCK_VIEWER_USER_ID,
-    3 * HOUR,
-    18,
-    '데이터 직무 신입 포트폴리오에는 어떤 프로젝트를 넣는 게 좋을까요?',
-    '목 모드에서 내가 쓴 고민글입니다. 로그인 상태에서 상세를 열면 수정·삭제가 보여야 합니다.',
-  ),
+  {
+    ...concern(
+      11,
+      'CAREER',
+      MOCK_VIEWER_USER_ID,
+      3 * HOUR,
+      18,
+      '데이터 직무 신입 포트폴리오에는 어떤 프로젝트를 넣는 게 좋을까요?',
+      '목 모드에서 내가 쓴 고민글입니다. 로그인 상태에서 상세를 열면 수정·삭제가 보여야 합니다.',
+    ),
+    images: [
+      { id: 'concern-11-image-1', url: '/hero/concerns.png' },
+      { id: 'concern-11-image-2', url: '/hero/jobs.png' },
+      { id: 'concern-11-image-3', url: '/hero/side-studies.png' },
+    ],
+  },
   concern(
     12,
     'ETC',

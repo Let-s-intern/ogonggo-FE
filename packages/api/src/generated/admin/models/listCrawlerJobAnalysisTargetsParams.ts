@@ -8,7 +8,7 @@
 export type ListCrawlerJobAnalysisTargetsParams = {
 /**
  * @minimum 1
- * @maximum 200
+ * @maximum 500
  */
 size?: number;
 };

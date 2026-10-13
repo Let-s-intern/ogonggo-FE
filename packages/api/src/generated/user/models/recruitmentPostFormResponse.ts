@@ -11,6 +11,7 @@ import type { RecruitmentPostFormResponseProgressMethod } from './recruitmentPos
 import type { RecruitmentPostFormResponseRecruitmentStatus } from './recruitmentPostFormResponseRecruitmentStatus';
 import type { RecruitmentPostFormResponseRecruitmentType } from './recruitmentPostFormResponseRecruitmentType';
 import type { RecruitmentPostFormResponseStatus } from './recruitmentPostFormResponseStatus';
+import type { RecruitmentPostImageResponse } from './recruitmentPostImageResponse';
 
 export interface RecruitmentPostFormResponse {
   postId: number;
@@ -51,6 +52,8 @@ export interface RecruitmentPostFormResponse {
   technologyStacks: string[];
   summary?: string;
   content?: JsonNode;
+  /** 첨부 사진. 수정할 때 남길 사진의 id를 imageIds로 다시 보냅니다. */
+  images: RecruitmentPostImageResponse[];
   eligibilityAndSelectionProcess?: string;
   recruitmentStartDate?: string;
   recruitmentEndDate?: string;

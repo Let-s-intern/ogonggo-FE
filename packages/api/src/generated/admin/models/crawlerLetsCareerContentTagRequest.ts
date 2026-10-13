@@ -16,7 +16,7 @@ export interface CrawlerLetsCareerContentTagRequest {
      */
   contentHash: string;
   /**
-     * 맞는 직군. 특정 직군 전용이 아니면 빈 배열
+     * 맞는 직군. 특정 직군 전용이 아니면 빈 배열. IT_DEVELOPMENT, MARKETING_ADVERTISING, SALES, HR_GENERAL_AFFAIRS, PLANNING_STRATEGY 다섯 묶음으로 저장하며, 다른 직군은 묶음으로 옮기고 묶음이 없으면 버립니다
      * @minItems 0
      * @maxItems 5
      */

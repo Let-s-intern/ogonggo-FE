@@ -184,6 +184,7 @@ const toSummary = (concern: ConcernFixture): ConcernSummaryResponse => ({
   viewCount: concern.viewCount,
   commentCount: commentCountOf(concern.id),
   hasOfficialComment: hasOfficialCommentOf(concern.id),
+  images: concern.images ?? [],
 });
 
 const toDetail = (concern: ConcernFixture, viewer: number | null): ConcernDetailResponse => ({
@@ -379,6 +380,8 @@ const replaceConcernHandler = http.put(
     concern.category = body.category as ConcernFixture['category'];
     concern.title = body.title as string;
     concern.content = body.content as string;
+    // 백엔드처럼 보낸 id 의 사진만 남긴다. 빠진 사진은 지워진다.
+    concern.images = (concern.images ?? []).filter((image) => body.imageIds?.includes(image.id));
     concern.updatedAt = minutesAgo(0);
 
     const response: SuccessResponseUnit = success(200);

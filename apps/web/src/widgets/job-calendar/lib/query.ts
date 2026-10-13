@@ -5,8 +5,8 @@ import {
 import {
   ALL_JOB_MAJOR_SLUGS,
   ALL_JOB_MAJORS_PARAM,
-  isJobMajorSlug,
   serializeJobMajors,
+  toJobMajorSlug,
 } from './job-majors';
 
 /** 달력 필터 줄의 `채용 형태`. 서버가 한 번에 하나만 받는다(`ListPublicJobCalendarParams`). */
@@ -31,7 +31,7 @@ export type JobCalendarDateBasis = 'deadline' | 'start';
  * 실제로 뷰를 갈아끼우는 것은 Push 3 이다.
  *
  * `majors`와 `picker`는 v6(`docs/asset/v6 공고달력/`)의 관심 직무 선택이다. 고른 직무는
- * `?majors=it,design`, 선택 화면이 열려 있는지는 `?picker=1`이다.
+ * `?majors=it,planning`, 선택 화면이 열려 있는지는 `?picker=1`이다.
  *
  * `employmentType`·`experienceType` 은 필터 줄의 알약 둘이다. **직무와 같은 자리에 둔다** —
  * 값은 주소에 싣고(`?employmentType=FULL_TIME,INTERN`) 서버 컴포넌트가 읽는다. 여럿을 고를 수 있다.
@@ -43,7 +43,7 @@ export interface JobCalendarQuery {
   date: Date;
   /** 켜면 주간, 끄면 월간. 기본은 월간이다(PRD 8.1). */
   brief: boolean;
-  /** 고른 관심 직무의 `slug`(`./job-majors`). 수 제한은 없고 모르는 값은 버린다. 전부면 25개다. */
+  /** 고른 관심 직무의 `slug`(`./job-majors`). 수 제한은 없고 모르는 값은 버린다. 전부면 19개다. */
   majors: string[];
   /** 관심 직무 선택 화면이 달력 자리에 열려 있는지. */
   picker: boolean;
@@ -138,6 +138,7 @@ export function toggleEnumValue<TValue extends string>(
 
 /**
  * `?majors=` 를 아는 값만, 중복 없이 읽는다. `all` 이면 전부다(`ALL_JOB_MAJORS_PARAM`).
+ * 없어진 칸의 옛 slug 는 옮긴 칸으로 읽고(`toJobMajorSlug`), 겹치면 하나로 합친다.
  */
 export function parseJobMajors(value: string | undefined): string[] {
   if (!value) {
@@ -146,7 +147,10 @@ export function parseJobMajors(value: string | undefined): string[] {
   if (value === ALL_JOB_MAJORS_PARAM) {
     return [...ALL_JOB_MAJOR_SLUGS];
   }
-  const slugs = value.split(',').filter(isJobMajorSlug);
+  const slugs = value
+    .split(',')
+    .map(toJobMajorSlug)
+    .filter((slug): slug is string => slug !== undefined);
   return [...new Set(slugs)];
 }
 

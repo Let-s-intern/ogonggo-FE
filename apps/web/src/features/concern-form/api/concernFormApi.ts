@@ -13,7 +13,10 @@ import type { ConcernFormValues } from '../model/values';
  * 2xx 가 아니면 `HttpError` 로 던진다.
  */
 export async function createConcernPost(values: ConcernFormValues): Promise<number> {
-  const response = (await createConcern(values)) as unknown as SuccessResponseCreateConcernResponse;
+  const response = (await createConcern({
+    ...values,
+    imageIds: [],
+  })) as unknown as SuccessResponseCreateConcernResponse;
   const id = response.data?.id;
   if (id === undefined) {
     throw new Error('고민글 작성 응답에 id 가 없습니다.');
@@ -21,9 +24,16 @@ export async function createConcernPost(values: ConcernFormValues): Promise<numb
   return id;
 }
 
-/** 고민글 수정. 카테고리·제목·본문을 모두 보낸다. 작성자 본인만 된다(403). */
-export async function updateConcernPost(id: number, values: ConcernFormValues): Promise<void> {
-  await replaceMyConcern(id, values);
+/**
+ * 고민글 수정. 카테고리·제목·본문을 모두 보낸다. 작성자 본인만 된다(403).
+ * `imageIds` 는 읽어 온 글의 사진 그대로다 — 남길 사진을 모두 보내야 하고, 빈 배열이면 사진이 지워진다.
+ */
+export async function updateConcernPost(
+  id: number,
+  values: ConcernFormValues,
+  imageIds: string[],
+): Promise<void> {
+  await replaceMyConcern(id, { ...values, imageIds });
 }
 
 /**

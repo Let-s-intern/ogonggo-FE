@@ -155,7 +155,7 @@ function ConcernFormBody({ initial, closeDialog, onSuccess, onPendingChange }: B
   const save = useMutation({
     mutationFn: async (values: ConcernFormValues): Promise<number> => {
       if (initial) {
-        await updateConcernPost(initial.id, values);
+        await updateConcernPost(initial.id, values, initial.imageIds);
         return initial.id;
       }
       return createConcernPost(values);

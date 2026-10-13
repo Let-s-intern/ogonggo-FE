@@ -1,4 +1,7 @@
-import type { AdminConcernDetailResponse } from '../../generated/admin/models';
+import type {
+  AdminConcernDetailResponse,
+  AdminConcernImageResponse,
+} from '../../generated/admin/models';
 
 /**
  * 어드민 취준고민 고민글 목(`GET /api/v1/admin/concerns`, `GET /api/v1/admin/concerns/{concernId}`).
@@ -6,8 +9,15 @@ import type { AdminConcernDetailResponse } from '../../generated/admin/models';
  * 제목·닉네임·본문은 지어낸 값이다. 운영 데이터가 아직 0 건이라 옮겨 올 실데이터가 없다.
  *
  * 화면 분기를 지나가는 건: 숨긴 글(id 4, 9), 프로필 없는 작성자(id 6), 공식 답변 있음(id 1, 3, 8),
- * 답변 0 건(id 5, 11), 수정된 글(id 2).
+ * 답변 0 건(id 5, 11), 수정된 글(id 2), 사진 있음(id 1 은 3장, id 4 는 1장).
+ *
+ * 사진 주소는 운영 웹의 `/hero/` 이미지다(`apps/web/public/hero/`). 어드민은 다른 주소에서 떠서 상대 경로로는 못 읽는다.
  */
+
+const heroImage = (id: string, name: string): AdminConcernImageResponse => ({
+  id,
+  url: `https://www.ogonggo.co.kr/hero/${name}.png`,
+});
 
 /** 오늘 기준 상대 일수의 시각. `HH:mm` 을 받아 그날 그 시각으로 둔다. */
 const daysAgo = (days: number, time: string): string => {
@@ -19,10 +29,14 @@ const daysAgo = (days: number, time: string): string => {
 };
 
 const concern = (
-  fields: Omit<AdminConcernDetailResponse, 'updatedAt'> & { updatedAt?: string },
+  fields: Omit<AdminConcernDetailResponse, 'updatedAt' | 'images'> & {
+    updatedAt?: string;
+    images?: AdminConcernImageResponse[];
+  },
 ): AdminConcernDetailResponse => ({
   ...fields,
   updatedAt: fields.updatedAt ?? fields.registeredAt,
+  images: fields.images ?? [],
 });
 
 export const ADMIN_CONCERN_FIXTURES: AdminConcernDetailResponse[] = [
@@ -40,6 +54,11 @@ export const ADMIN_CONCERN_FIXTURES: AdminConcernDetailResponse[] = [
     authorUserId: 201,
     authorNickname: '취준1년차',
     registeredAt: daysAgo(1, '09:20'),
+    images: [
+      heroImage('admin-concern-1-image-1', 'concerns'),
+      heroImage('admin-concern-1-image-2', 'jobs'),
+      heroImage('admin-concern-1-image-3', 'side-studies'),
+    ],
   }),
   concern({
     id: 2,
@@ -84,6 +103,7 @@ export const ADMIN_CONCERN_FIXTURES: AdminConcernDetailResponse[] = [
     authorUserId: 204,
     authorNickname: '스터디장',
     registeredAt: daysAgo(3, '23:45'),
+    images: [heroImage('admin-concern-4-image-1', 'concerns')],
   }),
   concern({
     id: 5,
