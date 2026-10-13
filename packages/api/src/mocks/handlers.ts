@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { userConcernHandlers } from './concerns';
+import { getJobRecommendedContentsHandler } from './job-recommended-contents';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
@@ -1125,6 +1126,7 @@ export const handlers: HttpHandler[] = [
   // `getJobHandler`보다 앞이어야 한다 — `*/api/v1/jobs/:jobId`가 `/jobs/calendar`, `/jobs/today`도 잡는다.
   getJobCalendarHandler,
   getTodayJobsHandler,
+  getJobRecommendedContentsHandler,
   getJobHandler,
   getBootcampsHandler,
   getBootcampHandler,
