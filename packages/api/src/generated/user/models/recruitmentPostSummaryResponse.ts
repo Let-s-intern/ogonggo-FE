@@ -42,6 +42,8 @@ export interface RecruitmentPostSummaryResponse {
   positions: RecruitmentPostSummaryResponsePositionsItem[];
   recruitmentStartDate: string;
   recruitmentEndDate: string;
+  /** 썸네일. 첫 번째 첨부 사진의 URL이며 사진이 없으면 null입니다. */
+  thumbnailUrl?: string;
   viewCount: number;
   commentCount: number;
   applicationCount: number;

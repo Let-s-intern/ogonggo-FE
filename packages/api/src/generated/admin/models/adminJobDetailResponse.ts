@@ -691,6 +691,6 @@ export interface AdminJobDetailResponse {
   benefits?: string;
   hiringProcess?: string;
   sourceUrl?: string;
-  /** 크롤러가 원문 페이지에서 읽은 글입니다. 원문 저장 전에 받은 공고와 기업회원 공고는 null입니다. */
-  sourceText?: string;
+  /** 채용공고 원문 HTML입니다. 원문 페이지의 본문 영역을 안전한 태그만 남긴 것이며, 원문이 없는 공고와 기업회원 공고는 null입니다. */
+  sourceHtml?: string;
 }

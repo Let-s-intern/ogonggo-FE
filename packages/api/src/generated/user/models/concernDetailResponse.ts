@@ -21,6 +21,7 @@ export interface ConcernDetailResponse {
      */
   category: ConcernDetailResponseCategory;
   title: string;
+  /** 본문 Lexical EditorState JSON 문자열 */
   content: string;
   /** 첨부 사진. 첨부한 순서대로이며 없으면 빈 배열입니다. */
   images: ConcernImageResponse[];
