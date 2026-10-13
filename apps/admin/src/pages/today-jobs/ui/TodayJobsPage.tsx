@@ -553,7 +553,7 @@ function JobPicker({ selectedIds, onAdd, onClose }: Omit<JobPickerModalProps, 'o
           {row.title}
           {row.visibility === 'HIDDEN' ? (
             <span className="block pt-1 text-xs text-orange-600">
-              비노출 공고는 오늘의 공고에 넣을 수 없습니다.
+              비노출 공고는 오공고 PICK에 넣을 수 없습니다.
             </span>
           ) : null}
         </>
