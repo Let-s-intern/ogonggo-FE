@@ -6,6 +6,7 @@
  */
 import type { ConcernAuthorResponse } from './concernAuthorResponse';
 import type { ConcernDetailResponseCategory } from './concernDetailResponseCategory';
+import type { ConcernImageResponse } from './concernImageResponse';
 
 export interface ConcernDetailResponse {
   id: number;
@@ -21,6 +22,8 @@ export interface ConcernDetailResponse {
   category: ConcernDetailResponseCategory;
   title: string;
   content: string;
+  /** 첨부 사진. 첨부한 순서대로이며 없으면 빈 배열입니다. */
+  images: ConcernImageResponse[];
   author: ConcernAuthorResponse;
   createdAt: string;
   updatedAt: string;

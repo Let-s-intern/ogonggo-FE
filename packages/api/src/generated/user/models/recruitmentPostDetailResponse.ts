@@ -11,6 +11,7 @@ import type { RecruitmentPostDetailResponsePositionsItem } from './recruitmentPo
 import type { RecruitmentPostDetailResponseProgressMethod } from './recruitmentPostDetailResponseProgressMethod';
 import type { RecruitmentPostDetailResponseRecruitmentStatus } from './recruitmentPostDetailResponseRecruitmentStatus';
 import type { RecruitmentPostDetailResponseRecruitmentType } from './recruitmentPostDetailResponseRecruitmentType';
+import type { RecruitmentPostImageResponse } from './recruitmentPostImageResponse';
 
 export interface RecruitmentPostDetailResponse {
   id: number;
@@ -47,6 +48,8 @@ export interface RecruitmentPostDetailResponse {
   contact: RecruitmentPostContactResponse;
   summary: string;
   content: JsonNode;
+  /** 첨부 사진. 첨부한 순서대로이며 없으면 빈 배열입니다. */
+  images: RecruitmentPostImageResponse[];
   eligibilityAndSelectionProcess?: string;
   viewCount: number;
   commentCount: number;

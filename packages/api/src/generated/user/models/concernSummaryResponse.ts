@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { ConcernAuthorResponse } from './concernAuthorResponse';
+import type { ConcernImageResponse } from './concernImageResponse';
 import type { ConcernSummaryResponseCategory } from './concernSummaryResponseCategory';
 
 export interface ConcernSummaryResponse {
@@ -22,6 +23,8 @@ export interface ConcernSummaryResponse {
   title: string;
   /** 본문 전체. 미리보기 줄임은 클라이언트가 합니다. */
   content: string;
+  /** 첨부 사진. 첨부한 순서대로이며 없으면 빈 배열입니다. */
+  images: ConcernImageResponse[];
   author: ConcernAuthorResponse;
   createdAt: string;
   viewCount: number;

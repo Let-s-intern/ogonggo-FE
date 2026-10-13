@@ -6,6 +6,7 @@
  */
 import type { AdminConcernDetailResponseCategory } from './adminConcernDetailResponseCategory';
 import type { AdminConcernDetailResponseVisibility } from './adminConcernDetailResponseVisibility';
+import type { AdminConcernImageResponse } from './adminConcernImageResponse';
 
 export interface AdminConcernDetailResponse {
   id: number;
@@ -22,6 +23,8 @@ export interface AdminConcernDetailResponse {
   title: string;
   /** 일반 텍스트 본문입니다. */
   content: string;
+  /** 첨부 사진. 첨부한 순서대로이며 없으면 빈 배열입니다. */
+  images: AdminConcernImageResponse[];
   viewCount: number;
   /** 남아 있는 답변 수입니다. 답글은 세지 않습니다. */
   commentCount: number;
