@@ -31,7 +31,8 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * 제재는 운영자가 쿼리로 걸고 이 화면은 결과를 상태 뱃지로 보여준다(PRD "하지 않는 것").
  *
  * 칸은 API(`AdminGeneralMemberResponse`) 가 주는 것만 둔다. 목 시절의 "최근 접속" 은 응답에
- * 없어 뺐다. 정렬 파라미터도 없어 정렬 선택은 두지 않는다 — 순서는 서버가 정한다.
+ * 없어 뺐다. 학교·학년·희망 직무까지 목록에 두어 행을 열지 않고도 회원을 가늠하게 한다. 나머지
+ * (렛츠커리어 ID, 탈퇴일, 희망 산업 등)는 행을 눌러 본다. 정렬 파라미터도 없어 정렬 선택은 두지 않는다 — 순서는 서버가 정한다.
  *
  * 행을 누르면 그 행의 응답을 모달로 보여 준다. 상세 API 가 아직 없어 목록 응답이 가진 칸이
  * 전부다 — 활동 내역(작성한 글, 북마크)은 없다.
@@ -50,8 +51,44 @@ export function UserMemberListPage() {
   const { data, isPending, isError } = useUserMemberList(filters);
 
   const columns: DataTableColumn<AdminGeneralMemberResponse>[] = [
-    { key: 'nickname', header: '닉네임', render: (row) => row.nickname ?? '-' },
-    { key: 'email', header: '이메일', render: (row) => row.email ?? '-' },
+    { key: 'userId', header: 'ID', width: 'w-20', render: (row) => row.userId },
+    {
+      key: 'nickname',
+      header: '닉네임 · 이름',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900">{orDash(row.nickname)}</span>
+          <span className="text-xs text-gray-500">{orDash(row.name)}</span>
+        </div>
+      ),
+    },
+    { key: 'email', header: '이메일', render: (row) => orDash(row.email) },
+    {
+      key: 'school',
+      header: '학교 · 전공',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900">{orDash(row.university)}</span>
+          <span className="text-xs text-gray-500">{orDash(row.major)}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'grade',
+      header: '학년',
+      width: 'w-24',
+      render: (row) => (row.grade ? GRADE_LABELS[row.grade] : '-'),
+    },
+    {
+      key: 'wish',
+      header: '희망 직군 · 직무',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900">{orDash(row.wishField)}</span>
+          <span className="text-xs text-gray-500">{orDash(row.wishJob)}</span>
+        </div>
+      ),
+    },
     {
       key: 'status',
       header: '상태',

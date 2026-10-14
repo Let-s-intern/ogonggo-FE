@@ -58,8 +58,39 @@ const byJoinedAtDesc = (a: { joinedAt: string }, b: { joinedAt: string }) =>
  * 픽스처를 목록 응답 한 행으로 옮긴다. 픽스처에 없는 칸(이름·학교·희망 조건 등) 은 비워 둔다 —
  * 스펙에서 전부 선택 필드다.
  */
+/**
+ * 렛츠커리어에서 받아 오는 프로필 칸. 지어낸 값이다. 프로필을 비운 회원도 있어 세 명에 한 명은
+ * 값이 없다.
+ */
+const GENERAL_PROFILES: Partial<AdminGeneralMemberResponse>[] = [
+  {
+    name: '김민수',
+    university: '서울대학교',
+    major: '경영학과',
+    grade: 'FOURTH',
+    wishField: '마케팅',
+    wishJob: '퍼포먼스 마케터',
+    wishIndustry: 'IT·플랫폼',
+    wishEmploymentType: '정규직',
+    wishCompany: '토스',
+  },
+  {
+    name: '이서연',
+    university: '연세대학교',
+    major: '컴퓨터과학과',
+    grade: 'GRADUATE',
+    wishField: '개발',
+    wishJob: '프론트엔드 개발자',
+    wishIndustry: '핀테크',
+    wishEmploymentType: '정규직',
+  },
+  {},
+];
+
 const toGeneralMember = (member: UserMemberSummary): AdminGeneralMemberResponse => ({
+  ...GENERAL_PROFILES[(member.id - 1) % GENERAL_PROFILES.length],
   userId: member.id,
+  letsCareerUserId: 1000 + member.id,
   status: member.status,
   joinedAt: member.joinedAt,
   nickname: member.nickname,
@@ -74,6 +105,11 @@ const toCompanyMember = (member: CompanyMemberSummary): AdminCompanyMemberRespon
   joinedAt: member.joinedAt,
   organizationName: member.companyName,
   managerName: member.managerName,
+  // 연락처와 알림 이메일은 지어낸 값이다. 알림 이메일을 따로 두지 않은 회사도 있게 짝수 id 만 채운다.
+  managerPhone: `010-${String(1000 + member.id).padStart(4, '0')}-${String(member.id * 37)
+    .padStart(4, '0')
+    .slice(-4)}`,
+  notificationEmail: member.id % 2 === 0 ? `recruit${member.id}@example.com` : undefined,
 });
 
 const listGeneralMembersHandler = http.get('*/api/v1/admin/general-members', ({ request }) => {
