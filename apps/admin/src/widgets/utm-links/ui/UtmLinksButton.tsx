@@ -52,6 +52,7 @@ export function UtmLinksButton({ kind, postings, allMatching }: UtmLinksButtonPr
           <UtmLinksForm
             kind={kind}
             postings={postings}
+            onClose={() => setOpen(false)}
             onDone={(message) => {
               setOpen(false);
               setAlert({ message, nonce: Date.now() });
@@ -68,10 +69,12 @@ const GROUPS = groupByChannel(UTM_TEMPLATES);
 function UtmLinksForm({
   kind,
   postings,
+  onClose,
   onDone,
 }: {
   kind: UtmContentKind;
   postings: UtmPosting[];
+  onClose: () => void;
   onDone: (message: string) => void;
 }) {
   const [picked, setPicked] = useState<Set<UtmTemplate>>(new Set());
@@ -118,6 +121,13 @@ function UtmLinksForm({
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-[16rem_1fr]">
         <div className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto">
+          <Checkbox
+            className="border-b border-gray-200 pb-3"
+            checked={picked.size === UTM_TEMPLATES.length}
+            onChange={(checked) => set(UTM_TEMPLATES, checked)}
+            label="전체 선택"
+            labelClassName="font-bold"
+          />
           {GROUPS.map((group) => (
             <fieldset key={group.channel} className="flex flex-col gap-2">
               <legend className="pb-1">
@@ -147,13 +157,13 @@ function UtmLinksForm({
               채널을 고르면 링크가 보입니다.
             </p>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="w-[30%] px-3 py-2 font-medium">
                     제목
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="w-[25%] px-3 py-2 font-medium">
                     채널
                   </th>
                   <th scope="col" className="px-3 py-2 font-medium">
@@ -165,9 +175,7 @@ function UtmLinksForm({
                 {links.map((link) => (
                   <tr key={link.url} className="border-b border-gray-100 last:border-b-0 align-top">
                     <td className="px-3 py-2 text-gray-900">{link.posting.title}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-gray-500">
-                      {templateLabel(link.template)}
-                    </td>
+                    <td className="px-3 py-2 text-gray-500">{templateLabel(link.template)}</td>
                     <td className="break-all px-3 py-2 text-gray-500">{link.url}</td>
                   </tr>
                 ))}
@@ -184,6 +192,9 @@ function UtmLinksForm({
           </span>
         ) : null}
         <span className="text-sm text-gray-500">{links.length}개 링크</span>
+        <Button variant="secondary" onClick={onClose}>
+          닫기
+        </Button>
         <Button variant="secondary" disabled={links.length === 0} onClick={download}>
           CSV 내보내기
         </Button>
