@@ -1,4 +1,5 @@
 import { isSignedIn } from '@/shared/api/authTokens';
+import { captureEvent } from './posthog';
 
 /**
  * GTM 으로 보내는 이벤트. 키 이름과 허용값은 마케팅팀 'dataLayer 개발 명세서(프론트엔드)'
@@ -40,6 +41,13 @@ export function track(event: string, params: DataLayerParams = {}): void {
   }
   syncPageContext();
   push({ event, ...params });
+  // 같은 이벤트를 PostHog 에도 보낸다. 화면 종류·로그인 여부는 GTM 처럼 직전 `page_context` 에서
+  // 붙지 않으므로 여기서 함께 싣는다.
+  captureEvent(event, {
+    ...params,
+    page_type: pageTypeOf(window.location.pathname),
+    login_state: isSignedIn() ? 'Y' : 'N',
+  });
 }
 
 let lastPageContext = '';

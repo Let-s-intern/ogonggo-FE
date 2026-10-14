@@ -7,6 +7,11 @@ const USER_API_ORIGIN = process.env.OGONGGO_USER_API_ORIGIN ?? 'http://localhost
 // `undefined/api/...` 를 목적지로 넣으면 Next 가 설정 오류를 내며 뜨지 못한다.
 const LETSCAREER_API_ORIGIN = process.env.NEXT_PUBLIC_LETSCAREER_API_ORIGIN;
 
+// PostHog 이벤트를 같은 오리진의 `/ingest` 로 받아 넘긴다(`src/shared/analytics/posthog.ts`). 광고 차단기가
+// PostHog 주소를 막아 이벤트가 빠지는 것을 줄인다. 키가 없는 배포에는 경로를 만들지 않는다.
+const POSTHOG_ENABLED = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
+const POSTHOG_REGION = process.env.NEXT_PUBLIC_POSTHOG_REGION === 'eu' ? 'eu' : 'us';
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@ogonggo/ui', '@ogonggo/api'],
   // 목데이터 여부를 브라우저에도 알린다(`src/shared/config/mocks.ts`). 서버는 그대로
@@ -24,6 +29,18 @@ const nextConfig: NextConfig = {
             {
               source: '/letscareer-api/:path*',
               destination: `${LETSCAREER_API_ORIGIN}/api/:path*`,
+            },
+          ]
+        : []),
+      ...(POSTHOG_ENABLED
+        ? [
+            {
+              source: '/ingest/static/:path*',
+              destination: `https://${POSTHOG_REGION}-assets.i.posthog.com/static/:path*`,
+            },
+            {
+              source: '/ingest/:path*',
+              destination: `https://${POSTHOG_REGION}.i.posthog.com/:path*`,
             },
           ]
         : []),
