@@ -3,7 +3,7 @@ import { SIDE_STUDY_MOCK } from '@/entities/card-mocks';
 import { SideStudyCard } from './SideStudyCard';
 
 /**
- * 사이드·스터디 목록 카드. 폭은 다른 두 카드와 같은 268px 다.
+ * 사이드·스터디 목록 카드. 폭은 다른 두 카드와 같은 283px 다.
  *
  * 이 카드만 `Card` 로 감싸 테두리가 있고 `h-full` 로 같은 행의 높이를 따라간다. 혼자 있는
  * 스토리에서는 늘어날 대상이 없어 내용만큼만 높아진다 — 높이 비교는 `카드 셋/셋 나란히` 에서
@@ -15,7 +15,7 @@ const meta: Meta<typeof SideStudyCard> = {
   args: { sideStudy: SIDE_STUDY_MOCK },
   decorators: [
     (Story) => (
-      <div className="w-[268px]">
+      <div className="w-[283px]">
         <Story />
       </div>
     ),

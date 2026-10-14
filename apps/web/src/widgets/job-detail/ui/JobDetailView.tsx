@@ -134,7 +134,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
   }
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-4">
+    <div className="flex w-full max-w-page flex-col gap-4">
       {viewTracker}
       <JobDetailBreadcrumb />
       {headerCard}

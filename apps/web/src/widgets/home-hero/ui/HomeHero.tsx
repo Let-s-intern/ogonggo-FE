@@ -34,7 +34,7 @@ function HeroSearchIcon() {
  * 목업 SVG에서 색과 크기를 읽어 텍스트로 그린다. 데이터에 의존하지 않아 서버 컴포넌트로 둔다.
  *
  * 목업에서 이 블록은 화면 끝까지 채운 띠가 아니라 좌우 40px 떨어진 박스다(1440px 기준 폭
- * 1360). 아래 콘텐츠(`max-w-6xl`)보다 넓어서 그 폭에 맞추지 않는다. 모바일은 좌우 16px 이고
+ * 1360). 아래 콘텐츠(`max-w-page-padded`)보다 넓어서 그 폭에 맞추지 않는다. 모바일은 좌우 16px 이고
  * (`docs/asset/v9 mobile/`), 배경은 `bg-cover` 라 비율을 지킨 채 좌우가 잘린다. 데스크톱 위아래 여백
  * 80px도 목업 PNG 높이에서 SVG 높이를 뺀 절반이다.
  *
@@ -53,7 +53,7 @@ export function HomeHero({ screen, children }: HomeHeroProps) {
   return (
     <section
       className={cn(
-        'relative mx-4 mt-4 self-stretch overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 sm:py-12 md:mx-10 md:mt-6 lg:py-20',
+        'relative mx-5 mt-4 self-stretch overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 sm:py-12 md:mx-10 md:mt-6 lg:py-20',
         // 모바일 가로 넘김 목록(`PopularJobsTabs`)이 `-mx-4` 로 박스 가장자리까지 번지려면 md 미만의
         // 가로 안쪽 여백이 16px 이어야 한다. 그래서 `sm:px-6` 을 md 로 미룬다.
         hasChildren && 'py-6 sm:px-4 sm:py-10 md:px-6 lg:py-16',
@@ -96,9 +96,9 @@ export function HomeHero({ screen, children }: HomeHeroProps) {
       </div>
 
       {hasChildren ? (
-        // 폭은 아래 콘텐츠 열(`max-w-6xl` 에서 좌우 `px-4` 를 뺀 1120px)과 맞춘다. 자식이 아무것도 그리지
+        // 폭은 아래 콘텐츠 열(`max-w-page-padded` 에서 좌우 `px-5` 를 뺀 1180px)과 맞춘다. 자식이 아무것도 그리지
         // 않으면(`empty:hidden`) 간격도 같이 사라져 박스가 헤드라인만 남은 모양이 된다.
-        <div className="mx-auto mt-8 w-full max-w-280 empty:hidden md:mt-16 lg:mt-26">
+        <div className="mx-auto mt-8 w-full max-w-page empty:hidden md:mt-16 lg:mt-26">
           {children}
         </div>
       ) : null}

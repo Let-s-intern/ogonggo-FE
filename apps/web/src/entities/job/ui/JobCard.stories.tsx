@@ -9,8 +9,8 @@ import {
 import { JobCard } from './JobCard';
 
 /**
- * 채용공고 목록 카드. 실제 목록은 `max-w-6xl px-4` 안의 `grid-cols-4 gap-x-4` 라서 카드 한 장의
- * 폭이 268px 다 — 스토리도 같은 폭에 둔다. 폭이 달라지면 제목 줄바꿈이 달라져 카드 높이도
+ * 채용공고 목록 카드. 실제 목록은 `max-w-page-padded px-5` 안의 `grid-cols-4 gap-x-4` 라서 카드 한 장의
+ * 폭이 283px 다 — 스토리도 같은 폭에 둔다. 폭이 달라지면 제목 줄바꿈이 달라져 카드 높이도
  * 달라지고, 세 카드를 비교하는 일 자체가 무의미해진다.
  *
  * 나란히 놓고 본 실측은 `카드 셋/셋 나란히` 에 있다.
@@ -21,7 +21,7 @@ const meta: Meta<typeof JobCard> = {
   args: { job: JOB_MOCK },
   decorators: [
     (Story) => (
-      <div className="w-[268px]">
+      <div className="w-[283px]">
         <Story />
       </div>
     ),

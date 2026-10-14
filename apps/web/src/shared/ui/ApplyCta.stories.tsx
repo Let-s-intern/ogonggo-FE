@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ApplyCta } from './ApplyCta';
 
 /**
- * 상세 사이드바 맨 위 CTA. 사이드바 폭은 `max-w-6xl` 에서 좌우 `px-8` 을 뺀 뒤
+ * 상세 사이드바 맨 위 CTA. 사이드바 폭은 `max-w-page` 에서 좌우 `px-8` 을 뺀 뒤
  * `739fr : 323fr` 로 나눈 오른쪽이다(`widgets/job-detail/ui/JobDetailView.tsx`). 스토리도 같은
  * 격자를 세운다 — 버튼이 `flex-1` 이라 폭이 달라지면 버튼 폭이 달라진다.
  *
@@ -29,7 +29,7 @@ const meta: Meta<typeof ApplyCta> = {
   decorators: [
     (Story) => (
       <div className="flex justify-center bg-white px-6 py-10">
-        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
+        <div className="grid w-full max-w-page grid-cols-1 gap-6 px-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
           <div />
           <aside>
             <Story />

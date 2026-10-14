@@ -96,7 +96,7 @@ export function MobileSiteHeader({
       {/* 앱을 설치하고 로그인해 하단 내비게이션(`MobileBottomNav`)이 떠 있으면 같은 탭이 위아래로 두 번 보이지 않게
           이 줄을 숨긴다. 공고 달력은 하단 채용공고 탭의 서브 메뉴로 간다. */}
       {bottomNav ? null : (
-        <div className="flex h-11 items-stretch justify-between px-4">
+        <div className="flex h-11 items-stretch justify-between px-5">
           {/* 탭 넷이 360px 에서도 한 줄에 들어가도록 글자 14px, 간격 8px 이다(Pretendard 로 잰 글자 폭 합 266px +
               간격 24px 가 쓸 수 있는 폭 304px 안에 든다). 그보다 좁은 폰에서만 이 묶음이 가로로 밀리고, 달력
               아이콘은 제자리에 있다. `whitespace-nowrap` 이 없으면 좁을 때 글자가 음절 사이에서 줄바꿈된다.
@@ -163,7 +163,7 @@ function TopRow({ signedIn, children }: { signedIn: boolean; children: ReactNode
   const install = useInstallState();
 
   return (
-    <div className="flex h-14 items-center justify-between px-4">
+    <div className="flex h-14 items-center justify-between px-5">
       <ServiceLogoToggle size="mobile" />
       <div className="flex items-center gap-4">
         {signedIn || install.kind === 'unknown' ? null : install.kind === 'installed' ? (

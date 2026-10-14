@@ -18,13 +18,13 @@ export interface SignupBannerProps {
 /**
  * 가입 화면 맨 위의 파란 띠. 홈 히어로와 모양이 달라 가입 화면 전용으로 둔다(PRD "공용 UI").
  *
- * 글자 왼쪽 끝을 헤더 로고와 맞추려고 헤더와 같은 `max-w-6xl px-6` 틀을 쓴다.
+ * 글자 왼쪽 끝을 헤더 로고와 맞추려고 헤더와 같은 `max-w-page-padded px-5` 틀을 쓴다.
  */
 export function SignupBanner({ audience }: SignupBannerProps) {
   const { title, description } = COPY[audience];
   return (
     <section className="bg-linear-to-r from-blue-600 to-blue-400">
-      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-10 md:py-12">
+      <div className="mx-auto flex max-w-page-padded flex-col gap-2 px-5 py-10 md:py-12">
         <h2 className="text-xl font-bold text-white md:text-3xl">{title}</h2>
         <p className="text-sm text-white/90">{description}</p>
       </div>

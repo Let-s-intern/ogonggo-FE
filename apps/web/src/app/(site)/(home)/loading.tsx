@@ -44,7 +44,7 @@ export default function Loading() {
           <PopularSkeleton />
         </HomeHero>
 
-        <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
+        <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
           {/* 전체 공고 — lg 이상은 왼쪽 열(제목 + 필터)과 오른쪽 열(칩·정렬 줄, 카드 3열, 페이지네이션)의
               두 칸이다(`JobList.tsx`). 그 아래는 제목(모바일은 정렬 포함), 칩 줄, 검색·필터 줄을 쌓고
               카드 그리드, 페이지네이션이 이어진다. md 는 칩 줄이 한 줄을 다 쓰고 그 아래에 검색·필터와

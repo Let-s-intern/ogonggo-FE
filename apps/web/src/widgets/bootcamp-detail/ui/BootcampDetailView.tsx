@@ -75,7 +75,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
   const bootcamp = await fetchBootcampDetail(bootcampId);
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-4">
+    <div className="flex w-full max-w-page flex-col gap-4">
       <BootcampDetailBreadcrumb />
       <BootcampDetailHeaderCard bootcamp={bootcamp} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">

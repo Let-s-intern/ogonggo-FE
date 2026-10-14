@@ -17,7 +17,7 @@ import { DetailPageSkeleton } from '@/shared/ui/DetailPageSkeleton';
  */
 export default function Loading() {
   return (
-    <main className="ogonggo-fallback flex min-h-screen flex-col items-center gap-10 bg-white px-4 pt-4 pb-40 md:px-6 md:py-10">
+    <main className="ogonggo-fallback flex min-h-screen flex-col items-center gap-10 bg-white px-5 pt-4 pb-40 md:py-10">
       <DetailPageSkeleton
         avatarClass="h-12 w-12"
         infoRows={4}

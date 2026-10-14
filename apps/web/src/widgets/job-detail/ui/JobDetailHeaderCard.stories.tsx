@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { JobDetailHeaderCard } from './JobDetailHeaderCard';
 
 /**
- * 공고 상세 맨 위 헤더 카드. 실제 화면에서는 `max-w-6xl` 컨테이너에 여백 없이 꽉 차므로
+ * 공고 상세 맨 위 헤더 카드. 실제 화면에서는 `max-w-page` 컨테이너에 여백 없이 꽉 차므로
  * (`widgets/job-detail/ui/JobDetailView.tsx`) 스토리도 같은 폭에 둔다.
  *
  * 마감일시는 "오늘 + 7일" 로 만든다 — 고정 날짜를 적으면 며칠 뒤 이 스토리가 "마감일 미정" 을
@@ -30,7 +30,7 @@ const meta: Meta<typeof JobDetailHeaderCard> = {
   decorators: [
     (Story) => (
       <div className="flex justify-center bg-white px-6 py-10">
-        <div className="w-full max-w-6xl">
+        <div className="w-full max-w-page">
           <Story />
         </div>
       </div>

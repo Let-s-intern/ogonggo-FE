@@ -44,13 +44,13 @@ export async function fetchConcernDetail(concernId: number): Promise<ConcernDeta
 
 /**
  * 고민글 상세 — 시안 순서(브레드크럼 → 본문 카드 → 답변 영역)로 조합한다. 폭은 다른 상세 화면과 같은
- * `max-w-6xl` 이고, 시안은 카드가 브레드크럼보다 안쪽에서 시작해서 `md` 부터 양옆을 들인다.
+ * `max-w-page` 이고, 시안은 카드가 브레드크럼보다 안쪽에서 시작해서 `md` 부터 양옆을 들인다.
  */
 export async function ConcernDetailView({ concernId }: ConcernDetailViewProps) {
   const concern = await fetchConcernDetail(concernId);
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-12">
+    <div className="flex w-full max-w-page flex-col gap-4 md:gap-12">
       <ConcernDetailBreadcrumb />
       <div className="flex flex-col gap-10 md:px-10">
         <ConcernDetailCard concern={concern} />
