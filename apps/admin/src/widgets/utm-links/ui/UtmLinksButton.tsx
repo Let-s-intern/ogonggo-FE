@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ActionAlert, Button, Checkbox, Modal } from '@ogonggo/ui';
 import {
   buildUtmLinks,
@@ -31,9 +32,17 @@ export function UtmLinksButton({ kind, postings, allMatching }: UtmLinksButtonPr
 
   return (
     <>
-      {alert ? (
-        <ActionAlert message={alert.message} nonce={alert.nonce} onDismiss={() => setAlert(null)} />
-      ) : null}
+      {/* 버튼이 transform 이 걸린 하단 바 안에 있어 `fixed` 가 바 기준이 된다. body 로 빼 화면 가운데에 띄운다. */}
+      {alert
+        ? createPortal(
+            <ActionAlert
+              message={alert.message}
+              nonce={alert.nonce}
+              onDismiss={() => setAlert(null)}
+            />,
+            document.body,
+          )
+        : null}
       <Button
         size="sm"
         variant="secondary"
