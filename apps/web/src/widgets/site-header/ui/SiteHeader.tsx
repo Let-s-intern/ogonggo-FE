@@ -117,11 +117,11 @@ export function SiteHeader() {
           아래의 아주 연한 가로선(`gray-100`)은 화면 끝까지 닿아야 해서 폭을 제한한 안쪽 상자가 아니라
           이 바깥 상자에 둔다. */}
       <div className="hidden border-b border-gray-100 md:block">
-        <div className="mx-auto flex h-10 max-w-6xl items-center px-6 pt-2 whitespace-nowrap">
+        <div className="mx-auto flex h-10 max-w-page-padded items-center px-5 pt-2 whitespace-nowrap">
           <ServiceLogoToggle size="desktop" />
         </div>
       </div>
-      <div className="mx-auto hidden h-14 max-w-6xl items-stretch justify-between px-6 whitespace-nowrap md:flex">
+      <div className="mx-auto hidden h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap md:flex">
         <div className="flex items-center gap-10">
           <Link href="/" aria-label="오늘의 공고 홈">
             <Logo className="h-[25px] w-[52px] text-blue-500" />

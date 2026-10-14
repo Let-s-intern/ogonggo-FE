@@ -61,7 +61,7 @@ export function DetailPageSkeleton({
       <span className="sr-only">불러오는 중</span>
       <div
         aria-hidden="true"
-        className="ogonggo-skeleton mx-auto flex w-full max-w-6xl animate-pulse flex-col gap-4"
+        className="ogonggo-skeleton mx-auto flex w-full max-w-page animate-pulse flex-col gap-4"
       >
         {/* 브레드크럼 — `flex items-center gap-1 text-sm`이라 높이 20px. */}
         <Bar className="h-5 w-28" />

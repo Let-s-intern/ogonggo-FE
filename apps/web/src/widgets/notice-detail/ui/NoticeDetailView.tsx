@@ -58,7 +58,7 @@ export async function NoticeDetailView({ noticeId }: NoticeDetailViewProps) {
   const notice = await fetchNoticeDetail(noticeId);
 
   return (
-    <article className="flex w-full max-w-6xl flex-col gap-6">
+    <article className="flex w-full max-w-page flex-col gap-6">
       <Link
         href="/notices"
         className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"

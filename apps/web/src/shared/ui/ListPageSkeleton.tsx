@@ -45,7 +45,7 @@ export function ListPageSkeleton({
 
       <HeroSkeleton />
 
-      <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
+      <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
         <div
           aria-hidden="true"
           className="ogonggo-skeleton flex w-full animate-pulse flex-col gap-6"

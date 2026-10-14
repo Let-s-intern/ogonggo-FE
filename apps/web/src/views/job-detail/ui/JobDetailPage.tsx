@@ -12,9 +12,9 @@ export interface JobDetailPageProps {
  */
 export function JobDetailPage({ jobId }: JobDetailPageProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center gap-10 bg-white px-4 pt-4 pb-40 md:px-6 md:py-10">
+    <main className="flex min-h-screen flex-col items-center gap-10 bg-white px-5 pt-4 pb-40 md:py-10">
       <JobDetailView jobId={jobId} />
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-page">
         {/* 2단이 풀리는 폭에서는 바로 위 사이드바(함께 보면 좋아요)와 이어져 보여 같은 회색 띠로 가른다. */}
         <DetailSidebarSection>
           <ForBusinessBanner />

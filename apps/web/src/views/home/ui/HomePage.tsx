@@ -12,7 +12,7 @@ export function HomePage(query: HomePageProps) {
           (`docs/asset/v12 채용공고 상세/목록.webp`). 첫 페이지에서만 보인다. 2페이지부터도 위에 고정해 두면 넘길 때마다 같은 네 건을 지나야 목록이 나온다. 자식이
           없으면 히어로는 헤드라인만 남는 지금 모양이다. */}
       <HomeHero screen="jobs">{query.page === 1 ? <PopularJobs /> : null}</HomeHero>
-      <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
+      <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
         {/* home.png 는 인기 공고와 전체 공고 사이에 배너 광고 자리가 있다. 광고 내용이 정해지지
             않아 빈 회색 상자만 보여서 그리지 않는다(2026-09-30, 사용자). 내용이 생기면 여기 둔다. */}
         <JobList {...query} />

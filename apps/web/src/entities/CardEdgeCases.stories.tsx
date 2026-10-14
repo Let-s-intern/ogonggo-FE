@@ -11,7 +11,7 @@ import { SideStudyCard } from './side-study/ui/SideStudyCard';
  * 답할 것이다.
  *
  * 모든 행은 세 목록 화면이 실제로 쓰는 그리드 그대로다
- * (`max-w-6xl px-4` 안의 `grid grid-cols-4 gap-x-4 gap-y-8`, 카드 폭 268px). `items-start` 를
+ * (`max-w-page-padded px-5` 안의 `grid grid-cols-4 gap-x-4 gap-y-8`, 카드 폭 283px). `items-start` 를
  * 더하지 않는다 — 기본값 `stretch` 가 실제 동작이고, 이 화면이 보려는 것이 바로 그 동작이다.
  *
  * 실측 (2026-09-21, 헤드리스 크롬, 행마다 세 카드의 아랫변을 비교):
@@ -44,7 +44,7 @@ export default meta;
 /** 실제 목록의 4열 그리드 한 행. */
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-6">
+    <section className="mx-auto w-full max-w-page-padded px-5 py-6">
       <p className="mb-3 text-xs font-bold text-gray-500">{label}</p>
       <ul data-row={label} className="grid grid-cols-4 gap-x-4 gap-y-8">
         {children}

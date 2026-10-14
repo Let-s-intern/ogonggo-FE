@@ -14,12 +14,12 @@ function Bar({ className }: { className: string }) {
  */
 export default function Loading() {
   return (
-    <main className="ogonggo-fallback flex min-h-screen flex-col items-center gap-10 bg-white px-4 pt-4 pb-40 md:px-6 md:py-10">
+    <main className="ogonggo-fallback flex min-h-screen flex-col items-center gap-10 bg-white px-5 pt-4 pb-40 md:py-10">
       <div className="w-full" role="status">
         <span className="sr-only">불러오는 중</span>
         <div
           aria-hidden="true"
-          className="ogonggo-skeleton mx-auto flex w-full max-w-6xl animate-pulse flex-col gap-4 md:gap-12"
+          className="ogonggo-skeleton mx-auto flex w-full max-w-page animate-pulse flex-col gap-4 md:gap-12"
         >
           <Bar className="hidden h-5 w-20 md:block" />
           <div className="flex flex-col gap-10 md:px-10">

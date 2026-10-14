@@ -8,7 +8,7 @@ export interface NoticeDetailPageProps {
 export function NoticeDetailPage({ noticeId }: NoticeDetailPageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center bg-white">
-      <div className="flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-10">
+      <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
         <NoticeDetailView noticeId={noticeId} />
       </div>
     </main>

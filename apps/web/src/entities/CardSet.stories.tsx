@@ -11,9 +11,9 @@ import { SideStudyCard } from './side-study/ui/SideStudyCard';
  * 없다. 이 스토리가 그 확인 자리다.
  *
  * 그리드는 세 목록 화면이 실제로 쓰는 것 그대로다 —
- * `max-w-6xl px-4` 안의 `grid grid-cols-4 gap-x-4 gap-y-8`(`widgets/job-list/ui/JobList.tsx`,
+ * `max-w-page-padded px-5` 안의 `grid grid-cols-4 gap-x-4 gap-y-8`(`widgets/job-list/ui/JobList.tsx`,
  * `widgets/bootcamp-list/ui/BootcampList.tsx`, `widgets/side-study-list/ui/SideStudyList.tsx`).
- * 카드 한 장의 폭은 268px 가 된다. 폭을 임의로 잡으면 제목 줄바꿈이 달라져 높이 비교가
+ * 카드 한 장의 폭은 283px 가 된다. 폭을 임의로 잡으면 제목 줄바꿈이 달라져 높이 비교가
  * 거짓말이 된다.
  *
  * 한 곳만 실제 목록과 다르다 — `items-start` 를 더했다. 실제 그리드는 기본값(`stretch`)이라
@@ -26,7 +26,7 @@ import { SideStudyCard } from './side-study/ui/SideStudyCard';
  *
  * | 항목 | JobCard | BootcampCard | SideStudyCard |
  * |---|---|---|---|
- * | 카드 폭 | 268px | 268px | 268px |
+ * | 카드 폭 | 283px | 283px | 283px |
  * | 제목 글자 | 14px / 700 / 20px | 14px / 700 / 20px | 14px / 700 / 20px |
  * | 메타 줄 글자 | 12px / 400 | 12px / 400 | 12px / 400 |
  * | 회사·닉네임 줄 글자 | 14px / 400 | 14px / 400 | 14px / 400 |
@@ -49,7 +49,7 @@ export default meta;
 
 export const SideBySide: StoryObj = {
   render: () => (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div className="mx-auto w-full max-w-page-padded px-5 py-10">
       <ul className="grid grid-cols-4 items-start gap-x-4 gap-y-8">
         <li data-card="job">
           <JobCard job={JOB_MOCK} />
