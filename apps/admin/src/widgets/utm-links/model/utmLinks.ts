@@ -89,6 +89,38 @@ export function toClipboardText(links: UtmLink[]): string {
   return blocks.join('\n\n');
 }
 
+/** URL 만 한 줄에 하나씩. */
+export function toUrlText(links: UtmLink[]): string {
+  return links.map((link) => link.url).join('\n');
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+/**
+ * 서식 붙여넣기용 HTML. `toClipboardText` 와 같은 묶음으로, 제목에 링크를 건다. 노션·슬랙·구글 문서에
+ * 붙이면 제목이 하이퍼링크로 들어간다.
+ */
+export function toHyperlinkHtml(links: UtmLink[]): string {
+  const blocks: string[] = [];
+  let current: UtmTemplate | null = null;
+  for (const link of links) {
+    if (link.template !== current) {
+      current = link.template;
+      blocks.push(`<p><strong>[${escapeHtml(templateLabel(current))}]</strong></p>`);
+    }
+    blocks.push(
+      `<p><a href="${escapeHtml(link.url)}">${escapeHtml(link.posting.title)}</a></p>`,
+    );
+  }
+  return blocks.join('');
+}
+
 const KIND_LABEL: Record<UtmContentKind, string> = {
   jobs: '채용공고',
   bootcamps: '부트캠프',

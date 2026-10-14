@@ -6,6 +6,8 @@ import {
   templateLabel,
   toClipboardText,
   toCsv,
+  toHyperlinkHtml,
+  toUrlText,
   UTM_TEMPLATES,
   type UtmContentKind,
   type UtmPosting,
@@ -98,14 +100,33 @@ function UtmLinksForm({
     setPicked(next);
   };
 
-  const copy = async () => {
+  const copy = async (write: () => Promise<void>, message: string) => {
     try {
-      await navigator.clipboard.writeText(toClipboardText(links));
-      onDone(`${links.length}개 링크를 복사했습니다.`);
+      await write();
+      onDone(message);
     } catch {
       setCopyFailed(true);
     }
   };
+
+  const copyUrls = () =>
+    copy(
+      () => navigator.clipboard.writeText(toUrlText(links)),
+      `${links.length}개 링크 주소만 복사했습니다.`,
+    );
+
+  // 서식을 받는 곳에는 HTML, 받지 않는 곳에는 기존 텍스트가 붙는다.
+  const copyHyperlinks = () =>
+    copy(
+      () =>
+        navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([toHyperlinkHtml(links)], { type: 'text/html' }),
+            'text/plain': new Blob([toClipboardText(links)], { type: 'text/plain' }),
+          }),
+        ]),
+      `${links.length}개 링크를 하이퍼링크로 복사했습니다.`,
+    );
 
   const download = () => {
     const blob = new Blob([toCsv(kind, links)], { type: 'text/csv;charset=utf-8' });
@@ -198,8 +219,11 @@ function UtmLinksForm({
         <Button variant="secondary" disabled={links.length === 0} onClick={download}>
           CSV 내보내기
         </Button>
-        <Button disabled={links.length === 0} onClick={copy}>
-          복사
+        <Button variant="secondary" disabled={links.length === 0} onClick={copyUrls}>
+          링크만 복사
+        </Button>
+        <Button disabled={links.length === 0} onClick={copyHyperlinks}>
+          하이퍼링크로 복사
         </Button>
       </div>
     </div>
