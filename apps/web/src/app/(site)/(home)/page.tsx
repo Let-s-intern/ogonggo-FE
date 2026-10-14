@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { ListPublicJobsSort } from '@ogonggo/api';
 import { HomePage } from '@/views/home';
+import { buildSiteJsonLd } from '@/shared/lib/siteJsonLd';
+import { serializeJsonLd } from '@/widgets/job-detail';
 import {
   buildJobListHref,
   parseEmploymentTypes,
@@ -54,13 +56,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Hom
   const { page, sort, q, employmentType, experienceType, jobField, jobRole } = await searchParams;
 
   return (
-    <HomePage
-      page={parsePage(page)}
-      sort={parseSort(sort)}
-      q={parseKeywordParam(q)}
-      employmentTypes={parseEmploymentTypes(employmentType)}
-      experienceTypes={parseExperienceTypes(experienceType)}
-      {...parseJobRoleSelection(jobField, jobRole)}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildSiteJsonLd()) }}
+      />
+      <HomePage
+        page={parsePage(page)}
+        sort={parseSort(sort)}
+        q={parseKeywordParam(q)}
+        employmentTypes={parseEmploymentTypes(employmentType)}
+        experienceTypes={parseExperienceTypes(experienceType)}
+        {...parseJobRoleSelection(jobField, jobRole)}
+      />
+    </>
   );
 }
