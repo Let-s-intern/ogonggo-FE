@@ -105,6 +105,11 @@ const toCompanyMember = (member: CompanyMemberSummary): AdminCompanyMemberRespon
   joinedAt: member.joinedAt,
   organizationName: member.companyName,
   managerName: member.managerName,
+  // 연락처와 알림 이메일은 지어낸 값이다. 알림 이메일을 따로 두지 않은 회사도 있게 짝수 id 만 채운다.
+  managerPhone: `010-${String(1000 + member.id).padStart(4, '0')}-${String(member.id * 37)
+    .padStart(4, '0')
+    .slice(-4)}`,
+  notificationEmail: member.id % 2 === 0 ? `recruit${member.id}@example.com` : undefined,
 });
 
 const listGeneralMembersHandler = http.get('*/api/v1/admin/general-members', ({ request }) => {

@@ -28,6 +28,8 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * 칸은 API(`AdminCompanyMemberResponse`) 가 주는 것만 둔다. 목 시절의 "사업자등록번호" 와
  * "등록 공고" 수는 응답에 없어 뺐고, 대신 계정을 알아볼 로그인 이메일을 둔다. 정렬 파라미터가
  * 없는 것과 행을 누르면 목록 응답을 모달로 보여 주는 것은 일반 회원 목록과 같다.
+ *
+ * 알림 이메일과 담당자 연락처까지 목록에 두어 행을 열지 않고도 연락처를 찾게 한다.
  */
 export function CompanyMemberListPage() {
   const [selected, setSelected] = useState<AdminCompanyMemberResponse | null>(null);
@@ -43,13 +45,27 @@ export function CompanyMemberListPage() {
   const { data, isPending, isError } = useCompanyMemberList(filters);
 
   const columns: DataTableColumn<AdminCompanyMemberResponse>[] = [
-    { key: 'organizationName', header: '회사명', render: (row) => row.organizationName ?? '-' },
-    { key: 'email', header: '이메일', render: (row) => row.email ?? '-' },
+    { key: 'userId', header: 'ID', width: 'w-20', render: (row) => row.userId },
+    { key: 'organizationName', header: '회사명', render: (row) => orDash(row.organizationName) },
+    {
+      key: 'email',
+      header: '계정 · 알림 이메일',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900">{orDash(row.email)}</span>
+          <span className="text-xs text-gray-500">{orDash(row.notificationEmail)}</span>
+        </div>
+      ),
+    },
     {
       key: 'managerName',
-      header: '담당자',
-      width: 'w-28',
-      render: (row) => row.managerName ?? '-',
+      header: '담당자 · 연락처',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900">{orDash(row.managerName)}</span>
+          <span className="text-xs text-gray-500">{orDash(row.managerPhone)}</span>
+        </div>
+      ),
     },
     {
       key: 'status',
