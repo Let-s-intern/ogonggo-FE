@@ -1,12 +1,15 @@
 import {
   getRecruitmentPosts,
+  listPublicConcerns,
   listPublicBootcamps,
   listPublicJobs,
   listPublicAnnouncements,
 } from '@ogonggo/api';
 import type {
+  ConcernSummaryResponse,
   PageInfo,
   RecruitmentPostSummaryResponse,
+  SuccessResponsePageResponseConcernSummaryResponse,
   SuccessResponsePageResponseRecruitmentPostSummaryResponse,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
   SuccessResponsePageResponseUserJobSummaryResponse,
@@ -111,6 +114,20 @@ export async function fetchAllNotices(): Promise<UserAnnouncementSummaryResponse
       page,
       size: PAGE_SIZE,
     })) as unknown as SuccessResponsePageResponseUserAnnouncementSummaryResponse;
+    return response.data ?? { items: [], pageInfo: emptyPageInfo(page) };
+  });
+}
+
+/**
+ * 취준 고민 상세 전체. `listPublicConcerns`(`GET /api/v1/concerns`)를 카테고리 없이 돈다. 사이드·스터디처럼
+ * `page`/`size`를 문자열로 받는다. 삭제된 글은 목록에 오지 않는다.
+ */
+export async function fetchAllConcerns(): Promise<ConcernSummaryResponse[]> {
+  return fetchAllPages(async (page) => {
+    const response = (await listPublicConcerns({
+      page: String(page),
+      size: String(PAGE_SIZE),
+    })) as unknown as SuccessResponsePageResponseConcernSummaryResponse;
     return response.data ?? { items: [], pageInfo: emptyPageInfo(page) };
   });
 }
