@@ -114,9 +114,7 @@ export function toHyperlinkHtml(links: UtmLink[]): string {
       current = link.template;
       blocks.push(`<p><strong>[${escapeHtml(templateLabel(current))}]</strong></p>`);
     }
-    blocks.push(
-      `<p><a href="${escapeHtml(link.url)}">${escapeHtml(link.posting.title)}</a></p>`,
-    );
+    blocks.push(`<p><a href="${escapeHtml(link.url)}">${escapeHtml(link.posting.title)}</a></p>`);
   }
   return blocks.join('');
 }
