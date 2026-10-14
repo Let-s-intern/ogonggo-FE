@@ -30,6 +30,15 @@ import {
  * 오는 주기를 틀어지게 한다(task 1.3). 사이드·스터디 목록 응답에는 그런 필드가 없어 항상 비운다.
  * 공지는 `createdAt`이 항상 있는 진짜 필드라 그대로 쓴다.
  */
+/**
+ * 백엔드 시각은 시간대가 없는 한국 시간(`2026-10-14T00:00:00.365861`)이다. 시각이 있는데 시간대가
+ * 없으면 W3C Datetime 형식이 아니라 Search Console 이 사이트맵 `lastmod` 를 잘못된 날짜로 거부한다.
+ */
+const withKstOffset = (localDateTime?: string) =>
+  !localDateTime || /[zZ]|[+-]\d{2}:\d{2}$/.test(localDateTime)
+    ? localDateTime
+    : `${localDateTime}+09:00`;
+
 /** 1시간. 공고는 하루에도 여러 번 들어오고, 한 번 만들 때 목록 API 를 수십 번 부른다. */
 export const revalidate = 3600;
 
@@ -51,14 +60,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const bootcampEntries: MetadataRoute.Sitemap = bootcamps.map((bootcamp) => ({
     url: `${SITE_ORIGIN}/bootcamps/${bootcamp.id}`,
-    lastModified: bootcamp.closedAt,
+    lastModified: withKstOffset(bootcamp.closedAt),
     changeFrequency: 'weekly',
     priority: 0.6,
   }));
 
   const jobEntries: MetadataRoute.Sitemap = jobs.map((job) => ({
     url: `${SITE_ORIGIN}/jobs/${job.id}`,
-    lastModified: job.closedAt,
+    lastModified: withKstOffset(job.closedAt),
     changeFrequency: 'weekly',
     priority: 0.6,
   }));
@@ -71,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const noticeEntries: MetadataRoute.Sitemap = notices.map((notice) => ({
     url: `${SITE_ORIGIN}/notices/${notice.id}`,
-    lastModified: notice.createdAt,
+    lastModified: withKstOffset(notice.createdAt),
     changeFrequency: 'monthly',
     priority: 0.3,
   }));

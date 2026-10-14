@@ -1,5 +1,6 @@
 export { JobList } from './ui/JobList';
 export {
+  buildJobListHref,
   parseEmploymentTypes,
   parseExperienceTypes,
   parseJobRoleSelection,

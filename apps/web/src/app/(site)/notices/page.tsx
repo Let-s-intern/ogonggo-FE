@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 import { NoticeListPage } from '@/views/notice-list';
-import { parseNoticeListQuery } from '@/widgets/notice-list';
+import { buildNoticeListHref, parseNoticeListQuery } from '@/widgets/notice-list';
 
-export const metadata: Metadata = { title: '공지사항' };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}): Promise<Metadata> {
+  const { page } = parseNoticeListQuery(await searchParams);
+  return { title: '공지사항', alternates: { canonical: buildNoticeListHref(page) } };
+}
 
 /**
  * 이 Next 버전에서 `searchParams` 는 Promise 로 온다 — `/side-studies` 와 같다. 값 검증은

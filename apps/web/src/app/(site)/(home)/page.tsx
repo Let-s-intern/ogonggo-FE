@@ -1,6 +1,8 @@
+import type { Metadata } from 'next';
 import { ListPublicJobsSort } from '@ogonggo/api';
 import { HomePage } from '@/views/home';
 import {
+  buildJobListHref,
   parseEmploymentTypes,
   parseExperienceTypes,
   parseJobRoleSelection,
@@ -29,6 +31,23 @@ function parseSort(value: string | undefined): ListPublicJobsSort {
   return value === ListPublicJobsSort.VIEW_COUNT
     ? ListPublicJobsSort.VIEW_COUNT
     : ListPublicJobsSort.LATEST;
+}
+
+/**
+ * 정렬·검색·필터 주소는 같은 공고를 다른 순서·부분으로 보일 뿐이라 기본 목록을 정식 주소로 둔다.
+ * 쪽(`page`)은 다른 공고를 보이므로 자기 자신이다 — 1쪽으로 몰면 뒤쪽에만 링크된 공고가 발견되지 않는다.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<HomeSearchParams>;
+}): Promise<Metadata> {
+  const { page } = await searchParams;
+  const canonical = buildJobListHref(
+    { page: parsePage(page), sort: ListPublicJobsSort.LATEST },
+    { page: parsePage(page) },
+  );
+  return { alternates: { canonical } };
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<HomeSearchParams> }) {

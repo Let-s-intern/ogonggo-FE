@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { SideStudyListPage } from '@/views/side-study-list';
-import { parseSideStudyListQuery } from '@/widgets/side-study-list';
+import { buildSideStudyListHref, parseSideStudyListQuery } from '@/widgets/side-study-list';
 
 interface SideStudySearchParams {
   page?: string;
@@ -11,7 +11,7 @@ interface SideStudySearchParams {
  * 목록 공유 미리보기의 제목·설명. 이미지는 옆의 `opengraph-image.tsx` 가 만든다. 하위 화면의
  * `openGraph` 는 루트 것과 합쳐지지 않고 통째로 바뀌어 사이트 이름과 형식을 다시 적는다.
  */
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: '사이드·스터디',
   description: '사이드 프로젝트·스터디 모집 게시판. 혼자 말고, 함께할 사람을 찾아보세요.',
   openGraph: {
@@ -22,6 +22,16 @@ export const metadata: Metadata = {
     locale: 'ko_KR',
   },
 };
+
+/** 탭과 쪽은 다른 글을 보이므로 정식 주소에 남긴다. 모르는 쿼리는 파싱에서 떨어진다. */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SideStudySearchParams>;
+}): Promise<Metadata> {
+  const canonical = buildSideStudyListHref(parseSideStudyListQuery(await searchParams));
+  return { ...metadata, alternates: { canonical } };
+}
 
 /**
  * 이 Next 버전에서 `searchParams`는 Promise로 온다 — `/bootcamps`와 같다. 값 검증은
