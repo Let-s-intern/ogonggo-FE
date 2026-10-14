@@ -16,6 +16,7 @@ import {
 } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
+import { UtmLinksButton } from '@/widgets/utm-links';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   CONTENT_SORT_OPTIONS,
@@ -153,6 +154,13 @@ export function SideStudyListPage() {
             selection={selection}
             total={data?.pageInfo.totalElements ?? 0}
             loadAllIds={(limit) => listAllIds('side-studies', filters, limit)}
+            actions={
+              <UtmLinksButton
+                kind="side-studies"
+                postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
+                allMatching={selection.allMatching}
+              />
+            }
           />
           <DataTable
             columns={columns}

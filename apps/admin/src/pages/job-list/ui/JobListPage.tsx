@@ -11,6 +11,7 @@ import {
 import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
+import { UtmLinksButton } from '@/widgets/utm-links';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   CONTENT_SORT_OPTIONS,
@@ -217,6 +218,13 @@ export function JobListPage() {
             selection={selection}
             total={data?.pageInfo.totalElements ?? 0}
             loadAllIds={(limit) => listAllIds('jobs', filters, limit)}
+            actions={
+              <UtmLinksButton
+                kind="jobs"
+                postings={rows.filter((row) => selection.selected.has(row.id))}
+                allMatching={selection.allMatching}
+              />
+            }
           />
           <DataTable
             columns={columns}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { ActionAlert, Button, Callout, Checkbox, type DataTableColumn } from '@ogonggo/ui';
 import {
   useChangeVisibilities,
@@ -55,8 +55,9 @@ type RowSelection = ReturnType<typeof useRowSelection>;
 /**
  * 표 맨 앞의 체크박스 칸.
  *
- * 클릭을 칸에서 멈춘다. 행 전체가 상세로 가는 링크라 멈추지 않으면 고르는 순간 화면이 넘어간다
- * — 목록의 노출 토글과 같은 이유다.
+ * 칸 전체(여백 포함)가 누를 면적이다. 네모(20px)만 받으면 정확히 눌러야 하고, 여백을 누르면 행
+ * 클릭으로 올라가 상세로 넘어갔다. 클릭을 칸에서 멈추는 것은 행 전체가 상세로 가는 링크라서다 —
+ * 목록의 노출 토글과 같은 이유다. 네모를 누른 것은 `input` 이 이미 바꿨으므로 여백일 때만 바꾼다.
  */
 export function selectionColumn<T extends { id: number; title: string }>(
   selection: RowSelection,
@@ -65,8 +66,17 @@ export function selectionColumn<T extends { id: number; title: string }>(
     key: 'select',
     header: '선택',
     width: 'w-16',
+    cellClassName: 'relative',
     render: (row) => (
-      <span className="inline-flex" onClick={(event) => event.stopPropagation()}>
+      <span
+        className="absolute inset-0 flex cursor-pointer items-center px-4"
+        onClick={(event) => {
+          event.stopPropagation();
+          if (event.target === event.currentTarget) {
+            selection.toggle(row.id, !selection.isSelected(row.id));
+          }
+        }}
+      >
         <Checkbox
           checked={selection.isSelected(row.id)}
           onChange={(checked) => selection.toggle(row.id, checked)}
@@ -87,6 +97,8 @@ export interface BulkVisibilityBarProps {
   total: number;
   /** 지금 필터·정렬 순서로 앞에서부터 `limit` 건의 id 를 받는다. 검색 결과를 고르고 바꿀 때 부른다. */
   loadAllIds: (limit: number) => Promise<number[]>;
+  /** 노출·비노출 버튼 앞에 더할 버튼. */
+  actions?: ReactNode;
 }
 
 /**
@@ -100,7 +112,13 @@ export interface BulkVisibilityBarProps {
  * 공고의 노출). 그 문구에 어느 id 인지가 들어 있어 그대로 보여 준다. 실패해도 고른 것은 남겨 둔다 —
  * 문제인 행만 빼고 다시 누르면 된다.
  */
-export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVisibilityBarProps) {
+export function BulkVisibilityBar({
+  kind,
+  selection,
+  total,
+  loadAllIds,
+  actions,
+}: BulkVisibilityBarProps) {
   const mutation = useChangeVisibilities(kind);
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
   const matchingCount = Math.min(total, MAX_IDS);
@@ -155,6 +173,7 @@ export function BulkVisibilityBar({ kind, selection, total, loadAllIds }: BulkVi
           </Button>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
+          {actions}
           <Button
             size="sm"
             variant="secondary"
