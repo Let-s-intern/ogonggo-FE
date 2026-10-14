@@ -9,6 +9,8 @@ export interface DataTableColumn<T> {
   align?: 'left' | 'right';
   /** `w-40` 같은 Tailwind 폭 클래스. 비우면 내용에 맞춰 늘어난다. */
   width?: string;
+  /** 이 칸의 `td` 에 더할 클래스. 칸 전체를 누를 면적으로 만들 때 `relative` 를 준다. */
+  cellClassName?: string;
   render: (row: T) => ReactNode;
 }
 
@@ -101,6 +103,7 @@ export function DataTable<T>({
                       column.align === 'right'
                         ? 'text-right [font-variant-numeric:tabular-nums]'
                         : 'text-left',
+                      column.cellClassName,
                     )}
                   >
                     {column.render(row)}

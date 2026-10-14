@@ -4,6 +4,7 @@ import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogon
 import { listAllIds, useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
+import { UtmLinksButton } from '@/widgets/utm-links';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   RECRUITMENT_STATUS_OPTIONS,
@@ -143,6 +144,13 @@ export function BootcampListPage() {
             selection={selection}
             total={data?.pageInfo.totalElements ?? 0}
             loadAllIds={(limit) => listAllIds('bootcamps', filters, limit)}
+            actions={
+              <UtmLinksButton
+                kind="bootcamps"
+                postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
+                allMatching={selection.allMatching}
+              />
+            }
           />
           <DataTable
             columns={columns}

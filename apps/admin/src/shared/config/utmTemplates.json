@@ -1,0 +1,111 @@
+{
+  "campaigns": {
+    "jobs": "job_post",
+    "bootcamps": "bootcamp_post",
+    "side-studies": "side_study_post"
+  },
+  "templates": [
+    {
+      "channel": "오공고 인스타그램",
+      "placement": "리틀리",
+      "source": "instagramjob",
+      "medium": "instagramjob_littly"
+    },
+    {
+      "channel": "오공고 인스타그램",
+      "placement": "스토리",
+      "source": "instagramjob",
+      "medium": "instagramjob_story"
+    },
+    {
+      "channel": "오공고 인스타그램",
+      "placement": "프로필",
+      "source": "instagramjob",
+      "medium": "instagramjob_profile"
+    },
+    {
+      "channel": "렛츠커리어 인스타그램",
+      "placement": "프로필",
+      "source": "instagram",
+      "medium": "instagram_profile"
+    },
+    {
+      "channel": "렛츠커리어 인스타그램",
+      "placement": "스토리",
+      "source": "instagram",
+      "medium": "instagram_story"
+    },
+    {
+      "channel": "렛츠커리어 인스타그램",
+      "placement": "프로필 리틀리",
+      "source": "instagram",
+      "medium": "instagram_littly"
+    },
+    {
+      "channel": "오공고 스레드",
+      "placement": "피드",
+      "source": "threadjob",
+      "medium": "threadjob_feed"
+    },
+    {
+      "channel": "오공고 스레드",
+      "placement": "프로필",
+      "source": "threadjob",
+      "medium": "threadjob_profile"
+    },
+    {
+      "channel": "렛츠커리어 스레드",
+      "placement": "피드",
+      "source": "thread",
+      "medium": "thread_feed"
+    },
+    {
+      "channel": "렛츠커리어 스레드",
+      "placement": "프로필",
+      "source": "thread",
+      "medium": "thread_profile"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "오공고 AI",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_AI"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "오공고 기획",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_PM"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "오공고 마케팅",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_MKT"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "오공고 세일즈",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_SALES"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "오공고 인사",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_HR"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "공채 정보방",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_GONGCHAE"
+    },
+    {
+      "channel": "카카오톡방",
+      "placement": "쥬디 커뮤니티",
+      "source": "kakaotalk",
+      "medium": "kakaotalk_judycommunity"
+    }
+  ]
+}
