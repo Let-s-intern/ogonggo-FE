@@ -1,13 +1,15 @@
 import { datadogLogs } from '@datadog/browser-logs';
 import { datadogRum } from '@datadog/browser-rum';
 import { nextjsPlugin, onRouterTransitionStart } from '@datadog/browser-rum-nextjs';
+import { initPostHog } from '@/shared/analytics/posthog';
 
 /**
  * 브라우저 모니터링(Datadog). 앱이 상호작용 가능해지기 전에 한 번 돈다
  * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/instrumentation-client.md).
  *
  * 두 SDK 를 켠다.
- * - RUM: 화면 조회, 클릭 같은 사용자 행동, 리소스·롱태스크, 잡히지 않은 오류, 세션 리플레이
+ * - RUM: 화면 조회, 클릭 같은 사용자 행동, 리소스·롱태스크, 잡히지 않은 오류. 세션 리플레이는
+ *   Clarity(GTM 컨테이너에 걸린 태그)가 맡아 여기서는 끈다.
  * - Logs: 잡히지 않은 오류와 `console.error`·`console.warn` 을 로그로
  *
  * 화면 이름은 `nextjsPlugin` 이 App Router 이동을 받아 `/jobs/[jobId]` 처럼 동적 구간을 묶어
@@ -44,7 +46,8 @@ if (APPLICATION_ID && CLIENT_TOKEN) {
     env: ENV,
     version: VERSION,
     sessionSampleRate: 100,
-    sessionReplaySampleRate: 20,
+    // 리플레이는 Clarity(GTM 태그)가 맡는다. 두 곳에서 녹화하지 않는다.
+    sessionReplaySampleRate: 0,
     trackResources: true,
     trackUserInteractions: true,
     trackLongTasks: true,
@@ -65,3 +68,6 @@ if (APPLICATION_ID && CLIENT_TOKEN) {
     forwardConsoleLogs: ['error', 'warn'],
   });
 }
+
+// 이벤트 분석(PostHog). 키가 없으면 아무것도 하지 않는다. 역할 구분은 `shared/analytics/posthog.ts`.
+initPostHog();

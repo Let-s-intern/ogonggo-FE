@@ -6,6 +6,7 @@ import {
   GoogleTagManagerNoScript,
   GoogleTagManagerScript,
 } from '@/shared/analytics/GoogleTagManager';
+import { PostHogIdentify } from '@/shared/analytics/PostHogIdentify';
 import { PageContextTracker } from '@/shared/analytics/PageContextTracker';
 import { SITE_ORIGIN } from '@/shared/config/site';
 import { MockGate } from './MockGate';
@@ -97,6 +98,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <DatadogAppRouter />
         {/* 화면 이동·로그인 상태가 바뀔 때마다 GTM 에 `page_context` 를 보낸다. */}
         <PageContextTracker />
+        {/* 로그인한 계정을 PostHog 사용자로 묶는다. 키가 없으면 아무것도 하지 않는다. */}
+        <PostHogIdentify />
         {/*
           헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
           그룹 밖이라 껍데기 없이 렌더된다.
