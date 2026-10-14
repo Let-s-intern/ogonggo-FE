@@ -3,10 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { saveTokens } from '@/shared/api/authTokens';
-import {
-  exchangeLetsCareerToken,
-  pathAfterLetsCareerSignIn,
-} from '@/shared/api/letsCareerSignIn';
+import { exchangeLetsCareerToken, pathAfterLetsCareerSignIn } from '@/shared/api/letsCareerSignIn';
 
 /**
  * 다른 서비스에서 넘어온 로그인을 받는다. 주소의 해시로 두 가지가 온다.
