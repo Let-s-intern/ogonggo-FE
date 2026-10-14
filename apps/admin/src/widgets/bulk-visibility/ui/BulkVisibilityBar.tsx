@@ -102,7 +102,10 @@ export interface BulkVisibilityBarProps {
 }
 
 /**
- * 표 위 한 줄. 이 페이지 전체 선택, 검색 결과 선택, 고른 건수, 노출·비노출 버튼이다.
+ * 표 위 한 줄(이 페이지 전체 선택, 검색 결과 선택, 고른 건수)과, 고른 것이 있을 때만 화면 아래에
+ * 뜨는 작은 바(고른 것으로 할 일: 앞에 붙인 `actions`, 노출·비노출). 할 일 버튼을 아래에 고정하는
+ * 것은 표를 내려 가며 고르는 동안 위로 다시 올라가지 않게 하려는 것이다. 바가 표 끝을 가리지 않게
+ * 레이아웃(`widgets/admin-layout`)이 아래 여백을 둔다.
  *
  * 고르는 방법은 둘이다. 이 페이지 전체, 또는 검색 결과를 지금 정렬 순서로 앞에서부터 상한(1000건)
  * 까지. 결과가 상한 이하면 검색 결과 전체가 된다. 바꾸는 순간 그 id 를 받아 한 요청으로 보낸다.
@@ -172,31 +175,41 @@ export function BulkVisibilityBar({
             {total > MAX_IDS ? `최대 ${MAX_IDS}건 선택` : `검색 결과 전체 ${total}건 선택`}
           </Button>
         ) : null}
-        <div className="ml-auto flex items-center gap-2">
-          {actions}
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={count === 0 || mutation.isPending}
-            onClick={() => change('VISIBLE')}
-          >
-            노출로 바꾸기
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={count === 0 || mutation.isPending}
-            onClick={() => change('HIDDEN')}
-          >
-            비노출로 바꾸기
-          </Button>
-        </div>
       </div>
 
-      {mutation.isError ? (
-        <Callout tone="error" className="mb-3">
-          {serverErrorMessage(mutation.error) ?? '노출을 바꾸지 못했습니다.'}
-        </Callout>
+      {count > 0 ? (
+        // 왼쪽 메뉴(`w-56`) 를 뺀 본문의 가운데에 둔다.
+        <div className="fixed bottom-6 left-[calc(50%+7rem)] z-40 flex -translate-x-1/2 flex-col items-center gap-2">
+          {mutation.isError ? (
+            <Callout tone="error">
+              {serverErrorMessage(mutation.error) ?? '노출을 바꾸지 못했습니다.'}
+            </Callout>
+          ) : null}
+          <div className="flex w-max items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-lg">
+            <span className="text-sm font-medium text-gray-900">{count}건 선택</span>
+            <Button size="sm" variant="ghost" onClick={selection.clear}>
+              선택 해제
+            </Button>
+            <span aria-hidden="true" className="h-5 w-px bg-gray-200" />
+            {actions}
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={mutation.isPending}
+              onClick={() => change('VISIBLE')}
+            >
+              노출로 바꾸기
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={mutation.isPending}
+              onClick={() => change('HIDDEN')}
+            >
+              비노출로 바꾸기
+            </Button>
+          </div>
+        </div>
       ) : null}
     </>
   );

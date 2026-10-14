@@ -95,7 +95,8 @@ export function AdminLayout() {
           <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
         </a>
       </nav>
-      <main className="min-w-0 flex-1 px-8 py-6">
+      {/* 아래 여백은 목록에서 고르면 뜨는 하단 바(`widgets/bulk-visibility`)가 표 끝을 가리지 않게 둔다. */}
+      <main className="min-w-0 flex-1 px-8 pt-6 pb-24">
         {isAdminTokenUnverified() ? (
           <Callout tone="warning" className="mb-6">
             {ADMIN_TOKEN_UNVERIFIED_MESSAGE}
