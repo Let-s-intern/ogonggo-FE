@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { lexicalToPlainText } from '@/shared/lib/lexicalHtml';
-import { fetchConcernDetail } from '@/widgets/concern-detail';
+import { fetchRootComments } from '@/features/concern-comments';
+import { buildConcernQaJsonLd, fetchConcernDetail } from '@/widgets/concern-detail';
+import { serializeJsonLd } from '@/widgets/job-detail';
 import { ConcernDetailPage } from '@/views/concern-detail';
 
 type PageParams = { params: Promise<{ concernId: string }> };
@@ -54,6 +56,23 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
  */
 export default async function Page({ params }: PageParams) {
   const { concernId } = await params;
+  // `generateMetadata` 와 같은 요청이라 Next 가 한 번만 보낸다(fetch 메모이제이션). 답변은 첫 페이지만
+  // 싣는다 — 구조화 데이터는 대표 답변 몇 개면 되고, 화면도 처음에는 이만큼만 보인다.
+  const [concern, answers] = await Promise.all([
+    fetchConcernDetail(Number(concernId)),
+    fetchRootComments(Number(concernId), 1).catch(() => null),
+  ]);
+  const jsonLd = buildConcernQaJsonLd(concern, answers?.items ?? []);
 
-  return <ConcernDetailPage concernId={Number(concernId)} />;
+  return (
+    <>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        />
+      ) : null}
+      <ConcernDetailPage concernId={Number(concernId)} />
+    </>
+  );
 }

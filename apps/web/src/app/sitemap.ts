@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { SITE_ORIGIN } from '@/shared/config/site';
+import { withKstOffset } from '@/shared/lib/kstDateTime';
 import {
   fetchAllBootcamps,
+  fetchAllConcerns,
   fetchAllJobs,
   fetchAllNotices,
   fetchAllSideStudies,
@@ -28,32 +30,27 @@ import {
  * `lastModified`는 실제로 있는 값만 쓴다. `closedAt`(채용공고·부트캠프)은 응답에 있으면 최근
  * 변경을 뜻하는 진짜 신호라 그대로 쓰고, 없으면 필드를 아예 비운다 — 거짓 날짜는 크롤러가 다시
  * 오는 주기를 틀어지게 한다(task 1.3). 사이드·스터디 목록 응답에는 그런 필드가 없어 항상 비운다.
- * 공지는 `createdAt`이 항상 있는 진짜 필드라 그대로 쓴다.
+ * 공지와 취준 고민은 `createdAt`이 항상 있는 진짜 필드라 그대로 쓴다. 고민은 질문·답변 글이라 AI
+ * 검색이 인용하기 좋아 목록과 상세를 모두 싣는다.
  */
-/**
- * 백엔드 시각은 시간대가 없는 한국 시간(`2026-10-14T00:00:00.365861`)이다. 시각이 있는데 시간대가
- * 없으면 W3C Datetime 형식이 아니라 Search Console 이 사이트맵 `lastmod` 를 잘못된 날짜로 거부한다.
- */
-const withKstOffset = (localDateTime?: string) =>
-  !localDateTime || /[zZ]|[+-]\d{2}:\d{2}$/.test(localDateTime)
-    ? localDateTime
-    : `${localDateTime}+09:00`;
 
 /** 1시간. 공고는 하루에도 여러 번 들어오고, 한 번 만들 때 목록 API 를 수십 번 부른다. */
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [bootcamps, jobs, sideStudies, notices] = await Promise.all([
+  const [bootcamps, jobs, sideStudies, notices, concerns] = await Promise.all([
     fetchAllBootcamps(),
     fetchAllJobs(),
     fetchAllSideStudies(),
     fetchAllNotices(),
+    fetchAllConcerns(),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE_ORIGIN}/`, changeFrequency: 'daily', priority: 1 },
     { url: `${SITE_ORIGIN}/bootcamps`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_ORIGIN}/side-studies`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${SITE_ORIGIN}/concerns`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_ORIGIN}/notices`, changeFrequency: 'weekly', priority: 0.3 },
   ];
 
@@ -84,11 +81,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.3,
   }));
 
+  const concernEntries: MetadataRoute.Sitemap = concerns.map((concern) => ({
+    url: `${SITE_ORIGIN}/concerns/${concern.id}`,
+    lastModified: withKstOffset(concern.createdAt),
+    changeFrequency: 'weekly',
+    priority: 0.5,
+  }));
+
   return [
     ...staticEntries,
     ...bootcampEntries,
     ...jobEntries,
     ...sideStudyEntries,
     ...noticeEntries,
+    ...concernEntries,
   ];
 }
