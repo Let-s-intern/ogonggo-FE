@@ -213,7 +213,7 @@ function UtmLinksForm({
                   <th scope="col" className="px-3 py-2 font-medium">
                     URL
                   </th>
-                  <th scope="col" className="w-20 px-3 py-2 font-medium">
+                  <th scope="col" className="w-24 px-3 py-2 font-medium">
                     <span className="sr-only">복사</span>
                   </th>
                 </tr>
@@ -226,7 +226,9 @@ function UtmLinksForm({
                     <td className="break-all px-3 py-2 text-gray-500">{link.url}</td>
                     <td className="px-3 py-2">
                       <Button size="sm" variant="secondary" onClick={() => copyOne(link.url)}>
-                        {copiedUrl === link.url ? '복사됨' : '복사'}
+                        <span className="whitespace-nowrap">
+                          {copiedUrl === link.url ? '복사됨' : '복사'}
+                        </span>
                       </Button>
                     </td>
                   </tr>
