@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, SearchInput } from '@ogonggo/ui';
+import { rememberJobFilters } from '../lib/filterCookie';
 import {
   clearSelection,
   FILTER_GROUPS,
@@ -124,6 +125,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
       setDraft(null);
       return;
     }
+    rememberJobFilters(href);
     startTransition(() => router.push(href, { scroll: false }));
   };
 

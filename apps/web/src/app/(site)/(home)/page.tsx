@@ -1,14 +1,18 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { ListPublicJobsSort } from '@ogonggo/api';
 import { HomePage } from '@/views/home';
 import { buildSiteJsonLd } from '@/shared/lib/siteJsonLd';
 import { serializeJsonLd } from '@/widgets/job-detail';
 import {
   buildJobListHref,
+  JOB_FILTER_COOKIE_NAME,
   parseEmploymentTypes,
   parseExperienceTypes,
   parseJobRoleSelection,
   parseKeywordParam,
+  parseRememberedJobFilters,
   parseRegions,
 } from '@/widgets/job-list';
 
@@ -55,9 +59,34 @@ export async function generateMetadata({
   return { alternates: { canonical } };
 }
 
+/**
+ * 주소에 필터 쿼리가 하나도 없으면 **마지막으로 건 필터를 쿠키에서 꺼내 그 주소로 보낸다**
+ * (`widgets/job-list/lib/filterCookie.ts`). 서버가 여기서 주소를 바꾸므로 필터 없는 목록이 잠깐
+ * 보였다 바뀌지 않는다. 검색어·정렬은 주소의 것을 그대로 두고 쪽만 1쪽으로 돌아간다.
+ *
+ * 쿼리가 있는지는 거르기 전의 원본으로 본다. `?employmentType=` 처럼 값이 틀린 주소도 사용자가 적은
+ * 필터 주소이므로 덮지 않는다. 쿠키의 필터는 거른 결과가 비면 보내지 않는다.
+ */
 export default async function Page({ searchParams }: { searchParams: Promise<HomeSearchParams> }) {
   const { page, sort, q, employmentType, experienceType, region, jobField, jobRole } =
     await searchParams;
+
+  const hasFilterQuery = [employmentType, experienceType, region, jobField, jobRole].some(
+    (value) => value !== undefined,
+  );
+  if (!hasFilterQuery) {
+    const remembered = parseRememberedJobFilters(
+      (await cookies()).get(JOB_FILTER_COOKIE_NAME)?.value,
+    );
+    if (remembered) {
+      redirect(
+        buildJobListHref(
+          { page: 1, sort: parseSort(sort), q: parseKeywordParam(q) },
+          remembered,
+        ),
+      );
+    }
+  }
 
   return (
     <>
