@@ -1,3 +1,4 @@
+import { CONTACT_VALUE_LABELS } from './options';
 import { hasContentBody, type RecruitmentPostFormValues } from './values';
 
 /**
@@ -51,9 +52,7 @@ export function validateForPublish(values: RecruitmentPostFormValues): string | 
     return '지원 및 소통 방법을 선택해 주세요.';
   }
   if (!values.contactValue.trim()) {
-    return values.contactMethod === 'EMAIL'
-      ? '이메일 주소를 입력해 주세요.'
-      : '오픈 카톡방 링크를 입력해 주세요.';
+    return `${CONTACT_VALUE_LABELS[values.contactMethod]}를 입력해 주세요.`;
   }
   const contactError = validateContactValue(values);
   if (contactError) {
@@ -83,7 +82,8 @@ export function validateForDraft(values: RecruitmentPostFormValues): string | nu
  * 형식을 본다(`RecruitmentPostRequests.kt`) — 여기서 먼저 막지 않으면 400 이 와서
  * `임시저장하지 못했습니다` 만 보이고 무엇이 틀렸는지 알 수 없다.
  *
- * 오픈 카톡방은 `http`·`https` 이고 호스트가 있는 주소, 이메일은 백엔드와 같은 식이다.
+ * 이메일 외(오픈 카톡방·디스코드·슬랙)는 `http`·`https` 이고 호스트가 있는 주소, 이메일은 백엔드와
+ * 같은 식이다.
  */
 function validateContactValue(values: RecruitmentPostFormValues): string | null {
   const value = values.contactValue.trim();
@@ -93,7 +93,9 @@ function validateContactValue(values: RecruitmentPostFormValues): string | null 
   if (values.contactMethod === 'EMAIL') {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? null : '이메일 형식으로 입력해 주세요.';
   }
-  return isHttpUrl(value) ? null : '오픈 카톡방 링크를 https:// 로 시작하는 주소로 입력해 주세요.';
+  return isHttpUrl(value)
+    ? null
+    : `${CONTACT_VALUE_LABELS[values.contactMethod]}를 https:// 로 시작하는 주소로 입력해 주세요.`;
 }
 
 function isHttpUrl(value: string): boolean {

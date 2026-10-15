@@ -1,7 +1,7 @@
 'use client';
 
 import { Callout, Checkbox, Field, Input } from '@ogonggo/ui';
-import { CONTACT_METHOD_OPTIONS } from '../model/options';
+import { CONTACT_METHOD_OPTIONS, CONTACT_VALUE_LABELS } from '../model/options';
 import type { RecruitmentPostFormValues } from '../model/values';
 import { FormSelect } from './FormSelect';
 import { PositionSelect } from './PositionSelect';
@@ -26,10 +26,11 @@ export interface ApplySettingsSectionProps {
  * 따른다.
  *
  * 마지막 칸의 이름은 소통 방법을 따라간다 — 이메일을 골라 놓고 `오픈 카톡방 링크` 에 주소를
- * 적게 두면 무엇을 적는 칸인지 어긋난다.
+ * 적게 두면 무엇을 적는 칸인지 어긋난다. 이름은 `CONTACT_VALUE_LABELS` 가 정한다.
  */
 export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionProps) {
   const email = values.contactMethod === 'EMAIL';
+  const contactValueLabel = CONTACT_VALUE_LABELS[values.contactMethod || 'OPEN_KAKAO'];
 
   return (
     <div>
@@ -103,7 +104,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
         </Field>
 
         <Field
-          label={email ? '이메일 주소' : '오픈 카톡방 링크'}
+          label={contactValueLabel}
           htmlFor="post-contact-value"
           done={Boolean(values.contactValue.trim())}
         >
@@ -113,7 +114,7 @@ export function ApplySettingsSection({ values, onChange }: ApplySettingsSectionP
             maxLength={MAX_CONTACT_VALUE_LENGTH}
             value={values.contactValue}
             onChange={(event) => onChange({ contactValue: event.target.value })}
-            placeholder={email ? '이메일 주소를 입력해 주세요' : '오픈 카톡방 링크를 입력해 주세요'}
+            placeholder={`${contactValueLabel}를 입력해 주세요`}
           />
         </Field>
       </div>

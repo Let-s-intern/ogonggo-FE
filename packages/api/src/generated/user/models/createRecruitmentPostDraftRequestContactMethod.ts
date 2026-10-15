@@ -10,6 +10,8 @@
  * | --- | --- | --- |
  * | `OPEN_KAKAO` | 1 | 카카오톡 오픈채팅 |
  * | `EMAIL` | 2 | 이메일 |
+ * | `SLACK` | 3 | 슬랙 |
+ * | `DISCORD` | 4 | 디스코드 |
  */
 export type CreateRecruitmentPostDraftRequestContactMethod = typeof CreateRecruitmentPostDraftRequestContactMethod[keyof typeof CreateRecruitmentPostDraftRequestContactMethod];
 
@@ -17,4 +19,6 @@ export type CreateRecruitmentPostDraftRequestContactMethod = typeof CreateRecrui
 export const CreateRecruitmentPostDraftRequestContactMethod = {
   OPEN_KAKAO: 'OPEN_KAKAO',
   EMAIL: 'EMAIL',
+  SLACK: 'SLACK',
+  DISCORD: 'DISCORD',
 } as const;

@@ -58,6 +58,8 @@ export interface UpdateRecruitmentPostRequest {
      * | --- | --- | --- |
      * | `OPEN_KAKAO` | 1 | 카카오톡 오픈채팅 |
      * | `EMAIL` | 2 | 이메일 |
+     * | `SLACK` | 3 | 슬랙 |
+     * | `DISCORD` | 4 | 디스코드 |
      */
   contactMethod?: UpdateRecruitmentPostRequestContactMethod;
   /**

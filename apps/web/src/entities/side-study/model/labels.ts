@@ -38,4 +38,6 @@ export const POSITION_LABELS: Record<SideStudyPosition, string> = {
 export const CONTACT_METHOD_LABELS: Record<SideStudyContactMethod, string> = {
   OPEN_KAKAO: '카카오톡 오픈채팅',
   EMAIL: '이메일',
+  SLACK: '슬랙',
+  DISCORD: '디스코드',
 };
