@@ -17,9 +17,9 @@ import { EMPTY_HIRING_PROCESS_STEP, type HiringProcessStep } from '../lib/hiring
  * 맞되, 고르지 않은 드롭다운을 빈 문자열로 들고 있어 타입이 다르다 — `<select>` 의 값은 늘
  * 문자열이고, 숫자 칸(`recruitmentHeadcount`) 도 적기 전에는 값이 없다.
  *
- * **목업에 있는데 여기 없는 칸 셋**(기업 로고, 근무 방식, 담당자 이메일) 은 받을 필드가 없어
- * 화면에만 비활성으로 그린다(v5 PRD 3 절). 값을 들고 있지 않는 것이 그 결정의 전부다 —
- * 들고 있으면 언젠가 저장되는 것처럼 보인다.
+ * **목업에 있는데 여기 없는 칸은 근무 방식 하나다**(v5 PRD 3 절). 받을 필드가 없어 화면에만
+ * 비활성으로 그린다. 값을 들고 있지 않는 것이 그 결정의 전부다 — 들고 있으면 언젠가 저장되는
+ * 것처럼 보인다.
  */
 export interface CompanyJobFormValues {
   companyName: string;
@@ -31,6 +31,8 @@ export interface CompanyJobFormValues {
   region: CreateCompanyJobRequestRegion | '';
   recruitmentHeadcount: string;
   coverImageUrl: string;
+  /** 기업 로고 주소. 목업의 `로고 업로드` 칸이다. */
+  logoUrl: string;
   responsibilities: string;
   qualifications: string;
   preferredQualifications: string;
@@ -47,6 +49,8 @@ export interface CompanyJobFormValues {
   recruitmentEndAt: string;
   applicationMethod: CreateCompanyJobRequestApplicationMethod | '';
   sourceUrl: string;
+  /** 목업의 `담당자 이메일`. 지원 방법이 이메일일 때 지원서를 받을 주소다. */
+  applyEmail: string;
   recruitmentNotice: string;
   autoCloseEnabled: boolean;
 }
@@ -79,6 +83,7 @@ export const EMPTY_COMPANY_JOB_VALUES: CompanyJobFormValues = {
   region: '',
   recruitmentHeadcount: '',
   coverImageUrl: '',
+  logoUrl: '',
   responsibilities: '',
   qualifications: '',
   preferredQualifications: '',
@@ -89,6 +94,7 @@ export const EMPTY_COMPANY_JOB_VALUES: CompanyJobFormValues = {
   recruitmentEndAt: '',
   applicationMethod: '',
   sourceUrl: '',
+  applyEmail: '',
   recruitmentNotice: '',
   autoCloseEnabled: false,
 };
@@ -107,6 +113,7 @@ export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFor
     region: job.region ?? '',
     recruitmentHeadcount: job.recruitmentHeadcount == null ? '' : String(job.recruitmentHeadcount),
     coverImageUrl: job.coverImageUrl ?? '',
+    logoUrl: job.logoUrl ?? '',
     responsibilities: job.responsibilities ?? '',
     qualifications: job.qualifications ?? '',
     preferredQualifications: job.preferredQualifications ?? '',
@@ -117,6 +124,7 @@ export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFor
     recruitmentEndAt: toDateInputValue(job.recruitmentEndAt),
     applicationMethod: job.applicationMethod ?? '',
     sourceUrl: job.sourceUrl ?? '',
+    applyEmail: job.applyEmail ?? '',
     recruitmentNotice: job.recruitmentNotice ?? '',
     autoCloseEnabled: job.autoCloseEnabled ?? false,
   };
@@ -162,6 +170,7 @@ export function toCompanyJobRequest(
     jobRole: passthrough.jobRole,
     industry: passthrough.industry,
     coverImageUrl: textOrUndefined(values.coverImageUrl),
+    logoUrl: textOrUndefined(values.logoUrl),
     employmentType: values.employmentType as CreateCompanyJobRequest['employmentType'],
     experienceType: values.experienceType as CreateCompanyJobRequest['experienceType'],
     experienceMinYears: passthrough.experienceMinYears,
@@ -183,5 +192,6 @@ export function toCompanyJobRequest(
     recruitmentNotice: textOrUndefined(values.recruitmentNotice),
     applicationMethod: values.applicationMethod || undefined,
     sourceUrl: textOrUndefined(values.sourceUrl),
+    applyEmail: textOrUndefined(values.applyEmail),
   };
 }

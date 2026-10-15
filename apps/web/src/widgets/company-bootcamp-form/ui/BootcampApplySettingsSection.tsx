@@ -23,9 +23,8 @@ export interface BootcampApplySettingsSectionProps {
  * 3 단 모집 · 지원 설정(v5 PRD 4 절). 모집 시작일 · 모집 마감일 · 지원 방법 · 지원 링크 ·
  * 담당자 이메일 · 문의 링크 · 공고 공개 기간 · 정책 동의.
  *
- * **문의처 두 칸은 채용공고 폼과 달리 살아 있다.** `CreateCompanyBootcampRequest` 에
- * `managerEmail` 과 `inquiryUrl` 이 있다 — 채용공고 요청에만 없어서 그쪽 담당자 이메일 칸이
- * 비활성이었다(v5 PRD 3·4 절). 같은 목업의 같은 자리라도 받을 필드가 있으면 받는다.
+ * **문의처 두 칸은 `CreateCompanyBootcampRequest` 의 `managerEmail` 과 `inquiryUrl` 이 받는다.**
+ * 채용공고 폼의 담당자 이메일 칸도 `applyEmail` 이 생겨 같은 모양이다(v5 PRD 3·4 절).
  *
  * 날짜는 `input[type=date]` 다. 백엔드는 일시를 받지만 목업이 `YYYY-MM-DD` 이고 마감 시각이
  * 23:59 로 고정이라, 화면은 달력 날짜만 다루고 시각은 저장할 때 붙인다

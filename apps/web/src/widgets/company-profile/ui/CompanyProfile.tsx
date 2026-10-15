@@ -9,7 +9,11 @@ import {
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
 import { isSignedIn } from '@/shared/api/authTokens';
-import { toCompanyProfileValues, type CompanyProfileDraft } from '../model/values';
+import {
+  toCompanyProfileValues,
+  type CompanyBasicInfoDraft,
+  type CompanyManagerInfoDraft,
+} from '../model/values';
 import { CompanyProfileView } from './CompanyProfileView';
 
 type State =
@@ -53,27 +57,42 @@ export function CompanyProfile() {
   }, []);
 
   /**
-   * 두 칸을 저장하고 **계정을 다시 읽는다.** 응답이 저장된 값을 돌려주지 않아서
-   * (`PUT` 의 `data` 가 비어 있다) 서버에 무엇이 들어갔는지는 다시 읽어야만 알 수 있다.
+   * 저장 뒤 계정을 다시 읽는다. 응답이 저장된 값을 돌려주지 않아서(`PUT` 의 `data` 가 비어
+   * 있다) 서버에 무엇이 들어갔는지는 다시 읽어야만 알 수 있다.
    *
-   * 저장이 실패하면 그대로 던진다 — 어느 칸에 무슨 문구를 띄울지는 그리는 쪽이 안다. 반대로
    * 다시 읽기가 실패한 것은 저장 실패가 아니므로 위쪽 배너로만 알린다. 저장은 끝났다고 말해
    * 놓고 화면에 옛 값이 남는 쪽이, 실패했다고 말해 다시 누르게 하는 것보다 낫다.
-   *
-   * 수정 API 가 기본 정보와 담당자 정보로 나뉘었다(ogonggo-BE LC-3396). 기본 정보는 로고를 같이
-   * 받으므로, 로고를 지우지 않게 계정에서 읽은 `logoImageId` 를 그대로 보낸다.
    */
-  const save = async (draft: CompanyProfileDraft): Promise<void> => {
-    const logoImageId =
-      state.kind === 'ready' ? state.account.companyProfile?.logoImageId : undefined;
-    await replaceMyCompanyBasicInfo({ organizationName: draft.organizationName, logoImageId });
-    await replaceMyCompanyManagerInfo({ managerName: draft.managerName });
+  const reload = async (): Promise<void> => {
     try {
       const body = (await getMyAccount()) as unknown as SuccessResponseMyAccountResponse;
       setState(body.data ? { kind: 'ready', account: body.data } : { kind: 'error' });
     } catch {
       setState({ kind: 'error' });
     }
+  };
+
+  /**
+   * 기본 정보(기관명·로고)를 저장한다. 수정 API 가 기본 정보와 담당자 정보로 나뉘어
+   * (ogonggo-BE LC-3396) 저장 버튼도 각자 자기 구역만 보낸다. 실패하면 그대로 던진다 — 어느
+   * 칸에 무슨 문구를 띄울지는 그리는 쪽이 안다.
+   */
+  const saveBasicInfo = async (draft: CompanyBasicInfoDraft): Promise<void> => {
+    await replaceMyCompanyBasicInfo({
+      organizationName: draft.organizationName,
+      logoImageId: draft.logoImageId || undefined,
+    });
+    await reload();
+  };
+
+  /** 담당자 정보(이름·연락처·수신용 이메일)를 저장한다. 세 값이 한 번에 교체된다. */
+  const saveManagerInfo = async (draft: CompanyManagerInfoDraft): Promise<void> => {
+    await replaceMyCompanyManagerInfo({
+      managerName: draft.managerName,
+      managerPhone: draft.managerPhone || undefined,
+      notificationEmail: draft.notificationEmail || undefined,
+    });
+    await reload();
   };
 
   return (
@@ -85,7 +104,8 @@ export function CompanyProfile() {
       ) : null}
       <CompanyProfileView
         values={state.kind === 'ready' ? toCompanyProfileValues(state.account) : undefined}
-        onSave={save}
+        onSaveBasicInfo={saveBasicInfo}
+        onSaveManagerInfo={saveManagerInfo}
       />
     </>
   );

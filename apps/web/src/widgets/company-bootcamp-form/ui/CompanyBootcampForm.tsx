@@ -8,6 +8,7 @@ import {
   createBootcamp,
   fetchMyBootcamp,
   replaceBootcamp,
+  saveCompanyBasicInfo,
   startBootcampRecruitment,
 } from '../lib/api';
 import { validateForDraft, validateForPublish } from '../model/validate';
@@ -122,6 +123,17 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
     }
     setFormError(null);
     setPending(true);
+    // 기본 정보를 먼저 저장한다. 공고를 만든 뒤에 실패하면 공고만 남고 사용자는 무엇이 저장됐는지
+    // 알 수 없다. 이쪽이 먼저 실패하면 아무것도 만들어지지 않는다.
+    if (values.saveAsBasicInfo) {
+      try {
+        await saveCompanyBasicInfo(values.companyName.trim(), values.logoImageId);
+      } catch {
+        setFormError('기업 기본 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        setPending(false);
+        return;
+      }
+    }
     try {
       let savedId = bootcampId;
       if (savedId === undefined) {

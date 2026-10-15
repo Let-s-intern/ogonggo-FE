@@ -2,6 +2,7 @@
 
 import { Checkbox, Field, Input, Select } from '@ogonggo/ui';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
+import { LogoUploadField } from '@/shared/ui/LogoUploadField';
 import {
   OPERATION_TYPE_OPTIONS,
   PROGRAM_TYPE_OPTIONS,
@@ -22,7 +23,7 @@ export interface BootcampBasicInfoSectionProps {
 }
 
 /**
- * 1 단 기본 정보(v5 PRD 4 절). 기업·기관명 · 프로그램명 · 프로그램 유형 · 진행 방식 ·
+ * 1 단 기본 정보(v5 PRD 4 절). 기업 로고 · 기업·기관명 · 프로그램명 · 프로그램 유형 · 진행 방식 ·
  * 교육 기간 · 모집 인원 · 수강료 유형 · 수강료 · 수료 후 파트너사 · 공고 대표 이미지.
  *
  * 드롭다운 폭을 `w-full` 로 준다. `Select` 의 기본 폭은 필터 줄에 맞춘 내용 폭이라, 두 칸씩
@@ -33,20 +34,12 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
     <div>
       <Field label="기업 · 기관명" htmlFor="company-bootcamp-company-name" required>
         <div className="flex items-start gap-3">
-          {/*
-            기업 로고 칸. **비활성이다** — `createImage` 로 올리는 것까지는 되지만
-            `CreateCompanyBootcampRequest` 에 로고를 담을 필드가 없어 버려진다(v5 PRD 4 절).
-            올릴 수 있게 두면 올린 것이 사라진 것으로 읽힌다. 채용공고 폼의 같은 칸과 같다.
-          */}
-          <button
-            type="button"
-            disabled
-            className="flex h-11 w-24 shrink-0 cursor-not-allowed flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-300"
-          >
-            <span aria-hidden="true" className="icon-[lucide--upload] block size-3.5" />
-            <span className="pt-0.5 text-[10px] leading-none">로고 업로드</span>
-            <span className="text-[10px] leading-none">1:1 비율 권장</span>
-          </button>
+          <LogoUploadField
+            url={values.logoUrl}
+            className="h-11 w-24"
+            onUploaded={(image) => onChange({ logoUrl: image.url, logoImageId: image.id })}
+            onClear={() => onChange({ logoUrl: '', logoImageId: '' })}
+          />
           <Input
             id="company-bootcamp-company-name"
             value={values.companyName}
@@ -58,15 +51,14 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
       </Field>
 
       {/*
-        `가입한 내용 동일 및 기본 정보로 저장`. **비활성이다** — 기업 프로필에는 기관명과
-        담당자 이름 둘뿐이고 **수정 API 가 없다**(v5 PRD 표). 적은 값을 기본 정보로 저장할
-        곳이 없다. 채용공고 목업에는 없고 이 목업에만 있는 칸이다.
+        `가입한 내용 동일 및 기본 정보로 저장`. 켜면 이 칸의 기관명·로고를 기업 기본 정보로도
+        저장한다(`lib/api.ts` 의 `saveCompanyBasicInfo`). 채용공고 목업에는 없고 이 목업에만 있는
+        칸이다.
       */}
       <div className="pb-4">
         <Checkbox
-          checked={false}
-          disabled
-          onChange={() => undefined}
+          checked={values.saveAsBasicInfo}
+          onChange={(saveAsBasicInfo) => onChange({ saveAsBasicInfo })}
           label="가입한 내용 동일 및 기본 정보로 저장"
         />
       </div>

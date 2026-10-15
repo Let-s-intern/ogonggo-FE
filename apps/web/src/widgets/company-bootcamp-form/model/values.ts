@@ -25,12 +25,19 @@ import {
  * 칸씩 짝이 맞되, 고르지 않은 드롭다운을 빈 문자열로 들고 있어 타입이 다르다 — `<select>` 의
  * 값은 늘 문자열이고, 숫자 칸(`capacity`·`tuitionAmount`) 도 적기 전에는 값이 없다.
  *
- * **목업에 있는데 여기 없는 칸은 기업 로고 하나다**(v5 PRD 4 절). 받을 필드가 없어 화면에만
- * 비활성으로 그린다 — 값을 들고 있지 않는 것이 그 결정의 전부다. 들고 있으면 언젠가
- * 저장되는 것처럼 보인다.
+ * 기업 로고는 `logoUrl` 로 공고에 저장된다. 목업의 `가입한 내용 동일 및 기본 정보로 저장` 체크는
+ * 요청 바디에 실리지 않고, 켜져 있으면 공고를 저장하기 전에 기업 기본 정보(기관명·로고)를 함께
+ * 저장한다(`lib/api.ts` 의 `saveCompanyBasicInfo`).
  */
 export interface CompanyBootcampFormValues {
   companyName: string;
+  /** 기업 로고 주소. 목업의 `로고 업로드` 칸이다. */
+  logoUrl: string;
+  /**
+   * 이 화면에서 방금 올린 로고의 이미지 식별자. 요청에 실리지 않고 기본 정보로 저장할 때만
+   * 쓴다. 저장된 공고를 열면 비어 있다 — 주소만 알고 식별자는 모른다.
+   */
+  logoImageId: string;
   /** 목업의 `프로그램명`. 요청에서는 `title` 이다. */
   title: string;
   programType: string;
@@ -67,12 +74,16 @@ export interface CompanyBootcampFormValues {
   publishUntilRecruitmentEnd: boolean;
   publicationStartAt: string;
   publicationEndAt: string;
+  /** 요청에 실리지 않는다. 켜져 있으면 기업 기본 정보(기관명·로고)도 함께 저장한다. */
+  saveAsBasicInfo: boolean;
   /** 요청에 실리지 않는다. `공고 등록` 을 막는 데만 쓴다(`ui/BootcampApplySettingsSection.tsx`). */
   agreedToPolicy: boolean;
 }
 
 export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
   companyName: '',
+  logoUrl: '',
+  logoImageId: '',
   title: '',
   programType: '',
   operationType: '',
@@ -96,6 +107,7 @@ export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
   publishUntilRecruitmentEnd: true,
   publicationStartAt: '',
   publicationEndAt: '',
+  saveAsBasicInfo: false,
   agreedToPolicy: false,
 };
 
@@ -105,6 +117,8 @@ export function toCompanyBootcampValues(
 ): CompanyBootcampFormValues {
   return {
     companyName: bootcamp.companyName,
+    logoUrl: bootcamp.logoUrl ?? '',
+    logoImageId: '',
     title: bootcamp.title,
     programType: bootcamp.programType,
     operationType: bootcamp.operationType,
@@ -132,6 +146,7 @@ export function toCompanyBootcampValues(
       toDateInputValue(bootcamp.publicationEndAt) === toDateInputValue(bootcamp.recruitmentEndAt),
     publicationStartAt: toDateInputValue(bootcamp.publicationStartAt),
     publicationEndAt: toDateInputValue(bootcamp.publicationEndAt),
+    saveAsBasicInfo: false,
     // 저장된 값이 아니다. 고쳐 다시 공개로 만들 때 한 번 더 받는다(v4 모집글 폼과 같다).
     agreedToPolicy: false,
   };
@@ -227,6 +242,7 @@ export function toCompanyBootcampRequest(
 
   return {
     companyName: values.companyName.trim(),
+    logoUrl: textOrUndefined(values.logoUrl),
     title: values.title.trim(),
     programType: values.programType.trim(),
     operationType: values.operationType as UpdateCompanyBootcampRequest['operationType'],
