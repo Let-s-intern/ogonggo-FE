@@ -80,10 +80,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Hom
     );
     if (remembered) {
       redirect(
-        buildJobListHref(
-          { page: 1, sort: parseSort(sort), q: parseKeywordParam(q) },
-          remembered,
-        ),
+        buildJobListHref({ page: 1, sort: parseSort(sort), q: parseKeywordParam(q) }, remembered),
       );
     }
   }
