@@ -90,6 +90,8 @@ function UtmLinksForm({
 }) {
   const [picked, setPicked] = useState<Set<UtmTemplate>>(new Set());
   const [copyFailed, setCopyFailed] = useState(false);
+  /** 한 줄 복사 버튼을 눌러 막 복사한 링크. 잠깐 `복사됨` 으로 보인다. */
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   // 고른 순서가 아니라 파일 순서로 링크를 늘어놓는다.
   const links = buildUtmLinks(
     kind,
@@ -136,6 +138,18 @@ function UtmLinksForm({
         ]),
       `${links.length}개 링크를 하이퍼링크로 복사했습니다.`,
     );
+
+  // 창을 닫지 않는다. 채널마다 하나씩 붙여 넣으러 오가며 이어서 누른다.
+  const copyOne = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyFailed(false);
+      setCopiedUrl(url);
+      setTimeout(() => setCopiedUrl((current) => (current === url ? null : current)), 1500);
+    } catch {
+      setCopyFailed(true);
+    }
+  };
 
   const download = () => {
     const blob = new Blob([toCsv(kind, links)], { type: 'text/csv;charset=utf-8' });
@@ -199,6 +213,9 @@ function UtmLinksForm({
                   <th scope="col" className="px-3 py-2 font-medium">
                     URL
                   </th>
+                  <th scope="col" className="w-20 px-3 py-2 font-medium">
+                    <span className="sr-only">복사</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -207,6 +224,11 @@ function UtmLinksForm({
                     <td className="px-3 py-2 text-gray-900">{link.posting.title}</td>
                     <td className="px-3 py-2 text-gray-500">{templateLabel(link.template)}</td>
                     <td className="break-all px-3 py-2 text-gray-500">{link.url}</td>
+                    <td className="px-3 py-2">
+                      <Button size="sm" variant="secondary" onClick={() => copyOne(link.url)}>
+                        {copiedUrl === link.url ? '복사됨' : '복사'}
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
