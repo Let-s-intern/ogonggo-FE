@@ -12,6 +12,7 @@ import type { AdminJobSummaryResponse, AdminTodayJobSummaryResponse } from '@ogo
 import { useJobIdLookup, useJobList } from '@/entities/content/api/useContent';
 import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
+import { useTodayJobWriter } from '@/features/today-job/lib/useTodayJobWriter';
 import { isRecommendationValid } from '@/features/today-job/lib/validate';
 import { PageHeader } from '@/widgets/page-header';
 import { SearchBox } from '@/widgets/list-toolbar';
@@ -138,6 +139,7 @@ export function TodayJobsPage() {
 function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryResponse[] }) {
   const { data, refetch } = useTodayJobList();
   const replaceMutation = useReplaceTodayJobs();
+  const writer = useTodayJobWriter(replaceMutation.mutateAsync);
 
   // 서버 상태. 저장하지 않은 변경을 세고, 저장 직전에 다른 곳에서 바뀌었는지 보는 기준이다.
   const [baseline, setBaseline] = useState<TodayJobRow[]>(() => serverJobs.map(toRow));
@@ -277,14 +279,13 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
     });
   };
 
-  /** 맨 끝에 붙인다. 문구는 비어 있어 저장하기 전에 채워야 한다. */
+  /** 맨 위(1순위)에 넣는다. 기존 행은 한 칸씩 밀린다. 문구는 비어 있어 저장하기 전에 채워야 한다. */
   const addRow = (job: AdminJobSummaryResponse) => {
     setIsSaved(false);
     setRows((current) =>
       current.some((row) => row.id === job.id)
         ? current
         : [
-            ...current,
             {
               id: job.id,
               title: job.title,
@@ -294,13 +295,39 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
               recommendationTitle: '',
               recommendationDescription: '',
             },
+            ...current,
           ],
     );
   };
 
-  /** 화면 상태에서만 지운다. 서버는 저장할 때까지 그대로다. */
-  const removeRow = (id: number) => {
+  /**
+   * 서버에 있는 공고를 바로 뺀다. 저장 버튼을 기다리지 않는다.
+   *
+   * 저장하지 않은 행은 서버에 없으니 화면에서만 지운다.
+   *
+   * 서버에는 최신 목록에서 이 공고만 뺀 목록을 보내므로(`useTodayJobWriter`) 아직 저장하지 않은
+   * 다른 행의 문구·순서 변경은 보내지 않고 화면에 그대로 남는다. 성공하면 화면 상태와 비교 기준
+   * 양쪽에서 이 행만 지운다. 이미 다른 곳에서 빠져 있었어도 같다.
+   */
+  const removeRow = async (id: number) => {
     setIsSaved(false);
+    setSaveError(null);
+
+    if (!baseline.some((row) => row.id === id)) {
+      setRows((current) => current.filter((row) => row.id !== id));
+      return;
+    }
+
+    setIsChecking(true);
+    try {
+      await writer.remove(id);
+    } catch {
+      setSaveError('공고를 빼지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
+      return;
+    } finally {
+      setIsChecking(false);
+    }
+    setBaseline((current) => current.filter((row) => row.id !== id));
     setRows((current) => current.filter((row) => row.id !== id));
   };
 
@@ -378,7 +405,7 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
               aria-label={`${row.title} 빼기`}
               className="border-red-200 text-error hover:bg-red-50"
               disabled={isSaving}
-              onClick={() => removeRow(row.id)}
+              onClick={() => void removeRow(row.id)}
             >
               빼기
             </Button>
@@ -501,7 +528,7 @@ function JobPickerModal({ open, selectedIds, onAdd, onClose }: JobPickerModalPro
     <Modal
       open={open}
       title="공고 추가"
-      description="노출 중인 공고를 검색해 고릅니다. 고른 공고는 표 맨 끝에 붙습니다."
+      description="노출 중인 공고를 검색해 고릅니다. 고른 공고는 표 맨 위(1순위)에 들어갑니다."
       onClose={onClose}
       className="w-[min(48rem,calc(100vw-2rem))]"
     >
