@@ -4,12 +4,14 @@ import {
   EXPERIENCE_TYPE_LABELS,
   JOB_ROLES,
   jobRolesOf,
+  REGION_LABELS,
   toJobField,
 } from '@/entities/job/model/labels';
 import type {
   JobEmploymentType,
   JobExperienceType,
   JobField,
+  JobRegion,
   JobRole,
 } from '@/entities/job/model/types';
 
@@ -25,6 +27,11 @@ export interface JobListQuery {
   employmentTypes?: JobEmploymentType[];
   /** 요구 경력. `employmentTypes` 와 같은 규칙이다. */
   experienceTypes?: JobExperienceType[];
+  /**
+   * 근무 지역(시·도). 다른 필터와 모양을 맞춰 배열이지만 하나만 든다 — `GET /api/v1/jobs` 의 `region` 이
+   * 값 하나만 받는다(되풀이해 보내면 첫 값만 쓴다, 2026-10-15 실측). 없으면 걸지 않는다.
+   */
+  regions?: JobRegion[];
   /** 직무 필터에서 `전체` 로 고른 직군들. */
   jobFields?: JobField[];
   /** 하나씩 고른 직무들. `jobFields` 에 든 직군의 직무는 싣지 않는다 — 이미 전부 골랐다. */
@@ -59,6 +66,10 @@ export function buildJobListHref(
   }
   for (const type of merged.experienceTypes ?? []) {
     params.append('experienceType', type);
+  }
+  // 하나만 싣는다. 여럿이 들어와도 API 는 첫 값만 쓰므로 주소가 실제 필터와 어긋나지 않게 맞춘다.
+  if (merged.regions?.[0]) {
+    params.set('region', merged.regions[0]);
   }
   for (const field of merged.jobFields ?? []) {
     params.append('jobField', field);
@@ -100,6 +111,18 @@ export function parseExperienceTypes(
   value: string | string[] | undefined,
 ): JobExperienceType[] | undefined {
   return parseEnumList(EXPERIENCE_TYPE_LABELS, value);
+}
+
+/**
+ * 주소의 `region`. 아는 시·도 하나만 남기고, 같은 이름이 되풀이되면 첫 값만 본다. 모르는 값은 버린다 —
+ * 그대로 보내면 API 가 400 을 돌려줘 홈 전체가 에러 화면이 된다. `Object.hasOwn` 인 이유는
+ * `parseEnumList` 와 같다(`toString` 같은 프로토타입 키).
+ */
+export function parseRegions(value: string | string[] | undefined): JobRegion[] | undefined {
+  const first = [value ?? []].flat()[0];
+  return first !== undefined && Object.hasOwn(REGION_LABELS, first)
+    ? [first as JobRegion]
+    : undefined;
 }
 
 /** 주소의 `q`. 같은 이름이 되풀이돼 배열로 와도 첫 값만 쓴다. */
@@ -185,6 +208,9 @@ export function buildJobsApiUrl(query: JobListQuery, size: number): string {
   }
   for (const type of query.experienceTypes ?? []) {
     params.append('experienceType', type);
+  }
+  if (query.regions?.[0]) {
+    params.set('region', query.regions[0]);
   }
   const { jobField, jobRole } = toJobRoleParams(query);
   if (jobField) {

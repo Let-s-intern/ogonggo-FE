@@ -96,7 +96,8 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
  * 보내고, 한 필드 안에서는 하나라도 맞으면(OR) 필드끼리는 모두 맞아야(AND) 통과한다.
  *
  * `jobField` 는 픽스처의 직군(`JOB_FIELD_BY_FIXTURE_ID`)으로 거른다. `jobRole` 은 거르지 않는다 —
- * 픽스처에 직무가 없어서, 거르면 무엇을 골라도 0건이 된다.
+ * 픽스처에 직무가 없어서, 거르면 무엇을 골라도 0건이 된다. `region` 은 픽스처의 시·도로 거르고,
+ * 백엔드처럼 지역이 없는 공고는 지역을 고르면 빠진다.
  */
 const filterJobs = (
   jobs: UserJobDetailResponse[],
@@ -105,11 +106,13 @@ const filterJobs = (
     employmentTypes,
     experienceTypes,
     jobField,
+    region,
   }: {
     keyword?: string;
     employmentTypes: string[];
     experienceTypes: string[];
     jobField?: string;
+    region?: string;
   },
 ): UserJobDetailResponse[] =>
   jobs.filter((job) => {
@@ -129,6 +132,9 @@ const filterJobs = (
     if (jobField && JOB_FIELD_BY_FIXTURE_ID.get(job.id) !== jobField) {
       return false;
     }
+    if (region && job.region !== region) {
+      return false;
+    }
     return true;
   });
 
@@ -142,12 +148,15 @@ const getJobsHandler = http.get('*/api/v1/jobs', ({ request }) => {
   const employmentTypes = url.searchParams.getAll('employmentType');
   const experienceTypes = url.searchParams.getAll('experienceType');
   const jobField = url.searchParams.get('jobField') ?? undefined;
+  // 백엔드는 값 하나만 받는다. 되풀이해 보내면 첫 값만 쓴다.
+  const region = url.searchParams.get('region') ?? undefined;
 
   const filtered = filterJobs(JOB_FIXTURES, {
     keyword,
     employmentTypes,
     experienceTypes,
     jobField,
+    region,
   });
   const sorted = sortJobs(filtered, sort);
   const start = (page - 1) * size;

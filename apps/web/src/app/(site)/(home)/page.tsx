@@ -9,6 +9,7 @@ import {
   parseExperienceTypes,
   parseJobRoleSelection,
   parseKeywordParam,
+  parseRegions,
 } from '@/widgets/job-list';
 
 interface HomeSearchParams {
@@ -19,6 +20,8 @@ interface HomeSearchParams {
   /** 채용 형태·요구 경력. 여럿이면 같은 이름이 되풀이돼 배열로 온다. */
   employmentType?: string | string[];
   experienceType?: string | string[];
+  /** 근무 지역(시·도). 하나만 쓴다. 되풀이돼 배열로 와도 첫 값만 읽는다. */
+  region?: string | string[];
   /** 직무 필터. 여럿이면 같은 이름이 되풀이돼 배열로 온다. */
   jobField?: string | string[];
   jobRole?: string | string[];
@@ -53,7 +56,8 @@ export async function generateMetadata({
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<HomeSearchParams> }) {
-  const { page, sort, q, employmentType, experienceType, jobField, jobRole } = await searchParams;
+  const { page, sort, q, employmentType, experienceType, region, jobField, jobRole } =
+    await searchParams;
 
   return (
     <>
@@ -67,6 +71,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Hom
         q={parseKeywordParam(q)}
         employmentTypes={parseEmploymentTypes(employmentType)}
         experienceTypes={parseExperienceTypes(experienceType)}
+        regions={parseRegions(region)}
         {...parseJobRoleSelection(jobField, jobRole)}
       />
     </>

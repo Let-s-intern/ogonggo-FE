@@ -1,13 +1,20 @@
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  REGION_LABELS,
+} from '@/entities/job/model/labels';
+import type { JobRegion } from '@/entities/job/model/types';
 import { track } from '@/shared/analytics/dataLayer';
 import type { JobListQuery } from './query';
 
 /**
- * 채용 형태·요구 경력으로 고른 값. PC 사이드바(`JobFilterSidebar`)와 모바일 필터 시트가 같은 모양의
+ * 채용 형태·요구 경력·지역으로 고른 값. PC 사이드바(`JobFilterSidebar`)와 모바일 필터 시트가 같은 모양의
  * 상태를 들고, 같은 규칙으로 바꾸고, 같은 주소(`buildJobListHref`)로 옮긴다. 다른 것은 적용 시점
  * 뿐이다 — 사이드바는 누르는 즉시, 시트는 `공고보기` 를 눌러야 한다.
  */
-export type FilterSelection = Required<Pick<JobListQuery, 'employmentTypes' | 'experienceTypes'>>;
+export type FilterSelection = Required<
+  Pick<JobListQuery, 'employmentTypes' | 'experienceTypes' | 'regions'>
+>;
 
 export type FilterKey = keyof FilterSelection;
 
@@ -17,6 +24,48 @@ export interface FilterGroup {
   filterType: string;
   /** `[값, 이름]`. 보이는 순서이자 주소에 적히는 순서다. */
   options: readonly (readonly [value: string, label: string])[];
+  /**
+   * 하나만 고른다. API 가 값 하나만 받는 묶음이다(지역). 켜면 다른 값이 꺼지고, 전부 골랐을 때 비우는
+   * 규칙은 적용하지 않는다.
+   */
+  single?: boolean;
+}
+
+/**
+ * 지역 칩의 순서. 공고가 많은 지역부터다 — 사람들이 많이 찾는 지역이 앞에 보이도록 한다. 검색 로그가 없어
+ * 지역별 공고 건수(2026-10-15 배포 API: 서울 1,636, 경기 468, 인천 96, 부산 64, 경남 42 …)를 대신 썼다.
+ * 특정 지역이 아닌 `전국`·`해외` 는 건수와 상관없이 맨 뒤에 둔다.
+ *
+ * 순서만 바꾸는 목록이다. 새 지역이 enum 에 생기면 여기 없어도 맨 뒤에 붙는다.
+ */
+const REGION_ORDER: readonly JobRegion[] = [
+  'SEOUL',
+  'GYEONGGI',
+  'INCHEON',
+  'BUSAN',
+  'GYEONGNAM',
+  'GYEONGBUK',
+  'JEONNAM_GWANGJU',
+  'CHUNGBUK',
+  'DAEJEON',
+  'GANGWON',
+  'DAEGU',
+  'JEONBUK',
+  'ULSAN',
+  'CHUNGNAM',
+  'JEJU',
+  'SEJONG',
+  'NATIONWIDE',
+  'OVERSEAS',
+];
+
+const REGION_OPTIONS: [string, string][] = Object.entries(REGION_LABELS).sort(
+  ([a], [b]) => regionRank(a) - regionRank(b),
+);
+
+function regionRank(value: string): number {
+  const index = REGION_ORDER.indexOf(value as JobRegion);
+  return index === -1 ? REGION_ORDER.length : index;
 }
 
 /**
@@ -34,12 +83,19 @@ export const FILTER_GROUPS: Record<FilterKey, FilterGroup> = {
     filterType: 'experience',
     options: Object.entries(EXPERIENCE_TYPE_LABELS),
   },
+  regions: {
+    label: '지역',
+    filterType: 'region',
+    options: REGION_OPTIONS,
+    single: true,
+  },
 };
 
 export function selectionOf(query: JobListQuery): FilterSelection {
   return {
     employmentTypes: query.employmentTypes ?? [],
     experienceTypes: query.experienceTypes ?? [],
+    regions: query.regions ?? [],
   };
 }
 
@@ -52,8 +108,13 @@ export function toggleSelection<TSelection extends FilterSelection>(
   key: FilterKey,
   value: string,
 ): TSelection {
-  const options = FILTER_GROUPS[key].options.map(([option]) => option);
+  const { options: entries, single } = FILTER_GROUPS[key];
+  const options = entries.map(([option]) => option);
   const current: readonly string[] = selection[key];
+  if (single) {
+    // 같은 값을 다시 고르면 끈다. 다른 값을 고르면 그 값으로 바꾼다.
+    return { ...selection, [key]: current.includes(value) ? [] : [value] };
+  }
   const next = current.includes(value)
     ? current.filter((item) => item !== value)
     : [...current, value];
@@ -74,7 +135,11 @@ export function clearSelection<TSelection extends FilterSelection>(
 }
 
 export function isSelectionEmpty(selection: FilterSelection): boolean {
-  return selection.employmentTypes.length === 0 && selection.experienceTypes.length === 0;
+  return (
+    selection.employmentTypes.length === 0 &&
+    selection.experienceTypes.length === 0 &&
+    selection.regions.length === 0
+  );
 }
 
 /** 두 선택이 같은지. 값은 옵션 순서로 정렬돼 있어 자리별로 비교하면 된다. */

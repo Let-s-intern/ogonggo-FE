@@ -19,10 +19,12 @@ import {
 } from '../lib/filter';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { FilterCheckGroup } from './FilterCheckGroup';
+import { FilterChipGroup } from './FilterChipGroup';
 
 const TABS: TabItem<FilterKey>[] = [
   { value: 'experienceTypes', label: FILTER_GROUPS.experienceTypes.label },
   { value: 'employmentTypes', label: FILTER_GROUPS.employmentTypes.label },
+  { value: 'regions', label: FILTER_GROUPS.regions.label },
 ];
 
 /** 시트의 `N개 공고보기`. 목록과 같은 필터에 고르는 중인 값만 바꿔 건수만 받는다. */
@@ -53,7 +55,8 @@ export function JobFilterButton({
 }) {
   const [open, setOpen] = useState(false);
   const applied = selectionOf(query);
-  const count = applied.employmentTypes.length + applied.experienceTypes.length;
+  const count =
+    applied.employmentTypes.length + applied.experienceTypes.length + applied.regions.length;
 
   return (
     <>
@@ -79,7 +82,7 @@ export function JobFilterButton({
 }
 
 /**
- * 아래에서 올라오는 시트(데스크톱 폭에서는 가운데 창). 탭은 `요구 경력`, `채용 형태`다.
+ * 아래에서 올라오는 시트(데스크톱 폭에서는 가운데 창). 탭은 `요구 경력`, `채용 형태`, `지역`이다.
  *
  * 시트 안에서 고르는 것은 초안이다. `공고보기` 를 눌러야 주소가 바뀐다 — 값 하나마다 페이지를 다시
  * 그리면 시트가 닫힌다. `초기화` 는 초안만 비운다. 건수는 초안이 바뀔 때마다 한 번 받는다
@@ -219,21 +222,33 @@ function JobFilterSheet({
           aria-label={FILTER_GROUPS[tab].label}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5"
         >
-          <FilterCheckGroup
-            key={tab}
-            group={FILTER_GROUPS[tab]}
-            hideLabel
-            selected={draft[tab]}
-            onToggle={(value) => setDraft((current) => toggleSelection(current, tab, value))}
-            onClear={() => setDraft((current) => clearSelection(current, tab))}
-          />
+          {FILTER_GROUPS[tab].single ? (
+            <FilterChipGroup
+              key={tab}
+              group={FILTER_GROUPS[tab]}
+              columnsClassName="grid-cols-4"
+              hideLabel
+              selected={draft[tab]}
+              onSelect={(value) => setDraft((current) => toggleSelection(current, tab, value))}
+              onClear={() => setDraft((current) => clearSelection(current, tab))}
+            />
+          ) : (
+            <FilterCheckGroup
+              key={tab}
+              group={FILTER_GROUPS[tab]}
+              hideLabel
+              selected={draft[tab]}
+              onToggle={(value) => setDraft((current) => toggleSelection(current, tab, value))}
+              onClear={() => setDraft((current) => clearSelection(current, tab))}
+            />
+          )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-gray-100 px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button
             variant="ghost"
             disabled={isSelectionEmpty(draft)}
-            onClick={() => setDraft({ employmentTypes: [], experienceTypes: [] })}
+            onClick={() => setDraft({ employmentTypes: [], experienceTypes: [], regions: [] })}
             className="gap-1 bg-gray-100 disabled:bg-gray-100"
           >
             <span aria-hidden="true" className="icon-[lucide--rotate-cw] block h-4 w-4" />

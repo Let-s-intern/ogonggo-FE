@@ -21,6 +21,7 @@ import {
 } from '../lib/query';
 import { pendingFilter } from '../lib/pendingFilter';
 import { FilterCheckGroup } from './FilterCheckGroup';
+import { FilterChipGroup } from './FilterChipGroup';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
 const DEBOUNCE_MS = 300;
@@ -41,7 +42,7 @@ interface SidebarState extends FilterSelection {
 }
 
 /**
- * PC(lg 이상) 왼쪽 필터. 검색창, 채용 형태, 요구 경력, 필터 초기화.
+ * PC(lg 이상) 왼쪽 필터. 검색창, 채용 형태, 요구 경력, 지역, 필터 초기화.
  *
  * 체크 상태는 누르는 즉시 바뀌고, 주소는 300ms 멈춘 뒤 한 번만 바뀐다. 누를 때마다 주소를 바꾸면 홈
  * 전체(인기 공고 요청 포함)가 서버에서 다시 그려져 연달아 누르기가 느리다. 그래서 체크박스는 링크가
@@ -115,6 +116,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
     const href = buildJobListHref(base, {
       employmentTypes: next.employmentTypes,
       experienceTypes: next.experienceTypes,
+      regions: next.regions,
       q: next.q,
       ...reset,
     });
@@ -158,9 +160,9 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
   const reset = () => {
     cancelTimer();
     writeKeyword(formRef.current, '');
-    setDraft({ employmentTypes: [], experienceTypes: [], q: undefined });
+    setDraft({ employmentTypes: [], experienceTypes: [], regions: [], q: undefined });
     go(
-      { employmentTypes: [], experienceTypes: [], q: undefined },
+      { employmentTypes: [], experienceTypes: [], regions: [], q: undefined },
       { jobFields: undefined, jobRoles: undefined },
     );
   };
@@ -204,6 +206,15 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
           onClear={() => change(clearSelection(view, key))}
         />
       ))}
+
+      <FilterChipGroup
+        group={FILTER_GROUPS.regions}
+        // `전체` 와 앞쪽 5개가 3열 두 줄이다. 나머지는 `펼치기` 로 본다.
+        collapsedCount={5}
+        selected={view.regions}
+        onSelect={(value) => toggle('regions', value)}
+        onClear={() => change(clearSelection(view, 'regions'))}
+      />
 
       <Button
         variant="secondary"
