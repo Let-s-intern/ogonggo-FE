@@ -70,8 +70,9 @@ export async function JobList(query: JobListProps) {
           <div className="hidden whitespace-nowrap md:ml-auto md:block md:shrink-0">{sort}</div>
         </div>
       </div>
-      {/* 목록을 내려도 필터가 화면에 남도록 붙인다. `self-start` 가 없으면 칸이 행 높이만큼 늘어나 붙을 자리가 없다. */}
-      <div className="hidden lg:sticky lg:top-6 lg:col-start-1 lg:row-start-2 lg:block lg:self-start">
+      {/* 목록을 내려도 필터가 화면에 남도록 붙인다. `self-start` 가 없으면 칸이 행 높이만큼 늘어나 붙을 자리가 없다.
+          필터가 화면보다 길면(지역 칩까지 합치면 그렇다) 아래가 잘리지 않도록 이 칸 안에서 스크롤한다. */}
+      <div className="hidden lg:sticky lg:top-6 lg:col-start-1 lg:row-start-2 lg:block lg:max-h-[calc(100dvh-3rem)] lg:self-start lg:overflow-y-auto">
         <JobFilterSidebar query={query} />
       </div>
       <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">

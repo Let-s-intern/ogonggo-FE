@@ -19,7 +19,7 @@ import {
 } from '../lib/filter';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { FilterCheckGroup } from './FilterCheckGroup';
-import { FilterSelectGroup } from './FilterSelectGroup';
+import { FilterChipGroup } from './FilterChipGroup';
 
 const TABS: TabItem<FilterKey>[] = [
   { value: 'experienceTypes', label: FILTER_GROUPS.experienceTypes.label },
@@ -223,9 +223,10 @@ function JobFilterSheet({
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5"
         >
           {FILTER_GROUPS[tab].single ? (
-            <FilterSelectGroup
+            <FilterChipGroup
               key={tab}
               group={FILTER_GROUPS[tab]}
+              columnsClassName="grid-cols-4"
               hideLabel
               selected={draft[tab]}
               onSelect={(value) => setDraft((current) => toggleSelection(current, tab, value))}

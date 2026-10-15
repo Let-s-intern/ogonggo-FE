@@ -31,6 +31,19 @@ export interface FilterGroup {
 }
 
 /**
+ * 지역 칩의 순서. 시·도는 백엔드 enum 순서(건수가 많은 서울·경기가 앞이다)이고, 특정 지역이 아닌 `전국`·
+ * `해외` 는 맨 뒤에 둔다. 주소에는 값 하나만 적히므로 순서는 보이는 것에만 영향을 준다.
+ */
+const REGION_OPTIONS: [string, string][] = (() => {
+  const trailing = ['NATIONWIDE', 'OVERSEAS'];
+  const all = Object.entries(REGION_LABELS);
+  return [
+    ...all.filter(([value]) => !trailing.includes(value)),
+    ...all.filter(([value]) => trailing.includes(value)),
+  ];
+})();
+
+/**
  * 채용 형태는 `EMPLOYMENT_TYPE_LABELS` 의 일곱 개 전부다. 시안에는 `기타` 가 없지만 빼면 기타 공고는
  * 전체에서만 보인다.
  */
@@ -48,7 +61,7 @@ export const FILTER_GROUPS: Record<FilterKey, FilterGroup> = {
   regions: {
     label: '지역',
     filterType: 'region',
-    options: Object.entries(REGION_LABELS),
+    options: REGION_OPTIONS,
     single: true,
   },
 };
