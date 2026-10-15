@@ -1,39 +1,14 @@
-import { Button, Input, Toggle } from '@ogonggo/ui';
-import { CompanyProfileField } from './CompanyProfileField';
+import { Toggle } from '@ogonggo/ui';
 
 /**
  * 목업에는 있지만 받을 곳이 없는 구역들(v5 PRD 5 절). 전부 비활성이고 저장 호출을 만들지
  * 않는다. v4 의 `widgets/my-profile/ui/PreparingSections.tsx` 와 같은 자리이고, 문구만
  * 기업 회원 목업의 것이다.
  *
- * 한 파일에 모은 이유는 백엔드가 생겼을 때 무엇을 살릴지 한눈에 보여야 해서다. 살릴 때
- * 필요한 API 는 `.claude/tasks/memos/백엔드-요청-마이페이지.md` 에 있다.
+ * 남은 둘은 모두 백엔드에 대응 API 가 없다(2026-10-15 배포 스펙 기준) — 광고성 정보 수신
+ * 동의를 저장·조회하는 필드가 계정 응답에 없고, 회원 탈퇴(`DELETE /api/v1/users/me`) 도 없다.
+ * 생기면 이 파일에서 해당 구역을 살리면 된다.
  */
-
-/** 비밀번호 변경(목업 세 번째 구역). 기업 회원은 비밀번호로 로그인하지만 바꾸는 API 가 없다. */
-export function PasswordSection() {
-  return (
-    <section className="flex flex-col gap-5">
-      <h2 className="text-xl font-bold text-gray-950">비밀번호 변경</h2>
-
-      <CompanyProfileField label="기존 비밀번호" htmlFor="company-current-password">
-        <Input id="company-current-password" type="password" value="" readOnly disabled />
-      </CompanyProfileField>
-
-      <CompanyProfileField label="새로운 비밀번호" htmlFor="company-new-password">
-        <Input id="company-new-password" type="password" value="" readOnly disabled />
-      </CompanyProfileField>
-
-      <CompanyProfileField label="비밀번호 확인" htmlFor="company-confirm-password">
-        <Input id="company-confirm-password" type="password" value="" readOnly disabled />
-      </CompanyProfileField>
-
-      <Button variant="secondary" disabled className="w-full border-blue-500 text-blue-500">
-        비밀번호 변경
-      </Button>
-    </section>
-  );
-}
 
 /** 혜택 및 광고성 정보 수신 동의(목업의 테두리 카드 + 스위치). 동의 여부를 저장할 곳이 없다. */
 export function MarketingSection() {

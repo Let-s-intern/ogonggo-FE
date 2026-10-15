@@ -6,12 +6,13 @@ import type { CompanyJobFormValues } from '../model/values';
 
 /** `CreateCompanyJobRequest.sourceUrl` 의 `@maxLength`. */
 const MAX_SOURCE_URL_LENGTH = 2048;
+/** `CreateCompanyJobRequest.applyEmail` 의 `@maxLength`. */
+const MAX_APPLY_EMAIL_LENGTH = 320;
 
 /**
  * 지원 방법 둘. 생성 타입의 `applicationMethod` 그대로다.
  *
- * `EMAIL` 을 고를 수 있게 두는 것은 목업의 선택지가 둘이기 때문이고, 주소를 적는 칸은
- * 비활성이다 — 요청에 주소를 담을 필드가 없다(v5 PRD 3 절).
+ * 이메일 지원의 주소는 아래 `담당자 이메일` 칸(`applyEmail`) 이 받는다.
  */
 const APPLICATION_METHOD_OPTIONS = [
   { value: 'EXTERNAL_PAGE', label: '외부 지원 페이지' },
@@ -91,23 +92,18 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
         </Field>
       </div>
 
-      {/*
-        담당자 이메일. **비활성이다** — `applicationMethod` 에 `EMAIL` 값은 있는데 주소를 담을
-        필드가 `CreateCompanyJobRequest` 에 없다(v5 PRD 3 절). 부트캠프 요청에는
-        `managerEmail` 이 있고 채용공고에만 없다. 선택지는 목업대로 둘 다 그리고 주소 칸만
-        잠근다 — 저장되지 않는 칸에 타이핑하게 두면 입력한 것이 사라진 것으로 읽힌다.
-      */}
       <Field
         label="담당자 이메일"
-        htmlFor="company-job-manager-email"
-        hint="지원 링크로 받아 주세요."
+        htmlFor="company-job-apply-email"
+        required={values.applicationMethod === 'EMAIL'}
+        hint="이메일 지원을 고르면 지원서를 이 주소로 받습니다."
       >
         <Input
-          id="company-job-manager-email"
+          id="company-job-apply-email"
           type="email"
-          disabled
-          value=""
-          onChange={() => undefined}
+          maxLength={MAX_APPLY_EMAIL_LENGTH}
+          value={values.applyEmail}
+          onChange={(event) => onChange({ applyEmail: event.target.value })}
           placeholder="담당자 이메일을 입력해 주세요."
         />
       </Field>

@@ -1,12 +1,15 @@
 import {
   createMyBootcamp,
+  getMyAccount,
   getMyBootcamp,
   HttpError,
   replaceMyBootcamp,
+  replaceMyCompanyBasicInfo,
   startMyBootcampRecruitment,
   type CompanyBootcampDetailResponse,
   type CreateCompanyBootcampRequest,
   type SuccessResponseCompanyBootcampDetailResponse,
+  type SuccessResponseMyAccountResponse,
   type SuccessResponseCreateCompanyBootcampResponse,
   type UpdateCompanyBootcampRequest,
 } from '@ogonggo/api';
@@ -87,4 +90,21 @@ export async function startBootcampRecruitment(bootcampId: number): Promise<bool
     }
     throw error;
   }
+}
+
+/**
+ * 이 폼에 적은 기관명·로고를 기업 기본 정보로도 저장한다(`PUT /api/v1/users/me/company-profile/
+ * basic-info`). `가입한 내용 동일 및 기본 정보로 저장` 체크가 켜져 있을 때만 부른다.
+ *
+ * 기본 정보 수정은 로고를 **같이 교체한다** — 식별자를 빼면 저장돼 있던 로고가 지워진다. 이
+ * 화면에서 방금 올린 로고가 없으면(`logoImageId` 가 비어 있다) 계정에서 읽은 식별자를 그대로
+ * 보내 기존 로고를 지킨다. 그래서 먼저 계정을 읽는다.
+ */
+export async function saveCompanyBasicInfo(
+  organizationName: string,
+  uploadedLogoImageId: string,
+): Promise<void> {
+  const account = (await getMyAccount()) as unknown as SuccessResponseMyAccountResponse;
+  const logoImageId = uploadedLogoImageId || account.data?.companyProfile?.logoImageId;
+  await replaceMyCompanyBasicInfo({ organizationName, logoImageId });
 }

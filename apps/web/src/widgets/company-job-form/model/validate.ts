@@ -1,14 +1,17 @@
 import type { CompanyJobFormValues } from './values';
 
+/** 골뱅이 양쪽에 공백 없는 글자와 점이 있는지만 본다. 나머지는 서버 400 이 말한다. */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * `공고 등록` 에 필요한 값이 다 있는지 본다. 모자라면 첫 한 줄을 돌려준다.
  *
- * 필수 칸의 목록은 목업의 별표(`*`) 그대로다. 두 곳만 목업에서 읽어낼 수 없어 여기서 정한다.
+ * 필수 칸의 목록은 목업의 별표(`*`) 그대로다. 세 곳은 목업에서 읽어낼 수 없어 여기서 정한다.
  *
- * - **지원 링크는 지원 방법과 상관없이 필수다.** `이메일 지원` 을 골라도 주소를 담을 필드가
- *   없어(v5 PRD 3 절, 담당자 이메일 칸이 비활성인 이유다) 링크마저 비면 공개 상세의
- *   `지원하러 가기` 가 갈 곳이 없다 — 그 버튼은 `sourceUrl` 하나만 본다
- *   (`shared/ui/ApplyCta.tsx`).
+ * - **지원 링크는 지원 방법과 상관없이 필수다.** 공개 상세의 `지원하러 가기` 는 `sourceUrl`
+ *   하나만 본다(`shared/ui/ApplyCta.tsx`). 링크가 비면 이메일 지원이어도 그 버튼이 갈 곳이 없다.
+ * - 이메일 지원이면 담당자 이메일이 필수다. 주소가 없으면 지원서를 받을 곳이 없다. 적었다면
+ *   어느 방법이든 형식을 본다.
  * - 마감일이 접수 시작일보다 앞서면 백엔드에 보내기 전에 막는다. 목록의 D-day 계산이
  *   음수가 되는 공고가 생긴다.
  */
@@ -46,6 +49,13 @@ export function validateForPublish(values: CompanyJobFormValues): string | null 
   }
   if (!values.sourceUrl.trim()) {
     return '지원 링크를 입력해 주세요.';
+  }
+  const applyEmail = values.applyEmail.trim();
+  if (values.applicationMethod === 'EMAIL' && !applyEmail) {
+    return '담당자 이메일을 입력해 주세요.';
+  }
+  if (applyEmail && !EMAIL_PATTERN.test(applyEmail)) {
+    return '담당자 이메일 형식을 확인해 주세요.';
   }
   return null;
 }
