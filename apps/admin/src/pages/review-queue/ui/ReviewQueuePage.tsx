@@ -73,7 +73,6 @@ export function ReviewQueuePage() {
   const current = queue[index];
   const currentDecision = current ? decisions.get(keyOf(current)) : undefined;
   const isSaved = saveMutation.isSuccess;
-  const allDecided = queue.length > 0 && decisions.size === queue.length;
 
   // 다른 건으로 넘어가면 본문을 맨 위로 돌린다. 앞 건에서 아래까지 읽고 넘어왔는데 다음 건이
   // 중간부터 보이면 첫 문단을 놓친다.
@@ -346,9 +345,10 @@ export function ReviewQueuePage() {
         />
       ) : null}
 
-      {allDecided ? (
+      {decisions.size > 0 ? (
         <SaveBar
           count={decisions.size}
+          remaining={queue.length - decisions.size}
           isSaving={saveMutation.isPending}
           onSave={() => saveMutation.mutate(toInputs(decisions))}
         />
@@ -420,24 +420,29 @@ function toInputs(decisions: Map<string, Decision>): ReviewDecisionInput[] {
 }
 
 /**
- * 전부 판정한 뒤에 뜨는 저장 줄. 화면 아래에 붙어 있어 스크롤 위치와 무관하게 보인다.
+ * 하나라도 판정하면 뜨는 저장 줄. 화면 아래에 붙어 있어 스크롤 위치와 무관하게 보인다.
+ * 판정하지 않은 건은 보내지 않고 대기 상태로 남는다.
  *
  * 저장 전까지는 아무것도 서버로 가지 않는다. 그래서 문구로도 그 사실을 말한다 — "다 했다"와
  * "저장됐다"를 운영자가 헷갈리면 창을 그냥 닫는다.
  */
 function SaveBar({
   count,
+  remaining,
   isSaving,
   onSave,
 }: {
   count: number;
+  remaining: number;
   isSaving: boolean;
   onSave: () => void;
 }) {
   return (
     <div className="sticky bottom-0 mt-4 flex items-center justify-between gap-4 rounded-md border border-blue-200 bg-blue-00 px-4 py-3">
       <p className="text-sm text-gray-700">
-        {count}건을 모두 판정했습니다.{' '}
+        {remaining === 0
+          ? `${count}건을 모두 판정했습니다.`
+          : `${count}건을 판정했고 ${remaining}건이 남았습니다.`}{' '}
         <span className="font-semibold">아직 저장되지 않았습니다.</span>
       </p>
       <Button onClick={onSave} disabled={isSaving}>
