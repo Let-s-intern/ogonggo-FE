@@ -155,9 +155,7 @@ export function CompanyProfileView({
     if (!onSaveManagerInfo) {
       return;
     }
-    await run('manager', () =>
-      onSaveManagerInfo({ managerName, managerPhone, notificationEmail }),
-    );
+    await run('manager', () => onSaveManagerInfo({ managerName, managerPhone, notificationEmail }));
   };
 
   return (
