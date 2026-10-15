@@ -60,7 +60,7 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
   const closeModal = () => setIsOpen(false);
 
   /**
-   * 입력한 문구로 이 공고를 맨 끝에 붙여 저장한다.
+   * 입력한 문구로 이 공고를 맨 앞(1순위)에 넣어 저장한다.
    *
    * 실패하면 모달을 열어 둔 채 오류를 보인다. 닫으면 적은 문구가 사라진다.
    */
@@ -128,7 +128,7 @@ export function PickToggle({ job, picked, disabled, replace, onNotice }: PickTog
       <Modal
         open={isOpen}
         title="오공고 PICK에 추가"
-        description={`${job.title} (${job.companyName}). 저장하면 오공고 PICK 맨 끝에 붙습니다.`}
+        description={`${job.title} (${job.companyName}). 저장하면 오공고 PICK 맨 앞(1순위)에 들어갑니다.`}
         onClose={closeModal}
       >
         {isOpen ? (

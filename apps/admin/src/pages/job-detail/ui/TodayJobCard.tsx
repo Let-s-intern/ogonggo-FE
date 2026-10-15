@@ -101,7 +101,7 @@ export function TodayJobCard({ jobId, isHidden }: TodayJobCardProps) {
       }
       return {
         keepDraft: false,
-        notice: { tone: 'success', message: '오공고 PICK 맨 끝에 넣었습니다.' },
+        notice: { tone: 'success', message: '오공고 PICK 맨 앞(1순위)에 넣었습니다.' },
       };
     }, SAVE_FAILED);
 
