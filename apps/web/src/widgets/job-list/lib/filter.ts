@@ -3,6 +3,7 @@ import {
   EXPERIENCE_TYPE_LABELS,
   REGION_LABELS,
 } from '@/entities/job/model/labels';
+import type { JobRegion } from '@/entities/job/model/types';
 import { track } from '@/shared/analytics/dataLayer';
 import type { JobListQuery } from './query';
 
@@ -31,17 +32,41 @@ export interface FilterGroup {
 }
 
 /**
- * 지역 칩의 순서. 시·도는 백엔드 enum 순서(건수가 많은 서울·경기가 앞이다)이고, 특정 지역이 아닌 `전국`·
- * `해외` 는 맨 뒤에 둔다. 주소에는 값 하나만 적히므로 순서는 보이는 것에만 영향을 준다.
+ * 지역 칩의 순서. 공고가 많은 지역부터다 — 사람들이 많이 찾는 지역이 앞에 보이도록 한다. 검색 로그가 없어
+ * 지역별 공고 건수(2026-10-15 배포 API: 서울 1,636, 경기 468, 인천 96, 부산 64, 경남 42 …)를 대신 썼다.
+ * 특정 지역이 아닌 `전국`·`해외` 는 건수와 상관없이 맨 뒤에 둔다.
+ *
+ * 순서만 바꾸는 목록이다. 새 지역이 enum 에 생기면 여기 없어도 맨 뒤에 붙는다.
  */
-const REGION_OPTIONS: [string, string][] = (() => {
-  const trailing = ['NATIONWIDE', 'OVERSEAS'];
-  const all = Object.entries(REGION_LABELS);
-  return [
-    ...all.filter(([value]) => !trailing.includes(value)),
-    ...all.filter(([value]) => trailing.includes(value)),
-  ];
-})();
+const REGION_ORDER: readonly JobRegion[] = [
+  'SEOUL',
+  'GYEONGGI',
+  'INCHEON',
+  'BUSAN',
+  'GYEONGNAM',
+  'GYEONGBUK',
+  'JEONNAM_GWANGJU',
+  'CHUNGBUK',
+  'DAEJEON',
+  'GANGWON',
+  'DAEGU',
+  'JEONBUK',
+  'ULSAN',
+  'CHUNGNAM',
+  'JEJU',
+  'SEJONG',
+  'NATIONWIDE',
+  'OVERSEAS',
+];
+
+const REGION_OPTIONS: [string, string][] = Object.entries(REGION_LABELS).sort(
+  ([a], [b]) => regionRank(a) - regionRank(b),
+);
+
+function regionRank(value: string): number {
+  const index = REGION_ORDER.indexOf(value as JobRegion);
+  return index === -1 ? REGION_ORDER.length : index;
+}
 
 /**
  * 채용 형태는 `EMPLOYMENT_TYPE_LABELS` 의 일곱 개 전부다. 시안에는 `기타` 가 없지만 빼면 기타 공고는

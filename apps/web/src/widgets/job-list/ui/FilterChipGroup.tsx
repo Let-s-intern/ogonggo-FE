@@ -1,3 +1,6 @@
+'use client';
+
+import { useId, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import type { FilterGroup } from '../lib/filter';
 
@@ -12,6 +15,11 @@ export interface FilterChipGroupProps {
   hideLabel?: boolean;
   /** 칩 격자의 열 수 클래스. 사이드바는 좁아 3열, 시트는 4열이다. */
   columnsClassName?: string;
+  /**
+   * 접었을 때 보이는 칩 수(`전체` 제외). 없으면 접지 않고 전부 보인다. 넘는 칩은 `펼치기` 로 보인다.
+   * 고른 값은 접힌 쪽에 있어도 항상 보인다 — 켜진 칩이 안 보이면 무엇이 걸려 있는지 알 수 없다.
+   */
+  collapsedCount?: number;
 }
 
 /**
@@ -27,15 +35,28 @@ export function FilterChipGroup({
   onClear,
   hideLabel = false,
   columnsClassName = 'grid-cols-3',
+  collapsedCount,
 }: FilterChipGroupProps) {
+  const [expanded, setExpanded] = useState(false);
+  const gridId = useId();
+  const foldable = collapsedCount !== undefined && group.options.length > collapsedCount;
+  const folded = foldable && !expanded;
+  // 접으면 앞쪽 `collapsedCount` 개와 고른 값만 남긴다. 순서는 그대로다.
+  const shown = folded
+    ? group.options.filter(
+        ([value], index) => index < (collapsedCount ?? 0) || selected.includes(value),
+      )
+    : group.options;
+  const hiddenCount = group.options.length - shown.length;
+
   return (
     <fieldset className="flex min-w-0 flex-col gap-3">
       <legend className={cn('mb-3 text-sm font-bold text-gray-900', hideLabel && 'sr-only')}>
         {group.label}
       </legend>
-      <div className={cn('grid gap-1.5', columnsClassName)}>
+      <div id={gridId} className={cn('grid gap-1.5', columnsClassName)}>
         <Chip label="전체" active={selected.length === 0} onClick={onClear} />
-        {group.options.map(([value, label]) => (
+        {shown.map(([value, label]) => (
           <Chip
             key={value}
             label={label}
@@ -44,6 +65,24 @@ export function FilterChipGroup({
           />
         ))}
       </div>
+      {foldable ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={gridId}
+          onClick={() => setExpanded((current) => !current)}
+          className="flex h-8 cursor-pointer items-center justify-center gap-1 rounded-full text-sm text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800"
+        >
+          {folded ? `펼치기${hiddenCount > 0 ? ` (${hiddenCount})` : ''}` : '접기'}
+          <span
+            aria-hidden="true"
+            className={cn(
+              'block h-4 w-4',
+              folded ? 'icon-[lucide--chevron-down]' : 'icon-[lucide--chevron-up]',
+            )}
+          />
+        </button>
+      ) : null}
     </fieldset>
   );
 }

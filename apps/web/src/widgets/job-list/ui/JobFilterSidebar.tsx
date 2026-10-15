@@ -199,6 +199,8 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
       <FilterChipGroup
         group={FILTER_GROUPS.regions}
+        // `전체` 와 앞쪽 5개가 3열 두 줄이다. 나머지는 `펼치기` 로 본다.
+        collapsedCount={5}
         selected={view.regions}
         onSelect={(value) => toggle('regions', value)}
         onClear={() => change(clearSelection(view, 'regions'))}
