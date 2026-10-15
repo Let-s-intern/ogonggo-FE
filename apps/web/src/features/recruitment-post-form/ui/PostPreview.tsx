@@ -1,7 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { KIND_LABELS, OPERATION_TYPE_LABELS } from '@/entities/side-study/model/labels';
+import {
+  CONTACT_METHOD_LABELS,
+  KIND_LABELS,
+  OPERATION_TYPE_LABELS,
+} from '@/entities/side-study/model/labels';
 import { parseLocalDate } from '@/shared/lib/localDate';
 import { AttachedImages } from '@/shared/ui/AttachedImages';
 import { POSITION_OPTION_LABELS } from '../model/options';
@@ -127,7 +131,7 @@ export function PostPreview({ values }: PostPreviewProps) {
           value={
             values.contactMethod ? (
               <>
-                <p>{values.contactMethod === 'EMAIL' ? '이메일' : '카카오톡 오픈채팅'}</p>
+                <p>{CONTACT_METHOD_LABELS[values.contactMethod]}</p>
                 <p className="font-normal break-all">{values.contactValue || NO_VALUE}</p>
               </>
             ) : (

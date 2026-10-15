@@ -42,11 +42,24 @@ export const PROGRESS_METHOD_OPTIONS: SelectOption[] = [
 
 export const CONTACT_METHOD_OPTIONS: SelectOption[] = [
   placeholder('지원 및 소통 방법을 선택해 주세요.'),
-  ...(['OPEN_KAKAO', 'EMAIL'] as CreateRecruitmentPostRequestContactMethod[]).map((value) => ({
+  ...(
+    ['OPEN_KAKAO', 'EMAIL', 'SLACK', 'DISCORD'] as CreateRecruitmentPostRequestContactMethod[]
+  ).map((value) => ({
     value,
     label: CONTACT_METHOD_LABELS[value],
   })),
 ];
+
+/**
+ * 소통 방법마다 연락처 칸에 적는 것의 이름. 이메일 외에는 모두 주소(링크)다.
+ * 고르기 전에는 첫 선택지였던 오픈 카톡방 링크로 둔다.
+ */
+export const CONTACT_VALUE_LABELS: Record<CreateRecruitmentPostRequestContactMethod, string> = {
+  OPEN_KAKAO: '오픈 카톡방 링크',
+  EMAIL: '이메일 주소',
+  SLACK: '슬랙 링크',
+  DISCORD: '디스코드 링크',
+};
 
 /**
  * 모집 인원 1~10 명. 백엔드는 정수라면 무엇이든 받지만 목업이 드롭다운이라 끝이 필요하고,

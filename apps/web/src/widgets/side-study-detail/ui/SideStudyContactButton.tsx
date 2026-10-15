@@ -8,6 +8,14 @@ import type { SideStudyDetail } from '@/entities/side-study/model/types';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { track, type DataLayerEvent } from '@/shared/analytics/dataLayer';
 
+/** 모달 첫 줄. 수단마다 신청하는 곳이 달라 한 문장으로 묶지 않는다. */
+const APPLY_GUIDES: Record<SideStudyDetail['contact']['method'], string> = {
+  OPEN_KAKAO: '아래 카카오톡 오픈채팅방에서 신청해 주세요.',
+  EMAIL: '아래 이메일로 신청해 주세요.',
+  SLACK: '아래 슬랙 링크에서 신청해 주세요.',
+  DISCORD: '아래 디스코드 링크에서 신청해 주세요.',
+};
+
 export interface SideStudyContactButtonProps {
   label: string;
   contact: SideStudyDetail['contact'];
@@ -108,11 +116,7 @@ export function SideStudyContactButton({
                 <span aria-hidden="true" className="icon-[lucide--x] block h-6 w-6" />
               </button>
             </div>
-            <p className="mt-2 text-sm break-keep text-gray-700">
-              {email
-                ? '아래 이메일로 신청해 주세요.'
-                : '아래 카카오톡 오픈채팅방에서 신청해 주세요.'}
-            </p>
+            <p className="mt-2 text-sm break-keep text-gray-700">{APPLY_GUIDES[contact.method]}</p>
 
             <p className="mt-5 text-sm text-gray-500">{CONTACT_METHOD_LABELS[contact.method]}</p>
             <button
