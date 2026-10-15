@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
 import { JOB_ROLES } from '@/entities/job/model/labels';
 import type { JobField } from '@/entities/job/model/types';
+import { rememberJobFilters } from '../lib/filterCookie';
 import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 import { JOB_ROLE_CHIPS } from '../lib/roleChips';
@@ -62,9 +63,11 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
     // 사이드바에 아직 주소로 안 나간 선택이 있으면 같이 실어 보낸다. 안 그러면 이 이동이 그 선택을 지운다.
     const unapplied = pendingFilter.takeSidebarDraft();
     lastMove.current = target;
+    const href = buildJobListHref(query, { ...unapplied, ...target });
+    rememberJobFilters(href);
     startTransition(() => {
       showOptimistically(next);
-      router.push(buildJobListHref(query, { ...unapplied, ...target }), { scroll: false });
+      router.push(href, { scroll: false });
     });
   };
 

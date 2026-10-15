@@ -17,6 +17,7 @@ import {
   type FilterKey,
   type FilterSelection,
 } from '../lib/filter';
+import { rememberJobFilters } from '../lib/filterCookie';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { FilterCheckGroup } from './FilterCheckGroup';
 import { FilterChipGroup } from './FilterChipGroup';
@@ -176,7 +177,9 @@ function JobFilterSheet({
   const apply = () => {
     if (!unchanged) {
       trackAddedSelections(initial, draft);
-      router.push(buildJobListHref(query, draft), { scroll: false });
+      const href = buildJobListHref(query, draft);
+      rememberJobFilters(href);
+      router.push(href, { scroll: false });
     }
     onClose();
   };
