@@ -1,13 +1,19 @@
-import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  REGION_LABELS,
+} from '@/entities/job/model/labels';
 import { track } from '@/shared/analytics/dataLayer';
 import type { JobListQuery } from './query';
 
 /**
- * 채용 형태·요구 경력으로 고른 값. PC 사이드바(`JobFilterSidebar`)와 모바일 필터 시트가 같은 모양의
+ * 채용 형태·요구 경력·지역으로 고른 값. PC 사이드바(`JobFilterSidebar`)와 모바일 필터 시트가 같은 모양의
  * 상태를 들고, 같은 규칙으로 바꾸고, 같은 주소(`buildJobListHref`)로 옮긴다. 다른 것은 적용 시점
  * 뿐이다 — 사이드바는 누르는 즉시, 시트는 `공고보기` 를 눌러야 한다.
  */
-export type FilterSelection = Required<Pick<JobListQuery, 'employmentTypes' | 'experienceTypes'>>;
+export type FilterSelection = Required<
+  Pick<JobListQuery, 'employmentTypes' | 'experienceTypes' | 'regions'>
+>;
 
 export type FilterKey = keyof FilterSelection;
 
@@ -17,6 +23,11 @@ export interface FilterGroup {
   filterType: string;
   /** `[값, 이름]`. 보이는 순서이자 주소에 적히는 순서다. */
   options: readonly (readonly [value: string, label: string])[];
+  /**
+   * 하나만 고른다. API 가 값 하나만 받는 묶음이다(지역). 켜면 다른 값이 꺼지고, 전부 골랐을 때 비우는
+   * 규칙은 적용하지 않는다.
+   */
+  single?: boolean;
 }
 
 /**
@@ -34,12 +45,19 @@ export const FILTER_GROUPS: Record<FilterKey, FilterGroup> = {
     filterType: 'experience',
     options: Object.entries(EXPERIENCE_TYPE_LABELS),
   },
+  regions: {
+    label: '지역',
+    filterType: 'region',
+    options: Object.entries(REGION_LABELS),
+    single: true,
+  },
 };
 
 export function selectionOf(query: JobListQuery): FilterSelection {
   return {
     employmentTypes: query.employmentTypes ?? [],
     experienceTypes: query.experienceTypes ?? [],
+    regions: query.regions ?? [],
   };
 }
 
@@ -52,8 +70,13 @@ export function toggleSelection<TSelection extends FilterSelection>(
   key: FilterKey,
   value: string,
 ): TSelection {
-  const options = FILTER_GROUPS[key].options.map(([option]) => option);
+  const { options: entries, single } = FILTER_GROUPS[key];
+  const options = entries.map(([option]) => option);
   const current: readonly string[] = selection[key];
+  if (single) {
+    // 같은 값을 다시 고르면 끈다. 다른 값을 고르면 그 값으로 바꾼다.
+    return { ...selection, [key]: current.includes(value) ? [] : [value] };
+  }
   const next = current.includes(value)
     ? current.filter((item) => item !== value)
     : [...current, value];
@@ -74,7 +97,11 @@ export function clearSelection<TSelection extends FilterSelection>(
 }
 
 export function isSelectionEmpty(selection: FilterSelection): boolean {
-  return selection.employmentTypes.length === 0 && selection.experienceTypes.length === 0;
+  return (
+    selection.employmentTypes.length === 0 &&
+    selection.experienceTypes.length === 0 &&
+    selection.regions.length === 0
+  );
 }
 
 /** 두 선택이 같은지. 값은 옵션 순서로 정렬돼 있어 자리별로 비교하면 된다. */
