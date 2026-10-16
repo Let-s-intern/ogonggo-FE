@@ -1,6 +1,7 @@
 import { Badge, type BadgeProps } from '@ogonggo/ui';
 import type {
   AdminConcernSummaryResponseCategory as ConcernCategory,
+  AdminGeneralMemberResponseRole as MemberRole,
   AdminJobDetailResponseReviewStatus as JobReviewStatus,
   AdminJobDetailResponseSource as ContentSource,
   AdminJobDetailResponseVisibility as Visibility,
@@ -61,6 +62,13 @@ const MEMBER_STATUS: Record<MemberStatus, LabelSpec> = {
   SUSPENDED: { label: '정지', tone: 'danger' },
 };
 
+/** 일반 회원의 역할. 기업 회원(`COMPANY`) 은 일반 회원 화면에 오지 않으므로 라벨을 두지 않는다. */
+const MEMBER_ROLE: Partial<Record<MemberRole, LabelSpec>> = {
+  USER: { label: '일반', tone: 'neutral' },
+  MENTOR: { label: '멘토', tone: 'success' },
+  ADMIN: { label: '관리자', tone: 'main' },
+};
+
 const SIDE_STUDY_KIND: Record<string, string> = {
   SIDE_PROJECT: '사이드 프로젝트',
   STUDY: '스터디',
@@ -117,6 +125,9 @@ export const RecruitmentStatusBadge = ({ value }: { value: string }) =>
 export const MemberStatusBadge = ({ value }: { value: MemberStatus }) =>
   renderBadge(MEMBER_STATUS[value], value);
 
+export const MemberRoleBadge = ({ value }: { value: MemberRole }) =>
+  renderBadge(MEMBER_ROLE[value], value);
+
 export const sideStudyKindLabel = (value: string): string => SIDE_STUDY_KIND[value] ?? value;
 
 export const recruitmentPositionLabel = (value: RecruitmentPosition): string =>
@@ -139,6 +150,9 @@ export const JOB_REVIEW_STATUS_OPTIONS = toOptions(JOB_REVIEW_STATUS, '검수 �
 export const CONTENT_SOURCE_OPTIONS = toOptions(CONTENT_SOURCE, '등록 경로 전체');
 export const RECRUITMENT_STATUS_OPTIONS = toOptions(RECRUITMENT_STATUS, '모집 상태 전체');
 export const MEMBER_STATUS_OPTIONS = toOptions(MEMBER_STATUS, '상태 전체');
+export const MEMBER_ROLE_OPTIONS = toOptions(MEMBER_ROLE as Record<string, LabelSpec>, '역할 전체');
+/** 역할을 바꿀 때 고르는 값. "전체" 칸이 없다. */
+export const MEMBER_ROLE_CHANGE_OPTIONS = MEMBER_ROLE_OPTIONS.slice(1);
 export const SIDE_STUDY_KIND_OPTIONS = toOptions(SIDE_STUDY_KIND, '종류 전체');
 export const CONCERN_CATEGORY_OPTIONS = toOptions(CONCERN_CATEGORY, '카테고리 전체');
 

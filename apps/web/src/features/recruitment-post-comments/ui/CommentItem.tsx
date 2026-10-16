@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { RecruitmentPostCommentResponse } from '@ogonggo/api';
 import { AUTHOR_NICKNAME_FALLBACK } from '@/entities/side-study/model/labels';
+import { AuthorRoleBadge } from '@/shared/ui/AuthorRoleBadge';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { DELETED_COMMENT_CONTENT } from '../api/commentsApi';
 import { formatRelativeTime } from '../lib/relativeTime';
@@ -61,7 +62,7 @@ export function CommentItem({
 
   return (
     <div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <Thumbnail
           src={comment.author.profileImageUrl}
           alt=""
@@ -70,6 +71,7 @@ export function CommentItem({
         <span className="min-w-0 truncate text-sm font-bold text-gray-900">
           {comment.author.nickname ?? AUTHOR_NICKNAME_FALLBACK}
         </span>
+        <AuthorRoleBadge role={comment.author.role} />
         {comment.author.userId === postAuthorId ? (
           <span className="shrink-0 rounded-sm bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-600">
             작성자

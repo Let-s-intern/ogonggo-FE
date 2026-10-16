@@ -1,7 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  changeGeneralMemberRole,
   listCompanyMembers,
   listGeneralMembers,
+  type ChangeGeneralMemberRoleRequestRole,
   type ListCompanyMembersParams,
   type ListGeneralMembersParams,
 } from '@ogonggo/api/src/admin';
@@ -62,12 +64,31 @@ function localDateDaysAgo(days: number): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-export function useUserMemberList(filters: MemberListFilters) {
+/** 일반 회원 목록만 역할로 거른다. 빈 문자열은 전체다. */
+export type UserMemberListFilters = MemberListFilters & { role: string };
+
+export function useUserMemberList(filters: UserMemberListFilters) {
   return useQuery({
     queryKey: ['admin', 'members', 'users', filters],
     // 상태 값은 화면의 선택지에서 오므로 스펙의 enum 과 같다.
     queryFn: () =>
       unwrapData(listGeneralMembers(toMemberListParams(filters) as ListGeneralMembersParams)),
+  });
+}
+
+/**
+ * 일반 회원의 역할 변경. 같은 역할을 보내도 서버는 200 으로 끝낸다.
+ *
+ * 성공하면 회원 목록을 다시 받는다. 모달이 들고 있는 행은 호출한 쪽이 새 역할로 바꾼다.
+ */
+export function useChangeMemberRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, role }: { userId: number; role: ChangeGeneralMemberRoleRequestRole }) =>
+      unwrapData(changeGeneralMemberRole(userId, { role })),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'members', 'users'] });
+    },
   });
 }
 

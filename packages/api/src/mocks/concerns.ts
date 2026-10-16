@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpHandler, type HttpResponseResolver } from 
 import {
   CONCERN_COMMENT_FIXTURES,
   CONCERN_FIXTURES,
+  CONCERN_MENTOR_USER_IDS,
   type ConcernCommentFixture,
   type ConcernFixture,
 } from './fixtures/concern';
@@ -201,7 +202,14 @@ const toCommentResponse = (
 ): ConcernCommentResponse => ({
   id: comment.id,
   parentId: comment.parentId,
-  author: { ...toAuthor(comment.nickname, comment.profileImageUrl), role: 'USER' },
+  author: {
+    ...toAuthor(comment.nickname, comment.profileImageUrl),
+    role: comment.official
+      ? 'ADMIN'
+      : CONCERN_MENTOR_USER_IDS.has(comment.userId)
+        ? 'MENTOR'
+        : 'USER',
+  },
   official: comment.official ?? false,
   concernAuthor: comment.userId === concern.userId,
   content: comment.deletedAt ? DELETED_COMMENT_CONTENT : comment.content,

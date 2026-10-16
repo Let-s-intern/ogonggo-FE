@@ -74,6 +74,12 @@ export interface ConcernCommentFixture {
 const HOUR = 60;
 const DAY = 24 * HOUR;
 
+/**
+ * 멘토인 답변 작성자. 운영자 답변(`official`) 은 관리자 역할로 따로 치므로 여기 두지 않는다.
+ * 401 은 고민글 1 의 답변과 답글에 여러 번 나와 멘토 배지가 한 화면에 몇 번 보인다.
+ */
+export const CONCERN_MENTOR_USER_IDS: ReadonlySet<number> = new Set([401]);
+
 /** 작성자 userId 별 닉네임. 같은 사람이 여러 글·답변에 같은 이름으로 나온다. */
 const NICKNAMES: Record<number, string | undefined> = {
   301: '부끄러운 라이언',
