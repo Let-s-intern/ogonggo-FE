@@ -32,7 +32,7 @@ export interface RecruitmentPostCommentFixture {
 }
 
 /**
- * 역할이 `USER` 가 아닌 댓글 작성자. 모집글 작성자(106) 를 멘토로 둬서 `멘토` 와 `작성자` 배지가 나란히
+ * 역할이 `USER` 가 아닌 댓글 작성자. 모집글 작성자(106) 를 멘토로 둬서 `렛츠커리어 매니저` 와 `작성자` 배지가 나란히
  * 보이게 하고, 203 은 관리자로 둔다.
  */
 export const COMMENT_AUTHOR_ROLES: Readonly<Record<number, 'MENTOR' | 'ADMIN'>> = {
