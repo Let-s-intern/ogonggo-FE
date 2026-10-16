@@ -4,6 +4,7 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { ListGeneralMembersInflowSource } from './listGeneralMembersInflowSource';
 import type { ListGeneralMembersRole } from './listGeneralMembersRole';
 import type { ListGeneralMembersStatus } from './listGeneralMembersStatus';
 
@@ -48,4 +49,11 @@ joinedTo?: string;
  * | `MENTOR` | 4 | 멘토 회원 |
  */
 role?: ListGeneralMembersRole;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `LETSCAREER` | 1 | 렛츠커리어 기존 회원 |
+ * | `OGONGGO` | 2 | 오공고 신규 유입 |
+ */
+inflowSource?: ListGeneralMembersInflowSource;
 };

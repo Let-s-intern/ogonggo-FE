@@ -103,6 +103,8 @@ const toGeneralMember = (member: UserMemberSummary): AdminGeneralMemberResponse 
   userId: member.id,
   letsCareerUserId: 1000 + member.id,
   role: roleStore.get(member.id) ?? 'USER',
+  // 세 명에 한 명은 유입 구분을 아직 정하지 못한 회원(응답 null)으로 둔다.
+  inflowSource: member.id % 3 === 0 ? undefined : member.id % 3 === 1 ? 'LETSCAREER' : 'OGONGGO',
   status: member.status,
   joinedAt: member.joinedAt,
   nickname: member.nickname,

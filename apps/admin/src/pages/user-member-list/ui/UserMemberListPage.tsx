@@ -20,6 +20,7 @@ import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
+  InflowSourceBadge,
   JOINED_WITHIN_OPTIONS,
   MEMBER_ROLE_CHANGE_OPTIONS,
   MEMBER_ROLE_OPTIONS,
@@ -101,6 +102,12 @@ export function UserMemberListPage() {
       header: '역할',
       width: 'w-24',
       render: (row) => <MemberRoleBadge value={row.role} />,
+    },
+    {
+      key: 'inflowSource',
+      header: '유입',
+      width: 'w-28',
+      render: (row) => <InflowSourceBadge value={row.inflowSource} />,
     },
     {
       key: 'status',
@@ -295,6 +302,7 @@ function MemberModal({
           { label: '이름', value: orDash(member.name) },
           { label: '닉네임', value: orDash(member.nickname) },
           { label: '이메일', value: orDash(member.email), full: true },
+          { label: '유입', value: <InflowSourceBadge value={member.inflowSource} /> },
           { label: '가입일', value: formatDateTime(member.joinedAt) },
           { label: '탈퇴일', value: member.withdrawnAt ? formatDateTime(member.withdrawnAt) : '-' },
           { label: '학교', value: orDash(member.university) },
