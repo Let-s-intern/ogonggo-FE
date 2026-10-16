@@ -201,7 +201,7 @@ const toCommentResponse = (
 ): ConcernCommentResponse => ({
   id: comment.id,
   parentId: comment.parentId,
-  author: toAuthor(comment.nickname, comment.profileImageUrl),
+  author: { ...toAuthor(comment.nickname, comment.profileImageUrl), role: 'USER' },
   official: comment.official ?? false,
   concernAuthor: comment.userId === concern.userId,
   content: comment.deletedAt ? DELETED_COMMENT_CONTENT : comment.content,

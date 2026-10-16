@@ -4,12 +4,12 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { ConcernAuthorResponse } from './concernAuthorResponse';
+import type { ConcernCommentAuthorResponse } from './concernCommentAuthorResponse';
 import type { PageResponseConcernCommentResponse } from './pageResponseConcernCommentResponse';
 
 export interface ConcernCommentRootResponse {
   id: number;
-  author: ConcernAuthorResponse;
+  author: ConcernCommentAuthorResponse;
   /** 관리자가 쓴 운영자 답변이면 true (렛츠커리어 매니저 배지) */
   official: boolean;
   /** 고민글 작성자(질문자)가 쓴 답변이면 true */

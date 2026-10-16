@@ -4,6 +4,7 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { ListGeneralMembersRole } from './listGeneralMembersRole';
 import type { ListGeneralMembersStatus } from './listGeneralMembersStatus';
 
 export type ListGeneralMembersParams = {
@@ -38,4 +39,13 @@ joinedFrom?: string;
  * 가입일 끝(포함)
  */
 joinedTo?: string;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `USER` | 1 | 일반 회원 |
+ * | `COMPANY` | 2 | 기업 회원 |
+ * | `ADMIN` | 3 | 관리자 회원 |
+ * | `MENTOR` | 4 | 멘토 회원 |
+ */
+role?: ListGeneralMembersRole;
 };

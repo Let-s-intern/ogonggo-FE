@@ -11,6 +11,7 @@
  * | `USER` | 1 | 일반 회원 |
  * | `COMPANY` | 2 | 기업 회원 |
  * | `ADMIN` | 3 | 관리자 회원 |
+ * | `MENTOR` | 4 | 멘토 회원 |
  */
 export type MyAccountResponseRole = typeof MyAccountResponseRole[keyof typeof MyAccountResponseRole];
 
@@ -19,4 +20,5 @@ export const MyAccountResponseRole = {
   USER: 'USER',
   COMPANY: 'COMPANY',
   ADMIN: 'ADMIN',
+  MENTOR: 'MENTOR',
 } as const;

@@ -91,6 +91,7 @@ const toGeneralMember = (member: UserMemberSummary): AdminGeneralMemberResponse 
   ...GENERAL_PROFILES[(member.id - 1) % GENERAL_PROFILES.length],
   userId: member.id,
   letsCareerUserId: 1000 + member.id,
+  role: 'USER',
   status: member.status,
   joinedAt: member.joinedAt,
   nickname: member.nickname,

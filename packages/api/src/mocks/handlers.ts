@@ -827,6 +827,7 @@ const toCommentResponse = (
     userId: comment.userId,
     nickname: comment.nickname,
     profileImageUrl: comment.profileImageUrl,
+    role: 'USER',
   },
   content: comment.deletedAt ? DELETED_COMMENT_CONTENT : comment.content,
   createdAt: comment.createdAt,

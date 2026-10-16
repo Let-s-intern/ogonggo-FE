@@ -5,12 +5,24 @@
  * OpenAPI spec version: v1
  */
 import type { AdminGeneralMemberResponseGrade } from './adminGeneralMemberResponseGrade';
+import type { AdminGeneralMemberResponseRole } from './adminGeneralMemberResponseRole';
 import type { AdminGeneralMemberResponseStatus } from './adminGeneralMemberResponseStatus';
 
 export interface AdminGeneralMemberResponse {
   userId: number;
   /** 렛츠커리어 사용자 식별자 */
   letsCareerUserId?: number;
+  /**
+     * USER·MENTOR·ADMIN 중 하나입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `USER` | 1 | 일반 회원 |
+     * | `COMPANY` | 2 | 기업 회원 |
+     * | `ADMIN` | 3 | 관리자 회원 |
+     * | `MENTOR` | 4 | 멘토 회원 |
+     */
+  role: AdminGeneralMemberResponseRole;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
