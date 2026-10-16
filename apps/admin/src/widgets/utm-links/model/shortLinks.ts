@@ -63,7 +63,8 @@ export async function createShortLinks(
         result.shortUrls[link.url] = await createShortUrl(shortLinkRequest(link));
       } catch (error) {
         result.failed += 1;
-        result.firstError ??= error instanceof Error ? error.message : '단축링크를 만들지 못했습니다.';
+        result.firstError ??=
+          error instanceof Error ? error.message : '단축링크를 만들지 못했습니다.';
         if (error instanceof ShortUrlError && (error.status === 401 || error.status === 503)) {
           halted = true;
         }

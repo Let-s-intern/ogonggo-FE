@@ -319,9 +319,7 @@ function UtmLinksForm({
         </Button>
         <Button
           variant="secondary"
-          disabled={
-            unshortened.length === 0 || shortening !== null || shortCopyingUrl !== null
-          }
+          disabled={unshortened.length === 0 || shortening !== null || shortCopyingUrl !== null}
           onClick={makeShortLinks}
         >
           {shortening ? `만드는 중 (${shortening.done}/${shortening.total})` : '단축링크 만들기'}
