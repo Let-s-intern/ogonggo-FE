@@ -364,7 +364,7 @@ const getJobCalendarHandler = http.get('*/api/v1/jobs/calendar', ({ request }) =
 });
 
 /**
- * 오늘의 추천 공고에 붙는 추천 문구. 길이는 어드민 한도(제목 30자, 설명 50자) 안이다.
+ * 오늘의 추천 공고에 붙는 추천 문구. 길이는 어드민 한도(제목 30자, 설명 200자) 안이다.
  * 항목 수만큼의 공고에 앞에서부터 하나씩 붙는다.
  */
 const TODAY_JOB_RECOMMENDATIONS = [

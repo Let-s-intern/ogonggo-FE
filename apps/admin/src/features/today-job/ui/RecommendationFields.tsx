@@ -1,4 +1,4 @@
-import { Input, cn } from '@ogonggo/ui';
+import { Input, Textarea, cn } from '@ogonggo/ui';
 import {
   RECOMMENDATION_DESCRIPTION_MAX,
   RECOMMENDATION_TITLE_MAX,
@@ -59,6 +59,7 @@ export function RecommendationFields({
         max={RECOMMENDATION_DESCRIPTION_MAX}
         error={errors.description}
         disabled={disabled}
+        multiline
         onChange={(description) => onChange({ ...value, description })}
       />
     </div>
@@ -73,10 +74,22 @@ interface TextRowProps {
   max: number;
   error: string | undefined;
   disabled: boolean;
+  /** 참이면 Enter 로 줄을 바꿀 수 있는 여러 줄 입력칸이다. 사용자 카드에도 줄바꿈이 그대로 보인다. */
+  multiline?: boolean;
   onChange: (text: string) => void;
 }
 
-function TextRow({ id, label, subject, text, max, error, disabled, onChange }: TextRowProps) {
+function TextRow({
+  id,
+  label,
+  subject,
+  text,
+  max,
+  error,
+  disabled,
+  multiline = false,
+  onChange,
+}: TextRowProps) {
   const length = recommendationLength(text);
   const errorId = `${id}-error`;
 
@@ -95,16 +108,30 @@ function TextRow({ id, label, subject, text, max, error, disabled, onChange }: T
           {length}/{max}
         </span>
       </div>
-      <Input
-        id={id}
-        value={text}
-        aria-label={subject ? `${subject} ${label}` : undefined}
-        disabled={disabled}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className="h-9 text-sm"
-        onChange={(event) => onChange(event.target.value)}
-      />
+      {multiline ? (
+        <Textarea
+          id={id}
+          value={text}
+          rows={3}
+          aria-label={subject ? `${subject} ${label}` : undefined}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="resize-y px-3 py-2"
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : (
+        <Input
+          id={id}
+          value={text}
+          aria-label={subject ? `${subject} ${label}` : undefined}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="h-9 text-sm"
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
       {error ? (
         <p id={errorId} className="pt-1 text-xs text-error">
           {error}
