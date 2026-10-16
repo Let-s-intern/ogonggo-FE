@@ -22,6 +22,13 @@ export interface UtmLink {
   template: UtmTemplate;
   campaign: string;
   url: string;
+  /** 단축링크를 만들었으면 그 주소. 붙여넣기·복사는 이 값을 우선한다. */
+  shortUrl?: string;
+}
+
+/** 사람에게 건네는 주소. 단축링크가 있으면 그것, 없으면 UTM 이 붙은 긴 주소다. */
+export function linkHref(link: UtmLink): string {
+  return link.shortUrl ?? link.url;
 }
 
 /**
@@ -84,14 +91,14 @@ export function toClipboardText(links: UtmLink[]): string {
       current = link.template;
       blocks.push(`[${templateLabel(current)}]`);
     }
-    blocks.push(`${link.posting.title}\n${link.url}`);
+    blocks.push(`${link.posting.title}\n${linkHref(link)}`);
   }
   return blocks.join('\n\n');
 }
 
 /** URL 만 한 줄에 하나씩. */
 export function toUrlText(links: UtmLink[]): string {
-  return links.map((link) => link.url).join('\n');
+  return links.map(linkHref).join('\n');
 }
 
 function escapeHtml(value: string): string {
@@ -114,7 +121,9 @@ export function toHyperlinkHtml(links: UtmLink[]): string {
       current = link.template;
       blocks.push(`<p><strong>[${escapeHtml(templateLabel(current))}]</strong></p>`);
     }
-    blocks.push(`<p><a href="${escapeHtml(link.url)}">${escapeHtml(link.posting.title)}</a></p>`);
+    blocks.push(
+      `<p><a href="${escapeHtml(linkHref(link))}">${escapeHtml(link.posting.title)}</a></p>`,
+    );
   }
   return blocks.join('');
 }
@@ -140,6 +149,7 @@ export function toCsv(kind: UtmContentKind, links: UtmLink[]): string {
     'utm_medium',
     'utm_campaign',
     'URL',
+    '단축 URL',
   ];
   const rows = links.map((link) => [
     link.posting.title,
@@ -150,6 +160,7 @@ export function toCsv(kind: UtmContentKind, links: UtmLink[]): string {
     link.template.medium,
     link.campaign,
     link.url,
+    link.shortUrl ?? '',
   ]);
   return `﻿${[header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
 }

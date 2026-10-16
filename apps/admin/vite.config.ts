@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
 // dev 서버가 `/api/**` 를 넘길 어드민 백엔드. 기본값은 로컬 도커의 어드민 API 다(`ogonggo-BE` 의
 // `ogonggo-api-admin`). 배포본은 이 값을 읽지 못하고 `vercel.json` 의 rewrite 가 주소를 직접 들고
@@ -20,6 +20,12 @@ const LETSCAREER_API_ORIGIN =
   process.env.OGONGGO_LETSCAREER_API_ORIGIN ??
   'https://3ccm7bgq1b.execute-api.ap-northeast-2.amazonaws.com';
 
+// 단축링크(Shlink) 서버와 API 키. `.env.local` 의 `SHLINK_*` 를 읽는다 — `VITE_` 접두사가 없어 번들에는
+// 들어가지 않고 dev 서버의 프록시만 쓴다. 배포본은 `api/shlink-short-url.ts` 가 서버 환경변수로 읽는다.
+const SHLINK_ENV = loadEnv('', process.cwd(), 'SHLINK_');
+const SHLINK_API_URL = SHLINK_ENV.SHLINK_API_URL ?? 'https://l.letscareer.co.kr';
+const SHLINK_API_KEY = SHLINK_ENV.SHLINK_API_KEY ?? '';
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -33,6 +39,14 @@ export default defineConfig({
     // any base-URL config — see packages/api/src/lib/http-client.ts.
     // 앞에 적은 항목이 먼저 걸린다. `/api/v1/auth` 가 `/api` 보다 앞에 있어야 한다.
     proxy: {
+      // 단축링크 생성. 배포본의 `api/shlink-short-url.ts` 가 하는 일을 키만 붙여 대신한다(호출자 검증은
+      // 하지 않는다 — 로컬 전용이다). 키가 없으면 Shlink 가 401 로 답한다.
+      '/shlink-api/short-urls': {
+        target: SHLINK_API_URL,
+        changeOrigin: true,
+        rewrite: () => '/rest/v3/short-urls',
+        headers: { 'X-Api-Key': SHLINK_API_KEY },
+      },
       '/api/v1/auth': { target: USER_API_ORIGIN, changeOrigin: true },
       '/api': { target: ADMIN_API_ORIGIN, changeOrigin: true },
       // 오공고의 `/api/**` 와 겹치지 않게 접두사를 따로 둔다(`apps/web` 의 next.config.ts 와 같은 이름이다).
