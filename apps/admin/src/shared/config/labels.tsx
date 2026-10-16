@@ -1,6 +1,7 @@
 import { Badge, type BadgeProps } from '@ogonggo/ui';
 import type {
   AdminConcernSummaryResponseCategory as ConcernCategory,
+  AdminGeneralMemberResponseInflowSource as InflowSource,
   AdminGeneralMemberResponseRole as MemberRole,
   AdminJobDetailResponseReviewStatus as JobReviewStatus,
   AdminJobDetailResponseSource as ContentSource,
@@ -69,6 +70,11 @@ const MEMBER_ROLE: Partial<Record<MemberRole, LabelSpec>> = {
   ADMIN: { label: '관리자', tone: 'main' },
 };
 
+const INFLOW_SOURCE: Record<InflowSource, LabelSpec> = {
+  LETSCAREER: { label: '렛츠커리어', tone: 'main' },
+  OGONGGO: { label: '오공고', tone: 'success' },
+};
+
 const SIDE_STUDY_KIND: Record<string, string> = {
   SIDE_PROJECT: '사이드 프로젝트',
   STUDY: '스터디',
@@ -127,6 +133,10 @@ export const MemberStatusBadge = ({ value }: { value: MemberStatus }) =>
 
 export const MemberRoleBadge = ({ value }: { value: MemberRole }) =>
   renderBadge(MEMBER_ROLE[value], value);
+
+/** 유입 구분을 아직 정하지 못한 회원은 응답이 `null` 이다. 빈 칸 대신 `-` 를 남긴다. */
+export const InflowSourceBadge = ({ value }: { value?: InflowSource | null }) =>
+  !value ? <span className="text-gray-400">-</span> : renderBadge(INFLOW_SOURCE[value], value);
 
 export const sideStudyKindLabel = (value: string): string => SIDE_STUDY_KIND[value] ?? value;
 

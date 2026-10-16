@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { AdminGeneralMemberResponseGrade } from './adminGeneralMemberResponseGrade';
+import type { AdminGeneralMemberResponseInflowSource } from './adminGeneralMemberResponseInflowSource';
 import type { AdminGeneralMemberResponseRole } from './adminGeneralMemberResponseRole';
 import type { AdminGeneralMemberResponseStatus } from './adminGeneralMemberResponseStatus';
 
@@ -34,6 +35,15 @@ export interface AdminGeneralMemberResponse {
   joinedAt: string;
   /** 탈퇴 일시. 탈퇴하지 않았으면 null입니다. */
   withdrawnAt?: string;
+  /**
+     * 유입 구분. 렛츠커리어를 쓰다 넘어왔으면 LETSCAREER, 오공고로 처음 들어왔으면 OGONGGO입니다. 아직 정하지 못한 회원은 null입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `LETSCAREER` | 1 | 렛츠커리어 기존 회원 |
+     * | `OGONGGO` | 2 | 오공고 신규 유입 |
+     */
+  inflowSource?: AdminGeneralMemberResponseInflowSource;
   name?: string;
   nickname?: string;
   /** 렛츠커리어에서 받은 이메일 */
