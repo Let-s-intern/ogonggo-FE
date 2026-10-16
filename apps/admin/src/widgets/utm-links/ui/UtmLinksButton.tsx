@@ -5,7 +5,6 @@ import { createShortLinks } from '../model/shortLinks';
 import {
   buildUtmLinks,
   groupByChannel,
-  linkHref,
   templateLabel,
   toClipboardText,
   toCsv,
@@ -13,6 +12,7 @@ import {
   toUrlText,
   UTM_TEMPLATES,
   type UtmContentKind,
+  type UtmLink,
   type UtmPosting,
   type UtmTemplate,
 } from '../model/utmLinks';
@@ -98,6 +98,8 @@ function UtmLinksForm({
   const [shortUrls, setShortUrls] = useState<Record<string, string>>({});
   const [shortening, setShortening] = useState<{ done: number; total: number } | null>(null);
   const [shortError, setShortError] = useState<string | null>(null);
+  /** 한 줄의 `단축링크 복사` 로 만드는 중인 링크의 긴 주소. */
+  const [shortCopyingUrl, setShortCopyingUrl] = useState<string | null>(null);
   // 고른 순서가 아니라 파일 순서로 링크를 늘어놓는다.
   const links = buildUtmLinks(
     kind,
@@ -171,6 +173,25 @@ function UtmLinksForm({
     }
   };
 
+  // 한 줄만 만들어 바로 복사한다. 이미 만들어 둔 링크는 만들지 않고 복사만 한다.
+  const copyShort = async (link: UtmLink) => {
+    let shortUrl = link.shortUrl;
+    if (shortUrl === undefined) {
+      setShortError(null);
+      setShortCopyingUrl(link.url);
+      const batch = await createShortLinks([link]);
+      setShortCopyingUrl(null);
+      shortUrl = batch.shortUrls[link.url];
+      if (shortUrl === undefined) {
+        setShortError(batch.firstError ?? '단축링크를 만들지 못했습니다.');
+        return;
+      }
+      const created = shortUrl;
+      setShortUrls((current) => ({ ...current, [link.url]: created }));
+    }
+    await copyOne(shortUrl);
+  };
+
   const download = () => {
     const blob = new Blob([toCsv(kind, links)], { type: 'text/csv;charset=utf-8' });
     const anchor = document.createElement('a');
@@ -233,7 +254,7 @@ function UtmLinksForm({
                   <th scope="col" className="px-3 py-2 font-medium">
                     URL
                   </th>
-                  <th scope="col" className="w-24 px-3 py-2 font-medium">
+                  <th scope="col" className="w-32 px-3 py-2 font-medium">
                     <span className="sr-only">복사</span>
                   </th>
                 </tr>
@@ -254,11 +275,27 @@ function UtmLinksForm({
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      <Button size="sm" variant="secondary" onClick={() => copyOne(linkHref(link))}>
-                        <span className="whitespace-nowrap">
-                          {copiedUrl === linkHref(link) ? '복사됨' : '복사'}
-                        </span>
-                      </Button>
+                      <div className="flex flex-col gap-1">
+                        <Button size="sm" variant="secondary" onClick={() => copyOne(link.url)}>
+                          <span className="whitespace-nowrap">
+                            {copiedUrl === link.url ? '복사됨' : '복사'}
+                          </span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={shortening !== null || shortCopyingUrl !== null}
+                          onClick={() => copyShort(link)}
+                        >
+                          <span className="whitespace-nowrap">
+                            {shortCopyingUrl === link.url
+                              ? '만드는 중'
+                              : link.shortUrl !== undefined && copiedUrl === link.shortUrl
+                                ? '복사됨'
+                                : '단축링크 복사'}
+                          </span>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -282,7 +319,9 @@ function UtmLinksForm({
         </Button>
         <Button
           variant="secondary"
-          disabled={unshortened.length === 0 || shortening !== null}
+          disabled={
+            unshortened.length === 0 || shortening !== null || shortCopyingUrl !== null
+          }
           onClick={makeShortLinks}
         >
           {shortening ? `만드는 중 (${shortening.done}/${shortening.total})` : '단축링크 만들기'}
