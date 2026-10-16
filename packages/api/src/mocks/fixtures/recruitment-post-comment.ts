@@ -32,6 +32,15 @@ export interface RecruitmentPostCommentFixture {
 }
 
 /**
+ * 역할이 `USER` 가 아닌 댓글 작성자. 모집글 작성자(106) 를 멘토로 둬서 `렛츠커리어 매니저` 와 `작성자` 배지가 나란히
+ * 보이게 하고, 203 은 관리자로 둔다.
+ */
+export const COMMENT_AUTHOR_ROLES: Readonly<Record<number, 'MENTOR' | 'ADMIN'>> = {
+  106: 'MENTOR',
+  203: 'ADMIN',
+};
+
+/**
  * 목 모드에서 "나" 로 칠 사용자. 목 핸들러는 토큰을 검사하지 않으므로 `Authorization` 헤더가
  * 실려 오면 이 사람이 보낸 것으로 본다.
  */

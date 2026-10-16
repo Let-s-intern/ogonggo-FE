@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import type {
   AdminCompanyMemberResponse,
   AdminGeneralMemberResponse,
+  AdminGeneralMemberResponseRole,
   PageResponseAdminCompanyMemberResponse,
   PageResponseAdminGeneralMemberResponse,
 } from '../../generated/admin/models';
@@ -87,10 +88,21 @@ const GENERAL_PROFILES: Partial<AdminGeneralMemberResponse>[] = [
   {},
 ];
 
+/**
+ * 회원별 역할. 바꾸면 목록에 바로 반영되도록 모듈 안에 들고 있다(새로고침하면 처음으로 돌아간다).
+ * 여기 없는 회원은 `USER` 다.
+ */
+const roleStore = new Map<number, AdminGeneralMemberResponseRole>([
+  [1, 'ADMIN'],
+  [2, 'MENTOR'],
+  [5, 'MENTOR'],
+]);
+
 const toGeneralMember = (member: UserMemberSummary): AdminGeneralMemberResponse => ({
   ...GENERAL_PROFILES[(member.id - 1) % GENERAL_PROFILES.length],
   userId: member.id,
   letsCareerUserId: 1000 + member.id,
+  role: roleStore.get(member.id) ?? 'USER',
   status: member.status,
   joinedAt: member.joinedAt,
   nickname: member.nickname,
@@ -113,15 +125,18 @@ const toCompanyMember = (member: CompanyMemberSummary): AdminCompanyMemberRespon
 });
 
 const listGeneralMembersHandler = http.get('*/api/v1/admin/general-members', ({ request }) => {
-  const { keyword, status, joinedFrom, joinedTo, page, size } = readMemberFilters(
-    new URL(request.url),
-  );
+  const url = new URL(request.url);
+  const { keyword, status, joinedFrom, joinedTo, page, size } = readMemberFilters(url);
+  const role = url.searchParams.get('role') ?? '';
 
   const filtered = USER_MEMBER_FIXTURES.filter((member) => {
     if (keyword && !matches(`${member.nickname} ${member.email}`, keyword)) {
       return false;
     }
     if (status && member.status !== status) {
+      return false;
+    }
+    if (role && (roleStore.get(member.id) ?? 'USER') !== role) {
       return false;
     }
     return joinedBetween(member.joinedAt, joinedFrom, joinedTo);
@@ -198,8 +213,53 @@ const getCompanyMemberHandler = http.get(
   },
 );
 
+/**
+ * `changeGeneralMemberRole`(`PATCH /api/v1/admin/general-members/{userId}/role`).
+ *
+ * 스펙의 오류 셋 중 목이 가를 수 있는 것만 낸다 — 허용하지 않는 역할(400), 없는 회원(404), 탈퇴 회원(409).
+ * 기업 회원과 자기 자신은 목 회원 목록에 없거나 가릴 방법이 없어 두지 않는다. 같은 역할을 보내면 그대로 200 이다.
+ */
+const changeGeneralMemberRoleHandler = http.patch(
+  '*/api/v1/admin/general-members/:userId/role',
+  async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as { role?: string } | null;
+    const role = body?.role;
+    if (role !== 'USER' && role !== 'MENTOR' && role !== 'ADMIN') {
+      return HttpResponse.json(
+        {
+          status: 400,
+          code: 'BAD_REQUEST',
+          message: 'role 은 USER·MENTOR·ADMIN 중 하나여야 합니다.',
+        },
+        { status: 400 },
+      );
+    }
+    const userId = Number(params.userId);
+    const member = USER_MEMBER_FIXTURES.find((fixture) => fixture.id === userId);
+    if (!member) {
+      return HttpResponse.json(
+        { status: 404, code: 'USER_NOT_FOUND', message: '회원을 찾을 수 없습니다.' },
+        { status: 404 },
+      );
+    }
+    if (member.status === 'WITHDRAWN') {
+      return HttpResponse.json(
+        {
+          status: 409,
+          code: 'WITHDRAWN_USER_ROLE_UNCHANGEABLE',
+          message: '탈퇴한 회원의 역할은 바꿀 수 없습니다.',
+        },
+        { status: 409 },
+      );
+    }
+    roleStore.set(userId, role);
+    return HttpResponse.json(ok({}), { status: 200 });
+  },
+);
+
 export const memberHandlers: HttpHandler[] = [
   listGeneralMembersHandler,
+  changeGeneralMemberRoleHandler,
   getUserMemberHandler,
   listCompanyMembersHandler,
   getCompanyMemberHandler,

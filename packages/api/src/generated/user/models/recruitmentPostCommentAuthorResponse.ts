@@ -4,9 +4,21 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { RecruitmentPostCommentAuthorResponseRole } from './recruitmentPostCommentAuthorResponseRole';
 
 export interface RecruitmentPostCommentAuthorResponse {
   userId: number;
   nickname?: string;
   profileImageUrl?: string;
+  /**
+     * 작성자의 현재 역할. MENTOR는 멘토, ADMIN은 멘토보다 위 등급(관리자)으로 표시합니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `USER` | 1 | 일반 회원 |
+     * | `COMPANY` | 2 | 기업 회원 |
+     * | `ADMIN` | 3 | 관리자 회원 |
+     * | `MENTOR` | 4 | 멘토 회원 |
+     */
+  role: RecruitmentPostCommentAuthorResponseRole;
 }

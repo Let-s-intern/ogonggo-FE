@@ -11,6 +11,7 @@ import {
   type RecruitmentPostFixture,
 } from './fixtures/recruitment-post';
 import {
+  COMMENT_AUTHOR_ROLES,
   MOCK_VIEWER_NICKNAME,
   MOCK_VIEWER_USER_ID,
   RECRUITMENT_POST_COMMENT_FIXTURES,
@@ -827,6 +828,7 @@ const toCommentResponse = (
     userId: comment.userId,
     nickname: comment.nickname,
     profileImageUrl: comment.profileImageUrl,
+    role: COMMENT_AUTHOR_ROLES[comment.userId] ?? 'USER',
   },
   content: comment.deletedAt ? DELETED_COMMENT_CONTENT : comment.content,
   createdAt: comment.createdAt,

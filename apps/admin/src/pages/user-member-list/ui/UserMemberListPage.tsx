@@ -13,13 +13,18 @@ import {
 import type {
   AdminGeneralMemberResponse,
   AdminGeneralMemberResponseGrade,
+  AdminGeneralMemberResponseRole,
 } from '@ogonggo/api/src/admin';
-import { useUserMemberList } from '@/entities/member/api/useMembers';
+import { useChangeMemberRole, useUserMemberList } from '@/entities/member/api/useMembers';
+import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   JOINED_WITHIN_OPTIONS,
+  MEMBER_ROLE_CHANGE_OPTIONS,
+  MEMBER_ROLE_OPTIONS,
   MEMBER_STATUS_OPTIONS,
+  MemberRoleBadge,
   MemberStatusBadge,
 } from '@/shared/config/labels';
 import { formatDate, formatDateTime } from '@/shared/lib/format';
@@ -28,7 +33,8 @@ import { useListQuery } from '@/shared/lib/useListQuery';
 /**
  * 일반 회원 목록. 읽기 전용이다.
  *
- * 제재는 운영자가 쿼리로 걸고 이 화면은 결과를 상태 뱃지로 보여준다(PRD "하지 않는 것").
+ * 제재는 운영자가 쿼리로 걸고 이 화면은 결과를 상태 뱃지로 보여준다(PRD "하지 않는 것"). 바꿀 수 있는 것은
+ * 역할 하나다 — 행 모달에서 멘토를 지정하고 관리자로 올리거나 내린다.
  *
  * 칸은 API(`AdminGeneralMemberResponse`) 가 주는 것만 둔다. 목 시절의 "최근 접속" 은 응답에
  * 없어 뺐다. 학교·학년·희망 직무까지 목록에 두어 행을 열지 않고도 회원을 가늠하게 한다. 나머지
@@ -45,6 +51,7 @@ export function UserMemberListPage() {
     page,
     keyword: get('keyword'),
     status: get('status'),
+    role: get('role'),
     joinedWithinDays: get('joinedWithinDays'),
   };
 
@@ -90,6 +97,12 @@ export function UserMemberListPage() {
       ),
     },
     {
+      key: 'role',
+      header: '역할',
+      width: 'w-24',
+      render: (row) => <MemberRoleBadge value={row.role} />,
+    },
+    {
       key: 'status',
       header: '상태',
       width: 'w-24',
@@ -115,6 +128,12 @@ export function UserMemberListPage() {
           aria-label="상태"
         />
         <Select
+          options={MEMBER_ROLE_OPTIONS}
+          value={filters.role}
+          onChange={(event) => setFilter('role', event.target.value)}
+          aria-label="역할"
+        />
+        <Select
           options={JOINED_WITHIN_OPTIONS}
           value={filters.joinedWithinDays}
           onChange={(event) => setFilter('joinedWithinDays', event.target.value)}
@@ -138,7 +157,13 @@ export function UserMemberListPage() {
         </>
       )}
 
-      {selected ? <MemberModal member={selected} onClose={() => setSelected(null)} /> : null}
+      {selected ? (
+        <MemberModal
+          member={selected}
+          onRoleChanged={(role) => setSelected({ ...selected, role })}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </>
   );
 }
@@ -155,11 +180,102 @@ const GRADE_LABELS: Record<AdminGeneralMemberResponseGrade, string> = {
 /** 응답에 없는 값은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. */
 const orDash = (value: string | number | undefined) => value ?? '-';
 
+/**
+ * 역할 변경. 고르고 `변경` 을 누르면 한 번 더 묻고, 확인하면 보낸다.
+ *
+ * 관리자 권한은 서버가 요청마다 역할로 확인하므로 `ADMIN` 으로 올리면 그 회원이 바로 어드민을 쓸 수 있고
+ * 내리면 다음 요청부터 접근을 잃는다. 되돌릴 수 있는 일이라 문구 입력까지 받지는 않는다. 탈퇴 회원은
+ * 서버가 거절하므로 처음부터 막는다. 기업 회원·자기 자신은 서버가 거절하고 그 메시지를 그대로 보인다.
+ */
+function RoleChanger({
+  member,
+  onRoleChanged,
+}: {
+  member: AdminGeneralMemberResponse;
+  onRoleChanged: (role: AdminGeneralMemberResponseRole) => void;
+}) {
+  const [draft, setDraft] = useState(member.role);
+  const [confirming, setConfirming] = useState(false);
+  const mutation = useChangeMemberRole();
+  const withdrawn = member.status === 'WITHDRAWN';
+
+  const submit = () => {
+    mutation.mutate(
+      { userId: member.userId, role: draft as 'USER' | 'MENTOR' | 'ADMIN' },
+      {
+        onSuccess: () => {
+          setConfirming(false);
+          onRoleChanged(draft);
+        },
+        onError: () => setConfirming(false),
+      },
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-3 pt-4">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-500">역할</span>
+        <MemberRoleBadge value={member.role} />
+        <Select
+          options={MEMBER_ROLE_CHANGE_OPTIONS}
+          value={draft}
+          disabled={withdrawn || mutation.isPending}
+          onChange={(event) => {
+            setDraft(event.target.value as AdminGeneralMemberResponseRole);
+            setConfirming(false);
+            mutation.reset();
+          }}
+          aria-label="바꿀 역할"
+        />
+        <Button
+          variant="secondary"
+          disabled={withdrawn || draft === member.role || mutation.isPending}
+          onClick={() => setConfirming(true)}
+        >
+          변경
+        </Button>
+      </div>
+      {withdrawn ? (
+        <p className="text-xs text-gray-500">탈퇴한 회원의 역할은 바꿀 수 없습니다.</p>
+      ) : null}
+      {confirming ? (
+        <Callout tone="warning">
+          <p>
+            이 회원이 {MEMBER_ROLE_LABEL[draft]} 역할로 바뀝니다. 다음 요청부터 적용됩니다.
+            {draft === 'ADMIN' ? ' 관리자가 되면 어드민을 쓸 수 있습니다.' : ''}
+            {member.role === 'ADMIN' ? ' 관리자에서 내리면 어드민에 접근할 수 없게 됩니다.' : ''}
+          </p>
+          <div className="flex gap-2 pt-2">
+            <Button onClick={submit} disabled={mutation.isPending}>
+              확인
+            </Button>
+            <Button variant="secondary" onClick={() => setConfirming(false)}>
+              취소
+            </Button>
+          </div>
+        </Callout>
+      ) : null}
+      {mutation.isError ? (
+        <Callout tone="error">
+          {serverErrorMessage(mutation.error) ?? '역할을 바꾸지 못했습니다.'}
+        </Callout>
+      ) : null}
+    </div>
+  );
+}
+
+const MEMBER_ROLE_LABEL: Record<string, string> = Object.fromEntries(
+  MEMBER_ROLE_CHANGE_OPTIONS.map((option) => [option.value, option.label]),
+);
+
 function MemberModal({
   member,
+  onRoleChanged,
   onClose,
 }: {
   member: AdminGeneralMemberResponse;
+  onRoleChanged: (role: AdminGeneralMemberResponseRole) => void;
   onClose: () => void;
 }) {
   return (
@@ -191,6 +307,7 @@ function MemberModal({
           { label: '희망 기업', value: orDash(member.wishCompany) },
         ]}
       />
+      <RoleChanger key={member.userId} member={member} onRoleChanged={onRoleChanged} />
       <div className="flex justify-end pt-6">
         <Button variant="secondary" onClick={onClose}>
           닫기

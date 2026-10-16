@@ -14,6 +14,8 @@
 > 상세 둘은 여전히 백엔드가 없다
 > 스펙 대조: 2026-10-13, 9 절. `ogonggo-BE` 의 `LetsCareerContentRecommend*` 소스와 배포된
 > `ogonggo-api-admin` 의 `/v3/api-docs` 를 읽고 목 핸들러를 맞췄다. 화면은 `/placements/recommend-weights`
+> 스펙 대조: 2026-10-16, 7 절의 일반 회원 목록과 역할 변경. 배포된 `ogonggo-api-admin` 의
+> `/v3/api-docs` 로 `role` 필드·필터와 `PATCH .../general-members/{userId}/role` 을 옮겼다
 
 ## 이 문서가 무엇인가
 
@@ -737,8 +739,9 @@
 일반 회원과 비즈니스 회원은 백엔드에서 같은 `users` 테이블을 `UserRole`(`USER` · `COMPANY`)로
 나눈 것이지만, 목록 칸이 서로 달라 화면과 API 가 둘로 갈린다.
 
-**네 API 가 전부 읽기다.** 콘솔은 회원 상태를 바꾸지 않는다 — 제재는 운영자가 DB 쿼리로 걸고
-화면은 결과만 보여준다. 상태를 바꾸는 API 를 만들지 않는다.
+**회원 상태는 바꾸지 않는다.** 제재는 운영자가 DB 쿼리로 걸고 화면은 결과만 보여준다. 상태를
+바꾸는 API 를 만들지 않는다. 바꾸는 것은 일반 회원의 역할 하나이고(`PATCH .../general-members/{userId}/role`),
+나머지 API 는 읽기다.
 
 **목록 둘은 백엔드가 있다.** 아래 두 목록 절은 배포된 `ogonggo-api-admin` 의 생성물
 (`listGeneralMembers`·`listCompanyMembers`, 2026-09-29) 을 옮긴 것이고, 목 핸들러
@@ -758,6 +761,7 @@
 | `size`       | 1~100                                | 보내지 않는다                                      |
 | `keyword`    | 문자열, 100자까지                    | 검색 상자. **닉네임 + 이메일** 부분 일치           |
 | `status`     | `ACTIVE` · `WITHDRAWN` · `SUSPENDED` | 상태 드롭다운                                      |
+| `role`       | `USER` · `MENTOR` · `ADMIN`          | 역할 드롭다운                                      |
 | `joinedFrom` | `YYYY-MM-DD`, 포함                   | 가입 기간 드롭다운. 오늘에서 7·30·90일 전 날짜     |
 | `joinedTo`   | `YYYY-MM-DD`, 포함                   | 보내지 않는다. 끝을 열어 두어 오늘 가입자까지 본다 |
 
@@ -766,11 +770,32 @@
 화면 주소의 `joinedWithinDays=7d` 는 그대로다(대시보드 카드가 링크로 건다). 요청을 만들 때
 `joinedFrom` 으로 바꾼다(`apps/admin/src/entities/member/api/useMembers.ts`).
 
-**응답 `data.items[]`** — `AdminGeneralMemberResponse`. `userId` `status` `joinedAt` 만 필수이고
+**응답 `data.items[]`** — `AdminGeneralMemberResponse`. `userId` `role` `status` `joinedAt` 만 필수이고
 `withdrawnAt` `name` `nickname` `email` `letsCareerUserId` `profileImageUrl` `university` `major`
 `grade` `wishField` `wishJob` `wishIndustry` `wishEmploymentType` `wishCompany` 는 선택이다. 화면은
 닉네임·이메일·상태·가입일을 그린다. 목 시절의 `lastAccessedAt`(최근 접속) 은 응답에 없어 칸을
 뺐다.
+
+### `PATCH /api/v1/admin/general-members/{userId}/role`
+
+**부르는 곳** — `/members/users` 의 회원 행 모달에서 역할을 고르고 `변경` 을 눌러 확인한 뒤.
+
+**요청 본문** — `ChangeGeneralMemberRoleRequest`. `{ "role": "USER" | "MENTOR" | "ADMIN" }`. `COMPANY` 는 보내지
+않는다(400).
+
+**응답** — 200, `data` 는 비어 있다. 화면은 목록을 다시 받고 모달의 역할을 새 값으로 바꾼다.
+
+| 상황             | 응답                                   | 화면                                     |
+| ---------------- | -------------------------------------- | ---------------------------------------- |
+| 지금과 같은 역할 | 200, 바꾸지 않고 이력도 남기지 않는다  | `변경` 버튼이 꺼져 있어 보내지 않는다    |
+| 정지한 회원      | 바꿀 수 있다                           | 막지 않는다                              |
+| 기업 회원        | 400 `COMPANY_MEMBER_ROLE_UNCHANGEABLE` | 서버 메시지를 오류 칸에 보인다           |
+| 자기 자신        | 400 `OWN_ROLE_UNCHANGEABLE`            | 서버 메시지를 오류 칸에 보인다           |
+| 탈퇴 회원        | 409 `WITHDRAWN_USER_ROLE_UNCHANGEABLE` | 선택과 버튼을 꺼 두고 안내 문구를 보인다 |
+| 없는 회원        | 404 `USER_NOT_FOUND`                   | 서버 메시지를 오류 칸에 보인다           |
+
+관리자 권한은 요청마다 DB 의 역할로 확인한다. `ADMIN` 으로 바꾸거나 내린 결과가 그 회원의 다음 요청부터
+적용된다. 화면은 확인 문구에 그 사실을 적는다.
 
 ### 목과 백엔드 스펙의 차이 — 일반 회원 목록
 
@@ -780,6 +805,7 @@
 | 가입일 범위의 날짜 기준      | 서버 시각의 날짜                                   | 브라우저 로컬 날짜                                           |
 | 대시보드 "이번 주 신규 회원" | 대시보드 API 가 아직 없다                          | 7×24시간 이동 창으로 센다. 목록은 날짜 단위라 하루치 더 넓다 |
 | 잘못된 파라미터              | 400 `BAD_REQUEST` (시작일이 끝보다 늦은 경우 포함) | 거르지 않고 무시한다                                         |
+| 역할 변경의 오류             | 기업 회원·자기 자신도 400 으로 거절한다            | 허용하지 않는 역할(400)·없는 회원(404)·탈퇴 회원(409)만 낸다 |
 
 ### `GET /api/v1/admin/members/users/{memberId}`
 

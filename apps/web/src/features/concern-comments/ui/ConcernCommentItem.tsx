@@ -3,10 +3,11 @@ import type { ConcernCommentResponse } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { getAuthorName } from '@/entities/concern/model/author';
 import { RelativeTime } from '@/entities/concern/ui/RelativeTime';
+import { AuthorRoleBadge } from '@/shared/ui/AuthorRoleBadge';
 import { CommentIcon } from '@/shared/ui/icons';
 import { DELETED_COMMENT_CONTENT } from '../api/concernCommentsApi';
 import { AuthorAvatar } from './AuthorAvatar';
-import { ConcernAuthorBadge, ManagerBadge } from './CommentBadges';
+import { ConcernAuthorBadge } from './CommentBadges';
 import { CommentLikeButton } from './CommentLikeButton';
 
 export interface ConcernCommentItemProps {
@@ -91,7 +92,7 @@ export function ConcernCommentItem({
         <span className="min-w-0 truncate text-sm font-bold text-gray-900">
           {getAuthorName(comment.author)}
         </span>
-        {comment.official ? <ManagerBadge /> : null}
+        <AuthorRoleBadge role={comment.official ? 'ADMIN' : comment.author.role} />
         {comment.concernAuthor ? <ConcernAuthorBadge /> : null}
         <TimeAndDelete comment={comment} onDelete={onDelete} className="ml-auto hidden md:flex" />
       </div>
