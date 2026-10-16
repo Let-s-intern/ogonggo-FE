@@ -19,7 +19,7 @@ import { notFound, ok } from './paging';
  * 응답은 읽을 때마다 픽스처의 현재 상태로 만든다. 목록 화면에서 노출을 바꾸거나 공고를 지우면
  * 여기에도 그대로 비친다. 스펙도 게시 상태와 무관하게 삭제되지 않은 공고를 준다고 한다.
  *
- * 거절은 스펙이 밝힌 것까지만 흉내 낸다 — 제목 30자·설명 50자 초과는 `400`, 없는 `jobId` 는
+ * 거절은 스펙이 밝힌 것까지만 흉내 낸다 — 제목 30자·설명 200자 초과는 `400`, 없는 `jobId` 는
  * `404`. 빈 문구, 같은 공고 중복, 개수 상한은 서버 동작이 확인되지 않아 받아 준다. 지어낸 규칙으로
  * 화면을 맞추면 실서버에서 처음 틀어진다.
  *
@@ -27,7 +27,7 @@ import { notFound, ok } from './paging';
  */
 
 const TITLE_MAX_LENGTH = 30;
-const DESCRIPTION_MAX_LENGTH = 50;
+const DESCRIPTION_MAX_LENGTH = 200;
 
 /** 시작 상태의 예시 문구. 한도 안에서 쓴다. */
 const SAMPLE_COPY = [

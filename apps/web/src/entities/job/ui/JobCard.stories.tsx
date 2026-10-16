@@ -38,12 +38,12 @@ export const AlwaysOpen: Story = {
   args: { job: { ...JOB_MOCK, recruitmentType: 'ALWAYS_OPEN', recruitmentEndAt: undefined } },
 };
 
-/** 오늘의 추천 공고. 제목 아래에 굵은 파란 제목 한 줄과 회색 설명 한 줄이 든 박스가 붙는다. */
+/** 오늘의 추천 공고. 제목 아래에 굵은 파란 제목 한 줄과 회색 설명 최대 세 줄이 든 박스가 붙는다. */
 export const WithRecommendation: Story = {
   args: { recommendation: JOB_RECOMMENDATION_MOCK },
 };
 
-/** 문구가 길어도 박스는 각각 한 줄에서 자른다. 카드 높이가 늘지 않는다. */
+/** 문구가 길어도 제목은 한 줄, 설명은 세 줄에서 자른다. 박스 높이는 세 줄 기준으로 고정이다. */
 export const LongRecommendation: Story = {
   args: {
     recommendation: {

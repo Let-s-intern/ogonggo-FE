@@ -1,7 +1,7 @@
 /**
  * 추천 문구 검증.
  *
- * 한도는 백엔드 스펙의 `AdminTodayJobRequest` 에 적힌 `@maxLength` 다(제목 30, 설명 50). 스펙의
+ * 한도는 백엔드 스펙의 `AdminTodayJobRequest` 에 적힌 `@maxLength` 다(제목 30, 설명 200). 스펙의
  * `@minLength` 는 0 이지만 빈 문구는 화면에서 막는다 — 서버가 빈 문자열을 받는지 확인되지 않았고
  * 설명 글이 "모두 적어야 한다" 고 한다(`.claude/tasks/todo/prd-admin-today-jobs.md` 결정 3). 서버가
  * 받는다는 것이 확인되면 `MIN` 을 0 으로 내려 푼다.
@@ -13,7 +13,7 @@
 export const RECOMMENDATION_TITLE_MIN = 1;
 export const RECOMMENDATION_TITLE_MAX = 30;
 export const RECOMMENDATION_DESCRIPTION_MIN = 1;
-export const RECOMMENDATION_DESCRIPTION_MAX = 50;
+export const RECOMMENDATION_DESCRIPTION_MAX = 200;
 
 export interface RecommendationValue {
   title: string;
