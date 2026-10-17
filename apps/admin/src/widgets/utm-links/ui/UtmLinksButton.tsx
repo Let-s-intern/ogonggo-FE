@@ -16,6 +16,7 @@ import {
   type UtmPosting,
   type UtmTemplate,
 } from '../model/utmLinks';
+import { mergePostings, type UtmBasket } from '../model/useUtmBasket';
 
 export interface UtmLinksButtonProps {
   kind: UtmContentKind;
@@ -25,55 +26,154 @@ export interface UtmLinksButtonProps {
    * 검색 결과 전체를 고른 상태. 그때는 id 만 있고 제목이 없어 붙여넣기 문구를 만들 수 없다. 버튼을 끈다.
    */
   allMatching: boolean;
+  /** 검색이 바뀌어도 남겨 둔 공고. 링크는 담은 공고와 고른 행을 합쳐 만든다. */
+  basket: UtmBasket;
 }
 
-/** 목록 위 줄의 `UTM 링크` 버튼. 누르면 채널을 고르는 창이 열린다. */
-export function UtmLinksButton({ kind, postings, allMatching }: UtmLinksButtonProps) {
-  const [open, setOpen] = useState(false);
+/** 버튼이 transform 이 걸린 바 안에 있어도 알림이 화면 가운데에 뜨게 body 로 뺀다. */
+function useUtmAlert() {
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
+  return {
+    show: (message: string) => setAlert({ message, nonce: Date.now() }),
+    node: alert
+      ? createPortal(
+          <ActionAlert
+            message={alert.message}
+            nonce={alert.nonce}
+            onDismiss={() => setAlert(null)}
+          />,
+          document.body,
+        )
+      : null,
+  };
+}
+
+function UtmLinksModal({
+  open,
+  kind,
+  postings,
+  onClose,
+  onDone,
+}: {
+  open: boolean;
+  kind: UtmContentKind;
+  postings: UtmPosting[];
+  onClose: () => void;
+  onDone: (message: string) => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      title="UTM 링크 만들기"
+      description={`고른 ${postings.length}건에 붙일 채널을 고릅니다.`}
+      onClose={onClose}
+      className="w-[min(64rem,calc(100vw-2rem))]"
+    >
+      {open ? (
+        <UtmLinksForm
+          kind={kind}
+          postings={postings}
+          onClose={onClose}
+          onDone={(message) => {
+            onClose();
+            onDone(message);
+          }}
+        />
+      ) : null}
+    </Modal>
+  );
+}
+
+/**
+ * 고른 행 바의 `UTM 담기`, `UTM 링크` 버튼. 담기는 고른 행을 검색이 바뀌어도 남는 목록에 더하고,
+ * 링크는 그 목록과 고른 행을 합쳐 채널을 고르는 창을 연다.
+ */
+export function UtmLinksButton({ kind, postings, allMatching, basket }: UtmLinksButtonProps) {
+  const [open, setOpen] = useState(false);
+  const alert = useUtmAlert();
+  const merged = mergePostings(basket.postings, postings);
+  const addable = !allMatching && postings.length > 0;
 
   return (
     <>
-      {/* 버튼이 transform 이 걸린 하단 바 안에 있어 `fixed` 가 바 기준이 된다. body 로 빼 화면 가운데에 띄운다. */}
-      {alert
-        ? createPortal(
-            <ActionAlert
-              message={alert.message}
-              nonce={alert.nonce}
-              onDismiss={() => setAlert(null)}
-            />,
-            document.body,
-          )
-        : null}
+      {alert.node}
       <Button
         size="sm"
         variant="secondary"
-        disabled={allMatching || postings.length === 0}
+        disabled={!addable}
+        title={allMatching ? 'UTM 링크는 이 페이지에서 고른 행으로 만듭니다.' : undefined}
+        onClick={() => {
+          basket.add(postings);
+          alert.show(`${postings.length}건을 UTM 링크용으로 담았습니다.`);
+        }}
+      >
+        UTM 담기
+      </Button>
+      <Button
+        size="sm"
+        variant="secondary"
+        disabled={allMatching || merged.length === 0}
         title={allMatching ? 'UTM 링크는 이 페이지에서 고른 행으로 만듭니다.' : undefined}
         onClick={() => setOpen(true)}
       >
-        UTM 링크
+        {`UTM 링크 (${merged.length})`}
       </Button>
-      <Modal
+      <UtmLinksModal
         open={open}
-        title="UTM 링크 만들기"
-        description={`고른 ${postings.length}건에 붙일 채널을 고릅니다.`}
+        kind={kind}
+        postings={merged}
         onClose={() => setOpen(false)}
-        className="w-[min(64rem,calc(100vw-2rem))]"
-      >
-        {open ? (
-          <UtmLinksForm
-            kind={kind}
-            postings={postings}
-            onClose={() => setOpen(false)}
-            onDone={(message) => {
-              setOpen(false);
-              setAlert({ message, nonce: Date.now() });
-            }}
-          />
-        ) : null}
-      </Modal>
+        onDone={alert.show}
+      />
     </>
+  );
+}
+
+/**
+ * 목록 위에 뜨는, 담아 둔 공고 줄. 담은 것이 있을 때만 보인다. 검색을 바꿔 체크가 풀려도 여기서 이어서
+ * 링크를 만들고, 담은 공고를 하나씩 빼거나 비운다.
+ */
+export function UtmBasketBar({ kind, basket }: { kind: UtmContentKind; basket: UtmBasket }) {
+  const [open, setOpen] = useState(false);
+  const alert = useUtmAlert();
+
+  if (basket.postings.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+      {alert.node}
+      <span className="text-sm font-medium text-gray-900">
+        UTM 링크용으로 담은 {basket.postings.length}건
+      </span>
+      {basket.postings.map((posting) => (
+        <span
+          key={posting.id}
+          className="inline-flex max-w-[20rem] items-center gap-1 rounded-full border border-gray-200 bg-white py-1 pl-3 pr-1 text-sm text-gray-700"
+        >
+          <span className="truncate">{posting.title}</span>
+          <Button size="sm" variant="ghost" onClick={() => basket.remove(posting.id)}>
+            <span className="sr-only">{posting.title}</span>빼기
+          </Button>
+        </span>
+      ))}
+      <span className="ml-auto flex items-center gap-2">
+        <Button size="sm" variant="ghost" onClick={basket.clear}>
+          비우기
+        </Button>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          UTM 링크
+        </Button>
+      </span>
+      <UtmLinksModal
+        open={open}
+        kind={kind}
+        postings={basket.postings}
+        onClose={() => setOpen(false)}
+        onDone={alert.show}
+      />
+    </div>
   );
 }
 
