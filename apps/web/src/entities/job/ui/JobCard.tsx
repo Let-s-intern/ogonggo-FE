@@ -8,6 +8,7 @@ import {
   ALWAYS_OPEN_LABEL,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
+import { EyeIcon } from '@/shared/ui/icons';
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
@@ -149,6 +150,13 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
       <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
         {job.title}
       </p>
+      {featured ? null : (
+        <p className="flex items-center gap-1 text-xs text-gray-400">
+          <EyeIcon className="size-3.5" />
+          <span className="sr-only">조회수</span>
+          {job.viewCount.toLocaleString('ko-KR')}
+        </p>
+      )}
     </>
   );
 
