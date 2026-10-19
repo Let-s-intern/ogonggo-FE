@@ -84,7 +84,14 @@ export function JobRoleSheet({
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [selection, setSelection] = useState<JobRoleSelection>(initial);
+  // 누른 직군에서 아직 아무것도 고르지 않았으면 그 직군의 `전체` 가 켜진 채로 연다(2026-10-19, 사용자).
+  // 창은 한 번에 한 직군만 고르게 하므로 다른 직군의 선택은 `전체` 로 바꾸며 지워진다.
+  const [selection, setSelection] = useState<JobRoleSelection>(() =>
+    initial.fields.includes(initialField) ||
+    initial.roles.some((role) => JOB_ROLES[role].field === initialField)
+      ? initial
+      : { fields: [initialField], roles: [] },
+  );
   const [activeField, setActiveField] = useState<JobField>(initialField);
   const [count, setCount] = useState<number | undefined>();
 
