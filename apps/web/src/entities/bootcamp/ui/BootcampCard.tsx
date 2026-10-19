@@ -6,6 +6,7 @@ import {
 } from '@/shared/analytics/dataLayer';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
+import { ViewCount } from '@/shared/ui/ViewCount';
 import { toBootcampInfo } from '../model/analytics';
 import { TUITION_TYPE_LABELS } from '../model/labels';
 import type { BootcampSummary } from '../model/types';
@@ -72,6 +73,7 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
         </p>
         {/* 모바일은 제목 아래다(`docs/asset/v9 mobile/부트캠프.png`). `JobCard` 와 같은 이유다. */}
         <span className="flex md:hidden">{badge}</span>
+        <ViewCount count={bootcamp.viewCount} className="mt-auto self-end" />
       </TrackedLink>
       <BookmarkButton
         kind="bootcamps"
