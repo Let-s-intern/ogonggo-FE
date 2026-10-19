@@ -1,6 +1,6 @@
 import { cn } from '@ogonggo/ui';
 import Link from 'next/link';
-import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
+import { EMPLOYMENT_TYPE_FILTER_OPTIONS } from '@/entities/job/model/labels';
 import { filterApplyEvents } from '@/shared/analytics/dataLayer';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
@@ -54,7 +54,7 @@ function FilterPill({
   );
 }
 
-const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPE_LABELS) as [
+const EMPLOYMENT_TYPE_OPTIONS = EMPLOYMENT_TYPE_FILTER_OPTIONS as [
   JobCalendarEmploymentType,
   string,
 ][];

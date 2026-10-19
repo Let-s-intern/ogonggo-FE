@@ -1,5 +1,5 @@
 import {
-  EMPLOYMENT_TYPE_LABELS,
+  EMPLOYMENT_TYPE_FILTER_OPTIONS,
   EXPERIENCE_TYPE_LABELS,
   REGION_LABELS,
 } from '@/entities/job/model/labels';
@@ -69,14 +69,14 @@ function regionRank(value: string): number {
 }
 
 /**
- * 채용 형태는 `EMPLOYMENT_TYPE_LABELS` 에서 `일학습병행` 만 뺀 여섯 개다(2026-10-19, 사용자). 시안에는
- * `기타` 가 없지만 빼면 기타 공고는 전체에서만 보인다. 일학습병행 공고도 전체에서는 그대로 보인다.
+ * 채용 형태는 `EMPLOYMENT_TYPE_FILTER_OPTIONS` 다 — 라벨 맵에서 `일학습병행` 만 뺀 여섯 개다. 시안에는
+ * `기타` 가 없지만 빼면 기타 공고는 전체에서만 보인다.
  */
 export const FILTER_GROUPS: Record<FilterKey, FilterGroup> = {
   employmentTypes: {
     label: '채용 형태',
     filterType: 'employment',
-    options: Object.entries(EMPLOYMENT_TYPE_LABELS).filter(([value]) => value !== 'WORK_STUDY'),
+    options: EMPLOYMENT_TYPE_FILTER_OPTIONS,
   },
   experienceTypes: {
     label: '요구 경력',
