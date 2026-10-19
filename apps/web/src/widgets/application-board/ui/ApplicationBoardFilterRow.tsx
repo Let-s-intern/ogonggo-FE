@@ -1,7 +1,6 @@
 'use client';
 
-import { EMPLOYMENT_TYPE_LABELS } from '@/entities/job/model/labels';
-import type { JobEmploymentType } from '@/entities/job/model/types';
+import { EMPLOYMENT_TYPE_FILTER_OPTIONS } from '@/entities/job/model/labels';
 import { stagesOf, type ApplicationStageId } from '@/features/application-board';
 import { SortToggle } from '@/shared/ui/SortToggle';
 import { MyPageFilterDropdown, MyPageFilterRow } from '@/widgets/mypage-list';
@@ -20,10 +19,7 @@ const RECRUITMENT_STATUS_OPTIONS = [
 ] as const;
 
 /** `고용 형태` 드롭다운. 채용공고 목록 필터와 같은 라벨 맵에서 만든다. */
-const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPE_LABELS) as [
-  JobEmploymentType,
-  string,
-][];
+const EMPLOYMENT_TYPE_OPTIONS = EMPLOYMENT_TYPE_FILTER_OPTIONS;
 
 /**
  * `최근 저장순` 하나뿐이다. `BookmarkSortType` 에 값이 이것 하나라 고를 것이 없고, v4 의 정렬

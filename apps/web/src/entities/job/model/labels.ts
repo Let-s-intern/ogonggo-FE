@@ -21,6 +21,14 @@ export const EMPLOYMENT_TYPE_LABELS: Record<JobEmploymentType, string> = {
   ETC: '기타',
 };
 
+/**
+ * 채용 형태 필터(공고 목록·달력·지원 보드)에 보이는 선택지. `일학습병행` 은 뺀다 — 이미 올라온 공고의
+ * 배지·상세는 `EMPLOYMENT_TYPE_LABELS` 가 그대로 그리고, 고르는 칸에서만 숨긴다.
+ */
+export const EMPLOYMENT_TYPE_FILTER_OPTIONS = (
+  Object.entries(EMPLOYMENT_TYPE_LABELS) as [JobEmploymentType, string][]
+).filter(([value]) => value !== 'WORK_STUDY');
+
 export const EXPERIENCE_TYPE_LABELS: Record<JobExperienceType, string> = {
   NEWCOMER: '신입',
   EXPERIENCED: '경력',
