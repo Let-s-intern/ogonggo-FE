@@ -16,7 +16,7 @@ import {
 } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
-import { UtmLinksButton } from '@/widgets/utm-links';
+import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   CONTENT_SORT_OPTIONS,
@@ -54,6 +54,8 @@ export function SideStudyListPage() {
     (data?.items ?? []).map((row) => row.id),
     JSON.stringify({ ...filters, page: undefined }),
   );
+  // 검색을 바꿔도 남는, UTM 링크용으로 담아 둔 공고.
+  const utmBasket = useUtmBasket();
 
   const columns: DataTableColumn<AdminSideStudy>[] = [
     selectionColumn<AdminSideStudy>(selection),
@@ -149,6 +151,7 @@ export function SideStudyListPage() {
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
+          <UtmBasketBar kind="side-studies" basket={utmBasket} />
           <BulkVisibilityBar
             kind="side-studies"
             selection={selection}
@@ -159,6 +162,7 @@ export function SideStudyListPage() {
                 kind="side-studies"
                 postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
                 allMatching={selection.allMatching}
+                basket={utmBasket}
               />
             }
           />

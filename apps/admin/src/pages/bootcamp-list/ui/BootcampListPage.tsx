@@ -4,7 +4,7 @@ import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogon
 import { listAllIds, useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
-import { UtmLinksButton } from '@/widgets/utm-links';
+import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   RECRUITMENT_STATUS_OPTIONS,
@@ -48,6 +48,8 @@ export function BootcampListPage() {
     (data?.items ?? []).map((row) => row.id),
     JSON.stringify({ ...filters, page: undefined }),
   );
+  // 검색을 바꿔도 남는, UTM 링크용으로 담아 둔 공고.
+  const utmBasket = useUtmBasket();
 
   const columns: DataTableColumn<AdminBootcampSummary>[] = [
     selectionColumn<AdminBootcampSummary>(selection),
@@ -139,6 +141,7 @@ export function BootcampListPage() {
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>
       ) : (
         <>
+          <UtmBasketBar kind="bootcamps" basket={utmBasket} />
           <BulkVisibilityBar
             kind="bootcamps"
             selection={selection}
@@ -149,6 +152,7 @@ export function BootcampListPage() {
                 kind="bootcamps"
                 postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
                 allMatching={selection.allMatching}
+                basket={utmBasket}
               />
             }
           />
