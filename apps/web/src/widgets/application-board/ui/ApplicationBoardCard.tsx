@@ -16,10 +16,18 @@ import {
   computeDday,
   isDdayUrgent,
   isRecruitmentClosed,
-  ALWAYS_OPEN_LABEL,
+  alwaysOpenLabel,
   isAlwaysOpen,
+  type ContentKind,
 } from '@/shared/lib/dday';
 import { ApplicationBoardItemImage } from './ApplicationBoardItemImage';
+
+/** 탭이 담은 콘텐츠의 종류. 마감일 없음 문구(`alwaysOpenLabel`)가 종류마다 다르다. */
+const CONTENT_KIND_BY_TAB = {
+  jobs: 'job',
+  bootcamps: 'bootcamp',
+  'side-studies': 'side-study',
+} as const satisfies Record<ApplicationBoardTab, ContentKind>;
 
 export interface ApplicationBoardCardProps {
   tab: ApplicationBoardTab;
@@ -132,7 +140,7 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
             </Badge>
           ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
             <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
-              {ALWAYS_OPEN_LABEL}
+              {alwaysOpenLabel(CONTENT_KIND_BY_TAB[tab])}
             </Badge>
           ) : null}
         </div>
