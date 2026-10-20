@@ -17,6 +17,7 @@ import { ReviewQueuePage } from '@/pages/review-queue';
 import { ServiceFeedbackListPage } from '@/pages/service-feedback-list';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
+import { StatsPage } from '@/pages/stats';
 import { TodayJobsPage } from '@/pages/today-jobs';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
@@ -64,6 +65,8 @@ export const router = createBrowserRouter([
 
       { path: 'support/notices', element: <NoticeListPage /> },
       { path: 'support/feedbacks', element: <ServiceFeedbackListPage /> },
+
+      { path: 'stats', element: <StatsPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

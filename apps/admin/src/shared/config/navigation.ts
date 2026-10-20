@@ -75,6 +75,6 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    items: [{ path: '/stats', label: '통계', disabled: true }],
+    items: [{ path: '/stats', label: '통계' }],
   },
 ];

@@ -18,6 +18,10 @@
       "destination": "/api/shlink-short-url"
     },
     {
+      "source": "/redash-api/query",
+      "destination": "/api/redash-query"
+    },
+    {
       "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
