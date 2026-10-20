@@ -1,17 +1,23 @@
 import { Badge, type BadgeProps } from '@ogonggo/ui';
-import type {
-  AdminConcernSummaryResponseCategory as ConcernCategory,
-  AdminGeneralMemberResponseInflowSource as InflowSource,
-  AdminGeneralMemberResponseRole as MemberRole,
-  AdminJobDetailResponseReviewStatus as JobReviewStatus,
-  AdminJobDetailResponseSource as ContentSource,
-  AdminJobDetailResponseVisibility as Visibility,
-  AdminRecruitmentPostSummaryResponsePositionsItem as RecruitmentPosition,
+import {
+  enumLabel,
+  enumOptions,
+  type AdminConcernSummaryResponseCategory as ConcernCategory,
+  type AdminGeneralMemberResponseInflowSource as InflowSource,
+  type AdminGeneralMemberResponseRole as MemberRole,
+  type AdminJobDetailResponseReviewStatus as JobReviewStatus,
+  type AdminJobDetailResponseSource as ContentSource,
+  type AdminJobDetailResponseVisibility as Visibility,
+  type AdminRecruitmentPostSummaryResponsePositionsItem as RecruitmentPosition,
+  type EnumName,
+  type EnumValue,
+  type ListGeneralMembersStatus as MemberStatus,
 } from '@ogonggo/api/src/admin';
-import type { MemberStatus } from '@ogonggo/api/src/mocks/fixtures/admin-member';
 
 /**
- * enum 값 -> 한국어 라벨과 뱃지 색.
+ * enum 값의 뱃지 색과 한국어 라벨.
+ *
+ * 라벨은 백엔드 enum 카탈로그(`enumLabel`)에서 온다. 여기는 색만 정한다.
  *
  * 색 매핑이 `packages/ui` 가 아니라 여기 있다. `Badge` 에 도메인별 색 맵을 박으면 상태 종류가
  * 다섯이라 도메인이 UI 패키지로 새어 들어간다(PRD "디자인 시스템"). 패키지는 `tone` 만 받고
@@ -20,95 +26,91 @@ import type { MemberStatus } from '@ogonggo/api/src/mocks/fixtures/admin-member'
 
 type Tone = NonNullable<BadgeProps['tone']>;
 
-interface LabelSpec {
-  label: string;
-  tone: Tone;
-}
+/**
+ * 어드민 전용 enum 두 개. 공개 카탈로그에 없어 `enumLabel` 로 찾을 수 없으므로 백엔드 `desc` 를
+ * 옮겨 둔다. 출처는 `ogonggo-BE/ogonggo-api-admin/src/main/kotlin/com/ogonggo/adminapi/content/business/`
+ * 의 `AdminContentVisibility.kt`, `AdminContentSortType.kt` 다.
+ */
+const ADMIN_CONTENT_VISIBILITY: { value: Visibility; label: string }[] = [
+  { value: 'VISIBLE', label: '노출' },
+  { value: 'HIDDEN', label: '비노출' },
+];
 
-const VISIBILITY: Record<Visibility, LabelSpec> = {
-  VISIBLE: { label: '노출', tone: 'success' },
-  HIDDEN: { label: '비노출', tone: 'danger' },
+export const CONTENT_SORT_OPTIONS = [
+  { value: 'REGISTERED_AT', label: '등록일순' },
+  { value: 'VIEW_COUNT', label: '조회수순' },
+];
+
+const VISIBILITY_TONE: Record<Visibility, Tone> = {
+  VISIBLE: 'success',
+  HIDDEN: 'danger',
 };
 
-const JOB_REVIEW_STATUS: Record<JobReviewStatus, LabelSpec> = {
-  PENDING: { label: '검수 대기', tone: 'urgent' },
-  APPROVED: { label: '승인', tone: 'success' },
-  REJECTED: { label: '반려', tone: 'danger' },
+const JOB_REVIEW_STATUS_TONE: Record<JobReviewStatus, Tone> = {
+  PENDING: 'urgent',
+  APPROVED: 'success',
+  REJECTED: 'danger',
 };
 
-const CONTENT_SOURCE: Record<ContentSource, LabelSpec> = {
-  CRAWLER: { label: '크롤링', tone: 'neutral' },
-  COMPANY: { label: '비즈니스 등록', tone: 'main' },
+const CONTENT_SOURCE_TONE: Record<ContentSource, Tone> = {
+  CRAWLER: 'neutral',
+  COMPANY: 'main',
   // 고용24 Open API 일일 수집으로 들어온 공고(LC-3197).
-  WORK24: { label: '고용24', tone: 'neutral' },
+  WORK24: 'neutral',
 };
 
 /**
  * 모집 상태. 노출 여부와 다른 것이다 — 모집이 끝나도 지면에 남을 수 있다.
  *
- * 채용공고의 계산값 `recruitmentStatus` 와 부트캠프의 저장값 `status` 가 같은 두 값을 쓴다.
- * 백엔드에 모집 예정 값은 없다.
- *
- * 임시저장(`DRAFT`)은 두지 않는다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 필터로
- * 남겨 두면 골라도 늘 0 건이다.
+ * 채용공고(`JobRecruitmentStatus`, 계산값), 부트캠프(`BootcampRecruitmentStatus`, 저장값),
+ * 사이드(`RecruitmentPostRecruitmentStatus`)가 같은 이름의 값을 쓰지만 라벨은 enum 마다 다르다.
+ * 그래서 라벨은 화면이 넘기는 `enumName` 으로 찾고 색만 함께 쓴다. 부트캠프의 임시저장(`DRAFT`)은
+ * 회색이다.
  */
-const RECRUITMENT_STATUS: Record<string, LabelSpec> = {
-  RECRUITING: { label: '모집중', tone: 'success' },
-  CLOSED: { label: '모집 마감', tone: 'neutral' },
+const RECRUITMENT_STATUS_TONE: Record<string, Tone> = {
+  RECRUITING: 'success',
+  CLOSED: 'neutral',
 };
 
-const MEMBER_STATUS: Record<MemberStatus, LabelSpec> = {
-  ACTIVE: { label: '활성', tone: 'success' },
-  WITHDRAWN: { label: '탈퇴', tone: 'neutral' },
-  SUSPENDED: { label: '정지', tone: 'danger' },
+type RecruitmentStatusEnum =
+  | 'JobRecruitmentStatus'
+  | 'BootcampRecruitmentStatus'
+  | 'RecruitmentPostRecruitmentStatus';
+
+/** 옛 공용 라벨. 호출부가 모두 `enumName` 을 넘기면 지운다. */
+const RECRUITMENT_STATUS: Record<string, string> = {
+  RECRUITING: '모집중',
+  CLOSED: '모집 마감',
 };
 
-/** 일반 회원의 역할. 기업 회원(`COMPANY`) 은 일반 회원 화면에 오지 않으므로 라벨을 두지 않는다. */
-const MEMBER_ROLE: Partial<Record<MemberRole, LabelSpec>> = {
-  USER: { label: '일반', tone: 'neutral' },
-  MENTOR: { label: '멘토', tone: 'success' },
-  ADMIN: { label: '관리자', tone: 'main' },
+const MEMBER_STATUS_TONE: Record<MemberStatus, Tone> = {
+  ACTIVE: 'success',
+  WITHDRAWN: 'neutral',
+  SUSPENDED: 'danger',
 };
 
-const INFLOW_SOURCE: Record<InflowSource, LabelSpec> = {
-  LETSCAREER: { label: '렛츠커리어', tone: 'main' },
-  OGONGGO: { label: '오공고', tone: 'success' },
+/** 일반 회원의 역할. 기업 회원(`COMPANY`) 은 일반 회원 화면에 오지 않으므로 색을 두지 않는다. */
+const MEMBER_ROLE_TONE: Partial<Record<MemberRole, Tone>> = {
+  USER: 'neutral',
+  MENTOR: 'success',
+  ADMIN: 'main',
 };
 
-const SIDE_STUDY_KIND: Record<string, string> = {
-  SIDE_PROJECT: '사이드 프로젝트',
-  STUDY: '스터디',
+const INFLOW_SOURCE_TONE: Record<InflowSource, Tone> = {
+  LETSCAREER: 'main',
+  OGONGGO: 'success',
 };
 
-/** 사이드·스터디 모집 직무. 사용자 웹의 `POSITION_LABELS` 와 같은 말이다. */
-const RECRUITMENT_POSITION: Record<RecruitmentPosition, string> = {
-  BACKEND: '백엔드',
-  FRONTEND: '프론트엔드',
-  DESIGN: '디자인',
-  PM: '기획',
-  MARKETING: '마케팅',
-  ETC: '기타',
-};
-
-/** 취준고민 카테고리. 백엔드 `ConcernCategory` 의 설명 그대로다. */
-const CONCERN_CATEGORY: Record<ConcernCategory, string> = {
-  JOB_POSTING: '공고 질문',
-  CAREER: '직무·커리어',
-  APPLICATION_INTERVIEW: '서류·면접',
-  SIDE_EXPERIENCE: '사이드·경험',
-  ETC: '기타',
-};
-
-/** 값이 매핑에 없으면 원래 문자열을 그대로 보여준다. 빈 칸보다 낫다. */
-function renderBadge(spec: LabelSpec | undefined, raw: string) {
-  if (!spec) {
-    return <Badge tone="neutral">{raw}</Badge>;
-  }
-  return <Badge tone={spec.tone}>{spec.label}</Badge>;
+/** 색이 매핑에 없으면 회색이다. 라벨은 카탈로그에 없으면 원래 값 그대로다(`enumLabel`). */
+function renderBadge(tone: Tone | undefined, label: string) {
+  return <Badge tone={tone ?? 'neutral'}>{label}</Badge>;
 }
 
 export const VisibilityBadge = ({ value }: { value: Visibility }) =>
-  renderBadge(VISIBILITY[value], value);
+  renderBadge(
+    VISIBILITY_TONE[value],
+    ADMIN_CONTENT_VISIBILITY.find((option) => option.value === value)?.label ?? value,
+  );
 
 /**
  * 크롤링 수집분에는 검수 상태가 없다. 빈 칸 대신 사유가 되는 단어를 남긴다.
@@ -119,63 +121,97 @@ export const JobReviewStatusBadge = ({ value }: { value?: JobReviewStatus | null
   !value ? (
     <span className="text-gray-400">해당 없음</span>
   ) : (
-    renderBadge(JOB_REVIEW_STATUS[value], value)
+    renderBadge(JOB_REVIEW_STATUS_TONE[value], enumLabel('ContentReviewStatus', value))
   );
 
 export const ContentSourceBadge = ({ value }: { value: ContentSource }) =>
-  renderBadge(CONTENT_SOURCE[value], value);
+  renderBadge(CONTENT_SOURCE_TONE[value], enumLabel('ContentSource', value));
 
-export const RecruitmentStatusBadge = ({ value }: { value: string }) =>
-  renderBadge(RECRUITMENT_STATUS[value], value);
+export const RecruitmentStatusBadge = ({
+  enumName,
+  value,
+}: {
+  enumName?: RecruitmentStatusEnum;
+  value: string;
+}) =>
+  renderBadge(
+    RECRUITMENT_STATUS_TONE[value],
+    enumName ? enumLabel(enumName, value) : (RECRUITMENT_STATUS[value] ?? value),
+  );
 
 export const MemberStatusBadge = ({ value }: { value: MemberStatus }) =>
-  renderBadge(MEMBER_STATUS[value], value);
+  renderBadge(MEMBER_STATUS_TONE[value], enumLabel('UserStatus', value));
 
 export const MemberRoleBadge = ({ value }: { value: MemberRole }) =>
-  renderBadge(MEMBER_ROLE[value], value);
+  renderBadge(MEMBER_ROLE_TONE[value], enumLabel('UserRole', value));
 
 /** 유입 구분을 아직 정하지 못한 회원은 응답이 `null` 이다. 빈 칸 대신 `-` 를 남긴다. */
 export const InflowSourceBadge = ({ value }: { value?: InflowSource | null }) =>
-  !value ? <span className="text-gray-400">-</span> : renderBadge(INFLOW_SOURCE[value], value);
+  !value ? (
+    <span className="text-gray-400">-</span>
+  ) : (
+    renderBadge(INFLOW_SOURCE_TONE[value], enumLabel('UserInflowSource', value))
+  );
 
-export const sideStudyKindLabel = (value: string): string => SIDE_STUDY_KIND[value] ?? value;
+export const sideStudyKindLabel = (value: string): string =>
+  enumLabel('RecruitmentPostType', value);
 
 export const recruitmentPositionLabel = (value: RecruitmentPosition): string =>
-  RECRUITMENT_POSITION[value] ?? value;
+  enumLabel('RecruitmentPostPosition', value);
 
 export const concernCategoryLabel = (value: ConcernCategory): string =>
-  CONCERN_CATEGORY[value] ?? value;
+  enumLabel('ConcernCategory', value);
 
-/** 필터 드롭다운 옵션. 첫 칸은 항상 "전체"이고 값이 빈 문자열이다. */
-const toOptions = (entries: Record<string, LabelSpec | string>, allLabel: string) => [
+/**
+ * 필터 드롭다운 옵션. 첫 칸은 항상 "전체"이고 값이 빈 문자열이다. 나머지는 카탈로그 선언
+ * 순서이고, 화면에 보이지 않을 값만 `exclude` 로 뺀다.
+ */
+const toOptions = <K extends EnumName>(
+  name: K,
+  allLabel: string,
+  exclude: readonly EnumValue<K>[] = [],
+) => [
   { value: '', label: allLabel },
-  ...Object.entries(entries).map(([value, spec]) => ({
-    value,
-    label: typeof spec === 'string' ? spec : spec.label,
-  })),
+  ...enumOptions(name).filter((option) => !exclude.includes(option.value)),
 ];
 
-export const VISIBILITY_OPTIONS = toOptions(VISIBILITY, '노출 여부 전체');
-export const JOB_REVIEW_STATUS_OPTIONS = toOptions(JOB_REVIEW_STATUS, '검수 상태 전체');
-export const CONTENT_SOURCE_OPTIONS = toOptions(CONTENT_SOURCE, '등록 경로 전체');
-export const RECRUITMENT_STATUS_OPTIONS = toOptions(RECRUITMENT_STATUS, '모집 상태 전체');
-export const MEMBER_STATUS_OPTIONS = toOptions(MEMBER_STATUS, '상태 전체');
-export const MEMBER_ROLE_OPTIONS = toOptions(MEMBER_ROLE as Record<string, LabelSpec>, '역할 전체');
+export const VISIBILITY_OPTIONS = [
+  { value: '', label: '노출 여부 전체' },
+  ...ADMIN_CONTENT_VISIBILITY,
+];
+export const JOB_REVIEW_STATUS_OPTIONS = toOptions('ContentReviewStatus', '검수 상태 전체');
+export const CONTENT_SOURCE_OPTIONS = toOptions('ContentSource', '등록 경로 전체');
+export const RECRUITMENT_STATUS_OPTIONS = [
+  { value: '', label: '모집 상태 전체' },
+  ...Object.entries(RECRUITMENT_STATUS).map(([value, label]) => ({ value, label })),
+];
+export const JOB_RECRUITMENT_STATUS_OPTIONS = toOptions('JobRecruitmentStatus', '모집 상태 전체');
+/**
+ * 임시저장(`DRAFT`)은 뺀다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 필터로 남겨 두면
+ * 골라도 늘 0 건이다.
+ */
+export const BOOTCAMP_RECRUITMENT_STATUS_OPTIONS = toOptions(
+  'BootcampRecruitmentStatus',
+  '모집 상태 전체',
+  ['DRAFT'],
+);
+export const SIDE_STUDY_RECRUITMENT_STATUS_OPTIONS = toOptions(
+  'RecruitmentPostRecruitmentStatus',
+  '모집 상태 전체',
+);
+export const MEMBER_STATUS_OPTIONS = toOptions('UserStatus', '상태 전체');
+/** 백엔드 선언 순서(일반, 관리자, 멘토)다. 기업 회원은 일반 회원 화면에 오지 않아 뺀다. */
+export const MEMBER_ROLE_OPTIONS = toOptions('UserRole', '역할 전체', ['COMPANY']);
 /** 역할을 바꿀 때 고르는 값. "전체" 칸이 없다. */
 export const MEMBER_ROLE_CHANGE_OPTIONS = MEMBER_ROLE_OPTIONS.slice(1);
-export const SIDE_STUDY_KIND_OPTIONS = toOptions(SIDE_STUDY_KIND, '종류 전체');
-export const CONCERN_CATEGORY_OPTIONS = toOptions(CONCERN_CATEGORY, '카테고리 전체');
+export const SIDE_STUDY_KIND_OPTIONS = toOptions('RecruitmentPostType', '종류 전체');
+export const CONCERN_CATEGORY_OPTIONS = toOptions('ConcernCategory', '카테고리 전체');
 
 export const JOINED_WITHIN_OPTIONS = [
   { value: '', label: '가입 기간 전체' },
   { value: '7d', label: '최근 7일' },
   { value: '30d', label: '최근 30일' },
   { value: '90d', label: '최근 90일' },
-];
-
-export const CONTENT_SORT_OPTIONS = [
-  { value: 'REGISTERED_AT', label: '등록일순' },
-  { value: 'VIEW_COUNT', label: '조회순' },
 ];
 
 /**
