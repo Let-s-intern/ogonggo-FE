@@ -3,33 +3,31 @@
  * 바로 알아차리라고 있는 것이고, 진짜 관문은 서버다(`app/api/apply/route.ts`). 폼을 우회해
  * 직접 POST 하는 요청이 있으므로 검증을 클라이언트에만 두면 아무것도 막지 못한다.
  */
+import { enumLabel, enumOptions } from '@ogonggo/api/src/enums';
 
 /** 신청 유형. 목업의 두 버튼(`지금 바로 무료 홍보` / `지금은 출시 알림만`)이다. */
 export type ApplyMode = 'promo' | 'alert';
 
+/**
+ * 슬랙 알림과 포켓베이스에 남는 신청 유형 문구. 키는 이 앱의 값이고 문구는 enum 카탈로그의
+ * `AdvertisementInquiryType` 이다(`promo` → `FREE_PROMOTION`, `alert` → `LAUNCH_ALERT`).
+ */
 export const MODE_LABEL: Record<ApplyMode, string> = {
-  promo: '무료 홍보 신청',
-  alert: '출시 알림 신청',
+  promo: enumLabel('AdvertisementInquiryType', 'FREE_PROMOTION'),
+  alert: enumLabel('AdvertisementInquiryType', 'LAUNCH_ALERT'),
 };
 
 /**
  * 무료 홍보를 태울 수 있는 채널.
  *
- * `code` 는 백엔드 `promotionChannel` enum, `label` 은 목업의 `select` 항목 그대로다.
- * **한 벌로 둔다.** 화면은 `label` 을, 슬랙 알림은 `code` 를, 포켓베이스는 다시 `label` 을
- * 쓰는데(어드민 표와 CSV 가 한국어로 읽혀야 한다), 목록을 나눠 두면 라벨을 손보는 순간
- * 매핑이 조용히 깨진다.
+ * `code` 는 백엔드 `promotionChannel` enum, `label` 은 enum 카탈로그의
+ * `AdvertisementInquiryPromotionChannel` 라벨이다. **한 벌로 둔다.** 화면은 `label` 을, 슬랙
+ * 알림은 `code` 를, 포켓베이스는 다시 `label` 을 쓰는데(어드민 표와 CSV 가 한국어로 읽혀야
+ * 한다), 목록을 나눠 두면 라벨을 손보는 순간 매핑이 조용히 깨진다.
  */
-export const CHANNELS = [
-  { code: 'INSTAGRAM', label: '인스타그램 @letscareer.job · 2.7만 팔로워' },
-  { code: 'OPEN_CHAT_MARKETING', label: '오픈채팅방 · 마케팅 (2,015명)' },
-  { code: 'OPEN_CHAT_PLANNING', label: '오픈채팅방 · 기획·운영 (1,146명)' },
-  { code: 'OPEN_CHAT_HR', label: '오픈채팅방 · 인사·HR·경영관리 (1,087명)' },
-  { code: 'OPEN_CHAT_PUBLIC_RECRUITMENT', label: '오픈채팅방 · 공채 전반 (856명)' },
-  { code: 'OPEN_CHAT_SALES', label: '오픈채팅방 · 세일즈 (330명)' },
-  { code: 'OPEN_CHAT_AI_DEVELOPMENT', label: '오픈채팅방 · AI역량·개발 (105명)' },
-  { code: 'RECOMMENDATION_REQUESTED', label: '정하기 어렵습니다. 추천해주세요' },
-] as const;
+export const CHANNELS = enumOptions('AdvertisementInquiryPromotionChannel').map(
+  ({ value, label }) => ({ code: value, label }),
+);
 
 /** 폼이 보내는 채널 값. `select` 의 `value` 가 이것이다. */
 export type ChannelCode = (typeof CHANNELS)[number]['code'];

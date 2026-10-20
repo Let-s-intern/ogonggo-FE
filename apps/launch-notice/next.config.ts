@@ -1,9 +1,10 @@
 import type { NextConfig } from 'next';
 
 /**
- * 이 앱은 워크스페이스 패키지를 쓰지 않는다 — `transpilePackages` 가 없는 이유다.
- * 런칭(2026-09-23) 이후 이 폴더와 Vercel 프로젝트만 지우면 끝나야 하므로, 지우는 순간
- * 다른 앱이 깨지는 연결을 처음부터 만들지 않는다.
+ * 워크스페이스 패키지는 `@ogonggo/api` 의 enum 카탈로그(`src/enums.ts`) 하나만 읽는다 — 신청 유형과
+ * 홍보 채널 문구가 백엔드 라벨이어야 해서다. Turbopack 이 TS 원본을 그대로 컴파일하므로
+ * `transpilePackages` 는 두지 않는다. 연결은 이 앱 쪽 한 방향이라, 런칭(2026-09-23) 이후 이 폴더와
+ * Vercel 프로젝트만 지우면 끝나는 것은 그대로다.
  */
 const nextConfig: NextConfig = {};
 
