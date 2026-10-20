@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import type { CSSProperties, MouseEvent } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { Callout, cn } from '@ogonggo/ui';
 import {
@@ -8,6 +8,12 @@ import {
 import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { isMockEnabled } from '@/app/enableMocking';
+import {
+  ASSISTANT_CLOSED_WIDTH,
+  ASSISTANT_OPEN_WIDTH,
+  AssistantPanel,
+  useAssistantPanelOpen,
+} from '@/features/ai-assistant';
 
 /**
  * 콘솔의 바깥 틀. 좌측 고정 메뉴와 본문 자리다.
@@ -32,8 +38,19 @@ function goToWeb(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 export function AdminLayout() {
+  const [isAssistantOpen, setIsAssistantOpen] = useAssistantPanelOpen();
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div
+      className="flex min-h-screen bg-gray-50"
+      // 오른쪽 AI 비서 패널의 폭. 화면 오른쪽에 붙는 플로팅 요소(상세의 수정 버튼, 목록의 일괄 변경 바)가
+      // 이 값만큼 비켜 서서 패널에 가리지 않는다.
+      style={
+        {
+          '--assistant-width': isAssistantOpen ? ASSISTANT_OPEN_WIDTH : ASSISTANT_CLOSED_WIDTH,
+        } as CSSProperties
+      }
+    >
       <nav className="w-56 shrink-0 border-r border-gray-200 bg-white px-3 py-6">
         <p className="px-3 pb-1 text-lg font-bold text-gray-900">오공고 관리자</p>
         {/*
@@ -104,6 +121,8 @@ export function AdminLayout() {
         ) : null}
         <Outlet />
       </main>
+      {/* 화면을 옮겨도 대화가 남도록 본문(`Outlet`) 밖, 레이아웃에 둔다. */}
+      <AssistantPanel open={isAssistantOpen} onOpenChange={setIsAssistantOpen} />
     </div>
   );
 }

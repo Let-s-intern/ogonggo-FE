@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ActionAlert, Button, ConfirmDelete } from '@ogonggo/ui';
 import type {
@@ -8,6 +8,7 @@ import type {
   AdminJobDetailResponseVisibility as Visibility,
 } from '@ogonggo/api/src/admin';
 import { useDeleteContent, usePatchBootcamp, usePatchJob } from '@/entities/content/api/useContent';
+import { useJobFillRequest } from '@/features/ai-assistant';
 import { ContentEditor, type ContentEditorField } from '@/widgets/content-editor';
 import { JobEditor } from '@/widgets/job-editor';
 import { OperationEditor } from '@/widgets/operation-editor';
@@ -65,6 +66,14 @@ export function ContentActions({
   const deleteMutation = useDeleteContent(kind);
 
   const patchMutation = kind === 'bootcamps' ? patchBootcamp : patchJob;
+
+  // AI 비서가 이 공고의 수정 창을 채워 달라고 했다. 창을 열면 `JobEditor` 가 칸을 채운다. 저장은 하지 않는다.
+  const fillRequest = useJobFillRequest(kind === 'jobs' && job ? id : null);
+  useEffect(() => {
+    if (fillRequest) {
+      setIsEditing(true);
+    }
+  }, [fillRequest]);
   const canEdit = kind !== 'side-studies' && (fields !== undefined || job !== undefined);
 
   return (
@@ -81,8 +90,9 @@ export function ContentActions({
       {/*
         플로팅 자리는 이 묶음 하나가 소유한다. 화면마다 따로 `fixed` 버튼을 그리면 같은 자리에
         겹쳐 떠서 글자가 서로를 가린다 — 실제로 채용공고 상세에서 그렇게 겹쳤다.
+        오른쪽에 붙는 AI 비서 패널(`features/ai-assistant`)의 폭만큼 비켜 선다(`--assistant-width`).
       */}
-      <div className="fixed right-8 bottom-8 z-40 flex items-center gap-2">
+      <div className="fixed right-[calc(var(--assistant-width,0px)+2rem)] bottom-8 z-40 flex items-center gap-2">
         {operation ? (
           <Button
             variant="secondary"
