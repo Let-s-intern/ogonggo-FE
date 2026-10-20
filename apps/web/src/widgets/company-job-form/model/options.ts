@@ -9,6 +9,7 @@ import type {
 import {
   EDUCATION_LEVEL_LABELS,
   EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
   JOB_FIELD_LABELS,
   REGION_LABELS,
 } from '@/entities/job/model/labels';
@@ -16,17 +17,18 @@ import {
 /**
  * 채용공고 작성 폼 드롭다운의 선택지(v5 PRD 3 절).
  *
- * 채용 유형과 학력은 `entities/job/model/labels.ts` 에서 온다 — 공개 상세가 그 말로 그리고
+ * 채용 유형·경력·학력은 `entities/job/model/labels.ts` 에서 온다 — 공개 상세가 그 말로 그리고
  * 있어, 작성 화면이 다른 말을 쓰면 쓴 사람이 자기 공고를 못 알아본다.
- *
- * **경력만 그 맵을 쓰지 않는다.** 거기서는 `BOTH` 와 `IRRELEVANT` 가 둘 다 `경력무관` 이라
- * 드롭다운에 같은 줄이 두 번 생긴다. 생성 타입이 적은 대로 `신입·경력` 과 `경력 무관` 으로
- * 가른다(`widgets/my-scraps/lib/query.ts` 의 경력 필터와 같은 판단이다).
  */
 
 /** 고르기 전 첫 줄. `<select>` 는 값이 늘 있어야 해서 빈 문자열을 자리로 쓴다. */
 const placeholder = (label: string): SelectOption => ({ value: '', label });
 
+/**
+ * 고용 형태에서 `일학습병행`(`WORK_STUDY`)·`미래내일 일경험`(`WORK_EXPERIENCE`)은 뺀다. 기업이 직접
+ * 올리는 공고에서는 고르지 않게 한 의도된 제외다(2026-10-20 사용자 결정). 이미 그 값을 가진 공고는
+ * 공개 화면이 그대로 그린다.
+ */
 export const EMPLOYMENT_TYPE_OPTIONS: SelectOption[] = [
   placeholder('고용 형태를 선택해 주세요.'),
   ...(
@@ -39,13 +41,6 @@ export const EMPLOYMENT_TYPE_OPTIONS: SelectOption[] = [
     ] as CreateCompanyJobRequestEmploymentType[]
   ).map((value) => ({ value, label: EMPLOYMENT_TYPE_LABELS[value] })),
 ];
-
-export const EXPERIENCE_TYPE_LABELS: Record<CreateCompanyJobRequestExperienceType, string> = {
-  NEWCOMER: '신입',
-  EXPERIENCED: '경력',
-  BOTH: '신입·경력',
-  IRRELEVANT: '경력 무관',
-};
 
 export const EXPERIENCE_TYPE_OPTIONS: SelectOption[] = [
   placeholder('경력을 선택해 주세요.'),

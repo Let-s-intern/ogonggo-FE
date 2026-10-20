@@ -3,10 +3,10 @@
 import {
   EDUCATION_LEVEL_LABELS,
   EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
   formatJobField,
   formatRegion,
 } from '@/entities/job/model/labels';
-import { EXPERIENCE_TYPE_LABELS } from '../model/options';
 import type { CompanyJobFormValues } from '../model/values';
 import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
 

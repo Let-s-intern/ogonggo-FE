@@ -1,6 +1,9 @@
 import { cn } from '@ogonggo/ui';
 import Link from 'next/link';
-import { EMPLOYMENT_TYPE_FILTER_OPTIONS } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_FILTER_OPTIONS,
+  EXPERIENCE_TYPE_LABELS,
+} from '@/entities/job/model/labels';
 import { filterApplyEvents } from '@/shared/analytics/dataLayer';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
@@ -59,18 +62,11 @@ const EMPLOYMENT_TYPE_OPTIONS = EMPLOYMENT_TYPE_FILTER_OPTIONS as [
   string,
 ][];
 
-/**
- * `요구 경력` 알약의 값과 이름. `entities/job/model/labels.ts` 의 `EXPERIENCE_TYPE_LABELS` 를 쓰지
- * 않는 이유는 그쪽이 `BOTH` 와 `IRRELEVANT` 를 둘 다 `경력무관` 으로 부르기 때문이다 — 배지
- * 한 칸에는 문제가 없지만 목록으로 펼치면 같은 이름이 두 줄이 되어 무엇이 다른지 알 수 없다.
- * 이름은 API 문서의 표(`ListPublicJobCalendarParams`)를 그대로 옮겼다.
- */
-const EXPERIENCE_TYPE_OPTIONS: [JobCalendarExperienceType, string][] = [
-  ['NEWCOMER', '신입'],
-  ['EXPERIENCED', '경력'],
-  ['BOTH', '신입·경력'],
-  ['IRRELEVANT', '경력무관'],
-];
+/** `요구 경력` 알약의 값과 이름. */
+const EXPERIENCE_TYPE_OPTIONS = Object.entries(EXPERIENCE_TYPE_LABELS) as [
+  JobCalendarExperienceType,
+  string,
+][];
 
 /**
  * 여럿을 고르는 알약. 항목을 누를 때마다 켜고 끈다(`toggleEnumValue`). 맨 위 `전체` 는 모두 해제다 —
