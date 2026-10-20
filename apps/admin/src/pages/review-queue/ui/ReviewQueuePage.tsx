@@ -502,8 +502,8 @@ function ReviewCard({
 
         {/* 키보드가 주 조작이지만 버튼도 둔다. 마우스로 오는 사람과, 단축키를 모르는 사람. */}
         <div className="flex shrink-0 gap-2">
-          <Button size="sm" onClick={onApprove} title="허용 (Space)">
-            허용
+          <Button size="sm" onClick={onApprove} title="승인 (Space)">
+            승인
           </Button>
           <Button size="sm" variant="secondary" onClick={onRejectOpen} title="반려 (Backspace)">
             반려
