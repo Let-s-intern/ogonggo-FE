@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
+import { alwaysOpenLabel, type ContentKind } from '@/shared/lib/dday';
 import { parseLocalDate } from '@/shared/lib/localDate';
 
 /** 공유 미리보기 이미지 크기. 카카오톡·페이스북·X·링크드인이 모두 1.91:1 을 잘라 쓰지 않는다. */
@@ -40,10 +40,17 @@ async function loadLogo(url: string | undefined): Promise<string | null> {
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-/** 아래 줄 마감 문구. 마감일이 없으면(상시채용·마감일 미정) `상시모집` 이다. */
-export function ogDeadlineText(recruitmentEndAt: string | undefined, alwaysOpen = false): string {
+/**
+ * 아래 줄 마감 문구. 마감일이 없으면(상시채용·마감일 미정) 종류별 문구다(채용공고 `상시 채용`,
+ * 그 밖 `상시 모집`).
+ */
+export function ogDeadlineText(
+  kind: ContentKind,
+  recruitmentEndAt: string | undefined,
+  alwaysOpen = false,
+): string {
   if (alwaysOpen || !recruitmentEndAt) {
-    return ALWAYS_OPEN_LABEL;
+    return alwaysOpenLabel(kind);
   }
   const end = parseLocalDate(recruitmentEndAt);
   return `${end.getMonth() + 1}/${end.getDate()}(${WEEKDAYS[end.getDay()]}) 마감`;
@@ -56,7 +63,7 @@ export interface PostingOgImageProps {
   organizationName: string;
   title: string;
   logoUrl?: string;
-  /** 아래 줄의 마감 문구(`10/14(수) 마감`, `상시모집`). */
+  /** 아래 줄의 마감 문구(`10/14(수) 마감`, `상시 채용`). */
   deadlineText: string;
 }
 

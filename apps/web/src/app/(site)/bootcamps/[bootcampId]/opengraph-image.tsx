@@ -21,6 +21,7 @@ export default async function Image({ params }: { params: Promise<{ bootcampId: 
     // API 가 로고를 주지 않으면 상세 헤더(`CompanyLogo`)와 같은 회사명 목록에서 찾는다.
     logoUrl: bootcamp.logoUrl ?? getCompanyLogoUrl(bootcamp.companyName),
     deadlineText: ogDeadlineText(
+      'bootcamp',
       bootcamp.recruitmentEndAt,
       bootcamp.recruitmentType === 'ALWAYS_OPEN',
     ),

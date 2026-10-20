@@ -5,7 +5,7 @@ import {
   computeDday,
   isDdayUrgent,
   isRecruitmentClosed,
-  ALWAYS_OPEN_LABEL,
+  alwaysOpenLabel,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
 import { ViewCount } from '@/shared/ui/ViewCount';
@@ -67,7 +67,7 @@ const FEATURED_ACTIONS_CLASS =
  * 마감된 공고는 D-day 자리에 회색 `마감` 배지가 들어간다. 전에는 배지가 통째로 빠져 메타 줄이
  * 20px에서 16px로 줄었다. 빈 자리로 두는 쪽도 높이는 맞지만 읽는 사람에게 아무 말도 하지
  * 않는다 — `BootcampCard`·`SideStudyCard`가 이미 같은 자리에 `마감`을 그린다.
- * 마감일이 없는 공고(상시채용·마감일 미정)는 같은 자리에 `상시모집` 배지다(`ALWAYS_OPEN_LABEL`).
+ * 마감일이 없는 공고(상시채용·마감일 미정)는 같은 자리에 `상시 채용` 배지다(`alwaysOpenLabel`).
  *
  * 추천 문구(`recommendation`)가 있으면 박스를 그린다. 박스는 링크 안쪽이라 누르면 상세로 간다.
  * `grid` 는 제목 아래, 모바일 `마감` 배지 위에 놓는다. `featured` 는 카드 맨 아래에 놓는다 — 모바일은
@@ -125,7 +125,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
     </Badge>
   ) : isAlwaysOpen(job.recruitmentType, job.recruitmentEndAt) ? (
     <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
-      {ALWAYS_OPEN_LABEL}
+      {alwaysOpenLabel('job')}
     </Badge>
   ) : null;
 

@@ -1,5 +1,5 @@
 import type { JobRecruitmentType } from '../model/types';
-import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
+import { alwaysOpenLabel } from '@/shared/lib/dday';
 
 export interface JobMetaProps {
   companyName: string;
@@ -12,7 +12,7 @@ export interface JobMetaProps {
 
 function formatDeadline(recruitmentType: JobRecruitmentType, recruitmentEndAt?: string): string {
   if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
-    return ALWAYS_OPEN_LABEL;
+    return alwaysOpenLabel('job');
   }
   const date = new Date(recruitmentEndAt);
   return `~${date.getMonth() + 1}.${date.getDate()} 마감`;
