@@ -1,7 +1,8 @@
 'use client';
 
-import { Button, Field, Input } from '@ogonggo/ui';
+import { Button, Field } from '@ogonggo/ui';
 import { EMPTY_PARTNER_ROW, moveRow, type BootcampPartnerRow } from '../model/rows';
+import { CountedInput } from '@/shared/ui/CountedInput';
 import { BootcampOrderableRow } from './BootcampOrderableRow';
 
 /** `CompanyBootcampPartnerRequest.partnerName` 의 `@maxLength`. */
@@ -38,7 +39,7 @@ export function BootcampPartnersField({ rows, onChange }: BootcampPartnersFieldP
             onMove={(from, to) => onChange(moveRow(rows, from, to))}
             onRemove={() => onChange(rows.filter((_, target) => target !== index))}
           >
-            <Input
+            <CountedInput
               aria-label={`파트너사 ${index + 1} 이름`}
               maxLength={MAX_PARTNER_NAME_LENGTH}
               value={row.partnerName}

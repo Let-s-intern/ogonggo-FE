@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, Callout, cn } from '@ogonggo/ui';
+import { FloatingFormActions } from '@/shared/ui/FloatingFormActions';
 import { FormSection } from '@/shared/ui/FormSection';
 import { companyPostCopy } from '@/widgets/company-posts';
 import { createJob, fetchMyJob, publishJob, replaceJob } from '../lib/api';
@@ -164,7 +165,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-4 pb-28 md:pb-0"
       onSubmit={(event) => {
         event.preventDefault();
         void save(true);
@@ -237,26 +238,20 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         </FormSection>
       </div>
 
-      {formError ? (
-        <p role="alert" className="text-sm text-error">
-          {formError}
-        </p>
-      ) : null}
-
-      <div className="flex justify-center gap-4 pt-2">
+      <FloatingFormActions error={formError}>
         <Button
           type="button"
           variant="secondary"
           disabled={pending}
           onClick={() => void save(false)}
-          className="w-full max-w-72"
+          className="flex-1 md:w-36 md:flex-none"
         >
           임시저장
         </Button>
-        <Button type="submit" disabled={pending} className="w-full max-w-80">
+        <Button type="submit" disabled={pending} className="flex-[2] md:w-44 md:flex-none">
           공고 등록
         </Button>
-      </div>
+      </FloatingFormActions>
     </form>
   );
 }

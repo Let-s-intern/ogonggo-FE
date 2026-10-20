@@ -13,7 +13,7 @@ export interface LogoUploadFieldProps {
   onUploaded: (image: { id: string; url: string }) => void;
   onClear: () => void;
   disabled?: boolean;
-  /** 박스 크기. 프로필(정사각)과 공고 폼(입력칸 옆 가로형)이 다르다. */
+  /** 박스 크기. 프로필과 공고 폼 모두 80px 정사각이다. */
   className?: string;
 }
 
@@ -79,7 +79,7 @@ export function LogoUploadField({
           disabled={disabled || pending}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            'flex flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50 text-[10px] leading-tight text-gray-400 hover:bg-gray-100 disabled:cursor-not-allowed',
+            'flex flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border border-dashed border-gray-300 bg-gray-50 text-gray-500 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-500 disabled:cursor-not-allowed',
             className,
           )}
         >
@@ -88,9 +88,11 @@ export function LogoUploadField({
             <img src={url} alt="기업 로고" className="h-full w-full object-contain" />
           ) : (
             <>
-              <span aria-hidden="true" className="icon-[lucide--upload] block size-3.5" />
-              <span className="pt-0.5">{pending ? '올리는 중' : '로고 업로드'}</span>
-              <span>1:1 비율 권장</span>
+              <span aria-hidden="true" className="icon-[lucide--image-plus] block size-5" />
+              <span className="pt-0.5 text-xs font-medium">
+                {pending ? '올리는 중' : '로고 업로드'}
+              </span>
+              <span className="text-[11px] text-gray-400">1:1 비율 권장</span>
             </>
           )}
         </button>
