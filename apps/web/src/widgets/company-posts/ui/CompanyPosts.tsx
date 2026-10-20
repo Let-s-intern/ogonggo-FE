@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@ogonggo/ui';
+import { useMyAccount } from '@/shared/api/useMyAccount';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import copy from '../config/copy.json';
 import { fetchCompanyPosts, TAB_NOUNS, type CompanyPostsPage } from '../lib/fetch';
@@ -41,6 +42,16 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
    * 읽어 온 목록을 버리면 무엇이 왜 안 됐는지 볼 화면이 사라진다(v4 `MyPosts` 와 같다).
    */
   const [actionError, setActionError] = useState<string | null>(null);
+  /**
+   * `기업/기관 정보` 에 올린 로고. 목록 응답에 공고별 로고가 없어(`CompanyJobSummaryResponse`)
+   * 카드 썸네일을 이것으로 채운다. 계정은 마이페이지 껍데기와 같은 요청을 나눠 쓴다.
+   *
+   * 채용공고 카드의 썸네일은 회사 로고 자리라 이것이 먼저다. 부트캠프 카드는 대표 이미지가
+   * 먼저고, 대표 이미지가 없을 때만 이것을 쓴다.
+   */
+  const account = useMyAccount();
+  const companyLogoUrl =
+    account.kind === 'ready' ? account.account.companyProfile?.logoUrl || undefined : undefined;
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 탭과 페이지를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -109,7 +120,13 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
           {rows.map((row) => (
             <CompanyPostCard
               key={row.key}
-              row={row}
+              row={{
+                ...row,
+                thumbnailUrl:
+                  query.tab === 'jobs'
+                    ? (companyLogoUrl ?? row.thumbnailUrl)
+                    : (row.thumbnailUrl ?? companyLogoUrl),
+              }}
               tab={query.tab}
               pending={pendingId === row.key}
               onDelete={() =>
