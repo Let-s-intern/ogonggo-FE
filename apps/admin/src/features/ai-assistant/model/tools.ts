@@ -17,13 +17,15 @@ import { runRedashQuery } from '@/shared/api/redash';
 import { unwrapData } from '@/shared/api/unwrapData';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { FILLABLE_JOB_FIELDS, type FillableJobField, requestJobFill } from './jobFill';
+import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
 
 /**
  * AI 비서의 도구 실행기. 모델이 부른 도구를 브라우저에서 기존 어드민 API 로 실행한다. 도구의 이름과
  * 인자 모양은 `api/assistant.ts` 의 `TOOLS` 와 같다.
  *
  * 로그인한 관리자의 토큰으로 실행되므로 비서는 그 관리자가 할 수 있는 일을 넘지 못한다. 그중에서도 조회와
- * 화면 이동, 수정 창 채우기만 둔다 — 저장·삭제·노출 변경을 부르는 실행기는 없다.
+ * 화면 이동, 입력 칸 채우기, 양식을 여는 버튼까지만 둔다 — 저장·삭제·노출 변경처럼 서버에 반영하는 버튼은
+ * 사람이 누른다(`./screen.ts`).
  *
  * 실행기는 모델에게 돌려줄 글을 만든다. 실패도 글로 돌려줘 모델이 사용자에게 설명하게 한다.
  */
@@ -75,6 +77,10 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return '서비스 의견 읽기';
     case 'read_screen':
       return '지금 화면 읽기';
+    case 'fill_fields':
+      return '입력 칸 채우기';
+    case 'press_button':
+      return '양식 열기';
     case 'navigate':
       return `화면 이동: ${String(args.path)}`;
     case 'fill_job_text':
@@ -270,22 +276,6 @@ async function serviceFeedbacks(args: Record<string, unknown>): Promise<string> 
   });
 }
 
-/**
- * 지금 보이는 화면의 글. 열린 모달이 있으면 그 안만, 아니면 본문만 읽는다. 좌측 메뉴와 비서 패널은 빼고,
- * 읽기만 한다.
- */
-async function readScreen(): Promise<string> {
-  // 이동 직후면 목록이 아직 그려지는 중일 수 있다.
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  const dialogs = [...document.querySelectorAll<HTMLDialogElement>('dialog[open]')];
-  const root = dialogs.at(-1) ?? document.querySelector('main');
-  return JSON.stringify({
-    path: location.pathname + location.search,
-    modal: root?.tagName === 'DIALOG',
-    text: (root?.innerText ?? '').replace(/\n{3,}/g, '\n\n').slice(0, MAX_RESULT_LENGTH - 500),
-  });
-}
-
 function goTo(args: Record<string, unknown>, context: ToolContext): string {
   const path = typeof args.path === 'string' ? args.path.trim() : '';
   const pathname = path.split('?')[0] ?? '';
@@ -333,7 +323,11 @@ export async function runTool(
       case 'list_service_feedbacks':
         return clip(await serviceFeedbacks(args));
       case 'read_screen':
-        return await readScreen();
+        return clip(await readScreen());
+      case 'fill_fields':
+        return await fillFields(Array.isArray(args.values) ? (args.values as FieldValue[]) : []);
+      case 'press_button':
+        return await pressButton(String(args.ref ?? ''));
       case 'navigate':
         return goTo(args, context);
       case 'fill_job_text':
