@@ -1,3 +1,4 @@
+import { enumLabel } from '@ogonggo/api';
 import { Badge, Card } from '@ogonggo/ui';
 import { BookmarkButton } from '@/features/bookmark';
 import {
@@ -230,7 +231,7 @@ function SideStudyBadge({ sideStudy }: { sideStudy: SideStudySummary }) {
   if (sideStudy.recruitmentStatus === 'CLOSED') {
     return (
       <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
-        마감
+        {enumLabel('RecruitmentPostRecruitmentStatus', 'CLOSED')}
       </Badge>
     );
   }

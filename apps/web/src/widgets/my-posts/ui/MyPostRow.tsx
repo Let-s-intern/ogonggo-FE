@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { enumLabel } from '@ogonggo/api';
 import { Badge, Button } from '@ogonggo/ui';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { formatDeadline } from '@/widgets/mypage-list';
@@ -86,12 +87,12 @@ export function MyPostRow({
             </Link>
             {draft ? (
               <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold">
-                임시저장
+                {enumLabel('RecruitmentPostPublicationStatus', 'DRAFT')}
               </Badge>
             ) : null}
             {row.status === 'HIDDEN' ? (
               <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold">
-                비공개
+                {enumLabel('RecruitmentPostPublicationStatus', 'HIDDEN')}
               </Badge>
             ) : null}
           </div>
