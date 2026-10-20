@@ -1,5 +1,5 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
-import { ALL_JOB_MAJOR_SLUGS, jobMajorField } from '../lib/job-majors';
+import { jobMajorField } from '../lib/job-majors';
 import { buildJobCalendarHref, toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, shiftMonths, shiftWeeks, startOfCalendarWeek } from '../lib/week';
 import { CalendarHeader } from './CalendarHeader';
@@ -88,8 +88,8 @@ type CalendarFilters = Omit<ListPublicJobCalendarParams, 'from' | 'to' | 'jobFie
  * - 여럿이면 `jobField` 없이 받고 여기서 공고의 `jobField` 로 거른다. 전에는 직무마다 요청을 나눠
  *   보내 최대 3개로 막았는데(`.claude/tasks/memos/결정-달력-직무-필터-여러개-2026-09-23.md`), 25개를
  *   다 고를 수 있게 되면서 요청 수가 고른 수만큼 늘지 않게 바꿨다.
- * - 전부면 거르지 않는다. 직군이 비어 있는 공고도 그때만 보인다 — 어느 직무를 고른 것도 아닌데
- *   고른 목록에 끼면 이상하다.
+ * - 전부여도 거른다. 칸이 목록 필터의 직군 다섯뿐이라(`lib/job-majors.ts`) `전체 선택`은 그 다섯을
+ *   고른 것이다. 다른 직군이나 직군이 비어 있는 공고는 보이지 않는다.
  */
 async function fetchCalendarItemsForMajors(
   from: string,
@@ -105,7 +105,7 @@ async function fetchCalendarItemsForMajors(
   const onlyField = fields.size === 1 ? [...fields][0] : undefined;
   const items = await fetchCalendarItems({ ...filters, from, to, jobField: onlyField });
 
-  if (onlyField !== undefined || fields.size === ALL_JOB_MAJOR_SLUGS.length) {
+  if (onlyField !== undefined) {
     return items;
   }
   return items.filter((item) => item.jobField !== undefined && fields.has(item.jobField));
