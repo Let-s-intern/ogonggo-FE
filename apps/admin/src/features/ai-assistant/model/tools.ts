@@ -1,4 +1,10 @@
-import { getJob, listJobs, type ListJobsParams } from '@ogonggo/api/src/admin';
+import {
+  getJob,
+  listJobs,
+  listServiceFeedbacks,
+  listTodayJobs,
+  type ListJobsParams,
+} from '@ogonggo/api/src/admin';
 import {
   DEFAULT_KPI_FILTERS,
   KPI_QUERY,
@@ -61,6 +67,14 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return `공고 ${String(args.jobId)} 읽기`;
     case 'get_stats':
       return '통계 불러오기';
+    case 'list_pick_jobs':
+      return '오공고 PICK 목록 읽기';
+    case 'get_job_performance':
+      return '공고별 성과 불러오기';
+    case 'list_service_feedbacks':
+      return '서비스 의견 읽기';
+    case 'read_screen':
+      return '지금 화면 읽기';
     case 'navigate':
       return `화면 이동: ${String(args.path)}`;
     case 'fill_job_text':
@@ -174,6 +188,104 @@ async function readStats(args: Record<string, unknown>): Promise<string> {
     .join('\n\n');
 }
 
+async function pickJobIds(): Promise<Set<number>> {
+  const picks = await unwrapData(listTodayJobs());
+  return new Set((picks ?? []).map((job) => job.id));
+}
+
+async function listPickJobs(): Promise<string> {
+  const picks = await unwrapData(listTodayJobs());
+  return JSON.stringify(
+    (picks ?? []).map((job) => ({
+      id: job.id,
+      title: job.title,
+      company: job.companyName,
+      recruitmentStatus: job.recruitmentStatus,
+      recruitmentEndAt: job.recruitmentEndAt,
+      recommendationTitle: job.recommendationTitle,
+    })),
+  );
+}
+
+/** `get_job_performance` 의 정렬 기준과 Redash 공고별 성과 쿼리의 컬럼. */
+const PERFORMANCE_SORT_COLUMNS: Record<string, string> = {
+  cardClick: '카드 클릭 사용자',
+  detailView: '상세 조회 사용자',
+  applyClick: '지원 클릭 사용자',
+  applyRate: '조회 지원 전환율',
+  saveRate: '저장률',
+};
+
+/**
+ * 공고별 성과에 오공고 PICK 등록 여부를 붙인다. 성과는 Redash(GA4), PICK 은 어드민 API 라 두 곳을 각각
+ * 불러와 공고 ID 로 맞춘다.
+ */
+async function jobPerformance(args: Record<string, unknown>): Promise<string> {
+  const window = ['최근 7일', '최근 30일', '누적'].includes(args.window as string)
+    ? (args.window as string)
+    : DEFAULT_KPI_FILTERS.window;
+  const sortColumn =
+    PERFORMANCE_SORT_COLUMNS[String(args.sortBy)] ?? PERFORMANCE_SORT_COLUMNS.applyClick!;
+  const limit = Math.min(asNumber(args.limit) ?? 20, 50);
+  const pickFilter = String(args.pick ?? 'all');
+
+  const [result, picks] = await Promise.all([
+    runRedashQuery(
+      KPI_QUERY.jobPerformance,
+      toRedashParameters(KPI_QUERY.jobPerformance, { ...DEFAULT_KPI_FILTERS, window }),
+    ),
+    pickJobIds(),
+  ]);
+  const rows = result.rows
+    .map((row) => ({ row, pick: picks.has(Number(row['공고 ID'])) }))
+    .filter(({ pick }) =>
+      pickFilter === 'not_pick' ? !pick : pickFilter === 'pick_only' ? pick : true,
+    )
+    .sort((a, b) => Number(b.row[sortColumn] ?? 0) - Number(a.row[sortColumn] ?? 0))
+    .slice(0, limit)
+    .map(({ row, pick }) => ({ ...row, pick }));
+  return JSON.stringify({
+    window,
+    sortedBy: sortColumn,
+    pickCount: picks.size,
+    totalJobs: result.rows.length,
+    rows,
+  });
+}
+
+/**
+ * 서비스 의견. 작성자 이름·이메일은 넘기지 않는다 — 의견을 묶고 요약하는 데 필요 없는 개인정보다.
+ */
+async function serviceFeedbacks(args: Record<string, unknown>): Promise<string> {
+  const size = Math.min(asNumber(args.size) ?? 50, 100);
+  const page = await unwrapData(listServiceFeedbacks({ page: 1, size }));
+  return JSON.stringify({
+    total: page?.pageInfo.totalElements ?? 0,
+    items: (page?.items ?? []).map((item) => ({
+      id: item.id,
+      satisfaction: item.satisfaction,
+      improvement: item.improvement,
+      registeredAt: item.registeredAt,
+    })),
+  });
+}
+
+/**
+ * 지금 보이는 화면의 글. 열린 모달이 있으면 그 안만, 아니면 본문만 읽는다. 좌측 메뉴와 비서 패널은 빼고,
+ * 읽기만 한다.
+ */
+async function readScreen(): Promise<string> {
+  // 이동 직후면 목록이 아직 그려지는 중일 수 있다.
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const dialogs = [...document.querySelectorAll<HTMLDialogElement>('dialog[open]')];
+  const root = dialogs.at(-1) ?? document.querySelector('main');
+  return JSON.stringify({
+    path: location.pathname + location.search,
+    modal: root?.tagName === 'DIALOG',
+    text: (root?.innerText ?? '').replace(/\n{3,}/g, '\n\n').slice(0, MAX_RESULT_LENGTH - 500),
+  });
+}
+
 function goTo(args: Record<string, unknown>, context: ToolContext): string {
   const path = typeof args.path === 'string' ? args.path.trim() : '';
   const pathname = path.split('?')[0] ?? '';
@@ -214,6 +326,14 @@ export async function runTool(
         return clip(await readJob(args));
       case 'get_stats':
         return clip(await readStats(args));
+      case 'list_pick_jobs':
+        return clip(await listPickJobs());
+      case 'get_job_performance':
+        return clip(await jobPerformance(args));
+      case 'list_service_feedbacks':
+        return clip(await serviceFeedbacks(args));
+      case 'read_screen':
+        return await readScreen();
       case 'navigate':
         return goTo(args, context);
       case 'fill_job_text':
