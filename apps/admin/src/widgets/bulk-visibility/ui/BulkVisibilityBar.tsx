@@ -179,8 +179,8 @@ export function BulkVisibilityBar({
       </div>
 
       {count > 0 ? (
-        // 왼쪽 메뉴(`w-56`) 를 뺀 본문의 가운데에 둔다.
-        <div className="fixed bottom-6 left-[calc(50%+7rem)] z-40 flex -translate-x-1/2 flex-col items-center gap-2">
+        // 왼쪽 메뉴(`w-56`) 와 오른쪽 AI 비서 패널(`--assistant-width`) 을 뺀 본문의 가운데에 둔다.
+        <div className="fixed bottom-6 left-[calc(50%+7rem-var(--assistant-width,0px)/2)] z-40 flex -translate-x-1/2 flex-col items-center gap-2">
           {mutation.isError ? (
             <Callout tone="error">
               {serverErrorMessage(mutation.error) ?? '노출을 바꾸지 못했습니다.'}

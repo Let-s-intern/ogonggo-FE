@@ -23,7 +23,6 @@ import { KpiFilterBar } from './KpiFilterBar';
 import { MetricTile } from './MetricTile';
 import { QueryCard } from './QueryCard';
 import { ResultTable } from './ResultTable';
-import { StatsAiPanel } from './StatsAiPanel';
 
 /** 같은 화면을 Redash 에서 보는 주소. 쿼리를 고치거나 원본을 확인할 때 쓴다. */
 const REDASH_DASHBOARD_URL = 'https://redash.lets-career.com/dashboards/46--kpi-v2';
@@ -130,7 +129,6 @@ export function StatsPage() {
   const { filters, setFilters } = useKpiFilters();
   const rootRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [isAiOpen, setIsAiOpen] = useState(false);
 
   const periodKpi = useKpiQuery(KPI_QUERY.periodKpi, filters);
   const signups = useKpiQuery(KPI_QUERY.signups, filters);
@@ -194,9 +192,6 @@ export function StatsPage() {
               onClick={() => void downloadPdf()}
             >
               {isExporting ? 'PDF 만드는 중' : 'PDF 다운로드'}
-            </Button>
-            <Button size="sm" onClick={() => setIsAiOpen(true)}>
-              AI 에게 묻기
             </Button>
           </div>
         }
@@ -413,7 +408,6 @@ export function StatsPage() {
           </QueryCard>
         </section>
       </div>
-      {isAiOpen ? <StatsAiPanel filters={filters} onClose={() => setIsAiOpen(false)} /> : null}
     </div>
   );
 }
