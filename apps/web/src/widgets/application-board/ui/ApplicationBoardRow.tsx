@@ -20,6 +20,7 @@ import {
   isDdayUrgent,
   isRecruitmentClosed,
   alwaysOpenLabel,
+  closedLabel,
   isAlwaysOpen,
   type ContentKind,
 } from '@/shared/lib/dday';
@@ -132,7 +133,7 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
     </Badge>
   ) : closed ? (
     <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
-      마감
+      {closedLabel(CONTENT_KIND_BY_TAB[tab])}
     </Badge>
   ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
     <Badge tone="main" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">

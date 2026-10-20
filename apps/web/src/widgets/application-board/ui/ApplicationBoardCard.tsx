@@ -17,6 +17,7 @@ import {
   isDdayUrgent,
   isRecruitmentClosed,
   alwaysOpenLabel,
+  closedLabel,
   isAlwaysOpen,
   type ContentKind,
 } from '@/shared/lib/dday';
@@ -44,7 +45,7 @@ export interface ApplicationBoardCardProps {
  * 썸네일이 없으면 오공고 로고로 떨어진다(`shared/ui/Thumbnail.tsx`). 회색 빈 네모를 두지
  * 않는 이유는 그쪽 주석에 있다 — 빈 네모는 "못 불러왔다" 와 "원래 없다" 를 구분해 주지 않는다.
  *
- * 마감된 건은 D-day 자리에 회색 `마감` 배지다. `entities/job/ui/JobCard.tsx` 와
+ * 마감된 건은 D-day 자리에 회색 마감 배지(`closedLabel`)다. `entities/job/ui/JobCard.tsx` 와
  * `widgets/mypage-list/ui/MyPageListRowCells.tsx` 가 이미 같은 판단을 한다 — 배지를 통째로
  * 빼면 그 자리가 아무 말도 하지 않는다.
  *
@@ -135,8 +136,11 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
               {dday}
             </Badge>
           ) : closed ? (
-            <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
-              마감
+            <Badge
+              tone="neutral"
+              className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+            >
+              {closedLabel(CONTENT_KIND_BY_TAB[tab])}
             </Badge>
           ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
             <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
