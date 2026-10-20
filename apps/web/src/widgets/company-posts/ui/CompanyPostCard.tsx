@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Badge, Button, cn } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
+import { closedLabel, computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { formatDeadline } from '@/widgets/mypage-list';
 import copy from '../config/copy.json';
@@ -111,7 +111,7 @@ export function CompanyPostCard({
                 tone="neutral"
                 className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
               >
-                모집 마감
+                {closedLabel(row.kind)}
               </Badge>
             ) : null}
             {row.href ? (

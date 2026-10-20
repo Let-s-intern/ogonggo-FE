@@ -6,6 +6,7 @@ import {
   isDdayUrgent,
   isRecruitmentClosed,
   alwaysOpenLabel,
+  closedLabel,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
 import { ViewCount } from '@/shared/ui/ViewCount';
@@ -64,7 +65,7 @@ const FEATURED_ACTIONS_CLASS =
  * `h-full`은 같은 행에 제목 한 줄짜리와 두 줄짜리가 섞일 때를 위한 것이다. 없으면 카드가
  * 내용만큼만 높아 짧은 쪽 아랫변이 20px 떠 보인다(`entities/CardEdgeCases.stories.tsx` 실측).
  *
- * 마감된 공고는 D-day 자리에 회색 `마감` 배지가 들어간다. 전에는 배지가 통째로 빠져 메타 줄이
+ * 마감된 공고는 D-day 자리에 회색 `모집 마감` 배지(`closedLabel`)가 들어간다. 전에는 배지가 통째로 빠져 메타 줄이
  * 20px에서 16px로 줄었다. 빈 자리로 두는 쪽도 높이는 맞지만 읽는 사람에게 아무 말도 하지
  * 않는다 — `BootcampCard`·`SideStudyCard`가 이미 같은 자리에 `마감`을 그린다.
  * 마감일이 없는 공고(상시채용·마감일 미정)는 같은 자리에 `상시 채용` 배지다(`alwaysOpenLabel`).
@@ -121,7 +122,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
     </Badge>
   ) : closed ? (
     <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
-      마감
+      {closedLabel('job')}
     </Badge>
   ) : isAlwaysOpen(job.recruitmentType, job.recruitmentEndAt) ? (
     <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { enumLabel } from '@ogonggo/api';
 import { Badge, Button } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
+import { closedLabel, computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { formatDeadline } from '@/widgets/mypage-list';
 import type { MyPostRow as Row } from '../lib/fetch';
 
@@ -123,7 +123,7 @@ export function MyPostRow({
                 tone="neutral"
                 className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
               >
-                모집 마감
+                {closedLabel('side-study')}
               </Badge>
             ) : null}
             <span className="text-sm text-gray-500">

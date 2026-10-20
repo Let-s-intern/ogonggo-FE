@@ -27,6 +27,22 @@ export function alwaysOpenLabel(kind: ContentKind): string {
     : enumLabel('BootcampRecruitmentType', 'ALWAYS_OPEN');
 }
 
+/**
+ * 마감된 건의 배지 문구. 종류마다 모집 상태 enum 의 `CLOSED` 라벨이다 — 채용공고
+ * `JobRecruitmentStatus`·부트캠프 `BootcampRecruitmentStatus` 는 `모집 마감`, 사이드·스터디
+ * `RecruitmentPostRecruitmentStatus` 는 `마감` 이다.
+ */
+export function closedLabel(kind: ContentKind): string {
+  switch (kind) {
+    case 'job':
+      return enumLabel('JobRecruitmentStatus', 'CLOSED');
+    case 'bootcamp':
+      return enumLabel('BootcampRecruitmentStatus', 'CLOSED');
+    case 'side-study':
+      return enumLabel('RecruitmentPostRecruitmentStatus', 'CLOSED');
+  }
+}
+
 /** 마감일이 없는 건인가(상시 채용이거나 마감일 미정). 마감 여부와는 따로 본다. */
 export function isAlwaysOpen(recruitmentType: RecruitmentType, recruitmentEndAt?: string): boolean {
   return recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt;
