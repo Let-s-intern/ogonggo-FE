@@ -1,21 +1,27 @@
+import { contentFieldLabel } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import type { JobDetail } from '@/entities/job/model/types';
 
 /**
- * `상세 채용공고.png`가 실제로 쓰는 6개 라벨(띄어쓰기 포함) 그대로다. 어드민에서 수정한
- * 회사/팀소개가 화면에 전혀 반영되지 않는다는 제보로 `companyAndTeamIntroduction`을 다시
- * 추가한다(#123) — 본문 맨 앞에 둔다.
+ * 본문 일곱 칸. 제목은 enum 카탈로그의 `JobContentField` 다. 어드민에서 수정한 회사/팀소개가
+ * 화면에 전혀 반영되지 않는다는 제보로 `companyAndTeamIntroduction`을 다시 추가한다(#123) —
+ * 본문 맨 앞에 둔다.
  */
+const SECTION_FIELDS = [
+  'companyAndTeamIntroduction',
+  'responsibilities',
+  'qualifications',
+  'preferredQualifications',
+  'compensation',
+  'benefits',
+  'hiringProcess',
+] as const;
+
 export function buildSections(job: JobDetail): { label: string; value?: string }[] {
-  return [
-    { label: '회사 및 팀 소개', value: job.companyAndTeamIntroduction },
-    { label: '주요 업무', value: job.responsibilities },
-    { label: '자격 요건', value: job.qualifications },
-    { label: '우대 사항', value: job.preferredQualifications },
-    { label: '급여 및 처우', value: job.compensation },
-    { label: '혜택 및 복지', value: job.benefits },
-    { label: '채용 절차', value: job.hiringProcess },
-  ];
+  return SECTION_FIELDS.map((field) => ({
+    label: contentFieldLabel('JobContentField', field),
+    value: job[field],
+  }));
 }
 
 /**

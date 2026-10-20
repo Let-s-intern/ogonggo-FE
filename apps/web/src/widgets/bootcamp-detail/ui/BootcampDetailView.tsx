@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getPublicBootcamp } from '@ogonggo/api';
+import { contentFieldLabel, getPublicBootcamp } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import { toBootcampInfo } from '@/entities/bootcamp/model/analytics';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
@@ -85,11 +85,13 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               더한 17px 만큼 들인다. */}
           <div className="flex flex-col gap-10 px-[17px]">
             <BootcampCurriculum curriculums={bootcamp.curriculums} />
-            {/* `지원 자격 · 전형`도 값이 없으면 제목째 사라진다 — 커리큘럼과 같은 규칙이다.
+            {/* `지원 자격 및 전형 안내`도 값이 없으면 제목째 사라진다 — 커리큘럼과 같은 규칙이다.
               본문 섹션이 하나뿐이라 `job-detail`처럼 목록으로 만들지 않는다. */}
             {bootcamp.eligibilityAndSelectionProcess ? (
               <section>
-                <h2 className="text-lg font-bold text-gray-900">지원 자격 · 전형</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  {contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess')}
+                </h2>
                 <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
                   {bootcamp.eligibilityAndSelectionProcess}
                 </p>

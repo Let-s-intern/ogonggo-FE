@@ -1,5 +1,6 @@
 'use client';
 
+import { contentFieldLabel } from '@ogonggo/api';
 import {
   EDUCATION_LEVEL_LABELS,
   EMPLOYMENT_TYPE_LABELS,
@@ -40,13 +41,15 @@ export interface JobPreviewProps {
  * 빈 자리가 된다. 채용 안내사항도 같은 이유로 없다 — 공개 상세가 그 값을 그리지 않는다.
  */
 export function JobPreview({ values }: JobPreviewProps) {
-  const sections = [
-    { label: '주요 업무', body: values.responsibilities },
-    { label: '자격 요건', body: values.qualifications },
-    { label: '우대 사항', body: values.preferredQualifications },
-    { label: '혜택 및 복지', body: values.benefits },
-    { label: '채용 절차', body: values.hiringProcess },
-  ];
+  const sections = (
+    [
+      'responsibilities',
+      'qualifications',
+      'preferredQualifications',
+      'benefits',
+      'hiringProcess',
+    ] as const
+  ).map((field) => ({ label: contentFieldLabel('JobContentField', field), body: values[field] }));
 
   return (
     <div className="flex flex-col gap-8 rounded-lg border border-gray-200 bg-white p-8">
