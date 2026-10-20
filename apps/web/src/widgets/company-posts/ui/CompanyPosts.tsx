@@ -57,7 +57,7 @@ export interface CompanyPostsProps {
  * |---|---|
  * | 작성한 사이드 프로젝트 · 스터디 모집글 | 작성한 공고 |
  * | 사이드 · 스터디확인해요. | 등록한 공고의 상태를 한곳에서 확인해요. |
- * | 새 모집글 작성하기 | 새 공고 작성하기 |
+ * | 새 모집글 작성하기 | 채용 공고 작성하기 · 교육 · 부트캠프 작성하기(지금 탭을 따른다) |
  *
  * **목업의 필터 줄(`마감 상태`·`지원 상태`·`모집글 검색`·`최근 저장순`) 을 그리지 않는다.**
  * `listMyJobs`·`listMyBootcamps` 가 받는 것이 `page`·`size` 뿐이라 거를 것도 정렬할 것도
@@ -145,7 +145,7 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
           <p className="pt-2 text-sm text-gray-500">등록한 공고의 상태를 한곳에서 확인해요.</p>
         </div>
         <Button asChild className="whitespace-nowrap">
-          <Link href={companyPostNewHref(query.tab)}>새 공고 작성하기</Link>
+          <Link href={companyPostNewHref(query.tab)}>{TAB_NOUNS[query.tab]} 작성하기</Link>
         </Button>
       </header>
 
