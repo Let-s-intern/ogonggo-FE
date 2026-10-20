@@ -4,8 +4,17 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { UpdateAdminJobRequestApplicationMethod } from './updateAdminJobRequestApplicationMethod';
+import type { UpdateAdminJobRequestEducationLevel } from './updateAdminJobRequestEducationLevel';
+import type { UpdateAdminJobRequestEmploymentType } from './updateAdminJobRequestEmploymentType';
+import type { UpdateAdminJobRequestExperienceType } from './updateAdminJobRequestExperienceType';
 import type { UpdateAdminJobRequestFields } from './updateAdminJobRequestFields';
+import type { UpdateAdminJobRequestJobField } from './updateAdminJobRequestJobField';
+import type { UpdateAdminJobRequestJobRole } from './updateAdminJobRequestJobRole';
+import type { UpdateAdminJobRequestRecruitmentType } from './updateAdminJobRequestRecruitmentType';
+import type { UpdateAdminJobRequestRegion } from './updateAdminJobRequestRegion';
 import type { UpdateAdminJobRequestReviewStatus } from './updateAdminJobRequestReviewStatus';
+import type { UpdateAdminJobRequestSubRegion } from './updateAdminJobRequestSubRegion';
 import type { UpdateAdminJobRequestVisibility } from './updateAdminJobRequestVisibility';
 
 export interface UpdateAdminJobRequest {
@@ -30,4 +39,624 @@ export interface UpdateAdminJobRequest {
      */
   title?: string;
   fields?: UpdateAdminJobRequestFields;
+  /**
+     * @minLength 0
+     * @maxLength 150
+     */
+  companyName?: string;
+  /**
+     * @minLength 0
+     * @maxLength 150
+     */
+  parentCompanyName?: string;
+  /**
+     * @minLength 0
+     * @maxLength 100
+     */
+  industry?: string;
+  /**
+     * @minLength 0
+     * @maxLength 2048
+     */
+  coverImageUrl?: string;
+  /**
+     * @minLength 0
+     * @maxLength 2048
+     */
+  logoUrl?: string;
+  /**
+     * 직군입니다. 바꾸면서 jobRole을 보내지 않으면 다른 직군의 기존 직무는 지웁니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `IT_DEVELOPMENT` | 1 | IT·개발 |
+     * | `GAME` | 3 | 게임 |
+     * | `PLANNING_STRATEGY` | 5 | 기획·전략 |
+     * | `MARKETING_ADVERTISING` | 6 | 마케팅·광고 |
+     * | `SALES` | 8 | 영업 |
+     * | `TRADE_LOGISTICS` | 9 | 무역·물류 |
+     * | `TRANSPORT_DELIVERY` | 10 | 운송·배송 |
+     * | `LEGAL` | 11 | 법률·법무 |
+     * | `HR_GENERAL_AFFAIRS` | 12 | HR·총무 |
+     * | `SECURITIES_ASSET_MANAGEMENT` | 14 | 증권·운용 |
+     * | `BANKING_CARD_INSURANCE` | 15 | 은행·카드·보험 |
+     * | `ENGINEERING_RND` | 16 | 엔지니어링·R&D |
+     * | `CONSTRUCTION_ARCHITECTURE` | 17 | 건설·건축 |
+     * | `PRODUCTION_SKILLED_TRADES` | 18 | 생산·기능직 |
+     * | `MEDICAL_HEALTH` | 19 | 의료·보건 |
+     * | `PUBLIC_WELFARE` | 20 | 공공·복지 |
+     * | `EDUCATION` | 21 | 교육 |
+     * | `SERVICE` | 24 | 서비스 |
+     * | `FOOD_BEVERAGE` | 25 | 식음료 |
+     */
+  jobField?: UpdateAdminJobRequestJobField;
+  /**
+     * 직무입니다. jobField 없이 보내면 직군도 이 직무의 직군으로 바꿉니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `IT_BACKEND` | 1 | 백엔드 |
+     * | `IT_FRONTEND_FULLSTACK` | 297 | 프론트 풀스택 |
+     * | `IT_WEB` | 298 | 웹 |
+     * | `IT_ANDROID` | 4 | 안드로이드 |
+     * | `IT_IOS` | 5 | iOS |
+     * | `IT_INFRA_DEVOPS` | 299 | 인프라·DevOps |
+     * | `IT_SECURITY` | 12 | 정보보호·보안 |
+     * | `IT_EMBEDDED_IOT_ROBOTICS` | 300 | 임베디드·IoT·로봇 |
+     * | `IT_ERP_SAP` | 22 | ERP·SAP |
+     * | `IT_DEV_PM` | 19 | 개발PM |
+     * | `IT_ETC` | 25 | 기타IT·개발 |
+     * | `AI_DATA_ANALYST_SCIENTIST` | 301 | 데이터분석·사이언티스트 |
+     * | `AI_DATA_ENGINEER` | 28 | 데이터엔지니어 |
+     * | `AI_ML_MLOPS` | 302 | 머신러닝·MLOps |
+     * | `AI_LLM_GENERATIVE_AI` | 303 | LLM·생성형AI |
+     * | `AI_ETC` | 42 | 기타AI·데이터 |
+     * | `GAME_PLANNING_PM` | 43 | 게임기획·PM |
+     * | `GAME_OPERATION` | 44 | 게임운영 |
+     * | `GAME_QA` | 45 | 게임QA |
+     * | `GAME_CLIENT` | 46 | 게임개발·클라이언트 |
+     * | `GAME_SERVER` | 47 | 게임개발·서버 |
+     * | `GAME_MOBILE` | 48 | 게임개발·모바일 |
+     * | `GAME_TECHNICAL_ARTIST` | 49 | 테크니컬아티스트 |
+     * | `GAME_ART` | 50 | 게임아트 |
+     * | `GAME_MODELING_3D` | 51 | 게임3D모델링 |
+     * | `GAME_ANIMATION` | 52 | 게임애니메이션 |
+     * | `GAME_EFFECT_FX` | 53 | 게임이펙트·FX |
+     * | `GAME_UI` | 54 | 게임인터페이스 |
+     * | `GAME_DIRECTING_VIDEO` | 55 | 게임연출·영상 |
+     * | `GAME_SOUND` | 56 | 게임사운드 |
+     * | `GAME_ETC` | 57 | 기타게임 |
+     * | `DESIGN_UX_UI_PRODUCT` | 59 | UXUI·프로덕트디자인 |
+     * | `DESIGN_RESEARCH` | 60 | 리서치 |
+     * | `PLANNING_PM_PO` | 74 | PM·PO |
+     * | `PLANNING_SERVICE_PRODUCT_PLANNING` | 75 | 서비스·상품기획 |
+     * | `PLANNING_BUSINESS_STRATEGY` | 76 | 사업·전략기획 |
+     * | `PLANNING_CONSULTING` | 77 | 컨설팅 |
+     * | `PLANNING_BUSINESS_DEVELOPMENT` | 79 | 사업개발·분석 |
+     * | `PLANNING_PROJECT_MANAGER` | 80 | 프로젝트매니저 |
+     * | `PLANNING_OPERATIONS_MANAGEMENT` | 81 | 운영관리·OM |
+     * | `PLANNING_MANAGEMENT_SUPPORT` | 82 | 경영지원 |
+     * | `PLANNING_ETC` | 83 | 기타기획·전략·경영 |
+     * | `MARKETING_STRATEGY` | 84 | 마케팅기획·전략 |
+     * | `MARKETING_PERFORMANCE` | 85 | 퍼포먼스마케팅 |
+     * | `MARKETING_CONTENT` | 86 | 콘텐츠마케팅 |
+     * | `MARKETING_SNS` | 87 | SNS마케팅 |
+     * | `MARKETING_BRAND` | 88 | 브랜드마케팅 |
+     * | `MARKETING_CRM` | 89 | CRM마케팅 |
+     * | `MARKETING_GLOBAL` | 90 | 글로벌마케팅 |
+     * | `MARKETING_AD_PLANNING_AE` | 91 | 광고기획·AE |
+     * | `MARKETING_PR` | 92 | 홍보·PR |
+     * | `MARKETING_EXHIBITION_EVENT` | 93 | 전시·행사마케팅 |
+     * | `MARKETING_ETC` | 94 | 기타마케팅 |
+     * | `MD_PRODUCT_PLANNING` | 95 | 상품기획 |
+     * | `MD_ONLINE` | 96 | 온라인MD |
+     * | `MD_FOOD` | 97 | 식품MD |
+     * | `MD_FASHION` | 98 | 패션MD |
+     * | `MD_BEAUTY` | 99 | 뷰티MD |
+     * | `MD_SALES` | 100 | 영업MD |
+     * | `MD_RETAIL` | 101 | 리테일MD |
+     * | `MD_ETC` | 102 | 기타상품기획·MD |
+     * | `SALES_B2C` | 103 | B2C영업 |
+     * | `SALES_B2B` | 104 | B2B영업 |
+     * | `SALES_GENERAL` | 105 | 일반영업 |
+     * | `SALES_MANAGEMENT_SUPPORT` | 106 | 영업관리·지원 |
+     * | `SALES_TECH_IT` | 107 | 기술·IT영업 |
+     * | `SALES_OVERSEAS` | 109 | 해외영업 |
+     * | `SALES_PHARMA_MEDICAL` | 110 | 제약·의료영업 |
+     * | `SALES_ETC` | 111 | 기타영업 |
+     * | `TRADE_OVERSEAS_TRADING_SALES` | 112 | 해외·상사영업 |
+     * | `TRADE_IMPORT_EXPORT` | 113 | 수출입관리·사무 |
+     * | `TRADE_CUSTOMS_BROKER` | 114 | 관세사 |
+     * | `TRADE_TRADE_FINANCE` | 115 | 무역금융 |
+     * | `TRADE_FORWARDING` | 116 | 포워딩 |
+     * | `TRADE_PURCHASING` | 117 | 구매·조달 |
+     * | `TRADE_LOGISTICS_SCM` | 118 | 물류·SCM |
+     * | `TRADE_WAREHOUSE_PACKING` | 119 | 입출고·포장 |
+     * | `TRADE_INVENTORY` | 120 | 자재·재고관리 |
+     * | `TRADE_TRANSPORTATION` | 121 | 운송 |
+     * | `TRADE_DISTRIBUTION` | 122 | 유통관리 |
+     * | `TRADE_FACILITY_MANAGEMENT` | 123 | 설비·시설관리 |
+     * | `TRADE_ETC` | 124 | 기타무역·물류·유통 |
+     * | `TRANSPORT_DELIVERY` | 125 | 배송·배달 |
+     * | `TRANSPORT_PASSENGER` | 126 | 승객운송 |
+     * | `TRANSPORT_FREIGHT` | 127 | 물류운송 |
+     * | `TRANSPORT_PROFESSIONAL_DRIVING` | 128 | 전문운전 |
+     * | `TRANSPORT_DISPATCH` | 129 | 배차관리 |
+     * | `TRANSPORT_ETC` | 130 | 기타운전·운송 |
+     * | `LEGAL_LAWYER` | 131 | 변호사 |
+     * | `LEGAL_PATENT_ATTORNEY` | 132 | 변리사 |
+     * | `LEGAL_LEGAL_AFFAIRS` | 133 | 법무 |
+     * | `LEGAL_COMPLIANCE` | 134 | 컴플라이언스 |
+     * | `LEGAL_INTERNAL_AUDIT` | 135 | 내부감사 |
+     * | `LEGAL_ESG_ETHICS` | 136 | ESG·윤리 |
+     * | `LEGAL_PATENT_IP` | 137 | 특허·IP |
+     * | `LEGAL_ETC` | 138 | 기타법률 |
+     * | `HR_PLANNING` | 139 | 인사기획 |
+     * | `HR_COMPENSATION` | 140 | 평가·보상 |
+     * | `HR_HRD_CULTURE` | 141 | HRD·조직문화 |
+     * | `HR_LABOR_RELATIONS` | 143 | 노무관리 |
+     * | `HR_GENERAL_AFFAIRS_SECRETARY` | 144 | 총무·비서 |
+     * | `HR_ETC` | 145 | 기타HR·총무 |
+     * | `ACCOUNTING_FINANCE` | 146 | 재무 |
+     * | `ACCOUNTING_ACCOUNTING` | 147 | 회계 |
+     * | `ACCOUNTING_TAX` | 148 | 세무 |
+     * | `ACCOUNTING_ETC` | 151 | 기타회계·재무·세무 |
+     * | `SECURITIES_TRADING` | 152 | 운용·트레이딩 |
+     * | `SECURITIES_RISK_COMPLIANCE_REVIEW` | 153 | 리스크·준법·심사 |
+     * | `SECURITIES_VC_PE` | 154 | VC·PE |
+     * | `SECURITIES_INVESTMENT_BANKING` | 155 | 증권IB |
+     * | `SECURITIES_REAL_ESTATE_INFRA_FINANCE` | 156 | 부동산·인프라금융 |
+     * | `SECURITIES_PB_WM` | 157 | PB·WM |
+     * | `SECURITIES_MANAGEMENT_SUPPORT` | 158 | 경영지원·관리 |
+     * | `SECURITIES_PRODUCT_DEVELOPMENT_SALES` | 159 | 금융상품개발·영업 |
+     * | `SECURITIES_ETC` | 160 | 기타증권·운용 |
+     * | `BANKING_BANK` | 161 | 은행 |
+     * | `BANKING_CARD` | 162 | 카드사 |
+     * | `BANKING_CAPITAL` | 163 | 캐피탈 |
+     * | `BANKING_INSURANCE_PLANNER` | 164 | 보험설계 |
+     * | `BANKING_ACTUARY` | 165 | 계리 |
+     * | `BANKING_CLAIMS_ADJUSTER` | 166 | 손해사정 |
+     * | `BANKING_UNDERWRITING` | 167 | 언더라이팅·심사 |
+     * | `BANKING_CLAIMS` | 168 | 청구·보상 |
+     * | `BANKING_INSURANCE_PRODUCT` | 169 | 보험상품개발 |
+     * | `BANKING_ETC` | 170 | 기타은행·보험 |
+     * | `ENGINEERING_SEMICONDUCTOR_DISPLAY` | 171 | 반도체·디스플레이 |
+     * | `ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL` | 172 | 전기·전자·제어 |
+     * | `ENGINEERING_TELECOM_NETWORK` | 173 | 통신기술·네트워크구축 |
+     * | `ENGINEERING_MECHANICAL` | 174 | 기계 |
+     * | `ENGINEERING_MECHANICAL_DESIGN_CAD` | 175 | 기계설계·CAD |
+     * | `ENGINEERING_AUTOMOTIVE` | 176 | 자동차 |
+     * | `ENGINEERING_SHIPBUILDING_AEROSPACE` | 177 | 조선·항공·우주 |
+     * | `ENGINEERING_METAL_STEEL` | 178 | 금속·철강 |
+     * | `ENGINEERING_CHEMICAL` | 179 | 화학 |
+     * | `ENGINEERING_COSMETICS` | 180 | 화장품 |
+     * | `ENGINEERING_BIO_PHARMA` | 181 | 바이오·제약 |
+     * | `ENGINEERING_FOOD` | 182 | 식품 |
+     * | `ENGINEERING_ENERGY` | 183 | 에너지 |
+     * | `ENGINEERING_ENVIRONMENT` | 184 | 환경 |
+     * | `ENGINEERING_ETC` | 185 | 기타엔지니어링·RND |
+     * | `CONSTRUCTION_ARCHITECTURAL_DESIGN` | 186 | 건축설계·시공 |
+     * | `CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE` | 187 | 토목·측량·조경·환경 |
+     * | `CONSTRUCTION_MEP_FIRE` | 188 | 기계·전기·소방·설비 |
+     * | `CONSTRUCTION_DESIGN_SUPERVISION` | 189 | 설계·감리·시공·공무 |
+     * | `CONSTRUCTION_SAFETY_QUALITY_MATERIAL` | 190 | 안전·품질·재료 |
+     * | `CONSTRUCTION_OFFICE_ADMIN` | 191 | 사무·관리·전산 |
+     * | `CONSTRUCTION_SPECIAL_DAILY_LABOR` | 192 | 건설특수·일용직 |
+     * | `CONSTRUCTION_ETC` | 193 | 기타건설·건축 |
+     * | `PRODUCTION_PRODUCTION` | 194 | 생산 |
+     * | `PRODUCTION_PLANT_ADMIN` | 195 | 공무 |
+     * | `PRODUCTION_EQUIPMENT` | 196 | 설비 |
+     * | `PRODUCTION_ENVIRONMENT_SAFETY` | 197 | 환경안전 |
+     * | `PRODUCTION_LOGISTICS` | 198 | 물류 |
+     * | `PRODUCTION_QUALITY` | 199 | 품질 |
+     * | `PRODUCTION_CONSTRUCTION_PROJECT` | 200 | 건설·공사·프로젝트 |
+     * | `PRODUCTION_DESIGN_CAD_CAM` | 201 | 설계·CAD·CAM |
+     * | `PRODUCTION_FACILITY_MANAGEMENT` | 202 | 시설관리 |
+     * | `PRODUCTION_ETC` | 203 | 기타생산·기능직 |
+     * | `MEDICAL_DOCTOR` | 204 | 의사 |
+     * | `MEDICAL_KOREAN_MEDICINE_DOCTOR` | 205 | 한의사 |
+     * | `MEDICAL_VETERINARIAN` | 206 | 수의사 |
+     * | `MEDICAL_PHARMACIST` | 207 | 약사·약무보조 |
+     * | `MEDICAL_NURSE` | 208 | 간호사 |
+     * | `MEDICAL_NURSE_AIDE` | 209 | 간호조무사 |
+     * | `MEDICAL_DENTAL_HYGIENIST` | 210 | 치위생사 |
+     * | `MEDICAL_EMT` | 211 | 응급구조사 |
+     * | `MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY` | 212 | 물리치료·작업치료 |
+     * | `MEDICAL_RADIOLOGY_CLINICAL_LAB` | 213 | 영상의학·임상병리·검사 |
+     * | `MEDICAL_DIETITIAN` | 214 | 영양사·임상영양사 |
+     * | `MEDICAL_MEDICAL_AESTHETICS` | 215 | 의료미용·에스테틱 |
+     * | `MEDICAL_HOSPITAL_ADMIN` | 216 | 병원행정·접수·수납 |
+     * | `MEDICAL_CARE_WORKER` | 217 | 요양보호사 |
+     * | `MEDICAL_POSTPARTUM_CARE` | 218 | 조리원 |
+     * | `MEDICAL_OPTICIAN` | 219 | 안경·검안사 |
+     * | `MEDICAL_ETC` | 220 | 기타의료·보건 |
+     * | `PUBLIC_ADMINISTRATION` | 221 | 행정·사무·운영 |
+     * | `PUBLIC_TECH_IT_FACILITY` | 222 | 기술·전산·시설 |
+     * | `PUBLIC_SOCIAL_SERVICE` | 223 | 복지·사회서비스 |
+     * | `PUBLIC_EDUCATION_RESEARCH` | 224 | 교육·연구 |
+     * | `PUBLIC_PUBLIC_SAFETY` | 225 | 공공안전 |
+     * | `PUBLIC_COUNSELING` | 226 | 상담·심리 |
+     * | `PUBLIC_RELIGION` | 227 | 종교 |
+     * | `PUBLIC_CHILD_YOUTH_WELFARE` | 228 | 아동·청소년복지 |
+     * | `PUBLIC_ELDERLY_WOMEN_WELFARE` | 229 | 노인·여성복지 |
+     * | `PUBLIC_VOLUNTEER` | 230 | 자원봉사 |
+     * | `PUBLIC_ETC` | 231 | 기타공공·복지 |
+     * | `EDUCATION_KINDERGARTEN_CHILDCARE` | 232 | 유치원·보육교사 |
+     * | `EDUCATION_CONTRACT_PRIVATE_TEACHER` | 233 | 기간제·사립교사 |
+     * | `EDUCATION_AFTER_SCHOOL_PART_TIME` | 234 | 방과후·시간교사 |
+     * | `EDUCATION_PROFESSOR_LECTURER` | 235 | 대학교수·강사 |
+     * | `EDUCATION_STAFF_ASSISTANT` | 236 | 교직원·조교 |
+     * | `EDUCATION_ACADEMY_EXAM_INSTRUCTOR` | 237 | 입시학원강사 |
+     * | `EDUCATION_LANGUAGE_INSTRUCTOR` | 238 | 국어·외국어강사 |
+     * | `EDUCATION_TECHNICAL_INSTRUCTOR` | 239 | 기술·전문강사 |
+     * | `EDUCATION_HOME_VISIT_TEACHER` | 240 | 학습지·방문교사 |
+     * | `EDUCATION_ACADEMY_COUNSELING_OPERATION` | 241 | 학원상담·운영 |
+     * | `EDUCATION_INSTRUCTIONAL_DESIGN` | 242 | 교재개발·교수설계 |
+     * | `EDUCATION_ETC` | 243 | 기타교육 |
+     * | `MEDIA_PD_DIRECTOR` | 244 | PD·감독 |
+     * | `MEDIA_CONTENT_PLANNING_EDITOR` | 245 | 콘텐츠기획·에디터 |
+     * | `MEDIA_VIDEO_EDITOR` | 248 | 영상편집 |
+     * | `MEDIA_CREATOR_INFLUENCER` | 254 | 크리에이터·인플루언서 |
+     * | `CS_CS` | 269 | CS |
+     * | `CS_CX_MANAGER` | 270 | CX매니저 |
+     * | `SERVICE_INSTALLATION_REPAIR` | 272 | 설치·수리기사 |
+     * | `SERVICE_PARKING_FUEL` | 273 | 주차·주유 |
+     * | `SERVICE_HOUSEKEEPER` | 274 | 가사도우미 |
+     * | `SERVICE_PET_GROOMING_TRAINING` | 275 | 애견미용·훈련 |
+     * | `SERVICE_SECURITY_GUARD` | 276 | 경호·경비 |
+     * | `SERVICE_HOTEL` | 277 | 호텔서비스 |
+     * | `SERVICE_TOURISM` | 278 | 관광서비스 |
+     * | `SERVICE_AIRLINE` | 279 | 항공서비스 |
+     * | `SERVICE_STORE_MANAGEMENT` | 280 | 매장관리 |
+     * | `SERVICE_RECEPTION` | 281 | 안내·리셉션 |
+     * | `SERVICE_HAIR_DESIGNER` | 282 | 헤어디자이너 |
+     * | `SERVICE_MAKEUP_NAIL` | 283 | 메이크업·네일 |
+     * | `SERVICE_SKIN_CARE` | 284 | 피부관리 |
+     * | `SERVICE_MASSAGE_BODY_CARE` | 285 | 마사지·체형관리 |
+     * | `SERVICE_WEDDING_PLANNER` | 286 | 웨딩플래너 |
+     * | `SERVICE_SANITATION` | 287 | 환경미화원 |
+     * | `SERVICE_ETC` | 288 | 기타서비스 |
+     * | `FOOD_FOOD_PROCESSING_DEVELOPMENT` | 289 | 식품가공·개발 |
+     * | `FOOD_KITCHEN_COOKING` | 290 | 주방조리 |
+     * | `FOOD_BAKERY` | 291 | 제과·제빵 |
+     * | `FOOD_BEVERAGE_LIQUOR` | 292 | 음료·주류 |
+     * | `FOOD_STORE_OPERATION` | 293 | 매장운영 |
+     * | `FOOD_HALL_STAFF` | 294 | 서비스·홀스태프 |
+     * | `FOOD_CONSULTING_SUPPORT` | 295 | 식음컨설팅·지원 |
+     * | `FOOD_ETC` | 296 | 기타식음료 |
+     */
+  jobRole?: UpdateAdminJobRequestJobRole;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `FULL_TIME` | 1 | 정규직 |
+     * | `CONTRACT` | 2 | 계약직 |
+     * | `INTERN` | 3 | 인턴 |
+     * | `PART_TIME` | 4 | 파트타임 |
+     * | `WORK_STUDY` | 6 | 일학습병행 |
+     * | `WORK_EXPERIENCE` | 7 | 미래내일 일경험 |
+     * | `ETC` | 5 | 기타 |
+     */
+  employmentType?: UpdateAdminJobRequestEmploymentType;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NEWCOMER` | 1 | 신입 |
+     * | `EXPERIENCED` | 2 | 경력 |
+     * | `BOTH` | 3 | 신입·경력 |
+     * | `IRRELEVANT` | 4 | 경력 무관 |
+     */
+  experienceType?: UpdateAdminJobRequestExperienceType;
+  experienceMinYears?: number;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `ANY` | 1 | 학력 무관 |
+     * | `HIGH_SCHOOL` | 2 | 고등학교 졸업 |
+     * | `ASSOCIATE` | 3 | 전문학사 |
+     * | `BACHELOR` | 4 | 학사 |
+     * | `MASTER` | 5 | 석사 |
+     * | `DOCTORATE` | 6 | 박사 |
+     */
+  educationLevel?: UpdateAdminJobRequestEducationLevel;
+  /**
+     * 근무 시·도입니다. 바꾸면서 subRegion을 보내지 않으면 다른 시·도의 기존 시·군·구는 지웁니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NATIONWIDE` | 1 | 전국 |
+     * | `SEOUL` | 2 | 서울 |
+     * | `GYEONGGI` | 3 | 경기 |
+     * | `INCHEON` | 4 | 인천 |
+     * | `BUSAN` | 5 | 부산 |
+     * | `DAEGU` | 6 | 대구 |
+     * | `JEONNAM_GWANGJU` | 7 | 전남광주 |
+     * | `DAEJEON` | 8 | 대전 |
+     * | `ULSAN` | 9 | 울산 |
+     * | `SEJONG` | 10 | 세종 |
+     * | `GANGWON` | 11 | 강원 |
+     * | `GYEONGNAM` | 12 | 경남 |
+     * | `GYEONGBUK` | 13 | 경북 |
+     * | `CHUNGNAM` | 14 | 충남 |
+     * | `CHUNGBUK` | 15 | 충북 |
+     * | `JEONBUK` | 16 | 전북 |
+     * | `JEJU` | 17 | 제주 |
+     * | `OVERSEAS` | 18 | 해외 |
+     */
+  region?: UpdateAdminJobRequestRegion;
+  /**
+     * 근무 시·군·구입니다. region 없이 보내면 시·도도 이 시·군·구의 시·도로 바꿉니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `SEOUL_JONGNO_GU` | 1 | 종로구 |
+     * | `SEOUL_JUNG_GU` | 2 | 중구 |
+     * | `SEOUL_YONGSAN_GU` | 3 | 용산구 |
+     * | `SEOUL_SEONGDONG_GU` | 4 | 성동구 |
+     * | `SEOUL_GWANGJIN_GU` | 5 | 광진구 |
+     * | `SEOUL_DONGDAEMUN_GU` | 6 | 동대문구 |
+     * | `SEOUL_JUNGNANG_GU` | 7 | 중랑구 |
+     * | `SEOUL_SEONGBUK_GU` | 8 | 성북구 |
+     * | `SEOUL_GANGBUK_GU` | 9 | 강북구 |
+     * | `SEOUL_DOBONG_GU` | 10 | 도봉구 |
+     * | `SEOUL_NOWON_GU` | 11 | 노원구 |
+     * | `SEOUL_EUNPYEONG_GU` | 12 | 은평구 |
+     * | `SEOUL_SEODAEMUN_GU` | 13 | 서대문구 |
+     * | `SEOUL_MAPO_GU` | 14 | 마포구 |
+     * | `SEOUL_YANGCHEON_GU` | 15 | 양천구 |
+     * | `SEOUL_GANGSEO_GU` | 16 | 강서구 |
+     * | `SEOUL_GURO_GU` | 17 | 구로구 |
+     * | `SEOUL_GEUMCHEON_GU` | 18 | 금천구 |
+     * | `SEOUL_YEONGDEUNGPO_GU` | 19 | 영등포구 |
+     * | `SEOUL_DONGJAK_GU` | 20 | 동작구 |
+     * | `SEOUL_GWANAK_GU` | 21 | 관악구 |
+     * | `SEOUL_SEOCHO_GU` | 22 | 서초구 |
+     * | `SEOUL_GANGNAM_GU` | 23 | 강남구 |
+     * | `SEOUL_SONGPA_GU` | 24 | 송파구 |
+     * | `SEOUL_GANGDONG_GU` | 25 | 강동구 |
+     * | `GYEONGGI_SUWON_SI` | 26 | 수원시 |
+     * | `GYEONGGI_SEONGNAM_SI` | 27 | 성남시 |
+     * | `GYEONGGI_UIJEONGBU_SI` | 28 | 의정부시 |
+     * | `GYEONGGI_ANYANG_SI` | 29 | 안양시 |
+     * | `GYEONGGI_BUCHEON_SI` | 30 | 부천시 |
+     * | `GYEONGGI_GWANGMYEONG_SI` | 31 | 광명시 |
+     * | `GYEONGGI_PYEONGTAEK_SI` | 32 | 평택시 |
+     * | `GYEONGGI_DONGDUCHEON_SI` | 33 | 동두천시 |
+     * | `GYEONGGI_ANSAN_SI` | 34 | 안산시 |
+     * | `GYEONGGI_GOYANG_SI` | 35 | 고양시 |
+     * | `GYEONGGI_GWACHEON_SI` | 36 | 과천시 |
+     * | `GYEONGGI_GURI_SI` | 37 | 구리시 |
+     * | `GYEONGGI_NAMYANGJU_SI` | 38 | 남양주시 |
+     * | `GYEONGGI_OSAN_SI` | 39 | 오산시 |
+     * | `GYEONGGI_SIHEUNG_SI` | 40 | 시흥시 |
+     * | `GYEONGGI_GUNPO_SI` | 41 | 군포시 |
+     * | `GYEONGGI_UIWANG_SI` | 42 | 의왕시 |
+     * | `GYEONGGI_HANAM_SI` | 43 | 하남시 |
+     * | `GYEONGGI_YONGIN_SI` | 44 | 용인시 |
+     * | `GYEONGGI_PAJU_SI` | 45 | 파주시 |
+     * | `GYEONGGI_ICHEON_SI` | 46 | 이천시 |
+     * | `GYEONGGI_ANSEONG_SI` | 47 | 안성시 |
+     * | `GYEONGGI_GIMPO_SI` | 48 | 김포시 |
+     * | `GYEONGGI_HWASEONG_SI` | 49 | 화성시 |
+     * | `GYEONGGI_GWANGJU_SI` | 50 | 광주시 |
+     * | `GYEONGGI_YANGJU_SI` | 51 | 양주시 |
+     * | `GYEONGGI_POCHEON_SI` | 52 | 포천시 |
+     * | `GYEONGGI_YEOJU_SI` | 53 | 여주시 |
+     * | `GYEONGGI_YEONCHEON_GUN` | 54 | 연천군 |
+     * | `GYEONGGI_GAPYEONG_GUN` | 55 | 가평군 |
+     * | `GYEONGGI_YANGPYEONG_GUN` | 56 | 양평군 |
+     * | `INCHEON_JEMULPO_GU` | 57 | 제물포구 |
+     * | `INCHEON_YEONGJONG_GU` | 58 | 영종구 |
+     * | `INCHEON_MICHUHOL_GU` | 59 | 미추홀구 |
+     * | `INCHEON_YEONSU_GU` | 60 | 연수구 |
+     * | `INCHEON_NAMDONG_GU` | 61 | 남동구 |
+     * | `INCHEON_BUPYEONG_GU` | 62 | 부평구 |
+     * | `INCHEON_GYEYANG_GU` | 63 | 계양구 |
+     * | `INCHEON_SEOHAE_GU` | 64 | 서해구 |
+     * | `INCHEON_GEOMDAN_GU` | 65 | 검단구 |
+     * | `INCHEON_GANGHWA_GUN` | 66 | 강화군 |
+     * | `INCHEON_ONGJIN_GUN` | 67 | 옹진군 |
+     * | `BUSAN_JUNG_GU` | 68 | 중구 |
+     * | `BUSAN_SEO_GU` | 69 | 서구 |
+     * | `BUSAN_DONG_GU` | 70 | 동구 |
+     * | `BUSAN_YEONGDO_GU` | 71 | 영도구 |
+     * | `BUSAN_BUSANJIN_GU` | 72 | 부산진구 |
+     * | `BUSAN_DONGNAE_GU` | 73 | 동래구 |
+     * | `BUSAN_NAM_GU` | 74 | 남구 |
+     * | `BUSAN_BUK_GU` | 75 | 북구 |
+     * | `BUSAN_HAEUNDAE_GU` | 76 | 해운대구 |
+     * | `BUSAN_SAHA_GU` | 77 | 사하구 |
+     * | `BUSAN_GEUMJEONG_GU` | 78 | 금정구 |
+     * | `BUSAN_GANGSEO_GU` | 79 | 강서구 |
+     * | `BUSAN_YEONJE_GU` | 80 | 연제구 |
+     * | `BUSAN_SUYEONG_GU` | 81 | 수영구 |
+     * | `BUSAN_SASANG_GU` | 82 | 사상구 |
+     * | `BUSAN_GIJANG_GUN` | 83 | 기장군 |
+     * | `DAEGU_JUNG_GU` | 84 | 중구 |
+     * | `DAEGU_DONG_GU` | 85 | 동구 |
+     * | `DAEGU_SEO_GU` | 86 | 서구 |
+     * | `DAEGU_NAM_GU` | 87 | 남구 |
+     * | `DAEGU_BUK_GU` | 88 | 북구 |
+     * | `DAEGU_SUSEONG_GU` | 89 | 수성구 |
+     * | `DAEGU_DALSEO_GU` | 90 | 달서구 |
+     * | `DAEGU_DALSEONG_GUN` | 91 | 달성군 |
+     * | `DAEGU_GUNWI_GUN` | 92 | 군위군 |
+     * | `JEONNAM_GWANGJU_MOKPO_SI` | 93 | 목포시 |
+     * | `JEONNAM_GWANGJU_YEOSU_SI` | 94 | 여수시 |
+     * | `JEONNAM_GWANGJU_SUNCHEON_SI` | 95 | 순천시 |
+     * | `JEONNAM_GWANGJU_NAJU_SI` | 96 | 나주시 |
+     * | `JEONNAM_GWANGJU_GWANGYANG_SI` | 97 | 광양시 |
+     * | `JEONNAM_GWANGJU_DONG_GU` | 98 | 동구 |
+     * | `JEONNAM_GWANGJU_SEO_GU` | 99 | 서구 |
+     * | `JEONNAM_GWANGJU_NAM_GU` | 100 | 남구 |
+     * | `JEONNAM_GWANGJU_BUK_GU` | 101 | 북구 |
+     * | `JEONNAM_GWANGJU_GWANGSAN_GU` | 102 | 광산구 |
+     * | `JEONNAM_GWANGJU_DAMYANG_GUN` | 103 | 담양군 |
+     * | `JEONNAM_GWANGJU_GOKSEONG_GUN` | 104 | 곡성군 |
+     * | `JEONNAM_GWANGJU_GURYE_GUN` | 105 | 구례군 |
+     * | `JEONNAM_GWANGJU_GOHEUNG_GUN` | 106 | 고흥군 |
+     * | `JEONNAM_GWANGJU_BOSEONG_GUN` | 107 | 보성군 |
+     * | `JEONNAM_GWANGJU_HWASUN_GUN` | 108 | 화순군 |
+     * | `JEONNAM_GWANGJU_JANGHEUNG_GUN` | 109 | 장흥군 |
+     * | `JEONNAM_GWANGJU_GANGJIN_GUN` | 110 | 강진군 |
+     * | `JEONNAM_GWANGJU_HAENAM_GUN` | 111 | 해남군 |
+     * | `JEONNAM_GWANGJU_YEONGAM_GUN` | 112 | 영암군 |
+     * | `JEONNAM_GWANGJU_MUAN_GUN` | 113 | 무안군 |
+     * | `JEONNAM_GWANGJU_HAMPYEONG_GUN` | 114 | 함평군 |
+     * | `JEONNAM_GWANGJU_YEONGGWANG_GUN` | 115 | 영광군 |
+     * | `JEONNAM_GWANGJU_JANGSEONG_GUN` | 116 | 장성군 |
+     * | `JEONNAM_GWANGJU_WANDO_GUN` | 117 | 완도군 |
+     * | `JEONNAM_GWANGJU_JINDO_GUN` | 118 | 진도군 |
+     * | `JEONNAM_GWANGJU_SINAN_GUN` | 119 | 신안군 |
+     * | `DAEJEON_DONG_GU` | 120 | 동구 |
+     * | `DAEJEON_JUNG_GU` | 121 | 중구 |
+     * | `DAEJEON_SEO_GU` | 122 | 서구 |
+     * | `DAEJEON_YUSEONG_GU` | 123 | 유성구 |
+     * | `DAEJEON_DAEDEOK_GU` | 124 | 대덕구 |
+     * | `ULSAN_JUNG_GU` | 125 | 중구 |
+     * | `ULSAN_NAM_GU` | 126 | 남구 |
+     * | `ULSAN_DONG_GU` | 127 | 동구 |
+     * | `ULSAN_BUK_GU` | 128 | 북구 |
+     * | `ULSAN_ULJU_GUN` | 129 | 울주군 |
+     * | `GANGWON_CHUNCHEON_SI` | 130 | 춘천시 |
+     * | `GANGWON_WONJU_SI` | 131 | 원주시 |
+     * | `GANGWON_GANGNEUNG_SI` | 132 | 강릉시 |
+     * | `GANGWON_DONGHAE_SI` | 133 | 동해시 |
+     * | `GANGWON_TAEBAEK_SI` | 134 | 태백시 |
+     * | `GANGWON_SOKCHO_SI` | 135 | 속초시 |
+     * | `GANGWON_SAMCHEOK_SI` | 136 | 삼척시 |
+     * | `GANGWON_HONGCHEON_GUN` | 137 | 홍천군 |
+     * | `GANGWON_HOENGSEONG_GUN` | 138 | 횡성군 |
+     * | `GANGWON_YEONGWOL_GUN` | 139 | 영월군 |
+     * | `GANGWON_PYEONGCHANG_GUN` | 140 | 평창군 |
+     * | `GANGWON_JEONGSEON_GUN` | 141 | 정선군 |
+     * | `GANGWON_CHEORWON_GUN` | 142 | 철원군 |
+     * | `GANGWON_HWACHEON_GUN` | 143 | 화천군 |
+     * | `GANGWON_YANGGU_GUN` | 144 | 양구군 |
+     * | `GANGWON_INJE_GUN` | 145 | 인제군 |
+     * | `GANGWON_GOSEONG_GUN` | 146 | 고성군 |
+     * | `GANGWON_YANGYANG_GUN` | 147 | 양양군 |
+     * | `GYEONGNAM_CHANGWON_SI` | 148 | 창원시 |
+     * | `GYEONGNAM_JINJU_SI` | 149 | 진주시 |
+     * | `GYEONGNAM_TONGYEONG_SI` | 150 | 통영시 |
+     * | `GYEONGNAM_SACHEON_SI` | 151 | 사천시 |
+     * | `GYEONGNAM_GIMHAE_SI` | 152 | 김해시 |
+     * | `GYEONGNAM_MIRYANG_SI` | 153 | 밀양시 |
+     * | `GYEONGNAM_GEOJE_SI` | 154 | 거제시 |
+     * | `GYEONGNAM_YANGSAN_SI` | 155 | 양산시 |
+     * | `GYEONGNAM_UIRYEONG_GUN` | 156 | 의령군 |
+     * | `GYEONGNAM_HAMAN_GUN` | 157 | 함안군 |
+     * | `GYEONGNAM_CHANGNYEONG_GUN` | 158 | 창녕군 |
+     * | `GYEONGNAM_GOSEONG_GUN` | 159 | 고성군 |
+     * | `GYEONGNAM_NAMHAE_GUN` | 160 | 남해군 |
+     * | `GYEONGNAM_HADONG_GUN` | 161 | 하동군 |
+     * | `GYEONGNAM_SANCHEONG_GUN` | 162 | 산청군 |
+     * | `GYEONGNAM_HAMYANG_GUN` | 163 | 함양군 |
+     * | `GYEONGNAM_GEOCHANG_GUN` | 164 | 거창군 |
+     * | `GYEONGNAM_HAPCHEON_GUN` | 165 | 합천군 |
+     * | `GYEONGBUK_POHANG_SI` | 166 | 포항시 |
+     * | `GYEONGBUK_GYEONGJU_SI` | 167 | 경주시 |
+     * | `GYEONGBUK_GIMCHEON_SI` | 168 | 김천시 |
+     * | `GYEONGBUK_ANDONG_SI` | 169 | 안동시 |
+     * | `GYEONGBUK_GUMI_SI` | 170 | 구미시 |
+     * | `GYEONGBUK_YEONGJU_SI` | 171 | 영주시 |
+     * | `GYEONGBUK_YEONGCHEON_SI` | 172 | 영천시 |
+     * | `GYEONGBUK_SANGJU_SI` | 173 | 상주시 |
+     * | `GYEONGBUK_MUNGYEONG_SI` | 174 | 문경시 |
+     * | `GYEONGBUK_GYEONGSAN_SI` | 175 | 경산시 |
+     * | `GYEONGBUK_UISEONG_GUN` | 176 | 의성군 |
+     * | `GYEONGBUK_CHEONGSONG_GUN` | 177 | 청송군 |
+     * | `GYEONGBUK_YEONGYANG_GUN` | 178 | 영양군 |
+     * | `GYEONGBUK_YEONGDEOK_GUN` | 179 | 영덕군 |
+     * | `GYEONGBUK_CHEONGDO_GUN` | 180 | 청도군 |
+     * | `GYEONGBUK_GORYEONG_GUN` | 181 | 고령군 |
+     * | `GYEONGBUK_SEONGJU_GUN` | 182 | 성주군 |
+     * | `GYEONGBUK_CHILGOK_GUN` | 183 | 칠곡군 |
+     * | `GYEONGBUK_YECHEON_GUN` | 184 | 예천군 |
+     * | `GYEONGBUK_BONGHWA_GUN` | 185 | 봉화군 |
+     * | `GYEONGBUK_ULJIN_GUN` | 186 | 울진군 |
+     * | `GYEONGBUK_ULLEUNG_GUN` | 187 | 울릉군 |
+     * | `CHUNGNAM_CHEONAN_SI` | 188 | 천안시 |
+     * | `CHUNGNAM_GONGJU_SI` | 189 | 공주시 |
+     * | `CHUNGNAM_BORYEONG_SI` | 190 | 보령시 |
+     * | `CHUNGNAM_ASAN_SI` | 191 | 아산시 |
+     * | `CHUNGNAM_SEOSAN_SI` | 192 | 서산시 |
+     * | `CHUNGNAM_NONSAN_SI` | 193 | 논산시 |
+     * | `CHUNGNAM_GYERYONG_SI` | 194 | 계룡시 |
+     * | `CHUNGNAM_DANGJIN_SI` | 195 | 당진시 |
+     * | `CHUNGNAM_GEUMSAN_GUN` | 196 | 금산군 |
+     * | `CHUNGNAM_BUYEO_GUN` | 197 | 부여군 |
+     * | `CHUNGNAM_SEOCHEON_GUN` | 198 | 서천군 |
+     * | `CHUNGNAM_CHEONGYANG_GUN` | 199 | 청양군 |
+     * | `CHUNGNAM_HONGSEONG_GUN` | 200 | 홍성군 |
+     * | `CHUNGNAM_YESAN_GUN` | 201 | 예산군 |
+     * | `CHUNGNAM_TAEAN_GUN` | 202 | 태안군 |
+     * | `CHUNGBUK_CHEONGJU_SI` | 203 | 청주시 |
+     * | `CHUNGBUK_CHUNGJU_SI` | 204 | 충주시 |
+     * | `CHUNGBUK_JECHEON_SI` | 205 | 제천시 |
+     * | `CHUNGBUK_BOEUN_GUN` | 206 | 보은군 |
+     * | `CHUNGBUK_OKCHEON_GUN` | 207 | 옥천군 |
+     * | `CHUNGBUK_YEONGDONG_GUN` | 208 | 영동군 |
+     * | `CHUNGBUK_JEUNGPYEONG_GUN` | 209 | 증평군 |
+     * | `CHUNGBUK_JINCHEON_GUN` | 210 | 진천군 |
+     * | `CHUNGBUK_GOESAN_GUN` | 211 | 괴산군 |
+     * | `CHUNGBUK_EUMSEONG_GUN` | 212 | 음성군 |
+     * | `CHUNGBUK_DANYANG_GUN` | 213 | 단양군 |
+     * | `JEONBUK_JEONJU_SI` | 214 | 전주시 |
+     * | `JEONBUK_GUNSAN_SI` | 215 | 군산시 |
+     * | `JEONBUK_IKSAN_SI` | 216 | 익산시 |
+     * | `JEONBUK_JEONGEUP_SI` | 217 | 정읍시 |
+     * | `JEONBUK_NAMWON_SI` | 218 | 남원시 |
+     * | `JEONBUK_GIMJE_SI` | 219 | 김제시 |
+     * | `JEONBUK_WANJU_GUN` | 220 | 완주군 |
+     * | `JEONBUK_JINAN_GUN` | 221 | 진안군 |
+     * | `JEONBUK_MUJU_GUN` | 222 | 무주군 |
+     * | `JEONBUK_JANGSU_GUN` | 223 | 장수군 |
+     * | `JEONBUK_IMSIL_GUN` | 224 | 임실군 |
+     * | `JEONBUK_SUNCHANG_GUN` | 225 | 순창군 |
+     * | `JEONBUK_GOCHANG_GUN` | 226 | 고창군 |
+     * | `JEONBUK_BUAN_GUN` | 227 | 부안군 |
+     * | `JEJU_JEJU_SI` | 228 | 제주시 |
+     * | `JEJU_SEOGWIPO_SI` | 229 | 서귀포시 |
+     */
+  subRegion?: UpdateAdminJobRequestSubRegion;
+  /**
+     * 모집 기간 유형입니다. ALWAYS_OPEN으로 바꾸면 모집 종료 일시를 지웁니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `PERIOD` | 1 | 기간 채용 |
+     * | `ALWAYS_OPEN` | 2 | 상시 채용 |
+     */
+  recruitmentType?: UpdateAdminJobRequestRecruitmentType;
+  recruitmentHeadcount?: number;
+  recruitmentStartAt?: string;
+  recruitmentEndAt?: string;
+  closesWhenFilled?: boolean;
+  autoCloseEnabled?: boolean;
+  recruitmentNotice?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+     * | `EMAIL` | 2 | 이메일 |
+     */
+  applicationMethod?: UpdateAdminJobRequestApplicationMethod;
+  /**
+     * @minLength 0
+     * @maxLength 320
+     */
+  applyEmail?: string;
+  /**
+     * @minLength 0
+     * @maxLength 320
+     */
+  inquiryEmail?: string;
+  /**
+     * @minLength 0
+     * @maxLength 2048
+     */
+  sourceUrl?: string;
+  /** 비울 공고 정보의 필드 이름입니다. parentCompanyName, industry, coverImageUrl, logoUrl, jobField, jobRole, experienceMinYears, region, subRegion, recruitmentHeadcount, recruitmentStartAt, recruitmentEndAt, closesWhenFilled, autoCloseEnabled, recruitmentNotice, applicationMethod, applyEmail, inquiryEmail, sourceUrl을 보낼 수 있습니다. */
+  clear?: string[];
 }
