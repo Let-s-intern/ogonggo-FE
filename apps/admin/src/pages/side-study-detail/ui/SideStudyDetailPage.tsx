@@ -1,8 +1,9 @@
 import { useParams } from 'react-router';
+import { enumLabel } from '@ogonggo/api/src/admin';
 import { Badge, Callout, Card, CardTitle, DescriptionList, EmptyState } from '@ogonggo/ui';
 import { useSideStudyDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
-import { plainLabel, sideStudyKindLabel } from '@/shared/config/labels';
+import { sideStudyKindLabel } from '@/shared/config/labels';
 import { BACKEND_PENDING_MESSAGE, isBackendPending } from '@/shared/config/backendPending';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
@@ -57,7 +58,10 @@ export function SideStudyDetailPage() {
           items={[
             { label: '종류', value: <Badge tone="neutral">{sideStudyKindLabel(data.kind)}</Badge> },
             { label: '모집장', value: data.authorNickname },
-            { label: '진행 방식', value: plainLabel(data.operationType) },
+            {
+              label: '진행 방식',
+              value: enumLabel('RecruitmentPostProgressMethod', data.operationType),
+            },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },

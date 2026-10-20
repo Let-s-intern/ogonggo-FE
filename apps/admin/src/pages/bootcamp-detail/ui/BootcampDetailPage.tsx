@@ -1,4 +1,5 @@
 import { useParams } from 'react-router';
+import { contentFieldLabel, enumLabel } from '@ogonggo/api/src/admin';
 import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
@@ -7,7 +8,6 @@ import {
   ContentSourceBadge,
   JobReviewStatusBadge,
   VisibilityBadge,
-  plainLabel,
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
@@ -58,16 +58,22 @@ export function BootcampDetailPage() {
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '프로그램 유형', value: data.programType },
-            { label: '진행 방식', value: plainLabel(data.operationType) },
+            { label: '진행 방식', value: enumLabel('BootcampOperationType', data.operationType) },
             {
               label: '수강료',
               value:
                 data.tuitionAmount == null
-                  ? plainLabel(data.tuitionType)
-                  : `${plainLabel(data.tuitionType)} (${formatCount(data.tuitionAmount)}원)`,
+                  ? enumLabel('BootcampTuitionType', data.tuitionType)
+                  : `${enumLabel('BootcampTuitionType', data.tuitionType)} (${formatCount(data.tuitionAmount)}원)`,
             },
-            { label: '모집 유형', value: plainLabel(data.recruitmentType) },
-            { label: '지원 방법', value: plainLabel(data.applicationMethod) },
+            {
+              label: '모집 유형',
+              value: enumLabel('BootcampRecruitmentType', data.recruitmentType),
+            },
+            {
+              label: '지원 방법',
+              value: enumLabel('BootcampApplicationMethod', data.applicationMethod),
+            },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
             { label: '정원', value: formatCount(data.capacity) },
@@ -111,14 +117,16 @@ export function BootcampDetailPage() {
 
       {data.content ? (
         <Card className="mt-4">
-          <CardTitle>소개</CardTitle>
+          <CardTitle>{contentFieldLabel('BootcampContentField', 'content')}</CardTitle>
           <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">{data.content}</p>
         </Card>
       ) : null}
 
       {data.eligibilityAndSelectionProcess ? (
         <Card className="mt-4">
-          <CardTitle>지원 자격과 선발 절차</CardTitle>
+          <CardTitle>
+            {contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess')}
+          </CardTitle>
           <p className="whitespace-pre-wrap pt-4 text-sm text-gray-900">
             {data.eligibilityAndSelectionProcess}
           </p>
@@ -136,10 +144,14 @@ export function BootcampDetailPage() {
           reviewStatus: data.reviewStatus,
         }}
         fields={[
-          { field: 'content', label: '소개', value: data.content ?? '' },
+          {
+            field: 'content',
+            label: contentFieldLabel('BootcampContentField', 'content'),
+            value: data.content ?? '',
+          },
           {
             field: 'eligibilityAndSelectionProcess',
-            label: '지원 자격과 선발 절차',
+            label: contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess'),
             value: data.eligibilityAndSelectionProcess ?? '',
           },
         ]}

@@ -1,4 +1,5 @@
 import { useParams } from 'react-router';
+import { contentFieldLabel, enumLabel } from '@ogonggo/api/src/admin';
 import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useJobDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
@@ -7,11 +8,21 @@ import {
   JobReviewStatusBadge,
   RecruitmentStatusBadge,
   VisibilityBadge,
-  plainLabel,
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
 import { TodayJobCard } from './TodayJobCard';
+
+/** 본문 칸. 상세의 본문 카드와 `내용 수정` 모달이 같은 순서로 쓴다. 제목은 `JobContentField` 라벨이다. */
+const BODY_FIELDS = [
+  'companyAndTeamIntroduction',
+  'responsibilities',
+  'qualifications',
+  'preferredQualifications',
+  'compensation',
+  'benefits',
+  'hiringProcess',
+] as const;
 
 /**
  * 채용공고 상세. 오늘의 공고(PICK) 카드와 운영 값·본문 수정(`ContentActions`)을 빼면 읽기 전용이다.
@@ -36,15 +47,10 @@ export function JobDetailPage() {
     );
   }
 
-  const bodyFields = [
-    { label: '회사·팀 소개', value: data.companyAndTeamIntroduction },
-    { label: '주요 업무', value: data.responsibilities },
-    { label: '자격 요건', value: data.qualifications },
-    { label: '우대 사항', value: data.preferredQualifications },
-    { label: '보상', value: data.compensation },
-    { label: '복지', value: data.benefits },
-    { label: '채용 절차', value: data.hiringProcess },
-  ].filter((field): field is { label: string; value: string } => Boolean(field.value));
+  const bodyFields = BODY_FIELDS.map((field) => ({
+    label: contentFieldLabel('JobContentField', field),
+    value: data[field],
+  })).filter((field): field is { label: string; value: string } => Boolean(field.value));
 
   return (
     <>
@@ -61,11 +67,11 @@ export function JobDetailPage() {
             { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
-            { label: '지역', value: plainLabel(data.region) },
-            { label: '고용 형태', value: plainLabel(data.employmentType) },
-            { label: '경력', value: plainLabel(data.experienceType) },
-            { label: '학력', value: plainLabel(data.educationLevel) },
-            { label: '모집 유형', value: plainLabel(data.recruitmentType) },
+            { label: '지역', value: data.region ? enumLabel('Region', data.region) : '-' },
+            { label: '고용 형태', value: enumLabel('JobEmploymentType', data.employmentType) },
+            { label: '경력', value: enumLabel('JobExperienceType', data.experienceType) },
+            { label: '학력', value: enumLabel('JobEducationLevel', data.educationLevel) },
+            { label: '모집 유형', value: enumLabel('JobRecruitmentType', data.recruitmentType) },
             {
               label: '모집 상태',
               value: (
@@ -123,23 +129,11 @@ export function JobDetailPage() {
           source: data.source,
           reviewStatus: data.reviewStatus,
         }}
-        fields={[
-          {
-            field: 'companyAndTeamIntroduction',
-            label: '회사·팀 소개',
-            value: data.companyAndTeamIntroduction ?? '',
-          },
-          { field: 'responsibilities', label: '주요 업무', value: data.responsibilities ?? '' },
-          { field: 'qualifications', label: '자격 요건', value: data.qualifications ?? '' },
-          {
-            field: 'preferredQualifications',
-            label: '우대 사항',
-            value: data.preferredQualifications ?? '',
-          },
-          { field: 'compensation', label: '보상', value: data.compensation ?? '' },
-          { field: 'benefits', label: '복지', value: data.benefits ?? '' },
-          { field: 'hiringProcess', label: '채용 절차', value: data.hiringProcess ?? '' },
-        ]}
+        fields={BODY_FIELDS.map((field) => ({
+          field,
+          label: contentFieldLabel('JobContentField', field),
+          value: data[field] ?? '',
+        }))}
       />
 
       {bodyFields.length > 0 ? (
