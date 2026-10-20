@@ -83,7 +83,9 @@ export function UserMemberDetailPage() {
       key: 'status',
       header: '게시 상태',
       width: 'w-28',
-      render: (row) => <RecruitmentStatusBadge value={row.status} />,
+      render: (row) => (
+        <RecruitmentStatusBadge enumName="BootcampRecruitmentStatus" value={row.status} />
+      ),
     },
   ];
 

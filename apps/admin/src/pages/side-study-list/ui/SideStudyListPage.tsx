@@ -20,7 +20,7 @@ import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links'
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
   CONTENT_SORT_OPTIONS,
-  RECRUITMENT_STATUS_OPTIONS,
+  SIDE_STUDY_RECRUITMENT_STATUS_OPTIONS,
   RecruitmentStatusBadge,
   SIDE_STUDY_KIND_OPTIONS,
   VISIBILITY_OPTIONS,
@@ -93,7 +93,12 @@ export function SideStudyListPage() {
       key: 'recruitmentStatus',
       header: '모집 상태',
       width: 'w-28',
-      render: (row) => <RecruitmentStatusBadge value={row.recruitmentStatus} />,
+      render: (row) => (
+        <RecruitmentStatusBadge
+          enumName="RecruitmentPostRecruitmentStatus"
+          value={row.recruitmentStatus}
+        />
+      ),
     },
     {
       key: 'viewCount',
@@ -133,7 +138,7 @@ export function SideStudyListPage() {
           aria-label="종류"
         />
         <Select
-          options={RECRUITMENT_STATUS_OPTIONS}
+          options={SIDE_STUDY_RECRUITMENT_STATUS_OPTIONS}
           value={filters.recruitmentStatus}
           onChange={(event) => setFilter('recruitmentStatus', event.target.value)}
           aria-label="모집 상태"

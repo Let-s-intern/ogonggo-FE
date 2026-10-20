@@ -77,12 +77,6 @@ type RecruitmentStatusEnum =
   | 'BootcampRecruitmentStatus'
   | 'RecruitmentPostRecruitmentStatus';
 
-/** 옛 공용 라벨. 호출부가 모두 `enumName` 을 넘기면 지운다. */
-const RECRUITMENT_STATUS: Record<string, string> = {
-  RECRUITING: '모집중',
-  CLOSED: '모집 마감',
-};
-
 const MEMBER_STATUS_TONE: Record<MemberStatus, Tone> = {
   ACTIVE: 'success',
   WITHDRAWN: 'neutral',
@@ -131,13 +125,9 @@ export const RecruitmentStatusBadge = ({
   enumName,
   value,
 }: {
-  enumName?: RecruitmentStatusEnum;
+  enumName: RecruitmentStatusEnum;
   value: string;
-}) =>
-  renderBadge(
-    RECRUITMENT_STATUS_TONE[value],
-    enumName ? enumLabel(enumName, value) : (RECRUITMENT_STATUS[value] ?? value),
-  );
+}) => renderBadge(RECRUITMENT_STATUS_TONE[value], enumLabel(enumName, value));
 
 export const MemberStatusBadge = ({ value }: { value: MemberStatus }) =>
   renderBadge(MEMBER_STATUS_TONE[value], enumLabel('UserStatus', value));
@@ -181,10 +171,6 @@ export const VISIBILITY_OPTIONS = [
 ];
 export const JOB_REVIEW_STATUS_OPTIONS = toOptions('ContentReviewStatus', '검수 상태 전체');
 export const CONTENT_SOURCE_OPTIONS = toOptions('ContentSource', '등록 경로 전체');
-export const RECRUITMENT_STATUS_OPTIONS = [
-  { value: '', label: '모집 상태 전체' },
-  ...Object.entries(RECRUITMENT_STATUS).map(([value, label]) => ({ value, label })),
-];
 export const JOB_RECRUITMENT_STATUS_OPTIONS = toOptions('JobRecruitmentStatus', '모집 상태 전체');
 /**
  * 임시저장(`DRAFT`)은 뺀다. 운영자가 콘솔에서 만들 수 있는 상태가 아니고, 필터로 남겨 두면
