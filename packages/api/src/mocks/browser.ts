@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'msw';
 import { setupWorker } from 'msw/browser';
 import { getOgonggoUserAPIMock } from '../generated/user/endpoints';
+import { enumHandlers } from './enums';
 import { handlers } from './handlers';
 
 /**
@@ -12,9 +13,10 @@ import { handlers } from './handlers';
  * 앞에 둔 핸들러가 먼저 받는다. 앱이 넘기는 것(`overrides`), 손으로 쓴 핸들러, 그리고 orval 이
  * 생성한 가짜 응답 순이다. 생성 핸들러는 손으로 쓴 것이 없는 API 를 메운다 — 마이페이지가 부르는
  * 스크랩·지원 관리(`/job-bookmarks` 등)·내 공고가 여기서 응답을 받는다. 값은 무작위다.
+ * `/enums`(`./enums.ts`)는 생성 핸들러가 무작위 카탈로그를 내지 않도록 그보다 앞에 둔다.
  *
  * 켤지 말지는 앱이 정한다(`./admin/browser.ts` 와 같은 이유).
  */
 export function setupUserWorker(...overrides: RequestHandler[]) {
-  return setupWorker(...overrides, ...handlers, ...getOgonggoUserAPIMock());
+  return setupWorker(...overrides, ...handlers, ...enumHandlers, ...getOgonggoUserAPIMock());
 }
