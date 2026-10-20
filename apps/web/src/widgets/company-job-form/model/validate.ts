@@ -8,8 +8,8 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *
  * 필수 칸의 목록은 목업의 별표(`*`) 그대로다. 세 곳은 목업에서 읽어낼 수 없어 여기서 정한다.
  *
- * - **지원 링크는 지원 방법과 상관없이 필수다.** 공개 상세의 `지원하러 가기` 는 `sourceUrl`
- *   하나만 본다(`shared/ui/ApplyCta.tsx`). 링크가 비면 이메일 지원이어도 그 버튼이 갈 곳이 없다.
+ * - 지원 링크는 외부 지원 페이지일 때만 필수다. 이메일 지원이면 공개 상세의 `지원하러 가기` 가
+ *   링크가 없을 때 담당자 이메일로 연결된다(`widgets/job-detail/ui/JobDetailView.tsx`).
  * - 이메일 지원이면 담당자 이메일이 필수다. 주소가 없으면 지원서를 받을 곳이 없다. 적었다면
  *   어느 방법이든 형식을 본다.
  * - 마감일이 접수 시작일보다 앞서면 백엔드에 보내기 전에 막는다. 목록의 D-day 계산이
@@ -47,7 +47,7 @@ export function validateForPublish(values: CompanyJobFormValues): string | null 
   if (!values.applicationMethod) {
     return '지원 방법을 선택해 주세요.';
   }
-  if (!values.sourceUrl.trim()) {
+  if (values.applicationMethod === 'EXTERNAL_PAGE' && !values.sourceUrl.trim()) {
     return '지원 링크를 입력해 주세요.';
   }
   const applyEmail = values.applyEmail.trim();

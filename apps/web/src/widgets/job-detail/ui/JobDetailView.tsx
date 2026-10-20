@@ -89,7 +89,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
   );
   const applyCta = (
     <ApplyCta
-      href={job.sourceUrl}
+      href={job.sourceUrl ?? (job.applyEmail ? `mailto:${job.applyEmail}` : undefined)}
       label="지원하러 가기"
       kind="jobs"
       id={job.id}
