@@ -8,7 +8,7 @@ import {
   ALWAYS_OPEN_LABEL,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
-import { EyeIcon } from '@/shared/ui/icons';
+import { ViewCount } from '@/shared/ui/ViewCount';
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
 import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels';
@@ -129,6 +129,15 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
     </Badge>
   ) : null;
 
+  // 맨 아래 줄 오른쪽 끝. 추천 박스가 없으면 `mt-auto` 로 같은 행의 카드끼리 바닥을 맞춘다. 박스가
+  // 있는 `featured` 는 박스가 이미 `mt-auto` 라서 여기 두 번째 `mt-auto` 를 두면 남는 높이가 둘로 갈린다.
+  const viewCount = (
+    <ViewCount
+      count={job.viewCount}
+      className={cn('self-end', !(recommendationTitle || recommendationDescription) && 'mt-auto')}
+    />
+  );
+
   /** 썸네일 → 메타 줄 → 회사명 → 제목. `grid` 의 전부이고 `featured` 의 md 이상 모양이다. */
   const verticalBody = (
     <>
@@ -150,13 +159,6 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
       <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
         {job.title}
       </p>
-      {featured ? null : (
-        <p className="flex items-center gap-1 text-xs text-gray-400">
-          <EyeIcon className="size-3.5" />
-          <span className="sr-only">조회수</span>
-          {job.viewCount.toLocaleString('ko-KR')}
-        </p>
-      )}
     </>
   );
 
@@ -186,7 +188,11 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
               </div>
               {deadlineBadge ? <span className="flex shrink-0">{deadlineBadge}</span> : null}
             </div>
-            <div className="hidden md:contents">{verticalBody}</div>
+            <ViewCount count={job.viewCount} className="self-end md:hidden" />
+            <div className="hidden md:contents">
+              {verticalBody}
+              {viewCount}
+            </div>
           </>
         ) : (
           verticalBody
@@ -211,6 +217,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         {!featured && deadlineBadge ? (
           <span className="flex md:hidden">{deadlineBadge}</span>
         ) : null}
+        {featured ? null : viewCount}
       </JobCardLink>
       {/* 카드뉴스 버튼은 어드민에게만 보인다. 없으면 북마크가 원래 자리(오른쪽 위 끝)에 남는다. */}
       <div
