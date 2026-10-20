@@ -5,7 +5,7 @@ import {
   isAdmin,
   parseRedashQueryInput,
   runRedashQuery,
-} from './redash-query';
+} from './redash-query.js';
 
 /**
  * 통계 화면의 AI 질문 창. 어드민 배포본의 `POST /stats-ai/ask` 가 `vercel.json` 의 rewrite 로 여기에
