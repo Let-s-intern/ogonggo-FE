@@ -5,6 +5,7 @@ import {
   type VisibilityContentKind,
 } from '@/entities/content/api/useContent';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
+import { visibilityLabel } from '@/shared/config/labels';
 
 /**
  * 목록에서 고른 행의 id, 또는 검색 결과 전체.
@@ -137,7 +138,7 @@ export function BulkVisibilityBar({
         onSuccess: () => {
           selection.clear();
           setAlert({
-            message: `${count}건을 ${visibility === 'VISIBLE' ? '노출' : '비노출'}로 바꿨습니다.`,
+            message: `${count}건을 ${visibilityLabel(visibility)}로 바꿨습니다.`,
             nonce: Date.now(),
           });
         },
@@ -198,7 +199,7 @@ export function BulkVisibilityBar({
               disabled={mutation.isPending}
               onClick={() => change('VISIBLE')}
             >
-              노출로 바꾸기
+              {visibilityLabel('VISIBLE')}로 바꾸기
             </Button>
             <Button
               size="sm"
@@ -206,7 +207,7 @@ export function BulkVisibilityBar({
               disabled={mutation.isPending}
               onClick={() => change('HIDDEN')}
             >
-              비노출로 바꾸기
+              {visibilityLabel('HIDDEN')}로 바꾸기
             </Button>
           </div>
         </div>

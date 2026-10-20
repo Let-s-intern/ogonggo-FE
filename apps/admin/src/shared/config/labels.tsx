@@ -100,11 +100,11 @@ function renderBadge(tone: Tone | undefined, label: string) {
   return <Badge tone={tone ?? 'neutral'}>{label}</Badge>;
 }
 
+export const visibilityLabel = (value: Visibility): string =>
+  ADMIN_CONTENT_VISIBILITY.find((option) => option.value === value)?.label ?? value;
+
 export const VisibilityBadge = ({ value }: { value: Visibility }) =>
-  renderBadge(
-    VISIBILITY_TONE[value],
-    ADMIN_CONTENT_VISIBILITY.find((option) => option.value === value)?.label ?? value,
-  );
+  renderBadge(VISIBILITY_TONE[value], visibilityLabel(value));
 
 /**
  * 크롤링 수집분에는 검수 상태가 없다. 빈 칸 대신 사유가 되는 단어를 남긴다.

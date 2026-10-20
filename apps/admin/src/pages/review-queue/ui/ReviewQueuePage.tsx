@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useBlocker } from 'react-router';
+import { enumLabel } from '@ogonggo/api/src/admin';
 import {
   ActionAlert,
   Badge,
@@ -150,7 +151,7 @@ export function ReviewQueuePage() {
       setDecisions((previous) => new Map(previous).set(keyOf(current), entry));
       setLastDecided(entry);
       setAlert({
-        message: decision === 'APPROVED' ? '허용되었습니다.' : '반려했습니다.',
+        message: decision === 'APPROVED' ? '승인되었습니다.' : '반려했습니다.',
         detail: current.title,
         tone: decision === 'APPROVED' ? 'success' : 'danger',
         nonce: Date.now(),
@@ -321,7 +322,7 @@ export function ReviewQueuePage() {
             className="max-w-md truncate text-sm text-blue-600 underline"
             onClick={undo}
           >
-            방금 {lastDecided.decision === 'APPROVED' ? '허용' : '반려'}한 「
+            방금 {lastDecided.decision === 'APPROVED' ? '승인' : '반려'}한 「
             {lastDecided.item.title}」 되돌리기
           </button>
         ) : null}
@@ -463,7 +464,7 @@ interface ReviewCardProps {
 }
 
 /**
- * 판정한 건은 테두리로 표시한다. 허용은 초록, 반려는 빨강.
+ * 판정한 건은 테두리로 표시한다. 승인은 초록, 반려는 빨강.
  *
  * A/D 로 앞뒤를 오갈 때 이 건을 이미 처리했는지가 한눈에 보여야 한다. 뱃지 하나로는 제목 옆
  * 작은 글자라 빠르게 넘기는 중에 눈에 들어오지 않는다.
@@ -487,11 +488,11 @@ function ReviewCard({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 pb-1">
-            <Badge tone="neutral">{item.type === 'JOB' ? '채용공고' : '부트캠프'}</Badge>
+            <Badge tone="neutral">{enumLabel('ContentReviewTargetType', item.type)}</Badge>
             <span className="text-sm text-gray-500">{item.companyName}</span>
             {decision ? (
               <Badge tone={decision === 'APPROVED' ? 'success' : 'danger'}>
-                {decision === 'APPROVED' ? '허용함' : '반려함'}
+                {decision === 'APPROVED' ? '승인함' : '반려함'}
               </Badge>
             ) : null}
           </div>
@@ -536,7 +537,7 @@ function ReviewCard({
       ) : null}
 
       {/*
-        본문만 스크롤한다. 페이지를 통째로 스크롤하면 W/S 를 누를 때 제목과 허용·반려 버튼이
+        본문만 스크롤한다. 페이지를 통째로 스크롤하면 W/S 를 누를 때 제목과 승인·반려 버튼이
         화면 밖으로 나가고, 무엇을 처리하는 중인지 놓친다.
       */}
       <div
