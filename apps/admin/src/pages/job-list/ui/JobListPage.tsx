@@ -19,7 +19,7 @@ import {
   ContentSourceBadge,
   JOB_REVIEW_STATUS_OPTIONS,
   JobReviewStatusBadge,
-  RECRUITMENT_STATUS_OPTIONS,
+  JOB_RECRUITMENT_STATUS_OPTIONS,
   RecruitmentStatusBadge,
   VISIBILITY_OPTIONS,
 } from '@/shared/config/labels';
@@ -138,7 +138,9 @@ export function JobListPage() {
       key: 'recruitmentStatus',
       header: '모집 상태',
       width: 'w-28',
-      render: (row) => <RecruitmentStatusBadge value={row.recruitmentStatus} />,
+      render: (row) => (
+        <RecruitmentStatusBadge enumName="JobRecruitmentStatus" value={row.recruitmentStatus} />
+      ),
     },
     {
       key: 'viewCount',
@@ -184,7 +186,7 @@ export function JobListPage() {
           aria-label="검수 상태"
         />
         <Select
-          options={RECRUITMENT_STATUS_OPTIONS}
+          options={JOB_RECRUITMENT_STATUS_OPTIONS}
           value={filters.recruitmentStatus}
           onChange={(event) => setFilter('recruitmentStatus', event.target.value)}
           aria-label="모집 상태"

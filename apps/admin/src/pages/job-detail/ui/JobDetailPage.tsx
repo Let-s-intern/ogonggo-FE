@@ -68,7 +68,12 @@ export function JobDetailPage() {
             { label: '모집 유형', value: plainLabel(data.recruitmentType) },
             {
               label: '모집 상태',
-              value: <RecruitmentStatusBadge value={data.recruitmentStatus} />,
+              value: (
+                <RecruitmentStatusBadge
+                  enumName="JobRecruitmentStatus"
+                  value={data.recruitmentStatus}
+                />
+              ),
             },
             { label: '모집 시작', value: formatDate(data.recruitmentStartAt) },
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
