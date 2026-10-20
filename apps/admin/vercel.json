@@ -22,6 +22,10 @@
       "destination": "/api/redash-query"
     },
     {
+      "source": "/stats-ai/ask",
+      "destination": "/api/stats-ask"
+    },
+    {
       "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }

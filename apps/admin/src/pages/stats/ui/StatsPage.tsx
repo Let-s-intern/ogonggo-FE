@@ -1,6 +1,12 @@
-import { useMemo } from 'react';
-import { Select } from '@ogonggo/ui';
-import { KPI_QUERY, WINDOW_OPTIONS, useKpiQuery } from '@/entities/kpi';
+import { useMemo, useRef, useState } from 'react';
+import { Button, Select } from '@ogonggo/ui';
+import {
+  KPI_QUERY,
+  WINDOW_OPTIONS,
+  isDateRangeComplete,
+  resolveDateRange,
+  useKpiQuery,
+} from '@/entities/kpi';
 import type { RedashRow } from '@/shared/api/redash';
 import { EChart } from '@/shared/ui/EChart';
 import { PageHeader } from '@/widgets/page-header';
@@ -11,11 +17,13 @@ import {
   sortByX,
   timeSeriesOption,
 } from '../lib/chartOptions';
+import { exportStatsPdf } from '../lib/exportPdf';
 import { useKpiFilters } from '../lib/useKpiFilters';
 import { KpiFilterBar } from './KpiFilterBar';
 import { MetricTile } from './MetricTile';
 import { QueryCard } from './QueryCard';
 import { ResultTable } from './ResultTable';
+import { StatsAiPanel } from './StatsAiPanel';
 
 /** 같은 화면을 Redash 에서 보는 주소. 쿼리를 고치거나 원본을 확인할 때 쓴다. */
 const REDASH_DASHBOARD_URL = 'https://redash.lets-career.com/dashboards/46--kpi-v2';
@@ -120,6 +128,9 @@ function completedLastTwo(
  */
 export function StatsPage() {
   const { filters, setFilters } = useKpiFilters();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
 
   const periodKpi = useKpiQuery(KPI_QUERY.periodKpi, filters);
   const signups = useKpiQuery(KPI_QUERY.signups, filters);
@@ -137,24 +148,62 @@ export function StatsPage() {
     ? `${latest['기간']}${filters.period === '일간' ? '' : ' 시작'} 기준`
     : undefined;
 
+  const downloadPdf = async () => {
+    if (!rootRef.current) {
+      return;
+    }
+    const { start, end } = resolveDateRange(filters);
+    setIsExporting(true);
+    try {
+      await exportStatsPdf(rootRef.current, `오공고-통계-${start}_${end}.pdf`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // 아직 불러오는 카드가 있으면 PDF 에 "불러오는 중" 이 찍힌다. 다 받은 뒤에만 누를 수 있다.
+  const isLoading = [
+    periodKpi,
+    signups,
+    weeklyRetention,
+    jobCounts,
+    jobPerformance,
+    channelKpi,
+    channelTrend,
+    searchLanding,
+  ].some((query) => query.isFetching);
+
   return (
-    <>
+    <div ref={rootRef}>
       <PageHeader
         title="통계"
         action={
-          <a
-            href={REDASH_DASHBOARD_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-gray-500 hover:text-gray-900"
-          >
-            Redash 에서 보기
-          </a>
+          <div className="flex items-center gap-3" data-pdf-hide>
+            <a
+              href={REDASH_DASHBOARD_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-gray-500 hover:text-gray-900"
+            >
+              Redash 에서 보기
+            </a>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={isExporting || isLoading || !isDateRangeComplete(filters)}
+              onClick={() => void downloadPdf()}
+            >
+              {isExporting ? 'PDF 만드는 중' : 'PDF 다운로드'}
+            </Button>
+            <Button size="sm" onClick={() => setIsAiOpen(true)}>
+              AI 에게 묻기
+            </Button>
+          </div>
         }
       />
 
       <div className="flex flex-col gap-10">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" data-pdf-block>
           <KpiFilterBar filters={filters} onChange={setFilters} />
           <p className="text-xs text-gray-500">
             방문·전환은 GA4(10/13 런칭부터, 기기 기준 순 사용자), 가입·공고 수는 서비스 DB(KST)
@@ -165,7 +214,7 @@ export function StatsPage() {
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-bold text-gray-900">KPI</h2>
 
-          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4" data-pdf-block>
             <MetricTile
               label="방문자"
               value={numberAt(latest, '방문자')}
@@ -292,7 +341,7 @@ export function StatsPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4" data-pdf-block>
             <MetricTile label="모집중 공고" value={numberAt(latestJobs, '모집중 공고')} unit="건" />
             <MetricTile
               label="마감 후 노출 중 공고"
@@ -364,6 +413,7 @@ export function StatsPage() {
           </QueryCard>
         </section>
       </div>
-    </>
+      {isAiOpen ? <StatsAiPanel filters={filters} onClose={() => setIsAiOpen(false)} /> : null}
+    </div>
   );
 }
