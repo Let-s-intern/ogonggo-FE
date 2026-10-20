@@ -17,9 +17,9 @@ import { EMPTY_HIRING_PROCESS_STEP, type HiringProcessStep } from '../lib/hiring
  * 맞되, 고르지 않은 드롭다운을 빈 문자열로 들고 있어 타입이 다르다 — `<select>` 의 값은 늘
  * 문자열이고, 숫자 칸(`recruitmentHeadcount`) 도 적기 전에는 값이 없다.
  *
- * **목업에 있는데 여기 없는 칸은 근무 방식 하나다**(v5 PRD 3 절). 받을 필드가 없어 화면에만
- * 비활성으로 그린다. 값을 들고 있지 않는 것이 그 결정의 전부다 — 들고 있으면 언젠가 저장되는
- * 것처럼 보인다.
+ * **목업에 있는데 여기 없는 칸은 근무 방식 하나다**(v5 PRD 3 절). 재택·출근·하이브리드를 받을
+ * 필드가 백엔드에 없어 화면에서도 뺐다(2026-10-20, 사용자). 비활성으로 두면 누를 수 없는 칸이
+ * 고장으로 읽힌다.
  */
 export interface CompanyJobFormValues {
   companyName: string;
