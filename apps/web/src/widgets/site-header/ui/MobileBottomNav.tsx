@@ -108,9 +108,14 @@ function buildTabs(pathname: string, company: boolean): Tab[] {
       subMenu: company
         ? [
             {
-              label: '공고 관리',
-              href: '/mypage/company/posts',
+              label: '채용공고 관리',
+              href: '/mypage/company/posts/jobs',
               icon: 'icon-[lucide--clipboard-list]',
+            },
+            {
+              label: '부트캠프 관리',
+              href: '/mypage/company/posts/bootcamps',
+              icon: 'icon-[lucide--graduation-cap]',
             },
             {
               label: '기업 정보',

@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@ogonggo/ui';
+import { Button, Callout } from '@ogonggo/ui';
 import { FormSection } from '@/shared/ui/FormSection';
+import { companyPostCopy } from '@/widgets/company-posts';
 import {
   createBootcamp,
   fetchMyBootcamp,
@@ -66,6 +67,11 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
+  /**
+   * 읽어 온 공고가 게시 중인지. 수정하면 다시 검수를 받는 동안 노출이 멈추므로 폼 위에 알린다
+   * (BE `requestReview`, `prd-company-mypage-posts.md`). 저장을 막지는 않는다.
+   */
+  const [published, setPublished] = useState(false);
 
   useEffect(() => {
     if (bootcampId === undefined) {
@@ -80,6 +86,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         }
         if (bootcamp) {
           setValues(toCompanyBootcampValues(bootcamp));
+          setPublished(bootcamp.publicationStatus === 'PUBLISHED');
           setPassthrough(toCompanyBootcampPassthrough(bootcamp));
         } else {
           setFormError('부트캠프 공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
@@ -146,7 +153,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
       if (publish && savedId !== undefined) {
         await startBootcampRecruitment(savedId);
       }
-      router.push('/mypage/company/posts?tab=bootcamps');
+      router.push('/mypage/company/posts/bootcamps');
     } catch {
       setFormError(
         publish
@@ -169,6 +176,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         void save(true);
       }}
     >
+      {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
       <FormSection
         name="company-bootcamp-form"
         step={1}

@@ -142,8 +142,32 @@ async function fetchBootcamps(query: CompanyPostsQuery): Promise<CompanyPostsPag
   };
 }
 
-/** 빈 목록·오류 문구에 그대로 나가는 탭 이름. */
+/** 제목·버튼·빈 목록·오류 문구에 그대로 나가는 종류 이름. 사이드바 메뉴 이름과 같다. */
 export const TAB_NOUNS: Record<CompanyPostsQuery['tab'], string> = {
-  jobs: '채용 공고',
-  bootcamps: '교육 · 부트캠프',
+  jobs: '채용공고',
+  bootcamps: '부트캠프',
 };
+
+/**
+ * 사이드바 메뉴 옆 건수. 두 목록을 한 건씩만 불러 전체 건수만 읽는다. 하나가 실패하면 그 종류는
+ * `undefined` 다 — 0 과 모름은 다른 말이다(`MyPageListTabs` 의 `count` 주석).
+ */
+export async function fetchCompanyPostTotals(): Promise<
+  Partial<Record<CompanyPostsQuery['tab'], number>>
+> {
+  const [jobs, bootcamps] = await Promise.allSettled([
+    listMyJobs({
+      page: 1,
+      size: 1,
+    }) as unknown as Promise<SuccessResponsePageResponseCompanyJobSummaryResponse>,
+    listMyBootcamps({
+      page: 1,
+      size: 1,
+    }) as unknown as Promise<SuccessResponsePageResponseCompanyBootcampSummaryResponse>,
+  ]);
+  return {
+    jobs: jobs.status === 'fulfilled' ? jobs.value.data?.pageInfo.totalElements : undefined,
+    bootcamps:
+      bootcamps.status === 'fulfilled' ? bootcamps.value.data?.pageInfo.totalElements : undefined,
+  };
+}

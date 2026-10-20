@@ -55,8 +55,8 @@ export async function replaceJob(jobId: number, request: CreateCompanyJobRequest
  *
  * **승인된 공고만 게시할 수 있고, 그렇지 않으면 409 다**(생성 타입 설명). 새로 쓴 공고도,
  * 고친 공고도 먼저 운영자 검수를 거치므로 409 가 오히려 보통이다. 그래서 409 는 실패로 보지
- * 않고 `false` 로 돌려준다 — 저장은 끝났고 게시만 검수 뒤로 미뤄진 것이다. 목록의 심사 열이
- * 그 상태를 그대로 보여 준다(`widgets/company-posts/model/status.ts`).
+ * 않고 `false` 로 돌려준다 — 저장은 끝났고 게시만 검수 뒤로 미뤄진 것이다. 목록 카드의 진행
+ * 단계가 그 상태를 그대로 보여 준다(`widgets/company-posts/model/stage.ts`).
  */
 export async function publishJob(jobId: number): Promise<boolean> {
   try {
