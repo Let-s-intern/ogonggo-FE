@@ -11,6 +11,7 @@ import {
   WORK_ARRANGEMENT_OPTIONS,
 } from '../model/options';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
+import { CountedInput } from '@/shared/ui/CountedInput';
 import { LogoUploadField } from '@/shared/ui/LogoUploadField';
 import type { CompanyJobFormValues } from '../model/values';
 
@@ -34,14 +35,14 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
   return (
     <div>
       <Field label="기업 · 기관명" htmlFor="company-job-company-name" required>
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-4">
           <LogoUploadField
             url={values.logoUrl}
-            className="h-11 w-24"
+            className="size-20"
             onUploaded={(image) => onChange({ logoUrl: image.url })}
             onClear={() => onChange({ logoUrl: '' })}
           />
-          <Input
+          <CountedInput
             id="company-job-company-name"
             value={values.companyName}
             maxLength={MAX_COMPANY_NAME_LENGTH}
@@ -53,7 +54,7 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
 
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="공고 제목" htmlFor="company-job-title" required>
-          <Input
+          <CountedInput
             id="company-job-title"
             value={values.title}
             maxLength={MAX_TITLE_LENGTH}

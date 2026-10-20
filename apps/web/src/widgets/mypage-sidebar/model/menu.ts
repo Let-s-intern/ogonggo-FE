@@ -8,6 +8,8 @@
 export interface MyPageMenuItem {
   href: string;
   label: string;
+  /** 이 항목 위에 구분선을 둔다. 기업 회원 메뉴가 공고 메뉴와 계정 메뉴를 가른다(B2 시안). */
+  separated?: boolean;
 }
 
 /**
@@ -27,15 +29,18 @@ export const USER_MYPAGE_MENU: readonly MyPageMenuItem[] = [
 ];
 
 /**
- * 기업 회원 메뉴 둘(v5 PRD 1 절). 순서는 목업
- * (`docs/asset/v5 기업회원 마이페이지/기업 기관 정보.png`) 그대로다.
+ * 기업 회원 메뉴 셋(B2 시안, `prd-company-mypage-posts.md`). v5 의 `작성한 공고` 하나를 종류별
+ * 둘로 나눴다 — 화면 안 탭으로 고르던 것을 메뉴로 올렸다.
+ *
+ * **첫 항목이 바뀌면 `/mypage/company` 가 데스크톱에서 보내는 곳도 바뀐다**(`myPageHomeFor`).
  *
  * 경로에 `company` 를 한 단 더 둔 이유는 역할 가드가 경로만 보고 판정할 수 있어야 하기
  * 때문이다 — `/mypage/company` 아래는 기업 회원, 나머지 `/mypage` 아래는 일반 회원이다.
  */
 export const COMPANY_MYPAGE_MENU: readonly MyPageMenuItem[] = [
-  { href: '/mypage/company/posts', label: '작성한 공고' },
-  { href: '/mypage/company/profile', label: '기업/기관 정보' },
+  { href: '/mypage/company/posts/jobs', label: '채용공고' },
+  { href: '/mypage/company/posts/bootcamps', label: '부트캠프' },
+  { href: '/mypage/company/profile', label: '기업/기관 정보', separated: true },
 ];
 
 /** 마이페이지는 둘이다. 어느 쪽 화면인지는 역할이 아니라 지금 경로가 정한다. */
@@ -86,26 +91,31 @@ export function myPageIndexFor(audience: MyPageAudience): string {
 const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[] = [
   { pattern: /^\/mypage\/posts\/new$/, title: '모집글 작성', back: '/mypage/posts' },
   { pattern: /^\/mypage\/posts\/[^/]+\/edit$/, title: '모집글 수정', back: '/mypage/posts' },
-  { pattern: /^\/mypage\/company\/posts$/, title: '작성한 공고', back: COMPANY_MYPAGE_ROOT },
+  { pattern: /^\/mypage\/company\/posts\/jobs$/, title: '채용공고', back: COMPANY_MYPAGE_ROOT },
+  {
+    pattern: /^\/mypage\/company\/posts\/bootcamps$/,
+    title: '부트캠프',
+    back: COMPANY_MYPAGE_ROOT,
+  },
   {
     pattern: /^\/mypage\/company\/posts\/jobs\/new$/,
     title: '채용 공고 등록',
-    back: '/mypage/company/posts',
+    back: '/mypage/company/posts/jobs',
   },
   {
     pattern: /^\/mypage\/company\/posts\/jobs\/[^/]+\/edit$/,
     title: '채용 공고 수정',
-    back: '/mypage/company/posts',
+    back: '/mypage/company/posts/jobs',
   },
   {
     pattern: /^\/mypage\/company\/posts\/bootcamps\/new$/,
     title: '교육 · 부트캠프 공고 등록',
-    back: '/mypage/company/posts',
+    back: '/mypage/company/posts/bootcamps',
   },
   {
     pattern: /^\/mypage\/company\/posts\/bootcamps\/[^/]+\/edit$/,
     title: '교육 · 부트캠프 공고 수정',
-    back: '/mypage/company/posts',
+    back: '/mypage/company/posts/bootcamps',
   },
   { pattern: /^\/mypage\/company\/profile$/, title: '기업/기관 정보', back: COMPANY_MYPAGE_ROOT },
 ];

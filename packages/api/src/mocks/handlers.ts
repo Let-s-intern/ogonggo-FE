@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
 import { getJobRecommendedContentsHandler } from './job-recommended-contents';
+import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
@@ -1157,6 +1158,7 @@ export const handlers: HttpHandler[] = [
   deleteRecruitmentPostCommentHandler,
   reportRecruitmentPostCommentHandler,
   ...myRecruitmentPostHandlers,
+  ...myCompanyPostHandlers,
   ...userConcernHandlers,
   getNoticesHandler,
   getNoticeHandler,

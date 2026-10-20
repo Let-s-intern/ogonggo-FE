@@ -10,8 +10,11 @@ import {
 } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { fetchCompanyPostTotals } from '@/widgets/company-posts';
 import {
   type MyPageAudience,
+  MyPageCompanyCard,
+  MyPageProfileCard,
   MyPageSidebar,
   MyPageTabs,
   isMyPageIndex,
@@ -55,7 +58,7 @@ export interface MyPageLayoutProps {
  * 데스크톱과 맞췄다(`/mypage` 는 첫 탭으로 보낸다). 작성·수정 화면만 모바일에서 탭 대신 `< 제목`
  * 머리를 단다(`myPageMobileHeaderOf`).
  *
- * 기업 회원은 v11 시안이 없어 전처럼 사이드바다. 모바일은 화면이 둘로 갈린다
+ * 기업 회원은 사이드바다(B2 시안, `prd-company-mypage-posts.md`). 모바일은 화면이 둘로 갈린다
  * (`docs/asset/v10 mobile/`). 첫 화면(`/mypage/company`)은 사이드바가 곧 메뉴 화면이고, 하위
  * 화면은 사이드바를 숨기고 `< 제목` 머리를 단다. `< 제목` 머리가 붙는 화면에서는 사이트 헤더도
  * 숨는다(`SiteHeader`) — 시안의 하위 화면은 그 머리 한 줄뿐이다.
@@ -115,9 +118,34 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
     };
   }, [router, audience]);
 
+  /**
+   * 기업 회원 메뉴 옆 건수(`채용공고` · `부트캠프`). 경로가 바뀔 때마다 다시 센다 — 공고를 저장하고
+   * 목록으로 돌아오면 늘어 있어야 한다. 실패하면 숫자 없이 이름만 둔다.
+   */
+  const [postTotals, setPostTotals] = useState<Record<string, number | undefined>>({});
+  useEffect(() => {
+    if (audience !== 'COMPANY' || !isSignedIn()) {
+      return;
+    }
+    let active = true;
+    fetchCompanyPostTotals()
+      .then((totals) => {
+        if (active) {
+          setPostTotals({
+            '/mypage/company/posts/jobs': totals.jobs,
+            '/mypage/company/posts/bootcamps': totals.bootcamps,
+          });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [audience, pathname]);
+
   const account = state.kind === 'ready' ? state.account : undefined;
   const profile = account ? (account.profile ?? {}) : undefined;
-  /** 기업 계정의 이름 자리는 담당자 이름이다. 목업 카드의 `오공고 님` 이 그 값이다. */
+  /** 기업 계정 카드는 기업명·담당자·로고를 쓴다(`MyPageCompanyCard`). */
   const companyProfile = account?.companyProfile;
   const isCompany = audience === 'COMPANY';
   const isIndex = isMyPageIndex(pathname);
@@ -170,17 +198,27 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
         <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block', tabbed && 'md:hidden')}>
           <MyPageSidebar
             menuItems={myPageMenuFor(audience)}
-            name={isCompany ? companyProfile?.managerName : profile?.name}
-            profileImageUrl={isCompany ? undefined : profile?.profileImageUrl}
-            details={
-              isCompany
-                ? [{ label: '기업/기관 명', value: companyProfile?.organizationName }]
-                : [
+            counts={isCompany ? postTotals : undefined}
+            card={
+              isCompany ? (
+                <MyPageCompanyCard
+                  organizationName={companyProfile?.organizationName}
+                  managerName={companyProfile?.managerName}
+                  logoUrl={companyProfile?.logoUrl}
+                  editHref="/mypage/company/profile"
+                />
+              ) : (
+                <MyPageProfileCard
+                  name={profile?.name}
+                  profileImageUrl={profile?.profileImageUrl}
+                  details={[
                     { label: '희망직무', value: profile?.wishJob },
                     { label: '희망기업', value: profile?.wishCompany },
-                  ]
+                  ]}
+                  editHref="/mypage/profile"
+                />
+              )
             }
-            editHref={isCompany ? '/mypage/company/profile' : '/mypage/profile'}
           />
         </div>
         <div className={cn('min-w-0 flex-1', isIndex && 'hidden md:block')}>

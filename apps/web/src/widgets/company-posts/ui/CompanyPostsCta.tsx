@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@ogonggo/ui';
+import { TAB_NOUNS } from '../lib/fetch';
 import { companyPostNewHref } from '../lib/routes';
 import type { CompanyPostTab } from '../lib/query';
 
@@ -17,7 +18,7 @@ export function CompanyPostsCta({ tab }: { tab: CompanyPostTab }) {
         <p className="pt-1 text-sm text-gray-500">기업 · 교육 공고는 무료로 등록할 수 있어요.</p>
       </div>
       <Button asChild>
-        <Link href={companyPostNewHref(tab)}>공고 등록하기</Link>
+        <Link href={companyPostNewHref(tab)}>{TAB_NOUNS[tab]} 등록하기</Link>
       </Button>
     </div>
   );

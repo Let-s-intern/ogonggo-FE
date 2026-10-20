@@ -2,6 +2,7 @@
 
 import { Button, Field, Input } from '@ogonggo/ui';
 import { EMPTY_CURRICULUM_ROW, moveRow, type BootcampCurriculumRow } from '../model/rows';
+import { CountedInput } from '@/shared/ui/CountedInput';
 import { BootcampOrderableRow } from './BootcampOrderableRow';
 
 /** `CompanyBootcampCurriculumRequest.subtitle` 의 `@maxLength`. */
@@ -57,7 +58,7 @@ export function BootcampCurriculumField({ rows, onChange }: BootcampCurriculumFi
               />
               <span className="pr-1 text-sm text-gray-500">주</span>
             </div>
-            <Input
+            <CountedInput
               aria-label={`커리큘럼 ${index + 1} 소제목`}
               maxLength={MAX_SUBTITLE_LENGTH}
               value={row.subtitle}

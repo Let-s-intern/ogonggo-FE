@@ -1,6 +1,7 @@
 'use client';
 
-import { Field, Input, Textarea } from '@ogonggo/ui';
+import { Field, Textarea } from '@ogonggo/ui';
+import { CountedInput } from '@/shared/ui/CountedInput';
 import { FormRichTextField } from '@/shared/ui/FormRichTextField';
 import { CONTENT_EXTRA_NOTICE, type BootcampContentExtras } from '../lib/contentExtras';
 import type { CompanyBootcampFormValues } from '../model/values';
@@ -53,7 +54,7 @@ export function BootcampContentSection({ values, onChange }: BootcampContentSect
   return (
     <div>
       <Field label="한 줄 소개" htmlFor="company-bootcamp-short-description" required>
-        <Input
+        <CountedInput
           id="company-bootcamp-short-description"
           value={values.shortDescription}
           maxLength={MAX_SHORT_DESCRIPTION_LENGTH}

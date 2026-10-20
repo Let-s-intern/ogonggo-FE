@@ -2,6 +2,7 @@
 
 import { Checkbox, Field, Input, Select } from '@ogonggo/ui';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
+import { CountedInput } from '@/shared/ui/CountedInput';
 import { LogoUploadField } from '@/shared/ui/LogoUploadField';
 import {
   OPERATION_TYPE_OPTIONS,
@@ -33,14 +34,14 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
   return (
     <div>
       <Field label="기업 · 기관명" htmlFor="company-bootcamp-company-name" required>
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-4">
           <LogoUploadField
             url={values.logoUrl}
-            className="h-11 w-24"
+            className="size-20"
             onUploaded={(image) => onChange({ logoUrl: image.url, logoImageId: image.id })}
             onClear={() => onChange({ logoUrl: '', logoImageId: '' })}
           />
-          <Input
+          <CountedInput
             id="company-bootcamp-company-name"
             value={values.companyName}
             maxLength={MAX_COMPANY_NAME_LENGTH}
@@ -64,7 +65,7 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
       </div>
 
       <Field label="프로그램명" htmlFor="company-bootcamp-title" required>
-        <Input
+        <CountedInput
           id="company-bootcamp-title"
           value={values.title}
           maxLength={MAX_TITLE_LENGTH}

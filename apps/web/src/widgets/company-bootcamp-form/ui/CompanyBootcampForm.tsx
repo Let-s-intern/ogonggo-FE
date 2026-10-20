@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@ogonggo/ui';
+import { Button, Callout } from '@ogonggo/ui';
+import { FloatingFormActions } from '@/shared/ui/FloatingFormActions';
 import { FormSection } from '@/shared/ui/FormSection';
+import { companyPostCopy } from '@/widgets/company-posts';
 import {
   createBootcamp,
   fetchMyBootcamp,
@@ -66,6 +68,11 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
+  /**
+   * 읽어 온 공고가 게시 중인지. 수정하면 다시 검수를 받는 동안 노출이 멈추므로 폼 위에 알린다
+   * (BE `requestReview`, `prd-company-mypage-posts.md`). 저장을 막지는 않는다.
+   */
+  const [published, setPublished] = useState(false);
 
   useEffect(() => {
     if (bootcampId === undefined) {
@@ -80,6 +87,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         }
         if (bootcamp) {
           setValues(toCompanyBootcampValues(bootcamp));
+          setPublished(bootcamp.publicationStatus === 'PUBLISHED');
           setPassthrough(toCompanyBootcampPassthrough(bootcamp));
         } else {
           setFormError('부트캠프 공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
@@ -146,7 +154,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
       if (publish && savedId !== undefined) {
         await startBootcampRecruitment(savedId);
       }
-      router.push('/mypage/company/posts?tab=bootcamps');
+      router.push('/mypage/company/posts/bootcamps');
     } catch {
       setFormError(
         publish
@@ -163,12 +171,13 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-4 pb-28 md:pb-0"
       onSubmit={(event) => {
         event.preventDefault();
         void save(true);
       }}
     >
+      {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
       <FormSection
         name="company-bootcamp-form"
         step={1}
@@ -202,26 +211,20 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         <BootcampApplySettingsSection values={values} onChange={change} />
       </FormSection>
 
-      {formError ? (
-        <p role="alert" className="text-sm text-error">
-          {formError}
-        </p>
-      ) : null}
-
-      <div className="flex justify-center gap-4 pt-2">
+      <FloatingFormActions error={formError}>
         <Button
           type="button"
           variant="secondary"
           disabled={pending}
           onClick={() => void save(false)}
-          className="w-full max-w-72"
+          className="flex-1 md:w-36 md:flex-none"
         >
           임시저장
         </Button>
-        <Button type="submit" disabled={pending} className="w-full max-w-80">
+        <Button type="submit" disabled={pending} className="flex-[2] md:w-44 md:flex-none">
           공고 등록
         </Button>
-      </div>
+      </FloatingFormActions>
     </form>
   );
 }

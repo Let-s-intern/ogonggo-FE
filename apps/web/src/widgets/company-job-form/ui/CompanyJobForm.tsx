@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button, cn } from '@ogonggo/ui';
+import { Button, Callout, cn } from '@ogonggo/ui';
+import { FloatingFormActions } from '@/shared/ui/FloatingFormActions';
 import { FormSection } from '@/shared/ui/FormSection';
+import { companyPostCopy } from '@/widgets/company-posts';
 import { createJob, fetchMyJob, publishJob, replaceJob } from '../lib/api';
 import { validateForDraft, validateForPublish } from '../model/validate';
 import {
@@ -70,6 +72,11 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
   const [tab, setTab] = useState<'write' | 'preview'>('write');
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
+  /**
+   * 읽어 온 공고가 게시 중인지. 수정하면 다시 검수를 받는 동안 노출이 멈추므로 폼 위에 알린다
+   * (BE `requestReview`, `prd-company-mypage-posts.md`). 저장을 막지는 않는다.
+   */
+  const [published, setPublished] = useState(false);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -85,6 +92,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         }
         if (job) {
           setValues(toCompanyJobValues(job));
+          setPublished(job.publicationStatus === 'PUBLISHED');
           setPassthrough(toCompanyJobPassthrough(job));
           setHiringProcessStored(Boolean(job.hiringProcess));
         } else {
@@ -140,7 +148,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
       if (publish && savedId !== undefined) {
         await publishJob(savedId);
       }
-      router.push('/mypage/company/posts');
+      router.push('/mypage/company/posts/jobs');
     } catch {
       setFormError(
         publish
@@ -157,12 +165,13 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-4 pb-28 md:pb-0"
       onSubmit={(event) => {
         event.preventDefault();
         void save(true);
       }}
     >
+      {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
       <div role="tablist" aria-label="채용공고 작성" className="flex border-b border-gray-200">
         {(
           [
@@ -229,26 +238,20 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         </FormSection>
       </div>
 
-      {formError ? (
-        <p role="alert" className="text-sm text-error">
-          {formError}
-        </p>
-      ) : null}
-
-      <div className="flex justify-center gap-4 pt-2">
+      <FloatingFormActions error={formError}>
         <Button
           type="button"
           variant="secondary"
           disabled={pending}
           onClick={() => void save(false)}
-          className="w-full max-w-72"
+          className="flex-1 md:w-36 md:flex-none"
         >
           임시저장
         </Button>
-        <Button type="submit" disabled={pending} className="w-full max-w-80">
+        <Button type="submit" disabled={pending} className="flex-[2] md:w-44 md:flex-none">
           공고 등록
         </Button>
-      </div>
+      </FloatingFormActions>
     </form>
   );
 }
