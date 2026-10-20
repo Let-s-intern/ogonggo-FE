@@ -1,7 +1,12 @@
 'use client';
 
+import { enumLabel, enumOptions } from '@ogonggo/api';
 import { EMPLOYMENT_TYPE_FILTER_OPTIONS } from '@/entities/job/model/labels';
-import { stagesOf, type ApplicationStageId } from '@/features/application-board';
+import {
+  stagesOf,
+  type ApplicationBoardTab,
+  type ApplicationStageId,
+} from '@/features/application-board';
 import { SortToggle } from '@/shared/ui/SortToggle';
 import { MyPageFilterDropdown, MyPageFilterRow } from '@/widgets/mypage-list';
 import {
@@ -12,20 +17,31 @@ import {
 } from '../lib/query';
 import { ApplicationBoardViewToggle } from './ApplicationBoardViewToggle';
 
-/** `마감 상태` 드롭다운. 세 탭이 같은 두 값을 보낸다(부트캠프만 파라미터 이름이 `status` 다). */
-const RECRUITMENT_STATUS_OPTIONS = [
-  ['RECRUITING', '모집 중'],
-  ['CLOSED', '마감'],
-] as const;
+/**
+ * `마감 상태` 드롭다운. 세 탭이 같은 두 값을 보낸다(부트캠프만 파라미터 이름이 `status` 다). 라벨은
+ * 탭마다 그 콘텐츠의 모집 상태 enum 이라 문구가 조금씩 다르다. 부트캠프의 `DRAFT`(임시저장)는
+ * 공개된 것만 스크랩할 수 있어 두지 않는다.
+ */
+const RECRUITMENT_STATUS_ENUMS = {
+  jobs: 'JobRecruitmentStatus',
+  bootcamps: 'BootcampRecruitmentStatus',
+  'side-studies': 'RecruitmentPostRecruitmentStatus',
+} as const satisfies Record<ApplicationBoardTab, string>;
+
+function recruitmentStatusOptions(tab: ApplicationBoardTab) {
+  return (['RECRUITING', 'CLOSED'] as const).map(
+    (value) => [value, enumLabel(RECRUITMENT_STATUS_ENUMS[tab], value)] as const,
+  );
+}
 
 /** `고용 형태` 드롭다운. 채용공고 목록 필터와 같은 라벨 맵에서 만든다. */
 const EMPLOYMENT_TYPE_OPTIONS = EMPLOYMENT_TYPE_FILTER_OPTIONS;
 
 /**
  * `최근 저장순` 하나뿐이다. `BookmarkSortType` 에 값이 이것 하나라 고를 것이 없고, v4 의 정렬
- * 드롭다운도 같은 처지였다(PRD "필터 줄"). 값이 늘면 여기에 줄을 더한다.
+ * 드롭다운도 같은 처지였다(PRD "필터 줄"). 값이 늘면 카탈로그를 따라 줄이 는다.
  */
-const SORT_OPTIONS = [{ value: 'RECENTLY_SAVED' as const, label: '최근 저장순' }];
+const SORT_OPTIONS = enumOptions('BookmarkSortType');
 
 export interface ApplicationBoardFilterRowProps {
   query: ApplicationBoardQuery;
@@ -72,7 +88,7 @@ export function ApplicationBoardFilterRow({ query }: ApplicationBoardFilterRowPr
       <MyPageFilterDropdown
         label="마감 상태"
         selected={query.recruitmentStatus}
-        options={RECRUITMENT_STATUS_OPTIONS}
+        options={recruitmentStatusOptions(query.tab)}
         buildHref={(recruitmentStatus) => buildApplicationBoardHref(query, { recruitmentStatus })}
       />
       <MyPageFilterDropdown
