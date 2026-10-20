@@ -427,7 +427,7 @@
   고칠 수 있다.
 
 선택지와 라벨(직군·직무·고용 형태 등)은 `GET /api/v1/admin/enums` 를 부르지 않고 codegen 이 만든
-스냅숏 `packages/api/src/generated/enums.ts` 에서 온다(`docs/architecture.md`).
+스냅숏 `packages/api/src/generated/enums.ts` 에서 온다(`docs/architecture.md` 의 "enum 라벨의 출처").
 
 **응답** — 고쳐진 공고 전체.
 
