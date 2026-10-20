@@ -10,8 +10,8 @@ import {
  * 마지막으로 건 목록 필터를 기억하는 쿠키. 채용 형태·요구 경력·지역·직군·직무 다섯 가지만 담는다 —
  * 검색어(`q`)·쪽(`page`)·정렬(`sort`)은 그때그때의 보기라 기억하지 않는다.
  *
- * 쿠키인 이유는 `widgets/job-calendar/lib/major-cookie.ts` 와 같다. 홈 라우트(`app/(site)/(home)/page.tsx`)가
- * 첫 렌더에 읽어 바로 `redirect` 하므로 필터 없는 목록이 번쩍이지 않고 공고 API 도 한 번만 부른다.
+ * 쿠키인 이유는 `widgets/job-calendar/lib/major-cookie.ts` 와 같다. `src/proxy.ts` 가 홈(`/`)을 렌더하기
+ * 전에 읽어 바로 보내므로 필터 없는 목록이 번쩍이지 않고 공고 API 도 한 번만 부른다.
  *
  * 값은 주소 쿼리와 같은 모양이다(`employmentType=FULL_TIME&region=SEOUL`). 읽을 때도 주소와 **같은**
  * 파서로 거른다 — 손으로 고쳐 넣은 값이 그대로 API 파라미터가 되면 안 된다.

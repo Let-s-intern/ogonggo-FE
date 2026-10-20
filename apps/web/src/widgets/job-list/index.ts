@@ -6,6 +6,6 @@ export {
   parseJobRoleSelection,
   parseKeywordParam,
   parseRegions,
+  parseSort,
 } from './lib/query';
 export type { JobListQuery } from './lib/query';
-export { JOB_FILTER_COOKIE_NAME, parseRememberedJobFilters } from './lib/filterCookie';
