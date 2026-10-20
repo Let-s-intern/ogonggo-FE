@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, Callout } from '@ogonggo/ui';
+import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
+import { useCompanyPostDraft } from '@/shared/lib/useCompanyPostDraft';
+import { DraftRestoreCallout } from '@/shared/ui/DraftRestoreCallout';
 import { FloatingFormActions } from '@/shared/ui/FloatingFormActions';
 import { FormSection } from '@/shared/ui/FormSection';
 import { companyPostCopy } from '@/widgets/company-posts';
@@ -49,7 +52,10 @@ export interface CompanyBootcampFormProps {
  * 값을 읽어 오는 동안은 폼을 그리지 않는다. 빈 폼을 먼저 보이면 그 사이에 저장한 사람이
  * 자기 공고를 빈 값으로 덮어쓴다.
  *
- * 하단 버튼 둘은 저장까지는 같고 그 뒤가 다르다 — `공고 등록` 만 이어서 모집 시작을
+ * **새 공고의 `임시저장` 은 이 브라우저에만 저장한다**(`shared/lib/companyPostDraft.ts`). 채용공고
+ * 폼과 같다 — 서버에 만들면 곧바로 검수 대기가 된다. 이미 저장된 공고를 고칠 때는 서버에 저장한다.
+ *
+ * 서버에 저장할 때 하단 버튼 둘은 저장까지는 같고 그 뒤가 다르다 — `공고 등록` 만 이어서 모집 시작을
  * 요청한다. **부트캠프에는 `/publish` 가 없다**(v5 PRD 4 절): 새 공고는 언제나 `DRAFT` 로
  * 만들어지고, 공개는 `start-recruitment` 가 만든다(`lib/api.ts`).
  *
@@ -73,6 +79,14 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
    * (BE `requestReview`, `prd-company-mypage-posts.md`). 저장을 막지는 않는다.
    */
   const [published, setPublished] = useState(false);
+  const isNew = bootcampId === undefined;
+  const draft = useCompanyPostDraft({
+    kind: 'bootcamps',
+    enabled: isNew,
+    values,
+    emptyValues: EMPTY_COMPANY_BOOTCAMP_VALUES,
+    onRestore: (restored) => setValues({ ...EMPTY_COMPANY_BOOTCAMP_VALUES, ...restored }),
+  });
 
   useEffect(() => {
     if (bootcampId === undefined) {
@@ -124,6 +138,14 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
     if (pending) {
       return;
     }
+    // 새 공고의 임시저장은 서버에 보내지 않는다. 서버에 만들면 곧바로 검수 대기가 된다
+    // (`shared/lib/companyPostDraft.ts`). 저장 뒤에도 이 화면에 머문다.
+    if (!publish && isNew) {
+      setFormError(
+        draft.saveNow() ? null : '임시저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.',
+      );
+      return;
+    }
     const invalid = publish ? validateForPublish(values) : validateForDraft(values);
     if (invalid) {
       setFormError(invalid);
@@ -154,6 +176,9 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
       if (publish && savedId !== undefined) {
         await startBootcampRecruitment(savedId);
       }
+      if (isNew) {
+        draft.clear();
+      }
       router.push('/mypage/company/posts/bootcamps');
     } catch {
       setFormError(
@@ -177,6 +202,13 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         void save(true);
       }}
     >
+      {draft.offeredSavedAt ? (
+        <DraftRestoreCallout
+          savedAt={draft.offeredSavedAt}
+          onRestore={draft.restore}
+          onDiscard={draft.discard}
+        />
+      ) : null}
       {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
       <FormSection
         name="company-bootcamp-form"
@@ -211,7 +243,14 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         <BootcampApplySettingsSection values={values} onChange={change} />
       </FormSection>
 
-      <FloatingFormActions error={formError}>
+      <FloatingFormActions
+        error={formError}
+        status={
+          draft.savedAt
+            ? `이 브라우저에 임시저장했어요 · ${formatDraftSavedAt(draft.savedAt)}`
+            : undefined
+        }
+      >
         <Button
           type="button"
           variant="secondary"

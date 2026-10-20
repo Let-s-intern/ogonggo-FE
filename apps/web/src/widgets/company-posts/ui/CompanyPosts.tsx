@@ -4,6 +4,11 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import {
+  clearCompanyPostDraft,
+  readCompanyPostDraft,
+  type CompanyPostDraft,
+} from '@/shared/lib/companyPostDraft';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import copy from '../config/copy.json';
 import { fetchCompanyPosts, TAB_NOUNS, type CompanyPostsPage } from '../lib/fetch';
@@ -11,6 +16,7 @@ import { closeCompanyPost, deleteCompanyPost } from '../lib/mutate';
 import { buildCompanyPostsHref, type CompanyPostsQuery } from '../lib/query';
 import { companyPostNewHref } from '../lib/routes';
 import { CompanyPostCard } from './CompanyPostCard';
+import { CompanyPostDraftCard } from './CompanyPostDraftCard';
 import { CompanyPostsCta } from './CompanyPostsCta';
 
 type State = { kind: 'loading' } | { kind: 'ready'; page: CompanyPostsPage } | { kind: 'error' };
@@ -52,6 +58,13 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
   const account = useMyAccount();
   const companyLogoUrl =
     account.kind === 'ready' ? account.account.companyProfile?.logoUrl || undefined : undefined;
+  const userId = account.kind === 'ready' ? account.account.userId : undefined;
+  /** 이 브라우저에 임시저장한 새 공고(`shared/lib/companyPostDraft.ts`). 목록 응답에는 없다. */
+  const [localDraft, setLocalDraft] = useState<CompanyPostDraft<{ title?: string }> | null>(null);
+
+  useEffect(() => {
+    setLocalDraft(userId === undefined ? null : readCompanyPostDraft(query.tab, userId));
+  }, [query.tab, userId]);
   /**
    * 무엇을 읽을지는 주소가 정한다. `query` 객체는 렌더마다 새로 만들어져 효과의 의존값이 될
    * 수 없는데, 주소 문자열은 탭과 페이지를 그대로 담고 있어 같은 값이면 같은 요청이다.
@@ -113,6 +126,18 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
         <p role="alert" className="text-sm text-error">
           {actionError}
         </p>
+      ) : null}
+
+      {localDraft && userId !== undefined ? (
+        <CompanyPostDraftCard
+          tab={query.tab}
+          title={localDraft.values.title}
+          savedAt={localDraft.savedAt}
+          onDiscard={() => {
+            clearCompanyPostDraft(query.tab, userId);
+            setLocalDraft(null);
+          }}
+        />
       ) : null}
 
       {rows.length > 0 ? (

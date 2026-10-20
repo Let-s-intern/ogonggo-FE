@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, Callout, cn } from '@ogonggo/ui';
+import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
+import { useCompanyPostDraft } from '@/shared/lib/useCompanyPostDraft';
+import { DraftRestoreCallout } from '@/shared/ui/DraftRestoreCallout';
 import { FloatingFormActions } from '@/shared/ui/FloatingFormActions';
 import { FormSection } from '@/shared/ui/FormSection';
 import { companyPostCopy } from '@/widgets/company-posts';
@@ -44,7 +47,11 @@ export interface CompanyJobFormProps {
  * 값을 읽어 오는 동안은 폼을 그리지 않는다. 빈 폼을 먼저 보이면 그 사이에 저장한 사람이
  * 자기 공고를 빈 값으로 덮어쓴다.
  *
- * 하단 버튼 둘은 저장까지는 같고 그 뒤가 다르다 — `공고 등록` 만 이어서 게시를 요청한다.
+ * **새 공고의 `임시저장` 은 이 브라우저에만 저장한다**(`shared/lib/companyPostDraft.ts`). 서버에
+ * 만들면 곧바로 검수 대기가 되기 때문이다. 쓰는 동안 5 초마다 자동으로도 저장하고, 다시 열면 이어
+ * 쓸지 묻는다. 이미 저장된 공고를 고칠 때의 `임시저장` 은 그대로 서버에 저장한다.
+ *
+ * 서버에 저장할 때 하단 버튼 둘은 저장까지는 같고 그 뒤가 다르다 — `공고 등록` 만 이어서 게시를 요청한다.
  * 등록은 언제나 초안으로 만들어지고, 게시는 운영자 검수를 통과한 공고만 된다(생성 타입 설명).
  * 그래서 검수 전 게시 실패(409) 는 실패로 보지 않는다(`lib/api.ts` 의 `publishJob`).
  *
@@ -78,6 +85,14 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
    */
   const [published, setPublished] = useState(false);
   const [pending, setPending] = useState(false);
+  const isNew = jobId === undefined;
+  const draft = useCompanyPostDraft({
+    kind: 'jobs',
+    enabled: isNew,
+    values,
+    emptyValues: EMPTY_COMPANY_JOB_VALUES,
+    onRestore: (restored) => setValues({ ...EMPTY_COMPANY_JOB_VALUES, ...restored }),
+  });
 
   useEffect(() => {
     if (jobId === undefined) {
@@ -130,6 +145,14 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
     if (pending) {
       return;
     }
+    // 새 공고의 임시저장은 서버에 보내지 않는다. 서버에 만들면 곧바로 검수 대기가 된다
+    // (`shared/lib/companyPostDraft.ts`). 저장 뒤에도 이 화면에 머문다.
+    if (!publish && isNew) {
+      setFormError(
+        draft.saveNow() ? null : '임시저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.',
+      );
+      return;
+    }
     const invalid = publish ? validateForPublish(values) : validateForDraft(values);
     if (invalid) {
       setFormError(invalid);
@@ -147,6 +170,9 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
       }
       if (publish && savedId !== undefined) {
         await publishJob(savedId);
+      }
+      if (isNew) {
+        draft.clear();
       }
       router.push('/mypage/company/posts/jobs');
     } catch {
@@ -171,6 +197,13 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         void save(true);
       }}
     >
+      {draft.offeredSavedAt ? (
+        <DraftRestoreCallout
+          savedAt={draft.offeredSavedAt}
+          onRestore={draft.restore}
+          onDiscard={draft.discard}
+        />
+      ) : null}
       {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
       <div role="tablist" aria-label="채용공고 작성" className="flex border-b border-gray-200">
         {(
@@ -238,7 +271,14 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         </FormSection>
       </div>
 
-      <FloatingFormActions error={formError}>
+      <FloatingFormActions
+        error={formError}
+        status={
+          draft.savedAt
+            ? `이 브라우저에 임시저장했어요 · ${formatDraftSavedAt(draft.savedAt)}`
+            : undefined
+        }
+      >
         <Button
           type="button"
           variant="secondary"
