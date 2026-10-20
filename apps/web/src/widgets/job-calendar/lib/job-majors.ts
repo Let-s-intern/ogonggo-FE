@@ -1,9 +1,10 @@
 import type { ListPublicJobCalendarJobField } from '@ogonggo/api';
-import { JOB_FIELD_LABELS } from '@/entities/job/model/labels';
+import { JOB_ROLE_CHIPS } from '@/widgets/job-list/lib/roleChips';
 
 /**
- * `관심 직무를 골라주세요`의 칸(`docs/asset/v6 공고달력/관심직무 선택.png`). 순서는 목업의
- * 5x5 배치 그대로이고, 백엔드가 직군 여섯 개를 합친 뒤(ogonggo-BE #86) 그 칸을 빼 19칸이다.
+ * `관심 직무를 골라주세요`의 칸(`docs/asset/v6 공고달력/관심직무 선택.png`). 채용공고 목록의 직무
+ * 필터와 같은 직군 다섯만, 같은 차례로 둔다(`widgets/job-list/lib/roleChips.ts`, 2026-10-20, 사용자).
+ * 목업의 나머지 칸은 뺐다.
  *
  * `slug`는 URL 에 두는 값이다(`?majors=it,planning`). 이름에 `·`와 `&`가 있어 그대로 쿼리에
  * 두면 인코딩된 긴 문자열이 된다.
@@ -16,7 +17,6 @@ import { JOB_FIELD_LABELS } from '@/entities/job/model/labels';
  */
 const MAJORS = [
   { slug: 'it', field: 'IT_DEVELOPMENT', icon: 'icon-[lucide--laptop]' },
-  { slug: 'game', field: 'GAME', icon: 'icon-[lucide--gamepad-2]' },
   {
     slug: 'planning',
     field: 'PLANNING_STRATEGY',
@@ -28,63 +28,17 @@ const MAJORS = [
     icon: 'icon-[lucide--megaphone]',
   },
   { slug: 'sales', field: 'SALES', icon: 'icon-[lucide--briefcase-business]' },
-  { slug: 'trade', field: 'TRADE_LOGISTICS', icon: 'icon-[lucide--package]' },
-  {
-    slug: 'delivery',
-    field: 'TRANSPORT_DELIVERY',
-    icon: 'icon-[lucide--truck]',
-  },
-  { slug: 'legal', field: 'LEGAL', icon: 'icon-[lucide--gavel]' },
   { slug: 'hr', field: 'HR_GENERAL_AFFAIRS', icon: 'icon-[lucide--contact]' },
-  {
-    slug: 'securities',
-    field: 'SECURITIES_ASSET_MANAGEMENT',
-    icon: 'icon-[lucide--chart-no-axes-combined]',
-  },
-  {
-    slug: 'banking',
-    field: 'BANKING_CARD_INSURANCE',
-    icon: 'icon-[lucide--landmark]',
-  },
-  {
-    slug: 'engineering',
-    field: 'ENGINEERING_RND',
-    icon: 'icon-[lucide--wrench]',
-  },
-  {
-    slug: 'construction',
-    field: 'CONSTRUCTION_ARCHITECTURE',
-    icon: 'icon-[lucide--traffic-cone]',
-  },
-  {
-    slug: 'production',
-    field: 'PRODUCTION_SKILLED_TRADES',
-    icon: 'icon-[lucide--factory]',
-  },
-  {
-    slug: 'medical',
-    field: 'MEDICAL_HEALTH',
-    icon: 'icon-[lucide--stethoscope]',
-  },
-  {
-    slug: 'public',
-    field: 'PUBLIC_WELFARE',
-    icon: 'icon-[lucide--heart-handshake]',
-  },
-  { slug: 'education', field: 'EDUCATION', icon: 'icon-[lucide--graduation-cap]' },
-  { slug: 'service', field: 'SERVICE', icon: 'icon-[lucide--handshake]' },
-  { slug: 'food', field: 'FOOD_BEVERAGE', icon: 'icon-[lucide--utensils]' },
 ] as const satisfies readonly {
   slug: string;
   field: ListPublicJobCalendarJobField;
   icon: string;
 }[];
 
-/** 칸 이름은 직군 라벨(enum 카탈로그의 `JobField`) 그대로다. */
-export const JOB_MAJORS = MAJORS.map((major) => ({
-  ...major,
-  label: JOB_FIELD_LABELS[major.field],
-}));
+/** 차례와 칸 이름은 목록의 직무 칩(`JOB_ROLE_CHIPS`)을 따른다. 이름은 직군 라벨 그대로다. */
+export const JOB_MAJORS = JOB_ROLE_CHIPS.flatMap(({ field, label }) =>
+  MAJORS.filter((major) => major.field === field).map((major) => ({ ...major, label })),
+);
 
 /**
  * 전부 고른 것을 주소·쿠키에 적는 값(`?majors=all`). slug 를 다 늘어놓지 않는다.
@@ -95,7 +49,7 @@ export const JOB_MAJORS = MAJORS.map((major) => ({
  */
 export const ALL_JOB_MAJORS_PARAM = 'all';
 
-/** 목업 순서대로 늘어놓은 모든 slug. */
+/** 칸 차례대로 늘어놓은 모든 slug. */
 export const ALL_JOB_MAJOR_SLUGS: readonly string[] = JOB_MAJORS.map((major) => major.slug);
 
 /** 고른 직무를 주소·쿠키에 적는 모양. 목록 순서로 맞추고, 전부면 `all` 이다. */
@@ -118,7 +72,10 @@ const MERGED_SLUGS: Readonly<Record<string, string>> = {
   media: 'marketing',
 };
 
-/** 주소·쿠키의 slug 를 지금 칸으로 읽는다. 옛 slug 는 옮긴 칸, 모르는 값은 `undefined`. */
+/**
+ * 주소·쿠키의 slug 를 지금 칸으로 읽는다. 옛 slug 는 옮긴 칸, 모르는 값은 `undefined`.
+ * 목록 필터에 맞춰 뺀 칸(`game`·`trade` 등)도 모르는 값이라 버려진다.
+ */
 export function toJobMajorSlug(value: string): string | undefined {
   if (FIELD_BY_SLUG.has(value)) {
     return value;
