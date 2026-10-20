@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { contentFieldLabel, type AdminJobDetailResponse } from '@ogonggo/api/src/admin';
 import { Button, Callout, Field, Input, Modal, Textarea } from '@ogonggo/ui';
 import { usePatchJob } from '@/entities/content/api/useContent';
+import { type FillableJobField, consumeJobFill, useJobFillRequest } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { buildPatch } from '../lib/buildPatch';
 import { JOB_BODY_FIELDS, toFormValues, type JobEditorValues } from '../lib/formValues';
@@ -37,6 +38,9 @@ export function JobEditor({ open, job, onClose, onSaved }: JobEditorProps) {
   const [values, setValues] = useState(before);
   const mutation = usePatchJob(job.id);
   const { reset } = mutation;
+  /** AI 비서가 채운 칸. 확인하라는 표시와 원래 문장을 보인다. */
+  const [aiFilled, setAiFilled] = useState<ReadonlySet<FillableJobField>>(new Set());
+  const fillRequest = useJobFillRequest(job.id);
 
   // 열 때마다 서버 값으로 되돌린다. 고치다 닫은 값이나 지난 저장 오류가 다음에 열었을 때 남아 있으면 헷갈린다.
   useEffect(() => {
@@ -46,8 +50,27 @@ export function JobEditor({ open, job, onClose, onSaved }: JobEditorProps) {
     const initial = toFormValues(job);
     setBefore(initial);
     setValues(initial);
+    setAiFilled(new Set());
     reset();
   }, [open, job, reset]);
+
+  /*
+   * AI 비서가 남긴 문장을 입력 칸에 넣는다. 위의 되돌리기 뒤에 돌아야 해서 그 아래에 둔다(같은 렌더의
+   * 효과는 적은 순서대로 돈다). 저장은 하지 않는다 — 사람이 보고 저장을 눌러야 서버로 간다.
+   */
+  useEffect(() => {
+    if (!open || !fillRequest) {
+      return;
+    }
+    const { title, ...body } = fillRequest.values;
+    setValues((previous) => ({
+      ...previous,
+      ...(title !== undefined ? { title } : {}),
+      fields: { ...previous.fields, ...body },
+    }));
+    setAiFilled(new Set(Object.keys(fillRequest.values) as FillableJobField[]));
+    consumeJobFill(fillRequest.nonce);
+  }, [open, fillRequest]);
 
   const onChange = <K extends keyof JobEditorValues>(key: K, value: JobEditorValues[K]) =>
     setValues((previous) => ({ ...previous, [key]: value }));
@@ -79,9 +102,22 @@ export function JobEditor({ open, job, onClose, onSaved }: JobEditorProps) {
           </Callout>
         ) : null}
 
-        <Field label="제목" htmlFor="job-title" required error={errors.title}>
+        {aiFilled.size > 0 ? (
+          <Callout tone="info" className="mb-4">
+            AI 비서가 칸을 채웠습니다. 파란 테두리 칸을 확인하고 저장을 눌러야 반영됩니다.
+          </Callout>
+        ) : null}
+
+        <Field
+          label="제목"
+          htmlFor="job-title"
+          required
+          error={errors.title}
+          hint={aiFilled.has('title') ? `AI 가 채웠습니다. 원래 제목: ${before.title}` : undefined}
+        >
           <Input
             id="job-title"
+            className={aiFilled.has('title') ? 'border-blue-400 ring-2 ring-blue-100' : undefined}
             value={values.title}
             onChange={(event) => onChange('title', event.target.value)}
           />
@@ -99,16 +135,31 @@ export function JobEditor({ open, job, onClose, onSaved }: JobEditorProps) {
               key={field}
               label={contentFieldLabel('JobContentField', field)}
               htmlFor={`job-${field}`}
-              hint={before.fields[field] === '' ? '수집되지 않은 칸입니다.' : undefined}
+              hint={
+                aiFilled.has(field)
+                  ? 'AI 가 채웠습니다. 위의 원래 문장을 펼쳐 비교할 수 있습니다.'
+                  : before.fields[field] === ''
+                    ? '수집되지 않은 칸입니다.'
+                    : undefined
+              }
             >
               <Textarea
                 id={`job-${field}`}
                 rows={5}
+                className={aiFilled.has(field) ? 'border-blue-400 ring-2 ring-blue-100' : undefined}
                 value={values.fields[field]}
                 onChange={(event) =>
                   onChange('fields', { ...values.fields, [field]: event.target.value })
                 }
               />
+              {aiFilled.has(field) ? (
+                <details className="pt-2 text-sm text-gray-500">
+                  <summary className="cursor-pointer">원래 문장</summary>
+                  <p className="whitespace-pre-wrap pt-1">
+                    {before.fields[field] || '(비어 있음)'}
+                  </p>
+                </details>
+              ) : null}
             </Field>
           ))}
         </section>
