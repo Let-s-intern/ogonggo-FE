@@ -26,3 +26,9 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* AI 비서가 채운 칸(`features/ai-assistant/model/screen.ts`). 저장 전에 무엇이 바뀌었는지 보이게 한다. */
+[data-ai-filled] {
+  outline: 2px solid var(--color-blue-400);
+  outline-offset: 2px;
+}

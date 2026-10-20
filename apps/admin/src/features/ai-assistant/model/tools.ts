@@ -1,4 +1,10 @@
-import { getJob, listJobs, type ListJobsParams } from '@ogonggo/api/src/admin';
+import {
+  getJob,
+  listJobs,
+  listServiceFeedbacks,
+  listTodayJobs,
+  type ListJobsParams,
+} from '@ogonggo/api/src/admin';
 import {
   DEFAULT_KPI_FILTERS,
   KPI_QUERY,
@@ -11,13 +17,15 @@ import { runRedashQuery } from '@/shared/api/redash';
 import { unwrapData } from '@/shared/api/unwrapData';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { FILLABLE_JOB_FIELDS, type FillableJobField, requestJobFill } from './jobFill';
+import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
 
 /**
  * AI 비서의 도구 실행기. 모델이 부른 도구를 브라우저에서 기존 어드민 API 로 실행한다. 도구의 이름과
  * 인자 모양은 `api/assistant.ts` 의 `TOOLS` 와 같다.
  *
  * 로그인한 관리자의 토큰으로 실행되므로 비서는 그 관리자가 할 수 있는 일을 넘지 못한다. 그중에서도 조회와
- * 화면 이동, 수정 창 채우기만 둔다 — 저장·삭제·노출 변경을 부르는 실행기는 없다.
+ * 화면 이동, 입력 칸 채우기, 양식을 여는 버튼까지만 둔다 — 저장·삭제·노출 변경처럼 서버에 반영하는 버튼은
+ * 사람이 누른다(`./screen.ts`).
  *
  * 실행기는 모델에게 돌려줄 글을 만든다. 실패도 글로 돌려줘 모델이 사용자에게 설명하게 한다.
  */
@@ -61,6 +69,18 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return `공고 ${String(args.jobId)} 읽기`;
     case 'get_stats':
       return '통계 불러오기';
+    case 'list_pick_jobs':
+      return '오공고 PICK 목록 읽기';
+    case 'get_job_performance':
+      return '공고별 성과 불러오기';
+    case 'list_service_feedbacks':
+      return '서비스 의견 읽기';
+    case 'read_screen':
+      return '지금 화면 읽기';
+    case 'fill_fields':
+      return '입력 칸 채우기';
+    case 'press_button':
+      return '양식 열기';
     case 'navigate':
       return `화면 이동: ${String(args.path)}`;
     case 'fill_job_text':
@@ -174,6 +194,88 @@ async function readStats(args: Record<string, unknown>): Promise<string> {
     .join('\n\n');
 }
 
+async function pickJobIds(): Promise<Set<number>> {
+  const picks = await unwrapData(listTodayJobs());
+  return new Set((picks ?? []).map((job) => job.id));
+}
+
+async function listPickJobs(): Promise<string> {
+  const picks = await unwrapData(listTodayJobs());
+  return JSON.stringify(
+    (picks ?? []).map((job) => ({
+      id: job.id,
+      title: job.title,
+      company: job.companyName,
+      recruitmentStatus: job.recruitmentStatus,
+      recruitmentEndAt: job.recruitmentEndAt,
+      recommendationTitle: job.recommendationTitle,
+    })),
+  );
+}
+
+/** `get_job_performance` 의 정렬 기준과 Redash 공고별 성과 쿼리의 컬럼. */
+const PERFORMANCE_SORT_COLUMNS: Record<string, string> = {
+  cardClick: '카드 클릭 사용자',
+  detailView: '상세 조회 사용자',
+  applyClick: '지원 클릭 사용자',
+  applyRate: '조회 지원 전환율',
+  saveRate: '저장률',
+};
+
+/**
+ * 공고별 성과에 오공고 PICK 등록 여부를 붙인다. 성과는 Redash(GA4), PICK 은 어드민 API 라 두 곳을 각각
+ * 불러와 공고 ID 로 맞춘다.
+ */
+async function jobPerformance(args: Record<string, unknown>): Promise<string> {
+  const window = ['최근 7일', '최근 30일', '누적'].includes(args.window as string)
+    ? (args.window as string)
+    : DEFAULT_KPI_FILTERS.window;
+  const sortColumn =
+    PERFORMANCE_SORT_COLUMNS[String(args.sortBy)] ?? PERFORMANCE_SORT_COLUMNS.applyClick!;
+  const limit = Math.min(asNumber(args.limit) ?? 20, 50);
+  const pickFilter = String(args.pick ?? 'all');
+
+  const [result, picks] = await Promise.all([
+    runRedashQuery(
+      KPI_QUERY.jobPerformance,
+      toRedashParameters(KPI_QUERY.jobPerformance, { ...DEFAULT_KPI_FILTERS, window }),
+    ),
+    pickJobIds(),
+  ]);
+  const rows = result.rows
+    .map((row) => ({ row, pick: picks.has(Number(row['공고 ID'])) }))
+    .filter(({ pick }) =>
+      pickFilter === 'not_pick' ? !pick : pickFilter === 'pick_only' ? pick : true,
+    )
+    .sort((a, b) => Number(b.row[sortColumn] ?? 0) - Number(a.row[sortColumn] ?? 0))
+    .slice(0, limit)
+    .map(({ row, pick }) => ({ ...row, pick }));
+  return JSON.stringify({
+    window,
+    sortedBy: sortColumn,
+    pickCount: picks.size,
+    totalJobs: result.rows.length,
+    rows,
+  });
+}
+
+/**
+ * 서비스 의견. 작성자 이름·이메일은 넘기지 않는다 — 의견을 묶고 요약하는 데 필요 없는 개인정보다.
+ */
+async function serviceFeedbacks(args: Record<string, unknown>): Promise<string> {
+  const size = Math.min(asNumber(args.size) ?? 50, 100);
+  const page = await unwrapData(listServiceFeedbacks({ page: 1, size }));
+  return JSON.stringify({
+    total: page?.pageInfo.totalElements ?? 0,
+    items: (page?.items ?? []).map((item) => ({
+      id: item.id,
+      satisfaction: item.satisfaction,
+      improvement: item.improvement,
+      registeredAt: item.registeredAt,
+    })),
+  });
+}
+
 function goTo(args: Record<string, unknown>, context: ToolContext): string {
   const path = typeof args.path === 'string' ? args.path.trim() : '';
   const pathname = path.split('?')[0] ?? '';
@@ -214,6 +316,18 @@ export async function runTool(
         return clip(await readJob(args));
       case 'get_stats':
         return clip(await readStats(args));
+      case 'list_pick_jobs':
+        return clip(await listPickJobs());
+      case 'get_job_performance':
+        return clip(await jobPerformance(args));
+      case 'list_service_feedbacks':
+        return clip(await serviceFeedbacks(args));
+      case 'read_screen':
+        return clip(await readScreen());
+      case 'fill_fields':
+        return await fillFields(Array.isArray(args.values) ? (args.values as FieldValue[]) : []);
+      case 'press_button':
+        return await pressButton(String(args.ref ?? ''));
       case 'navigate':
         return goTo(args, context);
       case 'fill_job_text':
