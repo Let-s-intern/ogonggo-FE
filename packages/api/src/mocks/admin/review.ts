@@ -9,6 +9,7 @@ import type {
   DecideReviewRequest,
 } from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
+import { enumLabel } from '../../enums';
 import { clearRejection, recordRejection } from '../fixtures/admin-rejection';
 import { notFound, ok } from './paging';
 
@@ -32,27 +33,12 @@ import { notFound, ok } from './paging';
 type ReviewTargetType = AdminContentReviewItemResponseType;
 
 /**
- * 메타 값은 여기서 한국어로 풀어 내보낸다.
+ * 메타 값은 여기서 enum 카탈로그 라벨(`enumLabel`)로 풀어 내보낸다.
  *
  * 화면이 아니라 목이 푸는 이유는, 검수 화면이 `meta` 를 종류 구분 없이 그대로 그리기
  * 때문이다. 화면에서 풀려면 어떤 칸이 enum 이고 어떤 칸이 이미 평문인지 알아야 하고, 그러면
  * 종류별 분기가 다시 생긴다. 백엔드가 이 API 를 만들 때도 같은 이유로 서버가 푸는 편이 낫다.
  */
-const VALUE_LABELS: Record<string, string> = {
-  FULL_TIME: '정규직',
-  CONTRACT: '계약직',
-  INTERN: '인턴',
-  PART_TIME: '파트타임',
-  ETC: '기타',
-  ONLINE: '온라인',
-  OFFLINE: '오프라인',
-  HYBRID: '온·오프라인',
-  FREE: '무료',
-  PAID: '유료',
-  GOVERNMENT_FUNDED: '국비지원',
-};
-
-const label = (value: string): string => VALUE_LABELS[value] ?? value;
 
 function toJobItem(job: AdminJobDetailResponse): AdminContentReviewItemResponse {
   const sections: AdminContentReviewSectionResponse[] = [
@@ -77,8 +63,8 @@ function toJobItem(job: AdminJobDetailResponse): AdminContentReviewItemResponse 
     registeredAt: job.registeredAt,
     sourceUrl: job.sourceUrl,
     meta: [
-      { label: '고용 형태', value: label(job.employmentType) },
-      { label: '지역', value: job.region ?? '-' },
+      { label: '고용 형태', value: enumLabel('JobEmploymentType', job.employmentType) },
+      { label: '지역', value: job.region ? enumLabel('Region', job.region) : '-' },
       { label: '모집 마감', value: job.recruitmentEndAt?.slice(0, 10) ?? '상시' },
     ],
     sections,
@@ -116,8 +102,8 @@ function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminContentRevi
     sourceUrl: bootcamp.applicationUrl ?? bootcamp.sourceUrl,
     meta: [
       { label: '프로그램 유형', value: bootcamp.programType },
-      { label: '진행 방식', value: label(bootcamp.operationType) },
-      { label: '수강료', value: label(bootcamp.tuitionType) },
+      { label: '진행 방식', value: enumLabel('BootcampOperationType', bootcamp.operationType) },
+      { label: '수강료', value: enumLabel('BootcampTuitionType', bootcamp.tuitionType) },
     ],
     sections,
   };
