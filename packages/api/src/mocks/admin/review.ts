@@ -9,7 +9,7 @@ import type {
   DecideReviewRequest,
 } from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
-import { enumLabel } from '../../enums';
+import { contentFieldLabel, enumLabel } from '../../enums';
 import { clearRejection, recordRejection } from '../fixtures/admin-rejection';
 import { notFound, ok } from './paging';
 
@@ -33,7 +33,7 @@ import { notFound, ok } from './paging';
 type ReviewTargetType = AdminContentReviewItemResponseType;
 
 /**
- * 메타 값은 여기서 enum 카탈로그 라벨(`enumLabel`)로 풀어 내보낸다.
+ * 메타 값과 본문 칸 제목은 여기서 enum 카탈로그 라벨(`enumLabel`, `contentFieldLabel`)로 풀어 내보낸다.
  *
  * 화면이 아니라 목이 푸는 이유는, 검수 화면이 `meta` 를 종류 구분 없이 그대로 그리기
  * 때문이다. 화면에서 풀려면 어떤 칸이 enum 이고 어떤 칸이 이미 평문인지 알아야 하고, 그러면
@@ -41,19 +41,23 @@ type ReviewTargetType = AdminContentReviewItemResponseType;
  */
 
 function toJobItem(job: AdminJobDetailResponse): AdminContentReviewItemResponse {
-  const sections: AdminContentReviewSectionResponse[] = [
-    {
-      field: 'companyAndTeamIntroduction',
-      label: '회사·팀 소개',
-      body: job.companyAndTeamIntroduction,
-    },
-    { field: 'responsibilities', label: '주요 업무', body: job.responsibilities },
-    { field: 'qualifications', label: '자격 요건', body: job.qualifications },
-    { field: 'preferredQualifications', label: '우대 사항', body: job.preferredQualifications },
-    { field: 'compensation', label: '보상', body: job.compensation },
-    { field: 'benefits', label: '복지', body: job.benefits },
-    { field: 'hiringProcess', label: '채용 절차', body: job.hiringProcess },
-  ].filter((section): section is AdminContentReviewSectionResponse => Boolean(section.body));
+  const sections: AdminContentReviewSectionResponse[] = (
+    [
+      'companyAndTeamIntroduction',
+      'responsibilities',
+      'qualifications',
+      'preferredQualifications',
+      'compensation',
+      'benefits',
+      'hiringProcess',
+    ] as const
+  )
+    .map((field): { field: string; label: string; body?: string } => ({
+      field,
+      label: contentFieldLabel('JobContentField', field),
+      body: job[field],
+    }))
+    .filter((section): section is AdminContentReviewSectionResponse => Boolean(section.body));
 
   return {
     type: 'JOB',
@@ -73,10 +77,14 @@ function toJobItem(job: AdminJobDetailResponse): AdminContentReviewItemResponse 
 
 function toBootcampItem(bootcamp: AdminBootcampDetailResponse): AdminContentReviewItemResponse {
   const sections: AdminContentReviewSectionResponse[] = [
-    { field: 'content', label: '소개', body: bootcamp.content },
+    {
+      field: 'content',
+      label: contentFieldLabel('BootcampContentField', 'content'),
+      body: bootcamp.content,
+    },
     {
       field: 'eligibilityAndSelectionProcess',
-      label: '지원 자격과 선발 절차',
+      label: contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess'),
       body: bootcamp.eligibilityAndSelectionProcess,
     },
     {
