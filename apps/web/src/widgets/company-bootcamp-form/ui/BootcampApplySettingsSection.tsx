@@ -1,5 +1,6 @@
 'use client';
 
+import { enumOptions } from '@ogonggo/api';
 import { Checkbox, Field, Input } from '@ogonggo/ui';
 import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
 import type { CompanyBootcampFormValues } from '../model/values';
@@ -8,11 +9,8 @@ import type { CompanyBootcampFormValues } from '../model/values';
 const MAX_URL_LENGTH = 2048;
 const MAX_MANAGER_EMAIL_LENGTH = 320;
 
-/** 지원 방법 둘. 생성 타입의 `applicationMethod` 그대로다. */
-const APPLICATION_METHOD_OPTIONS = [
-  { value: 'EXTERNAL_PAGE', label: '외부 지원 페이지' },
-  { value: 'EMAIL', label: '이메일 지원' },
-] as const;
+/** 지원 방법 둘. 값과 라벨은 enum 카탈로그의 `BootcampApplicationMethod` 다. */
+const APPLICATION_METHOD_OPTIONS = enumOptions('BootcampApplicationMethod');
 
 export interface BootcampApplySettingsSectionProps {
   values: CompanyBootcampFormValues;
