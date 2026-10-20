@@ -1,4 +1,5 @@
 import type { ListPublicJobCalendarJobField } from '@ogonggo/api';
+import { JOB_FIELD_LABELS } from '@/entities/job/model/labels';
 
 /**
  * `관심 직무를 골라주세요`의 칸(`docs/asset/v6 공고달력/관심직무 선택.png`). 순서는 목업의
@@ -7,89 +8,83 @@ import type { ListPublicJobCalendarJobField } from '@ogonggo/api';
  * `slug`는 URL 에 두는 값이다(`?majors=it,planning`). 이름에 `·`와 `&`가 있어 그대로 쿼리에
  * 두면 인코딩된 긴 문자열이 된다.
  *
- * `field`는 백엔드에 보내는 직군 enum 이다(ogonggo-BE LC-3385). 이름이 그 enum 의 라벨과
- * 글자까지 같다.
+ * `field`는 백엔드에 보내는 직군 enum 이다(ogonggo-BE LC-3385). 이름은 그 enum 의 라벨에서 온다.
  *
  * 아이콘은 Iconify(lucide) 클래스이고 문자열 그대로 적어야 한다 — 플러그인이 소스의 이
  * 문자열을 스캔해서 그린다(`packages/ui/src/styles/tokens.css`). 목업의 그림과 모양이 가장
  * 가까운 것을 골랐다.
  */
-export const JOB_MAJORS = [
-  { slug: 'it', label: 'IT·개발', field: 'IT_DEVELOPMENT', icon: 'icon-[lucide--laptop]' },
-  { slug: 'game', label: '게임', field: 'GAME', icon: 'icon-[lucide--gamepad-2]' },
+const MAJORS = [
+  { slug: 'it', field: 'IT_DEVELOPMENT', icon: 'icon-[lucide--laptop]' },
+  { slug: 'game', field: 'GAME', icon: 'icon-[lucide--gamepad-2]' },
   {
     slug: 'planning',
-    label: '기획·전략',
     field: 'PLANNING_STRATEGY',
     icon: 'icon-[lucide--lightbulb]',
   },
   {
     slug: 'marketing',
-    label: '마케팅·광고',
     field: 'MARKETING_ADVERTISING',
     icon: 'icon-[lucide--megaphone]',
   },
-  { slug: 'sales', label: '영업', field: 'SALES', icon: 'icon-[lucide--briefcase-business]' },
-  { slug: 'trade', label: '무역·물류', field: 'TRADE_LOGISTICS', icon: 'icon-[lucide--package]' },
+  { slug: 'sales', field: 'SALES', icon: 'icon-[lucide--briefcase-business]' },
+  { slug: 'trade', field: 'TRADE_LOGISTICS', icon: 'icon-[lucide--package]' },
   {
     slug: 'delivery',
-    label: '운송·배송',
     field: 'TRANSPORT_DELIVERY',
     icon: 'icon-[lucide--truck]',
   },
-  { slug: 'legal', label: '법률·법무', field: 'LEGAL', icon: 'icon-[lucide--gavel]' },
-  { slug: 'hr', label: 'HR·총무', field: 'HR_GENERAL_AFFAIRS', icon: 'icon-[lucide--contact]' },
+  { slug: 'legal', field: 'LEGAL', icon: 'icon-[lucide--gavel]' },
+  { slug: 'hr', field: 'HR_GENERAL_AFFAIRS', icon: 'icon-[lucide--contact]' },
   {
     slug: 'securities',
-    label: '증권·운용',
     field: 'SECURITIES_ASSET_MANAGEMENT',
     icon: 'icon-[lucide--chart-no-axes-combined]',
   },
   {
     slug: 'banking',
-    label: '은행·카드·보험',
     field: 'BANKING_CARD_INSURANCE',
     icon: 'icon-[lucide--landmark]',
   },
   {
     slug: 'engineering',
-    label: '엔지니어링·R&D',
     field: 'ENGINEERING_RND',
     icon: 'icon-[lucide--wrench]',
   },
   {
     slug: 'construction',
-    label: '건설·건축',
     field: 'CONSTRUCTION_ARCHITECTURE',
     icon: 'icon-[lucide--traffic-cone]',
   },
   {
     slug: 'production',
-    label: '생산·기능직',
     field: 'PRODUCTION_SKILLED_TRADES',
     icon: 'icon-[lucide--factory]',
   },
   {
     slug: 'medical',
-    label: '의료·보건',
     field: 'MEDICAL_HEALTH',
     icon: 'icon-[lucide--stethoscope]',
   },
   {
     slug: 'public',
-    label: '공공·복지',
     field: 'PUBLIC_WELFARE',
     icon: 'icon-[lucide--heart-handshake]',
   },
-  { slug: 'education', label: '교육', field: 'EDUCATION', icon: 'icon-[lucide--graduation-cap]' },
-  { slug: 'service', label: '서비스', field: 'SERVICE', icon: 'icon-[lucide--handshake]' },
-  { slug: 'food', label: '식음료', field: 'FOOD_BEVERAGE', icon: 'icon-[lucide--utensils]' },
+  { slug: 'education', field: 'EDUCATION', icon: 'icon-[lucide--graduation-cap]' },
+  { slug: 'service', field: 'SERVICE', icon: 'icon-[lucide--handshake]' },
+  { slug: 'food', field: 'FOOD_BEVERAGE', icon: 'icon-[lucide--utensils]' },
 ] as const satisfies readonly {
   slug: string;
-  label: string;
   field: ListPublicJobCalendarJobField;
   icon: string;
 }[];
+
+/** 칸 이름은 직군 라벨(enum 카탈로그의 `JobField`) 그대로다. */
+export const JOB_MAJORS = MAJORS.map((major) => ({
+  ...major,
+  label: JOB_FIELD_LABELS[major.field],
+}));
 
 /**
  * 전부 고른 것을 주소·쿠키에 적는 값(`?majors=all`). slug 를 다 늘어놓지 않는다.
