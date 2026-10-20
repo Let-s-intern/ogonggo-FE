@@ -9,6 +9,7 @@ import {
   replaceMyNotificationEmail,
   replaceMyProfileImage,
   type SuccessResponseImageUploadResponse,
+  enumLabel,
 } from '@ogonggo/api';
 import { Badge, Button, Checkbox, Input, cn } from '@ogonggo/ui';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
@@ -36,15 +37,28 @@ export interface BasicInfoSectionProps {
 }
 
 /**
- * 가입 경로 뱃지(v11 `docs/asset/v11/image copy 5.png` 의 초록 `네이버 로그인`). 색은 각 서비스의
- * 대표색이다. 렛츠커리어에 값이 없는 과거 계정은 `authProvider` 가 없어 뱃지를 그리지 않는다.
+ * 가입 경로 뱃지(v11 `docs/asset/v11/image copy 5.png` 의 초록 뱃지). 라벨은 enum 카탈로그의
+ * `LetsCareerAuthProvider` 이고, 색은 각 서비스의 대표색이다. 렛츠커리어에 값이 없는 과거 계정은
+ * `authProvider` 가 없어 뱃지를 그리지 않는다.
  */
 const PROVIDER_BADGES: Record<MyProfileResponseAuthProvider, { label: string; className: string }> =
   {
-    KAKAO: { label: '카카오 로그인', className: 'bg-[#FEE500] text-gray-900' },
-    NAVER: { label: '네이버 로그인', className: 'bg-[#03C75A] text-white' },
-    GOOGLE: { label: '구글 로그인', className: 'bg-gray-100 text-gray-700' },
-    SERVICE: { label: '이메일 로그인', className: 'bg-blue-50 text-blue-500' },
+    KAKAO: {
+      label: enumLabel('LetsCareerAuthProvider', 'KAKAO'),
+      className: 'bg-[#FEE500] text-gray-900',
+    },
+    NAVER: {
+      label: enumLabel('LetsCareerAuthProvider', 'NAVER'),
+      className: 'bg-[#03C75A] text-white',
+    },
+    GOOGLE: {
+      label: enumLabel('LetsCareerAuthProvider', 'GOOGLE'),
+      className: 'bg-gray-100 text-gray-700',
+    },
+    SERVICE: {
+      label: enumLabel('LetsCareerAuthProvider', 'SERVICE'),
+      className: 'bg-blue-50 text-blue-500',
+    },
   };
 
 /** 백엔드가 받는 닉네임 최대 글자 수(`ChangeMyNicknameRequest`). */

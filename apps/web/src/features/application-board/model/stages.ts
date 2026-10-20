@@ -1,7 +1,9 @@
-import type {
-  ListMyBootcampBookmarksApplicationStatus,
-  ListMyJobBookmarksApplicationStatus,
-  ListMyRecruitmentPostApplicationsApplicationStatus,
+import {
+  enumLabel,
+  enumLabels,
+  type ListMyBootcampBookmarksApplicationStatus,
+  type ListMyJobBookmarksApplicationStatus,
+  type ListMyRecruitmentPostApplicationsApplicationStatus,
 } from '@ogonggo/api';
 
 /**
@@ -37,7 +39,7 @@ export type ApplicationStageId<Tab extends ApplicationBoardTab = ApplicationBoar
 /** 칸·섹션 하나. `id` 는 키에서 채워 넣는다(`toOrderedStages`). */
 export interface ApplicationStage<Id extends string = string> {
   readonly id: Id;
-  /** 칸 머리에 쓰는 문구. 목업 그대로다. */
+  /** 칸 머리에 쓰는 문구. enum 카탈로그의 라벨이다. */
   readonly label: string;
   /**
    * 이 단계에서 **옮겨 갈 수 있는** 단계. 비어 있으면 그 칸의 카드는 움직이지 않는다.
@@ -91,37 +93,28 @@ function openStages<Id extends string>(labels: StageLabels<Id>): readonly Applic
 }
 
 /**
- * 채용공고 여섯 단계.
+ * 채용공고 여섯 단계. 문구와 차례는 enum 카탈로그의 `JobApplicationStatus` 다.
  *
  * 목업 리스트 뷰는 일곱 칸이고 그중 `서류 합격` 은 `JobApplicationStatus` 에 없다.
  * **여섯으로 간다**(PRD 결정 기록) — 없는 값이라 그 칸은 영원히 빈다.
- *
- * 문구는 목업의 칸 이름이다. 백엔드 enum 의 `desc` 와 셋이 다르다(`면접`/`합격` 대신
- * `면접 진행`/`최종 합격`, `스크랩` 대신 `스크랩한 공고`). 화면 문구는 목업을 따른다.
  */
-const JOB_LABELS = {
-  SCRAPPED: '스크랩한 공고',
-  PREPARING: '지원 준비 중',
-  APPLIED: '지원 완료',
-  INTERVIEWING: '면접 진행',
-  PASSED: '최종 합격',
-  FAILED: '불합격',
-} as const satisfies StageLabels<ApplicationStageIds['jobs']>;
+const JOB_LABELS: StageLabels<ApplicationStageIds['jobs']> = enumLabels('JobApplicationStatus');
 
-/** 교육·부트캠프 다섯 단계. `PREPARING` 만 `신청 전` 이고 나머지는 enum 의 `desc` 와 같다. */
-const BOOTCAMP_LABELS = {
-  SCRAPPED: '스크랩한 교육 · 부트캠프',
-  PREPARING: '신청 전',
-  APPLIED: '신청 완료',
-  IN_PROGRESS: '활동 중',
-  COMPLETED: '활동 완료',
-} as const satisfies StageLabels<ApplicationStageIds['bootcamps']>;
+/** 교육·부트캠프 다섯 단계. 문구와 차례는 enum 카탈로그의 `BootcampApplicationStatus` 다. */
+const BOOTCAMP_LABELS: StageLabels<ApplicationStageIds['bootcamps']> = enumLabels(
+  'BootcampApplicationStatus',
+);
+
+/** 사이드·스터디 지원 이력 넷의 문구(`RecruitmentPostApplicationProgressStatus`). */
+const sideStudyLabel = (id: ListMyRecruitmentPostApplicationsApplicationStatus) =>
+  enumLabel('RecruitmentPostApplicationProgressStatus', id);
 
 /**
  * 사이드·스터디 다섯 단계.
  *
- * `COMPLETED` 가 부트캠프에서는 `활동 완료` 인데 여기서는 `지원 완료` 다. 다른 enum 이고 목업도
- * 그렇게 적는다 — 문구를 탭마다 따로 두는 이유가 이것이다.
+ * `COMPLETED` 가 부트캠프에서는 `활동 완료` 인데 여기서는 `지원 완료` 다. 다른 enum 이라 문구를
+ * 탭마다 그 enum 에서 따로 가져온다. `SCRAPPED` 는 백엔드 enum 에 없는 이 화면만의 값이라 같은
+ * 뜻인 채용공고의 라벨(`스크랩`)을 빌린다.
  *
  * **이 탭만 표를 손으로 적는다.** 지원 이력 넷은 `updateRecruitmentPostApplicationStatus` 가
  * 서로 오가게 해 주지만, `SCRAPPED` 는 다른 테이블이라 `PREPARING` 과만 이어져 있다
@@ -129,14 +122,20 @@ const BOOTCAMP_LABELS = {
  * 스크랩으로 되돌아가는 호출도 백엔드에 없다.
  */
 const SIDE_STUDY_STAGES = {
-  SCRAPPED: { label: '스크랩한 사이드 · 스터디', movableTo: ['PREPARING'] },
+  SCRAPPED: { label: enumLabel('JobApplicationStatus', 'SCRAPPED'), movableTo: ['PREPARING'] },
   PREPARING: {
-    label: '지원 준비 중',
+    label: sideStudyLabel('PREPARING'),
     movableTo: ['SCRAPPED', 'COMPLETED', 'IN_PROGRESS', 'ENDED'],
   },
-  COMPLETED: { label: '지원 완료', movableTo: ['PREPARING', 'IN_PROGRESS', 'ENDED'] },
-  IN_PROGRESS: { label: '활동 중', movableTo: ['PREPARING', 'COMPLETED', 'ENDED'] },
-  ENDED: { label: '활동 완료', movableTo: ['PREPARING', 'COMPLETED', 'IN_PROGRESS'] },
+  COMPLETED: {
+    label: sideStudyLabel('COMPLETED'),
+    movableTo: ['PREPARING', 'IN_PROGRESS', 'ENDED'],
+  },
+  IN_PROGRESS: {
+    label: sideStudyLabel('IN_PROGRESS'),
+    movableTo: ['PREPARING', 'COMPLETED', 'ENDED'],
+  },
+  ENDED: { label: sideStudyLabel('ENDED'), movableTo: ['PREPARING', 'COMPLETED', 'IN_PROGRESS'] },
 } as const satisfies StageTable<ApplicationStageIds['side-studies']>;
 
 type ApplicationStageTables = {
