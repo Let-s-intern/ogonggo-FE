@@ -8,7 +8,9 @@ export {
   PERIOD_OPTIONS,
   RANGE_OPTIONS,
   WINDOW_OPTIONS,
+  isDateRangeComplete,
   resolveDateRange,
+  toRedashParameters,
   type KpiFilters,
   type RangePreset,
 } from './model/filters';

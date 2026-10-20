@@ -49,6 +49,7 @@ export function QueryCard({
         'flex min-w-0 flex-col rounded-lg border border-gray-200 bg-white p-5',
         className,
       )}
+      data-pdf-block
     >
       <div className="flex items-start justify-between gap-3 pb-4">
         <div className="min-w-0">
@@ -58,7 +59,7 @@ export function QueryCard({
         <div className="flex shrink-0 items-center gap-2">
           {action}
           {chart ? (
-            <div className="flex rounded-md border border-gray-200 p-0.5 text-sm">
+            <div className="flex rounded-md border border-gray-200 p-0.5 text-sm" data-pdf-hide>
               {(['chart', 'table'] as const).map((value) => (
                 <button
                   key={value}

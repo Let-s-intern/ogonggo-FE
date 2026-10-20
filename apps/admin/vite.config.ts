@@ -29,6 +29,9 @@ const SHLINK_API_KEY = SHLINK_ENV.SHLINK_API_KEY ?? '';
 // Redash API 키. 단축링크 키와 같은 이유로 `VITE_` 접두사 없이 `.env.local` 에서 읽는다.
 const REDASH_API_KEY = loadEnv('', process.cwd(), 'REDASH_').REDASH_API_KEY ?? '';
 
+// 통계 AI 질문 창의 모델 설정(`STATS_LLM_*`). 같은 이유로 `.env.local` 에서 읽는다.
+const STATS_LLM_ENV = loadEnv('', process.cwd(), 'STATS_LLM_');
+
 /**
  * 통계 화면의 `POST /redash-api/query`. 배포본은 `api/redash-query.ts` 가 받는다.
  *
@@ -83,6 +86,59 @@ const redashDevApi: Plugin = {
         }
         throw error;
       }
+    });
+
+    // 통계 AI 질문 창의 `POST /stats-ai/ask`. 배포본은 `api/stats-ask.ts` 가 받는다. 위와 같은 이유로 함수
+    // 파일의 `answerStatsQuestion` 을 그대로 부르고, 호출자 검증은 하지 않는다.
+    server.middlewares.use('/stats-ai/ask', async (req, res) => {
+      const { answerStatsQuestion, llmConfigFrom, parseStatsAskInput } =
+        (await server.ssrLoadModule('/api/stats-ask.ts')) as typeof import('./api/stats-ask');
+      const { RedashFailure } = (await server.ssrLoadModule(
+        '/api/redash-query.ts',
+      )) as typeof import('./api/redash-query');
+      const send = (status: number, code: string, message: string) => {
+        res.statusCode = status;
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ status, code, message }));
+      };
+      const config = llmConfigFrom(STATS_LLM_ENV);
+      if (!REDASH_API_KEY || !config) {
+        send(
+          503,
+          'STATS_AI_NOT_CONFIGURED',
+          '.env.local 에 REDASH_API_KEY 나 STATS_LLM_* 가 없습니다.',
+        );
+        return;
+      }
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(chunk as Buffer);
+      }
+      let input = null;
+      try {
+        input = parseStatsAskInput(JSON.parse(Buffer.concat(chunks).toString()));
+      } catch {
+        // 아래에서 400 으로 답한다.
+      }
+      if (!input) {
+        send(400, 'INVALID_REQUEST', '보낼 수 없는 질문입니다.');
+        return;
+      }
+      let stream: ReadableStream<Uint8Array>;
+      try {
+        stream = await answerStatsQuestion(config, REDASH_API_KEY, input);
+      } catch (error) {
+        if (error instanceof RedashFailure) {
+          send(error.status, error.code, error.message);
+          return;
+        }
+        throw error;
+      }
+      res.setHeader('content-type', 'text/plain; charset=utf-8');
+      for await (const chunk of stream) {
+        res.write(chunk);
+      }
+      res.end();
     });
   },
 };

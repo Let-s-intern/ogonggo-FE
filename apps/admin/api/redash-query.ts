@@ -82,7 +82,7 @@ function failure(status: number, code: string, message: string): Response {
   return json(status, { status, code, message });
 }
 
-async function isAdmin(authorization: string | null): Promise<boolean> {
+export async function isAdmin(authorization: string | null): Promise<boolean> {
   if (!authorization?.startsWith('Bearer ')) {
     return false;
   }
