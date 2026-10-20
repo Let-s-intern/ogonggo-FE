@@ -14,10 +14,12 @@ import type {
   UpdateAdminBootcampRequest,
   UpdateAdminJobRequest,
 } from '../../generated/admin/models';
+import { enumParent } from '../../enums';
 import {
   ADMIN_BOOTCAMP_FIXTURES,
   ADMIN_JOB_FIXTURES,
   ADMIN_SIDE_STUDY_FIXTURES,
+  recruitmentStatusOf,
 } from '../fixtures/admin-content';
 import {
   RECRUITMENT_POST_FIXTURES,
@@ -198,8 +200,166 @@ function applyContentPatch(
   return null;
 }
 
+/** `[필드] 사유` 꼴의 400. 백엔드 `AdminApiExceptionHandler.validationMessage` 와 같은 모양이다. */
+const badRequest = (field: string, reason: string) =>
+  HttpResponse.json(
+    { status: 400, code: 'BAD_REQUEST', message: `[${field}] ${reason}` },
+    { status: 400 },
+  );
+
+/** `clear` 로 비울 수 있는 공고 정보. 백엔드 `AdminJobClearableField` 와 같다. */
+const JOB_CLEARABLE_FIELDS = [
+  'parentCompanyName',
+  'industry',
+  'coverImageUrl',
+  'logoUrl',
+  'jobField',
+  'jobRole',
+  'experienceMinYears',
+  'region',
+  'subRegion',
+  'recruitmentHeadcount',
+  'recruitmentStartAt',
+  'recruitmentEndAt',
+  'closesWhenFilled',
+  'autoCloseEnabled',
+  'recruitmentNotice',
+  'applicationMethod',
+  'applyEmail',
+  'inquiryEmail',
+  'sourceUrl',
+] as const;
+
+/** 공백만 보내면 400 인 칸. 백엔드 요청의 `notBlank` 와 같다. 비우기는 `clear` 로 받는다. */
+const JOB_NOT_BLANK_FIELDS = [
+  'companyName',
+  'parentCompanyName',
+  'industry',
+  'coverImageUrl',
+  'logoUrl',
+  'recruitmentNotice',
+  'applyEmail',
+  'inquiryEmail',
+  'sourceUrl',
+] as const;
+
 /**
- * 채용공고의 운영 값을 고친다.
+ * 공고 정보(회사명부터 원문 주소까지)를 합친 값. 백엔드 `AdminJobDetailsPatch.mergeInto` 를 옮겼다.
+ *
+ * 보낸 값은 쓰고, `clear` 에 담은 값은 지우고, 나머지는 지금 값을 둔다. 직군·시·도·모집 기간 유형을
+ * 바꾸면 딸린 값(직무, 시·군·구, 모집 종료 일시)이 맞지 않을 수 있어, 함께 보내지 않았으면 맞지 않는
+ * 지금 값을 지운다. 함께 보낸 값이 맞지 않으면 400 이다.
+ *
+ * 공고에 바로 쓰지 않고 합친 값을 돌려준다. 확인이 다 끝난 뒤에 쓰므로 400 이 나도 공고가 반쯤
+ * 바뀌지 않는다.
+ */
+function mergeJobDetails(
+  job: AdminJobDetailResponse,
+  body: UpdateAdminJobRequest,
+): { error: Response } | { next: Partial<AdminJobDetailResponse> } {
+  const sent = body as Record<string, unknown>;
+  const current = job as unknown as Record<string, unknown>;
+  const cleared = body.clear ?? [];
+
+  const notClearable = cleared.find(
+    (name) => !(JOB_CLEARABLE_FIELDS as readonly string[]).includes(name),
+  );
+  if (notClearable !== undefined) {
+    return { error: badRequest('clear', `비울 수 없는 필드입니다: ${notClearable}`) };
+  }
+  const sentAndCleared = cleared.find((name) => sent[name] != null);
+  if (sentAndCleared !== undefined) {
+    return { error: badRequest(sentAndCleared, '값을 보내면서 비울 수 없습니다.') };
+  }
+  const blank = JOB_NOT_BLANK_FIELDS.find((field) => body[field]?.trim() === '');
+  if (blank !== undefined) {
+    return { error: badRequest(blank, '공백일 수 없습니다. 비우려면 clear에 담아 주세요.') };
+  }
+
+  const pick = (field: string): unknown =>
+    sent[field] != null ? sent[field] : cleared.includes(field) ? undefined : current[field];
+
+  // 직무만 보내면 그 직무의 직군으로 맞춘다. 시·도와 시·군·구도 같다.
+  const jobField =
+    body.jobField ??
+    (body.jobRole ? enumParent('JobRole', body.jobRole) : undefined) ??
+    pick('jobField');
+  const currentRole = pick('jobRole') as string | undefined;
+  if (body.jobRole && enumParent('JobRole', body.jobRole) !== jobField) {
+    return { error: badRequest('jobRole', 'jobField와 같은 직군의 직무여야 합니다.') };
+  }
+  const jobRole =
+    currentRole && enumParent('JobRole', currentRole) === jobField ? currentRole : undefined;
+
+  const region =
+    body.region ??
+    (body.subRegion ? enumParent('SubRegion', body.subRegion) : undefined) ??
+    pick('region');
+  const currentSubRegion = pick('subRegion') as string | undefined;
+  if (body.subRegion && enumParent('SubRegion', body.subRegion) !== region) {
+    return { error: badRequest('subRegion', 'region과 같은 시·도의 시·군·구여야 합니다.') };
+  }
+  const subRegion =
+    currentSubRegion && enumParent('SubRegion', currentSubRegion) === region
+      ? currentSubRegion
+      : undefined;
+
+  const recruitmentType = body.recruitmentType ?? job.recruitmentType;
+  if (recruitmentType === 'ALWAYS_OPEN' && body.recruitmentEndAt != null) {
+    return {
+      error: badRequest('recruitmentEndAt', '상시 채용에는 모집 종료 일시를 둘 수 없습니다.'),
+    };
+  }
+  const recruitmentEndAt =
+    recruitmentType === 'ALWAYS_OPEN'
+      ? undefined
+      : (pick('recruitmentEndAt') as string | undefined);
+  const recruitmentStartAt = pick('recruitmentStartAt') as string | undefined;
+  if (
+    recruitmentStartAt &&
+    recruitmentEndAt &&
+    new Date(recruitmentStartAt).getTime() > new Date(recruitmentEndAt).getTime()
+  ) {
+    return { error: badRequest('recruitmentStartAt', '모집 종료 일시보다 늦을 수 없습니다.') };
+  }
+
+  const picked = Object.fromEntries(
+    [
+      'parentCompanyName',
+      'industry',
+      'coverImageUrl',
+      'logoUrl',
+      'experienceMinYears',
+      'recruitmentHeadcount',
+      'closesWhenFilled',
+      'autoCloseEnabled',
+      'recruitmentNotice',
+      'applicationMethod',
+      'applyEmail',
+      'inquiryEmail',
+      'sourceUrl',
+    ].map((field) => [field, pick(field)]),
+  );
+  return {
+    next: {
+      ...picked,
+      companyName: body.companyName ?? job.companyName,
+      employmentType: body.employmentType ?? job.employmentType,
+      experienceType: body.experienceType ?? job.experienceType,
+      educationLevel: body.educationLevel ?? job.educationLevel,
+      jobField,
+      jobRole,
+      region,
+      subRegion,
+      recruitmentType,
+      recruitmentStartAt,
+      recruitmentEndAt,
+    } as Partial<AdminJobDetailResponse>,
+  };
+}
+
+/**
+ * 채용공고의 운영 값·공고 정보·제목과 본문을 고친다.
  *
  * 넘어온 칸만 바꾼다. 두 값을 늘 함께 보내게 하면 화면이 안 건드린 값까지 되돌려 쓰게 되고,
  * 그 사이 다른 곳에서 바뀐 값이 조용히 덮인다.
@@ -216,6 +376,11 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     return rejected;
   }
 
+  const merged = mergeJobDetails(job, body);
+  if ('error' in merged) {
+    return merged.error;
+  }
+
   const error = applyContentPatch(
     job as unknown as Record<string, unknown>,
     body,
@@ -224,6 +389,14 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (error) {
     return HttpResponse.json({ status: 400, code: 'BAD_REQUEST', message: error }, { status: 400 });
   }
+  Object.assign(job, merged.next);
+  // 모집 상태는 저장값이 아니라 일정에서 계산한다. 지난 마감일을 미루면 모집 중으로 돌아가고,
+  // 직접 마감한 공고(`closedAt`)는 마감으로 남는다.
+  job.recruitmentStatus = recruitmentStatusOf({
+    closedAt: job.closedAt,
+    recruitmentEndAt: job.recruitmentEndAt,
+    alwaysOpen: job.recruitmentType === 'ALWAYS_OPEN',
+  });
 
   if (body.visibility !== undefined) {
     job.visibility = body.visibility;

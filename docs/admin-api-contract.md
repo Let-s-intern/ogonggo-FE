@@ -103,7 +103,7 @@
 | 3   | `/content/jobs`                 | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
 | 4   | `/content/jobs/{id}`            | 진입                          | `GET /jobs/{id}`                             | 상세                               |
 | 5   | `/content/jobs/{id}`            | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·검수 상태                     |
-| 6   | `/content/jobs/{id}`            | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·본문 칸                       |
+| 6   | `/content/jobs/{id}`            | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·공고 정보·본문 칸             |
 | 7   | `/content/jobs/{id}`            | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
 | 8   | `/content/bootcamps`            | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
 | 9   | `/content/bootcamps`            | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
@@ -311,7 +311,8 @@
 ### `PATCH /api/v1/admin/jobs/{jobId}`
 
 **부르는 곳** — 목록의 노출 토글, 상세의 "운영 값 수정" 저장, 상세와 검수 화면의 "내용 수정"
-저장.
+저장. 상세의 내용 수정(`apps/admin/src/widgets/job-editor`)은 제목·공고 정보·본문을 보내고, 검수
+화면의 내용 수정(`apps/admin/src/widgets/content-editor`)은 제목·본문만 보낸다.
 
 **요청 본문** — 모두 선택. **넘어온 칸만 바꾼다.**
 
@@ -320,7 +321,10 @@
   "visibility": "VISIBLE",
   "reviewStatus": "APPROVED",
   "title": "고친 제목",
-  "fields": { "responsibilities": "고친 본문", "compensation": "" }
+  "fields": { "responsibilities": "고친 본문", "compensation": "" },
+  "companyName": "고친 회사명",
+  "jobField": "GAME",
+  "clear": ["industry", "jobRole"]
 }
 ```
 
@@ -353,6 +357,78 @@
 **크롤링 수집분도 내용을 고칠 수 있다.** 크롤러가 원문 구조를 잘못 읽어 오는 일이 있고,
 그때 고칠 방법이 없으면 그 공고는 통째로 내리는 수밖에 없다.
 
+**공고 정보**
+
+제목·본문·운영 값 말고 `UpdateAdminJobRequest` 에 있는 칸이다. 보내지 않거나 `null` 이면 그대로
+둔다. 값을 비우려면 필드 이름을 `clear` 배열에 담는다 — 서버는 `null` 과 보내지 않은 칸을 똑같이
+"그대로 둠" 으로 읽어서, 비우는 뜻을 따로 실어야 한다.
+
+| 칸                                                                      | `clear` 로 비우기 | 서버 검증                               |
+| ----------------------------------------------------------------------- | ----------------- | --------------------------------------- |
+| `companyName`                                                           | 불가              | 150자 이하, 공백만이면 400              |
+| `parentCompanyName`                                                     | 가능              | 150자 이하, 공백만이면 400              |
+| `industry`                                                              | 가능              | 100자 이하, 공백만이면 400              |
+| `logoUrl`, `coverImageUrl`                                              | 가능              | URL 형식, 2048자 이하, 공백만이면 400   |
+| `jobField`, `jobRole`                                                   | 가능              | 아래 연동 규칙                          |
+| `employmentType`, `experienceType`, `educationLevel`, `recruitmentType` | 불가              | enum 값                                 |
+| `experienceMinYears`                                                    | 가능              | 0 이상                                  |
+| `region`, `subRegion`                                                   | 가능              | 아래 연동 규칙                          |
+| `recruitmentHeadcount`                                                  | 가능              | 1 이상                                  |
+| `recruitmentStartAt`, `recruitmentEndAt`                                | 가능              | 아래 연동 규칙                          |
+| `closesWhenFilled`, `autoCloseEnabled`                                  | 가능              | 참·거짓                                 |
+| `recruitmentNotice`                                                     | 가능              | 공백만이면 400                          |
+| `applicationMethod`                                                     | 가능              | enum 값                                 |
+| `applyEmail`, `inquiryEmail`                                            | 가능              | 이메일 형식, 320자 이하, 공백만이면 400 |
+| `sourceUrl`                                                             | 가능              | URL 형식, 2048자 이하, 공백만이면 400   |
+
+비울 수 없는 다섯 칸은 상세 응답의 필수 칸이다. 공백만 보내는 것을 400 으로 막는 이유도 같다 —
+빈 값과 비운 값을 가르려면 비우는 길이 `clear` 하나여야 한다.
+
+연동 규칙. 딸린 값을 함께 보내지 않으면 서버가 맞지 않는 지금 값을 지우고, 함께 보낸 값이 맞지
+않으면 400 이다.
+
+- 직군을 바꾸면서 직무를 보내지 않으면 바뀐 직군에 맞지 않는 기존 직무를 지운다. 직무만 보내면
+  직군을 그 직무의 직군으로 바꾼다.
+- 시·도와 시·군·구도 같다. 화면에는 시·군·구 칸이 없어 시·도만 바꾸고 정리는 서버에 맡긴다.
+- 모집 기간 유형을 `ALWAYS_OPEN` 으로 바꾸면 모집 종료 일시를 지운다.
+- 모집 종료 일시가 바뀌면 모집 상태를 다시 정한다. 지난 마감일을 미루면 모집 중으로 돌아가고,
+  직접 마감한 공고는 마감으로 남는다.
+
+400 이 되는 경우. `message` 는 `[필드] 사유` 꼴이다(`AdminApiExceptionHandler.validationMessage`).
+아래 문구는 목(`packages/api/src/mocks/admin/content.ts` 의 `mergeJobDetails`)이 백엔드 소스에서
+옮긴 것이다.
+
+| 경우                                   | `message`                                                           |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| `clear` 에 비울 수 없는 이름           | `[clear] 비울 수 없는 필드입니다: <이름>`                           |
+| 같은 필드를 보내면서 `clear` 에도 담음 | `[<필드>] 값을 보내면서 비울 수 없습니다.`                          |
+| 문자열에 공백만                        | `[<필드>] 공백일 수 없습니다. 비우려면 clear에 담아 주세요.`        |
+| 직군과 맞지 않는 직무                  | `[jobRole] jobField와 같은 직군의 직무여야 합니다.`                 |
+| 시·도와 맞지 않는 시·군·구             | `[subRegion] region과 같은 시·도의 시·군·구여야 합니다.`            |
+| 상시 채용에 모집 종료 일시             | `[recruitmentEndAt] 상시 채용에는 모집 종료 일시를 둘 수 없습니다.` |
+| 모집 시작이 종료보다 늦음              | `[recruitmentStartAt] 모집 종료 일시보다 늦을 수 없습니다.`         |
+
+길이·URL·이메일 형식·최솟값을 어기면 Bean Validation 의 400 이 같은 꼴로 온다.
+
+화면이 요청을 만드는 방법(`apps/admin/src/widgets/job-editor/lib/buildPatch.ts`).
+
+- 연 때의 값과 다른 칸만 싣는다. 안 바뀐 칸까지 보내면 그 사이 크롤러나 다른 운영자가 바꾼 값을
+  연 때의 값으로 되돌린다. 아무것도 바뀌지 않았으면 저장 버튼이 잠긴다.
+- 바뀌었는데 비었으면 비울 수 있는 칸만 `clear` 에 담는다. 체크박스 둘은 바뀌면 참·거짓을 그대로
+  싣는다.
+- 직군을 바꾸면 직무 선택을 비운다. 직무를 다시 고르지 않고 저장하면 `jobRole` 도 `clear` 에 담는다
+  (`{ "jobField": "GAME", "clear": ["jobRole"] }`). 서버가 어차피 지우는 값이라 결과는 같다. 직무를
+  고르면 직군을 그 직무의 직군으로 채운다.
+- 모집 기간 유형을 상시로 바꾸면 마감일 칸을 비우고 잠근다. 요청에는 `recruitmentType` 만 싣고
+  `recruitmentEndAt` 은 싣지도 `clear` 에 담지도 않는다.
+- 날짜는 시각을 붙여 보낸다. 시작일은 `T00:00:00`, 마감일은 그날 끝까지 모집 중이도록 `T23:59:59` 다.
+- 서버 400 의 `message` 는 모달 위에 그대로 보이고 입력값은 남는다. 화면 검증
+  (`apps/admin/src/widgets/job-editor/lib/validate.ts`)이 서버보다 느슨해서 놓친 칸을 운영자가 알아야
+  고칠 수 있다.
+
+선택지와 라벨(직군·직무·고용 형태 등)은 `GET /api/v1/admin/enums` 를 부르지 않고 codegen 이 만든
+스냅숏 `packages/api/src/generated/enums.ts` 에서 온다(`docs/architecture.md` 의 "enum 라벨의 출처").
+
 **응답** — 고쳐진 공고 전체.
 
 ### `DELETE /api/v1/admin/jobs/{jobId}`
@@ -378,14 +454,16 @@
 `AdminJobSummaryResponse`, `AdminJobDetailResponse` 로 맞췄다. 그 과정에서 목에서 뺀 칸과, 목이
 아직 스펙과 다르게 동작하는 곳이다.
 
-| 항목                                                     | 백엔드 스펙                                                                                                                                                                             | 목                                                        |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `bookmarked`, `experienceMinYears`, `experienceMaxYears` | 목록·상세 응답에 없다                                                                                                                                                                   | 뺐다. 상세 화면의 경력 칸은 `experienceType` 만 보여 준다 |
-| `recruitmentStatus`                                      | `RECRUITING` · `CLOSED` 둘                                                                                                                                                              | 있던 `UPCOMING` 을 뺐다. 화면의 "모집 예정" 필터도 뺐다   |
-| `reviewStatus` (크롤링 수집분)                           | 생성 모델은 선택 칸이고 실제 응답은 `null` 을 싣는다                                                                                                                                    | 칸을 싣지 않는다. 화면은 둘 다 "해당 없음" 으로 그린다    |
-| `PATCH` 의 노출 규칙                                     | 승인하면 곧바로 노출, 검수 대기로 되돌리면 비노출. 기업회원 공고는 승인 전 `VISIBLE` 불가(409 `REVIEW_NOT_APPROVED`), 크롤링 수집분은 검수 상태 변경 불가(409 `CONTENT_NOT_REVIEWABLE`) | 노출과 검수 상태를 따로 바꾼다                            |
-| `DELETE`                                                 | 소프트 삭제. 반려 기록을 지우지 않고 반려 보관에 `contentExists=false` 로 남긴다                                                                                                        | 배열에서 빼고 반려 기록도 지운다                          |
-| 없는 id                                                  | 404 `JOB_NOT_FOUND`                                                                                                                                                                     | 404 `NOT_FOUND`                                           |
+| 항목                                                                  | 백엔드 스펙                                                                                                                                                                             | 목                                                                    |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `bookmarked`, `experienceMaxYears`                                    | 목록·상세 응답에 없다                                                                                                                                                                   | 뺐다                                                                  |
+| 상세에만 있는 공고 정보(`experienceMinYears`, `parentCompanyName` 등) | 목록 응답에 없다                                                                                                                                                                        | 목록 응답에도 실린다. `toJobSummary` 가 본문 칸과 `sourceUrl` 만 뺀다 |
+| `recruitmentStatus`                                                   | `RECRUITING` · `CLOSED` 둘                                                                                                                                                              | 있던 `UPCOMING` 을 뺐다. 화면의 "모집 예정" 필터도 뺐다               |
+| `reviewStatus` (크롤링 수집분)                                        | 생성 모델은 선택 칸이고 실제 응답은 `null` 을 싣는다                                                                                                                                    | 칸을 싣지 않는다. 화면은 둘 다 "해당 없음" 으로 그린다                |
+| `PATCH` 의 노출 규칙                                                  | 승인하면 곧바로 노출, 검수 대기로 되돌리면 비노출. 기업회원 공고는 승인 전 `VISIBLE` 불가(409 `REVIEW_NOT_APPROVED`), 크롤링 수집분은 검수 상태 변경 불가(409 `CONTENT_NOT_REVIEWABLE`) | 노출과 검수 상태를 따로 바꾼다                                        |
+| `PATCH` 의 길이·형식 검증                                             | 길이·URL·이메일 형식·최솟값을 어기면 400                                                                                                                                                | 확인하지 않는다. `clear`·공백·연동 규칙의 400 만 낸다                 |
+| `DELETE`                                                              | 소프트 삭제. 반려 기록을 지우지 않고 반려 보관에 `contentExists=false` 로 남긴다                                                                                                        | 배열에서 빼고 반려 기록도 지운다                                      |
+| 없는 id                                                               | 404 `JOB_NOT_FOUND`                                                                                                                                                                     | 404 `NOT_FOUND`                                                       |
 
 ---
 

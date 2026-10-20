@@ -3,3 +3,4 @@
 // 어드민 앱은 `@ogonggo/api/src/admin` 으로 가져온다.
 export * from './generated/admin/endpoints';
 export * from './generated/admin/models';
+export * from './enums';

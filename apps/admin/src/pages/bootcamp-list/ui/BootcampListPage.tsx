@@ -7,7 +7,7 @@ import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/b
 import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
-  RECRUITMENT_STATUS_OPTIONS,
+  BOOTCAMP_RECRUITMENT_STATUS_OPTIONS,
   RecruitmentStatusBadge,
   CONTENT_SORT_OPTIONS,
   CONTENT_SOURCE_OPTIONS,
@@ -77,7 +77,9 @@ export function BootcampListPage() {
       key: 'status',
       header: '모집 상태',
       width: 'w-28',
-      render: (row) => <RecruitmentStatusBadge value={row.status} />,
+      render: (row) => (
+        <RecruitmentStatusBadge enumName="BootcampRecruitmentStatus" value={row.status} />
+      ),
     },
     {
       key: 'viewCount',
@@ -123,7 +125,7 @@ export function BootcampListPage() {
           aria-label="검수 상태"
         />
         <Select
-          options={RECRUITMENT_STATUS_OPTIONS}
+          options={BOOTCAMP_RECRUITMENT_STATUS_OPTIONS}
           value={filters.status}
           onChange={(event) => setFilter('status', event.target.value)}
           aria-label="모집 상태"

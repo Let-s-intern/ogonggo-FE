@@ -5,7 +5,11 @@ import type {
   ListMyJobBookmarksJobField,
   ListMyJobBookmarksJobRoleItem,
 } from '@ogonggo/api';
-import { jobRolesOf, toJobField } from '@/entities/job/model/labels';
+import {
+  EMPLOYMENT_TYPE_FILTER_OPTIONS,
+  jobRolesOf,
+  toJobField,
+} from '@/entities/job/model/labels';
 
 /**
  * `/mypage/scraps` 의 URL 쿼리 상태(PRD 2 절). 탭·필터·페이지가 전부 주소에 있다 — 목록
@@ -97,13 +101,9 @@ function pick<T extends string>(value: string | undefined, allowed: readonly T[]
   return allowed.find((candidate) => candidate === value);
 }
 
-const EMPLOYMENT_TYPES: readonly ListMyJobBookmarksEmploymentType[] = [
-  'FULL_TIME',
-  'CONTRACT',
-  'INTERN',
-  'PART_TIME',
-  'ETC',
-];
+/** 채용공고 목록의 고용 형태 필터와 같은 선택지다(`일학습병행` 만 뺀다). */
+const EMPLOYMENT_TYPES: readonly ListMyJobBookmarksEmploymentType[] =
+  EMPLOYMENT_TYPE_FILTER_OPTIONS.map(([value]) => value);
 const EXPERIENCE_TYPES: readonly ListMyJobBookmarksExperienceType[] = [
   'NEWCOMER',
   'EXPERIENCED',

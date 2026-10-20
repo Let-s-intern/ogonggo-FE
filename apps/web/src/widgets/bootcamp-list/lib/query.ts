@@ -13,6 +13,9 @@ export type BootcampTab = (typeof BOOTCAMP_TABS)[number];
  * 백엔드는 분류를 저장하지 않고 등록 경로로 가른다(`ogonggo-BE` 의 `BootcampCategory`).
  * `KDT`는 고용24에서 수집한 K-디지털 트레이닝 과정, `SESAC`은 크롤러가 등록한 과정이다. 기업 회원이
  * 직접 등록한 과정과 고용24의 다른 훈련유형은 어느 탭에도 걸리지 않고 `전체`에만 나온다.
+ *
+ * 탭 이름은 이 분류의 카탈로그 라벨(`KDT`, `새싹`)이다. 탭 키(`bootcamp`, `sesac`)는 공유된 주소
+ * (`?tab=bootcamp`)가 그대로 열리도록 바꾸지 않는다.
  */
 export const TAB_CATEGORIES: Record<BootcampTab, ListPublicBootcampsCategory | undefined> = {
   all: undefined,

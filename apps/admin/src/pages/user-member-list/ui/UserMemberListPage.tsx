@@ -10,10 +10,10 @@ import {
   Select,
   type DataTableColumn,
 } from '@ogonggo/ui';
-import type {
-  AdminGeneralMemberResponse,
-  AdminGeneralMemberResponseGrade,
-  AdminGeneralMemberResponseRole,
+import {
+  enumLabel,
+  type AdminGeneralMemberResponse,
+  type AdminGeneralMemberResponseRole,
 } from '@ogonggo/api/src/admin';
 import { useChangeMemberRole, useUserMemberList } from '@/entities/member/api/useMembers';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
@@ -85,7 +85,7 @@ export function UserMemberListPage() {
       key: 'grade',
       header: '학년',
       width: 'w-24',
-      render: (row) => (row.grade ? GRADE_LABELS[row.grade] : '-'),
+      render: (row) => (row.grade ? enumLabel('UserGrade', row.grade) : '-'),
     },
     {
       key: 'wish',
@@ -175,15 +175,6 @@ export function UserMemberListPage() {
   );
 }
 
-const GRADE_LABELS: Record<AdminGeneralMemberResponseGrade, string> = {
-  FIRST: '1학년',
-  SECOND: '2학년',
-  THIRD: '3학년',
-  FOURTH: '4학년',
-  ETC: '5학년 이상',
-  GRADUATE: '졸업생',
-};
-
 /** 응답에 없는 값은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. */
 const orDash = (value: string | number | undefined) => value ?? '-';
 
@@ -249,7 +240,7 @@ function RoleChanger({
       {confirming ? (
         <Callout tone="warning">
           <p>
-            이 회원이 {MEMBER_ROLE_LABEL[draft]} 역할로 바뀝니다. 다음 요청부터 적용됩니다.
+            이 회원이 {enumLabel('UserRole', draft)} 역할로 바뀝니다. 다음 요청부터 적용됩니다.
             {draft === 'ADMIN' ? ' 관리자가 되면 어드민을 쓸 수 있습니다.' : ''}
             {member.role === 'ADMIN' ? ' 관리자에서 내리면 어드민에 접근할 수 없게 됩니다.' : ''}
           </p>
@@ -271,10 +262,6 @@ function RoleChanger({
     </div>
   );
 }
-
-const MEMBER_ROLE_LABEL: Record<string, string> = Object.fromEntries(
-  MEMBER_ROLE_CHANGE_OPTIONS.map((option) => [option.value, option.label]),
-);
 
 function MemberModal({
   member,
@@ -307,7 +294,7 @@ function MemberModal({
           { label: '탈퇴일', value: member.withdrawnAt ? formatDateTime(member.withdrawnAt) : '-' },
           { label: '학교', value: orDash(member.university) },
           { label: '전공', value: orDash(member.major) },
-          { label: '학년', value: member.grade ? GRADE_LABELS[member.grade] : '-' },
+          { label: '학년', value: member.grade ? enumLabel('UserGrade', member.grade) : '-' },
           { label: '희망 분야', value: orDash(member.wishField) },
           { label: '희망 직무', value: orDash(member.wishJob) },
           { label: '희망 산업', value: orDash(member.wishIndustry) },

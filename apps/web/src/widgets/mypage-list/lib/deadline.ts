@@ -1,5 +1,5 @@
 import { parseLocalDate } from '@/shared/lib/localDate';
-import { ALWAYS_OPEN_LABEL, type RecruitmentType } from '@/shared/lib/dday';
+import { alwaysOpenLabel, type ContentKind, type RecruitmentType } from '@/shared/lib/dday';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -16,13 +16,17 @@ const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
  * 상세 헤더의 같은 문구(`widgets/job-detail/ui/JobDetailHeaderCard.tsx`) 와 형식이 다르다 —
  * 그쪽은 `7/25(토) 23:59 마감` 이고 이쪽은 표 칸이라 연도까지 적고 `마감` 을 붙이지 않는다.
  * 그 자리는 옆의 배지가 말한다.
+ *
+ * 마감일이 없으면 종류별 문구다(`alwaysOpenLabel`). 날짜만 꾸미는 호출(`'PERIOD'` 와 늘 있는 날짜)
+ * 도 종류를 맞춰 넘긴다.
  */
 export function formatDeadline(
+  kind: ContentKind,
   recruitmentType: RecruitmentType,
   recruitmentEndAt?: string,
 ): string {
   if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
-    return ALWAYS_OPEN_LABEL;
+    return alwaysOpenLabel(kind);
   }
 
   const end = parseLocalDate(recruitmentEndAt);

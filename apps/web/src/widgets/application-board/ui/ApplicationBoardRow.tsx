@@ -19,11 +19,20 @@ import {
   computeDday,
   isDdayUrgent,
   isRecruitmentClosed,
-  ALWAYS_OPEN_LABEL,
+  alwaysOpenLabel,
+  closedLabel,
   isAlwaysOpen,
+  type ContentKind,
 } from '@/shared/lib/dday';
 import { formatDeadline } from '@/widgets/mypage-list';
 import { ApplicationBoardItemImage } from './ApplicationBoardItemImage';
+
+/** 탭이 담은 콘텐츠의 종류. 마감일 없음 문구(`alwaysOpenLabel`)가 종류마다 다르다. */
+const CONTENT_KIND_BY_TAB = {
+  jobs: 'job',
+  bootcamps: 'bootcamp',
+  'side-studies': 'side-study',
+} as const satisfies Record<ApplicationBoardTab, ContentKind>;
 
 /**
  * `지원하기` 를 그리는 마지막 단계. PRD "리스트 보기" 가 "`지원 완료` 뒤 섹션들은 `지원하기`
@@ -63,9 +72,10 @@ function activityPeriod(item: ApplicationBoardItem): string {
   if (!item.activityStartDate) {
     return '활동 기간 미정';
   }
-  const start = formatDeadline('PERIOD', item.activityStartDate);
+  // 활동 기간은 부트캠프에만 있다(`ApplicationBoardItem.activityStartDate`).
+  const start = formatDeadline('bootcamp', 'PERIOD', item.activityStartDate);
   return item.activityEndDate
-    ? `${start} ~ ${formatDeadline('PERIOD', item.activityEndDate)}`
+    ? `${start} ~ ${formatDeadline('bootcamp', 'PERIOD', item.activityEndDate)}`
     : `${start} ~`;
 }
 
@@ -123,11 +133,11 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
     </Badge>
   ) : closed ? (
     <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
-      마감
+      {closedLabel(CONTENT_KIND_BY_TAB[tab])}
     </Badge>
   ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
     <Badge tone="main" className="shrink-0 rounded-full px-2 py-1 text-xs font-bold">
-      {ALWAYS_OPEN_LABEL}
+      {alwaysOpenLabel(CONTENT_KIND_BY_TAB[tab])}
     </Badge>
   ) : null;
   const stageSelect = (className: string) => (
@@ -183,7 +193,11 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
           <span className="truncate text-xs text-gray-400">
             {activity
               ? activityPeriod(item)
-              : formatDeadline(item.recruitmentType, item.recruitmentEndAt)}
+              : formatDeadline(
+                  CONTENT_KIND_BY_TAB[tab],
+                  item.recruitmentType,
+                  item.recruitmentEndAt,
+                )}
           </span>
         </div>
         {stageSelect('ml-6 h-8 w-30 shrink-0 rounded-sm border-gray-150 px-3 text-gray-600')}

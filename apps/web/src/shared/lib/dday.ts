@@ -1,3 +1,4 @@
+import { enumLabel } from '@ogonggo/api';
 import { parseLocalDate } from './localDate';
 
 /**
@@ -12,13 +13,35 @@ import { parseLocalDate } from './localDate';
  */
 export type RecruitmentType = 'PERIOD' | 'ALWAYS_OPEN';
 
+/** 마감일 표기가 갈리는 콘텐츠 종류. */
+export type ContentKind = 'job' | 'bootcamp' | 'side-study';
+
 /**
- * 마감일이 없는 건의 표기. 상시 채용(`ALWAYS_OPEN`)과 마감일을 적지 않은 기간 채용 둘 다다.
- * 전에는 화면마다 `상시채용`·`상시 모집`·`상시 채용`·`마감일 미정` 으로 갈렸고, 카드·목록은
- * 배지를 통째로 빼서 아무 말도 하지 않았다. 사용자에게는 둘 다 "마감 없이 받는 중" 이라 한
- * 문구로 모았다.
+ * 마감일이 없는 건의 표기. 상시 채용과 마감일을 적지 않은 기간 채용 둘 다다. 채용공고는
+ * `JobRecruitmentType.ALWAYS_OPEN`(`상시 채용`), 그 밖은 `BootcampRecruitmentType.ALWAYS_OPEN`
+ * (`상시 모집`)의 라벨이다 — 사이드·스터디에는 모집 기간 유형 enum 이 없어 부트캠프 라벨을 쓴다.
  */
-export const ALWAYS_OPEN_LABEL = '상시모집';
+export function alwaysOpenLabel(kind: ContentKind): string {
+  return kind === 'job'
+    ? enumLabel('JobRecruitmentType', 'ALWAYS_OPEN')
+    : enumLabel('BootcampRecruitmentType', 'ALWAYS_OPEN');
+}
+
+/**
+ * 마감된 건의 배지 문구. 종류마다 모집 상태 enum 의 `CLOSED` 라벨이다 — 채용공고
+ * `JobRecruitmentStatus`·부트캠프 `BootcampRecruitmentStatus` 는 `모집 마감`, 사이드·스터디
+ * `RecruitmentPostRecruitmentStatus` 는 `마감` 이다.
+ */
+export function closedLabel(kind: ContentKind): string {
+  switch (kind) {
+    case 'job':
+      return enumLabel('JobRecruitmentStatus', 'CLOSED');
+    case 'bootcamp':
+      return enumLabel('BootcampRecruitmentStatus', 'CLOSED');
+    case 'side-study':
+      return enumLabel('RecruitmentPostRecruitmentStatus', 'CLOSED');
+  }
+}
 
 /** 마감일이 없는 건인가(상시 채용이거나 마감일 미정). 마감 여부와는 따로 본다. */
 export function isAlwaysOpen(recruitmentType: RecruitmentType, recruitmentEndAt?: string): boolean {

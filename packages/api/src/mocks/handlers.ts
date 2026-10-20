@@ -54,6 +54,7 @@ import type { UserBootcampDetailResponse } from '../generated/user/models/userBo
 import type { UserBootcampSummaryResponse } from '../generated/user/models/userBootcampSummaryResponse';
 import type { UserJobCalendarItemResponse } from '../generated/user/models/userJobCalendarItemResponse';
 import type { UserJobCalendarItemResponseJobField } from '../generated/user/models/userJobCalendarItemResponseJobField';
+import { enumOptions } from '../enums';
 import type { UserJobDetailResponse } from '../generated/user/models/userJobDetailResponse';
 import type { UserJobSummaryResponse } from '../generated/user/models/userJobSummaryResponse';
 
@@ -187,37 +188,20 @@ const CALENDAR_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * 직군 라벨 → enum. 실데이터 시드의 `job_major` 는 라벨이고, 백엔드는 직군을 enum 으로 주고
- * 받는다(ogonggo-BE LC-3385). 라벨은 `GET /api/v1/enums` 의 `JobField` 설명 그대로다.
+ * 받는다(ogonggo-BE LC-3385). 라벨은 enum 카탈로그(`GET /api/v1/enums`)의 `JobField` 설명이다.
  *
  * 백엔드가 직군 여섯 개를 합쳤다(ogonggo-BE #86). 시드에는 옛 라벨이 남아 있어 그 라벨은 합쳐진
- * 직군으로 옮긴다 — 운영 DB 의 공고도 같은 방식으로 옮겨졌다.
+ * 직군으로 옮긴다 — 운영 DB 의 공고도 같은 방식으로 옮겨졌다. 옛 라벨은 카탈로그에 없어
+ * 따로 적는다.
  */
 const JOB_FIELD_BY_LABEL: Record<string, UserJobCalendarItemResponseJobField> = {
-  IT·개발: 'IT_DEVELOPMENT',
+  ...Object.fromEntries(enumOptions('JobField').map(({ value, label }) => [label, value])),
   AI·데이터: 'IT_DEVELOPMENT',
-  게임: 'GAME',
   디자인: 'PLANNING_STRATEGY',
-  기획·전략: 'PLANNING_STRATEGY',
-  마케팅·광고: 'MARKETING_ADVERTISING',
   상품기획·MD: 'PLANNING_STRATEGY',
-  영업: 'SALES',
-  무역·물류: 'TRADE_LOGISTICS',
-  운송·배송: 'TRANSPORT_DELIVERY',
-  법률·법무: 'LEGAL',
-  HR·총무: 'HR_GENERAL_AFFAIRS',
   회계·세무·재무: 'HR_GENERAL_AFFAIRS',
-  증권·운용: 'SECURITIES_ASSET_MANAGEMENT',
-  은행·카드·보험: 'BANKING_CARD_INSURANCE',
-  '엔지니어링·R&D': 'ENGINEERING_RND',
-  건설·건축: 'CONSTRUCTION_ARCHITECTURE',
-  생산·기능직: 'PRODUCTION_SKILLED_TRADES',
-  의료·보건: 'MEDICAL_HEALTH',
-  공공·복지: 'PUBLIC_WELFARE',
-  교육: 'EDUCATION',
   미디어·엔터: 'MARKETING_ADVERTISING',
   고객상담·TM: 'HR_GENERAL_AFFAIRS',
-  서비스: 'SERVICE',
-  식음료: 'FOOD_BEVERAGE',
 };
 
 /**

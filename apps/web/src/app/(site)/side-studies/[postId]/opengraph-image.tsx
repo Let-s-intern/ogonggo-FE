@@ -20,6 +20,6 @@ export default async function Image({ params }: { params: Promise<{ postId: stri
     kindLabel: '사이드·스터디',
     organizationName: sideStudy.author.nickname ?? '익명',
     title: sideStudy.title,
-    deadlineText: ogDeadlineText(sideStudy.recruitmentEndDate),
+    deadlineText: ogDeadlineText('side-study', sideStudy.recruitmentEndDate),
   });
 }

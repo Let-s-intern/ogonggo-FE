@@ -1,3 +1,4 @@
+import { enumLabel } from '@ogonggo/api';
 import type { ApplicationStageId } from '@/features/application-board';
 import { KIND_LABELS } from '@/entities/side-study/model/labels';
 import { SortToggle } from '@/shared/ui/SortToggle';
@@ -9,26 +10,33 @@ import {
   RECRUITMENT_TYPES,
   SORTS,
   stageOf,
+  type MyApplicationTab,
   type MyApplicationsQuery,
 } from '../lib/query';
 
-/** 모집 중인가 마감인가. 목업 필터 줄의 `마감 상태` 다. */
-const RECRUITMENT_STATUS_LABELS: Record<(typeof RECRUITMENT_STATUSES)[number], string> = {
-  RECRUITING: '모집 중',
-  CLOSED: '마감',
-};
+/**
+ * 모집 중인가 마감인가. 목업 필터 줄의 `마감 상태` 다. 라벨은 탭마다 그 콘텐츠의 모집 상태 enum
+ * 이다.
+ */
+const RECRUITMENT_STATUS_ENUMS = {
+  jobs: 'JobRecruitmentStatus',
+  bootcamps: 'BootcampRecruitmentStatus',
+  'side-studies': 'RecruitmentPostRecruitmentStatus',
+} as const satisfies Record<MyApplicationTab, string>;
 
-const SORT_LABELS: Record<(typeof SORTS)[number], string> = {
-  LATEST: '최근 저장순',
-};
+function recruitmentStatusOptions(tab: MyApplicationTab) {
+  return RECRUITMENT_STATUSES.map(
+    (value) => [value, enumLabel(RECRUITMENT_STATUS_ENUMS[tab], value)] as const,
+  );
+}
 
-const RECRUITMENT_STATUS_OPTIONS = RECRUITMENT_STATUSES.map(
-  (value) => [value, RECRUITMENT_STATUS_LABELS[value]] as const,
-);
 const RECRUITMENT_TYPE_OPTIONS = RECRUITMENT_TYPES.map(
   (value) => [value, KIND_LABELS[value]] as const,
 );
-const SORT_OPTIONS = SORTS.map((value) => ({ value, label: SORT_LABELS[value] }));
+const SORT_OPTIONS = SORTS.map((value) => ({
+  value,
+  label: enumLabel('RecruitmentPostApplicationSortType', value),
+}));
 
 export interface MyApplicationsFiltersProps {
   query: MyApplicationsQuery;
@@ -55,7 +63,7 @@ export function MyApplicationsFilters({ query }: MyApplicationsFiltersProps) {
       <MyPageFilterDropdown
         label="마감 상태"
         selected={query.recruitmentStatus}
-        options={RECRUITMENT_STATUS_OPTIONS}
+        options={recruitmentStatusOptions(query.tab)}
         buildHref={(recruitmentStatus) => buildMyApplicationsHref(query, { recruitmentStatus })}
       />
       {query.tab === 'side-studies' ? (

@@ -14,7 +14,7 @@ export interface AdminTodayJobRequest {
   recommendationTitle: string;
   /**
      * @minLength 0
-     * @maxLength 50
+     * @maxLength 200
      */
   recommendationDescription: string;
 }

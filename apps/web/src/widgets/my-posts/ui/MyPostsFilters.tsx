@@ -1,3 +1,4 @@
+import { enumLabel } from '@ogonggo/api';
 import { SortToggle } from '@/shared/ui/SortToggle';
 import { MyPageFilterDropdown } from '@/widgets/mypage-list';
 import {
@@ -8,31 +9,22 @@ import {
   type MyPostsQuery,
 } from '../lib/query';
 
-const RECRUITMENT_STATUS_LABELS: Record<(typeof RECRUITMENT_STATUSES)[number], string> = {
-  RECRUITING: '모집 중',
-  CLOSED: '마감',
-};
+const RECRUITMENT_STATUS_OPTIONS = RECRUITMENT_STATUSES.map(
+  (value) => [value, enumLabel('RecruitmentPostRecruitmentStatus', value)] as const,
+);
 
 /**
  * 목업의 필터 이름은 `지원 상태` 인데 문구를 백엔드 값에 맞춘다(PRD 4 절 결정). 내가 쓴 글
- * 목록에서 거르는 것은 남의 지원 진행 단계가 아니라 "지원자가 붙었는가" 다.
+ * 목록에서 거르는 것은 남의 지원 진행 단계가 아니라 "지원자가 붙었는가" 다. 선택지 라벨은
+ * 카탈로그의 `RecruitmentPostApplicantPresence` 다.
  */
-const APPLICATION_STATUS_LABELS: Record<(typeof APPLICATION_STATUSES)[number], string> = {
-  HAS_APPLICATIONS: '지원자 있음',
-  NO_APPLICATIONS: '지원자 없음',
-};
-
-const SORT_LABELS: Record<(typeof SORTS)[number], string> = {
-  LATEST_SAVED: '최근 저장순',
-};
-
-const RECRUITMENT_STATUS_OPTIONS = RECRUITMENT_STATUSES.map(
-  (value) => [value, RECRUITMENT_STATUS_LABELS[value]] as const,
-);
 const APPLICATION_STATUS_OPTIONS = APPLICATION_STATUSES.map(
-  (value) => [value, APPLICATION_STATUS_LABELS[value]] as const,
+  (value) => [value, enumLabel('RecruitmentPostApplicantPresence', value)] as const,
 );
-const SORT_OPTIONS = SORTS.map((value) => ({ value, label: SORT_LABELS[value] }));
+const SORT_OPTIONS = SORTS.map((value) => ({
+  value,
+  label: enumLabel('RecruitmentPostManagementSortType', value),
+}));
 
 export interface MyPostsFiltersProps {
   query: MyPostsQuery;

@@ -24,30 +24,30 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AiBootcampRequest,
+  AiJobAnalysisRequest,
+  AiJobRegistrationRequest,
+  AiJobReplaceRequest,
+  AiJobSourceHtmlRequest,
+  AiLetsCareerContentTagRequest,
   ChangeAdminBootcampVisibilityRequest,
   ChangeAdminConcernVisibilityRequest,
   ChangeAdminJobVisibilityRequest,
   ChangeAdminRecruitmentPostVisibilityRequest,
   ChangeGeneralMemberRoleRequest,
-  CrawlerBootcampRequest,
-  CrawlerJobAnalysisRequest,
-  CrawlerJobRegistrationRequest,
-  CrawlerJobReplaceRequest,
-  CrawlerJobSourceHtmlRequest,
-  CrawlerLetsCareerContentTagRequest,
   CreateAdminAnnouncementRequest,
   DecideReviewRequest,
   ErrorResponse,
-  GetCrawlerBootcampParams,
-  GetCrawlerJobParams,
+  GetAiBootcampParams,
+  GetAiJobParams,
   GetWork24ApiResponseParams,
+  ListAiJobAnalysisTargetsParams,
+  ListAiLetsCareerContentTagTargetsParams,
   ListAnnouncementsParams,
   ListBootcampsParams,
   ListCompanyMembersParams,
   ListConcernsParams,
   ListContentRejectionsParams,
-  ListCrawlerJobAnalysisTargetsParams,
-  ListCrawlerLetsCareerContentTagTargetsParams,
   ListGeneralMembersParams,
   ListJobsParams,
   ListRecruitmentPostsParams,
@@ -61,16 +61,16 @@ import type {
   SuccessResponseAdminContentReviewDecisionResponse,
   SuccessResponseAdminJobDetailResponse,
   SuccessResponseAdminLetsCareerContentRecommendWeightsResponse,
-  SuccessResponseCrawlerBootcampLookupResponse,
-  SuccessResponseCrawlerBootcampRegistrationResponse,
-  SuccessResponseCrawlerJobLookupResponse,
-  SuccessResponseCrawlerJobRegistrationResponse,
+  SuccessResponseAiBootcampLookupResponse,
+  SuccessResponseAiBootcampRegistrationResponse,
+  SuccessResponseAiJobLookupResponse,
+  SuccessResponseAiJobRegistrationResponse,
   SuccessResponseJsonNode,
   SuccessResponseListAdminContentReviewItemResponse,
   SuccessResponseListAdminTodayJobSummaryResponse,
-  SuccessResponseListCrawlerJobAnalysisTargetResponse,
-  SuccessResponseListCrawlerLetsCareerContentResponse,
-  SuccessResponseListCrawlerLetsCareerContentTagTargetResponse,
+  SuccessResponseListAiJobAnalysisTargetResponse,
+  SuccessResponseListAiLetsCareerContentResponse,
+  SuccessResponseListAiLetsCareerContentTagTargetResponse,
   SuccessResponseMapStringListAdminEnumOptionResponse,
   SuccessResponsePageResponseAdminAnnouncementSummaryResponse,
   SuccessResponsePageResponseAdminBootcampSummaryResponse,
@@ -120,41 +120,41 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type replaceCrawlerLetsCareerContentTagsResponse200 = {
+export type replaceAiLetsCareerContentTagsResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type replaceCrawlerLetsCareerContentTagsResponse400 = {
+export type replaceAiLetsCareerContentTagsResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type replaceCrawlerLetsCareerContentTagsResponse401 = {
+export type replaceAiLetsCareerContentTagsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type replaceCrawlerLetsCareerContentTagsResponse404 = {
+export type replaceAiLetsCareerContentTagsResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type replaceCrawlerLetsCareerContentTagsResponse409 = {
+export type replaceAiLetsCareerContentTagsResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type replaceCrawlerLetsCareerContentTagsResponseSuccess = (replaceCrawlerLetsCareerContentTagsResponse200) & {
+export type replaceAiLetsCareerContentTagsResponseSuccess = (replaceAiLetsCareerContentTagsResponse200) & {
   headers: Headers;
 };
-export type replaceCrawlerLetsCareerContentTagsResponseError = (replaceCrawlerLetsCareerContentTagsResponse400 | replaceCrawlerLetsCareerContentTagsResponse401 | replaceCrawlerLetsCareerContentTagsResponse404 | replaceCrawlerLetsCareerContentTagsResponse409) & {
+export type replaceAiLetsCareerContentTagsResponseError = (replaceAiLetsCareerContentTagsResponse400 | replaceAiLetsCareerContentTagsResponse401 | replaceAiLetsCareerContentTagsResponse404 | replaceAiLetsCareerContentTagsResponse409) & {
   headers: Headers;
 };
 
-export type replaceCrawlerLetsCareerContentTagsResponse = (replaceCrawlerLetsCareerContentTagsResponseSuccess | replaceCrawlerLetsCareerContentTagsResponseError)
+export type replaceAiLetsCareerContentTagsResponse = (replaceAiLetsCareerContentTagsResponseSuccess | replaceAiLetsCareerContentTagsResponseError)
 
-export const getReplaceCrawlerLetsCareerContentTagsUrl = (contentId: number,) => {
+export const getReplaceAiLetsCareerContentTagsUrl = (contentId: number,) => {
 
 
 
@@ -164,12 +164,12 @@ export const getReplaceCrawlerLetsCareerContentTagsUrl = (contentId: number,) =>
 
 /**
  *
- *             크롤러가 붙인 직군·직무·준비 단계 태그를 저장합니다. 이미 있으면 바꿉니다.
+ *             AI 서버가 붙인 직군·직무·준비 단계 태그를 저장합니다. 이미 있으면 바꿉니다.
  *             대상을 받은 뒤 렛츠커리어에서 내용이 바뀌었으면 `contentHash`가 달라 409로 거절하며, 그 콘텐츠는 다음 대상 조회에 다시 나옵니다.
  * @summary 렛츠커리어 콘텐츠 태그 저장
  */
-export const replaceCrawlerLetsCareerContentTags = async (contentId: number,
-    crawlerLetsCareerContentTagRequest: CrawlerLetsCareerContentTagRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerLetsCareerContentTagsResponse> => {
+export const replaceAiLetsCareerContentTags = async (contentId: number,
+    aiLetsCareerContentTagRequest: AiLetsCareerContentTagRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceAiLetsCareerContentTagsResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -177,12 +177,12 @@ export const replaceCrawlerLetsCareerContentTags = async (contentId: number,
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<replaceCrawlerLetsCareerContentTagsResponse>(getReplaceCrawlerLetsCareerContentTagsUrl(contentId),
+return httpClient<replaceAiLetsCareerContentTagsResponse>(getReplaceAiLetsCareerContentTagsUrl(contentId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerLetsCareerContentTagRequest)
+    body: JSON.stringify(aiLetsCareerContentTagRequest)
   }
 );}
 
@@ -190,13 +190,13 @@ return httpClient<replaceCrawlerLetsCareerContentTagsResponse>(getReplaceCrawler
 
 
 
-export const getReplaceCrawlerLetsCareerContentTagsMutationKey = () => ['replaceCrawlerLetsCareerContentTags'] as const;
+export const getReplaceAiLetsCareerContentTagsMutationKey = () => ['replaceAiLetsCareerContentTags'] as const;
 
-export const getReplaceCrawlerLetsCareerContentTagsMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerLetsCareerContentTags>>, TError,ReplaceCrawlerLetsCareerContentTagsMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerLetsCareerContentTags>>, TError,ReplaceCrawlerLetsCareerContentTagsMutationVariables, TContext> => {
+export const getReplaceAiLetsCareerContentTagsMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiLetsCareerContentTags>>, TError,ReplaceAiLetsCareerContentTagsMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceAiLetsCareerContentTags>>, TError,ReplaceAiLetsCareerContentTagsMutationVariables, TContext> => {
 
-const mutationKey = getReplaceCrawlerLetsCareerContentTagsMutationKey();
+const mutationKey = getReplaceAiLetsCareerContentTagsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -206,10 +206,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerLetsCareerContentTags>>, ReplaceCrawlerLetsCareerContentTagsMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceAiLetsCareerContentTags>>, ReplaceAiLetsCareerContentTagsMutationVariables> = (props) => {
           const {contentId,data} = props ?? {};
 
-          return  replaceCrawlerLetsCareerContentTags(contentId,data,requestOptions)
+          return  replaceAiLetsCareerContentTags(contentId,data,requestOptions)
         }
 
 
@@ -219,60 +219,60 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ReplaceCrawlerLetsCareerContentTagsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerLetsCareerContentTags>>>
-    export type ReplaceCrawlerLetsCareerContentTagsMutationBody = CrawlerLetsCareerContentTagRequest
-    export type ReplaceCrawlerLetsCareerContentTagsMutationError = ErrorResponse
-    export type ReplaceCrawlerLetsCareerContentTagsMutationVariables = {contentId: number;data: CrawlerLetsCareerContentTagRequest}
+    export type ReplaceAiLetsCareerContentTagsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceAiLetsCareerContentTags>>>
+    export type ReplaceAiLetsCareerContentTagsMutationBody = AiLetsCareerContentTagRequest
+    export type ReplaceAiLetsCareerContentTagsMutationError = ErrorResponse
+    export type ReplaceAiLetsCareerContentTagsMutationVariables = {contentId: number;data: AiLetsCareerContentTagRequest}
 
     /**
  * @summary 렛츠커리어 콘텐츠 태그 저장
  */
-export const useReplaceCrawlerLetsCareerContentTags = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerLetsCareerContentTags>>, TError,ReplaceCrawlerLetsCareerContentTagsMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useReplaceAiLetsCareerContentTags = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiLetsCareerContentTags>>, TError,ReplaceAiLetsCareerContentTagsMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof replaceCrawlerLetsCareerContentTags>>,
+        Awaited<ReturnType<typeof replaceAiLetsCareerContentTags>>,
         TError,
-        ReplaceCrawlerLetsCareerContentTagsMutationVariables,
+        ReplaceAiLetsCareerContentTagsMutationVariables,
         TContext
       > => {
-      return useMutation(getReplaceCrawlerLetsCareerContentTagsMutationOptions(options), queryClient);
+      return useMutation(getReplaceAiLetsCareerContentTagsMutationOptions(options), queryClient);
     }
 
-export type replaceCrawlerJobResponse200 = {
+export type replaceAiJobResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type replaceCrawlerJobResponse400 = {
+export type replaceAiJobResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type replaceCrawlerJobResponse401 = {
+export type replaceAiJobResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type replaceCrawlerJobResponse404 = {
+export type replaceAiJobResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type replaceCrawlerJobResponse409 = {
+export type replaceAiJobResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type replaceCrawlerJobResponseSuccess = (replaceCrawlerJobResponse200) & {
+export type replaceAiJobResponseSuccess = (replaceAiJobResponse200) & {
   headers: Headers;
 };
-export type replaceCrawlerJobResponseError = (replaceCrawlerJobResponse400 | replaceCrawlerJobResponse401 | replaceCrawlerJobResponse404 | replaceCrawlerJobResponse409) & {
+export type replaceAiJobResponseError = (replaceAiJobResponse400 | replaceAiJobResponse401 | replaceAiJobResponse404 | replaceAiJobResponse409) & {
   headers: Headers;
 };
 
-export type replaceCrawlerJobResponse = (replaceCrawlerJobResponseSuccess | replaceCrawlerJobResponseError)
+export type replaceAiJobResponse = (replaceAiJobResponseSuccess | replaceAiJobResponseError)
 
-export const getReplaceCrawlerJobUrl = (jobId: number,) => {
+export const getReplaceAiJobUrl = (jobId: number,) => {
 
 
 
@@ -285,10 +285,10 @@ export const getReplaceCrawlerJobUrl = (jobId: number,) => {
  *             다시 수집·분류한 값으로 수집 공고 전체를 바꿉니다. 태그는 바꾸지 않습니다.
  *             운영자가 관리자 콘솔에서 고친 내용도 이 값으로 덮어씁니다. 게시 상태는 바꾸지 않습니다.
  *             원문(sourceHtml)을 생략하면 저장된 원문을 그대로 둡니다.
- * @summary 크롤러 채용공고 교체
+ * @summary AI 서버 채용공고 교체
  */
-export const replaceCrawlerJob = async (jobId: number,
-    crawlerJobReplaceRequest: CrawlerJobReplaceRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerJobResponse> => {
+export const replaceAiJob = async (jobId: number,
+    aiJobReplaceRequest: AiJobReplaceRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceAiJobResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -296,12 +296,12 @@ export const replaceCrawlerJob = async (jobId: number,
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<replaceCrawlerJobResponse>(getReplaceCrawlerJobUrl(jobId),
+return httpClient<replaceAiJobResponse>(getReplaceAiJobUrl(jobId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerJobReplaceRequest)
+    body: JSON.stringify(aiJobReplaceRequest)
   }
 );}
 
@@ -309,13 +309,13 @@ return httpClient<replaceCrawlerJobResponse>(getReplaceCrawlerJobUrl(jobId),
 
 
 
-export const getReplaceCrawlerJobMutationKey = () => ['replaceCrawlerJob'] as const;
+export const getReplaceAiJobMutationKey = () => ['replaceAiJob'] as const;
 
-export const getReplaceCrawlerJobMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJob>>, TError,ReplaceCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJob>>, TError,ReplaceCrawlerJobMutationVariables, TContext> => {
+export const getReplaceAiJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiJob>>, TError,ReplaceAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceAiJob>>, TError,ReplaceAiJobMutationVariables, TContext> => {
 
-const mutationKey = getReplaceCrawlerJobMutationKey();
+const mutationKey = getReplaceAiJobMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -325,10 +325,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerJob>>, ReplaceCrawlerJobMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceAiJob>>, ReplaceAiJobMutationVariables> = (props) => {
           const {jobId,data} = props ?? {};
 
-          return  replaceCrawlerJob(jobId,data,requestOptions)
+          return  replaceAiJob(jobId,data,requestOptions)
         }
 
 
@@ -338,50 +338,50 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ReplaceCrawlerJobMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerJob>>>
-    export type ReplaceCrawlerJobMutationBody = CrawlerJobReplaceRequest
-    export type ReplaceCrawlerJobMutationError = ErrorResponse
-    export type ReplaceCrawlerJobMutationVariables = {jobId: number;data: CrawlerJobReplaceRequest}
+    export type ReplaceAiJobMutationResult = NonNullable<Awaited<ReturnType<typeof replaceAiJob>>>
+    export type ReplaceAiJobMutationBody = AiJobReplaceRequest
+    export type ReplaceAiJobMutationError = ErrorResponse
+    export type ReplaceAiJobMutationVariables = {jobId: number;data: AiJobReplaceRequest}
 
     /**
- * @summary 크롤러 채용공고 교체
+ * @summary AI 서버 채용공고 교체
  */
-export const useReplaceCrawlerJob = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJob>>, TError,ReplaceCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useReplaceAiJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiJob>>, TError,ReplaceAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof replaceCrawlerJob>>,
+        Awaited<ReturnType<typeof replaceAiJob>>,
         TError,
-        ReplaceCrawlerJobMutationVariables,
+        ReplaceAiJobMutationVariables,
         TContext
       > => {
-      return useMutation(getReplaceCrawlerJobMutationOptions(options), queryClient);
+      return useMutation(getReplaceAiJobMutationOptions(options), queryClient);
     }
 
-export type deleteCrawlerJobResponse200 = {
+export type deleteAiJobResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type deleteCrawlerJobResponse401 = {
+export type deleteAiJobResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type deleteCrawlerJobResponse404 = {
+export type deleteAiJobResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type deleteCrawlerJobResponseSuccess = (deleteCrawlerJobResponse200) & {
+export type deleteAiJobResponseSuccess = (deleteAiJobResponse200) & {
   headers: Headers;
 };
-export type deleteCrawlerJobResponseError = (deleteCrawlerJobResponse401 | deleteCrawlerJobResponse404) & {
+export type deleteAiJobResponseError = (deleteAiJobResponse401 | deleteAiJobResponse404) & {
   headers: Headers;
 };
 
-export type deleteCrawlerJobResponse = (deleteCrawlerJobResponseSuccess | deleteCrawlerJobResponseError)
+export type deleteAiJobResponse = (deleteAiJobResponseSuccess | deleteAiJobResponseError)
 
-export const getDeleteCrawlerJobUrl = (jobId: number,) => {
+export const getDeleteAiJobUrl = (jobId: number,) => {
 
 
 
@@ -393,11 +393,11 @@ export const getDeleteCrawlerJobUrl = (jobId: number,) => {
  *
  *             직무별로 나뉘어 새 공고로 등록된 원래 공고처럼 더는 쓰지 않는 수집 공고를 소프트 삭제합니다.
  *             이미 삭제한 공고를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
- * @summary 크롤러 채용공고 삭제
+ * @summary AI 서버 채용공고 삭제
  */
-export const deleteCrawlerJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteCrawlerJobResponse> => {
+export const deleteAiJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteAiJobResponse> => {
 
-  return httpClient<deleteCrawlerJobResponse>(getDeleteCrawlerJobUrl(jobId),
+  return httpClient<deleteAiJobResponse>(getDeleteAiJobUrl(jobId),
   {
     ...options,
     method: 'DELETE'
@@ -410,13 +410,13 @@ export const deleteCrawlerJob = async (jobId: number, options?: Parameters<typeo
 
 
 
-export const getDeleteCrawlerJobMutationKey = () => ['deleteCrawlerJob'] as const;
+export const getDeleteAiJobMutationKey = () => ['deleteAiJob'] as const;
 
-export const getDeleteCrawlerJobMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerJob>>, TError,DeleteCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerJob>>, TError,DeleteCrawlerJobMutationVariables, TContext> => {
+export const getDeleteAiJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAiJob>>, TError,DeleteAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAiJob>>, TError,DeleteAiJobMutationVariables, TContext> => {
 
-const mutationKey = getDeleteCrawlerJobMutationKey();
+const mutationKey = getDeleteAiJobMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -426,10 +426,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCrawlerJob>>, DeleteCrawlerJobMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAiJob>>, DeleteAiJobMutationVariables> = (props) => {
           const {jobId} = props ?? {};
 
-          return  deleteCrawlerJob(jobId,requestOptions)
+          return  deleteAiJob(jobId,requestOptions)
         }
 
 
@@ -439,55 +439,55 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteCrawlerJobMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCrawlerJob>>>
+    export type DeleteAiJobMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAiJob>>>
 
-    export type DeleteCrawlerJobMutationError = ErrorResponse
-    export type DeleteCrawlerJobMutationVariables = {jobId: number}
+    export type DeleteAiJobMutationError = ErrorResponse
+    export type DeleteAiJobMutationVariables = {jobId: number}
 
     /**
- * @summary 크롤러 채용공고 삭제
+ * @summary AI 서버 채용공고 삭제
  */
-export const useDeleteCrawlerJob = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerJob>>, TError,DeleteCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useDeleteAiJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAiJob>>, TError,DeleteAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteCrawlerJob>>,
+        Awaited<ReturnType<typeof deleteAiJob>>,
         TError,
-        DeleteCrawlerJobMutationVariables,
+        DeleteAiJobMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteCrawlerJobMutationOptions(options), queryClient);
+      return useMutation(getDeleteAiJobMutationOptions(options), queryClient);
     }
 
-export type changeCrawlerJobSourceHtmlResponse200 = {
+export type changeAiJobSourceHtmlResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type changeCrawlerJobSourceHtmlResponse400 = {
+export type changeAiJobSourceHtmlResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type changeCrawlerJobSourceHtmlResponse401 = {
+export type changeAiJobSourceHtmlResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type changeCrawlerJobSourceHtmlResponse404 = {
+export type changeAiJobSourceHtmlResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type changeCrawlerJobSourceHtmlResponseSuccess = (changeCrawlerJobSourceHtmlResponse200) & {
+export type changeAiJobSourceHtmlResponseSuccess = (changeAiJobSourceHtmlResponse200) & {
   headers: Headers;
 };
-export type changeCrawlerJobSourceHtmlResponseError = (changeCrawlerJobSourceHtmlResponse400 | changeCrawlerJobSourceHtmlResponse401 | changeCrawlerJobSourceHtmlResponse404) & {
+export type changeAiJobSourceHtmlResponseError = (changeAiJobSourceHtmlResponse400 | changeAiJobSourceHtmlResponse401 | changeAiJobSourceHtmlResponse404) & {
   headers: Headers;
 };
 
-export type changeCrawlerJobSourceHtmlResponse = (changeCrawlerJobSourceHtmlResponseSuccess | changeCrawlerJobSourceHtmlResponseError)
+export type changeAiJobSourceHtmlResponse = (changeAiJobSourceHtmlResponseSuccess | changeAiJobSourceHtmlResponseError)
 
-export const getChangeCrawlerJobSourceHtmlUrl = (jobId: number,) => {
+export const getChangeAiJobSourceHtmlUrl = (jobId: number,) => {
 
 
 
@@ -500,10 +500,10 @@ export const getChangeCrawlerJobSourceHtmlUrl = (jobId: number,) => {
  *             수집 공고의 원문 HTML만 바꿉니다. 원문을 저장하기 전에 보낸 공고를 채울 때 씁니다.
  *             안전한 태그만 남겨 저장하며, 남은 글도 이미지도 없으면 저장된 원문을 그대로 둡니다.
  *             운영자가 관리자 콘솔에서 고친 다른 칸은 바꾸지 않습니다.
- * @summary 크롤러 채용공고 원문 변경
+ * @summary AI 서버 채용공고 원문 변경
  */
-export const changeCrawlerJobSourceHtml = async (jobId: number,
-    crawlerJobSourceHtmlRequest: CrawlerJobSourceHtmlRequest, options?: Parameters<typeof httpClient>[1]): Promise<changeCrawlerJobSourceHtmlResponse> => {
+export const changeAiJobSourceHtml = async (jobId: number,
+    aiJobSourceHtmlRequest: AiJobSourceHtmlRequest, options?: Parameters<typeof httpClient>[1]): Promise<changeAiJobSourceHtmlResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -511,12 +511,12 @@ export const changeCrawlerJobSourceHtml = async (jobId: number,
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<changeCrawlerJobSourceHtmlResponse>(getChangeCrawlerJobSourceHtmlUrl(jobId),
+return httpClient<changeAiJobSourceHtmlResponse>(getChangeAiJobSourceHtmlUrl(jobId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerJobSourceHtmlRequest)
+    body: JSON.stringify(aiJobSourceHtmlRequest)
   }
 );}
 
@@ -524,13 +524,13 @@ return httpClient<changeCrawlerJobSourceHtmlResponse>(getChangeCrawlerJobSourceH
 
 
 
-export const getChangeCrawlerJobSourceHtmlMutationKey = () => ['changeCrawlerJobSourceHtml'] as const;
+export const getChangeAiJobSourceHtmlMutationKey = () => ['changeAiJobSourceHtml'] as const;
 
-export const getChangeCrawlerJobSourceHtmlMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeCrawlerJobSourceHtml>>, TError,ChangeCrawlerJobSourceHtmlMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof changeCrawlerJobSourceHtml>>, TError,ChangeCrawlerJobSourceHtmlMutationVariables, TContext> => {
+export const getChangeAiJobSourceHtmlMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeAiJobSourceHtml>>, TError,ChangeAiJobSourceHtmlMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof changeAiJobSourceHtml>>, TError,ChangeAiJobSourceHtmlMutationVariables, TContext> => {
 
-const mutationKey = getChangeCrawlerJobSourceHtmlMutationKey();
+const mutationKey = getChangeAiJobSourceHtmlMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -540,10 +540,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof changeCrawlerJobSourceHtml>>, ChangeCrawlerJobSourceHtmlMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof changeAiJobSourceHtml>>, ChangeAiJobSourceHtmlMutationVariables> = (props) => {
           const {jobId,data} = props ?? {};
 
-          return  changeCrawlerJobSourceHtml(jobId,data,requestOptions)
+          return  changeAiJobSourceHtml(jobId,data,requestOptions)
         }
 
 
@@ -553,60 +553,60 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ChangeCrawlerJobSourceHtmlMutationResult = NonNullable<Awaited<ReturnType<typeof changeCrawlerJobSourceHtml>>>
-    export type ChangeCrawlerJobSourceHtmlMutationBody = CrawlerJobSourceHtmlRequest
-    export type ChangeCrawlerJobSourceHtmlMutationError = ErrorResponse
-    export type ChangeCrawlerJobSourceHtmlMutationVariables = {jobId: number;data: CrawlerJobSourceHtmlRequest}
+    export type ChangeAiJobSourceHtmlMutationResult = NonNullable<Awaited<ReturnType<typeof changeAiJobSourceHtml>>>
+    export type ChangeAiJobSourceHtmlMutationBody = AiJobSourceHtmlRequest
+    export type ChangeAiJobSourceHtmlMutationError = ErrorResponse
+    export type ChangeAiJobSourceHtmlMutationVariables = {jobId: number;data: AiJobSourceHtmlRequest}
 
     /**
- * @summary 크롤러 채용공고 원문 변경
+ * @summary AI 서버 채용공고 원문 변경
  */
-export const useChangeCrawlerJobSourceHtml = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeCrawlerJobSourceHtml>>, TError,ChangeCrawlerJobSourceHtmlMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useChangeAiJobSourceHtml = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeAiJobSourceHtml>>, TError,ChangeAiJobSourceHtmlMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof changeCrawlerJobSourceHtml>>,
+        Awaited<ReturnType<typeof changeAiJobSourceHtml>>,
         TError,
-        ChangeCrawlerJobSourceHtmlMutationVariables,
+        ChangeAiJobSourceHtmlMutationVariables,
         TContext
       > => {
-      return useMutation(getChangeCrawlerJobSourceHtmlMutationOptions(options), queryClient);
+      return useMutation(getChangeAiJobSourceHtmlMutationOptions(options), queryClient);
     }
 
-export type replaceCrawlerJobAnalysisResponse200 = {
+export type replaceAiJobAnalysisResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type replaceCrawlerJobAnalysisResponse400 = {
+export type replaceAiJobAnalysisResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type replaceCrawlerJobAnalysisResponse401 = {
+export type replaceAiJobAnalysisResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type replaceCrawlerJobAnalysisResponse404 = {
+export type replaceAiJobAnalysisResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type replaceCrawlerJobAnalysisResponse409 = {
+export type replaceAiJobAnalysisResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type replaceCrawlerJobAnalysisResponseSuccess = (replaceCrawlerJobAnalysisResponse200) & {
+export type replaceAiJobAnalysisResponseSuccess = (replaceAiJobAnalysisResponse200) & {
   headers: Headers;
 };
-export type replaceCrawlerJobAnalysisResponseError = (replaceCrawlerJobAnalysisResponse400 | replaceCrawlerJobAnalysisResponse401 | replaceCrawlerJobAnalysisResponse404 | replaceCrawlerJobAnalysisResponse409) & {
+export type replaceAiJobAnalysisResponseError = (replaceAiJobAnalysisResponse400 | replaceAiJobAnalysisResponse401 | replaceAiJobAnalysisResponse404 | replaceAiJobAnalysisResponse409) & {
   headers: Headers;
 };
 
-export type replaceCrawlerJobAnalysisResponse = (replaceCrawlerJobAnalysisResponseSuccess | replaceCrawlerJobAnalysisResponseError)
+export type replaceAiJobAnalysisResponse = (replaceAiJobAnalysisResponseSuccess | replaceAiJobAnalysisResponseError)
 
-export const getReplaceCrawlerJobAnalysisUrl = (jobId: number,) => {
+export const getReplaceAiJobAnalysisUrl = (jobId: number,) => {
 
 
 
@@ -616,13 +616,13 @@ export const getReplaceCrawlerJobAnalysisUrl = (jobId: number,) => {
 
 /**
  *
- *             크롤러가 만든 공고 분석을 저장합니다. 이미 있으면 바꿉니다.
+ *             AI 서버가 만든 공고 분석을 저장합니다. 이미 있으면 바꿉니다.
  *             분석 대상을 받은 뒤 운영자가 본문을 고쳤으면 `contentHash`가 지금 본문과 달라 409로 거절합니다.
  *             그 공고는 다음 대상 조회에 다시 나옵니다.
  * @summary 공고 분석 저장
  */
-export const replaceCrawlerJobAnalysis = async (jobId: number,
-    crawlerJobAnalysisRequest: CrawlerJobAnalysisRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerJobAnalysisResponse> => {
+export const replaceAiJobAnalysis = async (jobId: number,
+    aiJobAnalysisRequest: AiJobAnalysisRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceAiJobAnalysisResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -630,12 +630,12 @@ export const replaceCrawlerJobAnalysis = async (jobId: number,
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<replaceCrawlerJobAnalysisResponse>(getReplaceCrawlerJobAnalysisUrl(jobId),
+return httpClient<replaceAiJobAnalysisResponse>(getReplaceAiJobAnalysisUrl(jobId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerJobAnalysisRequest)
+    body: JSON.stringify(aiJobAnalysisRequest)
   }
 );}
 
@@ -643,13 +643,13 @@ return httpClient<replaceCrawlerJobAnalysisResponse>(getReplaceCrawlerJobAnalysi
 
 
 
-export const getReplaceCrawlerJobAnalysisMutationKey = () => ['replaceCrawlerJobAnalysis'] as const;
+export const getReplaceAiJobAnalysisMutationKey = () => ['replaceAiJobAnalysis'] as const;
 
-export const getReplaceCrawlerJobAnalysisMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, TError,ReplaceCrawlerJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, TError,ReplaceCrawlerJobAnalysisMutationVariables, TContext> => {
+export const getReplaceAiJobAnalysisMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiJobAnalysis>>, TError,ReplaceAiJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceAiJobAnalysis>>, TError,ReplaceAiJobAnalysisMutationVariables, TContext> => {
 
-const mutationKey = getReplaceCrawlerJobAnalysisMutationKey();
+const mutationKey = getReplaceAiJobAnalysisMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -659,10 +659,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, ReplaceCrawlerJobAnalysisMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceAiJobAnalysis>>, ReplaceAiJobAnalysisMutationVariables> = (props) => {
           const {jobId,data} = props ?? {};
 
-          return  replaceCrawlerJobAnalysis(jobId,data,requestOptions)
+          return  replaceAiJobAnalysis(jobId,data,requestOptions)
         }
 
 
@@ -672,60 +672,60 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ReplaceCrawlerJobAnalysisMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>>
-    export type ReplaceCrawlerJobAnalysisMutationBody = CrawlerJobAnalysisRequest
-    export type ReplaceCrawlerJobAnalysisMutationError = ErrorResponse
-    export type ReplaceCrawlerJobAnalysisMutationVariables = {jobId: number;data: CrawlerJobAnalysisRequest}
+    export type ReplaceAiJobAnalysisMutationResult = NonNullable<Awaited<ReturnType<typeof replaceAiJobAnalysis>>>
+    export type ReplaceAiJobAnalysisMutationBody = AiJobAnalysisRequest
+    export type ReplaceAiJobAnalysisMutationError = ErrorResponse
+    export type ReplaceAiJobAnalysisMutationVariables = {jobId: number;data: AiJobAnalysisRequest}
 
     /**
  * @summary 공고 분석 저장
  */
-export const useReplaceCrawlerJobAnalysis = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>, TError,ReplaceCrawlerJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useReplaceAiJobAnalysis = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiJobAnalysis>>, TError,ReplaceAiJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof replaceCrawlerJobAnalysis>>,
+        Awaited<ReturnType<typeof replaceAiJobAnalysis>>,
         TError,
-        ReplaceCrawlerJobAnalysisMutationVariables,
+        ReplaceAiJobAnalysisMutationVariables,
         TContext
       > => {
-      return useMutation(getReplaceCrawlerJobAnalysisMutationOptions(options), queryClient);
+      return useMutation(getReplaceAiJobAnalysisMutationOptions(options), queryClient);
     }
 
-export type replaceCrawlerBootcampResponse200 = {
+export type replaceAiBootcampResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type replaceCrawlerBootcampResponse400 = {
+export type replaceAiBootcampResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type replaceCrawlerBootcampResponse401 = {
+export type replaceAiBootcampResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type replaceCrawlerBootcampResponse404 = {
+export type replaceAiBootcampResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type replaceCrawlerBootcampResponse409 = {
+export type replaceAiBootcampResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type replaceCrawlerBootcampResponseSuccess = (replaceCrawlerBootcampResponse200) & {
+export type replaceAiBootcampResponseSuccess = (replaceAiBootcampResponse200) & {
   headers: Headers;
 };
-export type replaceCrawlerBootcampResponseError = (replaceCrawlerBootcampResponse400 | replaceCrawlerBootcampResponse401 | replaceCrawlerBootcampResponse404 | replaceCrawlerBootcampResponse409) & {
+export type replaceAiBootcampResponseError = (replaceAiBootcampResponse400 | replaceAiBootcampResponse401 | replaceAiBootcampResponse404 | replaceAiBootcampResponse409) & {
   headers: Headers;
 };
 
-export type replaceCrawlerBootcampResponse = (replaceCrawlerBootcampResponseSuccess | replaceCrawlerBootcampResponseError)
+export type replaceAiBootcampResponse = (replaceAiBootcampResponseSuccess | replaceAiBootcampResponseError)
 
-export const getReplaceCrawlerBootcampUrl = (bootcampId: number,) => {
+export const getReplaceAiBootcampUrl = (bootcampId: number,) => {
 
 
 
@@ -741,10 +741,10 @@ export const getReplaceCrawlerBootcampUrl = (bootcampId: number,) => {
  *             모집 상태(status)를 보내면 그 값으로 맞춥니다. RECRUITING에서 CLOSED로 바뀌면 교체 시각으로 마감하고,
  *             CLOSED에서 RECRUITING으로 바뀌면 마감 일시를 지우고 다시 모집 중으로 둡니다. 지금과 같으면 그대로 둡니다.
  *             보내지 않으면 모집 상태를 바꾸지 않습니다.
- * @summary 크롤러 부트캠프 교체
+ * @summary AI 서버 부트캠프 교체
  */
-export const replaceCrawlerBootcamp = async (bootcampId: number,
-    crawlerBootcampRequest: CrawlerBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCrawlerBootcampResponse> => {
+export const replaceAiBootcamp = async (bootcampId: number,
+    aiBootcampRequest: AiBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceAiBootcampResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -752,12 +752,12 @@ export const replaceCrawlerBootcamp = async (bootcampId: number,
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<replaceCrawlerBootcampResponse>(getReplaceCrawlerBootcampUrl(bootcampId),
+return httpClient<replaceAiBootcampResponse>(getReplaceAiBootcampUrl(bootcampId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerBootcampRequest)
+    body: JSON.stringify(aiBootcampRequest)
   }
 );}
 
@@ -765,13 +765,13 @@ return httpClient<replaceCrawlerBootcampResponse>(getReplaceCrawlerBootcampUrl(b
 
 
 
-export const getReplaceCrawlerBootcampMutationKey = () => ['replaceCrawlerBootcamp'] as const;
+export const getReplaceAiBootcampMutationKey = () => ['replaceAiBootcamp'] as const;
 
-export const getReplaceCrawlerBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, TError,ReplaceCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, TError,ReplaceCrawlerBootcampMutationVariables, TContext> => {
+export const getReplaceAiBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiBootcamp>>, TError,ReplaceAiBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceAiBootcamp>>, TError,ReplaceAiBootcampMutationVariables, TContext> => {
 
-const mutationKey = getReplaceCrawlerBootcampMutationKey();
+const mutationKey = getReplaceAiBootcampMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -781,10 +781,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, ReplaceCrawlerBootcampMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceAiBootcamp>>, ReplaceAiBootcampMutationVariables> = (props) => {
           const {bootcampId,data} = props ?? {};
 
-          return  replaceCrawlerBootcamp(bootcampId,data,requestOptions)
+          return  replaceAiBootcamp(bootcampId,data,requestOptions)
         }
 
 
@@ -794,50 +794,50 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ReplaceCrawlerBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>>
-    export type ReplaceCrawlerBootcampMutationBody = CrawlerBootcampRequest
-    export type ReplaceCrawlerBootcampMutationError = ErrorResponse
-    export type ReplaceCrawlerBootcampMutationVariables = {bootcampId: number;data: CrawlerBootcampRequest}
+    export type ReplaceAiBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof replaceAiBootcamp>>>
+    export type ReplaceAiBootcampMutationBody = AiBootcampRequest
+    export type ReplaceAiBootcampMutationError = ErrorResponse
+    export type ReplaceAiBootcampMutationVariables = {bootcampId: number;data: AiBootcampRequest}
 
     /**
- * @summary 크롤러 부트캠프 교체
+ * @summary AI 서버 부트캠프 교체
  */
-export const useReplaceCrawlerBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCrawlerBootcamp>>, TError,ReplaceCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useReplaceAiBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAiBootcamp>>, TError,ReplaceAiBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof replaceCrawlerBootcamp>>,
+        Awaited<ReturnType<typeof replaceAiBootcamp>>,
         TError,
-        ReplaceCrawlerBootcampMutationVariables,
+        ReplaceAiBootcampMutationVariables,
         TContext
       > => {
-      return useMutation(getReplaceCrawlerBootcampMutationOptions(options), queryClient);
+      return useMutation(getReplaceAiBootcampMutationOptions(options), queryClient);
     }
 
-export type deleteCrawlerBootcampResponse200 = {
+export type deleteAiBootcampResponse200 = {
   data: SuccessResponseUnit
   status: 200
 }
 
-export type deleteCrawlerBootcampResponse401 = {
+export type deleteAiBootcampResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type deleteCrawlerBootcampResponse404 = {
+export type deleteAiBootcampResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type deleteCrawlerBootcampResponseSuccess = (deleteCrawlerBootcampResponse200) & {
+export type deleteAiBootcampResponseSuccess = (deleteAiBootcampResponse200) & {
   headers: Headers;
 };
-export type deleteCrawlerBootcampResponseError = (deleteCrawlerBootcampResponse401 | deleteCrawlerBootcampResponse404) & {
+export type deleteAiBootcampResponseError = (deleteAiBootcampResponse401 | deleteAiBootcampResponse404) & {
   headers: Headers;
 };
 
-export type deleteCrawlerBootcampResponse = (deleteCrawlerBootcampResponseSuccess | deleteCrawlerBootcampResponseError)
+export type deleteAiBootcampResponse = (deleteAiBootcampResponseSuccess | deleteAiBootcampResponseError)
 
-export const getDeleteCrawlerBootcampUrl = (bootcampId: number,) => {
+export const getDeleteAiBootcampUrl = (bootcampId: number,) => {
 
 
 
@@ -849,11 +849,11 @@ export const getDeleteCrawlerBootcampUrl = (bootcampId: number,) => {
  *
  *             더는 쓰지 않는 수집 부트캠프를 소프트 삭제합니다.
  *             이미 삭제한 부트캠프를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
- * @summary 크롤러 부트캠프 삭제
+ * @summary AI 서버 부트캠프 삭제
  */
-export const deleteCrawlerBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteCrawlerBootcampResponse> => {
+export const deleteAiBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteAiBootcampResponse> => {
 
-  return httpClient<deleteCrawlerBootcampResponse>(getDeleteCrawlerBootcampUrl(bootcampId),
+  return httpClient<deleteAiBootcampResponse>(getDeleteAiBootcampUrl(bootcampId),
   {
     ...options,
     method: 'DELETE'
@@ -866,13 +866,13 @@ export const deleteCrawlerBootcamp = async (bootcampId: number, options?: Parame
 
 
 
-export const getDeleteCrawlerBootcampMutationKey = () => ['deleteCrawlerBootcamp'] as const;
+export const getDeleteAiBootcampMutationKey = () => ['deleteAiBootcamp'] as const;
 
-export const getDeleteCrawlerBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, TError,DeleteCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, TError,DeleteCrawlerBootcampMutationVariables, TContext> => {
+export const getDeleteAiBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAiBootcamp>>, TError,DeleteAiBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAiBootcamp>>, TError,DeleteAiBootcampMutationVariables, TContext> => {
 
-const mutationKey = getDeleteCrawlerBootcampMutationKey();
+const mutationKey = getDeleteAiBootcampMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -882,10 +882,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, DeleteCrawlerBootcampMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAiBootcamp>>, DeleteAiBootcampMutationVariables> = (props) => {
           const {bootcampId} = props ?? {};
 
-          return  deleteCrawlerBootcamp(bootcampId,requestOptions)
+          return  deleteAiBootcamp(bootcampId,requestOptions)
         }
 
 
@@ -895,23 +895,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteCrawlerBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>>
+    export type DeleteAiBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAiBootcamp>>>
 
-    export type DeleteCrawlerBootcampMutationError = ErrorResponse
-    export type DeleteCrawlerBootcampMutationVariables = {bootcampId: number}
+    export type DeleteAiBootcampMutationError = ErrorResponse
+    export type DeleteAiBootcampMutationVariables = {bootcampId: number}
 
     /**
- * @summary 크롤러 부트캠프 삭제
+ * @summary AI 서버 부트캠프 삭제
  */
-export const useDeleteCrawlerBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCrawlerBootcamp>>, TError,DeleteCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useDeleteAiBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAiBootcamp>>, TError,DeleteAiBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteCrawlerBootcamp>>,
+        Awaited<ReturnType<typeof deleteAiBootcamp>>,
         TError,
-        DeleteCrawlerBootcampMutationVariables,
+        DeleteAiBootcampMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteCrawlerBootcampMutationOptions(options), queryClient);
+      return useMutation(getDeleteAiBootcampMutationOptions(options), queryClient);
     }
 
 export type getLetsCareerContentRecommendWeightsResponse200 = {
@@ -1288,7 +1288,7 @@ export const getReplaceTodayJobsUrl = () => {
 /**
  *
  *             오늘의 공고를 jobs의 공고와 추천 문구로 모두 바꾸고 바뀐 목록을 반환합니다. 배열 순서가 노출 순서이며 개수 제한은 없습니다.
- *             추천 문구는 사용자 화면 카드에 보여 주며 제목(recommendationTitle, 30자 이하)과 설명(recommendationDescription, 50자 이하)을 모두 적어야 합니다.
+ *             추천 문구는 사용자 화면 카드에 보여 주며 제목(recommendationTitle, 30자 이하)과 설명(recommendationDescription, 200자 이하)을 모두 적어야 합니다.
  *             빈 배열을 보내면 오늘의 공고를 비웁니다. 같은 요청을 반복해도 결과가 같습니다.
  *
  *             게시 상태는 가리지 않지만 사용자 화면에는 게시 중인 공고만 나옵니다.
@@ -1363,31 +1363,31 @@ export const useReplaceTodayJobs = <TError = ErrorResponse,
       return useMutation(getReplaceTodayJobsMutationOptions(options), queryClient);
     }
 
-export type getCrawlerJobResponse200 = {
-  data: SuccessResponseCrawlerJobLookupResponse
+export type getAiJobResponse200 = {
+  data: SuccessResponseAiJobLookupResponse
   status: 200
 }
 
-export type getCrawlerJobResponse401 = {
+export type getAiJobResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getCrawlerJobResponse404 = {
+export type getAiJobResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type getCrawlerJobResponseSuccess = (getCrawlerJobResponse200) & {
+export type getAiJobResponseSuccess = (getAiJobResponse200) & {
   headers: Headers;
 };
-export type getCrawlerJobResponseError = (getCrawlerJobResponse401 | getCrawlerJobResponse404) & {
+export type getAiJobResponseError = (getAiJobResponse401 | getAiJobResponse404) & {
   headers: Headers;
 };
 
-export type getCrawlerJobResponse = (getCrawlerJobResponseSuccess | getCrawlerJobResponseError)
+export type getAiJobResponse = (getAiJobResponseSuccess | getAiJobResponseError)
 
-export const getGetCrawlerJobUrl = (params: GetCrawlerJobParams,) => {
+export const getGetAiJobUrl = (params: GetAiJobParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1405,12 +1405,12 @@ export const getGetCrawlerJobUrl = (params: GetCrawlerJobParams,) => {
 /**
  *
  *             원문 URL로 미삭제 수집 공고의 식별자를 찾습니다.
- *             크롤러가 등록 응답의 식별자를 잃은 채 같은 공고를 다시 등록해 409를 받았을 때 씁니다.
- * @summary 원문 URL로 크롤러 채용공고 식별자 조회
+ *             AI 서버가 등록 응답의 식별자를 잃은 채 같은 공고를 다시 등록해 409를 받았을 때 씁니다.
+ * @summary 원문 URL로 AI 서버 채용공고 식별자 조회
  */
-export const getCrawlerJob = async (params: GetCrawlerJobParams, options?: Parameters<typeof httpClient>[1]): Promise<getCrawlerJobResponse> => {
+export const getAiJob = async (params: GetAiJobParams, options?: Parameters<typeof httpClient>[1]): Promise<getAiJobResponse> => {
 
-  return httpClient<getCrawlerJobResponse>(getGetCrawlerJobUrl(params),
+  return httpClient<getAiJobResponse>(getGetAiJobUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1423,69 +1423,69 @@ export const getCrawlerJob = async (params: GetCrawlerJobParams, options?: Param
 
 
 
-export const getGetCrawlerJobQueryKey = (params?: GetCrawlerJobParams,) => {
+export const getGetAiJobQueryKey = (params?: GetAiJobParams,) => {
     return [
     `/api/v1/internal/jobs`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetCrawlerJobQueryOptions = <TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getGetAiJobQueryOptions = <TData = Awaited<ReturnType<typeof getAiJob>>, TError = ErrorResponse>(params: GetAiJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetCrawlerJobQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAiJobQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrawlerJob>>> = ({ signal }) => getCrawlerJob(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiJob>>> = ({ signal }) => getAiJob(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetCrawlerJobQueryResult = NonNullable<Awaited<ReturnType<typeof getCrawlerJob>>>
-export type GetCrawlerJobQueryError = ErrorResponse
+export type GetAiJobQueryResult = NonNullable<Awaited<ReturnType<typeof getAiJob>>>
+export type GetAiJobQueryError = ErrorResponse
 
 
-export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
- params: GetCrawlerJobParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>> & Pick<
+export function useGetAiJob<TData = Awaited<ReturnType<typeof getAiJob>>, TError = ErrorResponse>(
+ params: GetAiJobParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiJob>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCrawlerJob>>,
+          Awaited<ReturnType<typeof getAiJob>>,
           TError,
-          Awaited<ReturnType<typeof getCrawlerJob>>
+          Awaited<ReturnType<typeof getAiJob>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
- params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>> & Pick<
+export function useGetAiJob<TData = Awaited<ReturnType<typeof getAiJob>>, TError = ErrorResponse>(
+ params: GetAiJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiJob>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCrawlerJob>>,
+          Awaited<ReturnType<typeof getAiJob>>,
           TError,
-          Awaited<ReturnType<typeof getCrawlerJob>>
+          Awaited<ReturnType<typeof getAiJob>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
- params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useGetAiJob<TData = Awaited<ReturnType<typeof getAiJob>>, TError = ErrorResponse>(
+ params: GetAiJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 원문 URL로 크롤러 채용공고 식별자 조회
+ * @summary 원문 URL로 AI 서버 채용공고 식별자 조회
  */
 
-export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob>>, TError = ErrorResponse>(
- params: GetCrawlerJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useGetAiJob<TData = Awaited<ReturnType<typeof getAiJob>>, TError = ErrorResponse>(
+ params: GetAiJobParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiJob>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetCrawlerJobQueryOptions(params,options)
+  const queryOptions = getGetAiJobQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1498,36 +1498,36 @@ export function useGetCrawlerJob<TData = Awaited<ReturnType<typeof getCrawlerJob
 
 
 
-export type createCrawlerJobResponse201 = {
-  data: SuccessResponseCrawlerJobRegistrationResponse
+export type createAiJobResponse201 = {
+  data: SuccessResponseAiJobRegistrationResponse
   status: 201
 }
 
-export type createCrawlerJobResponse400 = {
+export type createAiJobResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type createCrawlerJobResponse401 = {
+export type createAiJobResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type createCrawlerJobResponse409 = {
+export type createAiJobResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type createCrawlerJobResponseSuccess = (createCrawlerJobResponse201) & {
+export type createAiJobResponseSuccess = (createAiJobResponse201) & {
   headers: Headers;
 };
-export type createCrawlerJobResponseError = (createCrawlerJobResponse400 | createCrawlerJobResponse401 | createCrawlerJobResponse409) & {
+export type createAiJobResponseError = (createAiJobResponse400 | createAiJobResponse401 | createAiJobResponse409) & {
   headers: Headers;
 };
 
-export type createCrawlerJobResponse = (createCrawlerJobResponseSuccess | createCrawlerJobResponseError)
+export type createAiJobResponse = (createAiJobResponseSuccess | createAiJobResponseError)
 
-export const getCreateCrawlerJobUrl = () => {
+export const getCreateAiJobUrl = () => {
 
 
 
@@ -1537,14 +1537,14 @@ export const getCreateCrawlerJobUrl = () => {
 
 /**
  *
- *             크롤러가 수집한 채용공고를 게시 상태로 등록합니다. 검수는 기업회원이 올린 공고만 거칩니다.
+ *             AI 서버가 수집한 채용공고를 게시 상태로 등록합니다. 검수는 기업회원이 올린 공고만 거칩니다.
  *
- *             고용 형태, 경력 유형, 요구 학력, 모집 기간 유형은 크롤러가 판단해 반드시 보냅니다. 서버는 빈 값을 다른 값으로 채우지 않습니다.
+ *             고용 형태, 경력 유형, 요구 학력, 모집 기간 유형은 AI 서버가 판단해 반드시 보냅니다. 서버는 빈 값을 다른 값으로 채우지 않습니다.
  *             상시 채용에는 모집 종료 일시를 보낼 수 없습니다.
  *             이미 같은 원문 URL로 등록된 미삭제 공고가 있으면 409로 거절합니다. 이때는 원문 URL로 식별자를 찾아 교체합니다.
- * @summary 크롤러 채용공고 등록
+ * @summary AI 서버 채용공고 등록
  */
-export const createCrawlerJob = async (crawlerJobRegistrationRequest: CrawlerJobRegistrationRequest, options?: Parameters<typeof httpClient>[1]): Promise<createCrawlerJobResponse> => {
+export const createAiJob = async (aiJobRegistrationRequest: AiJobRegistrationRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAiJobResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1552,12 +1552,12 @@ export const createCrawlerJob = async (crawlerJobRegistrationRequest: CrawlerJob
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<createCrawlerJobResponse>(getCreateCrawlerJobUrl(),
+return httpClient<createAiJobResponse>(getCreateAiJobUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerJobRegistrationRequest)
+    body: JSON.stringify(aiJobRegistrationRequest)
   }
 );}
 
@@ -1565,13 +1565,13 @@ return httpClient<createCrawlerJobResponse>(getCreateCrawlerJobUrl(),
 
 
 
-export const getCreateCrawlerJobMutationKey = () => ['createCrawlerJob'] as const;
+export const getCreateAiJobMutationKey = () => ['createAiJob'] as const;
 
-export const getCreateCrawlerJobMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCrawlerJob>>, TError,CreateCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof createCrawlerJob>>, TError,CreateCrawlerJobMutationVariables, TContext> => {
+export const getCreateAiJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAiJob>>, TError,CreateAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAiJob>>, TError,CreateAiJobMutationVariables, TContext> => {
 
-const mutationKey = getCreateCrawlerJobMutationKey();
+const mutationKey = getCreateAiJobMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1581,10 +1581,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCrawlerJob>>, CreateCrawlerJobMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAiJob>>, CreateAiJobMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  createCrawlerJob(data,requestOptions)
+          return  createAiJob(data,requestOptions)
         }
 
 
@@ -1594,50 +1594,50 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateCrawlerJobMutationResult = NonNullable<Awaited<ReturnType<typeof createCrawlerJob>>>
-    export type CreateCrawlerJobMutationBody = CrawlerJobRegistrationRequest
-    export type CreateCrawlerJobMutationError = ErrorResponse
-    export type CreateCrawlerJobMutationVariables = {data: CrawlerJobRegistrationRequest}
+    export type CreateAiJobMutationResult = NonNullable<Awaited<ReturnType<typeof createAiJob>>>
+    export type CreateAiJobMutationBody = AiJobRegistrationRequest
+    export type CreateAiJobMutationError = ErrorResponse
+    export type CreateAiJobMutationVariables = {data: AiJobRegistrationRequest}
 
     /**
- * @summary 크롤러 채용공고 등록
+ * @summary AI 서버 채용공고 등록
  */
-export const useCreateCrawlerJob = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCrawlerJob>>, TError,CreateCrawlerJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useCreateAiJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAiJob>>, TError,CreateAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createCrawlerJob>>,
+        Awaited<ReturnType<typeof createAiJob>>,
         TError,
-        CreateCrawlerJobMutationVariables,
+        CreateAiJobMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateCrawlerJobMutationOptions(options), queryClient);
+      return useMutation(getCreateAiJobMutationOptions(options), queryClient);
     }
 
-export type getCrawlerBootcampResponse200 = {
-  data: SuccessResponseCrawlerBootcampLookupResponse
+export type getAiBootcampResponse200 = {
+  data: SuccessResponseAiBootcampLookupResponse
   status: 200
 }
 
-export type getCrawlerBootcampResponse401 = {
+export type getAiBootcampResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getCrawlerBootcampResponse404 = {
+export type getAiBootcampResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type getCrawlerBootcampResponseSuccess = (getCrawlerBootcampResponse200) & {
+export type getAiBootcampResponseSuccess = (getAiBootcampResponse200) & {
   headers: Headers;
 };
-export type getCrawlerBootcampResponseError = (getCrawlerBootcampResponse401 | getCrawlerBootcampResponse404) & {
+export type getAiBootcampResponseError = (getAiBootcampResponse401 | getAiBootcampResponse404) & {
   headers: Headers;
 };
 
-export type getCrawlerBootcampResponse = (getCrawlerBootcampResponseSuccess | getCrawlerBootcampResponseError)
+export type getAiBootcampResponse = (getAiBootcampResponseSuccess | getAiBootcampResponseError)
 
-export const getGetCrawlerBootcampUrl = (params: GetCrawlerBootcampParams,) => {
+export const getGetAiBootcampUrl = (params: GetAiBootcampParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1655,12 +1655,12 @@ export const getGetCrawlerBootcampUrl = (params: GetCrawlerBootcampParams,) => {
 /**
  *
  *             원문 URL로 미삭제 수집 부트캠프의 식별자를 찾습니다.
- *             크롤러가 등록 응답의 식별자를 잃은 채 같은 부트캠프를 다시 등록해 409를 받았을 때 씁니다.
- * @summary 원문 URL로 크롤러 부트캠프 식별자 조회
+ *             AI 서버가 등록 응답의 식별자를 잃은 채 같은 부트캠프를 다시 등록해 409를 받았을 때 씁니다.
+ * @summary 원문 URL로 AI 서버 부트캠프 식별자 조회
  */
-export const getCrawlerBootcamp = async (params: GetCrawlerBootcampParams, options?: Parameters<typeof httpClient>[1]): Promise<getCrawlerBootcampResponse> => {
+export const getAiBootcamp = async (params: GetAiBootcampParams, options?: Parameters<typeof httpClient>[1]): Promise<getAiBootcampResponse> => {
 
-  return httpClient<getCrawlerBootcampResponse>(getGetCrawlerBootcampUrl(params),
+  return httpClient<getAiBootcampResponse>(getGetAiBootcampUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1673,69 +1673,69 @@ export const getCrawlerBootcamp = async (params: GetCrawlerBootcampParams, optio
 
 
 
-export const getGetCrawlerBootcampQueryKey = (params?: GetCrawlerBootcampParams,) => {
+export const getGetAiBootcampQueryKey = (params?: GetAiBootcampParams,) => {
     return [
     `/api/v1/internal/bootcamps`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetCrawlerBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getGetAiBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getAiBootcamp>>, TError = ErrorResponse>(params: GetAiBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetCrawlerBootcampQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAiBootcampQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrawlerBootcamp>>> = ({ signal }) => getCrawlerBootcamp(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiBootcamp>>> = ({ signal }) => getAiBootcamp(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetCrawlerBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getCrawlerBootcamp>>>
-export type GetCrawlerBootcampQueryError = ErrorResponse
+export type GetAiBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getAiBootcamp>>>
+export type GetAiBootcampQueryError = ErrorResponse
 
 
-export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
- params: GetCrawlerBootcampParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>> & Pick<
+export function useGetAiBootcamp<TData = Awaited<ReturnType<typeof getAiBootcamp>>, TError = ErrorResponse>(
+ params: GetAiBootcampParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiBootcamp>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCrawlerBootcamp>>,
+          Awaited<ReturnType<typeof getAiBootcamp>>,
           TError,
-          Awaited<ReturnType<typeof getCrawlerBootcamp>>
+          Awaited<ReturnType<typeof getAiBootcamp>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
- params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>> & Pick<
+export function useGetAiBootcamp<TData = Awaited<ReturnType<typeof getAiBootcamp>>, TError = ErrorResponse>(
+ params: GetAiBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiBootcamp>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCrawlerBootcamp>>,
+          Awaited<ReturnType<typeof getAiBootcamp>>,
           TError,
-          Awaited<ReturnType<typeof getCrawlerBootcamp>>
+          Awaited<ReturnType<typeof getAiBootcamp>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
- params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useGetAiBootcamp<TData = Awaited<ReturnType<typeof getAiBootcamp>>, TError = ErrorResponse>(
+ params: GetAiBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 원문 URL로 크롤러 부트캠프 식별자 조회
+ * @summary 원문 URL로 AI 서버 부트캠프 식별자 조회
  */
 
-export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError = ErrorResponse>(
- params: GetCrawlerBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCrawlerBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useGetAiBootcamp<TData = Awaited<ReturnType<typeof getAiBootcamp>>, TError = ErrorResponse>(
+ params: GetAiBootcampParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetCrawlerBootcampQueryOptions(params,options)
+  const queryOptions = getGetAiBootcampQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1748,36 +1748,36 @@ export function useGetCrawlerBootcamp<TData = Awaited<ReturnType<typeof getCrawl
 
 
 
-export type createCrawlerBootcampResponse201 = {
-  data: SuccessResponseCrawlerBootcampRegistrationResponse
+export type createAiBootcampResponse201 = {
+  data: SuccessResponseAiBootcampRegistrationResponse
   status: 201
 }
 
-export type createCrawlerBootcampResponse400 = {
+export type createAiBootcampResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type createCrawlerBootcampResponse401 = {
+export type createAiBootcampResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type createCrawlerBootcampResponse409 = {
+export type createAiBootcampResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type createCrawlerBootcampResponseSuccess = (createCrawlerBootcampResponse201) & {
+export type createAiBootcampResponseSuccess = (createAiBootcampResponse201) & {
   headers: Headers;
 };
-export type createCrawlerBootcampResponseError = (createCrawlerBootcampResponse400 | createCrawlerBootcampResponse401 | createCrawlerBootcampResponse409) & {
+export type createAiBootcampResponseError = (createAiBootcampResponse400 | createAiBootcampResponse401 | createAiBootcampResponse409) & {
   headers: Headers;
 };
 
-export type createCrawlerBootcampResponse = (createCrawlerBootcampResponseSuccess | createCrawlerBootcampResponseError)
+export type createAiBootcampResponse = (createAiBootcampResponseSuccess | createAiBootcampResponseError)
 
-export const getCreateCrawlerBootcampUrl = () => {
+export const getCreateAiBootcampUrl = () => {
 
 
 
@@ -1787,7 +1787,7 @@ export const getCreateCrawlerBootcampUrl = () => {
 
 /**
  *
- *             크롤러가 수집한 부트캠프를 게시 상태로 등록합니다. 검수는 기업회원이 올린 부트캠프만 거칩니다.
+ *             AI 서버가 수집한 부트캠프를 게시 상태로 등록합니다. 검수는 기업회원이 올린 부트캠프만 거칩니다.
  *
  *             모집 상태(status)는 RECRUITING(모집 중) 또는 CLOSED(모집 마감)만 받고, 보내지 않으면 RECRUITING으로 등록합니다.
  *             CLOSED로 보내면 모집 마감 상태로 게시하며 마감 일시는 등록 시각입니다.
@@ -1796,9 +1796,9 @@ export const getCreateCrawlerBootcampUrl = () => {
  *             외부 페이지 지원은 지원 페이지 주소가 필요하고, 이메일 지원에는 보낼 수 없습니다.
  *             커리큘럼은 보낸 순서대로 노출합니다.
  *             이미 같은 원문 URL로 등록된 미삭제 부트캠프가 있으면 409로 거절합니다. 이때는 원문 URL로 식별자를 찾아 교체합니다.
- * @summary 크롤러 부트캠프 등록
+ * @summary AI 서버 부트캠프 등록
  */
-export const createCrawlerBootcamp = async (crawlerBootcampRequest: CrawlerBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<createCrawlerBootcampResponse> => {
+export const createAiBootcamp = async (aiBootcampRequest: AiBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAiBootcampResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1806,12 +1806,12 @@ export const createCrawlerBootcamp = async (crawlerBootcampRequest: CrawlerBootc
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-return httpClient<createCrawlerBootcampResponse>(getCreateCrawlerBootcampUrl(),
+return httpClient<createAiBootcampResponse>(getCreateAiBootcampUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(crawlerBootcampRequest)
+    body: JSON.stringify(aiBootcampRequest)
   }
 );}
 
@@ -1819,13 +1819,13 @@ return httpClient<createCrawlerBootcampResponse>(getCreateCrawlerBootcampUrl(),
 
 
 
-export const getCreateCrawlerBootcampMutationKey = () => ['createCrawlerBootcamp'] as const;
+export const getCreateAiBootcampMutationKey = () => ['createAiBootcamp'] as const;
 
-export const getCreateCrawlerBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCrawlerBootcamp>>, TError,CreateCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof createCrawlerBootcamp>>, TError,CreateCrawlerBootcampMutationVariables, TContext> => {
+export const getCreateAiBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAiBootcamp>>, TError,CreateAiBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAiBootcamp>>, TError,CreateAiBootcampMutationVariables, TContext> => {
 
-const mutationKey = getCreateCrawlerBootcampMutationKey();
+const mutationKey = getCreateAiBootcampMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1835,10 +1835,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCrawlerBootcamp>>, CreateCrawlerBootcampMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAiBootcamp>>, CreateAiBootcampMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  createCrawlerBootcamp(data,requestOptions)
+          return  createAiBootcamp(data,requestOptions)
         }
 
 
@@ -1848,23 +1848,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateCrawlerBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof createCrawlerBootcamp>>>
-    export type CreateCrawlerBootcampMutationBody = CrawlerBootcampRequest
-    export type CreateCrawlerBootcampMutationError = ErrorResponse
-    export type CreateCrawlerBootcampMutationVariables = {data: CrawlerBootcampRequest}
+    export type CreateAiBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof createAiBootcamp>>>
+    export type CreateAiBootcampMutationBody = AiBootcampRequest
+    export type CreateAiBootcampMutationError = ErrorResponse
+    export type CreateAiBootcampMutationVariables = {data: AiBootcampRequest}
 
     /**
- * @summary 크롤러 부트캠프 등록
+ * @summary AI 서버 부트캠프 등록
  */
-export const useCreateCrawlerBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCrawlerBootcamp>>, TError,CreateCrawlerBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+export const useCreateAiBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAiBootcamp>>, TError,CreateAiBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createCrawlerBootcamp>>,
+        Awaited<ReturnType<typeof createAiBootcamp>>,
         TError,
-        CreateCrawlerBootcampMutationVariables,
+        CreateAiBootcampMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateCrawlerBootcampMutationOptions(options), queryClient);
+      return useMutation(getCreateAiBootcampMutationOptions(options), queryClient);
     }
 
 export type listAnnouncementsResponse200 = {
@@ -2475,6 +2475,15 @@ export const getUpdateJobUrl = (jobId: number,) => {
  *             fields는 companyAndTeamIntroduction, responsibilities, qualifications, preferredQualifications,
  *             compensation, benefits, hiringProcess만 반영하고 나머지 키는 버립니다. 빈 문자열은 그 칸을 비웁니다.
  *             등록 경로(source)는 바꿀 수 없어 보내도 무시합니다.
+ *
+ *             공고 정보(companyName, 경력 experienceType·experienceMinYears, 모집 기간 recruitmentType·recruitmentStartAt·recruitmentEndAt,
+ *             직군·직무 jobField·jobRole, 지역 region·subRegion, 학력, 고용 형태, 지원 방법·이메일 등)는 null이거나 보내지 않으면 그대로 둡니다.
+ *             값을 비우려면 필드 이름을 clear 배열에 담습니다. 예: "clear": ["experienceMinYears", "recruitmentEndAt"]
+ *             같은 필드를 보내면서 clear에도 담거나, clear에 비울 수 없는 이름을 담거나, 문자열에 공백만 보내면 400입니다.
+ *
+ *             직군·시·도를 바꾸면서 직무·시·군·구를 보내지 않으면, 바뀐 직군·시·도에 맞지 않는 기존 직무·시·군·구는 지웁니다.
+ *             직무·시·군·구만 보내면 직군·시·도도 그에 맞춰 바뀝니다. 모집 기간 유형을 ALWAYS_OPEN으로 바꾸면 모집 종료 일시를 지웁니다.
+ *             모집 종료 일시를 바꾸면 모집 상태를 다시 정합니다. 종료 일시가 지난 공고의 마감일을 미루면 모집 중으로 돌아가며, 직접 마감한 공고는 마감으로 남습니다.
  * @summary 채용공고 운영 값·내용 수정
  */
 export const updateJob = async (jobId: number,
@@ -3981,26 +3990,26 @@ export const useUpdateAnnouncement = <TError = ErrorResponse,
       return useMutation(getUpdateAnnouncementMutationOptions(options), queryClient);
     }
 
-export type listCrawlerLetsCareerContentsResponse200 = {
-  data: SuccessResponseListCrawlerLetsCareerContentResponse
+export type listAiLetsCareerContentsResponse200 = {
+  data: SuccessResponseListAiLetsCareerContentResponse
   status: 200
 }
 
-export type listCrawlerLetsCareerContentsResponse401 = {
+export type listAiLetsCareerContentsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type listCrawlerLetsCareerContentsResponseSuccess = (listCrawlerLetsCareerContentsResponse200) & {
+export type listAiLetsCareerContentsResponseSuccess = (listAiLetsCareerContentsResponse200) & {
   headers: Headers;
 };
-export type listCrawlerLetsCareerContentsResponseError = (listCrawlerLetsCareerContentsResponse401) & {
+export type listAiLetsCareerContentsResponseError = (listAiLetsCareerContentsResponse401) & {
   headers: Headers;
 };
 
-export type listCrawlerLetsCareerContentsResponse = (listCrawlerLetsCareerContentsResponseSuccess | listCrawlerLetsCareerContentsResponseError)
+export type listAiLetsCareerContentsResponse = (listAiLetsCareerContentsResponseSuccess | listAiLetsCareerContentsResponseError)
 
-export const getListCrawlerLetsCareerContentsUrl = () => {
+export const getListAiLetsCareerContentsUrl = () => {
 
 
 
@@ -4010,13 +4019,13 @@ export const getListCrawlerLetsCareerContentsUrl = () => {
 
 /**
  *
- *             렛츠커리어 목록에 있는 콘텐츠 전부와 지금 붙은 태그를 줍니다. 크롤러 화면에서 어떤 콘텐츠에 어떤 태그가 붙었는지 볼 때 씁니다.
+ *             렛츠커리어 목록에 있는 콘텐츠 전부와 지금 붙은 태그를 줍니다. AI 서버 화면에서 어떤 콘텐츠에 어떤 태그가 붙었는지 볼 때 씁니다.
  *             많아야 수백 건이라 페이지 없이 한 번에 줍니다.
  * @summary 렛츠커리어 콘텐츠와 태그 조회
  */
-export const listCrawlerLetsCareerContents = async ( options?: Parameters<typeof httpClient>[1]): Promise<listCrawlerLetsCareerContentsResponse> => {
+export const listAiLetsCareerContents = async ( options?: Parameters<typeof httpClient>[1]): Promise<listAiLetsCareerContentsResponse> => {
 
-  return httpClient<listCrawlerLetsCareerContentsResponse>(getListCrawlerLetsCareerContentsUrl(),
+  return httpClient<listAiLetsCareerContentsResponse>(getListAiLetsCareerContentsUrl(),
   {
     ...options,
     method: 'GET'
@@ -4029,69 +4038,69 @@ export const listCrawlerLetsCareerContents = async ( options?: Parameters<typeof
 
 
 
-export const getListCrawlerLetsCareerContentsQueryKey = () => {
+export const getListAiLetsCareerContentsQueryKey = () => {
     return [
     `/api/v1/internal/lets-career-contents`
     ] as const;
     }
 
 
-export const getListCrawlerLetsCareerContentsQueryOptions = <TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getListAiLetsCareerContentsQueryOptions = <TData = Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListCrawlerLetsCareerContentsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListAiLetsCareerContentsQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>> = ({ signal }) => listCrawlerLetsCareerContents({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiLetsCareerContents>>> = ({ signal }) => listAiLetsCareerContents({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListCrawlerLetsCareerContentsQueryResult = NonNullable<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>>
-export type ListCrawlerLetsCareerContentsQueryError = ErrorResponse
+export type ListAiLetsCareerContentsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiLetsCareerContents>>>
+export type ListAiLetsCareerContentsQueryError = ErrorResponse
 
 
-export function useListCrawlerLetsCareerContents<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError = ErrorResponse>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError, TData>> & Pick<
+export function useListAiLetsCareerContents<TData = Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>,
+          Awaited<ReturnType<typeof listAiLetsCareerContents>>,
           TError,
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>
+          Awaited<ReturnType<typeof listAiLetsCareerContents>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListCrawlerLetsCareerContents<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError, TData>> & Pick<
+export function useListAiLetsCareerContents<TData = Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>,
+          Awaited<ReturnType<typeof listAiLetsCareerContents>>,
           TError,
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>
+          Awaited<ReturnType<typeof listAiLetsCareerContents>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListCrawlerLetsCareerContents<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAiLetsCareerContents<TData = Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 렛츠커리어 콘텐츠와 태그 조회
  */
 
-export function useListCrawlerLetsCareerContents<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContents>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAiLetsCareerContents<TData = Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContents>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListCrawlerLetsCareerContentsQueryOptions(options)
+  const queryOptions = getListAiLetsCareerContentsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4104,26 +4113,26 @@ export function useListCrawlerLetsCareerContents<TData = Awaited<ReturnType<type
 
 
 
-export type listCrawlerLetsCareerContentTagTargetsResponse200 = {
-  data: SuccessResponseListCrawlerLetsCareerContentTagTargetResponse
+export type listAiLetsCareerContentTagTargetsResponse200 = {
+  data: SuccessResponseListAiLetsCareerContentTagTargetResponse
   status: 200
 }
 
-export type listCrawlerLetsCareerContentTagTargetsResponse401 = {
+export type listAiLetsCareerContentTagTargetsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type listCrawlerLetsCareerContentTagTargetsResponseSuccess = (listCrawlerLetsCareerContentTagTargetsResponse200) & {
+export type listAiLetsCareerContentTagTargetsResponseSuccess = (listAiLetsCareerContentTagTargetsResponse200) & {
   headers: Headers;
 };
-export type listCrawlerLetsCareerContentTagTargetsResponseError = (listCrawlerLetsCareerContentTagTargetsResponse401) & {
+export type listAiLetsCareerContentTagTargetsResponseError = (listAiLetsCareerContentTagTargetsResponse401) & {
   headers: Headers;
 };
 
-export type listCrawlerLetsCareerContentTagTargetsResponse = (listCrawlerLetsCareerContentTagTargetsResponseSuccess | listCrawlerLetsCareerContentTagTargetsResponseError)
+export type listAiLetsCareerContentTagTargetsResponse = (listAiLetsCareerContentTagTargetsResponseSuccess | listAiLetsCareerContentTagTargetsResponseError)
 
-export const getListCrawlerLetsCareerContentTagTargetsUrl = (params?: ListCrawlerLetsCareerContentTagTargetsParams,) => {
+export const getListAiLetsCareerContentTagTargetsUrl = (params?: ListAiLetsCareerContentTagTargetsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -4144,9 +4153,9 @@ export const getListCrawlerLetsCareerContentTagTargetsUrl = (params?: ListCrawle
  *             태그가 없거나 태그한 뒤로 제목·설명이 바뀐 것을 줍니다. 응답의 `contentHash`를 태그를 보낼 때 그대로 돌려줍니다.
  * @summary 렛츠커리어 콘텐츠 태그 대상 조회
  */
-export const listCrawlerLetsCareerContentTagTargets = async (params?: ListCrawlerLetsCareerContentTagTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listCrawlerLetsCareerContentTagTargetsResponse> => {
+export const listAiLetsCareerContentTagTargets = async (params?: ListAiLetsCareerContentTagTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listAiLetsCareerContentTagTargetsResponse> => {
 
-  return httpClient<listCrawlerLetsCareerContentTagTargetsResponse>(getListCrawlerLetsCareerContentTagTargetsUrl(params),
+  return httpClient<listAiLetsCareerContentTagTargetsResponse>(getListAiLetsCareerContentTagTargetsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -4159,69 +4168,69 @@ export const listCrawlerLetsCareerContentTagTargets = async (params?: ListCrawle
 
 
 
-export const getListCrawlerLetsCareerContentTagTargetsQueryKey = (params?: ListCrawlerLetsCareerContentTagTargetsParams,) => {
+export const getListAiLetsCareerContentTagTargetsQueryKey = (params?: ListAiLetsCareerContentTagTargetsParams,) => {
     return [
     `/api/v1/internal/lets-career-contents/tag-targets`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListCrawlerLetsCareerContentTagTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError = ErrorResponse>(params?: ListCrawlerLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getListAiLetsCareerContentTagTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError = ErrorResponse>(params?: ListAiLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListCrawlerLetsCareerContentTagTargetsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListAiLetsCareerContentTagTargetsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>> = ({ signal }) => listCrawlerLetsCareerContentTagTargets(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>> = ({ signal }) => listAiLetsCareerContentTagTargets(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListCrawlerLetsCareerContentTagTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>>
-export type ListCrawlerLetsCareerContentTagTargetsQueryError = ErrorResponse
+export type ListAiLetsCareerContentTagTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>>
+export type ListAiLetsCareerContentTagTargetsQueryError = ErrorResponse
 
 
-export function useListCrawlerLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError = ErrorResponse>(
- params: undefined |  ListCrawlerLetsCareerContentTagTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError, TData>> & Pick<
+export function useListAiLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError = ErrorResponse>(
+ params: undefined |  ListAiLetsCareerContentTagTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>,
+          Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>,
           TError,
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>
+          Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListCrawlerLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError = ErrorResponse>(
- params?: ListCrawlerLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError, TData>> & Pick<
+export function useListAiLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError = ErrorResponse>(
+ params?: ListAiLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>,
+          Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>,
           TError,
-          Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>
+          Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListCrawlerLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError = ErrorResponse>(
- params?: ListCrawlerLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAiLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError = ErrorResponse>(
+ params?: ListAiLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 렛츠커리어 콘텐츠 태그 대상 조회
  */
 
-export function useListCrawlerLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError = ErrorResponse>(
- params?: ListCrawlerLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerLetsCareerContentTagTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAiLetsCareerContentTagTargets<TData = Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError = ErrorResponse>(
+ params?: ListAiLetsCareerContentTagTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiLetsCareerContentTagTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListCrawlerLetsCareerContentTagTargetsQueryOptions(params,options)
+  const queryOptions = getListAiLetsCareerContentTagTargetsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4234,26 +4243,26 @@ export function useListCrawlerLetsCareerContentTagTargets<TData = Awaited<Return
 
 
 
-export type listCrawlerJobAnalysisTargetsResponse200 = {
-  data: SuccessResponseListCrawlerJobAnalysisTargetResponse
+export type listAiJobAnalysisTargetsResponse200 = {
+  data: SuccessResponseListAiJobAnalysisTargetResponse
   status: 200
 }
 
-export type listCrawlerJobAnalysisTargetsResponse401 = {
+export type listAiJobAnalysisTargetsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type listCrawlerJobAnalysisTargetsResponseSuccess = (listCrawlerJobAnalysisTargetsResponse200) & {
+export type listAiJobAnalysisTargetsResponseSuccess = (listAiJobAnalysisTargetsResponse200) & {
   headers: Headers;
 };
-export type listCrawlerJobAnalysisTargetsResponseError = (listCrawlerJobAnalysisTargetsResponse401) & {
+export type listAiJobAnalysisTargetsResponseError = (listAiJobAnalysisTargetsResponse401) & {
   headers: Headers;
 };
 
-export type listCrawlerJobAnalysisTargetsResponse = (listCrawlerJobAnalysisTargetsResponseSuccess | listCrawlerJobAnalysisTargetsResponseError)
+export type listAiJobAnalysisTargetsResponse = (listAiJobAnalysisTargetsResponseSuccess | listAiJobAnalysisTargetsResponseError)
 
-export const getListCrawlerJobAnalysisTargetsUrl = (params?: ListCrawlerJobAnalysisTargetsParams,) => {
+export const getListAiJobAnalysisTargetsUrl = (params?: ListAiJobAnalysisTargetsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -4271,13 +4280,13 @@ export const getListCrawlerJobAnalysisTargetsUrl = (params?: ListCrawlerJobAnaly
 /**
  *
  *             게시 중인 모집 중 채용공고 가운데 분석이 없거나 분석한 뒤로 본문이 바뀐 공고를 최근 것부터 줍니다.
- *             크롤러가 등록한 공고만이 아니라 고용24·기업회원 공고도 들어 있습니다.
+ *             AI 서버가 등록한 공고만이 아니라 고용24·기업회원 공고도 들어 있습니다.
  *             본문은 제목과 본문 여덟 칸이며, 응답의 `contentHash`를 분석을 보낼 때 그대로 돌려줍니다.
  * @summary 공고 분석 대상 조회
  */
-export const listCrawlerJobAnalysisTargets = async (params?: ListCrawlerJobAnalysisTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listCrawlerJobAnalysisTargetsResponse> => {
+export const listAiJobAnalysisTargets = async (params?: ListAiJobAnalysisTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listAiJobAnalysisTargetsResponse> => {
 
-  return httpClient<listCrawlerJobAnalysisTargetsResponse>(getListCrawlerJobAnalysisTargetsUrl(params),
+  return httpClient<listAiJobAnalysisTargetsResponse>(getListAiJobAnalysisTargetsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -4290,69 +4299,69 @@ export const listCrawlerJobAnalysisTargets = async (params?: ListCrawlerJobAnaly
 
 
 
-export const getListCrawlerJobAnalysisTargetsQueryKey = (params?: ListCrawlerJobAnalysisTargetsParams,) => {
+export const getListAiJobAnalysisTargetsQueryKey = (params?: ListAiJobAnalysisTargetsParams,) => {
     return [
     `/api/v1/internal/jobs/analysis-targets`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListCrawlerJobAnalysisTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export const getListAiJobAnalysisTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError = ErrorResponse>(params?: ListAiJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListCrawlerJobAnalysisTargetsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListAiJobAnalysisTargetsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>> = ({ signal }) => listCrawlerJobAnalysisTargets(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>> = ({ signal }) => listAiJobAnalysisTargets(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListCrawlerJobAnalysisTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>>
-export type ListCrawlerJobAnalysisTargetsQueryError = ErrorResponse
+export type ListAiJobAnalysisTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>>
+export type ListAiJobAnalysisTargetsQueryError = ErrorResponse
 
 
-export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
- params: undefined |  ListCrawlerJobAnalysisTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>> & Pick<
+export function useListAiJobAnalysisTargets<TData = Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError = ErrorResponse>(
+ params: undefined |  ListAiJobAnalysisTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>,
+          Awaited<ReturnType<typeof listAiJobAnalysisTargets>>,
           TError,
-          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>
+          Awaited<ReturnType<typeof listAiJobAnalysisTargets>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
- params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>> & Pick<
+export function useListAiJobAnalysisTargets<TData = Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>,
+          Awaited<ReturnType<typeof listAiJobAnalysisTargets>>,
           TError,
-          Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>
+          Awaited<ReturnType<typeof listAiJobAnalysisTargets>>
         > , 'initialData'
       >, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
- params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAiJobAnalysisTargets<TData = Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary 공고 분석 대상 조회
  */
 
-export function useListCrawlerJobAnalysisTargets<TData = Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError = ErrorResponse>(
- params?: ListCrawlerJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrawlerJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+export function useListAiJobAnalysisTargets<TData = Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobAnalysisTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobAnalysisTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListCrawlerJobAnalysisTargetsQueryOptions(params,options)
+  const queryOptions = getListAiJobAnalysisTargetsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5016,6 +5025,7 @@ export const getListGeneralMembersUrl = (params?: ListGeneralMembersParams,) => 
  *
  *             렛츠커리어로 가입한 일반 회원을 최근 가입 순으로 반환합니다. 멘토(MENTOR)와 관리자(ADMIN)도 나오며 기업 회원은 나오지 않습니다.
  *             탈퇴·정지한 회원도 포함하며 status로 거를 수 있습니다. role로 USER·MENTOR·ADMIN 중 하나만 거를 수 있습니다.
+ *             inflowSource로 렛츠커리어 기존 회원(LETSCAREER)과 오공고 신규 유입(OGONGGO)을 거를 수 있습니다.
  *
  *             keyword는 닉네임이나 이메일에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
  *             joinedFrom·joinedTo는 가입일(YYYY-MM-DD) 범위이며 두 날짜를 모두 포함합니다.
@@ -6033,19 +6043,19 @@ export function useListBootcamps<TData = Awaited<ReturnType<typeof listBootcamps
 }
 
 
-export const getReplaceCrawlerLetsCareerContentTagsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getReplaceAiLetsCareerContentTagsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getReplaceCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getReplaceAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getDeleteCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getDeleteAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getChangeCrawlerJobSourceHtmlResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getChangeAiJobSourceHtmlResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getReplaceCrawlerJobAnalysisResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getReplaceAiJobAnalysisResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getReplaceCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getReplaceAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getDeleteCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getDeleteAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getGetLetsCareerContentRecommendWeightsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminLetsCareerContentRecommendWeightsResponse, object>> = {}): SuccessResponseAdminLetsCareerContentRecommendWeightsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{roleScore: faker.number.int(), fieldScore: faker.number.int(), topicScore: faker.number.int(), maxTopicMatches: faker.number.int(), programBonus: faker.number.int(), materialBonus: faker.number.int(), blogBonus: faker.number.int(), maxPerGroup: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -6055,13 +6065,13 @@ export const getListTodayJobsResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getReplaceTodayJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminTodayJobSummaryResponse, object>> = {}): SuccessResponseListAdminTodayJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recommendationTitle: faker.string.alpha({length: {min: 10, max: 20}}), recommendationDescription: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
 
-export const getGetCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerJobLookupResponse, object>> = {}): SuccessResponseCrawlerJobLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
+export const getGetAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobLookupResponse, object>> = {}): SuccessResponseAiJobLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getCreateCrawlerJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerJobRegistrationResponse, object>> = {}): SuccessResponseCrawlerJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
+export const getCreateAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobRegistrationResponse, object>> = {}): SuccessResponseAiJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getGetCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerBootcampLookupResponse, object>> = {}): SuccessResponseCrawlerBootcampLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
+export const getGetAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampLookupResponse, object>> = {}): SuccessResponseAiBootcampLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getCreateCrawlerBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCrawlerBootcampRegistrationResponse, object>> = {}): SuccessResponseCrawlerBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
+export const getCreateAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampRegistrationResponse, object>> = {}): SuccessResponseAiBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -6069,11 +6079,11 @@ export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extr
 
 export const getUpdateRecruitmentPostVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
+export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
 export const getDeleteJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getUpdateJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
+export const getUpdateJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
 export const getUpdateJobVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -6101,11 +6111,11 @@ export const getDeleteAnnouncementResponseMock = (overrideResponse: Partial<Extr
 
 export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
-export const getListCrawlerLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListCrawlerLetsCareerContentResponse, object>> = {}): SuccessResponseListCrawlerLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
+export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
-export const getListCrawlerLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListCrawlerLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListCrawlerLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+export const getListAiLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListAiLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
 
-export const getListCrawlerJobAnalysisTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListCrawlerJobAnalysisTargetResponse, object>> = {}): SuccessResponseListCrawlerJobAnalysisTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), contentHash: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), undefined]), ...overrideResponse})
+export const getListAiJobAnalysisTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiJobAnalysisTargetResponse, object>> = {}): SuccessResponseListAiJobAnalysisTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), contentHash: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), undefined]), ...overrideResponse})
 
 export const getGetWork24ApiResponseResponseMock = (overrideResponse: Partial<Extract<SuccessResponseJsonNode, object>> = {}): SuccessResponseJsonNode => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -6115,7 +6125,7 @@ export const getListRecruitmentPostsResponseMock = (overrideResponse: Partial<Ex
 
 export const getListJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminJobSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getListGeneralMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminGeneralMemberResponse, object>> = {}): SuccessResponsePageResponseAdminGeneralMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), letsCareerUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListGeneralMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminGeneralMemberResponse, object>> = {}): SuccessResponsePageResponseAdminGeneralMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), letsCareerUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), inflowSource: faker.helpers.arrayElement([faker.helpers.arrayElement(['LETSCAREER','OGONGGO'] as const), undefined]), name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListAdminEnumsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMapStringListAdminEnumOptionResponse, object>> = {}): SuccessResponseMapStringListAdminEnumOptionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{
         [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), desc: faker.string.alpha({length: {min: 10, max: 20}}), parent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}))
@@ -6134,85 +6144,85 @@ export const getListCompanyMembersResponseMock = (overrideResponse: Partial<Extr
 export const getListBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 
-export const getReplaceCrawlerLetsCareerContentTagsMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getReplaceAiLetsCareerContentTagsMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/internal/lets-career-contents/:contentId/tags', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReplaceCrawlerLetsCareerContentTagsResponseMock(),
+    : getReplaceAiLetsCareerContentTagsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getReplaceCrawlerJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getReplaceAiJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/internal/jobs/:jobId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReplaceCrawlerJobResponseMock(),
+    : getReplaceAiJobResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getDeleteCrawlerJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getDeleteAiJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/internal/jobs/:jobId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteCrawlerJobResponseMock(),
+    : getDeleteAiJobResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getChangeCrawlerJobSourceHtmlMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getChangeAiJobSourceHtmlMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/internal/jobs/:jobId/source-html', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getChangeCrawlerJobSourceHtmlResponseMock(),
+    : getChangeAiJobSourceHtmlResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getReplaceCrawlerJobAnalysisMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getReplaceAiJobAnalysisMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/internal/jobs/:jobId/analysis', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReplaceCrawlerJobAnalysisResponseMock(),
+    : getReplaceAiJobAnalysisResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getReplaceCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getReplaceAiBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.put('*/api/v1/internal/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getReplaceCrawlerBootcampResponseMock(),
+    : getReplaceAiBootcampResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getDeleteCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getDeleteAiBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/internal/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteCrawlerBootcampResponseMock(),
+    : getDeleteAiBootcampResponseMock(),
       { status: 200
       })
   }, options)
@@ -6266,49 +6276,49 @@ export const getReplaceTodayJobsMockHandler = (overrideResponse?: SuccessRespons
   }, options)
 }
 
-export const getGetCrawlerJobMockHandler = (overrideResponse?: SuccessResponseCrawlerJobLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCrawlerJobLookupResponse> | SuccessResponseCrawlerJobLookupResponse), options?: RequestHandlerOptions) => {
+export const getGetAiJobMockHandler = (overrideResponse?: SuccessResponseAiJobLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAiJobLookupResponse> | SuccessResponseAiJobLookupResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetCrawlerJobResponseMock(),
+    : getGetAiJobResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getCreateCrawlerJobMockHandler = (overrideResponse?: SuccessResponseCrawlerJobRegistrationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCrawlerJobRegistrationResponse> | SuccessResponseCrawlerJobRegistrationResponse), options?: RequestHandlerOptions) => {
+export const getCreateAiJobMockHandler = (overrideResponse?: SuccessResponseAiJobRegistrationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAiJobRegistrationResponse> | SuccessResponseAiJobRegistrationResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/internal/jobs', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateCrawlerJobResponseMock(),
+    : getCreateAiJobResponseMock(),
       { status: 201
       })
   }, options)
 }
 
-export const getGetCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseCrawlerBootcampLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseCrawlerBootcampLookupResponse> | SuccessResponseCrawlerBootcampLookupResponse), options?: RequestHandlerOptions) => {
+export const getGetAiBootcampMockHandler = (overrideResponse?: SuccessResponseAiBootcampLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAiBootcampLookupResponse> | SuccessResponseAiBootcampLookupResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetCrawlerBootcampResponseMock(),
+    : getGetAiBootcampResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getCreateCrawlerBootcampMockHandler = (overrideResponse?: SuccessResponseCrawlerBootcampRegistrationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCrawlerBootcampRegistrationResponse> | SuccessResponseCrawlerBootcampRegistrationResponse), options?: RequestHandlerOptions) => {
+export const getCreateAiBootcampMockHandler = (overrideResponse?: SuccessResponseAiBootcampRegistrationResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAiBootcampRegistrationResponse> | SuccessResponseAiBootcampRegistrationResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/internal/bootcamps', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getCreateCrawlerBootcampResponseMock(),
+    : getCreateAiBootcampResponseMock(),
       { status: 201
       })
   }, options)
@@ -6542,37 +6552,37 @@ export const getUpdateAnnouncementMockHandler = (overrideResponse?: SuccessRespo
   }, options)
 }
 
-export const getListCrawlerLetsCareerContentsMockHandler = (overrideResponse?: SuccessResponseListCrawlerLetsCareerContentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListCrawlerLetsCareerContentResponse> | SuccessResponseListCrawlerLetsCareerContentResponse), options?: RequestHandlerOptions) => {
+export const getListAiLetsCareerContentsMockHandler = (overrideResponse?: SuccessResponseListAiLetsCareerContentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiLetsCareerContentResponse> | SuccessResponseListAiLetsCareerContentResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/lets-career-contents', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListCrawlerLetsCareerContentsResponseMock(),
+    : getListAiLetsCareerContentsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getListCrawlerLetsCareerContentTagTargetsMockHandler = (overrideResponse?: SuccessResponseListCrawlerLetsCareerContentTagTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListCrawlerLetsCareerContentTagTargetResponse> | SuccessResponseListCrawlerLetsCareerContentTagTargetResponse), options?: RequestHandlerOptions) => {
+export const getListAiLetsCareerContentTagTargetsMockHandler = (overrideResponse?: SuccessResponseListAiLetsCareerContentTagTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiLetsCareerContentTagTargetResponse> | SuccessResponseListAiLetsCareerContentTagTargetResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/lets-career-contents/tag-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListCrawlerLetsCareerContentTagTargetsResponseMock(),
+    : getListAiLetsCareerContentTagTargetsResponseMock(),
       { status: 200
       })
   }, options)
 }
 
-export const getListCrawlerJobAnalysisTargetsMockHandler = (overrideResponse?: SuccessResponseListCrawlerJobAnalysisTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListCrawlerJobAnalysisTargetResponse> | SuccessResponseListCrawlerJobAnalysisTargetResponse), options?: RequestHandlerOptions) => {
+export const getListAiJobAnalysisTargetsMockHandler = (overrideResponse?: SuccessResponseListAiJobAnalysisTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiJobAnalysisTargetResponse> | SuccessResponseListAiJobAnalysisTargetResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/jobs/analysis-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListCrawlerJobAnalysisTargetsResponseMock(),
+    : getListAiJobAnalysisTargetsResponseMock(),
       { status: 200
       })
   }, options)
@@ -6722,21 +6732,21 @@ export const getListBootcampsMockHandler = (overrideResponse?: SuccessResponsePa
   }, options)
 }
 export const getOgonggoAdminAPIMock = () => [
-  getReplaceCrawlerLetsCareerContentTagsMockHandler(),
-  getReplaceCrawlerJobMockHandler(),
-  getDeleteCrawlerJobMockHandler(),
-  getChangeCrawlerJobSourceHtmlMockHandler(),
-  getReplaceCrawlerJobAnalysisMockHandler(),
-  getReplaceCrawlerBootcampMockHandler(),
-  getDeleteCrawlerBootcampMockHandler(),
+  getReplaceAiLetsCareerContentTagsMockHandler(),
+  getReplaceAiJobMockHandler(),
+  getDeleteAiJobMockHandler(),
+  getChangeAiJobSourceHtmlMockHandler(),
+  getReplaceAiJobAnalysisMockHandler(),
+  getReplaceAiBootcampMockHandler(),
+  getDeleteAiBootcampMockHandler(),
   getGetLetsCareerContentRecommendWeightsMockHandler(),
   getReplaceLetsCareerContentRecommendWeightsMockHandler(),
   getListTodayJobsMockHandler(),
   getReplaceTodayJobsMockHandler(),
-  getGetCrawlerJobMockHandler(),
-  getCreateCrawlerJobMockHandler(),
-  getGetCrawlerBootcampMockHandler(),
-  getCreateCrawlerBootcampMockHandler(),
+  getGetAiJobMockHandler(),
+  getCreateAiJobMockHandler(),
+  getGetAiBootcampMockHandler(),
+  getCreateAiBootcampMockHandler(),
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getUpdateRecruitmentPostVisibilitiesMockHandler(),
@@ -6756,9 +6766,9 @@ export const getOgonggoAdminAPIMock = () => [
   getGetAnnouncementMockHandler(),
   getDeleteAnnouncementMockHandler(),
   getUpdateAnnouncementMockHandler(),
-  getListCrawlerLetsCareerContentsMockHandler(),
-  getListCrawlerLetsCareerContentTagTargetsMockHandler(),
-  getListCrawlerJobAnalysisTargetsMockHandler(),
+  getListAiLetsCareerContentsMockHandler(),
+  getListAiLetsCareerContentTagTargetsMockHandler(),
+  getListAiJobAnalysisTargetsMockHandler(),
   getGetWork24ApiResponseMockHandler(),
   getListServiceFeedbacksMockHandler(),
   getListRecruitmentPostsMockHandler(),

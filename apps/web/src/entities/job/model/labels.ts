@@ -1,3 +1,5 @@
+import { enumLabels, enumOptions, enumParent } from '@ogonggo/api';
+
 import type {
   JobEducationLevel,
   JobEmploymentType,
@@ -11,15 +13,8 @@ import type {
  * `JobBadge`가 쓰던 라벨 맵을 여기로 뽑아 `widgets/job-list/lib/filter.ts`의 채용 형태·
  * 요구 경력 체크박스 옵션에서도 같은 라벨을 쓴다 — 같은 값을 두 곳에 다시 적지 않는다.
  */
-export const EMPLOYMENT_TYPE_LABELS: Record<JobEmploymentType, string> = {
-  FULL_TIME: '정규직',
-  CONTRACT: '계약직',
-  INTERN: '인턴',
-  PART_TIME: '파트타임',
-  WORK_STUDY: '일학습병행',
-  WORK_EXPERIENCE: '미래내일 일경험',
-  ETC: '기타',
-};
+export const EMPLOYMENT_TYPE_LABELS: Record<JobEmploymentType, string> =
+  enumLabels('JobEmploymentType');
 
 /**
  * 채용 형태 필터(공고 목록·달력·지원 보드)에 보이는 선택지. `일학습병행` 은 뺀다 — 이미 올라온 공고의
@@ -29,46 +24,17 @@ export const EMPLOYMENT_TYPE_FILTER_OPTIONS = (
   Object.entries(EMPLOYMENT_TYPE_LABELS) as [JobEmploymentType, string][]
 ).filter(([value]) => value !== 'WORK_STUDY');
 
-export const EXPERIENCE_TYPE_LABELS: Record<JobExperienceType, string> = {
-  NEWCOMER: '신입',
-  EXPERIENCED: '경력',
-  BOTH: '신입·경력',
-  IRRELEVANT: '경력무관',
-};
+export const EXPERIENCE_TYPE_LABELS: Record<JobExperienceType, string> =
+  enumLabels('JobExperienceType');
 
-export const EDUCATION_LEVEL_LABELS: Record<JobEducationLevel, string> = {
-  ANY: '학력무관',
-  HIGH_SCHOOL: '고졸',
-  ASSOCIATE: '초대졸',
-  BACHELOR: '대졸',
-  MASTER: '석사',
-  DOCTORATE: '박사',
-};
+export const EDUCATION_LEVEL_LABELS: Record<JobEducationLevel, string> =
+  enumLabels('JobEducationLevel');
 
 /**
- * 근무 지역(시·도). 백엔드가 자유 문자열에서 enum 으로 바꿨다(ogonggo-BE LC-3385). 라벨은 스펙의
- * 설명 칸 그대로다 — 광주는 따로 없고 `전남광주`로 묶인다.
+ * 근무 지역(시·도). 백엔드가 자유 문자열에서 enum 으로 바꿨다(ogonggo-BE LC-3385). 라벨은 enum
+ * 카탈로그의 `Region` 이다 — 광주는 따로 없고 `전남광주`로 묶인다.
  */
-export const REGION_LABELS: Record<JobRegion, string> = {
-  NATIONWIDE: '전국',
-  SEOUL: '서울',
-  GYEONGGI: '경기',
-  INCHEON: '인천',
-  BUSAN: '부산',
-  DAEGU: '대구',
-  JEONNAM_GWANGJU: '전남광주',
-  DAEJEON: '대전',
-  ULSAN: '울산',
-  SEJONG: '세종',
-  GANGWON: '강원',
-  GYEONGNAM: '경남',
-  GYEONGBUK: '경북',
-  CHUNGNAM: '충남',
-  CHUNGBUK: '충북',
-  JEONBUK: '전북',
-  JEJU: '제주',
-  OVERSEAS: '해외',
-};
+export const REGION_LABELS: Record<JobRegion, string> = enumLabels('Region');
 
 /** 화면에 쓸 지역 이름. 값이 없으면 `undefined` 다. */
 export function formatRegion(region: JobRegion | undefined): string | undefined {
@@ -77,29 +43,9 @@ export function formatRegion(region: JobRegion | undefined): string | undefined 
 
 /**
  * 직군. 백엔드가 자유 문자열에서 enum 으로 바꿨다(ogonggo-BE LC-3385). 라벨과 순서는
- * `GET /api/v1/enums` 의 `JobField` 그대로다.
+ * enum 카탈로그(`GET /api/v1/enums` 스냅숏)의 `JobField` 그대로다.
  */
-export const JOB_FIELD_LABELS: Record<JobField, string> = {
-  IT_DEVELOPMENT: 'IT·개발',
-  GAME: '게임',
-  PLANNING_STRATEGY: '기획·전략',
-  MARKETING_ADVERTISING: '마케팅·광고',
-  SALES: '영업',
-  TRADE_LOGISTICS: '무역·물류',
-  TRANSPORT_DELIVERY: '운송·배송',
-  LEGAL: '법률·법무',
-  HR_GENERAL_AFFAIRS: 'HR·총무',
-  SECURITIES_ASSET_MANAGEMENT: '증권·운용',
-  BANKING_CARD_INSURANCE: '은행·카드·보험',
-  ENGINEERING_RND: '엔지니어링·R&D',
-  CONSTRUCTION_ARCHITECTURE: '건설·건축',
-  PRODUCTION_SKILLED_TRADES: '생산·기능직',
-  MEDICAL_HEALTH: '의료·보건',
-  PUBLIC_WELFARE: '공공·복지',
-  EDUCATION: '교육',
-  SERVICE: '서비스',
-  FOOD_BEVERAGE: '식음료',
-};
+export const JOB_FIELD_LABELS: Record<JobField, string> = enumLabels('JobField');
 
 /**
  * 백엔드가 없앤 직군과 그 직군이 합쳐 들어간 직군(ogonggo-BE #86). 공유된 옛 주소
@@ -122,262 +68,16 @@ export function toJobField(value: string): JobField | undefined {
   return Object.hasOwn(MERGED_JOB_FIELDS, value) ? MERGED_JOB_FIELDS[value] : undefined;
 }
 
-/** 직무와 그 직무가 속한 직군. `GET /api/v1/enums` 의 `JobRole` 그대로다. */
-export const JOB_ROLES: Record<JobRole, { label: string; field: JobField }> = {
-  IT_BACKEND: { label: '백엔드', field: 'IT_DEVELOPMENT' },
-  IT_FRONTEND_FULLSTACK: { label: '프론트 풀스택', field: 'IT_DEVELOPMENT' },
-  IT_WEB: { label: '웹', field: 'IT_DEVELOPMENT' },
-  IT_ANDROID: { label: '안드로이드', field: 'IT_DEVELOPMENT' },
-  IT_IOS: { label: 'iOS', field: 'IT_DEVELOPMENT' },
-  IT_INFRA_DEVOPS: { label: '인프라·DevOps', field: 'IT_DEVELOPMENT' },
-  IT_SECURITY: { label: '정보보호·보안', field: 'IT_DEVELOPMENT' },
-  IT_EMBEDDED_IOT_ROBOTICS: { label: '임베디드·IoT·로봇', field: 'IT_DEVELOPMENT' },
-  IT_ERP_SAP: { label: 'ERP·SAP', field: 'IT_DEVELOPMENT' },
-  IT_DEV_PM: { label: '개발PM', field: 'IT_DEVELOPMENT' },
-  IT_ETC: { label: '기타IT·개발', field: 'IT_DEVELOPMENT' },
-  AI_DATA_ANALYST_SCIENTIST: { label: '데이터분석·사이언티스트', field: 'IT_DEVELOPMENT' },
-  AI_DATA_ENGINEER: { label: '데이터엔지니어', field: 'IT_DEVELOPMENT' },
-  AI_ML_MLOPS: { label: '머신러닝·MLOps', field: 'IT_DEVELOPMENT' },
-  AI_LLM_GENERATIVE_AI: { label: 'LLM·생성형AI', field: 'IT_DEVELOPMENT' },
-  AI_ETC: { label: '기타AI·데이터', field: 'IT_DEVELOPMENT' },
-  GAME_PLANNING_PM: { label: '게임기획·PM', field: 'GAME' },
-  GAME_OPERATION: { label: '게임운영', field: 'GAME' },
-  GAME_QA: { label: '게임QA', field: 'GAME' },
-  GAME_CLIENT: { label: '게임개발·클라이언트', field: 'GAME' },
-  GAME_SERVER: { label: '게임개발·서버', field: 'GAME' },
-  GAME_MOBILE: { label: '게임개발·모바일', field: 'GAME' },
-  GAME_TECHNICAL_ARTIST: { label: '테크니컬아티스트', field: 'GAME' },
-  GAME_ART: { label: '게임아트', field: 'GAME' },
-  GAME_MODELING_3D: { label: '게임3D모델링', field: 'GAME' },
-  GAME_ANIMATION: { label: '게임애니메이션', field: 'GAME' },
-  GAME_EFFECT_FX: { label: '게임이펙트·FX', field: 'GAME' },
-  GAME_UI: { label: '게임인터페이스', field: 'GAME' },
-  GAME_DIRECTING_VIDEO: { label: '게임연출·영상', field: 'GAME' },
-  GAME_SOUND: { label: '게임사운드', field: 'GAME' },
-  GAME_ETC: { label: '기타게임', field: 'GAME' },
-  DESIGN_UX_UI_PRODUCT: { label: 'UXUI·프로덕트디자인', field: 'PLANNING_STRATEGY' },
-  DESIGN_RESEARCH: { label: '리서치', field: 'PLANNING_STRATEGY' },
-  PLANNING_PM_PO: { label: 'PM·PO', field: 'PLANNING_STRATEGY' },
-  PLANNING_SERVICE_PRODUCT_PLANNING: { label: '서비스·상품기획', field: 'PLANNING_STRATEGY' },
-  PLANNING_BUSINESS_STRATEGY: { label: '사업·전략기획', field: 'PLANNING_STRATEGY' },
-  PLANNING_CONSULTING: { label: '컨설팅', field: 'PLANNING_STRATEGY' },
-  PLANNING_BUSINESS_DEVELOPMENT: { label: '사업개발·분석', field: 'PLANNING_STRATEGY' },
-  PLANNING_PROJECT_MANAGER: { label: '프로젝트매니저', field: 'PLANNING_STRATEGY' },
-  PLANNING_OPERATIONS_MANAGEMENT: { label: '운영관리·OM', field: 'PLANNING_STRATEGY' },
-  PLANNING_MANAGEMENT_SUPPORT: { label: '경영지원', field: 'PLANNING_STRATEGY' },
-  PLANNING_ETC: { label: '기타기획·전략·경영', field: 'PLANNING_STRATEGY' },
-  MARKETING_STRATEGY: { label: '마케팅기획·전략', field: 'MARKETING_ADVERTISING' },
-  MARKETING_PERFORMANCE: { label: '퍼포먼스마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_CONTENT: { label: '콘텐츠마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_SNS: { label: 'SNS마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_BRAND: { label: '브랜드마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_CRM: { label: 'CRM마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_GLOBAL: { label: '글로벌마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_AD_PLANNING_AE: { label: '광고기획·AE', field: 'MARKETING_ADVERTISING' },
-  MARKETING_PR: { label: '홍보·PR', field: 'MARKETING_ADVERTISING' },
-  MARKETING_EXHIBITION_EVENT: { label: '전시·행사마케팅', field: 'MARKETING_ADVERTISING' },
-  MARKETING_ETC: { label: '기타마케팅', field: 'MARKETING_ADVERTISING' },
-  MD_PRODUCT_PLANNING: { label: '상품기획', field: 'PLANNING_STRATEGY' },
-  MD_ONLINE: { label: '온라인MD', field: 'PLANNING_STRATEGY' },
-  MD_FOOD: { label: '식품MD', field: 'PLANNING_STRATEGY' },
-  MD_FASHION: { label: '패션MD', field: 'PLANNING_STRATEGY' },
-  MD_BEAUTY: { label: '뷰티MD', field: 'PLANNING_STRATEGY' },
-  MD_SALES: { label: '영업MD', field: 'PLANNING_STRATEGY' },
-  MD_RETAIL: { label: '리테일MD', field: 'PLANNING_STRATEGY' },
-  MD_ETC: { label: '기타상품기획·MD', field: 'PLANNING_STRATEGY' },
-  SALES_B2C: { label: 'B2C영업', field: 'SALES' },
-  SALES_B2B: { label: 'B2B영업', field: 'SALES' },
-  SALES_GENERAL: { label: '일반영업', field: 'SALES' },
-  SALES_MANAGEMENT_SUPPORT: { label: '영업관리·지원', field: 'SALES' },
-  SALES_TECH_IT: { label: '기술·IT영업', field: 'SALES' },
-  SALES_OVERSEAS: { label: '해외영업', field: 'SALES' },
-  SALES_PHARMA_MEDICAL: { label: '제약·의료영업', field: 'SALES' },
-  SALES_ETC: { label: '기타영업', field: 'SALES' },
-  TRADE_OVERSEAS_TRADING_SALES: { label: '해외·상사영업', field: 'TRADE_LOGISTICS' },
-  TRADE_IMPORT_EXPORT: { label: '수출입관리·사무', field: 'TRADE_LOGISTICS' },
-  TRADE_CUSTOMS_BROKER: { label: '관세사', field: 'TRADE_LOGISTICS' },
-  TRADE_TRADE_FINANCE: { label: '무역금융', field: 'TRADE_LOGISTICS' },
-  TRADE_FORWARDING: { label: '포워딩', field: 'TRADE_LOGISTICS' },
-  TRADE_PURCHASING: { label: '구매·조달', field: 'TRADE_LOGISTICS' },
-  TRADE_LOGISTICS_SCM: { label: '물류·SCM', field: 'TRADE_LOGISTICS' },
-  TRADE_WAREHOUSE_PACKING: { label: '입출고·포장', field: 'TRADE_LOGISTICS' },
-  TRADE_INVENTORY: { label: '자재·재고관리', field: 'TRADE_LOGISTICS' },
-  TRADE_TRANSPORTATION: { label: '운송', field: 'TRADE_LOGISTICS' },
-  TRADE_DISTRIBUTION: { label: '유통관리', field: 'TRADE_LOGISTICS' },
-  TRADE_FACILITY_MANAGEMENT: { label: '설비·시설관리', field: 'TRADE_LOGISTICS' },
-  TRADE_ETC: { label: '기타무역·물류·유통', field: 'TRADE_LOGISTICS' },
-  TRANSPORT_DELIVERY: { label: '배송·배달', field: 'TRANSPORT_DELIVERY' },
-  TRANSPORT_PASSENGER: { label: '승객운송', field: 'TRANSPORT_DELIVERY' },
-  TRANSPORT_FREIGHT: { label: '물류운송', field: 'TRANSPORT_DELIVERY' },
-  TRANSPORT_PROFESSIONAL_DRIVING: { label: '전문운전', field: 'TRANSPORT_DELIVERY' },
-  TRANSPORT_DISPATCH: { label: '배차관리', field: 'TRANSPORT_DELIVERY' },
-  TRANSPORT_ETC: { label: '기타운전·운송', field: 'TRANSPORT_DELIVERY' },
-  LEGAL_LAWYER: { label: '변호사', field: 'LEGAL' },
-  LEGAL_PATENT_ATTORNEY: { label: '변리사', field: 'LEGAL' },
-  LEGAL_LEGAL_AFFAIRS: { label: '법무', field: 'LEGAL' },
-  LEGAL_COMPLIANCE: { label: '컴플라이언스', field: 'LEGAL' },
-  LEGAL_INTERNAL_AUDIT: { label: '내부감사', field: 'LEGAL' },
-  LEGAL_ESG_ETHICS: { label: 'ESG·윤리', field: 'LEGAL' },
-  LEGAL_PATENT_IP: { label: '특허·IP', field: 'LEGAL' },
-  LEGAL_ETC: { label: '기타법률', field: 'LEGAL' },
-  HR_PLANNING: { label: '인사기획', field: 'HR_GENERAL_AFFAIRS' },
-  HR_COMPENSATION: { label: '평가·보상', field: 'HR_GENERAL_AFFAIRS' },
-  HR_HRD_CULTURE: { label: 'HRD·조직문화', field: 'HR_GENERAL_AFFAIRS' },
-  HR_LABOR_RELATIONS: { label: '노무관리', field: 'HR_GENERAL_AFFAIRS' },
-  HR_GENERAL_AFFAIRS_SECRETARY: { label: '총무·비서', field: 'HR_GENERAL_AFFAIRS' },
-  HR_ETC: { label: '기타HR·총무', field: 'HR_GENERAL_AFFAIRS' },
-  ACCOUNTING_FINANCE: { label: '재무', field: 'HR_GENERAL_AFFAIRS' },
-  ACCOUNTING_ACCOUNTING: { label: '회계', field: 'HR_GENERAL_AFFAIRS' },
-  ACCOUNTING_TAX: { label: '세무', field: 'HR_GENERAL_AFFAIRS' },
-  ACCOUNTING_ETC: { label: '기타회계·재무·세무', field: 'HR_GENERAL_AFFAIRS' },
-  SECURITIES_TRADING: { label: '운용·트레이딩', field: 'SECURITIES_ASSET_MANAGEMENT' },
-  SECURITIES_RISK_COMPLIANCE_REVIEW: {
-    label: '리스크·준법·심사',
-    field: 'SECURITIES_ASSET_MANAGEMENT',
-  },
-  SECURITIES_VC_PE: { label: 'VC·PE', field: 'SECURITIES_ASSET_MANAGEMENT' },
-  SECURITIES_INVESTMENT_BANKING: { label: '증권IB', field: 'SECURITIES_ASSET_MANAGEMENT' },
-  SECURITIES_REAL_ESTATE_INFRA_FINANCE: {
-    label: '부동산·인프라금융',
-    field: 'SECURITIES_ASSET_MANAGEMENT',
-  },
-  SECURITIES_PB_WM: { label: 'PB·WM', field: 'SECURITIES_ASSET_MANAGEMENT' },
-  SECURITIES_MANAGEMENT_SUPPORT: { label: '경영지원·관리', field: 'SECURITIES_ASSET_MANAGEMENT' },
-  SECURITIES_PRODUCT_DEVELOPMENT_SALES: {
-    label: '금융상품개발·영업',
-    field: 'SECURITIES_ASSET_MANAGEMENT',
-  },
-  SECURITIES_ETC: { label: '기타증권·운용', field: 'SECURITIES_ASSET_MANAGEMENT' },
-  BANKING_BANK: { label: '은행', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_CARD: { label: '카드사', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_CAPITAL: { label: '캐피탈', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_INSURANCE_PLANNER: { label: '보험설계', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_ACTUARY: { label: '계리', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_CLAIMS_ADJUSTER: { label: '손해사정', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_UNDERWRITING: { label: '언더라이팅·심사', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_CLAIMS: { label: '청구·보상', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_INSURANCE_PRODUCT: { label: '보험상품개발', field: 'BANKING_CARD_INSURANCE' },
-  BANKING_ETC: { label: '기타은행·보험', field: 'BANKING_CARD_INSURANCE' },
-  ENGINEERING_SEMICONDUCTOR_DISPLAY: { label: '반도체·디스플레이', field: 'ENGINEERING_RND' },
-  ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL: { label: '전기·전자·제어', field: 'ENGINEERING_RND' },
-  ENGINEERING_TELECOM_NETWORK: { label: '통신기술·네트워크구축', field: 'ENGINEERING_RND' },
-  ENGINEERING_MECHANICAL: { label: '기계', field: 'ENGINEERING_RND' },
-  ENGINEERING_MECHANICAL_DESIGN_CAD: { label: '기계설계·CAD', field: 'ENGINEERING_RND' },
-  ENGINEERING_AUTOMOTIVE: { label: '자동차', field: 'ENGINEERING_RND' },
-  ENGINEERING_SHIPBUILDING_AEROSPACE: { label: '조선·항공·우주', field: 'ENGINEERING_RND' },
-  ENGINEERING_METAL_STEEL: { label: '금속·철강', field: 'ENGINEERING_RND' },
-  ENGINEERING_CHEMICAL: { label: '화학', field: 'ENGINEERING_RND' },
-  ENGINEERING_COSMETICS: { label: '화장품', field: 'ENGINEERING_RND' },
-  ENGINEERING_BIO_PHARMA: { label: '바이오·제약', field: 'ENGINEERING_RND' },
-  ENGINEERING_FOOD: { label: '식품', field: 'ENGINEERING_RND' },
-  ENGINEERING_ENERGY: { label: '에너지', field: 'ENGINEERING_RND' },
-  ENGINEERING_ENVIRONMENT: { label: '환경', field: 'ENGINEERING_RND' },
-  ENGINEERING_ETC: { label: '기타엔지니어링·RND', field: 'ENGINEERING_RND' },
-  CONSTRUCTION_ARCHITECTURAL_DESIGN: { label: '건축설계·시공', field: 'CONSTRUCTION_ARCHITECTURE' },
-  CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE: {
-    label: '토목·측량·조경·환경',
-    field: 'CONSTRUCTION_ARCHITECTURE',
-  },
-  CONSTRUCTION_MEP_FIRE: { label: '기계·전기·소방·설비', field: 'CONSTRUCTION_ARCHITECTURE' },
-  CONSTRUCTION_DESIGN_SUPERVISION: {
-    label: '설계·감리·시공·공무',
-    field: 'CONSTRUCTION_ARCHITECTURE',
-  },
-  CONSTRUCTION_SAFETY_QUALITY_MATERIAL: {
-    label: '안전·품질·재료',
-    field: 'CONSTRUCTION_ARCHITECTURE',
-  },
-  CONSTRUCTION_OFFICE_ADMIN: { label: '사무·관리·전산', field: 'CONSTRUCTION_ARCHITECTURE' },
-  CONSTRUCTION_SPECIAL_DAILY_LABOR: {
-    label: '건설특수·일용직',
-    field: 'CONSTRUCTION_ARCHITECTURE',
-  },
-  CONSTRUCTION_ETC: { label: '기타건설·건축', field: 'CONSTRUCTION_ARCHITECTURE' },
-  PRODUCTION_PRODUCTION: { label: '생산', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_PLANT_ADMIN: { label: '공무', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_EQUIPMENT: { label: '설비', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_ENVIRONMENT_SAFETY: { label: '환경안전', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_LOGISTICS: { label: '물류', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_QUALITY: { label: '품질', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_CONSTRUCTION_PROJECT: {
-    label: '건설·공사·프로젝트',
-    field: 'PRODUCTION_SKILLED_TRADES',
-  },
-  PRODUCTION_DESIGN_CAD_CAM: { label: '설계·CAD·CAM', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_FACILITY_MANAGEMENT: { label: '시설관리', field: 'PRODUCTION_SKILLED_TRADES' },
-  PRODUCTION_ETC: { label: '기타생산·기능직', field: 'PRODUCTION_SKILLED_TRADES' },
-  MEDICAL_DOCTOR: { label: '의사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_KOREAN_MEDICINE_DOCTOR: { label: '한의사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_VETERINARIAN: { label: '수의사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_PHARMACIST: { label: '약사·약무보조', field: 'MEDICAL_HEALTH' },
-  MEDICAL_NURSE: { label: '간호사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_NURSE_AIDE: { label: '간호조무사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_DENTAL_HYGIENIST: { label: '치위생사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_EMT: { label: '응급구조사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY: { label: '물리치료·작업치료', field: 'MEDICAL_HEALTH' },
-  MEDICAL_RADIOLOGY_CLINICAL_LAB: { label: '영상의학·임상병리·검사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_DIETITIAN: { label: '영양사·임상영양사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_MEDICAL_AESTHETICS: { label: '의료미용·에스테틱', field: 'MEDICAL_HEALTH' },
-  MEDICAL_HOSPITAL_ADMIN: { label: '병원행정·접수·수납', field: 'MEDICAL_HEALTH' },
-  MEDICAL_CARE_WORKER: { label: '요양보호사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_POSTPARTUM_CARE: { label: '조리원', field: 'MEDICAL_HEALTH' },
-  MEDICAL_OPTICIAN: { label: '안경·검안사', field: 'MEDICAL_HEALTH' },
-  MEDICAL_ETC: { label: '기타의료·보건', field: 'MEDICAL_HEALTH' },
-  PUBLIC_ADMINISTRATION: { label: '행정·사무·운영', field: 'PUBLIC_WELFARE' },
-  PUBLIC_TECH_IT_FACILITY: { label: '기술·전산·시설', field: 'PUBLIC_WELFARE' },
-  PUBLIC_SOCIAL_SERVICE: { label: '복지·사회서비스', field: 'PUBLIC_WELFARE' },
-  PUBLIC_EDUCATION_RESEARCH: { label: '교육·연구', field: 'PUBLIC_WELFARE' },
-  PUBLIC_PUBLIC_SAFETY: { label: '공공안전', field: 'PUBLIC_WELFARE' },
-  PUBLIC_COUNSELING: { label: '상담·심리', field: 'PUBLIC_WELFARE' },
-  PUBLIC_RELIGION: { label: '종교', field: 'PUBLIC_WELFARE' },
-  PUBLIC_CHILD_YOUTH_WELFARE: { label: '아동·청소년복지', field: 'PUBLIC_WELFARE' },
-  PUBLIC_ELDERLY_WOMEN_WELFARE: { label: '노인·여성복지', field: 'PUBLIC_WELFARE' },
-  PUBLIC_VOLUNTEER: { label: '자원봉사', field: 'PUBLIC_WELFARE' },
-  PUBLIC_ETC: { label: '기타공공·복지', field: 'PUBLIC_WELFARE' },
-  EDUCATION_KINDERGARTEN_CHILDCARE: { label: '유치원·보육교사', field: 'EDUCATION' },
-  EDUCATION_CONTRACT_PRIVATE_TEACHER: { label: '기간제·사립교사', field: 'EDUCATION' },
-  EDUCATION_AFTER_SCHOOL_PART_TIME: { label: '방과후·시간교사', field: 'EDUCATION' },
-  EDUCATION_PROFESSOR_LECTURER: { label: '대학교수·강사', field: 'EDUCATION' },
-  EDUCATION_STAFF_ASSISTANT: { label: '교직원·조교', field: 'EDUCATION' },
-  EDUCATION_ACADEMY_EXAM_INSTRUCTOR: { label: '입시학원강사', field: 'EDUCATION' },
-  EDUCATION_LANGUAGE_INSTRUCTOR: { label: '국어·외국어강사', field: 'EDUCATION' },
-  EDUCATION_TECHNICAL_INSTRUCTOR: { label: '기술·전문강사', field: 'EDUCATION' },
-  EDUCATION_HOME_VISIT_TEACHER: { label: '학습지·방문교사', field: 'EDUCATION' },
-  EDUCATION_ACADEMY_COUNSELING_OPERATION: { label: '학원상담·운영', field: 'EDUCATION' },
-  EDUCATION_INSTRUCTIONAL_DESIGN: { label: '교재개발·교수설계', field: 'EDUCATION' },
-  EDUCATION_ETC: { label: '기타교육', field: 'EDUCATION' },
-  MEDIA_PD_DIRECTOR: { label: 'PD·감독', field: 'MARKETING_ADVERTISING' },
-  MEDIA_CONTENT_PLANNING_EDITOR: { label: '콘텐츠기획·에디터', field: 'MARKETING_ADVERTISING' },
-  MEDIA_VIDEO_EDITOR: { label: '영상편집', field: 'MARKETING_ADVERTISING' },
-  MEDIA_CREATOR_INFLUENCER: { label: '크리에이터·인플루언서', field: 'MARKETING_ADVERTISING' },
-  CS_CS: { label: 'CS', field: 'HR_GENERAL_AFFAIRS' },
-  CS_CX_MANAGER: { label: 'CX매니저', field: 'HR_GENERAL_AFFAIRS' },
-  SERVICE_INSTALLATION_REPAIR: { label: '설치·수리기사', field: 'SERVICE' },
-  SERVICE_PARKING_FUEL: { label: '주차·주유', field: 'SERVICE' },
-  SERVICE_HOUSEKEEPER: { label: '가사도우미', field: 'SERVICE' },
-  SERVICE_PET_GROOMING_TRAINING: { label: '애견미용·훈련', field: 'SERVICE' },
-  SERVICE_SECURITY_GUARD: { label: '경호·경비', field: 'SERVICE' },
-  SERVICE_HOTEL: { label: '호텔서비스', field: 'SERVICE' },
-  SERVICE_TOURISM: { label: '관광서비스', field: 'SERVICE' },
-  SERVICE_AIRLINE: { label: '항공서비스', field: 'SERVICE' },
-  SERVICE_STORE_MANAGEMENT: { label: '매장관리', field: 'SERVICE' },
-  SERVICE_RECEPTION: { label: '안내·리셉션', field: 'SERVICE' },
-  SERVICE_HAIR_DESIGNER: { label: '헤어디자이너', field: 'SERVICE' },
-  SERVICE_MAKEUP_NAIL: { label: '메이크업·네일', field: 'SERVICE' },
-  SERVICE_SKIN_CARE: { label: '피부관리', field: 'SERVICE' },
-  SERVICE_MASSAGE_BODY_CARE: { label: '마사지·체형관리', field: 'SERVICE' },
-  SERVICE_WEDDING_PLANNER: { label: '웨딩플래너', field: 'SERVICE' },
-  SERVICE_SANITATION: { label: '환경미화원', field: 'SERVICE' },
-  SERVICE_ETC: { label: '기타서비스', field: 'SERVICE' },
-  FOOD_FOOD_PROCESSING_DEVELOPMENT: { label: '식품가공·개발', field: 'FOOD_BEVERAGE' },
-  FOOD_KITCHEN_COOKING: { label: '주방조리', field: 'FOOD_BEVERAGE' },
-  FOOD_BAKERY: { label: '제과·제빵', field: 'FOOD_BEVERAGE' },
-  FOOD_BEVERAGE_LIQUOR: { label: '음료·주류', field: 'FOOD_BEVERAGE' },
-  FOOD_STORE_OPERATION: { label: '매장운영', field: 'FOOD_BEVERAGE' },
-  FOOD_HALL_STAFF: { label: '서비스·홀스태프', field: 'FOOD_BEVERAGE' },
-  FOOD_CONSULTING_SUPPORT: { label: '식음컨설팅·지원', field: 'FOOD_BEVERAGE' },
-  FOOD_ETC: { label: '기타식음료', field: 'FOOD_BEVERAGE' },
-};
+/**
+ * 직무와 그 직무가 속한 직군. enum 카탈로그의 `JobRole` 이고 직군은 그 `parent` 다. 키 순서는
+ * 카탈로그 순서다 — `jobRolesOf` 가 이 순서에 기댄다.
+ */
+export const JOB_ROLES: Record<JobRole, { label: string; field: JobField }> = Object.fromEntries(
+  enumOptions('JobRole').map(({ value, label }) => [
+    value,
+    { label, field: enumParent('JobRole', value) as JobField },
+  ]),
+) as Record<JobRole, { label: string; field: JobField }>;
 
 /** 화면에 쓸 직군 이름. 값이 없으면 `undefined` 다. */
 export function formatJobField(field: JobField | undefined): string | undefined {

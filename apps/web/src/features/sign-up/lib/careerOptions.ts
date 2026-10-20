@@ -1,4 +1,4 @@
-import type { ReplaceMyProfileRequestGrade } from '@ogonggo/api';
+import { enumLabels, type ReplaceMyProfileRequestGrade } from '@ogonggo/api';
 
 /**
  * 커리어 정보 화면(`/signup/career`) 의 선택지. 렛츠커리어 커리어 계획 화면과 같은 목록이어야 한다 — 같은 사용자의
@@ -10,15 +10,9 @@ import type { ReplaceMyProfileRequestGrade } from '@ogonggo/api';
  * 다시 대조한다.
  */
 
-/** 원본 `GRADE_ENUM_TO_KOREAN`. 오공고 `grade` enum 과 키가 같다(백엔드 `UserGrade` 는 `ETC` 를 "5학년 이상" 이라 적지만 라벨은 렛츠커리어를 따른다). */
-export const GRADE_ENUM_TO_KOREAN = {
-  FIRST: '1학년',
-  SECOND: '2학년',
-  THIRD: '3학년',
-  FOURTH: '4학년',
-  ETC: '5학년',
-  GRADUATE: '졸업생',
-} as const satisfies Record<ReplaceMyProfileRequestGrade, string>;
+/** 학년. 이름은 원본 `GRADE_ENUM_TO_KOREAN` 이고 라벨은 enum 카탈로그의 `UserGrade` 다. */
+export const GRADE_ENUM_TO_KOREAN: Record<ReplaceMyProfileRequestGrade, string> =
+  enumLabels('UserGrade');
 
 /** 원본 `DESIRED_INDUSTRY.industryList`. `산업 무관` 은 다른 산업과 함께 고를 수 없다. */
 export const DESIRED_INDUSTRIES = [

@@ -155,14 +155,68 @@ const reviewStatusFor = (id: number, registeredAt: string): JobReviewStatus => {
 };
 
 /**
- * 사용자 픽스처를 어드민 모델로 옮긴다. 어드민 모델에 없는 칸(`bookmarked`, 경력 연차) 은 뺀다.
+ * 사용자 픽스처에 없는 어드민 칸(모회사·산업·직군·모집 인원·마감 옵션·지원 방법 등)을 채운 공고.
+ *
+ * `내용 수정` 모달과 상세 기본 정보 카드를 목에서 보려고 둔다. 크롤링 수집분 하나(1)와 비즈니스
+ * 등록분 하나(8)는 모든 칸을 채우고, 하나(2)는 대부분 비운다 — 상세의 `-` 와, 직군 없는 공고에서
+ * 직무를 고르면 직군이 채워지는 것을 본다. 나머지 공고는 사용자 픽스처 값 그대로다.
+ */
+const ADMIN_JOB_DETAILS: Record<number, Partial<AdminJobDetailResponse>> = {
+  1: {
+    parentCompanyName: '오공고홀딩스',
+    industry: 'IT·플랫폼',
+    logoUrl: 'https://picsum.photos/seed/ogonggo-logo/120',
+    coverImageUrl: 'https://picsum.photos/seed/ogonggo-cover/960/400',
+    jobField: 'IT_DEVELOPMENT',
+    jobRole: 'IT_FRONTEND_FULLSTACK',
+    experienceMinYears: 2,
+    subRegion: 'SEOUL_JUNG_GU',
+    recruitmentHeadcount: 3,
+    closesWhenFilled: true,
+    autoCloseEnabled: true,
+    recruitmentNotice: '서류 합격자에게 개별 연락합니다.\n지원서는 반환하지 않습니다.',
+    applicationMethod: 'EXTERNAL_PAGE',
+    applyEmail: 'recruit@ogonggo.example',
+    inquiryEmail: 'help@ogonggo.example',
+  },
+  2: {
+    region: undefined,
+    experienceMinYears: undefined,
+    recruitmentStartAt: undefined,
+    recruitmentEndAt: undefined,
+    sourceUrl: undefined,
+    applyEmail: undefined,
+  },
+  8: {
+    parentCompanyName: '렛츠커리어',
+    industry: '교육',
+    logoUrl: 'https://picsum.photos/seed/letscareer-logo/120',
+    coverImageUrl: 'https://picsum.photos/seed/letscareer-cover/960/400',
+    jobField: 'PLANNING_STRATEGY',
+    jobRole: 'PLANNING_PM_PO',
+    experienceMinYears: 0,
+    region: 'SEOUL',
+    subRegion: 'SEOUL_JONGNO_GU',
+    recruitmentHeadcount: 1,
+    closesWhenFilled: false,
+    autoCloseEnabled: true,
+    recruitmentNotice: '채용 확정 시 공고를 마감합니다.',
+    applicationMethod: 'EMAIL',
+    applyEmail: 'jobs@letscareer.example',
+    inquiryEmail: 'contact@letscareer.example',
+    sourceUrl: 'https://letscareer.example/careers/1',
+  },
+};
+
+/**
+ * 사용자 픽스처를 어드민 모델로 옮긴다. 어드민 모델에 없는 칸(`bookmarked`) 은 뺀다.
  * 크롤러 수집분의 `reviewStatus` 는 싣지 않는다 — 스펙이 이 칸을 선택으로 둔다.
  */
 const toAdminJob = ({
   bookmarked: _bookmarked,
-  experienceMinYears: _experienceMinYears,
-  ...job
+  ...userJob
 }: UserJobDetailResponse): AdminJobDetailResponse => {
+  const job = { ...userJob, ...ADMIN_JOB_DETAILS[userJob.id] };
   const id = job.id;
   const source = sourceFor(id);
   const registeredAt = registeredAtFor(id);

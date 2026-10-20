@@ -4,6 +4,7 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { AdminJobDetailResponseApplicationMethod } from './adminJobDetailResponseApplicationMethod';
 import type { AdminJobDetailResponseEducationLevel } from './adminJobDetailResponseEducationLevel';
 import type { AdminJobDetailResponseEmploymentType } from './adminJobDetailResponseEmploymentType';
 import type { AdminJobDetailResponseExperienceType } from './adminJobDetailResponseExperienceType';
@@ -21,6 +22,10 @@ export interface AdminJobDetailResponse {
   id: number;
   title: string;
   companyName: string;
+  parentCompanyName?: string;
+  industry?: string;
+  coverImageUrl?: string;
+  logoUrl?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -42,6 +47,8 @@ export interface AdminJobDetailResponse {
      * | `IRRELEVANT` | 4 | 경력 무관 |
      */
   experienceType: AdminJobDetailResponseExperienceType;
+  /** 최소 요구 경력 연수입니다. 공고에 없으면 null입니다. */
+  experienceMinYears?: number;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -320,6 +327,9 @@ export interface AdminJobDetailResponse {
   recruitmentType: AdminJobDetailResponseRecruitmentType;
   recruitmentStartAt?: string;
   recruitmentEndAt?: string;
+  recruitmentHeadcount?: number;
+  closesWhenFilled?: boolean;
+  autoCloseEnabled?: boolean;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -623,6 +633,16 @@ export interface AdminJobDetailResponse {
   compensation?: string;
   benefits?: string;
   hiringProcess?: string;
+  recruitmentNotice?: string;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `EXTERNAL_PAGE` | 1 | 외부 페이지 |
+     * | `EMAIL` | 2 | 이메일 |
+     */
+  applicationMethod?: AdminJobDetailResponseApplicationMethod;
+  applyEmail?: string;
+  inquiryEmail?: string;
   sourceUrl?: string;
   /** 채용공고 원문 HTML입니다. 원문 페이지의 본문 영역을 안전한 태그만 남긴 것이며, 원문이 없는 공고와 기업회원 공고는 null입니다. */
   sourceHtml?: string;

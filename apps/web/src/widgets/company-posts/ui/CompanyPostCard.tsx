@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Badge, Button, cn } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
+import { closedLabel, computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { formatDeadline } from '@/widgets/mypage-list';
 import copy from '../config/copy.json';
@@ -12,16 +12,19 @@ import { CompanyPostStageTrack } from './CompanyPostStageTrack';
 
 /**
  * 모집 기간 문구. 두 날짜 모두 시각이 붙은 일시라 `formatDeadline` 이 `2026.01.05(월) 23:59`
- * 로 그려 준다. 상시 모집이면 날짜가 없고 `formatDeadline` 이 `상시 모집` 을 돌려준다.
+ * 로 그려 준다. 상시 모집이면 날짜가 없고 `formatDeadline` 이 행의 종류에 맞는 문구(채용공고
+ * `상시 채용`, 부트캠프 `상시 모집`)를 돌려준다.
  */
 function formatPeriod(row: Row): string | undefined {
   if (row.recruitmentType === 'ALWAYS_OPEN') {
-    return formatDeadline(row.recruitmentType, row.recruitmentEndAt);
+    return formatDeadline(row.kind, row.recruitmentType, row.recruitmentEndAt);
   }
   const start = row.recruitmentStartAt
-    ? formatDeadline('PERIOD', row.recruitmentStartAt)
+    ? formatDeadline(row.kind, 'PERIOD', row.recruitmentStartAt)
     : undefined;
-  const end = row.recruitmentEndAt ? formatDeadline('PERIOD', row.recruitmentEndAt) : undefined;
+  const end = row.recruitmentEndAt
+    ? formatDeadline(row.kind, 'PERIOD', row.recruitmentEndAt)
+    : undefined;
   if (!start && !end) {
     return undefined;
   }
@@ -108,7 +111,7 @@ export function CompanyPostCard({
                 tone="neutral"
                 className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
               >
-                모집 마감
+                {closedLabel(row.kind)}
               </Badge>
             ) : null}
             {row.href ? (

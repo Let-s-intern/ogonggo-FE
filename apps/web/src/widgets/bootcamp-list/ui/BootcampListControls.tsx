@@ -1,26 +1,33 @@
 import Link from 'next/link';
+import { enumLabel } from '@ogonggo/api';
 import { MenuItem, SearchInput } from '@ogonggo/ui';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
 import {
+  BOOTCAMP_SORTS,
   BOOTCAMP_TABS,
+  TAB_CATEGORIES,
   buildBootcampListHref,
   type BootcampListQuery,
   type BootcampSort,
   type BootcampTab,
 } from '../lib/query';
 
-/** 탭이 보내는 `category`는 `lib/query.ts`의 `TAB_CATEGORIES`에 있다. */
-const TAB_LABELS: Record<BootcampTab, string> = {
-  all: '전체',
-  bootcamp: '부트캠프',
-  sesac: '새싹',
-};
+/**
+ * 탭이 보내는 `category`는 `lib/query.ts`의 `TAB_CATEGORIES`에 있다. 탭 이름은 그 분류의 카탈로그
+ * 라벨(`BootcampCategory`)이고, 분류를 보내지 않는 `전체`만 화면 문구다.
+ */
+const TAB_LABELS = Object.fromEntries(
+  BOOTCAMP_TABS.map((tab) => {
+    const category = TAB_CATEGORIES[tab];
+    return [tab, category ? enumLabel('BootcampCategory', category) : '전체'];
+  }),
+) as Record<BootcampTab, string>;
 
 /** 목업 우측의 `최신순 ▾` 드롭다운. `listPublicBootcamps`의 `sort`에 대응한다. */
-const SORT_OPTIONS: SortOption<BootcampSort>[] = [
-  { value: 'LATEST', label: '최신순' },
-  { value: 'VIEW_COUNT', label: '조회순' },
-];
+const SORT_OPTIONS: SortOption<BootcampSort>[] = BOOTCAMP_SORTS.map((value) => ({
+  value,
+  label: enumLabel('BootcampSortType', value),
+}));
 
 export interface BootcampListControlsProps {
   query: BootcampListQuery;

@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { enumLabel } from '@ogonggo/api';
 import { Badge, Button } from '@ogonggo/ui';
-import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
+import { closedLabel, computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { formatDeadline } from '@/widgets/mypage-list';
 import type { MyPostRow as Row } from '../lib/fetch';
 
@@ -16,8 +17,8 @@ export const EMPTY_CELL = '-';
  * 가 같은 이유로 그렇게 한다).
  */
 export function formatPeriod(startDate?: string, endDate?: string): string {
-  const start = startDate ? formatDeadline('PERIOD', startDate) : undefined;
-  const end = endDate ? formatDeadline('PERIOD', endDate) : undefined;
+  const start = startDate ? formatDeadline('side-study', 'PERIOD', startDate) : undefined;
+  const end = endDate ? formatDeadline('side-study', 'PERIOD', endDate) : undefined;
   if (!start && !end) {
     return EMPTY_CELL;
   }
@@ -86,12 +87,12 @@ export function MyPostRow({
             </Link>
             {draft ? (
               <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold">
-                임시저장
+                {enumLabel('RecruitmentPostPublicationStatus', 'DRAFT')}
               </Badge>
             ) : null}
             {row.status === 'HIDDEN' ? (
               <Badge tone="neutral" className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold">
-                비공개
+                {enumLabel('RecruitmentPostPublicationStatus', 'HIDDEN')}
               </Badge>
             ) : null}
           </div>
@@ -122,7 +123,7 @@ export function MyPostRow({
                 tone="neutral"
                 className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
               >
-                모집 마감
+                {closedLabel('side-study')}
               </Badge>
             ) : null}
             <span className="text-sm text-gray-500">

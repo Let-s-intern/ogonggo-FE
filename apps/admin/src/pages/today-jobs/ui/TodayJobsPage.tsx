@@ -502,7 +502,7 @@ function StatusBadges({ row }: { row: TodayJobRow }) {
   return (
     <span className="flex flex-wrap gap-1">
       {isHidden ? <VisibilityBadge value="HIDDEN" /> : null}
-      {isClosed ? <RecruitmentStatusBadge value="CLOSED" /> : null}
+      {isClosed ? <RecruitmentStatusBadge enumName="JobRecruitmentStatus" value="CLOSED" /> : null}
     </span>
   );
 }

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ActionAlert, Button, ConfirmDelete } from '@ogonggo/ui';
 import type {
+  AdminJobDetailResponse,
   AdminJobDetailResponseReviewStatus as JobReviewStatus,
   AdminJobDetailResponseSource as ContentSource,
   AdminJobDetailResponseVisibility as Visibility,
 } from '@ogonggo/api/src/admin';
 import { useDeleteContent, usePatchBootcamp, usePatchJob } from '@/entities/content/api/useContent';
 import { ContentEditor, type ContentEditorField } from '@/widgets/content-editor';
+import { JobEditor } from '@/widgets/job-editor';
 import { OperationEditor } from '@/widgets/operation-editor';
 
 type ContentKind = 'jobs' | 'bootcamps' | 'side-studies';
@@ -18,6 +20,8 @@ export interface ContentActionsProps {
   title: string;
   /** 수정 가능한 본문 칸. 사이드·스터디는 아직 수정을 붙이지 않아 비운다. */
   fields?: ContentEditorField[];
+  /** 채용공고 상세. 넘기면 `내용 수정` 이 제목·본문과 공고 정보를 함께 고치는 `JobEditor` 를 연다. */
+  job?: AdminJobDetailResponse;
   /** 삭제 후 돌아갈 목록 주소. */
   listPath: string;
   /**
@@ -46,6 +50,7 @@ export function ContentActions({
   id,
   title,
   fields,
+  job,
   listPath,
   operation,
 }: ContentActionsProps) {
@@ -60,7 +65,7 @@ export function ContentActions({
   const deleteMutation = useDeleteContent(kind);
 
   const patchMutation = kind === 'bootcamps' ? patchBootcamp : patchJob;
-  const canEdit = kind !== 'side-studies' && fields !== undefined;
+  const canEdit = kind !== 'side-studies' && (fields !== undefined || job !== undefined);
 
   return (
     <>
@@ -104,7 +109,14 @@ export function ContentActions({
         </Button>
       </div>
 
-      {canEdit ? (
+      {kind === 'jobs' && job ? (
+        <JobEditor
+          open={isEditing}
+          job={job}
+          onClose={() => setIsEditing(false)}
+          onSaved={() => setAlert({ message: '내용을 수정했습니다.', nonce: Date.now() })}
+        />
+      ) : canEdit && fields ? (
         <ContentEditor
           open={isEditing}
           title={title}

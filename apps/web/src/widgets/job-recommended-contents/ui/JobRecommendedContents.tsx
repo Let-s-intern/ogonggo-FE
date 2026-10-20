@@ -1,23 +1,14 @@
 import {
+  enumLabels,
   listPublicJobRecommendedLetsCareerContents,
   type SuccessResponseListUserRecommendedLetsCareerContentResponse,
   type UserRecommendedLetsCareerContentResponse,
   type UserRecommendedLetsCareerContentResponseKind,
 } from '@ogonggo/api';
 
-/**
- * 종류 글자. 스펙(`UserRecommendedLetsCareerContentResponse.kind`)의 설명과 같다.
- * `satisfies Record<생성 enum, string>` 이라 백엔드가 종류를 더하면 여기서 빌드가 깨진다.
- */
-const KIND_LABELS = {
-  CHALLENGE: '챌린지',
-  LIVE: '라이브',
-  VOD: 'VOD',
-  GUIDEBOOK: '가이드북',
-  REPORT: '서류 진단',
-  MATERIAL: '무료 자료집',
-  BLOG: '블로그',
-} satisfies Record<UserRecommendedLetsCareerContentResponseKind, string>;
+/** 종류 글자. enum 카탈로그의 `LetsCareerContentKind` 다. */
+const KIND_LABELS: Record<UserRecommendedLetsCareerContentResponseKind, string> =
+  enumLabels('LetsCareerContentKind');
 
 /**
  * 공고에 맞춘 추천 콘텐츠를 받는다. 생성 타입은 `{ data, status }` 로 감싼 응답을 가정하지만

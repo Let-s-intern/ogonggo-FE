@@ -1,4 +1,5 @@
 import { setupWorker } from 'msw/browser';
+import { enumHandlers } from '../enums';
 import { adminHandlers } from './handlers';
 
 /**
@@ -12,4 +13,4 @@ import { adminHandlers } from './handlers';
  * `import.meta.env` 를, Next 는 `process.env` 를 읽어서 이 패키지 안에서는 어느 쪽도 가정할 수
  * 없다(`../../lib/http-client.ts` 주석이 같은 이유를 적어 두었다).
  */
-export const adminWorker = setupWorker(...adminHandlers);
+export const adminWorker = setupWorker(...adminHandlers, ...enumHandlers);

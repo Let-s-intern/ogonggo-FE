@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { enumLabel, enumOptions } from '@ogonggo/api/src/admin';
 import {
   ActionAlert,
   Badge,
@@ -22,11 +23,7 @@ import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import { formatDateTime } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
-const TYPE_OPTIONS = [
-  { value: '', label: '종류 전체' },
-  { value: 'JOB', label: '채용공고' },
-  { value: 'BOOTCAMP', label: '부트캠프' },
-];
+const TYPE_OPTIONS = [{ value: '', label: '종류 전체' }, ...enumOptions('ContentReviewTargetType')];
 
 /**
  * 반려 보관.
@@ -51,7 +48,9 @@ export function RejectionsPage() {
       key: 'type',
       header: '종류',
       width: 'w-28',
-      render: (row) => <Badge tone="neutral">{row.type === 'JOB' ? '채용공고' : '부트캠프'}</Badge>,
+      render: (row) => (
+        <Badge tone="neutral">{enumLabel('ContentReviewTargetType', row.type)}</Badge>
+      ),
     },
     {
       key: 'title',

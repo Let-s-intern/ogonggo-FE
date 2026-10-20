@@ -1,6 +1,7 @@
-import type { ListMyJobBookmarksJobField } from '@ogonggo/api';
+import { enumLabels, type ListMyJobBookmarksJobField } from '@ogonggo/api';
 import {
   EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
   JOB_FIELD_LABELS,
   JOB_ROLES,
   jobRolesOf,
@@ -10,6 +11,7 @@ import {
   buildMyScrapsHref,
   BOOTCAMP_CATEGORIES,
   EMPLOYMENT_TYPES,
+  EXPERIENCE_TYPES,
   type MyScrapsQuery,
 } from '../lib/query';
 
@@ -17,20 +19,9 @@ const EMPLOYMENT_TYPE_OPTIONS = EMPLOYMENT_TYPES.map(
   (value) => [value, EMPLOYMENT_TYPE_LABELS[value]] as const,
 );
 
-/**
- * `entities/job/model/labels.ts` 의 `EXPERIENCE_TYPE_LABELS` 를 쓰지 않는다. 그 맵은 `BOTH` 와
- * `IRRELEVANT` 를 둘 다 `경력무관` 으로 적는데, 카드 한 장에서는 어느 쪽이든 읽는 사람에게
- * 같은 뜻이라 문제가 없지만 **고르는 목록에서는 똑같은 말이 두 줄 나온다.** 고를 수 없는
- * 목록이 된다.
- *
- * 그래서 네 값을 생성 타입의 설명 표(`ListMyJobBookmarksParams.experienceType`) 그대로 적는다.
- */
-const EXPERIENCE_TYPE_OPTIONS = [
-  ['NEWCOMER', '신입'],
-  ['EXPERIENCED', '경력'],
-  ['BOTH', '신입·경력'],
-  ['IRRELEVANT', '경력 무관'],
-] as const;
+const EXPERIENCE_TYPE_OPTIONS = EXPERIENCE_TYPES.map(
+  (value) => [value, EXPERIENCE_TYPE_LABELS[value]] as const,
+);
 
 /**
  * 직군·직무 목록. 백엔드의 직군·직무 enum 이다(ogonggo-BE LC-3385) — 공고에 붙는 값과 같은
@@ -45,10 +36,10 @@ function jobRoleOptions(jobField: ListMyJobBookmarksJobField) {
 }
 
 /**
- * 부트캠프 분류. 이름은 공개 목록의 탭과 같다(`widgets/bootcamp-list/ui/BootcampListControls.tsx`) —
- * `KDT` 가 `부트캠프`, `SESAC` 이 `새싹` 이다.
+ * 부트캠프 분류. 이름은 enum 카탈로그의 `BootcampCategory` 이고 공개 목록의 탭
+ * (`widgets/bootcamp-list/ui/BootcampListControls.tsx`)과 같다.
  */
-const CATEGORY_LABELS = { KDT: '부트캠프', SESAC: '새싹' } as const;
+const CATEGORY_LABELS = enumLabels('BootcampCategory');
 const CATEGORY_OPTIONS = BOOTCAMP_CATEGORIES.map(
   (value) => [value, CATEGORY_LABELS[value]] as const,
 );

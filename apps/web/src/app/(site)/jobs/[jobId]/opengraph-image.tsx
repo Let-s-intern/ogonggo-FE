@@ -24,6 +24,10 @@ export default async function Image({ params }: { params: Promise<{ jobId: strin
     title: job.title,
     // API 가 로고를 주지 않으면 상세 헤더(`CompanyLogo`)와 같은 회사명 목록에서 찾는다.
     logoUrl: job.logoUrl ?? getCompanyLogoUrl(job.companyName),
-    deadlineText: ogDeadlineText(job.recruitmentEndAt, job.recruitmentType === 'ALWAYS_OPEN'),
+    deadlineText: ogDeadlineText(
+      'job',
+      job.recruitmentEndAt,
+      job.recruitmentType === 'ALWAYS_OPEN',
+    ),
   });
 }

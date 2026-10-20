@@ -1,5 +1,6 @@
 'use client';
 
+import { enumOptions } from '@ogonggo/api';
 import { Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
 import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
 import type { CompanyJobFormValues } from '../model/values';
@@ -10,14 +11,11 @@ const MAX_SOURCE_URL_LENGTH = 2048;
 const MAX_APPLY_EMAIL_LENGTH = 320;
 
 /**
- * 지원 방법 둘. 생성 타입의 `applicationMethod` 그대로다.
+ * 지원 방법 둘. 값과 라벨은 enum 카탈로그의 `JobApplicationMethod` 다.
  *
  * 이메일 지원의 주소는 아래 `담당자 이메일` 칸(`applyEmail`) 이 받는다.
  */
-const APPLICATION_METHOD_OPTIONS = [
-  { value: 'EXTERNAL_PAGE', label: '외부 지원 페이지' },
-  { value: 'EMAIL', label: '이메일 지원' },
-] as const;
+const APPLICATION_METHOD_OPTIONS = enumOptions('JobApplicationMethod');
 
 export interface JobApplySettingsSectionProps {
   values: CompanyJobFormValues;

@@ -1,4 +1,4 @@
-import { ListPublicJobsSort, httpClient } from '@ogonggo/api';
+import { ListPublicJobsSort, enumOptions, httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
@@ -9,10 +9,7 @@ import { JobFilterSidebar } from './JobFilterSidebar';
 import { JobRoleChips } from './JobRoleChips';
 import { SearchFilterBar } from './SearchFilterBar';
 
-const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = [
-  { value: ListPublicJobsSort.LATEST, label: '최신순' },
-  { value: ListPublicJobsSort.VIEW_COUNT, label: '조회순' },
-];
+const SORT_OPTIONS: SortOption<ListPublicJobsSort>[] = enumOptions('JobSortType');
 
 export type JobListProps = JobListQuery;
 
