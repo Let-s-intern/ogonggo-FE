@@ -126,6 +126,13 @@ export function parseRegions(value: string | string[] | undefined): JobRegion[] 
 }
 
 /** 주소의 `q`. 같은 이름이 되풀이돼 배열로 와도 첫 값만 쓴다. */
+/** 주소의 `sort`. 조회순이 아니면 전부 최신순이다. */
+export function parseSort(value: string | undefined): ListPublicJobsSort {
+  return value === ListPublicJobsSort.VIEW_COUNT
+    ? ListPublicJobsSort.VIEW_COUNT
+    : ListPublicJobsSort.LATEST;
+}
+
 export function parseKeywordParam(value: string | string[] | undefined): string | undefined {
   const first = Array.isArray(value) ? value[0] : value;
   return first || undefined;

@@ -7,8 +7,8 @@ import { serializeJobMajors } from './job-majors';
  * 헤더의 `공고 달력`은 언제나 `/calendar`로 간다. 기억하지 않으면 달력에 올 때마다 직무부터
  * 고르게 되는데, 직무는 자주 바뀌지 않는다.
  *
- * `localStorage`가 아니라 쿠키인 이유는 **서버가 첫 렌더에 읽어야** 하기 때문이다. 라우트
- * (`app/(site)/calendar/page.tsx`)가 읽어 바로 `redirect`하므로 선택 화면이 번쩍이지 않는다.
+ * `localStorage`가 아니라 쿠키인 이유는 **서버가 렌더 전에 읽어야** 하기 때문이다.
+ * `src/proxy.ts`가 읽어 바로 보내므로 선택 화면이 번쩍이지 않는다.
  * 토큰을 `localStorage`에 두는 것(`shared/api/authTokens.ts`)과 결이 다르다 — 그쪽은 서버가
  * 볼 이유가 없고, 이쪽은 서버가 봐야 값어치가 있다.
  *
