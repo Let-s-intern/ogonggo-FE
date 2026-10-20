@@ -1,3 +1,4 @@
+import { enumLabel } from '@ogonggo/api';
 import { parseLocalDate } from './localDate';
 
 /**
@@ -19,6 +20,20 @@ export type RecruitmentType = 'PERIOD' | 'ALWAYS_OPEN';
  * 문구로 모았다.
  */
 export const ALWAYS_OPEN_LABEL = '상시모집';
+
+/** 마감일 표기가 갈리는 콘텐츠 종류. */
+export type ContentKind = 'job' | 'bootcamp' | 'side-study';
+
+/**
+ * 마감일이 없는 건의 표기. 상시 채용과 마감일을 적지 않은 기간 채용 둘 다다. 채용공고는
+ * `JobRecruitmentType.ALWAYS_OPEN`(`상시 채용`), 그 밖은 `BootcampRecruitmentType.ALWAYS_OPEN`
+ * (`상시 모집`)의 라벨이다 — 사이드·스터디에는 모집 기간 유형 enum 이 없어 부트캠프 라벨을 쓴다.
+ */
+export function alwaysOpenLabel(kind: ContentKind): string {
+  return kind === 'job'
+    ? enumLabel('JobRecruitmentType', 'ALWAYS_OPEN')
+    : enumLabel('BootcampRecruitmentType', 'ALWAYS_OPEN');
+}
 
 /** 마감일이 없는 건인가(상시 채용이거나 마감일 미정). 마감 여부와는 따로 본다. */
 export function isAlwaysOpen(recruitmentType: RecruitmentType, recruitmentEndAt?: string): boolean {

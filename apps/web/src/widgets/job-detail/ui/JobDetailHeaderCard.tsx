@@ -3,7 +3,7 @@ import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import type { JobRecruitmentType } from '@/entities/job/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
-import { ALWAYS_OPEN_LABEL } from '@/shared/lib/dday';
+import { alwaysOpenLabel } from '@/shared/lib/dday';
 
 export interface JobDetailHeaderCardProps {
   companyName: string;
@@ -58,7 +58,7 @@ export function formatDeadlineText(
   recruitmentEndAt?: string,
 ): string {
   if (recruitmentType === 'ALWAYS_OPEN' || !recruitmentEndAt) {
-    return ALWAYS_OPEN_LABEL;
+    return alwaysOpenLabel('job');
   }
   const end = new Date(recruitmentEndAt);
   const weekday = WEEKDAY_LABELS[end.getDay()];
