@@ -11,18 +11,12 @@ import {
 } from '@/shared/config/labels';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
+import { JOB_BODY_FIELDS } from '@/widgets/job-editor';
 import { TodayJobCard } from './TodayJobCard';
 
-/** 본문 칸. 상세의 본문 카드와 `내용 수정` 모달이 같은 순서로 쓴다. 제목은 `JobContentField` 라벨이다. */
-const BODY_FIELDS = [
-  'companyAndTeamIntroduction',
-  'responsibilities',
-  'qualifications',
-  'preferredQualifications',
-  'compensation',
-  'benefits',
-  'hiringProcess',
-] as const;
+/** 참·거짓 칸. 값이 없으면 다른 빈 칸처럼 `-` 다 — `아니요` 로 그리면 정한 적 없는 값이 정한 것처럼 보인다. */
+const yesNo = (value: boolean | null | undefined): string =>
+  value == null ? '-' : value ? '예' : '아니요';
 
 /**
  * 채용공고 상세. 오늘의 공고(PICK) 카드와 운영 값·본문 수정(`ContentActions`)을 빼면 읽기 전용이다.
@@ -47,7 +41,7 @@ export function JobDetailPage() {
     );
   }
 
-  const bodyFields = BODY_FIELDS.map((field) => ({
+  const bodyFields = JOB_BODY_FIELDS.map((field) => ({
     label: contentFieldLabel('JobContentField', field),
     value: data[field],
   })).filter((field): field is { label: string; value: string } => Boolean(field.value));
@@ -63,13 +57,21 @@ export function JobDetailPage() {
           columns={3}
           items={[
             { label: '회사', value: data.companyName },
+            { label: '모회사', value: data.parentCompanyName || '-' },
+            { label: '산업', value: data.industry || '-' },
             { label: '노출', value: <VisibilityBadge value={data.visibility} /> },
             { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
+            { label: '직군', value: data.jobField ? enumLabel('JobField', data.jobField) : '-' },
+            { label: '직무', value: data.jobRole ? enumLabel('JobRole', data.jobRole) : '-' },
             { label: '지역', value: data.region ? enumLabel('Region', data.region) : '-' },
             { label: '고용 형태', value: enumLabel('JobEmploymentType', data.employmentType) },
             { label: '경력', value: enumLabel('JobExperienceType', data.experienceType) },
+            {
+              label: '최소 경력 연수',
+              value: data.experienceMinYears == null ? '-' : `${data.experienceMinYears}년`,
+            },
             { label: '학력', value: enumLabel('JobEducationLevel', data.educationLevel) },
             { label: '모집 유형', value: enumLabel('JobRecruitmentType', data.recruitmentType) },
             {
@@ -85,6 +87,20 @@ export function JobDetailPage() {
             { label: '모집 마감', value: formatDate(data.recruitmentEndAt) },
             { label: '마감 처리', value: formatDateTime(data.closedAt) },
             {
+              label: '모집 인원',
+              value: data.recruitmentHeadcount == null ? '-' : `${data.recruitmentHeadcount}명`,
+            },
+            { label: '충원 시 마감', value: yesNo(data.closesWhenFilled) },
+            { label: '자동 마감', value: yesNo(data.autoCloseEnabled) },
+            {
+              label: '지원 방법',
+              value: data.applicationMethod
+                ? enumLabel('JobApplicationMethod', data.applicationMethod)
+                : '-',
+            },
+            { label: '지원 이메일', value: data.applyEmail || '-' },
+            { label: '문의 이메일', value: data.inquiryEmail || '-' },
+            {
               label: '원문',
               full: true,
               value: data.sourceUrl ? (
@@ -96,6 +112,15 @@ export function JobDetailPage() {
                 >
                   {data.sourceUrl}
                 </a>
+              ) : (
+                '-'
+              ),
+            },
+            {
+              label: '모집 안내',
+              full: true,
+              value: data.recruitmentNotice ? (
+                <span className="whitespace-pre-wrap">{data.recruitmentNotice}</span>
               ) : (
                 '-'
               ),
@@ -129,11 +154,7 @@ export function JobDetailPage() {
           source: data.source,
           reviewStatus: data.reviewStatus,
         }}
-        fields={BODY_FIELDS.map((field) => ({
-          field,
-          label: contentFieldLabel('JobContentField', field),
-          value: data[field] ?? '',
-        }))}
+        job={data}
       />
 
       {bodyFields.length > 0 ? (
