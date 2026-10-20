@@ -71,9 +71,10 @@ function activityPeriod(item: ApplicationBoardItem): string {
   if (!item.activityStartDate) {
     return '활동 기간 미정';
   }
-  const start = formatDeadline('PERIOD', item.activityStartDate);
+  // 활동 기간은 부트캠프에만 있다(`ApplicationBoardItem.activityStartDate`).
+  const start = formatDeadline('bootcamp', 'PERIOD', item.activityStartDate);
   return item.activityEndDate
-    ? `${start} ~ ${formatDeadline('PERIOD', item.activityEndDate)}`
+    ? `${start} ~ ${formatDeadline('bootcamp', 'PERIOD', item.activityEndDate)}`
     : `${start} ~`;
 }
 
@@ -191,7 +192,11 @@ export function ApplicationBoardRow({ tab, stage, item, move }: ApplicationBoard
           <span className="truncate text-xs text-gray-400">
             {activity
               ? activityPeriod(item)
-              : formatDeadline(item.recruitmentType, item.recruitmentEndAt)}
+              : formatDeadline(
+                  CONTENT_KIND_BY_TAB[tab],
+                  item.recruitmentType,
+                  item.recruitmentEndAt,
+                )}
           </span>
         </div>
         {stageSelect('ml-6 h-8 w-30 shrink-0 rounded-sm border-gray-150 px-3 text-gray-600')}

@@ -97,6 +97,7 @@ async function fetchJobScraps(query: MyScrapsQuery): Promise<MyScrapsPage> {
         EXPERIENCE_TYPE_LABELS[job.experienceType],
         formatRegion(job.region),
       ].filter((part): part is string => Boolean(part)),
+      kind: 'job' as const,
       recruitmentType: job.recruitmentType,
       recruitmentEndAt: job.recruitmentEndAt,
       closedAt: job.closedAt,
@@ -128,6 +129,7 @@ async function fetchBootcampScraps(query: MyScrapsQuery): Promise<MyScrapsPage> 
         BOOTCAMP_OPERATION_TYPE_LABELS[bootcamp.operationType],
         TUITION_TYPE_LABELS[bootcamp.tuitionType],
       ].filter((part): part is string => Boolean(part)),
+      kind: 'bootcamp' as const,
       recruitmentType: bootcamp.recruitmentType,
       recruitmentEndAt: bootcamp.recruitmentEndAt,
       closedAt: bootcamp.closedAt,
@@ -157,6 +159,7 @@ async function fetchSideStudyScraps(query: MyScrapsQuery): Promise<MyScrapsPage>
         `${post.activityDurationMonths}개월`,
       ],
       // 모집글은 상시 모집이 없다. 마감일이 늘 있어 `PERIOD` 로 고정이다.
+      kind: 'side-study' as const,
       recruitmentType: 'PERIOD' as const,
       recruitmentEndAt: post.recruitmentEndDate,
       closedAt: post.recruitmentStatus === 'CLOSED' ? post.recruitmentEndDate : undefined,

@@ -71,7 +71,7 @@ export function MyPageListRowCells({
             </Badge>
           ) : null}
           <span className="text-sm whitespace-nowrap text-gray-500">
-            {formatDeadline(row.recruitmentType, row.recruitmentEndAt)}
+            {formatDeadline(row.kind, row.recruitmentType, row.recruitmentEndAt)}
           </span>
         </div>
       </td>

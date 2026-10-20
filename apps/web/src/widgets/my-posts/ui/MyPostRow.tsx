@@ -17,8 +17,8 @@ export const EMPTY_CELL = '-';
  * 가 같은 이유로 그렇게 한다).
  */
 export function formatPeriod(startDate?: string, endDate?: string): string {
-  const start = startDate ? formatDeadline('PERIOD', startDate) : undefined;
-  const end = endDate ? formatDeadline('PERIOD', endDate) : undefined;
+  const start = startDate ? formatDeadline('side-study', 'PERIOD', startDate) : undefined;
+  const end = endDate ? formatDeadline('side-study', 'PERIOD', endDate) : undefined;
   if (!start && !end) {
     return EMPTY_CELL;
   }

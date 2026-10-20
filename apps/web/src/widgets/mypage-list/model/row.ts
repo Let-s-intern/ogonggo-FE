@@ -1,4 +1,4 @@
-import type { RecruitmentType } from '@/shared/lib/dday';
+import type { ContentKind, RecruitmentType } from '@/shared/lib/dday';
 import type { ThumbnailSrc } from '@/shared/ui/Thumbnail';
 
 /**
@@ -22,6 +22,8 @@ export interface MyPageListRow {
   title: string;
   /** 제목 아래 줄. 가운뎃점으로 잇는다. 빈 값은 호출부가 걸러서 넘긴다. */
   meta: string[];
+  /** 행의 콘텐츠 종류. 마감일이 없을 때의 문구(`상시 채용`·`상시 모집`)가 이걸로 갈린다. */
+  kind: ContentKind;
   recruitmentType: RecruitmentType;
   recruitmentEndAt?: string;
   closedAt?: string;

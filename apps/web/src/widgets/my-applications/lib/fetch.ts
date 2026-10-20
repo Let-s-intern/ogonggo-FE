@@ -77,6 +77,7 @@ export async function fetchMyApplications(query: MyApplicationsQuery): Promise<M
         OPERATION_TYPE_LABELS[item.progressMethod],
         `${item.activityDurationMonths}개월`,
       ],
+      kind: 'side-study' as const,
       // 모집글은 상시 모집이 없다. 마감일이 늘 있어 `PERIOD` 로 고정이다.
       recruitmentType: 'PERIOD' as const,
       recruitmentEndAt: item.recruitmentEndDate,
@@ -129,6 +130,7 @@ export async function fetchMyBookmarkApplications(
       caption: item.caption,
       title: item.title,
       meta: item.meta,
+      kind: tab === 'jobs' ? ('job' as const) : ('bootcamp' as const),
       recruitmentType: item.recruitmentType,
       recruitmentEndAt: item.recruitmentEndAt,
       closedAt: item.closedAt,
