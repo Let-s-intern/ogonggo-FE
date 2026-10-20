@@ -15,6 +15,7 @@
     "@ogonggo/api": "workspace:*",
     "@ogonggo/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.8",
+    "echarts": "^5.6.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router": "^8.3.1"

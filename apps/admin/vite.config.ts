@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, loadEnv } from 'vite';
+import { type Plugin, defineConfig, loadEnv } from 'vite';
 
 // dev 서버가 `/api/**` 를 넘길 어드민 백엔드. 기본값은 로컬 도커의 어드민 API 다(`ogonggo-BE` 의
 // `ogonggo-api-admin`). 배포본은 이 값을 읽지 못하고 `vercel.json` 의 rewrite 가 주소를 직접 들고
@@ -26,8 +26,69 @@ const SHLINK_ENV = loadEnv('', process.cwd(), 'SHLINK_');
 const SHLINK_API_URL = SHLINK_ENV.SHLINK_API_URL ?? 'https://l.letscareer.co.kr';
 const SHLINK_API_KEY = SHLINK_ENV.SHLINK_API_KEY ?? '';
 
+// Redash API 키. 단축링크 키와 같은 이유로 `VITE_` 접두사 없이 `.env.local` 에서 읽는다.
+const REDASH_API_KEY = loadEnv('', process.cwd(), 'REDASH_').REDASH_API_KEY ?? '';
+
+/**
+ * 통계 화면의 `POST /redash-api/query`. 배포본은 `api/redash-query.ts` 가 받는다.
+ *
+ * 단축링크처럼 프록시로 넘기지 않는 이유는, Redash 는 실행 요청에 작업 번호를 주고 끝날 때까지 상태를
+ * 다시 물어야 결과가 나오기 때문이다. 그 순서를 dev 에서 다시 짜지 않고 함수 파일의 `runRedashQuery` 를
+ * 그대로 부른다. 호출자 검증은 하지 않는다 — 로컬 토큰은 배포본 어드민 API 가 모른다.
+ */
+const redashDevApi: Plugin = {
+  name: 'redash-dev-api',
+  configureServer(server) {
+    server.middlewares.use('/redash-api/query', async (req, res) => {
+      const { parseRedashQueryInput, runRedashQuery, RedashFailure } = (await server.ssrLoadModule(
+        '/api/redash-query.ts',
+      )) as typeof import('./api/redash-query');
+      const send = (status: number, body: unknown) => {
+        res.statusCode = status;
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify(body));
+      };
+      if (!REDASH_API_KEY) {
+        send(503, {
+          status: 503,
+          code: 'REDASH_NOT_CONFIGURED',
+          message: '.env.local 에 REDASH_API_KEY 가 없습니다.',
+        });
+        return;
+      }
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(chunk as Buffer);
+      }
+      let input = null;
+      try {
+        input = parseRedashQueryInput(JSON.parse(Buffer.concat(chunks).toString()));
+      } catch {
+        // 아래에서 400 으로 답한다.
+      }
+      if (!input) {
+        send(400, {
+          status: 400,
+          code: 'INVALID_REQUEST',
+          message: '실행할 수 없는 쿼리 요청입니다.',
+        });
+        return;
+      }
+      try {
+        send(200, await runRedashQuery(REDASH_API_KEY, input));
+      } catch (error) {
+        if (error instanceof RedashFailure) {
+          send(error.status, { status: error.status, code: error.code, message: error.message });
+          return;
+        }
+        throw error;
+      }
+    });
+  },
+};
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), redashDevApi],
   resolve: {
     // tsconfig.json 의 paths 와 같은 별칭. Vite 는 tsconfig 를 읽지 않는다.
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
