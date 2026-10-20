@@ -78,8 +78,12 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
         <Field
           label="지원 링크"
           htmlFor="company-job-source-url"
-          required
-          hint="지원하기 버튼을 누르면 입력한 페이지로 이동합니다."
+          required={values.applicationMethod !== 'EMAIL'}
+          hint={
+            values.applicationMethod === 'EMAIL'
+              ? '비워 두면 지원하기 버튼이 담당자 이메일로 연결됩니다.'
+              : '지원하기 버튼을 누르면 입력한 페이지로 이동합니다.'
+          }
         >
           <Input
             id="company-job-source-url"
