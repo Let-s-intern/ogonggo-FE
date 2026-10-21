@@ -23,6 +23,7 @@ import { ContentSection } from './ContentSection';
 import { FormSection } from './FormSection';
 import { PostPreview } from './PostPreview';
 import { useMediaQuery } from '@/shared/lib/useMediaQuery';
+import { FloatingActionBar } from '@/shared/ui/FloatingActionBar';
 import { isUploadingAttachments } from '@/shared/ui/ImageAttachmentField';
 
 export interface RecruitmentPostFormProps {
@@ -202,7 +203,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
   return (
     <form
       ref={formRef}
-      className="flex flex-col gap-4 pb-24 md:pb-0"
+      className="flex flex-col gap-4 pb-32 md:pb-0"
       onSubmit={(event) => {
         event.preventDefault();
         void save('PUBLISH');
@@ -289,28 +290,24 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
         </p>
       ) : null}
 
-      <div className="sticky bottom-0 z-10 hidden justify-center gap-4 border-t border-gray-100 bg-white py-3 md:flex">
+      {/* 데스크톱과 모바일은 버튼이 다르다(모바일은 단계를 넘기는 `다음`). 판 모양은 같은 `FloatingActionBar` 다. */}
+      <FloatingActionBar className="max-md:hidden">
         {editingPublished ? null : (
           <Button
             type="button"
             variant="secondary"
             disabled={pending || uploading}
             onClick={() => void save('DRAFT')}
-            className="w-full max-w-72"
+            className="w-36"
           >
             임시저장
           </Button>
         )}
-        <Button type="submit" disabled={pending || uploading} className="w-full max-w-80">
+        <Button type="submit" disabled={pending || uploading} className="w-44">
           {submitLabel}
         </Button>
-      </div>
-      {/*
-        모바일 하단 내비게이션(`data-bottom-nav`, 앱 설치 + 로그인)이 떠 있으면 그 위로 올라앉는다
-        (`shared/ui/StickyApplyBar.tsx` 와 같은 방법). 올리지 않으면 내비게이션이 이 바를 덮어
-        버튼이 보이지 않았다.
-      */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-gray-100 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(64px+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:pb-3">
+      </FloatingActionBar>
+      <FloatingActionBar className="md:hidden">
         {editingPublished ? null : (
           <Button
             type="button"
@@ -331,7 +328,7 @@ export function RecruitmentPostForm({ postId, onSaved }: RecruitmentPostFormProp
             {submitLabel}
           </Button>
         )}
-      </div>
+      </FloatingActionBar>
     </form>
   );
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import { cn } from '@ogonggo/ui';
+import { Button, cn } from '@ogonggo/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { track } from '@/shared/analytics/dataLayer';
+import { FloatingActionBar } from '@/shared/ui/FloatingActionBar';
 import { ALL_JOB_MAJOR_SLUGS, JOB_MAJORS } from '../lib/job-majors';
 import { writeJobMajorCookie } from '../lib/major-cookie';
 import { buildJobCalendarHref, type JobCalendarQuery } from '../lib/query';
@@ -26,7 +27,7 @@ export interface JobMajorPickerProps {
  *
  * `공고보기`는 하나 이상 골라야 눌린다. 빈 선택으로 전체를 보는 길은 없앴다 — 전체 공고를 한
  * 달력에 놓으면 한 칸에 수십 건이 쌓여 읽을 수 없다(`prd-calendar-major-gate.md`). 고른 것이
- * 없는 동안은 목업(`관심직무 선택.png`)처럼 회색 글자다.
+ * 없는 동안은 버튼이 흐려진다.
  *
  * `초기화`는 선택만 비운다. 달력은 그대로 두고 이어서 다른 직무를 고르게 한다.
  */
@@ -42,7 +43,7 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
     );
 
   return (
-    <div className="flex flex-col pb-20">
+    <div className="flex flex-col pb-28 md:pb-0">
       <CalendarPanel className="items-center px-6 pt-12 pb-10">
         <h2 className="text-2xl font-bold text-gray-900">관심 직무를 골라주세요</h2>
         <div className="mt-3 flex items-center gap-3">
@@ -87,48 +88,38 @@ export function JobMajorPicker({ query }: JobMajorPickerProps) {
             );
           })}
         </ul>
+        {/*
+          버튼은 직무 칸 바로 아래에 둔다. 모바일은 직무가 두 줄씩 쌓여 끝까지 내려야 버튼이 보이므로 화면
+          아래에 띄우고(`FloatingActionBar`), 목록 끝이 판에 가리지 않게 그만큼 아래 여백(`pb-28`)을 둔다.
+          데스크톱은 직무 다섯 칸이 한 줄이라 띄울 이유가 없어 제자리에 둔다.
+        */}
+        <FloatingActionBar desktop="inline" className="md:mt-10">
+          <Button
+            type="button"
+            disabled={empty}
+            onClick={() => {
+              // 주소를 바꾸기 전에 적는다. 다음에 `/calendar`로 그냥 들어와도 라우트가 이 값을
+              // 읽어 같은 직무의 달력을 편다(`lib/major-cookie.ts`).
+              writeJobMajorCookie(selected);
+              trackMajorChange(query.majors, selected);
+              router.push(buildJobCalendarHref(query, { majors: selected, picker: false }));
+            }}
+            className="flex-1 md:w-56 md:flex-none"
+          >
+            공고보기
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={empty}
+            onClick={() => setSelected([])}
+            className="shrink-0 gap-1 text-sm font-normal"
+          >
+            <span aria-hidden="true" className="icon-[lucide--rotate-ccw] block h-4 w-4" />
+            초기화
+          </Button>
+        </FloatingActionBar>
       </CalendarPanel>
-      {/*
-        목업에서 버튼 줄 위에는 가로선이 있고, 두 버튼은 가운데 모여 있다(공고보기 710px, 초기화 202px).
-        직무 목록이 길어 끝까지 내려야 버튼이 보여서 모바일·데스크톱 모두 화면 아래에 띄워 둔다.
-        목록 끝이 버튼에 가리지 않게 그만큼 아래 여백(`pb-20`)을 둔다. `data-sticky-apply-bar` 는 의견 버튼이
-        이 바 위로 올라가게 하는 표시다(`features/service-feedback`) — 공고 상세 신청하기 바와 같다.
-        모바일 하단 내비게이션(`data-bottom-nav`)이 떠 있으면 이 바가 그 위로 올라앉는다.
-      */}
-      <div
-        data-sticky-apply-bar
-        className="fixed inset-x-0 bottom-0 z-30 flex justify-center gap-2 border-t border-gray-200 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(64px+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:pb-3"
-      >
-        <button
-          type="button"
-          disabled={empty}
-          onClick={() => {
-            // 주소를 바꾸기 전에 적는다. 다음에 `/calendar`로 그냥 들어와도 라우트가 이 값을
-            // 읽어 같은 직무의 달력을 편다(`lib/major-cookie.ts`).
-            writeJobMajorCookie(selected);
-            trackMajorChange(query.majors, selected);
-            router.push(buildJobCalendarHref(query, { majors: selected, picker: false }));
-          }}
-          className={cn(
-            'h-11 w-full max-w-[710px] rounded-xs border text-sm transition-colors',
-            empty
-              ? 'cursor-not-allowed border-gray-200 text-gray-400'
-              : 'border-blue-500 text-blue-500 hover:bg-blue-50',
-          )}
-        >
-          공고보기
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelected([])}
-          className={cn(
-            'h-11 w-28 shrink-0 rounded-xs bg-gray-100 text-sm transition-colors hover:bg-gray-200 md:w-[202px]',
-            empty ? 'text-gray-400' : 'text-gray-800',
-          )}
-        >
-          초기화
-        </button>
-      </div>
     </div>
   );
 }

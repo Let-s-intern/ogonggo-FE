@@ -1,4 +1,6 @@
+import { cn } from '@ogonggo/ui';
 import type { ReactNode } from 'react';
+import { FLOATING_BAR } from './FloatingActionBar';
 
 export interface StickyApplyBarProps {
   /** 모바일 바 윗줄. 마감 일시와 D-day 배지다. 데스크톱에서는 헤더 카드가 같은 것을 보여 준다. */
@@ -17,19 +19,19 @@ export interface StickyApplyBarProps {
  *
  * 바가 본문 끝을 가리지 않도록 상세 화면의 `<main>` 이 모바일에서 아래 여백을 넉넉히 둔다.
  *
- * 모양은 v12 시안(`docs/asset/v12 채용공고 상세/모바일 상세 하단 고정바.png`)을 따른다 — 위 테두리
- * 없이 흰 바이고, 윗줄은 12px `gray-600` 마감 문구와 D-day 배지다. 부트캠프·사이드 스터디 상세의
- * 모바일 시안(`docs/asset/v9 mobile/부트캠프 상세.png`, `사이드스터디 상세.png`)도 같은 바라 셋이
- * 한 모양을 쓴다.
- *
- * 하단 내비게이션(`data-bottom-nav`, 앱 설치 + 로그인)이 떠 있으면 그 바로 위에 올라앉는다. 화면 아래
- * 안전 영역은 내비게이션이 채우므로 이 바의 아래 여백에서는 뺀다.
+ * 모바일 판 모양은 다른 화면의 하단 버튼 줄과 같은 떠 있는 둥근 판이다(`FloatingActionBar` 의
+ * `FLOATING_BAR`). v12 시안(`docs/asset/v12 채용공고 상세/모바일 상세 하단 고정바.png`)의 화면 폭 흰 바는
+ * 푸터처럼 읽혀 바꿨다. 윗줄은 시안대로 12px `gray-600` 마감 문구와 D-day 배지다. 채용공고·부트캠프·사이드
+ * 스터디 상세 셋이 한 모양을 쓴다.
  */
 export function StickyApplyBar({ summary, children }: StickyApplyBarProps) {
   return (
     <div
       data-sticky-apply-bar
-      className="fixed inset-x-0 bottom-0 z-30 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:z-auto md:bg-transparent md:p-0 max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(64px+env(safe-area-inset-bottom))] max-md:[body:has([data-bottom-nav])_&]:pb-3"
+      className={cn(
+        FLOATING_BAR,
+        'md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none',
+      )}
     >
       {summary ? (
         <div className="mb-2 flex items-center justify-center gap-3 text-xs text-gray-600 md:hidden">
