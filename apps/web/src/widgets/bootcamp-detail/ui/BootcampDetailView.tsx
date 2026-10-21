@@ -3,6 +3,7 @@ import { contentFieldLabel, getPublicBootcamp } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import { toBootcampInfo } from '@/entities/bootcamp/model/analytics';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
+import { closedLabel } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
@@ -132,6 +133,15 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
                     ? undefined
                     : bootcamp.recruitmentEndAt,
               }}
+              // 잘못 등록된 신청 링크를 보여 주지 않으려고 직접 확인한다(이슈 #482). 이메일 신청은 뺀다.
+              sourceCheck={
+                bootcamp.applicationMethod === 'EXTERNAL_PAGE' && bootcamp.applicationUrl
+                  ? {
+                      path: `/source-check/bootcamps/${bootcamp.id}`,
+                      closedLabel: closedLabel('bootcamp'),
+                    }
+                  : undefined
+              }
             />
           </StickyApplyBar>
           <DetailSidebarSection>

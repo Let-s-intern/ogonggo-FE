@@ -34,8 +34,8 @@ export interface ApplyCtaProps {
   /** 넘기면 신청 버튼 줄 아래에 `공고 공유하기` 가 붙는다(`features/share-posting`). */
   share?: SharePosting;
   /**
-   * 넘기면 화면이 뜬 뒤 원문이 남아 있는지 확인하고, 없어졌으면 버튼을 회색 `closedLabel` 로 바꾼다
-   * (`SourceClosedGate`). 마감일이 없는 채용공고만 넘긴다.
+   * 넘기면 화면이 뜬 뒤 링크가 열리는지 확인하고, 깨졌으면 버튼을 회색 `closedLabel` 로 바꾼다
+   * (`SourceClosedGate`). 채용공고와 부트캠프가 웹 주소 링크일 때 넘긴다.
    */
   sourceCheck?: { path: string; closedLabel: string };
 }
