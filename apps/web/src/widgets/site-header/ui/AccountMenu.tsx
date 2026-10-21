@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@ogonggo/ui';
+import { useSignOut } from '@/features/sign-out';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { AccountIcon, ChevronIcon } from '@/shared/ui/icons';
 
@@ -11,21 +12,23 @@ export interface AccountMenuProps {
   name?: string;
   myPageHref: string;
   myPageActive: boolean;
-  /** 관리자일 때만 온다. 있으면 드롭다운이 되고, 없으면 마이페이지로 가는 링크 하나다. */
+  /** 관리자일 때만 온다. 있으면 드롭다운에 `어드민` 이 더해진다. */
   adminOrigin?: string;
 }
 
 /**
- * 데스크톱 헤더 우측의 `[사람] {이름} 님`. 전에는 `마이페이지`·`어드민` 이 나란히 있었다.
+ * 데스크톱 헤더 우측의 `[사람] {이름} 님`. 누르면 `마이페이지`·`로그아웃` 이 펼쳐지고, 관리자에게는
+ * 그 사이에 `어드민` 이 더해진다.
  *
- * 일반·기업 회원에게는 갈 곳이 마이페이지 하나라 그대로 링크다. 관리자만 갈 곳이 둘이라
- * 누르면 `마이페이지`·`어드민` 이 펼쳐진다.
+ * 마이페이지에서 로그아웃하면 홈으로 보낸다. 마이페이지의 로그인 가드는 들어올 때만 검사해서
+ * 그대로 두면 토큰이 지워진 채 빈 화면에 남는다(`useSignOut`). 다른 화면은 그 자리에 둔다.
  *
  * `<details>` 가 아니라 상태로 여닫는다. 헤더는 화면을 옮겨도 남아 있어서, `<details>` 는
  * `마이페이지` 를 눌러 이동한 뒤에도 열린 채로 남는다. 바깥을 누르거나 Esc 를 눌러도 닫는다.
  */
 export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
+  const { signOut, pending } = useSignOut();
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,19 +58,7 @@ export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: Acc
     myPageActive && 'font-semibold',
   );
 
-  if (!adminOrigin) {
-    return (
-      <Link
-        href={myPageHref}
-        aria-current={myPageActive ? 'page' : undefined}
-        className={labelClass}
-      >
-        {label}
-      </Link>
-    );
-  }
-
-  const itemClass = 'block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50';
+  const itemClass = 'block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50';
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -96,16 +87,32 @@ export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: Acc
               마이페이지
             </Link>
           </li>
+          {adminOrigin ? (
+            <li role="none">
+              {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. 누르면 웹 로그인을 들고 간다(`adminHandoff`). */}
+              <a
+                role="menuitem"
+                href={adminOrigin}
+                onClick={onAdminLinkClick(adminOrigin)}
+                className={itemClass}
+              >
+                어드민
+              </a>
+            </li>
+          ) : null}
           <li role="none">
-            {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. 누르면 웹 로그인을 들고 간다(`adminHandoff`). */}
-            <a
+            <button
+              type="button"
               role="menuitem"
-              href={adminOrigin}
-              onClick={onAdminLinkClick(adminOrigin)}
+              disabled={pending}
+              onClick={() => {
+                setOpen(false);
+                void signOut(myPageActive ? '/' : undefined);
+              }}
               className={itemClass}
             >
-              어드민
-            </a>
+              로그아웃
+            </button>
           </li>
         </ul>
       ) : null}
