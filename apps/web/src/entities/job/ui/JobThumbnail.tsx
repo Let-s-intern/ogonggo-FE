@@ -1,7 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { cn } from '@ogonggo/ui';
+import {
+  getLogoMeasure,
+  getServerLogoMeasure,
+  subscribeLogoMeasure,
+  type LogoMeasure,
+} from '../model/logo-bounds';
 import { CompanyLogo, type LogoBalance } from './CompanyLogo';
 
 /**
@@ -38,6 +44,43 @@ function judgeCover(img: HTMLImageElement): CoverState {
   return width >= MIN_PHOTO_WIDTH && width / height >= MIN_PHOTO_ASPECT ? 'photo' : 'logo';
 }
 
+/**
+ * 크기로는 사진인데 실은 가로로 긴 로고인 커버를 가르는 기준. 무림(528x188)·피유코어(3130x1502)
+ * 로고가 사진으로 통과해 8:5 박스를 꽉 채우고 양옆이 잘렸다(2026-10-21).
+ *
+ * 여백을 잰 범위(`logo-bounds.ts`)가 한 축에서 양쪽 모두 `MIN_MARGIN` 이상 떨어져 있으면 배경 위에
+ * 그린 그림이다. 그런데 꽉 채웠을 때 보이는 범위 밖으로 `CROP_TOLERANCE` 넘게 나가면 로고로 본다.
+ * 배포 커버 147장으로 맞췄다 — 위 둘이 로고, 쿠팡·삼양·GS글로벌·현대자동차·이랜드이츠도 로고로
+ * 잡히고, 여백 안에 그림이 들어오는 og 배너(NHN, 스마일게이트)와 사진은 그대로 남는다. 양쪽
+ * 여백을 함께 보지 않으면 모서리 한두 줄이 배경색과 같은 사진(코스맥스, YG)이 로고로 잡힌다.
+ *
+ * 픽셀을 못 읽는 호스트는 범위가 이미지 전체라 여백이 없고, 전처럼 사진으로 남는다.
+ */
+const MIN_MARGIN = 0.03;
+const CROP_TOLERANCE = 0.02;
+const BOX_ASPECT = 8 / 5;
+
+function cropsLogo(measure: LogoMeasure): boolean {
+  if (measure.status !== 'ready') {
+    return false;
+  }
+  const { naturalWidth: width, naturalHeight: height, bounds } = measure;
+  const hasMargin = (start: number, size: number, side: number) =>
+    Math.min(start, side - start - size) >= side * MIN_MARGIN;
+  if (!hasMargin(bounds.x, bounds.width, width) && !hasMargin(bounds.y, bounds.height, height)) {
+    return false;
+  }
+  const aspect = width / height;
+  const overflows = (start: number, size: number, side: number, visible: number) => {
+    const cut = ((1 - visible) / 2 - CROP_TOLERANCE) * side;
+    return start < cut || start + size > side - cut;
+  };
+  return (
+    overflows(bounds.x, bounds.width, width, Math.min(1, BOX_ASPECT / aspect)) ||
+    overflows(bounds.y, bounds.height, height, Math.min(1, aspect / BOX_ASPECT))
+  );
+}
+
 const BOX_CLASS =
   'relative aspect-[8/5] w-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow group-hover:shadow-lg';
 
@@ -56,7 +99,8 @@ export interface JobThumbnailProps {
  * 떨어진다. 여기서는 그 사이에 회사 로고가 한 단계 더 있다.
  *
  * 썸네일이 작거나 정사각형에 가까우면 사진이 아니라 로고로 보고 로고 규칙으로 작게 그린다
- * (`MIN_PHOTO_WIDTH`). 그래서 불러온 뒤에야 어느 쪽인지 정해진다.
+ * (`MIN_PHOTO_WIDTH`). 크기로 사진이어도 꽉 채우면 잘리는 가로 로고면 로고로 그린다(`cropsLogo`) —
+ * 이건 여백을 잰 뒤에 정해진다. 그래서 불러온 뒤에야 어느 쪽인지 정해진다.
  *
  * 서버가 그린 이미지는 하이드레이션 전에 이미 뜨거나 실패할 수 있고, 그러면 `onLoad`·`onError` 가
  * 불리지 않는다. 마운트 직후 `complete` 면 한 번 더 판정한다 — 수집된 주소에 `%PUBLIC_URL%` 처럼
@@ -84,7 +128,22 @@ export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbna
     }
   }, [coverImageUrl]);
 
-  if (coverImageUrl && (cover === 'pending' || cover === 'photo')) {
+  // 크기로 사진이라고 본 커버만 여백을 잰다. 재는 동안은 판정 전과 같이 숨긴다.
+  const measureUrl = cover === 'photo' ? coverImageUrl : undefined;
+  const subscribe = useCallback(
+    (notify: () => void) => (measureUrl ? subscribeLogoMeasure(measureUrl, notify) : () => {}),
+    [measureUrl],
+  );
+  const measure = useSyncExternalStore(
+    subscribe,
+    () => (measureUrl ? getLogoMeasure(measureUrl) : getServerLogoMeasure()),
+    getServerLogoMeasure,
+  );
+  const croppedLogo = cropsLogo(measure);
+  const shown: CoverState =
+    cover === 'photo' && measure.status === 'pending' ? 'pending' : croppedLogo ? 'logo' : cover;
+
+  if (coverImageUrl && (shown === 'pending' || shown === 'photo')) {
     return (
       <div className={BOX_CLASS}>
         <img
@@ -94,7 +153,7 @@ export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbna
           // 사진인지 가리기 전에는 숨긴다. 로고로 판정되면 크게 번쩍였다가 작아진다.
           className={cn(
             'absolute inset-0 h-full w-full object-cover',
-            cover === 'pending' && 'opacity-0',
+            shown === 'pending' && 'opacity-0',
           )}
           onLoad={(event) => setCover(judgeCover(event.currentTarget))}
           onError={() => setCover('failed')}
@@ -107,8 +166,11 @@ export function JobThumbnail({ companyName, coverImageUrl, logoUrl }: JobThumbna
     <div className={BOX_CLASS}>
       <CompanyLogo
         companyName={companyName}
-        // 썸네일이 로고였으면 진짜 로고를 먼저 쓰고, 없으면 그 썸네일을 로고처럼 그린다.
-        logoUrl={cover === 'logo' ? (logoUrl ?? coverImageUrl) : logoUrl}
+        // 썸네일이 로고였으면 진짜 로고를 먼저 쓰고, 없으면 그 썸네일을 로고처럼 그린다. 잘리는 가로
+        // 로고는 폭 300 이상이라 그 썸네일을 그대로 쓴다 — 피유코어의 진짜 로고는 32x32 파비콘이다.
+        logoUrl={
+          croppedLogo ? coverImageUrl : cover === 'logo' ? (logoUrl ?? coverImageUrl) : logoUrl
+        }
         className="absolute inset-0 h-full w-full p-0 shadow-none"
         balance={CARD_LOGO_BALANCE}
       />
