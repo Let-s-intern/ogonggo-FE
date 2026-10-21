@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { track } from '@/shared/analytics/dataLayer';
 import {
   letsCareerSignInErrorMessage,
@@ -31,6 +31,12 @@ export function UserSignInPanel({ returnPath, initialError = null }: UserSignInP
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
+
+  // 렛츠커리어 계정으로 처음 들어오면 교환 뒤 커리어 정보 화면으로 간다. 그 화면을 미리 받아 둔다(운영 빌드에서만
+  // 동작한다).
+  useEffect(() => {
+    router.prefetch('/signup/career');
+  }, [router]);
 
   const handleSubmit = async (credentials: { email: string; password: string }) => {
     setPending(true);

@@ -23,7 +23,13 @@ export type MyAccountState =
  */
 let pending: Promise<MyAccountResponse | null> | null = null;
 
-function fetchAccount(): Promise<MyAccountResponse | null> {
+/**
+ * 로그인한 계정을 한 번만 읽는다. 진행 중인 요청이 있으면 그것을 돌려준다. 실패하면 거부한다.
+ *
+ * 훅 밖에서도 부른다 — 토큰 교환 직후 미리 시작해 두면 커리어 정보 화면이 이동하는 동안 받은 응답을 그대로
+ * 쓴다(`shared/api/letsCareerSignIn.ts`, `views/signup/ui/CareerSignUpPage.tsx`).
+ */
+export function readMyAccount(): Promise<MyAccountResponse | null> {
   pending ??= (getMyAccount() as unknown as Promise<SuccessResponseMyAccountResponse>)
     .then((body) => body.data ?? null)
     .catch(() => {
@@ -55,7 +61,7 @@ export function useMyAccount(): MyAccountState {
         return;
       }
       setState({ kind: 'loading' });
-      fetchAccount()
+      readMyAccount()
         .then((account) => {
           if (active) {
             setState(account ? { kind: 'ready', account } : { kind: 'error' });

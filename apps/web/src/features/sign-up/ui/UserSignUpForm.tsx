@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { Button, CheckAllGroup, Input } from '@ogonggo/ui';
 import { track } from '@/shared/analytics/dataLayer';
 import { LetsCareerApiError, signUp } from '@/shared/api/letscareer';
@@ -104,6 +104,11 @@ export function UserSignUpForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [openModal, setOpenModal] = useState<'privacy' | 'marketing' | null>(null);
+
+  // 가입하면 커리어 정보 화면으로 간다. 입력하는 동안 그 화면을 미리 받아 둔다(운영 빌드에서만 동작한다).
+  useEffect(() => {
+    router.prefetch('/signup/career');
+  }, [router]);
 
   const filled = Object.values(values).every((value) => value.trim() !== '');
   const agreed = REQUIRED_AGREEMENTS.every((agreement) => agreements.includes(agreement));
