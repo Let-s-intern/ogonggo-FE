@@ -6,7 +6,7 @@ import { Button, Callout, cn } from '@ogonggo/ui';
 import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
 import { useCompanyPostDraft } from '@/shared/lib/useCompanyPostDraft';
 import { DraftRestoreCallout } from '@/shared/ui/DraftRestoreCallout';
-import { FloatingFormActions } from '@/shared/ui/FloatingFormActions';
+import { FloatingActionBar } from '@/shared/ui/FloatingActionBar';
 import { FormSection } from '@/shared/ui/FormSection';
 import { companyPostCopy } from '@/widgets/company-posts';
 import { createJob, fetchMyJob, publishJob, replaceJob } from '../lib/api';
@@ -191,7 +191,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
 
   return (
     <form
-      className="flex flex-col gap-4 pb-28 md:pb-0"
+      className="flex flex-col gap-4 pb-36 md:pb-0"
       onSubmit={(event) => {
         event.preventDefault();
         void save(true);
@@ -271,7 +271,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         </FormSection>
       </div>
 
-      <FloatingFormActions
+      <FloatingActionBar
         error={formError}
         status={
           draft.savedAt
@@ -291,7 +291,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         <Button type="submit" disabled={pending} className="flex-[2] md:w-44 md:flex-none">
           공고 등록
         </Button>
-      </FloatingFormActions>
+      </FloatingActionBar>
     </form>
   );
 }
