@@ -42,6 +42,8 @@ export function AuthHandoffPage() {
 
     const [letsCareerAccessToken, letsCareerRefreshToken] = (params.get('__sso') ?? '').split('|');
     if (letsCareerAccessToken && letsCareerRefreshToken) {
+      // 처음 들어오면 교환 뒤 커리어 정보 화면으로 간다. 교환하는 동안 그 화면을 받아 둔다.
+      router.prefetch('/signup/career');
       exchangeLetsCareerToken(letsCareerAccessToken, letsCareerRefreshToken)
         .then(({ isNewUser }) => router.replace(pathAfterLetsCareerSignIn(isNewUser, null)))
         .catch(() => router.replace('/'));

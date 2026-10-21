@@ -2,13 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import {
-  type MyProfileResponse,
-  type SuccessResponseMyAccountResponse,
-  getMyAccount,
-} from '@ogonggo/api';
-import { CareerInfoForm } from '@/features/sign-up';
+import type { MyProfileResponse } from '@ogonggo/api';
+import { CareerInfoForm, CareerInfoFormSkeleton } from '@/features/sign-up';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { readMyAccount } from '@/shared/api/useMyAccount';
 import { takeReturnPath } from '@/shared/lib/returnPath';
 import { SignUpLayout } from './SignUpLayout';
 
@@ -29,7 +26,7 @@ const SIGN_IN_PATH = '/login?redirect=/signup/career';
  * 저장소에만 있어 서버에서는 알 수 없으므로 첫 렌더 뒤에 본다.
  *
  * 지금 저장된 값을 읽어 폼을 채운다. 읽지 못하면 폼을 열지 않는다 — 빈 폼으로 저장하면 렛츠커리어에서 복사해 온
- * 값을 지운다.
+ * 값을 지운다. 계정은 `readMyAccount` 로 읽는다. 첫 교환 직후 이미 시작해 둔 요청이 있으면 그 응답을 쓴다.
  */
 export function CareerSignUpPage() {
   const router = useRouter();
@@ -41,17 +38,20 @@ export function CareerSignUpPage() {
       return;
     }
     let active = true;
-    // 생성 타입은 `{ data, status }` 로 감싼 모양이지만 httpClient 는 본문을 그대로 돌려준다. 로그인과 같다.
-    (getMyAccount() as unknown as Promise<SuccessResponseMyAccountResponse>)
-      .then((body) => {
+    readMyAccount()
+      .then((account) => {
         if (!active) {
           return;
         }
-        if (body.data?.role !== 'USER') {
+        if (!account) {
+          setState({ kind: 'error' });
+          return;
+        }
+        if (account.role !== 'USER') {
           router.replace('/');
           return;
         }
-        setState({ kind: 'ready', profile: body.data.profile ?? {} });
+        setState({ kind: 'ready', profile: account.profile ?? {} });
       })
       .catch(() => {
         // 401 이고 재발급도 실패했으면 `shared/api/reissue.ts` 가 이미 로그인 화면으로 보냈다.
@@ -67,9 +67,7 @@ export function CareerSignUpPage() {
   return (
     <SignUpLayout audience="user" eyebrow="정보입력" title="커리어 정보를 입력해 주세요. (선택)">
       {state.kind === 'ready' ? <CareerInfoForm initialProfile={state.profile} /> : null}
-      {state.kind === 'loading' ? (
-        <p className="py-20 text-center text-sm text-gray-400">불러오는 중...</p>
-      ) : null}
+      {state.kind === 'loading' ? <CareerInfoFormSkeleton /> : null}
       {state.kind === 'error' ? (
         <div className="flex flex-col items-center gap-4 py-20">
           <p role="alert" className="text-sm text-error">

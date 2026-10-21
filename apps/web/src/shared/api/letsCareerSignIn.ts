@@ -8,6 +8,7 @@ import {
   parseLetsCareerRedirect,
   ssoAuthenticate,
 } from './letscareer';
+import { readMyAccount } from './useMyAccount';
 
 /**
  * 일반 회원 로그인의 뒷부분. 렛츠커리어 토큰을 오공고 토큰으로 바꾸고 저장한다.
@@ -46,6 +47,11 @@ export async function exchangeLetsCareerToken(
       accessToken: letsCareerAccessToken,
       refreshToken: letsCareerRefreshToken,
     });
+  }
+  if (body.data.isNewUser) {
+    // 곧 커리어 정보 화면으로 가고, 그 화면은 이 계정을 읽어야 폼을 연다. 이동하는 동안 받아 두도록 지금 시작한다.
+    // 실패는 그 화면이 다시 읽으며 다룬다.
+    readMyAccount().catch(() => {});
   }
   return { isNewUser: body.data.isNewUser };
 }
