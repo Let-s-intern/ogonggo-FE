@@ -6,6 +6,7 @@ import { SharePostingButton, type SharePosting } from '@/features/share-posting'
 import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLayer';
 import { withApplyUtm } from '@/shared/lib/applyUtm';
 import { ApplyLink } from './ApplyLink';
+import { SourceClosedGate } from './SourceClosedGate';
 
 export interface ApplyCtaProps {
   /** 지원·신청 링크. 없으면 버튼 자체를 그리지 않고 북마크 칸만 남는다. */
@@ -32,6 +33,11 @@ export interface ApplyCtaProps {
   scrapParams?: DataLayerParams;
   /** 넘기면 신청 버튼 줄 아래에 `공고 공유하기` 가 붙는다(`features/share-posting`). */
   share?: SharePosting;
+  /**
+   * 넘기면 화면이 뜬 뒤 원문이 남아 있는지 확인하고, 없어졌으면 버튼을 회색 `closedLabel` 로 바꾼다
+   * (`SourceClosedGate`). 마감일이 없는 채용공고만 넘긴다.
+   */
+  sourceCheck?: { path: string; closedLabel: string };
 }
 
 /**
@@ -60,35 +66,43 @@ export function ApplyCta({
   applyEvent,
   scrapParams,
   share,
+  sourceCheck,
 }: ApplyCtaProps) {
   const outboundUrl = href ? withApplyUtm(href, kind) : undefined;
+  const applyButton = outboundUrl ? (
+    <Button asChild className="flex-1">
+      <ApplyLink
+        kind={kind}
+        contentId={id}
+        href={outboundUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        events={
+          applyEvent
+            ? [
+                {
+                  event: applyEvent.event,
+                  params: { ...applyEvent.params, outbound_url: outboundUrl },
+                },
+              ]
+            : []
+        }
+      >
+        {label}
+      </ApplyLink>
+    </Button>
+  ) : null;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         {action ??
-          (outboundUrl ? (
-            <Button asChild className="flex-1">
-              <ApplyLink
-                kind={kind}
-                contentId={id}
-                href={outboundUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                events={
-                  applyEvent
-                    ? [
-                        {
-                          event: applyEvent.event,
-                          params: { ...applyEvent.params, outbound_url: outboundUrl },
-                        },
-                      ]
-                    : []
-                }
-              >
-                {label}
-              </ApplyLink>
-            </Button>
-          ) : null)}
+          (applyButton && sourceCheck ? (
+            <SourceClosedGate checkPath={sourceCheck.path} closedLabel={sourceCheck.closedLabel}>
+              {applyButton}
+            </SourceClosedGate>
+          ) : (
+            applyButton
+          ))}
         <BookmarkCountButton
           kind={kind}
           id={id}
