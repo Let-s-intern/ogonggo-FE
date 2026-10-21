@@ -32,6 +32,10 @@ export interface BootcampCardProps {
  * 사진으로 볼지 로고로 볼지 같은 기준으로 가르고, 로고는 같은 넓이로 맞춰 그린다. 대표 이미지가
  * 없는 고용24 과정은 운영 회사 로고(`logoUrl`)다. 두 카드가 같은 그리드·같은 지면에 놓이므로
  * 규칙이 갈리면 로고 크기가 카드마다 달라 보인다(2026-10-02, 부트캠프 로고만 제각각 컸다).
+ *
+ * 그 로고도 대표 이미지 자리에 넣어 같은 판정을 받게 한다. 고용24 의 로고 칸에는 홍보 배너가
+ * 자주 들어온다 — 양산직업학교 940x540(2026-10-21). 로고로 그리면 큰 배너가 작은 띠가 된다.
+ * 진짜 로고는 작거나 정사각형에 가까워 판정에서 로고로 돌아간다.
  */
 export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
@@ -60,7 +64,7 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
       >
         <JobThumbnail
           companyName={bootcamp.companyName}
-          coverImageUrl={bootcamp.representativeImageUrl}
+          coverImageUrl={bootcamp.representativeImageUrl ?? bootcamp.logoUrl}
           logoUrl={bootcamp.logoUrl}
         />
         <p className="flex items-center justify-between gap-2 text-xs text-gray-400">

@@ -74,7 +74,7 @@ export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsPr
               <div className="w-24 shrink-0">
                 <JobThumbnail
                   companyName={bootcamp.companyName}
-                  coverImageUrl={bootcamp.representativeImageUrl}
+                  coverImageUrl={bootcamp.representativeImageUrl ?? bootcamp.logoUrl}
                   logoUrl={bootcamp.logoUrl}
                 />
               </div>
