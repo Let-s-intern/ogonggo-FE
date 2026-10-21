@@ -4,6 +4,7 @@ import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
+import { closedLabel, isAlwaysOpen } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
@@ -106,6 +107,12 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         // 상시채용은 마감일이 없어 캘린더에 넣을 날이 없다.
         recruitmentEndAt: job.recruitmentType === 'ALWAYS_OPEN' ? undefined : job.recruitmentEndAt,
       }}
+      // 마감일이 없는 공고는 원문이 내려가도 마감으로 바뀌지 않아 원문을 직접 확인한다(이슈 #479).
+      sourceCheck={
+        job.sourceUrl && isAlwaysOpen(job.recruitmentType, job.recruitmentEndAt)
+          ? { path: `/source-check/${job.id}`, closedLabel: closedLabel('job') }
+          : undefined
+      }
     />
   );
 
