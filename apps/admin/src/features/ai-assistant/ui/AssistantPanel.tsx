@@ -1,6 +1,6 @@
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { Button, Callout, Textarea, cn } from '@ogonggo/ui';
-import { useAssistantFavorites } from '../model/favorites';
+import { FAVORITES } from '../model/favorites';
 import { useAssistantChat } from '../model/useAssistantChat';
 
 const OPEN_STORAGE_KEY = 'ogonggo.admin.assistantOpen';
@@ -51,8 +51,6 @@ interface AssistantPanelProps {
 export function AssistantPanel({ open, onOpenChange }: AssistantPanelProps) {
   const [draft, setDraft] = useState('');
   const { lines, error, isBusy, send, stop, reset } = useAssistantChat();
-  const { favorites, add, remove, resetToDefaults } = useAssistantFavorites();
-  const [isEditingFavorites, setIsEditingFavorites] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,10 +137,22 @@ export function AssistantPanel({ open, onOpenChange }: AssistantPanelProps) {
       </div>
 
       <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-        {lines.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            무엇이든 물어보세요. 자주 하는 일은 아래 즐겨찾기를 누르면 바로 실행됩니다.
-          </p>
+        {/* 즐겨찾기. 패널을 처음 열어 아무것도 묻지 않았을 때만 보이고, 입력을 시작하면 숨는다. */}
+        {lines.length === 0 && !draft.trim() ? (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500">자주 하는 일은 눌러서 바로 실행할 수 있습니다.</p>
+            {FAVORITES.map((favorite) => (
+              <button
+                key={favorite.label}
+                type="button"
+                title={favorite.prompt}
+                onClick={() => submit(favorite.prompt)}
+                className="block w-full rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-00"
+              >
+                {favorite.label}
+              </button>
+            ))}
+          </div>
         ) : null}
 
         {lines.map((line, index) => (
@@ -165,66 +175,6 @@ export function AssistantPanel({ open, onOpenChange }: AssistantPanelProps) {
       </div>
 
       <form onSubmit={onSubmit} className="border-t border-gray-200 p-4">
-        {/*
-          즐겨찾기. 대화 중에도 늘 보이고 누르면 바로 보낸다. 편집 중에는 누르면 지운다.
-          지금 입력한 질문은 `+ 추가` 로 즐겨찾기에 넣는다.
-        */}
-        <div className="flex items-center justify-between pb-2">
-          <p className="text-xs font-medium text-gray-500">즐겨찾기</p>
-          <div className="flex items-center gap-2 text-xs">
-            {isEditingFavorites ? (
-              <button
-                type="button"
-                onClick={resetToDefaults}
-                className="text-gray-500 hover:text-gray-900"
-              >
-                기본값으로
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setIsEditingFavorites((editing) => !editing)}
-              className="text-gray-500 hover:text-gray-900"
-            >
-              {isEditingFavorites ? '편집 끝' : '편집'}
-            </button>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-1.5 pb-3">
-          {favorites.map((favorite) => (
-            <button
-              key={favorite.prompt}
-              type="button"
-              title={favorite.prompt}
-              disabled={!isEditingFavorites && isBusy}
-              onClick={() =>
-                isEditingFavorites ? remove(favorite.prompt) : submit(favorite.prompt)
-              }
-              className={cn(
-                'rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50',
-                isEditingFavorites
-                  ? 'border-red-200 text-red-600 hover:bg-red-50'
-                  : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-00 hover:text-blue-700',
-              )}
-            >
-              {favorite.label}
-              {isEditingFavorites ? <span className="pl-1">지우기</span> : null}
-            </button>
-          ))}
-          <button
-            type="button"
-            disabled={!draft.trim()}
-            title={
-              draft.trim()
-                ? '지금 입력한 질문을 즐겨찾기에 넣습니다'
-                : '질문을 입력하면 넣을 수 있습니다'
-            }
-            onClick={() => add(draft)}
-            className="rounded-full border border-dashed border-gray-300 px-3 py-1 text-xs text-gray-500 transition-colors enabled:hover:border-blue-300 enabled:hover:text-blue-700 disabled:opacity-50"
-          >
-            + 추가
-          </button>
-        </div>
         <Textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
