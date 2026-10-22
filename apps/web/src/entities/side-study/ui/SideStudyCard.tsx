@@ -71,10 +71,13 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
           <span className="truncate text-xs text-gray-500">{meta}</span>
         </p>
 
-        {/* 데스크톱 썸네일. 위쪽을 어둡게 덮어 흰 글씨가 사진·로고 위에서도 읽히게 한다. */}
+        {/*
+          데스크톱 썸네일. 시안은 Gray 100 바탕에 검정 1→0 세로 그라데이션을 20% 로 덮는다(시안 픽셀:
+          맨 위 #C3C4C6, 맨 아래 #F3F4F6). 흰 글씨가 사진·로고 위에서도 읽히게 하는 막이다.
+        */}
         <div className="relative hidden aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 md:block">
           <Thumbnail src={sideStudy.thumbnailUrl} alt="" className="h-full w-full" />
-          <div className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/20 to-transparent" />
           <p className="absolute top-3 right-10 left-3 flex items-center gap-2">
             <SideStudyBadge sideStudy={sideStudy} />
             <span className="truncate text-xs font-medium text-white">{meta}</span>
