@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import { Logo } from './Logo';
 
@@ -12,6 +12,11 @@ export interface ThumbnailProps {
   src?: ThumbnailSrc;
   alt: string;
   className?: string;
+  /**
+   * 오공고 로고 대신 그릴 자리. 시안이 빈 상자를 따로 정한 곳만 넘긴다 — 사이드·스터디 목록
+   * 카드의 글 썸네일이 Gray 100 상자다(`docs/asset/v14 사이드스터디 디자인 업데이트`).
+   */
+  fallback?: ReactNode;
 }
 
 /**
@@ -50,7 +55,7 @@ function ThumbnailFallback({ className }: { className?: string }) {
  * 마운트 직후 `complete && naturalWidth === 0` 을 한 번 더 본다
  * (`.claude/tasks/memos/메모-썸네일-SSR-깨진이미지-폴백-2026-09-21.md`).
  */
-export function Thumbnail({ src, alt, className }: ThumbnailProps) {
+export function Thumbnail({ src, alt, className, fallback }: ThumbnailProps) {
   // 실패를 주소로 기록한다. `onError` 와 마운트 직후 확인이 같은 실패를 둘 다 잡아도 한 번이다.
   const [failed, setFailed] = useState<readonly string[]>([]);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -67,7 +72,7 @@ export function Thumbnail({ src, alt, className }: ThumbnailProps) {
   }, [current]);
 
   if (!current) {
-    return <ThumbnailFallback className={className} />;
+    return fallback ?? <ThumbnailFallback className={className} />;
   }
 
   return (

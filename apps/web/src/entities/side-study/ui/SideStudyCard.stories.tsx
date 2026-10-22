@@ -28,13 +28,13 @@ export const Default: Story = {};
 
 /**
  * 첫 첨부 사진이 있는 글. 맨 위 8:5 상자(모바일은 오른쪽 작은 상자)를 사진이 채운다. 사진이 없는
- * `Default` 는 같은 상자에 오공고 로고가 뜬다. 스토리북은 `/icon-192.png` 하나만 붙여 그것을 사진 자리에 쓴다.
+ * `Default` 는 같은 상자가 Gray 100 으로 빈다. 스토리북은 `/icon-192.png` 하나만 붙여 그것을 사진 자리에 쓴다.
  */
 export const WithThumbnail: Story = {
   args: { sideStudy: { ...SIDE_STUDY_MOCK, thumbnailUrl: '/icon-192.png' } },
 };
 
-/** 사진 주소가 깨진 글. `Thumbnail` 이 오공고 로고로 떨어져 사진이 없는 글과 같아진다. */
+/** 사진 주소가 깨진 글. 빈 Gray 100 상자로 떨어져 사진이 없는 글과 같아진다. */
 export const BrokenThumbnail: Story = {
   args: { sideStudy: { ...SIDE_STUDY_MOCK, thumbnailUrl: '/no-such-image.png' } },
 };

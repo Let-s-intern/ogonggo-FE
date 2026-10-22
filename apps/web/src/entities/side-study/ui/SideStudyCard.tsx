@@ -73,10 +73,10 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
 
         {/*
           데스크톱 썸네일. 시안은 Gray 100 바탕에 검정 1→0 세로 그라데이션을 20% 로 덮는다(시안 픽셀:
-          맨 위 #C3C4C6, 맨 아래 #F3F4F6). 흰 글씨가 사진·로고 위에서도 읽히게 하는 막이다.
+          맨 위 #C3C4C6, 맨 아래 #F3F4F6). 흰 글씨가 사진 위에서도 읽히게 하는 막이다.
         */}
         <div className="relative hidden aspect-[8/5] w-full overflow-hidden rounded-lg bg-gray-100 md:block">
-          <Thumbnail src={sideStudy.thumbnailUrl} alt="" className="h-full w-full" />
+          <PostThumbnail src={sideStudy.thumbnailUrl} />
           <div className="absolute inset-0 bg-linear-to-b from-black/20 to-transparent" />
           <p className="absolute top-3 right-10 left-3 flex items-center gap-2">
             <SideStudyBadge sideStudy={sideStudy} />
@@ -101,7 +101,7 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
           </div>
           {/* 모바일 썸네일. 데스크톱은 위의 큰 썸네일이 대신한다. */}
           <div className="h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-gray-100 md:hidden">
-            <Thumbnail src={sideStudy.thumbnailUrl} alt="" className="h-full w-full" />
+            <PostThumbnail src={sideStudy.thumbnailUrl} />
           </div>
         </div>
 
@@ -144,6 +144,21 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
     </ImpressionTracker>
   ) : (
     card
+  );
+}
+
+/**
+ * 글 썸네일. 사진이 없거나 주소가 깨지면 오공고 로고가 아니라 Gray 100 빈 상자다 — v14 시안이
+ * 이 자리를 그렇게 그렸고 사용자가 시안대로 하기로 했다(2026-10-22). 바탕색은 감싸는 상자가 준다.
+ */
+function PostThumbnail({ src }: { src?: string }) {
+  return (
+    <Thumbnail
+      src={src}
+      alt=""
+      className="h-full w-full"
+      fallback={<div className="h-full w-full" />}
+    />
   );
 }
 
