@@ -40,17 +40,20 @@ async function fetchSideStudyPage({
   );
 }
 
-/** `사이드스터디.png`의 목록 본문 — 컨트롤 한 줄 + 4열 카드 그리드 + 번호 페이지네이션. */
+/**
+ * 목록 본문 — 컨트롤 한 줄 + 카드 + 번호 페이지네이션. 데스크톱은 4열 카드 그리드, 모바일은
+ * 항목 사이에 선을 긋는 한 줄 목록이다(`docs/asset/v14 사이드스터디 디자인 업데이트`).
+ */
 export async function SideStudyList(query: SideStudyListProps) {
   const { items, pageInfo } = await fetchSideStudyPage(query);
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-6 md:gap-10">
       <SideStudyListControls query={query} />
       {items.length === 0 ? (
         <p className="py-16 text-center text-sm text-gray-500">모집 중인 글이 없습니다.</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
+        <ul className="flex flex-col divide-y divide-gray-200 border-b border-gray-200 md:grid md:grid-cols-4 md:gap-5 md:divide-y-0 md:border-b-0">
           {items.map((sideStudy, index) => (
             <li key={sideStudy.id}>
               <SideStudyCard

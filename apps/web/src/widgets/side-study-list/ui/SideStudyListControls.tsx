@@ -25,12 +25,13 @@ export interface SideStudyListControlsProps {
  * 부트캠프 목록과 달리 오른쪽에 정렬 드롭다운도 `모집 중만` 토글도 없다 — 목업의 그 자리에는
  * `모집글 쓰기` 버튼이 있다(PRD 4.3).
  *
- * 탭 글자는 `BootcampListControls`와 같이 `MenuItem`이 그린다 — 현재 탭에 밑줄이 생기고,
- * 글자 크기만 `text-lg`로 덮어쓴다. 이유는 그쪽 주석에 적었다.
+ * 탭 글자는 `BootcampListControls`와 같이 `MenuItem`이 그린다. v14 시안
+ * (`docs/asset/v14 사이드스터디 디자인 업데이트`)은 밑줄 없이 현재 탭만 굵고 진하며 나머지는 옅은
+ * 회색이라, 그 셋을 여기서 덮어쓴다. 모바일은 `모집글 쓰기`가 탭 아래 왼쪽으로 내려간다.
  */
 export function SideStudyListControls({ query }: SideStudyListControlsProps) {
   return (
-    <div className="flex w-full flex-wrap items-center justify-between gap-4">
+    <div className="flex w-full flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
       <nav className="flex items-center gap-5" aria-label="모집글 종류">
         {SIDE_STUDY_TABS.map((tab) => (
           <Link
@@ -38,7 +39,14 @@ export function SideStudyListControls({ query }: SideStudyListControlsProps) {
             href={buildSideStudyListHref(query, { tab })}
             aria-current={tab === query.tab ? 'page' : undefined}
           >
-            <MenuItem state={tab === query.tab ? 'current' : 'default'} className="text-lg">
+            <MenuItem
+              state={tab === query.tab ? 'current' : 'default'}
+              className={
+                tab === query.tab
+                  ? 'border-transparent text-lg font-bold'
+                  : 'text-lg text-gray-400 hover:text-gray-600'
+              }
+            >
               {TAB_LABELS[tab]}
             </MenuItem>
           </Link>

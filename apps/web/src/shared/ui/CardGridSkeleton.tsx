@@ -15,13 +15,8 @@ export interface CardGridSkeletonProps {
    */
   columnsClass?: 'md:grid-cols-4' | 'md:grid-cols-4 lg:grid-cols-3';
   /**
-   * 카드 아래쪽에 해시태그·댓글·조회수 줄이 한 줄 더 있는지. 사이드·스터디 카드만 있다
-   * (`entities/side-study/ui/SideStudyCard.tsx`).
-   */
-  hasCardFooter?: boolean;
-  /**
-   * 테두리 안에 작성자 썸네일 줄이 맨 위에 있고 그 아래에 8:5 글 썸네일이 오는 카드인지.
-   * 사이드·스터디 카드가 그렇다(`entities/side-study/ui/SideStudyCard.tsx`).
+   * 사이드·스터디 카드인지(`entities/side-study/ui/SideStudyCard.tsx`). 데스크톱은 테두리 카드,
+   * 모바일은 오른쪽에 작은 썸네일이 붙는 한 줄 목록이라 다른 카드와 모양이 갈린다.
    */
   framed?: boolean;
 }
@@ -31,8 +26,8 @@ export interface CardGridSkeletonProps {
  * 공유해서(`entities/job/ui/JobCard.tsx`의 주석 참고) 한 벌로 셋 다 덮는다.
  *
  * 카드 한 장은 `aspect-[8/5]` 썸네일 + 메타 줄 + 회사명 줄 + 제목 두 줄이다. 사이드·스터디
- * (`framed`)만 v3에서 모양이 갈라졌다 — 48px 작성자 썸네일이 메타·닉네임 두 줄과 한 행을
- * 이루고, 그 아래에 8:5 글 썸네일, 제목 아래 모집 배지 줄이 하나 더 있다.
+ * (`framed`)는 v14 에서 모양이 갈라졌다 — 데스크톱은 테두리 안에 8:5 썸네일 → 제목 두 줄 →
+ * 모집 직무 → 구분선 아래 작성자 줄, 모바일은 선으로 나뉜 한 줄 목록이다.
  *
  * 카드 높이를 실제와 맞추는 기준은 한 장이 아니라 행이다 — `ul`이 그리드라 같은 행의 `li`는
  * 가장 높은 카드에 맞춰 늘어난다. 그래서 제목은 최대인 두 줄(40px)로 그린다. 한 행의 제목이
@@ -42,64 +37,60 @@ export function CardGridSkeleton({
   count,
   gapClass,
   columnsClass = 'md:grid-cols-4',
-  hasCardFooter = false,
   framed = false,
 }: CardGridSkeletonProps) {
   return (
-    <ul className={cn('grid grid-cols-2', columnsClass, gapClass)}>
-      {Array.from({ length: count }, (_, index) => (
-        <li
-          key={index}
-          className={cn(
-            'flex flex-col',
-            framed ? 'gap-2 rounded-lg border border-gray-100 p-4 md:gap-3' : 'gap-2',
-          )}
-        >
-          {framed ? (
-            <>
-              {/* 작성자 썸네일 48px + 그 오른쪽의 메타(16px)·닉네임(20px) 두 줄. 행 높이는
-                  썸네일이 정한다. 모바일은 카드처럼 40px 썸네일 아래로 두 줄을 내린다. */}
-              <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-3">
-                <div className="h-10 w-10 shrink-0 rounded-md bg-gray-100 md:h-12 md:w-12" />
-                <div className="flex w-full flex-col md:flex-1 md:gap-1">
-                  <div className="h-4 w-20 rounded bg-gray-100" />
-                  <div className="h-5 w-24 rounded bg-gray-100" />
+    <ul
+      className={
+        framed
+          ? 'flex flex-col divide-y divide-gray-200 border-b border-gray-200 md:grid md:grid-cols-4 md:gap-5 md:divide-y-0 md:border-b-0'
+          : cn('grid grid-cols-2', columnsClass, gapClass)
+      }
+    >
+      {Array.from({ length: count }, (_, index) =>
+        framed ? (
+          <li
+            key={index}
+            className="flex flex-col gap-3 px-4 py-6 md:rounded-2xl md:border md:border-gray-100 md:p-4"
+          >
+            {/* 모바일 첫 줄 — 배지·메타. 데스크톱은 이 줄이 썸네일 위에 겹친다. */}
+            <div className="h-6 w-32 rounded bg-gray-100 md:hidden" />
+            <div className="hidden aspect-[8/5] w-full rounded-lg bg-gray-100 md:block" />
+            <div className="flex items-start gap-4 md:flex-col md:gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-3 md:w-full">
+                {/* 제목 — 모바일 세 줄(60px), 데스크톱 두 줄(48px). */}
+                <div className="flex h-15 flex-col justify-between md:h-12">
+                  <div className="h-4 rounded bg-gray-100" />
+                  <div className="h-4 rounded bg-gray-100 md:w-2/3" />
+                  <div className="h-4 w-2/3 rounded bg-gray-100 md:hidden" />
                 </div>
+                {/* 모집 직무 줄 */}
+                <div className="h-5 w-32 rounded bg-gray-100" />
               </div>
-              {/* 글 썸네일 — 카드 폭을 채우는 8:5 상자. 사진이 없는 글도 상자를 둔다. */}
-              <div className="aspect-[8/5] w-full rounded-lg bg-gray-100" />
-            </>
-          ) : (
-            <>
-              <div className="aspect-[8/5] w-full rounded-lg bg-gray-100 shadow-sm" />
-              {/* 메타 줄 — 배지가 들어 있어 20px이다(`text-xs`의 16px이 아니다). */}
-              <div className="h-5 w-full rounded bg-gray-100" />
-              <div className="h-5 w-24 rounded bg-gray-100" />
-            </>
-          )}
-          {/* 제목은 `line-clamp-2`라 최대 40px. 두 줄로 보이게 하되 바깥 높이는 40px에 묶어
-              둔다 — 막대 두 개를 그냥 쌓으면 카드가 8px 길어진다. */}
-          <div className="flex h-10 flex-col justify-between">
-            <div className="h-4 rounded bg-gray-100" />
-            <div className="h-4 w-2/3 rounded bg-gray-100" />
-          </div>
-          {/* 모집 배지 줄 — `Badge` 기본값(`px-2 py-1` + `text-xs`)이라 24px이다. 모바일은 카드가
-              모집 직무(16px)를 배지 위에 쌓는다. */}
-          {framed ? (
-            <div className="flex flex-col gap-1">
-              <div className="h-4 w-24 rounded bg-gray-100 md:hidden" />
-              <div className="h-6 w-20 rounded-sm bg-gray-100" />
+              <div className="h-20 w-28 shrink-0 rounded-xl bg-gray-100 md:hidden" />
             </div>
-          ) : null}
-          {/* 해시태그·댓글·조회수 줄. 모바일 카드는 해시태그와 숫자를 두 줄로 쌓는다. */}
-          {hasCardFooter ? (
-            <div className="flex flex-col gap-1">
-              <div className="h-4 w-full rounded bg-gray-100" />
-              <div className="h-4 w-16 rounded bg-gray-100 md:hidden" />
+            {/* 구분선 아래 작성자·댓글·조회수 줄 — 32px 원형 프로필이 높이를 정한다. */}
+            <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
+              <div className="h-8 w-8 shrink-0 rounded-full bg-gray-100" />
+              <div className="h-4 w-16 rounded bg-gray-100" />
+              <div className="ml-auto h-4 w-16 rounded bg-gray-100" />
             </div>
-          ) : null}
-        </li>
-      ))}
+          </li>
+        ) : (
+          <li key={index} className="flex flex-col gap-2">
+            <div className="aspect-[8/5] w-full rounded-lg bg-gray-100 shadow-sm" />
+            {/* 메타 줄 — 배지가 들어 있어 20px이다(`text-xs`의 16px이 아니다). */}
+            <div className="h-5 w-full rounded bg-gray-100" />
+            <div className="h-5 w-24 rounded bg-gray-100" />
+            {/* 제목은 `line-clamp-2`라 최대 40px. 두 줄로 보이게 하되 바깥 높이는 40px에 묶어
+                둔다 — 막대 두 개를 그냥 쌓으면 카드가 8px 길어진다. */}
+            <div className="flex h-10 flex-col justify-between">
+              <div className="h-4 rounded bg-gray-100" />
+              <div className="h-4 w-2/3 rounded bg-gray-100" />
+            </div>
+          </li>
+        ),
+      )}
     </ul>
   );
 }
