@@ -8,7 +8,8 @@ import {
 
 /**
  * 웹 푸시(FCM). 브라우저의 알림 권한을 받고, FCM 토큰을 발급해 백엔드에 저장한다
- * (`PUT /api/v1/users/me/fcm-token`). 토큰은 사용자당 하나다 — 저장하면 앞의 기기 토큰은 밀려난다.
+ * (`PUT /api/v1/users/me/fcm-token`). 토큰은 기기마다 따로 둔다 — 설치 UUID(`deviceId`) 로 기기를 가려, 한 계정이
+ * 여러 브라우저에서 알림을 받는다.
  *
  * **Firebase 웹 설정이 하나라도 비어 있으면 이 기능은 없는 것과 같다.** 토글도 그리지 않고 요청도
  * 보내지 않는다(`isPushAvailable`). 값은 `NEXT_PUBLIC_FIREBASE_*` 이고 `.env.example` 에 있다.
@@ -204,8 +205,8 @@ export async function enablePush(): Promise<'enabled' | 'blocked'> {
 }
 
 /**
- * 알림을 끈다. 백엔드에 토큰을 지우는 API 가 없어서 서버의 토큰은 남는다. 대신 이 브라우저의 구독을
- * 해지해, 남은 토큰으로 보내도 이 기기에는 닿지 않게 한다.
+ * 알림을 끈다. 백엔드에서 이 기기의 토큰을 지우고(`releasePushToken`) 이 브라우저의 구독도 해지한다. 지우기가
+ * 실패해 서버에 토큰이 남아도, 구독을 해지했으니 그 토큰으로 보내도 이 기기에는 닿지 않는다.
  */
 export async function disablePush(): Promise<void> {
   writeFlag(DISABLED_KEY, '1');
