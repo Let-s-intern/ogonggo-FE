@@ -8,6 +8,7 @@ import {
 import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { isMockEnabled } from '@/app/enableMocking';
+import { useReviewQueue } from '@/entities/review/api/useReviewQueue';
 import {
   ASSISTANT_CLOSED_WIDTH,
   ASSISTANT_OPEN_WIDTH,
@@ -39,6 +40,11 @@ function goToWeb(event: MouseEvent<HTMLAnchorElement>) {
 
 export function AdminLayout() {
   const [isAssistantOpen, setIsAssistantOpen] = useAssistantPanelOpen();
+  // 검수 대기 화면과 같은 쿼리를 쓴다. 판정을 저장하면 그 화면이 무효화하므로 숫자도 함께 바뀐다.
+  const { data: reviewQueue } = useReviewQueue();
+  const navCounts: Record<string, number | undefined> = {
+    '/ads/review': reviewQueue?.length,
+  };
 
   return (
     <div
@@ -88,7 +94,7 @@ export function AdminLayout() {
                       end={item.path === '/'}
                       className={({ isActive }) =>
                         cn(
-                          'block rounded-sm px-3 py-2 text-sm',
+                          'flex items-center justify-between rounded-sm px-3 py-2 text-sm',
                           isActive
                             ? 'bg-blue-50 font-medium text-blue-600'
                             : 'text-gray-700 hover:bg-gray-100',
@@ -96,6 +102,11 @@ export function AdminLayout() {
                       }
                     >
                       {item.label}
+                      {navCounts[item.path] ? (
+                        <span className="text-xs font-normal text-gray-400">
+                          {navCounts[item.path]}
+                        </span>
+                      ) : null}
                     </NavLink>
                   )}
                 </li>
