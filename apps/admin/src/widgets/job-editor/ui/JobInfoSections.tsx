@@ -3,6 +3,7 @@ import { enumChildren, enumLabel, enumOptions, enumParent } from '@ogonggo/api/s
 import { Checkbox, Field, Input, Select, Textarea } from '@ogonggo/ui';
 import type { JobEditorValues } from '../lib/formValues';
 import type { JobEditorErrors } from '../lib/validate';
+import { LogoSuggest } from './LogoSuggest';
 
 type StringKey = {
   [K in keyof JobEditorValues]: JobEditorValues[K] extends string ? K : never;
@@ -90,11 +91,11 @@ function ImagePreview({ url }: { url: string }) {
   );
 }
 
-/** 형식에 맞는 주소일 때만 미리보기를 그린다. 형식 확인은 `validate` 가 이미 했다. */
+/** 형식에 맞는 주소만 돌려준다(미리보기·로고 추천). 형식 확인은 `validate` 가 이미 했다. */
 function previewUrl(
   values: JobEditorValues,
   errors: JobEditorErrors,
-  key: 'logoUrl' | 'coverImageUrl',
+  key: 'logoUrl' | 'coverImageUrl' | 'sourceUrl',
 ) {
   const url = values[key].trim();
   return url !== '' && !errors[key] ? url : null;
@@ -104,6 +105,7 @@ export function CompanySection(props: JobInfoSectionProps) {
   const { values, errors } = props;
   const logo = previewUrl(values, errors, 'logoUrl');
   const cover = previewUrl(values, errors, 'coverImageUrl');
+  const source = previewUrl(values, errors, 'sourceUrl');
   return (
     <Section title="회사">
       <TextInput {...props} name="companyName" label="회사명" required />
@@ -111,6 +113,12 @@ export function CompanySection(props: JobInfoSectionProps) {
       <TextInput {...props} name="industry" label="산업" />
       <TextInput {...props} name="logoUrl" label="로고 주소" type="url" wide>
         {logo ? <ImagePreview key={logo} url={logo} /> : null}
+        <LogoSuggest
+          key={source ?? ''}
+          sourceUrl={source}
+          logoUrl={values.logoUrl}
+          onPick={(url) => props.onChange('logoUrl', url)}
+        />
       </TextInput>
       <TextInput {...props} name="coverImageUrl" label="커버 이미지 주소" type="url" wide>
         {cover ? <ImagePreview key={cover} url={cover} /> : null}

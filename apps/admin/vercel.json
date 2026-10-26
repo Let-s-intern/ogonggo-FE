@@ -26,6 +26,10 @@
       "destination": "/api/assistant"
     },
     {
+      "source": "/logo-api/candidates",
+      "destination": "/api/logo-candidates"
+    },
+    {
       "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
