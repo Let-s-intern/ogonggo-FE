@@ -131,6 +131,43 @@ const redashDevApi: Plugin = {
         throw error;
       }
     });
+
+    // 공고 편집 로고 추천의 `POST /logo-api/candidates`. 배포본은 `api/logo-candidates.ts` 가 받는다. 위와
+    // 같은 이유로 함수 파일의 `findLogoCandidates` 를 그대로 부르고, 호출자 검증은 하지 않는다.
+    server.middlewares.use('/logo-api/candidates', async (req, res) => {
+      const { LogoFailure, findLogoCandidates, parseLogoCandidatesInput } =
+        (await server.ssrLoadModule(
+          '/api/logo-candidates.ts',
+        )) as typeof import('./api/logo-candidates');
+      const send = (status: number, body: unknown) => {
+        res.statusCode = status;
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify(body));
+      };
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(chunk as Buffer);
+      }
+      let input = null;
+      try {
+        input = parseLogoCandidatesInput(JSON.parse(Buffer.concat(chunks).toString()));
+      } catch {
+        // 아래에서 400 으로 답한다.
+      }
+      if (!input) {
+        send(400, { status: 400, code: 'INVALID_REQUEST', message: '원문 주소가 없습니다.' });
+        return;
+      }
+      try {
+        send(200, await findLogoCandidates(input.url));
+      } catch (error) {
+        if (error instanceof LogoFailure) {
+          send(error.status, { status: error.status, code: error.code, message: error.message });
+          return;
+        }
+        throw error;
+      }
+    });
   },
 };
 
