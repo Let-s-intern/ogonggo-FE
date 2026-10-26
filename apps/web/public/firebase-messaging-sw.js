@@ -52,7 +52,7 @@ function clickDestination(fields) {
 //
 // 이 워커의 범위는 `/firebase-cloud-messaging-push-scope` 라 오공고 페이지를 제어하지 않고, `navigate` 는 제어하는 창에만
 // 된다. 그래서 `navigate` 가 거절되면 그 창에 메시지(`ogonggo:push-open`)를 보내 페이지가 스스로 옮기게 한다 — 듣는 쪽도
-// `PushOpenTracker` 다. 창을 앞으로 가져올 권한은 클릭 직후에만 있어 포커스를 먼저 한다.
+// `PushOpenTracker`(`src/features/notification-inbox/ui/PushOpenTracker.tsx`)다. 창을 앞으로 가져올 권한은 클릭 직후에만 있어 포커스를 먼저 한다.
 async function openDestination(destination) {
   if (destination.internal) {
     const windows = await clients.matchAll({ type: 'window', includeUncontrolled: true });

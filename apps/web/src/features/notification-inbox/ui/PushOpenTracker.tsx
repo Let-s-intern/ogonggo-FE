@@ -10,6 +10,8 @@ import { useReadNotification } from '../model/useNotifications';
  */
 const PUSH_NOTIFICATION_ID_PARAM = 'push_nid';
 const PUSH_BATCH_ID_PARAM = 'push_batch';
+/** 워커가 열린 창을 옮기라고 보내는 메시지의 `type`. 보내는 쪽은 `firebase-messaging-sw.js` 의 `openDestination` 이다. */
+const PUSH_OPEN_MESSAGE = 'ogonggo:push-open';
 
 /**
  * 화면에는 아무것도 그리지 않는다. 푸시를 눌러 열린 페이지에서 그 알림을 읽음 처리한다(PRD 범위 3의 4). 워커는
@@ -20,6 +22,10 @@ const PUSH_BATCH_ID_PARAM = 'push_batch';
  * `useSearchParams` 는 쓰지 않고 `window.location` 을 직접 읽는다. 그것을 부르면 이 컴포넌트가 든 화면 전체가
  * 클라이언트 렌더로 내려간다(`features/concern-comments/ui/ConcernComments.tsx` 주석). 주소는 `history.replaceState`
  * 로 바꾼다 — Next 라우터가 그 호출을 받아 자기 상태와 맞춘다.
+ *
+ * 오공고 창이 이미 열려 있을 때 푸시를 누르면 워커는 그 창을 앞으로 가져오고 옮기라는 메시지를 보낸다. 워커의 범위가
+ * 페이지를 제어하지 않아 워커가 직접 옮기지 못해서다(`firebase-messaging-sw.js` 주석). 받으면 주소 전체를 새로 연다 —
+ * 새로 열린 페이지에서 이 컴포넌트가 다시 마운트돼 쿼리를 읽는다.
  */
 export function PushOpenTracker() {
   const read = useReadNotification();
@@ -45,6 +51,20 @@ export function PushOpenTracker() {
     url.searchParams.delete(PUSH_BATCH_ID_PARAM);
     window.history.replaceState(null, '', url.href);
   }, [read]);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: unknown; url?: unknown } | null;
+      if (data?.type === PUSH_OPEN_MESSAGE && typeof data.url === 'string') {
+        window.location.assign(data.url);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, []);
 
   return null;
 }
