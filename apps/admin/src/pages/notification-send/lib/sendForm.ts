@@ -10,9 +10,18 @@ import type { CreateNotificationBatchRequest } from '@ogonggo/api/src/admin';
 
 export type SendTarget = CreateNotificationBatchRequest['targetType'];
 
+/** 회원 검색에서 고른 회원. 칩에 보일 이름만 함께 든다. */
+export interface SelectedMember {
+  userId: number;
+  /** 닉네임, 없으면 이름. 둘 다 없으면 비어 있다. */
+  label: string;
+}
+
 export interface SendFormValues {
   target: SendTarget;
-  /** 회원 ID 입력 원문. 쉼표·공백·줄바꿈으로 나눈다. */
+  /** 회원 검색에서 고른 회원(`MemberPickerModal`). */
+  selectedMembers: SelectedMember[];
+  /** 회원 ID 직접 입력 원문. 쉼표·공백·줄바꿈으로 나눈다. 검색으로 고른 회원과 합쳐 보낸다. */
   userIds: string;
   title: string;
   body: string;
@@ -28,6 +37,7 @@ export const USER_IDS_MAX = 1000;
 
 export const EMPTY_SEND_FORM: SendFormValues = {
   target: 'USER_IDS',
+  selectedMembers: [],
   userIds: '',
   title: '',
   body: '',
@@ -61,6 +71,17 @@ export function parseUserIds(raw: string): ParsedUserIds {
   return { count: tokens.length, invalid, ids, uniqueCount: new Set(ids).size };
 }
 
+/**
+ * 보낼 회원 ID. 검색으로 고른 회원 다음에 직접 입력한 ID 를 붙인다. 중복은 지우지 않는다 — 서버가 지우고, 1,000개
+ * 한도는 지우기 전 개수로 잰다. 직접 입력의 잘못된 조각은 빼고 센다(그 경우 검증이 먼저 막는다).
+ */
+export function targetUserIds(values: SendFormValues): number[] {
+  return [
+    ...values.selectedMembers.map((member) => member.userId),
+    ...parseUserIds(values.userIds).ids,
+  ];
+}
+
 /** 서버 `validateData` 와 같다. 스킴이 http·https 이고 host 가 있어야 한다. */
 export function isHttpUrl(raw: string): boolean {
   try {
@@ -77,14 +98,15 @@ export function validateSendForm(values: SendFormValues): SendFormErrors {
 
   if (values.target === 'USER_IDS') {
     const parsed = parseUserIds(values.userIds);
-    if (parsed.count === 0) {
-      errors.userIds = '회원 ID를 1개 이상 입력해 주세요.';
+    const total = values.selectedMembers.length + parsed.count;
+    if (total === 0) {
+      errors.userIds = '회원을 검색해 고르거나 회원 ID를 1개 이상 입력해 주세요.';
     } else if (parsed.invalid.length > 0) {
       const shown = parsed.invalid.slice(0, 5).join(', ');
       const more = parsed.invalid.length > 5 ? ` 외 ${parsed.invalid.length - 5}개` : '';
       errors.userIds = `회원 ID는 양의 정수만 입력할 수 있어요: ${shown}${more}`;
-    } else if (parsed.count > USER_IDS_MAX) {
-      errors.userIds = `한 번에 ${USER_IDS_MAX.toLocaleString('ko-KR')}개까지 입력할 수 있어요. 지금 ${parsed.count.toLocaleString('ko-KR')}개예요.`;
+    } else if (total > USER_IDS_MAX) {
+      errors.userIds = `한 번에 ${USER_IDS_MAX.toLocaleString('ko-KR')}명까지 보낼 수 있어요. 지금 ${total.toLocaleString('ko-KR')}명이에요.`;
     }
   }
 
@@ -125,5 +147,5 @@ export function toCreateRequest(values: SendFormValues): CreateNotificationBatch
   if (values.target === 'ALL') {
     return { targetType: 'ALL', ...common };
   }
-  return { targetType: 'USER_IDS', userIds: parseUserIds(values.userIds).ids, ...common };
+  return { targetType: 'USER_IDS', userIds: targetUserIds(values), ...common };
 }
