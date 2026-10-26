@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import {
   Button,
   Callout,
@@ -343,7 +344,23 @@ function TodayJobsEditor({ serverJobs }: { serverJobs: AdminTodayJobSummaryRespo
       header: '제목',
       render: (row) => (
         <>
-          {row.title}
+          {/* 어드민 채용공고 상세로 간다. 저장하지 않은 변경이 있으면 이 화면을 떠나면 사라지므로 먼저 묻는다. */}
+          <Link
+            to={`/content/jobs/${row.id}`}
+            onClick={(event) => {
+              if (
+                changeCount > 0 &&
+                !window.confirm(
+                  `저장하지 않은 변경 ${changeCount}건이 사라져요. 채용공고 상세로 이동할까요?`,
+                )
+              ) {
+                event.preventDefault();
+              }
+            }}
+            className="text-gray-900 hover:text-blue-600 hover:underline"
+          >
+            {row.title}
+          </Link>
           {isHiddenAsClosed(row) ? (
             <span className="block pt-1 text-xs text-orange-600">
               마감되어 사용자 홈에 나오지 않습니다.
