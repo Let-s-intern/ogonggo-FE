@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
 import { setAccessTokenProvider, setUnauthorizedHandler } from '@ogonggo/api';
 import { ToastProvider } from '@ogonggo/ui';
-import { PushOpenTracker } from '@/features/notification-inbox';
 import { PushTokenSync } from '@/features/push-notification';
 import { getAccessToken } from '@/shared/api/authTokens';
 import { handleUnauthorized } from '@/shared/api/reissue';
@@ -26,7 +25,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <ToastProvider>{children}</ToastProvider>
       <DropdownDismiss />
       <PushTokenSync />
-      <PushOpenTracker />
     </QueryClientProvider>
   );
 }

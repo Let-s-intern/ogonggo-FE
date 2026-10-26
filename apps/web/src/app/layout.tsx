@@ -9,6 +9,7 @@ import {
 import { PostHogIdentify } from '@/shared/analytics/PostHogIdentify';
 import { PageContextTracker } from '@/shared/analytics/PageContextTracker';
 import { SITE_ORIGIN } from '@/shared/config/site';
+import { PushOpenTracker } from '@/features/notification-inbox';
 import { MockGate } from './MockGate';
 import { AppProviders } from './providers';
 import './globals.css';
@@ -105,7 +106,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           그룹 밖이라 껍데기 없이 렌더된다.
         */}
         <AppProviders>
-          <MockGate>{children}</MockGate>
+          <MockGate>
+            {children}
+            {/* 마운트하자마자 읽음 요청을 보내므로 목 워커가 뜬 뒤여야 한다. `AppProviders` 에 두면 목데이터
+                모드에서 요청이 워커를 지나친다. */}
+            <PushOpenTracker />
+          </MockGate>
         </AppProviders>
       </body>
     </html>
