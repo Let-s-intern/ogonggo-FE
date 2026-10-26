@@ -1,4 +1,5 @@
 import { replaceMyFcmToken } from '@ogonggo/api';
+import { forgetSavedToken, getSavedToken, setSavedToken } from '@/shared/api/pushDevice';
 
 /**
  * 웹 푸시(FCM). 브라우저의 알림 권한을 받고, FCM 토큰을 발급해 백엔드에 저장한다
@@ -18,8 +19,6 @@ const SERVICE_WORKER_PATH = '/firebase-messaging-sw.js';
  */
 const SERVICE_WORKER_SCOPE = '/firebase-cloud-messaging-push-scope';
 
-/** 마지막으로 백엔드에 저장한 토큰. 같은 토큰을 앱을 열 때마다 다시 보내지 않으려고 둔다. */
-const SAVED_TOKEN_KEY = 'ogonggo.push.savedToken';
 /** 사용자가 이 브라우저에서 알림을 끈 표시. 권한은 그대로 두고 우리 쪽에서만 끈다. */
 const DISABLED_KEY = 'ogonggo.push.disabled';
 
@@ -62,7 +61,7 @@ function writeFlag(key: string, value: string | null): void {
       window.localStorage.setItem(key, value);
     }
   } catch {
-    // 저장이 막혔으면 이번 방문 동안만 유효하다. 다음 방문에 토큰을 한 번 더 보낼 뿐이다.
+    // 저장이 막혔으면 이번 방문 동안만 유효하다.
   }
 }
 
@@ -85,11 +84,6 @@ export function isPushBlocked(): boolean {
 /** 켜 둔 상태인지. 권한을 줬어도 사용자가 꺼 두었으면 꺼진 것이다. */
 export function isPushEnabled(): boolean {
   return Notification.permission === 'granted' && readFlag(DISABLED_KEY) === null;
-}
-
-/** 로그아웃하면 저장해 둔 토큰 기록을 버린다. 다음 사람이 로그인하면 같은 토큰도 다시 저장해야 한다. */
-export function forgetSavedToken(): void {
-  writeFlag(SAVED_TOKEN_KEY, null);
 }
 
 /**
@@ -167,7 +161,7 @@ async function issueToken(): Promise<string> {
 
 async function saveToken(token: string): Promise<void> {
   await replaceMyFcmToken({ token });
-  writeFlag(SAVED_TOKEN_KEY, token);
+  setSavedToken(token);
 }
 
 /**
@@ -223,7 +217,7 @@ export function syncPushToken(): Promise<void> {
   }
   syncing ??= (async () => {
     const token = await issueToken();
-    if (token !== readFlag(SAVED_TOKEN_KEY)) {
+    if (token !== getSavedToken()) {
       await saveToken(token);
     }
   })()
