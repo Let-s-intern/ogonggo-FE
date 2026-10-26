@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { NotificationList, ReadAllButton } from '@/features/notification-inbox';
+import { PushConsentBanner } from '@/features/push-notification';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { useSignedIn } from '@/shared/api/useSignedIn';
 
@@ -32,6 +33,8 @@ export function NotificationsPage() {
         <h1 className="text-[22px] leading-[30px] font-bold text-gray-900">알림</h1>
         {signedIn ? <ReadAllButton className="h-11 text-sm" /> : null}
       </div>
+      {/* 모바일에서만. 데스크톱은 헤더 위 띠에 같은 일을 하는 `푸시 알림 받기` 가 있다. */}
+      {signedIn ? <PushConsentBanner className="mx-5 mb-3 md:hidden" /> : null}
       {signedIn ? <NotificationList layout="page" /> : null}
     </main>
   );
