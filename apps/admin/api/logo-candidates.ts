@@ -231,13 +231,17 @@ async function safeFetch(
   return null;
 }
 
+const ENTITIES: Record<string, string> = {
+  '&amp;': '&',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&lt;': '<',
+  '&gt;': '>',
+};
+
+/** 한 번에 푼다. 차례로 풀면 `&amp;quot;` 가 `"` 까지 두 번 풀린다. */
 function decodeEntities(value: string): string {
-  return value
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+  return value.replace(/&(?:amp|quot|#39|lt|gt);/g, (entity) => ENTITIES[entity] ?? entity);
 }
 
 /** 태그 하나의 속성을 소문자 이름으로 모은다. */
