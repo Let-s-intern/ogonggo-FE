@@ -18,6 +18,7 @@ import {
   isSameNotification,
   markAllNotificationsRead,
   markNotificationRead,
+  type NotificationRef,
   notificationListKey,
   notificationListPrefix,
   unreadCountKey,
@@ -73,7 +74,7 @@ export function useUnreadCount(): number | undefined {
   return signedIn ? query.data : undefined;
 }
 
-function patchRead(data: NotificationPages | undefined, target: UserNotificationResponse) {
+function patchRead(data: NotificationPages | undefined, target: NotificationRef) {
   if (!data) {
     return data;
   }
@@ -116,7 +117,7 @@ export function useReadNotification() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: unreadCountKey() }),
   });
 
-  return (notification: UserNotificationResponse) => {
+  return (notification: NotificationRef & Pick<UserNotificationResponse, 'isRead'>) => {
     if (!notification.isRead) {
       mutation.mutate(notification);
     }

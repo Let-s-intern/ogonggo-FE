@@ -27,15 +27,20 @@ export const unreadCountKey = () => getGetMyNotificationUnreadCountQueryKey();
 export type NotificationSource = 'PERSONAL' | 'BROADCAST';
 
 /**
+ * 한 건을 가리키는 데 쓰는 값만. 목록의 알림 말고도 푸시를 눌러 온 쿼리(`PushOpenTracker`)에서 만든 값을 넘긴다.
+ */
+export type NotificationRef = Pick<UserNotificationResponse, 'id' | 'batchId' | 'source'>;
+
+/**
  * 생성 타입의 `source` 는 `string` 이다(백엔드에 `allowableValues` 가 없다, PRD 백엔드 요청 3). 두 값으로 좁히고,
  * 모르는 값은 개인 알림으로 다룬다. 백엔드가 enum 으로 내주면 이 함수는 지운다.
  */
-export function notificationSource(notification: UserNotificationResponse): NotificationSource {
+export function notificationSource(notification: NotificationRef): NotificationSource {
   return notification.source === 'BROADCAST' ? 'BROADCAST' : 'PERSONAL';
 }
 
 /** 같은 알림인지. 개인 알림은 `id`, 전체 공지는 `batchId` 로 가린다 — 전체 공지의 `id` 는 `null` 이다. */
-export function isSameNotification(a: UserNotificationResponse, b: UserNotificationResponse) {
+export function isSameNotification(a: NotificationRef, b: NotificationRef) {
   const source = notificationSource(a);
   if (source !== notificationSource(b)) {
     return false;
@@ -69,7 +74,7 @@ export async function fetchUnreadCount(): Promise<number> {
  * 한 건 읽음. 전체 공지는 `batchId`, 그 밖에는 `id` 로 보낸다. 보낼 식별자가 없으면 아무것도 하지 않는다.
  * 이미 읽은 알림을 다시 보내도 서버는 200 이다. 30일이 지났거나 없는 알림은 404 다.
  */
-export async function markNotificationRead(notification: UserNotificationResponse): Promise<void> {
+export async function markNotificationRead(notification: NotificationRef): Promise<void> {
   if (notificationSource(notification) === 'BROADCAST') {
     if (notification.batchId) {
       await readMyBroadcastNotification(notification.batchId);
