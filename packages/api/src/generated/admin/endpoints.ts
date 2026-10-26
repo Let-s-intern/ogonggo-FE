@@ -36,6 +36,7 @@ import type {
   ChangeAdminRecruitmentPostVisibilityRequest,
   ChangeGeneralMemberRoleRequest,
   CreateAdminAnnouncementRequest,
+  CreateNotificationBatchRequest,
   DecideReviewRequest,
   ErrorResponse,
   GetAiBootcampParams,
@@ -61,6 +62,9 @@ import type {
   SuccessResponseAdminContentReviewDecisionResponse,
   SuccessResponseAdminJobDetailResponse,
   SuccessResponseAdminLetsCareerContentRecommendWeightsResponse,
+  SuccessResponseAdminNotificationBatchCreatedResponse,
+  SuccessResponseAdminNotificationBatchResultResponse,
+  SuccessResponseAdminNotificationRecentResultsResponse,
   SuccessResponseAiBootcampLookupResponse,
   SuccessResponseAiBootcampRegistrationResponse,
   SuccessResponseAiJobLookupResponse,
@@ -1613,6 +1617,108 @@ export const useCreateAiJob = <TError = ErrorResponse,
       return useMutation(getCreateAiJobMutationOptions(options), queryClient);
     }
 
+export type hideAiJobResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type hideAiJobResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type hideAiJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type hideAiJobResponseSuccess = (hideAiJobResponse200) & {
+  headers: Headers;
+};
+export type hideAiJobResponseError = (hideAiJobResponse401 | hideAiJobResponse404) & {
+  headers: Headers;
+};
+
+export type hideAiJobResponse = (hideAiJobResponseSuccess | hideAiJobResponseError)
+
+export const getHideAiJobUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}/hide`
+}
+
+/**
+ *
+ *             수집 공고를 숨김 상태로 바꿔 사용자 화면에서 내립니다. 지우지는 않아 관리자 콘솔에서 다시 노출할 수 있습니다.
+ *             AI 분석을 끝내 하지 못한 공고처럼 보여 줄 수 없는 공고에 씁니다. 크롤링 공고와 고용24 공고를 숨깁니다.
+ *             이미 숨긴 공고를 다시 숨겨도 성공합니다. 삭제한 공고와 기업회원 공고는 찾지 않습니다.
+ * @summary AI 서버 채용공고 숨김
+ */
+export const hideAiJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<hideAiJobResponse> => {
+
+  return httpClient<hideAiJobResponse>(getHideAiJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getHideAiJobMutationKey = () => ['hideAiJob'] as const;
+
+export const getHideAiJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideAiJob>>, TError,HideAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof hideAiJob>>, TError,HideAiJobMutationVariables, TContext> => {
+
+const mutationKey = getHideAiJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hideAiJob>>, HideAiJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  hideAiJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HideAiJobMutationResult = NonNullable<Awaited<ReturnType<typeof hideAiJob>>>
+
+    export type HideAiJobMutationError = ErrorResponse
+    export type HideAiJobMutationVariables = {jobId: number}
+
+    /**
+ * @summary AI 서버 채용공고 숨김
+ */
+export const useHideAiJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideAiJob>>, TError,HideAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof hideAiJob>>,
+        TError,
+        HideAiJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getHideAiJobMutationOptions(options), queryClient);
+    }
+
 export type getAiBootcampResponse200 = {
   data: SuccessResponseAiBootcampLookupResponse
   status: 200
@@ -1865,6 +1971,128 @@ export const useCreateAiBootcamp = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCreateAiBootcampMutationOptions(options), queryClient);
+    }
+
+export type createNotificationBatchResponse201 = {
+  data: SuccessResponseAdminNotificationBatchCreatedResponse
+  status: 201
+}
+
+export type createNotificationBatchResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createNotificationBatchResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createNotificationBatchResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createNotificationBatchResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createNotificationBatchResponseSuccess = (createNotificationBatchResponse201) & {
+  headers: Headers;
+};
+export type createNotificationBatchResponseError = (createNotificationBatchResponse400 | createNotificationBatchResponse401 | createNotificationBatchResponse403 | createNotificationBatchResponse404) & {
+  headers: Headers;
+};
+
+export type createNotificationBatchResponse = (createNotificationBatchResponseSuccess | createNotificationBatchResponseError)
+
+export const getCreateNotificationBatchUrl = () => {
+
+
+
+
+  return `/api/v1/admin/notification-batches`
+}
+
+/**
+ *
+ *         USER_IDS는 최대 1000개 ID를 중복 제거하고 없는 회원이 있으면 전체 요청을 거부합니다. ALL에는 userIds를 보내지 않습니다.
+ *         전체 토픽 전환 설정이 켜진 ALL은 공통 공지와 토픽 작업 한 건을 함께 저장합니다. 회원별 알림함·토큰별 발송 행을 생성하지 않습니다.
+ *         전환 전 ALL과 USER_IDS는 활성 회원별 알림함·활성 토큰별 발송을 유지합니다. deliveryTargetType으로 DIRECT/TOPIC을 구분합니다.
+ *         enqueuedCount는 발송 작업 수입니다. TOPIC에서는 1이며 회원별 성공 수가 아닙니다. noTokenUserCount와 회원 집계는 요청 시점 DB 참고 값입니다.
+ *         skippedNoTokenUserCount는 호환용 별칭이며 새 클라이언트는 noTokenUserCount를 사용합니다. data.url은 http(s) URL이 필요합니다.
+ *         제목 100자·본문 1000자 원문을 보관하고 TOPIC 푸시는 본문 미리보기 최대 100자를 보냅니다. 시스템 식별자 포함 TOPIC payload는 2048바이트, DIRECT는 4096바이트입니다.
+ *         실제 발송은 기존 dispatcher가 24시간 안에 처리합니다. POST마다 새 발송이며 자동 재발송·중복 클릭 방지는 제공하지 않습니다.
+ * @summary FCM 발송 요청
+ */
+export const createNotificationBatch = async (createNotificationBatchRequest: CreateNotificationBatchRequest, options?: Parameters<typeof httpClient>[1]): Promise<createNotificationBatchResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createNotificationBatchResponse>(getCreateNotificationBatchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createNotificationBatchRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateNotificationBatchMutationKey = () => ['createNotificationBatch'] as const;
+
+export const getCreateNotificationBatchMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNotificationBatch>>, TError,CreateNotificationBatchMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createNotificationBatch>>, TError,CreateNotificationBatchMutationVariables, TContext> => {
+
+const mutationKey = getCreateNotificationBatchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNotificationBatch>>, CreateNotificationBatchMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createNotificationBatch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateNotificationBatchMutationResult = NonNullable<Awaited<ReturnType<typeof createNotificationBatch>>>
+    export type CreateNotificationBatchMutationBody = CreateNotificationBatchRequest
+    export type CreateNotificationBatchMutationError = ErrorResponse
+    export type CreateNotificationBatchMutationVariables = {data: CreateNotificationBatchRequest}
+
+    /**
+ * @summary FCM 발송 요청
+ */
+export const useCreateNotificationBatch = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNotificationBatch>>, TError,CreateNotificationBatchMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createNotificationBatch>>,
+        TError,
+        CreateNotificationBatchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateNotificationBatchMutationOptions(options), queryClient);
     }
 
 export type listAnnouncementsResponse200 = {
@@ -4828,6 +5056,271 @@ export function useListRecruitmentPosts<TData = Awaited<ReturnType<typeof listRe
 
 
 
+export type getRecentNotificationResultsResponse200 = {
+  data: SuccessResponseAdminNotificationRecentResultsResponse
+  status: 200
+}
+
+export type getRecentNotificationResultsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getRecentNotificationResultsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getRecentNotificationResultsResponseSuccess = (getRecentNotificationResultsResponse200) & {
+  headers: Headers;
+};
+export type getRecentNotificationResultsResponseError = (getRecentNotificationResultsResponse401 | getRecentNotificationResultsResponse403) & {
+  headers: Headers;
+};
+
+export type getRecentNotificationResultsResponse = (getRecentNotificationResultsResponseSuccess | getRecentNotificationResultsResponseError)
+
+export const getGetRecentNotificationResultsUrl = () => {
+
+
+
+
+  return `/api/v1/admin/notifications/recent-results`
+}
+
+/**
+ * 발송 상태가 최근 변경된 알림 최대 100건을 수정 시각·ID 내림차순으로 반환합니다. 수신 주소와 발송 payload는 포함하지 않습니다.
+ * @summary 최근 알림 발송 결과 조회
+ */
+export const getRecentNotificationResults = async ( options?: Parameters<typeof httpClient>[1]): Promise<getRecentNotificationResultsResponse> => {
+
+  return httpClient<getRecentNotificationResultsResponse>(getGetRecentNotificationResultsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecentNotificationResultsQueryKey = () => {
+    return [
+    `/api/v1/admin/notifications/recent-results`
+    ] as const;
+    }
+
+
+export const getGetRecentNotificationResultsQueryOptions = <TData = Awaited<ReturnType<typeof getRecentNotificationResults>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecentNotificationResults>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecentNotificationResultsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecentNotificationResults>>> = ({ signal }) => getRecentNotificationResults({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecentNotificationResults>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRecentNotificationResultsQueryResult = NonNullable<Awaited<ReturnType<typeof getRecentNotificationResults>>>
+export type GetRecentNotificationResultsQueryError = ErrorResponse
+
+
+export function useGetRecentNotificationResults<TData = Awaited<ReturnType<typeof getRecentNotificationResults>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecentNotificationResults>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecentNotificationResults>>,
+          TError,
+          Awaited<ReturnType<typeof getRecentNotificationResults>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecentNotificationResults<TData = Awaited<ReturnType<typeof getRecentNotificationResults>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecentNotificationResults>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRecentNotificationResults>>,
+          TError,
+          Awaited<ReturnType<typeof getRecentNotificationResults>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRecentNotificationResults<TData = Awaited<ReturnType<typeof getRecentNotificationResults>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecentNotificationResults>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 최근 알림 발송 결과 조회
+ */
+
+export function useGetRecentNotificationResults<TData = Awaited<ReturnType<typeof getRecentNotificationResults>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecentNotificationResults>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRecentNotificationResultsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getNotificationBatchResponse200 = {
+  data: SuccessResponseAdminNotificationBatchResultResponse
+  status: 200
+}
+
+export type getNotificationBatchResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getNotificationBatchResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getNotificationBatchResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getNotificationBatchResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNotificationBatchResponseSuccess = (getNotificationBatchResponse200) & {
+  headers: Headers;
+};
+export type getNotificationBatchResponseError = (getNotificationBatchResponse400 | getNotificationBatchResponse401 | getNotificationBatchResponse403 | getNotificationBatchResponse404) & {
+  headers: Headers;
+};
+
+export type getNotificationBatchResponse = (getNotificationBatchResponseSuccess | getNotificationBatchResponseError)
+
+export const getGetNotificationBatchUrl = (batchId: string,) => {
+
+
+
+
+  return `/api/v1/admin/notification-batches/${batchId}`
+}
+
+/**
+ *
+ *         생성 후 30일 동안 결과와 resultCode별 실패·미확정 건수를 조회합니다. DIRECT는 기기별, TOPIC은 토픽 요청 한 건 단위입니다. sentCount는 FCM 접수이며 단말 도착을 뜻하지 않습니다.
+ *         24시간이 지난 PENDING은 expiredCount로 구분합니다. completed는 더 이상 발송 대기가 없음을 뜻하며 UNKNOWN·기한 초과도 따로 확인해야 합니다.
+ *         기한 직전에 시작한 provider 요청은 조회 뒤 결과를 기록할 수 있습니다. 토큰과 provider 응답 원문은 반환하지 않습니다.
+ * @summary FCM 발송 결과 조회
+ */
+export const getNotificationBatch = async (batchId: string, options?: Parameters<typeof httpClient>[1]): Promise<getNotificationBatchResponse> => {
+
+  return httpClient<getNotificationBatchResponse>(getGetNotificationBatchUrl(batchId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNotificationBatchQueryKey = (batchId: string,) => {
+    return [
+    `/api/v1/admin/notification-batches/${batchId}`
+    ] as const;
+    }
+
+
+export const getGetNotificationBatchQueryOptions = <TData = Awaited<ReturnType<typeof getNotificationBatch>>, TError = ErrorResponse>(batchId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatch>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNotificationBatchQueryKey(batchId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationBatch>>> = ({ signal }) => getNotificationBatch(batchId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: batchId !== null && batchId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNotificationBatchQueryResult = NonNullable<Awaited<ReturnType<typeof getNotificationBatch>>>
+export type GetNotificationBatchQueryError = ErrorResponse
+
+
+export function useGetNotificationBatch<TData = Awaited<ReturnType<typeof getNotificationBatch>>, TError = ErrorResponse>(
+ batchId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatch>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationBatch>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationBatch>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotificationBatch<TData = Awaited<ReturnType<typeof getNotificationBatch>>, TError = ErrorResponse>(
+ batchId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatch>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationBatch>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationBatch>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotificationBatch<TData = Awaited<ReturnType<typeof getNotificationBatch>>, TError = ErrorResponse>(
+ batchId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatch>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary FCM 발송 결과 조회
+ */
+
+export function useGetNotificationBatch<TData = Awaited<ReturnType<typeof getNotificationBatch>>, TError = ErrorResponse>(
+ batchId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatch>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNotificationBatchQueryOptions(batchId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listJobsResponse200 = {
   data: SuccessResponsePageResponseAdminJobSummaryResponse
   status: 200
@@ -6069,9 +6562,13 @@ export const getGetAiJobResponseMock = (overrideResponse: Partial<Extract<Succes
 
 export const getCreateAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobRegistrationResponse, object>> = {}): SuccessResponseAiJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
+export const getHideAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getGetAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampLookupResponse, object>> = {}): SuccessResponseAiBootcampLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampRegistrationResponse, object>> = {}): SuccessResponseAiBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getCreateNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchCreatedResponse, object>> = {}): SuccessResponseAdminNotificationBatchCreatedResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -6122,6 +6619,10 @@ export const getGetWork24ApiResponseResponseMock = (overrideResponse: Partial<Ex
 export const getListServiceFeedbacksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminServiceFeedbackResponse, object>> = {}): SuccessResponsePageResponseAdminServiceFeedbackResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), userName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), satisfaction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), improvement: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListRecruitmentPostsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminRecruitmentPostSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminRecruitmentPostSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), capacity: faker.number.int(), activityDurationMonths: faker.number.int(), positions: faker.helpers.arrayElements(['BACKEND','FRONTEND','DESIGN','PM','MARKETING','ETC'] as const), technologyStacks: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartDate: faker.date.past().toISOString().slice(0, 10), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), authorUserId: faker.number.int(), authorNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetRecentNotificationResultsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationRecentResultsResponse, object>> = {}): SuccessResponseAdminNotificationRecentResultsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({notificationId: faker.number.int(), channel: faker.helpers.arrayElement(['KAKAO','EMAIL','FCM'] as const), status: faker.helpers.arrayElement(['PENDING','SENT','FAILED','UNKNOWN','PROCESSING'] as const), recipientType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), templateCode: faker.string.alpha({length: {min: 10, max: 20}}), recipientUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), userNotificationId: faker.helpers.arrayElement([faker.number.int(), undefined]), batchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), scheduledAt: faker.date.past().toISOString().slice(0, 19) + 'Z', processingStartedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sentAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), providerMessageId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), resultCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), resultCategory: faker.helpers.arrayElement([faker.helpers.arrayElement(['DUPLICATE_REQUEST','AUTHENTICATION_CONFIGURATION','SENDER_PROFILE_CONFIGURATION','INVALID_REQUEST','TEMPLATE_CONFIGURATION','RATE_LIMITED','PROVIDER_UNAVAILABLE','PROVIDER_REJECTED','TRANSPORT_ERROR','PROCESSING_TIMEOUT','HTTP_ERROR','CLIENT_ERROR','INVALID_PROVIDER_RESPONSE','CHANNEL_NOT_CONFIGURED','APPLICATION_ERROR','UNKNOWN_PROVIDER_ERROR'] as const), undefined]), resultDetail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), attemptCount: faker.number.int(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}))}, undefined]), ...overrideResponse})
+
+export const getGetNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchResultResponse, object>> = {}): SuccessResponseAdminNotificationBatchResultResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), requestedByUserId: faker.number.int(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', targetType: faker.helpers.arrayElement(['USER_IDS','ALL'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), sentCount: faker.number.int(), failedCount: faker.number.int(), unknownCount: faker.number.int(), pendingCount: faker.number.int(), expiredCount: faker.number.int(), completed: faker.datatype.boolean(), dispatchExpiresAt: faker.date.past().toISOString().slice(0, 19) + 'Z', resultsAvailableUntil: faker.date.past().toISOString().slice(0, 19) + 'Z', failureReasons: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({status: faker.helpers.arrayElement(['PENDING','SENT','FAILED','UNKNOWN','PROCESSING'] as const), resultCode: faker.string.alpha({length: {min: 10, max: 20}}), count: faker.number.int()})), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getListJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminJobSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -6300,6 +6801,18 @@ export const getCreateAiJobMockHandler = (overrideResponse?: SuccessResponseAiJo
   }, options)
 }
 
+export const getHideAiJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/internal/jobs/:jobId/hide', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getHideAiJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getGetAiBootcampMockHandler = (overrideResponse?: SuccessResponseAiBootcampLookupResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAiBootcampLookupResponse> | SuccessResponseAiBootcampLookupResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -6319,6 +6832,18 @@ export const getCreateAiBootcampMockHandler = (overrideResponse?: SuccessRespons
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateAiBootcampResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateNotificationBatchMockHandler = (overrideResponse?: SuccessResponseAdminNotificationBatchCreatedResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAdminNotificationBatchCreatedResponse> | SuccessResponseAdminNotificationBatchCreatedResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/notification-batches', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateNotificationBatchResponseMock(),
       { status: 201
       })
   }, options)
@@ -6624,6 +7149,30 @@ export const getListRecruitmentPostsMockHandler = (overrideResponse?: SuccessRes
   }, options)
 }
 
+export const getGetRecentNotificationResultsMockHandler = (overrideResponse?: SuccessResponseAdminNotificationRecentResultsResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminNotificationRecentResultsResponse> | SuccessResponseAdminNotificationRecentResultsResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/notifications/recent-results', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetRecentNotificationResultsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetNotificationBatchMockHandler = (overrideResponse?: SuccessResponseAdminNotificationBatchResultResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminNotificationBatchResultResponse> | SuccessResponseAdminNotificationBatchResultResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/notification-batches/:batchId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetNotificationBatchResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListJobsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminJobSummaryResponse> | SuccessResponsePageResponseAdminJobSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -6745,8 +7294,10 @@ export const getOgonggoAdminAPIMock = () => [
   getReplaceTodayJobsMockHandler(),
   getGetAiJobMockHandler(),
   getCreateAiJobMockHandler(),
+  getHideAiJobMockHandler(),
   getGetAiBootcampMockHandler(),
   getCreateAiBootcampMockHandler(),
+  getCreateNotificationBatchMockHandler(),
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getUpdateRecruitmentPostVisibilitiesMockHandler(),
@@ -6772,6 +7323,8 @@ export const getOgonggoAdminAPIMock = () => [
   getGetWork24ApiResponseMockHandler(),
   getListServiceFeedbacksMockHandler(),
   getListRecruitmentPostsMockHandler(),
+  getGetRecentNotificationResultsMockHandler(),
+  getGetNotificationBatchMockHandler(),
   getListJobsMockHandler(),
   getListGeneralMembersMockHandler(),
   getListAdminEnumsMockHandler(),

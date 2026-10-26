@@ -11,4 +11,9 @@ export interface ReplaceFcmTokenRequest {
      * @maxLength 4096
      */
   token: string;
+  /**
+     * 설치별 UUID. 생략하거나 null이면 회원별 기존 클라이언트 슬롯만 교체합니다.
+     * @pattern [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
+     */
+  deviceId?: string;
 }
