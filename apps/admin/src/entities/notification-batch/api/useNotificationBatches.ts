@@ -1,7 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createNotificationBatch,
   getGetRecentNotificationResultsQueryKey,
+  getRecentNotificationResults,
   type CreateNotificationBatchRequest,
 } from '@ogonggo/api/src/admin';
 import { unwrapData } from '@/shared/api/unwrapData';
@@ -20,5 +21,16 @@ export function useCreateNotificationBatch() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getGetRecentNotificationResultsQueryKey() });
     },
+  });
+}
+
+/**
+ * 최근 수정된 발송 작업 100건. 페이지·필터 없이 서버 순서(`updatedAt` 내림차순) 그대로다. 관리자 발송뿐 아니라
+ * 댓글 푸시·알림톡·이메일 작업도 섞여 온다.
+ */
+export function useRecentNotificationResults() {
+  return useQuery({
+    queryKey: getGetRecentNotificationResultsQueryKey(),
+    queryFn: () => unwrapData(getRecentNotificationResults()),
   });
 }

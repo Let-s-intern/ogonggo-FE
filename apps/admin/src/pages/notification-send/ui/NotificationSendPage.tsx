@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { AdminNotificationBatchCreatedResponse } from '@ogonggo/api/src/admin';
 import { PageHeader } from '@/widgets/page-header';
 import { EMPTY_SEND_FORM } from '../lib/sendForm';
+import { RecentResultsTable } from './RecentResultsTable';
 import { SendForm } from './SendForm';
 import { SendPreview } from './SendPreview';
 import { SentSummary } from './SentSummary';
@@ -31,6 +32,7 @@ export function NotificationSendPage() {
         </div>
       </div>
       {created ? <SentSummary created={created} /> : null}
+      <RecentResultsTable />
     </>
   );
 }
