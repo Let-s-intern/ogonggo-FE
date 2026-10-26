@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { Button, Callout, DataTable, type DataTableColumn } from '@ogonggo/ui';
 import type {
   AdminNotificationBatchResultResponse,
@@ -97,7 +98,11 @@ export function RecentResultsTable({
           },
         ]
       : []),
-    { key: 'recipientUserId', header: '수신 회원 ID', render: (row) => row.recipientUserId ?? '-' },
+    {
+      key: 'recipientUserId',
+      header: '수신 회원 ID',
+      render: (row) => <RecipientLink userId={row.recipientUserId} />,
+    },
     { key: 'sentAt', header: '접수 시각', render: (row) => formatDateTime(row.sentAt) },
     { key: 'result', header: '결과', render: (row) => resultText(row) },
     { key: 'updatedAt', header: '수정 시각', render: (row) => formatDateTime(row.updatedAt) },
@@ -140,6 +145,26 @@ function PushTitle({ row, contents }: { row: RecentItem; contents: BatchContents
       <p className="truncate font-semibold text-gray-900">{title ?? kind}</p>
       {title ? <p className="text-xs text-gray-500">{kind}</p> : null}
     </div>
+  );
+}
+
+/**
+ * 수신 회원 ID 를 일반 회원 상세(`/members/users/:memberId`)로 잇는다. 토픽 작업처럼 회원이 없으면 `-` 다.
+ *
+ * 표의 줄은 누르면 상세 모달이 열리므로, 링크를 누를 때는 그 클릭이 줄까지 올라가지 않게 막는다.
+ */
+export function RecipientLink({ userId }: { userId?: number }) {
+  if (userId === undefined) {
+    return '-';
+  }
+  return (
+    <Link
+      to={`/members/users/${userId}`}
+      onClick={(event) => event.stopPropagation()}
+      className="text-blue-600 hover:text-blue-700 hover:underline"
+    >
+      {userId}
+    </Link>
   );
 }
 
