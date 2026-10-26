@@ -5,6 +5,7 @@ import {
   releasePushToken,
   setSavedToken,
 } from '@/shared/api/pushDevice';
+import { PUSH_RECEIVED_EVENT } from '@/shared/lib/pushReceived';
 
 /**
  * 웹 푸시(FCM). 브라우저의 알림 권한을 받고, FCM 토큰을 발급해 백엔드에 저장한다
@@ -128,7 +129,7 @@ let listening = false;
  * 이 브라우저의 FCM 토큰을 발급한다. 이미 있으면 같은 값을 돌려준다.
  *
  * 앱이 열려 있을 때 온 메시지는 SDK 가 알림을 띄우지 않고 페이지로 넘긴다. 아무것도 안 하면 열어 둔
- * 사이에 온 알림이 사라지므로, 같은 모양의 알림으로 직접 띄운다.
+ * 사이에 온 알림이 사라지므로, 같은 모양의 알림으로 직접 띄운다. 알림함 배지를 갱신하라고 `window` 에도 알린다.
  */
 async function issueToken(): Promise<string> {
   const config = readConfig();
@@ -152,6 +153,8 @@ async function issueToken(): Promise<string> {
   if (!listening) {
     listening = true;
     onMessage(messaging, (message) => {
+      // 알림함 배지가 바로 오르게 알린다(`PUSH_RECEIVED_EVENT`).
+      window.dispatchEvent(new Event(PUSH_RECEIVED_EVENT));
       const { title, body } = message.notification ?? {};
       if (title) {
         void registration.showNotification(title, {

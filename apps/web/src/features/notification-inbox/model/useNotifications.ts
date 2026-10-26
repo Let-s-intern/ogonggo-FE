@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import type { UserNotificationPageResponse, UserNotificationResponse } from '@ogonggo/api';
 import { subscribeTokens } from '@/shared/api/authTokens';
 import { useSignedIn } from '@/shared/api/useSignedIn';
+import { PUSH_RECEIVED_EVENT } from '@/shared/lib/pushReceived';
 import {
   fetchNotificationPage,
   fetchUnreadCount,
@@ -136,4 +137,20 @@ export function useReadAll() {
       ]);
     },
   });
+}
+
+/**
+ * 앱을 보고 있을 때 푸시가 오면 미읽음 개수와 목록을 다시 읽는다. 푸시 쪽(`features/push-notification`)이
+ * `window` 에 `PUSH_RECEIVED_EVENT` 를 낸다. 주기적으로 묻지 않으므로(PRD 결정 6) 배지가 바로 오르는 길은 이것뿐이다.
+ */
+export function useRefreshOnPushReceived() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const refresh = () => {
+      void queryClient.invalidateQueries({ queryKey: unreadCountKey() });
+      void queryClient.invalidateQueries({ queryKey: notificationListPrefix() });
+    };
+    window.addEventListener(PUSH_RECEIVED_EVENT, refresh);
+    return () => window.removeEventListener(PUSH_RECEIVED_EVENT, refresh);
+  }, [queryClient]);
 }

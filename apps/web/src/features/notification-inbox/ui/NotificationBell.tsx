@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { cn } from '@ogonggo/ui';
 import { BellIcon } from '@/shared/ui/icons';
-import { useUnreadCount } from '../model/useNotifications';
+import { useRefreshOnPushReceived, useUnreadCount } from '../model/useNotifications';
 import { NotificationList } from './NotificationList';
 import { ReadAllButton } from './ReadAllButton';
 import { UnreadBadge, bellLabel } from './UnreadBadge';
@@ -22,9 +22,13 @@ export interface NotificationBellProps {
  *
  * 패널은 폭 380px, 높이는 화면의 70% 까지이고 안에서 스크롤한다. 목록은 열 때 새로 그려지므로 열 때마다 다시
  * 받는다(`NotificationList`). 한 줄을 누르면 닫힌다.
+ *
+ * 앱을 보고 있을 때 푸시가 오면 개수와 목록을 다시 읽는다(`useRefreshOnPushReceived`). 듣는 곳은 여기 하나다 —
+ * 이 컴포넌트는 모바일에서도 숨겨진 채 마운트돼 있다(`SiteHeader` 의 `hidden md:block`).
  */
 export function NotificationBell({ open, onOpenChange }: NotificationBellProps) {
   const count = useUnreadCount();
+  useRefreshOnPushReceived();
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
