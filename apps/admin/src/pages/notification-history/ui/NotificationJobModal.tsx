@@ -9,7 +9,13 @@ import {
   notificationTemplateLabel,
 } from '@/shared/config/labels';
 import { formatDateTime } from '@/shared/lib/format';
-import { pushTitleOf, resultText, type BatchContents, type RecentItem } from './RecentResultsTable';
+import {
+  RecipientLink,
+  pushTitleOf,
+  resultText,
+  type BatchContents,
+  type RecentItem,
+} from './RecentResultsTable';
 
 /**
  * 전송 내역 한 줄의 상세. 위에 보낸 내용, 아래에 발송 작업 정보다.
@@ -61,7 +67,7 @@ export function NotificationJobModal({
             ...(batch
               ? [{ label: '발송 대상', value: notificationTargetTypeLabel(batch.targetType) }]
               : []),
-            { label: '수신 회원 ID', value: row.recipientUserId ?? '-' },
+            { label: '수신 회원 ID', value: <RecipientLink userId={row.recipientUserId} /> },
             { label: '알림함 ID', value: row.userNotificationId ?? '-' },
             { label: '작업 ID', value: row.notificationId },
             { label: '예정 시각', value: formatDateTime(row.scheduledAt) },
