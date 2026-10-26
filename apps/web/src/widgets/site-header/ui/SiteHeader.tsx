@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { NotificationBell } from '@/features/notification-inbox';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
@@ -30,7 +31,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * 있고, 그 아래 줄에 오공고 심볼 로고(`docs/asset/v3 변경사항/오공고 로고.svg`, 52x25)와 메뉴, 우측 링크가
  * 있다. 글자가 없는 마크라 로고 링크의 이름은 `aria-label`로 붙인다.
  *
- * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다.
+ * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다. 로그인했으면 이 띠의
+ * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`).
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
@@ -99,6 +101,11 @@ export function SiteHeader() {
   const accountName =
     role === 'COMPANY' ? account?.companyProfile?.managerName : account?.profile?.name;
 
+  /** 데스크톱의 두 드롭다운(알림 패널, `{이름} 님` 메뉴) 중 열린 것. 하나가 열리면 다른 하나는 닫힌다. */
+  const [openMenu, setOpenMenu] = useState<'notifications' | 'account' | null>(null);
+  const toggleMenu = (menu: 'notifications' | 'account') => (open: boolean) =>
+    setOpenMenu((current) => (open ? menu : current === menu ? null : current));
+
   return (
     <header
       className={cn('border-b border-gray-200 bg-white', hiddenOnMobile && 'hidden md:block')}
@@ -117,8 +124,15 @@ export function SiteHeader() {
           아래의 아주 연한 가로선(`gray-100`)은 화면 끝까지 닿아야 해서 폭을 제한한 안쪽 상자가 아니라
           이 바깥 상자에 둔다. */}
       <div className="hidden border-b border-gray-100 md:block">
-        <div className="mx-auto flex h-10 max-w-page-padded items-center px-5 pt-2 whitespace-nowrap">
+        <div className="mx-auto flex h-10 max-w-page-padded items-center justify-between px-5 pt-2 whitespace-nowrap">
           <ServiceLogoToggle size="desktop" />
+          {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다. */}
+          {signedIn ? (
+            <NotificationBell
+              open={openMenu === 'notifications'}
+              onOpenChange={toggleMenu('notifications')}
+            />
+          ) : null}
         </div>
       </div>
       <div className="mx-auto hidden h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap md:flex">
@@ -169,6 +183,8 @@ export function SiteHeader() {
               myPageHref={myPageHref}
               myPageActive={myPageActive}
               adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+              open={openMenu === 'account'}
+              onOpenChange={toggleMenu('account')}
             />
           ) : (
             <Button size="sm" asChild>
