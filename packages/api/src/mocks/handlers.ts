@@ -4,6 +4,7 @@ import { imageUploadHandlers } from './images';
 import { getJobRecommendedContentsHandler } from './job-recommended-contents';
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
+import { userNotificationHandlers } from './notifications';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
@@ -1171,4 +1172,5 @@ export const handlers: HttpHandler[] = [
   createServiceFeedbackHandler,
   replaceFcmTokenHandler,
   deleteFcmTokenHandler,
+  ...userNotificationHandlers,
 ];
