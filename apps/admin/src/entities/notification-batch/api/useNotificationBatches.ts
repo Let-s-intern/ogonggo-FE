@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HttpError } from '@ogonggo/api';
 import {
   createNotificationBatch,
@@ -36,6 +36,32 @@ export function useRecentNotificationResults() {
   return useQuery({
     queryKey: getGetRecentNotificationResultsQueryKey(),
     queryFn: () => unwrapData(getRecentNotificationResults()),
+  });
+}
+
+/**
+ * 전송 내역의 관리자 발송 줄에 제목·본문을 붙이려고 묶음 상세를 받는다. 발송 작업 응답에는 payload 가 없고, 관리자
+ * 발송만 `batchId` 로 내용을 되찾을 수 있다. 같은 묶음은 한 번만 받는다(상세 화면과 같은 캐시 키). 결과 조회 기간(30일)
+ * 이 지나 404 면 제목 없이 둔다 — 다시 보내지 않는다. 여기서는 폴링하지 않는다.
+ *
+ * 돌려주는 맵은 `batchId` → 상세다. 아직 오지 않았거나 못 받은 묶음은 맵에 없다.
+ */
+export function useNotificationBatchContents(batchIds: readonly string[]) {
+  const unique: string[] = [...new Set(batchIds)];
+  return useQueries({
+    queries: unique.map((batchId) => ({
+      queryKey: getGetNotificationBatchQueryKey(batchId),
+      queryFn: () => unwrapData(getNotificationBatch(batchId)),
+      staleTime: 60_000,
+      retry: false,
+    })),
+    combine: (results) =>
+      new Map(
+        results.flatMap((result, index) => {
+          const batchId = unique[index];
+          return batchId && result.data ? [[batchId, result.data] as const] : [];
+        }),
+      ),
   });
 }
 

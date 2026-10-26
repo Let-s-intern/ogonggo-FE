@@ -21,7 +21,7 @@ import {
 import { formatCount, formatDateTime } from '@/shared/lib/format';
 import { CountTile } from '@/shared/ui/CountTile';
 
-const BACK_TO = { to: '/support/notifications', label: '알림 발송' };
+const BACK_TO = { to: '/notifications/history/push', label: '푸시 전송 내역' };
 
 const failureColumns: DataTableColumn<AdminNotificationBatchFailureResponse>[] = [
   {

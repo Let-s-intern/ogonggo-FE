@@ -72,7 +72,20 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { path: '/support/notices', label: '공지사항' },
       { path: '/support/feedbacks', label: '서비스 의견' },
-      { path: '/support/notifications', label: '알림 발송' },
+    ],
+  },
+  {
+    /*
+     * 보내는 화면과 지난 발송을 보는 화면을 나누고, 전송 내역은 채널마다 따로 둔다. 관리자 발송뿐 아니라 댓글 푸시·
+     * 알림톡·이메일도 있어 `고객지원` 에 두기에는 범위가 넓다. 세 내역 화면은 같은 페이지가 채널만 바꿔 그린다
+     * (`pages/notification-history`).
+     */
+    title: '알림',
+    items: [
+      { path: '/notifications/send', label: '푸시 알림 전송' },
+      { path: '/notifications/history/push', label: '푸시 전송 내역' },
+      { path: '/notifications/history/alimtalk', label: '알림톡 전송 내역' },
+      { path: '/notifications/history/email', label: '이메일 전송 내역' },
     ],
   },
   {
