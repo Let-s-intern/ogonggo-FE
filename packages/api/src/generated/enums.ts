@@ -71,6 +71,23 @@ export const ENUM_CATALOG = {
     { name: 'SENT', desc: 'provider 접수', parent: null },
     { name: 'FAILED', desc: '발송 실패', parent: null },
     { name: 'UNKNOWN', desc: 'provider 접수 여부 미확정', parent: null },
+    { name: 'PROCESSING', desc: 'provider 처리 중', parent: null },
+  ],
+  NotificationRecipientType: [
+    { name: 'DIRECT', desc: '개별 주소', parent: null },
+    { name: 'TOPIC', desc: 'FCM 토픽', parent: null },
+  ],
+  NotificationBatchTargetType: [
+    { name: 'USER_IDS', desc: '지정 회원', parent: null },
+    { name: 'ALL', desc: '전체 활성 회원', parent: null },
+  ],
+  UserNotificationType: [
+    { name: 'SIDE_STUDY_COMMENT_REPLY', desc: '모집글 댓글의 새 답글', parent: null },
+    { name: 'CONCERN_COMMENT', desc: '취준고민의 새 댓글', parent: null },
+    { name: 'ADMIN_NOTIFICATION', desc: '관리자 알림', parent: null },
+  ],
+  UserNotificationPushSkipReason: [
+    { name: 'NO_ACTIVE_TOKEN', desc: '활성 토큰 없음', parent: null },
   ],
   JobField: [
     { name: 'IT_DEVELOPMENT', desc: 'IT·개발', parent: null },

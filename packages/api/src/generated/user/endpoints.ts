@@ -40,6 +40,7 @@ import type {
   CreateRecruitmentPostDraftRequest,
   CreateRecruitmentPostRequest,
   CreateServiceFeedbackRequest,
+  DeleteFcmTokenRequest,
   ErrorResponse,
   GetRecruitmentPostCommentRepliesParams,
   GetRecruitmentPostCommentsParams,
@@ -50,6 +51,7 @@ import type {
   ListMyBootcampsParams,
   ListMyJobBookmarksParams,
   ListMyJobsParams,
+  ListMyNotificationsParams,
   ListMyRecruitmentPostApplicationsParams,
   ListMyRecruitmentPostBookmarksParams,
   ListMyRecruitmentPostsParams,
@@ -115,6 +117,8 @@ import type {
   SuccessResponseUserAnnouncementDetailResponse,
   SuccessResponseUserBootcampDetailResponse,
   SuccessResponseUserJobDetailResponse,
+  SuccessResponseUserNotificationPageResponse,
+  SuccessResponseUserNotificationUnreadCountResponse,
   TokenReissueRequest,
   UpdateBootcampApplicationStatusRequest,
   UpdateCompanyBootcampRequest,
@@ -1046,6 +1050,11 @@ export type getMyFcmTokenResponse401 = {
   status: 401
 }
 
+export type getMyFcmTokenResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
 export type getMyFcmTokenResponse404 = {
   data: ErrorResponse
   status: 404
@@ -1054,7 +1063,7 @@ export type getMyFcmTokenResponse404 = {
 export type getMyFcmTokenResponseSuccess = (getMyFcmTokenResponse200) & {
   headers: Headers;
 };
-export type getMyFcmTokenResponseError = (getMyFcmTokenResponse401 | getMyFcmTokenResponse404) & {
+export type getMyFcmTokenResponseError = (getMyFcmTokenResponse401 | getMyFcmTokenResponse403 | getMyFcmTokenResponse404) & {
   headers: Headers;
 };
 
@@ -1069,6 +1078,7 @@ export const getGetMyFcmTokenUrl = () => {
 }
 
 /**
+ * 가장 최근 등록·갱신한 활성 토큰 한 개를 반환합니다. 없으면 token은 null입니다.
  * @summary 내 FCM 토큰 조회
  */
 export const getMyFcmToken = async ( options?: Parameters<typeof httpClient>[1]): Promise<getMyFcmTokenResponse> => {
@@ -1176,15 +1186,25 @@ export type replaceMyFcmTokenResponse401 = {
   status: 401
 }
 
+export type replaceMyFcmTokenResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
 export type replaceMyFcmTokenResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
+export type replaceMyFcmTokenResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type replaceMyFcmTokenResponseSuccess = (replaceMyFcmTokenResponse200) & {
   headers: Headers;
 };
-export type replaceMyFcmTokenResponseError = (replaceMyFcmTokenResponse400 | replaceMyFcmTokenResponse401 | replaceMyFcmTokenResponse404) & {
+export type replaceMyFcmTokenResponseError = (replaceMyFcmTokenResponse400 | replaceMyFcmTokenResponse401 | replaceMyFcmTokenResponse403 | replaceMyFcmTokenResponse404 | replaceMyFcmTokenResponse409) & {
   headers: Headers;
 };
 
@@ -1199,7 +1219,7 @@ export const getReplaceMyFcmTokenUrl = () => {
 }
 
 /**
- * 로그인한 사용자의 현재 앱·브라우저 FCM 토큰을 저장합니다. 기존 토큰은 새 토큰으로 교체합니다.
+ * 설치별 deviceId(UUID)의 토큰만 등록·교체합니다. deviceId 생략 또는 null은 회원별 기존 클라이언트 슬롯만 교체합니다. 같은 설치 또는 토큰의 이전 계정 연결은 해제합니다. 동시 등록 충돌 시 요청 전체를 재시도합니다.
  * @summary 내 FCM 토큰 저장
  */
 export const replaceMyFcmToken = async (replaceFcmTokenRequest: ReplaceFcmTokenRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceMyFcmTokenResponse> => {
@@ -1269,6 +1289,121 @@ export const useReplaceMyFcmToken = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getReplaceMyFcmTokenMutationOptions(options), queryClient);
+    }
+
+export type deleteMyFcmTokenResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteMyFcmTokenResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteMyFcmTokenResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteMyFcmTokenResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteMyFcmTokenResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteMyFcmTokenResponseSuccess = (deleteMyFcmTokenResponse200) & {
+  headers: Headers;
+};
+export type deleteMyFcmTokenResponseError = (deleteMyFcmTokenResponse400 | deleteMyFcmTokenResponse401 | deleteMyFcmTokenResponse403 | deleteMyFcmTokenResponse404) & {
+  headers: Headers;
+};
+
+export type deleteMyFcmTokenResponse = (deleteMyFcmTokenResponseSuccess | deleteMyFcmTokenResponseError)
+
+export const getDeleteMyFcmTokenUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/fcm-token`
+}
+
+/**
+ * 로그인한 회원의 일치하는 활성 토큰만 해제합니다. 이미 해제됐거나 다른 회원의 토큰이어도 200입니다.
+ * @summary 내 FCM 토큰 해제
+ */
+export const deleteMyFcmToken = async (deleteFcmTokenRequest: DeleteFcmTokenRequest, options?: Parameters<typeof httpClient>[1]): Promise<deleteMyFcmTokenResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<deleteMyFcmTokenResponse>(getDeleteMyFcmTokenUrl(),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deleteFcmTokenRequest)
+  }
+);}
+
+
+
+
+
+export const getDeleteMyFcmTokenMutationKey = () => ['deleteMyFcmToken'] as const;
+
+export const getDeleteMyFcmTokenMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyFcmToken>>, TError,DeleteMyFcmTokenMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyFcmToken>>, TError,DeleteMyFcmTokenMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyFcmTokenMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyFcmToken>>, DeleteMyFcmTokenMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  deleteMyFcmToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyFcmTokenMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyFcmToken>>>
+    export type DeleteMyFcmTokenMutationBody = DeleteFcmTokenRequest
+    export type DeleteMyFcmTokenMutationError = ErrorResponse
+    export type DeleteMyFcmTokenMutationVariables = {data: DeleteFcmTokenRequest}
+
+    /**
+ * @summary 내 FCM 토큰 해제
+ */
+export const useDeleteMyFcmToken = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyFcmToken>>, TError,DeleteMyFcmTokenMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyFcmToken>>,
+        TError,
+        DeleteMyFcmTokenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyFcmTokenMutationOptions(options), queryClient);
     }
 
 export type replaceMyCompanyManagerInfoResponse200 = {
@@ -7973,6 +8108,328 @@ export const useChangeMyPassword = <TError = ErrorResponse,
       return useMutation(getChangeMyPasswordMutationOptions(options), queryClient);
     }
 
+export type readMyNotificationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type readMyNotificationResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type readMyNotificationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type readMyNotificationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type readMyNotificationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type readMyNotificationResponseSuccess = (readMyNotificationResponse200) & {
+  headers: Headers;
+};
+export type readMyNotificationResponseError = (readMyNotificationResponse400 | readMyNotificationResponse401 | readMyNotificationResponse403 | readMyNotificationResponse404) & {
+  headers: Headers;
+};
+
+export type readMyNotificationResponse = (readMyNotificationResponseSuccess | readMyNotificationResponseError)
+
+export const getReadMyNotificationUrl = (notificationId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/notifications/${notificationId}/read`
+}
+
+/**
+ * 최초 읽은 시각만 보존합니다. 반복 호출은 성공하며, 없는 알림·타인 알림·30일이 지난 알림은 404입니다.
+ * @summary 내 알림 한 건 읽음
+ */
+export const readMyNotification = async (notificationId: number, options?: Parameters<typeof httpClient>[1]): Promise<readMyNotificationResponse> => {
+
+  return httpClient<readMyNotificationResponse>(getReadMyNotificationUrl(notificationId),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getReadMyNotificationMutationKey = () => ['readMyNotification'] as const;
+
+export const getReadMyNotificationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof readMyNotification>>, TError,ReadMyNotificationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof readMyNotification>>, TError,ReadMyNotificationMutationVariables, TContext> => {
+
+const mutationKey = getReadMyNotificationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof readMyNotification>>, ReadMyNotificationMutationVariables> = (props) => {
+          const {notificationId} = props ?? {};
+
+          return  readMyNotification(notificationId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReadMyNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof readMyNotification>>>
+
+    export type ReadMyNotificationMutationError = ErrorResponse
+    export type ReadMyNotificationMutationVariables = {notificationId: number}
+
+    /**
+ * @summary 내 알림 한 건 읽음
+ */
+export const useReadMyNotification = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof readMyNotification>>, TError,ReadMyNotificationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof readMyNotification>>,
+        TError,
+        ReadMyNotificationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReadMyNotificationMutationOptions(options), queryClient);
+    }
+
+export type readAllMyNotificationsResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type readAllMyNotificationsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type readAllMyNotificationsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type readAllMyNotificationsResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type readAllMyNotificationsResponseSuccess = (readAllMyNotificationsResponse200) & {
+  headers: Headers;
+};
+export type readAllMyNotificationsResponseError = (readAllMyNotificationsResponse401 | readAllMyNotificationsResponse403 | readAllMyNotificationsResponse404) & {
+  headers: Headers;
+};
+
+export type readAllMyNotificationsResponse = (readAllMyNotificationsResponseSuccess | readAllMyNotificationsResponseError)
+
+export const getReadAllMyNotificationsUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/notifications/read-all`
+}
+
+/**
+ * 개인 알림은 요청 시각·ID 상한까지, 공통 공지는 요청 시각까지 커밋되어 보이는 가입 이후 최근 30일 항목을 읽음 처리합니다. 본문 없이 호출합니다.
+ * @summary 내 알림 모두 읽음
+ */
+export const readAllMyNotifications = async ( options?: Parameters<typeof httpClient>[1]): Promise<readAllMyNotificationsResponse> => {
+
+  return httpClient<readAllMyNotificationsResponse>(getReadAllMyNotificationsUrl(),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getReadAllMyNotificationsMutationKey = () => ['readAllMyNotifications'] as const;
+
+export const getReadAllMyNotificationsMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof readAllMyNotifications>>, TError,void, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof readAllMyNotifications>>, TError,void, TContext> => {
+
+const mutationKey = getReadAllMyNotificationsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof readAllMyNotifications>>, void> = () => {
+
+
+          return  readAllMyNotifications(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReadAllMyNotificationsMutationResult = NonNullable<Awaited<ReturnType<typeof readAllMyNotifications>>>
+
+    export type ReadAllMyNotificationsMutationError = ErrorResponse
+
+
+    /**
+ * @summary 내 알림 모두 읽음
+ */
+export const useReadAllMyNotifications = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof readAllMyNotifications>>, TError,void, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof readAllMyNotifications>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getReadAllMyNotificationsMutationOptions(options), queryClient);
+    }
+
+export type readMyBroadcastNotificationResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type readMyBroadcastNotificationResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type readMyBroadcastNotificationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type readMyBroadcastNotificationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type readMyBroadcastNotificationResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type readMyBroadcastNotificationResponseSuccess = (readMyBroadcastNotificationResponse200) & {
+  headers: Headers;
+};
+export type readMyBroadcastNotificationResponseError = (readMyBroadcastNotificationResponse400 | readMyBroadcastNotificationResponse401 | readMyBroadcastNotificationResponse403 | readMyBroadcastNotificationResponse404) & {
+  headers: Headers;
+};
+
+export type readMyBroadcastNotificationResponse = (readMyBroadcastNotificationResponseSuccess | readMyBroadcastNotificationResponseError)
+
+export const getReadMyBroadcastNotificationUrl = (batchId: string,) => {
+
+
+
+
+  return `/api/v1/users/me/notifications/broadcasts/${batchId}/read`
+}
+
+/**
+ * 가입 이후 게시된 최근 30일 공지의 최초 읽음 시각을 저장합니다. source=BROADCAST의 batchId를 사용하며 반복 호출도 성공합니다.
+ * @summary 내 전체 공지 한 건 읽음
+ */
+export const readMyBroadcastNotification = async (batchId: string, options?: Parameters<typeof httpClient>[1]): Promise<readMyBroadcastNotificationResponse> => {
+
+  return httpClient<readMyBroadcastNotificationResponse>(getReadMyBroadcastNotificationUrl(batchId),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getReadMyBroadcastNotificationMutationKey = () => ['readMyBroadcastNotification'] as const;
+
+export const getReadMyBroadcastNotificationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof readMyBroadcastNotification>>, TError,ReadMyBroadcastNotificationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof readMyBroadcastNotification>>, TError,ReadMyBroadcastNotificationMutationVariables, TContext> => {
+
+const mutationKey = getReadMyBroadcastNotificationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof readMyBroadcastNotification>>, ReadMyBroadcastNotificationMutationVariables> = (props) => {
+          const {batchId} = props ?? {};
+
+          return  readMyBroadcastNotification(batchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReadMyBroadcastNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof readMyBroadcastNotification>>>
+
+    export type ReadMyBroadcastNotificationMutationError = ErrorResponse
+    export type ReadMyBroadcastNotificationMutationVariables = {batchId: string}
+
+    /**
+ * @summary 내 전체 공지 한 건 읽음
+ */
+export const useReadMyBroadcastNotification = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof readMyBroadcastNotification>>, TError,ReadMyBroadcastNotificationMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof readMyBroadcastNotification>>,
+        TError,
+        ReadMyBroadcastNotificationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReadMyBroadcastNotificationMutationOptions(options), queryClient);
+    }
+
 export type reopenMyRecruitmentPostResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -8769,6 +9226,280 @@ export function useListMyRecruitmentPostApplications<TData = Awaited<ReturnType<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListMyRecruitmentPostApplicationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listMyNotificationsResponse200 = {
+  data: SuccessResponseUserNotificationPageResponse
+  status: 200
+}
+
+export type listMyNotificationsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listMyNotificationsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMyNotificationsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyNotificationsResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type listMyNotificationsResponseSuccess = (listMyNotificationsResponse200) & {
+  headers: Headers;
+};
+export type listMyNotificationsResponseError = (listMyNotificationsResponse400 | listMyNotificationsResponse401 | listMyNotificationsResponse403 | listMyNotificationsResponse404) & {
+  headers: Headers;
+};
+
+export type listMyNotificationsResponse = (listMyNotificationsResponseSuccess | listMyNotificationsResponseError)
+
+export const getListMyNotificationsUrl = (params?: ListMyNotificationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users/me/notifications?${stringifiedParams}` : `/api/v1/users/me/notifications`
+}
+
+/**
+ * 최근 30일 개인 알림과 가입 이후 전체 공지를 최신순으로 조회합니다. source=PERSONAL은 숫자 id, BROADCAST는 batchId로 읽음 처리합니다. 같은 시각은 공통 공지, 개인 알림 순이며 각 종류 안에서 ID 내림차순입니다. 관리자 알림은 ADMIN_NOTIFICATION이며 postId·commentId는 null, 이동 주소는 url입니다. 토큰·푸시 결과와 무관하게 보관합니다. nextCursor를 그대로 다음 요청에 사용합니다. 기본 20건, 최대 100건입니다.
+ * @summary 내 알림 목록 조회
+ */
+export const listMyNotifications = async (params?: ListMyNotificationsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyNotificationsResponse> => {
+
+  return httpClient<listMyNotificationsResponse>(getListMyNotificationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyNotificationsQueryKey = (params?: ListMyNotificationsParams,) => {
+    return [
+    `/api/v1/users/me/notifications`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof listMyNotifications>>, TError = ErrorResponse>(params?: ListMyNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyNotifications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyNotificationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyNotifications>>> = ({ signal }) => listMyNotifications(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyNotifications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyNotifications>>>
+export type ListMyNotificationsQueryError = ErrorResponse
+
+
+export function useListMyNotifications<TData = Awaited<ReturnType<typeof listMyNotifications>>, TError = ErrorResponse>(
+ params: undefined |  ListMyNotificationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyNotifications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyNotifications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyNotifications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyNotifications<TData = Awaited<ReturnType<typeof listMyNotifications>>, TError = ErrorResponse>(
+ params?: ListMyNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyNotifications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyNotifications>>,
+          TError,
+          Awaited<ReturnType<typeof listMyNotifications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyNotifications<TData = Awaited<ReturnType<typeof listMyNotifications>>, TError = ErrorResponse>(
+ params?: ListMyNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyNotifications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 알림 목록 조회
+ */
+
+export function useListMyNotifications<TData = Awaited<ReturnType<typeof listMyNotifications>>, TError = ErrorResponse>(
+ params?: ListMyNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyNotifications>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyNotificationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getMyNotificationUnreadCountResponse200 = {
+  data: SuccessResponseUserNotificationUnreadCountResponse
+  status: 200
+}
+
+export type getMyNotificationUnreadCountResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getMyNotificationUnreadCountResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getMyNotificationUnreadCountResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyNotificationUnreadCountResponseSuccess = (getMyNotificationUnreadCountResponse200) & {
+  headers: Headers;
+};
+export type getMyNotificationUnreadCountResponseError = (getMyNotificationUnreadCountResponse401 | getMyNotificationUnreadCountResponse403 | getMyNotificationUnreadCountResponse404) & {
+  headers: Headers;
+};
+
+export type getMyNotificationUnreadCountResponse = (getMyNotificationUnreadCountResponseSuccess | getMyNotificationUnreadCountResponseError)
+
+export const getGetMyNotificationUnreadCountUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/notifications/unread-count`
+}
+
+/**
+ * 최근 30일의 실제 개수를 반환합니다. 99+ 표시는 클라이언트에서 처리합니다.
+ * @summary 내 안 읽은 알림 개수 조회
+ */
+export const getMyNotificationUnreadCount = async ( options?: Parameters<typeof httpClient>[1]): Promise<getMyNotificationUnreadCountResponse> => {
+
+  return httpClient<getMyNotificationUnreadCountResponse>(getGetMyNotificationUnreadCountUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyNotificationUnreadCountQueryKey = () => {
+    return [
+    `/api/v1/users/me/notifications/unread-count`
+    ] as const;
+    }
+
+
+export const getGetMyNotificationUnreadCountQueryOptions = <TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyNotificationUnreadCountQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>> = ({ signal }) => getMyNotificationUnreadCount({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyNotificationUnreadCountQueryResult = NonNullable<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>>
+export type GetMyNotificationUnreadCountQueryError = ErrorResponse
+
+
+export function useGetMyNotificationUnreadCount<TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+          TError,
+          Awaited<ReturnType<typeof getMyNotificationUnreadCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyNotificationUnreadCount<TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+          TError,
+          Awaited<ReturnType<typeof getMyNotificationUnreadCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyNotificationUnreadCount<TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 안 읽은 알림 개수 조회
+ */
+
+export function useGetMyNotificationUnreadCount<TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyNotificationUnreadCount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyNotificationUnreadCountQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -11602,6 +12333,8 @@ export const getGetMyFcmTokenResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getReplaceMyFcmTokenResponseMock = (overrideResponse: Partial<Extract<SuccessResponseFcmTokenResponse, object>> = {}): SuccessResponseFcmTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{token: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
+export const getDeleteMyFcmTokenResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getReplaceMyCompanyManagerInfoResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getReplaceMyCompanyBasicInfoResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -11720,6 +12453,12 @@ export const getUpdateRecruitmentPostApplicationStatusResponseMock = (overrideRe
 
 export const getChangeMyPasswordResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReadMyNotificationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getReadAllMyNotificationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getReadMyBroadcastNotificationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getReopenMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCloseMyRecruitmentPostResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -11733,6 +12472,10 @@ export const getGetMyRecruitmentPostFormResponseMock = (overrideResponse: Partia
 export const getListMyRecruitmentPostApplicationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseRecruitmentPostApplicationPageResponse, object>> = {}): SuccessResponseRecruitmentPostApplicationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({postId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentType: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), recruitmentEndDate: faker.date.past().toISOString().slice(0, 10), progressMethod: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), activityDurationMonths: faker.number.int(), applicationStatus: faker.helpers.arrayElement(['PREPARING','COMPLETED','IN_PROGRESS','ENDED'] as const), lastClickedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}, countsByRecruitmentType: {
         [faker.string.alphanumeric(5)]: faker.number.int()
       }}, undefined]), ...overrideResponse})
+
+export const getListMyNotificationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserNotificationPageResponse, object>> = {}): SuccessResponseUserNotificationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), type: faker.helpers.arrayElement(['SIDE_STUDY_COMMENT_REPLY','CONCERN_COMMENT','ADMIN_NOTIFICATION'] as const), actorNickname: faker.string.alpha({length: {min: 10, max: 20}}), actorProfileImageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), postTitle: faker.string.alpha({length: {min: 10, max: 20}}), preview: faker.string.alpha({length: {min: 10, max: 20}}), postId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), commentId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), isRead: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), batchId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), body: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), sourceId: faker.string.alpha({length: {min: 10, max: 20}}), source: faker.string.alpha({length: {min: 10, max: 20}})})), nextCursor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), hasNext: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getGetMyNotificationUnreadCountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserNotificationUnreadCountResponse, object>> = {}): SuccessResponseUserNotificationUnreadCountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{count: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getGetRecruitmentPostCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostCommentResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const)}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -11894,6 +12637,18 @@ export const getReplaceMyFcmTokenMockHandler = (overrideResponse?: SuccessRespon
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getReplaceMyFcmTokenResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteMyFcmTokenMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/users/me/fcm-token', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteMyFcmTokenResponseMock(),
       { status: 200
       })
   }, options)
@@ -12625,6 +13380,42 @@ export const getChangeMyPasswordMockHandler = (overrideResponse?: SuccessRespons
   }, options)
 }
 
+export const getReadMyNotificationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/users/me/notifications/:notificationId/read', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReadMyNotificationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReadAllMyNotificationsMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/users/me/notifications/read-all', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReadAllMyNotificationsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReadMyBroadcastNotificationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/users/me/notifications/broadcasts/:batchId/read', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReadMyBroadcastNotificationResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getReopenMyRecruitmentPostMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.patch('*/api/v1/recruitment-posts/:postId/reopen', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
 
@@ -12692,6 +13483,30 @@ export const getListMyRecruitmentPostApplicationsMockHandler = (overrideResponse
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getListMyRecruitmentPostApplicationsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListMyNotificationsMockHandler = (overrideResponse?: SuccessResponseUserNotificationPageResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserNotificationPageResponse> | SuccessResponseUserNotificationPageResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/notifications', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyNotificationsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyNotificationUnreadCountMockHandler = (overrideResponse?: SuccessResponseUserNotificationUnreadCountResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseUserNotificationUnreadCountResponse> | SuccessResponseUserNotificationUnreadCountResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/notifications/unread-count', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyNotificationUnreadCountResponseMock(),
       { status: 200
       })
   }, options)
@@ -12959,6 +13774,7 @@ export const getOgonggoUserAPIMock = () => [
   getDeleteMyJobMockHandler(),
   getGetMyFcmTokenMockHandler(),
   getReplaceMyFcmTokenMockHandler(),
+  getDeleteMyFcmTokenMockHandler(),
   getReplaceMyCompanyManagerInfoMockHandler(),
   getReplaceMyCompanyBasicInfoMockHandler(),
   getGetMyBootcampMockHandler(),
@@ -13020,12 +13836,17 @@ export const getOgonggoUserAPIMock = () => [
   getDeleteRecruitmentPostApplicationMockHandler(),
   getUpdateRecruitmentPostApplicationStatusMockHandler(),
   getChangeMyPasswordMockHandler(),
+  getReadMyNotificationMockHandler(),
+  getReadAllMyNotificationsMockHandler(),
+  getReadMyBroadcastNotificationMockHandler(),
   getReopenMyRecruitmentPostMockHandler(),
   getCloseMyRecruitmentPostMockHandler(),
   getGetMyAccountMockHandler(),
   getListMyRecruitmentPostsMockHandler(),
   getGetMyRecruitmentPostFormMockHandler(),
   getListMyRecruitmentPostApplicationsMockHandler(),
+  getListMyNotificationsMockHandler(),
+  getGetMyNotificationUnreadCountMockHandler(),
   getGetRecruitmentPostCommentRepliesMockHandler(),
   getListMyRecruitmentPostBookmarksMockHandler(),
   getListPublicRecommendedChallengesMockHandler(),
