@@ -1,5 +1,10 @@
-import { replaceMyFcmToken } from '@ogonggo/api';
-import { forgetSavedToken, getSavedToken, setSavedToken } from '@/shared/api/pushDevice';
+import { HttpError, replaceMyFcmToken } from '@ogonggo/api';
+import {
+  forgetSavedToken,
+  getDeviceId,
+  getSavedToken,
+  setSavedToken,
+} from '@/shared/api/pushDevice';
 
 /**
  * 웹 푸시(FCM). 브라우저의 알림 권한을 받고, FCM 토큰을 발급해 백엔드에 저장한다
@@ -159,8 +164,20 @@ async function issueToken(): Promise<string> {
   return token;
 }
 
+/**
+ * 토큰을 이 기기의 `deviceId` 와 함께 저장한다. 409(`FCM_TOKEN_CONFLICT`) 는 같은 기기·토큰을 동시에 등록하다
+ * 부딪힌 것이라 같은 요청을 한 번 더 보낸다. 이 API 의 409 는 그것뿐이라 상태 코드로 가른다.
+ */
 async function saveToken(token: string): Promise<void> {
-  await replaceMyFcmToken({ token });
+  const request = { token, deviceId: getDeviceId() };
+  try {
+    await replaceMyFcmToken(request);
+  } catch (error) {
+    if (!(error instanceof HttpError && error.status === 409)) {
+      throw error;
+    }
+    await replaceMyFcmToken(request);
+  }
   setSavedToken(token);
 }
 
