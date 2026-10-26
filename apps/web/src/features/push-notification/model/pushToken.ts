@@ -1,8 +1,16 @@
-import { replaceMyFcmToken } from '@ogonggo/api';
+import { HttpError, replaceMyFcmToken } from '@ogonggo/api';
+import {
+  getDeviceId,
+  getSavedToken,
+  releasePushToken,
+  setSavedToken,
+} from '@/shared/api/pushDevice';
+import { PUSH_RECEIVED_EVENT } from '@/shared/lib/pushReceived';
 
 /**
  * 웹 푸시(FCM). 브라우저의 알림 권한을 받고, FCM 토큰을 발급해 백엔드에 저장한다
- * (`PUT /api/v1/users/me/fcm-token`). 토큰은 사용자당 하나다 — 저장하면 앞의 기기 토큰은 밀려난다.
+ * (`PUT /api/v1/users/me/fcm-token`). 토큰은 기기마다 따로 둔다 — 설치 UUID(`deviceId`) 로 기기를 가려, 한 계정이
+ * 여러 브라우저에서 알림을 받는다.
  *
  * **Firebase 웹 설정이 하나라도 비어 있으면 이 기능은 없는 것과 같다.** 토글도 그리지 않고 요청도
  * 보내지 않는다(`isPushAvailable`). 값은 `NEXT_PUBLIC_FIREBASE_*` 이고 `.env.example` 에 있다.
@@ -18,8 +26,6 @@ const SERVICE_WORKER_PATH = '/firebase-messaging-sw.js';
  */
 const SERVICE_WORKER_SCOPE = '/firebase-cloud-messaging-push-scope';
 
-/** 마지막으로 백엔드에 저장한 토큰. 같은 토큰을 앱을 열 때마다 다시 보내지 않으려고 둔다. */
-const SAVED_TOKEN_KEY = 'ogonggo.push.savedToken';
 /** 사용자가 이 브라우저에서 알림을 끈 표시. 권한은 그대로 두고 우리 쪽에서만 끈다. */
 const DISABLED_KEY = 'ogonggo.push.disabled';
 
@@ -62,7 +68,7 @@ function writeFlag(key: string, value: string | null): void {
       window.localStorage.setItem(key, value);
     }
   } catch {
-    // 저장이 막혔으면 이번 방문 동안만 유효하다. 다음 방문에 토큰을 한 번 더 보낼 뿐이다.
+    // 저장이 막혔으면 이번 방문 동안만 유효하다.
   }
 }
 
@@ -87,9 +93,20 @@ export function isPushEnabled(): boolean {
   return Notification.permission === 'granted' && readFlag(DISABLED_KEY) === null;
 }
 
-/** 로그아웃하면 저장해 둔 토큰 기록을 버린다. 다음 사람이 로그인하면 같은 토큰도 다시 저장해야 한다. */
-export function forgetSavedToken(): void {
-  writeFlag(SAVED_TOKEN_KEY, null);
+/**
+ * 켜고 끈 뒤에 내는 이벤트. 헤더의 `푸시 알림 받기` 버튼과 마이페이지 스위치가 같은 화면에 함께 떠 있을 수 있어,
+ * 한쪽에서 바꾸면 다른 쪽도 다시 읽게 한다.
+ */
+const PUSH_STATE_EVENT = 'ogonggo:push-state';
+
+function notifyPushState(): void {
+  window.dispatchEvent(new Event(PUSH_STATE_EVENT));
+}
+
+/** 켜짐·꺼짐·막힘이 바뀌면 `listener` 를 부른다. 돌려주는 함수로 구독을 푼다. */
+export function subscribePushState(listener: () => void): () => void {
+  window.addEventListener(PUSH_STATE_EVENT, listener);
+  return () => window.removeEventListener(PUSH_STATE_EVENT, listener);
 }
 
 /**
@@ -128,7 +145,7 @@ let listening = false;
  * 이 브라우저의 FCM 토큰을 발급한다. 이미 있으면 같은 값을 돌려준다.
  *
  * 앱이 열려 있을 때 온 메시지는 SDK 가 알림을 띄우지 않고 페이지로 넘긴다. 아무것도 안 하면 열어 둔
- * 사이에 온 알림이 사라지므로, 같은 모양의 알림으로 직접 띄운다.
+ * 사이에 온 알림이 사라지므로, 같은 모양의 알림으로 직접 띄운다. 알림함 배지를 갱신하라고 `window` 에도 알린다.
  */
 async function issueToken(): Promise<string> {
   const config = readConfig();
@@ -152,6 +169,8 @@ async function issueToken(): Promise<string> {
   if (!listening) {
     listening = true;
     onMessage(messaging, (message) => {
+      // 알림함 배지가 바로 오르게 알린다(`PUSH_RECEIVED_EVENT`).
+      window.dispatchEvent(new Event(PUSH_RECEIVED_EVENT));
       const { title, body } = message.notification ?? {};
       if (title) {
         void registration.showNotification(title, {
@@ -165,9 +184,21 @@ async function issueToken(): Promise<string> {
   return token;
 }
 
+/**
+ * 토큰을 이 기기의 `deviceId` 와 함께 저장한다. 409(`FCM_TOKEN_CONFLICT`) 는 같은 기기·토큰을 동시에 등록하다
+ * 부딪힌 것이라 같은 요청을 한 번 더 보낸다. 이 API 의 409 는 그것뿐이라 상태 코드로 가른다.
+ */
 async function saveToken(token: string): Promise<void> {
-  await replaceMyFcmToken({ token });
-  writeFlag(SAVED_TOKEN_KEY, token);
+  const request = { token, deviceId: getDeviceId() };
+  try {
+    await replaceMyFcmToken(request);
+  } catch (error) {
+    if (!(error instanceof HttpError && error.status === 409)) {
+      throw error;
+    }
+    await replaceMyFcmToken(request);
+  }
+  setSavedToken(token);
 }
 
 /**
@@ -180,6 +211,7 @@ async function saveToken(token: string): Promise<void> {
 export async function enablePush(): Promise<'enabled' | 'blocked'> {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
+    notifyPushState();
     return 'blocked';
   }
   writeFlag(DISABLED_KEY, null);
@@ -189,16 +221,18 @@ export async function enablePush(): Promise<'enabled' | 'blocked'> {
     writeFlag(DISABLED_KEY, '1');
     throw error;
   }
+  notifyPushState();
   return 'enabled';
 }
 
 /**
- * 알림을 끈다. 백엔드에 토큰을 지우는 API 가 없어서 서버의 토큰은 남는다. 대신 이 브라우저의 구독을
- * 해지해, 남은 토큰으로 보내도 이 기기에는 닿지 않게 한다.
+ * 알림을 끈다. 백엔드에서 이 기기의 토큰을 지우고(`releasePushToken`) 이 브라우저의 구독도 해지한다. 지우기가
+ * 실패해 서버에 토큰이 남아도, 구독을 해지했으니 그 토큰으로 보내도 이 기기에는 닿지 않는다.
  */
 export async function disablePush(): Promise<void> {
   writeFlag(DISABLED_KEY, '1');
-  forgetSavedToken();
+  notifyPushState();
+  await releasePushToken();
   try {
     const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_SCOPE);
     const subscription = await registration?.pushManager.getSubscription();
@@ -223,7 +257,7 @@ export function syncPushToken(): Promise<void> {
   }
   syncing ??= (async () => {
     const token = await issueToken();
-    if (token !== readFlag(SAVED_TOKEN_KEY)) {
+    if (token !== getSavedToken()) {
       await saveToken(token);
     }
   })()

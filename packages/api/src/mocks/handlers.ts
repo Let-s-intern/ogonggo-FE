@@ -4,6 +4,7 @@ import { imageUploadHandlers } from './images';
 import { getJobRecommendedContentsHandler } from './job-recommended-contents';
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
+import { userNotificationHandlers } from './notifications';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
@@ -29,6 +30,7 @@ import { ListPublicBootcampsCategory } from '../generated/user/models/listPublic
 import { ListPublicJobsSort } from '../generated/user/models/listPublicJobsSort';
 import type { CreateRecruitmentPostCommentRequest } from '../generated/user/models/createRecruitmentPostCommentRequest';
 import type { CreateServiceFeedbackRequest } from '../generated/user/models/createServiceFeedbackRequest';
+import type { ReplaceFcmTokenRequest } from '../generated/user/models/replaceFcmTokenRequest';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import type { PageInfo } from '../generated/user/models/pageInfo';
 import type { RecruitmentPostCommentResponse } from '../generated/user/models/recruitmentPostCommentResponse';
@@ -43,6 +45,8 @@ import type { SuccessResponseRecruitmentPostDetailResponse } from '../generated/
 import type { SuccessResponsePageResponseUserBootcampSummaryResponse } from '../generated/user/models/successResponsePageResponseUserBootcampSummaryResponse';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../generated/user/models/successResponsePageResponseUserJobSummaryResponse';
 import type { SuccessResponseImageUploadResponse } from '../generated/user/models/successResponseImageUploadResponse';
+import type { SuccessResponseFcmTokenResponse } from '../generated/user/models/successResponseFcmTokenResponse';
+import type { SuccessResponseUnit } from '../generated/user/models/successResponseUnit';
 import type { SuccessResponsePageResponseUserAnnouncementSummaryResponse } from '../generated/user/models/successResponsePageResponseUserAnnouncementSummaryResponse';
 import type { SuccessResponseUserAnnouncementDetailResponse } from '../generated/user/models/successResponseUserAnnouncementDetailResponse';
 import type { UserAnnouncementSummaryResponse } from '../generated/user/models/userAnnouncementSummaryResponse';
@@ -1123,6 +1127,25 @@ const uploadImageHandler = http.post('*/api/v1/images', () => {
   return HttpResponse.json(body, { status: 201 });
 });
 
+/**
+ * `replaceMyFcmToken`·`deleteMyFcmToken`(`PUT`·`DELETE /api/v1/users/me/fcm-token`). 저장하지 않고 늘 200 이다.
+ * 알림 켜기·동기화가 `PUT` 을, 알림 끄기·로그아웃이 `DELETE` 를 보낸다.
+ */
+const replaceFcmTokenHandler = http.put('*/api/v1/users/me/fcm-token', async ({ request }) => {
+  const { token } = (await request.json()) as ReplaceFcmTokenRequest;
+  const body: SuccessResponseFcmTokenResponse = {
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: { token },
+  };
+  return HttpResponse.json(body, { status: 200 });
+});
+
+const deleteFcmTokenHandler = http.delete('*/api/v1/users/me/fcm-token', () => {
+  const body: SuccessResponseUnit = { status: 200, message: '요청이 성공했습니다.' };
+  return HttpResponse.json(body, { status: 200 });
+});
+
 export const handlers: HttpHandler[] = [
   uploadImageHandler,
   ...imageUploadHandlers,
@@ -1147,4 +1170,7 @@ export const handlers: HttpHandler[] = [
   getNoticesHandler,
   getNoticeHandler,
   createServiceFeedbackHandler,
+  replaceFcmTokenHandler,
+  deleteFcmTokenHandler,
+  ...userNotificationHandlers,
 ];

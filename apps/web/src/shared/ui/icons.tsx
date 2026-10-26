@@ -255,3 +255,10 @@ export function CardNewsIcon({ className, ...props }: IconProps) {
     <span aria-hidden="true" className={cn('icon-[lucide--images] block', className)} {...props} />
   );
 }
+
+/** 헤더의 알림 아이콘(`features/notification-inbox` 의 `NotificationBell`)과 알림함 빈 상태의 종 모양. */
+export function BellIcon({ className, ...props }: IconProps) {
+  return (
+    <span aria-hidden="true" className={cn('icon-[lucide--bell] block', className)} {...props} />
+  );
+}

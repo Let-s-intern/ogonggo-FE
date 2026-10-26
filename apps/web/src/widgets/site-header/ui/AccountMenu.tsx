@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { cn } from '@ogonggo/ui';
 import { useSignOut } from '@/features/sign-out';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
@@ -14,6 +14,9 @@ export interface AccountMenuProps {
   myPageActive: boolean;
   /** 관리자일 때만 온다. 있으면 드롭다운에 `어드민` 이 더해진다. */
   adminOrigin?: string;
+  /** 열림 상태는 `SiteHeader` 가 든다. 알림 패널(`NotificationBell`)과 한 번에 하나만 열린다. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
@@ -26,8 +29,14 @@ export interface AccountMenuProps {
  * `<details>` 가 아니라 상태로 여닫는다. 헤더는 화면을 옮겨도 남아 있어서, `<details>` 는
  * `마이페이지` 를 눌러 이동한 뒤에도 열린 채로 남는다. 바깥을 누르거나 Esc 를 눌러도 닫는다.
  */
-export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: AccountMenuProps) {
-  const [open, setOpen] = useState(false);
+export function AccountMenu({
+  name,
+  myPageHref,
+  myPageActive,
+  adminOrigin,
+  open,
+  onOpenChange: setOpen,
+}: AccountMenuProps) {
   const { signOut, pending } = useSignOut();
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +54,7 @@ export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: Acc
       document.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [open]);
+  }, [open, setOpen]);
 
   const label = (
     <>
@@ -65,7 +74,7 @@ export function AccountMenu({ name, myPageHref, myPageActive, adminOrigin }: Acc
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen(!open)}
         className={labelClass}
       >
         {label}

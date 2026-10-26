@@ -8,7 +8,12 @@ import {
   type AdminJobDetailResponseReviewStatus as JobReviewStatus,
   type AdminJobDetailResponseSource as ContentSource,
   type AdminJobDetailResponseVisibility as Visibility,
+  type AdminNotificationRecentResultItemResponseChannel as NotificationChannel,
+  type AdminNotificationRecentResultItemResponseRecipientType as NotificationRecipientType,
+  type AdminNotificationRecentResultItemResponseResultCategory as NotificationResultCategory,
+  type AdminNotificationRecentResultItemResponseStatus as NotificationStatus,
   type AdminRecruitmentPostSummaryResponsePositionsItem as RecruitmentPosition,
+  type CreateNotificationBatchRequestTargetType as NotificationTargetType,
   type EnumName,
   type EnumValue,
   type ListGeneralMembersStatus as MemberStatus,
@@ -151,6 +156,90 @@ export const recruitmentPositionLabel = (value: RecruitmentPosition): string =>
 
 export const concernCategoryLabel = (value: ConcernCategory): string =>
   enumLabel('ConcernCategory', value);
+
+/*
+ * 알림 발송. 문구는 PRD `prd-notifications.md` "라벨" 로 정했다. 카탈로그에 있는 넷(`NotificationStatus`·
+ * `NotificationChannel`·`NotificationRecipientType`·`NotificationBatchTargetType`)의 `desc` 는 `provider 접수`
+ * 처럼 백엔드 용어라 운영자가 읽는 말로 바꿨고, 뜻은 `desc` 와 같다. `resultCategory` 는 카탈로그에 없다.
+ *
+ * 모두 모르는 값이면 원래 값을 그대로 보인다. 백엔드가 값을 늘려도 칸이 비지 않는다.
+ */
+
+const NOTIFICATION_STATUS: Record<NotificationStatus, { label: string; tone: Tone }> = {
+  PENDING: { label: '대기', tone: 'neutral' },
+  PROCESSING: { label: '처리 중', tone: 'main' },
+  SENT: { label: '접수 성공', tone: 'success' },
+  FAILED: { label: '실패', tone: 'danger' },
+  UNKNOWN: { label: '미확정', tone: 'urgent' },
+};
+
+const NOTIFICATION_CHANNEL_LABEL: Record<NotificationChannel, string> = {
+  FCM: '푸시',
+  KAKAO: '알림톡',
+  EMAIL: '이메일',
+};
+
+const NOTIFICATION_RECIPIENT_TYPE_LABEL: Record<NotificationRecipientType, string> = {
+  DIRECT: '개별',
+  TOPIC: '토픽',
+};
+
+/** 발송 요약·상세의 `deliveryTargetType`. 같은 값을 작업 표(`recipientType`)보다 길게 부른다. */
+const NOTIFICATION_DELIVERY_TYPE_LABEL: Record<NotificationRecipientType, string> = {
+  DIRECT: '개별 발송',
+  TOPIC: '전체 공지',
+};
+
+const NOTIFICATION_TARGET_TYPE_LABEL: Record<NotificationTargetType, string> = {
+  USER_IDS: '지정 회원',
+  ALL: '전체 회원',
+};
+
+/**
+ * 채널 구현체가 분류한 실패 원인(백엔드 `NotificationFailureCategory`). 예로 FCM 의 `UNREGISTERED` 는
+ * `CLIENT_ERROR` 로 온다(`FcmNotificationSender.toFailureCategory`).
+ */
+const NOTIFICATION_RESULT_CATEGORY_LABEL: Record<NotificationResultCategory, string> = {
+  DUPLICATE_REQUEST: '중복 요청',
+  AUTHENTICATION_CONFIGURATION: '인증 설정 오류',
+  SENDER_PROFILE_CONFIGURATION: '발신 프로필 설정 오류',
+  INVALID_REQUEST: '잘못된 요청',
+  TEMPLATE_CONFIGURATION: '템플릿 설정 오류',
+  RATE_LIMITED: '발송 한도 초과',
+  PROVIDER_UNAVAILABLE: '발송사 장애',
+  PROVIDER_REJECTED: '발송사 거절',
+  TRANSPORT_ERROR: '통신 오류',
+  PROCESSING_TIMEOUT: '처리 시간 초과(결과 미확정)',
+  HTTP_ERROR: 'HTTP 오류',
+  CLIENT_ERROR: '수신 대상 오류',
+  INVALID_PROVIDER_RESPONSE: '발송사 응답 해석 실패',
+  CHANNEL_NOT_CONFIGURED: '채널 미설정',
+  APPLICATION_ERROR: '서버 내부 오류',
+  UNKNOWN_PROVIDER_ERROR: '발송사 원인 불명 오류',
+};
+
+/** 맵에 없는 값(서버가 새로 더한 값)은 원래 값 그대로다. */
+const lookup = (map: Record<string, string>, value: string): string => map[value] ?? value;
+
+export const NotificationStatusBadge = ({ value }: { value: string }) => {
+  const known = NOTIFICATION_STATUS[value as NotificationStatus];
+  return renderBadge(known?.tone, known?.label ?? value);
+};
+
+export const notificationChannelLabel = (value: string): string =>
+  lookup(NOTIFICATION_CHANNEL_LABEL, value);
+
+export const notificationRecipientTypeLabel = (value: string): string =>
+  lookup(NOTIFICATION_RECIPIENT_TYPE_LABEL, value);
+
+export const notificationDeliveryTypeLabel = (value: string): string =>
+  lookup(NOTIFICATION_DELIVERY_TYPE_LABEL, value);
+
+export const notificationTargetTypeLabel = (value: string): string =>
+  lookup(NOTIFICATION_TARGET_TYPE_LABEL, value);
+
+export const notificationResultCategoryLabel = (value: string): string =>
+  lookup(NOTIFICATION_RESULT_CATEGORY_LABEL, value);
 
 /**
  * 필터 드롭다운 옵션. 첫 칸은 항상 "전체"이고 값이 빈 문자열이다. 나머지는 카탈로그 선언

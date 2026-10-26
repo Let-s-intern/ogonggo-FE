@@ -10,6 +10,8 @@ import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { LoginPage } from '@/pages/login';
 import { NoticeListPage } from '@/pages/notice-list';
+import { NotificationBatchDetailPage } from '@/pages/notification-batch-detail';
+import { NotificationSendPage } from '@/pages/notification-send';
 import { NotFoundPage } from '@/pages/not-found';
 import { RecommendWeightsPage } from '@/pages/recommend-weights';
 import { RejectionsPage } from '@/pages/rejections';
@@ -65,6 +67,11 @@ export const router = createBrowserRouter([
 
       { path: 'support/notices', element: <NoticeListPage /> },
       { path: 'support/feedbacks', element: <ServiceFeedbackListPage /> },
+      { path: 'support/notifications', element: <NotificationSendPage /> },
+      {
+        path: 'support/notifications/batches/:batchId',
+        element: <NotificationBatchDetailPage />,
+      },
 
       { path: 'stats', element: <StatsPage /> },
 

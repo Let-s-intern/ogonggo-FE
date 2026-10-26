@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
-import { forgetSavedToken, syncPushToken } from '../model/pushToken';
+import { forgetSavedToken } from '@/shared/api/pushDevice';
+import { syncPushToken } from '../model/pushToken';
 
 /**
  * 화면에는 아무것도 그리지 않는다. 앱을 열 때와 로그인·로그아웃으로 토큰이 바뀔 때, 이미 알림을 켜 둔
