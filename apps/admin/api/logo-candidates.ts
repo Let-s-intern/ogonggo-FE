@@ -57,6 +57,8 @@ const MAX_IMAGE_BYTES = 2_000_000;
 const MAX_REDIRECTS = 3;
 /** 크기를 재는 후보 수. 선언이 많은 사이트도 이만큼만 받는다. */
 const MAX_CANDIDATES = 12;
+/** 이보다 짧은 변을 가진 그림은 로고로 쓰기에 작아 돌려주지 않는다. SVG 는 크기가 없어 남긴다. */
+const MIN_SIDE = 48;
 
 /** 아이콘을 브라우저처럼 달라고 해야 주는 사이트가 있다. */
 const USER_AGENT =
@@ -496,7 +498,11 @@ export async function findLogoCandidates(rawUrl: string): Promise<LogoCandidates
   // 다른 선언이 리다이렉트로 같은 파일에 닿기도 한다.
   const byUrl = new Map<string, LogoCandidate>();
   for (const candidate of measured) {
-    if (candidate && !byUrl.has(candidate.url)) {
+    const tooSmall =
+      candidate?.width != null &&
+      candidate.height != null &&
+      Math.min(candidate.width, candidate.height) < MIN_SIDE;
+    if (candidate && !tooSmall && !byUrl.has(candidate.url)) {
       byUrl.set(candidate.url, candidate);
     }
   }

@@ -106,7 +106,7 @@ export function LogoSuggest({
       </div>
       {state.kind === 'error' ? <p className="mt-2 text-xs text-error">{state.message}</p> : null}
       {state.kind === 'done' && state.candidates.length === 0 ? (
-        <p className="mt-2 text-xs text-gray-500">이 사이트에서 아이콘을 찾지 못했어요.</p>
+        <p className="mt-2 text-xs text-gray-500">이 사이트에서 48px 이상인 아이콘을 찾지 못했어요.</p>
       ) : null}
       {state.kind === 'done' && state.candidates.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-2">
