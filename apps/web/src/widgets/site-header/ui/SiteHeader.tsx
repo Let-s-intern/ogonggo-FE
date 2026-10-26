@@ -7,6 +7,7 @@ import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { NotificationBell } from '@/features/notification-inbox';
+import { PushConsentButton } from '@/features/push-notification';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
@@ -32,7 +33,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * 있다. 글자가 없는 마크라 로고 링크의 이름은 `aria-label`로 붙인다.
  *
  * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다. 로그인했으면 이 띠의
- * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`).
+ * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`). 이 기기에서 푸시를
+ * 아직 켜지 않았으면 아이콘 왼쪽에 `푸시 알림 받기` 가 붙고, 켜면 사라진다(`PushConsentButton`).
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
@@ -128,10 +130,13 @@ export function SiteHeader() {
           <ServiceLogoToggle size="desktop" />
           {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다. */}
           {signedIn ? (
-            <NotificationBell
-              open={openMenu === 'notifications'}
-              onOpenChange={toggleMenu('notifications')}
-            />
+            <div className="flex items-center gap-3">
+              <PushConsentButton />
+              <NotificationBell
+                open={openMenu === 'notifications'}
+                onOpenChange={toggleMenu('notifications')}
+              />
+            </div>
           ) : null}
         </div>
       </div>

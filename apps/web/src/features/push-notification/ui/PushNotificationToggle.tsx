@@ -8,6 +8,7 @@ import {
   isPushAvailable,
   isPushBlocked,
   isPushEnabled,
+  subscribePushState,
 } from '../model/pushToken';
 
 type State =
@@ -27,9 +28,14 @@ export function PushNotificationToggle() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (isPushAvailable()) {
-      setState({ kind: 'ready', enabled: isPushEnabled(), blocked: isPushBlocked() });
+    if (!isPushAvailable()) {
+      return;
     }
+    const update = () =>
+      setState({ kind: 'ready', enabled: isPushEnabled(), blocked: isPushBlocked() });
+    update();
+    // 헤더의 `푸시 알림 받기` 로 켜도 이 스위치가 따라 바뀐다.
+    return subscribePushState(update);
   }, []);
 
   if (state.kind === 'hidden') {

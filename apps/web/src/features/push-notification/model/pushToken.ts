@@ -94,6 +94,22 @@ export function isPushEnabled(): boolean {
 }
 
 /**
+ * 켜고 끈 뒤에 내는 이벤트. 헤더의 `푸시 알림 받기` 버튼과 마이페이지 스위치가 같은 화면에 함께 떠 있을 수 있어,
+ * 한쪽에서 바꾸면 다른 쪽도 다시 읽게 한다.
+ */
+const PUSH_STATE_EVENT = 'ogonggo:push-state';
+
+function notifyPushState(): void {
+  window.dispatchEvent(new Event(PUSH_STATE_EVENT));
+}
+
+/** 켜짐·꺼짐·막힘이 바뀌면 `listener` 를 부른다. 돌려주는 함수로 구독을 푼다. */
+export function subscribePushState(listener: () => void): () => void {
+  window.addEventListener(PUSH_STATE_EVENT, listener);
+  return () => window.removeEventListener(PUSH_STATE_EVENT, listener);
+}
+
+/**
  * 서비스 워커가 `active` 가 될 때까지 기다린다. 푸시 구독은 활성 워커가 있어야 만들어진다.
  * 이미 활성이면 바로 돌아온다.
  */
@@ -195,6 +211,7 @@ async function saveToken(token: string): Promise<void> {
 export async function enablePush(): Promise<'enabled' | 'blocked'> {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
+    notifyPushState();
     return 'blocked';
   }
   writeFlag(DISABLED_KEY, null);
@@ -204,6 +221,7 @@ export async function enablePush(): Promise<'enabled' | 'blocked'> {
     writeFlag(DISABLED_KEY, '1');
     throw error;
   }
+  notifyPushState();
   return 'enabled';
 }
 
@@ -213,6 +231,7 @@ export async function enablePush(): Promise<'enabled' | 'blocked'> {
  */
 export async function disablePush(): Promise<void> {
   writeFlag(DISABLED_KEY, '1');
+  notifyPushState();
   await releasePushToken();
   try {
     const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_SCOPE);
