@@ -27,7 +27,7 @@ export function SentSummary({ created }: { created: AdminNotificationBatchCreate
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-base font-bold text-gray-900">발송을 요청했어요</h2>
         <Link
-          to={`/support/notifications/batches/${created.batchId}`}
+          to={`/notifications/batches/${created.batchId}`}
           className="text-sm font-semibold text-blue-600 hover:text-blue-700"
         >
           발송 결과 보기

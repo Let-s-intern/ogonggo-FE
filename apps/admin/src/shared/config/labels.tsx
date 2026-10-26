@@ -218,6 +218,30 @@ const NOTIFICATION_RESULT_CATEGORY_LABEL: Record<NotificationResultCategory, str
   UNKNOWN_PROVIDER_ERROR: '발송사 원인 불명 오류',
 };
 
+/**
+ * 발송 작업의 `templateCode`. 코드는 백엔드가 정한 값을 옮겼다 — 알림톡 `sign_up_confirm`(`UserSignUpAlimTalkPreparer`)·
+ * `clip_remind`(`ReminderAlimTalkTemplate`), 이메일 `sign_up_welcome`(`EmailTemplate`), 푸시 `admin_notification`
+ * (`AdminNotificationBatchService`)·`fcm_test`(`FcmTestNotificationService`), 댓글 푸시는 `UserNotificationType` 이름 그대로다.
+ */
+const NOTIFICATION_TEMPLATE_LABEL: Record<string, string> = {
+  sign_up_confirm: '회원가입 완료 알림톡',
+  clip_remind: '스크랩 공고 마감 리마인드',
+  sign_up_welcome: '가입 환영 메일(AI 자소서 프롬프트)',
+  admin_notification: '관리자 알림',
+  fcm_test: 'FCM 테스트 발송',
+  CONCERN_COMMENT: '취준고민 댓글 알림',
+  SIDE_STUDY_COMMENT_REPLY: '사이드·스터디 답글 알림',
+};
+
+/**
+ * 댓글 푸시의 제목. 발송 작업 응답에 payload 가 없어, 백엔드가 늘 같은 제목을 쓰는 것을 여기에 옮겨 둔다
+ * (`CommentNotificationEventListener`). 바뀌면 같이 바꾼다.
+ */
+const COMMENT_PUSH_TITLE: Record<string, string> = {
+  CONCERN_COMMENT: '내 고민에 댓글이 달렸어요',
+  SIDE_STUDY_COMMENT_REPLY: '내 댓글에 답글이 달렸어요',
+};
+
 /** 맵에 없는 값(서버가 새로 더한 값)은 원래 값 그대로다. */
 const lookup = (map: Record<string, string>, value: string): string => map[value] ?? value;
 
@@ -240,6 +264,13 @@ export const notificationTargetTypeLabel = (value: string): string =>
 
 export const notificationResultCategoryLabel = (value: string): string =>
   lookup(NOTIFICATION_RESULT_CATEGORY_LABEL, value);
+
+export const notificationTemplateLabel = (value: string): string =>
+  lookup(NOTIFICATION_TEMPLATE_LABEL, value);
+
+/** 늘 같은 제목으로 가는 댓글 푸시면 그 제목, 아니면 `undefined` 다. */
+export const commentPushTitle = (templateCode: string): string | undefined =>
+  COMMENT_PUSH_TITLE[templateCode];
 
 /**
  * 필터 드롭다운 옵션. 첫 칸은 항상 "전체"이고 값이 빈 문자열이다. 나머지는 카탈로그 선언

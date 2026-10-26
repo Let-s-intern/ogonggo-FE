@@ -98,45 +98,45 @@
 
 ## 한눈에 보기
 
-| #   | 페이지                                     | 조작                          | 메서드 · 경로                                | 동작                               |
-| --- | ------------------------------------------ | ----------------------------- | -------------------------------------------- | ---------------------------------- |
-| 1   | `/` 대시보드                               | 진입                          | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
-| 2   | `/content/jobs`                            | 진입·검색·필터·정렬·페이지    | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
-| 3   | `/content/jobs`                            | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
-| 4   | `/content/jobs/{id}`                       | 진입                          | `GET /jobs/{id}`                             | 상세                               |
-| 5   | `/content/jobs/{id}`                       | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·검수 상태                     |
-| 6   | `/content/jobs/{id}`                       | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·공고 정보·본문 칸             |
-| 7   | `/content/jobs/{id}`                       | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
-| 8   | `/content/bootcamps`                       | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
-| 9   | `/content/bootcamps`                       | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
-| 10  | `/content/bootcamps/{id}`                  | 진입                          | `GET /bootcamps/{id}`                        | 상세                               |
-| 11  | `/content/bootcamps/{id}`                  | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
-| 12  | `/content/bootcamps/{id}`                  | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
-| 13  | `/content/bootcamps/{id}`                  | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
-| 14  | `/content/side-studies`                    | 진입·검색·필터·정렬·페이지    | `GET /side-studies`                          | 목록                               |
-| 15  | `/content/side-studies/{id}`               | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
-| 16  | `/content/side-studies/{id}`               | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
-| 17  | `/ads/review`                              | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
-| —   | `/ads/review`                              | 이전·다음 (버튼 또는 `A`/`D`) | 없음                                         | 화면 안에서만 이동한다             |
-| 18  | `/ads/review`                              | Space·Backspace 후 저장하기   | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
-| 19  | `/ads/review`                              | 되돌리기                      | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
-| 20  | `/ads/review`                              | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
-| 21  | `/ads/rejections`                          | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
-| 22  | `/ads/rejections`                          | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
-| 23  | `/members/users`                           | 진입·검색·필터·페이지         | `GET /general-members`                       | 목록. 백엔드 있음                  |
-| 24  | `/members/users/{id}`                      | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
-| 25  | `/members/companies`                       | 진입·검색·필터·페이지         | `GET /company-members`                       | 목록. 백엔드 있음                  |
-| 26  | `/members/companies/{id}`                  | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
-| 27  | `/support/notices`                         | 진입·페이지                   | `GET /notices`                               | 목록. 본문은 싣지 않음             |
-| 28  | `/support/notices`                         | 행 클릭                       | `GET /notices/{id}`                          | 본문을 받아 수정 폼을 연다         |
-| 29  | `/support/notices`                         | 새 공지 → 저장                | `POST /notices`                              | 등록                               |
-| 30  | `/support/notices`                         | 수정 폼 → 저장                | `PATCH /notices/{id}`                        | 보낸 값만 수정                     |
-| 31  | `/support/notices`                         | 수정 폼 → 삭제                | `DELETE /notices/{id}`                       | 소프트 삭제                        |
-| 32  | `/placements/recommend-weights`            | 진입                          | `GET /lets-career-content-recommend-weights` | 추천 점수 여덟 칸                  |
-| 33  | `/placements/recommend-weights`            | 저장                          | `PUT /lets-career-content-recommend-weights` | 여덟 칸 전체 교체                  |
-| 34  | `/support/notifications`                   | 진입·새로고침                 | `GET /notifications/recent-results`          | 최근 발송 작업 100건               |
-| 35  | `/support/notifications`                   | 발송 → 확인 창 → 보내기       | `POST /notification-batches`                 | 지정·전체 회원 발송                |
-| 36  | `/support/notifications/batches/{batchId}` | 진입                          | `GET /notification-batches/{batchId}`        | 결과 집계. 끝날 때까지 10초 폴링   |
+| #   | 페이지                             | 조작                          | 메서드 · 경로                                | 동작                               |
+| --- | ---------------------------------- | ----------------------------- | -------------------------------------------- | ---------------------------------- |
+| 1   | `/` 대시보드                       | 진입                          | `GET /dashboard/summary`                     | 처리할 일·오늘 유입 숫자를 한 번에 |
+| 2   | `/content/jobs`                    | 진입·검색·필터·정렬·페이지    | `GET /jobs`                                  | 목록. 파라미터를 실제로 반영       |
+| 3   | `/content/jobs`                    | 노출 토글                     | `PATCH /jobs/{id}`                           | `visibility` 만 바꿈               |
+| 4   | `/content/jobs/{id}`               | 진입                          | `GET /jobs/{id}`                             | 상세                               |
+| 5   | `/content/jobs/{id}`               | 운영 값 수정 → 저장           | `PATCH /jobs/{id}`                           | 노출·검수 상태                     |
+| 6   | `/content/jobs/{id}`               | 내용 수정 → 저장              | `PATCH /jobs/{id}`                           | 제목·공고 정보·본문 칸             |
+| 7   | `/content/jobs/{id}`               | 삭제 → 문구 입력              | `DELETE /jobs/{id}`                          | 삭제 후 목록으로                   |
+| 8   | `/content/bootcamps`               | 진입·검색·필터·정렬·페이지    | `GET /bootcamps`                             | 목록. **채용공고와 같은 파라미터** |
+| 9   | `/content/bootcamps`               | 노출 토글                     | `PATCH /bootcamps/{id}`                      | `visibility` 만 바꿈               |
+| 10  | `/content/bootcamps/{id}`          | 진입                          | `GET /bootcamps/{id}`                        | 상세                               |
+| 11  | `/content/bootcamps/{id}`          | 운영 값 수정 → 저장           | `PATCH /bootcamps/{id}`                      | 노출·검수 상태                     |
+| 12  | `/content/bootcamps/{id}`          | 내용 수정 → 저장              | `PATCH /bootcamps/{id}`                      | 제목·본문 칸                       |
+| 13  | `/content/bootcamps/{id}`          | 삭제                          | `DELETE /bootcamps/{id}`                     | 삭제 후 목록으로                   |
+| 14  | `/content/side-studies`            | 진입·검색·필터·정렬·페이지    | `GET /side-studies`                          | 목록                               |
+| 15  | `/content/side-studies/{id}`       | 진입                          | `GET /side-studies/{id}`                     | 상세                               |
+| 16  | `/content/side-studies/{id}`       | 삭제                          | `DELETE /side-studies/{id}`                  | 삭제 후 목록으로                   |
+| 17  | `/ads/review`                      | 진입                          | `GET /review-queue`                          | 검수 대기 전체 (페이지 없음)       |
+| —   | `/ads/review`                      | 이전·다음 (버튼 또는 `A`/`D`) | 없음                                         | 화면 안에서만 이동한다             |
+| 18  | `/ads/review`                      | Space·Backspace 후 저장하기   | `PATCH /review-queue/{type}/{id}`            | 판정. 반려는 사유 필수             |
+| 19  | `/ads/review`                      | 되돌리기                      | `PATCH /review-queue/{type}/{id}/undo`       | 대기로 되돌림                      |
+| 20  | `/ads/review`                      | 내용 수정 → 저장              | `PATCH /jobs/{id}` · `PATCH /bootcamps/{id}` | 6·12와 같은 API                    |
+| 21  | `/ads/rejections`                  | 진입·검색·필터                | `GET /rejections`                            | 반려 기록 목록                     |
+| 22  | `/ads/rejections`                  | 사유 수정 → 저장              | `PATCH /rejections/{type}/{id}`              | 사유 교체. 비울 수 없음            |
+| 23  | `/members/users`                   | 진입·검색·필터·페이지         | `GET /general-members`                       | 목록. 백엔드 있음                  |
+| 24  | `/members/users/{id}`              | 진입                          | `GET /members/users/{id}`                    | 상세 + 활동                        |
+| 25  | `/members/companies`               | 진입·검색·필터·페이지         | `GET /company-members`                       | 목록. 백엔드 있음                  |
+| 26  | `/members/companies/{id}`          | 진입                          | `GET /members/companies/{id}`                | 상세 + 등록 공고                   |
+| 27  | `/support/notices`                 | 진입·페이지                   | `GET /notices`                               | 목록. 본문은 싣지 않음             |
+| 28  | `/support/notices`                 | 행 클릭                       | `GET /notices/{id}`                          | 본문을 받아 수정 폼을 연다         |
+| 29  | `/support/notices`                 | 새 공지 → 저장                | `POST /notices`                              | 등록                               |
+| 30  | `/support/notices`                 | 수정 폼 → 저장                | `PATCH /notices/{id}`                        | 보낸 값만 수정                     |
+| 31  | `/support/notices`                 | 수정 폼 → 삭제                | `DELETE /notices/{id}`                       | 소프트 삭제                        |
+| 32  | `/placements/recommend-weights`    | 진입                          | `GET /lets-career-content-recommend-weights` | 추천 점수 여덟 칸                  |
+| 33  | `/placements/recommend-weights`    | 저장                          | `PUT /lets-career-content-recommend-weights` | 여덟 칸 전체 교체                  |
+| 34  | `/notifications/history/{channel}` | 진입·새로고침                 | `GET /notifications/recent-results`          | 최근 발송 작업 100건               |
+| 35  | `/notifications/send`              | 발송 → 확인 창 → 보내기       | `POST /notification-batches`                 | 지정·전체 회원 발송                |
+| 36  | `/notifications/batches/{batchId}` | 진입                          | `GET /notification-batches/{batchId}`        | 결과 집계. 끝날 때까지 10초 폴링   |
 
 지면(`/placements`)과 통계(`/stats`)는 만들지 않는다. 메뉴에 회색 비활성으로 자리만 있다.
 
@@ -1198,25 +1198,29 @@
 
 ---
 
-## 10. 고객 지원 · 알림 발송
+## 10. 알림 · 발송과 전송 내역
 
 백엔드가 있다(LC-3489). 아래는 배포된 `ogonggo-api-admin` 의 생성물
 (`packages/api/src/generated/admin`, 2026-10-26 동기화)과 `ogonggo-BE` 의
 `AdminNotificationBatchService.kt`·`AdminApiExceptionHandler.kt` 를 읽고 적은 것이다. 목 핸들러
 (`packages/api/src/mocks/admin/notifications.ts`)가 같은 검사와 같은 문구를 흉내 낸다.
 
-화면은 `/support/notifications`(좌측 메뉴 `고객지원 > 알림 발송`, `apps/admin/src/pages/notification-send`)와
-`/support/notifications/batches/{batchId}`(`apps/admin/src/pages/notification-batch-detail`)다.
+화면은 좌측 메뉴 `알림` 묶음의 넷과 결과 상세다.
+
+- `푸시 알림 전송` — `/notifications/send`(`apps/admin/src/pages/notification-send`)
+- `푸시 전송 내역`·`알림톡 전송 내역`·`이메일 전송 내역` — `/notifications/history/push`·`/alimtalk`·`/email`
+  (`apps/admin/src/pages/notification-history`, 한 페이지가 채널만 바꿔 그린다)
+- 결과 상세 — `/notifications/batches/{batchId}`(`apps/admin/src/pages/notification-batch-detail`)
 
 **두 ID 를 섞지 않는다.** 최근 발송 작업의 `notificationId` 는 발송 작업 번호다 — 기기 토큰 하나,
 알림톡 한 통, 이메일 한 통, 토픽 요청 한 건이 각각 한 작업이다. 회원 알림함의 알림 번호는
 `userNotificationId` 이고 사용자 API 의 `PATCH /api/v1/users/me/notifications/{notificationId}/read` 가
-받는 값이 이것이다. 한 회원의 기기가 둘이면 알림함 ID 하나에 작업 ID 가 둘이다. 화면은 표 위에
-`작업 ID는 발송 작업 번호예요. 회원 알림함의 알림 번호는 알림함 ID예요.` 를 적는다.
+받는 값이 이것이다. 한 회원의 기기가 둘이면 알림함 ID 하나에 작업 ID 가 둘이다. 상세 모달은 두 값을 각각
+`작업 ID`·`알림함 ID` 로 따로 적는다.
 
 ### `POST /api/v1/admin/notification-batches`
 
-**부르는 곳** — `/support/notifications` 의 `발송` → 확인 창 `보내기`.
+**부르는 곳** — `/notifications/send` 의 `발송` → 확인 창 `보내기`.
 
 **요청** — `CreateNotificationBatchRequest`.
 
@@ -1274,13 +1278,17 @@
 | payload 한도 초과                            | `[data] 시스템 식별자를 포함한 FCM payload는 4096바이트 이하여야 합니다.` (`TOPIC` 은 2048) |
 | 제목·본문 공백 또는 길이 초과                | Bean Validation 기본 문구(`[title] 공백일 수 없습니다` 등)                                  |
 
-화면은 위 규칙을 보내기 전에 먼저 검사한다(payload 한도 제외). 회원 ID 입력은 쉼표·공백·줄바꿈으로
-나누고, 원본 개수(중복 포함)로 1,000개를 잰다.
+화면은 위 규칙을 보내기 전에 먼저 검사한다(payload 한도 제외). 받는 회원은 두 길로 담는다. `회원 검색` 창이
+`GET /api/v1/admin/general-members`(`status=ACTIVE`, `keyword`)로 찾아 여러 명을 고르게 하고, 그 아래 칸에 ID 를
+쉼표·공백·줄바꿈으로 직접 넣을 수도 있다. 보낼 때는 고른 회원 다음에 직접 넣은 ID 를 붙이고 중복은 서버가 지운다.
+1,000개 한도는 둘을 합친 원본 개수(중복 포함)로 잰다. 푸시 동의(활성 토큰) 여부로는 거를 수 없다 — 회원 목록 API
+에 그 필터가 없다.
 
 ### `GET /api/v1/admin/notification-batches/{batchId}`
 
-**부르는 곳** — `/support/notifications/batches/{batchId}` 진입. 발송 직후 요약의 `발송 결과 보기`
-와 최근 발송 작업 표의 `발송 묶음` 링크가 여기로 온다.
+**부르는 곳** — `/notifications/batches/{batchId}` 진입. 발송 직후 요약의 `발송 결과 보기`
+와 전송 내역 상세 모달의 `발송 결과 보기` 가 여기로 온다. 푸시 전송 내역은 관리자 발송 줄의 제목·본문을
+얻으려고 같은 API 를 묶음마다 한 번 부른다(폴링 없음, 404 면 제목 없이 둔다).
 
 **응답 `data`** — `AdminNotificationBatchResultResponse`.
 
@@ -1309,36 +1317,45 @@
 
 ### `GET /api/v1/admin/notifications/recent-results`
 
-**부르는 곳** — `/support/notifications` 진입, `새로고침`, 발송 성공 직후.
+**부르는 곳** — `/notifications/history/{channel}` 진입, `새로고침`, 발송 성공 직후. 서버는 채널을
+섞어 주고 화면이 `channel` 로 거른다.
 
 **응답 `data`** — `AdminNotificationRecentResultsResponse`. `items` 는 최근 수정된 발송 작업 100건이고
 `updatedAt` 내림차순이다. 페이지·필터·검색 파라미터는 없다. 관리자 발송뿐 아니라 댓글 푸시, 카카오
 알림톡, 이메일 작업도 섞여 온다.
 
-표의 칸 순서와 원본 필드(`AdminNotificationRecentResultItemResponse`).
+목록 칸(`AdminNotificationRecentResultItemResponse`). 줄을 누르면 상세 모달이 열리고, 표에서 뺀 값(작업 ID
+`notificationId`, 알림함 ID `userNotificationId`, 예정 시각 `scheduledAt`, 시도 횟수 `attemptCount`, 결과 상세
+`resultDetail`)은 모달에 있다.
 
-| 칸           | 필드                                 | 비고                                                                                    |
-| ------------ | ------------------------------------ | --------------------------------------------------------------------------------------- |
-| 작업 ID      | `notificationId`                     | 발송 작업 번호                                                                          |
-| 채널         | `channel`                            | `FCM` 푸시, `KAKAO` 알림톡, `EMAIL` 이메일                                              |
-| 상태         | `status`                             | `PENDING` 대기, `PROCESSING` 처리 중, `SENT` 접수 성공, `FAILED` 실패, `UNKNOWN` 미확정 |
-| 대상 유형    | `recipientType`                      | `DIRECT` 개별, `TOPIC` 토픽                                                             |
-| 템플릿       | `templateCode`                       | 관리자 발송은 `admin_notification`                                                      |
-| 수신 회원 ID | `recipientUserId`                    | 토픽 작업은 없다                                                                        |
-| 알림함 ID    | `userNotificationId`                 | 알림톡·이메일과 토픽 작업은 없다                                                        |
-| 발송 묶음    | `batchId`                            | 있으면 결과 상세 링크                                                                   |
-| 예정 시각    | `scheduledAt`                        |                                                                                         |
-| 접수 시각    | `sentAt`                             |                                                                                         |
-| 결과         | `resultCategory` 라벨 + `resultCode` | `resultDetail`(최대 500자)은 마우스를 올리거나 `사유` 를 눌러 본다                      |
-| 시도 횟수    | `attemptCount`                       |                                                                                         |
-| 수정 시각    | `updatedAt`                          |                                                                                         |
+| 칸           | 필드                                 | 비고                                                         |
+| ------------ | ------------------------------------ | ------------------------------------------------------------ |
+| 제목(푸시)   | 아래 "푸시 제목"                     | 아래 줄에 종류(`templateCode` 라벨)                          |
+| 내용(그 밖)  | `templateCode`                       | 알림톡·이메일은 템플릿이 정해져 있어 종류 이름이 곧 내용이다 |
+| 상태         | `status`                             | `PENDING` 대기, `PROCESSING` 처리 중, `SENT` 접수 성공 등    |
+| 대상(푸시)   | `recipientType`                      | `DIRECT` 개별, `TOPIC` 토픽                                  |
+| 수신 회원 ID | `recipientUserId`                    | 토픽 작업은 없다                                             |
+| 접수 시각    | `sentAt`                             |                                                              |
+| 결과         | `resultCategory` 라벨 + `resultCode` |                                                              |
+| 수정 시각    | `updatedAt`                          |                                                              |
+
+**푸시 제목.** 응답에 payload 가 없어 종류마다 되찾는다. 관리자 발송(`admin_notification`)은
+`batchId` 로 `GET /notification-batches/{batchId}` 의 `title`·`body` 를 받는다. 댓글 푸시는 백엔드가 늘 같은
+제목을 쓴다 — `CONCERN_COMMENT` `내 고민에 댓글이 달렸어요`, `SIDE_STUDY_COMMENT_REPLY`
+`내 댓글에 답글이 달렸어요`(`CommentNotificationEventListener.kt`). 본문(작성자·댓글 미리보기)은 되찾을 수 없다.
+`fcm_test` 와 결과 조회 기간이 지난 관리자 발송은 종류 이름만 보인다.
+
+**템플릿 이름.** `sign_up_confirm` 회원가입 완료 알림톡, `clip_remind` 스크랩 공고 마감 리마인드,
+`sign_up_welcome` 가입 환영 메일, `admin_notification` 관리자 알림, `fcm_test` FCM 테스트 발송,
+`CONCERN_COMMENT` 취준고민 댓글 알림, `SIDE_STUDY_COMMENT_REPLY` 사이드·스터디 답글 알림. 모르는 코드는 원래
+값이다(`apps/admin/src/shared/config/labels.tsx`).
 
 `resultCategory` 는 enum 카탈로그(`/api/v1/admin/enums`)에 없어 라벨을 화면이 가진다
 (`apps/admin/src/shared/config/labels.tsx`). 모르는 값이 오면 원래 값을 그대로 보인다. 처리 시간을
 넘겨 결과를 모르는 작업은 `resultCode` 가 `STALE_PROCESSING_TIMEOUT`, `resultCategory` 가
 `PROCESSING_TIMEOUT`(`처리 시간 초과(결과 미확정)`)이다.
 
-`items` 가 비면 화면은 `발송 작업이 없어요` 를 보인다.
+거른 뒤 비면 화면은 `전송 내역이 없어요` 를 보인다.
 
 ### 목과 백엔드 스펙의 차이
 
