@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { InstallAppButton, useInstallState } from '@/features/install-app';
+import { NotificationBellLink } from '@/features/notification-inbox';
 import { SignOutButton } from '@/features/sign-out';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
@@ -46,7 +47,8 @@ function revealCurrentTab(nav: HTMLElement) {
  * `상단 햄버거 버튼.png` 이다(360px 폭의 두 배로 그려져 있어 값은 절반으로 읽었다).
  *
  * 두 줄이다. 윗줄은 로고와 `앱 다운로드`(또는 `로그인`)·햄버거, 아랫줄은 목록 탭 넷과 달력
- * 아이콘이다. 데스크톱 우측에 있던 `공고 등록`·`마이페이지`·`로그아웃` 은 햄버거 메뉴 안으로 들어간다.
+ * 아이콘이다. 로그인했으면 윗줄 햄버거 왼쪽에 알림 아이콘이 붙는다(`/notifications` 로 간다).
+ * 데스크톱 우측에 있던 `공고 등록`·`마이페이지`·`로그아웃` 은 햄버거 메뉴 안으로 들어간다.
  * 로그인하지 않았으면 `로그인` 도 메뉴 안에 있다.
  */
 export function MobileSiteHeader({
@@ -82,6 +84,8 @@ export function MobileSiteHeader({
   return (
     <div className="md:hidden">
       <TopRow signedIn={signedIn}>
+        {/* 로그인했을 때만. 로그인하지 않았으면 이 자리에 `앱 다운로드`(또는 `로그인`) 가 있다(`TopRow`). */}
+        {signedIn ? <NotificationBellLink active={pathname === '/notifications'} /> : null}
         <button
           type="button"
           aria-label="메뉴 열기"
