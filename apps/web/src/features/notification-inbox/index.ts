@@ -1,3 +1,4 @@
+export { NotificationList, type NotificationListProps } from './ui/NotificationList';
 export {
   useNotificationList,
   useReadAll,
