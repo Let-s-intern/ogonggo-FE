@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { signOut } from '@ogonggo/api';
 import { clearTokens } from '@/shared/api/authTokens';
+import { releasePushToken } from '@/shared/api/pushDevice';
 
 /**
  * 서버에 로그아웃(`signOut`, 리프레시 토큰 폐기) 을 알린 뒤 두 토큰을 지운다. `signOut` 이 실패해도(액세스
@@ -20,6 +21,8 @@ export function useSignOut() {
   const run = async (redirectTo?: string) => {
     setPending(true);
     try {
+      // 이 기기의 푸시 토큰부터 푼다. 액세스 토큰이 살아 있어야 하므로 `signOut` 앞이다. 실패해도 던지지 않는다.
+      await releasePushToken();
       await signOut();
     } catch {
       // 위 주석대로 실패해도 지운다.

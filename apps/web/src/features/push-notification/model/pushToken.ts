@@ -1,8 +1,8 @@
 import { HttpError, replaceMyFcmToken } from '@ogonggo/api';
 import {
-  forgetSavedToken,
   getDeviceId,
   getSavedToken,
+  releasePushToken,
   setSavedToken,
 } from '@/shared/api/pushDevice';
 
@@ -209,7 +209,7 @@ export async function enablePush(): Promise<'enabled' | 'blocked'> {
  */
 export async function disablePush(): Promise<void> {
   writeFlag(DISABLED_KEY, '1');
-  forgetSavedToken();
+  await releasePushToken();
   try {
     const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_SCOPE);
     const subscription = await registration?.pushManager.getSubscription();

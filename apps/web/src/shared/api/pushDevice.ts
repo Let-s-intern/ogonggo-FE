@@ -1,3 +1,5 @@
+import { deleteMyFcmToken } from '@ogonggo/api';
+
 /**
  * 이 브라우저의 푸시 기록. 마지막으로 백엔드에 저장한 FCM 토큰과 설치 UUID(`deviceId`) 를 둔다.
  *
@@ -61,4 +63,23 @@ export function getDeviceId(): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * 저장해 둔 토큰을 백엔드에서 지우고 기록을 버린다. 알림 끄기와 로그아웃이 부른다. 로그아웃은
+ * `signOut` 보다 먼저 `await` 해야 한다 — 이 요청은 액세스 토큰이 살아 있어야 간다.
+ *
+ * 실패는 무시한다. 알림 끄기는 구독 해지로, 로그아웃은 다음 계정의 로그인 때 같은 `deviceId` 로 다시
+ * 저장해 이전 계정의 연결이 풀린다. 사용자가 누른 일을 이 요청 때문에 막지 않는다.
+ */
+export async function releasePushToken(): Promise<void> {
+  const token = getSavedToken();
+  if (token) {
+    try {
+      await deleteMyFcmToken({ token });
+    } catch {
+      // 위 주석대로 넘긴다.
+    }
+  }
+  forgetSavedToken();
 }
