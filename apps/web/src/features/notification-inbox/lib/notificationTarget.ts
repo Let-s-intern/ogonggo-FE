@@ -22,6 +22,10 @@ const NONE: NotificationTarget = { kind: 'none' };
  * 옮기고, 다른 오리진이면 `https:` 일 때만 새 탭으로 연다. 비었거나 해석되지 않거나 다른 오리진의 `http:` 면 가지 않는다.
  *
  * 지금 오리진을 읽으므로 브라우저에서만 부른다. 알림은 로그인 토큰으로 브라우저에서만 받으므로 서버 렌더에는 오지 않는다.
+ *
+ * 푸시를 눌렀을 때도 같은 규칙으로 간다. 그쪽은 `public/firebase-messaging-sw.js` 의 `clickDestination` 이고, 빌드를
+ * 거치지 않는 워커라 이 함수를 import 하지 못해 따로 적었다. 한쪽을 바꾸면 다른 쪽도 바꾼다. 다른 점은 둘이다 — 워커는
+ * 갈 곳이 없으면 첫 화면을 열고, 오공고 안으로 갈 때 읽음 처리용 쿼리(`push_nid`·`push_batch`)를 붙인다.
  */
 export function notificationTarget(
   notification: UserNotificationResponse,
