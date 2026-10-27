@@ -1,8 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ElementId, VariantId } from '@/lib/card/types';
+import {
+  CARD_SIZE_IDS,
+  CARD_SIZES,
+  type CardSizeId,
+  type CardSpec,
+  type ElementId,
+  SLIDE_COUNT,
+  SLIDE_LABELS,
+  type VariantId,
+} from '@/lib/card/types';
+import { variantOf } from '@/lib/card/variants';
 import { Button } from '@ogonggo/ui';
+import { downloadSlides } from '@/lib/client/render';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { useRenderKit } from '@/lib/client/useRenderKit';
 import { CaptionPanel } from './CaptionPanel';
@@ -12,22 +23,141 @@ import { JobPicker } from './JobPicker';
 import { PropertiesPanel } from './PropertiesPanel';
 import { RegenerateModal } from './RegenerateModal';
 import { VariantPicker } from './VariantPicker';
-import { VariantPreview } from './VariantPreview';
+
+const SLIDES = Array.from({ length: SLIDE_COUNT }, (_, slide) => slide);
+
+function toggled<T>(set: Set<T>, value: T): Set<T> {
+  const next = new Set(set);
+  if (!next.delete(value)) {
+    next.add(value);
+  }
+  return next;
+}
+
+/**
+ * 편집 화면 하단 바. 템플릿 바꾸기, 캔버스 크기, 받을 장·크기 고르기와 받기, 넘침 경고. 받기는 서버
+ * 렌더(PNG)다 — 캔버스와 같은 JSX 를 이미지 생성기가 그린다.
+ */
+function BottomBar({
+  spec,
+  size,
+  onSizeChange,
+  overflow,
+  onRepick,
+}: {
+  spec: CardSpec;
+  size: CardSizeId;
+  onSizeChange: (size: CardSizeId) => void;
+  /** 넘친 장 번호. */
+  overflow: number[];
+  onRepick: () => void;
+}) {
+  const [slides, setSlides] = useState<Set<number>>(() => new Set(SLIDES));
+  const [sizes, setSizes] = useState<Set<CardSizeId>>(() => new Set(['post']));
+  const [progress, setProgress] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const targets = SLIDES.filter((slide) => slides.has(slide)).map((slide) => ({ spec, slide }));
+  const count = targets.length * sizes.size;
+
+  const download = async () => {
+    setError(null);
+    setProgress('준비 중');
+    try {
+      await downloadSlides(targets, [...sizes], (done, total) => setProgress(`${done}/${total}`));
+    } catch {
+      setError('다운로드에 실패했습니다. 다시 시도해 주세요.');
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  return (
+    <div className="sticky bottom-0 z-10 flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button size="sm" variant="secondary" onClick={onRepick}>
+            템플릿 바꾸기
+          </Button>
+          <span className="text-sm font-bold">{variantOf(spec.variant).label}</span>
+          <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+            {CARD_SIZE_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onSizeChange(id)}
+                aria-pressed={size === id}
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold ${
+                  size === id ? 'bg-white shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                {CARD_SIZES[id].label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-gray-600">받을 장</span>
+          {SLIDES.map((slide) => (
+            <label key={slide} className="flex items-center gap-1 text-sm">
+              <input
+                type="checkbox"
+                className="size-4"
+                checked={slides.has(slide)}
+                onChange={() => setSlides((current) => toggled(current, slide))}
+              />
+              {SLIDE_LABELS[slide]}
+            </label>
+          ))}
+          <span className="text-sm text-gray-600">받을 크기</span>
+          {CARD_SIZE_IDS.map((id) => (
+            <label key={id} className="flex items-center gap-1 text-sm">
+              <input
+                type="checkbox"
+                className="size-4"
+                checked={sizes.has(id)}
+                onChange={() => setSizes((current) => toggled(current, id))}
+              />
+              {CARD_SIZES[id].label}
+            </label>
+          ))}
+          <Button
+            size="sm"
+            disabled={count === 0 || progress !== null}
+            onClick={() => void download()}
+          >
+            {progress ? `만드는 중 ${progress}` : `고른 ${count}장 받기`}
+          </Button>
+        </div>
+      </div>
+      {overflow.length > 0 ? (
+        <p className="text-xs font-semibold text-error">
+          주의: {overflow.map((slide) => slide + 1).join('·')}장은 글이 많아 가장 작은 글자로도
+          넘칩니다. 항목을 줄이거나 글자 크기를 낮춰 주세요.
+        </p>
+      ) : null}
+      {error ? <p className="text-sm text-error">{error}</p> : null}
+    </div>
+  );
+}
 
 /**
  * 편집 화면 배치. 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
- * 왼쪽: 공고 고르기 → 설정 → 문구. 오른쪽: 처음엔 시안 고르기(열 시안을 한 장씩 나란히), 하나를
- * 고르면 그 시안의 세 장과 받기. 고른 뒤에는 한 시안만 그리므로 설정이 바로 보인다.
+ *
+ * 공고 고르기 → 템플릿 고르기(열 시안을 한 장씩 나란히) → 편집. 편집은 3단이다 — 왼쪽 문구와
+ * 인스타 본문, 가운데 캔버스, 오른쪽 속성. 아래 바에서 템플릿을 바꾸고 받는다.
  */
 export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const editor = useCardEditor();
   const { loaded, status, notice, specs, selectJob } = editor;
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [variant, setVariant] = useState<VariantId | null>(null);
+  const [size, setSize] = useState<CardSizeId>('post');
   const [slide, setSlide] = useState(0);
   const [selected, setSelected] = useState<ElementId | null>(null);
-  const { kit } = useRenderKit();
-  const built = useBuiltSlides(variant && specs ? specs[variant] : null, 'post', kit);
+  const { kit, error: kitError } = useRenderKit();
+  const spec = variant && specs ? specs[variant] : null;
+  const built = useBuiltSlides(spec, size, kit);
 
   // 주소에 공고 번호가 있으면 처음 한 번 그 공고를 고른다.
   useEffect(() => {
@@ -47,32 +177,76 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
     setVariant(null);
   }, [jobId]);
 
+  // 템플릿을 바꾸면 1장부터, 아무것도 고르지 않은 채로 연다.
+  useEffect(() => {
+    setSlide(0);
+    setSelected(null);
+  }, [variant]);
+
+  /** 캔버스에서 누른 글 요소의 문구 칸으로 간다. 목록은 지금 장의 섹션 칸이다. */
+  const focusText = (id: ElementId) => {
+    const key = id === 'sections' ? (slide === 0 ? 'summarySections' : 'detailSections') : id;
+    const field = document.getElementById(`content-${key}`);
+    const details = field?.closest('details');
+    if (details) {
+      details.open = true;
+    }
+    field?.focus({ preventScroll: true });
+    field?.scrollIntoView({ block: 'nearest' });
+  };
+
+  const header = (
+    <header className="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
+        <p className="text-sm text-gray-500">
+          공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 캔버스에서 고친 뒤
+          원하는 장만 받습니다.
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" variant="ghost" onClick={() => void logout()}>
+          로그아웃
+        </Button>
+        {loaded ? (
+          <>
+            <Button size="sm" variant="secondary" onClick={editor.startOver}>
+              처음부터 다시
+            </Button>
+            <Button size="sm" onClick={() => setRegenerateOpen(true)}>
+              AI로 다시 쓰기
+            </Button>
+          </>
+        ) : null}
+      </div>
+    </header>
+  );
+
+  const jobLine = loaded ? (
+    <div className="flex items-center justify-between gap-2">
+      <p className="text-sm text-gray-600">
+        <span className="font-semibold text-gray-900">{loaded.job.companyName}</span>{' '}
+        {loaded.job.title}
+      </p>
+      {loaded.job.sourceUrl ? (
+        <a
+          href={loaded.job.sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0 text-sm text-blue-500 underline"
+        >
+          원문 보기
+        </a>
+      ) : null}
+    </div>
+  ) : null;
+
+  const side =
+    'flex flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto';
+
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-6">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
-          <p className="text-sm text-gray-500">
-            공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 고친 뒤 원하는 장만
-            받습니다.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={() => void logout()}>
-            로그아웃
-          </Button>
-          {loaded ? (
-            <>
-              <Button size="sm" variant="secondary" onClick={editor.startOver}>
-                처음부터 다시
-              </Button>
-              <Button size="sm" onClick={() => setRegenerateOpen(true)}>
-                AI로 다시 쓰기
-              </Button>
-            </>
-          ) : null}
-        </div>
-      </header>
+      {header}
 
       {status.kind === 'loading' ? (
         <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{status.message}</p>
@@ -84,56 +258,27 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-        <div className="flex flex-col gap-4">
-          <JobPicker
-            selectedId={loaded?.job.id}
-            onSelect={(jobId) => void editor.selectJob(jobId)}
-          />
-          {loaded ? (
-            <>
-              <PropertiesPanel
-                settings={loaded.settings}
-                onSettingsChange={editor.setSettings}
-                selected={variant ? selected : null}
-                edit={variant && selected ? loaded.edits[variant]?.[slide]?.[selected] : undefined}
-                onEdit={(edit, group) =>
-                  variant && selected && editor.setEdits(variant, slide, selected, edit, group)
-                }
-                onDeselect={() => setSelected(null)}
-                brandColor={loaded.brandColor}
-                onResetBrandColor={editor.resetBrandColor}
-                logo={loaded.logo}
-                onLogoChange={editor.setLogo}
-                candidates={editor.candidates}
-              />
+      {loaded && spec && variant ? (
+        <>
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)_320px]">
+            <div className={side}>
               <ContentPanel content={loaded.content} onChange={editor.setContent} />
-            </>
-          ) : null}
-        </div>
-        <div className="flex flex-col gap-4">
-          {loaded && specs ? (
-            <>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold text-gray-900">{loaded.job.companyName}</span>{' '}
-                  {loaded.job.title}
+              <CaptionPanel
+                caption={loaded.content.caption ?? ''}
+                onChange={(caption) => editor.setContent({ ...loaded.content, caption })}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-3">
+              {jobLine}
+              {kitError ? (
+                <p className="text-sm text-error">
+                  캔버스를 그릴 글꼴을 받지 못했습니다. 새로고침해 주세요.
                 </p>
-                {loaded.job.sourceUrl ? (
-                  <a
-                    href={loaded.job.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm text-blue-500 underline"
-                  >
-                    원문 보기
-                  </a>
-                ) : null}
-              </div>
-              {variant && built ? (
+              ) : null}
+              {built ? (
                 <EditorCanvas
                   slides={built}
-                  size="post"
+                  size={size}
                   slide={slide}
                   edits={loaded.edits[variant]?.[slide]}
                   selected={selected}
@@ -143,26 +288,64 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                     setSelected(null);
                   }}
                   onEdit={(id, edit, group) => editor.setEdits(variant, slide, id, edit, group)}
-                  onFocusText={() => undefined}
+                  onFocusText={focusText}
                 />
-              ) : null}
-              {variant ? (
-                <VariantPreview spec={specs[variant]} onRepick={() => setVariant(null)} />
               ) : (
-                <VariantPicker specs={specs} current={variant} onPick={setVariant} />
+                <div className="flex h-80 items-center justify-center rounded-2xl bg-gray-100 text-sm text-gray-400">
+                  그리는 중
+                </div>
               )}
-              <CaptionPanel
-                caption={loaded.content.caption ?? ''}
-                onChange={(caption) => editor.setContent({ ...loaded.content, caption })}
-              />
-            </>
-          ) : (
-            <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-gray-300 text-sm text-gray-500">
-              왼쪽에서 공고를 고르면 시안이 여기에 그려집니다.
             </div>
-          )}
+            <div className={side}>
+              <PropertiesPanel
+                settings={loaded.settings}
+                onSettingsChange={editor.setSettings}
+                selected={selected}
+                edit={selected ? loaded.edits[variant]?.[slide]?.[selected] : undefined}
+                onEdit={(edit, group) =>
+                  selected && editor.setEdits(variant, slide, selected, edit, group)
+                }
+                onDeselect={() => setSelected(null)}
+                brandColor={loaded.brandColor}
+                onResetBrandColor={editor.resetBrandColor}
+                logo={loaded.logo}
+                onLogoChange={editor.setLogo}
+                candidates={editor.candidates}
+              />
+            </div>
+          </div>
+          <BottomBar
+            spec={spec}
+            size={size}
+            onSizeChange={setSize}
+            overflow={
+              built
+                ? built.flatMap((slideBuilt, index) => (slideBuilt.overflow ? [index] : []))
+                : []
+            }
+            onRepick={() => setVariant(null)}
+          />
+        </>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
+          <JobPicker
+            selectedId={loaded?.job.id}
+            onSelect={(jobId) => void editor.selectJob(jobId)}
+          />
+          <div className="flex flex-col gap-4">
+            {loaded && specs ? (
+              <>
+                {jobLine}
+                <VariantPicker specs={specs} current={variant} onPick={setVariant} />
+              </>
+            ) : (
+              <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-gray-300 text-sm text-gray-500">
+                왼쪽에서 공고를 고르면 시안이 여기에 그려집니다.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <RegenerateModal
         open={regenerateOpen}

@@ -343,7 +343,7 @@ export function EditorCanvas({
               stageRef={stageRef}
             />
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 overflow-hidden"
               onPointerDown={(event) => {
                 if (event.target === event.currentTarget) {
                   frameRef.current?.focus({ preventScroll: true });
