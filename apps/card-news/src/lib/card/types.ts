@@ -228,6 +228,46 @@ export interface ElementEdit {
 /** 한 장의 편집값. 편집하지 않은 요소는 없다. */
 export type SlideEdits = Partial<Record<ElementId, ElementEdit>>;
 
+/**
+ * 템플릿 위에 사람이 얹은 자유 요소. 장마다 따로이고 장을 넘어 공유하지 않는다. 좌표는 폭 1080 기준
+ * 왼쪽 위, 배열 순서가 칠하는 순서다(뒤에 있을수록 위).
+ */
+interface LayerBase {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+}
+
+/** 글자 요소. 높이는 글자에 맞춰 늘어난다. 줄은 `\n` 으로 나누고 강조 표시(`*단어*`)는 쓰지 않는다. */
+export interface TextLayer extends LayerBase {
+  kind: 'text';
+  text: string;
+  fontSize: number;
+  /** 500~900. 글꼴 파일이 있는 굵기만. */
+  fontWeight: number;
+  color: string;
+  align: 'left' | 'center' | 'right';
+  /** 글자 크기에 곱하는 줄 간격. */
+  lineHeight: number;
+}
+
+/** 이미지 요소. `src` 는 data URL, `imageId` 는 이 브라우저 이미지 저장소(IndexedDB)의 열쇠다. */
+export interface ImageLayer extends LayerBase {
+  kind: 'image';
+  imageId: string;
+  src: string;
+  height: number;
+  /** 0~1. */
+  opacity: number;
+  /** 모서리 둥글기(px). */
+  radius: number;
+}
+
+export type Layer = TextLayer | ImageLayer;
+
+export const LAYER_WEIGHTS = [500, 600, 700, 800, 900] as const;
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;
@@ -237,6 +277,8 @@ export interface CardSpec {
   companyName: string;
   /** 장 번호 순서의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
   edits?: SlideEdits[];
+  /** 장 번호 순서의 자유 요소. 크기끼리 같이 쓴다. */
+  layers?: Layer[][];
 }
 
 export interface RenderRequest {

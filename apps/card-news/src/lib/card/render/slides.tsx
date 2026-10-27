@@ -10,9 +10,10 @@ import {
   textScale,
 } from '../layout';
 import type { Measure } from '../measure';
-import type { CardSection, CardSize, CardSpec } from '../types';
+import type { CardSection, CardSize, CardSpec, Layer } from '../types';
 import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
 import { Background } from './backgrounds';
+import { layerElements } from './layers';
 import {
   BOXED_BORDER,
   BOXED_PAD_X,
@@ -57,7 +58,16 @@ const TAB_WIDTH = 440;
 const TAB_TITLE_MAX = 72;
 const TAB_INNER = TAB_CARD_WIDTH - TAB_CARD_PAD_X * 2;
 
-function Canvas({ size, children }: { size: CardSize; children: ReactNode }) {
+/** 장 하나의 바탕. 템플릿을 그린 뒤 맨 위에 자유 요소를 얹는다. */
+function Canvas({
+  size,
+  layers,
+  children,
+}: {
+  size: CardSize;
+  layers: Layer[] | undefined;
+  children: ReactNode;
+}) {
   return (
     <div
       style={{
@@ -69,6 +79,7 @@ function Canvas({ size, children }: { size: CardSize; children: ReactNode }) {
       }}
     >
       {children}
+      {layerElements(layers)}
     </div>
   );
 }
@@ -197,7 +208,7 @@ function TabSlide({
 
   const edits = spec.edits?.[slide];
   const element = (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[slide]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', left: PAD_X, top: padTop + 12 }}>
         <Editable id="brandMark" edits={edits}>
@@ -334,7 +345,7 @@ function LabelsSlide({
   };
   const edits = spec.edits?.[slide];
   const element = (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[slide]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
         <Editable id="brandMark" edits={edits}>
@@ -479,7 +490,7 @@ function InfoSlide({
     <Sections palette={palette} sections={sections} note={note} metrics={metrics} edits={edits} />
   );
   const element = (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[slide]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <Column size={size} metrics={metrics}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -778,7 +789,7 @@ function CtaSlide({
   const headlineScale = textScale(spec.settings.headlineScale);
   const edits = spec.edits?.[2];
   return (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[2]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} cta />
       <div
         style={{

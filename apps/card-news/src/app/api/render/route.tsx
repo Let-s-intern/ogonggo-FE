@@ -6,6 +6,8 @@ import {
   CARD_SIZES,
   type CardSpec,
   type ElementEdit,
+  LAYER_WEIGHTS,
+  type Layer,
   type RenderRequest,
   SLIDE_COUNT,
   type SlideEdits,
@@ -59,6 +61,70 @@ function sanitizeEdits(edits: unknown): SlideEdits[] | undefined {
   });
 }
 
+/** 장 하나에 얹을 수 있는 자유 요소 수와 글자 요소의 글자 수. */
+const MAX_LAYERS = 30;
+const MAX_LAYER_TEXT = 1000;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * 자유 요소를 검사한다. 모양이 틀린 요소는 버리고, 수치는 범위로 자른다. 이미지는 로고와 같은 data
+ * URL 규칙이다. 굵기는 글꼴 파일이 있는 값 가운데 가까운 것으로.
+ */
+function sanitizeLayers(layers: unknown): Layer[][] | undefined {
+  if (!Array.isArray(layers)) {
+    return undefined;
+  }
+  return layers.slice(0, SLIDE_COUNT).map((slide: unknown) =>
+    (Array.isArray(slide) ? slide : []).slice(0, MAX_LAYERS).flatMap((raw: unknown): Layer[] => {
+      if (!raw || typeof raw !== 'object') {
+        return [];
+      }
+      const layer = raw as Record<string, unknown>;
+      const base = {
+        id: typeof layer.id === 'string' ? layer.id.slice(0, 40) : '',
+        x: clamp(layer.x, -2000, 3000, 0),
+        y: clamp(layer.y, -2000, 3000, 0),
+        width: clamp(layer.width, 10, 3000, 400),
+      };
+      if (layer.kind === 'text' && typeof layer.text === 'string') {
+        const weight = clamp(layer.fontWeight, 500, 900, 700);
+        return [
+          {
+            ...base,
+            kind: 'text',
+            text: layer.text.slice(0, MAX_LAYER_TEXT),
+            fontSize: clamp(layer.fontSize, 8, 400, 48),
+            fontWeight: LAYER_WEIGHTS.reduce((best, value) =>
+              Math.abs(value - weight) < Math.abs(best - weight) ? value : best,
+            ),
+            color:
+              typeof layer.color === 'string' && HEX_COLOR.test(layer.color)
+                ? layer.color
+                : '#111111',
+            align: layer.align === 'center' || layer.align === 'right' ? layer.align : 'left',
+            lineHeight: clamp(layer.lineHeight, 0.8, 3, 1.3),
+          },
+        ];
+      }
+      const src = safeImage(layer.src);
+      if (layer.kind === 'image' && src) {
+        return [
+          {
+            ...base,
+            kind: 'image',
+            imageId: '',
+            src,
+            height: clamp(layer.height, 10, 3000, 400),
+            opacity: clamp(layer.opacity, 0, 1, 1),
+            radius: clamp(layer.radius, 0, 1000, 0),
+          },
+        ];
+      }
+      return [];
+    }),
+  );
+}
+
 /**
  * 요청에 실린 이미지(로고·썸네일)를 검사한다. data URL 이미지가 아니면 버린다 — 바깥 주소를
  * 이미지 생성기에 넘기면 서버가 그 주소로 요청을 보내고, 미리보기 SVG 에도 그대로 실린다.
@@ -81,6 +147,7 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
     },
     edits: sanitizeEdits(spec.edits),
+    layers: sanitizeLayers(spec.layers),
   };
 }
 
