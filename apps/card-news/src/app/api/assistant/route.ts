@@ -21,6 +21,23 @@ const LLM_TIMEOUT_MS = 120_000;
 /** 요소 id 설명. 섹션 요소는 장마다 수가 달라 목록으로 주지 않고 꼴로 알린다. */
 const ELEMENT_ID_DESCRIPTION = `요소 id. 고정 요소 ${JSON.stringify(ELEMENT_LABELS)}. 섹션은 section-<n>(칩과 목록 묶음), section-<n>-chip(칩), section-<n>-list(목록)이고 <n> 은 그 장에 보이는 섹션 순서(1부터)다. read_card 의 id 를 그대로 쓴다.`;
 
+/** 자유 글자 요소의 값. `add_text` 와 `edit_layers` 가 같이 쓴다. */
+const LAYER_TEXT_PROPERTIES = {
+  x: { type: 'number' },
+  y: { type: 'number' },
+  width: { type: 'number', minimum: 40, maximum: 2000, description: '상자 폭. 기본 840' },
+  fontSize: { type: 'number', minimum: 12, maximum: 300, description: '글자 크기 px. 기본 64' },
+  fontWeight: { type: 'integer', enum: [500, 600, 700, 800, 900], description: '기본 700' },
+  color: { type: 'string', description: '#RRGGBB. 기본 #111111' },
+  align: { type: 'string', enum: ['left', 'center', 'right'] },
+  lineHeight: {
+    type: 'number',
+    minimum: 0.8,
+    maximum: 3,
+    description: '글자 크기에 곱하는 줄 간격',
+  },
+} as const;
+
 const SECTION_SCHEMA = {
   type: 'array',
   items: {
@@ -39,7 +56,7 @@ const TOOLS = [
     function: {
       name: 'read_card',
       description:
-        '지금 편집 중인 카드를 읽는다. 공고 요약, 문구, 설정, 고른 템플릿, 크기, 장마다 요소 목록(id, 이름, 감싼 요소 in, 상자 x·y·폭·높이, 편집값, 캔버스 밖으로 나갔는지), 서로 겹친 요소, 넘침 경고가 온다. 좌표는 폭 1080 기준 px 이고 왼쪽 위가 0,0 이다. 무엇이든 바꾸기 전에 먼저 부른다.',
+        '지금 편집 중인 카드를 읽는다. 공고 요약, 문구, 설정, 고른 템플릿, 크기, 장마다 요소 목록(id, 이름, 감싼 요소 in, 상자 x·y·폭·높이, 편집값, 캔버스 밖으로 나갔는지), 장마다 자유 요소 목록(layers: 사람이나 add_text 가 얹은 글자·이미지), 서로 겹친 요소, 넘침 경고가 온다. 좌표는 폭 1080 기준 px 이고 왼쪽 위가 0,0 이다. 무엇이든 바꾸기 전에 먼저 부른다.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -188,6 +205,51 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'add_text',
+      description:
+        '장 하나에 자유 글자 요소를 템플릿 위에 얹는다. 문구 칸과 따로이고 강조 표시(*, ~)는 쓰지 않는다. 줄은 "\\n" 으로 나눈다. x·y 는 글자 상자 왼쪽 위, width 는 상자 폭이고 높이는 글자에 맞춰 늘어난다. 결과로 새 요소 id 가 온다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          slide: { type: 'integer', minimum: 1, maximum: 3 },
+          text: { type: 'string' },
+          ...LAYER_TEXT_PROPERTIES,
+        },
+        required: ['slide', 'text', 'x', 'y'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'edit_layers',
+      description:
+        '자유 요소(read_card 의 layers) 여러 개를 고치거나 지운다. 글자 요소는 글자·자리·폭·크기·굵기·색·정렬·줄 간격을, 이미지 요소는 자리(x, y)만 바꾸거나 지울 수 있다. 넘긴 값만 바뀐다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          changes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                slide: { type: 'integer', minimum: 1, maximum: 3 },
+                id: { type: 'string', description: 'read_card 의 layers[].id' },
+                text: { type: 'string' },
+                ...LAYER_TEXT_PROPERTIES,
+                remove: { type: 'boolean', description: 'true 면 지운다' },
+              },
+              required: ['slide', 'id'],
+            },
+          },
+        },
+        required: ['changes'],
+      },
+    },
+  },
 ] as const;
 
 const TOOL_NAMES = new Set<string>(TOOLS.map((tool) => tool.function.name));
@@ -203,7 +265,7 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 
 [일하는 순서]
 1. 바꾸기 전에 read_card 로 지금 상태를 읽는다. 요소가 어느 장에 있는지, 상자가 어디인지 보고 정한다.
-2. 도구로 바꾼다. 글자 크기는 set_settings 의 배율로, 요소 위치·크기는 edit_elements 로, 로고·색은 set_settings 로, 문구는 set_content 나 rewrite_copy 로 바꾼다.
+2. 도구로 바꾼다. 글자 크기는 set_settings 의 배율로, 요소 위치·크기는 edit_elements 로, 로고·색은 set_settings 로, 문구는 set_content 나 rewrite_copy 로, 새 글 얹기는 add_text 로, 얹은 글·이미지는 edit_layers 로 바꾼다.
 3. 바꾸는 도구의 결과에는 바꾼 뒤의 확인(check)이 붙어 온다 — 장마다 넘침(overflow), 캔버스 밖으로 나간 요소(outside), 서로 겹친 요소(overlaps). read_card 를 다시 부르지 않아도 된다. 바꾸기 전에 없던 문제가 생겼으면 한 번 고치고, 그래도 남으면 고치지 말고 사용자에게 알린다.
 4. 무엇을 바꿨는지 한두 줄로 알려 준다. 한 요청은 도구 왕복 여섯 번 안에 끝낸다.
 
@@ -215,6 +277,12 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 - "크게", "작게" 는 한 번에 10~20% 씩 바꾼다. 글 요소(큰 제목, 직무명, 3장 제목·부제, 목록)의 크기는 edit_elements 의 scale 보다 set_settings 의 글자 배율을 먼저 쓴다 — 그래야 줄이 다시 나뉜다.
 - 제목을 키워 넘침(overflow)이 생기면 본문 배율(bodyScale)을 0.05~0.1 낮춰 자리를 만든다. 제목이 옆으로 나가면(outside) 제목 배율을 조금 낮춘다. 요청을 원래대로 되돌리기만 하고 끝내지 않는다 — 사람이 보고 Ctrl+Z 로 되돌릴 수 있다.
 - 배경 도형(물결, 워터마크, 테두리)은 옮길 수 없다.
+
+[자유 요소]
+- 템플릿에 없는 글(예: "마감 임박", "지금 지원하세요")을 카드에 더하라고 하면 add_text 로 글자 요소를 얹는다. 문구 칸(set_content)을 바꾸는 것과 다르다. 사람이 템플릿 글자를 자유 텍스트로 푼 것도 자유 요소다.
+- 넣을 자리는 read_card 의 상자를 보고 다른 요소와 겹치지 않는 빈 곳에 둔다. "하단에" 는 브랜드 로고 위나 옆의 빈 띠, "상단에" 는 뱃지·로고 줄 아래처럼 정한다. 빈 곳이 좁으면 글자 크기를 줄이거나 다른 요소를 조금 옮긴다.
+- 색은 그 자리 바탕에서 읽히게 고른다. 강조 문구는 굵기 800~900. 결과의 check 로 겹침과 밖으로 나감을 보고 한 번 고친다.
+- 자유 요소를 고치거나 지울 때는 edit_layers 를 쓴다. 이미지는 만들지 못하고 자리만 옮기거나 지울 수 있다. 자유 요소는 템플릿·장마다 따로다.
 
 [문구]
 - 공고에 없는 사실(연봉, 규모, 혜택, 날짜)을 지어내지 않는다. 마감 기한은 고치지 않는다.

@@ -131,7 +131,8 @@ interface Box {
 
 /**
  * 캔버스 아래 썸네일에서 장 하나의 요소 상자를 잰다(1080 폭 좌표, 편집값이 걸린 자리). 썸네일은 세 장이
- * 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`.
+ * 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`. 자유 요소는 `layer:<id>` 로
+ * 뒤에 붙는다.
  */
 export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox[] | null {
   const stage = document.querySelector(`[data-card-canvas][data-slide="${slide}"]`);
@@ -143,7 +144,21 @@ export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox
   if (!stageScale) {
     return null;
   }
-  return [...stage.querySelectorAll<HTMLElement>('[data-el]')].flatMap((element) => {
+  const layers: MeasuredBox[] = [...stage.querySelectorAll<HTMLElement>('[data-layer]')].map(
+    (element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        id: layerRef(element.dataset.layer ?? ''),
+        parent: null,
+        x: (rect.left - origin.left) / stageScale,
+        y: (rect.top - origin.top) / stageScale,
+        width: rect.width / stageScale,
+        height: rect.height / stageScale,
+        factor: 1,
+      };
+    },
+  );
+  const elements = [...stage.querySelectorAll<HTMLElement>('[data-el]')].flatMap((element) => {
     const id = element.dataset.el;
     if (!isElementId(id)) {
       return [];
@@ -166,6 +181,7 @@ export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox
       },
     ];
   });
+  return [...elements, ...layers];
 }
 
 const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };

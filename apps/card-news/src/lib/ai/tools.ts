@@ -9,10 +9,17 @@ import {
   elementLabel,
   type ElementEdit,
   type ElementId,
+  LAYER_WEIGHTS,
+  type Layer,
+  type Selection,
+  type TextLayer,
   SLIDE_COUNT,
   type SlideEdits,
   type VariantId,
   isElementId,
+  isLayerRef,
+  layerLabel,
+  layerRef,
 } from '../card/types';
 import { visibleSectionLabels } from '../card/render/slides';
 import { VARIANTS, variantOf } from '../card/variants';
@@ -31,7 +38,8 @@ import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useC
 
 /** 캔버스에서 잰 요소 상자(1080 폭 좌표, 편집값이 걸린 자리). */
 export interface MeasuredBox {
-  id: ElementId;
+  /** 템플릿 요소 id, 자유 요소는 `layer:<id>`. */
+  id: Selection;
   /** 이 요소를 감싼 요소(흰 판 안 섹션, 섹션 안 칩). 감싼 요소를 옮기면 같이 움직인다. */
   parent: ElementId | null;
   x: number;
@@ -59,7 +67,7 @@ export interface ToolContext {
   size: () => CardSizeId;
   /** 보고 있는 장(0부터)과 고른 요소. */
   slide: () => number;
-  selected: () => ElementId | null;
+  selected: () => Selection | null;
   /** 지금 그려진 세 장의 요소 상자와 넘침. 아직 그려지지 않았으면 `null`. */
   measure: () => SlideMeasure[] | null;
 }
@@ -113,6 +121,10 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
     }
     case 'reset_elements':
       return '요소 처음으로';
+    case 'add_text':
+      return `글자 넣기: ${String(args.text ?? '')}`;
+    case 'edit_layers':
+      return '자유 요소 바꾸기';
     default:
       return name;
   }
@@ -126,11 +138,21 @@ export function describeScreen(context: ToolContext): string {
   const labels = loaded
     ? visibleSectionLabels({ variant: variant.id, content: loaded.content }, context.slide())
     : [];
+  const layer = isLayerRef(selected)
+    ? loaded?.layers[variant.id]?.[context.slide()]?.find((item) => layerRef(item.id) === selected)
+    : undefined;
+  const name = !selected
+    ? ''
+    : isLayerRef(selected)
+      ? layer
+        ? layerLabel(layer)
+        : '자유 요소'
+      : elementLabel(selected, labels);
   return [
     `템플릿 ${variant.id}(${variant.label})`,
     `크기 ${CARD_SIZES[context.size()].label}`,
     `보고 있는 장 ${context.slide() + 1}`,
-    `고른 요소 ${selected ? `${selected}(${elementLabel(selected, labels)})` : '없음'}`,
+    `고른 요소 ${selected ? `${selected}(${name})` : '없음'}`,
   ].join(', ');
 }
 
@@ -201,7 +223,7 @@ function inside(a: MeasuredBox, b: MeasuredBox): boolean {
 
 /** 서로 걸친 요소 쌍. 한쪽이 다른 쪽 안에 통째로 든 것(흰 카드 안 로고)은 빼고, 숨긴 요소도 뺀다. */
 function overlaps(boxes: MeasuredBox[], edits: SlideEdits | undefined): string[] {
-  const shown = boxes.filter((box) => !edits?.[box.id]?.hidden);
+  const shown = boxes.filter((box) => isLayerRef(box.id) || !edits?.[box.id]?.hidden);
   const pairs: string[] = [];
   shown.forEach((a, index) => {
     for (const b of shown.slice(index + 1)) {
@@ -226,7 +248,29 @@ function slideSummary(
   const variant = context.variant();
   const edits = loaded.edits[variant]?.[slide];
   const labels = visibleSectionLabels({ variant, content: loaded.content }, slide);
-  const elements = boxes.map((box) => {
+  const outside = (box: MeasuredBox) =>
+    box.x < -TOLERANCE ||
+    box.y < -TOLERANCE ||
+    box.x + box.width > size.width + TOLERANCE ||
+    box.y + box.height > size.height + TOLERANCE;
+  const layers = (loaded.layers[variant]?.[slide] ?? []).map((layer) => {
+    const box = boxes.find((item) => item.id === layerRef(layer.id));
+    const {
+      src: _src,
+      imageId: _imageId,
+      ...shown
+    } = layer.kind === 'image' ? layer : { ...layer, src: '', imageId: '' };
+    return {
+      ...shown,
+      name: layerLabel(layer),
+      height: Math.round(box?.height ?? (layer.kind === 'image' ? layer.height : 0)),
+      outside: box ? outside(box) : false,
+    };
+  });
+  const elements = boxes.flatMap((box) => {
+    if (isLayerRef(box.id)) {
+      return [];
+    }
     const edit = edits?.[box.id] ?? NO_EDIT;
     return {
       id: box.id,
@@ -237,15 +281,10 @@ function slideSummary(
       width: Math.round(box.width),
       height: Math.round(box.height),
       edit: { dx: edit.dx, dy: edit.dy, scale: edit.scale, hidden: Boolean(edit.hidden) },
-      outside:
-        !edit.hidden &&
-        (box.x < -TOLERANCE ||
-          box.y < -TOLERANCE ||
-          box.x + box.width > size.width + TOLERANCE ||
-          box.y + box.height > size.height + TOLERANCE),
+      outside: !edit.hidden && outside(box),
     };
   });
-  return { slide: slide + 1, overflow, elements, overlaps: overlaps(boxes, edits) };
+  return { slide: slide + 1, overflow, elements, layers, overlaps: overlaps(boxes, edits) };
 }
 
 /**
@@ -264,7 +303,10 @@ async function check(context: ToolContext) {
     return {
       slide: summary.slide,
       overflow: summary.overflow,
-      outside: summary.elements.filter((element) => element.outside).map((element) => element.id),
+      outside: [
+        ...summary.elements.filter((element) => element.outside).map((element) => element.id),
+        ...summary.layers.filter((layer) => layer.outside).map((layer) => layerRef(layer.id)),
+      ],
       overlaps: summary.overlaps,
     };
   });
@@ -577,6 +619,184 @@ function resetElements(
   });
 }
 
+/** 장 하나의 자유 요소를 바꾼 레이어 묶음. */
+function withLayers(
+  loaded: LoadedCard,
+  variant: VariantId,
+  slide: number,
+  layers: Layer[],
+): LoadedCard['layers'] {
+  const slides: Layer[][] = [...(loaded.layers[variant] ?? [])];
+  for (let index = 0; index < slide; index += 1) {
+    slides[index] ??= [];
+  }
+  slides[slide] = layers;
+  return { ...loaded.layers, [variant]: slides };
+}
+
+/** 글자 요소 값 가운데 모델이 준 것만 검사해 꺼낸다. 틀린 값은 `rejected` 에 이름을 남긴다. */
+function textPatch(raw: Record<string, unknown>, rejected: string[]): Partial<TextLayer> {
+  const patch: Partial<TextLayer> = {};
+  const number = (key: 'x' | 'y' | 'width' | 'fontSize', min: number, max: number) => {
+    if (raw[key] === undefined) {
+      return;
+    }
+    const value = asNumber(raw[key]);
+    if (value === null) {
+      rejected.push(key);
+    } else {
+      patch[key] = Math.round(clamp(value, min, max));
+    }
+  };
+  number('x', -MAX_OFFSET, MAX_OFFSET);
+  number('y', -MAX_OFFSET, MAX_OFFSET);
+  number('width', 40, 2000);
+  number('fontSize', 12, 300);
+  if (typeof raw.text === 'string') {
+    patch.text = raw.text.replace(/\\n/g, '\n').slice(0, 1000);
+  }
+  if (raw.fontWeight !== undefined) {
+    const weight = asNumber(raw.fontWeight);
+    if (weight === null) {
+      rejected.push('fontWeight');
+    } else {
+      patch.fontWeight = LAYER_WEIGHTS.reduce((best, value) =>
+        Math.abs(value - weight) < Math.abs(best - weight) ? value : best,
+      );
+    }
+  }
+  if (raw.color !== undefined) {
+    if (HEX.test(String(raw.color))) {
+      patch.color = String(raw.color).toUpperCase();
+    } else {
+      rejected.push('color');
+    }
+  }
+  if (raw.align !== undefined) {
+    if (raw.align === 'left' || raw.align === 'center' || raw.align === 'right') {
+      patch.align = raw.align;
+    } else {
+      rejected.push('align');
+    }
+  }
+  if (raw.lineHeight !== undefined) {
+    const lineHeight = asNumber(raw.lineHeight);
+    if (lineHeight === null) {
+      rejected.push('lineHeight');
+    } else {
+      patch.lineHeight = round(clamp(lineHeight, 0.8, 3));
+    }
+  }
+  return patch;
+}
+
+/** 글자 요소를 넣는다. 빠진 값은 편집 화면의 `텍스트 추가` 와 같다. */
+function addText(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
+  const loaded = context.readLoaded();
+  const slide = asSlide(args.slide);
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  if (slide === null) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
+  const rejected: string[] = [];
+  const patch = textPatch(args, rejected);
+  if (!patch.text?.trim()) {
+    return 'text 가 비었습니다.';
+  }
+  const size = CARD_SIZES[context.size()];
+  const width = patch.width ?? 840;
+  const layer: TextLayer = {
+    id: crypto.randomUUID().slice(0, 8),
+    kind: 'text',
+    text: patch.text,
+    fontSize: 64,
+    fontWeight: 700,
+    color: '#111111',
+    align: 'left',
+    lineHeight: 1.3,
+    width,
+    x: Math.round((size.width - width) / 2),
+    y: Math.round(size.height / 2),
+    ...patch,
+  };
+  const variant = context.variant();
+  const layers = [...(loaded.layers[variant]?.[slide] ?? []), layer];
+  change(context, session, { layers: withLayers(loaded, variant, slide, layers) });
+  return JSON.stringify({ added: { slide: slide + 1, id: layer.id }, rejected });
+}
+
+/** 자유 요소를 고치거나 지운다. 이미지는 자리만 옮기거나 지운다(그림은 바꾸지 못한다). */
+function editLayers(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
+  const loaded = context.readLoaded();
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  const changes = Array.isArray(args.changes) ? (args.changes as Record<string, unknown>[]) : [];
+  if (changes.length === 0) {
+    return 'changes 가 비었습니다.';
+  }
+  const variant = context.variant();
+  let next = loaded;
+  const results: unknown[] = [];
+  for (const raw of changes) {
+    const slide = asSlide(raw.slide);
+    const id = String(raw.id ?? '').replace(/^layer:/, '');
+    const layers = slide === null ? [] : (next.layers[variant]?.[slide] ?? []);
+    const layer = layers.find((item) => item.id === id);
+    if (slide === null || !layer) {
+      results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 자유 요소입니다.' });
+      continue;
+    }
+    if (raw.remove === true) {
+      next = {
+        ...next,
+        layers: withLayers(
+          next,
+          variant,
+          slide,
+          layers.filter((item) => item !== layer),
+        ),
+      };
+      results.push({ slide: slide + 1, id, removed: true });
+      continue;
+    }
+    const rejected: string[] = [];
+    const patch = textPatch(raw, rejected);
+    const updated: Layer =
+      layer.kind === 'text'
+        ? { ...layer, ...patch }
+        : {
+            ...layer,
+            ...(patch.x !== undefined ? { x: patch.x } : {}),
+            ...(patch.y !== undefined ? { y: patch.y } : {}),
+          };
+    next = {
+      ...next,
+      layers: withLayers(
+        next,
+        variant,
+        slide,
+        layers.map((item) => (item === layer ? updated : item)),
+      ),
+    };
+    results.push({ slide: slide + 1, id, changed: Object.keys(patch), rejected });
+  }
+  if (next !== loaded) {
+    change(context, session, { layers: next.layers });
+  }
+  return JSON.stringify({ results });
+}
+
 /** 카드를 바꾸는 도구. 결과에 바꾼 뒤의 확인(`check`)을 붙인다. */
 const CHANGING_TOOLS = new Set([
   'set_content',
@@ -584,6 +804,8 @@ const CHANGING_TOOLS = new Set([
   'set_settings',
   'edit_elements',
   'reset_elements',
+  'add_text',
+  'edit_layers',
 ]);
 
 function execute(
@@ -609,6 +831,10 @@ function execute(
       return editElements(context, session, args);
     case 'reset_elements':
       return resetElements(context, session, args);
+    case 'add_text':
+      return addText(context, session, args);
+    case 'edit_layers':
+      return editLayers(context, session, args);
     default:
       return `모르는 도구입니다: ${name}`;
   }

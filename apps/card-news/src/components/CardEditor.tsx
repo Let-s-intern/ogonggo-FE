@@ -196,10 +196,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
       pickVariant: setVariant,
       size: () => screenRef.current.size,
       slide: () => screenRef.current.slide,
-      selected: () => {
-        const now = screenRef.current.selected;
-        return isElementId(now) ? now : null;
-      },
+      selected: () => screenRef.current.selected,
       measure: () => {
         const { built: slides, size: sizeId } = screenRef.current;
         if (!slides) {
