@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
 import type {
@@ -24,6 +24,7 @@ import {
   extractBrandColor,
   processLogo,
 } from './theme';
+import { useHistory } from './useHistory';
 
 /**
  * 편집 화면의 상태와 동작. 화면 컴포넌트는 이 훅이 주는 값만 그리고, 바꿀 때는 이 훅의 함수를
@@ -43,6 +44,9 @@ export interface LoadedCard {
   /** 템플릿별·장별 요소 편집값. 템플릿을 바꿔도 각자 남는다. */
   edits: CardEdits;
 }
+
+/** 실행 취소가 되돌리는 값. 로고·공고는 넣지 않는다. */
+type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits'>;
 
 export type EditorStatus =
   | { kind: 'idle' }
@@ -89,17 +93,65 @@ export function useCardEditor() {
       setLoaded((current) => (current ? { ...current, ...patch } : current)),
     [],
   );
-  const setContent = useCallback((content: CardContent) => update({ content }), [update]);
+
+  // 문구·설정·편집값을 바꾸는 함수는 바꾸기 직전 값을 실행 취소 기록에 쌓는다. 기록은 마지막으로 그린
+  // 값을 본다.
+  const loadedRef = useRef(loaded);
+  loadedRef.current = loaded;
+  const history = useHistory<EditSnapshot>(
+    () => {
+      const current = loadedRef.current;
+      return current
+        ? { content: current.content, settings: current.settings, edits: current.edits }
+        : null;
+    },
+    (snapshot) => setLoaded((current) => (current ? { ...current, ...snapshot } : current)),
+  );
+  const { record, clear: clearHistory } = history;
+  const remember = useCallback(
+    (group?: string) => {
+      const current = loadedRef.current;
+      if (current) {
+        record(
+          { content: current.content, settings: current.settings, edits: current.edits },
+          group,
+        );
+      }
+    },
+    [record],
+  );
+
+  /** 문구를 바꾼다. 이어 치는 글자는 한 단계로 되돌린다. */
+  const setContent = useCallback(
+    (content: CardContent) => {
+      remember('content');
+      update({ content });
+    },
+    [remember, update],
+  );
   const setSettings = useCallback(
-    (patch: Partial<CardSettings>) =>
+    (patch: Partial<CardSettings>) => {
+      // 색 고르기·슬라이더처럼 같은 값을 잇달아 바꾸면 한 단계다.
+      remember(`settings:${Object.keys(patch).sort().join(',')}`);
       setLoaded((current) =>
         current ? { ...current, settings: { ...current.settings, ...patch } } : current,
-      ),
-    [],
+      );
+    },
+    [remember],
   );
-  /** 요소 하나의 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. */
+  /**
+   * 요소 하나의 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. `group` 이 같은 변경은
+   * 실행 취소에서 한 단계다(끄는 동안, 방향키를 누르고 있는 동안).
+   */
   const setEdits = useCallback(
-    (variant: VariantId, slide: number, id: ElementId, edit: ElementEdit | null) =>
+    (
+      variant: VariantId,
+      slide: number,
+      id: ElementId,
+      edit: ElementEdit | null,
+      group?: string,
+    ) => {
+      remember(group);
       setLoaded((current) => {
         if (!current) {
           return current;
@@ -108,8 +160,9 @@ export function useCardEditor() {
         const { [id]: _previous, ...others } = slides[slide] ?? {};
         slides[slide] = edit ? { ...others, [id]: edit } : others;
         return { ...current, edits: { ...current.edits, [variant]: slides } };
-      }),
-    [],
+      });
+    },
+    [remember],
   );
 
   /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
@@ -155,6 +208,7 @@ export function useCardEditor() {
         const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
 
         const saved = loadCard(jobId);
+        clearHistory();
         if (saved) {
           setLoaded({
             job,
@@ -187,7 +241,7 @@ export function useCardEditor() {
         });
       }
     },
-    [loadCandidates],
+    [loadCandidates, clearHistory],
   );
 
   const regenerate = useCallback(
@@ -202,6 +256,7 @@ export function useCardEditor() {
           instruction: instruction || REWRITE_INSTRUCTION,
           current: draftFromContent(loaded.content),
         });
+        remember();
         update({ content: contentFromDraft(loaded.job, result.draft, loaded.content) });
         setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         return true;
@@ -212,7 +267,7 @@ export function useCardEditor() {
         setRegenerating(false);
       }
     },
-    [loaded, update],
+    [loaded, remember, update],
   );
 
   const startOver = useCallback(() => {
@@ -305,6 +360,8 @@ export function useCardEditor() {
     setContent,
     setSettings,
     setEdits,
+    undo: history.undo,
+    redo: history.redo,
     resetBrandColor,
     setLogo: (next: string | undefined) => update({ logo: next }),
   };
