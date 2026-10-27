@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CARD_SIZE_IDS,
   CARD_SIZES,
@@ -12,13 +12,15 @@ import {
   type VariantId,
 } from '@/lib/card/types';
 import { variantOf } from '@/lib/card/variants';
+import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
 import { downloadSlides } from '@/lib/client/render';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { useRenderKit } from '@/lib/client/useRenderKit';
+import { AssistantPanel } from './AssistantPanel';
 import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
-import { EditorCanvas, useBuiltSlides } from './EditorCanvas';
+import { EditorCanvas, measureSlideBoxes, useBuiltSlides } from './EditorCanvas';
 import { JobPicker } from './JobPicker';
 import { PropertiesPanel } from './PropertiesPanel';
 import { RegenerateModal } from './RegenerateModal';
@@ -158,6 +160,38 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const { kit, error: kitError } = useRenderKit();
   const spec = variant && specs ? specs[variant] : null;
   const built = useBuiltSlides(spec, size, kit);
+
+  // AI 비서의 도구는 요청 하나 동안 여러 번 불리며 그때마다 최신 화면 값을 본다. 렌더를 기다리지 않게
+  // ref 로 넘긴다.
+  const screenRef = useRef({ variant, size, slide, selected, built });
+  screenRef.current = { variant, size, slide, selected, built };
+  const { readLoaded, remember, applyQuietly } = editor;
+  const toolContext = useMemo<ToolContext>(
+    () => ({
+      readLoaded,
+      remember: () => remember(),
+      apply: applyQuietly,
+      variant: () => screenRef.current.variant ?? 'wave',
+      pickVariant: setVariant,
+      size: () => screenRef.current.size,
+      slide: () => screenRef.current.slide,
+      selected: () => screenRef.current.selected,
+      measure: () => {
+        const { built: slides, size: sizeId } = screenRef.current;
+        if (!slides) {
+          return null;
+        }
+        const measured = slides.map((slideBuilt, index) => ({
+          boxes: measureSlideBoxes(index, CARD_SIZES[sizeId].width),
+          overflow: slideBuilt.overflow,
+        }));
+        return measured.every((item) => item.boxes)
+          ? measured.map(({ boxes, overflow }) => ({ boxes: boxes ?? [], overflow }))
+          : null;
+      },
+    }),
+    [readLoaded, remember, applyQuietly],
+  );
 
   // 주소에 공고 번호가 있으면 처음 한 번 그 공고를 고른다.
   useEffect(() => {
@@ -311,6 +345,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 logo={loaded.logo}
                 onLogoChange={editor.setLogo}
                 candidates={editor.candidates}
+                assistant={<AssistantPanel context={toolContext} />}
               />
             </div>
           </div>

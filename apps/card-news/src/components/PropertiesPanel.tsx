@@ -1,7 +1,7 @@
 'use client';
 
-import { type ChangeEvent, useId } from 'react';
-import { Button, Input, Toggle } from '@ogonggo/ui';
+import { type ChangeEvent, type ReactNode, useId, useState } from 'react';
+import { Button, Input, Tabs, Toggle } from '@ogonggo/ui';
 import {
   type BrandMarkId,
   type CardSettings,
@@ -33,7 +33,16 @@ interface PropertiesPanelProps {
   /** `null` 이면 템플릿 원래 배치로 돌린다. */
   onEdit: (edit: ElementEdit | null, group?: string) => void;
   onDeselect: () => void;
+  /** AI 탭 내용(`AssistantPanel`). */
+  assistant: ReactNode;
 }
+
+type PanelTab = 'properties' | 'ai';
+
+const PANEL_TABS: { value: PanelTab; label: string }[] = [
+  { value: 'properties', label: '속성' },
+  { value: 'ai', label: 'AI' },
+];
 
 const HIGHLIGHTS: { value: HighlightPreset; label: string }[] = [
   { value: 'tint', label: '연한 브랜드' },
@@ -245,10 +254,28 @@ function ElementProperties({
 }
 
 /**
- * 오른쪽 속성 패널. 캔버스에서 아무것도 고르지 않으면 모든 템플릿에 같이 걸리는 공통 설정을, 요소를
- * 고르면 그 요소의 값을 보여 준다.
+ * 오른쪽 패널. `속성 | AI` 탭이다. AI 탭은 숨겨도 계속 그려 대화와 진행 중인 요청이 남는다.
  */
-export function PropertiesPanel({
+export function PropertiesPanel({ assistant, ...props }: PropertiesPanelProps) {
+  const [tab, setTab] = useState<PanelTab>('properties');
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="rounded-2xl bg-white px-2 shadow-sm">
+        <Tabs items={PANEL_TABS} value={tab} onValueChange={setTab} aria-label="오른쪽 패널" />
+      </div>
+      {tab === 'properties' ? <Properties {...props} /> : null}
+      <section hidden={tab !== 'ai'} className="rounded-2xl bg-white p-4 shadow-sm">
+        {assistant}
+      </section>
+    </div>
+  );
+}
+
+/**
+ * 속성 탭. 캔버스에서 아무것도 고르지 않으면 모든 템플릿에 같이 걸리는 공통 설정을, 요소를 고르면 그
+ * 요소의 값을 보여 준다.
+ */
+function Properties({
   settings,
   onSettingsChange,
   brandColor,
@@ -260,7 +287,7 @@ export function PropertiesPanel({
   edit,
   onEdit,
   onDeselect,
-}: PropertiesPanelProps) {
+}: Omit<PropertiesPanelProps, 'assistant'>) {
   if (selected) {
     return (
       <ElementProperties
