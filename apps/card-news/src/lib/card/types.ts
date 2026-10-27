@@ -86,6 +86,8 @@ export interface CardImage {
   opacity: number;
   /** 가로÷세로. 썸네일 카드가 이미지를 자르지 않고 통째로 보여 주는 데 쓴다. */
   aspect: number;
+  /** 편집 화면에 "지금 들어간 뒷배경" 으로 보일 출처(`공고 원문 대표 이미지`, `직접 올린 이미지`). */
+  label?: string;
 }
 
 /** 모든 시안에 같이 걸리는 설정. 한 번 바꾸면 모든 시안이 같이 바뀐다. */
@@ -105,9 +107,19 @@ export interface CardSettings {
   bodyScale?: number;
   /** 카드에 그리는 우리 로고. 예전 편집본에는 없다 — 없으면 `ogonggo` 다. */
   brandMark?: BrandMarkId;
+  /** `brandMark` 가 `custom` 일 때 그리는 올린 로고. 없으면 오공고를 그린다. */
+  brandImage?: BrandImage;
 }
 
-export type BrandMarkId = 'ogonggo' | 'letscareer';
+/** `custom` 은 사람이 올린 로고(`brandImage`), `none` 은 모든 장에서 그리지 않는다. */
+export type BrandMarkId = 'ogonggo' | 'letscareer' | 'custom' | 'none';
+
+export interface BrandImage {
+  /** data URL. 편집 화면이 긴 변 600px 이하로 줄여 둔다. */
+  dataUrl: string;
+  /** 가로÷세로. */
+  aspect: number;
+}
 
 /** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */
 export interface CardLogo {

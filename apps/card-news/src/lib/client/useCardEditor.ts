@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
 import type {
+  BrandImage,
   CardContent,
   CardImage,
   CardSettings,
@@ -16,7 +17,8 @@ import type {
 } from '../card/types';
 import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
-import { toCardImage } from './image';
+import { fileToBrandImage, toCardImage } from './image';
+import { BRAND_IMAGE_ID, getImage, putImage } from './imageStore';
 import {
   type CardEdits,
   type CardLayers,
@@ -75,7 +77,20 @@ export const PHOTO_OPACITY = 1;
 
 /** 후보를 카드 이미지로. 다른 출처 이미지는 이 앱의 프록시를 거쳐야 캔버스로 읽힌다. */
 export function candidateToImage(candidate: ImageCandidate, opacity: number): Promise<CardImage> {
-  return toCardImage(candidate.proxyPath, opacity);
+  return toCardImage(candidate.proxyPath, opacity).then((image) => ({
+    ...image,
+    label: candidate.source,
+  }));
+}
+
+/** 이 브라우저에 올려 둔 브랜드 로고. 없거나 못 읽으면 `undefined`. */
+async function loadBrandImage(): Promise<BrandImage | undefined> {
+  try {
+    const parsed = JSON.parse((await getImage(BRAND_IMAGE_ID)) || 'null') as BrandImage | null;
+    return parsed?.dataUrl ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function requestDraft(body: {
@@ -163,6 +178,18 @@ export function useCardEditor() {
       );
     },
     [remember],
+  );
+  /**
+   * 브랜드 로고를 올린 이미지로 바꾼다. 이 브라우저에 하나만 남기고 다른 공고에서도 쓴다. 파일이 없으면
+   * 올린 로고를 지우고 오공고로 돌린다.
+   */
+  const setBrandImage = useCallback(
+    async (file: Blob | null) => {
+      const brandImage = file ? await fileToBrandImage(file) : undefined;
+      void putImage(BRAND_IMAGE_ID, brandImage ? JSON.stringify(brandImage) : '');
+      setSettings({ brandImage, brandMark: brandImage ? 'custom' : 'ogonggo' });
+    },
+    [setSettings],
   );
   /**
    * 요소 하나의 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. `group` 이 같은 변경은
@@ -255,6 +282,7 @@ export function useCardEditor() {
         const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
 
         const saved = loadCard(jobId);
+        const brandImage = await loadBrandImage();
         clearHistory();
         if (saved) {
           setLoaded({
@@ -262,7 +290,7 @@ export function useCardEditor() {
             logo,
             brandColor,
             content: saved.content,
-            settings: saved.settings,
+            settings: { ...saved.settings, brandImage },
             edits: saved.edits ?? {},
             layers: await restoreLayers(saved.layers),
           });
@@ -275,7 +303,7 @@ export function useCardEditor() {
             logo,
             brandColor,
             content: contentFromDraft(job, result.draft),
-            settings: defaultSettings(brandColor ?? FALLBACK_COLOR),
+            settings: { ...defaultSettings(brandColor ?? FALLBACK_COLOR), brandImage },
             edits: {},
             layers: {},
           });
@@ -409,6 +437,7 @@ export function useCardEditor() {
     startOver,
     setContent,
     setSettings,
+    setBrandImage,
     setEdits,
     setLayers,
     remember,

@@ -43,7 +43,8 @@ export function saveCard(
   edits: CardEdits,
   layers: CardLayers,
 ): void {
-  const { photo: _photo, ...rest } = settings;
+  // 올린 브랜드 로고는 공고마다가 아니라 이 브라우저에 하나다. IndexedDB 에 둔다(`BRAND_IMAGE_ID`).
+  const { photo: _photo, brandImage: _brandImage, ...rest } = settings;
   const saved: SavedCard = {
     content,
     settings: rest,

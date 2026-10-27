@@ -132,6 +132,8 @@ function sanitizeLayers(layers: unknown): Layer[][] | undefined {
 function sanitizeSpec(spec: CardSpec): CardSpec {
   const original = safeImage(spec.logo?.original);
   const photo = safeImage(spec.settings.photo?.dataUrl);
+  const brandImage = safeImage(spec.settings.brandImage?.dataUrl);
+  const brandAspect = Number(spec.settings.brandImage?.aspect);
   return {
     ...spec,
     logo: original
@@ -145,6 +147,10 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
     settings: {
       ...spec.settings,
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
+      brandImage:
+        brandImage && brandAspect > 0.05 && brandAspect < 20
+          ? { dataUrl: brandImage, aspect: brandAspect }
+          : undefined,
     },
     edits: sanitizeEdits(spec.edits),
     layers: sanitizeLayers(spec.layers),

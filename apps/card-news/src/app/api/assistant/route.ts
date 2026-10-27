@@ -145,8 +145,9 @@ const TOOLS = [
           },
           brandMark: {
             type: 'string',
-            enum: ['ogonggo', 'letscareer'],
-            description: '카드에 그리는 우리 로고. ogonggo 오공고, letscareer 렛츠커리어',
+            enum: ['ogonggo', 'letscareer', 'custom', 'none'],
+            description:
+              '카드에 그리는 우리 로고. ogonggo 오공고, letscareer 렛츠커리어, custom 사용자가 올린 로고(read_card 의 brandImage 가 true 일 때만), none 모든 장에서 숨김',
           },
           headlineScale: { type: 'number', minimum: 0.7, maximum: 1.5 },
           bodyScale: { type: 'number', minimum: 0.7, maximum: 1.5 },
