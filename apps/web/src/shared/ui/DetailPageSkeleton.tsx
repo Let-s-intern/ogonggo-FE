@@ -13,7 +13,7 @@ export interface DetailPageSkeletonProps {
   sectionCount: number;
   /** 본문 문단 한 개를 몇 줄로 그릴지. 한 줄은 `text-sm`이라 20px이다. */
   sectionLines: number;
-  /** 사이드바에서 CTA 아래에 오는 목록 블록 수(`비슷한 …`, `함께 보면 좋아요`). */
+  /** 사이드바에서 CTA 아래에 오는 목록 블록 수(`비슷한 …`). */
   sidebarListCount: number;
   /**
    * 본문(왼쪽) 열의 세로 간격. 채용공고 상세만 `gap-4`이고 나머지 둘은 `gap-8`이라

@@ -9,7 +9,7 @@ import { ForBusinessBanner } from '@/widgets/for-business-banner';
  * 뼈대와 `<main>` 클래스는 채용공고 상세(`app/jobs/[jobId]/loading.tsx`)와 같다 — 두 화면의
  * 실제 레이아웃이 같은 값이기 때문이다. 다른 것은 숫자뿐이다
  * (`widgets/bootcamp-detail/ui/BootcampDetailView.tsx`) — 정보 그리드 3행(6칸), 본문 섹션 2개
- * (커리큘럼, 지원 자격 · 전형), 사이드바 목록 2개. 본문 열 간격도 `gap-8`로 다르다.
+ * (커리큘럼, 지원 자격 · 전형), 사이드바 목록 1개. 본문 열 간격도 `gap-8`로 다르다.
  */
 export default function Loading() {
   return (
@@ -19,7 +19,7 @@ export default function Loading() {
         infoRows={3}
         sectionCount={2}
         sectionLines={3}
-        sidebarListCount={2}
+        sidebarListCount={1}
         bodyGapClass="gap-8"
       />
       <div className="w-full max-w-page">

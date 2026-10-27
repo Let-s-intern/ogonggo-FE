@@ -33,8 +33,7 @@ async function fetchSimilarPool(): Promise<BootcampSummary[]> {
 }
 
 /**
- * 사이드바의 비슷한 교육 목록. 옆의 `함께 보면 좋아요`(`widgets/cross-sell`)와 같은 틀이다 —
- * 왼쪽에 `수강료 · 유형`·배지(회색 줄)와 제목(굵게, 두 줄까지), 오른쪽에 썸네일, 항목 사이에
+ * 사이드바의 비슷한 교육 목록. 왼쪽에 `수강료 · 유형`·배지(회색 줄)와 제목(굵게, 두 줄까지), 오른쪽에 썸네일, 항목 사이에
  * 가는 선. 썸네일은 목록 카드와 같은 `JobThumbnail`(대표 이미지, 없으면 로고)을 폭만 줄여 쓴다.
  */
 export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsProps) {
