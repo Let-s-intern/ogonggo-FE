@@ -217,7 +217,7 @@ function Chip({
   );
 }
 
-export function visibleSections(sections: CardSection[]) {
+function visibleSections(sections: CardSection[]) {
   return sections
     .map((section) => ({
       label: section.label,

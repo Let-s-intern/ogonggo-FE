@@ -6,7 +6,6 @@ import {
   CARD_SIZES,
   type CardSizeId,
   type CardSpec,
-  type ElementId,
   type Layer,
   type RenderRequest,
   SLIDE_COUNT,
@@ -258,22 +257,6 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
       : null;
   };
 
-  /** 캔버스에서 누른 글 요소의 문구 칸으로 간다. 목록은 지금 장의 섹션 칸이다. */
-  const focusText = (id: ElementId) => {
-    const key = id.startsWith('section-')
-      ? slide === 0
-        ? 'summarySections'
-        : 'detailSections'
-      : id;
-    const field = document.getElementById(`content-${key}`);
-    const details = field?.closest('details');
-    if (details) {
-      details.open = true;
-    }
-    field?.focus({ preventScroll: true });
-    field?.scrollIntoView({ block: 'nearest' });
-  };
-
   const header = (
     <header className="flex flex-wrap items-center justify-between gap-2">
       <div>
@@ -374,7 +357,9 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                     setSelected(null);
                   }}
                   onEdit={(id, edit, group) => editor.setEdits(variant, slide, id, edit, group)}
-                  onFocusText={focusText}
+                  content={loaded.content}
+                  variant={variant}
+                  onContentChange={editor.setContent}
                   sectionLabels={sectionLabels}
                 />
               ) : (

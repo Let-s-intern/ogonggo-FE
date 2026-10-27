@@ -30,7 +30,6 @@ import {
   MarkedLine,
   Sections,
   type SlideAssets,
-  visibleSections,
 } from './primitives';
 
 /**
@@ -137,19 +136,33 @@ function slideSections(
 }
 
 /**
- * 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. 번호는 `Sections` 가 단
- * `section-<n>` 과 같다.
+ * 장에 보이는 섹션이 문구(`summarySections`·`detailSections`)의 몇 번째인지. `Sections` 가 단
+ * `section-<n>` 의 n 번째가 이 배열의 n-1 번째다. 탭 템플릿은 `채용 직무` 를 그리지 않고, 항목이 빈 섹션은
+ * 세지 않는다.
  */
-export function visibleSectionLabels(
+export function visibleSectionIndices(
   spec: Pick<CardSpec, 'variant' | 'content'>,
   slide: number,
-): string[] {
+): number[] {
   if (slide === 2) {
     return [];
   }
   const layout = variantOf(spec.variant);
   const tab = (slide === 1 && layout.detailLayout ? layout.detailLayout : layout.layout) === 'tab';
-  return visibleSections(slideSections(spec, slide, tab)).map((section) => section.label);
+  const shown = new Set(slideSections(spec, slide, tab));
+  const all = slide === 0 ? spec.content.summarySections : spec.content.detailSections;
+  return all.flatMap((section, index) =>
+    shown.has(section) && section.items.some((item) => item.trim()) ? [index] : [],
+  );
+}
+
+/** 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. */
+export function visibleSectionLabels(
+  spec: Pick<CardSpec, 'variant' | 'content'>,
+  slide: number,
+): string[] {
+  const all = slide === 0 ? spec.content.summarySections : spec.content.detailSections;
+  return visibleSectionIndices(spec, slide).map((index) => all[index]?.label ?? '');
 }
 
 function visibleCount(sections: CardSection[]): number {

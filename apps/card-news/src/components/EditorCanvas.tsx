@@ -17,6 +17,7 @@ import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
   type CardSize,
+  type CardContent,
   type CardSizeId,
   type CardSpec,
   elementLabel,
@@ -27,6 +28,7 @@ import {
   SLIDE_LABELS,
   type Selection,
   type TextLayer,
+  type VariantId,
   isElementId,
   isLayerRef,
   layerLabel,
@@ -34,6 +36,7 @@ import {
 } from '@/lib/card/types';
 import { blobToLayerImage } from '@/lib/client/image';
 import { putImage } from '@/lib/client/imageStore';
+import { TextPopover, templateTextField } from './TextPopover';
 import type { MeasuredBox } from '@/lib/ai/tools';
 import type { RenderKit } from '@/lib/client/useRenderKit';
 
@@ -165,16 +168,6 @@ export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox
   });
 }
 
-/** 캔버스에서 누르면 왼쪽 문구 칸으로 가는 요소. */
-export const TEXT_ELEMENTS: ElementId[] = [
-  'badge',
-  'headline',
-  'roleTitle',
-  'note',
-  'ctaHeadline',
-  'ctaSub',
-];
-
 const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };
 /** 이만큼 움직이기 전에는 끌기가 아니라 누르기다(화면 px). */
 const DRAG_THRESHOLD = 3;
@@ -247,7 +240,9 @@ export function EditorCanvas({
   onSlideChange,
   onEdit,
   onLayers,
-  onFocusText,
+  content,
+  variant,
+  onContentChange,
   sectionLabels,
   textColor,
   checkLayers,
@@ -265,7 +260,10 @@ export function EditorCanvas({
   onSlideChange: (slide: number) => void;
   onEdit: (id: ElementId, edit: ElementEdit | null, group?: string) => void;
   onLayers: (layers: Layer[], group?: string) => void;
-  onFocusText: (id: ElementId) => void;
+  /** 문구와 템플릿. 템플릿 글자를 두 번 눌러 고칠 때 쓴다. */
+  content: CardContent;
+  variant: VariantId;
+  onContentChange: (content: CardContent) => void;
   /** 이 장에 보이는 섹션의 칩 제목. 섹션 요소 이름에 쓴다. */
   sectionLabels: string[];
   /** 새 글자 요소의 색(템플릿 제목 색). */
@@ -281,6 +279,8 @@ export function EditorCanvas({
   const [width, setWidth] = useState(0);
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
+  /** 두 번 눌러 연 템플릿 글자 입력 창. */
+  const [textEdit, setTextEdit] = useState<{ id: ElementId; sectionIndex?: number } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const gestureCount = useRef(0);
@@ -675,15 +675,32 @@ export function EditorCanvas({
     if (!g || g.moved || g.kind !== 'move' || isLayerRef(g.id)) {
       return;
     }
-    // 고른 요소를 다시 누르면 한 겹 안쪽으로 들어간다. 끌지 않고 누른 글 요소는 왼쪽 문구 칸으로 간다.
-    const id = g.drill ?? g.id;
+    // 고른 요소를 다시 누르면 한 겹 안쪽으로 들어간다. 포커스는 캔버스에 남는다(방향키·Delete 가 먹게).
     if (g.drill) {
       onSelect(g.drill);
     }
-    if (TEXT_ELEMENTS.includes(id)) {
-      onFocusText(id);
+  };
+
+  /** 두 번 누른 요소. 글자 요소는 바로 고치기, 템플릿 글자는 요소 아래 입력 창을 연다. */
+  const openText = (id: Selection) => {
+    const layer = layerOf(id);
+    if (layer?.kind === 'text') {
+      setEditing(layer.id);
+      return;
+    }
+    if (isLayerRef(id)) {
+      return;
+    }
+    const field = templateTextField(id, content, variant, slide);
+    if (field) {
+      onSelect(id);
+      setTextEdit({ id, sectionIndex: field.sectionIndex });
     }
   };
+  const textField = textEdit
+    ? templateTextField(textEdit.id, content, variant, slide, textEdit.sectionIndex)
+    : null;
+  const textBox = textEdit ? boxes.find((box) => box.id === textEdit.id) : undefined;
 
   const onKeyDown = (event: KeyboardEvent) => {
     const command = event.ctrlKey || event.metaKey;
@@ -837,11 +854,7 @@ export function EditorCanvas({
                     onPointerMove={move}
                     onPointerUp={end}
                     onPointerCancel={end}
-                    onDoubleClick={() => {
-                      if (layerOf(box.id)?.kind === 'text') {
-                        setEditing(layerOf(box.id)?.id ?? null);
-                      }
-                    }}
+                    onDoubleClick={() => openText(box.id)}
                     className={`absolute cursor-move touch-none ${
                       on
                         ? 'outline outline-2 outline-blue-500'
@@ -890,6 +903,26 @@ export function EditorCanvas({
                     </div>
                   ))
                 : null}
+              {textEdit && textField && textBox ? (
+                <TextPopover
+                  key={`${textEdit.id}:${slide}`}
+                  field={textField}
+                  content={content}
+                  onChange={onContentChange}
+                  onClose={() => {
+                    setTextEdit(null);
+                    frameRef.current?.focus({ preventScroll: true });
+                  }}
+                  style={{
+                    width: Math.min(320, width - 16),
+                    left: Math.max(8, Math.min(textBox.x * scale, width - 328)),
+                    top: Math.min(
+                      (textBox.y + textBox.height) * scale + 6,
+                      cardSize.height * scale - 150,
+                    ),
+                  }}
+                />
+              ) : null}
               {editingLayer && editingBox ? (
                 // 글자는 캔버스가 바로 다시 그린다. 입력 칸은 글자를 투명하게 두고 커서와 선택만 보인다.
                 <textarea
@@ -948,7 +981,7 @@ export function EditorCanvas({
         </Button>
         <span className="text-xs text-gray-500">
           T 키로 글자, Ctrl+V 나 파일 끌어 놓기로 이미지를 넣습니다. 회사 로고를 고르고 붙이거나
-          로고 자리에 놓으면 로고가 바뀝니다. 글자는 두 번 눌러 고칩니다.
+          로고 자리에 놓으면 로고가 바뀝니다. 템플릿 글자도 두 번 눌러 고칩니다.
         </span>
       </div>
       {message ? <p className="text-center text-sm text-error">{message}</p> : null}
