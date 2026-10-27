@@ -49,8 +49,9 @@ export function AssistantPanel({ context }: { context: ToolContext }) {
     }
   };
 
+  // 화면 높이에서 머리글·탭과 하단 받기 바를 뺀 만큼. 넘으면 입력 칸이 하단 바에 가린다.
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[420px] flex-col">
+    <div className="flex h-[calc(100vh-18rem)] min-h-[420px] flex-col">
       <div className="flex items-start justify-between gap-2 pb-3">
         <p className="text-xs text-gray-500">
           문구, 템플릿, 색과 로고, 글자 크기, 요소 자리를 바꿉니다. 바꾼 것은 캔버스를 누른 뒤
