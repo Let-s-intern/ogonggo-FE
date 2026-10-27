@@ -103,7 +103,11 @@ export interface CardSettings {
    */
   headlineScale?: number;
   bodyScale?: number;
+  /** 카드에 그리는 우리 로고. 예전 편집본에는 없다 — 없으면 `ogonggo` 다. */
+  brandMark?: BrandMarkId;
 }
+
+export type BrandMarkId = 'ogonggo' | 'letscareer';
 
 /** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */
 export interface CardLogo {

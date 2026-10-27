@@ -90,6 +90,7 @@ export function defaultSettings(brandColor: string): CardSettings {
     logoStyle: 'auto',
     headlineScale: 1,
     bodyScale: 1,
+    brandMark: 'ogonggo',
   };
 }
 

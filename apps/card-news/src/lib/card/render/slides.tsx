@@ -19,12 +19,12 @@ import {
   BOXED_PAD_Y,
   COLUMN_CHIP_WIDTH,
   COLUMN_GAP,
+  BrandMark,
   CompanyLogo,
   LABEL_WIDTH,
   Header,
   Headline,
   Icon,
-  LetsCareer,
   MarkedLine,
   Sections,
   type SlideAssets,
@@ -173,7 +173,7 @@ function TabSlide({
     <Canvas size={size}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', left: PAD_X, top: padTop + 12 }}>
-        <LetsCareer palette={palette} assets={assets} size={64} />
+        <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} size={64} />
       </div>
       <div
         style={{
@@ -301,7 +301,7 @@ function LabelsSlide({
     <Canvas size={size}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
-        <LetsCareer palette={palette} assets={assets} size={52} />
+        <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} size={52} />
       </div>
       <Column size={size} metrics={metrics} justify="flex-start">
         <div
@@ -476,7 +476,7 @@ function InfoSlide({
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <LetsCareer palette={palette} assets={assets} />
+          <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} />
         </div>
       </Column>
     </Canvas>

@@ -14,7 +14,7 @@ import {
   type SlideMetrics,
 } from '../layout';
 import { parseLine } from '../markup';
-import type { CardSection, CardSpec } from '../types';
+import type { BrandMarkId, CardSection, CardSpec } from '../types';
 import type { Palette } from '../variants';
 
 /**
@@ -26,7 +26,9 @@ import type { Palette } from '../variants';
 export interface SlideAssets {
   markColor: string;
   markWhite: string;
+  /** 오공고 심볼. 원래 색(파랑)과 어두운 바탕용 흰색. */
   ogonggoLogo: string;
+  ogonggoWhite: string;
   /** 뱃지 확성기. 검정 뱃지용(흰색)과 흰 뱃지용(검정). */
   speakerLight: string;
   speakerDark: string;
@@ -502,6 +504,52 @@ export function LetsCareer({
       >
         <div style={{ display: 'flex' }}>LETS</div>
         <div style={{ display: 'flex' }}>CAREER</div>
+      </div>
+    </div>
+  );
+}
+
+/** 오공고 심볼의 가로÷세로(`assets/brand/ogonggo.svg` 52x25). */
+const OGONGGO_ASPECT = 52 / 25;
+
+/**
+ * 우리 로고. 오공고는 심볼 옆에 `오공고` 글자를 둔다 — 렛츠커리어의 심볼과 `LETS CAREER` 글자에
+ * 맞춘 모양이다. 어두운 바탕은 흰 심볼에 흰 글자다. `size` 는 렛츠커리어 심볼 크기 기준이다.
+ */
+export function BrandMark({
+  brand = 'ogonggo',
+  palette,
+  assets,
+  size = 72,
+}: {
+  brand?: BrandMarkId;
+  palette: Palette;
+  assets: SlideAssets;
+  size?: number;
+}) {
+  if (brand === 'letscareer') {
+    return <LetsCareer palette={palette} assets={assets} size={size} />;
+  }
+  const height = Math.round(size * 0.6);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: Math.round(size * 0.2) }}>
+      <img
+        src={palette.mark === 'white' ? assets.ogonggoWhite : assets.ogonggoLogo}
+        alt=""
+        width={Math.round(height * OGONGGO_ASPECT)}
+        height={height}
+      />
+      <div
+        style={{
+          display: 'flex',
+          fontSize: Math.round(size * 0.62),
+          fontWeight: 800,
+          lineHeight: 1,
+          letterSpacing: -size * 0.01,
+          color: palette.markText,
+        }}
+      >
+        오공고
       </div>
     </div>
   );
