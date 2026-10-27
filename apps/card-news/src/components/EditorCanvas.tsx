@@ -139,6 +139,7 @@ export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox
     return [
       {
         id,
+        parent: ancestorsOf(element, stage as HTMLElement)[0] ?? null,
         x: (rect.left - origin.left) / stageScale,
         y: (rect.top - origin.top) / stageScale,
         width: rect.width / stageScale,

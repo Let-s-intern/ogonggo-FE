@@ -32,6 +32,8 @@ import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useC
 /** 캔버스에서 잰 요소 상자(1080 폭 좌표, 편집값이 걸린 자리). */
 export interface MeasuredBox {
   id: ElementId;
+  /** 이 요소를 감싼 요소(흰 판 안 섹션, 섹션 안 칩). 감싼 요소를 옮기면 같이 움직인다. */
+  parent: ElementId | null;
   x: number;
   y: number;
   width: number;
@@ -229,6 +231,7 @@ function slideSummary(
     return {
       id: box.id,
       name: elementLabel(box.id, labels),
+      ...(box.parent ? { in: box.parent } : {}),
       x: Math.round(box.x),
       y: Math.round(box.y),
       width: Math.round(box.width),
@@ -444,6 +447,7 @@ async function editElements(
   const size = CARD_SIZES[context.size()];
   let edits = loaded.edits;
   const results: unknown[] = [];
+  const changed = new Set<string>();
   for (const raw of changes) {
     const slide = asSlide(raw.slide);
     const id = asElementId(raw.id);
@@ -453,6 +457,20 @@ async function editElements(
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 요소입니다.' });
       continue;
     }
+    // 감싼 요소를 옮기면 안쪽 요소는 따라 움직인다. 같은 호출에서 안쪽 요소까지 옮기면 두 번 옮겨진다.
+    let parent = box.parent;
+    while (parent && !changed.has(`${slide}:${parent}`)) {
+      parent = boxes.find((b) => b.id === parent)?.parent ?? null;
+    }
+    if (parent) {
+      results.push({
+        slide: slide + 1,
+        id,
+        error: `${parent} 를 바꾸면 그 안의 ${id} 는 같이 움직입니다. 따로 옮길 때만 따로 부릅니다.`,
+      });
+      continue;
+    }
+    changed.add(`${slide}:${id}`);
     const edit = edits[variant]?.[slide]?.[id] ?? NO_EDIT;
     const scale = clamp(asNumber(raw.scale) ?? edit.scale, MIN_SCALE, MAX_SCALE);
     const ratio = scale / edit.scale;
