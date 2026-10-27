@@ -6,3 +6,19 @@
 body {
   background: var(--color-gray-50, #f9fafb);
 }
+
+/*
+ * 편집 캔버스(EditorCanvas)는 이미지 생성기(satori)와 같은 규칙으로 그린다. 상자는 border-box,
+ * 이미지는 렌더가 준 크기 그대로 — Tailwind 기본 스타일의 `max-width: 100%` 를 걷는다.
+ * 이미지 생성기는 모든 상자가 `position: relative` 이고 적힌 순서대로 칠한다. 브라우저는 위치를
+ * 잡은 상자(배경)를 나중에 칠해 글자를 덮으므로 기본값을 맞춘다.
+ */
+[data-card-canvas],
+[data-card-canvas] * {
+  box-sizing: border-box;
+  position: relative;
+}
+
+[data-card-canvas] img {
+  max-width: none;
+}

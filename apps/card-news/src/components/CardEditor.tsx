@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { VariantId } from '@/lib/card/types';
+import type { ElementId, VariantId } from '@/lib/card/types';
 import { Button } from '@ogonggo/ui';
 import { useCardEditor } from '@/lib/client/useCardEditor';
+import { useRenderKit } from '@/lib/client/useRenderKit';
 import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
+import { EditorCanvas, useBuiltSlides } from './EditorCanvas';
 import { JobPicker } from './JobPicker';
 import { RegenerateModal } from './RegenerateModal';
 import { SettingsPanel } from './SettingsPanel';
@@ -22,6 +24,10 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const { loaded, status, notice, specs, selectJob } = editor;
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [variant, setVariant] = useState<VariantId | null>(null);
+  const [slide, setSlide] = useState(0);
+  const [selected, setSelected] = useState<ElementId | null>(null);
+  const { kit } = useRenderKit();
+  const built = useBuiltSlides(variant && specs ? specs[variant] : null, 'post', kit);
 
   // 주소에 공고 번호가 있으면 처음 한 번 그 공고를 고른다.
   useEffect(() => {
@@ -118,6 +124,22 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                   </a>
                 ) : null}
               </div>
+              {variant && built ? (
+                <EditorCanvas
+                  slides={built}
+                  size="post"
+                  slide={slide}
+                  edits={loaded.edits[variant]?.[slide]}
+                  selected={selected}
+                  onSelect={setSelected}
+                  onSlideChange={(next) => {
+                    setSlide(next);
+                    setSelected(null);
+                  }}
+                  onEdit={(id, edit, group) => editor.setEdits(variant, slide, id, edit, group)}
+                  onFocusText={() => undefined}
+                />
+              ) : null}
               {variant ? (
                 <VariantPreview spec={specs[variant]} onRepick={() => setVariant(null)} />
               ) : (

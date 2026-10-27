@@ -9,8 +9,13 @@ import type { SlideAssets } from './primitives';
  * 3장(`cta`)은 글과 프로필 카드가 위부터 차 있어 썸네일을 빼거나 더 어둡게 둔다.
  */
 
+/** 서버 렌더와 편집 캔버스(브라우저)가 같이 부르므로 `Buffer` 대신 `btoa` 로 만든다. 결과는 같다. */
 function svgUrl(svg: string): string {
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  let binary = '';
+  for (const byte of new TextEncoder().encode(svg)) {
+    binary += String.fromCharCode(byte);
+  }
+  return `data:image/svg+xml;base64,${btoa(binary)}`;
 }
 
 /**

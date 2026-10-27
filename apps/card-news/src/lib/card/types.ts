@@ -151,6 +151,22 @@ export const ELEMENT_IDS = [
 
 export type ElementId = (typeof ELEMENT_IDS)[number];
 
+/** 편집 화면에 보이는 요소 이름. */
+export const ELEMENT_LABELS: Record<ElementId, string> = {
+  badge: '뱃지',
+  companyLogo: '회사 로고',
+  headline: '큰 제목',
+  roleTitle: '직무명',
+  thumbnail: '썸네일 카드',
+  sections: '칩과 목록',
+  tabCard: '흰 카드',
+  brandMark: '브랜드 로고',
+  arrow: '화살표',
+  ctaHeadline: '3장 제목',
+  ctaSub: '3장 부제',
+  profile: '프로필 카드',
+};
+
 /**
  * 요소 하나의 편집값. 템플릿이 자동으로 잡은 자리에서 얼마나 옮겼는지(px, 1080 폭 기준)와 요소
  * 가운데를 기준으로 한 배율이다. 숨긴 요소도 자리는 그대로 차지한다 — 다른 요소가 따라 움직이지 않게.
