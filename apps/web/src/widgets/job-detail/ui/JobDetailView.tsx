@@ -9,7 +9,6 @@ import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
-import { JOB_PREPARATION_TITLE, JobRecommendedContents } from '@/widgets/job-recommended-contents';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { AnalysisTab } from './AnalysisTab';
@@ -132,9 +131,6 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
           <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
-          {/* 준비 위젯의 제목은 페이지 전용이다. 모달은 v6 시안대로 `함께 보면 좋아요` 를 둔다
-              (헤더·요약 박스를 옛 모양으로 둔 것과 같은 기준). */}
-          <JobRecommendedContents jobId={job.id} title="함께 보면 좋아요" />
         </aside>
       </div>
     );
@@ -172,9 +168,6 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           </StickyApplyBar>
           <DetailSidebarSection>
             <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
-          </DetailSidebarSection>
-          <DetailSidebarSection>
-            <JobRecommendedContents jobId={job.id} title={JOB_PREPARATION_TITLE} />
           </DetailSidebarSection>
         </aside>
       </div>

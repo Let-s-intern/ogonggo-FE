@@ -13,7 +13,7 @@ const TIMEOUT_MS = 3000;
  * `httpClient` 는 본문을 그대로 돌려준다.
  *
  * 실패하면 빈 목록이고, 히어로 첫 탭이 인기 공고로 바뀐다. 이 요청 하나 때문에 홈 본문 전체가
- * `(site)/error.tsx` 로 바뀌면 안 된다(`widgets/cross-sell/ui/CrossSellWidget.tsx` 와 같은 이유). 다만
+ * `(site)/error.tsx` 로 바뀌면 안 된다. 다만
  * 삼킨 오류가 보이지 않으면 백엔드가 계속 500 을 내도 아무도 모르므로 서버 로그에는 남긴다.
  *
  * 개수는 자르지 않는다 — 운영자가 고른 만큼 보이고 PC 는 네 건씩 넘긴다(`ui/PopularJobsTabs.tsx`).

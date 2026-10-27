@@ -12,8 +12,7 @@ import { ForBusinessBanner } from '@/widgets/for-business-banner';
  * 위젯이라 로딩 중에 이미 최종 모습으로 둘 수 있고, 그러면 이 부분은 높이가 어긋날 여지가
  * 아예 없다.
  *
- * 정보 그리드 2행(경력/채용 유형/학력/지역)과 사이드바 목록 2개(비슷한 공고,
- * 함께 보면 좋아요)는 이 화면의 실제 구성이다(`widgets/job-detail/ui/JobDetailView.tsx`).
+ * 정보 그리드 2행(경력/채용 유형/학력/지역)과 사이드바 목록 1개(비슷한 공고)는 이 화면의 실제 구성이다(`widgets/job-detail/ui/JobDetailView.tsx`).
  *
  * 본문 섹션은 최대 6개지만 3개만 그린다. 값이 없는 섹션은 통째로 사라져서 실제 개수가
  * 공고마다 다르고(픽스처 5건 실측: 1·1·1·4·6개), 6개를 그리면 본문이 사이드바보다 길어져
@@ -28,7 +27,7 @@ export default function Loading() {
         infoRows={2}
         sectionCount={3}
         sectionLines={3}
-        sidebarListCount={2}
+        sidebarListCount={1}
         bodyGapClass="gap-4"
       />
       <div className="w-full max-w-page">
