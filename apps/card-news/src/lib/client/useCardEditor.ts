@@ -10,13 +10,21 @@ import type {
   CardSpec,
   ElementEdit,
   ElementId,
+  Layer,
   SlideEdits,
   VariantId,
 } from '../card/types';
 import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { toCardImage } from './image';
-import { type CardEdits, clearCard, loadCard, saveCard } from './storage';
+import {
+  type CardEdits,
+  type CardLayers,
+  clearCard,
+  loadCard,
+  restoreLayers,
+  saveCard,
+} from './storage';
 import {
   FALLBACK_COLOR,
   type ProcessedLogo,
@@ -43,10 +51,16 @@ export interface LoadedCard {
   settings: CardSettings;
   /** 템플릿별·장별 요소 편집값. 템플릿을 바꿔도 각자 남는다. */
   edits: CardEdits;
+  /** 템플릿별·장별 자유 요소(글자·이미지). */
+  layers: CardLayers;
 }
 
 /** 실행 취소가 되돌리는 값. 로고·공고는 넣지 않는다. */
-export type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits'>;
+export type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits' | 'layers'>;
+
+function snapshotOf(card: LoadedCard): EditSnapshot {
+  return { content: card.content, settings: card.settings, edits: card.edits, layers: card.layers };
+}
 
 export type EditorStatus =
   | { kind: 'idle' }
@@ -101,9 +115,7 @@ export function useCardEditor() {
   const history = useHistory<EditSnapshot>(
     () => {
       const current = loadedRef.current;
-      return current
-        ? { content: current.content, settings: current.settings, edits: current.edits }
-        : null;
+      return current ? snapshotOf(current) : null;
     },
     (snapshot) => setLoaded((current) => (current ? { ...current, ...snapshot } : current)),
   );
@@ -112,10 +124,7 @@ export function useCardEditor() {
     (group?: string) => {
       const current = loadedRef.current;
       if (current) {
-        record(
-          { content: current.content, settings: current.settings, edits: current.edits },
-          group,
-        );
+        record(snapshotOf(current), group);
       }
     },
     [record],
@@ -181,6 +190,28 @@ export function useCardEditor() {
     [remember],
   );
 
+  /**
+   * 장 하나의 자유 요소 목록을 바꾼다(넣기, 고치기, 지우기, 순서). 배열 순서가 칠하는 순서다. `group` 이
+   * 같은 변경은 실행 취소에서 한 단계다.
+   */
+  const setLayers = useCallback(
+    (variant: VariantId, slide: number, layers: Layer[], group?: string) => {
+      remember(group);
+      setLoaded((current) => {
+        if (!current) {
+          return current;
+        }
+        const slides: Layer[][] = [...(current.layers[variant] ?? [])];
+        for (let index = 0; index < slide; index += 1) {
+          slides[index] ??= [];
+        }
+        slides[slide] = layers;
+        return { ...current, layers: { ...current.layers, [variant]: slides } };
+      });
+    },
+    [remember],
+  );
+
   /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
   const loadCandidates = useCallback(async (jobId: number) => {
     setCandidates(null);
@@ -233,6 +264,7 @@ export function useCardEditor() {
             content: saved.content,
             settings: saved.settings,
             edits: saved.edits ?? {},
+            layers: await restoreLayers(saved.layers),
           });
           setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
         } else {
@@ -245,6 +277,7 @@ export function useCardEditor() {
             content: contentFromDraft(job, result.draft),
             settings: defaultSettings(brandColor ?? FALLBACK_COLOR),
             edits: {},
+            layers: {},
           });
           setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         }
@@ -302,7 +335,7 @@ export function useCardEditor() {
   // 고칠 때마다 이 브라우저에 남긴다(이미지는 빼고).
   useEffect(() => {
     if (loaded) {
-      saveCard(loaded.job.id, loaded.content, loaded.settings, loaded.edits);
+      saveCard(loaded.job.id, loaded.content, loaded.settings, loaded.edits, loaded.layers);
     }
   }, [loaded]);
 
@@ -358,6 +391,7 @@ export function useCardEditor() {
           logo: logoSet,
           companyName: loaded.job.companyName,
           edits: loaded.edits[variant.id],
+          layers: loaded.layers[variant.id],
         } satisfies CardSpec,
       ]),
     ) as Record<VariantId, CardSpec>;
@@ -376,6 +410,7 @@ export function useCardEditor() {
     setContent,
     setSettings,
     setEdits,
+    setLayers,
     remember,
     applyQuietly,
     readLoaded,
