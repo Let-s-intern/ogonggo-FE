@@ -1,4 +1,4 @@
-import type { CardContent, CardSettings } from '../card/types';
+import type { CardContent, CardSettings, SlideEdits, VariantId } from '../card/types';
 
 /**
  * 편집 중인 카드를 이 브라우저에 공고별로 남긴다. 서버에는 저장하지 않는다 — 로그인이 없는
@@ -9,9 +9,14 @@ import type { CardContent, CardSettings } from '../card/types';
 // v2: 시안 여러 개로 바뀌며 테마 대신 공용 설정을 남긴다. v1 편집본은 읽지 않는다.
 const KEY_PREFIX = 'ogonggo.card-news.draft.v2.';
 
+/** 템플릿별·장별 요소 편집값. */
+export type CardEdits = Partial<Record<VariantId, SlideEdits[]>>;
+
 export interface SavedCard {
   content: CardContent;
   settings: CardSettings;
+  /** 예전 편집본에는 없다. */
+  edits?: CardEdits;
   savedAt: string;
 }
 
@@ -24,11 +29,17 @@ export function loadCard(jobId: number): SavedCard | null {
   }
 }
 
-export function saveCard(jobId: number, content: CardContent, settings: CardSettings): void {
+export function saveCard(
+  jobId: number,
+  content: CardContent,
+  settings: CardSettings,
+  edits: CardEdits,
+): void {
   const { photo: _photo, ...rest } = settings;
   const saved: SavedCard = {
     content,
     settings: rest,
+    edits,
     savedAt: new Date().toISOString(),
   };
   try {

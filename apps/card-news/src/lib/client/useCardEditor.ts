@@ -3,11 +3,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
-import type { CardContent, CardImage, CardSettings, CardSpec, VariantId } from '../card/types';
+import type {
+  CardContent,
+  CardImage,
+  CardSettings,
+  CardSpec,
+  ElementEdit,
+  ElementId,
+  SlideEdits,
+  VariantId,
+} from '../card/types';
 import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { toCardImage } from './image';
-import { clearCard, loadCard, saveCard } from './storage';
+import { type CardEdits, clearCard, loadCard, saveCard } from './storage';
 import {
   FALLBACK_COLOR,
   type ProcessedLogo,
@@ -31,6 +40,8 @@ export interface LoadedCard {
   brandColor: string | null;
   content: CardContent;
   settings: CardSettings;
+  /** 템플릿별·장별 요소 편집값. 템플릿을 바꿔도 각자 남는다. */
+  edits: CardEdits;
 }
 
 export type EditorStatus =
@@ -86,6 +97,20 @@ export function useCardEditor() {
       ),
     [],
   );
+  /** 요소 하나의 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. */
+  const setEdits = useCallback(
+    (variant: VariantId, slide: number, id: ElementId, edit: ElementEdit | null) =>
+      setLoaded((current) => {
+        if (!current) {
+          return current;
+        }
+        const slides: SlideEdits[] = [...(current.edits[variant] ?? [])];
+        const { [id]: _previous, ...others } = slides[slide] ?? {};
+        slides[slide] = edit ? { ...others, [id]: edit } : others;
+        return { ...current, edits: { ...current.edits, [variant]: slides } };
+      }),
+    [],
+  );
 
   /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
   const loadCandidates = useCallback(async (jobId: number) => {
@@ -131,7 +156,14 @@ export function useCardEditor() {
 
         const saved = loadCard(jobId);
         if (saved) {
-          setLoaded({ job, logo, brandColor, content: saved.content, settings: saved.settings });
+          setLoaded({
+            job,
+            logo,
+            brandColor,
+            content: saved.content,
+            settings: saved.settings,
+            edits: saved.edits ?? {},
+          });
           setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
         } else {
           setStatus({ kind: 'loading', message: 'AI가 초안을 쓰는 중' });
@@ -142,6 +174,7 @@ export function useCardEditor() {
             brandColor,
             content: contentFromDraft(job, result.draft),
             settings: defaultSettings(brandColor ?? FALLBACK_COLOR),
+            edits: {},
           });
           setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         }
@@ -198,7 +231,7 @@ export function useCardEditor() {
   // 고칠 때마다 이 브라우저에 남긴다(이미지는 빼고).
   useEffect(() => {
     if (loaded) {
-      saveCard(loaded.job.id, loaded.content, loaded.settings);
+      saveCard(loaded.job.id, loaded.content, loaded.settings, loaded.edits);
     }
   }, [loaded]);
 
@@ -253,6 +286,7 @@ export function useCardEditor() {
           settings: variant.image && photo ? { ...shared, photo } : shared,
           logo: logoSet,
           companyName: loaded.job.companyName,
+          edits: loaded.edits[variant.id],
         } satisfies CardSpec,
       ]),
     ) as Record<VariantId, CardSpec>;
@@ -270,6 +304,7 @@ export function useCardEditor() {
     startOver,
     setContent,
     setSettings,
+    setEdits,
     resetBrandColor,
     setLogo: (next: string | undefined) => update({ logo: next }),
   };
