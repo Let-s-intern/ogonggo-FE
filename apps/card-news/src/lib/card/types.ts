@@ -268,6 +268,27 @@ export type Layer = TextLayer | ImageLayer;
 
 export const LAYER_WEIGHTS = [500, 600, 700, 800, 900] as const;
 
+/** 편집 화면에서 고른 것. 템플릿 요소는 id, 자유 요소는 `layer:<id>` 다. */
+export type LayerRef = `layer:${string}`;
+export type Selection = ElementId | LayerRef;
+
+export function layerRef(id: string): LayerRef {
+  return `layer:${id}`;
+}
+
+export function isLayerRef(value: unknown): value is LayerRef {
+  return typeof value === 'string' && value.startsWith('layer:');
+}
+
+/** 자유 요소 이름. 글자 요소는 앞 글자 몇 개를 붙인다. */
+export function layerLabel(layer: Layer): string {
+  if (layer.kind === 'image') {
+    return '이미지';
+  }
+  const head = layer.text.replace(/\s+/g, ' ').trim();
+  return head ? `글자 · ${head.length > 12 ? `${head.slice(0, 12)}…` : head}` : '글자';
+}
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;

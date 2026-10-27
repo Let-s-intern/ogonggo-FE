@@ -7,12 +7,16 @@ import {
   type CardSizeId,
   type CardSpec,
   type ElementId,
+  type Layer,
+  type RenderRequest,
   SLIDE_COUNT,
   SLIDE_LABELS,
+  type Selection,
   type VariantId,
+  isElementId,
 } from '@/lib/card/types';
 import { visibleSectionLabels } from '@/lib/card/render/slides';
-import { variantOf } from '@/lib/card/variants';
+import { resolvePalette, variantOf } from '@/lib/card/variants';
 import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
 import { downloadSlides } from '@/lib/client/render';
@@ -28,6 +32,13 @@ import { RegenerateModal } from './RegenerateModal';
 import { VariantPicker } from './VariantPicker';
 
 const SLIDES = Array.from({ length: SLIDE_COUNT }, (_, slide) => slide);
+
+/**
+ * 받기 요청 하나의 상한. 배포처가 Vercel 이면 함수 요청 본문이 4.5MB 를 넘을 수 없다. 이미지는 data URL
+ * 로 실리므로 넣을 때 막는다.
+ */
+const MAX_RENDER_REQUEST = 4_000_000;
+const NO_LAYERS: Layer[] = [];
 
 function toggled<T>(set: Set<T>, value: T): Set<T> {
   const next = new Set(set);
@@ -157,7 +168,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const [variant, setVariant] = useState<VariantId | null>(null);
   const [size, setSize] = useState<CardSizeId>('post');
   const [slide, setSlide] = useState(0);
-  const [selected, setSelected] = useState<ElementId | null>(null);
+  const [selected, setSelected] = useState<Selection | null>(null);
   const { kit, error: kitError } = useRenderKit();
   const spec = variant && specs ? specs[variant] : null;
   const built = useBuiltSlides(spec, size, kit);
@@ -180,7 +191,10 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
       pickVariant: setVariant,
       size: () => screenRef.current.size,
       slide: () => screenRef.current.slide,
-      selected: () => screenRef.current.selected,
+      selected: () => {
+        const now = screenRef.current.selected;
+        return isElementId(now) ? now : null;
+      },
       measure: () => {
         const { built: slides, size: sizeId } = screenRef.current;
         if (!slides) {
@@ -221,6 +235,22 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
     setSlide(0);
     setSelected(null);
   }, [variant]);
+
+  const layers = (variant && loaded?.layers[variant]?.[slide]) || NO_LAYERS;
+  const setLayers = (next: Layer[], group?: string) =>
+    variant && editor.setLayers(variant, slide, next, group);
+  /** 이 장의 받기 요청이 상한을 넘으면 알릴 말. */
+  const checkLayers = (next: Layer[]): string | null => {
+    if (!spec) {
+      return null;
+    }
+    const slidesLayers = [...(spec.layers ?? [])];
+    slidesLayers[slide] = next;
+    const request: RenderRequest = { spec: { ...spec, layers: slidesLayers }, slide, size };
+    return JSON.stringify(request).length > MAX_RENDER_REQUEST
+      ? '이 장의 이미지가 많거나 커서 받기 요청이 4MB 를 넘습니다. 이미지를 빼거나 더 작은 이미지를 넣어 주세요.'
+      : null;
+  };
 
   /** 캔버스에서 누른 글 요소의 문구 칸으로 간다. 목록은 지금 장의 섹션 칸이다. */
   const focusText = (id: ElementId) => {
@@ -324,6 +354,10 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                   size={size}
                   slide={slide}
                   edits={loaded.edits[variant]?.[slide]}
+                  layers={layers}
+                  onLayers={setLayers}
+                  checkLayers={checkLayers}
+                  textColor={resolvePalette(variant, loaded.settings).headlineText}
                   selected={selected}
                   onSelect={setSelected}
                   onSlideChange={(next) => {
@@ -344,11 +378,13 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
               <PropertiesPanel
                 settings={loaded.settings}
                 onSettingsChange={editor.setSettings}
-                selected={selected}
+                selected={isElementId(selected) ? selected : null}
                 sectionLabels={sectionLabels}
-                edit={selected ? loaded.edits[variant]?.[slide]?.[selected] : undefined}
+                edit={
+                  isElementId(selected) ? loaded.edits[variant]?.[slide]?.[selected] : undefined
+                }
                 onEdit={(edit, group) =>
-                  selected && editor.setEdits(variant, slide, selected, edit, group)
+                  isElementId(selected) && editor.setEdits(variant, slide, selected, edit, group)
                 }
                 onDeselect={() => setSelected(null)}
                 brandColor={loaded.brandColor}

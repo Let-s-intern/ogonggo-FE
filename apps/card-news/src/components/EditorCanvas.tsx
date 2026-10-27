@@ -1,15 +1,18 @@
 'use client';
 
 import {
+  type DragEvent,
   type KeyboardEvent,
   type PointerEvent,
   type ReactElement,
   type Ref,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
+import { Button } from '@ogonggo/ui';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
@@ -19,10 +22,18 @@ import {
   elementLabel,
   type ElementEdit,
   type ElementId,
+  type Layer,
   SLIDE_COUNT,
   SLIDE_LABELS,
+  type Selection,
+  type TextLayer,
   isElementId,
+  isLayerRef,
+  layerLabel,
+  layerRef,
 } from '@/lib/card/types';
+import { blobToLayerImage } from '@/lib/client/image';
+import { putImage } from '@/lib/client/imageStore';
 import type { MeasuredBox } from '@/lib/ai/tools';
 import type { RenderKit } from '@/lib/client/useRenderKit';
 
@@ -32,8 +43,12 @@ import type { RenderKit } from '@/lib/client/useRenderKit';
  *
  * 요소 상자는 렌더가 단 `data-el` 로 찾아 잰다. 그 위에 투명한 상자를 얹어 고르기·끌기·크기 핸들을
  * 받는다. 요소 안에 요소가 있으면(흰 판 안 섹션, 섹션 안 칩) 처음 누르면 바깥 요소를 고르고, 같은
- * 자리를 다시 누르면 한 겹 안쪽을 고른다. Esc 는 한 겹 바깥으로, 맨 바깥에서는 선택을 푼다. 이동값은 요소가 놓인 부모 좌표(1080 폭 기준)로 바꿔 저장한다 — 3장 정사각처럼 묶음째
- * 줄인 장도 손을 따라 움직이게.
+ * 자리를 다시 누르면 한 겹 안쪽을 고른다. Esc 는 한 겹 바깥으로, 맨 바깥에서는 선택을 푼다. 이동값은
+ * 요소가 놓인 부모 좌표(1080 폭 기준)로 바꿔 저장한다 — 3장 정사각처럼 묶음째 줄인 장도 손을 따라
+ * 움직이게.
+ *
+ * 자유 요소(`Layer`)는 템플릿 위에 얹혀 늘 맨 위에서 골라진다. 피그마처럼 Ctrl+V 로 이미지·글자를
+ * 붙이고, 파일을 끌어 놓고, T 키나 `텍스트 추가` 로 글자를 넣고, 글자 요소는 두 번 눌러 바로 고친다.
  */
 
 export interface BuiltSlide {
@@ -100,10 +115,10 @@ function SlideStage({
 }
 
 interface Box {
-  id: ElementId;
-  /** 이 요소를 감싼 요소. 없으면 맨 바깥이다. */
+  id: Selection;
+  /** 이 요소를 감싼 요소. 없으면 맨 바깥이다. 자유 요소는 늘 맨 바깥이다. */
   parent: ElementId | null;
-  /** 감싼 요소 수. 깊을수록 위에 깐다. */
+  /** 감싼 요소 수. 깊을수록 위에 깐다. 자유 요소는 템플릿 요소보다 위다. */
   depth: number;
   x: number;
   y: number;
@@ -180,9 +195,30 @@ function ancestorsOf(element: HTMLElement, stage: HTMLElement): ElementId[] {
   return found;
 }
 
+/** 복사한 자유 요소를 클립보드에 싣는 형식. 같은 브라우저 안에서만 읽힌다. */
+const LAYER_MIME = 'application/x-ogonggo-layer';
+/** 붙여 넣은 이미지의 처음 크기 상한(1080 폭 기준). */
+const IMAGE_MAX_WIDTH = 600;
+const IMAGE_MAX_HEIGHT = 800;
+/** 복사·복제한 요소를 원래 자리에서 비켜 놓는 거리. */
+const PASTE_OFFSET = 24;
+const MIN_LAYER_WIDTH = 20;
+
+function newLayerId(): string {
+  return crypto.randomUUID().slice(0, 8);
+}
+
+/** 입력 칸에 포커스가 있으면 붙여넣기·복사는 그 칸의 몫이다. */
+function editingText(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+  );
+}
+
 type Gesture = {
   kind: 'move' | 'resize';
-  id: ElementId;
+  id: Selection;
   /** 끌지 않고 떼면 고를 한 겹 안쪽 요소. */
   drill: ElementId | null;
   group: string;
@@ -195,6 +231,8 @@ type Gesture = {
   centerY: number;
   startDistance: number;
   edit: ElementEdit;
+  /** 자유 요소를 끌 때 처음 값. */
+  layer: Layer | null;
   moved: boolean;
 };
 
@@ -203,33 +241,49 @@ export function EditorCanvas({
   size,
   slide,
   edits,
+  layers,
   selected,
   onSelect,
   onSlideChange,
   onEdit,
+  onLayers,
   onFocusText,
   sectionLabels,
+  textColor,
+  checkLayers,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
   slide: number;
   /** 이 장의 편집값. */
   edits: Partial<Record<ElementId, ElementEdit>> | undefined;
-  selected: ElementId | null;
-  onSelect: (id: ElementId | null) => void;
+  /** 이 장의 자유 요소. 배열 순서가 칠하는 순서다. */
+  layers: Layer[];
+  selected: Selection | null;
+  onSelect: (id: Selection | null) => void;
   onSlideChange: (slide: number) => void;
   onEdit: (id: ElementId, edit: ElementEdit | null, group?: string) => void;
+  onLayers: (layers: Layer[], group?: string) => void;
   onFocusText: (id: ElementId) => void;
   /** 이 장에 보이는 섹션의 칩 제목. 섹션 요소 이름에 쓴다. */
   sectionLabels: string[];
+  /** 새 글자 요소의 색(템플릿 제목 색). */
+  textColor: string;
+  /** 자유 요소를 바꾼 장을 받을 수 있는지. 안 되면 알릴 말. */
+  checkLayers: (layers: Layer[]) => string | null;
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [boxes, setBoxes] = useState<Box[]>([]);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const gestureCount = useRef(0);
+  // 붙여넣기·이미지 줄이기는 기다린 뒤 바꾼다. 그 사이 바뀐 목록 위에 더하도록 최신 값을 본다.
+  const layersRef = useRef(layers);
+  layersRef.current = layers;
 
   // 캔버스 폭은 칸 폭에 맞추되, 세로가 화면을 넘지 않게 줄인다.
   useLayoutEffect(() => {
@@ -263,32 +317,205 @@ export function EditorCanvas({
       return;
     }
     const origin = stage.getBoundingClientRect();
+    const measure = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        x: (rect.left - origin.left) / scale,
+        y: (rect.top - origin.top) / scale,
+        width: rect.width / scale,
+        height: rect.height / scale,
+      };
+    };
     const found: Box[] = [];
     for (const element of stage.querySelectorAll<HTMLElement>('[data-el]')) {
       const id = element.dataset.el;
       if (!isElementId(id)) {
         continue;
       }
-      const rect = element.getBoundingClientRect();
       const ancestors = ancestorsOf(element, stage);
       found.push({
         id,
         parent: ancestors[0] ?? null,
         depth: ancestors.length,
-        x: (rect.left - origin.left) / scale,
-        y: (rect.top - origin.top) / scale,
-        width: rect.width / scale,
-        height: rect.height / scale,
+        ...measure(element),
       });
     }
     // 안에 든 요소(흰 판 안 섹션, 섹션 안 칩)가 위에 오도록 바깥 것부터, 같은 깊이는 큰 것부터 깐다.
     found.sort((a, b) => a.depth - b.depth || b.width * b.height - a.width * a.height);
+    // 자유 요소는 템플릿 위에, 칠하는 순서대로 깐다.
+    stage.querySelectorAll<HTMLElement>('[data-layer]').forEach((element, index) => {
+      found.push({
+        id: layerRef(element.dataset.layer ?? ''),
+        parent: null,
+        depth: 1000 + index,
+        ...measure(element),
+      });
+    });
     setBoxes(found);
   }, [current, width, scale]);
 
   const editOf = (id: ElementId) => edits?.[id] ?? NO_EDIT;
-  const parentOf = (id: ElementId) => boxes.find((box) => box.id === id)?.parent ?? null;
-  const label = (id: ElementId) => elementLabel(id, sectionLabels);
+  const layerOf = (id: Selection | null) =>
+    isLayerRef(id) ? (layers.find((layer) => layerRef(layer.id) === id) ?? null) : null;
+  const parentOf = (id: Selection) => boxes.find((box) => box.id === id)?.parent ?? null;
+  const label = (id: Selection) => {
+    if (isLayerRef(id)) {
+      const layer = layerOf(id);
+      return layer ? layerLabel(layer) : '자유 요소';
+    }
+    return elementLabel(id, sectionLabels);
+  };
+
+  /** 장 하나의 자유 요소를 바꾼다. 받기 요청이 너무 커지면 바꾸지 않고 알린다. */
+  const commitLayers = (next: Layer[], group?: string, select?: Layer): boolean => {
+    const problem = checkLayers(next);
+    if (problem) {
+      setMessage(problem);
+      return false;
+    }
+    setMessage(null);
+    layersRef.current = next;
+    onLayers(next, group);
+    if (select) {
+      onSelect(layerRef(select.id));
+    }
+    return true;
+  };
+  const replaceLayer = (layer: Layer, group?: string) =>
+    commitLayers(
+      layersRef.current.map((item) => (item.id === layer.id ? layer : item)),
+      group,
+    );
+
+  /** 글자 요소를 넣는다. `text` 가 없으면 `텍스트` 를 넣고 바로 고치기를 연다. */
+  const addText = (text?: string, at?: { x: number; y: number }) => {
+    const layerWidth = text ? 840 : 600;
+    const layer: TextLayer = {
+      id: newLayerId(),
+      kind: 'text',
+      text: text ?? '텍스트',
+      fontSize: 64,
+      fontWeight: 700,
+      color: textColor,
+      align: 'left',
+      lineHeight: 1.3,
+      width: layerWidth,
+      x: Math.round((at?.x ?? cardSize.width / 2) - layerWidth / 2),
+      y: Math.round((at?.y ?? cardSize.height / 2) - 42),
+    };
+    if (commitLayers([...layersRef.current, layer], undefined, layer) && !text) {
+      setEditing(layer.id);
+    }
+  };
+
+  /** 이미지 파일을 줄여 이미지 요소로 넣는다. `at` 은 놓을 가운데(1080 폭 좌표)다. */
+  const addImages = async (files: Blob[], at?: { x: number; y: number }) => {
+    let offset = 0;
+    for (const file of files) {
+      let image: Awaited<ReturnType<typeof blobToLayerImage>>;
+      try {
+        image = await blobToLayerImage(file);
+      } catch {
+        setMessage('이미지를 읽지 못했습니다.');
+        continue;
+      }
+      const fit = Math.min(1, IMAGE_MAX_WIDTH / image.width, IMAGE_MAX_HEIGHT / image.height);
+      const layerWidth = Math.round(image.width * fit);
+      const layerHeight = Math.round(image.height * fit);
+      const id = newLayerId();
+      const layer: Layer = {
+        id,
+        kind: 'image',
+        imageId: id,
+        src: image.dataUrl,
+        width: layerWidth,
+        height: layerHeight,
+        x: Math.round((at?.x ?? cardSize.width / 2) - layerWidth / 2 + offset),
+        y: Math.round((at?.y ?? cardSize.height / 2) - layerHeight / 2 + offset),
+        opacity: 1,
+        radius: 0,
+      };
+      if (commitLayers([...layersRef.current, layer], undefined, layer)) {
+        void putImage(id, image.dataUrl);
+        offset += PASTE_OFFSET;
+      }
+    }
+  };
+
+  /** 자유 요소 복사본을 비켜 놓고 고른다. 이미지는 같은 저장 이미지를 쓴다. */
+  const addCopy = (source: Layer) => {
+    const copy = {
+      ...source,
+      id: newLayerId(),
+      x: source.x + PASTE_OFFSET,
+      y: source.y + PASTE_OFFSET,
+    };
+    commitLayers([...layersRef.current, copy], undefined, copy);
+  };
+
+  const removeLayer = (id: string) => {
+    commitLayers(layersRef.current.filter((layer) => layer.id !== id));
+    onSelect(null);
+  };
+
+  // 붙여넣기·복사는 캔버스 칸이 아니라 창에서 받는다 — 캔버스 밖 빈 곳을 누른 뒤에도 붙는다. 입력 칸이
+  // 받는 것은 건드리지 않는다.
+  const clipboardRef = useRef({ selected, layerOf, addText, addImages, addCopy });
+  clipboardRef.current = { selected, layerOf, addText, addImages, addCopy };
+  useEffect(() => {
+    const onCopy = (event: ClipboardEvent) => {
+      const { selected: now, layerOf: find } = clipboardRef.current;
+      const layer = find(now);
+      if (!layer || editingText(event.target) || !event.clipboardData) {
+        return;
+      }
+      event.preventDefault();
+      event.clipboardData.setData(LAYER_MIME, JSON.stringify(layer));
+      event.clipboardData.setData('text/plain', layer.kind === 'text' ? layer.text : '');
+    };
+    const onPaste = (event: ClipboardEvent) => {
+      const data = event.clipboardData;
+      if (!data || editingText(event.target)) {
+        return;
+      }
+      const copied = data.getData(LAYER_MIME);
+      const files = [...data.files].filter((file) => file.type.startsWith('image/'));
+      const text = data.getData('text/plain').trim();
+      if (!copied && files.length === 0 && !text) {
+        return;
+      }
+      event.preventDefault();
+      const actions = clipboardRef.current;
+      if (copied) {
+        try {
+          actions.addCopy(JSON.parse(copied) as Layer);
+          return;
+        } catch {
+          // 모양이 틀리면 아래에서 글자로 붙인다.
+        }
+      }
+      if (files.length > 0) {
+        void actions.addImages(files);
+      } else if (text) {
+        actions.addText(text);
+      }
+    };
+    window.addEventListener('copy', onCopy);
+    window.addEventListener('paste', onPaste);
+    return () => {
+      window.removeEventListener('copy', onCopy);
+      window.removeEventListener('paste', onPaste);
+    };
+  }, []);
+
+  /** 화면 좌표를 1080 폭 좌표로. */
+  const toCard = (clientX: number, clientY: number) => {
+    const origin = stageRef.current?.getBoundingClientRect();
+    return {
+      x: origin ? (clientX - origin.left) / scale : 0,
+      y: origin ? (clientY - origin.top) / scale : 0,
+    };
+  };
 
   /**
    * 누른 자리에서 고를 요소. `hit` 은 누른 상자(가장 안쪽)다. 그 상자와 감싼 요소 가운데 누른 자리를
@@ -299,9 +526,7 @@ export function EditorCanvas({
     event: PointerEvent,
     hit: ElementId,
   ): { id: ElementId; drill: ElementId | null } => {
-    const origin = stageRef.current?.getBoundingClientRect();
-    const x = origin ? (event.clientX - origin.left) / scale : 0;
-    const y = origin ? (event.clientY - origin.top) / scale : 0;
+    const { x, y } = toCard(event.clientX, event.clientY);
     const covers = (id: ElementId) => {
       const box = boxes.find((item) => item.id === id);
       return Boolean(
@@ -314,8 +539,8 @@ export function EditorCanvas({
         chain.unshift(id);
       }
     }
-    const lineage: ElementId[] = [];
-    for (let id: ElementId | null = selected; id; id = parentOf(id)) {
+    const lineage: Selection[] = [];
+    for (let id: Selection | null = selected; id; id = parentOf(id)) {
       lineage.push(id);
     }
     const shared = [...chain].reverse().find((id) => lineage.includes(id));
@@ -328,16 +553,20 @@ export function EditorCanvas({
     };
   };
 
-  const start = (event: PointerEvent, hit: ElementId, kind: Gesture['kind']) => {
+  const start = (event: PointerEvent, hit: Selection, kind: Gesture['kind']) => {
     event.preventDefault();
     event.stopPropagation();
     frameRef.current?.focus({ preventScroll: true });
-    const { id, drill } = kind === 'move' ? pick(event, hit) : { id: hit, drill: null };
+    const { id, drill }: { id: Selection; drill: ElementId | null } =
+      kind === 'move' && !isLayerRef(hit) ? pick(event, hit) : { id: hit, drill: null };
     onSelect(id);
-    const element = stageRef.current?.querySelector(`[data-el="${id}"]`);
+    const layer = layerOf(id);
+    const element = stageRef.current?.querySelector(
+      layer ? `[data-layer="${layer.id}"]` : `[data-el="${id}"]`,
+    );
     const parent = element?.parentElement;
     const factor =
-      parent && parent.offsetWidth > 0
+      !layer && parent && parent.offsetWidth > 0
         ? parent.getBoundingClientRect().width / parent.offsetWidth
         : scale;
     const rect = element?.getBoundingClientRect();
@@ -355,10 +584,45 @@ export function EditorCanvas({
       centerX,
       centerY,
       startDistance: Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY)),
-      edit: editOf(id),
+      edit: layer || isLayerRef(id) ? NO_EDIT : editOf(id),
+      layer,
       moved: false,
     };
     (event.currentTarget as Element).setPointerCapture(event.pointerId);
+  };
+
+  /** 자유 요소 끌기·크기. 크기는 가운데를 두고 바꾼다 — 글자는 폭만(줄이 다시 나뉜다), 이미지는 비율째. */
+  const moveLayer = (g: Gesture, layer: Layer, event: PointerEvent) => {
+    if (g.kind === 'move') {
+      replaceLayer(
+        {
+          ...layer,
+          x: Math.round(layer.x + (event.clientX - g.startX) / g.factor),
+          y: Math.round(layer.y + (event.clientY - g.startY) / g.factor),
+        },
+        g.group,
+      );
+      return;
+    }
+    const ratio =
+      Math.hypot(event.clientX - g.centerX, event.clientY - g.centerY) / g.startDistance;
+    const nextWidth = Math.max(MIN_LAYER_WIDTH, Math.round(layer.width * ratio));
+    const x = Math.round(layer.x + (layer.width - nextWidth) / 2);
+    if (layer.kind === 'text') {
+      replaceLayer({ ...layer, x, width: nextWidth }, g.group);
+      return;
+    }
+    const nextHeight = Math.max(1, Math.round((layer.height * nextWidth) / layer.width));
+    replaceLayer(
+      {
+        ...layer,
+        x,
+        y: Math.round(layer.y + (layer.height - nextHeight) / 2),
+        width: nextWidth,
+        height: nextHeight,
+      },
+      g.group,
+    );
   };
 
   const move = (event: PointerEvent) => {
@@ -372,6 +636,13 @@ export function EditorCanvas({
       return;
     }
     g.moved = true;
+    if (g.layer) {
+      moveLayer(g, g.layer, event);
+      return;
+    }
+    if (isLayerRef(g.id)) {
+      return;
+    }
     if (g.kind === 'move') {
       onEdit(
         g.id,
@@ -395,7 +666,7 @@ export function EditorCanvas({
   const end = () => {
     const g = gesture.current;
     gesture.current = null;
-    if (!g || g.moved || g.kind !== 'move') {
+    if (!g || g.moved || g.kind !== 'move' || isLayerRef(g.id)) {
       return;
     }
     // 고른 요소를 다시 누르면 한 겹 안쪽으로 들어간다. 끌지 않고 누른 글 요소는 왼쪽 문구 칸으로 간다.
@@ -409,14 +680,20 @@ export function EditorCanvas({
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
+    const command = event.ctrlKey || event.metaKey;
     if (event.key === 'Escape') {
       onSelect(selected ? parentOf(selected) : null);
+      return;
+    }
+    if (!command && !event.altKey && event.key.toLowerCase() === 't') {
+      event.preventDefault();
+      addText();
       return;
     }
     if (!selected) {
       return;
     }
-    const edit = editOf(selected);
+    const layer = layerOf(selected);
     const step = event.shiftKey ? 10 : 1;
     const arrows: Record<string, [number, number]> = {
       ArrowLeft: [-step, 0],
@@ -425,17 +702,70 @@ export function EditorCanvas({
       ArrowDown: [0, step],
     };
     const arrow = arrows[event.key];
-    if (arrow) {
+    if (command && event.key.toLowerCase() === 'd') {
       event.preventDefault();
-      onEdit(
-        selected,
-        { ...edit, dx: edit.dx + arrow[0], dy: edit.dy + arrow[1] },
-        `nudge:${selected}`,
-      );
+      if (layer) {
+        addCopy(layer);
+      }
+    } else if (arrow) {
+      event.preventDefault();
+      if (layer) {
+        replaceLayer(
+          { ...layer, x: layer.x + arrow[0], y: layer.y + arrow[1] },
+          `nudge:${selected}`,
+        );
+      } else if (!isLayerRef(selected)) {
+        const edit = editOf(selected);
+        onEdit(
+          selected,
+          { ...edit, dx: edit.dx + arrow[0], dy: edit.dy + arrow[1] },
+          `nudge:${selected}`,
+        );
+      }
     } else if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
-      onEdit(selected, { ...edit, hidden: true });
+      // 자유 요소는 지우고, 템플릿 요소는 숨긴다(자리를 지킨다).
+      if (layer) {
+        removeLayer(layer.id);
+      } else if (!isLayerRef(selected)) {
+        onEdit(selected, { ...editOf(selected), hidden: true });
+      }
+    } else if (event.key === 'Enter' && layer?.kind === 'text') {
+      event.preventDefault();
+      setEditing(layer.id);
     }
+  };
+
+  const onDragOver = (event: DragEvent) => {
+    if (event.dataTransfer.types.includes('Files')) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  };
+  const onDrop = (event: DragEvent) => {
+    const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith('image/'));
+    if (files.length === 0) {
+      return;
+    }
+    event.preventDefault();
+    frameRef.current?.focus({ preventScroll: true });
+    void addImages(files, toCard(event.clientX, event.clientY));
+  };
+
+  const editingLayer = layers.find(
+    (layer): layer is TextLayer => layer.id === editing && layer.kind === 'text',
+  );
+  const editingBox = editingLayer
+    ? boxes.find((box) => box.id === layerRef(editingLayer.id))
+    : undefined;
+  /** 바로 고치기를 닫는다. 비운 글자 요소는 지운다(피그마와 같다). */
+  const stopEditing = () => {
+    const layer = layersRef.current.find((item) => item.id === editing);
+    setEditing(null);
+    if (layer?.kind === 'text' && !layer.text.trim()) {
+      removeLayer(layer.id);
+    }
+    frameRef.current?.focus({ preventScroll: true });
   };
 
   const selectedBox = boxes.find((box) => box.id === selected);
@@ -447,6 +777,8 @@ export function EditorCanvas({
         ref={frameRef}
         tabIndex={0}
         onKeyDown={onKeyDown}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
         aria-label="카드 캔버스. 요소를 눌러 고르고 끌어 옮깁니다."
         className="flex w-full justify-center outline-none"
       >
@@ -471,7 +803,7 @@ export function EditorCanvas({
               }}
             >
               {boxes.map((box) => {
-                const hidden = edits?.[box.id]?.hidden;
+                const hidden = !isLayerRef(box.id) && edits?.[box.id]?.hidden;
                 const on = box.id === selected;
                 return (
                   <div
@@ -480,10 +812,16 @@ export function EditorCanvas({
                     aria-label={label(box.id)}
                     aria-pressed={on}
                     title={label(box.id)}
+                    data-box={box.id}
                     onPointerDown={(event) => start(event, box.id, 'move')}
                     onPointerMove={move}
                     onPointerUp={end}
                     onPointerCancel={end}
+                    onDoubleClick={() => {
+                      if (layerOf(box.id)?.kind === 'text') {
+                        setEditing(layerOf(box.id)?.id ?? null);
+                      }
+                    }}
                     className={`absolute cursor-move touch-none ${
                       on
                         ? 'outline outline-2 outline-blue-500'
@@ -500,7 +838,7 @@ export function EditorCanvas({
                   />
                 );
               })}
-              {selectedBox
+              {selectedBox && !editingLayer
                 ? (
                     [
                       ['left-0 top-0 -translate-1/2 cursor-nwse-resize', 'tl'],
@@ -532,6 +870,46 @@ export function EditorCanvas({
                     </div>
                   ))
                 : null}
+              {editingLayer && editingBox ? (
+                // 글자는 캔버스가 바로 다시 그린다. 입력 칸은 글자를 투명하게 두고 커서와 선택만 보인다.
+                <textarea
+                  aria-label="글자 고치기"
+                  autoFocus
+                  onFocus={(event) => event.currentTarget.select()}
+                  value={editingLayer.text}
+                  onChange={(event) =>
+                    replaceLayer(
+                      { ...editingLayer, text: event.target.value },
+                      `text:${editingLayer.id}`,
+                    )
+                  }
+                  onBlur={stopEditing}
+                  onKeyDown={(event) => {
+                    event.stopPropagation();
+                    if (event.key === 'Escape' || (event.key === 'Enter' && event.ctrlKey)) {
+                      event.preventDefault();
+                      stopEditing();
+                    }
+                  }}
+                  spellCheck={false}
+                  className="absolute resize-none overflow-hidden border-0 bg-transparent p-0 outline outline-2 outline-blue-500"
+                  style={{
+                    left: editingLayer.x * scale,
+                    top: editingLayer.y * scale,
+                    width: editingLayer.width * scale,
+                    height: Math.max(editingBox.height, editingLayer.fontSize) * scale,
+                    fontFamily: 'Pretendard',
+                    fontSize: editingLayer.fontSize * scale,
+                    fontWeight: editingLayer.fontWeight,
+                    lineHeight: editingLayer.lineHeight,
+                    textAlign: editingLayer.align,
+                    wordBreak: 'keep-all',
+                    whiteSpace: 'pre-wrap',
+                    color: 'transparent',
+                    caretColor: '#3B82F6',
+                  }}
+                />
+              ) : null}
             </div>
           </div>
         ) : (
@@ -543,6 +921,16 @@ export function EditorCanvas({
           </div>
         )}
       </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button type="button" size="sm" variant="secondary" onClick={() => addText()}>
+          텍스트 추가
+        </Button>
+        <span className="text-xs text-gray-500">
+          T 키로 글자, Ctrl+V 나 파일 끌어 놓기로 이미지를 넣습니다. 글자는 두 번 눌러 고칩니다.
+        </span>
+      </div>
+      {message ? <p className="text-center text-sm text-error">{message}</p> : null}
 
       <div className="flex justify-center gap-3">
         {slides.map((built, index) => (

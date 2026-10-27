@@ -58,3 +58,49 @@ export async function toCardImage(source: File | string, opacity: number): Promi
     aspect: canvas.width / canvas.height,
   };
 }
+
+/** 캔버스에 투명한 픽셀이 하나라도 있는지. */
+function hasTransparency(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): boolean {
+  const { data } = context.getImageData(0, 0, width, height);
+  for (let index = 3; index < data.length; index += 4) {
+    if ((data[index] ?? 255) < 255) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 자유 요소로 붙인 이미지를 긴 변 1350px 로 줄인다. 투명한 곳이 있는 PNG·WebP·GIF 는 PNG 로 두고
+ * 나머지는 JPEG 다 — 받기 요청 본문에 그대로 실린다(Vercel 함수 본문 한도 4.5MB).
+ */
+export async function blobToLayerImage(
+  blob: Blob,
+): Promise<{ dataUrl: string; width: number; height: number }> {
+  const source = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+  const image = await loadImage(source);
+  const ratio = Math.min(1, 1350 / Math.max(image.width, image.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(image.width * ratio));
+  canvas.height = Math.max(1, Math.round(image.height * ratio));
+  const context = canvas.getContext('2d');
+  context?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const transparent =
+    blob.type !== 'image/jpeg' &&
+    context !== null &&
+    hasTransparency(context, canvas.width, canvas.height);
+  return {
+    dataUrl: transparent ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.86),
+    width: canvas.width,
+    height: canvas.height,
+  };
+}
