@@ -6,6 +6,7 @@ import {
   CARD_SIZES,
   type CardSizeId,
   type CardSpec,
+  type ElementId,
   type Layer,
   type RenderRequest,
   SLIDE_COUNT,
@@ -17,6 +18,7 @@ import {
   layerRef,
 } from '@/lib/card/types';
 import { visibleSectionLabels } from '@/lib/card/render/slides';
+import { stripMarkup } from '@/lib/card/markup';
 import { resolvePalette, variantOf } from '@/lib/card/variants';
 import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
@@ -27,9 +29,10 @@ import { useRenderKit } from '@/lib/client/useRenderKit';
 import { AssistantPanel } from './AssistantPanel';
 import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
-import { EditorCanvas, measureSlideBoxes, useBuiltSlides } from './EditorCanvas';
+import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
 import { JobPicker } from './JobPicker';
 import { PropertiesPanel } from './PropertiesPanel';
+import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
 import { VariantPicker } from './VariantPicker';
 
@@ -244,6 +247,54 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
     : undefined;
   const setLayers = (next: Layer[], group?: string) =>
     variant && editor.setLayers(variant, slide, next, group);
+  /**
+   * 템플릿 글자 요소를 자유 텍스트로 푼다. 지금 보이는 글자·자리·크기·색으로 글자 요소를 만들고 원래
+   * 요소는 숨긴다. 실행 취소 한 번에 둘 다 돌아간다.
+   */
+  const unfold = (id: ElementId) => {
+    const field = variant && loaded ? templateTextField(id, loaded.content, variant, slide) : null;
+    const look = readTextLook(id, CARD_SIZES[size].width);
+    if (!variant || !loaded || !field || !look) {
+      return;
+    }
+    const text = id.endsWith('-list')
+      ? field.value
+          .split('\n')
+          .filter((line) => line.trim())
+          .map((line) => `• ${line}`)
+          .join('\n')
+      : stripMarkup(field.value);
+    // 줄이 다시 나뉘지 않게 폭을 조금 넉넉히 잡는다.
+    const slack = 24;
+    const layer: Layer = {
+      id: crypto.randomUUID().slice(0, 8),
+      kind: 'text',
+      text,
+      x: Math.round(look.x - (look.align === 'center' ? slack / 2 : 0)),
+      y: Math.round(look.y),
+      width: Math.round(look.width + slack),
+      fontSize: look.fontSize,
+      fontWeight: look.fontWeight,
+      color: look.color,
+      align: look.align,
+      lineHeight: look.lineHeight,
+    };
+    const slideEdits = [...(loaded.edits[variant] ?? [])];
+    const current = slideEdits[slide]?.[id] ?? { dx: 0, dy: 0, scale: 1 };
+    slideEdits[slide] = { ...slideEdits[slide], [id]: { ...current, hidden: true } };
+    const slideLayers = [...(loaded.layers[variant] ?? [])];
+    for (let index = 0; index < slide; index += 1) {
+      slideLayers[index] ??= [];
+    }
+    slideLayers[slide] = [...layers, layer];
+    editor.remember();
+    editor.applyQuietly({
+      edits: { ...loaded.edits, [variant]: slideEdits },
+      layers: { ...loaded.layers, [variant]: slideLayers },
+    });
+    setSelected(layerRef(layer.id));
+  };
+
   /** 이 장의 받기 요청이 상한을 넘으면 알릴 말. */
   const checkLayers = (next: Layer[]): string | null => {
     if (!spec) {
@@ -401,6 +452,13 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                   }
                 }}
                 onDeselect={() => setSelected(null)}
+                onUnfold={
+                  isElementId(selected) &&
+                  variant &&
+                  templateTextField(selected, loaded.content, variant, slide)
+                    ? () => unfold(selected)
+                    : undefined
+                }
                 brandColor={loaded.brandColor}
                 onResetBrandColor={editor.resetBrandColor}
                 logo={loaded.logo}

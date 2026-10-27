@@ -40,6 +40,8 @@ interface PropertiesPanelProps {
   /** `null` 이면 템플릿 원래 배치로 돌린다. */
   onEdit: (edit: ElementEdit | null, group?: string) => void;
   onDeselect: () => void;
+  /** 고른 템플릿 글자 요소를 자유 텍스트로 푼다. 글자 요소가 아니면 없다. */
+  onUnfold?: () => void;
   /** 고른 자유 요소. 있으면 그 요소의 값을 보여 준다. */
   layer: Layer | undefined;
   onLayerChange: (layer: Layer, group?: string) => void;
@@ -193,6 +195,7 @@ function ElementProperties({
   edit,
   onEdit,
   onDeselect,
+  onUnfold,
   settings,
   onSettingsChange,
 }: {
@@ -201,6 +204,7 @@ function ElementProperties({
   edit: ElementEdit;
   onEdit: (edit: ElementEdit | null, group?: string) => void;
   onDeselect: () => void;
+  onUnfold?: () => void;
   settings: CardSettings;
   onSettingsChange: (patch: Partial<CardSettings>) => void;
 }) {
@@ -265,6 +269,18 @@ function ElementProperties({
           처음으로
         </Button>
       </div>
+
+      {onUnfold ? (
+        <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+          <Button type="button" size="sm" variant="secondary" onClick={onUnfold}>
+            자유 텍스트로 풀기
+          </Button>
+          <p className="text-xs text-gray-500">
+            지금 보이는 글자·자리·크기·색으로 글자 요소를 만들고 이 요소는 숨깁니다. 푼 뒤로는 왼쪽
+            문구 칸과 연결이 끊기고, 강조 상자 모양은 사라집니다.
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -444,6 +460,7 @@ function Properties({
   edit,
   onEdit,
   onDeselect,
+  onUnfold,
   layer,
   onLayerChange,
   onLayerRemove,
@@ -468,6 +485,7 @@ function Properties({
         edit={edit ?? NO_EDIT}
         onEdit={onEdit}
         onDeselect={onDeselect}
+        onUnfold={onUnfold}
         settings={settings}
         onSettingsChange={onSettingsChange}
       />

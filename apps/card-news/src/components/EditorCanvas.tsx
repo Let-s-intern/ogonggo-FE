@@ -174,6 +174,69 @@ const DRAG_THRESHOLD = 3;
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 5;
 
+/** `rgb(…)` 색을 `#RRGGBB` 로. */
+function toHex(color: string): string {
+  const [r = 0, g = 0, b = 0] = (color.match(/\d+(\.\d+)?/g) ?? []).map(Number);
+  return `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+}
+
+/** 템플릿 글자 요소가 지금 큰 캔버스에 그려진 모양(1080 폭 좌표). 자유 텍스트로 풀 때 쓴다. */
+export interface TextLook {
+  x: number;
+  y: number;
+  width: number;
+  fontSize: number;
+  fontWeight: number;
+  color: string;
+  lineHeight: number;
+  align: TextLayer['align'];
+}
+
+/**
+ * 큰 캔버스에서 템플릿 글자 요소의 자리와 글자 모양을 잰다. 글자 크기는 편집값 배율까지 곱한 값이다.
+ * 색은 바탕을 칠하지 않은 글자(강조 상자·칩 바탕 밖)를 먼저 본다 — 풀면 상자 모양이 사라지므로.
+ */
+export function readTextLook(id: ElementId, cardWidth: number): TextLook | null {
+  const stage = document.querySelector<HTMLElement>('[data-card-canvas]:not([data-slide])');
+  const element = stage?.querySelector<HTMLElement>(`[data-el="${id}"]`);
+  if (!stage || !element) {
+    return null;
+  }
+  const origin = stage.getBoundingClientRect();
+  const stageScale = origin.width / cardWidth;
+  const rect = element.getBoundingClientRect();
+  const texts = [element, ...element.querySelectorAll<HTMLElement>('*')].filter((node) =>
+    [...node.childNodes].some((child) => child.nodeType === 3 && child.textContent?.trim()),
+  );
+  const first = texts[0];
+  if (!stageScale || !first) {
+    return null;
+  }
+  const plain =
+    texts.find((node) => getComputedStyle(node).backgroundColor === 'rgba(0, 0, 0, 0)') ?? first;
+  const style = getComputedStyle(first);
+  // 편집값으로 키운 만큼(요소 배율)을 글자 크기에 곱한다.
+  const factor = element.offsetWidth ? rect.width / (element.offsetWidth * stageScale) : 1;
+  const fontSize = Number.parseFloat(style.fontSize) * factor;
+  // 줄 간격은 줄 상자 둘의 위쪽 차이로 잰다(제목은 줄마다 상자이고 줄 사이가 따로 있다).
+  const lines = texts.map((node) => node.getBoundingClientRect().top);
+  const pitch = lines.find((top) => top - (lines[0] ?? 0) > 1);
+  const lineHeight =
+    pitch !== undefined && lines[0] !== undefined
+      ? (pitch - lines[0]) / stageScale / fontSize
+      : Number.parseFloat(style.lineHeight) / Number.parseFloat(style.fontSize) || 1.2;
+  return {
+    x: (rect.left - origin.left) / stageScale,
+    y: (rect.top - origin.top) / stageScale,
+    width: rect.width / stageScale,
+    fontSize: Math.round(fontSize),
+    fontWeight: Math.min(900, Math.max(500, Math.round(Number(style.fontWeight) / 100) * 100)),
+    color: toHex(getComputedStyle(plain).color),
+    lineHeight: Math.round(Math.min(3, Math.max(0.8, lineHeight)) * 100) / 100,
+    align: style.textAlign === 'center' ? 'center' : 'left',
+  };
+}
+
 /** 요소를 감싼 요소들(가까운 것부터). */
 function ancestorsOf(element: HTMLElement, stage: HTMLElement): ElementId[] {
   const found: ElementId[] = [];
