@@ -1,4 +1,4 @@
-import type { CardImage } from '../card/types';
+import type { BrandImage, CardImage } from '../card/types';
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -30,6 +30,13 @@ export async function fileToDataUrl(file: Blob, maxEdge = 1080): Promise<string>
   canvas.height = Math.round(image.height * ratio);
   canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL('image/png');
+}
+
+/** 올린 브랜드 로고. 로고라 긴 변 600px 이면 충분하고, 투명도를 지키려 PNG 로 둔다. */
+export async function fileToBrandImage(file: Blob): Promise<BrandImage> {
+  const dataUrl = await fileToDataUrl(file, 600);
+  const image = await loadImage(dataUrl);
+  return { dataUrl, aspect: image.width / image.height };
 }
 
 /**

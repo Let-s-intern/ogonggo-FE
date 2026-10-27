@@ -41,7 +41,12 @@ export function ImagePicker({
     const file = event.target.files?.[0];
     event.target.value = '';
     if (file) {
-      void apply(() => toCardImage(file, image?.opacity ?? defaultOpacity));
+      void apply(() =>
+        toCardImage(file, image?.opacity ?? defaultOpacity).then((next) => ({
+          ...next,
+          label: '직접 올린 이미지',
+        })),
+      );
     }
   };
 
@@ -65,6 +70,16 @@ export function ImagePicker({
           ) : null}
         </span>
       </div>
+      {image ? (
+        <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2">
+          <img src={image.dataUrl} alt="" className="size-12 shrink-0 rounded object-cover" />
+          <span className="text-xs text-gray-700">
+            지금 들어간 뒷배경: {image.label ?? '이미지'}
+          </span>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500">지금 들어간 뒷배경이 없어요.</p>
+      )}
       {candidates === null ? (
         <p className="text-xs text-gray-400">후보를 찾는 중</p>
       ) : candidates.length === 0 ? (

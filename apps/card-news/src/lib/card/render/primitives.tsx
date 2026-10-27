@@ -15,6 +15,7 @@ import {
 } from '../layout';
 import { parseLine } from '../markup';
 import {
+  type BrandImage,
   type BrandMarkId,
   type CardSection,
   type CardSpec,
@@ -616,17 +617,30 @@ const OGONGGO_ASPECT = 52 / 25;
  */
 export function BrandMark({
   brand = 'ogonggo',
+  image,
   palette,
   assets,
   size = 72,
 }: {
   brand?: BrandMarkId;
+  /** `custom` 일 때 그리는 올린 로고. 없으면 오공고를 그린다. */
+  image?: BrandImage;
   palette: Palette;
   assets: SlideAssets;
   size?: number;
 }) {
+  if (brand === 'none') {
+    return null;
+  }
   if (brand === 'letscareer') {
     return <LetsCareer palette={palette} assets={assets} size={size} />;
+  }
+  if (brand === 'custom' && image) {
+    // 렛츠커리어 심볼과 같은 높이로 두되, 가로로 긴 로고는 심볼의 여섯 배 폭에서 멈춘다.
+    const width = Math.min(Math.round(size * image.aspect), size * 6);
+    return (
+      <img src={image.dataUrl} alt="" width={width} height={Math.round(width / image.aspect)} />
+    );
   }
   const height = Math.round(size * 0.6);
   return (

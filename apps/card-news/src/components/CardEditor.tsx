@@ -397,6 +397,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                   onLogo={(image) =>
                     void fileToDataUrl(image).then(editor.setLogo, () => undefined)
                   }
+                  onBrand={(image) => void editor.setBrandImage(image)}
                   textColor={resolvePalette(variant, loaded.settings).headlineText}
                   selected={selected}
                   onSelect={setSelected}
@@ -460,6 +461,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 onResetBrandColor={editor.resetBrandColor}
                 logo={loaded.logo}
                 onLogoChange={editor.setLogo}
+                onBrandImage={(file) => void editor.setBrandImage(file)}
                 candidates={editor.candidates}
                 assistant={<AssistantPanel context={toolContext} />}
               />

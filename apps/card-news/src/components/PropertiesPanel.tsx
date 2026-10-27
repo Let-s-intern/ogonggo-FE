@@ -31,6 +31,8 @@ interface PropertiesPanelProps {
   onResetBrandColor: () => void;
   logo?: string;
   onLogoChange: (logo: string | undefined) => void;
+  /** 브랜드 로고를 올린 이미지로. `null` 이면 올린 로고를 지운다. */
+  onBrandImage: (file: Blob | null) => void;
   candidates: ImageCandidates | null;
   /** 캔버스에서 고른 요소. 없으면 공통 설정을 보여 준다. */
   selected: ElementId | null;
@@ -76,6 +78,8 @@ const LOGO_STYLES: { value: LogoStyle; label: string }[] = [
 const BRAND_MARKS: { value: BrandMarkId; label: string }[] = [
   { value: 'ogonggo', label: '오공고' },
   { value: 'letscareer', label: '렛츠커리어' },
+  { value: 'custom', label: '올린 로고' },
+  { value: 'none', label: '숨김' },
 ];
 
 /** 제목 배율이 걸리는 요소와 본문 배율이 걸리는 요소. 고르면 그 글자 크기 슬라이더가 보인다. */
@@ -466,6 +470,7 @@ function Properties({
   onResetBrandColor,
   logo,
   onLogoChange,
+  onBrandImage,
   candidates,
   selected,
   sectionLabels,
@@ -503,6 +508,14 @@ function Properties({
       />
     );
   }
+
+  const uploadBrand = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) {
+      onBrandImage(file);
+    }
+  };
 
   const uploadLogo = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -561,6 +574,33 @@ function Properties({
           value={settings.brandMark ?? 'ogonggo'}
           onChange={(brandMark) => onSettingsChange({ brandMark })}
         />
+        <div className="flex items-center justify-between gap-2">
+          {settings.brandImage ? (
+            <img src={settings.brandImage.dataUrl} alt="" className="h-8 max-w-28 object-contain" />
+          ) : (
+            <span className="text-xs text-gray-400">올린 로고 없음</span>
+          )}
+          <span className="flex items-center gap-2">
+            <label className="cursor-pointer rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50">
+              올리기
+              <input type="file" accept="image/*" className="hidden" onChange={uploadBrand} />
+            </label>
+            {settings.brandImage ? (
+              <button
+                type="button"
+                className="text-xs text-gray-500 underline"
+                onClick={() => onBrandImage(null)}
+              >
+                빼기
+              </button>
+            ) : null}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500">
+          {settings.brandMark === 'custom' && !settings.brandImage
+            ? '올린 로고가 없어 오공고 로고를 그립니다. 올리기를 누르거나 캔버스의 브랜드 로고를 고른 채 이미지를 붙여 넣으세요.'
+            : '올린 로고는 이 브라우저에 남아 다른 공고에서도 고를 수 있습니다. 숨김은 모든 장에서 브랜드 로고를 뺍니다.'}
+        </p>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
@@ -596,7 +636,7 @@ function Properties({
       </div>
       <div className="border-t border-gray-100 pt-3">
         <ImagePicker
-          label="썸네일 (썸네일 시안)"
+          label="뒷배경"
           image={settings.photo}
           candidates={candidates?.photo ?? null}
           defaultOpacity={PHOTO_OPACITY}
