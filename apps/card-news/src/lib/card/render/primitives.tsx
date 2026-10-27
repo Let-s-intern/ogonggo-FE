@@ -601,12 +601,14 @@ export function Header({
   palette,
   assets,
   width,
+  edits,
   right,
 }: {
   spec: CardSpec;
   palette: Palette;
   assets: SlideAssets;
   width: number;
+  edits: SlideEdits | undefined;
   right: ReactNode;
 }) {
   // 예전 편집본은 뱃지 끝에 확성기 이모지가 붙어 있다. 아이콘을 따로 그리므로 뗀다.
@@ -622,27 +624,29 @@ export function Header({
         width,
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          backgroundColor: palette.badge,
-          color: palette.badgeText,
-          fontSize: 30,
-          fontWeight: 700,
-          letterSpacing: -0.5,
-          padding: '12px 28px',
-          borderRadius: 999,
-          border: `2px solid ${palette.badgeText === '#FFFFFF' ? palette.badge : '#111111'}`,
-        }}
-      >
-        {badge}
-        <Icon
-          src={palette.badgeText === '#FFFFFF' ? assets.speakerLight : assets.speakerDark}
-          size={32}
-        />
-      </div>
+      <Editable id="badge" edits={edits}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: palette.badge,
+            color: palette.badgeText,
+            fontSize: 30,
+            fontWeight: 700,
+            letterSpacing: -0.5,
+            padding: '12px 28px',
+            borderRadius: 999,
+            border: `2px solid ${palette.badgeText === '#FFFFFF' ? palette.badge : '#111111'}`,
+          }}
+        >
+          {badge}
+          <Icon
+            src={palette.badgeText === '#FFFFFF' ? assets.speakerLight : assets.speakerDark}
+            size={32}
+          />
+        </div>
+      </Editable>
       {right}
     </div>
   );

@@ -4,7 +4,15 @@ import { loadBrandSvg, loadEmoji, loadFonts, loadIcon } from '@/lib/card/assets'
 import { loadMeasure } from '@/lib/card/measure';
 import type { SlideAssets } from '@/lib/card/render/primitives';
 import { buildSlide } from '@/lib/card/render/slides';
-import { CARD_SIZES, type CardSpec, SLIDE_COUNT, type RenderRequest } from '@/lib/card/types';
+import {
+  CARD_SIZES,
+  type CardSpec,
+  ELEMENT_IDS,
+  type ElementEdit,
+  type RenderRequest,
+  SLIDE_COUNT,
+  type SlideEdits,
+} from '@/lib/card/types';
 import { VARIANT_IDS } from '@/lib/card/variants';
 
 export const runtime = 'nodejs';
@@ -20,6 +28,39 @@ const IMAGE_DATA_URL = /^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);base64,[A-Z
 
 function safeImage(value: unknown): string | undefined {
   return typeof value === 'string' && IMAGE_DATA_URL.test(value) ? value : undefined;
+}
+
+function clamp(value: unknown, min: number, max: number, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+/** 요소 편집값을 검사한다. 모르는 요소는 버리고, 이동은 ±2000px, 배율은 0.2~5 로 자른다. */
+function sanitizeEdits(edits: unknown): SlideEdits[] | undefined {
+  if (!Array.isArray(edits)) {
+    return undefined;
+  }
+  return edits.slice(0, SLIDE_COUNT).map((slide: unknown) => {
+    const clean: SlideEdits = {};
+    if (!slide || typeof slide !== 'object') {
+      return clean;
+    }
+    for (const id of ELEMENT_IDS) {
+      const edit = (slide as Record<string, unknown>)[id];
+      if (!edit || typeof edit !== 'object') {
+        continue;
+      }
+      const { dx, dy, scale, hidden } = edit as Partial<Record<keyof ElementEdit, unknown>>;
+      clean[id] = {
+        dx: clamp(dx, -2000, 2000, 0),
+        dy: clamp(dy, -2000, 2000, 0),
+        scale: clamp(scale, 0.2, 5, 1),
+        ...(hidden === true ? { hidden: true } : {}),
+      };
+    }
+    return clean;
+  });
 }
 
 /**
@@ -43,6 +84,7 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
       ...spec.settings,
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
     },
+    edits: sanitizeEdits(spec.edits),
   };
 }
 
