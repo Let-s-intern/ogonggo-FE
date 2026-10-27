@@ -93,16 +93,12 @@ export function useAssistantChat(context: ToolContext) {
       try {
         for (let round = 0; ; round += 1) {
           const reply = await callAssistant(messages, describeScreen(context), controller.signal);
-          messages.push({
-            role: 'assistant',
-            content: reply.content,
-            tool_calls: reply.tool_calls,
-          });
-
           if (!reply.tool_calls?.length) {
+            messages.push({ role: 'assistant', content: reply.content });
             setLines((current) => [...current, { kind: 'assistant', text: reply.content ?? '' }]);
             break;
           }
+          // 한도에서 멈추면 이 도구 호출은 대화에 넣지 않는다. 결과 없는 호출이 남으면 다음 질문이 거절된다.
           if (round >= MAX_TOOL_ROUNDS) {
             setLines((current) => [
               ...current,
@@ -113,6 +109,11 @@ export function useAssistantChat(context: ToolContext) {
             ]);
             break;
           }
+          messages.push({
+            role: 'assistant',
+            content: reply.content,
+            tool_calls: reply.tool_calls,
+          });
           for (const call of reply.tool_calls) {
             const args = parseArguments(call.function.arguments);
             setLines((current) => [

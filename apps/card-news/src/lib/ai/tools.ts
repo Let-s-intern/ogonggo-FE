@@ -208,6 +208,58 @@ function overlaps(boxes: MeasuredBox[], edits: SlideEdits | undefined): string[]
   return pairs;
 }
 
+/** 한 장의 요소 상자를 모델에게 줄 모양으로. */
+function slideSummary(
+  context: ToolContext,
+  loaded: LoadedCard,
+  { boxes, overflow }: SlideMeasure,
+  slide: number,
+) {
+  const size = CARD_SIZES[context.size()];
+  const edits = loaded.edits[context.variant()]?.[slide];
+  const elements = boxes.map((box) => {
+    const edit = edits?.[box.id] ?? NO_EDIT;
+    return {
+      id: box.id,
+      name: ELEMENT_LABELS[box.id],
+      x: Math.round(box.x),
+      y: Math.round(box.y),
+      width: Math.round(box.width),
+      height: Math.round(box.height),
+      edit: { dx: edit.dx, dy: edit.dy, scale: edit.scale, hidden: Boolean(edit.hidden) },
+      outside:
+        !edit.hidden &&
+        (box.x < -TOLERANCE ||
+          box.y < -TOLERANCE ||
+          box.x + box.width > size.width + TOLERANCE ||
+          box.y + box.height > size.height + TOLERANCE),
+    };
+  });
+  return { slide: slide + 1, overflow, elements, overlaps: overlaps(boxes, edits) };
+}
+
+/**
+ * 바꾼 뒤의 확인. 다시 그려지기를 기다려 장마다 넘침, 캔버스 밖으로 나간 요소, 겹친 요소만 추린다.
+ * 바꾸는 도구의 결과에 붙여 모델이 `read_card` 를 다시 부르지 않아도 되게 한다.
+ */
+async function check(context: ToolContext) {
+  await settle();
+  const loaded = context.readLoaded();
+  const measured = context.measure();
+  if (!loaded || !measured) {
+    return null;
+  }
+  return measured.map((slide, index) => {
+    const summary = slideSummary(context, loaded, slide, index);
+    return {
+      slide: summary.slide,
+      overflow: summary.overflow,
+      outside: summary.elements.filter((element) => element.outside).map((element) => element.id),
+      overlaps: summary.overlaps,
+    };
+  });
+}
+
 async function readCard(context: ToolContext): Promise<string> {
   await settle();
   const loaded = context.readLoaded();
@@ -232,31 +284,7 @@ async function readCard(context: ToolContext): Promise<string> {
       logo: Boolean(loaded.logo),
     },
     content: loaded.content,
-    slides: measured.map(({ boxes, overflow }, slide) => {
-      const edits = loaded.edits[variant]?.[slide];
-      return {
-        slide: slide + 1,
-        overflow,
-        elements: boxes.map((box) => {
-          const edit = edits?.[box.id] ?? NO_EDIT;
-          return {
-            id: box.id,
-            name: ELEMENT_LABELS[box.id],
-            x: Math.round(box.x),
-            y: Math.round(box.y),
-            width: Math.round(box.width),
-            height: Math.round(box.height),
-            edit: { dx: edit.dx, dy: edit.dy, scale: edit.scale, hidden: Boolean(edit.hidden) },
-            outside:
-              box.x < -TOLERANCE ||
-              box.y < -TOLERANCE ||
-              box.x + box.width > size.width + TOLERANCE ||
-              box.y + box.height > size.height + TOLERANCE,
-          };
-        }),
-        overlaps: overlaps(boxes, edits),
-      };
-    }),
+    slides: measured.map((slide, index) => slideSummary(context, loaded, slide, index)),
   });
 }
 
@@ -523,6 +551,43 @@ function resetElements(
   });
 }
 
+/** 카드를 바꾸는 도구. 결과에 바꾼 뒤의 확인(`check`)을 붙인다. */
+const CHANGING_TOOLS = new Set([
+  'set_content',
+  'rewrite_copy',
+  'set_settings',
+  'edit_elements',
+  'reset_elements',
+]);
+
+function execute(
+  name: string,
+  args: Record<string, unknown>,
+  context: ToolContext,
+  session: ToolSession,
+): string | Promise<string> {
+  switch (name) {
+    case 'read_card':
+      return readCard(context);
+    case 'list_variants':
+      return listVariants();
+    case 'pick_variant':
+      return pickVariant(context, args);
+    case 'set_content':
+      return setContent(context, session, args);
+    case 'rewrite_copy':
+      return rewriteCopy(context, session, args);
+    case 'set_settings':
+      return setSettings(context, session, args);
+    case 'edit_elements':
+      return editElements(context, session, args);
+    case 'reset_elements':
+      return resetElements(context, session, args);
+    default:
+      return `모르는 도구입니다: ${name}`;
+  }
+}
+
 /** 도구 하나를 실행하고 모델에게 돌려줄 글을 만든다. */
 export async function runTool(
   name: string,
@@ -531,26 +596,13 @@ export async function runTool(
   session: ToolSession,
 ): Promise<string> {
   try {
-    switch (name) {
-      case 'read_card':
-        return clip(await readCard(context));
-      case 'list_variants':
-        return listVariants();
-      case 'pick_variant':
-        return pickVariant(context, args);
-      case 'set_content':
-        return setContent(context, session, args);
-      case 'rewrite_copy':
-        return clip(await rewriteCopy(context, session, args));
-      case 'set_settings':
-        return setSettings(context, session, args);
-      case 'edit_elements':
-        return clip(await editElements(context, session, args));
-      case 'reset_elements':
-        return resetElements(context, session, args);
-      default:
-        return `모르는 도구입니다: ${name}`;
+    const result = await execute(name, args, context, session);
+    // 실패는 글이다. 바꾼 경우(JSON)에만 확인을 붙인다.
+    if (!CHANGING_TOOLS.has(name) || !result.startsWith('{')) {
+      return clip(result);
     }
+    const parsed = JSON.parse(result) as Record<string, unknown>;
+    return clip(JSON.stringify({ ...parsed, check: await check(context) }));
   } catch (error) {
     return `도구 실행이 실패했습니다: ${error instanceof Error ? error.message : String(error)}`;
   }
