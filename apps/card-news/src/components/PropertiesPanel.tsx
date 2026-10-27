@@ -156,17 +156,24 @@ function TextScaleSliders({
   );
 }
 
-/** 이동값 칸. 숫자가 아니면 무시한다. */
+/**
+ * 숫자 칸. 치는 동안의 글자는 따로 들고 있다가 숫자이고 `min` 이상일 때만 반영한다. 값을 바로
+ * 칸에 되돌려 넣으면 칸을 비우거나 `min` 아래 중간값("40" 을 치려고 거치는 "4")을 거칠 수 없다.
+ * 칸을 떠나면 반영된 값으로 돌아간다.
+ */
 function OffsetField({
   label,
   value,
   onChange,
+  min,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  min?: number;
 }) {
   const id = useId();
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-sm text-gray-700">
@@ -176,13 +183,16 @@ function OffsetField({
         id={id}
         type="number"
         className="h-9 text-sm"
-        value={value}
+        value={draft ?? String(value)}
         onChange={(event) => {
-          const next = Number(event.target.value);
-          if (event.target.value !== '' && Number.isFinite(next)) {
+          const raw = event.target.value;
+          setDraft(raw);
+          const next = Number(raw);
+          if (raw !== '' && Number.isFinite(next) && (min === undefined || next >= min)) {
             onChange(Math.round(next));
           }
         }}
+        onBlur={() => setDraft(null)}
       />
     </div>
   );
@@ -331,7 +341,8 @@ function LayerProperties({
           <OffsetField
             label="글자 크기(px)"
             value={layer.fontSize}
-            onChange={(fontSize) => setText({ fontSize: Math.max(8, fontSize) }, 'fontSize')}
+            min={8}
+            onChange={(fontSize) => setText({ fontSize }, 'fontSize')}
           />
           <div className="flex flex-col gap-2">
             <span className="text-sm text-gray-700">굵기</span>
@@ -376,7 +387,8 @@ function LayerProperties({
           <OffsetField
             label="모서리 둥글기(px)"
             value={layer.radius}
-            onChange={(radius) => setImage({ radius: Math.max(0, radius) }, 'radius')}
+            min={0}
+            onChange={(radius) => setImage({ radius }, 'radius')}
           />
         </div>
       )}
@@ -395,15 +407,15 @@ function LayerProperties({
         <OffsetField
           label="폭(px)"
           value={layer.width}
-          onChange={(width) =>
-            onChange({ ...layer, width: Math.max(20, width) }, `size:${layer.id}`)
-          }
+          min={20}
+          onChange={(width) => onChange({ ...layer, width }, `size:${layer.id}`)}
         />
         {layer.kind === 'image' ? (
           <OffsetField
             label="높이(px)"
             value={layer.height}
-            onChange={(height) => setImage({ height: Math.max(1, height) }, 'size')}
+            min={1}
+            onChange={(height) => setImage({ height }, 'size')}
           />
         ) : null}
       </div>
