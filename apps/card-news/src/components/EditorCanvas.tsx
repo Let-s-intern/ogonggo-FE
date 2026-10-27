@@ -23,6 +23,7 @@ import {
   SLIDE_COUNT,
   SLIDE_LABELS,
 } from '@/lib/card/types';
+import type { MeasuredBox } from '@/lib/ai/tools';
 import type { RenderKit } from '@/lib/client/useRenderKit';
 
 /**
@@ -56,17 +57,19 @@ export function useBuiltSlides(
   );
 }
 
-/** 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. */
+/** 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. `slideIndex` 를 주면 `measureSlideBoxes` 가 찾는다. */
 function SlideStage({
   element,
   size,
   width,
   stageRef,
+  slideIndex,
 }: {
   element: ReactElement;
   size: CardSize;
   width: number;
   stageRef?: Ref<HTMLDivElement>;
+  slideIndex?: number;
 }) {
   const scale = width / size.width;
   return (
@@ -74,6 +77,7 @@ function SlideStage({
       <div
         ref={stageRef}
         data-card-canvas=""
+        data-slide={slideIndex}
         style={{
           position: 'absolute',
           top: 0,
@@ -100,6 +104,44 @@ interface Box {
   y: number;
   width: number;
   height: number;
+}
+
+/**
+ * 캔버스 아래 썸네일에서 장 하나의 요소 상자를 잰다(1080 폭 좌표, 편집값이 걸린 자리). 썸네일은 세 장이
+ * 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`.
+ */
+export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox[] | null {
+  const stage = document.querySelector(`[data-card-canvas][data-slide="${slide}"]`);
+  if (!stage) {
+    return null;
+  }
+  const origin = stage.getBoundingClientRect();
+  const stageScale = origin.width / cardWidth;
+  if (!stageScale) {
+    return null;
+  }
+  return ELEMENT_IDS.flatMap((id) => {
+    const element = stage.querySelector(`[data-el="${id}"]`);
+    if (!element) {
+      return [];
+    }
+    const rect = element.getBoundingClientRect();
+    const parent = element.parentElement;
+    const factor =
+      parent && parent.offsetWidth > 0
+        ? parent.getBoundingClientRect().width / parent.offsetWidth / stageScale
+        : 1;
+    return [
+      {
+        id,
+        x: (rect.left - origin.left) / stageScale,
+        y: (rect.top - origin.top) / stageScale,
+        width: rect.width / stageScale,
+        height: rect.height / stageScale,
+        factor: factor || 1,
+      },
+    ];
+  });
 }
 
 /** 캔버스에서 누르면 왼쪽 문구 칸으로 가는 요소. */
@@ -439,7 +481,7 @@ export function EditorCanvas({
                 index === slide ? 'outline outline-2 outline-blue-500' : 'hover:outline-gray-300'
               }`}
             >
-              <SlideStage element={built.element} size={cardSize} width={96} />
+              <SlideStage element={built.element} size={cardSize} width={96} slideIndex={index} />
             </span>
             <span
               className={`text-xs ${index === slide ? 'font-bold text-gray-900' : 'text-gray-500'}`}

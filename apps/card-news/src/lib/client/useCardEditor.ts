@@ -46,7 +46,7 @@ export interface LoadedCard {
 }
 
 /** 실행 취소가 되돌리는 값. 로고·공고는 넣지 않는다. */
-type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits'>;
+export type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits'>;
 
 export type EditorStatus =
   | { kind: 'idle' }
@@ -64,7 +64,7 @@ export function candidateToImage(candidate: ImageCandidate, opacity: number): Pr
   return toCardImage(candidate.proxyPath, opacity);
 }
 
-async function requestDraft(body: {
+export async function requestDraft(body: {
   jobId: number;
   instruction?: string;
   current?: AiDraft;
@@ -120,6 +120,22 @@ export function useCardEditor() {
     },
     [record],
   );
+
+  /**
+   * 기록에 쌓지 않고 바꾼다. AI 비서가 한 요청 안에서 여러 번 바꿀 때 쓴다 — 처음 바꾸기 전에 한 번만
+   * `remember()` 로 쌓아 Ctrl+Z 한 번에 요청 전으로 돌아가게. 같은 요청의 다음 도구가 바로 읽도록
+   * ref 도 같이 고친다.
+   */
+  const applyQuietly = useCallback((patch: Partial<EditSnapshot>) => {
+    const current = loadedRef.current;
+    if (!current) {
+      return;
+    }
+    const next = { ...current, ...patch };
+    loadedRef.current = next;
+    setLoaded(next);
+  }, []);
+  const readLoaded = useCallback(() => loadedRef.current, []);
 
   /** 문구를 바꾼다. 이어 치는 글자는 한 단계로 되돌린다. */
   const setContent = useCallback(
@@ -360,6 +376,9 @@ export function useCardEditor() {
     setContent,
     setSettings,
     setEdits,
+    remember,
+    applyQuietly,
+    readLoaded,
     undo: history.undo,
     redo: history.redo,
     resetBrandColor,
