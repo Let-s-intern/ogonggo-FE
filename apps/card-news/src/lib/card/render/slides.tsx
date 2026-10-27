@@ -7,23 +7,26 @@ import {
   PAD_X,
   type SlideMetrics,
   measureSlide,
+  textScale,
 } from '../layout';
 import type { Measure } from '../measure';
-import type { CardSection, CardSize, CardSpec } from '../types';
+import type { CardSection, CardSize, CardSpec, Layer } from '../types';
 import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
 import { Background } from './backgrounds';
+import { layerElements } from './layers';
 import {
   BOXED_BORDER,
   BOXED_PAD_X,
   BOXED_PAD_Y,
   COLUMN_CHIP_WIDTH,
   COLUMN_GAP,
+  BrandMark,
   CompanyLogo,
+  Editable,
   LABEL_WIDTH,
   Header,
   Headline,
   Icon,
-  LetsCareer,
   MarkedLine,
   Sections,
   type SlideAssets,
@@ -54,7 +57,16 @@ const TAB_WIDTH = 440;
 const TAB_TITLE_MAX = 72;
 const TAB_INNER = TAB_CARD_WIDTH - TAB_CARD_PAD_X * 2;
 
-function Canvas({ size, children }: { size: CardSize; children: ReactNode }) {
+/** 장 하나의 바탕. 템플릿을 그린 뒤 맨 위에 자유 요소를 얹는다. */
+function Canvas({
+  size,
+  layers,
+  children,
+}: {
+  size: CardSize;
+  layers: Layer[] | undefined;
+  children: ReactNode;
+}) {
   return (
     <div
       style={{
@@ -66,6 +78,7 @@ function Canvas({ size, children }: { size: CardSize; children: ReactNode }) {
       }}
     >
       {children}
+      {layerElements(layers)}
     </div>
   );
 }
@@ -97,21 +110,59 @@ function Column({
   );
 }
 
-/** 직무명이 카드 폭에 한 줄로 들어가는 크기. */
+/**
+ * 직무명이 카드 폭에 한 줄로 들어가는 크기. 좁힌 자간(`HEADLINE_TRACKING`)은 빼고 잰다 — 이미지
+ * 생성기는 줄을 나눌 때 좁힌 자간만큼 덜 들어가는 것처럼 굴어, 폭에 꼭 맞춘 직무명의 마지막 한두
+ * 글자를 다음 줄로 넘긴다(편집 캔버스와 비교해 찾았다).
+ */
 function titleSizeFor(measure: Measure, title: string): number {
-  const at100 = measure(title, 100, 800, 100 * HEADLINE_TRACKING);
+  const at100 = measure(title, 100, 800);
   return Math.floor(Math.max(40, Math.min(TAB_TITLE_MAX, (TAB_INNER / Math.max(1, at100)) * 100)));
 }
 
 type Built = { element: ReactElement; overflow: boolean };
 
-function slideSections(spec: CardSpec, slide: number, dropRole: boolean): CardSection[] {
+function slideSections(
+  spec: Pick<CardSpec, 'content'>,
+  slide: number,
+  dropRole: boolean,
+): CardSection[] {
   const { content } = spec;
   const sections = slide === 0 ? content.summarySections : content.detailSections;
   // 직무명을 제목으로 크게 쓰는 시안은 `채용 직무` 섹션을 또 그리지 않는다.
   return dropRole && content.roleTitle.trim()
     ? sections.filter((section) => section.label.trim() !== '채용 직무')
     : sections;
+}
+
+/**
+ * 장에 보이는 섹션이 문구(`summarySections`·`detailSections`)의 몇 번째인지. `Sections` 가 단
+ * `section-<n>` 의 n 번째가 이 배열의 n-1 번째다. 탭 템플릿은 `채용 직무` 를 그리지 않고, 항목이 빈 섹션은
+ * 세지 않는다.
+ */
+export function visibleSectionIndices(
+  spec: Pick<CardSpec, 'variant' | 'content'>,
+  slide: number,
+): number[] {
+  if (slide === 2) {
+    return [];
+  }
+  const layout = variantOf(spec.variant);
+  const tab = (slide === 1 && layout.detailLayout ? layout.detailLayout : layout.layout) === 'tab';
+  const shown = new Set(slideSections(spec, slide, tab));
+  const all = slide === 0 ? spec.content.summarySections : spec.content.detailSections;
+  return all.flatMap((section, index) =>
+    shown.has(section) && section.items.some((item) => item.trim()) ? [index] : [],
+  );
+}
+
+/** 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. */
+export function visibleSectionLabels(
+  spec: Pick<CardSpec, 'variant' | 'content'>,
+  slide: number,
+): string[] {
+  const all = slide === 0 ? spec.content.summarySections : spec.content.detailSections;
+  return visibleSectionIndices(spec, slide).map((index) => all[index]?.label ?? '');
 }
 
 function visibleCount(sections: CardSection[]): number {
@@ -137,7 +188,9 @@ function TabSlide({
   const sections = slideSections(spec, slide, true);
   const note = boxed ? spec.content.note : '';
   const count = visibleCount(sections);
-  const titleSize = titleSizeFor(measure, spec.content.roleTitle);
+  const titleSize = Math.round(
+    titleSizeFor(measure, spec.content.roleTitle) * textScale(spec.settings.headlineScale),
+  );
   const titleHeight = spec.content.roleTitle.trim() ? Math.round(titleSize * 1.2) : 0;
   const story = size.height > size.width * 1.5;
   const square = size.height <= size.width;
@@ -162,22 +215,30 @@ function TabSlide({
       : TAB_INNER - COLUMN_CHIP_WIDTH - COLUMN_GAP,
     chrome,
     footer: false,
+    headlineScale: 1,
+    bodyScale: textScale(spec.settings.bodyScale),
   });
 
+  const edits = spec.edits?.[slide];
   const element = (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[slide]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', left: PAD_X, top: padTop + 12 }}>
-        <LetsCareer palette={palette} assets={assets} size={64} />
+        <Editable id="brandMark" edits={edits}>
+          <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} size={64} />
+        </Editable>
       </div>
-      <div
+      {/* 로고 탭과 카드는 한 요소로 같이 움직인다. 카드가 탭 아래 8px 를 덮는다. */}
+      <Editable
+        id="tabCard"
+        edits={edits}
         style={{
-          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           position: 'absolute',
           top: padTop,
-          left: 0,
-          width: size.width,
-          justifyContent: 'center',
+          left: (size.width - TAB_CARD_WIDTH) / 2,
+          width: TAB_CARD_WIDTH,
         }}
       >
         <div
@@ -192,49 +253,52 @@ function TabSlide({
             borderRadius: '40px 40px 0 0',
           }}
         >
-          <CompanyLogo spec={spec} palette={palette} height={84} maxWidth={TAB_WIDTH - 80} />
+          <Editable id="companyLogo" edits={edits}>
+            <CompanyLogo spec={spec} palette={palette} height={84} maxWidth={TAB_WIDTH - 80} />
+          </Editable>
         </div>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          position: 'absolute',
-          top: cardTop,
-          left: (size.width - TAB_CARD_WIDTH) / 2,
-          width: TAB_CARD_WIDTH,
-          // 카드는 화면 아래로 이어진다(예시처럼 아래 모서리를 보이지 않는다).
-          height: size.height - cardTop + 60,
-          backgroundColor: '#FFFFFF',
-          borderRadius: 40,
-          padding: `${TAB_CARD_PAD_TOP}px ${TAB_CARD_PAD_X}px 0`,
-        }}
-      >
-        {titleHeight ? (
-          <div
-            style={{
-              display: 'flex',
-              fontSize: titleSize,
-              fontWeight: 800,
-              lineHeight: 1.2,
-              letterSpacing: titleSize * HEADLINE_TRACKING,
-              color: palette.headlineText,
-            }}
-          >
-            {spec.content.roleTitle}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginTop: cardTop - padTop - TAB_HEIGHT,
+            width: TAB_CARD_WIDTH,
+            // 카드는 화면 아래로 이어진다(예시처럼 아래 모서리를 보이지 않는다).
+            height: size.height - cardTop + 60,
+            backgroundColor: '#FFFFFF',
+            borderRadius: 40,
+            padding: `${TAB_CARD_PAD_TOP}px ${TAB_CARD_PAD_X}px 0`,
+          }}
+        >
+          {titleHeight ? (
+            <Editable id="roleTitle" edits={edits}>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: titleSize,
+                  fontWeight: 800,
+                  lineHeight: 1.2,
+                  letterSpacing: titleSize * HEADLINE_TRACKING,
+                  color: palette.headlineText,
+                }}
+              >
+                {spec.content.roleTitle}
+              </div>
+            </Editable>
+          ) : null}
+          <div style={{ display: 'flex', marginTop: metrics.sectionsGap }}>
+            <Sections
+              palette={palette}
+              sections={sections}
+              note={note}
+              metrics={metrics}
+              mode={boxed ? 'boxed' : 'columns'}
+              edits={edits}
+            />
           </div>
-        ) : null}
-        <div style={{ display: 'flex', marginTop: metrics.sectionsGap }}>
-          <Sections
-            palette={palette}
-            sections={sections}
-            note={note}
-            metrics={metrics}
-            mode={boxed ? 'boxed' : 'columns'}
-          />
         </div>
-      </div>
+      </Editable>
     </Canvas>
   );
   return { element, overflow: metrics.overflow };
@@ -266,7 +330,9 @@ function LabelsSlide({
   const count = visibleCount(sections);
   const brand = spec.settings.brandColor;
   const role = spec.content.roleTitle.trim();
-  const roleSize = Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role));
+  const roleSize = Math.round(
+    Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role)) * textScale(spec.settings.headlineScale),
+  );
   const headCard = Math.round(LABELS_BAR * 1.2) + 28 + (role ? Math.round(roleSize * 1.2) + 36 : 0);
   // 머리 자리(뱃지 줄) 대신 로고·머리 카드·표 안쪽 여백을 잡는다. 표는 항목명이 목록 옆에 있어 칩
   // 높이를 다시 돌려준다.
@@ -279,6 +345,8 @@ function LabelsSlide({
     contentWidth: CONTENT_WIDTH - LABELS_CARD_PAD_X * 2 - LABEL_WIDTH - COLUMN_GAP,
     chrome,
     footer: false,
+    headlineScale: 1,
+    bodyScale: textScale(spec.settings.bodyScale),
   });
 
   const card: CSSProperties = {
@@ -288,11 +356,14 @@ function LabelsSlide({
     backgroundColor: '#FFFFFF',
     borderRadius: 32,
   };
+  const edits = spec.edits?.[slide];
   const element = (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[slide]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
-        <LetsCareer palette={palette} assets={assets} size={52} />
+        <Editable id="brandMark" edits={edits}>
+          <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} size={52} />
+        </Editable>
       </div>
       <Column size={size} metrics={metrics} justify="flex-start">
         <div
@@ -304,54 +375,67 @@ function LabelsSlide({
             marginTop: 24,
           }}
         >
-          <CompanyLogo
-            spec={spec}
-            palette={{ ...palette, logo: palette.logo === 'plate' ? 'original' : palette.logo }}
-            height={LABELS_LOGO}
-            maxWidth={520}
-          />
+          <Editable id="companyLogo" edits={edits}>
+            <CompanyLogo
+              spec={spec}
+              palette={{ ...palette, logo: palette.logo === 'plate' ? 'original' : palette.logo }}
+              height={LABELS_LOGO}
+              maxWidth={520}
+            />
+          </Editable>
         </div>
-        <div style={{ ...card, marginTop: 36, overflow: 'hidden' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              backgroundColor: brand,
-              color: textOnBrand(brand),
-              fontSize: LABELS_BAR,
-              fontWeight: 800,
-              lineHeight: 1.2,
-              padding: '14px 0',
-            }}
-          >
-            {spec.companyName}
-          </div>
-          {role ? (
+        {/* 표 배치의 직무명은 회사명 띠와 함께 머리 카드째 움직인다. */}
+        <Editable id="roleTitle" edits={edits} style={{ marginTop: 36 }}>
+          <div style={{ ...card, overflow: 'hidden' }}>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'center',
-                fontSize: roleSize,
+                backgroundColor: brand,
+                color: textOnBrand(brand),
+                fontSize: LABELS_BAR,
                 fontWeight: 800,
                 lineHeight: 1.2,
-                letterSpacing: roleSize * HEADLINE_TRACKING,
-                color: palette.headlineText,
-                padding: '18px 0',
+                padding: '14px 0',
               }}
             >
-              {role}
+              {spec.companyName}
             </div>
-          ) : null}
-        </div>
-        <div
-          style={{
-            ...card,
-            marginTop: 40,
-            padding: `${LABELS_CARD_PAD_Y}px ${LABELS_CARD_PAD_X}px`,
-          }}
-        >
-          <Sections palette={palette} sections={sections} note="" metrics={metrics} mode="labels" />
-        </div>
+            {role ? (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  fontSize: roleSize,
+                  fontWeight: 800,
+                  lineHeight: 1.2,
+                  letterSpacing: roleSize * HEADLINE_TRACKING,
+                  color: palette.headlineText,
+                  padding: '18px 0',
+                }}
+              >
+                {role}
+              </div>
+            ) : null}
+          </div>
+        </Editable>
+        <Editable id="sectionsPanel" edits={edits} style={{ marginTop: 40 }}>
+          <div
+            style={{
+              ...card,
+              padding: `${LABELS_CARD_PAD_Y}px ${LABELS_CARD_PAD_X}px`,
+            }}
+          >
+            <Sections
+              palette={palette}
+              sections={sections}
+              note=""
+              metrics={metrics}
+              mode="labels"
+              edits={edits}
+            />
+          </div>
+        </Editable>
       </Column>
     </Canvas>
   );
@@ -410,11 +494,16 @@ function InfoSlide({
     contentWidth: panel ? CONTENT_WIDTH - PANEL_PAD * 2 : CONTENT_WIDTH,
     chrome: (panel ? PANEL_PAD * 2 : 0) + (card ? card.height + 32 : 0),
     footer: true,
+    headlineScale: textScale(spec.settings.headlineScale),
+    bodyScale: textScale(spec.settings.bodyScale),
   });
 
-  const list = <Sections palette={palette} sections={sections} note={note} metrics={metrics} />;
+  const edits = spec.edits?.[slide];
+  const list = (
+    <Sections palette={palette} sections={sections} note={note} metrics={metrics} edits={edits} />
+  );
   const element = (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[slide]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <Column size={size} metrics={metrics}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -423,49 +512,62 @@ function InfoSlide({
             palette={palette}
             assets={assets}
             width={CONTENT_WIDTH}
-            right={<CompanyLogo spec={spec} palette={palette} />}
+            edits={edits}
+            right={
+              <Editable id="companyLogo" edits={edits}>
+                <CompanyLogo spec={spec} palette={palette} />
+              </Editable>
+            }
           />
           {thumbnail && card ? (
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-              <img
-                src={thumbnail.dataUrl}
-                alt=""
-                width={card.width}
-                height={card.height}
-                style={{ borderRadius: 32, opacity: thumbnail.opacity }}
-              />
+              <Editable id="thumbnail" edits={edits}>
+                <img
+                  src={thumbnail.dataUrl}
+                  alt=""
+                  width={card.width}
+                  height={card.height}
+                  style={{ borderRadius: 32, opacity: thumbnail.opacity }}
+                />
+              </Editable>
             </div>
           ) : null}
           {headline !== null ? (
             <div style={{ display: 'flex', marginTop: metrics.headlineGap }}>
-              <Headline
-                palette={palette}
-                text={headline}
-                size={metrics.headlineSize}
-                color={palette.headlineText}
-              />
+              <Editable id="headline" edits={edits}>
+                <Headline
+                  palette={palette}
+                  text={headline}
+                  size={metrics.headlineSize}
+                  color={palette.headlineText}
+                />
+              </Editable>
             </div>
           ) : null}
           <div style={{ display: 'flex', marginTop: metrics.sectionsGap }}>
             {panel ? (
-              <div
-                style={{
-                  display: 'flex',
-                  // 썸네일 위에 놓이므로 불투명하게 — 배너 속 글자가 비치지 않게.
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 36,
-                  padding: PANEL_PAD,
-                }}
-              >
-                {list}
-              </div>
+              <Editable id="sectionsPanel" edits={edits}>
+                <div
+                  style={{
+                    display: 'flex',
+                    // 썸네일 위에 놓이므로 불투명하게 — 배너 속 글자가 비치지 않게.
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 36,
+                    padding: PANEL_PAD,
+                  }}
+                >
+                  {list}
+                </div>
+              </Editable>
             ) : (
               list
             )}
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <LetsCareer palette={palette} assets={assets} />
+          <Editable id="brandMark" edits={edits}>
+            <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} />
+          </Editable>
         </div>
       </Column>
     </Canvas>
@@ -696,8 +798,11 @@ function CtaSlide({
   const scale = square ? 0.76 : 1;
   const text = palette.ctaText;
   const ctaPalette: Palette = { ...palette, headlineText: text };
+  // 3장 제목·부제는 크기가 고정이라 제목 배율만 곱한다.
+  const headlineScale = textScale(spec.settings.headlineScale);
+  const edits = spec.edits?.[2];
   return (
-    <Canvas size={size}>
+    <Canvas size={size} layers={spec.layers?.[2]}>
       <Background spec={spec} palette={palette} size={size} assets={assets} cta />
       <div
         style={{
@@ -719,39 +824,47 @@ function CtaSlide({
             transformOrigin: 'top center',
           }}
         >
-          <Icon
-            src={text === '#FFFFFF' ? assets.arrowLight : assets.arrowDark}
-            size={92}
-            style={{ marginLeft: -18 }}
-          />
+          <Editable id="arrow" edits={edits} style={{ alignSelf: 'flex-start', marginLeft: -18 }}>
+            <Icon src={text === '#FFFFFF' ? assets.arrowLight : assets.arrowDark} size={92} />
+          </Editable>
           <div style={{ display: 'flex', marginTop: 24 }}>
-            <Headline palette={ctaPalette} text={spec.content.ctaHeadline} size={88} color={text} />
+            <Editable id="ctaHeadline" edits={edits}>
+              <Headline
+                palette={ctaPalette}
+                text={spec.content.ctaHeadline}
+                size={Math.round(88 * headlineScale)}
+                color={text}
+              />
+            </Editable>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              marginTop: 56,
-              gap: 12,
-            }}
-          >
-            {spec.content.ctaSub
-              .split('\n')
-              .filter((line) => line.trim())
-              .map((line, index) => (
-                <MarkedLine
-                  key={index}
-                  palette={ctaPalette}
-                  text={line}
-                  size={46}
-                  weight={800}
-                  color={text}
-                />
-              ))}
-          </div>
+          <Editable id="ctaSub" edits={edits} style={{ alignSelf: 'center', marginTop: 56 }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              {spec.content.ctaSub
+                .split('\n')
+                .filter((line) => line.trim())
+                .map((line, index) => (
+                  <MarkedLine
+                    key={index}
+                    palette={ctaPalette}
+                    text={line}
+                    size={Math.round(46 * headlineScale)}
+                    weight={800}
+                    color={text}
+                  />
+                ))}
+            </div>
+          </Editable>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 52 }}>
-            <ProfileCard spec={spec} assets={assets} />
+            <Editable id="profile" edits={edits}>
+              <ProfileCard spec={spec} assets={assets} />
+            </Editable>
           </div>
         </div>
       </div>

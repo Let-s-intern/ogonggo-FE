@@ -97,7 +97,17 @@ export interface CardSettings {
   logoStyle: LogoStyle;
   /** 썸네일 시안들의 이미지. 처음엔 공고 원문 대표 이미지이고, 사람이 바꾸거나 올릴 수 있다. */
   photo?: CardImage;
+  /**
+   * 자동으로 고른 글자 크기에 곱하는 배율(0.7~1.5). 제목은 큰 제목·직무명·3장 제목과 부제, 본문은
+   * 칩·목록·안내에 건다. 예전 편집본에는 없다 — 없으면 1 이다.
+   */
+  headlineScale?: number;
+  bodyScale?: number;
+  /** 카드에 그리는 우리 로고. 예전 편집본에는 없다 — 없으면 `ogonggo` 다. */
+  brandMark?: BrandMarkId;
 }
+
+export type BrandMarkId = 'ogonggo' | 'letscareer';
 
 /** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */
 export interface CardLogo {
@@ -120,6 +130,165 @@ export type VariantId =
   | 'tab'
   | 'dark';
 
+/**
+ * 사람이 옮기거나 크기를 바꾸거나 숨길 수 있는 요소. 렌더가 이 단위로 감싼다. 배경 도형(물결,
+ * 워터마크, 프레임)은 고정이다. 칩과 목록은 섹션마다 따로다(`SectionElementId`).
+ */
+export const ELEMENT_IDS = [
+  'badge',
+  'companyLogo',
+  'headline',
+  'roleTitle',
+  'thumbnail',
+  'sectionsPanel',
+  'note',
+  'tabCard',
+  'brandMark',
+  'arrow',
+  'ctaHeadline',
+  'ctaSub',
+  'profile',
+] as const;
+
+export type FixedElementId = (typeof ELEMENT_IDS)[number];
+
+/**
+ * 섹션 요소. `section-<n>` 은 칩과 목록 묶음, `-chip`·`-list` 는 그 안의 칩과 목록이다. `<n>` 은
+ * 그 장에 보이는 섹션 순서(1부터, 항목이 빈 섹션은 세지 않는다)다.
+ */
+export type SectionElementId =
+  | `section-${number}`
+  | `section-${number}-chip`
+  | `section-${number}-list`;
+
+export type ElementId = FixedElementId | SectionElementId;
+
+/** 섹션 번호는 1~9 까지 받는다. */
+const SECTION_ELEMENT = /^section-([1-9])(?:-(chip|list))?$/;
+
+export function sectionElementId(index: number, part?: 'chip' | 'list'): SectionElementId {
+  return part ? `section-${index}-${part}` : `section-${index}`;
+}
+
+export function isElementId(value: unknown): value is ElementId {
+  return (
+    typeof value === 'string' &&
+    ((ELEMENT_IDS as readonly string[]).includes(value) || SECTION_ELEMENT.test(value))
+  );
+}
+
+/** 편집 화면에 보이는 요소 이름. */
+export const ELEMENT_LABELS: Record<FixedElementId, string> = {
+  badge: '뱃지',
+  companyLogo: '회사 로고',
+  headline: '큰 제목',
+  roleTitle: '직무명',
+  thumbnail: '썸네일 카드',
+  sectionsPanel: '흰 판',
+  note: '안내 문구',
+  tabCard: '흰 카드',
+  brandMark: '브랜드 로고',
+  arrow: '화살표',
+  ctaHeadline: '3장 제목',
+  ctaSub: '3장 부제',
+  profile: '프로필 카드',
+};
+
+/**
+ * 요소 이름. 섹션은 `섹션 2 · 마감 기한`, `섹션 2 칩` 처럼 번호와 칩 제목을 붙인다. `sectionLabels` 는
+ * 그 장에 보이는 섹션의 칩 제목이다(없으면 번호만).
+ */
+export function elementLabel(id: ElementId, sectionLabels?: string[]): string {
+  const match = SECTION_ELEMENT.exec(id);
+  if (!match) {
+    return ELEMENT_LABELS[id as FixedElementId] ?? id;
+  }
+  const label = sectionLabels?.[Number(match[1]) - 1]?.trim();
+  const name = `섹션 ${match[1]}`;
+  if (match[2] === 'chip') {
+    return `${name} 칩`;
+  }
+  if (match[2] === 'list') {
+    return `${name} 목록`;
+  }
+  return label ? `${name} · ${label}` : name;
+}
+
+/**
+ * 요소 하나의 편집값. 템플릿이 자동으로 잡은 자리에서 얼마나 옮겼는지(px, 1080 폭 기준)와 요소
+ * 가운데를 기준으로 한 배율이다. 숨긴 요소도 자리는 그대로 차지한다 — 다른 요소가 따라 움직이지 않게.
+ */
+export interface ElementEdit {
+  dx: number;
+  dy: number;
+  scale: number;
+  hidden?: boolean;
+}
+
+/** 한 장의 편집값. 편집하지 않은 요소는 없다. */
+export type SlideEdits = Partial<Record<ElementId, ElementEdit>>;
+
+/**
+ * 템플릿 위에 사람이 얹은 자유 요소. 장마다 따로이고 장을 넘어 공유하지 않는다. 좌표는 폭 1080 기준
+ * 왼쪽 위, 배열 순서가 칠하는 순서다(뒤에 있을수록 위).
+ */
+interface LayerBase {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+}
+
+/** 글자 요소. 높이는 글자에 맞춰 늘어난다. 줄은 `\n` 으로 나누고 강조 표시(`*단어*`)는 쓰지 않는다. */
+export interface TextLayer extends LayerBase {
+  kind: 'text';
+  text: string;
+  fontSize: number;
+  /** 500~900. 글꼴 파일이 있는 굵기만. */
+  fontWeight: number;
+  color: string;
+  align: 'left' | 'center' | 'right';
+  /** 글자 크기에 곱하는 줄 간격. */
+  lineHeight: number;
+}
+
+/** 이미지 요소. `src` 는 data URL, `imageId` 는 이 브라우저 이미지 저장소(IndexedDB)의 열쇠다. */
+export interface ImageLayer extends LayerBase {
+  kind: 'image';
+  imageId: string;
+  src: string;
+  height: number;
+  /** 0~1. */
+  opacity: number;
+  /** 모서리 둥글기(px). */
+  radius: number;
+}
+
+export type Layer = TextLayer | ImageLayer;
+
+export const LAYER_WEIGHTS = [500, 600, 700, 800, 900] as const;
+
+/** 편집 화면에서 고른 것. 템플릿 요소는 id, 자유 요소는 `layer:<id>` 다. */
+export type LayerRef = `layer:${string}`;
+export type Selection = ElementId | LayerRef;
+
+export function layerRef(id: string): LayerRef {
+  return `layer:${id}`;
+}
+
+export function isLayerRef(value: unknown): value is LayerRef {
+  return typeof value === 'string' && value.startsWith('layer:');
+}
+
+/** 자유 요소 이름. 글자 요소는 앞 글자 몇 개를 붙인다. */
+export function layerLabel(layer: Layer): string {
+  if (layer.kind === 'image') {
+    return '이미지';
+  }
+  const head = layer.text.replace(/\s+/g, ' ').trim();
+  return head ? `글자 · ${head.length > 12 ? `${head.slice(0, 12)}…` : head}` : '글자';
+}
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;
@@ -127,6 +296,10 @@ export interface CardSpec {
   /** 없으면 회사명을 글자로 쓴다. */
   logo?: CardLogo;
   companyName: string;
+  /** 장 번호 순서의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
+  edits?: SlideEdits[];
+  /** 장 번호 순서의 자유 요소. 크기끼리 같이 쓴다. */
+  layers?: Layer[][];
 }
 
 export interface RenderRequest {

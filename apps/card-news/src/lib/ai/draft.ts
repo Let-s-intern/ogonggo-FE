@@ -31,9 +31,10 @@ export interface DraftResult {
  *   Gemini    CARD_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
  *             CARD_LLM_MODEL=gemini-2.5-flash
  *
- * 키가 없으면 모델을 부르지 않고 원문을 잘라 초안을 만든다(`fallbackDraft`).
+ * 키가 없으면 모델을 부르지 않고 원문을 잘라 초안을 만든다(`fallbackDraft`). 편집 비서
+ * (`app/api/assistant/route.ts`)도 같은 설정을 쓴다.
  */
-function llmConfig() {
+export function llmConfig() {
   const apiKey = process.env.CARD_LLM_API_KEY?.trim();
   const baseUrl = process.env.CARD_LLM_BASE_URL?.trim().replace(/\/$/, '');
   const model = process.env.CARD_LLM_MODEL?.trim();

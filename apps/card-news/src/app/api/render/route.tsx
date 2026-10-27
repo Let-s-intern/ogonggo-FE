@@ -1,25 +1,128 @@
 import { Resvg } from '@resvg/resvg-js';
 import satori from 'satori';
-import { loadBrandSvg, loadEmoji, loadFonts, loadIcon } from '@/lib/card/assets';
-import { loadMeasure } from '@/lib/card/measure';
-import type { SlideAssets } from '@/lib/card/render/primitives';
+import { loadEmoji, loadFonts } from '@/lib/card/assets';
 import { buildSlide } from '@/lib/card/render/slides';
-import { CARD_SIZES, type CardSpec, SLIDE_COUNT, type RenderRequest } from '@/lib/card/types';
+import {
+  CARD_SIZES,
+  type CardSpec,
+  type ElementEdit,
+  LAYER_WEIGHTS,
+  type Layer,
+  type RenderRequest,
+  SLIDE_COUNT,
+  type SlideEdits,
+  isElementId,
+} from '@/lib/card/types';
 import { VARIANT_IDS } from '@/lib/card/variants';
+import { loadMeasure } from '@/lib/server/measure';
+import { loadAssets } from '@/lib/server/slideAssets';
 
 export const runtime = 'nodejs';
-
-const INK = '#111111';
-const WHITE = '#FFFFFF';
-
-/** 렛츠커리어 심볼을 밝은 바탕에 놓을 때의 파랑 그라데이션(원본은 회색이다). */
-const MARK_GRADIENT: [string, string] = ['#7C8CFF', '#3D5AFE'];
 
 /** 렌더에 넣을 수 있는 이미지 값. 편집 화면이 만드는 base64 data URL 이미지만 받는다. */
 const IMAGE_DATA_URL = /^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/;
 
 function safeImage(value: unknown): string | undefined {
   return typeof value === 'string' && IMAGE_DATA_URL.test(value) ? value : undefined;
+}
+
+function clamp(value: unknown, min: number, max: number, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+/**
+ * 요소 편집값을 검사한다. 모르는 요소(예전 편집본의 `sections` 포함)는 버리고, 이동은 ±2000px, 배율은
+ * 0.2~5 로 자른다.
+ */
+function sanitizeEdits(edits: unknown): SlideEdits[] | undefined {
+  if (!Array.isArray(edits)) {
+    return undefined;
+  }
+  return edits.slice(0, SLIDE_COUNT).map((slide: unknown) => {
+    const clean: SlideEdits = {};
+    if (!slide || typeof slide !== 'object') {
+      return clean;
+    }
+    for (const [id, edit] of Object.entries(slide)) {
+      if (!isElementId(id) || !edit || typeof edit !== 'object') {
+        continue;
+      }
+      const { dx, dy, scale, hidden } = edit as Partial<Record<keyof ElementEdit, unknown>>;
+      clean[id] = {
+        dx: clamp(dx, -2000, 2000, 0),
+        dy: clamp(dy, -2000, 2000, 0),
+        scale: clamp(scale, 0.2, 5, 1),
+        ...(hidden === true ? { hidden: true } : {}),
+      };
+    }
+    return clean;
+  });
+}
+
+/** 장 하나에 얹을 수 있는 자유 요소 수와 글자 요소의 글자 수. */
+const MAX_LAYERS = 30;
+const MAX_LAYER_TEXT = 1000;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * 자유 요소를 검사한다. 모양이 틀린 요소는 버리고, 수치는 범위로 자른다. 이미지는 로고와 같은 data
+ * URL 규칙이다. 굵기는 글꼴 파일이 있는 값 가운데 가까운 것으로.
+ */
+function sanitizeLayers(layers: unknown): Layer[][] | undefined {
+  if (!Array.isArray(layers)) {
+    return undefined;
+  }
+  return layers.slice(0, SLIDE_COUNT).map((slide: unknown) =>
+    (Array.isArray(slide) ? slide : []).slice(0, MAX_LAYERS).flatMap((raw: unknown): Layer[] => {
+      if (!raw || typeof raw !== 'object') {
+        return [];
+      }
+      const layer = raw as Record<string, unknown>;
+      const base = {
+        id: typeof layer.id === 'string' ? layer.id.slice(0, 40) : '',
+        x: clamp(layer.x, -2000, 3000, 0),
+        y: clamp(layer.y, -2000, 3000, 0),
+        width: clamp(layer.width, 10, 3000, 400),
+      };
+      if (layer.kind === 'text' && typeof layer.text === 'string') {
+        const weight = clamp(layer.fontWeight, 500, 900, 700);
+        return [
+          {
+            ...base,
+            kind: 'text',
+            text: layer.text.slice(0, MAX_LAYER_TEXT),
+            fontSize: clamp(layer.fontSize, 8, 400, 48),
+            fontWeight: LAYER_WEIGHTS.reduce((best, value) =>
+              Math.abs(value - weight) < Math.abs(best - weight) ? value : best,
+            ),
+            color:
+              typeof layer.color === 'string' && HEX_COLOR.test(layer.color)
+                ? layer.color
+                : '#111111',
+            align: layer.align === 'center' || layer.align === 'right' ? layer.align : 'left',
+            lineHeight: clamp(layer.lineHeight, 0.8, 3, 1.3),
+          },
+        ];
+      }
+      const src = safeImage(layer.src);
+      if (layer.kind === 'image' && src) {
+        return [
+          {
+            ...base,
+            kind: 'image',
+            imageId: '',
+            src,
+            height: clamp(layer.height, 10, 3000, 400),
+            opacity: clamp(layer.opacity, 0, 1, 1),
+            radius: clamp(layer.radius, 0, 1000, 0),
+          },
+        ];
+      }
+      return [];
+    }),
+  );
 }
 
 /**
@@ -43,53 +146,8 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
       ...spec.settings,
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
     },
-  };
-}
-
-async function loadAssets(): Promise<SlideAssets> {
-  const [
-    markColor,
-    markWhite,
-    ogonggoLogo,
-    speakerLight,
-    speakerDark,
-    arrowDark,
-    arrowLight,
-    chevronDown,
-    threads,
-    squarePlus,
-    menu,
-    plusWhite,
-    dotsWhite,
-  ] = await Promise.all([
-    loadBrandSvg('letscareer', { gradient: MARK_GRADIENT }),
-    loadBrandSvg('letscareer', { fill: WHITE }),
-    loadBrandSvg('ogonggo'),
-    loadIcon('speakerphone', WHITE, 2),
-    loadIcon('speakerphone', INK, 2),
-    loadIcon('arrow-up', INK, 1.5),
-    loadIcon('arrow-up', WHITE, 1.5),
-    loadIcon('chevron-down', INK, 2.5),
-    loadIcon('brand-threads', INK, 1.8),
-    loadIcon('square-plus', INK, 1.8),
-    loadIcon('menu-2', INK, 1.8),
-    loadIcon('plus', WHITE, 3),
-    loadIcon('dots', WHITE, 3),
-  ]);
-  return {
-    markColor,
-    markWhite,
-    ogonggoLogo,
-    speakerLight,
-    speakerDark,
-    arrowDark,
-    arrowLight,
-    chevronDown,
-    threads,
-    squarePlus,
-    menu,
-    plusWhite,
-    dotsWhite,
+    edits: sanitizeEdits(spec.edits),
+    layers: sanitizeLayers(spec.layers),
   };
 }
 

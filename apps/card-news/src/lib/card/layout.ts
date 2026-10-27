@@ -155,6 +155,16 @@ export interface SlideBox {
   chrome: number;
   /** 하단 렛츠커리어 로고 자리를 두는가. */
   footer: boolean;
+  /** 고른 제목·본문 크기에 곱하는 배율(`CardSettings.headlineScale`·`bodyScale`). */
+  headlineScale: number;
+  bodyScale: number;
+}
+
+/** 글자 배율. 없거나 잘못된 값은 1, 나머지는 0.7~1.5 로 자른다. */
+export function textScale(value: number | undefined): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(1.5, Math.max(0.7, value))
+    : 1;
 }
 
 /** 위 여백. 스토리는 인스타 화면 요소가 덮는 위쪽을 비운다. */
@@ -209,31 +219,50 @@ export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): S
       chosen = fit ? { bodySize, ...fit } : null;
     }
     if (chosen) {
+      // 사람이 정한 배율은 자동으로 고른 크기에 곱한다. 배율이 1 이 아니면 그 크기로 높이를 다시
+      // 재고, 넘치면 간격을 늘리지 않고 경고만 한다.
+      const scaledHeadline = Math.round(headlineSize * box.headlineScale);
+      const scaledBody = Math.round(chosen.bodySize * box.bodyScale);
+      const scaled =
+        scaledHeadline === headlineSize && scaledBody === chosen.bodySize
+          ? { available, body: chosen.body, gaps: chosen.gaps }
+          : (() => {
+              const body = bodyHeight(measure, sections, scaledBody, note, contentWidth);
+              return {
+                available:
+                  size.height -
+                  fixed -
+                  (withHeadline ? headlineHeight(headline, scaledHeadline) : 0),
+                body,
+                gaps: baseGaps(scaledBody, body, hasNote, withHeadline),
+              };
+            })();
       // 남는 높이의 7할을 간격에 나눠 준다. 간격이 두 배를 넘으면 듬성해 보여 거기서 멈춘다.
-      const slack = available - chosen.body.height - chosen.gaps.total;
-      const scale = Math.min(2, 1 + (slack * 0.7) / chosen.gaps.total);
+      const slack = scaled.available - scaled.body.height - scaled.gaps.total;
+      const scale = slack < 0 ? 1 : Math.min(2, 1 + (slack * 0.7) / scaled.gaps.total);
       return {
         contentWidth,
         padTop,
         padBottom,
-        headlineSize,
-        bodySize: chosen.bodySize,
-        chipSize: chipSizeFor(chosen.bodySize),
+        headlineSize: scaledHeadline,
+        bodySize: scaledBody,
+        chipSize: chipSizeFor(scaledBody),
         headlineGap: Math.round(BASE_HEADLINE_GAP * scale),
         sectionsGap: Math.round(BASE_SECTIONS_GAP * scale),
-        chipGap: Math.round(chosen.gaps.chipGap * scale),
-        sectionGap: Math.round(chosen.gaps.sectionGap * scale),
-        overflow: false,
+        chipGap: Math.round(scaled.gaps.chipGap * scale),
+        sectionGap: Math.round(scaled.gaps.sectionGap * scale),
+        overflow: slack < 0,
       };
     }
   }
+  const fallbackBody = Math.round(22 * box.bodyScale);
   return {
     contentWidth,
     padTop,
     padBottom,
-    headlineSize,
-    bodySize: 22,
-    chipSize: chipSizeFor(22),
+    headlineSize: Math.round(headlineSize * box.headlineScale),
+    bodySize: fallbackBody,
+    chipSize: chipSizeFor(fallbackBody),
     headlineGap: BASE_HEADLINE_GAP,
     sectionsGap: BASE_SECTIONS_GAP,
     chipGap: 11,

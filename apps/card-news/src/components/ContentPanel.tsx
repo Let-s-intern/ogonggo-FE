@@ -9,16 +9,23 @@ interface ContentPanelProps {
   onChange: (content: CardContent) => void;
 }
 
+/**
+ * 이름표 달린 칸. `field` 를 주면 `content-<field>` 를 칸 id 로 쓴다 — 캔버스에서 글 요소를 누르면
+ * 그 칸으로 포커스가 온다.
+ */
 function Labeled({
   label,
   hint,
+  field,
   children,
 }: {
   label: string;
   hint?: string;
+  field?: string;
   children: (id: string) => ReactNode;
 }) {
-  const id = useId();
+  const generated = useId();
+  const id = field ? `content-${field}` : generated;
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-sm font-semibold text-gray-800">
@@ -34,9 +41,12 @@ function Labeled({
 function SectionEditor({
   section,
   onChange,
+  itemsId,
 }: {
   section: CardSection;
   onChange: (section: CardSection) => void;
+  /** 목록 칸 id. 장의 첫 섹션에만 단다(캔버스에서 목록을 누르면 이리 온다). */
+  itemsId?: string;
 }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-3">
@@ -47,6 +57,7 @@ function SectionEditor({
         onChange={(event) => onChange({ ...section, label: event.target.value })}
       />
       <Textarea
+        id={itemsId}
         aria-label={`${section.label} 항목`}
         rows={Math.max(2, section.items.length + 1)}
         className="text-sm"
@@ -74,7 +85,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
   return (
     <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
       <h2 className="text-base font-bold">문구</h2>
-      <Labeled label="뱃지">
+      <Labeled label="뱃지" field="badge">
         {(id) => (
           <Input
             id={id}
@@ -85,6 +96,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
       </Labeled>
       <Labeled
         label="제목 (1·2장)"
+        field="headline"
         hint="줄바꿈으로 줄을 나눕니다. *단어* 는 강조 상자, ~단어~ 는 강조색 글자입니다."
       >
         {(id) => (
@@ -98,7 +110,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
         )}
       </Labeled>
 
-      <Labeled label="직무명 (로고 탭 카드·썸네일 + 흰 판 2장의 제목)">
+      <Labeled label="직무명 (로고 탭 카드·썸네일 + 흰 판 2장의 제목)" field="roleTitle">
         {(id) => (
           <Input
             id={id}
@@ -117,11 +129,12 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
           <SectionEditor
             key={index}
             section={section}
+            itemsId={index === 0 ? 'content-summarySections' : undefined}
             onChange={(next) => setSection('summarySections', index, next)}
           />
         ))}
       </div>
-      <Labeled label="1장 아래 안내 (선택)">
+      <Labeled label="1장 아래 안내 (선택)" field="note">
         {(id) => (
           <Textarea
             id={id}
@@ -140,6 +153,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
           <SectionEditor
             key={index}
             section={section}
+            itemsId={index === 0 ? 'content-detailSections' : undefined}
             onChange={(next) => setSection('detailSections', index, next)}
           />
         ))}
@@ -150,7 +164,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
           3장 프로필 안내
         </summary>
         <div className="mt-3 flex flex-col gap-3">
-          <Labeled label="큰 문구">
+          <Labeled label="큰 문구" field="ctaHeadline">
             {(id) => (
               <Textarea
                 id={id}
@@ -160,7 +174,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
               />
             )}
           </Labeled>
-          <Labeled label="작은 문구">
+          <Labeled label="작은 문구" field="ctaSub">
             {(id) => (
               <Textarea
                 id={id}
