@@ -99,9 +99,13 @@ function Column({
   );
 }
 
-/** 직무명이 카드 폭에 한 줄로 들어가는 크기. */
+/**
+ * 직무명이 카드 폭에 한 줄로 들어가는 크기. 좁힌 자간(`HEADLINE_TRACKING`)은 빼고 잰다 — 이미지
+ * 생성기는 줄을 나눌 때 좁힌 자간만큼 덜 들어가는 것처럼 굴어, 폭에 꼭 맞춘 직무명의 마지막 한두
+ * 글자를 다음 줄로 넘긴다(편집 캔버스와 비교해 찾았다).
+ */
 function titleSizeFor(measure: Measure, title: string): number {
-  const at100 = measure(title, 100, 800, 100 * HEADLINE_TRACKING);
+  const at100 = measure(title, 100, 800);
   return Math.floor(Math.max(40, Math.min(TAB_TITLE_MAX, (TAB_INNER / Math.max(1, at100)) * 100)));
 }
 
