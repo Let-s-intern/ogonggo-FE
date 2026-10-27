@@ -1,8 +1,6 @@
 import { Resvg } from '@resvg/resvg-js';
 import satori from 'satori';
-import { loadBrandSvg, loadEmoji, loadFonts, loadIcon } from '@/lib/card/assets';
-import { loadMeasure } from '@/lib/card/measure';
-import type { SlideAssets } from '@/lib/card/render/primitives';
+import { loadEmoji, loadFonts } from '@/lib/card/assets';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
@@ -14,14 +12,10 @@ import {
   type SlideEdits,
 } from '@/lib/card/types';
 import { VARIANT_IDS } from '@/lib/card/variants';
+import { loadMeasure } from '@/lib/server/measure';
+import { loadAssets } from '@/lib/server/slideAssets';
 
 export const runtime = 'nodejs';
-
-const INK = '#111111';
-const WHITE = '#FFFFFF';
-
-/** 렛츠커리어 심볼을 밝은 바탕에 놓을 때의 파랑 그라데이션(원본은 회색이다). */
-const MARK_GRADIENT: [string, string] = ['#7C8CFF', '#3D5AFE'];
 
 /** 렌더에 넣을 수 있는 이미지 값. 편집 화면이 만드는 base64 data URL 이미지만 받는다. */
 const IMAGE_DATA_URL = /^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/;
@@ -85,56 +79,6 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
     },
     edits: sanitizeEdits(spec.edits),
-  };
-}
-
-async function loadAssets(): Promise<SlideAssets> {
-  const [
-    markColor,
-    markWhite,
-    ogonggoLogo,
-    ogonggoWhite,
-    speakerLight,
-    speakerDark,
-    arrowDark,
-    arrowLight,
-    chevronDown,
-    threads,
-    squarePlus,
-    menu,
-    plusWhite,
-    dotsWhite,
-  ] = await Promise.all([
-    loadBrandSvg('letscareer', { gradient: MARK_GRADIENT }),
-    loadBrandSvg('letscareer', { fill: WHITE }),
-    loadBrandSvg('ogonggo'),
-    loadBrandSvg('ogonggo', { fill: WHITE }),
-    loadIcon('speakerphone', WHITE, 2),
-    loadIcon('speakerphone', INK, 2),
-    loadIcon('arrow-up', INK, 1.5),
-    loadIcon('arrow-up', WHITE, 1.5),
-    loadIcon('chevron-down', INK, 2.5),
-    loadIcon('brand-threads', INK, 1.8),
-    loadIcon('square-plus', INK, 1.8),
-    loadIcon('menu-2', INK, 1.8),
-    loadIcon('plus', WHITE, 3),
-    loadIcon('dots', WHITE, 3),
-  ]);
-  return {
-    markColor,
-    markWhite,
-    ogonggoLogo,
-    ogonggoWhite,
-    speakerLight,
-    speakerDark,
-    arrowDark,
-    arrowLight,
-    chevronDown,
-    threads,
-    squarePlus,
-    menu,
-    plusWhite,
-    dotsWhite,
   };
 }
 

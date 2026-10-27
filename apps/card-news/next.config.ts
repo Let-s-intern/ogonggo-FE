@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
 
 /**
- * 카드 이미지는 서버(`src/app/api/render`)가 `assets/` 의 폰트·이모지·로고를 읽어 만든다. 서버리스
- * 번들에 그 파일이 따라가도록 `outputFileTracingIncludes` 로 묶는다.
+ * 카드 이미지는 서버(`src/app/api/render`)가 `assets/` 의 폰트·이모지·로고를 읽어 만든다. 편집
+ * 캔버스용 렌더 키트(`src/app/api/render-kit`)도 같은 파일을 내려준다. 서버리스 번들에 그 파일이
+ * 따라가도록 `outputFileTracingIncludes` 로 묶는다.
  */
 const nextConfig: NextConfig = {
   transpilePackages: ['@ogonggo/ui', '@ogonggo/api'],
@@ -11,6 +12,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@resvg/resvg-js', 'satori'],
   outputFileTracingIncludes: {
     '/api/render': ['./assets/**/*'],
+    '/api/render-kit': ['./assets/**/*'],
   },
 };
 
