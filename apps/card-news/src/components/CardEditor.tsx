@@ -9,8 +9,8 @@ import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
 import { EditorCanvas, useBuiltSlides } from './EditorCanvas';
 import { JobPicker } from './JobPicker';
+import { PropertiesPanel } from './PropertiesPanel';
 import { RegenerateModal } from './RegenerateModal';
-import { SettingsPanel } from './SettingsPanel';
 import { VariantPicker } from './VariantPicker';
 import { VariantPreview } from './VariantPreview';
 
@@ -92,9 +92,15 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
           />
           {loaded ? (
             <>
-              <SettingsPanel
+              <PropertiesPanel
                 settings={loaded.settings}
-                onChange={editor.setSettings}
+                onSettingsChange={editor.setSettings}
+                selected={variant ? selected : null}
+                edit={variant && selected ? loaded.edits[variant]?.[slide]?.[selected] : undefined}
+                onEdit={(edit, group) =>
+                  variant && selected && editor.setEdits(variant, slide, selected, edit, group)
+                }
+                onDeselect={() => setSelected(null)}
                 brandColor={loaded.brandColor}
                 onResetBrandColor={editor.resetBrandColor}
                 logo={loaded.logo}
