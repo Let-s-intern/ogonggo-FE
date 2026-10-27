@@ -16,12 +16,12 @@ import {
   type CardSize,
   type CardSizeId,
   type CardSpec,
-  ELEMENT_IDS,
-  ELEMENT_LABELS,
+  elementLabel,
   type ElementEdit,
   type ElementId,
   SLIDE_COUNT,
   SLIDE_LABELS,
+  isElementId,
 } from '@/lib/card/types';
 import type { MeasuredBox } from '@/lib/ai/tools';
 import type { RenderKit } from '@/lib/client/useRenderKit';
@@ -120,9 +120,9 @@ export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox
   if (!stageScale) {
     return null;
   }
-  return ELEMENT_IDS.flatMap((id) => {
-    const element = stage.querySelector(`[data-el="${id}"]`);
-    if (!element) {
+  return [...stage.querySelectorAll<HTMLElement>('[data-el]')].flatMap((element) => {
+    const id = element.dataset.el;
+    if (!isElementId(id)) {
       return [];
     }
     const rect = element.getBoundingClientRect();
@@ -149,7 +149,7 @@ export const TEXT_ELEMENTS: ElementId[] = [
   'badge',
   'headline',
   'roleTitle',
-  'sections',
+  'note',
   'ctaHeadline',
   'ctaSub',
 ];
@@ -239,9 +239,9 @@ export function EditorCanvas({
     }
     const origin = stage.getBoundingClientRect();
     const found: Box[] = [];
-    for (const id of ELEMENT_IDS) {
-      const element = stage.querySelector(`[data-el="${id}"]`);
-      if (!element) {
+    for (const element of stage.querySelectorAll<HTMLElement>('[data-el]')) {
+      const id = element.dataset.el;
+      if (!isElementId(id)) {
         continue;
       }
       const rect = element.getBoundingClientRect();
@@ -400,9 +400,9 @@ export function EditorCanvas({
                   <div
                     key={box.id}
                     role="button"
-                    aria-label={ELEMENT_LABELS[box.id]}
+                    aria-label={elementLabel(box.id)}
                     aria-pressed={on}
-                    title={ELEMENT_LABELS[box.id]}
+                    title={elementLabel(box.id)}
                     onPointerDown={(event) => start(event, box.id, 'move')}
                     onPointerMove={move}
                     onPointerUp={end}
@@ -444,7 +444,7 @@ export function EditorCanvas({
                     >
                       <div
                         role="button"
-                        aria-label={`${ELEMENT_LABELS[selectedBox.id]} 크기`}
+                        aria-label={`${elementLabel(selectedBox.id)} 크기`}
                         data-handle={corner}
                         onPointerDown={(event) => start(event, selectedBox.id, 'resize')}
                         onPointerMove={move}

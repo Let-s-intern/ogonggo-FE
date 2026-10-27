@@ -5,11 +5,11 @@ import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
   type CardSpec,
-  ELEMENT_IDS,
   type ElementEdit,
   type RenderRequest,
   SLIDE_COUNT,
   type SlideEdits,
+  isElementId,
 } from '@/lib/card/types';
 import { VARIANT_IDS } from '@/lib/card/variants';
 import { loadMeasure } from '@/lib/server/measure';
@@ -30,7 +30,10 @@ function clamp(value: unknown, min: number, max: number, fallback: number): numb
     : fallback;
 }
 
-/** 요소 편집값을 검사한다. 모르는 요소는 버리고, 이동은 ±2000px, 배율은 0.2~5 로 자른다. */
+/**
+ * 요소 편집값을 검사한다. 모르는 요소(예전 편집본의 `sections` 포함)는 버리고, 이동은 ±2000px, 배율은
+ * 0.2~5 로 자른다.
+ */
 function sanitizeEdits(edits: unknown): SlideEdits[] | undefined {
   if (!Array.isArray(edits)) {
     return undefined;
@@ -40,9 +43,8 @@ function sanitizeEdits(edits: unknown): SlideEdits[] | undefined {
     if (!slide || typeof slide !== 'object') {
       return clean;
     }
-    for (const id of ELEMENT_IDS) {
-      const edit = (slide as Record<string, unknown>)[id];
-      if (!edit || typeof edit !== 'object') {
+    for (const [id, edit] of Object.entries(slide)) {
+      if (!isElementId(id) || !edit || typeof edit !== 'object') {
         continue;
       }
       const { dx, dy, scale, hidden } = edit as Partial<Record<keyof ElementEdit, unknown>>;

@@ -132,7 +132,7 @@ export type VariantId =
 
 /**
  * 사람이 옮기거나 크기를 바꾸거나 숨길 수 있는 요소. 렌더가 이 단위로 감싼다. 배경 도형(물결,
- * 워터마크, 프레임)은 고정이다.
+ * 워터마크, 프레임)은 고정이다. 칩과 목록은 섹션마다 따로다(`SectionElementId`).
  */
 export const ELEMENT_IDS = [
   'badge',
@@ -140,7 +140,8 @@ export const ELEMENT_IDS = [
   'headline',
   'roleTitle',
   'thumbnail',
-  'sections',
+  'sectionsPanel',
+  'note',
   'tabCard',
   'brandMark',
   'arrow',
@@ -149,16 +150,42 @@ export const ELEMENT_IDS = [
   'profile',
 ] as const;
 
-export type ElementId = (typeof ELEMENT_IDS)[number];
+export type FixedElementId = (typeof ELEMENT_IDS)[number];
+
+/**
+ * 섹션 요소. `section-<n>` 은 칩과 목록 묶음, `-chip`·`-list` 는 그 안의 칩과 목록이다. `<n>` 은
+ * 그 장에 보이는 섹션 순서(1부터, 항목이 빈 섹션은 세지 않는다)다.
+ */
+export type SectionElementId =
+  | `section-${number}`
+  | `section-${number}-chip`
+  | `section-${number}-list`;
+
+export type ElementId = FixedElementId | SectionElementId;
+
+/** 섹션 번호는 1~9 까지 받는다. */
+const SECTION_ELEMENT = /^section-([1-9])(?:-(chip|list))?$/;
+
+export function sectionElementId(index: number, part?: 'chip' | 'list'): SectionElementId {
+  return part ? `section-${index}-${part}` : `section-${index}`;
+}
+
+export function isElementId(value: unknown): value is ElementId {
+  return (
+    typeof value === 'string' &&
+    ((ELEMENT_IDS as readonly string[]).includes(value) || SECTION_ELEMENT.test(value))
+  );
+}
 
 /** 편집 화면에 보이는 요소 이름. */
-export const ELEMENT_LABELS: Record<ElementId, string> = {
+export const ELEMENT_LABELS: Record<FixedElementId, string> = {
   badge: '뱃지',
   companyLogo: '회사 로고',
   headline: '큰 제목',
   roleTitle: '직무명',
   thumbnail: '썸네일 카드',
-  sections: '칩과 목록',
+  sectionsPanel: '흰 판',
+  note: '안내 문구',
   tabCard: '흰 카드',
   brandMark: '브랜드 로고',
   arrow: '화살표',
@@ -166,6 +193,26 @@ export const ELEMENT_LABELS: Record<ElementId, string> = {
   ctaSub: '3장 부제',
   profile: '프로필 카드',
 };
+
+/**
+ * 요소 이름. 섹션은 `섹션 2 · 마감 기한`, `섹션 2 칩` 처럼 번호와 칩 제목을 붙인다. `sectionLabels` 는
+ * 그 장에 보이는 섹션의 칩 제목이다(없으면 번호만).
+ */
+export function elementLabel(id: ElementId, sectionLabels?: string[]): string {
+  const match = SECTION_ELEMENT.exec(id);
+  if (!match) {
+    return ELEMENT_LABELS[id as FixedElementId] ?? id;
+  }
+  const label = sectionLabels?.[Number(match[1]) - 1]?.trim();
+  const name = `섹션 ${match[1]}`;
+  if (match[2] === 'chip') {
+    return `${name} 칩`;
+  }
+  if (match[2] === 'list') {
+    return `${name} 목록`;
+  }
+  return label ? `${name} · ${label}` : name;
+}
 
 /**
  * 요소 하나의 편집값. 템플릿이 자동으로 잡은 자리에서 얼마나 옮겼는지(px, 1080 폭 기준)와 요소

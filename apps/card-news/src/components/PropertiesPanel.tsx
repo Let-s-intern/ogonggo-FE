@@ -5,7 +5,7 @@ import { Button, Input, Tabs, Toggle } from '@ogonggo/ui';
 import {
   type BrandMarkId,
   type CardSettings,
-  ELEMENT_LABELS,
+  elementLabel,
   type ElementEdit,
   type ElementId,
   type HighlightPreset,
@@ -65,7 +65,8 @@ const BRAND_MARKS: { value: BrandMarkId; label: string }[] = [
 
 /** 제목 배율이 걸리는 요소와 본문 배율이 걸리는 요소. 고르면 그 글자 크기 슬라이더가 보인다. */
 const HEADLINE_ELEMENTS: ElementId[] = ['headline', 'roleTitle', 'ctaHeadline', 'ctaSub'];
-const BODY_ELEMENTS: ElementId[] = ['sections'];
+const isBodyElement = (id: ElementId) =>
+  id === 'sectionsPanel' || id === 'note' || id.startsWith('section-');
 
 const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };
 
@@ -190,13 +191,13 @@ function ElementProperties({
 }) {
   const text = HEADLINE_ELEMENTS.includes(id)
     ? (['headline'] as const)
-    : BODY_ELEMENTS.includes(id)
+    : isBodyElement(id)
       ? (['body'] as const)
       : null;
   return (
     <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold">{ELEMENT_LABELS[id]}</h2>
+        <h2 className="text-base font-bold">{elementLabel(id)}</h2>
         <Button type="button" size="sm" variant="ghost" onClick={onDeselect}>
           선택 해제
         </Button>

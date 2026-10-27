@@ -219,7 +219,11 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
 
   /** 캔버스에서 누른 글 요소의 문구 칸으로 간다. 목록은 지금 장의 섹션 칸이다. */
   const focusText = (id: ElementId) => {
-    const key = id === 'sections' ? (slide === 0 ? 'summarySections' : 'detailSections') : id;
+    const key = id.startsWith('section-')
+      ? slide === 0
+        ? 'summarySections'
+        : 'detailSections'
+      : id;
     const field = document.getElementById(`content-${key}`);
     const details = field?.closest('details');
     if (details) {

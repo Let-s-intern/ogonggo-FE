@@ -14,7 +14,14 @@ import {
   type SlideMetrics,
 } from '../layout';
 import { parseLine } from '../markup';
-import type { BrandMarkId, CardSection, CardSpec, ElementId, SlideEdits } from '../types';
+import {
+  type BrandMarkId,
+  type CardSection,
+  type CardSpec,
+  type ElementId,
+  type SlideEdits,
+  sectionElementId,
+} from '../types';
 import type { Palette } from '../variants';
 
 /**
@@ -210,7 +217,7 @@ function Chip({
   );
 }
 
-function visibleSections(sections: CardSection[]) {
+export function visibleSections(sections: CardSection[]) {
   return sections
     .map((section) => ({
       label: section.label,
@@ -285,6 +292,9 @@ export const COLUMN_GAP = 28;
  *
  * `metrics.contentWidth` 는 `list`·`columns` 에서 목록 폭, `boxed` 에서 상자 안 글자 폭에
  * `BULLET_INDENT` 를 더한 값이다(높이 계산이 그 폭에서 들여쓰기를 빼고 줄 수를 센다).
+ *
+ * 섹션(`section-<n>`), 그 안의 칩과 목록, 안내(`note`)를 따로 감싼다. 감싼 상자가 배치를 바꾸지 않게
+ * 묶음 상자는 세로 배치로 안을 늘이고, 칩 상자는 칩이 놓이던 정렬을 물려받는다.
  */
 export function Sections({
   palette,
@@ -292,12 +302,14 @@ export function Sections({
   note,
   metrics,
   mode = 'list',
+  edits,
 }: {
   palette: Palette;
   sections: CardSection[];
   note: string;
   metrics: SlideMetrics;
   mode?: 'list' | 'boxed' | 'columns' | 'labels';
+  edits: SlideEdits | undefined;
 }) {
   const { bodySize: size, contentWidth } = metrics;
   const visible = visibleSections(sections);
@@ -312,114 +324,160 @@ export function Sections({
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: metrics.sectionGap }}>
         {visible.map((section, sectionIndex) => {
+          const number = sectionIndex + 1;
           const chip = section.label.trim() ? (
-            <Chip
-              palette={palette}
-              size={metrics.chipSize}
-              pill={mode !== 'list'}
-              width={mode === 'columns' ? COLUMN_CHIP_WIDTH : undefined}
+            <Editable
+              id={sectionElementId(number, 'chip')}
+              edits={edits}
+              style={{ alignSelf: mode === 'list' ? 'flex-start' : 'center', flexShrink: 0 }}
             >
-              {section.label}
-            </Chip>
+              <Chip
+                palette={palette}
+                size={metrics.chipSize}
+                pill={mode !== 'list'}
+                width={mode === 'columns' ? COLUMN_CHIP_WIDTH : undefined}
+              >
+                {section.label}
+              </Chip>
+            </Editable>
           ) : null;
+          const list = (children: ReactNode) => (
+            <Editable
+              id={sectionElementId(number, 'list')}
+              edits={edits}
+              style={{ flexDirection: 'column' }}
+            >
+              {children}
+            </Editable>
+          );
           if (mode === 'columns' || mode === 'labels') {
             const label =
               mode === 'labels' ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    width: LABEL_WIDTH,
-                    flexShrink: 0,
-                    fontSize: Math.round(metrics.chipSize * 1.08),
-                    fontWeight: 800,
-                    lineHeight: BODY_LINE_HEIGHT,
-                    letterSpacing: -metrics.chipSize * 0.02,
-                    color: palette.bodyText,
-                  }}
+                <Editable
+                  id={sectionElementId(number, 'chip')}
+                  edits={edits}
+                  style={{ flexShrink: 0 }}
                 >
-                  {section.label}
-                </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      width: LABEL_WIDTH,
+                      flexShrink: 0,
+                      fontSize: Math.round(metrics.chipSize * 1.08),
+                      fontWeight: 800,
+                      lineHeight: BODY_LINE_HEIGHT,
+                      letterSpacing: -metrics.chipSize * 0.02,
+                      color: palette.bodyText,
+                    }}
+                  >
+                    {section.label}
+                  </div>
+                </Editable>
               ) : (
                 chip
               );
             return (
-              <div
+              <Editable
                 key={sectionIndex}
-                style={{ display: 'flex', gap: COLUMN_GAP, alignItems: 'flex-start' }}
+                id={sectionElementId(number)}
+                edits={edits}
+                style={{ flexDirection: 'column' }}
               >
-                {label ?? <div style={{ display: 'flex', width: COLUMN_CHIP_WIDTH }} />}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {section.items.map((item, index) => (
-                    <Bullet
-                      key={index}
-                      item={item}
-                      size={size}
-                      width={contentWidth}
-                      color={palette.bodyText}
-                    />
-                  ))}
+                <div style={{ display: 'flex', gap: COLUMN_GAP, alignItems: 'flex-start' }}>
+                  {label ?? <div style={{ display: 'flex', width: COLUMN_CHIP_WIDTH }} />}
+                  {list(
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {section.items.map((item, index) => (
+                        <Bullet
+                          key={index}
+                          item={item}
+                          size={size}
+                          width={contentWidth}
+                          color={palette.bodyText}
+                        />
+                      ))}
+                    </div>,
+                  )}
                 </div>
-              </div>
+              </Editable>
             );
           }
           if (mode === 'boxed') {
             return (
-              <div
+              <Editable
                 key={sectionIndex}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: metrics.chipGap,
-                }}
+                id={sectionElementId(number)}
+                edits={edits}
+                style={{ flexDirection: 'column' }}
               >
-                {chip}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    border: `${BOXED_BORDER}px solid ${palette.border}`,
-                    borderRadius: 28,
-                    padding: `${BOXED_PAD_Y}px ${BOXED_PAD_X}px`,
+                    alignItems: 'center',
+                    gap: metrics.chipGap,
                   }}
                 >
-                  {section.items.map((item, index) => (
-                    <Bullet
-                      key={index}
-                      item={item}
-                      size={size}
-                      width={itemWidth}
-                      color={palette.bodyText}
-                      align="center"
-                    />
-                  ))}
+                  {chip}
+                  {list(
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        border: `${BOXED_BORDER}px solid ${palette.border}`,
+                        borderRadius: 28,
+                        padding: `${BOXED_PAD_Y}px ${BOXED_PAD_X}px`,
+                      }}
+                    >
+                      {section.items.map((item, index) => (
+                        <Bullet
+                          key={index}
+                          item={item}
+                          size={size}
+                          width={itemWidth}
+                          color={palette.bodyText}
+                          align="center"
+                        />
+                      ))}
+                    </div>,
+                  )}
                 </div>
-              </div>
+              </Editable>
             );
           }
           return (
-            <div
+            <Editable
               key={sectionIndex}
-              style={{ display: 'flex', flexDirection: 'column', gap: metrics.chipGap }}
+              id={sectionElementId(number)}
+              edits={edits}
+              style={{ flexDirection: 'column' }}
             >
-              {chip}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {section.items.map((item, index) => (
-                  <Bullet
-                    key={index}
-                    item={item}
-                    size={size}
-                    width={contentWidth}
-                    color={palette.bodyText}
-                  />
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: metrics.chipGap }}>
+                {chip}
+                {list(
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {section.items.map((item, index) => (
+                      <Bullet
+                        key={index}
+                        item={item}
+                        size={size}
+                        width={contentWidth}
+                        color={palette.bodyText}
+                      />
+                    ))}
+                  </div>,
+                )}
               </div>
-            </div>
+            </Editable>
           );
         })}
       </div>
       {note.trim() ? (
-        <div style={{ display: 'flex', flexDirection: 'column', marginTop: metrics.chipGap }}>
+        <Editable
+          id="note"
+          edits={edits}
+          style={{ flexDirection: 'column', marginTop: metrics.chipGap }}
+        >
           {note.split('\n').map((line, index) => (
             <div
               key={index}
@@ -436,7 +494,7 @@ export function Sections({
               {line}
             </div>
           ))}
-        </div>
+        </Editable>
       ) : null}
     </div>
   );

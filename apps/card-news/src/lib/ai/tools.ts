@@ -6,13 +6,13 @@ import {
   type CardSection,
   type CardSettings,
   type CardSizeId,
-  ELEMENT_IDS,
-  ELEMENT_LABELS,
+  elementLabel,
   type ElementEdit,
   type ElementId,
   SLIDE_COUNT,
   type SlideEdits,
   type VariantId,
+  isElementId,
 } from '../card/types';
 import { VARIANTS, variantOf } from '../card/variants';
 import type { CardEdits } from '../client/storage';
@@ -104,7 +104,7 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
         : [];
       const names = changes.map(
         (change) =>
-          `${String(change.slide)}장 ${ELEMENT_LABELS[change.id as ElementId] ?? String(change.id)}`,
+          `${String(change.slide)}장 ${isElementId(change.id) ? elementLabel(change.id) : String(change.id)}`,
       );
       return `요소 바꾸기: ${names.join(', ')}`;
     }
@@ -123,7 +123,7 @@ export function describeScreen(context: ToolContext): string {
     `템플릿 ${variant.id}(${variant.label})`,
     `크기 ${CARD_SIZES[context.size()].label}`,
     `보고 있는 장 ${context.slide() + 1}`,
-    `고른 요소 ${selected ? `${selected}(${ELEMENT_LABELS[selected]})` : '없음'}`,
+    `고른 요소 ${selected ? `${selected}(${elementLabel(selected)})` : '없음'}`,
   ].join(', ');
 }
 
@@ -154,7 +154,7 @@ function asSlide(value: unknown): number | null {
 }
 
 function asElementId(value: unknown): ElementId | null {
-  return ELEMENT_IDS.includes(value as ElementId) ? (value as ElementId) : null;
+  return isElementId(value) ? value : null;
 }
 
 function round(value: number): number {
@@ -221,7 +221,7 @@ function slideSummary(
     const edit = edits?.[box.id] ?? NO_EDIT;
     return {
       id: box.id,
-      name: ELEMENT_LABELS[box.id],
+      name: elementLabel(box.id),
       x: Math.round(box.x),
       y: Math.round(box.y),
       width: Math.round(box.width),

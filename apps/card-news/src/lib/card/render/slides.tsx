@@ -29,6 +29,7 @@ import {
   MarkedLine,
   Sections,
   type SlideAssets,
+  visibleSections,
 } from './primitives';
 
 /**
@@ -118,6 +119,19 @@ function slideSections(spec: CardSpec, slide: number, dropRole: boolean): CardSe
   return dropRole && content.roleTitle.trim()
     ? sections.filter((section) => section.label.trim() !== '채용 직무')
     : sections;
+}
+
+/**
+ * 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. 번호는 `Sections` 가 단
+ * `section-<n>` 과 같다.
+ */
+export function visibleSectionLabels(spec: CardSpec, slide: number): string[] {
+  if (slide === 2) {
+    return [];
+  }
+  const layout = variantOf(spec.variant);
+  const tab = (slide === 1 && layout.detailLayout ? layout.detailLayout : layout.layout) === 'tab';
+  return visibleSections(slideSections(spec, slide, tab)).map((section) => section.label);
 }
 
 function visibleCount(sections: CardSection[]): number {
@@ -243,15 +257,14 @@ function TabSlide({
             </Editable>
           ) : null}
           <div style={{ display: 'flex', marginTop: metrics.sectionsGap }}>
-            <Editable id="sections" edits={edits}>
-              <Sections
-                palette={palette}
-                sections={sections}
-                note={note}
-                metrics={metrics}
-                mode={boxed ? 'boxed' : 'columns'}
-              />
-            </Editable>
+            <Sections
+              palette={palette}
+              sections={sections}
+              note={note}
+              metrics={metrics}
+              mode={boxed ? 'boxed' : 'columns'}
+              edits={edits}
+            />
           </div>
         </div>
       </Editable>
@@ -375,7 +388,7 @@ function LabelsSlide({
             ) : null}
           </div>
         </Editable>
-        <Editable id="sections" edits={edits} style={{ marginTop: 40 }}>
+        <Editable id="sectionsPanel" edits={edits} style={{ marginTop: 40 }}>
           <div
             style={{
               ...card,
@@ -388,6 +401,7 @@ function LabelsSlide({
               note=""
               metrics={metrics}
               mode="labels"
+              edits={edits}
             />
           </div>
         </Editable>
@@ -453,8 +467,10 @@ function InfoSlide({
     bodyScale: textScale(spec.settings.bodyScale),
   });
 
-  const list = <Sections palette={palette} sections={sections} note={note} metrics={metrics} />;
   const edits = spec.edits?.[slide];
+  const list = (
+    <Sections palette={palette} sections={sections} note={note} metrics={metrics} edits={edits} />
+  );
   const element = (
     <Canvas size={size}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
@@ -498,8 +514,8 @@ function InfoSlide({
             </div>
           ) : null}
           <div style={{ display: 'flex', marginTop: metrics.sectionsGap }}>
-            <Editable id="sections" edits={edits}>
-              {panel ? (
+            {panel ? (
+              <Editable id="sectionsPanel" edits={edits}>
                 <div
                   style={{
                     display: 'flex',
@@ -511,10 +527,10 @@ function InfoSlide({
                 >
                   {list}
                 </div>
-              ) : (
-                list
-              )}
-            </Editable>
+              </Editable>
+            ) : (
+              list
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
