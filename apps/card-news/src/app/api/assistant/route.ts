@@ -1,5 +1,5 @@
 import { llmConfig } from '@/lib/ai/draft';
-import { ELEMENT_IDS, ELEMENT_LABELS } from '@/lib/card/types';
+import { ELEMENT_LABELS } from '@/lib/card/types';
 import { VARIANTS } from '@/lib/card/variants';
 
 /**
@@ -17,6 +17,9 @@ import { VARIANTS } from '@/lib/card/variants';
 const MAX_MESSAGES = 60;
 const MAX_CONTENT_LENGTH = 20_000;
 const LLM_TIMEOUT_MS = 120_000;
+
+/** 요소 id 설명. 섹션 요소는 장마다 수가 달라 목록으로 주지 않고 꼴로 알린다. */
+const ELEMENT_ID_DESCRIPTION = `요소 id. 고정 요소 ${JSON.stringify(ELEMENT_LABELS)}. 섹션은 section-<n>(칩과 목록 묶음), section-<n>-chip(칩), section-<n>-list(목록)이고 <n> 은 그 장에 보이는 섹션 순서(1부터)다. read_card 의 id 를 그대로 쓴다.`;
 
 const SECTION_SCHEMA = {
   type: 'array',
@@ -149,11 +152,7 @@ const TOOLS = [
               type: 'object',
               properties: {
                 slide: { type: 'integer', minimum: 1, maximum: 3, description: '장 번호' },
-                id: {
-                  type: 'string',
-                  enum: [...ELEMENT_IDS],
-                  description: `요소. ${JSON.stringify(ELEMENT_LABELS)}`,
-                },
+                id: { type: 'string', description: ELEMENT_ID_DESCRIPTION },
                 x: { type: 'number' },
                 y: { type: 'number' },
                 dx: { type: 'number' },
@@ -184,7 +183,7 @@ const TOOLS = [
         type: 'object',
         properties: {
           slide: { type: 'integer', minimum: 1, maximum: 3 },
-          ids: { type: 'array', items: { type: 'string', enum: [...ELEMENT_IDS] } },
+          ids: { type: 'array', items: { type: 'string', description: ELEMENT_ID_DESCRIPTION } },
         },
       },
     },
@@ -199,6 +198,7 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 - 한 벌은 세 장이다. 1장 공고 요약, 2장 자격·우대 요건, 3장 프로필 링크 안내.
 - 좌표는 폭 1080 기준 px 다. 높이는 크기마다 다르다(4:5 는 1350, 1:1 은 1080, 9:16 은 1920). read_card 가 알려 준다.
 - 요소 편집값은 템플릿이 자동으로 잡은 자리에서 옮긴 거리(dx, dy)와 배율(scale), 숨김이다.
+- 1·2장 목록은 섹션(채용 직무, 마감 기한, 담당 업무 같은 칩과 목록 묶음) 단위다. section-<n> 은 섹션 하나, section-<n>-chip 은 그 칩, section-<n>-list 는 그 목록이다. <n> 은 그 장에 보이는 순서라 같은 섹션도 장·템플릿마다 번호가 다를 수 있다 — read_card 의 이름(예: "섹션 2 · 마감 기한")으로 찾는다. note 는 1장 맨 아래 안내, sectionsPanel 은 섹션들을 담은 흰 판(있는 템플릿만)이다.
 
 [일하는 순서]
 1. 바꾸기 전에 read_card 로 지금 상태를 읽는다. 요소가 어느 장에 있는지, 상자가 어디인지 보고 정한다.
@@ -207,7 +207,9 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 4. 무엇을 바꿨는지 한두 줄로 알려 준다. 한 요청은 도구 왕복 여섯 번 안에 끝낸다.
 
 [요소 다루기]
-- 요소가 여러 장에 있으면(뱃지, 회사 로고, 큰 제목, 목록, 브랜드 로고는 1·2장) 사용자가 장을 말하지 않는 한 있는 장 모두에 같이 적용한다.
+- 요소가 여러 장에 있으면(뱃지, 회사 로고, 큰 제목, 브랜드 로고는 1·2장) 사용자가 장을 말하지 않는 한 있는 장 모두에 같이 적용한다.
+- 섹션 하나를 옮기거나 숨겨도 다른 섹션은 제자리에 있고 빈자리를 메우지 않는다. 섹션끼리 자리를 바꾸려면 두 섹션을 같이 옮겨 겹치지 않게 한다. "맨 아래로" 는 그 장의 다른 섹션들보다 아래, 브랜드 로고 위에 둔다.
+- "목록 전체" 를 옮기라고 하면 흰 판(sectionsPanel)이 있으면 그것을, 없으면 섹션 모두를 같은 거리만큼 옮긴다.
 - "오른쪽 아래로" 처럼 자리를 말하면 카드 가장자리에서 60px 안쪽에 둔다. 다른 요소와 겹치면 겹치지 않는 자리를 찾는다.
 - "크게", "작게" 는 한 번에 10~20% 씩 바꾼다. 글 요소(큰 제목, 직무명, 3장 제목·부제, 목록)의 크기는 edit_elements 의 scale 보다 set_settings 의 글자 배율을 먼저 쓴다 — 그래야 줄이 다시 나뉜다.
 - 제목을 키워 넘침(overflow)이 생기면 본문 배율(bodyScale)을 0.05~0.1 낮춰 자리를 만든다. 제목이 옆으로 나가면(outside) 제목 배율을 조금 낮춘다. 요청을 원래대로 되돌리기만 하고 끝내지 않는다 — 사람이 보고 Ctrl+Z 로 되돌릴 수 있다.

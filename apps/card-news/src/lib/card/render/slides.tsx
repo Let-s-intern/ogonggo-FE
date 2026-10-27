@@ -112,7 +112,11 @@ function titleSizeFor(measure: Measure, title: string): number {
 
 type Built = { element: ReactElement; overflow: boolean };
 
-function slideSections(spec: CardSpec, slide: number, dropRole: boolean): CardSection[] {
+function slideSections(
+  spec: Pick<CardSpec, 'content'>,
+  slide: number,
+  dropRole: boolean,
+): CardSection[] {
   const { content } = spec;
   const sections = slide === 0 ? content.summarySections : content.detailSections;
   // 직무명을 제목으로 크게 쓰는 시안은 `채용 직무` 섹션을 또 그리지 않는다.
@@ -125,7 +129,10 @@ function slideSections(spec: CardSpec, slide: number, dropRole: boolean): CardSe
  * 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. 번호는 `Sections` 가 단
  * `section-<n>` 과 같다.
  */
-export function visibleSectionLabels(spec: CardSpec, slide: number): string[] {
+export function visibleSectionLabels(
+  spec: Pick<CardSpec, 'variant' | 'content'>,
+  slide: number,
+): string[] {
   if (slide === 2) {
     return [];
   }

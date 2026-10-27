@@ -14,6 +14,7 @@ import {
   type VariantId,
   isElementId,
 } from '../card/types';
+import { visibleSectionLabels } from '../card/render/slides';
 import { VARIANTS, variantOf } from '../card/variants';
 import type { CardEdits } from '../client/storage';
 import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useCardEditor';
@@ -119,11 +120,15 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
 export function describeScreen(context: ToolContext): string {
   const variant = variantOf(context.variant());
   const selected = context.selected();
+  const loaded = context.readLoaded();
+  const labels = loaded
+    ? visibleSectionLabels({ variant: variant.id, content: loaded.content }, context.slide())
+    : [];
   return [
     `템플릿 ${variant.id}(${variant.label})`,
     `크기 ${CARD_SIZES[context.size()].label}`,
     `보고 있는 장 ${context.slide() + 1}`,
-    `고른 요소 ${selected ? `${selected}(${elementLabel(selected)})` : '없음'}`,
+    `고른 요소 ${selected ? `${selected}(${elementLabel(selected, labels)})` : '없음'}`,
   ].join(', ');
 }
 
@@ -216,12 +221,14 @@ function slideSummary(
   slide: number,
 ) {
   const size = CARD_SIZES[context.size()];
-  const edits = loaded.edits[context.variant()]?.[slide];
+  const variant = context.variant();
+  const edits = loaded.edits[variant]?.[slide];
+  const labels = visibleSectionLabels({ variant, content: loaded.content }, slide);
   const elements = boxes.map((box) => {
     const edit = edits?.[box.id] ?? NO_EDIT;
     return {
       id: box.id,
-      name: elementLabel(box.id),
+      name: elementLabel(box.id, labels),
       x: Math.round(box.x),
       y: Math.round(box.y),
       width: Math.round(box.width),
@@ -440,7 +447,8 @@ async function editElements(
   for (const raw of changes) {
     const slide = asSlide(raw.slide);
     const id = asElementId(raw.id);
-    const box = slide === null || !id ? undefined : measured[slide]?.boxes.find((b) => b.id === id);
+    const boxes = slide === null ? [] : (measured[slide]?.boxes ?? []);
+    const box = boxes.find((b) => b.id === id);
     if (slide === null || !id || !box) {
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 요소입니다.' });
       continue;
