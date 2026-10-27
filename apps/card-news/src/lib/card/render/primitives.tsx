@@ -14,7 +14,7 @@ import {
   type SlideMetrics,
 } from '../layout';
 import { parseLine } from '../markup';
-import type { BrandMarkId, CardSection, CardSpec } from '../types';
+import type { BrandMarkId, CardSection, CardSpec, ElementId, SlideEdits } from '../types';
 import type { Palette } from '../variants';
 
 /**
@@ -41,6 +41,46 @@ export interface SlideAssets {
   menu: string;
   plusWhite: string;
   dotsWhite: string;
+}
+
+/**
+ * 편집할 수 있는 요소를 감싸는 상자. 편집값이 있으면 자동 배치 자리에서 옮기고 가운데를 기준으로
+ * 키운다. 숨긴 요소는 투명하게 그려 자리를 지킨다. `data-el` 은 이미지 생성기가 무시하고, 편집
+ * 화면이 브라우저 DOM 에서 요소 상자를 찾는 데 쓴다.
+ *
+ * 상자가 놓이는 자리의 정렬(가운데 정렬, 늘이기)은 `style` 로 넘긴다 — 감싼 상자 때문에 배치가
+ * 바뀌지 않게.
+ */
+export function Editable({
+  id,
+  edits,
+  style,
+  children,
+}: {
+  id: ElementId;
+  edits: SlideEdits | undefined;
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  const edit = edits?.[id];
+  return (
+    <div
+      data-el={id}
+      style={{
+        display: 'flex',
+        ...style,
+        ...(edit
+          ? {
+              transform: `translate(${edit.dx}px, ${edit.dy}px) scale(${edit.scale})`,
+              transformOrigin: 'center',
+              ...(edit.hidden ? { opacity: 0 } : {}),
+            }
+          : {}),
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function Icon({ src, size, style }: { src: string; size: number; style?: CSSProperties }) {

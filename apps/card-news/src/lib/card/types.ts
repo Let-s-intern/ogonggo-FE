@@ -130,6 +130,41 @@ export type VariantId =
   | 'tab'
   | 'dark';
 
+/**
+ * 사람이 옮기거나 크기를 바꾸거나 숨길 수 있는 요소. 렌더가 이 단위로 감싼다. 배경 도형(물결,
+ * 워터마크, 프레임)은 고정이다.
+ */
+export const ELEMENT_IDS = [
+  'badge',
+  'companyLogo',
+  'headline',
+  'roleTitle',
+  'thumbnail',
+  'sections',
+  'tabCard',
+  'brandMark',
+  'arrow',
+  'ctaHeadline',
+  'ctaSub',
+  'profile',
+] as const;
+
+export type ElementId = (typeof ELEMENT_IDS)[number];
+
+/**
+ * 요소 하나의 편집값. 템플릿이 자동으로 잡은 자리에서 얼마나 옮겼는지(px, 1080 폭 기준)와 요소
+ * 가운데를 기준으로 한 배율이다. 숨긴 요소도 자리는 그대로 차지한다 — 다른 요소가 따라 움직이지 않게.
+ */
+export interface ElementEdit {
+  dx: number;
+  dy: number;
+  scale: number;
+  hidden?: boolean;
+}
+
+/** 한 장의 편집값. 편집하지 않은 요소는 없다. */
+export type SlideEdits = Partial<Record<ElementId, ElementEdit>>;
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;
@@ -137,6 +172,8 @@ export interface CardSpec {
   /** 없으면 회사명을 글자로 쓴다. */
   logo?: CardLogo;
   companyName: string;
+  /** 장 번호 순서의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
+  edits?: SlideEdits[];
 }
 
 export interface RenderRequest {
