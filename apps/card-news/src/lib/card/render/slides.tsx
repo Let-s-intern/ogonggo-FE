@@ -7,6 +7,7 @@ import {
   PAD_X,
   type SlideMetrics,
   measureSlide,
+  textScale,
 } from '../layout';
 import type { Measure } from '../measure';
 import type { CardSection, CardSize, CardSpec } from '../types';
@@ -137,7 +138,9 @@ function TabSlide({
   const sections = slideSections(spec, slide, true);
   const note = boxed ? spec.content.note : '';
   const count = visibleCount(sections);
-  const titleSize = titleSizeFor(measure, spec.content.roleTitle);
+  const titleSize = Math.round(
+    titleSizeFor(measure, spec.content.roleTitle) * textScale(spec.settings.headlineScale),
+  );
   const titleHeight = spec.content.roleTitle.trim() ? Math.round(titleSize * 1.2) : 0;
   const story = size.height > size.width * 1.5;
   const square = size.height <= size.width;
@@ -162,6 +165,8 @@ function TabSlide({
       : TAB_INNER - COLUMN_CHIP_WIDTH - COLUMN_GAP,
     chrome,
     footer: false,
+    headlineScale: 1,
+    bodyScale: textScale(spec.settings.bodyScale),
   });
 
   const element = (
@@ -266,7 +271,9 @@ function LabelsSlide({
   const count = visibleCount(sections);
   const brand = spec.settings.brandColor;
   const role = spec.content.roleTitle.trim();
-  const roleSize = Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role));
+  const roleSize = Math.round(
+    Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role)) * textScale(spec.settings.headlineScale),
+  );
   const headCard = Math.round(LABELS_BAR * 1.2) + 28 + (role ? Math.round(roleSize * 1.2) + 36 : 0);
   // 머리 자리(뱃지 줄) 대신 로고·머리 카드·표 안쪽 여백을 잡는다. 표는 항목명이 목록 옆에 있어 칩
   // 높이를 다시 돌려준다.
@@ -279,6 +286,8 @@ function LabelsSlide({
     contentWidth: CONTENT_WIDTH - LABELS_CARD_PAD_X * 2 - LABEL_WIDTH - COLUMN_GAP,
     chrome,
     footer: false,
+    headlineScale: 1,
+    bodyScale: textScale(spec.settings.bodyScale),
   });
 
   const card: CSSProperties = {
@@ -410,6 +419,8 @@ function InfoSlide({
     contentWidth: panel ? CONTENT_WIDTH - PANEL_PAD * 2 : CONTENT_WIDTH,
     chrome: (panel ? PANEL_PAD * 2 : 0) + (card ? card.height + 32 : 0),
     footer: true,
+    headlineScale: textScale(spec.settings.headlineScale),
+    bodyScale: textScale(spec.settings.bodyScale),
   });
 
   const list = <Sections palette={palette} sections={sections} note={note} metrics={metrics} />;
@@ -696,6 +707,8 @@ function CtaSlide({
   const scale = square ? 0.76 : 1;
   const text = palette.ctaText;
   const ctaPalette: Palette = { ...palette, headlineText: text };
+  // 3장 제목·부제는 크기가 고정이라 제목 배율만 곱한다.
+  const headlineScale = textScale(spec.settings.headlineScale);
   return (
     <Canvas size={size}>
       <Background spec={spec} palette={palette} size={size} assets={assets} cta />
@@ -725,7 +738,12 @@ function CtaSlide({
             style={{ marginLeft: -18 }}
           />
           <div style={{ display: 'flex', marginTop: 24 }}>
-            <Headline palette={ctaPalette} text={spec.content.ctaHeadline} size={88} color={text} />
+            <Headline
+              palette={ctaPalette}
+              text={spec.content.ctaHeadline}
+              size={Math.round(88 * headlineScale)}
+              color={text}
+            />
           </div>
           <div
             style={{
@@ -744,7 +762,7 @@ function CtaSlide({
                   key={index}
                   palette={ctaPalette}
                   text={line}
-                  size={46}
+                  size={Math.round(46 * headlineScale)}
                   weight={800}
                   color={text}
                 />

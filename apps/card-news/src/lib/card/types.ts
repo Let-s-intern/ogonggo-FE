@@ -97,6 +97,12 @@ export interface CardSettings {
   logoStyle: LogoStyle;
   /** 썸네일 시안들의 이미지. 처음엔 공고 원문 대표 이미지이고, 사람이 바꾸거나 올릴 수 있다. */
   photo?: CardImage;
+  /**
+   * 자동으로 고른 글자 크기에 곱하는 배율(0.7~1.5). 제목은 큰 제목·직무명·3장 제목과 부제, 본문은
+   * 칩·목록·안내에 건다. 예전 편집본에는 없다 — 없으면 1 이다.
+   */
+  headlineScale?: number;
+  bodyScale?: number;
 }
 
 /** 기업 로고. 한 색 판은 편집 화면이 캔버스로 칠해 둔다(서버는 이미지를 다시 칠하지 못한다). */

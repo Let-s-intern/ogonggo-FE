@@ -88,6 +88,8 @@ export function defaultSettings(brandColor: string): CardSettings {
     highlight: 'tint',
     highlightColor: '#111111',
     logoStyle: 'auto',
+    headlineScale: 1,
+    bodyScale: 1,
   };
 }
 
