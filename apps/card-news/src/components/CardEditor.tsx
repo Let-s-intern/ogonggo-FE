@@ -21,6 +21,7 @@ import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { resolvePalette, variantOf } from '@/lib/card/variants';
 import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
+import { fileToDataUrl } from '@/lib/client/image';
 import { downloadSlides } from '@/lib/client/render';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { useRenderKit } from '@/lib/client/useRenderKit';
@@ -362,6 +363,9 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                   layers={layers}
                   onLayers={setLayers}
                   checkLayers={checkLayers}
+                  onLogo={(image) =>
+                    void fileToDataUrl(image).then(editor.setLogo, () => undefined)
+                  }
                   textColor={resolvePalette(variant, loaded.settings).headlineText}
                   selected={selected}
                   onSelect={setSelected}

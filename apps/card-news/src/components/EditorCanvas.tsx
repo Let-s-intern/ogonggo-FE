@@ -251,6 +251,7 @@ export function EditorCanvas({
   sectionLabels,
   textColor,
   checkLayers,
+  onLogo,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
@@ -271,6 +272,8 @@ export function EditorCanvas({
   textColor: string;
   /** 자유 요소를 바꾼 장을 받을 수 있는지. 안 되면 알릴 말. */
   checkLayers: (layers: Layer[]) => string | null;
+  /** 회사 로고 자리에 붙이거나 놓은 이미지. 회사 로고를 바꾼다. */
+  onLogo: (image: Blob) => void;
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
@@ -460,8 +463,8 @@ export function EditorCanvas({
 
   // 붙여넣기·복사는 캔버스 칸이 아니라 창에서 받는다 — 캔버스 밖 빈 곳을 누른 뒤에도 붙는다. 입력 칸이
   // 받는 것은 건드리지 않는다.
-  const clipboardRef = useRef({ selected, layerOf, addText, addImages, addCopy });
-  clipboardRef.current = { selected, layerOf, addText, addImages, addCopy };
+  const clipboardRef = useRef({ selected, layerOf, addText, addImages, addCopy, onLogo });
+  clipboardRef.current = { selected, layerOf, addText, addImages, addCopy, onLogo };
   useEffect(() => {
     const onCopy = (event: ClipboardEvent) => {
       const { selected: now, layerOf: find } = clipboardRef.current;
@@ -494,7 +497,10 @@ export function EditorCanvas({
           // 모양이 틀리면 아래에서 글자로 붙인다.
         }
       }
-      if (files.length > 0) {
+      // 회사 로고를 고른 채 붙인 이미지는 로고가 된다(로고가 없어 회사명 글자로 그린 자리도 같다).
+      if (files[0] && actions.selected === 'companyLogo') {
+        actions.onLogo(files[0]);
+      } else if (files.length > 0) {
         void actions.addImages(files);
       } else if (text) {
         actions.addText(text);
@@ -749,7 +755,21 @@ export function EditorCanvas({
     }
     event.preventDefault();
     frameRef.current?.focus({ preventScroll: true });
-    void addImages(files, toCard(event.clientX, event.clientY));
+    const at = toCard(event.clientX, event.clientY);
+    const logo = boxes.find((box) => box.id === 'companyLogo');
+    if (
+      files[0] &&
+      logo &&
+      at.x >= logo.x &&
+      at.x <= logo.x + logo.width &&
+      at.y >= logo.y &&
+      at.y <= logo.y + logo.height
+    ) {
+      onSelect('companyLogo');
+      onLogo(files[0]);
+      return;
+    }
+    void addImages(files, at);
   };
 
   const editingLayer = layers.find(
@@ -927,7 +947,8 @@ export function EditorCanvas({
           텍스트 추가
         </Button>
         <span className="text-xs text-gray-500">
-          T 키로 글자, Ctrl+V 나 파일 끌어 놓기로 이미지를 넣습니다. 글자는 두 번 눌러 고칩니다.
+          T 키로 글자, Ctrl+V 나 파일 끌어 놓기로 이미지를 넣습니다. 회사 로고를 고르고 붙이거나
+          로고 자리에 놓으면 로고가 바뀝니다. 글자는 두 번 눌러 고칩니다.
         </span>
       </div>
       {message ? <p className="text-center text-sm text-error">{message}</p> : null}
