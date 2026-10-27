@@ -14,6 +14,8 @@ import {
   type Selection,
   type VariantId,
   isElementId,
+  isLayerRef,
+  layerRef,
 } from '@/lib/card/types';
 import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { resolvePalette, variantOf } from '@/lib/card/variants';
@@ -237,6 +239,9 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   }, [variant]);
 
   const layers = (variant && loaded?.layers[variant]?.[slide]) || NO_LAYERS;
+  const selectedLayer = isLayerRef(selected)
+    ? layers.find((layer) => layerRef(layer.id) === selected)
+    : undefined;
   const setLayers = (next: Layer[], group?: string) =>
     variant && editor.setLayers(variant, slide, next, group);
   /** 이 장의 받기 요청이 상한을 넘으면 알릴 말. */
@@ -386,6 +391,26 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 onEdit={(edit, group) =>
                   isElementId(selected) && editor.setEdits(variant, slide, selected, edit, group)
                 }
+                layer={selectedLayer}
+                onLayerChange={(layer, group) =>
+                  setLayers(
+                    layers.map((item) => (item.id === layer.id ? layer : item)),
+                    group,
+                  )
+                }
+                onLayerRemove={(layer) => {
+                  setLayers(layers.filter((item) => item.id !== layer.id));
+                  setSelected(null);
+                }}
+                onLayerOrder={(layer, step) => {
+                  const index = layers.indexOf(layer);
+                  const target = Math.max(0, Math.min(layers.length - 1, index + step));
+                  if (index >= 0 && target !== index) {
+                    const next = layers.filter((item) => item !== layer);
+                    next.splice(target, 0, layer);
+                    setLayers(next);
+                  }
+                }}
                 onDeselect={() => setSelected(null)}
                 brandColor={loaded.brandColor}
                 onResetBrandColor={editor.resetBrandColor}

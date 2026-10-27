@@ -9,7 +9,12 @@ import {
   type ElementEdit,
   type ElementId,
   type HighlightPreset,
+  type ImageLayer,
+  LAYER_WEIGHTS,
+  type Layer,
   type LogoStyle,
+  type TextLayer,
+  layerLabel,
 } from '@/lib/card/types';
 import { textScale } from '@/lib/card/layout';
 import { fileToDataUrl } from '@/lib/client/image';
@@ -35,6 +40,12 @@ interface PropertiesPanelProps {
   /** `null` 이면 템플릿 원래 배치로 돌린다. */
   onEdit: (edit: ElementEdit | null, group?: string) => void;
   onDeselect: () => void;
+  /** 고른 자유 요소. 있으면 그 요소의 값을 보여 준다. */
+  layer: Layer | undefined;
+  onLayerChange: (layer: Layer, group?: string) => void;
+  onLayerRemove: (layer: Layer) => void;
+  /** 칠하는 순서를 옮긴다. 1 이면 앞으로(위로), -1 이면 뒤로. */
+  onLayerOrder: (layer: Layer, step: number) => void;
   /** AI 탭 내용(`AssistantPanel`). */
   assistant: ReactNode;
 }
@@ -258,6 +269,146 @@ function ElementProperties({
   );
 }
 
+const ALIGNS: { value: TextLayer['align']; label: string }[] = [
+  { value: 'left', label: '왼쪽' },
+  { value: 'center', label: '가운데' },
+  { value: 'right', label: '오른쪽' },
+];
+
+const WEIGHTS = LAYER_WEIGHTS.map((weight) => ({ value: String(weight), label: String(weight) }));
+
+/** 고른 자유 요소의 값. 글자는 크기·굵기·색·정렬·줄 간격, 이미지는 투명도·모서리. 둘 다 자리와 크기, 순서. */
+function LayerProperties({
+  layer,
+  onChange,
+  onRemove,
+  onOrder,
+  onDeselect,
+}: {
+  layer: Layer;
+  onChange: (layer: Layer, group?: string) => void;
+  onRemove: (layer: Layer) => void;
+  onOrder: (layer: Layer, step: number) => void;
+  onDeselect: () => void;
+}) {
+  const setText = (patch: Partial<TextLayer>, group: string) =>
+    layer.kind === 'text' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
+  const setImage = (patch: Partial<ImageLayer>, group: string) =>
+    layer.kind === 'image' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
+  return (
+    <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-bold">{layerLabel(layer)}</h2>
+        <Button type="button" size="sm" variant="ghost" onClick={onDeselect}>
+          선택 해제
+        </Button>
+      </div>
+      <p className="-mt-2 text-xs text-gray-500">
+        {layer.kind === 'text'
+          ? '캔버스에서 두 번 누르면 글자를 바로 고칩니다. 모서리로 폭을 바꾸면 줄이 다시 나뉩니다.'
+          : '모서리로 비율을 지키며 크기를 바꿉니다.'}{' '}
+        Ctrl+C·Ctrl+V 로 복사, Ctrl+D 로 복제, Delete 로 지웁니다.
+      </p>
+
+      {layer.kind === 'text' ? (
+        <div className="flex flex-col gap-3">
+          <OffsetField
+            label="글자 크기(px)"
+            value={layer.fontSize}
+            onChange={(fontSize) => setText({ fontSize: Math.max(8, fontSize) }, 'fontSize')}
+          />
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-gray-700">굵기</span>
+            <Segmented
+              label="굵기"
+              options={WEIGHTS}
+              value={String(layer.fontWeight)}
+              onChange={(weight) => setText({ fontWeight: Number(weight) }, 'fontWeight')}
+            />
+          </div>
+          <ColorField
+            label="글자 색"
+            value={layer.color}
+            onChange={(color) => setText({ color }, 'color')}
+          />
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-gray-700">정렬</span>
+            <Segmented
+              label="정렬"
+              options={ALIGNS}
+              value={layer.align}
+              onChange={(align) => setText({ align }, 'align')}
+            />
+          </div>
+          <PercentSlider
+            label="줄 간격"
+            value={layer.lineHeight}
+            min={80}
+            max={250}
+            onChange={(lineHeight) => setText({ lineHeight }, 'lineHeight')}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <PercentSlider
+            label="투명도"
+            value={layer.opacity}
+            min={0}
+            max={100}
+            onChange={(opacity) => setImage({ opacity }, 'opacity')}
+          />
+          <OffsetField
+            label="모서리 둥글기(px)"
+            value={layer.radius}
+            onChange={(radius) => setImage({ radius: Math.max(0, radius) }, 'radius')}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-3">
+        <OffsetField
+          label="X(px)"
+          value={layer.x}
+          onChange={(x) => onChange({ ...layer, x }, `offset:${layer.id}`)}
+        />
+        <OffsetField
+          label="Y(px)"
+          value={layer.y}
+          onChange={(y) => onChange({ ...layer, y }, `offset:${layer.id}`)}
+        />
+        <OffsetField
+          label="폭(px)"
+          value={layer.width}
+          onChange={(width) =>
+            onChange({ ...layer, width: Math.max(20, width) }, `size:${layer.id}`)
+          }
+        />
+        {layer.kind === 'image' ? (
+          <OffsetField
+            label="높이(px)"
+            value={layer.height}
+            onChange={(height) => setImage({ height: Math.max(1, height) }, 'size')}
+          />
+        ) : null}
+      </div>
+
+      <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+        <span className="flex gap-2">
+          <Button type="button" size="sm" variant="secondary" onClick={() => onOrder(layer, 1)}>
+            앞으로
+          </Button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => onOrder(layer, -1)}>
+            뒤로
+          </Button>
+        </span>
+        <Button type="button" size="sm" variant="ghost" onClick={() => onRemove(layer)}>
+          지우기
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 /**
  * 오른쪽 패널. `속성 | AI` 탭이다. AI 탭은 숨겨도 계속 그려 대화와 진행 중인 요청이 남는다.
  */
@@ -293,7 +444,22 @@ function Properties({
   edit,
   onEdit,
   onDeselect,
+  layer,
+  onLayerChange,
+  onLayerRemove,
+  onLayerOrder,
 }: Omit<PropertiesPanelProps, 'assistant'>) {
+  if (layer) {
+    return (
+      <LayerProperties
+        layer={layer}
+        onChange={onLayerChange}
+        onRemove={onLayerRemove}
+        onOrder={onLayerOrder}
+        onDeselect={onDeselect}
+      />
+    );
+  }
   if (selected) {
     return (
       <ElementProperties
