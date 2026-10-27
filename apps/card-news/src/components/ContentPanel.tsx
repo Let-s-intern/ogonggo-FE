@@ -134,7 +134,7 @@ export function ContentPanel({ content, onChange }: ContentPanelProps) {
           />
         ))}
       </div>
-      <Labeled label="1장 아래 안내 (선택)">
+      <Labeled label="1장 아래 안내 (선택)" field="note">
         {(id) => (
           <Textarea
             id={id}

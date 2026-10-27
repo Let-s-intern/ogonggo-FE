@@ -29,6 +29,8 @@ interface PropertiesPanelProps {
   candidates: ImageCandidates | null;
   /** 캔버스에서 고른 요소. 없으면 공통 설정을 보여 준다. */
   selected: ElementId | null;
+  /** 지금 장에 보이는 섹션의 칩 제목. 섹션 요소 이름에 쓴다. */
+  sectionLabels: string[];
   edit: ElementEdit | undefined;
   /** `null` 이면 템플릿 원래 배치로 돌린다. */
   onEdit: (edit: ElementEdit | null, group?: string) => void;
@@ -176,6 +178,7 @@ function OffsetField({
 /** 고른 요소의 값. 크기, 이동, 숨기기, 처음으로. 제목·목록이면 그 글자 크기도. */
 function ElementProperties({
   id,
+  label,
   edit,
   onEdit,
   onDeselect,
@@ -183,6 +186,7 @@ function ElementProperties({
   onSettingsChange,
 }: {
   id: ElementId;
+  label: string;
   edit: ElementEdit;
   onEdit: (edit: ElementEdit | null, group?: string) => void;
   onDeselect: () => void;
@@ -197,14 +201,14 @@ function ElementProperties({
   return (
     <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold">{elementLabel(id)}</h2>
+        <h2 className="text-base font-bold">{label}</h2>
         <Button type="button" size="sm" variant="ghost" onClick={onDeselect}>
           선택 해제
         </Button>
       </div>
       <p className="-mt-2 text-xs text-gray-500">
         캔버스에서 끌어 옮기고 모서리로 크기를 바꿉니다. 방향키로 1px, Shift 와 함께 10px 씩
-        옮깁니다.
+        옮깁니다. 같은 자리를 다시 누르면 안쪽 요소를, Esc 는 바깥 요소를 고릅니다.
       </p>
 
       {text ? (
@@ -285,6 +289,7 @@ function Properties({
   onLogoChange,
   candidates,
   selected,
+  sectionLabels,
   edit,
   onEdit,
   onDeselect,
@@ -293,6 +298,7 @@ function Properties({
     return (
       <ElementProperties
         id={selected}
+        label={elementLabel(selected, sectionLabels)}
         edit={edit ?? NO_EDIT}
         onEdit={onEdit}
         onDeselect={onDeselect}

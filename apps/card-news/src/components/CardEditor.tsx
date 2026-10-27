@@ -11,6 +11,7 @@ import {
   SLIDE_LABELS,
   type VariantId,
 } from '@/lib/card/types';
+import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { variantOf } from '@/lib/card/variants';
 import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
@@ -160,6 +161,10 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const { kit, error: kitError } = useRenderKit();
   const spec = variant && specs ? specs[variant] : null;
   const built = useBuiltSlides(spec, size, kit);
+  const sectionLabels = useMemo(
+    () => (spec ? visibleSectionLabels(spec, slide) : []),
+    [spec, slide],
+  );
 
   // AI 비서의 도구는 요청 하나 동안 여러 번 불리며 그때마다 최신 화면 값을 본다. 렌더를 기다리지 않게
   // ref 로 넘긴다.
@@ -327,6 +332,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                   }}
                   onEdit={(id, edit, group) => editor.setEdits(variant, slide, id, edit, group)}
                   onFocusText={focusText}
+                  sectionLabels={sectionLabels}
                 />
               ) : (
                 <div className="flex h-80 items-center justify-center rounded-2xl bg-gray-100 text-sm text-gray-400">
@@ -339,6 +345,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 settings={loaded.settings}
                 onSettingsChange={editor.setSettings}
                 selected={selected}
+                sectionLabels={sectionLabels}
                 edit={selected ? loaded.edits[variant]?.[slide]?.[selected] : undefined}
                 onEdit={(edit, group) =>
                   selected && editor.setEdits(variant, slide, selected, edit, group)

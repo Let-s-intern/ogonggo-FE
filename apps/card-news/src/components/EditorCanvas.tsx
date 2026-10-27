@@ -31,7 +31,8 @@ import type { RenderKit } from '@/lib/client/useRenderKit';
  * 맞게 줄인다. 끄는 동안 서버를 부르지 않는다 — 받기만 서버 PNG 다.
  *
  * 요소 상자는 렌더가 단 `data-el` 로 찾아 잰다. 그 위에 투명한 상자를 얹어 고르기·끌기·크기 핸들을
- * 받는다. 이동값은 요소가 놓인 부모 좌표(1080 폭 기준)로 바꿔 저장한다 — 3장 정사각처럼 묶음째
+ * 받는다. 요소 안에 요소가 있으면(흰 판 안 섹션, 섹션 안 칩) 처음 누르면 바깥 요소를 고르고, 같은
+ * 자리를 다시 누르면 한 겹 안쪽을 고른다. Esc 는 한 겹 바깥으로, 맨 바깥에서는 선택을 푼다. 이동값은 요소가 놓인 부모 좌표(1080 폭 기준)로 바꿔 저장한다 — 3장 정사각처럼 묶음째
  * 줄인 장도 손을 따라 움직이게.
  */
 
@@ -100,6 +101,10 @@ function SlideStage({
 
 interface Box {
   id: ElementId;
+  /** 이 요소를 감싼 요소. 없으면 맨 바깥이다. */
+  parent: ElementId | null;
+  /** 감싼 요소 수. 깊을수록 위에 깐다. */
+  depth: number;
   x: number;
   y: number;
   width: number;
@@ -160,9 +165,25 @@ const DRAG_THRESHOLD = 3;
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 5;
 
+/** 요소를 감싼 요소들(가까운 것부터). */
+function ancestorsOf(element: HTMLElement, stage: HTMLElement): ElementId[] {
+  const found: ElementId[] = [];
+  let current = element.parentElement;
+  while (current && current !== stage) {
+    const id = current.dataset.el;
+    if (isElementId(id)) {
+      found.push(id);
+    }
+    current = current.parentElement;
+  }
+  return found;
+}
+
 type Gesture = {
   kind: 'move' | 'resize';
   id: ElementId;
+  /** 끌지 않고 떼면 고를 한 겹 안쪽 요소. */
+  drill: ElementId | null;
   group: string;
   startX: number;
   startY: number;
@@ -186,6 +207,7 @@ export function EditorCanvas({
   onSlideChange,
   onEdit,
   onFocusText,
+  sectionLabels,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
@@ -197,6 +219,8 @@ export function EditorCanvas({
   onSlideChange: (slide: number) => void;
   onEdit: (id: ElementId, edit: ElementEdit | null, group?: string) => void;
   onFocusText: (id: ElementId) => void;
+  /** 이 장에 보이는 섹션의 칩 제목. 섹션 요소 이름에 쓴다. */
+  sectionLabels: string[];
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
@@ -245,25 +269,69 @@ export function EditorCanvas({
         continue;
       }
       const rect = element.getBoundingClientRect();
+      const ancestors = ancestorsOf(element, stage);
       found.push({
         id,
+        parent: ancestors[0] ?? null,
+        depth: ancestors.length,
         x: (rect.left - origin.left) / scale,
         y: (rect.top - origin.top) / scale,
         width: rect.width / scale,
         height: rect.height / scale,
       });
     }
-    // 안에 든 작은 요소(흰 카드 안 로고·목록)가 위에 오도록 큰 것부터 깐다.
-    found.sort((a, b) => b.width * b.height - a.width * a.height);
+    // 안에 든 요소(흰 판 안 섹션, 섹션 안 칩)가 위에 오도록 바깥 것부터, 같은 깊이는 큰 것부터 깐다.
+    found.sort((a, b) => a.depth - b.depth || b.width * b.height - a.width * a.height);
     setBoxes(found);
   }, [current, width, scale]);
 
   const editOf = (id: ElementId) => edits?.[id] ?? NO_EDIT;
+  const parentOf = (id: ElementId) => boxes.find((box) => box.id === id)?.parent ?? null;
+  const label = (id: ElementId) => elementLabel(id, sectionLabels);
 
-  const start = (event: PointerEvent, id: ElementId, kind: Gesture['kind']) => {
+  /**
+   * 누른 자리에서 고를 요소. `hit` 은 누른 상자(가장 안쪽)다. 그 상자와 감싼 요소 가운데 누른 자리를
+   * 덮는 것을 바깥부터 늘어놓고, 고른 요소가 그 안에 있으면 그것을 끈다(떼면 한 겹 안쪽). 고른 요소의
+   * 바깥 요소가 있으면 그 바로 안쪽(고른 요소와 같은 깊이)을, 아니면 맨 바깥을 고른다.
+   */
+  const pick = (
+    event: PointerEvent,
+    hit: ElementId,
+  ): { id: ElementId; drill: ElementId | null } => {
+    const origin = stageRef.current?.getBoundingClientRect();
+    const x = origin ? (event.clientX - origin.left) / scale : 0;
+    const y = origin ? (event.clientY - origin.top) / scale : 0;
+    const covers = (id: ElementId) => {
+      const box = boxes.find((item) => item.id === id);
+      return Boolean(
+        box && x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height,
+      );
+    };
+    const chain: ElementId[] = [];
+    for (let id: ElementId | null = hit; id; id = parentOf(id)) {
+      if (id === hit || covers(id)) {
+        chain.unshift(id);
+      }
+    }
+    const lineage: ElementId[] = [];
+    for (let id: ElementId | null = selected; id; id = parentOf(id)) {
+      lineage.push(id);
+    }
+    const shared = [...chain].reverse().find((id) => lineage.includes(id));
+    if (shared && shared === selected) {
+      return { id: shared, drill: chain[chain.indexOf(shared) + 1] ?? null };
+    }
+    return {
+      id: shared ? (chain[chain.indexOf(shared) + 1] ?? shared) : (chain[0] ?? hit),
+      drill: null,
+    };
+  };
+
+  const start = (event: PointerEvent, hit: ElementId, kind: Gesture['kind']) => {
     event.preventDefault();
     event.stopPropagation();
     frameRef.current?.focus({ preventScroll: true });
+    const { id, drill } = kind === 'move' ? pick(event, hit) : { id: hit, drill: null };
     onSelect(id);
     const element = stageRef.current?.querySelector(`[data-el="${id}"]`);
     const parent = element?.parentElement;
@@ -278,6 +346,7 @@ export function EditorCanvas({
     gesture.current = {
       kind,
       id,
+      drill,
       group: `${kind}:${gestureCount.current}`,
       startX: event.clientX,
       startY: event.clientY,
@@ -325,15 +394,22 @@ export function EditorCanvas({
   const end = () => {
     const g = gesture.current;
     gesture.current = null;
-    // 끌지 않고 누른 글 요소는 왼쪽 문구 칸으로 간다.
-    if (g && !g.moved && g.kind === 'move' && TEXT_ELEMENTS.includes(g.id)) {
-      onFocusText(g.id);
+    if (!g || g.moved || g.kind !== 'move') {
+      return;
+    }
+    // 고른 요소를 다시 누르면 한 겹 안쪽으로 들어간다. 끌지 않고 누른 글 요소는 왼쪽 문구 칸으로 간다.
+    const id = g.drill ?? g.id;
+    if (g.drill) {
+      onSelect(g.drill);
+    }
+    if (TEXT_ELEMENTS.includes(id)) {
+      onFocusText(id);
     }
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
-      onSelect(null);
+      onSelect(selected ? parentOf(selected) : null);
       return;
     }
     if (!selected) {
@@ -400,9 +476,9 @@ export function EditorCanvas({
                   <div
                     key={box.id}
                     role="button"
-                    aria-label={elementLabel(box.id)}
+                    aria-label={label(box.id)}
                     aria-pressed={on}
-                    title={elementLabel(box.id)}
+                    title={label(box.id)}
                     onPointerDown={(event) => start(event, box.id, 'move')}
                     onPointerMove={move}
                     onPointerUp={end}
@@ -444,7 +520,7 @@ export function EditorCanvas({
                     >
                       <div
                         role="button"
-                        aria-label={`${elementLabel(selectedBox.id)} 크기`}
+                        aria-label={`${label(selectedBox.id)} 크기`}
                         data-handle={corner}
                         onPointerDown={(event) => start(event, selectedBox.id, 'resize')}
                         onPointerMove={move}
