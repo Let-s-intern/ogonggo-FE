@@ -29,6 +29,8 @@ export interface ApplyValues {
   role: string;
   link: string;
   survey: string;
+  /** 요청사항·기타. 선택이다. 서버에 칸이 없어 설문 답변 뒤에 붙여 보낸다(`toRequest`). */
+  request: string;
   /** 개인정보 수집·이용 동의. 필수다. */
   agree: boolean;
   /** 마케팅 정보 수신. 선택이다. */
@@ -52,6 +54,7 @@ export const EMPTY_VALUES: ApplyValues = {
   role: '',
   link: '',
   survey: '',
+  request: '',
   agree: false,
   marketing: false,
   website: '',
@@ -135,6 +138,21 @@ export const FIELD_ORDER: (keyof ApplyErrors)[] = [
   'agree',
 ];
 
+/**
+ * 요청사항을 설문 답변 뒤에 붙일 때 쓰는 머리말. 서버의 `promotionAnswer` 는 2000자라
+ * 설문 1490자 + 머리말 9자 + 요청사항 500자로 나눠 화면 `maxLength` 를 건다.
+ */
+const REQUEST_HEADER = '\n\n[요청사항]\n';
+export const SURVEY_MAX_LENGTH = 1490;
+export const REQUEST_MAX_LENGTH = 500;
+
+/** 설문 답변과 요청사항을 `promotionAnswer` 하나로 합친다. 요청사항이 비면 설문 답변만 보낸다. */
+export function promotionAnswerOf(values: ApplyValues): string {
+  const survey = values.survey.trim();
+  const request = values.request.trim();
+  return request ? `${survey}${REQUEST_HEADER}${request}` : survey;
+}
+
 /** 페이지에 처음 들어온 순간의 유입 원본. 서버가 이것으로 유입 경로를 판정한다. */
 export type InflowFields = Pick<
   CreateAdvertisementInquiryRequest,
@@ -163,7 +181,7 @@ export function toRequest(
     promotionChannel: promotionChannelOf(values) ?? 'RECOMMENDATION_REQUESTED',
     hiringJobName: values.role.trim(),
     jobPostingUrl: values.link.trim(),
-    promotionAnswer: values.survey.trim(),
+    promotionAnswer: promotionAnswerOf(values),
     marketingConsent: values.marketing,
     ...inflow,
   };
