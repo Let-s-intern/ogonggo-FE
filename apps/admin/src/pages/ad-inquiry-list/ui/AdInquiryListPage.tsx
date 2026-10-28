@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router';
 import { Callout, Pagination } from '@ogonggo/ui';
 import {
   type AdInquiryListFilters,
@@ -5,6 +6,7 @@ import {
 } from '@/entities/advertisement-inquiry/api/useAdvertisementInquiries';
 import { PageHeader } from '@/widgets/page-header';
 import { AdInquiryCard } from './AdInquiryCard';
+import { AdInquiryFilters } from './AdInquiryFilters';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
 /**
@@ -12,6 +14,24 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  */
 export function AdInquiryListPage() {
   const { get, page, setPage } = useListQuery();
+  const [, setSearchParams] = useSearchParams();
+
+  /**
+   * 필터 여러 개를 한 번에 바꾼다(`오늘` 은 시작·끝 둘이다). 바꾸면 1페이지로 돌아간다.
+   *
+   * 지금 주소(`window.location.search`)에서 출발한다. 렌더 때의 쿼리에서 출발하면 두 필터를 연달아 바꿀 때 두
+   * 번째가 첫 번째를 모르는 쿼리를 써서 앞의 변경이 사라진다. react-router 의 `setSearchParams` 갱신 함수도
+   * 렌더 때의 쿼리를 넘겨 주어 막지 못한다. 주소는 이동하는 즉시 바뀐다.
+   */
+  const changeFilters = (changes: Partial<Record<string, string>>) => {
+    const next = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
+    next.delete('page');
+    setSearchParams(next);
+  };
 
   const filters: AdInquiryListFilters = {
     page,
@@ -31,6 +51,11 @@ export function AdInquiryListPage() {
   return (
     <>
       <PageHeader title="광고 문의" />
+      <AdInquiryFilters
+        filters={filters}
+        total={data?.pageInfo.totalElements}
+        onChange={changeFilters}
+      />
 
       {isError ? (
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>

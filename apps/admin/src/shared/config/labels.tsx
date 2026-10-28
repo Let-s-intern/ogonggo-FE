@@ -342,6 +342,29 @@ export const MEMBER_ROLE_CHANGE_OPTIONS = MEMBER_ROLE_OPTIONS.slice(1);
 export const SIDE_STUDY_KIND_OPTIONS = toOptions('RecruitmentPostType', '종류 전체');
 export const CONCERN_CATEGORY_OPTIONS = toOptions('ConcernCategory', '카테고리 전체');
 
+export const AD_INQUIRY_TYPE_OPTIONS = toOptions('AdvertisementInquiryType', '문의 유형 전체');
+export const AD_INQUIRY_STATUS_OPTIONS = toOptions('AdvertisementInquiryStatus', '처리 상태 전체');
+export const AD_INQUIRY_MEMBER_TYPE_OPTIONS = toOptions(
+  'AdvertisementInquiryMemberType',
+  '회원 구분 전체',
+);
+export const AD_INQUIRY_INFLOW_CHANNEL_OPTIONS = toOptions(
+  'AdvertisementInquiryInflowChannel',
+  '유입 경로 전체',
+);
+export const AD_INQUIRY_COMPANY_NAME_SOURCE_OPTIONS = toOptions(
+  'AdvertisementInquiryCompanyNameSource',
+  '회사명 입력 방식 전체',
+);
+/**
+ * 캠페인 코드. 서버 enum 이 아니라 문자열이라 카탈로그에 없다. 서버가 진입 페이지로 정하는 값이고 지금은
+ * `/biz` 의 `launch_free_promo` 하나다(`AdvertisementInquiryService.LAUNCH_FREE_PROMO_CAMPAIGN`). 캠페인이 늘면 여기에 더한다.
+ */
+export const AD_INQUIRY_CAMPAIGN_OPTIONS = [
+  { value: '', label: '캠페인 전체' },
+  { value: 'launch_free_promo', label: 'launch_free_promo' },
+];
+
 export const JOINED_WITHIN_OPTIONS = [
   { value: '', label: '가입 기간 전체' },
   { value: '7d', label: '최근 7일' },
