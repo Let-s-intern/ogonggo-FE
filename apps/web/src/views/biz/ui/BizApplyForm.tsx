@@ -17,6 +17,7 @@ import {
   toRequest,
   validateApply,
 } from '../model/apply';
+import { captureInflow, readInflow } from '../model/inflow';
 import { BizApplyDone } from './BizApplyDone';
 import { BizChannelPicker } from './BizChannelPicker';
 import { BizCompanyNameField } from './BizCompanyNameField';
@@ -38,6 +39,9 @@ export function BizApplyForm() {
   const accountState = useMyAccount();
   /** 미리 채우기는 계정이 처음 읽혔을 때 한 번만 한다. 그 뒤로 지운 칸을 다시 채우지 않는다. */
   const prefillDone = useRef(false);
+
+  // 첫 진입의 UTM·referrer 를 이 탭에 한 번만 남긴다. 제출 때 `readInflow` 가 꺼낸다.
+  useEffect(() => captureInflow(), []);
 
   useEffect(() => {
     if (accountState.kind !== 'ready' || prefillDone.current) {
@@ -69,7 +73,7 @@ export function BizApplyForm() {
     }
     setState('sending');
     try {
-      await createAdvertisementInquiry(toRequest(values, {}));
+      await createAdvertisementInquiry(toRequest(values, readInflow()));
       setDoneEmail(values.email.trim());
     } catch {
       setState('error');
@@ -77,7 +81,12 @@ export function BizApplyForm() {
   };
 
   if (doneEmail !== null) {
-    return <BizApplyDone email={doneEmail} />;
+    return (
+      <BizApplyDone
+        email={doneEmail}
+        role={accountState.kind === 'ready' ? accountState.account.role : undefined}
+      />
+    );
   }
 
   return (
