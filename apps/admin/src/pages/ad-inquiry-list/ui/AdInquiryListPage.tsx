@@ -4,6 +4,7 @@ import {
   useAdInquiryList,
 } from '@/entities/advertisement-inquiry/api/useAdvertisementInquiries';
 import { PageHeader } from '@/widgets/page-header';
+import { AdInquiryCard } from './AdInquiryCard';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
 /**
@@ -42,8 +43,8 @@ export function AdInquiryListPage() {
           ) : (
             <ul className="flex flex-col gap-3">
               {items.map((inquiry) => (
-                <li key={inquiry.id} className="rounded-lg border border-gray-200 bg-white p-5">
-                  {inquiry.companyName}
+                <li key={inquiry.id}>
+                  <AdInquiryCard inquiry={inquiry} />
                 </li>
               ))}
             </ul>

@@ -2,6 +2,8 @@ import { Badge, type BadgeProps } from '@ogonggo/ui';
 import {
   enumLabel,
   enumOptions,
+  type AdminAdvertisementInquiryResponseMemberType as AdInquiryMemberType,
+  type AdminAdvertisementInquiryResponseStatus as AdInquiryStatus,
   type AdminConcernSummaryResponseCategory as ConcernCategory,
   type AdminGeneralMemberResponseInflowSource as InflowSource,
   type AdminGeneralMemberResponseRole as MemberRole,
@@ -100,6 +102,14 @@ const INFLOW_SOURCE_TONE: Record<InflowSource, Tone> = {
   OGONGGO: 'success',
 };
 
+/** 광고 문의 처리 상태. 새로 들어와 손대야 하는 `접수` 를 주황으로 띄운다. */
+const AD_INQUIRY_STATUS_TONE: Record<AdInquiryStatus, Tone> = {
+  RECEIVED: 'urgent',
+  CONTACTED: 'main',
+  EXECUTED: 'success',
+  REJECTED: 'neutral',
+};
+
 /** 색이 매핑에 없으면 회색이다. 라벨은 카탈로그에 없으면 원래 값 그대로다(`enumLabel`). */
 function renderBadge(tone: Tone | undefined, label: string) {
   return <Badge tone={tone ?? 'neutral'}>{label}</Badge>;
@@ -146,6 +156,25 @@ export const InflowSourceBadge = ({ value }: { value?: InflowSource | null }) =>
     <span className="text-gray-400">-</span>
   ) : (
     renderBadge(INFLOW_SOURCE_TONE[value], enumLabel('UserInflowSource', value))
+  );
+
+export const AdInquiryStatusBadge = ({ value }: { value: AdInquiryStatus }) =>
+  renderBadge(AD_INQUIRY_STATUS_TONE[value], enumLabel('AdvertisementInquiryStatus', value));
+
+/**
+ * 광고 문의의 회원 구분(PRD `어드민 화면`). 기업 회원은 파랑, 일반 회원은 회색, 비회원은 테두리만이다.
+ * 비회원 모양은 `Badge` 톤에 없어 여기서 그린다.
+ */
+export const AdInquiryMemberTypeBadge = ({ value }: { value: AdInquiryMemberType }) =>
+  value === 'GUEST' ? (
+    <span className="inline-flex items-center rounded-sm border border-gray-300 px-2 py-[3px] text-sm font-medium text-gray-500">
+      {enumLabel('AdvertisementInquiryMemberType', value)}
+    </span>
+  ) : (
+    renderBadge(
+      value === 'COMPANY' ? 'main' : 'neutral',
+      enumLabel('AdvertisementInquiryMemberType', value),
+    )
   );
 
 export const sideStudyKindLabel = (value: string): string =>
