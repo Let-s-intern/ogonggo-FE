@@ -7,6 +7,10 @@ export interface SignUpFieldProps {
   required?: boolean;
   /** 칸 아래 빨간 문구. */
   error?: string | null;
+  /** 칸 아래 회색 안내. 오류가 있으면 오류만 보인다. */
+  hint?: string;
+  /** 라벨 줄 오른쪽 끝에 붙는 것(기업 가입의 `해외 기업` 체크박스). */
+  labelAside?: ReactNode;
   children: ReactNode;
 }
 
@@ -21,19 +25,33 @@ export function SignUpField({
   htmlFor,
   required = false,
   error,
+  hint,
+  labelAside,
   children,
 }: SignUpFieldProps) {
+  const labelElement = (
+    <label htmlFor={htmlFor} className="text-base font-medium text-gray-900">
+      {label}
+      {required ? <span className="pl-1 text-blue-500">*</span> : null}
+    </label>
+  );
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-base font-medium text-gray-900">
-        {label}
-        {required ? <span className="pl-1 text-blue-500">*</span> : null}
-      </label>
+      {labelAside ? (
+        <div className="flex items-center justify-between gap-3">
+          {labelElement}
+          {labelAside}
+        </div>
+      ) : (
+        labelElement
+      )}
       {children}
       {error ? (
         <p id={`${htmlFor}-error`} className="text-sm text-error">
           {error}
         </p>
+      ) : hint ? (
+        <p className="text-sm text-gray-500">{hint}</p>
       ) : null}
     </div>
   );
