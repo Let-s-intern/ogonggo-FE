@@ -8,7 +8,7 @@ import type { ListAdvertisementInquiriesCompanyNameSource } from './listAdvertis
 import type { ListAdvertisementInquiriesInflowChannel } from './listAdvertisementInquiriesInflowChannel';
 import type { ListAdvertisementInquiriesInquiryType } from './listAdvertisementInquiriesInquiryType';
 import type { ListAdvertisementInquiriesMemberType } from './listAdvertisementInquiriesMemberType';
-import type { ListAdvertisementInquiriesStatus } from './listAdvertisementInquiriesStatus';
+import type { ListAdvertisementInquiriesStatusItem } from './listAdvertisementInquiriesStatusItem';
 
 export type ListAdvertisementInquiriesParams = {
 /**
@@ -33,15 +33,7 @@ inquiryType?: ListAdvertisementInquiriesInquiryType;
  * @maxLength 50
  */
 campaignCode?: string;
-/**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `RECEIVED` | 1 | 접수 |
- * | `CONTACTED` | 2 | 연락함 |
- * | `EXECUTED` | 3 | 집행 완료 |
- * | `REJECTED` | 4 | 반려 |
- */
-status?: ListAdvertisementInquiriesStatus;
+status?: ListAdvertisementInquiriesStatusItem[];
 /**
  * | 값 | code | 설명 |
  * | --- | --- | --- |
