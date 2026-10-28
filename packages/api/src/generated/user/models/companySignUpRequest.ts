@@ -4,6 +4,10 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { CompanySignUpRequestBusinessNumberType } from './companySignUpRequestBusinessNumberType';
+import type { CompanySignUpRequestCompanyType } from './companySignUpRequestCompanyType';
+import type { CompanySignUpRequestEmployeeCountRange } from './companySignUpRequestEmployeeCountRange';
+import type { CompanySignUpRequestManagerDuty } from './companySignUpRequestManagerDuty';
 
 export interface CompanySignUpRequest {
   /**
@@ -26,4 +30,96 @@ export interface CompanySignUpRequest {
      * @maxLength 100
      */
   managerName: string;
+  /**
+     * 사업자 번호 종류. 해외 기업이면 OVERSEAS이고 businessNumber를 보내지 않는다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `BUSINESS_REGISTRATION` | 1 | 사업자등록번호 |
+     * | `CORPORATE_REGISTRATION` | 2 | 법인등록번호 |
+     * | `OVERSEAS` | 3 | 해외 기업 |
+     */
+  businessNumberType?: CompanySignUpRequestBusinessNumberType;
+  /**
+     * 하이픈 없이 숫자만. 사업자등록번호는 10자리, 법인등록번호는 13자리다. businessNumberType 없이 보내거나 종류와 자릿수가 맞지 않으면 400이다.
+     * @minLength 0
+     * @maxLength 13
+     * @pattern ^[0-9]+$
+     */
+  businessNumber?: string;
+  /**
+     * 기업 형태
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `LARGE` | 1 | 대기업 |
+     * | `MID_SIZED` | 2 | 중견기업 |
+     * | `SMALL` | 3 | 중소기업 |
+     * | `STARTUP` | 4 | 스타트업 |
+     * | `FOREIGN` | 5 | 외국계 |
+     * | `PUBLIC` | 6 | 공공기관·공기업 |
+     * | `NON_PROFIT` | 7 | 비영리·단체 |
+     */
+  companyType?: CompanySignUpRequestCompanyType;
+  /**
+     * 직원 수 구간
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `RANGE_1_9` | 1 | 1~9명 |
+     * | `RANGE_10_49` | 2 | 10~49명 |
+     * | `RANGE_50_99` | 3 | 50~99명 |
+     * | `RANGE_100_299` | 4 | 100~299명 |
+     * | `RANGE_300_999` | 5 | 300~999명 |
+     * | `RANGE_1000_PLUS` | 6 | 1,000명 이상 |
+     */
+  employeeCountRange?: CompanySignUpRequestEmployeeCountRange;
+  /**
+     * 산업. 공고의 industry와 같은 문자열이다.
+     * @minLength 0
+     * @maxLength 100
+     */
+  industry?: string;
+  /**
+     * 주소
+     * @minLength 0
+     * @maxLength 255
+     */
+  address?: string;
+  /**
+     * 홈페이지. 스킴을 포함한 URL이다.
+     * @minLength 0
+     * @maxLength 2048
+     */
+  homepageUrl?: string;
+  /**
+     * 담당자 직책
+     * @minLength 0
+     * @maxLength 50
+     */
+  managerTitle?: string;
+  /**
+     * 담당 업무
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `HR` | 1 | 인사·채용 |
+     * | `EXECUTIVE` | 2 | 대표·경영 |
+     * | `MARKETING` | 3 | 마케팅·홍보 |
+     * | `OTHER` | 4 | 기타 |
+     */
+  managerDuty?: CompanySignUpRequestManagerDuty;
+  /**
+     * 담당자 연락처. 숫자와 하이픈(-)만 받는다.
+     * @minLength 0
+     * @maxLength 20
+     * @pattern ^[0-9-]+$
+     */
+  managerPhone?: string;
+  /**
+     * 추천인
+     * @minLength 0
+     * @maxLength 100
+     */
+  recommender?: string;
 }

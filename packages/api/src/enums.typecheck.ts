@@ -107,6 +107,10 @@ export const enumCatalogAssertions: true[] = [
     EnumValue<'AdvertisementInquiryPromotionChannel'>,
     User.CreateAdvertisementInquiryRequestPromotionChannel
   >,
+  {} as Equal<EnumValue<'CompanyBusinessNumberType'>, User.CompanySignUpRequestBusinessNumberType>,
+  {} as Equal<EnumValue<'CompanyType'>, User.CompanySignUpRequestCompanyType>,
+  {} as Equal<EnumValue<'CompanyEmployeeCountRange'>, User.CompanySignUpRequestEmployeeCountRange>,
+  {} as Equal<EnumValue<'CompanyManagerDuty'>, User.CompanySignUpRequestManagerDuty>,
   // 본문 칸은 생성 타입이 없다(응답은 camelCase 필드). `contentFieldLabel` 이 칸 이름을 바꿔 찾는
   // 값이 카탈로그와 같은지 본다. 채용공고 일곱 칸, 부트캠프 두 칸.
   {} as Equal<UpperSnake<(typeof JOB_CONTENT_FIELDS)[number]>, EnumValue<'JobContentField'>>,
