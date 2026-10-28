@@ -2,6 +2,8 @@ import { Badge, type BadgeProps } from '@ogonggo/ui';
 import {
   enumLabel,
   enumOptions,
+  type AdminAdvertisementInquiryResponseMemberType as AdInquiryMemberType,
+  type AdminAdvertisementInquiryResponseStatus as AdInquiryStatus,
   type AdminConcernSummaryResponseCategory as ConcernCategory,
   type AdminGeneralMemberResponseInflowSource as InflowSource,
   type AdminGeneralMemberResponseRole as MemberRole,
@@ -100,6 +102,14 @@ const INFLOW_SOURCE_TONE: Record<InflowSource, Tone> = {
   OGONGGO: 'success',
 };
 
+/** 광고 문의 처리 상태. 새로 들어와 손대야 하는 `접수` 를 주황으로 띄운다. */
+const AD_INQUIRY_STATUS_TONE: Record<AdInquiryStatus, Tone> = {
+  RECEIVED: 'urgent',
+  CONTACTED: 'main',
+  EXECUTED: 'success',
+  REJECTED: 'neutral',
+};
+
 /** 색이 매핑에 없으면 회색이다. 라벨은 카탈로그에 없으면 원래 값 그대로다(`enumLabel`). */
 function renderBadge(tone: Tone | undefined, label: string) {
   return <Badge tone={tone ?? 'neutral'}>{label}</Badge>;
@@ -146,6 +156,25 @@ export const InflowSourceBadge = ({ value }: { value?: InflowSource | null }) =>
     <span className="text-gray-400">-</span>
   ) : (
     renderBadge(INFLOW_SOURCE_TONE[value], enumLabel('UserInflowSource', value))
+  );
+
+export const AdInquiryStatusBadge = ({ value }: { value: AdInquiryStatus }) =>
+  renderBadge(AD_INQUIRY_STATUS_TONE[value], enumLabel('AdvertisementInquiryStatus', value));
+
+/**
+ * 광고 문의의 회원 구분(PRD `어드민 화면`). 기업 회원은 파랑, 일반 회원은 회색, 비회원은 테두리만이다.
+ * 비회원 모양은 `Badge` 톤에 없어 여기서 그린다.
+ */
+export const AdInquiryMemberTypeBadge = ({ value }: { value: AdInquiryMemberType }) =>
+  value === 'GUEST' ? (
+    <span className="inline-flex items-center rounded-sm border border-gray-300 px-2 py-[3px] text-sm font-medium text-gray-500">
+      {enumLabel('AdvertisementInquiryMemberType', value)}
+    </span>
+  ) : (
+    renderBadge(
+      value === 'COMPANY' ? 'main' : 'neutral',
+      enumLabel('AdvertisementInquiryMemberType', value),
+    )
   );
 
 export const sideStudyKindLabel = (value: string): string =>
@@ -312,6 +341,29 @@ export const MEMBER_ROLE_OPTIONS = toOptions('UserRole', '역할 전체', ['COMP
 export const MEMBER_ROLE_CHANGE_OPTIONS = MEMBER_ROLE_OPTIONS.slice(1);
 export const SIDE_STUDY_KIND_OPTIONS = toOptions('RecruitmentPostType', '종류 전체');
 export const CONCERN_CATEGORY_OPTIONS = toOptions('ConcernCategory', '카테고리 전체');
+
+export const AD_INQUIRY_TYPE_OPTIONS = toOptions('AdvertisementInquiryType', '문의 유형 전체');
+export const AD_INQUIRY_STATUS_OPTIONS = toOptions('AdvertisementInquiryStatus', '처리 상태 전체');
+export const AD_INQUIRY_MEMBER_TYPE_OPTIONS = toOptions(
+  'AdvertisementInquiryMemberType',
+  '회원 구분 전체',
+);
+export const AD_INQUIRY_INFLOW_CHANNEL_OPTIONS = toOptions(
+  'AdvertisementInquiryInflowChannel',
+  '유입 경로 전체',
+);
+export const AD_INQUIRY_COMPANY_NAME_SOURCE_OPTIONS = toOptions(
+  'AdvertisementInquiryCompanyNameSource',
+  '회사명 입력 방식 전체',
+);
+/**
+ * 캠페인 코드. 서버 enum 이 아니라 문자열이라 카탈로그에 없다. 서버가 진입 페이지로 정하는 값이고 지금은
+ * `/biz` 의 `launch_free_promo` 하나다(`AdvertisementInquiryService.LAUNCH_FREE_PROMO_CAMPAIGN`). 캠페인이 늘면 여기에 더한다.
+ */
+export const AD_INQUIRY_CAMPAIGN_OPTIONS = [
+  { value: '', label: '캠페인 전체' },
+  { value: 'launch_free_promo', label: 'launch_free_promo' },
+];
 
 export const JOINED_WITHIN_OPTIONS = [
   { value: '', label: '가입 기간 전체' },

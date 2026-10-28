@@ -34,6 +34,8 @@ import type {
   ChangeAdminConcernVisibilityRequest,
   ChangeAdminJobVisibilityRequest,
   ChangeAdminRecruitmentPostVisibilityRequest,
+  ChangeAdvertisementInquiryMemoRequest,
+  ChangeAdvertisementInquiryStatusRequest,
   ChangeGeneralMemberRoleRequest,
   CreateAdminAnnouncementRequest,
   CreateNotificationBatchRequest,
@@ -42,6 +44,7 @@ import type {
   GetAiBootcampParams,
   GetAiJobParams,
   GetWork24ApiResponseParams,
+  ListAdvertisementInquiriesParams,
   ListAiJobAnalysisTargetsParams,
   ListAiLetsCareerContentTagTargetsParams,
   ListAnnouncementsParams,
@@ -55,6 +58,8 @@ import type {
   ListServiceFeedbacksParams,
   ReplaceAdminLetsCareerContentRecommendWeightsRequest,
   ReplaceAdminTodayJobsRequest,
+  SuccessResponseAdminAdvertisementInquiryResponse,
+  SuccessResponseAdminAdvertisementInquiryTodayCountResponse,
   SuccessResponseAdminAnnouncementDetailResponse,
   SuccessResponseAdminBootcampDetailResponse,
   SuccessResponseAdminConcernDetailResponse,
@@ -65,6 +70,7 @@ import type {
   SuccessResponseAdminNotificationBatchCreatedResponse,
   SuccessResponseAdminNotificationBatchResultResponse,
   SuccessResponseAdminNotificationRecentResultsResponse,
+  SuccessResponseAdminWelcomeEmailResendResponse,
   SuccessResponseAiBootcampLookupResponse,
   SuccessResponseAiBootcampRegistrationResponse,
   SuccessResponseAiJobLookupResponse,
@@ -76,6 +82,7 @@ import type {
   SuccessResponseListAiLetsCareerContentResponse,
   SuccessResponseListAiLetsCareerContentTagTargetResponse,
   SuccessResponseMapStringListAdminEnumOptionResponse,
+  SuccessResponsePageResponseAdminAdvertisementInquiryResponse,
   SuccessResponsePageResponseAdminAnnouncementSummaryResponse,
   SuccessResponsePageResponseAdminBootcampSummaryResponse,
   SuccessResponsePageResponseAdminCompanyMemberResponse,
@@ -2093,6 +2100,125 @@ export const useCreateNotificationBatch = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCreateNotificationBatchMutationOptions(options), queryClient);
+    }
+
+export type createWelcomeEmailResendResponse201 = {
+  data: SuccessResponseAdminWelcomeEmailResendResponse
+  status: 201
+}
+
+export type createWelcomeEmailResendResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createWelcomeEmailResendResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type createWelcomeEmailResendResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type createWelcomeEmailResendResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createWelcomeEmailResendResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createWelcomeEmailResendResponseSuccess = (createWelcomeEmailResendResponse201) & {
+  headers: Headers;
+};
+export type createWelcomeEmailResendResponseError = (createWelcomeEmailResendResponse400 | createWelcomeEmailResendResponse401 | createWelcomeEmailResendResponse403 | createWelcomeEmailResendResponse404 | createWelcomeEmailResendResponse409) & {
+  headers: Headers;
+};
+
+export type createWelcomeEmailResendResponse = (createWelcomeEmailResendResponseSuccess | createWelcomeEmailResendResponseError)
+
+export const getCreateWelcomeEmailResendUrl = (userId: number,) => {
+
+
+
+
+  return `/api/v1/admin/general-members/${userId}/welcome-email-resends`
+}
+
+/**
+ *
+ *             오공고 일반 회원 ID로 현재 프로필의 가입 이메일에 sign_up_welcome 메일을 다시 적재합니다.
+ *             USER·MENTOR·ADMIN 역할의 활성 일반 회원만 대상이며 수신 이메일·제목·본문은 입력받지 않습니다.
+ *             기존 발송 이력이 없어도 요청할 수 있고 기존 결과는 변경하지 않습니다. 요청마다 새 발송이므로 반복 호출하면 중복 수신할 수 있습니다.
+ *             201은 새 발송 기록의 저장 완료입니다. 실제 SMTP 발송은 사용자 API dispatcher가 24시간 안에 처리하며 sentAt은 최근 알림 결과에서 확인합니다.
+ *             응답의 notificationId로 GET /api/v1/admin/notifications/recent-results 항목을 식별할 수 있습니다. batchId는 생성하지 않습니다.
+ * @summary 가입 환영 이메일 재발송
+ */
+export const createWelcomeEmailResend = async (userId: number, options?: Parameters<typeof httpClient>[1]): Promise<createWelcomeEmailResendResponse> => {
+
+  return httpClient<createWelcomeEmailResendResponse>(getCreateWelcomeEmailResendUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateWelcomeEmailResendMutationKey = () => ['createWelcomeEmailResend'] as const;
+
+export const getCreateWelcomeEmailResendMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWelcomeEmailResend>>, TError,CreateWelcomeEmailResendMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWelcomeEmailResend>>, TError,CreateWelcomeEmailResendMutationVariables, TContext> => {
+
+const mutationKey = getCreateWelcomeEmailResendMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWelcomeEmailResend>>, CreateWelcomeEmailResendMutationVariables> = (props) => {
+          const {userId} = props ?? {};
+
+          return  createWelcomeEmailResend(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWelcomeEmailResendMutationResult = NonNullable<Awaited<ReturnType<typeof createWelcomeEmailResend>>>
+
+    export type CreateWelcomeEmailResendMutationError = ErrorResponse
+    export type CreateWelcomeEmailResendMutationVariables = {userId: number}
+
+    /**
+ * @summary 가입 환영 이메일 재발송
+ */
+export const useCreateWelcomeEmailResend = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWelcomeEmailResend>>, TError,CreateWelcomeEmailResendMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createWelcomeEmailResend>>,
+        TError,
+        CreateWelcomeEmailResendMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateWelcomeEmailResendMutationOptions(options), queryClient);
     }
 
 export type listAnnouncementsResponse200 = {
@@ -4218,6 +4344,223 @@ export const useUpdateAnnouncement = <TError = ErrorResponse,
       return useMutation(getUpdateAnnouncementMutationOptions(options), queryClient);
     }
 
+export type updateAdvertisementInquiryStatusResponse200 = {
+  data: SuccessResponseAdminAdvertisementInquiryResponse
+  status: 200
+}
+
+export type updateAdvertisementInquiryStatusResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateAdvertisementInquiryStatusResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateAdvertisementInquiryStatusResponseSuccess = (updateAdvertisementInquiryStatusResponse200) & {
+  headers: Headers;
+};
+export type updateAdvertisementInquiryStatusResponseError = (updateAdvertisementInquiryStatusResponse400 | updateAdvertisementInquiryStatusResponse404) & {
+  headers: Headers;
+};
+
+export type updateAdvertisementInquiryStatusResponse = (updateAdvertisementInquiryStatusResponseSuccess | updateAdvertisementInquiryStatusResponseError)
+
+export const getUpdateAdvertisementInquiryStatusUrl = (inquiryId: number,) => {
+
+
+
+
+  return `/api/v1/admin/advertisement-inquiries/${inquiryId}/status`
+}
+
+/**
+ *
+ *             영업이 문의를 어디까지 처리했는지 바꿉니다(RECEIVED 접수, CONTACTED 연락함, EXECUTED 집행 완료, REJECTED 반려).
+ *             잘못 바꾼 상태를 되돌릴 수 있도록 어느 상태로든 바꿀 수 있고, 같은 상태를 보내면 그대로 성공합니다.
+ *             변경 이력은 남기지 않습니다. 바뀐 문의 전체를 반환합니다.
+ * @summary 광고 문의 처리 상태 변경
+ */
+export const updateAdvertisementInquiryStatus = async (inquiryId: number,
+    changeAdvertisementInquiryStatusRequest: ChangeAdvertisementInquiryStatusRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateAdvertisementInquiryStatusResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateAdvertisementInquiryStatusResponse>(getUpdateAdvertisementInquiryStatusUrl(inquiryId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(changeAdvertisementInquiryStatusRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdvertisementInquiryStatusMutationKey = () => ['updateAdvertisementInquiryStatus'] as const;
+
+export const getUpdateAdvertisementInquiryStatusMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementInquiryStatus>>, TError,UpdateAdvertisementInquiryStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementInquiryStatus>>, TError,UpdateAdvertisementInquiryStatusMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdvertisementInquiryStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdvertisementInquiryStatus>>, UpdateAdvertisementInquiryStatusMutationVariables> = (props) => {
+          const {inquiryId,data} = props ?? {};
+
+          return  updateAdvertisementInquiryStatus(inquiryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdvertisementInquiryStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdvertisementInquiryStatus>>>
+    export type UpdateAdvertisementInquiryStatusMutationBody = ChangeAdvertisementInquiryStatusRequest
+    export type UpdateAdvertisementInquiryStatusMutationError = ErrorResponse
+    export type UpdateAdvertisementInquiryStatusMutationVariables = {inquiryId: number;data: ChangeAdvertisementInquiryStatusRequest}
+
+    /**
+ * @summary 광고 문의 처리 상태 변경
+ */
+export const useUpdateAdvertisementInquiryStatus = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementInquiryStatus>>, TError,UpdateAdvertisementInquiryStatusMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdvertisementInquiryStatus>>,
+        TError,
+        UpdateAdvertisementInquiryStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdvertisementInquiryStatusMutationOptions(options), queryClient);
+    }
+
+export type updateAdvertisementInquiryMemoResponse200 = {
+  data: SuccessResponseAdminAdvertisementInquiryResponse
+  status: 200
+}
+
+export type updateAdvertisementInquiryMemoResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateAdvertisementInquiryMemoResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateAdvertisementInquiryMemoResponseSuccess = (updateAdvertisementInquiryMemoResponse200) & {
+  headers: Headers;
+};
+export type updateAdvertisementInquiryMemoResponseError = (updateAdvertisementInquiryMemoResponse400 | updateAdvertisementInquiryMemoResponse404) & {
+  headers: Headers;
+};
+
+export type updateAdvertisementInquiryMemoResponse = (updateAdvertisementInquiryMemoResponseSuccess | updateAdvertisementInquiryMemoResponseError)
+
+export const getUpdateAdvertisementInquiryMemoUrl = (inquiryId: number,) => {
+
+
+
+
+  return `/api/v1/admin/advertisement-inquiries/${inquiryId}/memo`
+}
+
+/**
+ *
+ *             영업 담당자가 적는 메모를 통째로 바꿉니다. 2000자 이하이며 null이거나 공백만 있으면 메모를 지웁니다.
+ *             바뀐 문의 전체를 반환합니다.
+ * @summary 광고 문의 메모 저장
+ */
+export const updateAdvertisementInquiryMemo = async (inquiryId: number,
+    changeAdvertisementInquiryMemoRequest: ChangeAdvertisementInquiryMemoRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateAdvertisementInquiryMemoResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateAdvertisementInquiryMemoResponse>(getUpdateAdvertisementInquiryMemoUrl(inquiryId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(changeAdvertisementInquiryMemoRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdvertisementInquiryMemoMutationKey = () => ['updateAdvertisementInquiryMemo'] as const;
+
+export const getUpdateAdvertisementInquiryMemoMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementInquiryMemo>>, TError,UpdateAdvertisementInquiryMemoMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementInquiryMemo>>, TError,UpdateAdvertisementInquiryMemoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdvertisementInquiryMemoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdvertisementInquiryMemo>>, UpdateAdvertisementInquiryMemoMutationVariables> = (props) => {
+          const {inquiryId,data} = props ?? {};
+
+          return  updateAdvertisementInquiryMemo(inquiryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdvertisementInquiryMemoMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdvertisementInquiryMemo>>>
+    export type UpdateAdvertisementInquiryMemoMutationBody = ChangeAdvertisementInquiryMemoRequest
+    export type UpdateAdvertisementInquiryMemoMutationError = ErrorResponse
+    export type UpdateAdvertisementInquiryMemoMutationVariables = {inquiryId: number;data: ChangeAdvertisementInquiryMemoRequest}
+
+    /**
+ * @summary 광고 문의 메모 저장
+ */
+export const useUpdateAdvertisementInquiryMemo = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementInquiryMemo>>, TError,UpdateAdvertisementInquiryMemoMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdvertisementInquiryMemo>>,
+        TError,
+        UpdateAdvertisementInquiryMemoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdvertisementInquiryMemoMutationOptions(options), queryClient);
+    }
+
 export type listAiLetsCareerContentsResponse200 = {
   data: SuccessResponseListAiLetsCareerContentResponse
   status: 200
@@ -5089,7 +5432,7 @@ export const getGetRecentNotificationResultsUrl = () => {
 }
 
 /**
- * 발송 상태가 최근 변경된 알림 최대 100건을 수정 시각·ID 내림차순으로 반환합니다. 수신 주소와 발송 payload는 포함하지 않습니다.
+ * 최근 생성된 알림 최대 100건을 생성 시각·ID 내림차순으로 반환합니다. 상태가 바뀌어도 생성 순서를 유지하며 수신 주소와 발송 payload는 포함하지 않습니다.
  * @summary 최근 알림 발송 결과 조회
  */
 export const getRecentNotificationResults = async ( options?: Parameters<typeof httpClient>[1]): Promise<getRecentNotificationResultsResponse> => {
@@ -6536,6 +6879,254 @@ export function useListBootcamps<TData = Awaited<ReturnType<typeof listBootcamps
 }
 
 
+
+
+
+
+
+export type listAdvertisementInquiriesResponse200 = {
+  data: SuccessResponsePageResponseAdminAdvertisementInquiryResponse
+  status: 200
+}
+
+export type listAdvertisementInquiriesResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listAdvertisementInquiriesResponseSuccess = (listAdvertisementInquiriesResponse200) & {
+  headers: Headers;
+};
+export type listAdvertisementInquiriesResponseError = (listAdvertisementInquiriesResponse400) & {
+  headers: Headers;
+};
+
+export type listAdvertisementInquiriesResponse = (listAdvertisementInquiriesResponseSuccess | listAdvertisementInquiriesResponseError)
+
+export const getListAdvertisementInquiriesUrl = (params?: ListAdvertisementInquiriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/advertisement-inquiries?${stringifiedParams}` : `/api/v1/admin/advertisement-inquiries`
+}
+
+/**
+ *
+ *             기업 담당자가 남긴 광고 문의를 최근에 들어온 순으로 반환합니다. 정렬은 고를 수 없습니다.
+ *             문의 유형·캠페인 코드·처리 상태·회원 구분·유입 경로·회사명 입력 방식으로 거를 수 있고 필터는 모두 AND로 묶입니다.
+ *             createdFrom·createdTo는 접수일(YYYY-MM-DD, 한국 시간) 범위이며 두 날짜를 모두 포함합니다.
+ *             값을 보내지 않거나 빈 값을 보내면 그 조건을 적용하지 않습니다. 현재 조건의 건수는 pageInfo.totalElements입니다.
+ * @summary 광고 문의 목록 조회
+ */
+export const listAdvertisementInquiries = async (params?: ListAdvertisementInquiriesParams, options?: Parameters<typeof httpClient>[1]): Promise<listAdvertisementInquiriesResponse> => {
+
+  return httpClient<listAdvertisementInquiriesResponse>(getListAdvertisementInquiriesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdvertisementInquiriesQueryKey = (params?: ListAdvertisementInquiriesParams,) => {
+    return [
+    `/api/v1/admin/advertisement-inquiries`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAdvertisementInquiriesQueryOptions = <TData = Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError = ErrorResponse>(params?: ListAdvertisementInquiriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdvertisementInquiriesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdvertisementInquiries>>> = ({ signal }) => listAdvertisementInquiries(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAdvertisementInquiriesQueryResult = NonNullable<Awaited<ReturnType<typeof listAdvertisementInquiries>>>
+export type ListAdvertisementInquiriesQueryError = ErrorResponse
+
+
+export function useListAdvertisementInquiries<TData = Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError = ErrorResponse>(
+ params: undefined |  ListAdvertisementInquiriesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdvertisementInquiries>>,
+          TError,
+          Awaited<ReturnType<typeof listAdvertisementInquiries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAdvertisementInquiries<TData = Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError = ErrorResponse>(
+ params?: ListAdvertisementInquiriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAdvertisementInquiries>>,
+          TError,
+          Awaited<ReturnType<typeof listAdvertisementInquiries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAdvertisementInquiries<TData = Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError = ErrorResponse>(
+ params?: ListAdvertisementInquiriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 광고 문의 목록 조회
+ */
+
+export function useListAdvertisementInquiries<TData = Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError = ErrorResponse>(
+ params?: ListAdvertisementInquiriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAdvertisementInquiries>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAdvertisementInquiriesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getAdvertisementInquiryTodayCountResponse200 = {
+  data: SuccessResponseAdminAdvertisementInquiryTodayCountResponse
+  status: 200
+}
+
+export type getAdvertisementInquiryTodayCountResponseSuccess = (getAdvertisementInquiryTodayCountResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getAdvertisementInquiryTodayCountResponse = (getAdvertisementInquiryTodayCountResponseSuccess)
+
+export const getGetAdvertisementInquiryTodayCountUrl = () => {
+
+
+
+
+  return `/api/v1/admin/advertisement-inquiries/today-count`
+}
+
+/**
+ *
+ *             관리자 메뉴 숫자용입니다. 한국 시간 오늘 0시부터 지금까지 들어온 광고 문의 수를 반환합니다.
+ *             문의 유형과 처리 상태를 가리지 않으므로 처리 상태를 바꿔도 줄지 않습니다.
+ * @summary 오늘 들어온 광고 문의 수 조회
+ */
+export const getAdvertisementInquiryTodayCount = async ( options?: Parameters<typeof httpClient>[1]): Promise<getAdvertisementInquiryTodayCountResponse> => {
+
+  return httpClient<getAdvertisementInquiryTodayCountResponse>(getGetAdvertisementInquiryTodayCountUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdvertisementInquiryTodayCountQueryKey = () => {
+    return [
+    `/api/v1/admin/advertisement-inquiries/today-count`
+    ] as const;
+    }
+
+
+export const getGetAdvertisementInquiryTodayCountQueryOptions = <TData = Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdvertisementInquiryTodayCountQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>> = ({ signal }) => getAdvertisementInquiryTodayCount({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdvertisementInquiryTodayCountQueryResult = NonNullable<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>>
+export type GetAdvertisementInquiryTodayCountQueryError = unknown
+
+
+export function useGetAdvertisementInquiryTodayCount<TData = Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>,
+          TError,
+          Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdvertisementInquiryTodayCount<TData = Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>,
+          TError,
+          Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdvertisementInquiryTodayCount<TData = Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 오늘 들어온 광고 문의 수 조회
+ */
+
+export function useGetAdvertisementInquiryTodayCount<TData = Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdvertisementInquiryTodayCount>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdvertisementInquiryTodayCountQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
 export const getReplaceAiLetsCareerContentTagsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getReplaceAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -6569,6 +7160,8 @@ export const getGetAiBootcampResponseMock = (overrideResponse: Partial<Extract<S
 export const getCreateAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampRegistrationResponse, object>> = {}): SuccessResponseAiBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchCreatedResponse, object>> = {}): SuccessResponseAdminNotificationBatchCreatedResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getCreateWelcomeEmailResendResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminWelcomeEmailResendResponse, object>> = {}): SuccessResponseAdminWelcomeEmailResendResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{notificationId: faker.number.int(), recipientUserId: faker.number.int(), templateCode: faker.string.alpha({length: {min: 10, max: 20}}), scheduledAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -6608,6 +7201,10 @@ export const getDeleteAnnouncementResponseMock = (overrideResponse: Partial<Extr
 
 export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
+export const getUpdateAdvertisementInquiryStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementInquiryResponse, object>> = {}): SuccessResponseAdminAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), inquiryType: faker.helpers.arrayElement(['FREE_PROMOTION','LAUNCH_ALERT'] as const), campaignCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['RECEIVED','CONTACTED','EXECUTED','REJECTED'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), companyNameSource: faker.helpers.arrayElement(['SEARCH','MANUAL','MEMBER_PROFILE'] as const), managerName: faker.string.alpha({length: {min: 10, max: 20}}), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.string.alpha({length: {min: 10, max: 20}}), phoneNumber: faker.string.alpha({length: {min: 10, max: 20}}), promotionChannel: faker.helpers.arrayElement(['INSTAGRAM','OPEN_CHAT_MARKETING','OPEN_CHAT_PLANNING','OPEN_CHAT_HR','OPEN_CHAT_PUBLIC_RECRUITMENT','OPEN_CHAT_SALES','OPEN_CHAT_AI_DEVELOPMENT','RECOMMENDATION_REQUESTED'] as const), hiringJobName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobPostingUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), promotionAnswer: faker.string.alpha({length: {min: 10, max: 20}}), marketingConsent: faker.datatype.boolean(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), memberType: faker.helpers.arrayElement(['COMPANY','USER','GUEST'] as const), inflowChannel: faker.helpers.arrayElement(['COLDMAIL','INSTAGRAM','KAKAO','NEWSLETTER','UTM_OTHER','OGONGGO','LETSCAREER','SEARCH','EXTERNAL_SITE','DIRECT'] as const), utmSource: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmMedium: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmCampaign: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmContent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), referrer: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), entryHost: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), landingPath: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getUpdateAdvertisementInquiryMemoResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementInquiryResponse, object>> = {}): SuccessResponseAdminAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), inquiryType: faker.helpers.arrayElement(['FREE_PROMOTION','LAUNCH_ALERT'] as const), campaignCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['RECEIVED','CONTACTED','EXECUTED','REJECTED'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), companyNameSource: faker.helpers.arrayElement(['SEARCH','MANUAL','MEMBER_PROFILE'] as const), managerName: faker.string.alpha({length: {min: 10, max: 20}}), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.string.alpha({length: {min: 10, max: 20}}), phoneNumber: faker.string.alpha({length: {min: 10, max: 20}}), promotionChannel: faker.helpers.arrayElement(['INSTAGRAM','OPEN_CHAT_MARKETING','OPEN_CHAT_PLANNING','OPEN_CHAT_HR','OPEN_CHAT_PUBLIC_RECRUITMENT','OPEN_CHAT_SALES','OPEN_CHAT_AI_DEVELOPMENT','RECOMMENDATION_REQUESTED'] as const), hiringJobName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobPostingUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), promotionAnswer: faker.string.alpha({length: {min: 10, max: 20}}), marketingConsent: faker.datatype.boolean(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), memberType: faker.helpers.arrayElement(['COMPANY','USER','GUEST'] as const), inflowChannel: faker.helpers.arrayElement(['COLDMAIL','INSTAGRAM','KAKAO','NEWSLETTER','UTM_OTHER','OGONGGO','LETSCAREER','SEARCH','EXTERNAL_SITE','DIRECT'] as const), utmSource: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmMedium: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmCampaign: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmContent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), referrer: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), entryHost: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), landingPath: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
 export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
 export const getListAiLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListAiLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
@@ -6643,6 +7240,10 @@ export const getGetConcernResponseMock = (overrideResponse: Partial<Extract<Succ
 export const getListCompanyMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminCompanyMemberResponse, object>> = {}): SuccessResponsePageResponseAdminCompanyMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), organizationName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerPhone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListAdvertisementInquiriesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementInquiryResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), inquiryType: faker.helpers.arrayElement(['FREE_PROMOTION','LAUNCH_ALERT'] as const), campaignCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['RECEIVED','CONTACTED','EXECUTED','REJECTED'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), companyNameSource: faker.helpers.arrayElement(['SEARCH','MANUAL','MEMBER_PROFILE'] as const), managerName: faker.string.alpha({length: {min: 10, max: 20}}), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.string.alpha({length: {min: 10, max: 20}}), phoneNumber: faker.string.alpha({length: {min: 10, max: 20}}), promotionChannel: faker.helpers.arrayElement(['INSTAGRAM','OPEN_CHAT_MARKETING','OPEN_CHAT_PLANNING','OPEN_CHAT_HR','OPEN_CHAT_PUBLIC_RECRUITMENT','OPEN_CHAT_SALES','OPEN_CHAT_AI_DEVELOPMENT','RECOMMENDATION_REQUESTED'] as const), hiringJobName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobPostingUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), promotionAnswer: faker.string.alpha({length: {min: 10, max: 20}}), marketingConsent: faker.datatype.boolean(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), memberType: faker.helpers.arrayElement(['COMPANY','USER','GUEST'] as const), inflowChannel: faker.helpers.arrayElement(['COLDMAIL','INSTAGRAM','KAKAO','NEWSLETTER','UTM_OTHER','OGONGGO','LETSCAREER','SEARCH','EXTERNAL_SITE','DIRECT'] as const), utmSource: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmMedium: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmCampaign: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmContent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), referrer: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), entryHost: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), landingPath: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetAdvertisementInquiryTodayCountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementInquiryTodayCountResponse, object>> = {}): SuccessResponseAdminAdvertisementInquiryTodayCountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{count: faker.number.int()}, undefined]), ...overrideResponse})
 
 
 export const getReplaceAiLetsCareerContentTagsMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
@@ -6844,6 +7445,18 @@ export const getCreateNotificationBatchMockHandler = (overrideResponse?: Success
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateNotificationBatchResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
+export const getCreateWelcomeEmailResendMockHandler = (overrideResponse?: SuccessResponseAdminWelcomeEmailResendResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAdminWelcomeEmailResendResponse> | SuccessResponseAdminWelcomeEmailResendResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/general-members/:userId/welcome-email-resends', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateWelcomeEmailResendResponseMock(),
       { status: 201
       })
   }, options)
@@ -7077,6 +7690,30 @@ export const getUpdateAnnouncementMockHandler = (overrideResponse?: SuccessRespo
   }, options)
 }
 
+export const getUpdateAdvertisementInquiryStatusMockHandler = (overrideResponse?: SuccessResponseAdminAdvertisementInquiryResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminAdvertisementInquiryResponse> | SuccessResponseAdminAdvertisementInquiryResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/advertisement-inquiries/:inquiryId/status', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateAdvertisementInquiryStatusResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateAdvertisementInquiryMemoMockHandler = (overrideResponse?: SuccessResponseAdminAdvertisementInquiryResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminAdvertisementInquiryResponse> | SuccessResponseAdminAdvertisementInquiryResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/advertisement-inquiries/:inquiryId/memo', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateAdvertisementInquiryMemoResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListAiLetsCareerContentsMockHandler = (overrideResponse?: SuccessResponseListAiLetsCareerContentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiLetsCareerContentResponse> | SuccessResponseListAiLetsCareerContentResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/lets-career-contents', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -7280,6 +7917,30 @@ export const getListBootcampsMockHandler = (overrideResponse?: SuccessResponsePa
       })
   }, options)
 }
+
+export const getListAdvertisementInquiriesMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminAdvertisementInquiryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminAdvertisementInquiryResponse> | SuccessResponsePageResponseAdminAdvertisementInquiryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/advertisement-inquiries', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListAdvertisementInquiriesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetAdvertisementInquiryTodayCountMockHandler = (overrideResponse?: SuccessResponseAdminAdvertisementInquiryTodayCountResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminAdvertisementInquiryTodayCountResponse> | SuccessResponseAdminAdvertisementInquiryTodayCountResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/advertisement-inquiries/today-count', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetAdvertisementInquiryTodayCountResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 export const getOgonggoAdminAPIMock = () => [
   getReplaceAiLetsCareerContentTagsMockHandler(),
   getReplaceAiJobMockHandler(),
@@ -7298,6 +7959,7 @@ export const getOgonggoAdminAPIMock = () => [
   getGetAiBootcampMockHandler(),
   getCreateAiBootcampMockHandler(),
   getCreateNotificationBatchMockHandler(),
+  getCreateWelcomeEmailResendMockHandler(),
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getUpdateRecruitmentPostVisibilitiesMockHandler(),
@@ -7317,6 +7979,8 @@ export const getOgonggoAdminAPIMock = () => [
   getGetAnnouncementMockHandler(),
   getDeleteAnnouncementMockHandler(),
   getUpdateAnnouncementMockHandler(),
+  getUpdateAdvertisementInquiryStatusMockHandler(),
+  getUpdateAdvertisementInquiryMemoMockHandler(),
   getListAiLetsCareerContentsMockHandler(),
   getListAiLetsCareerContentTagTargetsMockHandler(),
   getListAiJobAnalysisTargetsMockHandler(),
@@ -7333,5 +7997,7 @@ export const getOgonggoAdminAPIMock = () => [
   getListConcernsMockHandler(),
   getGetConcernMockHandler(),
   getListCompanyMembersMockHandler(),
-  getListBootcampsMockHandler()
+  getListBootcampsMockHandler(),
+  getListAdvertisementInquiriesMockHandler(),
+  getGetAdvertisementInquiryTodayCountMockHandler()
 ]

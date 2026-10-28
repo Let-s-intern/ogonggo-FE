@@ -1,5 +1,5 @@
 import type { CSSProperties, MouseEvent } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useNavigate } from 'react-router';
 import { Callout, cn } from '@ogonggo/ui';
 import {
   ADMIN_TOKEN_UNVERIFIED_MESSAGE,
@@ -9,6 +9,10 @@ import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { isMockEnabled } from '@/app/enableMocking';
 import { useReviewQueue } from '@/entities/review/api/useReviewQueue';
+import {
+  todayAdInquiriesHref,
+  useAdInquiryTodayCount,
+} from '@/entities/advertisement-inquiry/api/useAdvertisementInquiries';
 import {
   ASSISTANT_CLOSED_WIDTH,
   ASSISTANT_OPEN_WIDTH,
@@ -44,6 +48,26 @@ export function AdminLayout() {
   const { data: reviewQueue } = useReviewQueue();
   const navCounts: Record<string, number | undefined> = {
     '/ads/review': reviewQueue?.length,
+  };
+  /*
+   * 파란 숫자 배지. 위의 회색 숫자(남은 일의 양)와 달리 "새로 들어온 것" 을 알린다. 누르면 그 숫자에 해당하는
+   * 목록(`to`)으로 간다. `navigation.ts` 는 `shared/config` 라 entity 훅을 가져올 수 없어 메뉴 정의가 아니라
+   * 여기서 경로로 붙인다 — 위 `navCounts` 와 같은 방식이다.
+   */
+  const { data: adInquiryToday } = useAdInquiryTodayCount();
+  const navBadges: Record<string, { count: number | undefined; to: string; label: string }> = {
+    '/business/ad-inquiries': {
+      count: adInquiryToday?.count,
+      to: todayAdInquiriesHref(),
+      label: '오늘 들어온 문의',
+    },
+  };
+  const navigate = useNavigate();
+  const navBadgeFor = (path: string) => {
+    const badge = navBadges[path];
+    return badge?.count ? (
+      <NavBadge count={badge.count} to={badge.to} label={badge.label} onOpen={navigate} />
+    ) : null;
   };
 
   return (
@@ -102,6 +126,7 @@ export function AdminLayout() {
                       }
                     >
                       {item.label}
+                      {navBadgeFor(item.path)}
                       {navCounts[item.path] ? (
                         <span className="text-xs font-normal text-gray-400">
                           {navCounts[item.path]}
@@ -135,5 +160,39 @@ export function AdminLayout() {
       {/* 화면을 옮겨도 대화가 남도록 본문(`Outlet`) 밖, 레이아웃에 둔다. */}
       <AssistantPanel open={isAssistantOpen} onOpenChange={setIsAssistantOpen} />
     </div>
+  );
+}
+
+/**
+ * 메뉴 글자 오른쪽 숫자 배지. 0 이면 그리지 않고(부르는 쪽), 100 이상이면 `99+` 다.
+ *
+ * 메뉴 링크 안에 있어 링크를 겹쳐 둘 수 없다. 누르면 메뉴 이동을 막고 배지의 목록으로 보낸다. 키보드로는
+ * 메뉴로 들어간 뒤 목록의 `오늘` 버튼이 같은 일을 한다.
+ */
+function NavBadge({
+  count,
+  to,
+  label,
+  onOpen,
+}: {
+  count: number;
+  to: string;
+  label: string;
+  onOpen: (to: string) => void;
+}) {
+  return (
+    <span
+      role="link"
+      aria-label={`${label} ${count}건`}
+      title={`${label} 보기`}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onOpen(to);
+      }}
+      className="min-w-5 cursor-pointer rounded-full bg-blue-500 px-1.5 text-center text-xs leading-5 font-semibold text-white hover:bg-blue-600"
+    >
+      {count >= 100 ? '99+' : count}
+    </span>
   );
 }

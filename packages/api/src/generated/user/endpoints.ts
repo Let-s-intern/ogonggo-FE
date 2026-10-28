@@ -57,6 +57,7 @@ import type {
   ListMyRecruitmentPostsParams,
   ListPublicAnnouncementsParams,
   ListPublicBootcampsParams,
+  ListPublicCompanyNamesParams,
   ListPublicConcernCommentRepliesParams,
   ListPublicConcernCommentsParams,
   ListPublicConcernsParams,
@@ -77,6 +78,7 @@ import type {
   SuccessResponseCompanyBootcampDetailResponse,
   SuccessResponseCompanyJobDetailResponse,
   SuccessResponseConcernDetailResponse,
+  SuccessResponseCreateAdvertisementInquiryResponse,
   SuccessResponseCreateCompanyBootcampResponse,
   SuccessResponseCreateCompanyJobResponse,
   SuccessResponseCreateConcernCommentResponse,
@@ -91,6 +93,7 @@ import type {
   SuccessResponseImageUploadResponse,
   SuccessResponseLetsCareerJobProfileSyncResponse,
   SuccessResponseListConcernSummaryResponse,
+  SuccessResponseListString,
   SuccessResponseListUserJobCalendarItemResponse,
   SuccessResponseListUserJobSummaryResponse,
   SuccessResponseListUserRecommendedChallengeResponse,
@@ -7664,20 +7667,20 @@ export const useSignInCompany = <TError = ErrorResponse,
       return useMutation(getSignInCompanyMutationOptions(options), queryClient);
     }
 
-export type createAdvertisementInquiryResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
+export type createAdvertisementInquiryResponse201 = {
+  data: SuccessResponseCreateAdvertisementInquiryResponse
+  status: 201
 }
 
-export type createAdvertisementInquiryResponse503 = {
+export type createAdvertisementInquiryResponse400 = {
   data: ErrorResponse
-  status: 503
+  status: 400
 }
 
-export type createAdvertisementInquiryResponseSuccess = (createAdvertisementInquiryResponse200) & {
+export type createAdvertisementInquiryResponseSuccess = (createAdvertisementInquiryResponse201) & {
   headers: Headers;
 };
-export type createAdvertisementInquiryResponseError = (createAdvertisementInquiryResponse503) & {
+export type createAdvertisementInquiryResponseError = (createAdvertisementInquiryResponse400) & {
   headers: Headers;
 };
 
@@ -7692,7 +7695,14 @@ export const getCreateAdvertisementInquiryUrl = () => {
 }
 
 /**
- * 기업 담당자가 광고 소개 페이지에서 남긴 문의를 영업 슬랙 채널로 전달합니다. 문의를 저장하지 않아 생성되는 리소스가 없으므로 201이 아닌 200과 `data: null`로 응답합니다. 슬랙 전달에 실패하면 문의가 남지 않으므로 성공으로 응답하지 않습니다.
+ *
+ *             기업 담당자가 남긴 광고 문의를 저장하고 영업 슬랙 채널과 담당자 확인 메일로 알립니다.
+ *             저장한 문의의 식별자를 201과 함께 돌려줍니다. 슬랙·메일 발송에 실패해도 저장은 남으므로 성공으로 응답합니다.
+ *
+ *             로그인 없이 보낼 수 있습니다. 액세스 토큰을 보내면 그 회원과 회원 구분(기업 회원·일반 회원)을 서버가 정해 함께 저장하고,
+ *             토큰이 없거나 유효하지 않으면 비회원으로 저장합니다. 요청 본문의 회원 구분·회원 식별자는 받지 않습니다.
+ *
+ *             유입 경로는 utmSource와 referrer로 서버가 판정합니다. 캠페인 코드도 서버가 정합니다.
  * @summary B2B 광고 문의 접수
  */
 export const createAdvertisementInquiry = async (createAdvertisementInquiryRequest: CreateAdvertisementInquiryRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAdvertisementInquiryResponse> => {
@@ -11438,6 +11448,143 @@ export function useListPublicPopularConcerns<TData = Awaited<ReturnType<typeof l
 
 
 
+export type listPublicCompanyNamesResponse200 = {
+  data: SuccessResponseListString
+  status: 200
+}
+
+export type listPublicCompanyNamesResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicCompanyNamesResponseSuccess = (listPublicCompanyNamesResponse200) & {
+  headers: Headers;
+};
+export type listPublicCompanyNamesResponseError = (listPublicCompanyNamesResponse400) & {
+  headers: Headers;
+};
+
+export type listPublicCompanyNamesResponse = (listPublicCompanyNamesResponseSuccess | listPublicCompanyNamesResponseError)
+
+export const getListPublicCompanyNamesUrl = (params?: ListPublicCompanyNamesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/company-names?${stringifiedParams}` : `/api/v1/company-names`
+}
+
+/**
+ *
+ *             오공고에 있는 회사명 가운데 keyword를 포함하는 이름을 최대 10개 반환합니다. 페이지 정보는 없습니다.
+ *             광고 문의 폼의 회사명 칸이 이미 있는 이름을 고르게 권하는 데 씁니다.
+ *
+ *             삭제되지 않은 채용공고(마감·비노출 포함)와 부트캠프(마감 포함)의 회사명, 기업 회원의 기관명을 합쳐 찾습니다.
+ *             앞뒤 공백만 다듬어 같은 이름을 하나로 합치고 표기는 바꾸지 않습니다.
+ *             keyword로 시작하는 이름이 먼저, 그다음 포함하는 이름이며 같은 묶음 안에서는 짧은 이름이 먼저입니다.
+ *             대소문자를 가리지 않습니다.
+ *
+ *             로그인 없이 호출합니다. keyword는 앞뒤 공백을 지우고 찾으며, 보내지 않거나 비면 빈 목록입니다.
+ * @summary 회사명 검색
+ */
+export const listPublicCompanyNames = async (params?: ListPublicCompanyNamesParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicCompanyNamesResponse> => {
+
+  return httpClient<listPublicCompanyNamesResponse>(getListPublicCompanyNamesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicCompanyNamesQueryKey = (params?: ListPublicCompanyNamesParams,) => {
+    return [
+    `/api/v1/company-names`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicCompanyNamesQueryOptions = <TData = Awaited<ReturnType<typeof listPublicCompanyNames>>, TError = ErrorResponse>(params?: ListPublicCompanyNamesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCompanyNames>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicCompanyNamesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicCompanyNames>>> = ({ signal }) => listPublicCompanyNames(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicCompanyNames>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicCompanyNamesQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicCompanyNames>>>
+export type ListPublicCompanyNamesQueryError = ErrorResponse
+
+
+export function useListPublicCompanyNames<TData = Awaited<ReturnType<typeof listPublicCompanyNames>>, TError = ErrorResponse>(
+ params: undefined |  ListPublicCompanyNamesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCompanyNames>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicCompanyNames>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicCompanyNames>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicCompanyNames<TData = Awaited<ReturnType<typeof listPublicCompanyNames>>, TError = ErrorResponse>(
+ params?: ListPublicCompanyNamesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCompanyNames>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicCompanyNames>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicCompanyNames>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicCompanyNames<TData = Awaited<ReturnType<typeof listPublicCompanyNames>>, TError = ErrorResponse>(
+ params?: ListPublicCompanyNamesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCompanyNames>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 회사명 검색
+ */
+
+export function useListPublicCompanyNames<TData = Awaited<ReturnType<typeof listPublicCompanyNames>>, TError = ErrorResponse>(
+ params?: ListPublicCompanyNamesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCompanyNames>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicCompanyNamesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listPublicBootcampsResponse200 = {
   data: SuccessResponsePageResponseUserBootcampSummaryResponse
   status: 200
@@ -12445,7 +12592,7 @@ export const getSignUpCompanyResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
 
-export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementInquiryResponse, object>> = {}): SuccessResponseCreateAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getDeleteRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -12506,6 +12653,8 @@ export const getListPublicEnumsResponseMock = (overrideResponse: Partial<Extract
 export const getListPublicConcernCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseConcernCommentResponse, object>> = {}): SuccessResponsePageResponseConcernCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const)}, official: faker.datatype.boolean(), concernAuthor: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), deleted: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean(), likeCount: faker.number.int(), liked: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListPublicPopularConcernsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListConcernSummaryResponse, object>> = {}): SuccessResponseListConcernSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), url: faker.string.alpha({length: {min: 10, max: 20}})})), author: {nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean()})), undefined]), ...overrideResponse})
+
+export const getListPublicCompanyNamesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListString, object>> = {}): SuccessResponseListString => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), undefined]), ...overrideResponse})
 
 export const getListPublicBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -13332,14 +13481,14 @@ export const getSignInCompanyMockHandler = (overrideResponse?: SuccessResponseAu
   }, options)
 }
 
-export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: SuccessResponseCreateAdvertisementInquiryResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateAdvertisementInquiryResponse> | SuccessResponseCreateAdvertisementInquiryResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/advertisement-inquiries', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateAdvertisementInquiryResponseMock(),
-      { status: 200
+      { status: 201
       })
   }, options)
 }
@@ -13680,6 +13829,18 @@ export const getListPublicPopularConcernsMockHandler = (overrideResponse?: Succe
   }, options)
 }
 
+export const getListPublicCompanyNamesMockHandler = (overrideResponse?: SuccessResponseListString | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListString> | SuccessResponseListString), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/company-names', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicCompanyNamesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListPublicBootcampsMockHandler = (overrideResponse?: SuccessResponsePageResponseUserBootcampSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseUserBootcampSummaryResponse> | SuccessResponsePageResponseUserBootcampSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/bootcamps', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -13861,6 +14022,7 @@ export const getOgonggoUserAPIMock = () => [
   getListPublicEnumsMockHandler(),
   getListPublicConcernCommentRepliesMockHandler(),
   getListPublicPopularConcernsMockHandler(),
+  getListPublicCompanyNamesMockHandler(),
   getListPublicBootcampsMockHandler(),
   getGetPublicBootcampMockHandler(),
   getListMyBootcampBookmarksMockHandler(),

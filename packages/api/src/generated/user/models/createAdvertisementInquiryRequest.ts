@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { CreateAdvertisementInquiryRequestCompanyNameSource } from './createAdvertisementInquiryRequestCompanyNameSource';
 import type { CreateAdvertisementInquiryRequestInquiryType } from './createAdvertisementInquiryRequestInquiryType';
 import type { CreateAdvertisementInquiryRequestPromotionChannel } from './createAdvertisementInquiryRequestPromotionChannel';
 
@@ -14,10 +15,26 @@ export interface CreateAdvertisementInquiryRequest {
      */
   companyName: string;
   /**
+     * 회사명을 채운 방식. 회사명 검색에서 고르면 SEARCH, 기업 회원 정보로 채우면 MEMBER_PROFILE입니다. 보내지 않으면 직접 입력(MANUAL)으로 저장합니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `SEARCH` | 1 | 검색 |
+     * | `MANUAL` | 2 | 직접 입력 |
+     * | `MEMBER_PROFILE` | 3 | 회원 정보 |
+     */
+  companyNameSource?: CreateAdvertisementInquiryRequestCompanyNameSource;
+  /**
      * @minLength 0
      * @maxLength 50
      */
   managerName: string;
+  /**
+     * 담당자 직함
+     * @minLength 0
+     * @maxLength 50
+     */
+  managerTitle?: string;
   /**
      * @minLength 0
      * @maxLength 255
@@ -49,8 +66,65 @@ export interface CreateAdvertisementInquiryRequest {
      */
   promotionChannel: CreateAdvertisementInquiryRequestPromotionChannel;
   /**
+     * 채용 직무명
+     * @minLength 0
+     * @maxLength 100
+     */
+  hiringJobName?: string;
+  /**
+     * 채용공고 링크
+     * @minLength 0
+     * @maxLength 500
+     */
+  jobPostingUrl?: string;
+  /**
+     * 현재 사용 중인 채용 홍보 채널과 어려운 점
      * @minLength 0
      * @maxLength 2000
      */
   promotionAnswer: string;
+  /** 마케팅 정보 수신 동의. 보내지 않으면 동의하지 않은 것으로 저장합니다. */
+  marketingConsent?: boolean;
+  /**
+     * 진입 URL의 utm_source. 유입 경로 판정에 씁니다.
+     * @minLength 0
+     * @maxLength 100
+     */
+  utmSource?: string;
+  /**
+     * 진입 URL의 utm_medium
+     * @minLength 0
+     * @maxLength 100
+     */
+  utmMedium?: string;
+  /**
+     * 진입 URL의 utm_campaign
+     * @minLength 0
+     * @maxLength 100
+     */
+  utmCampaign?: string;
+  /**
+     * 진입 URL의 utm_content
+     * @minLength 0
+     * @maxLength 100
+     */
+  utmContent?: string;
+  /**
+     * 페이지에 처음 들어왔을 때의 document.referrer 원문. 유입 경로 판정에 씁니다.
+     * @minLength 0
+     * @maxLength 2000
+     */
+  referrer?: string;
+  /**
+     * 처음 들어온 호스트. biz.ogonggo.co.kr(리다이렉트 전)인지 www.ogonggo.co.kr인지
+     * @minLength 0
+     * @maxLength 255
+     */
+  entryHost?: string;
+  /**
+     * 진입 URL의 경로와 쿼리 전체
+     * @minLength 0
+     * @maxLength 2000
+     */
+  landingPath?: string;
 }

@@ -55,9 +55,25 @@ function validate(values: Values): Errors {
  *
  * 다섯 칸이 모두 차기 전에는 가입하기가 꺼져 있다(디자인의 회색 버튼). 형식은 제출 때 보고 칸마다 문구를 단다.
  */
-export function CompanySignUpForm() {
+export interface CompanySignUpFormProps {
+  /**
+   * 처음 채워 둘 기관명·이메일. `/biz` 신청 완료 화면의 가입 버튼이 쿼리로 넘긴다. 검증하지 않고 초기값으로만
+   * 쓴다 — 제출 때 다른 값과 똑같이 검사한다.
+   */
+  initialOrganizationName?: string;
+  initialEmail?: string;
+}
+
+export function CompanySignUpForm({
+  initialOrganizationName = '',
+  initialEmail = '',
+}: CompanySignUpFormProps = {}) {
   const router = useRouter();
-  const [values, setValues] = useState<Values>(INITIAL);
+  const [values, setValues] = useState<Values>(() => ({
+    ...INITIAL,
+    organizationName: initialOrganizationName.slice(0, MAX_LENGTH.organizationName),
+    email: initialEmail.slice(0, MAX_LENGTH.email),
+  }));
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
