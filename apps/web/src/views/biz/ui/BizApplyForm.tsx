@@ -15,6 +15,7 @@ import {
 } from '../model/apply';
 import { BizApplyDone } from './BizApplyDone';
 import { BizChannelPicker } from './BizChannelPicker';
+import { BizCompanyNameField } from './BizCompanyNameField';
 
 type SubmitState = 'idle' | 'sending' | 'error';
 
@@ -72,18 +73,13 @@ export function BizApplyForm() {
     >
       <p className="mb-3.5 text-sm font-bold text-gray-900">담당자 정보</p>
       <div className="grid gap-x-3 md:grid-cols-2">
-        <Field label="회사명" htmlFor="biz-company" required error={errors.company}>
-          <Input
-            id="biz-company"
-            value={values.company}
-            maxLength={100}
-            autoComplete="organization"
-            onChange={(event) => {
-              set('company', event.target.value);
-              set('companyNameSource', 'MANUAL');
-            }}
-          />
-        </Field>
+        <BizCompanyNameField
+          value={values.company}
+          error={errors.company}
+          onChange={(company, companyNameSource) =>
+            setValues((current) => ({ ...current, company, companyNameSource }))
+          }
+        />
         <Field label="담당자 이름" htmlFor="biz-name" required error={errors.name}>
           <Input
             id="biz-name"
