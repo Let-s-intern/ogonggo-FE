@@ -1,5 +1,6 @@
 import { Navigate, createBrowserRouter } from 'react-router';
 import { AdminLayout } from '@/widgets/admin-layout';
+import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
@@ -57,6 +58,8 @@ export const router = createBrowserRouter([
 
       { path: 'ads/review', element: <ReviewQueuePage /> },
       { path: 'ads/rejections', element: <RejectionsPage /> },
+
+      { path: 'business/ad-inquiries', element: <AdInquiryListPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },
