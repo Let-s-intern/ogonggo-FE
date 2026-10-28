@@ -5,6 +5,7 @@ import {
   useAdInquiryList,
 } from '@/entities/advertisement-inquiry/api/useAdvertisementInquiries';
 import { PageHeader } from '@/widgets/page-header';
+import { AdInquiryActions } from './AdInquiryActions';
 import { AdInquiryCard } from './AdInquiryCard';
 import { AdInquiryFilters } from './AdInquiryFilters';
 import { useListQuery } from '@/shared/lib/useListQuery';
@@ -69,7 +70,10 @@ export function AdInquiryListPage() {
             <ul className="flex flex-col gap-3">
               {items.map((inquiry) => (
                 <li key={inquiry.id}>
-                  <AdInquiryCard inquiry={inquiry} />
+                  <AdInquiryCard
+                    inquiry={inquiry}
+                    actions={<AdInquiryActions inquiry={inquiry} />}
+                  />
                 </li>
               ))}
             </ul>

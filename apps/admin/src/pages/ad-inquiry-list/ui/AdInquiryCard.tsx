@@ -16,7 +16,7 @@ export function AdInquiryCard({
 }: {
   inquiry: AdminAdvertisementInquiryResponse;
   /** 처리 구역(상태 변경·메모). */
-  actions?: ReactNode;
+  actions: ReactNode;
 }) {
   const rawParts = inflowRawParts(inquiry);
 
@@ -97,11 +97,7 @@ export function AdInquiryCard({
         </p>
       </Section>
 
-      <Section title="처리">
-        {actions ?? (
-          <p className="whitespace-pre-wrap text-gray-700">{inquiry.memo ?? '메모 없음'}</p>
-        )}
-      </Section>
+      <Section title="처리">{actions}</Section>
     </article>
   );
 }

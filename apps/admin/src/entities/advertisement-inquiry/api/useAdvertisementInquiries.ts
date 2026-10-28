@@ -1,7 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getAdvertisementInquiryTodayCount,
   listAdvertisementInquiries,
+  updateAdvertisementInquiryMemo,
+  updateAdvertisementInquiryStatus,
+  type ChangeAdvertisementInquiryStatusRequestStatus,
   type ListAdvertisementInquiriesParams,
 } from '@ogonggo/api/src/admin';
 import { omitEmpty } from '@/shared/api/omitEmpty';
@@ -69,4 +72,32 @@ export function todayInSeoul(): string {
 export function todayAdInquiriesHref(): string {
   const today = todayInSeoul();
   return `/business/ad-inquiries?createdFrom=${today}&createdTo=${today}`;
+}
+
+/**
+ * 처리 상태 변경. 낙관적으로 바꾸지 않고 성공한 뒤 목록·건수를 다시 읽는다 — 상태 필터가 걸린 목록에서는 카드가
+ * 빠져야 하고, 그 판단은 서버 결과로 한다. 오늘 건수는 상태와 무관해 바뀌지 않는다.
+ */
+export function useChangeAdInquiryStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      inquiryId,
+      status,
+    }: {
+      inquiryId: number;
+      status: ChangeAdvertisementInquiryStatusRequestStatus;
+    }) => unwrapData(updateAdvertisementInquiryStatus(inquiryId, { status })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+  });
+}
+
+/** 메모 저장. 통째로 바꾸며 비우면 지운다(서버 규칙). 성공한 뒤 목록을 다시 읽는다. */
+export function useSaveAdInquiryMemo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ inquiryId, memo }: { inquiryId: number; memo: string }) =>
+      unwrapData(updateAdvertisementInquiryMemo(inquiryId, { memo })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+  });
 }
