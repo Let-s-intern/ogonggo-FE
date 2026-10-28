@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { BizApplyLink } from './BizApplyLink';
 
 /**
  * 오른쪽 아래에 붙어 다니는 신청 버튼(시안 `.float`). 신청 구역으로 내려간다.
@@ -27,8 +28,8 @@ export function BizFloatingApply() {
   }, []);
 
   return (
-    <a
-      href="#apply"
+    <BizApplyLink
+      placement="floating"
       aria-hidden={formVisible}
       tabIndex={formVisible ? -1 : undefined}
       className={`fixed right-5 bottom-5 z-20 inline-flex h-14 items-center rounded-full bg-blue-500 px-[26px] text-base font-bold text-white shadow-[0_12px_24px_-8px_rgba(74,118,255,0.5)] transition-opacity hover:bg-blue-600 md:right-8 md:bottom-8 ${
@@ -36,6 +37,6 @@ export function BizFloatingApply() {
       }`}
     >
       무료 홍보 신청하기
-    </a>
+    </BizApplyLink>
   );
 }

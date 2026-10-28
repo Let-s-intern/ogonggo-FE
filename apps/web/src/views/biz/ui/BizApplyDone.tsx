@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { MyAccountResponseRole } from '@ogonggo/api';
 import { COMPANY_JOB_REGISTER_HREF } from '@/shared/lib/companyJobRegister';
+import { trackBiz } from '../model/analytics';
 
 const COMPANY_SIGNUP_HREF = '/signup/company';
 
@@ -64,6 +65,7 @@ export function BizApplyDone({ email, role }: BizApplyDoneProps) {
             </p>
             <Link
               href={COMPANY_SIGNUP_HREF}
+              onClick={() => trackBiz('biz_signup_click', { biz_placement: 'done' })}
               className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-blue-500 text-base font-bold text-white hover:bg-blue-600"
             >
               기업회원 가입하기

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { cn } from '@ogonggo/ui';
+import { trackBiz } from '../model/analytics';
 import { HERO_SCREENS } from '../model/content';
 
 /** 한 화면에 머무는 시간. 진행 막대가 이 시간 동안 차고, 다 차면 다음 화면이다. */
@@ -39,7 +40,7 @@ function subscribeVisibility(listener: () => void): () => void {
  *
  * GSAP 대신 CSS 를 쓴 이유: 네 장을 겹쳐 놓고 투명도·확대·스크롤만 바꾸는 일이라 브라우저 전환으로 충분하다.
  */
-export function BizHeroScreens({ onSelect }: { onSelect?: (key: string) => void }) {
+export function BizHeroScreens() {
   const reducedMotion = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
@@ -145,7 +146,7 @@ export function BizHeroScreens({ onSelect }: { onSelect?: (key: string) => void 
               aria-selected={isActive}
               onClick={() => {
                 show(index);
-                onSelect?.(item.key);
+                trackBiz('biz_hero_screen_click', { biz_screen: item.key });
               }}
               className={cn(
                 'flex flex-col gap-2 text-left text-xs font-semibold md:text-[13px]',

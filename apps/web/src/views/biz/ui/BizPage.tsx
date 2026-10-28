@@ -1,6 +1,7 @@
 import { BizApplyForm } from './BizApplyForm';
 import { BizFloatingApply } from './BizFloatingApply';
 import { BizHero } from './BizHero';
+import { BizPageView } from './BizPageView';
 import { BizSiteHeader } from './BizSiteHeader';
 import { BizApplySide, BizChannels, BizFaq, BizFooter, BizIntro } from './BizSections';
 
@@ -30,6 +31,7 @@ export function BizPage() {
       </main>
       <BizFooter />
       <BizFloatingApply />
+      <BizPageView />
     </div>
   );
 }

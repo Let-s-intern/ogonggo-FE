@@ -1,4 +1,5 @@
 import { INSTAGRAM_URL, LAUNCH_DATE_LABEL } from '../model/content';
+import { BizApplyLink } from './BizApplyLink';
 import { BizHeroScreens } from './BizHeroScreens';
 
 /** 히어로 문구와 화면 전환(PRD 2절). 버튼은 같은 화면 안의 구역으로 내려간다. */
@@ -36,12 +37,12 @@ export function BizHero() {
             있습니다.
           </p>
           <div className="mt-8 flex flex-wrap gap-2.5">
-            <a
-              href="#apply"
+            <BizApplyLink
+              placement="hero"
               className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-500 px-[22px] text-base font-bold text-white hover:bg-blue-600"
             >
               무료 홍보 신청하기
-            </a>
+            </BizApplyLink>
             <a
               href="#intro"
               className="inline-flex h-12 items-center justify-center rounded-xl border border-gray-200 bg-white px-[22px] text-base font-bold text-gray-800 hover:bg-gray-50"

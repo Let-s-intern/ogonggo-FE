@@ -17,6 +17,7 @@ import {
   toRequest,
   validateApply,
 } from '../model/apply';
+import { trackBiz } from '../model/analytics';
 import { captureInflow, readInflow } from '../model/inflow';
 import { BizApplyDone } from './BizApplyDone';
 import { BizChannelPicker } from './BizChannelPicker';
@@ -55,8 +56,19 @@ export function BizApplyForm() {
 
   const errors: ApplyErrors = submitted ? validateApply(values) : {};
 
-  const set = <K extends keyof ApplyValues>(key: K, value: ApplyValues[K]) =>
+  /** `biz_form_start` 는 사람이 처음 칸을 고칠 때 한 번만 보낸다. 미리 채우기는 세지 않는다. */
+  const formStarted = useRef(false);
+  const markStarted = () => {
+    if (!formStarted.current) {
+      formStarted.current = true;
+      trackBiz('biz_form_start');
+    }
+  };
+
+  const set = <K extends keyof ApplyValues>(key: K, value: ApplyValues[K]) => {
+    markStarted();
     setValues((current) => ({ ...current, [key]: value }));
+  };
 
   const submit = async () => {
     setSubmitted(true);
@@ -73,7 +85,9 @@ export function BizApplyForm() {
     }
     setState('sending');
     try {
-      await createAdvertisementInquiry(toRequest(values, readInflow()));
+      const request = toRequest(values, readInflow());
+      await createAdvertisementInquiry(request);
+      trackBiz('biz_apply_submit', { biz_channel: request.promotionChannel });
       setDoneEmail(values.email.trim());
     } catch {
       setState('error');
@@ -108,9 +122,10 @@ export function BizApplyForm() {
         <BizCompanyNameField
           value={values.company}
           error={errors.company}
-          onChange={(company, companyNameSource) =>
-            setValues((current) => ({ ...current, company, companyNameSource }))
-          }
+          onChange={(company, companyNameSource) => {
+            markStarted();
+            setValues((current) => ({ ...current, company, companyNameSource }));
+          }}
         />
         <Field label="담당자 이름" htmlFor="biz-name" required error={errors.name}>
           <Input
@@ -164,8 +179,14 @@ export function BizApplyForm() {
           group={values.channelGroup}
           room={values.openChatRoom}
           error={errors.channel}
-          onGroupChange={(group) => set('channelGroup', group)}
-          onRoomChange={(room) => set('openChatRoom', room)}
+          onGroupChange={(group) => {
+            set('channelGroup', group);
+            trackBiz('biz_channel_select', { biz_channel: group });
+          }}
+          onRoomChange={(room) => {
+            set('openChatRoom', room);
+            trackBiz('biz_channel_select', { biz_channel: room });
+          }}
         />
         <div className="grid gap-x-3 md:grid-cols-2">
           <Field label="채용 직무명" htmlFor="biz-role" required error={errors.role}>
