@@ -7,6 +7,7 @@ import {
 import { PageHeader } from '@/widgets/page-header';
 import { AdInquiryActions } from './AdInquiryActions';
 import { AdInquiryCard } from './AdInquiryCard';
+import { AdInquiryCsvButton } from './AdInquiryCsvButton';
 import { AdInquiryFilters } from './AdInquiryFilters';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
@@ -51,7 +52,7 @@ export function AdInquiryListPage() {
 
   return (
     <>
-      <PageHeader title="광고 문의" />
+      <PageHeader title="광고 문의" action={<AdInquiryCsvButton filters={filters} />} />
       <AdInquiryFilters
         filters={filters}
         total={data?.pageInfo.totalElements}

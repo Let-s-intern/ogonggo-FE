@@ -4,6 +4,7 @@ import {
   listAdvertisementInquiries,
   updateAdvertisementInquiryMemo,
   updateAdvertisementInquiryStatus,
+  type AdminAdvertisementInquiryResponse,
   type ChangeAdvertisementInquiryStatusRequestStatus,
   type ListAdvertisementInquiriesParams,
 } from '@ogonggo/api/src/admin';
@@ -100,4 +101,28 @@ export function useSaveAdInquiryMemo() {
       unwrapData(updateAdvertisementInquiryMemo(inquiryId, { memo })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
   });
+}
+
+/** 서버가 한 페이지에 주는 최대 건수(`size` 최대 100). */
+const EXPORT_PAGE_SIZE = 100;
+
+/**
+ * 현재 필터의 문의 전부(CSV 용). 페이지가 아니라 조건 전체라 100건씩 끝 페이지까지 읽는다.
+ * 읽는 동안 새 문의가 들어오면 최신순이라 한 건이 두 페이지에 걸칠 수 있어 ID 로 한 번 거른다.
+ */
+export async function fetchAllAdInquiries(
+  filters: AdInquiryListFilters,
+): Promise<AdminAdvertisementInquiryResponse[]> {
+  const rows = new Map<number, AdminAdvertisementInquiryResponse>();
+  for (let page = 1; ; page += 1) {
+    const data = await unwrapData(
+      listAdvertisementInquiries({
+        ...toAdInquiryParams({ ...filters, page }),
+        size: EXPORT_PAGE_SIZE,
+      }),
+    );
+    for (const item of data?.items ?? []) rows.set(item.id, item);
+    if (!data || page >= data.pageInfo.totalPages) break;
+  }
+  return [...rows.values()];
 }
