@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createAdvertisementInquiry } from '@ogonggo/api';
 import { Button, Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { formatPhone } from '@/shared/lib/formatPhone';
+import { CompanyNameCombobox } from '@/shared/ui/CompanyNameCombobox';
 import {
   type ApplyErrors,
   type ApplyValues,
@@ -12,7 +14,6 @@ import {
   REQUEST_MAX_LENGTH,
   SURVEY_MAX_LENGTH,
   applyPrefill,
-  formatPhone,
   hasErrors,
   hasPrefill,
   prefillFrom,
@@ -23,7 +24,6 @@ import { trackBiz } from '../model/analytics';
 import { captureInflow, readInflow } from '../model/inflow';
 import { BizApplyDone } from './BizApplyDone';
 import { BizChannelPicker } from './BizChannelPicker';
-import { BizCompanyNameField } from './BizCompanyNameField';
 
 type SubmitState = 'idle' | 'sending' | 'error';
 
@@ -123,14 +123,23 @@ export function BizApplyForm() {
       ) : null}
       <p className="mb-3.5 text-sm font-bold text-gray-900">담당자 정보</p>
       <div className="grid gap-x-3 md:grid-cols-2">
-        <BizCompanyNameField
-          value={values.company}
+        <Field
+          label="회사명"
+          htmlFor="biz-company"
+          required
           error={errors.company}
-          onChange={(company, companyNameSource) => {
-            markStarted();
-            setValues((current) => ({ ...current, company, companyNameSource }));
-          }}
-        />
+          hint="오공고에 등록된 회사면 목록에서 골라주세요. 없으면 그대로 입력하셔도 돼요."
+        >
+          <CompanyNameCombobox
+            id="biz-company"
+            value={values.company}
+            maxLength={100}
+            onChange={(company, companyNameSource) => {
+              markStarted();
+              setValues((current) => ({ ...current, company, companyNameSource }));
+            }}
+          />
+        </Field>
         <Field label="담당자 이름" htmlFor="biz-name" required error={errors.name}>
           <Input
             id="biz-name"
