@@ -17,6 +17,18 @@ const nextConfig: NextConfig = {
   // 목데이터 여부를 브라우저에도 알린다(`src/shared/config/mocks.ts`). 서버는 그대로
   // `OGONGGO_USE_MOCKS` 를 읽고, 브라우저는 빌드 때 박힌 이 값을 본다.
   env: { NEXT_PUBLIC_OGONGGO_USE_MOCKS: process.env.OGONGGO_USE_MOCKS ?? '' },
+  // 콜드메일에 나간 `biz.ogonggo.co.kr` 링크를 `/biz` 로 보낸다. 경로는 버리고 쿼리(UTM)는 Next 가 그대로
+  // 넘기며, `entry=biz` 로 서브도메인에서 왔음을 남긴다. `permanent` 라 308 이다.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'biz.ogonggo.co.kr' }],
+        destination: 'https://www.ogonggo.co.kr/biz?entry=biz',
+        permanent: true,
+      },
+    ];
+  },
   // Same-origin from the browser avoids CORS and keeps packages/api free of
   // any base-URL config — see packages/api/src/lib/http-client.ts.
   async rewrites() {
