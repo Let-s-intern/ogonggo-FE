@@ -9,6 +9,8 @@ import {
   type ApplyValues,
   EMPTY_VALUES,
   FIELD_ORDER,
+  REQUEST_MAX_LENGTH,
+  SURVEY_MAX_LENGTH,
   applyPrefill,
   formatPhone,
   hasErrors,
@@ -222,9 +224,19 @@ export function BizApplyForm() {
             id="biz-survey"
             rows={4}
             value={values.survey}
-            maxLength={2000}
+            maxLength={SURVEY_MAX_LENGTH}
             placeholder="자유롭게 적어주세요"
             onChange={(event) => set('survey', event.target.value)}
+          />
+        </Field>
+        <Field label="요청사항·기타" htmlFor="biz-request">
+          <Textarea
+            id="biz-request"
+            rows={3}
+            value={values.request}
+            maxLength={REQUEST_MAX_LENGTH}
+            placeholder="그 밖에 전하실 내용이 있으면 적어주세요 (선택)"
+            onChange={(event) => set('request', event.target.value)}
           />
         </Field>
       </div>
