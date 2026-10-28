@@ -5,6 +5,8 @@
  * 고쳤다. 손으로 고치는 값은 이 파일에만 둔다.
  */
 
+import { enumOptions } from '@ogonggo/api';
+
 export const INSTAGRAM_URL = 'https://www.instagram.com/letscareer.job';
 
 /**
@@ -20,6 +22,11 @@ export const LAUNCH_DATE_LABEL = '10월 12일';
 export const INSTAGRAM_FOLLOWERS_LABEL = '2.7만';
 export const OPEN_CHAT_MEMBERS_LABEL = '5,539';
 export const OPEN_CHAT_ROOM_COUNT = 6;
+
+/** 직무별 오픈채팅방 여섯 곳. 라벨은 enum 카탈로그 그대로다(`docs/architecture.md` 라벨 규칙 1). */
+export const OPEN_CHAT_ROOMS = enumOptions('AdvertisementInquiryPromotionChannel').filter(
+  ({ value }) => value.startsWith('OPEN_CHAT_'),
+);
 
 export const INTRO_FEATURES = [
   {

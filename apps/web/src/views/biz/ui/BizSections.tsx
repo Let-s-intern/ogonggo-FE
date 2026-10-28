@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import type { ReactNode } from 'react';
-import { enumLabel, enumOptions } from '@ogonggo/api';
+import { enumLabel } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import {
   APPLY_NOTES,
@@ -9,16 +9,12 @@ import {
   INSTAGRAM_URL,
   INTRO_FEATURES,
   OPEN_CHAT_MEMBERS_LABEL,
+  OPEN_CHAT_ROOMS,
   OPEN_CHAT_ROOM_COUNT,
   PRIVACY_URL,
   STEPS,
   TERMS_URL,
 } from '../model/content';
-
-/** 직무별 오픈채팅방 여섯 곳. 라벨은 enum 카탈로그 그대로다(`docs/architecture.md` 라벨 규칙 1). */
-export const OPEN_CHAT_ROOMS = enumOptions('AdvertisementInquiryPromotionChannel').filter(
-  ({ value }) => value.startsWith('OPEN_CHAT_'),
-);
 
 export function SectionHeading({
   eyebrow,

@@ -1,3 +1,4 @@
+import { BizApplyForm } from './BizApplyForm';
 import { BizFloatingApply } from './BizFloatingApply';
 import { BizHero } from './BizHero';
 import { BizSiteHeader } from './BizSiteHeader';
@@ -22,6 +23,7 @@ export function BizPage() {
         <section id="apply" className="scroll-mt-16 bg-blue-00 py-16 md:py-24">
           <div className="mx-auto grid max-w-[1120px] items-start gap-10 px-5 md:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
             <BizApplySide />
+            <BizApplyForm />
           </div>
         </section>
         <BizFaq />
