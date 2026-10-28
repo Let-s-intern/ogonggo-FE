@@ -1,6 +1,7 @@
 import { INSTAGRAM_URL, LAUNCH_DATE_LABEL } from '../model/content';
+import { BizHeroScreens } from './BizHeroScreens';
 
-/** 히어로 문구(PRD 2절). 버튼은 같은 화면 안의 구역으로 내려간다. */
+/** 히어로 문구와 화면 전환(PRD 2절). 버튼은 같은 화면 안의 구역으로 내려간다. */
 export function BizHero() {
   return (
     <header className="overflow-hidden bg-[linear-gradient(180deg,var(--color-blue-00)_0%,#fff_100%)] pt-14 pb-16 md:pt-20 md:pb-24">
@@ -52,6 +53,7 @@ export function BizHero() {
             신청 비용 없음 · 소재 제작은 렛츠커리어가 진행 · 2일 안에 일정 안내
           </p>
         </div>
+        <BizHeroScreens />
       </div>
     </header>
   );

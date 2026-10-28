@@ -92,3 +92,45 @@ export const FAQ = [
 export const TERMS_URL =
   'https://letsintern.notion.site/3e95e77cbee180f993a3c70e3bce5a21?source=copy_link';
 export const PRIVACY_URL = 'https://letsintern.notion.site/3e95e77cbee18074a1c7dc485644d737?pvs=74';
+
+/**
+ * 히어로 브라우저 틀이 돌리는 화면(PRD 2절). 캡처는 `public/biz/` 에 화면 이름으로 둔다.
+ *
+ * 무엇을 찍을지는 영업이 고르고 노출 동의를 받는다(PRD 결정 5). 확정 전이라 2026-10-28 에 게시 중이던
+ * 공고 19048 과 부트캠프 3305 로 찍었다. 바꿀 때는 같은 이름으로 파일만 바꾸고, 크기가 다르면 아래
+ * `width`·`height` 와 주소 표시줄을 함께 고친다. 1280px 폭, 로그아웃 상태, 위에서 1800px 까지다.
+ */
+export const HERO_SCREENS = [
+  {
+    key: 'jobs-list',
+    label: '채용공고 목록',
+    address: 'ogonggo.co.kr',
+    src: '/biz/jobs-list.webp',
+    width: 1280,
+    height: 1800,
+  },
+  {
+    key: 'job-detail',
+    label: '공고 상세',
+    address: 'ogonggo.co.kr/jobs/19048',
+    src: '/biz/job-detail.webp',
+    width: 1280,
+    height: 1800,
+  },
+  {
+    key: 'bootcamps-list',
+    label: '부트캠프 목록',
+    address: 'ogonggo.co.kr/bootcamps',
+    src: '/biz/bootcamps-list.webp',
+    width: 1280,
+    height: 1800,
+  },
+  {
+    key: 'bootcamp-detail',
+    label: '부트캠프 상세',
+    address: 'ogonggo.co.kr/bootcamps/3305',
+    src: '/biz/bootcamp-detail.webp',
+    width: 1280,
+    height: 1800,
+  },
+] as const;

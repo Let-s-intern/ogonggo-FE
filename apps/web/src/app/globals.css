@@ -227,3 +227,29 @@
     display: none;
   }
 }
+
+/*
+ * `/biz` 히어로의 화면 전환(`views/biz/ui/BizHeroScreens.tsx`). 화면이 머무는 동안 캡처를 끝까지
+ * 내리는 스크롤과, 탭 아래 진행 막대다. 진행 막대의 `animationend` 가 다음 화면으로 넘기는 시계라
+ * 둘을 함께 `animation-play-state` 로 멈추면 정지와 재개가 따로 맞출 것 없이 맞는다.
+ *
+ * `--biz-view-h` 는 틀 안 보이는 높이다. 그림 자기 높이(-100%)에서 그만큼을 빼야 마지막에 그림 바닥이
+ * 틀 바닥에 닿는다.
+ */
+@keyframes ogonggo-biz-screen-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% + var(--biz-view-h)));
+  }
+}
+
+@keyframes ogonggo-biz-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
