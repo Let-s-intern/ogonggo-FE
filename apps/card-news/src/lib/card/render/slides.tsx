@@ -225,7 +225,13 @@ function TabSlide({
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', left: PAD_X, top: padTop + 12 }}>
         <Editable id="brandMark" edits={edits}>
-          <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} size={64} />
+          <BrandMark
+            brand={spec.settings.brandMark}
+            image={spec.settings.brandImage}
+            palette={palette}
+            assets={assets}
+            size={64}
+          />
         </Editable>
       </div>
       {/* 로고 탭과 카드는 한 요소로 같이 움직인다. 카드가 탭 아래 8px 를 덮는다. */}
@@ -362,7 +368,13 @@ function LabelsSlide({
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
         <Editable id="brandMark" edits={edits}>
-          <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} size={52} />
+          <BrandMark
+            brand={spec.settings.brandMark}
+            image={spec.settings.brandImage}
+            palette={palette}
+            assets={assets}
+            size={52}
+          />
         </Editable>
       </div>
       <Column size={size} metrics={metrics} justify="flex-start">
@@ -566,7 +578,12 @@ function InfoSlide({
         </div>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <Editable id="brandMark" edits={edits}>
-            <BrandMark brand={spec.settings.brandMark} palette={palette} assets={assets} />
+            <BrandMark
+              brand={spec.settings.brandMark}
+              image={spec.settings.brandImage}
+              palette={palette}
+              assets={assets}
+            />
           </Editable>
         </div>
       </Column>

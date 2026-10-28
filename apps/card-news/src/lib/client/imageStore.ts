@@ -6,6 +6,9 @@
  * 쓰이고 새로고침하면 사라진다.
  */
 const DB_NAME = 'ogonggo.card-news.images';
+
+/** 올린 브랜드 로고를 두는 키. 공고마다가 아니라 이 브라우저에 하나다. */
+export const BRAND_IMAGE_ID = 'brand-mark';
 const STORE = 'images';
 
 let dbPromise: Promise<IDBDatabase | null> | null = null;

@@ -91,7 +91,7 @@ const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const HIGHLIGHTS = ['tint', 'brand', 'black', 'custom'] as const;
 const LOGO_STYLES = ['auto', 'mono', 'original', 'plate'] as const;
-const BRAND_MARKS = ['ogonggo', 'letscareer'] as const;
+const BRAND_MARKS = ['ogonggo', 'letscareer', 'custom', 'none'] as const;
 const TEXT_FIELDS = ['badge', 'headline', 'roleTitle', 'note', 'ctaHeadline', 'ctaSub', 'caption'];
 
 /** 사용자에게 보일 진행 문구. 모델이 무엇을 하고 있는지 채팅 창에 한 줄로 적는다. */
@@ -321,7 +321,7 @@ async function readCard(context: ToolContext): Promise<string> {
   }
   const variant = context.variant();
   const size = CARD_SIZES[context.size()];
-  const { photo, ...settings } = loaded.settings;
+  const { photo, brandImage, ...settings } = loaded.settings;
   return JSON.stringify({
     job: { company: loaded.job.companyName, title: loaded.job.title },
     variant: { id: variant, label: variantOf(variant).label },
@@ -333,6 +333,7 @@ async function readCard(context: ToolContext): Promise<string> {
       bodyScale: textScale(settings.bodyScale),
       brandMark: settings.brandMark ?? 'ogonggo',
       photo: Boolean(photo),
+      brandImage: Boolean(brandImage),
       logo: Boolean(loaded.logo),
     },
     content: loaded.content,

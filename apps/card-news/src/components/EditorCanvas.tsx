@@ -326,6 +326,7 @@ export function EditorCanvas({
   textColor,
   checkLayers,
   onLogo,
+  onBrand,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
@@ -351,6 +352,8 @@ export function EditorCanvas({
   checkLayers: (layers: Layer[]) => string | null;
   /** 회사 로고 자리에 붙이거나 놓은 이미지. 회사 로고를 바꾼다. */
   onLogo: (image: Blob) => void;
+  /** 브랜드 로고 자리에 붙이거나 놓은 이미지. 브랜드 로고를 올린 로고로 바꾼다. */
+  onBrand: (image: Blob) => void;
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
@@ -542,8 +545,8 @@ export function EditorCanvas({
 
   // 붙여넣기·복사는 캔버스 칸이 아니라 창에서 받는다 — 캔버스 밖 빈 곳을 누른 뒤에도 붙는다. 입력 칸이
   // 받는 것은 건드리지 않는다.
-  const clipboardRef = useRef({ selected, layerOf, addText, addImages, addCopy, onLogo });
-  clipboardRef.current = { selected, layerOf, addText, addImages, addCopy, onLogo };
+  const clipboardRef = useRef({ selected, layerOf, addText, addImages, addCopy, onLogo, onBrand });
+  clipboardRef.current = { selected, layerOf, addText, addImages, addCopy, onLogo, onBrand };
   useEffect(() => {
     const onCopy = (event: ClipboardEvent) => {
       const { selected: now, layerOf: find } = clipboardRef.current;
@@ -577,8 +580,11 @@ export function EditorCanvas({
         }
       }
       // 회사 로고를 고른 채 붙인 이미지는 로고가 된다(로고가 없어 회사명 글자로 그린 자리도 같다).
+      // 브랜드 로고를 고른 채 붙이면 브랜드 로고가 된다.
       if (files[0] && actions.selected === 'companyLogo') {
         actions.onLogo(files[0]);
+      } else if (files[0] && actions.selected === 'brandMark') {
+        actions.onBrand(files[0]);
       } else if (files.length > 0) {
         void actions.addImages(files);
       } else if (text) {
@@ -852,17 +858,18 @@ export function EditorCanvas({
     event.preventDefault();
     frameRef.current?.focus({ preventScroll: true });
     const at = toCard(event.clientX, event.clientY);
-    const logo = boxes.find((box) => box.id === 'companyLogo');
-    if (
-      files[0] &&
-      logo &&
-      at.x >= logo.x &&
-      at.x <= logo.x + logo.width &&
-      at.y >= logo.y &&
-      at.y <= logo.y + logo.height
-    ) {
-      onSelect('companyLogo');
-      onLogo(files[0]);
+    // 회사 로고나 브랜드 로고 위에 놓으면 그 로고를 바꾼다.
+    const target = boxes.find(
+      (box) =>
+        (box.id === 'companyLogo' || box.id === 'brandMark') &&
+        at.x >= box.x &&
+        at.x <= box.x + box.width &&
+        at.y >= box.y &&
+        at.y <= box.y + box.height,
+    );
+    if (files[0] && target) {
+      onSelect(target.id);
+      (target.id === 'brandMark' ? onBrand : onLogo)(files[0]);
       return;
     }
     void addImages(files, at);

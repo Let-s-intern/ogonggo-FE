@@ -31,6 +31,8 @@ interface PropertiesPanelProps {
   onResetBrandColor: () => void;
   logo?: string;
   onLogoChange: (logo: string | undefined) => void;
+  /** 브랜드 로고를 올린 이미지로. `null` 이면 올린 로고를 지운다. */
+  onBrandImage: (file: Blob | null) => void;
   candidates: ImageCandidates | null;
   /** 캔버스에서 고른 요소. 없으면 공통 설정을 보여 준다. */
   selected: ElementId | null;
@@ -76,6 +78,8 @@ const LOGO_STYLES: { value: LogoStyle; label: string }[] = [
 const BRAND_MARKS: { value: BrandMarkId; label: string }[] = [
   { value: 'ogonggo', label: '오공고' },
   { value: 'letscareer', label: '렛츠커리어' },
+  { value: 'custom', label: '올린 로고' },
+  { value: 'none', label: '숨김' },
 ];
 
 /** 제목 배율이 걸리는 요소와 본문 배율이 걸리는 요소. 고르면 그 글자 크기 슬라이더가 보인다. */
@@ -156,17 +160,24 @@ function TextScaleSliders({
   );
 }
 
-/** 이동값 칸. 숫자가 아니면 무시한다. */
+/**
+ * 숫자 칸. 치는 동안의 글자는 따로 들고 있다가 숫자이고 `min` 이상일 때만 반영한다. 값을 바로
+ * 칸에 되돌려 넣으면 칸을 비우거나 `min` 아래 중간값("40" 을 치려고 거치는 "4")을 거칠 수 없다.
+ * 칸을 떠나면 반영된 값으로 돌아간다.
+ */
 function OffsetField({
   label,
   value,
   onChange,
+  min,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  min?: number;
 }) {
   const id = useId();
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-sm text-gray-700">
@@ -176,13 +187,16 @@ function OffsetField({
         id={id}
         type="number"
         className="h-9 text-sm"
-        value={value}
+        value={draft ?? String(value)}
         onChange={(event) => {
-          const next = Number(event.target.value);
-          if (event.target.value !== '' && Number.isFinite(next)) {
+          const raw = event.target.value;
+          setDraft(raw);
+          const next = Number(raw);
+          if (raw !== '' && Number.isFinite(next) && (min === undefined || next >= min)) {
             onChange(Math.round(next));
           }
         }}
+        onBlur={() => setDraft(null)}
       />
     </div>
   );
@@ -331,7 +345,8 @@ function LayerProperties({
           <OffsetField
             label="글자 크기(px)"
             value={layer.fontSize}
-            onChange={(fontSize) => setText({ fontSize: Math.max(8, fontSize) }, 'fontSize')}
+            min={8}
+            onChange={(fontSize) => setText({ fontSize }, 'fontSize')}
           />
           <div className="flex flex-col gap-2">
             <span className="text-sm text-gray-700">굵기</span>
@@ -376,7 +391,8 @@ function LayerProperties({
           <OffsetField
             label="모서리 둥글기(px)"
             value={layer.radius}
-            onChange={(radius) => setImage({ radius: Math.max(0, radius) }, 'radius')}
+            min={0}
+            onChange={(radius) => setImage({ radius }, 'radius')}
           />
         </div>
       )}
@@ -395,15 +411,15 @@ function LayerProperties({
         <OffsetField
           label="폭(px)"
           value={layer.width}
-          onChange={(width) =>
-            onChange({ ...layer, width: Math.max(20, width) }, `size:${layer.id}`)
-          }
+          min={20}
+          onChange={(width) => onChange({ ...layer, width }, `size:${layer.id}`)}
         />
         {layer.kind === 'image' ? (
           <OffsetField
             label="높이(px)"
             value={layer.height}
-            onChange={(height) => setImage({ height: Math.max(1, height) }, 'size')}
+            min={1}
+            onChange={(height) => setImage({ height }, 'size')}
           />
         ) : null}
       </div>
@@ -454,6 +470,7 @@ function Properties({
   onResetBrandColor,
   logo,
   onLogoChange,
+  onBrandImage,
   candidates,
   selected,
   sectionLabels,
@@ -491,6 +508,14 @@ function Properties({
       />
     );
   }
+
+  const uploadBrand = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) {
+      onBrandImage(file);
+    }
+  };
 
   const uploadLogo = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -549,6 +574,33 @@ function Properties({
           value={settings.brandMark ?? 'ogonggo'}
           onChange={(brandMark) => onSettingsChange({ brandMark })}
         />
+        <div className="flex items-center justify-between gap-2">
+          {settings.brandImage ? (
+            <img src={settings.brandImage.dataUrl} alt="" className="h-8 max-w-28 object-contain" />
+          ) : (
+            <span className="text-xs text-gray-400">올린 로고 없음</span>
+          )}
+          <span className="flex items-center gap-2">
+            <label className="cursor-pointer rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50">
+              올리기
+              <input type="file" accept="image/*" className="hidden" onChange={uploadBrand} />
+            </label>
+            {settings.brandImage ? (
+              <button
+                type="button"
+                className="text-xs text-gray-500 underline"
+                onClick={() => onBrandImage(null)}
+              >
+                빼기
+              </button>
+            ) : null}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500">
+          {settings.brandMark === 'custom' && !settings.brandImage
+            ? '올린 로고가 없어 오공고 로고를 그립니다. 올리기를 누르거나 캔버스의 브랜드 로고를 고른 채 이미지를 붙여 넣으세요.'
+            : '올린 로고는 이 브라우저에 남아 다른 공고에서도 고를 수 있습니다. 숨김은 모든 장에서 브랜드 로고를 뺍니다.'}
+        </p>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
@@ -584,7 +636,7 @@ function Properties({
       </div>
       <div className="border-t border-gray-100 pt-3">
         <ImagePicker
-          label="썸네일 (썸네일 시안)"
+          label="뒷배경"
           image={settings.photo}
           candidates={candidates?.photo ?? null}
           defaultOpacity={PHOTO_OPACITY}
