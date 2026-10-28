@@ -801,4 +801,32 @@ export const ENUM_CATALOG = {
     { name: 'OPEN_CHAT_AI_DEVELOPMENT', desc: '오픈채팅방 · AI역량·개발', parent: null },
     { name: 'RECOMMENDATION_REQUESTED', desc: '정하기 어렵습니다. 추천해주세요', parent: null },
   ],
+  AdvertisementInquiryStatus: [
+    { name: 'RECEIVED', desc: '접수', parent: null },
+    { name: 'CONTACTED', desc: '연락함', parent: null },
+    { name: 'EXECUTED', desc: '집행 완료', parent: null },
+    { name: 'REJECTED', desc: '반려', parent: null },
+  ],
+  AdvertisementInquiryMemberType: [
+    { name: 'COMPANY', desc: '기업 회원', parent: null },
+    { name: 'USER', desc: '일반 회원', parent: null },
+    { name: 'GUEST', desc: '비회원', parent: null },
+  ],
+  AdvertisementInquiryInflowChannel: [
+    { name: 'COLDMAIL', desc: '콜드메일', parent: null },
+    { name: 'INSTAGRAM', desc: '인스타그램', parent: null },
+    { name: 'KAKAO', desc: '카카오톡', parent: null },
+    { name: 'NEWSLETTER', desc: '뉴스레터', parent: null },
+    { name: 'UTM_OTHER', desc: '기타 UTM', parent: null },
+    { name: 'OGONGGO', desc: '오공고 사이트', parent: null },
+    { name: 'LETSCAREER', desc: '렛츠커리어', parent: null },
+    { name: 'SEARCH', desc: '검색', parent: null },
+    { name: 'EXTERNAL_SITE', desc: '외부 사이트', parent: null },
+    { name: 'DIRECT', desc: '직접 접속', parent: null },
+  ],
+  AdvertisementInquiryCompanyNameSource: [
+    { name: 'SEARCH', desc: '검색', parent: null },
+    { name: 'MANUAL', desc: '직접 입력', parent: null },
+    { name: 'MEMBER_PROFILE', desc: '회원 정보', parent: null },
+  ],
 } as const;
