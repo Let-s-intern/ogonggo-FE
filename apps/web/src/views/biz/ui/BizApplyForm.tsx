@@ -35,7 +35,8 @@ export function BizApplyForm() {
   const [values, setValues] = useState<ApplyValues>(EMPTY_VALUES);
   const [submitted, setSubmitted] = useState(false);
   const [state, setState] = useState<SubmitState>('idle');
-  const [doneEmail, setDoneEmail] = useState<string | null>(null);
+  /** 접수된 신청의 회사명·이메일. 있으면 폼 대신 완료 화면이다. */
+  const [done, setDone] = useState<{ companyName: string; email: string } | null>(null);
   const [prefilled, setPrefilled] = useState(false);
   const accountState = useMyAccount();
   /** 미리 채우기는 계정이 처음 읽혔을 때 한 번만 한다. 그 뒤로 지운 칸을 다시 채우지 않는다. */
@@ -80,7 +81,7 @@ export function BizApplyForm() {
     }
     // 허니팟이 채워졌으면 봇이다. 보내지 않고 접수된 것처럼 보인다 — 실패를 보이면 봇이 다른 값으로 다시 온다.
     if (values.website.trim() !== '') {
-      setDoneEmail(values.email.trim());
+      setDone({ companyName: values.company.trim(), email: values.email.trim() });
       return;
     }
     setState('sending');
@@ -88,16 +89,17 @@ export function BizApplyForm() {
       const request = toRequest(values, readInflow());
       await createAdvertisementInquiry(request);
       trackBiz('biz_apply_submit', { biz_channel: request.promotionChannel });
-      setDoneEmail(values.email.trim());
+      setDone({ companyName: values.company.trim(), email: values.email.trim() });
     } catch {
       setState('error');
     }
   };
 
-  if (doneEmail !== null) {
+  if (done !== null) {
     return (
       <BizApplyDone
-        email={doneEmail}
+        companyName={done.companyName}
+        email={done.email}
         role={accountState.kind === 'ready' ? accountState.account.role : undefined}
       />
     );

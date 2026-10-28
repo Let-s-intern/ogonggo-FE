@@ -9,6 +9,8 @@ import { trackBiz } from '../model/analytics';
 const COMPANY_SIGNUP_HREF = '/signup/company';
 
 interface BizApplyDoneProps {
+  /** 신청서의 회사명. 가입 화면에 넘겨 미리 채운다. */
+  companyName: string;
   email: string;
   /** 로그인한 계정의 역할. 비로그인이면 `undefined`. */
   role: MyAccountResponseRole | undefined;
@@ -23,7 +25,7 @@ interface BizApplyDoneProps {
  *
  * `나중에 할게요` 는 가입 카드만 접는다. 접수 안내는 남는다.
  */
-export function BizApplyDone({ email, role }: BizApplyDoneProps) {
+export function BizApplyDone({ companyName, email, role }: BizApplyDoneProps) {
   const [cardHidden, setCardHidden] = useState(false);
   const isCompany = role === 'COMPANY';
 
@@ -62,9 +64,10 @@ export function BizApplyDone({ email, role }: BizApplyDoneProps) {
             </p>
             <p className="mt-2 text-sm leading-relaxed text-gray-600">
               가입하면 홍보한 공고의 게시 상태를 확인하고, 다음 공고부터는 직접 등록할 수 있습니다.
+              입력하신 회사명과 이메일은 미리 채워드려요.
             </p>
             <Link
-              href={COMPANY_SIGNUP_HREF}
+              href={`${COMPANY_SIGNUP_HREF}?${new URLSearchParams({ company: companyName, email })}`}
               onClick={() => trackBiz('biz_signup_click', { biz_placement: 'done' })}
               className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-blue-500 text-base font-bold text-white hover:bg-blue-600"
             >
