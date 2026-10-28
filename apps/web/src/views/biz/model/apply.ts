@@ -2,6 +2,7 @@ import type {
   CreateAdvertisementInquiryRequest,
   CreateAdvertisementInquiryRequestCompanyNameSource,
   CreateAdvertisementInquiryRequestPromotionChannel,
+  MyAccountResponse,
 } from '@ogonggo/api';
 
 /**
@@ -205,4 +206,56 @@ export function formatPhone(value: string): string {
 
   if (digits.length <= 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
+/** 미리 채울 수 있는 칸(PRD 5절 표). 직함은 회원 정보에 없어 늘 비운다. */
+export type PrefillValues = Partial<
+  Pick<ApplyValues, 'company' | 'companyNameSource' | 'name' | 'phone' | 'email'>
+>;
+
+/**
+ * 로그인한 계정으로 담당자 정보를 채운다(PRD 5절 표, 결정 6 — 일반 회원도 채운다).
+ *
+ * 기업 회원은 기업 정보, 그 밖(일반 회원·멘토·관리자)은 개인 프로필이다. 서버도 기업 회원이 아니면 일반
+ * 회원으로 저장한다. 알림 이메일이 없으면 가입 이메일이다. 기업 회원의 회사명은 입력 방식 `MEMBER_PROFILE` 이다.
+ */
+export function prefillFrom(account: MyAccountResponse): PrefillValues {
+  const nonBlank = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
+  if (account.role === 'COMPANY') {
+    const company = account.companyProfile;
+    const organization = nonBlank(company?.organizationName);
+    return {
+      company: organization,
+      companyNameSource: organization ? 'MEMBER_PROFILE' : undefined,
+      name: nonBlank(company?.managerName),
+      phone: company?.managerPhone ? formatPhone(company.managerPhone) : undefined,
+      email: nonBlank(company?.notificationEmail) ?? nonBlank(account.email),
+    };
+  }
+  const profile = account.profile;
+  return {
+    name: nonBlank(profile?.name),
+    phone: profile?.phoneNum ? formatPhone(profile.phoneNum) : undefined,
+    email: nonBlank(profile?.notificationEmail) ?? nonBlank(account.email),
+  };
+}
+
+/** 채울 값이 하나라도 있는지. 폼 위 안내 한 줄을 그때만 보인다. */
+export function hasPrefill(prefill: PrefillValues): boolean {
+  return Boolean(prefill.company || prefill.name || prefill.phone || prefill.email);
+}
+
+/** 비어 있는 칸만 채운다. 계정 응답이 오기 전에 사람이 먼저 쳤으면 그 값을 덮지 않는다. */
+export function applyPrefill(values: ApplyValues, prefill: PrefillValues): ApplyValues {
+  const next = { ...values };
+  for (const key of ['company', 'name', 'phone', 'email'] as const) {
+    const value = prefill[key];
+    if (value && next[key].trim() === '') {
+      next[key] = value;
+      if (key === 'company' && prefill.companyNameSource) {
+        next.companyNameSource = prefill.companyNameSource;
+      }
+    }
+  }
+  return next;
 }

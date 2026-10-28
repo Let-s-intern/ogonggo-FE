@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createAdvertisementInquiry } from '@ogonggo/api';
 import { Button, Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
+import { useMyAccount } from '@/shared/api/useMyAccount';
 import {
   type ApplyErrors,
   type ApplyValues,
   EMPTY_VALUES,
   FIELD_ORDER,
+  applyPrefill,
   formatPhone,
   hasErrors,
+  hasPrefill,
+  prefillFrom,
   toRequest,
   validateApply,
 } from '../model/apply';
@@ -30,6 +34,20 @@ export function BizApplyForm() {
   const [submitted, setSubmitted] = useState(false);
   const [state, setState] = useState<SubmitState>('idle');
   const [doneEmail, setDoneEmail] = useState<string | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
+  const accountState = useMyAccount();
+  /** 미리 채우기는 계정이 처음 읽혔을 때 한 번만 한다. 그 뒤로 지운 칸을 다시 채우지 않는다. */
+  const prefillDone = useRef(false);
+
+  useEffect(() => {
+    if (accountState.kind !== 'ready' || prefillDone.current) {
+      return;
+    }
+    prefillDone.current = true;
+    const prefill = prefillFrom(accountState.account);
+    setValues((current) => applyPrefill(current, prefill));
+    setPrefilled(hasPrefill(prefill));
+  }, [accountState]);
 
   const errors: ApplyErrors = submitted ? validateApply(values) : {};
 
@@ -71,6 +89,11 @@ export function BizApplyForm() {
       }}
       className="relative rounded-3xl bg-white p-5 shadow-[0_1px_0_rgba(17,24,39,0.04),0_0_0_1px_var(--color-gray-150)] md:p-9"
     >
+      {prefilled ? (
+        <p className="mb-5 rounded-lg bg-blue-00 px-3.5 py-2.5 text-sm text-blue-600">
+          회원 정보로 채웠어요. 다르면 고쳐주세요.
+        </p>
+      ) : null}
       <p className="mb-3.5 text-sm font-bold text-gray-900">담당자 정보</p>
       <div className="grid gap-x-3 md:grid-cols-2">
         <BizCompanyNameField
