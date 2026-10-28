@@ -164,7 +164,7 @@ export function BizApplyForm() {
           />
         </Field>
       </div>
-      <Field label="이메일" htmlFor="biz-email" required error={errors.email}>
+      <Field label="업무용 이메일" htmlFor="biz-email" required error={errors.email}>
         <Input
           id="biz-email"
           type="email"

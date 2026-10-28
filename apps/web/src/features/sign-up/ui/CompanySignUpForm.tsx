@@ -155,13 +155,18 @@ export function CompanySignUpForm({
           placeholder="기업/기관명을 입력해 주세요."
         />
       </SignUpField>
-      <SignUpField label="이메일" htmlFor="company-signup-email" required error={errors.email}>
+      <SignUpField
+        label="업무용 이메일"
+        htmlFor="company-signup-email"
+        required
+        error={errors.email}
+      >
         <Input
           {...input('email')}
           type="email"
           autoComplete="email"
           maxLength={MAX_LENGTH.email}
-          placeholder="이메일을 입력해 주세요."
+          placeholder="업무용 이메일을 입력해 주세요."
         />
       </SignUpField>
       <SignUpField
