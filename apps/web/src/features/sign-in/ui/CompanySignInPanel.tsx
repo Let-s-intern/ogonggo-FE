@@ -49,7 +49,12 @@ export function CompanySignInPanel({ returnPath }: CompanySignInPanelProps) {
   return (
     <div className="flex flex-col">
       <p className="pb-4 text-sm text-gray-500">기업 계정으로 로그인합니다.</p>
-      <SignInForm onSubmit={handleSubmit} pending={pending} error={error} />
+      <SignInForm
+        onSubmit={handleSubmit}
+        pending={pending}
+        error={error}
+        emailLabel="업무용 이메일"
+      />
       <div className="flex justify-center pt-12 text-sm font-medium text-gray-900">
         <Link href="/signup/company" className="hover:underline">
           회원가입

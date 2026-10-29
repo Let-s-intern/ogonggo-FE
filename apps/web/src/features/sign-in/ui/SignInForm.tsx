@@ -9,6 +9,8 @@ export interface SignInFormProps {
   onSubmit: (credentials: { email: string; password: string }) => void;
   pending: boolean;
   error: string | null;
+  /** 이메일 칸 이름. 기업 회원 탭은 `업무용 이메일` 이다. */
+  emailLabel?: string;
 }
 
 /**
@@ -20,7 +22,7 @@ export interface SignInFormProps {
  *
  * 칸 이름은 디자인대로 자리표시 글자로만 보인다. 화면에 라벨이 없으므로 `aria-label` 로 이름을 준다.
  */
-export function SignInForm({ onSubmit, pending, error }: SignInFormProps) {
+export function SignInForm({ onSubmit, pending, error, emailLabel = '이메일' }: SignInFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [missing, setMissing] = useState(false);
@@ -46,8 +48,8 @@ export function SignInForm({ onSubmit, pending, error }: SignInFormProps) {
         type="email"
         name="email"
         autoComplete="email"
-        aria-label="이메일"
-        placeholder="이메일"
+        aria-label={emailLabel}
+        placeholder={emailLabel}
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={message ? true : undefined}

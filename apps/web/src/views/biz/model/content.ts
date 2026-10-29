@@ -34,8 +34,8 @@ export const INTRO_FEATURES = [
     body: '공고의 핵심 정보를 한눈에 파악할 수 있도록 정리해, 지원자가 자신의 경험 중 어떤 부분을 강조할 수 있을지 이해하도록 돕습니다.',
     image: {
       src: '/biz/intro-duties.webp',
-      width: 1654,
-      height: 364,
+      width: 2000,
+      height: 493,
       alt: '채용공고 상세의 담당 업무 구역',
     },
   },
@@ -44,8 +44,8 @@ export const INTRO_FEATURES = [
     body: '필수 요건과 우대 사항을 구분해 보여주어, 지원자가 자신의 지원 가능 여부를 쉽게 판단할 수 있도록 돕습니다.',
     image: {
       src: '/biz/intro-requirements.webp',
-      width: 1654,
-      height: 1548,
+      width: 2000,
+      height: 1080,
       alt: '채용공고 상세의 자격 요건 체크리스트',
     },
   },
@@ -54,8 +54,8 @@ export const INTRO_FEATURES = [
     body: '공모전·동아리·인턴처럼 지원자에게 익숙한 경험을 바탕으로 직무에 필요한 역량을 이해하고, 실제 지원까지 이어질 수 있도록 돕습니다.',
     image: {
       src: '/biz/intro-experiences.webp',
-      width: 1654,
-      height: 760,
+      width: 2000,
+      height: 938,
       alt: '채용공고 상세의 이력서에 담을 경험 구역',
     },
   },
