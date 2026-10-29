@@ -126,7 +126,7 @@ export function UserMemberListPage() {
         <SearchBox
           value={filters.keyword}
           onSubmit={(keyword) => setFilter('keyword', keyword)}
-          placeholder="닉네임·이메일 검색"
+          placeholder="이름·닉네임·이메일 검색"
         />
         <Select
           options={MEMBER_STATUS_OPTIONS}

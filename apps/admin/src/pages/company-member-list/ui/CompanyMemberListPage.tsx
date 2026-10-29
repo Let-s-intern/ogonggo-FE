@@ -10,6 +10,7 @@ import {
   Select,
   type DataTableColumn,
 } from '@ogonggo/ui';
+import { enumLabel } from '@ogonggo/api';
 import type { AdminCompanyMemberResponse } from '@ogonggo/api/src/admin';
 import { useCompanyMemberList } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
@@ -29,7 +30,8 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * "등록 공고" 수는 응답에 없어 뺐고, 대신 계정을 알아볼 로그인 이메일을 둔다. 정렬 파라미터가
  * 없는 것과 행을 누르면 목록 응답을 모달로 보여 주는 것은 일반 회원 목록과 같다.
  *
- * 알림 이메일과 담당자 연락처까지 목록에 두어 행을 열지 않고도 연락처를 찾게 한다.
+ * 알림 이메일과 담당자 연락처까지 목록에 두어 행을 열지 않고도 연락처를 찾게 한다. 가입 때 받은 기업·담당자
+ * 정보(LC-3526)는 칸이 많아 모달에서만 보인다. 그 전에 가입한 회원은 값이 없어 `-` 다.
  */
 export function CompanyMemberListPage() {
   const [selected, setSelected] = useState<AdminCompanyMemberResponse | null>(null);
@@ -84,7 +86,7 @@ export function CompanyMemberListPage() {
         <SearchBox
           value={filters.keyword}
           onSubmit={(keyword) => setFilter('keyword', keyword)}
-          placeholder="회사명·담당자 검색"
+          placeholder="회사명·담당자·이메일 검색"
         />
         <Select
           options={MEMBER_STATUS_OPTIONS}
@@ -124,6 +126,28 @@ export function CompanyMemberListPage() {
 /** 응답에 없는 값은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. */
 const orDash = (value: string | undefined) => value ?? '-';
 
+/** 카탈로그 라벨. 값이 없으면 `-` 다. */
+const labelOrDash = (
+  name: 'CompanyType' | 'CompanyEmployeeCountRange' | 'CompanyManagerDuty',
+  value: string | undefined,
+) => (value ? enumLabel(name, value) : '-');
+
+/**
+ * 사업자 번호 칸. 종류 라벨과 하이픈 넣은 번호(가입 화면과 같은 자리), 해외 기업은 종류 라벨만 보인다.
+ * 서버는 숫자만 저장한다.
+ */
+function businessNumberOf(member: AdminCompanyMemberResponse): string {
+  const { businessNumberType: type, businessNumber: number } = member;
+  if (!type) return '-';
+  const label = enumLabel('CompanyBusinessNumberType', type);
+  if (!number) return label;
+  const formatted =
+    type === 'CORPORATE_REGISTRATION'
+      ? `${number.slice(0, 6)}-${number.slice(6)}`
+      : `${number.slice(0, 3)}-${number.slice(3, 5)}-${number.slice(5)}`;
+  return `${label} ${formatted}`;
+}
+
 function MemberModal({
   member,
   onClose,
@@ -151,6 +175,42 @@ function MemberModal({
           { label: '담당자 연락처', value: orDash(member.managerPhone) },
           { label: '가입일', value: formatDateTime(member.joinedAt) },
           { label: '탈퇴일', value: member.withdrawnAt ? formatDateTime(member.withdrawnAt) : '-' },
+        ]}
+      />
+      <h3 className="pt-6 pb-2.5 text-base font-bold text-gray-900">기업 정보</h3>
+      <DescriptionList
+        items={[
+          { label: '사업자 번호', value: businessNumberOf(member), full: true },
+          { label: '기업 형태', value: labelOrDash('CompanyType', member.companyType) },
+          {
+            label: '직원 수',
+            value: labelOrDash('CompanyEmployeeCountRange', member.employeeCountRange),
+          },
+          { label: '산업', value: orDash(member.industry) },
+          {
+            label: '홈페이지',
+            value: member.homepageUrl ? (
+              <a
+                href={member.homepageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-blue-600 hover:underline"
+              >
+                {member.homepageUrl}
+              </a>
+            ) : (
+              '-'
+            ),
+          },
+          { label: '주소', value: orDash(member.address), full: true },
+        ]}
+      />
+      <h3 className="pt-6 pb-2.5 text-base font-bold text-gray-900">담당자 정보</h3>
+      <DescriptionList
+        items={[
+          { label: '직책', value: orDash(member.managerTitle) },
+          { label: '담당 업무', value: labelOrDash('CompanyManagerDuty', member.managerDuty) },
+          { label: '추천인', value: orDash(member.recommender), full: true },
         ]}
       />
       <div className="flex justify-end pt-6">
