@@ -19,8 +19,10 @@ export const LAUNCH_DATE_LABEL = '10월 12일';
  * (`ogonggo-BE/.../advertisementinquiry/domain/AdvertisementInquiryPromotionChannel.kt` 주석).
  * 손으로 고치는 값이다.
  */
-export const INSTAGRAM_FOLLOWERS_LABEL = '2.7만';
-export const OPEN_CHAT_MEMBERS_LABEL = '5,539';
+export const INSTAGRAM_FOLLOWERS_LABEL = '2.9만';
+export const OPEN_CHAT_MEMBERS_LABEL = '7,281';
+/** 오픈채팅 인원을 센 때. 인원 옆에 `기준` 으로 붙는다. */
+export const OPEN_CHAT_MEMBERS_AS_OF = '2026년 10월';
 export const OPEN_CHAT_ROOM_COUNT = 6;
 
 /** 직무별 오픈채팅방 여섯 곳. 라벨은 enum 카탈로그 그대로다(`docs/architecture.md` 라벨 규칙 1). */
@@ -64,10 +66,10 @@ export const INTRO_FEATURES = [
 export const STEPS = [
   { title: '신청서 제출', body: '채널과 공고 링크만 남겨주세요. 1분이면 끝납니다.' },
   {
-    title: '일정 안내와 소재 확인',
-    body: '2일 안에 담당자가 연락드리고, 제작한 소재를 발송 전에 확인받습니다.',
+    title: '진행 여부와 송출일 안내',
+    body: '담당자가 확인 후 진행 여부와 (진행 시) 송출일을 안내드립니다.',
   },
-  { title: '홍보 집행', body: '선택한 채널에 공고가 올라가고 오늘의 공고에도 게시됩니다.' },
+  { title: '홍보 집행', body: '오늘의 공고에 게시 후 선택한 채널을 통해 공고가 확산됩니다.' },
 ] as const;
 
 export const APPLY_NOTES = [
@@ -92,7 +94,7 @@ export const FAQ = [
   },
   {
     q: '공고 소재를 저희가 만들어야 하나요?',
-    a: '아닙니다. 채용 페이지 링크만 주시면 렛츠커리어가 채널별 소재를 제작하고, 발송 전에 확인받습니다.',
+    a: '아닙니다. 채용 페이지 링크만 주시면 렛츠커리어가 채널별 소재를 제작합니다.',
   },
 ] as const;
 

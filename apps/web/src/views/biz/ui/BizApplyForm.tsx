@@ -128,7 +128,7 @@ export function BizApplyForm() {
           htmlFor="biz-company"
           required
           error={errors.company}
-          hint="오공고에 등록된 회사면 목록에서 골라주세요. 없으면 그대로 입력하셔도 돼요."
+          hint="오공고에 등록된 회사라면 목록에서 골라주세요. 없으면 그대로 입력하셔도 돼요."
         >
           <CompanyNameCombobox
             id="biz-company"
