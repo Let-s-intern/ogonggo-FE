@@ -60,6 +60,11 @@ export const router = createBrowserRouter([
       { path: 'ads/rejections', element: <RejectionsPage /> },
 
       { path: 'business/ad-inquiries', element: <AdInquiryListPage /> },
+      {
+        path: 'business/rejected-ad-inquiries',
+        // 경로가 달라도 같은 컴포넌트라 key 가 없으면 메뉴를 옮겨도 상태가 남는다.
+        element: <AdInquiryListPage key="rejected" view="rejected" />,
+      },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },

@@ -18,7 +18,7 @@ export function AdInquiryCsvButton({ filters }: { filters: AdInquiryListFilters 
       const blob = new Blob([toAdInquiryCsv(rows)], { type: 'text/csv;charset=utf-8' });
       const anchor = document.createElement('a');
       anchor.href = URL.createObjectURL(blob);
-      anchor.download = `ad-inquiries-${todayInSeoul()}.csv`;
+      anchor.download = `${filters.view === 'rejected' ? 'rejected-' : ''}ad-inquiries-${todayInSeoul()}.csv`;
       anchor.click();
       URL.revokeObjectURL(anchor.href);
       setState('idle');

@@ -18,14 +18,14 @@ const SELECTED = 'border-transparent bg-blue-50 font-semibold text-blue-500';
 const UNSELECTED = 'text-gray-500';
 
 /**
- * 탭 안의 처리 상태 선택지. `광고 문의` 탭은 반려를 뺀 셋만 고른다(반려는 `반려한 문의` 탭이다). `반려한 문의`
- * 탭은 상태가 하나뿐이라 처리 상태 필터를 숨긴다.
+ * 처리 상태 선택지. `광고 문의` 는 반려를 뺀 셋만 고른다(반려는 `반려한 문의` 메뉴다). `반려한 문의` 는 상태가
+ * 하나뿐이라 처리 상태 필터를 숨긴다.
  */
 const ACTIVE_STATUS_OPTIONS = AD_INQUIRY_STATUS_OPTIONS.filter(
   (option) => option.value !== 'REJECTED',
 );
 
-type FilterKey = Exclude<keyof AdInquiryListFilters, 'page' | 'tab'>;
+type FilterKey = Exclude<keyof AdInquiryListFilters, 'page' | 'view'>;
 
 const SELECTS: { key: FilterKey; label: string; options: SelectOption[] }[] = [
   { key: 'inquiryType', label: '문의 유형', options: AD_INQUIRY_TYPE_OPTIONS },
@@ -60,7 +60,7 @@ export function AdInquiryFilters({
 
   return (
     <ListToolbar>
-      {SELECTS.filter(({ key }) => !(key === 'status' && filters.tab === 'rejected')).map(
+      {SELECTS.filter(({ key }) => !(key === 'status' && filters.view === 'rejected')).map(
         ({ key, label, options }) => (
           <Select
             key={key}

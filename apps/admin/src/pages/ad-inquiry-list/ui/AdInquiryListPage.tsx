@@ -1,10 +1,9 @@
 import { useSearchParams } from 'react-router';
-import { Callout, Pagination, Tabs } from '@ogonggo/ui';
+import { Callout, Pagination } from '@ogonggo/ui';
 import {
   type AdInquiryListFilters,
-  type AdInquiryTab,
+  type AdInquiryView,
   useAdInquiryList,
-  useAdInquiryTabCount,
 } from '@/entities/advertisement-inquiry/api/useAdvertisementInquiries';
 import { PageHeader } from '@/widgets/page-header';
 import { AdInquiryActions } from './AdInquiryActions';
@@ -13,10 +12,15 @@ import { AdInquiryCsvButton } from './AdInquiryCsvButton';
 import { AdInquiryFilters } from './AdInquiryFilters';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
+const TITLES: Record<AdInquiryView, string> = { active: '광고 문의', rejected: '반려한 문의' };
+
 /**
  * 광고 문의 목록(PRD `어드민 화면`). 영업이 한 건씩 읽고 연락하는 흐름이라 표가 아니라 한 줄에 카드 하나다.
+ *
+ * `광고 문의`(반려 제외)와 `반려한 문의` 두 메뉴가 이 화면을 함께 쓴다(LC-3525). 처음에는 목록 위 탭이었는데
+ * 어색하다는 말이 있어(2026-10-29, 사용자) `광고` 구역의 `검수 대기`·`반려 보관` 처럼 메뉴로 나눴다.
  */
-export function AdInquiryListPage() {
+export function AdInquiryListPage({ view = 'active' }: { view?: AdInquiryView }) {
   const { get, page, setPage } = useListQuery();
   const [, setSearchParams] = useSearchParams();
 
@@ -37,11 +41,9 @@ export function AdInquiryListPage() {
     setSearchParams(next);
   };
 
-  const tab: AdInquiryTab = get('tab') === 'rejected' ? 'rejected' : 'active';
-
   const filters: AdInquiryListFilters = {
     page,
-    tab,
+    view,
     inquiryType: get('inquiryType'),
     campaignCode: get('campaignCode'),
     status: get('status'),
@@ -54,27 +56,10 @@ export function AdInquiryListPage() {
 
   const { data, isPending, isError } = useAdInquiryList(filters);
   const items = data?.items ?? [];
-  const activeCount = useAdInquiryTabCount(filters, 'active').data;
-  const rejectedCount = useAdInquiryTabCount(filters, 'rejected').data;
-  const withCount = (label: string, count: number | undefined) =>
-    count === undefined ? label : `${label} ${count.toLocaleString()}`;
 
   return (
     <>
-      <PageHeader title="광고 문의" action={<AdInquiryCsvButton filters={filters} />} />
-      <Tabs
-        aria-label="광고 문의 구분"
-        items={[
-          { value: 'active', label: withCount('광고 문의', activeCount) },
-          { value: 'rejected', label: withCount('반려한 문의', rejectedCount) },
-        ]}
-        value={tab}
-        // 탭을 바꾸면 탭 안의 상태 필터는 뜻이 달라져 지운다. 다른 필터는 그대로 둔다.
-        onValueChange={(next) =>
-          changeFilters({ tab: next === 'rejected' ? next : '', status: '' })
-        }
-        className="mb-4"
-      />
+      <PageHeader title={TITLES[view]} action={<AdInquiryCsvButton filters={filters} />} />
       <AdInquiryFilters
         filters={filters}
         total={data?.pageInfo.totalElements}
