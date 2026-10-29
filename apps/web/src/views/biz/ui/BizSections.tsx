@@ -8,6 +8,7 @@ import {
   INSTAGRAM_FOLLOWERS_LABEL,
   INSTAGRAM_URL,
   INTRO_FEATURES,
+  OPEN_CHAT_MEMBERS_AS_OF,
   OPEN_CHAT_MEMBERS_LABEL,
   OPEN_CHAT_ROOMS,
   OPEN_CHAT_ROOM_COUNT,
@@ -110,7 +111,7 @@ export function BizChannels() {
               <small className="ml-1.5 text-base font-semibold text-gray-500">팔로워</small>
             </p>
             <p className="mt-3 text-[15px] leading-[1.65] text-gray-600">
-              공고 카드뉴스와 스토리로 나갑니다. 저장과 공유가 가장 많이 일어나는 채널입니다.
+              저장과 공유가 가장 많이 일어나는 채널입니다.
             </p>
             <p className="mt-3.5 text-[13px] text-gray-500">
               기존 유료 상품 · 이벤트 기간 <b className="text-blue-600">1회 무료</b>
@@ -124,6 +125,7 @@ export function BizChannels() {
                 명 · {OPEN_CHAT_ROOM_COUNT}개 방
               </small>
             </p>
+            <p className="mt-1 text-[13px] text-gray-500">{OPEN_CHAT_MEMBERS_AS_OF} 기준</p>
             <p className="mt-3 text-[15px] leading-[1.65] text-gray-600">
               뽑는 직군의 방으로만 정확히 보낼 수 있습니다.
             </p>
