@@ -1726,6 +1726,108 @@ export const useHideAiJob = <TError = ErrorResponse,
       return useMutation(getHideAiJobMutationOptions(options), queryClient);
     }
 
+export type closeAiJobResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type closeAiJobResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type closeAiJobResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type closeAiJobResponseSuccess = (closeAiJobResponse200) & {
+  headers: Headers;
+};
+export type closeAiJobResponseError = (closeAiJobResponse401 | closeAiJobResponse404) & {
+  headers: Headers;
+};
+
+export type closeAiJobResponse = (closeAiJobResponseSuccess | closeAiJobResponseError)
+
+export const getCloseAiJobUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}/close`
+}
+
+/**
+ *
+ *             모집을 마감합니다. 마감일이 없는 상시 채용 공고가 원래 사이트 목록에서 사라졌을 때 씁니다.
+ *             게시 상태는 바꾸지 않아 사용자 화면에 모집 마감으로 보입니다. AI 서버가 등록한 크롤링 공고만 마감합니다.
+ *             이미 마감한 공고를 다시 마감해도 처음 마감 일시를 그대로 두고 성공합니다. 삭제한 공고, 고용24 공고, 기업회원 공고는 찾지 않습니다.
+ * @summary AI 서버 채용공고 마감
+ */
+export const closeAiJob = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<closeAiJobResponse> => {
+
+  return httpClient<closeAiJobResponse>(getCloseAiJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseAiJobMutationKey = () => ['closeAiJob'] as const;
+
+export const getCloseAiJobMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAiJob>>, TError,CloseAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeAiJob>>, TError,CloseAiJobMutationVariables, TContext> => {
+
+const mutationKey = getCloseAiJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeAiJob>>, CloseAiJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeAiJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseAiJobMutationResult = NonNullable<Awaited<ReturnType<typeof closeAiJob>>>
+
+    export type CloseAiJobMutationError = ErrorResponse
+    export type CloseAiJobMutationVariables = {jobId: number}
+
+    /**
+ * @summary AI 서버 채용공고 마감
+ */
+export const useCloseAiJob = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAiJob>>, TError,CloseAiJobMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeAiJob>>,
+        TError,
+        CloseAiJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseAiJobMutationOptions(options), queryClient);
+    }
+
 export type getAiBootcampResponse200 = {
   data: SuccessResponseAiBootcampLookupResponse
   status: 200
@@ -5863,7 +5965,7 @@ export const getListGeneralMembersUrl = (params?: ListGeneralMembersParams,) => 
  *             탈퇴·정지한 회원도 포함하며 status로 거를 수 있습니다. role로 USER·MENTOR·ADMIN 중 하나만 거를 수 있습니다.
  *             inflowSource로 렛츠커리어 기존 회원(LETSCAREER)과 오공고 신규 유입(OGONGGO)을 거를 수 있습니다.
  *
- *             keyword는 닉네임이나 이메일에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
+ *             keyword는 이름, 닉네임, 이메일에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
  *             joinedFrom·joinedTo는 가입일(YYYY-MM-DD) 범위이며 두 날짜를 모두 포함합니다.
  *             필터는 모두 AND로 묶이고 값을 보내지 않거나 빈 값을 보내면 그 조건을 적용하지 않습니다.
  * @summary 일반 회원 목록 조회
@@ -6645,7 +6747,7 @@ export const getListCompanyMembersUrl = (params?: ListCompanyMembersParams,) => 
  *             기업용 회원가입으로 만든 비즈니스(기업) 회원을 최근 가입 순으로 반환합니다.
  *             탈퇴·정지한 회원도 포함하며 status로 거를 수 있습니다.
  *
- *             keyword는 회사명이나 담당자 이름에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
+ *             keyword는 회사명, 담당자 이름, 계정 이메일에서 대소문자를 가리지 않고 부분 일치로 찾습니다.
  *             joinedFrom·joinedTo는 가입일(YYYY-MM-DD) 범위이며 두 날짜를 모두 포함합니다.
  *             필터는 모두 AND로 묶이고 값을 보내지 않거나 빈 값을 보내면 그 조건을 적용하지 않습니다.
  * @summary 비즈니스 회원 목록 조회
@@ -7165,6 +7267,8 @@ export const getCreateAiJobResponseMock = (overrideResponse: Partial<Extract<Suc
 
 export const getHideAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getCloseAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getGetAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampLookupResponse, object>> = {}): SuccessResponseAiBootcampLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampRegistrationResponse, object>> = {}): SuccessResponseAiBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
@@ -7419,6 +7523,18 @@ export const getHideAiJobMockHandler = (overrideResponse?: SuccessResponseUnit |
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getHideAiJobResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getCloseAiJobMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/internal/jobs/:jobId/close', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCloseAiJobResponseMock(),
       { status: 200
       })
   }, options)
@@ -7966,6 +8082,7 @@ export const getOgonggoAdminAPIMock = () => [
   getGetAiJobMockHandler(),
   getCreateAiJobMockHandler(),
   getHideAiJobMockHandler(),
+  getCloseAiJobMockHandler(),
   getGetAiBootcampMockHandler(),
   getCreateAiBootcampMockHandler(),
   getCreateNotificationBatchMockHandler(),

@@ -56,7 +56,11 @@ export const NAV_SECTIONS: NavSection[] = [
      * 메뉴 이름이 `무료 홍보 신청` 이 아닌 이유는 테이블이 문의 유형을 가리지 않기 때문이다(PRD `어드민 화면`).
      */
     title: '비즈니스',
-    items: [{ path: '/business/ad-inquiries', label: '광고 문의' }],
+    items: [
+      { path: '/business/ad-inquiries', label: '광고 문의' },
+      // `/business/ad-inquiries/rejected` 로 두면 메뉴 링크(`end` 없음)가 `광고 문의` 까지 함께 켠다.
+      { path: '/business/rejected-ad-inquiries', label: '반려한 문의' },
+    ],
   },
   {
     /*

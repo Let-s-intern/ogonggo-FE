@@ -19,7 +19,7 @@ page?: number;
  */
 size?: number;
 /**
- * 닉네임이나 이메일에서 찾을 검색어
+ * 이름, 닉네임, 이메일에서 찾을 검색어
  * @minLength 0
  * @maxLength 100
  */
