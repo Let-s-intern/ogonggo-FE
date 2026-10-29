@@ -62,9 +62,11 @@ import type {
   SuccessResponseAdminAdvertisementInquiryTodayCountResponse,
   SuccessResponseAdminAnnouncementDetailResponse,
   SuccessResponseAdminBootcampDetailResponse,
+  SuccessResponseAdminCompanyMemberDetailResponse,
   SuccessResponseAdminConcernDetailResponse,
   SuccessResponseAdminContentRejectionResponse,
   SuccessResponseAdminContentReviewDecisionResponse,
+  SuccessResponseAdminGeneralMemberDetailResponse,
   SuccessResponseAdminJobDetailResponse,
   SuccessResponseAdminLetsCareerContentRecommendWeightsResponse,
   SuccessResponseAdminNotificationBatchCreatedResponse,
@@ -6060,6 +6062,134 @@ export function useListGeneralMembers<TData = Awaited<ReturnType<typeof listGene
 
 
 
+export type getGeneralMemberResponse200 = {
+  data: SuccessResponseAdminGeneralMemberDetailResponse
+  status: 200
+}
+
+export type getGeneralMemberResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getGeneralMemberResponseSuccess = (getGeneralMemberResponse200) & {
+  headers: Headers;
+};
+export type getGeneralMemberResponseError = (getGeneralMemberResponse404) & {
+  headers: Headers;
+};
+
+export type getGeneralMemberResponse = (getGeneralMemberResponseSuccess | getGeneralMemberResponseError)
+
+export const getGetGeneralMemberUrl = (userId: number,) => {
+
+
+
+
+  return `/api/v1/admin/general-members/${userId}`
+}
+
+/**
+ *
+ *             목록 항목과 같은 회원 정보에 활동을 더해 반환합니다. 멘토와 관리자도 조회할 수 있고 탈퇴·정지한 회원도 조회할 수 있습니다.
+ *
+ *             - bookmarkedJobs: 북마크한 채용공고 중 지금 게시 중인 것. 회원이 마이페이지에서 보는 것과 같습니다.
+ *             - bookmarkedBootcamps: 북마크한 부트캠프 중 지금 공개된 것. status는 모집 상태입니다.
+ *             - authoredSideStudies: 작성한 사이드·스터디 모집글. 임시저장과 삭제한 글은 빼고 운영자가 숨긴 글은 싣습니다.
+ *
+ *             응답이 끝없이 커지지 않도록 세 목록은 각각 최대 50건이며, 북마크는 최근 저장 순, 모집글은 최근 작성 순입니다.
+ * @summary 일반 회원 상세 조회
+ */
+export const getGeneralMember = async (userId: number, options?: Parameters<typeof httpClient>[1]): Promise<getGeneralMemberResponse> => {
+
+  return httpClient<getGeneralMemberResponse>(getGetGeneralMemberUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGeneralMemberQueryKey = (userId: number,) => {
+    return [
+    `/api/v1/admin/general-members/${userId}`
+    ] as const;
+    }
+
+
+export const getGetGeneralMemberQueryOptions = <TData = Awaited<ReturnType<typeof getGeneralMember>>, TError = ErrorResponse>(userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGeneralMember>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGeneralMemberQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGeneralMember>>> = ({ signal }) => getGeneralMember(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGeneralMember>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGeneralMemberQueryResult = NonNullable<Awaited<ReturnType<typeof getGeneralMember>>>
+export type GetGeneralMemberQueryError = ErrorResponse
+
+
+export function useGetGeneralMember<TData = Awaited<ReturnType<typeof getGeneralMember>>, TError = ErrorResponse>(
+ userId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGeneralMember>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGeneralMember>>,
+          TError,
+          Awaited<ReturnType<typeof getGeneralMember>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGeneralMember<TData = Awaited<ReturnType<typeof getGeneralMember>>, TError = ErrorResponse>(
+ userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGeneralMember>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGeneralMember>>,
+          TError,
+          Awaited<ReturnType<typeof getGeneralMember>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGeneralMember<TData = Awaited<ReturnType<typeof getGeneralMember>>, TError = ErrorResponse>(
+ userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGeneralMember>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 일반 회원 상세 조회
+ */
+
+export function useGetGeneralMember<TData = Awaited<ReturnType<typeof getGeneralMember>>, TError = ErrorResponse>(
+ userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGeneralMember>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGeneralMemberQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listAdminEnumsResponse200 = {
   data: SuccessResponseMapStringListAdminEnumOptionResponse
   status: 200
@@ -6842,6 +6972,130 @@ export function useListCompanyMembers<TData = Awaited<ReturnType<typeof listComp
 
 
 
+export type getCompanyMemberResponse200 = {
+  data: SuccessResponseAdminCompanyMemberDetailResponse
+  status: 200
+}
+
+export type getCompanyMemberResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getCompanyMemberResponseSuccess = (getCompanyMemberResponse200) & {
+  headers: Headers;
+};
+export type getCompanyMemberResponseError = (getCompanyMemberResponse404) & {
+  headers: Headers;
+};
+
+export type getCompanyMemberResponse = (getCompanyMemberResponseSuccess | getCompanyMemberResponseError)
+
+export const getGetCompanyMemberUrl = (userId: number,) => {
+
+
+
+
+  return `/api/v1/admin/company-members/${userId}`
+}
+
+/**
+ *
+ *             목록 항목과 같은 회원 정보에 이 회원이 등록한 공고(jobs)를 더해 반환합니다.
+ *             공고는 검수 중이거나 숨긴 공고도 포함하며 최근 등록 순으로 최대 50건입니다. 삭제한 공고는 싣지 않습니다.
+ *             탈퇴·정지한 회원도 조회할 수 있습니다.
+ * @summary 비즈니스 회원 상세 조회
+ */
+export const getCompanyMember = async (userId: number, options?: Parameters<typeof httpClient>[1]): Promise<getCompanyMemberResponse> => {
+
+  return httpClient<getCompanyMemberResponse>(getGetCompanyMemberUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyMemberQueryKey = (userId: number,) => {
+    return [
+    `/api/v1/admin/company-members/${userId}`
+    ] as const;
+    }
+
+
+export const getGetCompanyMemberQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyMember>>, TError = ErrorResponse>(userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyMember>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyMemberQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyMember>>> = ({ signal }) => getCompanyMember(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyMember>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCompanyMemberQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyMember>>>
+export type GetCompanyMemberQueryError = ErrorResponse
+
+
+export function useGetCompanyMember<TData = Awaited<ReturnType<typeof getCompanyMember>>, TError = ErrorResponse>(
+ userId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyMember>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyMember>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyMember>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyMember<TData = Awaited<ReturnType<typeof getCompanyMember>>, TError = ErrorResponse>(
+ userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyMember>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyMember>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyMember>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyMember<TData = Awaited<ReturnType<typeof getCompanyMember>>, TError = ErrorResponse>(
+ userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyMember>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 비즈니스 회원 상세 조회
+ */
+
+export function useGetCompanyMember<TData = Awaited<ReturnType<typeof getCompanyMember>>, TError = ErrorResponse>(
+ userId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyMember>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCompanyMemberQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listBootcampsResponse200 = {
   data: SuccessResponsePageResponseAdminBootcampSummaryResponse
   status: 200
@@ -7339,6 +7593,8 @@ export const getListJobsResponseMock = (overrideResponse: Partial<Extract<Succes
 
 export const getListGeneralMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminGeneralMemberResponse, object>> = {}): SuccessResponsePageResponseAdminGeneralMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), letsCareerUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), inflowSource: faker.helpers.arrayElement([faker.helpers.arrayElement(['LETSCAREER','OGONGGO'] as const), undefined]), name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
+export const getGetGeneralMemberResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminGeneralMemberDetailResponse, object>> = {}): SuccessResponseAdminGeneralMemberDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), letsCareerUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), inflowSource: faker.helpers.arrayElement([faker.helpers.arrayElement(['LETSCAREER','OGONGGO'] as const), undefined]), name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), bookmarkedJobs: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), viewCount: faker.number.int()})), bookmarkedBootcamps: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const)})), authoredSideStudies: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), kind: faker.helpers.arrayElement(['SIDE_PROJECT','STUDY'] as const), appliedCount: faker.number.int(), capacity: faker.number.int(), closed: faker.datatype.boolean(), viewCount: faker.number.int()}))}, undefined]), ...overrideResponse})
+
 export const getListAdminEnumsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMapStringListAdminEnumOptionResponse, object>> = {}): SuccessResponseMapStringListAdminEnumOptionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{
         [faker.string.alphanumeric(5)]: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), desc: faker.string.alpha({length: {min: 10, max: 20}}), parent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}))
       }, undefined]), ...overrideResponse})
@@ -7352,6 +7608,8 @@ export const getListConcernsResponseMock = (overrideResponse: Partial<Extract<Su
 export const getGetConcernResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminConcernDetailResponse, object>> = {}): SuccessResponseAdminConcernDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','CAREER','APPLICATION_INTERVIEW','SIDE_EXPERIENCE','ETC'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), url: faker.string.alpha({length: {min: 10, max: 20}})})), viewCount: faker.number.int(), commentCount: faker.number.int(), hasOfficialComment: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), authorUserId: faker.number.int(), authorNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getListCompanyMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminCompanyMemberResponse, object>> = {}): SuccessResponsePageResponseAdminCompanyMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), organizationName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerPhone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), businessNumberType: faker.helpers.arrayElement([faker.helpers.arrayElement(['BUSINESS_REGISTRATION','CORPORATE_REGISTRATION','OVERSEAS'] as const), undefined]), businessNumber: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyType: faker.helpers.arrayElement([faker.helpers.arrayElement(['LARGE','MID_SIZED','SMALL','STARTUP','FOREIGN','PUBLIC','NON_PROFIT'] as const), undefined]), employeeCountRange: faker.helpers.arrayElement([faker.helpers.arrayElement(['RANGE_1_9','RANGE_10_49','RANGE_50_99','RANGE_100_299','RANGE_300_999','RANGE_1000_PLUS'] as const), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), address: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), homepageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerDuty: faker.helpers.arrayElement([faker.helpers.arrayElement(['HR','EXECUTIVE','MARKETING','OTHER'] as const), undefined]), recommender: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetCompanyMemberResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminCompanyMemberDetailResponse, object>> = {}): SuccessResponseAdminCompanyMemberDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), organizationName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerPhone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), notificationEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), businessNumberType: faker.helpers.arrayElement([faker.helpers.arrayElement(['BUSINESS_REGISTRATION','CORPORATE_REGISTRATION','OVERSEAS'] as const), undefined]), businessNumber: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyType: faker.helpers.arrayElement([faker.helpers.arrayElement(['LARGE','MID_SIZED','SMALL','STARTUP','FOREIGN','PUBLIC','NON_PROFIT'] as const), undefined]), employeeCountRange: faker.helpers.arrayElement([faker.helpers.arrayElement(['RANGE_1_9','RANGE_10_49','RANGE_50_99','RANGE_100_299','RANGE_300_999','RANGE_1000_PLUS'] as const), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), address: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), homepageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerDuty: faker.helpers.arrayElement([faker.helpers.arrayElement(['HR','EXECUTIVE','MARKETING','OTHER'] as const), undefined]), recommender: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobs: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', viewCount: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getListBootcampsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -7960,6 +8218,18 @@ export const getListGeneralMembersMockHandler = (overrideResponse?: SuccessRespo
   }, options)
 }
 
+export const getGetGeneralMemberMockHandler = (overrideResponse?: SuccessResponseAdminGeneralMemberDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminGeneralMemberDetailResponse> | SuccessResponseAdminGeneralMemberDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/general-members/:userId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetGeneralMemberResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListAdminEnumsMockHandler = (overrideResponse?: SuccessResponseMapStringListAdminEnumOptionResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMapStringListAdminEnumOptionResponse> | SuccessResponseMapStringListAdminEnumOptionResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/enums', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -8027,6 +8297,18 @@ export const getListCompanyMembersMockHandler = (overrideResponse?: SuccessRespo
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getListCompanyMembersResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetCompanyMemberMockHandler = (overrideResponse?: SuccessResponseAdminCompanyMemberDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminCompanyMemberDetailResponse> | SuccessResponseAdminCompanyMemberDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/company-members/:userId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetCompanyMemberResponseMock(),
       { status: 200
       })
   }, options)
@@ -8118,12 +8400,14 @@ export const getOgonggoAdminAPIMock = () => [
   getGetNotificationBatchMockHandler(),
   getListJobsMockHandler(),
   getListGeneralMembersMockHandler(),
+  getGetGeneralMemberMockHandler(),
   getListAdminEnumsMockHandler(),
   getListContentReviewsMockHandler(),
   getListContentRejectionsMockHandler(),
   getListConcernsMockHandler(),
   getGetConcernMockHandler(),
   getListCompanyMembersMockHandler(),
+  getGetCompanyMemberMockHandler(),
   getListBootcampsMockHandler(),
   getListAdvertisementInquiriesMockHandler(),
   getGetAdvertisementInquiryTodayCountMockHandler()

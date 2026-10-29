@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ReplaceMyCompanyManagerInfoRequestManagerDuty } from './replaceMyCompanyManagerInfoRequestManagerDuty';
 
 export interface ReplaceMyCompanyManagerInfoRequest {
   /**
@@ -25,4 +26,27 @@ export interface ReplaceMyCompanyManagerInfoRequest {
      * @maxLength 320
      */
   notificationEmail?: string;
+  /**
+     * 담당자 직책. 빼면 그대로 둔다.
+     * @minLength 0
+     * @maxLength 50
+     */
+  managerTitle?: string;
+  /**
+     * 담당 업무. 빼면 그대로 둔다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `HR` | 1 | 인사·채용 |
+     * | `EXECUTIVE` | 2 | 대표·경영 |
+     * | `MARKETING` | 3 | 마케팅·홍보 |
+     * | `OTHER` | 4 | 기타 |
+     */
+  managerDuty?: ReplaceMyCompanyManagerInfoRequestManagerDuty;
+  /**
+     * 추천인. 빼면 그대로 둔다.
+     * @minLength 0
+     * @maxLength 100
+     */
+  recommender?: string;
 }
