@@ -1,7 +1,7 @@
 import type {
   ListMyBootcampBookmarksCategory,
-  ListMyJobBookmarksEmploymentType,
-  ListMyJobBookmarksExperienceType,
+  ListMyJobBookmarksEmploymentTypeItem,
+  ListMyJobBookmarksExperienceTypeItem,
   ListMyJobBookmarksJobField,
   ListMyJobBookmarksJobRoleItem,
 } from '@ogonggo/api';
@@ -22,8 +22,8 @@ export interface MyScrapsQuery {
   tab: MyScrapTab;
   page: number;
   /** 채용 공고 탭 전용. */
-  employmentType?: ListMyJobBookmarksEmploymentType;
-  experienceType?: ListMyJobBookmarksExperienceType;
+  employmentType?: ListMyJobBookmarksEmploymentTypeItem;
+  experienceType?: ListMyJobBookmarksExperienceTypeItem;
   jobField?: ListMyJobBookmarksJobField;
   jobRole?: ListMyJobBookmarksJobRoleItem;
   /** 교육·부트캠프 탭 전용. */
@@ -102,9 +102,9 @@ function pick<T extends string>(value: string | undefined, allowed: readonly T[]
 }
 
 /** 채용공고 목록의 고용 형태 필터와 같은 선택지다(`일학습병행` 만 뺀다). */
-const EMPLOYMENT_TYPES: readonly ListMyJobBookmarksEmploymentType[] =
+const EMPLOYMENT_TYPES: readonly ListMyJobBookmarksEmploymentTypeItem[] =
   EMPLOYMENT_TYPE_FILTER_OPTIONS.map(([value]) => value);
-const EXPERIENCE_TYPES: readonly ListMyJobBookmarksExperienceType[] = [
+const EXPERIENCE_TYPES: readonly ListMyJobBookmarksExperienceTypeItem[] = [
   'NEWCOMER',
   'EXPERIENCED',
   'BOTH',
