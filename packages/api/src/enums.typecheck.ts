@@ -19,8 +19,8 @@ type UpperSnake<S extends string> = S extends `${infer H}${infer T}`
   : '';
 
 export const enumCatalogAssertions: true[] = [
-  {} as Equal<EnumValue<'JobEmploymentType'>, User.ListPublicJobsEmploymentType>,
-  {} as Equal<EnumValue<'JobExperienceType'>, User.ListPublicJobsExperienceType>,
+  {} as Equal<EnumValue<'JobEmploymentType'>, User.ListPublicJobsEmploymentTypeItem>,
+  {} as Equal<EnumValue<'JobExperienceType'>, User.ListPublicJobsExperienceTypeItem>,
   {} as Equal<EnumValue<'JobEducationLevel'>, User.UserJobDetailResponseEducationLevel>,
   {} as Equal<EnumValue<'JobRecruitmentType'>, User.UserJobDetailResponseRecruitmentType>,
   {} as Equal<EnumValue<'BootcampRecruitmentType'>, User.UserJobDetailResponseRecruitmentType>,

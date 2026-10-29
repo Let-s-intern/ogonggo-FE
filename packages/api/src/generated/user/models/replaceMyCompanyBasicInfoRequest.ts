@@ -4,6 +4,9 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ReplaceMyCompanyBasicInfoRequestBusinessNumberType } from './replaceMyCompanyBasicInfoRequestBusinessNumberType';
+import type { ReplaceMyCompanyBasicInfoRequestCompanyType } from './replaceMyCompanyBasicInfoRequestCompanyType';
+import type { ReplaceMyCompanyBasicInfoRequestEmployeeCountRange } from './replaceMyCompanyBasicInfoRequestEmployeeCountRange';
 
 export interface ReplaceMyCompanyBasicInfoRequest {
   /**
@@ -18,4 +21,66 @@ export interface ReplaceMyCompanyBasicInfoRequest {
      * @maxLength 36
      */
   logoImageId?: string;
+  /**
+     * 사업자 번호 종류. 해외 기업이면 OVERSEAS이고 businessNumber를 보내지 않는다. 보내면 businessNumber도 함께 바꾸고, 빼면 번호 종류와 번호를 그대로 둔다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `BUSINESS_REGISTRATION` | 1 | 사업자등록번호 |
+     * | `CORPORATE_REGISTRATION` | 2 | 법인등록번호 |
+     * | `OVERSEAS` | 3 | 해외 기업 |
+     */
+  businessNumberType?: ReplaceMyCompanyBasicInfoRequestBusinessNumberType;
+  /**
+     * 하이픈 없이 숫자만. 사업자등록번호는 10자리, 법인등록번호는 13자리다. businessNumberType 없이 보내거나 종류와 자릿수가 맞지 않으면 400이다.
+     * @minLength 0
+     * @maxLength 13
+     * @pattern ^[0-9]+$
+     */
+  businessNumber?: string;
+  /**
+     * 기업 형태. 빼면 그대로 둔다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `LARGE` | 1 | 대기업 |
+     * | `MID_SIZED` | 2 | 중견기업 |
+     * | `SMALL` | 3 | 중소기업 |
+     * | `STARTUP` | 4 | 스타트업 |
+     * | `FOREIGN` | 5 | 외국계 |
+     * | `PUBLIC` | 6 | 공공기관·공기업 |
+     * | `NON_PROFIT` | 7 | 비영리·단체 |
+     */
+  companyType?: ReplaceMyCompanyBasicInfoRequestCompanyType;
+  /**
+     * 직원 수 구간. 빼면 그대로 둔다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `RANGE_1_9` | 1 | 1~9명 |
+     * | `RANGE_10_49` | 2 | 10~49명 |
+     * | `RANGE_50_99` | 3 | 50~99명 |
+     * | `RANGE_100_299` | 4 | 100~299명 |
+     * | `RANGE_300_999` | 5 | 300~999명 |
+     * | `RANGE_1000_PLUS` | 6 | 1,000명 이상 |
+     */
+  employeeCountRange?: ReplaceMyCompanyBasicInfoRequestEmployeeCountRange;
+  /**
+     * 산업. 공고의 industry와 같은 문자열이다. 빼면 그대로 둔다.
+     * @minLength 0
+     * @maxLength 100
+     */
+  industry?: string;
+  /**
+     * 주소. 빼면 그대로 둔다.
+     * @minLength 0
+     * @maxLength 255
+     */
+  address?: string;
+  /**
+     * 홈페이지. 스킴을 포함한 URL이다. 빼면 그대로 둔다.
+     * @minLength 0
+     * @maxLength 2048
+     */
+  homepageUrl?: string;
 }

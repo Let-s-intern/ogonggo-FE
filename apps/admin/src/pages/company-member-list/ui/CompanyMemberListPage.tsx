@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import {
   Avatar,
   Button,
@@ -12,6 +13,7 @@ import {
 } from '@ogonggo/ui';
 import type { AdminCompanyMemberResponse } from '@ogonggo/api/src/admin';
 import { useCompanyMemberList } from '@/entities/member/api/useMembers';
+import { companyInfoItems, managerInfoItems } from '@/entities/member/model/companySignupInfo';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
@@ -29,7 +31,8 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * "등록 공고" 수는 응답에 없어 뺐고, 대신 계정을 알아볼 로그인 이메일을 둔다. 정렬 파라미터가
  * 없는 것과 행을 누르면 목록 응답을 모달로 보여 주는 것은 일반 회원 목록과 같다.
  *
- * 알림 이메일과 담당자 연락처까지 목록에 두어 행을 열지 않고도 연락처를 찾게 한다.
+ * 알림 이메일과 담당자 연락처까지 목록에 두어 행을 열지 않고도 연락처를 찾게 한다. 가입 때 받은 기업·담당자
+ * 정보(LC-3526)는 칸이 많아 모달에서만 보인다. 그 전에 가입한 회원은 값이 없어 `-` 다.
  */
 export function CompanyMemberListPage() {
   const [selected, setSelected] = useState<AdminCompanyMemberResponse | null>(null);
@@ -84,7 +87,7 @@ export function CompanyMemberListPage() {
         <SearchBox
           value={filters.keyword}
           onSubmit={(keyword) => setFilter('keyword', keyword)}
-          placeholder="회사명·담당자 검색"
+          placeholder="회사명·담당자·이메일 검색"
         />
         <Select
           options={MEMBER_STATUS_OPTIONS}
@@ -153,7 +156,18 @@ function MemberModal({
           { label: '탈퇴일', value: member.withdrawnAt ? formatDateTime(member.withdrawnAt) : '-' },
         ]}
       />
-      <div className="flex justify-end pt-6">
+      <h3 className="pt-6 pb-2.5 text-base font-bold text-gray-900">기업 정보</h3>
+      <DescriptionList items={companyInfoItems(member)} />
+      <h3 className="pt-6 pb-2.5 text-base font-bold text-gray-900">담당자 정보</h3>
+      <DescriptionList items={managerInfoItems(member)} />
+      <div className="flex justify-end gap-2 pt-6">
+        {/* 북마크·작성 글·등록 공고는 상세(LC-3530)에만 있다. */}
+        <Link
+          to={`/members/companies/${member.userId}`}
+          className="inline-flex h-11 items-center justify-center rounded-md border border-gray-300 px-4 text-base font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+        >
+          상세 보기
+        </Link>
         <Button variant="secondary" onClick={onClose}>
           닫기
         </Button>

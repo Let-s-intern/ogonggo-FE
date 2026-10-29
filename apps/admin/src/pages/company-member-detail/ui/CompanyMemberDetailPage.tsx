@@ -5,40 +5,25 @@ import {
   CardTitle,
   DataTable,
   DescriptionList,
-  EmptyState,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import { useCompanyMemberDetail, type CompanyMemberJob } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
 import { JobReviewStatusBadge, VisibilityBadge, MemberStatusBadge } from '@/shared/config/labels';
-import { BACKEND_PENDING_MESSAGE, isBackendPending } from '@/shared/config/backendPending';
+import { companyInfoItems, managerInfoItems } from '@/entities/member/model/companySignupInfo';
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /**
  * 비즈니스 회원 상세. 읽기 전용이다.
  *
  * 그 회사가 등록한 공고를 함께 보여준다. 검수 대기가 섞여 있으면 여기서 바로 채용공고 상세로
- * 넘어갈 수 있다.
+ * 넘어갈 수 있다. 가입 때 낸 기업·담당자 정보(LC-3526)는 목록 모달과 같은 줄이다(`companySignupInfo`).
+ * 공고는 API 가 최근 등록 순 최대 50건만 주므로 공고 현황 숫자도 그 50건 기준이다(LC-3530).
  */
 export function CompanyMemberDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
   const { data, isPending, isError } = useCompanyMemberDetail(Number(memberId));
-
-  // 실서버 모드에는 회원 상세 API 가 없다(목록 API 만 있다). 목록의 행을 누르면 여기로 오는데,
-  // "회원을 찾을 수 없습니다" 로 읽히면 없는 회원을 찾은 것처럼 보이고 목데이터를 그리면 실데이터로
-  // 읽힌다. 그래서 준비 중 안내만 그린다.
-  if (isBackendPending) {
-    return (
-      <>
-        <PageHeader
-          title="비즈니스 회원"
-          backTo={{ to: '/members/companies', label: '비즈니스 회원 목록' }}
-        />
-        <EmptyState title={BACKEND_PENDING_MESSAGE.member} />
-      </>
-    );
-  }
 
   if (isPending) {
     return <p className="text-sm text-gray-500">불러오는 중입니다.</p>;
@@ -93,7 +78,7 @@ export function CompanyMemberDetailPage() {
   return (
     <>
       <PageHeader
-        title={data.companyName}
+        title={data.organizationName ?? '비즈니스 회원'}
         backTo={{ to: '/members/companies', label: '비즈니스 회원 목록' }}
       />
 
@@ -103,15 +88,31 @@ export function CompanyMemberDetailPage() {
           className="pt-4"
           columns={2}
           items={[
-            { label: '회사명', value: data.companyName },
-            { label: '사업자등록번호', value: data.businessRegistrationNumber },
-            { label: '담당자', value: data.managerName },
-            { label: '담당자 이메일', value: data.managerEmail },
+            { label: '회사명', value: data.organizationName ?? '-' },
             { label: '상태', value: <MemberStatusBadge value={data.status} /> },
+            { label: '계정 이메일', value: data.email ?? '-' },
+            { label: '알림 이메일', value: data.notificationEmail ?? '-' },
+            { label: '담당자', value: data.managerName ?? '-' },
+            { label: '담당자 연락처', value: data.managerPhone ?? '-' },
             { label: '가입일', value: formatDateTime(data.joinedAt) },
+            {
+              label: '탈퇴일',
+              value: data.withdrawnAt ? formatDateTime(data.withdrawnAt) : '-',
+            },
           ]}
         />
       </Card>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardTitle>기업 정보</CardTitle>
+          <DescriptionList className="pt-4" columns={2} items={companyInfoItems(data)} />
+        </Card>
+        <Card>
+          <CardTitle>담당자 정보</CardTitle>
+          <DescriptionList className="pt-4" columns={2} items={managerInfoItems(data)} />
+        </Card>
+      </div>
 
       {data.status === 'SUSPENDED' ? (
         <Callout tone="warning" className="mt-4">

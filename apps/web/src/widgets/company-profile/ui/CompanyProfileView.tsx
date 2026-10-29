@@ -2,12 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Checkbox, Input } from '@ogonggo/ui';
+import {
+  BUSINESS_NUMBER_DIGITS,
+  BUSINESS_NUMBER_TYPE_OPTIONS,
+  COMPANY_INDUSTRIES,
+  COMPANY_SIGN_UP_MAX_LENGTH as MAX_LENGTH,
+  COMPANY_TYPE_OPTIONS,
+  type DomesticNumberType,
+  EMPLOYEE_COUNT_OPTIONS,
+  MANAGER_DUTY_OPTIONS,
+  formatBusinessNumber,
+  isHomepage,
+} from '@/features/sign-up';
 import { SignOutButton } from '@/features/sign-out';
+import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
+import { ListboxSelect } from '@/shared/ui/ListboxSelect';
 import { LogoUploadField } from '@/shared/ui/LogoUploadField';
 import {
   EMPTY_COMPANY_BASIC_INFO_DRAFT,
+  EMPTY_COMPANY_BUSINESS_DRAFT,
+  EMPTY_COMPANY_MANAGER_DETAILS_DRAFT,
   EMPTY_COMPANY_MANAGER_INFO_DRAFT,
   type CompanyBasicInfoDraft,
+  type CompanyBusinessDraft,
+  type CompanyManagerDetailsDraft,
   type CompanyManagerInfoDraft,
   type CompanyProfileValues,
 } from '../model/values';
@@ -32,6 +50,14 @@ type SaveSection = 'basic' | 'manager';
 const PHONE_PATTERN = /^[0-9-]+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** 이 화면 입력칸(`Input`)과 같은 높이·모서리. */
+const SELECT_CLASS = 'h-11 rounded-md';
+
+const INDUSTRY_OPTIONS = COMPANY_INDUSTRIES.map((industry) => ({
+  value: industry,
+  label: industry,
+}));
+
 /**
  * 기업/기관 정보를 그린다(v5 PRD 5 절). **계정 응답을 모른다** — 읽는 쪽이
  * `toCompanyProfileValues` 로 뽑아 넘긴 값만 받는다.
@@ -42,6 +68,10 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *
  * 값을 읽기 전에는 저장 버튼을 잠근다. 빈 폼 값으로 저장하면 서버에 있던 연락처와 이메일이
  * 비워진다.
+ *
+ * 가입 때 받은 기업 정보(사업자 번호·기업 형태·직원 수·산업·주소·홈페이지)는 기본 정보에, 담당자 정보(직책·담당
+ * 업무·추천인)는 담당자 정보에 붙는다(LC-3530). 이 칸들은 비우고 저장하면 서버가 저장된 값을 그대로 둔다 —
+ * 지울 수는 없고 바꿀 수만 있다.
  *
  * 가입한 이메일은 읽기 전용이다 — 로그인 이메일은 이 API 로 바꿀 수 없다. 마케팅 수신 동의와
  * 회원 탈퇴는 백엔드에 받을 곳이 없어 목업대로 그리되 비활성이다(`PreparingSections.tsx`).
@@ -73,17 +103,23 @@ export function CompanyProfileView({
   const loadedOrganizationName = values?.organizationName;
   const loadedLogoImageId = values?.logoImageId;
   const loadedLogoUrl = values?.logoUrl;
+  // 기업 정보 칸은 여럿이라 한 문자열로 묶어 의존성에 둔다. 위와 같은 이유로 객체를 그대로 두지 않는다.
+  const loadedBusiness = JSON.stringify(values?.business ?? EMPTY_COMPANY_BUSINESS_DRAFT);
   useEffect(() => {
     setBasic({
       organizationName: loadedOrganizationName ?? '',
       logoImageId: loadedLogoImageId ?? '',
       logoUrl: loadedLogoUrl ?? '',
+      ...(JSON.parse(loadedBusiness) as CompanyBusinessDraft),
     });
-  }, [loadedOrganizationName, loadedLogoImageId, loadedLogoUrl]);
+  }, [loadedOrganizationName, loadedLogoImageId, loadedLogoUrl, loadedBusiness]);
 
   const loadedManagerName = values?.managerName;
   const loadedManagerPhone = values?.managerPhone;
   const loadedNotificationEmail = values?.notificationEmail;
+  const loadedManagerDetails = JSON.stringify(
+    values?.managerDetails ?? EMPTY_COMPANY_MANAGER_DETAILS_DRAFT,
+  );
   useEffect(() => {
     // 서버는 "비어 있음" 과 "가입한 이메일과 같음" 을 따로 저장하지 않는다. 두 값이 같으면 다시
     // 열 때 체크된 채로 보인다(v4 `BasicInfoSection` 과 같다).
@@ -93,8 +129,9 @@ export function CompanyProfileView({
       managerName: loadedManagerName ?? '',
       managerPhone: loadedManagerPhone ?? '',
       notificationEmail: same ? '' : (loadedNotificationEmail ?? ''),
+      ...(JSON.parse(loadedManagerDetails) as CompanyManagerDetailsDraft),
     });
-  }, [loadedManagerName, loadedManagerPhone, loadedNotificationEmail, email]);
+  }, [loadedManagerName, loadedManagerPhone, loadedNotificationEmail, loadedManagerDetails, email]);
 
   const notificationEmailValue = sameAsEmail ? email : manager.notificationEmail;
 
@@ -129,6 +166,20 @@ export function CompanyProfileView({
       });
       return;
     }
+    const digits = basic.businessNumber.replace(/\D/g, '');
+    const digitCount = BUSINESS_NUMBER_DIGITS[basic.businessNumberType];
+    if (!basic.overseas && digits && digits.length !== digitCount) {
+      setStatus({
+        section: 'basic',
+        tone: 'error',
+        message: `사업자 번호는 숫자 ${digitCount}자리로 입력해 주세요.`,
+      });
+      return;
+    }
+    if (basic.homepageUrl.trim() && !isHomepage(basic.homepageUrl)) {
+      setStatus({ section: 'basic', tone: 'error', message: '홈페이지 주소를 확인해 주세요.' });
+      return;
+    }
     if (!onSaveBasicInfo) {
       return;
     }
@@ -155,7 +206,9 @@ export function CompanyProfileView({
     if (!onSaveManagerInfo) {
       return;
     }
-    await run('manager', () => onSaveManagerInfo({ managerName, managerPhone, notificationEmail }));
+    await run('manager', () =>
+      onSaveManagerInfo({ ...manager, managerName, managerPhone, notificationEmail }),
+    );
   };
 
   return (
@@ -187,6 +240,123 @@ export function CompanyProfileView({
           />
         </CompanyProfileField>
 
+        <CompanyProfileField label="사업자 번호" htmlFor="company-business-number">
+          <Checkbox
+            checked={basic.overseas}
+            disabled={!loaded}
+            onChange={(overseas) => setBasic((previous) => ({ ...previous, overseas }))}
+            label="해외 기업"
+          />
+          {basic.overseas ? (
+            <p id="company-business-number" className="text-sm text-gray-500">
+              해외 기업은 사업자 번호 없이 등록합니다.
+            </p>
+          ) : (
+            <>
+              <FormRadioGroup
+                name="businessNumberType"
+                options={BUSINESS_NUMBER_TYPE_OPTIONS}
+                value={basic.businessNumberType}
+                onChange={(next) => {
+                  const type = next as DomesticNumberType;
+                  // 자릿수와 하이픈 자리가 달라 지금 친 숫자를 새 종류에 맞게 다시 끊는다(가입 화면과 같다).
+                  setBasic((previous) => ({
+                    ...previous,
+                    businessNumberType: type,
+                    businessNumber: formatBusinessNumber(type, previous.businessNumber),
+                  }));
+                }}
+              />
+              <Input
+                id="company-business-number"
+                inputMode="numeric"
+                autoComplete="off"
+                value={basic.businessNumber}
+                disabled={!loaded}
+                placeholder={`숫자 ${BUSINESS_NUMBER_DIGITS[basic.businessNumberType]}자리`}
+                onChange={(event) =>
+                  setBasic((previous) => ({
+                    ...previous,
+                    businessNumber: formatBusinessNumber(
+                      previous.businessNumberType,
+                      event.target.value,
+                    ),
+                  }))
+                }
+              />
+            </>
+          )}
+        </CompanyProfileField>
+
+        <CompanyProfileField label="기업 형태" htmlFor="company-type">
+          <ListboxSelect
+            id="company-type"
+            label="기업 형태"
+            placeholder="기업 형태를 선택해 주세요."
+            value={basic.companyType}
+            options={COMPANY_TYPE_OPTIONS}
+            disabled={!loaded}
+            onChange={(companyType) => setBasic((previous) => ({ ...previous, companyType }))}
+            className={SELECT_CLASS}
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="직원 수" htmlFor="company-employee-count">
+          <ListboxSelect
+            id="company-employee-count"
+            label="직원 수"
+            placeholder="직원 수를 선택해 주세요."
+            value={basic.employeeCountRange}
+            options={EMPLOYEE_COUNT_OPTIONS}
+            disabled={!loaded}
+            onChange={(employeeCountRange) =>
+              setBasic((previous) => ({ ...previous, employeeCountRange }))
+            }
+            className={SELECT_CLASS}
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="산업" htmlFor="company-industry">
+          <ListboxSelect
+            id="company-industry"
+            label="산업"
+            placeholder="산업을 선택해 주세요."
+            value={basic.industry}
+            options={INDUSTRY_OPTIONS}
+            disabled={!loaded}
+            onChange={(industry) => setBasic((previous) => ({ ...previous, industry }))}
+            className={SELECT_CLASS}
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="주소" htmlFor="company-address">
+          <Input
+            id="company-address"
+            value={basic.address}
+            maxLength={MAX_LENGTH.address}
+            autoComplete="street-address"
+            placeholder="회사 주소를 입력해 주세요."
+            onChange={(event) =>
+              setBasic((previous) => ({ ...previous, address: event.target.value }))
+            }
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="홈페이지" htmlFor="company-homepage">
+          <Input
+            id="company-homepage"
+            type="url"
+            inputMode="url"
+            value={basic.homepageUrl}
+            maxLength={MAX_LENGTH.homepageUrl}
+            autoComplete="url"
+            placeholder="https://example.com"
+            onChange={(event) =>
+              setBasic((previous) => ({ ...previous, homepageUrl: event.target.value }))
+            }
+          />
+        </CompanyProfileField>
+
         <Button
           variant="secondary"
           disabled={!loaded || saving}
@@ -213,6 +383,35 @@ export function CompanyProfileView({
             }
             className="max-w-70"
           />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="직책" htmlFor="company-manager-title">
+          <Input
+            id="company-manager-title"
+            value={manager.managerTitle}
+            maxLength={MAX_LENGTH.managerTitle}
+            autoComplete="organization-title"
+            placeholder="예) 인사팀 매니저"
+            onChange={(event) =>
+              setManager((previous) => ({ ...previous, managerTitle: event.target.value }))
+            }
+            className="max-w-70"
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="담당 업무" htmlFor="company-manager-duty">
+          <div className="max-w-70">
+            <ListboxSelect
+              id="company-manager-duty"
+              label="담당 업무"
+              placeholder="담당 업무를 선택해 주세요."
+              value={manager.managerDuty}
+              options={MANAGER_DUTY_OPTIONS}
+              disabled={!loaded}
+              onChange={(managerDuty) => setManager((previous) => ({ ...previous, managerDuty }))}
+              className={SELECT_CLASS}
+            />
+          </div>
         </CompanyProfileField>
 
         <CompanyProfileField label="연락처" htmlFor="company-manager-phone">
@@ -255,6 +454,19 @@ export function CompanyProfileView({
             disabled={!loaded || !email}
             onChange={setSameAsEmail}
             label="가입한 이메일과 동일"
+          />
+        </CompanyProfileField>
+
+        <CompanyProfileField label="추천인" htmlFor="company-recommender">
+          <Input
+            id="company-recommender"
+            value={manager.recommender}
+            maxLength={MAX_LENGTH.recommender}
+            placeholder="추천인이 있으면 입력해 주세요."
+            onChange={(event) =>
+              setManager((previous) => ({ ...previous, recommender: event.target.value }))
+            }
+            className="max-w-70"
           />
         </CompanyProfileField>
 

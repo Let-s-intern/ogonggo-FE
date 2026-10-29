@@ -6,8 +6,12 @@ import {
   replaceMyCompanyBasicInfo,
   replaceMyCompanyManagerInfo,
   type MyAccountResponse,
+  type ReplaceMyCompanyBasicInfoRequestCompanyType,
+  type ReplaceMyCompanyBasicInfoRequestEmployeeCountRange,
+  type ReplaceMyCompanyManagerInfoRequestManagerDuty,
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
+import { normalizeHomepage } from '@/features/sign-up';
 import { isSignedIn } from '@/shared/api/authTokens';
 import {
   toCompanyProfileValues,
@@ -78,19 +82,44 @@ export function CompanyProfile() {
    * 칸에 무슨 문구를 띄울지는 그리는 쪽이 안다.
    */
   const saveBasicInfo = async (draft: CompanyBasicInfoDraft): Promise<void> => {
+    const digits = draft.businessNumber.replace(/\D/g, '');
     await replaceMyCompanyBasicInfo({
       organizationName: draft.organizationName,
       logoImageId: draft.logoImageId || undefined,
+      // 아래 기업 정보는 빼면 서버가 저장된 값을 그대로 둔다(LC-3530). 빈 칸은 보내지 않는다.
+      businessNumberType: draft.overseas
+        ? 'OVERSEAS'
+        : digits
+          ? draft.businessNumberType
+          : undefined,
+      businessNumber: draft.overseas ? undefined : digits || undefined,
+      companyType: (draft.companyType || undefined) as
+        | ReplaceMyCompanyBasicInfoRequestCompanyType
+        | undefined,
+      employeeCountRange: (draft.employeeCountRange || undefined) as
+        | ReplaceMyCompanyBasicInfoRequestEmployeeCountRange
+        | undefined,
+      industry: draft.industry.trim() || undefined,
+      address: draft.address.trim() || undefined,
+      homepageUrl: normalizeHomepage(draft.homepageUrl) || undefined,
     });
     await reload();
   };
 
-  /** 담당자 정보(이름·연락처·수신용 이메일)를 저장한다. 세 값이 한 번에 교체된다. */
+  /**
+   * 담당자 정보를 저장한다. 이름·연락처·수신용 이메일은 한 번에 교체되고, 직책·담당 업무·추천인은 보낸 값만
+   * 바뀐다(LC-3530).
+   */
   const saveManagerInfo = async (draft: CompanyManagerInfoDraft): Promise<void> => {
     await replaceMyCompanyManagerInfo({
       managerName: draft.managerName,
       managerPhone: draft.managerPhone || undefined,
       notificationEmail: draft.notificationEmail || undefined,
+      managerTitle: draft.managerTitle.trim() || undefined,
+      managerDuty: (draft.managerDuty || undefined) as
+        | ReplaceMyCompanyManagerInfoRequestManagerDuty
+        | undefined,
+      recommender: draft.recommender.trim() || undefined,
     });
     await reload();
   };

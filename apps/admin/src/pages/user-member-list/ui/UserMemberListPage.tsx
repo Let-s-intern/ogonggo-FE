@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import {
   Avatar,
   Button,
@@ -126,7 +127,7 @@ export function UserMemberListPage() {
         <SearchBox
           value={filters.keyword}
           onSubmit={(keyword) => setFilter('keyword', keyword)}
-          placeholder="닉네임·이메일 검색"
+          placeholder="이름·닉네임·이메일 검색"
         />
         <Select
           options={MEMBER_STATUS_OPTIONS}
@@ -303,7 +304,14 @@ function MemberModal({
         ]}
       />
       <RoleChanger key={member.userId} member={member} onRoleChanged={onRoleChanged} />
-      <div className="flex justify-end pt-6">
+      <div className="flex justify-end gap-2 pt-6">
+        {/* 북마크·작성 글·등록 공고는 상세(LC-3530)에만 있다. */}
+        <Link
+          to={`/members/users/${member.userId}`}
+          className="inline-flex h-11 items-center justify-center rounded-md border border-gray-300 px-4 text-base font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+        >
+          상세 보기
+        </Link>
         <Button variant="secondary" onClick={onClose}>
           닫기
         </Button>

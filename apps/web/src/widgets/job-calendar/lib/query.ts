@@ -1,6 +1,6 @@
 import {
-  ListPublicJobCalendarEmploymentType,
-  ListPublicJobCalendarExperienceType,
+  ListPublicJobCalendarEmploymentTypeItem,
+  ListPublicJobCalendarExperienceTypeItem,
 } from '@ogonggo/api';
 import {
   ALL_JOB_MAJOR_SLUGS,
@@ -10,10 +10,10 @@ import {
 } from './job-majors';
 
 /** 달력 필터 줄의 `채용 형태`. 서버가 한 번에 하나만 받는다(`ListPublicJobCalendarParams`). */
-export type JobCalendarEmploymentType = ListPublicJobCalendarEmploymentType;
+export type JobCalendarEmploymentType = ListPublicJobCalendarEmploymentTypeItem;
 
 /** 달력 필터 줄의 `요구 경력`. 마찬가지로 하나만 받는다. */
-export type JobCalendarExperienceType = ListPublicJobCalendarExperienceType;
+export type JobCalendarExperienceType = ListPublicJobCalendarExperienceTypeItem;
 
 /**
  * `마감일 기준` 토글의 값. 격자가 `recruitmentEndAt`(마감일)과 `recruitmentStartAt`(시작일) 중
@@ -203,11 +203,11 @@ export function parseJobCalendarQuery(
     majors: parseJobMajors(searchParams.majors),
     picker: searchParams.picker === FLAG_ON,
     employmentTypes: parseEnumListParam(
-      ListPublicJobCalendarEmploymentType,
+      ListPublicJobCalendarEmploymentTypeItem,
       searchParams.employmentType,
     ),
     experienceTypes: parseEnumListParam(
-      ListPublicJobCalendarExperienceType,
+      ListPublicJobCalendarExperienceTypeItem,
       searchParams.experienceType,
     ),
     excludeClosed: searchParams.excludeClosed === FLAG_ON,

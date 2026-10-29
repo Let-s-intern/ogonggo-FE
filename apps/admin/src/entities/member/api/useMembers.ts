@@ -1,29 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   changeGeneralMemberRole,
+  getCompanyMember,
+  getGeneralMember,
   listCompanyMembers,
   listGeneralMembers,
+  type AdminCompanyMemberJobResponse,
   type ChangeGeneralMemberRoleRequestRole,
   type ListCompanyMembersParams,
   type ListGeneralMembersParams,
 } from '@ogonggo/api/src/admin';
-import type {
-  CompanyMemberSummary,
-  UserMemberSummary,
-} from '@ogonggo/api/src/mocks/fixtures/admin-member';
-import type { JobReviewStatus, Visibility } from '@ogonggo/api/src/mocks/fixtures/admin-content';
-import type { UserMemberActivity } from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
-import { adminGet } from '@/shared/api/adminClient';
 import { omitEmpty } from '@/shared/api/omitEmpty';
 import { unwrapData } from '@/shared/api/unwrapData';
-import { isBackendPending } from '@/shared/config/backendPending';
 
 /**
  * 회원 목록·상세 조회.
  *
- * 목록 둘은 admin 스펙의 생성 함수(`listGeneralMembers`·`listCompanyMembers`) 를 부른다. 상세는
- * 백엔드 API 가 없어 MSW 목에만 있으므로 `adminClient` 로 부르고, 실서버 모드에서는 아예 부르지
- * 않는다 — 화면이 안내를 대신 그린다(`@/shared/config/backendPending`).
+ * 목록·상세 모두 admin 스펙의 생성 함수(`listGeneralMembers`·`listCompanyMembers`·`getGeneralMember`·
+ * `getCompanyMember`)를 부른다. 상세 API 는 LC-3530 에서 생겼다.
  */
 
 export interface MemberListFilters {
@@ -92,14 +86,12 @@ export function useChangeMemberRole() {
   });
 }
 
-/** 상세는 기본 정보에 북마크와 작성 글을 함께 준다. */
-export type UserMemberDetail = UserMemberSummary & UserMemberActivity;
-
+/** 상세는 기본 정보에 북마크·작성 글을 각 최대 50건씩 함께 준다(LC-3530). */
 export function useUserMemberDetail(memberId: number) {
   return useQuery({
     queryKey: ['admin', 'members', 'users', memberId],
-    queryFn: () => adminGet<UserMemberDetail>(`/api/v1/admin/members/users/${memberId}`),
-    enabled: !isBackendPending && Number.isInteger(memberId),
+    queryFn: () => unwrapData(getGeneralMember(memberId)),
+    enabled: Number.isInteger(memberId),
   });
 }
 
@@ -111,22 +103,14 @@ export function useCompanyMemberList(filters: MemberListFilters) {
   });
 }
 
-/** 비즈니스 회원 상세는 그 회사가 등록한 공고 목록을 함께 준다. */
-export interface CompanyMemberJob {
-  id: number;
-  title: string;
-  visibility: Visibility;
-  reviewStatus: JobReviewStatus | null;
-  registeredAt: string;
-  viewCount: number;
-}
+/** 비즈니스 회원 상세가 함께 주는 등록 공고 한 줄. */
+export type CompanyMemberJob = AdminCompanyMemberJobResponse;
 
-export type CompanyMemberDetail = CompanyMemberSummary & { jobs: CompanyMemberJob[] };
-
+/** 비즈니스 회원 상세는 그 회원이 등록한 공고를 최대 50건 함께 준다(LC-3530). */
 export function useCompanyMemberDetail(memberId: number) {
   return useQuery({
     queryKey: ['admin', 'members', 'companies', memberId],
-    queryFn: () => adminGet<CompanyMemberDetail>(`/api/v1/admin/members/companies/${memberId}`),
-    enabled: !isBackendPending && Number.isInteger(memberId),
+    queryFn: () => unwrapData(getCompanyMember(memberId)),
+    enabled: Number.isInteger(memberId),
   });
 }

@@ -120,7 +120,7 @@ export function normalizeHomepage(value: string): string {
 }
 
 /** 붙인 뒤 주소로 읽히고 호스트에 점이 있는지만 본다. 나머지는 서버(`@URL`)가 본다. */
-function isHomepage(value: string): boolean {
+export function isHomepage(value: string): boolean {
   try {
     const url = new URL(normalizeHomepage(value));
     return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.includes('.');

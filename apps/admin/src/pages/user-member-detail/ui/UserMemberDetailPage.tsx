@@ -6,14 +6,13 @@ import {
   CardTitle,
   DataTable,
   DescriptionList,
-  EmptyState,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import type {
-  AuthoredSideStudy,
-  BookmarkedBootcamp,
-  BookmarkedJob,
-} from '@ogonggo/api/src/mocks/fixtures/admin-member-activity';
+  AdminMemberAuthoredSideStudyResponse as AuthoredSideStudy,
+  AdminMemberBookmarkedBootcampResponse as BookmarkedBootcamp,
+  AdminMemberBookmarkedJobResponse as BookmarkedJob,
+} from '@ogonggo/api/src/admin';
 import { useUserMemberDetail } from '@/entities/member/api/useMembers';
 import { PageHeader } from '@/widgets/page-header';
 import {
@@ -21,7 +20,6 @@ import {
   MemberStatusBadge,
   sideStudyKindLabel,
 } from '@/shared/config/labels';
-import { BACKEND_PENDING_MESSAGE, isBackendPending } from '@/shared/config/backendPending';
 import { formatCount, formatDateTime } from '@/shared/lib/format';
 
 /**
@@ -38,18 +36,6 @@ export function UserMemberDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
   const { data, isPending, isError } = useUserMemberDetail(Number(memberId));
-
-  // 실서버 모드에는 회원 상세 API 가 없다(목록 API 만 있다). 목록의 행을 누르면 여기로 오는데,
-  // "회원을 찾을 수 없습니다" 로 읽히면 없는 회원을 찾은 것처럼 보이고 목데이터를 그리면 실데이터로
-  // 읽힌다. 그래서 준비 중 안내만 그린다.
-  if (isBackendPending) {
-    return (
-      <>
-        <PageHeader title="일반 회원" backTo={{ to: '/members/users', label: '일반 회원 목록' }} />
-        <EmptyState title={BACKEND_PENDING_MESSAGE.member} />
-      </>
-    );
-  }
 
   if (isPending) {
     return <p className="text-sm text-gray-500">불러오는 중입니다.</p>;
@@ -124,7 +110,7 @@ export function UserMemberDetailPage() {
   return (
     <>
       <PageHeader
-        title={data.nickname}
+        title={data.nickname ?? data.name ?? '일반 회원'}
         backTo={{ to: '/members/users', label: '일반 회원 목록' }}
       />
 
@@ -134,11 +120,15 @@ export function UserMemberDetailPage() {
           className="pt-4"
           columns={2}
           items={[
-            { label: '닉네임', value: data.nickname },
-            { label: '이메일', value: data.email },
+            { label: '닉네임', value: data.nickname ?? '-' },
+            { label: '이름', value: data.name ?? '-' },
+            { label: '이메일', value: data.email ?? '-' },
             { label: '상태', value: <MemberStatusBadge value={data.status} /> },
             { label: '가입일', value: formatDateTime(data.joinedAt) },
-            { label: '최근 접속', value: formatDateTime(data.lastAccessedAt) },
+            {
+              label: '탈퇴일',
+              value: data.withdrawnAt ? formatDateTime(data.withdrawnAt) : '-',
+            },
           ]}
         />
       </Card>

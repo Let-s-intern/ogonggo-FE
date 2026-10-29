@@ -36,7 +36,6 @@ export const isBackendPending = !isMockEnabled;
 export const BACKEND_PENDING_MESSAGE = {
   dashboard: '집계 기능을 준비하고 있습니다. 검수와 콘텐츠 관리는 지금 쓸 수 있습니다.',
   sideStudy: '사이드·스터디 관리 기능을 준비하고 있습니다.',
-  member: '회원 상세 조회 기능을 준비하고 있습니다. 회원 목록은 지금 쓸 수 있습니다.',
 } as const;
 
 export interface TableBodyState {
