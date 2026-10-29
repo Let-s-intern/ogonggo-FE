@@ -1,8 +1,10 @@
 import { useSearchParams } from 'react-router';
-import { Callout, Pagination } from '@ogonggo/ui';
+import { Callout, Pagination, Tabs } from '@ogonggo/ui';
 import {
   type AdInquiryListFilters,
+  type AdInquiryTab,
   useAdInquiryList,
+  useAdInquiryTabCount,
 } from '@/entities/advertisement-inquiry/api/useAdvertisementInquiries';
 import { PageHeader } from '@/widgets/page-header';
 import { AdInquiryActions } from './AdInquiryActions';
@@ -35,8 +37,11 @@ export function AdInquiryListPage() {
     setSearchParams(next);
   };
 
+  const tab: AdInquiryTab = get('tab') === 'rejected' ? 'rejected' : 'active';
+
   const filters: AdInquiryListFilters = {
     page,
+    tab,
     inquiryType: get('inquiryType'),
     campaignCode: get('campaignCode'),
     status: get('status'),
@@ -49,10 +54,27 @@ export function AdInquiryListPage() {
 
   const { data, isPending, isError } = useAdInquiryList(filters);
   const items = data?.items ?? [];
+  const activeCount = useAdInquiryTabCount(filters, 'active').data;
+  const rejectedCount = useAdInquiryTabCount(filters, 'rejected').data;
+  const withCount = (label: string, count: number | undefined) =>
+    count === undefined ? label : `${label} ${count.toLocaleString()}`;
 
   return (
     <>
       <PageHeader title="광고 문의" action={<AdInquiryCsvButton filters={filters} />} />
+      <Tabs
+        aria-label="광고 문의 구분"
+        items={[
+          { value: 'active', label: withCount('광고 문의', activeCount) },
+          { value: 'rejected', label: withCount('반려한 문의', rejectedCount) },
+        ]}
+        value={tab}
+        // 탭을 바꾸면 탭 안의 상태 필터는 뜻이 달라져 지운다. 다른 필터는 그대로 둔다.
+        onValueChange={(next) =>
+          changeFilters({ tab: next === 'rejected' ? next : '', status: '' })
+        }
+        className="mb-4"
+      />
       <AdInquiryFilters
         filters={filters}
         total={data?.pageInfo.totalElements}

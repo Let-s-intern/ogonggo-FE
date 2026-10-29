@@ -17,12 +17,20 @@ import { ListToolbar } from '@/widgets/list-toolbar';
 const SELECTED = 'border-transparent bg-blue-50 font-semibold text-blue-500';
 const UNSELECTED = 'text-gray-500';
 
-type FilterKey = Exclude<keyof AdInquiryListFilters, 'page'>;
+/**
+ * 탭 안의 처리 상태 선택지. `광고 문의` 탭은 반려를 뺀 셋만 고른다(반려는 `반려한 문의` 탭이다). `반려한 문의`
+ * 탭은 상태가 하나뿐이라 처리 상태 필터를 숨긴다.
+ */
+const ACTIVE_STATUS_OPTIONS = AD_INQUIRY_STATUS_OPTIONS.filter(
+  (option) => option.value !== 'REJECTED',
+);
+
+type FilterKey = Exclude<keyof AdInquiryListFilters, 'page' | 'tab'>;
 
 const SELECTS: { key: FilterKey; label: string; options: SelectOption[] }[] = [
   { key: 'inquiryType', label: '문의 유형', options: AD_INQUIRY_TYPE_OPTIONS },
   { key: 'campaignCode', label: '캠페인', options: AD_INQUIRY_CAMPAIGN_OPTIONS },
-  { key: 'status', label: '처리 상태', options: AD_INQUIRY_STATUS_OPTIONS },
+  { key: 'status', label: '처리 상태', options: ACTIVE_STATUS_OPTIONS },
   { key: 'memberType', label: '회원 구분', options: AD_INQUIRY_MEMBER_TYPE_OPTIONS },
   { key: 'inflowChannel', label: '유입 경로', options: AD_INQUIRY_INFLOW_CHANNEL_OPTIONS },
   {
@@ -52,16 +60,18 @@ export function AdInquiryFilters({
 
   return (
     <ListToolbar>
-      {SELECTS.map(({ key, label, options }) => (
-        <Select
-          key={key}
-          aria-label={label}
-          options={options}
-          value={filters[key]}
-          onChange={(event) => onChange({ [key]: event.target.value })}
-          className={filters[key] ? SELECTED : UNSELECTED}
-        />
-      ))}
+      {SELECTS.filter(({ key }) => !(key === 'status' && filters.tab === 'rejected')).map(
+        ({ key, label, options }) => (
+          <Select
+            key={key}
+            aria-label={label}
+            options={options}
+            value={filters[key]}
+            onChange={(event) => onChange({ [key]: event.target.value })}
+            className={filters[key] ? SELECTED : UNSELECTED}
+          />
+        ),
+      )}
       <div className="flex items-center gap-1.5">
         <Input
           type="date"

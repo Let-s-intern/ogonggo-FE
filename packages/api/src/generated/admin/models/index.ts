@@ -209,7 +209,7 @@ export * from './listAdvertisementInquiriesInflowChannel';
 export * from './listAdvertisementInquiriesInquiryType';
 export * from './listAdvertisementInquiriesMemberType';
 export * from './listAdvertisementInquiriesParams';
-export * from './listAdvertisementInquiriesStatus';
+export * from './listAdvertisementInquiriesStatusItem';
 export * from './listAiJobAnalysisTargetsParams';
 export * from './listAiLetsCareerContentTagTargetsParams';
 export * from './listAnnouncementsParams';
