@@ -17,7 +17,7 @@ page?: number;
  */
 size?: number;
 /**
- * 회사명이나 담당자 이름에서 찾을 검색어
+ * 회사명, 담당자 이름, 계정 이메일에서 찾을 검색어
  * @minLength 0
  * @maxLength 100
  */
