@@ -152,14 +152,19 @@ const listGeneralMembersHandler = http.get('*/api/v1/admin/general-members', ({ 
   return HttpResponse.json(ok(body), { status: 200 });
 });
 
-/** 상세는 기본 정보에 북마크와 작성 글을 함께 준다. 요청을 셋으로 나누면 화면이 세 번 흔들린다. */
-const getUserMemberHandler = http.get('*/api/v1/admin/members/users/:memberId', ({ params }) => {
-  const memberId = Number(params.memberId);
+/**
+ * `getGeneralMember`(`GET /api/v1/admin/general-members/{userId}`, LC-3530). 목록 항목에 북마크와 작성 글을
+ * 더한다. 요청을 셋으로 나누면 화면이 세 번 흔들린다.
+ */
+const getUserMemberHandler = http.get('*/api/v1/admin/general-members/:userId', ({ params }) => {
+  const memberId = Number(params.userId);
   const member = USER_MEMBER_FIXTURES.find((fixture) => fixture.id === memberId);
   if (!member) {
     return HttpResponse.json(notFound('회원을 찾을 수 없습니다.'), { status: 404 });
   }
-  return HttpResponse.json(ok({ ...member, ...activityFor(memberId) }), { status: 200 });
+  return HttpResponse.json(ok({ ...toGeneralMember(member), ...activityFor(memberId) }), {
+    status: 200,
+  });
 });
 
 const listCompanyMembersHandler = http.get('*/api/v1/admin/company-members', ({ request }) => {
@@ -186,34 +191,32 @@ const listCompanyMembersHandler = http.get('*/api/v1/admin/company-members', ({ 
 });
 
 /**
- * 비즈니스 회원 상세는 그 회사가 등록한 공고를 함께 준다.
+ * `getCompanyMember`(`GET /api/v1/admin/company-members/{userId}`, LC-3530). 목록 항목에 그 회사가 등록한
+ * 공고를 더한다.
  *
  * 회사명으로 잇는다. 픽스처에 회사 id 가 없어서인데, 백엔드에는 외래키가 있을 자리다 —
  * 계약을 넘길 때 `companyId` 로 바꾼다.
  */
-const getCompanyMemberHandler = http.get(
-  '*/api/v1/admin/members/companies/:memberId',
-  ({ params }) => {
-    const memberId = Number(params.memberId);
-    const member = COMPANY_MEMBER_FIXTURES.find((fixture) => fixture.id === memberId);
-    if (!member) {
-      return HttpResponse.json(notFound('비즈니스 회원을 찾을 수 없습니다.'), { status: 404 });
-    }
+const getCompanyMemberHandler = http.get('*/api/v1/admin/company-members/:userId', ({ params }) => {
+  const memberId = Number(params.userId);
+  const member = COMPANY_MEMBER_FIXTURES.find((fixture) => fixture.id === memberId);
+  if (!member) {
+    return HttpResponse.json(notFound('비즈니스 회원을 찾을 수 없습니다.'), { status: 404 });
+  }
 
-    const jobs = ADMIN_JOB_FIXTURES.filter(
-      (job) => job.source === 'COMPANY' && job.companyName === member.companyName,
-    ).map((job) => ({
-      id: job.id,
-      title: job.title,
-      visibility: job.visibility,
-      reviewStatus: job.reviewStatus,
-      registeredAt: job.registeredAt,
-      viewCount: job.viewCount,
-    }));
+  const jobs = ADMIN_JOB_FIXTURES.filter(
+    (job) => job.source === 'COMPANY' && job.companyName === member.companyName,
+  ).map((job) => ({
+    id: job.id,
+    title: job.title,
+    visibility: job.visibility,
+    reviewStatus: job.reviewStatus,
+    registeredAt: job.registeredAt,
+    viewCount: job.viewCount,
+  }));
 
-    return HttpResponse.json(ok({ ...member, jobs }), { status: 200 });
-  },
-);
+  return HttpResponse.json(ok({ ...toCompanyMember(member), jobs }), { status: 200 });
+});
 
 /**
  * `changeGeneralMemberRole`(`PATCH /api/v1/admin/general-members/{userId}/role`).

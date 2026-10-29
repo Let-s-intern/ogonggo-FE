@@ -10,9 +10,9 @@ import {
   Select,
   type DataTableColumn,
 } from '@ogonggo/ui';
-import { enumLabel } from '@ogonggo/api';
 import type { AdminCompanyMemberResponse } from '@ogonggo/api/src/admin';
 import { useCompanyMemberList } from '@/entities/member/api/useMembers';
+import { companyInfoItems, managerInfoItems } from '@/entities/member/model/companySignupInfo';
 import { PageHeader } from '@/widgets/page-header';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
 import {
@@ -126,28 +126,6 @@ export function CompanyMemberListPage() {
 /** 응답에 없는 값은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. */
 const orDash = (value: string | undefined) => value ?? '-';
 
-/** 카탈로그 라벨. 값이 없으면 `-` 다. */
-const labelOrDash = (
-  name: 'CompanyType' | 'CompanyEmployeeCountRange' | 'CompanyManagerDuty',
-  value: string | undefined,
-) => (value ? enumLabel(name, value) : '-');
-
-/**
- * 사업자 번호 칸. 종류 라벨과 하이픈 넣은 번호(가입 화면과 같은 자리), 해외 기업은 종류 라벨만 보인다.
- * 서버는 숫자만 저장한다.
- */
-function businessNumberOf(member: AdminCompanyMemberResponse): string {
-  const { businessNumberType: type, businessNumber: number } = member;
-  if (!type) return '-';
-  const label = enumLabel('CompanyBusinessNumberType', type);
-  if (!number) return label;
-  const formatted =
-    type === 'CORPORATE_REGISTRATION'
-      ? `${number.slice(0, 6)}-${number.slice(6)}`
-      : `${number.slice(0, 3)}-${number.slice(3, 5)}-${number.slice(5)}`;
-  return `${label} ${formatted}`;
-}
-
 function MemberModal({
   member,
   onClose,
@@ -178,41 +156,9 @@ function MemberModal({
         ]}
       />
       <h3 className="pt-6 pb-2.5 text-base font-bold text-gray-900">기업 정보</h3>
-      <DescriptionList
-        items={[
-          { label: '사업자 번호', value: businessNumberOf(member), full: true },
-          { label: '기업 형태', value: labelOrDash('CompanyType', member.companyType) },
-          {
-            label: '직원 수',
-            value: labelOrDash('CompanyEmployeeCountRange', member.employeeCountRange),
-          },
-          { label: '산업', value: orDash(member.industry) },
-          {
-            label: '홈페이지',
-            value: member.homepageUrl ? (
-              <a
-                href={member.homepageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="break-all text-blue-600 hover:underline"
-              >
-                {member.homepageUrl}
-              </a>
-            ) : (
-              '-'
-            ),
-          },
-          { label: '주소', value: orDash(member.address), full: true },
-        ]}
-      />
+      <DescriptionList items={companyInfoItems(member)} />
       <h3 className="pt-6 pb-2.5 text-base font-bold text-gray-900">담당자 정보</h3>
-      <DescriptionList
-        items={[
-          { label: '직책', value: orDash(member.managerTitle) },
-          { label: '담당 업무', value: labelOrDash('CompanyManagerDuty', member.managerDuty) },
-          { label: '추천인', value: orDash(member.recommender), full: true },
-        ]}
-      />
+      <DescriptionList items={managerInfoItems(member)} />
       <div className="flex justify-end pt-6">
         <Button variant="secondary" onClick={onClose}>
           닫기
