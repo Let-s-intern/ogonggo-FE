@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { HttpError, signUpCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
 import { Button, Checkbox, Input, cn } from '@ogonggo/ui';
 import { track } from '@/shared/analytics/dataLayer';
@@ -10,7 +10,6 @@ import { formatPhone } from '@/shared/lib/formatPhone';
 import { recordSignInMethod } from '@/shared/lib/lastSignInMethod';
 import { CompanyNameCombobox } from '@/shared/ui/CompanyNameCombobox';
 import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
-import { ChevronIcon } from '@/shared/ui/icons';
 import {
   BUSINESS_NUMBER_DIGITS,
   BUSINESS_NUMBER_TYPE_OPTIONS,
@@ -30,6 +29,7 @@ import {
   validateStep,
 } from '../lib/companySignUp';
 import { SIGN_UP_INPUT_CLASS, SIGN_UP_SUBMIT_CLASS, SignUpField } from './SignUpField';
+import { SignUpSelect } from './SignUpSelect';
 
 type Step = 1 | 2;
 
@@ -406,58 +406,5 @@ function StepProgress({ step }: { step: Step }) {
         {STEP_TITLES[step]}
       </p>
     </div>
-  );
-}
-
-/**
- * 가입 화면의 드롭다운. 네이티브 `select` 라 키보드와 모바일 피커를 브라우저가 해 준다. 사이트 공통 규칙대로
- * 고르기 전에는 회색 안내 문구, 고른 뒤에는 값을 파랗게 보인다. 모두 필수 칸이다.
- */
-function SignUpSelect({
-  id,
-  label,
-  placeholder,
-  value,
-  options,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  placeholder: string;
-  value: string;
-  options: readonly { value: string; label: string }[];
-  onChange: (value: string) => void;
-}): ReactNode {
-  const chosen = value !== '';
-  return (
-    <SignUpField label={label} htmlFor={id} required>
-      <div className="relative">
-        <select
-          id={id}
-          name={id}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className={cn(
-            'w-full cursor-pointer appearance-none border border-gray-300 bg-white pr-11 pl-4 text-base',
-            'focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none',
-            chosen ? 'font-semibold text-blue-500' : 'text-gray-400',
-            SIGN_UP_INPUT_CLASS,
-          )}
-        >
-          <option value="" disabled className="text-gray-400">
-            {placeholder}
-          </option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value} className="font-normal text-gray-900">
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronIcon
-          direction="down"
-          className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-gray-500"
-        />
-      </div>
-    </SignUpField>
   );
 }
