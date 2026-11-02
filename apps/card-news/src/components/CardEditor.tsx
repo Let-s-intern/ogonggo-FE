@@ -17,8 +17,11 @@ import {
 } from '@/lib/card/types';
 import {
   type RenderSlide,
+  attachSlide,
+  detachSlide,
   documentContent,
   documentTitle,
+  slideEditsOf,
   slideLabel,
   withSlideEdit,
   withSlideLayers,
@@ -262,6 +265,8 @@ export function CardEditor({ docId }: { docId: string }) {
   }, [variant, rememberVariant]);
 
   const layers = (variant && docSlide?.layers[variant]) || NO_LAYERS;
+  const slideEdits =
+    variant && loaded && docSlide ? slideEditsOf(loaded.doc, docSlide)[variant] : undefined;
   const selectedLayer = isLayerRef(selected)
     ? layers.find((layer) => layerRef(layer.id) === selected)
     : undefined;
@@ -302,7 +307,7 @@ export function CardEditor({ docId }: { docId: string }) {
       align: look.align,
       lineHeight: look.lineHeight,
     };
-    const current = docSlide.edits[variant]?.[id] ?? { dx: 0, dy: 0, scale: 1 };
+    const current = slideEditsOf(loaded.doc, docSlide)[variant]?.[id] ?? { dx: 0, dy: 0, scale: 1 };
     editor.remember();
     editor.applyQuietly(
       withSlideLayers(
@@ -432,7 +437,7 @@ export function CardEditor({ docId }: { docId: string }) {
                   slides={built}
                   size={size}
                   slide={docSlide.id}
-                  edits={docSlide.edits[variant]}
+                  edits={slideEdits}
                   layers={layers}
                   onLayers={setLayers}
                   checkLayers={checkLayers}
@@ -467,7 +472,16 @@ export function CardEditor({ docId }: { docId: string }) {
                 onSettingsChange={editor.setSettings}
                 selected={isElementId(selected) ? selected : null}
                 sectionLabels={sectionLabels}
-                edit={isElementId(selected) ? docSlide.edits[variant]?.[selected] : undefined}
+                edit={isElementId(selected) ? slideEdits?.[selected] : undefined}
+                jobTemplate={
+                  loaded.doc.kind === 'bundle' && docSlide.role === 'job'
+                    ? {
+                        detached: Boolean(docSlide.detached),
+                        onDetach: () => editor.changeSlides((doc) => detachSlide(doc, docSlide.id)),
+                        onAttach: () => editor.changeSlides((doc) => attachSlide(doc, docSlide.id)),
+                      }
+                    : undefined
+                }
                 onEdit={(edit, group) =>
                   isElementId(selected) &&
                   editor.setEdits(variant, docSlide.id, selected, edit, group)

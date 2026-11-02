@@ -70,8 +70,13 @@ export interface DocumentSlide {
   role: SlideRole;
   /** `role = job` 일 때 `jobs` 의 몇 번째인가. */
   jobIndex?: number;
-  /** 템플릿별 요소 편집값. 템플릿을 바꿔도 각자 남는다. */
+  /**
+   * 템플릿별 요소 편집값. 템플릿을 바꿔도 각자 남는다. 틀을 쓰는 묶음 공고 장은 이 값 대신
+   * `CardDocument.jobTemplateEdits` 를 쓴다(`slideEditsOf()`).
+   */
   edits: Partial<Record<VariantId, SlideEdits>>;
+  /** 묶음 공고 장을 공고별 장 틀에서 뗐는가(`이 장만 따로`). */
+  detached?: boolean;
   /** 템플릿별 자유 요소(글자·이미지). */
   layers: Partial<Record<VariantId, Layer[]>>;
 }
@@ -110,6 +115,12 @@ export interface CardDocument {
   caption: string;
   /** 묶음 표지. 묶음 문서에만 있다. */
   cover?: DocumentCover;
+  /**
+   * 묶음 공고 장 틀의 템플릿별 요소 편집값. 뗀 장(`detached`)이 아닌 공고 장은 모두 이 값을 같이 쓴다 —
+   * 한 장에서 로고를 옮기면 다른 공고 장도 옮겨지고, 실행 취소 한 번에 같이 돌아간다. 자유 요소와 문구는
+   * 장마다 따로다.
+   */
+  jobTemplateEdits?: Partial<Record<VariantId, SlideEdits>>;
   /** 편집 화면을 열 때의 캔버스 크기. 빈 캔버스에서 고른다. 없으면 피드 4:5 다. */
   size?: CardSizeId;
 }
@@ -360,7 +371,7 @@ export function slideSpec(
       settings: variantOf(variant).image && photo ? { ...shared, photo } : shared,
       logo: sameCompany ? logo : undefined,
       companyName: job?.companyName ?? '',
-      edits: slide.edits[variant],
+      edits: slideEditsOf(doc, slide)[variant],
       layers: slide.layers[variant],
       ...(cover ? { cover } : {}),
       ...(bundleRow ? { bundleRow } : {}),
@@ -382,6 +393,49 @@ function withSlide(
   };
 }
 
+/**
+ * 묶음 공고 장이 공고별 장 틀(`CardDocument.jobTemplateEdits`)을 쓰는가. `이 장만 따로` 로 뗀 장은 자기
+ * 편집값을 쓴다.
+ */
+export function usesJobTemplate(doc: CardDocument, slide: DocumentSlide): boolean {
+  return doc.kind === 'bundle' && slide.role === 'job' && !slide.detached;
+}
+
+/** 장이 그리는 템플릿별 요소 편집값. 틀을 쓰는 묶음 공고 장은 틀의 값이다. */
+export function slideEditsOf(
+  doc: CardDocument,
+  slide: DocumentSlide,
+): Partial<Record<VariantId, SlideEdits>> {
+  return usesJobTemplate(doc, slide) ? (doc.jobTemplateEdits ?? {}) : slide.edits;
+}
+
+/**
+ * 장 하나의 템플릿 편집값을 바꾼 문서. 틀을 쓰는 묶음 공고 장이면 틀을 바꿔 다른 공고 장도 같이
+ * 바뀐다. 없는 id 면 그대로다.
+ */
+function withEditsOf(
+  doc: CardDocument,
+  slideId: string,
+  variant: VariantId,
+  change: (edits: SlideEdits) => SlideEdits,
+): CardDocument {
+  const slide = doc.slides.find((item) => item.id === slideId);
+  if (!slide) {
+    return doc;
+  }
+  if (usesJobTemplate(doc, slide)) {
+    const template = doc.jobTemplateEdits ?? {};
+    return {
+      ...doc,
+      jobTemplateEdits: { ...template, [variant]: change(template[variant] ?? {}) },
+    };
+  }
+  return withSlide(doc, slideId, (current) => ({
+    ...current,
+    edits: { ...current.edits, [variant]: change(current.edits[variant] ?? {}) },
+  }));
+}
+
 /** 요소 하나의 편집값을 바꾼 문서. `null` 이면 템플릿 원래 배치로 돌린다. */
 export function withSlideEdit(
   doc: CardDocument,
@@ -390,12 +444,9 @@ export function withSlideEdit(
   id: ElementId,
   edit: ElementEdit | null,
 ): CardDocument {
-  return withSlide(doc, slideId, (slide) => {
-    const { [id]: _previous, ...others } = slide.edits[variant] ?? {};
-    return {
-      ...slide,
-      edits: { ...slide.edits, [variant]: edit ? { ...others, [id]: edit } : others },
-    };
+  return withEditsOf(doc, slideId, variant, (edits) => {
+    const { [id]: _previous, ...others } = edits;
+    return edit ? { ...others, [id]: edit } : others;
   });
 }
 
@@ -406,10 +457,24 @@ export function withSlideEdits(
   variant: VariantId,
   edits: SlideEdits,
 ): CardDocument {
+  return withEditsOf(doc, slideId, variant, () => edits);
+}
+
+/**
+ * 묶음 공고 장을 틀에서 뗀 문서(`이 장만 따로`). 지금 틀의 편집값을 그 장에 옮겨 적어 겉모습은 그대로이고,
+ * 이후 이 장을 고쳐도 다른 공고 장은 바뀌지 않는다.
+ */
+export function detachSlide(doc: CardDocument, slideId: string): CardDocument {
   return withSlide(doc, slideId, (slide) => ({
     ...slide,
-    edits: { ...slide.edits, [variant]: edits },
+    detached: true,
+    edits: { ...doc.jobTemplateEdits },
   }));
+}
+
+/** 뗀 묶음 공고 장을 틀로 되돌린 문서. 그 장에만 있던 템플릿 편집값은 버린다(자유 요소는 남긴다). */
+export function attachSlide(doc: CardDocument, slideId: string): CardDocument {
+  return withSlide(doc, slideId, ({ detached: _detached, ...slide }) => ({ ...slide, edits: {} }));
 }
 
 /** 장 하나의 자유 요소 목록을 바꾼 문서. */

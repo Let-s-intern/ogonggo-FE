@@ -245,6 +245,15 @@ export function useCardEditor() {
     [remember, changeDoc],
   );
 
+  /** 장 목록을 바꾼다(장 떼기·붙이기, 넣기, 지우기, 순서). 실행 취소 한 단계다. */
+  const changeSlides = useCallback(
+    (change: (doc: CardDocument) => CardDocument) => {
+      remember();
+      changeDoc(change);
+    },
+    [remember, changeDoc],
+  );
+
   /** 고른 시안을 문서에 남긴다. 실행 취소 기록에는 쌓지 않는다. */
   const setVariant = useCallback(
     (variant: VariantId) => changeDoc((doc) => ({ ...doc, variant })),
@@ -514,6 +523,7 @@ export function useCardEditor() {
     setBrandImage,
     setEdits,
     setLayers,
+    changeSlides,
     setVariant,
     remember,
     applyQuietly,

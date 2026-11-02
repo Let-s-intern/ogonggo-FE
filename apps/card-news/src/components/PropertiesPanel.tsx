@@ -52,6 +52,31 @@ interface PropertiesPanelProps {
   onLayerOrder: (layer: Layer, step: number) => void;
   /** AI 탭 내용(`AssistantPanel`). */
   assistant: ReactNode;
+  /** 보고 있는 장이 묶음 공고 장이면 공고별 장 틀을 쓰는지와 떼고 붙이는 동작. 아니면 없다. */
+  jobTemplate?: JobTemplateControl;
+}
+
+export interface JobTemplateControl {
+  detached: boolean;
+  onDetach: () => void;
+  onAttach: () => void;
+}
+
+/** 묶음 공고 장의 틀 공유 상태. 틀을 쓰면 `이 장만 따로`, 뗀 장이면 `틀로 되돌리기`. */
+function JobTemplateSection({ detached, onDetach, onAttach }: JobTemplateControl) {
+  return (
+    <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
+      <h2 className="text-base font-bold">공고별 장 틀</h2>
+      <p className="text-xs text-gray-500">
+        {detached
+          ? '이 장은 틀에서 떼어 따로 고칩니다. 되돌리면 이 장에서 옮긴 자리는 버리고 틀을 따릅니다.'
+          : '로고·머리 카드·표를 옮기거나 크기를 바꾸면 다른 공고 장도 같이 바뀝니다. 자유 요소와 문구는 장마다 따로입니다.'}
+      </p>
+      <Button type="button" size="sm" variant="secondary" onClick={detached ? onAttach : onDetach}>
+        {detached ? '틀로 되돌리기' : '이 장만 따로'}
+      </Button>
+    </section>
+  );
 }
 
 type PanelTab = 'properties' | 'ai';
@@ -444,13 +469,14 @@ function LayerProperties({
 /**
  * 오른쪽 패널. `속성 | AI` 탭이다. AI 탭은 숨겨도 계속 그려 대화와 진행 중인 요청이 남는다.
  */
-export function PropertiesPanel({ assistant, ...props }: PropertiesPanelProps) {
+export function PropertiesPanel({ assistant, jobTemplate, ...props }: PropertiesPanelProps) {
   const [tab, setTab] = useState<PanelTab>('properties');
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-2xl bg-white px-2 shadow-sm">
         <Tabs items={PANEL_TABS} value={tab} onValueChange={setTab} aria-label="오른쪽 패널" />
       </div>
+      {tab === 'properties' && jobTemplate ? <JobTemplateSection {...jobTemplate} /> : null}
       {tab === 'properties' ? <Properties {...props} /> : null}
       <section hidden={tab !== 'ai'} className="rounded-2xl bg-white p-4 shadow-sm">
         {assistant}
@@ -482,7 +508,7 @@ function Properties({
   onLayerChange,
   onLayerRemove,
   onLayerOrder,
-}: Omit<PropertiesPanelProps, 'assistant'>) {
+}: Omit<PropertiesPanelProps, 'assistant' | 'jobTemplate'>) {
   if (layer) {
     return (
       <LayerProperties

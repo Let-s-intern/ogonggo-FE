@@ -4,6 +4,7 @@ import {
   documentContent,
   withContent,
   withSlideEdit,
+  slideEditsOf,
   withSlideEdits,
   withSlideLayers,
 } from '../card/document';
@@ -251,7 +252,7 @@ function slideSummary(
   const size = CARD_SIZES[context.size()];
   const variant = context.variant();
   const docSlide = loaded.doc.slides[slide];
-  const edits = docSlide?.edits[variant];
+  const edits = docSlide ? slideEditsOf(loaded.doc, docSlide)[variant] : undefined;
   const labels = docSlide
     ? visibleSectionLabels(
         { variant, content: documentContent(loaded.doc, docSlide) },
@@ -532,7 +533,7 @@ async function editElements(
       continue;
     }
     changed.add(`${slide}:${id}`);
-    const edit = docSlide.edits[variant]?.[id] ?? NO_EDIT;
+    const edit = slideEditsOf(doc, docSlide)[variant]?.[id] ?? NO_EDIT;
     const scale = clamp(asNumber(raw.scale) ?? edit.scale, MIN_SCALE, MAX_SCALE);
     const ratio = scale / edit.scale;
     const width = box.width * ratio;
@@ -628,7 +629,7 @@ function resetElements(
     }
     const edits = ids
       ? (Object.fromEntries(
-          Object.entries(docSlide.edits[variant] ?? {}).filter(
+          Object.entries(slideEditsOf(loaded.doc, docSlide)[variant] ?? {}).filter(
             ([id]) => !ids.includes(id as ElementId),
           ),
         ) as SlideEdits)
