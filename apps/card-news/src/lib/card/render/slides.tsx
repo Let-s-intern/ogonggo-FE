@@ -58,7 +58,7 @@ import {
 } from '../layout';
 import { contrastRatio } from '../color';
 import type { SlideRole } from '../document';
-import type { Measure } from '../measure';
+import { type Measure, wordBreakFor } from '../measure';
 import {
   type BrandMarkId,
   type BundleCard,
@@ -398,6 +398,7 @@ function TabSlide({
               metrics={metrics}
               mode={boxed ? 'boxed' : 'columns'}
               edits={edits}
+              measure={measure}
             />
           </div>
         </div>
@@ -563,6 +564,7 @@ function LabelsSlide({
               metrics={metrics}
               mode="labels"
               edits={edits}
+              measure={measure}
             />
           </div>
         </Editable>
@@ -816,6 +818,13 @@ function CompaniesSlide({
                           fontWeight: COVER_ROW_WEIGHT,
                           lineHeight: COMPANY_ROW_LINE_HEIGHT,
                           letterSpacing: -rowSize * 0.01,
+                          wordBreak: wordBreakFor(
+                            measure,
+                            text.trim() || '-',
+                            rowSize,
+                            COVER_ROW_WEIGHT,
+                            COMPANY_CELL_WIDTH,
+                          ),
                           color: '#111111',
                         }}
                       >
@@ -841,12 +850,14 @@ function CardColumn({
   size,
   weight,
   width,
+  measure,
 }: {
   sections: CardSection[];
   brand: string;
   size: number;
   weight: number;
   width: number;
+  measure: Measure;
 }) {
   const visible = sections
     .map((section) => ({ ...section, items: section.items.filter((item) => item.trim()) }))
@@ -896,7 +907,15 @@ function CardColumn({
                 >
                   •
                 </div>
-                <div style={{ display: 'flex', width: width - BULLET_INDENT }}>{item}</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    width: width - BULLET_INDENT,
+                    wordBreak: wordBreakFor(measure, item, size, weight, width - BULLET_INDENT),
+                  }}
+                >
+                  {item}
+                </div>
               </div>
             ))}
           </div>
@@ -1018,6 +1037,7 @@ function ColumnsSlide({
                     size={bodySize}
                     weight={COLUMNS_LEFT_WEIGHT}
                     width={COLUMNS_LEFT_WIDTH}
+                    measure={measure}
                   />
                   <CardColumn
                     sections={card.right}
@@ -1025,6 +1045,7 @@ function ColumnsSlide({
                     size={bodySize}
                     weight={COLUMNS_RIGHT_WEIGHT}
                     width={COLUMNS_RIGHT_WIDTH}
+                    measure={measure}
                   />
                 </div>
               </div>
@@ -1100,7 +1121,14 @@ function InfoSlide({
 
   const edits = spec.edits;
   const list = (
-    <Sections palette={palette} sections={sections} note={note} metrics={metrics} edits={edits} />
+    <Sections
+      palette={palette}
+      sections={sections}
+      note={note}
+      metrics={metrics}
+      edits={edits}
+      measure={measure}
+    />
   );
   const element = (
     <Canvas size={size} layers={spec.layers}>
@@ -1370,6 +1398,13 @@ function CoverSlide({
                       width: CONTENT_WIDTH - COVER_SCHEDULE_PAD_X * 2,
                       fontSize: metrics.scheduleSize,
                       fontWeight: COVER_SCHEDULE_WEIGHT,
+                      wordBreak: wordBreakFor(
+                        measure,
+                        line,
+                        metrics.scheduleSize,
+                        COVER_SCHEDULE_WEIGHT,
+                        CONTENT_WIDTH - COVER_SCHEDULE_PAD_X * 2,
+                      ),
                       lineHeight: COVER_SCHEDULE_LINE_HEIGHT,
                       letterSpacing: -metrics.scheduleSize * 0.01,
                       color: '#111111',

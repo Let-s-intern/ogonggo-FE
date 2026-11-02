@@ -14,6 +14,7 @@ import {
   type SlideMetrics,
 } from '../layout';
 import { parseLine } from '../markup';
+import { type Measure, wordBreakFor } from '../measure';
 import {
   type BrandImage,
   type BrandMarkId,
@@ -234,12 +235,14 @@ function Bullet({
   size,
   width,
   color,
+  measure,
   align = 'left',
 }: {
   item: string;
   size: number;
   width: number;
   color: string;
+  measure: Measure;
   align?: 'left' | 'center';
 }) {
   const text: CSSProperties = {
@@ -252,7 +255,14 @@ function Bullet({
   if (align === 'center') {
     return (
       <div
-        style={{ display: 'flex', justifyContent: 'center', width, textAlign: 'center', ...text }}
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          width,
+          textAlign: 'center',
+          wordBreak: wordBreakFor(measure, `• ${item}`, size, BODY_WEIGHT, width),
+          ...text,
+        }}
       >
         {`• ${item}`}
       </div>
@@ -270,7 +280,15 @@ function Bullet({
       >
         •
       </div>
-      <div style={{ display: 'flex', width: width - BULLET_INDENT }}>{item}</div>
+      <div
+        style={{
+          display: 'flex',
+          width: width - BULLET_INDENT,
+          wordBreak: wordBreakFor(measure, item, size, BODY_WEIGHT, width - BULLET_INDENT),
+        }}
+      >
+        {item}
+      </div>
     </div>
   );
 }
@@ -306,6 +324,7 @@ export function Sections({
   metrics,
   mode = 'list',
   edits,
+  measure,
 }: {
   palette: Palette;
   sections: CardSection[];
@@ -313,6 +332,7 @@ export function Sections({
   metrics: SlideMetrics;
   mode?: 'list' | 'boxed' | 'columns' | 'labels';
   edits: SlideEdits | undefined;
+  measure: Measure;
 }) {
   const { bodySize: size, contentWidth } = metrics;
   const visible = visibleSections(sections);
@@ -397,6 +417,7 @@ export function Sections({
                           size={size}
                           width={contentWidth}
                           color={palette.bodyText}
+                          measure={measure}
                         />
                       ))}
                     </div>,
@@ -439,6 +460,7 @@ export function Sections({
                           size={size}
                           width={itemWidth}
                           color={palette.bodyText}
+                          measure={measure}
                           align="center"
                         />
                       ))}
@@ -466,6 +488,7 @@ export function Sections({
                         size={size}
                         width={contentWidth}
                         color={palette.bodyText}
+                        measure={measure}
                       />
                     ))}
                   </div>,
@@ -489,6 +512,13 @@ export function Sections({
                 width: contentWidth,
                 fontSize: Math.round(size * NOTE_SCALE),
                 fontWeight: 500,
+                wordBreak: wordBreakFor(
+                  measure,
+                  line,
+                  Math.round(size * NOTE_SCALE),
+                  500,
+                  contentWidth,
+                ),
                 lineHeight: 1.5,
                 color: palette.bodyText,
                 opacity: 0.85,
