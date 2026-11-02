@@ -7,6 +7,7 @@ import { closedLabel } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { BookmarkHintBand } from '@/features/bookmark';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { BootcampRecommendedChallenges } from '@/widgets/lets-career-recommend';
 import { BootcampCurriculum } from './BootcampCurriculum';
@@ -103,6 +104,13 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
         </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
+            hint={
+              <BookmarkHintBand
+                kind="bootcamps"
+                id={bootcamp.id}
+                bookmarked={bootcamp.bookmarked}
+              />
+            }
             summary={
               <>
                 <span>

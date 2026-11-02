@@ -11,6 +11,7 @@ import { AttachedImages } from '@/shared/ui/AttachedImages';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { LexicalContent } from '@/shared/ui/LexicalContent';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { BookmarkHintBand } from '@/features/bookmark';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { SideStudyContactButton } from './SideStudyContactButton';
 import { SideStudyDetailBreadcrumb } from './SideStudyDetailBreadcrumb';
@@ -119,6 +120,13 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
         </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
+            hint={
+              <BookmarkHintBand
+                kind="side-studies"
+                id={sideStudy.id}
+                bookmarked={sideStudy.bookmarked}
+              />
+            }
             summary={
               <>
                 <span>{formatRecruitmentPeriod(sideStudy)}</span>

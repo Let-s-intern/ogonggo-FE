@@ -44,6 +44,9 @@ const ABOVE_STICKY_BAR = cn(
   'max-md:[body:has([data-bottom-nav])_&]:bottom-[calc(6rem+env(safe-area-inset-bottom))]',
   // 상세 화면에서 둘이 겹쳐 쌓이면(신청하기 바가 내비게이션 위에 올라앉는다) 그 둘 위로 올린다.
   'max-md:[body:has([data-bottom-nav]):has([data-sticky-apply-bar])_&]:bottom-[calc(11.5rem+env(safe-area-inset-bottom))]',
+  // 신청하기 바에 북마크 안내 띠(`data-bookmark-hint`)가 붙으면 바가 그 높이(2.5rem)만큼 커진다.
+  'max-md:[body:has([data-sticky-apply-bar]):has([data-bookmark-hint])_&]:bottom-[calc(11rem+env(safe-area-inset-bottom))]',
+  'max-md:[body:has([data-bottom-nav]):has([data-sticky-apply-bar]):has([data-bookmark-hint])_&]:bottom-[calc(14rem+env(safe-area-inset-bottom))]',
 );
 
 /** 공고 상세 주소. 달력에서 여는 상세 모달도 같은 주소라 함께 센다. */

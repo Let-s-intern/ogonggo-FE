@@ -7,6 +7,13 @@ import type { BookmarkKind } from '../api/bookmarkApi';
 import { useBookmarkAccess } from '../model/useMyBookmarkIds';
 import { useToggleBookmark } from '../model/useToggleBookmark';
 
+/** 카드 북마크에 마우스를 올렸을 때의 안내. */
+const HOVER_HINTS: Record<BookmarkKind, string> = {
+  jobs: '나중에 볼 공고 저장',
+  bootcamps: '나중에 볼 교육 저장',
+  'side-studies': '나중에 볼 글 저장',
+};
+
 export interface BookmarkButtonProps {
   kind: BookmarkKind;
   id: number;
@@ -62,9 +69,29 @@ export function BookmarkButton({
       aria-pressed={bookmarked}
       aria-disabled={pending || undefined}
       onClick={toggle}
-      className={cn('cursor-pointer transition-opacity hover:opacity-70', className)}
+      className={cn('group/bookmark relative cursor-pointer', className)}
     >
-      <BookmarkIcon filled={bookmarked} className={cn('h-6 w-6', iconClassName)} />
+      <BookmarkIcon
+        filled={bookmarked}
+        className={cn('h-6 w-6 transition-opacity group-hover/bookmark:opacity-70', iconClassName)}
+      />
+      {/* 카드마다 상시로 띄우면 목록이 지저분해 마우스를 올렸을 때만 보인다. 저장한 카드에는 없다. */}
+      {bookmarked ? null : (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 right-full z-10 mr-2 hidden -translate-y-1/2 drop-shadow-[0_4px_10px_rgba(17,24,39,0.14)] md:[@media(hover:hover)]:group-hover/bookmark:block"
+        >
+          <span className="block rounded-xl bg-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-gray-700">
+            {HOVER_HINTS[kind]}
+          </span>
+          <svg
+            viewBox="0 0 8 12"
+            className="absolute top-1/2 -right-[7px] h-3 w-2 -translate-y-1/2 fill-white"
+          >
+            <path d="M0 0L8 6L0 12Z" />
+          </svg>
+        </span>
+      )}
     </button>
   );
 }
