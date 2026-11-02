@@ -28,7 +28,16 @@ const FAVORITES = [
  * 대화 기록은 `기록` 을 누르거나 보내면 입력창 위로 펼쳐진다. 접어도 대화와 진행 중인 요청은 남는다.
  * `scope` 는 입력창 위에 그릴 범위 알약이다.
  */
-export function AssistantPanel({ context, scope }: { context: ToolContext; scope?: ReactNode }) {
+export function AssistantPanel({
+  context,
+  scope,
+  onClose,
+}: {
+  context: ToolContext;
+  scope?: ReactNode;
+  /** 입력창을 숨긴다. 다시 여는 것은 위 막대의 `AI로 수정` 이다. */
+  onClose?: () => void;
+}) {
   const [draft, setDraft] = useState('');
   const [open, setOpen] = useState(false);
   const { lines, error, isBusy, send, stop, reset } = useAssistantChat(context);
@@ -120,7 +129,21 @@ export function AssistantPanel({ context, scope }: { context: ToolContext; scope
           </div>
         </div>
       ) : null}
-      {scope}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">{scope}</div>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onClose();
+            }}
+            className="shrink-0 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+          >
+            닫기
+          </button>
+        ) : null}
+      </div>
       <form onSubmit={onSubmit} className="flex items-center gap-2">
         <textarea
           aria-label="AI 비서에게 요청"

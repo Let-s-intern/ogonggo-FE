@@ -127,6 +127,8 @@ function ScopePills({
 
 /** 캔버스 칸 아래 비울 높이. 캔버스 아래 떠 있는 AI 입력창(접었을 때)이 캔버스를 가리지 않게. */
 const AI_SPACE = 112;
+/** AI 입력창을 닫았을 때도 캔버스 아래에 남기는 여백. */
+const CLOSED_AI_SPACE = 32;
 
 /** 왼쪽 레일. 도형·배경 서랍은 2차라 두지 않는다. */
 type DrawerKey = 'template' | 'text' | 'elements' | 'upload' | 'jobs';
@@ -152,6 +154,8 @@ export function CardEditor({ docId }: { docId: string }) {
   const [scale, setScale] = useState(0);
   /** AI 로 고칠 범위. 고른 것이 있으면 `선택한 요소`, 없으면 `이 장 전체` 로 시작한다. */
   const [scope, setScope] = useState<AssistantScope>('slide');
+  // 캔버스 아래 AI 입력창. 닫으면 그 자리만큼 캔버스를 키우고, 위 막대의 `AI로 수정` 으로 다시 연다.
+  const [aiOpen, setAiOpen] = useState(true);
   /** 열린 왼쪽 서랍. `null` 이면 닫혀 있다. */
   const [drawer, setDrawer] = useState<DrawerKey | null>('template');
   const { kit, error: kitError } = useRenderKit();
@@ -437,9 +441,14 @@ export function CardEditor({ docId }: { docId: string }) {
       : null;
   };
 
-  /** 위 막대의 `AI로 수정`. AI 입력 칸에 포커스를 준다. */
-  const focusAssistant = () =>
-    document.querySelector<HTMLTextAreaElement>('[aria-label="AI 비서에게 요청"]')?.focus();
+  /** 위 막대의 `AI로 수정`. 닫아 둔 AI 입력창을 다시 열고 입력 칸에 포커스를 준다. */
+  const focusAssistant = () => {
+    setAiOpen(true);
+    // 다시 그려진 뒤에 포커스를 준다(닫혀 있는 동안은 입력 칸이 숨겨져 있다).
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLTextAreaElement>('[aria-label="AI 비서에게 요청"]')?.focus(),
+    );
+  };
 
   const editing = Boolean(loaded && content && slides && currentSlide && docSlide && variant);
   const toolbar = (
@@ -649,7 +658,7 @@ export function CardEditor({ docId }: { docId: string }) {
                   sectionLabels={sectionLabels}
                   zoom={zoom}
                   onScale={setScale}
-                  bottomSpace={AI_SPACE}
+                  bottomSpace={aiOpen ? AI_SPACE : CLOSED_AI_SPACE}
                 />
               ) : (
                 <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
@@ -657,10 +666,16 @@ export function CardEditor({ docId }: { docId: string }) {
                 </div>
               )}
               {/* 캔버스 아래 떠 있는 AI 입력창. 장 목록 위, 캔버스 칸 안에 있어 장 목록·내보내기에 가리지 않는다. */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center">
+              {/* 닫아도 지우지 않고 숨긴다 — 대화 기록이 남는다. */}
+              <div
+                className={`pointer-events-none absolute inset-x-0 bottom-3 z-20 justify-center ${
+                  aiOpen ? 'flex' : 'hidden'
+                }`}
+              >
                 <div className="pointer-events-auto flex w-full justify-center">
                   <AssistantPanel
                     context={toolContext}
+                    onClose={() => setAiOpen(false)}
                     scope={
                       <ScopePills
                         scope={scope}
