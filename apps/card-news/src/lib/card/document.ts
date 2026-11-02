@@ -44,6 +44,10 @@ export const ROLE_LABELS: Record<SlideRole, string> = {
  */
 export const MAX_SLIDES = 10;
 
+/** 묶음 하나에 넣는 공고 수. 표지와 안내 장을 빼고 장 상한까지다. 표 줄이 몇 개까지 읽히는지는 아직 보지 않았다. */
+export const MIN_BUNDLE_JOBS = 2;
+export const MAX_BUNDLE_JOBS = MAX_SLIDES - 2;
+
 /** 장 목록에 보이는 장 이름(`2. 자격·우대 요건`). `index` 는 문서의 몇 번째 장인가(0부터). */
 export function slideLabel(slide: Pick<DocumentSlide, 'role'>, index: number): string {
   return `${index + 1}. ${ROLE_LABELS[slide.role]}`;

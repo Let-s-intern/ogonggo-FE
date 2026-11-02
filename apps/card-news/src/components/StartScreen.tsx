@@ -4,20 +4,33 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@ogonggo/ui';
-import { blankDocument, newDocumentId } from '@/lib/card/document';
+import {
+  MAX_BUNDLE_JOBS,
+  MIN_BUNDLE_JOBS,
+  blankDocument,
+  newDocumentId,
+} from '@/lib/card/document';
 import { CARD_SIZE_IDS, CARD_SIZES, type CardSizeId, type VariantId } from '@/lib/card/types';
 import { type DocumentEntry, listDocuments, saveDocument } from '@/lib/client/storage';
+import type { JobListItem } from '@/lib/server/ogonggo';
 import { FALLBACK_COLOR, defaultSettings } from '@/lib/client/theme';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { JobPicker } from './JobPicker';
 import { VariantPicker } from './VariantPicker';
 
-type StartTab = 'single' | 'blank';
+type StartTab = 'single' | 'bundle' | 'blank';
 
 const TABS: { id: StartTab; label: string }[] = [
   { id: 'single', label: '공고 하나' },
+  { id: 'bundle', label: '여러 공고 묶기' },
   { id: 'blank', label: '빈 캔버스' },
 ];
+
+/** 묶음 종류. 1차에는 한 회사 여러 직무만 고를 수 있다. */
+const BUNDLE_KINDS = [
+  { id: 'company', label: '한 회사 여러 직무', description: '표지 직무 표 + 직무별 한 장 + 안내' },
+  { id: 'topic', label: '여러 회사 주제 모음', description: '여러 회사 공고를 한 주제로' },
+] as const;
 
 /** 저장 시각을 `11월 2일 14:05` 로. */
 function savedLabel(savedAt: string): string {
@@ -106,6 +119,138 @@ function SingleTab() {
   );
 }
 
+/** 묶음으로 만들어질 장. 표지, 고른 순서대로 공고마다 한 장, 프로필 안내. */
+function bundleSlides(jobs: JobListItem[]): string[] {
+  return ['표지', ...jobs.map((job) => `${job.companyName} · ${job.title}`), '프로필 안내'];
+}
+
+/**
+ * 여러 공고 묶기 탭. 왼쪽에서 공고를 고른 순서가 장 순서다. 오른쪽에서 순서를 바꾸고 만들어질 장을
+ * 본다.
+ */
+function BundleTab() {
+  const [picked, setPicked] = useState<JobListItem[]>([]);
+  const slides = bundleSlides(picked);
+
+  const move = (index: number, step: number) => {
+    const target = index + step;
+    if (target < 0 || target >= picked.length) {
+      return;
+    }
+    const next = [...picked];
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    setPicked(next);
+  };
+
+  return (
+    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[420px_minmax(0,1fr)]">
+      <JobPicker multiple={{ picked, onChange: setPicked, max: MAX_BUNDLE_JOBS }} />
+      <div className="flex flex-col gap-4">
+        <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
+          <h2 className="text-base font-bold">묶음 종류</h2>
+          <div className="flex flex-wrap gap-2">
+            {BUNDLE_KINDS.map((kind) => (
+              <label
+                key={kind.id}
+                className={`flex flex-1 items-start gap-2 rounded-lg border px-3 py-2 ${
+                  kind.id === 'company'
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'cursor-not-allowed border-gray-200 opacity-50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="bundle-kind"
+                  className="mt-1"
+                  checked={kind.id === 'company'}
+                  disabled={kind.id !== 'company'}
+                  readOnly
+                />
+                <span className="flex flex-col">
+                  <span className="text-sm font-bold">{kind.label}</span>
+                  <span className="text-xs text-gray-500">{kind.description}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
+          <h2 className="text-base font-bold">고른 공고</h2>
+          {picked.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              왼쪽에서 공고를 {MIN_BUNDLE_JOBS}~{MAX_BUNDLE_JOBS}개 고르세요. 고른 순서가 장
+              순서입니다.
+            </p>
+          ) : (
+            <ol className="flex flex-col gap-1">
+              {picked.map((job, index) => (
+                <li
+                  key={job.id}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50"
+                >
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm">
+                    <span className="font-semibold">{job.companyName}</span> {job.title}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${index + 1}번 위로`}
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                  >
+                    위로
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${index + 1}번 아래로`}
+                    disabled={index === picked.length - 1}
+                    onClick={() => move(index, 1)}
+                  >
+                    아래로
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${index + 1}번 빼기`}
+                    onClick={() => setPicked(picked.filter((item) => item.id !== job.id))}
+                  >
+                    빼기
+                  </Button>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-bold">만들어질 장</h2>
+            <span className="text-sm text-gray-600" data-testid="slide-count">
+              표지 1 + 공고 {picked.length} + 안내 1 = {slides.length}장
+            </span>
+          </div>
+          <ol className="flex flex-wrap gap-2" aria-label="만들어질 장">
+            {slides.map((label, index) => (
+              <li
+                key={`${index}-${label}`}
+                className="flex max-w-[220px] items-center gap-1.5 rounded-lg bg-gray-100 px-2 py-1 text-xs"
+              >
+                <span className="font-bold">{index + 1}</span>
+                <span className="truncate">{label}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 /** 빈 캔버스 탭. 크기만 고르고 빈 장 하나로 편집 화면을 연다. */
 function BlankTab() {
   const router = useRouter();
@@ -148,7 +293,7 @@ function BlankTab() {
 }
 
 /**
- * 시작 화면(`/`). 공고 하나, 빈 캔버스 중 하나로 시작해 편집 화면으로 들어간다. 남은 문서는
+ * 시작 화면(`/`). 공고 하나, 여러 공고 묶기, 빈 캔버스 중 하나로 시작해 편집 화면으로 들어간다. 남은 문서는
  * `최근 작업 이어하기` 에서 다시 연다.
  */
 export function StartScreen() {
@@ -165,8 +310,8 @@ export function StartScreen() {
         <div>
           <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
           <p className="text-sm text-gray-500">
-            공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 편집 화면에서
-            고친 뒤 원하는 장만 받습니다.
+            공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 편집 화면에서 고친
+            뒤 원하는 장만 받습니다.
           </p>
         </div>
         <Button size="sm" variant="ghost" onClick={() => void logout()}>
@@ -191,6 +336,7 @@ export function StartScreen() {
         ))}
       </div>
       {tab === 'single' ? <SingleTab /> : null}
+      {tab === 'bundle' ? <BundleTab /> : null}
       {tab === 'blank' ? <BlankTab /> : null}
     </main>
   );

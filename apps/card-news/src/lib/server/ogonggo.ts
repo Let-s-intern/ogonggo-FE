@@ -1,4 +1,5 @@
 import {
+  type ListPublicJobsExperienceTypeItem,
   type SuccessResponsePageResponseUserJobSummaryResponse,
   type SuccessResponseListUserJobSummaryResponse,
   type SuccessResponseUserJobDetailResponse,
@@ -37,11 +38,19 @@ function toListItem(job: UserJobSummaryResponse): JobListItem {
   };
 }
 
-export async function searchJobs(keyword: string): Promise<JobListItem[]> {
+/** 공개 공고 검색. `experienceType` 을 주면 그 경력 구분 공고만, `size` 는 1~100 이다. */
+export async function searchJobs(
+  keyword: string,
+  {
+    experienceType,
+    size = 20,
+  }: { experienceType?: ListPublicJobsExperienceTypeItem; size?: number } = {},
+): Promise<JobListItem[]> {
   const body = (await listPublicJobs({
     page: 1,
-    size: 20,
+    size,
     keyword: keyword || undefined,
+    experienceType: experienceType ? [experienceType] : undefined,
   })) as unknown as SuccessResponsePageResponseUserJobSummaryResponse;
   return (body.data?.items ?? []).map(toListItem);
 }
