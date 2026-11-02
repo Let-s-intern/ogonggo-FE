@@ -42,6 +42,11 @@ export const ROLE_LABELS: Record<SlideRole, string> = {
  */
 export const MAX_SLIDES = 10;
 
+/** 장 목록에 보이는 장 이름(`2. 자격·우대 요건`). `index` 는 문서의 몇 번째 장인가(0부터). */
+export function slideLabel(slide: Pick<DocumentSlide, 'role'>, index: number): string {
+  return `${index + 1}. ${ROLE_LABELS[slide.role]}`;
+}
+
 /** 템플릿을 바꾸지 않을 때 쓰는 시안. 비서 도구가 템플릿을 모를 때와 같다. */
 export const DEFAULT_VARIANT: VariantId = 'wave';
 

@@ -8,8 +8,6 @@ import {
   type ElementId,
   type Layer,
   type RenderRequest,
-  SLIDE_COUNT,
-  SLIDE_LABELS,
   type Selection,
   type VariantId,
   isElementId,
@@ -19,6 +17,8 @@ import {
 import {
   type RenderSlide,
   documentContent,
+  documentTitle,
+  slideLabel,
   withSlideEdit,
   withSlideLayers,
 } from '@/lib/card/document';
@@ -41,8 +41,6 @@ import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
 import { VariantPicker } from './VariantPicker';
 
-const SLIDES = Array.from({ length: SLIDE_COUNT }, (_, slide) => slide);
-
 /**
  * 받기 요청 하나의 상한. 배포처가 Vercel 이면 함수 요청 본문이 4.5MB 를 넘을 수 없다. 이미지는 data URL
  * 로 실리므로 넣을 때 막는다.
@@ -63,7 +61,8 @@ function toggled<T>(set: Set<T>, value: T): Set<T> {
  * 렌더(PNG)다 — 캔버스와 같은 JSX 를 이미지 생성기가 그린다.
  */
 function BottomBar({
-  slides: documentSlides,
+  slides,
+  title,
   variant,
   size,
   onSizeChange,
@@ -72,6 +71,8 @@ function BottomBar({
 }: {
   /** 지금 시안으로 편 문서의 장. */
   slides: RenderSlide[];
+  /** 문서 제목. 묶어 받는 zip 이름에 쓴다. */
+  title: string;
   variant: VariantId;
   size: CardSizeId;
   onSizeChange: (size: CardSizeId) => void;
@@ -79,13 +80,14 @@ function BottomBar({
   overflow: number[];
   onRepick: () => void;
 }) {
-  const [slides, setSlides] = useState<Set<number>>(() => new Set(SLIDES));
+  // 받지 않을 장을 둔다. 문서에 장이 늘면 새 장은 받을 장으로 시작한다.
+  const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
   const [sizes, setSizes] = useState<Set<CardSizeId>>(() => new Set(['post']));
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const targets = documentSlides.flatMap(({ spec, role }, index) =>
-    slides.has(index) ? [{ spec, role, index }] : [],
+  const targets = slides.flatMap(({ id, spec, role }, index) =>
+    skipped.has(id) ? [] : [{ spec, role, index }],
   );
   const count = targets.length * sizes.size;
 
@@ -93,7 +95,9 @@ function BottomBar({
     setError(null);
     setProgress('준비 중');
     try {
-      await downloadSlides(targets, [...sizes], (done, total) => setProgress(`${done}/${total}`));
+      await downloadSlides(targets, [...sizes], title, (done, total) =>
+        setProgress(`${done}/${total}`),
+      );
     } catch {
       setError('다운로드에 실패했습니다. 다시 시도해 주세요.');
     } finally {
@@ -127,15 +131,15 @@ function BottomBar({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-gray-600">받을 장</span>
-          {SLIDES.map((slide) => (
-            <label key={slide} className="flex items-center gap-1 text-sm">
+          {slides.map((slide, index) => (
+            <label key={slide.id} className="flex items-center gap-1 text-sm">
               <input
                 type="checkbox"
                 className="size-4"
-                checked={slides.has(slide)}
-                onChange={() => setSlides((current) => toggled(current, slide))}
+                checked={!skipped.has(slide.id)}
+                onChange={() => setSkipped((current) => toggled(current, slide.id))}
               />
-              {SLIDE_LABELS[slide]}
+              {slideLabel(slide, index)}
             </label>
           ))}
           <span className="text-sm text-gray-600">받을 크기</span>
@@ -492,6 +496,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
           </div>
           <BottomBar
             slides={slides}
+            title={documentTitle(loaded.doc)}
             variant={variant}
             size={size}
             onSizeChange={setSize}

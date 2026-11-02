@@ -57,11 +57,12 @@ function fileName(target: SlideTarget, size: CardSizeId): string {
 
 /**
  * 고른 장들을 받는다. 한 장이면 PNG 하나, 여러 장이면 zip 하나 — 브라우저는 다운로드가 여러 개
- * 연달아 나가면 허용을 묻는다.
+ * 연달아 나가면 허용을 묻는다. zip 이름은 `<문서 제목>-카드뉴스-<N>장.zip` 이다(공고 하나면 회사명).
  */
 export async function downloadSlides(
   targets: SlideTarget[],
   sizes: CardSizeId[],
+  title: string,
   onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
   const total = targets.length * sizes.length;
@@ -79,9 +80,8 @@ export async function downloadSlides(
       onProgress?.(done, total);
     }
   }
-  const company = targets[0]?.spec.companyName ?? '카드뉴스';
   save(
     new Blob([zipSync(files, { level: 0 }) as BlobPart], { type: 'application/zip' }),
-    safe(`${company}-카드뉴스-${total}장.zip`),
+    safe(`${title}-카드뉴스-${total}장.zip`),
   );
 }

@@ -25,10 +25,6 @@ export const CARD_SIZES: Record<CardSizeId, CardSize> = {
 
 export const CARD_SIZE_IDS = Object.keys(CARD_SIZES) as CardSizeId[];
 
-/** 한 벌은 세 장이다 — 공고 요약, 자격·우대 요건, 프로필 링크 안내. */
-export const SLIDE_COUNT = 3;
-export const SLIDE_LABELS = ['1. 공고 요약', '2. 자격·우대 요건', '3. 프로필 안내'] as const;
-
 export interface CardSection {
   /** 칩에 들어가는 제목(`채용 직무`, `마감 기한`). */
   label: string;

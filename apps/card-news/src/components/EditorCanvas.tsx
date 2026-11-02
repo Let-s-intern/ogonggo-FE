@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import { Button } from '@ogonggo/ui';
-import type { RenderSlide, SlideRole } from '@/lib/card/document';
+import { type RenderSlide, type SlideRole, slideLabel } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
@@ -24,7 +24,6 @@ import {
   type ElementEdit,
   type ElementId,
   type Layer,
-  SLIDE_LABELS,
   type Selection,
   type TextLayer,
   type VariantId,
@@ -134,8 +133,8 @@ interface Box {
 }
 
 /**
- * 캔버스 아래 썸네일에서 장 하나의 요소 상자를 잰다(1080 폭 좌표, 편집값이 걸린 자리). 썸네일은 세 장이
- * 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`. 자유 요소는 `layer:<id>` 로
+ * 캔버스 아래 썸네일에서 장 하나(`slideId`)의 요소 상자를 잰다(1080 폭 좌표, 편집값이 걸린 자리).
+ * 썸네일은 문서의 모든 장이 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`. 자유 요소는 `layer:<id>` 로
  * 뒤에 붙는다.
  */
 export function measureSlideBoxes(slideId: string, cardWidth: number): MeasuredBox[] | null {
@@ -1097,7 +1096,7 @@ export function EditorCanvas({
             <span
               className={`text-xs ${built.id === slide ? 'font-bold text-gray-900' : 'text-gray-500'}`}
             >
-              {SLIDE_LABELS[index]}
+              {slideLabel(built, index)}
             </span>
             {built.overflow ? <span className="text-xs font-semibold text-error">넘침</span> : null}
           </button>
