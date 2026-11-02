@@ -317,6 +317,18 @@ function coverTable(doc: CardDocument, slide: DocumentSlide): CoverTable | undef
   return { deadline: coverDeadline(doc), columns: doc.cover.columns, rows: doc.cover.rows };
 }
 
+/**
+ * 묶음 공고 장의 표지 표 줄(직무, 모집 분야). 표 줄이 모자라면 그 공고의 직무명을 쓴다. 묶음 문서의
+ * 공고 장이 아니면 `undefined`.
+ */
+function bundleRowOf(doc: CardDocument, slide: DocumentSlide): [string, string] | undefined {
+  if (slide.role !== 'job' || !doc.cover) {
+    return undefined;
+  }
+  const index = slide.jobIndex ?? 0;
+  return doc.cover.rows[index] ?? [doc.jobs[index]?.content.roleTitle ?? '', ''];
+}
+
 /** 렌더할 장 하나. `id` 는 문서 장의 id 다. */
 export interface RenderSlide {
   id: string;
@@ -338,16 +350,20 @@ export function slideSpec(
   // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
   const { photo, ...shared } = doc.settings;
   const cover = coverTable(doc, slide);
+  const bundleRow = bundleRowOf(doc, slide);
+  // 로고는 첫 공고 것 하나다. 회사가 다른 공고 장은 로고 대신 회사명을 글자로 쓴다.
+  const sameCompany = !job || job.companyName === doc.jobs[0]?.companyName;
   return {
     spec: {
       variant,
       content: documentContent(doc, slide),
       settings: variantOf(variant).image && photo ? { ...shared, photo } : shared,
-      logo,
+      logo: sameCompany ? logo : undefined,
       companyName: job?.companyName ?? '',
       edits: slide.edits[variant],
       layers: slide.layers[variant],
       ...(cover ? { cover } : {}),
+      ...(bundleRow ? { bundleRow } : {}),
     },
     id: slide.id,
     role: slide.role,

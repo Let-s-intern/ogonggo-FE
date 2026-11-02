@@ -326,6 +326,11 @@ export interface CardSpec {
   layers?: Layer[];
   /** 묶음 표지. 있으면 표지 장을 묶음 표지 배치(마감 줄, 직무 표)로 그린다. */
   cover?: CoverTable;
+  /**
+   * 묶음 공고 장의 표지 표 줄(직무, 모집 분야). 있으면 공고 장을 시안과 상관없이 항목명 표 배치로 그리고,
+   * 브랜드색 머리띠에 직무, 흰 줄에 모집 분야, 표에 마감·업무·우대를 쓴다.
+   */
+  bundleRow?: [string, string];
 }
 
 export interface RenderRequest {

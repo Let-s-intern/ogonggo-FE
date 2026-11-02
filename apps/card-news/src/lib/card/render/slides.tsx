@@ -52,7 +52,7 @@ import {
  *   아래 테두리 상자, 2장은 왼쪽 칩·오른쪽 목록 두 칸이다.
  * - `labels`: 가운데 로고, 브랜드색 띠 머리 카드, 왼쪽 항목명·오른쪽 목록 표(LG생활건강형 2장).
  *
- * 시안이 `detailLayout` 을 가지면 2장만 그 배치로 그린다.
+ * 시안이 `detailLayout` 을 가지면 2장만 그 배치로 그린다. 묶음 공고 장(`bundleRow`)은 늘 `labels` 다.
  */
 
 /** 흰 판 안쪽 여백. */
@@ -136,12 +136,26 @@ type Built = { element: ReactElement; overflow: boolean };
 /** 공고 문구를 목록으로 그리는 장. 표지는 요약 섹션, 공고 장은 자격·우대 섹션이다. */
 type InfoRole = Extract<SlideRole, 'cover' | 'job'>;
 
+/** 묶음 공고 장의 표 항목. 문구에서 이 이름의 섹션을 찾고, 없으면 그 자리 순서의 섹션을 쓴다. */
+const BUNDLE_JOB_SECTIONS = [
+  { from: 'summarySections', label: '마감 기한', index: 1 },
+  { from: 'summarySections', label: '담당 업무', index: 2 },
+  { from: 'detailSections', label: '우대 요건', index: 1 },
+] as const;
+
 function slideSections(
-  spec: Pick<CardSpec, 'content'>,
+  spec: Pick<CardSpec, 'content' | 'bundleRow'>,
   slide: InfoRole,
   dropRole: boolean,
 ): CardSection[] {
   const { content } = spec;
+  if (slide === 'job' && spec.bundleRow) {
+    return BUNDLE_JOB_SECTIONS.flatMap(({ from, label, index }) => {
+      const found =
+        content[from].find((section) => section.label.trim() === label) ?? content[from][index];
+      return found ? [found] : [];
+    });
+  }
   const sections = slide === 'cover' ? content.summarySections : content.detailSections;
   // 직무명을 제목으로 크게 쓰는 시안은 `채용 직무` 섹션을 또 그리지 않는다.
   return dropRole && content.roleTitle.trim()
@@ -155,10 +169,11 @@ function slideSections(
  * 세지 않는다.
  */
 export function visibleSectionIndices(
-  spec: Pick<CardSpec, 'variant' | 'content'>,
+  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow'>,
   slide: SlideRole,
 ): number[] {
-  if (slide !== 'cover' && slide !== 'job') {
+  // 묶음 공고 장은 두 문구 배열에서 섹션을 모아 그려 한 배열의 순서로 가리킬 수 없다.
+  if ((slide !== 'cover' && slide !== 'job') || (slide === 'job' && spec.bundleRow)) {
     return [];
   }
   const layout = variantOf(spec.variant);
@@ -173,9 +188,14 @@ export function visibleSectionIndices(
 
 /** 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. */
 export function visibleSectionLabels(
-  spec: Pick<CardSpec, 'variant' | 'content'>,
+  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow'>,
   slide: SlideRole,
 ): string[] {
+  if (slide === 'job' && spec.bundleRow) {
+    return slideSections(spec, slide, false)
+      .filter((section) => section.items.some((item) => item.trim()))
+      .map((section) => section.label);
+  }
   const all = slide === 'cover' ? spec.content.summarySections : spec.content.detailSections;
   return visibleSectionIndices(spec, slide).map((index) => all[index]?.label ?? '');
 }
@@ -334,7 +354,7 @@ const LABELS_CARD_PAD_Y = 48;
 
 function LabelsSlide({
   spec,
-  palette,
+  palette: base,
   size,
   slide,
   measure,
@@ -347,10 +367,17 @@ function LabelsSlide({
   measure: Measure;
   assets: SlideAssets;
 }): Built {
+  // 머리 카드와 표는 흰 카드라, 묶음 공고 장은 바탕 시안이 어두워도 검은 글자로 쓴다. 공고 하나는 이
+  // 배치를 밝은 바탕 시안(뒷배경 + 흰 판)에서만 써 원래 글자색 그대로다.
+  const palette: Palette = spec.bundleRow
+    ? { ...base, headlineText: '#111111', bodyText: '#111111' }
+    : base;
   const sections = slideSections(spec, slide, false);
   const count = visibleCount(sections);
   const brand = spec.settings.brandColor;
-  const role = spec.content.roleTitle.trim();
+  // 묶음 공고 장은 머리띠에 직무, 흰 줄에 모집 분야(표지 표 줄)를 쓴다. 공고 하나는 회사명과 직무명이다.
+  const band = spec.bundleRow ? spec.bundleRow[0] : spec.companyName;
+  const role = (spec.bundleRow ? spec.bundleRow[1] : spec.content.roleTitle).trim();
   const roleSize = Math.round(
     Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role)) * textScale(spec.settings.headlineScale),
   );
@@ -426,7 +453,7 @@ function LabelsSlide({
                 padding: '14px 0',
               }}
             >
-              {spec.companyName}
+              {band}
             </div>
             {role ? (
               <div
@@ -495,8 +522,13 @@ function InfoSlide({
   assets: SlideAssets;
 }): Built {
   const definition = variantOf(spec.variant);
+  // 묶음 공고 장은 어느 시안이든 항목명 표 배치다(공고별 장 틀).
   const layout =
-    slide === 'job' && definition.detailLayout ? definition.detailLayout : definition.layout;
+    slide === 'job' && spec.bundleRow
+      ? 'labels'
+      : slide === 'job' && definition.detailLayout
+        ? definition.detailLayout
+        : definition.layout;
   if (layout === 'tab') {
     return TabSlide({ spec, palette, size, slide, measure, assets });
   }
