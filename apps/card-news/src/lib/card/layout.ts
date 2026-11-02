@@ -494,6 +494,8 @@ export const COMPANY_HEAD_GAP = 8;
 export const COMPANY_COLUMN_GAP = 24;
 /** 표 줄 위아래 여백(글자 크기에 곱한다)과 줄 사이 구분선 두께. */
 export const COMPANY_ROW_PAD = 0.62;
+/** 남는 높이로 줄 위아래 여백을 늘릴 때의 최대(글자 크기에 곱한다). */
+const COMPANY_ROW_PAD_MAX = 1.05;
 export const COMPANY_RULE = 2;
 export const COMPANY_ROW_LINE_HEIGHT = 1.3;
 /** 머리 칩 테두리 두께. 칩은 흰 바탕에 브랜드색 테두리다. */
@@ -524,17 +526,21 @@ export interface CompaniesMetrics {
   padTop: number;
   padBottom: number;
   rowSize: number;
+  /** 표 줄 위아래 여백(px). 남는 높이가 있으면 늘린다. */
+  rowPad: number;
   /** 블록마다 줄마다의 줄 수(칸 둘 중 많은 쪽). */
   rowLines: number[][];
+  /** 위 로고 자리 아래에서 첫 블록까지, 블록 사이. 남는 높이를 블록 위·사이·아래에 똑같이 나눈다. */
+  blockTop: number;
+  blockGap: number;
   overflow: boolean;
 }
 
 /** 회사 블록 하나의 높이. */
-function companyBlockHeight(rowSize: number, lines: number[]): number {
+function companyBlockHeight(rowSize: number, rowPad: number, lines: number[]): number {
   const band = Math.round(COMPANY_BAND_SIZE * 1.2) + COMPANY_BAND_PAD_Y * 2;
   const rows = lines.reduce(
-    (sum, count) =>
-      sum + Math.round(count * rowSize * COMPANY_ROW_LINE_HEIGHT + rowSize * COMPANY_ROW_PAD * 2),
+    (sum, count) => sum + Math.round(count * rowSize * COMPANY_ROW_LINE_HEIGHT) + rowPad * 2,
     0,
   );
   return (
@@ -553,6 +559,9 @@ function companyBlockHeight(rowSize: number, lines: number[]): number {
 /**
  * 회사 블록 배치의 글자 크기. 표 줄 글자는 4:5 기준 30px 에서 시작해 블록이 장에 다 들어가는 크기까지
  * 줄인다(칸에서 넘치는 글은 줄을 바꾼다). 22px 로도 넘치면 `overflow` 다.
+ *
+ * 들어가고 남는 높이는 절반까지 표 줄 여백을 늘리는 데 쓰고(글자의 1.05배까지), 나머지는 블록 위·사이·아래에
+ * 똑같이 나눈다 — 블록이 위에 몰리지 않고 하나뿐이면 세로 가운데다.
  */
 export function measureCompanies(
   measure: Measure,
@@ -581,16 +590,43 @@ export function measureCompanies(
         ),
       ),
     );
-  const heightAt = (rowSize: number, lines: number[][]) =>
-    lines.reduce((sum, block) => sum + companyBlockHeight(rowSize, block), 0);
+  const heightAt = (rowSize: number, rowPad: number, lines: number[][]) =>
+    lines.reduce((sum, block) => sum + companyBlockHeight(rowSize, rowPad, block), 0);
   const floor = Math.min(base, Math.round(COMPANY_ROW_FLOOR * bodyScale));
   for (let rowSize = base; rowSize >= floor; rowSize -= 1) {
     const lines = linesAt(rowSize);
-    if (heightAt(rowSize, lines) <= available) {
-      return { padTop, padBottom, rowSize, rowLines: lines, overflow: false };
+    const basePad = Math.round(rowSize * COMPANY_ROW_PAD);
+    const baseSlack = available - heightAt(rowSize, basePad, lines);
+    if (baseSlack < 0) {
+      continue;
     }
+    const rows = lines.flat().length;
+    const rowPad = Math.min(
+      Math.round(rowSize * COMPANY_ROW_PAD_MAX),
+      basePad + Math.floor((baseSlack * 0.5) / Math.max(1, rows * 2)),
+    );
+    const unit = Math.floor((available - heightAt(rowSize, rowPad, lines)) / (blocks.length + 1));
+    return {
+      padTop,
+      padBottom,
+      rowSize,
+      rowPad,
+      rowLines: lines,
+      blockTop: unit,
+      blockGap: COMPANY_BLOCK_GAP + unit,
+      overflow: false,
+    };
   }
-  return { padTop, padBottom, rowSize: floor, rowLines: linesAt(floor), overflow: true };
+  return {
+    padTop,
+    padBottom,
+    rowSize: floor,
+    rowPad: Math.round(floor * COMPANY_ROW_PAD),
+    rowLines: linesAt(floor),
+    blockTop: 0,
+    blockGap: COMPANY_BLOCK_GAP,
+    overflow: true,
+  };
 }
 
 /**

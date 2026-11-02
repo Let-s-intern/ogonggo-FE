@@ -5,13 +5,11 @@ import {
   CHIP_WEIGHT,
   COMPANY_BAND_PAD_Y,
   COMPANY_BAND_SIZE,
-  COMPANY_BLOCK_GAP,
   COMPANY_CELL_WIDTH,
   COMPANY_HEAD_GAP,
   COMPANY_LOGO_GAP,
   COMPANY_LOGO_HEIGHT,
   COMPANY_ROW_LINE_HEIGHT,
-  COMPANY_ROW_PAD,
   COMPANY_RULE,
   COMPANY_TABLE_PAD_BOTTOM,
   COMPANY_TABLE_PAD_TOP,
@@ -672,8 +670,8 @@ function CompaniesSlide({
           display: 'flex',
           flexDirection: 'column',
           width: size.width,
-          padding: `${metrics.padTop + BUNDLE_TOP_GAP}px ${PAD_X}px 0`,
-          gap: COMPANY_BLOCK_GAP,
+          padding: `${metrics.padTop + BUNDLE_TOP_GAP + metrics.blockTop}px ${PAD_X}px 0`,
+          gap: metrics.blockGap,
         }}
       >
         {companies.map((company, blockIndex) => (
@@ -753,7 +751,7 @@ function CompaniesSlide({
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      padding: `${Math.round(rowSize * COMPANY_ROW_PAD)}px 0`,
+                      padding: `${metrics.rowPad}px 0`,
                       ...(rowIndex > 0 ? { borderTop: `${COMPANY_RULE}px solid #DDDDDD` } : {}),
                     }}
                   >
