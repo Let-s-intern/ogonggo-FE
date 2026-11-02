@@ -179,7 +179,7 @@ export function Headline({
   );
 }
 
-function Chip({
+export function Chip({
   palette,
   children,
   size,

@@ -158,6 +158,8 @@ export const ELEMENT_IDS = [
   'ctaHeadline',
   'ctaSub',
   'profile',
+  'deadlineRow',
+  'jobTable',
 ] as const;
 
 export type FixedElementId = (typeof ELEMENT_IDS)[number];
@@ -202,6 +204,8 @@ export const ELEMENT_LABELS: Record<FixedElementId, string> = {
   ctaHeadline: '3장 제목',
   ctaSub: '3장 부제',
   profile: '프로필 카드',
+  deadlineRow: '마감 줄',
+  jobTable: '직무 표',
 };
 
 /**
@@ -299,6 +303,16 @@ export function layerLabel(layer: Layer): string {
   return head ? `글자 · ${head.length > 12 ? `${head.slice(0, 12)}…` : head}` : '글자';
 }
 
+/**
+ * 묶음 표지에 그리는 값. 마감 줄의 날짜와 2열 직무 표(열 이름, 공고마다 한 줄)다. 문서의 `cover` 와
+ * 공고 문구에서 편다(`../card/document.ts`).
+ */
+export interface CoverTable {
+  deadline: string;
+  columns: [string, string];
+  rows: [string, string][];
+}
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;
@@ -310,6 +324,8 @@ export interface CardSpec {
   edits?: SlideEdits;
   /** 이 장의 자유 요소. 크기끼리 같이 쓴다. */
   layers?: Layer[];
+  /** 묶음 표지. 있으면 표지 장을 묶음 표지 배치(마감 줄, 직무 표)로 그린다. */
+  cover?: CoverTable;
 }
 
 export interface RenderRequest {

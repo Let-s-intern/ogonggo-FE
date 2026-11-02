@@ -5,6 +5,7 @@ import type {
   CardSettings,
   CardSizeId,
   CardSpec,
+  CoverTable,
   ElementEdit,
   ElementId,
   Layer,
@@ -76,9 +77,8 @@ export interface DocumentSlide {
 }
 
 /**
- * 묶음 표지의 제목과 직무 표(묶음 초안의 `cover`). 표 줄은 공고마다 하나, 묶은 순서다. 표지 배치가
- * 따로 생기기 전(Push 3)에는 `cover` 장이 공고 요약 배치로 뱃지·제목을 그리고 표의 두 열을 섹션
- * 두 개로 그린다.
+ * 묶음 표지의 제목과 직무 표(묶음 초안의 `cover`). 표 줄은 공고마다 하나, 묶은 순서다. `cover` 장은
+ * 묶음 표지 배치로 그린다(`slideSpec()` 이 `CardSpec.cover` 로 편다).
  */
 export interface DocumentCover {
   badge: string;
@@ -252,7 +252,8 @@ function slideJob(doc: CardDocument, slide?: DocumentSlide): DocumentJob | undef
 
 /**
  * 장 하나가 그리는 문구. 인스타그램 본문은 문서 것을 붙인다. 묶음 표지 장은 첫 공고 문구에 표지
- * 뱃지·제목을 얹고, 섹션 자리에 직무 표의 두 열을 둔다(표지 배치가 따로 생기기 전까지).
+ * 뱃지·제목을 얹고, 섹션 자리에 직무 표의 두 열을 둔다 — 그림은 `CardSpec.cover` 로 그리고, 이 섹션은
+ * 비서가 표지를 읽을 때 쓴다.
  */
 export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardContent {
   const content = { ...(slideJob(doc, slide)?.content ?? EMPTY_CONTENT), caption: doc.caption };
@@ -271,6 +272,49 @@ export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardC
     })),
     note: '',
   };
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+/** 공고 문구의 마감 기한(`2026.11.09 (월) 23:59`, `2026.11.09 (월) 마감`). */
+const DEADLINE = /^(\d{4})\.(\d{2})\.(\d{2})\s*\((.)\)(?:\s+(\d{2}:\d{2}))?/;
+
+/**
+ * 묶음 표지 마감 줄의 날짜. 공고마다 `마감 기한` 첫 항목을 읽어 가장 이른 날짜를 `~ 11월 9일(월) 23:59`
+ * 로 쓴다(인스타 본문의 마감 줄과 같은 모양). 날짜로 읽히는 것이 없으면 첫 공고의 글 그대로, 그것도
+ * 없으면 `채용 시 마감` 이다. 공고 문구에서 읽으므로 공고 마감을 고치면 표지도 따라간다.
+ */
+export function coverDeadline(doc: CardDocument): string {
+  const texts = doc.jobs.map(
+    (job) =>
+      job.content.summarySections
+        .find((section) => section.label.trim() === '마감 기한')
+        ?.items.find((item) => item.trim())
+        ?.trim() ?? '',
+  );
+  const dated = texts
+    .map((text) => DEADLINE.exec(text))
+    .filter((match): match is RegExpExecArray => match !== null)
+    .sort((a, b) =>
+      `${a[1]}${a[2]}${a[3]}${a[5] ?? '24:00'}`.localeCompare(
+        `${b[1]}${b[2]}${b[3]}${b[5] ?? '24:00'}`,
+      ),
+    );
+  const first = dated[0];
+  if (!first) {
+    return texts.find(Boolean) ?? '채용 시 마감';
+  }
+  const [, year = '', month = '', day = '', , time] = first;
+  const weekday = WEEKDAYS[new Date(Number(year), Number(month) - 1, Number(day)).getDay()] ?? '';
+  const date = `${Number(month)}월 ${Number(day)}일(${weekday})`;
+  return time ? `~ ${date} ${time}` : `~ ${date}`;
+}
+
+/** 묶음 표지 장이 그리는 마감 줄과 직무 표. 묶음 문서의 표지 장이 아니면 `undefined`. */
+function coverTable(doc: CardDocument, slide: DocumentSlide): CoverTable | undefined {
+  if (slide.role !== 'cover' || !doc.cover) {
+    return undefined;
+  }
+  return { deadline: coverDeadline(doc), columns: doc.cover.columns, rows: doc.cover.rows };
 }
 
 /** 렌더할 장 하나. `id` 는 문서 장의 id 다. */
@@ -293,6 +337,7 @@ export function slideSpec(
   const job = slideJob(doc, slide);
   // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
   const { photo, ...shared } = doc.settings;
+  const cover = coverTable(doc, slide);
   return {
     spec: {
       variant,
@@ -302,6 +347,7 @@ export function slideSpec(
       companyName: job?.companyName ?? '',
       edits: slide.edits[variant],
       layers: slide.layers[variant],
+      ...(cover ? { cover } : {}),
     },
     id: slide.id,
     role: slide.role,

@@ -2,16 +2,25 @@ import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import {
   BULLET_INDENT,
   CONTENT_WIDTH,
+  COVER_DEADLINE_INNER_GAP,
+  COVER_LINK_SCALE,
+  COVER_LINK_TEXT,
+  COVER_ROW_WEIGHT,
+  COVER_TABLE_PAD_X,
+  COVER_TABLE_PAD_Y,
   HEADER_HEIGHT,
   HEADLINE_TRACKING,
+  HEADLINE_WEIGHT,
   PAD_X,
   type SlideMetrics,
+  measureCover,
   measureSlide,
   textScale,
 } from '../layout';
+import { contrastRatio } from '../color';
 import type { SlideRole } from '../document';
 import type { Measure } from '../measure';
-import type { CardSection, CardSize, CardSpec, Layer } from '../types';
+import type { CardSection, CardSize, CardSpec, CoverTable, Layer } from '../types';
 import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
 import { Background } from './backgrounds';
 import { layerElements } from './layers';
@@ -22,6 +31,7 @@ import {
   COLUMN_CHIP_WIDTH,
   COLUMN_GAP,
   BrandMark,
+  Chip,
   CompanyLogo,
   Editable,
   LABEL_WIDTH,
@@ -597,6 +607,186 @@ function InfoSlide({
   return { element, overflow: metrics.overflow };
 }
 
+/**
+ * 묶음 표지(농심 그룹 묶음 예시 1장). 뱃지·회사 로고 머리, 강조 상자 제목, 마감 줄(칩 + 가장 이른 마감 +
+ * `직무별 공고 자세히 보기`), 흰 판 안 2열 직무 표(머리 칩 두 개, 공고마다 한 줄), 아래 우리 로고.
+ * 표 줄이 늘면 글자를 줄인다(`measureCover`).
+ */
+function CoverSlide({
+  spec,
+  cover,
+  palette,
+  size,
+  measure,
+  assets,
+}: {
+  spec: CardSpec;
+  cover: CoverTable;
+  palette: Palette;
+  size: CardSize;
+  measure: Measure;
+  assets: SlideAssets;
+}): Built {
+  const metrics = measureCover(measure, size, {
+    headline: spec.content.headline,
+    deadline: cover.deadline,
+    columns: cover.columns,
+    rows: cover.rows,
+    headlineScale: textScale(spec.settings.headlineScale),
+    bodyScale: textScale(spec.settings.bodyScale),
+  });
+  // 표는 흰 판 위라 바탕 시안과 상관없이 검은 글자다. 머리 칩은 브랜드색, 흰 판에 묻히는 밝은 색이면 검정.
+  const brand = spec.settings.brandColor;
+  const headChip = contrastRatio(brand, '#FFFFFF') < 1.35 ? '#111111' : brand;
+  const headPalette: Palette = { ...palette, chip: headChip, chipText: textOnBrand(headChip) };
+  const deadlineChip = Math.round(metrics.deadlineSize * 0.86);
+  const cell = (column: number): CSSProperties => ({
+    display: 'flex',
+    justifyContent: 'center',
+    width: metrics.cellWidths[column === 0 ? 0 : 1],
+  });
+  const edits = spec.edits;
+  const element = (
+    <Canvas size={size} layers={spec.layers}>
+      <Background spec={spec} palette={palette} size={size} assets={assets} />
+      <Column size={size} metrics={metrics}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Header
+            spec={spec}
+            palette={palette}
+            assets={assets}
+            width={CONTENT_WIDTH}
+            edits={edits}
+            right={
+              <Editable id="companyLogo" edits={edits}>
+                <CompanyLogo spec={spec} palette={palette} />
+              </Editable>
+            }
+          />
+          <div style={{ display: 'flex', marginTop: metrics.headlineGap }}>
+            <Editable id="headline" edits={edits}>
+              <Headline
+                palette={palette}
+                text={spec.content.headline}
+                size={metrics.headlineSize}
+                color={palette.headlineText}
+              />
+            </Editable>
+          </div>
+          <Editable id="deadlineRow" edits={edits} style={{ marginTop: metrics.deadlineGap }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: CONTENT_WIDTH,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: COVER_DEADLINE_INNER_GAP }}>
+                <Chip palette={palette} size={deadlineChip} pill>
+                  마감 기한
+                </Chip>
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: metrics.deadlineSize,
+                    fontWeight: HEADLINE_WEIGHT,
+                    lineHeight: 1.2,
+                    letterSpacing: -metrics.deadlineSize * 0.01,
+                    whiteSpace: 'nowrap',
+                    color: palette.headlineText,
+                  }}
+                >
+                  {cover.deadline}
+                </div>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: Math.round(metrics.deadlineSize * COVER_LINK_SCALE),
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                  color: palette.headlineText,
+                }}
+              >
+                {COVER_LINK_TEXT}
+              </div>
+            </div>
+          </Editable>
+          <Editable id="jobTable" edits={edits} style={{ marginTop: metrics.tableGap }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: CONTENT_WIDTH,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 32,
+                padding: `${COVER_TABLE_PAD_Y}px ${COVER_TABLE_PAD_X}px`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: metrics.headGap,
+                }}
+              >
+                {cover.columns.map((label, index) => (
+                  <div key={index} style={cell(index)}>
+                    <Chip palette={headPalette} size={metrics.headSize} pill>
+                      {label}
+                    </Chip>
+                  </div>
+                ))}
+              </div>
+              {cover.rows.map((cells, rowIndex) => (
+                <div
+                  key={rowIndex}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    height: metrics.rowPitch,
+                  }}
+                >
+                  {cells.map((text, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        ...cell(index),
+                        fontSize: metrics.rowSize,
+                        fontWeight: COVER_ROW_WEIGHT,
+                        lineHeight: 1.2,
+                        letterSpacing: -metrics.rowSize * 0.01,
+                        whiteSpace: 'nowrap',
+                        color: '#111111',
+                      }}
+                    >
+                      {text}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </Editable>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Editable id="brandMark" edits={edits}>
+            <BrandMark
+              brand={spec.settings.brandMark}
+              image={spec.settings.brandImage}
+              palette={palette}
+              assets={assets}
+            />
+          </Editable>
+        </div>
+      </Column>
+    </Canvas>
+  );
+  return { element, overflow: metrics.overflow };
+}
+
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: 200 }}>
@@ -914,8 +1104,8 @@ function FreeSlide({
 }
 
 /**
- * 한 장을 만든다. 무엇을 그릴지는 장 종류가 정한다 — 표지·공고 장은 문구 목록, 안내 장은 프로필 링크
- * 안내, 빈 장은 배경만. `overflow` 는 가장 작은 글자로도 목록이 넘치는 경우다.
+ * 한 장을 만든다. 무엇을 그릴지는 장 종류가 정한다 — 표지·공고 장은 문구 목록(묶음 표지는 직무 표),
+ * 안내 장은 프로필 링크 안내, 빈 장은 배경만. `overflow` 는 가장 작은 글자로도 목록이 넘치는 경우다.
  */
 export function buildSlide(
   spec: CardSpec,
@@ -936,6 +1126,9 @@ export function buildSlide(
       element: <FreeSlide spec={spec} palette={palette} size={size} assets={assets} />,
       overflow: false,
     };
+  }
+  if (role === 'cover' && spec.cover) {
+    return CoverSlide({ spec, cover: spec.cover, palette, size, measure, assets });
   }
   return InfoSlide({ spec, palette, size, slide: role, measure, assets });
 }

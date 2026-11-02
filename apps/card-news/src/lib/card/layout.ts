@@ -270,3 +270,172 @@ export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): S
     overflow: true,
   };
 }
+
+/** 묶음 표지의 고정 치수. 표 안쪽 여백, 표 머리 칩과 첫 줄 사이, 마감 줄과 표 사이. */
+export const COVER_TABLE_PAD_X = 40;
+export const COVER_TABLE_PAD_Y = 40;
+const COVER_HEAD_GAP = 20;
+const COVER_DEADLINE_GAP = 56;
+const COVER_TABLE_GAP = 28;
+/** 마감 줄 칩과 날짜, 날짜와 `직무별 공고 자세히 보기` 사이. */
+export const COVER_DEADLINE_INNER_GAP = 20;
+/** `직무별 공고 자세히 보기` 글자 크기(마감 날짜 크기에 곱한다). */
+export const COVER_LINK_SCALE = 0.8;
+export const COVER_LINK_TEXT = '직무별 공고 자세히 보기 →';
+/** 표 줄 높이(글자 크기에 곱한다). 남는 높이를 나눠 줄 사이를 넓히되 이 범위 안이다. */
+const COVER_ROW_PITCH_MIN = 1.5;
+const COVER_ROW_PITCH_MAX = 2.6;
+/** 표 두 열 사이 최소 간격. */
+const COVER_COLUMN_GAP = 32;
+/** 줄 글자의 최소 크기. 표를 이보다 줄여야 들어가면 제목을 먼저 줄이고, 그래도 안 되면 22px 까지 내린다. */
+const COVER_ROW_MIN = 28;
+const COVER_ROW_FLOOR = 22;
+export const COVER_ROW_WEIGHT = 700;
+
+export interface CoverMetrics {
+  padTop: number;
+  padBottom: number;
+  headlineSize: number;
+  headlineGap: number;
+  /** 마감 날짜 글자 크기. 칩은 이보다 조금 작고, `자세히 보기` 는 `COVER_LINK_SCALE` 배다. */
+  deadlineSize: number;
+  deadlineGap: number;
+  tableGap: number;
+  /** 표 머리 칩 글자 크기와 칩 아래 간격. */
+  headSize: number;
+  headGap: number;
+  /** 표 줄 글자 크기와 줄 높이. */
+  rowSize: number;
+  rowPitch: number;
+  /** 표 두 열의 폭. 열 사이 간격은 따로다(`COVER_COLUMN_GAP`). */
+  cellWidths: [number, number];
+  overflow: boolean;
+}
+
+/**
+ * 묶음 표지의 글자 크기와 간격. 표 줄은 5줄까지 기본 크기(4:5 40px)이고, 줄이 늘어 높이가 모자라면
+ * 줄 수에 맞춰 줄인다. 칸 폭에 가장 긴 칸이 한 줄로 들어가는지도 잰다. 줄 글자가 28px 아래로
+ * 내려가야 하면 제목을 먼저 줄이고(본문 배치와 같은 단계), 22px 로도 넘치면 `overflow` 다.
+ */
+export function measureCover(
+  measure: Measure,
+  size: CardSize,
+  box: {
+    headline: string;
+    deadline: string;
+    columns: [string, string];
+    rows: [string, string][];
+    headlineScale: number;
+    bodyScale: number;
+  },
+): CoverMetrics {
+  const story = size.height > size.width * 1.5;
+  const square = size.height <= size.width;
+  const padTop = slidePadTop(size);
+  const padBottom = story ? 230 : square ? 40 : 56;
+  const headlineMax = square ? 92 : story ? 112 : 104;
+  const rowBase = Math.round((square ? 34 : story ? 44 : 40) * box.bodyScale);
+
+  // 마감 줄은 칩 + 날짜 + `자세히 보기` 가 한 줄에 들어가는 크기까지 줄인다.
+  const deadlineWidth = (fontSize: number) => {
+    const chip = chipSizeFor(Math.round(fontSize * 0.86));
+    return (
+      measure('마감 기한', chip, CHIP_WEIGHT) +
+      Math.round(chip * 0.9) * 2 +
+      COVER_DEADLINE_INNER_GAP * 2 +
+      measure(box.deadline, fontSize, HEADLINE_WEIGHT) +
+      measure(COVER_LINK_TEXT, Math.round(fontSize * COVER_LINK_SCALE), CHIP_WEIGHT)
+    );
+  };
+  let deadlineSize = Math.round((square ? 36 : 40) * box.bodyScale);
+  while (deadlineSize > 22 && deadlineWidth(deadlineSize) > CONTENT_WIDTH) {
+    deadlineSize -= 1;
+  }
+  const deadlineHeight = Math.max(
+    chipHeight(chipSizeFor(Math.round(deadlineSize * 0.86))),
+    Math.round(deadlineSize * HEADLINE_LINE_HEIGHT),
+  );
+
+  // 칸 폭은 열마다 가장 긴 칸(머리 칩 포함)에 맞추고 남는 폭을 두 열에 똑같이 나눈다. 직무명이 긴 묶음도
+  // 모집 분야 칸의 빈 자리를 빌려 글자를 덜 줄인다.
+  const inner = CONTENT_WIDTH - COVER_TABLE_PAD_X * 2;
+  const headSizeOf = (fontSize: number) => Math.round(fontSize * 0.9);
+  const needs = (fontSize: number): [number, number] => {
+    const head = headSizeOf(fontSize);
+    return [0, 1].map((column) =>
+      Math.max(
+        measure(box.columns[column] ?? '', head, CHIP_WEIGHT) + Math.round(head * 0.9) * 2,
+        ...box.rows.map((cells) => measure(cells[column] ?? '', fontSize, COVER_ROW_WEIGHT)),
+      ),
+    ) as [number, number];
+  };
+  const widthFits = (fontSize: number) => {
+    const [first, second] = needs(fontSize);
+    return first + second + COVER_COLUMN_GAP <= inner;
+  };
+  const count = Math.max(1, box.rows.length);
+  const fullHeadline = headlineSizeFor(measure, box.headline, headlineMax);
+
+  const fit = (headlineScale: number, rowMin: number) => {
+    const headlineSize = Math.max(52, Math.round(fullHeadline * headlineScale * box.headlineScale));
+    const fixed =
+      padTop +
+      HEADER_HEIGHT +
+      BASE_HEADLINE_GAP +
+      headlineHeight(box.headline, headlineSize) +
+      COVER_DEADLINE_GAP +
+      deadlineHeight +
+      COVER_TABLE_GAP +
+      COVER_TABLE_PAD_Y * 2 +
+      chipHeight(headSizeOf(rowBase)) +
+      COVER_HEAD_GAP +
+      FOOTER_HEIGHT +
+      padBottom;
+    const available = size.height - fixed;
+    let rowSize = Math.min(rowBase, Math.floor(available / (count * COVER_ROW_PITCH_MIN)));
+    while (rowSize > rowMin && !widthFits(rowSize)) {
+      rowSize -= 1;
+    }
+    const fits = rowSize >= rowMin && widthFits(rowSize);
+    return { headlineSize, available, rowSize: Math.max(rowMin, rowSize), fits };
+  };
+
+  const tiers: [number, number][] = [
+    [1, COVER_ROW_MIN],
+    [0.86, COVER_ROW_MIN],
+    [0.74, COVER_ROW_MIN],
+    [0.74, COVER_ROW_FLOOR],
+  ];
+  let chosen = fit(1, COVER_ROW_MIN);
+  for (const [headlineScale, rowMin] of tiers.slice(1)) {
+    if (chosen.fits) {
+      break;
+    }
+    chosen = fit(headlineScale, rowMin);
+  }
+  const { headlineSize, available, rowSize, fits } = chosen;
+  const need = needs(rowSize);
+  const spare = Math.max(0, (inner - need[0] - need[1]) / 2);
+  const cellWidths: [number, number] = [Math.floor(need[0] + spare), Math.floor(need[1] + spare)];
+  const rowPitch = Math.round(
+    Math.min(
+      rowSize * COVER_ROW_PITCH_MAX,
+      Math.max(rowSize * COVER_ROW_PITCH_MIN, available / count),
+    ),
+  );
+  return {
+    padTop,
+    padBottom,
+    headlineSize,
+    headlineGap: BASE_HEADLINE_GAP,
+    deadlineSize,
+    deadlineGap: COVER_DEADLINE_GAP,
+    tableGap: COVER_TABLE_GAP,
+    headSize: headSizeOf(rowBase),
+    headGap: COVER_HEAD_GAP,
+    rowSize,
+    rowPitch,
+    cellWidths,
+    overflow: !fits || rowPitch * count > available + 1,
+  };
+}
