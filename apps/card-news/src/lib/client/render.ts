@@ -49,17 +49,22 @@ export interface SlideTarget {
   index: number;
 }
 
-/** 장 파일 이름. 회사명이 없는 장(빈 캔버스)은 문서 제목을 쓴다. */
-function fileName(target: SlideTarget, size: CardSizeId, title: string): string {
+/**
+ * 장 파일 이름(`<문서 제목>-<시안>-<장 번호>-<크기>.png`). 이름 앞을 문서 제목 하나로 두어, 여러 회사를
+ * 묶어도 파일 이름 순서가 장 순서다. 공고 하나면 문서 제목이 회사명이다. 장 번호는 받는 장 중 가장 큰
+ * 번호의 자릿수에 맞춰 앞을 0 으로 채운다(10장이면 `01`).
+ */
+function fileName(target: SlideTarget, size: CardSizeId, title: string, digits: number): string {
   const { width, height } = CARD_SIZES[size];
   const variant = variantOf(target.spec.variant).label;
-  const name = target.spec.companyName || title;
-  return safe(`${name}-${variant}-${target.index + 1}-${width}x${height}.png`);
+  const number = String(target.index + 1).padStart(digits, '0');
+  return safe(`${title}-${variant}-${number}-${width}x${height}.png`);
 }
 
 /**
  * 고른 장들을 받는다. 한 장이면 PNG 하나, 여러 장이면 zip 하나 — 브라우저는 다운로드가 여러 개
- * 연달아 나가면 허용을 묻는다. zip 이름은 `<문서 제목>-카드뉴스-<N>장.zip` 이다(공고 하나면 회사명).
+ * 연달아 나가면 허용을 묻는다. zip 이름은 `<문서 제목>-카드뉴스-<N>장.zip` 이다(한 회사면 회사명, 여러
+ * 회사 묶음이면 회사 이름을 `·` 로 이은 문서 제목).
  */
 export async function downloadSlides(
   targets: SlideTarget[],
@@ -68,16 +73,17 @@ export async function downloadSlides(
   onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
   const total = targets.length * sizes.length;
+  const digits = String(Math.max(0, ...targets.map((target) => target.index + 1))).length;
   const files: Record<string, Uint8Array> = {};
   let done = 0;
   for (const size of sizes) {
     for (const target of targets) {
       const { blob } = await renderSlide(target.spec, target.role, size);
       if (total === 1) {
-        save(blob, fileName(target, size, title));
+        save(blob, fileName(target, size, title, digits));
         return;
       }
-      files[fileName(target, size, title)] = new Uint8Array(await blob.arrayBuffer());
+      files[fileName(target, size, title, digits)] = new Uint8Array(await blob.arrayBuffer());
       done += 1;
       onProgress?.(done, total);
     }
