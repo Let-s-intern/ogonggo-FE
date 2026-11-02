@@ -358,6 +358,17 @@ export interface CoverTable {
   rows: [string, string][];
 }
 
+/**
+ * 회사 블록 배치(여러 회사 묶음)의 회사 하나. 가운데 회사 로고, 브랜드색 머리띠에 회사명, 흰 카드 안 2열 표
+ * (표지 표의 열 이름, 그 회사 공고마다 한 줄)다. 로고가 없으면 회사명을 글자로 쓴다.
+ */
+export interface BundleCompany {
+  name: string;
+  logo?: CardLogo;
+  columns: [string, string];
+  rows: [string, string][];
+}
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;
@@ -376,6 +387,13 @@ export interface CardSpec {
    * 브랜드색 머리띠에 직무, 흰 줄에 모집 분야, 표에 마감·업무·우대를 쓴다.
    */
   bundleRow?: [string, string];
+  /** 묶음 공고 장을 회사 블록 배치로 그릴 때 장에 놓는 회사들(위에서부터). */
+  bundleCompanies?: BundleCompany[];
+  /**
+   * 여러 회사 묶음의 표지. 있으면 표지 머리 오른쪽에 회사 로고 대신 회사명 목록을 쓴다(로고는 첫 회사
+   * 것뿐이다).
+   */
+  companyNames?: string[];
 }
 
 export interface RenderRequest {

@@ -20,6 +20,7 @@ import type {
   BrandImage,
   CardContent,
   CardImage,
+  CardLogo,
   CardSettings,
   ElementEdit,
   ElementId,
@@ -550,6 +551,41 @@ export function useCardEditor() {
   }, [logo]);
   const tintReady = !logo || tinted?.source === logo;
 
+  // 여러 회사 묶음의 다른 회사 로고. 회사마다 첫 공고의 로고를 받아 배경을 걷어 둔다. 문서에는 남기지 않는다
+  // (저장소 한도). 받기 전과 로고가 없는 회사는 회사명을 글자로 그린다.
+  const [companyLogos, setCompanyLogos] = useState<Partial<Record<string, CardLogo>>>({});
+  const requestedLogos = useRef(new Set<string>());
+  const otherCompanies = useMemo(() => {
+    const jobs = loaded?.doc.jobs ?? [];
+    const first = jobs[0]?.companyName;
+    const seen = new Map<string, number>();
+    for (const job of jobs) {
+      if (job.companyName !== first && !seen.has(job.companyName)) {
+        seen.set(job.companyName, job.jobId);
+      }
+    }
+    return JSON.stringify([...seen]);
+  }, [loaded?.doc.jobs]);
+  useEffect(() => {
+    for (const [name, jobId] of JSON.parse(otherCompanies) as [string, number][]) {
+      if (requestedLogos.current.has(name)) {
+        continue;
+      }
+      requestedLogos.current.add(name);
+      fetchCardJob(jobId)
+        .then(({ logo: source }) => (source ? processLogo(source) : null))
+        .then((processed) => {
+          if (processed) {
+            setCompanyLogos((current) => ({
+              ...current,
+              [name]: { original: processed.dataUrl, aspect: processed.aspect },
+            }));
+          }
+        })
+        .catch(() => undefined);
+    }
+  }, [otherCompanies]);
+
   const specs = useMemo(() => {
     if (!loaded || !tintReady) {
       return null;
@@ -567,10 +603,10 @@ export function useCardEditor() {
     return Object.fromEntries(
       VARIANTS.map((variant) => [
         variant.id,
-        doc.slides.map((slide) => slideSpec(doc, slide, variant.id, logoSet)),
+        doc.slides.map((slide) => slideSpec(doc, slide, variant.id, logoSet, companyLogos)),
       ]),
     ) as Record<VariantId, RenderSlide[]>;
-  }, [loaded, tintReady, tinted]);
+  }, [loaded, tintReady, tinted, companyLogos]);
 
   return {
     loaded,

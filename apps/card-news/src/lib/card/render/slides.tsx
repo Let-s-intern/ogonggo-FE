@@ -1,6 +1,21 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import {
   BULLET_INDENT,
+  BUNDLE_TOP_GAP,
+  CHIP_WEIGHT,
+  COMPANY_BAND_PAD_Y,
+  COMPANY_BAND_SIZE,
+  COMPANY_BLOCK_GAP,
+  COMPANY_CELL_WIDTH,
+  COMPANY_HEAD_GAP,
+  COMPANY_LOGO_GAP,
+  COMPANY_LOGO_HEIGHT,
+  COMPANY_ROW_LINE_HEIGHT,
+  COMPANY_ROW_PAD,
+  COMPANY_RULE,
+  COMPANY_TABLE_PAD_BOTTOM,
+  COMPANY_TABLE_PAD_TOP,
+  COMPANY_TABLE_PAD_X,
   CONTENT_WIDTH,
   COVER_DEADLINE_INNER_GAP,
   COVER_LINK_SCALE,
@@ -11,8 +26,11 @@ import {
   HEADER_HEIGHT,
   HEADLINE_TRACKING,
   HEADLINE_WEIGHT,
+  OUTLINE_CHIP_BORDER,
   PAD_X,
   type SlideMetrics,
+  companyHeadSize,
+  measureCompanies,
   measureCover,
   measureSlide,
   textScale,
@@ -20,7 +38,16 @@ import {
 import { contrastRatio } from '../color';
 import type { SlideRole } from '../document';
 import type { Measure } from '../measure';
-import type { CardSection, CardSize, CardSpec, CoverTable, Layer } from '../types';
+import {
+  type BrandMarkId,
+  type BundleCompany,
+  type CardSection,
+  type CardSize,
+  type CardSpec,
+  type CoverTable,
+  type Layer,
+  sectionElementId,
+} from '../types';
 import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
 import { Background } from './backgrounds';
 import { layerElements } from './layers';
@@ -52,7 +79,8 @@ import {
  *   아래 테두리 상자, 2장은 왼쪽 칩·오른쪽 목록 두 칸이다.
  * - `labels`: 가운데 로고, 브랜드색 띠 머리 카드, 왼쪽 항목명·오른쪽 목록 표(LG생활건강형 2장).
  *
- * 시안이 `detailLayout` 을 가지면 2장만 그 배치로 그린다. 묶음 공고 장(`bundleRow`)은 늘 `labels` 다.
+ * 시안이 `detailLayout` 을 가지면 2장만 그 배치로 그린다. 묶음 공고 장은 시안과 상관없이 문서의 묶음 배치다 —
+ * 항목명 표(`bundleRow`)는 `labels`, 회사 블록(`bundleCompanies`)은 `CompaniesSlide` 다.
  */
 
 /** 흰 판 안쪽 여백. */
@@ -169,11 +197,15 @@ function slideSections(
  * 세지 않는다.
  */
 export function visibleSectionIndices(
-  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow'>,
+  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow' | 'bundleCompanies'>,
   slide: SlideRole,
 ): number[] {
-  // 묶음 공고 장은 두 문구 배열에서 섹션을 모아 그려 한 배열의 순서로 가리킬 수 없다.
-  if ((slide !== 'cover' && slide !== 'job') || (slide === 'job' && spec.bundleRow)) {
+  // 묶음 공고 장은 두 문구 배열에서 섹션을 모아 그리거나(항목명 표) 공고 여럿을 그려(회사 블록) 한 배열의
+  // 순서로 가리킬 수 없다.
+  if (
+    (slide !== 'cover' && slide !== 'job') ||
+    (slide === 'job' && (spec.bundleRow || spec.bundleCompanies))
+  ) {
     return [];
   }
   const layout = variantOf(spec.variant);
@@ -188,9 +220,13 @@ export function visibleSectionIndices(
 
 /** 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. */
 export function visibleSectionLabels(
-  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow'>,
+  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow' | 'bundleCompanies'>,
   slide: SlideRole,
 ): string[] {
+  // 회사 블록 배치의 `section-<n>` 은 n 번째 회사 블록이다.
+  if (slide === 'job' && spec.bundleCompanies) {
+    return spec.bundleCompanies.map((company) => company.name);
+  }
   if (slide === 'job' && spec.bundleRow) {
     return slideSections(spec, slide, false)
       .filter((section) => section.items.some((item) => item.trim()))
@@ -497,6 +533,257 @@ function LabelsSlide({
 }
 
 /**
+ * 묶음 공고 장(회사 블록) 오른쪽 위 브랜드 로고. 처음 값(`ogonggo`, 심볼 + 글자)은 좁은 귀퉁이에 맞지 않아 옛
+ * 오공고 로고로 그린다(예시 묶음 게시물). 다른 것을 고르면 그것이다.
+ */
+function cornerBrandMark(mark: BrandMarkId | undefined): BrandMarkId {
+  return mark === undefined || mark === 'ogonggo' ? 'ogonggoClassic' : mark;
+}
+
+/**
+ * 흰 바탕에 브랜드색 테두리 알약 칩(묶음 공고 장의 표 머리). 글자는 검정이다. 브랜드색이 흰 바탕과 거의 같으면
+ * 테두리를 검정으로 한다.
+ */
+function OutlineChip({
+  brand,
+  size,
+  children,
+}: {
+  brand: string;
+  size: number;
+  children: ReactNode;
+}) {
+  const border = contrastRatio(brand, '#FFFFFF') < 1.15 ? '#111111' : brand;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignSelf: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        backgroundColor: '#FFFFFF',
+        color: '#111111',
+        border: `${OUTLINE_CHIP_BORDER}px solid ${border}`,
+        fontSize: size,
+        fontWeight: CHIP_WEIGHT,
+        lineHeight: 1,
+        letterSpacing: -size * 0.01,
+        whiteSpace: 'nowrap',
+        padding: `${Math.round(size * 0.3)}px ${Math.round(size * 0.9)}px`,
+        borderRadius: 999,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * 회사 블록 배치(여러 회사 묶음 예시). 회사마다 가운데 로고, 브랜드색 머리띠에 회사명, 흰 카드 안 2열 표(테두리
+ * 칩 머리, 줄 사이 회색 선, 빈 칸은 `-`)다. 오른쪽 위에 브랜드 로고. 블록이 장에 다 들어가게 표 글자를 줄인다
+ * (`measureCompanies`).
+ */
+function CompaniesSlide({
+  spec,
+  companies,
+  palette,
+  size,
+  measure,
+  assets,
+}: {
+  spec: CardSpec;
+  companies: BundleCompany[];
+  palette: Palette;
+  size: CardSize;
+  measure: Measure;
+  assets: SlideAssets;
+}): Built {
+  const metrics = measureCompanies(measure, size, companies, textScale(spec.settings.bodyScale));
+  const brand = spec.settings.brandColor;
+  const { rowSize } = metrics;
+  const headSize = companyHeadSize(rowSize);
+  const logoPalette: Palette = {
+    ...palette,
+    logo: palette.logo === 'plate' ? 'original' : palette.logo,
+  };
+  const cell: CSSProperties = {
+    display: 'flex',
+    justifyContent: 'center',
+    width: COMPANY_CELL_WIDTH,
+  };
+  const edits = spec.edits;
+  const element = (
+    <Canvas size={size} layers={spec.layers}>
+      <Background spec={spec} palette={palette} size={size} assets={assets} />
+      <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
+        <Editable id="brandMark" edits={edits}>
+          <BrandMark
+            brand={cornerBrandMark(spec.settings.brandMark)}
+            image={spec.settings.brandImage}
+            palette={palette}
+            assets={assets}
+            size={52}
+          />
+        </Editable>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: size.width,
+          padding: `${metrics.padTop + BUNDLE_TOP_GAP}px ${PAD_X}px 0`,
+          gap: COMPANY_BLOCK_GAP,
+        }}
+      >
+        {companies.map((company, blockIndex) => (
+          <Editable
+            key={blockIndex}
+            id={sectionElementId(blockIndex + 1)}
+            edits={edits}
+            style={{ flexDirection: 'column', alignItems: 'center' }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: COMPANY_LOGO_HEIGHT,
+                marginBottom: COMPANY_LOGO_GAP,
+              }}
+            >
+              <CompanyLogo
+                spec={{ ...spec, logo: company.logo, companyName: company.name }}
+                palette={logoPalette}
+                height={COMPANY_LOGO_HEIGHT}
+                maxWidth={520}
+              />
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: CONTENT_WIDTH,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 28,
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  backgroundColor: brand,
+                  color: textOnBrand(brand),
+                  fontSize: COMPANY_BAND_SIZE,
+                  fontWeight: 800,
+                  lineHeight: 1.2,
+                  letterSpacing: -COMPANY_BAND_SIZE * 0.01,
+                  padding: `${COMPANY_BAND_PAD_Y}px 0`,
+                }}
+              >
+                {company.name}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: `${COMPANY_TABLE_PAD_TOP}px ${COMPANY_TABLE_PAD_X}px ${COMPANY_TABLE_PAD_BOTTOM}px`,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: COMPANY_HEAD_GAP,
+                  }}
+                >
+                  {company.columns.map((label, index) => (
+                    <div key={index} style={cell}>
+                      <OutlineChip brand={brand} size={headSize}>
+                        {label}
+                      </OutlineChip>
+                    </div>
+                  ))}
+                </div>
+                {company.rows.map((cells, rowIndex) => (
+                  <div
+                    key={rowIndex}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: `${Math.round(rowSize * COMPANY_ROW_PAD)}px 0`,
+                      ...(rowIndex > 0 ? { borderTop: `${COMPANY_RULE}px solid #DDDDDD` } : {}),
+                    }}
+                  >
+                    {cells.map((text, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          ...cell,
+                          textAlign: 'center',
+                          fontSize: rowSize,
+                          fontWeight: COVER_ROW_WEIGHT,
+                          lineHeight: COMPANY_ROW_LINE_HEIGHT,
+                          letterSpacing: -rowSize * 0.01,
+                          color: '#111111',
+                        }}
+                      >
+                        {text.trim() || '-'}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Editable>
+        ))}
+      </div>
+    </Canvas>
+  );
+  return { element, overflow: metrics.overflow };
+}
+
+/**
+ * 여러 회사 묶음 표지 머리 오른쪽의 회사명 목록(로고 자리). 한 줄에 들어가는 크기까지 줄이고, 24px 로도 넘치면
+ * 줄을 바꾼다.
+ */
+const COMPANY_NAMES_WIDTH = 440;
+
+function CompanyNames({
+  names,
+  palette,
+  measure,
+}: {
+  names: string[];
+  palette: Palette;
+  measure: Measure;
+}) {
+  const text = names.join(' · ');
+  let fontSize = 40;
+  while (fontSize > 24 && measure(text, fontSize, 800) > COMPANY_NAMES_WIDTH) {
+    fontSize -= 1;
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        maxWidth: COMPANY_NAMES_WIDTH,
+        textAlign: 'right',
+        fontSize,
+        fontWeight: 800,
+        lineHeight: 1.15,
+        letterSpacing: -fontSize * 0.01,
+        color: palette.headlineText,
+      }}
+    >
+      {text}
+    </div>
+  );
+}
+
+/**
  * 썸네일 카드 크기. 이미지 비율 그대로 콘텐츠 폭에 맞추되, 세로는 카드 높이의 3할까지. 그보다 길면
  * 세로에 맞춰 폭을 줄인다 — 배너 속 글자가 잘리지 않게 통째로 보여 준다.
  */
@@ -691,7 +978,11 @@ function CoverSlide({
             edits={edits}
             right={
               <Editable id="companyLogo" edits={edits}>
-                <CompanyLogo spec={spec} palette={palette} />
+                {spec.companyNames ? (
+                  <CompanyNames names={spec.companyNames} palette={palette} measure={measure} />
+                ) : (
+                  <CompanyLogo spec={spec} palette={palette} />
+                )}
               </Editable>
             }
           />
@@ -1161,6 +1452,16 @@ export function buildSlide(
   }
   if (role === 'cover' && spec.cover) {
     return CoverSlide({ spec, cover: spec.cover, palette, size, measure, assets });
+  }
+  if (role === 'job' && spec.bundleCompanies) {
+    return CompaniesSlide({
+      spec,
+      companies: spec.bundleCompanies,
+      palette,
+      size,
+      measure,
+      assets,
+    });
   }
   return InfoSlide({ spec, palette, size, slide: role, measure, assets });
 }

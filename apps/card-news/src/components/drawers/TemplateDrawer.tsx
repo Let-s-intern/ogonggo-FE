@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { DocumentKind, RenderSlide } from '@/lib/card/document';
+import {
+  BUNDLE_LAYOUT_LABELS,
+  type BundleLayout,
+  type BundleLayoutKind,
+  type DocumentKind,
+  type RenderSlide,
+} from '@/lib/card/document';
 import { CARD_SIZES, type CardSizeId, type VariantId } from '@/lib/card/types';
 import { VARIANTS } from '@/lib/card/variants';
 import type { RenderKit } from '@/lib/client/useRenderKit';
@@ -17,6 +23,59 @@ const TABS: { value: TemplateTab; label: string }[] = [
   { value: 'bundle', label: '묶음' },
   { value: 'slide', label: '한 장씩' },
 ];
+
+const LAYOUT_OPTIONS = (Object.keys(BUNDLE_LAYOUT_LABELS) as BundleLayoutKind[]).map((value) => ({
+  value,
+  label: BUNDLE_LAYOUT_LABELS[value],
+}));
+
+const PER_SLIDE_OPTIONS: { value: '1' | '2'; label: string }[] = [
+  { value: '1', label: '한 장에 1개' },
+  { value: '2', label: '2개' },
+];
+
+/**
+ * 묶음 공고 장 배치 고르기. 항목명 표는 공고마다 한 장이고, 회사 블록은 한 장에 회사 1~2곳이다(둘이 장에
+ * 들어가지 않으면 한 곳씩). 고르면 사람이 고른 배치로 남는다.
+ */
+function BundleLayoutPicker({
+  layout,
+  onChange,
+}: {
+  layout: BundleLayout;
+  onChange: (layout: BundleLayout) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-2">
+      <span className="text-xs font-bold text-gray-500">공고 장 배치</span>
+      <Segmented
+        label="공고 장 배치"
+        options={LAYOUT_OPTIONS}
+        value={layout.kind}
+        onChange={(kind) =>
+          onChange({ kind, perSlide: kind === 'labels' ? 1 : layout.perSlide, manual: true })
+        }
+      />
+      {layout.kind === 'labels' ? (
+        <p className="text-xs text-gray-500">공고마다 한 장입니다.</p>
+      ) : (
+        <>
+          <Segmented
+            label="한 장에 놓는 회사 수"
+            options={PER_SLIDE_OPTIONS}
+            value={String(layout.perSlide) as '1' | '2'}
+            onChange={(value) =>
+              onChange({ ...layout, perSlide: Number(value) as 1 | 2, manual: true })
+            }
+          />
+          <p className="text-xs text-gray-500">
+            2개를 고르면 두 곳이 한 장에 들어갈 때만 같이 놓고, 넘치면 한 곳씩 나눕니다.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
 
 /** 재기 전 미리보기 폭(px). 실제 폭은 두 열 칸에서 잰다 — 스크롤바가 서랍 폭을 먹으면 칸이 좁아진다. */
 const FALLBACK_PREVIEW_WIDTH = 110;
@@ -61,6 +120,8 @@ export function TemplateDrawer({
   kit,
   onPick,
   onPickSlide,
+  bundleLayout,
+  onBundleLayout,
 }: {
   kind: DocumentKind;
   /** 시안별로 모든 장을 그 시안으로 편 값(장에 덮어쓴 템플릿은 뺀다). */
@@ -77,6 +138,9 @@ export function TemplateDrawer({
   onPick: (variant: VariantId) => void;
   /** `null` 이면 덮어쓴 것을 지워 문서 템플릿을 따른다. */
   onPickSlide: (variant: VariantId | null) => void;
+  /** 묶음 공고 장 배치. 묶음 문서에만 있다. */
+  bundleLayout?: BundleLayout;
+  onBundleLayout?: (layout: BundleLayout) => void;
 }) {
   const [tab, setTab] = useState<TemplateTab>(kind === 'bundle' ? 'bundle' : 'single');
   const docTab = kind === 'bundle' ? 'bundle' : 'single';
@@ -123,6 +187,9 @@ export function TemplateDrawer({
                 ? '묶음 · 표지 + 공고별 장 + 안내, 모든 장에 적용'
                 : '모든 장에 적용'}
           </p>
+          {tab === 'bundle' && bundleLayout && onBundleLayout ? (
+            <BundleLayoutPicker layout={bundleLayout} onChange={onBundleLayout} />
+          ) : null}
           {tab === 'slide' && slideOverride ? (
             <button
               type="button"

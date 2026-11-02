@@ -35,11 +35,20 @@ const TABS: { id: StartTab; label: string }[] = [
   { id: 'blank', label: '빈 캔버스' },
 ];
 
-/** 묶음 종류. 1차에는 한 회사 여러 직무만 고를 수 있다. */
+/**
+ * 묶음 종류. 여러 회사 주제 모음은 공고 장을 회사 블록 배치(한 장에 회사 2곳까지)로 시작한다. 한 회사 여러
+ * 직무는 공고마다 한 장이다. 편집 화면 템플릿 서랍에서 바꿀 수 있다.
+ */
 const BUNDLE_KINDS = [
   { id: 'company', label: '한 회사 여러 직무', description: '표지 직무 표 + 직무별 한 장 + 안내' },
-  { id: 'topic', label: '여러 회사 주제 모음', description: '여러 회사 공고를 한 주제로' },
+  {
+    id: 'topic',
+    label: '여러 회사 주제 모음',
+    description: '표지 직무 표 + 회사마다 블록(한 장에 2곳까지) + 안내',
+  },
 ] as const;
+
+type BundleKind = (typeof BUNDLE_KINDS)[number]['id'];
 
 /** 저장 시각을 `11월 2일 14:05` 로. */
 function savedLabel(savedAt: string): string {
@@ -181,8 +190,18 @@ function SingleTab({
   );
 }
 
-/** 묶음으로 만들어질 장. 표지, 고른 순서대로 공고마다 한 장, 프로필 안내. */
-function bundleSlides(jobs: JobListItem[]): string[] {
+/**
+ * 묶음으로 만들어질 장. 표지, 고른 순서대로 공고마다 한 장, 프로필 안내. 여러 회사 주제 모음은 회사 둘씩 한
+ * 장이다 — 둘이 장에 들어가지 않으면 편집 화면에서 한 곳씩 나눈다.
+ */
+function bundleSlides(jobs: JobListItem[], kind: BundleKind): string[] {
+  if (kind === 'topic') {
+    const companies = [...new Set(jobs.map((job) => job.companyName))];
+    const pairs = Array.from({ length: Math.ceil(companies.length / 2) }, (_, index) =>
+      companies.slice(index * 2, index * 2 + 2),
+    );
+    return ['표지', ...pairs.map((pair) => `회사 블록 · ${pair.join(' · ')}`), '프로필 안내'];
+  }
   return ['표지', ...jobs.map((job) => `${job.companyName} · ${job.title}`), '프로필 안내'];
 }
 
@@ -213,9 +232,10 @@ function BundleTab({
 }) {
   const router = useRouter();
   const [picked, setPicked] = useState<JobListItem[]>([]);
+  const [kind, setKind] = useState<BundleKind>('company');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const slides = bundleSlides(picked);
+  const slides = bundleSlides(picked, kind);
 
   /** 묶음 초안을 쓰고, 첫 공고 로고로 브랜드색을 잡아 문서를 남긴 뒤 편집 화면으로 간다. */
   const create = async () => {
@@ -240,6 +260,9 @@ function BundleTab({
         result.draft,
         defaultSettings(first.brandColor ?? FALLBACK_COLOR),
         { request: text, uploads: request.images.map((image) => image.id) },
+        kind === 'topic'
+          ? { kind: 'companies', perSlide: 2, manual: true }
+          : { kind: 'labels', perSlide: 1 },
       );
       saveDocument(doc);
       // 모델 없이 원문으로 만든 초안이면 편집 화면에서 한 번 알린다.
@@ -273,26 +296,23 @@ function BundleTab({
         <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
           <h2 className="text-base font-bold">묶음 종류</h2>
           <div className="flex flex-wrap gap-2">
-            {BUNDLE_KINDS.map((kind) => (
+            {BUNDLE_KINDS.map((option) => (
               <label
-                key={kind.id}
-                className={`flex flex-1 items-start gap-2 rounded-lg border px-3 py-2 ${
-                  kind.id === 'company'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'cursor-not-allowed border-gray-200 opacity-50'
+                key={option.id}
+                className={`flex flex-1 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 ${
+                  option.id === kind ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
                 }`}
               >
                 <input
                   type="radio"
                   name="bundle-kind"
                   className="mt-1"
-                  checked={kind.id === 'company'}
-                  disabled={kind.id !== 'company'}
-                  readOnly
+                  checked={option.id === kind}
+                  onChange={() => setKind(option.id)}
                 />
                 <span className="flex flex-col">
-                  <span className="text-sm font-bold">{kind.label}</span>
-                  <span className="text-xs text-gray-500">{kind.description}</span>
+                  <span className="text-sm font-bold">{option.label}</span>
+                  <span className="text-xs text-gray-500">{option.description}</span>
                 </span>
               </label>
             ))}
@@ -355,7 +375,9 @@ function BundleTab({
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-bold">만들어질 장</h2>
             <span className="text-sm text-gray-600" data-testid="slide-count">
-              표지 1 + 공고 {picked.length} + 안내 1 = {slides.length}장
+              {kind === 'topic'
+                ? `표지 1 + 회사 블록 ${slides.length - 2} + 안내 1 = ${slides.length}장`
+                : `표지 1 + 공고 ${picked.length} + 안내 1 = ${slides.length}장`}
             </span>
           </div>
           <ol className="flex flex-wrap gap-2" aria-label="만들어질 장">

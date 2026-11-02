@@ -1,5 +1,6 @@
 import { DEFAULT_PROFILE } from './fromJob';
 import type {
+  BundleCompany,
   CardContent,
   CardLogo,
   CardSettings,
@@ -104,6 +105,35 @@ export interface DocumentCover {
   rows: [string, string][];
 }
 
+/**
+ * 묶음 공고 장의 배치. `labels` 는 공고마다 한 장, 머리띠(직무·모집 분야)와 항목명 표(마감·업무·우대)다.
+ * `companies` 는 여러 회사 묶음이고 회사마다 블록 하나(로고, 회사명 머리띠, 부문·직무 2열 표)다.
+ */
+export type BundleLayoutKind = 'labels' | 'companies';
+
+export const BUNDLE_LAYOUT_LABELS: Record<BundleLayoutKind, string> = {
+  labels: '항목명 표',
+  companies: '회사 블록',
+};
+
+/**
+ * 묶음 공고 장을 어떻게 놓는가. `perSlide` 는 장 하나에 놓는 공고(회사 블록은 회사)의 최대 수다 — 둘이 장에
+ * 들어가지 않으면 하나만 놓는다(`../card/bundle.ts`). `manual` 이면 사람이 고른 것이라 자동으로 바꾸지 않는다.
+ */
+export interface BundleLayout {
+  kind: BundleLayoutKind;
+  perSlide: 1 | 2;
+  manual?: boolean;
+}
+
+/** 배치를 남기지 않은 묶음(v3 편집본)의 배치. 지금까지처럼 공고마다 한 장이고 자동으로 바꾸지 않는다. */
+const LEGACY_BUNDLE_LAYOUT: BundleLayout = { kind: 'labels', perSlide: 1, manual: true };
+
+/** 문서의 묶음 공고 장 배치. 묶음이 아니거나 남긴 배치가 없으면 공고마다 한 장의 항목명 표다. */
+export function bundleLayoutOf(doc: CardDocument): BundleLayout {
+  return (doc.kind === 'bundle' ? doc.bundleLayout : undefined) ?? LEGACY_BUNDLE_LAYOUT;
+}
+
 export interface CardDocument {
   /** 저장 열쇠. `single` 은 `job-<jobId>`, 나머지는 무작위다. */
   id: string;
@@ -137,6 +167,8 @@ export interface CardDocument {
   size?: CardSizeId;
   /** 사람이 고친 문서 제목. 비어 있으면 묶은 회사 이름이다(`documentTitle()`). */
   title?: string;
+  /** 묶음 공고 장 배치. 없으면 공고마다 한 장의 항목명 표다(`bundleLayoutOf()`). */
+  bundleLayout?: BundleLayout;
 }
 
 export function newSlideId(): string {
@@ -215,10 +247,12 @@ export function bundleDocument(
   draft: { cover: DocumentCover; caption: string },
   settings: CardSettings,
   start: { request: string; uploads?: string[] },
+  layout: BundleLayout,
 ): CardDocument {
   return {
     id,
     kind: 'bundle',
+    bundleLayout: layout,
     jobs: jobs.map(({ jobId, companyName, content: { caption: _caption, ...content } }) => ({
       jobId,
       companyName,
@@ -383,7 +417,7 @@ function coverTable(doc: CardDocument, slide: DocumentSlide): CoverTable | undef
  * 공고 장이 아니면 `undefined`.
  */
 function bundleRowOf(doc: CardDocument, slide: DocumentSlide): [string, string] | undefined {
-  if (slide.role !== 'job' || !doc.cover) {
+  if (slide.role !== 'job' || !doc.cover || bundleLayoutOf(doc).kind !== 'labels') {
     return undefined;
   }
   const index = firstJobIndex(slide);
@@ -464,29 +498,73 @@ export function slideSpec(
   slide: DocumentSlide,
   variant: VariantId,
   logo?: CardLogo,
+  logos?: Partial<Record<string, CardLogo>>,
 ): RenderSlide {
   const job = slideJob(doc, slide);
   // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
   const { photo, ...shared } = doc.settings;
   const cover = coverTable(doc, slide);
   const bundleRow = bundleRowOf(doc, slide);
-  // 로고는 첫 공고 것 하나다. 회사가 다른 공고 장은 로고 대신 회사명을 글자로 쓴다.
-  const sameCompany = !job || job.companyName === doc.jobs[0]?.companyName;
+  const firstCompany = doc.jobs[0]?.companyName;
+  // 로고는 첫 회사는 편집 화면의 로고, 다른 회사는 `logos` 에 받아 둔 것이다. 없으면 회사명을 글자로 쓴다.
+  const logoOf = (name: string) => (name === firstCompany ? logo : logos?.[name]);
+  const companies =
+    slide.role === 'job' && doc.kind === 'bundle' && bundleLayoutOf(doc).kind === 'companies'
+      ? companyBlocks(doc, slideJobIndices(slide)).map((block) => {
+          const found = logoOf(block.name);
+          return found ? { ...block, logo: found } : block;
+        })
+      : undefined;
+  const names = companyNames(doc);
+  const companyNameList = cover && names.length > 1 ? names : undefined;
   return {
     spec: {
       variant,
       content: documentContent(doc, slide),
       settings: variantOf(variant).image && photo ? { ...shared, photo } : shared,
-      logo: sameCompany ? logo : undefined,
+      logo: !job ? logo : companyNameList ? undefined : logoOf(job.companyName),
       companyName: job?.companyName ?? '',
       edits: slideEditsOf(doc, slide)[variant],
       layers: resolveLayers(doc, slide, slide.layers[variant]),
       ...(cover ? { cover } : {}),
       ...(bundleRow ? { bundleRow } : {}),
+      ...(companies ? { bundleCompanies: companies } : {}),
+      ...(companyNameList ? { companyNames: companyNameList } : {}),
     },
     id: slide.id,
     role: slide.role,
   };
+}
+
+/** 묶은 회사 이름. 처음 나온 순서이고 같은 회사는 한 번이다. */
+export function companyNames(doc: CardDocument): string[] {
+  return [...new Set(doc.jobs.map((job) => job.companyName))];
+}
+
+/**
+ * 회사 블록 배치에서 공고들(`jobs` 의 몇 번째인가)을 회사마다 묶은 블록. 처음 나온 회사 순서이고, 표는 표지
+ * 표의 열 이름과 그 회사 공고의 표 줄이다(표 줄이 없으면 직무명과 빈 칸).
+ */
+export function companyBlocks(doc: CardDocument, indices: number[]): BundleCompany[] {
+  const blocks: BundleCompany[] = [];
+  for (const index of indices) {
+    const job = doc.jobs[index];
+    if (!job) {
+      continue;
+    }
+    const row = doc.cover?.rows[index] ?? [job.content.roleTitle, ''];
+    const block = blocks.find((item) => item.name === job.companyName);
+    if (block) {
+      block.rows.push(row);
+    } else {
+      blocks.push({
+        name: job.companyName,
+        columns: doc.cover?.columns ?? ['채용 직무', '모집 분야'],
+        rows: [row],
+      });
+    }
+  }
+  return blocks;
 }
 
 /** 장이 쓰는 템플릿. 장에 덮어쓴 템플릿이 없으면 문서 템플릿(`variant`)이다. */
@@ -891,6 +969,56 @@ export function addJobs(
       : {}),
     slides,
   };
+}
+
+/**
+ * 묶음 공고 장 배치를 바꾼 문서(템플릿 서랍). 사람이 고른 것이라 `manual` 이 서고 자동 고르기를 멈춘다.
+ * 배치 종류가 바뀌면 공고별 장 틀 편집값은 버린다 — 요소 자리가 배치마다 달라 옮긴 값이 엉뚱한 데 걸린다.
+ * 공고 장을 다시 나누는 일은 `../card/bundle.ts` 의 `arrangeBundle()` 이 한다.
+ */
+export function withBundleLayout(doc: CardDocument, layout: BundleLayout): CardDocument {
+  const { jobTemplateEdits: _template, ...rest } = doc;
+  return {
+    ...(layout.kind === bundleLayoutOf(doc).kind ? doc : rest),
+    bundleLayout: layout,
+  };
+}
+
+/**
+ * 공고 장을 `groups`(장마다 놓을 공고들) 순서로 다시 나눈 문서. 지금 공고 장과 같으면 그대로 돌려준다. 새 공고
+ * 장들은 첫 공고 장이 있던 자리에 놓고, 첫 공고가 같은 장은 그 장(id·편집값·자유 요소)을 이어 쓴다. 공고 순서는
+ * 새 장 순서를 따른다(`withJobOrder()`).
+ */
+export function withJobGroups(doc: CardDocument, groups: number[][]): CardDocument {
+  const current = doc.slides.filter((slide) => slide.role === 'job');
+  const same =
+    current.length === groups.length &&
+    current.every((slide, index) => {
+      const indices = slideJobIndices(slide);
+      const group = groups[index]!;
+      return indices.length === group.length && indices.every((value, at) => value === group[at]);
+    });
+  if (same) {
+    return doc;
+  }
+  const unused = [...current];
+  const slides = groups.map((group) => {
+    const reuse = unused.findIndex((slide) => firstJobIndex(slide) === group[0]);
+    const base = reuse >= 0 ? unused.splice(reuse, 1)[0]! : newSlide('job');
+    return { ...base, jobIndices: group };
+  });
+  const first = doc.slides.findIndex((slide) => slide.role === 'job');
+  const others = doc.slides.filter((slide) => slide.role !== 'job');
+  const profile = others.findIndex((slide) => slide.role === 'profile');
+  // 공고 장이 하나도 없던 문서면 안내 장 앞(없으면 끝)이다.
+  const at =
+    first >= 0
+      ? doc.slides.slice(0, first).filter((slide) => slide.role !== 'job').length
+      : profile >= 0
+        ? profile
+        : others.length;
+  others.splice(at, 0, ...slides);
+  return withJobOrder({ ...doc, slides: others });
 }
 
 /** 장 하나를 `to` 자리로 옮긴 문서. 공고 장 순서가 바뀌면 `jobs` 와 표지 표 줄 순서도 따라간다. */

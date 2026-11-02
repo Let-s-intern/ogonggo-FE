@@ -4,7 +4,9 @@ import { loadEmoji, loadFonts } from '@/lib/card/assets';
 import { SLIDE_ROLES } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
+  type BundleCompany,
   CARD_SIZES,
+  type CardLogo,
   type CardSpec,
   type ElementEdit,
   LAYER_WEIGHTS,
@@ -122,25 +124,53 @@ function sanitizeLayers(layers: unknown): Layer[] | undefined {
   });
 }
 
+/** 회사 블록의 회사 로고. 기업 로고와 같은 규칙이다. */
+function sanitizeLogo(logo: CardLogo | undefined): CardLogo | undefined {
+  const original = safeImage(logo?.original);
+  return original
+    ? {
+        original,
+        white: safeImage(logo?.white),
+        black: safeImage(logo?.black),
+        aspect: logo?.aspect,
+      }
+    : undefined;
+}
+
+/** 한 장에 놓는 회사 블록 수 상한. 섹션 요소 번호(1~9)를 넘지 않는다. */
+const MAX_COMPANY_BLOCKS = 9;
+
+/** 회사 블록을 검사한다. 글은 글자로 바꾸고, 로고는 data URL 이미지만 남긴다. */
+function sanitizeCompanies(companies: unknown): BundleCompany[] | undefined {
+  if (!Array.isArray(companies)) {
+    return undefined;
+  }
+  const text = (value: unknown) => (typeof value === 'string' ? value : '');
+  const pair = (value: unknown): [string, string] =>
+    Array.isArray(value) ? [text(value[0]), text(value[1])] : ['', ''];
+  return companies.slice(0, MAX_COMPANY_BLOCKS).map((raw: unknown) => {
+    const company = (raw ?? {}) as Partial<BundleCompany>;
+    const logo = sanitizeLogo(company.logo);
+    return {
+      name: text(company.name),
+      ...(logo ? { logo } : {}),
+      columns: pair(company.columns),
+      rows: Array.isArray(company.rows) ? company.rows.slice(0, 20).map(pair) : [],
+    };
+  });
+}
+
 /**
  * 요청에 실린 이미지(로고·썸네일)를 검사한다. data URL 이미지가 아니면 버린다 — 바깥 주소를
  * 이미지 생성기에 넘기면 서버가 그 주소로 요청을 보내고, 미리보기 SVG 에도 그대로 실린다.
  */
 function sanitizeSpec(spec: CardSpec): CardSpec {
-  const original = safeImage(spec.logo?.original);
   const photo = safeImage(spec.settings.photo?.dataUrl);
   const brandImage = safeImage(spec.settings.brandImage?.dataUrl);
   const brandAspect = Number(spec.settings.brandImage?.aspect);
   return {
     ...spec,
-    logo: original
-      ? {
-          original,
-          white: safeImage(spec.logo?.white),
-          black: safeImage(spec.logo?.black),
-          aspect: spec.logo?.aspect,
-        }
-      : undefined,
+    logo: sanitizeLogo(spec.logo),
     settings: {
       ...spec.settings,
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
@@ -151,6 +181,7 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
     },
     edits: sanitizeEdits(spec.edits),
     layers: sanitizeLayers(spec.layers),
+    bundleCompanies: sanitizeCompanies(spec.bundleCompanies),
   };
 }
 

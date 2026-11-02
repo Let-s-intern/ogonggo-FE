@@ -16,8 +16,11 @@ import {
   layerLabel,
   layerRef,
 } from '@/lib/card/types';
+import { arrangeBundle } from '@/lib/card/bundle';
 import {
+  type BundleLayout,
   attachSlide,
+  bundleLayoutOf,
   detachSlide,
   documentContent,
   documentTitle,
@@ -35,6 +38,7 @@ import {
   slideLabel,
   slideName,
   slideVariant,
+  withBundleLayout,
   withCoverRow,
   withSlideEdit,
   withSlideLayers,
@@ -220,6 +224,18 @@ export function CardEditor({ docId }: { docId: string }) {
     });
   }, [docId, openDocument]);
 
+  // 묶음 공고 장을 배치대로 나눈다(장 하나에 회사 몇 곳). 글자 폭으로 재므로 렌더 키트를 받은 뒤다. 나눈 결과는
+  // 실행 취소 기록에 쌓지 않는다 — 바꾸기 전 문서로 되돌리면 그 문서대로 다시 나뉜다.
+  const loadedDoc = loaded?.doc;
+  useEffect(() => {
+    if (kit && loadedDoc) {
+      const arranged = arrangeBundle(loadedDoc, kit.measure);
+      if (arranged !== loadedDoc) {
+        applyQuietly(arranged);
+      }
+    }
+  }, [kit, loadedDoc, applyQuietly]);
+
   const logout = async () => {
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/login';
@@ -325,11 +341,14 @@ export function CardEditor({ docId }: { docId: string }) {
   const addOptions: AddSlideOption[] = loaded
     ? [
         { key: 'free', label: '빈 장', onAdd: () => addSlide('free') },
-        ...loaded.doc.jobs.map((_, index) => ({
-          key: `job-${index}`,
-          label: `공고 장 · ${jobName(loaded.doc, index)}`,
-          onAdd: () => addSlide('job', index),
-        })),
+        // 회사 블록 배치는 공고 장을 회사마다 나눠 두므로 공고 장을 따로 더하지 않는다.
+        ...(bundleLayoutOf(loaded.doc).kind === 'labels' ? loaded.doc.jobs : []).map(
+          (_, index) => ({
+            key: `job-${index}`,
+            label: `공고 장 · ${jobName(loaded.doc, index)}`,
+            onAdd: () => addSlide('job', index),
+          }),
+        ),
         { key: 'profile', label: '안내 장', onAdd: () => addSlide('profile') },
       ]
     : [];
@@ -524,6 +543,13 @@ export function CardEditor({ docId }: { docId: string }) {
                     kit={kit}
                     onPick={(picked) => editor.pickTemplate(picked)}
                     onPickSlide={(picked) => editor.pickTemplate(picked, docSlide.id)}
+                    {...(loaded.doc.kind === 'bundle'
+                      ? {
+                          bundleLayout: bundleLayoutOf(loaded.doc),
+                          onBundleLayout: (layout: BundleLayout) =>
+                            editor.changeDocument((doc) => withBundleLayout(doc, layout)),
+                        }
+                      : {})}
                   />
                 ) : null,
               },
