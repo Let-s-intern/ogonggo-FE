@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   CARD_SIZE_IDS,
   CARD_SIZES,
@@ -35,7 +36,6 @@ import { AssistantPanel } from './AssistantPanel';
 import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
 import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
-import { JobPicker } from './JobPicker';
 import { PropertiesPanel } from './PropertiesPanel';
 import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
@@ -175,14 +175,15 @@ function BottomBar({
 }
 
 /**
- * 편집 화면 배치. 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
+ * 편집 화면 배치(`/edit/<문서 id>`). 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
  *
- * 공고 고르기 → 템플릿 고르기(열 시안을 한 장씩 나란히) → 편집. 편집은 3단이다 — 왼쪽 문구와
- * 인스타 본문, 가운데 캔버스, 오른쪽 속성. 아래 바에서 템플릿을 바꾸고 받는다.
+ * 남은 문서를 고른 템플릿으로 연다. 여기서 새로 만든 문서(`?jobId=` 로 들어온 공고)는 템플릿 고르기
+ * (열 시안을 한 장씩 나란히)부터 연다. 편집은 3단이다 — 왼쪽 문구와 인스타 본문, 가운데 캔버스, 오른쪽
+ * 속성. 아래 바에서 템플릿을 바꾸고 받는다.
  */
-export function CardEditor({ initialJobId }: { initialJobId?: number }) {
+export function CardEditor({ docId }: { docId: string }) {
   const editor = useCardEditor();
-  const { loaded, status, notice, specs, selectJob } = editor;
+  const { loaded, status, notice, specs, openDocument } = editor;
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [variant, setVariant] = useState<VariantId | null>(null);
   const [size, setSize] = useState<CardSizeId>('post');
@@ -234,23 +235,19 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
     [readLoaded, remember, applyQuietly],
   );
 
-  // 주소에 공고 번호가 있으면 처음 한 번 그 공고를 고른다.
+  // 주소의 문서를 연다. 남은 문서는 고른 템플릿으로, 새로 만든 문서는 템플릿 고르기부터.
   useEffect(() => {
-    if (initialJobId) {
-      void selectJob(initialJobId);
-    }
-  }, [initialJobId, selectJob]);
+    void openDocument(docId).then((opened) => {
+      if (opened) {
+        setVariant(opened.created ? null : opened.doc.variant);
+      }
+    });
+  }, [docId, openDocument]);
 
   const logout = async () => {
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/login';
   };
-
-  // 다른 공고를 고르면 시안부터 다시 고른다.
-  const jobId = loaded?.job.id;
-  useEffect(() => {
-    setVariant(null);
-  }, [jobId]);
 
   // 템플릿을 바꾸면 1장부터, 아무것도 고르지 않은 채로 연다. 고른 템플릿은 문서에 남긴다.
   const { setVariant: rememberVariant } = editor;
@@ -336,19 +333,26 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
       <div>
         <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
         <p className="text-sm text-gray-500">
-          공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 캔버스에서 고친 뒤
-          원하는 장만 받습니다.
+          캔버스에서 고친 뒤 원하는 장만 받습니다. 고친 내용은 이 브라우저에 남습니다.
         </p>
       </div>
       <div className="flex gap-2">
         <Button size="sm" variant="ghost" onClick={() => void logout()}>
           로그아웃
         </Button>
+        <Link
+          href="/"
+          className="inline-flex h-9 items-center rounded-lg px-3 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+        >
+          시작 화면
+        </Link>
         {loaded ? (
           <>
-            <Button size="sm" variant="secondary" onClick={editor.startOver}>
-              처음부터 다시
-            </Button>
+            {loaded.job && loaded.doc.kind === 'single' ? (
+              <Button size="sm" variant="secondary" onClick={editor.startOver}>
+                처음부터 다시
+              </Button>
+            ) : null}
             <Button size="sm" onClick={() => setRegenerateOpen(true)}>
               AI로 다시 쓰기
             </Button>
@@ -358,7 +362,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
     </header>
   );
 
-  const jobLine = loaded ? (
+  const jobLine = loaded?.job ? (
     <div className="flex items-center justify-between gap-2">
       <p className="text-sm text-gray-600">
         <span className="font-semibold text-gray-900">{loaded.job.companyName}</span>{' '}
@@ -508,26 +512,12 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
             onRepick={() => setVariant(null)}
           />
         </>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-          <JobPicker
-            selectedId={loaded?.job.id}
-            onSelect={(jobId) => void editor.selectJob(jobId)}
-          />
-          <div className="flex flex-col gap-4">
-            {loaded && specs ? (
-              <>
-                {jobLine}
-                <VariantPicker specs={specs} current={variant} onPick={setVariant} />
-              </>
-            ) : (
-              <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-gray-300 text-sm text-gray-500">
-                왼쪽에서 공고를 고르면 시안이 여기에 그려집니다.
-              </div>
-            )}
-          </div>
+      ) : loaded && specs ? (
+        <div className="flex flex-col gap-4">
+          {jobLine}
+          <VariantPicker specs={specs} current={variant} onPick={setVariant} />
         </div>
-      )}
+      ) : null}
 
       <RegenerateModal
         open={regenerateOpen}

@@ -27,7 +27,7 @@ import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { fileToBrandImage, toCardImage } from './image';
 import { BRAND_IMAGE_ID, getImage, putImage } from './imageStore';
-import { loadSingleDocument, restoreLayers, saveDocument } from './storage';
+import { loadDocument, loadSingleDocument, restoreLayers, saveDocument } from './storage';
 import {
   FALLBACK_COLOR,
   type ProcessedLogo,
@@ -46,7 +46,8 @@ import { useHistory } from './useHistory';
  */
 
 export interface LoadedCard {
-  job: CardJob;
+  /** 첫 공고. 공고가 없는 문서(빈 캔버스)면 `null` 이다. */
+  job: CardJob | null;
   /** 원래 색 로고. 사람이 바꿀 수 있다. */
   logo?: string;
   /** 로고에서 뽑은 대표 색. 없으면 흑백 로고이거나 로고가 없다. */
@@ -102,6 +103,30 @@ export async function requestDraft(body: {
     throw new Error(result.message ?? 'AI 초안을 받지 못했습니다.');
   }
   return result;
+}
+
+/** 공고 하나의 카드용 값과 로고(data URL), 로고에서 뽑은 대표 색. */
+async function fetchCardJob(
+  jobId: number,
+): Promise<{ job: CardJob; logo?: string; brandColor: string | null }> {
+  const response = await fetch(`/api/jobs/${jobId}`);
+  const body = (await response.json()) as {
+    job?: CardJob;
+    logoDataUrl?: string | null;
+    message?: string;
+  };
+  if (!response.ok || !body.job) {
+    throw new Error(body.message ?? '공고를 불러오지 못했습니다.');
+  }
+  const logo = body.logoDataUrl ?? undefined;
+  const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
+  return { job: body.job, logo, brandColor };
+}
+
+/** 연 문서. `created` 면 여기서 새 초안으로 만든 문서다(남은 편집본이 없었다). */
+export interface OpenedDocument {
+  doc: CardDocument;
+  created: boolean;
 }
 
 export function useCardEditor() {
@@ -240,7 +265,7 @@ export function useCardEditor() {
       const image = first ? await candidateToImage(first, PHOTO_OPACITY).catch(() => null) : null;
       if (image) {
         setLoaded((current) =>
-          current?.job.id === jobId && !current.doc.settings.photo
+          current?.job?.id === jobId && !current.doc.settings.photo
             ? {
                 ...current,
                 doc: { ...current.doc, settings: { ...current.doc.settings, photo: image } },
@@ -253,77 +278,120 @@ export function useCardEditor() {
     }
   }, []);
 
-  /** 공고를 연다. 남은 편집본이 있으면 그것을, 없거나 `fresh` 면 새 AI 초안을 연다. */
+  /**
+   * 공고를 연다. 남은 편집본이 있으면 그것을, 없거나 `fresh` 면 새 AI 초안을 연다. `quiet` 면 남은
+   * 편집본을 열었다고 알리지 않는다 — 편집 화면 주소가 문서 id 라 그 문서를 여는 것이 당연하다.
+   */
   const selectJob = useCallback(
-    async (jobId: number, { fresh = false }: { fresh?: boolean } = {}) => {
+    async (
+      jobId: number,
+      { fresh = false, quiet = false }: { fresh?: boolean; quiet?: boolean } = {},
+    ): Promise<OpenedDocument | null> => {
       setStatus({ kind: 'loading', message: '공고를 읽는 중' });
       setNotice(null);
       try {
-        const response = await fetch(`/api/jobs/${jobId}`);
-        const body = (await response.json()) as {
-          job?: CardJob;
-          logoDataUrl?: string | null;
-          message?: string;
-        };
-        if (!response.ok || !body.job) {
-          throw new Error(body.message ?? '공고를 불러오지 못했습니다.');
-        }
-        const job = body.job;
-        const logo = body.logoDataUrl ?? undefined;
-        const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
-
+        const { job, logo, brandColor } = await fetchCardJob(jobId);
         const saved = fresh ? null : loadSingleDocument(job);
         const brandImage = await loadBrandImage();
         clearHistory();
+        let opened: OpenedDocument;
         if (saved) {
-          setLoaded({
-            job,
-            logo,
-            brandColor,
+          opened = {
             doc: await restoreLayers({ ...saved, settings: { ...saved.settings, brandImage } }),
-          });
-          setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
+            created: false,
+          };
+          if (!quiet) {
+            setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
+          }
         } else {
           setStatus({ kind: 'loading', message: 'AI가 초안을 쓰는 중' });
           const result = await requestDraft({ jobId });
-          setLoaded({
-            job,
-            logo,
-            brandColor,
+          opened = {
             doc: singleDocument(job, contentFromDraft(job, result.draft), {
               ...defaultSettings(brandColor ?? FALLBACK_COLOR),
               brandImage,
             }),
-          });
+            created: true,
+          };
           setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         }
+        setLoaded({ job, logo, brandColor, doc: opened.doc });
         setStatus({ kind: 'idle' });
         void loadCandidates(jobId);
+        return opened;
       } catch (error) {
         setStatus({
           kind: 'error',
           message: error instanceof Error ? error.message : '공고를 불러오지 못했습니다.',
         });
+        return null;
       }
     },
     [loadCandidates, clearHistory],
   );
 
+  /**
+   * 편집 화면 주소의 문서를 연다. 공고 하나 문서(`job-<번호>`)는 남은 편집본이 없으면 새 초안으로
+   * 만든다(오공고 웹의 `?jobId=` 버튼). 다른 문서는 이 브라우저에 남은 것만 연다. 로고와 썸네일 후보는
+   * 첫 공고 것이다.
+   */
+  const openDocument = useCallback(
+    async (docId: string): Promise<OpenedDocument | null> => {
+      const single = /^job-(\d+)$/.exec(docId);
+      if (single) {
+        return selectJob(Number(single[1]), { quiet: true });
+      }
+      setNotice(null);
+      const saved = loadDocument(docId);
+      if (!saved) {
+        setStatus({
+          kind: 'error',
+          message: '이 브라우저에 남아 있는 문서가 아닙니다. 시작 화면에서 새로 만들어 주세요.',
+        });
+        return null;
+      }
+      setStatus({ kind: 'loading', message: '문서를 여는 중' });
+      try {
+        const first = saved.jobs[0];
+        const card = first
+          ? await fetchCardJob(first.jobId)
+          : { job: null, logo: undefined, brandColor: null };
+        const brandImage = await loadBrandImage();
+        clearHistory();
+        const doc = await restoreLayers({ ...saved, settings: { ...saved.settings, brandImage } });
+        setLoaded({ ...card, doc });
+        setStatus({ kind: 'idle' });
+        if (first) {
+          void loadCandidates(first.jobId);
+        }
+        return { doc, created: false };
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: error instanceof Error ? error.message : '문서를 열지 못했습니다.',
+        });
+        return null;
+      }
+    },
+    [selectJob, loadCandidates, clearHistory],
+  );
+
   const regenerate = useCallback(
     async (instruction: string): Promise<boolean> => {
-      if (!loaded) {
+      const job = loaded?.job;
+      if (!loaded || !job) {
         return false;
       }
       setRegenerating(true);
       try {
         const result = await requestDraft({
-          jobId: loaded.job.id,
+          jobId: job.id,
           instruction: instruction || REWRITE_INSTRUCTION,
           current: draftFromContent(documentContent(loaded.doc)),
         });
         remember();
         changeDoc((doc) =>
-          withContent(doc, contentFromDraft(loaded.job, result.draft, documentContent(doc))),
+          withContent(doc, contentFromDraft(job, result.draft, documentContent(doc))),
         );
         setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         return true;
@@ -338,7 +406,7 @@ export function useCardEditor() {
   );
 
   const startOver = useCallback(() => {
-    if (loaded) {
+    if (loaded?.job && loaded.doc.kind === 'single') {
       // 남은 편집본은 새 초안을 저장할 때 덮어쓴다. 지우지 않는다 — 지우면 v2 편집본을 다시 옮겨 온다.
       void selectJob(loaded.job.id, { fresh: true });
     }
@@ -414,6 +482,7 @@ export function useCardEditor() {
     regenerating,
     specs,
     selectJob,
+    openDocument,
     regenerate,
     startOver,
     setContent,

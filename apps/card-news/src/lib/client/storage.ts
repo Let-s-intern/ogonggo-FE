@@ -48,6 +48,11 @@ export function listDocuments(): DocumentEntry[] {
   return read<DocumentEntry[]>(INDEX_KEY) ?? [];
 }
 
+/** 남은 문서. 없으면 `null`. 이미지 요소의 `src` 는 비어 있다(`restoreLayers`). */
+export function loadDocument(id: string): CardDocument | null {
+  return read<CardDocument>(`${DOC_PREFIX}${id}`);
+}
+
 /**
  * 공고 하나로 만든 문서를 읽는다. v3 가 없고 v2 편집본이 있으면 `single` 문서로 옮겨 돌려준다 — 옮긴
  * 문서는 편집 화면이 고칠 때 v3 로 남긴다. 이미지 요소의 `src` 는 비어 있다(`restoreLayers`).

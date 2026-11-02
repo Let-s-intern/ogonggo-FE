@@ -333,7 +333,7 @@ async function readCard(context: ToolContext): Promise<string> {
   const size = CARD_SIZES[context.size()];
   const { photo, brandImage, ...settings } = loaded.doc.settings;
   return JSON.stringify({
-    job: { company: loaded.job.companyName, title: loaded.job.title },
+    job: loaded.job ? { company: loaded.job.companyName, title: loaded.job.title } : null,
     variant: { id: variant, label: variantOf(variant).label },
     size: { id: context.size(), width: size.width, height: size.height },
     screen: { slide: context.slide() + 1, selected: context.selected() },
@@ -427,6 +427,9 @@ async function rewriteCopy(
   if (!instruction) {
     return 'instruction 이 비었습니다.';
   }
+  if (!loaded.job) {
+    return '공고가 없는 문서라 문구를 다시 쓸 수 없습니다. set_content 로 고치세요.';
+  }
   const result = await requestDraft({
     jobId: loaded.job.id,
     instruction,
@@ -437,7 +440,11 @@ async function rewriteCopy(
     return `다시 쓰지 못해 문구를 그대로 두었습니다. ${result.message ?? ''}`;
   }
   const latest = context.readLoaded() ?? loaded;
-  const content = contentFromDraft(latest.job, result.draft, documentContent(latest.doc));
+  const content = contentFromDraft(
+    latest.job ?? loaded.job,
+    result.draft,
+    documentContent(latest.doc),
+  );
   change(context, session, withContent(latest.doc, content));
   return JSON.stringify({ changed: true, content });
 }
