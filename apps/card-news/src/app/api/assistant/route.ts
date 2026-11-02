@@ -53,6 +53,16 @@ const LAYER_SHAPE_PROPERTIES = {
   radius: { type: 'number', minimum: 0, description: '모서리 둥글기 px' },
 } as const;
 
+/** 자유 요소 회전. `add_text`·`add_shape`·`edit_layers` 가 같이 쓴다. */
+const LAYER_ROTATION = {
+  rotation: {
+    type: 'number',
+    minimum: -180,
+    maximum: 180,
+    description: '상자 가운데를 두고 시계 방향으로 돌린 각도(도). 0 이면 돌리지 않는다',
+  },
+} as const;
+
 /** 장 지정. 장 번호(문서 장 순서, 1부터)나 묶음의 장 이름으로 받는다. */
 const SLIDE_SCHEMA = {
   anyOf: [
@@ -244,6 +254,7 @@ const TOOLS = [
           slide: SLIDE_SCHEMA,
           text: { type: 'string' },
           ...LAYER_TEXT_PROPERTIES,
+          ...LAYER_ROTATION,
         },
         required: ['slide', 'text', 'x', 'y'],
       },
@@ -264,6 +275,7 @@ const TOOLS = [
           y: { type: 'number' },
           width: { type: 'number', description: '상자 폭' },
           ...LAYER_SHAPE_PROPERTIES,
+          ...LAYER_ROTATION,
           behind: { type: 'boolean', description: 'true 면 템플릿 요소 뒤(배경 바로 위)에 깐다' },
           below: { type: 'string', description: '이 자유 요소 id 바로 뒤에 깐다' },
         },
@@ -276,7 +288,7 @@ const TOOLS = [
     function: {
       name: 'edit_layers',
       description:
-        '자유 요소(read_card 의 layers) 여러 개를 고치거나 지운다. 글자 요소는 글자·자리·폭·크기·굵기·색·정렬·줄 간격을, 도형은 자리·폭·높이·채움·테두리·투명도·모서리를, 이미지 요소는 자리(x, y)만 바꾸거나 지울 수 있다. behind 로 템플릿 뒤·위를 옮긴다. 넘긴 값만 바뀐다.',
+        '자유 요소(read_card 의 layers) 여러 개를 고치거나 지운다. 글자 요소는 글자·자리·폭·크기·굵기·색·정렬·줄 간격을, 도형은 자리·폭·높이·채움·테두리·투명도·모서리를, 이미지 요소는 자리(x, y)만 바꾸거나 지울 수 있다. behind 로 템플릿 뒤·위를 옮기고 rotation 으로 돌린다(모든 자유 요소). 넘긴 값만 바뀐다.',
       parameters: {
         type: 'object',
         properties: {
@@ -290,6 +302,7 @@ const TOOLS = [
                 text: { type: 'string' },
                 ...LAYER_TEXT_PROPERTIES,
                 ...LAYER_SHAPE_PROPERTIES,
+                ...LAYER_ROTATION,
                 behind: { type: 'boolean', description: 'true 면 템플릿 뒤, false 면 템플릿 위' },
                 remove: { type: 'boolean', description: 'true 면 지운다' },
               },

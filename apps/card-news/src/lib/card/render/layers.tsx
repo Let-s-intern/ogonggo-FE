@@ -10,6 +10,13 @@ import type { Layer, ShapeLayer } from '../types';
  */
 const JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' } as const;
 
+/** 돌린 요소는 상자 가운데를 두고 돌린다. 돌리지 않은 요소는 스타일을 더하지 않는다(그림이 그대로). */
+function rotate(layer: Layer) {
+  return layer.rotation
+    ? { transform: `rotate(${layer.rotation}deg)`, transformOrigin: 'center' }
+    : {};
+}
+
 /** 서버 렌더와 편집 캔버스(브라우저)가 같이 부르므로 `Buffer` 대신 `btoa` 로 만든다. */
 function svgUrl(svg: string): string {
   let binary = '';
@@ -66,6 +73,7 @@ export function layerElements(
             left: layer.x,
             top: layer.y,
             opacity: layer.opacity,
+            ...rotate(layer),
           }}
         />
       ) : layer.kind === 'text' ? (
@@ -83,6 +91,7 @@ export function layerElements(
             fontWeight: layer.fontWeight,
             lineHeight: layer.lineHeight,
             color: layer.color,
+            ...rotate(layer),
           }}
         >
           {/* 이미지 생성기는 한 글자 상자 안의 줄바꿈(\n)을 공백으로 그려, 줄마다 상자를 따로 둔다. 빈 줄은 줄 높이를 지키게 줄바꿈 없는 공백을 넣는다. */}
@@ -129,6 +138,7 @@ export function layerElements(
             opacity: layer.opacity,
             borderRadius: layer.radius,
             objectFit: 'cover',
+            ...rotate(layer),
           }}
         />
       ),

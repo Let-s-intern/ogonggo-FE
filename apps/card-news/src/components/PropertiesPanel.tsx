@@ -16,6 +16,7 @@ import {
   type ShapeLayer,
   type TextLayer,
   layerLabel,
+  normalizeAngle,
 } from '@/lib/card/types';
 import { textScale } from '@/lib/card/layout';
 import { fileToDataUrl } from '@/lib/client/image';
@@ -441,7 +442,8 @@ function LayerProperties({
           : line
             ? '모서리로 길이를 바꿉니다.'
             : '모서리로 비율을 지키며 크기를 바꿉니다.'}{' '}
-        Ctrl+C·Ctrl+V 로 복사, Ctrl+D 로 복제, Delete 로 지웁니다.
+        위 동그라미를 끌어 돌리고 Shift 를 누르면 15° 씩 돕니다. Ctrl+C·Ctrl+V 로 복사, Ctrl+D 로
+        복제, Delete 로 지웁니다.
       </p>
 
       {valueLabel ? <ValueLine label={valueLabel} /> : null}
@@ -479,6 +481,15 @@ function LayerProperties({
             onChange={(height) => setShape({ height }, 'size')}
           />
         ) : null}
+        <OffsetField
+          label="회전(°)"
+          value={layer.rotation ?? 0}
+          onChange={(degrees) => {
+            const { rotation: _previous, ...rest } = layer;
+            const rotation = normalizeAngle(degrees);
+            onChange(rotation ? { ...rest, rotation } : rest, `rotate:${layer.id}`);
+          }}
+        />
       </div>
 
       {layer.kind === 'text' ? (

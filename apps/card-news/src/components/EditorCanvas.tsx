@@ -33,6 +33,7 @@ import {
   isLayerRef,
   layerLabel,
   layerRef,
+  normalizeAngle,
 } from '@/lib/card/types';
 import { blobToLayerImage } from '@/lib/client/image';
 import { getImage, putImage } from '@/lib/client/imageStore';
@@ -138,6 +139,8 @@ interface Box {
   y: number;
   width: number;
   height: number;
+  /** 돌린 자유 요소의 각도(도). 상자는 돌리기 전 상자이고, 겹쳐 그린 상자를 같은 각도로 돌린다. */
+  rotation?: number;
 }
 
 /**
@@ -336,7 +339,7 @@ function editingText(target: EventTarget | null): boolean {
 }
 
 type Gesture = {
-  kind: 'move' | 'resize';
+  kind: 'move' | 'resize' | 'rotate';
   id: Selection;
   /** 끌지 않고 떼면 고를 한 겹 안쪽 요소. */
   drill: ElementId | null;
@@ -352,6 +355,8 @@ type Gesture = {
   edit: ElementEdit;
   /** 자유 요소를 끌 때 처음 값. */
   layer: Layer | null;
+  /** 돌리기를 시작한 손의 각도(라디안, 요소 가운데 기준). */
+  startAngle: number;
   /** 끌기 시작할 때의 요소 상자(1080 폭 좌표). 장 가운데 선에 붙일 때 쓴다. */
   box: Box | null;
   moved: boolean;
@@ -368,6 +373,8 @@ const TOOLS: { value: CanvasTool; label: string }[] = [
 
 /** 장 가운데 선에 붙는 거리(1080 폭 px). */
 const SNAP = 12;
+/** Shift 를 누르고 돌리면 이 각도 단위로 붙는다. */
+const ROTATE_STEP = 15;
 
 export function EditorCanvas({
   slides,
@@ -535,12 +542,22 @@ export function EditorCanvas({
     const under: Box[] = [];
     stage.querySelectorAll<HTMLElement>('[data-layer]').forEach((element, index) => {
       const id = element.dataset.layer ?? '';
-      const behind = layersRef.current.some((layer) => layer.id === id && layer.behind);
-      (behind ? under : found).push({
+      const layer = layersRef.current.find((item) => item.id === id);
+      // 돌린 요소는 화면 상자가 돌린 모양을 감싼 큰 상자라, 돌리기 전 상자(배치 값)를 쓴다.
+      const rotation = layer?.rotation ?? 0;
+      (layer?.behind ? under : found).push({
         id: layerRef(id),
         parent: null,
-        depth: (behind ? -1000 : 1000) + index,
-        ...measure(element),
+        depth: (layer?.behind ? -1000 : 1000) + index,
+        ...(rotation
+          ? {
+              x: element.offsetLeft,
+              y: element.offsetTop,
+              width: element.offsetWidth,
+              height: element.offsetHeight,
+              rotation,
+            }
+          : measure(element)),
       });
     });
     setBoxes([...under, ...found]);
@@ -928,6 +945,7 @@ export function EditorCanvas({
       startDistance: Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY)),
       edit: layer || isLayerRef(id) ? NO_EDIT : editOf(id),
       layer,
+      startAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX),
       box: boxes.find((box) => box.id === id) ?? null,
       moved: false,
     };
@@ -954,6 +972,19 @@ export function EditorCanvas({
         },
         g.group,
       );
+      return;
+    }
+    if (g.kind === 'rotate') {
+      // 손이 가운데를 두고 돈 만큼 돌린다. Shift 면 15° 단위로 붙인다.
+      const turned =
+        ((Math.atan2(event.clientY - g.centerY, event.clientX - g.centerX) - g.startAngle) * 180) /
+        Math.PI;
+      const raw = (layer.rotation ?? 0) + turned;
+      const rotation = normalizeAngle(
+        event.shiftKey ? Math.round(raw / ROTATE_STEP) * ROTATE_STEP : Math.round(raw),
+      );
+      const { rotation: _previous, ...rest } = layer;
+      replaceLayer(rotation ? { ...rest, rotation } : rest, g.group);
       return;
     }
     const ratio =
@@ -1315,6 +1346,8 @@ export function EditorCanvas({
   };
 
   const selectedBox = boxes.find((box) => box.id === selected);
+  /** 겹쳐 그린 상자를 돌린 요소와 같은 각도로 돌린다. */
+  const turn = (box: Box) => (box.rotation ? { transform: `rotate(${box.rotation}deg)` } : {});
   const handle = 'absolute size-3 rounded-sm border-2 border-blue-500 bg-white';
 
   return (
@@ -1409,6 +1442,7 @@ export function EditorCanvas({
                       top: box.y * scale,
                       width: box.width * scale,
                       height: box.height * scale,
+                      ...turn(box),
                     }}
                   />
                 );
@@ -1455,6 +1489,7 @@ export function EditorCanvas({
                         top: selectedBox.y * scale,
                         width: selectedBox.width * scale,
                         height: selectedBox.height * scale,
+                        ...turn(selectedBox),
                       }}
                     >
                       <div
@@ -1470,6 +1505,35 @@ export function EditorCanvas({
                     </div>
                   ))
                 : null}
+              {selectedBox &&
+              !editingLayer &&
+              !lockedOf(selectedBox.id) &&
+              layerOf(selectedBox.id) ? (
+                // 돌리기 핸들. 선택 상자 위 가운데에 달려 상자와 같이 돈다.
+                <div
+                  className="pointer-events-none absolute"
+                  style={{
+                    left: selectedBox.x * scale,
+                    top: selectedBox.y * scale,
+                    width: selectedBox.width * scale,
+                    height: selectedBox.height * scale,
+                    ...turn(selectedBox),
+                  }}
+                >
+                  <div className="absolute bottom-full left-1/2 h-5 w-px -translate-x-1/2 bg-blue-500" />
+                  <div
+                    role="button"
+                    aria-label={`${label(selectedBox.id)} 돌리기`}
+                    title="돌리기 (Shift: 15° 단위)"
+                    data-handle="rotate"
+                    onPointerDown={(event) => start(event, selectedBox.id, 'rotate')}
+                    onPointerMove={move}
+                    onPointerUp={end}
+                    onPointerCancel={end}
+                    className="pointer-events-auto absolute bottom-full left-1/2 mb-5 size-3.5 -translate-x-1/2 cursor-grab touch-none rounded-full border-2 border-blue-500 bg-white"
+                  />
+                </div>
+              ) : null}
               {textEdit && textField && textBox ? (
                 <TextPopover
                   key={`${textEdit.id}:${slide}`}
@@ -1532,6 +1596,13 @@ export function EditorCanvas({
                     whiteSpace: 'pre-wrap',
                     color: 'transparent',
                     caretColor: '#3B82F6',
+                    // 돌린 글자는 입력 칸도 글자 상자 가운데를 두고 같이 돌린다.
+                    ...(editingLayer.rotation
+                      ? {
+                          transform: `rotate(${editingLayer.rotation}deg)`,
+                          transformOrigin: `${(editingLayer.width * scale) / 2}px ${(editingBox.height * scale) / 2}px`,
+                        }
+                      : {}),
                   }}
                 />
               ) : null}

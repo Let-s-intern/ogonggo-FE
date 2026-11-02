@@ -39,6 +39,7 @@ import {
   isLayerRef,
   layerLabel,
   layerRef,
+  normalizeAngle,
 } from '../card/types';
 import { visibleSectionLabels } from '../card/render/slides';
 import { VARIANTS, variantOf } from '../card/variants';
@@ -875,11 +876,26 @@ function addText(
     x: Math.round((size.width - width) / 2),
     y: Math.round(size.height / 2),
     ...patch,
+    ...rotationPatch(args, rejected),
   };
   const variant = slideVariant(docSlide, context.variant());
   const layers = [...(docSlide.layers[variant] ?? []), layer];
   change(context, session, withSlideLayers(loaded.doc, docSlide.id, variant, layers));
   return JSON.stringify({ added: { slide: slide + 1, id: layer.id }, rejected });
+}
+
+/** 돌린 각도(도). 주지 않으면 빈 값, 0 이면 돌림을 푼다(`undefined`). */
+function rotationPatch(raw: Record<string, unknown>, rejected: string[]): { rotation?: number } {
+  if (raw.rotation === undefined) {
+    return {};
+  }
+  const value = asNumber(raw.rotation);
+  if (value === null) {
+    rejected.push('rotation');
+    return {};
+  }
+  const rotation = normalizeAngle(Math.round(value));
+  return { rotation: rotation || undefined };
 }
 
 /** 도형 값 가운데 모델이 준 것만 검사해 꺼낸다. 색은 `null` 이나 `"none"` 이면 뺀다. */
@@ -978,6 +994,7 @@ function addShape(
     opacity: 1,
     radius: kind === 'roundRect' ? 48 : 0,
     ...patch,
+    ...rotationPatch(args, rejected),
     width,
     height,
     ...(below
@@ -999,7 +1016,7 @@ function addShape(
 
 /**
  * 자유 요소를 고치거나 지운다. 이미지는 자리만 옮기거나 지운다(그림은 바꾸지 못한다). 도형은 모양 말고 모든
- * 값을 바꾼다. `behind` 는 모든 자유 요소가 받는다.
+ * 값을 바꾼다. `behind`·`rotation` 은 모든 자유 요소가 받는다.
  */
 function editLayers(
   context: ToolContext,
@@ -1045,7 +1062,10 @@ function editLayers(
     const patch = textPatch(raw, rejected);
     // 글자를 바꾸면 공고 값과의 연결을 끊는다(사람이 캔버스에서 고칠 때와 같다).
     const shape = layer.kind === 'shape' ? shapePatch(raw, rejected) : {};
-    const placed = typeof raw.behind === 'boolean' ? { behind: raw.behind ? true : undefined } : {};
+    const placed = {
+      ...(typeof raw.behind === 'boolean' ? { behind: raw.behind ? true : undefined } : {}),
+      ...rotationPatch(raw, rejected),
+    };
     const updated: Layer =
       layer.kind === 'text'
         ? {

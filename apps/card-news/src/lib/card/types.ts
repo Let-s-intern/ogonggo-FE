@@ -346,6 +346,8 @@ interface LayerBase {
    * 뒤에 깐 요소끼리, 위에 얹은 요소끼리는 배열 순서대로 칠한다.
    */
   behind?: boolean;
+  /** 상자 가운데를 두고 시계 방향으로 돌린 각도(도, -180~180). 없으면 0 이다. x·y·폭·높이는 돌리기 전 상자다. */
+  rotation?: number;
 }
 
 /** 글자 요소. 높이는 글자에 맞춰 늘어난다. 줄은 `\n` 으로 나누고 강조 표시(`*단어*`)는 쓰지 않는다. */
@@ -452,6 +454,12 @@ export function layerLabel(layer: Layer): string {
   }
   const head = layer.text.replace(/\s+/g, ' ').trim();
   return head ? `글자 · ${head.length > 12 ? `${head.slice(0, 12)}…` : head}` : '글자';
+}
+
+/** 각도(도)를 -180 초과 180 이하로. */
+export function normalizeAngle(degrees: number): number {
+  const turned = ((((degrees + 180) % 360) + 360) % 360) - 180;
+  return turned === -180 ? 180 : turned;
 }
 
 /** 도형 이름. 모서리가 있는 사각은 `둥근 사각형` 이다. */

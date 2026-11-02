@@ -86,6 +86,9 @@ function sanitizeLayers(layers: unknown): Layer[] | undefined {
       y: clamp(layer.y, -2000, 3000, 0),
       width: clamp(layer.width, 10, 3000, 400),
       ...(layer.behind === true ? { behind: true } : {}),
+      ...(typeof layer.rotation === 'number' && layer.rotation
+        ? { rotation: clamp(layer.rotation, -360, 360, 0) }
+        : {}),
     };
     const color = (value: unknown) =>
       typeof value === 'string' && HEX_COLOR.test(value) ? value : undefined;
