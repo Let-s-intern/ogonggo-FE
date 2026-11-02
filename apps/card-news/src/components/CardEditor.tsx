@@ -58,7 +58,7 @@ import { type JobValueChip, type TextPreset, TextDrawer } from './drawers/TextDr
 import { UploadDrawer } from './drawers/UploadDrawer';
 import { TemplateDrawer } from './drawers/TemplateDrawer';
 import { LeftRail } from './LeftRail';
-import { type PanelTab, PropertiesPanel } from './PropertiesPanel';
+import { PropertiesPanel } from './PropertiesPanel';
 import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
 import { type AddSlideOption, SlideStrip } from './SlideStrip';
@@ -94,7 +94,6 @@ export function CardEditor({ docId }: { docId: string }) {
   /** 고른 배율. `null` 이면 캔버스 칸에 맞춘다. */
   const [zoom, setZoom] = useState<number | null>(null);
   const [scale, setScale] = useState(0);
-  const [panelTab, setPanelTab] = useState<PanelTab>('properties');
   /** 열린 왼쪽 서랍. `null` 이면 닫혀 있다. */
   const [drawer, setDrawer] = useState<DrawerKey | null>('template');
   const { kit, error: kitError } = useRenderKit();
@@ -274,6 +273,17 @@ export function CardEditor({ docId }: { docId: string }) {
   const selectedLayer = isLayerRef(selected)
     ? layers.find((layer) => layerRef(layer.id) === selected)
     : undefined;
+  /** 고른 글이 이어진 공고 값(자유 글자) 또는 문구 칸(템플릿 글자)의 이름. */
+  const valueLabel =
+    !loaded?.doc.jobs.length || !variant || !content || !currentSlide
+      ? undefined
+      : selectedLayer
+        ? selectedLayer.kind === 'text' && selectedLayer.bind
+          ? JOB_VALUE_LABELS[selectedLayer.bind]
+          : undefined
+        : isElementId(selected)
+          ? templateTextField(selected, content, variant, currentSlide.role)?.label
+          : undefined;
   const setLayers = (next: Layer[], group?: string) =>
     variant && docSlide && editor.setLayers(variant, docSlide.id, next, group);
   /**
@@ -343,13 +353,9 @@ export function CardEditor({ docId }: { docId: string }) {
       : null;
   };
 
-  /** 위 막대의 `AI로 수정`. 오른쪽 AI 탭을 열고 입력 칸에 포커스를 준다. */
-  const focusAssistant = () => {
-    setPanelTab('ai');
-    requestAnimationFrame(() =>
-      document.querySelector<HTMLTextAreaElement>('[aria-label="AI 비서에게 요청"]')?.focus(),
-    );
-  };
+  /** 위 막대의 `AI로 수정`. AI 입력 칸에 포커스를 준다. */
+  const focusAssistant = () =>
+    document.querySelector<HTMLTextAreaElement>('[aria-label="AI 비서에게 요청"]')?.focus();
 
   const editing = Boolean(loaded && content && slides && currentSlide && docSlide && variant);
   const toolbar = (
@@ -586,10 +592,13 @@ export function CardEditor({ docId }: { docId: string }) {
               </div>
             ) : null}
           </section>
-          <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-gray-200 bg-gray-50 p-3">
+          <aside
+            aria-label="디자인"
+            className="w-[300px] shrink-0 overflow-y-auto border-l border-gray-200 bg-white"
+          >
             <PropertiesPanel
-              tab={panelTab}
-              onTabChange={setPanelTab}
+              onAlign={(kind) => canvasRef.current?.align(kind)}
+              valueLabel={valueLabel}
               settings={loaded.doc.settings}
               onSettingsChange={editor.setSettings}
               selected={isElementId(selected) ? selected : null}
@@ -641,8 +650,10 @@ export function CardEditor({ docId }: { docId: string }) {
               onLogoChange={editor.setLogo}
               onBrandImage={(file) => void editor.setBrandImage(file)}
               candidates={editor.candidates}
-              assistant={<AssistantPanel context={toolContext} />}
             />
+            <section className="p-4">
+              <AssistantPanel context={toolContext} />
+            </section>
           </aside>
         </div>
       ) : loaded && specs ? (

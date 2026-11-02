@@ -285,7 +285,12 @@ export interface CanvasHandle {
   addText: (text: string, style?: Partial<TextLayer>) => void;
   /** 그림(data URL)을 보고 있는 장 가운데에 이미지 요소로 넣는다. */
   addImageSource: (src: string) => void;
+  /** 고른 요소를 장 기준으로 맞춘다. */
+  align: (kind: AlignKind) => void;
 }
+
+/** 정렬. 왼쪽·가로 가운데·오른쪽, 위·세로 가운데·아래. */
+export type AlignKind = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
 
 /** 업로드 서랍에서 캔버스로 끌어 오는 이미지 id 형식(IndexedDB 열쇠). */
 export const UPLOAD_MIME = 'application/x-ogonggo-upload';
@@ -614,13 +619,63 @@ export function EditorCanvas({
     }
   };
 
-  const handleRef = useRef({ addText, addImageSource });
-  handleRef.current = { addText, addImageSource };
+  /**
+   * 고른 요소를 장 기준으로 맞춘다(디자인 패널의 정렬). 템플릿 요소는 요소가 놓인 부모 배율로 나눠
+   * 이동값에, 자유 요소는 자리(x, y)에 넣는다.
+   */
+  const align = (kind: AlignKind) => {
+    const box = boxes.find((item) => item.id === selected);
+    if (!selected || !box) {
+      return;
+    }
+    const horizontal = kind === 'left' || kind === 'center' || kind === 'right';
+    const target =
+      kind === 'left' || kind === 'top'
+        ? 0
+        : kind === 'center'
+          ? (cardSize.width - box.width) / 2
+          : kind === 'middle'
+            ? (cardSize.height - box.height) / 2
+            : kind === 'right'
+              ? cardSize.width - box.width
+              : cardSize.height - box.height;
+    const delta = target - (horizontal ? box.x : box.y);
+    const layer = layerOf(selected);
+    if (layer) {
+      replaceLayer(
+        horizontal
+          ? { ...layer, x: Math.round(layer.x + delta) }
+          : { ...layer, y: Math.round(layer.y + delta) },
+      );
+      return;
+    }
+    if (isLayerRef(selected)) {
+      return;
+    }
+    const element = stageRef.current?.querySelector(`[data-el="${selected}"]`);
+    const parent = element?.parentElement;
+    // 부모가 줄어 있으면(정사각 3장 묶음) 그만큼 더 옮겨야 화면에서 delta 만큼 간다.
+    const factor =
+      parent && parent.offsetWidth > 0
+        ? parent.getBoundingClientRect().width / parent.offsetWidth / scale
+        : 1;
+    const edit = editOf(selected);
+    onEdit(
+      selected,
+      horizontal
+        ? { ...edit, dx: Math.round(edit.dx + delta / (factor || 1)) }
+        : { ...edit, dy: Math.round(edit.dy + delta / (factor || 1)) },
+    );
+  };
+
+  const handleRef = useRef({ addText, addImageSource, align });
+  handleRef.current = { addText, addImageSource, align };
   useImperativeHandle(
     canvasRef,
     () => ({
       addText: (text, style) => handleRef.current.addText(text, undefined, style),
       addImageSource: (src) => void handleRef.current.addImageSource(src),
+      align: (kind) => handleRef.current.align(kind),
     }),
     [],
   );
