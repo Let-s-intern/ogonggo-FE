@@ -10,6 +10,8 @@ import {
   slideSpec,
   withContent,
   withSlideEdit,
+  addJobs,
+  withSlideContent,
   withSlideLayers,
   withSlideTemplate,
   withTemplate,
@@ -186,11 +188,36 @@ export function useCardEditor() {
   }, []);
   const readLoaded = useCallback(() => loadedRef.current, []);
 
-  /** 문구를 바꾼다. 이어 치는 글자는 한 단계로 되돌린다. */
-  const setContent = useCallback(
-    (content: CardContent) => {
+  /**
+   * 장 하나가 그리는 문구를 바꾼다(캔버스에서 템플릿 글자 고치기). 묶음 표지는 표지에, 공고 장은 그 장의
+   * 공고에 들어간다(`withSlideContent()`). 이어 치는 글자는 한 단계로 되돌린다.
+   */
+  const setSlideContent = useCallback(
+    (slideId: string, content: CardContent) => {
       remember('content');
-      changeDoc((doc) => withContent(doc, content));
+      changeDoc((doc) =>
+        withSlideContent(
+          doc,
+          doc.slides.find((slide) => slide.id === slideId),
+          content,
+        ),
+      );
+    },
+    [remember, changeDoc],
+  );
+  /** 묶은 공고 하나의 문구를 바꾼다(공고 서랍). 인스타 본문은 문서 것이다. */
+  const setJobContent = useCallback(
+    (jobIndex: number, content: CardContent) => {
+      remember('content');
+      changeDoc((doc) => withContent(doc, content, jobIndex));
+    },
+    [remember, changeDoc],
+  );
+  /** 문서를 바꾸고 실행 취소 기록에 쌓는다. `group` 이 같으면 이어 친 글자처럼 한 단계다. */
+  const changeDocument = useCallback(
+    (change: (doc: CardDocument) => CardDocument, group?: string) => {
+      remember(group);
+      changeDoc(change);
     },
     [remember, changeDoc],
   );
@@ -281,6 +308,40 @@ export function useCardEditor() {
             ? withTemplate(doc, variant)
             : doc,
       );
+    },
+    [remember, changeDoc],
+  );
+
+  /**
+   * 공고를 더 묶는다(공고 서랍의 `공고 더 묶기`). 공고마다 AI 초안을 쓴다 — 시작할 때 적은 요청사항을
+   * 같이 넘긴다. 표지 표 줄은 초안의 첫 직무와 빈 `모집 분야` 로 시작한다(공고 상세에 직무 분류가 없다).
+   * 실패하면 오류 글을 돌려준다.
+   */
+  const addMoreJobs = useCallback(
+    async (jobIds: number[]): Promise<string | null> => {
+      const request = loadedRef.current?.doc.request.trim() || undefined;
+      try {
+        const added = await Promise.all(
+          jobIds.map(async (jobId) => {
+            const [{ job }, result] = await Promise.all([
+              fetchCardJob(jobId),
+              requestDraft({ jobId, instruction: request }),
+            ]);
+            const content = contentFromDraft(job, result.draft);
+            return {
+              jobId,
+              companyName: job.companyName,
+              content,
+              row: [content.roleTitle, ''] as [string, string],
+            };
+          }),
+        );
+        remember();
+        changeDoc((doc) => addJobs(doc, added));
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : '공고를 더 묶지 못했습니다.';
+      }
     },
     [remember, changeDoc],
   );
@@ -543,7 +604,10 @@ export function useCardEditor() {
     openDocument,
     regenerate,
     startOver,
-    setContent,
+    setSlideContent,
+    setJobContent,
+    changeDocument,
+    addMoreJobs,
     setSettings,
     setBrandImage,
     setEdits,

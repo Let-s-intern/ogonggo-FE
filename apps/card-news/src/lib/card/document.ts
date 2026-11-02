@@ -274,10 +274,16 @@ function slideJob(doc: CardDocument, slide?: DocumentSlide): DocumentJob | undef
 /**
  * 장 하나가 그리는 문구. 인스타그램 본문은 문서 것을 붙인다. 묶음 표지 장은 첫 공고 문구에 표지
  * 뱃지·제목을 얹고, 섹션 자리에 직무 표의 두 열을 둔다 — 그림은 `CardSpec.cover` 로 그리고, 이 섹션은
- * 비서가 표지를 읽을 때 쓴다.
+ * 비서가 표지를 읽을 때 쓴다. 묶음 공고 장의 직무명은 그 장 머리 카드에 그리는 표지 표의 `모집 분야`다.
+ *
+ * 이 문구를 고친 값은 `withSlideContent()` 가 같은 자리(표지, 표 줄, 그 장의 공고)에 되돌려 넣는다.
  */
 export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardContent {
   const content = { ...(slideJob(doc, slide)?.content ?? EMPTY_CONTENT), caption: doc.caption };
+  const row = slide ? bundleRowOf(doc, slide) : undefined;
+  if (row) {
+    return { ...content, roleTitle: row[1] };
+  }
   if (slide?.role !== 'cover' || !doc.cover) {
     return content;
   }
@@ -541,6 +547,61 @@ export function withContent(doc: CardDocument, content: CardContent, jobIndex = 
 }
 
 /**
+ * 장 하나의 문구(`documentContent(doc, slide)`)를 고친 문서. 묶음 표지는 뱃지·제목을 표지에, 섹션 두 개를
+ * 표지 표 열 이름과 줄에 넣는다(줄 수는 공고 수 그대로). 묶음 공고 장의 직무명은 표지 표의 `모집 분야`
+ * 에 넣는다. 나머지는 그 장의 공고 문구(공고를 가리키지 않는 장은 첫 공고)다.
+ */
+export function withSlideContent(
+  doc: CardDocument,
+  slide: DocumentSlide | undefined,
+  content: CardContent,
+): CardDocument {
+  const cover = doc.cover;
+  if (slide?.role === 'cover' && cover) {
+    const [first, second] = content.summarySections;
+    return {
+      ...doc,
+      caption: content.caption,
+      cover: {
+        ...cover,
+        badge: content.badge,
+        headline: content.headline,
+        columns: [first?.label ?? cover.columns[0], second?.label ?? cover.columns[1]],
+        rows: cover.rows.map((row, index) => [
+          first?.items[index] ?? row[0],
+          second?.items[index] ?? row[1],
+        ]),
+      },
+    };
+  }
+  const jobIndex = slide?.jobIndex ?? 0;
+  const row = slide ? bundleRowOf(doc, slide) : undefined;
+  if (row && cover) {
+    const previous = doc.jobs[jobIndex]?.content.roleTitle ?? '';
+    return withContent(
+      withCoverRow(doc, jobIndex, [row[0], content.roleTitle]),
+      { ...content, roleTitle: previous },
+      jobIndex,
+    );
+  }
+  return withContent(doc, content, jobIndex);
+}
+
+/** 묶음 표지 표에서 공고 하나의 줄(직무, 모집 분야)을 바꾼 문서. */
+export function withCoverRow(
+  doc: CardDocument,
+  jobIndex: number,
+  row: [string, string],
+): CardDocument {
+  if (!doc.cover) {
+    return doc;
+  }
+  const rows = [...doc.cover.rows];
+  rows[jobIndex] = row;
+  return { ...doc, cover: { ...doc.cover, rows } };
+}
+
+/**
  * 문서 제목. 사람이 고친 제목이 있으면 그것을, 없으면 묶은 회사 이름이다(같은 회사는 한 번). 공고가
  * 없으면 `빈 캔버스` 다.
  */
@@ -623,6 +684,107 @@ function withJobOrder(doc: CardDocument): CardDocument {
         ? { ...slide, jobIndex: moved(slide.jobIndex) }
         : slide,
     ),
+  };
+}
+
+/**
+ * 묶은 공고 하나를 `to` 자리(0부터)로 옮긴 문서(공고 서랍의 순서 바꾸기). 공고 장들은 지금 공고 장이
+ * 있던 자리에 새 공고 순서로 다시 놓이고, `jobs`·표지 표 줄·`jobIndex` 가 같이 바뀐다.
+ */
+export function moveJob(doc: CardDocument, from: number, to: number): CardDocument {
+  const target = Math.max(0, Math.min(doc.jobs.length - 1, to));
+  if (from === target || from < 0 || from >= doc.jobs.length) {
+    return doc;
+  }
+  const order = doc.jobs.map((_, index) => index);
+  order.splice(target, 0, ...order.splice(from, 1));
+  const rank = (jobIndex: number | undefined) => order.indexOf(jobIndex ?? 0);
+  const positions = doc.slides.flatMap((slide, index) => (slide.role === 'job' ? [index] : []));
+  const jobSlides = positions
+    .map((index) => doc.slides[index]!)
+    .sort((a, b) => rank(a.jobIndex) - rank(b.jobIndex));
+  const slides = [...doc.slides];
+  positions.forEach((position, index) => {
+    const slide = jobSlides[index]!;
+    slides[position] = { ...slide, jobIndex: rank(slide.jobIndex) };
+  });
+  return {
+    ...doc,
+    jobs: order.map((index) => doc.jobs[index]!),
+    ...(doc.cover
+      ? {
+          cover: {
+            ...doc.cover,
+            rows: order.flatMap((index) => {
+              const row = doc.cover?.rows[index];
+              return row ? [row] : [];
+            }),
+          },
+        }
+      : {}),
+    slides,
+  };
+}
+
+/**
+ * 묶은 공고 하나를 뺀 문서(공고 서랍의 `빼기`). 그 공고 장과 표지 표 줄이 같이 사라진다. 마지막 공고와,
+ * 빼면 장이 하나도 남지 않는 공고는 빼지 않는다.
+ */
+export function removeJob(doc: CardDocument, jobIndex: number): CardDocument {
+  const slides = doc.slides.filter(
+    (slide) => !(slide.role === 'job' && (slide.jobIndex ?? 0) === jobIndex),
+  );
+  if (doc.jobs.length <= 1 || slides.length === 0 || !doc.jobs[jobIndex]) {
+    return doc;
+  }
+  return {
+    ...doc,
+    jobs: doc.jobs.filter((_, index) => index !== jobIndex),
+    ...(doc.cover
+      ? { cover: { ...doc.cover, rows: doc.cover.rows.filter((_, index) => index !== jobIndex) } }
+      : {}),
+    slides: slides.map((slide) =>
+      slide.role === 'job' && (slide.jobIndex ?? 0) > jobIndex
+        ? { ...slide, jobIndex: (slide.jobIndex ?? 0) - 1 }
+        : slide,
+    ),
+  };
+}
+
+/**
+ * 공고를 더 묶은 문서(`공고 더 묶기`). 공고는 `jobs` 끝에, 표지 표 줄은 `row` 로, 공고 장은 마지막 공고
+ * 장 뒤(없으면 안내 장 앞)에 넣는다. 이미 묶은 공고와 장·공고 수 상한을 넘는 공고는 넣지 않는다.
+ */
+export function addJobs(
+  doc: CardDocument,
+  added: { jobId: number; companyName: string; content: CardContent; row: [string, string] }[],
+): CardDocument {
+  const room = Math.min(MAX_SLIDES - doc.slides.length, MAX_BUNDLE_JOBS - doc.jobs.length);
+  const taken = added
+    .filter(({ jobId }) => !doc.jobs.some((job) => job.jobId === jobId))
+    .slice(0, Math.max(0, room));
+  if (taken.length === 0) {
+    return doc;
+  }
+  const lastJob = doc.slides.map((slide) => slide.role).lastIndexOf('job');
+  const profile = doc.slides.findIndex((slide) => slide.role === 'profile');
+  const at = lastJob >= 0 ? lastJob + 1 : profile >= 0 ? profile : doc.slides.length;
+  const slides = [...doc.slides];
+  slides.splice(at, 0, ...taken.map((_, index) => newSlide('job', doc.jobs.length + index)));
+  return {
+    ...doc,
+    jobs: [
+      ...doc.jobs,
+      ...taken.map(({ jobId, companyName, content: { caption: _caption, ...content } }) => ({
+        jobId,
+        companyName,
+        content,
+      })),
+    ],
+    ...(doc.cover
+      ? { cover: { ...doc.cover, rows: [...doc.cover.rows, ...taken.map(({ row }) => row)] } }
+      : {}),
+    slides,
   };
 }
 

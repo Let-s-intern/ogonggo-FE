@@ -20,13 +20,16 @@ import {
   duplicateSlide,
   insertSlide,
   jobName,
+  moveJob,
   moveSlide,
   newSlide,
+  removeJob,
   removeSlide,
   slideEditsOf,
   slideLabel,
   slideName,
   slideVariant,
+  withCoverRow,
   withSlideEdit,
   withSlideLayers,
 } from '@/lib/card/document';
@@ -39,10 +42,9 @@ import { fileToDataUrl } from '@/lib/client/image';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { useRenderKit } from '@/lib/client/useRenderKit';
 import { AssistantPanel } from './AssistantPanel';
-import { CaptionPanel } from './CaptionPanel';
-import { ContentPanel } from './ContentPanel';
 import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
 import { EditorToolbar } from './EditorToolbar';
+import { JobsDrawer } from './drawers/JobsDrawer';
 import { TemplateDrawer } from './drawers/TemplateDrawer';
 import { LeftRail } from './LeftRail';
 import { type PanelTab, PropertiesPanel } from './PropertiesPanel';
@@ -100,7 +102,11 @@ export function CardEditor({ docId }: { docId: string }) {
   const docSlide = loaded?.doc.slides.find((item) => item.id === currentSlide?.id);
   /** 보고 있는 장의 템플릿. 편집값·자유 요소는 이 템플릿 것을 고친다. */
   const variant = docSlide && docVariant ? slideVariant(docSlide, docVariant) : docVariant;
-  const content = useMemo(() => (loaded ? documentContent(loaded.doc) : null), [loaded]);
+  /** 보고 있는 장이 그리는 문구. 캔버스에서 템플릿 글자를 고치면 이 장의 공고(표지면 표지)에 들어간다. */
+  const content = useMemo(
+    () => (loaded && docSlide ? documentContent(loaded.doc, docSlide) : null),
+    [loaded, docSlide],
+  );
   const built = useBuiltSlides(slides, size, kit);
   const sectionLabels = useMemo(
     () => (currentSlide ? visibleSectionLabels(currentSlide.spec, currentSlide.role) : []),
@@ -377,16 +383,28 @@ export function CardEditor({ docId }: { docId: string }) {
                 key: 'jobs',
                 label: '공고',
                 drawer: (
-                  <div className="flex flex-col gap-4 p-4">
-                    {jobLine}
-                    {loaded.doc.jobs.length > 0 ? (
-                      <ContentPanel content={content} onChange={editor.setContent} />
-                    ) : null}
-                    <CaptionPanel
-                      caption={content.caption ?? ''}
-                      onChange={(caption) => editor.setContent({ ...content, caption })}
-                    />
-                  </div>
+                  <JobsDrawer
+                    doc={loaded.doc}
+                    onJobContent={editor.setJobContent}
+                    onCaption={(caption) =>
+                      editor.changeDocument((doc) => ({ ...doc, caption }), 'caption')
+                    }
+                    onCover={(patch) =>
+                      editor.changeDocument(
+                        (doc) => (doc.cover ? { ...doc, cover: { ...doc.cover, ...patch } } : doc),
+                        'cover',
+                      )
+                    }
+                    onRow={(jobIndex, row) =>
+                      editor.changeDocument((doc) => withCoverRow(doc, jobIndex, row), 'row')
+                    }
+                    onMove={(from, to) => editor.changeDocument((doc) => moveJob(doc, from, to))}
+                    onRemove={(jobIndex) => {
+                      editor.changeDocument((doc) => removeJob(doc, jobIndex));
+                      setSelected(null);
+                    }}
+                    onAddJobs={editor.addMoreJobs}
+                  />
                 ),
               },
             ]}
@@ -411,7 +429,7 @@ export function CardEditor({ docId }: { docId: string }) {
                 onEdit={(id, edit, group) => editor.setEdits(variant, docSlide.id, id, edit, group)}
                 content={content}
                 variant={variant}
-                onContentChange={editor.setContent}
+                onContentChange={(next) => editor.setSlideContent(docSlide.id, next)}
                 sectionLabels={sectionLabels}
                 zoom={zoom}
                 onScale={setScale}

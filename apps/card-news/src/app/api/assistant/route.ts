@@ -87,10 +87,11 @@ const TOOLS = [
     function: {
       name: 'set_content',
       description:
-        '문구 칸 일부를 바꾼다. 넘긴 칸만 바뀐다. 목록(summarySections, detailSections)은 칩 묶음 전체를 넘긴다. 큰 제목과 3장 글은 줄을 "\\n" 으로 나누고, *단어* 는 강조 상자, ~단어~ 는 강조색 글자다.',
+        '문구 칸 일부를 바꾼다. 넘긴 칸만 바뀐다. slide 의 장이 그리는 공고 문구를 고친다(묶음 표지는 표지 뱃지·제목·표, 묶음 공고 장의 roleTitle 은 표지 표의 모집 분야). slide 를 빼면 보고 있는 장이다. 목록(summarySections, detailSections)은 칩 묶음 전체를 넘긴다. 큰 제목과 3장 글은 줄을 "\\n" 으로 나누고, *단어* 는 강조 상자, ~단어~ 는 강조색 글자다.',
       parameters: {
         type: 'object',
         properties: {
+          slide: { type: 'integer', minimum: 1, maximum: MAX_SLIDES },
           badge: { type: 'string', description: '왼쪽 위 뱃지' },
           headline: { type: 'string', description: '1·2장 큰 제목' },
           roleTitle: { type: 'string', description: '탭·표 템플릿의 직무명' },

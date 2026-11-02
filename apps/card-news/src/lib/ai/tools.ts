@@ -4,6 +4,7 @@ import {
   documentContent,
   slideVariant,
   withContent,
+  withSlideContent,
   withTemplate,
   withSlideEdit,
   slideEditsOf,
@@ -411,9 +412,18 @@ function setContent(
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
+  // 장을 주지 않으면 보고 있는 장이다. 그 장이 그리는 공고(묶음 표지면 표지)의 문구를 고친다.
+  const index = args.slide === undefined ? context.slide() : asSlide(args.slide, loaded.doc);
+  const docSlide = index === null ? undefined : loaded.doc.slides[index];
+  if (index === null || !docSlide) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
   const patch: Partial<CardContent> = {};
   const rejected: string[] = [];
   for (const [key, value] of Object.entries(args)) {
+    if (key === 'slide') {
+      continue;
+    }
     if (TEXT_FIELDS.includes(key) && typeof value === 'string') {
       Object.assign(patch, { [key]: value.replace(/\\n/g, '\n') });
     } else if (key === 'summarySections' || key === 'detailSections') {
@@ -428,9 +438,16 @@ function setContent(
     }
   }
   if (Object.keys(patch).length > 0) {
-    change(context, session, withContent(loaded.doc, { ...documentContent(loaded.doc), ...patch }));
+    change(
+      context,
+      session,
+      withSlideContent(loaded.doc, docSlide, {
+        ...documentContent(loaded.doc, docSlide),
+        ...patch,
+      }),
+    );
   }
-  return JSON.stringify({ changed: Object.keys(patch), rejected });
+  return JSON.stringify({ slide: index + 1, changed: Object.keys(patch), rejected });
 }
 
 async function rewriteCopy(
