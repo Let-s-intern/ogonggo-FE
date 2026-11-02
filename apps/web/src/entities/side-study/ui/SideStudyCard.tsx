@@ -86,7 +86,7 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
 
         <div className="flex items-start gap-4 md:flex-col md:gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-3 md:w-full">
-            <p className="line-clamp-3 text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:line-clamp-2 md:min-h-12 md:text-base">
+            <p className="line-clamp-3 break-keep text-pretty text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:line-clamp-2 md:min-h-12 md:text-base">
               {sideStudy.title}
             </p>
             {positions.length > 0 ? (

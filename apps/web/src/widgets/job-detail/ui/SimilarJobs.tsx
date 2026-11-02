@@ -66,7 +66,7 @@ export async function SimilarJobs({ excludeJobId, jobRole }: SimilarJobsProps) {
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs text-gray-500">{job.companyName}</p>
-                <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-800 transition-colors group-hover:text-blue-500">
+                <p className="mt-1 line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-800 transition-colors group-hover:text-blue-500">
                   {job.title}
                 </p>
               </div>

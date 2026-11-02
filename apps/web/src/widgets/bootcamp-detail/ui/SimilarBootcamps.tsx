@@ -66,7 +66,7 @@ export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsPr
                     />
                   </span>
                 </p>
-                <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-800 group-hover:text-blue-500">
+                <p className="mt-1 line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-800 group-hover:text-blue-500">
                   {bootcamp.title}
                 </p>
               </div>

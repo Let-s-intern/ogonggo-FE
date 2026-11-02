@@ -72,7 +72,7 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
           <span className="hidden md:inline-flex">{badge}</span>
         </p>
         <p className="text-sm text-gray-500">{bootcamp.companyName}</p>
-        <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
+        <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
           {bootcamp.title}
         </p>
         {/* 모바일은 제목 아래다(`docs/asset/v9 mobile/부트캠프.png`). `JobCard` 와 같은 이유다. */}

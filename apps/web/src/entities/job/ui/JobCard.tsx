@@ -157,7 +157,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         recruitmentEndAt={job.recruitmentEndAt}
         showDeadline={false}
       />
-      <p className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
+      <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
         {job.title}
       </p>
     </>
@@ -174,7 +174,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
       >
         {featured ? (
           <>
-            <p className="line-clamp-3 pr-8 text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:hidden">
+            <p className="line-clamp-3 break-keep text-pretty pr-8 text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:hidden">
               {job.title}
             </p>
             <div className="mt-auto flex items-center gap-3 md:hidden">
@@ -209,7 +209,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
               <p className="truncate text-xs font-bold text-blue-500">{recommendationTitle}</p>
             ) : null}
             {recommendationDescription ? (
-              <p className="line-clamp-3 text-xs break-words whitespace-pre-line text-gray-500">
+              <p className="line-clamp-3 break-keep text-pretty text-xs break-words whitespace-pre-line text-gray-500">
                 {recommendationDescription}
               </p>
             ) : null}

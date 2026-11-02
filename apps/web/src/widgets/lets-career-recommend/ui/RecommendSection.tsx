@@ -41,11 +41,11 @@ export function RecommendSection({ title, description, items }: RecommendSection
                   )}
                   <span className="truncate">{item.label}</span>
                 </p>
-                <p className="mt-2 line-clamp-2 text-sm font-bold break-keep wrap-anywhere text-gray-900 group-hover:text-blue-500">
+                <p className="mt-2 line-clamp-2 text-sm font-bold break-keep break-words text-pretty text-gray-900 group-hover:text-blue-500">
                   {item.title}
                 </p>
                 {item.description ? (
-                  <p className="mt-1 line-clamp-2 text-xs break-keep wrap-anywhere text-gray-500">
+                  <p className="mt-1 line-clamp-2 text-xs break-keep break-words text-pretty text-gray-500">
                     {item.description}
                   </p>
                 ) : null}
