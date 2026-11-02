@@ -28,6 +28,14 @@ export type SlideRole = 'cover' | 'job' | 'profile' | 'free';
 
 export const SLIDE_ROLES: readonly SlideRole[] = ['cover', 'job', 'profile', 'free'];
 
+/** 장 종류 이름. 장 목록과 비서의 화면 설명에 쓴다. */
+export const ROLE_LABELS: Record<SlideRole, string> = {
+  cover: '공고 요약',
+  job: '자격·우대 요건',
+  profile: '프로필 안내',
+  free: '빈 장',
+};
+
 /**
  * 한 문서의 장 수 상한. 인스타그램 캐러셀 한도는 확인하지 못했다 — 10장이면 묶음 공고 8개에 표지와
  * 안내가 들어간다.

@@ -1,5 +1,6 @@
 import {
   type CardDocument,
+  ROLE_LABELS,
   documentContent,
   withContent,
   withSlideEdit,
@@ -21,7 +22,6 @@ import {
   type Layer,
   type Selection,
   type TextLayer,
-  SLIDE_COUNT,
   type SlideEdits,
   type VariantId,
   isElementId,
@@ -72,10 +72,10 @@ export interface ToolContext {
   variant: () => VariantId;
   pickVariant: (variant: VariantId) => void;
   size: () => CardSizeId;
-  /** 보고 있는 장(0부터)과 고른 요소. */
+  /** 보고 있는 장(문서 장 순서, 0부터)과 고른 요소. */
   slide: () => number;
   selected: () => Selection | null;
-  /** 지금 그려진 세 장의 요소 상자와 넘침. 아직 그려지지 않았으면 `null`. */
+  /** 지금 그려진 문서 장마다의 요소 상자와 넘침. 아직 그려지지 않았으면 `null`. */
   measure: () => SlideMeasure[] | null;
 }
 
@@ -160,9 +160,11 @@ export function describeScreen(context: ToolContext): string {
         ? layerLabel(layer)
         : '자유 요소'
       : elementLabel(selected, labels);
+  const slides = loaded?.doc.slides ?? [];
   return [
     `템플릿 ${variant.id}(${variant.label})`,
     `크기 ${CARD_SIZES[context.size()].label}`,
+    `장 ${slides.length}개(${slides.map((item, index) => `${index + 1} ${ROLE_LABELS[item.role]}`).join(' · ')})`,
     `보고 있는 장 ${context.slide() + 1}`,
     `고른 요소 ${selected ? `${selected}(${name})` : '없음'}`,
   ].join(', ');
@@ -186,10 +188,13 @@ function asNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-/** 1~3 장 번호를 0부터로. 아니면 `null`. */
-function asSlide(value: unknown): number | null {
+/**
+ * 모델이 준 장 번호(문서 장 순서, 1부터)를 0부터로. 문서에 없는 장이면 `null`. 장은 이 번호로 문서에서
+ * 찾아 장 id 로 바꾼다 — 편집값은 장 id 에 붙는다.
+ */
+function asSlide(value: unknown, doc: CardDocument): number | null {
   const slide = asNumber(value);
-  return slide !== null && Number.isInteger(slide) && slide >= 1 && slide <= SLIDE_COUNT
+  return slide !== null && Number.isInteger(slide) && slide >= 1 && slide <= doc.slides.length
     ? slide - 1
     : null;
 }
@@ -497,7 +502,7 @@ async function editElements(
   const results: unknown[] = [];
   const changed = new Set<string>();
   for (const raw of changes) {
-    const slide = asSlide(raw.slide);
+    const slide = asSlide(raw.slide, doc);
     const id = asElementId(raw.id);
     const docSlide = slide === null ? undefined : doc.slides[slide];
     const boxes = slide === null ? [] : (measured[slide]?.boxes ?? []);
@@ -602,7 +607,7 @@ function resetElements(
     return '편집 중인 카드가 없습니다.';
   }
   const variant = context.variant();
-  const slide = args.slide === undefined ? null : asSlide(args.slide);
+  const slide = args.slide === undefined ? null : asSlide(args.slide, loaded.doc);
   if (args.slide !== undefined && slide === null) {
     return `없는 장입니다: ${String(args.slide)}`;
   }
@@ -692,10 +697,10 @@ function addText(
   args: Record<string, unknown>,
 ): string {
   const loaded = context.readLoaded();
-  const slide = asSlide(args.slide);
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
+  const slide = asSlide(args.slide, loaded.doc);
   const docSlide = slide === null ? undefined : loaded.doc.slides[slide];
   if (slide === null || !docSlide) {
     return `없는 장입니다: ${String(args.slide)}`;
@@ -745,7 +750,7 @@ function editLayers(
   let next = loaded.doc;
   const results: unknown[] = [];
   for (const raw of changes) {
-    const slide = asSlide(raw.slide);
+    const slide = asSlide(raw.slide, next);
     const id = String(raw.id ?? '').replace(/^layer:/, '');
     const docSlide = slide === null ? undefined : next.slides[slide];
     const layers = docSlide?.layers[variant] ?? [];

@@ -1,4 +1,5 @@
 import { llmConfig } from '@/lib/ai/draft';
+import { MAX_SLIDES } from '@/lib/card/document';
 import { ELEMENT_LABELS } from '@/lib/card/types';
 import { VARIANTS } from '@/lib/card/variants';
 
@@ -169,7 +170,12 @@ const TOOLS = [
             items: {
               type: 'object',
               properties: {
-                slide: { type: 'integer', minimum: 1, maximum: 3, description: '장 번호' },
+                slide: {
+                  type: 'integer',
+                  minimum: 1,
+                  maximum: MAX_SLIDES,
+                  description: '장 번호(문서 장 순서, 1부터)',
+                },
                 id: { type: 'string', description: ELEMENT_ID_DESCRIPTION },
                 x: { type: 'number' },
                 y: { type: 'number' },
@@ -200,7 +206,7 @@ const TOOLS = [
       parameters: {
         type: 'object',
         properties: {
-          slide: { type: 'integer', minimum: 1, maximum: 3 },
+          slide: { type: 'integer', minimum: 1, maximum: MAX_SLIDES },
           ids: { type: 'array', items: { type: 'string', description: ELEMENT_ID_DESCRIPTION } },
         },
       },
@@ -215,7 +221,7 @@ const TOOLS = [
       parameters: {
         type: 'object',
         properties: {
-          slide: { type: 'integer', minimum: 1, maximum: 3 },
+          slide: { type: 'integer', minimum: 1, maximum: MAX_SLIDES },
           text: { type: 'string' },
           ...LAYER_TEXT_PROPERTIES,
         },
@@ -237,7 +243,7 @@ const TOOLS = [
             items: {
               type: 'object',
               properties: {
-                slide: { type: 'integer', minimum: 1, maximum: 3 },
+                slide: { type: 'integer', minimum: 1, maximum: MAX_SLIDES },
                 id: { type: 'string', description: 'read_card 의 layers[].id' },
                 text: { type: 'string' },
                 ...LAYER_TEXT_PROPERTIES,
@@ -258,7 +264,7 @@ const TOOL_NAMES = new Set<string>(TOOLS.map((tool) => tool.function.name));
 const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 공고' 카드뉴스 편집 화면의 AI 비서다. 편집하는 사람의 요청대로 카드를 직접 고친다.
 
 [카드]
-- 한 벌은 세 장이다. 1장 공고 요약, 2장 자격·우대 요건, 3장 프로필 링크 안내.
+- 게시물은 장 목록이다. 장 수와 장마다 무엇을 그리는지는 화면 설명의 장 목록에 있고, slide 는 그 목록 순서(1부터)다. 공고 하나로 만든 게시물은 1장 공고 요약, 2장 자격·우대 요건, 3장 프로필 링크 안내다.
 - 좌표는 폭 1080 기준 px 다. 높이는 크기마다 다르다(4:5 는 1350, 1:1 은 1080, 9:16 은 1920). read_card 가 알려 준다.
 - 요소 편집값은 템플릿이 자동으로 잡은 자리에서 옮긴 거리(dx, dy)와 배율(scale), 숨김이다.
 - 1·2장 목록은 섹션(채용 직무, 마감 기한, 담당 업무 같은 칩과 목록 묶음) 단위다. section-<n> 은 섹션 하나, section-<n>-chip 은 그 칩, section-<n>-list 는 그 목록이다. <n> 은 그 장에 보이는 순서라 같은 섹션도 장·템플릿마다 번호가 다를 수 있다 — read_card 의 이름(예: "섹션 2 · 마감 기한")으로 찾는다. note 는 1장 맨 아래 안내, sectionsPanel 은 섹션들을 담은 흰 판(있는 템플릿만)이다.
