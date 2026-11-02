@@ -8,6 +8,7 @@ import { closedLabel } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { BookmarkHintBand } from '@/features/bookmark';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { JobRecommendedContents } from '@/widgets/lets-career-recommend';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
@@ -156,6 +157,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <div className="min-w-0">{tabs}</div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
+            hint={<BookmarkHintBand kind="jobs" id={job.id} bookmarked={job.bookmarked} />}
             summary={
               <>
                 <span>{formatDeadlineText(job.recruitmentType, job.recruitmentEndAt)}</span>

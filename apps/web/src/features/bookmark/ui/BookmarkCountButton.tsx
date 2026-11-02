@@ -4,7 +4,9 @@ import { BookmarkIcon } from '@/shared/ui/icons';
 import type { DataLayerParams } from '@/shared/analytics/dataLayer';
 import type { BookmarkKind } from '../api/bookmarkApi';
 import { useBookmarkAccess } from '../model/useMyBookmarkIds';
+import { useBookmarkHintVisible } from '../model/useBookmarkHint';
 import { useToggleBookmark } from '../model/useToggleBookmark';
+import { BookmarkHintBubble } from './BookmarkHintBubble';
 
 export interface BookmarkCountButtonProps {
   kind: BookmarkKind;
@@ -41,23 +43,27 @@ export function BookmarkCountButton({
     bookmarked: serverBookmarked,
     scrapParams,
   });
+  const showHint = useBookmarkHintVisible({ kind, id, bookmarked: serverBookmarked });
 
   if (access === 'company' || access === 'unknown') {
     return null;
   }
 
   return (
-    <button
-      type="button"
-      aria-label="북마크"
-      aria-pressed={bookmarked}
-      aria-disabled={pending || undefined}
-      onClick={toggle}
-      className="flex h-11 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 px-3 text-xs text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50"
-    >
-      <BookmarkIcon filled={bookmarked} className="h-4 w-4" />
-      {/* 서버 값이 오래됐을 때 음수가 보이지 않게 막는다. 개수가 0 인 공고를 푸는 경우다. */}
-      <span>{Math.max(0, bookmarkCount + countDelta)}</span>
-    </button>
+    <div className="relative">
+      {showHint ? <BookmarkHintBubble kind={kind} /> : null}
+      <button
+        type="button"
+        aria-label="북마크"
+        aria-pressed={bookmarked}
+        aria-disabled={pending || undefined}
+        onClick={toggle}
+        className="flex h-11 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 px-3 text-xs text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50"
+      >
+        <BookmarkIcon filled={bookmarked} className="h-4 w-4" />
+        {/* 서버 값이 오래됐을 때 음수가 보이지 않게 막는다. 개수가 0 인 공고를 푸는 경우다. */}
+        <span>{Math.max(0, bookmarkCount + countDelta)}</span>
+      </button>
+    </div>
   );
 }

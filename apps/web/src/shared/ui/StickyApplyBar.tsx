@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { FLOATING_BAR } from './FloatingActionBar';
 
 export interface StickyApplyBarProps {
+  /** 모바일 바 맨 위의 띠. 북마크 안내(`features/bookmark` 의 `BookmarkHintBand`)다. */
+  hint?: ReactNode;
   /** 모바일 바 윗줄. 마감 일시와 D-day 배지다. 데스크톱에서는 헤더 카드가 같은 것을 보여 준다. */
   summary?: ReactNode;
   /** `ApplyCta`. */
@@ -24,7 +26,7 @@ export interface StickyApplyBarProps {
  * 푸터처럼 읽혀 바꿨다. 윗줄은 시안대로 12px `gray-600` 마감 문구와 D-day 배지다. 채용공고·부트캠프·사이드
  * 스터디 상세 셋이 한 모양을 쓴다.
  */
-export function StickyApplyBar({ summary, children }: StickyApplyBarProps) {
+export function StickyApplyBar({ hint, summary, children }: StickyApplyBarProps) {
   return (
     <div
       data-sticky-apply-bar
@@ -33,6 +35,7 @@ export function StickyApplyBar({ summary, children }: StickyApplyBarProps) {
         'md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none',
       )}
     >
+      {hint}
       {summary ? (
         <div className="mb-2 flex items-center justify-center gap-3 text-xs text-gray-600 md:hidden">
           {summary}
