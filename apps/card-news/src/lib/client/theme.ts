@@ -111,7 +111,18 @@ export interface ProcessedLogo {
   aspect: number;
 }
 
-export async function processLogo(dataUrl: string, color?: string): Promise<ProcessedLogo> {
+/**
+ * 빈 테두리를 자를 때 로고로 보는 픽셀의 알파. `strict` 는 거의 불투명한 픽셀만 본다 — 흰 판 로고 둘레의 옅은
+ * 회색 테두리 선(농심 로고)을 로고로 잡아 로고가 작아지는 것을 막는다. 회사 블록의 회사 로고에만 쓴다(다른
+ * 자리의 그림이 바뀌지 않게).
+ */
+const TRIM_ALPHA = { loose: 24, strict: 200 } as const;
+
+export async function processLogo(
+  dataUrl: string,
+  color?: string,
+  trim: keyof typeof TRIM_ALPHA = 'loose',
+): Promise<ProcessedLogo> {
   const image = await loadImage(dataUrl);
   const scale = Math.min(1, 800 / Math.max(image.width, image.height));
   const width = Math.max(1, Math.round(image.width * scale));
@@ -160,7 +171,7 @@ export async function processLogo(dataUrl: string, color?: string): Promise<Proc
       [data[offset], data[offset + 1], data[offset + 2]] = tint;
     }
     data[offset + 3] = alpha;
-    if (alpha > 24) {
+    if (alpha > TRIM_ALPHA[trim]) {
       const x = pixel % width;
       const y = Math.floor(pixel / width);
       left = Math.min(left, x);
@@ -182,7 +193,7 @@ export async function processLogo(dataUrl: string, color?: string): Promise<Proc
       }
     }
     if (covered / ((right - left + 1) * (bottom - top + 1)) > 0.6) {
-      return processLogo(dataUrl);
+      return processLogo(dataUrl, undefined, trim);
     }
   }
   context.putImageData(pixels, 0, 0);

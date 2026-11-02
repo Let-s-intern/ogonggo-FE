@@ -9,6 +9,7 @@ import {
   COMPANY_HEAD_GAP,
   COMPANY_LOGO_GAP,
   COMPANY_LOGO_HEIGHT,
+  COMPANY_LOGO_MAX_WIDTH,
   COMPANY_ROW_LINE_HEIGHT,
   COMPANY_RULE,
   COMPANY_TABLE_PAD_BOTTOM,
@@ -618,6 +619,61 @@ function OutlineChip({
 }
 
 /**
+ * 회사 블록의 회사 로고. 같은 높이·최대 폭 상자(`COMPANY_LOGO_HEIGHT`·`COMPANY_LOGO_MAX_WIDTH`)에 비율대로
+ * 맞춘다. 로고가 없으면 회사명을 상자 높이의 6할 크기 글자로 쓰고, 상자 폭을 넘으면 줄인다.
+ */
+function BlockLogo({
+  company,
+  palette,
+  measure,
+}: {
+  company: BundleCompany;
+  palette: Palette;
+  measure: Measure;
+}) {
+  const { logo } = company;
+  const source =
+    palette.logo === 'white'
+      ? (logo?.white ?? logo?.original)
+      : palette.logo === 'black'
+        ? (logo?.black ?? logo?.original)
+        : logo?.original;
+  if (source) {
+    const aspect = logo?.aspect ?? 1;
+    const wide = aspect > COMPANY_LOGO_MAX_WIDTH / COMPANY_LOGO_HEIGHT;
+    return (
+      <img
+        src={source}
+        alt=""
+        width={wide ? COMPANY_LOGO_MAX_WIDTH : Math.round(COMPANY_LOGO_HEIGHT * aspect)}
+        height={wide ? Math.round(COMPANY_LOGO_MAX_WIDTH / aspect) : COMPANY_LOGO_HEIGHT}
+      />
+    );
+  }
+  const base = Math.round(COMPANY_LOGO_HEIGHT * 0.6);
+  const width = measure(company.name, base, 900);
+  const fontSize =
+    width > COMPANY_LOGO_MAX_WIDTH
+      ? Math.max(24, Math.floor((base * COMPANY_LOGO_MAX_WIDTH) / width))
+      : base;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        fontSize,
+        fontWeight: 900,
+        lineHeight: 1,
+        letterSpacing: -fontSize * 0.02,
+        whiteSpace: 'nowrap',
+        color: palette.headlineText,
+      }}
+    >
+      {company.name}
+    </div>
+  );
+}
+
+/**
  * 회사 블록 배치(여러 회사 묶음 예시). 회사마다 가운데 로고, 브랜드색 머리띠에 회사명, 흰 카드 안 2열 표(테두리
  * 칩 머리, 줄 사이 회색 선, 빈 칸은 `-`)다. 오른쪽 위에 브랜드 로고. 블록이 장에 다 들어가게 표 글자를 줄인다
  * (`measureCompanies`).
@@ -690,12 +746,7 @@ function CompaniesSlide({
                 marginBottom: COMPANY_LOGO_GAP,
               }}
             >
-              <CompanyLogo
-                spec={{ ...spec, logo: company.logo, companyName: company.name }}
-                palette={logoPalette}
-                height={COMPANY_LOGO_HEIGHT}
-                maxWidth={520}
-              />
+              <BlockLogo company={company} palette={logoPalette} measure={measure} />
             </div>
             <div
               style={{

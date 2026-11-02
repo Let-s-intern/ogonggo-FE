@@ -559,20 +559,21 @@ export function useCardEditor() {
   }, [logo]);
   const tintReady = !logo || tinted?.source === logo;
 
-  // 여러 회사 묶음의 다른 회사 로고. 회사마다 첫 공고의 로고를 받아 배경을 걷어 둔다. 문서에는 남기지 않는다
-  // (저장소 한도). 받기 전과 로고가 없는 회사는 회사명을 글자로 그린다.
+  // 여러 회사 묶음의 회사 로고. 회사마다 첫 공고의 로고를 받아 배경을 걷고 옅은 테두리까지 잘라 둔다(첫 회사도
+  // 회사 블록에서는 이것을 쓴다). 문서에는 남기지 않는다(저장소 한도). 받기 전과 로고가 없는 회사는 회사명을
+  // 글자로 그린다.
   const [companyLogos, setCompanyLogos] = useState<Partial<Record<string, CardLogo>>>({});
   const requestedLogos = useRef(new Set<string>());
   const otherCompanies = useMemo(() => {
     const jobs = loaded?.doc.jobs ?? [];
-    const first = jobs[0]?.companyName;
     const seen = new Map<string, number>();
     for (const job of jobs) {
-      if (job.companyName !== first && !seen.has(job.companyName)) {
+      if (!seen.has(job.companyName)) {
         seen.set(job.companyName, job.jobId);
       }
     }
-    return JSON.stringify([...seen]);
+    // 한 회사 문서는 받지 않는다(회사 블록이 아니면 편집 화면의 로고를 쓴다).
+    return JSON.stringify(seen.size > 1 ? [...seen] : []);
   }, [loaded?.doc.jobs]);
   useEffect(() => {
     for (const [name, jobId] of JSON.parse(otherCompanies) as [string, number][]) {
@@ -581,7 +582,7 @@ export function useCardEditor() {
       }
       requestedLogos.current.add(name);
       fetchCardJob(jobId)
-        .then(({ logo: source }) => (source ? processLogo(source) : null))
+        .then(({ logo: source }) => (source ? processLogo(source, undefined, 'strict') : null))
         .then((processed) => {
           if (processed) {
             setCompanyLogos((current) => ({

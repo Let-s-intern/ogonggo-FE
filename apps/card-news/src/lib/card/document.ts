@@ -567,7 +567,8 @@ export function slideSpec(
   const companies =
     slide.role === 'job' && doc.kind === 'bundle' && bundleLayoutOf(doc).kind === 'companies'
       ? companyBlocks(doc, slideJobIndices(slide)).map((block) => {
-          const found = logoOf(block.name);
+          // 회사 블록은 회사마다 받아 둔 로고(옅은 테두리까지 자른 것)를 먼저 쓴다.
+          const found = logos?.[block.name] ?? logoOf(block.name);
           return found ? { ...block, logo: found } : block;
         })
       : undefined;

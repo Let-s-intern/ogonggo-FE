@@ -481,7 +481,12 @@ export function measureCover(
  * 묶음 공고 장의 회사 블록 배치(여러 회사 묶음 예시). 회사마다 가운데 로고, 브랜드색 머리띠, 흰 카드 안 2열
  * 표다. 렌더(`CompaniesSlide`)와 한 장에 회사를 몇 곳 넣을지 고르는 쪽(`../card/bundle.ts`)이 같은 치수를 쓴다.
  */
-export const COMPANY_LOGO_HEIGHT = 88;
+/**
+ * 회사 로고 상자. 회사마다 로고 모양이 달라도 같은 높이·최대 폭 상자에 맞춰(contain) 크기를 고르게 한다. 로고가
+ * 없으면 회사명 글자를 이 높이에 맞춘다.
+ */
+export const COMPANY_LOGO_HEIGHT = 84;
+export const COMPANY_LOGO_MAX_WIDTH = 300;
 export const COMPANY_LOGO_GAP = 24;
 /** 머리띠 글자 크기와 위아래 여백. */
 export const COMPANY_BAND_SIZE = 36;
