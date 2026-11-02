@@ -82,6 +82,11 @@ export interface DocumentSlide {
   detached?: boolean;
   /** 템플릿별 자유 요소(글자·이미지). */
   layers: Partial<Record<VariantId, Layer[]>>;
+  /**
+   * 이 장에만 덮어쓴 템플릿(템플릿 서랍의 `한 장씩`). 없으면 문서 템플릿(`CardDocument.variant`)이다.
+   * 편집값·자유 요소는 템플릿별로 남으므로 이 템플릿 것을 읽고 쓴다.
+   */
+  variant?: VariantId;
 }
 
 /**
@@ -108,7 +113,7 @@ export interface CardDocument {
    * 화면의 재료로 쓴다.
    */
   uploads?: string[];
-  /** 마지막으로 고른 시안. */
+  /** 문서 템플릿. 모든 장을 이 시안으로 그린다(장에 덮어쓴 템플릿이 있으면 그 장은 그것으로). */
   variant: VariantId;
   /** 모든 장이 같이 쓴다. */
   settings: CardSettings;
@@ -384,6 +389,34 @@ export function slideSpec(
     id: slide.id,
     role: slide.role,
   };
+}
+
+/** 장이 쓰는 템플릿. 장에 덮어쓴 템플릿이 없으면 문서 템플릿(`variant`)이다. */
+export function slideVariant(slide: DocumentSlide, variant: VariantId): VariantId {
+  return slide.variant ?? variant;
+}
+
+/** 문서 템플릿을 바꾼 문서. 한 벌 통째로 바꾸므로 장마다 덮어쓴 템플릿도 지운다. */
+export function withTemplate(doc: CardDocument, variant: VariantId): CardDocument {
+  return {
+    ...doc,
+    variant,
+    slides: doc.slides.map(({ variant: _override, ...slide }) => slide),
+  };
+}
+
+/**
+ * 장 하나에만 템플릿을 덮어쓴 문서(`한 장씩`). `null` 이거나 문서 템플릿과 같으면 덮어쓴 것을 지워 문서
+ * 템플릿을 따른다.
+ */
+export function withSlideTemplate(
+  doc: CardDocument,
+  slideId: string,
+  variant: VariantId | null,
+): CardDocument {
+  return withSlide(doc, slideId, ({ variant: _override, ...slide }) =>
+    variant && variant !== doc.variant ? { ...slide, variant } : slide,
+  );
 }
 
 /** 장 하나를 바꾼 문서. 없는 id 면 그대로다. */

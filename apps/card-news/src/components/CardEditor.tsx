@@ -8,7 +8,6 @@ import {
   type Layer,
   type RenderRequest,
   type Selection,
-  type VariantId,
   isElementId,
   isLayerRef,
   layerRef,
@@ -25,7 +24,9 @@ import {
   newSlide,
   removeSlide,
   slideEditsOf,
+  slideLabel,
   slideName,
+  slideVariant,
   withSlideEdit,
   withSlideLayers,
 } from '@/lib/card/document';
@@ -42,6 +43,8 @@ import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
 import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
 import { EditorToolbar } from './EditorToolbar';
+import { TemplateDrawer } from './drawers/TemplateDrawer';
+import { LeftRail } from './LeftRail';
 import { type PanelTab, PropertiesPanel } from './PropertiesPanel';
 import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
@@ -55,6 +58,9 @@ import { VariantPicker } from './VariantPicker';
 const MAX_RENDER_REQUEST = 4_000_000;
 const NO_LAYERS: Layer[] = [];
 
+/** 왼쪽 레일. 도형·배경 서랍은 2차라 두지 않는다. */
+type DrawerKey = 'template' | 'jobs';
+
 /**
  * 편집 화면 배치(`/edit/<문서 id>`). 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
  *
@@ -66,7 +72,8 @@ export function CardEditor({ docId }: { docId: string }) {
   const editor = useCardEditor();
   const { loaded, status, notice, specs, openDocument } = editor;
   const [regenerateOpen, setRegenerateOpen] = useState(false);
-  const [variant, setVariant] = useState<VariantId | null>(null);
+  /** 템플릿 고르기(시안을 나란히)를 보고 있는가. 여기서 새로 만든 문서는 이것부터 연다. */
+  const [picking, setPicking] = useState(false);
   const [size, setSize] = useState<CardSizeId>('post');
   /** 보고 있는 장의 id. `null` 이면 첫 장이다. */
   const [slideId, setSlideId] = useState<string | null>(null);
@@ -75,12 +82,24 @@ export function CardEditor({ docId }: { docId: string }) {
   const [zoom, setZoom] = useState<number | null>(null);
   const [scale, setScale] = useState(0);
   const [panelTab, setPanelTab] = useState<PanelTab>('properties');
+  /** 열린 왼쪽 서랍. `null` 이면 닫혀 있다. */
+  const [drawer, setDrawer] = useState<DrawerKey | null>('template');
   const { kit, error: kitError } = useRenderKit();
-  const slides = variant && specs ? specs[variant] : null;
+  /** 문서 템플릿. 장마다 `한 장씩` 으로 덮어쓴 템플릿이 있으면 그 장은 그것으로 그린다. */
+  const docVariant = loaded && !picking ? loaded.doc.variant : null;
+  const slides = useMemo(
+    () =>
+      docVariant && specs && loaded
+        ? loaded.doc.slides.map((item, index) => specs[slideVariant(item, docVariant)][index]!)
+        : null,
+    [docVariant, specs, loaded],
+  );
   /** 보고 있는 장이 문서의 몇 번째인가(0부터). */
   const slide = Math.max(0, slides?.findIndex((item) => item.id === slideId) ?? 0);
   const currentSlide = slides?.[slide];
   const docSlide = loaded?.doc.slides.find((item) => item.id === currentSlide?.id);
+  /** 보고 있는 장의 템플릿. 편집값·자유 요소는 이 템플릿 것을 고친다. */
+  const variant = docSlide && docVariant ? slideVariant(docSlide, docVariant) : docVariant;
   const content = useMemo(() => (loaded ? documentContent(loaded.doc) : null), [loaded]);
   const built = useBuiltSlides(slides, size, kit);
   const sectionLabels = useMemo(
@@ -90,16 +109,15 @@ export function CardEditor({ docId }: { docId: string }) {
 
   // AI 비서의 도구는 요청 하나 동안 여러 번 불리며 그때마다 최신 화면 값을 본다. 렌더를 기다리지 않게
   // ref 로 넘긴다.
-  const screenRef = useRef({ variant, size, slide, selected, built });
-  screenRef.current = { variant, size, slide, selected, built };
+  const screenRef = useRef({ docVariant, size, slide, selected, built });
+  screenRef.current = { docVariant, size, slide, selected, built };
   const { readLoaded, remember, applyQuietly } = editor;
   const toolContext = useMemo<ToolContext>(
     () => ({
       readLoaded,
       remember: () => remember(),
       apply: applyQuietly,
-      variant: () => screenRef.current.variant ?? 'wave',
-      pickVariant: setVariant,
+      variant: () => screenRef.current.docVariant ?? 'wave',
       size: () => screenRef.current.size,
       slide: () => screenRef.current.slide,
       selected: () => screenRef.current.selected,
@@ -124,7 +142,7 @@ export function CardEditor({ docId }: { docId: string }) {
   useEffect(() => {
     void openDocument(docId).then((opened) => {
       if (opened) {
-        setVariant(opened.created ? null : opened.doc.variant);
+        setPicking(opened.created);
         setSize(opened.doc.size ?? 'post');
       }
     });
@@ -135,15 +153,10 @@ export function CardEditor({ docId }: { docId: string }) {
     window.location.href = '/login';
   };
 
-  // 템플릿을 바꾸면 1장부터, 아무것도 고르지 않은 채로 연다. 고른 템플릿은 문서에 남긴다.
-  const { setVariant: rememberVariant } = editor;
+  // 템플릿을 바꾸면 고른 요소를 푼다(템플릿마다 요소가 다르다). 보고 있는 장은 그대로다.
   useEffect(() => {
-    setSlideId(null);
     setSelected(null);
-    if (variant) {
-      rememberVariant(variant);
-    }
-  }, [variant, rememberVariant]);
+  }, [variant]);
 
   const layers = (variant && docSlide?.layers[variant]) || NO_LAYERS;
   const names = useMemo(
@@ -338,19 +351,46 @@ export function CardEditor({ docId }: { docId: string }) {
 
       {loaded && content && slides && currentSlide && docSlide && variant ? (
         <div className="flex min-h-0 flex-1">
-          <aside className="flex w-[372px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-gray-200 bg-white p-4">
-            {jobLine}
-            <Button size="sm" variant="secondary" onClick={() => setVariant(null)}>
-              템플릿 바꾸기
-            </Button>
-            {loaded.doc.jobs.length > 0 ? (
-              <ContentPanel content={content} onChange={editor.setContent} />
-            ) : null}
-            <CaptionPanel
-              caption={content.caption ?? ''}
-              onChange={(caption) => editor.setContent({ ...content, caption })}
-            />
-          </aside>
+          <LeftRail
+            open={drawer}
+            onOpenChange={setDrawer}
+            items={[
+              {
+                key: 'template',
+                label: '템플릿',
+                drawer: specs ? (
+                  <TemplateDrawer
+                    kind={loaded.doc.kind}
+                    specs={specs}
+                    slideIndex={slide}
+                    slideName={slideLabel(names[slide] ?? '', slide)}
+                    docVariant={loaded.doc.variant}
+                    slideOverride={docSlide.variant}
+                    size={size}
+                    kit={kit}
+                    onPick={(picked) => editor.pickTemplate(picked)}
+                    onPickSlide={(picked) => editor.pickTemplate(picked, docSlide.id)}
+                  />
+                ) : null,
+              },
+              {
+                key: 'jobs',
+                label: '공고',
+                drawer: (
+                  <div className="flex flex-col gap-4 p-4">
+                    {jobLine}
+                    {loaded.doc.jobs.length > 0 ? (
+                      <ContentPanel content={content} onChange={editor.setContent} />
+                    ) : null}
+                    <CaptionPanel
+                      caption={content.caption ?? ''}
+                      onChange={(caption) => editor.setContent({ ...content, caption })}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
           <section className="flex min-w-0 flex-1 flex-col">
             {built ? (
               <EditorCanvas
@@ -471,7 +511,14 @@ export function CardEditor({ docId }: { docId: string }) {
       ) : loaded && specs ? (
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
           {jobLine}
-          <VariantPicker specs={specs} current={variant} onPick={setVariant} />
+          <VariantPicker
+            specs={specs}
+            current={null}
+            onPick={(picked) => {
+              editor.setVariant(picked);
+              setPicking(false);
+            }}
+          />
         </div>
       ) : null}
 

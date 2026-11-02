@@ -2,7 +2,9 @@ import {
   type CardDocument,
   ROLE_LABELS,
   documentContent,
+  slideVariant,
   withContent,
+  withTemplate,
   withSlideEdit,
   slideEditsOf,
   withSlideEdits,
@@ -39,7 +41,7 @@ import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useC
  * 모양은 `app/api/assistant/route.ts` 의 `TOOLS` 와 같다.
  *
  * 한 요청(사람이 보낸 말 하나) 안의 변경은 실행 취소 한 단계다 — 처음 바꾸기 전에 한 번만 기록에 쌓고
- * 그 뒤로는 쌓지 않고 바꾼다(`ToolSession`). 고른 템플릿은 기록에 들지 않는다(사람이 고를 때와 같다).
+ * 그 뒤로는 쌓지 않고 바꾼다(`ToolSession`). 템플릿 바꾸기도 문서 변경이라 같이 되돌아간다.
  *
  * 실행기는 모델에게 돌려줄 글(JSON)을 만든다. 실패도 글로 돌려줘 모델이 고치거나 사용자에게 설명하게 한다.
  */
@@ -70,8 +72,8 @@ export interface ToolContext {
   remember: () => void;
   /** 기록에 쌓지 않고 바꾼다. */
   apply: (doc: EditSnapshot) => void;
+  /** 문서 템플릿. 장에 덮어쓴 템플릿이 있으면 그 장은 그것이다(`slideVariant()`). */
   variant: () => VariantId;
-  pickVariant: (variant: VariantId) => void;
   size: () => CardSizeId;
   /** 보고 있는 장(문서 장 순서, 0부터)과 고른 요소. */
   slide: () => number;
@@ -140,10 +142,10 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
 
 /** 모델에게 보내는 지금 화면 한 줄. "이거" 를 풀 때 쓴다. */
 export function describeScreen(context: ToolContext): string {
-  const variant = variantOf(context.variant());
   const selected = context.selected();
   const loaded = context.readLoaded();
   const slide = loaded?.doc.slides[context.slide()];
+  const variant = variantOf(slide ? slideVariant(slide, context.variant()) : context.variant());
   const labels =
     loaded && slide
       ? visibleSectionLabels(
@@ -250,8 +252,8 @@ function slideSummary(
   slide: number,
 ) {
   const size = CARD_SIZES[context.size()];
-  const variant = context.variant();
   const docSlide = loaded.doc.slides[slide];
+  const variant = docSlide ? slideVariant(docSlide, context.variant()) : context.variant();
   const edits = docSlide ? slideEditsOf(loaded.doc, docSlide)[variant] : undefined;
   const labels = docSlide
     ? visibleSectionLabels(
@@ -295,7 +297,15 @@ function slideSummary(
       outside: !edit.hidden && outside(box),
     };
   });
-  return { slide: slide + 1, overflow, elements, layers, overlaps: overlaps(boxes, edits) };
+  return {
+    slide: slide + 1,
+    // 이 장에만 덮어쓴 템플릿. 없으면 문서 템플릿이다.
+    ...(docSlide?.variant ? { variant } : {}),
+    overflow,
+    elements,
+    layers,
+    overlaps: overlaps(boxes, edits),
+  };
 }
 
 /**
@@ -362,12 +372,20 @@ function listVariants(): string {
   );
 }
 
-function pickVariant(context: ToolContext, args: Record<string, unknown>): string {
+function pickVariant(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
   const found = VARIANTS.find((variant) => variant.id === args.variant);
+  const loaded = context.readLoaded();
   if (!found) {
     return `없는 템플릿입니다: ${String(args.variant)}`;
   }
-  context.pickVariant(found.id);
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  change(context, session, withTemplate(loaded.doc, found.id));
   return `템플릿을 ${found.id}(${found.label}) 로 바꿨습니다. 요소 자리가 바뀌었으니 옮기기 전에 read_card 로 다시 읽으세요.`;
 }
 
@@ -504,7 +522,6 @@ async function editElements(
   if (changes.length === 0) {
     return 'changes 가 비었습니다.';
   }
-  const variant = context.variant();
   const size = CARD_SIZES[context.size()];
   let doc = loaded.doc;
   const results: unknown[] = [];
@@ -533,6 +550,7 @@ async function editElements(
       continue;
     }
     changed.add(`${slide}:${id}`);
+    const variant = slideVariant(docSlide, context.variant());
     const edit = slideEditsOf(doc, docSlide)[variant]?.[id] ?? NO_EDIT;
     const scale = clamp(asNumber(raw.scale) ?? edit.scale, MIN_SCALE, MAX_SCALE);
     const ratio = scale / edit.scale;
@@ -614,7 +632,6 @@ function resetElements(
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
-  const variant = context.variant();
   const slide = args.slide === undefined ? null : asSlide(args.slide, loaded.doc);
   if (args.slide !== undefined && slide === null) {
     return `없는 장입니다: ${String(args.slide)}`;
@@ -627,6 +644,7 @@ function resetElements(
     if (slide !== null && index !== slide) {
       return;
     }
+    const variant = slideVariant(docSlide, context.variant());
     const edits = ids
       ? (Object.fromEntries(
           Object.entries(slideEditsOf(loaded.doc, docSlide)[variant] ?? {}).filter(
@@ -734,7 +752,7 @@ function addText(
     y: Math.round(size.height / 2),
     ...patch,
   };
-  const variant = context.variant();
+  const variant = slideVariant(docSlide, context.variant());
   const layers = [...(docSlide.layers[variant] ?? []), layer];
   change(context, session, withSlideLayers(loaded.doc, docSlide.id, variant, layers));
   return JSON.stringify({ added: { slide: slide + 1, id: layer.id }, rejected });
@@ -754,13 +772,13 @@ function editLayers(
   if (changes.length === 0) {
     return 'changes 가 비었습니다.';
   }
-  const variant = context.variant();
   let next = loaded.doc;
   const results: unknown[] = [];
   for (const raw of changes) {
     const slide = asSlide(raw.slide, next);
     const id = String(raw.id ?? '').replace(/^layer:/, '');
     const docSlide = slide === null ? undefined : next.slides[slide];
+    const variant = docSlide ? slideVariant(docSlide, context.variant()) : context.variant();
     const layers = docSlide?.layers[variant] ?? [];
     const layer = layers.find((item) => item.id === id);
     if (slide === null || !docSlide || !layer) {
@@ -824,7 +842,7 @@ function execute(
     case 'list_variants':
       return listVariants();
     case 'pick_variant':
-      return pickVariant(context, args);
+      return pickVariant(context, session, args);
     case 'set_content':
       return setContent(context, session, args);
     case 'rewrite_copy':

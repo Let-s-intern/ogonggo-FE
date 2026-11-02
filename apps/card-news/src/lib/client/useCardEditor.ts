@@ -11,6 +11,8 @@ import {
   withContent,
   withSlideEdit,
   withSlideLayers,
+  withSlideTemplate,
+  withTemplate,
 } from '../card/document';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
 import type {
@@ -56,7 +58,7 @@ export interface LoadedCard {
   doc: CardDocument;
 }
 
-/** 실행 취소가 되돌리는 값. 문서 통째다. 로고·공고는 넣지 않는다. */
+/** 실행 취소가 되돌리는 값. 문서 통째다(템플릿 포함). 로고·공고는 넣지 않는다. */
 export type EditSnapshot = CardDocument;
 
 export type EditorStatus =
@@ -146,13 +148,10 @@ export function useCardEditor() {
   // 값을 본다.
   const loadedRef = useRef(loaded);
   loadedRef.current = loaded;
-  // 고른 시안은 기록에 들지 않는다 — 되돌려도 지금 시안 그대로다.
+  // 템플릿(문서 템플릿과 장마다 덮어쓴 템플릿)도 문서에 들어 있어 같이 되돌린다.
   const history = useHistory<EditSnapshot>(
     () => loadedRef.current?.doc ?? null,
-    (snapshot) =>
-      setLoaded((current) =>
-        current ? { ...current, doc: { ...snapshot, variant: current.doc.variant } } : current,
-      ),
+    (snapshot) => setLoaded((current) => (current ? { ...current, doc: snapshot } : current)),
   );
   const { record, clear: clearHistory } = history;
   const remember = useCallback(
@@ -263,10 +262,27 @@ export function useCardEditor() {
     [remember, changeDoc],
   );
 
-  /** 고른 시안을 문서에 남긴다. 실행 취소 기록에는 쌓지 않는다. */
+  /** 템플릿 고르기(새 문서를 처음 열 때)에서 고른 시안을 문서에 남긴다. 실행 취소 기록에는 쌓지 않는다. */
   const setVariant = useCallback(
-    (variant: VariantId) => changeDoc((doc) => ({ ...doc, variant })),
+    (variant: VariantId) => changeDoc((doc) => withTemplate(doc, variant)),
     [changeDoc],
+  );
+  /**
+   * 템플릿 서랍에서 템플릿을 바꾼다. `slideId` 가 없으면 문서 템플릿(모든 장), 있으면 그 장에만 덮어쓴다
+   * (`null` 이면 덮어쓴 것을 지운다). 실행 취소 한 단계다.
+   */
+  const pickTemplate = useCallback(
+    (variant: VariantId | null, slideId?: string) => {
+      remember();
+      changeDoc((doc) =>
+        slideId
+          ? withSlideTemplate(doc, slideId, variant)
+          : variant
+            ? withTemplate(doc, variant)
+            : doc,
+      );
+    },
+    [remember, changeDoc],
   );
 
   /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
@@ -535,6 +551,7 @@ export function useCardEditor() {
     changeSlides,
     setTitle,
     setVariant,
+    pickTemplate,
     remember,
     applyQuietly,
     readLoaded,

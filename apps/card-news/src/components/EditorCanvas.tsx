@@ -79,19 +79,24 @@ export function useBuiltSlides(
   );
 }
 
-/** 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. `slideId` 를 주면 `measureSlideBoxes` 가 찾는다. */
+/**
+ * 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. `slideId` 를 주면 `measureSlideBoxes` 가, `main` 이면
+ * `readTextLook` 이 찾는다(큰 캔버스는 하나다 — 템플릿 서랍 미리보기와 헷갈리지 않게).
+ */
 export function SlideStage({
   element,
   size,
   width,
   stageRef,
   slideId,
+  main,
 }: {
   element: ReactElement;
   size: CardSize;
   width: number;
   stageRef?: Ref<HTMLDivElement>;
   slideId?: string;
+  main?: boolean;
 }) {
   const scale = width / size.width;
   return (
@@ -100,6 +105,7 @@ export function SlideStage({
         ref={stageRef}
         data-card-canvas=""
         data-slide={slideId}
+        data-main-canvas={main ? '' : undefined}
         style={{
           position: 'absolute',
           top: 0,
@@ -218,7 +224,7 @@ export interface TextLook {
  * 색은 바탕을 칠하지 않은 글자(강조 상자·칩 바탕 밖)를 먼저 본다 — 풀면 상자 모양이 사라지므로.
  */
 export function readTextLook(id: ElementId, cardWidth: number): TextLook | null {
-  const stage = document.querySelector<HTMLElement>('[data-card-canvas]:not([data-slide])');
+  const stage = document.querySelector<HTMLElement>('[data-main-canvas]');
   const element = stage?.querySelector<HTMLElement>(`[data-el="${id}"]`);
   if (!stage || !element) {
     return null;
@@ -944,6 +950,7 @@ export function EditorCanvas({
               size={cardSize}
               width={width}
               stageRef={stageRef}
+              main
             />
             <div
               className="absolute inset-0 overflow-hidden"
