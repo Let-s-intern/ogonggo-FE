@@ -282,6 +282,82 @@ export function resolvePalette(id: VariantId, settings: CardSettings): Palette {
   };
 }
 
+/**
+ * 단색 배경의 색. 바탕이 어두우면 흰 글자(물결 시안처럼 흰 글자와 대비 3 이상이면 흰색), 밝으면 검정 글자다.
+ * 뱃지는 검정이고, 바탕이 검정에 가까우면 흰 뱃지다.
+ */
+function solidPalette(background: string, settings: CardSettings): Palette {
+  const text = textOnBrand(background);
+  const box = visibleOn(highlightBase(settings), background, text);
+  const dark = text === WHITE;
+  const badge = contrastRatio(background, INK) < 1.5 ? WHITE : INK;
+  return {
+    background,
+    headlineText: text,
+    bodyText: text,
+    ctaText: text,
+    box,
+    boxText: readableText(box),
+    chip: box,
+    chipText: readableText(box),
+    border: box,
+    accent: dark
+      ? mix(settings.brandColor, WHITE, 0.55)
+      : contrastRatio(settings.brandColor, background) >= 3
+        ? settings.brandColor
+        : INK,
+    badge,
+    badgeText: badge === WHITE ? INK : WHITE,
+    logo: logoFor(settings, dark, text),
+    mark: dark ? 'white' : 'color',
+    markText: dark ? WHITE : MARK_TEXT,
+  };
+}
+
+/**
+ * 덮어쓴 배경(`settings.background`)의 색. 무늬는 그 시안의 색, 단색은 그 색에 맞춘 색이다. 사진은 시안 바탕색
+ * 위에 깔리므로 시안 색 그대로라 `undefined`, 덮어쓰지 않았어도 `undefined` 다.
+ */
+export function backgroundTone(settings: CardSettings): Palette | undefined {
+  const background = settings.background;
+  if (background?.kind === 'pattern') {
+    return resolvePalette(background.pattern, settings);
+  }
+  return background?.kind === 'color' ? solidPalette(background.color, settings) : undefined;
+}
+
+/**
+ * 장에서 글이 어디에 놓이는가. `background` 는 바탕 위, `panel` 은 목록만 흰 판 위(흰 판 배치), `card` 는 글이
+ * 모두 흰 카드 위(로고 탭 카드, 항목명 표)다.
+ */
+export type TextSurface = 'background' | 'panel' | 'card';
+
+/**
+ * 장 하나의 색. 배경을 덮어쓰면 바탕 위에 놓인 것의 색을 그 배경에 맞추고, 흰 판·카드 안의 색은 시안 그대로
+ * 둔다(흰 판 위 목록이 흰 글자가 되지 않게).
+ */
+export function slidePalette(id: VariantId, settings: CardSettings, surface: TextSurface): Palette {
+  const palette = resolvePalette(id, settings);
+  const tone = backgroundTone(settings);
+  if (!tone) {
+    return palette;
+  }
+  if (surface === 'card') {
+    return {
+      ...palette,
+      background: tone.background,
+      ctaText: tone.ctaText,
+      mark: tone.mark,
+      markText: tone.markText,
+    };
+  }
+  if (surface === 'panel') {
+    const { bodyText, chip, chipText, border } = palette;
+    return { ...tone, bodyText, chip, chipText, border };
+  }
+  return tone;
+}
+
 /** 시안이 쓰는 썸네일. 설정에 없으면 `undefined`. */
 export function variantImage(id: VariantId, settings: CardSettings): CardImage | undefined {
   return variantOf(id).image ? settings.photo : undefined;

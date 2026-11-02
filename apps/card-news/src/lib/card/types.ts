@@ -107,7 +107,41 @@ export interface CardSettings {
   brandMark?: BrandMarkId;
   /** `brandMark` 가 `custom` 일 때 그리는 올린 로고. 없으면 오공고를 그린다. */
   brandImage?: BrandImage;
+  /**
+   * 시안 배경 대신 모든 장에 까는 배경(배경 서랍). 장마다 덮어쓴 배경(`DocumentSlide.background`)이 있으면
+   * 그 장은 그것이다. 렌더 요청에는 그 장에 걸리는 배경 하나가 여기 실린다(`slideSpec()`). 없으면 시안 배경이다.
+   */
+  background?: CardBackground;
 }
+
+/** 시안에서 떼어 낸 무늬. 시안 id 와 같고, 그 시안의 배경과 바탕 위 글자색을 그대로 쓴다. */
+export type BackgroundPattern =
+  | 'wave'
+  | 'watermark'
+  | 'frame'
+  | 'panel'
+  | 'thumbDark'
+  | 'thumbFade';
+
+export const BACKGROUND_PATTERNS: { id: BackgroundPattern; label: string }[] = [
+  { id: 'wave', label: '물결' },
+  { id: 'watermark', label: '워터마크' },
+  { id: 'frame', label: '테두리' },
+  { id: 'panel', label: '흰 판' },
+  { id: 'thumbDark', label: '어둡게' },
+  { id: 'thumbFade', label: '연하게' },
+];
+
+/**
+ * 덮어쓴 배경. `color` 는 단색, `pattern` 은 시안 무늬(어둡게·연하게는 썸네일 `settings.photo` 를 쓴다),
+ * `photo` 는 사진 한 장을 진하기(`opacity`)대로 시안 바탕색 위에 깐다. 사진의 `imageId` 는 올린 이미지(IndexedDB
+ * 열쇠)이고, 없으면 썸네일(공고 대표 이미지)이다. `src` 는 그릴 data URL 이다 — 문서에 남길 때는 비우고 열 때
+ * 다시 채운다(`../client/storage.ts`). 썸네일 사진은 `slideSpec()` 이 채운다.
+ */
+export type CardBackground =
+  | { kind: 'color'; color: string }
+  | { kind: 'pattern'; pattern: BackgroundPattern }
+  | { kind: 'photo'; imageId?: string; src: string; opacity: number };
 
 /**
  * `ogonggo` 는 심볼 + `오공고` 글자, `ogonggoSymbol` 은 심볼만, `ogonggoClassic` 은 옛 오공고 로고(파랑 세 겹

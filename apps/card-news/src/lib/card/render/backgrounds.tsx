@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { mix } from '../color';
 import type { CardSize, CardSpec } from '../types';
-import { type Palette, variantImage } from '../variants';
+import { type Palette, backgroundTone, variantImage } from '../variants';
 import type { SlideAssets } from './primitives';
 
 /**
@@ -73,14 +73,34 @@ export function Background({
   cta?: boolean;
 }) {
   const base = fill(size);
-  const image = variantImage(spec.variant, spec.settings);
+  // 배경 서랍에서 덮어쓴 배경. 무늬는 그 시안의 배경을 그 시안의 색으로 그리고, 단색은 바탕색만이다.
+  const override = spec.settings.background;
+  const pattern = override?.kind === 'pattern' ? override.pattern : null;
+  const variant = pattern ?? spec.variant;
+  const image = variantImage(variant, spec.settings);
+  const colors = (pattern && backgroundTone(spec.settings)) || palette;
 
   const layers = (() => {
-    switch (spec.variant) {
+    if (override?.kind === 'color') {
+      return null;
+    }
+    if (override?.kind === 'photo') {
+      // 사진 한 장을 진하기대로 시안 바탕색 위에 깐다. 사진을 못 받았으면 바탕색만.
+      return override.src ? (
+        <img
+          src={override.src}
+          alt=""
+          width={size.width}
+          height={size.height}
+          style={{ ...base, objectFit: 'cover', opacity: override.opacity }}
+        />
+      ) : null;
+    }
+    switch (variant) {
       case 'wave':
         return (
           <img
-            src={waveSvg(palette.background, size, palette.headlineText)}
+            src={waveSvg(colors.background, size, colors.headlineText)}
             alt=""
             width={size.width}
             height={size.height}
@@ -116,7 +136,7 @@ export function Background({
                 width: size.width - FRAME_INSET * 2,
                 height: size.height - FRAME_INSET * 2,
                 display: 'flex',
-                backgroundColor: palette.background,
+                backgroundColor: colors.background,
                 borderRadius: 40,
               }}
             />
@@ -154,7 +174,7 @@ export function Background({
             <div
               style={{
                 ...base,
-                backgroundImage: `linear-gradient(180deg, ${palette.background} 0%, ${palette.background} 45%, rgba(244,245,247,0) 60%)`,
+                backgroundImage: `linear-gradient(180deg, ${colors.background} 0%, ${colors.background} 45%, rgba(244,245,247,0) 60%)`,
               }}
             />
           </div>
@@ -213,7 +233,7 @@ export function Background({
 
   return (
     <div style={base}>
-      <div style={{ ...base, backgroundColor: palette.background }} />
+      <div style={{ ...base, backgroundColor: colors.background }} />
       {layers}
     </div>
   );

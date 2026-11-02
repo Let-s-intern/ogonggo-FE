@@ -4,7 +4,14 @@ import {
   migrateDocument,
   singleDocument,
 } from '../card/document';
-import type { CardContent, CardSettings, Layer, SlideEdits, VariantId } from '../card/types';
+import type {
+  CardBackground,
+  CardContent,
+  CardSettings,
+  Layer,
+  SlideEdits,
+  VariantId,
+} from '../card/types';
 import { getImage } from './imageStore';
 
 /**
@@ -92,12 +99,33 @@ function mapLayers(doc: CardDocument, map: (layer: Layer) => Layer | null): Card
   };
 }
 
+/** 문서 배경과 장 배경을 바꾼다. */
+function mapBackgrounds(
+  doc: CardDocument,
+  map: (background: CardBackground) => CardBackground | undefined,
+): CardDocument {
+  const { background, ...settings } = doc.settings;
+  const next = background && map(background);
+  return {
+    ...doc,
+    settings: next ? { ...settings, background: next } : settings,
+    slides: doc.slides.map(({ background: own, ...slide }) => {
+      const mapped = own && map(own);
+      return mapped ? { ...slide, background: mapped } : slide;
+    }),
+  };
+}
+
 export function saveDocument(doc: CardDocument): void {
   // 올린 브랜드 로고는 문서마다가 아니라 이 브라우저에 하나다. IndexedDB 에 둔다(`BRAND_IMAGE_ID`).
   const { photo: _photo, brandImage: _brandImage, ...settings } = doc.settings;
   const savedAt = new Date().toISOString();
-  const saved: CardDocument = mapLayers({ ...doc, settings }, (layer) =>
-    layer.kind === 'image' ? { ...layer, src: '' } : layer,
+  // 배경 사진도 id 만 남긴다(올린 이미지는 IndexedDB, 썸네일은 열 때 다시 받는다).
+  const saved: CardDocument = mapLayers(
+    mapBackgrounds({ ...doc, settings }, (background) =>
+      background.kind === 'photo' ? { ...background, src: '' } : background,
+    ),
+    (layer) => (layer.kind === 'image' ? { ...layer, src: '' } : layer),
   );
   const entry: DocumentEntry = { id: doc.id, title: documentTitle(doc), savedAt };
   try {
@@ -111,7 +139,10 @@ export function saveDocument(doc: CardDocument): void {
   }
 }
 
-/** 남긴 자유 요소에 이미지를 다시 채운다. 이미지를 찾지 못한 이미지 요소는 뺀다. */
+/**
+ * 남긴 자유 요소와 배경 사진에 이미지를 다시 채운다. 이미지를 찾지 못한 이미지 요소는 빼고, 찾지 못한 배경
+ * 사진은 덮어쓰기를 지운다(시안 배경).
+ */
 export async function restoreLayers(doc: CardDocument): Promise<CardDocument> {
   const ids = new Set<string>();
   mapLayers(doc, (layer) => {
@@ -120,10 +151,23 @@ export async function restoreLayers(doc: CardDocument): Promise<CardDocument> {
     }
     return layer;
   });
+  mapBackgrounds(doc, (background) => {
+    if (background.kind === 'photo' && background.imageId) {
+      ids.add(background.imageId);
+    }
+    return background;
+  });
   const images = new Map(
     await Promise.all([...ids].map(async (id) => [id, await getImage(id)] as const)),
   );
-  return mapLayers(doc, (layer) => {
+  const restored = mapBackgrounds(doc, (background) => {
+    if (background.kind !== 'photo' || !background.imageId) {
+      return background;
+    }
+    const src = images.get(background.imageId);
+    return src ? { ...background, src } : undefined;
+  });
+  return mapLayers(restored, (layer) => {
     if (layer.kind !== 'image') {
       return layer;
     }

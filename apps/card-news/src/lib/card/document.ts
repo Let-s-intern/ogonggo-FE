@@ -2,6 +2,7 @@ import { DEFAULT_PROFILE } from './fromJob';
 import type {
   BundleCard,
   BundleCompany,
+  CardBackground,
   CardContent,
   CardLogo,
   CardSettings,
@@ -93,6 +94,11 @@ export interface DocumentSlide {
    * 편집값·자유 요소는 템플릿별로 남으므로 이 템플릿 것을 읽고 쓴다.
    */
   variant?: VariantId;
+  /**
+   * 이 장에만 덮어쓴 배경(배경 서랍에서 `모든 장에 같이 적용` 을 끄고 고른 것). 문서 배경
+   * (`settings.background`)보다 앞선다. 없으면 문서 배경, 그것도 없으면 시안 배경이다. 템플릿을 바꿔도 남는다.
+   */
+  background?: CardBackground;
 }
 
 /**
@@ -557,8 +563,13 @@ export function slideSpec(
   logos?: Partial<Record<string, CardLogo>>,
 ): RenderSlide {
   const job = slideJob(doc, slide);
-  // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
-  const { photo, ...shared } = doc.settings;
+  // 썸네일은 그것을 쓰는 시안(과 배경)에만 싣는다. 렌더 요청 본문이 가벼워진다.
+  const { photo, background: _documentBackground, ...rest } = doc.settings;
+  const background = slideBackground(doc, slide, photo);
+  const shared: CardSettings = background ? { ...rest, background } : rest;
+  const needsPhoto =
+    variantOf(variant).image ||
+    (background?.kind === 'pattern' && variantOf(background.pattern).image);
   const cover = coverTable(doc, slide);
   const bundleRow = bundleRowOf(doc, slide);
   const firstCompany = doc.jobs[0]?.companyName;
@@ -582,7 +593,7 @@ export function slideSpec(
     spec: {
       variant,
       content: documentContent(doc, slide),
-      settings: variantOf(variant).image && photo ? { ...shared, photo } : shared,
+      settings: needsPhoto && photo ? { ...shared, photo } : shared,
       logo: !job ? logo : companyNameList ? undefined : logoOf(job.companyName),
       companyName: job?.companyName ?? '',
       edits: slideEditsOf(doc, slide)[variant],
@@ -595,6 +606,52 @@ export function slideSpec(
     },
     id: slide.id,
     role: slide.role,
+  };
+}
+
+/**
+ * 장 하나에 걸리는 덮어쓴 배경. 장 배경, 없으면 문서 배경이다. 썸네일 사진(`imageId` 없음)은 지금 썸네일로
+ * 채우고, 그릴 사진이 없으면 배경을 덮어쓰지 않은 것으로 친다(시안 배경).
+ */
+export function slideBackground(
+  doc: CardDocument,
+  slide: DocumentSlide,
+  photo = doc.settings.photo,
+): CardBackground | undefined {
+  const background = slide.background ?? doc.settings.background;
+  if (background?.kind !== 'photo') {
+    return background;
+  }
+  const src = background.imageId ? background.src : (photo?.dataUrl ?? '');
+  return src ? { ...background, src } : undefined;
+}
+
+/**
+ * 배경을 덮어쓴다. `slideId` 가 있으면 그 장에만이고 `null` 이면 그 장 것을 지운다(문서 배경으로). 없으면
+ * 모든 장이다 — 문서 배경을 바꾸고 장마다 덮어쓴 배경은 지운다. `null` 이면 시안 배경으로 돌아간다
+ * (`배경 덮어쓰기 지우기`).
+ */
+export function withBackground(
+  doc: CardDocument,
+  background: CardBackground | null,
+  slideId?: string,
+): CardDocument {
+  const strip = <T extends { background?: CardBackground }>({
+    background: _previous,
+    ...item
+  }: T): Omit<T, 'background'> => item;
+  if (slideId) {
+    return {
+      ...doc,
+      slides: doc.slides.map((slide) =>
+        slide.id !== slideId ? slide : background ? { ...slide, background } : strip(slide),
+      ),
+    };
+  }
+  return {
+    ...doc,
+    settings: background ? { ...doc.settings, background } : strip(doc.settings),
+    slides: doc.slides.map((slide) => strip(slide)),
   };
 }
 

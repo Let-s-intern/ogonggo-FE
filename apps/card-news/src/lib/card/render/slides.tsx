@@ -72,7 +72,7 @@ import {
   bundleElementId,
   sectionElementId,
 } from '../types';
-import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
+import { type Palette, slidePalette, textOnBrand, variantImage, variantOf } from '../variants';
 import { Background } from './backgrounds';
 import { layerElements } from './layers';
 import {
@@ -1780,6 +1780,30 @@ function FreeSlide({
 }
 
 /**
+ * 장 하나의 색. 배경을 덮어쓰면(`settings.background`) 바탕 위 글자도 그 배경에 맞춘다(`slidePalette()`).
+ * 편집 화면(새 글자 색)도 이것을 쓴다.
+ */
+export function specPalette(spec: CardSpec, role: SlideRole): Palette {
+  const definition = variantOf(spec.variant);
+  // `InfoSlide` 가 고르는 배치와 같다. 묶음 표지·2열 카드·회사 블록·안내 장·빈 장은 바탕 위 글이다.
+  const info =
+    (role === 'cover' && !spec.cover) ||
+    (role === 'job' && !spec.bundleCards && !spec.bundleCompanies);
+  const layout = !info
+    ? 'open'
+    : role === 'job' && spec.bundleRow
+      ? 'labels'
+      : role === 'job' && definition.detailLayout
+        ? definition.detailLayout
+        : definition.layout;
+  return slidePalette(
+    spec.variant,
+    spec.settings,
+    layout === 'tab' || layout === 'labels' ? 'card' : layout === 'panel' ? 'panel' : 'background',
+  );
+}
+
+/**
  * 한 장을 만든다. 무엇을 그릴지는 장 종류가 정한다 — 표지·공고 장은 문구 목록(묶음 표지는 직무 표),
  * 안내 장은 프로필 링크 안내, 빈 장은 배경만. `overflow` 는 가장 작은 글자로도 목록이 넘치는 경우다.
  */
@@ -1790,7 +1814,7 @@ export function buildSlide(
   measure: Measure,
   assets: SlideAssets,
 ): { element: ReactElement; overflow: boolean } {
-  const palette = resolvePalette(spec.variant, spec.settings);
+  const palette = specPalette(spec, role);
   if (role === 'profile') {
     return {
       element: <CtaSlide spec={spec} palette={palette} size={size} assets={assets} />,

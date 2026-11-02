@@ -4,9 +4,11 @@ import { loadEmoji, loadFonts } from '@/lib/card/assets';
 import { SLIDE_ROLES } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
+  BACKGROUND_PATTERNS,
   type BundleCard,
   type BundleCompany,
   CARD_SIZES,
+  type CardBackground,
   type CardSection,
   type CardLogo,
   type CardSpec,
@@ -184,6 +186,22 @@ function sanitizeCards(cards: unknown): BundleCard[] | undefined {
   });
 }
 
+/** 덮어쓴 배경을 검사한다. 모르는 무늬·색이나 data URL 이 아닌 사진이면 버린다(시안 배경). */
+function sanitizeBackground(background: unknown): CardBackground | undefined {
+  const raw = (background ?? {}) as Record<string, unknown>;
+  if (raw.kind === 'color' && typeof raw.color === 'string' && HEX_COLOR.test(raw.color)) {
+    return { kind: 'color', color: raw.color };
+  }
+  const pattern = BACKGROUND_PATTERNS.find((item) => item.id === raw.pattern);
+  if (raw.kind === 'pattern' && pattern) {
+    return { kind: 'pattern', pattern: pattern.id };
+  }
+  const src = safeImage(raw.src);
+  return raw.kind === 'photo' && src
+    ? { kind: 'photo', src, opacity: clamp(raw.opacity, 0, 1, 1) }
+    : undefined;
+}
+
 /**
  * 요청에 실린 이미지(로고·썸네일)를 검사한다. data URL 이미지가 아니면 버린다 — 바깥 주소를
  * 이미지 생성기에 넘기면 서버가 그 주소로 요청을 보내고, 미리보기 SVG 에도 그대로 실린다.
@@ -192,6 +210,7 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
   const photo = safeImage(spec.settings.photo?.dataUrl);
   const brandImage = safeImage(spec.settings.brandImage?.dataUrl);
   const brandAspect = Number(spec.settings.brandImage?.aspect);
+  const background = sanitizeBackground(spec.settings.background);
   return {
     ...spec,
     logo: sanitizeLogo(spec.logo),
@@ -202,6 +221,7 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
         brandImage && brandAspect > 0.05 && brandAspect < 20
           ? { dataUrl: brandImage, aspect: brandAspect }
           : undefined,
+      background,
     },
     edits: sanitizeEdits(spec.edits),
     layers: sanitizeLayers(spec.layers),
