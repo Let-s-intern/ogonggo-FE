@@ -7,7 +7,8 @@ import type { JobListItem } from '@/lib/server/ogonggo';
 
 interface JobPickerProps {
   selectedId?: number;
-  onSelect?: (jobId: number) => void;
+  /** 목록에서 고르면 `job` 도 준다. 링크로 열면 번호만 안다. */
+  onSelect?: (jobId: number, job?: JobListItem) => void;
   /**
    * 여러 개 고르기. 주면 누를 때마다 고르고 빼며, 고른 순서대로 번호를 단다. `max` 개를 고르면 더
    * 고르지 못한다. 필터 알약과 `같은 회사 공고 모두` 를 같이 그린다.
@@ -124,7 +125,7 @@ export function JobPicker({ selectedId, onSelect, multiple }: JobPickerProps) {
 
   const toggle = (job: JobListItem) => {
     if (!multiple) {
-      onSelect?.(job.id);
+      onSelect?.(job.id, job);
       return;
     }
     const { picked, onChange } = multiple;
@@ -284,7 +285,7 @@ export function JobPicker({ selectedId, onSelect, multiple }: JobPickerProps) {
                 aria-pressed={multiple ? on : undefined}
                 disabled={multiple ? !on && full : false}
                 className={`flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 ${
-                  on ? 'bg-blue-50' : ''
+                  on ? 'bg-blue-50 ring-1 ring-blue-400' : ''
                 }`}
               >
                 {multiple ? (

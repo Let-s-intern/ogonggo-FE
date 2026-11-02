@@ -79,8 +79,9 @@ function RecentDocuments() {
 }
 
 /**
- * 공고 하나 탭. 공고를 고르고 그 밑에 요청사항을 적은 뒤 `이 공고로 초안 쓰기` 를 누르면 초안을 쓰고(남은
- * 편집본이 있으면 그것을 열고) 시안 열 개를 보인다. 시안을 고르면 그 시안으로 편집 화면을 연다.
+ * 공고 하나 탭. 공고를 고르면 오른쪽에 고른 공고와 `이 공고로 초안 쓰기` 가 나온다(아래 요청사항 바에도
+ * 같은 버튼). 누르면 초안을 쓰고(남은 편집본이 있으면 그것을 열고) 시안 열 개를 보인다. 시안을 고르면 그
+ * 시안으로 편집 화면을 연다.
  */
 function SingleTab({
   request,
@@ -93,7 +94,10 @@ function SingleTab({
   const editor = useCardEditor();
   const { loaded, status, notice, specs } = editor;
   const [pickedId, setPickedId] = useState<number | null>(null);
+  const [pickedJob, setPickedJob] = useState<JobListItem | null>(null);
   const loading = status.kind === 'loading';
+  // 초안을 쓴 공고와 지금 고른 공고가 같을 때만 시안을 보인다. 다른 공고를 고르면 다시 초안부터.
+  const drafted = loaded?.job && specs && (pickedId === null || pickedId === loaded.job.id);
 
   const write = () => {
     if (pickedId === null) {
@@ -115,15 +119,21 @@ function SingleTab({
     router.push(`/edit/${encodeURIComponent(loaded.doc.id)}`);
   };
 
+  const writeButton = (className?: string) => (
+    <Button className={className} disabled={pickedId === null || loading} onClick={write}>
+      {loading ? 'AI가 초안을 쓰는 중' : '이 공고로 초안 쓰기'}
+    </Button>
+  );
+
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        <JobPicker selectedId={pickedId ?? loaded?.job?.id} onSelect={setPickedId} />
-        <RequestPanel value={request} onChange={onRequestChange} />
-        <Button disabled={pickedId === null || loading} onClick={write}>
-          {loading ? 'AI가 초안을 쓰는 중' : '이 공고로 초안 쓰기'}
-        </Button>
-      </div>
+      <JobPicker
+        selectedId={pickedId ?? loaded?.job?.id}
+        onSelect={(jobId, job) => {
+          setPickedId(jobId);
+          setPickedJob(job ?? null);
+        }}
+      />
       <div className="flex flex-col gap-3">
         {status.kind === 'loading' ? (
           <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{status.message}</p>
@@ -134,7 +144,7 @@ function SingleTab({
         {notice ? (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p>
         ) : null}
-        {loaded?.job && specs ? (
+        {drafted && loaded?.job && specs ? (
           <>
             <p className="text-sm text-gray-600">
               <span className="font-semibold text-gray-900">{loaded.job.companyName}</span>{' '}
@@ -142,12 +152,31 @@ function SingleTab({
             </p>
             <VariantPicker specs={specs} current={null} onPick={pick} />
           </>
+        ) : pickedId !== null ? (
+          <div className="flex h-80 flex-col items-center justify-center gap-4 rounded-2xl border border-blue-200 bg-white px-6 text-center">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-bold text-blue-600">고른 공고</span>
+              {pickedJob ? (
+                <>
+                  <span className="text-lg font-bold">{pickedJob.companyName}</span>
+                  <span className="text-sm text-gray-600">{pickedJob.title}</span>
+                </>
+              ) : (
+                <span className="text-lg font-bold">공고 {pickedId}번</span>
+              )}
+            </div>
+            <p className="text-sm text-gray-500">
+              필요하면 아래 요청사항을 적고 초안을 쓰세요. 시안 열 개가 여기에 그려집니다.
+            </p>
+            {writeButton('px-8')}
+          </div>
         ) : (
           <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-gray-300 text-sm text-gray-500">
-            왼쪽에서 공고를 고르고 초안을 쓰면 시안이 여기에 그려집니다.
+            왼쪽 목록에서 공고를 누르세요.
           </div>
         )}
       </div>
+      <RequestPanel value={request} onChange={onRequestChange} action={writeButton()} />
     </div>
   );
 }
@@ -239,10 +268,7 @@ function BundleTab({
 
   return (
     <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[420px_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        <JobPicker multiple={{ picked, onChange: setPicked, max: MAX_BUNDLE_JOBS }} />
-        <RequestPanel value={request} onChange={onRequestChange} />
-      </div>
+      <JobPicker multiple={{ picked, onChange: setPicked, max: MAX_BUNDLE_JOBS }} />
       <div className="flex flex-col gap-4">
         <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
           <h2 className="text-base font-bold">묶음 종류</h2>
@@ -343,20 +369,22 @@ function BundleTab({
               </li>
             ))}
           </ol>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              size="sm"
-              disabled={picked.length < MIN_BUNDLE_JOBS || busy}
-              onClick={() => void create()}
-            >
-              {busy
-                ? 'AI가 묶음 초안을 쓰는 중'
-                : `공고 ${picked.length}개로 ${slides.length}장 만들고 편집하기`}
-            </Button>
-            {error ? <span className="text-sm text-error">{error}</span> : null}
-          </div>
+          {error ? <p className="text-sm text-error">{error}</p> : null}
         </section>
       </div>
+      <RequestPanel
+        value={request}
+        onChange={onRequestChange}
+        action={
+          <Button disabled={picked.length < MIN_BUNDLE_JOBS || busy} onClick={() => void create()}>
+            {busy
+              ? 'AI가 묶음 초안을 쓰는 중'
+              : picked.length < MIN_BUNDLE_JOBS
+                ? `공고를 ${MIN_BUNDLE_JOBS}개 이상 고르세요`
+                : `공고 ${picked.length}개로 ${slides.length}장 만들고 편집하기`}
+          </Button>
+        }
+      />
     </div>
   );
 }

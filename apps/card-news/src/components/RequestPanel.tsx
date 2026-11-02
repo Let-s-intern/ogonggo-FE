@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { Button, Input, Textarea } from '@ogonggo/ui';
 import { fileToDataUrl } from '@/lib/client/image';
 import { putImage } from '@/lib/client/imageStore';
@@ -36,12 +36,18 @@ function isLink(value: string): boolean {
   }
 }
 
+/**
+ * 시작 화면 맨 아래 전체 폭 요청사항 바. 탭마다 다음 단계 버튼(`action`)을 오른쪽에 둔다. 화면에 고정하지
+ * 않는다 — 탭 격자의 두 열을 다 차지하는 마지막 칸이다.
+ */
 export function RequestPanel({
   value,
   onChange,
+  action,
 }: {
   value: StartRequest;
   onChange: (next: StartRequest) => void;
+  action: ReactNode;
 }) {
   const [link, setLink] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -76,82 +82,87 @@ export function RequestPanel({
   };
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm">
-      <div>
-        <h2 className="text-base font-bold">요청사항·추가 정보</h2>
-        <p className="text-xs text-gray-500">
-          공고 원문과 다르면 여기 적은 것을 따릅니다(예: 바뀐 마감 시각). 초안을 쓸 때 같이
-          보냅니다.
-        </p>
-      </div>
-      <Textarea
-        aria-label="요청사항"
-        rows={3}
-        placeholder="예: 마감을 11월 9일 23:59 로 써 줘. 신입 공채라는 점을 제목에 살려 줘."
-        value={value.text}
-        onChange={(event) => onChange({ ...value, text: event.target.value })}
-      />
-      <form onSubmit={addLink} className="flex gap-2">
-        <Input
-          aria-label="참고 링크"
-          placeholder="참고 링크 붙여넣기"
-          inputMode="url"
-          className="h-9 text-sm"
-          value={link}
-          onChange={(event) => {
-            setLink(event.target.value);
-            setError(null);
-          }}
-        />
-        <Button type="submit" size="sm" variant="secondary" className="shrink-0">
-          링크 더하기
-        </Button>
-      </form>
-      {error ? <p className="text-xs text-error">{error}</p> : null}
-      {value.links.length > 0 ? (
-        <ul className="flex flex-col gap-1 text-sm">
+    <section
+      aria-label="요청사항·추가 정보"
+      className="rounded-2xl bg-white shadow-sm lg:col-span-2"
+    >
+      <div className="flex w-full flex-col gap-2 px-4 py-3">
+        <div className="flex items-end gap-3">
+          <label className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="text-sm font-bold">
+              요청사항·추가 정보{' '}
+              <span className="text-xs font-normal text-gray-500">
+                공고 원문과 다르면 여기 적은 것을 따릅니다(예: 바뀐 마감 시각). 초안을 쓸 때 같이
+                보냅니다.
+              </span>
+            </span>
+            <Textarea
+              rows={2}
+              placeholder="예: 마감을 11월 9일 23:59 로 써 줘. 신입 공채라는 점을 제목에 살려 줘."
+              value={value.text}
+              onChange={(event) => onChange({ ...value, text: event.target.value })}
+            />
+          </label>
+          <div className="shrink-0">{action}</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <form onSubmit={addLink} className="flex items-center gap-2">
+            <Input
+              aria-label="참고 링크"
+              placeholder="참고 링크 붙여넣기"
+              inputMode="url"
+              className="h-8 w-64 text-sm"
+              value={link}
+              onChange={(event) => {
+                setLink(event.target.value);
+                setError(null);
+              }}
+            />
+            <Button type="submit" size="sm" variant="secondary" className="shrink-0">
+              링크 더하기
+            </Button>
+          </form>
+          <label className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-gray-200 px-3 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            이미지 첨부
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                void attach(event.target.files);
+                event.target.value = '';
+              }}
+            />
+          </label>
+          <span className="text-xs text-gray-500">
+            첨부한 이미지는 편집 화면에서 씁니다. AI 에는 보내지 않습니다.
+          </span>
+          {error ? <span className="text-xs text-error">{error}</span> : null}
           {value.links.map((item) => (
-            <li key={item} className="flex items-center justify-between gap-2">
+            <span
+              key={item}
+              className="flex max-w-60 items-center gap-1 rounded-full bg-gray-100 py-0.5 pr-1 pl-3 text-xs"
+            >
               <span className="truncate text-blue-600">{item}</span>
-              <Button
-                size="sm"
-                variant="ghost"
+              <button
+                type="button"
+                aria-label={`${item} 빼기`}
+                className="rounded-full px-1.5 text-gray-500 hover:bg-gray-200"
                 onClick={() =>
                   onChange({ ...value, links: value.links.filter((other) => other !== item) })
                 }
               >
                 빼기
-              </Button>
-            </li>
+              </button>
+            </span>
           ))}
-        </ul>
-      ) : null}
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-gray-200 px-3 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-          이미지 첨부
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(event) => {
-              void attach(event.target.files);
-              event.target.value = '';
-            }}
-          />
-        </label>
-        <span className="text-xs text-gray-500">
-          첨부한 이미지는 이 브라우저에 남아 편집 화면에서 씁니다. AI 에는 보내지 않습니다.
-        </span>
-      </div>
-      {value.images.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
           {value.images.map((image) => (
-            <li key={image.id} className="relative">
-              <img src={image.dataUrl} alt="" className="size-16 rounded-md object-cover" />
+            <span key={image.id} className="flex items-center gap-1">
+              <img src={image.dataUrl} alt="" className="size-8 rounded object-cover" />
               <button
                 type="button"
-                className="absolute inset-x-0 bottom-0 rounded-b-md bg-gray-900/70 text-xs text-white"
+                className="text-xs text-gray-500 underline"
                 onClick={() =>
                   onChange({
                     ...value,
@@ -161,10 +172,10 @@ export function RequestPanel({
               >
                 빼기
               </button>
-            </li>
+            </span>
           ))}
-        </ul>
-      ) : null}
+        </div>
+      </div>
     </section>
   );
 }
