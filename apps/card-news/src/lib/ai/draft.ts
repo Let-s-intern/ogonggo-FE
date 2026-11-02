@@ -400,6 +400,10 @@ const BUNDLE_SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오�
 👇더 많은 취업·공고 컨텐츠는
 @letscareer.job
 
+[글자 수 확인 — 답하기 전에 꼭]
+- cover.headline 과 jobs[i].headline 의 줄마다 별표(*)를 뺀 글자 수를 공백까지 센다. 12자를 넘는 줄이 하나라도 있으면 말을 빼거나 줄여 다시 쓴다.
+- 직무를 셋 이상 늘어놓지 않는다. 예: "*국내영업·생산·회계* 채용!"(14자) → "*3개 직무* 채용!"(9자), "*SNOW* 사업개발·광고사업"(14자) → "*SNOW* 사업개발"(9자).
+
 [출력]
 {"cover": {"badge": string, "headline": string, "rows": [[string, string], …]}, "jobs": [{"headline": string, "roles": string[], "responsibilities": string[], "qualifications": string[], "preferred": string[], "note": string}, …], "caption": string} 형태의 JSON 하나만. 설명을 붙이지 않는다.`;
 
