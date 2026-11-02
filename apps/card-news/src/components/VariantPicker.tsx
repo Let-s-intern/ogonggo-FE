@@ -20,7 +20,11 @@ export function VariantPicker({
   current: VariantId | null;
   onPick: (variant: VariantId) => void;
 }) {
-  const targets = VARIANTS.map((variant) => specs[variant.id][variant.previewSlide ?? 0]!);
+  // 장이 모자란 문서(빈 캔버스)는 마지막 장을 그린다.
+  const targets = VARIANTS.map((variant) => {
+    const slides = specs[variant.id];
+    return slides[Math.min(variant.previewSlide ?? 0, slides.length - 1)]!;
+  });
   const { previews, error } = usePreviews(targets, 'post', specs);
   const { width, height } = CARD_SIZES.post;
 

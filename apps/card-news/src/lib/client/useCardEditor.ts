@@ -363,6 +363,9 @@ export function useCardEditor() {
         setStatus({ kind: 'idle' });
         if (first) {
           void loadCandidates(first.jobId);
+        } else {
+          // 공고가 없으면 찾을 썸네일 후보도 없다.
+          setCandidates({ photo: [] });
         }
         return { doc, created: false };
       } catch (error) {

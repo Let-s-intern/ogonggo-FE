@@ -1,7 +1,9 @@
+import { DEFAULT_PROFILE } from './fromJob';
 import type {
   CardContent,
   CardLogo,
   CardSettings,
+  CardSizeId,
   CardSpec,
   ElementEdit,
   ElementId,
@@ -85,10 +87,17 @@ export interface CardDocument {
   slides: DocumentSlide[];
   /** 인스타그램 게시물 본문. 카드에는 그리지 않는다. */
   caption: string;
+  /** 편집 화면을 열 때의 캔버스 크기. 빈 캔버스에서 고른다. 없으면 피드 4:5 다. */
+  size?: CardSizeId;
 }
 
 export function newSlideId(): string {
   return crypto.randomUUID().slice(0, 8);
+}
+
+/** 묶음·빈 캔버스 문서의 id. 공고 하나 문서는 `job-<공고 번호>` 다. */
+export function newDocumentId(kind: Exclude<DocumentKind, 'single'>): string {
+  return `${kind}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
 /** 공고 하나로 만든 문서의 장. 지금 세 장과 같은 순서다. */
@@ -133,19 +142,50 @@ export function singleDocument(
   };
 }
 
-/** 장이 그리는 공고. 표지·안내처럼 공고를 가리키지 않는 장은 첫 공고다. */
-function slideJob(doc: CardDocument, slide?: DocumentSlide): DocumentJob {
-  const job = doc.jobs[slide?.jobIndex ?? 0] ?? doc.jobs[0];
-  if (!job) {
-    // 빈 캔버스 문서는 아직 만들지 않는다(시작 화면이 들어올 때 정한다).
-    throw new Error('공고가 없는 문서는 아직 그리지 못합니다.');
-  }
-  return job;
+/**
+ * 빈 캔버스로 시작한 문서. 공고 없이 `free` 장 하나다. 시안 배경만 그리고 글은 자유 요소로 넣는다.
+ */
+export function blankDocument(id: string, settings: CardSettings, size: CardSizeId): CardDocument {
+  return {
+    id,
+    kind: 'blank',
+    jobs: [],
+    request: '',
+    variant: DEFAULT_VARIANT,
+    settings,
+    slides: [{ id: newSlideId(), role: 'free', edits: {}, layers: {} }],
+    caption: '',
+    size,
+  };
+}
+
+/**
+ * 공고가 없는 문서(빈 캔버스)의 문구. 템플릿 글자는 모두 비어 그리지 않는다. 안내 장을 더하면 기본
+ * 프로필을 그린다.
+ */
+const EMPTY_CONTENT: DocumentJob['content'] = {
+  badge: '',
+  headline: '',
+  roleTitle: '',
+  summarySections: [],
+  note: '',
+  detailSections: [],
+  ctaHeadline: '',
+  ctaSub: '',
+  profile: DEFAULT_PROFILE,
+};
+
+/**
+ * 장이 그리는 공고. 표지·안내처럼 공고를 가리키지 않는 장은 첫 공고다. 공고가 없는 문서면
+ * `undefined` 다.
+ */
+function slideJob(doc: CardDocument, slide?: DocumentSlide): DocumentJob | undefined {
+  return doc.jobs[slide?.jobIndex ?? 0] ?? doc.jobs[0];
 }
 
 /** 장 하나가 그리는 문구. 인스타그램 본문은 문서 것을 붙인다. */
 export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardContent {
-  return { ...slideJob(doc, slide).content, caption: doc.caption };
+  return { ...(slideJob(doc, slide)?.content ?? EMPTY_CONTENT), caption: doc.caption };
 }
 
 /** 렌더할 장 하나. `id` 는 문서 장의 id 다. */
@@ -174,7 +214,7 @@ export function slideSpec(
       content: documentContent(doc, slide),
       settings: variantOf(variant).image && photo ? { ...shared, photo } : shared,
       logo,
-      companyName: job.companyName,
+      companyName: job?.companyName ?? '',
       edits: slide.edits[variant],
       layers: slide.layers[variant],
     },

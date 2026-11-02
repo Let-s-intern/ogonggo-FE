@@ -82,7 +82,8 @@ function BottomBar({
 }) {
   // 받지 않을 장을 둔다. 문서에 장이 늘면 새 장은 받을 장으로 시작한다.
   const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
-  const [sizes, setSizes] = useState<Set<CardSizeId>>(() => new Set(['post']));
+  // 처음 받을 크기는 열 때의 캔버스 크기다(빈 캔버스에서 고른 크기).
+  const [sizes, setSizes] = useState<Set<CardSizeId>>(() => new Set([size]));
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -240,6 +241,7 @@ export function CardEditor({ docId }: { docId: string }) {
     void openDocument(docId).then((opened) => {
       if (opened) {
         setVariant(opened.created ? null : opened.doc.variant);
+        setSize(opened.doc.size ?? 'post');
       }
     });
   }, [docId, openDocument]);
@@ -353,9 +355,11 @@ export function CardEditor({ docId }: { docId: string }) {
                 처음부터 다시
               </Button>
             ) : null}
-            <Button size="sm" onClick={() => setRegenerateOpen(true)}>
-              AI로 다시 쓰기
-            </Button>
+            {loaded.job ? (
+              <Button size="sm" onClick={() => setRegenerateOpen(true)}>
+                AI로 다시 쓰기
+              </Button>
+            ) : null}
           </>
         ) : null}
       </div>
@@ -402,7 +406,9 @@ export function CardEditor({ docId }: { docId: string }) {
         <>
           <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)_320px]">
             <div className={side}>
-              <ContentPanel content={content} onChange={editor.setContent} />
+              {loaded.doc.jobs.length > 0 ? (
+                <ContentPanel content={content} onChange={editor.setContent} />
+              ) : null}
               <CaptionPanel
                 caption={content.caption ?? ''}
                 onChange={(caption) => editor.setContent({ ...content, caption })}

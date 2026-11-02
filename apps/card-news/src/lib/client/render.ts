@@ -49,10 +49,12 @@ export interface SlideTarget {
   index: number;
 }
 
-function fileName(target: SlideTarget, size: CardSizeId): string {
+/** 장 파일 이름. 회사명이 없는 장(빈 캔버스)은 문서 제목을 쓴다. */
+function fileName(target: SlideTarget, size: CardSizeId, title: string): string {
   const { width, height } = CARD_SIZES[size];
   const variant = variantOf(target.spec.variant).label;
-  return safe(`${target.spec.companyName}-${variant}-${target.index + 1}-${width}x${height}.png`);
+  const name = target.spec.companyName || title;
+  return safe(`${name}-${variant}-${target.index + 1}-${width}x${height}.png`);
 }
 
 /**
@@ -72,10 +74,10 @@ export async function downloadSlides(
     for (const target of targets) {
       const { blob } = await renderSlide(target.spec, target.role, size);
       if (total === 1) {
-        save(blob, fileName(target, size));
+        save(blob, fileName(target, size, title));
         return;
       }
-      files[fileName(target, size)] = new Uint8Array(await blob.arrayBuffer());
+      files[fileName(target, size, title)] = new Uint8Array(await blob.arrayBuffer());
       done += 1;
       onProgress?.(done, total);
     }
