@@ -321,9 +321,24 @@ function solidPalette(background: string, settings: CardSettings): Palette {
 export function backgroundTone(settings: CardSettings): Palette | undefined {
   const background = settings.background;
   if (background?.kind === 'pattern') {
-    return resolvePalette(background.pattern, settings);
+    const palette = resolvePalette(background.pattern, settings);
+    const opacity = background.opacity ?? 1;
+    // 절반 넘게 흐리게 깔면 흰 바탕이 더 크게 보이므로, 흐려진 바탕색에 맞춰 글자색을 다시 고른다.
+    return opacity > FADED_PATTERN
+      ? palette
+      : solidPalette(mix(palette.background, WHITE, 1 - opacity), settings);
   }
-  return background?.kind === 'color' ? solidPalette(background.color, settings) : undefined;
+  return background?.kind === 'color'
+    ? solidPalette(fadedColor(background.color, background.opacity), settings)
+    : undefined;
+}
+
+/** 무늬를 이 진하기 이하로 깔면 글자색을 흐려진 바탕에 맞춘다. */
+const FADED_PATTERN = 0.5;
+
+/** 단색 배경을 진하기(`opacity`, 없으면 1)대로 흰 바탕에 섞은 색. 그리기와 글자색 고르기가 같이 쓴다. */
+export function fadedColor(color: string, opacity = 1): string {
+  return opacity >= 1 ? color : mix(color, WHITE, 1 - opacity);
 }
 
 /**

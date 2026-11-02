@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { mix } from '../color';
 import type { CardSize, CardSpec } from '../types';
-import { type Palette, backgroundTone, variantImage } from '../variants';
+import { type Palette, backgroundTone, resolvePalette, variantImage } from '../variants';
 import type { SlideAssets } from './primitives';
 
 /**
@@ -78,7 +78,10 @@ export function Background({
   const pattern = override?.kind === 'pattern' ? override.pattern : null;
   const variant = pattern ?? spec.variant;
   const image = variantImage(variant, spec.settings);
-  const colors = (pattern && backgroundTone(spec.settings)) || palette;
+  // 무늬는 흐리게 깔아도 원래 색으로 그리고(흐리기는 아래 겉 상자가 한다), 단색은 진하기를 섞은 색이다.
+  const colors =
+    (pattern && resolvePalette(pattern, spec.settings)) || backgroundTone(spec.settings) || palette;
+  const fade = override?.kind === 'pattern' ? (override.opacity ?? 1) : 1;
 
   const layers = (() => {
     if (override?.kind === 'color') {
@@ -231,6 +234,17 @@ export function Background({
     }
   })();
 
+  if (fade < 1) {
+    // 흐리게 깐 무늬. 흰 바탕 위에 무늬 전체를 진하기대로 겹친다.
+    return (
+      <div style={{ ...base, backgroundColor: '#FFFFFF' }}>
+        <div style={{ ...base, opacity: fade }}>
+          <div style={{ ...base, backgroundColor: colors.background }} />
+          {layers}
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={base}>
       <div style={{ ...base, backgroundColor: colors.background }} />

@@ -98,6 +98,8 @@ export function BackgroundDrawer({
 
   const pick = (background: CardBackground, group?: string) => onChange(background, all, group);
   const opacity = current?.kind === 'photo' ? current.opacity : PHOTO_OPACITY;
+  // 진하기 슬라이더가 보이는 값. 단색·무늬는 처음이 100% 다.
+  const strength = current ? (current.opacity ?? 1) : 1;
   const photo = (imageId?: string, src = ''): CardBackground =>
     imageId ? { kind: 'photo', imageId, src, opacity } : { kind: 'photo', src: '', opacity };
 
@@ -280,19 +282,19 @@ export function BackgroundDrawer({
         <span className="w-11 text-gray-600">진하기</span>
         <input
           type="range"
-          aria-label="사진 진하기"
+          aria-label="배경 진하기"
           min={0.1}
           max={1}
           step={0.05}
-          value={opacity}
-          disabled={current?.kind !== 'photo'}
+          value={strength}
+          disabled={!current}
           onChange={(event) =>
-            current?.kind === 'photo' &&
+            current &&
             pick({ ...current, opacity: Number(event.target.value) }, 'background-opacity')
           }
           className="flex-1 disabled:opacity-40"
         />
-        <span className="w-9 text-right text-gray-600">{Math.round(opacity * 100)}%</span>
+        <span className="w-9 text-right text-gray-600">{Math.round(strength * 100)}%</span>
       </label>
     </Drawer>
   );

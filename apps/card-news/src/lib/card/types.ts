@@ -134,13 +134,14 @@ export const BACKGROUND_PATTERNS: { id: BackgroundPattern; label: string }[] = [
 
 /**
  * 덮어쓴 배경. `color` 는 단색, `pattern` 은 시안 무늬(어둡게·연하게는 썸네일 `settings.photo` 를 쓴다),
+ * 단색·무늬의 `opacity`(없으면 1)는 흰 바탕 위에 그 진하기로 깐다는 뜻이다.
  * `photo` 는 사진 한 장을 진하기(`opacity`)대로 시안 바탕색 위에 깐다. 사진의 `imageId` 는 올린 이미지(IndexedDB
  * 열쇠)이고, 없으면 썸네일(공고 대표 이미지)이다. `src` 는 그릴 data URL 이다 — 문서에 남길 때는 비우고 열 때
  * 다시 채운다(`../client/storage.ts`). 썸네일 사진은 `slideSpec()` 이 채운다.
  */
 export type CardBackground =
-  | { kind: 'color'; color: string }
-  | { kind: 'pattern'; pattern: BackgroundPattern }
+  | { kind: 'color'; color: string; opacity?: number }
+  | { kind: 'pattern'; pattern: BackgroundPattern; opacity?: number }
   | { kind: 'photo'; imageId?: string; src: string; opacity: number };
 
 /**
