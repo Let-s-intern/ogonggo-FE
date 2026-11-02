@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
-import { type RenderSlide, singleDocument, slideSpec } from '../card/document';
+import {
+  type CardDocument,
+  type RenderSlide,
+  documentContent,
+  singleDocument,
+  slideSpec,
+  withContent,
+  withSlideEdit,
+  withSlideLayers,
+} from '../card/document';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
 import type {
   BrandImage,
@@ -12,21 +21,13 @@ import type {
   ElementEdit,
   ElementId,
   Layer,
-  SlideEdits,
   VariantId,
 } from '../card/types';
 import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { fileToBrandImage, toCardImage } from './image';
 import { BRAND_IMAGE_ID, getImage, putImage } from './imageStore';
-import {
-  type CardEdits,
-  type CardLayers,
-  clearCard,
-  loadCard,
-  restoreLayers,
-  saveCard,
-} from './storage';
+import { clearCard, loadCard, restoreLayers, saveCard } from './storage';
 import {
   FALLBACK_COLOR,
   type ProcessedLogo,
@@ -40,7 +41,8 @@ import { useHistory } from './useHistory';
  * 편집 화면의 상태와 동작. 화면 컴포넌트는 이 훅이 주는 값만 그리고, 바꿀 때는 이 훅의 함수를
  * 부른다 — 공고 읽기, AI 초안, 저장, 로고 칠하기, 배경 이미지 고르기가 여기 모여 있다.
  *
- * 문구와 설정은 하나다. 시안 열 개는 그 하나에서 `specs`(시안별 장 목록)로 갈라진다.
+ * 편집하는 값은 문서(`CardDocument`) 하나다. 시안 열 개는 그 하나에서 `specs`(시안별 장 목록)로
+ * 갈라진다.
  */
 
 export interface LoadedCard {
@@ -49,20 +51,12 @@ export interface LoadedCard {
   logo?: string;
   /** 로고에서 뽑은 대표 색. 없으면 흑백 로고이거나 로고가 없다. */
   brandColor: string | null;
-  content: CardContent;
-  settings: CardSettings;
-  /** 템플릿별·장별 요소 편집값. 템플릿을 바꿔도 각자 남는다. */
-  edits: CardEdits;
-  /** 템플릿별·장별 자유 요소(글자·이미지). */
-  layers: CardLayers;
+  /** 문구·설정·장마다의 편집값. */
+  doc: CardDocument;
 }
 
-/** 실행 취소가 되돌리는 값. 로고·공고는 넣지 않는다. */
-export type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits' | 'layers'>;
-
-function snapshotOf(card: LoadedCard): EditSnapshot {
-  return { content: card.content, settings: card.settings, edits: card.edits, layers: card.layers };
-}
+/** 실행 취소가 되돌리는 값. 문서 통째다. 로고·공고는 넣지 않는다. */
+export type EditSnapshot = CardDocument;
 
 export type EditorStatus =
   | { kind: 'idle' }
@@ -127,22 +121,29 @@ export function useCardEditor() {
   // 값을 본다.
   const loadedRef = useRef(loaded);
   loadedRef.current = loaded;
+  // 고른 시안은 기록에 들지 않는다 — 되돌려도 지금 시안 그대로다.
   const history = useHistory<EditSnapshot>(
-    () => {
-      const current = loadedRef.current;
-      return current ? snapshotOf(current) : null;
-    },
-    (snapshot) => setLoaded((current) => (current ? { ...current, ...snapshot } : current)),
+    () => loadedRef.current?.doc ?? null,
+    (snapshot) =>
+      setLoaded((current) =>
+        current ? { ...current, doc: { ...snapshot, variant: current.doc.variant } } : current,
+      ),
   );
   const { record, clear: clearHistory } = history;
   const remember = useCallback(
     (group?: string) => {
       const current = loadedRef.current;
       if (current) {
-        record(snapshotOf(current), group);
+        record(current.doc, group);
       }
     },
     [record],
+  );
+  /** 문서를 바꾼다(기록은 부르는 쪽이 쌓는다). */
+  const changeDoc = useCallback(
+    (change: (doc: CardDocument) => CardDocument) =>
+      setLoaded((current) => (current ? { ...current, doc: change(current.doc) } : current)),
+    [],
   );
 
   /**
@@ -150,12 +151,12 @@ export function useCardEditor() {
    * `remember()` 로 쌓아 Ctrl+Z 한 번에 요청 전으로 돌아가게. 같은 요청의 다음 도구가 바로 읽도록
    * ref 도 같이 고친다.
    */
-  const applyQuietly = useCallback((patch: Partial<EditSnapshot>) => {
+  const applyQuietly = useCallback((doc: EditSnapshot) => {
     const current = loadedRef.current;
     if (!current) {
       return;
     }
-    const next = { ...current, ...patch };
+    const next = { ...current, doc };
     loadedRef.current = next;
     setLoaded(next);
   }, []);
@@ -165,19 +166,17 @@ export function useCardEditor() {
   const setContent = useCallback(
     (content: CardContent) => {
       remember('content');
-      update({ content });
+      changeDoc((doc) => withContent(doc, content));
     },
-    [remember, update],
+    [remember, changeDoc],
   );
   const setSettings = useCallback(
     (patch: Partial<CardSettings>) => {
       // 색 고르기·슬라이더처럼 같은 값을 잇달아 바꾸면 한 단계다.
       remember(`settings:${Object.keys(patch).sort().join(',')}`);
-      setLoaded((current) =>
-        current ? { ...current, settings: { ...current.settings, ...patch } } : current,
-      );
+      changeDoc((doc) => ({ ...doc, settings: { ...doc.settings, ...patch } }));
     },
-    [remember],
+    [remember, changeDoc],
   );
   /**
    * 브랜드 로고를 올린 이미지로 바꾼다. 이 브라우저에 하나만 남기고 다른 공고에서도 쓴다. 파일이 없으면
@@ -192,29 +191,21 @@ export function useCardEditor() {
     [setSettings],
   );
   /**
-   * 요소 하나의 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. `group` 이 같은 변경은
-   * 실행 취소에서 한 단계다(끄는 동안, 방향키를 누르고 있는 동안).
+   * 장 하나(`slideId`)의 요소 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. `group` 이 같은
+   * 변경은 실행 취소에서 한 단계다(끄는 동안, 방향키를 누르고 있는 동안).
    */
   const setEdits = useCallback(
     (
       variant: VariantId,
-      slide: number,
+      slideId: string,
       id: ElementId,
       edit: ElementEdit | null,
       group?: string,
     ) => {
       remember(group);
-      setLoaded((current) => {
-        if (!current) {
-          return current;
-        }
-        const slides: SlideEdits[] = [...(current.edits[variant] ?? [])];
-        const { [id]: _previous, ...others } = slides[slide] ?? {};
-        slides[slide] = edit ? { ...others, [id]: edit } : others;
-        return { ...current, edits: { ...current.edits, [variant]: slides } };
-      });
+      changeDoc((doc) => withSlideEdit(doc, slideId, variant, id, edit));
     },
-    [remember],
+    [remember, changeDoc],
   );
 
   /**
@@ -222,21 +213,17 @@ export function useCardEditor() {
    * 같은 변경은 실행 취소에서 한 단계다.
    */
   const setLayers = useCallback(
-    (variant: VariantId, slide: number, layers: Layer[], group?: string) => {
+    (variant: VariantId, slideId: string, layers: Layer[], group?: string) => {
       remember(group);
-      setLoaded((current) => {
-        if (!current) {
-          return current;
-        }
-        const slides: Layer[][] = [...(current.layers[variant] ?? [])];
-        for (let index = 0; index < slide; index += 1) {
-          slides[index] ??= [];
-        }
-        slides[slide] = layers;
-        return { ...current, layers: { ...current.layers, [variant]: slides } };
-      });
+      changeDoc((doc) => withSlideLayers(doc, slideId, variant, layers));
     },
-    [remember],
+    [remember, changeDoc],
+  );
+
+  /** 고른 시안을 문서에 남긴다. 실행 취소 기록에는 쌓지 않는다. */
+  const setVariant = useCallback(
+    (variant: VariantId) => changeDoc((doc) => ({ ...doc, variant })),
+    [changeDoc],
   );
 
   /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
@@ -253,8 +240,11 @@ export function useCardEditor() {
       const image = first ? await candidateToImage(first, PHOTO_OPACITY).catch(() => null) : null;
       if (image) {
         setLoaded((current) =>
-          current?.job.id === jobId && !current.settings.photo
-            ? { ...current, settings: { ...current.settings, photo: image } }
+          current?.job.id === jobId && !current.doc.settings.photo
+            ? {
+                ...current,
+                doc: { ...current.doc, settings: { ...current.doc.settings, photo: image } },
+              }
             : current,
         );
       }
@@ -289,10 +279,12 @@ export function useCardEditor() {
             job,
             logo,
             brandColor,
-            content: saved.content,
-            settings: { ...saved.settings, brandImage },
-            edits: saved.edits ?? {},
-            layers: await restoreLayers(saved.layers),
+            doc: singleDocument(
+              job,
+              saved.content,
+              { ...saved.settings, brandImage },
+              { edits: saved.edits, layers: await restoreLayers(saved.layers) },
+            ),
           });
           setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
         } else {
@@ -302,10 +294,10 @@ export function useCardEditor() {
             job,
             logo,
             brandColor,
-            content: contentFromDraft(job, result.draft),
-            settings: { ...defaultSettings(brandColor ?? FALLBACK_COLOR), brandImage },
-            edits: {},
-            layers: {},
+            doc: singleDocument(job, contentFromDraft(job, result.draft), {
+              ...defaultSettings(brandColor ?? FALLBACK_COLOR),
+              brandImage,
+            }),
           });
           setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         }
@@ -331,10 +323,12 @@ export function useCardEditor() {
         const result = await requestDraft({
           jobId: loaded.job.id,
           instruction: instruction || REWRITE_INSTRUCTION,
-          current: draftFromContent(loaded.content),
+          current: draftFromContent(documentContent(loaded.doc)),
         });
         remember();
-        update({ content: contentFromDraft(loaded.job, result.draft, loaded.content) });
+        changeDoc((doc) =>
+          withContent(doc, contentFromDraft(loaded.job, result.draft, documentContent(doc))),
+        );
         setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         return true;
       } catch (error) {
@@ -344,7 +338,7 @@ export function useCardEditor() {
         setRegenerating(false);
       }
     },
-    [loaded, remember, update],
+    [loaded, remember, changeDoc],
   );
 
   const startOver = useCallback(() => {
@@ -363,7 +357,7 @@ export function useCardEditor() {
   // 고칠 때마다 이 브라우저에 남긴다(이미지는 빼고).
   useEffect(() => {
     if (loaded) {
-      saveCard(loaded.job.id, loaded.content, loaded.settings, loaded.edits, loaded.layers);
+      saveCard(loaded.job.id, loaded.doc);
     }
   }, [loaded]);
 
@@ -407,10 +401,7 @@ export function useCardEditor() {
             aspect: tinted.original.aspect,
           }
         : undefined;
-    const doc = singleDocument(loaded.job, loaded.content, loaded.settings, {
-      edits: loaded.edits,
-      layers: loaded.layers,
-    });
+    const { doc } = loaded;
     return Object.fromEntries(
       VARIANTS.map((variant) => [
         variant.id,
@@ -434,6 +425,7 @@ export function useCardEditor() {
     setBrandImage,
     setEdits,
     setLayers,
+    setVariant,
     remember,
     applyQuietly,
     readLoaded,

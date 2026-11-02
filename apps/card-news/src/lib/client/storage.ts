@@ -1,3 +1,4 @@
+import { type CardDocument, documentContent } from '../card/document';
 import type { CardContent, CardSettings, Layer, SlideEdits, VariantId } from '../card/types';
 import { getImage } from './imageStore';
 
@@ -36,15 +37,27 @@ export function loadCard(jobId: number): SavedCard | null {
   }
 }
 
-export function saveCard(
-  jobId: number,
-  content: CardContent,
-  settings: CardSettings,
-  edits: CardEdits,
-  layers: CardLayers,
-): void {
+/** 문서의 장별 편집값을 장 번호 순서의 템플릿별 배열로 되돌린다. */
+function byVariant<T>(
+  doc: CardDocument,
+  pick: (slide: CardDocument['slides'][number]) => Partial<Record<VariantId, T>>,
+): Partial<Record<VariantId, T[]>> {
+  const result: Partial<Record<VariantId, T[]>> = {};
+  doc.slides.forEach((slide, index) => {
+    for (const [variant, value] of Object.entries(pick(slide)) as [VariantId, T][]) {
+      const slides = (result[variant] ??= []);
+      slides[index] = value;
+    }
+  });
+  return result;
+}
+
+export function saveCard(jobId: number, doc: CardDocument): void {
+  const content = documentContent(doc);
+  const edits = byVariant(doc, (slide) => slide.edits);
+  const layers = byVariant(doc, (slide) => slide.layers);
   // 올린 브랜드 로고는 공고마다가 아니라 이 브라우저에 하나다. IndexedDB 에 둔다(`BRAND_IMAGE_ID`).
-  const { photo: _photo, brandImage: _brandImage, ...rest } = settings;
+  const { photo: _photo, brandImage: _brandImage, ...rest } = doc.settings;
   const saved: SavedCard = {
     content,
     settings: rest,

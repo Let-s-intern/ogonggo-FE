@@ -16,7 +16,12 @@ import {
   isLayerRef,
   layerRef,
 } from '@/lib/card/types';
-import type { RenderSlide } from '@/lib/card/document';
+import {
+  type RenderSlide,
+  documentContent,
+  withSlideEdit,
+  withSlideLayers,
+} from '@/lib/card/document';
 import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { stripMarkup } from '@/lib/card/markup';
 import { resolvePalette, variantOf } from '@/lib/card/variants';
@@ -177,11 +182,16 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [variant, setVariant] = useState<VariantId | null>(null);
   const [size, setSize] = useState<CardSizeId>('post');
-  const [slide, setSlide] = useState(0);
+  /** 보고 있는 장의 id. `null` 이면 첫 장이다. */
+  const [slideId, setSlideId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Selection | null>(null);
   const { kit, error: kitError } = useRenderKit();
   const slides = variant && specs ? specs[variant] : null;
+  /** 보고 있는 장이 문서의 몇 번째인가(0부터). */
+  const slide = Math.max(0, slides?.findIndex((item) => item.id === slideId) ?? 0);
   const currentSlide = slides?.[slide];
+  const docSlide = loaded?.doc.slides.find((item) => item.id === currentSlide?.id);
+  const content = useMemo(() => (loaded ? documentContent(loaded.doc) : null), [loaded]);
   const built = useBuiltSlides(slides, size, kit);
   const sectionLabels = useMemo(
     () => (currentSlide ? visibleSectionLabels(currentSlide.spec, currentSlide.role) : []),
@@ -208,8 +218,8 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
         if (!slides) {
           return null;
         }
-        const measured = slides.map((slideBuilt, index) => ({
-          boxes: measureSlideBoxes(index, CARD_SIZES[sizeId].width),
+        const measured = slides.map((slideBuilt) => ({
+          boxes: measureSlideBoxes(slideBuilt.id, CARD_SIZES[sizeId].width),
           overflow: slideBuilt.overflow,
         }));
         return measured.every((item) => item.boxes)
@@ -238,29 +248,33 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
     setVariant(null);
   }, [jobId]);
 
-  // 템플릿을 바꾸면 1장부터, 아무것도 고르지 않은 채로 연다.
+  // 템플릿을 바꾸면 1장부터, 아무것도 고르지 않은 채로 연다. 고른 템플릿은 문서에 남긴다.
+  const { setVariant: rememberVariant } = editor;
   useEffect(() => {
-    setSlide(0);
+    setSlideId(null);
     setSelected(null);
-  }, [variant]);
+    if (variant) {
+      rememberVariant(variant);
+    }
+  }, [variant, rememberVariant]);
 
-  const layers = (variant && loaded?.layers[variant]?.[slide]) || NO_LAYERS;
+  const layers = (variant && docSlide?.layers[variant]) || NO_LAYERS;
   const selectedLayer = isLayerRef(selected)
     ? layers.find((layer) => layerRef(layer.id) === selected)
     : undefined;
   const setLayers = (next: Layer[], group?: string) =>
-    variant && editor.setLayers(variant, slide, next, group);
+    variant && docSlide && editor.setLayers(variant, docSlide.id, next, group);
   /**
    * 템플릿 글자 요소를 자유 텍스트로 푼다. 지금 보이는 글자·자리·크기·색으로 글자 요소를 만들고 원래
    * 요소는 숨긴다. 실행 취소 한 번에 둘 다 돌아간다.
    */
   const unfold = (id: ElementId) => {
     const field =
-      variant && loaded && currentSlide
-        ? templateTextField(id, loaded.content, variant, currentSlide.role)
+      variant && content && currentSlide
+        ? templateTextField(id, content, variant, currentSlide.role)
         : null;
     const look = readTextLook(id, CARD_SIZES[size].width);
-    if (!variant || !loaded || !field || !look) {
+    if (!variant || !loaded || !docSlide || !field || !look) {
       return;
     }
     const text = id.endsWith('-list')
@@ -285,19 +299,16 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
       align: look.align,
       lineHeight: look.lineHeight,
     };
-    const slideEdits = [...(loaded.edits[variant] ?? [])];
-    const current = slideEdits[slide]?.[id] ?? { dx: 0, dy: 0, scale: 1 };
-    slideEdits[slide] = { ...slideEdits[slide], [id]: { ...current, hidden: true } };
-    const slideLayers = [...(loaded.layers[variant] ?? [])];
-    for (let index = 0; index < slide; index += 1) {
-      slideLayers[index] ??= [];
-    }
-    slideLayers[slide] = [...layers, layer];
+    const current = docSlide.edits[variant]?.[id] ?? { dx: 0, dy: 0, scale: 1 };
     editor.remember();
-    editor.applyQuietly({
-      edits: { ...loaded.edits, [variant]: slideEdits },
-      layers: { ...loaded.layers, [variant]: slideLayers },
-    });
+    editor.applyQuietly(
+      withSlideLayers(
+        withSlideEdit(loaded.doc, docSlide.id, variant, id, { ...current, hidden: true }),
+        docSlide.id,
+        variant,
+        [...layers, layer],
+      ),
+    );
     setSelected(layerRef(layer.id));
   };
 
@@ -379,14 +390,14 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p>
       ) : null}
 
-      {loaded && slides && currentSlide && variant ? (
+      {loaded && content && slides && currentSlide && docSlide && variant ? (
         <>
           <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)_320px]">
             <div className={side}>
-              <ContentPanel content={loaded.content} onChange={editor.setContent} />
+              <ContentPanel content={content} onChange={editor.setContent} />
               <CaptionPanel
-                caption={loaded.content.caption ?? ''}
-                onChange={(caption) => editor.setContent({ ...loaded.content, caption })}
+                caption={content.caption ?? ''}
+                onChange={(caption) => editor.setContent({ ...content, caption })}
               />
             </div>
             <div className="flex min-w-0 flex-col gap-3">
@@ -400,8 +411,8 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 <EditorCanvas
                   slides={built}
                   size={size}
-                  slide={slide}
-                  edits={loaded.edits[variant]?.[slide]}
+                  slide={docSlide.id}
+                  edits={docSlide.edits[variant]}
                   layers={layers}
                   onLayers={setLayers}
                   checkLayers={checkLayers}
@@ -409,15 +420,17 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                     void fileToDataUrl(image).then(editor.setLogo, () => undefined)
                   }
                   onBrand={(image) => void editor.setBrandImage(image)}
-                  textColor={resolvePalette(variant, loaded.settings).headlineText}
+                  textColor={resolvePalette(variant, loaded.doc.settings).headlineText}
                   selected={selected}
                   onSelect={setSelected}
                   onSlideChange={(next) => {
-                    setSlide(next);
+                    setSlideId(next);
                     setSelected(null);
                   }}
-                  onEdit={(id, edit, group) => editor.setEdits(variant, slide, id, edit, group)}
-                  content={loaded.content}
+                  onEdit={(id, edit, group) =>
+                    editor.setEdits(variant, docSlide.id, id, edit, group)
+                  }
+                  content={content}
                   variant={variant}
                   onContentChange={editor.setContent}
                   sectionLabels={sectionLabels}
@@ -430,15 +443,14 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
             </div>
             <div className={side}>
               <PropertiesPanel
-                settings={loaded.settings}
+                settings={loaded.doc.settings}
                 onSettingsChange={editor.setSettings}
                 selected={isElementId(selected) ? selected : null}
                 sectionLabels={sectionLabels}
-                edit={
-                  isElementId(selected) ? loaded.edits[variant]?.[slide]?.[selected] : undefined
-                }
+                edit={isElementId(selected) ? docSlide.edits[variant]?.[selected] : undefined}
                 onEdit={(edit, group) =>
-                  isElementId(selected) && editor.setEdits(variant, slide, selected, edit, group)
+                  isElementId(selected) &&
+                  editor.setEdits(variant, docSlide.id, selected, edit, group)
                 }
                 layer={selectedLayer}
                 onLayerChange={(layer, group) =>
@@ -464,7 +476,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 onUnfold={
                   isElementId(selected) &&
                   variant &&
-                  templateTextField(selected, loaded.content, variant, currentSlide.role)
+                  templateTextField(selected, content, variant, currentSlide.role)
                     ? () => unfold(selected)
                     : undefined
                 }

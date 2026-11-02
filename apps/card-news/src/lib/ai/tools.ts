@@ -1,4 +1,11 @@
-import { SINGLE_ROLES } from '../card/document';
+import {
+  type CardDocument,
+  documentContent,
+  withContent,
+  withSlideEdit,
+  withSlideEdits,
+  withSlideLayers,
+} from '../card/document';
 import { contentFromDraft, draftFromContent } from '../card/fromJob';
 import { textScale } from '../card/layout';
 import {
@@ -24,7 +31,6 @@ import {
 } from '../card/types';
 import { visibleSectionLabels } from '../card/render/slides';
 import { VARIANTS, variantOf } from '../card/variants';
-import type { CardEdits } from '../client/storage';
 import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useCardEditor';
 
 /**
@@ -62,7 +68,7 @@ export interface ToolContext {
   /** 바꾸기 직전 값을 실행 취소 기록에 쌓는다. */
   remember: () => void;
   /** 기록에 쌓지 않고 바꾼다. */
-  apply: (patch: Partial<EditSnapshot>) => void;
+  apply: (doc: EditSnapshot) => void;
   variant: () => VariantId;
   pickVariant: (variant: VariantId) => void;
   size: () => CardSizeId;
@@ -136,14 +142,16 @@ export function describeScreen(context: ToolContext): string {
   const variant = variantOf(context.variant());
   const selected = context.selected();
   const loaded = context.readLoaded();
-  const labels = loaded
-    ? visibleSectionLabels(
-        { variant: variant.id, content: loaded.content },
-        SINGLE_ROLES[context.slide()] ?? 'free',
-      )
-    : [];
+  const slide = loaded?.doc.slides[context.slide()];
+  const labels =
+    loaded && slide
+      ? visibleSectionLabels(
+          { variant: variant.id, content: documentContent(loaded.doc, slide) },
+          slide.role,
+        )
+      : [];
   const layer = isLayerRef(selected)
-    ? loaded?.layers[variant.id]?.[context.slide()]?.find((item) => layerRef(item.id) === selected)
+    ? slide?.layers[variant.id]?.find((item) => layerRef(item.id) === selected)
     : undefined;
   const name = !selected
     ? ''
@@ -195,25 +203,12 @@ function round(value: number): number {
 }
 
 /** 첫 변경 앞에서만 기록에 쌓고 바꾼다. */
-function change(context: ToolContext, session: ToolSession, patch: Partial<EditSnapshot>) {
+function change(context: ToolContext, session: ToolSession, doc: CardDocument) {
   if (!session.remembered) {
     context.remember();
     session.remembered = true;
   }
-  context.apply(patch);
-}
-
-function withEdit(
-  edits: CardEdits,
-  variant: VariantId,
-  slide: number,
-  id: ElementId,
-  edit: ElementEdit | null,
-): CardEdits {
-  const slides: SlideEdits[] = [...(edits[variant] ?? [])];
-  const { [id]: _previous, ...others } = slides[slide] ?? {};
-  slides[slide] = edit ? { ...others, [id]: edit } : others;
-  return { ...edits, [variant]: slides };
+  context.apply(doc);
 }
 
 function inside(a: MeasuredBox, b: MeasuredBox): boolean {
@@ -250,17 +245,20 @@ function slideSummary(
 ) {
   const size = CARD_SIZES[context.size()];
   const variant = context.variant();
-  const edits = loaded.edits[variant]?.[slide];
-  const labels = visibleSectionLabels(
-    { variant, content: loaded.content },
-    SINGLE_ROLES[slide] ?? 'free',
-  );
+  const docSlide = loaded.doc.slides[slide];
+  const edits = docSlide?.edits[variant];
+  const labels = docSlide
+    ? visibleSectionLabels(
+        { variant, content: documentContent(loaded.doc, docSlide) },
+        docSlide.role,
+      )
+    : [];
   const outside = (box: MeasuredBox) =>
     box.x < -TOLERANCE ||
     box.y < -TOLERANCE ||
     box.x + box.width > size.width + TOLERANCE ||
     box.y + box.height > size.height + TOLERANCE;
-  const layers = (loaded.layers[variant]?.[slide] ?? []).map((layer) => {
+  const layers = (docSlide?.layers[variant] ?? []).map((layer) => {
     const box = boxes.find((item) => item.id === layerRef(layer.id));
     const {
       src: _src,
@@ -328,7 +326,7 @@ async function readCard(context: ToolContext): Promise<string> {
   }
   const variant = context.variant();
   const size = CARD_SIZES[context.size()];
-  const { photo, brandImage, ...settings } = loaded.settings;
+  const { photo, brandImage, ...settings } = loaded.doc.settings;
   return JSON.stringify({
     job: { company: loaded.job.companyName, title: loaded.job.title },
     variant: { id: variant, label: variantOf(variant).label },
@@ -343,7 +341,7 @@ async function readCard(context: ToolContext): Promise<string> {
       brandImage: Boolean(brandImage),
       logo: Boolean(loaded.logo),
     },
-    content: loaded.content,
+    content: documentContent(loaded.doc),
     slides: measured.map((slide, index) => slideSummary(context, loaded, slide, index)),
   });
 }
@@ -406,7 +404,7 @@ function setContent(
     }
   }
   if (Object.keys(patch).length > 0) {
-    change(context, session, { content: { ...loaded.content, ...patch } });
+    change(context, session, withContent(loaded.doc, { ...documentContent(loaded.doc), ...patch }));
   }
   return JSON.stringify({ changed: Object.keys(patch), rejected });
 }
@@ -427,15 +425,15 @@ async function rewriteCopy(
   const result = await requestDraft({
     jobId: loaded.job.id,
     instruction,
-    current: draftFromContent(loaded.content),
+    current: draftFromContent(documentContent(loaded.doc)),
   });
   // 모델 없이 원문을 잘라 만든 초안은 지금 문구보다 거칠다. 바꾸지 않고 알린다.
   if (result.source === 'fallback') {
     return `다시 쓰지 못해 문구를 그대로 두었습니다. ${result.message ?? ''}`;
   }
   const latest = context.readLoaded() ?? loaded;
-  const content = contentFromDraft(latest.job, result.draft, latest.content);
-  change(context, session, { content });
+  const content = contentFromDraft(latest.job, result.draft, documentContent(latest.doc));
+  change(context, session, withContent(latest.doc, content));
   return JSON.stringify({ changed: true, content });
 }
 
@@ -468,7 +466,7 @@ function setSettings(
     }
   }
   if (Object.keys(patch).length > 0) {
-    change(context, session, { settings: { ...loaded.settings, ...patch } });
+    change(context, session, { ...loaded.doc, settings: { ...loaded.doc.settings, ...patch } });
   }
   return JSON.stringify({ changed: patch, rejected });
 }
@@ -495,15 +493,16 @@ async function editElements(
   }
   const variant = context.variant();
   const size = CARD_SIZES[context.size()];
-  let edits = loaded.edits;
+  let doc = loaded.doc;
   const results: unknown[] = [];
   const changed = new Set<string>();
   for (const raw of changes) {
     const slide = asSlide(raw.slide);
     const id = asElementId(raw.id);
+    const docSlide = slide === null ? undefined : doc.slides[slide];
     const boxes = slide === null ? [] : (measured[slide]?.boxes ?? []);
     const box = boxes.find((b) => b.id === id);
-    if (slide === null || !id || !box) {
+    if (slide === null || !docSlide || !id || !box) {
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 요소입니다.' });
       continue;
     }
@@ -521,7 +520,7 @@ async function editElements(
       continue;
     }
     changed.add(`${slide}:${id}`);
-    const edit = edits[variant]?.[slide]?.[id] ?? NO_EDIT;
+    const edit = docSlide.edits[variant]?.[id] ?? NO_EDIT;
     const scale = clamp(asNumber(raw.scale) ?? edit.scale, MIN_SCALE, MAX_SCALE);
     const ratio = scale / edit.scale;
     const width = box.width * ratio;
@@ -567,7 +566,7 @@ async function editElements(
       scale: round(scale),
       ...(hidden ? { hidden: true } : {}),
     };
-    edits = withEdit(edits, variant, slide, id, next);
+    doc = withSlideEdit(doc, docSlide.id, variant, id, next);
     // 같은 요소를 한 번 더 바꾸면 방금 옮긴 자리에서 이어 계산한다.
     Object.assign(box, {
       x: nextX - width / 2,
@@ -587,8 +586,8 @@ async function editElements(
       edit: next,
     });
   }
-  if (edits !== loaded.edits) {
-    change(context, session, { edits });
+  if (doc !== loaded.doc) {
+    change(context, session, doc);
   }
   return JSON.stringify({ results });
 }
@@ -610,36 +609,24 @@ function resetElements(
   const ids = Array.isArray(args.ids)
     ? args.ids.map(asElementId).filter((id) => id !== null)
     : null;
-  const slides = (loaded.edits[variant] ?? []).map((edits, index) => {
+  let doc = loaded.doc;
+  loaded.doc.slides.forEach((docSlide, index) => {
     if (slide !== null && index !== slide) {
-      return edits;
+      return;
     }
-    if (!ids) {
-      return {};
-    }
-    return Object.fromEntries(
-      Object.entries(edits ?? {}).filter(([id]) => !ids.includes(id as ElementId)),
-    ) as SlideEdits;
+    const edits = ids
+      ? (Object.fromEntries(
+          Object.entries(docSlide.edits[variant] ?? {}).filter(
+            ([id]) => !ids.includes(id as ElementId),
+          ),
+        ) as SlideEdits)
+      : {};
+    doc = withSlideEdits(doc, docSlide.id, variant, edits);
   });
-  change(context, session, { edits: { ...loaded.edits, [variant]: slides } });
+  change(context, session, doc);
   return JSON.stringify({
     reset: { slide: slide === null ? 'all' : slide + 1, ids: ids ?? 'all' },
   });
-}
-
-/** 장 하나의 자유 요소를 바꾼 레이어 묶음. */
-function withLayers(
-  loaded: LoadedCard,
-  variant: VariantId,
-  slide: number,
-  layers: Layer[],
-): LoadedCard['layers'] {
-  const slides: Layer[][] = [...(loaded.layers[variant] ?? [])];
-  for (let index = 0; index < slide; index += 1) {
-    slides[index] ??= [];
-  }
-  slides[slide] = layers;
-  return { ...loaded.layers, [variant]: slides };
 }
 
 /** 글자 요소 값 가운데 모델이 준 것만 검사해 꺼낸다. 틀린 값은 `rejected` 에 이름을 남긴다. */
@@ -709,7 +696,8 @@ function addText(
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
-  if (slide === null) {
+  const docSlide = slide === null ? undefined : loaded.doc.slides[slide];
+  if (slide === null || !docSlide) {
     return `없는 장입니다: ${String(args.slide)}`;
   }
   const rejected: string[] = [];
@@ -734,8 +722,8 @@ function addText(
     ...patch,
   };
   const variant = context.variant();
-  const layers = [...(loaded.layers[variant]?.[slide] ?? []), layer];
-  change(context, session, { layers: withLayers(loaded, variant, slide, layers) });
+  const layers = [...(docSlide.layers[variant] ?? []), layer];
+  change(context, session, withSlideLayers(loaded.doc, docSlide.id, variant, layers));
   return JSON.stringify({ added: { slide: slide + 1, id: layer.id }, rejected });
 }
 
@@ -754,27 +742,25 @@ function editLayers(
     return 'changes 가 비었습니다.';
   }
   const variant = context.variant();
-  let next = loaded;
+  let next = loaded.doc;
   const results: unknown[] = [];
   for (const raw of changes) {
     const slide = asSlide(raw.slide);
     const id = String(raw.id ?? '').replace(/^layer:/, '');
-    const layers = slide === null ? [] : (next.layers[variant]?.[slide] ?? []);
+    const docSlide = slide === null ? undefined : next.slides[slide];
+    const layers = docSlide?.layers[variant] ?? [];
     const layer = layers.find((item) => item.id === id);
-    if (slide === null || !layer) {
+    if (slide === null || !docSlide || !layer) {
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 자유 요소입니다.' });
       continue;
     }
     if (raw.remove === true) {
-      next = {
-        ...next,
-        layers: withLayers(
-          next,
-          variant,
-          slide,
-          layers.filter((item) => item !== layer),
-        ),
-      };
+      next = withSlideLayers(
+        next,
+        docSlide.id,
+        variant,
+        layers.filter((item) => item !== layer),
+      );
       results.push({ slide: slide + 1, id, removed: true });
       continue;
     }
@@ -788,19 +774,16 @@ function editLayers(
             ...(patch.x !== undefined ? { x: patch.x } : {}),
             ...(patch.y !== undefined ? { y: patch.y } : {}),
           };
-    next = {
-      ...next,
-      layers: withLayers(
-        next,
-        variant,
-        slide,
-        layers.map((item) => (item === layer ? updated : item)),
-      ),
-    };
+    next = withSlideLayers(
+      next,
+      docSlide.id,
+      variant,
+      layers.map((item) => (item === layer ? updated : item)),
+    );
     results.push({ slide: slide + 1, id, changed: Object.keys(patch), rejected });
   }
-  if (next !== loaded) {
-    change(context, session, { layers: next.layers });
+  if (next !== loaded.doc) {
+    change(context, session, next);
   }
   return JSON.stringify({ results });
 }

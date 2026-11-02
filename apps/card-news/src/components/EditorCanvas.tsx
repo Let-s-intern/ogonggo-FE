@@ -54,6 +54,8 @@ import type { RenderKit } from '@/lib/client/useRenderKit';
  */
 
 export interface BuiltSlide {
+  /** 문서 장의 id. */
+  id: string;
   role: SlideRole;
   element: ReactElement;
   overflow: boolean;
@@ -68,7 +70,8 @@ export function useBuiltSlides(
   return useMemo(
     () =>
       slides && kit
-        ? slides.map(({ spec, role }) => ({
+        ? slides.map(({ id, spec, role }) => ({
+            id,
             role,
             ...buildSlide(spec, role, CARD_SIZES[size], kit.measure, kit.assets),
           }))
@@ -77,19 +80,19 @@ export function useBuiltSlides(
   );
 }
 
-/** 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. `slideIndex` 를 주면 `measureSlideBoxes` 가 찾는다. */
+/** 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. `slideId` 를 주면 `measureSlideBoxes` 가 찾는다. */
 function SlideStage({
   element,
   size,
   width,
   stageRef,
-  slideIndex,
+  slideId,
 }: {
   element: ReactElement;
   size: CardSize;
   width: number;
   stageRef?: Ref<HTMLDivElement>;
-  slideIndex?: number;
+  slideId?: string;
 }) {
   const scale = width / size.width;
   return (
@@ -97,7 +100,7 @@ function SlideStage({
       <div
         ref={stageRef}
         data-card-canvas=""
-        data-slide={slideIndex}
+        data-slide={slideId}
         style={{
           position: 'absolute',
           top: 0,
@@ -135,8 +138,8 @@ interface Box {
  * 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`. 자유 요소는 `layer:<id>` 로
  * 뒤에 붙는다.
  */
-export function measureSlideBoxes(slide: number, cardWidth: number): MeasuredBox[] | null {
-  const stage = document.querySelector(`[data-card-canvas][data-slide="${slide}"]`);
+export function measureSlideBoxes(slideId: string, cardWidth: number): MeasuredBox[] | null {
+  const stage = document.querySelector(`[data-card-canvas][data-slide="${CSS.escape(slideId)}"]`);
   if (!stage) {
     return null;
   }
@@ -331,14 +334,15 @@ export function EditorCanvas({
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
-  slide: number;
+  /** 보고 있는 장의 id. */
+  slide: string;
   /** 이 장의 편집값. */
   edits: Partial<Record<ElementId, ElementEdit>> | undefined;
   /** 이 장의 자유 요소. 배열 순서가 칠하는 순서다. */
   layers: Layer[];
   selected: Selection | null;
   onSelect: (id: Selection | null) => void;
-  onSlideChange: (slide: number) => void;
+  onSlideChange: (slideId: string) => void;
   onEdit: (id: ElementId, edit: ElementEdit | null, group?: string) => void;
   onLayers: (layers: Layer[], group?: string) => void;
   /** 문구와 템플릿. 템플릿 글자를 두 번 눌러 고칠 때 쓴다. */
@@ -394,7 +398,7 @@ export function EditorCanvas({
   }, [cardSize]);
 
   const scale = width / cardSize.width;
-  const current = slides[slide];
+  const current = slides.find((built) => built.id === slide);
   const role = current?.role ?? 'free';
 
   // 그릴 때마다 요소 상자를 다시 잰다(1080 폭 좌표). 편집값이 바뀌면 상자도 따라 움직인다.
@@ -1077,21 +1081,21 @@ export function EditorCanvas({
       <div className="flex justify-center gap-3">
         {slides.map((built, index) => (
           <button
-            key={index}
+            key={built.id}
             type="button"
-            onClick={() => onSlideChange(index)}
-            aria-pressed={index === slide}
+            onClick={() => onSlideChange(built.id)}
+            aria-pressed={built.id === slide}
             className="flex flex-col items-center gap-1"
           >
             <span
               className={`pointer-events-none block overflow-hidden outline-offset-2 ${
-                index === slide ? 'outline outline-2 outline-blue-500' : 'hover:outline-gray-300'
+                built.id === slide ? 'outline outline-2 outline-blue-500' : 'hover:outline-gray-300'
               }`}
             >
-              <SlideStage element={built.element} size={cardSize} width={96} slideIndex={index} />
+              <SlideStage element={built.element} size={cardSize} width={96} slideId={built.id} />
             </span>
             <span
-              className={`text-xs ${index === slide ? 'font-bold text-gray-900' : 'text-gray-500'}`}
+              className={`text-xs ${built.id === slide ? 'font-bold text-gray-900' : 'text-gray-500'}`}
             >
               {SLIDE_LABELS[index]}
             </span>

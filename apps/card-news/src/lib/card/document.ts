@@ -3,6 +3,8 @@ import type {
   CardLogo,
   CardSettings,
   CardSpec,
+  ElementEdit,
+  ElementId,
   Layer,
   SlideEdits,
   VariantId,
@@ -77,7 +79,7 @@ export function newSlideId(): string {
 }
 
 /** 공고 하나로 만든 문서의 장. 지금 세 장과 같은 순서다. */
-export const SINGLE_ROLES: readonly SlideRole[] = ['cover', 'job', 'profile'];
+const SINGLE_ROLES: readonly SlideRole[] = ['cover', 'job', 'profile'];
 
 /**
  * 공고 하나로 문서를 만든다. `edits`·`layers` 는 장 번호 순서로 남아 있던 템플릿별 편집값이다(예전
@@ -165,5 +167,72 @@ export function slideSpec(
     },
     id: slide.id,
     role: slide.role,
+  };
+}
+
+/** 장 하나를 바꾼 문서. 없는 id 면 그대로다. */
+function withSlide(
+  doc: CardDocument,
+  slideId: string,
+  change: (slide: DocumentSlide) => DocumentSlide,
+): CardDocument {
+  return {
+    ...doc,
+    slides: doc.slides.map((slide) => (slide.id === slideId ? change(slide) : slide)),
+  };
+}
+
+/** 요소 하나의 편집값을 바꾼 문서. `null` 이면 템플릿 원래 배치로 돌린다. */
+export function withSlideEdit(
+  doc: CardDocument,
+  slideId: string,
+  variant: VariantId,
+  id: ElementId,
+  edit: ElementEdit | null,
+): CardDocument {
+  return withSlide(doc, slideId, (slide) => {
+    const { [id]: _previous, ...others } = slide.edits[variant] ?? {};
+    return {
+      ...slide,
+      edits: { ...slide.edits, [variant]: edit ? { ...others, [id]: edit } : others },
+    };
+  });
+}
+
+/** 장 하나의 편집값을 통째로 바꾼 문서. */
+export function withSlideEdits(
+  doc: CardDocument,
+  slideId: string,
+  variant: VariantId,
+  edits: SlideEdits,
+): CardDocument {
+  return withSlide(doc, slideId, (slide) => ({
+    ...slide,
+    edits: { ...slide.edits, [variant]: edits },
+  }));
+}
+
+/** 장 하나의 자유 요소 목록을 바꾼 문서. */
+export function withSlideLayers(
+  doc: CardDocument,
+  slideId: string,
+  variant: VariantId,
+  layers: Layer[],
+): CardDocument {
+  return withSlide(doc, slideId, (slide) => ({
+    ...slide,
+    layers: { ...slide.layers, [variant]: layers },
+  }));
+}
+
+/** 문구를 바꾼 문서. 인스타그램 본문은 문서에, 나머지는 그 공고에 둔다. */
+export function withContent(doc: CardDocument, content: CardContent, jobIndex = 0): CardDocument {
+  const { caption, ...jobContent } = content;
+  return {
+    ...doc,
+    caption,
+    jobs: doc.jobs.map((job, index) =>
+      index === jobIndex ? { ...job, content: jobContent } : job,
+    ),
   };
 }
