@@ -637,9 +637,25 @@ export function EditorCanvas({
         image.onerror = reject;
         image.src = src;
       });
-      // 작은 로고 SVG 는 보이는 크기로 키운다.
-      const grow = Math.max(1, 360 / Math.max(size.width, size.height));
-      placeImage({ dataUrl: src, width: size.width * grow, height: size.height * grow }, at);
+      // 아주 작은 로고 SVG(52×25 같은)만 보이는 크기로 키운다. 아이콘·꾸미기는 그린 크기 그대로다.
+      const longest = Math.max(size.width, size.height);
+      const grow = longest < 100 ? 360 / longest : 1;
+      const width = size.width * grow;
+      const height = size.height * grow;
+      // 자리를 주지 않고 연달아 넣으면 같은 가운데에 겹치므로, 이미 그 자리에 있는 만큼 비켜 놓는다.
+      let offset = 0;
+      if (!at) {
+        const taken = (shift: number) =>
+          layersRef.current.some(
+            (layer) =>
+              Math.abs(layer.x + layer.width / 2 - (cardSize.width / 2 + shift)) < 2 &&
+              Math.abs(layer.y - (cardSize.height / 2 + shift)) < height,
+          );
+        while (taken(offset) && offset < PASTE_OFFSET * 10) {
+          offset += PASTE_OFFSET;
+        }
+      }
+      placeImage({ dataUrl: src, width, height }, at, offset);
     } catch {
       setMessage('이미지를 읽지 못했습니다.');
     }

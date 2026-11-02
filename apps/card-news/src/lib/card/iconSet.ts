@@ -338,12 +338,12 @@ export const CARD_ICONS: CardIcon[] = [
   },
 ];
 
-/** 아이콘을 한 색으로 칠한 SVG data URL. 이미지 요소로 넣으므로 크게 그려 둔다(흐려지지 않게). */
+/** 아이콘을 한 색으로 칠한 SVG data URL. 이미지 요소로 넣으므로 140px 로 그려 둔다. */
 export function iconDataUrl(icon: CardIcon, color: string): string {
   const paint =
     icon.kind === 'outline'
       ? `fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`
       : `fill="${color}"`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 24 24" ${paint}>${icon.body.replaceAll('currentColor', color)}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 24 24" ${paint}>${icon.body.replaceAll('currentColor', color)}</svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }

@@ -239,14 +239,14 @@ export const DECORATIONS: Decoration[] = [
   },
 ];
 
-/** 장식을 한 색으로 칠한 SVG data URL. 이미지 요소로 넣으므로 3배로 크게 그려 둔다(흐려지지 않게). */
+/** 장식을 한 색으로 칠한 SVG data URL. 이미지 요소로 넣으므로 2배로 그려 둔다(흐려지지 않게). */
 export function decorationDataUrl(decoration: Decoration, color: string): string {
   const paint =
     decoration.paint === 'stroke'
       ? `fill="none" stroke="${color}" stroke-width="${decoration.strokeWidth ?? 5}" stroke-linecap="round" stroke-linejoin="round"`
       : `fill="${color}"${decoration.opacity ? ` fill-opacity="${decoration.opacity}"` : ''}`;
   const paths = decoration.paths.map((d) => `<path d="${d}"/>`).join('');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${decoration.width * 3}" height="${decoration.height * 3}" viewBox="0 0 ${decoration.width} ${decoration.height}" ${paint}>${paths}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${decoration.width * 2}" height="${decoration.height * 2}" viewBox="0 0 ${decoration.width} ${decoration.height}" ${paint}>${paths}</svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
