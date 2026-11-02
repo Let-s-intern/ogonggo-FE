@@ -294,7 +294,13 @@ function slideSummary(
       y: Math.round(box.y),
       width: Math.round(box.width),
       height: Math.round(box.height),
-      edit: { dx: edit.dx, dy: edit.dy, scale: edit.scale, hidden: Boolean(edit.hidden) },
+      edit: {
+        dx: edit.dx,
+        dy: edit.dy,
+        scale: edit.scale,
+        hidden: Boolean(edit.hidden),
+        locked: Boolean(edit.locked),
+      },
       outside: !edit.hidden && outside(box),
     };
   });
@@ -566,9 +572,13 @@ async function editElements(
       });
       continue;
     }
-    changed.add(`${slide}:${id}`);
     const variant = slideVariant(docSlide, context.variant());
     const edit = slideEditsOf(doc, docSlide)[variant]?.[id] ?? NO_EDIT;
+    if (edit.locked) {
+      results.push({ slide: slide + 1, id, error: '잠김. 사람이 잠근 요소라 바꾸지 않았습니다.' });
+      continue;
+    }
+    changed.add(`${slide}:${id}`);
     const scale = clamp(asNumber(raw.scale) ?? edit.scale, MIN_SCALE, MAX_SCALE);
     const ratio = scale / edit.scale;
     const width = box.width * ratio;
@@ -662,13 +672,12 @@ function resetElements(
       return;
     }
     const variant = slideVariant(docSlide, context.variant());
-    const edits = ids
-      ? (Object.fromEntries(
-          Object.entries(slideEditsOf(loaded.doc, docSlide)[variant] ?? {}).filter(
-            ([id]) => !ids.includes(id as ElementId),
-          ),
-        ) as SlideEdits)
-      : {};
+    // 잠근 요소는 처음으로 돌리지 않는다.
+    const edits = Object.fromEntries(
+      Object.entries(slideEditsOf(loaded.doc, docSlide)[variant] ?? {}).filter(
+        ([id, edit]) => edit?.locked || (ids !== null && !ids.includes(id as ElementId)),
+      ),
+    ) as SlideEdits;
     doc = withSlideEdits(doc, docSlide.id, variant, edits);
   });
   change(context, session, doc);
@@ -800,6 +809,10 @@ function editLayers(
     const layer = layers.find((item) => item.id === id);
     if (slide === null || !docSlide || !layer) {
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 자유 요소입니다.' });
+      continue;
+    }
+    if (layer.locked) {
+      results.push({ slide: slide + 1, id, error: '잠김. 사람이 잠근 요소라 바꾸지 않았습니다.' });
       continue;
     }
     if (raw.remove === true) {

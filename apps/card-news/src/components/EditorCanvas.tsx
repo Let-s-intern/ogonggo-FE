@@ -13,7 +13,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Button } from '@ogonggo/ui';
 import type { RenderSlide, SlideRole } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
@@ -201,6 +200,8 @@ const MIN_SCALE = 0.2;
 const MAX_SCALE = 5;
 /** 캔버스 칸 안쪽 여백(px). 맞춤 배율은 이만큼 띄운다. */
 const FRAME_PADDING = 24;
+/** 캔버스 칸 위 여백. 위 가운데 도구 막대 자리다. */
+const FRAME_TOP = 60;
 
 /** `rgb(…)` 색을 `#RRGGBB` 로. */
 function toHex(color: string): string {
@@ -333,8 +334,22 @@ type Gesture = {
   edit: ElementEdit;
   /** 자유 요소를 끌 때 처음 값. */
   layer: Layer | null;
+  /** 끌기 시작할 때의 요소 상자(1080 폭 좌표). 장 가운데 선에 붙일 때 쓴다. */
+  box: Box | null;
   moved: boolean;
 };
+
+/** 캔버스 도구. `텍스트 넣기` 는 누른 자리에 글자를 넣고 `선택` 으로 돌아간다. `손 도구` 는 끌어서 캔버스 칸을 움직인다. */
+type CanvasTool = 'select' | 'text' | 'hand';
+
+const TOOLS: { value: CanvasTool; label: string }[] = [
+  { value: 'select', label: '선택' },
+  { value: 'text', label: '텍스트 넣기' },
+  { value: 'hand', label: '손 도구' },
+];
+
+/** 장 가운데 선에 붙는 거리(1080 폭 px). */
+const SNAP = 12;
 
 export function EditorCanvas({
   slides,
@@ -400,6 +415,12 @@ export function EditorCanvas({
   /** 두 번 눌러 연 템플릿 글자 입력 창. */
   const [textEdit, setTextEdit] = useState<{ id: ElementId; sectionIndex?: number } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [tool, setTool] = useState<CanvasTool>('select');
+  /** 끄는 동안 붙은 장 가운데 선. */
+  const [guides, setGuides] = useState({ vertical: false, horizontal: false });
+  /** 우클릭 메뉴. 자리는 캔버스 칸 기준 화면 px 다. */
+  const [menu, setMenu] = useState<{ id: Selection; x: number; y: number } | null>(null);
+  const pan = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const gestureCount = useRef(0);
   // 붙여넣기·이미지 줄이기는 기다린 뒤 바꾼다. 그 사이 바뀐 목록 위에 더하도록 최신 값을 본다.
@@ -417,14 +438,14 @@ export function EditorCanvas({
         setWidth(Math.round(cardSize.width * zoom));
         return;
       }
-      const room = FRAME_PADDING * 2;
       setWidth(
         Math.max(
           120,
           Math.floor(
             Math.min(
-              frame.clientWidth - room,
-              ((frame.clientHeight - room) * cardSize.width) / cardSize.height,
+              frame.clientWidth - FRAME_PADDING * 2,
+              ((frame.clientHeight - FRAME_TOP - FRAME_PADDING) * cardSize.width) /
+                cardSize.height,
             ),
           ),
         ),
@@ -497,12 +518,15 @@ export function EditorCanvas({
   const layerOf = (id: Selection | null) =>
     isLayerRef(id) ? (layers.find((layer) => layerRef(layer.id) === id) ?? null) : null;
   const parentOf = (id: Selection) => boxes.find((box) => box.id === id)?.parent ?? null;
+  const lockedOf = (id: Selection) =>
+    isLayerRef(id) ? Boolean(layerOf(id)?.locked) : Boolean(edits?.[id]?.locked);
   const label = (id: Selection) => {
-    if (isLayerRef(id)) {
-      const layer = layerOf(id);
-      return layer ? layerLabel(layer) : '자유 요소';
-    }
-    return elementLabel(id, sectionLabels);
+    const name = isLayerRef(id)
+      ? layerOf(id)
+        ? layerLabel(layerOf(id)!)
+        : '자유 요소'
+      : elementLabel(id, sectionLabels);
+    return lockedOf(id) ? `${name} (잠김)` : name;
   };
 
   /** 장 하나의 자유 요소를 바꾼다. 받기 요청이 너무 커지면 바꾸지 않고 알린다. */
@@ -804,7 +828,13 @@ export function EditorCanvas({
     const { id, drill }: { id: Selection; drill: ElementId | null } =
       kind === 'move' && !isLayerRef(hit) ? pick(event, hit) : { id: hit, drill: null };
     onSelect(id);
+    setMenu(null);
     const layer = layerOf(id);
+    // 잠근 요소는 고르기만 하고 끌거나 크기를 바꾸지 않는다.
+    if (lockedOf(id)) {
+      gesture.current = null;
+      return;
+    }
     const element = stageRef.current?.querySelector(
       layer ? `[data-layer="${layer.id}"]` : `[data-el="${id}"]`,
     );
@@ -830,19 +860,26 @@ export function EditorCanvas({
       startDistance: Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY)),
       edit: layer || isLayerRef(id) ? NO_EDIT : editOf(id),
       layer,
+      box: boxes.find((box) => box.id === id) ?? null,
       moved: false,
     };
     (event.currentTarget as Element).setPointerCapture(event.pointerId);
   };
 
   /** 자유 요소 끌기·크기. 크기는 가운데를 두고 바꾼다 — 글자는 폭만(줄이 다시 나뉜다), 이미지는 비율째. */
-  const moveLayer = (g: Gesture, layer: Layer, event: PointerEvent) => {
+  const moveLayer = (
+    g: Gesture,
+    layer: Layer,
+    event: PointerEvent,
+    offsetX: number,
+    offsetY: number,
+  ) => {
     if (g.kind === 'move') {
       replaceLayer(
         {
           ...layer,
-          x: Math.round(layer.x + (event.clientX - g.startX) / g.factor),
-          y: Math.round(layer.y + (event.clientY - g.startY) / g.factor),
+          x: Math.round(layer.x + offsetX / g.factor),
+          y: Math.round(layer.y + offsetY / g.factor),
         },
         g.group,
       );
@@ -874,14 +911,32 @@ export function EditorCanvas({
     if (!g) {
       return;
     }
-    const offsetX = event.clientX - g.startX;
-    const offsetY = event.clientY - g.startY;
+    let offsetX = event.clientX - g.startX;
+    let offsetY = event.clientY - g.startY;
     if (!g.moved && Math.hypot(offsetX, offsetY) < DRAG_THRESHOLD) {
       return;
     }
     g.moved = true;
+    // 끌 때 요소 가운데가 장 가운데 선 가까이 오면 붙이고 안내선을 그린다.
+    if (g.kind === 'move' && g.box && scale) {
+      const centerX = g.box.x + g.box.width / 2;
+      const centerY = g.box.y + g.box.height / 2;
+      const vertical = Math.abs(centerX + offsetX / scale - cardSize.width / 2) < SNAP;
+      const horizontal = Math.abs(centerY + offsetY / scale - cardSize.height / 2) < SNAP;
+      if (vertical) {
+        offsetX = (cardSize.width / 2 - centerX) * scale;
+      }
+      if (horizontal) {
+        offsetY = (cardSize.height / 2 - centerY) * scale;
+      }
+      setGuides((current) =>
+        current.vertical === vertical && current.horizontal === horizontal
+          ? current
+          : { vertical, horizontal },
+      );
+    }
     if (g.layer) {
-      moveLayer(g, g.layer, event);
+      moveLayer(g, g.layer, event, offsetX, offsetY);
       return;
     }
     if (isLayerRef(g.id)) {
@@ -910,6 +965,7 @@ export function EditorCanvas({
   const end = () => {
     const g = gesture.current;
     gesture.current = null;
+    setGuides({ vertical: false, horizontal: false });
     if (!g || g.moved || g.kind !== 'move' || isLayerRef(g.id)) {
       return;
     }
@@ -951,7 +1007,7 @@ export function EditorCanvas({
       addText();
       return;
     }
-    if (!selected) {
+    if (!selected || lockedOf(selected)) {
       return;
     }
     const layer = layerOf(selected);
@@ -994,6 +1050,80 @@ export function EditorCanvas({
     } else if (event.key === 'Enter' && layer?.kind === 'text') {
       event.preventDefault();
       setEditing(layer.id);
+    }
+  };
+
+  /** 자유 요소를 칠하는 순서에서 한 칸 옮긴다. 1 이면 앞으로(위로), -1 이면 뒤로. */
+  const orderLayer = (id: string, step: number) => {
+    const current = layersRef.current;
+    const index = current.findIndex((layer) => layer.id === id);
+    const target = Math.max(0, Math.min(current.length - 1, index + step));
+    if (index < 0 || target === index) {
+      return;
+    }
+    const next = current.filter((layer) => layer.id !== id);
+    next.splice(target, 0, current[index]!);
+    commitLayers(next);
+  };
+
+  /** 잠그거나 푼다. 템플릿 요소는 편집값에, 자유 요소는 요소에 둔다. */
+  const toggleLock = (id: Selection) => {
+    const layer = layerOf(id);
+    if (layer) {
+      replaceLayer({ ...layer, locked: layer.locked ? undefined : true });
+    } else if (!isLayerRef(id)) {
+      const edit = editOf(id);
+      onEdit(id, { ...edit, locked: edit.locked ? undefined : true });
+    }
+  };
+
+  // 우클릭 메뉴 밖을 누르거나 Esc 를 누르면 닫는다.
+  useEffect(() => {
+    if (!menu) {
+      return;
+    }
+    const close = (event: Event) => {
+      if (
+        event instanceof KeyboardEvent
+          ? event.key === 'Escape'
+          : !(event.target instanceof Element && event.target.closest('[data-canvas-menu]'))
+      ) {
+        setMenu(null);
+      }
+    };
+    window.addEventListener('pointerdown', close);
+    window.addEventListener('keydown', close);
+    return () => {
+      window.removeEventListener('pointerdown', close);
+      window.removeEventListener('keydown', close);
+    };
+  }, [menu]);
+
+  /** `텍스트 넣기`·`손 도구` 가 받는 누르기. */
+  const toolDown = (event: PointerEvent) => {
+    event.preventDefault();
+    frameRef.current?.focus({ preventScroll: true });
+    if (tool === 'text') {
+      addText(undefined, toCard(event.clientX, event.clientY));
+      setTool('select');
+      return;
+    }
+    const frame = frameRef.current;
+    if (frame) {
+      pan.current = {
+        x: event.clientX,
+        y: event.clientY,
+        left: frame.scrollLeft,
+        top: frame.scrollTop,
+      };
+      (event.currentTarget as Element).setPointerCapture(event.pointerId);
+    }
+  };
+  const toolMove = (event: PointerEvent) => {
+    const frame = frameRef.current;
+    if (pan.current && frame) {
+      frame.scrollLeft = pan.current.left - (event.clientX - pan.current.x);
+      frame.scrollTop = pan.current.top - (event.clientY - pan.current.y);
     }
   };
 
@@ -1064,7 +1194,26 @@ export function EditorCanvas({
   const handle = 'absolute size-3 rounded-sm border-2 border-blue-500 bg-white';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div
+        role="toolbar"
+        aria-label="캔버스 도구"
+        className="absolute left-1/2 top-3 z-20 flex -translate-x-1/2 gap-1 rounded-xl bg-white p-1 shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+      >
+        {TOOLS.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            aria-pressed={tool === item.value}
+            onClick={() => setTool(item.value)}
+            className={`h-8 rounded-md px-3 text-xs ${
+              tool === item.value ? 'bg-blue-50 font-bold text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
       <div
         ref={frameRef}
         tabIndex={0}
@@ -1073,7 +1222,7 @@ export function EditorCanvas({
         onDrop={onDrop}
         aria-label="카드 캔버스. 요소를 눌러 고르고 끌어 옮깁니다."
         className="flex min-h-0 flex-1 overflow-auto outline-none"
-        style={{ padding: FRAME_PADDING }}
+        style={{ padding: FRAME_PADDING, paddingTop: FRAME_TOP }}
       >
         {width && current ? (
           <div
@@ -1112,7 +1261,17 @@ export function EditorCanvas({
                     onPointerUp={end}
                     onPointerCancel={end}
                     onDoubleClick={() => openText(box.id)}
-                    className={`absolute cursor-move touch-none ${
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      onSelect(box.id);
+                      const origin = event.currentTarget.parentElement?.getBoundingClientRect();
+                      setMenu({
+                        id: box.id,
+                        x: event.clientX - (origin?.left ?? 0),
+                        y: event.clientY - (origin?.top ?? 0),
+                      });
+                    }}
+                    className={`absolute touch-none ${lockedOf(box.id) ? 'cursor-default' : 'cursor-move'} ${
                       on
                         ? 'outline outline-2 outline-blue-500'
                         : hidden
@@ -1128,7 +1287,32 @@ export function EditorCanvas({
                   />
                 );
               })}
-              {selectedBox && !editingLayer
+              {guides.vertical ? (
+                <div
+                  data-guide="vertical"
+                  className="pointer-events-none absolute inset-y-0 w-px bg-pink-500"
+                  style={{ left: (cardSize.width / 2) * scale }}
+                />
+              ) : null}
+              {guides.horizontal ? (
+                <div
+                  data-guide="horizontal"
+                  className="pointer-events-none absolute inset-x-0 h-px bg-pink-500"
+                  style={{ top: (cardSize.height / 2) * scale }}
+                />
+              ) : null}
+              {tool !== 'select' ? (
+                <div
+                  aria-hidden
+                  className={`absolute inset-0 z-10 ${tool === 'text' ? 'cursor-text' : 'cursor-grab active:cursor-grabbing'}`}
+                  onPointerDown={toolDown}
+                  onPointerMove={toolMove}
+                  onPointerUp={() => {
+                    pan.current = null;
+                  }}
+                />
+              ) : null}
+              {selectedBox && !editingLayer && !lockedOf(selectedBox.id)
                 ? (
                     [
                       ['left-0 top-0 -translate-1/2 cursor-nwse-resize', 'tl'],
@@ -1220,6 +1404,81 @@ export function EditorCanvas({
                 />
               ) : null}
             </div>
+            {menu ? (
+              <div
+                role="menu"
+                aria-label="요소 메뉴"
+                data-canvas-menu=""
+                className="absolute z-30 w-32 overflow-hidden rounded-lg bg-white py-1 shadow-lg"
+                style={{ left: menu.x, top: menu.y }}
+              >
+                {(() => {
+                  const layer = layerOf(menu.id);
+                  const locked = lockedOf(menu.id);
+                  const item =
+                    'block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 disabled:text-gray-300';
+                  const run = (action: () => void) => () => {
+                    action();
+                    setMenu(null);
+                  };
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={item}
+                        disabled={!layer || locked}
+                        onClick={run(() => layer && orderLayer(layer.id, 1))}
+                      >
+                        앞으로
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={item}
+                        disabled={!layer || locked}
+                        onClick={run(() => layer && orderLayer(layer.id, -1))}
+                      >
+                        뒤로
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={item}
+                        onClick={run(() => toggleLock(menu.id))}
+                      >
+                        {locked ? '잠금 풀기' : '잠금'}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={item}
+                        disabled={!layer}
+                        onClick={run(() => layer && addCopy(layer))}
+                      >
+                        복제
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={item}
+                        disabled={locked}
+                        onClick={run(() => {
+                          // 자유 요소는 지우고, 템플릿 요소는 숨긴다(자리를 지킨다).
+                          if (layer) {
+                            removeLayer(layer.id);
+                          } else if (!isLayerRef(menu.id)) {
+                            onEdit(menu.id, { ...editOf(menu.id), hidden: true });
+                          }
+                        })}
+                      >
+                        삭제
+                      </button>
+                    </>
+                  );
+                })()}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="m-auto text-sm text-gray-400">
@@ -1228,15 +1487,6 @@ export function EditorCanvas({
         )}
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center justify-center gap-3 pb-2">
-        <Button type="button" size="sm" variant="secondary" onClick={() => addText()}>
-          텍스트 추가
-        </Button>
-        <span className="text-xs text-gray-500">
-          T 키로 글자, Ctrl+V 나 파일 끌어 놓기로 이미지를 넣습니다. 회사 로고를 고르고 붙이거나
-          로고 자리에 놓으면 로고가 바뀝니다. 템플릿 글자도 두 번 눌러 고칩니다.
-        </span>
-      </div>
       {message ? <p className="text-center text-sm text-error">{message}</p> : null}
     </div>
   );

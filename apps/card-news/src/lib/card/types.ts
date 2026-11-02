@@ -237,6 +237,8 @@ export interface ElementEdit {
   dy: number;
   scale: number;
   hidden?: boolean;
+  /** 잠근 요소. 캔버스에서 끌리지 않고 비서 도구도 바꾸지 않는다(우클릭 `잠금`). */
+  locked?: boolean;
 }
 
 /** 한 장의 편집값. 편집하지 않은 요소는 없다. */
@@ -251,6 +253,8 @@ interface LayerBase {
   x: number;
   y: number;
   width: number;
+  /** 잠근 요소. 캔버스에서 끌리지 않고 비서 도구도 바꾸지 않는다(우클릭 `잠금`). */
+  locked?: boolean;
 }
 
 /** 글자 요소. 높이는 글자에 맞춰 늘어난다. 줄은 `\n` 으로 나누고 강조 표시(`*단어*`)는 쓰지 않는다. */
