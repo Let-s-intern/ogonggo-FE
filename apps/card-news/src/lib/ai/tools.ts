@@ -113,7 +113,14 @@ const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const HIGHLIGHTS = ['tint', 'brand', 'black', 'custom'] as const;
 const LOGO_STYLES = ['auto', 'mono', 'original', 'plate'] as const;
-const BRAND_MARKS = ['ogonggo', 'letscareer', 'custom', 'none'] as const;
+const BRAND_MARKS = [
+  'ogonggo',
+  'ogonggoSymbol',
+  'ogonggoClassic',
+  'letscareer',
+  'custom',
+  'none',
+] as const;
 const TEXT_FIELDS = ['badge', 'headline', 'roleTitle', 'note', 'ctaHeadline', 'ctaSub', 'caption'];
 
 /** 사용자에게 보일 진행 문구. 모델이 무엇을 하고 있는지 채팅 창에 한 줄로 적는다. */

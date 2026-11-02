@@ -37,6 +37,8 @@ export interface SlideAssets {
   /** 오공고 심볼. 원래 색(파랑)과 어두운 바탕용 흰색. */
   ogonggoLogo: string;
   ogonggoWhite: string;
+  /** 옛 오공고 로고(파랑 세 겹 마크, PNG). 어두운 바탕에서도 원래 색이다. */
+  ogonggoClassic: string;
   /** 뱃지 확성기. 검정 뱃지용(흰색)과 흰 뱃지용(검정). */
   speakerLight: string;
   speakerDark: string;
@@ -610,6 +612,8 @@ export function LetsCareer({
 
 /** 오공고 심볼의 가로÷세로(`assets/brand/ogonggo.svg` 52x25). */
 const OGONGGO_ASPECT = 52 / 25;
+/** `assets/brand/ogonggo-classic.png` 의 가로÷세로(400×301). */
+const OGONGGO_CLASSIC_ASPECT = 400 / 301;
 
 /**
  * 우리 로고. 오공고는 심볼 옆에 `오공고` 글자를 둔다 — 렛츠커리어의 심볼과 `LETS CAREER` 글자에
@@ -642,15 +646,33 @@ export function BrandMark({
       <img src={image.dataUrl} alt="" width={width} height={Math.round(width / image.aspect)} />
     );
   }
+  if (brand === 'ogonggoClassic') {
+    return (
+      <img
+        src={assets.ogonggoClassic}
+        alt=""
+        width={Math.round(size * OGONGGO_CLASSIC_ASPECT)}
+        height={size}
+      />
+    );
+  }
+  const symbol = palette.mark === 'white' ? assets.ogonggoWhite : assets.ogonggoLogo;
+  if (brand === 'ogonggoSymbol') {
+    // 글자가 빠진 만큼 심볼을 키운다. 렛츠커리어 심볼과 비슷한 무게가 되게.
+    const symbolHeight = Math.round(size * 0.8);
+    return (
+      <img
+        src={symbol}
+        alt=""
+        width={Math.round(symbolHeight * OGONGGO_ASPECT)}
+        height={symbolHeight}
+      />
+    );
+  }
   const height = Math.round(size * 0.6);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: Math.round(size * 0.2) }}>
-      <img
-        src={palette.mark === 'white' ? assets.ogonggoWhite : assets.ogonggoLogo}
-        alt=""
-        width={Math.round(height * OGONGGO_ASPECT)}
-        height={height}
-      />
+      <img src={symbol} alt="" width={Math.round(height * OGONGGO_ASPECT)} height={height} />
       <div
         style={{
           display: 'flex',

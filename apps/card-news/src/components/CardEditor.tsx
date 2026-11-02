@@ -547,6 +547,7 @@ export function CardEditor({ docId }: { docId: string }) {
                       { label: '기업 로고', src: loaded.logo },
                       { label: '렛츠커리어', src: kit?.assets.markColor },
                       { label: '오공고', src: kit?.assets.ogonggoLogo },
+                      { label: '옛 오공고', src: kit?.assets.ogonggoClassic },
                     ]}
                     onAdd={(src) => canvasRef.current?.addImageSource(src)}
                   />

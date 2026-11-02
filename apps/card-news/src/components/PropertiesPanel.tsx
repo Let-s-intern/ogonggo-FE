@@ -131,12 +131,25 @@ const LOGO_STYLES: { value: LogoStyle; label: string }[] = [
   { value: 'plate', label: '흰 판' },
 ];
 
-const BRAND_MARKS: { value: BrandMarkId; label: string }[] = [
+/** 브랜드 로고 첫 줄. 오공고 셋(`ogonggo*`)은 `오공고` 하나로 묶고 둘째 줄에서 고른다. */
+type BrandGroup = 'ogonggo' | 'letscareer' | 'custom' | 'none';
+
+const BRAND_GROUPS: { value: BrandGroup; label: string }[] = [
   { value: 'ogonggo', label: '오공고' },
   { value: 'letscareer', label: '렛츠커리어' },
   { value: 'custom', label: '올린 로고' },
   { value: 'none', label: '숨김' },
 ];
+
+const OGONGGO_MARKS: { value: BrandMarkId; label: string }[] = [
+  { value: 'ogonggo', label: '글자 포함' },
+  { value: 'ogonggoSymbol', label: '심볼만' },
+  { value: 'ogonggoClassic', label: '옛 로고' },
+];
+
+function brandGroup(mark: BrandMarkId): BrandGroup {
+  return mark === 'ogonggoSymbol' || mark === 'ogonggoClassic' ? 'ogonggo' : mark;
+}
 
 /** 제목 배율이 걸리는 요소와 본문 배율이 걸리는 요소. 고르면 그 글자 크기 슬라이더가 보인다. */
 const HEADLINE_ELEMENTS: ElementId[] = ['headline', 'roleTitle', 'ctaHeadline', 'ctaSub'];
@@ -688,10 +701,23 @@ function Properties({
         <span className="text-sm text-gray-700">브랜드 로고</span>
         <Segmented
           label="브랜드 로고"
-          options={BRAND_MARKS}
-          value={settings.brandMark ?? 'ogonggo'}
-          onChange={(brandMark) => onSettingsChange({ brandMark })}
+          options={BRAND_GROUPS}
+          value={brandGroup(settings.brandMark ?? 'ogonggo')}
+          onChange={(group) => {
+            // 오공고를 다시 눌러도 둘째 줄에서 고른 모양을 지킨다.
+            if (group !== brandGroup(settings.brandMark ?? 'ogonggo')) {
+              onSettingsChange({ brandMark: group });
+            }
+          }}
         />
+        {brandGroup(settings.brandMark ?? 'ogonggo') === 'ogonggo' ? (
+          <Segmented
+            label="오공고 로고 모양"
+            options={OGONGGO_MARKS}
+            value={settings.brandMark ?? 'ogonggo'}
+            onChange={(brandMark) => onSettingsChange({ brandMark })}
+          />
+        ) : null}
         <div className="flex items-center justify-between gap-2">
           {settings.brandImage ? (
             <img src={settings.brandImage.dataUrl} alt="" className="h-8 max-w-28 object-contain" />

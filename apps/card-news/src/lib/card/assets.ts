@@ -88,6 +88,22 @@ export function loadBrandSvg(
   return cached;
 }
 
+/**
+ * 그림으로만 남은 브랜드 로고(PNG)를 data URL 로. 옛 오공고 로고는 원본이 PNG 를 품은 SVG 라
+ * (`docs/asset/v1/오늘의공고_파비콘 2.svg`) 여백을 잘라 PNG 로 받아 두었다. 칠하지 않는다.
+ */
+export function loadBrandPng(name: 'ogonggo-classic'): Promise<string> {
+  const key = `${name}:png`;
+  let cached = brandCache.get(key);
+  if (!cached) {
+    cached = readFile(path.join(ASSETS_DIR, 'brand', `${name}.png`)).then(
+      (png) => `data:image/png;base64,${png.toString('base64')}`,
+    );
+    brandCache.set(key, cached);
+  }
+  return cached;
+}
+
 export type IconName =
   | 'arrow-up'
   | 'brand-threads'

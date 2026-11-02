@@ -109,8 +109,17 @@ export interface CardSettings {
   brandImage?: BrandImage;
 }
 
-/** `custom` 은 사람이 올린 로고(`brandImage`), `none` 은 모든 장에서 그리지 않는다. */
-export type BrandMarkId = 'ogonggo' | 'letscareer' | 'custom' | 'none';
+/**
+ * `ogonggo` 는 심볼 + `오공고` 글자, `ogonggoSymbol` 은 심볼만, `ogonggoClassic` 은 옛 오공고 로고(파랑 세 겹
+ * 마크)다. `custom` 은 사람이 올린 로고(`brandImage`), `none` 은 모든 장에서 그리지 않는다.
+ */
+export type BrandMarkId =
+  | 'ogonggo'
+  | 'ogonggoSymbol'
+  | 'ogonggoClassic'
+  | 'letscareer'
+  | 'custom'
+  | 'none';
 
 export interface BrandImage {
   /** data URL. 편집 화면이 긴 변 600px 이하로 줄여 둔다. */
