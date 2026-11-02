@@ -989,45 +989,6 @@ function ColumnsSlide({
 }
 
 /**
- * 여러 회사 묶음 표지 머리 오른쪽의 회사명 목록(로고 자리). 한 줄에 들어가는 크기까지 줄이고, 24px 로도 넘치면
- * 줄을 바꾼다.
- */
-const COMPANY_NAMES_WIDTH = 440;
-
-function CompanyNames({
-  names,
-  palette,
-  measure,
-}: {
-  names: string[];
-  palette: Palette;
-  measure: Measure;
-}) {
-  const text = names.join(' · ');
-  let fontSize = 40;
-  while (fontSize > 24 && measure(text, fontSize, 800) > COMPANY_NAMES_WIDTH) {
-    fontSize -= 1;
-  }
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        maxWidth: COMPANY_NAMES_WIDTH,
-        textAlign: 'right',
-        fontSize,
-        fontWeight: 800,
-        lineHeight: 1.15,
-        letterSpacing: -fontSize * 0.01,
-        color: palette.headlineText,
-      }}
-    >
-      {text}
-    </div>
-  );
-}
-
-/**
  * 썸네일 카드 크기. 이미지 비율 그대로 콘텐츠 폭에 맞추되, 세로는 카드 높이의 3할까지. 그보다 길면
  * 세로에 맞춰 폭을 줄인다 — 배너 속 글자가 잘리지 않게 통째로 보여 준다.
  */
@@ -1222,13 +1183,12 @@ function CoverSlide({
             width={CONTENT_WIDTH}
             edits={edits}
             right={
-              <Editable id="companyLogo" edits={edits}>
-                {spec.companyNames ? (
-                  <CompanyNames names={spec.companyNames} palette={palette} measure={measure} />
-                ) : (
+              // 여러 회사 묶음은 회사 로고 하나를 고를 수 없어 머리 오른쪽을 비운다(우리 로고는 아래에 있다).
+              spec.companyNames ? null : (
+                <Editable id="companyLogo" edits={edits}>
                   <CompanyLogo spec={spec} palette={palette} />
-                )}
-              </Editable>
+                </Editable>
+              )
             }
           />
           <div style={{ display: 'flex', marginTop: metrics.headlineGap }}>

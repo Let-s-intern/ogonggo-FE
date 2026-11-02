@@ -403,10 +403,7 @@ export interface CardSpec {
   bundleCompanies?: BundleCompany[];
   /** 묶음 공고 장을 2열 카드 배치로 그릴 때 장에 놓는 공고들(위에서부터). 로고는 장 맨 위에 하나다. */
   bundleCards?: BundleCard[];
-  /**
-   * 여러 회사 묶음의 표지. 있으면 표지 머리 오른쪽에 회사 로고 대신 회사명 목록을 쓴다(로고는 첫 회사
-   * 것뿐이다).
-   */
+  /** 여러 회사 묶음의 표지. 있으면 표지 머리 오른쪽(회사 로고 자리)을 비운다. */
   companyNames?: string[];
 }
 

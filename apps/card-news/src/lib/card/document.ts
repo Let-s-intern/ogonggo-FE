@@ -109,7 +109,15 @@ export interface DocumentCover {
    * 비면 상자를 그리지 않는다. 표지 문구의 `note` 로 고친다(`documentContent()`).
    */
   schedule?: string[];
+  /**
+   * 여러 회사 묶음 표지 표의 열 이름. 여러 회사면 표지 표는 공고마다가 아니라 회사마다 한 줄(회사, 그 회사 직무를
+   * `, ` 로 이은 것)이라 열도 따로다. 없으면 `COMPANY_COVER_COLUMNS` 다.
+   */
+  companyColumns?: [string, string];
 }
+
+/** 여러 회사 묶음 표지 표의 처음 열 이름. */
+export const COMPANY_COVER_COLUMNS: [string, string] = ['회사', '채용 직무'];
 
 /** 일정 상자에 그릴 줄. 빈 줄을 뺀다. */
 export function scheduleLines(cover: DocumentCover | undefined): string[] {
@@ -368,7 +376,8 @@ export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardC
   if (slide?.role !== 'cover' || !doc.cover) {
     return content;
   }
-  const { badge, headline, columns, rows, schedule } = doc.cover;
+  const { badge, headline, schedule } = doc.cover;
+  const { columns, rows } = coverRows(doc);
   return {
     ...content,
     badge,
@@ -425,9 +434,37 @@ function coverTable(doc: CardDocument, slide: DocumentSlide): CoverTable | undef
   const schedule = scheduleLines(doc.cover);
   return {
     deadline: coverDeadline(doc),
-    columns: doc.cover.columns,
-    rows: doc.cover.rows,
+    ...coverRows(doc),
     ...(schedule.length > 0 ? { schedule } : {}),
+  };
+}
+
+/**
+ * 묶음 표지에 그리는 직무 표. 한 회사면 문서의 표지 표 그대로(공고마다 한 줄)다. 여러 회사면 회사마다 한 줄이고
+ * 칸은 회사명과 그 회사 공고의 직무(표지 표 줄의 직무, 없으면 직무명)를 `, ` 로 이은 것이다. 처음 나온 회사 순서다.
+ */
+export function coverRows(doc: CardDocument): Pick<CoverTable, 'columns' | 'rows'> {
+  const cover = doc.cover;
+  if (!cover) {
+    return { columns: ['', ''], rows: [] };
+  }
+  const names = companyNames(doc);
+  if (names.length <= 1) {
+    return { columns: cover.columns, rows: cover.rows };
+  }
+  return {
+    columns: cover.companyColumns ?? COMPANY_COVER_COLUMNS,
+    rows: names.map((name) => [
+      name,
+      doc.jobs
+        .flatMap((job, index) =>
+          job.companyName === name
+            ? [cover.rows[index]?.[0]?.trim() || job.content.roleTitle.trim()]
+            : [],
+        )
+        .filter(Boolean)
+        .join(', '),
+    ]),
   };
 }
 
@@ -770,7 +807,8 @@ export function withContent(doc: CardDocument, content: CardContent, jobIndex = 
 
 /**
  * 장 하나의 문구(`documentContent(doc, slide)`)를 고친 문서. 묶음 표지는 뱃지·제목을 표지에, 섹션 두 개를
- * 표지 표 열 이름과 줄에, 안내(`note`)를 일정 상자 줄에 넣는다(줄 수는 공고 수 그대로). 묶음 공고 장의 직무명은 표지 표의 `모집 분야`
+ * 표지 표 열 이름과 줄에, 안내(`note`)를 일정 상자 줄에 넣는다(줄 수는 공고 수 그대로). 여러 회사 묶음의 표지
+ * 표는 공고 문구에서 펴므로 열 이름만 넣고 줄은 버린다(직무는 공고 서랍에서 고친다). 묶음 공고 장의 직무명은 표지 표의 `모집 분야`
  * 에 넣는다. 나머지는 그 장의 공고 문구(공고를 가리키지 않는 장은 첫 공고)다.
  */
 export function withSlideContent(
@@ -783,6 +821,20 @@ export function withSlideContent(
     const [first, second] = content.summarySections;
     const { schedule: _schedule, ...rest } = cover;
     const schedule = content.note.split('\n');
+    if (companyNames(doc).length > 1) {
+      const columns = coverRows(doc).columns;
+      return {
+        ...doc,
+        caption: content.caption,
+        cover: {
+          ...rest,
+          ...(content.note.trim() ? { schedule } : {}),
+          badge: content.badge,
+          headline: content.headline,
+          companyColumns: [first?.label ?? columns[0], second?.label ?? columns[1]],
+        },
+      };
+    }
     return {
       ...doc,
       caption: content.caption,

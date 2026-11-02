@@ -6,6 +6,8 @@ import {
   type CardDocument,
   MAX_BUNDLE_JOBS,
   MAX_SLIDES,
+  companyNames,
+  coverRows,
   jobName,
   slideJobIndices,
 } from '@/lib/card/document';
@@ -37,7 +39,12 @@ export function JobsDrawer({
   onCaption: (caption: string) => void;
   /** 묶음 표지의 뱃지·제목. */
   onCover: (
-    patch: Partial<Pick<NonNullable<CardDocument['cover']>, 'badge' | 'headline' | 'columns' | 'schedule'>>,
+    patch: Partial<
+      Pick<
+        NonNullable<CardDocument['cover']>,
+        'badge' | 'headline' | 'columns' | 'companyColumns' | 'schedule'
+      >
+    >,
   ) => void;
   /** 묶음 표지 표에서 공고 하나의 줄(직무, 모집 분야). */
   onRow: (jobIndex: number, row: [string, string]) => void;
@@ -55,6 +62,8 @@ export function JobsDrawer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const room = Math.min(MAX_SLIDES - doc.slides.length, MAX_BUNDLE_JOBS - doc.jobs.length);
+  const multiCompany = companyNames(doc).length > 1;
+  const coverColumns = coverRows(doc).columns;
 
   /** 공고가 그려지는 장 번호(`2장`, `2·5장`). */
   const slidesOf = (jobIndex: number) => {
@@ -120,22 +129,24 @@ export function JobsDrawer({
                   줄바꿈으로 줄을 나눕니다. *단어* 는 강조 상자입니다.
                 </p>
                 <div className="flex gap-2">
-                  {doc.cover.columns.map((label, column) => (
+                  {coverColumns.map((label, column) => (
                     <Input
                       key={column}
                       aria-label={`표 머리 ${column + 1}`}
                       className="h-9 text-sm"
                       value={label}
                       onChange={(event) => {
-                        const columns = [...doc.cover!.columns] as [string, string];
+                        const columns = [...coverColumns] as [string, string];
                         columns[column] = event.target.value;
-                        onCover({ columns });
+                        onCover(multiCompany ? { companyColumns: columns } : { columns });
                       }}
                     />
                   ))}
                 </div>
                 <p className="text-xs text-gray-500">
-                  표 머리 칩입니다(예: 채용 형태, 채용 직무).
+                  {multiCompany
+                    ? '표 머리 칩입니다. 여러 회사 묶음의 표는 회사마다 한 줄이고, 직무는 아래 공고마다 고칩니다.'
+                    : '표 머리 칩입니다(예: 채용 형태, 채용 직무).'}
                 </p>
                 <Textarea
                   aria-label="표지 일정"
@@ -263,7 +274,7 @@ export function JobsDrawer({
 
       {bundle && doc.cover ? (
         <p className="text-xs text-gray-500">
-          표지 표 열: {doc.cover.columns.join(' · ')} (공고마다 한 줄)
+          표지 표 열: {coverColumns.join(' · ')} ({multiCompany ? '회사마다' : '공고마다'} 한 줄)
         </p>
       ) : null}
 
