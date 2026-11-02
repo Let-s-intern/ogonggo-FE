@@ -91,7 +91,8 @@ export function contentFromDraft(
     roleTitle: draft.roles[0] ?? job.title,
     summarySections: [
       { label: '채용 직무', items: draft.roles.length ? draft.roles : [job.title] },
-      { label: '마감 기한', items: [deadlineText(job)] },
+      // 요청사항이 마감을 바꾸라고 했으면 모델이 쓴 마감을 따른다.
+      { label: '마감 기한', items: [draft.deadline || deadlineText(job)] },
       { label: '담당 업무', items: draft.responsibilities },
     ],
     note: draft.note,

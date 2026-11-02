@@ -16,6 +16,7 @@ import type { JobListItem } from '@/lib/server/ogonggo';
 import { FALLBACK_COLOR, defaultSettings } from '@/lib/client/theme';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { JobPicker } from './JobPicker';
+import { EMPTY_REQUEST, RequestPanel, type StartRequest, requestText } from './RequestPanel';
 import { VariantPicker } from './VariantPicker';
 
 type StartTab = 'single' | 'bundle' | 'blank';
@@ -73,7 +74,7 @@ function RecentDocuments() {
  * 공고 하나 탭. 공고를 고르면 초안을 쓰고(남은 편집본이 있으면 그것을 열고) 시안 열 개를 보인다.
  * 시안을 고르면 그 시안으로 편집 화면을 연다.
  */
-function SingleTab() {
+function SingleTab({ request }: { request: StartRequest }) {
   const router = useRouter();
   const editor = useCardEditor();
   const { loaded, status, notice, specs } = editor;
@@ -90,7 +91,15 @@ function SingleTab() {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-      <JobPicker selectedId={loaded?.job?.id} onSelect={(jobId) => void editor.selectJob(jobId)} />
+      <JobPicker
+        selectedId={loaded?.job?.id}
+        onSelect={(jobId) =>
+          void editor.selectJob(jobId, {
+            request: requestText(request),
+            uploads: request.images.map((image) => image.id),
+          })
+        }
+      />
       <div className="flex flex-col gap-3">
         {status.kind === 'loading' ? (
           <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{status.message}</p>
@@ -298,6 +307,7 @@ function BlankTab() {
  */
 export function StartScreen() {
   const [tab, setTab] = useState<StartTab>('single');
+  const [request, setRequest] = useState<StartRequest>(EMPTY_REQUEST);
 
   const logout = async () => {
     await fetch('/api/logout', { method: 'POST' });
@@ -335,7 +345,8 @@ export function StartScreen() {
           </button>
         ))}
       </div>
-      {tab === 'single' ? <SingleTab /> : null}
+      {tab !== 'blank' ? <RequestPanel value={request} onChange={setRequest} /> : null}
+      {tab === 'single' ? <SingleTab request={request} /> : null}
       {tab === 'bundle' ? <BundleTab /> : null}
       {tab === 'blank' ? <BlankTab /> : null}
     </main>

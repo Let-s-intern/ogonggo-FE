@@ -281,23 +281,35 @@ export function useCardEditor() {
   /**
    * 공고를 연다. 남은 편집본이 있으면 그것을, 없거나 `fresh` 면 새 AI 초안을 연다. `quiet` 면 남은
    * 편집본을 열었다고 알리지 않는다 — 편집 화면 주소가 문서 id 라 그 문서를 여는 것이 당연하다.
+   *
+   * `request` 가 있으면 남은 편집본 대신 그 요청을 지시로 새 초안을 쓰고 문서에 남긴다. `uploads` 는
+   * 첨부 이미지 id 로, 문서에 더한다.
    */
   const selectJob = useCallback(
     async (
       jobId: number,
-      { fresh = false, quiet = false }: { fresh?: boolean; quiet?: boolean } = {},
+      {
+        fresh = false,
+        quiet = false,
+        request = '',
+        uploads = [],
+      }: { fresh?: boolean; quiet?: boolean; request?: string; uploads?: string[] } = {},
     ): Promise<OpenedDocument | null> => {
       setStatus({ kind: 'loading', message: '공고를 읽는 중' });
       setNotice(null);
       try {
         const { job, logo, brandColor } = await fetchCardJob(jobId);
-        const saved = fresh ? null : loadSingleDocument(job);
+        const saved = fresh || request.trim() ? null : loadSingleDocument(job);
         const brandImage = await loadBrandImage();
         clearHistory();
         let opened: OpenedDocument;
         if (saved) {
           opened = {
-            doc: await restoreLayers({ ...saved, settings: { ...saved.settings, brandImage } }),
+            doc: await restoreLayers({
+              ...saved,
+              settings: { ...saved.settings, brandImage },
+              ...(uploads.length > 0 ? { uploads: [...(saved.uploads ?? []), ...uploads] } : {}),
+            }),
             created: false,
           };
           if (!quiet) {
@@ -305,12 +317,16 @@ export function useCardEditor() {
           }
         } else {
           setStatus({ kind: 'loading', message: 'AI가 초안을 쓰는 중' });
-          const result = await requestDraft({ jobId });
+          const result = await requestDraft({ jobId, instruction: request.trim() || undefined });
           opened = {
-            doc: singleDocument(job, contentFromDraft(job, result.draft), {
-              ...defaultSettings(brandColor ?? FALLBACK_COLOR),
-              brandImage,
-            }),
+            doc: {
+              ...singleDocument(job, contentFromDraft(job, result.draft), {
+                ...defaultSettings(brandColor ?? FALLBACK_COLOR),
+                brandImage,
+              }),
+              request: request.trim(),
+              ...(uploads.length > 0 ? { uploads } : {}),
+            },
             created: true,
           };
           setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
@@ -411,7 +427,12 @@ export function useCardEditor() {
   const startOver = useCallback(() => {
     if (loaded?.job && loaded.doc.kind === 'single') {
       // 남은 편집본은 새 초안을 저장할 때 덮어쓴다. 지우지 않는다 — 지우면 v2 편집본을 다시 옮겨 온다.
-      void selectJob(loaded.job.id, { fresh: true });
+      // 시작할 때 적은 요청과 첨부 이미지는 새 초안에도 남긴다.
+      void selectJob(loaded.job.id, {
+        fresh: true,
+        request: loaded.doc.request,
+        uploads: loaded.doc.uploads,
+      });
     }
   }, [loaded, selectJob]);
 

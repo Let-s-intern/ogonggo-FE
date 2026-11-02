@@ -14,6 +14,11 @@ export interface AiDraft {
   note: string;
   /** 인스타그램 게시물 본문. */
   caption: string;
+  /**
+   * 카드의 마감 기한 문구. 추가 지시가 마감을 바꾸라고 할 때만 모델이 채운다(예: 바뀐 마감 시각). 없으면
+   * 공고 데이터로 계산한다(`../card/fromJob.ts`).
+   */
+  deadline?: string;
 }
 
 export interface DraftResult {
@@ -192,6 +197,9 @@ export function parseDraft(raw: string): AiDraft | null {
     preferred: strings(parsed.preferred, 4),
     note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
     caption: typeof parsed.caption === 'string' ? parsed.caption.replace(/\\n/g, '\n').trim() : '',
+    ...(typeof parsed.deadline === 'string' && parsed.deadline.trim()
+      ? { deadline: parsed.deadline.trim() }
+      : {}),
   };
 }
 
@@ -274,6 +282,7 @@ export async function generateDraft(
   if (options.instruction?.trim()) {
     userParts.push(
       `[추가 지시 — 규칙보다 이 지시를 먼저 따른다]\n${options.instruction.trim().slice(0, 1000)}`,
+      `[마감 바꾸기]\n추가 지시가 마감 일시를 바꾸라고 할 때만 JSON 에 "deadline" 을 더한다. 카드에 들어갈 문구로 "2026.11.09 (월) 23:59" 형식이다. 그때 caption 의 마감 줄도 그 일시로 쓴다. 바꾸라는 말이 없으면 "deadline" 을 넣지 않는다.`,
     );
   }
 

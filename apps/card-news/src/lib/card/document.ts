@@ -81,8 +81,13 @@ export interface CardDocument {
   kind: DocumentKind;
   /** 묶은 순서. `blank` 는 빈 배열이다. */
   jobs: DocumentJob[];
-  /** 시작 화면에서 적은 요청사항·추가 정보. */
+  /** 시작 화면에서 적은 요청사항·추가 정보(참고 링크 포함). 초안 모델에 같이 넘긴다. */
   request: string;
+  /**
+   * 시작 화면에서 첨부한 이미지 id(IndexedDB, `../client/imageStore.ts`). 모델에는 보내지 않고 편집
+   * 화면의 재료로 쓴다.
+   */
+  uploads?: string[];
   /** 마지막으로 고른 시안. */
   variant: VariantId;
   /** 모든 장이 같이 쓴다. */
