@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { DocumentKind, RenderSlide } from '@/lib/card/document';
 import { CARD_SIZES, type CardSizeId, type VariantId } from '@/lib/card/types';
@@ -18,8 +18,29 @@ const TABS: { value: TemplateTab; label: string }[] = [
   { value: 'slide', label: '한 장씩' },
 ];
 
-/** 미리보기 폭(px). 서랍 300px 에 두 열이다. */
-const PREVIEW_WIDTH = 126;
+/** 재기 전 미리보기 폭(px). 실제 폭은 두 열 칸에서 잰다 — 스크롤바가 서랍 폭을 먹으면 칸이 좁아진다. */
+const FALLBACK_PREVIEW_WIDTH = 110;
+/** 두 열 사이(`gap-2.5`)와 버튼 안쪽 여백(`p-1.5` 양쪽). */
+const GRID_GAP = 10;
+const CELL_PADDING = 12;
+
+/** 두 열 칸에 꼭 맞는 미리보기 폭. 서랍 폭이 바뀌면 다시 잰다. */
+function usePreviewWidth() {
+  const [grid, setGrid] = useState<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(FALLBACK_PREVIEW_WIDTH);
+  useEffect(() => {
+    if (!grid) {
+      return;
+    }
+    const fit = () =>
+      setWidth(Math.max(40, Math.floor((grid.clientWidth - GRID_GAP) / 2 - CELL_PADDING)));
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [grid]);
+  return { ref: setGrid, width };
+}
 
 /**
  * 템플릿 서랍. `단일 공고`·`묶음` 은 한 벌 통째로(모든 장, 장마다 덮어쓴 템플릿도 지운다), `한 장씩` 은
@@ -78,6 +99,7 @@ export function TemplateDrawer({
   const built = useBuiltSlides(targets, size, kit);
   const current = tab === 'slide' ? (slideOverride ?? docVariant) : docVariant;
   const sizeValue = CARD_SIZES[size];
+  const preview = usePreviewWidth();
 
   return (
     <Drawer title="템플릿">
@@ -110,10 +132,10 @@ export function TemplateDrawer({
               문서 템플릿 따르기
             </button>
           ) : null}
-          <div className="grid grid-cols-2 gap-2.5">
+          <div ref={preview.ref} className="grid grid-cols-2 gap-2.5">
             {VARIANTS.map((variant, index) => {
               const on = current === variant.id;
-              const preview = built?.[index];
+              const slide = built?.[index];
               return (
                 <button
                   key={variant.id}
@@ -127,18 +149,14 @@ export function TemplateDrawer({
                   }`}
                 >
                   <span className="pointer-events-none block overflow-hidden rounded">
-                    {preview ? (
-                      <SlideStage
-                        element={preview.element}
-                        size={sizeValue}
-                        width={PREVIEW_WIDTH}
-                      />
+                    {slide ? (
+                      <SlideStage element={slide.element} size={sizeValue} width={preview.width} />
                     ) : (
                       <span
                         className="block bg-gray-100"
                         style={{
-                          width: PREVIEW_WIDTH,
-                          height: (PREVIEW_WIDTH * sizeValue.height) / sizeValue.width,
+                          width: preview.width,
+                          height: (preview.width * sizeValue.height) / sizeValue.width,
                         }}
                       />
                     )}
