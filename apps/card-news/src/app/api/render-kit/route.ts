@@ -18,7 +18,9 @@ export async function GET(request: Request) {
       assets: await loadAssets(),
       weights: fonts.map((font) => font.weight),
     };
-    return Response.json(manifest, { headers: { 'Cache-Control': 'private, max-age=3600' } });
+    // 그림 목록은 캐시하지 않는다. 그림(예: 옛 오공고 로고)을 더하면 캐시된 옛 목록에 그 그림이 없어
+    // 캔버스에 빈칸으로 그려진다. 폰트는 바뀌지 않으므로 아래처럼 하루 캐시한다.
+    return Response.json(manifest, { headers: { 'Cache-Control': 'no-store' } });
   }
   const font = fonts.find((candidate) => String(candidate.weight) === weight);
   if (!font) {
