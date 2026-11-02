@@ -13,11 +13,14 @@ import {
   slideEditsOf,
   withSlideEdits,
   withSlideLayers,
+  withBackground,
 } from '../card/document';
 import { contentFromDraft, draftFromContent } from '../card/fromJob';
 import { textScale } from '../card/layout';
 import {
+  BACKGROUND_PATTERNS,
   CARD_SIZES,
+  type CardBackground,
   type CardContent,
   type CardSection,
   type CardSettings,
@@ -156,6 +159,8 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return `글자 넣기: ${String(args.text ?? '')}`;
     case 'edit_layers':
       return '자유 요소 바꾸기';
+    case 'set_background':
+      return describeBackgroundCall(args);
     default:
       return name;
   }
@@ -411,7 +416,7 @@ async function readCard(context: ToolContext): Promise<string> {
   }
   const variant = context.variant();
   const size = CARD_SIZES[context.size()];
-  const { photo, brandImage, ...settings } = loaded.doc.settings;
+  const { photo, brandImage, background, ...settings } = loaded.doc.settings;
   return JSON.stringify({
     job: loaded.job ? { company: loaded.job.companyName, title: loaded.job.title } : null,
     variant: { id: variant, label: variantOf(variant).label },
@@ -426,6 +431,7 @@ async function readCard(context: ToolContext): Promise<string> {
       brandImage: Boolean(brandImage),
       logo: Boolean(loaded.logo),
     },
+    background: backgroundSummary(loaded.doc, background),
     content: documentContent(loaded.doc),
     slides: measured.map((slide, index) => slideSummary(context, loaded, slide, index)),
   });
@@ -1048,6 +1054,8 @@ export function outOfScope(
       return only && !(isElementId(only) && fieldsOf(only).length > 0)
         ? refuse('고른 요소는 글자가 아닙니다')
         : null;
+    case 'set_background':
+      return backgroundOutOfScope(args, only, elsewhere, refuse);
     default:
       return null;
   }
@@ -1062,6 +1070,7 @@ const CHANGING_TOOLS = new Set([
   'reset_elements',
   'add_text',
   'edit_layers',
+  'set_background',
 ]);
 
 function execute(
@@ -1091,6 +1100,8 @@ function execute(
       return addText(context, session, args);
     case 'edit_layers':
       return editLayers(context, session, args);
+    case 'set_background':
+      return setBackground(context, session, args);
     default:
       return `모르는 도구입니다: ${name}`;
   }
@@ -1118,4 +1129,114 @@ export async function runTool(
   } catch (error) {
     return `도구 실행이 실패했습니다: ${error instanceof Error ? error.message : String(error)}`;
   }
+}
+
+// 배경(배경 서랍과 같은 일). `set_background` 의 실행·범위·설명과 `read_card` 의 배경 요약을 여기 모은다.
+
+/** 사진 배경의 처음 진하기. 배경 서랍과 같다. */
+const BACKGROUND_PHOTO_OPACITY = 0.6;
+
+function backgroundLabel(background: CardBackground | undefined): string | null {
+  if (!background) {
+    return null;
+  }
+  if (background.kind === 'color') {
+    return `단색 ${background.color}`;
+  }
+  if (background.kind === 'pattern') {
+    return `무늬 ${background.pattern}(${BACKGROUND_PATTERNS.find((item) => item.id === background.pattern)?.label ?? ''})`;
+  }
+  return `사진 ${background.imageId ? '올린 이미지' : '공고 대표 이미지'} 진하기 ${round(background.opacity)}`;
+}
+
+/** `read_card` 의 배경. 모든 장 배경과 장마다 덮어쓴 배경이고, 덮어쓰지 않았으면 템플릿 배경이다. */
+function backgroundSummary(doc: CardDocument, background: CardBackground | undefined) {
+  return {
+    all: backgroundLabel(background) ?? '템플릿 배경',
+    slides: doc.slides.flatMap((slide, index) => {
+      const label = backgroundLabel(slide.background);
+      return label ? [{ slide: index + 1, background: label }] : [];
+    }),
+  };
+}
+
+function describeBackgroundCall(args: Record<string, unknown>): string {
+  const where = args.slide === undefined ? '모든 장' : `${String(args.slide)}장`;
+  return `배경 바꾸기(${where}): ${String(args.kind)}${args.pattern ? ` ${String(args.pattern)}` : ''}${args.color ? ` ${String(args.color)}` : ''}`;
+}
+
+/** 장을 빼면 모든 장이라 `모든 장` 에서만, 장을 주면 보고 있는 장만. 고른 요소 범위에서는 막는다. */
+function backgroundOutOfScope(
+  args: Record<string, unknown>,
+  only: Selection | null,
+  elsewhere: (value: unknown, defaultHere: boolean) => boolean,
+  refuse: (what: string) => string,
+): string | null {
+  if (args.slide === undefined) {
+    return refuse(
+      'slide 를 뺀 배경은 모든 장에 걸립니다. 이 장만 바꾸려면 slide 에 보고 있는 장을 줍니다',
+    );
+  }
+  if (only) {
+    return refuse('배경은 고른 요소가 아닙니다');
+  }
+  return elsewhere(args.slide, false) ? refuse(`${String(args.slide)}장 배경`) : null;
+}
+
+function setBackground(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
+  const loaded = context.readLoaded();
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  let slideId: string | undefined;
+  if (args.slide !== undefined) {
+    const index = asSlide(args.slide, loaded.doc);
+    if (index === null) {
+      return `없는 장입니다: ${String(args.slide)}`;
+    }
+    slideId = loaded.doc.slides[index]!.id;
+  }
+  let background: CardBackground | null;
+  switch (args.kind) {
+    case 'clear':
+      background = null;
+      break;
+    case 'color':
+      if (!HEX.test(String(args.color))) {
+        return `색은 #RRGGBB 로 줍니다: ${String(args.color)}`;
+      }
+      background = { kind: 'color', color: String(args.color).toUpperCase() };
+      break;
+    case 'pattern': {
+      const pattern = BACKGROUND_PATTERNS.find((item) => item.id === args.pattern);
+      if (!pattern) {
+        return `없는 무늬입니다: ${String(args.pattern)}`;
+      }
+      background = { kind: 'pattern', pattern: pattern.id };
+      break;
+    }
+    case 'photo':
+      if (!loaded.doc.settings.photo) {
+        return '공고 대표 이미지가 없어 사진 배경을 깔 수 없습니다.';
+      }
+      background = {
+        kind: 'photo',
+        src: '',
+        opacity: round(clamp(asNumber(args.opacity) ?? BACKGROUND_PHOTO_OPACITY, 0.1, 1)),
+      };
+      break;
+    default:
+      return `kind 는 color, pattern, photo, clear 중 하나입니다: ${String(args.kind)}`;
+  }
+  change(context, session, withBackground(loaded.doc, background, slideId));
+  return JSON.stringify({
+    changed: {
+      where: slideId ? `${String(args.slide)}장` : '모든 장',
+      background: backgroundLabel(background ?? undefined) ?? '덮어쓰기 지움',
+    },
+  });
 }

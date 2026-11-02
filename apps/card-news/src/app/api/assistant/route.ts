@@ -1,6 +1,6 @@
 import { llmConfig } from '@/lib/ai/draft';
 import { MAX_SLIDES } from '@/lib/card/document';
-import { ELEMENT_LABELS } from '@/lib/card/types';
+import { BACKGROUND_PATTERNS, ELEMENT_LABELS } from '@/lib/card/types';
 import { VARIANTS } from '@/lib/card/variants';
 
 /**
@@ -267,6 +267,34 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'set_background',
+      description:
+        '템플릿 배경 대신 깔 배경을 바꾼다(배경 서랍과 같다). slide 를 주면 그 장에만, 빼면 모든 장이다(장마다 덮어쓴 배경은 지워진다). 장 배경이 모든 장 배경보다 앞선다. kind 가 color 면 color 단색, pattern 이면 템플릿에서 떼어 낸 무늬(wave 물결, watermark 워터마크, frame 테두리, panel 흰 판, thumbDark 어둡게(대표 이미지 위를 어둡게), thumbFade 연하게), photo 면 공고 대표 이미지를 opacity 진하기로 깐다. clear 면 덮어쓴 배경을 지운다 — slide 를 주면 그 장만(모든 장 배경으로), 빼면 모두(템플릿 배경으로). 바탕 위 글자색은 배경에 맞춰 바뀐다. 템플릿을 바꿔도 덮어쓴 배경은 남는다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          slide: SLIDE_SCHEMA,
+          kind: { type: 'string', enum: ['color', 'pattern', 'photo', 'clear'] },
+          color: { type: 'string', description: '#RRGGBB. kind 가 color 일 때' },
+          pattern: {
+            type: 'string',
+            enum: BACKGROUND_PATTERNS.map((pattern) => pattern.id),
+            description: 'kind 가 pattern 일 때',
+          },
+          opacity: {
+            type: 'number',
+            minimum: 0.1,
+            maximum: 1,
+            description: 'kind 가 photo 일 때 사진 진하기. 빼면 0.6',
+          },
+        },
+        required: ['kind'],
+      },
+    },
+  },
 ] as const;
 
 const TOOL_NAMES = new Set<string>(TOOLS.map((tool) => tool.function.name));
@@ -295,12 +323,12 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 - "오른쪽 아래로" 처럼 자리를 말하면 카드 가장자리에서 60px 안쪽에 둔다. 다른 요소와 겹치면 겹치지 않는 자리를 찾는다.
 - "크게", "작게" 는 한 번에 10~20% 씩 바꾼다. 글 요소(큰 제목, 직무명, 3장 제목·부제, 목록)의 크기는 edit_elements 의 scale 보다 set_settings 의 글자 배율을 먼저 쓴다 — 그래야 줄이 다시 나뉜다.
 - 제목을 키워 넘침(overflow)이 생기면 본문 배율(bodyScale)을 0.05~0.1 낮춰 자리를 만든다. 제목이 옆으로 나가면(outside) 제목 배율을 조금 낮춘다. 요청을 원래대로 되돌리기만 하고 끝내지 않는다 — 사람이 보고 Ctrl+Z 로 되돌릴 수 있다.
-- 배경 도형(물결, 워터마크, 테두리)은 옮길 수 없다.
+- 배경 도형(물결, 워터마크, 테두리)은 옮길 수 없다. 배경을 바꾸라고 하면 set_background 를 쓴다.
 - 사람이 잠근 요소(read_card 의 locked)는 바꾸지 않는다. 바꾸는 도구는 "잠김" 으로 거절한다. 잠금을 풀어 달라고 사용자에게 알린다.
 
 [범위]
 - [지금 화면] 의 범위가 고칠 수 있는 곳이다. "선택한 <요소>" 면 그 요소만, "이 장 전체" 면 보고 있는 장만, "모든 장" 이면 어디든이다.
-- 모든 장에 같이 걸리는 것(set_settings 의 색·로고·글자 배율, pick_variant 의 템플릿)은 범위가 "모든 장" 일 때만 바꾼다.
+- 모든 장에 같이 걸리는 것(set_settings 의 색·로고·글자 배율, pick_variant 의 템플릿, slide 를 뺀 set_background)은 범위가 "모든 장" 일 때만 바꾼다. "이 장 전체" 에서 배경을 바꾸라고 하면 set_background 에 보고 있는 장을 준다.
 - 범위 밖을 바꾸는 도구는 실행 전에 "범위 밖" 으로 거절된다. 거절되면 다른 곳을 대신 바꾸지 말고, 입력창 위 범위 알약에서 범위를 넓히라고 사용자에게 알린다.
 
 [자유 요소]
