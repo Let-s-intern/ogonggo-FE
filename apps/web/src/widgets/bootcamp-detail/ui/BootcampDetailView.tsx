@@ -8,6 +8,7 @@ import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
+import { BootcampRecommendedChallenges } from '@/widgets/lets-career-recommend';
 import { BootcampCurriculum } from './BootcampCurriculum';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
 import { BootcampDetailHeaderCard, formatDeadlineText } from './BootcampDetailHeaderCard';
@@ -143,6 +144,9 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               }
             />
           </StickyApplyBar>
+          <DetailSidebarSection>
+            <BootcampRecommendedChallenges />
+          </DetailSidebarSection>
           <DetailSidebarSection>
             <SimilarBootcamps excludeBootcampId={bootcamp.id} />
           </DetailSidebarSection>

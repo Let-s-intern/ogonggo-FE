@@ -35,7 +35,7 @@ export function ConcernCard({ concern }: ConcernCardProps) {
           <ConcernCategoryBadge category={concern.category} />
           {concern.hasOfficialComment ? <OfficialAnswerBadge /> : null}
         </div>
-        <p className="mt-3 line-clamp-2 text-sm font-bold text-gray-900 md:text-base">
+        <p className="mt-3 line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 md:text-base">
           {concern.title}
         </p>
         <p className="mt-1 line-clamp-1 text-xs text-gray-500 md:text-sm">

@@ -1,7 +1,10 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
-import { getJobRecommendedContentsHandler } from './job-recommended-contents';
+import {
+  getJobRecommendedContentsHandler,
+  getRecommendedChallengesHandler,
+} from './job-recommended-contents';
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { userNotificationHandlers } from './notifications';
@@ -1154,6 +1157,7 @@ export const handlers: HttpHandler[] = [
   getJobCalendarHandler,
   getTodayJobsHandler,
   getJobRecommendedContentsHandler,
+  getRecommendedChallengesHandler,
   getJobHandler,
   getBootcampsHandler,
   getBootcampHandler,

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { JOB_SCENARIO_IDS } from './fixtures/job';
 import { UserRecommendedLetsCareerContentResponseKind } from '../generated/user/models/userRecommendedLetsCareerContentResponseKind';
+import type { SuccessResponseListUserRecommendedChallengeResponse } from '../generated/user/models/successResponseListUserRecommendedChallengeResponse';
 import type { SuccessResponseListUserRecommendedLetsCareerContentResponse } from '../generated/user/models/successResponseListUserRecommendedLetsCareerContentResponse';
 import type { UserRecommendedLetsCareerContentResponse } from '../generated/user/models/userRecommendedLetsCareerContentResponse';
 
@@ -10,6 +11,7 @@ const THUMBNAIL_URL =
 /**
  * 공고마다 같은 세 개. 백엔드는 공고의 직군·직무와 요구 서류·전형으로 고르지만 목은 고르지 않는다.
  * 종류를 섞고, 설명이 없는 것(`null`)과 썸네일이 없는 것을 하나씩 둬서 항목의 빈 칸 처리를 볼 수 있게 한다.
+ * 자료집 설명은 운영 응답처럼 JSON 원문이다.
  * `null` 은 생성 타입(`description?: string`)이 받지 않지만 백엔드는 실제로 `null` 을 준다.
  */
 const RECOMMENDED_CONTENTS = [
@@ -27,7 +29,8 @@ const RECOMMENDED_CONTENTS = [
     kind: UserRecommendedLetsCareerContentResponseKind.MATERIAL,
     letsCareerContentId: 7,
     title: '합격 자기소개서 문항별 예시 모음',
-    description: null as unknown as string,
+    description:
+      '{"metaDescription":"최근 공고 50개를 분석한 자기소개서 자료집","programRecommend":[{"id":null}]}',
     thumbnailUrl: THUMBNAIL_URL,
     url: 'https://www.letscareer.co.kr/material/7',
   },
@@ -35,7 +38,7 @@ const RECOMMENDED_CONTENTS = [
     kind: UserRecommendedLetsCareerContentResponseKind.BLOG,
     letsCareerContentId: 32,
     title: '서류 합격률을 높이는 직무 경험 쓰는 법',
-    description: '면접관이 이력서에서 먼저 보는 세 가지',
+    description: null as unknown as string,
     url: 'https://www.letscareer.co.kr/blog/32',
   },
 ] satisfies UserRecommendedLetsCareerContentResponse[];
@@ -61,3 +64,20 @@ export const getJobRecommendedContentsHandler = http.get(
     return HttpResponse.json(body, { status: 200 });
   },
 );
+
+/** `GET /api/v1/recommended-challenges`. 교육·부트캠프 상세의 추천이 쓴다. */
+export const getRecommendedChallengesHandler = http.get('*/api/v1/recommended-challenges', () => {
+  const body: SuccessResponseListUserRecommendedChallengeResponse = {
+    status: 200,
+    message: '추천 챌린지를 조회했습니다.',
+    data: [
+      {
+        challengeId: 431,
+        title: '면접 준비 7일 끝장 챌린지 9기',
+        shortDescription: '면접의 본질 파악부터, 질문 유형별 대비까지 7일만에 완성하기',
+        thumbnailUrl: THUMBNAIL_URL,
+      },
+    ],
+  };
+  return HttpResponse.json(body, { status: 200 });
+});

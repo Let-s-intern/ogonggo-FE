@@ -43,7 +43,9 @@ export function PopularConcernCard({ concern }: PopularConcernCardProps) {
         ) : null}
         <ConcernStats {...stats} className="md:hidden" />
       </div>
-      <p className="line-clamp-3 text-sm font-bold text-gray-900 md:text-base">{concern.title}</p>
+      <p className="line-clamp-3 break-keep text-pretty break-words text-sm font-bold text-gray-900 md:text-base">
+        {concern.title}
+      </p>
       <ConcernStats {...stats} className="mt-auto hidden justify-end md:flex" />
     </Link>
   );
