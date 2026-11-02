@@ -75,6 +75,18 @@ export interface DocumentSlide {
   layers: Partial<Record<VariantId, Layer[]>>;
 }
 
+/**
+ * 묶음 표지의 제목과 직무 표(묶음 초안의 `cover`). 표 줄은 공고마다 하나, 묶은 순서다. 표지 배치가
+ * 따로 생기기 전(Push 3)에는 `cover` 장이 공고 요약 배치로 뱃지·제목을 그리고 표의 두 열을 섹션
+ * 두 개로 그린다.
+ */
+export interface DocumentCover {
+  badge: string;
+  headline: string;
+  columns: [string, string];
+  rows: [string, string][];
+}
+
 export interface CardDocument {
   /** 저장 열쇠. `single` 은 `job-<jobId>`, 나머지는 무작위다. */
   id: string;
@@ -96,6 +108,8 @@ export interface CardDocument {
   slides: DocumentSlide[];
   /** 인스타그램 게시물 본문. 카드에는 그리지 않는다. */
   caption: string;
+  /** 묶음 표지. 묶음 문서에만 있다. */
+  cover?: DocumentCover;
   /** 편집 화면을 열 때의 캔버스 크기. 빈 캔버스에서 고른다. 없으면 피드 4:5 다. */
   size?: CardSizeId;
 }
@@ -151,6 +165,50 @@ export function singleDocument(
   };
 }
 
+/** 묶음 문서의 장. 표지, 묶은 순서대로 공고마다 한 장, 프로필 안내. */
+function bundleSlides(count: number): DocumentSlide[] {
+  return [
+    { id: newSlideId(), role: 'cover', edits: {}, layers: {} },
+    ...Array.from({ length: count }, (_, jobIndex) => ({
+      id: newSlideId(),
+      role: 'job' as const,
+      jobIndex,
+      edits: {},
+      layers: {},
+    })),
+    { id: newSlideId(), role: 'profile', edits: {}, layers: {} },
+  ];
+}
+
+/**
+ * 여러 공고를 묶은 문서. `jobs` 는 묶은 순서이고 공고마다의 문구를 든다. 인스타그램 본문은 문서에
+ * 하나라 공고 문구의 `caption` 은 버린다.
+ */
+export function bundleDocument(
+  id: string,
+  jobs: { jobId: number; companyName: string; content: CardContent }[],
+  draft: { cover: DocumentCover; caption: string },
+  settings: CardSettings,
+  start: { request: string; uploads?: string[] },
+): CardDocument {
+  return {
+    id,
+    kind: 'bundle',
+    jobs: jobs.map(({ jobId, companyName, content: { caption: _caption, ...content } }) => ({
+      jobId,
+      companyName,
+      content,
+    })),
+    request: start.request,
+    ...(start.uploads?.length ? { uploads: start.uploads } : {}),
+    variant: DEFAULT_VARIANT,
+    settings,
+    slides: bundleSlides(jobs.length),
+    caption: draft.caption,
+    cover: draft.cover,
+  };
+}
+
 /**
  * 빈 캔버스로 시작한 문서. 공고 없이 `free` 장 하나다. 시안 배경만 그리고 글은 자유 요소로 넣는다.
  */
@@ -192,9 +250,27 @@ function slideJob(doc: CardDocument, slide?: DocumentSlide): DocumentJob | undef
   return doc.jobs[slide?.jobIndex ?? 0] ?? doc.jobs[0];
 }
 
-/** 장 하나가 그리는 문구. 인스타그램 본문은 문서 것을 붙인다. */
+/**
+ * 장 하나가 그리는 문구. 인스타그램 본문은 문서 것을 붙인다. 묶음 표지 장은 첫 공고 문구에 표지
+ * 뱃지·제목을 얹고, 섹션 자리에 직무 표의 두 열을 둔다(표지 배치가 따로 생기기 전까지).
+ */
 export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardContent {
-  return { ...(slideJob(doc, slide)?.content ?? EMPTY_CONTENT), caption: doc.caption };
+  const content = { ...(slideJob(doc, slide)?.content ?? EMPTY_CONTENT), caption: doc.caption };
+  if (slide?.role !== 'cover' || !doc.cover) {
+    return content;
+  }
+  const { badge, headline, columns, rows } = doc.cover;
+  return {
+    ...content,
+    badge,
+    headline,
+    roleTitle: '',
+    summarySections: columns.map((label, column) => ({
+      label,
+      items: rows.map((cells) => cells[column] ?? ''),
+    })),
+    note: '',
+  };
 }
 
 /** 렌더할 장 하나. `id` 는 문서 장의 id 다. */

@@ -4,17 +4,20 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@ogonggo/ui';
+import type { BundleDraftResult } from '@/lib/ai/draft';
 import {
   MAX_BUNDLE_JOBS,
   MIN_BUNDLE_JOBS,
   blankDocument,
+  bundleDocument,
   newDocumentId,
 } from '@/lib/card/document';
+import { contentFromDraft } from '@/lib/card/fromJob';
 import { CARD_SIZE_IDS, CARD_SIZES, type CardSizeId, type VariantId } from '@/lib/card/types';
 import { type DocumentEntry, listDocuments, saveDocument } from '@/lib/client/storage';
 import type { JobListItem } from '@/lib/server/ogonggo';
 import { FALLBACK_COLOR, defaultSettings } from '@/lib/client/theme';
-import { useCardEditor } from '@/lib/client/useCardEditor';
+import { fetchCardJob, useCardEditor } from '@/lib/client/useCardEditor';
 import { JobPicker } from './JobPicker';
 import { EMPTY_REQUEST, RequestPanel, type StartRequest, requestText } from './RequestPanel';
 import { VariantPicker } from './VariantPicker';
@@ -133,13 +136,62 @@ function bundleSlides(jobs: JobListItem[]): string[] {
   return ['표지', ...jobs.map((job) => `${job.companyName} · ${job.title}`), '프로필 안내'];
 }
 
+/** 묶음 초안을 받는다(`/api/draft/bundle`). */
+async function requestBundleDraft(jobIds: number[], request: string): Promise<BundleDraftResult> {
+  const response = await fetch('/api/draft/bundle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobIds, request }),
+  });
+  const result = (await response.json()) as BundleDraftResult & { message?: string };
+  if (!response.ok) {
+    throw new Error(result.message ?? '묶음 초안을 받지 못했습니다.');
+  }
+  return result;
+}
+
 /**
  * 여러 공고 묶기 탭. 왼쪽에서 공고를 고른 순서가 장 순서다. 오른쪽에서 순서를 바꾸고 만들어질 장을
- * 본다.
+ * 보고, 묶음 초안으로 문서를 만들어 편집 화면을 연다.
  */
-function BundleTab() {
+function BundleTab({ request }: { request: StartRequest }) {
+  const router = useRouter();
   const [picked, setPicked] = useState<JobListItem[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const slides = bundleSlides(picked);
+
+  /** 묶음 초안을 쓰고, 첫 공고 로고로 브랜드색을 잡아 문서를 남긴 뒤 편집 화면으로 간다. */
+  const create = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const text = requestText(request);
+      const [result, first] = await Promise.all([
+        requestBundleDraft(
+          picked.map((job) => job.id),
+          text,
+        ),
+        fetchCardJob(picked[0]!.id),
+      ]);
+      const doc = bundleDocument(
+        newDocumentId('bundle'),
+        picked.map((job, index) => ({
+          jobId: job.id,
+          companyName: job.companyName,
+          content: contentFromDraft(job, result.draft.jobs[index]!),
+        })),
+        result.draft,
+        defaultSettings(first.brandColor ?? FALLBACK_COLOR),
+        { request: text, uploads: request.images.map((image) => image.id) },
+      );
+      saveDocument(doc);
+      router.push(`/edit/${encodeURIComponent(doc.id)}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '묶음 초안을 받지 못했습니다.');
+      setBusy(false);
+    }
+  };
 
   const move = (index: number, step: number) => {
     const target = index + step;
@@ -254,6 +306,18 @@ function BundleTab() {
               </li>
             ))}
           </ol>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              size="sm"
+              disabled={picked.length < MIN_BUNDLE_JOBS || busy}
+              onClick={() => void create()}
+            >
+              {busy
+                ? 'AI가 묶음 초안을 쓰는 중'
+                : `공고 ${picked.length}개로 ${slides.length}장 만들고 편집하기`}
+            </Button>
+            {error ? <span className="text-sm text-error">{error}</span> : null}
+          </div>
         </section>
       </div>
     </div>
@@ -347,7 +411,7 @@ export function StartScreen() {
       </div>
       {tab !== 'blank' ? <RequestPanel value={request} onChange={setRequest} /> : null}
       {tab === 'single' ? <SingleTab request={request} /> : null}
-      {tab === 'bundle' ? <BundleTab /> : null}
+      {tab === 'bundle' ? <BundleTab request={request} /> : null}
       {tab === 'blank' ? <BlankTab /> : null}
     </main>
   );

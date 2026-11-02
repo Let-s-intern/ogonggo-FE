@@ -106,7 +106,7 @@ export async function requestDraft(body: {
 }
 
 /** 공고 하나의 카드용 값과 로고(data URL), 로고에서 뽑은 대표 색. */
-async function fetchCardJob(
+export async function fetchCardJob(
   jobId: number,
 ): Promise<{ job: CardJob; logo?: string; brandColor: string | null }> {
   const response = await fetch(`/api/jobs/${jobId}`);

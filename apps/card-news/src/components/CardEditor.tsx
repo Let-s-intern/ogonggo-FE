@@ -366,24 +366,30 @@ export function CardEditor({ docId }: { docId: string }) {
     </header>
   );
 
-  const jobLine = loaded?.job ? (
-    <div className="flex items-center justify-between gap-2">
+  const jobLine =
+    loaded?.doc.kind === 'bundle' ? (
       <p className="text-sm text-gray-600">
-        <span className="font-semibold text-gray-900">{loaded.job.companyName}</span>{' '}
-        {loaded.job.title}
+        <span className="font-semibold text-gray-900">묶음 {loaded.doc.jobs.length}개 공고</span>{' '}
+        {documentTitle(loaded.doc)}
       </p>
-      {loaded.job.sourceUrl ? (
-        <a
-          href={loaded.job.sourceUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="shrink-0 text-sm text-blue-500 underline"
-        >
-          원문 보기
-        </a>
-      ) : null}
-    </div>
-  ) : null;
+    ) : loaded?.job ? (
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-gray-600">
+          <span className="font-semibold text-gray-900">{loaded.job.companyName}</span>{' '}
+          {loaded.job.title}
+        </p>
+        {loaded.job.sourceUrl ? (
+          <a
+            href={loaded.job.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 text-sm text-blue-500 underline"
+          >
+            원문 보기
+          </a>
+        ) : null}
+      </div>
+    ) : null;
 
   const side =
     'flex flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto';
