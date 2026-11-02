@@ -94,12 +94,15 @@ export function TextPopover({
   content,
   onChange,
   onClose,
+  onStep,
   style,
 }: {
   field: TemplateTextField;
   content: CardContent;
   onChange: (content: CardContent) => void;
   onClose: () => void;
+  /** Tab(1)·Shift+Tab(-1). 저장하고 닫은 뒤 다음·이전 글자 요소를 연다. */
+  onStep?: (step: 1 | -1) => void;
   style: { left: number; top: number; width: number };
 }) {
   const original = useRef(content);
@@ -127,6 +130,10 @@ export function TextPopover({
       } else if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
         event.preventDefault();
         close(false);
+      } else if (event.key === 'Tab' && onStep && !event.nativeEvent.isComposing) {
+        event.preventDefault();
+        close(false);
+        onStep(event.shiftKey ? -1 : 1);
       }
     },
   };

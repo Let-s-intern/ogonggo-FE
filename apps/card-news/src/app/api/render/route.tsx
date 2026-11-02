@@ -4,8 +4,10 @@ import { loadEmoji, loadFonts } from '@/lib/card/assets';
 import { SLIDE_ROLES } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
+  type BundleCard,
   type BundleCompany,
   CARD_SIZES,
+  type CardSection,
   type CardLogo,
   type CardSpec,
   type ElementEdit,
@@ -160,6 +162,28 @@ function sanitizeCompanies(companies: unknown): BundleCompany[] | undefined {
   });
 }
 
+/** 2열 카드를 검사한다. 글은 글자로 바꾸고 섹션·항목 수를 자른다. */
+function sanitizeCards(cards: unknown): BundleCard[] | undefined {
+  if (!Array.isArray(cards)) {
+    return undefined;
+  }
+  const text = (value: unknown) => (typeof value === 'string' ? value : '');
+  const sections = (value: unknown): CardSection[] =>
+    Array.isArray(value)
+      ? value.slice(0, 4).map((raw: unknown) => {
+          const section = (raw ?? {}) as Partial<CardSection>;
+          return {
+            label: text(section.label),
+            items: Array.isArray(section.items) ? section.items.slice(0, 20).map(text) : [],
+          };
+        })
+      : [];
+  return cards.slice(0, MAX_COMPANY_BLOCKS).map((raw: unknown) => {
+    const card = (raw ?? {}) as Partial<BundleCard>;
+    return { title: text(card.title), left: sections(card.left), right: sections(card.right) };
+  });
+}
+
 /**
  * 요청에 실린 이미지(로고·썸네일)를 검사한다. data URL 이미지가 아니면 버린다 — 바깥 주소를
  * 이미지 생성기에 넘기면 서버가 그 주소로 요청을 보내고, 미리보기 SVG 에도 그대로 실린다.
@@ -182,6 +206,7 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
     edits: sanitizeEdits(spec.edits),
     layers: sanitizeLayers(spec.layers),
     bundleCompanies: sanitizeCompanies(spec.bundleCompanies),
+    bundleCards: sanitizeCards(spec.bundleCards),
   };
 }
 

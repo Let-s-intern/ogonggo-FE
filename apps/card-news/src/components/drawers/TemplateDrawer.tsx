@@ -35,8 +35,8 @@ const PER_SLIDE_OPTIONS: { value: '1' | '2'; label: string }[] = [
 ];
 
 /**
- * 묶음 공고 장 배치 고르기. 항목명 표는 공고마다 한 장이고, 회사 블록은 한 장에 회사 1~2곳이다(둘이 장에
- * 들어가지 않으면 한 곳씩). 고르면 사람이 고른 배치로 남는다.
+ * 묶음 공고 장 배치 고르기. 항목명 표는 공고마다 한 장이고, 2열 카드는 한 장에 공고 1~2개, 회사 블록은 회사
+ * 1~2곳이다(둘이 장에 들어가지 않으면 하나씩). 고르면 사람이 고른 배치로 남는다.
  */
 function BundleLayoutPicker({
   layout,
@@ -61,7 +61,7 @@ function BundleLayoutPicker({
       ) : (
         <>
           <Segmented
-            label="한 장에 놓는 회사 수"
+            label={layout.kind === 'companies' ? '한 장에 놓는 회사 수' : '한 장에 놓는 공고 수'}
             options={PER_SLIDE_OPTIONS}
             value={String(layout.perSlide) as '1' | '2'}
             onChange={(value) =>
@@ -69,7 +69,7 @@ function BundleLayoutPicker({
             }
           />
           <p className="text-xs text-gray-500">
-            2개를 고르면 두 곳이 한 장에 들어갈 때만 같이 놓고, 넘치면 한 곳씩 나눕니다.
+            2개를 고르면 둘이 한 장에 들어갈 때만 같이 놓고, 넘치면 하나씩 나눕니다.
           </p>
         </>
       )}

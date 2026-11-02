@@ -1,12 +1,19 @@
 import {
   type BundleLayout,
   type CardDocument,
+  bundleCards,
   bundleLayoutOf,
   companyBlocks,
   slideJobIndices,
   withJobGroups,
 } from './document';
-import { COMPANY_PACK_MIN, measureCompanies, textScale } from './layout';
+import {
+  COLUMNS_PACK_MIN,
+  COMPANY_PACK_MIN,
+  measureColumns,
+  measureCompanies,
+  textScale,
+} from './layout';
 import type { Measure } from './measure';
 import { CARD_SIZES } from './types';
 
@@ -42,6 +49,17 @@ function pack<T>(items: T[], perSlide: number, fits: (group: T[]) => boolean): T
 /** 배치대로 나눈 장마다의 공고들. */
 function groupJobs(doc: CardDocument, layout: BundleLayout, measure: Measure): number[][] {
   const size = CARD_SIZES[doc.size ?? 'post'];
+  const bodyScale = textScale(doc.settings.bodyScale);
+  if (layout.kind === 'columns') {
+    return pack(
+      shownJobs(doc).map((index) => [index]),
+      layout.perSlide,
+      (jobs) => {
+        const metrics = measureColumns(measure, size, bundleCards(doc, jobs.flat()), bodyScale);
+        return !metrics.overflow && metrics.bodySize >= Math.round(COLUMNS_PACK_MIN * bodyScale);
+      },
+    ).map((jobs) => jobs.flat());
+  }
   if (layout.kind === 'companies') {
     // 같은 회사 공고는 한 블록이다. 회사는 처음 나온 순서다.
     const byCompany = new Map<string, number[]>();
@@ -49,7 +67,6 @@ function groupJobs(doc: CardDocument, layout: BundleLayout, measure: Measure): n
       const name = doc.jobs[index]!.companyName;
       byCompany.set(name, [...(byCompany.get(name) ?? []), index]);
     }
-    const bodyScale = textScale(doc.settings.bodyScale);
     return pack([...byCompany.values()], layout.perSlide, (companies) => {
       const metrics = measureCompanies(
         measure,

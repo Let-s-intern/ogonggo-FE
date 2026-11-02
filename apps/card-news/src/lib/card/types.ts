@@ -369,6 +369,16 @@ export interface BundleCompany {
   rows: [string, string][];
 }
 
+/**
+ * 2열 카드 배치(한 회사 여러 직무 묶음)의 공고 하나. 검정 머리띠에 직무, 흰 카드 왼쪽 열에 담당 업무, 오른쪽
+ * 열에 자격 요건·우대 요건이다. 빈 섹션은 그리지 않는다.
+ */
+export interface BundleCard {
+  title: string;
+  left: CardSection[];
+  right: CardSection[];
+}
+
 export interface CardSpec {
   variant: VariantId;
   content: CardContent;
@@ -389,6 +399,8 @@ export interface CardSpec {
   bundleRow?: [string, string];
   /** 묶음 공고 장을 회사 블록 배치로 그릴 때 장에 놓는 회사들(위에서부터). */
   bundleCompanies?: BundleCompany[];
+  /** 묶음 공고 장을 2열 카드 배치로 그릴 때 장에 놓는 공고들(위에서부터). 로고는 장 맨 위에 하나다. */
+  bundleCards?: BundleCard[];
   /**
    * 여러 회사 묶음의 표지. 있으면 표지 머리 오른쪽에 회사 로고 대신 회사명 목록을 쓴다(로고는 첫 회사
    * 것뿐이다).

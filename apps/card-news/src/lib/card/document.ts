@@ -1,5 +1,6 @@
 import { DEFAULT_PROFILE } from './fromJob';
 import type {
+  BundleCard,
   BundleCompany,
   CardContent,
   CardLogo,
@@ -107,12 +108,14 @@ export interface DocumentCover {
 
 /**
  * 묶음 공고 장의 배치. `labels` 는 공고마다 한 장, 머리띠(직무·모집 분야)와 항목명 표(마감·업무·우대)다.
+ * `columns` 는 한 회사 여러 직무이고 공고마다 카드 하나(직무 머리띠, 담당 업무 | 자격·우대 요건 2열)다.
  * `companies` 는 여러 회사 묶음이고 회사마다 블록 하나(로고, 회사명 머리띠, 부문·직무 2열 표)다.
  */
-export type BundleLayoutKind = 'labels' | 'companies';
+export type BundleLayoutKind = 'labels' | 'columns' | 'companies';
 
 export const BUNDLE_LAYOUT_LABELS: Record<BundleLayoutKind, string> = {
   labels: '항목명 표',
+  columns: '2열 카드',
   companies: '회사 블록',
 };
 
@@ -515,6 +518,10 @@ export function slideSpec(
           return found ? { ...block, logo: found } : block;
         })
       : undefined;
+  const cards =
+    slide.role === 'job' && doc.kind === 'bundle' && bundleLayoutOf(doc).kind === 'columns'
+      ? bundleCards(doc, slideJobIndices(slide))
+      : undefined;
   const names = companyNames(doc);
   const companyNameList = cover && names.length > 1 ? names : undefined;
   return {
@@ -529,6 +536,7 @@ export function slideSpec(
       ...(cover ? { cover } : {}),
       ...(bundleRow ? { bundleRow } : {}),
       ...(companies ? { bundleCompanies: companies } : {}),
+      ...(cards ? { bundleCards: cards } : {}),
       ...(companyNameList ? { companyNames: companyNameList } : {}),
     },
     id: slide.id,
@@ -565,6 +573,34 @@ export function companyBlocks(doc: CardDocument, indices: number[]): BundleCompa
     }
   }
   return blocks;
+}
+
+/**
+ * 2열 카드 배치에서 공고들(`jobs` 의 몇 번째인가)의 카드. 머리띠는 표지 표의 직무(없으면 직무명), 왼쪽 열은
+ * `담당 업무`, 오른쪽 열은 `자격 요건`·`우대 요건` 이다. 섹션은 이름으로 찾고 없으면 그 자리 순서의 섹션이다.
+ */
+export function bundleCards(doc: CardDocument, indices: number[]): BundleCard[] {
+  return indices.flatMap((index) => {
+    const job = doc.jobs[index];
+    if (!job) {
+      return [];
+    }
+    const section = (from: 'summarySections' | 'detailSections', label: string, at: number) => {
+      const found =
+        job.content[from].find((item) => item.label.trim() === label) ?? job.content[from][at];
+      return found && found.items.some((item) => item.trim()) ? [found] : [];
+    };
+    return [
+      {
+        title: doc.cover?.rows[index]?.[0]?.trim() || job.content.roleTitle,
+        left: section('summarySections', '담당 업무', 2),
+        right: [
+          ...section('detailSections', '자격 요건', 0),
+          ...section('detailSections', '우대 요건', 1),
+        ],
+      },
+    ];
+  });
 }
 
 /** 장이 쓰는 템플릿. 장에 덮어쓴 템플릿이 없으면 문서 템플릿(`variant`)이다. */

@@ -998,6 +998,41 @@ export function EditorCanvas({
     : null;
   const textBox = textEdit ? boxes.find((box) => box.id === textEdit.id) : undefined;
 
+  /**
+   * Tab 으로 오가는 글자 요소. 템플릿 글자(문구 칸이 있는 것)와 자유 글자를 읽는 순서(위에서 아래, 같은
+   * 줄이면 왼쪽에서 오른쪽)로 늘어놓는다. 숨긴 요소는 뺀다.
+   */
+  const textTargets = boxes
+    .filter((box) => {
+      const layer = layerOf(box.id);
+      if (layer) {
+        return layer.kind === 'text';
+      }
+      return (
+        !isLayerRef(box.id) &&
+        !editOf(box.id).hidden &&
+        templateTextField(box.id, content, variant, role) !== null
+      );
+    })
+    .sort((a, b) => (Math.abs(a.y - b.y) > 12 ? a.y - b.y : a.x - b.x))
+    .map((box) => box.id);
+
+  /** 글자 요소 사이를 한 칸 옮긴다. `open` 이면 옮긴 요소의 고치기 창을 바로 연다. */
+  const stepText = (from: Selection | null, step: 1 | -1, open: boolean) => {
+    if (textTargets.length === 0) {
+      return;
+    }
+    const index = from ? textTargets.indexOf(from) : -1;
+    const next =
+      index < 0
+        ? textTargets[step === 1 ? 0 : textTargets.length - 1]!
+        : textTargets[(index + step + textTargets.length) % textTargets.length]!;
+    onSelect(next);
+    if (open) {
+      openText(next);
+    }
+  };
+
   const onKeyDown = (event: KeyboardEvent) => {
     const command = event.ctrlKey || event.metaKey;
     if (event.key === 'Escape') {
@@ -1009,7 +1044,18 @@ export function EditorCanvas({
       addText();
       return;
     }
+    if (event.key === 'Tab' && !command && !event.altKey) {
+      event.preventDefault();
+      stepText(selected, event.shiftKey ? -1 : 1, false);
+      return;
+    }
     if (!selected || lockedOf(selected)) {
+      return;
+    }
+    // 템플릿 글자도 Enter 로 고치기 창을 연다(두 번 누르기와 같다).
+    if (event.key === 'Enter' && !command && !layerOf(selected)) {
+      event.preventDefault();
+      openText(selected);
       return;
     }
     const layer = layerOf(selected);
@@ -1358,6 +1404,7 @@ export function EditorCanvas({
                     setTextEdit(null);
                     frameRef.current?.focus({ preventScroll: true });
                   }}
+                  onStep={(step) => stepText(textEdit.id, step, true)}
                   style={{
                     width: Math.min(320, width - 16),
                     left: Math.max(8, Math.min(textBox.x * scale, width - 328)),
@@ -1386,6 +1433,12 @@ export function EditorCanvas({
                     if (event.key === 'Escape' || (event.key === 'Enter' && event.ctrlKey)) {
                       event.preventDefault();
                       stopEditing();
+                    } else if (event.key === 'Tab' && !event.nativeEvent.isComposing) {
+                      // 저장하고 다음(Shift 면 이전) 글자 요소를 바로 고친다.
+                      event.preventDefault();
+                      const from = layerRef(editingLayer.id);
+                      stopEditing();
+                      stepText(from, event.shiftKey ? -1 : 1, true);
                     }
                   }}
                   spellCheck={false}

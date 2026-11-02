@@ -555,3 +555,117 @@ export function measureCompanies(
   }
   return { padTop, padBottom, rowSize: floor, rowLines: linesAt(floor), overflow: true };
 }
+
+/**
+ * 묶음 공고 장의 2열 카드 배치(한 회사 여러 직무 묶음 예시). 장 맨 위 가운데 회사 로고, 공고마다 검정 머리띠와
+ * 흰 카드 안 두 열(왼쪽 담당 업무, 오른쪽 자격·우대 요건)이다. 렌더(`ColumnsSlide`)와 한 장에 공고를 몇 개
+ * 넣을지 고르는 쪽(`../card/bundle.ts`)이 같은 치수를 쓴다.
+ */
+export const COLUMNS_LOGO_HEIGHT = 112;
+export const COLUMNS_LOGO_GAP = 36;
+export const COLUMNS_BAND_SIZE = 40;
+export const COLUMNS_BAND_PAD_Y = 16;
+export const COLUMNS_CARD_PAD_X = 40;
+export const COLUMNS_CARD_PAD_Y = 36;
+export const COLUMNS_GAP = 32;
+/** 왼쪽 열 폭. 오른쪽 열은 남은 폭이다. */
+export const COLUMNS_LEFT_WIDTH = 430;
+export const COLUMNS_RIGHT_WIDTH =
+  CONTENT_WIDTH - COLUMNS_CARD_PAD_X * 2 - COLUMNS_LEFT_WIDTH - COLUMNS_GAP;
+export const COLUMNS_CARD_GAP = 40;
+/** 칩과 목록 사이, 오른쪽 열 섹션 사이(글자 크기에 곱한다). */
+export const COLUMNS_CHIP_GAP = 0.5;
+export const COLUMNS_SECTION_GAP = 0.9;
+/** 목록 굵기. 왼쪽(담당 업무)은 굵게, 오른쪽은 보통이다(예시처럼). */
+export const COLUMNS_LEFT_WEIGHT = 700;
+export const COLUMNS_RIGHT_WEIGHT = 500;
+export const COLUMNS_LINE_HEIGHT = 1.5;
+const COLUMNS_FLOOR = 20;
+/** 한 장에 둘을 넣을지 고를 때는 목록 글자가 이보다 크게 들어가야 둘을 넣는다. */
+export const COLUMNS_PACK_MIN = 24;
+
+/** 2열 카드의 칩 글자 크기. */
+export function columnsChipSize(bodySize: number): number {
+  return Math.round(bodySize * 1.08);
+}
+
+export interface ColumnsMetrics {
+  padTop: number;
+  padBottom: number;
+  bodySize: number;
+  overflow: boolean;
+}
+
+/** 열 하나(칩 + 점 목록 섹션들)의 높이. */
+function columnHeight(
+  measure: Measure,
+  sections: CardSection[],
+  size: number,
+  weight: number,
+  width: number,
+): number {
+  const visible = visibleSections(sections);
+  return visible.reduce(
+    (sum, items, index) =>
+      sum +
+      (index > 0 ? Math.round(size * COLUMNS_SECTION_GAP) : 0) +
+      outlineChipHeight(columnsChipSize(size)) +
+      Math.round(size * COLUMNS_CHIP_GAP) +
+      items.reduce(
+        (lines, item) =>
+          lines +
+          lineCount(measure, item, size, weight, width - BULLET_INDENT) *
+            size *
+            COLUMNS_LINE_HEIGHT,
+        0,
+      ),
+    0,
+  );
+}
+
+/** 2열 카드 하나의 높이. */
+function columnsCardHeight(
+  measure: Measure,
+  card: { left: CardSection[]; right: CardSection[] },
+  size: number,
+): number {
+  const band = Math.round(COLUMNS_BAND_SIZE * 1.2) + COLUMNS_BAND_PAD_Y * 2;
+  const body = Math.max(
+    columnHeight(measure, card.left, size, COLUMNS_LEFT_WEIGHT, COLUMNS_LEFT_WIDTH),
+    columnHeight(measure, card.right, size, COLUMNS_RIGHT_WEIGHT, COLUMNS_RIGHT_WIDTH),
+  );
+  return band + COLUMNS_CARD_PAD_Y * 2 + Math.round(body);
+}
+
+/**
+ * 2열 카드 배치의 목록 글자 크기. 4:5 기준 28px 에서 시작해 카드가 장에 다 들어가는 크기까지 줄인다. 20px 로도
+ * 넘치면 `overflow` 다.
+ */
+export function measureColumns(
+  measure: Measure,
+  size: CardSize,
+  cards: { left: CardSection[]; right: CardSection[] }[],
+  bodyScale: number,
+): ColumnsMetrics {
+  const story = size.height > size.width * 1.5;
+  const square = size.height <= size.width;
+  const padTop = slidePadTop(size);
+  const padBottom = story ? 230 : square ? 40 : 56;
+  const base = Math.round((square ? 26 : story ? 30 : 28) * bodyScale);
+  const available =
+    size.height -
+    padTop -
+    BUNDLE_TOP_GAP -
+    COLUMNS_LOGO_HEIGHT -
+    COLUMNS_LOGO_GAP -
+    padBottom -
+    Math.max(0, cards.length - 1) * COLUMNS_CARD_GAP;
+  const floor = Math.min(base, Math.round(COLUMNS_FLOOR * bodyScale));
+  for (let bodySize = base; bodySize >= floor; bodySize -= 1) {
+    const height = cards.reduce((sum, card) => sum + columnsCardHeight(measure, card, bodySize), 0);
+    if (height <= available) {
+      return { padTop, padBottom, bodySize, overflow: false };
+    }
+  }
+  return { padTop, padBottom, bodySize: floor, overflow: true };
+}

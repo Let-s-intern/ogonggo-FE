@@ -16,6 +16,21 @@ import {
   COMPANY_TABLE_PAD_BOTTOM,
   COMPANY_TABLE_PAD_TOP,
   COMPANY_TABLE_PAD_X,
+  COLUMNS_BAND_PAD_Y,
+  COLUMNS_BAND_SIZE,
+  COLUMNS_CARD_GAP,
+  COLUMNS_CARD_PAD_X,
+  COLUMNS_CARD_PAD_Y,
+  COLUMNS_CHIP_GAP,
+  COLUMNS_GAP,
+  COLUMNS_LEFT_WEIGHT,
+  COLUMNS_LEFT_WIDTH,
+  COLUMNS_LINE_HEIGHT,
+  COLUMNS_LOGO_GAP,
+  COLUMNS_LOGO_HEIGHT,
+  COLUMNS_RIGHT_WEIGHT,
+  COLUMNS_RIGHT_WIDTH,
+  COLUMNS_SECTION_GAP,
   CONTENT_WIDTH,
   COVER_DEADLINE_INNER_GAP,
   COVER_LINK_SCALE,
@@ -29,7 +44,9 @@ import {
   OUTLINE_CHIP_BORDER,
   PAD_X,
   type SlideMetrics,
+  columnsChipSize,
   companyHeadSize,
+  measureColumns,
   measureCompanies,
   measureCover,
   measureSlide,
@@ -40,6 +57,7 @@ import type { SlideRole } from '../document';
 import type { Measure } from '../measure';
 import {
   type BrandMarkId,
+  type BundleCard,
   type BundleCompany,
   type CardSection,
   type CardSize,
@@ -80,7 +98,8 @@ import {
  * - `labels`: 가운데 로고, 브랜드색 띠 머리 카드, 왼쪽 항목명·오른쪽 목록 표(LG생활건강형 2장).
  *
  * 시안이 `detailLayout` 을 가지면 2장만 그 배치로 그린다. 묶음 공고 장은 시안과 상관없이 문서의 묶음 배치다 —
- * 항목명 표(`bundleRow`)는 `labels`, 회사 블록(`bundleCompanies`)은 `CompaniesSlide` 다.
+ * 항목명 표(`bundleRow`)는 `labels`, 2열 카드(`bundleCards`)는 `ColumnsSlide`, 회사 블록(`bundleCompanies`)은
+ * `CompaniesSlide` 다.
  */
 
 /** 흰 판 안쪽 여백. */
@@ -197,14 +216,14 @@ function slideSections(
  * 세지 않는다.
  */
 export function visibleSectionIndices(
-  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow' | 'bundleCompanies'>,
+  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow' | 'bundleCompanies' | 'bundleCards'>,
   slide: SlideRole,
 ): number[] {
   // 묶음 공고 장은 두 문구 배열에서 섹션을 모아 그리거나(항목명 표) 공고 여럿을 그려(회사 블록) 한 배열의
   // 순서로 가리킬 수 없다.
   if (
     (slide !== 'cover' && slide !== 'job') ||
-    (slide === 'job' && (spec.bundleRow || spec.bundleCompanies))
+    (slide === 'job' && (spec.bundleRow || spec.bundleCompanies || spec.bundleCards))
   ) {
     return [];
   }
@@ -220,12 +239,15 @@ export function visibleSectionIndices(
 
 /** 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. */
 export function visibleSectionLabels(
-  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow' | 'bundleCompanies'>,
+  spec: Pick<CardSpec, 'variant' | 'content' | 'bundleRow' | 'bundleCompanies' | 'bundleCards'>,
   slide: SlideRole,
 ): string[] {
-  // 회사 블록 배치의 `section-<n>` 은 n 번째 회사 블록이다.
+  // 회사 블록·2열 카드 배치의 `section-<n>` 은 n 번째 회사 블록·카드다.
   if (slide === 'job' && spec.bundleCompanies) {
     return spec.bundleCompanies.map((company) => company.name);
+  }
+  if (slide === 'job' && spec.bundleCards) {
+    return spec.bundleCards.map((card) => card.title);
   }
   if (slide === 'job' && spec.bundleRow) {
     return slideSections(spec, slide, false)
@@ -738,6 +760,209 @@ function CompaniesSlide({
             </div>
           </Editable>
         ))}
+      </div>
+    </Canvas>
+  );
+  return { element, overflow: metrics.overflow };
+}
+
+/** 2열 카드의 열 하나. 섹션마다 가운데 테두리 칩, 그 아래 왼쪽 정렬 점 목록이다. */
+function CardColumn({
+  sections,
+  brand,
+  size,
+  weight,
+  width,
+}: {
+  sections: CardSection[];
+  brand: string;
+  size: number;
+  weight: number;
+  width: number;
+}) {
+  const visible = sections
+    .map((section) => ({ ...section, items: section.items.filter((item) => item.trim()) }))
+    .filter((section) => section.items.length > 0);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width,
+        gap: Math.round(size * COLUMNS_SECTION_GAP),
+      }}
+    >
+      {visible.map((section, index) => (
+        <div
+          key={index}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: Math.round(size * COLUMNS_CHIP_GAP),
+          }}
+        >
+          <OutlineChip brand={brand} size={columnsChipSize(size)}>
+            {section.label}
+          </OutlineChip>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {section.items.map((item, itemIndex) => (
+              <div
+                key={itemIndex}
+                style={{
+                  display: 'flex',
+                  width,
+                  fontSize: size,
+                  fontWeight: weight,
+                  lineHeight: COLUMNS_LINE_HEIGHT,
+                  letterSpacing: -size * 0.01,
+                  color: '#111111',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    width: BULLET_INDENT,
+                    flexShrink: 0,
+                    paddingLeft: Math.round(size * 0.3),
+                  }}
+                >
+                  •
+                </div>
+                <div style={{ display: 'flex', width: width - BULLET_INDENT }}>{item}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 2열 카드 배치(한 회사 여러 직무 묶음 예시). 맨 위 가운데 회사 로고, 오른쪽 위 브랜드 로고, 공고마다 검정
+ * 머리띠에 직무, 흰 카드 안 왼쪽 열 담당 업무, 오른쪽 열 자격·우대 요건이다. 칩은 흰 바탕에 브랜드색 테두리다.
+ * 카드가 장에 다 들어가게 목록 글자를 줄인다(`measureColumns`).
+ */
+function ColumnsSlide({
+  spec,
+  cards,
+  palette,
+  size,
+  measure,
+  assets,
+}: {
+  spec: CardSpec;
+  cards: BundleCard[];
+  palette: Palette;
+  size: CardSize;
+  measure: Measure;
+  assets: SlideAssets;
+}): Built {
+  const metrics = measureColumns(measure, size, cards, textScale(spec.settings.bodyScale));
+  const brand = spec.settings.brandColor;
+  const { bodySize } = metrics;
+  const edits = spec.edits;
+  const element = (
+    <Canvas size={size} layers={spec.layers}>
+      <Background spec={spec} palette={palette} size={size} assets={assets} />
+      <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
+        <Editable id="brandMark" edits={edits}>
+          <BrandMark
+            brand={cornerBrandMark(spec.settings.brandMark)}
+            image={spec.settings.brandImage}
+            palette={palette}
+            assets={assets}
+            size={52}
+          />
+        </Editable>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          width: size.width,
+          padding: `${metrics.padTop + BUNDLE_TOP_GAP}px ${PAD_X}px 0`,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: COLUMNS_LOGO_HEIGHT,
+            marginBottom: COLUMNS_LOGO_GAP,
+          }}
+        >
+          <Editable id="companyLogo" edits={edits}>
+            <CompanyLogo
+              spec={spec}
+              palette={{ ...palette, logo: palette.logo === 'plate' ? 'original' : palette.logo }}
+              height={COLUMNS_LOGO_HEIGHT}
+              maxWidth={520}
+            />
+          </Editable>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: COLUMNS_CARD_GAP }}>
+          {cards.map((card, index) => (
+            <Editable
+              key={index}
+              id={sectionElementId(index + 1)}
+              edits={edits}
+              style={{ flexDirection: 'column' }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: CONTENT_WIDTH,
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 28,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    backgroundColor: '#111111',
+                    color: '#FFFFFF',
+                    fontSize: COLUMNS_BAND_SIZE,
+                    fontWeight: 800,
+                    lineHeight: 1.2,
+                    letterSpacing: -COLUMNS_BAND_SIZE * 0.01,
+                    padding: `${COLUMNS_BAND_PAD_Y}px 0`,
+                  }}
+                >
+                  {card.title}
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: COLUMNS_GAP,
+                    padding: `${COLUMNS_CARD_PAD_Y}px ${COLUMNS_CARD_PAD_X}px`,
+                  }}
+                >
+                  <CardColumn
+                    sections={card.left}
+                    brand={brand}
+                    size={bodySize}
+                    weight={COLUMNS_LEFT_WEIGHT}
+                    width={COLUMNS_LEFT_WIDTH}
+                  />
+                  <CardColumn
+                    sections={card.right}
+                    brand={brand}
+                    size={bodySize}
+                    weight={COLUMNS_RIGHT_WEIGHT}
+                    width={COLUMNS_RIGHT_WIDTH}
+                  />
+                </div>
+              </div>
+            </Editable>
+          ))}
+        </div>
       </div>
     </Canvas>
   );
@@ -1452,6 +1677,9 @@ export function buildSlide(
   }
   if (role === 'cover' && spec.cover) {
     return CoverSlide({ spec, cover: spec.cover, palette, size, measure, assets });
+  }
+  if (role === 'job' && spec.bundleCards) {
+    return ColumnsSlide({ spec, cards: spec.bundleCards, palette, size, measure, assets });
   }
   if (role === 'job' && spec.bundleCompanies) {
     return CompaniesSlide({
