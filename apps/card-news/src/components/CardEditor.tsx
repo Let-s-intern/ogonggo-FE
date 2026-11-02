@@ -5,6 +5,8 @@ import {
   CARD_SIZES,
   type CardSizeId,
   type ElementId,
+  JOB_VALUE_LABELS,
+  type JobValueKey,
   type Layer,
   type RenderRequest,
   type Selection,
@@ -20,11 +22,13 @@ import {
   duplicateSlide,
   insertSlide,
   jobName,
+  jobValue,
   moveJob,
   moveSlide,
   newSlide,
   removeJob,
   removeSlide,
+  resolveLayers,
   slideEditsOf,
   slideLabel,
   slideName,
@@ -39,12 +43,19 @@ import { resolvePalette } from '@/lib/card/variants';
 import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
 import { fileToDataUrl } from '@/lib/client/image';
+import { putImage } from '@/lib/client/imageStore';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { useRenderKit } from '@/lib/client/useRenderKit';
 import { AssistantPanel } from './AssistantPanel';
-import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
+import {
+  type CanvasHandle,
+  EditorCanvas,
+  measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
 import { EditorToolbar } from './EditorToolbar';
+import { ElementsDrawer } from './drawers/ElementsDrawer';
 import { JobsDrawer } from './drawers/JobsDrawer';
+import { type JobValueChip, type TextPreset, TextDrawer } from './drawers/TextDrawer';
+import { UploadDrawer } from './drawers/UploadDrawer';
 import { TemplateDrawer } from './drawers/TemplateDrawer';
 import { LeftRail } from './LeftRail';
 import { type PanelTab, PropertiesPanel } from './PropertiesPanel';
@@ -61,7 +72,7 @@ const MAX_RENDER_REQUEST = 4_000_000;
 const NO_LAYERS: Layer[] = [];
 
 /** 왼쪽 레일. 도형·배경 서랍은 2차라 두지 않는다. */
-type DrawerKey = 'template' | 'jobs';
+type DrawerKey = 'template' | 'text' | 'elements' | 'upload' | 'jobs';
 
 /**
  * 편집 화면 배치(`/edit/<문서 id>`). 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
@@ -87,6 +98,7 @@ export function CardEditor({ docId }: { docId: string }) {
   /** 열린 왼쪽 서랍. `null` 이면 닫혀 있다. */
   const [drawer, setDrawer] = useState<DrawerKey | null>('template');
   const { kit, error: kitError } = useRenderKit();
+  const canvasRef = useRef<CanvasHandle>(null);
   /** 문서 템플릿. 장마다 `한 장씩` 으로 덮어쓴 템플릿이 있으면 그 장은 그것으로 그린다. */
   const docVariant = loaded && !picking ? loaded.doc.variant : null;
   const slides = useMemo(
@@ -164,7 +176,77 @@ export function CardEditor({ docId }: { docId: string }) {
     setSelected(null);
   }, [variant]);
 
-  const layers = (variant && docSlide?.layers[variant]) || NO_LAYERS;
+  // 공고 값과 이어진 글자는 이 장의 공고 값으로 채워 캔버스에 넘긴다(받기와 같은 글).
+  const layers =
+    (variant && loaded && docSlide
+      ? resolveLayers(loaded.doc, docSlide, docSlide.layers[variant])
+      : undefined) || NO_LAYERS;
+  const palette = variant && loaded ? resolvePalette(variant, loaded.doc.settings) : null;
+  /** 텍스트 서랍의 오공고 글 스타일. 강조 상자·칩은 지금 색으로 채운다. */
+  const textStyles: { label: string; preset: TextPreset }[] = palette
+    ? [
+        {
+          label: '강조 제목',
+          preset: {
+            text: '강조 제목',
+            style: {
+              fontSize: 96,
+              fontWeight: 900,
+              lineHeight: 1.25,
+              color: palette.boxText,
+              background: palette.box,
+            },
+          },
+        },
+        {
+          label: '칩',
+          preset: {
+            text: '마감 기한',
+            style: {
+              fontSize: 36,
+              fontWeight: 700,
+              width: 400,
+              color: palette.chipText,
+              background: palette.chip,
+              radius: 999,
+            },
+          },
+        },
+        {
+          label: '· 담당 업무\n· 우대 사항',
+          preset: {
+            text: '• 담당 업무\n• 우대 사항',
+            style: { fontSize: 40, fontWeight: 500, lineHeight: 1.5 },
+          },
+        },
+        {
+          label: '마감 11월 9일\n업무 국내영업',
+          preset: {
+            text: '마감    11월 9일\n업무    국내영업',
+            style: { fontSize: 40, fontWeight: 600, lineHeight: 1.6 },
+          },
+        },
+      ]
+    : [];
+  const jobValues: JobValueChip[] =
+    loaded && docSlide && loaded.doc.jobs.length > 0
+      ? (Object.entries(JOB_VALUE_LABELS) as [JobValueKey, string][]).map(([key, label]) => ({
+          label,
+          value: jobValue(loaded.doc, docSlide, key),
+          style: { fontSize: 44, fontWeight: 700, lineHeight: 1.4, bind: key },
+        }))
+      : [];
+  /** 업로드 서랍에서 올린 이미지를 이 브라우저에 남기고 문서의 업로드 목록에 더한다. */
+  const upload = async (files: File[]) => {
+    const ids = await Promise.all(
+      files.map(async (file) => {
+        const id = `upload-${crypto.randomUUID().slice(0, 8)}`;
+        await putImage(id, await fileToDataUrl(file));
+        return id;
+      }),
+    );
+    editor.changeDocument((doc) => ({ ...doc, uploads: [...(doc.uploads ?? []), ...ids] }));
+  };
   const names = useMemo(
     () => (loaded ? loaded.doc.slides.map((item) => slideName(loaded.doc, item)) : []),
     [loaded],
@@ -380,6 +462,42 @@ export function CardEditor({ docId }: { docId: string }) {
                 ) : null,
               },
               {
+                key: 'text',
+                label: '텍스트',
+                drawer: (
+                  <TextDrawer
+                    styles={textStyles}
+                    values={jobValues}
+                    onAdd={({ text, style }) => canvasRef.current?.addText(text, style)}
+                  />
+                ),
+              },
+              {
+                key: 'elements',
+                label: '요소',
+                drawer: (
+                  <ElementsDrawer
+                    logos={[
+                      { label: '기업 로고', src: loaded.logo },
+                      { label: '렛츠커리어', src: kit?.assets.markColor },
+                      { label: '오공고', src: kit?.assets.ogonggoLogo },
+                    ]}
+                    onAdd={(src) => canvasRef.current?.addImageSource(src)}
+                  />
+                ),
+              },
+              {
+                key: 'upload',
+                label: '업로드',
+                drawer: (
+                  <UploadDrawer
+                    uploads={loaded.doc.uploads ?? []}
+                    onUpload={(files) => void upload(files)}
+                    onAdd={(src) => canvasRef.current?.addImageSource(src)}
+                  />
+                ),
+              },
+              {
                 key: 'jobs',
                 label: '공고',
                 drawer: (
@@ -423,7 +541,8 @@ export function CardEditor({ docId }: { docId: string }) {
                   void fileToDataUrl(image).then(editor.setLogo, () => undefined)
                 }
                 onBrand={(image) => void editor.setBrandImage(image)}
-                textColor={resolvePalette(variant, loaded.doc.settings).headlineText}
+                textColor={palette?.headlineText ?? '#111111'}
+                canvasRef={canvasRef}
                 selected={selected}
                 onSelect={setSelected}
                 onEdit={(id, edit, group) => editor.setEdits(variant, docSlide.id, id, edit, group)}

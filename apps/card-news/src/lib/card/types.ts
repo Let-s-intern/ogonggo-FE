@@ -264,7 +264,39 @@ export interface TextLayer extends LayerBase {
   align: 'left' | 'center' | 'right';
   /** 글자 크기에 곱하는 줄 간격. */
   lineHeight: number;
+  /**
+   * 채움(`#RRGGBB`). 있으면 줄마다 글자에 맞춘 상자를 칠한다 — 강조 상자·칩 모양이다. 예전 편집본에는
+   * 없다(채움 없음).
+   */
+  background?: string;
+  /** 채움 상자 모서리 둥글기(px). */
+  radius?: number;
+  /**
+   * 이어진 공고 값(`공고 값 넣기`). 있으면 그릴 때 이 장이 그리는 공고의 값으로 글자를 채운다
+   * (`resolveLayers()`) — 같은 글을 다른 공고 장에 붙이면 그 공고 값이 된다. 글자를 직접 고치면 끊는다.
+   */
+  bind?: JobValueKey;
 }
+
+/** 글자 요소에 이을 수 있는 공고 값. */
+export type JobValueKey =
+  | 'company'
+  | 'role'
+  | 'field'
+  | 'deadline'
+  | 'duties'
+  | 'qualifications'
+  | 'preferred';
+
+export const JOB_VALUE_LABELS: Record<JobValueKey, string> = {
+  company: '회사명',
+  role: '직무',
+  field: '모집 분야',
+  deadline: '마감일',
+  duties: '담당 업무',
+  qualifications: '자격 요건',
+  preferred: '우대 요건',
+};
 
 /** 이미지 요소. `src` 는 data URL, `imageId` 는 이 브라우저 이미지 저장소(IndexedDB)의 열쇠다. */
 export interface ImageLayer extends LayerBase {

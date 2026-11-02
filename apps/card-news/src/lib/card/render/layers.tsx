@@ -40,7 +40,21 @@ export function layerElements(layers: Layer[] | undefined): ReactElement[] {
               wordBreak: 'keep-all',
             }}
           >
-            {line || '\u00a0'}
+            {layer.background ? (
+              // 채움은 줄마다 글자에 맞춘 상자다(강조 상자·칩).
+              <div
+                style={{
+                  display: 'flex',
+                  backgroundColor: layer.background,
+                  borderRadius: layer.radius ?? 0,
+                  padding: `${Math.round(layer.fontSize * 0.08)}px ${Math.round(layer.fontSize * 0.28)}px`,
+                }}
+              >
+                {line || '\u00a0'}
+              </div>
+            ) : (
+              line || '\u00a0'
+            )}
           </div>
         ))}
       </div>

@@ -8,6 +8,7 @@ import type {
   CoverTable,
   ElementEdit,
   ElementId,
+  JobValueKey,
   Layer,
   SlideEdits,
   VariantId,
@@ -356,6 +357,65 @@ function bundleRowOf(doc: CardDocument, slide: DocumentSlide): [string, string] 
   return doc.cover.rows[index] ?? [doc.jobs[index]?.content.roleTitle ?? '', ''];
 }
 
+/** 공고 문구에서 섹션 하나의 항목. 이름으로 찾고, 없으면 그 자리 순서의 섹션이다. */
+function sectionItems(
+  content: DocumentJob['content'],
+  from: 'summarySections' | 'detailSections',
+  label: string,
+  index: number,
+): string[] {
+  const section =
+    content[from].find((item) => item.label.trim() === label) ?? content[from][index];
+  return (section?.items ?? []).map((item) => item.trim()).filter(Boolean);
+}
+
+/**
+ * 장이 그리는 공고의 값 하나(`공고 값 넣기`). 표지·안내 장은 첫 공고다. 목록 값은 줄마다 `• ` 를 붙인다.
+ * 공고가 없으면 빈 글이다.
+ */
+export function jobValue(doc: CardDocument, slide: DocumentSlide, key: JobValueKey): string {
+  const job = slideJob(doc, slide);
+  if (!job) {
+    return '';
+  }
+  const index = doc.jobs.indexOf(job);
+  const row = doc.cover?.rows[index];
+  const list = (items: string[]) => items.map((item) => `• ${item}`).join('\n');
+  switch (key) {
+    case 'company':
+      return job.companyName;
+    case 'role':
+      return row?.[0]?.trim() || job.content.roleTitle;
+    case 'field':
+      return (
+        row?.[1]?.trim() || sectionItems(job.content, 'summarySections', '채용 직무', 0).join(', ')
+      );
+    case 'deadline':
+      return sectionItems(job.content, 'summarySections', '마감 기한', 1)[0] ?? '';
+    case 'duties':
+      return list(sectionItems(job.content, 'summarySections', '담당 업무', 2));
+    case 'qualifications':
+      return list(sectionItems(job.content, 'detailSections', '자격 요건', 0));
+    case 'preferred':
+      return list(sectionItems(job.content, 'detailSections', '우대 요건', 1));
+  }
+}
+
+/** 공고 값과 이어진 글자 요소를 이 장의 공고 값으로 채운 목록. 값이 비면 원래 글자를 둔다. */
+export function resolveLayers(
+  doc: CardDocument,
+  slide: DocumentSlide,
+  layers: Layer[] | undefined,
+): Layer[] | undefined {
+  return layers?.map((layer) => {
+    if (layer.kind !== 'text' || !layer.bind) {
+      return layer;
+    }
+    const text = jobValue(doc, slide, layer.bind);
+    return text && text !== layer.text ? { ...layer, text } : layer;
+  });
+}
+
 /** 렌더할 장 하나. `id` 는 문서 장의 id 다. */
 export interface RenderSlide {
   id: string;
@@ -388,7 +448,7 @@ export function slideSpec(
       logo: sameCompany ? logo : undefined,
       companyName: job?.companyName ?? '',
       edits: slideEditsOf(doc, slide)[variant],
-      layers: slide.layers[variant],
+      layers: resolveLayers(doc, slide, slide.layers[variant]),
       ...(cover ? { cover } : {}),
       ...(bundleRow ? { bundleRow } : {}),
     },

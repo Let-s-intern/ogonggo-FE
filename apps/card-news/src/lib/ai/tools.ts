@@ -814,9 +814,14 @@ function editLayers(
     }
     const rejected: string[] = [];
     const patch = textPatch(raw, rejected);
+    // 글자를 바꾸면 공고 값과의 연결을 끊는다(사람이 캔버스에서 고칠 때와 같다).
     const updated: Layer =
       layer.kind === 'text'
-        ? { ...layer, ...patch }
+        ? {
+            ...layer,
+            ...patch,
+            ...(patch.text === undefined ? {} : { bind: undefined }),
+          }
         : {
             ...layer,
             ...(patch.x !== undefined ? { x: patch.x } : {}),

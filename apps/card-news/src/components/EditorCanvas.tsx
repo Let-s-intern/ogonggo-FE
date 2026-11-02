@@ -7,6 +7,7 @@ import {
   type ReactElement,
   type Ref,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -33,7 +34,7 @@ import {
   layerRef,
 } from '@/lib/card/types';
 import { blobToLayerImage } from '@/lib/client/image';
-import { putImage } from '@/lib/client/imageStore';
+import { getImage, putImage } from '@/lib/client/imageStore';
 import { TextPopover, templateTextField } from './TextPopover';
 import type { MeasuredBox } from '@/lib/ai/tools';
 import type { RenderKit } from '@/lib/client/useRenderKit';
@@ -278,6 +279,17 @@ function ancestorsOf(element: HTMLElement, stage: HTMLElement): ElementId[] {
   return found;
 }
 
+/** 서랍에서 캔버스에 넣는 동작(텍스트 서랍, 업로드·요소 서랍). */
+export interface CanvasHandle {
+  /** 보고 있는 장 가운데에 글자 요소를 넣고 고른다. */
+  addText: (text: string, style?: Partial<TextLayer>) => void;
+  /** 그림(data URL)을 보고 있는 장 가운데에 이미지 요소로 넣는다. */
+  addImageSource: (src: string) => void;
+}
+
+/** 업로드 서랍에서 캔버스로 끌어 오는 이미지 id 형식(IndexedDB 열쇠). */
+export const UPLOAD_MIME = 'application/x-ogonggo-upload';
+
 /** 복사한 자유 요소를 클립보드에 싣는 형식. 같은 브라우저 안에서만 읽힌다. */
 const LAYER_MIME = 'application/x-ogonggo-layer';
 /** 붙여 넣은 이미지의 처음 크기 상한(1080 폭 기준). */
@@ -339,6 +351,7 @@ export function EditorCanvas({
   onBrand,
   zoom,
   onScale,
+  canvasRef,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
@@ -370,6 +383,8 @@ export function EditorCanvas({
   zoom: number | null;
   /** 그려진 배율이 바뀌면 알린다(위 막대의 배율 표시). */
   onScale?: (scale: number) => void;
+  /** 서랍이 캔버스에 요소를 넣을 때 쓴다. */
+  canvasRef?: Ref<CanvasHandle>;
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
@@ -506,28 +521,62 @@ export function EditorCanvas({
       group,
     );
 
-  /** 글자 요소를 넣는다. `text` 가 없으면 `텍스트` 를 넣고 바로 고치기를 연다. */
-  const addText = (text?: string, at?: { x: number; y: number }) => {
-    const layerWidth = text ? 840 : 600;
+  /**
+   * 글자 요소를 넣는다. `text` 가 없으면 `텍스트` 를 넣고 바로 고치기를 연다. `style` 은 텍스트 서랍의
+   * 글 스타일(크기·굵기·채움, 이어진 공고 값)이다.
+   */
+  const addText = (text?: string, at?: { x: number; y: number }, style?: Partial<TextLayer>) => {
+    const layerWidth = style?.width ?? (text ? 840 : 600);
+    const fontSize = style?.fontSize ?? 64;
     const layer: TextLayer = {
       id: newLayerId(),
       kind: 'text',
       text: text ?? '텍스트',
-      fontSize: 64,
+      fontSize,
       fontWeight: 700,
       color: textColor,
       align: 'left',
       lineHeight: 1.3,
+      ...style,
       width: layerWidth,
       x: Math.round((at?.x ?? cardSize.width / 2) - layerWidth / 2),
-      y: Math.round((at?.y ?? cardSize.height / 2) - 42),
+      y: Math.round((at?.y ?? cardSize.height / 2) - fontSize * 0.65),
     };
     if (commitLayers([...layersRef.current, layer], undefined, layer) && !text) {
       setEditing(layer.id);
     }
   };
 
-  /** 이미지 파일을 줄여 이미지 요소로 넣는다. `at` 은 놓을 가운데(1080 폭 좌표)다. */
+  /** 줄인 이미지를 이미지 요소로 넣는다. `at` 은 놓을 가운데(1080 폭 좌표)다. */
+  const placeImage = (
+    image: { dataUrl: string; width: number; height: number },
+    at?: { x: number; y: number },
+    offset = 0,
+  ): boolean => {
+    const fit = Math.min(1, IMAGE_MAX_WIDTH / image.width, IMAGE_MAX_HEIGHT / image.height);
+    const layerWidth = Math.round(image.width * fit);
+    const layerHeight = Math.round(image.height * fit);
+    const id = newLayerId();
+    const layer: Layer = {
+      id,
+      kind: 'image',
+      imageId: id,
+      src: image.dataUrl,
+      width: layerWidth,
+      height: layerHeight,
+      x: Math.round((at?.x ?? cardSize.width / 2) - layerWidth / 2 + offset),
+      y: Math.round((at?.y ?? cardSize.height / 2) - layerHeight / 2 + offset),
+      opacity: 1,
+      radius: 0,
+    };
+    if (!commitLayers([...layersRef.current, layer], undefined, layer)) {
+      return false;
+    }
+    void putImage(id, image.dataUrl);
+    return true;
+  };
+
+  /** 이미지 파일을 줄여 이미지 요소로 넣는다. */
   const addImages = async (files: Blob[], at?: { x: number; y: number }) => {
     let offset = 0;
     for (const file of files) {
@@ -538,28 +587,43 @@ export function EditorCanvas({
         setMessage('이미지를 읽지 못했습니다.');
         continue;
       }
-      const fit = Math.min(1, IMAGE_MAX_WIDTH / image.width, IMAGE_MAX_HEIGHT / image.height);
-      const layerWidth = Math.round(image.width * fit);
-      const layerHeight = Math.round(image.height * fit);
-      const id = newLayerId();
-      const layer: Layer = {
-        id,
-        kind: 'image',
-        imageId: id,
-        src: image.dataUrl,
-        width: layerWidth,
-        height: layerHeight,
-        x: Math.round((at?.x ?? cardSize.width / 2) - layerWidth / 2 + offset),
-        y: Math.round((at?.y ?? cardSize.height / 2) - layerHeight / 2 + offset),
-        opacity: 1,
-        radius: 0,
-      };
-      if (commitLayers([...layersRef.current, layer], undefined, layer)) {
-        void putImage(id, image.dataUrl);
+      if (placeImage(image, at, offset)) {
         offset += PASTE_OFFSET;
       }
     }
   };
+
+  /**
+   * 이미 줄여 둔 그림(data URL)을 이미지 요소로 넣는다. 업로드 서랍의 이미지와 요소 서랍의 로고다 —
+   * 로고 SVG 는 그대로 넣어 키워도 흐려지지 않는다.
+   */
+  const addImageSource = async (src: string, at?: { x: number; y: number }) => {
+    try {
+      const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () =>
+          resolve({ width: image.naturalWidth || 400, height: image.naturalHeight || 400 });
+        image.onerror = reject;
+        image.src = src;
+      });
+      // 작은 로고 SVG 는 보이는 크기로 키운다.
+      const grow = Math.max(1, 360 / Math.max(size.width, size.height));
+      placeImage({ dataUrl: src, width: size.width * grow, height: size.height * grow }, at);
+    } catch {
+      setMessage('이미지를 읽지 못했습니다.');
+    }
+  };
+
+  const handleRef = useRef({ addText, addImageSource });
+  handleRef.current = { addText, addImageSource };
+  useImperativeHandle(
+    canvasRef,
+    () => ({
+      addText: (text, style) => handleRef.current.addText(text, undefined, style),
+      addImageSource: (src) => void handleRef.current.addImageSource(src),
+    }),
+    [],
+  );
 
   /** 자유 요소 복사본을 비켜 놓고 고른다. 이미지는 같은 저장 이미지를 쓴다. */
   const addCopy = (source: Layer) => {
@@ -879,12 +943,28 @@ export function EditorCanvas({
   };
 
   const onDragOver = (event: DragEvent) => {
-    if (event.dataTransfer.types.includes('Files')) {
+    if (
+      event.dataTransfer.types.includes('Files') ||
+      event.dataTransfer.types.includes(UPLOAD_MIME)
+    ) {
       event.preventDefault();
       event.dataTransfer.dropEffect = 'copy';
     }
   };
   const onDrop = (event: DragEvent) => {
+    const upload = event.dataTransfer.getData(UPLOAD_MIME);
+    if (upload) {
+      // 업로드 서랍에서 끌어 온 이미지. 놓은 자리에 넣는다.
+      event.preventDefault();
+      frameRef.current?.focus({ preventScroll: true });
+      const at = toCard(event.clientX, event.clientY);
+      void getImage(upload).then((src) => {
+        if (src) {
+          void addImageSource(src, at);
+        }
+      });
+      return;
+    }
     const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith('image/'));
     if (files.length === 0) {
       return;
@@ -1052,12 +1132,11 @@ export function EditorCanvas({
                   autoFocus
                   onFocus={(event) => event.currentTarget.select()}
                   value={editingLayer.text}
-                  onChange={(event) =>
-                    replaceLayer(
-                      { ...editingLayer, text: event.target.value },
-                      `text:${editingLayer.id}`,
-                    )
-                  }
+                  // 글자를 직접 고치면 공고 값과의 연결을 끊는다.
+                  onChange={(event) => {
+                    const { bind: _bind, ...layer } = editingLayer;
+                    replaceLayer({ ...layer, text: event.target.value }, `text:${editingLayer.id}`);
+                  }}
                   onBlur={stopEditing}
                   onKeyDown={(event) => {
                     event.stopPropagation();
