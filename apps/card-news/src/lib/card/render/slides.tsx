@@ -68,6 +68,8 @@ import {
   type CardSpec,
   type CoverTable,
   type Layer,
+  type SlideEdits,
+  bundleElementId,
   sectionElementId,
 } from '../types';
 import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
@@ -709,6 +711,10 @@ function CompaniesSlide({
     width: COMPANY_CELL_WIDTH,
   };
   const edits = spec.edits;
+  // 표 줄마다 그 장의 몇 번째 공고인가(`bundleSlideJobs()` 순서, 블록을 넘어 이어 센다).
+  const firstRow = companies.map((_, blockIndex) =>
+    companies.slice(0, blockIndex).reduce((sum, block) => sum + block.rows.length, 0),
+  );
   const element = (
     <Canvas size={size} layers={spec.layers}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
@@ -809,8 +815,14 @@ function CompaniesSlide({
                     }}
                   >
                     {cells.map((text, index) => (
-                      <div
+                      <Editable
                         key={index}
+                        id={bundleElementId(
+                          (firstRow[blockIndex] ?? 0) + rowIndex + 1,
+                          'cell',
+                          index + 1,
+                        )}
+                        edits={edits}
                         style={{
                           ...cell,
                           textAlign: 'center',
@@ -829,7 +841,7 @@ function CompaniesSlide({
                         }}
                       >
                         {text.trim() || '-'}
-                      </div>
+                      </Editable>
                     ))}
                   </div>
                 ))}
@@ -851,6 +863,9 @@ function CardColumn({
   weight,
   width,
   measure,
+  job,
+  side,
+  edits,
 }: {
   sections: CardSection[];
   brand: string;
@@ -858,6 +873,10 @@ function CardColumn({
   weight: number;
   width: number;
   measure: Measure;
+  /** 그 장의 몇 번째 공고인가(1부터). 목록 요소 id 에 쓴다. */
+  job: number;
+  side: 'left' | 'right';
+  edits: SlideEdits | undefined;
 }) {
   const visible = sections
     .map((section) => ({ ...section, items: section.items.filter((item) => item.trim()) }))
@@ -883,7 +902,11 @@ function CardColumn({
           <OutlineChip brand={brand} size={columnsChipSize(size)}>
             {section.label}
           </OutlineChip>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Editable
+            id={bundleElementId(job, side, index + 1)}
+            edits={edits}
+            style={{ flexDirection: 'column' }}
+          >
             {section.items.map((item, itemIndex) => (
               <div
                 key={itemIndex}
@@ -918,7 +941,7 @@ function CardColumn({
                 </div>
               </div>
             ))}
-          </div>
+          </Editable>
         </div>
       ))}
     </div>
@@ -1008,9 +1031,10 @@ function ColumnsSlide({
                   overflow: 'hidden',
                 }}
               >
-                <div
+                <Editable
+                  id={bundleElementId(index + 1, 'title')}
+                  edits={edits}
                   style={{
-                    display: 'flex',
                     justifyContent: 'center',
                     backgroundColor: '#111111',
                     color: '#FFFFFF',
@@ -1022,7 +1046,7 @@ function ColumnsSlide({
                   }}
                 >
                   {card.title}
-                </div>
+                </Editable>
                 <div
                   style={{
                     display: 'flex',
@@ -1038,6 +1062,9 @@ function ColumnsSlide({
                     weight={COLUMNS_LEFT_WEIGHT}
                     width={COLUMNS_LEFT_WIDTH}
                     measure={measure}
+                    job={index + 1}
+                    side="left"
+                    edits={edits}
                   />
                   <CardColumn
                     sections={card.right}
@@ -1046,6 +1073,9 @@ function ColumnsSlide({
                     weight={COLUMNS_RIGHT_WEIGHT}
                     width={COLUMNS_RIGHT_WIDTH}
                     measure={measure}
+                    job={index + 1}
+                    side="right"
+                    edits={edits}
                   />
                 </div>
               </div>

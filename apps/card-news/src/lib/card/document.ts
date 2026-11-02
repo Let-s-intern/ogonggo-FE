@@ -629,9 +629,40 @@ export function companyBlocks(doc: CardDocument, indices: number[]): BundleCompa
   return blocks;
 }
 
+/** 공고 문구의 섹션 하나가 어디 있는가. */
+export interface SectionSource {
+  from: 'summarySections' | 'detailSections';
+  index: number;
+}
+
 /**
- * 2열 카드 배치에서 공고들(`jobs` 의 몇 번째인가)의 카드. 머리띠는 표지 표의 직무(없으면 직무명), 왼쪽 열은
- * `담당 업무`, 오른쪽 열은 `자격 요건`·`우대 요건` 이다. 섹션은 이름으로 찾고 없으면 그 자리 순서의 섹션이다.
+ * 2열 카드 왼쪽·오른쪽 열에 놓이는 공고 섹션의 자리. 왼쪽 열은 `담당 업무`, 오른쪽 열은 `자격 요건`·`우대 요건`
+ * 이다. 섹션은 이름으로 찾고 없으면 그 자리 순서의 섹션이다. 항목이 모두 빈 섹션은 뺀다.
+ */
+export function cardSectionSources(
+  content: Pick<CardContent, 'summarySections' | 'detailSections'>,
+): {
+  left: SectionSource[];
+  right: SectionSource[];
+} {
+  const source = (from: SectionSource['from'], label: string, at: number): SectionSource[] => {
+    const found = content[from].findIndex((item) => item.label.trim() === label);
+    const index = found >= 0 ? found : at;
+    const section = content[from][index];
+    return section && section.items.some((item) => item.trim()) ? [{ from, index }] : [];
+  };
+  return {
+    left: source('summarySections', '담당 업무', 2),
+    right: [
+      ...source('detailSections', '자격 요건', 0),
+      ...source('detailSections', '우대 요건', 1),
+    ],
+  };
+}
+
+/**
+ * 2열 카드 배치에서 공고들(`jobs` 의 몇 번째인가)의 카드. 머리띠는 표지 표의 직무(없으면 직무명), 열은
+ * `cardSectionSources()` 의 섹션이다.
  */
 export function bundleCards(doc: CardDocument, indices: number[]): BundleCard[] {
   return indices.flatMap((index) => {
@@ -639,22 +670,30 @@ export function bundleCards(doc: CardDocument, indices: number[]): BundleCard[] 
     if (!job) {
       return [];
     }
-    const section = (from: 'summarySections' | 'detailSections', label: string, at: number) => {
-      const found =
-        job.content[from].find((item) => item.label.trim() === label) ?? job.content[from][at];
-      return found && found.items.some((item) => item.trim()) ? [found] : [];
-    };
+    const { left, right } = cardSectionSources(job.content);
+    const sections = (sources: SectionSource[]) =>
+      sources.map(({ from, index: at }) => job.content[from][at]!);
     return [
       {
         title: doc.cover?.rows[index]?.[0]?.trim() || job.content.roleTitle,
-        left: section('summarySections', '담당 업무', 2),
-        right: [
-          ...section('detailSections', '자격 요건', 0),
-          ...section('detailSections', '우대 요건', 1),
-        ],
+        left: sections(left),
+        right: sections(right),
       },
     ];
   });
+}
+
+/**
+ * 묶음 공고 장(2열 카드·회사 블록)이 그리는 공고 순서. 회사 블록은 회사마다 모아 처음 나온 회사 순서다
+ * (`companyBlocks()` 의 표 줄 순서). 요소 id `job-<k>-…` 의 `<k>` 가 이 순서다.
+ */
+export function bundleSlideJobs(doc: CardDocument, slide: DocumentSlide): number[] {
+  const indices = slideJobIndices(slide).filter((index) => doc.jobs[index]);
+  if (bundleLayoutOf(doc).kind !== 'companies') {
+    return indices;
+  }
+  const names = [...new Set(indices.map((index) => doc.jobs[index]!.companyName))];
+  return names.flatMap((name) => indices.filter((index) => doc.jobs[index]!.companyName === name));
 }
 
 /** 장이 쓰는 템플릿. 장에 덮어쓴 템플릿이 없으면 문서 템플릿(`variant`)이다. */

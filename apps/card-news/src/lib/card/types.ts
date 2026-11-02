@@ -182,10 +182,42 @@ export type SectionElementId =
   | `section-${number}-chip`
   | `section-${number}-list`;
 
-export type ElementId = FixedElementId | SectionElementId;
+/**
+ * 묶음 공고 장(2열 카드·회사 블록)에서 공고 하나의 글자. `<k>` 는 그 장의 몇 번째 공고인가(1부터,
+ * `bundleSlideJobs()` 순서)다. `title` 은 2열 카드 머리띠, `left-<m>`·`right-<m>` 은 2열 카드 왼쪽·오른쪽 열의
+ * `<m>` 번째 목록, `cell-<c>` 는 회사 블록 표 줄의 `<c>` 번째 칸이다.
+ */
+export type BundleElementId =
+  | `job-${number}-title`
+  | `job-${number}-left-${number}`
+  | `job-${number}-right-${number}`
+  | `job-${number}-cell-${number}`;
+
+export type ElementId = FixedElementId | SectionElementId | BundleElementId;
 
 /** 섹션 번호는 1~9 까지 받는다. */
 const SECTION_ELEMENT = /^section-([1-9])(?:-(chip|list))?$/;
+const BUNDLE_ELEMENT = /^job-([1-9])-(?:(title)|(left|right)-([1-9])|(cell)-([12]))$/;
+
+export function bundleElementId(
+  job: number,
+  part: 'title' | 'left' | 'right' | 'cell',
+  index?: number,
+): BundleElementId {
+  return part === 'title' ? `job-${job}-title` : `job-${job}-${part}-${index ?? 1}`;
+}
+
+/** 묶음 공고 장 글자 id 를 푼다. 아니면 `null`. `job`·`index` 는 1부터다. */
+export function parseBundleElementId(
+  id: string,
+): { job: number; part: 'title' | 'left' | 'right' | 'cell'; index: number } | null {
+  const match = BUNDLE_ELEMENT.exec(id);
+  if (!match) {
+    return null;
+  }
+  const part = (match[2] ?? match[3] ?? match[5]) as 'title' | 'left' | 'right' | 'cell';
+  return { job: Number(match[1]), part, index: Number(match[4] ?? match[6] ?? 1) };
+}
 
 export function sectionElementId(index: number, part?: 'chip' | 'list'): SectionElementId {
   return part ? `section-${index}-${part}` : `section-${index}`;
@@ -194,7 +226,9 @@ export function sectionElementId(index: number, part?: 'chip' | 'list'): Section
 export function isElementId(value: unknown): value is ElementId {
   return (
     typeof value === 'string' &&
-    ((ELEMENT_IDS as readonly string[]).includes(value) || SECTION_ELEMENT.test(value))
+    ((ELEMENT_IDS as readonly string[]).includes(value) ||
+      SECTION_ELEMENT.test(value) ||
+      BUNDLE_ELEMENT.test(value))
   );
 }
 
@@ -222,6 +256,15 @@ export const ELEMENT_LABELS: Record<FixedElementId, string> = {
  * 그 장에 보이는 섹션의 칩 제목이다(없으면 번호만).
  */
 export function elementLabel(id: ElementId, sectionLabels?: string[]): string {
+  const bundle = parseBundleElementId(id);
+  if (bundle) {
+    const name = `공고 ${bundle.job}`;
+    return bundle.part === 'title'
+      ? `${name} 직무`
+      : bundle.part === 'cell'
+        ? `${name} 표 ${bundle.index}칸`
+        : `${name} ${bundle.part === 'left' ? '왼쪽' : '오른쪽'} 목록 ${bundle.index}`;
+  }
   const match = SECTION_ELEMENT.exec(id);
   if (!match) {
     return ELEMENT_LABELS[id as FixedElementId] ?? id;

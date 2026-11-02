@@ -364,6 +364,7 @@ export function EditorCanvas({
   content,
   variant,
   onContentChange,
+  bundleText,
   sectionLabels,
   textColor,
   checkLayers,
@@ -390,6 +391,13 @@ export function EditorCanvas({
   content: CardContent;
   variant: VariantId;
   onContentChange: (content: CardContent) => void;
+  /**
+   * 묶음 공고 장(2열 카드·회사 블록)의 글자 요소가 고치는 칸. 장의 첫 공고가 아니라 그 요소의 공고 문구를
+   * 고친다(`set`). 아니면 `null`.
+   */
+  bundleText?: (
+    id: ElementId,
+  ) => { label: string; value: string; multiline: boolean; set: (value: string) => void } | null;
   /** 이 장에 보이는 섹션의 칩 제목. 섹션 요소 이름에 쓴다. */
   sectionLabels: string[];
   /** 새 글자 요소의 색(템플릿 제목 색). */
@@ -993,6 +1001,19 @@ export function EditorCanvas({
     }
   };
 
+  /** 고칠 글자 칸. 템플릿 글자는 장 문구, 묶음 공고 장 글자는 그 요소의 공고 문구다. */
+  const textFieldOf = (id: ElementId, sectionIndex?: number) => {
+    const template = templateTextField(id, content, variant, role, sectionIndex);
+    if (template) {
+      return {
+        ...template,
+        set: (value: string) => onContentChange(template.apply(content, value)),
+      };
+    }
+    const bundle = bundleText?.(id);
+    return bundle ? { ...bundle, sectionIndex: undefined } : null;
+  };
+
   /** 두 번 누른 요소. 글자 요소는 바로 고치기, 템플릿 글자는 요소 아래 입력 창을 연다. */
   const openText = (id: Selection) => {
     const layer = layerOf(id);
@@ -1003,15 +1024,13 @@ export function EditorCanvas({
     if (isLayerRef(id)) {
       return;
     }
-    const field = templateTextField(id, content, variant, role);
+    const field = textFieldOf(id);
     if (field) {
       onSelect(id);
       setTextEdit({ id, sectionIndex: field.sectionIndex });
     }
   };
-  const textField = textEdit
-    ? templateTextField(textEdit.id, content, variant, role, textEdit.sectionIndex)
-    : null;
+  const textField = textEdit ? textFieldOf(textEdit.id, textEdit.sectionIndex) : null;
   const textBox = textEdit ? boxes.find((box) => box.id === textEdit.id) : undefined;
 
   /**
@@ -1024,11 +1043,7 @@ export function EditorCanvas({
       if (layer) {
         return layer.kind === 'text';
       }
-      return (
-        !isLayerRef(box.id) &&
-        !editOf(box.id).hidden &&
-        templateTextField(box.id, content, variant, role) !== null
-      );
+      return !isLayerRef(box.id) && !editOf(box.id).hidden && textFieldOf(box.id) !== null;
     })
     .sort((a, b) => (Math.abs(a.y - b.y) > 12 ? a.y - b.y : a.x - b.x))
     .map((box) => box.id);
@@ -1414,8 +1429,7 @@ export function EditorCanvas({
                 <TextPopover
                   key={`${textEdit.id}:${slide}`}
                   field={textField}
-                  content={content}
-                  onChange={onContentChange}
+                  onValue={textField.set}
                   onClose={() => {
                     setTextEdit(null);
                     frameRef.current?.focus({ preventScroll: true });

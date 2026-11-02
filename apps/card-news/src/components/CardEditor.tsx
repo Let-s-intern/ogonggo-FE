@@ -69,7 +69,7 @@ import { UploadDrawer } from './drawers/UploadDrawer';
 import { TemplateDrawer } from './drawers/TemplateDrawer';
 import { LeftRail } from './LeftRail';
 import { PropertiesPanel } from './PropertiesPanel';
-import { templateTextField } from './TextPopover';
+import { bundleTextField, templateTextField } from './TextPopover';
 import { type AddSlideOption, SlideStrip } from './SlideStrip';
 import { VariantPicker } from './VariantPicker';
 
@@ -371,7 +371,8 @@ export function CardEditor({ docId }: { docId: string }) {
           ? JOB_VALUE_LABELS[selectedLayer.bind]
           : undefined
         : isElementId(selected)
-          ? templateTextField(selected, content, variant, currentSlide.role)?.label
+          ? (templateTextField(selected, content, variant, currentSlide.role)?.label ??
+            (docSlide ? bundleTextField(selected, loaded.doc, docSlide)?.label : undefined))
           : undefined;
   const setLayers = (next: Layer[], group?: string) =>
     variant && docSlide && editor.setLayers(variant, docSlide.id, next, group);
@@ -656,6 +657,16 @@ export function CardEditor({ docId }: { docId: string }) {
                   content={content}
                   variant={variant}
                   onContentChange={(next) => editor.setSlideContent(docSlide.id, next)}
+                  bundleText={(id) => {
+                    const field = bundleTextField(id, loaded.doc, docSlide);
+                    return field
+                      ? {
+                          ...field,
+                          set: (value: string) =>
+                            editor.changeDocument((doc) => field.apply(doc, value), 'content'),
+                        }
+                      : null;
+                  }}
                   sectionLabels={sectionLabels}
                   zoom={zoom}
                   onScale={setScale}
