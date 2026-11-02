@@ -1,6 +1,8 @@
 import {
   type CardDocument,
+  type DocumentSlide,
   ROLE_LABELS,
+  slideName,
   documentContent,
   slideVariant,
   withSlideContent,
@@ -85,7 +87,12 @@ export interface ToolContext {
   selected: () => Selection | null;
   /** 지금 그려진 문서 장마다의 요소 상자와 넘침. 아직 그려지지 않았으면 `null`. */
   measure: () => SlideMeasure[] | null;
+  /** AI 입력창 위 범위 알약. 범위 밖을 바꾸는 도구는 실행 전에 거절한다(`outOfScope()`). */
+  scope: () => AssistantScope;
 }
+
+/** AI 로 고칠 범위. 고른 요소만, 보고 있는 장만, 모든 장. */
+export type AssistantScope = 'selected' | 'slide' | 'all';
 
 /** 요청 하나 동안 이어지는 실행기 상태. 첫 변경 앞에서만 기록에 쌓는다. */
 export interface ToolSession {
@@ -169,13 +176,37 @@ export function describeScreen(context: ToolContext): string {
         : '자유 요소'
       : elementLabel(selected, labels);
   const slides = loaded?.doc.slides ?? [];
+  const doc = loaded?.doc;
+  const here = context.slide() + 1;
   return [
     `템플릿 ${variant.id}(${variant.label})`,
     `크기 ${CARD_SIZES[context.size()].label}`,
-    `장 ${slides.length}개(${slides.map((item, index) => `${index + 1} ${ROLE_LABELS[item.role]}`).join(' · ')})`,
-    `보고 있는 장 ${context.slide() + 1}`,
+    `장 ${slides.length}개(${slides.map((item, index) => `${index + 1} ${doc ? slideAlias(doc, item) : ROLE_LABELS[item.role]}`).join(' · ')})`,
+    `보고 있는 장 ${here}`,
     `고른 요소 ${selected ? `${selected}(${name})` : '없음'}`,
+    `범위 ${scopeLabel(context.scope(), selected ? `${selected}(${name})` : '', here)}`,
   ].join(', ');
+}
+
+/** 화면 설명의 장 이름. 묶음은 `표지`, `공고 2(영업)`, `안내` 로 도구의 장 지정과 같은 이름이다. */
+function slideAlias(doc: CardDocument, slide: DocumentSlide): string {
+  if (doc.kind !== 'bundle') {
+    return ROLE_LABELS[slide.role];
+  }
+  if (slide.role === 'job') {
+    return `공고 ${(slide.jobIndex ?? 0) + 1}(${slideName(doc, slide)})`;
+  }
+  return slide.role === 'cover' ? '표지' : slide.role === 'profile' ? '안내' : ROLE_LABELS.free;
+}
+
+/** 범위 한 줄. 고른 것이 없으면 `선택한 요소` 범위도 `이 장 전체` 다. */
+function scopeLabel(scope: AssistantScope, selected: string, slide: number): string {
+  if (scope === 'all') {
+    return '모든 장';
+  }
+  return scope === 'selected' && selected
+    ? `선택한 요소 ${selected}, ${slide}장(이 요소만 바꾼다)`
+    : `이 장 전체(${slide}장만 바꾼다)`;
 }
 
 function clip(text: string): string {
@@ -197,10 +228,26 @@ function asNumber(value: unknown): number | null {
 }
 
 /**
- * 모델이 준 장 번호(문서 장 순서, 1부터)를 0부터로. 문서에 없는 장이면 `null`. 장은 이 번호로 문서에서
+ * 모델이 준 장 번호(문서 장 순서, 1부터)나 장 이름(`표지`, `공고 2`, `안내`)을 0부터의 장 순서로. 문서에
+ * 없는 장이면 `null`. 장은 이 번호로 문서에서
  * 찾아 장 id 로 바꾼다 — 편집값은 장 id 에 붙는다.
  */
 function asSlide(value: unknown, doc: CardDocument): number | null {
+  if (typeof value === 'string') {
+    const name = value.trim();
+    if (/^\d+$/.test(name)) {
+      return asSlide(Number(name), doc);
+    }
+    const job = /^공고\s*(\d+)$/.exec(name);
+    const found = doc.slides.findIndex((slide) =>
+      job
+        ? slide.role === 'job' && (slide.jobIndex ?? 0) === Number(job[1]) - 1
+        : name === '표지'
+          ? slide.role === 'cover'
+          : (name === '안내' || name === '프로필 안내') && slide.role === 'profile',
+    );
+    return found >= 0 ? found : null;
+  }
   const slide = asNumber(value);
   return slide !== null && Number.isInteger(slide) && slide >= 1 && slide <= doc.slides.length
     ? slide - 1
@@ -503,11 +550,23 @@ async function rewriteCopy(
   const latestSlide = latest.doc.slides.find((slide) => slide.id === docSlide.id) ?? docSlide;
   const previous = documentContent(latest.doc, latestSlide);
   const rewritten = contentFromDraft(job, result.draft, previous);
-  // 묶음은 게시물 본문이 하나이고, 공고 장의 직무명 자리는 표지 표의 모집 분야라 그대로 둔다.
-  const content =
-    latest.doc.kind === 'bundle'
-      ? { ...rewritten, caption: previous.caption, roleTitle: previous.roleTitle }
-      : rewritten;
+  // 묶음은 게시물 본문이 하나이고, 공고 장의 직무명 자리는 표지 표의 모집 분야라 그대로 둔다. 게시물
+  // 본문은 범위가 `모든 장` 일 때만 바꾸고, `선택한 요소` 범위면 그 요소의 문구 칸만 바꾼다.
+  const kept: Partial<CardContent> = {
+    ...(latest.doc.kind === 'bundle' ? { roleTitle: previous.roleTitle } : {}),
+    ...(latest.doc.kind === 'bundle' || context.scope() !== 'all'
+      ? { caption: previous.caption }
+      : {}),
+  };
+  const selected = context.selected();
+  const only = context.scope() === 'selected' && isElementId(selected) ? fieldsOf(selected) : null;
+  const content: CardContent = only
+    ? {
+        ...previous,
+        ...Object.fromEntries(only.map((key) => [key, rewritten[key]])),
+        ...kept,
+      }
+    : { ...rewritten, ...kept };
   change(context, session, withSlideContent(latest.doc, latestSlide, content));
   return JSON.stringify({ slide: index + 1, changed: true, content });
 }
@@ -875,6 +934,112 @@ function editLayers(
   return JSON.stringify({ results });
 }
 
+/** 템플릿 글자 요소가 고치는 문구 칸. 글자가 아닌 요소(로고, 흰 판)면 빈 배열이다. */
+function fieldsOf(id: ElementId): (keyof CardContent)[] {
+  switch (id) {
+    case 'badge':
+    case 'headline':
+    case 'roleTitle':
+    case 'note':
+    case 'ctaHeadline':
+    case 'ctaSub':
+      return [id];
+    case 'jobTable':
+      return ['summarySections'];
+  }
+  return id.startsWith('section-') ? ['summarySections', 'detailSections'] : [];
+}
+
+/** 고른 요소이거나 그 안의 요소(섹션의 칩·목록)인가. */
+function withinSelected(target: string, selected: Selection): boolean {
+  return target === selected || (!isLayerRef(selected) && target.startsWith(`${selected}-`));
+}
+
+/**
+ * 범위 밖을 바꾸는 도구 호출이면 모델에게 돌려줄 거절 사유, 아니면 `null`. 실행 전에 막는다 — 라우트는
+ * 편집본을 모르므로 브라우저가 막는다. 읽는 도구는 늘 된다. 모든 장에 걸리는 것(템플릿, 공통 설정)은
+ * `모든 장` 에서만 바꾼다.
+ */
+export function outOfScope(
+  name: string,
+  args: Record<string, unknown>,
+  context: ToolContext,
+): string | null {
+  const loaded = context.readLoaded();
+  const scope = context.scope();
+  if (scope === 'all' || !loaded || name === 'read_card' || name === 'list_variants') {
+    return null;
+  }
+  const selected = context.selected();
+  const only = scope === 'selected' && selected ? selected : null;
+  const here = context.slide();
+  const where = only ? `선택한 요소 ${only}` : `이 장 전체(${here + 1}장)`;
+  const refuse = (what: string) =>
+    `범위 밖이라 실행하지 않았습니다: ${what}. 지금 범위는 ${where}입니다. 다른 곳을 대신 바꾸지 말고, 범위를 넓히려면 입력창 위 범위 알약을 바꾸라고 사용자에게 알리세요.`;
+  /** 장을 주지 않으면 보고 있는 장으로 치는 도구가 있다. */
+  const elsewhere = (value: unknown, defaultHere: boolean) =>
+    (value === undefined ? (defaultHere ? here : null) : asSlide(value, loaded.doc)) !== here;
+  switch (name) {
+    case 'pick_variant':
+      return refuse('템플릿은 모든 장에 걸립니다');
+    case 'set_settings':
+      return refuse('색·로고·글자 배율은 모든 장에 걸립니다. 요소 하나의 크기는 edit_elements 의 scale 로 바꿉니다');
+    case 'add_text':
+      return only
+        ? refuse('새 글자 요소 넣기')
+        : elsewhere(args.slide, false)
+          ? refuse(`${String(args.slide)}장에 넣기`)
+          : null;
+    case 'edit_elements':
+    case 'edit_layers': {
+      const changes = Array.isArray(args.changes) ? (args.changes as Record<string, unknown>[]) : [];
+      for (const change of changes) {
+        const target =
+          name === 'edit_layers'
+            ? layerRef(String(change.id ?? '').replace(/^layer:/, ''))
+            : String(change.id ?? '');
+        if (elsewhere(change.slide, false)) {
+          return refuse(`${String(change.slide)}장의 ${target}`);
+        }
+        if (only && !withinSelected(target, only)) {
+          return refuse(target);
+        }
+      }
+      return null;
+    }
+    case 'reset_elements': {
+      if (elsewhere(args.slide, false)) {
+        return refuse(args.slide === undefined ? '모든 장 요소' : `${String(args.slide)}장 요소`);
+      }
+      const ids = Array.isArray(args.ids) ? args.ids.map(String) : null;
+      return only && (!ids || !ids.every((id) => withinSelected(id, only)))
+        ? refuse('고른 요소 밖의 요소')
+        : null;
+    }
+    case 'set_content': {
+      if (elsewhere(args.slide, true)) {
+        return refuse(`${String(args.slide)}장 문구`);
+      }
+      const allowed = only && isElementId(only) ? fieldsOf(only) : null;
+      const outside = Object.keys(args).filter(
+        (key) => key !== 'slide' && allowed !== null && !allowed.includes(key as keyof CardContent),
+      );
+      return only && (!allowed || outside.length > 0)
+        ? refuse(`문구 칸 ${outside.join(', ') || '(고른 요소는 문구 칸이 아님)'}`)
+        : null;
+    }
+    case 'rewrite_copy':
+      if (elsewhere(args.slide, true)) {
+        return refuse(`${String(args.slide)}장 문구`);
+      }
+      return only && !(isElementId(only) && fieldsOf(only).length > 0)
+        ? refuse('고른 요소는 글자가 아닙니다')
+        : null;
+    default:
+      return null;
+  }
+}
+
 /** 카드를 바꾸는 도구. 결과에 바꾼 뒤의 확인(`check`)을 붙인다. */
 const CHANGING_TOOLS = new Set([
   'set_content',
@@ -926,6 +1091,10 @@ export async function runTool(
   session: ToolSession,
 ): Promise<string> {
   try {
+    const refused = outOfScope(name, args, context);
+    if (refused) {
+      return refused;
+    }
     const result = await execute(name, args, context, session);
     // 실패는 글이다. 바꾼 경우(JSON)에만 확인을 붙인다.
     if (!CHANGING_TOOLS.has(name) || !result.startsWith('{')) {

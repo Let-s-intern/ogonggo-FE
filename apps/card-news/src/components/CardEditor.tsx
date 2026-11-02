@@ -5,6 +5,7 @@ import {
   CARD_SIZES,
   type CardSizeId,
   type ElementId,
+  elementLabel,
   JOB_VALUE_LABELS,
   type JobValueKey,
   type Layer,
@@ -12,6 +13,7 @@ import {
   type Selection,
   isElementId,
   isLayerRef,
+  layerLabel,
   layerRef,
 } from '@/lib/card/types';
 import {
@@ -40,7 +42,7 @@ import {
 import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { stripMarkup } from '@/lib/card/markup';
 import { resolvePalette } from '@/lib/card/variants';
-import type { ToolContext } from '@/lib/ai/tools';
+import type { AssistantScope, ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
 import { fileToDataUrl } from '@/lib/client/image';
 import { putImage } from '@/lib/client/imageStore';
@@ -70,8 +72,50 @@ import { VariantPicker } from './VariantPicker';
 const MAX_RENDER_REQUEST = 4_000_000;
 const NO_LAYERS: Layer[] = [];
 
+/**
+ * AI 입력창 위 범위 알약. `선택한 <요소>` 는 고른 것이 있을 때만 그린다. 비서는 범위 밖을 바꾸는 도구를
+ * 실행 전에 거절당한다(`outOfScope()`).
+ */
+function ScopePills({
+  scope,
+  onChange,
+  selectedName,
+}: {
+  scope: AssistantScope;
+  onChange: (scope: AssistantScope) => void;
+  selectedName: string | null;
+}) {
+  const pills: { value: AssistantScope; label: string }[] = [
+    ...(selectedName ? [{ value: 'selected' as const, label: `선택한 ${selectedName}` }] : []),
+    { value: 'slide', label: '이 장 전체' },
+    { value: 'all', label: '모든 장' },
+  ];
+  const current = scope === 'selected' && !selectedName ? 'slide' : scope;
+  return (
+    <div role="radiogroup" aria-label="AI 수정 범위" className="flex flex-wrap items-center gap-1.5 text-xs">
+      <span className="text-gray-500">대상</span>
+      {pills.map((pill) => (
+        <button
+          key={pill.value}
+          type="button"
+          role="radio"
+          aria-checked={current === pill.value}
+          onClick={() => onChange(pill.value)}
+          className={`max-w-56 truncate rounded-full px-2.5 py-0.5 ${
+            current === pill.value
+              ? 'bg-indigo-50 font-bold text-indigo-800'
+              : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          {pill.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** 캔버스 칸 아래 비울 높이. 캔버스 아래 떠 있는 AI 입력창(접었을 때)이 캔버스를 가리지 않게. */
-const AI_SPACE = 84;
+const AI_SPACE = 112;
 
 /** 왼쪽 레일. 도형·배경 서랍은 2차라 두지 않는다. */
 type DrawerKey = 'template' | 'text' | 'elements' | 'upload' | 'jobs';
@@ -95,6 +139,8 @@ export function CardEditor({ docId }: { docId: string }) {
   /** 고른 배율. `null` 이면 캔버스 칸에 맞춘다. */
   const [zoom, setZoom] = useState<number | null>(null);
   const [scale, setScale] = useState(0);
+  /** AI 로 고칠 범위. 고른 것이 있으면 `선택한 요소`, 없으면 `이 장 전체` 로 시작한다. */
+  const [scope, setScope] = useState<AssistantScope>('slide');
   /** 열린 왼쪽 서랍. `null` 이면 닫혀 있다. */
   const [drawer, setDrawer] = useState<DrawerKey | null>('template');
   const { kit, error: kitError } = useRenderKit();
@@ -127,8 +173,8 @@ export function CardEditor({ docId }: { docId: string }) {
 
   // AI 비서의 도구는 요청 하나 동안 여러 번 불리며 그때마다 최신 화면 값을 본다. 렌더를 기다리지 않게
   // ref 로 넘긴다.
-  const screenRef = useRef({ docVariant, size, slide, selected, built });
-  screenRef.current = { docVariant, size, slide, selected, built };
+  const screenRef = useRef({ docVariant, size, slide, selected, built, scope });
+  screenRef.current = { docVariant, size, slide, selected, built, scope };
   const { readLoaded, remember, applyQuietly } = editor;
   const toolContext = useMemo<ToolContext>(
     () => ({
@@ -139,6 +185,7 @@ export function CardEditor({ docId }: { docId: string }) {
       size: () => screenRef.current.size,
       slide: () => screenRef.current.slide,
       selected: () => screenRef.current.selected,
+      scope: () => screenRef.current.scope,
       measure: () => {
         const { built: slides, size: sizeId } = screenRef.current;
         if (!slides) {
@@ -170,6 +217,16 @@ export function CardEditor({ docId }: { docId: string }) {
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/login';
   };
+
+  // 요소를 고르면 AI 범위를 그 요소로, 고른 것을 풀면 이 장 전체로 돌린다. `모든 장` 은 사람이 바꿀 때까지 둔다.
+  useEffect(() => {
+    setScope((current) => {
+      if (selected) {
+        return current === 'all' ? current : 'selected';
+      }
+      return current === 'selected' ? 'slide' : current;
+    });
+  }, [selected]);
 
   // 템플릿을 바꾸면 고른 요소를 푼다(템플릿마다 요소가 다르다). 보고 있는 장은 그대로다.
   useEffect(() => {
@@ -565,7 +622,22 @@ export function CardEditor({ docId }: { docId: string }) {
               {/* 캔버스 아래 떠 있는 AI 입력창. 장 목록 위, 캔버스 칸 안에 있어 장 목록·내보내기에 가리지 않는다. */}
               <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center">
                 <div className="pointer-events-auto flex w-full justify-center">
-                  <AssistantPanel context={toolContext} />
+                  <AssistantPanel
+                    context={toolContext}
+                    scope={
+                      <ScopePills
+                        scope={scope}
+                        onChange={setScope}
+                        selectedName={
+                          selectedLayer
+                            ? layerLabel(selectedLayer)
+                            : isElementId(selected)
+                              ? elementLabel(selected, sectionLabels)
+                              : null
+                        }
+                      />
+                    }
+                  />
                 </div>
               </div>
             </div>
