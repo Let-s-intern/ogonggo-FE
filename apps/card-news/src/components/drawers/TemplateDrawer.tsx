@@ -174,7 +174,11 @@ export function TemplateDrawer({
         );
         const index =
           tab === 'slide' ? slideIndex : tab === 'bundle' ? cover : (variant.previewSlide ?? 0);
-        return slides[Math.min(index, slides.length - 1)]!;
+        const target = slides[Math.min(index, slides.length - 1)]!;
+        // 배경 서랍에서 덮어쓴 배경은 빼고 그린다. 덮어쓴 배경으로 그리면 배치가 비슷한 시안끼리(표지 등)
+        // 미리보기가 모두 같아 보여 고를 수 없다.
+        const { background: _background, ...settings } = target.spec.settings;
+        return { ...target, spec: { ...target.spec, settings } };
       }),
     [specs, tab, slideIndex],
   );
