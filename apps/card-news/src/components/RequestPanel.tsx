@@ -80,8 +80,8 @@ export function RequestPanel({
       <div>
         <h2 className="text-base font-bold">요청사항·추가 정보</h2>
         <p className="text-xs text-gray-500">
-          공고 원문과 다르면 여기 적은 것을 따릅니다(예: 바뀐 마감 시각). 공고를 고르기 전에 적어
-          주세요.
+          공고 원문과 다르면 여기 적은 것을 따릅니다(예: 바뀐 마감 시각). 초안을 쓸 때 같이
+          보냅니다.
         </p>
       </div>
       <Textarea

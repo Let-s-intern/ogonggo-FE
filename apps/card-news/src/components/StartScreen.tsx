@@ -79,13 +79,31 @@ function RecentDocuments() {
 }
 
 /**
- * 공고 하나 탭. 공고를 고르면 초안을 쓰고(남은 편집본이 있으면 그것을 열고) 시안 열 개를 보인다.
- * 시안을 고르면 그 시안으로 편집 화면을 연다.
+ * 공고 하나 탭. 공고를 고르고 그 밑에 요청사항을 적은 뒤 `이 공고로 초안 쓰기` 를 누르면 초안을 쓰고(남은
+ * 편집본이 있으면 그것을 열고) 시안 열 개를 보인다. 시안을 고르면 그 시안으로 편집 화면을 연다.
  */
-function SingleTab({ request }: { request: StartRequest }) {
+function SingleTab({
+  request,
+  onRequestChange,
+}: {
+  request: StartRequest;
+  onRequestChange: (request: StartRequest) => void;
+}) {
   const router = useRouter();
   const editor = useCardEditor();
   const { loaded, status, notice, specs } = editor;
+  const [pickedId, setPickedId] = useState<number | null>(null);
+  const loading = status.kind === 'loading';
+
+  const write = () => {
+    if (pickedId === null) {
+      return;
+    }
+    void editor.selectJob(pickedId, {
+      request: requestText(request),
+      uploads: request.images.map((image) => image.id),
+    });
+  };
 
   const pick = (variant: VariantId) => {
     if (!loaded) {
@@ -99,15 +117,13 @@ function SingleTab({ request }: { request: StartRequest }) {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-      <JobPicker
-        selectedId={loaded?.job?.id}
-        onSelect={(jobId) =>
-          void editor.selectJob(jobId, {
-            request: requestText(request),
-            uploads: request.images.map((image) => image.id),
-          })
-        }
-      />
+      <div className="flex flex-col gap-4">
+        <JobPicker selectedId={pickedId ?? loaded?.job?.id} onSelect={setPickedId} />
+        <RequestPanel value={request} onChange={onRequestChange} />
+        <Button disabled={pickedId === null || loading} onClick={write}>
+          {loading ? 'AI가 초안을 쓰는 중' : '이 공고로 초안 쓰기'}
+        </Button>
+      </div>
       <div className="flex flex-col gap-3">
         {status.kind === 'loading' ? (
           <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{status.message}</p>
@@ -128,7 +144,7 @@ function SingleTab({ request }: { request: StartRequest }) {
           </>
         ) : (
           <div className="flex h-80 items-center justify-center rounded-2xl border border-dashed border-gray-300 text-sm text-gray-500">
-            왼쪽에서 공고를 고르면 시안이 여기에 그려집니다.
+            왼쪽에서 공고를 고르고 초안을 쓰면 시안이 여기에 그려집니다.
           </div>
         )}
       </div>
@@ -159,7 +175,13 @@ async function requestBundleDraft(jobIds: number[], request: string): Promise<Bu
  * 여러 공고 묶기 탭. 왼쪽에서 공고를 고른 순서가 장 순서다. 오른쪽에서 순서를 바꾸고 만들어질 장을
  * 보고, 묶음 초안으로 문서를 만들어 편집 화면을 연다.
  */
-function BundleTab({ request }: { request: StartRequest }) {
+function BundleTab({
+  request,
+  onRequestChange,
+}: {
+  request: StartRequest;
+  onRequestChange: (request: StartRequest) => void;
+}) {
   const router = useRouter();
   const [picked, setPicked] = useState<JobListItem[]>([]);
   const [busy, setBusy] = useState(false);
@@ -217,7 +239,10 @@ function BundleTab({ request }: { request: StartRequest }) {
 
   return (
     <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[420px_minmax(0,1fr)]">
-      <JobPicker multiple={{ picked, onChange: setPicked, max: MAX_BUNDLE_JOBS }} />
+      <div className="flex flex-col gap-4">
+        <JobPicker multiple={{ picked, onChange: setPicked, max: MAX_BUNDLE_JOBS }} />
+        <RequestPanel value={request} onChange={onRequestChange} />
+      </div>
       <div className="flex flex-col gap-4">
         <section className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
           <h2 className="text-base font-bold">묶음 종류</h2>
@@ -396,8 +421,8 @@ export function StartScreen() {
         <div>
           <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
           <p className="text-sm text-gray-500">
-            공고를 고르면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라 편집 화면에서 고친
-            뒤 원하는 장만 받습니다.
+            공고를 고르고 요청사항을 적으면 AI가 초안을 쓰고 시안 열 개를 보여 줍니다. 하나를 골라
+            편집 화면에서 고친 뒤 원하는 장만 받습니다.
           </p>
         </div>
         <Button size="sm" variant="ghost" onClick={() => void logout()}>
@@ -421,9 +446,8 @@ export function StartScreen() {
           </button>
         ))}
       </div>
-      {tab !== 'blank' ? <RequestPanel value={request} onChange={setRequest} /> : null}
-      {tab === 'single' ? <SingleTab request={request} /> : null}
-      {tab === 'bundle' ? <BundleTab request={request} /> : null}
+      {tab === 'single' ? <SingleTab request={request} onRequestChange={setRequest} /> : null}
+      {tab === 'bundle' ? <BundleTab request={request} onRequestChange={setRequest} /> : null}
       {tab === 'blank' ? <BlankTab /> : null}
     </main>
   );
