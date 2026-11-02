@@ -410,6 +410,40 @@ const LABELS_ROLE_MAX = 54;
 const LABELS_CARD_PAD_X = 44;
 const LABELS_CARD_PAD_Y = 48;
 
+/**
+ * `labels` 배치의 글자 크기와 간격. 렌더와, 묶음 공고 장 배치를 자동으로 고르는 쪽(`../bundle.ts`, 이 배치에서
+ * 목록 글자가 얼마나 줄어드는가)이 같이 쓴다.
+ */
+export function labelsMetrics(
+  spec: CardSpec,
+  size: CardSize,
+  slide: InfoRole,
+  measure: Measure,
+): { metrics: SlideMetrics; sections: CardSection[]; role: string; roleSize: number } {
+  const sections = slideSections(spec, slide, false);
+  const count = visibleCount(sections);
+  const role = (spec.bundleRow ? spec.bundleRow[1] : spec.content.roleTitle).trim();
+  const roleSize = Math.round(
+    Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role)) * textScale(spec.settings.headlineScale),
+  );
+  const headCard = Math.round(LABELS_BAR * 1.2) + 28 + (role ? Math.round(roleSize * 1.2) + 36 : 0);
+  // 머리 자리(뱃지 줄) 대신 로고·머리 카드·표 안쪽 여백을 잡는다. 표는 항목명이 목록 옆에 있어 칩
+  // 높이를 다시 돌려준다.
+  const chrome =
+    LABELS_LOGO + 36 + headCard + 40 + LABELS_CARD_PAD_Y * 2 - HEADER_HEIGHT - count * 60;
+  const metrics = measureSlide(measure, size, {
+    headline: null,
+    sections,
+    note: '',
+    contentWidth: CONTENT_WIDTH - LABELS_CARD_PAD_X * 2 - LABEL_WIDTH - COLUMN_GAP,
+    chrome,
+    footer: false,
+    headlineScale: 1,
+    bodyScale: textScale(spec.settings.bodyScale),
+  });
+  return { metrics, sections, role, roleSize };
+}
+
 function LabelsSlide({
   spec,
   palette: base,
@@ -430,30 +464,10 @@ function LabelsSlide({
   const palette: Palette = spec.bundleRow
     ? { ...base, headlineText: '#111111', bodyText: '#111111' }
     : base;
-  const sections = slideSections(spec, slide, false);
-  const count = visibleCount(sections);
+  const { metrics, sections, role, roleSize } = labelsMetrics(spec, size, slide, measure);
   const brand = spec.settings.brandColor;
   // 묶음 공고 장은 머리띠에 직무, 흰 줄에 모집 분야(표지 표 줄)를 쓴다. 공고 하나는 회사명과 직무명이다.
   const band = spec.bundleRow ? spec.bundleRow[0] : spec.companyName;
-  const role = (spec.bundleRow ? spec.bundleRow[1] : spec.content.roleTitle).trim();
-  const roleSize = Math.round(
-    Math.min(LABELS_ROLE_MAX, titleSizeFor(measure, role)) * textScale(spec.settings.headlineScale),
-  );
-  const headCard = Math.round(LABELS_BAR * 1.2) + 28 + (role ? Math.round(roleSize * 1.2) + 36 : 0);
-  // 머리 자리(뱃지 줄) 대신 로고·머리 카드·표 안쪽 여백을 잡는다. 표는 항목명이 목록 옆에 있어 칩
-  // 높이를 다시 돌려준다.
-  const chrome =
-    LABELS_LOGO + 36 + headCard + 40 + LABELS_CARD_PAD_Y * 2 - HEADER_HEIGHT - count * 60;
-  const metrics = measureSlide(measure, size, {
-    headline: null,
-    sections,
-    note: '',
-    contentWidth: CONTENT_WIDTH - LABELS_CARD_PAD_X * 2 - LABEL_WIDTH - COLUMN_GAP,
-    chrome,
-    footer: false,
-    headlineScale: 1,
-    bodyScale: textScale(spec.settings.bodyScale),
-  });
 
   const card: CSSProperties = {
     display: 'flex',

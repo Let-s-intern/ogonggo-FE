@@ -56,6 +56,18 @@ function BundleLayoutPicker({
           onChange({ kind, perSlide: kind === 'labels' ? 1 : layout.perSlide, manual: true })
         }
       />
+      <p className="text-xs text-gray-500">
+        {layout.manual ? '직접 고른 배치입니다. ' : '내용에 맞춰 자동으로 고른 배치입니다. '}
+        {layout.manual ? (
+          <button
+            type="button"
+            className="text-blue-600 underline"
+            onClick={() => onChange({ ...layout, manual: false })}
+          >
+            자동으로 고르기
+          </button>
+        ) : null}
+      </p>
       {layout.kind === 'labels' ? (
         <p className="text-xs text-gray-500">공고마다 한 장입니다.</p>
       ) : (
