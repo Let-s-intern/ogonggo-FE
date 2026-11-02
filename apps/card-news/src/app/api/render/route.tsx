@@ -97,6 +97,10 @@ function sanitizeLayers(layers: unknown): Layer[] | undefined {
               : '#111111',
           align: layer.align === 'center' || layer.align === 'right' ? layer.align : 'left',
           lineHeight: clamp(layer.lineHeight, 0.8, 3, 1.3),
+          // 채움(강조 상자·칩 모양). 없으면 채우지 않는다.
+          ...(typeof layer.background === 'string' && HEX_COLOR.test(layer.background)
+            ? { background: layer.background, radius: clamp(layer.radius, 0, 1000, 0) }
+            : {}),
         },
       ];
     }
