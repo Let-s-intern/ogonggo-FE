@@ -134,6 +134,7 @@ export function TemplateDrawer({
   onPickSlide,
   bundleLayout,
   onBundleLayout,
+  onClearBackground,
 }: {
   kind: DocumentKind;
   /** 시안별로 모든 장을 그 시안으로 편 값(장에 덮어쓴 템플릿은 뺀다). */
@@ -153,6 +154,11 @@ export function TemplateDrawer({
   /** 묶음 공고 장 배치. 묶음 문서에만 있다. */
   bundleLayout?: BundleLayout;
   onBundleLayout?: (layout: BundleLayout) => void;
+  /**
+   * 배경 서랍에서 배경을 덮어썼을 때만 준다. 템플릿을 바꿔도 덮어쓴 배경은 남으므로 그렇다고 알리고 지우는
+   * 버튼을 둔다.
+   */
+  onClearBackground?: () => void;
 }) {
   const [tab, setTab] = useState<TemplateTab>(kind === 'bundle' ? 'bundle' : 'single');
   const docTab = kind === 'bundle' ? 'bundle' : 'single';
@@ -199,6 +205,15 @@ export function TemplateDrawer({
                 ? '묶음 · 표지 + 공고별 장 + 안내, 모든 장에 적용'
                 : '모든 장에 적용'}
           </p>
+          {onClearBackground ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              시안 배경 대신 배경 서랍에서 고른 배경을 쓰는 중입니다. 템플릿을 바꿔도 고른 배경은
+              그대로입니다.{' '}
+              <button type="button" onClick={onClearBackground} className="font-bold underline">
+                배경 덮어쓰기 지우기
+              </button>
+            </p>
+          ) : null}
           {tab === 'bundle' && bundleLayout && onBundleLayout ? (
             <BundleLayoutPicker layout={bundleLayout} onChange={onBundleLayout} />
           ) : null}

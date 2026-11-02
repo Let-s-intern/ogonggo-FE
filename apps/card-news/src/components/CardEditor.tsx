@@ -43,10 +43,10 @@ import {
   withCoverRow,
   withSlideEdit,
   withSlideLayers,
+  withBackground,
 } from '@/lib/card/document';
-import { visibleSectionLabels } from '@/lib/card/render/slides';
+import { specPalette, visibleSectionLabels } from '@/lib/card/render/slides';
 import { stripMarkup } from '@/lib/card/markup';
-import { resolvePalette } from '@/lib/card/variants';
 import type { AssistantScope, ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
 import { fileToDataUrl } from '@/lib/client/image';
@@ -62,6 +62,7 @@ import {
   useBuiltSlides,
 } from './EditorCanvas';
 import { EditorToolbar } from './EditorToolbar';
+import { BackgroundDrawer } from './drawers/BackgroundDrawer';
 import { ElementsDrawer } from './drawers/ElementsDrawer';
 import { JobsDrawer } from './drawers/JobsDrawer';
 import { type JobValueChip, type TextPreset, TextDrawer } from './drawers/TextDrawer';
@@ -131,8 +132,8 @@ const AI_SPACE = 112;
 /** AI 입력창을 닫았을 때도 캔버스 아래에 남기는 여백. */
 const CLOSED_AI_SPACE = 32;
 
-/** 왼쪽 레일. 도형·배경 서랍은 2차라 두지 않는다. */
-type DrawerKey = 'template' | 'text' | 'elements' | 'upload' | 'jobs';
+/** 왼쪽 레일. 도형 서랍은 2차라 두지 않는다. */
+type DrawerKey = 'template' | 'text' | 'elements' | 'background' | 'upload' | 'jobs';
 
 /**
  * 편집 화면 배치(`/edit/<문서 id>`). 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
@@ -266,7 +267,8 @@ export function CardEditor({ docId }: { docId: string }) {
     (variant && loaded && docSlide
       ? resolveLayers(loaded.doc, docSlide, docSlide.layers[variant])
       : undefined) || NO_LAYERS;
-  const palette = variant && loaded ? resolvePalette(variant, loaded.doc.settings) : null;
+  // 덮어쓴 배경이 있으면 그 배경에 맞춘 색이다(새 글자가 배경에 묻히지 않게).
+  const palette = currentSlide ? specPalette(currentSlide.spec, currentSlide.role) : null;
   /** 텍스트 서랍의 오공고 글 스타일. 강조 상자·칩은 지금 색으로 채운다. */
   const textStyles: { label: string; preset: TextPreset }[] = palette
     ? [
@@ -424,6 +426,12 @@ export function CardEditor({ docId }: { docId: string }) {
     setSelected(layerRef(layer.id));
   };
 
+  /** 문서나 어느 장이든 배경 서랍에서 배경을 덮어썼는가. */
+  const backgroundOverridden = Boolean(
+    loaded && (loaded.doc.settings.background || loaded.doc.slides.some((item) => item.background)),
+  );
+  const clearBackground = () => editor.changeDocument((doc) => withBackground(doc, null));
+
   const overflow = built
     ? built.flatMap((slideBuilt, index) => (slideBuilt.overflow ? [index] : []))
     : [];
@@ -554,6 +562,7 @@ export function CardEditor({ docId }: { docId: string }) {
                     kit={kit}
                     onPick={(picked) => editor.pickTemplate(picked)}
                     onPickSlide={(picked) => editor.pickTemplate(picked, docSlide.id)}
+                    {...(backgroundOverridden ? { onClearBackground: clearBackground } : {})}
                     {...(loaded.doc.kind === 'bundle'
                       ? {
                           bundleLayout: bundleLayoutOf(loaded.doc),
@@ -588,6 +597,28 @@ export function CardEditor({ docId }: { docId: string }) {
                     ]}
                     brandColor={loaded.doc.settings.brandColor}
                     onAdd={(src) => canvasRef.current?.addImageSource(src)}
+                  />
+                ),
+              },
+              {
+                key: 'background',
+                label: '배경',
+                drawer: (
+                  <BackgroundDrawer
+                    key={docSlide.id}
+                    settings={loaded.doc.settings}
+                    slideBackground={docSlide.background}
+                    overridden={backgroundOverridden}
+                    slideName={slideLabel(names[slide] ?? '', slide)}
+                    uploads={loaded.doc.uploads ?? []}
+                    onUpload={(files) => void upload(files)}
+                    onChange={(background, all, group) =>
+                      editor.changeDocument(
+                        (doc) => withBackground(doc, background, all ? undefined : docSlide.id),
+                        group,
+                      )
+                    }
+                    onClear={clearBackground}
                   />
                 ),
               },
