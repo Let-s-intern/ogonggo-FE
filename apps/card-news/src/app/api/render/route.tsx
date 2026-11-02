@@ -1,15 +1,21 @@
 import { Resvg } from '@resvg/resvg-js';
 import satori from 'satori';
 import { loadEmoji, loadFonts } from '@/lib/card/assets';
+import { SLIDE_ROLES } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
+  BACKGROUND_PATTERNS,
+  type BundleCard,
+  type BundleCompany,
   CARD_SIZES,
+  type CardBackground,
+  type CardSection,
+  type CardLogo,
   type CardSpec,
   type ElementEdit,
   LAYER_WEIGHTS,
   type Layer,
   type RenderRequest,
-  SLIDE_COUNT,
   type SlideEdits,
   isElementId,
 } from '@/lib/card/types';
@@ -36,29 +42,24 @@ function clamp(value: unknown, min: number, max: number, fallback: number): numb
  * 요소 편집값을 검사한다. 모르는 요소(예전 편집본의 `sections` 포함)는 버리고, 이동은 ±2000px, 배율은
  * 0.2~5 로 자른다.
  */
-function sanitizeEdits(edits: unknown): SlideEdits[] | undefined {
-  if (!Array.isArray(edits)) {
+function sanitizeEdits(edits: unknown): SlideEdits | undefined {
+  if (!edits || typeof edits !== 'object' || Array.isArray(edits)) {
     return undefined;
   }
-  return edits.slice(0, SLIDE_COUNT).map((slide: unknown) => {
-    const clean: SlideEdits = {};
-    if (!slide || typeof slide !== 'object') {
-      return clean;
+  const clean: SlideEdits = {};
+  for (const [id, edit] of Object.entries(edits)) {
+    if (!isElementId(id) || !edit || typeof edit !== 'object') {
+      continue;
     }
-    for (const [id, edit] of Object.entries(slide)) {
-      if (!isElementId(id) || !edit || typeof edit !== 'object') {
-        continue;
-      }
-      const { dx, dy, scale, hidden } = edit as Partial<Record<keyof ElementEdit, unknown>>;
-      clean[id] = {
-        dx: clamp(dx, -2000, 2000, 0),
-        dy: clamp(dy, -2000, 2000, 0),
-        scale: clamp(scale, 0.2, 5, 1),
-        ...(hidden === true ? { hidden: true } : {}),
-      };
-    }
-    return clean;
-  });
+    const { dx, dy, scale, hidden } = edit as Partial<Record<keyof ElementEdit, unknown>>;
+    clean[id] = {
+      dx: clamp(dx, -2000, 2000, 0),
+      dy: clamp(dy, -2000, 2000, 0),
+      scale: clamp(scale, 0.2, 5, 1),
+      ...(hidden === true ? { hidden: true } : {}),
+    };
+  }
+  return clean;
 }
 
 /** 장 하나에 얹을 수 있는 자유 요소 수와 글자 요소의 글자 수. */
@@ -70,59 +71,162 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
  * 자유 요소를 검사한다. 모양이 틀린 요소는 버리고, 수치는 범위로 자른다. 이미지는 로고와 같은 data
  * URL 규칙이다. 굵기는 글꼴 파일이 있는 값 가운데 가까운 것으로.
  */
-function sanitizeLayers(layers: unknown): Layer[][] | undefined {
+function sanitizeLayers(layers: unknown): Layer[] | undefined {
   if (!Array.isArray(layers)) {
     return undefined;
   }
-  return layers.slice(0, SLIDE_COUNT).map((slide: unknown) =>
-    (Array.isArray(slide) ? slide : []).slice(0, MAX_LAYERS).flatMap((raw: unknown): Layer[] => {
-      if (!raw || typeof raw !== 'object') {
-        return [];
-      }
-      const layer = raw as Record<string, unknown>;
-      const base = {
-        id: typeof layer.id === 'string' ? layer.id.slice(0, 40) : '',
-        x: clamp(layer.x, -2000, 3000, 0),
-        y: clamp(layer.y, -2000, 3000, 0),
-        width: clamp(layer.width, 10, 3000, 400),
-      };
-      if (layer.kind === 'text' && typeof layer.text === 'string') {
-        const weight = clamp(layer.fontWeight, 500, 900, 700);
-        return [
-          {
-            ...base,
-            kind: 'text',
-            text: layer.text.slice(0, MAX_LAYER_TEXT),
-            fontSize: clamp(layer.fontSize, 8, 400, 48),
-            fontWeight: LAYER_WEIGHTS.reduce((best, value) =>
-              Math.abs(value - weight) < Math.abs(best - weight) ? value : best,
-            ),
-            color:
-              typeof layer.color === 'string' && HEX_COLOR.test(layer.color)
-                ? layer.color
-                : '#111111',
-            align: layer.align === 'center' || layer.align === 'right' ? layer.align : 'left',
-            lineHeight: clamp(layer.lineHeight, 0.8, 3, 1.3),
-          },
-        ];
-      }
-      const src = safeImage(layer.src);
-      if (layer.kind === 'image' && src) {
-        return [
-          {
-            ...base,
-            kind: 'image',
-            imageId: '',
-            src,
-            height: clamp(layer.height, 10, 3000, 400),
-            opacity: clamp(layer.opacity, 0, 1, 1),
-            radius: clamp(layer.radius, 0, 1000, 0),
-          },
-        ];
-      }
+  return layers.slice(0, MAX_LAYERS).flatMap((raw: unknown): Layer[] => {
+    if (!raw || typeof raw !== 'object') {
       return [];
-    }),
-  );
+    }
+    const layer = raw as Record<string, unknown>;
+    const base = {
+      id: typeof layer.id === 'string' ? layer.id.slice(0, 40) : '',
+      x: clamp(layer.x, -2000, 3000, 0),
+      y: clamp(layer.y, -2000, 3000, 0),
+      width: clamp(layer.width, 10, 3000, 400),
+      ...(layer.behind === true ? { behind: true } : {}),
+      ...(layer.hidden === true ? { hidden: true } : {}),
+      ...(typeof layer.rotation === 'number' && layer.rotation
+        ? { rotation: clamp(layer.rotation, -360, 360, 0) }
+        : {}),
+    };
+    const color = (value: unknown) =>
+      typeof value === 'string' && HEX_COLOR.test(value) ? value : undefined;
+    if (layer.kind === 'text' && typeof layer.text === 'string') {
+      const weight = clamp(layer.fontWeight, 500, 900, 700);
+      return [
+        {
+          ...base,
+          kind: 'text',
+          text: layer.text.slice(0, MAX_LAYER_TEXT),
+          fontSize: clamp(layer.fontSize, 8, 400, 48),
+          fontWeight: LAYER_WEIGHTS.reduce((best, value) =>
+            Math.abs(value - weight) < Math.abs(best - weight) ? value : best,
+          ),
+          color:
+            typeof layer.color === 'string' && HEX_COLOR.test(layer.color)
+              ? layer.color
+              : '#111111',
+          align: layer.align === 'center' || layer.align === 'right' ? layer.align : 'left',
+          lineHeight: clamp(layer.lineHeight, 0.8, 3, 1.3),
+          // 채움(강조 상자·칩 모양). 없으면 채우지 않는다.
+          ...(typeof layer.background === 'string' && HEX_COLOR.test(layer.background)
+            ? { background: layer.background, radius: clamp(layer.radius, 0, 1000, 0) }
+            : {}),
+        },
+      ];
+    }
+    if (
+      layer.kind === 'shape' &&
+      (layer.shape === 'rect' || layer.shape === 'ellipse' || layer.shape === 'line')
+    ) {
+      const fill = color(layer.fill);
+      const stroke = color(layer.stroke);
+      return [
+        {
+          ...base,
+          kind: 'shape',
+          shape: layer.shape,
+          height: clamp(layer.height, 1, 3000, 300),
+          ...(fill ? { fill } : {}),
+          ...(stroke ? { stroke } : {}),
+          strokeWidth: clamp(layer.strokeWidth, 0, 200, 0),
+          opacity: clamp(layer.opacity, 0, 1, 1),
+          radius: clamp(layer.radius, 0, 1000, 0),
+        },
+      ];
+    }
+    const src = safeImage(layer.src);
+    if (layer.kind === 'image' && src) {
+      return [
+        {
+          ...base,
+          kind: 'image',
+          imageId: '',
+          src,
+          height: clamp(layer.height, 10, 3000, 400),
+          opacity: clamp(layer.opacity, 0, 1, 1),
+          radius: clamp(layer.radius, 0, 1000, 0),
+        },
+      ];
+    }
+    return [];
+  });
+}
+
+/** 회사 블록의 회사 로고. 기업 로고와 같은 규칙이다. */
+function sanitizeLogo(logo: CardLogo | undefined): CardLogo | undefined {
+  const original = safeImage(logo?.original);
+  return original
+    ? {
+        original,
+        white: safeImage(logo?.white),
+        black: safeImage(logo?.black),
+        aspect: logo?.aspect,
+      }
+    : undefined;
+}
+
+/** 한 장에 놓는 회사 블록 수 상한. 섹션 요소 번호(1~9)를 넘지 않는다. */
+const MAX_COMPANY_BLOCKS = 9;
+
+/** 회사 블록을 검사한다. 글은 글자로 바꾸고, 로고는 data URL 이미지만 남긴다. */
+function sanitizeCompanies(companies: unknown): BundleCompany[] | undefined {
+  if (!Array.isArray(companies)) {
+    return undefined;
+  }
+  const text = (value: unknown) => (typeof value === 'string' ? value : '');
+  const pair = (value: unknown): [string, string] =>
+    Array.isArray(value) ? [text(value[0]), text(value[1])] : ['', ''];
+  return companies.slice(0, MAX_COMPANY_BLOCKS).map((raw: unknown) => {
+    const company = (raw ?? {}) as Partial<BundleCompany>;
+    const logo = sanitizeLogo(company.logo);
+    return {
+      name: text(company.name),
+      ...(logo ? { logo } : {}),
+      columns: pair(company.columns),
+      rows: Array.isArray(company.rows) ? company.rows.slice(0, 20).map(pair) : [],
+    };
+  });
+}
+
+/** 2열 카드를 검사한다. 글은 글자로 바꾸고 섹션·항목 수를 자른다. */
+function sanitizeCards(cards: unknown): BundleCard[] | undefined {
+  if (!Array.isArray(cards)) {
+    return undefined;
+  }
+  const text = (value: unknown) => (typeof value === 'string' ? value : '');
+  const sections = (value: unknown): CardSection[] =>
+    Array.isArray(value)
+      ? value.slice(0, 4).map((raw: unknown) => {
+          const section = (raw ?? {}) as Partial<CardSection>;
+          return {
+            label: text(section.label),
+            items: Array.isArray(section.items) ? section.items.slice(0, 20).map(text) : [],
+          };
+        })
+      : [];
+  return cards.slice(0, MAX_COMPANY_BLOCKS).map((raw: unknown) => {
+    const card = (raw ?? {}) as Partial<BundleCard>;
+    return { title: text(card.title), left: sections(card.left), right: sections(card.right) };
+  });
+}
+
+/** 덮어쓴 배경을 검사한다. 모르는 무늬·색이나 data URL 이 아닌 사진이면 버린다(시안 배경). */
+function sanitizeBackground(background: unknown): CardBackground | undefined {
+  const raw = (background ?? {}) as Record<string, unknown>;
+  if (raw.kind === 'color' && typeof raw.color === 'string' && HEX_COLOR.test(raw.color)) {
+    return { kind: 'color', color: raw.color };
+  }
+  const pattern = BACKGROUND_PATTERNS.find((item) => item.id === raw.pattern);
+  if (raw.kind === 'pattern' && pattern) {
+    return { kind: 'pattern', pattern: pattern.id };
+  }
+  const src = safeImage(raw.src);
+  return raw.kind === 'photo' && src
+    ? { kind: 'photo', src, opacity: clamp(raw.opacity, 0, 1, 1) }
+    : undefined;
 }
 
 /**
@@ -130,20 +234,13 @@ function sanitizeLayers(layers: unknown): Layer[][] | undefined {
  * 이미지 생성기에 넘기면 서버가 그 주소로 요청을 보내고, 미리보기 SVG 에도 그대로 실린다.
  */
 function sanitizeSpec(spec: CardSpec): CardSpec {
-  const original = safeImage(spec.logo?.original);
   const photo = safeImage(spec.settings.photo?.dataUrl);
   const brandImage = safeImage(spec.settings.brandImage?.dataUrl);
   const brandAspect = Number(spec.settings.brandImage?.aspect);
+  const background = sanitizeBackground(spec.settings.background);
   return {
     ...spec,
-    logo: original
-      ? {
-          original,
-          white: safeImage(spec.logo?.white),
-          black: safeImage(spec.logo?.black),
-          aspect: spec.logo?.aspect,
-        }
-      : undefined,
+    logo: sanitizeLogo(spec.logo),
     settings: {
       ...spec.settings,
       photo: photo && spec.settings.photo ? { ...spec.settings.photo, dataUrl: photo } : undefined,
@@ -151,14 +248,18 @@ function sanitizeSpec(spec: CardSpec): CardSpec {
         brandImage && brandAspect > 0.05 && brandAspect < 20
           ? { dataUrl: brandImage, aspect: brandAspect }
           : undefined,
+      background,
     },
     edits: sanitizeEdits(spec.edits),
     layers: sanitizeLayers(spec.layers),
+    bundleCompanies: sanitizeCompanies(spec.bundleCompanies),
+    bundleCards: sanitizeCards(spec.bundleCards),
   };
 }
 
 /**
- * 카드 한 장을 PNG 로 그린다. 미리보기와 다운로드가 같은 경로를 쓴다 — 미리보기에서 본 그대로
+ * 카드 한 장을 PNG 로 그린다. 요청 하나가 장 하나다 — 장 종류(`role`)와 그 장의 편집값만 싣는다.
+ * 미리보기와 다운로드가 같은 경로를 쓴다 — 미리보기에서 본 그대로
  * 받는다. 미리보기는 `format: 'svg'` 로 PNG 굽기를 건너뛴다(배치는 같다).
  *
  * 본문이 가장 작은 글자로도 넘치면 `X-Card-Overflow: 1` 을 붙인다. 이미지는 그대로 돌려주고
@@ -176,12 +277,10 @@ export async function POST(request: Request) {
     !size ||
     !body.spec ||
     !VARIANT_IDS.includes(body.spec.variant) ||
-    !Number.isInteger(body.slide) ||
-    body.slide < 0 ||
-    body.slide >= SLIDE_COUNT
+    !SLIDE_ROLES.includes(body.role)
   ) {
     return Response.json(
-      { message: '시안, 크기, 장 번호 중 잘못된 값이 있습니다.' },
+      { message: '시안, 크기, 장 종류 중 잘못된 값이 있습니다.' },
       { status: 400 },
     );
   }
@@ -190,7 +289,7 @@ export async function POST(request: Request) {
   const [fonts, measure, assets] = await Promise.all([loadFonts(), loadMeasure(), loadAssets()]);
   const { element, overflow } = buildSlide(
     sanitizeSpec(body.spec),
-    body.slide,
+    body.role,
     size,
     measure,
     assets,

@@ -1,4 +1,4 @@
-import { loadBrandSvg, loadIcon } from '../card/assets';
+import { loadBrandPng, loadBrandSvg, loadIcon } from '../card/assets';
 import type { SlideAssets } from '../card/render/primitives';
 
 const INK = '#111111';
@@ -20,6 +20,7 @@ export async function loadAssets(): Promise<SlideAssets> {
     markWhite,
     ogonggoLogo,
     ogonggoWhite,
+    ogonggoClassic,
     speakerLight,
     speakerDark,
     arrowDark,
@@ -35,6 +36,7 @@ export async function loadAssets(): Promise<SlideAssets> {
     loadBrandSvg('letscareer', { fill: WHITE }),
     loadBrandSvg('ogonggo'),
     loadBrandSvg('ogonggo', { fill: WHITE }),
+    loadBrandPng('ogonggo-classic'),
     loadIcon('speakerphone', WHITE, 2),
     loadIcon('speakerphone', INK, 2),
     loadIcon('arrow-up', INK, 1.5),
@@ -51,6 +53,7 @@ export async function loadAssets(): Promise<SlideAssets> {
     markWhite,
     ogonggoLogo,
     ogonggoWhite,
+    ogonggoClassic,
     speakerLight,
     speakerDark,
     arrowDark,

@@ -1,4 +1,4 @@
-import type { UserJobDetailResponse } from '@ogonggo/api';
+import { type UserJobDetailResponse, enumLabel } from '@ogonggo/api';
 import { captionDeadline } from '../card/fromJob';
 
 /**
@@ -14,6 +14,11 @@ export interface AiDraft {
   note: string;
   /** 인스타그램 게시물 본문. */
   caption: string;
+  /**
+   * 카드의 마감 기한 문구. 추가 지시가 마감을 바꾸라고 할 때만 모델이 채운다(예: 바뀐 마감 시각). 없으면
+   * 공고 데이터로 계산한다(`../card/fromJob.ts`).
+   */
+  deadline?: string;
 }
 
 export interface DraftResult {
@@ -142,7 +147,8 @@ HR, 영업/마케팅, 구매, SCM, Finance 등
 [출력]
 {"headline": string, "roles": string[], "responsibilities": string[], "qualifications": string[], "preferred": string[], "note": string, "caption": string} 형태의 JSON 하나만. caption 안의 줄바꿈은 "\\n". 설명을 붙이지 않는다.`;
 
-function jobBrief(job: UserJobDetailResponse): string {
+/** 공고 원문을 모델에 넘길 글로. 항목마다 `limit` 자까지 자른다. */
+function jobBrief(job: UserJobDetailResponse, limit = 2500): string {
   const fields: [string, string | undefined][] = [
     ['회사명', job.companyName],
     ['공고 제목', job.title],
@@ -155,7 +161,7 @@ function jobBrief(job: UserJobDetailResponse): string {
   ];
   return fields
     .filter(([, value]) => value?.trim())
-    .map(([label, value]) => `## ${label}\n${(value ?? '').trim().slice(0, 2500)}`)
+    .map(([label, value]) => `## ${label}\n${(value ?? '').trim().slice(0, limit)}`)
     .join('\n\n');
 }
 
@@ -171,15 +177,24 @@ function strings(value: unknown, max: number): string[] {
     .slice(0, max);
 }
 
-/** 모델 답을 초안으로. 모양이 틀리면 `null` 이고, 부르는 쪽이 원문 초안으로 대신한다. */
-export function parseDraft(raw: string): AiDraft | null {
+/** 모델 답에서 JSON 객체 하나를 꺼낸다. 못 읽으면 `null`. */
+function parseObject(raw: string): Record<string, unknown> | null {
   const json = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
-  let parsed: Record<string, unknown>;
   try {
-    parsed = JSON.parse(json) as Record<string, unknown>;
+    const parsed = JSON.parse(json) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
   } catch {
     return null;
   }
+}
+
+/** 모델 답을 초안으로. 모양이 틀리면 `null` 이고, 부르는 쪽이 원문 초안으로 대신한다. */
+export function parseDraft(raw: string): AiDraft | null {
+  const parsed = parseObject(raw);
+  return parsed ? draftFromObject(parsed) : null;
+}
+
+function draftFromObject(parsed: Record<string, unknown>): AiDraft | null {
   const headline = typeof parsed.headline === 'string' ? parsed.headline.trim() : '';
   if (!headline) {
     return null;
@@ -192,6 +207,9 @@ export function parseDraft(raw: string): AiDraft | null {
     preferred: strings(parsed.preferred, 4),
     note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
     caption: typeof parsed.caption === 'string' ? parsed.caption.replace(/\\n/g, '\n').trim() : '',
+    ...(typeof parsed.deadline === 'string' && parsed.deadline.trim()
+      ? { deadline: parsed.deadline.trim() }
+      : {}),
   };
 }
 
@@ -274,6 +292,7 @@ export async function generateDraft(
   if (options.instruction?.trim()) {
     userParts.push(
       `[추가 지시 — 규칙보다 이 지시를 먼저 따른다]\n${options.instruction.trim().slice(0, 1000)}`,
+      `[마감 바꾸기]\n추가 지시가 마감 일시를 바꾸라고 할 때만 JSON 에 "deadline" 을 더한다. 카드에 들어갈 문구로 "2026.11.09 (월) 23:59" 형식이다. 그때 caption 의 마감 줄도 그 일시로 쓴다. 바꾸라는 말이 없으면 "deadline" 을 넣지 않는다.`,
     );
   }
 
@@ -305,6 +324,312 @@ export async function generateDraft(
     console.error('[card-news] AI 초안 실패', error);
     return {
       draft: fallbackDraft(job),
+      source: 'fallback',
+      message: 'AI 호출이 실패해 원문을 잘라 초안을 만들었습니다. 다시 시도해 주세요.',
+    };
+  }
+}
+
+/**
+ * 여러 공고를 묶은 게시물의 초안. 표지(직무 표)와 공고마다의 문구, 게시물 본문 하나다. 마감 기한은
+ * 단일 초안처럼 데이터로 계산한다.
+ */
+export interface BundleCover {
+  badge: string;
+  /** 단일 초안의 제목 규칙과 같다(2줄, 줄당 12자, `*강조*`). */
+  headline: string;
+  /** 표지 표의 열 이름. */
+  columns: [string, string];
+  /** 공고마다 한 줄. 묶은 순서다. */
+  rows: [string, string][];
+  /**
+   * 직무 표 밑 일정 상자 줄(`서류 합격 발표 : 10월 20일 화요일 오후 6시`). 요청사항에 일정이 적혀 있을 때만
+   * 모델이 채운다 — 요청사항이 없으면 모델 답에 있어도 버린다(지어낸 일정을 막는다).
+   */
+  schedule?: string[];
+}
+
+export interface BundleDraft {
+  cover: BundleCover;
+  /** 묶은 순서. 단일 초안과 같은 모양이고, `caption` 은 비어 있다(본문은 `BundleDraft.caption` 하나). */
+  jobs: AiDraft[];
+  caption: string;
+}
+
+export interface BundleDraftResult {
+  draft: BundleDraft;
+  source: 'ai' | 'fallback';
+  message?: string;
+}
+
+/** 표지 표의 기본 열. */
+export const BUNDLE_COLUMNS: [string, string] = ['채용 직무', '모집 분야'];
+
+const BUNDLE_SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 공고(@letscareer.job)'의 카드뉴스 에디터다.
+독자는 인턴·신입 공고를 찾는 문과 대학생·취업 준비생이다. 여러 공고를 한 게시물로 묶는다. 공고 원문들을 읽고 카드뉴스 문구를 JSON 으로만 답한다.
+
+[게시물 구성]
+1장 표지: 큰 제목(cover.headline) + 직무 표(cover.rows, 공고마다 한 줄: [채용 직무, 모집 분야])
+2장부터 공고마다 한 장: jobs[i] 의 제목·채용 직무·담당 업무·자격 요건·우대 요건. [공고 1], [공고 2] … 순서를 그대로 지킨다.
+마지막 장: 프로필 안내(코드가 채움)
+
+[cover.headline 규칙]
+- 정확히 2줄. 줄바꿈은 "\\n". 한 줄은 공백 포함 12자 이내. 두 줄 길이를 비슷하게.
+- 회사명은 원문 '회사명' 값을 그대로 쓴다. 한 회사면 첫 줄에 회사명. 여러 회사면 [여러 회사 묶음] 지시를 따른다.
+- 회사명·핵심 키워드를 *별표*로 감싸 강조 상자로 강조한다. 강조는 2~3곳. 끝맺음은 "채용 중!", "채용!" 처럼 짧게.
+- 원문에 없는 사실(연봉, 규모, 혜택)을 지어내지 않는다.
+- cover.badge: 표지 왼쪽 위 짧은 칩. 기본 "오늘의 공고 속보".
+
+[cover.rows 규칙]
+- 공고 수와 같은 줄 수, 같은 순서. 각 줄은 ["채용 직무", "모집 분야"] 두 칸, 칸마다 14자 이내.
+- 채용 직무는 원문의 직무명을 짧게(예: "국내영업"), 모집 분야는 직군·근무지·전형 등 공고를 가르는 값(예: "영업관리", "서울 본사"). 모르면 "".
+- 모집 분야에 회사명이나 "신입"·"채용"·"공채" 를 다시 쓰지 않는다. 표지 제목과 회사 칸에 이미 있는 말이다("현대면세점 신입" 이 아니라 "면세점 영업", 가를 값이 없으면 "").
+
+[jobs[i] 규칙 — 공고 하나 카드와 같다]
+- headline: 2줄, 줄당 12자 이내, 회사명과 직무를 *별표*로 강조.
+- roles: 1~2개. responsibilities: 3~5개, 각 26자 이내, 명사형. qualifications: 2~4개, preferred: 0~4개, 각 32자 이내, "~분" 으로 끝낸다. 원문에 없으면 [].
+- 원문 문장을 그대로 옮기지 말고 핵심만 짧게. 이모지·번호·마크다운을 쓰지 않는다.
+- note: 꼭 필요할 때만 1~2줄, 아니면 "".
+
+[caption 규칙 — 인스타그램 게시물 본문 하나]
+- 첫 줄 "[오늘의 공고 속보🚨]". 회사 소개 한 줄(원문 근거가 있을 때만) → 어떤 직무들을 채용하는지 → 지원 권유. 문단 사이는 빈 줄. 이모지는 한두 개만.
+- 마감 줄은 "⏰ " 뒤에 [가장 이른 마감]을 글자 그대로 쓴다.
+- 끝은 늘 아래 세 줄이다.
+🔗자세한 공고 내용은 프로필 링크에서!
+
+👇더 많은 취업·공고 컨텐츠는
+@letscareer.job
+
+[글자 수 확인 — 답하기 전에 꼭]
+- cover.headline 과 jobs[i].headline 의 줄마다 별표(*)를 뺀 글자 수를 공백까지 센다. 12자를 넘는 줄이 하나라도 있으면 말을 빼거나 줄여 다시 쓴다.
+- 직무를 셋 이상 늘어놓지 않는다. 예: "*국내영업·생산·회계* 채용!"(14자) → "*3개 직무* 채용!"(9자), "*SNOW* 사업개발·광고사업"(14자) → "*SNOW* 사업개발"(9자).
+
+[출력]
+{"cover": {"badge": string, "headline": string, "rows": [[string, string], …]}, "jobs": [{"headline": string, "roles": string[], "responsibilities": string[], "qualifications": string[], "preferred": string[], "note": string}, …], "caption": string} 형태의 JSON 하나만. 설명을 붙이지 않는다.`;
+
+/** 표지 표의 `모집 분야` 대신 쓸 값. 직무 분류, 없으면 직군 이름. */
+function fieldName(job: UserJobDetailResponse): string {
+  if (job.jobRole) {
+    return enumLabel('JobRole', job.jobRole);
+  }
+  return job.jobField ? enumLabel('JobField', job.jobField) : '';
+}
+
+/** 묶은 회사 이름. 한 회사면 그 이름, 여러 회사면 `<첫 회사> 외 N곳`. */
+function bundleCompany(jobs: UserJobDetailResponse[]): string {
+  const names = [...new Set(jobs.map((job) => job.companyName))];
+  return names.length > 1 ? `${names[0]} 외 ${names.length - 1}곳` : (names[0] ?? '');
+}
+
+/** 묶은 공고 중 가장 먼저 마감하는 공고의 마감 줄. 모두 상시 채용이면 `채용 시 마감`. */
+export function bundleDeadline(jobs: UserJobDetailResponse[]): string {
+  const dated = jobs
+    .filter((job) => job.recruitmentType !== 'ALWAYS_OPEN' && job.recruitmentEndAt)
+    .sort((a, b) => (a.recruitmentEndAt ?? '').localeCompare(b.recruitmentEndAt ?? ''));
+  return captionDeadline(dated[0] ?? { recruitmentType: 'ALWAYS_OPEN' });
+}
+
+/** 묶은 회사 수. */
+function companyCount(jobs: UserJobDetailResponse[]): number {
+  return new Set(jobs.map((job) => job.companyName)).size;
+}
+
+/** 모델이 없을 때의 표지 제목. 여러 회사면 회사명을 늘어놓지 않고 공고 모음 제목이다. */
+function fallbackHeadline(jobs: UserJobDetailResponse[]): string {
+  const count = companyCount(jobs);
+  return count > 1
+    ? `*이번 주 채용 공고*\n*${count}곳* 모아 봤어요`
+    : `*${bundleCompany(jobs)}*\n채용 중!`;
+}
+
+/**
+ * 표지 표 `모집 분야` 칸에서 회사명과 `신입`·`채용`·`공채` 를 뺀다. 표지 제목·회사 칸과 겹치는 말이다
+ * (`현대면세점 신입` → `현대면세점` 은 회사명이 아니라 남고, `농심 신입` → 빈 칸).
+ */
+export function cleanField(cell: string, companyName: string): string {
+  const name = companyName.trim();
+  return (name ? cell.split(name).join(' ') : cell)
+    .replace(/(^|[\s·,/])(신입|채용|공채)(?=$|[\s·,/])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s·,/]+|[\s·,/]+$/g, '')
+    .trim();
+}
+
+function fallbackCover(jobs: UserJobDetailResponse[]): BundleCover {
+  return {
+    badge: '오늘의 공고 속보',
+    headline: fallbackHeadline(jobs),
+    columns: BUNDLE_COLUMNS,
+    rows: jobs.map((job) => [roleName(job), fieldName(job)]),
+  };
+}
+
+/** AI 없이 쓰는 묶음 본문. 회사·직무 목록·가장 이른 마감만 채운다. */
+function fallbackBundleCaption(jobs: UserJobDetailResponse[]): string {
+  return [
+    '[오늘의 공고 속보🚨]',
+    '',
+    `${bundleCompany(jobs)}에서 ${jobs.length}개 직무 채용 중이에요!`,
+    '',
+    ...jobs.map((job) => `- ${roleName(job)}`),
+    '',
+    '자세한 요건은 채용공고 링크에서 꼭 확인하시고',
+    '이번 공고 놓치지 말고 꼭 지원해 보세요!',
+    '',
+    `⏰ ${bundleDeadline(jobs)}`,
+    '',
+    '🔗자세한 공고 내용은 프로필 링크에서!',
+    '',
+    '👇더 많은 취업·공고 컨텐츠는',
+    '@letscareer.job',
+  ].join('\n');
+}
+
+/** 모델 없이 만드는 묶음 초안. 공고마다 `fallbackDraft`, 표지는 회사명 + `채용 중!` 이다. */
+export function fallbackBundle(jobs: UserJobDetailResponse[]): BundleDraft {
+  return {
+    cover: fallbackCover(jobs),
+    jobs: jobs.map((job) => ({ ...fallbackDraft(job), caption: '' })),
+    caption: fallbackBundleCaption(jobs),
+  };
+}
+
+/** 두 칸짜리 표 줄. 모양이 틀리면 `null`. */
+function row(value: unknown): [string, string] | null {
+  return Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((cell) => typeof cell === 'string')
+    ? [String(value[0]).trim(), String(value[1]).trim()]
+    : null;
+}
+
+/**
+ * 모델 답을 묶음 초안으로. 통째로 못 읽으면 `null` 이다. 일부가 틀리면 그 부분만 원문 초안으로
+ * 채운다 — 제목이 2줄이 아닌 표지, 공고 수와 줄 수가 다른 표, 빠진 공고. 표지 일정은 `withSchedule`(요청사항이
+ * 있을 때)일 때만 읽는다.
+ */
+export function parseBundleDraft(
+  raw: string,
+  jobs: UserJobDetailResponse[],
+  withSchedule = false,
+): BundleDraft | null {
+  const parsed = parseObject(raw);
+  if (!parsed) {
+    return null;
+  }
+  const fallback = fallbackCover(jobs);
+  const cover = (parsed.cover ?? {}) as Record<string, unknown>;
+  const headline =
+    typeof cover.headline === 'string' ? cover.headline.replace(/\\n/g, '\n').trim() : '';
+  const rows = Array.isArray(cover.rows) ? cover.rows.map(row) : [];
+  const drafts = Array.isArray(parsed.jobs) ? parsed.jobs : [];
+  // 여러 회사 묶음 제목에 회사명이 둘 이상 나오면 회사명 나열로 보고 대체 제목을 쓴다.
+  const names = [...new Set(jobs.map((job) => job.companyName))];
+  const listed = names.length > 1 && names.filter((name) => headline.includes(name)).length > 1;
+  const schedule =
+    withSchedule && Array.isArray(cover.schedule)
+      ? cover.schedule
+          .filter((line): line is string => typeof line === 'string' && Boolean(line.trim()))
+          .map((line) => line.trim())
+          .slice(0, 4)
+      : [];
+  return {
+    cover: {
+      ...(schedule.length > 0 ? { schedule } : {}),
+      badge:
+        typeof cover.badge === 'string' && cover.badge.trim() ? cover.badge.trim() : fallback.badge,
+      headline: headline.split('\n').length === 2 && !listed ? headline : fallback.headline,
+      columns: BUNDLE_COLUMNS,
+      rows:
+        rows.length === jobs.length && rows.every(Boolean)
+          ? (rows as [string, string][]).map(([role, field], index) => [
+              role,
+              cleanField(field, jobs[index]?.companyName ?? ''),
+            ])
+          : fallback.rows,
+    },
+    jobs: jobs.map((job, index) => {
+      const value = drafts[index];
+      const draft =
+        value && typeof value === 'object'
+          ? draftFromObject(value as Record<string, unknown>)
+          : null;
+      return { ...(draft ?? fallbackDraft(job)), caption: '' };
+    }),
+    caption:
+      typeof parsed.caption === 'string' && parsed.caption.trim()
+        ? parsed.caption.replace(/\\n/g, '\n').trim()
+        : fallbackBundleCaption(jobs),
+  };
+}
+
+/** 여러 공고 초안. `jobs` 는 묶은 순서이고 답도 그 순서다. `request` 는 시작 화면의 요청사항이다. */
+export async function generateBundleDraft(
+  jobs: UserJobDetailResponse[],
+  request = '',
+): Promise<BundleDraftResult> {
+  const config = llmConfig();
+  if (!config) {
+    return {
+      draft: fallbackBundle(jobs),
+      source: 'fallback',
+      message: 'AI 키(CARD_LLM_API_KEY 등)가 없어 원문을 잘라 초안을 만들었습니다.',
+    };
+  }
+
+  // 공고가 여럿이라 항목마다 짧게 자른다.
+  const userParts = jobs.map(
+    (job, index) =>
+      `[공고 ${index + 1}]\n${jobBrief(job, 800)}\n## 마감 문구\n${captionDeadline(job)}`,
+  );
+  userParts.push(`[가장 이른 마감]\n${bundleDeadline(jobs)}`);
+  const companies = companyCount(jobs);
+  if (companies > 1) {
+    userParts.push(
+      `[여러 회사 묶음]\n이 묶음은 회사 ${companies}곳의 공고다. cover.headline 에 회사명을 늘어놓지 않는다 — 회사명은 쓰지 않거나 "${jobs[0]?.companyName ?? ''} 외 ${companies - 1}곳" 처럼 한 번만 쓴다. 공고들의 공통점(신입·인턴, 문과 지원 가능, 직무군, 근무지, 마감 시기 등)으로 주제를 잡아 "이번 주 마감 신입 공고", "문과생 지원 가능 공고" 처럼 쓴다. 추가 지시에 주제가 있으면 그 주제를 쓴다. *강조* 는 주제의 핵심 말에 둔다.`,
+    );
+  }
+  if (request.trim()) {
+    userParts.push(
+      `[추가 지시 — 규칙보다 이 지시를 먼저 따른다]\n${request.trim().slice(0, 1000)}`,
+      `[마감 바꾸기]\n추가 지시가 어느 공고의 마감 일시를 바꾸라고 할 때만 그 jobs[i] 에 "deadline" 을 더한다. 카드에 들어갈 문구로 "2026.11.09 (월) 23:59" 형식이다. 그때 caption 의 마감 줄도 바꾼 일시를 따른다.`,
+      `[표지 일정]\n추가 지시에 서류 발표·면접·최종 발표 같은 전형 일정이 적혀 있을 때만 cover 에 "schedule"(문자열 배열, 한 줄에 하나, 4줄까지)을 더한다. "서류 합격 발표 : 10월 20일 화요일 오후 6시" 처럼 "항목 : 일시" 로 쓴다. 추가 지시에 없는 일정은 지어내지 않는다 — 공고 원문의 마감 기한도 넣지 않는다. 일정이 없으면 "schedule" 을 넣지 않는다.`,
+    );
+  }
+
+  try {
+    const response = await fetch(`${config.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
+      body: JSON.stringify({
+        model: config.model,
+        temperature: 0.6,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: BUNDLE_SYSTEM_PROMPT },
+          { role: 'user', content: userParts.join('\n\n') },
+        ],
+      }),
+      // 공고가 여럿이라 답이 길다.
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!response.ok) {
+      throw new Error(`${response.status} ${(await response.text()).slice(0, 200)}`);
+    }
+    const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+    const draft = parseBundleDraft(
+      body.choices?.[0]?.message?.content ?? '',
+      jobs,
+      Boolean(request.trim()),
+    );
+    if (!draft) {
+      throw new Error('모델 답이 JSON 모양이 아닙니다.');
+    }
+    return { draft, source: 'ai' };
+  } catch (error) {
+    console.error('[card-news] AI 묶음 초안 실패', error);
+    return {
+      draft: fallbackBundle(jobs),
       source: 'fallback',
       message: 'AI 호출이 실패해 원문을 잘라 초안을 만들었습니다. 다시 시도해 주세요.',
     };

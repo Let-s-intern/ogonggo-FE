@@ -1,6 +1,8 @@
+import type { SlideRole } from './document';
+
 /**
- * 카드뉴스 한 벌을 그리는 데 필요한 값. 편집 화면이 들고 있다가 렌더 API(`/api/render`)에 시안마다
- * 보낸다. 서버는 이 값만 보고 그린다 — 공고를 다시 읽지 않는다.
+ * 카드뉴스 한 벌을 그리는 데 필요한 값. 편집 화면이 문서(`./document.ts`)에서 장 하나씩 펴서 렌더
+ * API(`/api/render`)에 보낸다. 서버는 이 값만 보고 그린다 — 공고를 다시 읽지 않는다.
  *
  * 문구(`CardContent`)와 설정(`CardSettings`)은 모든 시안이 같이 쓴다. 시안마다 다른 것은 배경과
  * 배치뿐이고, 그건 `./variants.ts` 가 정한다.
@@ -22,10 +24,6 @@ export const CARD_SIZES: Record<CardSizeId, CardSize> = {
 };
 
 export const CARD_SIZE_IDS = Object.keys(CARD_SIZES) as CardSizeId[];
-
-/** 한 벌은 세 장이다 — 공고 요약, 자격·우대 요건, 프로필 링크 안내. */
-export const SLIDE_COUNT = 3;
-export const SLIDE_LABELS = ['1. 공고 요약', '2. 자격·우대 요건', '3. 프로필 안내'] as const;
 
 export interface CardSection {
   /** 칩에 들어가는 제목(`채용 직무`, `마감 기한`). */
@@ -109,10 +107,54 @@ export interface CardSettings {
   brandMark?: BrandMarkId;
   /** `brandMark` 가 `custom` 일 때 그리는 올린 로고. 없으면 오공고를 그린다. */
   brandImage?: BrandImage;
+  /**
+   * 시안 배경 대신 모든 장에 까는 배경(배경 서랍). 장마다 덮어쓴 배경(`DocumentSlide.background`)이 있으면
+   * 그 장은 그것이다. 렌더 요청에는 그 장에 걸리는 배경 하나가 여기 실린다(`slideSpec()`). 없으면 시안 배경이다.
+   */
+  background?: CardBackground;
 }
 
-/** `custom` 은 사람이 올린 로고(`brandImage`), `none` 은 모든 장에서 그리지 않는다. */
-export type BrandMarkId = 'ogonggo' | 'letscareer' | 'custom' | 'none';
+/** 시안에서 떼어 낸 무늬. 시안 id 와 같고, 그 시안의 배경과 바탕 위 글자색을 그대로 쓴다. */
+export type BackgroundPattern =
+  | 'wave'
+  | 'watermark'
+  | 'frame'
+  | 'panel'
+  | 'thumbDark'
+  | 'thumbFade';
+
+export const BACKGROUND_PATTERNS: { id: BackgroundPattern; label: string }[] = [
+  { id: 'wave', label: '물결' },
+  { id: 'watermark', label: '워터마크' },
+  { id: 'frame', label: '테두리' },
+  { id: 'panel', label: '흰 판' },
+  { id: 'thumbDark', label: '어둡게' },
+  { id: 'thumbFade', label: '연하게' },
+];
+
+/**
+ * 덮어쓴 배경. `color` 는 단색, `pattern` 은 시안 무늬(어둡게·연하게는 썸네일 `settings.photo` 를 쓴다),
+ * 단색·무늬의 `opacity`(없으면 1)는 흰 바탕 위에 그 진하기로 깐다는 뜻이다.
+ * `photo` 는 사진 한 장을 진하기(`opacity`)대로 시안 바탕색 위에 깐다. 사진의 `imageId` 는 올린 이미지(IndexedDB
+ * 열쇠)이고, 없으면 썸네일(공고 대표 이미지)이다. `src` 는 그릴 data URL 이다 — 문서에 남길 때는 비우고 열 때
+ * 다시 채운다(`../client/storage.ts`). 썸네일 사진은 `slideSpec()` 이 채운다.
+ */
+export type CardBackground =
+  | { kind: 'color'; color: string; opacity?: number }
+  | { kind: 'pattern'; pattern: BackgroundPattern; opacity?: number }
+  | { kind: 'photo'; imageId?: string; src: string; opacity: number };
+
+/**
+ * `ogonggo` 는 심볼 + `오공고` 글자, `ogonggoSymbol` 은 심볼만, `ogonggoClassic` 은 옛 오공고 로고(파랑 세 겹
+ * 마크)다. `custom` 은 사람이 올린 로고(`brandImage`), `none` 은 모든 장에서 그리지 않는다.
+ */
+export type BrandMarkId =
+  | 'ogonggo'
+  | 'ogonggoSymbol'
+  | 'ogonggoClassic'
+  | 'letscareer'
+  | 'custom'
+  | 'none';
 
 export interface BrandImage {
   /** data URL. 편집 화면이 긴 변 600px 이하로 줄여 둔다. */
@@ -160,6 +202,8 @@ export const ELEMENT_IDS = [
   'ctaHeadline',
   'ctaSub',
   'profile',
+  'deadlineRow',
+  'jobTable',
 ] as const;
 
 export type FixedElementId = (typeof ELEMENT_IDS)[number];
@@ -173,10 +217,42 @@ export type SectionElementId =
   | `section-${number}-chip`
   | `section-${number}-list`;
 
-export type ElementId = FixedElementId | SectionElementId;
+/**
+ * 묶음 공고 장(2열 카드·회사 블록)에서 공고 하나의 글자. `<k>` 는 그 장의 몇 번째 공고인가(1부터,
+ * `bundleSlideJobs()` 순서)다. `title` 은 2열 카드 머리띠, `left-<m>`·`right-<m>` 은 2열 카드 왼쪽·오른쪽 열의
+ * `<m>` 번째 목록, `cell-<c>` 는 회사 블록 표 줄의 `<c>` 번째 칸이다.
+ */
+export type BundleElementId =
+  | `job-${number}-title`
+  | `job-${number}-left-${number}`
+  | `job-${number}-right-${number}`
+  | `job-${number}-cell-${number}`;
+
+export type ElementId = FixedElementId | SectionElementId | BundleElementId;
 
 /** 섹션 번호는 1~9 까지 받는다. */
 const SECTION_ELEMENT = /^section-([1-9])(?:-(chip|list))?$/;
+const BUNDLE_ELEMENT = /^job-([1-9])-(?:(title)|(left|right)-([1-9])|(cell)-([12]))$/;
+
+export function bundleElementId(
+  job: number,
+  part: 'title' | 'left' | 'right' | 'cell',
+  index?: number,
+): BundleElementId {
+  return part === 'title' ? `job-${job}-title` : `job-${job}-${part}-${index ?? 1}`;
+}
+
+/** 묶음 공고 장 글자 id 를 푼다. 아니면 `null`. `job`·`index` 는 1부터다. */
+export function parseBundleElementId(
+  id: string,
+): { job: number; part: 'title' | 'left' | 'right' | 'cell'; index: number } | null {
+  const match = BUNDLE_ELEMENT.exec(id);
+  if (!match) {
+    return null;
+  }
+  const part = (match[2] ?? match[3] ?? match[5]) as 'title' | 'left' | 'right' | 'cell';
+  return { job: Number(match[1]), part, index: Number(match[4] ?? match[6] ?? 1) };
+}
 
 export function sectionElementId(index: number, part?: 'chip' | 'list'): SectionElementId {
   return part ? `section-${index}-${part}` : `section-${index}`;
@@ -185,7 +261,9 @@ export function sectionElementId(index: number, part?: 'chip' | 'list'): Section
 export function isElementId(value: unknown): value is ElementId {
   return (
     typeof value === 'string' &&
-    ((ELEMENT_IDS as readonly string[]).includes(value) || SECTION_ELEMENT.test(value))
+    ((ELEMENT_IDS as readonly string[]).includes(value) ||
+      SECTION_ELEMENT.test(value) ||
+      BUNDLE_ELEMENT.test(value))
   );
 }
 
@@ -204,6 +282,8 @@ export const ELEMENT_LABELS: Record<FixedElementId, string> = {
   ctaHeadline: '3장 제목',
   ctaSub: '3장 부제',
   profile: '프로필 카드',
+  deadlineRow: '마감 줄',
+  jobTable: '직무 표',
 };
 
 /**
@@ -211,6 +291,15 @@ export const ELEMENT_LABELS: Record<FixedElementId, string> = {
  * 그 장에 보이는 섹션의 칩 제목이다(없으면 번호만).
  */
 export function elementLabel(id: ElementId, sectionLabels?: string[]): string {
+  const bundle = parseBundleElementId(id);
+  if (bundle) {
+    const name = `공고 ${bundle.job}`;
+    return bundle.part === 'title'
+      ? `${name} 직무`
+      : bundle.part === 'cell'
+        ? `${name} 표 ${bundle.index}칸`
+        : `${name} ${bundle.part === 'left' ? '왼쪽' : '오른쪽'} 목록 ${bundle.index}`;
+  }
   const match = SECTION_ELEMENT.exec(id);
   if (!match) {
     return ELEMENT_LABELS[id as FixedElementId] ?? id;
@@ -235,6 +324,8 @@ export interface ElementEdit {
   dy: number;
   scale: number;
   hidden?: boolean;
+  /** 잠근 요소. 캔버스에서 끌리지 않고 비서 도구도 바꾸지 않는다(우클릭 `잠금`). */
+  locked?: boolean;
 }
 
 /** 한 장의 편집값. 편집하지 않은 요소는 없다. */
@@ -249,6 +340,17 @@ interface LayerBase {
   x: number;
   y: number;
   width: number;
+  /** 잠근 요소. 캔버스에서 끌리지 않고 비서 도구도 바꾸지 않는다(우클릭 `잠금`). */
+  locked?: boolean;
+  /**
+   * 템플릿 뒤에 깐 요소. 배경 바로 위, 템플릿 요소 아래에 칠한다(제목 뒤에 까는 도형). 없으면 템플릿 위다.
+   * 뒤에 깐 요소끼리, 위에 얹은 요소끼리는 배열 순서대로 칠한다.
+   */
+  behind?: boolean;
+  /** 숨긴 요소. 투명하게 그려 자리를 지킨다(템플릿 요소의 숨김과 같다). 레이어 목록에서 켜고 끈다. */
+  hidden?: boolean;
+  /** 상자 가운데를 두고 시계 방향으로 돌린 각도(도, -180~180). 없으면 0 이다. x·y·폭·높이는 돌리기 전 상자다. */
+  rotation?: number;
 }
 
 /** 글자 요소. 높이는 글자에 맞춰 늘어난다. 줄은 `\n` 으로 나누고 강조 표시(`*단어*`)는 쓰지 않는다. */
@@ -262,7 +364,39 @@ export interface TextLayer extends LayerBase {
   align: 'left' | 'center' | 'right';
   /** 글자 크기에 곱하는 줄 간격. */
   lineHeight: number;
+  /**
+   * 채움(`#RRGGBB`). 있으면 줄마다 글자에 맞춘 상자를 칠한다 — 강조 상자·칩 모양이다. 예전 편집본에는
+   * 없다(채움 없음).
+   */
+  background?: string;
+  /** 채움 상자 모서리 둥글기(px). */
+  radius?: number;
+  /**
+   * 이어진 공고 값(`공고 값 넣기`). 있으면 그릴 때 이 장이 그리는 공고의 값으로 글자를 채운다
+   * (`resolveLayers()`) — 같은 글을 다른 공고 장에 붙이면 그 공고 값이 된다. 글자를 직접 고치면 끊는다.
+   */
+  bind?: JobValueKey;
 }
+
+/** 글자 요소에 이을 수 있는 공고 값. */
+export type JobValueKey =
+  | 'company'
+  | 'role'
+  | 'field'
+  | 'deadline'
+  | 'duties'
+  | 'qualifications'
+  | 'preferred';
+
+export const JOB_VALUE_LABELS: Record<JobValueKey, string> = {
+  company: '회사명',
+  role: '직무',
+  field: '모집 분야',
+  deadline: '마감일',
+  duties: '담당 업무',
+  qualifications: '자격 요건',
+  preferred: '우대 요건',
+};
 
 /** 이미지 요소. `src` 는 data URL, `imageId` 는 이 브라우저 이미지 저장소(IndexedDB)의 열쇠다. */
 export interface ImageLayer extends LayerBase {
@@ -276,7 +410,28 @@ export interface ImageLayer extends LayerBase {
   radius: number;
 }
 
-export type Layer = TextLayer | ImageLayer;
+/** 도형 종류. 둥근 사각은 모서리(`radius`)가 있는 사각이고, 선은 높이가 굵기인 막대다. */
+export type ShapeKind = 'rect' | 'ellipse' | 'line';
+
+/** 도형 요소. 사각·원은 채움과 테두리를, 선은 채움 색 하나를 쓴다. */
+export interface ShapeLayer extends LayerBase {
+  kind: 'shape';
+  shape: ShapeKind;
+  /** 선이면 굵기다. */
+  height: number;
+  /** 채움(`#RRGGBB`). 없으면 비운다. 선은 이 색으로 칠한다. */
+  fill?: string;
+  /** 테두리 색(`#RRGGBB`). 없으면 테두리가 없다. 선에는 쓰지 않는다. */
+  stroke?: string;
+  /** 테두리 굵기(px). 테두리는 상자 안쪽으로 그린다. */
+  strokeWidth: number;
+  /** 0~1. */
+  opacity: number;
+  /** 모서리 둥글기(px). 원에는 쓰지 않는다. */
+  radius: number;
+}
+
+export type Layer = TextLayer | ImageLayer | ShapeLayer;
 
 export const LAYER_WEIGHTS = [500, 600, 700, 800, 900] as const;
 
@@ -297,8 +452,61 @@ export function layerLabel(layer: Layer): string {
   if (layer.kind === 'image') {
     return '이미지';
   }
+  if (layer.kind === 'shape') {
+    return shapeLabel(layer);
+  }
   const head = layer.text.replace(/\s+/g, ' ').trim();
   return head ? `글자 · ${head.length > 12 ? `${head.slice(0, 12)}…` : head}` : '글자';
+}
+
+/** 각도(도)를 -180 초과 180 이하로. */
+export function normalizeAngle(degrees: number): number {
+  const turned = ((((degrees + 180) % 360) + 360) % 360) - 180;
+  return turned === -180 ? 180 : turned;
+}
+
+/** 도형 이름. 모서리가 있는 사각은 `둥근 사각형` 이다. */
+export function shapeLabel(layer: Pick<ShapeLayer, 'shape' | 'radius'>): string {
+  if (layer.shape === 'ellipse') {
+    return '원';
+  }
+  if (layer.shape === 'line') {
+    return '선';
+  }
+  return layer.radius > 0 ? '둥근 사각형' : '사각형';
+}
+
+/**
+ * 묶음 표지에 그리는 값. 마감 줄의 날짜와 2열 직무 표(열 이름, 공고마다 한 줄)다. 문서의 `cover` 와
+ * 공고 문구에서 편다(`../card/document.ts`).
+ */
+export interface CoverTable {
+  deadline: string;
+  columns: [string, string];
+  rows: [string, string][];
+  /** 직무 표 밑 일정 상자 줄. 없으면 상자를 그리지 않는다. */
+  schedule?: string[];
+}
+
+/**
+ * 회사 블록 배치(여러 회사 묶음)의 회사 하나. 가운데 회사 로고, 브랜드색 머리띠에 회사명, 흰 카드 안 2열 표
+ * (표지 표의 열 이름, 그 회사 공고마다 한 줄)다. 로고가 없으면 회사명을 글자로 쓴다.
+ */
+export interface BundleCompany {
+  name: string;
+  logo?: CardLogo;
+  columns: [string, string];
+  rows: [string, string][];
+}
+
+/**
+ * 2열 카드 배치(한 회사 여러 직무 묶음)의 공고 하나. 검정 머리띠에 직무, 흰 카드 왼쪽 열에 담당 업무, 오른쪽
+ * 열에 자격 요건·우대 요건이다. 빈 섹션은 그리지 않는다.
+ */
+export interface BundleCard {
+  title: string;
+  left: CardSection[];
+  right: CardSection[];
 }
 
 export interface CardSpec {
@@ -308,15 +516,29 @@ export interface CardSpec {
   /** 없으면 회사명을 글자로 쓴다. */
   logo?: CardLogo;
   companyName: string;
-  /** 장 번호 순서의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
-  edits?: SlideEdits[];
-  /** 장 번호 순서의 자유 요소. 크기끼리 같이 쓴다. */
-  layers?: Layer[][];
+  /** 이 장의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
+  edits?: SlideEdits;
+  /** 이 장의 자유 요소. 크기끼리 같이 쓴다. */
+  layers?: Layer[];
+  /** 묶음 표지. 있으면 표지 장을 묶음 표지 배치(마감 줄, 직무 표)로 그린다. */
+  cover?: CoverTable;
+  /**
+   * 묶음 공고 장의 표지 표 줄(직무, 모집 분야). 있으면 공고 장을 시안과 상관없이 항목명 표 배치로 그리고,
+   * 브랜드색 머리띠에 직무, 흰 줄에 모집 분야, 표에 마감·업무·우대를 쓴다.
+   */
+  bundleRow?: [string, string];
+  /** 묶음 공고 장을 회사 블록 배치로 그릴 때 장에 놓는 회사들(위에서부터). */
+  bundleCompanies?: BundleCompany[];
+  /** 묶음 공고 장을 2열 카드 배치로 그릴 때 장에 놓는 공고들(위에서부터). 로고는 장 맨 위에 하나다. */
+  bundleCards?: BundleCard[];
+  /** 여러 회사 묶음의 표지. 있으면 표지 머리 오른쪽(회사 로고 자리)을 비운다. */
+  companyNames?: string[];
 }
 
 export interface RenderRequest {
+  /** 그릴 장 하나의 값(`slideSpec()`). */
   spec: CardSpec;
-  slide: number;
+  role: SlideRole;
   size: CardSizeId;
   /** PNG 축척. 다운로드는 1. */
   scale?: number;

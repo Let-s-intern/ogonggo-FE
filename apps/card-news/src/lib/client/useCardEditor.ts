@@ -2,17 +2,31 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
-import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
+import {
+  type CardDocument,
+  type RenderSlide,
+  companyNames,
+  singleDocument,
+  slideSpec,
+  withContent,
+  withSlideEdit,
+  addJobs,
+  withSlideContent,
+  withSlideLayers,
+  withBackground,
+  withSlideTemplate,
+  withTemplate,
+} from '../card/document';
+import { type CardJob, contentFromDraft } from '../card/fromJob';
 import type {
   BrandImage,
   CardContent,
   CardImage,
+  CardLogo,
   CardSettings,
-  CardSpec,
   ElementEdit,
   ElementId,
   Layer,
-  SlideEdits,
   VariantId,
 } from '../card/types';
 import { VARIANTS } from '../card/variants';
@@ -20,15 +34,15 @@ import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { fileToBrandImage, toCardImage } from './image';
 import { BRAND_IMAGE_ID, getImage, putImage } from './imageStore';
 import {
-  type CardEdits,
-  type CardLayers,
-  clearCard,
-  loadCard,
+  loadDocument,
+  loadSingleDocument,
   restoreLayers,
-  saveCard,
+  saveDocument,
+  takeNotice,
 } from './storage';
 import {
   FALLBACK_COLOR,
+  OGONGGO_COLOR,
   type ProcessedLogo,
   defaultSettings,
   extractBrandColor,
@@ -40,37 +54,28 @@ import { useHistory } from './useHistory';
  * 편집 화면의 상태와 동작. 화면 컴포넌트는 이 훅이 주는 값만 그리고, 바꿀 때는 이 훅의 함수를
  * 부른다 — 공고 읽기, AI 초안, 저장, 로고 칠하기, 배경 이미지 고르기가 여기 모여 있다.
  *
- * 문구와 설정은 하나다. 시안 다섯 개는 그 하나에서 `specs` 로 갈라진다.
+ * 편집하는 값은 문서(`CardDocument`) 하나다. 시안 열 개는 그 하나에서 `specs`(시안별 장 목록)로
+ * 갈라진다.
  */
 
 export interface LoadedCard {
-  job: CardJob;
+  /** 첫 공고. 공고가 없는 문서(빈 캔버스)면 `null` 이다. */
+  job: CardJob | null;
   /** 원래 색 로고. 사람이 바꿀 수 있다. */
   logo?: string;
   /** 로고에서 뽑은 대표 색. 없으면 흑백 로고이거나 로고가 없다. */
   brandColor: string | null;
-  content: CardContent;
-  settings: CardSettings;
-  /** 템플릿별·장별 요소 편집값. 템플릿을 바꿔도 각자 남는다. */
-  edits: CardEdits;
-  /** 템플릿별·장별 자유 요소(글자·이미지). */
-  layers: CardLayers;
+  /** 문구·설정·장마다의 편집값. */
+  doc: CardDocument;
 }
 
-/** 실행 취소가 되돌리는 값. 로고·공고는 넣지 않는다. */
-export type EditSnapshot = Pick<LoadedCard, 'content' | 'settings' | 'edits' | 'layers'>;
-
-function snapshotOf(card: LoadedCard): EditSnapshot {
-  return { content: card.content, settings: card.settings, edits: card.edits, layers: card.layers };
-}
+/** 실행 취소가 되돌리는 값. 문서 통째다(템플릿 포함). 로고·공고는 넣지 않는다. */
+export type EditSnapshot = CardDocument;
 
 export type EditorStatus =
   | { kind: 'idle' }
   | { kind: 'loading'; message: string }
   | { kind: 'error'; message: string };
-
-/** 다시 쓰기에서 지시를 비웠을 때 보내는 말. 빈 지시는 첫 초안 캐시를 돌려받으므로 넣는다. */
-const REWRITE_INSTRUCTION = '지금 초안과 다른 표현으로 새로 써 줘.';
 
 /** 썸네일의 처음 진하기. 시안마다 이 값에 자기 배율을 곱한다. */
 export const PHOTO_OPACITY = 1;
@@ -110,12 +115,37 @@ export async function requestDraft(body: {
   return result;
 }
 
+/** 공고 하나의 카드용 값과 로고(data URL), 로고에서 뽑은 대표 색. */
+export async function fetchCardJob(
+  jobId: number,
+): Promise<{ job: CardJob; logo?: string; brandColor: string | null }> {
+  const response = await fetch(`/api/jobs/${jobId}`);
+  const body = (await response.json()) as {
+    job?: CardJob;
+    logoDataUrl?: string | null;
+    message?: string;
+  };
+  if (!response.ok || !body.job) {
+    throw new Error(body.message ?? '공고를 불러오지 못했습니다.');
+  }
+  const logo = body.logoDataUrl ?? undefined;
+  const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
+  return { job: body.job, logo, brandColor };
+}
+
+/** 연 문서. `created` 면 여기서 새 초안으로 만든 문서다(남은 편집본이 없었다). */
+export interface OpenedDocument {
+  doc: CardDocument;
+  created: boolean;
+}
+
 export function useCardEditor() {
   const [loaded, setLoaded] = useState<LoadedCard | null>(null);
   const [status, setStatus] = useState<EditorStatus>({ kind: 'idle' });
   const [notice, setNotice] = useState<string | null>(null);
-  const [regenerating, setRegenerating] = useState(false);
   const [candidates, setCandidates] = useState<ImageCandidates | null>(null);
+  /** 문서마다 열 때 한 번 보일 알림(`takeNotice()`). */
+  const notices = useRef(new Map<string, string | null>());
 
   const update = useCallback(
     (patch: Partial<LoadedCard>) =>
@@ -127,22 +157,26 @@ export function useCardEditor() {
   // 값을 본다.
   const loadedRef = useRef(loaded);
   loadedRef.current = loaded;
+  // 템플릿(문서 템플릿과 장마다 덮어쓴 템플릿)도 문서에 들어 있어 같이 되돌린다.
   const history = useHistory<EditSnapshot>(
-    () => {
-      const current = loadedRef.current;
-      return current ? snapshotOf(current) : null;
-    },
-    (snapshot) => setLoaded((current) => (current ? { ...current, ...snapshot } : current)),
+    () => loadedRef.current?.doc ?? null,
+    (snapshot) => setLoaded((current) => (current ? { ...current, doc: snapshot } : current)),
   );
   const { record, clear: clearHistory } = history;
   const remember = useCallback(
     (group?: string) => {
       const current = loadedRef.current;
       if (current) {
-        record(snapshotOf(current), group);
+        record(current.doc, group);
       }
     },
     [record],
+  );
+  /** 문서를 바꾼다(기록은 부르는 쪽이 쌓는다). */
+  const changeDoc = useCallback(
+    (change: (doc: CardDocument) => CardDocument) =>
+      setLoaded((current) => (current ? { ...current, doc: change(current.doc) } : current)),
+    [],
   );
 
   /**
@@ -150,34 +184,57 @@ export function useCardEditor() {
    * `remember()` 로 쌓아 Ctrl+Z 한 번에 요청 전으로 돌아가게. 같은 요청의 다음 도구가 바로 읽도록
    * ref 도 같이 고친다.
    */
-  const applyQuietly = useCallback((patch: Partial<EditSnapshot>) => {
+  const applyQuietly = useCallback((doc: EditSnapshot) => {
     const current = loadedRef.current;
     if (!current) {
       return;
     }
-    const next = { ...current, ...patch };
+    const next = { ...current, doc };
     loadedRef.current = next;
     setLoaded(next);
   }, []);
   const readLoaded = useCallback(() => loadedRef.current, []);
 
-  /** 문구를 바꾼다. 이어 치는 글자는 한 단계로 되돌린다. */
-  const setContent = useCallback(
-    (content: CardContent) => {
+  /**
+   * 장 하나가 그리는 문구를 바꾼다(캔버스에서 템플릿 글자 고치기). 묶음 표지는 표지에, 공고 장은 그 장의
+   * 공고에 들어간다(`withSlideContent()`). 이어 치는 글자는 한 단계로 되돌린다.
+   */
+  const setSlideContent = useCallback(
+    (slideId: string, content: CardContent) => {
       remember('content');
-      update({ content });
+      changeDoc((doc) =>
+        withSlideContent(
+          doc,
+          doc.slides.find((slide) => slide.id === slideId),
+          content,
+        ),
+      );
     },
-    [remember, update],
+    [remember, changeDoc],
+  );
+  /** 묶은 공고 하나의 문구를 바꾼다(공고 서랍). 인스타 본문은 문서 것이다. */
+  const setJobContent = useCallback(
+    (jobIndex: number, content: CardContent) => {
+      remember('content');
+      changeDoc((doc) => withContent(doc, content, jobIndex));
+    },
+    [remember, changeDoc],
+  );
+  /** 문서를 바꾸고 실행 취소 기록에 쌓는다. `group` 이 같으면 이어 친 글자처럼 한 단계다. */
+  const changeDocument = useCallback(
+    (change: (doc: CardDocument) => CardDocument, group?: string) => {
+      remember(group);
+      changeDoc(change);
+    },
+    [remember, changeDoc],
   );
   const setSettings = useCallback(
     (patch: Partial<CardSettings>) => {
       // 색 고르기·슬라이더처럼 같은 값을 잇달아 바꾸면 한 단계다.
       remember(`settings:${Object.keys(patch).sort().join(',')}`);
-      setLoaded((current) =>
-        current ? { ...current, settings: { ...current.settings, ...patch } } : current,
-      );
+      changeDoc((doc) => ({ ...doc, settings: { ...doc.settings, ...patch } }));
     },
-    [remember],
+    [remember, changeDoc],
   );
   /**
    * 브랜드 로고를 올린 이미지로 바꾼다. 이 브라우저에 하나만 남기고 다른 공고에서도 쓴다. 파일이 없으면
@@ -192,29 +249,21 @@ export function useCardEditor() {
     [setSettings],
   );
   /**
-   * 요소 하나의 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. `group` 이 같은 변경은
-   * 실행 취소에서 한 단계다(끄는 동안, 방향키를 누르고 있는 동안).
+   * 장 하나(`slideId`)의 요소 편집값을 바꾼다. `null` 이면 템플릿 원래 배치로 돌린다. `group` 이 같은
+   * 변경은 실행 취소에서 한 단계다(끄는 동안, 방향키를 누르고 있는 동안).
    */
   const setEdits = useCallback(
     (
       variant: VariantId,
-      slide: number,
+      slideId: string,
       id: ElementId,
       edit: ElementEdit | null,
       group?: string,
     ) => {
       remember(group);
-      setLoaded((current) => {
-        if (!current) {
-          return current;
-        }
-        const slides: SlideEdits[] = [...(current.edits[variant] ?? [])];
-        const { [id]: _previous, ...others } = slides[slide] ?? {};
-        slides[slide] = edit ? { ...others, [id]: edit } : others;
-        return { ...current, edits: { ...current.edits, [variant]: slides } };
-      });
+      changeDoc((doc) => withSlideEdit(doc, slideId, variant, id, edit));
     },
-    [remember],
+    [remember, changeDoc],
   );
 
   /**
@@ -222,21 +271,88 @@ export function useCardEditor() {
    * 같은 변경은 실행 취소에서 한 단계다.
    */
   const setLayers = useCallback(
-    (variant: VariantId, slide: number, layers: Layer[], group?: string) => {
+    (variant: VariantId, slideId: string, layers: Layer[], group?: string) => {
       remember(group);
-      setLoaded((current) => {
-        if (!current) {
-          return current;
-        }
-        const slides: Layer[][] = [...(current.layers[variant] ?? [])];
-        for (let index = 0; index < slide; index += 1) {
-          slides[index] ??= [];
-        }
-        slides[slide] = layers;
-        return { ...current, layers: { ...current.layers, [variant]: slides } };
-      });
+      changeDoc((doc) => withSlideLayers(doc, slideId, variant, layers));
     },
-    [remember],
+    [remember, changeDoc],
+  );
+
+  /** 장 목록을 바꾼다(장 떼기·붙이기, 넣기, 지우기, 순서). 실행 취소 한 단계다. */
+  const changeSlides = useCallback(
+    (change: (doc: CardDocument) => CardDocument) => {
+      remember();
+      changeDoc(change);
+    },
+    [remember, changeDoc],
+  );
+
+  /** 문서 제목을 바꾼다. 빈 글이면 회사 이름 제목으로 돌린다. */
+  const setTitle = useCallback(
+    (title: string) => {
+      remember();
+      changeDoc(({ title: _previous, ...doc }) => (title ? { ...doc, title } : doc));
+    },
+    [remember, changeDoc],
+  );
+
+  /** 템플릿 고르기(새 문서를 처음 열 때)에서 고른 시안을 문서에 남긴다. 실행 취소 기록에는 쌓지 않는다. */
+  const setVariant = useCallback(
+    (variant: VariantId) => changeDoc((doc) => withTemplate(doc, variant)),
+    [changeDoc],
+  );
+  /**
+   * 템플릿 서랍에서 템플릿을 바꾼다. `slideId` 가 없으면 문서 템플릿(모든 장), 있으면 그 장에만 덮어쓴다
+   * (`null` 이면 덮어쓴 것을 지운다). 실행 취소 한 단계다.
+   */
+  const pickTemplate = useCallback(
+    (variant: VariantId | null, slideId?: string) => {
+      remember();
+      // 템플릿을 고르면 배경 서랍에서 덮어쓴 배경은 지운다 — 템플릿 미리보기에서 본 모습 그대로 되게.
+      // 한 장만 고르면 그 장에 덮어쓴 배경만 지운다.
+      changeDoc((doc) =>
+        slideId
+          ? withBackground(withSlideTemplate(doc, slideId, variant), null, slideId)
+          : variant
+            ? withBackground(withTemplate(doc, variant), null)
+            : doc,
+      );
+    },
+    [remember, changeDoc],
+  );
+
+  /**
+   * 공고를 더 묶는다(공고 서랍의 `공고 더 묶기`). 공고마다 AI 초안을 쓴다 — 시작할 때 적은 요청사항을
+   * 같이 넘긴다. 표지 표 줄은 초안의 첫 직무와 빈 `모집 분야` 로 시작한다(공고 상세에 직무 분류가 없다).
+   * 실패하면 오류 글을 돌려준다.
+   */
+  const addMoreJobs = useCallback(
+    async (jobIds: number[]): Promise<string | null> => {
+      const request = loadedRef.current?.doc.request.trim() || undefined;
+      try {
+        const added = await Promise.all(
+          jobIds.map(async (jobId) => {
+            const [{ job }, result] = await Promise.all([
+              fetchCardJob(jobId),
+              requestDraft({ jobId, instruction: request }),
+            ]);
+            const content = contentFromDraft(job, result.draft);
+            return {
+              jobId,
+              companyName: job.companyName,
+              content,
+              row: [content.roleTitle, ''] as [string, string],
+            };
+          }),
+        );
+        remember();
+        changeDoc((doc) => addJobs(doc, added));
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : '공고를 더 묶지 못했습니다.';
+      }
+    },
+    [remember, changeDoc],
   );
 
   /** 썸네일 후보를 받아, 아직 썸네일이 없으면 첫 후보(공고 원문 대표 이미지)를 넣는다. */
@@ -253,8 +369,11 @@ export function useCardEditor() {
       const image = first ? await candidateToImage(first, PHOTO_OPACITY).catch(() => null) : null;
       if (image) {
         setLoaded((current) =>
-          current?.job.id === jobId && !current.settings.photo
-            ? { ...current, settings: { ...current.settings, photo: image } }
+          current?.job?.id === jobId && !current.doc.settings.photo
+            ? {
+                ...current,
+                doc: { ...current.doc, settings: { ...current.doc.settings, photo: image } },
+              }
             : current,
         );
       }
@@ -263,107 +382,156 @@ export function useCardEditor() {
     }
   }, []);
 
+  /**
+   * 공고를 연다. 남은 편집본이 있으면 그것을, 없거나 `fresh` 면 새 AI 초안을 연다. `quiet` 면 남은
+   * 편집본을 열었다고 알리지 않는다 — 편집 화면 주소가 문서 id 라 그 문서를 여는 것이 당연하다.
+   *
+   * `request` 가 있으면 남은 편집본 대신 그 요청을 지시로 새 초안을 쓰고 문서에 남긴다. `uploads` 는
+   * 첨부 이미지 id 로, 문서에 더한다.
+   */
   const selectJob = useCallback(
-    async (jobId: number) => {
+    async (
+      jobId: number,
+      {
+        fresh = false,
+        quiet = false,
+        request = '',
+        uploads = [],
+      }: { fresh?: boolean; quiet?: boolean; request?: string; uploads?: string[] } = {},
+    ): Promise<OpenedDocument | null> => {
       setStatus({ kind: 'loading', message: '공고를 읽는 중' });
       setNotice(null);
       try {
-        const response = await fetch(`/api/jobs/${jobId}`);
-        const body = (await response.json()) as {
-          job?: CardJob;
-          logoDataUrl?: string | null;
-          message?: string;
-        };
-        if (!response.ok || !body.job) {
-          throw new Error(body.message ?? '공고를 불러오지 못했습니다.');
-        }
-        const job = body.job;
-        const logo = body.logoDataUrl ?? undefined;
-        const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
-
-        const saved = loadCard(jobId);
+        const { job, logo, brandColor } = await fetchCardJob(jobId);
+        const saved = fresh || request.trim() ? null : loadSingleDocument(job);
         const brandImage = await loadBrandImage();
         clearHistory();
+        let opened: OpenedDocument;
         if (saved) {
-          setLoaded({
-            job,
-            logo,
-            brandColor,
-            content: saved.content,
-            settings: { ...saved.settings, brandImage },
-            edits: saved.edits ?? {},
-            layers: await restoreLayers(saved.layers),
-          });
-          setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
+          opened = {
+            doc: await restoreLayers({
+              ...saved,
+              settings: { ...saved.settings, brandImage },
+              ...(uploads.length > 0 ? { uploads: [...(saved.uploads ?? []), ...uploads] } : {}),
+            }),
+            created: false,
+          };
+          if (!quiet) {
+            setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
+          }
         } else {
           setStatus({ kind: 'loading', message: 'AI가 초안을 쓰는 중' });
-          const result = await requestDraft({ jobId });
-          setLoaded({
-            job,
-            logo,
-            brandColor,
-            content: contentFromDraft(job, result.draft),
-            settings: { ...defaultSettings(brandColor ?? FALLBACK_COLOR), brandImage },
-            edits: {},
-            layers: {},
-          });
+          const result = await requestDraft({ jobId, instruction: request.trim() || undefined });
+          opened = {
+            doc: {
+              ...singleDocument(job, contentFromDraft(job, result.draft), {
+                ...defaultSettings(brandColor ?? FALLBACK_COLOR),
+                brandImage,
+              }),
+              request: request.trim(),
+              ...(uploads.length > 0 ? { uploads } : {}),
+            },
+            created: true,
+          };
           setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
         }
+        setLoaded({ job, logo, brandColor, doc: opened.doc });
         setStatus({ kind: 'idle' });
         void loadCandidates(jobId);
+        return opened;
       } catch (error) {
         setStatus({
           kind: 'error',
           message: error instanceof Error ? error.message : '공고를 불러오지 못했습니다.',
         });
+        return null;
       }
     },
     [loadCandidates, clearHistory],
   );
 
-  const regenerate = useCallback(
-    async (instruction: string): Promise<boolean> => {
-      if (!loaded) {
-        return false;
+  /**
+   * 편집 화면 주소의 문서를 연다. 공고 하나 문서(`job-<번호>`)는 남은 편집본이 없으면 새 초안으로
+   * 만든다(오공고 웹의 `?jobId=` 버튼). 다른 문서는 이 브라우저에 남은 것만 연다. 로고와 썸네일 후보는
+   * 첫 공고 것이다.
+   */
+  const openDocument = useCallback(
+    async (docId: string): Promise<OpenedDocument | null> => {
+      const single = /^job-(\d+)$/.exec(docId);
+      if (single) {
+        return selectJob(Number(single[1]), { quiet: true });
       }
-      setRegenerating(true);
-      try {
-        const result = await requestDraft({
-          jobId: loaded.job.id,
-          instruction: instruction || REWRITE_INSTRUCTION,
-          current: draftFromContent(loaded.content),
+      setNotice(null);
+      const saved = loadDocument(docId);
+      if (!saved) {
+        setStatus({
+          kind: 'error',
+          message: '이 브라우저에 남아 있는 문서가 아닙니다. 시작 화면에서 새로 만들어 주세요.',
         });
-        remember();
-        update({ content: contentFromDraft(loaded.job, result.draft, loaded.content) });
-        setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
-        return true;
+        return null;
+      }
+      setStatus({ kind: 'loading', message: '문서를 여는 중' });
+      try {
+        const first = saved.jobs[0];
+        const card = first
+          ? await fetchCardJob(first.jobId)
+          : { job: null, logo: undefined, brandColor: null };
+        const brandImage = await loadBrandImage();
+        clearHistory();
+        const doc = await restoreLayers({ ...saved, settings: { ...saved.settings, brandImage } });
+        setLoaded({ ...card, doc });
+        setStatus({ kind: 'idle' });
+        // 개발 모드는 여는 effect 를 두 번 부른다. 꺼낸 알림을 ref 에 두어 두 번째에도 보이게.
+        if (!notices.current.has(docId)) {
+          notices.current.set(docId, takeNotice(docId));
+        }
+        setNotice(notices.current.get(docId) ?? null);
+        if (first) {
+          void loadCandidates(first.jobId);
+        } else {
+          // 공고가 없으면 찾을 썸네일 후보도 없다.
+          setCandidates({ photo: [] });
+        }
+        return { doc, created: false };
       } catch (error) {
-        setNotice(error instanceof Error ? error.message : 'AI 초안을 받지 못했습니다.');
-        return false;
-      } finally {
-        setRegenerating(false);
+        setStatus({
+          kind: 'error',
+          message: error instanceof Error ? error.message : '문서를 열지 못했습니다.',
+        });
+        return null;
       }
     },
-    [loaded, remember, update],
+    [selectJob, loadCandidates, clearHistory],
   );
 
   const startOver = useCallback(() => {
-    if (loaded) {
-      clearCard(loaded.job.id);
-      void selectJob(loaded.job.id);
+    if (loaded?.job && loaded.doc.kind === 'single') {
+      // 남은 편집본은 새 초안을 저장할 때 덮어쓴다. 지우지 않는다 — 지우면 v2 편집본을 다시 옮겨 온다.
+      // 시작할 때 적은 요청과 첨부 이미지는 새 초안에도 남긴다.
+      void selectJob(loaded.job.id, {
+        fresh: true,
+        request: loaded.doc.request,
+        uploads: loaded.doc.uploads,
+      });
     }
   }, [loaded, selectJob]);
 
+  // 여러 회사 묶음은 첫 회사 로고 색이 아니라 오공고 색으로 되돌린다.
   const resetBrandColor = useCallback(() => {
     if (loaded) {
-      setSettings({ brandColor: loaded.brandColor ?? FALLBACK_COLOR });
+      setSettings({
+        brandColor:
+          companyNames(loaded.doc).length > 1
+            ? OGONGGO_COLOR
+            : (loaded.brandColor ?? FALLBACK_COLOR),
+      });
     }
   }, [loaded, setSettings]);
 
   // 고칠 때마다 이 브라우저에 남긴다(이미지는 빼고).
   useEffect(() => {
     if (loaded) {
-      saveCard(loaded.job.id, loaded.content, loaded.settings, loaded.edits, loaded.layers);
+      saveDocument(loaded.doc);
     }
   }, [loaded]);
 
@@ -394,6 +562,42 @@ export function useCardEditor() {
   }, [logo]);
   const tintReady = !logo || tinted?.source === logo;
 
+  // 여러 회사 묶음의 회사 로고. 회사마다 첫 공고의 로고를 받아 배경을 걷고 옅은 테두리까지 잘라 둔다(첫 회사도
+  // 회사 블록에서는 이것을 쓴다). 문서에는 남기지 않는다(저장소 한도). 받기 전과 로고가 없는 회사는 회사명을
+  // 글자로 그린다.
+  const [companyLogos, setCompanyLogos] = useState<Partial<Record<string, CardLogo>>>({});
+  const requestedLogos = useRef(new Set<string>());
+  const otherCompanies = useMemo(() => {
+    const jobs = loaded?.doc.jobs ?? [];
+    const seen = new Map<string, number>();
+    for (const job of jobs) {
+      if (!seen.has(job.companyName)) {
+        seen.set(job.companyName, job.jobId);
+      }
+    }
+    // 한 회사 문서는 받지 않는다(회사 블록이 아니면 편집 화면의 로고를 쓴다).
+    return JSON.stringify(seen.size > 1 ? [...seen] : []);
+  }, [loaded?.doc.jobs]);
+  useEffect(() => {
+    for (const [name, jobId] of JSON.parse(otherCompanies) as [string, number][]) {
+      if (requestedLogos.current.has(name)) {
+        continue;
+      }
+      requestedLogos.current.add(name);
+      fetchCardJob(jobId)
+        .then(({ logo: source }) => (source ? processLogo(source, undefined, 'strict') : null))
+        .then((processed) => {
+          if (processed) {
+            setCompanyLogos((current) => ({
+              ...current,
+              [name]: { original: processed.dataUrl, aspect: processed.aspect },
+            }));
+          }
+        })
+        .catch(() => undefined);
+    }
+  }, [otherCompanies]);
+
   const specs = useMemo(() => {
     if (!loaded || !tintReady) {
       return null;
@@ -407,39 +611,36 @@ export function useCardEditor() {
             aspect: tinted.original.aspect,
           }
         : undefined;
-    // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
-    const { photo, ...shared } = loaded.settings;
+    const { doc } = loaded;
     return Object.fromEntries(
       VARIANTS.map((variant) => [
         variant.id,
-        {
-          variant: variant.id,
-          content: loaded.content,
-          settings: variant.image && photo ? { ...shared, photo } : shared,
-          logo: logoSet,
-          companyName: loaded.job.companyName,
-          edits: loaded.edits[variant.id],
-          layers: loaded.layers[variant.id],
-        } satisfies CardSpec,
+        doc.slides.map((slide) => slideSpec(doc, slide, variant.id, logoSet, companyLogos)),
       ]),
-    ) as Record<VariantId, CardSpec>;
-  }, [loaded, tintReady, tinted]);
+    ) as Record<VariantId, RenderSlide[]>;
+  }, [loaded, tintReady, tinted, companyLogos]);
 
   return {
     loaded,
     status,
     candidates,
     notice,
-    regenerating,
     specs,
     selectJob,
-    regenerate,
+    openDocument,
     startOver,
-    setContent,
+    setSlideContent,
+    setJobContent,
+    changeDocument,
+    addMoreJobs,
     setSettings,
     setBrandImage,
     setEdits,
     setLayers,
+    changeSlides,
+    setTitle,
+    setVariant,
+    pickTemplate,
     remember,
     applyQuietly,
     readLoaded,

@@ -270,3 +270,480 @@ export function measureSlide(measure: Measure, size: CardSize, box: SlideBox): S
     overflow: true,
   };
 }
+
+/** 묶음 표지의 고정 치수. 표 안쪽 여백, 표 머리 칩과 첫 줄 사이, 마감 줄과 표 사이. */
+export const COVER_TABLE_PAD_X = 40;
+export const COVER_TABLE_PAD_Y = 40;
+const COVER_HEAD_GAP = 20;
+const COVER_DEADLINE_GAP = 56;
+const COVER_TABLE_GAP = 28;
+/** 마감 줄 칩과 날짜, 날짜와 `직무별 공고 자세히 보기` 사이. */
+export const COVER_DEADLINE_INNER_GAP = 20;
+/** `직무별 공고 자세히 보기` 글자 크기(마감 날짜 크기에 곱한다). */
+export const COVER_LINK_SCALE = 0.8;
+export const COVER_LINK_TEXT = '직무별 공고 자세히 보기 →';
+/** 표 줄 높이(글자 크기에 곱한다). 남는 높이를 나눠 줄 사이를 넓히되 이 범위 안이다. */
+const COVER_ROW_PITCH_MIN = 1.5;
+const COVER_ROW_PITCH_MAX = 2.6;
+/** 표 두 열 사이 최소 간격. */
+const COVER_COLUMN_GAP = 32;
+/** 줄 글자의 최소 크기. 표를 이보다 줄여야 들어가면 제목을 먼저 줄이고, 그래도 안 되면 22px 까지 내린다. */
+const COVER_ROW_MIN = 28;
+const COVER_ROW_FLOOR = 22;
+export const COVER_ROW_WEIGHT = 700;
+/** 일정 상자. 표와 상자 사이, 안쪽 여백(위아래·옆), 줄 높이, 글자 굵기. */
+export const COVER_SCHEDULE_GAP = 20;
+export const COVER_SCHEDULE_PAD_Y = 26;
+export const COVER_SCHEDULE_PAD_X = 40;
+export const COVER_SCHEDULE_LINE_HEIGHT = 1.45;
+export const COVER_SCHEDULE_WEIGHT = 800;
+
+export interface CoverMetrics {
+  padTop: number;
+  padBottom: number;
+  headlineSize: number;
+  headlineGap: number;
+  /** 마감 날짜 글자 크기. 칩은 이보다 조금 작고, `자세히 보기` 는 `COVER_LINK_SCALE` 배다. */
+  deadlineSize: number;
+  deadlineGap: number;
+  tableGap: number;
+  /** 표 머리 칩 글자 크기와 칩 아래 간격. */
+  headSize: number;
+  headGap: number;
+  /** 표 줄 글자 크기와 줄 높이. */
+  rowSize: number;
+  rowPitch: number;
+  /** 표 두 열의 폭. 열 사이 간격은 따로다(`COVER_COLUMN_GAP`). */
+  cellWidths: [number, number];
+  /** 일정 상자 글자 크기. 일정이 없으면 0 이다. */
+  scheduleSize: number;
+  overflow: boolean;
+}
+
+/**
+ * 묶음 표지의 글자 크기와 간격. 표 줄은 5줄까지 기본 크기(4:5 40px)이고, 줄이 늘어 높이가 모자라면
+ * 줄 수에 맞춰 줄인다. 칸 폭에 가장 긴 칸이 한 줄로 들어가는지도 잰다. 줄 글자가 28px 아래로
+ * 내려가야 하면 제목을 먼저 줄이고(본문 배치와 같은 단계), 22px 로도 넘치면 `overflow` 다.
+ */
+export function measureCover(
+  measure: Measure,
+  size: CardSize,
+  box: {
+    headline: string;
+    deadline: string;
+    columns: [string, string];
+    rows: [string, string][];
+    /** 일정 상자 줄. 없거나 비면 상자 자리를 잡지 않는다. */
+    schedule?: string[];
+    headlineScale: number;
+    bodyScale: number;
+  },
+): CoverMetrics {
+  const story = size.height > size.width * 1.5;
+  const square = size.height <= size.width;
+  const padTop = slidePadTop(size);
+  const padBottom = story ? 230 : square ? 40 : 56;
+  const headlineMax = square ? 92 : story ? 112 : 104;
+  const rowBase = Math.round((square ? 34 : story ? 44 : 40) * box.bodyScale);
+
+  // 마감 줄은 칩 + 날짜 + `자세히 보기` 가 한 줄에 들어가는 크기까지 줄인다.
+  const deadlineWidth = (fontSize: number) => {
+    const chip = chipSizeFor(Math.round(fontSize * 0.86));
+    return (
+      measure('마감 기한', chip, CHIP_WEIGHT) +
+      Math.round(chip * 0.9) * 2 +
+      COVER_DEADLINE_INNER_GAP * 2 +
+      measure(box.deadline, fontSize, HEADLINE_WEIGHT) +
+      measure(COVER_LINK_TEXT, Math.round(fontSize * COVER_LINK_SCALE), CHIP_WEIGHT)
+    );
+  };
+  let deadlineSize = Math.round((square ? 36 : 40) * box.bodyScale);
+  while (deadlineSize > 22 && deadlineWidth(deadlineSize) > CONTENT_WIDTH) {
+    deadlineSize -= 1;
+  }
+  const deadlineHeight = Math.max(
+    chipHeight(chipSizeFor(Math.round(deadlineSize * 0.86))),
+    Math.round(deadlineSize * HEADLINE_LINE_HEIGHT),
+  );
+
+  // 칸 폭은 열마다 가장 긴 칸(머리 칩 포함)에 맞추고 남는 폭을 두 열에 똑같이 나눈다. 직무명이 긴 묶음도
+  // 모집 분야 칸의 빈 자리를 빌려 글자를 덜 줄인다.
+  const inner = CONTENT_WIDTH - COVER_TABLE_PAD_X * 2;
+  const headSizeOf = (fontSize: number) => Math.round(fontSize * 0.9);
+  const needs = (fontSize: number): [number, number] => {
+    const head = headSizeOf(fontSize);
+    return [0, 1].map((column) =>
+      Math.max(
+        measure(box.columns[column] ?? '', head, CHIP_WEIGHT) + Math.round(head * 0.9) * 2,
+        ...box.rows.map((cells) => measure(cells[column] ?? '', fontSize, COVER_ROW_WEIGHT)),
+      ),
+    ) as [number, number];
+  };
+  const widthFits = (fontSize: number) => {
+    const [first, second] = needs(fontSize);
+    return first + second + COVER_COLUMN_GAP <= inner;
+  };
+  const count = Math.max(1, box.rows.length);
+  const fullHeadline = headlineSizeFor(measure, box.headline, headlineMax);
+
+  // 일정 상자는 가장 긴 줄이 한 줄에 들어가는 크기까지 줄이고(24px 까지), 그래도 길면 줄을 바꾼다.
+  const schedule = (box.schedule ?? []).filter((line) => line.trim());
+  const scheduleWidth = CONTENT_WIDTH - COVER_SCHEDULE_PAD_X * 2;
+  let scheduleSize = schedule.length > 0 ? Math.round((square ? 32 : 36) * box.bodyScale) : 0;
+  while (
+    scheduleSize > 24 &&
+    schedule.some((line) => measure(line, scheduleSize, COVER_SCHEDULE_WEIGHT) > scheduleWidth)
+  ) {
+    scheduleSize -= 1;
+  }
+  const scheduleHeight =
+    schedule.length > 0
+      ? COVER_SCHEDULE_GAP +
+        COVER_SCHEDULE_PAD_Y * 2 +
+        Math.round(
+          schedule.reduce(
+            (sum, line) =>
+              sum + lineCount(measure, line, scheduleSize, COVER_SCHEDULE_WEIGHT, scheduleWidth),
+            0,
+          ) *
+            scheduleSize *
+            COVER_SCHEDULE_LINE_HEIGHT,
+        )
+      : 0;
+
+  const fit = (headlineScale: number, rowMin: number) => {
+    const headlineSize = Math.max(52, Math.round(fullHeadline * headlineScale * box.headlineScale));
+    const fixed =
+      padTop +
+      HEADER_HEIGHT +
+      BASE_HEADLINE_GAP +
+      headlineHeight(box.headline, headlineSize) +
+      COVER_DEADLINE_GAP +
+      deadlineHeight +
+      COVER_TABLE_GAP +
+      COVER_TABLE_PAD_Y * 2 +
+      chipHeight(headSizeOf(rowBase)) +
+      COVER_HEAD_GAP +
+      FOOTER_HEIGHT +
+      scheduleHeight +
+      padBottom;
+    const available = size.height - fixed;
+    let rowSize = Math.min(rowBase, Math.floor(available / (count * COVER_ROW_PITCH_MIN)));
+    while (rowSize > rowMin && !widthFits(rowSize)) {
+      rowSize -= 1;
+    }
+    const fits = rowSize >= rowMin && widthFits(rowSize);
+    return { headlineSize, available, rowSize: Math.max(rowMin, rowSize), fits };
+  };
+
+  const tiers: [number, number][] = [
+    [1, COVER_ROW_MIN],
+    [0.86, COVER_ROW_MIN],
+    [0.74, COVER_ROW_MIN],
+    [0.74, COVER_ROW_FLOOR],
+  ];
+  let chosen = fit(1, COVER_ROW_MIN);
+  for (const [headlineScale, rowMin] of tiers.slice(1)) {
+    if (chosen.fits) {
+      break;
+    }
+    chosen = fit(headlineScale, rowMin);
+  }
+  const { headlineSize, available, rowSize, fits } = chosen;
+  const need = needs(rowSize);
+  const spare = Math.max(0, (inner - need[0] - need[1]) / 2);
+  const cellWidths: [number, number] = [Math.floor(need[0] + spare), Math.floor(need[1] + spare)];
+  const rowPitch = Math.round(
+    Math.min(
+      rowSize * COVER_ROW_PITCH_MAX,
+      Math.max(rowSize * COVER_ROW_PITCH_MIN, available / count),
+    ),
+  );
+  return {
+    padTop,
+    padBottom,
+    headlineSize,
+    headlineGap: BASE_HEADLINE_GAP,
+    deadlineSize,
+    deadlineGap: COVER_DEADLINE_GAP,
+    tableGap: COVER_TABLE_GAP,
+    headSize: headSizeOf(rowBase),
+    headGap: COVER_HEAD_GAP,
+    rowSize,
+    rowPitch,
+    cellWidths,
+    scheduleSize,
+    overflow: !fits || rowPitch * count > available + 1,
+  };
+}
+
+/**
+ * 묶음 공고 장의 회사 블록 배치(여러 회사 묶음 예시). 회사마다 가운데 로고, 브랜드색 머리띠, 흰 카드 안 2열
+ * 표다. 렌더(`CompaniesSlide`)와 한 장에 회사를 몇 곳 넣을지 고르는 쪽(`../card/bundle.ts`)이 같은 치수를 쓴다.
+ */
+/**
+ * 회사 로고 상자. 회사마다 로고 모양이 달라도 같은 높이·최대 폭 상자에 맞춰(contain) 크기를 고르게 한다. 로고가
+ * 없으면 회사명 글자를 이 높이에 맞춘다.
+ */
+export const COMPANY_LOGO_HEIGHT = 84;
+export const COMPANY_LOGO_MAX_WIDTH = 300;
+export const COMPANY_LOGO_GAP = 24;
+/** 머리띠 글자 크기와 위아래 여백. */
+export const COMPANY_BAND_SIZE = 36;
+export const COMPANY_BAND_PAD_Y = 12;
+/** 표 안쪽 여백(옆, 위, 아래)과 머리 칩 아래 간격, 두 열 사이. */
+export const COMPANY_TABLE_PAD_X = 28;
+export const COMPANY_TABLE_PAD_TOP = 30;
+export const COMPANY_TABLE_PAD_BOTTOM = 18;
+export const COMPANY_HEAD_GAP = 8;
+export const COMPANY_COLUMN_GAP = 24;
+/** 표 줄 위아래 여백(글자 크기에 곱한다)과 줄 사이 구분선 두께. */
+export const COMPANY_ROW_PAD = 0.62;
+/** 남는 높이로 줄 위아래 여백을 늘릴 때의 최대(글자 크기에 곱한다). */
+const COMPANY_ROW_PAD_MAX = 1.05;
+export const COMPANY_RULE = 2;
+export const COMPANY_ROW_LINE_HEIGHT = 1.3;
+/** 머리 칩 테두리 두께. 칩은 흰 바탕에 브랜드색 테두리다. */
+export const OUTLINE_CHIP_BORDER = 3;
+/** 블록 사이, 장 위 여백에서 첫 블록까지(오른쪽 위 브랜드 로고 자리). */
+export const COMPANY_BLOCK_GAP = 44;
+export const BUNDLE_TOP_GAP = 52;
+/** 표 줄 글자의 최소 크기. 한 장에 회사 둘을 넣을지 고를 때는 이보다 크게 들어가야 둘을 넣는다. */
+const COMPANY_ROW_FLOOR = 22;
+export const COMPANY_PACK_MIN = 26;
+
+/** 회사 블록 하나의 표 칸 폭. */
+export const COMPANY_CELL_WIDTH = Math.floor(
+  (CONTENT_WIDTH - COMPANY_TABLE_PAD_X * 2 - COMPANY_COLUMN_GAP) / 2,
+);
+
+/** 표 머리 칩 글자 크기. 줄 글자보다 조금 작다. */
+export function companyHeadSize(rowSize: number): number {
+  return Math.round(rowSize * 0.94);
+}
+
+/** 흰 바탕 테두리 칩의 높이. */
+export function outlineChipHeight(fontSize: number): number {
+  return chipHeight(fontSize) + OUTLINE_CHIP_BORDER * 2;
+}
+
+export interface CompaniesMetrics {
+  padTop: number;
+  padBottom: number;
+  rowSize: number;
+  /** 표 줄 위아래 여백(px). 남는 높이가 있으면 늘린다. */
+  rowPad: number;
+  /** 블록마다 줄마다의 줄 수(칸 둘 중 많은 쪽). */
+  rowLines: number[][];
+  /** 위 로고 자리 아래에서 첫 블록까지, 블록 사이. 남는 높이를 블록 위·사이·아래에 똑같이 나눈다. */
+  blockTop: number;
+  blockGap: number;
+  overflow: boolean;
+}
+
+/** 회사 블록 하나의 높이. */
+function companyBlockHeight(rowSize: number, rowPad: number, lines: number[]): number {
+  const band = Math.round(COMPANY_BAND_SIZE * 1.2) + COMPANY_BAND_PAD_Y * 2;
+  const rows = lines.reduce(
+    (sum, count) => sum + Math.round(count * rowSize * COMPANY_ROW_LINE_HEIGHT) + rowPad * 2,
+    0,
+  );
+  return (
+    COMPANY_LOGO_HEIGHT +
+    COMPANY_LOGO_GAP +
+    band +
+    COMPANY_TABLE_PAD_TOP +
+    outlineChipHeight(companyHeadSize(rowSize)) +
+    COMPANY_HEAD_GAP +
+    rows +
+    Math.max(0, lines.length - 1) * COMPANY_RULE +
+    COMPANY_TABLE_PAD_BOTTOM
+  );
+}
+
+/**
+ * 회사 블록 배치의 글자 크기. 표 줄 글자는 4:5 기준 30px 에서 시작해 블록이 장에 다 들어가는 크기까지
+ * 줄인다(칸에서 넘치는 글은 줄을 바꾼다). 22px 로도 넘치면 `overflow` 다.
+ *
+ * 들어가고 남는 높이는 절반까지 표 줄 여백을 늘리는 데 쓰고(글자의 1.05배까지), 나머지는 블록 위·사이·아래에
+ * 똑같이 나눈다 — 블록이 위에 몰리지 않고 하나뿐이면 세로 가운데다.
+ */
+export function measureCompanies(
+  measure: Measure,
+  size: CardSize,
+  blocks: { rows: [string, string][] }[],
+  bodyScale: number,
+): CompaniesMetrics {
+  const story = size.height > size.width * 1.5;
+  const square = size.height <= size.width;
+  const padTop = slidePadTop(size);
+  const padBottom = story ? 230 : square ? 40 : 56;
+  const base = Math.round((square ? 28 : story ? 32 : 30) * bodyScale);
+  const available =
+    size.height -
+    padTop -
+    BUNDLE_TOP_GAP -
+    padBottom -
+    Math.max(0, blocks.length - 1) * COMPANY_BLOCK_GAP;
+  const linesAt = (rowSize: number) =>
+    blocks.map((block) =>
+      (block.rows.length > 0 ? block.rows : [['', ''] as [string, string]]).map((cells) =>
+        Math.max(
+          ...cells.map((cell) =>
+            lineCount(measure, cell.trim() || '-', rowSize, COVER_ROW_WEIGHT, COMPANY_CELL_WIDTH),
+          ),
+        ),
+      ),
+    );
+  const heightAt = (rowSize: number, rowPad: number, lines: number[][]) =>
+    lines.reduce((sum, block) => sum + companyBlockHeight(rowSize, rowPad, block), 0);
+  const floor = Math.min(base, Math.round(COMPANY_ROW_FLOOR * bodyScale));
+  for (let rowSize = base; rowSize >= floor; rowSize -= 1) {
+    const lines = linesAt(rowSize);
+    const basePad = Math.round(rowSize * COMPANY_ROW_PAD);
+    const baseSlack = available - heightAt(rowSize, basePad, lines);
+    if (baseSlack < 0) {
+      continue;
+    }
+    const rows = lines.flat().length;
+    const rowPad = Math.min(
+      Math.round(rowSize * COMPANY_ROW_PAD_MAX),
+      basePad + Math.floor((baseSlack * 0.5) / Math.max(1, rows * 2)),
+    );
+    const unit = Math.floor((available - heightAt(rowSize, rowPad, lines)) / (blocks.length + 1));
+    return {
+      padTop,
+      padBottom,
+      rowSize,
+      rowPad,
+      rowLines: lines,
+      blockTop: unit,
+      blockGap: COMPANY_BLOCK_GAP + unit,
+      overflow: false,
+    };
+  }
+  return {
+    padTop,
+    padBottom,
+    rowSize: floor,
+    rowPad: Math.round(floor * COMPANY_ROW_PAD),
+    rowLines: linesAt(floor),
+    blockTop: 0,
+    blockGap: COMPANY_BLOCK_GAP,
+    overflow: true,
+  };
+}
+
+/**
+ * 묶음 공고 장의 2열 카드 배치(한 회사 여러 직무 묶음 예시). 장 맨 위 가운데 회사 로고, 공고마다 검정 머리띠와
+ * 흰 카드 안 두 열(왼쪽 담당 업무, 오른쪽 자격·우대 요건)이다. 렌더(`ColumnsSlide`)와 한 장에 공고를 몇 개
+ * 넣을지 고르는 쪽(`../card/bundle.ts`)이 같은 치수를 쓴다.
+ */
+export const COLUMNS_LOGO_HEIGHT = 112;
+export const COLUMNS_LOGO_GAP = 36;
+export const COLUMNS_BAND_SIZE = 40;
+export const COLUMNS_BAND_PAD_Y = 16;
+export const COLUMNS_CARD_PAD_X = 40;
+export const COLUMNS_CARD_PAD_Y = 36;
+export const COLUMNS_GAP = 32;
+/** 왼쪽 열 폭. 오른쪽 열은 남은 폭이다. */
+export const COLUMNS_LEFT_WIDTH = 430;
+export const COLUMNS_RIGHT_WIDTH =
+  CONTENT_WIDTH - COLUMNS_CARD_PAD_X * 2 - COLUMNS_LEFT_WIDTH - COLUMNS_GAP;
+export const COLUMNS_CARD_GAP = 40;
+/** 칩과 목록 사이, 오른쪽 열 섹션 사이(글자 크기에 곱한다). */
+export const COLUMNS_CHIP_GAP = 0.5;
+export const COLUMNS_SECTION_GAP = 0.9;
+/** 목록 굵기. 왼쪽(담당 업무)은 굵게, 오른쪽은 보통이다(예시처럼). */
+export const COLUMNS_LEFT_WEIGHT = 700;
+export const COLUMNS_RIGHT_WEIGHT = 500;
+export const COLUMNS_LINE_HEIGHT = 1.5;
+const COLUMNS_FLOOR = 20;
+/** 한 장에 둘을 넣을지 고를 때는 목록 글자가 이보다 크게 들어가야 둘을 넣는다. */
+export const COLUMNS_PACK_MIN = 24;
+
+/** 2열 카드의 칩 글자 크기. */
+export function columnsChipSize(bodySize: number): number {
+  return Math.round(bodySize * 1.08);
+}
+
+export interface ColumnsMetrics {
+  padTop: number;
+  padBottom: number;
+  bodySize: number;
+  overflow: boolean;
+}
+
+/** 열 하나(칩 + 점 목록 섹션들)의 높이. */
+function columnHeight(
+  measure: Measure,
+  sections: CardSection[],
+  size: number,
+  weight: number,
+  width: number,
+): number {
+  const visible = visibleSections(sections);
+  return visible.reduce(
+    (sum, items, index) =>
+      sum +
+      (index > 0 ? Math.round(size * COLUMNS_SECTION_GAP) : 0) +
+      outlineChipHeight(columnsChipSize(size)) +
+      Math.round(size * COLUMNS_CHIP_GAP) +
+      items.reduce(
+        (lines, item) =>
+          lines +
+          lineCount(measure, item, size, weight, width - BULLET_INDENT) *
+            size *
+            COLUMNS_LINE_HEIGHT,
+        0,
+      ),
+    0,
+  );
+}
+
+/** 2열 카드 하나의 높이. */
+function columnsCardHeight(
+  measure: Measure,
+  card: { left: CardSection[]; right: CardSection[] },
+  size: number,
+): number {
+  const band = Math.round(COLUMNS_BAND_SIZE * 1.2) + COLUMNS_BAND_PAD_Y * 2;
+  const body = Math.max(
+    columnHeight(measure, card.left, size, COLUMNS_LEFT_WEIGHT, COLUMNS_LEFT_WIDTH),
+    columnHeight(measure, card.right, size, COLUMNS_RIGHT_WEIGHT, COLUMNS_RIGHT_WIDTH),
+  );
+  return band + COLUMNS_CARD_PAD_Y * 2 + Math.round(body);
+}
+
+/**
+ * 2열 카드 배치의 목록 글자 크기. 4:5 기준 28px 에서 시작해 카드가 장에 다 들어가는 크기까지 줄인다. 20px 로도
+ * 넘치면 `overflow` 다.
+ */
+export function measureColumns(
+  measure: Measure,
+  size: CardSize,
+  cards: { left: CardSection[]; right: CardSection[] }[],
+  bodyScale: number,
+): ColumnsMetrics {
+  const story = size.height > size.width * 1.5;
+  const square = size.height <= size.width;
+  const padTop = slidePadTop(size);
+  const padBottom = story ? 230 : square ? 40 : 56;
+  const base = Math.round((square ? 26 : story ? 30 : 28) * bodyScale);
+  const available =
+    size.height -
+    padTop -
+    BUNDLE_TOP_GAP -
+    COLUMNS_LOGO_HEIGHT -
+    COLUMNS_LOGO_GAP -
+    padBottom -
+    Math.max(0, cards.length - 1) * COLUMNS_CARD_GAP;
+  const floor = Math.min(base, Math.round(COLUMNS_FLOOR * bodyScale));
+  for (let bodySize = base; bodySize >= floor; bodySize -= 1) {
+    const height = cards.reduce((sum, card) => sum + columnsCardHeight(measure, card, bodySize), 0);
+    if (height <= available) {
+      return { padTop, padBottom, bodySize, overflow: false };
+    }
+  }
+  return { padTop, padBottom, bodySize: floor, overflow: true };
+}

@@ -42,12 +42,13 @@ function parseArguments(raw: string): Record<string, unknown> {
 async function callAssistant(
   messages: ApiMessage[],
   screen: string,
+  request: string,
   signal: AbortSignal,
 ): Promise<{ content: string | null; tool_calls?: ToolCall[] }> {
   const response = await fetch('/api/assistant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, screen }),
+    body: JSON.stringify({ messages, screen, request }),
     signal,
   });
   const body = (await response.json().catch(() => ({}))) as {
@@ -92,7 +93,13 @@ export function useAssistantChat(context: ToolContext) {
 
       try {
         for (let round = 0; ; round += 1) {
-          const reply = await callAssistant(messages, describeScreen(context), controller.signal);
+          // 시작할 때 적은 요청사항은 매 호출의 시스템 맥락이다.
+          const reply = await callAssistant(
+            messages,
+            describeScreen(context),
+            context.readLoaded()?.doc.request ?? '',
+            controller.signal,
+          );
           if (!reply.tool_calls?.length) {
             messages.push({ role: 'assistant', content: reply.content });
             setLines((current) => [...current, { kind: 'assistant', text: reply.content ?? '' }]);

@@ -4,6 +4,12 @@ import type { CardSettings } from '../card/types';
 /** 로고에서 색을 못 뽑았을 때(흑백 로고 등)의 바탕. 오공고 인스타 계정의 민트다. */
 export const FALLBACK_COLOR = '#9CF6EE';
 
+/**
+ * 여러 회사 묶음의 처음 브랜드색. 한 회사 로고 색을 묶음 전체에 쓰면 그 회사 게시물처럼 보여 오공고 파랑으로
+ * 시작한다(오공고 웹 `theme_color`, 오공고 심볼 색).
+ */
+export const OGONGGO_COLOR = '#4A76FF';
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -105,7 +111,18 @@ export interface ProcessedLogo {
   aspect: number;
 }
 
-export async function processLogo(dataUrl: string, color?: string): Promise<ProcessedLogo> {
+/**
+ * 빈 테두리를 자를 때 로고로 보는 픽셀의 알파. `strict` 는 거의 불투명한 픽셀만 본다 — 흰 판 로고 둘레의 옅은
+ * 회색 테두리 선(농심 로고)을 로고로 잡아 로고가 작아지는 것을 막는다. 회사 블록의 회사 로고에만 쓴다(다른
+ * 자리의 그림이 바뀌지 않게).
+ */
+const TRIM_ALPHA = { loose: 24, strict: 200 } as const;
+
+export async function processLogo(
+  dataUrl: string,
+  color?: string,
+  trim: keyof typeof TRIM_ALPHA = 'loose',
+): Promise<ProcessedLogo> {
   const image = await loadImage(dataUrl);
   const scale = Math.min(1, 800 / Math.max(image.width, image.height));
   const width = Math.max(1, Math.round(image.width * scale));
@@ -154,7 +171,7 @@ export async function processLogo(dataUrl: string, color?: string): Promise<Proc
       [data[offset], data[offset + 1], data[offset + 2]] = tint;
     }
     data[offset + 3] = alpha;
-    if (alpha > 24) {
+    if (alpha > TRIM_ALPHA[trim]) {
       const x = pixel % width;
       const y = Math.floor(pixel / width);
       left = Math.min(left, x);
@@ -176,7 +193,7 @@ export async function processLogo(dataUrl: string, color?: string): Promise<Proc
       }
     }
     if (covered / ((right - left + 1) * (bottom - top + 1)) > 0.6) {
-      return processLogo(dataUrl);
+      return processLogo(dataUrl, undefined, trim);
     }
   }
   context.putImageData(pixels, 0, 0);

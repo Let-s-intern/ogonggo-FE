@@ -1,4 +1,5 @@
 import { type AiDraft, type DraftResult, generateDraft } from '@/lib/ai/draft';
+import { RATE_LIMIT_MESSAGE, allowDraft, clientIp } from '@/lib/server/draftLimit';
 import { fetchJob } from '@/lib/server/ogonggo';
 
 /**
@@ -6,28 +7,13 @@ import { fetchJob } from '@/lib/server/ogonggo';
  *
  * - 실제 공고 번호일 때만 모델을 부른다.
  * - 추가 지시 없는 첫 초안은 공고별로 하루 동안 다시 쓴다.
- * - IP 마다 10분에 20번까지 부른다.
+ * - IP 마다 10분에 20번까지 부른다(묶음 초안과 합쳐서, `@/lib/server/draftLimit`).
  *
  * 둘 다 서버 인스턴스의 메모리라 인스턴스가 바뀌면 비워진다. 로그인을 붙이기 전까지의 최소한이다.
  */
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT = 20;
 
 const cache = new Map<number, { at: number; result: DraftResult }>();
-const calls = new Map<string, number[]>();
-
-function allow(ip: string): boolean {
-  const now = Date.now();
-  const recent = (calls.get(ip) ?? []).filter((at) => now - at < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) {
-    calls.set(ip, recent);
-    return false;
-  }
-  recent.push(now);
-  calls.set(ip, recent);
-  return true;
-}
 
 interface DraftRequest {
   jobId: number;
@@ -53,12 +39,8 @@ export async function POST(request: Request) {
     return Response.json(cached.result);
   }
 
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
-  if (!allow(ip)) {
-    return Response.json(
-      { message: '잠시 뒤에 다시 시도해 주세요. 10분에 20번까지 만들 수 있습니다.' },
-      { status: 429 },
-    );
+  if (!allowDraft(clientIp(request))) {
+    return Response.json({ message: RATE_LIMIT_MESSAGE }, { status: 429 });
   }
 
   const job = await fetchJob(jobId);

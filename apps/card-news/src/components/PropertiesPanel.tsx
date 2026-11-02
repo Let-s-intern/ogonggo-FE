@@ -1,7 +1,7 @@
 'use client';
 
-import { type ChangeEvent, type ReactNode, useId, useState } from 'react';
-import { Button, Input, Tabs, Toggle } from '@ogonggo/ui';
+import { type ChangeEvent, useId, useState } from 'react';
+import { Button, Input, Toggle } from '@ogonggo/ui';
 import {
   type BrandMarkId,
   type CardSettings,
@@ -13,13 +13,16 @@ import {
   LAYER_WEIGHTS,
   type Layer,
   type LogoStyle,
+  type ShapeLayer,
   type TextLayer,
   layerLabel,
+  normalizeAngle,
 } from '@/lib/card/types';
 import { textScale } from '@/lib/card/layout';
 import { fileToDataUrl } from '@/lib/client/image';
 import { PHOTO_OPACITY } from '@/lib/client/useCardEditor';
 import type { ImageCandidates } from '@/lib/server/images';
+import type { AlignKind } from './EditorCanvas';
 import { ColorField, Segmented } from './fields';
 import { ImagePicker } from './ImagePicker';
 
@@ -29,6 +32,8 @@ interface PropertiesPanelProps {
   /** 로고에서 뽑은 대표 색. 없으면 로고가 흑백이었거나 로고가 없다. */
   brandColor: string | null;
   onResetBrandColor: () => void;
+  /** 여러 회사 묶음. 브랜드색을 로고 색이 아니라 오공고 색으로 되돌린다. */
+  multiCompany?: boolean;
   logo?: string;
   onLogoChange: (logo: string | undefined) => void;
   /** 브랜드 로고를 올린 이미지로. `null` 이면 올린 로고를 지운다. */
@@ -50,16 +55,71 @@ interface PropertiesPanelProps {
   onLayerRemove: (layer: Layer) => void;
   /** 칠하는 순서를 옮긴다. 1 이면 앞으로(위로), -1 이면 뒤로. */
   onLayerOrder: (layer: Layer, step: number) => void;
-  /** AI 탭 내용(`AssistantPanel`). */
-  assistant: ReactNode;
+  /** 고른 요소를 장 기준으로 맞춘다. */
+  onAlign: (kind: AlignKind) => void;
+  /** 고른 글이 이어진 공고 값·문구 칸 이름(`모집 분야`). 없으면 그리지 않는다. */
+  valueLabel?: string;
+  /** 보고 있는 장이 묶음 공고 장이면 공고별 장 틀을 쓰는지와 떼고 붙이는 동작. 아니면 없다. */
+  jobTemplate?: JobTemplateControl;
 }
 
-type PanelTab = 'properties' | 'ai';
+export interface JobTemplateControl {
+  detached: boolean;
+  onDetach: () => void;
+  onAttach: () => void;
+}
 
-const PANEL_TABS: { value: PanelTab; label: string }[] = [
-  { value: 'properties', label: '속성' },
-  { value: 'ai', label: 'AI' },
+/** 묶음 공고 장의 틀 공유 상태. 틀을 쓰면 `이 장만 따로`, 뗀 장이면 `틀로 되돌리기`. */
+function JobTemplateSection({ detached, onDetach, onAttach }: JobTemplateControl) {
+  return (
+    <section className="flex flex-col gap-2 border-b border-gray-100 p-4">
+      <h2 className="text-base font-bold">공고별 장 틀</h2>
+      <p className="text-xs text-gray-500">
+        {detached
+          ? '이 장은 틀에서 떼어 따로 고칩니다. 되돌리면 이 장에서 옮긴 자리는 버리고 틀을 따릅니다.'
+          : '로고·머리 카드·표를 옮기거나 크기를 바꾸면 다른 공고 장도 같이 바뀝니다. 자유 요소와 문구는 장마다 따로입니다.'}
+      </p>
+      <Button type="button" size="sm" variant="secondary" onClick={detached ? onAttach : onDetach}>
+        {detached ? '틀로 되돌리기' : '이 장만 따로'}
+      </Button>
+    </section>
+  );
+}
+
+const ALIGN_BUTTONS: { kind: AlignKind; label: string }[] = [
+  { kind: 'left', label: '왼쪽' },
+  { kind: 'center', label: '가로 가운데' },
+  { kind: 'right', label: '오른쪽' },
+  { kind: 'top', label: '위' },
+  { kind: 'middle', label: '세로 가운데' },
+  { kind: 'bottom', label: '아래' },
 ];
+
+/** 정렬 버튼 6개. 장 가장자리·가운데에 맞춘다. */
+function AlignRow({ onAlign }: { onAlign: (kind: AlignKind) => void }) {
+  return (
+    <section aria-label="정렬" className="grid grid-cols-3 gap-1 border-b border-gray-100 p-4">
+      {ALIGN_BUTTONS.map(({ kind, label }) => (
+        <button
+          key={kind}
+          type="button"
+          aria-label={`${label} 정렬`}
+          onClick={() => onAlign(kind)}
+          className="h-8 rounded-md bg-gray-100 text-xs text-gray-700 hover:bg-gray-200"
+        >
+          {label}
+        </button>
+      ))}
+    </section>
+  );
+}
+
+/** 고른 글이 이어진 값 한 줄(`공고 값: 모집 분야`). */
+function ValueLine({ label }: { label: string }) {
+  return (
+    <p className="rounded-md bg-blue-50 px-2 py-1.5 text-xs text-blue-700">공고 값: {label}</p>
+  );
+}
 
 const HIGHLIGHTS: { value: HighlightPreset; label: string }[] = [
   { value: 'tint', label: '연한 브랜드' },
@@ -75,12 +135,25 @@ const LOGO_STYLES: { value: LogoStyle; label: string }[] = [
   { value: 'plate', label: '흰 판' },
 ];
 
-const BRAND_MARKS: { value: BrandMarkId; label: string }[] = [
+/** 브랜드 로고 첫 줄. 오공고 셋(`ogonggo*`)은 `오공고` 하나로 묶고 둘째 줄에서 고른다. */
+type BrandGroup = 'ogonggo' | 'letscareer' | 'custom' | 'none';
+
+const BRAND_GROUPS: { value: BrandGroup; label: string }[] = [
   { value: 'ogonggo', label: '오공고' },
   { value: 'letscareer', label: '렛츠커리어' },
   { value: 'custom', label: '올린 로고' },
   { value: 'none', label: '숨김' },
 ];
+
+const OGONGGO_MARKS: { value: BrandMarkId; label: string }[] = [
+  { value: 'ogonggo', label: '글자 포함' },
+  { value: 'ogonggoSymbol', label: '심볼만' },
+  { value: 'ogonggoClassic', label: '옛 로고' },
+];
+
+function brandGroup(mark: BrandMarkId): BrandGroup {
+  return mark === 'ogonggoSymbol' || mark === 'ogonggoClassic' ? 'ogonggo' : mark;
+}
 
 /** 제목 배율이 걸리는 요소와 본문 배율이 걸리는 요소. 고르면 그 글자 크기 슬라이더가 보인다. */
 const HEADLINE_ELEMENTS: ElementId[] = ['headline', 'roleTitle', 'ctaHeadline', 'ctaSub'];
@@ -212,9 +285,11 @@ function ElementProperties({
   onUnfold,
   settings,
   onSettingsChange,
+  valueLabel,
 }: {
   id: ElementId;
   label: string;
+  valueLabel?: string;
   edit: ElementEdit;
   onEdit: (edit: ElementEdit | null, group?: string) => void;
   onDeselect: () => void;
@@ -228,7 +303,7 @@ function ElementProperties({
       ? (['body'] as const)
       : null;
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
+    <section className="flex flex-col gap-4 border-b border-gray-100 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold">{label}</h2>
         <Button type="button" size="sm" variant="ghost" onClick={onDeselect}>
@@ -239,6 +314,8 @@ function ElementProperties({
         캔버스에서 끌어 옮기고 모서리로 크기를 바꿉니다. 방향키로 1px, Shift 와 함께 10px 씩
         옮깁니다. 같은 자리를 다시 누르면 안쪽 요소를, Esc 는 바깥 요소를 고릅니다.
       </p>
+
+      {valueLabel ? <ValueLine label={valueLabel} /> : null}
 
       {text ? (
         <div className="flex flex-col gap-3">
@@ -272,6 +349,21 @@ function ElementProperties({
           />
         </div>
       </div>
+
+      {text ? (
+        <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+          <span className="text-sm text-gray-700">강조 상자·칩 색</span>
+          <Segmented
+            label="강조 상자·칩 색"
+            options={HIGHLIGHTS}
+            value={settings.highlight}
+            onChange={(highlight) => onSettingsChange({ highlight })}
+          />
+          <p className="text-xs text-gray-500">
+            *단어* 강조 상자와 칩에 모든 장 같이 걸립니다. `브랜드색` 은 브랜드색을 따라갑니다.
+          </p>
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
         <Toggle
@@ -307,15 +399,23 @@ const ALIGNS: { value: TextLayer['align']; label: string }[] = [
 
 const WEIGHTS = LAYER_WEIGHTS.map((weight) => ({ value: String(weight), label: String(weight) }));
 
-/** 고른 자유 요소의 값. 글자는 크기·굵기·색·정렬·줄 간격, 이미지는 투명도·모서리. 둘 다 자리와 크기, 순서. */
+/**
+ * 고른 자유 요소의 값. 글자는 크기·굵기·색·정렬·줄 간격, 이미지는 투명도·모서리, 도형은 채움·테두리·투명도·
+ * 모서리. 모두 자리와 크기, 순서.
+ */
 function LayerProperties({
   layer,
   onChange,
   onRemove,
   onOrder,
   onDeselect,
+  valueLabel,
+  brandColor,
 }: {
   layer: Layer;
+  valueLabel?: string;
+  /** 채움의 `브랜드색` 버튼이 넣는 색. */
+  brandColor: string;
   onChange: (layer: Layer, group?: string) => void;
   onRemove: (layer: Layer) => void;
   onOrder: (layer: Layer, step: number) => void;
@@ -325,8 +425,11 @@ function LayerProperties({
     layer.kind === 'text' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
   const setImage = (patch: Partial<ImageLayer>, group: string) =>
     layer.kind === 'image' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
+  const setShape = (patch: Partial<ShapeLayer>, group: string) =>
+    layer.kind === 'shape' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
+  const line = layer.kind === 'shape' && layer.shape === 'line';
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
+    <section className="flex flex-col gap-4 border-b border-gray-100 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold">{layerLabel(layer)}</h2>
         <Button type="button" size="sm" variant="ghost" onClick={onDeselect}>
@@ -336,12 +439,61 @@ function LayerProperties({
       <p className="-mt-2 text-xs text-gray-500">
         {layer.kind === 'text'
           ? '캔버스에서 두 번 누르면 글자를 바로 고칩니다. 모서리로 폭을 바꾸면 줄이 다시 나뉩니다.'
-          : '모서리로 비율을 지키며 크기를 바꿉니다.'}{' '}
-        Ctrl+C·Ctrl+V 로 복사, Ctrl+D 로 복제, Delete 로 지웁니다.
+          : line
+            ? '모서리로 길이를 바꿉니다.'
+            : '모서리로 비율을 지키며 크기를 바꿉니다.'}{' '}
+        위 동그라미를 끌어 돌리고 Shift 를 누르면 15° 씩 돕니다. Ctrl+C·Ctrl+V 로 복사, Ctrl+D 로
+        복제, Delete 로 지웁니다.
       </p>
 
+      {valueLabel ? <ValueLine label={valueLabel} /> : null}
+
+      <div className="grid grid-cols-2 gap-2">
+        <OffsetField
+          label="X(px)"
+          value={layer.x}
+          onChange={(x) => onChange({ ...layer, x }, `offset:${layer.id}`)}
+        />
+        <OffsetField
+          label="Y(px)"
+          value={layer.y}
+          onChange={(y) => onChange({ ...layer, y }, `offset:${layer.id}`)}
+        />
+        <OffsetField
+          label="폭(px)"
+          value={layer.width}
+          min={20}
+          onChange={(width) => onChange({ ...layer, width }, `size:${layer.id}`)}
+        />
+        {layer.kind === 'image' ? (
+          <OffsetField
+            label="높이(px)"
+            value={layer.height}
+            min={1}
+            onChange={(height) => setImage({ height }, 'size')}
+          />
+        ) : null}
+        {layer.kind === 'shape' && !line ? (
+          <OffsetField
+            label="높이(px)"
+            value={layer.height}
+            min={1}
+            onChange={(height) => setShape({ height }, 'size')}
+          />
+        ) : null}
+        <OffsetField
+          label="회전(°)"
+          value={layer.rotation ?? 0}
+          onChange={(degrees) => {
+            const { rotation: _previous, ...rest } = layer;
+            const rotation = normalizeAngle(degrees);
+            onChange(rotation ? { ...rest, rotation } : rest, `rotate:${layer.id}`);
+          }}
+        />
+      </div>
+
       {layer.kind === 'text' ? (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
           <OffsetField
             label="글자 크기(px)"
             value={layer.fontSize}
@@ -378,9 +530,46 @@ function LayerProperties({
             max={250}
             onChange={(lineHeight) => setText({ lineHeight }, 'lineHeight')}
           />
+          <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+            <Toggle
+              checked={Boolean(layer.background)}
+              onChange={(on) =>
+                on
+                  ? setText({ background: brandColor }, 'background')
+                  : onChange({ ...layer, background: undefined, radius: undefined })
+              }
+              label="채움"
+            />
+            {layer.background ? (
+              <>
+                <ColorField
+                  label="채움 색"
+                  value={layer.background}
+                  onChange={(background) => setText({ background }, 'background')}
+                />
+                <span className="flex items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setText({ background: brandColor }, 'background')}
+                  >
+                    브랜드색
+                  </Button>
+                  <Toggle
+                    checked={(layer.radius ?? 0) > 0}
+                    onChange={(round) => setText({ radius: round ? 999 : 0 }, 'radius')}
+                    label="칩 모양"
+                  />
+                </span>
+              </>
+            ) : null}
+          </div>
         </div>
+      ) : layer.kind === 'shape' ? (
+        <ShapeFields layer={layer} brandColor={brandColor} onChange={setShape} />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
           <PercentSlider
             label="투명도"
             value={layer.opacity}
@@ -397,31 +586,14 @@ function LayerProperties({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-3">
-        <OffsetField
-          label="X(px)"
-          value={layer.x}
-          onChange={(x) => onChange({ ...layer, x }, `offset:${layer.id}`)}
+      <div className="border-t border-gray-100 pt-3">
+        <Toggle
+          checked={Boolean(layer.behind)}
+          onChange={(behind) =>
+            onChange({ ...layer, behind: behind || undefined }, `behind:${layer.id}`)
+          }
+          label="템플릿 뒤에 깔기"
         />
-        <OffsetField
-          label="Y(px)"
-          value={layer.y}
-          onChange={(y) => onChange({ ...layer, y }, `offset:${layer.id}`)}
-        />
-        <OffsetField
-          label="폭(px)"
-          value={layer.width}
-          min={20}
-          onChange={(width) => onChange({ ...layer, width }, `size:${layer.id}`)}
-        />
-        {layer.kind === 'image' ? (
-          <OffsetField
-            label="높이(px)"
-            value={layer.height}
-            min={1}
-            onChange={(height) => setImage({ height }, 'size')}
-          />
-        ) : null}
       </div>
 
       <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
@@ -441,26 +613,122 @@ function LayerProperties({
   );
 }
 
-/**
- * 오른쪽 패널. `속성 | AI` 탭이다. AI 탭은 숨겨도 계속 그려 대화와 진행 중인 요청이 남는다.
- */
-export function PropertiesPanel({ assistant, ...props }: PropertiesPanelProps) {
-  const [tab, setTab] = useState<PanelTab>('properties');
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="rounded-2xl bg-white px-2 shadow-sm">
-        <Tabs items={PANEL_TABS} value={tab} onValueChange={setTab} aria-label="오른쪽 패널" />
+/** 도형의 채움·테두리·투명도·모서리. 선은 색·굵기·투명도·끝 둥글기다. */
+function ShapeFields({
+  layer,
+  brandColor,
+  onChange,
+}: {
+  layer: ShapeLayer;
+  brandColor: string;
+  onChange: (patch: Partial<ShapeLayer>, group: string) => void;
+}) {
+  if (layer.shape === 'line') {
+    return (
+      <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
+        <ColorField
+          label="선 색"
+          value={layer.fill ?? '#111111'}
+          onChange={(fill) => onChange({ fill }, 'fill')}
+        />
+        <OffsetField
+          label="굵기(px)"
+          value={layer.height}
+          min={1}
+          onChange={(height) => onChange({ height }, 'size')}
+        />
+        <PercentSlider
+          label="투명도"
+          value={layer.opacity}
+          min={0}
+          max={100}
+          onChange={(opacity) => onChange({ opacity }, 'opacity')}
+        />
+        <Toggle
+          checked={layer.radius > 0}
+          onChange={(round) => onChange({ radius: round ? 999 : 0 }, 'radius')}
+          label="끝 둥글게"
+        />
       </div>
-      {tab === 'properties' ? <Properties {...props} /> : null}
-      <section hidden={tab !== 'ai'} className="rounded-2xl bg-white p-4 shadow-sm">
-        {assistant}
-      </section>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
+      <Toggle
+        checked={Boolean(layer.fill)}
+        onChange={(on) => onChange({ fill: on ? brandColor : undefined }, 'fill')}
+        label="채움"
+      />
+      {layer.fill ? (
+        <ColorField
+          label="채움 색"
+          value={layer.fill}
+          onChange={(fill) => onChange({ fill }, 'fill')}
+        />
+      ) : null}
+      <Toggle
+        checked={Boolean(layer.stroke) && layer.strokeWidth > 0}
+        onChange={(on) =>
+          onChange(
+            on
+              ? { stroke: layer.stroke ?? '#111111', strokeWidth: layer.strokeWidth || 6 }
+              : { stroke: undefined, strokeWidth: 0 },
+            'stroke',
+          )
+        }
+        label="테두리"
+      />
+      {layer.stroke && layer.strokeWidth > 0 ? (
+        <>
+          <ColorField
+            label="테두리 색"
+            value={layer.stroke}
+            onChange={(stroke) => onChange({ stroke }, 'stroke')}
+          />
+          <OffsetField
+            label="테두리 굵기(px)"
+            value={layer.strokeWidth}
+            min={1}
+            onChange={(strokeWidth) => onChange({ strokeWidth }, 'strokeWidth')}
+          />
+        </>
+      ) : null}
+      <PercentSlider
+        label="투명도"
+        value={layer.opacity}
+        min={0}
+        max={100}
+        onChange={(opacity) => onChange({ opacity }, 'opacity')}
+      />
+      {layer.shape === 'rect' ? (
+        <OffsetField
+          label="모서리 둥글기(px)"
+          value={layer.radius}
+          min={0}
+          onChange={(radius) => onChange({ radius }, 'radius')}
+        />
+      ) : null}
     </div>
   );
 }
 
 /**
- * 속성 탭. 캔버스에서 아무것도 고르지 않으면 모든 템플릿에 같이 걸리는 공통 설정을, 요소를 고르면 그
+ * 오른쪽 디자인 패널. 탭 없이 하나다 — 묶음 공고 장이면 장 틀, 고른 것이 있으면 정렬과 그 요소의 값
+ * (위치와 크기, 텍스트, 채움·강조 상자 색, 이어진 공고 값), 없으면 공통 설정. 글꼴 고르기는 두지 않는다
+ * (렌더 글꼴은 Pretendard 하나다).
+ */
+export function PropertiesPanel({ jobTemplate, onAlign, ...props }: PropertiesPanelProps) {
+  return (
+    <div className="flex flex-col">
+      {jobTemplate ? <JobTemplateSection {...jobTemplate} /> : null}
+      {props.layer || props.selected ? <AlignRow onAlign={onAlign} /> : null}
+      <Properties {...props} />
+    </div>
+  );
+}
+
+/**
+ * 디자인 패널 본문. 캔버스에서 아무것도 고르지 않으면 모든 템플릿에 같이 걸리는 공통 설정을, 요소를 고르면 그
  * 요소의 값을 보여 준다.
  */
 function Properties({
@@ -468,6 +736,7 @@ function Properties({
   onSettingsChange,
   brandColor,
   onResetBrandColor,
+  multiCompany,
   logo,
   onLogoChange,
   onBrandImage,
@@ -482,11 +751,14 @@ function Properties({
   onLayerChange,
   onLayerRemove,
   onLayerOrder,
-}: Omit<PropertiesPanelProps, 'assistant'>) {
+  valueLabel,
+}: Omit<PropertiesPanelProps, 'jobTemplate' | 'onAlign'>) {
   if (layer) {
     return (
       <LayerProperties
         layer={layer}
+        valueLabel={valueLabel}
+        brandColor={settings.brandColor}
         onChange={onLayerChange}
         onRemove={onLayerRemove}
         onOrder={onLayerOrder}
@@ -505,6 +777,7 @@ function Properties({
         onUnfold={onUnfold}
         settings={settings}
         onSettingsChange={onSettingsChange}
+        valueLabel={valueLabel}
       />
     );
   }
@@ -526,17 +799,19 @@ function Properties({
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
+    <section className="flex flex-col gap-4 border-b border-gray-100 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold">공통 설정</h2>
         <Button type="button" size="sm" variant="ghost" onClick={onResetBrandColor}>
-          로고 색으로 다시 맞추기
+          {multiCompany ? '오공고 색으로 다시 맞추기' : '로고 색으로 다시 맞추기'}
         </Button>
       </div>
       <p className="-mt-2 text-xs text-gray-500">
-        {brandColor
-          ? `로고에서 뽑은 색: ${brandColor}. 여기서 바꾸면 모든 시안에 같이 걸립니다.`
-          : '로고에서 색을 뽑지 못해 기본 민트로 시작했어요.'}
+        {multiCompany
+          ? '여러 회사 묶음은 오공고 색으로 시작했어요. 여기서 바꾸면 모든 시안에 같이 걸립니다.'
+          : brandColor
+            ? `로고에서 뽑은 색: ${brandColor}. 여기서 바꾸면 모든 시안에 같이 걸립니다.`
+            : '로고에서 색을 뽑지 못해 기본 민트로 시작했어요.'}
       </p>
 
       <ColorField
@@ -570,10 +845,23 @@ function Properties({
         <span className="text-sm text-gray-700">브랜드 로고</span>
         <Segmented
           label="브랜드 로고"
-          options={BRAND_MARKS}
-          value={settings.brandMark ?? 'ogonggo'}
-          onChange={(brandMark) => onSettingsChange({ brandMark })}
+          options={BRAND_GROUPS}
+          value={brandGroup(settings.brandMark ?? 'ogonggo')}
+          onChange={(group) => {
+            // 오공고를 다시 눌러도 둘째 줄에서 고른 모양을 지킨다.
+            if (group !== brandGroup(settings.brandMark ?? 'ogonggo')) {
+              onSettingsChange({ brandMark: group });
+            }
+          }}
         />
+        {brandGroup(settings.brandMark ?? 'ogonggo') === 'ogonggo' ? (
+          <Segmented
+            label="오공고 로고 모양"
+            options={OGONGGO_MARKS}
+            value={settings.brandMark ?? 'ogonggo'}
+            onChange={(brandMark) => onSettingsChange({ brandMark })}
+          />
+        ) : null}
         <div className="flex items-center justify-between gap-2">
           {settings.brandImage ? (
             <img src={settings.brandImage.dataUrl} alt="" className="h-8 max-w-28 object-contain" />

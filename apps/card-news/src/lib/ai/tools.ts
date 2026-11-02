@@ -1,7 +1,26 @@
+import {
+  type CardDocument,
+  type DocumentSlide,
+  ROLE_LABELS,
+  slideName,
+  firstJobIndex,
+  slideJobIndices,
+  documentContent,
+  slideVariant,
+  withSlideContent,
+  withTemplate,
+  withSlideEdit,
+  slideEditsOf,
+  withSlideEdits,
+  withSlideLayers,
+  withBackground,
+} from '../card/document';
 import { contentFromDraft, draftFromContent } from '../card/fromJob';
 import { textScale } from '../card/layout';
 import {
+  BACKGROUND_PATTERNS,
   CARD_SIZES,
+  type CardBackground,
   type CardContent,
   type CardSection,
   type CardSettings,
@@ -12,26 +31,31 @@ import {
   LAYER_WEIGHTS,
   type Layer,
   type Selection,
+  type ShapeLayer,
   type TextLayer,
-  SLIDE_COUNT,
   type SlideEdits,
   type VariantId,
   isElementId,
   isLayerRef,
   layerLabel,
   layerRef,
+  normalizeAngle,
 } from '../card/types';
 import { visibleSectionLabels } from '../card/render/slides';
 import { VARIANTS, variantOf } from '../card/variants';
-import type { CardEdits } from '../client/storage';
-import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useCardEditor';
+import {
+  type EditSnapshot,
+  type LoadedCard,
+  fetchCardJob,
+  requestDraft,
+} from '../client/useCardEditor';
 
 /**
  * 편집 비서의 도구 실행기. 모델이 부른 도구를 브라우저에서 편집 상태에 실행한다. 도구의 이름과 인자
  * 모양은 `app/api/assistant/route.ts` 의 `TOOLS` 와 같다.
  *
  * 한 요청(사람이 보낸 말 하나) 안의 변경은 실행 취소 한 단계다 — 처음 바꾸기 전에 한 번만 기록에 쌓고
- * 그 뒤로는 쌓지 않고 바꾼다(`ToolSession`). 고른 템플릿은 기록에 들지 않는다(사람이 고를 때와 같다).
+ * 그 뒤로는 쌓지 않고 바꾼다(`ToolSession`). 템플릿 바꾸기도 문서 변경이라 같이 되돌아간다.
  *
  * 실행기는 모델에게 돌려줄 글(JSON)을 만든다. 실패도 글로 돌려줘 모델이 고치거나 사용자에게 설명하게 한다.
  */
@@ -61,16 +85,21 @@ export interface ToolContext {
   /** 바꾸기 직전 값을 실행 취소 기록에 쌓는다. */
   remember: () => void;
   /** 기록에 쌓지 않고 바꾼다. */
-  apply: (patch: Partial<EditSnapshot>) => void;
+  apply: (doc: EditSnapshot) => void;
+  /** 문서 템플릿. 장에 덮어쓴 템플릿이 있으면 그 장은 그것이다(`slideVariant()`). */
   variant: () => VariantId;
-  pickVariant: (variant: VariantId) => void;
   size: () => CardSizeId;
-  /** 보고 있는 장(0부터)과 고른 요소. */
+  /** 보고 있는 장(문서 장 순서, 0부터)과 고른 요소. */
   slide: () => number;
   selected: () => Selection | null;
-  /** 지금 그려진 세 장의 요소 상자와 넘침. 아직 그려지지 않았으면 `null`. */
+  /** 지금 그려진 문서 장마다의 요소 상자와 넘침. 아직 그려지지 않았으면 `null`. */
   measure: () => SlideMeasure[] | null;
+  /** AI 입력창 위 범위 알약. 범위 밖을 바꾸는 도구는 실행 전에 거절한다(`outOfScope()`). */
+  scope: () => AssistantScope;
 }
+
+/** AI 로 고칠 범위. 고른 요소만, 보고 있는 장만, 모든 장. */
+export type AssistantScope = 'selected' | 'slide' | 'all';
 
 /** 요청 하나 동안 이어지는 실행기 상태. 첫 변경 앞에서만 기록에 쌓는다. */
 export interface ToolSession {
@@ -91,7 +120,14 @@ const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const HIGHLIGHTS = ['tint', 'brand', 'black', 'custom'] as const;
 const LOGO_STYLES = ['auto', 'mono', 'original', 'plate'] as const;
-const BRAND_MARKS = ['ogonggo', 'letscareer', 'custom', 'none'] as const;
+const BRAND_MARKS = [
+  'ogonggo',
+  'ogonggoSymbol',
+  'ogonggoClassic',
+  'letscareer',
+  'custom',
+  'none',
+] as const;
 const TEXT_FIELDS = ['badge', 'headline', 'roleTitle', 'note', 'ctaHeadline', 'ctaSub', 'caption'];
 
 /** 사용자에게 보일 진행 문구. 모델이 무엇을 하고 있는지 채팅 창에 한 줄로 적는다. */
@@ -123,8 +159,12 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return '요소 처음으로';
     case 'add_text':
       return `글자 넣기: ${String(args.text ?? '')}`;
+    case 'add_shape':
+      return `도형 넣기: ${String(args.shape ?? '')}`;
     case 'edit_layers':
       return '자유 요소 바꾸기';
+    case 'set_background':
+      return describeBackgroundCall(args);
     default:
       return name;
   }
@@ -132,14 +172,19 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
 
 /** 모델에게 보내는 지금 화면 한 줄. "이거" 를 풀 때 쓴다. */
 export function describeScreen(context: ToolContext): string {
-  const variant = variantOf(context.variant());
   const selected = context.selected();
   const loaded = context.readLoaded();
-  const labels = loaded
-    ? visibleSectionLabels({ variant: variant.id, content: loaded.content }, context.slide())
-    : [];
+  const slide = loaded?.doc.slides[context.slide()];
+  const variant = variantOf(slide ? slideVariant(slide, context.variant()) : context.variant());
+  const labels =
+    loaded && slide
+      ? visibleSectionLabels(
+          { variant: variant.id, content: documentContent(loaded.doc, slide) },
+          slide.role,
+        )
+      : [];
   const layer = isLayerRef(selected)
-    ? loaded?.layers[variant.id]?.[context.slide()]?.find((item) => layerRef(item.id) === selected)
+    ? slide?.layers[variant.id]?.find((item) => layerRef(item.id) === selected)
     : undefined;
   const name = !selected
     ? ''
@@ -148,12 +193,40 @@ export function describeScreen(context: ToolContext): string {
         ? layerLabel(layer)
         : '자유 요소'
       : elementLabel(selected, labels);
+  const slides = loaded?.doc.slides ?? [];
+  const doc = loaded?.doc;
+  const here = context.slide() + 1;
   return [
     `템플릿 ${variant.id}(${variant.label})`,
     `크기 ${CARD_SIZES[context.size()].label}`,
-    `보고 있는 장 ${context.slide() + 1}`,
+    `장 ${slides.length}개(${slides.map((item, index) => `${index + 1} ${doc ? slideAlias(doc, item) : ROLE_LABELS[item.role]}`).join(' · ')})`,
+    `보고 있는 장 ${here}`,
     `고른 요소 ${selected ? `${selected}(${name})` : '없음'}`,
+    `범위 ${scopeLabel(context.scope(), selected ? `${selected}(${name})` : '', here)}`,
   ].join(', ');
+}
+
+/** 화면 설명의 장 이름. 묶음은 `표지`, `공고 2(영업)`, `안내` 로 도구의 장 지정과 같은 이름이다. */
+function slideAlias(doc: CardDocument, slide: DocumentSlide): string {
+  if (doc.kind !== 'bundle') {
+    return ROLE_LABELS[slide.role];
+  }
+  if (slide.role === 'job') {
+    return `공고 ${slideJobIndices(slide)
+      .map((index) => index + 1)
+      .join('·')}(${slideName(doc, slide)})`;
+  }
+  return slide.role === 'cover' ? '표지' : slide.role === 'profile' ? '안내' : ROLE_LABELS.free;
+}
+
+/** 범위 한 줄. 고른 것이 없으면 `선택한 요소` 범위도 `이 장 전체` 다. */
+function scopeLabel(scope: AssistantScope, selected: string, slide: number): string {
+  if (scope === 'all') {
+    return '모든 장';
+  }
+  return scope === 'selected' && selected
+    ? `선택한 요소 ${selected}, ${slide}장(이 요소만 바꾼다)`
+    : `이 장 전체(${slide}장만 바꾼다)`;
 }
 
 function clip(text: string): string {
@@ -174,10 +247,29 @@ function asNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-/** 1~3 장 번호를 0부터로. 아니면 `null`. */
-function asSlide(value: unknown): number | null {
+/**
+ * 모델이 준 장 번호(문서 장 순서, 1부터)나 장 이름(`표지`, `공고 2`, `안내`)을 0부터의 장 순서로. 문서에
+ * 없는 장이면 `null`. 장은 이 번호로 문서에서
+ * 찾아 장 id 로 바꾼다 — 편집값은 장 id 에 붙는다.
+ */
+function asSlide(value: unknown, doc: CardDocument): number | null {
+  if (typeof value === 'string') {
+    const name = value.trim();
+    if (/^\d+$/.test(name)) {
+      return asSlide(Number(name), doc);
+    }
+    const job = /^공고\s*(\d+)$/.exec(name);
+    const found = doc.slides.findIndex((slide) =>
+      job
+        ? slideJobIndices(slide).includes(Number(job[1]) - 1)
+        : name === '표지'
+          ? slide.role === 'cover'
+          : (name === '안내' || name === '프로필 안내') && slide.role === 'profile',
+    );
+    return found >= 0 ? found : null;
+  }
   const slide = asNumber(value);
-  return slide !== null && Number.isInteger(slide) && slide >= 1 && slide <= SLIDE_COUNT
+  return slide !== null && Number.isInteger(slide) && slide >= 1 && slide <= doc.slides.length
     ? slide - 1
     : null;
 }
@@ -191,25 +283,12 @@ function round(value: number): number {
 }
 
 /** 첫 변경 앞에서만 기록에 쌓고 바꾼다. */
-function change(context: ToolContext, session: ToolSession, patch: Partial<EditSnapshot>) {
+function change(context: ToolContext, session: ToolSession, doc: CardDocument) {
   if (!session.remembered) {
     context.remember();
     session.remembered = true;
   }
-  context.apply(patch);
-}
-
-function withEdit(
-  edits: CardEdits,
-  variant: VariantId,
-  slide: number,
-  id: ElementId,
-  edit: ElementEdit | null,
-): CardEdits {
-  const slides: SlideEdits[] = [...(edits[variant] ?? [])];
-  const { [id]: _previous, ...others } = slides[slide] ?? {};
-  slides[slide] = edit ? { ...others, [id]: edit } : others;
-  return { ...edits, [variant]: slides };
+  context.apply(doc);
 }
 
 function inside(a: MeasuredBox, b: MeasuredBox): boolean {
@@ -245,15 +324,21 @@ function slideSummary(
   slide: number,
 ) {
   const size = CARD_SIZES[context.size()];
-  const variant = context.variant();
-  const edits = loaded.edits[variant]?.[slide];
-  const labels = visibleSectionLabels({ variant, content: loaded.content }, slide);
+  const docSlide = loaded.doc.slides[slide];
+  const variant = docSlide ? slideVariant(docSlide, context.variant()) : context.variant();
+  const edits = docSlide ? slideEditsOf(loaded.doc, docSlide)[variant] : undefined;
+  const labels = docSlide
+    ? visibleSectionLabels(
+        { variant, content: documentContent(loaded.doc, docSlide) },
+        docSlide.role,
+      )
+    : [];
   const outside = (box: MeasuredBox) =>
     box.x < -TOLERANCE ||
     box.y < -TOLERANCE ||
     box.x + box.width > size.width + TOLERANCE ||
     box.y + box.height > size.height + TOLERANCE;
-  const layers = (loaded.layers[variant]?.[slide] ?? []).map((layer) => {
+  const layers = (docSlide?.layers[variant] ?? []).map((layer) => {
     const box = boxes.find((item) => item.id === layerRef(layer.id));
     const {
       src: _src,
@@ -263,7 +348,7 @@ function slideSummary(
     return {
       ...shown,
       name: layerLabel(layer),
-      height: Math.round(box?.height ?? (layer.kind === 'image' ? layer.height : 0)),
+      height: Math.round(box?.height ?? (layer.kind === 'text' ? 0 : layer.height)),
       outside: box ? outside(box) : false,
     };
   });
@@ -280,11 +365,25 @@ function slideSummary(
       y: Math.round(box.y),
       width: Math.round(box.width),
       height: Math.round(box.height),
-      edit: { dx: edit.dx, dy: edit.dy, scale: edit.scale, hidden: Boolean(edit.hidden) },
+      edit: {
+        dx: edit.dx,
+        dy: edit.dy,
+        scale: edit.scale,
+        hidden: Boolean(edit.hidden),
+        locked: Boolean(edit.locked),
+      },
       outside: !edit.hidden && outside(box),
     };
   });
-  return { slide: slide + 1, overflow, elements, layers, overlaps: overlaps(boxes, edits) };
+  return {
+    slide: slide + 1,
+    // 이 장에만 덮어쓴 템플릿. 없으면 문서 템플릿이다.
+    ...(docSlide?.variant ? { variant } : {}),
+    overflow,
+    elements,
+    layers,
+    overlaps: overlaps(boxes, edits),
+  };
 }
 
 /**
@@ -321,9 +420,9 @@ async function readCard(context: ToolContext): Promise<string> {
   }
   const variant = context.variant();
   const size = CARD_SIZES[context.size()];
-  const { photo, brandImage, ...settings } = loaded.settings;
+  const { photo, brandImage, background, ...settings } = loaded.doc.settings;
   return JSON.stringify({
-    job: { company: loaded.job.companyName, title: loaded.job.title },
+    job: loaded.job ? { company: loaded.job.companyName, title: loaded.job.title } : null,
     variant: { id: variant, label: variantOf(variant).label },
     size: { id: context.size(), width: size.width, height: size.height },
     screen: { slide: context.slide() + 1, selected: context.selected() },
@@ -336,7 +435,8 @@ async function readCard(context: ToolContext): Promise<string> {
       brandImage: Boolean(brandImage),
       logo: Boolean(loaded.logo),
     },
-    content: loaded.content,
+    background: backgroundSummary(loaded.doc, background),
+    content: documentContent(loaded.doc),
     slides: measured.map((slide, index) => slideSummary(context, loaded, slide, index)),
   });
 }
@@ -351,12 +451,20 @@ function listVariants(): string {
   );
 }
 
-function pickVariant(context: ToolContext, args: Record<string, unknown>): string {
+function pickVariant(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
   const found = VARIANTS.find((variant) => variant.id === args.variant);
+  const loaded = context.readLoaded();
   if (!found) {
     return `없는 템플릿입니다: ${String(args.variant)}`;
   }
-  context.pickVariant(found.id);
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  change(context, session, withTemplate(loaded.doc, found.id));
   return `템플릿을 ${found.id}(${found.label}) 로 바꿨습니다. 요소 자리가 바뀌었으니 옮기기 전에 read_card 로 다시 읽으세요.`;
 }
 
@@ -382,9 +490,18 @@ function setContent(
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
+  // 장을 주지 않으면 보고 있는 장이다. 그 장이 그리는 공고(묶음 표지면 표지)의 문구를 고친다.
+  const index = args.slide === undefined ? context.slide() : asSlide(args.slide, loaded.doc);
+  const docSlide = index === null ? undefined : loaded.doc.slides[index];
+  if (index === null || !docSlide) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
   const patch: Partial<CardContent> = {};
   const rejected: string[] = [];
   for (const [key, value] of Object.entries(args)) {
+    if (key === 'slide') {
+      continue;
+    }
     if (TEXT_FIELDS.includes(key) && typeof value === 'string') {
       Object.assign(patch, { [key]: value.replace(/\\n/g, '\n') });
     } else if (key === 'summarySections' || key === 'detailSections') {
@@ -399,9 +516,16 @@ function setContent(
     }
   }
   if (Object.keys(patch).length > 0) {
-    change(context, session, { content: { ...loaded.content, ...patch } });
+    change(
+      context,
+      session,
+      withSlideContent(loaded.doc, docSlide, {
+        ...documentContent(loaded.doc, docSlide),
+        ...patch,
+      }),
+    );
   }
-  return JSON.stringify({ changed: Object.keys(patch), rejected });
+  return JSON.stringify({ slide: index + 1, changed: Object.keys(patch), rejected });
 }
 
 async function rewriteCopy(
@@ -417,19 +541,53 @@ async function rewriteCopy(
   if (!instruction) {
     return 'instruction 이 비었습니다.';
   }
+  // 장을 주지 않으면 보고 있는 장이다. 그 장이 그리는 공고의 원문으로 다시 쓴다.
+  const index = args.slide === undefined ? context.slide() : asSlide(args.slide, loaded.doc);
+  const docSlide = index === null ? undefined : loaded.doc.slides[index];
+  if (index === null || !docSlide) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
+  if (loaded.doc.kind === 'bundle' && docSlide.role === 'cover') {
+    return '묶음 표지는 공고 하나의 문구가 아니라 다시 쓸 수 없습니다. 표지 뱃지·제목·표는 set_content 로 고치세요.';
+  }
+  const documentJob = loaded.doc.jobs[firstJobIndex(docSlide)];
+  if (!documentJob) {
+    return '공고가 없는 문서라 문구를 다시 쓸 수 없습니다. set_content 로 고치세요.';
+  }
+  const job =
+    loaded.job?.id === documentJob.jobId ? loaded.job : (await fetchCardJob(documentJob.jobId)).job;
   const result = await requestDraft({
-    jobId: loaded.job.id,
+    jobId: job.id,
     instruction,
-    current: draftFromContent(loaded.content),
+    current: draftFromContent(documentContent(loaded.doc, docSlide)),
   });
   // 모델 없이 원문을 잘라 만든 초안은 지금 문구보다 거칠다. 바꾸지 않고 알린다.
   if (result.source === 'fallback') {
     return `다시 쓰지 못해 문구를 그대로 두었습니다. ${result.message ?? ''}`;
   }
   const latest = context.readLoaded() ?? loaded;
-  const content = contentFromDraft(latest.job, result.draft, latest.content);
-  change(context, session, { content });
-  return JSON.stringify({ changed: true, content });
+  const latestSlide = latest.doc.slides.find((slide) => slide.id === docSlide.id) ?? docSlide;
+  const previous = documentContent(latest.doc, latestSlide);
+  const rewritten = contentFromDraft(job, result.draft, previous);
+  // 묶음은 게시물 본문이 하나이고, 공고 장의 직무명 자리는 표지 표의 모집 분야라 그대로 둔다. 게시물
+  // 본문은 범위가 `모든 장` 일 때만 바꾸고, `선택한 요소` 범위면 그 요소의 문구 칸만 바꾼다.
+  const kept: Partial<CardContent> = {
+    ...(latest.doc.kind === 'bundle' ? { roleTitle: previous.roleTitle } : {}),
+    ...(latest.doc.kind === 'bundle' || context.scope() !== 'all'
+      ? { caption: previous.caption }
+      : {}),
+  };
+  const selected = context.selected();
+  const only = context.scope() === 'selected' && isElementId(selected) ? fieldsOf(selected) : null;
+  const content: CardContent = only
+    ? {
+        ...previous,
+        ...Object.fromEntries(only.map((key) => [key, rewritten[key]])),
+        ...kept,
+      }
+    : { ...rewritten, ...kept };
+  change(context, session, withSlideContent(latest.doc, latestSlide, content));
+  return JSON.stringify({ slide: index + 1, changed: true, content });
 }
 
 function setSettings(
@@ -461,7 +619,7 @@ function setSettings(
     }
   }
   if (Object.keys(patch).length > 0) {
-    change(context, session, { settings: { ...loaded.settings, ...patch } });
+    change(context, session, { ...loaded.doc, settings: { ...loaded.doc.settings, ...patch } });
   }
   return JSON.stringify({ changed: patch, rejected });
 }
@@ -486,17 +644,17 @@ async function editElements(
   if (changes.length === 0) {
     return 'changes 가 비었습니다.';
   }
-  const variant = context.variant();
   const size = CARD_SIZES[context.size()];
-  let edits = loaded.edits;
+  let doc = loaded.doc;
   const results: unknown[] = [];
   const changed = new Set<string>();
   for (const raw of changes) {
-    const slide = asSlide(raw.slide);
+    const slide = asSlide(raw.slide, doc);
     const id = asElementId(raw.id);
+    const docSlide = slide === null ? undefined : doc.slides[slide];
     const boxes = slide === null ? [] : (measured[slide]?.boxes ?? []);
     const box = boxes.find((b) => b.id === id);
-    if (slide === null || !id || !box) {
+    if (slide === null || !docSlide || !id || !box) {
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 요소입니다.' });
       continue;
     }
@@ -513,8 +671,13 @@ async function editElements(
       });
       continue;
     }
+    const variant = slideVariant(docSlide, context.variant());
+    const edit = slideEditsOf(doc, docSlide)[variant]?.[id] ?? NO_EDIT;
+    if (edit.locked) {
+      results.push({ slide: slide + 1, id, error: '잠김. 사람이 잠근 요소라 바꾸지 않았습니다.' });
+      continue;
+    }
     changed.add(`${slide}:${id}`);
-    const edit = edits[variant]?.[slide]?.[id] ?? NO_EDIT;
     const scale = clamp(asNumber(raw.scale) ?? edit.scale, MIN_SCALE, MAX_SCALE);
     const ratio = scale / edit.scale;
     const width = box.width * ratio;
@@ -560,7 +723,7 @@ async function editElements(
       scale: round(scale),
       ...(hidden ? { hidden: true } : {}),
     };
-    edits = withEdit(edits, variant, slide, id, next);
+    doc = withSlideEdit(doc, docSlide.id, variant, id, next);
     // 같은 요소를 한 번 더 바꾸면 방금 옮긴 자리에서 이어 계산한다.
     Object.assign(box, {
       x: nextX - width / 2,
@@ -580,8 +743,8 @@ async function editElements(
       edit: next,
     });
   }
-  if (edits !== loaded.edits) {
-    change(context, session, { edits });
+  if (doc !== loaded.doc) {
+    change(context, session, doc);
   }
   return JSON.stringify({ results });
 }
@@ -595,44 +758,31 @@ function resetElements(
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
-  const variant = context.variant();
-  const slide = args.slide === undefined ? null : asSlide(args.slide);
+  const slide = args.slide === undefined ? null : asSlide(args.slide, loaded.doc);
   if (args.slide !== undefined && slide === null) {
     return `없는 장입니다: ${String(args.slide)}`;
   }
   const ids = Array.isArray(args.ids)
     ? args.ids.map(asElementId).filter((id) => id !== null)
     : null;
-  const slides = (loaded.edits[variant] ?? []).map((edits, index) => {
+  let doc = loaded.doc;
+  loaded.doc.slides.forEach((docSlide, index) => {
     if (slide !== null && index !== slide) {
-      return edits;
+      return;
     }
-    if (!ids) {
-      return {};
-    }
-    return Object.fromEntries(
-      Object.entries(edits ?? {}).filter(([id]) => !ids.includes(id as ElementId)),
+    const variant = slideVariant(docSlide, context.variant());
+    // 잠근 요소는 처음으로 돌리지 않는다.
+    const edits = Object.fromEntries(
+      Object.entries(slideEditsOf(loaded.doc, docSlide)[variant] ?? {}).filter(
+        ([id, edit]) => edit?.locked || (ids !== null && !ids.includes(id as ElementId)),
+      ),
     ) as SlideEdits;
+    doc = withSlideEdits(doc, docSlide.id, variant, edits);
   });
-  change(context, session, { edits: { ...loaded.edits, [variant]: slides } });
+  change(context, session, doc);
   return JSON.stringify({
     reset: { slide: slide === null ? 'all' : slide + 1, ids: ids ?? 'all' },
   });
-}
-
-/** 장 하나의 자유 요소를 바꾼 레이어 묶음. */
-function withLayers(
-  loaded: LoadedCard,
-  variant: VariantId,
-  slide: number,
-  layers: Layer[],
-): LoadedCard['layers'] {
-  const slides: Layer[][] = [...(loaded.layers[variant] ?? [])];
-  for (let index = 0; index < slide; index += 1) {
-    slides[index] ??= [];
-  }
-  slides[slide] = layers;
-  return { ...loaded.layers, [variant]: slides };
 }
 
 /** 글자 요소 값 가운데 모델이 준 것만 검사해 꺼낸다. 틀린 값은 `rejected` 에 이름을 남긴다. */
@@ -698,11 +848,12 @@ function addText(
   args: Record<string, unknown>,
 ): string {
   const loaded = context.readLoaded();
-  const slide = asSlide(args.slide);
   if (!loaded) {
     return '편집 중인 카드가 없습니다.';
   }
-  if (slide === null) {
+  const slide = asSlide(args.slide, loaded.doc);
+  const docSlide = slide === null ? undefined : loaded.doc.slides[slide];
+  if (slide === null || !docSlide) {
     return `없는 장입니다: ${String(args.slide)}`;
   }
   const rejected: string[] = [];
@@ -725,14 +876,148 @@ function addText(
     x: Math.round((size.width - width) / 2),
     y: Math.round(size.height / 2),
     ...patch,
+    ...rotationPatch(args, rejected),
   };
-  const variant = context.variant();
-  const layers = [...(loaded.layers[variant]?.[slide] ?? []), layer];
-  change(context, session, { layers: withLayers(loaded, variant, slide, layers) });
+  const variant = slideVariant(docSlide, context.variant());
+  const layers = [...(docSlide.layers[variant] ?? []), layer];
+  change(context, session, withSlideLayers(loaded.doc, docSlide.id, variant, layers));
   return JSON.stringify({ added: { slide: slide + 1, id: layer.id }, rejected });
 }
 
-/** 자유 요소를 고치거나 지운다. 이미지는 자리만 옮기거나 지운다(그림은 바꾸지 못한다). */
+/** 돌린 각도(도). 주지 않으면 빈 값, 0 이면 돌림을 푼다(`undefined`). */
+function rotationPatch(raw: Record<string, unknown>, rejected: string[]): { rotation?: number } {
+  if (raw.rotation === undefined) {
+    return {};
+  }
+  const value = asNumber(raw.rotation);
+  if (value === null) {
+    rejected.push('rotation');
+    return {};
+  }
+  const rotation = normalizeAngle(Math.round(value));
+  return { rotation: rotation || undefined };
+}
+
+/** 도형 값 가운데 모델이 준 것만 검사해 꺼낸다. 색은 `null` 이나 `"none"` 이면 뺀다. */
+function shapePatch(raw: Record<string, unknown>, rejected: string[]): Partial<ShapeLayer> {
+  const patch: Partial<ShapeLayer> = {};
+  const number = (
+    key: 'x' | 'y' | 'width' | 'height' | 'strokeWidth' | 'radius',
+    min: number,
+    max: number,
+  ) => {
+    if (raw[key] === undefined) {
+      return;
+    }
+    const value = asNumber(raw[key]);
+    if (value === null) {
+      rejected.push(key);
+    } else {
+      patch[key] = Math.round(clamp(value, min, max));
+    }
+  };
+  number('x', -MAX_OFFSET, MAX_OFFSET);
+  number('y', -MAX_OFFSET, MAX_OFFSET);
+  number('width', 2, 3000);
+  number('height', 1, 3000);
+  number('strokeWidth', 0, 200);
+  number('radius', 0, 1000);
+  for (const key of ['fill', 'stroke'] as const) {
+    const value = raw[key];
+    if (value === undefined) {
+      continue;
+    }
+    if (value === null || value === 'none') {
+      patch[key] = undefined;
+    } else if (HEX.test(String(value))) {
+      patch[key] = String(value).toUpperCase();
+    } else {
+      rejected.push(key);
+    }
+  }
+  if (raw.opacity !== undefined) {
+    const opacity = asNumber(raw.opacity);
+    if (opacity === null) {
+      rejected.push('opacity');
+    } else {
+      patch.opacity = round(clamp(opacity, 0, 1));
+    }
+  }
+  return patch;
+}
+
+const SHAPE_KINDS = ['rect', 'roundRect', 'ellipse', 'line'] as const;
+
+/**
+ * 도형을 넣는다. `behind` 면 템플릿 뒤에 깔고, `below` 면 그 자유 요소 바로 아래(같은 쪽)에 넣는다. 빠진 값은
+ * 요소 서랍의 도형과 같다.
+ */
+function addShape(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
+  const loaded = context.readLoaded();
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  const slide = asSlide(args.slide, loaded.doc);
+  const docSlide = slide === null ? undefined : loaded.doc.slides[slide];
+  if (slide === null || !docSlide) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
+  const kind = SHAPE_KINDS.find((item) => item === args.shape);
+  if (!kind) {
+    return `shape 는 ${SHAPE_KINDS.join(', ')} 중 하나입니다.`;
+  }
+  const rejected: string[] = [];
+  const patch = shapePatch(args, rejected);
+  const variant = slideVariant(docSlide, context.variant());
+  const layers = docSlide.layers[variant] ?? [];
+  const belowId = typeof args.below === 'string' ? args.below.replace(/^layer:/, '') : null;
+  const below = belowId ? layers.find((item) => item.id === belowId) : undefined;
+  if (belowId && !below) {
+    rejected.push('below');
+  }
+  const size = CARD_SIZES[context.size()];
+  const line = kind === 'line';
+  const width = patch.width ?? (line ? 600 : 480);
+  const height = line ? (patch.height ?? 8) : (patch.height ?? (kind === 'ellipse' ? width : 320));
+  const layer: ShapeLayer = {
+    id: crypto.randomUUID().slice(0, 8),
+    kind: 'shape',
+    shape: kind === 'roundRect' ? 'rect' : kind,
+    x: Math.round((size.width - width) / 2),
+    y: Math.round((size.height - height) / 2),
+    fill: '#111111',
+    strokeWidth: 0,
+    opacity: 1,
+    radius: kind === 'roundRect' ? 48 : 0,
+    ...patch,
+    ...rotationPatch(args, rejected),
+    width,
+    height,
+    ...(below
+      ? below.behind
+        ? { behind: true }
+        : {}
+      : args.behind === true
+        ? { behind: true }
+        : {}),
+  };
+  const index = below ? layers.indexOf(below) : layers.length;
+  const next = [...layers.slice(0, index), layer, ...layers.slice(index)];
+  change(context, session, withSlideLayers(loaded.doc, docSlide.id, variant, next));
+  return JSON.stringify({
+    added: { slide: slide + 1, id: layer.id, behind: Boolean(layer.behind) },
+    rejected,
+  });
+}
+
+/**
+ * 자유 요소를 고치거나 지운다. 이미지는 자리만 옮기거나 지운다(그림은 바꾸지 못한다). 도형은 모양 말고 모든
+ * 값을 바꾼다. `behind`·`rotation` 은 모든 자유 요소가 받는다.
+ */
 function editLayers(
   context: ToolContext,
   session: ToolSession,
@@ -746,56 +1031,192 @@ function editLayers(
   if (changes.length === 0) {
     return 'changes 가 비었습니다.';
   }
-  const variant = context.variant();
-  let next = loaded;
+  let next = loaded.doc;
   const results: unknown[] = [];
   for (const raw of changes) {
-    const slide = asSlide(raw.slide);
+    const slide = asSlide(raw.slide, next);
     const id = String(raw.id ?? '').replace(/^layer:/, '');
-    const layers = slide === null ? [] : (next.layers[variant]?.[slide] ?? []);
+    const docSlide = slide === null ? undefined : next.slides[slide];
+    const variant = docSlide ? slideVariant(docSlide, context.variant()) : context.variant();
+    const layers = docSlide?.layers[variant] ?? [];
     const layer = layers.find((item) => item.id === id);
-    if (slide === null || !layer) {
+    if (slide === null || !docSlide || !layer) {
       results.push({ slide: raw.slide, id: raw.id, error: '그 장에 없는 자유 요소입니다.' });
       continue;
     }
+    if (layer.locked) {
+      results.push({ slide: slide + 1, id, error: '잠김. 사람이 잠근 요소라 바꾸지 않았습니다.' });
+      continue;
+    }
     if (raw.remove === true) {
-      next = {
-        ...next,
-        layers: withLayers(
-          next,
-          variant,
-          slide,
-          layers.filter((item) => item !== layer),
-        ),
-      };
+      next = withSlideLayers(
+        next,
+        docSlide.id,
+        variant,
+        layers.filter((item) => item !== layer),
+      );
       results.push({ slide: slide + 1, id, removed: true });
       continue;
     }
     const rejected: string[] = [];
     const patch = textPatch(raw, rejected);
+    // 글자를 바꾸면 공고 값과의 연결을 끊는다(사람이 캔버스에서 고칠 때와 같다).
+    const shape = layer.kind === 'shape' ? shapePatch(raw, rejected) : {};
+    const placed = {
+      ...(typeof raw.behind === 'boolean' ? { behind: raw.behind ? true : undefined } : {}),
+      ...rotationPatch(raw, rejected),
+    };
     const updated: Layer =
       layer.kind === 'text'
-        ? { ...layer, ...patch }
-        : {
+        ? {
             ...layer,
-            ...(patch.x !== undefined ? { x: patch.x } : {}),
-            ...(patch.y !== undefined ? { y: patch.y } : {}),
-          };
-    next = {
-      ...next,
-      layers: withLayers(
-        next,
-        variant,
-        slide,
-        layers.map((item) => (item === layer ? updated : item)),
-      ),
-    };
-    results.push({ slide: slide + 1, id, changed: Object.keys(patch), rejected });
+            ...patch,
+            ...(patch.text === undefined ? {} : { bind: undefined }),
+            ...placed,
+          }
+        : layer.kind === 'shape'
+          ? { ...layer, ...shape, ...placed }
+          : {
+              ...layer,
+              ...(patch.x !== undefined ? { x: patch.x } : {}),
+              ...(patch.y !== undefined ? { y: patch.y } : {}),
+              ...placed,
+            };
+    next = withSlideLayers(
+      next,
+      docSlide.id,
+      variant,
+      layers.map((item) => (item === layer ? updated : item)),
+    );
+    results.push({
+      slide: slide + 1,
+      id,
+      changed: [
+        ...new Set([
+          ...Object.keys(layer.kind === 'shape' ? shape : patch),
+          ...Object.keys(placed),
+        ]),
+      ],
+      rejected,
+    });
   }
-  if (next !== loaded) {
-    change(context, session, { layers: next.layers });
+  if (next !== loaded.doc) {
+    change(context, session, next);
   }
   return JSON.stringify({ results });
+}
+
+/** 템플릿 글자 요소가 고치는 문구 칸. 글자가 아닌 요소(로고, 흰 판)면 빈 배열이다. */
+function fieldsOf(id: ElementId): (keyof CardContent)[] {
+  switch (id) {
+    case 'badge':
+    case 'headline':
+    case 'roleTitle':
+    case 'note':
+    case 'ctaHeadline':
+    case 'ctaSub':
+      return [id];
+    case 'jobTable':
+      return ['summarySections'];
+  }
+  return id.startsWith('section-') ? ['summarySections', 'detailSections'] : [];
+}
+
+/** 고른 요소이거나 그 안의 요소(섹션의 칩·목록)인가. */
+function withinSelected(target: string, selected: Selection): boolean {
+  return target === selected || (!isLayerRef(selected) && target.startsWith(`${selected}-`));
+}
+
+/**
+ * 범위 밖을 바꾸는 도구 호출이면 모델에게 돌려줄 거절 사유, 아니면 `null`. 실행 전에 막는다 — 라우트는
+ * 편집본을 모르므로 브라우저가 막는다. 읽는 도구는 늘 된다. 모든 장에 걸리는 것(템플릿, 공통 설정)은
+ * `모든 장` 에서만 바꾼다.
+ */
+export function outOfScope(
+  name: string,
+  args: Record<string, unknown>,
+  context: ToolContext,
+): string | null {
+  const loaded = context.readLoaded();
+  const scope = context.scope();
+  if (scope === 'all' || !loaded || name === 'read_card' || name === 'list_variants') {
+    return null;
+  }
+  const selected = context.selected();
+  const only = scope === 'selected' && selected ? selected : null;
+  const here = context.slide();
+  const where = only ? `선택한 요소 ${only}` : `이 장 전체(${here + 1}장)`;
+  const refuse = (what: string) =>
+    `범위 밖이라 실행하지 않았습니다: ${what}. 지금 범위는 ${where}입니다. 다른 곳을 대신 바꾸지 말고, 범위를 넓히려면 입력창 위 범위 알약을 바꾸라고 사용자에게 알리세요.`;
+  /** 장을 주지 않으면 보고 있는 장으로 치는 도구가 있다. */
+  const elsewhere = (value: unknown, defaultHere: boolean) =>
+    (value === undefined ? (defaultHere ? here : null) : asSlide(value, loaded.doc)) !== here;
+  switch (name) {
+    case 'pick_variant':
+      return refuse('템플릿은 모든 장에 걸립니다');
+    case 'set_settings':
+      return refuse(
+        '색·로고·글자 배율은 모든 장에 걸립니다. 요소 하나의 크기는 edit_elements 의 scale 로 바꿉니다',
+      );
+    case 'add_text':
+    case 'add_shape':
+      return only
+        ? refuse(name === 'add_text' ? '새 글자 요소 넣기' : '새 도형 넣기')
+        : elsewhere(args.slide, false)
+          ? refuse(`${String(args.slide)}장에 넣기`)
+          : null;
+    case 'edit_elements':
+    case 'edit_layers': {
+      const changes = Array.isArray(args.changes)
+        ? (args.changes as Record<string, unknown>[])
+        : [];
+      for (const change of changes) {
+        const target =
+          name === 'edit_layers'
+            ? layerRef(String(change.id ?? '').replace(/^layer:/, ''))
+            : String(change.id ?? '');
+        if (elsewhere(change.slide, false)) {
+          return refuse(`${String(change.slide)}장의 ${target}`);
+        }
+        if (only && !withinSelected(target, only)) {
+          return refuse(target);
+        }
+      }
+      return null;
+    }
+    case 'reset_elements': {
+      if (elsewhere(args.slide, false)) {
+        return refuse(args.slide === undefined ? '모든 장 요소' : `${String(args.slide)}장 요소`);
+      }
+      const ids = Array.isArray(args.ids) ? args.ids.map(String) : null;
+      return only && (!ids || !ids.every((id) => withinSelected(id, only)))
+        ? refuse('고른 요소 밖의 요소')
+        : null;
+    }
+    case 'set_content': {
+      if (elsewhere(args.slide, true)) {
+        return refuse(`${String(args.slide)}장 문구`);
+      }
+      const allowed = only && isElementId(only) ? fieldsOf(only) : null;
+      const outside = Object.keys(args).filter(
+        (key) => key !== 'slide' && allowed !== null && !allowed.includes(key as keyof CardContent),
+      );
+      return only && (!allowed || outside.length > 0)
+        ? refuse(`문구 칸 ${outside.join(', ') || '(고른 요소는 문구 칸이 아님)'}`)
+        : null;
+    }
+    case 'rewrite_copy':
+      if (elsewhere(args.slide, true)) {
+        return refuse(`${String(args.slide)}장 문구`);
+      }
+      return only && !(isElementId(only) && fieldsOf(only).length > 0)
+        ? refuse('고른 요소는 글자가 아닙니다')
+        : null;
+    case 'set_background':
+      return backgroundOutOfScope(args, only, elsewhere, refuse);
+    default:
+      return null;
+  }
 }
 
 /** 카드를 바꾸는 도구. 결과에 바꾼 뒤의 확인(`check`)을 붙인다. */
@@ -806,7 +1227,9 @@ const CHANGING_TOOLS = new Set([
   'edit_elements',
   'reset_elements',
   'add_text',
+  'add_shape',
   'edit_layers',
+  'set_background',
 ]);
 
 function execute(
@@ -821,7 +1244,7 @@ function execute(
     case 'list_variants':
       return listVariants();
     case 'pick_variant':
-      return pickVariant(context, args);
+      return pickVariant(context, session, args);
     case 'set_content':
       return setContent(context, session, args);
     case 'rewrite_copy':
@@ -834,8 +1257,12 @@ function execute(
       return resetElements(context, session, args);
     case 'add_text':
       return addText(context, session, args);
+    case 'add_shape':
+      return addShape(context, session, args);
     case 'edit_layers':
       return editLayers(context, session, args);
+    case 'set_background':
+      return setBackground(context, session, args);
     default:
       return `모르는 도구입니다: ${name}`;
   }
@@ -849,6 +1276,10 @@ export async function runTool(
   session: ToolSession,
 ): Promise<string> {
   try {
+    const refused = outOfScope(name, args, context);
+    if (refused) {
+      return refused;
+    }
     const result = await execute(name, args, context, session);
     // 실패는 글이다. 바꾼 경우(JSON)에만 확인을 붙인다.
     if (!CHANGING_TOOLS.has(name) || !result.startsWith('{')) {
@@ -859,4 +1290,114 @@ export async function runTool(
   } catch (error) {
     return `도구 실행이 실패했습니다: ${error instanceof Error ? error.message : String(error)}`;
   }
+}
+
+// 배경(배경 서랍과 같은 일). `set_background` 의 실행·범위·설명과 `read_card` 의 배경 요약을 여기 모은다.
+
+/** 사진 배경의 처음 진하기. 배경 서랍과 같다. */
+const BACKGROUND_PHOTO_OPACITY = 0.6;
+
+function backgroundLabel(background: CardBackground | undefined): string | null {
+  if (!background) {
+    return null;
+  }
+  if (background.kind === 'color') {
+    return `단색 ${background.color}`;
+  }
+  if (background.kind === 'pattern') {
+    return `무늬 ${background.pattern}(${BACKGROUND_PATTERNS.find((item) => item.id === background.pattern)?.label ?? ''})`;
+  }
+  return `사진 ${background.imageId ? '올린 이미지' : '공고 대표 이미지'} 진하기 ${round(background.opacity)}`;
+}
+
+/** `read_card` 의 배경. 모든 장 배경과 장마다 덮어쓴 배경이고, 덮어쓰지 않았으면 템플릿 배경이다. */
+function backgroundSummary(doc: CardDocument, background: CardBackground | undefined) {
+  return {
+    all: backgroundLabel(background) ?? '템플릿 배경',
+    slides: doc.slides.flatMap((slide, index) => {
+      const label = backgroundLabel(slide.background);
+      return label ? [{ slide: index + 1, background: label }] : [];
+    }),
+  };
+}
+
+function describeBackgroundCall(args: Record<string, unknown>): string {
+  const where = args.slide === undefined ? '모든 장' : `${String(args.slide)}장`;
+  return `배경 바꾸기(${where}): ${String(args.kind)}${args.pattern ? ` ${String(args.pattern)}` : ''}${args.color ? ` ${String(args.color)}` : ''}`;
+}
+
+/** 장을 빼면 모든 장이라 `모든 장` 에서만, 장을 주면 보고 있는 장만. 고른 요소 범위에서는 막는다. */
+function backgroundOutOfScope(
+  args: Record<string, unknown>,
+  only: Selection | null,
+  elsewhere: (value: unknown, defaultHere: boolean) => boolean,
+  refuse: (what: string) => string,
+): string | null {
+  if (args.slide === undefined) {
+    return refuse(
+      'slide 를 뺀 배경은 모든 장에 걸립니다. 이 장만 바꾸려면 slide 에 보고 있는 장을 줍니다',
+    );
+  }
+  if (only) {
+    return refuse('배경은 고른 요소가 아닙니다');
+  }
+  return elsewhere(args.slide, false) ? refuse(`${String(args.slide)}장 배경`) : null;
+}
+
+function setBackground(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
+  const loaded = context.readLoaded();
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  let slideId: string | undefined;
+  if (args.slide !== undefined) {
+    const index = asSlide(args.slide, loaded.doc);
+    if (index === null) {
+      return `없는 장입니다: ${String(args.slide)}`;
+    }
+    slideId = loaded.doc.slides[index]!.id;
+  }
+  let background: CardBackground | null;
+  switch (args.kind) {
+    case 'clear':
+      background = null;
+      break;
+    case 'color':
+      if (!HEX.test(String(args.color))) {
+        return `색은 #RRGGBB 로 줍니다: ${String(args.color)}`;
+      }
+      background = { kind: 'color', color: String(args.color).toUpperCase() };
+      break;
+    case 'pattern': {
+      const pattern = BACKGROUND_PATTERNS.find((item) => item.id === args.pattern);
+      if (!pattern) {
+        return `없는 무늬입니다: ${String(args.pattern)}`;
+      }
+      background = { kind: 'pattern', pattern: pattern.id };
+      break;
+    }
+    case 'photo':
+      if (!loaded.doc.settings.photo) {
+        return '공고 대표 이미지가 없어 사진 배경을 깔 수 없습니다.';
+      }
+      background = {
+        kind: 'photo',
+        src: '',
+        opacity: round(clamp(asNumber(args.opacity) ?? BACKGROUND_PHOTO_OPACITY, 0.1, 1)),
+      };
+      break;
+    default:
+      return `kind 는 color, pattern, photo, clear 중 하나입니다: ${String(args.kind)}`;
+  }
+  change(context, session, withBackground(loaded.doc, background, slideId));
+  return JSON.stringify({
+    changed: {
+      where: slideId ? `${String(args.slide)}장` : '모든 장',
+      background: backgroundLabel(background ?? undefined) ?? '덮어쓰기 지움',
+    },
+  });
 }

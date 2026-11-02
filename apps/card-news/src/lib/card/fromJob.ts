@@ -80,18 +80,27 @@ export const DEFAULT_PROFILE: CardProfile = {
   bio: '📍 문과 취준생이 놓치면 안되는 채용공고\n🔥 매일 오후 1시, 채용 관련 정보를 알려드려요\n➰ 꼼꼼히 분석하여 이해하기 쉽게 정리해요',
 };
 
+/**
+ * 초안을 카드 문구로. `previous`(다시 쓰기 전 문구)가 있으면 뱃지·3장 문구·프로필과 마감 기한을 그대로
+ * 둔다 — 마감은 시작할 때 요청사항으로 바꿨거나 사람이 고쳤을 수 있다. 초안이 마감을 새로 쓰면(지시가
+ * 마감을 바꾸라고 할 때만 쓴다) 그것을 따른다.
+ */
 export function contentFromDraft(
   job: CardJob,
   draft: AiDraft,
   previous?: CardContent,
 ): CardContent {
+  const previousDeadline = previous?.summarySections
+    .find((section) => section.label.trim() === '마감 기한')
+    ?.items.find((item) => item.trim());
   return {
     badge: previous?.badge ?? '오늘의 공고 속보',
     headline: draft.headline,
     roleTitle: draft.roles[0] ?? job.title,
     summarySections: [
       { label: '채용 직무', items: draft.roles.length ? draft.roles : [job.title] },
-      { label: '마감 기한', items: [deadlineText(job)] },
+      // 요청사항이 마감을 바꾸라고 했으면 모델이 쓴 마감을 따른다.
+      { label: '마감 기한', items: [draft.deadline || previousDeadline || deadlineText(job)] },
       { label: '담당 업무', items: draft.responsibilities },
     ],
     note: draft.note,
