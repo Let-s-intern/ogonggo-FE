@@ -36,7 +36,9 @@ export function JobsDrawer({
   onJobContent: (jobIndex: number, content: CardContent) => void;
   onCaption: (caption: string) => void;
   /** 묶음 표지의 뱃지·제목. */
-  onCover: (patch: { badge?: string; headline?: string }) => void;
+  onCover: (
+    patch: Partial<Pick<NonNullable<CardDocument['cover']>, 'badge' | 'headline' | 'columns' | 'schedule'>>,
+  ) => void;
   /** 묶음 표지 표에서 공고 하나의 줄(직무, 모집 분야). */
   onRow: (jobIndex: number, row: [string, string]) => void;
   onMove: (from: number, to: number) => void;
@@ -116,6 +118,39 @@ export function JobsDrawer({
                 />
                 <p className="text-xs text-gray-500">
                   줄바꿈으로 줄을 나눕니다. *단어* 는 강조 상자입니다.
+                </p>
+                <div className="flex gap-2">
+                  {doc.cover.columns.map((label, column) => (
+                    <Input
+                      key={column}
+                      aria-label={`표 머리 ${column + 1}`}
+                      className="h-9 text-sm"
+                      value={label}
+                      onChange={(event) => {
+                        const columns = [...doc.cover!.columns] as [string, string];
+                        columns[column] = event.target.value;
+                        onCover({ columns });
+                      }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  표 머리 칩입니다(예: 채용 형태, 채용 직무).
+                </p>
+                <Textarea
+                  aria-label="표지 일정"
+                  rows={2}
+                  className="text-sm"
+                  placeholder="서류 합격 발표 : 10월 20일 화요일 오후 6시"
+                  value={(doc.cover.schedule ?? []).join('\n')}
+                  onChange={(event) =>
+                    onCover({
+                      schedule: event.target.value ? event.target.value.split('\n') : [],
+                    })
+                  }
+                />
+                <p className="text-xs text-gray-500">
+                  일정은 직무 표 밑 상자에 한 줄씩 들어갑니다. 비우면 상자를 그리지 않습니다.
                 </p>
               </div>
             </details>

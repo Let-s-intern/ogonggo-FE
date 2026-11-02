@@ -104,6 +104,16 @@ export interface DocumentCover {
   headline: string;
   columns: [string, string];
   rows: [string, string][];
+  /**
+   * 직무 표 밑 일정 상자(`서류 합격 발표 : 10월 20일 …`). 한 줄에 하나, 빈 줄은 그리지 않는다. 없거나 모두
+   * 비면 상자를 그리지 않는다. 표지 문구의 `note` 로 고친다(`documentContent()`).
+   */
+  schedule?: string[];
+}
+
+/** 일정 상자에 그릴 줄. 빈 줄을 뺀다. */
+export function scheduleLines(cover: DocumentCover | undefined): string[] {
+  return (cover?.schedule ?? []).map((line) => line.trim()).filter(Boolean);
 }
 
 /**
@@ -358,7 +368,7 @@ export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardC
   if (slide?.role !== 'cover' || !doc.cover) {
     return content;
   }
-  const { badge, headline, columns, rows } = doc.cover;
+  const { badge, headline, columns, rows, schedule } = doc.cover;
   return {
     ...content,
     badge,
@@ -368,7 +378,7 @@ export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardC
       label,
       items: rows.map((cells) => cells[column] ?? ''),
     })),
-    note: '',
+    note: (schedule ?? []).join('\n'),
   };
 }
 
@@ -412,7 +422,13 @@ function coverTable(doc: CardDocument, slide: DocumentSlide): CoverTable | undef
   if (slide.role !== 'cover' || !doc.cover) {
     return undefined;
   }
-  return { deadline: coverDeadline(doc), columns: doc.cover.columns, rows: doc.cover.rows };
+  const schedule = scheduleLines(doc.cover);
+  return {
+    deadline: coverDeadline(doc),
+    columns: doc.cover.columns,
+    rows: doc.cover.rows,
+    ...(schedule.length > 0 ? { schedule } : {}),
+  };
 }
 
 /**
@@ -754,7 +770,7 @@ export function withContent(doc: CardDocument, content: CardContent, jobIndex = 
 
 /**
  * 장 하나의 문구(`documentContent(doc, slide)`)를 고친 문서. 묶음 표지는 뱃지·제목을 표지에, 섹션 두 개를
- * 표지 표 열 이름과 줄에 넣는다(줄 수는 공고 수 그대로). 묶음 공고 장의 직무명은 표지 표의 `모집 분야`
+ * 표지 표 열 이름과 줄에, 안내(`note`)를 일정 상자 줄에 넣는다(줄 수는 공고 수 그대로). 묶음 공고 장의 직무명은 표지 표의 `모집 분야`
  * 에 넣는다. 나머지는 그 장의 공고 문구(공고를 가리키지 않는 장은 첫 공고)다.
  */
 export function withSlideContent(
@@ -765,11 +781,14 @@ export function withSlideContent(
   const cover = doc.cover;
   if (slide?.role === 'cover' && cover) {
     const [first, second] = content.summarySections;
+    const { schedule: _schedule, ...rest } = cover;
+    const schedule = content.note.split('\n');
     return {
       ...doc,
       caption: content.caption,
       cover: {
-        ...cover,
+        ...rest,
+        ...(content.note.trim() ? { schedule } : {}),
         badge: content.badge,
         headline: content.headline,
         columns: [first?.label ?? cover.columns[0], second?.label ?? cover.columns[1]],

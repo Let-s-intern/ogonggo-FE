@@ -356,6 +356,8 @@ export interface CoverTable {
   deadline: string;
   columns: [string, string];
   rows: [string, string][];
+  /** 직무 표 밑 일정 상자 줄. 없으면 상자를 그리지 않는다. */
+  schedule?: string[];
 }
 
 /**

@@ -342,6 +342,11 @@ export interface BundleCover {
   columns: [string, string];
   /** 공고마다 한 줄. 묶은 순서다. */
   rows: [string, string][];
+  /**
+   * 직무 표 밑 일정 상자 줄(`서류 합격 발표 : 10월 20일 화요일 오후 6시`). 요청사항에 일정이 적혀 있을 때만
+   * 모델이 채운다 — 요청사항이 없으면 모델 답에 있어도 버린다(지어낸 일정을 막는다).
+   */
+  schedule?: string[];
 }
 
 export interface BundleDraft {
@@ -469,9 +474,14 @@ function row(value: unknown): [string, string] | null {
 
 /**
  * 모델 답을 묶음 초안으로. 통째로 못 읽으면 `null` 이다. 일부가 틀리면 그 부분만 원문 초안으로
- * 채운다 — 제목이 2줄이 아닌 표지, 공고 수와 줄 수가 다른 표, 빠진 공고.
+ * 채운다 — 제목이 2줄이 아닌 표지, 공고 수와 줄 수가 다른 표, 빠진 공고. 표지 일정은 `withSchedule`(요청사항이
+ * 있을 때)일 때만 읽는다.
  */
-export function parseBundleDraft(raw: string, jobs: UserJobDetailResponse[]): BundleDraft | null {
+export function parseBundleDraft(
+  raw: string,
+  jobs: UserJobDetailResponse[],
+  withSchedule = false,
+): BundleDraft | null {
   const parsed = parseObject(raw);
   if (!parsed) {
     return null;
@@ -482,8 +492,16 @@ export function parseBundleDraft(raw: string, jobs: UserJobDetailResponse[]): Bu
     typeof cover.headline === 'string' ? cover.headline.replace(/\\n/g, '\n').trim() : '';
   const rows = Array.isArray(cover.rows) ? cover.rows.map(row) : [];
   const drafts = Array.isArray(parsed.jobs) ? parsed.jobs : [];
+  const schedule =
+    withSchedule && Array.isArray(cover.schedule)
+      ? cover.schedule
+          .filter((line): line is string => typeof line === 'string' && Boolean(line.trim()))
+          .map((line) => line.trim())
+          .slice(0, 4)
+      : [];
   return {
     cover: {
+      ...(schedule.length > 0 ? { schedule } : {}),
       badge:
         typeof cover.badge === 'string' && cover.badge.trim() ? cover.badge.trim() : fallback.badge,
       headline: headline.split('\n').length === 2 ? headline : fallback.headline,
@@ -532,6 +550,7 @@ export async function generateBundleDraft(
     userParts.push(
       `[추가 지시 — 규칙보다 이 지시를 먼저 따른다]\n${request.trim().slice(0, 1000)}`,
       `[마감 바꾸기]\n추가 지시가 어느 공고의 마감 일시를 바꾸라고 할 때만 그 jobs[i] 에 "deadline" 을 더한다. 카드에 들어갈 문구로 "2026.11.09 (월) 23:59" 형식이다. 그때 caption 의 마감 줄도 바꾼 일시를 따른다.`,
+      `[표지 일정]\n추가 지시에 서류 발표·면접·최종 발표 같은 전형 일정이 적혀 있을 때만 cover 에 "schedule"(문자열 배열, 한 줄에 하나, 4줄까지)을 더한다. "서류 합격 발표 : 10월 20일 화요일 오후 6시" 처럼 "항목 : 일시" 로 쓴다. 추가 지시에 없는 일정은 지어내지 않는다 — 공고 원문의 마감 기한도 넣지 않는다. 일정이 없으면 "schedule" 을 넣지 않는다.`,
     );
   }
 
@@ -555,7 +574,11 @@ export async function generateBundleDraft(
       throw new Error(`${response.status} ${(await response.text()).slice(0, 200)}`);
     }
     const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-    const draft = parseBundleDraft(body.choices?.[0]?.message?.content ?? '', jobs);
+    const draft = parseBundleDraft(
+      body.choices?.[0]?.message?.content ?? '',
+      jobs,
+      Boolean(request.trim()),
+    );
     if (!draft) {
       throw new Error('모델 답이 JSON 모양이 아닙니다.');
     }

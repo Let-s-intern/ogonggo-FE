@@ -36,6 +36,11 @@ import {
   COVER_LINK_SCALE,
   COVER_LINK_TEXT,
   COVER_ROW_WEIGHT,
+  COVER_SCHEDULE_GAP,
+  COVER_SCHEDULE_LINE_HEIGHT,
+  COVER_SCHEDULE_PAD_X,
+  COVER_SCHEDULE_PAD_Y,
+  COVER_SCHEDULE_WEIGHT,
   COVER_TABLE_PAD_X,
   COVER_TABLE_PAD_Y,
   HEADER_HEIGHT,
@@ -1190,6 +1195,7 @@ function CoverSlide({
     deadline: cover.deadline,
     columns: cover.columns,
     rows: cover.rows,
+    ...(cover.schedule ? { schedule: cover.schedule } : {}),
     headlineScale: textScale(spec.settings.headlineScale),
     bodyScale: textScale(spec.settings.bodyScale),
   });
@@ -1332,6 +1338,40 @@ function CoverSlide({
               ))}
             </div>
           </Editable>
+          {cover.schedule?.length ? (
+            <Editable id="note" edits={edits} style={{ marginTop: COVER_SCHEDULE_GAP }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  width: CONTENT_WIDTH,
+                  backgroundColor: 'rgba(255,255,255,0.86)',
+                  borderRadius: 32,
+                  padding: `${COVER_SCHEDULE_PAD_Y}px ${COVER_SCHEDULE_PAD_X}px`,
+                }}
+              >
+                {cover.schedule.map((line, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      width: CONTENT_WIDTH - COVER_SCHEDULE_PAD_X * 2,
+                      fontSize: metrics.scheduleSize,
+                      fontWeight: COVER_SCHEDULE_WEIGHT,
+                      lineHeight: COVER_SCHEDULE_LINE_HEIGHT,
+                      letterSpacing: -metrics.scheduleSize * 0.01,
+                      color: '#111111',
+                    }}
+                  >
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </Editable>
+          ) : null}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <Editable id="brandMark" edits={edits}>

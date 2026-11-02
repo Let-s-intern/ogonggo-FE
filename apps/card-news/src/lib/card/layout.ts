@@ -291,6 +291,12 @@ const COVER_COLUMN_GAP = 32;
 const COVER_ROW_MIN = 28;
 const COVER_ROW_FLOOR = 22;
 export const COVER_ROW_WEIGHT = 700;
+/** 일정 상자. 표와 상자 사이, 안쪽 여백(위아래·옆), 줄 높이, 글자 굵기. */
+export const COVER_SCHEDULE_GAP = 20;
+export const COVER_SCHEDULE_PAD_Y = 26;
+export const COVER_SCHEDULE_PAD_X = 40;
+export const COVER_SCHEDULE_LINE_HEIGHT = 1.45;
+export const COVER_SCHEDULE_WEIGHT = 800;
 
 export interface CoverMetrics {
   padTop: number;
@@ -309,6 +315,8 @@ export interface CoverMetrics {
   rowPitch: number;
   /** 표 두 열의 폭. 열 사이 간격은 따로다(`COVER_COLUMN_GAP`). */
   cellWidths: [number, number];
+  /** 일정 상자 글자 크기. 일정이 없으면 0 이다. */
+  scheduleSize: number;
   overflow: boolean;
 }
 
@@ -325,6 +333,8 @@ export function measureCover(
     deadline: string;
     columns: [string, string];
     rows: [string, string][];
+    /** 일정 상자 줄. 없거나 비면 상자 자리를 잡지 않는다. */
+    schedule?: string[];
     headlineScale: number;
     bodyScale: number;
   },
@@ -376,6 +386,31 @@ export function measureCover(
   const count = Math.max(1, box.rows.length);
   const fullHeadline = headlineSizeFor(measure, box.headline, headlineMax);
 
+  // 일정 상자는 가장 긴 줄이 한 줄에 들어가는 크기까지 줄이고(24px 까지), 그래도 길면 줄을 바꾼다.
+  const schedule = (box.schedule ?? []).filter((line) => line.trim());
+  const scheduleWidth = CONTENT_WIDTH - COVER_SCHEDULE_PAD_X * 2;
+  let scheduleSize = schedule.length > 0 ? Math.round((square ? 32 : 36) * box.bodyScale) : 0;
+  while (
+    scheduleSize > 24 &&
+    schedule.some((line) => measure(line, scheduleSize, COVER_SCHEDULE_WEIGHT) > scheduleWidth)
+  ) {
+    scheduleSize -= 1;
+  }
+  const scheduleHeight =
+    schedule.length > 0
+      ? COVER_SCHEDULE_GAP +
+        COVER_SCHEDULE_PAD_Y * 2 +
+        Math.round(
+          schedule.reduce(
+            (sum, line) =>
+              sum + lineCount(measure, line, scheduleSize, COVER_SCHEDULE_WEIGHT, scheduleWidth),
+            0,
+          ) *
+            scheduleSize *
+            COVER_SCHEDULE_LINE_HEIGHT,
+        )
+      : 0;
+
   const fit = (headlineScale: number, rowMin: number) => {
     const headlineSize = Math.max(52, Math.round(fullHeadline * headlineScale * box.headlineScale));
     const fixed =
@@ -390,6 +425,7 @@ export function measureCover(
       chipHeight(headSizeOf(rowBase)) +
       COVER_HEAD_GAP +
       FOOTER_HEIGHT +
+      scheduleHeight +
       padBottom;
     const available = size.height - fixed;
     let rowSize = Math.min(rowBase, Math.floor(available / (count * COVER_ROW_PITCH_MIN)));
@@ -436,6 +472,7 @@ export function measureCover(
     rowSize,
     rowPitch,
     cellWidths,
+    scheduleSize,
     overflow: !fits || rowPitch * count > available + 1,
   };
 }
