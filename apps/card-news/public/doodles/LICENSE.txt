@@ -1,6 +1,0 @@
-Open Doodles by Pablo Stanley (https://www.opendoodles.com/)
-License: CC0 1.0 Universal (Public Domain Dedication)
-https://creativecommons.org/publicdomain/zero/1.0/
-
-Files in this folder were downloaded from https://opendoodles.s3-us-west-1.amazonaws.com/
-and minified with svgo 3.3.2. Shapes and colors are unchanged.

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DECORATIONS, DOODLES, decorationDataUrl, doodleDataUrl } from '@/lib/card/decorations';
+import { DECORATIONS, decorationDataUrl } from '@/lib/card/decorations';
 import { CARD_ICONS, iconDataUrl } from '@/lib/card/iconSet';
 import { Drawer } from '../LeftRail';
 
@@ -12,9 +12,8 @@ export interface LogoItem {
 }
 
 /**
- * 요소 서랍. 로고, 손그림 꾸미기(밑줄·동그라미·별표 등), 사람 일러스트(Open Doodles), 아이콘이다. 누르면
- * 보고 있는 장 가운데에 이미지 요소로 넣는다 — 템플릿의 로고 자리와 따로 옮기고 키운다. 위에서 고른 색으로
- * 꾸미기·아이콘을 칠하고, 일러스트는 원래 분홍 강조색을 그 색으로 바꿀 수 있다.
+ * 요소 서랍. 로고, 손그림 꾸미기(밑줄·동그라미·별표 등), 아이콘이다. 누르면 보고 있는 장 가운데에 이미지
+ * 요소로 넣는다 — 템플릿의 로고 자리와 따로 옮기고 키운다. 위에서 고른 색으로 꾸미기·아이콘을 칠한다.
  */
 export function ElementsDrawer({
   logos,
@@ -27,8 +26,6 @@ export function ElementsDrawer({
 }) {
   const [color, setColor] = useState('#111111');
   const [query, setQuery] = useState('');
-  const [doodleAccent, setDoodleAccent] = useState<'original' | 'picked'>('original');
-  const [error, setError] = useState<string | null>(null);
   const swatches = [
     { label: '검정', value: '#111111' },
     { label: '흰색', value: '#FFFFFF' },
@@ -38,26 +35,11 @@ export function ElementsDrawer({
   const match = (label: string) => !words || label.includes(words);
   const icons = CARD_ICONS.filter((icon) => match(icon.label));
   const decorations = DECORATIONS.filter((item) => match(item.label));
-  const doodles = DOODLES.filter((item) => match(item.label));
   // 흰색으로 칠한 것은 흰 칸에서 보이지 않으므로 어두운 칸에 그린다.
   const light = color.toUpperCase() === '#FFFFFF';
   const cell = `flex items-center justify-center rounded-lg p-2 ${
     light ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
   }`;
-
-  /** 일러스트 파일(`public/doodles`)을 읽어 강조색을 바꾼 data URL 로 넣는다. */
-  const addDoodle = async (id: string) => {
-    setError(null);
-    try {
-      const response = await fetch(`/doodles/${id}.svg`);
-      if (!response.ok) {
-        throw new Error(String(response.status));
-      }
-      onAdd(doodleDataUrl(await response.text(), doodleAccent === 'picked' ? color : undefined));
-    } catch {
-      setError('일러스트를 불러오지 못했어요. 다시 눌러 주세요.');
-    }
-  };
 
   return (
     <Drawer title="요소">
@@ -112,7 +94,7 @@ export function ElementsDrawer({
         </div>
         <input
           aria-label="요소 찾기"
-          placeholder="찾기 (예: 밑줄, 별표, 커피, 일정)"
+          placeholder="찾기 (예: 밑줄, 별표, 동그라미, 일정)"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"
@@ -142,43 +124,6 @@ export function ElementsDrawer({
         </>
       ) : null}
 
-      {doodles.length > 0 ? (
-        <>
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold text-gray-500">사람 일러스트</p>
-            <label className="flex items-center gap-1 text-xs text-gray-600">
-              <input
-                type="checkbox"
-                checked={doodleAccent === 'picked'}
-                onChange={(event) => setDoodleAccent(event.target.checked ? 'picked' : 'original')}
-              />
-              분홍을 고른 색으로
-            </label>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {doodles.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                title={item.label}
-                aria-label={`일러스트 ${item.label}`}
-                onClick={() => void addDoodle(item.id)}
-                className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-1.5 text-xs text-gray-700 hover:bg-gray-200"
-              >
-                <img
-                  src={`/doodles/${item.id}.svg`}
-                  alt=""
-                  loading="lazy"
-                  className="aspect-[4/3] w-full object-contain"
-                />
-                {item.label}
-              </button>
-            ))}
-          </div>
-          {error ? <p className="text-xs text-error">{error}</p> : null}
-        </>
-      ) : null}
-
       {icons.length > 0 ? (
         <>
           <p className="text-xs font-bold text-gray-500">아이콘</p>
@@ -202,12 +147,10 @@ export function ElementsDrawer({
         </>
       ) : null}
 
-      {decorations.length + doodles.length + icons.length === 0 ? (
+      {decorations.length + icons.length === 0 ? (
         <p className="text-xs text-gray-500">찾는 요소가 없어요.</p>
       ) : null}
-      <p className="text-xs text-gray-400">
-        일러스트: Open Doodles (CC0), 아이콘: Tabler Icons (MIT)
-      </p>
+      <p className="text-xs text-gray-400">아이콘: Tabler Icons (MIT)</p>
     </Drawer>
   );
 }

@@ -16,6 +16,8 @@ export interface Decoration {
   strokeWidth?: number;
   /** 면 투명도. 형광펜처럼 글자 뒤에 깔 것. */
   opacity?: number;
+  /** 점선(`stroke-dasharray`). */
+  dash?: string;
   /** `d` 값들. 경로마다 `<path>` 하나다. */
   paths: string[];
 }
@@ -237,54 +239,257 @@ export const DECORATIONS: Decoration[] = [
     strokeWidth: 6,
     paths: ['M10 34 L 10 10 L 40 10', 'M160 90 L 190 90 L 190 66'],
   },
+  {
+    id: 'underline-zigzag',
+    label: '지그재그 밑줄',
+    width: 200,
+    height: 30,
+    paint: 'stroke',
+    strokeWidth: 4,
+    paths: [
+      'M6 20 L 22 9 L 38 21 L 54 10 L 70 21 L 86 10 L 102 21 L 118 10 L 134 21 L 150 10 L 166 21 L 182 10 L 194 18',
+    ],
+  },
+  {
+    id: 'underline-arrow',
+    label: '화살표 밑줄',
+    width: 220,
+    height: 40,
+    paint: 'stroke',
+    strokeWidth: 5,
+    paths: ['M8 24 C 60 18, 130 22, 200 18', 'M184 6 L 204 18 L 186 32'],
+  },
+  {
+    id: 'underline-dashed',
+    label: '점선 밑줄',
+    width: 200,
+    height: 24,
+    paint: 'stroke',
+    strokeWidth: 5,
+    dash: '12 12',
+    paths: ['M8 13 C 60 9, 130 15, 192 11'],
+  },
+  {
+    id: 'oval-wide',
+    label: '긴 동그라미',
+    width: 280,
+    height: 100,
+    paint: 'stroke',
+    strokeWidth: 5,
+    paths: [
+      'M60 18 C 120 6, 230 8, 262 36 C 284 58, 240 88, 150 92 C 70 96, 14 80, 12 54 C 10 30, 50 16, 110 12',
+    ],
+  },
+  {
+    id: 'circle-double',
+    label: '두 겹 동그라미',
+    width: 200,
+    height: 130,
+    paint: 'stroke',
+    strokeWidth: 4,
+    paths: [
+      'M50 22 C 100 4, 172 14, 186 52 C 198 88, 150 118, 96 118 C 40 118, 8 92, 14 58 C 18 34, 46 20, 84 16',
+      'M60 30 C 110 12, 176 26, 180 62 C 182 96, 132 112, 90 110 C 46 108, 20 86, 24 60',
+    ],
+  },
+  {
+    id: 'checkbox',
+    label: '체크 박스',
+    width: 110,
+    height: 100,
+    paint: 'stroke',
+    strokeWidth: 6,
+    paths: [
+      'M12 30 L 70 28 L 72 88 L 14 90 Z',
+      'M28 56 C 34 62, 40 70, 44 78 C 60 48, 80 24, 104 8',
+    ],
+  },
+  {
+    id: 'cross',
+    label: '엑스',
+    width: 90,
+    height: 90,
+    paint: 'stroke',
+    strokeWidth: 8,
+    paths: ['M14 16 C 36 38, 56 58, 76 78', 'M74 12 C 54 36, 34 58, 14 80'],
+  },
+  {
+    id: 'exclaim',
+    label: '느낌표',
+    width: 50,
+    height: 120,
+    paint: 'stroke',
+    strokeWidth: 9,
+    paths: ['M24 10 C 26 40, 26 60, 25 80', 'M25 104 L 25.5 105'],
+  },
+  {
+    id: 'plus',
+    label: '플러스',
+    width: 100,
+    height: 90,
+    paint: 'stroke',
+    strokeWidth: 6,
+    paths: ['M34 14 L 36 58', 'M14 36 L 58 34', 'M76 54 L 77 80', 'M64 67 L 90 66'],
+  },
+  {
+    id: 'dots',
+    label: '점 셋',
+    width: 120,
+    height: 40,
+    paint: 'fill',
+    paths: [circle(22, 20, 10), circle(60, 20, 10), circle(98, 20, 10)],
+  },
+  {
+    id: 'heart-fill',
+    label: '하트 채움',
+    width: 100,
+    height: 92,
+    paint: 'fill',
+    paths: [
+      'M50 86 C 26 68, 4 52, 6 28 C 8 8, 34 2, 50 22 C 66 2, 92 8, 94 28 C 96 52, 74 68, 50 86 Z',
+    ],
+  },
+  {
+    id: 'lightning',
+    label: '번개',
+    width: 80,
+    height: 120,
+    paint: 'fill',
+    paths: ['M46 4 L 10 68 L 36 68 L 26 116 L 70 44 L 44 44 L 58 4 Z'],
+  },
+  {
+    id: 'crown',
+    label: '왕관',
+    width: 140,
+    height: 100,
+    paint: 'stroke',
+    strokeWidth: 5,
+    paths: ['M16 80 L 10 26 L 44 52 L 70 14 L 96 52 L 130 26 L 124 80 Z', 'M18 92 L 122 92'],
+  },
+  {
+    id: 'starburst',
+    label: '뱃지 별',
+    width: 140,
+    height: 140,
+    paint: 'fill',
+    paths: [burst(70, 70, 66, 52, 16)],
+  },
+  {
+    id: 'seal',
+    label: '도장 원',
+    width: 140,
+    height: 140,
+    paint: 'stroke',
+    strokeWidth: 4,
+    paths: [burst(70, 70, 64, 58, 24), circle(70, 70, 46)],
+  },
+  {
+    id: 'tape',
+    label: '마스킹 테이프',
+    width: 220,
+    height: 60,
+    paint: 'fill',
+    opacity: 0.6,
+    paths: [
+      'M10 12 L 16 18 L 10 24 L 16 30 L 10 36 L 16 42 L 10 48 L 210 46 L 204 40 L 210 34 L 204 28 L 210 22 L 204 16 L 210 10 Z',
+    ],
+  },
+  {
+    id: 'sticky',
+    label: '메모지',
+    width: 160,
+    height: 160,
+    paint: 'fill',
+    opacity: 0.85,
+    paths: ['M14 18 L 146 10 L 150 120 L 120 150 L 18 146 Z'],
+  },
+  {
+    id: 'blob',
+    label: '물방울 면',
+    width: 200,
+    height: 160,
+    paint: 'fill',
+    opacity: 0.35,
+    paths: [
+      'M44 22 C 84 -2, 150 6, 180 40 C 206 70, 194 122, 150 142 C 108 160, 46 154, 20 120 C -2 90, 6 44, 44 22 Z',
+    ],
+  },
+  {
+    id: 'thought',
+    label: '생각 풍선',
+    width: 200,
+    height: 150,
+    paint: 'stroke',
+    strokeWidth: 5,
+    paths: [
+      'M50 40 C 50 14, 90 8, 104 24 C 120 6, 162 12, 164 40 C 192 44, 194 84, 166 92 C 166 116, 128 122, 112 108 C 96 124, 52 120, 50 98 C 22 96, 18 58, 50 40 Z',
+      circle(46, 122, 9),
+      circle(28, 140, 5),
+    ],
+  },
+  {
+    id: 'brace',
+    label: '중괄호',
+    width: 60,
+    height: 160,
+    paint: 'stroke',
+    strokeWidth: 5,
+    paths: [
+      'M46 8 C 24 10, 30 40, 28 62 C 26 74, 18 78, 10 80 C 18 82, 26 86, 28 98 C 30 120, 24 150, 46 152',
+    ],
+  },
+  {
+    id: 'shine',
+    label: '빛 선',
+    width: 140,
+    height: 70,
+    paint: 'stroke',
+    strokeWidth: 5,
+    paths: [
+      'M18 60 L 34 46',
+      'M44 30 L 52 10',
+      'M70 26 L 70 4',
+      'M96 30 L 88 10',
+      'M122 60 L 106 46',
+    ],
+  },
+  {
+    id: 'arrow-dashed',
+    label: '점선 화살표',
+    width: 180,
+    height: 100,
+    paint: 'stroke',
+    strokeWidth: 5,
+    dash: '10 12',
+    paths: ['M12 86 C 40 30, 100 14, 158 30'],
+  },
 ];
+
+/** 가운데 (cx, cy), 반지름 r 인 원 경로. */
+function circle(cx: number, cy: number, r: number): string {
+  return `M${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0 Z`;
+}
+
+/** 뾰족한 끝이 `points` 개인 별꼴(뱃지·도장 테두리). 바깥 반지름 `outer`, 안쪽 `inner`. */
+function burst(cx: number, cy: number, outer: number, inner: number, points: number): string {
+  const corners: string[] = [];
+  for (let index = 0; index < points * 2; index += 1) {
+    const radius = index % 2 === 0 ? outer : inner;
+    const angle = (Math.PI * index) / points - Math.PI / 2;
+    corners.push(
+      `${(cx + radius * Math.cos(angle)).toFixed(1)} ${(cy + radius * Math.sin(angle)).toFixed(1)}`,
+    );
+  }
+  return `M${corners.join(' L ')} Z`;
+}
 
 /** 장식을 한 색으로 칠한 SVG data URL. 이미지 요소로 넣으므로 2배로 그려 둔다(흐려지지 않게). */
 export function decorationDataUrl(decoration: Decoration, color: string): string {
   const paint =
     decoration.paint === 'stroke'
-      ? `fill="none" stroke="${color}" stroke-width="${decoration.strokeWidth ?? 5}" stroke-linecap="round" stroke-linejoin="round"`
+      ? `fill="none" stroke="${color}" stroke-width="${decoration.strokeWidth ?? 5}" stroke-linecap="round" stroke-linejoin="round"${decoration.dash ? ` stroke-dasharray="${decoration.dash}"` : ''}`
       : `fill="${color}"${decoration.opacity ? ` fill-opacity="${decoration.opacity}"` : ''}`;
   const paths = decoration.paths.map((d) => `<path d="${d}"/>`).join('');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${decoration.width * 2}" height="${decoration.height * 2}" viewBox="0 0 ${decoration.width} ${decoration.height}" ${paint}>${paths}</svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
-}
-
-/** Open Doodles(CC0, `public/doodles/LICENSE.txt`) 사람 일러스트. 강조색 `#FF5678` 을 바꿔 칠할 수 있다. */
-export const DOODLES: { id: string; label: string }[] = [
-  { id: 'reading', label: '책 읽기' },
-  { id: 'sitting-reading', label: '앉아서 읽기' },
-  { id: 'reading-side', label: '누워 읽기' },
-  { id: 'coffee', label: '커피' },
-  { id: 'selfie', label: '셀카' },
-  { id: 'sitting', label: '앉기' },
-  { id: 'meditating', label: '명상' },
-  { id: 'unboxing', label: '상자 열기' },
-  { id: 'jumping', label: '점프' },
-  { id: 'running', label: '달리기' },
-  { id: 'sprinting', label: '전력 질주' },
-  { id: 'strolling', label: '산책' },
-  { id: 'groovy', label: '신남' },
-  { id: 'levitate', label: '둥실' },
-  { id: 'float', label: '떠다니기' },
-  { id: 'chilling', label: '쉬기' },
-  { id: 'laying', label: '눕기' },
-  { id: 'loving', label: '사랑' },
-  { id: 'doggie', label: '강아지' },
-  { id: 'dog-jump', label: '강아지 점프' },
-];
-
-/** 일러스트 원본의 강조색. */
-export const DOODLE_ACCENT = '#FF5678';
-
-/** 일러스트 SVG 글을 받아 강조색을 바꾼 data URL 로. `accent` 가 없으면 원래 색이다. */
-export function doodleDataUrl(svg: string, accent?: string): string {
-  const painted = accent ? svg.replaceAll(DOODLE_ACCENT, accent) : svg;
-  // 한글이 없는 SVG 지만, 혹시 모를 비 ASCII 글자에 btoa 가 깨지지 않게 UTF-8 로 바꾼다.
-  const bytes = new TextEncoder().encode(painted);
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return `data:image/svg+xml;base64,${btoa(binary)}`;
 }
