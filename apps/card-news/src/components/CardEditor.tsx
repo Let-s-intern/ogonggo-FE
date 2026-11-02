@@ -21,8 +21,15 @@ import {
   detachSlide,
   documentContent,
   documentTitle,
+  duplicateSlide,
+  insertSlide,
+  jobName,
+  moveSlide,
+  newSlide,
+  removeSlide,
   slideEditsOf,
   slideLabel,
+  slideName,
   withSlideEdit,
   withSlideLayers,
 } from '@/lib/card/document';
@@ -42,6 +49,7 @@ import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from '.
 import { PropertiesPanel } from './PropertiesPanel';
 import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
+import { type AddSlideOption, SlideStrip } from './SlideStrip';
 import { VariantPicker } from './VariantPicker';
 
 /**
@@ -65,6 +73,7 @@ function toggled<T>(set: Set<T>, value: T): Set<T> {
  */
 function BottomBar({
   slides,
+  names,
   title,
   variant,
   size,
@@ -74,6 +83,8 @@ function BottomBar({
 }: {
   /** 지금 시안으로 편 문서의 장. */
   slides: RenderSlide[];
+  /** 장 이름(`slideName()`). `slides` 와 같은 순서다. */
+  names: string[];
   /** 문서 제목. 묶어 받는 zip 이름에 쓴다. */
   title: string;
   variant: VariantId;
@@ -143,7 +154,7 @@ function BottomBar({
                 checked={!skipped.has(slide.id)}
                 onChange={() => setSkipped((current) => toggled(current, slide.id))}
               />
-              {slideLabel(slide, index)}
+              {slideLabel(names[index] ?? '', index)}
             </label>
           ))}
           <span className="text-sm text-gray-600">받을 크기</span>
@@ -265,6 +276,28 @@ export function CardEditor({ docId }: { docId: string }) {
   }, [variant, rememberVariant]);
 
   const layers = (variant && docSlide?.layers[variant]) || NO_LAYERS;
+  const names = useMemo(
+    () => (loaded ? loaded.doc.slides.map((item) => slideName(loaded.doc, item)) : []),
+    [loaded],
+  );
+  /** `장 추가` 메뉴. 지금 장 바로 뒤에 넣고 그 장으로 간다. */
+  const addSlide = (role: 'free' | 'profile' | 'job', jobIndex?: number) => {
+    const next = newSlide(role, jobIndex);
+    editor.changeSlides((doc) => insertSlide(doc, next, slide + 1));
+    setSlideId(next.id);
+    setSelected(null);
+  };
+  const addOptions: AddSlideOption[] = loaded
+    ? [
+        { key: 'free', label: '빈 장', onAdd: () => addSlide('free') },
+        ...loaded.doc.jobs.map((_, index) => ({
+          key: `job-${index}`,
+          label: `공고 장 · ${jobName(loaded.doc, index)}`,
+          onAdd: () => addSlide('job', index),
+        })),
+        { key: 'profile', label: '안내 장', onAdd: () => addSlide('profile') },
+      ]
+    : [];
   const slideEdits =
     variant && loaded && docSlide ? slideEditsOf(loaded.doc, docSlide)[variant] : undefined;
   const selectedLayer = isLayerRef(selected)
@@ -433,33 +466,48 @@ export function CardEditor({ docId }: { docId: string }) {
                 </p>
               ) : null}
               {built ? (
-                <EditorCanvas
-                  slides={built}
-                  size={size}
-                  slide={docSlide.id}
-                  edits={slideEdits}
-                  layers={layers}
-                  onLayers={setLayers}
-                  checkLayers={checkLayers}
-                  onLogo={(image) =>
-                    void fileToDataUrl(image).then(editor.setLogo, () => undefined)
-                  }
-                  onBrand={(image) => void editor.setBrandImage(image)}
-                  textColor={resolvePalette(variant, loaded.doc.settings).headlineText}
-                  selected={selected}
-                  onSelect={setSelected}
-                  onSlideChange={(next) => {
-                    setSlideId(next);
-                    setSelected(null);
-                  }}
-                  onEdit={(id, edit, group) =>
-                    editor.setEdits(variant, docSlide.id, id, edit, group)
-                  }
-                  content={content}
-                  variant={variant}
-                  onContentChange={editor.setContent}
-                  sectionLabels={sectionLabels}
-                />
+                <>
+                  <EditorCanvas
+                    slides={built}
+                    size={size}
+                    slide={docSlide.id}
+                    edits={slideEdits}
+                    layers={layers}
+                    onLayers={setLayers}
+                    checkLayers={checkLayers}
+                    onLogo={(image) =>
+                      void fileToDataUrl(image).then(editor.setLogo, () => undefined)
+                    }
+                    onBrand={(image) => void editor.setBrandImage(image)}
+                    textColor={resolvePalette(variant, loaded.doc.settings).headlineText}
+                    selected={selected}
+                    onSelect={setSelected}
+                    onEdit={(id, edit, group) =>
+                      editor.setEdits(variant, docSlide.id, id, edit, group)
+                    }
+                    content={content}
+                    variant={variant}
+                    onContentChange={editor.setContent}
+                    sectionLabels={sectionLabels}
+                  />
+                  <SlideStrip
+                    slides={built}
+                    names={names}
+                    size={size}
+                    current={docSlide.id}
+                    onSelect={(next) => {
+                      setSlideId(next);
+                      setSelected(null);
+                    }}
+                    onMove={(id, to) => editor.changeSlides((doc) => moveSlide(doc, id, to))}
+                    onDuplicate={(id) => editor.changeSlides((doc) => duplicateSlide(doc, id))}
+                    onRemove={(id) => {
+                      editor.changeSlides((doc) => removeSlide(doc, id));
+                      setSelected(null);
+                    }}
+                    addOptions={addOptions}
+                  />
+                </>
               ) : (
                 <div className="flex h-80 items-center justify-center rounded-2xl bg-gray-100 text-sm text-gray-400">
                   그리는 중
@@ -526,6 +574,7 @@ export function CardEditor({ docId }: { docId: string }) {
           </div>
           <BottomBar
             slides={slides}
+            names={names}
             title={documentTitle(loaded.doc)}
             variant={variant}
             size={size}

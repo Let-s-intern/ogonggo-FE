@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import { Button } from '@ogonggo/ui';
-import { type RenderSlide, type SlideRole, slideLabel } from '@/lib/card/document';
+import type { RenderSlide, SlideRole } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
@@ -80,7 +80,7 @@ export function useBuiltSlides(
 }
 
 /** 1080 폭 장 하나를 `width` 폭으로 줄여 그린다. `slideId` 를 주면 `measureSlideBoxes` 가 찾는다. */
-function SlideStage({
+export function SlideStage({
   element,
   size,
   width,
@@ -133,7 +133,7 @@ interface Box {
 }
 
 /**
- * 캔버스 아래 썸네일에서 장 하나(`slideId`)의 요소 상자를 잰다(1080 폭 좌표, 편집값이 걸린 자리).
+ * 캔버스 아래 장 목록(`SlideStrip`)의 썸네일에서 장 하나(`slideId`)의 요소 상자를 잰다(1080 폭 좌표, 편집값이 걸린 자리).
  * 썸네일은 문서의 모든 장이 늘 그려져 있어 지금 보고 있지 않은 장도 잰다. 썸네일이 없으면 `null`. 자유 요소는 `layer:<id>` 로
  * 뒤에 붙는다.
  */
@@ -319,7 +319,6 @@ export function EditorCanvas({
   layers,
   selected,
   onSelect,
-  onSlideChange,
   onEdit,
   onLayers,
   content,
@@ -341,7 +340,6 @@ export function EditorCanvas({
   layers: Layer[];
   selected: Selection | null;
   onSelect: (id: Selection | null) => void;
-  onSlideChange: (slideId: string) => void;
   onEdit: (id: ElementId, edit: ElementEdit | null, group?: string) => void;
   onLayers: (layers: Layer[], group?: string) => void;
   /** 문구와 템플릿. 템플릿 글자를 두 번 눌러 고칠 때 쓴다. */
@@ -1076,32 +1074,6 @@ export function EditorCanvas({
         </span>
       </div>
       {message ? <p className="text-center text-sm text-error">{message}</p> : null}
-
-      <div className="flex justify-center gap-3">
-        {slides.map((built, index) => (
-          <button
-            key={built.id}
-            type="button"
-            onClick={() => onSlideChange(built.id)}
-            aria-pressed={built.id === slide}
-            className="flex flex-col items-center gap-1"
-          >
-            <span
-              className={`pointer-events-none block overflow-hidden outline-offset-2 ${
-                built.id === slide ? 'outline outline-2 outline-blue-500' : 'hover:outline-gray-300'
-              }`}
-            >
-              <SlideStage element={built.element} size={cardSize} width={96} slideId={built.id} />
-            </span>
-            <span
-              className={`text-xs ${built.id === slide ? 'font-bold text-gray-900' : 'text-gray-500'}`}
-            >
-              {slideLabel(built, index)}
-            </span>
-            {built.overflow ? <span className="text-xs font-semibold text-error">넘침</span> : null}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

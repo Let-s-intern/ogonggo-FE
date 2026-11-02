@@ -49,9 +49,12 @@ export const MAX_SLIDES = 10;
 export const MIN_BUNDLE_JOBS = 2;
 export const MAX_BUNDLE_JOBS = MAX_SLIDES - 2;
 
-/** 장 목록에 보이는 장 이름(`2. 자격·우대 요건`). `index` 는 문서의 몇 번째 장인가(0부터). */
-export function slideLabel(slide: Pick<DocumentSlide, 'role'>, index: number): string {
-  return `${index + 1}. ${ROLE_LABELS[slide.role]}`;
+/**
+ * 장 목록·받기에 보이는 장 이름(`2. 자격·우대 요건`). `name` 은 `slideName()` 이다. `index` 는 문서의
+ * 몇 번째 장인가(0부터).
+ */
+export function slideLabel(name: string, index: number): string {
+  return `${index + 1}. ${name}`;
 }
 
 /** 템플릿을 바꾸지 않을 때 쓰는 시안. 비서 도구가 템플릿을 모를 때와 같다. */
@@ -506,4 +509,118 @@ export function withContent(doc: CardDocument, content: CardContent, jobIndex = 
 export function documentTitle(doc: CardDocument): string {
   const names = [...new Set(doc.jobs.map((job) => job.companyName))];
   return names.length > 0 ? names.join(' · ') : '빈 캔버스';
+}
+
+/**
+ * 장 이름. 묶음은 `표지`, 공고 장은 그 공고의 직무(표지 표 줄), `프로필 안내` 다. 공고 하나·빈 캔버스는
+ * 장 종류 이름이다.
+ */
+export function slideName(doc: CardDocument, slide: DocumentSlide): string {
+  if (doc.kind !== 'bundle') {
+    return ROLE_LABELS[slide.role];
+  }
+  if (slide.role === 'cover') {
+    return '표지';
+  }
+  if (slide.role === 'job') {
+    return jobName(doc, slide.jobIndex ?? 0);
+  }
+  return ROLE_LABELS[slide.role];
+}
+
+/** 묶은 공고 하나의 이름. 표지 표의 직무, 없으면 직무명, 그것도 없으면 `공고 <n>`. */
+export function jobName(doc: CardDocument, jobIndex: number): string {
+  return (
+    doc.cover?.rows[jobIndex]?.[0]?.trim() ||
+    doc.jobs[jobIndex]?.content.roleTitle.trim() ||
+    `공고 ${jobIndex + 1}`
+  );
+}
+
+/** 새 장. 공고 장은 `jobIndex` 의 공고를 그린다. */
+export function newSlide(role: SlideRole, jobIndex?: number): DocumentSlide {
+  return {
+    id: newSlideId(),
+    role,
+    ...(role === 'job' ? { jobIndex: jobIndex ?? 0 } : {}),
+    edits: {},
+    layers: {},
+  };
+}
+
+/**
+ * 공고 장 순서에 맞춰 `jobs` 와 표지 표 줄을 다시 줄 세운 문서. 공고 장에 처음 나오는 순서이고, 장이 없는
+ * 공고는 원래 순서대로 뒤에 둔다. 장의 `jobIndex` 도 새 순서로 고친다.
+ */
+function withJobOrder(doc: CardDocument): CardDocument {
+  const seen = doc.slides.flatMap((slide) =>
+    slide.role === 'job' && slide.jobIndex !== undefined ? [slide.jobIndex] : [],
+  );
+  const order = [...new Set([...seen, ...doc.jobs.map((_, index) => index)])].filter(
+    (index) => index < doc.jobs.length,
+  );
+  if (order.every((from, to) => from === to)) {
+    return doc;
+  }
+  const moved = (index: number) => order.indexOf(index);
+  return {
+    ...doc,
+    jobs: order.map((index) => doc.jobs[index]!),
+    ...(doc.cover
+      ? {
+          cover: {
+            ...doc.cover,
+            rows: order.flatMap((index) => {
+              const row = doc.cover?.rows[index];
+              return row ? [row] : [];
+            }),
+          },
+        }
+      : {}),
+    slides: doc.slides.map((slide) =>
+      slide.role === 'job' && slide.jobIndex !== undefined
+        ? { ...slide, jobIndex: moved(slide.jobIndex) }
+        : slide,
+    ),
+  };
+}
+
+/** 장 하나를 `to` 자리로 옮긴 문서. 공고 장 순서가 바뀌면 `jobs` 와 표지 표 줄 순서도 따라간다. */
+export function moveSlide(doc: CardDocument, slideId: string, to: number): CardDocument {
+  const from = doc.slides.findIndex((slide) => slide.id === slideId);
+  const target = Math.max(0, Math.min(doc.slides.length - 1, to));
+  if (from < 0 || from === target) {
+    return doc;
+  }
+  const slides = doc.slides.filter((slide) => slide.id !== slideId);
+  slides.splice(target, 0, doc.slides[from]!);
+  return withJobOrder({ ...doc, slides });
+}
+
+/** `at` 자리에 장을 넣은 문서. 장 상한이면 그대로다. */
+export function insertSlide(doc: CardDocument, slide: DocumentSlide, at: number): CardDocument {
+  if (doc.slides.length >= MAX_SLIDES) {
+    return doc;
+  }
+  const slides = [...doc.slides];
+  slides.splice(Math.max(0, Math.min(slides.length, at)), 0, slide);
+  return withJobOrder({ ...doc, slides });
+}
+
+/** 장 하나를 바로 뒤에 복제한 문서. 편집값과 자유 요소를 같이 옮긴다. 장 상한이면 그대로다. */
+export function duplicateSlide(doc: CardDocument, slideId: string): CardDocument {
+  const index = doc.slides.findIndex((slide) => slide.id === slideId);
+  const source = doc.slides[index];
+  if (!source) {
+    return doc;
+  }
+  return insertSlide(doc, { ...structuredClone(source), id: newSlideId() }, index + 1);
+}
+
+/** 장 하나를 지운 문서. 마지막 한 장은 지우지 않는다. 공고는 문서에 남는다(표지 표 줄도). */
+export function removeSlide(doc: CardDocument, slideId: string): CardDocument {
+  if (doc.slides.length <= 1) {
+    return doc;
+  }
+  return withJobOrder({ ...doc, slides: doc.slides.filter((slide) => slide.id !== slideId) });
 }
