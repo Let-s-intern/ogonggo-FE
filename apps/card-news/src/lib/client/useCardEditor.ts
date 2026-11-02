@@ -5,6 +5,7 @@ import type { AiDraft, DraftResult } from '../ai/draft';
 import {
   type CardDocument,
   type RenderSlide,
+  companyNames,
   singleDocument,
   slideSpec,
   withContent,
@@ -40,6 +41,7 @@ import {
 } from './storage';
 import {
   FALLBACK_COLOR,
+  OGONGGO_COLOR,
   type ProcessedLogo,
   defaultSettings,
   extractBrandColor,
@@ -511,9 +513,15 @@ export function useCardEditor() {
     }
   }, [loaded, selectJob]);
 
+  // 여러 회사 묶음은 첫 회사 로고 색이 아니라 오공고 색으로 되돌린다.
   const resetBrandColor = useCallback(() => {
     if (loaded) {
-      setSettings({ brandColor: loaded.brandColor ?? FALLBACK_COLOR });
+      setSettings({
+        brandColor:
+          companyNames(loaded.doc).length > 1
+            ? OGONGGO_COLOR
+            : (loaded.brandColor ?? FALLBACK_COLOR),
+      });
     }
   }, [loaded, setSettings]);
 

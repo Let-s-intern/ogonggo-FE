@@ -21,6 +21,7 @@ import {
   type BundleLayout,
   attachSlide,
   bundleLayoutOf,
+  companyNames,
   detachSlide,
   documentContent,
   documentTitle,
@@ -776,6 +777,7 @@ export function CardEditor({ docId }: { docId: string }) {
               }
               brandColor={loaded.brandColor}
               onResetBrandColor={editor.resetBrandColor}
+              multiCompany={companyNames(loaded.doc).length > 1}
               logo={loaded.logo}
               onLogoChange={editor.setLogo}
               onBrandImage={(file) => void editor.setBrandImage(file)}

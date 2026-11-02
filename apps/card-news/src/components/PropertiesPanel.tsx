@@ -30,6 +30,8 @@ interface PropertiesPanelProps {
   /** 로고에서 뽑은 대표 색. 없으면 로고가 흑백이었거나 로고가 없다. */
   brandColor: string | null;
   onResetBrandColor: () => void;
+  /** 여러 회사 묶음. 브랜드색을 로고 색이 아니라 오공고 색으로 되돌린다. */
+  multiCompany?: boolean;
   logo?: string;
   onLogoChange: (logo: string | undefined) => void;
   /** 브랜드 로고를 올린 이미지로. `null` 이면 올린 로고를 지운다. */
@@ -595,6 +597,7 @@ function Properties({
   onSettingsChange,
   brandColor,
   onResetBrandColor,
+  multiCompany,
   logo,
   onLogoChange,
   onBrandImage,
@@ -661,13 +664,15 @@ function Properties({
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold">공통 설정</h2>
         <Button type="button" size="sm" variant="ghost" onClick={onResetBrandColor}>
-          로고 색으로 다시 맞추기
+          {multiCompany ? '오공고 색으로 다시 맞추기' : '로고 색으로 다시 맞추기'}
         </Button>
       </div>
       <p className="-mt-2 text-xs text-gray-500">
-        {brandColor
-          ? `로고에서 뽑은 색: ${brandColor}. 여기서 바꾸면 모든 시안에 같이 걸립니다.`
-          : '로고에서 색을 뽑지 못해 기본 민트로 시작했어요.'}
+        {multiCompany
+          ? '여러 회사 묶음은 오공고 색으로 시작했어요. 여기서 바꾸면 모든 시안에 같이 걸립니다.'
+          : brandColor
+            ? `로고에서 뽑은 색: ${brandColor}. 여기서 바꾸면 모든 시안에 같이 걸립니다.`
+            : '로고에서 색을 뽑지 못해 기본 민트로 시작했어요.'}
       </p>
 
       <ColorField

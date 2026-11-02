@@ -21,7 +21,7 @@ import {
   saveDocument,
 } from '@/lib/client/storage';
 import type { JobListItem } from '@/lib/server/ogonggo';
-import { FALLBACK_COLOR, defaultSettings } from '@/lib/client/theme';
+import { FALLBACK_COLOR, OGONGGO_COLOR, defaultSettings } from '@/lib/client/theme';
 import { fetchCardJob, useCardEditor } from '@/lib/client/useCardEditor';
 import { JobPicker } from './JobPicker';
 import { EMPTY_REQUEST, RequestPanel, type StartRequest, requestText } from './RequestPanel';
@@ -258,7 +258,12 @@ function BundleTab({
           content: contentFromDraft(job, result.draft.jobs[index]!),
         })),
         result.draft,
-        defaultSettings(first.brandColor ?? FALLBACK_COLOR),
+        // 여러 회사를 묶으면 첫 회사 로고 색이 아니라 오공고 색으로 시작한다.
+        defaultSettings(
+          new Set(picked.map((job) => job.companyName)).size > 1
+            ? OGONGGO_COLOR
+            : (first.brandColor ?? FALLBACK_COLOR),
+        ),
         { request: text, uploads: request.images.map((image) => image.id) },
         kind === 'topic'
           ? { kind: 'companies', perSlide: 2, manual: true }

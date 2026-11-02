@@ -4,6 +4,12 @@ import type { CardSettings } from '../card/types';
 /** 로고에서 색을 못 뽑았을 때(흑백 로고 등)의 바탕. 오공고 인스타 계정의 민트다. */
 export const FALLBACK_COLOR = '#9CF6EE';
 
+/**
+ * 여러 회사 묶음의 처음 브랜드색. 한 회사 로고 색을 묶음 전체에 쓰면 그 회사 게시물처럼 보여 오공고 파랑으로
+ * 시작한다(오공고 웹 `theme_color`, 오공고 심볼 색).
+ */
+export const OGONGGO_COLOR = '#4A76FF';
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
