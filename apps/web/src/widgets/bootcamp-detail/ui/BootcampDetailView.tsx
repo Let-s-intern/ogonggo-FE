@@ -145,10 +145,10 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
             />
           </StickyApplyBar>
           <DetailSidebarSection>
-            <SimilarBootcamps excludeBootcampId={bootcamp.id} />
+            <BootcampRecommendedChallenges />
           </DetailSidebarSection>
           <DetailSidebarSection>
-            <BootcampRecommendedChallenges />
+            <SimilarBootcamps excludeBootcampId={bootcamp.id} />
           </DetailSidebarSection>
         </aside>
       </div>

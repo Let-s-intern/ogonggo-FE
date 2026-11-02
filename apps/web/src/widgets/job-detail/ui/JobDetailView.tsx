@@ -131,8 +131,8 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         </div>
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
-          <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
           <JobRecommendedContents jobId={job.id} />
+          <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
         </aside>
       </div>
     );
@@ -169,10 +169,10 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
             {applyCta}
           </StickyApplyBar>
           <DetailSidebarSection>
-            <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+            <JobRecommendedContents jobId={job.id} />
           </DetailSidebarSection>
           <DetailSidebarSection>
-            <JobRecommendedContents jobId={job.id} />
+            <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
           </DetailSidebarSection>
         </aside>
       </div>
