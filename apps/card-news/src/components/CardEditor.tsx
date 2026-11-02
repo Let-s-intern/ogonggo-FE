@@ -60,7 +60,6 @@ import { TemplateDrawer } from './drawers/TemplateDrawer';
 import { LeftRail } from './LeftRail';
 import { PropertiesPanel } from './PropertiesPanel';
 import { templateTextField } from './TextPopover';
-import { RegenerateModal } from './RegenerateModal';
 import { type AddSlideOption, SlideStrip } from './SlideStrip';
 import { VariantPicker } from './VariantPicker';
 
@@ -70,6 +69,9 @@ import { VariantPicker } from './VariantPicker';
  */
 const MAX_RENDER_REQUEST = 4_000_000;
 const NO_LAYERS: Layer[] = [];
+
+/** 캔버스 칸 아래 비울 높이. 캔버스 아래 떠 있는 AI 입력창(접었을 때)이 캔버스를 가리지 않게. */
+const AI_SPACE = 84;
 
 /** 왼쪽 레일. 도형·배경 서랍은 2차라 두지 않는다. */
 type DrawerKey = 'template' | 'text' | 'elements' | 'upload' | 'jobs';
@@ -84,7 +86,6 @@ type DrawerKey = 'template' | 'text' | 'elements' | 'upload' | 'jobs';
 export function CardEditor({ docId }: { docId: string }) {
   const editor = useCardEditor();
   const { loaded, status, notice, specs, openDocument } = editor;
-  const [regenerateOpen, setRegenerateOpen] = useState(false);
   /** 템플릿 고르기(시안을 나란히)를 보고 있는가. 여기서 새로 만든 문서는 이것부터 연다. */
   const [picking, setPicking] = useState(false);
   const [size, setSize] = useState<CardSizeId>('post');
@@ -386,11 +387,6 @@ export function CardEditor({ docId }: { docId: string }) {
               처음부터 다시
             </Button>
           ) : null}
-          {loaded?.job && editing ? (
-            <Button size="sm" variant="ghost" onClick={() => setRegenerateOpen(true)}>
-              AI로 다시 쓰기
-            </Button>
-          ) : null}
           <Button size="sm" variant="ghost" onClick={() => void logout()}>
             로그아웃
           </Button>
@@ -534,36 +530,45 @@ export function CardEditor({ docId }: { docId: string }) {
             ]}
           />
           <section className="flex min-w-0 flex-1 flex-col">
-            {built ? (
-              <EditorCanvas
-                slides={built}
-                size={size}
-                slide={docSlide.id}
-                edits={slideEdits}
-                layers={layers}
-                onLayers={setLayers}
-                checkLayers={checkLayers}
-                onLogo={(image) =>
-                  void fileToDataUrl(image).then(editor.setLogo, () => undefined)
-                }
-                onBrand={(image) => void editor.setBrandImage(image)}
-                textColor={palette?.headlineText ?? '#111111'}
-                canvasRef={canvasRef}
-                selected={selected}
-                onSelect={setSelected}
-                onEdit={(id, edit, group) => editor.setEdits(variant, docSlide.id, id, edit, group)}
-                content={content}
-                variant={variant}
-                onContentChange={(next) => editor.setSlideContent(docSlide.id, next)}
-                sectionLabels={sectionLabels}
-                zoom={zoom}
-                onScale={setScale}
-              />
-            ) : (
-              <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
-                그리는 중
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              {built ? (
+                <EditorCanvas
+                  slides={built}
+                  size={size}
+                  slide={docSlide.id}
+                  edits={slideEdits}
+                  layers={layers}
+                  onLayers={setLayers}
+                  checkLayers={checkLayers}
+                  onLogo={(image) =>
+                    void fileToDataUrl(image).then(editor.setLogo, () => undefined)
+                  }
+                  onBrand={(image) => void editor.setBrandImage(image)}
+                  textColor={palette?.headlineText ?? '#111111'}
+                  canvasRef={canvasRef}
+                  selected={selected}
+                  onSelect={setSelected}
+                  onEdit={(id, edit, group) => editor.setEdits(variant, docSlide.id, id, edit, group)}
+                  content={content}
+                  variant={variant}
+                  onContentChange={(next) => editor.setSlideContent(docSlide.id, next)}
+                  sectionLabels={sectionLabels}
+                  zoom={zoom}
+                  onScale={setScale}
+                  bottomSpace={AI_SPACE}
+                />
+              ) : (
+                <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
+                  그리는 중
+                </div>
+              )}
+              {/* 캔버스 아래 떠 있는 AI 입력창. 장 목록 위, 캔버스 칸 안에 있어 장 목록·내보내기에 가리지 않는다. */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center">
+                <div className="pointer-events-auto flex w-full justify-center">
+                  <AssistantPanel context={toolContext} />
+                </div>
               </div>
-            )}
+            </div>
             {built ? (
               <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-2">
                 <SlideStrip
@@ -651,9 +656,6 @@ export function CardEditor({ docId }: { docId: string }) {
               onBrandImage={(file) => void editor.setBrandImage(file)}
               candidates={editor.candidates}
             />
-            <section className="p-4">
-              <AssistantPanel context={toolContext} />
-            </section>
           </aside>
         </div>
       ) : loaded && specs ? (
@@ -670,14 +672,6 @@ export function CardEditor({ docId }: { docId: string }) {
         </div>
       ) : null}
 
-      <RegenerateModal
-        open={regenerateOpen}
-        busy={editor.regenerating}
-        onClose={() => setRegenerateOpen(false)}
-        onSubmit={(instruction) =>
-          void editor.regenerate(instruction).then((ok) => ok && setRegenerateOpen(false))
-        }
-      />
     </main>
   );
 }

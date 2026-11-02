@@ -1,7 +1,7 @@
 'use client';
 
-import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { Button, Callout, Textarea, cn } from '@ogonggo/ui';
+import { type FormEvent, type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import { Button, Callout, cn } from '@ogonggo/ui';
 import type { ToolContext } from '@/lib/ai/tools';
 import { useAssistantChat } from '@/lib/client/useAssistantChat';
 
@@ -14,25 +14,29 @@ const FAVORITES = [
 ];
 
 /**
- * 오른쪽 AI 탭. 말로 요청하면 비서가 도구로 문구·템플릿·설정·요소 배치를 직접 바꾼다. 받기는 하지 않는다
- * — 사람이 하단 바에서 받는다.
+ * 캔버스 아래 떠 있는 `AI로 수정` 입력창. 말로 요청하면 비서가 도구로 문구·템플릿·설정·요소 배치를
+ * 직접 바꾼다. 문구 다시 쓰기도 여기서 한다(`rewrite_copy`). 받기는 하지 않는다 — 사람이 위 막대의
+ * `내보내기` 로 받는다.
  *
- * 탭을 옮겨도 대화가 남도록 속성 패널이 숨겨 둔 채로 계속 그린다.
+ * 대화 기록은 `기록` 을 누르거나 보내면 입력창 위로 펼쳐진다. 접어도 대화와 진행 중인 요청은 남는다.
+ * `scope` 는 입력창 위에 그릴 범위 알약이다.
  */
-export function AssistantPanel({ context }: { context: ToolContext }) {
+export function AssistantPanel({ context, scope }: { context: ToolContext; scope?: ReactNode }) {
   const [draft, setDraft] = useState('');
+  const [open, setOpen] = useState(false);
   const { lines, error, isBusy, send, stop, reset } = useAssistantChat(context);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-  }, [lines, isBusy]);
+  }, [lines, isBusy, open]);
 
   const submit = (text: string) => {
     if (!text.trim() || isBusy) {
       return;
     }
     setDraft('');
+    setOpen(true);
     void send(text);
   };
 
@@ -46,81 +50,95 @@ export function AssistantPanel({ context }: { context: ToolContext }) {
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       submit(draft);
+    } else if (event.key === 'Escape') {
+      setOpen(false);
     }
   };
 
-  // 화면 높이에서 위 막대와 탭을 뺀 만큼.
   return (
-    <div className="flex h-[calc(100vh-10rem)] min-h-[420px] flex-col">
-      <div className="flex items-start justify-between gap-2 pb-3">
-        <p className="text-xs text-gray-500">
-          문구, 템플릿, 색과 로고, 글자 크기, 요소 자리를 바꿉니다. 바꾼 것은 캔버스를 누른 뒤
-          Ctrl+Z 로 한 번에 되돌립니다.
-        </p>
-        {lines.length > 0 ? (
-          <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
-            새 대화
-          </Button>
-        ) : null}
-      </div>
-
-      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto border-t border-gray-100 py-3">
-        {lines.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            예: 제목을 더 크게, 회사 로고를 오른쪽 아래로, 템플릿을 브랜드색 물결로.
-          </p>
-        ) : null}
-        {lines.map((line, index) => (
-          <p
-            key={index}
-            className={cn(
-              'whitespace-pre-wrap',
-              line.kind === 'user' && 'ml-8 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-900',
-              line.kind === 'activity' && 'text-xs text-gray-400',
-              line.kind === 'assistant' && 'text-sm leading-relaxed text-gray-900',
-            )}
-          >
-            {line.text}
-          </p>
-        ))}
-        {isBusy ? <p className="text-sm text-gray-400">생각하는 중입니다.</p> : null}
-        {error ? <Callout tone="error">{error}</Callout> : null}
-      </div>
-
-      <form onSubmit={onSubmit} className="border-t border-gray-100 pt-3">
-        <div className="flex flex-wrap gap-1.5 pb-2">
-          {FAVORITES.map((favorite) => (
-            <button
-              key={favorite.label}
-              type="button"
-              title={favorite.prompt}
-              disabled={isBusy}
-              onClick={() => submit(favorite.prompt)}
-              className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-            >
-              {favorite.label}
-            </button>
-          ))}
+    <div
+      role="region"
+      aria-label="AI로 수정"
+      className="flex w-[min(620px,calc(100%-2rem))] flex-col gap-2 rounded-2xl border border-indigo-200 bg-white p-2.5 shadow-[0_6px_20px_rgba(55,48,163,0.12)]"
+    >
+      {open ? (
+        <div className="flex flex-col gap-2 border-b border-gray-100 pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-gray-500">
+              문구, 템플릿, 색과 로고, 글자 크기, 요소 자리를 바꿉니다. 바꾼 것은 캔버스를 누른 뒤
+              Ctrl+Z 로 한 번에 되돌립니다.
+            </p>
+            <span className="flex shrink-0 gap-1">
+              {lines.length > 0 ? (
+                <Button variant="ghost" size="sm" onClick={reset}>
+                  새 대화
+                </Button>
+              ) : null}
+              <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+                접기
+              </Button>
+            </span>
+          </div>
+          <div ref={listRef} className="max-h-[40vh] space-y-3 overflow-y-auto">
+            {lines.map((line, index) => (
+              <p
+                key={index}
+                className={cn(
+                  'whitespace-pre-wrap',
+                  line.kind === 'user' &&
+                    'ml-8 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-900',
+                  line.kind === 'activity' && 'text-xs text-gray-400',
+                  line.kind === 'assistant' && 'text-sm leading-relaxed text-gray-900',
+                )}
+              >
+                {line.text}
+              </p>
+            ))}
+            {isBusy ? <p className="text-sm text-gray-400">생각하는 중입니다.</p> : null}
+            {error ? <Callout tone="error">{error}</Callout> : null}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {FAVORITES.map((favorite) => (
+              <button
+                key={favorite.label}
+                type="button"
+                title={favorite.prompt}
+                disabled={isBusy}
+                onClick={() => submit(favorite.prompt)}
+                className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {favorite.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <Textarea
+      ) : null}
+      {scope}
+      <form onSubmit={onSubmit} className="flex items-center gap-2">
+        <textarea
           aria-label="AI 비서에게 요청"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="무엇을 바꿀까요? Shift+Enter 로 줄을 바꿉니다."
-          rows={2}
+          placeholder="예: 제목을 더 짧게, 강조를 '문과'에만 두고 표를 위로 올려줘"
+          rows={1}
           maxLength={1000}
+          className="h-9 min-w-0 flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none"
         />
-        <div className="flex justify-end gap-2 pt-2">
-          {isBusy ? (
-            <Button type="button" variant="secondary" size="sm" onClick={stop}>
-              멈추기
-            </Button>
-          ) : null}
-          <Button type="submit" size="sm" disabled={isBusy || !draft.trim()}>
-            보내기
+        {!open ? (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)}>
+            {isBusy ? '생각하는 중' : lines.length > 0 ? '기록' : '자주 쓰는 요청'}
           </Button>
-        </div>
+        ) : null}
+        {isBusy ? (
+          <Button type="button" variant="secondary" size="sm" onClick={stop}>
+            멈추기
+          </Button>
+        ) : (
+          <Button type="submit" size="sm" disabled={!draft.trim()}>
+            수정
+          </Button>
+        )}
       </form>
     </div>
   );

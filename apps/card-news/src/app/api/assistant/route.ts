@@ -113,10 +113,11 @@ const TOOLS = [
     function: {
       name: 'rewrite_copy',
       description:
-        '공고 원문을 다시 읽고 문구(제목, 직무, 목록, 안내, 게시물 본문)를 지시대로 새로 쓴다. 원문에 근거해 쓰므로 사실을 새로 써야 할 때는 set_content 대신 이것을 쓴다. 뱃지와 3장 문구는 바꾸지 않는다.',
+        '공고 원문을 다시 읽고 문구(제목, 직무, 목록, 안내, 게시물 본문)를 지시대로 새로 쓴다. slide 의 장이 그리는 공고를 다시 쓰고, 빼면 보고 있는 장이다. 원문에 근거해 쓰므로 사실을 새로 써야 할 때는 set_content 대신 이것을 쓴다. 뱃지, 3장 문구, 마감 기한(지시가 마감을 바꾸라고 할 때만 바뀐다)은 그대로다. 묶음 표지와 묶음의 게시물 본문은 바꾸지 않는다.',
       parameters: {
         type: 'object',
         properties: {
+          slide: { type: 'integer', minimum: 1, maximum: MAX_SLIDES },
           instruction: { type: 'string', description: '어떻게 바꿀지. 예: 제목을 더 짧게' },
         },
         required: ['instruction'],

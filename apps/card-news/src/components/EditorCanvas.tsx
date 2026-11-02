@@ -372,6 +372,7 @@ export function EditorCanvas({
   zoom,
   onScale,
   canvasRef,
+  bottomSpace = FRAME_PADDING,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
@@ -405,6 +406,8 @@ export function EditorCanvas({
   onScale?: (scale: number) => void;
   /** 서랍이 캔버스에 요소를 넣을 때 쓴다. */
   canvasRef?: Ref<CanvasHandle>;
+  /** 캔버스 칸 아래 비울 높이(px). 캔버스 아래 떠 있는 AI 입력창 자리다. */
+  bottomSpace?: number;
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
@@ -444,7 +447,7 @@ export function EditorCanvas({
           Math.floor(
             Math.min(
               frame.clientWidth - FRAME_PADDING * 2,
-              ((frame.clientHeight - FRAME_TOP - FRAME_PADDING) * cardSize.width) /
+              ((frame.clientHeight - FRAME_TOP - bottomSpace) * cardSize.width) /
                 cardSize.height,
             ),
           ),
@@ -459,7 +462,7 @@ export function EditorCanvas({
       observer.disconnect();
       window.removeEventListener('resize', fit);
     };
-  }, [cardSize, zoom]);
+  }, [cardSize, zoom, bottomSpace]);
 
   const scale = width / cardSize.width;
   useEffect(() => {
@@ -1222,7 +1225,7 @@ export function EditorCanvas({
         onDrop={onDrop}
         aria-label="카드 캔버스. 요소를 눌러 고르고 끌어 옮깁니다."
         className="flex min-h-0 flex-1 overflow-auto outline-none"
-        style={{ padding: FRAME_PADDING, paddingTop: FRAME_TOP }}
+        style={{ padding: FRAME_PADDING, paddingTop: FRAME_TOP, paddingBottom: bottomSpace }}
       >
         {width && current ? (
           <div

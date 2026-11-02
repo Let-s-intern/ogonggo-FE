@@ -3,7 +3,6 @@ import {
   ROLE_LABELS,
   documentContent,
   slideVariant,
-  withContent,
   withSlideContent,
   withTemplate,
   withSlideEdit,
@@ -35,7 +34,12 @@ import {
 } from '../card/types';
 import { visibleSectionLabels } from '../card/render/slides';
 import { VARIANTS, variantOf } from '../card/variants';
-import { type EditSnapshot, type LoadedCard, requestDraft } from '../client/useCardEditor';
+import {
+  type EditSnapshot,
+  type LoadedCard,
+  fetchCardJob,
+  requestDraft,
+} from '../client/useCardEditor';
 
 /**
  * 편집 비서의 도구 실행기. 모델이 부른 도구를 브라우저에서 편집 상태에 실행한다. 도구의 이름과 인자
@@ -469,26 +473,43 @@ async function rewriteCopy(
   if (!instruction) {
     return 'instruction 이 비었습니다.';
   }
-  if (!loaded.job) {
+  // 장을 주지 않으면 보고 있는 장이다. 그 장이 그리는 공고의 원문으로 다시 쓴다.
+  const index = args.slide === undefined ? context.slide() : asSlide(args.slide, loaded.doc);
+  const docSlide = index === null ? undefined : loaded.doc.slides[index];
+  if (index === null || !docSlide) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
+  if (loaded.doc.kind === 'bundle' && docSlide.role === 'cover') {
+    return '묶음 표지는 공고 하나의 문구가 아니라 다시 쓸 수 없습니다. 표지 뱃지·제목·표는 set_content 로 고치세요.';
+  }
+  const documentJob = loaded.doc.jobs[docSlide.jobIndex ?? 0];
+  if (!documentJob) {
     return '공고가 없는 문서라 문구를 다시 쓸 수 없습니다. set_content 로 고치세요.';
   }
+  const job =
+    loaded.job?.id === documentJob.jobId
+      ? loaded.job
+      : (await fetchCardJob(documentJob.jobId)).job;
   const result = await requestDraft({
-    jobId: loaded.job.id,
+    jobId: job.id,
     instruction,
-    current: draftFromContent(documentContent(loaded.doc)),
+    current: draftFromContent(documentContent(loaded.doc, docSlide)),
   });
   // 모델 없이 원문을 잘라 만든 초안은 지금 문구보다 거칠다. 바꾸지 않고 알린다.
   if (result.source === 'fallback') {
     return `다시 쓰지 못해 문구를 그대로 두었습니다. ${result.message ?? ''}`;
   }
   const latest = context.readLoaded() ?? loaded;
-  const content = contentFromDraft(
-    latest.job ?? loaded.job,
-    result.draft,
-    documentContent(latest.doc),
-  );
-  change(context, session, withContent(latest.doc, content));
-  return JSON.stringify({ changed: true, content });
+  const latestSlide = latest.doc.slides.find((slide) => slide.id === docSlide.id) ?? docSlide;
+  const previous = documentContent(latest.doc, latestSlide);
+  const rewritten = contentFromDraft(job, result.draft, previous);
+  // 묶음은 게시물 본문이 하나이고, 공고 장의 직무명 자리는 표지 표의 모집 분야라 그대로 둔다.
+  const content =
+    latest.doc.kind === 'bundle'
+      ? { ...rewritten, caption: previous.caption, roleTitle: previous.roleTitle }
+      : rewritten;
+  change(context, session, withSlideContent(latest.doc, latestSlide, content));
+  return JSON.stringify({ slide: index + 1, changed: true, content });
 }
 
 function setSettings(

@@ -14,7 +14,12 @@ import {
 } from '@/lib/card/document';
 import { contentFromDraft } from '@/lib/card/fromJob';
 import { CARD_SIZE_IDS, CARD_SIZES, type CardSizeId, type VariantId } from '@/lib/card/types';
-import { type DocumentEntry, listDocuments, saveDocument } from '@/lib/client/storage';
+import {
+  type DocumentEntry,
+  listDocuments,
+  rememberNotice,
+  saveDocument,
+} from '@/lib/client/storage';
 import type { JobListItem } from '@/lib/server/ogonggo';
 import { FALLBACK_COLOR, defaultSettings } from '@/lib/client/theme';
 import { fetchCardJob, useCardEditor } from '@/lib/client/useCardEditor';
@@ -186,6 +191,13 @@ function BundleTab({ request }: { request: StartRequest }) {
         { request: text, uploads: request.images.map((image) => image.id) },
       );
       saveDocument(doc);
+      // 모델 없이 원문으로 만든 초안이면 편집 화면에서 한 번 알린다.
+      if (result.source === 'fallback') {
+        rememberNotice(
+          doc.id,
+          result.message ?? 'AI 초안을 받지 못해 공고 원문을 잘라 묶음 초안을 만들었어요.',
+        );
+      }
       router.push(`/edit/${encodeURIComponent(doc.id)}`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '묶음 초안을 받지 못했습니다.');

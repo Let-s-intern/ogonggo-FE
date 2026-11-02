@@ -125,3 +125,28 @@ export async function restoreLayers(doc: CardDocument): Promise<CardDocument> {
     return src ? { ...layer, src } : null;
   });
 }
+
+const NOTICE_KEY = 'ogonggo.card-news.notice.';
+
+/**
+ * 편집 화면을 열 때 한 번 보일 알림을 남긴다. 시작 화면에서 묶음을 만들고 바로 편집 화면으로 가면
+ * 시작 화면의 알림(묶음 초안이 대체 초안이었다)이 사라져서다. 이 탭에만 남는다(sessionStorage).
+ */
+export function rememberNotice(docId: string, message: string): void {
+  try {
+    sessionStorage.setItem(`${NOTICE_KEY}${docId}`, message);
+  } catch {
+    // 남기지 못하면 알리지 않는다.
+  }
+}
+
+/** 남긴 알림을 꺼내고 지운다. 없으면 `null`. */
+export function takeNotice(docId: string): string | null {
+  try {
+    const message = sessionStorage.getItem(`${NOTICE_KEY}${docId}`);
+    sessionStorage.removeItem(`${NOTICE_KEY}${docId}`);
+    return message;
+  } catch {
+    return null;
+  }
+}

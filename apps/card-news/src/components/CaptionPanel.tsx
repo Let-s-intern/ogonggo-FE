@@ -53,7 +53,7 @@ export function CaptionPanel({
         className="text-sm leading-relaxed"
         value={caption}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="AI가 쓴 본문이 여기 들어옵니다. 'AI로 다시 쓰기'로 새로 받을 수 있어요."
+        placeholder="AI가 쓴 본문이 여기 들어옵니다. 캔버스 아래 AI 입력창에서 다시 쓰게 할 수 있어요."
       />
     </section>
   );

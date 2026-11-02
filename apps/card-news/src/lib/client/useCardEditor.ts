@@ -5,7 +5,6 @@ import type { AiDraft, DraftResult } from '../ai/draft';
 import {
   type CardDocument,
   type RenderSlide,
-  documentContent,
   singleDocument,
   slideSpec,
   withContent,
@@ -16,7 +15,7 @@ import {
   withSlideTemplate,
   withTemplate,
 } from '../card/document';
-import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
+import { type CardJob, contentFromDraft } from '../card/fromJob';
 import type {
   BrandImage,
   CardContent,
@@ -31,7 +30,13 @@ import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { fileToBrandImage, toCardImage } from './image';
 import { BRAND_IMAGE_ID, getImage, putImage } from './imageStore';
-import { loadDocument, loadSingleDocument, restoreLayers, saveDocument } from './storage';
+import {
+  loadDocument,
+  loadSingleDocument,
+  restoreLayers,
+  saveDocument,
+  takeNotice,
+} from './storage';
 import {
   FALLBACK_COLOR,
   type ProcessedLogo,
@@ -67,9 +72,6 @@ export type EditorStatus =
   | { kind: 'idle' }
   | { kind: 'loading'; message: string }
   | { kind: 'error'; message: string };
-
-/** 다시 쓰기에서 지시를 비웠을 때 보내는 말. 빈 지시는 첫 초안 캐시를 돌려받으므로 넣는다. */
-const REWRITE_INSTRUCTION = '지금 초안과 다른 표현으로 새로 써 줘.';
 
 /** 썸네일의 처음 진하기. 시안마다 이 값에 자기 배율을 곱한다. */
 export const PHOTO_OPACITY = 1;
@@ -137,8 +139,9 @@ export function useCardEditor() {
   const [loaded, setLoaded] = useState<LoadedCard | null>(null);
   const [status, setStatus] = useState<EditorStatus>({ kind: 'idle' });
   const [notice, setNotice] = useState<string | null>(null);
-  const [regenerating, setRegenerating] = useState(false);
   const [candidates, setCandidates] = useState<ImageCandidates | null>(null);
+  /** 문서마다 열 때 한 번 보일 알림(`takeNotice()`). */
+  const notices = useRef(new Map<string, string | null>());
 
   const update = useCallback(
     (patch: Partial<LoadedCard>) =>
@@ -472,6 +475,11 @@ export function useCardEditor() {
         const doc = await restoreLayers({ ...saved, settings: { ...saved.settings, brandImage } });
         setLoaded({ ...card, doc });
         setStatus({ kind: 'idle' });
+        // 개발 모드는 여는 effect 를 두 번 부른다. 꺼낸 알림을 ref 에 두어 두 번째에도 보이게.
+        if (!notices.current.has(docId)) {
+          notices.current.set(docId, takeNotice(docId));
+        }
+        setNotice(notices.current.get(docId) ?? null);
         if (first) {
           void loadCandidates(first.jobId);
         } else {
@@ -488,35 +496,6 @@ export function useCardEditor() {
       }
     },
     [selectJob, loadCandidates, clearHistory],
-  );
-
-  const regenerate = useCallback(
-    async (instruction: string): Promise<boolean> => {
-      const job = loaded?.job;
-      if (!loaded || !job) {
-        return false;
-      }
-      setRegenerating(true);
-      try {
-        const result = await requestDraft({
-          jobId: job.id,
-          instruction: instruction || REWRITE_INSTRUCTION,
-          current: draftFromContent(documentContent(loaded.doc)),
-        });
-        remember();
-        changeDoc((doc) =>
-          withContent(doc, contentFromDraft(job, result.draft, documentContent(doc))),
-        );
-        setNotice(result.source === 'fallback' ? (result.message ?? null) : null);
-        return true;
-      } catch (error) {
-        setNotice(error instanceof Error ? error.message : 'AI 초안을 받지 못했습니다.');
-        return false;
-      } finally {
-        setRegenerating(false);
-      }
-    },
-    [loaded, remember, changeDoc],
   );
 
   const startOver = useCallback(() => {
@@ -598,11 +577,9 @@ export function useCardEditor() {
     status,
     candidates,
     notice,
-    regenerating,
     specs,
     selectJob,
     openDocument,
-    regenerate,
     startOver,
     setSlideContent,
     setJobContent,
