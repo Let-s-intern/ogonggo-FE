@@ -244,3 +244,9 @@ export function withContent(doc: CardDocument, content: CardContent, jobIndex = 
     ),
   };
 }
+
+/** 문서 제목. 묶은 회사 이름이다(같은 회사는 한 번). 공고가 없으면 `빈 캔버스` 다. */
+export function documentTitle(doc: CardDocument): string {
+  const names = [...new Set(doc.jobs.map((job) => job.companyName))];
+  return names.length > 0 ? names.join(' · ') : '빈 캔버스';
+}

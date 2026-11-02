@@ -27,7 +27,7 @@ import { VARIANTS } from '../card/variants';
 import type { ImageCandidate, ImageCandidates } from '../server/images';
 import { fileToBrandImage, toCardImage } from './image';
 import { BRAND_IMAGE_ID, getImage, putImage } from './imageStore';
-import { clearCard, loadCard, restoreLayers, saveCard } from './storage';
+import { loadSingleDocument, restoreLayers, saveDocument } from './storage';
 import {
   FALLBACK_COLOR,
   type ProcessedLogo,
@@ -253,8 +253,9 @@ export function useCardEditor() {
     }
   }, []);
 
+  /** 공고를 연다. 남은 편집본이 있으면 그것을, 없거나 `fresh` 면 새 AI 초안을 연다. */
   const selectJob = useCallback(
-    async (jobId: number) => {
+    async (jobId: number, { fresh = false }: { fresh?: boolean } = {}) => {
       setStatus({ kind: 'loading', message: '공고를 읽는 중' });
       setNotice(null);
       try {
@@ -271,7 +272,7 @@ export function useCardEditor() {
         const logo = body.logoDataUrl ?? undefined;
         const brandColor = logo ? await extractBrandColor(logo).catch(() => null) : null;
 
-        const saved = loadCard(jobId);
+        const saved = fresh ? null : loadSingleDocument(job);
         const brandImage = await loadBrandImage();
         clearHistory();
         if (saved) {
@@ -279,12 +280,7 @@ export function useCardEditor() {
             job,
             logo,
             brandColor,
-            doc: singleDocument(
-              job,
-              saved.content,
-              { ...saved.settings, brandImage },
-              { edits: saved.edits, layers: await restoreLayers(saved.layers) },
-            ),
+            doc: await restoreLayers({ ...saved, settings: { ...saved.settings, brandImage } }),
           });
           setNotice('이 브라우저에 남아 있던 편집본을 불러왔어요.');
         } else {
@@ -343,8 +339,8 @@ export function useCardEditor() {
 
   const startOver = useCallback(() => {
     if (loaded) {
-      clearCard(loaded.job.id);
-      void selectJob(loaded.job.id);
+      // 남은 편집본은 새 초안을 저장할 때 덮어쓴다. 지우지 않는다 — 지우면 v2 편집본을 다시 옮겨 온다.
+      void selectJob(loaded.job.id, { fresh: true });
     }
   }, [loaded, selectJob]);
 
@@ -357,7 +353,7 @@ export function useCardEditor() {
   // 고칠 때마다 이 브라우저에 남긴다(이미지는 빼고).
   useEffect(() => {
     if (loaded) {
-      saveCard(loaded.job.id, loaded.doc);
+      saveDocument(loaded.doc);
     }
   }, [loaded]);
 
