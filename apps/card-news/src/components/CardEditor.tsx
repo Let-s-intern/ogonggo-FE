@@ -549,6 +549,7 @@ export function CardEditor({ docId }: { docId: string }) {
                       { label: '오공고', src: kit?.assets.ogonggoLogo },
                       { label: '옛 오공고', src: kit?.assets.ogonggoClassic },
                     ]}
+                    brandColor={loaded.doc.settings.brandColor}
                     onAdd={(src) => canvasRef.current?.addImageSource(src)}
                   />
                 ),
