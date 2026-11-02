@@ -43,6 +43,16 @@ const LAYER_TEXT_PROPERTIES = {
   },
 } as const;
 
+/** 도형 값. `add_shape` 와 `edit_layers` 가 같이 쓴다. */
+const LAYER_SHAPE_PROPERTIES = {
+  height: { type: 'number', description: '상자 높이. 선이면 굵기' },
+  fill: { type: 'string', description: '채움 #RRGGBB. "none" 이면 비운다. 선은 이 색으로 칠한다' },
+  stroke: { type: 'string', description: '테두리 #RRGGBB. "none" 이면 테두리 없음' },
+  strokeWidth: { type: 'number', minimum: 0, maximum: 200, description: '테두리 굵기 px' },
+  opacity: { type: 'number', minimum: 0, maximum: 1 },
+  radius: { type: 'number', minimum: 0, description: '모서리 둥글기 px' },
+} as const;
+
 /** 장 지정. 장 번호(문서 장 순서, 1부터)나 묶음의 장 이름으로 받는다. */
 const SLIDE_SCHEMA = {
   anyOf: [
@@ -70,7 +80,7 @@ const TOOLS = [
     function: {
       name: 'read_card',
       description:
-        '지금 편집 중인 카드를 읽는다. 공고 요약, 문구, 설정, 고른 템플릿, 크기, 장마다 요소 목록(id, 이름, 감싼 요소 in, 상자 x·y·폭·높이, 편집값, 캔버스 밖으로 나갔는지), 장마다 자유 요소 목록(layers: 사람이나 add_text 가 얹은 글자·이미지), 서로 겹친 요소, 넘침 경고가 온다. 좌표는 폭 1080 기준 px 이고 왼쪽 위가 0,0 이다. 무엇이든 바꾸기 전에 먼저 부른다.',
+        '지금 편집 중인 카드를 읽는다. 공고 요약, 문구, 설정, 고른 템플릿, 크기, 장마다 요소 목록(id, 이름, 감싼 요소 in, 상자 x·y·폭·높이, 편집값, 캔버스 밖으로 나갔는지), 장마다 자유 요소 목록(layers: 사람이나 add_text·add_shape 가 얹은 글자·이미지·도형, 배열 순서가 칠하는 순서, behind 는 템플릿 뒤), 서로 겹친 요소, 넘침 경고가 온다. 좌표는 폭 1080 기준 px 이고 왼쪽 위가 0,0 이다. 무엇이든 바꾸기 전에 먼저 부른다.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -242,9 +252,31 @@ const TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'add_shape',
+      description:
+        '장 하나에 도형(사각형 rect, 둥근 사각형 roundRect, 원 ellipse, 선 line)을 얹는다. x·y 는 상자 왼쪽 위다. 자유 요소는 템플릿 위에 얹히므로, 템플릿 요소(제목 등) 뒤에 깔려면 behind 를 true 로 준다. 자유 요소 뒤에 깔려면 below 에 그 요소 id 를 준다. 결과로 새 요소 id 가 온다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          slide: SLIDE_SCHEMA,
+          shape: { type: 'string', enum: ['rect', 'roundRect', 'ellipse', 'line'] },
+          x: { type: 'number' },
+          y: { type: 'number' },
+          width: { type: 'number', description: '상자 폭' },
+          ...LAYER_SHAPE_PROPERTIES,
+          behind: { type: 'boolean', description: 'true 면 템플릿 요소 뒤(배경 바로 위)에 깐다' },
+          below: { type: 'string', description: '이 자유 요소 id 바로 뒤에 깐다' },
+        },
+        required: ['slide', 'shape', 'x', 'y', 'width'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'edit_layers',
       description:
-        '자유 요소(read_card 의 layers) 여러 개를 고치거나 지운다. 글자 요소는 글자·자리·폭·크기·굵기·색·정렬·줄 간격을, 이미지 요소는 자리(x, y)만 바꾸거나 지울 수 있다. 넘긴 값만 바뀐다.',
+        '자유 요소(read_card 의 layers) 여러 개를 고치거나 지운다. 글자 요소는 글자·자리·폭·크기·굵기·색·정렬·줄 간격을, 도형은 자리·폭·높이·채움·테두리·투명도·모서리를, 이미지 요소는 자리(x, y)만 바꾸거나 지울 수 있다. behind 로 템플릿 뒤·위를 옮긴다. 넘긴 값만 바뀐다.',
       parameters: {
         type: 'object',
         properties: {
@@ -257,6 +289,8 @@ const TOOLS = [
                 id: { type: 'string', description: 'read_card 의 layers[].id' },
                 text: { type: 'string' },
                 ...LAYER_TEXT_PROPERTIES,
+                ...LAYER_SHAPE_PROPERTIES,
+                behind: { type: 'boolean', description: 'true 면 템플릿 뒤, false 면 템플릿 위' },
                 remove: { type: 'boolean', description: 'true 면 지운다' },
               },
               required: ['slide', 'id'],
@@ -312,7 +346,7 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 
 [일하는 순서]
 1. 바꾸기 전에 read_card 로 지금 상태를 읽는다. 요소가 어느 장에 있는지, 상자가 어디인지 보고 정한다.
-2. 도구로 바꾼다. 글자 크기는 set_settings 의 배율로, 요소 위치·크기는 edit_elements 로, 로고·색은 set_settings 로, 문구는 set_content 나 rewrite_copy 로, 새 글 얹기는 add_text 로, 얹은 글·이미지는 edit_layers 로 바꾼다.
+2. 도구로 바꾼다. 글자 크기는 set_settings 의 배율로, 요소 위치·크기는 edit_elements 로, 로고·색은 set_settings 로, 문구는 set_content 나 rewrite_copy 로, 새 글 얹기는 add_text 로, 도형은 add_shape 로, 얹은 글·이미지·도형은 edit_layers 로 바꾼다.
 3. 바꾸는 도구의 결과에는 바꾼 뒤의 확인(check)이 붙어 온다 — 장마다 넘침(overflow), 캔버스 밖으로 나간 요소(outside), 서로 겹친 요소(overlaps). read_card 를 다시 부르지 않아도 된다. 바꾸기 전에 없던 문제가 생겼으면 한 번 고치고, 그래도 남으면 고치지 말고 사용자에게 알린다.
 4. 무엇을 바꿨는지 한두 줄로 알려 준다. 한 요청은 도구 왕복 여섯 번 안에 끝낸다.
 
@@ -336,6 +370,7 @@ const SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오늘의 �
 - 넣을 자리는 read_card 의 상자를 보고 다른 요소와 겹치지 않는 빈 곳에 둔다. "하단에" 는 브랜드 로고 위나 옆의 빈 띠, "상단에" 는 뱃지·로고 줄 아래처럼 정한다. 빈 곳이 좁으면 글자 크기를 줄이거나 다른 요소를 조금 옮긴다.
 - 색은 그 자리 바탕에서 읽히게 고른다. 강조 문구는 굵기 800~900. 결과의 check 로 겹침과 밖으로 나감을 보고 한 번 고친다.
 - 겹침을 풀려고 같은 요소를 두 번 넘게 옮기지 않는다. 자리가 모자라면 글자 크기를 줄이거나, 그대로 두고 어디와 겹치는지 알린다. 글자 요소의 높이는 글자 크기 x 줄 간격 x 줄 수다.
+- 도형(사각형, 둥근 사각형, 원, 선)을 그려 달라고 하면 add_shape 로 얹는다. 자유 요소는 템플릿 위에 칠해지므로 "제목 뒤에 깔아 줘" 처럼 템플릿 글 뒤에 둘 도형은 behind: true 로 넣고, 그 글 상자(read_card 의 상자)보다 조금 크게 잡는다. 자유 글자 요소 뒤라면 below 에 그 id 를 준다. "연한" 색은 흰색과 섞은 밝은 색(예: 연한 빨강 #FFD6D6)이다.
 - 자유 요소를 고치거나 지울 때는 edit_layers 를 쓴다. 이미지는 만들지 못하고 자리만 옮기거나 지울 수 있다. 자유 요소는 템플릿·장마다 따로다.
 
 [문구]

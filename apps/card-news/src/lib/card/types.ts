@@ -341,6 +341,11 @@ interface LayerBase {
   width: number;
   /** 잠근 요소. 캔버스에서 끌리지 않고 비서 도구도 바꾸지 않는다(우클릭 `잠금`). */
   locked?: boolean;
+  /**
+   * 템플릿 뒤에 깐 요소. 배경 바로 위, 템플릿 요소 아래에 칠한다(제목 뒤에 까는 도형). 없으면 템플릿 위다.
+   * 뒤에 깐 요소끼리, 위에 얹은 요소끼리는 배열 순서대로 칠한다.
+   */
+  behind?: boolean;
 }
 
 /** 글자 요소. 높이는 글자에 맞춰 늘어난다. 줄은 `\n` 으로 나누고 강조 표시(`*단어*`)는 쓰지 않는다. */
@@ -400,7 +405,28 @@ export interface ImageLayer extends LayerBase {
   radius: number;
 }
 
-export type Layer = TextLayer | ImageLayer;
+/** 도형 종류. 둥근 사각은 모서리(`radius`)가 있는 사각이고, 선은 높이가 굵기인 막대다. */
+export type ShapeKind = 'rect' | 'ellipse' | 'line';
+
+/** 도형 요소. 사각·원은 채움과 테두리를, 선은 채움 색 하나를 쓴다. */
+export interface ShapeLayer extends LayerBase {
+  kind: 'shape';
+  shape: ShapeKind;
+  /** 선이면 굵기다. */
+  height: number;
+  /** 채움(`#RRGGBB`). 없으면 비운다. 선은 이 색으로 칠한다. */
+  fill?: string;
+  /** 테두리 색(`#RRGGBB`). 없으면 테두리가 없다. 선에는 쓰지 않는다. */
+  stroke?: string;
+  /** 테두리 굵기(px). 테두리는 상자 안쪽으로 그린다. */
+  strokeWidth: number;
+  /** 0~1. */
+  opacity: number;
+  /** 모서리 둥글기(px). 원에는 쓰지 않는다. */
+  radius: number;
+}
+
+export type Layer = TextLayer | ImageLayer | ShapeLayer;
 
 export const LAYER_WEIGHTS = [500, 600, 700, 800, 900] as const;
 
@@ -421,8 +447,22 @@ export function layerLabel(layer: Layer): string {
   if (layer.kind === 'image') {
     return '이미지';
   }
+  if (layer.kind === 'shape') {
+    return shapeLabel(layer);
+  }
   const head = layer.text.replace(/\s+/g, ' ').trim();
   return head ? `글자 · ${head.length > 12 ? `${head.slice(0, 12)}…` : head}` : '글자';
+}
+
+/** 도형 이름. 모서리가 있는 사각은 `둥근 사각형` 이다. */
+export function shapeLabel(layer: Pick<ShapeLayer, 'shape' | 'radius'>): string {
+  if (layer.shape === 'ellipse') {
+    return '원';
+  }
+  if (layer.shape === 'line') {
+    return '선';
+  }
+  return layer.radius > 0 ? '둥근 사각형' : '사각형';
 }
 
 /**

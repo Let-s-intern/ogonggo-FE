@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DECORATIONS, decorationDataUrl } from '@/lib/card/decorations';
 import { CARD_ICONS, iconDataUrl } from '@/lib/card/iconSet';
+import type { ShapePreset } from '../EditorCanvas';
 import { Drawer } from '../LeftRail';
 
 /** 요소 서랍의 로고 하나. `src` 가 없으면 넣을 수 없다(공고 로고가 없을 때). */
@@ -11,18 +12,27 @@ export interface LogoItem {
   src: string | undefined;
 }
 
+const SHAPES: { preset: ShapePreset; label: string; preview: string }[] = [
+  { preset: 'rect', label: '사각형', preview: 'h-7 w-9' },
+  { preset: 'roundRect', label: '둥근 사각형', preview: 'h-7 w-9 rounded-md' },
+  { preset: 'ellipse', label: '원', preview: 'size-8 rounded-full' },
+  { preset: 'line', label: '선', preview: 'h-1 w-10' },
+];
+
 /**
- * 요소 서랍. 로고, 손그림 꾸미기(밑줄·동그라미·별표 등), 아이콘이다. 누르면 보고 있는 장 가운데에 이미지
- * 요소로 넣는다 — 템플릿의 로고 자리와 따로 옮기고 키운다. 위에서 고른 색으로 꾸미기·아이콘을 칠한다.
+ * 요소 서랍. 도형, 로고, 손그림 꾸미기(밑줄·동그라미·별표 등), 아이콘이다. 누르면 보고 있는 장 가운데에
+ * 넣는다 — 템플릿의 로고 자리와 따로 옮기고 키운다. 고른 색으로 도형을 채우고 꾸미기·아이콘을 칠한다.
  */
 export function ElementsDrawer({
   logos,
   brandColor,
   onAdd,
+  onShape,
 }: {
   logos: LogoItem[];
   brandColor: string;
   onAdd: (src: string) => void;
+  onShape: (shape: ShapePreset, color: string) => void;
 }) {
   const [color, setColor] = useState('#111111');
   const [query, setQuery] = useState('');
@@ -43,6 +53,22 @@ export function ElementsDrawer({
 
   return (
     <Drawer title="요소">
+      <p className="text-xs font-bold text-gray-500">도형</p>
+      <div className="grid grid-cols-4 gap-1.5">
+        {SHAPES.map((item) => (
+          <button
+            key={item.preset}
+            type="button"
+            title={item.label}
+            aria-label={`도형 ${item.label}`}
+            onClick={() => onShape(item.preset, color)}
+            className={`${cell} aspect-square`}
+          >
+            <span className={item.preview} style={{ background: color }} />
+          </button>
+        ))}
+      </div>
+
       <p className="text-xs font-bold text-gray-500">로고</p>
       <div className="grid grid-cols-3 gap-2">
         {logos.map((logo) => (
@@ -65,7 +91,7 @@ export function ElementsDrawer({
       </div>
 
       <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-2">
-        <p className="text-xs font-bold text-gray-500">색 (꾸미기·아이콘)</p>
+        <p className="text-xs font-bold text-gray-500">색 (도형·꾸미기·아이콘)</p>
         <div className="flex items-center gap-2">
           {swatches.map((swatch) => (
             <button

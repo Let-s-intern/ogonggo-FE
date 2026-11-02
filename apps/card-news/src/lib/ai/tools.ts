@@ -31,6 +31,7 @@ import {
   LAYER_WEIGHTS,
   type Layer,
   type Selection,
+  type ShapeLayer,
   type TextLayer,
   type SlideEdits,
   type VariantId,
@@ -157,6 +158,8 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return '요소 처음으로';
     case 'add_text':
       return `글자 넣기: ${String(args.text ?? '')}`;
+    case 'add_shape':
+      return `도형 넣기: ${String(args.shape ?? '')}`;
     case 'edit_layers':
       return '자유 요소 바꾸기';
     case 'set_background':
@@ -344,7 +347,7 @@ function slideSummary(
     return {
       ...shown,
       name: layerLabel(layer),
-      height: Math.round(box?.height ?? (layer.kind === 'image' ? layer.height : 0)),
+      height: Math.round(box?.height ?? (layer.kind === 'text' ? 0 : layer.height)),
       outside: box ? outside(box) : false,
     };
   });
@@ -879,7 +882,125 @@ function addText(
   return JSON.stringify({ added: { slide: slide + 1, id: layer.id }, rejected });
 }
 
-/** 자유 요소를 고치거나 지운다. 이미지는 자리만 옮기거나 지운다(그림은 바꾸지 못한다). */
+/** 도형 값 가운데 모델이 준 것만 검사해 꺼낸다. 색은 `null` 이나 `"none"` 이면 뺀다. */
+function shapePatch(raw: Record<string, unknown>, rejected: string[]): Partial<ShapeLayer> {
+  const patch: Partial<ShapeLayer> = {};
+  const number = (
+    key: 'x' | 'y' | 'width' | 'height' | 'strokeWidth' | 'radius',
+    min: number,
+    max: number,
+  ) => {
+    if (raw[key] === undefined) {
+      return;
+    }
+    const value = asNumber(raw[key]);
+    if (value === null) {
+      rejected.push(key);
+    } else {
+      patch[key] = Math.round(clamp(value, min, max));
+    }
+  };
+  number('x', -MAX_OFFSET, MAX_OFFSET);
+  number('y', -MAX_OFFSET, MAX_OFFSET);
+  number('width', 2, 3000);
+  number('height', 1, 3000);
+  number('strokeWidth', 0, 200);
+  number('radius', 0, 1000);
+  for (const key of ['fill', 'stroke'] as const) {
+    const value = raw[key];
+    if (value === undefined) {
+      continue;
+    }
+    if (value === null || value === 'none') {
+      patch[key] = undefined;
+    } else if (HEX.test(String(value))) {
+      patch[key] = String(value).toUpperCase();
+    } else {
+      rejected.push(key);
+    }
+  }
+  if (raw.opacity !== undefined) {
+    const opacity = asNumber(raw.opacity);
+    if (opacity === null) {
+      rejected.push('opacity');
+    } else {
+      patch.opacity = round(clamp(opacity, 0, 1));
+    }
+  }
+  return patch;
+}
+
+const SHAPE_KINDS = ['rect', 'roundRect', 'ellipse', 'line'] as const;
+
+/**
+ * 도형을 넣는다. `behind` 면 템플릿 뒤에 깔고, `below` 면 그 자유 요소 바로 아래(같은 쪽)에 넣는다. 빠진 값은
+ * 요소 서랍의 도형과 같다.
+ */
+function addShape(
+  context: ToolContext,
+  session: ToolSession,
+  args: Record<string, unknown>,
+): string {
+  const loaded = context.readLoaded();
+  if (!loaded) {
+    return '편집 중인 카드가 없습니다.';
+  }
+  const slide = asSlide(args.slide, loaded.doc);
+  const docSlide = slide === null ? undefined : loaded.doc.slides[slide];
+  if (slide === null || !docSlide) {
+    return `없는 장입니다: ${String(args.slide)}`;
+  }
+  const kind = SHAPE_KINDS.find((item) => item === args.shape);
+  if (!kind) {
+    return `shape 는 ${SHAPE_KINDS.join(', ')} 중 하나입니다.`;
+  }
+  const rejected: string[] = [];
+  const patch = shapePatch(args, rejected);
+  const variant = slideVariant(docSlide, context.variant());
+  const layers = docSlide.layers[variant] ?? [];
+  const belowId = typeof args.below === 'string' ? args.below.replace(/^layer:/, '') : null;
+  const below = belowId ? layers.find((item) => item.id === belowId) : undefined;
+  if (belowId && !below) {
+    rejected.push('below');
+  }
+  const size = CARD_SIZES[context.size()];
+  const line = kind === 'line';
+  const width = patch.width ?? (line ? 600 : 480);
+  const height = line ? (patch.height ?? 8) : (patch.height ?? (kind === 'ellipse' ? width : 320));
+  const layer: ShapeLayer = {
+    id: crypto.randomUUID().slice(0, 8),
+    kind: 'shape',
+    shape: kind === 'roundRect' ? 'rect' : kind,
+    x: Math.round((size.width - width) / 2),
+    y: Math.round((size.height - height) / 2),
+    fill: '#111111',
+    strokeWidth: 0,
+    opacity: 1,
+    radius: kind === 'roundRect' ? 48 : 0,
+    ...patch,
+    width,
+    height,
+    ...(below
+      ? below.behind
+        ? { behind: true }
+        : {}
+      : args.behind === true
+        ? { behind: true }
+        : {}),
+  };
+  const index = below ? layers.indexOf(below) : layers.length;
+  const next = [...layers.slice(0, index), layer, ...layers.slice(index)];
+  change(context, session, withSlideLayers(loaded.doc, docSlide.id, variant, next));
+  return JSON.stringify({
+    added: { slide: slide + 1, id: layer.id, behind: Boolean(layer.behind) },
+    rejected,
+  });
+}
+
+/**
+ * 자유 요소를 고치거나 지운다. 이미지는 자리만 옮기거나 지운다(그림은 바꾸지 못한다). 도형은 모양 말고 모든
+ * 값을 바꾼다. `behind` 는 모든 자유 요소가 받는다.
+ */
 function editLayers(
   context: ToolContext,
   session: ToolSession,
@@ -923,25 +1044,41 @@ function editLayers(
     const rejected: string[] = [];
     const patch = textPatch(raw, rejected);
     // 글자를 바꾸면 공고 값과의 연결을 끊는다(사람이 캔버스에서 고칠 때와 같다).
+    const shape = layer.kind === 'shape' ? shapePatch(raw, rejected) : {};
+    const placed = typeof raw.behind === 'boolean' ? { behind: raw.behind ? true : undefined } : {};
     const updated: Layer =
       layer.kind === 'text'
         ? {
             ...layer,
             ...patch,
             ...(patch.text === undefined ? {} : { bind: undefined }),
+            ...placed,
           }
-        : {
-            ...layer,
-            ...(patch.x !== undefined ? { x: patch.x } : {}),
-            ...(patch.y !== undefined ? { y: patch.y } : {}),
-          };
+        : layer.kind === 'shape'
+          ? { ...layer, ...shape, ...placed }
+          : {
+              ...layer,
+              ...(patch.x !== undefined ? { x: patch.x } : {}),
+              ...(patch.y !== undefined ? { y: patch.y } : {}),
+              ...placed,
+            };
     next = withSlideLayers(
       next,
       docSlide.id,
       variant,
       layers.map((item) => (item === layer ? updated : item)),
     );
-    results.push({ slide: slide + 1, id, changed: Object.keys(patch), rejected });
+    results.push({
+      slide: slide + 1,
+      id,
+      changed: [
+        ...new Set([
+          ...Object.keys(layer.kind === 'shape' ? shape : patch),
+          ...Object.keys(placed),
+        ]),
+      ],
+      rejected,
+    });
   }
   if (next !== loaded.doc) {
     change(context, session, next);
@@ -1002,8 +1139,9 @@ export function outOfScope(
         '색·로고·글자 배율은 모든 장에 걸립니다. 요소 하나의 크기는 edit_elements 의 scale 로 바꿉니다',
       );
     case 'add_text':
+    case 'add_shape':
       return only
-        ? refuse('새 글자 요소 넣기')
+        ? refuse(name === 'add_text' ? '새 글자 요소 넣기' : '새 도형 넣기')
         : elsewhere(args.slide, false)
           ? refuse(`${String(args.slide)}장에 넣기`)
           : null;
@@ -1069,6 +1207,7 @@ const CHANGING_TOOLS = new Set([
   'edit_elements',
   'reset_elements',
   'add_text',
+  'add_shape',
   'edit_layers',
   'set_background',
 ]);
@@ -1098,6 +1237,8 @@ function execute(
       return resetElements(context, session, args);
     case 'add_text':
       return addText(context, session, args);
+    case 'add_shape':
+      return addShape(context, session, args);
     case 'edit_layers':
       return editLayers(context, session, args);
     case 'set_background':

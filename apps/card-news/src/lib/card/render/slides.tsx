@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import { type CSSProperties, Children, type ReactElement, type ReactNode } from 'react';
 import {
   BULLET_INDENT,
   BUNDLE_TOP_GAP,
@@ -121,7 +121,10 @@ const TAB_WIDTH = 440;
 const TAB_TITLE_MAX = 72;
 const TAB_INNER = TAB_CARD_WIDTH - TAB_CARD_PAD_X * 2;
 
-/** 장 하나의 바탕. 템플릿을 그린 뒤 맨 위에 자유 요소를 얹는다. */
+/**
+ * 장 하나의 바탕. 템플릿을 그린 뒤 맨 위에 자유 요소를 얹는다. 템플릿 뒤에 깐 자유 요소(`behind`)는 첫 자식
+ * (배경, `Background`) 바로 다음에 그린다 — 이미지 생성기와 편집 캔버스 모두 적힌 순서대로 칠한다.
+ */
 function Canvas({
   size,
   layers,
@@ -131,6 +134,7 @@ function Canvas({
   layers: Layer[] | undefined;
   children: ReactNode;
 }) {
+  const [background, ...template] = Children.toArray(children);
   return (
     <div
       style={{
@@ -141,7 +145,9 @@ function Canvas({
         fontFamily: 'Pretendard',
       }}
     >
-      {children}
+      {background}
+      {layerElements(layers, 'behind')}
+      {template}
       {layerElements(layers)}
     </div>
   );

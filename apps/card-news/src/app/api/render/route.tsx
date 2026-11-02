@@ -85,7 +85,10 @@ function sanitizeLayers(layers: unknown): Layer[] | undefined {
       x: clamp(layer.x, -2000, 3000, 0),
       y: clamp(layer.y, -2000, 3000, 0),
       width: clamp(layer.width, 10, 3000, 400),
+      ...(layer.behind === true ? { behind: true } : {}),
     };
+    const color = (value: unknown) =>
+      typeof value === 'string' && HEX_COLOR.test(value) ? value : undefined;
     if (layer.kind === 'text' && typeof layer.text === 'string') {
       const weight = clamp(layer.fontWeight, 500, 900, 700);
       return [
@@ -107,6 +110,26 @@ function sanitizeLayers(layers: unknown): Layer[] | undefined {
           ...(typeof layer.background === 'string' && HEX_COLOR.test(layer.background)
             ? { background: layer.background, radius: clamp(layer.radius, 0, 1000, 0) }
             : {}),
+        },
+      ];
+    }
+    if (
+      layer.kind === 'shape' &&
+      (layer.shape === 'rect' || layer.shape === 'ellipse' || layer.shape === 'line')
+    ) {
+      const fill = color(layer.fill);
+      const stroke = color(layer.stroke);
+      return [
+        {
+          ...base,
+          kind: 'shape',
+          shape: layer.shape,
+          height: clamp(layer.height, 1, 3000, 300),
+          ...(fill ? { fill } : {}),
+          ...(stroke ? { stroke } : {}),
+          strokeWidth: clamp(layer.strokeWidth, 0, 200, 0),
+          opacity: clamp(layer.opacity, 0, 1, 1),
+          radius: clamp(layer.radius, 0, 1000, 0),
         },
       ];
     }

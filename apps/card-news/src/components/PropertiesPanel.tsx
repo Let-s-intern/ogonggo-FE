@@ -13,6 +13,7 @@ import {
   LAYER_WEIGHTS,
   type Layer,
   type LogoStyle,
+  type ShapeLayer,
   type TextLayer,
   layerLabel,
 } from '@/lib/card/types';
@@ -397,7 +398,10 @@ const ALIGNS: { value: TextLayer['align']; label: string }[] = [
 
 const WEIGHTS = LAYER_WEIGHTS.map((weight) => ({ value: String(weight), label: String(weight) }));
 
-/** 고른 자유 요소의 값. 글자는 크기·굵기·색·정렬·줄 간격, 이미지는 투명도·모서리. 둘 다 자리와 크기, 순서. */
+/**
+ * 고른 자유 요소의 값. 글자는 크기·굵기·색·정렬·줄 간격, 이미지는 투명도·모서리, 도형은 채움·테두리·투명도·
+ * 모서리. 모두 자리와 크기, 순서.
+ */
 function LayerProperties({
   layer,
   onChange,
@@ -420,6 +424,9 @@ function LayerProperties({
     layer.kind === 'text' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
   const setImage = (patch: Partial<ImageLayer>, group: string) =>
     layer.kind === 'image' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
+  const setShape = (patch: Partial<ShapeLayer>, group: string) =>
+    layer.kind === 'shape' && onChange({ ...layer, ...patch }, `${group}:${layer.id}`);
+  const line = layer.kind === 'shape' && layer.shape === 'line';
   return (
     <section className="flex flex-col gap-4 border-b border-gray-100 p-4">
       <div className="flex items-center justify-between">
@@ -431,7 +438,9 @@ function LayerProperties({
       <p className="-mt-2 text-xs text-gray-500">
         {layer.kind === 'text'
           ? '캔버스에서 두 번 누르면 글자를 바로 고칩니다. 모서리로 폭을 바꾸면 줄이 다시 나뉩니다.'
-          : '모서리로 비율을 지키며 크기를 바꿉니다.'}{' '}
+          : line
+            ? '모서리로 길이를 바꿉니다.'
+            : '모서리로 비율을 지키며 크기를 바꿉니다.'}{' '}
         Ctrl+C·Ctrl+V 로 복사, Ctrl+D 로 복제, Delete 로 지웁니다.
       </p>
 
@@ -460,6 +469,14 @@ function LayerProperties({
             value={layer.height}
             min={1}
             onChange={(height) => setImage({ height }, 'size')}
+          />
+        ) : null}
+        {layer.kind === 'shape' && !line ? (
+          <OffsetField
+            label="높이(px)"
+            value={layer.height}
+            min={1}
+            onChange={(height) => setShape({ height }, 'size')}
           />
         ) : null}
       </div>
@@ -538,6 +555,8 @@ function LayerProperties({
             ) : null}
           </div>
         </div>
+      ) : layer.kind === 'shape' ? (
+        <ShapeFields layer={layer} brandColor={brandColor} onChange={setShape} />
       ) : (
         <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
           <PercentSlider
@@ -556,6 +575,16 @@ function LayerProperties({
         </div>
       )}
 
+      <div className="border-t border-gray-100 pt-3">
+        <Toggle
+          checked={Boolean(layer.behind)}
+          onChange={(behind) =>
+            onChange({ ...layer, behind: behind || undefined }, `behind:${layer.id}`)
+          }
+          label="템플릿 뒤에 깔기"
+        />
+      </div>
+
       <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
         <span className="flex gap-2">
           <Button type="button" size="sm" variant="secondary" onClick={() => onOrder(layer, 1)}>
@@ -570,6 +599,105 @@ function LayerProperties({
         </Button>
       </div>
     </section>
+  );
+}
+
+/** 도형의 채움·테두리·투명도·모서리. 선은 색·굵기·투명도·끝 둥글기다. */
+function ShapeFields({
+  layer,
+  brandColor,
+  onChange,
+}: {
+  layer: ShapeLayer;
+  brandColor: string;
+  onChange: (patch: Partial<ShapeLayer>, group: string) => void;
+}) {
+  if (layer.shape === 'line') {
+    return (
+      <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
+        <ColorField
+          label="선 색"
+          value={layer.fill ?? '#111111'}
+          onChange={(fill) => onChange({ fill }, 'fill')}
+        />
+        <OffsetField
+          label="굵기(px)"
+          value={layer.height}
+          min={1}
+          onChange={(height) => onChange({ height }, 'size')}
+        />
+        <PercentSlider
+          label="투명도"
+          value={layer.opacity}
+          min={0}
+          max={100}
+          onChange={(opacity) => onChange({ opacity }, 'opacity')}
+        />
+        <Toggle
+          checked={layer.radius > 0}
+          onChange={(round) => onChange({ radius: round ? 999 : 0 }, 'radius')}
+          label="끝 둥글게"
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3 border-t border-gray-100 pt-3">
+      <Toggle
+        checked={Boolean(layer.fill)}
+        onChange={(on) => onChange({ fill: on ? brandColor : undefined }, 'fill')}
+        label="채움"
+      />
+      {layer.fill ? (
+        <ColorField
+          label="채움 색"
+          value={layer.fill}
+          onChange={(fill) => onChange({ fill }, 'fill')}
+        />
+      ) : null}
+      <Toggle
+        checked={Boolean(layer.stroke) && layer.strokeWidth > 0}
+        onChange={(on) =>
+          onChange(
+            on
+              ? { stroke: layer.stroke ?? '#111111', strokeWidth: layer.strokeWidth || 6 }
+              : { stroke: undefined, strokeWidth: 0 },
+            'stroke',
+          )
+        }
+        label="테두리"
+      />
+      {layer.stroke && layer.strokeWidth > 0 ? (
+        <>
+          <ColorField
+            label="테두리 색"
+            value={layer.stroke}
+            onChange={(stroke) => onChange({ stroke }, 'stroke')}
+          />
+          <OffsetField
+            label="테두리 굵기(px)"
+            value={layer.strokeWidth}
+            min={1}
+            onChange={(strokeWidth) => onChange({ strokeWidth }, 'strokeWidth')}
+          />
+        </>
+      ) : null}
+      <PercentSlider
+        label="투명도"
+        value={layer.opacity}
+        min={0}
+        max={100}
+        onChange={(opacity) => onChange({ opacity }, 'opacity')}
+      />
+      {layer.shape === 'rect' ? (
+        <OffsetField
+          label="모서리 둥글기(px)"
+          value={layer.radius}
+          min={0}
+          onChange={(radius) => onChange({ radius }, 'radius')}
+        />
+      ) : null}
+    </div>
   );
 }
 

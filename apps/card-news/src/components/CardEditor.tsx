@@ -597,6 +597,7 @@ export function CardEditor({ docId }: { docId: string }) {
                     ]}
                     brandColor={loaded.doc.settings.brandColor}
                     onAdd={(src) => canvasRef.current?.addImageSource(src)}
+                    onShape={(shape, color) => canvasRef.current?.addShape(shape, color)}
                   />
                 ),
               },

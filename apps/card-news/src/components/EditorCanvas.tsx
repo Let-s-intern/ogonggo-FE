@@ -25,6 +25,8 @@ import {
   type ElementId,
   type Layer,
   type Selection,
+  type ShapeKind,
+  type ShapeLayer,
   type TextLayer,
   type VariantId,
   isElementId,
@@ -286,9 +288,25 @@ export interface CanvasHandle {
   addText: (text: string, style?: Partial<TextLayer>) => void;
   /** 그림(data URL)을 보고 있는 장 가운데에 이미지 요소로 넣는다. */
   addImageSource: (src: string) => void;
+  /** 도형을 보고 있는 장 가운데에 넣고 고른다. */
+  addShape: (shape: ShapePreset, color: string) => void;
   /** 고른 요소를 장 기준으로 맞춘다. */
   align: (kind: AlignKind) => void;
 }
+
+/** 요소 서랍의 도형 네 가지. 둥근 사각은 모서리가 있는 사각이다. */
+export type ShapePreset = 'rect' | 'roundRect' | 'ellipse' | 'line';
+
+/** 도형의 처음 크기와 모서리(1080 폭 기준). */
+const SHAPE_PRESETS: Record<
+  ShapePreset,
+  { shape: ShapeKind; width: number; height: number; radius: number }
+> = {
+  rect: { shape: 'rect', width: 480, height: 320, radius: 0 },
+  roundRect: { shape: 'rect', width: 480, height: 320, radius: 48 },
+  ellipse: { shape: 'ellipse', width: 360, height: 360, radius: 0 },
+  line: { shape: 'line', width: 600, height: 8, radius: 0 },
+};
 
 /** 정렬. 왼쪽·가로 가운데·오른쪽, 위·세로 가운데·아래. */
 export type AlignKind = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
@@ -512,16 +530,20 @@ export function EditorCanvas({
     }
     // 안에 든 요소(흰 판 안 섹션, 섹션 안 칩)가 위에 오도록 바깥 것부터, 같은 깊이는 큰 것부터 깐다.
     found.sort((a, b) => a.depth - b.depth || b.width * b.height - a.width * a.height);
-    // 자유 요소는 템플릿 위에, 칠하는 순서대로 깐다.
+    // 자유 요소는 템플릿 위에, 칠하는 순서대로 깐다. 템플릿 뒤에 깐 요소는 템플릿 요소 밑에 깔아 템플릿 요소가
+    // 먼저 골라지게 한다.
+    const under: Box[] = [];
     stage.querySelectorAll<HTMLElement>('[data-layer]').forEach((element, index) => {
-      found.push({
-        id: layerRef(element.dataset.layer ?? ''),
+      const id = element.dataset.layer ?? '';
+      const behind = layersRef.current.some((layer) => layer.id === id && layer.behind);
+      (behind ? under : found).push({
+        id: layerRef(id),
         parent: null,
-        depth: 1000 + index,
+        depth: (behind ? -1000 : 1000) + index,
         ...measure(element),
       });
     });
-    setBoxes(found);
+    setBoxes([...under, ...found]);
   }, [current, width, scale]);
 
   const editOf = (id: ElementId) => edits?.[id] ?? NO_EDIT;
@@ -613,6 +635,25 @@ export function EditorCanvas({
     }
     void putImage(id, image.dataUrl);
     return true;
+  };
+
+  /** 도형을 장 가운데에 넣는다. 사각·원은 그 색으로 채우고 테두리는 없이 시작한다. */
+  const addShape = (preset: ShapePreset, color: string) => {
+    const { shape, width: shapeWidth, height: shapeHeight, radius } = SHAPE_PRESETS[preset];
+    const layer: ShapeLayer = {
+      id: newLayerId(),
+      kind: 'shape',
+      shape,
+      x: Math.round((cardSize.width - shapeWidth) / 2),
+      y: Math.round((cardSize.height - shapeHeight) / 2),
+      width: shapeWidth,
+      height: shapeHeight,
+      fill: color,
+      strokeWidth: 0,
+      opacity: 1,
+      radius,
+    };
+    commitLayers([...layersRef.current, layer], undefined, layer);
   };
 
   /** 이미지 파일을 줄여 이미지 요소로 넣는다. */
@@ -718,13 +759,14 @@ export function EditorCanvas({
     );
   };
 
-  const handleRef = useRef({ addText, addImageSource, align });
-  handleRef.current = { addText, addImageSource, align };
+  const handleRef = useRef({ addText, addImageSource, addShape, align });
+  handleRef.current = { addText, addImageSource, addShape, align };
   useImperativeHandle(
     canvasRef,
     () => ({
       addText: (text, style) => handleRef.current.addText(text, undefined, style),
       addImageSource: (src) => void handleRef.current.addImageSource(src),
+      addShape: (shape, color) => handleRef.current.addShape(shape, color),
       align: (kind) => handleRef.current.align(kind),
     }),
     [],
@@ -892,7 +934,10 @@ export function EditorCanvas({
     (event.currentTarget as Element).setPointerCapture(event.pointerId);
   };
 
-  /** 자유 요소 끌기·크기. 크기는 가운데를 두고 바꾼다 — 글자는 폭만(줄이 다시 나뉜다), 이미지는 비율째. */
+  /**
+   * 자유 요소 끌기·크기. 크기는 가운데를 두고 바꾼다 — 글자와 선은 폭만(글자는 줄이 다시 나뉜다), 이미지와
+   * 사각·원은 비율째.
+   */
   const moveLayer = (
     g: Gesture,
     layer: Layer,
@@ -915,7 +960,7 @@ export function EditorCanvas({
       Math.hypot(event.clientX - g.centerX, event.clientY - g.centerY) / g.startDistance;
     const nextWidth = Math.max(MIN_LAYER_WIDTH, Math.round(layer.width * ratio));
     const x = Math.round(layer.x + (layer.width - nextWidth) / 2);
-    if (layer.kind === 'text') {
+    if (layer.kind === 'text' || (layer.kind === 'shape' && layer.shape === 'line')) {
       replaceLayer({ ...layer, x, width: nextWidth }, g.group);
       return;
     }
