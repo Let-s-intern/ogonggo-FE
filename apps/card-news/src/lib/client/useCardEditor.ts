@@ -13,6 +13,7 @@ import {
   addJobs,
   withSlideContent,
   withSlideLayers,
+  withBackground,
   withSlideTemplate,
   withTemplate,
 } from '../card/document';
@@ -307,11 +308,13 @@ export function useCardEditor() {
   const pickTemplate = useCallback(
     (variant: VariantId | null, slideId?: string) => {
       remember();
+      // 템플릿을 고르면 배경 서랍에서 덮어쓴 배경은 지운다 — 템플릿 미리보기에서 본 모습 그대로 되게.
+      // 한 장만 고르면 그 장에 덮어쓴 배경만 지운다.
       changeDoc((doc) =>
         slideId
-          ? withSlideTemplate(doc, slideId, variant)
+          ? withBackground(withSlideTemplate(doc, slideId, variant), null, slideId)
           : variant
-            ? withTemplate(doc, variant)
+            ? withBackground(withTemplate(doc, variant), null)
             : doc,
       );
     },

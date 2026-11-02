@@ -211,8 +211,8 @@ export function TemplateDrawer({
           </p>
           {onClearBackground ? (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              시안 배경 대신 배경 서랍에서 고른 배경을 쓰는 중입니다. 템플릿을 바꿔도 고른 배경은
-              그대로입니다.{' '}
+              시안 배경 대신 배경 서랍에서 고른 배경을 쓰는 중입니다. 템플릿을 고르면 고른 배경은
+              지워지고 그 템플릿 배경으로 바뀝니다.{' '}
               <button type="button" onClick={onClearBackground} className="font-bold underline">
                 배경 덮어쓰기 지우기
               </button>

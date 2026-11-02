@@ -156,8 +156,8 @@ export function BackgroundDrawer({
       {overridden ? (
         <div className="flex flex-col gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
           <p>
-            시안 배경 대신 고른 배경을 쓰는 중입니다. 템플릿을 다시 골라도 고른 배경은 그대로
-            남습니다.
+            시안 배경 대신 고른 배경을 쓰는 중입니다. 템플릿을 다시 고르면 고른 배경은 지워지고 그
+            템플릿 배경으로 바뀝니다.
           </p>
           <div className="flex flex-wrap gap-2">
             <button
