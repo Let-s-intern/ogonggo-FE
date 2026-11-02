@@ -69,6 +69,7 @@ import { type JobValueChip, type TextPreset, TextDrawer } from './drawers/TextDr
 import { UploadDrawer } from './drawers/UploadDrawer';
 import { TemplateDrawer } from './drawers/TemplateDrawer';
 import { LeftRail } from './LeftRail';
+import { LayerList } from './LayerList';
 import { PropertiesPanel } from './PropertiesPanel';
 import { bundleTextField, templateTextField } from './TextPopover';
 import { type AddSlideOption, SlideStrip } from './SlideStrip';
@@ -825,6 +826,16 @@ export function CardEditor({ docId }: { docId: string }) {
               onLogoChange={editor.setLogo}
               onBrandImage={(file) => void editor.setBrandImage(file)}
               candidates={editor.candidates}
+            />
+            <LayerList
+              element={built?.find((item) => item.id === docSlide.id)?.element}
+              layers={layers}
+              edits={slideEdits}
+              sectionLabels={sectionLabels}
+              selected={selected}
+              onSelect={setSelected}
+              onLayers={setLayers}
+              onEdit={(id, edit) => editor.setEdits(variant, docSlide.id, id, edit)}
             />
           </aside>
         </div>

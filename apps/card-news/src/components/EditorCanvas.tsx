@@ -1117,7 +1117,7 @@ export function EditorCanvas({
     .filter((box) => {
       const layer = layerOf(box.id);
       if (layer) {
-        return layer.kind === 'text';
+        return layer.kind === 'text' && !layer.hidden;
       }
       return !isLayerRef(box.id) && !editOf(box.id).hidden && textFieldOf(box.id) !== null;
     })
@@ -1405,7 +1405,9 @@ export function EditorCanvas({
               }}
             >
               {boxes.map((box) => {
-                const hidden = !isLayerRef(box.id) && edits?.[box.id]?.hidden;
+                const hidden = isLayerRef(box.id)
+                  ? layerOf(box.id)?.hidden
+                  : edits?.[box.id]?.hidden;
                 const on = box.id === selected;
                 return (
                   <div
