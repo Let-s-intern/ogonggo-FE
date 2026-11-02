@@ -28,13 +28,11 @@ export function UploadDrawer({
     if (missing.length === 0) {
       return;
     }
-    void Promise.all(missing.map(async (id) => [id, await getImage(id)] as const)).then(
-      (found) => {
-        if (!cancelled) {
-          setImages((current) => ({ ...current, ...Object.fromEntries(found) }));
-        }
-      },
-    );
+    void Promise.all(missing.map(async (id) => [id, await getImage(id)] as const)).then((found) => {
+      if (!cancelled) {
+        setImages((current) => ({ ...current, ...Object.fromEntries(found) }));
+      }
+    });
     return () => {
       cancelled = true;
     };
@@ -55,8 +53,8 @@ export function UploadDrawer({
         <input type="file" accept="image/*" multiple className="hidden" onChange={pick} />
       </label>
       <p className="text-xs text-gray-500">
-        누르면 이 장 가운데에, 캔버스로 끌어 놓으면 놓은 자리에 넣습니다. 올린 이미지는 이 브라우저에만
-        남습니다.
+        누르면 이 장 가운데에, 캔버스로 끌어 놓으면 놓은 자리에 넣습니다. 올린 이미지는 이
+        브라우저에만 남습니다.
       </p>
       {uploads.length === 0 ? (
         <p className="text-sm text-gray-500">올린 이미지가 없습니다.</p>

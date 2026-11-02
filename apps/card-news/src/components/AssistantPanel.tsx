@@ -1,6 +1,13 @@
 'use client';
 
-import { type FormEvent, type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Button, Callout, cn } from '@ogonggo/ui';
 import type { ToolContext } from '@/lib/ai/tools';
 import { useAssistantChat } from '@/lib/client/useAssistantChat';

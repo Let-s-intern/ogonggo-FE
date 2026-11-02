@@ -92,70 +92,72 @@ export function SlideStrip({
   return (
     <div ref={rootRef} className="relative flex items-center gap-3">
       <div className="flex min-w-0 items-start gap-2 overflow-x-auto">
-      {slides.map((built, index) => {
-        const on = built.id === current;
-        return (
-          <button
-            key={built.id}
-            type="button"
-            draggable
-            onDragStart={(event) => {
-              event.dataTransfer.effectAllowed = 'move';
-              event.dataTransfer.setData('text/plain', built.id);
-              setDragging(built.id);
-            }}
-            onDragOver={(event) => {
-              if (dragging) {
+        {slides.map((built, index) => {
+          const on = built.id === current;
+          return (
+            <button
+              key={built.id}
+              type="button"
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', built.id);
+                setDragging(built.id);
+              }}
+              onDragOver={(event) => {
+                if (dragging) {
+                  event.preventDefault();
+                  setOver(index);
+                }
+              }}
+              onDragLeave={() => setOver((value) => (value === index ? null : value))}
+              onDrop={(event) => drop(event, index)}
+              onDragEnd={() => {
+                setDragging(null);
+                setOver(null);
+              }}
+              onClick={() => onSelect(built.id)}
+              onContextMenu={(event) => {
                 event.preventDefault();
-                setOver(index);
-              }
-            }}
-            onDragLeave={() => setOver((value) => (value === index ? null : value))}
-            onDrop={(event) => drop(event, index)}
-            onDragEnd={() => {
-              setDragging(null);
-              setOver(null);
-            }}
-            onClick={() => onSelect(built.id)}
-            onContextMenu={(event) => {
-              event.preventDefault();
-              const root = rootRef.current?.getBoundingClientRect();
-              setAdding(false);
-              setMenu({
-                slideId: built.id,
-                x: event.clientX - (root?.left ?? 0),
-                y: event.clientY - (root?.top ?? 0),
-              });
-            }}
-            aria-pressed={on}
-            aria-label={`${slideLabel(names[index] ?? '', index)}. 끌어서 순서를 바꾸고 우클릭으로 복제·삭제합니다.`}
-            className={`flex shrink-0 flex-col items-center gap-1 rounded-md p-1 ${
-              over === index && dragging !== built.id
-                ? 'bg-blue-50 outline outline-2 outline-blue-300'
-                : ''
-            } ${dragging === built.id ? 'opacity-40' : ''}`}
-          >
-            <span
-              className={`pointer-events-none block overflow-hidden outline-offset-2 ${
-                on ? 'outline outline-2 outline-blue-500' : ''
-              }`}
+                const root = rootRef.current?.getBoundingClientRect();
+                setAdding(false);
+                setMenu({
+                  slideId: built.id,
+                  x: event.clientX - (root?.left ?? 0),
+                  y: event.clientY - (root?.top ?? 0),
+                });
+              }}
+              aria-pressed={on}
+              aria-label={`${slideLabel(names[index] ?? '', index)}. 끌어서 순서를 바꾸고 우클릭으로 복제·삭제합니다.`}
+              className={`flex shrink-0 flex-col items-center gap-1 rounded-md p-1 ${
+                over === index && dragging !== built.id
+                  ? 'bg-blue-50 outline outline-2 outline-blue-300'
+                  : ''
+              } ${dragging === built.id ? 'opacity-40' : ''}`}
             >
-              <SlideStage
-                element={built.element}
-                size={CARD_SIZES[size]}
-                width={THUMB_WIDTH}
-                slideId={built.id}
-              />
-            </span>
-            <span
-              className={`max-w-18 truncate text-xs ${on ? 'font-bold text-gray-900' : 'text-gray-500'}`}
-            >
-              {slideLabel(names[index] ?? '', index)}
-            </span>
-            {built.overflow ? <span className="text-xs font-semibold text-error">넘침</span> : null}
-          </button>
-        );
-      })}
+              <span
+                className={`pointer-events-none block overflow-hidden outline-offset-2 ${
+                  on ? 'outline outline-2 outline-blue-500' : ''
+                }`}
+              >
+                <SlideStage
+                  element={built.element}
+                  size={CARD_SIZES[size]}
+                  width={THUMB_WIDTH}
+                  slideId={built.id}
+                />
+              </span>
+              <span
+                className={`max-w-18 truncate text-xs ${on ? 'font-bold text-gray-900' : 'text-gray-500'}`}
+              >
+                {slideLabel(names[index] ?? '', index)}
+              </span>
+              {built.overflow ? (
+                <span className="text-xs font-semibold text-error">넘침</span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
 
       <div className="relative flex shrink-0 flex-col items-center gap-1">

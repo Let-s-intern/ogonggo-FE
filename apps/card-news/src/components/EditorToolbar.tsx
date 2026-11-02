@@ -243,8 +243,7 @@ export function EditorToolbar({
             options={[
               {
                 value: 'fit',
-                label:
-                  editing.zoom === null ? `맞춤 ${Math.round(editing.scale * 100)}%` : '맞춤',
+                label: editing.zoom === null ? `맞춤 ${Math.round(editing.scale * 100)}%` : '맞춤',
               },
               ...ZOOMS.map((zoom) => ({ value: String(zoom), label: `${zoom * 100}%` })),
             ]}

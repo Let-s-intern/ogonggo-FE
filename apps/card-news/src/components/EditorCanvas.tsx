@@ -447,8 +447,7 @@ export function EditorCanvas({
           Math.floor(
             Math.min(
               frame.clientWidth - FRAME_PADDING * 2,
-              ((frame.clientHeight - FRAME_TOP - bottomSpace) * cardSize.width) /
-                cardSize.height,
+              ((frame.clientHeight - FRAME_TOP - bottomSpace) * cardSize.width) / cardSize.height,
             ),
           ),
         ),
@@ -1210,7 +1209,9 @@ export function EditorCanvas({
             aria-pressed={tool === item.value}
             onClick={() => setTool(item.value)}
             className={`h-8 rounded-md px-3 text-xs ${
-              tool === item.value ? 'bg-blue-50 font-bold text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+              tool === item.value
+                ? 'bg-blue-50 font-bold text-blue-700'
+                : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
             {item.label}
@@ -1484,9 +1485,7 @@ export function EditorCanvas({
             ) : null}
           </div>
         ) : (
-          <div className="m-auto text-sm text-gray-400">
-            그리는 중
-          </div>
+          <div className="m-auto text-sm text-gray-400">그리는 중</div>
         )}
       </div>
 

@@ -364,8 +364,7 @@ function sectionItems(
   label: string,
   index: number,
 ): string[] {
-  const section =
-    content[from].find((item) => item.label.trim() === label) ?? content[from][index];
+  const section = content[from].find((item) => item.label.trim() === label) ?? content[from][index];
   return (section?.items ?? []).map((item) => item.trim()).filter(Boolean);
 }
 

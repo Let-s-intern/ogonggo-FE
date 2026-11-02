@@ -33,7 +33,9 @@ export function ElementsDrawer({
             className="flex flex-col items-center gap-1.5 rounded-lg bg-gray-100 p-2 text-xs text-gray-700 hover:bg-gray-200 disabled:opacity-40"
           >
             <span className="flex h-10 w-full items-center justify-center">
-              {logo.src ? <img src={logo.src} alt="" className="max-h-10 max-w-full object-contain" /> : null}
+              {logo.src ? (
+                <img src={logo.src} alt="" className="max-h-10 max-w-full object-contain" />
+              ) : null}
             </span>
             {logo.label}
           </button>

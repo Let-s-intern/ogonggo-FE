@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import { Button, Input, Modal, Textarea } from '@ogonggo/ui';
-import {
-  type CardDocument,
-  MAX_BUNDLE_JOBS,
-  MAX_SLIDES,
-  jobName,
-} from '@/lib/card/document';
+import { type CardDocument, MAX_BUNDLE_JOBS, MAX_SLIDES, jobName } from '@/lib/card/document';
 import type { CardContent } from '@/lib/card/types';
 import type { JobListItem } from '@/lib/server/ogonggo';
 import { CaptionPanel } from '../CaptionPanel';

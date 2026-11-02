@@ -45,10 +45,18 @@ export function TextDrawer({
     'rounded-lg bg-gray-100 px-3 py-2.5 text-left hover:bg-gray-200 disabled:text-gray-300';
   return (
     <Drawer title="텍스트">
-      <button type="button" className={`${block} text-lg font-black`} onClick={() => onAdd(ADD[0]!.preset)}>
+      <button
+        type="button"
+        className={`${block} text-lg font-black`}
+        onClick={() => onAdd(ADD[0]!.preset)}
+      >
         {ADD[0]!.label}
       </button>
-      <button type="button" className={`${block} text-base font-bold`} onClick={() => onAdd(ADD[1]!.preset)}>
+      <button
+        type="button"
+        className={`${block} text-base font-bold`}
+        onClick={() => onAdd(ADD[1]!.preset)}
+      >
         {ADD[1]!.label}
       </button>
       <button type="button" className={`${block} text-sm`} onClick={() => onAdd(ADD[2]!.preset)}>

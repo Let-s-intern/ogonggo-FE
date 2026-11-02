@@ -70,11 +70,7 @@ export function TemplateDrawer({
           slides.findIndex((slide) => slide.role === 'cover'),
         );
         const index =
-          tab === 'slide'
-            ? slideIndex
-            : tab === 'bundle'
-              ? cover
-              : (variant.previewSlide ?? 0);
+          tab === 'slide' ? slideIndex : tab === 'bundle' ? cover : (variant.previewSlide ?? 0);
         return slides[Math.min(index, slides.length - 1)]!;
       }),
     [specs, tab, slideIndex],
@@ -125,16 +121,18 @@ export function TemplateDrawer({
                   aria-pressed={on}
                   aria-label={variant.label}
                   title={variant.description}
-                  onClick={() =>
-                    tab === 'slide' ? onPickSlide(variant.id) : onPick(variant.id)
-                  }
+                  onClick={() => (tab === 'slide' ? onPickSlide(variant.id) : onPick(variant.id))}
                   className={`flex flex-col gap-1 rounded-lg bg-white p-1.5 text-left ${
                     on ? 'ring-2 ring-blue-500' : 'ring-1 ring-gray-200 hover:ring-blue-300'
                   }`}
                 >
                   <span className="pointer-events-none block overflow-hidden rounded">
                     {preview ? (
-                      <SlideStage element={preview.element} size={sizeValue} width={PREVIEW_WIDTH} />
+                      <SlideStage
+                        element={preview.element}
+                        size={sizeValue}
+                        width={PREVIEW_WIDTH}
+                      />
                     ) : (
                       <span
                         className="block bg-gray-100"

@@ -534,9 +534,7 @@ async function rewriteCopy(
     return '공고가 없는 문서라 문구를 다시 쓸 수 없습니다. set_content 로 고치세요.';
   }
   const job =
-    loaded.job?.id === documentJob.jobId
-      ? loaded.job
-      : (await fetchCardJob(documentJob.jobId)).job;
+    loaded.job?.id === documentJob.jobId ? loaded.job : (await fetchCardJob(documentJob.jobId)).job;
   const result = await requestDraft({
     jobId: job.id,
     instruction,
@@ -983,7 +981,9 @@ export function outOfScope(
     case 'pick_variant':
       return refuse('템플릿은 모든 장에 걸립니다');
     case 'set_settings':
-      return refuse('색·로고·글자 배율은 모든 장에 걸립니다. 요소 하나의 크기는 edit_elements 의 scale 로 바꿉니다');
+      return refuse(
+        '색·로고·글자 배율은 모든 장에 걸립니다. 요소 하나의 크기는 edit_elements 의 scale 로 바꿉니다',
+      );
     case 'add_text':
       return only
         ? refuse('새 글자 요소 넣기')
@@ -992,7 +992,9 @@ export function outOfScope(
           : null;
     case 'edit_elements':
     case 'edit_layers': {
-      const changes = Array.isArray(args.changes) ? (args.changes as Record<string, unknown>[]) : [];
+      const changes = Array.isArray(args.changes)
+        ? (args.changes as Record<string, unknown>[])
+        : [];
       for (const change of changes) {
         const target =
           name === 'edit_layers'

@@ -52,7 +52,10 @@ import { AssistantPanel } from './AssistantPanel';
 import {
   type CanvasHandle,
   EditorCanvas,
-  measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
+  measureSlideBoxes,
+  readTextLook,
+  useBuiltSlides,
+} from './EditorCanvas';
 import { EditorToolbar } from './EditorToolbar';
 import { ElementsDrawer } from './drawers/ElementsDrawer';
 import { JobsDrawer } from './drawers/JobsDrawer';
@@ -92,7 +95,11 @@ function ScopePills({
   ];
   const current = scope === 'selected' && !selectedName ? 'slide' : scope;
   return (
-    <div role="radiogroup" aria-label="AI 수정 범위" className="flex flex-wrap items-center gap-1.5 text-xs">
+    <div
+      role="radiogroup"
+      aria-label="AI 수정 범위"
+      className="flex flex-wrap items-center gap-1.5 text-xs"
+    >
       <span className="text-gray-500">대상</span>
       {pills.map((pill) => (
         <button
@@ -605,7 +612,9 @@ export function CardEditor({ docId }: { docId: string }) {
                   canvasRef={canvasRef}
                   selected={selected}
                   onSelect={setSelected}
-                  onEdit={(id, edit, group) => editor.setEdits(variant, docSlide.id, id, edit, group)}
+                  onEdit={(id, edit, group) =>
+                    editor.setEdits(variant, docSlide.id, id, edit, group)
+                  }
                   content={content}
                   variant={variant}
                   onContentChange={(next) => editor.setSlideContent(docSlide.id, next)}
@@ -691,7 +700,8 @@ export function CardEditor({ docId }: { docId: string }) {
                   : undefined
               }
               onEdit={(edit, group) =>
-                isElementId(selected) && editor.setEdits(variant, docSlide.id, selected, edit, group)
+                isElementId(selected) &&
+                editor.setEdits(variant, docSlide.id, selected, edit, group)
               }
               layer={selectedLayer}
               onLayerChange={(layer, group) =>
@@ -743,7 +753,6 @@ export function CardEditor({ docId }: { docId: string }) {
           />
         </div>
       ) : null}
-
     </main>
   );
 }
