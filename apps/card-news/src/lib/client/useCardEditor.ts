@@ -254,6 +254,15 @@ export function useCardEditor() {
     [remember, changeDoc],
   );
 
+  /** 문서 제목을 바꾼다. 빈 글이면 회사 이름 제목으로 돌린다. */
+  const setTitle = useCallback(
+    (title: string) => {
+      remember();
+      changeDoc(({ title: _previous, ...doc }) => (title ? { ...doc, title } : doc));
+    },
+    [remember, changeDoc],
+  );
+
   /** 고른 시안을 문서에 남긴다. 실행 취소 기록에는 쌓지 않는다. */
   const setVariant = useCallback(
     (variant: VariantId) => changeDoc((doc) => ({ ...doc, variant })),
@@ -524,6 +533,7 @@ export function useCardEditor() {
     setEdits,
     setLayers,
     changeSlides,
+    setTitle,
     setVariant,
     remember,
     applyQuietly,

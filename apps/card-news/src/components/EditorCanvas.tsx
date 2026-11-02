@@ -192,6 +192,8 @@ const NO_EDIT: ElementEdit = { dx: 0, dy: 0, scale: 1 };
 const DRAG_THRESHOLD = 3;
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 5;
+/** 캔버스 칸 안쪽 여백(px). 맞춤 배율은 이만큼 띄운다. */
+const FRAME_PADDING = 24;
 
 /** `rgb(…)` 색을 `#RRGGBB` 로. */
 function toHex(color: string): string {
@@ -329,6 +331,8 @@ export function EditorCanvas({
   checkLayers,
   onLogo,
   onBrand,
+  zoom,
+  onScale,
 }: {
   slides: BuiltSlide[];
   size: CardSizeId;
@@ -356,6 +360,10 @@ export function EditorCanvas({
   onLogo: (image: Blob) => void;
   /** 브랜드 로고 자리에 붙이거나 놓은 이미지. 브랜드 로고를 올린 로고로 바꾼다. */
   onBrand: (image: Blob) => void;
+  /** 고른 배율(1080 폭 기준). `null` 이면 칸에 맞춘다. 칸보다 크면 칸 안에서 스크롤한다. */
+  zoom: number | null;
+  /** 그려진 배율이 바뀌면 알린다(위 막대의 배율 표시). */
+  onScale?: (scale: number) => void;
 }) {
   const cardSize = CARD_SIZES[size];
   const frameRef = useRef<HTMLDivElement>(null);
@@ -372,16 +380,28 @@ export function EditorCanvas({
   const layersRef = useRef(layers);
   layersRef.current = layers;
 
-  // 캔버스 폭은 칸 폭에 맞추되, 세로가 화면을 넘지 않게 줄인다.
+  // 맞춤이면 캔버스를 칸(가운데 열에서 위아래 띠를 뺀 자리)에 통째로 들어가게 줄인다.
   useLayoutEffect(() => {
     const frame = frameRef.current;
     if (!frame) {
       return;
     }
     const fit = () => {
-      const maxHeight = Math.max(320, window.innerHeight - 260);
+      if (zoom !== null) {
+        setWidth(Math.round(cardSize.width * zoom));
+        return;
+      }
+      const room = FRAME_PADDING * 2;
       setWidth(
-        Math.floor(Math.min(frame.clientWidth, (maxHeight * cardSize.width) / cardSize.height)),
+        Math.max(
+          120,
+          Math.floor(
+            Math.min(
+              frame.clientWidth - room,
+              ((frame.clientHeight - room) * cardSize.width) / cardSize.height,
+            ),
+          ),
+        ),
       );
     };
     fit();
@@ -392,9 +412,14 @@ export function EditorCanvas({
       observer.disconnect();
       window.removeEventListener('resize', fit);
     };
-  }, [cardSize]);
+  }, [cardSize, zoom]);
 
   const scale = width / cardSize.width;
+  useEffect(() => {
+    if (scale) {
+      onScale?.(scale);
+    }
+  }, [scale, onScale]);
   const current = slides.find((built) => built.id === slide);
   const role = current?.role ?? 'free';
 
@@ -898,7 +923,7 @@ export function EditorCanvas({
   const handle = 'absolute size-3 rounded-sm border-2 border-blue-500 bg-white';
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={frameRef}
         tabIndex={0}
@@ -906,11 +931,12 @@ export function EditorCanvas({
         onDragOver={onDragOver}
         onDrop={onDrop}
         aria-label="카드 캔버스. 요소를 눌러 고르고 끌어 옮깁니다."
-        className="flex w-full justify-center outline-none"
+        className="flex min-h-0 flex-1 overflow-auto outline-none"
+        style={{ padding: FRAME_PADDING }}
       >
         {width && current ? (
           <div
-            className="relative bg-gray-100 shadow-sm"
+            className="relative m-auto shrink-0 bg-gray-100 shadow-[0_8px_24px_rgba(17,24,39,0.14)]"
             style={{ width, height: cardSize.height * scale }}
           >
             <SlideStage
@@ -1055,16 +1081,13 @@ export function EditorCanvas({
             </div>
           </div>
         ) : (
-          <div
-            className="flex w-full items-center justify-center rounded-2xl bg-gray-100 text-sm text-gray-400"
-            style={{ aspectRatio: `${cardSize.width} / ${cardSize.height}`, maxHeight: '70vh' }}
-          >
+          <div className="m-auto text-sm text-gray-400">
             그리는 중
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-center gap-3 pb-2">
         <Button type="button" size="sm" variant="secondary" onClick={() => addText()}>
           텍스트 추가
         </Button>

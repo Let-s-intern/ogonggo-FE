@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import {
-  CARD_SIZE_IDS,
   CARD_SIZES,
   type CardSizeId,
   type ElementId,
@@ -16,7 +14,6 @@ import {
   layerRef,
 } from '@/lib/card/types';
 import {
-  type RenderSlide,
   attachSlide,
   detachSlide,
   documentContent,
@@ -28,25 +25,24 @@ import {
   newSlide,
   removeSlide,
   slideEditsOf,
-  slideLabel,
   slideName,
   withSlideEdit,
   withSlideLayers,
 } from '@/lib/card/document';
 import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { stripMarkup } from '@/lib/card/markup';
-import { resolvePalette, variantOf } from '@/lib/card/variants';
+import { resolvePalette } from '@/lib/card/variants';
 import type { ToolContext } from '@/lib/ai/tools';
 import { Button } from '@ogonggo/ui';
 import { fileToDataUrl } from '@/lib/client/image';
-import { downloadSlides } from '@/lib/client/render';
 import { useCardEditor } from '@/lib/client/useCardEditor';
 import { useRenderKit } from '@/lib/client/useRenderKit';
 import { AssistantPanel } from './AssistantPanel';
 import { CaptionPanel } from './CaptionPanel';
 import { ContentPanel } from './ContentPanel';
 import { EditorCanvas, measureSlideBoxes, readTextLook, useBuiltSlides } from './EditorCanvas';
-import { PropertiesPanel } from './PropertiesPanel';
+import { EditorToolbar } from './EditorToolbar';
+import { type PanelTab, PropertiesPanel } from './PropertiesPanel';
 import { templateTextField } from './TextPopover';
 import { RegenerateModal } from './RegenerateModal';
 import { type AddSlideOption, SlideStrip } from './SlideStrip';
@@ -59,142 +55,12 @@ import { VariantPicker } from './VariantPicker';
 const MAX_RENDER_REQUEST = 4_000_000;
 const NO_LAYERS: Layer[] = [];
 
-function toggled<T>(set: Set<T>, value: T): Set<T> {
-  const next = new Set(set);
-  if (!next.delete(value)) {
-    next.add(value);
-  }
-  return next;
-}
-
-/**
- * 편집 화면 하단 바. 템플릿 바꾸기, 캔버스 크기, 받을 장·크기 고르기와 받기, 넘침 경고. 받기는 서버
- * 렌더(PNG)다 — 캔버스와 같은 JSX 를 이미지 생성기가 그린다.
- */
-function BottomBar({
-  slides,
-  names,
-  title,
-  variant,
-  size,
-  onSizeChange,
-  overflow,
-  onRepick,
-}: {
-  /** 지금 시안으로 편 문서의 장. */
-  slides: RenderSlide[];
-  /** 장 이름(`slideName()`). `slides` 와 같은 순서다. */
-  names: string[];
-  /** 문서 제목. 묶어 받는 zip 이름에 쓴다. */
-  title: string;
-  variant: VariantId;
-  size: CardSizeId;
-  onSizeChange: (size: CardSizeId) => void;
-  /** 넘친 장 번호. */
-  overflow: number[];
-  onRepick: () => void;
-}) {
-  // 받지 않을 장을 둔다. 문서에 장이 늘면 새 장은 받을 장으로 시작한다.
-  const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
-  // 처음 받을 크기는 열 때의 캔버스 크기다(빈 캔버스에서 고른 크기).
-  const [sizes, setSizes] = useState<Set<CardSizeId>>(() => new Set([size]));
-  const [progress, setProgress] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const targets = slides.flatMap(({ id, spec, role }, index) =>
-    skipped.has(id) ? [] : [{ spec, role, index }],
-  );
-  const count = targets.length * sizes.size;
-
-  const download = async () => {
-    setError(null);
-    setProgress('준비 중');
-    try {
-      await downloadSlides(targets, [...sizes], title, (done, total) =>
-        setProgress(`${done}/${total}`),
-      );
-    } catch {
-      setError('다운로드에 실패했습니다. 다시 시도해 주세요.');
-    } finally {
-      setProgress(null);
-    }
-  };
-
-  return (
-    <div className="sticky bottom-0 z-10 flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Button size="sm" variant="secondary" onClick={onRepick}>
-            템플릿 바꾸기
-          </Button>
-          <span className="text-sm font-bold">{variantOf(variant).label}</span>
-          <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-            {CARD_SIZE_IDS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onSizeChange(id)}
-                aria-pressed={size === id}
-                className={`rounded-md px-3 py-1.5 text-sm font-semibold ${
-                  size === id ? 'bg-white shadow-sm' : 'text-gray-500'
-                }`}
-              >
-                {CARD_SIZES[id].label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm text-gray-600">받을 장</span>
-          {slides.map((slide, index) => (
-            <label key={slide.id} className="flex items-center gap-1 text-sm">
-              <input
-                type="checkbox"
-                className="size-4"
-                checked={!skipped.has(slide.id)}
-                onChange={() => setSkipped((current) => toggled(current, slide.id))}
-              />
-              {slideLabel(names[index] ?? '', index)}
-            </label>
-          ))}
-          <span className="text-sm text-gray-600">받을 크기</span>
-          {CARD_SIZE_IDS.map((id) => (
-            <label key={id} className="flex items-center gap-1 text-sm">
-              <input
-                type="checkbox"
-                className="size-4"
-                checked={sizes.has(id)}
-                onChange={() => setSizes((current) => toggled(current, id))}
-              />
-              {CARD_SIZES[id].label}
-            </label>
-          ))}
-          <Button
-            size="sm"
-            disabled={count === 0 || progress !== null}
-            onClick={() => void download()}
-          >
-            {progress ? `만드는 중 ${progress}` : `고른 ${count}장 받기`}
-          </Button>
-        </div>
-      </div>
-      {overflow.length > 0 ? (
-        <p className="text-xs font-semibold text-error">
-          주의: {overflow.map((slide) => slide + 1).join('·')}장은 글이 많아 가장 작은 글자로도
-          넘칩니다. 항목을 줄이거나 글자 크기를 낮춰 주세요.
-        </p>
-      ) : null}
-      {error ? <p className="text-sm text-error">{error}</p> : null}
-    </div>
-  );
-}
-
 /**
  * 편집 화면 배치(`/edit/<문서 id>`). 상태와 동작은 `useCardEditor` 에 있고, 여기서는 패널을 놓기만 한다.
  *
  * 남은 문서를 고른 템플릿으로 연다. 여기서 새로 만든 문서(`?jobId=` 로 들어온 공고)는 템플릿 고르기
- * (열 시안을 한 장씩 나란히)부터 연다. 편집은 3단이다 — 왼쪽 문구와 인스타 본문, 가운데 캔버스, 오른쪽
- * 속성. 아래 바에서 템플릿을 바꾸고 받는다.
+ * (열 시안을 한 장씩 나란히)부터 연다. 편집 화면은 위 막대 아래 네 열이다 — 왼쪽 레일과 서랍, 가운데
+ * 캔버스와 장 목록, 오른쪽 디자인 패널. 받기는 위 막대의 `내보내기` 다.
  */
 export function CardEditor({ docId }: { docId: string }) {
   const editor = useCardEditor();
@@ -205,6 +71,10 @@ export function CardEditor({ docId }: { docId: string }) {
   /** 보고 있는 장의 id. `null` 이면 첫 장이다. */
   const [slideId, setSlideId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Selection | null>(null);
+  /** 고른 배율. `null` 이면 캔버스 칸에 맞춘다. */
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [scale, setScale] = useState(0);
+  const [panelTab, setPanelTab] = useState<PanelTab>('properties');
   const { kit, error: kitError } = useRenderKit();
   const slides = variant && specs ? specs[variant] : null;
   /** 보고 있는 장이 문서의 몇 번째인가(0부터). */
@@ -353,6 +223,10 @@ export function CardEditor({ docId }: { docId: string }) {
     setSelected(layerRef(layer.id));
   };
 
+  const overflow = built
+    ? built.flatMap((slideBuilt, index) => (slideBuilt.overflow ? [index] : []))
+    : [];
+
   /** 이 장의 받기 요청이 상한을 넘으면 알릴 말. */
   const checkLayers = (next: Layer[]): string | null => {
     if (!currentSlide) {
@@ -368,40 +242,54 @@ export function CardEditor({ docId }: { docId: string }) {
       : null;
   };
 
-  const header = (
-    <header className="flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <h1 className="text-xl font-bold">오공고 카드뉴스</h1>
-        <p className="text-sm text-gray-500">
-          캔버스에서 고친 뒤 원하는 장만 받습니다. 고친 내용은 이 브라우저에 남습니다.
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <Button size="sm" variant="ghost" onClick={() => void logout()}>
-          로그아웃
-        </Button>
-        <Link
-          href="/"
-          className="inline-flex h-9 items-center rounded-lg px-3 text-sm font-semibold text-gray-700 hover:bg-gray-100"
-        >
-          시작 화면
-        </Link>
-        {loaded ? (
-          <>
-            {loaded.job && loaded.doc.kind === 'single' ? (
-              <Button size="sm" variant="secondary" onClick={editor.startOver}>
-                처음부터 다시
-              </Button>
-            ) : null}
-            {loaded.job ? (
-              <Button size="sm" onClick={() => setRegenerateOpen(true)}>
-                AI로 다시 쓰기
-              </Button>
-            ) : null}
-          </>
-        ) : null}
-      </div>
-    </header>
+  /** 위 막대의 `AI로 수정`. 오른쪽 AI 탭을 열고 입력 칸에 포커스를 준다. */
+  const focusAssistant = () => {
+    setPanelTab('ai');
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLTextAreaElement>('[aria-label="AI 비서에게 요청"]')?.focus(),
+    );
+  };
+
+  const editing = Boolean(loaded && content && slides && currentSlide && docSlide && variant);
+  const toolbar = (
+    <EditorToolbar
+      title={loaded ? documentTitle(loaded.doc) : null}
+      onTitleChange={editor.setTitle}
+      bundleCount={loaded?.doc.kind === 'bundle' ? loaded.doc.jobs.length : null}
+      editing={
+        editing && slides
+          ? {
+              onUndo: editor.undo,
+              onRedo: editor.redo,
+              size,
+              onSizeChange: setSize,
+              zoom,
+              onZoomChange: setZoom,
+              scale,
+              onAi: focusAssistant,
+              slides,
+              names,
+            }
+          : null
+      }
+      actions={
+        <>
+          {loaded?.job && loaded.doc.kind === 'single' ? (
+            <Button size="sm" variant="ghost" onClick={editor.startOver}>
+              처음부터 다시
+            </Button>
+          ) : null}
+          {loaded?.job && editing ? (
+            <Button size="sm" variant="ghost" onClick={() => setRegenerateOpen(true)}>
+              AI로 다시 쓰기
+            </Button>
+          ) : null}
+          <Button size="sm" variant="ghost" onClick={() => void logout()}>
+            로그아웃
+          </Button>
+        </>
+      }
+    />
   );
 
   const jobLine =
@@ -429,166 +317,159 @@ export function CardEditor({ docId }: { docId: string }) {
       </div>
     ) : null;
 
-  const side =
-    'flex flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto';
-
   return (
-    <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-6">
-      {header}
+    <main className="flex h-screen flex-col overflow-hidden bg-gray-100">
+      {toolbar}
 
       {status.kind === 'loading' ? (
-        <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{status.message}</p>
+        <p className="shrink-0 bg-blue-50 px-4 py-2 text-sm text-blue-700">{status.message}</p>
       ) : null}
       {status.kind === 'error' ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-error">{status.message}</p>
+        <p className="shrink-0 bg-red-50 px-4 py-2 text-sm text-error">{status.message}</p>
       ) : null}
       {notice ? (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p>
+        <p className="shrink-0 bg-amber-50 px-4 py-2 text-sm text-amber-800">{notice}</p>
+      ) : null}
+      {kitError ? (
+        <p className="shrink-0 bg-red-50 px-4 py-2 text-sm text-error">
+          캔버스를 그릴 글꼴을 받지 못했습니다. 새로고침해 주세요.
+        </p>
       ) : null}
 
       {loaded && content && slides && currentSlide && docSlide && variant ? (
-        <>
-          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)_320px]">
-            <div className={side}>
-              {loaded.doc.jobs.length > 0 ? (
-                <ContentPanel content={content} onChange={editor.setContent} />
-              ) : null}
-              <CaptionPanel
-                caption={content.caption ?? ''}
-                onChange={(caption) => editor.setContent({ ...content, caption })}
-              />
-            </div>
-            <div className="flex min-w-0 flex-col gap-3">
-              {jobLine}
-              {kitError ? (
-                <p className="text-sm text-error">
-                  캔버스를 그릴 글꼴을 받지 못했습니다. 새로고침해 주세요.
-                </p>
-              ) : null}
-              {built ? (
-                <>
-                  <EditorCanvas
-                    slides={built}
-                    size={size}
-                    slide={docSlide.id}
-                    edits={slideEdits}
-                    layers={layers}
-                    onLayers={setLayers}
-                    checkLayers={checkLayers}
-                    onLogo={(image) =>
-                      void fileToDataUrl(image).then(editor.setLogo, () => undefined)
-                    }
-                    onBrand={(image) => void editor.setBrandImage(image)}
-                    textColor={resolvePalette(variant, loaded.doc.settings).headlineText}
-                    selected={selected}
-                    onSelect={setSelected}
-                    onEdit={(id, edit, group) =>
-                      editor.setEdits(variant, docSlide.id, id, edit, group)
-                    }
-                    content={content}
-                    variant={variant}
-                    onContentChange={editor.setContent}
-                    sectionLabels={sectionLabels}
-                  />
-                  <SlideStrip
-                    slides={built}
-                    names={names}
-                    size={size}
-                    current={docSlide.id}
-                    onSelect={(next) => {
-                      setSlideId(next);
-                      setSelected(null);
-                    }}
-                    onMove={(id, to) => editor.changeSlides((doc) => moveSlide(doc, id, to))}
-                    onDuplicate={(id) => editor.changeSlides((doc) => duplicateSlide(doc, id))}
-                    onRemove={(id) => {
-                      editor.changeSlides((doc) => removeSlide(doc, id));
-                      setSelected(null);
-                    }}
-                    addOptions={addOptions}
-                  />
-                </>
-              ) : (
-                <div className="flex h-80 items-center justify-center rounded-2xl bg-gray-100 text-sm text-gray-400">
-                  그리는 중
-                </div>
-              )}
-            </div>
-            <div className={side}>
-              <PropertiesPanel
-                settings={loaded.doc.settings}
-                onSettingsChange={editor.setSettings}
-                selected={isElementId(selected) ? selected : null}
+        <div className="flex min-h-0 flex-1">
+          <aside className="flex w-[372px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-gray-200 bg-white p-4">
+            {jobLine}
+            <Button size="sm" variant="secondary" onClick={() => setVariant(null)}>
+              템플릿 바꾸기
+            </Button>
+            {loaded.doc.jobs.length > 0 ? (
+              <ContentPanel content={content} onChange={editor.setContent} />
+            ) : null}
+            <CaptionPanel
+              caption={content.caption ?? ''}
+              onChange={(caption) => editor.setContent({ ...content, caption })}
+            />
+          </aside>
+          <section className="flex min-w-0 flex-1 flex-col">
+            {built ? (
+              <EditorCanvas
+                slides={built}
+                size={size}
+                slide={docSlide.id}
+                edits={slideEdits}
+                layers={layers}
+                onLayers={setLayers}
+                checkLayers={checkLayers}
+                onLogo={(image) =>
+                  void fileToDataUrl(image).then(editor.setLogo, () => undefined)
+                }
+                onBrand={(image) => void editor.setBrandImage(image)}
+                textColor={resolvePalette(variant, loaded.doc.settings).headlineText}
+                selected={selected}
+                onSelect={setSelected}
+                onEdit={(id, edit, group) => editor.setEdits(variant, docSlide.id, id, edit, group)}
+                content={content}
+                variant={variant}
+                onContentChange={editor.setContent}
                 sectionLabels={sectionLabels}
-                edit={isElementId(selected) ? slideEdits?.[selected] : undefined}
-                jobTemplate={
-                  loaded.doc.kind === 'bundle' && docSlide.role === 'job'
-                    ? {
-                        detached: Boolean(docSlide.detached),
-                        onDetach: () => editor.changeSlides((doc) => detachSlide(doc, docSlide.id)),
-                        onAttach: () => editor.changeSlides((doc) => attachSlide(doc, docSlide.id)),
-                      }
-                    : undefined
-                }
-                onEdit={(edit, group) =>
-                  isElementId(selected) &&
-                  editor.setEdits(variant, docSlide.id, selected, edit, group)
-                }
-                layer={selectedLayer}
-                onLayerChange={(layer, group) =>
-                  setLayers(
-                    layers.map((item) => (item.id === layer.id ? layer : item)),
-                    group,
-                  )
-                }
-                onLayerRemove={(layer) => {
-                  setLayers(layers.filter((item) => item.id !== layer.id));
-                  setSelected(null);
-                }}
-                onLayerOrder={(layer, step) => {
-                  const index = layers.indexOf(layer);
-                  const target = Math.max(0, Math.min(layers.length - 1, index + step));
-                  if (index >= 0 && target !== index) {
-                    const next = layers.filter((item) => item !== layer);
-                    next.splice(target, 0, layer);
-                    setLayers(next);
-                  }
-                }}
-                onDeselect={() => setSelected(null)}
-                onUnfold={
-                  isElementId(selected) &&
-                  variant &&
-                  templateTextField(selected, content, variant, currentSlide.role)
-                    ? () => unfold(selected)
-                    : undefined
-                }
-                brandColor={loaded.brandColor}
-                onResetBrandColor={editor.resetBrandColor}
-                logo={loaded.logo}
-                onLogoChange={editor.setLogo}
-                onBrandImage={(file) => void editor.setBrandImage(file)}
-                candidates={editor.candidates}
-                assistant={<AssistantPanel context={toolContext} />}
+                zoom={zoom}
+                onScale={setScale}
               />
-            </div>
-          </div>
-          <BottomBar
-            slides={slides}
-            names={names}
-            title={documentTitle(loaded.doc)}
-            variant={variant}
-            size={size}
-            onSizeChange={setSize}
-            overflow={
-              built
-                ? built.flatMap((slideBuilt, index) => (slideBuilt.overflow ? [index] : []))
-                : []
-            }
-            onRepick={() => setVariant(null)}
-          />
-        </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
+                그리는 중
+              </div>
+            )}
+            {built ? (
+              <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-2">
+                <SlideStrip
+                  slides={built}
+                  names={names}
+                  size={size}
+                  current={docSlide.id}
+                  onSelect={(next) => {
+                    setSlideId(next);
+                    setSelected(null);
+                  }}
+                  onMove={(id, to) => editor.changeSlides((doc) => moveSlide(doc, id, to))}
+                  onDuplicate={(id) => editor.changeSlides((doc) => duplicateSlide(doc, id))}
+                  onRemove={(id) => {
+                    editor.changeSlides((doc) => removeSlide(doc, id));
+                    setSelected(null);
+                  }}
+                  addOptions={addOptions}
+                />
+                {overflow.length > 0 ? (
+                  <p className="pt-1 text-xs font-semibold text-error">
+                    주의: {overflow.map((index) => index + 1).join('·')}장은 글이 많아 가장 작은
+                    글자로도 넘칩니다. 항목을 줄이거나 글자 크기를 낮춰 주세요.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+          <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-gray-200 bg-gray-50 p-3">
+            <PropertiesPanel
+              tab={panelTab}
+              onTabChange={setPanelTab}
+              settings={loaded.doc.settings}
+              onSettingsChange={editor.setSettings}
+              selected={isElementId(selected) ? selected : null}
+              sectionLabels={sectionLabels}
+              edit={isElementId(selected) ? slideEdits?.[selected] : undefined}
+              jobTemplate={
+                loaded.doc.kind === 'bundle' && docSlide.role === 'job'
+                  ? {
+                      detached: Boolean(docSlide.detached),
+                      onDetach: () => editor.changeSlides((doc) => detachSlide(doc, docSlide.id)),
+                      onAttach: () => editor.changeSlides((doc) => attachSlide(doc, docSlide.id)),
+                    }
+                  : undefined
+              }
+              onEdit={(edit, group) =>
+                isElementId(selected) && editor.setEdits(variant, docSlide.id, selected, edit, group)
+              }
+              layer={selectedLayer}
+              onLayerChange={(layer, group) =>
+                setLayers(
+                  layers.map((item) => (item.id === layer.id ? layer : item)),
+                  group,
+                )
+              }
+              onLayerRemove={(layer) => {
+                setLayers(layers.filter((item) => item.id !== layer.id));
+                setSelected(null);
+              }}
+              onLayerOrder={(layer, step) => {
+                const index = layers.indexOf(layer);
+                const target = Math.max(0, Math.min(layers.length - 1, index + step));
+                if (index >= 0 && target !== index) {
+                  const next = layers.filter((item) => item !== layer);
+                  next.splice(target, 0, layer);
+                  setLayers(next);
+                }
+              }}
+              onDeselect={() => setSelected(null)}
+              onUnfold={
+                isElementId(selected) &&
+                variant &&
+                templateTextField(selected, content, variant, currentSlide.role)
+                  ? () => unfold(selected)
+                  : undefined
+              }
+              brandColor={loaded.brandColor}
+              onResetBrandColor={editor.resetBrandColor}
+              logo={loaded.logo}
+              onLogoChange={editor.setLogo}
+              onBrandImage={(file) => void editor.setBrandImage(file)}
+              candidates={editor.candidates}
+              assistant={<AssistantPanel context={toolContext} />}
+            />
+          </aside>
+        </div>
       ) : loaded && specs ? (
-        <div className="flex flex-col gap-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
           {jobLine}
           <VariantPicker specs={specs} current={variant} onPick={setVariant} />
         </div>

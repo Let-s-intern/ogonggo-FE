@@ -126,6 +126,8 @@ export interface CardDocument {
   jobTemplateEdits?: Partial<Record<VariantId, SlideEdits>>;
   /** 편집 화면을 열 때의 캔버스 크기. 빈 캔버스에서 고른다. 없으면 피드 4:5 다. */
   size?: CardSizeId;
+  /** 사람이 고친 문서 제목. 비어 있으면 묶은 회사 이름이다(`documentTitle()`). */
+  title?: string;
 }
 
 export function newSlideId(): string {
@@ -505,8 +507,14 @@ export function withContent(doc: CardDocument, content: CardContent, jobIndex = 
   };
 }
 
-/** 문서 제목. 묶은 회사 이름이다(같은 회사는 한 번). 공고가 없으면 `빈 캔버스` 다. */
+/**
+ * 문서 제목. 사람이 고친 제목이 있으면 그것을, 없으면 묶은 회사 이름이다(같은 회사는 한 번). 공고가
+ * 없으면 `빈 캔버스` 다.
+ */
 export function documentTitle(doc: CardDocument): string {
+  if (doc.title?.trim()) {
+    return doc.title.trim();
+  }
   const names = [...new Set(doc.jobs.map((job) => job.companyName))];
   return names.length > 0 ? names.join(' · ') : '빈 캔버스';
 }

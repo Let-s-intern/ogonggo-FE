@@ -14,7 +14,7 @@ export interface AddSlideOption {
 }
 
 /** 썸네일 폭(px). */
-const THUMB_WIDTH = 96;
+const THUMB_WIDTH = 72;
 
 /**
  * 캔버스 아래 장 목록(필름 띠). 캔버스와 같은 `buildSlide()` 결과를 작게 그린다. 눌러 고르고, 끌어 놓아
@@ -90,7 +90,8 @@ export function SlideStrip({
     'block w-full px-4 py-2 text-left text-sm hover:bg-gray-100 disabled:text-gray-300';
 
   return (
-    <div ref={rootRef} className="relative flex flex-wrap items-start justify-center gap-3">
+    <div ref={rootRef} className="relative flex items-center gap-3">
+      <div className="flex min-w-0 items-start gap-2 overflow-x-auto">
       {slides.map((built, index) => {
         const on = built.id === current;
         return (
@@ -128,7 +129,7 @@ export function SlideStrip({
             }}
             aria-pressed={on}
             aria-label={`${slideLabel(names[index] ?? '', index)}. 끌어서 순서를 바꾸고 우클릭으로 복제·삭제합니다.`}
-            className={`flex flex-col items-center gap-1 rounded-md p-1 ${
+            className={`flex shrink-0 flex-col items-center gap-1 rounded-md p-1 ${
               over === index && dragging !== built.id
                 ? 'bg-blue-50 outline outline-2 outline-blue-300'
                 : ''
@@ -147,7 +148,7 @@ export function SlideStrip({
               />
             </span>
             <span
-              className={`max-w-24 truncate text-xs ${on ? 'font-bold text-gray-900' : 'text-gray-500'}`}
+              className={`max-w-18 truncate text-xs ${on ? 'font-bold text-gray-900' : 'text-gray-500'}`}
             >
               {slideLabel(names[index] ?? '', index)}
             </span>
@@ -155,8 +156,9 @@ export function SlideStrip({
           </button>
         );
       })}
+      </div>
 
-      <div className="relative flex flex-col items-center gap-1 self-center">
+      <div className="relative flex shrink-0 flex-col items-center gap-1">
         <Button
           type="button"
           size="sm"
@@ -174,7 +176,7 @@ export function SlideStrip({
           <div
             role="menu"
             aria-label="장 추가"
-            className="absolute bottom-full z-20 mb-2 w-56 overflow-hidden rounded-lg bg-white py-1 shadow-lg"
+            className="absolute bottom-full right-0 z-20 mb-2 w-56 overflow-hidden rounded-lg bg-white py-1 shadow-lg"
           >
             {addOptions.map((option) => (
               <button
@@ -199,7 +201,8 @@ export function SlideStrip({
           role="menu"
           aria-label="장 메뉴"
           className="absolute z-20 w-32 overflow-hidden rounded-lg bg-white py-1 shadow-lg"
-          style={{ left: menu.x, top: menu.y }}
+          // 장 목록은 화면 맨 아래에 있어 메뉴를 누른 자리 위로 연다.
+          style={{ left: menu.x, top: menu.y, transform: 'translateY(-100%)' }}
         >
           <button
             type="button"

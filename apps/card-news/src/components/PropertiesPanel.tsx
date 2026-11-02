@@ -52,6 +52,9 @@ interface PropertiesPanelProps {
   onLayerOrder: (layer: Layer, step: number) => void;
   /** AI 탭 내용(`AssistantPanel`). */
   assistant: ReactNode;
+  /** 보이는 탭. 위 막대의 `AI로 수정` 이 AI 탭으로 바꾼다. */
+  tab: PanelTab;
+  onTabChange: (tab: PanelTab) => void;
   /** 보고 있는 장이 묶음 공고 장이면 공고별 장 틀을 쓰는지와 떼고 붙이는 동작. 아니면 없다. */
   jobTemplate?: JobTemplateControl;
 }
@@ -79,7 +82,7 @@ function JobTemplateSection({ detached, onDetach, onAttach }: JobTemplateControl
   );
 }
 
-type PanelTab = 'properties' | 'ai';
+export type PanelTab = 'properties' | 'ai';
 
 const PANEL_TABS: { value: PanelTab; label: string }[] = [
   { value: 'properties', label: '속성' },
@@ -469,12 +472,17 @@ function LayerProperties({
 /**
  * 오른쪽 패널. `속성 | AI` 탭이다. AI 탭은 숨겨도 계속 그려 대화와 진행 중인 요청이 남는다.
  */
-export function PropertiesPanel({ assistant, jobTemplate, ...props }: PropertiesPanelProps) {
-  const [tab, setTab] = useState<PanelTab>('properties');
+export function PropertiesPanel({
+  assistant,
+  jobTemplate,
+  tab,
+  onTabChange,
+  ...props
+}: PropertiesPanelProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-2xl bg-white px-2 shadow-sm">
-        <Tabs items={PANEL_TABS} value={tab} onValueChange={setTab} aria-label="오른쪽 패널" />
+        <Tabs items={PANEL_TABS} value={tab} onValueChange={onTabChange} aria-label="오른쪽 패널" />
       </div>
       {tab === 'properties' && jobTemplate ? <JobTemplateSection {...jobTemplate} /> : null}
       {tab === 'properties' ? <Properties {...props} /> : null}
@@ -508,7 +516,7 @@ function Properties({
   onLayerChange,
   onLayerRemove,
   onLayerOrder,
-}: Omit<PropertiesPanelProps, 'assistant' | 'jobTemplate'>) {
+}: Omit<PropertiesPanelProps, 'assistant' | 'jobTemplate' | 'tab' | 'onTabChange'>) {
   if (layer) {
     return (
       <LayerProperties
