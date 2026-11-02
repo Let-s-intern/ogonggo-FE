@@ -375,7 +375,7 @@ const BUNDLE_SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오�
 
 [cover.headline 규칙]
 - 정확히 2줄. 줄바꿈은 "\\n". 한 줄은 공백 포함 12자 이내. 두 줄 길이를 비슷하게.
-- 회사명은 원문 '회사명' 값을 그대로 쓴다. 한 회사면 첫 줄에 회사명. 여러 회사면 공통 주제(예: 신입 공채, 마케팅 인턴)를 쓴다.
+- 회사명은 원문 '회사명' 값을 그대로 쓴다. 한 회사면 첫 줄에 회사명. 여러 회사면 [여러 회사 묶음] 지시를 따른다.
 - 회사명·핵심 키워드를 *별표*로 감싸 강조 상자로 강조한다. 강조는 2~3곳. 끝맺음은 "채용 중!", "채용!" 처럼 짧게.
 - 원문에 없는 사실(연봉, 규모, 혜택)을 지어내지 않는다.
 - cover.badge: 표지 왼쪽 위 짧은 칩. 기본 "오늘의 공고 속보".
@@ -383,6 +383,7 @@ const BUNDLE_SYSTEM_PROMPT = `너는 인스타그램 채용 정보 계정 '오�
 [cover.rows 규칙]
 - 공고 수와 같은 줄 수, 같은 순서. 각 줄은 ["채용 직무", "모집 분야"] 두 칸, 칸마다 14자 이내.
 - 채용 직무는 원문의 직무명을 짧게(예: "국내영업"), 모집 분야는 직군·근무지·전형 등 공고를 가르는 값(예: "영업관리", "서울 본사"). 모르면 "".
+- 모집 분야에 회사명이나 "신입"·"채용"·"공채" 를 다시 쓰지 않는다. 표지 제목과 회사 칸에 이미 있는 말이다("현대면세점 신입" 이 아니라 "면세점 영업", 가를 값이 없으면 "").
 
 [jobs[i] 규칙 — 공고 하나 카드와 같다]
 - headline: 2줄, 줄당 12자 이내, 회사명과 직무를 *별표*로 강조.
@@ -424,10 +425,36 @@ export function bundleDeadline(jobs: UserJobDetailResponse[]): string {
   return captionDeadline(dated[0] ?? { recruitmentType: 'ALWAYS_OPEN' });
 }
 
+/** 묶은 회사 수. */
+function companyCount(jobs: UserJobDetailResponse[]): number {
+  return new Set(jobs.map((job) => job.companyName)).size;
+}
+
+/** 모델이 없을 때의 표지 제목. 여러 회사면 회사명을 늘어놓지 않고 공고 모음 제목이다. */
+function fallbackHeadline(jobs: UserJobDetailResponse[]): string {
+  const count = companyCount(jobs);
+  return count > 1
+    ? `*이번 주 채용 공고*\n*${count}곳* 모아 봤어요`
+    : `*${bundleCompany(jobs)}*\n채용 중!`;
+}
+
+/**
+ * 표지 표 `모집 분야` 칸에서 회사명과 `신입`·`채용`·`공채` 를 뺀다. 표지 제목·회사 칸과 겹치는 말이다
+ * (`현대면세점 신입` → `현대면세점` 은 회사명이 아니라 남고, `농심 신입` → 빈 칸).
+ */
+export function cleanField(cell: string, companyName: string): string {
+  const name = companyName.trim();
+  return (name ? cell.split(name).join(' ') : cell)
+    .replace(/(^|[\s·,/])(신입|채용|공채)(?=$|[\s·,/])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s·,/]+|[\s·,/]+$/g, '')
+    .trim();
+}
+
 function fallbackCover(jobs: UserJobDetailResponse[]): BundleCover {
   return {
     badge: '오늘의 공고 속보',
-    headline: `*${bundleCompany(jobs)}*\n채용 중!`,
+    headline: fallbackHeadline(jobs),
     columns: BUNDLE_COLUMNS,
     rows: jobs.map((job) => [roleName(job), fieldName(job)]),
   };
@@ -492,6 +519,9 @@ export function parseBundleDraft(
     typeof cover.headline === 'string' ? cover.headline.replace(/\\n/g, '\n').trim() : '';
   const rows = Array.isArray(cover.rows) ? cover.rows.map(row) : [];
   const drafts = Array.isArray(parsed.jobs) ? parsed.jobs : [];
+  // 여러 회사 묶음 제목에 회사명이 둘 이상 나오면 회사명 나열로 보고 대체 제목을 쓴다.
+  const names = [...new Set(jobs.map((job) => job.companyName))];
+  const listed = names.length > 1 && names.filter((name) => headline.includes(name)).length > 1;
   const schedule =
     withSchedule && Array.isArray(cover.schedule)
       ? cover.schedule
@@ -504,11 +534,14 @@ export function parseBundleDraft(
       ...(schedule.length > 0 ? { schedule } : {}),
       badge:
         typeof cover.badge === 'string' && cover.badge.trim() ? cover.badge.trim() : fallback.badge,
-      headline: headline.split('\n').length === 2 ? headline : fallback.headline,
+      headline: headline.split('\n').length === 2 && !listed ? headline : fallback.headline,
       columns: BUNDLE_COLUMNS,
       rows:
         rows.length === jobs.length && rows.every(Boolean)
-          ? (rows as [string, string][])
+          ? (rows as [string, string][]).map(([role, field], index) => [
+              role,
+              cleanField(field, jobs[index]?.companyName ?? ''),
+            ])
           : fallback.rows,
     },
     jobs: jobs.map((job, index) => {
@@ -546,6 +579,12 @@ export async function generateBundleDraft(
       `[공고 ${index + 1}]\n${jobBrief(job, 800)}\n## 마감 문구\n${captionDeadline(job)}`,
   );
   userParts.push(`[가장 이른 마감]\n${bundleDeadline(jobs)}`);
+  const companies = companyCount(jobs);
+  if (companies > 1) {
+    userParts.push(
+      `[여러 회사 묶음]\n이 묶음은 회사 ${companies}곳의 공고다. cover.headline 에 회사명을 늘어놓지 않는다 — 회사명은 쓰지 않거나 "${jobs[0]?.companyName ?? ''} 외 ${companies - 1}곳" 처럼 한 번만 쓴다. 공고들의 공통점(신입·인턴, 문과 지원 가능, 직무군, 근무지, 마감 시기 등)으로 주제를 잡아 "이번 주 마감 신입 공고", "문과생 지원 가능 공고" 처럼 쓴다. 추가 지시에 주제가 있으면 그 주제를 쓴다. *강조* 는 주제의 핵심 말에 둔다.`,
+    );
+  }
   if (request.trim()) {
     userParts.push(
       `[추가 지시 — 규칙보다 이 지시를 먼저 따른다]\n${request.trim().slice(0, 1000)}`,
