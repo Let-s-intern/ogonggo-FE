@@ -3,6 +3,8 @@ import {
   type DocumentSlide,
   ROLE_LABELS,
   slideName,
+  firstJobIndex,
+  slideJobIndices,
   documentContent,
   slideVariant,
   withSlideContent,
@@ -201,7 +203,9 @@ function slideAlias(doc: CardDocument, slide: DocumentSlide): string {
     return ROLE_LABELS[slide.role];
   }
   if (slide.role === 'job') {
-    return `공고 ${(slide.jobIndex ?? 0) + 1}(${slideName(doc, slide)})`;
+    return `공고 ${slideJobIndices(slide)
+      .map((index) => index + 1)
+      .join('·')}(${slideName(doc, slide)})`;
   }
   return slide.role === 'cover' ? '표지' : slide.role === 'profile' ? '안내' : ROLE_LABELS.free;
 }
@@ -248,7 +252,7 @@ function asSlide(value: unknown, doc: CardDocument): number | null {
     const job = /^공고\s*(\d+)$/.exec(name);
     const found = doc.slides.findIndex((slide) =>
       job
-        ? slide.role === 'job' && (slide.jobIndex ?? 0) === Number(job[1]) - 1
+        ? slideJobIndices(slide).includes(Number(job[1]) - 1)
         : name === '표지'
           ? slide.role === 'cover'
           : (name === '안내' || name === '프로필 안내') && slide.role === 'profile',
@@ -536,7 +540,7 @@ async function rewriteCopy(
   if (loaded.doc.kind === 'bundle' && docSlide.role === 'cover') {
     return '묶음 표지는 공고 하나의 문구가 아니라 다시 쓸 수 없습니다. 표지 뱃지·제목·표는 set_content 로 고치세요.';
   }
-  const documentJob = loaded.doc.jobs[docSlide.jobIndex ?? 0];
+  const documentJob = loaded.doc.jobs[firstJobIndex(docSlide)];
   if (!documentJob) {
     return '공고가 없는 문서라 문구를 다시 쓸 수 없습니다. set_content 로 고치세요.';
   }

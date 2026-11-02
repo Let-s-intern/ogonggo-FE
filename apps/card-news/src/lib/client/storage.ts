@@ -1,4 +1,9 @@
-import { type CardDocument, documentTitle, singleDocument } from '../card/document';
+import {
+  type CardDocument,
+  documentTitle,
+  migrateDocument,
+  singleDocument,
+} from '../card/document';
 import type { CardContent, CardSettings, Layer, SlideEdits, VariantId } from '../card/types';
 import { getImage } from './imageStore';
 
@@ -50,7 +55,8 @@ export function listDocuments(): DocumentEntry[] {
 
 /** 남은 문서. 없으면 `null`. 이미지 요소의 `src` 는 비어 있다(`restoreLayers`). */
 export function loadDocument(id: string): CardDocument | null {
-  return read<CardDocument>(`${DOC_PREFIX}${id}`);
+  const saved = read<CardDocument>(`${DOC_PREFIX}${id}`);
+  return saved ? migrateDocument(saved) : null;
 }
 
 /**
@@ -60,7 +66,7 @@ export function loadDocument(id: string): CardDocument | null {
 export function loadSingleDocument(job: { id: number; companyName: string }): CardDocument | null {
   const saved = read<CardDocument>(`${DOC_PREFIX}job-${job.id}`);
   if (saved) {
-    return saved;
+    return migrateDocument(saved);
   }
   const legacy = read<LegacyCard>(`${LEGACY_PREFIX}${job.id}`);
   return legacy

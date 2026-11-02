@@ -72,8 +72,11 @@ export interface DocumentSlide {
   /** 장을 옮겨도 편집값이 따라가는 열쇠. */
   id: string;
   role: SlideRole;
-  /** `role = job` 일 때 `jobs` 의 몇 번째인가. */
-  jobIndex?: number;
+  /**
+   * `role = job` 일 때 그리는 공고(`jobs` 의 몇 번째인가). 장 하나에 공고 여러 개를 놓는 배치(2열 카드,
+   * 회사 블록)는 둘 이상이다. v3 편집본은 `jobIndex` 하나를 들고 있어 읽을 때 옮긴다(`migrateDocument()`).
+   */
+  jobIndices?: number[];
   /**
    * 템플릿별 요소 편집값. 템플릿을 바꿔도 각자 남는다. 틀을 쓰는 묶음 공고 장은 이 값 대신
    * `CardDocument.jobTemplateEdits` 를 쓴다(`slideEditsOf()`).
@@ -179,7 +182,7 @@ export function singleDocument(
     slides: SINGLE_ROLES.map((role, index) => ({
       id: newSlideId(),
       role,
-      ...(role === 'job' ? { jobIndex: 0 } : {}),
+      ...(role === 'job' ? { jobIndices: [0] } : {}),
       edits: byVariant(saved.edits, index),
       layers: byVariant(saved.layers, index),
     })),
@@ -194,7 +197,7 @@ function bundleSlides(count: number): DocumentSlide[] {
     ...Array.from({ length: count }, (_, jobIndex) => ({
       id: newSlideId(),
       role: 'job' as const,
-      jobIndex,
+      jobIndices: [jobIndex],
       edits: {},
       layers: {},
     })),
@@ -269,7 +272,37 @@ const EMPTY_CONTENT: DocumentJob['content'] = {
  * `undefined` 다.
  */
 function slideJob(doc: CardDocument, slide?: DocumentSlide): DocumentJob | undefined {
-  return doc.jobs[slide?.jobIndex ?? 0] ?? doc.jobs[0];
+  return doc.jobs[slide ? firstJobIndex(slide) : 0] ?? doc.jobs[0];
+}
+
+/** 장이 그리는 공고들(`jobs` 의 몇 번째인가). 공고 장이 아니면 빈 배열이다. */
+export function slideJobIndices(slide: DocumentSlide): number[] {
+  return slide.role === 'job' ? (slide.jobIndices ?? [0]) : [];
+}
+
+/** 장이 그리는 첫 공고. 공고 장이 아니면(표지·안내) 0, 곧 첫 공고다. */
+export function firstJobIndex(slide: DocumentSlide): number {
+  return slideJobIndices(slide)[0] ?? 0;
+}
+
+/** v3 편집본의 장(`jobIndex` 하나). */
+type LegacySlide = DocumentSlide & { jobIndex?: number };
+
+/**
+ * 남은 문서를 지금 모양으로 옮긴다. v3 편집본의 공고 장은 `jobIndex` 하나를 들고 있어 `jobIndices` 로
+ * 바꾼다. 이미 지금 모양이면 그대로 돌려준다.
+ */
+export function migrateDocument(doc: CardDocument): CardDocument {
+  const slides = doc.slides as LegacySlide[];
+  if (!slides.some((slide) => 'jobIndex' in slide)) {
+    return doc;
+  }
+  return {
+    ...doc,
+    slides: slides.map(({ jobIndex, ...slide }) =>
+      slide.role === 'job' && !slide.jobIndices ? { ...slide, jobIndices: [jobIndex ?? 0] } : slide,
+    ),
+  };
 }
 
 /**
@@ -353,7 +386,7 @@ function bundleRowOf(doc: CardDocument, slide: DocumentSlide): [string, string] 
   if (slide.role !== 'job' || !doc.cover) {
     return undefined;
   }
-  const index = slide.jobIndex ?? 0;
+  const index = firstJobIndex(slide);
   return doc.cover.rows[index] ?? [doc.jobs[index]?.content.roleTitle ?? '', ''];
 }
 
@@ -633,7 +666,7 @@ export function withSlideContent(
       },
     };
   }
-  const jobIndex = slide?.jobIndex ?? 0;
+  const jobIndex = slide ? firstJobIndex(slide) : 0;
   const row = slide ? bundleRowOf(doc, slide) : undefined;
   if (row && cover) {
     const previous = doc.jobs[jobIndex]?.content.roleTitle ?? '';
@@ -684,7 +717,9 @@ export function slideName(doc: CardDocument, slide: DocumentSlide): string {
     return '표지';
   }
   if (slide.role === 'job') {
-    return jobName(doc, slide.jobIndex ?? 0);
+    return slideJobIndices(slide)
+      .map((index) => jobName(doc, index))
+      .join(' · ');
   }
   return ROLE_LABELS[slide.role];
 }
@@ -703,7 +738,7 @@ export function newSlide(role: SlideRole, jobIndex?: number): DocumentSlide {
   return {
     id: newSlideId(),
     role,
-    ...(role === 'job' ? { jobIndex: jobIndex ?? 0 } : {}),
+    ...(role === 'job' ? { jobIndices: [jobIndex ?? 0] } : {}),
     edits: {},
     layers: {},
   };
@@ -711,12 +746,10 @@ export function newSlide(role: SlideRole, jobIndex?: number): DocumentSlide {
 
 /**
  * 공고 장 순서에 맞춰 `jobs` 와 표지 표 줄을 다시 줄 세운 문서. 공고 장에 처음 나오는 순서이고, 장이 없는
- * 공고는 원래 순서대로 뒤에 둔다. 장의 `jobIndex` 도 새 순서로 고친다.
+ * 공고는 원래 순서대로 뒤에 둔다. 장의 `jobIndices` 도 새 순서로 고친다.
  */
 function withJobOrder(doc: CardDocument): CardDocument {
-  const seen = doc.slides.flatMap((slide) =>
-    slide.role === 'job' && slide.jobIndex !== undefined ? [slide.jobIndex] : [],
-  );
+  const seen = doc.slides.flatMap(slideJobIndices);
   const order = [...new Set([...seen, ...doc.jobs.map((_, index) => index)])].filter(
     (index) => index < doc.jobs.length,
   );
@@ -739,16 +772,14 @@ function withJobOrder(doc: CardDocument): CardDocument {
         }
       : {}),
     slides: doc.slides.map((slide) =>
-      slide.role === 'job' && slide.jobIndex !== undefined
-        ? { ...slide, jobIndex: moved(slide.jobIndex) }
-        : slide,
+      slide.role === 'job' ? { ...slide, jobIndices: slideJobIndices(slide).map(moved) } : slide,
     ),
   };
 }
 
 /**
  * 묶은 공고 하나를 `to` 자리(0부터)로 옮긴 문서(공고 서랍의 순서 바꾸기). 공고 장들은 지금 공고 장이
- * 있던 자리에 새 공고 순서로 다시 놓이고, `jobs`·표지 표 줄·`jobIndex` 가 같이 바뀐다.
+ * 있던 자리에 새 공고 순서로 다시 놓이고, `jobs`·표지 표 줄·`jobIndices` 가 같이 바뀐다.
  */
 export function moveJob(doc: CardDocument, from: number, to: number): CardDocument {
   const target = Math.max(0, Math.min(doc.jobs.length - 1, to));
@@ -757,15 +788,20 @@ export function moveJob(doc: CardDocument, from: number, to: number): CardDocume
   }
   const order = doc.jobs.map((_, index) => index);
   order.splice(target, 0, ...order.splice(from, 1));
-  const rank = (jobIndex: number | undefined) => order.indexOf(jobIndex ?? 0);
+  const rank = (jobIndex: number) => order.indexOf(jobIndex);
   const positions = doc.slides.flatMap((slide, index) => (slide.role === 'job' ? [index] : []));
   const jobSlides = positions
     .map((index) => doc.slides[index]!)
-    .sort((a, b) => rank(a.jobIndex) - rank(b.jobIndex));
+    .sort((a, b) => rank(firstJobIndex(a)) - rank(firstJobIndex(b)));
   const slides = [...doc.slides];
   positions.forEach((position, index) => {
     const slide = jobSlides[index]!;
-    slides[position] = { ...slide, jobIndex: rank(slide.jobIndex) };
+    slides[position] = {
+      ...slide,
+      jobIndices: slideJobIndices(slide)
+        .map(rank)
+        .sort((a, b) => a - b),
+    };
   });
   return {
     ...doc,
@@ -790,9 +826,14 @@ export function moveJob(doc: CardDocument, from: number, to: number): CardDocume
  * 빼면 장이 하나도 남지 않는 공고는 빼지 않는다.
  */
 export function removeJob(doc: CardDocument, jobIndex: number): CardDocument {
-  const slides = doc.slides.filter(
-    (slide) => !(slide.role === 'job' && (slide.jobIndex ?? 0) === jobIndex),
-  );
+  // 공고 여럿을 놓은 장은 그 공고만 빼고, 남는 공고가 없는 장은 지운다.
+  const slides = doc.slides.flatMap((slide) => {
+    if (slide.role !== 'job') {
+      return [slide];
+    }
+    const rest = slideJobIndices(slide).filter((index) => index !== jobIndex);
+    return rest.length > 0 ? [{ ...slide, jobIndices: rest }] : [];
+  });
   if (doc.jobs.length <= 1 || slides.length === 0 || !doc.jobs[jobIndex]) {
     return doc;
   }
@@ -803,8 +844,13 @@ export function removeJob(doc: CardDocument, jobIndex: number): CardDocument {
       ? { cover: { ...doc.cover, rows: doc.cover.rows.filter((_, index) => index !== jobIndex) } }
       : {}),
     slides: slides.map((slide) =>
-      slide.role === 'job' && (slide.jobIndex ?? 0) > jobIndex
-        ? { ...slide, jobIndex: (slide.jobIndex ?? 0) - 1 }
+      slide.role === 'job'
+        ? {
+            ...slide,
+            jobIndices: slideJobIndices(slide).map((index) =>
+              index > jobIndex ? index - 1 : index,
+            ),
+          }
         : slide,
     ),
   };

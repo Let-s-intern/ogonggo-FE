@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Button, Input, Modal, Textarea } from '@ogonggo/ui';
-import { type CardDocument, MAX_BUNDLE_JOBS, MAX_SLIDES, jobName } from '@/lib/card/document';
+import {
+  type CardDocument,
+  MAX_BUNDLE_JOBS,
+  MAX_SLIDES,
+  jobName,
+  slideJobIndices,
+} from '@/lib/card/document';
 import type { CardContent } from '@/lib/card/types';
 import type { JobListItem } from '@/lib/server/ogonggo';
 import { CaptionPanel } from '../CaptionPanel';
@@ -51,7 +57,7 @@ export function JobsDrawer({
   /** 공고가 그려지는 장 번호(`2장`, `2·5장`). */
   const slidesOf = (jobIndex: number) => {
     const numbers = doc.slides.flatMap((slide, index) =>
-      slide.role === 'job' && (slide.jobIndex ?? 0) === jobIndex ? [index + 1] : [],
+      slideJobIndices(slide).includes(jobIndex) ? [index + 1] : [],
     );
     return numbers.length > 0 ? `${numbers.join('·')}장` : '장 없음';
   };
