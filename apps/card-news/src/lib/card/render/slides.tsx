@@ -9,6 +9,7 @@ import {
   measureSlide,
   textScale,
 } from '../layout';
+import type { SlideRole } from '../document';
 import type { Measure } from '../measure';
 import type { CardSection, CardSize, CardSpec, Layer } from '../types';
 import { type Palette, resolvePalette, textOnBrand, variantImage, variantOf } from '../variants';
@@ -122,13 +123,16 @@ function titleSizeFor(measure: Measure, title: string): number {
 
 type Built = { element: ReactElement; overflow: boolean };
 
+/** 공고 문구를 목록으로 그리는 장. 표지는 요약 섹션, 공고 장은 자격·우대 섹션이다. */
+type InfoRole = Extract<SlideRole, 'cover' | 'job'>;
+
 function slideSections(
   spec: Pick<CardSpec, 'content'>,
-  slide: number,
+  slide: InfoRole,
   dropRole: boolean,
 ): CardSection[] {
   const { content } = spec;
-  const sections = slide === 0 ? content.summarySections : content.detailSections;
+  const sections = slide === 'cover' ? content.summarySections : content.detailSections;
   // 직무명을 제목으로 크게 쓰는 시안은 `채용 직무` 섹션을 또 그리지 않는다.
   return dropRole && content.roleTitle.trim()
     ? sections.filter((section) => section.label.trim() !== '채용 직무')
@@ -142,15 +146,16 @@ function slideSections(
  */
 export function visibleSectionIndices(
   spec: Pick<CardSpec, 'variant' | 'content'>,
-  slide: number,
+  slide: SlideRole,
 ): number[] {
-  if (slide === 2) {
+  if (slide !== 'cover' && slide !== 'job') {
     return [];
   }
   const layout = variantOf(spec.variant);
-  const tab = (slide === 1 && layout.detailLayout ? layout.detailLayout : layout.layout) === 'tab';
+  const tab =
+    (slide === 'job' && layout.detailLayout ? layout.detailLayout : layout.layout) === 'tab';
   const shown = new Set(slideSections(spec, slide, tab));
-  const all = slide === 0 ? spec.content.summarySections : spec.content.detailSections;
+  const all = slide === 'cover' ? spec.content.summarySections : spec.content.detailSections;
   return all.flatMap((section, index) =>
     shown.has(section) && section.items.some((item) => item.trim()) ? [index] : [],
   );
@@ -159,9 +164,9 @@ export function visibleSectionIndices(
 /** 장에 보이는 섹션의 칩 제목. 섹션 요소 이름(`섹션 2 · 마감 기한`)에 쓴다. */
 export function visibleSectionLabels(
   spec: Pick<CardSpec, 'variant' | 'content'>,
-  slide: number,
+  slide: SlideRole,
 ): string[] {
-  const all = slide === 0 ? spec.content.summarySections : spec.content.detailSections;
+  const all = slide === 'cover' ? spec.content.summarySections : spec.content.detailSections;
   return visibleSectionIndices(spec, slide).map((index) => all[index]?.label ?? '');
 }
 
@@ -180,11 +185,11 @@ function TabSlide({
   spec: CardSpec;
   palette: Palette;
   size: CardSize;
-  slide: number;
+  slide: InfoRole;
   measure: Measure;
   assets: SlideAssets;
 }): Built {
-  const boxed = slide === 0;
+  const boxed = slide === 'cover';
   const sections = slideSections(spec, slide, true);
   const note = boxed ? spec.content.note : '';
   const count = visibleCount(sections);
@@ -219,9 +224,9 @@ function TabSlide({
     bodyScale: textScale(spec.settings.bodyScale),
   });
 
-  const edits = spec.edits?.[slide];
+  const edits = spec.edits;
   const element = (
-    <Canvas size={size} layers={spec.layers?.[slide]}>
+    <Canvas size={size} layers={spec.layers}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', left: PAD_X, top: padTop + 12 }}>
         <Editable id="brandMark" edits={edits}>
@@ -328,7 +333,7 @@ function LabelsSlide({
   spec: CardSpec;
   palette: Palette;
   size: CardSize;
-  slide: number;
+  slide: InfoRole;
   measure: Measure;
   assets: SlideAssets;
 }): Built {
@@ -362,9 +367,9 @@ function LabelsSlide({
     backgroundColor: '#FFFFFF',
     borderRadius: 32,
   };
-  const edits = spec.edits?.[slide];
+  const edits = spec.edits;
   const element = (
-    <Canvas size={size} layers={spec.layers?.[slide]}>
+    <Canvas size={size} layers={spec.layers}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <div style={{ display: 'flex', position: 'absolute', right: PAD_X, top: metrics.padTop }}>
         <Editable id="brandMark" edits={edits}>
@@ -475,13 +480,13 @@ function InfoSlide({
   spec: CardSpec;
   palette: Palette;
   size: CardSize;
-  slide: number;
+  slide: InfoRole;
   measure: Measure;
   assets: SlideAssets;
 }): Built {
   const definition = variantOf(spec.variant);
   const layout =
-    slide === 1 && definition.detailLayout ? definition.detailLayout : definition.layout;
+    slide === 'job' && definition.detailLayout ? definition.detailLayout : definition.layout;
   if (layout === 'tab') {
     return TabSlide({ spec, palette, size, slide, measure, assets });
   }
@@ -491,12 +496,12 @@ function InfoSlide({
   const panel = layout === 'panel';
   // 썸네일 카드 시안은 2장의 제목(1장과 같은 문구) 자리에 썸네일 카드를 둔다.
   const thumbnail =
-    definition.image === 'card' && slide === 1
+    definition.image === 'card' && slide === 'job'
       ? variantImage(spec.variant, spec.settings)
       : undefined;
   const card = thumbnail ? thumbCardSize(size, thumbnail.aspect) : null;
   const sections = slideSections(spec, slide, false);
-  const note = slide === 0 ? spec.content.note : '';
+  const note = slide === 'cover' ? spec.content.note : '';
   const headline = thumbnail ? null : spec.content.headline;
 
   const metrics = measureSlide(measure, size, {
@@ -510,12 +515,12 @@ function InfoSlide({
     bodyScale: textScale(spec.settings.bodyScale),
   });
 
-  const edits = spec.edits?.[slide];
+  const edits = spec.edits;
   const list = (
     <Sections palette={palette} sections={sections} note={note} metrics={metrics} edits={edits} />
   );
   const element = (
-    <Canvas size={size} layers={spec.layers?.[slide]}>
+    <Canvas size={size} layers={spec.layers}>
       <Background spec={spec} palette={palette} size={size} assets={assets} />
       <Column size={size} metrics={metrics}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -817,9 +822,9 @@ function CtaSlide({
   const ctaPalette: Palette = { ...palette, headlineText: text };
   // 3장 제목·부제는 크기가 고정이라 제목 배율만 곱한다.
   const headlineScale = textScale(spec.settings.headlineScale);
-  const edits = spec.edits?.[2];
+  const edits = spec.edits;
   return (
-    <Canvas size={size} layers={spec.layers?.[2]}>
+    <Canvas size={size} layers={spec.layers}>
       <Background spec={spec} palette={palette} size={size} assets={assets} cta />
       <div
         style={{
@@ -889,20 +894,48 @@ function CtaSlide({
   );
 }
 
-/** 한 장을 만든다. `overflow` 는 가장 작은 글자로도 목록이 넘치는 경우다. */
+/** 시안 배경만 그린 빈 장. 자유 요소를 얹는 자리다. */
+function FreeSlide({
+  spec,
+  palette,
+  size,
+  assets,
+}: {
+  spec: CardSpec;
+  palette: Palette;
+  size: CardSize;
+  assets: SlideAssets;
+}): ReactElement {
+  return (
+    <Canvas size={size} layers={spec.layers}>
+      <Background spec={spec} palette={palette} size={size} assets={assets} />
+    </Canvas>
+  );
+}
+
+/**
+ * 한 장을 만든다. 무엇을 그릴지는 장 종류가 정한다 — 표지·공고 장은 문구 목록, 안내 장은 프로필 링크
+ * 안내, 빈 장은 배경만. `overflow` 는 가장 작은 글자로도 목록이 넘치는 경우다.
+ */
 export function buildSlide(
   spec: CardSpec,
-  slide: number,
+  role: SlideRole,
   size: CardSize,
   measure: Measure,
   assets: SlideAssets,
 ): { element: ReactElement; overflow: boolean } {
   const palette = resolvePalette(spec.variant, spec.settings);
-  if (slide === 2) {
+  if (role === 'profile') {
     return {
       element: <CtaSlide spec={spec} palette={palette} size={size} assets={assets} />,
       overflow: false,
     };
   }
-  return InfoSlide({ spec, palette, size, slide, measure, assets });
+  if (role === 'free') {
+    return {
+      element: <FreeSlide spec={spec} palette={palette} size={size} assets={assets} />,
+      overflow: false,
+    };
+  }
+  return InfoSlide({ spec, palette, size, slide: role, measure, assets });
 }

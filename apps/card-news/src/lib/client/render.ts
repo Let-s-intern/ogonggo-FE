@@ -1,4 +1,5 @@
 import { zipSync } from 'fflate';
+import type { SlideRole } from '../card/document';
 import { CARD_SIZES, type CardSizeId, type CardSpec } from '../card/types';
 import { variantOf } from '../card/variants';
 
@@ -9,14 +10,14 @@ export interface RenderedSlide {
 
 export async function renderSlide(
   spec: CardSpec,
-  slide: number,
+  role: SlideRole,
   size: CardSizeId,
   options: { scale?: number; format?: 'png' | 'svg'; signal?: AbortSignal } = {},
 ): Promise<RenderedSlide> {
   const response = await fetch('/api/render', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ spec, slide, size, scale: options.scale, format: options.format }),
+    body: JSON.stringify({ spec, role, size, scale: options.scale, format: options.format }),
     signal: options.signal,
   });
   if (!response.ok) {
@@ -41,16 +42,17 @@ function safe(name: string): string {
   return name.replace(/[\\/:*?"<>|\s]+/g, '_');
 }
 
-/** 받을 한 장. 시안마다 `spec` 이 다르다(배경 이미지가 시안에만 실린다). */
+/** 받을 한 장. 장마다 `spec` 이 다르다(그 장의 편집값만 싣는다). `index` 는 문서의 몇 번째 장인가. */
 export interface SlideTarget {
   spec: CardSpec;
-  slide: number;
+  role: SlideRole;
+  index: number;
 }
 
 function fileName(target: SlideTarget, size: CardSizeId): string {
   const { width, height } = CARD_SIZES[size];
   const variant = variantOf(target.spec.variant).label;
-  return safe(`${target.spec.companyName}-${variant}-${target.slide + 1}-${width}x${height}.png`);
+  return safe(`${target.spec.companyName}-${variant}-${target.index + 1}-${width}x${height}.png`);
 }
 
 /**
@@ -67,7 +69,7 @@ export async function downloadSlides(
   let done = 0;
   for (const size of sizes) {
     for (const target of targets) {
-      const { blob } = await renderSlide(target.spec, target.slide, size);
+      const { blob } = await renderSlide(target.spec, target.role, size);
       if (total === 1) {
         save(blob, fileName(target, size));
         return;

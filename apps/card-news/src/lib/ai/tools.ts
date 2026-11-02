@@ -1,3 +1,4 @@
+import { SINGLE_ROLES } from '../card/document';
 import { contentFromDraft, draftFromContent } from '../card/fromJob';
 import { textScale } from '../card/layout';
 import {
@@ -136,7 +137,10 @@ export function describeScreen(context: ToolContext): string {
   const selected = context.selected();
   const loaded = context.readLoaded();
   const labels = loaded
-    ? visibleSectionLabels({ variant: variant.id, content: loaded.content }, context.slide())
+    ? visibleSectionLabels(
+        { variant: variant.id, content: loaded.content },
+        SINGLE_ROLES[context.slide()] ?? 'free',
+      )
     : [];
   const layer = isLayerRef(selected)
     ? loaded?.layers[variant.id]?.[context.slide()]?.find((item) => layerRef(item.id) === selected)
@@ -247,7 +251,10 @@ function slideSummary(
   const size = CARD_SIZES[context.size()];
   const variant = context.variant();
   const edits = loaded.edits[variant]?.[slide];
-  const labels = visibleSectionLabels({ variant, content: loaded.content }, slide);
+  const labels = visibleSectionLabels(
+    { variant, content: loaded.content },
+    SINGLE_ROLES[slide] ?? 'free',
+  );
   const outside = (box: MeasuredBox) =>
     box.x < -TOLERANCE ||
     box.y < -TOLERANCE ||

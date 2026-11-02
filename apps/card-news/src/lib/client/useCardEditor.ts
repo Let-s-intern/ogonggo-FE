@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AiDraft, DraftResult } from '../ai/draft';
+import { type RenderSlide, singleDocument, slideSpec } from '../card/document';
 import { type CardJob, contentFromDraft, draftFromContent } from '../card/fromJob';
 import type {
   BrandImage,
   CardContent,
   CardImage,
   CardSettings,
-  CardSpec,
   ElementEdit,
   ElementId,
   Layer,
@@ -40,7 +40,7 @@ import { useHistory } from './useHistory';
  * 편집 화면의 상태와 동작. 화면 컴포넌트는 이 훅이 주는 값만 그리고, 바꿀 때는 이 훅의 함수를
  * 부른다 — 공고 읽기, AI 초안, 저장, 로고 칠하기, 배경 이미지 고르기가 여기 모여 있다.
  *
- * 문구와 설정은 하나다. 시안 다섯 개는 그 하나에서 `specs` 로 갈라진다.
+ * 문구와 설정은 하나다. 시안 열 개는 그 하나에서 `specs`(시안별 장 목록)로 갈라진다.
  */
 
 export interface LoadedCard {
@@ -407,22 +407,16 @@ export function useCardEditor() {
             aspect: tinted.original.aspect,
           }
         : undefined;
-    // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
-    const { photo, ...shared } = loaded.settings;
+    const doc = singleDocument(loaded.job, loaded.content, loaded.settings, {
+      edits: loaded.edits,
+      layers: loaded.layers,
+    });
     return Object.fromEntries(
       VARIANTS.map((variant) => [
         variant.id,
-        {
-          variant: variant.id,
-          content: loaded.content,
-          settings: variant.image && photo ? { ...shared, photo } : shared,
-          logo: logoSet,
-          companyName: loaded.job.companyName,
-          edits: loaded.edits[variant.id],
-          layers: loaded.layers[variant.id],
-        } satisfies CardSpec,
+        doc.slides.map((slide) => slideSpec(doc, slide, variant.id, logoSet)),
       ]),
-    ) as Record<VariantId, CardSpec>;
+    ) as Record<VariantId, RenderSlide[]>;
   }, [loaded, tintReady, tinted]);
 
   return {

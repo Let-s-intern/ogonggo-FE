@@ -5,7 +5,6 @@ import {
   CARD_SIZE_IDS,
   CARD_SIZES,
   type CardSizeId,
-  type CardSpec,
   type ElementId,
   type Layer,
   type RenderRequest,
@@ -17,6 +16,7 @@ import {
   isLayerRef,
   layerRef,
 } from '@/lib/card/types';
+import type { RenderSlide } from '@/lib/card/document';
 import { visibleSectionLabels } from '@/lib/card/render/slides';
 import { stripMarkup } from '@/lib/card/markup';
 import { resolvePalette, variantOf } from '@/lib/card/variants';
@@ -58,13 +58,16 @@ function toggled<T>(set: Set<T>, value: T): Set<T> {
  * 렌더(PNG)다 — 캔버스와 같은 JSX 를 이미지 생성기가 그린다.
  */
 function BottomBar({
-  spec,
+  slides: documentSlides,
+  variant,
   size,
   onSizeChange,
   overflow,
   onRepick,
 }: {
-  spec: CardSpec;
+  /** 지금 시안으로 편 문서의 장. */
+  slides: RenderSlide[];
+  variant: VariantId;
   size: CardSizeId;
   onSizeChange: (size: CardSizeId) => void;
   /** 넘친 장 번호. */
@@ -76,7 +79,9 @@ function BottomBar({
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const targets = SLIDES.filter((slide) => slides.has(slide)).map((slide) => ({ spec, slide }));
+  const targets = documentSlides.flatMap(({ spec, role }, index) =>
+    slides.has(index) ? [{ spec, role, index }] : [],
+  );
   const count = targets.length * sizes.size;
 
   const download = async () => {
@@ -98,7 +103,7 @@ function BottomBar({
           <Button size="sm" variant="secondary" onClick={onRepick}>
             템플릿 바꾸기
           </Button>
-          <span className="text-sm font-bold">{variantOf(spec.variant).label}</span>
+          <span className="text-sm font-bold">{variantOf(variant).label}</span>
           <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
             {CARD_SIZE_IDS.map((id) => (
               <button
@@ -175,11 +180,12 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
   const [slide, setSlide] = useState(0);
   const [selected, setSelected] = useState<Selection | null>(null);
   const { kit, error: kitError } = useRenderKit();
-  const spec = variant && specs ? specs[variant] : null;
-  const built = useBuiltSlides(spec, size, kit);
+  const slides = variant && specs ? specs[variant] : null;
+  const currentSlide = slides?.[slide];
+  const built = useBuiltSlides(slides, size, kit);
   const sectionLabels = useMemo(
-    () => (spec ? visibleSectionLabels(spec, slide) : []),
-    [spec, slide],
+    () => (currentSlide ? visibleSectionLabels(currentSlide.spec, currentSlide.role) : []),
+    [currentSlide],
   );
 
   // AI 비서의 도구는 요청 하나 동안 여러 번 불리며 그때마다 최신 화면 값을 본다. 렌더를 기다리지 않게
@@ -249,7 +255,10 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
    * 요소는 숨긴다. 실행 취소 한 번에 둘 다 돌아간다.
    */
   const unfold = (id: ElementId) => {
-    const field = variant && loaded ? templateTextField(id, loaded.content, variant, slide) : null;
+    const field =
+      variant && loaded && currentSlide
+        ? templateTextField(id, loaded.content, variant, currentSlide.role)
+        : null;
     const look = readTextLook(id, CARD_SIZES[size].width);
     if (!variant || !loaded || !field || !look) {
       return;
@@ -294,12 +303,14 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
 
   /** 이 장의 받기 요청이 상한을 넘으면 알릴 말. */
   const checkLayers = (next: Layer[]): string | null => {
-    if (!spec) {
+    if (!currentSlide) {
       return null;
     }
-    const slidesLayers = [...(spec.layers ?? [])];
-    slidesLayers[slide] = next;
-    const request: RenderRequest = { spec: { ...spec, layers: slidesLayers }, slide, size };
+    const request: RenderRequest = {
+      spec: { ...currentSlide.spec, layers: next },
+      role: currentSlide.role,
+      size,
+    };
     return JSON.stringify(request).length > MAX_RENDER_REQUEST
       ? '이 장의 이미지가 많거나 커서 받기 요청이 4MB 를 넘습니다. 이미지를 빼거나 더 작은 이미지를 넣어 주세요.'
       : null;
@@ -368,7 +379,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p>
       ) : null}
 
-      {loaded && spec && variant ? (
+      {loaded && slides && currentSlide && variant ? (
         <>
           <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)_320px]">
             <div className={side}>
@@ -453,7 +464,7 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
                 onUnfold={
                   isElementId(selected) &&
                   variant &&
-                  templateTextField(selected, loaded.content, variant, slide)
+                  templateTextField(selected, loaded.content, variant, currentSlide.role)
                     ? () => unfold(selected)
                     : undefined
                 }
@@ -468,7 +479,8 @@ export function CardEditor({ initialJobId }: { initialJobId?: number }) {
             </div>
           </div>
           <BottomBar
-            spec={spec}
+            slides={slides}
+            variant={variant}
             size={size}
             onSizeChange={setSize}
             overflow={

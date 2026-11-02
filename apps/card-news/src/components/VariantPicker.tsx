@@ -1,6 +1,7 @@
 'use client';
 
-import { CARD_SIZES, type CardSpec, type VariantId } from '@/lib/card/types';
+import type { RenderSlide } from '@/lib/card/document';
+import { CARD_SIZES, type VariantId } from '@/lib/card/types';
 import { VARIANTS } from '@/lib/card/variants';
 import { usePreviews } from '@/lib/client/usePreviews';
 
@@ -14,14 +15,12 @@ export function VariantPicker({
   current,
   onPick,
 }: {
-  specs: Record<VariantId, CardSpec>;
+  /** 시안별 장 목록. */
+  specs: Record<VariantId, RenderSlide[]>;
   current: VariantId | null;
   onPick: (variant: VariantId) => void;
 }) {
-  const targets = VARIANTS.map((variant) => ({
-    spec: specs[variant.id],
-    slide: variant.previewSlide ?? 0,
-  }));
+  const targets = VARIANTS.map((variant) => specs[variant.id][variant.previewSlide ?? 0]!);
   const { previews, error } = usePreviews(targets, 'post', specs);
   const { width, height } = CARD_SIZES.post;
 

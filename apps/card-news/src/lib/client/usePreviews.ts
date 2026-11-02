@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { SlideRole } from '../card/document';
 import type { CardSizeId, CardSpec } from '../card/types';
 import { renderSlide } from './render';
 
@@ -15,7 +16,7 @@ export interface Preview {
  * `key` 로 판단한다(배열은 그릴 때마다 새로 만들어지므로).
  */
 export function usePreviews(
-  targets: { spec: CardSpec; slide: number }[],
+  targets: { spec: CardSpec; role: SlideRole }[],
   size: CardSizeId,
   key: unknown,
 ): { previews: (Preview | null)[]; error: boolean } {
@@ -29,7 +30,7 @@ export function usePreviews(
       Promise.all(
         targets.map((target) =>
           // PNG 로 굽지 않은 SVG 를 받아 브라우저가 그린다(렌더 라우트 참고).
-          renderSlide(target.spec, target.slide, size, {
+          renderSlide(target.spec, target.role, size, {
             format: 'svg',
             signal: controller.signal,
           }),

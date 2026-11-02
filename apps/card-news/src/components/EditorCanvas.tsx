@@ -13,18 +13,17 @@ import {
   useState,
 } from 'react';
 import { Button } from '@ogonggo/ui';
+import type { RenderSlide, SlideRole } from '@/lib/card/document';
 import { buildSlide } from '@/lib/card/render/slides';
 import {
   CARD_SIZES,
   type CardSize,
   type CardContent,
   type CardSizeId,
-  type CardSpec,
   elementLabel,
   type ElementEdit,
   type ElementId,
   type Layer,
-  SLIDE_COUNT,
   SLIDE_LABELS,
   type Selection,
   type TextLayer,
@@ -55,24 +54,26 @@ import type { RenderKit } from '@/lib/client/useRenderKit';
  */
 
 export interface BuiltSlide {
+  role: SlideRole;
   element: ReactElement;
   overflow: boolean;
 }
 
-/** 세 장을 브라우저에서 만든다. 캔버스·썸네일·넘침 경고가 같이 쓴다. */
+/** 문서의 장을 브라우저에서 만든다. 캔버스·썸네일·넘침 경고가 같이 쓴다. */
 export function useBuiltSlides(
-  spec: CardSpec | null,
+  slides: RenderSlide[] | null,
   size: CardSizeId,
   kit: RenderKit | null,
 ): BuiltSlide[] | null {
   return useMemo(
     () =>
-      spec && kit
-        ? Array.from({ length: SLIDE_COUNT }, (_, slide) =>
-            buildSlide(spec, slide, CARD_SIZES[size], kit.measure, kit.assets),
-          )
+      slides && kit
+        ? slides.map(({ spec, role }) => ({
+            role,
+            ...buildSlide(spec, role, CARD_SIZES[size], kit.measure, kit.assets),
+          }))
         : null,
-    [spec, size, kit],
+    [slides, size, kit],
   );
 }
 
@@ -394,6 +395,7 @@ export function EditorCanvas({
 
   const scale = width / cardSize.width;
   const current = slides[slide];
+  const role = current?.role ?? 'free';
 
   // 그릴 때마다 요소 상자를 다시 잰다(1080 폭 좌표). 편집값이 바뀌면 상자도 따라 움직인다.
   useLayoutEffect(() => {
@@ -776,14 +778,14 @@ export function EditorCanvas({
     if (isLayerRef(id)) {
       return;
     }
-    const field = templateTextField(id, content, variant, slide);
+    const field = templateTextField(id, content, variant, role);
     if (field) {
       onSelect(id);
       setTextEdit({ id, sectionIndex: field.sectionIndex });
     }
   };
   const textField = textEdit
-    ? templateTextField(textEdit.id, content, variant, slide, textEdit.sectionIndex)
+    ? templateTextField(textEdit.id, content, variant, role, textEdit.sectionIndex)
     : null;
   const textBox = textEdit ? boxes.find((box) => box.id === textEdit.id) : undefined;
 

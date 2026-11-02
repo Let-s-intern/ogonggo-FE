@@ -2,6 +2,7 @@
 
 import { type KeyboardEvent, useRef } from 'react';
 import { Input, Textarea } from '@ogonggo/ui';
+import type { SlideRole } from '@/lib/card/document';
 import { visibleSectionIndices } from '@/lib/card/render/slides';
 import type { CardContent, ElementId, VariantId } from '@/lib/card/types';
 
@@ -25,7 +26,7 @@ export function templateTextField(
   id: ElementId,
   content: CardContent,
   variant: VariantId,
-  slide: number,
+  slide: SlideRole,
   sectionIndex?: number,
 ): TemplateTextField | null {
   const plain = (
@@ -53,7 +54,7 @@ export function templateTextField(
       return plain('ctaSub', '3장 작은 문구', true);
   }
   const match = SECTION_PART.exec(id);
-  const key = slide === 0 ? 'summarySections' : 'detailSections';
+  const key = slide === 'cover' ? 'summarySections' : 'detailSections';
   const index = !match
     ? -1
     : (sectionIndex ?? visibleSectionIndices({ variant, content }, slide)[Number(match[1]) - 1]);

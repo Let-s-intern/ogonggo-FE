@@ -77,7 +77,7 @@ export function newSlideId(): string {
 }
 
 /** 공고 하나로 만든 문서의 장. 지금 세 장과 같은 순서다. */
-const SINGLE_ROLES: readonly SlideRole[] = ['cover', 'job', 'profile'];
+export const SINGLE_ROLES: readonly SlideRole[] = ['cover', 'job', 'profile'];
 
 /**
  * 공고 하나로 문서를 만든다. `edits`·`layers` 는 장 번호 순서로 남아 있던 템플릿별 편집값이다(예전
@@ -133,11 +133,12 @@ export function documentContent(doc: CardDocument, slide?: DocumentSlide): CardC
   return { ...slideJob(doc, slide).content, caption: doc.caption };
 }
 
-/** 렌더 한 장의 값. `edits`·`layers` 는 이 장 것만 든다. */
-export type SlideSpec = Omit<CardSpec, 'edits' | 'layers'> & {
-  edits?: SlideEdits;
-  layers?: Layer[];
-};
+/** 렌더할 장 하나. `id` 는 문서 장의 id 다. */
+export interface RenderSlide {
+  id: string;
+  role: SlideRole;
+  spec: CardSpec;
+}
 
 /**
  * 장 하나를 렌더할 값으로 편다. 시안은 문서에 고른 것이 아니라 부르는 쪽이 준다 — 시안 고르기는
@@ -148,7 +149,7 @@ export function slideSpec(
   slide: DocumentSlide,
   variant: VariantId,
   logo?: CardLogo,
-): { spec: SlideSpec; role: SlideRole } {
+): RenderSlide {
   const job = slideJob(doc, slide);
   // 썸네일은 그것을 쓰는 시안에만 싣는다. 렌더 요청 본문이 가벼워진다.
   const { photo, ...shared } = doc.settings;
@@ -162,6 +163,7 @@ export function slideSpec(
       edits: slide.edits[variant],
       layers: slide.layers[variant],
     },
+    id: slide.id,
     role: slide.role,
   };
 }

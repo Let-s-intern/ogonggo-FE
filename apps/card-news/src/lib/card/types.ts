@@ -1,6 +1,8 @@
+import type { SlideRole } from './document';
+
 /**
- * 카드뉴스 한 벌을 그리는 데 필요한 값. 편집 화면이 들고 있다가 렌더 API(`/api/render`)에 시안마다
- * 보낸다. 서버는 이 값만 보고 그린다 — 공고를 다시 읽지 않는다.
+ * 카드뉴스 한 벌을 그리는 데 필요한 값. 편집 화면이 문서(`./document.ts`)에서 장 하나씩 펴서 렌더
+ * API(`/api/render`)에 보낸다. 서버는 이 값만 보고 그린다 — 공고를 다시 읽지 않는다.
  *
  * 문구(`CardContent`)와 설정(`CardSettings`)은 모든 시안이 같이 쓴다. 시안마다 다른 것은 배경과
  * 배치뿐이고, 그건 `./variants.ts` 가 정한다.
@@ -308,15 +310,16 @@ export interface CardSpec {
   /** 없으면 회사명을 글자로 쓴다. */
   logo?: CardLogo;
   companyName: string;
-  /** 장 번호 순서의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
-  edits?: SlideEdits[];
-  /** 장 번호 순서의 자유 요소. 크기끼리 같이 쓴다. */
-  layers?: Layer[][];
+  /** 이 장의 편집값. 크기(4:5·1:1·9:16)끼리 같이 쓴다. */
+  edits?: SlideEdits;
+  /** 이 장의 자유 요소. 크기끼리 같이 쓴다. */
+  layers?: Layer[];
 }
 
 export interface RenderRequest {
+  /** 그릴 장 하나의 값(`slideSpec()`). */
   spec: CardSpec;
-  slide: number;
+  role: SlideRole;
   size: CardSizeId;
   /** PNG 축척. 다운로드는 1. */
   scale?: number;
