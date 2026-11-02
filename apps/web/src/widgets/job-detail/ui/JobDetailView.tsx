@@ -9,6 +9,7 @@ import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
+import { JobRecommendedContents } from '@/widgets/lets-career-recommend';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { AnalysisTab } from './AnalysisTab';
@@ -131,6 +132,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
           <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          <JobRecommendedContents jobId={job.id} />
         </aside>
       </div>
     );
@@ -168,6 +170,9 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           </StickyApplyBar>
           <DetailSidebarSection>
             <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          </DetailSidebarSection>
+          <DetailSidebarSection>
+            <JobRecommendedContents jobId={job.id} />
           </DetailSidebarSection>
         </aside>
       </div>
