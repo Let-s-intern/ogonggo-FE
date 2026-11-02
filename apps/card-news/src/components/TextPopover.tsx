@@ -160,8 +160,8 @@ export function TextPopover({
       )}
       <span className="text-xs text-gray-500">
         {field.multiline
-          ? 'Enter 로 닫고 Shift+Enter 로 줄을 바꿉니다. Esc 는 취소입니다.'
-          : 'Enter 로 닫고 Esc 로 취소합니다.'}
+          ? 'Enter 로 닫고 Shift+Enter 로 줄을 바꿉니다. Tab 은 다음 글자, Esc 는 취소입니다.'
+          : 'Enter 로 닫고 Tab 은 다음 글자, Esc 는 취소입니다.'}
       </span>
     </div>
   );
