@@ -99,14 +99,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <DatadogAppRouter />
         {/* 화면 이동·로그인 상태가 바뀔 때마다 GTM 에 `page_context` 를 보낸다. */}
         <PageContextTracker />
-        {/* 로그인한 계정을 PostHog 사용자로 묶는다. 키가 없으면 아무것도 하지 않는다. */}
-        <PostHogIdentify />
         {/*
           헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
           그룹 밖이라 껍데기 없이 렌더된다.
         */}
         <AppProviders>
           <MockGate>
+            {/* 로그인한 계정을 PostHog 사용자로 묶는다. 키가 없으면 아무것도 하지 않는다. 계정 요청을 함께 쓰므로
+                목 워커가 뜬 뒤여야 한다. 먼저 부르면 그 실패를 화면이 물려받아 북마크 버튼이 그려지지 않는다. */}
+            <PostHogIdentify />
             {children}
             {/* 마운트하자마자 읽음 요청을 보내므로 목 워커가 뜬 뒤여야 한다. `AppProviders` 에 두면 목데이터
                 모드에서 요청이 워커를 지나친다. */}
