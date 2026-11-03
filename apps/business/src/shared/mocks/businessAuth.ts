@@ -66,6 +66,15 @@ const roleOf = (request: Request): string | null => {
   return match ? match[1]! : null;
 };
 
+/** 로그인·가입이 돌려주는 토큰. 역할을 액세스 토큰에 싣는다. */
+const tokens = (role: string) => ({
+  accessToken: `mock-access.${role}`,
+  refreshToken: `mock-refresh.${role}`,
+});
+
+/** 목 로그인에서 틀린 비밀번호로 보는 값. 401 문구를 확인할 때 쓴다. */
+export const MOCK_WRONG_PASSWORD = 'wrong-password';
+
 const unauthorized = () =>
   HttpResponse.json(
     { status: 401, code: 'UNAUTHORIZED', message: '인증이 필요합니다.' },
@@ -76,6 +85,26 @@ const ok = (data: unknown) =>
   HttpResponse.json({ status: 200, message: '요청이 성공했습니다.', data });
 
 export const businessAuthHandlers: HttpHandler[] = [
+  http.post('*/api/v1/auth/company/signin', async ({ request }) => {
+    const { email, password } = (await request.json()) as { email: string; password: string };
+    if (password === MOCK_WRONG_PASSWORD) {
+      return HttpResponse.json(
+        {
+          status: 401,
+          code: 'INVALID_COMPANY_CREDENTIALS',
+          message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        },
+        { status: 401 },
+      );
+    }
+    return ok(tokens(email === MOCK_USER_EMAIL ? 'USER' : 'COMPANY'));
+  }),
+  http.post('*/api/v1/auth/signout', () => ok(null)),
+  http.post('*/api/v1/auth/token', async ({ request }) => {
+    const { refreshToken } = (await request.json()) as { refreshToken: string };
+    const match = refreshToken.match(/^mock-refresh\.(\w+)$/);
+    return match ? ok({ accessToken: `mock-access.${match[1]}` }) : unauthorized();
+  }),
   http.get('*/api/v1/users/me', ({ request }) => {
     const role = roleOf(request);
     if (!role) return unauthorized();
