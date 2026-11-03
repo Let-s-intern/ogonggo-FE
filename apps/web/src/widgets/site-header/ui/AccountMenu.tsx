@@ -14,14 +14,16 @@ export interface AccountMenuProps {
   myPageActive: boolean;
   /** 관리자일 때만 온다. 있으면 드롭다운에 `어드민` 이 더해진다. */
   adminOrigin?: string;
+  /** 기업 회원일 때만 온다. 있으면 드롭다운에 `비즈니스` 가 더해진다. */
+  businessHref?: string;
   /** 열림 상태는 `SiteHeader` 가 든다. 알림 패널(`NotificationBell`)과 한 번에 하나만 열린다. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 /**
- * 데스크톱 헤더 우측의 `[사람] {이름} 님`. 누르면 `마이페이지`·`로그아웃` 이 펼쳐지고, 관리자에게는
- * 그 사이에 `어드민` 이 더해진다.
+ * 데스크톱 헤더 우측의 `[사람] {이름} 님`. 누르면 `마이페이지`·`로그아웃` 이 펼쳐지고, 그 사이에
+ * 관리자에게는 `어드민` 이, 기업 회원에게는 `비즈니스` 가 더해진다.
  *
  * 마이페이지에서 로그아웃하면 홈으로 보낸다. 마이페이지의 로그인 가드는 들어올 때만 검사해서
  * 그대로 두면 토큰이 지워진 채 빈 화면에 남는다(`useSignOut`). 다른 화면은 그 자리에 둔다.
@@ -34,6 +36,7 @@ export function AccountMenu({
   myPageHref,
   myPageActive,
   adminOrigin,
+  businessHref,
   open,
   onOpenChange: setOpen,
 }: AccountMenuProps) {
@@ -96,6 +99,14 @@ export function AccountMenu({
               마이페이지
             </Link>
           </li>
+          {businessHref ? (
+            <li role="none">
+              {/* 다른 출처(비즈니스 앱)라 `a` 다. 로그인은 들고 가지 않는다 — 비즈니스 앱은 따로 로그인한다(PRD). */}
+              <a role="menuitem" href={businessHref} className={itemClass}>
+                비즈니스
+              </a>
+            </li>
+          ) : null}
           {adminOrigin ? (
             <li role="none">
               {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. 누르면 웹 로그인을 들고 간다(`adminHandoff`). */}

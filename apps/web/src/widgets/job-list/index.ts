@@ -9,3 +9,4 @@ export {
   parseSort,
 } from './lib/query';
 export type { JobListQuery } from './lib/query';
+export { fetchAdJobs, type AdJob } from './api/fetchAdJobs';

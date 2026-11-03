@@ -1,6 +1,7 @@
 import { listPublicJobs, ListPublicJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import type { JobSummary } from '@/entities/job/model/types';
+import { fetchAdJobs } from '@/widgets/job-list';
 import { fetchTodayJobs } from '../api/fetchTodayJobs';
 import { PopularJobsTabs } from './PopularJobsTabs';
 
@@ -29,14 +30,44 @@ async function fetchPopularPool(): Promise<JobSummary[]> {
  * 조회수순 묶음에서 나눈다. 두 요청은 서로 기다리지 않는다.
  */
 export async function PopularJobs() {
-  const [pool, picks] = await Promise.all([fetchPopularPool(), fetchTodayJobs()]);
-  const popular = pool.slice(0, TOP_COUNT);
+  const [pool, todayPicks, recommendAds] = await Promise.all([
+    fetchPopularPool(),
+    fetchTodayJobs(),
+    fetchAdJobs('RECOMMEND_TOP_RECRUIT'),
+  ]);
+  // A1 오공고 추천 카드: 첫 탭의 첫 자리. 해석 한 줄(`headline`)이 추천 문구 자리에 들어간다.
+  const recommendAd = recommendAds[0];
+  const adPick = recommendAd
+    ? ({
+        ...recommendAd.job,
+        recommendationTitle: recommendAd.ad.headline ?? '',
+        recommendationDescription: recommendAd.ad.skillTags.join(' · '),
+      } as (typeof todayPicks)[number])
+    : undefined;
+  const picks =
+    adPick && todayPicks.length > 0
+      ? [adPick, ...todayPicks.filter((job) => job.id !== adPick.id)]
+      : todayPicks;
+  const popularBase = pool.slice(0, TOP_COUNT);
+  const popular =
+    recommendAd && todayPicks.length === 0
+      ? [recommendAd.job, ...popularBase.filter((job) => job.id !== recommendAd.job.id)].slice(
+          0,
+          TOP_COUNT,
+        )
+      : popularBase;
   const intern = pool.filter((job) => job.employmentType === 'INTERN').slice(0, TOP_COUNT);
   const newcomer = pool.filter((job) => job.experienceType === 'NEWCOMER').slice(0, TOP_COUNT);
 
   return (
     <section className="w-full">
-      <PopularJobsTabs picks={picks} popular={popular} intern={intern} newcomer={newcomer} />
+      <PopularJobsTabs
+        picks={picks}
+        popular={popular}
+        intern={intern}
+        newcomer={newcomer}
+        adJobId={recommendAd?.job.id}
+      />
     </section>
   );
 }

@@ -32,6 +32,8 @@ export interface MonthCalendarProps {
   bookmarkedOnly: boolean;
   /** `마감일 기준` 토글 값. 격자·오른쪽 목록이 묶는 날짜 필드를 정한다. */
   dateBasis: JobCalendarDateBasis;
+  /** 달력 하이라이트 광고의 공고 id. 칸에서는 로고에 테두리를, 오른쪽 목록에서는 맨 위에 `AD` 로 고정한다. */
+  adJobIds?: number[];
 }
 
 /**
@@ -49,6 +51,7 @@ export function MonthCalendar({
   header,
   bookmarkedOnly,
   dateBasis,
+  adJobIds = [],
 }: MonthCalendarProps) {
   const [selectedDay, setSelectedDay] = useState(() => defaultDay(initialDate));
   const [renderedMonth, setRenderedMonth] = useState(initialDate);
@@ -85,10 +88,14 @@ export function MonthCalendar({
   const bookmarkedIds = useBookmarkedIds();
   const visibleItems = filterBookmarkedOnly(items, bookmarkedOnly, bookmarkedIds);
 
-  const dayItems = visibleItems.filter((item) => {
-    const day = dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt;
-    return day.slice(0, 10) === selectedDay;
-  });
+  // 광고 공고를 그날 목록 맨 위로 올린다(우측 리스트 핀). 나머지 순서는 그대로다.
+  const isAd = (id: number) => adJobIds.includes(id);
+  const dayItems = visibleItems
+    .filter((item) => {
+      const day = dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt;
+      return day.slice(0, 10) === selectedDay;
+    })
+    .sort((a, b) => Number(isAd(b.id)) - Number(isAd(a.id)));
 
   return (
     // 목업의 격자는 791px, 목록은 290px, 사이는 40px 이다.
@@ -101,6 +108,7 @@ export function MonthCalendar({
           selectedDay={selectedDay}
           onSelectDay={selectDay}
           dateBasis={dateBasis}
+          adJobIds={adJobIds}
         />
       </div>
       <div className="hidden md:block">
@@ -108,6 +116,7 @@ export function MonthCalendar({
           day={selectedDay}
           items={dayItems}
           dateBasis={dateBasis}
+          adJobIds={adJobIds}
           highlightId={pickedJobId}
         />
       </div>
@@ -134,6 +143,7 @@ export function MonthCalendar({
               day={selectedDay}
               items={dayItems}
               dateBasis={dateBasis}
+              adJobIds={adJobIds}
               highlightId={pickedJobId}
             />
           </div>

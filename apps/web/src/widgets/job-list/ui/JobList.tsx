@@ -1,9 +1,11 @@
 import { ListPublicJobsSort, enumOptions, httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
+import { AdLabel } from '@/entities/advertisement/ui/AdLabel';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
+import { fetchAdJobs, type AdJob } from '../api/fetchAdJobs';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { JobFilterSidebar } from './JobFilterSidebar';
 import { JobRoleChips } from './JobRoleChips';
@@ -37,7 +39,14 @@ async function fetchJobPage(
 
 /** 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다. */
 export async function JobList(query: JobListProps) {
-  const { items, pageInfo } = await fetchJobPage(query);
+  // 광고 둘(리스트 상단 고정 A2, 적극 채용중)은 첫 쪽에만 나온다(PRD: 2페이지부터 비노출).
+  const firstPage = query.page === 1;
+  const jobField = query.jobFields?.[0];
+  const [{ items, pageInfo }, listTop, active] = await Promise.all([
+    fetchJobPage(query),
+    firstPage ? fetchAdJobs('LIST_TOP_RECRUIT', jobField) : Promise.resolve([]),
+    firstPage ? fetchAdJobs('ACTIVE_RECRUIT') : Promise.resolve([]),
+  ]);
   const sort = (
     <SortToggle
       options={SORT_OPTIONS}
@@ -73,10 +82,11 @@ export async function JobList(query: JobListProps) {
         <JobFilterSidebar query={query} />
       </div>
       <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
+        {active.length > 0 ? <ActiveRecruitAds ads={active} /> : null}
         {items.length === 0 ? (
           <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
         ) : (
-          <JobListItems items={items} pageNumber={pageInfo.pageNum} />
+          <JobListItems items={items} pageNumber={pageInfo.pageNum} pinned={listTop[0]} />
         )}
         <NumberedPagination
           pageInfo={pageInfo}
@@ -92,10 +102,35 @@ export async function JobList(query: JobListProps) {
  * "인기 공고"(`widgets/popular-jobs`)와 완전히 같은 카드 디자인을 보장한다. lg 이상은 왼쪽에
  * 필터 열이 있어 시안(`docs/asset/v12 채용공고 상세/목록.webp`)대로 3열이다.
  */
-function JobListItems({ items, pageNumber }: { items: JobSummary[]; pageNumber: number }) {
+function JobListItems({
+  items,
+  pageNumber,
+  pinned,
+}: {
+  items: JobSummary[];
+  pageNumber: number;
+  /**
+   * 리스트 상단 고정 광고(A2). 첫 칸에 두고, 같은 공고가 목록에 있으면 목록 쪽을 뺀다. 한 쪽 카드 수(그리드 칸)가
+   * 바뀌지 않도록 목록의 마지막 카드를 하나 덜어 낸다.
+   */
+  pinned?: AdJob;
+}) {
+  const rest = pinned
+    ? items.filter((job) => job.id !== pinned.job.id).slice(0, items.length - 1)
+    : items;
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 lg:grid-cols-3">
-      {items.map((job, index) => (
+      {pinned ? (
+        <li
+          key={`ad-${pinned.ad.itemId}`}
+          className="relative"
+          data-ad-placement={pinned.ad.placementKey}
+        >
+          <JobCard job={pinned.job} />
+          <AdLabel className="absolute top-2 left-2" />
+        </li>
+      ) : null}
+      {rest.map((job, index) => (
         <li key={job.id}>
           <JobCard
             job={job}
@@ -104,5 +139,25 @@ function JobListItems({ items, pageNumber }: { items: JobSummary[]; pageNumber: 
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * 적극 채용중 공고(`ACTIVE_RECRUIT`, 4슬롯). 전체 공고 카드 위에 한 줄로 둔다. 카드마다 `AD` 라벨이 붙는다.
+ * 자리는 시안에 그림이 없어 정했다(`.claude/tasks/memos/결정-광고시스템-web-광고자리-2026-11-03.md`).
+ */
+function ActiveRecruitAds({ ads }: { ads: AdJob[] }) {
+  return (
+    <section className="flex flex-col gap-3" data-ad-placement="ACTIVE_RECRUIT">
+      <h3 className="text-base font-bold text-gray-900">적극 채용 중인 공고</h3>
+      <ul className="-mx-5 flex snap-x gap-4 overflow-x-auto px-5 md:mx-0 md:grid md:grid-cols-4 md:px-0 lg:grid-cols-4">
+        {ads.map(({ ad, job }) => (
+          <li key={ad.itemId} className="relative w-[44%] shrink-0 snap-start md:w-auto">
+            <JobCard job={job} />
+            <AdLabel className="absolute top-2 left-2" />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

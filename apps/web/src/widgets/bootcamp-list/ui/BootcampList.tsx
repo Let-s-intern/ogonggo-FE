@@ -1,8 +1,11 @@
-import { httpClient } from '@ogonggo/api';
+import { getPublicBootcamp, httpClient } from '@ogonggo/api';
 import type {
   PageInfo,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
+  SuccessResponseUserBootcampDetailResponse,
 } from '@ogonggo/api';
+import { fetchAdExposures } from '@/entities/advertisement/api/adExposureApi';
+import { AdLabel } from '@/entities/advertisement/ui/AdLabel';
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampCard } from '@/entities/bootcamp/ui/BootcampCard';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
@@ -55,16 +58,51 @@ async function fetchBootcampPage(
 }
 
 /** `교육부트캠프.png`의 목록 본문 — 컨트롤 한 줄 + 4열 카드 그리드 + 번호 페이지네이션. */
+/**
+ * 적극 모집중 교육(`active_edu`, E1 교육 상단 고정과 같은 자리)의 광고와 그 부트캠프. 카드 칸이 노출 응답에 없어 상세를
+ * 한 건씩 읽는다(채용공고의 `fetchAdJobs` 와 같다). 읽지 못한 것은 빼고, 광고 API 가 실패하면 빈 목록이다.
+ */
+async function fetchActiveEduAds(): Promise<BootcampSummary[]> {
+  const ads = (await fetchAdExposures('ACTIVE_EDU')).filter((ad) => ad.target === 'BOOTCAMP');
+  const bootcamps = await Promise.all(
+    ads.map(async (ad) => {
+      try {
+        const response = (await getPublicBootcamp(
+          ad.postId,
+        )) as unknown as SuccessResponseUserBootcampDetailResponse;
+        return response.data as BootcampSummary | undefined;
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+  return bootcamps.filter((bootcamp): bootcamp is BootcampSummary => bootcamp !== undefined);
+}
+
 export async function BootcampList(query: BootcampListProps) {
-  const { items, pageInfo } = await fetchBootcampPage(query);
+  // 적극 모집중 광고는 첫 쪽 목록 맨 앞에 고정한다. 한 쪽 카드 수가 바뀌지 않게 목록 뒤에서 그만큼 덜어 낸다.
+  const [{ items: pageItems, pageInfo }, pinned] = await Promise.all([
+    fetchBootcampPage(query),
+    query.page === 1 ? fetchActiveEduAds() : Promise.resolve([]),
+  ]);
+  const pinnedIds = pinned.map((bootcamp) => bootcamp.id);
+  const items = pageItems
+    .filter((bootcamp) => !pinnedIds.includes(bootcamp.id))
+    .slice(0, Math.max(0, pageItems.length - pinned.length));
 
   return (
     <div className="flex w-full flex-col gap-6">
       <BootcampListControls query={query} />
-      {items.length === 0 ? (
+      {items.length + pinned.length === 0 ? (
         <p className="py-16 text-center text-sm text-gray-500">교육·부트캠프가 없습니다.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
+          {pinned.map((bootcamp) => (
+            <li key={`ad-${bootcamp.id}`} className="relative" data-ad-placement="ACTIVE_EDU">
+              <BootcampCard bootcamp={bootcamp} />
+              <AdLabel className="absolute top-2 left-2" />
+            </li>
+          ))}
           {items.map((bootcamp, index) => (
             <li key={bootcamp.id}>
               <BootcampCard

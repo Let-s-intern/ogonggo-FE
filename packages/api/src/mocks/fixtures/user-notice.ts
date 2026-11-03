@@ -1,6 +1,25 @@
 import type { UserAnnouncementDetailResponse } from '../../generated/user/models/userAnnouncementDetailResponse';
 
 /**
+ * 공지 카테고리(광고 시스템 PRD "공지 작성 시 카테고리"). 백엔드에 아직 없는 값이라 생성 타입이 없다.
+ * 요청서: `.claude/tasks/memos/백엔드-요청-광고-시스템-web.md`.
+ */
+export type UserNoticeCategory = 'OGONGGO_UPDATE' | 'JOB_NOTE';
+
+/** 오공고 업데이트 글의 태그. `NEW_FEATURE` 새 기능, `CHANGE` 변경사항. */
+export type UserNoticeTag = 'NEW_FEATURE' | 'CHANGE';
+
+/** 백엔드에 요청한 필드를 더한 공지. 백엔드 배포·코드젠 뒤 생성 타입으로 바꾼다. */
+export interface UserNoticeFixture extends UserAnnouncementDetailResponse {
+  category: UserNoticeCategory;
+  tags: UserNoticeTag[];
+  /** 목록 썸네일이자 본문 대표 이미지. 없을 수 있다. */
+  thumbnailUrl?: string;
+  /** 목록·추천 카드의 한 줄 요약. 없을 수 있다. */
+  summary?: string;
+}
+
+/**
  * `GET /api/v1/announcements`, `GET /api/v1/announcements/{noticeId}` 목 응답의 원본.
  *
  * 어드민 공지 픽스처(`./admin-notice.ts`) 와 별개다. 그쪽은 백엔드 도메인이 없던 시절의 모양
@@ -77,12 +96,34 @@ const daysAgo = (days: number, time = '09:00:00'): string => {
  *
  * 순서는 백엔드 정렬과 같다 — 고정 먼저, 그 안에서 id 역순
  * (`core/notice/persistence/NoticeRepositories.kt` 의 `pinned.desc(), id.desc()`).
+ *
+ * 모두 `OGONGGO_UPDATE` 다. `JOB_NOTE`(새로운 공고 노트)는 템플릿이 오기 전까지 글이 없다(PRD "새로운 공고 노트는
+ * 이번 범위에서 뺀다"). 고정 글이 공지 홈의 `추천` 이고, 최근 7 일 안의 글(13, 12, 11)이 새 글 `N` 이다.
+ * 태그 없는 글·썸네일 없는 글·요약 없는 글을 섞어 빈 칸 처리를 화면에서 볼 수 있게 했다.
  */
-export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
+export const USER_NOTICE_FIXTURES: UserNoticeFixture[] = [
+  {
+    id: 13,
+    title: '공고 달력에서 마감일을 한눈에 볼 수 있습니다',
+    pinned: true,
+    category: 'OGONGGO_UPDATE',
+    tags: ['NEW_FEATURE'],
+    thumbnailUrl: '/hero/bootcamps.png',
+    summary: '마감일 기준으로 채용공고를 달력에서 볼 수 있어요.',
+    createdAt: daysAgo(1, '14:30:00'),
+    content: editorState([
+      paragraph(text('상단 메뉴의 공고 달력에서 마감일 기준으로 채용공고를 볼 수 있습니다.')),
+      paragraph(text('관심 직무를 고르면 그 직무의 공고만 달력에 표시됩니다.')),
+    ]),
+  },
   {
     id: 12,
     title: '개인정보 처리방침 개정 안내',
     pinned: true,
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
+    thumbnailUrl: '/hero/jobs.png',
+    summary: '10월 1일부터 바뀌는 개인정보 처리방침의 주요 내용을 정리했어요.',
     createdAt: daysAgo(3, '10:20:00'),
     content: editorState([
       paragraph(text('2026년 10월 1일부터 개인정보 처리방침이 개정됩니다.')),
@@ -103,6 +144,11 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 4,
     title: '오늘의 공고 서비스 이용 안내',
     pinned: true,
+    category: 'OGONGGO_UPDATE',
+    tags: [],
+    thumbnailUrl:
+      'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg',
+    summary: '오늘의 공고에서 무엇을 볼 수 있는지 한 번에 알려드려요.',
     createdAt: daysAgo(60, '11:00:00'),
     content: editorState([
       paragraph(
@@ -116,19 +162,12 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     ]),
   },
   {
-    id: 13,
-    title: '공고 달력에서 마감일을 한눈에 볼 수 있습니다',
-    pinned: false,
-    createdAt: daysAgo(1, '14:30:00'),
-    content: editorState([
-      paragraph(text('상단 메뉴의 공고 달력에서 마감일 기준으로 채용공고를 볼 수 있습니다.')),
-      paragraph(text('관심 직무를 고르면 그 직무의 공고만 달력에 표시됩니다.')),
-    ]),
-  },
-  {
     id: 11,
     title: '추석 연휴 고객센터 운영 안내',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: [],
+    summary: '연휴 동안 문의 답변이 늦어질 수 있어요.',
     createdAt: daysAgo(5, '09:30:00'),
     content: editorState([
       paragraph(text('9월 27일부터 10월 1일까지 문의 답변이 지연될 수 있습니다.')),
@@ -138,6 +177,10 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 10,
     title: '기업 회원 공고 등록 절차가 간단해졌습니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
+    thumbnailUrl: '/hero/concerns.png',
+    summary: '공고 등록 입력 칸을 열둘에서 여덟으로 줄였어요.',
     createdAt: daysAgo(9),
     content: editorState([
       paragraph(text('공고 등록에 필요한 입력 칸을 열둘에서 여덟으로 줄였습니다.')),
@@ -148,6 +191,10 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 9,
     title: '사이드·스터디 모집글 작성 가이드',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['NEW_FEATURE'],
+    thumbnailUrl: '/hero/side-studies.png',
+    summary: '읽기 좋은 모집글을 쓰는 순서를 알려드려요.',
     createdAt: daysAgo(14),
     content: editorState([
       paragraph(text('모집글은 소개·목표·진행 방식·팀 구성 순으로 적으면 읽기 좋습니다.')),
@@ -158,6 +205,8 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 8,
     title: '서비스 점검 안내 (9월 12일 새벽)',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: [],
     createdAt: daysAgo(18),
     content: editorState([
       paragraph(text('9월 12일 새벽 2시부터 4시까지 서비스 점검을 진행합니다.')),
@@ -168,6 +217,10 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 7,
     title: '부트캠프 정보가 매주 갱신됩니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
+    thumbnailUrl: '/hero/bootcamps.png',
+    summary: '매주 월요일 교육·부트캠프 목록이 새로 바뀌어요.',
     createdAt: daysAgo(23),
     content: editorState([paragraph(text('매주 월요일 교육·부트캠프 목록을 갱신합니다.'))]),
   },
@@ -175,6 +228,9 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 6,
     title: '스크랩한 공고를 마이페이지에서 볼 수 있습니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['NEW_FEATURE'],
+    summary: '저장한 공고를 마이페이지에서 모아 볼 수 있어요.',
     createdAt: daysAgo(30),
     content: editorState([
       paragraph(text('마이페이지 스크랩 탭에서 저장한 공고를 모아 볼 수 있습니다.')),
@@ -184,6 +240,9 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 5,
     title: '회원 가입 방식이 렛츠커리어 통합 로그인으로 바뀝니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
+    summary: '렛츠커리어 계정으로 로그인할 수 있게 됐어요.',
     createdAt: daysAgo(35),
     // 일부러 Lexical JSON 이 아닌 평문이다. 위 주석의 대체 경로 확인용이다.
     content:
@@ -193,6 +252,10 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 3,
     title: '공고 검색에 직무 필터가 추가됐습니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['NEW_FEATURE'],
+    thumbnailUrl: '/hero/jobs.png',
+    summary: '채용공고 목록을 직무별로 걸러 볼 수 있어요.',
     createdAt: daysAgo(44),
     content: editorState([paragraph(text('채용공고 목록에서 직무별로 걸러 볼 수 있습니다.'))]),
   },
@@ -200,6 +263,8 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 2,
     title: '오늘의 공고 로고가 바뀌었습니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
     createdAt: daysAgo(51),
     content: editorState([paragraph(text('서비스 로고와 앱 아이콘을 새로 바꿨습니다.'))]),
   },
@@ -207,6 +272,9 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
     id: 1,
     title: '오늘의 공고를 열었습니다',
     pinned: false,
+    category: 'OGONGGO_UPDATE',
+    tags: [],
+    summary: '채용·교육·모집 정보를 한곳에서 보는 오늘의 공고를 시작해요.',
     createdAt: daysAgo(70, '08:00:00'),
     content: editorState([
       heading('반갑습니다'),

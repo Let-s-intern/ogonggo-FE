@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import { getPublicJob } from '@ogonggo/api';
 import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
+import { fetchAdExposures } from '@/entities/advertisement/api/adExposureApi';
+import { AdBanner } from '@/entities/advertisement/ui/AdBanner';
+import { AdSideBanner } from '@/entities/advertisement/ui/AdSideBanner';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
@@ -15,6 +18,7 @@ import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { AnalysisTab } from './AnalysisTab';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
+import { JobDetailStickyHeader } from './JobDetailStickyHeader';
 import { JobDetailTabs } from './JobDetailTabs';
 import { OriginalTab } from './OriginalTab';
 import { SimilarJobs } from './SimilarJobs';
@@ -133,17 +137,29 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <aside className="flex min-w-0 flex-col gap-6">
           {applyCta}
           <JobRecommendedContents jobId={job.id} />
-          <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} jobField={job.jobField} />
         </aside>
       </div>
     );
   }
+
+  // 상세 배너 둘(PC 사이드, MO 본문 중간). 광고가 없으면 접힌다.
+  const [sideBanners, mobileBanners] = await Promise.all([
+    fetchAdExposures('DETAIL_SIDE_BANNER_RECRUIT'),
+    fetchAdExposures('DETAIL_MO_BANNER_RECRUIT'),
+  ]);
 
   return (
     <div className="flex w-full max-w-page flex-col gap-4">
       {viewTracker}
       <JobDetailBreadcrumb />
       {headerCard}
+      <JobDetailStickyHeader
+        companyName={job.companyName}
+        title={job.title}
+        recruitmentType={job.recruitmentType}
+        recruitmentEndAt={job.recruitmentEndAt}
+      />
       {/* 본문 2단은 좌우 여백 없이 위 헤더 카드와 아래 `ForBusinessBanner`의 바깥 가장자리에 맞춘다.
           전에는 카드 안쪽 글자 위치에 맞춰 `md:px-8`을 뒀는데, 블록 가장자리가 어긋나 보인다는
           요청으로 가장자리 기준으로 바꿨다(2026-09-30). */}
@@ -170,12 +186,24 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           >
             {applyCta}
           </StickyApplyBar>
+          {/* MO: `이력서에 담을 경험`(본문 탭 끝) 아래, `이 공고, 더 탄탄하게 준비하고 싶다면?` 위(`job-detail-mo.png`). */}
+          {mobileBanners.length > 0 ? (
+            <div className="lg:hidden">
+              <AdBanner ads={mobileBanners} />
+            </div>
+          ) : null}
           <DetailSidebarSection>
             <JobRecommendedContents jobId={job.id} />
           </DetailSidebarSection>
           <DetailSidebarSection>
-            <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+            <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} jobField={job.jobField} />
           </DetailSidebarSection>
+          {/* PC: 비슷한 공고 목록 아래 사이드 배너(`job-detail-pc.png`). */}
+          {sideBanners.length > 0 ? (
+            <div className="hidden lg:block">
+              <AdSideBanner ad={sideBanners[0]} />
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

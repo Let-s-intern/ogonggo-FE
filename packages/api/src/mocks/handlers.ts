@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import { advertisementCouponHandlers } from './advertisementCoupons';
 import { advertisementHandlers } from './advertisements';
 import { companyEmailVerificationHandlers } from './companyEmailVerifications';
+import { detailAdBannerHandlers } from './detail-ad-banners';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
 import {
@@ -10,6 +11,7 @@ import {
 } from './job-recommended-contents';
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
+import { userNoticeHandlers } from './notices';
 import { userNotificationHandlers } from './notifications';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
@@ -26,7 +28,6 @@ import {
   minutesAgo,
   type RecruitmentPostCommentFixture,
 } from './fixtures/recruitment-post-comment';
-import { USER_NOTICE_FIXTURES } from './fixtures/user-notice';
 import { GetRecruitmentPostsPositionsItem } from '../generated/user/models/getRecruitmentPostsPositionsItem';
 import { GetRecruitmentPostsProgressMethodsItem } from '../generated/user/models/getRecruitmentPostsProgressMethodsItem';
 import { GetRecruitmentPostsRecruitmentStatusesItem } from '../generated/user/models/getRecruitmentPostsRecruitmentStatusesItem';
@@ -53,9 +54,6 @@ import type { SuccessResponsePageResponseUserJobSummaryResponse } from '../gener
 import type { SuccessResponseImageUploadResponse } from '../generated/user/models/successResponseImageUploadResponse';
 import type { SuccessResponseFcmTokenResponse } from '../generated/user/models/successResponseFcmTokenResponse';
 import type { SuccessResponseUnit } from '../generated/user/models/successResponseUnit';
-import type { SuccessResponsePageResponseUserAnnouncementSummaryResponse } from '../generated/user/models/successResponsePageResponseUserAnnouncementSummaryResponse';
-import type { SuccessResponseUserAnnouncementDetailResponse } from '../generated/user/models/successResponseUserAnnouncementDetailResponse';
-import type { UserAnnouncementSummaryResponse } from '../generated/user/models/userAnnouncementSummaryResponse';
 import type { SuccessResponseListUserJobCalendarItemResponse } from '../generated/user/models/successResponseListUserJobCalendarItemResponse';
 import type { SuccessResponseListUserTodayJobSummaryResponse } from '../generated/user/models/successResponseListUserTodayJobSummaryResponse';
 import type { SuccessResponseUserBootcampDetailResponse } from '../generated/user/models/successResponseUserBootcampDetailResponse';
@@ -1022,69 +1020,6 @@ const reportRecruitmentPostCommentHandler = http.post(
   },
 );
 
-/** 공지 목록 한 페이지 건수. 백엔드 기본값이자 `widgets/notice-list` 가 보내는 값이다. */
-const DEFAULT_NOTICE_SIZE = 10;
-
-const toNoticeSummary = ({
-  content: _content,
-  ...summary
-}: (typeof USER_NOTICE_FIXTURES)[number]): UserAnnouncementSummaryResponse => summary;
-
-/**
- * `listPublicAnnouncements`(`GET /api/v1/announcements`). 픽스처가 이미 백엔드 정렬 순서(고정 먼저, 그 안에서
- * id 역순) 로 놓여 있어 여기서 다시 정렬하지 않는다 — 화면도 받은 순서를 그대로 그린다.
- */
-const getNoticesHandler = http.get('*/api/v1/announcements', ({ request }) => {
-  const url = new URL(request.url);
-  const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
-  const size = Number(url.searchParams.get('size') ?? DEFAULT_NOTICE_SIZE);
-
-  const start = (page - 1) * size;
-  const items = USER_NOTICE_FIXTURES.slice(start, start + size).map(toNoticeSummary);
-
-  const body: SuccessResponsePageResponseUserAnnouncementSummaryResponse = {
-    status: 200,
-    message: '요청이 성공했습니다.',
-    data: {
-      items,
-      pageInfo: {
-        pageNum: page,
-        pageSize: size,
-        totalElements: USER_NOTICE_FIXTURES.length,
-        totalPages: Math.ceil(USER_NOTICE_FIXTURES.length / size),
-      },
-    },
-  };
-
-  return HttpResponse.json(body, { status: 200 });
-});
-
-/**
- * `getPublicAnnouncement`(`GET /api/v1/announcements/{noticeId}`). 404 본문은 운영 응답을 그대로 옮긴 것이다
- * (2026-09-23 확인: `{"status":404,"code":"ANNOUNCEMENT_NOT_FOUND","message":"공지사항을 찾을 수 없습니다."}`).
- */
-const getNoticeHandler = http.get('*/api/v1/announcements/:noticeId', ({ params }) => {
-  const noticeId = Number(params.noticeId);
-  const notice = USER_NOTICE_FIXTURES.find((fixture) => fixture.id === noticeId);
-
-  if (!notice) {
-    const body: ErrorResponse = {
-      status: 404,
-      code: 'ANNOUNCEMENT_NOT_FOUND',
-      message: '공지사항을 찾을 수 없습니다.',
-    };
-    return HttpResponse.json(body, { status: 404 });
-  }
-
-  const body: SuccessResponseUserAnnouncementDetailResponse = {
-    status: 200,
-    message: '요청이 성공했습니다.',
-    data: notice,
-  };
-
-  return HttpResponse.json(body, { status: 200 });
-});
-
 /**
  * `createServiceFeedback`(`POST /api/v1/service-feedbacks`). 저장하지 않는다. 백엔드처럼 두 문항이
  * 모두 비었거나(공백만 있어도 빈 것) 1000자를 넘으면 400 이다.
@@ -1174,12 +1109,13 @@ export const handlers: HttpHandler[] = [
   ...myRecruitmentPostHandlers,
   ...myCompanyPostHandlers,
   ...userConcernHandlers,
-  getNoticesHandler,
-  getNoticeHandler,
+  ...userNoticeHandlers,
   createServiceFeedbackHandler,
   replaceFcmTokenHandler,
   deleteFcmTokenHandler,
   ...userNotificationHandlers,
+  // 공용 광고 핸들러와 같은 경로를 나눠 쓴다. 상세 배너 키만 받고 나머지는 넘기므로 앞에 둔다.
+  ...detailAdBannerHandlers,
   ...advertisementHandlers,
   ...advertisementCouponHandlers,
   ...companyEmailVerificationHandlers,

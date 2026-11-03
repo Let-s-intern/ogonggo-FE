@@ -79,6 +79,24 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
 };
 
 /**
+ * 채용공고 홈 히어로 헤드라인(광고 시스템 PRD, `home-pc-guest.png` · `home-pc-member.png`). 로그인했고 이름을 알면
+ * `{이름}에게 딱! 맞는`, 아니면 `지금 딱! 필요한` 이고, 둘째 줄의 `NN` 은 게시 중인 전체 공고 수다.
+ *
+ * `HERO_CONTENT.jobs.lines` 는 그대로 둔다. 홈 히어로는 이 함수로 그리고, 그 값은 공고 수가 없는 공유 이미지
+ * (`og/sectionOgImage.tsx`)만 쓴다.
+ */
+export function jobsHeroLines(name: string | undefined, total: number): HeroSegment[][] {
+  return [
+    [
+      { text: name ? `${name}에게 ` : '지금 ' },
+      { text: '딱!', accent: true, tilted: true },
+      { text: name ? ' 맞는' : ' 필요한' },
+    ],
+    [{ text: `채용공고가 ${total.toLocaleString('ko-KR')}개 올라왔어요` }],
+  ];
+}
+
+/**
  * `HeroSkeleton`이 자리를 잡는 높이(px). 목업 배경 PNG의 높이다 — 부트캠프·사이드스터디가
  * 308, 채용공고만 강조 글자("딱!"·"쏙!")가 커서 328이다. 스켈레톤은 목록 두 화면과 홈이
  * 같이 쓰므로 둘 중 많은 쪽인 308을 둔다.

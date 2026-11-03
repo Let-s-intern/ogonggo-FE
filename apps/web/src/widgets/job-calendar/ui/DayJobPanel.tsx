@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
+import { AdLabel } from '@/entities/advertisement/ui/AdLabel';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import {
@@ -52,6 +53,7 @@ export function DayJobCard({
   listPosition,
   highlighted = false,
   otherDate,
+  ad = false,
 }: {
   job: UserJobCalendarItemResponse;
   /** 이 카드가 놓인 목록 안의 순서, 1부터. `job_card_click` 에 실린다. */
@@ -60,6 +62,8 @@ export function DayJobCard({
   highlighted?: boolean;
   /** 메타 줄 끝에 적는 반대쪽 날짜(`시작 9/25`). 목록 머리가 이미 기준 날짜일 때 쓴다. */
   otherDate?: string;
+  /** 달력 하이라이트 광고 공고. 회사명 앞에 `AD` 를 붙인다. */
+  ad?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -95,8 +99,9 @@ export function DayJobCard({
             logoUrl={job.logoUrl}
             className="h-10 w-10 rounded-lg"
           />
-          <p className="flex-1 truncate pt-1 text-sm font-medium text-gray-800">
-            {job.companyName}
+          <p className="flex min-w-0 flex-1 items-center gap-1.5 pt-1 text-sm font-medium text-gray-800">
+            {ad ? <AdLabel /> : null}
+            <span className="truncate">{job.companyName}</span>
           </p>
           {/* 북마크 버튼이 겹치는 자리. 빼면 회사명 칸이 36px 넓어져 잘리는 지점이 달라진다. */}
           <span aria-hidden="true" className="h-6 w-6 shrink-0" />
@@ -147,6 +152,8 @@ export interface DayJobPanelProps {
   dateBasis: JobCalendarDateBasis;
   /** 격자에서 누른 로고의 공고. 그 카드를 강조하고, `더보기` 뒤에 있으면 거기까지 펼친다. */
   highlightId?: number | null;
+  /** 달력 하이라이트 광고의 공고 id. 그 카드에 `AD` 를 붙인다. 맨 위 고정은 `items` 순서로 이미 되어 있다. */
+  adJobIds?: number[];
 }
 
 /** `YYYY-MM-DD…` → `9/25`. */
@@ -161,7 +168,13 @@ function shortDate(value: string): string {
  * `더보기`는 이제 네트워크 요청이 아니라 이미 받은 `items`를 더 드러내는 것뿐이다 — 그래서
  * 지역 상태(`visibleCount`) 하나로 끝난다.
  */
-export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJobPanelProps) {
+export function DayJobPanel({
+  day,
+  items,
+  dateBasis,
+  highlightId = null,
+  adJobIds = [],
+}: DayJobPanelProps) {
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
   const [visibleCount, setVisibleCount] = useState(DAY_JOBS_PAGE_SIZE);
   // 날이 바뀌면 다시 5건부터 보인다. 렌더 중에 맞추는 것은 `MonthCalendar`의 `selectedDay`와
@@ -208,6 +221,7 @@ export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJo
                 job={job}
                 listPosition={index + 1}
                 highlighted={job.id === highlightId}
+                ad={adJobIds.includes(job.id)}
                 // 목록 머리가 이미 기준 날짜(마감일 기준이면 마감일)라 카드에는 반대쪽 날짜를 적는다.
                 otherDate={
                   dateBasis === 'start'
