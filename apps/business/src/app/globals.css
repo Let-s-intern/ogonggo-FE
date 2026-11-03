@@ -1,0 +1,9 @@
+@import '@ogonggo/ui/src/styles/tokens.css';
+
+/*
+ * Tailwind v4 는 node_modules 를 스캔하지 않는다. `@ogonggo/ui` 안에서만 쓰는 클래스가 빠지지 않게
+ * 패키지 소스를 직접 가리킨다. 이유는 `apps/web/src/app/globals.css` 와 같다.
+ */
+@source '../../../../packages/ui/src';
+@source not '../**/*.stories.tsx';
+@source not '../../../../packages/ui/src/**/*.stories.tsx';
