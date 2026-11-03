@@ -225,6 +225,16 @@ export interface AdApplicationSummary {
   receivedAt: string;
 }
 
+/** 마이페이지 광고 목록 탭. `ACTIVE` 는 종료 전 전부, `ENDED` 는 종료. */
+export type AdApplicationTab = 'ALL' | 'ACTIVE' | 'ENDED';
+
+export interface AdApplicationListResponse {
+  items: AdApplicationSummary[];
+  pageInfo: { pageNum: number; pageSize: number; totalElements: number; totalPages: number };
+  /** 탭 옆 건수. 고른 탭과 상관없이 셋 다 준다. */
+  counts: Record<AdApplicationTab, number>;
+}
+
 export interface AdApplication extends Omit<AdApplicationSummary, 'items'> {
   purpose: AdPurpose;
   items: AdApplicationItem[];
