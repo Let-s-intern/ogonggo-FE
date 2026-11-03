@@ -79,3 +79,22 @@ export function validateStep3(
   if (emails.some((each) => !EMAIL.test(each))) return '이메일 형식을 확인해 주세요.';
   return null;
 }
+
+/** 4단계. 역량 키워드·수행 Task 각 1개 이상, 직접 업로드면 PC 배너. */
+export function validateStep4(values: AdApplicationFormValues, hasBanner: boolean): string | null {
+  const { creative } = values;
+  if (creative.skillTags.length === 0 || creative.taskTags.length === 0) {
+    return '필수 역량 키워드와 상세 수행 Task 를 하나 이상 입력해 주세요.';
+  }
+  if (creative.source === 'UPLOADED' && hasBanner && !creative.bannerImageUrlPc) {
+    return '직접 업로드를 골랐다면 PC 배너 이미지를 올려 주세요.';
+  }
+  return null;
+}
+
+/** 5단계. 두 필수 동의. */
+export function validateStep5(values: AdApplicationFormValues): string | null {
+  return values.privacyAgreed && values.policyAgreed
+    ? null
+    : '개인정보 수집·이용과 광고 운영 정책에 동의해 주세요.';
+}

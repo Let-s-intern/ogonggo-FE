@@ -2,6 +2,8 @@ import { httpClient } from '@ogonggo/api';
 import type {
   AdCoupon,
   AdPlacementAvailabilityResponse,
+  CreateAdApplicationRequest,
+  CreateAdApplicationResponse,
 } from '@ogonggo/api/src/mocks/fixtures/advertisement-types';
 
 /**
@@ -48,4 +50,18 @@ export async function confirmCompanyEmailCode(email: string, code: string): Prom
     method: 'POST',
     body: JSON.stringify({ email, code }),
   });
+}
+
+/** 광고 신청 생성. 기업회원으로 로그인한 뒤에 부른다. 잔여 없음·쿠폰 불가는 409, 규칙 위반은 400. */
+export async function createAdApplication(
+  request: CreateAdApplicationRequest,
+): Promise<CreateAdApplicationResponse> {
+  const body = await httpClient<Envelope<CreateAdApplicationResponse>>(
+    '/api/v1/users/me/advertisements',
+    {
+      method: 'POST',
+      body: JSON.stringify(request),
+    },
+  );
+  return body.data;
 }

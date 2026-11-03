@@ -27,7 +27,18 @@ import {
   newUid,
 } from '../model/form';
 import { isFreeMail } from '../model/freeMail';
-import { validateStep1, validateStep2, validateStep3 } from '../model/validate';
+import { HttpError } from '@ogonggo/api';
+import { submitApplication } from '../lib/submit';
+import {
+  validateStep1,
+  validateStep2,
+  validateStep3,
+  validateStep4,
+  validateStep5,
+} from '../model/validate';
+import { ApplicationDone } from './ApplicationDone';
+import { StepConfirm } from './StepConfirm';
+import { StepCreative } from './StepCreative';
 import { StepContact } from './StepContact';
 import { StepPlacements } from './StepPlacements';
 import { StepPost } from './StepPost';
@@ -189,8 +200,12 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
       ),
     3: () =>
       validateStep3(values, { signedIn, password, freeMail: isFreeMail(values.signUp.email) }),
-    4: () => '',
-    5: () => '',
+    4: () =>
+      validateStep4(
+        values,
+        values.items.some((item) => placements.get(item.placementKey)?.format === 'BANNER'),
+      ),
+    5: () => validateStep5(values),
   };
   const done = Object.fromEntries(
     STEPS.map((step) => [step.n, validators[step.n]() === null]),
@@ -276,10 +291,89 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
             ) : null}
           </>
         );
-      default:
-        return null;
+      case 4:
+        return (
+          <>
+            <StepCreative values={values} patch={patch} placements={placements} />
+            {stepErrors[4] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[4]}
+              </p>
+            ) : null}
+          </>
+        );
+      case 5:
+        return (
+          <StepConfirm
+            values={values}
+            patch={patch}
+            placements={placements}
+            amounts={amounts}
+            signedIn={signedIn}
+            couponOnly={couponOnly}
+          />
+        );
     }
   };
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [completed, setCompleted] = useState<{
+    applicationNo: string;
+    couponOnly: boolean;
+    newAccountEmail?: string;
+    newJobTitle?: string;
+  } | null>(null);
+  /** 신청만 실패했을 때 다시 눌러도 새 공고를 또 만들지 않게 들고 있는다. */
+  const createdPostId = useRef<number | undefined>(undefined);
+
+  const submit = async () => {
+    if (submitting) return;
+    const failed = STEPS.find((step) => validators[step.n]() !== null);
+    if (failed) {
+      const error = validators[failed.n]() || `${failed.title} 단계를 마쳐 주세요.`;
+      setStepErrors((previous) => ({ ...previous, [failed.n]: error }));
+      setSubmitError(`${failed.n}단계 ${failed.title}: ${error}`);
+      setOpen(failed.n);
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const result = await submitApplication(values, {
+        signedIn,
+        password,
+        couponId: values.useCoupon && amounts.couponItemUid ? coupon?.id : undefined,
+        placements,
+        createdPostId: createdPostId.current,
+        onPostCreated: (id) => {
+          createdPostId.current = id;
+        },
+      });
+      clearDraft();
+      setCompleted({
+        applicationNo: result.applicationNo,
+        couponOnly,
+        newAccountEmail: result.newAccount ? values.signUp.email.trim() : undefined,
+        newJobTitle: values.postMode === 'NEW' ? values.newJob.title.trim() : undefined,
+      });
+      window.scrollTo({ top: 0 });
+    } catch (error) {
+      setSubmitError(
+        error instanceof HttpError && error.status === 409
+          ? '잔여 구좌가 없거나 쓸 수 없는 쿠폰이 있어요. 2단계를 확인해 주세요.'
+          : error instanceof HttpError && error.status === 400
+            ? '입력한 값을 확인해 주세요. 지면·태그·동의 항목을 다시 봐 주세요.'
+            : '신청하지 못했어요. 잠시 후 다시 시도해 주세요.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (completed) {
+    return <ApplicationDone {...completed} />;
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -328,8 +422,16 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
       ))}
 
       <div className="sticky bottom-0 z-10 -mx-5 flex justify-end gap-2 border-t border-gray-200 bg-white px-5 py-3 md:mx-0 md:rounded-md md:border">
-        <Button type="button" variant="secondary" onClick={saveDraft}>
+        {submitError ? (
+          <p role="alert" className="mr-auto self-center text-sm text-error">
+            {submitError}
+          </p>
+        ) : null}
+        <Button type="button" variant="secondary" onClick={saveDraft} disabled={submitting}>
           임시저장
+        </Button>
+        <Button type="button" onClick={() => void submit()} disabled={submitting}>
+          {submitting ? '신청하는 중...' : '신청하기'}
         </Button>
       </div>
     </div>

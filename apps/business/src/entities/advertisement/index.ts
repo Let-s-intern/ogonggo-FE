@@ -3,6 +3,7 @@ export {
   MY_AD_COUPONS_QUERY_KEY,
   fetchAdAvailability,
   confirmCompanyEmailCode,
+  createAdApplication,
   fetchMyAdCoupons,
   sendCompanyEmailCode,
 } from './api/advertisementApi';
