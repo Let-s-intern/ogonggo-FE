@@ -1,3 +1,5 @@
+import { fetchAdExposures } from '@/entities/advertisement/api/adExposureApi';
+import { AdJobRow } from '@/entities/advertisement/ui/AdJobRow';
 import {
   ApplicationBoard,
   ApplicationBoardCta,
@@ -16,12 +18,17 @@ export type MyScrapsPageProps = ApplicationBoardQuery;
  *
  * 제목이 메뉴 이름(`스크랩한 공고`) 과 다르다. 목업이 그렇게 그렸고 PRD 결정 기록이 그대로
  * 두기로 했다.
+ *
+ * 칸반 위에 지원일정 관리 대시보드 광고 고정(`my_dashboard_scrap`, 1슬롯)을 둔다(광고 시스템 PRD). 광고가 없으면 접힌다.
  */
-export function MyScrapsPage(query: MyScrapsPageProps) {
+export async function MyScrapsPage(query: MyScrapsPageProps) {
+  const [dashboardAd] = await fetchAdExposures('MY_DASHBOARD_SCRAP');
+
   return (
     <section className="flex flex-col gap-6">
       {/* 제목은 없다(v11). 데스크톱은 `MyPageLayout` 의 상단 탭이, 모바일은 `< 지원 · 신청 관리`
           머리가 제목을 대신한다. */}
+      <AdJobRow ad={dashboardAd} />
       <ApplicationBoard query={query} />
 
       <ApplicationBoardCta />
