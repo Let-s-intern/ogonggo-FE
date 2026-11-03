@@ -159,7 +159,15 @@ export function CompanyPostCard({
           >
             <span aria-hidden="true" className="icon-[lucide--ellipsis-vertical] block h-4 w-4" />
           </summary>
-          <div className="absolute right-0 z-10 mt-1 w-28 rounded-md border border-gray-200 bg-white py-1 shadow-md">
+          <div
+            className={cn(
+              'absolute right-0 z-10 mt-1 rounded-md border border-gray-200 bg-white py-1 shadow-md',
+              tab === 'jobs' ? 'w-48' : 'w-28',
+            )}
+          >
+            {tab === 'jobs' ? (
+              <AdvertiseAction row={row} live={stage === 'PUBLISHED' && !closed} />
+            ) : null}
             <MenuAction label="삭제하기" onClick={onDelete} disabled={pending} />
             {closed ? null : <MenuAction label="마감하기" onClick={onClose} disabled={pending} />}
           </div>
@@ -167,6 +175,46 @@ export function CompanyPostCard({
       </div>
     </li>
   );
+}
+
+/**
+ * 채용공고 메뉴의 `광고로 더 알리기`(시안 B-07). 게시 중인 공고만 광고할 수 있어, 아니면 누를 수 없게 두고 그
+ * 이유를 항목 아래와 `title` 툴팁으로 알린다. 누르면 광고 신청으로 가고 그 공고가 1단계에 골라져 있다
+ * (`?jobId=`, 신청서는 Push 6).
+ */
+function AdvertiseAction({ row, live }: { row: Row; live: boolean }) {
+  const className = 'block w-full px-3 py-1.5 text-left text-sm whitespace-nowrap';
+  if (live) {
+    return (
+      <Link
+        href={advertiseHref(row.id)}
+        className={cn(className, 'text-blue-500 hover:bg-gray-50')}
+      >
+        광고로 더 알리기
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      disabled
+      title={ADVERTISE_DISABLED_HINT}
+      aria-describedby={`advertise-hint-${row.id}`}
+      className={cn(className, 'cursor-not-allowed text-gray-300')}
+    >
+      광고로 더 알리기
+      <span id={`advertise-hint-${row.id}`} className="block pt-0.5 text-xs text-gray-400">
+        {ADVERTISE_DISABLED_HINT}
+      </span>
+    </button>
+  );
+}
+
+const ADVERTISE_DISABLED_HINT = '게시된 공고만 광고할 수 있어요';
+
+/** 광고 신청서로 가는 주소. 공고를 1단계에 미리 고른다. */
+export function advertiseHref(jobId: number): string {
+  return `/apply?jobId=${jobId}`;
 }
 
 /** 점 세 개 메뉴 한 줄. */
