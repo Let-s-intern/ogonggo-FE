@@ -13,6 +13,15 @@
 
 export type NoticeVisibility = 'VISIBLE' | 'HIDDEN';
 
+/**
+ * 공지 카테고리(PRD `공지 작성 시 카테고리`). 백엔드 `Announcement` 에 아직 없는 목 전용 필드다.
+ * `JOB_NOTE`(새로운 공고 노트) 는 이번 범위에서 글을 쓰지 않지만 값은 둔다.
+ */
+export type NoticeCategory = 'OGONGGO_UPDATE' | 'JOB_NOTE';
+
+/** 오공고 업데이트 글 안의 태그. `새 기능` · `변경사항`. 목 전용. */
+export type NoticeTag = 'NEW_FEATURE' | 'CHANGE';
+
 export interface AdminNotice {
   id: number;
   title: string;
@@ -20,6 +29,14 @@ export interface AdminNotice {
   content: string;
   pinned: boolean;
   visibility: NoticeVisibility;
+  /** 아래 넷은 목 전용. 백엔드 요청서(`백엔드-요청-광고-시스템-admin.md`) 에 적었다. */
+  category: NoticeCategory;
+  /** `OGONGGO_UPDATE` 에만 붙는다. 다른 카테고리는 빈 배열이다. */
+  tags: NoticeTag[];
+  /** 목록 썸네일이자 본문 대표 이미지. 없으면 `null`. */
+  thumbnailUrl: string | null;
+  /** 목록에 보이는 한두 줄 요약. 없으면 `null`. */
+  summary: string | null;
   /** `2026-09-20T10:20:00`. 시간대가 붙지 않는다 — `localDateTime` 머리 주석. */
   registeredAt: string;
   updatedAt: string;
@@ -95,6 +112,10 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     ),
     pinned: true,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
+    thumbnailUrl: null,
+    summary: '보관 기간 명시와 위탁 업체 목록 갱신을 안내드려요.',
     registeredAt: daysFromNow(-3),
     updatedAt: daysFromNow(-2),
   },
@@ -104,6 +125,10 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     content: lexical('9월 27일부터 10월 1일까지 문의 답변이 지연될 수 있습니다.'),
     pinned: false,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
+    tags: [],
+    thumbnailUrl: null,
+    summary: null,
     registeredAt: daysFromNow(-6),
     updatedAt: daysFromNow(-6),
   },
@@ -115,6 +140,10 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     ),
     pinned: false,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
+    tags: ['NEW_FEATURE'],
+    thumbnailUrl: 'https://www.ogonggo.co.kr/hero/jobs.png',
+    summary: '마감일 기준으로 채용공고를 달력에서 볼 수 있어요.',
     registeredAt: daysFromNow(-14),
     updatedAt: daysFromNow(-14),
   },
@@ -124,6 +153,10 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     content: lexical('8월 30일 새벽 2시부터 4시까지 진행한 점검이 완료됐습니다.'),
     pinned: false,
     visibility: 'HIDDEN',
+    category: 'OGONGGO_UPDATE',
+    tags: ['CHANGE'],
+    thumbnailUrl: null,
+    summary: null,
     registeredAt: daysFromNow(-41),
     updatedAt: daysFromNow(-38),
   },
