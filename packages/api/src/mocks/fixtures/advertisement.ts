@@ -671,4 +671,15 @@ export const AD_COUPON_FIXTURES: AdCoupon[] = [
     expiresAt: at(plusDays(mondayAfter(8), 6), '23:59'),
     usedAt: at(reviewingReceivedAt, '14:02'),
   },
+  /**
+   * 아직 쓰지 않은 쿠폰. 비즈니스 앱 신청서의 쿠폰 적용·0원 신청(계약 단계 생략)을 목으로 확인하려고 더했다
+   * (`.claude/tasks/memos/결정-광고시스템-business-신청서-2026-11-03.md`).
+   */
+  {
+    id: 2,
+    name: '무료 홍보 쿠폰',
+    placementKeys: ['LIST_TOP_RECRUIT', 'SIMILAR_TOP_RECRUIT'],
+    weeks: 1,
+    expiresAt: at(plusDays(mondayAfter(8), 6), '23:59'),
+  },
 ];

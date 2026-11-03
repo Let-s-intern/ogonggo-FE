@@ -22,4 +22,5 @@ export type {
   AdPlacementKey,
   AdPlacementPage,
   AdPlacementPeriodAvailability,
+  AdTargetType,
 } from '@ogonggo/api/src/mocks/fixtures/advertisement-types';

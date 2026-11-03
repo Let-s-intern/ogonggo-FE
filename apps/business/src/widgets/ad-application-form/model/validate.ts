@@ -32,3 +32,15 @@ export function validateStep1(values: AdApplicationFormValues): string | null {
   }
   return null;
 }
+
+/** 2단계. 지면이 하나 이상이고, 겹침·잔여 없는 주가 없는지. */
+export function validateStep2(
+  values: AdApplicationFormValues,
+  hasConflict: boolean,
+  hasSoldOut: boolean,
+): string | null {
+  if (values.items.length === 0) return '광고할 지면을 하나 이상 추가해 주세요.';
+  if (hasConflict) return '같은 주에 겹치는 지면이 있어요. 표시된 항목의 주를 바꿔 주세요.';
+  if (hasSoldOut) return '잔여 구좌가 없는 주가 있어요. 다른 주로 바꾸거나 지면을 빼 주세요.';
+  return null;
+}

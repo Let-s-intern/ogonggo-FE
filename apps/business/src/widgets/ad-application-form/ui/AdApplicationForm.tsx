@@ -1,18 +1,32 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, Callout, useToast } from '@ogonggo/ui';
+import {
+  AD_AVAILABILITY_QUERY_KEY,
+  MY_AD_COUPONS_QUERY_KEY,
+  type AdJobField,
+  type AdPlacement,
+  type AdPlacementKey,
+  fetchAdAvailability,
+  fetchMyAdCoupons,
+  formatWon,
+} from '@/entities/advertisement';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { clearDraft, formatSavedAt, readDraft, writeDraft } from '../lib/draft';
+import { computeAmounts, conflictsOf, soldOutStarts, targetOf } from '../model/items';
 import {
   type AdApplicationFormValues,
   EMPTY_FORM,
   PURPOSES,
   STEPS,
   type StepNumber,
+  newUid,
 } from '../model/form';
-import { validateStep1 } from '../model/validate';
+import { validateStep1, validateStep2 } from '../model/validate';
+import { StepPlacements } from './StepPlacements';
 import { StepPost } from './StepPost';
 import { StepSection } from './StepSection';
 
@@ -49,6 +63,73 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
     }
   }, []);
 
+  const availabilityQuery = useQuery({
+    queryKey: AD_AVAILABILITY_QUERY_KEY,
+    queryFn: fetchAdAvailability,
+  });
+  const couponsQuery = useQuery({
+    queryKey: MY_AD_COUPONS_QUERY_KEY,
+    queryFn: fetchMyAdCoupons,
+    enabled: signedIn,
+  });
+  const [addOpen, setAddOpen] = useState(false);
+
+  const placements = useMemo(
+    () =>
+      new Map<AdPlacementKey, AdPlacement>(
+        (availabilityQuery.data ?? []).map((item) => [item.placement.key, item.placement]),
+      ),
+    [availabilityQuery.data],
+  );
+  const target = targetOf(values.postMode, values.post?.target);
+  const availability = (availabilityQuery.data ?? []).filter(
+    (item) => item.placement.target === target,
+  );
+  const coupon = signedIn ? couponsQuery.data?.find((each) => !each.usedAt) : undefined;
+  const conflicts = conflictsOf(values.items, placements);
+  const amounts = computeAmounts(values.items, placements, values.useCoupon ? coupon : undefined);
+  /** 쿠폰만 쓰는 0원 신청이면 계약·세금계산서를 받지 않는다(PRD `지면 상품`). */
+  const couponOnly = values.items.length > 0 && amounts.total === 0;
+
+  // 신청 가능 일정의 `이 일정으로 신청하기` 로 왔으면 그 항목을 한 번 넣고 2단계를 연다. 잔여를 받은 뒤에 한다.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !availabilityQuery.data || !prefill.placementKey || !prefill.startDate)
+      return;
+    prefilled.current = true;
+    const found = availabilityQuery.data.find(
+      (item) => item.placement.key === prefill.placementKey,
+    );
+    if (!found) return;
+    const jobField = found.placement.perJobField
+      ? (prefill.jobField as AdJobField | undefined)
+      : undefined;
+    if (found.placement.perJobField && !jobField) return;
+    setValues((previous) =>
+      previous.items.some(
+        (item) =>
+          item.placementKey === found.placement.key &&
+          item.startDate === prefill.startDate &&
+          item.jobField === jobField,
+      )
+        ? previous
+        : {
+            ...previous,
+            items: [
+              ...previous.items,
+              {
+                uid: newUid(),
+                placementKey: found.placement.key,
+                jobField,
+                startDate: prefill.startDate!,
+                weeks: 1,
+              },
+            ],
+          },
+    );
+    setOpen(2);
+  }, [availabilityQuery.data, prefill]);
+
   const patch = (next: Partial<AdApplicationFormValues>) =>
     setValues((previous) => ({ ...previous, ...next }));
 
@@ -69,7 +150,18 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
   const validators: Record<StepNumber, () => string | null> = {
     1: () => validateStep1(values),
     // 아직 검사하지 않는 단계는 빈 문구다. 막지는 않고 완료 표시도 붙지 않는다.
-    2: () => '',
+    2: () =>
+      validateStep2(
+        values,
+        conflicts.size > 0,
+        values.items.some(
+          (item) =>
+            soldOutStarts(
+              item,
+              availabilityQuery.data?.find((each) => each.placement.key === item.placementKey),
+            ).length > 0,
+        ),
+      ),
     3: () => '',
     4: () => '',
     5: () => '',
@@ -90,6 +182,10 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
     ]
       .filter(Boolean)
       .join(' · '),
+    2:
+      values.items.length > 0
+        ? `지면 ${values.items.length}개 · 합계 ${formatWon(amounts.total)}`
+        : undefined,
   };
 
   const body = (n: StepNumber) => {
@@ -110,6 +206,38 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
             ) : null}
           </>
         );
+      case 2:
+        return (
+          <>
+            {availabilityQuery.isError ? (
+              <p role="alert" className="text-sm text-error">
+                잔여 구좌를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+              </p>
+            ) : null}
+            <StepPlacements
+              values={values}
+              patch={patch}
+              availability={availability}
+              placements={placements}
+              conflicts={conflicts}
+              amounts={amounts}
+              coupon={coupon}
+              addOpen={addOpen}
+              setAddOpen={setAddOpen}
+            />
+            {stepErrors[2] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[2]}
+              </p>
+            ) : null}
+          </>
+        );
+      case 3:
+        return couponOnly ? (
+          <p className="rounded-md bg-blue-00 px-4 py-3 text-sm text-blue-700">
+            쿠폰만 사용하는 0원 신청이라 계약·세금계산서 단계는 건너뛰어요.
+          </p>
+        ) : null;
       default:
         return null;
     }
@@ -149,7 +277,7 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
         <StepSection
           key={step.n}
           n={step.n}
-          title={step.title}
+          title={step.n === 3 && couponOnly ? '담당자' : step.title}
           description={step.description}
           open={open === step.n}
           done={done[step.n]}
