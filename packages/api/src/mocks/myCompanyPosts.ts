@@ -7,7 +7,7 @@ import type { SuccessResponseCompanyBootcampDetailResponse } from '../generated/
 import type { SuccessResponseCompanyJobDetailResponse } from '../generated/user/models/successResponseCompanyJobDetailResponse';
 
 /**
- * 기업 회원의 내 공고(채용공고·부트캠프) 목 핸들러. 목록·상세·수정·게시·마감·삭제.
+ * 기업 회원의 내 공고(채용공고·부트캠프) 목 핸들러. 목록·상세·생성·수정·게시·마감·삭제.
  *
  * 생성 핸들러는 검수·게시 상태가 무작위라 마이페이지 목록의 진행 단계를 차례로 볼 수 없다. 단계 판정
  * (`apps/web/src/widgets/company-posts/model/stage.ts`)의 다섯 줄이 각 목록에서 한 번씩은 나오게 손으로
@@ -237,11 +237,19 @@ function postHandlers<T extends Post>(
       const post = find(params);
       return post ? HttpResponse.json(detail(post)) : notFound();
     }),
-    http.put(`*/api/v1/users/me/${path}/:${param}`, ({ params }) => {
+    // 새 공고는 본문 그대로 검수 대기 초안이 된다(백엔드: 등록은 언제나 초안). 응답은 새 id 다.
+    http.post(`*/api/v1/users/me/${path}`, async ({ request }) => {
+      const id = Math.max(0, ...store.keys()) + 1;
+      const body = (await request.json()) as Partial<T>;
+      store.set(id, { ...body, id, publicationStatus: 'DRAFT', reviewStatus: 'PENDING' } as T);
+      return HttpResponse.json({ status: 201, message: '요청이 성공했습니다.', data: { id } });
+    }),
+    http.put(`*/api/v1/users/me/${path}/:${param}`, async ({ params, request }) => {
       const post = find(params);
       if (!post) {
         return notFound();
       }
+      Object.assign(post, (await request.json()) as Partial<T>);
       requestReview(post);
       return ok();
     }),
