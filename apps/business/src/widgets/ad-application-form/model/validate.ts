@@ -44,3 +44,38 @@ export function validateStep2(
   if (hasSoldOut) return '잔여 구좌가 없는 주가 있어요. 다른 주로 바꾸거나 지면을 빼 주세요.';
   return null;
 }
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** 3단계. 비회원 가입 칸(인증, 비밀번호, 개인 메일이면 사업자등록증)과 담당자 필수 칸. */
+export function validateStep3(
+  values: AdApplicationFormValues,
+  { signedIn, password, freeMail }: { signedIn: boolean; password: string; freeMail: boolean },
+): string | null {
+  if (!signedIn) {
+    const email = values.signUp.email.trim();
+    if (!email || values.signUp.verifiedEmail !== email) return '회사 이메일 인증을 마쳐 주세요.';
+    if (password.length < 8) return '비밀번호는 8자 이상으로 입력해 주세요.';
+    if (freeMail && !values.signUp.businessLicenseUrl)
+      return '개인 메일로 가입하려면 사업자등록증을 올려 주세요.';
+  }
+  const { contact } = values;
+  if (
+    !contact.name.trim() ||
+    !contact.email.trim() ||
+    !contact.phone.trim() ||
+    !contact.companyName.trim()
+  ) {
+    return '담당자 이름, 이메일, 전화, 회사명을 입력해 주세요.';
+  }
+  const emails = [
+    contact.email,
+    contact.ccEmail,
+    values.billing.contractEmail,
+    values.billing.taxInvoiceEmail,
+  ]
+    .map((each) => each.trim())
+    .filter(Boolean);
+  if (emails.some((each) => !EMAIL.test(each))) return '이메일 형식을 확인해 주세요.';
+  return null;
+}

@@ -1,6 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { advertisementCouponHandlers } from './advertisementCoupons';
 import { advertisementHandlers } from './advertisements';
+import { companyEmailVerificationHandlers } from './companyEmailVerifications';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
 import {
@@ -1181,4 +1182,5 @@ export const handlers: HttpHandler[] = [
   ...userNotificationHandlers,
   ...advertisementHandlers,
   ...advertisementCouponHandlers,
+  ...companyEmailVerificationHandlers,
 ];

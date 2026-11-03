@@ -15,6 +15,7 @@ import {
   formatWon,
 } from '@/entities/advertisement';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
+import { useMyAccount } from '@/shared/api/useMyAccount';
 import { clearDraft, formatSavedAt, readDraft, writeDraft } from '../lib/draft';
 import { computeAmounts, conflictsOf, soldOutStarts, targetOf } from '../model/items';
 import {
@@ -25,7 +26,9 @@ import {
   type StepNumber,
   newUid,
 } from '../model/form';
-import { validateStep1, validateStep2 } from '../model/validate';
+import { isFreeMail } from '../model/freeMail';
+import { validateStep1, validateStep2, validateStep3 } from '../model/validate';
+import { StepContact } from './StepContact';
 import { StepPlacements } from './StepPlacements';
 import { StepPost } from './StepPost';
 import { StepSection } from './StepSection';
@@ -73,6 +76,28 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
     enabled: signedIn,
   });
   const [addOpen, setAddOpen] = useState(false);
+  /** 가입 비밀번호. 임시저장하지 않는다. */
+  const [password, setPassword] = useState('');
+  const account = useMyAccount();
+
+  // 로그인했으면 담당자 칸을 계정 값으로 한 번 채운다. 사용자가 이미 적은 칸은 덮지 않는다.
+  const contactFilled = useRef(false);
+  useEffect(() => {
+    if (contactFilled.current || account.kind !== 'ready') return;
+    contactFilled.current = true;
+    const profile = account.account.companyProfile;
+    setValues((previous) => ({
+      ...previous,
+      contact: {
+        ...previous.contact,
+        name: previous.contact.name || profile?.managerName || '',
+        title: previous.contact.title || profile?.managerTitle || '',
+        email: previous.contact.email || profile?.notificationEmail || account.account.email || '',
+        phone: previous.contact.phone || profile?.managerPhone || '',
+        companyName: previous.contact.companyName || profile?.organizationName || '',
+      },
+    }));
+  }, [account]);
 
   const placements = useMemo(
     () =>
@@ -162,7 +187,8 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
             ).length > 0,
         ),
       ),
-    3: () => '',
+    3: () =>
+      validateStep3(values, { signedIn, password, freeMail: isFreeMail(values.signUp.email) }),
     4: () => '',
     5: () => '',
   };
@@ -233,11 +259,23 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
           </>
         );
       case 3:
-        return couponOnly ? (
-          <p className="rounded-md bg-blue-00 px-4 py-3 text-sm text-blue-700">
-            쿠폰만 사용하는 0원 신청이라 계약·세금계산서 단계는 건너뛰어요.
-          </p>
-        ) : null;
+        return (
+          <>
+            <StepContact
+              values={values}
+              patch={patch}
+              signedIn={signedIn}
+              couponOnly={couponOnly}
+              password={password}
+              setPassword={setPassword}
+            />
+            {stepErrors[3] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[3]}
+              </p>
+            ) : null}
+          </>
+        );
       default:
         return null;
     }

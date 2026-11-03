@@ -33,3 +33,19 @@ export async function fetchMyAdCoupons(): Promise<AdCoupon[]> {
 }
 
 export const MY_AD_COUPONS_QUERY_KEY = ['advertisements', 'coupons'] as const;
+
+/** 회사 이메일로 인증번호를 보낸다. 목만 있다(비즈니스 요청서 3). */
+export async function sendCompanyEmailCode(email: string): Promise<void> {
+  await httpClient('/api/v1/auth/company/email-verifications', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+/** 인증번호를 확인한다. 틀리면 `HttpError`(400). */
+export async function confirmCompanyEmailCode(email: string, code: string): Promise<void> {
+  await httpClient('/api/v1/auth/company/email-verifications/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}

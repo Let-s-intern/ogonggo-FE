@@ -2,7 +2,9 @@ export {
   AD_AVAILABILITY_QUERY_KEY,
   MY_AD_COUPONS_QUERY_KEY,
   fetchAdAvailability,
+  confirmCompanyEmailCode,
   fetchMyAdCoupons,
+  sendCompanyEmailCode,
 } from './api/advertisementApi';
 export {
   AD_PAGE_LABELS,
