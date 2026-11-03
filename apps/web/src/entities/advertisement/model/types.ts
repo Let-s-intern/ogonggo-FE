@@ -17,7 +17,13 @@ export type AdPlacementKey =
   | 'MAIN_BOTTOM_BANNER_EDU'
   | 'SIMILAR_TOP_EDU'
   | 'CALENDAR_TOP'
-  | 'MY_DASHBOARD_SCRAP';
+  | 'MY_DASHBOARD_SCRAP'
+  /**
+   * 공고 상세 PC 사이드 · MO 본문 배너. 상품 시안에 없는 자리라 공용 목에 없고 web 이 가칭으로 둔 키다
+   * (`packages/api/src/mocks/detail-ad-banners.ts`, PRD `결정 필요` 10).
+   */
+  | 'DETAIL_SIDE_BANNER_RECRUIT'
+  | 'DETAIL_MO_BANNER_RECRUIT';
 
 export type AdTargetType = 'JOB' | 'BOOTCAMP';
 

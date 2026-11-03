@@ -1,14 +1,18 @@
 import { listPublicJobs, ListPublicJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
+import { AdLabel } from '@/entities/advertisement/ui/AdLabel';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import type { JobRole, JobSummary } from '@/entities/job/model/types';
+import { fetchAdJobs } from '@/widgets/job-list';
 
 export interface SimilarJobsProps {
   excludeJobId: number;
   /** 지금 공고의 직무. 있으면 같은 직무의 공고를 먼저 찾고, 없으면 최신 공고를 보인다. */
   jobRole?: JobRole;
+  /** 지금 공고의 직군. 비슷한 공고 첫 자리 광고(`similar_top_recruit`, 직무당 1슬롯)를 고르는 데 쓴다. */
+  jobField?: string;
 }
 
 const POOL_SIZE = 12;
@@ -38,13 +42,21 @@ async function fetchLatestJobs(size: number, jobRole?: JobRole): Promise<JobSumm
  * 받아 지금 공고를 뺀다. `jobRole`이 없거나 같은 직무의 다른 공고가 하나도 없으면 직무와 상관없이
  * 최신 공고 3개로 돌아간다.
  */
-export async function SimilarJobs({ excludeJobId, jobRole }: SimilarJobsProps) {
+export async function SimilarJobs({ excludeJobId, jobRole, jobField }: SimilarJobsProps) {
   const pickOthers = (jobs: JobSummary[]) =>
     jobs.filter((job) => job.id !== excludeJobId).slice(0, SIMILAR_COUNT);
 
+  const adPromise = fetchAdJobs('SIMILAR_TOP_RECRUIT', jobField);
   let items = jobRole ? pickOthers(await fetchLatestJobs(SIMILAR_COUNT + 1, jobRole)) : [];
   if (items.length === 0) {
     items = pickOthers(await fetchLatestJobs(POOL_SIZE));
+  }
+  // 광고 공고를 첫 자리에 고정한다(PRD 결정). 지금 보고 있는 공고면 넣지 않고, 목록에 같은 공고가 있으면 뺀다.
+  // `선착순` 배지는 넣지 않는다.
+  const ad = (await adPromise).find(({ job }) => job.id !== excludeJobId);
+  const adJobId = ad?.job.id;
+  if (ad) {
+    items = [ad.job, ...items.filter((job) => job.id !== ad.job.id)].slice(0, SIMILAR_COUNT);
   }
 
   if (items.length === 0) {
@@ -65,7 +77,10 @@ export async function SimilarJobs({ excludeJobId, jobRole }: SimilarJobsProps) {
               tracking={{ listSource: 'similar', listPosition: index + 1, pageNumber: 1 }}
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs text-gray-500">{job.companyName}</p>
+                <p className="flex items-center gap-1.5 text-xs text-gray-500">
+                  {job.id === adJobId ? <AdLabel /> : null}
+                  <span className="truncate">{job.companyName}</span>
+                </p>
                 <p className="mt-1 line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-800 transition-colors group-hover:text-blue-500">
                   {job.title}
                 </p>
