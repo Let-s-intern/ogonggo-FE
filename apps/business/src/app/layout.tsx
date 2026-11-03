@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
+import { MockGate } from './MockGate';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko" className={pretendard.variable}>
       <body>
         <AppProviders>
-          {children}
+          <MockGate>{children}</MockGate>
         </AppProviders>
       </body>
     </html>
