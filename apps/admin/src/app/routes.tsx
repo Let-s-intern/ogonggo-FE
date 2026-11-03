@@ -1,5 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router';
 import { AdminLayout } from '@/widgets/admin-layout';
+import { AdApplicationDetailPage } from '@/pages/ad-application-detail';
+import { AdApplicationListPage } from '@/pages/ad-application-list';
 import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
 import { AdPlacementSettingsPage } from '@/pages/ad-placement-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
@@ -66,6 +68,8 @@ export const router = createBrowserRouter([
         // 경로가 달라도 같은 컴포넌트라 key 가 없으면 메뉴를 옮겨도 상태가 남는다.
         element: <AdInquiryListPage key="rejected" view="rejected" />,
       },
+      { path: 'business/ad-applications', element: <AdApplicationListPage /> },
+      { path: 'business/ad-applications/:advertisementId', element: <AdApplicationDetailPage /> },
       { path: 'business/ad-placements', element: <AdPlacementSettingsPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },

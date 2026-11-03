@@ -24,7 +24,8 @@ import { matches, notFound, ok, paginate, readPaging } from './paging';
 
 const placements = structuredClone(AD_PLACEMENT_FIXTURES);
 
-const applications = new Map<number, AdApplication>(
+/** 신청 상세·소재 핸들러(`./advertisement-details.ts`)가 같은 저장소를 쓴다. */
+export const applications = new Map<number, AdApplication>(
   structuredClone(ADMIN_AD_APPLICATION_FIXTURES).map((application) => [
     application.id,
     application,
