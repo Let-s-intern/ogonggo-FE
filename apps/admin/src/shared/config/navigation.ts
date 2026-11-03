@@ -60,6 +60,9 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/business/ad-inquiries', label: '광고 문의' },
       // `/business/ad-inquiries/rejected` 로 두면 메뉴 링크(`end` 없음)가 `광고 문의` 까지 함께 켠다.
       { path: '/business/rejected-ad-inquiries', label: '반려한 문의' },
+      // 광고 신청·구좌 설정은 기업회원이 지면을 사는 일이라 광고 문의와 함께 둔다(memos `결정-광고시스템-admin-메뉴위치`).
+      { path: '/business/ad-applications', label: '광고 신청' },
+      { path: '/business/ad-placements', label: '구좌 설정' },
     ],
   },
   {
