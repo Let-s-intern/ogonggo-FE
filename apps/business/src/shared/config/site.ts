@@ -5,3 +5,9 @@
  * `http://localhost:4000` 을 넘긴다. `NEXT_PUBLIC_` 이라 빌드 시점에 박힌다.
  */
 export const WEB_ORIGIN = process.env.NEXT_PUBLIC_WEB_ORIGIN || 'https://www.ogonggo.co.kr';
+
+/** 광고 상담 신청. 사용자 웹의 기존 광고 문의 접수(`/biz`)로 보낸다(`memos/결정-광고시스템-business-랜딩-2026-11-03.md`). */
+export const CONSULT_HREF = `${WEB_ORIGIN}/biz`;
+
+/** 소개서·견적 문의를 받는 메일. 푸터의 연락처와 같다. */
+export const SALES_EMAIL = 'official@letscareer.co.kr';
