@@ -1,5 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import type { MyAccountResponse } from '@ogonggo/api';
+import type { CompanySignUpRequest, MyAccountResponse } from '@ogonggo/api';
 
 /**
  * 비즈니스 앱 목데이터 모드의 계정·로그인 목. 브라우저 워커에만 건다(`./startMockWorker.ts`).
@@ -98,6 +98,27 @@ export const businessAuthHandlers: HttpHandler[] = [
       );
     }
     return ok(tokens(email === MOCK_USER_EMAIL ? 'USER' : 'COMPANY'));
+  }),
+  // 가입한 값으로 목 기업 계정을 바꾼다. 이미 있는 계정(`MOCK_USER_EMAIL`)이면 백엔드처럼 409 다.
+  http.post('*/api/v1/auth/company/signup', async ({ request }) => {
+    const { email, password: _password, organizationName, managerName, ...rest } =
+      (await request.json()) as CompanySignUpRequest;
+    if (email === MOCK_USER_EMAIL) {
+      return HttpResponse.json(
+        { status: 409, code: 'EMAIL_ALREADY_EXISTS', message: '이미 가입된 이메일입니다.' },
+        { status: 409 },
+      );
+    }
+    saveMockCompanyAccount({
+      ...MOCK_COMPANY_ACCOUNT,
+      email,
+      joinedAt: new Date().toISOString(),
+      companyProfile: { organizationName, managerName, notificationEmail: email, ...rest },
+    });
+    return HttpResponse.json(
+      { status: 201, message: '요청이 성공했습니다.', data: tokens('COMPANY') },
+      { status: 201 },
+    );
   }),
   http.post('*/api/v1/auth/signout', () => ok(null)),
   http.post('*/api/v1/auth/token', async ({ request }) => {
