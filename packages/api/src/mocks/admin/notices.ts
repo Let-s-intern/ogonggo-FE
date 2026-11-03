@@ -1,5 +1,11 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import { localDateTime, NOTICE_FIXTURES, type AdminNotice } from '../fixtures/admin-notice';
+import {
+  localDateTime,
+  NOTICE_FIXTURES,
+  type AdminNotice,
+  type NoticeCategory,
+  type NoticeTag,
+} from '../fixtures/admin-notice';
 import { matches, ok, paginate, readPaging } from './paging';
 
 /**
@@ -56,6 +62,19 @@ const isEditorJson = (content: string): boolean => {
   }
 };
 
+const CATEGORIES: readonly NoticeCategory[] = ['OGONGGO_UPDATE', 'JOB_NOTE'];
+const TAGS: readonly NoticeTag[] = ['NEW_FEATURE', 'CHANGE'];
+
+/**
+ * 카테고리·태그·썸네일·요약은 목 전용 필드다(요청서 `백엔드-요청-광고-시스템-admin.md`).
+ * 태그는 `OGONGGO_UPDATE` 에만 붙고, 빈 썸네일·요약은 `null` 로 저장한다.
+ */
+const normalizeTags = (category: NoticeCategory, tags: NoticeTag[] | undefined): NoticeTag[] =>
+  category === 'OGONGGO_UPDATE' ? [...new Set(tags ?? [])] : [];
+
+const blankToNull = (value: string | null | undefined): string | null =>
+  value?.trim() ? value.trim() : null;
+
 /** 고정이 먼저, 그 안에서 최신순. 서버가 정렬해서 주고 화면은 받은 순서를 그대로 그린다. */
 const listNoticesHandler = http.get('*/api/v1/admin/announcements', ({ request }) => {
   const url = new URL(request.url);
@@ -97,6 +116,21 @@ interface CreateNoticeBody {
   content: string;
   pinned: boolean;
   visibility: AdminNotice['visibility'];
+  category: NoticeCategory;
+  tags?: NoticeTag[];
+  thumbnailUrl?: string | null;
+  summary?: string | null;
+}
+
+/** 카테고리·태그 값이 정해진 것 중 하나인지 본다. 틀리면 400 문구를, 맞으면 `null` 을 돌려준다. */
+function invalidCategoryOrTags(body: Partial<CreateNoticeBody>): string | null {
+  if (body.category !== undefined && !CATEGORIES.includes(body.category)) {
+    return '공지 카테고리가 올바르지 않습니다.';
+  }
+  if (body.tags !== undefined && !body.tags.every((tag) => TAGS.includes(tag))) {
+    return '공지 태그가 올바르지 않습니다.';
+  }
+  return null;
 }
 
 const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ request }) => {
@@ -107,6 +141,13 @@ const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ r
   if (!isEditorJson(body.content ?? '')) {
     return badRequest('에디터 내용 JSON 형식이 올바르지 않습니다.');
   }
+  if (body.category === undefined) {
+    return badRequest('공지 카테고리를 선택해 주세요.');
+  }
+  const invalid = invalidCategoryOrTags(body);
+  if (invalid) {
+    return badRequest(invalid);
+  }
 
   const now = localDateTime(new Date());
   const notice: AdminNotice = {
@@ -115,6 +156,10 @@ const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ r
     content: body.content,
     pinned: body.pinned,
     visibility: body.visibility,
+    category: body.category,
+    tags: normalizeTags(body.category, body.tags),
+    thumbnailUrl: blankToNull(body.thumbnailUrl),
+    summary: blankToNull(body.summary),
     registeredAt: now,
     updatedAt: now,
   };
@@ -144,6 +189,10 @@ const updateNoticeHandler = http.patch(
     if (body.content !== undefined && !isEditorJson(body.content)) {
       return badRequest('에디터 내용 JSON 형식이 올바르지 않습니다.');
     }
+    const invalid = invalidCategoryOrTags(body);
+    if (invalid) {
+      return badRequest(invalid);
+    }
 
     if (body.title !== undefined) {
       notice.title = body.title.trim();
@@ -156,6 +205,17 @@ const updateNoticeHandler = http.patch(
     }
     if (body.visibility !== undefined) {
       notice.visibility = body.visibility;
+    }
+    if (body.category !== undefined) {
+      notice.category = body.category;
+    }
+    // 카테고리만 바꿔도 태그가 그 카테고리 규칙을 따르도록 늘 다시 맞춘다.
+    notice.tags = normalizeTags(notice.category, body.tags ?? notice.tags);
+    if (body.thumbnailUrl !== undefined) {
+      notice.thumbnailUrl = blankToNull(body.thumbnailUrl);
+    }
+    if (body.summary !== undefined) {
+      notice.summary = blankToNull(body.summary);
     }
     notice.updatedAt = localDateTime(new Date());
 

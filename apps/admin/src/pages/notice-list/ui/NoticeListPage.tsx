@@ -10,17 +10,23 @@ import {
   Field,
   Input,
   Pagination,
+  Select,
+  Textarea,
   Toggle,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import {
+  NOTICE_CATEGORY_LABELS,
+  NOTICE_TAG_LABELS,
   useDeleteNotice,
   useNoticeDetail,
   useNoticeList,
   usePatchNoticeVisibility,
   useSaveNotice,
+  type NoticeCategory,
   type NoticeDetail,
   type NoticeSummary,
+  type NoticeTag,
 } from '@/entities/notice/api/useNotices';
 import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
 import { lexicalToText } from '@/entities/notice/lib/content';
@@ -56,6 +62,21 @@ export function NoticeListPage() {
         <span className="flex items-center gap-2">
           {row.pinned ? <Badge tone="main">고정</Badge> : null}
           {row.title}
+        </span>
+      ),
+    },
+    {
+      key: 'category',
+      header: '카테고리',
+      width: 'w-40',
+      render: (row) => (
+        <span className="flex flex-wrap items-center gap-1">
+          {NOTICE_CATEGORY_LABELS[row.category]}
+          {row.tags.map((tag) => (
+            <Badge key={tag} tone="neutral">
+              {NOTICE_TAG_LABELS[tag]}
+            </Badge>
+          ))}
         </span>
       ),
     },
@@ -166,6 +187,10 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
   const [contentText, setContentText] = useState(notice ? lexicalToText(notice.content) : '');
   const [pinned, setPinned] = useState(notice?.pinned ?? false);
   const [visible, setVisible] = useState(notice ? notice.visibility === 'VISIBLE' : true);
+  const [category, setCategory] = useState<NoticeCategory>(notice?.category ?? 'OGONGGO_UPDATE');
+  const [tags, setTags] = useState<NoticeTag[]>(notice?.tags ?? []);
+  const [thumbnailUrl, setThumbnailUrl] = useState(notice?.thumbnailUrl ?? '');
+  const [summary, setSummary] = useState(notice?.summary ?? '');
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const canSave = title.trim().length > 0 && contentText.trim().length > 0;
@@ -192,6 +217,75 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
             id="notice-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
+          />
+        </Field>
+
+        <Field label="카테고리" htmlFor="notice-category" required>
+          <Select
+            id="notice-category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value as NoticeCategory)}
+            options={Object.entries(NOTICE_CATEGORY_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+          />
+        </Field>
+
+        {/* 태그는 오공고 업데이트 글에만 붙는다. 다른 카테고리로 바꾸면 저장할 때 서버가 비운다. */}
+        {category === 'OGONGGO_UPDATE' ? (
+          <Field label="태그">
+            <div className="flex gap-6">
+              {(Object.keys(NOTICE_TAG_LABELS) as NoticeTag[]).map((tag) => (
+                <label key={tag} className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={tags.includes(tag)}
+                    onChange={(event) =>
+                      setTags((current) =>
+                        event.target.checked
+                          ? [...current, tag]
+                          : current.filter((entry) => entry !== tag),
+                      )
+                    }
+                  />
+                  {NOTICE_TAG_LABELS[tag]}
+                </label>
+              ))}
+            </div>
+          </Field>
+        ) : null}
+
+        <Field
+          label="썸네일 이미지 주소"
+          htmlFor="notice-thumbnail"
+          hint="목록 썸네일과 본문 대표 이미지로 쓰입니다. 비우면 이미지 없이 보입니다."
+        >
+          <Input
+            id="notice-thumbnail"
+            value={thumbnailUrl}
+            onChange={(event) => setThumbnailUrl(event.target.value)}
+            placeholder="https://"
+          />
+          {thumbnailUrl.trim() ? (
+            <img
+              src={thumbnailUrl.trim()}
+              alt="썸네일 미리보기"
+              className="mt-2 h-24 rounded-md border border-gray-200 object-cover"
+            />
+          ) : null}
+        </Field>
+
+        <Field
+          label="요약"
+          htmlFor="notice-summary"
+          hint="목록에서 제목 아래에 보이는 한두 줄입니다."
+        >
+          <Textarea
+            id="notice-summary"
+            rows={2}
+            value={summary}
+            onChange={(event) => setSummary(event.target.value)}
           />
         </Field>
 
@@ -234,6 +328,10 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
                 content,
                 pinned,
                 visibility: visible ? 'VISIBLE' : 'HIDDEN',
+                category,
+                tags: category === 'OGONGGO_UPDATE' ? tags : [],
+                thumbnailUrl: thumbnailUrl.trim() || null,
+                summary: summary.trim() || null,
               })
             }
             disabled={!canSave || saveMutation.isPending}
