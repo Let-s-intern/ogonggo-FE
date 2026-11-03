@@ -1,5 +1,8 @@
 import { httpClient } from '@ogonggo/api';
-import type { AdPlacementAvailabilityResponse } from '@ogonggo/api/src/mocks/fixtures/advertisement-types';
+import type {
+  AdCoupon,
+  AdPlacementAvailabilityResponse,
+} from '@ogonggo/api/src/mocks/fixtures/advertisement-types';
 
 /**
  * 광고 API. **백엔드에 아직 없고 MSW 목에만 있다**(`packages/api/src/mocks/advertisements.ts`, 요청서
@@ -22,3 +25,11 @@ export async function fetchAdAvailability(): Promise<AdPlacementAvailabilityResp
 }
 
 export const AD_AVAILABILITY_QUERY_KEY = ['advertisements', 'availability'] as const;
+
+/** 내 광고 쿠폰. 기업회원만. 경로는 비즈니스 요청서(`백엔드-요청-광고-시스템-business.md`)의 것이다. */
+export async function fetchMyAdCoupons(): Promise<AdCoupon[]> {
+  const body = await httpClient<Envelope<AdCoupon[]>>('/api/v1/users/me/advertisement-coupons');
+  return body.data;
+}
+
+export const MY_AD_COUPONS_QUERY_KEY = ['advertisements', 'coupons'] as const;
