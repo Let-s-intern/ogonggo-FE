@@ -54,6 +54,16 @@ const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[
     title: '채용 공고 수정',
     back: '/mypage/company/posts/jobs',
   },
+  {
+    pattern: /^\/mypage\/company\/posts\/bootcamps\/new$/,
+    title: '교육 · 부트캠프 공고 등록',
+    back: '/mypage/company/posts/bootcamps',
+  },
+  {
+    pattern: /^\/mypage\/company\/posts\/bootcamps\/[^/]+\/edit$/,
+    title: '교육 · 부트캠프 공고 수정',
+    back: '/mypage/company/posts/bootcamps',
+  },
   { pattern: /^\/mypage\/company\/ads$/, title: '광고', back: COMPANY_MYPAGE_ROOT },
   { pattern: /^\/mypage\/company\/profile$/, title: '기업 정보', back: COMPANY_MYPAGE_ROOT },
 ];
