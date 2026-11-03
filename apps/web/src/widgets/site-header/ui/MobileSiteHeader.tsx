@@ -21,6 +21,8 @@ export interface MobileSiteHeaderProps {
   myPageHref: string;
   /** 관리자일 때만 온다. 없으면 어드민 항목을 그리지 않는다. */
   adminOrigin?: string;
+  /** 기업 회원일 때만 온다. 없으면 비즈니스 항목을 그리지 않는다. */
+  businessHref?: string;
 }
 
 /**
@@ -57,6 +59,7 @@ export function MobileSiteHeader({
   registerHref,
   myPageHref,
   adminOrigin,
+  businessHref,
 }: MobileSiteHeaderProps) {
   const [open, setOpen] = useState(false);
   // 메뉴는 누르면 닫히며 사라지므로 광고 문의 모달은 메뉴 밖, 여기서 띄운다.
@@ -142,6 +145,7 @@ export function MobileSiteHeader({
           registerHref={registerHref}
           myPageHref={myPageHref}
           adminOrigin={adminOrigin}
+          businessHref={businessHref}
           onClose={() => setOpen(false)}
           onAdInquiry={() => setAdInquiryOpen(true)}
         />
@@ -188,6 +192,8 @@ interface MenuLink {
   href: string;
   /** 다른 도메인(어드민)이면 `Link` 가 아니라 `a` 로 그리고, 웹 로그인을 들고 간다(`adminHandoff`). */
   external?: boolean;
+  /** 다른 출처지만 로그인을 들고 가지 않는 곳(비즈니스 앱). `a` 로만 그린다. */
+  plain?: boolean;
 }
 
 /**
@@ -204,6 +210,7 @@ function MobileMenu({
   registerHref,
   myPageHref,
   adminOrigin,
+  businessHref,
   onClose,
   onAdInquiry,
 }: Omit<MobileSiteHeaderProps, 'pathname'> & { onClose: () => void; onAdInquiry: () => void }) {
@@ -228,6 +235,7 @@ function MobileMenu({
     { label: '공고 달력', href: '/calendar' },
   ];
   const account: MenuLink[] = [{ label: '마이페이지', href: myPageHref }];
+  if (businessHref) account.push({ label: '비즈니스', href: businessHref, plain: true });
   if (adminOrigin) account.push({ label: '어드민', href: adminOrigin, external: true });
 
   return (
@@ -312,9 +320,13 @@ function MenuSection({
     <section>
       <h2 className="text-sm font-semibold text-gray-400">{title}</h2>
       <ul className="mt-1 divide-y divide-gray-200">
-        {links.map(({ label, href, external }) => (
+        {links.map(({ label, href, external, plain }) => (
           <li key={label}>
-            {external ? (
+            {plain ? (
+              <a href={href} onClick={onNavigate} className={itemClass}>
+                {label}
+              </a>
+            ) : external ? (
               <a href={href} onClick={onAdminLinkClick(href)} className={itemClass}>
                 {label}
               </a>

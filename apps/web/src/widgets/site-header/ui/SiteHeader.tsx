@@ -8,6 +8,7 @@ import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { NotificationBell } from '@/features/notification-inbox';
 import { PushConsentButton } from '@/features/push-notification';
+import { businessUrl } from '@/shared/config/business';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
@@ -24,6 +25,10 @@ import { ServiceLogoToggle } from './ServiceLogoToggle';
  */
 const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
 
+/** 비즈니스 앱의 기업 마이페이지와 첫 화면. 기업 회원의 `마이페이지` 와 `비즈니스` 항목이 간다. */
+const COMPANY_MYPAGE_URL = businessUrl('/mypage/company');
+const BUSINESS_HOME_URL = businessUrl('/');
+
 /**
  * `home.png`·`교육부트캠프.png`의 상단 헤더. 현재 경로에 밑줄이 붙어야 해서 `usePathname`을
  * 쓰는 클라이언트 컴포넌트다.
@@ -39,8 +44,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
- * `{이름} 님` 은 `마이페이지`·`로그아웃` 을 펼치는 드롭다운이고, 관리자에게는 `어드민` 이
- * 더해진다(`AccountMenu`, `showAdmin`). `로그아웃` 은 마이페이지의 `개인 정보`·`기업/기관 정보`
+ * `{이름} 님` 은 `마이페이지`·`로그아웃` 을 펼치는 드롭다운이고, 관리자에게는 `어드민` 이,
+ * 기업 회원에게는 `비즈니스` 가 더해진다(`AccountMenu`, `showAdmin`, `businessHref`). `로그아웃` 은 마이페이지의 `개인 정보`·`기업/기관 정보`
  * 화면 아래와 모바일 햄버거 메뉴에도 있다.
  *
  * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "{이름} 님". 토큰이 브라우저 저장소에만
@@ -79,18 +84,19 @@ export function SiteHeader() {
   const registerActive = pathname.startsWith(COMPANY_JOB_REGISTER_HREF);
 
   /*
-   * 마이페이지는 역할마다 첫 화면이 다르다(`myPageHomeFor`). 역할을 아직 모르는 동안에는
-   * 일반 회원 쪽으로 보내 둔다 — 기업 계정이 그리 가도 `MyPageLayout` 의 역할 가드가 기업
-   * 마이페이지로 다시 보낸다. 역할이 올 때까지 링크를 감추면 헤더에서 항목이 늦게 나타난다.
+   * 마이페이지는 역할마다 첫 화면이 다르다(`myPageHomeFor`). 기업 회원의 마이페이지는 비즈니스 앱에
+   * 있어 그쪽 주소로 보낸다(광고 시스템 PRD). 역할을 아직 모르는 동안에는 일반 회원 쪽으로 보내 둔다 —
+   * 기업 계정이 그리 가도 `MyPageLayout` 의 역할 가드가 기업 마이페이지로 다시 보낸다. 역할이 올 때까지
+   * 링크를 감추면 헤더에서 항목이 늦게 나타난다.
    */
-  const myPageHref = myPageHomeFor(role === 'COMPANY' ? 'COMPANY' : 'USER');
+  const myPageHref = role === 'COMPANY' ? COMPANY_MYPAGE_URL : myPageHomeFor('USER');
   const myPageActive = pathname.startsWith('/mypage');
   /*
    * 모바일은 마이페이지 첫 화면(메뉴)으로 보낸다. `< 제목` 머리가 붙는 화면에서는 이 헤더가
    * 숨고 그 머리가 대신한다(`docs/asset/v10 mobile/`). 일반 회원의 탭 화면에는 머리가 없어
    * 헤더가 그대로 보인다.
    */
-  const myPageMobileHref = myPageIndexFor(role === 'COMPANY' ? 'COMPANY' : 'USER');
+  const myPageMobileHref = role === 'COMPANY' ? COMPANY_MYPAGE_URL : myPageIndexFor('USER');
   const hiddenOnMobile = myPageMobileHeaderOf(pathname) !== undefined;
 
   /*
@@ -100,6 +106,8 @@ export function SiteHeader() {
    * 보이고 그것을 되돌려 줄 가드가 헤더에는 없다. 그래서 늦게 나타나는 쪽을 택한다.
    */
   const showAdmin = role === 'ADMIN' && Boolean(ADMIN_ORIGIN);
+  /** 기업 회원에게만 비즈니스 앱으로 가는 항목을 보인다. 어드민과 같은 이유로 역할이 온 뒤에 나타난다. */
+  const businessHref = role === 'COMPANY' ? BUSINESS_HOME_URL : undefined;
 
   /** `{이름} 님` 의 이름. 마이페이지 껍데기(`MyPageLayout`)와 같은 규칙이다. */
   const account = accountState.kind === 'ready' ? accountState.account : undefined;
@@ -121,6 +129,7 @@ export function SiteHeader() {
         registerHref={registerHref}
         myPageHref={myPageMobileHref}
         adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+        businessHref={businessHref}
       />
       {/* 탭이 넷이 되어 md 경계(768px)의 여유가 줄었다. 이름이 5자 이상이거나 관리자 계정이면 768px 에서 탭과
           우측 글자가 음절 사이에서 줄바꿈되므로(실측) `whitespace-nowrap` 으로 막고, 탭 사이는 lg 미만에서만
@@ -214,6 +223,7 @@ export function SiteHeader() {
               myPageHref={myPageHref}
               myPageActive={myPageActive}
               adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+              businessHref={businessHref}
               open={openMenu === 'account'}
               onOpenChange={toggleMenu('account')}
             />
