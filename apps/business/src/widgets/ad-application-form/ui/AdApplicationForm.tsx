@@ -1,0 +1,484 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Button, Callout, useToast } from '@ogonggo/ui';
+import {
+  AD_AVAILABILITY_QUERY_KEY,
+  MY_AD_COUPONS_QUERY_KEY,
+  type AdJobField,
+  type AdPlacement,
+  type AdPlacementKey,
+  fetchAdAvailability,
+  fetchMyAdApplication,
+  fetchMyAdCoupons,
+  formatWon,
+} from '@/entities/advertisement';
+import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
+import { useMyAccount } from '@/shared/api/useMyAccount';
+import { clearDraft, formatSavedAt, readDraft, writeDraft } from '../lib/draft';
+import { computeAmounts, conflictsOf, soldOutStarts, targetOf } from '../model/items';
+import {
+  type AdApplicationFormValues,
+  EMPTY_FORM,
+  PURPOSES,
+  STEPS,
+  type StepNumber,
+  newUid,
+} from '../model/form';
+import { isFreeMail } from '../model/freeMail';
+import { HttpError } from '@ogonggo/api';
+import { submitApplication } from '../lib/submit';
+import {
+  validateStep1,
+  validateStep2,
+  validateStep3,
+  validateStep4,
+  validateStep5,
+} from '../model/validate';
+import { ApplicationDone } from './ApplicationDone';
+import { StepConfirm } from './StepConfirm';
+import { StepCreative } from './StepCreative';
+import { StepContact } from './StepContact';
+import { StepPlacements } from './StepPlacements';
+import { StepPost } from './StepPost';
+import { StepSection } from './StepSection';
+
+export interface AdApplicationPrefill {
+  jobId?: number;
+  placementKey?: string;
+  startDate?: string;
+  jobField?: string;
+  /** 이 신청과 같은 지면·직무·주 수로 2단계를 채운다. 로그인해야 읽을 수 있다. */
+  fromApplicationId?: number;
+}
+
+export interface AdApplicationFormProps {
+  prefill: AdApplicationPrefill;
+}
+
+/**
+ * 광고 신청서(시안 B-04). 다섯 단계 아코디언이고 한 번에 한 칸이 열린다. 비회원·기업회원이 같은 화면을 쓴다 —
+ * 로그인했으면 3단계의 가입 칸이 빠지고 담당자 정보가 미리 채워진다(`memos/결정-광고시스템-business-신청서-2026-11-03.md`).
+ *
+ * 임시저장은 이 브라우저에 둔다. 다시 들어오면 저장한 값을 불러오고, `새로 작성` 으로 지울 수 있다.
+ */
+export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
+  const toast = useToast();
+  const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
+  const [values, setValues] = useState<AdApplicationFormValues>(EMPTY_FORM);
+  const [open, setOpen] = useState<StepNumber | 0>(1);
+  const [restoredAt, setRestoredAt] = useState<string | null>(null);
+
+  // 저장소는 브라우저에만 있어 첫 렌더 뒤에 읽는다.
+  useEffect(() => {
+    const draft = readDraft();
+    if (draft) {
+      setValues(draft.values);
+      setRestoredAt(draft.savedAt);
+    }
+  }, []);
+
+  const availabilityQuery = useQuery({
+    queryKey: AD_AVAILABILITY_QUERY_KEY,
+    queryFn: fetchAdAvailability,
+  });
+  const couponsQuery = useQuery({
+    queryKey: MY_AD_COUPONS_QUERY_KEY,
+    queryFn: fetchMyAdCoupons,
+    enabled: signedIn,
+  });
+  const [addOpen, setAddOpen] = useState(false);
+  /** 가입 비밀번호. 임시저장하지 않는다. */
+  const [password, setPassword] = useState('');
+  const account = useMyAccount();
+
+  // 로그인했으면 담당자 칸을 계정 값으로 한 번 채운다. 사용자가 이미 적은 칸은 덮지 않는다.
+  const contactFilled = useRef(false);
+  useEffect(() => {
+    if (contactFilled.current || account.kind !== 'ready') return;
+    contactFilled.current = true;
+    const profile = account.account.companyProfile;
+    setValues((previous) => ({
+      ...previous,
+      contact: {
+        ...previous.contact,
+        name: previous.contact.name || profile?.managerName || '',
+        title: previous.contact.title || profile?.managerTitle || '',
+        email: previous.contact.email || profile?.notificationEmail || account.account.email || '',
+        phone: previous.contact.phone || profile?.managerPhone || '',
+        companyName: previous.contact.companyName || profile?.organizationName || '',
+      },
+    }));
+  }, [account]);
+
+  const placements = useMemo(
+    () =>
+      new Map<AdPlacementKey, AdPlacement>(
+        (availabilityQuery.data ?? []).map((item) => [item.placement.key, item.placement]),
+      ),
+    [availabilityQuery.data],
+  );
+  const target = targetOf(values.postMode, values.post?.target);
+  const availability = (availabilityQuery.data ?? []).filter(
+    (item) => item.placement.target === target,
+  );
+  const coupon = signedIn ? couponsQuery.data?.find((each) => !each.usedAt) : undefined;
+  const conflicts = conflictsOf(values.items, placements);
+  const amounts = computeAmounts(values.items, placements, values.useCoupon ? coupon : undefined);
+  /** 쿠폰만 쓰는 0원 신청이면 계약·세금계산서를 받지 않는다(PRD `지면 상품`). */
+  const couponOnly = values.items.length > 0 && amounts.total === 0;
+
+  // 신청 가능 일정의 `이 일정으로 신청하기` 로 왔으면 그 항목을 한 번 넣고 2단계를 연다. 잔여를 받은 뒤에 한다.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !availabilityQuery.data || !prefill.placementKey || !prefill.startDate)
+      return;
+    prefilled.current = true;
+    const found = availabilityQuery.data.find(
+      (item) => item.placement.key === prefill.placementKey,
+    );
+    if (!found) return;
+    const jobField = found.placement.perJobField
+      ? (prefill.jobField as AdJobField | undefined)
+      : undefined;
+    if (found.placement.perJobField && !jobField) return;
+    setValues((previous) =>
+      previous.items.some(
+        (item) =>
+          item.placementKey === found.placement.key &&
+          item.startDate === prefill.startDate &&
+          item.jobField === jobField,
+      )
+        ? previous
+        : {
+            ...previous,
+            items: [
+              ...previous.items,
+              {
+                uid: newUid(),
+                placementKey: found.placement.key,
+                jobField,
+                startDate: prefill.startDate!,
+                weeks: 1,
+              },
+            ],
+          },
+    );
+    setOpen(2);
+  }, [availabilityQuery.data, prefill]);
+
+  // 성과 리포트의 `같은 조건으로 다시 신청`. 지면·직무·주 수·목적·공고를 그대로 두고, 시작 주는 그 지면에 잔여가 있는 첫 주로 잡는다.
+  const repeated = useRef(false);
+  useEffect(() => {
+    if (repeated.current || !signedIn || !prefill.fromApplicationId || !availabilityQuery.data)
+      return;
+    repeated.current = true;
+    const data = availabilityQuery.data;
+    fetchMyAdApplication(prefill.fromApplicationId)
+      .then((previousAd) => {
+        const items = previousAd.items.flatMap((item) => {
+          const periods = data
+            .find((each) => each.placement.key === item.placementKey)
+            ?.periods.filter((period) => period.jobField === item.jobField);
+          const start = periods?.find((period) => period.remaining > 0) ?? periods?.[0];
+          return start
+            ? [
+                {
+                  uid: newUid(),
+                  placementKey: item.placementKey,
+                  jobField: item.jobField,
+                  startDate: start.startDate,
+                  weeks: item.weeks,
+                },
+              ]
+            : [];
+        });
+        setValues((previous) => ({
+          ...previous,
+          purpose: previousAd.purpose,
+          postMode: 'EXISTING',
+          post: {
+            target: previousAd.postTarget,
+            id: previousAd.postId,
+            title: previousAd.postTitle,
+          },
+          items,
+        }));
+        setOpen(2);
+      })
+      .catch(() => undefined);
+  }, [signedIn, prefill.fromApplicationId, availabilityQuery.data]);
+
+  const patch = (next: Partial<AdApplicationFormValues>) =>
+    setValues((previous) => ({ ...previous, ...next }));
+
+  const saveDraft = () => {
+    const savedAt = writeDraft(values);
+    toast.show({ message: `임시저장했어요 (${formatSavedAt(savedAt)})` });
+  };
+
+  const startOver = () => {
+    clearDraft();
+    setValues(EMPTY_FORM);
+    setRestoredAt(null);
+    setOpen(1);
+  };
+
+  /** `다음 단계` 를 눌렀을 때 막힌 이유. 그 단계 아래에 보인다. */
+  const [stepErrors, setStepErrors] = useState<Partial<Record<StepNumber, string>>>({});
+  const validators: Record<StepNumber, () => string | null> = {
+    1: () => validateStep1(values),
+    // 아직 검사하지 않는 단계는 빈 문구다. 막지는 않고 완료 표시도 붙지 않는다.
+    2: () =>
+      validateStep2(
+        values,
+        conflicts.size > 0,
+        values.items.some(
+          (item) =>
+            soldOutStarts(
+              item,
+              availabilityQuery.data?.find((each) => each.placement.key === item.placementKey),
+            ).length > 0,
+        ),
+      ),
+    3: () =>
+      validateStep3(values, { signedIn, password, freeMail: isFreeMail(values.signUp.email) }),
+    4: () =>
+      validateStep4(
+        values,
+        values.items.some((item) => placements.get(item.placementKey)?.format === 'BANNER'),
+      ),
+    5: () => validateStep5(values),
+  };
+  const done = Object.fromEntries(
+    STEPS.map((step) => [step.n, validators[step.n]() === null]),
+  ) as Record<StepNumber, boolean>;
+  const goNext = (n: StepNumber) => {
+    const error = validators[n]();
+    setStepErrors((previous) => ({ ...previous, [n]: error ?? undefined }));
+    if (!error && n < 5) setOpen((n + 1) as StepNumber);
+  };
+  const purposeLabel = PURPOSES.find((purpose) => purpose.value === values.purpose)?.label;
+  const summaries: Partial<Record<StepNumber, string>> = {
+    1: [
+      values.postMode === 'NEW' ? values.newJob.title || '새 공고' : values.post?.title,
+      purposeLabel,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    2:
+      values.items.length > 0
+        ? `지면 ${values.items.length}개 · 합계 ${formatWon(amounts.total)}`
+        : undefined,
+  };
+
+  const body = (n: StepNumber) => {
+    switch (n) {
+      case 1:
+        return (
+          <>
+            <StepPost
+              values={values}
+              signedIn={signedIn}
+              preselectJobId={prefill.jobId}
+              patch={patch}
+            />
+            {stepErrors[1] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[1]}
+              </p>
+            ) : null}
+          </>
+        );
+      case 2:
+        return (
+          <>
+            {availabilityQuery.isError ? (
+              <p role="alert" className="text-sm text-error">
+                잔여 구좌를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+              </p>
+            ) : null}
+            <StepPlacements
+              values={values}
+              patch={patch}
+              availability={availability}
+              placements={placements}
+              conflicts={conflicts}
+              amounts={amounts}
+              coupon={coupon}
+              addOpen={addOpen}
+              setAddOpen={setAddOpen}
+            />
+            {stepErrors[2] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[2]}
+              </p>
+            ) : null}
+          </>
+        );
+      case 3:
+        return (
+          <>
+            <StepContact
+              values={values}
+              patch={patch}
+              signedIn={signedIn}
+              couponOnly={couponOnly}
+              password={password}
+              setPassword={setPassword}
+            />
+            {stepErrors[3] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[3]}
+              </p>
+            ) : null}
+          </>
+        );
+      case 4:
+        return (
+          <>
+            <StepCreative values={values} patch={patch} placements={placements} />
+            {stepErrors[4] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[4]}
+              </p>
+            ) : null}
+          </>
+        );
+      case 5:
+        return (
+          <StepConfirm
+            values={values}
+            patch={patch}
+            placements={placements}
+            amounts={amounts}
+            signedIn={signedIn}
+            couponOnly={couponOnly}
+          />
+        );
+    }
+  };
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [completed, setCompleted] = useState<{
+    applicationNo: string;
+    couponOnly: boolean;
+    newAccountEmail?: string;
+    newJobTitle?: string;
+  } | null>(null);
+  /** 신청만 실패했을 때 다시 눌러도 새 공고를 또 만들지 않게 들고 있는다. */
+  const createdPostId = useRef<number | undefined>(undefined);
+
+  const submit = async () => {
+    if (submitting) return;
+    const failed = STEPS.find((step) => validators[step.n]() !== null);
+    if (failed) {
+      const error = validators[failed.n]() || `${failed.title} 단계를 마쳐 주세요.`;
+      setStepErrors((previous) => ({ ...previous, [failed.n]: error }));
+      setSubmitError(`${failed.n}단계 ${failed.title}: ${error}`);
+      setOpen(failed.n);
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const result = await submitApplication(values, {
+        signedIn,
+        password,
+        couponId: values.useCoupon && amounts.couponItemUid ? coupon?.id : undefined,
+        placements,
+        createdPostId: createdPostId.current,
+        onPostCreated: (id) => {
+          createdPostId.current = id;
+        },
+      });
+      clearDraft();
+      setCompleted({
+        applicationNo: result.applicationNo,
+        couponOnly,
+        newAccountEmail: result.newAccount ? values.signUp.email.trim() : undefined,
+        newJobTitle: values.postMode === 'NEW' ? values.newJob.title.trim() : undefined,
+      });
+      window.scrollTo({ top: 0 });
+    } catch (error) {
+      setSubmitError(
+        error instanceof HttpError && error.status === 409
+          ? '잔여 구좌가 없거나 쓸 수 없는 쿠폰이 있어요. 2단계를 확인해 주세요.'
+          : error instanceof HttpError && error.status === 400
+            ? '입력한 값을 확인해 주세요. 지면·태그·동의 항목을 다시 봐 주세요.'
+            : '신청하지 못했어요. 잠시 후 다시 시도해 주세요.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (completed) {
+    return <ApplicationDone {...completed} />;
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-950 md:text-3xl">광고 신청</h1>
+        <p className="pt-2 text-sm text-gray-500 md:text-base">
+          {signedIn
+            ? '게시 중인 공고를 선택하고 지면과 일정을 정해 주세요.'
+            : '로그인 없이 작성할 수 있어요. 공고가 없으면 1단계에서 바로 등록하고, 3단계에서 가입이 함께 진행돼요.'}
+        </p>
+      </div>
+      <Callout
+        tone="info"
+        className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between"
+      >
+        <span>
+          신청 즉시 확정되지 않아요. 담당자 메일로 견적서와 확정 안내를 영업일 2일 안에 보내드려요.
+        </span>
+        <Link href="/schedule" className="shrink-0 font-semibold underline">
+          신청 가능 일정 보기
+        </Link>
+      </Callout>
+      {restoredAt ? (
+        <Callout tone="success" className="flex items-center justify-between gap-3">
+          <span>{formatSavedAt(restoredAt)} 에 임시저장한 신청서를 불러왔어요.</span>
+          <button type="button" onClick={startOver} className="shrink-0 font-semibold underline">
+            새로 작성
+          </button>
+        </Callout>
+      ) : null}
+
+      {STEPS.map((step) => (
+        <StepSection
+          key={step.n}
+          n={step.n}
+          title={step.n === 3 && couponOnly ? '담당자' : step.title}
+          description={step.description}
+          open={open === step.n}
+          done={done[step.n]}
+          summary={summaries[step.n]}
+          onToggle={() => setOpen((current) => (current === step.n ? 0 : step.n))}
+          onNext={step.n < 5 ? () => goNext(step.n) : undefined}
+        >
+          {body(step.n)}
+        </StepSection>
+      ))}
+
+      <div className="sticky bottom-0 z-10 -mx-5 flex justify-end gap-2 border-t border-gray-200 bg-white px-5 py-3 md:mx-0 md:rounded-md md:border">
+        {submitError ? (
+          <p role="alert" className="mr-auto self-center text-sm text-error">
+            {submitError}
+          </p>
+        ) : null}
+        <Button type="button" variant="secondary" onClick={saveDraft} disabled={submitting}>
+          임시저장
+        </Button>
+        <Button type="button" onClick={() => void submit()} disabled={submitting}>
+          {submitting ? '신청하는 중...' : '신청하기'}
+        </Button>
+      </div>
+    </div>
+  );
+}

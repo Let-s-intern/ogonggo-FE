@@ -7,3 +7,20 @@
 @source '../../../../packages/ui/src';
 @source not '../**/*.stories.tsx';
 @source not '../../../../packages/ui/src/**/*.stories.tsx';
+
+/*
+ * 인쇄(성과 리포트의 `PDF 다운로드` 가 브라우저 인쇄를 연다). A4 세로에 여백을 두고, 배경색이 빠지지 않게 한다.
+ * 헤더·푸터·사이드바는 각 컴포넌트의 `print:hidden` 이 숨긴다.
+ */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

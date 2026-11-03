@@ -32,7 +32,7 @@ import type { ErrorResponse } from '../generated/user/models/errorResponse';
  * - 비로그인 공개: 잔여 구좌 조회, 구좌별 노출용 광고 조회
  * - 기업회원(`users/me`): 광고 신청 생성·목록·상세·리포트, 소재 `이대로 게재`·`수정 요청`
  *
- * 신청은 메모리에 두고 생성·소재 확인이 그 상태를 바꾼다. 새로 고치면(워커가 다시 뜨면) 처음으로 돌아간다.
+ * 신청은 메모리에 두고 생성·소재 확인이 그 상태를 바꾼다. 브라우저에서는 `localStorage` 에도 남아 새로 고쳐도 이어진다(아래 `persist`).
  * 토큰은 검사하지 않는다(다른 `users/me` 목과 같다). 잔여는 픽스처 값 그대로라 신청해도 줄지 않는다.
  */
 
@@ -61,11 +61,53 @@ function now(): string {
 const placementOf = (key: string) =>
   AD_PLACEMENT_FIXTURES.find((placement) => placement.key === key);
 
+/**
+ * 브라우저에서는 신청·쿠폰 상태를 `localStorage` 에 남긴다. 브라우저 워커의 핸들러는 페이지 안에서 돌아 새로 고치면
+ * 메모리가 처음으로 돌아가는데, 비즈니스 앱의 소재 `이대로 게재` 는 새로 고친 뒤에도 남아 있어야 확인할 수 있다
+ * (`todo/tasks-ad-system-push7.md` 7.2.1). 서버(`msw/node`)에는 저장소가 없어 메모리만 쓴다.
+ *
+ * 픽스처를 바꿨는데 화면에 옛 값이 보이면 이 키를 지운다.
+ */
+const STORAGE_KEY = 'ogonggo.mock.advertisements';
+
+interface StoredAdvertisements {
+  applications: AdApplication[];
+  coupons: typeof AD_COUPON_FIXTURES;
+  nextApplicationId: number;
+}
+
+const storage = typeof localStorage === 'undefined' ? undefined : localStorage;
+
+function loadStored(): StoredAdvertisements | undefined {
+  try {
+    const raw = storage?.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredAdvertisements) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const stored = loadStored();
+
 const applications = new Map<number, AdApplication>(
-  structuredClone(AD_APPLICATION_FIXTURES).map((application) => [application.id, application]),
+  (stored?.applications ?? structuredClone(AD_APPLICATION_FIXTURES)).map((application) => [
+    application.id,
+    application,
+  ]),
 );
 
-const coupons = structuredClone(AD_COUPON_FIXTURES);
+const coupons = stored?.coupons ?? structuredClone(AD_COUPON_FIXTURES);
+
+function persist(): void {
+  storage?.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      applications: [...applications.values()],
+      coupons,
+      nextApplicationId,
+    } satisfies StoredAdvertisements),
+  );
+}
 
 /** 잔여 구좌. `?placementKey=` 로 하나만 볼 수 있다. 판매하지 않는(`visible: false`) 구좌는 빠진다. */
 const getAvailabilityHandler = http.get('*/api/v1/advertisements/availability', ({ request }) => {
@@ -195,7 +237,8 @@ function findSoldOut(items: CreateAdApplicationRequest['items']): string | null 
   return null;
 }
 
-let nextApplicationId = Math.max(...AD_APPLICATION_FIXTURES.map((each) => each.id)) + 1;
+let nextApplicationId =
+  stored?.nextApplicationId ?? Math.max(...AD_APPLICATION_FIXTURES.map((each) => each.id)) + 1;
 
 /**
  * 광고 신청 생성. 시안 규칙을 본다 — 항목 1개 이상, 구좌·직무·주 수·시작일, A1·A2·A6 같은 주 중복 금지, 해석 한 줄
@@ -319,6 +362,7 @@ const createApplicationHandler = http.post(
       memo: body.memo,
       history: [{ at: receivedAt, message: `신청 접수 (${applicationNo})` }],
     });
+    persist();
     return success<CreateAdApplicationResponse>({ id, applicationNo }, 201);
   },
 );
@@ -439,6 +483,7 @@ const approveCreativeHandler = http.post(
     item.creative.confirmStatus = 'APPROVED';
     item.creative.revisionRequest = undefined;
     application.history.push({ at: now(), message: `${item.placementName} 소재 확인 완료` });
+    persist();
     return success(application);
   },
 );
@@ -462,6 +507,7 @@ const requestCreativeRevisionHandler = http.post(
     item.creative.confirmStatus = 'REVISION_REQUESTED';
     item.creative.revisionRequest = message;
     application.history.push({ at: now(), message: `${item.placementName} 소재 수정 요청` });
+    persist();
     return success(application);
   },
 );

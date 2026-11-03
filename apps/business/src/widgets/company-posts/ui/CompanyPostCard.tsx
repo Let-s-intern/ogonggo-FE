@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Badge, Button, cn } from '@ogonggo/ui';
 import { closedLabel, computeDday, isDdayUrgent, isRecruitmentClosed } from '@/shared/lib/dday';
 import { Thumbnail } from '@/shared/ui/Thumbnail';
+import { adApplyHref } from '@/entities/advertisement';
 import { formatDeadline } from '@/widgets/mypage-list';
 import copy from '../config/copy.json';
 import { companyPostStage, type CompanyPostStage } from '../model/stage';
@@ -187,7 +188,7 @@ function AdvertiseAction({ row, live }: { row: Row; live: boolean }) {
   if (live) {
     return (
       <Link
-        href={advertiseHref(row.id)}
+        href={adApplyHref({ jobId: row.id })}
         className={cn(className, 'text-blue-500 hover:bg-gray-50')}
       >
         광고로 더 알리기
@@ -211,11 +212,6 @@ function AdvertiseAction({ row, live }: { row: Row; live: boolean }) {
 }
 
 const ADVERTISE_DISABLED_HINT = '게시된 공고만 광고할 수 있어요';
-
-/** 광고 신청서로 가는 주소. 공고를 1단계에 미리 고른다. */
-export function advertiseHref(jobId: number): string {
-  return `/apply?jobId=${jobId}`;
-}
 
 /** 점 세 개 메뉴 한 줄. */
 function MenuAction({

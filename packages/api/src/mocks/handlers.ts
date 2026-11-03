@@ -1,5 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { advertisementCouponHandlers } from './advertisementCoupons';
 import { advertisementHandlers } from './advertisements';
+import { companyEmailVerificationHandlers } from './companyEmailVerifications';
 import { detailAdBannerHandlers } from './detail-ad-banners';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
@@ -1115,4 +1117,6 @@ export const handlers: HttpHandler[] = [
   // 공용 광고 핸들러와 같은 경로를 나눠 쓴다. 상세 배너 키만 받고 나머지는 넘기므로 앞에 둔다.
   ...detailAdBannerHandlers,
   ...advertisementHandlers,
+  ...advertisementCouponHandlers,
+  ...companyEmailVerificationHandlers,
 ];
