@@ -1,22 +1,21 @@
 import type { Metadata } from 'next';
-import { NoticeListPage } from '@/views/notice-list';
-import { buildNoticeListHref, parseNoticeListQuery } from '@/widgets/notice-list';
+import { NoticeHomePage } from '@/views/notice-home';
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}): Promise<Metadata> {
-  const { page } = parseNoticeListQuery(await searchParams);
-  return { title: '공지사항', alternates: { canonical: buildNoticeListHref(page) } };
+export const metadata: Metadata = { title: '공지사항', alternates: { canonical: '/notices' } };
+
+/** 검색어 `?keyword=`. 앞뒤 공백만 지운다. 비면 검색하지 않는다. */
+function parseKeyword(value?: string): string | undefined {
+  const keyword = value?.trim();
+  return keyword ? keyword : undefined;
 }
 
-/**
- * 이 Next 버전에서 `searchParams` 는 Promise 로 온다 — `/side-studies` 와 같다. 값 검증은
- * `parseNoticeListQuery` 가 한 곳에서 맡는다(`widgets/notice-list/lib/query.ts`).
- */
-export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const query = parseNoticeListQuery(await searchParams);
+/** 이 Next 버전에서 `searchParams` 는 Promise 로 온다 — `/side-studies` 와 같다. */
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ keyword?: string }>;
+}) {
+  const { keyword } = await searchParams;
 
-  return <NoticeListPage {...query} />;
+  return <NoticeHomePage keyword={parseKeyword(keyword)} />;
 }

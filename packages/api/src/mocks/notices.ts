@@ -16,6 +16,7 @@ import type { PageInfo } from '../generated/user/models/pageInfo';
  * - `category`: `OGONGGO_UPDATE` · `JOB_NOTE`. 없으면 전체
  * - `keyword`: 제목·요약·본문 글자에 들어 있는 글만. 앞뒤 공백은 지운다
  * - `pinned`: `true` 면 고정 글(공지 홈 `추천`)만
+ * - `sort`: `LATEST` 면 고정 여부와 상관없이 게시일 최신순(공지 홈 카테고리의 최근 글). 없으면 기존 순서(고정 먼저)
  *
  * 본문 응답에는 같은 카테고리 안의 `previous`(이전 글, 더 오래된 글) · `next`(다음 글, 더 새 글)를 싣는다.
  * 고정 여부와 상관없이 id 순서로 잇는다.
@@ -72,6 +73,7 @@ const getNoticesHandler = http.get('*/api/v1/announcements', ({ request }) => {
   const category = url.searchParams.get('category');
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
   const pinnedOnly = url.searchParams.get('pinned') === 'true';
+  const latest = url.searchParams.get('sort') === 'LATEST';
 
   if (category && !CATEGORIES.includes(category as UserNoticeCategory)) {
     const body: ErrorResponse = {
@@ -88,6 +90,9 @@ const getNoticesHandler = http.get('*/api/v1/announcements', ({ request }) => {
       (!pinnedOnly || notice.pinned) &&
       (keyword === '' || matchesKeyword(notice, keyword)),
   );
+  if (latest) {
+    matched.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
 
   const start = (page - 1) * size;
   const pageInfo: PageInfo = {
