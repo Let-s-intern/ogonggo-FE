@@ -36,7 +36,7 @@ function InfoLine({ children }: { children: ReactNode }) {
 
 export function BusinessFooter() {
   return (
-    <footer className="border-t border-gray-200 bg-gray-50">
+    <footer className="border-t border-gray-200 bg-gray-50 print:hidden">
       <div className="mx-auto flex max-w-page-padded flex-col gap-10 px-5 py-12">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <Link href="/" aria-label="오늘의 공고 비즈니스 홈" className="text-blue-500">

@@ -77,15 +77,20 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
   return (
     <main
       className={cn(
-        'mx-auto w-full max-w-page-padded px-5 md:py-12',
+        'mx-auto w-full max-w-page-padded px-5 md:py-12 print:max-w-none print:p-0',
         mobileHeader ? 'pb-12' : 'py-6',
       )}
     >
-      <h1 className={cn('text-2xl font-bold text-gray-950', mobileHeader && 'hidden md:block')}>
+      <h1
+        className={cn(
+          'text-2xl font-bold text-gray-950 print:hidden',
+          mobileHeader && 'hidden md:block',
+        )}
+      >
         마이페이지
       </h1>
       {mobileHeader ? (
-        <div className="-mx-5 mb-4 flex h-14 items-center gap-2 border-b border-gray-200 px-5 md:hidden">
+        <div className="-mx-5 mb-4 flex h-14 items-center gap-2 border-b border-gray-200 px-5 md:hidden print:hidden">
           <Link href={mobileHeader.back} aria-label="뒤로" className="-ml-1 p-1 text-gray-900">
             <span aria-hidden="true" className="icon-[lucide--chevron-left] block h-6 w-6" />
           </Link>
@@ -108,7 +113,7 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
         </div>
       ) : (
         <div className="flex flex-col md:mt-6 md:flex-row md:gap-10">
-          <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block')}>
+          <div className={cn('mt-6 md:mt-0 print:hidden', !isIndex && 'hidden md:block')}>
             <MyPageSidebar
               menuItems={COMPANY_MYPAGE_MENU}
               counts={postTotals}

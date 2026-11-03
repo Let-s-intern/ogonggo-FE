@@ -47,7 +47,7 @@ export function BusinessHeader() {
   );
 
   return (
-    <header className="border-b border-gray-200 bg-white">
+    <header className="border-b border-gray-200 bg-white print:hidden">
       <div className="mx-auto flex h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap">
         <div className="flex items-center gap-10">
           <Link href="/" aria-label="오늘의 공고 비즈니스 홈" className="flex items-center gap-2">
