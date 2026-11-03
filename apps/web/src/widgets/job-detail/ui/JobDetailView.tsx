@@ -15,6 +15,7 @@ import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { AnalysisTab } from './AnalysisTab';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
+import { JobDetailStickyHeader } from './JobDetailStickyHeader';
 import { JobDetailTabs } from './JobDetailTabs';
 import { OriginalTab } from './OriginalTab';
 import { SimilarJobs } from './SimilarJobs';
@@ -144,6 +145,12 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       {viewTracker}
       <JobDetailBreadcrumb />
       {headerCard}
+      <JobDetailStickyHeader
+        companyName={job.companyName}
+        title={job.title}
+        recruitmentType={job.recruitmentType}
+        recruitmentEndAt={job.recruitmentEndAt}
+      />
       {/* 본문 2단은 좌우 여백 없이 위 헤더 카드와 아래 `ForBusinessBanner`의 바깥 가장자리에 맞춘다.
           전에는 카드 안쪽 글자 위치에 맞춰 `md:px-8`을 뒀는데, 블록 가장자리가 어긋나 보인다는
           요청으로 가장자리 기준으로 바꿨다(2026-09-30). */}
