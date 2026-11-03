@@ -66,7 +66,9 @@ export function BusinessHeader() {
           )}
         </div>
       </div>
-      {nav('mx-auto flex h-11 max-w-page-padded items-stretch gap-4 overflow-x-auto px-5 whitespace-nowrap md:hidden')}
+      {nav(
+        'mx-auto flex h-11 max-w-page-padded items-stretch gap-4 overflow-x-auto px-5 whitespace-nowrap md:hidden',
+      )}
     </header>
   );
 }

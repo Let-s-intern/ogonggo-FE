@@ -97,7 +97,12 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           <p className="text-base text-gray-700">
             비즈니스는 기업회원만 이용할 수 있어요. 기업 계정으로 다시 로그인해 주세요.
           </p>
-          <Button variant="secondary" size="sm" disabled={pending} onClick={() => void signOut('/login')}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={pending}
+            onClick={() => void signOut('/login')}
+          >
             로그아웃
           </Button>
         </div>

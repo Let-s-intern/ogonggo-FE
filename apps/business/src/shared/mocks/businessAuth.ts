@@ -101,8 +101,13 @@ export const businessAuthHandlers: HttpHandler[] = [
   }),
   // 가입한 값으로 목 기업 계정을 바꾼다. 이미 있는 계정(`MOCK_USER_EMAIL`)이면 백엔드처럼 409 다.
   http.post('*/api/v1/auth/company/signup', async ({ request }) => {
-    const { email, password: _password, organizationName, managerName, ...rest } =
-      (await request.json()) as CompanySignUpRequest;
+    const {
+      email,
+      password: _password,
+      organizationName,
+      managerName,
+      ...rest
+    } = (await request.json()) as CompanySignUpRequest;
     if (email === MOCK_USER_EMAIL) {
       return HttpResponse.json(
         { status: 409, code: 'EMAIL_ALREADY_EXISTS', message: '이미 가입된 이메일입니다.' },
