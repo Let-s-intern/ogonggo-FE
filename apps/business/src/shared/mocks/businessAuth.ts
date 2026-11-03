@@ -1,0 +1,154 @@
+import { http, HttpResponse, type HttpHandler } from 'msw';
+import type { CompanySignUpRequest, MyAccountResponse } from '@ogonggo/api';
+
+/**
+ * 비즈니스 앱 목데이터 모드의 계정·로그인 목. 브라우저 워커에만 건다(`./startMockWorker.ts`).
+ *
+ * `packages/api` 의 생성 목은 내 계정의 역할이 무작위라 기업 마이페이지가 튕기고, 로그인은 토큰 모양만 맞춘
+ * 무작위 문자열을 준다. 비즈니스는 로그인 → 새로고침 → 로그아웃을 목으로 확인해야 해서 손으로 쓴다. web 이
+ * 아니라 이 앱에 두는 이유는 web 은 목 모드에서 늘 로그인으로 보기 때문이다(`shared/api/authTokens.ts`).
+ *
+ * 액세스 토큰에 역할을 실어 둔다(`mock-access.COMPANY`). 내 계정 목은 `Authorization` 의 토큰을 보고 역할을 정한다.
+ * 기업 계정 정보는 이 브라우저의 `localStorage` 에 두어 새로고침해도 남는다(가입·기업 정보 수정이 그 값을 바꾼다).
+ */
+
+const ACCOUNT_KEY = 'ogonggo.business.mock.account';
+
+export const MOCK_COMPANY_ACCOUNT: MyAccountResponse = {
+  userId: 501,
+  role: 'COMPANY',
+  status: 'ACTIVE',
+  email: 'company@example.com',
+  joinedAt: '2026-09-01T00:00:00Z',
+  passwordChangeable: true,
+  companyProfile: {
+    organizationName: '오공고 테스트 기업',
+    managerName: '김담당',
+    managerPhone: '010-1234-5678',
+    notificationEmail: 'company@example.com',
+    businessNumberType: 'BUSINESS_REGISTRATION',
+    businessNumber: '1234567890',
+    companyType: 'STARTUP',
+    employeeCountRange: 'RANGE_10_49',
+    industry: 'IT·플랫폼',
+    address: '서울특별시 성동구 왕십리로 137',
+    homepageUrl: 'https://www.ogonggo.co.kr',
+    managerTitle: '인사팀 매니저',
+    managerDuty: 'HR',
+  },
+};
+
+/** 기업이 아닌 계정을 흉내 내는 이메일. 기업 로그인 화면이 이 계정을 막는지 본다. */
+export const MOCK_USER_EMAIL = 'user@example.com';
+
+const MOCK_USER_ACCOUNT: MyAccountResponse = {
+  userId: 1,
+  role: 'USER',
+  status: 'ACTIVE',
+  email: MOCK_USER_EMAIL,
+  joinedAt: '2026-09-01T00:00:00Z',
+  passwordChangeable: true,
+  profile: { name: '김오공', nickname: '오공이' },
+};
+
+export function readMockCompanyAccount(): MyAccountResponse {
+  const saved = localStorage.getItem(ACCOUNT_KEY);
+  return saved ? (JSON.parse(saved) as MyAccountResponse) : MOCK_COMPANY_ACCOUNT;
+}
+
+export function saveMockCompanyAccount(account: MyAccountResponse): void {
+  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+}
+
+const roleOf = (request: Request): string | null => {
+  const header = request.headers.get('Authorization');
+  const match = header?.match(/^Bearer mock-access\.(\w+)/);
+  return match ? match[1]! : null;
+};
+
+/** 로그인·가입이 돌려주는 토큰. 역할을 액세스 토큰에 싣는다. */
+const tokens = (role: string) => ({
+  accessToken: `mock-access.${role}`,
+  refreshToken: `mock-refresh.${role}`,
+});
+
+/** 목 로그인에서 틀린 비밀번호로 보는 값. 401 문구를 확인할 때 쓴다. */
+export const MOCK_WRONG_PASSWORD = 'wrong-password';
+
+const unauthorized = () =>
+  HttpResponse.json(
+    { status: 401, code: 'UNAUTHORIZED', message: '인증이 필요합니다.' },
+    { status: 401 },
+  );
+
+const ok = (data: unknown) =>
+  HttpResponse.json({ status: 200, message: '요청이 성공했습니다.', data });
+
+export const businessAuthHandlers: HttpHandler[] = [
+  http.post('*/api/v1/auth/company/signin', async ({ request }) => {
+    const { email, password } = (await request.json()) as { email: string; password: string };
+    if (password === MOCK_WRONG_PASSWORD) {
+      return HttpResponse.json(
+        {
+          status: 401,
+          code: 'INVALID_COMPANY_CREDENTIALS',
+          message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        },
+        { status: 401 },
+      );
+    }
+    return ok(tokens(email === MOCK_USER_EMAIL ? 'USER' : 'COMPANY'));
+  }),
+  // 가입한 값으로 목 기업 계정을 바꾼다. 이미 있는 계정(`MOCK_USER_EMAIL`)이면 백엔드처럼 409 다.
+  http.post('*/api/v1/auth/company/signup', async ({ request }) => {
+    const {
+      email,
+      password: _password,
+      organizationName,
+      managerName,
+      ...rest
+    } = (await request.json()) as CompanySignUpRequest;
+    if (email === MOCK_USER_EMAIL) {
+      return HttpResponse.json(
+        { status: 409, code: 'EMAIL_ALREADY_EXISTS', message: '이미 가입된 이메일입니다.' },
+        { status: 409 },
+      );
+    }
+    saveMockCompanyAccount({
+      ...MOCK_COMPANY_ACCOUNT,
+      email,
+      joinedAt: new Date().toISOString(),
+      companyProfile: { organizationName, managerName, notificationEmail: email, ...rest },
+    });
+    return HttpResponse.json(
+      { status: 201, message: '요청이 성공했습니다.', data: tokens('COMPANY') },
+      { status: 201 },
+    );
+  }),
+  http.post('*/api/v1/auth/signout', () => ok(null)),
+  // 기업 정보 수정. 보낸 칸만 목 기업 계정에 덮어써 새로고침해도 남게 한다.
+  ...(['basic-info', 'manager-info'] as const).map((part) =>
+    http.put(`*/api/v1/users/me/company-profile/${part}`, async ({ request }) => {
+      if (roleOf(request) !== 'COMPANY') return unauthorized();
+      const patch = (await request.json()) as Record<string, unknown>;
+      const account = readMockCompanyAccount();
+      const companyProfile = { ...account.companyProfile!, ...patch };
+      if (patch.businessNumberType === 'OVERSEAS') delete companyProfile.businessNumber;
+      saveMockCompanyAccount({ ...account, companyProfile });
+      return ok(null);
+    }),
+  ),
+  http.patch('*/api/v1/users/me/password', ({ request }) =>
+    roleOf(request) ? ok(null) : unauthorized(),
+  ),
+  http.post('*/api/v1/auth/token', async ({ request }) => {
+    const { refreshToken } = (await request.json()) as { refreshToken: string };
+    const match = refreshToken.match(/^mock-refresh\.(\w+)$/);
+    return match ? ok({ accessToken: `mock-access.${match[1]}` }) : unauthorized();
+  }),
+  http.get('*/api/v1/users/me', ({ request }) => {
+    const role = roleOf(request);
+    if (!role) return unauthorized();
+    return ok(role === 'COMPANY' ? readMockCompanyAccount() : MOCK_USER_ACCOUNT);
+  }),
+];

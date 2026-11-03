@@ -1,0 +1,51 @@
+# 시안 배포용. 세 앱(web, admin, business)을 MSW 목이 켜진 채로 함께 띄운다. 백엔드는 없다.
+#
+#   docker compose up --build
+#
+# 앱 사이 링크(web → admin, web → business, business → web)는 브라우저가 여는 주소라 컨테이너 이름이 아니라
+# 밖에서 보이는 주소를 넣는다. 기본은 이 기계의 포트다. 도메인을 붙여 올릴 때는 아래 변수를 바꾼다.
+#
+#   WEB_ORIGIN       기본 http://localhost:${WEB_PORT:-4000}
+#   ADMIN_ORIGIN     기본 http://localhost:${ADMIN_PORT:-4001}
+#   BUSINESS_ORIGIN  기본 http://localhost:${BUSINESS_PORT:-4002}
+#
+# `NEXT_PUBLIC_*` 는 빌드 때 박히므로 주소를 바꾸면 `--build` 로 다시 빌드한다.
+# 목은 `OGONGGO_USE_MOCKS`·`VITE_OGONGGO_USE_MOCKS` 가 정확히 `false` 일 때만 꺼진다. 여기서는 비워 둔다.
+# 이미지마다 띄우는 방식이 다른 이유: .claude/tasks/memos/결정-광고시스템-business-docker-2026-11-03.md
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        OGONGGO_USE_MOCKS: ''
+        NEXT_PUBLIC_ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://localhost:4001}
+        NEXT_PUBLIC_BUSINESS_ORIGIN: ${BUSINESS_ORIGIN:-http://localhost:4002}
+    environment:
+      OGONGGO_USE_MOCKS: ''
+      NEXT_PUBLIC_ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://localhost:4001}
+      NEXT_PUBLIC_BUSINESS_ORIGIN: ${BUSINESS_ORIGIN:-http://localhost:4002}
+    ports:
+      - '${WEB_PORT:-4000}:4000'
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_OGONGGO_USE_MOCKS: ''
+    ports:
+      - '${ADMIN_PORT:-4001}:4001'
+
+  business:
+    build:
+      context: .
+      dockerfile: apps/business/Dockerfile
+      args:
+        OGONGGO_USE_MOCKS: ''
+        NEXT_PUBLIC_WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4000}
+    environment:
+      OGONGGO_USE_MOCKS: ''
+    ports:
+      - '${BUSINESS_PORT:-4002}:4002'
