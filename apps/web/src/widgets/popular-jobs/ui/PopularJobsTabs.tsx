@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { UserTodayJobSummaryResponse } from '@ogonggo/api';
 import { CircleIconButton, cn } from '@ogonggo/ui';
+import { AdLabel } from '@/entities/advertisement/ui/AdLabel';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
 
@@ -21,6 +22,8 @@ export interface PopularJobsTabsProps {
   popular: JobSummary[];
   intern: JobSummary[];
   newcomer: JobSummary[];
+  /** A1 오공고 추천 카드 광고의 공고 id. 첫 탭의 첫 카드에 `AD` 라벨을 붙인다. */
+  adJobId?: number;
 }
 
 /**
@@ -28,7 +31,13 @@ export interface PopularJobsTabsProps {
  * 시 유지할 필요가 없는 화면 상태다(Push 4 task 파일 2.2절). 세 리스트는 서버 컴포넌트
  * (`PopularJobs`)가 이미 나눠 내려준다.
  */
-export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJobsTabsProps) {
+export function PopularJobsTabs({
+  picks,
+  popular,
+  intern,
+  newcomer,
+  adJobId,
+}: PopularJobsTabsProps) {
   const firstTab: TabKey = picks.length > 0 ? 'pick' : 'popular';
   const tabs: TabKey[] = [firstTab, 'intern', 'newcomer'];
   const [active, setActive] = useState<TabKey>(firstTab);
@@ -66,7 +75,11 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
             inert={tab !== active}
             className={cn('col-start-1 row-start-1 min-w-0', tab !== active && 'invisible')}
           >
-            <TabList tab={tab} items={itemsByTab[tab]} />
+            <TabList
+              tab={tab}
+              items={itemsByTab[tab]}
+              adJobId={tab === firstTab ? adJobId : undefined}
+            />
           </div>
         ))}
       </div>
@@ -89,7 +102,7 @@ function recommendationOf(job: JobSummary) {
 /** PC 에서 한 번에 보이고 화살표 한 번에 넘어가는 카드 수. 그리드 네 칸과 같다. */
 const PAGE_SIZE = 4;
 
-function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
+function TabList({ tab, items, adJobId }: { tab: TabKey; items: JobSummary[]; adJobId?: number }) {
   const [page, setPage] = useState(0);
 
   if (items.length === 0) {
@@ -123,7 +136,7 @@ function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
           <li
             key={job.id}
             className={cn(
-              'w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0',
+              'relative w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0',
               (index < start || index >= start + PAGE_SIZE) && 'md:hidden',
             )}
           >
@@ -133,6 +146,9 @@ function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
               recommendation={tab === 'pick' ? recommendationOf(job) : undefined}
               tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
             />
+            {index === 0 && job.id === adJobId ? (
+              <AdLabel className="absolute top-2 left-2 z-10" />
+            ) : null}
           </li>
         ))}
       </ul>

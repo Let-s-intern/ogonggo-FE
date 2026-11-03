@@ -1,7 +1,9 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
+import { fetchAdExposures } from '@/entities/advertisement/api/adExposureApi';
 import { jobMajorField } from '../lib/job-majors';
 import { buildJobCalendarHref, toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, shiftMonths, shiftWeeks, startOfCalendarWeek } from '../lib/week';
+import { CalendarAdStrip } from './CalendarAdStrip';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarSwipe } from './CalendarSwipe';
 import { JobMajorPicker } from './JobMajorPicker';
@@ -155,6 +157,9 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   const { from, to } = query.brief ? weekGridRange(baseDate) : monthGridRange(baseDate);
   const fromParam = toCalendarParam(from);
   const toParam = toCalendarParam(to);
+  // 달력 하이라이트(`calendar_top`): 위 스트립, 칸의 로고 테두리, 오른쪽 목록 맨 위 고정에 같이 쓴다.
+  // 달력 항목과 기다리지 않게 먼저 보낸다.
+  const calendarAdsPromise = fetchAdExposures('CALENDAR_TOP');
   const fetchedItems = await fetchCalendarItemsForMajors(fromParam, toParam, query.majors, {
     // 하나만 골랐을 때만 서버가 거른다. 여럿이면 빼고 받아 아래에서 거른다. 서버는 배열도 받지만
     // 이 화면의 거르기 동작은 그대로 둔다.
@@ -197,6 +202,9 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   // 서버가 다시 렌더하므로 리마운트가 추가 비용도 아니다. 두 뷰의 렌더 규칙이 서로 겹치지
   // 않는다는 점이 더 크다 — 로고와 `+N` 은 월간, 가로 막대는 주간이다.
   // 모바일에서 좌우로 밀면 위 화살표와 같은 곳으로 간다(`CalendarSwipe`).
+  const calendarAds = await calendarAdsPromise;
+  const adJobIds = calendarAds.filter((ad) => ad.target === 'JOB').map((ad) => ad.postId);
+
   const step = (delta: number) =>
     query.brief ? shiftWeeks(baseDate, delta) : shiftMonths(baseDate, delta);
   const prevHref = buildJobCalendarHref(query, { date: step(-1) });
@@ -204,6 +212,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
 
   return (
     <CalendarSwipe prevHref={prevHref} nextHref={nextHref}>
+      <CalendarAdStrip ads={calendarAds} />
       {query.brief ? (
         <div className="flex flex-col gap-4">
           {header}
@@ -221,6 +230,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
           header={header}
           bookmarkedOnly={query.bookmarkedOnly}
           dateBasis={query.dateBasis}
+          adJobIds={adJobIds}
         />
       )}
     </CalendarSwipe>

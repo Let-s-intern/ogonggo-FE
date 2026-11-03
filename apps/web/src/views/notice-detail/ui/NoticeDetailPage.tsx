@@ -4,11 +4,11 @@ export interface NoticeDetailPageProps {
   noticeId: number;
 }
 
-/** `/notices/[noticeId]` — 바깥 여백은 목록(`views/notice-list`) 과 같은 값이다. */
+/** `/notices/[noticeId]` — 바깥 여백은 오공고 업데이트 목록(`views/notice-list`) 과 같은 값이다. */
 export function NoticeDetailPage({ noticeId }: NoticeDetailPageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center bg-white">
-      <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
+      <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10 md:pb-24">
         <NoticeDetailView noticeId={noticeId} />
       </div>
     </main>
