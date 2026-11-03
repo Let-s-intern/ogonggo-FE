@@ -9,6 +9,8 @@ const LETSCAREER_API_ORIGIN = process.env.NEXT_PUBLIC_LETSCAREER_API_ORIGIN;
 
 // PostHog 이벤트를 같은 오리진의 `/ingest` 로 받아 넘긴다(`src/shared/analytics/posthog.ts`). 광고 차단기가
 // PostHog 주소를 막아 이벤트가 빠지는 것을 줄인다. 키가 없는 배포에는 경로를 만들지 않는다.
+/** 비즈니스 앱 주소. `src/shared/config/business.ts` 와 같은 규칙이다(비면 운영 주소). */
+const BUSINESS_ORIGIN = process.env.NEXT_PUBLIC_BUSINESS_ORIGIN || 'https://biz.ogonggo.co.kr';
 const POSTHOG_ENABLED = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
 const POSTHOG_REGION = process.env.NEXT_PUBLIC_POSTHOG_REGION === 'eu' ? 'eu' : 'us';
 
@@ -17,15 +19,23 @@ const nextConfig: NextConfig = {
   // 목데이터 여부를 브라우저에도 알린다(`src/shared/config/mocks.ts`). 서버는 그대로
   // `OGONGGO_USE_MOCKS` 를 읽고, 브라우저는 빌드 때 박힌 이 값을 본다.
   env: { NEXT_PUBLIC_OGONGGO_USE_MOCKS: process.env.OGONGGO_USE_MOCKS ?? '' },
-  // 콜드메일에 나간 `biz.ogonggo.co.kr` 링크를 `/biz` 로 보낸다. 경로는 버리고 쿼리(UTM)는 Next 가 그대로
-  // 넘기며, `entry=biz` 로 서브도메인에서 왔음을 남긴다. `permanent` 라 308 이다.
+  // 기업 마이페이지는 비즈니스 앱(`apps/business`)으로 옮겨 갔다(광고 시스템 PRD). 북마크·메일에 남은 옛 주소가 깨지지
+  // 않게 같은 경로의 비즈니스 주소로 보낸다. 두 앱의 경로(`/mypage/company/**`)가 같다. 쿼리는 Next 가 그대로 넘긴다.
+  // 비즈니스 쪽 경로가 바뀔 수 있어 `permanent: false`(307) 다.
+  //
+  // 전에는 `biz.ogonggo.co.kr` 호스트를 `/biz` 로 보내는 리다이렉트가 여기 있었다. 그 주소는 이제 비즈니스 앱이 받으므로
+  // 걷어 냈다.
   async redirects() {
     return [
       {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'biz.ogonggo.co.kr' }],
-        destination: 'https://www.ogonggo.co.kr/biz?entry=biz',
-        permanent: true,
+        source: '/mypage/company',
+        destination: `${BUSINESS_ORIGIN}/mypage/company`,
+        permanent: false,
+      },
+      {
+        source: '/mypage/company/:path*',
+        destination: `${BUSINESS_ORIGIN}/mypage/company/:path*`,
+        permanent: false,
       },
     ];
   },
