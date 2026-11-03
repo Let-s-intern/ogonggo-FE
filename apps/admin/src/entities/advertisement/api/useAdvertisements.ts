@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AdminAdPlacementSetting,
   AdPlacementUnit,
+  ReorderAdminAdPlacementRequest,
   UpdateAdminAdPlacementRequest,
 } from '@ogonggo/api/src/mocks/fixtures/advertisement-types';
 import { adminGet, adminWrite } from '@/shared/api/adminClient';
@@ -13,6 +14,7 @@ import { adminGet, adminWrite } from '@/shared/api/adminClient';
  */
 
 export type {
+  AdminAdPlacementAssignment,
   AdminAdPlacementSetting,
   AdPlacementUnit,
 } from '@ogonggo/api/src/mocks/fixtures/advertisement-types';
@@ -40,6 +42,25 @@ export function useUpdateAdPlacement(placementKey: string) {
       adminWrite<AdminAdPlacementSetting>(
         'PATCH',
         `/api/v1/admin/advertisement-placements/${placementKey}`,
+        body,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PLACEMENTS_KEY });
+    },
+  });
+}
+
+/**
+ * 구좌 안 노출 순서 변경. 지금 배치된 항목 id 전부를 원하는 순서로 보낸다(빠지거나 겹치면 400).
+ * 순서는 구좌 하나에 하나다(요청서 5절 1).
+ */
+export function useReorderAdPlacement(placementKey: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ReorderAdminAdPlacementRequest) =>
+      adminWrite<AdminAdPlacementSetting>(
+        'PUT',
+        `/api/v1/admin/advertisement-placements/${placementKey}/order`,
         body,
       ),
     onSuccess: () => {

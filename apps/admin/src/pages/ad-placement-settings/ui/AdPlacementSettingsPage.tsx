@@ -10,14 +10,17 @@ import {
   Input,
   type DataTableColumn,
 } from '@ogonggo/ui';
+import { enumLabel } from '@ogonggo/api/src/admin';
 import {
   AD_PLACEMENT_UNIT_LABELS,
   useAdPlacementSettings,
+  useReorderAdPlacement,
   useUpdateAdPlacement,
+  type AdminAdPlacementAssignment,
   type AdminAdPlacementSetting,
 } from '@/entities/advertisement/api/useAdvertisements';
 import { PageHeader } from '@/widgets/page-header';
-import { formatCount } from '@/shared/lib/format';
+import { formatCount, formatDate } from '@/shared/lib/format';
 
 /**
  * 광고 구좌 설정(PRD `어드민 > 구좌 세팅`). 구좌 목록과 고른 구좌의 수정 폼을 한 화면에 둔다. 구좌는 열두 개라 쪽을
@@ -92,11 +95,14 @@ export function AdPlacementSettingsPage() {
       {isError ? <Callout tone="error">구좌 설정을 불러오지 못했습니다.</Callout> : null}
 
       {selected ? (
-        <AdPlacementForm
-          key={selected.placement.key}
-          setting={selected}
-          onClose={() => setSelectedKey(null)}
-        />
+        <div className="flex flex-col gap-4">
+          <AdPlacementForm
+            key={selected.placement.key}
+            setting={selected}
+            onClose={() => setSelectedKey(null)}
+          />
+          <AdPlacementOrder key={`order-${selected.placement.key}`} setting={selected} />
+        </div>
       ) : null}
 
       <DataTable
@@ -219,6 +225,112 @@ function AdPlacementForm({ setting, onClose }: AdPlacementFormProps) {
           </Button>
         </div>
       </div>
+    </Card>
+  );
+}
+
+/**
+ * 구좌 안 노출 순서. 확정·집행 중인 광고를 위·아래 버튼으로 옮기고 한 번에 저장한다.
+ *
+ * 끌어 옮기기가 아니라 버튼이다. 어드민에는 `@dnd-kit` 이 없고, 버튼은 키보드로도 된다
+ * (memos `결정-광고시스템-admin-노출순서-2026-11-03.md`).
+ */
+function AdPlacementOrder({ setting }: { setting: AdminAdPlacementSetting }) {
+  const reorderMutation = useReorderAdPlacement(setting.placement.key);
+  const [order, setOrder] = useState<AdminAdPlacementAssignment[]>(setting.assignments);
+  const changed = order.some((entry, index) => entry.itemId !== setting.assignments[index]?.itemId);
+
+  const move = (index: number, offset: -1 | 1) => {
+    setOrder((current) => {
+      const moving = current[index];
+      if (!moving) {
+        return current;
+      }
+      const rest = current.filter((_, position) => position !== index);
+      return [...rest.slice(0, index + offset), moving, ...rest.slice(index + offset)];
+    });
+  };
+
+  return (
+    <Card>
+      <CardTitle>노출 순서</CardTitle>
+      <p className="pt-1 text-sm text-gray-500">
+        확정·집행 중인 광고입니다. 위에 있을수록 먼저 보입니다. 슬롯 {setting.placement.slotCount}
+        {setting.placement.perJobField ? '(직무당)' : ''}개
+        {setting.placement.rolling ? ', 슬롯 여럿이 번갈아 보입니다.' : '.'}
+      </p>
+
+      {reorderMutation.isSuccess && !changed ? (
+        <Callout tone="success" className="mt-4">
+          저장했습니다.
+        </Callout>
+      ) : null}
+      {reorderMutation.isError ? (
+        <Callout tone="error" className="mt-4">
+          저장하지 못했습니다. 목록을 새로 불러온 뒤 다시 시도해 주세요.
+        </Callout>
+      ) : null}
+
+      {order.length === 0 ? (
+        <p className="pt-4 text-sm text-gray-500">이 구좌에 배치된 광고가 없습니다.</p>
+      ) : (
+        <ol className="mt-4 divide-y divide-gray-100 rounded-md border border-gray-200">
+          {order.map((entry, index) => (
+            <li key={entry.itemId} className="flex items-center gap-4 px-4 py-3 text-sm">
+              <span className="w-6 shrink-0 text-right font-bold text-gray-900">{index + 1}</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-gray-900">
+                  {entry.companyName} · {entry.postTitle}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {entry.applicationNo}
+                  {entry.jobField ? ` · ${enumLabel('JobField', entry.jobField)}` : ''} ·{' '}
+                  {formatDate(entry.startDate)} ~ {formatDate(entry.endDate)} ·{' '}
+                  {entry.status === 'RUNNING' ? '집행' : '확정'}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  aria-label={`${index + 1}번 위로`}
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                >
+                  위로
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  aria-label={`${index + 1}번 아래로`}
+                  disabled={index === order.length - 1}
+                  onClick={() => move(index, 1)}
+                >
+                  아래로
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {order.length > 1 ? (
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={() => reorderMutation.mutate({ itemIds: order.map((entry) => entry.itemId) })}
+            disabled={!changed || reorderMutation.isPending}
+          >
+            {reorderMutation.isPending ? '저장 중' : '순서 저장'}
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={!changed}
+            onClick={() => setOrder(setting.assignments)}
+          >
+            되돌리기
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }
