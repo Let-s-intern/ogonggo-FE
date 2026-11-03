@@ -1,6 +1,6 @@
 import { CardGridSkeleton } from '@/shared/ui/CardGridSkeleton';
 import { ForBusinessBanner } from '@/widgets/for-business-banner';
-import { HomeHero } from '@/widgets/home-hero';
+import { JobsHomeHeroPlaceholder } from '@/widgets/home-hero';
 
 /** `인기 공고`는 조회수 상위 네 건이다(`widgets/popular-jobs/ui/PopularJobs.tsx`의 `TOP_COUNT`). */
 const POPULAR_CARD_COUNT = 4;
@@ -24,8 +24,8 @@ const JOB_CARD_COUNT = 12;
  *
  * 히어로는 `HeroSkeleton` 이 아니라 진짜 `HomeHero` 에 스켈레톤 카드를 자식으로 넣는다. 박스 높이가
  * 인기 공고 구역 높이만큼 달라지는데, 같은 위젯이 같은 값으로 그리면 헤드라인과 여백이 어긋날 수
- * 없다. 히어로는 데이터가 필요 없는 정적 위젯이라 로딩 중에 이미 최종 모습이다(맨 아래
- * `FOR BUSINESS` 배너도 같은 이유로 진짜 위젯이다).
+ * 없다. 헤드라인은 공고 수가 들어가 로딩 중에는 자리만 잡고 감춘다(`JobsHomeHeroPlaceholder`). 맨 아래
+ * `FOR BUSINESS` 배너는 진짜 위젯이다.
  *
  * 히어로 안 카드 네 장은 오늘의 추천 공고 탭이다. 첫 탭은 오공고 PICK 이고 PICK 이 없으면 인기 공고로
  * 대신하므로(`widgets/popular-jobs/ui/PopularJobs.tsx`) 카드가 비는 일이 없다.
@@ -40,9 +40,9 @@ export default function Loading() {
       <div className="flex w-full flex-col items-center" role="status">
         <span className="sr-only">불러오는 중</span>
 
-        <HomeHero screen="jobs">
+        <JobsHomeHeroPlaceholder>
           <PopularSkeleton />
-        </HomeHero>
+        </JobsHomeHeroPlaceholder>
 
         <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
           {/* 전체 공고 — lg 이상은 왼쪽 열(제목 + 필터)과 오른쪽 열(칩·정렬 줄, 카드 3열, 페이지네이션)의
