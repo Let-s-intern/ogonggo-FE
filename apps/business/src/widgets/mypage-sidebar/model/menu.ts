@@ -65,6 +65,7 @@ const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[
     back: '/mypage/company/posts/bootcamps',
   },
   { pattern: /^\/mypage\/company\/ads$/, title: '광고', back: COMPANY_MYPAGE_ROOT },
+  { pattern: /^\/mypage\/company\/ads\/[^/]+$/, title: '광고 상세', back: '/mypage/company/ads' },
   { pattern: /^\/mypage\/company\/profile$/, title: '기업 정보', back: COMPANY_MYPAGE_ROOT },
 ];
 
