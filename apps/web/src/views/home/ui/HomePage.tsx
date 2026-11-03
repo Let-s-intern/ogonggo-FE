@@ -1,5 +1,5 @@
 import { ForBusinessBanner } from '@/widgets/for-business-banner';
-import { HomeHero } from '@/widgets/home-hero';
+import { JobsHomeHero } from '@/widgets/home-hero';
 import { JobList, type JobListQuery } from '@/widgets/job-list';
 import { PopularJobs } from '@/widgets/popular-jobs';
 
@@ -12,9 +12,9 @@ export function HomePage(query: HomePageProps) {
           보인다(`docs/asset/v12 채용공고 상세/목록.webp`). 2페이지부터도 위에 두면 넘길 때마다 같은
           히어로를 지나 스크롤해야 목록이 나온다(2026-10-15, 사용자). */}
       {query.page === 1 ? (
-        <HomeHero screen="jobs">
+        <JobsHomeHero>
           <PopularJobs />
-        </HomeHero>
+        </JobsHomeHero>
       ) : null}
       <div className="flex w-full max-w-page-padded flex-col items-center gap-10 px-5 py-10">
         {/* home.png 는 인기 공고와 전체 공고 사이에 배너 광고 자리가 있다. 광고 내용이 정해지지
