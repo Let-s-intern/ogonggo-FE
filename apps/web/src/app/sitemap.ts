@@ -52,6 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_ORIGIN}/side-studies`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_ORIGIN}/concerns`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_ORIGIN}/notices`, changeFrequency: 'weekly', priority: 0.3 },
+    { url: `${SITE_ORIGIN}/notices/updates`, changeFrequency: 'weekly', priority: 0.3 },
   ];
 
   const bootcampEntries: MetadataRoute.Sitemap = bootcamps.map((bootcamp) => ({

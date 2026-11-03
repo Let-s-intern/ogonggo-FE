@@ -43,18 +43,19 @@ export interface NoticeCategoryInfo {
   href: string;
 }
 
+/** 오공고 업데이트. 공지 홈의 카테고리 칸과 `/notices/updates` 목록이 쓴다. */
+export const OGONGGO_UPDATE_CATEGORY: NoticeCategoryInfo = {
+  category: 'OGONGGO_UPDATE',
+  label: '오공고 업데이트',
+  description: '오공고의 새로운 기능과 변경사항을 전달드려요.',
+  href: '/notices/updates',
+};
+
 /**
  * 공지 홈 `전체 카테고리` 에 보이는 카테고리. `JOB_NOTE`(새로운 공고 노트)는 템플릿이 오기 전까지 글이 없어
  * 넣지 않는다(`.claude/tasks/memos/결정-광고시스템-web-공지사항-2026-11-03.md`).
  */
-export const VISIBLE_NOTICE_CATEGORIES: NoticeCategoryInfo[] = [
-  {
-    category: 'OGONGGO_UPDATE',
-    label: '오공고 업데이트',
-    description: '오공고의 새로운 기능과 변경사항을 전달드려요.',
-    href: '/notices/updates',
-  },
-];
+export const VISIBLE_NOTICE_CATEGORIES: NoticeCategoryInfo[] = [OGONGGO_UPDATE_CATEGORY];
 
 /** 새 글 `N` 을 붙이는 기간. 게시 후 7 일이다. */
 const NEW_NOTICE_DAYS = 7;
