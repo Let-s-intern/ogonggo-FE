@@ -12,6 +12,8 @@ import {
   STEPS,
   type StepNumber,
 } from '../model/form';
+import { validateStep1 } from '../model/validate';
+import { StepPost } from './StepPost';
 import { StepSection } from './StepSection';
 
 export interface AdApplicationPrefill {
@@ -31,7 +33,7 @@ export interface AdApplicationFormProps {
  *
  * 임시저장은 이 브라우저에 둔다. 다시 들어오면 저장한 값을 불러오고, `새로 작성` 으로 지울 수 있다.
  */
-export function AdApplicationForm({ prefill: _prefill }: AdApplicationFormProps) {
+export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
   const toast = useToast();
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const [values, setValues] = useState<AdApplicationFormValues>(EMPTY_FORM);
@@ -62,36 +64,51 @@ export function AdApplicationForm({ prefill: _prefill }: AdApplicationFormProps)
     setOpen(1);
   };
 
-  const done: Record<StepNumber, boolean> = { 1: false, 2: false, 3: false, 4: false, 5: false };
+  /** `다음 단계` 를 눌렀을 때 막힌 이유. 그 단계 아래에 보인다. */
+  const [stepErrors, setStepErrors] = useState<Partial<Record<StepNumber, string>>>({});
+  const validators: Record<StepNumber, () => string | null> = {
+    1: () => validateStep1(values),
+    // 아직 검사하지 않는 단계는 빈 문구다. 막지는 않고 완료 표시도 붙지 않는다.
+    2: () => '',
+    3: () => '',
+    4: () => '',
+    5: () => '',
+  };
+  const done = Object.fromEntries(
+    STEPS.map((step) => [step.n, validators[step.n]() === null]),
+  ) as Record<StepNumber, boolean>;
+  const goNext = (n: StepNumber) => {
+    const error = validators[n]();
+    setStepErrors((previous) => ({ ...previous, [n]: error ?? undefined }));
+    if (!error && n < 5) setOpen((n + 1) as StepNumber);
+  };
+  const purposeLabel = PURPOSES.find((purpose) => purpose.value === values.purpose)?.label;
   const summaries: Partial<Record<StepNumber, string>> = {
-    1: PURPOSES.find((purpose) => purpose.value === values.purpose)?.label,
+    1: [
+      values.postMode === 'NEW' ? values.newJob.title || '새 공고' : values.post?.title,
+      purposeLabel,
+    ]
+      .filter(Boolean)
+      .join(' · '),
   };
 
   const body = (n: StepNumber) => {
     switch (n) {
       case 1:
         return (
-          <fieldset className="flex flex-col gap-3">
-            <legend className="pb-3 text-sm font-semibold text-gray-900">광고 목적</legend>
-            <div className="grid gap-2 md:grid-cols-3">
-              {PURPOSES.map((purpose) => (
-                <label
-                  key={purpose.value}
-                  className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 px-4 py-3 text-sm has-checked:border-blue-500 has-checked:bg-blue-00"
-                >
-                  <input
-                    type="radio"
-                    name="purpose"
-                    value={purpose.value}
-                    checked={values.purpose === purpose.value}
-                    onChange={() => patch({ purpose: purpose.value })}
-                    className="accent-blue-500"
-                  />
-                  <span className="font-semibold text-gray-900">{purpose.label}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <>
+            <StepPost
+              values={values}
+              signedIn={signedIn}
+              preselectJobId={prefill.jobId}
+              patch={patch}
+            />
+            {stepErrors[1] ? (
+              <p role="alert" className="text-sm text-error">
+                {stepErrors[1]}
+              </p>
+            ) : null}
+          </>
         );
       default:
         return null;
@@ -138,7 +155,7 @@ export function AdApplicationForm({ prefill: _prefill }: AdApplicationFormProps)
           done={done[step.n]}
           summary={summaries[step.n]}
           onToggle={() => setOpen((current) => (current === step.n ? 0 : step.n))}
-          onNext={step.n < 5 ? () => setOpen((step.n + 1) as StepNumber) : undefined}
+          onNext={step.n < 5 ? () => goNext(step.n) : undefined}
         >
           {body(step.n)}
         </StepSection>
