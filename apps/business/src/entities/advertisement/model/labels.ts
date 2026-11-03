@@ -53,9 +53,12 @@ export function adApplyHref(params: {
   startDate?: string;
   jobField?: string;
   jobId?: number;
+  /** 성과 리포트의 `같은 조건으로 다시 신청`. 그 신청의 지면·직무·주 수로 2단계를 채운다. */
+  fromApplicationId?: number;
 }): string {
   const query = new URLSearchParams();
   if (params.jobId !== undefined) query.set('jobId', String(params.jobId));
+  if (params.fromApplicationId !== undefined) query.set('from', String(params.fromApplicationId));
   if (params.placementKey) query.set('placement', params.placementKey);
   if (params.startDate) query.set('start', params.startDate);
   if (params.jobField) query.set('jobField', params.jobField);

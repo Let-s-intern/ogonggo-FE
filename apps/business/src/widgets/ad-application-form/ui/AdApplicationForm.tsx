@@ -11,6 +11,7 @@ import {
   type AdPlacement,
   type AdPlacementKey,
   fetchAdAvailability,
+  fetchMyAdApplication,
   fetchMyAdCoupons,
   formatWon,
 } from '@/entities/advertisement';
@@ -49,6 +50,8 @@ export interface AdApplicationPrefill {
   placementKey?: string;
   startDate?: string;
   jobField?: string;
+  /** 이 신청과 같은 지면·직무·주 수로 2단계를 채운다. 로그인해야 읽을 수 있다. */
+  fromApplicationId?: number;
 }
 
 export interface AdApplicationFormProps {
@@ -165,6 +168,48 @@ export function AdApplicationForm({ prefill }: AdApplicationFormProps) {
     );
     setOpen(2);
   }, [availabilityQuery.data, prefill]);
+
+  // 성과 리포트의 `같은 조건으로 다시 신청`. 지면·직무·주 수·목적·공고를 그대로 두고, 시작 주는 그 지면에 잔여가 있는 첫 주로 잡는다.
+  const repeated = useRef(false);
+  useEffect(() => {
+    if (repeated.current || !signedIn || !prefill.fromApplicationId || !availabilityQuery.data)
+      return;
+    repeated.current = true;
+    const data = availabilityQuery.data;
+    fetchMyAdApplication(prefill.fromApplicationId)
+      .then((previousAd) => {
+        const items = previousAd.items.flatMap((item) => {
+          const periods = data
+            .find((each) => each.placement.key === item.placementKey)
+            ?.periods.filter((period) => period.jobField === item.jobField);
+          const start = periods?.find((period) => period.remaining > 0) ?? periods?.[0];
+          return start
+            ? [
+                {
+                  uid: newUid(),
+                  placementKey: item.placementKey,
+                  jobField: item.jobField,
+                  startDate: start.startDate,
+                  weeks: item.weeks,
+                },
+              ]
+            : [];
+        });
+        setValues((previous) => ({
+          ...previous,
+          purpose: previousAd.purpose,
+          postMode: 'EXISTING',
+          post: {
+            target: previousAd.postTarget,
+            id: previousAd.postId,
+            title: previousAd.postTitle,
+          },
+          items,
+        }));
+        setOpen(2);
+      })
+      .catch(() => undefined);
+  }, [signedIn, prefill.fromApplicationId, availabilityQuery.data]);
 
   const patch = (next: Partial<AdApplicationFormValues>) =>
     setValues((previous) => ({ ...previous, ...next }));
