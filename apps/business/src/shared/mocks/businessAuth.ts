@@ -121,6 +121,21 @@ export const businessAuthHandlers: HttpHandler[] = [
     );
   }),
   http.post('*/api/v1/auth/signout', () => ok(null)),
+  // 기업 정보 수정. 보낸 칸만 목 기업 계정에 덮어써 새로고침해도 남게 한다.
+  ...(['basic-info', 'manager-info'] as const).map((part) =>
+    http.put(`*/api/v1/users/me/company-profile/${part}`, async ({ request }) => {
+      if (roleOf(request) !== 'COMPANY') return unauthorized();
+      const patch = (await request.json()) as Record<string, unknown>;
+      const account = readMockCompanyAccount();
+      const companyProfile = { ...account.companyProfile!, ...patch };
+      if (patch.businessNumberType === 'OVERSEAS') delete companyProfile.businessNumber;
+      saveMockCompanyAccount({ ...account, companyProfile });
+      return ok(null);
+    }),
+  ),
+  http.patch('*/api/v1/users/me/password', ({ request }) =>
+    roleOf(request) ? ok(null) : unauthorized(),
+  ),
   http.post('*/api/v1/auth/token', async ({ request }) => {
     const { refreshToken } = (await request.json()) as { refreshToken: string };
     const match = refreshToken.match(/^mock-refresh\.(\w+)$/);
