@@ -34,7 +34,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  *
  * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다. 로그인했으면 이 띠의
  * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`). 이 기기에서 푸시를
- * 아직 켜지 않았으면 아이콘 왼쪽에 `푸시 알림 받기` 가 붙고, 켜면 사라진다(`PushConsentButton`).
+ * 아직 켜지 않았으면 아이콘 왼쪽에 `푸시 알림 받기` 가 붙고, 켜면 사라진다(`PushConsentButton`). 그 왼쪽에
+ * `공지사항` · `오공고 커뮤니티+` 가 로그인과 상관없이 늘 있다. 모바일에서는 햄버거 메뉴 안에 둔다.
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
@@ -63,6 +64,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
 export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
+  const noticesActive = pathname.startsWith('/notices');
+  const communityActive = pathname.startsWith('/community');
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
@@ -128,16 +131,39 @@ export function SiteHeader() {
       <div className="hidden border-b border-gray-100 md:block">
         <div className="mx-auto flex h-10 max-w-page-padded items-center justify-between px-5 pt-2 whitespace-nowrap">
           <ServiceLogoToggle size="desktop" />
-          {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다. */}
-          {signedIn ? (
-            <div className="flex items-center gap-3">
-              <PushConsentButton />
-              <NotificationBell
-                open={openMenu === 'notifications'}
-                onOpenChange={toggleMenu('notifications')}
-              />
-            </div>
-          ) : null}
+          {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다.
+              `공지사항` · `오공고 커뮤니티+` 는 푸시 알림 왼쪽이고 비로그인에도 보인다(광고 시스템 PRD `헤더`). */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/notices"
+              aria-current={noticesActive ? 'page' : undefined}
+              className={cn(
+                'text-xs font-medium text-gray-700 transition-colors hover:text-gray-900',
+                noticesActive && 'font-semibold text-gray-900',
+              )}
+            >
+              공지사항
+            </Link>
+            <Link
+              href="/community"
+              aria-current={communityActive ? 'page' : undefined}
+              className={cn(
+                'rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:text-gray-900',
+                communityActive && 'font-semibold text-gray-900',
+              )}
+            >
+              오공고 커뮤니티+
+            </Link>
+            {signedIn ? (
+              <>
+                <PushConsentButton />
+                <NotificationBell
+                  open={openMenu === 'notifications'}
+                  onOpenChange={toggleMenu('notifications')}
+                />
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
       <div className="mx-auto hidden h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap md:flex">

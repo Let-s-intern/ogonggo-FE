@@ -264,6 +264,15 @@ function MobileMenu({
           />
         )}
         <MenuSection title="공고" links={postings} onNavigate={onClose} />
+        {/* 데스크톱 윗띠의 `공지사항` · `오공고 커뮤니티+`. 모바일 윗줄은 지금처럼 알림·햄버거만 둔다. */}
+        <MenuSection
+          title="오공고 소식"
+          links={[
+            { label: '공지사항', href: '/notices' },
+            { label: '오공고 커뮤니티+', href: '/community' },
+          ]}
+          onNavigate={onClose}
+        />
         <MenuSection
           title="기업 서비스"
           links={[{ label: '공고 등록하기', href: registerHref }]}
