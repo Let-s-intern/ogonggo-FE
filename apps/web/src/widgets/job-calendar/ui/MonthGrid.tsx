@@ -5,6 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import { useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import { cn } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
 import {
   EVENT_RESET_CLASSES,
@@ -44,6 +45,7 @@ const EVENTS_BESIDE_MORE = 5;
 function buildMonthEvents(
   items: UserJobCalendarItemResponse[],
   dateBasis: JobCalendarDateBasis,
+  adJobIds: number[],
 ): EventInput[] {
   const byDay = new Map<string, UserJobCalendarItemResponse[]>();
   for (const item of items) {
@@ -55,7 +57,11 @@ function buildMonthEvents(
   }
 
   const events: EventInput[] = [];
-  for (const [day, dayItems] of byDay) {
+  for (const [day, unsorted] of byDay) {
+    // 광고 공고를 앞에 둬 `+N` 뒤로 숨지 않게 한다.
+    const dayItems = [...unsorted].sort(
+      (a, b) => Number(adJobIds.includes(b.id)) - Number(adJobIds.includes(a.id)),
+    );
     const overflowing = dayItems.length > MAX_EVENTS_PER_DAY;
     const visible = overflowing ? dayItems.slice(0, EVENTS_BESIDE_MORE) : dayItems;
 
@@ -65,7 +71,7 @@ function buildMonthEvents(
         title: item.companyName,
         start: day,
         allDay: true,
-        extendedProps: { order: index, logoUrl: item.logoUrl },
+        extendedProps: { order: index, logoUrl: item.logoUrl, ad: adJobIds.includes(item.id) },
       });
     });
 
@@ -95,6 +101,8 @@ export interface MonthGridProps {
   onSelectDay: (day: string, jobId: number | null) => void;
   /** `마감일 기준` 토글 값. 날짜 칸을 묶는 필드를 정한다(`buildMonthEvents`). */
   dateBasis: JobCalendarDateBasis;
+  /** 달력 하이라이트 광고의 공고 id. 그 로고에 파란 테두리를 두른다. */
+  adJobIds?: number[];
 }
 
 /**
@@ -119,6 +127,7 @@ export function MonthGrid({
   selectedDay,
   onSelectDay,
   dateBasis,
+  adJobIds = [],
 }: MonthGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
   useCalendarDate(calendarRef, initialDate);
@@ -260,12 +269,15 @@ export function MonthGrid({
               <CompanyLogo
                 companyName={arg.event.title}
                 logoUrl={arg.event.extendedProps.logoUrl as string | undefined}
-                className="h-7 w-7 rounded-xs p-0"
+                className={cn(
+                  'h-7 w-7 rounded-xs p-0',
+                  Boolean(arg.event.extendedProps.ad) && 'ring-2 ring-blue-500',
+                )}
               />
             </span>
           );
         }}
-        events={buildMonthEvents(items, dateBasis)}
+        events={buildMonthEvents(items, dateBasis, adJobIds)}
       />
       <DayHoverPopover hover={dayHover} items={items} dateBasis={dateBasis} side="bottom" />
     </div>
