@@ -1,7 +1,11 @@
 import { httpClient } from '@ogonggo/api';
 import type {
+  AdApplication,
+  AdApplicationListResponse,
+  AdApplicationTab,
   AdCoupon,
   AdPlacementAvailabilityResponse,
+  AdReport,
   CreateAdApplicationRequest,
   CreateAdApplicationResponse,
 } from '@ogonggo/api/src/mocks/fixtures/advertisement-types';
@@ -65,3 +69,52 @@ export async function createAdApplication(
   );
   return body.data;
 }
+
+/** 내 광고 목록. 탭 옆 건수(`counts`)는 고른 탭과 상관없이 셋 다 온다. */
+export async function fetchMyAdApplications(
+  tab: AdApplicationTab,
+  page: number,
+): Promise<AdApplicationListResponse> {
+  const body = await httpClient<Envelope<AdApplicationListResponse>>(
+    `/api/v1/users/me/advertisements?tab=${tab}&page=${page}&size=10`,
+  );
+  return body.data;
+}
+
+export async function fetchMyAdApplication(id: number): Promise<AdApplication> {
+  const body = await httpClient<Envelope<AdApplication>>(`/api/v1/users/me/advertisements/${id}`);
+  return body.data;
+}
+
+/** 성과 리포트. 종료된 광고만 있다(아니면 409). */
+export async function fetchAdReport(id: number): Promise<AdReport> {
+  const body = await httpClient<Envelope<AdReport>>(`/api/v1/users/me/advertisements/${id}/report`);
+  return body.data;
+}
+
+/** 소재 `이대로 게재`. 바뀐 신청 전체가 돌아온다. */
+export async function approveAdCreative(id: number, creativeId: number): Promise<AdApplication> {
+  const body = await httpClient<Envelope<AdApplication>>(
+    `/api/v1/users/me/advertisements/${id}/creatives/${creativeId}/approve`,
+    { method: 'POST' },
+  );
+  return body.data;
+}
+
+/** 소재 `수정 요청`. 바뀐 신청 전체가 돌아온다. */
+export async function requestAdCreativeRevision(
+  id: number,
+  creativeId: number,
+  message: string,
+): Promise<AdApplication> {
+  const body = await httpClient<Envelope<AdApplication>>(
+    `/api/v1/users/me/advertisements/${id}/creatives/${creativeId}/revision-request`,
+    { method: 'POST', body: JSON.stringify({ message }) },
+  );
+  return body.data;
+}
+
+export const myAdApplicationsKey = (tab: AdApplicationTab, page: number) =>
+  ['advertisements', 'mine', tab, page] as const;
+export const myAdApplicationKey = (id: number) => ['advertisements', 'mine', 'detail', id] as const;
+export const adReportKey = (id: number) => ['advertisements', 'mine', 'report', id] as const;
