@@ -1,4 +1,5 @@
 import type { HttpHandler } from 'msw';
+import { advertisementHandlers } from './advertisements';
 import { concernHandlers } from './concerns';
 import { contentHandlers } from './content';
 import { dashboardHandlers } from './dashboard';
@@ -38,4 +39,5 @@ export const adminHandlers: HttpHandler[] = [
   ...serviceFeedbackHandlers,
   ...notificationHandlers,
   ...recommendWeightsHandlers,
+  ...advertisementHandlers,
 ];
