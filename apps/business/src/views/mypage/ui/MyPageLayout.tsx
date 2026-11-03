@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Button, cn } from '@ogonggo/ui';
 import { useSignOut } from '@/features/sign-out';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { fetchCompanyPostTotals } from '@/widgets/company-posts';
 import {
   COMPANY_MYPAGE_MENU,
   COMPANY_MYPAGE_ROOT,
@@ -41,6 +42,31 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [router, pathname]);
+
+  /**
+   * 메뉴 옆 건수(`채용공고` · `부트캠프`). 경로가 바뀔 때마다 다시 센다 — 공고를 저장하고 목록으로 돌아오면 늘어
+   * 있어야 한다. 실패하면 숫자 없이 이름만 둔다. web 과 같다.
+   */
+  const [postTotals, setPostTotals] = useState<Record<string, number | undefined>>({});
+  useEffect(() => {
+    if (!isSignedIn()) {
+      return;
+    }
+    let active = true;
+    fetchCompanyPostTotals()
+      .then((totals) => {
+        if (active) {
+          setPostTotals({
+            [`${COMPANY_MYPAGE_ROOT}/posts/jobs`]: totals.jobs,
+            [`${COMPANY_MYPAGE_ROOT}/posts/bootcamps`]: totals.bootcamps,
+          });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
 
   const account = accountState.kind === 'ready' ? accountState.account : undefined;
   const companyProfile = account?.companyProfile;
@@ -80,6 +106,7 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block')}>
             <MyPageSidebar
               menuItems={COMPANY_MYPAGE_MENU}
+              counts={postTotals}
               card={
                 <MyPageCompanyCard
                   organizationName={companyProfile?.organizationName}

@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { CompanyPostsPage } from '@/views/mypage';
+import { parseCompanyPostsQuery } from '@/widgets/company-posts';
 
 export const metadata: Metadata = { title: '채용공고' };
 
-export default function Page() {
-  return (
-    <section className="flex flex-col gap-1">
-      <h2 className="text-xl font-bold text-gray-950">채용공고</h2>
-      <p className="text-sm text-gray-500">공고가 작성부터 종료까지 어디쯤 있는지 확인해요.</p>
-    </section>
-  );
+/** 기업 회원의 채용공고 목록. 페이지가 주소에 있다(`widgets/company-posts/lib/query.ts`). */
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  return <CompanyPostsPage {...parseCompanyPostsQuery('jobs', await searchParams)} />;
 }
