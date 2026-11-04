@@ -177,6 +177,11 @@ export default defineConfig({
     // tsconfig.json 의 paths 와 같은 별칭. Vite 는 tsconfig 를 읽지 않는다.
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  // 시안 배포(docker-compose.yml)는 `vite preview` 로 띄운다. preview 는 localhost 가 아닌 Host 를 막으므로, 밖에서 보이는
+  // 주소를 받아 허용한다. 값이 없으면(로컬) 기본 동작 그대로다.
+  ...(process.env.OGONGGO_PREVIEW_PUBLIC_URL && {
+    preview: { allowedHosts: [new URL(process.env.OGONGGO_PREVIEW_PUBLIC_URL).hostname] },
+  }),
   server: {
     port: 4001,
     strictPort: true,

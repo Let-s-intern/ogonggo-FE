@@ -40,6 +40,8 @@ services:
         VITE_OGONGGO_USE_MOCKS: ''
     environment:
       SERVICE_URL_ADMIN_4001:
+      # admin 은 `vite preview` 라서 이 주소를 허용 Host 에 넣는다(apps/admin/vite.config.ts).
+      OGONGGO_PREVIEW_PUBLIC_URL: ${SERVICE_URL_ADMIN_4001:-}
     expose:
       - '4001'
 
