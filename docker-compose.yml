@@ -1,15 +1,15 @@
 # 시안 배포용. 세 앱(web, admin, business)을 MSW 목이 켜진 채로 함께 띄운다. 백엔드는 없다.
 #
-#   docker compose up --build
+# Coolify(Docker Compose 빌드팩)에 올리는 것을 기준으로 쓴다.
+# 각 서비스의 `SERVICE_URL_<서비스>_<포트>` 는 Coolify 매직 변수다. Coolify 가 와일드카드 도메인으로
+# 주소를 만들어 그 서비스에 붙이고, 끝의 포트로 프록시를 연결한다. 같은 이름을 다른 서비스에서
+# `${...}` 로 읽으면 같은 주소가 들어오므로, 앱 사이 링크(web → admin, web → business,
+# business → web)에 그대로 쓴다. 주소는 리소스의 도메인 설정에서 바꾼다.
 #
-# 앱 사이 링크(web → admin, web → business, business → web)는 브라우저가 여는 주소라 컨테이너 이름이 아니라
-# 밖에서 보이는 주소를 넣는다. 기본은 이 기계의 포트다. 도메인을 붙여 올릴 때는 아래 변수를 바꾼다.
+# 호스트 포트는 열지 않는다(`expose`). 연결은 Coolify 프록시가 한다.
+# 매직 변수가 없는 곳(로컬 `docker compose up`)에서는 링크가 아래 localhost 기본값으로 간다.
 #
-#   WEB_ORIGIN       기본 http://localhost:${WEB_PORT:-4000}
-#   ADMIN_ORIGIN     기본 http://localhost:${ADMIN_PORT:-4001}
-#   BUSINESS_ORIGIN  기본 http://localhost:${BUSINESS_PORT:-4002}
-#
-# `NEXT_PUBLIC_*` 는 빌드 때 박히므로 주소를 바꾸면 `--build` 로 다시 빌드한다.
+# `NEXT_PUBLIC_*` 는 빌드 때 박히므로 주소를 바꾸면 다시 배포(빌드)한다.
 # 목은 `OGONGGO_USE_MOCKS`·`VITE_OGONGGO_USE_MOCKS` 가 정확히 `false` 일 때만 꺼진다. 여기서는 비워 둔다.
 # 이미지마다 띄우는 방식이 다른 이유: .claude/tasks/memos/결정-광고시스템-business-docker-2026-11-03.md
 
@@ -20,14 +20,15 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         OGONGGO_USE_MOCKS: ''
-        NEXT_PUBLIC_ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://localhost:4001}
-        NEXT_PUBLIC_BUSINESS_ORIGIN: ${BUSINESS_ORIGIN:-http://localhost:4002}
+        NEXT_PUBLIC_ADMIN_ORIGIN: ${SERVICE_URL_ADMIN_4001:-http://localhost:4001}
+        NEXT_PUBLIC_BUSINESS_ORIGIN: ${SERVICE_URL_BUSINESS_4002:-http://localhost:4002}
     environment:
+      SERVICE_URL_WEB_4000:
       OGONGGO_USE_MOCKS: ''
-      NEXT_PUBLIC_ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://localhost:4001}
-      NEXT_PUBLIC_BUSINESS_ORIGIN: ${BUSINESS_ORIGIN:-http://localhost:4002}
-    ports:
-      - '${WEB_PORT:-4000}:4000'
+      NEXT_PUBLIC_ADMIN_ORIGIN: ${SERVICE_URL_ADMIN_4001:-http://localhost:4001}
+      NEXT_PUBLIC_BUSINESS_ORIGIN: ${SERVICE_URL_BUSINESS_4002:-http://localhost:4002}
+    expose:
+      - '4000'
 
   admin:
     build:
@@ -35,8 +36,10 @@ services:
       dockerfile: apps/admin/Dockerfile
       args:
         VITE_OGONGGO_USE_MOCKS: ''
-    ports:
-      - '${ADMIN_PORT:-4001}:4001'
+    environment:
+      SERVICE_URL_ADMIN_4001:
+    expose:
+      - '4001'
 
   business:
     build:
@@ -44,8 +47,9 @@ services:
       dockerfile: apps/business/Dockerfile
       args:
         OGONGGO_USE_MOCKS: ''
-        NEXT_PUBLIC_WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4000}
+        NEXT_PUBLIC_WEB_ORIGIN: ${SERVICE_URL_WEB_4000:-http://localhost:4000}
     environment:
+      SERVICE_URL_BUSINESS_4002:
       OGONGGO_USE_MOCKS: ''
-    ports:
-      - '${BUSINESS_PORT:-4002}:4002'
+    expose:
+      - '4002'
