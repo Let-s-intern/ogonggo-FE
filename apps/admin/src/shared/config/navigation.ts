@@ -73,6 +73,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { path: '/placements/pick-jobs', label: '오공고 PICK 공고' },
       { path: '/placements/recommend-weights', label: '추천 로직 가중치' },
+      { path: '/placements/company-priority', label: '기업회원 공고 우선 노출' },
     ],
   },
   {
