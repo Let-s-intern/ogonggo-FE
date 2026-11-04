@@ -128,14 +128,17 @@ const MINUTES_SO_FAR_TODAY = Math.max(1, Math.floor((Date.now() - startOfToday()
 /**
  * 등록 시각. 0~59 일 전 사이에 흩어진다. 사용자 공고 목(`handlers.ts`)도 같은 값을 쓴다.
  *
- * 오늘 등록분은 자정부터 지금까지 안에 흩는다. 하루 전체에 흩으면 아직 오지 않은 시각이 나와, 등록 24시간
- * 안 공고의 `NEW` 배지와 오늘 올라온 공고의 등록 시각이 미래를 가리킨다.
+ * 오늘 등록분은 하루에 흩은 시각을 자정부터 지금까지로 줄여 넣는다. 하루 전체에 흩으면 아직 오지 않은 시각이
+ * 나와, 등록 24시간 안 공고의 `NEW` 배지와 오늘 올라온 공고의 등록 시각이 미래를 가리킨다. 나머지로 자르지 않고
+ * 비율로 줄여서, 새로고침할 때마다 시각은 조금씩 움직여도 오늘 등록분끼리의 순서는 그대로다.
  */
 export const registeredAtFor = (id: number): string => {
   const daysAgo = hashId(id, 1) % 60;
   // 하루를 통째로 빼지 않고 시각까지 벌려 둔다. 같은 날 등록된 행이 여럿일 때 등록일 정렬이
   // 뒤집히지 않는지 보려면 시각이 달라야 한다.
-  const minutesIntoDay = hashId(id, 2) % (daysAgo === 0 ? MINUTES_SO_FAR_TODAY : 24 * 60);
+  const spread = hashId(id, 2) % (24 * 60);
+  const minutesIntoDay =
+    daysAgo === 0 ? Math.floor((spread * MINUTES_SO_FAR_TODAY) / (24 * 60)) : spread;
   return new Date(
     startOfToday() - daysAgo * 24 * 60 * 60 * 1000 + minutesIntoDay * 60 * 1000,
   ).toISOString();
