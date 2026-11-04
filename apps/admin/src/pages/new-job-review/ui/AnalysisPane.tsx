@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { contentFieldLabel } from '@ogonggo/api/src/admin';
-import type { AdminJobAnalysis } from '@ogonggo/api/src/mocks/admin/inspection';
+import type { Analysis as JobAnalysis } from '@ogonggo/api/src/mocks/admin/inspection';
 import { Badge, Button, Callout, Field, Input, Textarea, cn } from '@ogonggo/ui';
 import type { NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
 import { WEB_HOME } from '@/shared/api/webHandoff';
@@ -293,7 +293,7 @@ function Analysis({
   isCurrent,
   bodySaved,
 }: {
-  analysis: AdminJobAnalysis | null;
+  analysis: JobAnalysis | null;
   isCurrent: boolean;
   bodySaved: boolean;
 }) {

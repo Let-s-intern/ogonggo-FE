@@ -2,42 +2,49 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import type {
   AdminJobDetailResponse,
   AdminJobSummaryResponse,
-  SuccessResponseUnit,
+  Analysis,
 } from '../../generated/admin/models';
-import type { UserJobAnalysisResponse } from '../../generated/user/models/userJobAnalysisResponse';
 import { enumLabel } from '../../enums';
 import { ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
 import { notFound, ok } from './paging';
 
 /**
- * 오늘 올라온 공고 검수(LC-3567)의 목. 백엔드에 아직 없는 계약을 이 파일 한 곳에 모았다.
- * PRD `.claude/tasks/todo/prd-admin-today-job-review.md` "백엔드 요청" 1~3 의 제안 모양이다.
+ * 오늘 올라온 공고 검수(LC-3567)의 목. 구현된(배포 전) 백엔드 계약을 이 파일 한 곳에 모았다
+ * (`ogonggo-BE` 브랜치 `LC-3567-어드민-오늘-올라온-공고-검수-화면`). 시각은 오프셋 없는 KST date-time 이다.
  *
- * 1. 검수 완료 표시 `PUT /api/v1/admin/jobs/{jobId}/inspection`, 해제 `DELETE` 같은 경로. 둘 다 본문 없이 200.
- * 2. 어드민 상세의 `analysis`(사용자 `UserJobAnalysisResponse` 와 같은 모양)와 `analysisCurrent`.
- * 3. 목록 필터 `registeredFrom`·`registeredTo`(이상·미만)와 `inspected`. 목록·상세 응답의 `inspectedAt`.
+ * 1. 검수 완료 표시 `PUT /api/v1/admin/jobs/{jobId}/inspection`(`replaceJobInspection`), 해제 `DELETE` 같은 경로
+ *    (`deleteJobInspection`). 둘 다 본문 없이 200 `data: null`, 없는 공고는 404. 다시 PUT 해도 처음 시각이다.
+ * 2. 목록 필터 `registeredFrom`·`registeredTo`(`YYYY-MM-DD`, 두 날짜 포함)와 `inspected`. 목록·상세·`/today` 의
+ *    `inspectedAt`.
+ * 3. 상세의 `analysis`(`Analysis`)·`analysisCurrent`·`analysisEditedAt`.
+ * 4. 운영자 분석 수정 `PUT /api/v1/admin/jobs/{jobId}/analysis`(`replaceJobAnalysis`). 본문 `Analysis`, 응답은 상세.
+ * 5. `PATCH /api/v1/admin/jobs/{jobId}` 의 `sourceHtml`. 걸러서 저장하고 비울 수 없다(400 `[sourceHtml]`).
  *
  * 백엔드가 배포되면 코드젠으로 생성 모델에 이 칸들이 생긴다. 그때 아래 타입을 생성 모델로 바꾸고, 이 파일의
  * 핸들러는 생성 모델의 이름으로 옮긴다. 화면(`apps/admin/src/entities/new-job`)은 이 파일의 타입만 가져다 쓴다.
+ *
+ * `Analysis` 는 배포된 어드민 스펙에 이미 있는 생성 모델이다(AI 서버 저장 본문과 같은 스키마라 코드젠 뒤에도 같은
+ * 이름이다). 백엔드는 빈 `Fact` 칸을 null 로 주는데 생성 모델은 선택 칸(`value?: string`)이라, 화면은 null 과 빈
+ * 칸을 같이 다룬다.
  */
+export type { Analysis };
 
-/** 백엔드 요청 2. 사용자 상세의 분석과 같은 모양이다. */
-export type AdminJobAnalysis = UserJobAnalysisResponse;
-
-/** 백엔드 요청 1·2 가 어드민 상세에 더하는 칸. */
+/** 백엔드가 어드민 상세에 더하는 칸. */
 export interface AdminJobInspectionFields {
   /** 검수 완료 시각. 미검수면 null. */
   inspectedAt?: string | null;
   /** 저장된 공고 분석. 분석이 없으면 null. */
-  analysis?: AdminJobAnalysis | null;
-  /** 분석이 지금 본문으로 만든 것인지. 본문이 바뀌어 다시 분석을 기다리면 false. */
+  analysis?: Analysis | null;
+  /** 분석이 지금 본문으로 만든 것인지. 본문이 바뀌어 다시 분석을 기다리거나 분석이 없으면 false. */
   analysisCurrent?: boolean;
+  /** 운영자가 분석을 고친 시각. AI 가 바뀐 본문으로 다시 분석해 저장하면 null 로 돌아간다. */
+  analysisEditedAt?: string | null;
 }
 
 /**
- * 백엔드 요청 4(2026-11-04 추가). `PATCH /api/v1/admin/jobs/{jobId}` 본문의 원문 HTML. 배포된
- * `UpdateAdminJobRequest` 에는 없어 이 목만 받는다. 백엔드는 크롤러 원문과 같은 거르기(`JobSourceHtmlSanitizer`)를
- * 거쳐 저장한다. 빈 문자열은 원문을 지운다. 코드젠 뒤 생성 모델의 칸으로 바꾸고 이 타입을 지운다.
+ * `PATCH /api/v1/admin/jobs/{jobId}` 본문의 원문 HTML. 배포된 `UpdateAdminJobRequest` 에는 아직 없다. 백엔드는
+ * 크롤러 원문과 같은 거르기(`JobSourceHtmlSanitizer`)를 거쳐 저장하고, 공백이거나 거른 뒤 남는 것이 없으면 400
+ * `[sourceHtml]` 이다. 원문만 고치면 분석은 낡지 않는다. 코드젠 뒤 생성 모델의 칸으로 바꾸고 이 타입을 지운다.
  */
 export interface AdminJobSourceHtmlPatch {
   sourceHtml?: string;
@@ -50,6 +57,13 @@ export type AdminJobSummaryWithInspection = AdminJobSummaryResponse &
 /** 등록 시각의 KST 날짜(`YYYY-MM-DD`). 검수 대상은 오늘(KST) 등록분이다. */
 const kstDate = (iso: string): string =>
   new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+/** 지금의 오프셋 없는 KST date-time(`2026-11-04T13:05:09`). 백엔드 `LocalDateTime` 과 같은 모양이다. */
+const kstNow = (): string => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
+
+function badRequest(message: string) {
+  return HttpResponse.json({ status: 400, code: 'BAD_REQUEST', message }, { status: 400 });
+}
 
 // --- 검수 완료 ------------------------------------------------------------------------------
 
@@ -73,6 +87,36 @@ const inspections = loadInspections();
 function saveInspections() {
   try {
     globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify([...inspections]));
+  } catch {
+    // 메모리에는 남는다.
+  }
+}
+
+/**
+ * 운영자가 고친 분석과 그 시각. 검수 완료처럼 "새로고침해도 남는다" 를 확인해야 해서 `localStorage` 에도 적는다.
+ * 본문 고침은 메모리라 새로고침하면 처음 본문으로 돌아가고, 고친 분석은 그 본문 기준으로 남는다.
+ */
+const EDITS_KEY = 'ogonggo.mock.admin.jobAnalysisEdits';
+
+interface AnalysisEdit {
+  analysis: Analysis;
+  editedAt: string;
+}
+
+function loadEdits(): Map<number, AnalysisEdit> {
+  try {
+    const raw = globalThis.localStorage?.getItem(EDITS_KEY);
+    return new Map(raw ? (JSON.parse(raw) as [number, AnalysisEdit][]) : []);
+  } catch {
+    return new Map();
+  }
+}
+
+const analysisEdits = loadEdits();
+
+function saveEdits() {
+  try {
+    globalThis.localStorage?.setItem(EDITS_KEY, JSON.stringify([...analysisEdits]));
   } catch {
     // 메모리에는 남는다.
   }
@@ -127,7 +171,7 @@ const GARBAGE_BOTTOM = [
 ].join('');
 
 /** 본문 칸으로 공고 분석을 지어낸다. 사용자 상세의 분석과 같은 모양이다. */
-function analysisOf(job: AdminJobDetailResponse): AdminJobAnalysis {
+function analysisOf(job: AdminJobDetailResponse): Analysis {
   const required = linesOf(job.qualifications).slice(0, 8);
   const preferred = linesOf(job.preferredQualifications).slice(0, 8);
   const process = linesOf(job.hiringProcess)[0];
@@ -161,7 +205,7 @@ function analysisOf(job: AdminJobDetailResponse): AdminJobAnalysis {
 }
 
 /** 분석. 없으면 null(분석 없음). 값이 있는 동안 `stale` 에 든 공고는 다시 분석을 기다린다. */
-const analyses = new Map<number, AdminJobAnalysis | null>();
+const analyses = new Map<number, Analysis | null>();
 const staleAnalyses = new Set<number>();
 
 /**
@@ -231,7 +275,16 @@ function seedBatch() {
 
 seedBatch();
 
-/** 내용 수정으로 본문이 바뀌면 분석이 낡는다. 백엔드는 본문 해시로 같은 일을 한다. */
+// 고친 분석은 지금 본문 기준이다(백엔드는 지금 본문 해시로 저장한다).
+analysisEdits.forEach(({ analysis }, jobId) => {
+  analyses.set(jobId, analysis);
+  staleAnalyses.delete(jobId);
+});
+
+/**
+ * 내용 수정으로 본문이 바뀌면 분석이 낡는다. 백엔드는 본문 해시로 같은 일을 한다. 운영자 수정 시각은 남는다 —
+ * 백엔드는 AI 가 새 본문으로 다시 분석해 저장할 때 지운다. 목에는 AI 가 없어 다시 분석은 오지 않는다.
+ */
 export function markAnalysisStale(jobId: number) {
   if (analyses.get(jobId)) {
     staleAnalyses.add(jobId);
@@ -246,6 +299,7 @@ export function withInspection(job: AdminJobDetailResponse): AdminJobDetailWithI
     inspectedAt: inspections.get(job.id) ?? null,
     analysis,
     analysisCurrent: analysis ? !staleAnalyses.has(job.id) : false,
+    analysisEditedAt: analysisEdits.get(job.id)?.editedAt ?? null,
   };
 }
 
@@ -256,20 +310,43 @@ export function withInspectedAt<T extends { id: number }>(
   return { ...summary, inspectedAt: inspections.get(summary.id) ?? null };
 }
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * 목록 필터(백엔드 요청 3). 보내지 않으면 지금과 같다.
+ * 목록 필터의 날짜 검사. `YYYY-MM-DD` 가 아니면(date-time 포함) 400, 시작일이 끝일보다 늦으면 400
+ * `[registeredFrom]`. 문제가 없으면 null.
+ */
+export function rejectInspectionFilters(url: URL) {
+  const from = url.searchParams.get('registeredFrom');
+  const to = url.searchParams.get('registeredTo');
+  for (const [name, value] of [
+    ['registeredFrom', from],
+    ['registeredTo', to],
+  ] as const) {
+    if (value !== null && !DATE_ONLY.test(value)) {
+      return badRequest(`[${name}] 날짜는 YYYY-MM-DD 로 보내 주세요.`);
+    }
+  }
+  if (from && to && from > to) {
+    return badRequest('[registeredFrom] 시작일이 종료일보다 늦습니다.');
+  }
+  return null;
+}
+
+/**
+ * 목록 필터. 보내지 않으면 지금과 같다.
  *
- * `registeredFrom` 이상, `registeredTo` 미만. 값은 오프셋이 붙은 date-time 이다(`2026-11-04T00:00:00+09:00`).
- * 읽을 수 없는 값은 백엔드처럼 400 을 주는 대신 무시한다 — 화면은 늘 만든 값을 보낸다.
+ * `registeredFrom`·`registeredTo` 는 KST 날짜(`YYYY-MM-DD`)이고 두 날짜를 포함한다. 오늘분은 두 칸에 오늘 날짜다.
+ * 형식 검사는 `rejectInspectionFilters` 가 먼저 한다.
  */
 export function matchesInspectionFilters(job: AdminJobDetailResponse, url: URL): boolean {
-  const time = new Date(job.registeredAt).getTime();
-  const from = Date.parse(url.searchParams.get('registeredFrom') ?? '');
-  const to = Date.parse(url.searchParams.get('registeredTo') ?? '');
-  if (!Number.isNaN(from) && time < from) {
+  const date = kstDate(job.registeredAt);
+  const from = url.searchParams.get('registeredFrom');
+  const to = url.searchParams.get('registeredTo');
+  if (from && date < from) {
     return false;
   }
-  if (!Number.isNaN(to) && time >= to) {
+  if (to && date > to) {
     return false;
   }
   const inspected = url.searchParams.get('inspected');
@@ -292,16 +369,81 @@ function sanitizeSourceHtml(html: string): string {
 }
 
 /**
- * 백엔드 요청 4. 공고 수정 본문의 `sourceHtml` 을 거른 뒤 저장한다. 분석은 본문 칸으로 만들므로 낡게 하지 않는다.
- * 보내지 않으면 그대로다.
+ * 공고 수정 본문의 `sourceHtml` 을 거른 값. 보내지 않으면 `{}`, 공백이거나 거른 뒤 남는 것이 없으면 400 응답이다.
+ * 백엔드는 다른 칸을 저장하기 전에 거절하므로, 수정 목은 이것을 먼저 부르고 저장은 끝에 한다. 분석은 본문 칸으로
+ * 만드므로 낡게 하지 않는다.
  */
-export function applySourceHtmlPatch(job: AdminJobDetailResponse, body: AdminJobSourceHtmlPatch) {
+export function readSourceHtmlPatch(body: AdminJobSourceHtmlPatch): {
+  html?: string;
+  error?: ReturnType<typeof badRequest>;
+} {
   if (typeof body.sourceHtml !== 'string') {
-    return;
+    return {};
+  }
+  if (body.sourceHtml.trim() === '') {
+    return { error: badRequest('[sourceHtml] 원문 HTML 은 비울 수 없습니다.') };
   }
   const html = sanitizeSourceHtml(body.sourceHtml).trim();
-  job.sourceHtml = html === '' ? undefined : html;
+  if (html.replace(/<[^>]*>/g, '').trim() === '' && !/<img\b/i.test(html)) {
+    return { error: badRequest('[sourceHtml] 안전한 태그만 남기면 보여 줄 내용이 없습니다.') };
+  }
+  return { html };
 }
+
+const TEXT_MAX = 1000;
+
+/**
+ * 운영자 분석 본문 검사. 백엔드 `AiJobAnalysisRequest.Analysis` 의 제약과 같다 — 할 일·역량 3개, 필수·우대 8개,
+ * 경험 3개, 글 1000자, 할 일의 태그·글과 역량의 이름·문장·설명은 비울 수 없다. 걸리면 `[칸] 사유`.
+ */
+function analysisError(analysis: Analysis): string | null {
+  const long = (text: string | null | undefined) => (text ?? '').length > TEXT_MAX;
+  const blank = (text: string | null | undefined) => (text ?? '').trim() === '';
+  if (analysis.tasks.length > 3) return '[tasks] 할 일은 3개까지입니다.';
+  if (analysis.required.length > 8) return '[required] 필수 조건은 8개까지입니다.';
+  if (analysis.preferred.length > 8) return '[preferred] 우대 조건은 8개까지입니다.';
+  if (analysis.competencies.length > 3) return '[competencies] 역량은 3개까지입니다.';
+  for (const [index, task] of analysis.tasks.entries()) {
+    if ([task.tag, task.text].some((text) => blank(text) || long(text))) {
+      return `[tasks[${index}]] 할 일의 태그와 내용을 1000자 안으로 입력해 주세요.`;
+    }
+  }
+  for (const key of ['required', 'preferred'] as const) {
+    if (analysis[key].some((item) => blank(item) || long(item))) {
+      return `[${key}] 빈 조건이나 1000자를 넘는 조건이 있습니다.`;
+    }
+  }
+  const facts: Fact[] = [
+    ...Object.values(analysis.employment),
+    ...Object.values(analysis.submission),
+  ];
+  if (facts.some((fact) => long(fact.value) || long(fact.note))) {
+    return '[employment] 근무 조건·제출의 값과 보충은 1000자까지입니다.';
+  }
+  for (const [index, competency] of analysis.competencies.entries()) {
+    if (
+      [competency.name, competency.quote, competency.description].some((t) => blank(t) || long(t))
+    ) {
+      return `[competencies[${index}]] 역량의 이름·문장·설명을 1000자 안으로 입력해 주세요.`;
+    }
+    if (competency.experiences.length > 3) {
+      return `[competencies[${index}].experiences] 경험은 3개까지입니다.`;
+    }
+  }
+  return null;
+}
+
+/** 백엔드가 주는 `Fact`. 빈 칸은 null 이다. */
+interface Fact {
+  value?: string | null;
+  note?: string | null;
+}
+
+/** 공백뿐인 `Fact` 칸은 null 로 저장한다(백엔드 `Fact.toFact`). */
+const toFact = (fact: Fact): Fact => ({
+  value: fact.value?.trim() ? fact.value : null,
+  note: fact.note?.trim() ? fact.note : null,
+});
 
 const findJob = (jobId: unknown) =>
   ADMIN_JOB_FIXTURES.find((fixture) => fixture.id === Number(jobId));
@@ -313,11 +455,10 @@ const markInspectedHandler = http.put('*/api/v1/admin/jobs/:jobId/inspection', (
     return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
   }
   if (!inspections.has(job.id)) {
-    inspections.set(job.id, new Date().toISOString());
+    inspections.set(job.id, kstNow());
     saveInspections();
   }
-  const body: SuccessResponseUnit = ok({});
-  return HttpResponse.json(body, { status: 200 });
+  return HttpResponse.json(ok(null), { status: 200 });
 });
 
 /** 해제. 표시가 없어도 200 이다. */
@@ -330,9 +471,52 @@ const unmarkInspectedHandler = http.delete(
     }
     inspections.delete(job.id);
     saveInspections();
-    const body: SuccessResponseUnit = ok({});
-    return HttpResponse.json(body, { status: 200 });
+    return HttpResponse.json(ok(null), { status: 200 });
   },
 );
 
-export const inspectionHandlers: HttpHandler[] = [markInspectedHandler, unmarkInspectedHandler];
+/**
+ * 운영자 분석 수정. 통째로 바꾸고 지금 본문 기준으로 저장한다 — 바로 사용자에게 보이고, 본문이 바뀌기 전까지 AI 가
+ * 덮어쓰지 않는다. 분석이 없던 공고에도 저장할 수 있다.
+ */
+const replaceAnalysisHandler = http.put(
+  '*/api/v1/admin/jobs/:jobId/analysis',
+  async ({ params, request }) => {
+    const job = findJob(params.jobId);
+    if (!job) {
+      return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
+    }
+    const body = (await request.json()) as Analysis;
+    const error = analysisError(body);
+    if (error) {
+      return badRequest(error);
+    }
+    const { employment: e, submission: s } = body;
+    const analysis = {
+      ...body,
+      employment: {
+        type: toFact(e.type),
+        conversion: toFact(e.conversion),
+        salary: toFact(e.salary),
+        affiliation: toFact(e.affiliation),
+      },
+      submission: {
+        documents: toFact(s.documents),
+        essay: toFact(s.essay),
+        process: toFact(s.process),
+        deadline: toFact(s.deadline),
+      },
+    } as Analysis;
+    analyses.set(job.id, analysis);
+    staleAnalyses.delete(job.id);
+    analysisEdits.set(job.id, { analysis, editedAt: kstNow() });
+    saveEdits();
+    return HttpResponse.json(ok(withInspection(job)), { status: 200 });
+  },
+);
+
+export const inspectionHandlers: HttpHandler[] = [
+  markInspectedHandler,
+  unmarkInspectedHandler,
+  replaceAnalysisHandler,
+];

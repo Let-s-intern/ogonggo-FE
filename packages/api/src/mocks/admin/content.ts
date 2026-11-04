@@ -28,9 +28,10 @@ import {
 import { clearRejection } from '../fixtures/admin-rejection';
 import {
   type AdminJobSourceHtmlPatch,
-  applySourceHtmlPatch,
   markAnalysisStale,
   matchesInspectionFilters,
+  readSourceHtmlPatch,
+  rejectInspectionFilters,
   withInspectedAt,
   withInspection,
 } from './inspection';
@@ -96,6 +97,10 @@ const toBootcampSummary = ({
 
 const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
   const url = new URL(request.url);
+  const rejectedFilter = rejectInspectionFilters(url);
+  if (rejectedFilter) {
+    return rejectedFilter;
+  }
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
   const visibility = url.searchParams.get('visibility') ?? '';
   const source = url.searchParams.get('source') ?? '';
@@ -385,6 +390,10 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (rejected) {
     return rejected;
   }
+  const sourceHtml = readSourceHtmlPatch(body as AdminJobSourceHtmlPatch);
+  if (sourceHtml.error) {
+    return sourceHtml.error;
+  }
 
   const merged = mergeJobDetails(job, body);
   if ('error' in merged) {
@@ -403,7 +412,9 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     markAnalysisStale(job.id);
   }
   Object.assign(job, merged.next);
-  applySourceHtmlPatch(job, body as AdminJobSourceHtmlPatch);
+  if (sourceHtml.html !== undefined) {
+    job.sourceHtml = sourceHtml.html;
+  }
   // 모집 상태는 저장값이 아니라 일정에서 계산한다. 지난 마감일을 미루면 모집 중으로 돌아가고,
   // 직접 마감한 공고(`closedAt`)는 마감으로 남는다.
   job.recruitmentStatus = recruitmentStatusOf({

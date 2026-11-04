@@ -11,6 +11,7 @@ import type {
   AdminJobDetailWithInspection,
   AdminJobSourceHtmlPatch,
   AdminJobSummaryWithInspection,
+  Analysis,
 } from '@ogonggo/api/src/mocks/admin/inspection';
 import { adminDelete, adminWrite } from '@/shared/api/adminClient';
 import { unwrapData } from '@/shared/api/unwrapData';
@@ -21,10 +22,10 @@ export type NewJobDetail = AdminJobDetailWithInspection;
 /**
  * 오늘 올라온 공고(LC-3567). 오늘(KST 달력 날짜) 등록된 크롤러·고용24 공고다. 자정이 지나면 전날 공고는 빠진다.
  *
- * 검수 완료 표시·해제, 상세의 `inspectedAt`·`analysis`·`analysisCurrent`, 목록의 `registeredFrom`·`registeredTo`
- * 는 백엔드에 아직 없다(PRD `prd-admin-today-job-review.md` "백엔드 요청" 1~3). 타입은 목의 계약
- * (`@ogonggo/api/src/mocks/admin/inspection`)에서 가져오고, 검수 완료는 `adminClient` 로 부른다. 코드젠 뒤 생성
- * 모델과 생성 함수로 바꾼다.
+ * 검수 완료 표시·해제, 분석 수정, 상세의 `inspectedAt`·`analysis`·`analysisCurrent`·`analysisEditedAt`, 목록의
+ * `registeredFrom`·`registeredTo`·`inspected`, 수정의 `sourceHtml` 은 백엔드에 구현됐고 아직 배포 전이다. 타입은 목의
+ * 계약(`@ogonggo/api/src/mocks/admin/inspection`)에서 가져오고, 검수 완료·분석 수정은 `adminClient` 로 부른다.
+ * 코드젠 뒤 생성 모델과 생성 함수(`replaceJobInspection`·`deleteJobInspection`·`replaceJobAnalysis`)로 바꾼다.
  */
 
 export interface NewJobQueue {
@@ -47,14 +48,15 @@ const SOURCES = ['CRAWLER', 'WORK24'] as const;
 export const kstDate = (iso: string): string =>
   new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-const nextDate = (date: string): string =>
-  new Date(Date.parse(`${date}T00:00:00Z`) + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+/** 지금의 오프셋 없는 KST date-time. 백엔드가 주는 시각과 같은 모양이다. */
+const kstNow = (): string => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
 
 /**
- * 한 등록 경로의 그날 공고. 등록일 필터(백엔드 요청 3)를 보내되, 받은 것을 여기서도 날짜로 거른다.
+ * 한 등록 경로의 그날 공고. 등록일 필터를 보내되, 받은 것을 여기서도 날짜로 거른다.
  *
- * 지금 배포된 백엔드는 이 필터를 모르고 무시한다. 그래도 정렬이 등록일 역순이라 그날보다 앞선 공고가 나오면
- * 거기서 멈추면 된다. 필터가 생기면 첫 쪽에서 끝난다.
+ * 필터는 KST 날짜(`YYYY-MM-DD`)이고 두 날짜를 포함한다. 그날 하루는 두 칸에 같은 날짜를 보낸다. 지금 배포된
+ * 백엔드는 이 필터를 모르고 무시한다. 그래도 정렬이 등록일 역순이라 그날보다 앞선 공고가 나오면 거기서 멈추면
+ * 된다. 필터가 배포되면 첫 쪽에서 끝난다.
  */
 async function fetchSource(source: (typeof SOURCES)[number], date: string): Promise<NewJob[]> {
   const items: NewJob[] = [];
@@ -62,8 +64,8 @@ async function fetchSource(source: (typeof SOURCES)[number], date: string): Prom
     const params = {
       source,
       sort: 'REGISTERED_AT',
-      registeredFrom: `${date}T00:00:00+09:00`,
-      registeredTo: `${nextDate(date)}T00:00:00+09:00`,
+      registeredFrom: date,
+      registeredTo: date,
       page,
       size: PAGE_SIZE,
     } as ListJobsParams;
@@ -143,9 +145,10 @@ export function usePrefetchNewJobDetail() {
 const inspectionPath = (jobId: number) => `/api/v1/admin/jobs/${jobId}/inspection`;
 
 /**
- * 검수 완료 표시·해제(백엔드 요청 1). 노출 상태는 바꾸지 않는다.
+ * 검수 완료 표시·해제(`replaceJobInspection`·`deleteJobInspection`). 요청 본문이 없고 응답 `data` 는 null 이다.
+ * 노출 상태는 바꾸지 않는다.
  *
- * 응답 본문이 없어 완료 시각은 지금으로 적어 두고, 상세는 다시 받아 서버 시각으로 맞춘다.
+ * 응답에 시각이 없어 완료 시각은 지금으로 적어 두고, 상세는 다시 받아 서버 시각으로 맞춘다.
  */
 export function useSetJobInspected() {
   const queryClient = useQueryClient();
@@ -159,7 +162,7 @@ export function useSetJobInspected() {
     },
     onSuccess: (_, { jobId, inspected }) => {
       patchQueueItem(queryClient, jobId, {
-        inspectedAt: inspected ? new Date().toISOString() : null,
+        inspectedAt: inspected ? kstNow() : null,
       });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
     },
@@ -184,9 +187,9 @@ export function useSetJobVisibility() {
 }
 
 /**
- * 원문 HTML 고치기(백엔드 요청 4). 같은 `PATCH /api/v1/admin/jobs/{jobId}` 에 `sourceHtml` 을 싣는다. 배포된
- * `UpdateAdminJobRequest` 에는 이 칸이 없어 목만 받는다. 지금 백엔드에 보내면 저장되지 않는다(모르는 칸을
- * 버리는지 400 인지 확인 필요). 코드젠 뒤 생성 모델의 칸으로 바꾸고 계약 타입(`AdminJobSourceHtmlPatch`)을 지운다.
+ * 원문 HTML 고치기. 같은 `PATCH /api/v1/admin/jobs/{jobId}` 에 `sourceHtml` 을 싣는다. 백엔드는 걸러서 저장하고
+ * 비울 수 없다(공백이면 400 `[sourceHtml]`). 원문만 고치면 분석은 낡지 않는다. 배포된 `UpdateAdminJobRequest` 에는
+ * 아직 이 칸이 없다. 코드젠 뒤 생성 모델의 칸으로 바꾸고 계약 타입(`AdminJobSourceHtmlPatch`)을 지운다.
  */
 export function useSetJobSourceHtml() {
   const queryClient = useQueryClient();
@@ -196,5 +199,21 @@ export function useSetJobSourceHtml() {
         updateJob(jobId, { sourceHtml } satisfies AdminJobSourceHtmlPatch as UpdateAdminJobRequest),
       ),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] }),
+  });
+}
+
+/**
+ * 운영자 분석 수정(`PUT /api/v1/admin/jobs/{jobId}/analysis`, `replaceJobAnalysis`). 본문은 분석 전체이고 응답은
+ * 바뀐 상세다. 지금 본문 기준으로 저장돼 바로 사용자에게 보이고, 본문이 바뀌기 전까지 AI 가 덮어쓰지 않는다.
+ */
+export function useSaveJobAnalysis() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ jobId, analysis }: { jobId: number; analysis: Analysis }) =>
+      adminWrite<NewJobDetail>('PUT', `/api/v1/admin/jobs/${jobId}/analysis`, analysis),
+    onSuccess: (detail, { jobId }) => {
+      queryClient.setQueryData(['admin', 'jobs', jobId], detail);
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
+    },
   });
 }
