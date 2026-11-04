@@ -79,6 +79,14 @@ const full: UserJobDetailResponse = {
   region: 'SEOUL',
   sourceUrl: 'https://example.com/careers/frontend-engineer',
   viewCount: 1234,
+  // 원문 포스터 줄(`widgets/job-detail/ui/PosterStrip.tsx`) 확인용. 셋째 이미지는 일부러 없는 주소다 —
+  // 핫링크가 막힌 원문 이미지처럼 깨진 이미지가 화면에서 숨는지 본다.
+  sourceHtml: [
+    '<p><img src="https://www.ogonggo.co.kr/hero/jobs.png" alt="채용 포스터"></p>',
+    '<h2>주요 업무</h2><ul><li>채용공고 화면을 만듭니다.</li><li>디자인 시스템을 다듬습니다.</li></ul>',
+    '<p><img src="https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg" alt="회사 소개"></p>',
+    '<p><img src="https://example.com/poster-missing.png" alt="깨진 이미지"></p>',
+  ].join(''),
 };
 
 /** 본문 필드 전부 undefined — 상세 페이지 섹션 숨김 검증 대상. */
