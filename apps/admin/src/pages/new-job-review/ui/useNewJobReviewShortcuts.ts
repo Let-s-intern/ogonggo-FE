@@ -15,7 +15,7 @@ export interface NewJobReviewShortcutHandlers {
  *
  *   W / S   마우스가 마지막에 올라간 칸(기본은 왼쪽) 위·아래 스크롤
  *   A / D   이전·다음 건
- *   Space   검수 완료
+ *   Space   검수 완료 체크 후 다음 건(이미 체크했으면 다음 건만)
  *   H       비노출 / 다시 노출
  *   E       내용 수정
  *

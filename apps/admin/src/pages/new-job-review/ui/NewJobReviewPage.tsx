@@ -2,14 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   ActionAlert,
-  Badge,
   Button,
   Callout,
   Card,
   CardTitle,
+  Checkbox,
   Chip,
   EmptyState,
-  cn,
 } from '@ogonggo/ui';
 import {
   type NewJob,
@@ -35,7 +34,7 @@ import { useNewJobReviewShortcuts } from './useNewJobReviewShortcuts';
 
 type Filter = 'uninspected' | 'inspected' | 'hidden' | 'all';
 
-/** 되돌릴 수 있는 마지막 동작. 비노출은 노출로, 검수 완료는 해제로 되돌린다. */
+/** 되돌릴 수 있는 마지막 동작. 비노출은 노출로, 검수 완료 체크는 해제로 되돌린다. */
 interface LastAction {
   kind: 'inspect' | 'hide';
   job: NewJob;
@@ -181,47 +180,46 @@ export function NewJobReviewPage() {
   }, []);
 
   /**
-   * 검수 완료. 성공하면 다음 건으로 간다. 이미 완료한 건이면 요청 없이 다음 건으로만 간다 — Space 를 연달아
-   * 누르며 훑는 흐름을 끊지 않는다. 실패하면 그 건에 머문다.
+   * 검수 완료 체크(2026-11-04 사용자: 검수 상태는 체크 표시 하나). 누르는 즉시 저장한다. 체크박스를 누르면 그 건에
+   * 머물고, Space(`advance`)는 체크한 뒤 다음 건으로 간다. 이미 체크한 건에서 Space 는 요청 없이 다음 건으로만
+   * 간다 — 연달아 누르며 훑다가 체크를 풀지 않게 한다. 해제는 체크박스로만 한다. 실패하면 그 건에 머문다.
    */
-  const inspect = useCallback(() => {
-    if (!current || isBusy) {
-      return;
-    }
-    focusRoot();
-    if (current.inspectedAt) {
-      move(1);
-      return;
-    }
-    const job = current;
-    setError('');
-    setInspected.mutate(
-      { jobId: job.id, inspected: true },
-      {
-        onSuccess: () => {
-          setLastAction({ kind: 'inspect', job });
-          setAlert({
-            message: '검수 완료했습니다.',
-            detail: job.title,
-            tone: 'success',
-            nonce: Date.now(),
-          });
+  const setChecked = useCallback(
+    (checked: boolean, advance: boolean) => {
+      if (!current || isBusy) {
+        return;
+      }
+      focusRoot();
+      if (checked === Boolean(current.inspectedAt)) {
+        if (advance) {
           move(1);
+        }
+        return;
+      }
+      const job = current;
+      setError('');
+      setInspected.mutate(
+        { jobId: job.id, inspected: checked },
+        {
+          onSuccess: () => {
+            setLastAction(checked ? { kind: 'inspect', job } : null);
+            if (advance) {
+              // 다음 건으로 넘어가 체크 표시가 화면에서 사라지므로 무엇을 체크했는지 알린다.
+              setAlert({
+                message: '검수 완료로 체크했습니다.',
+                detail: job.title,
+                tone: 'success',
+                nonce: Date.now(),
+              });
+              move(1);
+            }
+          },
+          onError: fail,
         },
-        onError: fail,
-      },
-    );
-  }, [current, isBusy, focusRoot, move, setInspected, fail]);
-
-  /** 검수 완료 해제. 버튼으로만 한다. */
-  const uninspect = useCallback(() => {
-    if (!current || isBusy) {
-      return;
-    }
-    focusRoot();
-    setError('');
-    setInspected.mutate({ jobId: current.id, inspected: false }, { onError: fail });
-  }, [current, isBusy, focusRoot, setInspected, fail]);
+      );
+    },
+    [current, isBusy, focusRoot, move, setInspected, fail],
+  );
 
   /** 비노출이면 다음 건으로 가고, 다시 노출이면 그 건에 머문다(고친 뒤 되살리는 경우다). */
   const toggleHidden = useCallback(() => {
@@ -286,11 +284,11 @@ export function NewJobReviewPage() {
       scrollDown: () => scrollBy(SCROLL_STEP),
       previous: () => move(-1),
       next: () => move(1),
-      inspect,
+      inspect: () => setChecked(true, true),
       toggleHidden,
       edit: () => setIsEditing(Boolean(detail.data)),
     }),
-    [scrollBy, move, inspect, toggleHidden, detail.data],
+    [scrollBy, move, setChecked, toggleHidden, detail.data],
   );
 
   useNewJobReviewShortcuts({ enabled: !isEditing && current !== undefined, handlers });
@@ -359,7 +357,7 @@ export function NewJobReviewPage() {
                 className="max-w-md truncate text-sm text-blue-600 underline"
                 onClick={undo}
               >
-                방금 {lastAction.kind === 'inspect' ? '검수 완료' : '비노출'}한 「
+                방금 {lastAction.kind === 'inspect' ? '검수 완료 체크' : '비노출'}한 「
                 {lastAction.job.title}」 되돌리기
               </button>
             ) : null}
@@ -410,13 +408,12 @@ export function NewJobReviewPage() {
         />
       ) : (
         <>
-          <Card className={cn(current.inspectedAt && 'border-green-500 ring-1 ring-green-100')}>
+          <Card>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2 pb-1">
                   <ContentSourceBadge value={current.source} />
                   <VisibilityBadge value={current.visibility} />
-                  {current.inspectedAt ? <Badge tone="success">검수 완료</Badge> : null}
                   <span className="text-sm text-gray-500">
                     {detail.data?.companyName ?? current.companyName}
                   </span>
@@ -430,7 +427,20 @@ export function NewJobReviewPage() {
               </div>
 
               {/* 키보드가 주 조작이지만 버튼도 둔다. 키 이름은 `title` 로 남긴다. */}
-              <div className="flex shrink-0 gap-2">
+              <div className="flex shrink-0 items-center gap-2">
+                {/*
+                  누르는 즉시 저장하는 체크박스라 AI 비서가 칸 채우기로 누르지 않게 막는다(`data-ai-human-only`,
+                  `features/ai-assistant/model/screen.ts`). 확정은 사람이 한다.
+                */}
+                <span data-ai-human-only title="검수 완료 체크 (Space 는 체크하고 다음 건)">
+                  <Checkbox
+                    checked={Boolean(current.inspectedAt)}
+                    onChange={(checked) => setChecked(checked, false)}
+                    disabled={isBusy}
+                    label="검수 완료"
+                    labelClassName="font-medium"
+                  />
+                </span>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -449,15 +459,6 @@ export function NewJobReviewPage() {
                 >
                   {current.visibility === 'HIDDEN' ? '다시 노출' : '비노출'}
                 </Button>
-                {current.inspectedAt ? (
-                  <Button size="sm" variant="secondary" onClick={uninspect} disabled={isBusy}>
-                    검수 완료 해제
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={inspect} disabled={isBusy} title="검수 완료 (Space)">
-                    검수 완료
-                  </Button>
-                )}
               </div>
             </div>
           </Card>
