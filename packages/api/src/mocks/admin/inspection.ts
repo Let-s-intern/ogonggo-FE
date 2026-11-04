@@ -183,6 +183,8 @@ function seedBatch() {
 
   batch.forEach((job, index) => {
     job.sourceHtml ??= sourceHtmlOf(job);
+    job.coverImageUrl ??= `https://picsum.photos/seed/ogonggo-batch-${job.id}/960/600`;
+    job.logoUrl ??= `https://picsum.photos/seed/ogonggo-batch-logo-${job.id}/120`;
     analyses.set(job.id, analysisOf(job));
     switch (index) {
       case 0:
@@ -221,6 +223,10 @@ function seedBatch() {
       case 8:
         // 목 픽스처에는 고용24 공고가 없어 기준일 공고 두 건을 고용24로 바꾼다. 기준일은 크롤러로만 정한다.
         job.source = 'WORK24';
+        break;
+      case 9:
+        // 썸네일 자리에 회사 로고 주소가 들어갔다.
+        job.coverImageUrl = job.logoUrl;
         break;
       default:
     }

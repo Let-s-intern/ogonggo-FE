@@ -33,6 +33,8 @@ export const NAV_SECTIONS: NavSection[] = [
     title: '콘텐츠',
     items: [
       { path: '/content/jobs', label: '채용공고' },
+      // `/content/jobs/...` 아래에 두면 메뉴 링크(`end` 없음)가 `채용공고` 까지 함께 켠다. `반려한 문의` 와 같은 이유다.
+      { path: '/content/new-jobs', label: '오늘 올라온 공고' },
       { path: '/content/bootcamps', label: '부트캠프' },
       { path: '/content/side-studies', label: '사이드·스터디' },
       { path: '/content/concerns', label: '취준고민' },
