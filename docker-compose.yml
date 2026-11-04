@@ -24,6 +24,8 @@ services:
         NEXT_PUBLIC_BUSINESS_ORIGIN: ${SERVICE_URL_BUSINESS_4002:-http://localhost:4002}
     environment:
       SERVICE_URL_WEB_4000:
+      # web 은 `next dev` 라서 이 주소를 HMR 허용 목록에 넣는다(apps/web/next.config.ts).
+      OGONGGO_DEV_PUBLIC_URL: ${SERVICE_URL_WEB_4000:-}
       OGONGGO_USE_MOCKS: ''
       NEXT_PUBLIC_ADMIN_ORIGIN: ${SERVICE_URL_ADMIN_4001:-http://localhost:4001}
       NEXT_PUBLIC_BUSINESS_ORIGIN: ${SERVICE_URL_BUSINESS_4002:-http://localhost:4002}

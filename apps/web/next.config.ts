@@ -14,8 +14,15 @@ const BUSINESS_ORIGIN = process.env.NEXT_PUBLIC_BUSINESS_ORIGIN || 'https://biz.
 const POSTHOG_ENABLED = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
 const POSTHOG_REGION = process.env.NEXT_PUBLIC_POSTHOG_REGION === 'eu' ? 'eu' : 'us';
 
+// 시안 배포(docker-compose.yml)는 web 을 `next dev` 로 띄운다. dev 서버는 localhost 가 아닌 주소에서 오는 HMR 웹소켓을
+// 막으므로, 밖에서 보이는 주소를 받아 허용한다. 값이 없으면(로컬 개발) 설정하지 않는다.
+const DEV_PUBLIC_HOST = process.env.OGONGGO_DEV_PUBLIC_URL
+  ? new URL(process.env.OGONGGO_DEV_PUBLIC_URL).hostname
+  : undefined;
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@ogonggo/ui', '@ogonggo/api'],
+  ...(DEV_PUBLIC_HOST && { allowedDevOrigins: [DEV_PUBLIC_HOST] }),
   // 목데이터 여부를 브라우저에도 알린다(`src/shared/config/mocks.ts`). 서버는 그대로
   // `OGONGGO_USE_MOCKS` 를 읽고, 브라우저는 빌드 때 박힌 이 값을 본다.
   env: { NEXT_PUBLIC_OGONGGO_USE_MOCKS: process.env.OGONGGO_USE_MOCKS ?? '' },
