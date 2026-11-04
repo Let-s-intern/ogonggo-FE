@@ -14,7 +14,7 @@ import { NAV_ITEMS, isNavActive } from './navItems';
  * 비즈니스 앱 헤더. 피그마가 없어 web 헤더(`apps/web/src/widgets/site-header/ui/SiteHeader.tsx`)의 아래 줄과
  * 같은 모양으로 만든다 — 높이 56px, `MenuItem` 밑줄 메뉴, 우측 글자 메뉴, 흰 바탕에 아래 회색 선.
  *
- * 왼쪽은 오공고 로고와 `비즈니스`, 그 옆에 `광고 안내` · `신청 가능 일정` · `광고 신청`. 오른쪽은 토큰이 없으면
+ * 왼쪽은 오공고 로고와 영문 `for business`, 그 옆에 `광고 안내` · `신청 가능 일정`(로그인했을 때만) · `광고 신청`. 오른쪽은 토큰이 없으면
  * `로그인`, 있으면 `{이름} 님` 드롭다운이다. 이름은 기업 계정의 담당자 이름이다. 토큰이 브라우저 저장소에만
  * 있어 서버 렌더와 첫 하이드레이션은 `로그인` 으로 그리고 그 직후 바꾼다.
  *
@@ -30,7 +30,7 @@ export function BusinessHeader() {
 
   const nav = (className: string) => (
     <nav aria-label="비즈니스 메뉴" className={className}>
-      {NAV_ITEMS.map(({ href, label }) => {
+      {NAV_ITEMS.filter((item) => signedIn || !item.signedInOnly).map(({ href, label }) => {
         const active = isNavActive(href, pathname);
         return (
           <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
@@ -50,9 +50,11 @@ export function BusinessHeader() {
     <header className="border-b border-gray-200 bg-white print:hidden">
       <div className="mx-auto flex h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap">
         <div className="flex items-center gap-10">
-          <Link href="/" aria-label="오늘의 공고 비즈니스 홈" className="flex items-center gap-2">
+          <Link href="/" aria-label="오늘의 공고 for business 홈" className="flex items-end gap-1.5">
             <Logo className="h-[25px] w-[52px] text-blue-500" />
-            <span className="text-base font-bold text-gray-900">비즈니스</span>
+            <span className="pb-px text-[13px] leading-none font-semibold tracking-tight text-gray-500">
+              for business
+            </span>
           </Link>
           {nav('hidden items-stretch gap-4 md:flex lg:gap-6')}
         </div>

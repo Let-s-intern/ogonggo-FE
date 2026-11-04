@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState } from 'react';
 import { Button, Input } from '@ogonggo/ui';
+import { isMockEnabled } from '@/shared/config/mocks';
 
 export interface SignInFormProps {
   /** 제출 중이면 버튼을 막는다. 실패 문구는 `error` 로 받는다. */
@@ -27,6 +28,11 @@ export function SignInForm({ onSubmit, pending, error, emailLabel = '이메일' 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (pending) {
+      return;
+    }
+    // 목 모드(시안 배포)는 빈 칸이어도 테스트 기업 계정으로 들어간다. 목 로그인은 어떤 값이든 받는다.
+    if (isMockEnabled) {
+      onSubmit({ email: email.trim() || 'company@example.com', password: password || 'mock' });
       return;
     }
     const blank = !email.trim() || !password;
