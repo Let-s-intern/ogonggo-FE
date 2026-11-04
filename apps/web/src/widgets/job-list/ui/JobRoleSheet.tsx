@@ -86,14 +86,10 @@ export function JobRoleSheet({
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  // 누른 직군에서 아직 아무것도 고르지 않았으면 그 직군의 `전체` 가 켜진 채로 연다(2026-10-19, 사용자).
-  // 다른 직군의 선택은 그대로 두고 그 위에 더한다.
-  const [selection, setSelection] = useState<JobRoleSelection>(() =>
-    initial.fields.includes(initialField) ||
-    initial.roles.some((role) => JOB_ROLES[role].field === initialField)
-      ? initial
-      : { fields: [...initial.fields, initialField], roles: initial.roles },
-  );
+  // 적용된 선택 그대로 연다. 누른 직군의 `전체` 를 켜 두지 않는다 — 켜 두면 세부 직무를 고르려다 그대로
+  // `공고보기` 를 눌러 직군 전체로 걸린다(LC-3566, PRD `prd-job-filter-improve.md` 결정 2. 2026-10-19 의
+  // `전체` 를 켜 두는 결정을 뒤집었다).
+  const [selection, setSelection] = useState<JobRoleSelection>(initial);
   // 펼친 직군. 처음에는 누른 칩의 직군만 펼친다.
   const [expanded, setExpanded] = useState<JobField[]>([initialField]);
   const [count, setCount] = useState<number | undefined>();
