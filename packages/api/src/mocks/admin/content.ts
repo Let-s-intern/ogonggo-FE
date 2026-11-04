@@ -27,6 +27,8 @@ import {
 } from '../fixtures/recruitment-post';
 import { clearRejection } from '../fixtures/admin-rejection';
 import {
+  type AdminJobSourceHtmlPatch,
+  applySourceHtmlPatch,
   markAnalysisStale,
   matchesInspectionFilters,
   withInspectedAt,
@@ -401,6 +403,7 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     markAnalysisStale(job.id);
   }
   Object.assign(job, merged.next);
+  applySourceHtmlPatch(job, body as AdminJobSourceHtmlPatch);
   // 모집 상태는 저장값이 아니라 일정에서 계산한다. 지난 마감일을 미루면 모집 중으로 돌아가고,
   // 직접 마감한 공고(`closedAt`)는 마감으로 남는다.
   job.recruitmentStatus = recruitmentStatusOf({

@@ -499,6 +499,7 @@ export function NewJobReviewPage() {
                   <SourcePane
                     ref={sourceRef}
                     job={detail.data}
+                    edit={inlineEdit ?? undefined}
                     className="h-full"
                     action={
                       <Button

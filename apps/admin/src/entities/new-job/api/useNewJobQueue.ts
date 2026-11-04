@@ -5,9 +5,11 @@ import {
   updateJob,
   type AdminJobDetailResponseVisibility as Visibility,
   type ListJobsParams,
+  type UpdateAdminJobRequest,
 } from '@ogonggo/api/src/admin';
 import type {
   AdminJobDetailWithInspection,
+  AdminJobSourceHtmlPatch,
   AdminJobSummaryWithInspection,
 } from '@ogonggo/api/src/mocks/admin/inspection';
 import { adminDelete, adminWrite } from '@/shared/api/adminClient';
@@ -178,5 +180,21 @@ export function useSetJobVisibility() {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
+  });
+}
+
+/**
+ * 원문 HTML 고치기(백엔드 요청 4). 같은 `PATCH /api/v1/admin/jobs/{jobId}` 에 `sourceHtml` 을 싣는다. 배포된
+ * `UpdateAdminJobRequest` 에는 이 칸이 없어 목만 받는다. 지금 백엔드에 보내면 저장되지 않는다(모르는 칸을
+ * 버리는지 400 인지 확인 필요). 코드젠 뒤 생성 모델의 칸으로 바꾸고 계약 타입(`AdminJobSourceHtmlPatch`)을 지운다.
+ */
+export function useSetJobSourceHtml() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ jobId, sourceHtml }: { jobId: number; sourceHtml: string }) =>
+      unwrapData(
+        updateJob(jobId, { sourceHtml } satisfies AdminJobSourceHtmlPatch as UpdateAdminJobRequest),
+      ),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] }),
   });
 }

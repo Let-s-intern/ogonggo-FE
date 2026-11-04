@@ -34,6 +34,15 @@ export interface AdminJobInspectionFields {
   analysisCurrent?: boolean;
 }
 
+/**
+ * 백엔드 요청 4(2026-11-04 추가). `PATCH /api/v1/admin/jobs/{jobId}` 본문의 원문 HTML. 배포된
+ * `UpdateAdminJobRequest` 에는 없어 이 목만 받는다. 백엔드는 크롤러 원문과 같은 거르기(`JobSourceHtmlSanitizer`)를
+ * 거쳐 저장한다. 빈 문자열은 원문을 지운다. 코드젠 뒤 생성 모델의 칸으로 바꾸고 이 타입을 지운다.
+ */
+export interface AdminJobSourceHtmlPatch {
+  sourceHtml?: string;
+}
+
 export type AdminJobDetailWithInspection = AdminJobDetailResponse & AdminJobInspectionFields;
 export type AdminJobSummaryWithInspection = AdminJobSummaryResponse &
   Pick<AdminJobInspectionFields, 'inspectedAt'>;
@@ -268,6 +277,30 @@ export function matchesInspectionFilters(job: AdminJobDetailResponse, url: URL):
     return inspections.has(job.id) === (inspected === 'true');
   }
   return true;
+}
+
+/**
+ * 원문 HTML 의 위험한 부분을 지운다. 백엔드 `JobSourceHtmlSanitizer` 의 흉내다 — 스크립트·스타일·틀 태그, `on*`
+ * 속성, `javascript:` 주소. 목에서만 쓴다. 화면은 저장된 원문을 다시 거르지 않고 그린다(`SourcePane`).
+ */
+function sanitizeSourceHtml(html: string): string {
+  return html
+    .replace(/<(script|style|iframe|object|embed)\b[\s\S]*?<\/\1\s*>/gi, '')
+    .replace(/<(script|style|iframe|object|embed|link|meta)\b[^>]*>/gi, '')
+    .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/(href|src)\s*=\s*(["']?)\s*javascript:[^"'\s>]*\2/gi, '$1="#"');
+}
+
+/**
+ * 백엔드 요청 4. 공고 수정 본문의 `sourceHtml` 을 거른 뒤 저장한다. 분석은 본문 칸으로 만들므로 낡게 하지 않는다.
+ * 보내지 않으면 그대로다.
+ */
+export function applySourceHtmlPatch(job: AdminJobDetailResponse, body: AdminJobSourceHtmlPatch) {
+  if (typeof body.sourceHtml !== 'string') {
+    return;
+  }
+  const html = sanitizeSourceHtml(body.sourceHtml).trim();
+  job.sourceHtml = html === '' ? undefined : html;
 }
 
 const findJob = (jobId: unknown) =>
