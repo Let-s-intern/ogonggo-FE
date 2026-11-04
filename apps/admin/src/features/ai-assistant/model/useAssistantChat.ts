@@ -64,6 +64,7 @@ export function useAssistantChat() {
           pathRef.current = path;
           navigate(path);
         },
+        currentPath: () => pathRef.current,
       };
 
       try {

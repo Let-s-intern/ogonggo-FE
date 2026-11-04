@@ -1,10 +1,13 @@
 import {
+  enumLabel,
   getJob,
   listJobs,
   listServiceFeedbacks,
   listTodayJobs,
+  type EnumName,
   type ListJobsParams,
 } from '@ogonggo/api/src/admin';
+import type { AdminJobDetailWithInspection } from '@ogonggo/api/src/mocks/admin/inspection';
 import {
   DEFAULT_KPI_FILTERS,
   KPI_QUERY,
@@ -32,12 +35,25 @@ import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
 
 export interface ToolContext {
   navigate: (path: string) => void;
+  /** 지금 보고 있는 경로(쿼리스트링 포함). */
+  currentPath: () => string;
 }
+
+/** 오늘 올라온 공고 검수 화면. 보고 있는 공고가 `?job=` 에 있다(`pages/new-job-review`). */
+const REVIEW_PATH = '/content/new-jobs';
 
 /** 모델에게 돌려줄 결과의 최대 길이. 길면 다음 호출의 입력이 커져 느리고 비싸다. */
 const MAX_RESULT_LENGTH = 12_000;
 /** 공고 본문 칸 하나에서 모델에게 넘길 최대 길이. */
 const MAX_BODY_LENGTH = 2_500;
+/**
+ * `get_job_review` 의 결과 상한. 원문까지 실어 공용 상한(12,000자)으로는 원문이 반쯤 잘린다. 서버의 메시지당
+ * 상한(`api/assistant.ts` 의 `MAX_CONTENT_LENGTH`, 20,000자) 아래로 둔다.
+ */
+const MAX_REVIEW_RESULT_LENGTH = 18_000;
+/** 검수에서 칸 하나, 원문 텍스트에서 모델에게 넘길 최대 길이. */
+const MAX_REVIEW_BODY_LENGTH = 1_000;
+const MAX_SOURCE_TEXT_LENGTH = 8_000;
 const MAX_STATS_ROWS = 30;
 
 const STATS_TITLES: Record<number, string> = {
@@ -67,6 +83,8 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return args.keyword ? `공고 검색: ${String(args.keyword)}` : '공고 검색';
     case 'get_job':
       return `공고 ${String(args.jobId)} 읽기`;
+    case 'get_job_review':
+      return `공고 ${String(args.jobId)} 검수 자료 읽기`;
     case 'get_stats':
       return '통계 불러오기';
     case 'list_pick_jobs':
@@ -90,10 +108,8 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
   }
 }
 
-function clip(text: string): string {
-  return text.length > MAX_RESULT_LENGTH
-    ? `${text.slice(0, MAX_RESULT_LENGTH)}\n(이하 생략)`
-    : text;
+function clip(text: string, max = MAX_RESULT_LENGTH): string {
+  return text.length > max ? `${text.slice(0, max)}\n(이하 생략)` : text;
 }
 
 function asNumber(value: unknown): number | null {
@@ -159,6 +175,75 @@ async function readJob(args: Record<string, unknown>): Promise<string> {
     visibility: job.visibility,
     source: job.source,
     ...body,
+  });
+}
+
+/** 원문 HTML 의 글자만. 블록이 끝나는 자리에서 줄을 바꾸고 빈 줄은 뺀다. */
+function sourceText(html: string | undefined): string {
+  if (!html?.trim()) {
+    return '없음';
+  }
+  const withBreaks = html.replace(/<br\s*\/?>|<\/(p|div|li|h[1-6]|tr|table|ul|ol)>/gi, '$&\n');
+  const text = new DOMParser().parseFromString(withBreaks, 'text/html').body.textContent ?? '';
+  return text
+    .split('\n')
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, MAX_SOURCE_TEXT_LENGTH);
+}
+
+/**
+ * 검수 자료. 분류(값과 라벨), 썸네일 주소, 본문 칸, 공고 분석, 원문 텍스트를 한 번에 준다(PRD "AI 비서에게 검수 요청").
+ *
+ * 분석(`analysis`·`analysisCurrent`)은 백엔드 요청 2 의 칸이다. 백엔드가 싣기 전에는 칸이 없어 그렇다고 적는다.
+ */
+async function reviewJob(args: Record<string, unknown>): Promise<string> {
+  const jobId = asNumber(args.jobId);
+  if (!jobId) {
+    return 'jobId 가 올바르지 않습니다.';
+  }
+  const job = (await unwrapData(getJob(jobId))) as AdminJobDetailWithInspection | undefined;
+  if (!job) {
+    return `공고 ${jobId} 를 찾지 못했습니다.`;
+  }
+  const labeled = (name: EnumName, value: string | undefined) =>
+    value ? `${value} (${enumLabel(name, value)})` : null;
+  return JSON.stringify({
+    id: job.id,
+    title: job.title,
+    company: job.companyName,
+    source: job.source,
+    visibility: job.visibility,
+    inspectedAt: job.inspectedAt ?? null,
+    classification: {
+      jobField: labeled('JobField', job.jobField),
+      jobRole: labeled('JobRole', job.jobRole),
+      employmentType: labeled('JobEmploymentType', job.employmentType),
+      experienceType: labeled('JobExperienceType', job.experienceType),
+      experienceMinYears: job.experienceMinYears ?? null,
+      educationLevel: labeled('JobEducationLevel', job.educationLevel),
+      region: labeled('Region', job.region),
+      subRegion: labeled('SubRegion', job.subRegion),
+      recruitmentType: labeled('JobRecruitmentType', job.recruitmentType),
+      recruitmentStartAt: job.recruitmentStartAt ?? null,
+      recruitmentEndAt: job.recruitmentEndAt ?? null,
+    },
+    thumbnail: {
+      coverImageUrl: job.coverImageUrl ?? null,
+      logoUrl: job.logoUrl ?? null,
+      coverIsLogo: Boolean(job.coverImageUrl) && job.coverImageUrl === job.logoUrl,
+    },
+    body: Object.fromEntries(
+      FILLABLE_JOB_FIELDS.filter((field) => field !== 'title').map((field) => [
+        field,
+        (job[field] ?? '').slice(0, MAX_REVIEW_BODY_LENGTH),
+      ]),
+    ),
+    analysis: 'analysis' in job ? (job.analysis ?? '없음') : '백엔드가 아직 분석을 주지 않습니다',
+    analysisCurrent: job.analysisCurrent ?? null,
+    sourceUrl: job.sourceUrl ?? null,
+    sourceText: sourceText(job.sourceHtml),
   });
 }
 
@@ -298,7 +383,13 @@ function fillJobText(args: Record<string, unknown>, context: ToolContext): strin
   if (!jobId || Object.keys(values).length === 0) {
     return '채울 공고나 칸이 올바르지 않습니다. 채울 수 있는 칸: ' + FILLABLE_JOB_FIELDS.join(', ');
   }
-  context.navigate(`/content/jobs/${jobId}`);
+  // 검수 화면에서 보고 있는 공고면 화면을 옮기지 않는다. 검수 화면이 수정 창을 연다.
+  const current = new URL(context.currentPath(), 'http://admin');
+  const isReviewing =
+    current.pathname === REVIEW_PATH && current.searchParams.get('job') === String(jobId);
+  if (!isReviewing) {
+    context.navigate(`/content/jobs/${jobId}`);
+  }
   requestJobFill(jobId, values);
   return `공고 ${jobId} 수정 창의 ${Object.keys(values).join(', ')} 칸을 채웠습니다. 저장은 하지 않았습니다 — 사용자가 확인하고 저장을 눌러야 반영됩니다.`;
 }
@@ -314,6 +405,8 @@ export async function runTool(
         return clip(await searchJobs(args));
       case 'get_job':
         return clip(await readJob(args));
+      case 'get_job_review':
+        return clip(await reviewJob(args), MAX_REVIEW_RESULT_LENGTH);
       case 'get_stats':
         return clip(await readStats(args));
       case 'list_pick_jobs':
