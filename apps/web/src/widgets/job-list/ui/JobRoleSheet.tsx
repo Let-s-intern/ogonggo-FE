@@ -56,9 +56,9 @@ function trackChanges(filterType: string, before: string[], after: string[]) {
 
 /**
  * 직무 선택 창. 직무 칩(`JobRoleChips`)의 직군 칩을 누르면 뜬다. 왼쪽에 직군, 오른쪽에 그 직군의
- * 직무 칩이 있고, 눌린 칩의 직군이 펼쳐진 채 열린다. 한 직군 안에서는 직무를 여러 개 고를 수 있고,
- * `전체` 는 그 직군을 통째로 고른다. 다른 직군에서 고르면 앞 직군의 선택은 지운다 — 직무 칩이 한 번에
- * 하나만 켜지게 한다(2026-10-12, 사용자).
+ * 직무 칩이 있고, 눌린 칩의 직군이 펼쳐진 채 열린다. 직무는 여러 직군에 걸쳐 여러 개 고를 수 있고,
+ * `전체` 는 그 직군을 통째로 고른다. 한 직군에서 고른 것은 다른 직군의 선택을 건드리지 않는다
+ * (2026-11-04, 사용자 설문. 2026-10-12 의 한 직군 제한을 뒤집었다).
  *
  * 창 안에서 고르는 것은 초안이다. `N개 공고보기` 를 눌러야 `onApply` 로 넘어가 주소가 바뀐다 —
  * 칩 하나마다 페이지를 다시 그리면 창이 닫히고 스크롤이 튄다. 건수는 초안이 바뀔 때마다 한 번
@@ -85,12 +85,12 @@ export function JobRoleSheet({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   // 누른 직군에서 아직 아무것도 고르지 않았으면 그 직군의 `전체` 가 켜진 채로 연다(2026-10-19, 사용자).
-  // 창은 한 번에 한 직군만 고르게 하므로 다른 직군의 선택은 `전체` 로 바꾸며 지워진다.
+  // 다른 직군의 선택은 그대로 두고 그 위에 더한다.
   const [selection, setSelection] = useState<JobRoleSelection>(() =>
     initial.fields.includes(initialField) ||
     initial.roles.some((role) => JOB_ROLES[role].field === initialField)
       ? initial
-      : { fields: [initialField], roles: [] },
+      : { fields: [...initial.fields, initialField], roles: initial.roles },
   );
   const [activeField, setActiveField] = useState<JobField>(initialField);
   const [count, setCount] = useState<number | undefined>();
@@ -131,25 +131,27 @@ export function JobRoleSheet({
   const fieldSelected = selection.fields.includes(activeField);
   const empty = selection.fields.length === 0 && selection.roles.length === 0;
 
-  // 직군을 통째로 고르면 다른 선택은 모두 지운다(한 직군만). 끄면 아무것도 고르지 않은 상태다.
+  // 이 직군을 통째로 켜거나 끈다. 이 직군에서 하나씩 고른 직무는 지우고, 다른 직군의 선택은 그대로 둔다.
   const toggleField = () =>
-    setSelection(() =>
-      fieldSelected ? { fields: [], roles: [] } : { fields: [activeField], roles: [] },
-    );
+    setSelection(({ fields, roles: picked }) => ({
+      fields: fieldSelected
+        ? fields.filter((field) => field !== activeField)
+        : [...fields, activeField],
+      roles: picked.filter((item) => JOB_ROLES[item].field !== activeField),
+    }));
 
+  // 이 직군이 `전체` 로 골라져 있으면 `전체` 를 풀고 누른 직무만 고른다. 다른 직군의 선택은 그대로 둔다.
   const toggleRole = (role: JobRole) =>
-    setSelection(({ fields, roles: picked }) => {
-      // 이 직군에서 고른 직무만 남긴다. 다른 직군의 선택과 이 직군의 `전체` 는 지운다.
-      const sameField = fields.includes(activeField)
-        ? []
-        : picked.filter((item) => JOB_ROLES[item].field === activeField);
-      return {
-        fields: [],
-        roles: sameField.includes(role)
-          ? sameField.filter((item) => item !== role)
-          : [...sameField, role],
-      };
-    });
+    setSelection(({ fields, roles: picked }) =>
+      fields.includes(activeField)
+        ? { fields: fields.filter((field) => field !== activeField), roles: [...picked, role] }
+        : {
+            fields,
+            roles: picked.includes(role)
+              ? picked.filter((item) => item !== role)
+              : [...picked, role],
+          },
+    );
 
   const apply = () => {
     trackChanges('job_field', initial.fields, selection.fields);
