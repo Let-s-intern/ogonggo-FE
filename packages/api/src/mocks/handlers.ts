@@ -83,6 +83,10 @@ const DEFAULT_SIZE = 10;
 /** 부트캠프 목록 한 페이지 건수. 목업은 10건이지만 결정 전까지 12로 둔다(Push 1 task 선행 조건). */
 const DEFAULT_BOOTCAMP_SIZE = 12;
 
+/** 픽스처 등록 시각을 백엔드 모양(오프셋 없는 KST date-time)으로. */
+const kstRegisteredAt = (id: number): string =>
+  new Date(Date.parse(registeredAtFor(id)) + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
+
 const toSummary = ({
   companyAndTeamIntroduction: _companyAndTeamIntroduction,
   responsibilities: _responsibilities,
@@ -95,12 +99,12 @@ const toSummary = ({
   ...summary
 }: UserJobDetailResponse): UserJobSummaryResponse & JobRegisteredAt => ({
   ...summary,
-  registeredAt: registeredAtFor(summary.id),
+  registeredAt: kstRegisteredAt(summary.id),
 });
 
 /**
- * 사용자 공고 목록·상세에 아직 없는 등록 시각(제안 칸). 어드민 공고 응답의 `registeredAt` 과 같은 값이다.
- * 사용자 웹의 `NEW` 배지(등록 24시간 안)가 쓴다. 백엔드가 칸을 더하고 코드젠하면 이 타입을 지운다.
+ * 사용자 공고 목록·오늘의 공고·상세의 등록 시각. 어드민 공고 응답의 `registeredAt` 과 같은 값이다. 백엔드는 필수 칸으로
+ * 구현했고 아직 배포 전이다. 사용자 웹의 `NEW` 배지(등록 24시간 안)가 쓴다. 배포 뒤 코드젠하면 이 타입을 지운다.
  */
 interface JobRegisteredAt {
   registeredAt: string;
@@ -426,7 +430,7 @@ const getJobHandler = http.get('*/api/v1/jobs/:jobId', ({ params }) => {
   const body: SuccessResponseUserJobDetailResponse = {
     status: 200,
     message: '채용공고 상세를 조회했습니다.',
-    data: { ...job, registeredAt: registeredAtFor(job.id) } as UserJobDetailResponse,
+    data: { ...job, registeredAt: kstRegisteredAt(job.id) } as UserJobDetailResponse,
   };
 
   return HttpResponse.json(body, { status: 200 });
