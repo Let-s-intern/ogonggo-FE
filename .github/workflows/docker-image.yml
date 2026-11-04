@@ -1,0 +1,105 @@
+# 고른 브랜치로 web·admin·business Docker 이미지를 빌드해 GHCR 에 올린다. 시안 배포(Coolify)용.
+#
+# Actions 탭 > Docker image > Run workflow 에서 브랜치 이름을 적고 실행한다.
+# workflow_dispatch 는 이 파일이 기본 브랜치(main)에 있어야 실행 버튼이 보인다.
+#
+# 이미지: ghcr.io/<owner>/ogonggo-<app>:<tag>, ghcr.io/<owner>/ogonggo-<app>:<커밋 앞 7자리>
+# 브랜치 이름에 한글이 들어가면 Docker 태그로 쓸 수 없어서, 태그는 입력값과 커밋 해시로 붙인다.
+#
+# `NEXT_PUBLIC_*`·`VITE_*` 는 빌드 때 박힌다. 도메인이 바뀌면 다시 실행한다.
+name: Docker image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '빌드할 브랜치 이름 (또는 태그, 커밋 해시)'
+        required: true
+        type: string
+      apps:
+        description: '빌드할 앱'
+        required: true
+        default: all
+        type: choice
+        options: [all, web, admin, business]
+      tag:
+        description: '이미지 태그'
+        required: true
+        default: preview
+        type: string
+      web_origin:
+        description: 'web 주소 (business 의 web 링크)'
+        required: false
+        default: ''
+        type: string
+      admin_origin:
+        description: 'admin 주소 (web 의 어드민 링크)'
+        required: false
+        default: ''
+        type: string
+      business_origin:
+        description: 'business 주소 (web 의 비즈니스 링크)'
+        required: false
+        default: ''
+        type: string
+      use_mocks:
+        description: 'MSW 목 사용. false 면 실제 백엔드에 붙는다'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-image-${{ inputs.ref }}-${{ inputs.apps }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(inputs.apps == 'all' && '["web","admin","business"]' || format('["{0}"]', inputs.apps)) }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - id: meta
+        run: |
+          owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          image="ghcr.io/${owner}/ogonggo-${{ matrix.app }}"
+          sha=$(git rev-parse --short=7 HEAD)
+          echo "tags=${image}:${{ inputs.tag }},${image}:${sha}" >> "$GITHUB_OUTPUT"
+          # 목 스위치는 정확히 `false` 일 때만 꺼진다. 켤 때는 비워 둔다.
+          if [ '${{ inputs.use_mocks }}' = 'true' ]; then echo "mocks=" >> "$GITHUB_OUTPUT"; else echo "mocks=false" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          # 앱마다 쓰는 인자만 읽고 나머지는 무시한다.
+          build-args: |
+            OGONGGO_USE_MOCKS=${{ steps.meta.outputs.mocks }}
+            VITE_OGONGGO_USE_MOCKS=${{ steps.meta.outputs.mocks }}
+            NEXT_PUBLIC_WEB_ORIGIN=${{ inputs.web_origin }}
+            NEXT_PUBLIC_ADMIN_ORIGIN=${{ inputs.admin_origin }}
+            NEXT_PUBLIC_BUSINESS_ORIGIN=${{ inputs.business_origin }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+
+      - run: |
+          echo "올린 이미지: ${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
