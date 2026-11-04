@@ -5,8 +5,17 @@ import type {
   UserJobSummaryResponse,
 } from '@ogonggo/api';
 
+/**
+ * 사용자 공고 응답에 아직 없는 등록 시각(제안 칸, 어드민 공고 응답의 `registeredAt` 과 같은 값). 목
+ * (`packages/api/src/mocks/handlers.ts`)만 싣는다. 카드·상세의 `NEW` 배지가 쓴다(`isNewJob`). 백엔드가 칸을
+ * 더하고 코드젠하면 생성 모델에 들어오므로 이 타입을 지운다.
+ */
+interface JobRegisteredAt {
+  registeredAt?: string;
+}
+
 /** `GET /api/v1/jobs`의 목록 항목 하나 — 본문 필드는 없다. */
-export type JobSummary = UserJobSummaryResponse;
+export type JobSummary = UserJobSummaryResponse & JobRegisteredAt;
 
 /**
  * 오늘의 추천 공고가 카드에 붙이는 추천 문구. `GET /api/v1/jobs/today` 항목의
@@ -18,7 +27,7 @@ export interface JobRecommendation {
 }
 
 /** `GET /api/v1/jobs/{jobId}`의 상세 — JobSummary의 모든 필드 + 본문 필드. */
-export type JobDetail = UserJobDetailResponse;
+export type JobDetail = UserJobDetailResponse & JobRegisteredAt;
 
 export type JobEmploymentType = JobSummary['employmentType'];
 export type JobExperienceType = JobSummary['experienceType'];

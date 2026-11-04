@@ -80,6 +80,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       recruitmentType={job.recruitmentType}
       recruitmentEndAt={job.recruitmentEndAt}
       viewCount={job.viewCount}
+      registeredAt={job.registeredAt}
       layout={layout}
     />
   );
