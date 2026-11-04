@@ -11,12 +11,14 @@ import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { BookmarkHintBand } from '@/features/bookmark';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
 import { JobRecommendedContents } from '@/widgets/lets-career-recommend';
+import { extractPosterImages } from '../lib/posterImages';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
 import { AnalysisTab } from './AnalysisTab';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobDetailTabs } from './JobDetailTabs';
 import { OriginalTab } from './OriginalTab';
+import { PosterStrip } from './PosterStrip';
 import { SimilarJobs } from './SimilarJobs';
 
 export interface JobDetailViewProps {
@@ -89,6 +91,11 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       original={<OriginalTab job={job} layout={layout} />}
     />
   );
+  // 원문 이미지는 탭 위에 따로 꺼낸다. 이미지가 없는 공고(고용24 등)는 줄이 없어 화면이 전과 같다.
+  // 기업회원이 올린 `coverImageUrl` 은 넣지 않는다 — 크롤링 공고의 같은 칸은 원문 og:image(회사 아이콘 등)라
+  // 응답만으로는 포스터인지 가를 수 없다(결정 메모 `결정-job-filter-improve-2026-11-04.md`).
+  const posterImages = extractPosterImages(job.sourceHtml);
+  const posterStrip = posterImages.length > 0 ? <PosterStrip images={posterImages} /> : null;
   const applyCta = (
     <ApplyCta
       href={job.sourceUrl ?? (job.applyEmail ? `mailto:${job.applyEmail}` : undefined)}
@@ -128,6 +135,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
         <div className="flex min-w-0 flex-col gap-5">
           {viewTracker}
           {headerCard}
+          {posterStrip}
           {tabs}
         </div>
         <aside className="flex min-w-0 flex-col gap-6">
@@ -154,7 +162,10 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           1440px 기준)을 그대로 `fr`로 옮긴 것이다. 3:2로 뒀을 때 사이드바가 목업보다 넓고
           본문이 좁았다. */}
       <div className="mt-10 grid grid-cols-1 gap-6 md:mt-8 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
-        <div className="min-w-0">{tabs}</div>
+        <div className="flex min-w-0 flex-col gap-8">
+          {posterStrip}
+          {tabs}
+        </div>
         <aside className="flex flex-col gap-6">
           <StickyApplyBar
             hint={<BookmarkHintBand kind="jobs" id={job.id} bookmarked={job.bookmarked} />}
