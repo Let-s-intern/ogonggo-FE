@@ -28,6 +28,7 @@ import { ContentSourceBadge, VisibilityBadge } from '@/shared/config/labels';
 import { formatDateTime } from '@/shared/lib/format';
 import { JobEditor } from '@/widgets/job-editor';
 import { PageHeader } from '@/widgets/page-header';
+import { useInlineJobEdit } from '../model/useInlineJobEdit';
 import { AnalysisPane } from './AnalysisPane';
 import { SourcePane } from './SourcePane';
 import { useNewJobReviewShortcuts } from './useNewJobReviewShortcuts';
@@ -120,6 +121,8 @@ export function NewJobReviewPage() {
   );
   const current = list[index];
   const detail = useNewJobDetail(current?.id);
+  /** 두 칸에서 그 자리에서 고치는 값(썸네일·분류·본문, 원문 칸 머리). */
+  const inlineEdit = useInlineJobEdit(detail.data);
   const isAssistantBusy = useAssistantBusy();
 
   /*
@@ -479,8 +482,8 @@ export function NewJobReviewPage() {
                   className="overflow-y-auto p-4 outline-none @min-[944px]:h-[calc(100vh-19rem)]"
                 >
                   <h2 className="pb-4 text-base font-bold text-gray-900">공고 분석</h2>
-                  {detail.data ? (
-                    <AnalysisPane job={detail.data} />
+                  {detail.data && inlineEdit ? (
+                    <AnalysisPane job={detail.data} edit={inlineEdit} />
                   ) : detail.isError ? (
                     <Callout tone="error">상세를 불러오지 못했습니다.</Callout>
                   ) : (
