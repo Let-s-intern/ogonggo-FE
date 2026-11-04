@@ -9,10 +9,31 @@ import { ok } from './paging';
  * 설정 행이 없으면 켜짐이라 기본값은 `enabled: true` 다. `PUT` 은 `enabled` 가 빠졌거나 `null` 이거나
  * 참·거짓이 아니면 400 `BAD_REQUEST`, 맞으면 저장한 값을 `data` 로 돌려준다.
  *
- * 쓰기가 일어나는 핸들러다. 값은 모듈 안에 있어 목을 다시 띄우면 켜짐으로 돌아간다.
+ * 쓰기가 일어나는 핸들러다. 목은 메모리라 새로고침하면 사라지는데, 이 화면은 "끄고 다시 열어도 꺼져 있다" 를
+ * 확인해야 해서 브라우저면 `localStorage` 에도 적는다(`./inspection.ts` 와 같다). 쓸 수 없는 환경(Node 테스트,
+ * 사생활 보호 창)에서는 메모리만 쓴다.
  */
 
-let current: AdminCompanyContentPriorityResponse = { enabled: true };
+const STORAGE_KEY = 'ogonggo.mock.admin.companyContentPriority';
+
+function loadPriority(): AdminCompanyContentPriorityResponse {
+  try {
+    const raw = globalThis.localStorage?.getItem(STORAGE_KEY);
+    return { enabled: raw === null || raw === undefined ? true : raw === 'true' };
+  } catch {
+    return { enabled: true };
+  }
+}
+
+let current = loadPriority();
+
+function savePriority() {
+  try {
+    globalThis.localStorage?.setItem(STORAGE_KEY, String(current.enabled));
+  } catch {
+    // 메모리에는 남는다.
+  }
+}
 
 const PATH = '*/api/v1/admin/company-content-priority';
 
@@ -29,6 +50,7 @@ const replacePriorityHandler = http.put(PATH, async ({ request }) => {
   }
 
   current = { enabled: body.enabled };
+  savePriority();
   return HttpResponse.json(ok(current), { status: 200 });
 });
 
