@@ -8,6 +8,7 @@ import {
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { userNotificationHandlers } from './notifications';
+import { registeredAtFor } from './fixtures/admin-content';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
@@ -92,7 +93,18 @@ const toSummary = ({
   hiringProcess: _hiringProcess,
   sourceUrl: _sourceUrl,
   ...summary
-}: UserJobDetailResponse): UserJobSummaryResponse => summary;
+}: UserJobDetailResponse): UserJobSummaryResponse & JobRegisteredAt => ({
+  ...summary,
+  registeredAt: registeredAtFor(summary.id),
+});
+
+/**
+ * 사용자 공고 목록·상세에 아직 없는 등록 시각(제안 칸). 어드민 공고 응답의 `registeredAt` 과 같은 값이다.
+ * 사용자 웹의 `NEW` 배지(등록 24시간 안)가 쓴다. 백엔드가 칸을 더하고 코드젠하면 이 타입을 지운다.
+ */
+interface JobRegisteredAt {
+  registeredAt: string;
+}
 
 /** LATEST는 id 역순(생성 역순 근사), VIEW_COUNT는 조회수 내림차순이며 동률이면 최신순(id 역순). */
 const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailResponse[] =>
@@ -414,7 +426,7 @@ const getJobHandler = http.get('*/api/v1/jobs/:jobId', ({ params }) => {
   const body: SuccessResponseUserJobDetailResponse = {
     status: 200,
     message: '채용공고 상세를 조회했습니다.',
-    data: job,
+    data: { ...job, registeredAt: registeredAtFor(job.id) } as UserJobDetailResponse,
   };
 
   return HttpResponse.json(body, { status: 200 });
