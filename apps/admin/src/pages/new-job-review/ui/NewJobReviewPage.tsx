@@ -1,18 +1,42 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Callout, Card, CardTitle, Chip, EmptyState, cn } from '@ogonggo/ui';
+import {
+  ActionAlert,
+  Badge,
+  Button,
+  Callout,
+  Card,
+  CardTitle,
+  Chip,
+  EmptyState,
+  cn,
+} from '@ogonggo/ui';
 import {
   type NewJob,
   useNewJobDetail,
   useNewJobQueue,
   usePrefetchNewJobDetail,
+  useSetJobInspected,
+  useSetJobVisibility,
 } from '@/entities/new-job/api/useNewJobQueue';
+import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { ContentSourceBadge, VisibilityBadge } from '@/shared/config/labels';
 import { formatDateTime } from '@/shared/lib/format';
+import { JobEditor } from '@/widgets/job-editor';
 import { PageHeader } from '@/widgets/page-header';
 import { AnalysisPane } from './AnalysisPane';
 import { SourcePane } from './SourcePane';
+import { useNewJobReviewShortcuts } from './useNewJobReviewShortcuts';
 
 type Filter = 'uninspected' | 'inspected' | 'hidden' | 'all';
+
+/** 되돌릴 수 있는 마지막 동작. 비노출은 노출로, 검수 완료는 해제로 되돌린다. */
+interface LastAction {
+  kind: 'inspect' | 'hide';
+  job: NewJob;
+}
+
+/** 한 번에 스크롤할 거리(px). 검수 대기와 같다. */
+const SCROLL_STEP = 240;
 
 const FILTERS: { value: Filter; label: string; matches: (job: NewJob) => boolean }[] = [
   { value: 'uninspected', label: '미검수', matches: (job) => !job.inspectedAt },
@@ -46,6 +70,20 @@ export function NewJobReviewPage() {
    */
   const [ids, setIds] = useState<number[] | null>(null);
   const [index, setIndex] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [lastAction, setLastAction] = useState<LastAction | null>(null);
+  const [error, setError] = useState('');
+  const [alert, setAlert] = useState<{
+    message: string;
+    detail?: string;
+    tone: 'success' | 'danger';
+    nonce: number;
+  } | null>(null);
+  /** W/S 가 스크롤할 칸. 마우스가 마지막에 올라간 칸이다. */
+  const scrollTargetRef = useRef<'analysis' | 'source'>('analysis');
+  const setInspected = useSetJobInspected();
+  const setVisibility = useSetJobVisibility();
+  const isBusy = setInspected.isPending || setVisibility.isPending;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
@@ -110,6 +148,130 @@ export function NewJobReviewPage() {
     [list.length],
   );
 
+  const focusRoot = useCallback(() => rootRef.current?.focus({ preventScroll: true }), []);
+
+  const fail = useCallback((caught: unknown) => {
+    setError(serverErrorMessage(caught) ?? '저장하지 못했습니다. 다시 시도해 주세요.');
+  }, []);
+
+  /**
+   * 검수 완료. 성공하면 다음 건으로 간다. 이미 완료한 건이면 요청 없이 다음 건으로만 간다 — Space 를 연달아
+   * 누르며 훑는 흐름을 끊지 않는다. 실패하면 그 건에 머문다.
+   */
+  const inspect = useCallback(() => {
+    if (!current || isBusy) {
+      return;
+    }
+    focusRoot();
+    if (current.inspectedAt) {
+      move(1);
+      return;
+    }
+    const job = current;
+    setError('');
+    setInspected.mutate(
+      { jobId: job.id, inspected: true },
+      {
+        onSuccess: () => {
+          setLastAction({ kind: 'inspect', job });
+          setAlert({
+            message: '검수 완료했습니다.',
+            detail: job.title,
+            tone: 'success',
+            nonce: Date.now(),
+          });
+          move(1);
+        },
+        onError: fail,
+      },
+    );
+  }, [current, isBusy, focusRoot, move, setInspected, fail]);
+
+  /** 검수 완료 해제. 버튼으로만 한다. */
+  const uninspect = useCallback(() => {
+    if (!current || isBusy) {
+      return;
+    }
+    focusRoot();
+    setError('');
+    setInspected.mutate({ jobId: current.id, inspected: false }, { onError: fail });
+  }, [current, isBusy, focusRoot, setInspected, fail]);
+
+  /** 비노출이면 다음 건으로 가고, 다시 노출이면 그 건에 머문다(고친 뒤 되살리는 경우다). */
+  const toggleHidden = useCallback(() => {
+    if (!current || isBusy) {
+      return;
+    }
+    focusRoot();
+    const job = current;
+    const hiding = job.visibility !== 'HIDDEN';
+    setError('');
+    setVisibility.mutate(
+      { jobId: job.id, visibility: hiding ? 'HIDDEN' : 'VISIBLE' },
+      {
+        onSuccess: () => {
+          setAlert({
+            message: hiding ? '비노출로 바꿨습니다.' : '다시 노출했습니다.',
+            detail: job.title,
+            tone: hiding ? 'danger' : 'success',
+            nonce: Date.now(),
+          });
+          if (hiding) {
+            setLastAction({ kind: 'hide', job });
+            move(1);
+          } else {
+            setLastAction(null);
+          }
+        },
+        onError: fail,
+      },
+    );
+  }, [current, isBusy, focusRoot, move, setVisibility, fail]);
+
+  const undo = useCallback(() => {
+    if (!lastAction || isBusy) {
+      return;
+    }
+    const { kind, job } = lastAction;
+    const position = list.findIndex((entry) => entry.id === job.id);
+    const onSuccess = () => {
+      setLastAction(null);
+      if (position >= 0) {
+        setIndex(position);
+      }
+    };
+    setError('');
+    if (kind === 'inspect') {
+      setInspected.mutate({ jobId: job.id, inspected: false }, { onSuccess, onError: fail });
+    } else {
+      setVisibility.mutate({ jobId: job.id, visibility: 'VISIBLE' }, { onSuccess, onError: fail });
+    }
+    focusRoot();
+  }, [lastAction, isBusy, list, setInspected, setVisibility, fail, focusRoot]);
+
+  const scrollBy = useCallback((amount: number) => {
+    const target = scrollTargetRef.current === 'source' ? sourceRef : analysisRef;
+    target.current?.scrollBy({ top: amount, behavior: 'auto' });
+  }, []);
+
+  const handlers = useMemo(
+    () => ({
+      scrollUp: () => scrollBy(-SCROLL_STEP),
+      scrollDown: () => scrollBy(SCROLL_STEP),
+      previous: () => move(-1),
+      next: () => move(1),
+      inspect,
+      toggleHidden,
+      edit: () => setIsEditing(Boolean(detail.data)),
+    }),
+    [scrollBy, move, inspect, toggleHidden, detail.data],
+  );
+
+  useNewJobReviewShortcuts({ enabled: !isEditing && current !== undefined, handlers });
+
+  // 건을 옮기면 앞 건의 오류는 지운다.
+  useEffect(() => setError(''), [current?.id]);
+
   if (isPending) {
     return <p className="text-sm text-gray-500">불러오는 중입니다.</p>;
   }
@@ -129,6 +291,16 @@ export function NewJobReviewPage() {
 
   return (
     <div ref={rootRef} tabIndex={-1} className="outline-none">
+      {alert ? (
+        <ActionAlert
+          message={alert.message}
+          detail={alert.detail}
+          tone={alert.tone}
+          nonce={alert.nonce}
+          onDismiss={() => setAlert(null)}
+        />
+      ) : null}
+
       <PageHeader
         title="오늘 올라온 공고"
         action={
@@ -154,7 +326,17 @@ export function NewJobReviewPage() {
           ))}
         </div>
         {list.length > 0 ? (
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            {lastAction ? (
+              <button
+                type="button"
+                className="max-w-md truncate text-sm text-blue-600 underline"
+                onClick={undo}
+              >
+                방금 {lastAction.kind === 'inspect' ? '검수 완료' : '비노출'}한 「
+                {lastAction.job.title}」 되돌리기
+              </button>
+            ) : null}
             <div className="flex items-center gap-1">
               <Button
                 size="sm"
@@ -184,6 +366,12 @@ export function NewJobReviewPage() {
         ) : null}
       </div>
 
+      {error ? (
+        <Callout tone="error" className="mb-3">
+          {error}
+        </Callout>
+      ) : null}
+
       {!data?.batchDate ? (
         <EmptyState
           title="수집된 공고가 없습니다"
@@ -203,14 +391,47 @@ export function NewJobReviewPage() {
                   <ContentSourceBadge value={current.source} />
                   <VisibilityBadge value={current.visibility} />
                   {current.inspectedAt ? <Badge tone="success">검수 완료</Badge> : null}
-                  <span className="text-sm text-gray-500">{current.companyName}</span>
+                  <span className="text-sm text-gray-500">
+                    {detail.data?.companyName ?? current.companyName}
+                  </span>
                   <span className="text-sm text-gray-400">공고 {current.id}</span>
                 </div>
-                <CardTitle className="break-words">{current.title}</CardTitle>
+                <CardTitle className="break-words">{detail.data?.title ?? current.title}</CardTitle>
                 <p className="pt-1 text-sm text-gray-500">
                   등록 {formatDateTime(current.registeredAt)}
                   {current.inspectedAt ? ` · 검수 완료 ${formatDateTime(current.inspectedAt)}` : ''}
                 </p>
+              </div>
+
+              {/* 키보드가 주 조작이지만 버튼도 둔다. 키 이름은 `title` 로 남긴다. */}
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditing(true)}
+                  disabled={!detail.data}
+                  title="내용 수정 (E)"
+                >
+                  내용 수정
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={toggleHidden}
+                  disabled={isBusy}
+                  title={current.visibility === 'HIDDEN' ? '다시 노출 (H)' : '비노출 (H)'}
+                >
+                  {current.visibility === 'HIDDEN' ? '다시 노출' : '비노출'}
+                </Button>
+                {current.inspectedAt ? (
+                  <Button size="sm" variant="secondary" onClick={uninspect} disabled={isBusy}>
+                    검수 완료 해제
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={inspect} disabled={isBusy} title="검수 완료 (Space)">
+                    검수 완료
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
@@ -221,7 +442,10 @@ export function NewJobReviewPage() {
           */}
           <div className="@container mt-4">
             <div className="grid gap-4 @min-[944px]:grid-cols-2">
-              <Card className="min-w-0 p-0">
+              <Card
+                className="min-w-0 p-0"
+                onMouseEnter={() => (scrollTargetRef.current = 'analysis')}
+              >
                 <div
                   ref={analysisRef}
                   tabIndex={-1}
@@ -237,7 +461,10 @@ export function NewJobReviewPage() {
                   )}
                 </div>
               </Card>
-              <Card className="min-w-0 @min-[944px]:h-[calc(100vh-19rem)]">
+              <Card
+                className="min-w-0 @min-[944px]:h-[calc(100vh-19rem)]"
+                onMouseEnter={() => (scrollTargetRef.current = 'source')}
+              >
                 {detail.data ? (
                   <SourcePane ref={sourceRef} job={detail.data} className="h-full" />
                 ) : (
@@ -246,6 +473,26 @@ export function NewJobReviewPage() {
               </Card>
             </div>
           </div>
+
+          {detail.data ? (
+            <JobEditor
+              open={isEditing}
+              job={detail.data}
+              onClose={() => {
+                setIsEditing(false);
+                focusRoot();
+              }}
+              onSaved={() =>
+                setAlert({
+                  message: '내용을 수정했습니다.',
+                  // 본문을 고치면 백엔드가 분석을 다시 만든다. 검수 완료는 풀지 않는다(PRD 결정 필요 5).
+                  detail: '본문을 고쳤다면 공고 분석은 다시 분석을 기다립니다.',
+                  tone: 'success',
+                  nonce: Date.now(),
+                })
+              }
+            />
+          ) : null}
         </>
       )}
     </div>
