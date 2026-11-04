@@ -26,7 +26,7 @@ const SOURCE_HTML_CLASS = cn(
  * 것도 확인 대상이다.
  *
  * 머리의 제목·회사명·원문 주소와 원문 HTML 은 그 자리에서 고친다(2026-11-04 사용자). 앞의 셋은 왼쪽 칸과 같은
- * `useInlineJobEdit` 로, 원문 HTML 은 `useSetJobSourceHtml`(백엔드 요청 4, 목만 받는다)로 저장한다.
+ * `useInlineJobEdit` 로, 원문 HTML 은 `useSetJobSourceHtml`(`PATCH` 의 `sourceHtml`, 배포 전)로 저장한다.
  */
 export const SourcePane = forwardRef<
   HTMLDivElement,
@@ -137,6 +137,8 @@ function SourceHtml({
   }
 
   const dirty = draft !== (job.sourceHtml ?? '');
+  // 백엔드는 원문을 비울 수 없다(공백이면 400 `[sourceHtml]`). 보내기 전에 막는다.
+  const empty = draft.trim() === '';
   return (
     <div className="pt-3">
       <div className="flex items-center gap-2 pb-2">
@@ -168,13 +170,16 @@ function SourceHtml({
           onChange={(event) => setDraft(event.target.value)}
         />
       )}
+      {empty ? (
+        <p className="pt-1 text-sm text-error">원문을 비울 수 없습니다. 고칠 원문을 입력해 주세요.</p>
+      ) : null}
       <p className="pt-1 text-xs text-gray-500">
-        저장할 때 스크립트 같은 위험한 태그는 지워집니다. 원문을 비우고 저장하면 저장된 원문이 없어집니다.
+        저장할 때 스크립트 같은 위험한 태그는 지워집니다. 거른 뒤 남는 내용이 없으면 저장되지 않습니다.
       </p>
       <div className="flex items-center gap-2 pt-2">
         <Button
           size="sm"
-          disabled={!dirty || mutation.isPending}
+          disabled={!dirty || empty || mutation.isPending}
           onClick={() =>
             mutation.mutate(
               { jobId: job.id, sourceHtml: draft },
