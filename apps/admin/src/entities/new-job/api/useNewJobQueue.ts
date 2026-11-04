@@ -17,7 +17,7 @@ export type NewJob = AdminJobSummaryWithInspection;
 export type NewJobDetail = AdminJobDetailWithInspection;
 
 /**
- * 오늘 올라온 공고(LC-3567). 가장 최근 수집 묶음의 크롤러·고용24 공고다.
+ * 오늘 올라온 공고(LC-3567). 오늘(KST 달력 날짜) 등록된 크롤러·고용24 공고다. 자정이 지나면 전날 공고는 빠진다.
  *
  * 검수 완료 표시·해제, 상세의 `inspectedAt`·`analysis`·`analysisCurrent`, 목록의 `registeredFrom`·`registeredTo`
  * 는 백엔드에 아직 없다(PRD `prd-admin-today-job-review.md` "백엔드 요청" 1~3). 타입은 목의 계약
@@ -26,8 +26,8 @@ export type NewJobDetail = AdminJobDetailWithInspection;
  */
 
 export interface NewJobQueue {
-  /** 기준 수집일(KST `YYYY-MM-DD`). 크롤러 공고가 하나도 없으면 null. */
-  batchDate: string | null;
+  /** 목록을 받은 날(KST `YYYY-MM-DD`). */
+  date: string;
   items: NewJob[];
 }
 
@@ -35,13 +35,10 @@ const QUEUE_KEY = ['admin', 'new-jobs', 'queue'] as const;
 
 /** 목록 API 의 페이지 크기 상한(백엔드 `validatePageRequest`). */
 const PAGE_SIZE = 100;
-/** 한 묶음에서 읽을 최대 쪽 수. 크롤러 하루 수집분이 수백 건을 넘지 않는다. */
+/** 하루치에서 읽을 최대 쪽 수. 크롤러 하루 수집분이 수백 건을 넘지 않는다. */
 const MAX_PAGES = 10;
 
-/**
- * 비즈니스 회원 공고는 넣지 않는다. 검수 대기에서 사전 승인을 거쳤다(PRD 결정 필요 3).
- * 고용24는 기준일을 정하는 데는 쓰지 않고, 기준일에 들어온 것만 더한다(결정 필요 2).
- */
+/** 비즈니스 회원 공고는 넣지 않는다. 검수 대기에서 사전 승인을 거쳤다(PRD 결정 필요 3). */
 const SOURCES = ['CRAWLER', 'WORK24'] as const;
 
 /** 등록 시각의 KST 날짜. */
@@ -52,23 +49,9 @@ const nextDate = (date: string): string =>
   new Date(Date.parse(`${date}T00:00:00Z`) + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /**
- * 기준 수집일. 크롤러 공고 중 가장 늦은 등록 시각의 KST 날짜다.
+ * 한 등록 경로의 그날 공고. 등록일 필터(백엔드 요청 3)를 보내되, 받은 것을 여기서도 날짜로 거른다.
  *
- * `sort=REGISTERED_AT` 은 `[크롤러 여부][등록일][PICK 직군][무작위]` 순이라(BE `JobListSortKey`) 크롤러로 거른
- * 첫 건이 가장 최근 수집일의 공고다. 같은 날 안에서는 무작위라 시각이 아니라 날짜만 쓴다.
- */
-async function fetchBatchDate(): Promise<string | null> {
-  const page = await unwrapData(
-    listJobs({ source: 'CRAWLER', sort: 'REGISTERED_AT', page: 1, size: 1 }),
-  );
-  const first = page?.items[0];
-  return first ? kstDate(first.registeredAt) : null;
-}
-
-/**
- * 한 등록 경로의 기준일 공고. 등록일 필터(백엔드 요청 3)를 보내되, 받은 것을 여기서도 날짜로 거른다.
- *
- * 지금 배포된 백엔드는 이 필터를 모르고 무시한다. 그래도 정렬이 등록일 역순이라 기준일보다 앞선 공고가 나오면
+ * 지금 배포된 백엔드는 이 필터를 모르고 무시한다. 그래도 정렬이 등록일 역순이라 그날보다 앞선 공고가 나오면
  * 거기서 멈추면 된다. 필터가 생기면 첫 쪽에서 끝난다.
  */
 async function fetchSource(source: (typeof SOURCES)[number], date: string): Promise<NewJob[]> {
@@ -103,15 +86,14 @@ export function useNewJobQueue() {
   return useQuery({
     queryKey: QUEUE_KEY,
     queryFn: async (): Promise<NewJobQueue> => {
-      const batchDate = await fetchBatchDate();
-      if (!batchDate) {
-        return { batchDate: null, items: [] };
-      }
-      const lists = await Promise.all(SOURCES.map((source) => fetchSource(source, batchDate)));
+      // 오늘 등록분만 본다(2026-11-04 사용자). 전에는 크롤러 공고 중 가장 늦은 등록일을 기준으로 삼아, 수집이
+      // 없는 날에도 전날 공고가 남았다.
+      const date = kstDate(new Date().toISOString());
+      const lists = await Promise.all(SOURCES.map((source) => fetchSource(source, date)));
       const items = lists
         .flat()
         .sort((a, b) => Date.parse(b.registeredAt) - Date.parse(a.registeredAt));
-      return { batchDate, items };
+      return { date, items };
     },
     staleTime: Number.POSITIVE_INFINITY,
   });
@@ -129,7 +111,7 @@ export function patchQueueItem(queryClient: QueryClient, jobId: number, patch: P
   );
 }
 
-/** 처음부터 다시 받는다. 다음 묶음이 올라왔는지 볼 때 쓴다. */
+/** 처음부터 다시 받는다. 새 공고가 올라왔는지 볼 때 쓴다. */
 export function useReloadNewJobQueue() {
   const queryClient = useQueryClient();
   return () => queryClient.resetQueries({ queryKey: QUEUE_KEY });

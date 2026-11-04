@@ -38,7 +38,7 @@ export type AdminJobDetailWithInspection = AdminJobDetailResponse & AdminJobInsp
 export type AdminJobSummaryWithInspection = AdminJobSummaryResponse &
   Pick<AdminJobInspectionFields, 'inspectedAt'>;
 
-/** 등록 시각의 KST 날짜(`YYYY-MM-DD`). 기준 수집일을 KST 로 정한다(PRD 결정 필요 2). */
+/** 등록 시각의 KST 날짜(`YYYY-MM-DD`). 검수 대상은 오늘(KST) 등록분이다. */
 const kstDate = (iso: string): string =>
   new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -69,7 +69,7 @@ function saveInspections() {
   }
 }
 
-// --- 오늘 묶음 픽스처 ------------------------------------------------------------------------
+// --- 오늘 등록분 픽스처 ------------------------------------------------------------------------
 
 const BODY_LABELS: [keyof AdminJobDetailResponse, string][] = [
   ['companyAndTeamIntroduction', '회사 소개'],
@@ -156,29 +156,16 @@ const analyses = new Map<number, AdminJobAnalysis | null>();
 const staleAnalyses = new Set<number>();
 
 /**
- * 크롤러 공고 중 가장 늦은 등록 시각의 KST 날짜. 화면의 기준 수집일과 같은 규칙이다(PRD 결정 필요 2).
- * 고용24는 기준에 넣지 않는다. 매일 04:00 에 몇 건만 들어와 전날 크롤러 묶음을 밀어낸다.
- */
-const latestCrawlerDate = (): string | null => {
-  const latest = ADMIN_JOB_FIXTURES.filter((job) => job.source === 'CRAWLER')
-    .map((job) => job.registeredAt)
-    .sort()
-    .at(-1);
-  return latest ? kstDate(latest) : null;
-};
-
-/**
- * 기준 수집일 공고에 원문과 분석을 붙이고, 검수에서 잡아야 할 경우를 한 건씩 심는다.
+ * 오늘(KST) 등록된 크롤러 공고에 원문과 분석을 붙이고, 검수에서 잡아야 할 경우를 한 건씩 심는다. 화면과 같은
+ * 날짜 규칙이다. 등록 시각은 픽스처가 지금을 기준으로 흩어 두므로(`registeredAtFor`) 언제 열어도 오늘 등록분이
+ * 있다.
  *
  * 나머지 공고는 손대지 않는다. 사용자 픽스처의 원문이 있는 공고(1번)는 그 원문을 그대로 둔다.
  */
 function seedBatch() {
-  const batchDate = latestCrawlerDate();
-  if (!batchDate) {
-    return;
-  }
+  const today = kstDate(new Date().toISOString());
   const batch = ADMIN_JOB_FIXTURES.filter(
-    (job) => job.source === 'CRAWLER' && kstDate(job.registeredAt) === batchDate,
+    (job) => job.source === 'CRAWLER' && kstDate(job.registeredAt) === today,
   ).sort((a, b) => a.id - b.id);
 
   batch.forEach((job, index) => {
@@ -221,7 +208,7 @@ function seedBatch() {
       }
       case 7:
       case 8:
-        // 목 픽스처에는 고용24 공고가 없어 기준일 공고 두 건을 고용24로 바꾼다. 기준일은 크롤러로만 정한다.
+        // 목 픽스처에는 고용24 공고가 없어 오늘 공고 두 건을 고용24로 바꾼다.
         job.source = 'WORK24';
         break;
       case 9:

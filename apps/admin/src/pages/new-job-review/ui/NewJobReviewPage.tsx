@@ -58,7 +58,7 @@ const monthDay = (date: string) => {
 };
 
 /**
- * 오늘 올라온 공고 검수(LC-3567). 가장 최근 수집 묶음의 크롤러·고용24 공고를 한 건씩 넘기며, 왼쪽에 우리가 만든 값,
+ * 오늘 올라온 공고 검수(LC-3567). 오늘(KST) 등록된 크롤러·고용24 공고를 한 건씩 넘기며, 왼쪽에 우리가 만든 값,
  * 오른쪽에 원문을 나란히 놓고 본다.
  *
  * 공고는 이미 게시돼 있다. 검수 대기(`pages/review-queue`)와 달리 사전 승인이 아니라 사후 확인이고, 판정을 모으지
@@ -330,9 +330,9 @@ export function NewJobReviewPage() {
       <PageHeader
         title="오늘 올라온 공고"
         action={
-          data?.batchDate ? (
+          data ? (
             <p className="text-sm text-gray-500">
-              {monthDay(data.batchDate)} 수집분 · {items.length}건
+              오늘({monthDay(data.date)}) · {items.length}건
             </p>
           ) : null
         }
@@ -398,15 +398,15 @@ export function NewJobReviewPage() {
         </Callout>
       ) : null}
 
-      {!data?.batchDate ? (
+      {items.length === 0 ? (
         <EmptyState
-          title="수집된 공고가 없습니다"
-          description="크롤러가 공고를 수집하면 가장 최근 수집일의 공고가 여기에 올라옵니다."
+          title="오늘 올라온 공고가 없습니다"
+          description="크롤러와 고용24가 오늘 등록한 공고가 여기에 올라옵니다. 전날 공고는 자정이 지나면 빠집니다."
         />
       ) : !current ? (
         <EmptyState
           title={`${FILTERS.find((entry) => entry.value === filter)!.label} 공고가 없습니다`}
-          description="다른 칩을 눌러 보세요. 크롤러와 고용24가 기준 수집일에 올린 공고만 봅니다. 비즈니스 회원 공고는 검수 대기에서 봅니다."
+          description="다른 칩을 눌러 보세요. 크롤러와 고용24가 오늘 올린 공고만 봅니다. 비즈니스 회원 공고는 검수 대기에서 봅니다."
         />
       ) : (
         <>
