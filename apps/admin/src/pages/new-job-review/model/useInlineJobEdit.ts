@@ -95,8 +95,6 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
   const [saving, setSaving] = useState<InlineSection | null>(null);
   const [errorOf, setErrorOf] = useState<Partial<Record<InlineSection, string>>>({});
   const [lastSave, setLastSave] = useState<LastSave | null>(null);
-  /** 본문을 저장한 공고. 분석이 다시 만들어진다고 알린다. */
-  const [bodySavedFor, setBodySavedFor] = useState<number | null>(null);
   const mutation = usePatchJob(job?.id ?? 0);
 
   // 다른 공고로 넘어가면 처음부터, 같은 공고의 새 값이면 고치던 칸을 남긴다.
@@ -136,7 +134,6 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
   if (!job || !active) {
     return null;
   }
-  const jobId = job.id;
   const { before, values } = active;
   const errors: JobEditorErrors = validate(values);
 
@@ -171,9 +168,6 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
               }
             : previous,
         );
-        if (patch.fields) {
-          setBodySavedFor(jobId);
-        }
         onDone();
       },
       onError: (caught) =>
@@ -223,7 +217,6 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
     lastSave,
     saving,
     errorOf,
-    bodySaved: bodySavedFor === jobId,
   };
 }
 

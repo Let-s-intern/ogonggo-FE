@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { contentFieldLabel } from '@ogonggo/api/src/admin';
-import type { Analysis as JobAnalysis } from '@ogonggo/api/src/mocks/admin/inspection';
-import { Badge, Button, Callout, Field, Input, Textarea, cn } from '@ogonggo/ui';
+import { Button, Callout, Field, Input, Textarea, cn } from '@ogonggo/ui';
 import type { NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
 import { WEB_HOME } from '@/shared/api/webHandoff';
 import {
@@ -11,6 +10,7 @@ import {
   RecruitmentSection,
 } from '@/widgets/job-editor';
 import { INLINE_SECTIONS, type InlineJobEdit, type InlineSection } from '../model/useInlineJobEdit';
+import { AnalysisEditor } from './AnalysisEditor';
 
 /** 이 칸 입력란의 `id` 앞머리. 같은 화면의 `내용 수정` 모달(`job-`)과 겹치지 않게 한다. */
 const ID_PREFIX = 'review';
@@ -19,7 +19,7 @@ const ID_PREFIX = 'review';
  * 왼쪽 칸. 우리가 만든 값이다 — 썸네일, 분류, 본문 칸, 공고 분석. 오른쪽 원문과 대조한다.
  *
  * 썸네일·분류·본문은 그 자리에서 고친다(2026-11-04 사용자). 칸 부품과 검사는 `내용 수정` 모달의 것을 쓰고, 구역마다
- * `저장` 으로 바뀐 칸만 보낸다(`useInlineJobEdit`). 분석 결과는 백엔드가 본문으로 만드는 값이라 고치지 않는다.
+ * `저장` 으로 바뀐 칸만 보낸다(`useInlineJobEdit`). 분석 결과도 그 자리에서 고쳐 통째로 저장한다(`AnalysisEditor`).
  *
  * 상세 화면과 달리 빈 칸을 숨기지 않는다. 검수에서는 무엇이 안 뽑혔는지가 확인 대상이라 비었다고 적는다.
  */
@@ -29,12 +29,11 @@ export function AnalysisPane({ job, edit }: { job: NewJobDetail; edit: InlineJob
       <Thumbnails job={job} edit={edit} />
       <Classification edit={edit} />
       <BodyFields edit={edit} />
-      {/* 백엔드가 분석을 싣기 전(칸 자체가 없을 때)에는 이 구역을 그리지 않는다(PRD 백엔드 요청 2). */}
+      {/* 분석 칸이 배포되기 전(칸 자체가 없을 때)에는 이 구역을 그리지 않는다. 서버 값이 바뀌면 새로 연다. */}
       {'analysis' in job ? (
-        <Analysis
-          analysis={job.analysis ?? null}
-          isCurrent={job.analysisCurrent !== false}
-          bodySaved={edit.bodySaved}
+        <AnalysisEditor
+          key={`${job.id}:${job.analysisEditedAt ?? ''}:${String(job.analysisCurrent)}:${JSON.stringify(job.analysis)}`}
+          job={job}
         />
       ) : null}
     </div>
@@ -264,115 +263,5 @@ function BodyFields({ edit }: { edit: InlineJobEdit }) {
         </Field>
       ))}
     </Section>
-  );
-}
-
-/** `Fact` 한 줄. 값이 없으면 보충 설명만, 둘 다 없으면 `-`. */
-function fact(value?: string, note?: string): string {
-  return [value, note && `(${note})`].filter(Boolean).join(' ') || '-';
-}
-
-function List({ items }: { items: string[] }) {
-  return items.length === 0 ? (
-    <p className="text-sm text-gray-300">없음</p>
-  ) : (
-    <ul className="list-disc space-y-0.5 pl-5 text-sm text-gray-900">
-      {items.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  );
-}
-
-/**
- * 분석 결과. 백엔드가 본문 칸으로 만드는 값이라 읽기만 한다. 본문을 저장하면 다시 만들어진다는 것을 알린다 —
- * 다시 만들어지기 전까지 보이는 분석은 고치기 전 본문 기준이다.
- */
-function Analysis({
-  analysis,
-  isCurrent,
-  bodySaved,
-}: {
-  analysis: JobAnalysis | null;
-  isCurrent: boolean;
-  bodySaved: boolean;
-}) {
-  const notice = bodySaved ? (
-    <Callout tone="info" className="mb-3">
-      본문을 고쳐 분석 결과를 다시 만듭니다. 다시 만들어지기 전까지 아래 분석은 고치기 전 본문 기준입니다.
-    </Callout>
-  ) : null;
-  if (!analysis) {
-    return (
-      <Section title="분석 결과">
-        {notice}
-        <p className="text-sm text-error">분석 없음</p>
-      </Section>
-    );
-  }
-  const { employment, submission } = analysis;
-  return (
-    <section>
-      <div className="flex items-center gap-2 pb-2">
-        <h3 className="text-sm font-bold text-gray-900">분석 결과</h3>
-        {isCurrent ? null : <Badge tone="urgent">다시 분석 대기</Badge>}
-        <span className="text-xs text-gray-400">본문으로 만든 값이라 고치지 않습니다</span>
-      </div>
-      {notice}
-      <div className="space-y-4">
-        <div>
-          <h4 className="pb-1 text-sm font-medium text-gray-500">할 일</h4>
-          <List items={analysis.tasks.map((task) => `[${task.tag}] ${task.text}`)} />
-        </div>
-        <div>
-          <h4 className="pb-1 text-sm font-medium text-gray-500">필수 조건</h4>
-          <List items={analysis.required} />
-        </div>
-        <div>
-          <h4 className="pb-1 text-sm font-medium text-gray-500">우대 조건</h4>
-          <List items={analysis.preferred} />
-        </div>
-        <div>
-          <h4 className="pb-1 text-sm font-medium text-gray-500">근무 조건</h4>
-          <List
-            items={[
-              `고용 형태: ${fact(employment.type.value, employment.type.note)}`,
-              `전환: ${fact(employment.conversion.value, employment.conversion.note)}`,
-              `급여: ${fact(employment.salary.value, employment.salary.note)}`,
-              `소속: ${fact(employment.affiliation.value, employment.affiliation.note)}`,
-            ]}
-          />
-        </div>
-        <div>
-          <h4 className="pb-1 text-sm font-medium text-gray-500">제출</h4>
-          <List
-            items={[
-              `서류: ${fact(submission.documents.value, submission.documents.note)}`,
-              `자기소개서: ${fact(submission.essay.value, submission.essay.note)}`,
-              `절차: ${fact(submission.process.value, submission.process.note)}`,
-              `마감: ${fact(submission.deadline.value, submission.deadline.note)}`,
-            ]}
-          />
-        </div>
-        <div>
-          <h4 className="pb-1 text-sm font-medium text-gray-500">역량</h4>
-          {analysis.competencies.length === 0 ? (
-            <p className="text-sm text-gray-300">없음</p>
-          ) : (
-            <ul className="space-y-2">
-              {analysis.competencies.map((competency) => (
-                <li key={competency.name} className="text-sm">
-                  <p className="font-medium text-gray-900">{competency.name}</p>
-                  {/* 원문 문장 그대로다. 오른쪽 원문에서 같은 문장을 찾아 대조한다. */}
-                  <blockquote className="mt-0.5 border-l-2 border-gray-300 pl-2 text-gray-600">
-                    {competency.quote}
-                  </blockquote>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </section>
   );
 }
