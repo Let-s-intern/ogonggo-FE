@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import {
   ActionAlert,
   Badge,
@@ -18,6 +19,11 @@ import {
   useSetJobInspected,
   useSetJobVisibility,
 } from '@/entities/new-job/api/useNewJobQueue';
+import {
+  requestAssistantQuestion,
+  useAssistantBusy,
+  useJobFillRequest,
+} from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { ContentSourceBadge, VisibilityBadge } from '@/shared/config/labels';
 import { formatDateTime } from '@/shared/lib/format';
@@ -115,6 +121,26 @@ export function NewJobReviewPage() {
   );
   const current = list[index];
   const detail = useNewJobDetail(current?.id);
+  const isAssistantBusy = useAssistantBusy();
+
+  /*
+   * 보고 있는 공고를 주소(`?job=`)에 적는다. AI 비서는 주소로 "이 공고" 를 알고(`api/assistant.ts` [대화]),
+   * 수정 창 채우기(`fill_job_text`)가 이 화면을 떠나지 않아도 되는지 가른다. 읽지는 않는다 — 위치는 칩과 순서로 정한다.
+   */
+  const [, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (current) {
+      setSearchParams({ job: String(current.id) }, { replace: true });
+    }
+  }, [current, setSearchParams]);
+
+  // AI 비서가 이 공고의 수정 창을 채워 달라고 했다. 창을 열면 `JobEditor` 가 칸을 채운다. 저장은 하지 않는다.
+  const fillRequest = useJobFillRequest(current?.id ?? null);
+  useEffect(() => {
+    if (fillRequest) {
+      setIsEditing(true);
+    }
+  }, [fillRequest]);
 
   // 다음 건을 미리 받는다.
   const nextId = list[index + 1]?.id;
@@ -466,7 +492,26 @@ export function NewJobReviewPage() {
                 onMouseEnter={() => (scrollTargetRef.current = 'source')}
               >
                 {detail.data ? (
-                  <SourcePane ref={sourceRef} job={detail.data} className="h-full" />
+                  <SourcePane
+                    ref={sourceRef}
+                    job={detail.data}
+                    className="h-full"
+                    action={
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={isAssistantBusy}
+                        title={isAssistantBusy ? 'AI 비서가 답하는 중입니다' : undefined}
+                        onClick={() => {
+                          requestAssistantQuestion(`공고 ${current.id} 를 검수해줘`);
+                          // 버튼에 포커스가 남으면 다음 Space 가 이 버튼을 다시 누른다.
+                          focusRoot();
+                        }}
+                      >
+                        AI 비서에게 검수 요청
+                      </Button>
+                    }
+                  />
                 ) : (
                   <p className="text-sm text-gray-500">불러오는 중입니다.</p>
                 )}

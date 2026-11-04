@@ -5,3 +5,8 @@ export {
   useAssistantPanelOpen,
 } from './ui/AssistantPanel';
 export { consumeJobFill, useJobFillRequest, type FillableJobField } from './model/jobFill';
+export {
+  requestAssistantQuestion,
+  useAssistantBusy,
+  useAssistantQuestion,
+} from './model/askRequest';

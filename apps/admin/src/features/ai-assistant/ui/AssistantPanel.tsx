@@ -1,5 +1,10 @@
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { Button, Callout, Textarea, cn } from '@ogonggo/ui';
+import {
+  consumeAssistantQuestion,
+  setAssistantBusy,
+  useAssistantQuestion,
+} from '../model/askRequest';
 import { FAVORITES } from '../model/favorites';
 import { useAssistantChat } from '../model/useAssistantChat';
 
@@ -52,6 +57,17 @@ export function AssistantPanel({ open, onOpenChange }: AssistantPanelProps) {
   const [draft, setDraft] = useState('');
   const { lines, error, isBusy, send, stop, reset } = useAssistantChat();
   const listRef = useRef<HTMLDivElement>(null);
+  const question = useAssistantQuestion();
+
+  // 다른 화면이 넣은 질문(`../model/askRequest.ts`). 답하는 중이면 끝난 뒤에 보낸다.
+  useEffect(() => {
+    if (question && !isBusy) {
+      consumeAssistantQuestion(question.nonce);
+      void send(question.text);
+    }
+  }, [question, isBusy, send]);
+
+  useEffect(() => setAssistantBusy(isBusy), [isBusy]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
