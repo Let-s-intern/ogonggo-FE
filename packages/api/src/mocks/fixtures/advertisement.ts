@@ -9,6 +9,7 @@ import type {
   AdPlacementPeriodAvailability,
   AdReport,
 } from './advertisement-types';
+import { mockBannerAt } from './ogonggo-banners';
 
 /**
  * 광고 시스템 픽스처. 구좌 목록과 기간별 잔여, 광고 신청 셋, 리포트 한 건, 무료 쿠폰 한 장.
@@ -352,9 +353,6 @@ const BILLING = {
   taxInvoiceType: 'CLAIM',
 } as const;
 
-const BANNER_IMAGE_URL =
-  'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg';
-
 /** 소재 검수 중. 오공고 제작 소재 둘이 광고주 확인을 기다린다. A4 에 쿠폰을 썼다. */
 const reviewingReceivedAt = mondayAfter(-2);
 const reviewingStart = mondayAfter(1);
@@ -473,8 +471,8 @@ export const AD_APPLICATION_FIXTURES: AdApplication[] = [
         creative: {
           id: 22011,
           source: 'UPLOADED',
-          bannerImageUrlPc: BANNER_IMAGE_URL,
-          bannerImageUrlMo: BANNER_IMAGE_URL,
+          bannerImageUrlPc: mockBannerAt(2).pc,
+          bannerImageUrlMo: mockBannerAt(2).mo,
           skillTags: ['고객 응대', '운영 프로세스'],
           taskTags: ['VOC 분류', '운영 지표 관리'],
           confirmStatus: 'APPROVED',

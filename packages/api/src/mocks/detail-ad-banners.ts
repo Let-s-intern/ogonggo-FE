@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { JOB_FIXTURES } from './fixtures/job';
+import { OGONGGO_SIDE_BANNERS, mockBannerAt } from './fixtures/ogonggo-banners';
 
 /**
  * 공고 상세의 배너 자리 둘(PC 사이드, MO 본문 중간). 상품 시안에 없는 자리라 구좌 키가 공용 목
@@ -10,9 +11,6 @@ import { JOB_FIXTURES } from './fixtures/job';
  * (`advertisements.ts`)로 넘긴다. 그래서 `handlers.ts` 에서 공용 광고 핸들러보다 앞에 둔다.
  */
 const DETAIL_BANNER_KEYS = ['DETAIL_SIDE_BANNER_RECRUIT', 'DETAIL_MO_BANNER_RECRUIT'] as const;
-
-const BANNER_IMAGE_URL =
-  'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg';
 
 const getDetailBannerHandler = http.get('*/api/v1/advertisements/exposures', ({ request }) => {
   const placementKey = new URL(request.url).searchParams.get('placementKey');
@@ -39,8 +37,9 @@ const getDetailBannerHandler = http.get('*/api/v1/advertisements/exposures', ({ 
         companyName: job.companyName,
         companyLogoUrl: job.logoUrl,
         skillTags: [],
-        bannerImageUrlPc: BANNER_IMAGE_URL,
-        bannerImageUrlMo: BANNER_IMAGE_URL,
+        // 사이드 자리는 4:5 라 세로 소재를, MO 본문 자리는 가로 배너를 준다.
+        bannerImageUrlPc: index === 0 ? OGONGGO_SIDE_BANNERS[0] : mockBannerAt(1).pc,
+        bannerImageUrlMo: index === 0 ? OGONGGO_SIDE_BANNERS[0] : mockBannerAt(1).mo,
       },
     ],
   });

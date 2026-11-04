@@ -23,6 +23,7 @@ import type {
 } from './fixtures/advertisement-types';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { JOB_FIXTURES } from './fixtures/job';
+import { mockBannerAt } from './fixtures/ogonggo-banners';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 
 /**
@@ -134,9 +135,6 @@ const HEADLINE_PLACEMENTS: AdPlacementKey[] = [
   'SIMILAR_TOP_EDU',
 ];
 
-const BANNER_IMAGE_URL =
-  'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg';
-
 /**
  * 구좌별 노출용 광고. 슬롯 수만큼 채우고, 공고는 공고·부트캠프 목에서 구좌마다 다른 자리부터 가져와 눌러서 간 상세가
  * 같은 공고다. 직무별 구좌에 `?jobField=` 를 주면 그 직무의 광고로 내준다. 공고 목에 직무가 비어 있어 공고는 직무와
@@ -177,8 +175,8 @@ const getExposuresHandler = http.get('*/api/v1/advertisements/exposures', ({ req
     jobField: placement.perJobField ? (jobField ?? post.jobField) : undefined,
     headline: headline ? HEADLINES[index % HEADLINES.length] : undefined,
     skillTags: headline ? ['문제 정의', '데이터 분석'] : [],
-    bannerImageUrlPc: banner ? BANNER_IMAGE_URL : undefined,
-    bannerImageUrlMo: banner ? BANNER_IMAGE_URL : undefined,
+    bannerImageUrlPc: banner ? mockBannerAt(offset + index).pc : undefined,
+    bannerImageUrlMo: banner ? mockBannerAt(offset + index).mo : undefined,
   }));
   return success(exposures);
 });
