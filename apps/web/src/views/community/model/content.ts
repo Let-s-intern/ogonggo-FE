@@ -122,6 +122,25 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
     ],
   },
   {
+    id: 'univ',
+    // 계정 주소는 사용자가 준 자료 폴더 이름(`letscareer_univ`)을 따랐다. 프로필과 게시물 캡처 다섯 장도 그 폴더에서
+    // 왔다(2026-11-05 사용자). 여섯째 칸은 비어 회색으로 남는다.
+    handle: '@letscareer_univ',
+    label: '렛츠커리어 대외활동',
+    pitch: '다양한 대외활동을 찾는 분께 추천',
+    description:
+      '다양한 대외활동과 공모전 정보부터 취업에 필요한 경험을 쌓을 기회까지 빠르게 만나보세요.',
+    url: 'https://www.instagram.com/letscareer_univ/',
+    profileImage: '/community/instagram-univ-profile.jpg',
+    thumbnails: [
+      { src: '/community/instagram-univ-1.jpg', alt: '2026년 10월 5주차 대외활동·공모전' },
+      { src: '/community/instagram-univ-2.jpg', alt: '네이버 웹툰 찐오타쿠 모집' },
+      { src: '/community/instagram-univ-3.jpg', alt: '교촌 서포터즈 모집' },
+      { src: '/community/instagram-univ-4.jpg', alt: '대학생 일본여행 무료 지원' },
+      { src: '/community/instagram-univ-5.jpg', alt: '학년별 취업 준비' },
+    ],
+  },
+  {
     id: 'qna',
     handle: '@letscareer.qna',
     label: '렛츠커리어 QNA',
