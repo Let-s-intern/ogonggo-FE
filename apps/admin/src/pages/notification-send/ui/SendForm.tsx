@@ -1,5 +1,15 @@
 import { useRef, useState } from 'react';
-import { Button, Callout, Card, DescriptionList, Field, Input, Modal, Textarea } from '@ogonggo/ui';
+import {
+  Button,
+  Callout,
+  Card,
+  Checkbox,
+  DescriptionList,
+  Field,
+  Input,
+  Modal,
+  Textarea,
+} from '@ogonggo/ui';
 import { HttpError } from '@ogonggo/api';
 import type { AdminNotificationBatchCreatedResponse } from '@ogonggo/api/src/admin';
 import { useCreateNotificationBatch } from '@/entities/notification-batch/api/useNotificationBatches';
@@ -7,11 +17,16 @@ import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { notificationTargetTypeLabel } from '@/shared/config/labels';
 import { formatCount } from '@/shared/lib/format';
 import {
+  AD_TITLE_PREFIX,
   BODY_MAX,
   EMPTY_SEND_FORM,
   TITLE_MAX,
+  canAdvertise,
+  isAdQuietHours,
   parseUserIds,
+  sendTitle,
   targetUserIds,
+  titlePrefix,
   toCreateRequest,
   validateSendForm,
   type SendFormValues,
@@ -60,6 +75,8 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
   const createMutation = useCreateNotificationBatch();
   const [submitted, setSubmitted] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  /** 확인 창을 연 때가 광고성 야간 시간이었는지. 창을 연 동안에는 바꾸지 않는다. */
+  const [isQuietHours, setIsQuietHours] = useState(false);
   const sendingRef = useRef(false);
 
   const [isPicking, setIsPicking] = useState(false);
@@ -72,6 +89,7 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
     setSubmitted(true);
     createMutation.reset();
     if (Object.keys(validateSendForm(values)).length === 0) {
+      setIsQuietHours(values.advertisement && isAdQuietHours());
       setIsConfirming(true);
     }
   };
@@ -122,7 +140,9 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
                 name="notification-target"
                 value={target}
                 checked={values.target === target}
-                onChange={() => set({ target })}
+                onChange={() =>
+                  set(canAdvertise(target) ? { target } : { target, advertisement: false })
+                }
                 className="accent-blue-500"
               />
               {notificationTargetTypeLabel(target)}
@@ -130,6 +150,20 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
           ))}
         </div>
       </fieldset>
+
+      <Field label="광고성" error={errors.advertisement}>
+        <Checkbox
+          checked={values.advertisement}
+          disabled={!canAdvertise(values.target)}
+          onChange={(advertisement) => set({ advertisement })}
+          label="광고성 알림으로 보내기"
+        />
+        <p className="pt-1.5 text-xs text-gray-500">
+          {canAdvertise(values.target)
+            ? `광고성 알림은 렛츠커리어 마케팅 수신에 동의한 회원에게만 가고, 제목 앞에 ${AD_TITLE_PREFIX.trim()} 가 붙어요.`
+            : '기업 회원에게는 광고성 알림을 보낼 수 없어요.'}
+        </p>
+      </Field>
 
       {values.target === 'USER_IDS' ? (
         <Field label="받는 회원" htmlFor="notification-user-ids" error={errors.userIds}>
@@ -229,7 +263,12 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
           value={values.title}
           onChange={(event) => set({ title: event.target.value })}
         />
-        <Counter length={values.title.length} max={TITLE_MAX} />
+        <div className="flex justify-between gap-4">
+          <p className="pt-1.5 text-xs text-gray-500">
+            {titlePrefix(values) ? `보낼 제목: ${sendTitle(values) || AD_TITLE_PREFIX}` : null}
+          </p>
+          <Counter length={titlePrefix(values).length + values.title.length} max={TITLE_MAX} />
+        </div>
       </Field>
 
       <Field label="본문" htmlFor="notification-body" error={errors.body}>
@@ -290,10 +329,20 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
           columns={1}
           items={[
             { label: '대상', value: <span className="font-semibold">{audience}</span> },
-            { label: '제목', value: values.title.trim() },
+            {
+              label: '광고성',
+              value: values.advertisement ? '광고성 · 마케팅 수신 동의자에게만' : '아님',
+            },
+            { label: '제목', value: sendTitle(values) },
             { label: '이동', value: <span className="break-all">{values.url.trim()}</span> },
           ]}
         />
+        {isQuietHours ? (
+          <Callout tone="error" className="mt-4">
+            지금은 밤 9시부터 아침 8시 사이예요. 이 시간의 광고성 알림은 야간 수신에 따로 동의한
+            회원에게만 보낼 수 있어요. 지금 보내도 되는지 한 번 더 확인해 주세요.
+          </Callout>
+        ) : null}
         <Callout tone="warning" className="mt-4">
           보내면 취소할 수 없어요. 같은 내용을 다시 보내면 회원에게 한 번 더 갑니다.
         </Callout>
@@ -306,7 +355,7 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
             취소
           </Button>
           <Button disabled={createMutation.isPending} onClick={send}>
-            {createMutation.isPending ? '보내는 중' : '보내기'}
+            {createMutation.isPending ? '보내는 중' : isQuietHours ? '그래도 보내기' : '보내기'}
           </Button>
         </div>
       </Modal>
