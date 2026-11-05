@@ -41,6 +41,8 @@ export interface ToolContext {
 
 /** 오늘 올라온 공고 검수 화면. 보고 있는 공고가 `?job=` 에 있다(`pages/new-job-review`). */
 const REVIEW_PATH = '/content/new-jobs';
+/** 채용공고 목록. 편집 창으로 연 공고가 `?edit=` 에 있다(`pages/job-list`). */
+const JOB_LIST_PATH = '/content/jobs';
 
 /** 모델에게 돌려줄 결과의 최대 길이. 길면 다음 호출의 입력이 커져 느리고 비싸다. */
 const MAX_RESULT_LENGTH = 12_000;
@@ -383,10 +385,11 @@ function fillJobText(args: Record<string, unknown>, context: ToolContext): strin
   if (!jobId || Object.keys(values).length === 0) {
     return '채울 공고나 칸이 올바르지 않습니다. 채울 수 있는 칸: ' + FILLABLE_JOB_FIELDS.join(', ');
   }
-  // 검수 화면에서 보고 있는 공고면 화면을 옮기지 않는다. 검수 화면이 수정 창을 연다.
+  // 검수 화면이나 목록 편집 창에서 보고 있는 공고면 화면을 옮기지 않는다. 그 화면이 수정 창을 연다.
   const current = new URL(context.currentPath(), 'http://admin');
   const isReviewing =
-    current.pathname === REVIEW_PATH && current.searchParams.get('job') === String(jobId);
+    (current.pathname === REVIEW_PATH && current.searchParams.get('job') === String(jobId)) ||
+    (current.pathname === JOB_LIST_PATH && current.searchParams.get('edit') === String(jobId));
   if (!isReviewing) {
     context.navigate(`/content/jobs/${jobId}`);
   }
