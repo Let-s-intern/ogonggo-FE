@@ -100,13 +100,15 @@ export function AdminLayout() {
         맨 위 헤더. 유저·비즈니스 구역을 고르면 좌측 메뉴가 그 구역의 묶음으로 바뀌고 구역의 첫 화면으로 간다
         (2026-11-05 사용자). 좌측 메뉴 모양은 그대로다.
       */}
-        <header className="flex h-14 shrink-0 items-center gap-8 border-b border-gray-200 bg-white px-6">
-          <p className="text-lg font-bold text-gray-900">오공고 관리자</p>
-          <div
-            role="tablist"
-            aria-label="관리 구역"
-            className="ml-10 flex h-full items-stretch gap-8"
-          >
+        {/*
+          왼쪽 칸은 좌측 메뉴와 같은 폭·같은 오른쪽 선이라 메뉴 기둥이 헤더까지 이어진다. 탭은 본문 글자(`px-8`)와
+          같은 자리에서 시작한다.
+        */}
+        <header className="flex h-14 shrink-0 items-stretch border-b border-gray-200 bg-white">
+          <p className="flex w-56 shrink-0 items-center border-r border-gray-200 px-6 text-lg font-bold text-gray-900">
+            오공고 관리자
+          </p>
+          <div role="tablist" aria-label="관리 구역" className="flex items-stretch gap-8 px-8">
             {NAV_AREAS.map((item) => (
               <button
                 key={item.area}
@@ -115,7 +117,7 @@ export function AdminLayout() {
                 aria-selected={area === item.area}
                 onClick={() => navigate(firstPathOf(item.area))}
                 className={cn(
-                  'cursor-pointer border-b-2 px-1 text-sm font-medium',
+                  '-mb-px cursor-pointer border-b-2 px-1 text-[15px] font-semibold',
                   area === item.area
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-800',
