@@ -61,6 +61,8 @@ export function OriginalTab({
             'break-words text-sm leading-relaxed text-gray-700',
             '[&_:is(p,ul,ol,table,h1,h2,h3,h4,h5,h6)]:my-3 [&>:first-child]:mt-0',
             '[&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_:is(h1,h2,h3,h4,h5,h6)]:text-gray-900',
+            // 소제목 크기를 단계로 나눈다. 전에는 모두 본문과 같은 14px 라 원문의 소제목이 본문과 구분되지 않았다
+            '[&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_:is(h4,h5,h6)]:text-sm',
             '[&_ul]:list-disc [&_ol]:list-decimal [&_:is(ul,ol)]:pl-5',
             '[&_img]:h-auto [&_img]:max-w-full',
             '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',

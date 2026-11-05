@@ -25,6 +25,8 @@ const SOURCE_HTML_CLASS = cn(
   'break-words text-sm leading-relaxed text-gray-700',
   '[&_:is(p,ul,ol,table,h1,h2,h3,h4,h5,h6)]:my-3 [&>:first-child]:mt-0',
   '[&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_:is(h1,h2,h3,h4,h5,h6)]:text-gray-900',
+  // 소제목 크기는 사용자 웹 공고 원문 탭(`OriginalTab`)과 같다
+  '[&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_:is(h4,h5,h6)]:text-sm',
   '[&_ul]:list-disc [&_ol]:list-decimal [&_:is(ul,ol)]:pl-5',
   '[&_img]:h-auto [&_img]:max-w-full',
   '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',
@@ -265,11 +267,14 @@ function SourceHtml({
 }
 
 /**
- * 고치는 중 미리보기(`iframe`)의 표 줄 모양. 틀 안에는 화면의 Tailwind 클래스가 닿지 않아 `SOURCE_LABEL_ROW_CLASS` 와
- * 같은 모양을 글로 넣는다.
+ * 고치는 중 미리보기(`iframe`)의 글자 크기와 표 줄 모양. 틀 안에는 화면의 Tailwind 클래스가 닿지 않아 저장 뒤
+ * 보이는 모양(`SOURCE_HTML_CLASS`, `SOURCE_LABEL_ROW_CLASS`)과 같은 값을 글로 넣는다. 넣지 않으면 브라우저 기본값으로
+ * 소제목이 훨씬 크게 보여 미리보기와 저장 뒤 모양이 달랐다.
  */
 const PREVIEW_STYLE =
   '<style>body{font:14px/1.6 sans-serif;color:#374151}img{max-width:100%;height:auto}' +
+  'h1,h2,h3,h4,h5,h6{color:#111827;font-weight:700;margin:12px 0}' +
+  'h1{font-size:20px}h2{font-size:18px}h3{font-size:16px}h4,h5,h6{font-size:14px}' +
   '.source-label-row{display:flex;gap:16px;padding:8px 0;border-bottom:1px solid #f3f4f6}' +
   '.source-label{width:80px;flex-shrink:0;color:#6b7280}</style>';
 
