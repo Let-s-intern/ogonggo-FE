@@ -367,11 +367,18 @@ export function matchesInspectionFilters(job: AdminJobDetailResponse, url: URL):
  * 속성, `javascript:` 주소. 목에서만 쓴다. 화면은 저장된 원문을 다시 거르지 않고 그린다(`SourcePane`).
  */
 function sanitizeSourceHtml(html: string): string {
-  return html
-    .replace(/<(script|style|iframe|object|embed)\b[\s\S]*?<\/\1\s*>/gi, '')
-    .replace(/<(script|style|iframe|object|embed|link|meta)\b[^>]*>/gi, '')
-    .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/(href|src)\s*=\s*(["']?)\s*javascript:[^"'\s>]*\2/gi, '$1="#"');
+  // 한 번 지운 자리에서 새 태그가 이어 붙을 수 있어(`<scr<script>ipt>`) 더 바뀌지 않을 때까지 되풀이한다.
+  let previous: string;
+  let current = html;
+  do {
+    previous = current;
+    current = current
+      .replace(/<(script|style|iframe|object|embed)\b[\s\S]*?<\/\1\s*>/gi, '')
+      .replace(/<(script|style|iframe|object|embed|link|meta)\b[^>]*>/gi, '')
+      .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+      .replace(/(href|src)\s*=\s*(["']?)\s*javascript:[^"'\s>]*\2/gi, '$1="#"');
+  } while (current !== previous);
+  return current;
 }
 
 /**
@@ -390,7 +397,14 @@ export function readSourceHtmlPatch(body: UpdateAdminJobRequest): {
     return { error: badRequest('[sourceHtml] 원문 HTML 은 비울 수 없습니다.') };
   }
   const html = sanitizeSourceHtml(body.sourceHtml).trim();
-  if (html.replace(/<[^>]*>/g, '').trim() === '' && !/<img\b/i.test(html)) {
+  // 글이 남는지만 본다. 꺾쇠를 모두 지워 태그 이름을 남기지 않으므로 거르는 용도가 아니다.
+  if (
+    html
+      .replace(/<[^>]*>/g, '')
+      .replace(/[<>]/g, '')
+      .trim() === '' &&
+    !/<img\b/i.test(html)
+  ) {
     return { error: badRequest('[sourceHtml] 안전한 태그만 남기면 보여 줄 내용이 없습니다.') };
   }
   return { html };
