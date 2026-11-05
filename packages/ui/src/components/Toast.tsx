@@ -208,7 +208,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           자리다. 모바일은 화면 위(안전 영역 바로 아래)에 띄운다 — 아래에는 신청하기 바·하단
           내비게이션·의견 버튼이 붙어 있어 토스트가 그것들을 가렸다. 껍데기는 `pointer-events-none`
           이라 토스트가 떠 있어도 뒤 화면을 누를 수 있다. */}
-      <div className="pointer-events-none fixed inset-x-0 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 flex justify-center px-4 md:top-auto md:bottom-6">
+      <div className="pointer-events-none fixed left-0 right-[var(--assistant-width,0px)] top-[calc(0.75rem+env(safe-area-inset-top))] z-50 flex justify-center px-4 md:top-auto md:bottom-6">
         <div role="status">{isError ? null : toast}</div>
         <div role="alert">{isError ? toast : null}</div>
       </div>
