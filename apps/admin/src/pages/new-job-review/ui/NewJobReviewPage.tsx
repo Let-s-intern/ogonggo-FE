@@ -11,7 +11,7 @@ import {
   useSetJobInspected,
   useSetJobVisibility,
 } from '@/entities/new-job/api/useNewJobQueue';
-import { useJobFillRequest } from '@/features/ai-assistant';
+import { consumeReviewJob, useJobFillRequest, useReviewJobRequest } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { JobEditor } from '@/widgets/job-editor';
 import {
@@ -157,6 +157,30 @@ export function NewJobReviewPage() {
       setIsEditing(true);
     }
   }, [fillRequest]);
+
+  /*
+   * AI 비서가 이 공고로 넘겨 달라고 했다(`open_review_job`). 목록을 받기 전이나 저장 중이면 끝난 뒤에 넘긴다. 지금
+   * 칩에 없는 공고면 `전체` 칩으로 바꿔 찾는다. 고치던 것이 있으면 묻는다.
+   */
+  const reviewRequest = useReviewJobRequest();
+  useEffect(() => {
+    if (!reviewRequest || ids === null || isSaving) {
+      return;
+    }
+    consumeReviewJob(reviewRequest.nonce);
+    const { jobId } = reviewRequest;
+    if (jobId === current?.id || !confirmLeave()) {
+      return;
+    }
+    const position = list.findIndex((job) => job.id === jobId);
+    if (position >= 0) {
+      setIndex(position);
+    } else if (byId.has(jobId)) {
+      setFilter('all');
+      setIds(items.map((job) => job.id));
+      setIndex(items.findIndex((job) => job.id === jobId));
+    }
+  }, [reviewRequest, ids, current, list, items, byId, isSaving, confirmLeave]);
 
   // 다음 건을 미리 받는다.
   const nextId = list[index + 1]?.id;

@@ -85,7 +85,7 @@ async function fetchSource(source: (typeof SOURCES)[number], date: string): Prom
 }
 
 /** 오늘의 KST 날짜(`YYYY-MM-DD`). */
-const kstToday = (): string => kstDate(new Date().toISOString());
+export const kstToday = (): string => kstDate(new Date().toISOString());
 
 /** 다음 KST 자정까지 남은 시간(ms). */
 const msUntilKstMidnight = (): number => {
@@ -128,23 +128,29 @@ export function useKstToday(): string {
  * 새로고침하면 보인다.
  */
 export function useNewJobQueue(date: string) {
-  return useQuery({
-    queryKey: [...QUEUE_KEY, date],
-    queryFn: async (): Promise<NewJobQueue> => {
-      // 오늘 등록분만 본다(2026-11-04 사용자). 전에는 크롤러 공고 중 가장 늦은 등록일을 기준으로 삼아, 수집이
-      // 없는 날에도 전날 공고가 남았다.
-      const lists = await Promise.all(SOURCES.map((source) => fetchSource(source, date)));
-      const items = lists
-        .flat()
-        .sort(
-          (a, b) =>
-            Date.parse(withKstOffset(b.registeredAt)) - Date.parse(withKstOffset(a.registeredAt)),
-        );
-      return { date, items };
-    },
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  return useQuery(newJobQueueQuery(date));
 }
+
+/**
+ * 그날 목록의 쿼리. 화면(`useNewJobQueue`)과 AI 비서의 오늘 공고 목록(`list_today_review_jobs`)이 같은 캐시를 읽어
+ * 건수가 어긋나지 않는다.
+ */
+export const newJobQueueQuery = (date: string) => ({
+  queryKey: [...QUEUE_KEY, date],
+  queryFn: async (): Promise<NewJobQueue> => {
+    // 오늘 등록분만 본다(2026-11-04 사용자). 전에는 크롤러 공고 중 가장 늦은 등록일을 기준으로 삼아, 수집이
+    // 없는 날에도 전날 공고가 남았다.
+    const lists = await Promise.all(SOURCES.map((source) => fetchSource(source, date)));
+    const items = lists
+      .flat()
+      .sort(
+        (a, b) =>
+          Date.parse(withKstOffset(b.registeredAt)) - Date.parse(withKstOffset(a.registeredAt)),
+      );
+    return { date, items };
+  },
+  staleTime: Number.POSITIVE_INFINITY,
+});
 
 /** 큐의 한 건만 고친다. 목록을 다시 받지 않는다. 날짜마다 캐시가 따로라 모두 고친다. */
 export function patchQueueItem(queryClient: QueryClient, jobId: number, patch: Partial<NewJob>) {
@@ -188,20 +194,25 @@ export function usePrefetchNewJobDetail() {
 export function useSetJobInspected() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ jobId, inspected }: { jobId: number; inspected: boolean }) => {
-      if (inspected) {
-        await replaceJobInspection(jobId);
-      } else {
-        await deleteJobInspection(jobId);
-      }
-    },
-    onSuccess: (_, { jobId, inspected }) => {
-      patchQueueItem(queryClient, jobId, {
-        inspectedAt: inspected ? kstNow() : undefined,
-      });
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
-    },
+    mutationFn: ({ jobId, inspected }: { jobId: number; inspected: boolean }) =>
+      setJobInspected(queryClient, jobId, inspected),
   });
+}
+
+/**
+ * 검수 완료 표시·해제를 저장하고 캐시를 맞춘다. 화면의 체크(`useSetJobInspected`)와 AI 비서의 `mark_inspected` 가
+ * 같이 쓴다 — 비서가 체크해도 화면에 그대로 보인다.
+ */
+export async function setJobInspected(queryClient: QueryClient, jobId: number, inspected: boolean) {
+  if (inspected) {
+    await replaceJobInspection(jobId);
+  } else {
+    await deleteJobInspection(jobId);
+  }
+  patchQueueItem(queryClient, jobId, {
+    inspectedAt: inspected ? kstNow() : undefined,
+  });
+  void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
 }
 
 /**
