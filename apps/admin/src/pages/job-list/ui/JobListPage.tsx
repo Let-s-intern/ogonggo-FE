@@ -39,7 +39,18 @@ import { PickToggle, type PickNotice } from './PickToggle';
  * 행을 누르면 오늘 올라온 공고와 같은 편집 창(`JobReviewDialog`)을 연다(2026-11-05 사용자). 연 공고는 주소의
  * `?edit=<id>` 에 적어 새로고침·뒤로 가기가 그대로 따른다. 상세 페이지는 창 안 링크로 간다.
  */
-export function JobListPage() {
+/**
+ * 비즈니스 구역 목록(`/business/jobs`, `/business/bootcamps`)이 같은 화면을 쓸 때 넘긴다. 등록 경로를 비즈니스 등록으로
+ * 묶고 그 필터를 숨긴다(2026-11-05 사용자: 비즈니스 등록 채용공고·부트캠프를 유저 쪽과 비슷하게 따로 본다).
+ */
+export interface ContentListScope {
+  /** 고정할 등록 경로. 주면 등록 경로 필터가 사라진다. */
+  fixedSource?: 'COMPANY';
+  /** 화면 제목. 없으면 기본 제목. */
+  title?: string;
+}
+
+export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { get, page, setFilter, setPage } = useListQuery();
@@ -67,7 +78,7 @@ export function JobListPage() {
     page,
     keyword: get('keyword'),
     visibility: get('visibility'),
-    source: get('source'),
+    source: fixedSource ?? get('source'),
     reviewStatus: get('reviewStatus'),
     recruitmentStatus: get('recruitmentStatus'),
     sort: get('sort', 'REGISTERED_AT'),
@@ -183,7 +194,7 @@ export function JobListPage() {
 
   return (
     <>
-      <PageHeader title="채용공고" />
+      <PageHeader title={title ?? '채용공고'} />
 
       <ListToolbar>
         <SearchBox
@@ -197,12 +208,14 @@ export function JobListPage() {
           onChange={(event) => setFilter('visibility', event.target.value)}
           aria-label="노출 여부"
         />
-        <Select
-          options={CONTENT_SOURCE_OPTIONS}
-          value={filters.source}
-          onChange={(event) => setFilter('source', event.target.value)}
-          aria-label="등록 경로"
-        />
+        {fixedSource ? null : (
+          <Select
+            options={CONTENT_SOURCE_OPTIONS}
+            value={filters.source}
+            onChange={(event) => setFilter('source', event.target.value)}
+            aria-label="등록 경로"
+          />
+        )}
         <Select
           options={JOB_REVIEW_STATUS_OPTIONS}
           value={filters.reviewStatus}

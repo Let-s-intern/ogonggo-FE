@@ -62,6 +62,23 @@ export const router = createBrowserRouter([
       { path: 'ads/review', element: <ReviewQueuePage /> },
       { path: 'ads/rejections', element: <RejectionsPage /> },
 
+      // 비즈니스 등록 채용공고·부트캠프만 보는 목록. 유저 구역의 같은 화면을 등록 경로만 묶어 쓴다.
+      {
+        path: 'business/jobs',
+        element: <JobListPage key="business" fixedSource="COMPANY" title="비즈니스 채용공고" />,
+      },
+      {
+        path: 'business/bootcamps',
+        element: (
+          <BootcampListPage
+            key="business"
+            fixedSource="COMPANY"
+            title="비즈니스 부트캠프"
+            detailBasePath="/business/bootcamps"
+          />
+        ),
+      },
+      { path: 'business/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
       { path: 'business/ad-inquiries', element: <AdInquiryListPage /> },
       {
         path: 'business/rejected-ad-inquiries',

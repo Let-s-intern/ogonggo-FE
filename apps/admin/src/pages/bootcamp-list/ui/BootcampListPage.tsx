@@ -28,7 +28,21 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * 모집 상태(`BootcampStatus`)만 채용공고에 없는 칸이다. 노출 여부와 다른 것이라 함께 둔다 —
  * 모집이 끝난 과정을 지면에 남겨 둘 수도, 모집 중인데 내릴 수도 있다.
  */
-export function BootcampListPage() {
+export function BootcampListPage({
+  fixedSource,
+  title,
+  detailBasePath = '/content/bootcamps',
+}: {
+  /**
+   * 비즈니스 구역 목록(`/business/bootcamps`)이 넘긴다. 등록 경로를 비즈니스 등록으로 묶고 그 필터를 숨긴다
+   * (2026-11-05 사용자). 채용공고 목록(`JobListPage`)과 같은 모양이다.
+   */
+  fixedSource?: 'COMPANY';
+  /** 화면 제목. 없으면 `부트캠프`. */
+  title?: string;
+  /** 행을 누르면 갈 상세의 앞부분. 비즈니스 구역은 `/business/bootcamps` 라 헤더 구역이 유지된다. */
+  detailBasePath?: string;
+} = {}) {
   const navigate = useNavigate();
   const { get, page, setFilter, setPage } = useListQuery();
 
@@ -37,7 +51,7 @@ export function BootcampListPage() {
     keyword: get('keyword'),
     status: get('status'),
     visibility: get('visibility'),
-    source: get('source'),
+    source: fixedSource ?? get('source'),
     reviewStatus: get('reviewStatus'),
     sort: get('sort', 'REGISTERED_AT'),
   };
@@ -98,7 +112,7 @@ export function BootcampListPage() {
 
   return (
     <>
-      <PageHeader title="부트캠프" />
+      <PageHeader title={title ?? '부트캠프'} />
 
       <ListToolbar>
         <SearchBox
@@ -112,12 +126,14 @@ export function BootcampListPage() {
           onChange={(event) => setFilter('visibility', event.target.value)}
           aria-label="노출 여부"
         />
-        <Select
-          options={CONTENT_SOURCE_OPTIONS}
-          value={filters.source}
-          onChange={(event) => setFilter('source', event.target.value)}
-          aria-label="등록 경로"
-        />
+        {fixedSource ? null : (
+          <Select
+            options={CONTENT_SOURCE_OPTIONS}
+            value={filters.source}
+            onChange={(event) => setFilter('source', event.target.value)}
+            aria-label="등록 경로"
+          />
+        )}
         <Select
           options={JOB_REVIEW_STATUS_OPTIONS}
           value={filters.reviewStatus}
@@ -162,7 +178,7 @@ export function BootcampListPage() {
             columns={columns}
             rows={data?.items ?? []}
             rowKey={(row) => row.id}
-            onRowClick={(row) => navigate(`/content/bootcamps/${row.id}`)}
+            onRowClick={(row) => navigate(`${detailBasePath}/${row.id}`)}
             isLoading={isPending}
             emptyMessage="조건에 맞는 부트캠프가 없습니다."
           />
