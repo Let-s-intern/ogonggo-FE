@@ -47,4 +47,5 @@ export {
 } from './components/Toast';
 export { Toggle, type ToggleProps } from './components/Toggle';
 export { cn } from './lib/cn';
+export { markLabelRows, SOURCE_LABEL_ROW_CLASS, withLabelRows } from './lib/markLabelRows';
 export { computePageBlock, PAGE_BLOCK_SIZE, type PageBlock } from './lib/pageBlock';

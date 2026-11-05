@@ -1,5 +1,15 @@
-import { forwardRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-import { Button, Callout, Chip, Field, Input, Textarea, cn } from '@ogonggo/ui';
+import { forwardRef, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  Button,
+  Callout,
+  Chip,
+  Field,
+  Input,
+  Textarea,
+  cn,
+  SOURCE_LABEL_ROW_CLASS,
+  withLabelRows,
+} from '@ogonggo/ui';
 import {
   type NewJobDetail,
   SourceHtmlNotSavedError,
@@ -20,6 +30,8 @@ const SOURCE_HTML_CLASS = cn(
   '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',
   '[&_:is(td,th)]:border [&_:is(td,th)]:border-gray-200 [&_:is(td,th)]:px-2 [&_:is(td,th)]:py-1',
   '[&_a]:text-blue-500 [&_a]:underline',
+  // 원문 위쪽 "칸 이름 + 값" 묶음은 사용자 웹 공고 상세와 같이 표 한 줄로 그린다(`markLabelRows`)
+  SOURCE_LABEL_ROW_CLASS,
 );
 
 /**
@@ -156,7 +168,7 @@ function SourceHtml({
           </div>
         ) : null}
         {sourceHtml ? (
-          <div className={SOURCE_HTML_CLASS} dangerouslySetInnerHTML={{ __html: sourceHtml }} />
+          <SourceHtmlPreview html={sourceHtml} />
         ) : (
           <p className="text-sm text-gray-500">
             저장된 원문이 없습니다.{sourceUrl ? ' 원문 사이트에서 확인해 주세요.' : ''}
@@ -197,7 +209,7 @@ function SourceHtml({
         <iframe
           title="원문 미리보기"
           sandbox=""
-          srcDoc={draft}
+          srcDoc={PREVIEW_STYLE + withLabelRows(draft)}
           className="h-[50vh] w-full rounded-md border border-gray-200 bg-white"
         />
       ) : (
@@ -250,4 +262,19 @@ function SourceHtml({
       </div>
     </div>
   );
+}
+
+/**
+ * 고치는 중 미리보기(`iframe`)의 표 줄 모양. 틀 안에는 화면의 Tailwind 클래스가 닿지 않아 `SOURCE_LABEL_ROW_CLASS` 와
+ * 같은 모양을 글로 넣는다.
+ */
+const PREVIEW_STYLE =
+  '<style>body{font:14px/1.6 sans-serif;color:#374151}img{max-width:100%;height:auto}' +
+  '.source-label-row{display:flex;gap:16px;padding:8px 0;border-bottom:1px solid #f3f4f6}' +
+  '.source-label{width:80px;flex-shrink:0;color:#6b7280}</style>';
+
+/** 저장된 원문 미리보기. "칸 이름 + 값" 묶음에 표 줄 클래스를 붙인 HTML 을 그린다(`withLabelRows`). */
+function SourceHtmlPreview({ html }: { html: string }) {
+  const marked = useMemo(() => withLabelRows(html), [html]);
+  return <div className={SOURCE_HTML_CLASS} dangerouslySetInnerHTML={{ __html: marked }} />;
 }

@@ -118,6 +118,18 @@ const noSourceUrl: JobFixture = {
 const noRegion: JobFixture = {
   ...baseJob(4),
   region: undefined,
+  // 그리팅 공고 원문 모양(2026-11-05 제보). 위쪽 정보가 "칸 이름 + 값" `div` 묶음이라 표 줄로 보이는지 본다
+  // (`widgets/job-detail/lib/markLabelRows.ts`).
+  sourceHtml: [
+    '<div><div><div>[26년도 겨울 계절학기 대학교 현장실습 인턴] 인사 부문_보상/총무팀',
+    '<div><div><div>마감기한</div><div>2026년 11월 11일, 14:59</div></div></div>',
+    '<div><div><div><div>부문</div>People</div><div><div>직군</div>대학생인턴</div>',
+    '<div><div>경력사항</div>신입</div><div><div>고용형태</div>인턴</div>',
+    '<div><div>근무지</div><div>서울대한민국 서울특별시 강남구 영동대로 517 아셈타워</div></div></div></div>',
+    '<div><p><strong>※ 해당 공고는 현장실습 협약이 체결된 학교의 재학생만 지원이 가능합니다.</strong></p>',
+    '<p><img src="https://www.ogonggo.co.kr/hero/jobs.png" alt="채용 포스터"></p></div>',
+    '</div></div></div>',
+  ].join(''),
 };
 
 /** 상시채용 — recruitmentEndAt 없이 ALWAYS_OPEN. */
