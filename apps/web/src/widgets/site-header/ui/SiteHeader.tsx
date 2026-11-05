@@ -35,6 +35,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다. 로그인했으면 이 띠의
  * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`). 이 기기에서 푸시를
  * 아직 켜지 않았으면 아이콘 왼쪽에 `푸시 알림 받기` 가 붙고, 켜면 사라진다(`PushConsentButton`).
+ * 알림 아이콘 바로 왼쪽에는 `/community` 로 가는 `오공고 커뮤니티+` 알약이 늘 있다(이슈 #569). 모바일은 윗줄에
+ * 자리가 없어 햄버거 메뉴의 `커뮤니티` 묶음에 둔다(`MobileSiteHeader`).
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
@@ -63,6 +65,7 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
 export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
+  const communityActive = pathname === '/community';
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
@@ -128,16 +131,30 @@ export function SiteHeader() {
       <div className="hidden border-b border-gray-100 md:block">
         <div className="mx-auto flex h-10 max-w-page-padded items-center justify-between px-5 pt-2 whitespace-nowrap">
           <ServiceLogoToggle size="desktop" />
-          {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다. */}
-          {signedIn ? (
-            <div className="flex items-center gap-3">
-              <PushConsentButton />
+          {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다.
+              `오공고 커뮤니티` 는 알림 아이콘 바로 왼쪽이고, 로그인하지 않아 아이콘이 없으면 오른쪽 끝이다. */}
+          <div className="flex items-center gap-3">
+            {signedIn ? <PushConsentButton /> : null}
+            <Link
+              href="/community"
+              aria-current={communityActive ? 'page' : undefined}
+              className={cn(
+                'flex h-7 items-center gap-0.5 rounded-full border px-3 text-xs font-medium transition-colors',
+                communityActive
+                  ? 'border-blue-500 text-blue-500'
+                  : 'border-gray-300 text-gray-700 hover:text-gray-900',
+              )}
+            >
+              오공고 커뮤니티
+              <span aria-hidden="true" className="icon-[lucide--plus] block h-3 w-3" />
+            </Link>
+            {signedIn ? (
               <NotificationBell
                 open={openMenu === 'notifications'}
                 onOpenChange={toggleMenu('notifications')}
               />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </div>
       <div className="mx-auto hidden h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap md:flex">
