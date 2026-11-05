@@ -171,10 +171,18 @@ function SourceHtml({
   return (
     <div className="pt-3">
       <div className="flex items-center gap-2 pb-2">
-        <Chip tone={preview ? 'gray' : 'blue'} aria-pressed={!preview} onClick={() => setPreview(false)}>
+        <Chip
+          tone={preview ? 'gray' : 'blue'}
+          aria-pressed={!preview}
+          onClick={() => setPreview(false)}
+        >
           HTML
         </Chip>
-        <Chip tone={preview ? 'blue' : 'gray'} aria-pressed={preview} onClick={() => setPreview(true)}>
+        <Chip
+          tone={preview ? 'blue' : 'gray'}
+          aria-pressed={preview}
+          onClick={() => setPreview(true)}
+        >
           미리보기
         </Chip>
       </div>
@@ -202,10 +210,13 @@ function SourceHtml({
         />
       )}
       {empty ? (
-        <p className="pt-1 text-sm text-error">원문을 비울 수 없습니다. 고칠 원문을 입력해 주세요.</p>
+        <p className="pt-1 text-sm text-error">
+          원문을 비울 수 없습니다. 고칠 원문을 입력해 주세요.
+        </p>
       ) : null}
       <p className="pt-1 text-xs text-gray-500">
-        저장할 때 스크립트 같은 위험한 태그는 지워집니다. 거른 뒤 남는 내용이 없으면 저장되지 않습니다.
+        저장할 때 스크립트 같은 위험한 태그는 지워집니다. 거른 뒤 남는 내용이 없으면 저장되지
+        않습니다.
       </p>
       <div className="flex items-center gap-2 pt-2">
         <Button

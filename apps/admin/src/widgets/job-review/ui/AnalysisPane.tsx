@@ -272,7 +272,9 @@ function BodyFields({ edit }: { edit: InlineJobEdit }) {
             id={`${ID_PREFIX}-${field}`}
             rows={4}
             value={values.fields[field]}
-            onChange={(event) => onChange('fields', { ...values.fields, [field]: event.target.value })}
+            onChange={(event) =>
+              onChange('fields', { ...values.fields, [field]: event.target.value })
+            }
           />
         </Field>
       ))}

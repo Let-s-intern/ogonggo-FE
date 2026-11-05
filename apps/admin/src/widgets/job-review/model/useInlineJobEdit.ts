@@ -57,7 +57,10 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  * 서버 값이 새로 오면(저장 뒤 다시 받기, `내용 수정` 모달 저장) 고치던 칸은 남기고 나머지만 새 값으로 바꾼다.
  * 본문은 칸마다 따로 본다.
  */
-function rebase(previous: { before: JobEditorValues; values: JobEditorValues }, base: JobEditorValues) {
+function rebase(
+  previous: { before: JobEditorValues; values: JobEditorValues },
+  base: JobEditorValues,
+) {
   const values = { ...base, fields: { ...base.fields } };
   for (const key of Object.keys(base) as (keyof JobEditorValues)[]) {
     if (key === 'fields') {
@@ -108,7 +111,9 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
     const base = toFormValues(job);
     if (jobIdRef.current === job.id) {
       setState((previous) =>
-        previous ? { id: job.id, ...rebase(previous, base) } : { id: job.id, before: base, values: base },
+        previous
+          ? { id: job.id, ...rebase(previous, base) }
+          : { id: job.id, before: base, values: base },
       );
       return;
     }

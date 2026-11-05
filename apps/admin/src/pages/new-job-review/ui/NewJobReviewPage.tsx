@@ -31,7 +31,8 @@ interface LastAction {
   job: NewJob;
 }
 
-const UNSAVED_MESSAGE = '저장하지 않은 고침이 있습니다. 다른 공고로 넘어가면 사라집니다. 넘어갈까요?';
+const UNSAVED_MESSAGE =
+  '저장하지 않은 고침이 있습니다. 다른 공고로 넘어가면 사라집니다. 넘어갈까요?';
 
 /** 한 번에 스크롤할 거리(px). 검수 대기와 같다. */
 const SCROLL_STEP = 240;
