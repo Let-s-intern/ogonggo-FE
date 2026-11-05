@@ -143,7 +143,7 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
     {
       key: 'sourceUrl',
       header: '원문',
-      width: 'w-36',
+      width: 'w-16',
       render: (row) => <SourceLink url={row.sourceUrl} />,
     },
     {
@@ -322,8 +322,9 @@ function VisibilityToggle({ job }: { job: AdminJobSummary }) {
 }
 
 /**
- * 원문 사이트로 가는 링크. 들어가지는지 눈으로 보고 같은 줄의 노출 토글로 바로 내리려는 것이다(2026-11-05 사용자,
- * 쿠팡 공고처럼 봇을 막는 사이트는 서버가 마감을 잡지 못한다). 주소가 길어 도메인만 보이고 전체는 툴팁으로 보인다.
+ * 원문 사이트로 가는 작은 아이콘 링크. 들어가지는지 눈으로 보고 같은 줄의 노출 토글로 바로 내리려는 것이다(2026-11-05
+ * 사용자, 쿠팡 공고처럼 봇을 막는 사이트는 서버가 마감을 잡지 못한다). 처음에는 도메인 글자였다가 칸을 덜 차지하게
+ * 아이콘으로 바꿨다(2026-11-05 사용자). 주소는 툴팁으로 보이고 읽기 프로그램에는 `원문 열기` 로 읽힌다.
  *
  * 클릭을 행에서 멈춘다. 행 전체가 편집 창을 연다. `http(s)` 주소가 아니면 링크를 걸지 않는다.
  */
@@ -331,22 +332,17 @@ function SourceLink({ url }: { url: string | undefined }) {
   if (!url || !/^https?:\/\//.test(url)) {
     return <span className="text-gray-400">-</span>;
   }
-  let host = url;
-  try {
-    host = new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    // 위에서 http(s) 만 통과시켜 여기는 거의 오지 않는다. 오면 주소를 그대로 보인다.
-  }
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
       title={url}
+      aria-label="원문 열기"
       onClick={(event) => event.stopPropagation()}
-      className="block truncate text-blue-500 underline-offset-2 hover:underline"
+      className="inline-flex size-7 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-blue-600"
     >
-      {host}
+      <span aria-hidden="true" className="icon-[lucide--external-link] block size-4" />
     </a>
   );
 }
