@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useParams } from 'react-router';
 import { PageHeader } from '@/widgets/page-header';
 import { NotificationJobModal } from './NotificationJobModal';
+import { NotificationStatisticsSection } from './NotificationStatisticsSection';
 import {
   HISTORY_CHANNELS,
   RecentResultsTable,
@@ -16,6 +17,9 @@ const isHistoryChannel = (value: string | undefined): value is HistoryChannel =>
 /**
  * `알림` 메뉴의 푸시·알림톡·이메일 전송 내역. 세 메뉴가 이 페이지를 채널만 바꿔 쓴다(`/notifications/history/:channel`).
  * 모르는 채널 주소는 푸시 내역으로 보낸다.
+ *
+ * 푸시 내역 위에는 관리자 발송의 기간별 통계를 둔다(사용자 결정). 통계 API 는 푸시 발송 묶음만 세므로 알림톡·이메일
+ * 에는 두지 않는다.
  */
 export function NotificationHistoryPage() {
   const { channel } = useParams();
@@ -30,6 +34,7 @@ export function NotificationHistoryPage() {
   return (
     <>
       <PageHeader title={HISTORY_CHANNELS[channel].title} />
+      {channel === 'push' ? <NotificationStatisticsSection /> : null}
       <RecentResultsTable
         key={channel}
         channel={channel}
