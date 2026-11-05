@@ -74,6 +74,15 @@ export function AdminLayout() {
     },
   };
   const navigate = useNavigate();
+  /*
+   * 헤더 오른쪽의 할 일 숫자(2026-11-05 사용자). 어느 구역을 보고 있든 비즈니스 쪽에 쌓인 일을 알린다. 메뉴의 숫자와
+   * 같은 쿼리라 판정·처리하면 함께 줄어든다. 0 이면 그리지 않는다. 비즈니스 탭에는 둘을 더한 수를 붙인다.
+   */
+  const headerCounts = [
+    { label: '등록 대기', count: reviewQueue?.length ?? 0, to: '/ads/review' },
+    { label: '오늘 문의', count: adInquiryToday?.count ?? 0, to: todayAdInquiriesHref() },
+  ].filter((item) => item.count > 0);
+  const businessTotal = headerCounts.reduce((sum, item) => sum + item.count, 0);
   // 헤더의 구역은 주소에서 정한다. 주소로 바로 들어와도(상세 등) 그 화면이 속한 구역이 켜진다.
   const area = navAreaOf(useLocation().pathname);
   const navBadgeFor = (path: string) => {
@@ -97,11 +106,8 @@ export function AdminLayout() {
       {/* 헤더와 좌측 메뉴·본문을 한 열에 두고, AI 비서 패널은 그 오른쪽에 화면 높이로 둔다. */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/*
-        맨 위 헤더. 유저·비즈니스 구역을 고르면 좌측 메뉴가 그 구역의 묶음으로 바뀌고 구역의 첫 화면으로 간다
-        (2026-11-05 사용자). 좌측 메뉴 모양은 그대로다.
-      */}
-        {/*
-          왼쪽 칸은 좌측 메뉴와 같은 폭·같은 오른쪽 선이라 메뉴 기둥이 헤더까지 이어진다. 탭은 본문 글자(`px-8`)와
+          맨 위 헤더. 유저·비즈니스 구역을 고르면 좌측 메뉴가 그 구역의 묶음으로 바뀌고 구역의 첫 화면으로 간다
+          (2026-11-05 사용자). 왼쪽 칸은 좌측 메뉴와 같은 폭·같은 오른쪽 선이라 메뉴 기둥이 헤더까지 이어진다. 탭은 본문 글자(`px-8`)와
           같은 자리에서 시작한다.
         */}
         <header className="flex h-14 shrink-0 items-stretch border-b border-gray-200 bg-white">
@@ -123,10 +129,34 @@ export function AdminLayout() {
                     : 'border-transparent text-gray-500 hover:text-gray-800',
                 )}
               >
-                {item.label}
+                <span className="flex items-center gap-1.5">
+                  {item.label}
+                  {item.area === 'business' && businessTotal > 0 ? (
+                    <span
+                      aria-label={`처리할 일 ${businessTotal}건`}
+                      className="min-w-5 rounded-full bg-blue-500 px-1.5 text-center text-xs leading-5 font-semibold text-white"
+                    >
+                      {businessTotal >= 100 ? '99+' : businessTotal}
+                    </span>
+                  ) : null}
+                </span>
               </button>
             ))}
           </div>
+          {headerCounts.length > 0 ? (
+            <div className="ml-auto flex items-center gap-2 px-6">
+              {headerCounts.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => navigate(item.to)}
+                  className="cursor-pointer rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  {item.label} <span className="font-semibold text-blue-600">{item.count}</span>건
+                </button>
+              ))}
+            </div>
+          ) : null}
         </header>
         <div className="flex flex-1">
           <nav className="w-56 shrink-0 border-r border-gray-200 bg-white px-3 py-6">
