@@ -28,11 +28,8 @@ import { useListQuery } from '@/shared/lib/useListQuery';
 import { JobReviewDialog } from './JobReviewDialog';
 import { PickToggle, type PickNotice } from './PickToggle';
 
-/**
- * 목록 줄. 원문 주소(`sourceUrl`)는 백엔드 LC-3572 가 목록 응답에 더한다. 배포 뒤 코드젠으로 생성 타입에 들어오면
- * 이 덧붙임을 지운다.
- */
-type AdminJobSummary = AdminJobSummaryResponse & { sourceUrl?: string };
+/** 목록 줄. 원문 주소(`sourceUrl`)는 백엔드 LC-3572 가 목록 응답에 싣는다. */
+type AdminJobSummary = AdminJobSummaryResponse;
 
 /**
  * 채용공고 목록.

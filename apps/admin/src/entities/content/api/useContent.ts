@@ -39,6 +39,10 @@ import { isBackendPending } from '@/shared/config/backendPending';
  * 뒤로 가기로 돌아오면 캐시가 그대로 뜬다.
  */
 
+/** 건별 수정 요청. 기업회원 공고 우선 노출(`priorityExposed`)도 이 요청으로 바꾼다(백엔드 LC-3573). */
+export type PatchJobInput = UpdateAdminJobRequest;
+export type PatchBootcampInput = UpdateAdminBootcampRequest;
+
 export interface JobListFilters {
   page: number;
   keyword: string;
@@ -196,7 +200,7 @@ export function useSideStudyDetail(postId: number) {
 export function usePatchJob(jobId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: UpdateAdminJobRequest) => unwrapData(updateJob(jobId, input)),
+    mutationFn: (input: PatchJobInput) => unwrapData(updateJob(jobId, input)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
@@ -233,8 +237,7 @@ export function useConcernDetail(concernId: number) {
 export function usePatchBootcamp(bootcampId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: UpdateAdminBootcampRequest) =>
-      unwrapData(updateBootcamp(bootcampId, input)),
+    mutationFn: (input: PatchBootcampInput) => unwrapData(updateBootcamp(bootcampId, input)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });

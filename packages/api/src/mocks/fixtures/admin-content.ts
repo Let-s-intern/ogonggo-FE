@@ -257,6 +257,8 @@ const toAdminJob = ({
     visibility: visibilityFor(id),
     // 분석은 검수 목(`../admin/inspection.ts`의 `withInspection`)이 응답에 얹는다.
     analysisCurrent: false,
+    // 백엔드 기본값. 공고별 값은 어드민 목(`../admin/content.ts`의 `withPriorityExposed`)이 덮는다.
+    priorityExposed: true,
     ...(source === 'COMPANY' ? { reviewStatus: reviewStatusFor(id, registeredAt) } : {}),
   };
 };
@@ -281,6 +283,7 @@ export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetailResponse[] = BOOTCAMP_F
       registeredAt,
       source,
       visibility: visibilityFor(bootcamp.id + 1000),
+      priorityExposed: true,
       ...(source === 'COMPANY'
         ? { reviewStatus: reviewStatusFor(bootcamp.id + 1000, registeredAt) }
         : {}),

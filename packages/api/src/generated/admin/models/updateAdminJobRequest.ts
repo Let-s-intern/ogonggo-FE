@@ -661,4 +661,6 @@ export interface UpdateAdminJobRequest {
   clear?: string[];
   /** 원문 HTML입니다. 크롤러 원문과 같이 서버가 안전한 태그만 남겨 저장하고, 상대 주소는 sourceUrl 기준 절대 주소로 바꿉니다. null이면 그대로 둡니다. 비울 수 없어 공백이거나 걸러서 남는 글·이미지가 없으면 400입니다. 공고 분석에는 영향이 없습니다. */
   sourceHtml?: string;
+  /** 기업회원 공고 우선 노출을 이 공고에 줄지입니다. null이면 그대로 둡니다. 기업회원 공고(source = COMPANY)에만 영향이 있으며, 전체 설정(company-content-priority)이 켜져 있고 이 값이 true인 마감 전 공고만 공개 목록 맨 앞에 둡니다. 다음 목록 요청부터 반영됩니다. */
+  priorityExposed?: boolean;
 }

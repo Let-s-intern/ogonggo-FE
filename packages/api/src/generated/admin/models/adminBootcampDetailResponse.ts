@@ -93,6 +93,8 @@ export interface AdminBootcampDetailResponse {
      */
   reviewStatus?: AdminBootcampDetailResponseReviewStatus;
   registeredAt: string;
+  /** 기업회원 공고 우선 노출을 이 과정에 줄지입니다. 기업회원 과정(source = COMPANY)에만 영향이 있고, 다른 경로 과정은 저장한 값(기본 true)을 그대로 보여 줍니다. 전체 설정(company-content-priority)이 켜져 있고 이 값이 true인 마감 전 과정만 공개 목록 맨 앞에 둡니다. */
+  priorityExposed: boolean;
   content: string;
   eligibilityAndSelectionProcess?: string;
   logoUrl?: string;
