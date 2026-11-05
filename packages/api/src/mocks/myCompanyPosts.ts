@@ -217,6 +217,32 @@ function requestReview(post: Post) {
   }
 }
 
+/**
+ * 정리 작업이 이미 지운 업로드 이미지의 시험용 주소. 이 주소를 로고·대표 이미지에 넣어 공고를 등록·수정하면 백엔드처럼
+ * 400 `IMAGE_ASSET_NOT_AVAILABLE` 을 준다(ogonggo-BE #117). 실제 버킷 주소라 브라우저에서 불러오면 S3 가 403 을
+ * 준다 — 임시저장을 불러올 때의 만료 확인(`apps/web/src/shared/lib/expiredImages.ts`)도 이 주소로 본다.
+ */
+export const MOCK_EXPIRED_IMAGE_URL =
+  'https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/mock/expired-image.png';
+
+const IMAGE_FIELDS = ['logoUrl', 'coverImageUrl', 'representativeImageUrl'] as const;
+
+/** 요청이 지워진 이미지를 가리키면 400. 아니면 `undefined`. */
+async function rejectExpiredImage(request: Request) {
+  const body = (await request
+    .clone()
+    .json()
+    .catch(() => ({}))) as Record<string, unknown>;
+  if (IMAGE_FIELDS.some((field) => body[field] === MOCK_EXPIRED_IMAGE_URL)) {
+    return errorResponse(
+      400,
+      'IMAGE_ASSET_NOT_AVAILABLE',
+      '이미 정리된 이미지입니다. 이미지를 다시 올려 주세요.',
+    );
+  }
+  return undefined;
+}
+
 /** 한 종류(채용공고·부트캠프)의 핸들러 묶음. 경로와 상세 가짜 응답만 다르다. */
 function postHandlers<T extends Post>(
   path: string,
@@ -233,14 +259,20 @@ function postHandlers<T extends Post>(
         data: page(store, request),
       }),
     ),
+    // 등록은 지워진 이미지만 여기서 거절하고 나머지는 생성 핸들러에 넘긴다(아무것도 돌려주지 않으면 다음 핸들러).
+    http.post(`*/api/v1/users/me/${path}`, ({ request }) => rejectExpiredImage(request)),
     http.get(`*/api/v1/users/me/${path}/:${param}`, ({ params }) => {
       const post = find(params);
       return post ? HttpResponse.json(detail(post)) : notFound();
     }),
-    http.put(`*/api/v1/users/me/${path}/:${param}`, ({ params }) => {
+    http.put(`*/api/v1/users/me/${path}/:${param}`, async ({ params, request }) => {
       const post = find(params);
       if (!post) {
         return notFound();
+      }
+      const expired = await rejectExpiredImage(request);
+      if (expired) {
+        return expired;
       }
       requestReview(post);
       return ok();

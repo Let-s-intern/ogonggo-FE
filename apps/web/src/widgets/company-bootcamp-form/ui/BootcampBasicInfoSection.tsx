@@ -19,6 +19,8 @@ const MAX_TITLE_LENGTH = 255;
 const MAX_PROGRAM_TYPE_LENGTH = 50;
 
 export interface BootcampBasicInfoSectionProps {
+  /** 만료돼 다시 올려야 하는 이미지 칸의 안내(`shared/lib/expiredImages.ts`). */
+  imageNotice?: (key: 'logoUrl' | 'representativeImageUrl') => string | undefined;
   values: CompanyBootcampFormValues;
   onChange: (patch: Partial<CompanyBootcampFormValues>) => void;
 }
@@ -30,13 +32,18 @@ export interface BootcampBasicInfoSectionProps {
  * 드롭다운 폭을 `w-full` 로 준다. `Select` 의 기본 폭은 필터 줄에 맞춘 내용 폭이라, 두 칸씩
  * 나란한 이 폼에서는 왼쪽 칸과 오른쪽 칸의 너비가 달라 보인다(채용공고 폼과 같다).
  */
-export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfoSectionProps) {
+export function BootcampBasicInfoSection({
+  values,
+  onChange,
+  imageNotice,
+}: BootcampBasicInfoSectionProps) {
   return (
     <div>
       <Field label="기업 · 기관명" htmlFor="company-bootcamp-company-name" required>
         <div className="flex items-center gap-4">
           <LogoUploadField
             url={values.logoUrl}
+            notice={imageNotice?.('logoUrl')}
             className="size-20"
             onUploaded={(image) => onChange({ logoUrl: image.url, logoImageId: image.id })}
             onClear={() => onChange({ logoUrl: '', logoImageId: '' })}
@@ -171,6 +178,7 @@ export function BootcampBasicInfoSection({ values, onChange }: BootcampBasicInfo
 
       <CoverImageField
         value={values.representativeImageUrl}
+        notice={imageNotice?.('representativeImageUrl')}
         onChange={(representativeImageUrl) => onChange({ representativeImageUrl })}
       />
     </div>

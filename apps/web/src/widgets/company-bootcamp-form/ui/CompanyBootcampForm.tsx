@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, Callout } from '@ogonggo/ui';
 import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
+import {
+  findExpiredImages,
+  IMAGE_EXPIRED_MESSAGE,
+  imagesToClearAfterRejection,
+  isImageAssetNotAvailable,
+  useExpiredImageFields,
+} from '@/shared/lib/expiredImages';
 import { useCompanyPostDraft } from '@/shared/lib/useCompanyPostDraft';
 import { DraftRestoreCallout } from '@/shared/ui/DraftRestoreCallout';
 import { FloatingActionBar } from '@/shared/ui/FloatingActionBar';
@@ -80,12 +87,37 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
    */
   const [published, setPublished] = useState(false);
   const isNew = bootcampId === undefined;
+  const expiredImages = useExpiredImageFields<'logoUrl' | 'representativeImageUrl'>();
+  /**
+   * 만료된 업로드 이미지 칸을 비우고 다시 올리라고 표시한다(ogonggo-BE #117). 나머지 칸은 그대로 둔다.
+   */
+  const clearExpired = (keys: ('logoUrl' | 'representativeImageUrl')[]) => {
+    if (keys.length === 0) {
+      return;
+    }
+    setValues((previous) => ({
+      ...previous,
+      ...Object.fromEntries(keys.map((key) => [key, ''])),
+      ...(keys.includes('logoUrl') ? { logoImageId: '' } : {}),
+    }));
+    expiredImages.mark(keys);
+    setOpenSteps((previous) => (previous.includes(1) ? previous : [...previous, 1]));
+  };
+  /** 임시저장을 불러온 뒤, 그 사이 정리 작업이 지운 업로드 이미지가 있으면 비운다. 외부 주소는 보지 않는다. */
+  const checkRestoredImages = (restored: CompanyBootcampFormValues) =>
+    void findExpiredImages({
+      logoUrl: restored.logoUrl ?? '',
+      representativeImageUrl: restored.representativeImageUrl ?? '',
+    }).then(clearExpired);
   const draft = useCompanyPostDraft({
     kind: 'bootcamps',
     enabled: isNew,
     values,
     emptyValues: EMPTY_COMPANY_BOOTCAMP_VALUES,
-    onRestore: (restored) => setValues({ ...EMPTY_COMPANY_BOOTCAMP_VALUES, ...restored }),
+    onRestore: (restored) => {
+      setValues({ ...EMPTY_COMPANY_BOOTCAMP_VALUES, ...restored });
+      checkRestoredImages(restored);
+    },
   });
 
   useEffect(() => {
@@ -122,8 +154,10 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
     };
   }, [bootcampId]);
 
-  const change = (patch: Partial<CompanyBootcampFormValues>) =>
+  const change = (patch: Partial<CompanyBootcampFormValues>) => {
     setValues((previous) => ({ ...previous, ...patch }));
+    expiredImages.onChanged(patch);
+  };
 
   const toggle = (step: number) =>
     setOpenSteps((previous) =>
@@ -158,7 +192,14 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
     if (values.saveAsBasicInfo) {
       try {
         await saveCompanyBasicInfo(values.companyName.trim(), values.logoImageId);
-      } catch {
+      } catch (error) {
+        // 기본 정보의 로고가 정리 작업이 지운 업로드 이미지다.
+        if (isImageAssetNotAvailable(error)) {
+          clearExpired(['logoUrl']);
+          setFormError(IMAGE_EXPIRED_MESSAGE);
+          setPending(false);
+          return;
+        }
         setFormError('기업 기본 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
         setPending(false);
         return;
@@ -180,7 +221,19 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         draft.clear();
       }
       router.push('/mypage/company/posts/bootcamps');
-    } catch {
+    } catch (error) {
+      // 정리 작업이 지운 업로드 이미지로 저장했다. 응답은 어느 칸인지 알려 주지 않아 이미지를 불러 보고 고른다.
+      if (isImageAssetNotAvailable(error)) {
+        clearExpired(
+          await imagesToClearAfterRejection({
+            logoUrl: values.logoUrl,
+            representativeImageUrl: values.representativeImageUrl,
+          }),
+        );
+        setFormError(IMAGE_EXPIRED_MESSAGE);
+        setPending(false);
+        return;
+      }
       setFormError(
         publish
           ? '부트캠프 공고를 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.'
@@ -218,7 +271,11 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         open={openSteps.includes(1)}
         onToggle={() => toggle(1)}
       >
-        <BootcampBasicInfoSection values={values} onChange={change} />
+        <BootcampBasicInfoSection
+          values={values}
+          onChange={change}
+          imageNotice={expiredImages.messageOf}
+        />
       </FormSection>
 
       <FormSection

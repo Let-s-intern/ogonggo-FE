@@ -9,6 +9,8 @@ export interface CoverImageFieldProps {
   label?: string;
   value: string;
   onChange: (url: string) => void;
+  /** 칸 아래에 띄울 안내. 올린 이미지가 만료돼 다시 올려야 할 때 쓴다(`shared/lib/expiredImages.ts`). */
+  notice?: string;
 }
 
 /**
@@ -25,6 +27,7 @@ export function CoverImageField({
   label = '공고 대표 이미지',
   value,
   onChange,
+  notice,
 }: CoverImageFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
@@ -51,7 +54,7 @@ export function CoverImageField({
   };
 
   return (
-    <Field label={label} required error={error ?? undefined} className="pb-0">
+    <Field label={label} required error={error ?? notice} className="pb-0">
       <input
         ref={inputRef}
         type="file"
