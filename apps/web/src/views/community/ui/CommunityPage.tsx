@@ -14,8 +14,8 @@ import {
 } from '../model/content';
 
 /**
- * 카드 한 장의 폭. 모바일 한 줄에 하나, md 둘, lg 셋이다. 줄이 다 차지 않으면 남은 카드를 가운데로 모은다 —
- * 시안의 인스타그램 둘째 줄이 그렇다. 그래서 `grid` 가 아니라 `flex-wrap` 이다. 간격은 20px(`gap-5`)이다.
+ * 카드 한 장의 폭. 모바일 한 줄에 하나, md 둘, lg 셋이다. 인스타그램은 줄이 다 차지 않으면 남은 카드를 가운데로
+ * 모은다 — 시안의 둘째 줄이 그렇다. 톡방은 왼쪽부터 채운다. 그래서 `grid` 가 아니라 `flex-wrap` 이다. 간격은 20px(`gap-5`)이다.
  */
 const CARD_WIDTH = 'w-full md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)]';
 
@@ -41,7 +41,8 @@ export function CommunityPage() {
               '검증된 공고를 직무별로 골라 매일 소개해드려요.',
             ]}
           />
-          <ul className="mt-8 flex flex-wrap justify-center gap-5 md:mt-10">
+          {/* 톡방은 남는 카드를 왼쪽부터 채운다(2026-11-05 사용자). 인스타그램 둘째 줄만 가운데로 모은다. */}
+          <ul className="mt-8 flex flex-wrap justify-start gap-5 md:mt-10">
             {OPEN_CHAT_ROOM_CARDS.map((room) => (
               <li key={room.id} className={CARD_WIDTH}>
                 <OpenChatCard room={room} />
