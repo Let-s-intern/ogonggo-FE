@@ -15,9 +15,10 @@ export interface JobReviewPanesProps {
   edit: InlineJobEdit | null;
   /**
    * 두 칸을 나란히 놓을 때(본문 폭 944px 이상)의 칸 높이. Tailwind 가 읽도록 클래스 그대로 넘긴다
-   * (예: `@min-[944px]:h-[calc(100vh-19rem)]`).
+   * (예: `@min-[944px]:h-[calc(100vh-19rem)]`). 주면 칸 안에서 스크롤하고, 안 주면 칸이 내용만큼 늘어나 페이지가
+   * 스크롤된다(오늘 올라온 공고, 2026-11-05 사용자).
    */
-  paneHeightClass: string;
+  paneHeightClass?: string;
   analysisRef?: Ref<HTMLDivElement>;
   sourceRef?: Ref<HTMLDivElement>;
   /** 마우스가 올라간 칸. 오늘 올라온 공고는 W/S 가 스크롤할 칸으로 쓴다. */
