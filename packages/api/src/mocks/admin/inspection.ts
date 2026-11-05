@@ -5,7 +5,7 @@ import type {
   Analysis,
 } from '../../generated/admin/models';
 import { enumLabel } from '../../enums';
-import { ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
+import { ADMIN_JOB_FIXTURES, kstTime } from '../fixtures/admin-content';
 import { notFound, ok } from './paging';
 
 /**
@@ -54,9 +54,12 @@ export type AdminJobDetailWithInspection = AdminJobDetailResponse & AdminJobInsp
 export type AdminJobSummaryWithInspection = AdminJobSummaryResponse &
   Pick<AdminJobInspectionFields, 'inspectedAt'>;
 
-/** 등록 시각의 KST 날짜(`YYYY-MM-DD`). 검수 대상은 오늘(KST) 등록분이다. */
-const kstDate = (iso: string): string =>
-  new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+/**
+ * 등록 시각의 KST 날짜(`YYYY-MM-DD`). 검수 대상은 오늘(KST) 등록분이다. 공고 등록 시각은 오프셋 없는 KST 이고,
+ * 오프셋이 붙은 값(지금 시각)도 받는다.
+ */
+const kstDate = (dateTime: string): string =>
+  new Date(kstTime(dateTime) + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /** 지금의 오프셋 없는 KST date-time(`2026-11-04T13:05:09`). 백엔드 `LocalDateTime` 과 같은 모양이다. */
 const kstNow = (): string => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);

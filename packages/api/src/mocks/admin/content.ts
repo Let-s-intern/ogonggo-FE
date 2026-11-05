@@ -19,6 +19,7 @@ import {
   ADMIN_BOOTCAMP_FIXTURES,
   ADMIN_JOB_FIXTURES,
   ADMIN_SIDE_STUDY_FIXTURES,
+  kstTime,
   recruitmentStatusOf,
 } from '../fixtures/admin-content';
 import {
@@ -62,7 +63,7 @@ function sortContent<T extends { registeredAt: string; viewCount: number }>(
   sort: ContentSort,
 ): T[] {
   return [...rows].sort((a, b) => {
-    const byRegisteredAt = new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime();
+    const byRegisteredAt = kstTime(b.registeredAt) - kstTime(a.registeredAt);
     return sort === 'VIEW_COUNT' ? b.viewCount - a.viewCount || byRegisteredAt : byRegisteredAt;
   });
 }

@@ -16,6 +16,7 @@ import type {
 } from '@ogonggo/api/src/mocks/admin/inspection';
 import { adminDelete, adminWrite } from '@/shared/api/adminClient';
 import { unwrapData } from '@/shared/api/unwrapData';
+import { withKstOffset } from '@/shared/lib/kstDateTime';
 
 export type NewJob = AdminJobSummaryWithInspection;
 export type NewJobDetail = AdminJobDetailWithInspection;
@@ -45,15 +46,19 @@ const MAX_PAGES = 10;
 /** 비즈니스 회원 공고는 넣지 않는다. 검수 대기에서 사전 승인을 거쳤다(PRD 결정 필요 3). */
 const SOURCES = ['CRAWLER', 'WORK24'] as const;
 
-/** 등록 시각의 KST 날짜. */
-export const kstDate = (iso: string): string =>
-  new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+/**
+ * 시각의 KST 날짜. 백엔드 등록 시각은 시간대 없는 한국 시간이라 `+09:00` 으로 읽는다(`withKstOffset`). 브라우저
+ * 시간대로 읽으면 한국 밖에서 날짜가 어긋난다.
+ */
+export const kstDate = (dateTime: string): string =>
+  new Date(Date.parse(withKstOffset(dateTime)) + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /** 지금의 오프셋 없는 KST date-time. 백엔드가 주는 시각과 같은 모양이다. */
 export const kstNow = (): string => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
 
 /**
- * 한 등록 경로의 그날 공고. 등록일 필터를 보내되, 받은 것을 여기서도 날짜로 거른다.
+ * 한 등록 경로의 그날 공고. 등록일 필터를 보내되, 받은 것을 여기서도 날짜로 거른다. 이 거르기는 필터를 모르는
+ * 백엔드를 위한 대비일 뿐이다.
  *
  * 필터는 KST 날짜(`YYYY-MM-DD`)이고 두 날짜를 포함한다. 그날 하루는 두 칸에 같은 날짜를 보낸다. 지금 배포된
  * 백엔드는 이 필터를 모르고 무시한다. 그래도 정렬이 등록일 역순이라 그날보다 앞선 공고가 나오면 거기서 멈추면
@@ -133,7 +138,10 @@ export function useNewJobQueue(date: string) {
       const lists = await Promise.all(SOURCES.map((source) => fetchSource(source, date)));
       const items = lists
         .flat()
-        .sort((a, b) => Date.parse(b.registeredAt) - Date.parse(a.registeredAt));
+        .sort(
+          (a, b) =>
+            Date.parse(withKstOffset(b.registeredAt)) - Date.parse(withKstOffset(a.registeredAt)),
+        );
       return { date, items };
     },
     staleTime: Number.POSITIVE_INFINITY,

@@ -95,11 +95,22 @@ export type JobReviewStatus = AdminJobDetailResponseReviewStatus;
  */
 export type AdminSideStudy = SideStudyDetail & { registeredAt: string };
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 오늘 KST 자정의 시각(ms). 브라우저 시간대와 상관없이 한국 날짜로 하루를 가른다. */
 const startOfToday = (): number => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date.getTime();
+  const now = Date.now();
+  return now - ((now + KST_OFFSET_MS) % DAY_MS);
 };
+
+/** 시각을 백엔드 모양(오프셋 없는 KST date-time, `2026-11-05T09:30:00`)으로. */
+const toKstLocal = (iso: string): string =>
+  new Date(Date.parse(iso) + KST_OFFSET_MS).toISOString().slice(0, 19);
+
+/** 등록 시각의 ms. 오프셋 없는 값은 KST 로 읽는다(`toKstLocal` 의 반대). 오프셋이 있으면 그대로 읽는다. */
+export const kstTime = (dateTime: string): number =>
+  Date.parse(/[zZ]|[+-]\d{2}:\d{2}$/.test(dateTime) ? dateTime : `${dateTime}+09:00`);
 
 /**
  * id 를 섞어 서로 무관한 난수 하나를 뽑는다. `salt` 가 다르면 다른 값이 나온다.
@@ -236,7 +247,8 @@ const toAdminJob = ({
   const registeredAt = registeredAtFor(id);
   return {
     ...job,
-    registeredAt,
+    // 백엔드는 시간대 없는 한국 시간을 준다. 어드민 화면은 이것을 +09:00 으로 읽는다.
+    registeredAt: toKstLocal(registeredAt),
     recruitmentStatus: recruitmentStatusOf({
       closedAt: job.closedAt,
       recruitmentEndAt: job.recruitmentEndAt,
@@ -282,7 +294,7 @@ export const ADMIN_SIDE_STUDY_FIXTURES: AdminSideStudy[] = SIDE_STUDY_FIXTURES.m
 }));
 
 const isRegisteredToday = (registeredAt: string): boolean =>
-  new Date(registeredAt).getTime() >= startOfToday();
+  kstTime(registeredAt) >= startOfToday();
 
 /**
  * 운영자가 통과시켜 줘야 지면에 오르는 콘텐츠. 대시보드의 "해야 할 일" 첫 칸이자 검수 대기

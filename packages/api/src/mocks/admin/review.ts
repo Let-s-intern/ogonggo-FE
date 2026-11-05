@@ -8,7 +8,7 @@ import type {
   AdminContentReviewSectionResponse,
   DecideReviewRequest,
 } from '../../generated/admin/models';
-import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
+import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES, kstTime } from '../fixtures/admin-content';
 import { contentFieldLabel, enumLabel } from '../../enums';
 import { clearRejection, recordRejection } from '../fixtures/admin-rejection';
 import { notFound, ok } from './paging';
@@ -125,7 +125,8 @@ function pendingQueue(): AdminContentReviewItemResponse[] {
   ).map(toBootcampItem);
 
   return [...jobs, ...bootcamps].sort(
-    (a, b) => new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime(),
+    // 공고는 오프셋 없는 KST, 부트캠프는 UTC 시각이라 같은 규칙으로 읽는다.
+    (a, b) => kstTime(a.registeredAt) - kstTime(b.registeredAt),
   );
 }
 
