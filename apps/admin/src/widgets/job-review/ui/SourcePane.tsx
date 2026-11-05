@@ -1,6 +1,11 @@
 import { forwardRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { Button, Callout, Chip, Field, Input, Textarea, cn } from '@ogonggo/ui';
-import { type NewJobDetail, useSetJobSourceHtml } from '@/entities/new-job/api/useNewJobQueue';
+import {
+  type NewJobDetail,
+  SourceHtmlNotSavedError,
+  supportsSourceHtmlEdit,
+  useSetJobSourceHtml,
+} from '@/entities/new-job/api/useNewJobQueue';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import type { InlineJobEdit } from '../model/useInlineJobEdit';
 import { SectionActions } from './AnalysisPane';
@@ -142,11 +147,14 @@ function SourceHtml({
   if (draft === null) {
     return (
       <div className="pt-3">
-        <div className="flex justify-end pb-2">
-          <Button size="sm" variant="ghost" onClick={() => setDraft(job.sourceHtml ?? '')}>
-            원문 고치기
-          </Button>
-        </div>
+        {/* 원문 저장을 모르는 백엔드(상세에 검수 칸이 없다)에서는 고쳐도 저장되지 않아 버튼을 두지 않는다. */}
+        {supportsSourceHtmlEdit(job) ? (
+          <div className="flex justify-end pb-2">
+            <Button size="sm" variant="ghost" onClick={() => setDraft(job.sourceHtml ?? '')}>
+              원문 고치기
+            </Button>
+          </div>
+        ) : null}
         {sourceHtml ? (
           <div className={SOURCE_HTML_CLASS} dangerouslySetInnerHTML={{ __html: sourceHtml }} />
         ) : (
@@ -172,7 +180,9 @@ function SourceHtml({
       </div>
       {mutation.isError ? (
         <Callout tone="error" className="mb-2">
-          {serverErrorMessage(mutation.error) ?? '원문을 저장하지 못했습니다.'}
+          {mutation.error instanceof SourceHtmlNotSavedError
+            ? mutation.error.message
+            : (serverErrorMessage(mutation.error) ?? '원문을 저장하지 못했습니다.')}
         </Callout>
       ) : null}
       {preview ? (
@@ -203,7 +213,7 @@ function SourceHtml({
           disabled={!dirty || empty || mutation.isPending}
           onClick={() =>
             mutation.mutate(
-              { jobId: job.id, sourceHtml: draft },
+              { jobId: job.id, sourceHtml: draft, previous: job.sourceHtml ?? '' },
               {
                 onSuccess: () => {
                   setDraft(null);

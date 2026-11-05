@@ -187,17 +187,52 @@ export function useSetJobVisibility() {
 }
 
 /**
+ * 원문 HTML 을 저장했는데 응답에 반영되지 않았다. 원문 칸을 모르는 백엔드(배포 전)는 모르는 칸을 버리고 200 을 준다 —
+ * 성공으로 보이면 운영자는 고친 줄 안다.
+ */
+export class SourceHtmlNotSavedError extends Error {}
+
+/**
+ * 이 상세를 준 백엔드가 원문 HTML 저장을 받는지. 원문 저장은 검수 칸(`inspectedAt`)과 같은 배포에 들어 있어, 상세에
+ * 그 칸이 없으면 옛 백엔드다. 검수 칸은 비어도 null 로 온다.
+ */
+export const supportsSourceHtmlEdit = (job: NewJobDetail): boolean => 'inspectedAt' in job;
+
+/**
  * 원문 HTML 고치기. 같은 `PATCH /api/v1/admin/jobs/{jobId}` 에 `sourceHtml` 을 싣는다. 백엔드는 걸러서 저장하고
  * 비울 수 없다(공백이면 400 `[sourceHtml]`). 원문만 고치면 분석은 낡지 않는다. 배포된 `UpdateAdminJobRequest` 에는
  * 아직 이 칸이 없다. 코드젠 뒤 생성 모델의 칸으로 바꾸고 계약 타입(`AdminJobSourceHtmlPatch`)을 지운다.
+ *
+ * 응답의 상세로 저장됐는지 확인한다. 검수 칸이 없으면(옛 백엔드) 또는 원문이 저장 전과 같으면 실패로 돌린다.
  */
 export function useSetJobSourceHtml() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ jobId, sourceHtml }: { jobId: number; sourceHtml: string }) =>
-      unwrapData(
+    mutationFn: async ({
+      jobId,
+      sourceHtml,
+      previous,
+    }: {
+      jobId: number;
+      sourceHtml: string;
+      /** 저장 전 원문. 응답의 원문이 이것과 같으면 저장되지 않은 것이다. */
+      previous: string;
+    }) => {
+      const detail = (await unwrapData(
         updateJob(jobId, { sourceHtml } satisfies AdminJobSourceHtmlPatch as UpdateAdminJobRequest),
-      ),
+      )) as NewJobDetail | undefined;
+      if (!detail || !supportsSourceHtmlEdit(detail)) {
+        throw new SourceHtmlNotSavedError(
+          '원문이 저장되지 않았습니다. 지금 백엔드는 원문 HTML 저장을 받지 않습니다.',
+        );
+      }
+      if ((detail.sourceHtml ?? '') === previous) {
+        throw new SourceHtmlNotSavedError(
+          '원문이 저장되지 않았습니다. 저장 뒤에도 원문이 그대로입니다 — 걸러지는 태그만 고쳤는지 확인해 주세요.',
+        );
+      }
+      return detail;
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] }),
   });
 }
