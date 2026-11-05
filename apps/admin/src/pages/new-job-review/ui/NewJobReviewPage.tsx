@@ -5,6 +5,7 @@ import { ActionAlert, Button, Callout, Chip, EmptyState } from '@ogonggo/ui';
 import {
   type NewJob,
   useNewJobDetail,
+  useKstToday,
   useNewJobQueue,
   usePrefetchNewJobDetail,
   useSetJobInspected,
@@ -50,7 +51,8 @@ const monthDay = (date: string) => {
  * 칸 안만 스크롤, 들어오자마자 키가 먹게 포커스 잡기, 마지막 동작 되돌리기.
  */
 export function NewJobReviewPage() {
-  const { data, isPending, isError } = useNewJobQueue();
+  const today = useKstToday();
+  const { data, isPending, isError } = useNewJobQueue(today);
   const prefetch = usePrefetchNewJobDetail();
 
   const [filter, setFilter] = useState<Filter>('uninspected');
@@ -98,12 +100,14 @@ export function NewJobReviewPage() {
     [items],
   );
 
-  // 처음 받았을 때 기본 칩으로 거른다.
+  // 처음 받았을 때와 날짜가 바뀌어 새 목록을 받았을 때 지금 칩으로 다시 거른다.
+  const [filteredDate, setFilteredDate] = useState<string | null>(null);
   useEffect(() => {
-    if (data && ids === null) {
+    if (data && (ids === null || filteredDate !== data.date)) {
+      setFilteredDate(data.date);
       applyFilter(filter);
     }
-  }, [data, ids, filter, applyFilter]);
+  }, [data, ids, filteredDate, filter, applyFilter]);
 
   const list = useMemo(
     () => (ids ?? []).flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])),
@@ -411,7 +415,7 @@ export function NewJobReviewPage() {
       {items.length === 0 ? (
         <EmptyState
           title="오늘 올라온 공고가 없습니다"
-          description="크롤러와 고용24가 오늘 등록한 공고가 여기에 올라옵니다. 전날 공고는 자정이 지나면 빠집니다."
+          description="크롤러와 고용24가 오늘(한국 시간) 등록한 공고가 여기에 올라옵니다. 화면을 연 뒤 등록된 공고는 새로고침하면 보이고, 자정이 지나면 그날 공고로 바뀝니다."
         />
       ) : !current ? (
         <EmptyState

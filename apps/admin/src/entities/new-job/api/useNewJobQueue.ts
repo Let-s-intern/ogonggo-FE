@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
   getJob,
@@ -20,7 +21,7 @@ export type NewJob = AdminJobSummaryWithInspection;
 export type NewJobDetail = AdminJobDetailWithInspection;
 
 /**
- * 오늘 올라온 공고(LC-3567). 오늘(KST 달력 날짜) 등록된 크롤러·고용24 공고다. 자정이 지나면 전날 공고는 빠진다.
+ * 오늘 올라온 공고(LC-3567). 오늘(KST 달력 날짜) 등록된 크롤러·고용24 공고다. 자정이 지나면 새 날짜로 다시 받는다.
  *
  * 검수 완료 표시·해제, 분석 수정, 상세의 `inspectedAt`·`analysis`·`analysisCurrent`·`analysisEditedAt`, 목록의
  * `registeredFrom`·`registeredTo`·`inspected`, 수정의 `sourceHtml` 은 백엔드에 구현됐고 아직 배포 전이다. 타입은 목의
@@ -80,19 +81,55 @@ async function fetchSource(source: (typeof SOURCES)[number], date: string): Prom
   return items;
 }
 
+/** 오늘의 KST 날짜(`YYYY-MM-DD`). */
+const kstToday = (): string => kstDate(new Date().toISOString());
+
+/** 다음 KST 자정까지 남은 시간(ms). */
+const msUntilKstMidnight = (): number => {
+  const kst = Date.now() + 9 * 60 * 60 * 1000;
+  const day = 24 * 60 * 60 * 1000;
+  return day - (kst % day);
+};
+
 /**
- * 대상 목록. 등록 시각 역순이다.
- *
- * `staleTime` 을 무한으로 둔다(검수 대기 `useReviewQueue` 와 같다). 다시 받으면 같은 날 안의 순서가 바뀌어 보던
- * 위치가 흔들린다. 동작이 성공하면 그 건만 캐시에서 고친다(`patchQueueItem`).
+ * 오늘(KST) 날짜. 화면을 켜 둔 채 자정이 지나면 바뀐다 — 자정에 맞춘 타이머, 창에 다시 포커스가 올 때, 탭이 다시
+ * 보일 때 다시 잰다(잠자기에서 깨어나면 타이머가 늦을 수 있다).
  */
-export function useNewJobQueue() {
+export function useKstToday(): string {
+  const [today, setToday] = useState(kstToday);
+  useEffect(() => {
+    const refresh = () => setToday(kstToday());
+    const timer = window.setTimeout(refresh, msUntilKstMidnight() + 1000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+      }
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [today]);
+  return today;
+}
+
+/**
+ * 그날(`date`, KST `YYYY-MM-DD`)의 대상 목록. 등록 시각 역순이다. 날짜가 키에 들어 있어 자정이 지나면
+ * (`useKstToday`) 새 날짜로 받는다.
+ *
+ * 같은 날 안에서는 `staleTime` 을 무한으로 둔다(검수 대기 `useReviewQueue` 와 같다). 다시 받으면 같은 날 안의 순서가
+ * 바뀌어 보던 위치가 흔들린다. 동작이 성공하면 그 건만 캐시에서 고친다(`patchQueueItem`). 그날 새로 올라온 공고는
+ * 새로고침하면 보인다.
+ */
+export function useNewJobQueue(date: string) {
   return useQuery({
-    queryKey: QUEUE_KEY,
+    queryKey: [...QUEUE_KEY, date],
     queryFn: async (): Promise<NewJobQueue> => {
       // 오늘 등록분만 본다(2026-11-04 사용자). 전에는 크롤러 공고 중 가장 늦은 등록일을 기준으로 삼아, 수집이
       // 없는 날에도 전날 공고가 남았다.
-      const date = kstDate(new Date().toISOString());
       const lists = await Promise.all(SOURCES.map((source) => fetchSource(source, date)));
       const items = lists
         .flat()
@@ -103,9 +140,9 @@ export function useNewJobQueue() {
   });
 }
 
-/** 큐의 한 건만 고친다. 목록을 다시 받지 않는다. */
+/** 큐의 한 건만 고친다. 목록을 다시 받지 않는다. 날짜마다 캐시가 따로라 모두 고친다. */
 export function patchQueueItem(queryClient: QueryClient, jobId: number, patch: Partial<NewJob>) {
-  queryClient.setQueryData<NewJobQueue>(QUEUE_KEY, (queue) =>
+  queryClient.setQueriesData<NewJobQueue>({ queryKey: QUEUE_KEY }, (queue) =>
     queue
       ? {
           ...queue,
@@ -113,12 +150,6 @@ export function patchQueueItem(queryClient: QueryClient, jobId: number, patch: P
         }
       : queue,
   );
-}
-
-/** 처음부터 다시 받는다. 새 공고가 올라왔는지 볼 때 쓴다. */
-export function useReloadNewJobQueue() {
-  const queryClient = useQueryClient();
-  return () => queryClient.resetQueries({ queryKey: QUEUE_KEY });
 }
 
 const detailQuery = (jobId: number) => ({
