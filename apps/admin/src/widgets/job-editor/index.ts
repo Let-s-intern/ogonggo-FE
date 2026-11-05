@@ -1,2 +1,11 @@
 export { JobEditor } from './ui/JobEditor';
-export { JOB_BODY_FIELDS } from './lib/formValues';
+export { ConditionSection, RecruitmentSection } from './ui/JobInfoSections';
+export { LogoSuggest } from './ui/LogoSuggest';
+export {
+  buildPatch,
+  hasAiAnalysis,
+  rebuildsAnalysis,
+  REBUILD_ANALYSIS_CONFIRM,
+} from './lib/buildPatch';
+export { JOB_BODY_FIELDS, toFormValues, type JobEditorValues } from './lib/formValues';
+export { validate, type JobEditorErrors } from './lib/validate';

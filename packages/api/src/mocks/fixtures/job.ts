@@ -14,6 +14,13 @@ import { REAL_JOB_SEEDS } from './real-jobs-seed';
  */
 faker.seed(20260831);
 
+/**
+ * 사용자 공고 픽스처. 등록 시각(`registeredAt`, 응답의 필수 칸)은 싣지 않는다 — 어드민 목과 같은 값이어야 해서
+ * 응답을 만들 때 `registeredAtFor`(`./admin-content.ts`)로 얹는다(`../handlers.ts`). 그 파일이 이 파일을 읽으므로
+ * 여기서 부르면 순환한다.
+ */
+export type JobFixture = Omit<UserJobDetailResponse, 'registeredAt'>;
+
 const EMPLOYMENT_TYPES: UserJobDetailResponseEmploymentType[] = [
   'FULL_TIME',
   'CONTRACT',
@@ -50,7 +57,7 @@ const bodyFields = () => ({
   hiringProcess: faker.lorem.sentence(),
 });
 
-const baseJob = (id: number): UserJobDetailResponse => ({
+const baseJob = (id: number): JobFixture => ({
   id,
   companyName: faker.company.name(),
   title: faker.person.jobTitle(),
@@ -72,17 +79,25 @@ const baseJob = (id: number): UserJobDetailResponse => ({
 });
 
 /** 본문 필드~sourceUrl 전부 채워진 정상 케이스. */
-const full: UserJobDetailResponse = {
+const full: JobFixture = {
   ...baseJob(1),
   companyName: '오공고',
   title: '프론트엔드 엔지니어',
   region: 'SEOUL',
   sourceUrl: 'https://example.com/careers/frontend-engineer',
   viewCount: 1234,
+  // 원문 포스터 줄(`widgets/job-detail/ui/PosterStrip.tsx`) 확인용. 셋째 이미지는 일부러 없는 주소다 —
+  // 핫링크가 막힌 원문 이미지처럼 깨진 이미지가 화면에서 숨는지 본다.
+  sourceHtml: [
+    '<p><img src="https://www.ogonggo.co.kr/hero/jobs.png" alt="채용 포스터"></p>',
+    '<h2>주요 업무</h2><ul><li>채용공고 화면을 만듭니다.</li><li>디자인 시스템을 다듬습니다.</li></ul>',
+    '<p><img src="https://letsintern-bucket.s3.ap-northeast-2.amazonaws.com/images/work24/3e73c50619eb40de51e78fd8da445c1bb850fb2b.jpg" alt="회사 소개"></p>',
+    '<p><img src="https://example.com/poster-missing.png" alt="깨진 이미지"></p>',
+  ].join(''),
 };
 
 /** 본문 필드 전부 undefined — 상세 페이지 섹션 숨김 검증 대상. */
-const noBodyFields: UserJobDetailResponse = {
+const noBodyFields: JobFixture = {
   ...baseJob(2),
   companyAndTeamIntroduction: undefined,
   responsibilities: undefined,
@@ -94,19 +109,19 @@ const noBodyFields: UserJobDetailResponse = {
 };
 
 /** sourceUrl만 없음 — 원문 이동 버튼 숨김 검증 대상. */
-const noSourceUrl: UserJobDetailResponse = {
+const noSourceUrl: JobFixture = {
   ...baseJob(3),
   sourceUrl: undefined,
 };
 
 /** region 없음 — JobMeta 지역 표시 없음 검증 대상. */
-const noRegion: UserJobDetailResponse = {
+const noRegion: JobFixture = {
   ...baseJob(4),
   region: undefined,
 };
 
 /** 상시채용 — recruitmentEndAt 없이 ALWAYS_OPEN. */
-const alwaysOpen: UserJobDetailResponse = {
+const alwaysOpen: JobFixture = {
   ...baseJob(5),
   recruitmentType: 'ALWAYS_OPEN',
   recruitmentStartAt: undefined,
@@ -147,7 +162,7 @@ function toRegion(text: string | undefined): UserJobDetailResponseRegion | undef
   return text ? REGION_KEYWORDS.find(([, pattern]) => pattern.test(text))?.[0] : undefined;
 }
 
-const realFiller: UserJobDetailResponse[] = REAL_JOB_SEEDS.map((seed, index) => {
+const realFiller: JobFixture[] = REAL_JOB_SEEDS.map((seed, index) => {
   const id = 6 + index;
   const endAt = new Date();
   endAt.setUTCDate(endAt.getUTCDate() + seed.daysOut);
@@ -252,7 +267,7 @@ const calendarDayOffsets = (count: number): number[] => {
  * `baseJob`이 faker로 만든 모집 기간도 여기서 덮인다. faker 호출을 빼면 이 파일의 호출 순서가
  * 어긋나 다른 필드까지 전부 바뀌므로 호출은 그대로 두고 값만 덮는다(파일 상단 `faker.seed` 주석).
  */
-const withCalendarDeadlines = (jobs: UserJobDetailResponse[]): UserJobDetailResponse[] => {
+const withCalendarDeadlines = (jobs: JobFixture[]): JobFixture[] => {
   const dated = jobs
     .filter((job) => job.recruitmentEndAt !== undefined)
     .sort(
@@ -275,7 +290,7 @@ const withCalendarDeadlines = (jobs: UserJobDetailResponse[]): UserJobDetailResp
   });
 };
 
-export const JOB_FIXTURES: UserJobDetailResponse[] = withCalendarDeadlines([
+export const JOB_FIXTURES: JobFixture[] = withCalendarDeadlines([
   full,
   noBodyFields,
   noSourceUrl,

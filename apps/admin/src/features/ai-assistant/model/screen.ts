@@ -8,6 +8,8 @@
  * - 표(`table`) 안의 컨트롤은 건드리지 않는다. 목록의 노출 토글처럼 누르는 즉시 서버에 반영되는 것이
  *   표 안에 있다. 표 밖의 입력 칸은 화면 상태일 뿐이라 저장을 누르기 전에는 아무것도 바뀌지 않는다.
  * - 좌측 메뉴와 비서 패널(`data-pdf-hide`) 자신은 다루지 않는다. 화면 이동은 `navigate` 도구가 한다.
+ * - `data-ai-human-only` 안의 컨트롤도 건드리지 않는다. 표 밖이지만 누르는 즉시 저장되는 것(오늘 올라온 공고의
+ *   검수 완료 체크박스)에 단다.
  *
  * 비서가 채운 칸에는 `data-ai-filled` 를 달아 파란 테두리로 보인다(`app/index.css`).
  */
@@ -29,7 +31,7 @@ function scope(): HTMLElement | null {
 }
 
 function isOffLimits(element: Element): boolean {
-  return Boolean(element.closest('nav, table, [data-pdf-hide]'));
+  return Boolean(element.closest('nav, table, [data-pdf-hide], [data-ai-human-only]'));
 }
 
 function isVisible(element: HTMLElement): boolean {

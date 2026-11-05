@@ -1,7 +1,9 @@
 import type { HttpHandler } from 'msw';
+import { companyPriorityHandlers } from './company-priority';
 import { concernHandlers } from './concerns';
 import { contentHandlers } from './content';
 import { dashboardHandlers } from './dashboard';
+import { inspectionHandlers } from './inspection';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
 import { notificationHandlers } from './notifications';
@@ -31,6 +33,7 @@ export const adminHandlers: HttpHandler[] = [
   ...rejectionHandlers,
   // `contentHandlers` 의 `:jobId` 가 `today` 를 id 로 삼키므로 그보다 앞에 둔다.
   ...todayJobHandlers,
+  ...inspectionHandlers,
   ...contentHandlers,
   ...concernHandlers,
   ...memberHandlers,
@@ -38,4 +41,5 @@ export const adminHandlers: HttpHandler[] = [
   ...serviceFeedbackHandlers,
   ...notificationHandlers,
   ...recommendWeightsHandlers,
+  ...companyPriorityHandlers,
 ];

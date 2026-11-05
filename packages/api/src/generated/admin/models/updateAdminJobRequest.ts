@@ -659,4 +659,6 @@ export interface UpdateAdminJobRequest {
   sourceUrl?: string;
   /** 비울 공고 정보의 필드 이름입니다. parentCompanyName, industry, coverImageUrl, logoUrl, jobField, jobRole, experienceMinYears, region, subRegion, recruitmentHeadcount, recruitmentStartAt, recruitmentEndAt, closesWhenFilled, autoCloseEnabled, recruitmentNotice, applicationMethod, applyEmail, inquiryEmail, sourceUrl을 보낼 수 있습니다. */
   clear?: string[];
+  /** 원문 HTML입니다. 크롤러 원문과 같이 서버가 안전한 태그만 남겨 저장하고, 상대 주소는 sourceUrl 기준 절대 주소로 바꿉니다. null이면 그대로 둡니다. 비울 수 없어 공백이거나 걸러서 남는 글·이미지가 없으면 400입니다. 공고 분석에는 영향이 없습니다. */
+  sourceHtml?: string;
 }

@@ -103,3 +103,26 @@ export function buildPatch(before: JobEditorValues, after: JobEditorValues): Upd
 
   return patch as UpdateAdminJobRequest;
 }
+
+/**
+ * 공고 분석이 기대는 칸을 바꾸는 요청인지. 제목, 본문 칸, 모집 안내다(백엔드 `Job.contentHash`). 이 칸이 바뀌면 AI 가
+ * 만든 분석은 낡아 다시 만들어진다. 운영자가 고친 분석은 새 본문 기준으로 옮겨져 그대로 남는다(ogonggo-BE #119).
+ */
+export function rebuildsAnalysis(patch: UpdateAdminJobRequest): boolean {
+  return (
+    patch.title !== undefined ||
+    patch.recruitmentNotice !== undefined ||
+    (patch.clear ?? []).includes('recruitmentNotice') ||
+    Object.keys(patch.fields ?? {}).length > 0
+  );
+}
+
+/** AI 가 만든 분석이 있을 때 `rebuildsAnalysis` 인 저장 앞에 묻는 말. */
+export const REBUILD_ANALYSIS_CONFIRM =
+  'AI 가 만든 공고 분석이 있습니다. 제목·본문·모집 안내를 바꾸면 분석이 다시 만들어지고, 새 분석이 나올 때까지 사용자 화면에 분석이 보이지 않습니다. 저장할까요?';
+
+/** 상세에 AI 가 만든(운영자가 고치지 않은) 분석이 있는지. 이때만 `REBUILD_ANALYSIS_CONFIRM` 을 묻는다. */
+export const hasAiAnalysis = (job: object): boolean =>
+  'analysis' in job &&
+  Boolean(job.analysis) &&
+  !('analysisEditedAt' in job && job.analysisEditedAt);

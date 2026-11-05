@@ -143,6 +143,8 @@ export function toCreateRequest(values: SendFormValues): CreateNotificationBatch
     title: values.title.trim(),
     body: values.body.trim(),
     data: { url: values.url.trim() },
+    // 광고성 발송·새 대상(일반·기업 회원, 희망 직무)·이미지는 따로 붙인다. 그전까지는 지금처럼 비광고성만 보낸다.
+    advertisement: false,
   };
   if (values.target === 'ALL') {
     return { targetType: 'ALL', ...common };

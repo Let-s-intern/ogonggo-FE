@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, Callout, cn } from '@ogonggo/ui';
 import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
+import {
+  findExpiredImages,
+  IMAGE_EXPIRED_MESSAGE,
+  imagesToClearAfterRejection,
+  isImageAssetNotAvailable,
+  useExpiredImageFields,
+} from '@/shared/lib/expiredImages';
 import { useCompanyPostDraft } from '@/shared/lib/useCompanyPostDraft';
 import { DraftRestoreCallout } from '@/shared/ui/DraftRestoreCallout';
 import { FloatingActionBar } from '@/shared/ui/FloatingActionBar';
@@ -86,12 +93,36 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
   const [published, setPublished] = useState(false);
   const [pending, setPending] = useState(false);
   const isNew = jobId === undefined;
+  const expiredImages = useExpiredImageFields<'logoUrl' | 'coverImageUrl'>();
+  /**
+   * 만료된 업로드 이미지 칸을 비우고 다시 올리라고 표시한다(ogonggo-BE #117). 나머지 칸은 그대로 둔다.
+   */
+  const clearExpired = (keys: ('logoUrl' | 'coverImageUrl')[]) => {
+    if (keys.length === 0) {
+      return;
+    }
+    setValues((previous) => ({
+      ...previous,
+      ...Object.fromEntries(keys.map((key) => [key, ''])),
+    }));
+    expiredImages.mark(keys);
+    setOpenSteps((previous) => (previous.includes(1) ? previous : [...previous, 1]));
+  };
+  /** 임시저장을 불러온 뒤, 그 사이 정리 작업이 지운 업로드 이미지가 있으면 비운다. 외부 주소는 보지 않는다. */
+  const checkRestoredImages = (restored: CompanyJobFormValues) =>
+    void findExpiredImages({
+      logoUrl: restored.logoUrl ?? '',
+      coverImageUrl: restored.coverImageUrl ?? '',
+    }).then(clearExpired);
   const draft = useCompanyPostDraft({
     kind: 'jobs',
     enabled: isNew,
     values,
     emptyValues: EMPTY_COMPANY_JOB_VALUES,
-    onRestore: (restored) => setValues({ ...EMPTY_COMPANY_JOB_VALUES, ...restored }),
+    onRestore: (restored) => {
+      setValues({ ...EMPTY_COMPANY_JOB_VALUES, ...restored });
+      checkRestoredImages(restored);
+    },
   });
 
   useEffect(() => {
@@ -129,8 +160,10 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
     };
   }, [jobId]);
 
-  const change = (patch: Partial<CompanyJobFormValues>) =>
+  const change = (patch: Partial<CompanyJobFormValues>) => {
     setValues((previous) => ({ ...previous, ...patch }));
+    expiredImages.onChanged(patch);
+  };
 
   const toggle = (step: number) =>
     setOpenSteps((previous) =>
@@ -175,7 +208,20 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         draft.clear();
       }
       router.push('/mypage/company/posts/jobs');
-    } catch {
+    } catch (error) {
+      // 정리 작업이 지운 업로드 이미지로 저장했다. 응답은 어느 칸인지 알려 주지 않아 이미지를 불러 보고 고른다.
+      if (isImageAssetNotAvailable(error)) {
+        clearExpired(
+          await imagesToClearAfterRejection({
+            logoUrl: values.logoUrl,
+            coverImageUrl: values.coverImageUrl,
+          }),
+        );
+        setTab('write');
+        setFormError(IMAGE_EXPIRED_MESSAGE);
+        setPending(false);
+        return;
+      }
       setFormError(
         publish
           ? '채용공고를 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.'
@@ -241,7 +287,11 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
           open={openSteps.includes(1)}
           onToggle={() => toggle(1)}
         >
-          <JobBasicInfoSection values={values} onChange={change} />
+          <JobBasicInfoSection
+            values={values}
+            onChange={change}
+            imageNotice={expiredImages.messageOf}
+          />
         </FormSection>
 
         <FormSection

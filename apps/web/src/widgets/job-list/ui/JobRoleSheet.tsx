@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { httpClient } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
-import { Button, CircleIconButton, cn } from '@ogonggo/ui';
-import { JOB_FIELD_LABELS, JOB_ROLES, jobRolesOf } from '@/entities/job/model/labels';
+import { Button, Checkbox, CircleIconButton, cn } from '@ogonggo/ui';
+import { JOB_FIELD_LABELS, JOB_ROLES } from '@/entities/job/model/labels';
 import type { JobField, JobRole } from '@/entities/job/model/types';
 import { track } from '@/shared/analytics/dataLayer';
 import { JOB_MAJORS } from '@/widgets/job-calendar/lib/job-majors';
 import { buildJobsApiUrl, type JobListQuery } from '../lib/query';
+import { jobRoleGroupsOf, type JobRoleGroup } from '../lib/roleGroups';
 import { JOB_ROLE_CHIPS } from '../lib/roleChips';
 
-/** 왼쪽 목록. 직무 칩에 있는 직군만, 칩 순서대로다. */
+/** 창의 직군 목록. 직무 칩에 있는 직군만, 칩 순서대로다. */
 const JOB_FIELDS = JOB_ROLE_CHIPS.map(({ field }) => field);
 
 /** 직군 아이콘. 공고 달력의 관심 직무 칸과 같은 그림을 쓴다. */
@@ -37,6 +38,42 @@ async function fetchCount(
   return response.data?.pageInfo.totalElements;
 }
 
+/**
+ * 직무 선택의 이벤트. 묶음(`lib/roleGroups.ts`) 하나를 통째로 켜거나 끈 것은 묶음 이벤트 하나로 보낸다
+ * (`filter_type: 'job_role_group'`, 값은 `직군:묶음 이름`, 예 `HR_GENERAL_AFFAIRS:인사`). 묶음을 직무마다 보내면
+ * 묶음 하나에 이벤트가 열 개씩 쌓인다. 묶음에 들지 않는 나머지는 지금처럼 직무마다 `job_role` 이다. 묶음이 하나뿐인
+ * 직군(`영업`)은 묶음 줄이 없어 직무마다 보낸다.
+ */
+function trackRoleChanges(before: JobRole[], after: JobRole[]) {
+  const added = after.filter((role) => !before.includes(role));
+  const removed = before.filter((role) => !after.includes(role));
+  const grouped = new Set<JobRole>();
+  for (const field of JOB_FIELDS) {
+    const groups = jobRoleGroupsOf(field, JOB_FIELD_LABELS[field]);
+    if (groups.length < 2) continue;
+    for (const group of groups) {
+      for (const [changed, action] of [
+        [added, 'select'],
+        [removed, 'deselect'],
+      ] as const) {
+        if (group.roles.length > 1 && group.roles.every((role) => changed.includes(role))) {
+          group.roles.forEach((role) => grouped.add(role));
+          track('filter_apply', {
+            filter_type: 'job_role_group',
+            filter_value: `${field}:${group.label}`,
+            filter_action: action,
+          });
+        }
+      }
+    }
+  }
+  trackChanges(
+    'job_role',
+    before.filter((role) => !grouped.has(role)),
+    after.filter((role) => !grouped.has(role)),
+  );
+}
+
 function trackChanges(filterType: string, before: string[], after: string[]) {
   for (const value of after.filter((item) => !before.includes(item))) {
     track('filter_apply', {
@@ -55,10 +92,11 @@ function trackChanges(filterType: string, before: string[], after: string[]) {
 }
 
 /**
- * 직무 선택 창. 직무 칩(`JobRoleChips`)의 직군 칩을 누르면 뜬다. 왼쪽에 직군, 오른쪽에 그 직군의
- * 직무 칩이 있고, 눌린 칩의 직군이 펼쳐진 채 열린다. 한 직군 안에서는 직무를 여러 개 고를 수 있고,
- * `전체` 는 그 직군을 통째로 고른다. 다른 직군에서 고르면 앞 직군의 선택은 지운다 — 직무 칩이 한 번에
- * 하나만 켜지게 한다(2026-10-12, 사용자).
+ * 직무 선택 창. 직무 칩(`JobRoleChips`)의 직군 칩을 누르면 뜬다. 직군 → 묶음 → 직무 체크박스가 접는
+ * 목록으로 서고(LC-3566, PRD `prd-job-filter-improve.md` 결정 3 B), 눌린 칩의 직군이 펼쳐진 채 열린다.
+ * 묶음은 FE 상수다(`lib/roleGroups.ts`) — 묶음을 고르면 그 안의 직무가 `jobRole` 여럿으로 실린다.
+ * 직무는 여러 직군에 걸쳐 여러 개 고를 수 있고, `전체` 는 그 직군을 통째로 고른다. 한 직군에서 고른 것은
+ * 다른 직군의 선택을 건드리지 않는다(2026-11-04, 사용자 설문. 2026-10-12 의 한 직군 제한을 뒤집었다).
  *
  * 창 안에서 고르는 것은 초안이다. `N개 공고보기` 를 눌러야 `onApply` 로 넘어가 주소가 바뀐다 —
  * 칩 하나마다 페이지를 다시 그리면 창이 닫히고 스크롤이 튄다. 건수는 초안이 바뀔 때마다 한 번
@@ -84,15 +122,12 @@ export function JobRoleSheet({
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  // 누른 직군에서 아직 아무것도 고르지 않았으면 그 직군의 `전체` 가 켜진 채로 연다(2026-10-19, 사용자).
-  // 창은 한 번에 한 직군만 고르게 하므로 다른 직군의 선택은 `전체` 로 바꾸며 지워진다.
-  const [selection, setSelection] = useState<JobRoleSelection>(() =>
-    initial.fields.includes(initialField) ||
-    initial.roles.some((role) => JOB_ROLES[role].field === initialField)
-      ? initial
-      : { fields: [initialField], roles: [] },
-  );
-  const [activeField, setActiveField] = useState<JobField>(initialField);
+  // 적용된 선택 그대로 연다. 누른 직군의 `전체` 를 켜 두지 않는다 — 켜 두면 세부 직무를 고르려다 그대로
+  // `공고보기` 를 눌러 직군 전체로 걸린다(LC-3566, PRD `prd-job-filter-improve.md` 결정 2. 2026-10-19 의
+  // `전체` 를 켜 두는 결정을 뒤집었다).
+  const [selection, setSelection] = useState<JobRoleSelection>(initial);
+  // 펼친 직군. 처음에는 누른 칩의 직군만 펼친다.
+  const [expanded, setExpanded] = useState<JobField[]>([initialField]);
   const [count, setCount] = useState<number | undefined>();
 
   useEffect(() => {
@@ -127,33 +162,34 @@ export function JobRoleSheet({
     };
   }, [query, selection]);
 
-  const roles = useMemo(() => jobRolesOf(activeField), [activeField]);
-  const fieldSelected = selection.fields.includes(activeField);
   const empty = selection.fields.length === 0 && selection.roles.length === 0;
 
-  // 직군을 통째로 고르면 다른 선택은 모두 지운다(한 직군만). 끄면 아무것도 고르지 않은 상태다.
-  const toggleField = () =>
-    setSelection(() =>
-      fieldSelected ? { fields: [], roles: [] } : { fields: [activeField], roles: [] },
-    );
+  // 이 직군을 통째로 켜거나 끈다. 이 직군에서 하나씩 고른 직무는 지우고, 다른 직군의 선택은 그대로 둔다.
+  const toggleField = (field: JobField) =>
+    setSelection(({ fields, roles: picked }) => ({
+      fields: fields.includes(field) ? fields.filter((item) => item !== field) : [...fields, field],
+      roles: picked.filter((item) => JOB_ROLES[item].field !== field),
+    }));
 
-  const toggleRole = (role: JobRole) =>
+  // 직무 여럿(묶음 하나 또는 직무 하나)을 켜거나 끈다. 이 직군이 `전체` 로 골라져 있으면 `전체` 를 풀고
+  // 누른 것만 고른다. 다른 직군의 선택은 그대로 둔다.
+  const setRoles = (field: JobField, targets: JobRole[], on: boolean) =>
     setSelection(({ fields, roles: picked }) => {
-      // 이 직군에서 고른 직무만 남긴다. 다른 직군의 선택과 이 직군의 `전체` 는 지운다.
-      const sameField = fields.includes(activeField)
-        ? []
-        : picked.filter((item) => JOB_ROLES[item].field === activeField);
+      const rest = picked.filter((item) => !targets.includes(item));
       return {
-        fields: [],
-        roles: sameField.includes(role)
-          ? sameField.filter((item) => item !== role)
-          : [...sameField, role],
+        fields: fields.filter((item) => item !== field),
+        roles: on ? [...rest, ...targets] : rest,
       };
     });
 
+  const toggleExpanded = (field: JobField) =>
+    setExpanded((open) =>
+      open.includes(field) ? open.filter((item) => item !== field) : [...open, field],
+    );
+
   const apply = () => {
     trackChanges('job_field', initial.fields, selection.fields);
-    trackChanges('job_role', initial.roles, selection.roles);
+    trackRoleChanges(initial.roles, selection.roles);
     onApply(selection);
     onClose();
   };
@@ -188,59 +224,19 @@ export function JobRoleSheet({
           </CircleIconButton>
         </div>
 
-        <div className="flex min-h-0 flex-1">
-          <ul className="w-32 shrink-0 overflow-y-auto border-r border-gray-100 px-3 pb-4 md:w-40">
-            {JOB_FIELDS.map((field) => {
-              // 직군을 통째로 골랐으면 `전체`, 아니면 그 직군에서 고른 직무 수다.
-              const picked = selection.fields.includes(field)
-                ? '전체'
-                : selection.roles.filter((role) => JOB_ROLES[role].field === field).length || null;
-              return (
-                <li key={field}>
-                  <button
-                    type="button"
-                    onClick={() => setActiveField(field)}
-                    aria-current={field === activeField}
-                    className={cn(
-                      'flex w-full items-center justify-between gap-1 rounded-md px-3 py-3 text-left text-sm md:text-base',
-                      field === activeField
-                        ? 'bg-gray-100 font-semibold text-gray-900'
-                        : 'text-gray-800 hover:bg-gray-50',
-                    )}
-                  >
-                    <span className="break-keep">{JOB_FIELD_LABELS[field]}</span>
-                    {picked ? (
-                      <span className="text-xs font-semibold text-blue-500">{picked}</span>
-                    ) : null}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="min-w-0 flex-1 overflow-y-auto px-4 pb-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-400 text-white">
-                <span
-                  aria-hidden="true"
-                  className={cn(FIELD_ICONS.get(activeField), 'block h-6 w-6')}
-                />
-              </span>
-              <h3 className="text-lg font-bold text-gray-900">{JOB_FIELD_LABELS[activeField]}</h3>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <RoleChip label="전체" selected={fieldSelected} onClick={toggleField} />
-              {roles.map((role) => (
-                <RoleChip
-                  key={role}
-                  label={JOB_ROLES[role].label}
-                  selected={!fieldSelected && selection.roles.includes(role)}
-                  onClick={() => toggleRole(role)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        <ul className="min-h-0 flex-1 overflow-y-auto border-t border-gray-100 px-4 pb-4 md:px-6">
+          {JOB_FIELDS.map((field) => (
+            <FieldSection
+              key={field}
+              field={field}
+              selection={selection}
+              expanded={expanded.includes(field)}
+              onToggleExpanded={() => toggleExpanded(field)}
+              onToggleField={() => toggleField(field)}
+              onSetRoles={(targets, on) => setRoles(field, targets, on)}
+            />
+          ))}
+        </ul>
 
         <div className="flex justify-end gap-2 border-t border-gray-100 px-6 py-4">
           <Button
@@ -261,28 +257,108 @@ export function JobRoleSheet({
   );
 }
 
-function RoleChip({
-  label,
-  selected,
-  onClick,
+/** 직군에서 고른 것을 한 줄로. 묶음을 다 골랐으면 묶음 이름, 아니면 직무 이름이다. */
+function summarize(groups: JobRoleGroup[], picked: JobRole[]): string {
+  return groups
+    .flatMap((group) =>
+      group.roles.length > 1 && group.roles.every((role) => picked.includes(role))
+        ? [group.label]
+        : group.roles.filter((role) => picked.includes(role)).map((role) => JOB_ROLES[role].label),
+    )
+    .join(', ');
+}
+
+/**
+ * 직군 하나. 머리를 누르면 접히고 펼쳐진다. 펼치면 `전체`, 묶음, 묶음 안의 직무 체크박스가 차례로 선다.
+ * `전체` 가 켜져 있으면 묶음·직무는 꺼진 채로 보인다 — `전체` 는 그 직군을 통째로 거는 다른 선택이다.
+ * 묶음이 하나뿐인 직군(`영업`)은 묶음 줄이 직군 `전체` 와 같아 그리지 않는다.
+ */
+function FieldSection({
+  field,
+  selection,
+  expanded,
+  onToggleExpanded,
+  onToggleField,
+  onSetRoles,
 }: {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
+  field: JobField;
+  selection: JobRoleSelection;
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  onToggleField: () => void;
+  onSetRoles: (roles: JobRole[], on: boolean) => void;
 }) {
+  const label = JOB_FIELD_LABELS[field];
+  const groups = jobRoleGroupsOf(field, label);
+  const fieldSelected = selection.fields.includes(field);
+  const picked = fieldSelected
+    ? []
+    : selection.roles.filter((role) => JOB_ROLES[role].field === field);
+  const summary = fieldSelected ? '전체' : summarize(groups, picked);
+  const panelId = `job-role-field-${field}`;
+
   return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={cn(
-        'h-9 rounded-md border px-3 text-sm transition-colors',
-        selected
-          ? 'border-blue-500 bg-blue-50 font-semibold text-blue-500'
-          : 'border-transparent bg-gray-100 text-gray-700 hover:bg-gray-200',
-      )}
-    >
-      {label}
-    </button>
+    <li className="border-b border-gray-100 last:border-b-0">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        onClick={onToggleExpanded}
+        className="flex w-full items-center gap-3 py-4 text-left"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-400 text-white">
+          <span aria-hidden="true" className={cn(FIELD_ICONS.get(field), 'block size-5')} />
+        </span>
+        <span className="shrink-0 text-base font-bold text-gray-900">{label}</span>
+        <span className="min-w-0 flex-1 truncate text-right text-sm font-semibold text-blue-500">
+          {summary}
+        </span>
+        <span
+          aria-hidden="true"
+          className={cn(
+            'icon-[lucide--chevron-down] block size-5 shrink-0 text-gray-500 transition-transform',
+            expanded && 'rotate-180',
+          )}
+        />
+      </button>
+      {expanded ? (
+        <div id={panelId} className="flex flex-col gap-4 pb-5 pl-1">
+          <Checkbox
+            label="전체"
+            checked={fieldSelected}
+            onChange={onToggleField}
+            labelClassName="font-semibold"
+          />
+          {groups.map((group) => (
+            <fieldset key={group.label} className="flex min-w-0 flex-col gap-3">
+              {groups.length > 1 ? (
+                <legend className="mb-3">
+                  <Checkbox
+                    label={group.label}
+                    checked={group.roles.every((role) => picked.includes(role))}
+                    onChange={(on) => onSetRoles(group.roles, on)}
+                    labelClassName="font-semibold"
+                  />
+                </legend>
+              ) : (
+                <legend className="sr-only">{group.label}</legend>
+              )}
+              <div className={cn('grid grid-cols-2 gap-x-4 gap-y-3', groups.length > 1 && 'pl-7')}>
+                {group.roles.map((role) => (
+                  <Checkbox
+                    key={role}
+                    label={JOB_ROLES[role].label}
+                    checked={picked.includes(role)}
+                    onChange={(on) => onSetRoles([role], on)}
+                    className="min-w-0"
+                    labelClassName="break-keep"
+                  />
+                ))}
+              </div>
+            </fieldset>
+          ))}
+        </div>
+      ) : null}
+    </li>
   );
 }

@@ -16,6 +16,7 @@ export interface CreateImagePresignedUrlRequest {
      * | `PROFILE` | 1 | 프로필 이미지·기업 로고 |
      * | `RECRUITMENT_POST` | 2 | 사이드 프로젝트·스터디 모집글 |
      * | `CONCERN` | 3 | 취준고민 |
+     * | `NOTIFICATION` | 4 | 푸시 알림 이미지 |
      */
   usage: CreateImagePresignedUrlRequestUsage;
   /** 올릴 파일의 MIME 타입 */

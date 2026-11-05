@@ -10,6 +10,9 @@
  * | --- | --- | --- |
  * | `USER_IDS` | 1 | 지정 회원 |
  * | `ALL` | 2 | 전체 활성 회원 |
+ * | `GENERAL_MEMBERS` | 3 | 활성 일반 회원 |
+ * | `COMPANY_MEMBERS` | 4 | 활성 기업 회원 |
+ * | `JOB_ROLES` | 5 | 희망 직무가 맞는 활성 일반 회원 |
  */
 export type AdminNotificationBatchResultResponseTargetType = typeof AdminNotificationBatchResultResponseTargetType[keyof typeof AdminNotificationBatchResultResponseTargetType];
 
@@ -17,4 +20,7 @@ export type AdminNotificationBatchResultResponseTargetType = typeof AdminNotific
 export const AdminNotificationBatchResultResponseTargetType = {
   USER_IDS: 'USER_IDS',
   ALL: 'ALL',
+  GENERAL_MEMBERS: 'GENERAL_MEMBERS',
+  COMPANY_MEMBERS: 'COMPANY_MEMBERS',
+  JOB_ROLES: 'JOB_ROLES',
 } as const;

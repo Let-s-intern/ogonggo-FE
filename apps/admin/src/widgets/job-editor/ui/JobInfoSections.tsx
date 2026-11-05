@@ -15,6 +15,11 @@ export interface JobInfoSectionProps {
   before: JobEditorValues;
   errors: JobEditorErrors;
   onChange: <K extends keyof JobEditorValues>(key: K, value: JobEditorValues[K]) => void;
+  /**
+   * 입력 칸 `id` 앞머리. 기본은 `job` 이다. 한 화면에 같은 칸이 둘 있으면(검수 화면의 왼쪽 칸과 `내용 수정` 모달)
+   * 다르게 줘야 라벨이 제 칸을 가리킨다.
+   */
+  idPrefix?: string;
 }
 
 const NONE = { value: '', label: '선택 안 함' };
@@ -39,8 +44,9 @@ function TextInput({
   values,
   errors,
   onChange,
+  idPrefix = 'job',
   children,
-}: Pick<JobInfoSectionProps, 'values' | 'errors' | 'onChange'> & {
+}: Pick<JobInfoSectionProps, 'values' | 'errors' | 'onChange' | 'idPrefix'> & {
   name: StringKey;
   label: string;
   type?: 'text' | 'number' | 'email' | 'url' | 'date';
@@ -54,14 +60,14 @@ function TextInput({
   return (
     <Field
       label={label}
-      htmlFor={`job-${name}`}
+      htmlFor={`${idPrefix}-${name}`}
       required={required}
       hint={hint}
       error={errors[name]}
       className={wide ? 'sm:col-span-2' : undefined}
     >
       <Input
-        id={`job-${name}`}
+        id={`${idPrefix}-${name}`}
         type={type}
         min={min}
         value={values[name]}
@@ -134,7 +140,7 @@ export function CompanySection(props: JobInfoSectionProps) {
  * 그 직무의 직군으로 채운다. 직군이 비어 있으면 직무 전체에서 고를 수 있다.
  */
 export function ConditionSection(props: JobInfoSectionProps) {
-  const { values, before, onChange } = props;
+  const { values, before, onChange, idPrefix = 'job' } = props;
   const roles = values.jobField
     ? enumChildren('JobRole', values.jobField)
     : enumOptions('JobRole').map((option) => option.value);
@@ -142,9 +148,9 @@ export function ConditionSection(props: JobInfoSectionProps) {
 
   return (
     <Section title="직무·조건">
-      <Field label="직군" htmlFor="job-jobField">
+      <Field label="직군" htmlFor={`${idPrefix}-jobField`}>
         <Select
-          id="job-jobField"
+          id={`${idPrefix}-jobField`}
           className="w-full"
           options={[NONE, ...enumOptions('JobField')]}
           value={values.jobField}
@@ -156,11 +162,11 @@ export function ConditionSection(props: JobInfoSectionProps) {
       </Field>
       <Field
         label="직무"
-        htmlFor="job-jobRole"
+        htmlFor={`${idPrefix}-jobRole`}
         hint={roleCleared ? '직무를 고르지 않으면 기존 직무는 지워집니다.' : undefined}
       >
         <Select
-          id="job-jobRole"
+          id={`${idPrefix}-jobRole`}
           className="w-full"
           options={[
             NONE,
@@ -177,18 +183,18 @@ export function ConditionSection(props: JobInfoSectionProps) {
           }}
         />
       </Field>
-      <Field label="고용 형태" htmlFor="job-employmentType" required>
+      <Field label="고용 형태" htmlFor={`${idPrefix}-employmentType`} required>
         <Select
-          id="job-employmentType"
+          id={`${idPrefix}-employmentType`}
           className="w-full"
           options={enumOptions('JobEmploymentType')}
           value={values.employmentType}
           onChange={(event) => onChange('employmentType', event.target.value)}
         />
       </Field>
-      <Field label="경력" htmlFor="job-experienceType" required>
+      <Field label="경력" htmlFor={`${idPrefix}-experienceType`} required>
         <Select
-          id="job-experienceType"
+          id={`${idPrefix}-experienceType`}
           className="w-full"
           options={enumOptions('JobExperienceType')}
           value={values.experienceType}
@@ -202,9 +208,9 @@ export function ConditionSection(props: JobInfoSectionProps) {
         type="number"
         min={0}
       />
-      <Field label="학력" htmlFor="job-educationLevel" required>
+      <Field label="학력" htmlFor={`${idPrefix}-educationLevel`} required>
         <Select
-          id="job-educationLevel"
+          id={`${idPrefix}-educationLevel`}
           className="w-full"
           options={enumOptions('JobEducationLevel')}
           value={values.educationLevel}
@@ -213,13 +219,13 @@ export function ConditionSection(props: JobInfoSectionProps) {
       </Field>
       <Field
         label="근무 지역"
-        htmlFor="job-region"
+        htmlFor={`${idPrefix}-region`}
         hint={
           values.region !== before.region ? '시·군·구는 저장할 때 서버가 정리합니다.' : undefined
         }
       >
         <Select
-          id="job-region"
+          id={`${idPrefix}-region`}
           className="w-full"
           options={[NONE, ...enumOptions('Region')]}
           value={values.region}
@@ -235,14 +241,14 @@ export function ConditionSection(props: JobInfoSectionProps) {
  * 기간으로 되돌리면 마감일 칸이 빈 채로 다시 열린다.
  */
 export function RecruitmentSection(props: JobInfoSectionProps) {
-  const { values, errors, onChange } = props;
+  const { values, errors, onChange, idPrefix = 'job' } = props;
   const alwaysOpen = values.recruitmentType === 'ALWAYS_OPEN';
 
   return (
     <Section title="모집">
-      <Field label="모집 기간 유형" htmlFor="job-recruitmentType" required>
+      <Field label="모집 기간 유형" htmlFor={`${idPrefix}-recruitmentType`} required>
         <Select
-          id="job-recruitmentType"
+          id={`${idPrefix}-recruitmentType`}
           className="w-full"
           options={enumOptions('JobRecruitmentType')}
           value={values.recruitmentType}
@@ -255,12 +261,12 @@ export function RecruitmentSection(props: JobInfoSectionProps) {
       <TextInput {...props} name="recruitmentStartAt" label="모집 시작일" type="date" />
       <Field
         label="모집 마감일"
-        htmlFor="job-recruitmentEndAt"
+        htmlFor={`${idPrefix}-recruitmentEndAt`}
         hint={alwaysOpen ? '상시 채용은 마감일이 없습니다.' : undefined}
         error={errors.recruitmentEndAt}
       >
         <Input
-          id="job-recruitmentEndAt"
+          id={`${idPrefix}-recruitmentEndAt`}
           type="date"
           disabled={alwaysOpen}
           value={values.recruitmentEndAt}
@@ -280,9 +286,9 @@ export function RecruitmentSection(props: JobInfoSectionProps) {
           onChange={(checked) => onChange('autoCloseEnabled', checked)}
         />
       </div>
-      <Field label="모집 안내" htmlFor="job-recruitmentNotice" className="sm:col-span-2">
+      <Field label="모집 안내" htmlFor={`${idPrefix}-recruitmentNotice`} className="sm:col-span-2">
         <Textarea
-          id="job-recruitmentNotice"
+          id={`${idPrefix}-recruitmentNotice`}
           rows={3}
           value={values.recruitmentNotice}
           onChange={(event) => onChange('recruitmentNotice', event.target.value)}
@@ -293,12 +299,12 @@ export function RecruitmentSection(props: JobInfoSectionProps) {
 }
 
 export function ApplySection(props: JobInfoSectionProps) {
-  const { values, onChange } = props;
+  const { values, onChange, idPrefix = 'job' } = props;
   return (
     <Section title="지원">
-      <Field label="지원 방법" htmlFor="job-applicationMethod">
+      <Field label="지원 방법" htmlFor={`${idPrefix}-applicationMethod`}>
         <Select
-          id="job-applicationMethod"
+          id={`${idPrefix}-applicationMethod`}
           className="w-full"
           options={[NONE, ...enumOptions('JobApplicationMethod')]}
           value={values.applicationMethod}

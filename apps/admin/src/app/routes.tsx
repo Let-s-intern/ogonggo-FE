@@ -4,12 +4,14 @@ import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
+import { CompanyPriorityPage } from '@/pages/company-priority';
 import { ConcernDetailPage } from '@/pages/concern-detail';
 import { ConcernListPage } from '@/pages/concern-list';
 import { CompanyMemberListPage } from '@/pages/company-member-list';
 import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { LoginPage } from '@/pages/login';
+import { NewJobReviewPage } from '@/pages/new-job-review';
 import { NoticeListPage } from '@/pages/notice-list';
 import { NotificationBatchDetailPage } from '@/pages/notification-batch-detail';
 import { NotificationHistoryPage } from '@/pages/notification-history';
@@ -49,6 +51,7 @@ export const router = createBrowserRouter([
 
       { path: 'content/jobs', element: <JobListPage /> },
       { path: 'content/jobs/:jobId', element: <JobDetailPage /> },
+      { path: 'content/new-jobs', element: <NewJobReviewPage /> },
       { path: 'content/bootcamps', element: <BootcampListPage /> },
       { path: 'content/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
       { path: 'content/side-studies', element: <SideStudyListPage /> },
@@ -68,6 +71,7 @@ export const router = createBrowserRouter([
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },
+      { path: 'placements/company-priority', element: <CompanyPriorityPage /> },
 
       { path: 'members/users', element: <UserMemberListPage /> },
       { path: 'members/users/:memberId', element: <UserMemberDetailPage /> },

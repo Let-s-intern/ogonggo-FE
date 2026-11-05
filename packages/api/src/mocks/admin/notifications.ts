@@ -140,6 +140,8 @@ storeBatch(
     skippedNoTokenUserCount: 1,
     noTokenUserCount: 1,
     skippedInactiveUserCount: 1,
+    advertisement: false,
+    noMarketingConsentUserCount: 0,
     deliveryTargetType: 'DIRECT',
     dispatchExpiresAt: at(12 * MINUTE_MS - DAY_MS),
     resultsAvailableUntil: at(12 * MINUTE_MS - 30 * DAY_MS),
@@ -161,6 +163,8 @@ storeBatch(
     skippedNoTokenUserCount: ALL_NO_TOKEN_USERS,
     noTokenUserCount: ALL_NO_TOKEN_USERS,
     skippedInactiveUserCount: 0,
+    advertisement: false,
+    noMarketingConsentUserCount: 0,
     deliveryTargetType: 'TOPIC',
     dispatchExpiresAt: at(3 * HOUR_MS - DAY_MS),
     resultsAvailableUntil: at(3 * HOUR_MS - 30 * DAY_MS),
@@ -263,6 +267,8 @@ const createBatchHandler = http.post('*/api/v1/admin/notification-batches', asyn
       skippedNoTokenUserCount: ALL_NO_TOKEN_USERS,
       skippedInactiveUserCount: 0,
       enqueuedCount: 1,
+      advertisement: false,
+      noMarketingConsentUserCount: 0,
     };
   } else {
     const active = ids.filter((id) => id % 10 !== 0);
@@ -276,6 +282,8 @@ const createBatchHandler = http.post('*/api/v1/admin/notification-batches', asyn
       skippedNoTokenUserCount: active.length - withToken.length,
       skippedInactiveUserCount: ids.length - active.length,
       enqueuedCount: withToken.reduce((sum, id) => sum + (id % 2 === 0 ? 2 : 1), 0),
+      advertisement: false,
+      noMarketingConsentUserCount: 0,
     };
   }
 

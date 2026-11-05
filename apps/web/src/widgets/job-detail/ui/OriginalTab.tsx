@@ -1,6 +1,7 @@
 import { contentFieldLabel } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import type { JobDetail } from '@/entities/job/model/types';
+import { SourceHtml } from './SourceHtml';
 
 /**
  * 본문 일곱 칸. 제목은 enum 카탈로그의 `JobContentField` 다. 어드민에서 수정한 회사/팀소개가
@@ -34,6 +35,8 @@ export function buildSections(job: JobDetail): { label: string; value?: string }
  * 거르면 같은 일을 두 번 하면서 라이브러리만 늘어난다. 스타일은 화면 폭을 넘지 않을 만큼만 준다 —
  * 이미지는 폭에 맞추고, 표는 가로로 스크롤하고, 목록·문단에 간격을 둔다.
  *
+ * 불러오지 못한 원문 이미지는 숨긴다(`SourceHtml`).
+ *
  * 링크는 `http(s)` 주소일 때만 건다. 값이 없거나 다른 형식이면 링크만 빼고 그린다.
  *
  * `layout="modal"` 이면 전처럼 본문이 17px 안쪽에서 시작한다(`AnalysisTab` 과 같다).
@@ -52,7 +55,8 @@ export function OriginalTab({
   return (
     <div className={cn('flex flex-col gap-10', layout === 'modal' && 'px-[17px]')}>
       {sourceHtml ? (
-        <div
+        <SourceHtml
+          html={sourceHtml}
           className={cn(
             'break-words text-sm leading-relaxed text-gray-700',
             '[&_:is(p,ul,ol,table,h1,h2,h3,h4,h5,h6)]:my-3 [&>:first-child]:mt-0',
@@ -63,7 +67,6 @@ export function OriginalTab({
             '[&_:is(td,th)]:border [&_:is(td,th)]:border-gray-200 [&_:is(td,th)]:px-2 [&_:is(td,th)]:py-1',
             '[&_a]:text-blue-500 [&_a]:underline',
           )}
-          dangerouslySetInnerHTML={{ __html: sourceHtml }}
         />
       ) : null}
       {sections.map((section) => (

@@ -17,6 +17,9 @@ export interface AdminNotificationBatchResultResponse {
      * | --- | --- | --- |
      * | `USER_IDS` | 1 | 지정 회원 |
      * | `ALL` | 2 | 전체 활성 회원 |
+     * | `GENERAL_MEMBERS` | 3 | 활성 일반 회원 |
+     * | `COMPANY_MEMBERS` | 4 | 활성 기업 회원 |
+     * | `JOB_ROLES` | 5 | 희망 직무가 맞는 활성 일반 회원 |
      */
   targetType: AdminNotificationBatchResultResponseTargetType;
   title: string;
@@ -47,4 +50,10 @@ export interface AdminNotificationBatchResultResponse {
      */
   deliveryTargetType: AdminNotificationBatchResultResponseDeliveryTargetType;
   noTokenUserCount: number;
+  /** JOB_ROLES 발송에서 고른 희망 직무 선택지. 다른 대상은 null */
+  targetJobRoles?: string[];
+  advertisement: boolean;
+  noMarketingConsentUserCount: number;
+  imageId?: string;
+  imageUrl?: string;
 }

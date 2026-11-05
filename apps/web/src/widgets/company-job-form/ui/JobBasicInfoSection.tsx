@@ -19,6 +19,8 @@ const MAX_COMPANY_NAME_LENGTH = 150;
 const MAX_TITLE_LENGTH = 255;
 
 export interface JobBasicInfoSectionProps {
+  /** 만료돼 다시 올려야 하는 이미지 칸의 안내(`shared/lib/expiredImages.ts`). */
+  imageNotice?: (key: 'logoUrl' | 'coverImageUrl') => string | undefined;
   values: CompanyJobFormValues;
   onChange: (patch: Partial<CompanyJobFormValues>) => void;
 }
@@ -30,13 +32,14 @@ export interface JobBasicInfoSectionProps {
  * 드롭다운 폭을 `w-full` 로 준다. `Select` 의 기본 폭은 필터 줄에 맞춘 내용 폭이라, 두 칸씩
  * 나란한 이 폼에서는 왼쪽 칸과 오른쪽 칸의 너비가 달라 보인다.
  */
-export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionProps) {
+export function JobBasicInfoSection({ values, onChange, imageNotice }: JobBasicInfoSectionProps) {
   return (
     <div>
       <Field label="기업 · 기관명" htmlFor="company-job-company-name" required>
         <div className="flex items-center gap-4">
           <LogoUploadField
             url={values.logoUrl}
+            notice={imageNotice?.('logoUrl')}
             className="size-20"
             onUploaded={(image) => onChange({ logoUrl: image.url })}
             onClear={() => onChange({ logoUrl: '' })}
@@ -142,6 +145,7 @@ export function JobBasicInfoSection({ values, onChange }: JobBasicInfoSectionPro
 
       <CoverImageField
         value={values.coverImageUrl}
+        notice={imageNotice?.('coverImageUrl')}
         onChange={(coverImageUrl) => onChange({ coverImageUrl })}
       />
     </div>

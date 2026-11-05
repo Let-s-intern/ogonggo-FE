@@ -90,6 +90,19 @@ const TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'get_job_review',
+      description:
+        '공고 검수용 자료를 가져온다(오늘 올라온 공고와 목록 편집 창). 분류(값과 라벨), 썸네일 주소(coverIsLogo: 커버 자리에 로고 주소가 들어갔는지), 본문 칸(칸당 1,000자), 공고 분석(analysis, analysisCurrent=false 면 다시 분석 대기), 원문 텍스트(sourceText, 8,000자까지, 없으면 "없음")가 온다.',
+      parameters: {
+        type: 'object',
+        properties: { jobId: { type: 'integer' } },
+        required: ['jobId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'get_stats',
       description:
         '서비스 KPI 통계(방문자, 전환율, 가입, 공고 수, 채널별 성과, 공고별 성과, 검색 유입)를 Redash 에서 가져온다.',
@@ -201,7 +214,7 @@ const TOOLS = [
     function: {
       name: 'navigate',
       description:
-        '어드민 화면을 옮긴다. 갈 수 있는 곳: /content/jobs, /content/bootcamps, /content/side-studies, /content/concerns, /ads/review, /ads/rejections, /placements/pick-jobs, /placements/recommend-weights, /members/users, /members/companies, /support/notices, /support/feedbacks, /stats, 그리고 상세 /content/jobs/{id} 등. 채용공고 목록은 쿼리스트링으로 거를 수 있다: keyword, visibility(VISIBLE|HIDDEN), source(CRAWLER|COMPANY), recruitmentStatus(RECRUITING|CLOSED).',
+        '어드민 화면을 옮긴다. 갈 수 있는 곳: /content/jobs, /content/new-jobs(오늘 올라온 공고 검수), /content/bootcamps, /content/side-studies, /content/concerns, /ads/review, /ads/rejections, /placements/pick-jobs, /placements/recommend-weights, /members/users, /members/companies, /support/notices, /support/feedbacks, /stats, 그리고 상세 /content/jobs/{id} 등. 채용공고 목록은 쿼리스트링으로 거를 수 있다: keyword, visibility(VISIBLE|HIDDEN), source(CRAWLER|COMPANY), recruitmentStatus(RECRUITING|CLOSED).',
       parameters: {
         type: 'object',
         properties: { path: { type: 'string', description: '예: /content/jobs?keyword=마케팅' } },
@@ -245,7 +258,8 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 2. 요약: 공고(get_job)나 통계(get_stats)를 요약한다. 공고 단위 성과는 get_stats 가 아니라 get_job_performance 로 본다(get_stats 의 공고별 성과는 위 30행만 온다). 서비스 의견은 list_service_feedbacks 로 읽어 공통 주제로 묶는다. 그 밖의 화면 내용은 navigate 후 read_screen 으로 읽는다.
 3. 화면 이동: navigate 로 어드민 화면을 연다.
 4. 문장 다듬기: get_job 으로 원문을 읽고 고친 문장을 fill_job_text 로 수정 창 입력 칸에 채운다.
-5. 어느 화면이든 입력하기: navigate 로 화면을 열고, read_screen 으로 칸과 버튼을 읽고, press_button 으로 양식을 연 뒤(예: '새 공지'), fill_fields 로 칸을 채운다. 공지 작성, 부트캠프·공고 수정, 운영 값 등 화면에 있는 양식은 모두 이렇게 한다. 할 수 없다고 답하기 전에 이 방법을 먼저 쓴다.
+5. 검수: 오늘 올라온 공고의 분석과 원문이 맞는지 get_job_review 로 대조한다(아래 [검수]).
+6. 어느 화면이든 입력하기: navigate 로 화면을 열고, read_screen 으로 칸과 버튼을 읽고, press_button 으로 양식을 연 뒤(예: '새 공지'), fill_fields 로 칸을 채운다. 공지 작성, 부트캠프·공고 수정, 운영 값 등 화면에 있는 양식은 모두 이렇게 한다. 할 수 없다고 답하기 전에 이 방법을 먼저 쓴다.
 
 [할 수 없는 일]
 - 확정 버튼(humanOnly: 저장, 등록, 삭제, 적용, 승인, 노출 변경 등)은 누를 수 없다. 칸을 다 채운 뒤 어느 버튼을 누르면 되는지 사용자에게 알려 준다.
@@ -264,8 +278,19 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 - 사용자가 칸을 말하지 않으면 무엇을 고칠지 먼저 묻는다.
 - 채운 뒤에는 어느 칸을 채웠는지와 바뀐 점을 한두 줄로 알려 준다.
 
+[검수]
+- "공고 {id} 를 검수해줘" 는 오늘 올라온 공고 검수 화면(/content/new-jobs)이나 채용공고 목록의 편집 창(/content/jobs?edit={id})의 버튼에서 온 요청이다. 오늘 공고가 아니어도 같은 방법으로 검수한다. get_job_review 로 자료를 받아 우리가 만든 값(분류, 썸네일, 본문 칸, 공고 분석)을 원문 텍스트(sourceText)와 대조한다.
+- 답은 "고칠 곳" 목록이다. 한 줄에 하나씩 "- 칸 이름: 지금 값 → 고칠 값 (원문: "원문 문장")" 꼴로 적는다. 원문에 근거 문장이 없으면 고칠 곳으로 적지 않는다.
+- 이어서 따로 적는다.
+  - 쓰레기 글: 원문에 섞인 메뉴, 쿠키 안내, 다른 공고 목록, 바닥글. 있으면 그 문장을 짧게 인용한다.
+  - 분류: 직군·직무가 원문의 업무와 맞는지. 비었으면 원문에 맞는 직군·직무를 제안한다.
+  - 공고 분석: 원문에 없는 조건을 넣었거나 원문의 조건을 빠뜨렸는지. 분석이 없거나 analysisCurrent 가 false(다시 분석 대기)면 그 사실을 적는다.
+  - 썸네일: 이미지는 보지 못하고 주소만 본다고 밝힌다. 커버 이미지가 비었거나 coverIsLogo 가 true 일 때만 짚는다.
+- 고칠 곳이 없으면 "고칠 곳 없음" 과 확인한 항목을 한 줄로 적는다.
+- 고칠 문장은 사용자가 원하면 fill_job_text 로 수정 창에 채운다. 저장, 검수 완료, 비노출은 사용자가 직접 누른다.
+
 [대화]
-- "이 공고", "여기" 는 [현재 화면] 의 경로가 /content/jobs/{id} 이면 그 공고다.
+- "이 공고", "여기" 는 [현재 화면] 의 경로가 /content/jobs/{id} 이면 그 공고, /content/new-jobs?job={id} 나 /content/jobs?edit={id} 이면 그 공고다.
 - 공고를 나열할 때는 "ID 제목 (회사)" 꼴로 짧게. 10건이 넘으면 상위 10건과 전체 건수만.
 - 한국어로 짧게 답한다. 마크다운 표, 제목(#), 굵게(**), 이모지를 쓰지 않는다. 목록은 "-" 로.`;
 

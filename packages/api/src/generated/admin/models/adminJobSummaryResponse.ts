@@ -616,4 +616,6 @@ export interface AdminJobSummaryResponse {
      */
   recruitmentStatus: AdminJobSummaryResponseRecruitmentStatus;
   registeredAt: string;
+  /** 검수 완료 일시(한국 시간). 미검수면 null입니다. 기업회원 공고의 검수 상태(reviewStatus)와 다른 값입니다. */
+  inspectedAt?: string;
 }

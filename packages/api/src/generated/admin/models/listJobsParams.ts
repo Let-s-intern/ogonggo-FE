@@ -89,4 +89,16 @@ recruitmentStatus?: ListJobsRecruitmentStatus;
  */
 jobField?: ListJobsJobField;
 jobRole?: ListJobsJobRoleItem[];
+/**
+ * 등록일 시작(포함)
+ */
+registeredFrom?: string;
+/**
+ * 등록일 끝(포함)
+ */
+registeredTo?: string;
+/**
+ * 검수 완료 여부
+ */
+inspected?: boolean;
 };

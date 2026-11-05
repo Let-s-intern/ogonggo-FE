@@ -19,6 +19,7 @@ import {
   ADMIN_BOOTCAMP_FIXTURES,
   ADMIN_JOB_FIXTURES,
   ADMIN_SIDE_STUDY_FIXTURES,
+  kstTime,
   recruitmentStatusOf,
 } from '../fixtures/admin-content';
 import {
@@ -26,6 +27,16 @@ import {
   type RecruitmentPostFixture,
 } from '../fixtures/recruitment-post';
 import { clearRejection } from '../fixtures/admin-rejection';
+import {
+  analysisSourceOf,
+  markAnalysisStale,
+  markContentEdited,
+  matchesInspectionFilters,
+  readSourceHtmlPatch,
+  rejectInspectionFilters,
+  withInspectedAt,
+  withInspection,
+} from './inspection';
 import { matches, notFound, ok, paginate, readPaging } from './paging';
 
 /**
@@ -52,7 +63,7 @@ function sortContent<T extends { registeredAt: string; viewCount: number }>(
   sort: ContentSort,
 ): T[] {
   return [...rows].sort((a, b) => {
-    const byRegisteredAt = new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime();
+    const byRegisteredAt = kstTime(b.registeredAt) - kstTime(a.registeredAt);
     return sort === 'VIEW_COUNT' ? b.viewCount - a.viewCount || byRegisteredAt : byRegisteredAt;
   });
 }
@@ -67,6 +78,7 @@ const toJobSummary = ({
   benefits: _benefits,
   hiringProcess: _hiringProcess,
   sourceUrl: _sourceUrl,
+  sourceHtml: _sourceHtml,
   ...summary
 }: AdminJobDetailResponse): AdminJobSummaryResponse => summary;
 
@@ -87,6 +99,10 @@ const toBootcampSummary = ({
 
 const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
   const url = new URL(request.url);
+  const rejectedFilter = rejectInspectionFilters(url);
+  if (rejectedFilter) {
+    return rejectedFilter;
+  }
   const keyword = url.searchParams.get('keyword')?.trim() ?? '';
   const visibility = url.searchParams.get('visibility') ?? '';
   const source = url.searchParams.get('source') ?? '';
@@ -110,13 +126,14 @@ const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
     if (recruitmentStatus && job.recruitmentStatus !== recruitmentStatus) {
       return false;
     }
-    return true;
+    // 오늘 올라온 공고 검수의 등록일·검수 필터(`./inspection.ts`, 백엔드 요청 3).
+    return matchesInspectionFilters(job, url);
   });
 
   const sorted = sortContent(filtered, readSort(url));
   const paged = paginate(sorted, page, size);
   const body: PageResponseAdminJobSummaryResponse = {
-    items: paged.items.map(toJobSummary),
+    items: paged.items.map((job) => withInspectedAt(toJobSummary(job))),
     pageInfo: paged.pageInfo,
   };
   return HttpResponse.json(ok(body), { status: 200 });
@@ -128,7 +145,7 @@ const getJobHandler = http.get('*/api/v1/admin/jobs/:jobId', ({ params }) => {
   if (!job) {
     return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
   }
-  return HttpResponse.json(ok(job), { status: 200 });
+  return HttpResponse.json(ok(withInspection(job)), { status: 200 });
 });
 
 /**
@@ -375,12 +392,17 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (rejected) {
     return rejected;
   }
+  const sourceHtml = readSourceHtmlPatch(body);
+  if (sourceHtml.error) {
+    return sourceHtml.error;
+  }
 
   const merged = mergeJobDetails(job, body);
   if ('error' in merged) {
     return merged.error;
   }
 
+  const analysisSource = analysisSourceOf(job);
   const error = applyContentPatch(
     job as unknown as Record<string, unknown>,
     body,
@@ -390,6 +412,16 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     return HttpResponse.json({ status: 400, code: 'BAD_REQUEST', message: error }, { status: 400 });
   }
   Object.assign(job, merged.next);
+  if (analysisSourceOf(job) !== analysisSource) {
+    markAnalysisStale(job.id);
+  }
+  // 노출·검수 상태 말고 하나라도 보냈으면 운영자 내용 수정이다(백엔드 `markContentEdited`).
+  if (Object.keys(body).some((key) => key !== 'visibility' && key !== 'reviewStatus')) {
+    markContentEdited(job.id);
+  }
+  if (sourceHtml.html !== undefined) {
+    job.sourceHtml = sourceHtml.html;
+  }
   // 모집 상태는 저장값이 아니라 일정에서 계산한다. 지난 마감일을 미루면 모집 중으로 돌아가고,
   // 직접 마감한 공고(`closedAt`)는 마감으로 남는다.
   job.recruitmentStatus = recruitmentStatusOf({
@@ -409,7 +441,7 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     clearRejection('JOB', job.id);
   }
 
-  return HttpResponse.json(ok(job), { status: 200 });
+  return HttpResponse.json(ok(withInspection(job)), { status: 200 });
 });
 
 const patchBootcampHandler = http.patch(

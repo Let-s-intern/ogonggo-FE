@@ -13,6 +13,8 @@ export interface LogoUploadFieldProps {
   onUploaded: (image: { id: string; url: string }) => void;
   onClear: () => void;
   disabled?: boolean;
+  /** 칸 아래에 띄울 안내. 올린 이미지가 만료돼 다시 올려야 할 때 쓴다(`shared/lib/expiredImages.ts`). */
+  notice?: string;
   /** 박스 크기. 프로필과 공고 폼 모두 80px 정사각이다. */
   className?: string;
 }
@@ -33,6 +35,7 @@ export function LogoUploadField({
   onUploaded,
   onClear,
   disabled = false,
+  notice,
   className,
 }: LogoUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,9 +110,9 @@ export function LogoUploadField({
           </button>
         ) : null}
       </div>
-      {error ? (
+      {(error ?? notice) ? (
         <p role="alert" className="max-w-32 text-xs break-keep text-error">
-          {error}
+          {error ?? notice}
         </p>
       ) : null}
     </div>

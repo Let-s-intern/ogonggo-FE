@@ -1,8 +1,10 @@
 import {
+  enumLabel,
   getJob,
   listJobs,
   listServiceFeedbacks,
   listTodayJobs,
+  type EnumName,
   type ListJobsParams,
 } from '@ogonggo/api/src/admin';
 import {
@@ -32,12 +34,46 @@ import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
 
 export interface ToolContext {
   navigate: (path: string) => void;
+  /** 지금 보고 있는 경로(쿼리스트링 포함). */
+  currentPath: () => string;
 }
+
+/** 오늘 올라온 공고 검수 화면. 보고 있는 공고가 `?job=` 에 있다(`pages/new-job-review`). */
+const REVIEW_PATH = '/content/new-jobs';
+/** 채용공고 목록. 편집 창으로 연 공고가 `?edit=` 에 있다(`pages/job-list`). */
+const JOB_LIST_PATH = '/content/jobs';
 
 /** 모델에게 돌려줄 결과의 최대 길이. 길면 다음 호출의 입력이 커져 느리고 비싸다. */
 const MAX_RESULT_LENGTH = 12_000;
 /** 공고 본문 칸 하나에서 모델에게 넘길 최대 길이. */
 const MAX_BODY_LENGTH = 2_500;
+/**
+ * `get_job_review` 의 결과 상한. 원문까지 실어 공용 상한(12,000자)으로는 원문이 반쯤 잘린다. 서버의 메시지당
+ * 상한(`api/assistant.ts` 의 `MAX_CONTENT_LENGTH`, 20,000자) 아래로 둔다. 결과를 끝에서 자르지 않는다 — JSON 이
+ * 깨진다. 칸마다 줄여 맞춘다(`REVIEW_BUDGETS`).
+ */
+const MAX_REVIEW_RESULT_LENGTH = 18_000;
+
+/** 검수 자료의 칸별 상한(본문 칸 하나, 원문 텍스트, 분석 JSON). 앞에서부터 맞는 첫 단계를 쓴다. */
+interface ReviewBudget {
+  body: number;
+  source: number;
+  analysis: number;
+}
+
+/**
+ * 원문은 대조의 기준이라 가장 늦게 줄인다. 본문 칸(일곱 칸)을 먼저 줄이고, 다음은 분석, 마지막이 원문이다. 마지막
+ * 단계는 본문 7×150 + 원문 1,000 + 분석 2,000 에 분류·썸네일을 더해도 상한 아래다.
+ */
+const REVIEW_BUDGETS: ReviewBudget[] = [
+  ...[1_000, 600, 300, 150].map((body) => ({ body, source: 8_000, analysis: Infinity })),
+  ...[4_000, 2_000].map((analysis) => ({ body: 150, source: 8_000, analysis })),
+  ...[6_000, 4_000, 2_000, 1_000].map((source) => ({ body: 150, source, analysis: 2_000 })),
+];
+
+/** 글을 상한까지. 잘랐으면 잘렸다고 적는다. */
+const clipField = (text: string, max: number) =>
+  text.length > max ? `${text.slice(0, max)} (이하 생략)` : text;
 const MAX_STATS_ROWS = 30;
 
 const STATS_TITLES: Record<number, string> = {
@@ -67,6 +103,8 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return args.keyword ? `공고 검색: ${String(args.keyword)}` : '공고 검색';
     case 'get_job':
       return `공고 ${String(args.jobId)} 읽기`;
+    case 'get_job_review':
+      return `공고 ${String(args.jobId)} 검수 자료 읽기`;
     case 'get_stats':
       return '통계 불러오기';
     case 'list_pick_jobs':
@@ -90,10 +128,8 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
   }
 }
 
-function clip(text: string): string {
-  return text.length > MAX_RESULT_LENGTH
-    ? `${text.slice(0, MAX_RESULT_LENGTH)}\n(이하 생략)`
-    : text;
+function clip(text: string, max = MAX_RESULT_LENGTH): string {
+  return text.length > max ? `${text.slice(0, max)}\n(이하 생략)` : text;
 }
 
 function asNumber(value: unknown): number | null {
@@ -160,6 +196,89 @@ async function readJob(args: Record<string, unknown>): Promise<string> {
     source: job.source,
     ...body,
   });
+}
+
+/** 원문 HTML 의 글자만. 블록이 끝나는 자리에서 줄을 바꾸고 빈 줄은 뺀다. */
+function sourceText(html: string | undefined): string {
+  if (!html?.trim()) {
+    return '없음';
+  }
+  const withBreaks = html.replace(/<br\s*\/?>|<\/(p|div|li|h[1-6]|tr|table|ul|ol)>/gi, '$&\n');
+  const text = new DOMParser().parseFromString(withBreaks, 'text/html').body.textContent ?? '';
+  return text
+    .split('\n')
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * 검수 자료. 분류(값과 라벨), 썸네일 주소, 본문 칸, 공고 분석, 원문 텍스트를 한 번에 준다(PRD "AI 비서에게 검수 요청").
+ *
+ * 분석(`analysis`·`analysisCurrent`)은 백엔드 요청 2 의 칸이다. 백엔드가 싣기 전에는 칸이 없어 그렇다고 적는다.
+ */
+async function reviewJob(args: Record<string, unknown>): Promise<string> {
+  const jobId = asNumber(args.jobId);
+  if (!jobId) {
+    return 'jobId 가 올바르지 않습니다.';
+  }
+  const job = await unwrapData(getJob(jobId));
+  if (!job) {
+    return `공고 ${jobId} 를 찾지 못했습니다.`;
+  }
+  const labeled = (name: EnumName, value: string | undefined) =>
+    value ? `${value} (${enumLabel(name, value)})` : null;
+  const source = sourceText(job.sourceHtml);
+  const analysis =
+    'analysis' in job ? (job.analysis ?? '없음') : '백엔드가 아직 분석을 주지 않습니다';
+  const analysisJson = JSON.stringify(analysis);
+  // 원문 텍스트를 앞에 둔다. 긴 결과에서 모델이 끝을 덜 읽고, 예전에는 맨 끝이라 상한에서 잘렸다.
+  const render = (budget: ReviewBudget) =>
+    JSON.stringify({
+      id: job.id,
+      title: job.title,
+      company: job.companyName,
+      source: job.source,
+      sourceUrl: job.sourceUrl ?? null,
+      sourceText: clipField(source, budget.source),
+      visibility: job.visibility,
+      inspectedAt: job.inspectedAt ?? null,
+      classification: {
+        jobField: labeled('JobField', job.jobField),
+        jobRole: labeled('JobRole', job.jobRole),
+        employmentType: labeled('JobEmploymentType', job.employmentType),
+        experienceType: labeled('JobExperienceType', job.experienceType),
+        experienceMinYears: job.experienceMinYears ?? null,
+        educationLevel: labeled('JobEducationLevel', job.educationLevel),
+        region: labeled('Region', job.region),
+        subRegion: labeled('SubRegion', job.subRegion),
+        recruitmentType: labeled('JobRecruitmentType', job.recruitmentType),
+        recruitmentStartAt: job.recruitmentStartAt ?? null,
+        recruitmentEndAt: job.recruitmentEndAt ?? null,
+      },
+      thumbnail: {
+        coverImageUrl: job.coverImageUrl ?? null,
+        logoUrl: job.logoUrl ?? null,
+        coverIsLogo: Boolean(job.coverImageUrl) && job.coverImageUrl === job.logoUrl,
+      },
+      body: Object.fromEntries(
+        FILLABLE_JOB_FIELDS.filter((field) => field !== 'title').map((field) => [
+          field,
+          clipField(job[field] ?? '', budget.body),
+        ]),
+      ),
+      // 분석이 상한을 넘으면 JSON 글로 줄여 싣는다. 객체째 자르면 결과 JSON 이 깨진다.
+      analysis:
+        analysisJson.length > budget.analysis ? clipField(analysisJson, budget.analysis) : analysis,
+      analysisCurrent: job.analysisCurrent ?? null,
+    });
+  for (const budget of REVIEW_BUDGETS) {
+    const result = render(budget);
+    if (result.length <= MAX_REVIEW_RESULT_LENGTH) {
+      return result;
+    }
+  }
+  return render(REVIEW_BUDGETS.at(-1)!);
 }
 
 async function readStats(args: Record<string, unknown>): Promise<string> {
@@ -298,7 +417,14 @@ function fillJobText(args: Record<string, unknown>, context: ToolContext): strin
   if (!jobId || Object.keys(values).length === 0) {
     return '채울 공고나 칸이 올바르지 않습니다. 채울 수 있는 칸: ' + FILLABLE_JOB_FIELDS.join(', ');
   }
-  context.navigate(`/content/jobs/${jobId}`);
+  // 검수 화면이나 목록 편집 창에서 보고 있는 공고면 화면을 옮기지 않는다. 그 화면이 수정 창을 연다.
+  const current = new URL(context.currentPath(), 'http://admin');
+  const isReviewing =
+    (current.pathname === REVIEW_PATH && current.searchParams.get('job') === String(jobId)) ||
+    (current.pathname === JOB_LIST_PATH && current.searchParams.get('edit') === String(jobId));
+  if (!isReviewing) {
+    context.navigate(`/content/jobs/${jobId}`);
+  }
   requestJobFill(jobId, values);
   return `공고 ${jobId} 수정 창의 ${Object.keys(values).join(', ')} 칸을 채웠습니다. 저장은 하지 않았습니다 — 사용자가 확인하고 저장을 눌러야 반영됩니다.`;
 }
@@ -314,6 +440,9 @@ export async function runTool(
         return clip(await searchJobs(args));
       case 'get_job':
         return clip(await readJob(args));
+      case 'get_job_review':
+        // 칸마다 줄여 상한 안에 맞춘다. 끝을 자르면 JSON 이 깨진다.
+        return await reviewJob(args);
       case 'get_stats':
         return clip(await readStats(args));
       case 'list_pick_jobs':

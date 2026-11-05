@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent } from 'react';
+import { type CSSProperties, type MouseEvent, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { Callout, cn } from '@ogonggo/ui';
 import {
@@ -18,6 +18,7 @@ import {
   ASSISTANT_OPEN_WIDTH,
   AssistantPanel,
   useAssistantPanelOpen,
+  useAssistantQuestion,
 } from '@/features/ai-assistant';
 
 /** 크롤링 서버(`ogonggo-crawler`) 운영 화면. EC2 의 고정 IP 이고 HTTPS 가 없다. */
@@ -47,6 +48,13 @@ function goToWeb(event: MouseEvent<HTMLAnchorElement>) {
 
 export function AdminLayout() {
   const [isAssistantOpen, setIsAssistantOpen] = useAssistantPanelOpen();
+  // 화면이 비서에게 질문을 넣으면(`AI 비서에게 검수 요청`) 닫힌 패널을 연다. 보내는 것은 패널이 한다.
+  const assistantQuestion = useAssistantQuestion();
+  useEffect(() => {
+    if (assistantQuestion && !isAssistantOpen) {
+      setIsAssistantOpen(true);
+    }
+  }, [assistantQuestion, isAssistantOpen, setIsAssistantOpen]);
   // 검수 대기 화면과 같은 쿼리를 쓴다. 판정을 저장하면 그 화면이 무효화하므로 숫자도 함께 바뀐다.
   const { data: reviewQueue } = useReviewQueue();
   const navCounts: Record<string, number | undefined> = {

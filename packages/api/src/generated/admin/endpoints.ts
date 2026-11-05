@@ -30,6 +30,7 @@ import type {
   AiJobReplaceRequest,
   AiJobSourceHtmlRequest,
   AiLetsCareerContentTagRequest,
+  Analysis,
   ChangeAdminBootcampVisibilityRequest,
   ChangeAdminConcernVisibilityRequest,
   ChangeAdminJobVisibilityRequest,
@@ -43,6 +44,7 @@ import type {
   ErrorResponse,
   GetAiBootcampParams,
   GetAiJobParams,
+  GetNotificationBatchStatisticsParams,
   GetWork24ApiResponseParams,
   ListAdvertisementInquiriesParams,
   ListAiJobAnalysisTargetsParams,
@@ -56,12 +58,14 @@ import type {
   ListJobsParams,
   ListRecruitmentPostsParams,
   ListServiceFeedbacksParams,
+  ReplaceAdminCompanyContentPriorityRequest,
   ReplaceAdminLetsCareerContentRecommendWeightsRequest,
   ReplaceAdminTodayJobsRequest,
   SuccessResponseAdminAdvertisementInquiryResponse,
   SuccessResponseAdminAdvertisementInquiryTodayCountResponse,
   SuccessResponseAdminAnnouncementDetailResponse,
   SuccessResponseAdminBootcampDetailResponse,
+  SuccessResponseAdminCompanyContentPriorityResponse,
   SuccessResponseAdminCompanyMemberDetailResponse,
   SuccessResponseAdminConcernDetailResponse,
   SuccessResponseAdminContentRejectionResponse,
@@ -71,6 +75,7 @@ import type {
   SuccessResponseAdminLetsCareerContentRecommendWeightsResponse,
   SuccessResponseAdminNotificationBatchCreatedResponse,
   SuccessResponseAdminNotificationBatchResultResponse,
+  SuccessResponseAdminNotificationBatchStatisticsResponse,
   SuccessResponseAdminNotificationRecentResultsResponse,
   SuccessResponseAdminWelcomeEmailResendResponse,
   SuccessResponseAiBootcampLookupResponse,
@@ -79,6 +84,7 @@ import type {
   SuccessResponseAiJobRegistrationResponse,
   SuccessResponseJsonNode,
   SuccessResponseListAdminContentReviewItemResponse,
+  SuccessResponseListAdminNotificationJobRoleOptionResponse,
   SuccessResponseListAdminTodayJobSummaryResponse,
   SuccessResponseListAiJobAnalysisTargetResponse,
   SuccessResponseListAiLetsCareerContentResponse,
@@ -296,8 +302,9 @@ export const getReplaceAiJobUrl = (jobId: number,) => {
 /**
  *
  *             다시 수집·분류한 값으로 수집 공고 전체를 바꿉니다. 태그는 바꾸지 않습니다.
- *             운영자가 관리자 콘솔에서 고친 내용도 이 값으로 덮어씁니다. 게시 상태는 바꾸지 않습니다.
- *             원문(sourceHtml)을 생략하면 저장된 원문을 그대로 둡니다.
+ *             게시 상태는 바꾸지 않습니다. 원문(sourceHtml)을 생략하면 저장된 원문을 그대로 둡니다.
+ *             운영자가 관리자 콘솔에서 내용을 고친 공고는 내용과 원문을 바꾸지 않고 200으로 응답합니다. 다시 보내지 않아도 됩니다.
+ *             운영자가 검수 완료한 공고의 본문이나 원문이 바뀌면 검수 완료를 지웁니다.
  * @summary AI 서버 채용공고 교체
  */
 export const replaceAiJob = async (jobId: number,
@@ -512,7 +519,8 @@ export const getChangeAiJobSourceHtmlUrl = (jobId: number,) => {
  *
  *             수집 공고의 원문 HTML만 바꿉니다. 원문을 저장하기 전에 보낸 공고를 채울 때 씁니다.
  *             안전한 태그만 남겨 저장하며, 남은 글도 이미지도 없으면 저장된 원문을 그대로 둡니다.
- *             운영자가 관리자 콘솔에서 고친 다른 칸은 바꾸지 않습니다.
+ *             운영자가 관리자 콘솔에서 고친 다른 칸은 바꾸지 않습니다. 운영자가 내용을 고친 공고는 원문도 바꾸지 않고 200으로 응답합니다.
+ *             운영자가 검수 완료한 공고의 원문이 바뀌면 검수 완료를 지웁니다.
  * @summary AI 서버 채용공고 원문 변경
  */
 export const changeAiJobSourceHtml = async (jobId: number,
@@ -632,6 +640,8 @@ export const getReplaceAiJobAnalysisUrl = (jobId: number,) => {
  *             AI 서버가 만든 공고 분석을 저장합니다. 이미 있으면 바꿉니다.
  *             분석 대상을 받은 뒤 운영자가 본문을 고쳤으면 `contentHash`가 지금 본문과 달라 409로 거절합니다.
  *             그 공고는 다음 대상 조회에 다시 나옵니다.
+ *             운영자가 관리자 콘솔에서 지금 본문에 대한 분석을 고쳤으면 409 JOB_ANALYSIS_EDITED_BY_ADMIN으로 거절합니다.
+ *             그 공고는 본문이 바뀌기 전까지 대상 조회에 나오지 않으므로 다시 보내지 않습니다.
  * @summary 공고 분석 저장
  */
 export const replaceAiJobAnalysis = async (jobId: number,
@@ -1147,6 +1157,313 @@ export const useReplaceLetsCareerContentRecommendWeights = <TError = ErrorRespon
       return useMutation(getReplaceLetsCareerContentRecommendWeightsMutationOptions(options), queryClient);
     }
 
+export type replaceJobInspectionResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type replaceJobInspectionResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceJobInspectionResponseSuccess = (replaceJobInspectionResponse200) & {
+  headers: Headers;
+};
+export type replaceJobInspectionResponseError = (replaceJobInspectionResponse404) & {
+  headers: Headers;
+};
+
+export type replaceJobInspectionResponse = (replaceJobInspectionResponseSuccess | replaceJobInspectionResponseError)
+
+export const getReplaceJobInspectionUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/admin/jobs/${jobId}/inspection`
+}
+
+/**
+ *
+ *             운영자가 공고를 직접 확인했다고 남깁니다(어드민 오늘 올라온 공고 화면의 검수 완료). 본문 없이 보내며 성공하면 data 없이 응답합니다.
+ *             이미 검수 완료한 공고에 다시 보내도 200이며 처음 확인한 시각(inspectedAt)을 지킵니다.
+ *             등록 경로와 무관하게 받고, 노출(visibility)과 검수 상태(reviewStatus)는 바꾸지 않습니다. 숨긴 공고도 표시할 수 있습니다.
+ *             내용을 고치거나 AI 서버가 다시 수집해도 검수 완료는 풀리지 않습니다.
+ * @summary 채용공고 검수 완료 표시
+ */
+export const replaceJobInspection = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<replaceJobInspectionResponse> => {
+
+  return httpClient<replaceJobInspectionResponse>(getReplaceJobInspectionUrl(jobId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getReplaceJobInspectionMutationKey = () => ['replaceJobInspection'] as const;
+
+export const getReplaceJobInspectionMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceJobInspection>>, TError,ReplaceJobInspectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceJobInspection>>, TError,ReplaceJobInspectionMutationVariables, TContext> => {
+
+const mutationKey = getReplaceJobInspectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceJobInspection>>, ReplaceJobInspectionMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  replaceJobInspection(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceJobInspectionMutationResult = NonNullable<Awaited<ReturnType<typeof replaceJobInspection>>>
+
+    export type ReplaceJobInspectionMutationError = ErrorResponse
+    export type ReplaceJobInspectionMutationVariables = {jobId: number}
+
+    /**
+ * @summary 채용공고 검수 완료 표시
+ */
+export const useReplaceJobInspection = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceJobInspection>>, TError,ReplaceJobInspectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceJobInspection>>,
+        TError,
+        ReplaceJobInspectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceJobInspectionMutationOptions(options), queryClient);
+    }
+
+export type deleteJobInspectionResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteJobInspectionResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteJobInspectionResponseSuccess = (deleteJobInspectionResponse200) & {
+  headers: Headers;
+};
+export type deleteJobInspectionResponseError = (deleteJobInspectionResponse404) & {
+  headers: Headers;
+};
+
+export type deleteJobInspectionResponse = (deleteJobInspectionResponseSuccess | deleteJobInspectionResponseError)
+
+export const getDeleteJobInspectionUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/admin/jobs/${jobId}/inspection`
+}
+
+/**
+ *
+ *             검수 완료 표시를 지워 미검수로 되돌립니다. 성공하면 data 없이 응답합니다. 표시가 없어도 200입니다.
+ * @summary 채용공고 검수 완료 해제
+ */
+export const deleteJobInspection = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteJobInspectionResponse> => {
+
+  return httpClient<deleteJobInspectionResponse>(getDeleteJobInspectionUrl(jobId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteJobInspectionMutationKey = () => ['deleteJobInspection'] as const;
+
+export const getDeleteJobInspectionMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteJobInspection>>, TError,DeleteJobInspectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteJobInspection>>, TError,DeleteJobInspectionMutationVariables, TContext> => {
+
+const mutationKey = getDeleteJobInspectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteJobInspection>>, DeleteJobInspectionMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  deleteJobInspection(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteJobInspectionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteJobInspection>>>
+
+    export type DeleteJobInspectionMutationError = ErrorResponse
+    export type DeleteJobInspectionMutationVariables = {jobId: number}
+
+    /**
+ * @summary 채용공고 검수 완료 해제
+ */
+export const useDeleteJobInspection = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteJobInspection>>, TError,DeleteJobInspectionMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteJobInspection>>,
+        TError,
+        DeleteJobInspectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteJobInspectionMutationOptions(options), queryClient);
+    }
+
+export type replaceJobAnalysisResponse200 = {
+  data: SuccessResponseAdminJobDetailResponse
+  status: 200
+}
+
+export type replaceJobAnalysisResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceJobAnalysisResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceJobAnalysisResponseSuccess = (replaceJobAnalysisResponse200) & {
+  headers: Headers;
+};
+export type replaceJobAnalysisResponseError = (replaceJobAnalysisResponse400 | replaceJobAnalysisResponse404) & {
+  headers: Headers;
+};
+
+export type replaceJobAnalysisResponse = (replaceJobAnalysisResponseSuccess | replaceJobAnalysisResponseError)
+
+export const getReplaceJobAnalysisUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/admin/jobs/${jobId}/analysis`
+}
+
+/**
+ *
+ *             운영자가 고친 공고 분석으로 통째로 바꾸고 바뀐 공고 전체를 반환합니다. 본문은 상세 응답의 analysis와 같은 칸이며,
+ *             AI 서버 분석 저장(PUT /api/v1/internal/jobs/{jobId}/analysis)의 analysis와 같은 개수 제한과 검증을 따릅니다.
+ *             tasks 3개, required·preferred 각 8개, competencies 3개, 역량마다 experiences 3개까지이고 글은 1000자까지입니다.
+ *             employment·submission의 칸마다 value가 비었거나 공백이면 공고에서 확인할 수 없는 값(null)으로 저장합니다.
+ *
+ *             지금 본문 해시로 저장하므로 사용자 상세에 바로 보이고 analysisCurrent가 true가 됩니다. 분석이 없던 공고에도 저장합니다.
+ *             운영자가 고친 분석은 본문(제목과 본문 여덟 칸)이 바뀌기 전까지 AI 서버의 분석 대상에서 빠지고 AI 서버 저장은 409로 거절합니다.
+ *             본문이 바뀌면 평소처럼 AI 서버가 다시 분석해 바꿉니다. 같은 요청을 반복해도 결과가 같습니다.
+ * @summary 채용공고 공고 분석 수정
+ */
+export const replaceJobAnalysis = async (jobId: number,
+    analysis: Analysis, options?: Parameters<typeof httpClient>[1]): Promise<replaceJobAnalysisResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceJobAnalysisResponse>(getReplaceJobAnalysisUrl(jobId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(analysis)
+  }
+);}
+
+
+
+
+
+export const getReplaceJobAnalysisMutationKey = () => ['replaceJobAnalysis'] as const;
+
+export const getReplaceJobAnalysisMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceJobAnalysis>>, TError,ReplaceJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceJobAnalysis>>, TError,ReplaceJobAnalysisMutationVariables, TContext> => {
+
+const mutationKey = getReplaceJobAnalysisMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceJobAnalysis>>, ReplaceJobAnalysisMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  replaceJobAnalysis(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceJobAnalysisMutationResult = NonNullable<Awaited<ReturnType<typeof replaceJobAnalysis>>>
+    export type ReplaceJobAnalysisMutationBody = Analysis
+    export type ReplaceJobAnalysisMutationError = ErrorResponse
+    export type ReplaceJobAnalysisMutationVariables = {jobId: number;data: Analysis}
+
+    /**
+ * @summary 채용공고 공고 분석 수정
+ */
+export const useReplaceJobAnalysis = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceJobAnalysis>>, TError,ReplaceJobAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceJobAnalysis>>,
+        TError,
+        ReplaceJobAnalysisMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceJobAnalysisMutationOptions(options), queryClient);
+    }
+
 export type listTodayJobsResponse200 = {
   data: SuccessResponseListAdminTodayJobSummaryResponse
   status: 200
@@ -1374,6 +1691,224 @@ export const useReplaceTodayJobs = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getReplaceTodayJobsMutationOptions(options), queryClient);
+    }
+
+export type getCompanyContentPriorityResponse200 = {
+  data: SuccessResponseAdminCompanyContentPriorityResponse
+  status: 200
+}
+
+export type getCompanyContentPriorityResponseSuccess = (getCompanyContentPriorityResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getCompanyContentPriorityResponse = (getCompanyContentPriorityResponseSuccess)
+
+export const getGetCompanyContentPriorityUrl = () => {
+
+
+
+
+  return `/api/v1/admin/company-content-priority`
+}
+
+/**
+ *
+ *             기업회원이 비즈니스로 등록한 마감 전 채용공고·부트캠프를 공개 목록(`GET /api/v1/jobs`, `GET /api/v1/bootcamps`) 맨 앞에 두는지 줍니다.
+ *             바꾼 적이 없으면 켜짐(`enabled: true`)입니다.
+ * @summary 기업회원 공고 우선 노출 조회
+ */
+export const getCompanyContentPriority = async ( options?: Parameters<typeof httpClient>[1]): Promise<getCompanyContentPriorityResponse> => {
+
+  return httpClient<getCompanyContentPriorityResponse>(getGetCompanyContentPriorityUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyContentPriorityQueryKey = () => {
+    return [
+    `/api/v1/admin/company-content-priority`
+    ] as const;
+    }
+
+
+export const getGetCompanyContentPriorityQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyContentPriority>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyContentPriority>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyContentPriorityQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyContentPriority>>> = ({ signal }) => getCompanyContentPriority({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyContentPriority>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCompanyContentPriorityQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyContentPriority>>>
+export type GetCompanyContentPriorityQueryError = unknown
+
+
+export function useGetCompanyContentPriority<TData = Awaited<ReturnType<typeof getCompanyContentPriority>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyContentPriority>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyContentPriority>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyContentPriority>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyContentPriority<TData = Awaited<ReturnType<typeof getCompanyContentPriority>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyContentPriority>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyContentPriority>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyContentPriority>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyContentPriority<TData = Awaited<ReturnType<typeof getCompanyContentPriority>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyContentPriority>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 기업회원 공고 우선 노출 조회
+ */
+
+export function useGetCompanyContentPriority<TData = Awaited<ReturnType<typeof getCompanyContentPriority>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyContentPriority>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCompanyContentPriorityQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type replaceCompanyContentPriorityResponse200 = {
+  data: SuccessResponseAdminCompanyContentPriorityResponse
+  status: 200
+}
+
+export type replaceCompanyContentPriorityResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceCompanyContentPriorityResponseSuccess = (replaceCompanyContentPriorityResponse200) & {
+  headers: Headers;
+};
+export type replaceCompanyContentPriorityResponseError = (replaceCompanyContentPriorityResponse400) & {
+  headers: Headers;
+};
+
+export type replaceCompanyContentPriorityResponse = (replaceCompanyContentPriorityResponseSuccess | replaceCompanyContentPriorityResponseError)
+
+export const getReplaceCompanyContentPriorityUrl = () => {
+
+
+
+
+  return `/api/v1/admin/company-content-priority`
+}
+
+/**
+ *
+ *             우선 노출을 켜거나 끄고 바뀐 값을 반환합니다. 다음 공개 목록 요청부터 바로 씁니다. 같은 요청을 반복해도 결과가 같습니다.
+ *             끄면 기업회원 공고는 다른 공고와 같은 기준으로 정렬되고, 부트캠프는 기업 연계 과정만 먼저 둡니다.
+ * @summary 기업회원 공고 우선 노출 수정
+ */
+export const replaceCompanyContentPriority = async (replaceAdminCompanyContentPriorityRequest: ReplaceAdminCompanyContentPriorityRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceCompanyContentPriorityResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceCompanyContentPriorityResponse>(getReplaceCompanyContentPriorityUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceAdminCompanyContentPriorityRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceCompanyContentPriorityMutationKey = () => ['replaceCompanyContentPriority'] as const;
+
+export const getReplaceCompanyContentPriorityMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCompanyContentPriority>>, TError,ReplaceCompanyContentPriorityMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceCompanyContentPriority>>, TError,ReplaceCompanyContentPriorityMutationVariables, TContext> => {
+
+const mutationKey = getReplaceCompanyContentPriorityMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceCompanyContentPriority>>, ReplaceCompanyContentPriorityMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  replaceCompanyContentPriority(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceCompanyContentPriorityMutationResult = NonNullable<Awaited<ReturnType<typeof replaceCompanyContentPriority>>>
+    export type ReplaceCompanyContentPriorityMutationBody = ReplaceAdminCompanyContentPriorityRequest
+    export type ReplaceCompanyContentPriorityMutationError = ErrorResponse
+    export type ReplaceCompanyContentPriorityMutationVariables = {data: ReplaceAdminCompanyContentPriorityRequest}
+
+    /**
+ * @summary 기업회원 공고 우선 노출 수정
+ */
+export const useReplaceCompanyContentPriority = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceCompanyContentPriority>>, TError,ReplaceCompanyContentPriorityMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceCompanyContentPriority>>,
+        TError,
+        ReplaceCompanyContentPriorityMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceCompanyContentPriorityMutationOptions(options), queryClient);
     }
 
 export type getAiJobResponse200 = {
@@ -2109,10 +2644,15 @@ export type createNotificationBatchResponse404 = {
   status: 404
 }
 
+export type createNotificationBatchResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type createNotificationBatchResponseSuccess = (createNotificationBatchResponse201) & {
   headers: Headers;
 };
-export type createNotificationBatchResponseError = (createNotificationBatchResponse400 | createNotificationBatchResponse401 | createNotificationBatchResponse403 | createNotificationBatchResponse404) & {
+export type createNotificationBatchResponseError = (createNotificationBatchResponse400 | createNotificationBatchResponse401 | createNotificationBatchResponse403 | createNotificationBatchResponse404 | createNotificationBatchResponse503) & {
   headers: Headers;
 };
 
@@ -2128,11 +2668,15 @@ export const getCreateNotificationBatchUrl = () => {
 
 /**
  *
- *         USER_IDS는 최대 1000개 ID를 중복 제거하고 없는 회원이 있으면 전체 요청을 거부합니다. ALL에는 userIds를 보내지 않습니다.
- *         전체 토픽 전환 설정이 켜진 ALL은 공통 공지와 토픽 작업 한 건을 함께 저장합니다. 회원별 알림함·토큰별 발송 행을 생성하지 않습니다.
- *         전환 전 ALL과 USER_IDS는 활성 회원별 알림함·활성 토큰별 발송을 유지합니다. deliveryTargetType으로 DIRECT/TOPIC을 구분합니다.
+ *         USER_IDS는 최대 1000개 ID를 중복 제거하고 없는 회원이 있으면 전체 요청을 거부합니다. ALL·GENERAL_MEMBERS·COMPANY_MEMBERS·JOB_ROLES에는 userIds를 보내지 않습니다.
+ *         GENERAL_MEMBERS는 활성 일반 회원(USER·MENTOR·ADMIN), COMPANY_MEMBERS는 활성 기업 회원에게 보냅니다.
+ *         JOB_ROLES는 jobRoles(job-role-options의 직무 또는 '<직군> 직무 전체', 최대 100개)와 희망 직무가 하나라도 겹치는 활성 일반 회원에게 기기마다 보냅니다. '직무 무관'을 고른 회원은 대상이 아닙니다.
+ *         advertisement=true(광고성)는 대상 중 렛츠커리어 마케팅 수신 동의자에게만 기기마다 보내며 토픽을 쓰지 않습니다. 동의 여부를 확인하지 못하면 503으로 거부합니다. 기업 회원 대상에는 쓸 수 없습니다.
+ *         전체 토픽 전환 설정이 켜진 ALL, 회원 종류 토픽 설정이 켜진 GENERAL_MEMBERS·COMPANY_MEMBERS는 공통 공지와 토픽 작업 한 건을 함께 저장합니다. 회원별 알림함·토큰별 발송 행을 생성하지 않습니다.
+ *         설정이 꺼진 대상과 USER_IDS는 활성 회원별 알림함·활성 토큰별 발송을 유지합니다. deliveryTargetType으로 DIRECT/TOPIC을 구분합니다.
  *         enqueuedCount는 발송 작업 수입니다. TOPIC에서는 1이며 회원별 성공 수가 아닙니다. noTokenUserCount와 회원 집계는 요청 시점 DB 참고 값입니다.
  *         skippedNoTokenUserCount는 호환용 별칭이며 새 클라이언트는 noTokenUserCount를 사용합니다. data.url은 http(s) URL이 필요합니다.
+ *         imageId는 관리자 푸시 이미지 업로드 API가 발급한 이미지 식별자입니다. 생략하면 이미지 없이 발송하며, 소유하지 않거나 사용 불가한 이미지는 400입니다.
  *         제목 100자·본문 1000자 원문을 보관하고 TOPIC 푸시는 본문 미리보기 최대 100자를 보냅니다. 시스템 식별자 포함 TOPIC payload는 2048바이트, DIRECT는 4096바이트입니다.
  *         실제 발송은 기존 dispatcher가 24시간 안에 처리합니다. POST마다 새 발송이며 자동 재발송·중복 클릭 방지는 제공하지 않습니다.
  * @summary FCM 발송 요청
@@ -2942,6 +3486,17 @@ export const getUpdateJobUrl = (jobId: number,) => {
  *             직군·시·도를 바꾸면서 직무·시·군·구를 보내지 않으면, 바뀐 직군·시·도에 맞지 않는 기존 직무·시·군·구는 지웁니다.
  *             직무·시·군·구만 보내면 직군·시·도도 그에 맞춰 바뀝니다. 모집 기간 유형을 ALWAYS_OPEN으로 바꾸면 모집 종료 일시를 지웁니다.
  *             모집 종료 일시를 바꾸면 모집 상태를 다시 정합니다. 종료 일시가 지난 공고의 마감일을 미루면 모집 중으로 돌아가며, 직접 마감한 공고는 마감으로 남습니다.
+ *
+ *             sourceHtml은 원문 HTML을 바꿉니다. AI 서버 원문과 같이 안전한 태그만 남겨 저장하고 상대 주소는 sourceUrl 기준 절대 주소로 바꿉니다.
+ *             보내지 않거나 null이면 그대로 두고, 비울 수 없어 공백이거나 걸러서 남는 글·이미지가 없으면 400입니다.
+ *             원문은 공고 분석의 본문 해시에 들어가지 않아 원문만 고치면 분석(analysisCurrent)은 그대로입니다.
+ *             제목·본문 칸(title, fields)이나 recruitmentNotice를 고치면 AI 서버가 만든 분석은 낡아(analysisCurrent=false) 다시 분석을 기다립니다.
+ *             운영자가 고친 분석(analysisEditedAt이 있고 analysisCurrent=true)은 새 본문으로 옮겨 그대로 보이며 AI 서버가 덮지 못합니다.
+ *             내용을 고쳐도 검수 완료(inspectedAt)는 풀리지 않습니다.
+ *
+ *             제목·본문·공고 정보·원문을 하나라도 고치면 운영자 내용 수정으로 남습니다(상세의 contentEditedAt).
+ *             그 뒤로 AI 서버가 같은 공고를 다시 수집해도 공고 내용과 원문은 바뀌지 않습니다. 이 표시는 자동으로 풀리지 않습니다.
+ *             visibility·reviewStatus만 보내면 내용 수정으로 남지 않습니다.
  * @summary 채용공고 운영 값·내용 수정
  */
 export const updateJob = async (jobId: number,
@@ -4955,6 +5510,7 @@ export const getListAiJobAnalysisTargetsUrl = (params?: ListAiJobAnalysisTargets
 /**
  *
  *             게시 중인 모집 중 채용공고 가운데 분석이 없거나 분석한 뒤로 본문이 바뀐 공고를 최근 것부터 줍니다.
+ *             운영자가 지금 본문에 대해 고친 분석이 있는 공고는 본문이 바뀌기 전까지 주지 않습니다.
  *             AI 서버가 등록한 공고만이 아니라 고용24·기업회원 공고도 들어 있습니다.
  *             본문은 제목과 본문 여덟 칸이며, 응답의 `contentHash`를 분석을 보낼 때 그대로 돌려줍니다.
  * @summary 공고 분석 대상 조회
@@ -5768,6 +6324,277 @@ export function useGetNotificationBatch<TData = Awaited<ReturnType<typeof getNot
 
 
 
+export type getNotificationBatchStatisticsResponse200 = {
+  data: SuccessResponseAdminNotificationBatchStatisticsResponse
+  status: 200
+}
+
+export type getNotificationBatchStatisticsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getNotificationBatchStatisticsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getNotificationBatchStatisticsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getNotificationBatchStatisticsResponseSuccess = (getNotificationBatchStatisticsResponse200) & {
+  headers: Headers;
+};
+export type getNotificationBatchStatisticsResponseError = (getNotificationBatchStatisticsResponse400 | getNotificationBatchStatisticsResponse401 | getNotificationBatchStatisticsResponse403) & {
+  headers: Headers;
+};
+
+export type getNotificationBatchStatisticsResponse = (getNotificationBatchStatisticsResponseSuccess | getNotificationBatchStatisticsResponseError)
+
+export const getGetNotificationBatchStatisticsUrl = (params?: GetNotificationBatchStatisticsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/notification-batches/statistics?${stringifiedParams}` : `/api/v1/admin/notification-batches/statistics`
+}
+
+/**
+ *
+ *         from 이상 to 미만의 배치를 대상 종류와 DIRECT/TOPIC별로 집계합니다. 둘 다 생략하면 현재 시각을 포함한 최근 30일을 조회하며, 지정 시 둘 다 보내야 합니다.
+ *         최근 30일 안에서 최대 30일 범위만 허용합니다. to는 현재 시각 다음 날까지 허용합니다.
+ *         sentCount는 FCM 접수 작업 수입니다. DIRECT는 기기별, TOPIC은 토픽 요청별이며 단말 도착·푸시 탭 수가 아닙니다.
+ *         readUserCount는 배치마다 중복 없이 읽은 회원 수의 합입니다. DIRECT는 회원 알림함, TOPIC은 현재 활성 회원의 역할에 보이는 공통 공지 읽음을 셉니다.
+ *         readEligibleUserCount는 DIRECT 알림함 행 수와 TOPIC 발송 시점 대상 회원 수를 분모로 사용합니다.
+ * @summary 기간별 FCM 발송·알림함 읽음 통계
+ */
+export const getNotificationBatchStatistics = async (params?: GetNotificationBatchStatisticsParams, options?: Parameters<typeof httpClient>[1]): Promise<getNotificationBatchStatisticsResponse> => {
+
+  return httpClient<getNotificationBatchStatisticsResponse>(getGetNotificationBatchStatisticsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNotificationBatchStatisticsQueryKey = (params?: GetNotificationBatchStatisticsParams,) => {
+    return [
+    `/api/v1/admin/notification-batches/statistics`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetNotificationBatchStatisticsQueryOptions = <TData = Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError = ErrorResponse>(params?: GetNotificationBatchStatisticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNotificationBatchStatisticsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationBatchStatistics>>> = ({ signal }) => getNotificationBatchStatistics(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNotificationBatchStatisticsQueryResult = NonNullable<Awaited<ReturnType<typeof getNotificationBatchStatistics>>>
+export type GetNotificationBatchStatisticsQueryError = ErrorResponse
+
+
+export function useGetNotificationBatchStatistics<TData = Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError = ErrorResponse>(
+ params: undefined |  GetNotificationBatchStatisticsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationBatchStatistics>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationBatchStatistics>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotificationBatchStatistics<TData = Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError = ErrorResponse>(
+ params?: GetNotificationBatchStatisticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationBatchStatistics>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationBatchStatistics>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotificationBatchStatistics<TData = Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError = ErrorResponse>(
+ params?: GetNotificationBatchStatisticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 기간별 FCM 발송·알림함 읽음 통계
+ */
+
+export function useGetNotificationBatchStatistics<TData = Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError = ErrorResponse>(
+ params?: GetNotificationBatchStatisticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationBatchStatistics>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNotificationBatchStatisticsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getNotificationJobRoleOptionsResponse200 = {
+  data: SuccessResponseListAdminNotificationJobRoleOptionResponse
+  status: 200
+}
+
+export type getNotificationJobRoleOptionsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getNotificationJobRoleOptionsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getNotificationJobRoleOptionsResponseSuccess = (getNotificationJobRoleOptionsResponse200) & {
+  headers: Headers;
+};
+export type getNotificationJobRoleOptionsResponseError = (getNotificationJobRoleOptionsResponse401 | getNotificationJobRoleOptionsResponse403) & {
+  headers: Headers;
+};
+
+export type getNotificationJobRoleOptionsResponse = (getNotificationJobRoleOptionsResponseSuccess | getNotificationJobRoleOptionsResponseError)
+
+export const getGetNotificationJobRoleOptionsUrl = () => {
+
+
+
+
+  return `/api/v1/admin/notification-batches/job-role-options`
+}
+
+/**
+ *
+ *         JOB_ROLES 발송에서 고를 수 있는 렛츠커리어 희망 직군과 직무 목록입니다. 회원 프로필의 희망 직무와 같은 목록입니다.
+ *         직군 전체를 고를 때는 allRolesOption 값을, 개별 직무는 jobRoles의 값을 jobRoles 요청에 그대로 보냅니다.
+ * @summary 희망 직무 발송 선택지 조회
+ */
+export const getNotificationJobRoleOptions = async ( options?: Parameters<typeof httpClient>[1]): Promise<getNotificationJobRoleOptionsResponse> => {
+
+  return httpClient<getNotificationJobRoleOptionsResponse>(getGetNotificationJobRoleOptionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNotificationJobRoleOptionsQueryKey = () => {
+    return [
+    `/api/v1/admin/notification-batches/job-role-options`
+    ] as const;
+    }
+
+
+export const getGetNotificationJobRoleOptionsQueryOptions = <TData = Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNotificationJobRoleOptionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>> = ({ signal }) => getNotificationJobRoleOptions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNotificationJobRoleOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>>
+export type GetNotificationJobRoleOptionsQueryError = ErrorResponse
+
+
+export function useGetNotificationJobRoleOptions<TData = Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationJobRoleOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationJobRoleOptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotificationJobRoleOptions<TData = Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationJobRoleOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationJobRoleOptions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNotificationJobRoleOptions<TData = Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 희망 직무 발송 선택지 조회
+ */
+
+export function useGetNotificationJobRoleOptions<TData = Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationJobRoleOptions>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNotificationJobRoleOptionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listJobsResponse200 = {
   data: SuccessResponsePageResponseAdminJobSummaryResponse
   status: 200
@@ -5832,6 +6659,9 @@ export const getListJobsUrl = (params?: ListJobsParams,) => {
  *             jobField(직군), jobRole(직무)은 GET /api/v1/enums(사용자 API)의 JobField·JobRole 값을 보냅니다.
  *             jobField만 보내면 그 직군의 직무 공고도 함께 걸립니다.
  *             jobRole은 jobRole=IT_BACKEND&jobRole=IT_FRONTEND처럼 여러 번 보내 여러 개를 고를 수 있고, 그중 하나라도 맞는 공고가 걸립니다.
+ *             registeredFrom·registeredTo는 등록일(YYYY-MM-DD, 한국 시간) 범위이며 두 날짜를 모두 포함합니다. 항목의 registeredAt과 같은 값으로 거릅니다.
+ *             오늘 등록분만 보려면 두 값에 같은 날짜를 보냅니다. 시작일이 종료일보다 늦으면 400입니다.
+ *             inspected는 true면 검수 완료한 공고만, false면 미검수 공고만 고릅니다.
  *
  *             정렬 기본값은 REGISTERED_AT(등록일 역순)이며, VIEW_COUNT는 조회 수가 같으면 등록일 역순입니다.
  *             마지막 페이지를 넘는 page는 빈 items를 반환합니다.
@@ -7511,9 +8341,19 @@ export const getGetLetsCareerContentRecommendWeightsResponseMock = (overrideResp
 
 export const getReplaceLetsCareerContentRecommendWeightsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminLetsCareerContentRecommendWeightsResponse, object>> = {}): SuccessResponseAdminLetsCareerContentRecommendWeightsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{roleScore: faker.number.int(), fieldScore: faker.number.int(), topicScore: faker.number.int(), maxTopicMatches: faker.number.int(), programBonus: faker.number.int(), materialBonus: faker.number.int(), blogBonus: faker.number.int(), maxPerGroup: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getListTodayJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminTodayJobSummaryResponse, object>> = {}): SuccessResponseListAdminTodayJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recommendationTitle: faker.string.alpha({length: {min: 10, max: 20}}), recommendationDescription: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+export const getReplaceJobInspectionResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getReplaceTodayJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminTodayJobSummaryResponse, object>> = {}): SuccessResponseListAdminTodayJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', recommendationTitle: faker.string.alpha({length: {min: 10, max: 20}}), recommendationDescription: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+export const getDeleteJobInspectionResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getReplaceJobAnalysisResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', inspectedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), analysis: faker.helpers.arrayElement([{tasks: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => ({tag: faker.string.alpha({length: {min: 0, max: 1000}}), text: faker.string.alpha({length: {min: 0, max: 1000}})})), required: Array.from({ length: faker.number.int({min: 0, max: 8}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), preferred: Array.from({ length: faker.number.int({min: 0, max: 8}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), employment: {type: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, conversion: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, salary: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, affiliation: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}}, submission: {documents: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, essay: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, process: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, deadline: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}}, competencies: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 0, max: 1000}}), quote: faker.string.alpha({length: {min: 0, max: 1000}}), description: faker.string.alpha({length: {min: 0, max: 1000}}), experiences: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}})))}))}, undefined]), analysisCurrent: faker.datatype.boolean(), analysisEditedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentEditedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
+
+export const getListTodayJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminTodayJobSummaryResponse, object>> = {}): SuccessResponseListAdminTodayJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', inspectedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recommendationTitle: faker.string.alpha({length: {min: 10, max: 20}}), recommendationDescription: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+
+export const getReplaceTodayJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminTodayJobSummaryResponse, object>> = {}): SuccessResponseListAdminTodayJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', inspectedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recommendationTitle: faker.string.alpha({length: {min: 10, max: 20}}), recommendationDescription: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+
+export const getGetCompanyContentPriorityResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminCompanyContentPriorityResponse, object>> = {}): SuccessResponseAdminCompanyContentPriorityResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{enabled: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
+export const getReplaceCompanyContentPriorityResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminCompanyContentPriorityResponse, object>> = {}): SuccessResponseAdminCompanyContentPriorityResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{enabled: faker.datatype.boolean()}, undefined]), ...overrideResponse})
 
 export const getGetAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobLookupResponse, object>> = {}): SuccessResponseAiJobLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
@@ -7527,7 +8367,7 @@ export const getGetAiBootcampResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getCreateAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiBootcampRegistrationResponse, object>> = {}): SuccessResponseAiBootcampRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{bootcampId: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getCreateNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchCreatedResponse, object>> = {}): SuccessResponseAdminNotificationBatchCreatedResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int()}, undefined]), ...overrideResponse})
+export const getCreateNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchCreatedResponse, object>> = {}): SuccessResponseAdminNotificationBatchCreatedResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int(), advertisement: faker.datatype.boolean(), noMarketingConsentUserCount: faker.number.int(), imageId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), imageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
 export const getCreateWelcomeEmailResendResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminWelcomeEmailResendResponse, object>> = {}): SuccessResponseAdminWelcomeEmailResendResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{notificationId: faker.number.int(), recipientUserId: faker.number.int(), templateCode: faker.string.alpha({length: {min: 10, max: 20}}), scheduledAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
@@ -7537,11 +8377,11 @@ export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extr
 
 export const getUpdateRecruitmentPostVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
+export const getGetJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', inspectedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), analysis: faker.helpers.arrayElement([{tasks: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => ({tag: faker.string.alpha({length: {min: 0, max: 1000}}), text: faker.string.alpha({length: {min: 0, max: 1000}})})), required: Array.from({ length: faker.number.int({min: 0, max: 8}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), preferred: Array.from({ length: faker.number.int({min: 0, max: 8}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), employment: {type: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, conversion: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, salary: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, affiliation: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}}, submission: {documents: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, essay: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, process: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, deadline: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}}, competencies: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 0, max: 1000}}), quote: faker.string.alpha({length: {min: 0, max: 1000}}), description: faker.string.alpha({length: {min: 0, max: 1000}}), experiences: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}})))}))}, undefined]), analysisCurrent: faker.datatype.boolean(), analysisEditedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentEditedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
 
 export const getDeleteJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getUpdateJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
+export const getUpdateJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminJobDetailResponse, object>> = {}): SuccessResponseAdminJobDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), parentCompanyName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), industry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentHeadcount: faker.helpers.arrayElement([faker.number.int(), undefined]), closesWhenFilled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), autoCloseEnabled: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', inspectedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), undefined]), applyEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), sourceHtml: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), analysis: faker.helpers.arrayElement([{tasks: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => ({tag: faker.string.alpha({length: {min: 0, max: 1000}}), text: faker.string.alpha({length: {min: 0, max: 1000}})})), required: Array.from({ length: faker.number.int({min: 0, max: 8}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), preferred: Array.from({ length: faker.number.int({min: 0, max: 8}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), employment: {type: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, conversion: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, salary: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, affiliation: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}}, submission: {documents: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, essay: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, process: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}, deadline: {value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined]), note: faker.helpers.arrayElement([faker.string.alpha({length: {min: 0, max: 1000}}), undefined])}}, competencies: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 0, max: 1000}}), quote: faker.string.alpha({length: {min: 0, max: 1000}}), description: faker.string.alpha({length: {min: 0, max: 1000}}), experiences: Array.from({ length: faker.number.int({min: 0, max: 3}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}})))}))}, undefined]), analysisCurrent: faker.datatype.boolean(), analysisEditedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentEditedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])}, undefined]), ...overrideResponse})
 
 export const getUpdateJobVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -7587,9 +8427,13 @@ export const getListRecruitmentPostsResponseMock = (overrideResponse: Partial<Ex
 
 export const getGetRecentNotificationResultsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationRecentResultsResponse, object>> = {}): SuccessResponseAdminNotificationRecentResultsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({notificationId: faker.number.int(), channel: faker.helpers.arrayElement(['KAKAO','EMAIL','FCM'] as const), status: faker.helpers.arrayElement(['PENDING','SENT','FAILED','UNKNOWN','PROCESSING'] as const), recipientType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), templateCode: faker.string.alpha({length: {min: 10, max: 20}}), recipientUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), userNotificationId: faker.helpers.arrayElement([faker.number.int(), undefined]), batchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), scheduledAt: faker.date.past().toISOString().slice(0, 19) + 'Z', processingStartedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sentAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), providerMessageId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), resultCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), resultCategory: faker.helpers.arrayElement([faker.helpers.arrayElement(['DUPLICATE_REQUEST','AUTHENTICATION_CONFIGURATION','SENDER_PROFILE_CONFIGURATION','INVALID_REQUEST','TEMPLATE_CONFIGURATION','RATE_LIMITED','PROVIDER_UNAVAILABLE','PROVIDER_REJECTED','TRANSPORT_ERROR','PROCESSING_TIMEOUT','HTTP_ERROR','CLIENT_ERROR','INVALID_PROVIDER_RESPONSE','CHANNEL_NOT_CONFIGURED','APPLICATION_ERROR','UNKNOWN_PROVIDER_ERROR'] as const), undefined]), resultDetail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), attemptCount: faker.number.int(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}))}, undefined]), ...overrideResponse})
 
-export const getGetNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchResultResponse, object>> = {}): SuccessResponseAdminNotificationBatchResultResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), requestedByUserId: faker.number.int(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', targetType: faker.helpers.arrayElement(['USER_IDS','ALL'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), sentCount: faker.number.int(), failedCount: faker.number.int(), unknownCount: faker.number.int(), pendingCount: faker.number.int(), expiredCount: faker.number.int(), completed: faker.datatype.boolean(), dispatchExpiresAt: faker.date.past().toISOString().slice(0, 19) + 'Z', resultsAvailableUntil: faker.date.past().toISOString().slice(0, 19) + 'Z', failureReasons: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({status: faker.helpers.arrayElement(['PENDING','SENT','FAILED','UNKNOWN','PROCESSING'] as const), resultCode: faker.string.alpha({length: {min: 10, max: 20}}), count: faker.number.int()})), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int()}, undefined]), ...overrideResponse})
+export const getGetNotificationBatchResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchResultResponse, object>> = {}): SuccessResponseAdminNotificationBatchResultResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{batchId: faker.string.alpha({length: {min: 10, max: 20}}), requestedByUserId: faker.number.int(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', targetType: faker.helpers.arrayElement(['USER_IDS','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS','JOB_ROLES'] as const), title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), skippedNoTokenUserCount: faker.number.int(), skippedInactiveUserCount: faker.number.int(), sentCount: faker.number.int(), failedCount: faker.number.int(), unknownCount: faker.number.int(), pendingCount: faker.number.int(), expiredCount: faker.number.int(), completed: faker.datatype.boolean(), dispatchExpiresAt: faker.date.past().toISOString().slice(0, 19) + 'Z', resultsAvailableUntil: faker.date.past().toISOString().slice(0, 19) + 'Z', failureReasons: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({status: faker.helpers.arrayElement(['PENDING','SENT','FAILED','UNKNOWN','PROCESSING'] as const), resultCode: faker.string.alpha({length: {min: 10, max: 20}}), count: faker.number.int()})), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), noTokenUserCount: faker.number.int(), targetJobRoles: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), undefined]), advertisement: faker.datatype.boolean(), noMarketingConsentUserCount: faker.number.int(), imageId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), imageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])}, undefined]), ...overrideResponse})
 
-export const getListJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminJobSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getGetNotificationBatchStatisticsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminNotificationBatchStatisticsResponse, object>> = {}): SuccessResponseAdminNotificationBatchStatisticsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{from: faker.date.past().toISOString().slice(0, 19) + 'Z', to: faker.date.past().toISOString().slice(0, 19) + 'Z', groups: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['USER_IDS','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS','JOB_ROLES'] as const), deliveryTargetType: faker.helpers.arrayElement(['DIRECT','TOPIC'] as const), batchCount: faker.number.int(), targetUserCount: faker.number.int(), recipientUserCount: faker.number.int(), enqueuedCount: faker.number.int(), sentCount: faker.number.int(), failedCount: faker.number.int(), unknownCount: faker.number.int(), pendingCount: faker.number.int(), expiredCount: faker.number.int(), readUserCount: faker.number.int(), readEligibleUserCount: faker.number.int(), readRate: faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), undefined])}))}, undefined]), ...overrideResponse})
+
+export const getGetNotificationJobRoleOptionsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminNotificationJobRoleOptionResponse, object>> = {}): SuccessResponseListAdminNotificationJobRoleOptionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.string.alpha({length: {min: 10, max: 20}}), allRolesOption: faker.string.alpha({length: {min: 10, max: 20}}), jobRoles: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}})))})), undefined]), ...overrideResponse})
+
+export const getListJobsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminJobSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminJobSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), recruitmentStatus: faker.helpers.arrayElement(['RECRUITING','CLOSED'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', inspectedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListGeneralMembersResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminGeneralMemberResponse, object>> = {}): SuccessResponsePageResponseAdminGeneralMemberResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({userId: faker.number.int(), letsCareerUserId: faker.helpers.arrayElement([faker.number.int(), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const), status: faker.helpers.arrayElement(['ACTIVE','WITHDRAWN','SUSPENDED'] as const), joinedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', withdrawnAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), inflowSource: faker.helpers.arrayElement([faker.helpers.arrayElement(['LETSCAREER','OGONGGO'] as const), undefined]), name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), university: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), major: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), grade: faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), undefined]), wishField: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishJob: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishIndustry: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishEmploymentType: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), wishCompany: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -7726,6 +8570,42 @@ export const getReplaceLetsCareerContentRecommendWeightsMockHandler = (overrideR
   }, options)
 }
 
+export const getReplaceJobInspectionMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/jobs/:jobId/inspection', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceJobInspectionResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteJobInspectionMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/jobs/:jobId/inspection', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteJobInspectionResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceJobAnalysisMockHandler = (overrideResponse?: SuccessResponseAdminJobDetailResponse | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseAdminJobDetailResponse> | SuccessResponseAdminJobDetailResponse), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/jobs/:jobId/analysis', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceJobAnalysisResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListTodayJobsMockHandler = (overrideResponse?: SuccessResponseListAdminTodayJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAdminTodayJobSummaryResponse> | SuccessResponseListAdminTodayJobSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/jobs/today', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -7745,6 +8625,30 @@ export const getReplaceTodayJobsMockHandler = (overrideResponse?: SuccessRespons
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getReplaceTodayJobsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetCompanyContentPriorityMockHandler = (overrideResponse?: SuccessResponseAdminCompanyContentPriorityResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminCompanyContentPriorityResponse> | SuccessResponseAdminCompanyContentPriorityResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/company-content-priority', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetCompanyContentPriorityResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceCompanyContentPriorityMockHandler = (overrideResponse?: SuccessResponseAdminCompanyContentPriorityResponse | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseAdminCompanyContentPriorityResponse> | SuccessResponseAdminCompanyContentPriorityResponse), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/company-content-priority', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceCompanyContentPriorityResponseMock(),
       { status: 200
       })
   }, options)
@@ -8194,6 +9098,30 @@ export const getGetNotificationBatchMockHandler = (overrideResponse?: SuccessRes
   }, options)
 }
 
+export const getGetNotificationBatchStatisticsMockHandler = (overrideResponse?: SuccessResponseAdminNotificationBatchStatisticsResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminNotificationBatchStatisticsResponse> | SuccessResponseAdminNotificationBatchStatisticsResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/notification-batches/statistics', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetNotificationBatchStatisticsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetNotificationJobRoleOptionsMockHandler = (overrideResponse?: SuccessResponseListAdminNotificationJobRoleOptionResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAdminNotificationJobRoleOptionResponse> | SuccessResponseListAdminNotificationJobRoleOptionResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/notification-batches/job-role-options', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetNotificationJobRoleOptionsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListJobsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdminJobSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdminJobSummaryResponse> | SuccessResponsePageResponseAdminJobSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/admin/jobs', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -8359,8 +9287,13 @@ export const getOgonggoAdminAPIMock = () => [
   getDeleteAiBootcampMockHandler(),
   getGetLetsCareerContentRecommendWeightsMockHandler(),
   getReplaceLetsCareerContentRecommendWeightsMockHandler(),
+  getReplaceJobInspectionMockHandler(),
+  getDeleteJobInspectionMockHandler(),
+  getReplaceJobAnalysisMockHandler(),
   getListTodayJobsMockHandler(),
   getReplaceTodayJobsMockHandler(),
+  getGetCompanyContentPriorityMockHandler(),
+  getReplaceCompanyContentPriorityMockHandler(),
   getGetAiJobMockHandler(),
   getCreateAiJobMockHandler(),
   getHideAiJobMockHandler(),
@@ -8398,6 +9331,8 @@ export const getOgonggoAdminAPIMock = () => [
   getListRecruitmentPostsMockHandler(),
   getGetRecentNotificationResultsMockHandler(),
   getGetNotificationBatchMockHandler(),
+  getGetNotificationBatchStatisticsMockHandler(),
+  getGetNotificationJobRoleOptionsMockHandler(),
   getListJobsMockHandler(),
   getListGeneralMembersMockHandler(),
   getGetGeneralMemberMockHandler(),

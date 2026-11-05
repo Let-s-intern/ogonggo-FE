@@ -23,9 +23,8 @@ import type {
   AdminJobDetailResponseSource,
   AdminJobDetailResponseVisibility,
 } from '../../generated/admin/models';
-import type { UserJobDetailResponse } from '../../generated/user/models/userJobDetailResponse';
 import { BOOTCAMP_FIXTURES } from './bootcamp';
-import { JOB_FIXTURES } from './job';
+import { JOB_FIXTURES, type JobFixture } from './job';
 import { SIDE_STUDY_FIXTURES, type SideStudyDetail } from './side-study';
 
 /** 크롤러가 수집했는지, 비즈니스 회원이 직접 등록했는지. 부트캠프에는 이 칸이 없다. */
@@ -95,11 +94,22 @@ export type JobReviewStatus = AdminJobDetailResponseReviewStatus;
  */
 export type AdminSideStudy = SideStudyDetail & { registeredAt: string };
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 오늘 KST 자정의 시각(ms). 브라우저 시간대와 상관없이 한국 날짜로 하루를 가른다. */
 const startOfToday = (): number => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date.getTime();
+  const now = Date.now();
+  return now - ((now + KST_OFFSET_MS) % DAY_MS);
 };
+
+/** 시각을 백엔드 모양(오프셋 없는 KST date-time, `2026-11-05T09:30:00`)으로. */
+const toKstLocal = (iso: string): string =>
+  new Date(Date.parse(iso) + KST_OFFSET_MS).toISOString().slice(0, 19);
+
+/** 등록 시각의 ms. 오프셋 없는 값은 KST 로 읽는다(`toKstLocal` 의 반대). 오프셋이 있으면 그대로 읽는다. */
+export const kstTime = (dateTime: string): number =>
+  Date.parse(/[zZ]|[+-]\d{2}:\d{2}$/.test(dateTime) ? dateTime : `${dateTime}+09:00`);
 
 /**
  * id 를 섞어 서로 무관한 난수 하나를 뽑는다. `salt` 가 다르면 다른 값이 나온다.
@@ -119,12 +129,26 @@ export const hashId = (id: number, salt: number): number => {
   return (value ^ (value >>> 16)) >>> 0;
 };
 
-/** 등록 시각. 0~59 일 전 사이에 흩어진다. */
-const registeredAtFor = (id: number): string => {
+/**
+ * 자정부터 지금까지의 분. 목을 불러올 때 한 번만 잰다. 부를 때마다 재면 분이 바뀔 때마다 오늘 등록분의 시각이
+ * 흔들리고, 어드민 목과 사용자 목의 시각이 서로 달라진다.
+ */
+const MINUTES_SO_FAR_TODAY = Math.max(1, Math.floor((Date.now() - startOfToday()) / 60_000));
+
+/**
+ * 등록 시각. 0~59 일 전 사이에 흩어진다. 사용자 공고 목(`handlers.ts`)도 같은 값을 쓴다.
+ *
+ * 오늘 등록분은 하루에 흩은 시각을 자정부터 지금까지로 줄여 넣는다. 하루 전체에 흩으면 아직 오지 않은 시각이
+ * 나와, 등록 24시간 안 공고의 `NEW` 배지와 오늘 올라온 공고의 등록 시각이 미래를 가리킨다. 나머지로 자르지 않고
+ * 비율로 줄여서, 새로고침할 때마다 시각은 조금씩 움직여도 오늘 등록분끼리의 순서는 그대로다.
+ */
+export const registeredAtFor = (id: number): string => {
   const daysAgo = hashId(id, 1) % 60;
   // 하루를 통째로 빼지 않고 시각까지 벌려 둔다. 같은 날 등록된 행이 여럿일 때 등록일 정렬이
   // 뒤집히지 않는지 보려면 시각이 달라야 한다.
-  const minutesIntoDay = hashId(id, 2) % (24 * 60);
+  const spread = hashId(id, 2) % (24 * 60);
+  const minutesIntoDay =
+    daysAgo === 0 ? Math.floor((spread * MINUTES_SO_FAR_TODAY) / (24 * 60)) : spread;
   return new Date(
     startOfToday() - daysAgo * 24 * 60 * 60 * 1000 + minutesIntoDay * 60 * 1000,
   ).toISOString();
@@ -215,14 +239,15 @@ const ADMIN_JOB_DETAILS: Record<number, Partial<AdminJobDetailResponse>> = {
 const toAdminJob = ({
   bookmarked: _bookmarked,
   ...userJob
-}: UserJobDetailResponse): AdminJobDetailResponse => {
+}: JobFixture): AdminJobDetailResponse => {
   const job = { ...userJob, ...ADMIN_JOB_DETAILS[userJob.id] };
   const id = job.id;
   const source = sourceFor(id);
   const registeredAt = registeredAtFor(id);
   return {
     ...job,
-    registeredAt,
+    // 백엔드는 시간대 없는 한국 시간을 준다. 어드민 화면은 이것을 +09:00 으로 읽는다.
+    registeredAt: toKstLocal(registeredAt),
     recruitmentStatus: recruitmentStatusOf({
       closedAt: job.closedAt,
       recruitmentEndAt: job.recruitmentEndAt,
@@ -230,6 +255,8 @@ const toAdminJob = ({
     }),
     source,
     visibility: visibilityFor(id),
+    // 분석은 검수 목(`../admin/inspection.ts`의 `withInspection`)이 응답에 얹는다.
+    analysisCurrent: false,
     ...(source === 'COMPANY' ? { reviewStatus: reviewStatusFor(id, registeredAt) } : {}),
   };
 };
@@ -268,7 +295,7 @@ export const ADMIN_SIDE_STUDY_FIXTURES: AdminSideStudy[] = SIDE_STUDY_FIXTURES.m
 }));
 
 const isRegisteredToday = (registeredAt: string): boolean =>
-  new Date(registeredAt).getTime() >= startOfToday();
+  kstTime(registeredAt) >= startOfToday();
 
 /**
  * 운영자가 통과시켜 줘야 지면에 오르는 콘텐츠. 대시보드의 "해야 할 일" 첫 칸이자 검수 대기

@@ -12,4 +12,5 @@ export const CreateImageUsage = {
   PROFILE: 'PROFILE',
   RECRUITMENT_POST: 'RECRUITMENT_POST',
   CONCERN: 'CONCERN',
+  NOTIFICATION: 'NOTIFICATION',
 } as const;

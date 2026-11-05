@@ -50,6 +50,8 @@ export const JOB_MOCK: JobSummary = {
   region: 'SEOUL',
   recruitmentType: 'PERIOD',
   recruitmentEndAt: endAt(7),
+  // 오프셋 없는 KST date-time(백엔드 모양). 24시간이 지난 시각이라 `NEW` 는 달지 않는다.
+  registeredAt: '2026-10-01T09:00:00',
   bookmarked: false,
   viewCount: 1284,
   bookmarkCount: 42,

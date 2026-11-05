@@ -8,8 +8,9 @@ import {
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { userNotificationHandlers } from './notifications';
+import { registeredAtFor } from './fixtures/admin-content';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
-import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
+import { JOB_FIXTURES, JOB_SCENARIO_IDS, type JobFixture } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
 import {
   RECRUITMENT_POST_FIXTURES,
@@ -62,7 +63,6 @@ import type { UserBootcampSummaryResponse } from '../generated/user/models/userB
 import type { UserJobCalendarItemResponse } from '../generated/user/models/userJobCalendarItemResponse';
 import type { UserJobCalendarItemResponseJobField } from '../generated/user/models/userJobCalendarItemResponseJobField';
 import { enumOptions } from '../enums';
-import type { UserJobDetailResponse } from '../generated/user/models/userJobDetailResponse';
 import type { UserJobSummaryResponse } from '../generated/user/models/userJobSummaryResponse';
 
 /**
@@ -82,6 +82,10 @@ const DEFAULT_SIZE = 10;
 /** 부트캠프 목록 한 페이지 건수. 목업은 10건이지만 결정 전까지 12로 둔다(Push 1 task 선행 조건). */
 const DEFAULT_BOOTCAMP_SIZE = 12;
 
+/** 픽스처 등록 시각을 백엔드 모양(오프셋 없는 KST date-time)으로. */
+const kstRegisteredAt = (id: number): string =>
+  new Date(Date.parse(registeredAtFor(id)) + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
+
 const toSummary = ({
   companyAndTeamIntroduction: _companyAndTeamIntroduction,
   responsibilities: _responsibilities,
@@ -92,10 +96,13 @@ const toSummary = ({
   hiringProcess: _hiringProcess,
   sourceUrl: _sourceUrl,
   ...summary
-}: UserJobDetailResponse): UserJobSummaryResponse => summary;
+}: JobFixture): UserJobSummaryResponse => ({
+  ...summary,
+  registeredAt: kstRegisteredAt(summary.id),
+});
 
 /** LATEST는 id 역순(생성 역순 근사), VIEW_COUNT는 조회수 내림차순이며 동률이면 최신순(id 역순). */
-const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailResponse[] =>
+const sortJobs = (jobs: JobFixture[], sort: string): JobFixture[] =>
   [...jobs].sort((a, b) =>
     sort === ListPublicJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
   );
@@ -110,7 +117,7 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
  * 백엔드처럼 지역이 없는 공고는 지역을 고르면 빠진다.
  */
 const filterJobs = (
-  jobs: UserJobDetailResponse[],
+  jobs: JobFixture[],
   {
     keyword,
     employmentTypes,
@@ -124,7 +131,7 @@ const filterJobs = (
     jobField?: string;
     region?: string;
   },
-): UserJobDetailResponse[] =>
+): JobFixture[] =>
   jobs.filter((job) => {
     if (keyword) {
       const needle = keyword.toLowerCase();
@@ -414,7 +421,7 @@ const getJobHandler = http.get('*/api/v1/jobs/:jobId', ({ params }) => {
   const body: SuccessResponseUserJobDetailResponse = {
     status: 200,
     message: '채용공고 상세를 조회했습니다.',
-    data: job,
+    data: { ...job, registeredAt: kstRegisteredAt(job.id) },
   };
 
   return HttpResponse.json(body, { status: 200 });

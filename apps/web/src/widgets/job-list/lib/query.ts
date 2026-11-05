@@ -14,6 +14,10 @@ import type {
   JobRegion,
   JobRole,
 } from '@/entities/job/model/types';
+import { JOB_ROLE_CHIPS } from './roleChips';
+
+/** 직무 칩과 직무 창에 있는 직군. 주소에서 읽는 직무 선택은 이 안의 것만 남긴다. */
+const CHIP_FIELDS: ReadonlySet<JobField> = new Set(JOB_ROLE_CHIPS.map(({ field }) => field));
 
 /**
  * "전체 공고" 검색/필터/정렬/페이지네이션이 공유하는 URL 쿼리 상태. 검색어는 주소에서 `q`, API 로는
@@ -142,6 +146,9 @@ export function parseKeywordParam(value: string | string[] | undefined): string 
  * 주소의 `jobField`·`jobRole` 을 검증해 고른 상태로 만든다. 모르는 값은 버리고, `전체` 로 고른
  * 직군에 속한 직무도 버린다 — 겹쳐 적힌 주소를 한 모양으로 맞춘다. 없어진 직군은 합쳐진 직군으로
  * 읽고(`toJobField`), 그래서 겹친 직군은 하나로 합친다.
+ *
+ * 직무 칩 다섯 직군(`lib/roleChips.ts`) 밖의 직군과 그 직무도 버린다. 칩과 직무 창에 보이지 않아 풀 길이 없는
+ * 조건이 옛 쿠키나 주소에서 남아 목록을 말없이 좁히지 않게 한다.
  */
 export function parseJobRoleSelection(
   jobField: string | string[] | undefined,
@@ -150,11 +157,13 @@ export function parseJobRoleSelection(
   const list = (value: string | string[] | undefined) =>
     [value ?? []].flat().filter((item, index, all) => all.indexOf(item) === index);
   const jobFields = [...new Set(list(jobField).map(toJobField))].filter(
-    (value): value is JobField => value !== undefined,
+    (value): value is JobField => value !== undefined && CHIP_FIELDS.has(value),
   );
   const jobRoles = list(jobRole).filter(
     (value): value is JobRole =>
-      value in JOB_ROLES && !jobFields.includes(JOB_ROLES[value as JobRole].field),
+      value in JOB_ROLES &&
+      CHIP_FIELDS.has(JOB_ROLES[value as JobRole].field) &&
+      !jobFields.includes(JOB_ROLES[value as JobRole].field),
   );
   return {
     jobFields: jobFields.length > 0 ? jobFields : undefined,

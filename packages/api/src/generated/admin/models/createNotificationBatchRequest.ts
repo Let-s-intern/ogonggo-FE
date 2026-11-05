@@ -13,6 +13,9 @@ export interface CreateNotificationBatchRequest {
      * | --- | --- | --- |
      * | `USER_IDS` | 1 | 지정 회원 |
      * | `ALL` | 2 | 전체 활성 회원 |
+     * | `GENERAL_MEMBERS` | 3 | 활성 일반 회원 |
+     * | `COMPANY_MEMBERS` | 4 | 활성 기업 회원 |
+     * | `JOB_ROLES` | 5 | 희망 직무가 맞는 활성 일반 회원 |
      */
   targetType: CreateNotificationBatchRequestTargetType;
   /**
@@ -31,4 +34,18 @@ export interface CreateNotificationBatchRequest {
      */
   body: string;
   data: CreateNotificationBatchRequestData;
+  /**
+     * JOB_ROLES에서만 보낸다. job-role-options의 직무 이름 또는 '<직군> 직무 전체'.
+     * @minItems 0
+     * @maxItems 100
+     */
+  jobRoles?: string[];
+  /** 광고성이면 true. 렛츠커리어 마케팅 수신 동의자에게만 기기마다 보낸다. 기업 회원 대상에는 쓸 수 없다. */
+  advertisement: boolean;
+  /**
+     * 관리자 이미지 업로드 API에서 받은 이미지 ID. 생략하면 이미지 없이 발송
+     * @minLength 0
+     * @maxLength 36
+     */
+  imageId?: string;
 }
