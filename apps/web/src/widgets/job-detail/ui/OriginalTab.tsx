@@ -1,5 +1,5 @@
 import { contentFieldLabel } from '@ogonggo/api';
-import { cn } from '@ogonggo/ui';
+import { cn, SOURCE_LABEL_ROW_CLASS } from '@ogonggo/ui';
 import type { JobDetail } from '@/entities/job/model/types';
 import { SourceHtml } from './SourceHtml';
 
@@ -35,7 +35,7 @@ export function buildSections(job: JobDetail): { label: string; value?: string }
  * 거르면 같은 일을 두 번 하면서 라이브러리만 늘어난다. 스타일은 화면 폭을 넘지 않을 만큼만 준다 —
  * 이미지는 폭에 맞추고, 표는 가로로 스크롤하고, 목록·문단에 간격을 둔다.
  *
- * 불러오지 못한 원문 이미지는 숨긴다(`SourceHtml`).
+ * 불러오지 못한 원문 이미지는 숨기고, 위쪽의 "칸 이름 + 값" 묶음은 표 줄로 그린다(`SourceHtml`).
  *
  * 링크는 `http(s)` 주소일 때만 건다. 값이 없거나 다른 형식이면 링크만 빼고 그린다.
  *
@@ -66,6 +66,8 @@ export function OriginalTab({
             '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',
             '[&_:is(td,th)]:border [&_:is(td,th)]:border-gray-200 [&_:is(td,th)]:px-2 [&_:is(td,th)]:py-1',
             '[&_a]:text-blue-500 [&_a]:underline',
+            // 원문 위쪽 "칸 이름 + 값" 묶음은 표 한 줄로 그린다(`markLabelRows`)
+            SOURCE_LABEL_ROW_CLASS,
           )}
         />
       ) : null}
