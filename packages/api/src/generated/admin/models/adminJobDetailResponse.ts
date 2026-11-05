@@ -629,6 +629,8 @@ export interface AdminJobDetailResponse {
   registeredAt: string;
   /** 검수 완료 일시(한국 시간). 미검수면 null입니다. 기업회원 공고의 검수 상태(reviewStatus)와 다른 값입니다. */
   inspectedAt?: string;
+  /** 기업회원 공고 우선 노출을 이 공고에 줄지입니다. 기업회원 공고(source = COMPANY)에만 영향이 있고, 다른 경로 공고는 저장한 값(기본 true)을 그대로 보여 줍니다. 전체 설정(company-content-priority)이 켜져 있고 이 값이 true인 마감 전 공고만 공개 목록 맨 앞에 둡니다. */
+  priorityExposed: boolean;
   companyAndTeamIntroduction?: string;
   responsibilities?: string;
   qualifications?: string;
