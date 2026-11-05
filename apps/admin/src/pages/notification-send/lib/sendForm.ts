@@ -23,8 +23,20 @@ export interface SendFormValues {
   selectedMembers: SelectedMember[];
   /** 회원 ID 직접 입력 원문. 쉼표·공백·줄바꿈으로 나눈다. 검색으로 고른 회원과 합쳐 보낸다. */
   userIds: string;
+  /** 희망 직무 발송에서 고른 선택지. 직군 전체(`allRolesOption`)와 개별 직무 이름이 섞인다. */
+  jobRoles: string[];
+  /** 광고성 발송. 켜면 제목 앞에 `(광고) ` 를 붙여 보낸다(`sendTitle`). 기업 회원 대상에서는 켤 수 없다. */
+  advertisement: boolean;
   title: string;
   body: string;
+  url: string;
+  /** 올린 알림 이미지. 없으면 이미지 없이 보낸다. */
+  image: NotificationImage | null;
+}
+
+/** 사용자 API 이미지 업로드가 돌려준 식별자와 표시용 주소. */
+export interface NotificationImage {
+  id: string;
   url: string;
 }
 
@@ -34,15 +46,54 @@ export const TITLE_MAX = 100;
 export const BODY_MAX = 1000;
 /** 원본 개수 한도. 서버는 중복을 지우기 전 개수로 잰다(`@Size(max = 1000)`). */
 export const USER_IDS_MAX = 1000;
+/** 희망 직무 선택지 한도(`jobRoles` 의 `@Size(max = 100)`). */
+export const JOB_ROLES_MAX = 100;
 
 export const EMPTY_SEND_FORM: SendFormValues = {
   target: 'USER_IDS',
   selectedMembers: [],
   userIds: '',
+  jobRoles: [],
+  advertisement: false,
   title: '',
   body: '',
   url: '',
+  image: null,
 };
+
+/** 광고성 알림 제목 앞에 붙이는 표기(사용자 결정). 뒤의 공백까지 제목 글자 수에 든다. */
+export const AD_TITLE_PREFIX = '(광고) ';
+
+/** 광고성을 켤 수 없는 대상. 기업 회원은 마케팅 수신 동의 항목이 없다(서버도 400 으로 거절한다). */
+export const canAdvertise = (target: SendTarget) => target !== 'COMPANY_MEMBERS';
+
+/**
+ * 제목 앞에 붙일 것. 광고성이고 운영자가 이미 `(광고)` 로 시작하게 썼으면 다시 붙이지 않는다 — `(광고) (광고) …`
+ * 가 되지 않게.
+ */
+export function titlePrefix(values: SendFormValues): string {
+  return values.advertisement && !values.title.trim().startsWith('(광고)') ? AD_TITLE_PREFIX : '';
+}
+
+/** 실제로 보낼 제목. 100자 한도는 이 값으로 잰다. */
+export function sendTitle(values: SendFormValues): string {
+  return `${titlePrefix(values)}${values.title.trim()}`;
+}
+
+/**
+ * 한국 시간 밤 9시부터 아침 8시 전까지. 이 시간의 광고성 발송은 확인 창에서 한 번 더 경고한다(사용자 결정). 막지는
+ * 않는다.
+ */
+export function isAdQuietHours(now: Date = new Date()): boolean {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      hour: 'numeric',
+      hourCycle: 'h23',
+    }).format(now),
+  );
+  return hour >= 21 || hour < 8;
+}
 
 export interface ParsedUserIds {
   /** 나눈 조각 수. 중복과 잘못된 값을 포함한다. */
@@ -96,6 +147,14 @@ export function isHttpUrl(raw: string): boolean {
 export function validateSendForm(values: SendFormValues): SendFormErrors {
   const errors: SendFormErrors = {};
 
+  if (values.target === 'JOB_ROLES') {
+    if (values.jobRoles.length === 0) {
+      errors.jobRoles = '희망 직무를 1개 이상 골라 주세요.';
+    } else if (values.jobRoles.length > JOB_ROLES_MAX) {
+      errors.jobRoles = `희망 직무는 ${JOB_ROLES_MAX}개까지 고를 수 있어요. 지금 ${values.jobRoles.length}개예요.`;
+    }
+  }
+
   if (values.target === 'USER_IDS') {
     const parsed = parseUserIds(values.userIds);
     const total = values.selectedMembers.length + parsed.count;
@@ -110,11 +169,16 @@ export function validateSendForm(values: SendFormValues): SendFormErrors {
     }
   }
 
-  const title = values.title.trim();
-  if (!title) {
+  if (values.advertisement && !canAdvertise(values.target)) {
+    errors.advertisement = '기업 회원에게는 광고성 알림을 보낼 수 없어요.';
+  }
+
+  if (!values.title.trim()) {
     errors.title = '제목을 입력해 주세요.';
-  } else if (title.length > TITLE_MAX) {
-    errors.title = `제목은 ${TITLE_MAX}자까지 쓸 수 있어요.`;
+  } else if (sendTitle(values).length > TITLE_MAX) {
+    errors.title = titlePrefix(values)
+      ? `제목은 앞에 붙는 ${AD_TITLE_PREFIX.trim()} 까지 ${TITLE_MAX}자까지 쓸 수 있어요.`
+      : `제목은 ${TITLE_MAX}자까지 쓸 수 있어요.`;
   }
 
   const body = values.body.trim();
@@ -135,19 +199,22 @@ export function validateSendForm(values: SendFormValues): SendFormErrors {
 }
 
 /**
- * 요청 본문. `ALL` 이면 `userIds` 키를 아예 넣지 않는다 — 서버는 빈 배열도 400 으로 거절한다.
- * `data` 는 `url` 하나뿐이다(PRD "결정한 것" 7).
+ * 요청 본문. `userIds` 는 `USER_IDS` 에서만, `jobRoles` 는 `JOB_ROLES` 에서만 넣는다 — 서버는 다른 대상에 그 키가
+ * 있으면 빈 배열이어도 400 으로 거절한다. `data` 는 `url` 하나뿐이다(PRD "결정한 것" 7).
  */
 export function toCreateRequest(values: SendFormValues): CreateNotificationBatchRequest {
   const common = {
-    title: values.title.trim(),
+    title: sendTitle(values),
     body: values.body.trim(),
     data: { url: values.url.trim() },
-    // 광고성 발송·새 대상(일반·기업 회원, 희망 직무)·이미지는 따로 붙인다. 그전까지는 지금처럼 비광고성만 보낸다.
-    advertisement: false,
+    advertisement: values.advertisement,
+    ...(values.image ? { imageId: values.image.id } : {}),
   };
-  if (values.target === 'ALL') {
-    return { targetType: 'ALL', ...common };
+  if (values.target === 'USER_IDS') {
+    return { targetType: 'USER_IDS', userIds: targetUserIds(values), ...common };
   }
-  return { targetType: 'USER_IDS', userIds: targetUserIds(values), ...common };
+  if (values.target === 'JOB_ROLES') {
+    return { targetType: 'JOB_ROLES', jobRoles: values.jobRoles, ...common };
+  }
+  return { targetType: values.target, ...common };
 }
