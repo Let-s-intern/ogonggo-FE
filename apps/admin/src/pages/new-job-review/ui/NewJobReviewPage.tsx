@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import {
-  ActionAlert,
-  Button,
-  Callout,
-  Card,
-  CardTitle,
-  Checkbox,
-  Chip,
-  EmptyState,
-} from '@ogonggo/ui';
+import { ActionAlert, Button, Callout, Chip, EmptyState } from '@ogonggo/ui';
 import {
   type NewJob,
   useNewJobDetail,
@@ -18,19 +9,11 @@ import {
   useSetJobInspected,
   useSetJobVisibility,
 } from '@/entities/new-job/api/useNewJobQueue';
-import {
-  requestAssistantQuestion,
-  useAssistantBusy,
-  useJobFillRequest,
-} from '@/features/ai-assistant';
+import { useJobFillRequest } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
-import { ContentSourceBadge, VisibilityBadge } from '@/shared/config/labels';
-import { formatDateTime } from '@/shared/lib/format';
 import { JobEditor } from '@/widgets/job-editor';
+import { JobReviewHeader, JobReviewPanes, useInlineJobEdit } from '@/widgets/job-review';
 import { PageHeader } from '@/widgets/page-header';
-import { useInlineJobEdit } from '../model/useInlineJobEdit';
-import { AnalysisPane } from './AnalysisPane';
-import { SourcePane } from './SourcePane';
 import { useNewJobReviewShortcuts } from './useNewJobReviewShortcuts';
 
 type Filter = 'uninspected' | 'inspected' | 'hidden' | 'all';
@@ -123,7 +106,6 @@ export function NewJobReviewPage() {
   const detail = useNewJobDetail(current?.id);
   /** 두 칸에서 그 자리에서 고치는 값(썸네일·분류·본문, 원문 칸 머리). */
   const inlineEdit = useInlineJobEdit(detail.data);
-  const isAssistantBusy = useAssistantBusy();
 
   /*
    * 보고 있는 공고를 주소(`?job=`)에 적는다. AI 비서는 주소로 "이 공고" 를 알고(`api/assistant.ts` [대화]),
@@ -411,118 +393,31 @@ export function NewJobReviewPage() {
         />
       ) : (
         <>
-          <Card>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2 pb-1">
-                  <ContentSourceBadge value={current.source} />
-                  <VisibilityBadge value={current.visibility} />
-                  <span className="text-sm text-gray-500">
-                    {detail.data?.companyName ?? current.companyName}
-                  </span>
-                  <span className="text-sm text-gray-400">공고 {current.id}</span>
-                </div>
-                <CardTitle className="break-words">{detail.data?.title ?? current.title}</CardTitle>
-                <p className="pt-1 text-sm text-gray-500">
-                  등록 {formatDateTime(current.registeredAt)}
-                  {current.inspectedAt ? ` · 검수 완료 ${formatDateTime(current.inspectedAt)}` : ''}
-                </p>
-              </div>
+          <JobReviewHeader
+            job={{
+              ...current,
+              companyName: detail.data?.companyName ?? current.companyName,
+              title: detail.data?.title ?? current.title,
+            }}
+            busy={isBusy}
+            canEdit={Boolean(detail.data)}
+            onCheck={(checked) => setChecked(checked, false)}
+            onEdit={() => setIsEditing(true)}
+            onToggleHidden={toggleHidden}
+            keyHints
+          />
 
-              {/* 키보드가 주 조작이지만 버튼도 둔다. 키 이름은 `title` 로 남긴다. */}
-              <div className="flex shrink-0 items-center gap-2">
-                {/*
-                  누르는 즉시 저장하는 체크박스라 AI 비서가 칸 채우기로 누르지 않게 막는다(`data-ai-human-only`,
-                  `features/ai-assistant/model/screen.ts`). 확정은 사람이 한다.
-                */}
-                <span data-ai-human-only title="검수 완료 체크 (Space 는 체크하고 다음 건)">
-                  <Checkbox
-                    checked={Boolean(current.inspectedAt)}
-                    onChange={(checked) => setChecked(checked, false)}
-                    disabled={isBusy}
-                    label="검수 완료"
-                    labelClassName="font-medium"
-                  />
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEditing(true)}
-                  disabled={!detail.data}
-                  title="내용 수정 (E)"
-                >
-                  내용 수정
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={toggleHidden}
-                  disabled={isBusy}
-                  title={current.visibility === 'HIDDEN' ? '다시 노출 (H)' : '비노출 (H)'}
-                >
-                  {current.visibility === 'HIDDEN' ? '다시 노출' : '비노출'}
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          {/*
-            두 칸은 각자 스크롤한다. 본문 폭이 944px(비서 패널을 닫은 1280px 화면) 아래면 위아래로 쌓는다 — 비서
-            패널을 열면 본문이 400px 줄어 화면 폭이 아니라 본문 폭으로 가른다.
-          */}
-          <div className="@container mt-4">
-            <div className="grid gap-4 @min-[944px]:grid-cols-2">
-              <Card
-                className="min-w-0 p-0"
-                onMouseEnter={() => (scrollTargetRef.current = 'analysis')}
-              >
-                <div
-                  ref={analysisRef}
-                  tabIndex={-1}
-                  className="overflow-y-auto p-4 outline-none @min-[944px]:h-[calc(100vh-19rem)]"
-                >
-                  <h2 className="pb-4 text-base font-bold text-gray-900">공고 분석</h2>
-                  {detail.data && inlineEdit ? (
-                    <AnalysisPane job={detail.data} edit={inlineEdit} />
-                  ) : detail.isError ? (
-                    <Callout tone="error">상세를 불러오지 못했습니다.</Callout>
-                  ) : (
-                    <p className="text-sm text-gray-500">불러오는 중입니다.</p>
-                  )}
-                </div>
-              </Card>
-              <Card
-                className="min-w-0 @min-[944px]:h-[calc(100vh-19rem)]"
-                onMouseEnter={() => (scrollTargetRef.current = 'source')}
-              >
-                {detail.data ? (
-                  <SourcePane
-                    ref={sourceRef}
-                    job={detail.data}
-                    edit={inlineEdit ?? undefined}
-                    className="h-full"
-                    action={
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        disabled={isAssistantBusy}
-                        title={isAssistantBusy ? 'AI 비서가 답하는 중입니다' : undefined}
-                        onClick={() => {
-                          requestAssistantQuestion(`공고 ${current.id} 를 검수해줘`);
-                          // 버튼에 포커스가 남으면 다음 Space 가 이 버튼을 다시 누른다.
-                          focusRoot();
-                        }}
-                      >
-                        AI 비서에게 검수 요청
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <p className="text-sm text-gray-500">불러오는 중입니다.</p>
-                )}
-              </Card>
-            </div>
-          </div>
+          <JobReviewPanes
+            jobId={current.id}
+            detail={detail}
+            edit={inlineEdit}
+            paneHeightClass="@min-[944px]:h-[calc(100vh-19rem)]"
+            analysisRef={analysisRef}
+            sourceRef={sourceRef}
+            onPaneEnter={(pane) => (scrollTargetRef.current = pane)}
+            // 버튼에 포커스가 남으면 다음 Space 가 이 버튼을 다시 누른다.
+            onAskedAssistant={focusRoot}
+          />
 
           {detail.data ? (
             <JobEditor
