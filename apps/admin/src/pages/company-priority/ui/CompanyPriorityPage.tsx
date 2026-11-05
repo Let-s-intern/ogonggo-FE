@@ -4,9 +4,13 @@ import {
   useSaveCompanyPriority,
 } from '@/entities/company-priority/api/useCompanyPriority';
 import { PageHeader } from '@/widgets/page-header';
+import { PriorityPostingList } from './PriorityPostingList';
 
 /**
- * 기업회원이 비즈니스 등록으로 올린 공고를 공개 목록 맨 앞에 둘지 정한다. 채용공고·부트캠프 한 값이다.
+ * 기업회원이 비즈니스 등록으로 올린 공고를 공개 목록 맨 앞에 둘지 정한다.
+ *
+ * 전체 스위치(채용공고·부트캠프 한 값)가 마스터다. 켜져 있을 때 공고별 우선 노출이 켜진 공고만 맨 앞에 온다.
+ * 공고별 값의 기본은 켬이다(#558, 백엔드 LC-3573).
  *
  * 저장 버튼이 없다. 토글을 누르면 바로 저장한다. 토글의 켜짐은 서버 값에서 오고, 누른 순간 뒤집지
  * 않는다 — 저장이 끝나 캐시가 바뀌면 뒤집힌다. 그래서 실패하면 토글은 이전 값에 남는다.
@@ -23,7 +27,8 @@ export function CompanyPriorityPage() {
       <Card>
         <CardTitle>마감 전 기업회원 공고를 맨 앞에</CardTitle>
         <CardDescription className="pt-1">
-          켜면 비즈니스 회원이 등록한 마감 전 채용공고·부트캠프가 공개 목록 맨 앞에 와요. 끄면
+          전체 스위치예요. 켜면 비즈니스 회원이 등록한 마감 전 채용공고·부트캠프 가운데 아래
+          목록에서 우선 노출이 켜진 공고가 공개 목록 맨 앞에 와요. 끄면 공고별 설정과 상관없이 모두
           크롤링 공고와 같은 기준으로 정렬돼요. 바꾸면 다음 목록 요청부터 운영에 바로 반영돼요.
         </CardDescription>
         <p className="pt-2 text-sm text-gray-500">
@@ -51,6 +56,15 @@ export function CompanyPriorityPage() {
             뒤 다시 시도해 주세요.
           </Callout>
         ) : null}
+      </Card>
+
+      <Card className="mt-4">
+        <CardTitle>공고별 우선 노출</CardTitle>
+        <CardDescription className="pt-1">
+          마감 전 기업회원 공고마다 우선 노출을 켜고 꺼요. 처음에는 모두 켜져 있어요. 끈 공고는 전체
+          스위치가 켜져 있어도 크롤링 공고와 같은 기준으로 정렬돼요.
+        </CardDescription>
+        <PriorityPostingList globalEnabled={data?.enabled} />
       </Card>
     </>
   );
