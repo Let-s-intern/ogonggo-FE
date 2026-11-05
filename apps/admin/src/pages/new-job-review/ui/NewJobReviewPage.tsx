@@ -169,6 +169,20 @@ export function NewJobReviewPage() {
     [list.length, isSaving],
   );
 
+  /**
+   * 동작이 성공한 뒤 그 건의 다음 건으로 간다. 지금 위치에서 한 칸이 아니라 동작을 시작한 건의 다음 자리다 — 응답
+   * 전에 위치가 바뀌었어도 한 건을 건너뛰지 않는다.
+   */
+  const advanceFrom = useCallback(
+    (position: number) => {
+      const next = position + 1;
+      if (next < list.length) {
+        setIndex(next);
+      }
+    },
+    [list.length],
+  );
+
   const focusRoot = useCallback(() => rootRef.current?.focus({ preventScroll: true }), []);
 
   const fail = useCallback((caught: unknown) => {
@@ -193,6 +207,7 @@ export function NewJobReviewPage() {
         return;
       }
       const job = current;
+      const position = index;
       setError('');
       setInspected.mutate(
         { jobId: job.id, inspected: checked },
@@ -207,14 +222,14 @@ export function NewJobReviewPage() {
                 tone: 'success',
                 nonce: Date.now(),
               });
-              move(1);
+              advanceFrom(position);
             }
           },
           onError: fail,
         },
       );
     },
-    [current, isBusy, focusRoot, move, setInspected, fail],
+    [current, index, isBusy, focusRoot, move, advanceFrom, setInspected, fail],
   );
 
   /** 비노출이면 다음 건으로 가고, 다시 노출이면 그 건에 머문다(고친 뒤 되살리는 경우다). */
@@ -224,6 +239,7 @@ export function NewJobReviewPage() {
     }
     focusRoot();
     const job = current;
+    const position = index;
     const hiding = job.visibility !== 'HIDDEN';
     setError('');
     setVisibility.mutate(
@@ -238,7 +254,7 @@ export function NewJobReviewPage() {
           });
           if (hiding) {
             setLastAction({ kind: 'hide', job });
-            move(1);
+            advanceFrom(position);
           } else {
             setLastAction(null);
           }
@@ -246,7 +262,7 @@ export function NewJobReviewPage() {
         onError: fail,
       },
     );
-  }, [current, isBusy, focusRoot, move, setVisibility, fail]);
+  }, [current, index, isBusy, focusRoot, advanceFrom, setVisibility, fail]);
 
   const undo = useCallback(() => {
     if (!lastAction || isBusy) {
@@ -362,7 +378,7 @@ export function NewJobReviewPage() {
                 size="sm"
                 variant="secondary"
                 onClick={() => move(-1)}
-                disabled={index === 0}
+                disabled={index === 0 || isSaving}
                 aria-label="이전 건"
                 title="이전 건 (A)"
               >
@@ -372,7 +388,7 @@ export function NewJobReviewPage() {
                 size="sm"
                 variant="secondary"
                 onClick={() => move(1)}
-                disabled={index >= list.length - 1}
+                disabled={index >= list.length - 1 || isSaving}
                 aria-label="다음 건"
                 title="다음 건 (D)"
               >
