@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
-import type { AdminJobSummaryResponse as AdminJobSummary } from '@ogonggo/api/src/admin';
+import type { AdminJobSummaryResponse } from '@ogonggo/api/src/admin';
 import {
   listAllIds,
   useJobIdLookup,
@@ -27,6 +27,12 @@ import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 import { JobReviewDialog } from './JobReviewDialog';
 import { PickToggle, type PickNotice } from './PickToggle';
+
+/**
+ * 목록 줄. 원문 주소(`sourceUrl`)는 백엔드 LC-3572 가 목록 응답에 더한다. 배포 뒤 코드젠으로 생성 타입에 들어오면
+ * 이 덧붙임을 지운다.
+ */
+type AdminJobSummary = AdminJobSummaryResponse & { sourceUrl?: string };
 
 /**
  * 채용공고 목록.
@@ -126,6 +132,12 @@ export function JobListPage() {
       ),
     },
     { key: 'companyName', header: '회사', width: 'w-40', render: (row) => row.companyName },
+    {
+      key: 'sourceUrl',
+      header: '원문',
+      width: 'w-36',
+      render: (row) => <SourceLink url={row.sourceUrl} />,
+    },
     {
       key: 'visibility',
       header: '노출',
@@ -296,5 +308,35 @@ function VisibilityToggle({ job }: { job: AdminJobSummary }) {
         onChange={(next) => patchMutation.mutate({ visibility: next ? 'VISIBLE' : 'HIDDEN' })}
       />
     </span>
+  );
+}
+
+/**
+ * 원문 사이트로 가는 링크. 들어가지는지 눈으로 보고 같은 줄의 노출 토글로 바로 내리려는 것이다(2026-11-05 사용자,
+ * 쿠팡 공고처럼 봇을 막는 사이트는 서버가 마감을 잡지 못한다). 주소가 길어 도메인만 보이고 전체는 툴팁으로 보인다.
+ *
+ * 클릭을 행에서 멈춘다. 행 전체가 편집 창을 연다. `http(s)` 주소가 아니면 링크를 걸지 않는다.
+ */
+function SourceLink({ url }: { url: string | undefined }) {
+  if (!url || !/^https?:\/\//.test(url)) {
+    return <span className="text-gray-400">-</span>;
+  }
+  let host = url;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    // 위에서 http(s) 만 통과시켜 여기는 거의 오지 않는다. 오면 주소를 그대로 보인다.
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={url}
+      onClick={(event) => event.stopPropagation()}
+      className="block truncate text-blue-500 underline-offset-2 hover:underline"
+    >
+      {host}
+    </a>
   );
 }

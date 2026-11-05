@@ -68,7 +68,10 @@ function sortContent<T extends { registeredAt: string; viewCount: number }>(
   });
 }
 
-/** 목록에 나가는 칸만 남긴다. 본문을 목록 응답에 실으면 페이지 하나가 수백 KB 가 된다. */
+/**
+ * 목록에 나가는 칸만 남긴다. 본문을 목록 응답에 실으면 페이지 하나가 수백 KB 가 된다. 원문 주소(`sourceUrl`)는
+ * 목록에서 원문으로 바로 가도록 남긴다(백엔드 LC-3572).
+ */
 const toJobSummary = ({
   companyAndTeamIntroduction: _companyAndTeamIntroduction,
   responsibilities: _responsibilities,
@@ -77,7 +80,6 @@ const toJobSummary = ({
   compensation: _compensation,
   benefits: _benefits,
   hiringProcess: _hiringProcess,
-  sourceUrl: _sourceUrl,
   sourceHtml: _sourceHtml,
   ...summary
 }: AdminJobDetailResponse): AdminJobSummaryResponse => summary;
