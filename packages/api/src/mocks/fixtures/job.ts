@@ -86,7 +86,7 @@ const full: JobFixture = {
   region: 'SEOUL',
   sourceUrl: 'https://example.com/careers/frontend-engineer',
   viewCount: 1234,
-  // 원문 포스터 줄(`widgets/job-detail/ui/PosterStrip.tsx`) 확인용. 셋째 이미지는 일부러 없는 주소다 —
+  // 공고 원문 탭의 이미지 확인용(`widgets/job-detail/ui/SourceHtml.tsx`). 셋째 이미지는 일부러 없는 주소다 —
   // 핫링크가 막힌 원문 이미지처럼 깨진 이미지가 화면에서 숨는지 본다.
   sourceHtml: [
     '<p><img src="https://www.ogonggo.co.kr/hero/jobs.png" alt="채용 포스터"></p>',
