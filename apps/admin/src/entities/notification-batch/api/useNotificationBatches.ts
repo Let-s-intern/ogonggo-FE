@@ -3,8 +3,10 @@ import { HttpError } from '@ogonggo/api';
 import {
   createNotificationBatch,
   getGetNotificationBatchQueryKey,
+  getGetNotificationJobRoleOptionsQueryKey,
   getGetRecentNotificationResultsQueryKey,
   getNotificationBatch,
+  getNotificationJobRoleOptions,
   getRecentNotificationResults,
   type CreateNotificationBatchRequest,
 } from '@ogonggo/api/src/admin';
@@ -25,6 +27,18 @@ export function useCreateNotificationBatch() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getGetRecentNotificationResultsQueryKey() });
     },
+  });
+}
+
+/**
+ * 희망 직무 발송(`JOB_ROLES`)에서 고를 직군·직무. 렛츠커리어가 정한 목록이라 거의 바뀌지 않는다 — 화면을 연 동안은
+ * 다시 받지 않는다.
+ */
+export function useNotificationJobRoleOptions() {
+  return useQuery({
+    queryKey: getGetNotificationJobRoleOptionsQueryKey(),
+    queryFn: () => unwrapData(getNotificationJobRoleOptions()),
+    staleTime: Infinity,
   });
 }
 

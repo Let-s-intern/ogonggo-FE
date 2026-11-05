@@ -17,6 +17,7 @@ import {
   type SendFormValues,
   type SendTarget,
 } from '../lib/sendForm';
+import { JobRolePicker } from './JobRolePicker';
 import { MemberPickerModal } from './MemberPickerModal';
 
 interface SendFormProps {
@@ -28,9 +29,23 @@ interface SendFormProps {
 
 /**
  * `전체 회원` 을 앞에 둔다(사용자 결정). 처음 고른 값은 `지정 회원` 그대로다 — 손이 먼저 가는 자리에 있다고 전체
- * 발송이 기본이 되면, 확인 창 하나만 남은 채 전 회원에게 갈 수 있다.
+ * 발송이 기본이 되면, 확인 창 하나만 남은 채 전 회원에게 갈 수 있다. 회원 종류·희망 직무는 전체와 지정 사이에
+ * 둔다. 넓은 대상에서 좁은 대상 순서다.
  */
-const TARGETS: SendTarget[] = ['ALL', 'USER_IDS'];
+const TARGETS: SendTarget[] = [
+  'ALL',
+  'GENERAL_MEMBERS',
+  'COMPANY_MEMBERS',
+  'JOB_ROLES',
+  'USER_IDS',
+];
+
+/** 확인 창의 대상 문구. 회원 수는 서버가 요청 시점에 세므로 지정 회원만 숫자를 적는다. */
+const AUDIENCE: Record<Exclude<SendTarget, 'USER_IDS' | 'JOB_ROLES'>, string> = {
+  ALL: '전체 활성 회원',
+  GENERAL_MEMBERS: '활성 일반 회원',
+  COMPANY_MEMBERS: '활성 기업 회원',
+};
 
 /**
  * 발송 폼과 확인 창.
@@ -82,13 +97,17 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
   };
 
   const audience =
-    values.target === 'ALL' ? '전체 활성 회원' : `지정 회원 ${formatCount(uniqueTargets)}명`;
+    values.target === 'USER_IDS'
+      ? `지정 회원 ${formatCount(uniqueTargets)}명`
+      : values.target === 'JOB_ROLES'
+        ? `희망 직무 ${formatCount(values.jobRoles.length)}개 중 하나라도 맞는 활성 일반 회원`
+        : AUDIENCE[values.target];
 
   return (
     <Card className="p-6">
       <fieldset className="pb-4">
         <legend className="pb-1.5 text-sm font-medium text-gray-700">대상</legend>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {TARGETS.map((target) => (
             <label
               key={target}
@@ -179,6 +198,16 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
               검색 {formatCount(values.selectedMembers.length)}명 · 직접 입력{' '}
               {formatCount(parsed.count)}개 · 중복 제외 {formatCount(uniqueTargets)}명
             </span>
+          </p>
+        </Field>
+      ) : null}
+
+      {values.target === 'JOB_ROLES' ? (
+        <Field label="희망 직무" error={errors.jobRoles}>
+          <JobRolePicker value={values.jobRoles} onChange={(jobRoles) => set({ jobRoles })} />
+          <p className="pt-1.5 text-xs text-gray-500">
+            고른 직무 중 하나라도 희망 직무에 넣은 활성 일반 회원에게 가요. 직무 무관을 고른 회원은
+            받지 않아요.
           </p>
         </Field>
       ) : null}

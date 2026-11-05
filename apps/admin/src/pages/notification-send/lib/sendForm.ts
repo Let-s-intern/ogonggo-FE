@@ -23,6 +23,8 @@ export interface SendFormValues {
   selectedMembers: SelectedMember[];
   /** 회원 ID 직접 입력 원문. 쉼표·공백·줄바꿈으로 나눈다. 검색으로 고른 회원과 합쳐 보낸다. */
   userIds: string;
+  /** 희망 직무 발송에서 고른 선택지. 직군 전체(`allRolesOption`)와 개별 직무 이름이 섞인다. */
+  jobRoles: string[];
   title: string;
   body: string;
   url: string;
@@ -34,11 +36,14 @@ export const TITLE_MAX = 100;
 export const BODY_MAX = 1000;
 /** 원본 개수 한도. 서버는 중복을 지우기 전 개수로 잰다(`@Size(max = 1000)`). */
 export const USER_IDS_MAX = 1000;
+/** 희망 직무 선택지 한도(`jobRoles` 의 `@Size(max = 100)`). */
+export const JOB_ROLES_MAX = 100;
 
 export const EMPTY_SEND_FORM: SendFormValues = {
   target: 'USER_IDS',
   selectedMembers: [],
   userIds: '',
+  jobRoles: [],
   title: '',
   body: '',
   url: '',
@@ -96,6 +101,14 @@ export function isHttpUrl(raw: string): boolean {
 export function validateSendForm(values: SendFormValues): SendFormErrors {
   const errors: SendFormErrors = {};
 
+  if (values.target === 'JOB_ROLES') {
+    if (values.jobRoles.length === 0) {
+      errors.jobRoles = '희망 직무를 1개 이상 골라 주세요.';
+    } else if (values.jobRoles.length > JOB_ROLES_MAX) {
+      errors.jobRoles = `희망 직무는 ${JOB_ROLES_MAX}개까지 고를 수 있어요. 지금 ${values.jobRoles.length}개예요.`;
+    }
+  }
+
   if (values.target === 'USER_IDS') {
     const parsed = parseUserIds(values.userIds);
     const total = values.selectedMembers.length + parsed.count;
@@ -135,19 +148,22 @@ export function validateSendForm(values: SendFormValues): SendFormErrors {
 }
 
 /**
- * 요청 본문. `ALL` 이면 `userIds` 키를 아예 넣지 않는다 — 서버는 빈 배열도 400 으로 거절한다.
- * `data` 는 `url` 하나뿐이다(PRD "결정한 것" 7).
+ * 요청 본문. `userIds` 는 `USER_IDS` 에서만, `jobRoles` 는 `JOB_ROLES` 에서만 넣는다 — 서버는 다른 대상에 그 키가
+ * 있으면 빈 배열이어도 400 으로 거절한다. `data` 는 `url` 하나뿐이다(PRD "결정한 것" 7).
  */
 export function toCreateRequest(values: SendFormValues): CreateNotificationBatchRequest {
   const common = {
     title: values.title.trim(),
     body: values.body.trim(),
     data: { url: values.url.trim() },
-    // 광고성 발송·새 대상(일반·기업 회원, 희망 직무)·이미지는 따로 붙인다. 그전까지는 지금처럼 비광고성만 보낸다.
+    // 광고성 발송·이미지는 따로 붙인다. 그전까지는 지금처럼 비광고성만 보낸다.
     advertisement: false,
   };
-  if (values.target === 'ALL') {
-    return { targetType: 'ALL', ...common };
+  if (values.target === 'USER_IDS') {
+    return { targetType: 'USER_IDS', userIds: targetUserIds(values), ...common };
   }
-  return { targetType: 'USER_IDS', userIds: targetUserIds(values), ...common };
+  if (values.target === 'JOB_ROLES') {
+    return { targetType: 'JOB_ROLES', jobRoles: values.jobRoles, ...common };
+  }
+  return { targetType: values.target, ...common };
 }
