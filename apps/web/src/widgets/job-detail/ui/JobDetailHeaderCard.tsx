@@ -106,7 +106,7 @@ export function JobDetailHeaderCard({
       </div>
       <h1 className={styles.title}>
         {isNewJob(registeredAt) ? (
-          <NewJobMark className="mr-2 size-6 align-[-0.15em] text-sm md:size-8 md:text-base" />
+          <NewJobMark className="relative -top-0.5 mr-2 size-5 align-middle text-[11px] md:size-6 md:text-xs" />
         ) : null}
         {title}
       </h1>

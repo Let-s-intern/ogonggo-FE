@@ -135,7 +135,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
    * 초록 `NEW` 알약이었다.
    */
   const isNew = isNewJob(job.registeredAt);
-  const newMark = isNew ? <NewJobMark className="mr-1.5 align-[-0.3em]" /> : null;
+  const newMark = isNew ? <NewJobMark className="relative -top-px mr-1 align-middle" /> : null;
   const hasRecommendation = Boolean(recommendationTitle || recommendationDescription);
 
   /**
