@@ -10,6 +10,8 @@ import {
   moveApplicationStage,
   movableTargets,
   stagesOf,
+  trackApplicationDelete,
+  trackApplicationStageChange,
   type ApplicationStageId,
 } from '@/features/application-board';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
@@ -175,6 +177,8 @@ export function MyApplications({ query }: MyApplicationsProps) {
         updateApplicationStatus(
           row.id,
           value as UpdateRecruitmentPostApplicationStatusRequestApplicationStatus,
+        ).then(() =>
+          trackApplicationStageChange('side-studies', row.id, row.applicationStatus, value, 'list'),
         ),
       );
       return;
@@ -184,7 +188,21 @@ export function MyApplications({ query }: MyApplicationsProps) {
       toast.show({ message: '이 단계로는 옮길 수 없어 변경되지 않았습니다.', tone: 'error' });
       return;
     }
-    mutate(row.id, () => moveApplicationStage(tab, row.id, row.applicationStatus, value));
+    mutate(row.id, () =>
+      moveApplicationStage(tab, row.id, row.applicationStatus, value).then(() =>
+        trackApplicationStageChange(tab, row.id, row.applicationStatus, value, 'list'),
+      ),
+    );
+  };
+
+  const deleteRow = (row: Row) => {
+    const tab = query.tab;
+    mutate(row.id, () =>
+      (tab === 'side-studies'
+        ? deleteApplication(row.id)
+        : unbookmarkApplication(queryClient, tab, row.id)
+      ).then(() => trackApplicationDelete(tab, row.id, row.applicationStatus, 'list')),
+    );
   };
 
   return (
@@ -228,13 +246,7 @@ export function MyApplications({ query }: MyApplicationsProps) {
               verb={TAB_LABELS[query.tab].verb}
               pending={pendingId === row.id}
               onStatusChange={(value) => changeStatus(row, value)}
-              onDelete={() =>
-                mutate(row.id, () =>
-                  query.tab === 'side-studies'
-                    ? deleteApplication(row.id)
-                    : unbookmarkApplication(queryClient, query.tab, row.id),
-                )
-              }
+              onDelete={() => deleteRow(row)}
             />
           ))
         ) : (

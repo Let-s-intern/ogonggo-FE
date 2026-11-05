@@ -28,3 +28,8 @@ export {
   type ApplicationStageList,
 } from './model/useApplicationStage';
 export { useMoveStage, type MoveStage, type MoveStageRequest } from './model/useMoveStage';
+export {
+  trackApplicationDelete,
+  trackApplicationStageChange,
+  type ApplicationChangeLocation,
+} from './model/analytics';

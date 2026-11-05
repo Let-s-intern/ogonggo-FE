@@ -8,6 +8,7 @@ import {
   type ApplicationBoardItem,
   type ApplicationBoardPage,
 } from '../api/applicationBoardApi';
+import { trackApplicationStageChange } from './analytics';
 import { canMoveStage, type ApplicationBoardTab, type ApplicationStageId } from './stages';
 
 type StageData = InfiniteData<ApplicationBoardPage, number>;
@@ -58,6 +59,9 @@ export function useMoveStage(tab: ApplicationBoardTab): MoveStage {
         (data) => data && withItem(data, item),
       );
       return { previous };
+    },
+    onSuccess: (_data, { item, from, to }) => {
+      trackApplicationStageChange(tab, item.id, from, to, 'board');
     },
     onError: (error, _request, context) => {
       for (const [key, data] of context?.previous ?? []) {
