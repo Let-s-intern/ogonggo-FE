@@ -1,12 +1,17 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@ogonggo/api';
+import { HttpError, createImage } from '@ogonggo/api';
 import {
   createNotificationBatch,
   getGetNotificationBatchQueryKey,
+  getGetNotificationBatchStatisticsQueryKey,
+  getGetNotificationJobRoleOptionsQueryKey,
   getGetRecentNotificationResultsQueryKey,
   getNotificationBatch,
+  getNotificationBatchStatistics,
+  getNotificationJobRoleOptions,
   getRecentNotificationResults,
   type CreateNotificationBatchRequest,
+  type GetNotificationBatchStatisticsParams,
 } from '@ogonggo/api/src/admin';
 import { authErrorMessage } from '@/shared/api/authErrorMessages';
 import { unwrapData } from '@/shared/api/unwrapData';
@@ -29,6 +34,30 @@ export function useCreateNotificationBatch() {
 }
 
 /**
+ * 알림 이미지 올리기. 관리자 API 에는 업로드가 없어 사용자 API `POST /api/v1/images`(`usage=NOTIFICATION`)로
+ * 올린다(백엔드 `ImageUploadControllerTest` 가 관리자 화면의 이 경로를 확인한다). 어드민의 `/api/v1/images` 는
+ * dev 프록시(`vite.config.ts`)와 배포 rewrite(`vercel.json`)가 사용자 API 로 보낸다. 받은 `id` 를 발송 요청의
+ * `imageId` 로 쓴다. JPEG·PNG 만 된다.
+ */
+export function useUploadNotificationImage() {
+  return useMutation({
+    mutationFn: (file: File) => unwrapData(createImage({ file }, { usage: 'NOTIFICATION' })),
+  });
+}
+
+/**
+ * 희망 직무 발송(`JOB_ROLES`)에서 고를 직군·직무. 렛츠커리어가 정한 목록이라 거의 바뀌지 않는다 — 화면을 연 동안은
+ * 다시 받지 않는다.
+ */
+export function useNotificationJobRoleOptions() {
+  return useQuery({
+    queryKey: getGetNotificationJobRoleOptionsQueryKey(),
+    queryFn: () => unwrapData(getNotificationJobRoleOptions()),
+    staleTime: Infinity,
+  });
+}
+
+/**
  * 최근 수정된 발송 작업 100건. 페이지·필터 없이 서버 순서(`updatedAt` 내림차순) 그대로다. 관리자 발송뿐 아니라
  * 댓글 푸시·알림톡·이메일 작업도 섞여 온다.
  */
@@ -36,6 +65,24 @@ export function useRecentNotificationResults() {
   return useQuery({
     queryKey: getGetRecentNotificationResultsQueryKey(),
     queryFn: () => unwrapData(getRecentNotificationResults()),
+  });
+}
+
+/**
+ * 기간별 발송·읽음 통계. 대상 종류 × 발송 방식(DIRECT/TOPIC)마다 한 줄이다. 기간이 화면 검증을 넘지 못하면
+ * `params` 를 `null` 로 넘겨 부르지 않는다. 400(기간 범위)은 다시 보내지 않는다 — 기다려도 같다.
+ */
+export function useNotificationBatchStatistics(
+  params: GetNotificationBatchStatisticsParams | null,
+) {
+  return useQuery({
+    queryKey: getGetNotificationBatchStatisticsQueryKey(params ?? undefined),
+    queryFn: () => unwrapData(getNotificationBatchStatistics(params ?? undefined)),
+    enabled: params !== null,
+    retry: (failureCount, error) =>
+      !authErrorMessage(error) &&
+      !(error instanceof HttpError && error.status === 400) &&
+      failureCount < 3,
   });
 }
 

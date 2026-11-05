@@ -193,6 +193,8 @@ export default defineConfig({
         headers: { 'X-Api-Key': SHLINK_API_KEY },
       },
       '/api/v1/auth': { target: USER_API_ORIGIN, changeOrigin: true },
+      // 알림 이미지 업로드도 사용자 API 에만 있다(`useUploadNotificationImage`). 관리자 스펙에는 이 경로가 없다.
+      '/api/v1/images': { target: USER_API_ORIGIN, changeOrigin: true },
       '/api': { target: ADMIN_API_ORIGIN, changeOrigin: true },
       // 오공고의 `/api/**` 와 겹치지 않게 접두사를 따로 둔다(`apps/web` 의 next.config.ts 와 같은 이름이다).
       // 렛츠커리어 쪽 실제 경로는 `/api/**` 라 접두사만 바꿔 넘긴다.
