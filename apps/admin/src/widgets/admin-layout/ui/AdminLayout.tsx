@@ -107,11 +107,11 @@ export function AdminLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/*
           맨 위 헤더. 서비스·비즈니스 구역을 고르면 좌측 메뉴가 그 구역의 묶음으로 바뀌고 구역의 첫 화면으로 간다
-          (2026-11-05 사용자). 왼쪽 칸은 좌측 메뉴와 같은 폭·같은 오른쪽 선이라 메뉴 기둥이 헤더까지 이어진다. 탭은 본문 글자(`px-8`)와
+          (2026-11-05 사용자). 왼쪽 칸은 좌측 메뉴와 같은 폭이다. 칸과 탭 사이에 세로선은 두지 않는다(2026-11-05 사용자). 탭은 본문 글자(`px-8`)와
           같은 자리에서 시작한다.
         */}
         <header className="flex h-14 shrink-0 items-stretch border-b border-gray-200 bg-white">
-          <p className="flex w-56 shrink-0 items-center border-r border-gray-200 px-6 text-lg font-bold text-gray-900">
+          <p className="flex w-56 shrink-0 items-center px-6 text-lg font-bold text-gray-900">
             오공고 관리자
           </p>
           <div role="tablist" aria-label="관리 구역" className="flex items-stretch gap-8 px-8">
