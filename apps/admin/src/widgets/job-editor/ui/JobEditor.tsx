@@ -4,7 +4,12 @@ import { Button, Callout, Field, Input, Modal, Textarea } from '@ogonggo/ui';
 import { usePatchJob } from '@/entities/content/api/useContent';
 import { type FillableJobField, consumeJobFill, useJobFillRequest } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
-import { buildPatch, rebuildsAnalysis, REBUILD_ANALYSIS_CONFIRM } from '../lib/buildPatch';
+import {
+  buildPatch,
+  hasAiAnalysis,
+  rebuildsAnalysis,
+  REBUILD_ANALYSIS_CONFIRM,
+} from '../lib/buildPatch';
 import { JOB_BODY_FIELDS, toFormValues, type JobEditorValues } from '../lib/formValues';
 import { validate } from '../lib/validate';
 import {
@@ -169,10 +174,9 @@ export function JobEditor({ open, job, onClose, onSaved }: JobEditorProps) {
         <Button
           disabled={!canSave}
           onClick={() => {
-            // 운영자가 고친 분석이 있는 공고(검수 화면의 상세)면 분석이 다시 만들어지는 저장 앞에 묻는다.
+            // AI 가 만든 분석이 있는 공고(검수 화면의 상세)면 분석이 다시 만들어지는 저장 앞에 묻는다.
             if (
-              'analysisEditedAt' in job &&
-              job.analysisEditedAt &&
+              hasAiAnalysis(job) &&
               rebuildsAnalysis(patch) &&
               !window.confirm(REBUILD_ANALYSIS_CONFIRM)
             ) {

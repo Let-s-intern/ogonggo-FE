@@ -127,6 +127,15 @@ function missingOf(form: AnalysisForm): string[] {
       missing.push(`역량 ${index + 1}`);
     }
   });
+  // 목록의 글은 1000자까지다(백엔드 400 `[analysis]`). 빈 줄은 보내기 전에 지운다(`toAnalysis`).
+  const tooLong = (items: string[]) => items.some((item) => item.trim().length > TEXT_MAX);
+  if (tooLong(form.required)) missing.push('필수 조건(1000자 초과)');
+  if (tooLong(form.preferred)) missing.push('우대 조건(1000자 초과)');
+  form.competencies.forEach((competency, index) => {
+    if (tooLong(competency.experiences)) {
+      missing.push(`역량 ${index + 1} 경험(1000자 초과)`);
+    }
+  });
   return missing;
 }
 
@@ -183,7 +192,7 @@ export function AnalysisEditor({
     analysis && !isCurrent ? (
       <Callout tone="info" className="mb-3">
         {job.analysisEditedAt
-          ? '제목·본문·모집 안내가 바뀌어 AI 가 분석을 다시 만듭니다. 새 분석이 저장되면 운영자 수정은 사라집니다.'
+          ? '다시 수집해 제목·본문·모집 안내가 바뀌어 AI 가 분석을 다시 만듭니다. 새 분석이 저장되면 운영자 수정은 사라집니다.'
           : '제목·본문·모집 안내가 바뀌어 AI 가 분석을 다시 만듭니다.'}{' '}
         그 전까지 아래 분석은 바뀌기 전 글 기준입니다. 지금 고쳐 저장하면 바뀐 글 기준으로 저장되고
         AI 가 덮어쓰지 않습니다.
@@ -208,8 +217,9 @@ export function AnalysisEditor({
     <section>
       {header}
       <p className="pb-2 text-xs text-gray-500">
-        제목·본문 칸·모집 안내를 바꾸면 분석이 다시 만들어집니다. 그 칸을 먼저 고치고 분석은
-        마지막에 고쳐 주세요.
+        {job.analysisEditedAt
+          ? '운영자가 고친 분석은 제목·본문 칸·모집 안내를 고쳐도 새 글 기준으로 그대로 남습니다.'
+          : 'AI 가 만든 분석은 제목·본문 칸·모집 안내를 고치면 다시 만들어집니다. 그 칸을 먼저 고치고 분석은 마지막에 고쳐 주세요.'}
       </p>
       {notice}
       <div className="space-y-5">

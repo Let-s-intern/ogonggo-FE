@@ -7,7 +7,10 @@ import { formatDateTime } from '@/shared/lib/format';
 export type JobReviewSummary = Pick<
   NewJob,
   'id' | 'source' | 'visibility' | 'companyName' | 'title' | 'registeredAt' | 'inspectedAt'
->;
+> & {
+  /** 운영자가 내용을 고친 시각(상세에만 있다). 그 뒤로는 재수집이 내용과 원문을 덮어쓰지 않는다. */
+  contentEditedAt?: string | null;
+};
 
 export interface JobReviewHeaderProps {
   job: JobReviewSummary;
@@ -56,6 +59,11 @@ export function JobReviewHeader({
             등록 {formatDateTime(job.registeredAt)}
             {job.inspectedAt ? ` · 검수 완료 ${formatDateTime(job.inspectedAt)}` : ''}
           </p>
+          {job.contentEditedAt ? (
+            <p className="pt-1 text-sm text-gray-500">
+              운영자 수정 {formatDateTime(job.contentEditedAt)}, 재수집이 덮어쓰지 않음
+            </p>
+          ) : null}
         </div>
 
         {/* 키보드가 주 조작인 화면도 있어 버튼을 둔다. 키 이름은 `title` 로 남긴다. */}

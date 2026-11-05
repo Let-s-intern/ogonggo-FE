@@ -31,6 +31,7 @@ import {
   type AdminJobSourceHtmlPatch,
   analysisSourceOf,
   markAnalysisStale,
+  markContentEdited,
   matchesInspectionFilters,
   readSourceHtmlPatch,
   rejectInspectionFilters,
@@ -414,6 +415,10 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   Object.assign(job, merged.next);
   if (analysisSourceOf(job) !== analysisSource) {
     markAnalysisStale(job.id);
+  }
+  // 노출·검수 상태 말고 하나라도 보냈으면 운영자 내용 수정이다(백엔드 `markContentEdited`).
+  if (Object.keys(body).some((key) => key !== 'visibility' && key !== 'reviewStatus')) {
+    markContentEdited(job.id);
   }
   if (sourceHtml.html !== undefined) {
     job.sourceHtml = sourceHtml.html;

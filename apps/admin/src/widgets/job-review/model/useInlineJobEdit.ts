@@ -5,6 +5,7 @@ import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import {
   buildPatch,
   JOB_BODY_FIELDS,
+  hasAiAnalysis,
   rebuildsAnalysis,
   REBUILD_ANALYSIS_CONFIRM,
   toFormValues,
@@ -207,10 +208,9 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
     }
     const from = pick(before, section);
     const to = pick(values, section);
-    // 운영자가 고친 분석은 제목·본문·모집 안내를 바꾸면 다시 만들어진다. 그 전에 묻는다.
+    // AI 가 만든 분석은 제목·본문·모집 안내를 바꾸면 다시 만들어진다. 그 전에 묻는다. 운영자가 고친 분석은 남는다.
     if (
-      'analysisEditedAt' in job &&
-      job.analysisEditedAt &&
+      hasAiAnalysis(job) &&
       rebuildsAnalysis(sectionPatch(section, before, values)) &&
       !window.confirm(REBUILD_ANALYSIS_CONFIRM)
     ) {

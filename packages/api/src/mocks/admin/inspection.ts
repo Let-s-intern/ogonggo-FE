@@ -16,7 +16,7 @@ import { notFound, ok } from './paging';
  *    (`deleteJobInspection`). 둘 다 본문 없이 200 `data: null`, 없는 공고는 404. 다시 PUT 해도 처음 시각이다.
  * 2. 목록 필터 `registeredFrom`·`registeredTo`(`YYYY-MM-DD`, 두 날짜 포함)와 `inspected`. 목록·상세·`/today` 의
  *    `inspectedAt`.
- * 3. 상세의 `analysis`(`Analysis`)·`analysisCurrent`·`analysisEditedAt`.
+ * 3. 상세의 `analysis`(`Analysis`)·`analysisCurrent`·`analysisEditedAt`·`contentEditedAt`.
  * 4. 운영자 분석 수정 `PUT /api/v1/admin/jobs/{jobId}/analysis`(`replaceJobAnalysis`). 본문 `Analysis`, 응답은 상세.
  * 5. `PATCH /api/v1/admin/jobs/{jobId}` 의 `sourceHtml`. 걸러서 저장하고 비울 수 없다(400 `[sourceHtml]`).
  *
@@ -39,6 +39,11 @@ export interface AdminJobInspectionFields {
   analysisCurrent?: boolean;
   /** 운영자가 분석을 고친 시각. AI 가 바뀐 본문으로 다시 분석해 저장하면 null 로 돌아간다. */
   analysisEditedAt?: string | null;
+  /**
+   * 운영자가 `PATCH` 로 제목·본문·공고 정보·원문을 고친 시각. 고치지 않았으면 null. 그 뒤로는 AI 서버 재수집이
+   * 내용과 원문을 바꾸지 않는다. 보호는 저절로 풀리지 않고 푸는 API 도 아직 없다.
+   */
+  contentEditedAt?: string | null;
 }
 
 /**
@@ -305,14 +310,25 @@ export function analysisSourceOf(job: AdminJobDetailResponse): string {
 }
 
 /**
- * 내용 수정으로 분석이 기대는 글(`analysisSourceOf`)이 바뀌면 분석이 낡는다. 백엔드는 같은 칸의 해시로 같은 일을
- * 한다. 운영자 수정 시각은 남는다 — 백엔드는 AI 가 새 본문으로 다시 분석해 저장할 때 지운다. 목에는 AI 가 없어 다시
- * 분석은 오지 않는다.
+ * 운영자 내용 수정으로 분석이 기대는 글(`analysisSourceOf`)이 바뀌었다. 백엔드는 같은 칸의 해시로 같은 일을 한다.
+ * AI 가 만든 분석은 낡아 다시 분석을 기다린다. 운영자가 고친 분석은 새 본문 해시로 옮겨 그대로 보인다(ogonggo-BE
+ * #119 리뷰 후 수정 3). 목에는 AI 가 없어 다시 분석은 오지 않는다.
  */
 export function markAnalysisStale(jobId: number) {
-  if (analyses.get(jobId)) {
+  if (analyses.get(jobId) && !analysisEdits.has(jobId)) {
     staleAnalyses.add(jobId);
   }
+}
+
+/** 운영자가 내용을 고친 시각. 목은 메모리라 새로고침하면 사라진다(본문 고침과 같다). */
+const contentEdits = new Map<number, string>();
+
+/**
+ * 운영자가 `PATCH` 로 제목·본문·공고 정보·원문을 고쳤다. 노출·검수 상태만 바꾼 요청은 부르지 않는다. 시각은 고칠
+ * 때마다 새로 남긴다.
+ */
+export function markContentEdited(jobId: number) {
+  contentEdits.set(jobId, kstNow());
 }
 
 /** 어드민 상세 응답. 생성 모델에 검수 칸을 얹는다. */
@@ -324,6 +340,7 @@ export function withInspection(job: AdminJobDetailResponse): AdminJobDetailWithI
     analysis,
     analysisCurrent: analysis ? !staleAnalyses.has(job.id) : false,
     analysisEditedAt: analysisEdits.get(job.id)?.editedAt ?? null,
+    contentEditedAt: contentEdits.get(job.id) ?? null,
   };
 }
 
@@ -434,7 +451,12 @@ function analysisError(analysis: Analysis): string | null {
   }
   for (const key of ['required', 'preferred'] as const) {
     if (analysis[key].some((item) => blank(item) || long(item))) {
-      return `[${key}] 빈 조건이나 1000자를 넘는 조건이 있습니다.`;
+      return `[analysis] ${key} 에 빈 조건이나 1000자를 넘는 조건이 있습니다.`;
+    }
+  }
+  for (const [index, competency] of analysis.competencies.entries()) {
+    if (competency.experiences.some((item) => blank(item) || long(item))) {
+      return `[analysis] 역량 ${index + 1} 에 빈 경험이나 1000자를 넘는 경험이 있습니다.`;
     }
   }
   const facts: Fact[] = [

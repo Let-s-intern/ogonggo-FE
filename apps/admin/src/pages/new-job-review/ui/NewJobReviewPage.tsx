@@ -453,6 +453,7 @@ export function NewJobReviewPage() {
               ...current,
               companyName: detail.data?.companyName ?? current.companyName,
               title: detail.data?.title ?? current.title,
+              contentEditedAt: detail.data?.contentEditedAt,
             }}
             busy={isBusy}
             canEdit={Boolean(detail.data)}
@@ -487,7 +488,8 @@ export function NewJobReviewPage() {
                 setAlert({
                   message: '내용을 수정했습니다.',
                   // 본문을 고치면 백엔드가 분석을 다시 만든다. 검수 완료는 풀지 않는다(PRD 결정 필요 5).
-                  detail: '제목·본문·모집 안내를 고쳤다면 공고 분석은 다시 분석을 기다립니다.',
+                  detail:
+                    '제목·본문·모집 안내를 고쳤다면 AI 가 만든 분석은 다시 분석을 기다립니다. 운영자가 고친 분석은 그대로입니다.',
                   tone: 'success',
                   nonce: Date.now(),
                 })
