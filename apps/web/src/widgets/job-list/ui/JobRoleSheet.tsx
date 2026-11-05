@@ -38,6 +38,42 @@ async function fetchCount(
   return response.data?.pageInfo.totalElements;
 }
 
+/**
+ * 직무 선택의 이벤트. 묶음(`lib/roleGroups.ts`) 하나를 통째로 켜거나 끈 것은 묶음 이벤트 하나로 보낸다
+ * (`filter_type: 'job_role_group'`, 값은 `직군:묶음 이름`, 예 `HR_GENERAL_AFFAIRS:인사`). 묶음을 직무마다 보내면
+ * 묶음 하나에 이벤트가 열 개씩 쌓인다. 묶음에 들지 않는 나머지는 지금처럼 직무마다 `job_role` 이다. 묶음이 하나뿐인
+ * 직군(`영업`)은 묶음 줄이 없어 직무마다 보낸다.
+ */
+function trackRoleChanges(before: JobRole[], after: JobRole[]) {
+  const added = after.filter((role) => !before.includes(role));
+  const removed = before.filter((role) => !after.includes(role));
+  const grouped = new Set<JobRole>();
+  for (const field of JOB_FIELDS) {
+    const groups = jobRoleGroupsOf(field, JOB_FIELD_LABELS[field]);
+    if (groups.length < 2) continue;
+    for (const group of groups) {
+      for (const [changed, action] of [
+        [added, 'select'],
+        [removed, 'deselect'],
+      ] as const) {
+        if (group.roles.length > 1 && group.roles.every((role) => changed.includes(role))) {
+          group.roles.forEach((role) => grouped.add(role));
+          track('filter_apply', {
+            filter_type: 'job_role_group',
+            filter_value: `${field}:${group.label}`,
+            filter_action: action,
+          });
+        }
+      }
+    }
+  }
+  trackChanges(
+    'job_role',
+    before.filter((role) => !grouped.has(role)),
+    after.filter((role) => !grouped.has(role)),
+  );
+}
+
 function trackChanges(filterType: string, before: string[], after: string[]) {
   for (const value of after.filter((item) => !before.includes(item))) {
     track('filter_apply', {
@@ -153,7 +189,7 @@ export function JobRoleSheet({
 
   const apply = () => {
     trackChanges('job_field', initial.fields, selection.fields);
-    trackChanges('job_role', initial.roles, selection.roles);
+    trackRoleChanges(initial.roles, selection.roles);
     onApply(selection);
     onClose();
   };
