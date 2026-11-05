@@ -71,8 +71,9 @@ function rebase(previous: { before: JobEditorValues; values: JobEditorValues }, 
   return { before: base, values };
 }
 
-/** 마지막 저장. 한 번만 되돌린다(이 화면의 다른 동작과 같다). */
+/** 마지막 저장. 한 번만 되돌린다(이 화면의 다른 동작과 같다). 저장한 공고에서만 되돌린다. */
 interface LastSave {
+  jobId: number;
   section: InlineSection;
   before: Subset;
   after: Subset;
@@ -149,18 +150,28 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
       errors[key as keyof JobEditorValues] ? [errors[key as keyof JobEditorValues]!] : [],
     );
 
+  /**
+   * 저장을 보낸다. 보낸 공고 id 를 붙잡아 둔다 — 응답이 오기 전에 다른 공고로 넘어가면(검수 화면의 A/D) 응답의
+   * 값을 다음 공고에 합치거나 그 공고의 되돌리기로 남기면 안 된다. 그때는 응답을 버린다. 요청 자체는 보낸 공고에
+   * 간다(`usePatchJob` 의 `jobId` 는 보낼 때 정해진다). 화면은 저장 중에 넘기지 못하게 막는다(`useIsMutating`).
+   */
   const send = (section: InlineSection, from: Subset, to: Subset, onDone: () => void) => {
     const patch = buildPatch({ ...before, ...from }, { ...before, ...from, ...to });
     if (Object.keys(patch).length === 0) {
       return;
     }
+    const jobId = job.id;
+    const stillHere = () => jobIdRef.current === jobId;
     setSaving(section);
     setErrorOf((previous) => ({ ...previous, [section]: undefined }));
     mutation.mutate(patch, {
       onSuccess: () => {
+        if (!stillHere()) {
+          return;
+        }
         // 다시 받기 전에도 저장 버튼이 잠기도록 연 때의 값을 저장한 값으로 맞춘다.
         setState((previous) =>
-          previous
+          previous && previous.id === jobId
             ? {
                 ...previous,
                 before: { ...previous.before, ...to },
@@ -170,11 +181,15 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
         );
         onDone();
       },
-      onError: (caught) =>
+      onError: (caught) => {
+        if (!stillHere()) {
+          return;
+        }
         setErrorOf((previous) => ({
           ...previous,
           [section]: serverErrorMessage(caught) ?? '저장하지 못했습니다. 다시 시도해 주세요.',
-        })),
+        }));
+      },
       onSettled: () => setSaving(null),
     });
   };
@@ -185,7 +200,8 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
     }
     const from = pick(before, section);
     const to = pick(values, section);
-    send(section, from, to, () => setLastSave({ section, before: from, after: to }));
+    const jobId = job.id;
+    send(section, from, to, () => setLastSave({ jobId, section, before: from, after: to }));
   };
 
   /** 저장하지 않은 고침을 버린다. */
@@ -198,7 +214,7 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
 
   /** 마지막 저장을 되돌린다. 저장 전 값을 다시 보낸다. */
   const undo = () => {
-    if (!lastSave || saving) {
+    if (!lastSave || lastSave.jobId !== job.id || saving) {
       return;
     }
     send(lastSave.section, lastSave.after, lastSave.before, () => setLastSave(null));
@@ -214,7 +230,7 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
     save,
     discard,
     undo,
-    lastSave,
+    lastSave: lastSave?.jobId === job.id ? lastSave : null,
     saving,
     errorOf,
   };

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { useIsMutating } from '@tanstack/react-query';
 import { ActionAlert, Button, Callout, Chip, EmptyState } from '@ogonggo/ui';
 import {
   type NewJob,
@@ -73,6 +74,12 @@ export function NewJobReviewPage() {
   const setInspected = useSetJobInspected();
   const setVisibility = useSetJobVisibility();
   const isBusy = setInspected.isPending || setVisibility.isPending;
+  /**
+   * 이 화면의 저장이 하나라도 도는 중인지 — 구역 저장, 원문·분석 저장, `내용 수정`, 검수 완료·비노출. 도는 동안은
+   * 다른 공고로 넘기지 않는다. 응답이 오기 전에 넘기면 응답이 다음 공고의 화면에 섞이거나(구역 저장의 되돌리기),
+   * 응답 뒤의 `다음 건` 이 한 건을 더 넘긴다.
+   */
+  const isSaving = useIsMutating() > 0;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
@@ -150,12 +157,16 @@ export function NewJobReviewPage() {
   }, [isPending, list.length]);
 
   const move = useCallback(
-    (delta: number) =>
+    (delta: number) => {
+      if (isSaving) {
+        return;
+      }
       setIndex((previous) => {
         const next = previous + delta;
         return next < 0 || next >= list.length ? previous : next;
-      }),
-    [list.length],
+      });
+    },
+    [list.length, isSaving],
   );
 
   const focusRoot = useCallback(() => rootRef.current?.focus({ preventScroll: true }), []);
