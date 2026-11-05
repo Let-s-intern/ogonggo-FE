@@ -93,7 +93,7 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
     description:
       '문과 취준생을 위해 큐레이션된 채용공고와 직무 인사이트를 인스타그램으로 가장 빠르게 만나보세요.',
     url: 'https://www.instagram.com/letscareer.job?igsh=dXl4YmhvOWdsYXU1',
-    profileImage: '/community/instagram-job-profile.jpg',
+    profileImage: '/community/instagram-job-profile-ogonggo.jpg',
     thumbnails: [
       { src: '/community/instagram-job-1.jpg', alt: '오공고 소개' },
       { src: '/community/instagram-job-2.jpg', alt: '인턴 합격 후기' },
