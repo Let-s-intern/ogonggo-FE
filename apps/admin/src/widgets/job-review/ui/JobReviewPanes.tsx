@@ -3,13 +3,11 @@ import { Button, Callout, Card, cn } from '@ogonggo/ui';
 import type { NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
 import { requestAssistantQuestion, useAssistantBusy } from '@/features/ai-assistant';
 import type { InlineJobEdit } from '../model/useInlineJobEdit';
+import type { JobReviewDraft } from '../model/useUnsavedEdits';
 import { AnalysisPane } from './AnalysisPane';
 import { SourcePane } from './SourcePane';
 
 export type JobReviewPane = 'analysis' | 'source';
-
-/** 구역 저장(`useInlineJobEdit`) 밖에서 따로 고치는 것. 분석 결과와 원문 HTML 이다. */
-export type JobReviewDraft = 'analysis' | 'sourceHtml';
 
 export interface JobReviewPanesProps {
   jobId: number;

@@ -137,8 +137,8 @@ function missingOf(form: AnalysisForm): string[] {
  * 저장하면 지금 본문 기준이 되어 바로 사용자에게 보이고, 본문이 바뀌기 전까지 AI 가 덮어쓰지 않는다. 본문을 고치면
  * AI 가 다시 분석하고, 그 분석이 저장되면 운영자 수정 표시가 사라진다.
  *
- * 부르는 쪽이 `key` 에 공고 id 와 서버 값(`analysisEditedAt`·`analysisCurrent`)을 넣는다. 서버 값이 바뀌면 고치던
- * 값을 버리고 새로 연다.
+ * 부르는 쪽이 `key` 에 공고 id 와 서버의 분석(`analysisEditedAt`·`analysis`)을 넣는다. 분석이 바뀌면 고치던 값을
+ * 버리고 새로 연다. 낡음(`analysisCurrent`)은 넣지 않는다 — 안내만 바뀐다.
  */
 export function AnalysisEditor({
   job,

@@ -38,10 +38,14 @@ export function AnalysisPane({
       <Thumbnails job={job} edit={edit} />
       <Classification edit={edit} />
       <BodyFields edit={edit} />
-      {/* 분석 칸이 배포되기 전(칸 자체가 없을 때)에는 이 구역을 그리지 않는다. 서버 값이 바뀌면 새로 연다. */}
+      {/*
+       * 분석 칸이 배포되기 전(칸 자체가 없을 때)에는 이 구역을 그리지 않는다. 분석 자체가 바뀌면(저장, AI 의 새 분석)
+       * 새로 연다. 낡음(`analysisCurrent`)은 키에 넣지 않는다 — 본문을 저장하면 낡음만 바뀌는데, 그때 새로 열면
+       * 고치던 분석이 사라진다. 낡음 안내는 열린 채 바뀐다.
+       */}
       {'analysis' in job ? (
         <AnalysisEditor
-          key={`${job.id}:${job.analysisEditedAt ?? ''}:${String(job.analysisCurrent)}:${JSON.stringify(job.analysis)}`}
+          key={`${job.id}:${job.analysisEditedAt ?? ''}:${JSON.stringify(job.analysis)}`}
           job={job}
           onDraftChange={onDraftChange}
         />

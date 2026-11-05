@@ -13,15 +13,13 @@ import { useJobFillRequest } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { JobEditor } from '@/widgets/job-editor';
 import {
-  INLINE_SECTIONS,
   JobReviewHeader,
   JobReviewPanes,
   useInlineJobEdit,
-  type InlineSection,
-  type JobReviewDraft,
+  useUnsavedEdits,
 } from '@/widgets/job-review';
 
-const UNSAVED_MESSAGE = '저장하지 않은 고침이 있습니다. 닫으면 사라집니다. 닫을까요?';
+const UNSAVED_MESSAGE = '저장하지 않은 고침이 있습니다. 창을 떠나면 사라집니다. 떠날까요?';
 
 /**
  * 채용공고 목록에서 연 공고 편집 창(2026-11-05 사용자). 오늘 올라온 공고 화면의 편집기(`widgets/job-review`)를
@@ -49,20 +47,7 @@ export function JobReviewDialog({ jobId, onClose }: { jobId: number; onClose: ()
     tone: 'success' | 'danger';
     nonce: number;
   } | null>(null);
-  const [drafts, setDrafts] = useState<Partial<Record<JobReviewDraft, boolean>>>({});
-
-  const onDraftChange = useCallback(
-    (draft: JobReviewDraft, dirty: boolean) =>
-      setDrafts((previous) =>
-        previous[draft] === dirty ? previous : { ...previous, [draft]: dirty },
-      ),
-    [],
-  );
-
-  const hasUnsaved =
-    (edit
-      ? (Object.keys(INLINE_SECTIONS) as InlineSection[]).some((section) => edit.isDirty(section))
-      : false) || Object.values(drafts).some(Boolean);
+  const { hasUnsaved, onDraftChange } = useUnsavedEdits(edit);
 
   /** 저장하지 않은 고침이 있으면 묻는다(오공고 PICK 화면과 같은 `confirm`). */
   const requestClose = useCallback(() => {
@@ -183,7 +168,15 @@ export function JobReviewDialog({ jobId, onClose }: { jobId: number; onClose: ()
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-5 py-3">
           <h2 className="text-lg font-bold text-gray-900">공고 편집</h2>
           <div className="flex items-center gap-3">
-            <Link to={`/content/jobs/${jobId}`} className="text-sm text-blue-600 underline">
+            <Link
+              to={`/content/jobs/${jobId}`}
+              className="text-sm text-blue-600 underline"
+              onClick={(event) => {
+                if (hasUnsaved && !window.confirm(UNSAVED_MESSAGE)) {
+                  event.preventDefault();
+                }
+              }}
+            >
               상세 페이지로
             </Link>
             <Button size="sm" variant="secondary" onClick={requestClose} title="닫기 (Esc)">

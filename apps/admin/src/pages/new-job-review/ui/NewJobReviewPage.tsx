@@ -14,7 +14,12 @@ import {
 import { useJobFillRequest } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { JobEditor } from '@/widgets/job-editor';
-import { JobReviewHeader, JobReviewPanes, useInlineJobEdit } from '@/widgets/job-review';
+import {
+  JobReviewHeader,
+  JobReviewPanes,
+  useInlineJobEdit,
+  useUnsavedEdits,
+} from '@/widgets/job-review';
 import { PageHeader } from '@/widgets/page-header';
 import { useNewJobReviewShortcuts } from './useNewJobReviewShortcuts';
 
@@ -25,6 +30,8 @@ interface LastAction {
   kind: 'inspect' | 'hide';
   job: NewJob;
 }
+
+const UNSAVED_MESSAGE = '저장하지 않은 고침이 있습니다. 다른 공고로 넘어가면 사라집니다. 넘어갈까요?';
 
 /** 한 번에 스크롤할 거리(px). 검수 대기와 같다. */
 const SCROLL_STEP = 240;
@@ -117,6 +124,19 @@ export function NewJobReviewPage() {
   const detail = useNewJobDetail(current?.id);
   /** 두 칸에서 그 자리에서 고치는 값(썸네일·분류·본문, 원문 칸 머리). */
   const inlineEdit = useInlineJobEdit(detail.data);
+  const { hasUnsaved, onDraftChange } = useUnsavedEdits(inlineEdit);
+  /*
+   * 다른 공고로 넘어가도 되는지. 저장하지 않은 고침(구역, 분석 결과, 원문 HTML)이 있으면 묻는다 — 넘어가면 사라진다.
+   * 응답 뒤(검수 완료 후 다음 건)에도 부르므로 마지막 값을 ref 로 읽는다.
+   */
+  const hasUnsavedRef = useRef(hasUnsaved);
+  useEffect(() => {
+    hasUnsavedRef.current = hasUnsaved;
+  });
+  const confirmLeave = useCallback(
+    () => !hasUnsavedRef.current || window.confirm(UNSAVED_MESSAGE),
+    [],
+  );
 
   /*
    * 보고 있는 공고를 주소(`?job=`)에 적는다. AI 비서는 주소로 "이 공고" 를 알고(`api/assistant.ts` [대화]),
@@ -162,15 +182,13 @@ export function NewJobReviewPage() {
 
   const move = useCallback(
     (delta: number) => {
-      if (isSaving) {
+      const next = index + delta;
+      if (isSaving || next < 0 || next >= list.length || !confirmLeave()) {
         return;
       }
-      setIndex((previous) => {
-        const next = previous + delta;
-        return next < 0 || next >= list.length ? previous : next;
-      });
+      setIndex(next);
     },
-    [list.length, isSaving],
+    [index, list.length, isSaving, confirmLeave],
   );
 
   /**
@@ -180,11 +198,11 @@ export function NewJobReviewPage() {
   const advanceFrom = useCallback(
     (position: number) => {
       const next = position + 1;
-      if (next < list.length) {
+      if (next < list.length && confirmLeave()) {
         setIndex(next);
       }
     },
-    [list.length],
+    [list.length, confirmLeave],
   );
 
   const focusRoot = useCallback(() => rootRef.current?.focus({ preventScroll: true }), []);
@@ -276,7 +294,7 @@ export function NewJobReviewPage() {
     const position = list.findIndex((entry) => entry.id === job.id);
     const onSuccess = () => {
       setLastAction(null);
-      if (position >= 0) {
+      if (position >= 0 && position !== index && confirmLeave()) {
         setIndex(position);
       }
     };
@@ -287,7 +305,7 @@ export function NewJobReviewPage() {
       setVisibility.mutate({ jobId: job.id, visibility: 'VISIBLE' }, { onSuccess, onError: fail });
     }
     focusRoot();
-  }, [lastAction, isBusy, list, setInspected, setVisibility, fail, focusRoot]);
+  }, [lastAction, isBusy, list, index, confirmLeave, setInspected, setVisibility, fail, focusRoot]);
 
   const scrollBy = useCallback((amount: number) => {
     const target = scrollTargetRef.current === 'source' ? sourceRef : analysisRef;
@@ -359,7 +377,12 @@ export function NewJobReviewPage() {
               key={entry.value}
               tone={filter === entry.value ? 'blue' : 'gray'}
               aria-pressed={filter === entry.value}
-              onClick={() => applyFilter(entry.value)}
+              onClick={() => {
+                // 칩을 바꾸면 첫 건으로 간다. 넘기기와 같이 저장 중이면 막고, 고치던 것이 있으면 묻는다.
+                if (!isSaving && confirmLeave()) {
+                  applyFilter(entry.value);
+                }
+              }}
             >
               {entry.label} {counts[entry.value]}
             </Chip>
@@ -446,6 +469,7 @@ export function NewJobReviewPage() {
             analysisRef={analysisRef}
             sourceRef={sourceRef}
             onPaneEnter={(pane) => (scrollTargetRef.current = pane)}
+            onDraftChange={onDraftChange}
             // 버튼에 포커스가 남으면 다음 Space 가 이 버튼을 다시 누른다.
             onAskedAssistant={focusRoot}
           />
