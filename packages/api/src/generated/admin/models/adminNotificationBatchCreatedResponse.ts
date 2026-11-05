@@ -25,4 +25,10 @@ export interface AdminNotificationBatchCreatedResponse {
      */
   deliveryTargetType: AdminNotificationBatchCreatedResponseDeliveryTargetType;
   noTokenUserCount: number;
+  /** 광고성 발송 여부 */
+  advertisement: boolean;
+  /** 광고성 발송에서 마케팅 수신에 동의하지 않아 뺀 활성 회원 수. 기업 회원은 동의 항목이 없어 여기에 센다. */
+  noMarketingConsentUserCount: number;
+  imageId?: string;
+  imageUrl?: string;
 }

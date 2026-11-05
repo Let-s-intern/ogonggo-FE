@@ -80,6 +80,9 @@ export const ENUM_CATALOG = {
   NotificationBatchTargetType: [
     { name: 'USER_IDS', desc: '지정 회원', parent: null },
     { name: 'ALL', desc: '전체 활성 회원', parent: null },
+    { name: 'GENERAL_MEMBERS', desc: '활성 일반 회원', parent: null },
+    { name: 'COMPANY_MEMBERS', desc: '활성 기업 회원', parent: null },
+    { name: 'JOB_ROLES', desc: '희망 직무가 맞는 활성 일반 회원', parent: null },
   ],
   UserNotificationType: [
     { name: 'SIDE_STUDY_COMMENT_REPLY', desc: '모집글 댓글의 새 답글', parent: null },
@@ -757,6 +760,7 @@ export const ENUM_CATALOG = {
     { name: 'PROFILE', desc: '프로필 이미지·기업 로고', parent: null },
     { name: 'RECRUITMENT_POST', desc: '사이드 프로젝트·스터디 모집글', parent: null },
     { name: 'CONCERN', desc: '취준고민', parent: null },
+    { name: 'NOTIFICATION', desc: '푸시 알림 이미지', parent: null },
   ],
   UserRole: [
     { name: 'USER', desc: '일반 회원', parent: null },

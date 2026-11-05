@@ -17,6 +17,7 @@ import type { AdminJobDetailResponseReviewStatus } from './adminJobDetailRespons
 import type { AdminJobDetailResponseSource } from './adminJobDetailResponseSource';
 import type { AdminJobDetailResponseSubRegion } from './adminJobDetailResponseSubRegion';
 import type { AdminJobDetailResponseVisibility } from './adminJobDetailResponseVisibility';
+import type { Analysis } from './analysis';
 
 export interface AdminJobDetailResponse {
   id: number;
@@ -626,6 +627,8 @@ export interface AdminJobDetailResponse {
      */
   recruitmentStatus: AdminJobDetailResponseRecruitmentStatus;
   registeredAt: string;
+  /** 검수 완료 일시(한국 시간). 미검수면 null입니다. 기업회원 공고의 검수 상태(reviewStatus)와 다른 값입니다. */
+  inspectedAt?: string;
   companyAndTeamIntroduction?: string;
   responsibilities?: string;
   qualifications?: string;
@@ -646,4 +649,11 @@ export interface AdminJobDetailResponse {
   sourceUrl?: string;
   /** 채용공고 원문 HTML입니다. 원문 페이지의 본문 영역을 안전한 태그만 남긴 것이며, 원문이 없는 공고와 기업회원 공고는 null입니다. */
   sourceHtml?: string;
+  analysis?: Analysis;
+  /** analysis가 지금 본문(제목과 본문 여덟 칸)으로 만든 것인지입니다. false면 사용자에게 보이지 않고 AI 서버의 다시 분석을 기다립니다. 분석이 없으면 false입니다. */
+  analysisCurrent: boolean;
+  /** 운영자가 고친 분석이면 고친 일시(한국 시간)입니다. AI 서버가 만든 분석이거나 분석이 없으면 null입니다. 본문이 바뀌기 전까지 AI 서버는 운영자가 고친 분석을 덮어쓰지 않습니다. */
+  analysisEditedAt?: string;
+  /** 운영자가 공고 내용(제목·본문·공고 정보·원문)을 마지막으로 고친 일시(한국 시간)입니다. 값이 있으면 AI 서버가 다시 수집해도 공고 내용과 원문을 바꾸지 않습니다. 고친 적이 없으면 null입니다. */
+  contentEditedAt?: string;
 }
