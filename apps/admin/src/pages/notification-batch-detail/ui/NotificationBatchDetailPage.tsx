@@ -78,6 +78,12 @@ export function NotificationBatchDetailPage() {
     { label: '토큰 없음(알림함에만 저장)', value: `${formatCount(data.noTokenUserCount)}명` },
     { label: '비활성 제외', value: `${formatCount(data.skippedInactiveUserCount)}명` },
     { label: '적재한 발송 작업', value: `${formatCount(data.enqueuedCount)}건` },
+    {
+      label: '마케팅 수신 미동의 제외',
+      value: data.advertisement
+        ? `${formatCount(data.noMarketingConsentUserCount)}명`
+        : '해당 없음',
+    },
   ];
 
   // 대기는 `PENDING` 과 아직 발송사에 요청 중인 `PROCESSING` 을 함께 센다(백엔드 `pendingCount`).
@@ -109,6 +115,10 @@ export function NotificationBatchDetailPage() {
           items={[
             { label: '대상', value: notificationTargetTypeLabel(data.targetType) },
             { label: '발송 방식', value: notificationDeliveryTypeLabel(data.deliveryTargetType) },
+            {
+              label: '광고성',
+              value: data.advertisement ? '광고성 · 마케팅 수신 동의자에게만' : '아님',
+            },
             { label: '요청 관리자 ID', value: data.requestedByUserId },
             { label: '발송 묶음 ID', value: <span className="break-all">{data.batchId}</span> },
             { label: '요청 시각', value: formatDateTime(data.createdAt) },
@@ -117,9 +127,25 @@ export function NotificationBatchDetailPage() {
               label: '결과 조회 가능',
               value: `${formatDateTime(data.resultsAvailableUntil)}까지`,
             },
+            ...(data.targetJobRoles?.length
+              ? [{ label: '희망 직무', value: data.targetJobRoles.join(', '), full: true }]
+              : []),
             {
               label: '본문',
               value: <p className="whitespace-pre-wrap">{data.body}</p>,
+              full: true,
+            },
+            {
+              label: '이미지',
+              value: data.imageUrl ? (
+                <img
+                  src={data.imageUrl}
+                  alt="알림 이미지"
+                  className="h-32 w-56 rounded-md border border-gray-200 object-cover"
+                />
+              ) : (
+                '없음'
+              ),
               full: true,
             },
           ]}
@@ -128,7 +154,7 @@ export function NotificationBatchDetailPage() {
 
       <section className="pt-6">
         <h2 className="pb-2.5 text-base font-bold text-gray-900">대상</h2>
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-6 gap-3">
           {targets.map((tile) => (
             <CountTile key={tile.label} label={tile.label} value={tile.value} />
           ))}
