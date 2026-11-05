@@ -222,6 +222,9 @@ const NOTIFICATION_DELIVERY_TYPE_LABEL: Record<NotificationRecipientType, string
 const NOTIFICATION_TARGET_TYPE_LABEL: Record<NotificationTargetType, string> = {
   USER_IDS: '지정 회원',
   ALL: '전체 회원',
+  GENERAL_MEMBERS: '일반 회원',
+  COMPANY_MEMBERS: '기업 회원',
+  JOB_ROLES: '희망 직무',
 };
 
 /**
