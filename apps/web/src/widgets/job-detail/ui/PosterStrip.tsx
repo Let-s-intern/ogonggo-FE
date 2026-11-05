@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Modal } from '@ogonggo/ui';
 import type { PosterImage } from '../lib/posterImages';
 
@@ -10,37 +10,54 @@ import type { PosterImage } from '../lib/posterImages';
  */
 const MIN_POSTER_SIDE = 100;
 
+/** 크기를 재 볼 이미지 수. 원문에 아이콘이 수십 개 섞여도 앞쪽 몇 개만 받는다. */
+const MAX_CANDIDATES = 12;
+
+/** 줄에 보이는 포스터 수. */
+const MAX_POSTERS = 6;
+
 /**
  * 상세 헤더 카드와 탭 사이의 원본 포스터 줄(LC-3566, PRD `prd-job-filter-improve.md` 결정 4 C). 원문이 글을
  * 옮겨 붙인 것이라 읽기 어렵다는 설문에, 원문 HTML 의 이미지를 탭을 누르지 않아도 보이게 꺼낸다. 기본 탭
  * (`공고 분석`)은 그대로다. 누르면 크게 본다.
  *
- * 이미지는 원문 사이트 주소를 그대로 건다(결정 5, S3 로 옮기지 않는다). 핫링크가 막힌 곳은 불러오지 못하므로
- * 깨진 이미지는 숨기고, 전부 숨으면 줄도 그리지 않는다. 서버가 그린 이미지는 하이드레이션 전에 이미 실패해
- * `onError` 가 불리지 않을 수 있어, 붙는 순간 `complete` 를 한 번 더 본다(`JobThumbnail` 과 같다).
+ * 이미지는 원문 사이트 주소를 그대로 건다(결정 5, S3 로 옮기지 않는다). 핫링크가 막힌 곳은 불러오지 못하고,
+ * 원문에는 아이콘·구분선 이미지도 섞여 있다. 그래서 줄은 숨긴 채(자리도 잡지 않고) 시작하고, 브라우저에서 이미지를
+ * 받아 두 변이 모두 100px 이상인 것이 확인되면 그것만 보인다. 서버 HTML 에 줄을 그려 두고 하이드레이션 뒤 숨기면,
+ * 포스터가 없는 공고에서 아래 탭이 위로 튄다(CLS). 확인된 이미지는 이미 받아 둔 것이라 줄에 붙은 뒤 크기가
+ * 바뀌지 않는다.
  *
  * `next/image` 를 쓰지 않는다. 원문 이미지 호스트는 정해져 있지 않아 `images.remotePatterns` 에 다 적을 수
  * 없다.
  */
 export function PosterStrip({ images }: { images: PosterImage[] }) {
-  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const [confirmed, setConfirmed] = useState<ReadonlySet<string>>(() => new Set());
   const [opened, setOpened] = useState<PosterImage | undefined>();
-  const shown = images.filter((image) => !hidden.has(image.src));
+  const candidates = images.slice(0, MAX_CANDIDATES);
+  const sources = candidates.map((image) => image.src).join('\n');
 
+  useEffect(() => {
+    let alive = true;
+    const loaders = sources.split('\n').map((src) => {
+      const img = new Image();
+      img.onload = () => {
+        if (alive && img.naturalWidth >= MIN_POSTER_SIDE && img.naturalHeight >= MIN_POSTER_SIDE) {
+          setConfirmed((previous) => (previous.has(src) ? previous : new Set(previous).add(src)));
+        }
+      };
+      img.src = src;
+      return img;
+    });
+    return () => {
+      alive = false;
+      for (const img of loaders) img.onload = null;
+    };
+  }, [sources]);
+
+  const shown = candidates.filter((image) => confirmed.has(image.src)).slice(0, MAX_POSTERS);
   if (shown.length === 0) {
     return null;
   }
-
-  const hide = (src: string) =>
-    setHidden((previous) => (previous.has(src) ? previous : new Set(previous).add(src)));
-  const judge = (img: HTMLImageElement, src: string) => {
-    if (!img.complete) {
-      return;
-    }
-    if (img.naturalWidth < MIN_POSTER_SIDE || img.naturalHeight < MIN_POSTER_SIDE) {
-      hide(src);
-    }
-  };
 
   return (
     <section aria-labelledby="job-poster-title" className="flex flex-col gap-3">
@@ -58,14 +75,8 @@ export function PosterStrip({ images }: { images: PosterImage[] }) {
             >
               {/* oxlint-disable-next-line no-img-element */}
               <img
-                ref={(img) => {
-                  if (img) judge(img, image.src);
-                }}
                 src={image.src}
                 alt={image.alt}
-                loading="lazy"
-                onLoad={(event) => judge(event.currentTarget, image.src)}
-                onError={() => hide(image.src)}
                 className="block h-48 w-auto max-w-[80vw] object-contain md:h-60 md:max-w-md"
               />
             </button>
