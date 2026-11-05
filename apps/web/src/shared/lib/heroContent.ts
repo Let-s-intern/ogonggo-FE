@@ -1,4 +1,4 @@
-export type HeroScreen = 'jobs' | 'bootcamps' | 'side-studies' | 'concerns';
+export type HeroScreen = 'jobs' | 'bootcamps' | 'side-studies' | 'concerns' | 'community';
 
 /** 헤드라인 한 조각. `accent`가 있으면 강조색으로 그린다(지금은 jobs의 "딱!"·"쏙!"뿐이다). */
 export interface HeroSegment {
@@ -74,6 +74,19 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
       backgroundImage: '/hero/concerns.png',
       badgeBg: 'bg-[#D1F3E6]',
       badgeText: 'text-emerald-700',
+    },
+  },
+  /**
+   * `/community`(이슈 #569). 시안은 `.claude/tasks/todo/오공고 커무니티/image copy.png` 이고, 배경은 같은 폴더의
+   * `image.png`(1360x268, 흐린 오공고 로고)를 그대로 둔 `public/hero/community.png` 다. 배지는 채용공고와 같은 파랑이다.
+   */
+  community: {
+    badge: '오공고 커뮤니티',
+    lines: [[{ text: '막막하고 외로운 취준,' }], [{ text: '함께라면 달라집니다' }]],
+    theme: {
+      backgroundImage: '/hero/community.png',
+      badgeBg: 'bg-blue-100',
+      badgeText: 'text-blue-500',
     },
   },
 };
