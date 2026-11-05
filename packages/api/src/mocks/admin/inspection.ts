@@ -365,20 +365,28 @@ export function matchesInspectionFilters(job: AdminJobDetailResponse, url: URL):
 /**
  * 원문 HTML 의 위험한 부분을 지운다. 백엔드 `JobSourceHtmlSanitizer` 의 흉내다 — 스크립트·스타일·틀 태그, `on*`
  * 속성, `javascript:` 주소. 목에서만 쓴다. 화면은 저장된 원문을 다시 거르지 않고 그린다(`SourcePane`).
+ *
+ * 정규식으로 태그를 지우면 지운 자리에서 새 태그가 이어 붙을 수 있어(CodeQL `js/incomplete-multi-character-sanitization`)
+ * 브라우저의 `DOMParser` 로 읽어 요소·속성을 지운다. 이 목은 어드민 브라우저(MSW 서비스 워커 쪽 핸들러)에서만 돈다.
  */
-function sanitizeSourceHtml(html: string): string {
-  // 한 번 지운 자리에서 새 태그가 이어 붙을 수 있어(`<scr<script>ipt>`) 더 바뀌지 않을 때까지 되풀이한다.
-  let previous: string;
-  let current = html;
-  do {
-    previous = current;
-    current = current
-      .replace(/<(script|style|iframe|object|embed)\b[\s\S]*?<\/\1\s*>/gi, '')
-      .replace(/<(script|style|iframe|object|embed|link|meta)\b[^>]*>/gi, '')
-      .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-      .replace(/(href|src)\s*=\s*(["']?)\s*javascript:[^"'\s>]*\2/gi, '$1="#"');
-  } while (current !== previous);
-  return current;
+function sanitizeSourceHtml(html: string): { html: string; hasContent: boolean } {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.body
+    .querySelectorAll('script, style, iframe, object, embed, link, meta')
+    .forEach((el) => el.remove());
+  doc.body.querySelectorAll('*').forEach((el) => {
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      } else if ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(attr.value)) {
+        el.setAttribute(attr.name, '#');
+      }
+    }
+  });
+  const hasContent =
+    (doc.body.textContent ?? '').trim() !== '' || doc.body.querySelector('img') !== null;
+  return { html: doc.body.innerHTML.trim(), hasContent };
 }
 
 /**
@@ -396,15 +404,8 @@ export function readSourceHtmlPatch(body: UpdateAdminJobRequest): {
   if (body.sourceHtml.trim() === '') {
     return { error: badRequest('[sourceHtml] 원문 HTML 은 비울 수 없습니다.') };
   }
-  const html = sanitizeSourceHtml(body.sourceHtml).trim();
-  // 글이 남는지만 본다. 꺾쇠를 모두 지워 태그 이름을 남기지 않으므로 거르는 용도가 아니다.
-  if (
-    html
-      .replace(/<[^>]*>/g, '')
-      .replace(/[<>]/g, '')
-      .trim() === '' &&
-    !/<img\b/i.test(html)
-  ) {
+  const { html, hasContent } = sanitizeSourceHtml(body.sourceHtml);
+  if (!hasContent) {
     return { error: badRequest('[sourceHtml] 안전한 태그만 남기면 보여 줄 내용이 없습니다.') };
   }
   return { html };
