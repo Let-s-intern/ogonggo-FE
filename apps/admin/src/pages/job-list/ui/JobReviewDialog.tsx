@@ -245,7 +245,7 @@ export function JobReviewDialog({ jobId, onClose }: { jobId: number; onClose: ()
               onSaved={() =>
                 setAlert({
                   message: '내용을 수정했습니다.',
-                  detail: '본문을 고쳤다면 공고 분석은 다시 분석을 기다립니다.',
+                  detail: '제목·본문·모집 안내를 고쳤다면 공고 분석은 다시 분석을 기다립니다.',
                   tone: 'success',
                   nonce: Date.now(),
                 })

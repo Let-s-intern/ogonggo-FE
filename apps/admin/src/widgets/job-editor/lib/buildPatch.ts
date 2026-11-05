@@ -103,3 +103,20 @@ export function buildPatch(before: JobEditorValues, after: JobEditorValues): Upd
 
   return patch as UpdateAdminJobRequest;
 }
+
+/**
+ * 공고 분석이 기대는 칸을 바꾸는 요청인지. 제목, 본문 칸, 모집 안내다(백엔드 `Job.contentHash`). 이 칸이 바뀌면 분석이
+ * 낡아 AI 가 다시 만들고, 그 분석이 저장되면 운영자가 고친 분석은 사라진다.
+ */
+export function rebuildsAnalysis(patch: UpdateAdminJobRequest): boolean {
+  return (
+    patch.title !== undefined ||
+    patch.recruitmentNotice !== undefined ||
+    (patch.clear ?? []).includes('recruitmentNotice') ||
+    Object.keys(patch.fields ?? {}).length > 0
+  );
+}
+
+/** 운영자가 고친 분석이 있을 때 `rebuildsAnalysis` 인 저장 앞에 묻는 말. */
+export const REBUILD_ANALYSIS_CONFIRM =
+  '운영자가 고친 공고 분석이 있습니다. 제목·본문·모집 안내를 바꾸면 분석이 다시 만들어지고, 새 분석이 저장되면 고친 분석은 사라집니다. 저장할까요?';

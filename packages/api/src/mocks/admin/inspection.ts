@@ -282,8 +282,29 @@ analysisEdits.forEach(({ analysis }, jobId) => {
 });
 
 /**
- * 내용 수정으로 본문이 바뀌면 분석이 낡는다. 백엔드는 본문 해시로 같은 일을 한다. 운영자 수정 시각은 남는다 —
- * 백엔드는 AI 가 새 본문으로 다시 분석해 저장할 때 지운다. 목에는 AI 가 없어 다시 분석은 오지 않는다.
+ * 분석이 기대는 글. 백엔드 `Job.contentHash()`(ogonggo-BE `core/job/domain/Job.kt`)와 같은 칸이다 — 제목, 본문 일곱
+ * 칸, 모집 안내. 이 값이 바뀌면 분석이 낡는다. 회사명·분류·썸네일·원문 HTML 은 들지 않는다.
+ */
+export function analysisSourceOf(job: AdminJobDetailResponse): string {
+  return [
+    job.title,
+    job.companyAndTeamIntroduction,
+    job.responsibilities,
+    job.qualifications,
+    job.preferredQualifications,
+    job.compensation,
+    job.benefits,
+    job.hiringProcess,
+    job.recruitmentNotice,
+  ]
+    .map((text) => text ?? '')
+    .join('\u0000');
+}
+
+/**
+ * 내용 수정으로 분석이 기대는 글(`analysisSourceOf`)이 바뀌면 분석이 낡는다. 백엔드는 같은 칸의 해시로 같은 일을
+ * 한다. 운영자 수정 시각은 남는다 — 백엔드는 AI 가 새 본문으로 다시 분석해 저장할 때 지운다. 목에는 AI 가 없어 다시
+ * 분석은 오지 않는다.
  */
 export function markAnalysisStale(jobId: number) {
   if (analyses.get(jobId)) {

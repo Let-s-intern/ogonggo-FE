@@ -28,6 +28,7 @@ import {
 import { clearRejection } from '../fixtures/admin-rejection';
 import {
   type AdminJobSourceHtmlPatch,
+  analysisSourceOf,
   markAnalysisStale,
   matchesInspectionFilters,
   readSourceHtmlPatch,
@@ -400,6 +401,7 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     return merged.error;
   }
 
+  const analysisSource = analysisSourceOf(job);
   const error = applyContentPatch(
     job as unknown as Record<string, unknown>,
     body,
@@ -408,10 +410,10 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (error) {
     return HttpResponse.json({ status: 400, code: 'BAD_REQUEST', message: error }, { status: 400 });
   }
-  if (body.fields && Object.keys(body.fields).length > 0) {
+  Object.assign(job, merged.next);
+  if (analysisSourceOf(job) !== analysisSource) {
     markAnalysisStale(job.id);
   }
-  Object.assign(job, merged.next);
   if (sourceHtml.html !== undefined) {
     job.sourceHtml = sourceHtml.html;
   }
