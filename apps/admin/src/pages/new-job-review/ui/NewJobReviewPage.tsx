@@ -79,8 +79,6 @@ export function NewJobReviewPage() {
     tone: 'success' | 'danger';
     nonce: number;
   } | null>(null);
-  /** W/S 가 스크롤할 칸. 마우스가 마지막에 올라간 칸이다. */
-  const scrollTargetRef = useRef<'analysis' | 'source'>('analysis');
   const setInspected = useSetJobInspected();
   const setVisibility = useSetJobVisibility();
   const isBusy = setInspected.isPending || setVisibility.isPending;
@@ -92,8 +90,6 @@ export function NewJobReviewPage() {
   const isSaving = useIsMutating() > 0;
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const analysisRef = useRef<HTMLDivElement>(null);
-  const sourceRef = useRef<HTMLDivElement>(null);
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const byId = useMemo(() => new Map(items.map((job) => [job.id, job])), [items]);
@@ -190,10 +186,9 @@ export function NewJobReviewPage() {
     }
   }, [nextId, prefetch]);
 
-  // 다른 건으로 넘어가면 두 칸을 맨 위로 돌린다.
+  // 다른 건으로 넘어가면 맨 위로 돌린다. 두 칸은 내용만큼 늘어나 페이지가 스크롤된다(2026-11-05 사용자).
   useEffect(() => {
-    analysisRef.current?.scrollTo({ top: 0 });
-    sourceRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
   }, [current?.id]);
 
   // 들어오자마자 키가 먹도록 화면에 포커스를 준다. 이유는 검수 대기와 같다.
@@ -332,9 +327,9 @@ export function NewJobReviewPage() {
     focusRoot();
   }, [lastAction, isBusy, list, index, confirmLeave, setInspected, setVisibility, fail, focusRoot]);
 
+  // 칸 안 스크롤이 없어 W/S 는 페이지를 움직인다.
   const scrollBy = useCallback((amount: number) => {
-    const target = scrollTargetRef.current === 'source' ? sourceRef : analysisRef;
-    target.current?.scrollBy({ top: amount, behavior: 'auto' });
+    window.scrollBy({ top: amount, behavior: 'auto' });
   }, []);
 
   const handlers = useMemo(
@@ -491,10 +486,6 @@ export function NewJobReviewPage() {
             jobId={current.id}
             detail={detail}
             edit={inlineEdit}
-            paneHeightClass="@min-[944px]:h-[calc(100vh-19rem)]"
-            analysisRef={analysisRef}
-            sourceRef={sourceRef}
-            onPaneEnter={(pane) => (scrollTargetRef.current = pane)}
             onDraftChange={onDraftChange}
             // 버튼에 포커스가 남으면 다음 Space 가 이 버튼을 다시 누른다.
             onAskedAssistant={focusRoot}
