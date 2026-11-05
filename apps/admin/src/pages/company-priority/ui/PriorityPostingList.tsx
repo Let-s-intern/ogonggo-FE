@@ -1,16 +1,12 @@
 import { useSearchParams } from 'react-router';
-import { Callout, DataTable, Pagination, Tabs, Toggle, type DataTableColumn } from '@ogonggo/ui';
+import { Callout, DataTable, Pagination, Tabs, type DataTableColumn } from '@ogonggo/ui';
 import {
   enumLabel,
   type AdminBootcampSummaryResponse,
   type AdminJobSummaryResponse,
 } from '@ogonggo/api/src/admin';
-import {
-  useBootcampList,
-  useJobList,
-  usePatchBootcamp,
-  usePatchJob,
-} from '@/entities/content/api/useContent';
+import { useBootcampList, useJobList } from '@/entities/content/api/useContent';
+import { BootcampPriorityToggle, JobPriorityToggle } from '@/features/priority-exposed';
 import { RecruitmentStatusBadge } from '@/shared/config/labels';
 import { formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
@@ -27,13 +23,14 @@ const KIND_TABS = [
 ] as const;
 
 /**
- * 우선 노출 대상(기업회원이 올린 마감 전 공고)만 서버 필터로 받는다. 채용공고는 계산한 모집 상태
+ * 우선 노출 대상(기업회원이 올린 마감 전 공고 가운데 노출 중인 것)만 서버 필터로 받는다. 비노출 공고는 공개 목록에
+ * 나가지 않아 우선 노출을 정할 일이 없다(2026-11-05 사용자). 채용공고는 계산한 모집 상태
  * (`recruitmentStatus`), 부트캠프는 저장된 모집 상태(`status`)가 모집 중인 것이다. 부트캠프의 임시저장(`DRAFT`)은
  * 공개 목록에 나가지 않아 뺀다.
  */
 const JOB_FILTERS = {
   keyword: '',
-  visibility: '',
+  visibility: 'VISIBLE',
   source: 'COMPANY',
   reviewStatus: '',
   recruitmentStatus: 'RECRUITING',
@@ -43,7 +40,7 @@ const JOB_FILTERS = {
 const BOOTCAMP_FILTERS = {
   keyword: '',
   status: 'RECRUITING',
-  visibility: '',
+  visibility: 'VISIBLE',
   source: 'COMPANY',
   reviewStatus: '',
   sort: 'REGISTERED_AT',
@@ -188,60 +185,5 @@ function BootcampTable({ page }: { page: number }) {
       />
       <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
     </>
-  );
-}
-
-/**
- * 켜짐은 서버 값에서 온다. 누른 순간 뒤집지 않고, 저장이 끝나 목록을 다시 받으면 뒤집힌다(`usePatchJob` 이
- * 목록을 무효화한다). 그래서 실패하면 이전 값에 남는다.
- */
-function JobPriorityToggle({ job }: { job: JobRow }) {
-  const patchMutation = usePatchJob(job.id);
-  return (
-    <PriorityToggle
-      checked={job.priorityExposed ?? true}
-      isPending={patchMutation.isPending}
-      isError={patchMutation.isError}
-      onChange={(next) => patchMutation.mutate({ priorityExposed: next })}
-    />
-  );
-}
-
-function BootcampPriorityToggle({ bootcamp }: { bootcamp: BootcampRow }) {
-  const patchMutation = usePatchBootcamp(bootcamp.id);
-  return (
-    <PriorityToggle
-      checked={bootcamp.priorityExposed ?? true}
-      isPending={patchMutation.isPending}
-      isError={patchMutation.isError}
-      onChange={(next) => patchMutation.mutate({ priorityExposed: next })}
-    />
-  );
-}
-
-function PriorityToggle({
-  checked,
-  isPending,
-  isError,
-  onChange,
-}: {
-  checked: boolean;
-  isPending: boolean;
-  isError: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    // 라벨이 줄바꿈되면 행 높이가 들쭉날쭉해진다.
-    <span className="whitespace-nowrap">
-      <Toggle
-        checked={checked}
-        disabled={isPending}
-        label={checked ? '켜짐' : '꺼짐'}
-        onChange={onChange}
-      />
-      {isError ? (
-        <span className="block pt-1 text-xs text-red-500">저장하지 못했습니다.</span>
-      ) : null}
-    </span>
   );
 }
