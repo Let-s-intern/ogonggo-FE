@@ -72,6 +72,15 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     area: 'business',
     /*
+     * 비즈니스 회원 공고를 공개 목록 맨 앞에 둘지 정한다. 전체 스위치와 공고별 설정이 있다(2026-11-05 사용자: 기업회원
+     * 쪽에서 보고 공고마다 정한다). 광고 구좌가 열리기 전까지의 임시 혜택이다.
+     */
+    title: '노출',
+    items: [{ path: '/placements/company-priority', label: '기업회원 공고 우선 노출' }],
+  },
+  {
+    area: 'business',
+    /*
      * 회원이 아닌 사람도 보내는 영업 문의다. 제휴 문의가 생기면 여기에 더한다. 메뉴 이름이 `무료 홍보 신청` 이 아닌
      * 이유는 테이블이 문의 유형을 가리지 않기 때문이다(PRD `어드민 화면`).
      */
@@ -92,7 +101,6 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { path: '/placements/pick-jobs', label: '오공고 PICK 공고' },
       { path: '/placements/recommend-weights', label: '추천 로직 가중치' },
-      { path: '/placements/company-priority', label: '기업회원 공고 우선 노출' },
     ],
   },
   {
