@@ -6,9 +6,10 @@ import { loadFont, POSTING_OG_SIZE } from './postingOgImage';
 
 /**
  * 미리보기 카드가 있는 화면. 취준고민(`concerns`)은 미리보기 카드를 만들지 않기로 했다(v13 PRD
- * "하지 않는 것"). 히어로 화면이 늘 때마다 아래 표를 채우게 되지 않도록 뺀다.
+ * "하지 않는 것"). 커뮤니티(`community`)도 만들지 않는다. 히어로 화면이 늘 때마다 아래 표를 채우게 되지
+ * 않도록 뺀다.
  */
-type OgScreen = Exclude<HeroScreen, 'concerns'>;
+type OgScreen = Exclude<HeroScreen, 'concerns' | 'community'>;
 
 /**
  * 목록 화면의 배지 색. 히어로(`HERO_CONTENT`)는 Tailwind 클래스로 들고 있어 이미지 생성기에

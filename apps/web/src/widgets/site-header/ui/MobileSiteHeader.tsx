@@ -264,6 +264,12 @@ function MobileMenu({
           />
         )}
         <MenuSection title="공고" links={postings} onNavigate={onClose} />
+        {/* 데스크톱은 헤더 맨 위 띠의 알림 아이콘 왼쪽에 있다. 모바일 윗줄은 로고·앱 다운로드·알림·햄버거로 차 있다. */}
+        <MenuSection
+          title="커뮤니티"
+          links={[{ label: '오공고 커뮤니티', href: '/community' }]}
+          onNavigate={onClose}
+        />
         <MenuSection
           title="기업 서비스"
           links={[{ label: '공고 등록하기', href: registerHref }]}
