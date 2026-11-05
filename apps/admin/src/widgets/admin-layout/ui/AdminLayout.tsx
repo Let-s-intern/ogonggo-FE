@@ -102,7 +102,11 @@ export function AdminLayout() {
       */}
         <header className="flex h-14 shrink-0 items-center gap-8 border-b border-gray-200 bg-white px-6">
           <p className="text-lg font-bold text-gray-900">오공고 관리자</p>
-          <div role="tablist" aria-label="관리 구역" className="flex h-full items-stretch gap-6">
+          <div
+            role="tablist"
+            aria-label="관리 구역"
+            className="ml-10 flex h-full items-stretch gap-8"
+          >
             {NAV_AREAS.map((item) => (
               <button
                 key={item.area}
