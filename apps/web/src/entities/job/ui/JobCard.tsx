@@ -117,7 +117,10 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
    * 회사명 줄 오른쪽 끝이다(2026-11-05 사용자 시안). 회사명이 길면 회사명이 말줄임으로 줄고 배지는 줄지 않는다.
    */
   const deadlineBadge = dday ? (
-    <Badge tone={urgent ? 'urgent' : 'main'} className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold">
+    <Badge
+      tone={urgent ? 'urgent' : 'main'}
+      className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold"
+    >
       {dday}
     </Badge>
   ) : closed ? (
