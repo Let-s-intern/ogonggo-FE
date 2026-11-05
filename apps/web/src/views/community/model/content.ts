@@ -123,14 +123,13 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
   },
   {
     id: 'univ',
-    // 계정 주소는 사용자가 준 자료 폴더 이름(`letscareer_univ`)을 따랐다. 프로필과 게시물 캡처 다섯 장도 그 폴더에서
-    // 왔다(2026-11-05 사용자). 여섯째 칸은 비어 회색으로 남는다.
-    handle: '@letscareer_univ',
+    // 계정 주소와 프로필·게시물 캡처 다섯 장은 사용자가 준 것이다(2026-11-05). 여섯째 칸은 비어 회색으로 남는다.
+    handle: '@letscareer.univ',
     label: '렛츠커리어 대외활동',
     pitch: '다양한 대외활동을 찾는 분께 추천',
     description:
       '다양한 대외활동과 공모전 정보부터 취업에 필요한 경험을 쌓을 기회까지 빠르게 만나보세요.',
-    url: 'https://www.instagram.com/letscareer_univ/',
+    url: 'https://www.instagram.com/letscareer.univ/',
     profileImage: '/community/instagram-univ-profile.jpg',
     thumbnails: [
       { src: '/community/instagram-univ-1.jpg', alt: '2026년 10월 5주차 대외활동·공모전' },
@@ -156,6 +155,28 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
       { src: '/community/instagram-qna-4.jpg', alt: 'AI 티 나는 문장 4가지' },
       { src: '/community/instagram-qna-5.jpg', alt: '면접에서 AI 써봤냐고 물어보면' },
       { src: '/community/instagram-qna-6.jpg', alt: '계약직 vs 정규직 퍼포먼스 QNA' },
+    ],
+  },
+  {
+    id: 'gongchae',
+    // 프로필과 게시물은 사용자가 준 자료(`letscareer_공채` 폴더)다. 넷째 캡처와 같은 그림이 한 장 더 있어 다섯 장만 넣어
+    // 여섯째 칸은 비어 회색으로 남는다. 계정 주소는 사용자가 준 것이다(2026-11-05).
+    handle: '@letscareer.gongchae',
+    label: '렛츠커리어 공채',
+    pitch: '신입 공채 정보를 찾는 분께 추천',
+    description:
+      '문과 취준생을 위한 신입 공채와 기업별 채용 소식, 놓치기 쉬운 공채 일정까지 한눈에 확인해 보세요.',
+    url: 'https://www.instagram.com/letscareer.gongchae/',
+    profileImage: '/community/instagram-gongchae-profile.jpg',
+    thumbnails: [
+      { src: '/community/instagram-gongchae-1.jpg', alt: '삼성전자 GSAT 참거짓 문제' },
+      { src: '/community/instagram-gongchae-2.jpg', alt: '삼성전자 GSAT 자료해석 유형' },
+      { src: '/community/instagram-gongchae-3.jpg', alt: '1분 안에 풀어야 하는 삼성 GSAT 문제' },
+      { src: '/community/instagram-gongchae-4.jpg', alt: '오답률 86% 삼성 인적성 문제' },
+      {
+        src: '/community/instagram-gongchae-5.jpg',
+        alt: '60초 안에 풀어야 하는 삼성 필기고사 문제',
+      },
     ],
   },
 ];
