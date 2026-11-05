@@ -79,7 +79,7 @@ export interface InstagramAccountCard {
   /** 파란 상자의 설명. 렛츠커리어 문구다. */
   description: string;
   url: string;
-  /** `public/community/`. 렛츠커리어 `images/instagram-*` 의 프로필과 앞의 게시물 셋이다. */
+  /** `public/community/`. 렛츠커리어 `images/instagram-*` 의 프로필과 게시물 여섯이다(2026-11-05 사용자: 사진 6개 모두). */
   profileImage: string;
   thumbnails: { src: string; alt: string }[];
 }
@@ -98,6 +98,9 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
       { src: '/community/instagram-job-1.jpg', alt: '오공고 소개' },
       { src: '/community/instagram-job-2.jpg', alt: '인턴 합격 후기' },
       { src: '/community/instagram-job-3.jpg', alt: '카카오스타일 마케팅 인턴 채용' },
+      { src: '/community/instagram-job-4.jpg', alt: 'PTKOREA 공채 문과 직무' },
+      { src: '/community/instagram-job-5.jpg', alt: '오늘의집 Recruiting Coordinator' },
+      { src: '/community/instagram-job-6.jpg', alt: '당근마켓 그로스 매니저 인턴' },
     ],
   },
   {
@@ -113,6 +116,9 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
       { src: '/community/instagram-official-1.jpg', alt: '2026 자유양식 이력서 템플릿' },
       { src: '/community/instagram-official-2.jpg', alt: '삼성·롯데 인적성 시작을 시작해' },
       { src: '/community/instagram-official-3.jpg', alt: '문과 직무 SQL & AI 활용 실습' },
+      { src: '/community/instagram-official-4.jpg', alt: '자소서 제출 직전 성과가 없어 보인다면' },
+      { src: '/community/instagram-official-5.jpg', alt: '네이버 마케터 ADsP·SQLD 따야 돼?' },
+      { src: '/community/instagram-official-6.jpg', alt: 'AI 면접관 프롬프트 공개' },
     ],
   },
   {
@@ -128,6 +134,9 @@ export const INSTAGRAM_ACCOUNT_CARDS: InstagramAccountCard[] = [
       { src: '/community/instagram-qna-1.jpg', alt: '취준생의 현실 12시간 루틴' },
       { src: '/community/instagram-qna-2.jpg', alt: '인적성 면접 준비 가이드' },
       { src: '/community/instagram-qna-3.jpg', alt: '인스타그램 광고로 역량 쌓는법' },
+      { src: '/community/instagram-qna-4.jpg', alt: 'AI 티 나는 문장 4가지' },
+      { src: '/community/instagram-qna-5.jpg', alt: '면접에서 AI 써봤냐고 물어보면' },
+      { src: '/community/instagram-qna-6.jpg', alt: '계약직 vs 정규직 퍼포먼스 QNA' },
     ],
   },
 ];
