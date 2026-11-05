@@ -15,12 +15,9 @@ import { RecruitmentStatusBadge } from '@/shared/config/labels';
 import { formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
-/**
- * 목록 줄. 공고별 우선 노출(`priorityExposed`)은 백엔드 LC-3573 이 목록·상세 응답에 더한다. 생성 타입에 아직 없어
- * 덧붙이고, 없으면 켬(백엔드 기본값)으로 읽는다. LC-3573 배포 뒤 코드젠으로 바꾼다.
- */
-type JobRow = AdminJobSummaryResponse & { priorityExposed?: boolean };
-type BootcampRow = AdminBootcampSummaryResponse & { priorityExposed?: boolean };
+/** 목록 줄. 공고별 우선 노출(`priorityExposed`)은 백엔드 LC-3573 이 목록·상세 응답에 싣는다. */
+type JobRow = AdminJobSummaryResponse;
+type BootcampRow = AdminBootcampSummaryResponse;
 
 type PostingKind = 'jobs' | 'bootcamps';
 

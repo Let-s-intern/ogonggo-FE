@@ -59,8 +59,8 @@ type ContentSort = 'REGISTERED_AT' | 'VIEW_COUNT';
  * 기업회원 공고 우선 노출을 공고마다 켜고 끄는 값(`priorityExposed`, 백엔드 LC-3573). 목록·상세 응답에 붙고 건별
  * 수정(PATCH)으로 바꾼다. 백엔드 기본값은 켬이다.
  *
- * 생성 모델에 아직 없어 픽스처 밖에 따로 든다. 우선 노출 화면이 꺼진 줄을 그려 보도록 다섯에 하나꼴로 끈 채
- * 시작한다. LC-3573 배포 뒤 코드젠으로 바꾼다.
+ * 픽스처는 백엔드 기본값(켬)으로 두고, 바꾼 값은 여기 따로 든다. 우선 노출 화면이 꺼진 줄을 그려 보도록 다섯에
+ * 하나꼴로 끈 채 시작한다.
  */
 const priorityExposedById = {
   job: new Map<number, boolean>(),
@@ -75,9 +75,12 @@ function withPriorityExposed<T extends { id: number }>(
   return { ...row, priorityExposed };
 }
 
-/** 보냈으면 참·거짓이어야 한다. 백엔드는 `null` 을 받지 않는다(non-null 칸). */
+/** 보냈으면 참·거짓이어야 한다. 백엔드처럼 `null` 은 그대로 둔다는 뜻이다. */
 function readPriorityExposed(body: object): { value?: boolean; error?: Response } {
-  if (!('priorityExposed' in body)) {
+  if (
+    !('priorityExposed' in body) ||
+    (body as { priorityExposed: unknown }).priorityExposed === null
+  ) {
     return {};
   }
   const value = (body as { priorityExposed: unknown }).priorityExposed;
