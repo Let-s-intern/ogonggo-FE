@@ -8,7 +8,7 @@
  * "useEffect only works in Client Components" 로 빌드가 깨진다 — `apps/web` 의 `not-found.tsx`
  * 가 실제로 그렇게 깨졌다.
  */
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
 
 export interface ModalProps {
@@ -33,9 +33,16 @@ export interface ModalProps {
  *
  * 열려 있는 동안 뒤 화면의 스크롤을 막는다. 막지 않으면 모달 안에서 스크롤이 끝났을 때 뒤
  * 페이지가 대신 움직인다.
+ *
+ * 어드민처럼 오른쪽에 AI 비서 패널이 붙은 화면(조상에 `--assistant-width` 가 있다)에서는 `showModal()` 을 쓰지
+ * 않는다. 최상위 레이어와 어두운 막이 패널까지 덮고 뒤 화면을 모두 막아, 모달을 띄운 채 비서에게 묻지 못했다
+ * (2026-11-05 사용자). 그때는 열린 `<dialog>`(`show`)를 패널 폭만큼 비켜 세우고 막도 그 폭만큼만 덮는다
+ * (어드민 `JobReviewDialog` 와 같은 방식). 초점 가둠은 없어지고, Esc 는 직접 받는다.
  */
 export function Modal({ open, title, description, onClose, children, className }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // 비서 패널을 비켜 서는지. 열 때 조상의 `--assistant-width` 로 정한다.
+  const [besideAssistant, setBesideAssistant] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -43,12 +50,32 @@ export function Modal({ open, title, description, onClose, children, className }
       return;
     }
     if (open && !dialog.open) {
-      dialog.showModal();
+      const beside = getComputedStyle(dialog).getPropertyValue('--assistant-width').trim() !== '';
+      setBesideAssistant(beside);
+      if (beside) {
+        dialog.show();
+      } else {
+        dialog.showModal();
+      }
     }
     if (!open && dialog.open) {
       dialog.close();
     }
   }, [open]);
+
+  // 열린 `<dialog>`(`show`)는 Esc 로 닫히지 않아 직접 받는다. `showModal` 일 때는 브라우저가 닫는다.
+  useEffect(() => {
+    if (!open || !besideAssistant) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        dialogRef.current?.close();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, besideAssistant]);
 
   useEffect(() => {
     if (!open) {
@@ -62,18 +89,28 @@ export function Modal({ open, title, description, onClose, children, className }
   }, [open]);
 
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose}
-      className={cn(
-        'm-auto w-[min(36rem,calc(100vw-2rem))] rounded-lg border border-gray-200 bg-white p-6',
-        'backdrop:bg-gray-950/40',
-        className,
-      )}
-    >
-      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-      {description ? <p className="pt-1 text-sm text-gray-500">{description}</p> : null}
-      <div className="pt-4">{children}</div>
-    </dialog>
+    <>
+      {open && besideAssistant ? (
+        <div
+          aria-hidden="true"
+          className="fixed inset-y-0 left-0 right-[var(--assistant-width)] z-40 bg-gray-950/40"
+        />
+      ) : null}
+      <dialog
+        ref={dialogRef}
+        onClose={onClose}
+        className={cn(
+          'm-auto w-[min(36rem,calc(100vw-2rem))] rounded-lg border border-gray-200 bg-white p-6',
+          'backdrop:bg-gray-950/40',
+          besideAssistant &&
+            'fixed inset-y-0 left-0 right-[var(--assistant-width)] z-50 h-fit max-h-[calc(100vh-2rem)] w-[min(36rem,calc(100vw-var(--assistant-width)-2rem))] overflow-y-auto',
+          className,
+        )}
+      >
+        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        {description ? <p className="pt-1 text-sm text-gray-500">{description}</p> : null}
+        <div className="pt-4">{children}</div>
+      </dialog>
+    </>
   );
 }

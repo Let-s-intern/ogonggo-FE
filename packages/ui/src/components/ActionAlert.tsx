@@ -90,8 +90,9 @@ export function ActionAlert({
 
   const palette = TONE[tone];
 
+  // 어드민의 AI 비서 패널(`--assistant-width`)은 덮지 않는다. 변수가 없는 화면(웹)은 전체 폭이다.
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+    <div className="pointer-events-none fixed inset-y-0 left-0 right-[var(--assistant-width,0px)] z-50 flex items-center justify-center">
       <div className="animate-scrim-in absolute inset-0 bg-gray-950/15" />
 
       <div

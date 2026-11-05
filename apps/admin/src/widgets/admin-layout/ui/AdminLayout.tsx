@@ -1,12 +1,12 @@
 import { type CSSProperties, type MouseEvent, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Callout, cn } from '@ogonggo/ui';
 import {
   ADMIN_TOKEN_UNVERIFIED_MESSAGE,
   isAdminTokenUnverified,
 } from '@/shared/api/adminTokenUnverified';
 import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
-import { NAV_SECTIONS } from '@/shared/config/navigation';
+import { NAV_AREAS, NAV_SECTIONS, firstPathOf, navAreaOf } from '@/shared/config/navigation';
 import { isMockEnabled } from '@/app/enableMocking';
 import { useReviewQueue } from '@/entities/review/api/useReviewQueue';
 import {
@@ -74,6 +74,17 @@ export function AdminLayout() {
     },
   };
   const navigate = useNavigate();
+  /*
+   * 헤더 오른쪽의 할 일 숫자(2026-11-05 사용자). 어느 구역을 보고 있든 비즈니스 쪽에 쌓인 일을 알린다. 메뉴의 숫자와
+   * 같은 쿼리라 판정·처리하면 함께 줄어든다. 0 이면 그리지 않는다. 비즈니스 탭에는 둘을 더한 수를 붙인다.
+   */
+  const headerCounts = [
+    { label: '등록 대기', count: reviewQueue?.length ?? 0, to: '/ads/review' },
+    { label: '오늘 문의', count: adInquiryToday?.count ?? 0, to: todayAdInquiriesHref() },
+  ].filter((item) => item.count > 0);
+  const businessTotal = headerCounts.reduce((sum, item) => sum + item.count, 0);
+  // 헤더의 구역은 주소에서 정한다. 주소로 바로 들어와도(상세 등) 그 화면이 속한 구역이 켜진다.
+  const area = navAreaOf(useLocation().pathname);
   const navBadgeFor = (path: string) => {
     const badge = navBadges[path];
     return badge?.count ? (
@@ -92,95 +103,150 @@ export function AdminLayout() {
         } as CSSProperties
       }
     >
-      <nav className="w-56 shrink-0 border-r border-gray-200 bg-white px-3 py-6">
-        <p className="px-3 pb-1 text-lg font-bold text-gray-900">오공고 관리자</p>
+      {/* 헤더와 좌측 메뉴·본문을 한 열에 두고, AI 비서 패널은 그 오른쪽에 화면 높이로 둔다. */}
+      <div className="flex min-w-0 flex-1 flex-col">
         {/*
+          맨 위 헤더. 서비스·비즈니스 구역을 고르면 좌측 메뉴가 그 구역의 묶음으로 바뀌고 구역의 첫 화면으로 간다
+          (2026-11-05 사용자). 왼쪽 칸은 좌측 메뉴와 같은 폭·같은 오른쪽 선이라 메뉴 기둥이 헤더까지 이어진다. 탭은 본문 글자(`px-8`)와
+          같은 자리에서 시작한다.
+        */}
+        <header className="flex h-14 shrink-0 items-stretch border-b border-gray-200 bg-white">
+          <p className="flex w-56 shrink-0 items-center border-r border-gray-200 px-6 text-lg font-bold text-gray-900">
+            오공고 관리자
+          </p>
+          <div role="tablist" aria-label="관리 구역" className="flex items-stretch gap-8 px-8">
+            {NAV_AREAS.map((item) => (
+              <button
+                key={item.area}
+                type="button"
+                role="tab"
+                aria-selected={area === item.area}
+                onClick={() => navigate(firstPathOf(item.area))}
+                className={cn(
+                  '-mb-px cursor-pointer border-b-2 px-1 text-[15px] font-semibold',
+                  area === item.area
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-800',
+                )}
+              >
+                <span className="flex items-center gap-1.5">
+                  {item.label}
+                  {item.area === 'business' && businessTotal > 0 ? (
+                    <span
+                      aria-label={`처리할 일 ${businessTotal}건`}
+                      className="min-w-5 rounded-full bg-blue-500 px-1.5 text-center text-xs leading-5 font-semibold text-white"
+                    >
+                      {businessTotal >= 100 ? '99+' : businessTotal}
+                    </span>
+                  ) : null}
+                </span>
+              </button>
+            ))}
+          </div>
+          {headerCounts.length > 0 ? (
+            <div className="ml-auto flex items-center gap-2 px-6">
+              {headerCounts.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => navigate(item.to)}
+                  className="cursor-pointer rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  {item.label} <span className="font-semibold text-blue-600">{item.count}</span>건
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </header>
+        <div className="flex flex-1">
+          <nav className="w-56 shrink-0 border-r border-gray-200 bg-white px-3 py-6">
+            {/*
           목이 켜져 있으면 화면에 적는다. 실수로 켜둔 채 실서비스가 되면 데이터만 가짜인
           화면이 멀쩡히 돌아가고, 그건 사람이 눈으로 잡는 수밖에 없다.
         */}
-        {isMockEnabled ? (
-          <p className="mx-3 mb-5 rounded-sm bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
-            목데이터로 동작 중
-          </p>
-        ) : (
-          <div className="pb-5" />
-        )}
-        {NAV_SECTIONS.map((section, index) => (
-          <div key={section.title ?? index} className="pb-6">
-            {section.title ? (
-              <p className="px-3 pb-2 text-sm font-medium text-gray-400">{section.title}</p>
+            {isMockEnabled ? (
+              <p className="mx-3 mb-5 rounded-sm bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                목데이터로 동작 중
+              </p>
             ) : null}
-            <ul>
-              {section.items.map((item) => (
-                <li key={item.path}>
-                  {item.disabled ? (
-                    // 라우트가 없는 항목. 링크로 두면 눌렀을 때 404 가 난다.
-                    <span
-                      aria-disabled="true"
-                      title="아직 만들지 않은 화면입니다"
-                      className="block cursor-not-allowed rounded-sm px-3 py-2 text-sm text-gray-300"
-                    >
-                      {item.label}
-                    </span>
-                  ) : (
-                    <NavLink
-                      to={item.path}
-                      // `/` 는 end 가 없으면 모든 경로에 활성으로 걸린다.
-                      end={item.path === '/'}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center justify-between rounded-sm px-3 py-2 text-sm',
-                          isActive
-                            ? 'bg-blue-50 font-medium text-blue-600'
-                            : 'text-gray-700 hover:bg-gray-100',
-                        )
-                      }
-                    >
-                      {item.label}
-                      {navBadgeFor(item.path)}
-                      {navCounts[item.path] ? (
-                        <span className="text-xs font-normal text-gray-400">
-                          {navCounts[item.path]}
+            {NAV_SECTIONS.filter((section) => section.area === area).map((section, index) => (
+              <div key={section.title ?? index} className="pb-6">
+                {section.title ? (
+                  <p className="px-3 pb-2 text-sm font-medium text-gray-400">{section.title}</p>
+                ) : null}
+                <ul>
+                  {section.items.map((item) => (
+                    <li key={item.path}>
+                      {item.disabled ? (
+                        // 라우트가 없는 항목. 링크로 두면 눌렀을 때 404 가 난다.
+                        <span
+                          aria-disabled="true"
+                          title="아직 만들지 않은 화면입니다"
+                          className="block cursor-not-allowed rounded-sm px-3 py-2 text-sm text-gray-300"
+                        >
+                          {item.label}
                         </span>
-                      ) : null}
-                    </NavLink>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        <a
-          href={WEB_HOME}
-          onClick={goToWeb}
-          className="mx-3 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-        >
-          오공고 웹으로
-          <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
-        </a>
-        {/*
+                      ) : (
+                        <NavLink
+                          to={item.path}
+                          // `/` 는 end 가 없으면 모든 경로에 활성으로 걸린다.
+                          end={item.path === '/'}
+                          className={({ isActive }) =>
+                            cn(
+                              'flex items-center justify-between rounded-sm px-3 py-2 text-sm',
+                              isActive
+                                ? 'bg-blue-50 font-medium text-blue-600'
+                                : 'text-gray-700 hover:bg-gray-100',
+                            )
+                          }
+                        >
+                          {item.label}
+                          {navBadgeFor(item.path)}
+                          {navCounts[item.path] ? (
+                            <span className="text-xs font-normal text-gray-400">
+                              {navCounts[item.path]}
+                            </span>
+                          ) : null}
+                        </NavLink>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <a
+              href={WEB_HOME}
+              onClick={goToWeb}
+              className="mx-3 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              오공고 웹으로
+              <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
+            </a>
+            {/*
           크롤링 서버는 HTTP 로만 열려 있어 어드민(HTTPS) 안에 띄울 수 없고, 쿠키도 iframe 안에서는
           보내지지 않아 새 탭으로 연다. 인스턴스를 켜고 끄며 운영해 꺼져 있을 때는 열리지 않는다.
         */}
-        <a
-          href={CRAWLER_SERVER_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="mx-3 mt-2 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-        >
-          크롤링 서버로
-          <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
-        </a>
-      </nav>
-      {/* 아래 여백은 목록에서 고르면 뜨는 하단 바(`widgets/bulk-visibility`)가 표 끝을 가리지 않게 둔다. */}
-      <main className="min-w-0 flex-1 px-8 pt-6 pb-24">
-        {isAdminTokenUnverified() ? (
-          <Callout tone="warning" className="mb-6">
-            {ADMIN_TOKEN_UNVERIFIED_MESSAGE}
-          </Callout>
-        ) : null}
-        <Outlet />
-      </main>
+            <a
+              href={CRAWLER_SERVER_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mx-3 mt-2 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              크롤링 서버로
+              <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
+            </a>
+          </nav>
+          {/* 아래 여백은 목록에서 고르면 뜨는 하단 바(`widgets/bulk-visibility`)가 표 끝을 가리지 않게 둔다. */}
+          <main className="min-w-0 flex-1 px-8 pt-6 pb-24">
+            {isAdminTokenUnverified() ? (
+              <Callout tone="warning" className="mb-6">
+                {ADMIN_TOKEN_UNVERIFIED_MESSAGE}
+              </Callout>
+            ) : null}
+            <Outlet />
+          </main>
+        </div>
+      </div>
       {/* 화면을 옮겨도 대화가 남도록 본문(`Outlet`) 밖, 레이아웃에 둔다. */}
       <AssistantPanel open={isAssistantOpen} onOpenChange={setIsAssistantOpen} />
     </div>
