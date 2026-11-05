@@ -10,8 +10,12 @@ const LABEL_CLASS = 'source-label';
  * 표 줄 모양. 원문을 그리는 상자의 클래스에 더한다. 웹 공고 상세(`OriginalTab`)와 어드민 원문 미리보기(`SourcePane`)가
  * 같이 쓴다.
  */
-export const SOURCE_LABEL_ROW_CLASS =
-  '[&_.source-label-row]:flex [&_.source-label-row]:gap-4 [&_.source-label-row]:border-b [&_.source-label-row]:border-gray-100 [&_.source-label-row]:py-2 [&_.source-label]:w-20 [&_.source-label]:shrink-0 [&_.source-label]:text-gray-500';
+export const SOURCE_LABEL_ROW_CLASS = [
+  '[&_.source-label-row]:flex [&_.source-label-row]:gap-4 [&_.source-label-row]:border-b [&_.source-label-row]:border-gray-100 [&_.source-label-row]:py-2 [&_.source-label]:w-20 [&_.source-label]:shrink-0 [&_.source-label]:text-gray-500',
+  // 잡코리아 등은 같은 정보를 정의 목록(`<dl><dt>직군</dt><dd>마케팅</dd>`)으로 둔다. 클래스 없이 같은 표 줄로 그린다
+  // (2026-11-05 사용자 제보, 라라스윗 공고).
+  '[&_dl]:grid [&_dl]:grid-cols-[5rem_minmax(0,1fr)] [&_dl]:gap-x-0 [&_dt]:pr-4 [&_:is(dt,dd)]:border-b [&_:is(dt,dd)]:border-gray-100 [&_:is(dt,dd)]:py-2 [&_dt]:text-gray-500 [&_dd]:m-0',
+].join(' ');
 
 /** 자식 요소가 없는 `div`·`span`. 글만 든 칸이다. */
 function isLeaf(node: ChildNode): node is HTMLElement {

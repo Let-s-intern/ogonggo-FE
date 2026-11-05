@@ -126,6 +126,8 @@ const noRegion: JobFixture = {
     '<div><div><div><div>부문</div>People</div><div><div>직군</div>대학생인턴</div>',
     '<div><div>경력사항</div>신입</div><div><div>고용형태</div>인턴</div>',
     '<div><div>근무지</div><div>서울대한민국 서울특별시 강남구 영동대로 517 아셈타워</div></div></div></div>',
+    // 잡코리아식 정의 목록(`dl`)도 같은 표 줄로 보이는지 본다.
+    '<dl><dt>직군</dt><dd>마케팅</dd><dt>경력사항</dt><dd>경력 무관</dd><dt>고용형태</dt><dd>인턴</dd></dl>',
     '<div><p><strong>※ 해당 공고는 현장실습 협약이 체결된 학교의 재학생만 지원이 가능합니다.</strong></p>',
     '<p><img src="https://www.ogonggo.co.kr/hero/jobs.png" alt="채용 포스터"></p></div>',
     '</div></div></div>',

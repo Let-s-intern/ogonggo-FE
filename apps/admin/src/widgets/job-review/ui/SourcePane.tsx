@@ -276,7 +276,9 @@ const PREVIEW_STYLE =
   'h1,h2,h3,h4,h5,h6{color:#111827;font-weight:700;margin:12px 0}' +
   'h1{font-size:20px}h2{font-size:18px}h3{font-size:16px}h4,h5,h6{font-size:14px}' +
   '.source-label-row{display:flex;gap:16px;padding:8px 0;border-bottom:1px solid #f3f4f6}' +
-  '.source-label{width:80px;flex-shrink:0;color:#6b7280}</style>';
+  '.source-label{width:80px;flex-shrink:0;color:#6b7280}' +
+  'dl{display:grid;grid-template-columns:80px minmax(0,1fr);column-gap:0}' +
+  'dt,dd{margin:0;padding:8px 0;border-bottom:1px solid #f3f4f6}dt{color:#6b7280;padding-right:16px}</style>';
 
 /** 저장된 원문 미리보기. "칸 이름 + 값" 묶음에 표 줄 클래스를 붙인 HTML 을 그린다(`withLabelRows`). */
 function SourceHtmlPreview({ html }: { html: string }) {
