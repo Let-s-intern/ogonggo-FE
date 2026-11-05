@@ -19,7 +19,20 @@ export interface NavItem {
   disabled?: boolean;
 }
 
+/**
+ * 맨 위 헤더의 구역. 좌측 메뉴는 고른 구역의 묶음만 보인다(2026-11-05 사용자 — 비즈니스 광고 구매 기능이 들어올
+ * 예정이라 비즈니스 관련 메뉴를 따로 본다). 라우트는 구역과 상관없이 모두 열려 있다.
+ */
+export type NavArea = 'user' | 'business';
+
+export const NAV_AREAS: { area: NavArea; label: string }[] = [
+  { area: 'user', label: '유저' },
+  { area: 'business', label: '비즈니스' },
+];
+
 export interface NavSection {
+  /** 이 묶음이 속한 헤더 구역. */
+  area: NavArea;
   /**
    * 상위 묶음 제목. 하위가 하나뿐인 구역은 제목을 두지 않는다 — 제목과 항목이 같은 말을 두 번
    * 하게 되고, 메뉴만 한 단 깊어진다. 대시보드·통계가 그렇다.
@@ -30,6 +43,7 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
+    area: 'user',
     title: '콘텐츠',
     items: [
       { path: '/content/jobs', label: '채용공고' },
@@ -41,6 +55,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    area: 'business',
     /*
      * 검수와 반려는 비즈니스 회원이 돈을 내고 올린 것을 지면에 올릴지 정하는 일이다. 콘텐츠
      * 조회와 성격이 달라 따로 묶는다.
@@ -52,6 +67,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    area: 'business',
     /*
      * 회원이 아닌 사람도 보내는 영업 문의다. 비즈니스 회원이 올린 공고를 검수하는 `광고` 와 성격이 달라 따로
      * 묶는다. 어드민이 기업 회원을 `비즈니스 회원` 이라 부르므로 이름을 맞췄고, 제휴 문의가 생기면 여기에 더한다.
@@ -65,6 +81,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    area: 'user',
     /*
      * 사용자 화면의 어느 자리에 무엇을 보일지 정하는 곳이다. 콘텐츠 하나하나를 보고 고치는
      * 콘텐츠 구역과 달라 따로 묶는다.
@@ -77,13 +94,18 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    area: 'user',
     title: '회원',
-    items: [
-      { path: '/members/users', label: '일반 회원' },
-      { path: '/members/companies', label: '비즈니스 회원' },
-    ],
+    items: [{ path: '/members/users', label: '일반 회원' }],
   },
   {
+    // 비즈니스 회원은 비즈니스 구역에서 본다. 제목은 유저 구역의 `회원` 과 같은 말을 쓴다.
+    area: 'business',
+    title: '회원',
+    items: [{ path: '/members/companies', label: '비즈니스 회원' }],
+  },
+  {
+    area: 'user',
     title: '고객지원',
     items: [
       { path: '/support/notices', label: '공지사항' },
@@ -91,6 +113,7 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    area: 'user',
     /*
      * 보내는 화면과 지난 발송을 보는 화면을 나누고, 전송 내역은 채널마다 따로 둔다. 관리자 발송뿐 아니라 댓글 푸시·
      * 알림톡·이메일도 있어 `고객지원` 에 두기에는 범위가 넓다. 세 내역 화면은 같은 페이지가 채널만 바꿔 그린다
@@ -105,6 +128,26 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    area: 'user',
     items: [{ path: '/stats', label: '통계' }],
   },
 ];
+
+/** 경로가 속한 구역. 메뉴에 없는 경로(상세 등)는 같은 앞부분을 가진 메뉴 항목의 구역이고, 없으면 유저다. */
+export function navAreaOf(pathname: string): NavArea {
+  const section = NAV_SECTIONS.find((candidate) =>
+    candidate.items.some(
+      (item) =>
+        item.path !== '/' && (pathname === item.path || pathname.startsWith(`${item.path}/`)),
+    ),
+  );
+  return section?.area ?? 'user';
+}
+
+/** 구역의 첫 화면. 헤더에서 구역을 바꾸면 이리로 간다. */
+export function firstPathOf(area: NavArea): string {
+  const item = NAV_SECTIONS.filter((section) => section.area === area)
+    .flatMap((section) => section.items)
+    .find((candidate) => !candidate.disabled);
+  return item?.path ?? '/';
+}
