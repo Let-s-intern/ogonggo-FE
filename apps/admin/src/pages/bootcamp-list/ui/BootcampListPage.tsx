@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogonggo/api/src/admin';
 import { listAllIds, useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
+import { BootcampPriorityToggle } from '@/features/priority-exposed';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
@@ -75,6 +76,17 @@ export function BootcampListPage({
       width: 'w-32',
       render: (row) => <VisibilityToggle bootcamp={row} />,
     },
+    // 비즈니스 구역 목록에서만 보인다. 기업회원 공고별 우선 노출(`features/priority-exposed`).
+    ...(fixedSource === 'COMPANY'
+      ? [
+          {
+            key: 'priorityExposed',
+            header: '우선 노출',
+            width: 'w-28',
+            render: (row: AdminBootcampSummary) => <BootcampPriorityToggle bootcamp={row} />,
+          },
+        ]
+      : []),
     {
       key: 'source',
       header: '등록 경로',

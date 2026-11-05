@@ -9,6 +9,7 @@ import {
   usePatchJob,
 } from '@/entities/content/api/useContent';
 import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
+import { JobPriorityToggle } from '@/features/priority-exposed';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
@@ -152,6 +153,17 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
       width: 'w-32',
       render: (row) => <VisibilityToggle job={row} />,
     },
+    // 비즈니스 구역 목록에서만 보인다. 기업회원 공고별 우선 노출(`features/priority-exposed`).
+    ...(fixedSource === 'COMPANY'
+      ? [
+          {
+            key: 'priorityExposed',
+            header: '우선 노출',
+            width: 'w-28',
+            render: (row: AdminJobSummary) => <JobPriorityToggle job={row} />,
+          },
+        ]
+      : []),
     {
       key: 'pick',
       header: 'PICK',
