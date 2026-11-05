@@ -1,5 +1,5 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HttpError } from '@ogonggo/api';
+import { HttpError, createImage } from '@ogonggo/api';
 import {
   createNotificationBatch,
   getGetNotificationBatchQueryKey,
@@ -27,6 +27,18 @@ export function useCreateNotificationBatch() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getGetRecentNotificationResultsQueryKey() });
     },
+  });
+}
+
+/**
+ * 알림 이미지 올리기. 관리자 API 에는 업로드가 없어 사용자 API `POST /api/v1/images`(`usage=NOTIFICATION`)로
+ * 올린다(백엔드 `ImageUploadControllerTest` 가 관리자 화면의 이 경로를 확인한다). 어드민의 `/api/v1/images` 는
+ * dev 프록시(`vite.config.ts`)와 배포 rewrite(`vercel.json`)가 사용자 API 로 보낸다. 받은 `id` 를 발송 요청의
+ * `imageId` 로 쓴다. JPEG·PNG 만 된다.
+ */
+export function useUploadNotificationImage() {
+  return useMutation({
+    mutationFn: (file: File) => unwrapData(createImage({ file }, { usage: 'NOTIFICATION' })),
   });
 }
 

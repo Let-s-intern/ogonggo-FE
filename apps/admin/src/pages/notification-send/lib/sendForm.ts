@@ -30,6 +30,14 @@ export interface SendFormValues {
   title: string;
   body: string;
   url: string;
+  /** 올린 알림 이미지. 없으면 이미지 없이 보낸다. */
+  image: NotificationImage | null;
+}
+
+/** 사용자 API 이미지 업로드가 돌려준 식별자와 표시용 주소. */
+export interface NotificationImage {
+  id: string;
+  url: string;
 }
 
 export type SendFormErrors = Partial<Record<keyof SendFormValues, string>>;
@@ -50,6 +58,7 @@ export const EMPTY_SEND_FORM: SendFormValues = {
   title: '',
   body: '',
   url: '',
+  image: null,
 };
 
 /** 광고성 알림 제목 앞에 붙이는 표기(사용자 결정). 뒤의 공백까지 제목 글자 수에 든다. */
@@ -199,6 +208,7 @@ export function toCreateRequest(values: SendFormValues): CreateNotificationBatch
     body: values.body.trim(),
     data: { url: values.url.trim() },
     advertisement: values.advertisement,
+    ...(values.image ? { imageId: values.image.id } : {}),
   };
   if (values.target === 'USER_IDS') {
     return { targetType: 'USER_IDS', userIds: targetUserIds(values), ...common };

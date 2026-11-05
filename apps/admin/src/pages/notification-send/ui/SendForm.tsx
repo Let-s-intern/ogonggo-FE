@@ -34,6 +34,7 @@ import {
 } from '../lib/sendForm';
 import { JobRolePicker } from './JobRolePicker';
 import { MemberPickerModal } from './MemberPickerModal';
+import { NotificationImageField } from './NotificationImageField';
 
 interface SendFormProps {
   values: SendFormValues;
@@ -295,6 +296,8 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
         />
       </Field>
 
+      <NotificationImageField value={values.image} onChange={(image) => set({ image })} />
+
       {createMutation.isError ? (
         <Callout tone="error" className="mb-4">
           {sendErrorMessage(createMutation.error)}
@@ -335,6 +338,18 @@ export function SendForm({ values, onChange, onSent }: SendFormProps) {
             },
             { label: '제목', value: sendTitle(values) },
             { label: '이동', value: <span className="break-all">{values.url.trim()}</span> },
+            {
+              label: '이미지',
+              value: values.image ? (
+                <img
+                  src={values.image.url}
+                  alt="알림 이미지"
+                  className="h-16 w-28 rounded border border-gray-200 object-cover"
+                />
+              ) : (
+                '없음'
+              ),
+            },
           ]}
         />
         {isQuietHours ? (
