@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query';
 import {
   enumLabel,
   getJob,
@@ -14,11 +15,14 @@ import {
   type RangePreset,
   toRedashParameters,
 } from '@/entities/kpi';
+import { kstToday, newJobQueueQuery, setJobInspected } from '@/entities/new-job/api/useNewJobQueue';
+import type { AssistantApiMessage } from '@/shared/api/assistant';
 import { omitEmpty } from '@/shared/api/omitEmpty';
 import { runRedashQuery } from '@/shared/api/redash';
 import { unwrapData } from '@/shared/api/unwrapData';
 import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { FILLABLE_JOB_FIELDS, type FillableJobField, requestJobFill } from './jobFill';
+import { requestReviewJob } from './reviewTarget';
 import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
 
 /**
@@ -29,6 +33,9 @@ import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
  * 화면 이동, 입력 칸 채우기, 양식을 여는 버튼까지만 둔다 — 저장·삭제·노출 변경처럼 서버에 반영하는 버튼은
  * 사람이 누른다(`./screen.ts`).
  *
+ * 예외는 검수 완료 표시(`mark_inspected`) 하나다(2026-11-05 운영자: 문제 없는 공고는 비서가 검수 완료를 누르고
+ * 다음으로 넘긴다). 화면의 체크와 같은 API·캐시 갱신(`setJobInspected`)을 쓰고, 노출 상태는 바꾸지 않는다.
+ *
  * 실행기는 모델에게 돌려줄 글을 만든다. 실패도 글로 돌려줘 모델이 사용자에게 설명하게 한다.
  */
 
@@ -36,6 +43,8 @@ export interface ToolContext {
   navigate: (path: string) => void;
   /** 지금 보고 있는 경로(쿼리스트링 포함). */
   currentPath: () => string;
+  /** 어드민 화면의 캐시. 오늘 공고 목록을 화면과 같이 읽고, 검수 완료 표시를 화면에 바로 보이게 한다. */
+  queryClient: QueryClient;
 }
 
 /** 오늘 올라온 공고 검수 화면. 보고 있는 공고가 `?job=` 에 있다(`pages/new-job-review`). */
@@ -123,6 +132,18 @@ export function describeToolCall(name: string, args: Record<string, unknown>): s
       return `화면 이동: ${String(args.path)}`;
     case 'fill_job_text':
       return `공고 ${String(args.jobId)} 수정 창 채우기`;
+    case 'list_today_review_jobs':
+      return '오늘 올라온 공고 목록 읽기';
+    case 'mark_inspected':
+      return args.inspected === false
+        ? `공고 ${String(args.jobId)} 검수 완료 해제`
+        : `공고 ${String(args.jobId)} 검수 완료 표시`;
+    case 'leave_uninspected':
+      return `공고 ${String(args.jobId)} 확인 필요로 남김`;
+    case 'open_review_job':
+      return args.jobId
+        ? `검수 화면에 공고 ${String(args.jobId)} 열기`
+        : '검수 화면에 다음 미검수 공고 열기';
     default:
       return name;
   }
@@ -395,6 +416,138 @@ async function serviceFeedbacks(args: Record<string, unknown>): Promise<string> 
   });
 }
 
+/** 오늘 올라온 공고. 검수 화면과 같은 쿼리·캐시라 건수와 순서가 화면과 같다. */
+async function todayQueue(context: ToolContext) {
+  return context.queryClient.fetchQuery(newJobQueueQuery(kstToday()));
+}
+
+/** 오늘 공고 목록 한 번에 넘기는 최대 건수. 결과를 끝에서 자르면 JSON 이 깨져 건수로 맞춘다. */
+const MAX_TODAY_JOBS = 50;
+
+async function listTodayReviewJobs(
+  args: Record<string, unknown>,
+  context: ToolContext,
+): Promise<string> {
+  const queue = await todayQueue(context);
+  const matches =
+    typeof args.inspected === 'boolean'
+      ? queue.items.filter((job) => Boolean(job.inspectedAt) === args.inspected)
+      : queue.items;
+  const offset = typeof args.offset === 'number' && args.offset > 0 ? Math.floor(args.offset) : 0;
+  const limit = Math.min(asNumber(args.limit) ?? 30, MAX_TODAY_JOBS);
+  return JSON.stringify({
+    date: queue.date,
+    total: queue.items.length,
+    uninspected: queue.items.filter((job) => !job.inspectedAt).length,
+    matched: matches.length,
+    offset,
+    items: matches.slice(offset, offset + limit).map((job) => ({
+      id: job.id,
+      title: job.title,
+      company: job.companyName,
+      inspected: Boolean(job.inspectedAt),
+      visibility: job.visibility,
+    })),
+  });
+}
+
+async function markInspected(args: Record<string, unknown>, context: ToolContext): Promise<string> {
+  const jobId = asNumber(args.jobId);
+  if (!jobId) {
+    return 'jobId 가 올바르지 않습니다.';
+  }
+  const inspected = args.inspected !== false;
+  await setJobInspected(context.queryClient, jobId, inspected);
+  return inspected
+    ? `공고 ${jobId} 를 검수 완료로 표시했습니다. 노출 상태는 바꾸지 않았습니다.`
+    : `공고 ${jobId} 의 검수 완료를 해제했습니다.`;
+}
+
+/** 확인 필요로 남긴 공고. 서버에는 아무것도 쓰지 않는다 — 이유가 대화에 남아 요약에 쓰인다. */
+function leaveUninspected(args: Record<string, unknown>): string {
+  const jobId = asNumber(args.jobId);
+  if (!jobId) {
+    return 'jobId 가 올바르지 않습니다.';
+  }
+  return `공고 ${jobId} 는 검수 완료로 표시하지 않았습니다. 이유: ${String(args.reason ?? '').slice(0, 300)}`;
+}
+
+/**
+ * 검수 화면에서 공고를 연다. `jobId` 가 없으면 지금 보는 공고 다음의 미검수 공고(끝이면 처음부터)다. 순서는 화면과
+ * 같은 등록 역순이다. 검수 화면이 아니면 그 화면으로 옮긴다.
+ */
+async function openReviewJob(args: Record<string, unknown>, context: ToolContext): Promise<string> {
+  const { items } = await todayQueue(context);
+  const current = new URL(context.currentPath(), 'http://admin');
+  const currentId =
+    current.pathname === REVIEW_PATH ? Number(current.searchParams.get('job')) : Number.NaN;
+  let target: (typeof items)[number] | undefined;
+  if (args.jobId !== undefined && args.jobId !== null) {
+    const jobId = asNumber(args.jobId);
+    target = items.find((job) => job.id === jobId);
+    if (!target) {
+      return `공고 ${String(args.jobId)} 는 오늘 올라온 공고가 아닙니다. 다른 공고는 /content/jobs?edit={id} 로 엽니다.`;
+    }
+  } else {
+    const start = items.findIndex((job) => job.id === currentId) + 1;
+    target = [...items.slice(start), ...items.slice(0, start)].find(
+      (job) => !job.inspectedAt && job.id !== currentId,
+    );
+    if (!target) {
+      return '오늘 올라온 공고 중 남은 미검수 공고가 없습니다.';
+    }
+  }
+  requestReviewJob(target.id);
+  if (current.pathname !== REVIEW_PATH) {
+    context.navigate(`${REVIEW_PATH}?job=${target.id}`);
+  }
+  const left = items.filter((job) => !job.inspectedAt).length;
+  return `검수 화면에 공고 ${target.id} 「${target.title}」 를 열었습니다. 남은 미검수 ${left}건.`;
+}
+
+/**
+ * 판정을 남긴 공고(`mark_inspected`·`leave_uninspected`)의 검수 자료를 대화에서 줄인다. 검수 자료는 한 건에 2만 자
+ * 가까이라, 오늘 공고를 한꺼번에 검수하면 대화가 모델의 입력 상한을 넘는다. 판정을 마친 공고의 원문은 다시 쓰지
+ * 않는다. 판정 전인 공고(한 건 검수 뒤 "고칠 문장 채워줘")는 그대로 둔다.
+ */
+export function compactReviewedResults(messages: AssistantApiMessage[]): AssistantApiMessage[] {
+  /** 공고마다 아직 판정이 뒤따르지 않은 검수 자료 호출. */
+  const pending = new Map<number, string[]>();
+  const done = new Map<string, number>();
+  for (const message of messages) {
+    if (message.role !== 'assistant') {
+      continue;
+    }
+    for (const call of message.tool_calls ?? []) {
+      const { name, arguments: raw } = call.function;
+      let jobId: number | null = null;
+      try {
+        jobId = asNumber((JSON.parse(raw) as Record<string, unknown>).jobId);
+      } catch {
+        // 인자가 깨진 호출은 건너뛴다.
+      }
+      if (jobId === null) {
+        continue;
+      }
+      if (name === 'get_job_review') {
+        pending.set(jobId, [...(pending.get(jobId) ?? []), call.id]);
+      } else if (name === 'mark_inspected' || name === 'leave_uninspected') {
+        // 판정 뒤에 다시 읽은 자료는 남긴다. 판정 앞의 것만 줄인다.
+        for (const id of pending.get(jobId) ?? []) {
+          done.set(id, jobId);
+        }
+        pending.delete(jobId);
+      }
+    }
+  }
+  return messages.map((message) => {
+    const jobId = message.role === 'tool' ? done.get(message.tool_call_id) : undefined;
+    return message.role === 'tool' && jobId !== undefined
+      ? { ...message, content: `공고 ${jobId} 검수 자료(판정을 남겨 생략)` }
+      : message;
+  });
+}
+
 function goTo(args: Record<string, unknown>, context: ToolContext): string {
   const path = typeof args.path === 'string' ? args.path.trim() : '';
   const pathname = path.split('?')[0] ?? '';
@@ -457,10 +610,23 @@ export async function runTool(
         return await fillFields(Array.isArray(args.values) ? (args.values as FieldValue[]) : []);
       case 'press_button':
         return await pressButton(String(args.ref ?? ''));
-      case 'navigate':
-        return goTo(args, context);
+      case 'navigate': {
+        // 검수 화면의 `?job=` 은 화면이 주소를 읽지 않아 `open_review_job` 으로 넘긴다.
+        const target = new URL(String(args.path ?? ''), 'http://admin');
+        return target.pathname === REVIEW_PATH && target.searchParams.has('job')
+          ? await openReviewJob({ jobId: Number(target.searchParams.get('job')) }, context)
+          : goTo(args, context);
+      }
       case 'fill_job_text':
         return fillJobText(args, context);
+      case 'list_today_review_jobs':
+        return await listTodayReviewJobs(args, context);
+      case 'mark_inspected':
+        return await markInspected(args, context);
+      case 'leave_uninspected':
+        return leaveUninspected(args);
+      case 'open_review_job':
+        return await openReviewJob(args, context);
       default:
         return `${name} 는 없는 도구입니다.`;
     }

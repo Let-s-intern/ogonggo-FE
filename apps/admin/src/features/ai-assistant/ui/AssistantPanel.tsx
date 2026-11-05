@@ -131,7 +131,8 @@ export function AssistantPanel({ open, onOpenChange }: AssistantPanelProps) {
         <div className="min-w-0">
           <h2 className="text-base font-bold text-gray-900">AI 비서</h2>
           <p className="pt-0.5 text-xs text-gray-500">
-            찾기, 요약, 화면 이동, 공고 문장 다듬기를 합니다. 저장은 직접 눌러야 반영됩니다.
+            찾기, 요약, 화면 이동, 공고 문장 다듬기, 공고 검수를 합니다. 검수 완료 표시 말고는 직접
+            눌러야 반영됩니다.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1 whitespace-nowrap">

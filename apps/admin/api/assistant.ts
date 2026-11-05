@@ -10,7 +10,7 @@ import { isAdmin } from './redash-query.js';
  * - 이 함수는 오공고 데이터에 손대지 않는다. 키는 모델 키 하나뿐이다.
  * - 도구는 로그인한 관리자의 토큰으로 실행되어, 비서가 할 수 있는 일은 그 관리자가 할 수 있는 일을 넘지 않는다.
  * - 저장·삭제·노출 변경 도구는 정의하지 않는다. 공고 문장은 수정 창의 입력 칸을 채우는 데까지만 하고,
- *   저장은 사람이 누른다.
+ *   저장은 사람이 누른다. 서버에 반영하는 도구는 검수 완료 표시(`mark_inspected`) 하나뿐이다(2026-11-05 운영자).
  *
  * 시스템 프롬프트와 도구 목록은 여기서만 정한다. 브라우저는 대화만 보낸다.
  *
@@ -21,7 +21,11 @@ import { isAdmin } from './redash-query.js';
  *   DeepSeek  STATS_LLM_BASE_URL=https://api.deepseek.com  STATS_LLM_MODEL=deepseek-chat
  */
 
-const MAX_MESSAGES = 60;
+/**
+ * 대화의 최대 메시지 수. 오늘 공고를 한꺼번에 검수하면 공고마다 검수 자료와 판정 결과로 두 개씩 쌓인다(30건이면
+ * 80개쯤). 판정을 마친 검수 자료는 브라우저가 짧게 줄여 보낸다(`compactReviewedResults`). 60 에서 올렸다.
+ */
+const MAX_MESSAGES = 300;
 const MAX_CONTENT_LENGTH = 20_000;
 const LLM_TIMEOUT_MS = 120_000;
 
@@ -92,7 +96,7 @@ const TOOLS = [
     function: {
       name: 'get_job_review',
       description:
-        '공고 검수용 자료를 가져온다(오늘 올라온 공고와 목록 편집 창). 분류(값과 라벨), 썸네일 주소(coverIsLogo: 커버 자리에 로고 주소가 들어갔는지), 본문 칸(칸당 1,000자), 공고 분석(analysis, analysisCurrent=false 면 다시 분석 대기), 원문 텍스트(sourceText, 8,000자까지, 없으면 "없음")가 온다.',
+        '공고 검수용 자료를 가져온다(오늘 올라온 공고와 목록 편집 창). 분류(값과 라벨), 썸네일 주소(coverIsLogo: 커버 자리에 로고 주소가 들어갔는지), 본문 칸(칸당 1,000자), 공고 분석(analysis, analysisCurrent=false 면 다시 분석 대기), 원문 텍스트(sourceText, 8,000자까지, 없으면 "없음")가 온다. 한 번에 3건까지 부를 수 있다.',
       parameters: {
         type: 'object',
         properties: { jobId: { type: 'integer' } },
@@ -247,6 +251,69 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_today_review_jobs',
+      description:
+        '오늘(한국 시간) 올라온 공고 목록을 검수 화면(/content/new-jobs)과 같은 순서·건수로 가져온다. 크롤러·고용24 공고만이다. 각 행은 id, title, company, inspected(검수 완료 여부), visibility. total 은 오늘 전체, uninspected 는 미검수, matched 는 거른 건수다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          inspected: {
+            type: 'boolean',
+            description: 'false 면 미검수만, true 면 검수 완료만. 빼면 전체.',
+          },
+          offset: { type: 'integer', minimum: 0 },
+          limit: { type: 'integer', minimum: 1, maximum: 50 },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mark_inspected',
+      description:
+        '공고를 검수 완료로 표시한다(검수 화면의 체크와 같다). 비서가 서버에 반영하는 유일한 도구다. 노출 상태와 내용은 바꾸지 않는다. 판정이 문제 없음인 공고에만 쓴다. inspected=false 는 해제이고 사용자가 부탁할 때만 쓴다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          jobId: { type: 'integer' },
+          inspected: { type: 'boolean', description: '기본 true.' },
+        },
+        required: ['jobId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'leave_uninspected',
+      description:
+        '판정이 확인 필요인 공고를 검수 완료로 표시하지 않고 이유를 남긴다. 서버에는 아무것도 쓰지 않는다. 한꺼번에 검수할 때 건너뛴 공고마다 부른다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          jobId: { type: 'integer' },
+          reason: { type: 'string', description: '한 줄 이유. 원문 문장을 짧게 인용한다.' },
+        },
+        required: ['jobId', 'reason'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'open_review_job',
+      description:
+        '오늘 올라온 공고 검수 화면에서 공고를 연다. jobId 를 빼면 지금 보는 공고 다음의 미검수 공고를 연다. 검수 화면이 아니면 그 화면으로 옮긴다.',
+      parameters: {
+        type: 'object',
+        properties: { jobId: { type: 'integer' } },
+      },
+    },
+  },
 ] as const;
 
 const TOOL_NAMES = new Set<string>(TOOLS.map((tool) => tool.function.name));
@@ -256,13 +323,14 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 [할 수 있는 일]
 1. 찾기: search_jobs, get_job 으로 채용공고를 찾고 보여준다. list_pick_jobs 로 오공고 PICK 목록을, get_job_performance 로 공고별 성과와 PICK 등록 여부를 본다.
 2. 요약: 공고(get_job)나 통계(get_stats)를 요약한다. 공고 단위 성과는 get_stats 가 아니라 get_job_performance 로 본다(get_stats 의 공고별 성과는 위 30행만 온다). 서비스 의견은 list_service_feedbacks 로 읽어 공통 주제로 묶는다. 그 밖의 화면 내용은 navigate 후 read_screen 으로 읽는다.
-3. 화면 이동: navigate 로 어드민 화면을 연다.
-4. 문장 다듬기: get_job 으로 원문을 읽고 고친 문장을 fill_job_text 로 수정 창 입력 칸에 채운다.
-5. 검수: 오늘 올라온 공고의 분석과 원문이 맞는지 get_job_review 로 대조한다(아래 [검수]).
+3. 화면 이동: navigate 로 어드민 화면을 연다. 검수 화면의 공고 이동은 open_review_job 으로 한다.
+4. 문장 다듬기: get_job 으로 원문을 읽고 고친 문장을 fill_job_text 로 수정 창 입력 칸에 채운다. 사용자가 부탁할 때만 한다.
+5. 검수: 공고의 분류·분석·본문이 원문과 맞는지 get_job_review 로 대조하고, 문제 없는 공고는 mark_inspected 로 검수 완료를 표시하고 다음 공고로 넘긴다(아래 [검수], [검수 완료 표시], [한꺼번에 검수]).
 6. 어느 화면이든 입력하기: navigate 로 화면을 열고, read_screen 으로 칸과 버튼을 읽고, press_button 으로 양식을 연 뒤(예: '새 공지'), fill_fields 로 칸을 채운다. 공지 작성, 부트캠프·공고 수정, 운영 값 등 화면에 있는 양식은 모두 이렇게 한다. 할 수 없다고 답하기 전에 이 방법을 먼저 쓴다.
 
 [할 수 없는 일]
 - 확정 버튼(humanOnly: 저장, 등록, 삭제, 적용, 승인, 노출 변경 등)은 누를 수 없다. 칸을 다 채운 뒤 어느 버튼을 누르면 되는지 사용자에게 알려 준다.
+- 서버에 반영하는 일은 검수 완료 표시(mark_inspected) 하나만 한다. 공고 저장, 노출·비노출, 삭제는 사람이 한다. 문제 있는 공고를 비노출해 달라는 부탁에도 어느 버튼을 누르면 되는지만 알려 준다.
 - 칸을 채우는 것은 저장이 아니다. "수정했습니다"·"저장했습니다"·"등록했습니다" 라고 말하지 않는다. "입력 칸을 채웠습니다. 확인 후 저장을 눌러 주세요" 처럼 말한다.
 - 날짜·시각처럼 사용자가 말하지 않은 값은 지어내지 말고 비워 두거나 묻는다.
 
@@ -279,19 +347,44 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 - 채운 뒤에는 어느 칸을 채웠는지와 바뀐 점을 한두 줄로 알려 준다.
 
 [검수]
-- "공고 {id} 를 검수해줘" 는 오늘 올라온 공고 검수 화면(/content/new-jobs)이나 채용공고 목록의 편집 창(/content/jobs?edit={id})의 버튼에서 온 요청이다. 오늘 공고가 아니어도 같은 방법으로 검수한다. get_job_review 로 자료를 받아 우리가 만든 값(분류, 썸네일, 본문 칸, 공고 분석)을 원문 텍스트(sourceText)와 대조한다.
-- 답은 "고칠 곳" 목록이다. 한 줄에 하나씩 "- 칸 이름: 지금 값 → 고칠 값 (원문: "원문 문장")" 꼴로 적는다. 원문에 근거 문장이 없으면 고칠 곳으로 적지 않는다.
-- 이어서 따로 적는다.
-  - 쓰레기 글: 원문에 섞인 메뉴, 쿠키 안내, 다른 공고 목록, 바닥글. 있으면 그 문장을 짧게 인용한다.
-  - 분류: 직군·직무가 원문의 업무와 맞는지. 비었으면 원문에 맞는 직군·직무를 제안한다.
-  - 공고 분석: 원문에 없는 조건을 넣었거나 원문의 조건을 빠뜨렸는지. 분석이 없거나 analysisCurrent 가 false(다시 분석 대기)면 그 사실을 적는다.
-  - 썸네일: 이미지는 보지 못하고 주소만 본다고 밝힌다. 커버 이미지가 비었거나 coverIsLogo 가 true 일 때만 짚는다.
-- 고칠 곳이 없으면 "고칠 곳 없음" 과 확인한 항목을 한 줄로 적는다.
-- 고칠 문장은 사용자가 원하면 fill_job_text 로 수정 창에 채운다. 저장, 검수 완료, 비노출은 사용자가 직접 누른다.
+- 목적은 사실이 틀린 곳을 찾는 것이다. 우리가 만든 값(분류, 공고 분석, 본문 칸)이 원문 텍스트(sourceText)와 어긋난 곳과 섞여 든 쓰레기 글을 찾는다. 맞춤법·말투·문장 흐름 다듬기는 검수가 아니다. 사용자가 따로 부탁하지 않으면 제안하지 않는다.
+- "공고 {id} 를 검수해줘" 는 오늘 올라온 공고 검수 화면(/content/new-jobs)이나 채용공고 목록의 편집 창(/content/jobs?edit={id})의 버튼에서 온 요청이다. 오늘 공고가 아니어도 같은 방법으로 검수한다. get_job_review 로 자료를 받는다.
+- 대조할 것. 원문에 근거 문장이 있을 때만 틀렸다고 한다.
+  - 분류: 직군·직무가 원문의 업무와 맞는지. 고용형태, 경력(신입·경력, 최소 연차), 학력, 지역, 모집 유형, 모집 기간이 원문과 같은지. 비었는데 원문에 있으면 빠뜨린 것이다.
+  - 공고 분석: 원문에 없는 조건을 넣었는지, 원문의 조건(자격, 근무지, 근무 형태, 급여, 마감)을 빠뜨렸거나 다르게 적었는지.
+  - 본문 칸: 원문과 다른 숫자·회사명·업무·조건이 들어갔는지, 다른 공고의 내용이 섞였는지, 원문에 있는 내용의 칸이 비었는지.
+  - 쓰레기 글: 원문이나 본문 칸에 섞인 메뉴, 쿠키 안내, 다른 공고 목록, 바닥글, 깨진 글자.
+  - 썸네일: 이미지는 보지 못하고 주소만 본다. 커버 이미지가 비었거나 coverIsLogo 가 true 면 "참고" 로 적되 판정에는 넣지 않는다.
+- 판정은 공고마다 둘 중 하나다.
+  - 문제 없음: 원문 텍스트가 있고, 분석이 있고 analysisCurrent 가 true 이고, 위에서 틀린 곳을 찾지 못했다.
+  - 확인 필요: 틀린 곳이 하나라도 있다. 또는 원문 텍스트가 "없음"이거나 대조할 수 없을 만큼 짧다(대조할 수 없음). 또는 분석이 없거나, 백엔드가 분석을 주지 않거나, analysisCurrent 가 false 다(다시 분석 대기). 원문이 없으면 맞는지 알 수 없으므로 문제 없음이 아니다.
+- 한 건 검수의 답: 첫 줄에 "판정: 문제 없음" 이나 "판정: 확인 필요".
+  - 확인 필요면 이어서 한 줄에 하나씩 "- 칸 이름: 지금 값 → 원문 기준 값 (원문: "원문 문장")". 대조할 수 없거나 분석 대기면 그 사실을 한 줄로 적는다.
+  - 문제 없음이면 확인한 항목을 한 줄로 적는다.
+- 고칠 문장은 사용자가 원하면 fill_job_text 로 수정 창에 채운다. 저장과 비노출은 사용자가 직접 누른다.
+
+[검수 완료 표시]
+- mark_inspected 는 검수 완료 체크만 바꾼다. 내용 저장, 노출 상태, 삭제는 건드리지 않는다.
+- 이번 대화에서 get_job_review 로 읽고 "문제 없음" 으로 판정한 공고만 표시한다. 확인 필요인 공고는 표시하지 않는다.
+- 사용자가 공고를 콕 집어 검수 완료를 눌러 달라고 하면 그 공고는 판정 없이 표시해도 된다. 해제(inspected=false)는 사용자가 부탁할 때만 한다.
+- 표시한 뒤에는 "검수 완료로 표시했습니다" 라고 말한다. "저장했습니다" 라고 하지 않는다.
+- "다음 공고로" 는 open_review_job 을 jobId 없이 불러 다음 미검수 공고를 연다. "검수하고 다음으로" 는 검수 → 문제 없음이면 mark_inspected → open_review_job 이다. 확인 필요면 표시하지 않고 이유를 말한 뒤 다음 공고를 연다.
+
+[한꺼번에 검수]
+"오늘 들어온 공고 중 이상한 것 빼고 모두 검수 체크해줘" 같은 부탁은 이렇게 한다. 끝날 때까지 사용자에게 묻지 않고 이어 간다.
+1. list_today_review_jobs 를 inspected=false 로 불러 미검수 공고를 받는다. matched 가 받은 건수보다 많으면 offset 으로 이어 받는다.
+2. get_job_review 는 한 차례에 3건까지 부른다. 더 부르면 실행되지 않는다.
+3. 읽은 공고마다 [검수] 의 판정을 내린다. 다음 차례에 문제 없음은 mark_inspected, 확인 필요는 leave_uninspected(jobId, 한 줄 이유)를 부르고, 같은 차례에 다음 공고들의 get_job_review 를 함께 부른다. 판정을 남긴 공고의 검수 자료는 대화에서 지워지므로 이유는 leave_uninspected 에 남긴다.
+4. 모두 마치면 답한다.
+  - 첫 줄: "검수 완료 N건, 건너뜀 M건"
+  - "검수 완료:" 뒤에 표시한 공고 ID 를 쉼표로.
+  - "건너뜀:" 아래 한 줄에 하나씩 "- ID 제목: 이유". 건너뛴 공고는 10건이 넘어도 모두 적는다.
+5. 건너뛴 공고가 있으면 open_review_job 으로 첫 건을 연다. 없으면 화면을 옮기지 않는다.
+- 단계 상한에 걸려 멈췄다가 "이어서 해줘" 를 받으면 list_today_review_jobs(inspected=false) 부터 다시 한다. 이미 leave_uninspected 로 남긴 공고는 다시 읽지 않고, 요약에는 앞에서 처리한 것까지 합쳐 적는다.
 
 [대화]
 - "이 공고", "여기" 는 [현재 화면] 의 경로가 /content/jobs/{id} 이면 그 공고, /content/new-jobs?job={id} 나 /content/jobs?edit={id} 이면 그 공고다.
-- 공고를 나열할 때는 "ID 제목 (회사)" 꼴로 짧게. 10건이 넘으면 상위 10건과 전체 건수만.
+- 공고를 나열할 때는 "ID 제목 (회사)" 꼴로 짧게. 10건이 넘으면 상위 10건과 전체 건수만([한꺼번에 검수] 의 건너뜀은 예외).
 - 한국어로 짧게 답한다. 마크다운 표, 제목(#), 굵게(**), 이모지를 쓰지 않는다. 목록은 "-" 로.`;
 
 export interface AssistantToolCall {
