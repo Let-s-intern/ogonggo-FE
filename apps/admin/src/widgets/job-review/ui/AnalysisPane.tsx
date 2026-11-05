@@ -23,7 +23,16 @@ const ID_PREFIX = 'review';
  *
  * 상세 화면과 달리 빈 칸을 숨기지 않는다. 검수에서는 무엇이 안 뽑혔는지가 확인 대상이라 비었다고 적는다.
  */
-export function AnalysisPane({ job, edit }: { job: NewJobDetail; edit: InlineJobEdit }) {
+export function AnalysisPane({
+  job,
+  edit,
+  onDraftChange,
+}: {
+  job: NewJobDetail;
+  edit: InlineJobEdit;
+  /** 저장하지 않은 고침이 생기거나 없어질 때. 목록 창이 닫기 전에 묻는 데 쓴다. */
+  onDraftChange?: (dirty: boolean) => void;
+}) {
   return (
     <div className="space-y-6">
       <Thumbnails job={job} edit={edit} />
@@ -34,6 +43,7 @@ export function AnalysisPane({ job, edit }: { job: NewJobDetail; edit: InlineJob
         <AnalysisEditor
           key={`${job.id}:${job.analysisEditedAt ?? ''}:${String(job.analysisCurrent)}:${JSON.stringify(job.analysis)}`}
           job={job}
+          onDraftChange={onDraftChange}
         />
       ) : null}
     </div>

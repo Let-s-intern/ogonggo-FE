@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useLayoutEffect, useState, type ReactNode } from 'react';
 import type { Analysis } from '@ogonggo/api/src/mocks/admin/inspection';
 import { Badge, Button, Callout, Input, Textarea } from '@ogonggo/ui';
 import { useSaveJobAnalysis, type NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
@@ -140,7 +140,14 @@ function missingOf(form: AnalysisForm): string[] {
  * 부르는 쪽이 `key` 에 공고 id 와 서버 값(`analysisEditedAt`·`analysisCurrent`)을 넣는다. 서버 값이 바뀌면 고치던
  * 값을 버리고 새로 연다.
  */
-export function AnalysisEditor({ job }: { job: NewJobDetail }) {
+export function AnalysisEditor({
+  job,
+  onDraftChange,
+}: {
+  job: NewJobDetail;
+  /** 저장하지 않은 고침이 생기거나 없어질 때. 목록 창이 닫기 전에 묻는 데 쓴다. */
+  onDraftChange?: (dirty: boolean) => void;
+}) {
   const analysis = job.analysis ?? null;
   const isCurrent = job.analysisCurrent !== false;
   const [base] = useState(() => toForm(analysis));
@@ -151,6 +158,12 @@ export function AnalysisEditor({ job }: { job: NewJobDetail }) {
 
   const dirty = JSON.stringify(form) !== JSON.stringify(base);
   const missing = missingOf(form);
+
+  // 그린 직후 바로 알린다. 고치자마자 Esc 를 눌러도 닫기 전 확인이 이 고침을 안다.
+  useLayoutEffect(() => {
+    onDraftChange?.(dirty);
+    return () => onDraftChange?.(false);
+  }, [dirty, onDraftChange]);
 
   const update = (patch: Partial<AnalysisForm>) =>
     setForm((previous) => ({ ...previous, ...patch }));

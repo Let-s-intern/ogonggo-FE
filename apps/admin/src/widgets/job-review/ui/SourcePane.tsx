@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState, type ReactNode } from 'react';
+import { forwardRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { Button, Callout, Chip, Field, Input, Textarea, cn } from '@ogonggo/ui';
 import { type NewJobDetail, useSetJobSourceHtml } from '@/entities/new-job/api/useNewJobQueue';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
@@ -30,8 +30,15 @@ const SOURCE_HTML_CLASS = cn(
  */
 export const SourcePane = forwardRef<
   HTMLDivElement,
-  { job: NewJobDetail; edit?: InlineJobEdit; action?: ReactNode; className?: string }
->(function SourcePane({ job, edit, action, className }, ref) {
+  {
+    job: NewJobDetail;
+    edit?: InlineJobEdit;
+    action?: ReactNode;
+    className?: string;
+    /** 저장하지 않은 원문 HTML 이 생기거나 없어질 때. 목록 창이 닫기 전에 묻는 데 쓴다. */
+    onDraftChange?: (dirty: boolean) => void;
+  }
+>(function SourcePane({ job, edit, action, className, onDraftChange }, ref) {
   const sourceHtml = job.sourceHtml?.trim();
   const sourceUrl = job.sourceUrl && /^https?:\/\//.test(job.sourceUrl) ? job.sourceUrl : undefined;
 
@@ -55,7 +62,13 @@ export const SourcePane = forwardRef<
       </div>
       <div ref={ref} tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto pt-3 outline-none">
         {edit ? <SourceInfoFields edit={edit} /> : null}
-        <SourceHtml key={job.id} job={job} sourceHtml={sourceHtml} sourceUrl={sourceUrl} />
+        <SourceHtml
+          key={job.id}
+          job={job}
+          sourceHtml={sourceHtml}
+          sourceUrl={sourceUrl}
+          onDraftChange={onDraftChange}
+        />
       </div>
     </div>
   );
@@ -104,10 +117,12 @@ function SourceHtml({
   job,
   sourceHtml,
   sourceUrl,
+  onDraftChange,
 }: {
   job: NewJobDetail;
   sourceHtml: string | undefined;
   sourceUrl: string | undefined;
+  onDraftChange?: (dirty: boolean) => void;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
@@ -116,6 +131,13 @@ function SourceHtml({
 
   // 다른 공고로 넘어가면 `key` 로 새로 그린다. 같은 공고의 원문이 바뀌면(저장 뒤 다시 받기) 지난 오류를 지운다.
   useEffect(() => reset(), [sourceHtml, reset]);
+
+  const dirty = draft !== null && draft !== (job.sourceHtml ?? '');
+  // 그린 직후 바로 알린다. 고치자마자 Esc 를 눌러도 닫기 전 확인이 이 고침을 안다.
+  useLayoutEffect(() => {
+    onDraftChange?.(dirty);
+    return () => onDraftChange?.(false);
+  }, [dirty, onDraftChange]);
 
   if (draft === null) {
     return (
@@ -136,7 +158,6 @@ function SourceHtml({
     );
   }
 
-  const dirty = draft !== (job.sourceHtml ?? '');
   // 백엔드는 원문을 비울 수 없다(공백이면 400 `[sourceHtml]`). 보내기 전에 막는다.
   const empty = draft.trim() === '';
   return (

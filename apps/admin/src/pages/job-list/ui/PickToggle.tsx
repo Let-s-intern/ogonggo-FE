@@ -37,8 +37,8 @@ const EMPTY_RECOMMENDATION: RecommendationValue = { title: '', description: '' }
  * 뺀다. 화면이 들고 있는 목록(오래됐을 수 있다)으로 보내면 다른 운영자가 그 사이에 한 일을
  * 덮어쓴다. 확인과 전송 사이의 틈은 남는다.
  *
- * 클릭을 행에서 멈춘다. 행 전체가 상세로 가는 링크라 멈추지 않으면 토글을 누르는 순간 화면이
- * 넘어간다(`VisibilityToggle` 과 같다). 모달은 이 칸 안에 그려지므로 모달 안의 클릭도 같은
+ * 클릭을 행에서 멈춘다. 행 전체가 편집 창을 열어 멈추지 않으면 토글을 누르는 순간 창이
+ * 뜬다(`VisibilityToggle` 과 같다). 모달은 이 칸 안에 그려지므로 모달 안의 클릭도 같은
  * 자리에서 멈춘다.
  */
 export function PickToggle({ job, picked, disabled, replace, onNotice }: PickToggleProps) {

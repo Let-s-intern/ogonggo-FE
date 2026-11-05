@@ -49,7 +49,7 @@ export const kstDate = (iso: string): string =>
   new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /** 지금의 오프셋 없는 KST date-time. 백엔드가 주는 시각과 같은 모양이다. */
-const kstNow = (): string => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
+export const kstNow = (): string => new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
 
 /**
  * 한 등록 경로의 그날 공고. 등록일 필터를 보내되, 받은 것을 여기서도 날짜로 거른다.

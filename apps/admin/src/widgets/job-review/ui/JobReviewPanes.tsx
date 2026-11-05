@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import { useCallback, type Ref } from 'react';
 import { Button, Callout, Card, cn } from '@ogonggo/ui';
 import type { NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
 import { requestAssistantQuestion, useAssistantBusy } from '@/features/ai-assistant';
@@ -7,6 +7,9 @@ import { AnalysisPane } from './AnalysisPane';
 import { SourcePane } from './SourcePane';
 
 export type JobReviewPane = 'analysis' | 'source';
+
+/** 구역 저장(`useInlineJobEdit`) 밖에서 따로 고치는 것. 분석 결과와 원문 HTML 이다. */
+export type JobReviewDraft = 'analysis' | 'sourceHtml';
 
 export interface JobReviewPanesProps {
   jobId: number;
@@ -23,6 +26,8 @@ export interface JobReviewPanesProps {
   onPaneEnter?: (pane: JobReviewPane) => void;
   /** AI 비서에게 검수를 부탁한 뒤. 오늘 올라온 공고는 키가 먹게 화면에 포커스를 돌린다. */
   onAskedAssistant?: () => void;
+  /** 분석 결과·원문 HTML 에 저장하지 않은 고침이 생기거나 없어질 때. */
+  onDraftChange?: (draft: JobReviewDraft, dirty: boolean) => void;
 }
 
 /**
@@ -41,8 +46,17 @@ export function JobReviewPanes({
   sourceRef,
   onPaneEnter,
   onAskedAssistant,
+  onDraftChange,
 }: JobReviewPanesProps) {
   const isAssistantBusy = useAssistantBusy();
+  const onAnalysisDraft = useCallback(
+    (dirty: boolean) => onDraftChange?.('analysis', dirty),
+    [onDraftChange],
+  );
+  const onSourceDraft = useCallback(
+    (dirty: boolean) => onDraftChange?.('sourceHtml', dirty),
+    [onDraftChange],
+  );
   return (
     <div className="@container mt-4">
       <div className="grid gap-4 @min-[944px]:grid-cols-2">
@@ -54,7 +68,7 @@ export function JobReviewPanes({
           >
             <h2 className="pb-4 text-base font-bold text-gray-900">공고 분석</h2>
             {detail.data && edit ? (
-              <AnalysisPane job={detail.data} edit={edit} />
+              <AnalysisPane job={detail.data} edit={edit} onDraftChange={onAnalysisDraft} />
             ) : detail.isError ? (
               <Callout tone="error">상세를 불러오지 못했습니다.</Callout>
             ) : (
@@ -72,6 +86,7 @@ export function JobReviewPanes({
               job={detail.data}
               edit={edit ?? undefined}
               className="h-full"
+              onDraftChange={onSourceDraft}
               action={
                 <Button
                   size="sm"
