@@ -7,7 +7,6 @@ import {
   type EnumName,
   type ListJobsParams,
 } from '@ogonggo/api/src/admin';
-import type { AdminJobDetailWithInspection } from '@ogonggo/api/src/mocks/admin/inspection';
 import {
   DEFAULT_KPI_FILTERS,
   KPI_QUERY,
@@ -223,7 +222,7 @@ async function reviewJob(args: Record<string, unknown>): Promise<string> {
   if (!jobId) {
     return 'jobId 가 올바르지 않습니다.';
   }
-  const job = (await unwrapData(getJob(jobId))) as AdminJobDetailWithInspection | undefined;
+  const job = await unwrapData(getJob(jobId));
   if (!job) {
     return `공고 ${jobId} 를 찾지 못했습니다.`;
   }

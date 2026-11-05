@@ -1,11 +1,11 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import type { AdminCompanyContentPriorityResponse } from '../fixtures/company-priority-types';
+import type { AdminCompanyContentPriorityResponse } from '../../generated/admin/models';
 import { ok } from './paging';
 
 /**
  * 기업회원 공고 우선 노출 설정 핸들러.
  *
- * 백엔드 `GET`·`PUT /api/v1/admin/company-content-priority`(LC-3568, 아직 배포 전)를 흉내 낸다.
+ * 백엔드 `GET`·`PUT /api/v1/admin/company-content-priority`(LC-3568)를 흉내 낸다.
  * 설정 행이 없으면 켜짐이라 기본값은 `enabled: true` 다. `PUT` 은 `enabled` 가 빠졌거나 `null` 이거나
  * 참·거짓이 아니면 400 `BAD_REQUEST`, 맞으면 저장한 값을 `data` 로 돌려준다.
  *

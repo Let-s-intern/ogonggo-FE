@@ -31,7 +31,7 @@ const SOURCE_HTML_CLASS = cn(
  * 것도 확인 대상이다.
  *
  * 머리의 제목·회사명·원문 주소와 원문 HTML 은 그 자리에서 고친다(2026-11-04 사용자). 앞의 셋은 왼쪽 칸과 같은
- * `useInlineJobEdit` 로, 원문 HTML 은 `useSetJobSourceHtml`(`PATCH` 의 `sourceHtml`, 배포 전)로 저장한다.
+ * `useInlineJobEdit` 로, 원문 HTML 은 `useSetJobSourceHtml`(`PATCH` 의 `sourceHtml`)로 저장한다.
  */
 export const SourcePane = forwardRef<
   HTMLDivElement,

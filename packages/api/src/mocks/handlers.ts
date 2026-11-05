@@ -10,7 +10,7 @@ import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { userNotificationHandlers } from './notifications';
 import { registeredAtFor } from './fixtures/admin-content';
 import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
-import { JOB_FIXTURES, JOB_SCENARIO_IDS } from './fixtures/job';
+import { JOB_FIXTURES, JOB_SCENARIO_IDS, type JobFixture } from './fixtures/job';
 import { REAL_JOB_SEEDS } from './fixtures/real-jobs-seed';
 import {
   RECRUITMENT_POST_FIXTURES,
@@ -63,7 +63,6 @@ import type { UserBootcampSummaryResponse } from '../generated/user/models/userB
 import type { UserJobCalendarItemResponse } from '../generated/user/models/userJobCalendarItemResponse';
 import type { UserJobCalendarItemResponseJobField } from '../generated/user/models/userJobCalendarItemResponseJobField';
 import { enumOptions } from '../enums';
-import type { UserJobDetailResponse } from '../generated/user/models/userJobDetailResponse';
 import type { UserJobSummaryResponse } from '../generated/user/models/userJobSummaryResponse';
 
 /**
@@ -97,21 +96,13 @@ const toSummary = ({
   hiringProcess: _hiringProcess,
   sourceUrl: _sourceUrl,
   ...summary
-}: UserJobDetailResponse): UserJobSummaryResponse & JobRegisteredAt => ({
+}: JobFixture): UserJobSummaryResponse => ({
   ...summary,
   registeredAt: kstRegisteredAt(summary.id),
 });
 
-/**
- * 사용자 공고 목록·오늘의 공고·상세의 등록 시각. 어드민 공고 응답의 `registeredAt` 과 같은 값이다. 백엔드는 필수 칸으로
- * 구현했고 아직 배포 전이다. 사용자 웹의 `NEW` 배지(등록 24시간 안)가 쓴다. 배포 뒤 코드젠하면 이 타입을 지운다.
- */
-interface JobRegisteredAt {
-  registeredAt: string;
-}
-
 /** LATEST는 id 역순(생성 역순 근사), VIEW_COUNT는 조회수 내림차순이며 동률이면 최신순(id 역순). */
-const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailResponse[] =>
+const sortJobs = (jobs: JobFixture[], sort: string): JobFixture[] =>
   [...jobs].sort((a, b) =>
     sort === ListPublicJobsSort.VIEW_COUNT ? b.viewCount - a.viewCount || b.id - a.id : b.id - a.id,
   );
@@ -126,7 +117,7 @@ const sortJobs = (jobs: UserJobDetailResponse[], sort: string): UserJobDetailRes
  * 백엔드처럼 지역이 없는 공고는 지역을 고르면 빠진다.
  */
 const filterJobs = (
-  jobs: UserJobDetailResponse[],
+  jobs: JobFixture[],
   {
     keyword,
     employmentTypes,
@@ -140,7 +131,7 @@ const filterJobs = (
     jobField?: string;
     region?: string;
   },
-): UserJobDetailResponse[] =>
+): JobFixture[] =>
   jobs.filter((job) => {
     if (keyword) {
       const needle = keyword.toLowerCase();
@@ -430,7 +421,7 @@ const getJobHandler = http.get('*/api/v1/jobs/:jobId', ({ params }) => {
   const body: SuccessResponseUserJobDetailResponse = {
     status: 200,
     message: '채용공고 상세를 조회했습니다.',
-    data: { ...job, registeredAt: kstRegisteredAt(job.id) } as UserJobDetailResponse,
+    data: { ...job, registeredAt: kstRegisteredAt(job.id) },
   };
 
   return HttpResponse.json(body, { status: 200 });

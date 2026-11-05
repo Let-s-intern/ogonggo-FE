@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState, type ReactNode } from 'react';
-import type { Analysis } from '@ogonggo/api/src/mocks/admin/inspection';
+import type { Analysis } from '@ogonggo/api/src/admin';
 import { Badge, Button, Callout, Input, Textarea } from '@ogonggo/ui';
 import { useSaveJobAnalysis, type NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';

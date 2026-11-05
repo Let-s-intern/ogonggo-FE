@@ -123,7 +123,7 @@ export function JobReviewDialog({ jobId, onClose }: { jobId: number; onClose: ()
     setInspected.mutate(
       { jobId, inspected: checked },
       {
-        onSuccess: () => patchDetail({ inspectedAt: checked ? kstNow() : null }),
+        onSuccess: () => patchDetail({ inspectedAt: checked ? kstNow() : undefined }),
         onError: fail,
       },
     );

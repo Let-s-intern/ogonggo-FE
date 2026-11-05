@@ -1,16 +1,16 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import type {
   AdminJobDetailResponse,
-  AdminJobSummaryResponse,
   Analysis,
+  UpdateAdminJobRequest,
 } from '../../generated/admin/models';
 import { enumLabel } from '../../enums';
 import { ADMIN_JOB_FIXTURES, kstTime } from '../fixtures/admin-content';
 import { notFound, ok } from './paging';
 
 /**
- * 오늘 올라온 공고 검수(LC-3567)의 목. 구현된(배포 전) 백엔드 계약을 이 파일 한 곳에 모았다
- * (`ogonggo-BE` 브랜치 `LC-3567-어드민-오늘-올라온-공고-검수-화면`). 시각은 오프셋 없는 KST date-time 이다.
+ * 오늘 올라온 공고 검수(LC-3567)의 목. 백엔드 계약을 이 파일 한 곳에 모았다. 시각은 오프셋 없는 KST date-time 이다.
+ * 타입은 배포된 어드민 스펙의 생성 모델이다.
  *
  * 1. 검수 완료 표시 `PUT /api/v1/admin/jobs/{jobId}/inspection`(`replaceJobInspection`), 해제 `DELETE` 같은 경로
  *    (`deleteJobInspection`). 둘 다 본문 없이 200 `data: null`, 없는 공고는 404. 다시 PUT 해도 처음 시각이다.
@@ -20,44 +20,9 @@ import { notFound, ok } from './paging';
  * 4. 운영자 분석 수정 `PUT /api/v1/admin/jobs/{jobId}/analysis`(`replaceJobAnalysis`). 본문 `Analysis`, 응답은 상세.
  * 5. `PATCH /api/v1/admin/jobs/{jobId}` 의 `sourceHtml`. 걸러서 저장하고 비울 수 없다(400 `[sourceHtml]`).
  *
- * 백엔드가 배포되면 코드젠으로 생성 모델에 이 칸들이 생긴다. 그때 아래 타입을 생성 모델로 바꾸고, 이 파일의
- * 핸들러는 생성 모델의 이름으로 옮긴다. 화면(`apps/admin/src/entities/new-job`)은 이 파일의 타입만 가져다 쓴다.
- *
- * `Analysis` 는 배포된 어드민 스펙에 이미 있는 생성 모델이다(AI 서버 저장 본문과 같은 스키마라 코드젠 뒤에도 같은
- * 이름이다). 백엔드는 빈 `Fact` 칸을 null 로 주는데 생성 모델은 선택 칸(`value?: string`)이라, 화면은 null 과 빈
- * 칸을 같이 다룬다.
+ * 백엔드는 빈 칸(`inspectedAt`, `analysis`, `Fact` 칸 등)을 null 로 주는데 생성 모델은 선택 칸(`?: string`)이다.
+ * 목은 백엔드처럼 null 을 싣고, 화면은 null 과 빈 칸을 같이 다룬다.
  */
-export type { Analysis };
-
-/** 백엔드가 어드민 상세에 더하는 칸. */
-export interface AdminJobInspectionFields {
-  /** 검수 완료 시각. 미검수면 null. */
-  inspectedAt?: string | null;
-  /** 저장된 공고 분석. 분석이 없으면 null. */
-  analysis?: Analysis | null;
-  /** 분석이 지금 본문으로 만든 것인지. 본문이 바뀌어 다시 분석을 기다리거나 분석이 없으면 false. */
-  analysisCurrent?: boolean;
-  /** 운영자가 분석을 고친 시각. AI 가 바뀐 본문으로 다시 분석해 저장하면 null 로 돌아간다. */
-  analysisEditedAt?: string | null;
-  /**
-   * 운영자가 `PATCH` 로 제목·본문·공고 정보·원문을 고친 시각. 고치지 않았으면 null. 그 뒤로는 AI 서버 재수집이
-   * 내용과 원문을 바꾸지 않는다. 보호는 저절로 풀리지 않고 푸는 API 도 아직 없다.
-   */
-  contentEditedAt?: string | null;
-}
-
-/**
- * `PATCH /api/v1/admin/jobs/{jobId}` 본문의 원문 HTML. 배포된 `UpdateAdminJobRequest` 에는 아직 없다. 백엔드는
- * 크롤러 원문과 같은 거르기(`JobSourceHtmlSanitizer`)를 거쳐 저장하고, 공백이거나 거른 뒤 남는 것이 없으면 400
- * `[sourceHtml]` 이다. 원문만 고치면 분석은 낡지 않는다. 코드젠 뒤 생성 모델의 칸으로 바꾸고 이 타입을 지운다.
- */
-export interface AdminJobSourceHtmlPatch {
-  sourceHtml?: string;
-}
-
-export type AdminJobDetailWithInspection = AdminJobDetailResponse & AdminJobInspectionFields;
-export type AdminJobSummaryWithInspection = AdminJobSummaryResponse &
-  Pick<AdminJobInspectionFields, 'inspectedAt'>;
 
 /**
  * 등록 시각의 KST 날짜(`YYYY-MM-DD`). 검수 대상은 오늘(KST) 등록분이다. 공고 등록 시각은 오프셋 없는 KST 이고,
@@ -331,8 +296,8 @@ export function markContentEdited(jobId: number) {
   contentEdits.set(jobId, kstNow());
 }
 
-/** 어드민 상세 응답. 생성 모델에 검수 칸을 얹는다. */
-export function withInspection(job: AdminJobDetailResponse): AdminJobDetailWithInspection {
+/** 어드민 상세 응답. 생성 모델에 검수 칸을 얹는다. 빈 칸은 백엔드처럼 null 이다. */
+export function withInspection(job: AdminJobDetailResponse) {
   const analysis = analyses.get(job.id) ?? null;
   return {
     ...job,
@@ -414,7 +379,7 @@ function sanitizeSourceHtml(html: string): string {
  * 백엔드는 다른 칸을 저장하기 전에 거절하므로, 수정 목은 이것을 먼저 부르고 저장은 끝에 한다. 분석은 본문 칸으로
  * 만드므로 낡게 하지 않는다.
  */
-export function readSourceHtmlPatch(body: AdminJobSourceHtmlPatch): {
+export function readSourceHtmlPatch(body: UpdateAdminJobRequest): {
   html?: string;
   error?: ReturnType<typeof badRequest>;
 } {

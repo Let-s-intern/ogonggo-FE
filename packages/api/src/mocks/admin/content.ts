@@ -28,7 +28,6 @@ import {
 } from '../fixtures/recruitment-post';
 import { clearRejection } from '../fixtures/admin-rejection';
 import {
-  type AdminJobSourceHtmlPatch,
   analysisSourceOf,
   markAnalysisStale,
   markContentEdited,
@@ -393,7 +392,7 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (rejected) {
     return rejected;
   }
-  const sourceHtml = readSourceHtmlPatch(body as AdminJobSourceHtmlPatch);
+  const sourceHtml = readSourceHtmlPatch(body);
   if (sourceHtml.error) {
     return sourceHtml.error;
   }

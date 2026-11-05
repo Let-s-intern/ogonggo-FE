@@ -23,9 +23,8 @@ import type {
   AdminJobDetailResponseSource,
   AdminJobDetailResponseVisibility,
 } from '../../generated/admin/models';
-import type { UserJobDetailResponse } from '../../generated/user/models/userJobDetailResponse';
 import { BOOTCAMP_FIXTURES } from './bootcamp';
-import { JOB_FIXTURES } from './job';
+import { JOB_FIXTURES, type JobFixture } from './job';
 import { SIDE_STUDY_FIXTURES, type SideStudyDetail } from './side-study';
 
 /** 크롤러가 수집했는지, 비즈니스 회원이 직접 등록했는지. 부트캠프에는 이 칸이 없다. */
@@ -240,7 +239,7 @@ const ADMIN_JOB_DETAILS: Record<number, Partial<AdminJobDetailResponse>> = {
 const toAdminJob = ({
   bookmarked: _bookmarked,
   ...userJob
-}: UserJobDetailResponse): AdminJobDetailResponse => {
+}: JobFixture): AdminJobDetailResponse => {
   const job = { ...userJob, ...ADMIN_JOB_DETAILS[userJob.id] };
   const id = job.id;
   const source = sourceFor(id);
@@ -256,6 +255,8 @@ const toAdminJob = ({
     }),
     source,
     visibility: visibilityFor(id),
+    // 분석은 검수 목(`../admin/inspection.ts`의 `withInspection`)이 응답에 얹는다.
+    analysisCurrent: false,
     ...(source === 'COMPANY' ? { reviewStatus: reviewStatusFor(id, registeredAt) } : {}),
   };
 };
