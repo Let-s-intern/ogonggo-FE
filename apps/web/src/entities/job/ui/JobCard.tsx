@@ -17,7 +17,7 @@ import { EMPLOYMENT_TYPE_LABELS, EXPERIENCE_TYPE_LABELS } from '../model/labels'
 import type { JobRecommendation, JobSummary } from '../model/types';
 import { CompanyLogo } from './CompanyLogo';
 import { JobCardLink, type JobCardTracking } from './JobCardLink';
-import { JobMeta } from './JobMeta';
+import { NewJobMark } from './NewJobMark';
 import { JobThumbnail } from './JobThumbnail';
 
 export interface JobCardProps {
@@ -58,7 +58,7 @@ const FEATURED_ACTIONS_CLASS =
  * "인기 공고"와 "전체 공고" 두 섹션이 완전히 같은 카드 디자인을 쓰도록 만든 단일 컴포넌트다
  * (`widgets/job-list/ui/JobList.tsx`와 `widgets/popular-jobs/ui/PopularJobCard.tsx`가 예전엔
  * 따로 그려서 D-day 표시 방식이 서로 달랐다 — 사용자가 그 차이를 지적해 하나로 합쳤다).
- * 썸네일(북마크만) → "고용형태 · 직무 · 경력  D-day 배지" 한 줄 → "회사명 · 지역" 한 줄 → 제목.
+ * 썸네일(북마크만) → "회사명  D-day 배지" → "N 제목" → "고용형태 · 직무 · 경력  조회수"(2026-11-05 사용자 시안).
  * "직무"(`job_major`)는 처음엔 대응 API 필드가 없다고 뺐었는데, 실제 목업(`상세 채용공고.png`
  * 리스트 카드 크롭)을 다시 보니 있었다 — 크롤러 DB엔 이 필드가 실제로 있어서(`job-major.ts`)
  * 넣는다, 없는 공고는 그 세그먼트만 뺀다.
@@ -72,7 +72,7 @@ const FEATURED_ACTIONS_CLASS =
  * 마감일이 없는 공고(상시채용·마감일 미정)는 같은 자리에 `상시 채용` 배지다(`alwaysOpenLabel`).
  *
  * 추천 문구(`recommendation`)가 있으면 박스를 그린다. 박스는 링크 안쪽이라 누르면 상세로 간다.
- * `grid` 는 제목 아래, 모바일 `마감` 배지 위에 놓는다. `featured` 는 카드 맨 아래에 놓는다 — 모바일은
+ * `grid` 는 맨 아래 줄 뒤에 놓는다. `featured` 는 카드 맨 아래에 놓는다 — 모바일은
  * 제목과 로고 줄 아래(D-day 알약은 로고 줄 안이라 박스 위쪽)이고, md 이상은 `mt-auto` 로 같은 행의
  * 카드끼리 박스 높이를 맞춘다. 제목은 굵은 파랑이고 한 줄에서 자른다. 설명은 회색이고 세 줄까지
  * 보인다(2026-10-16, 사용자). 어드민이 넣은 줄바꿈은 그대로 줄이 바뀐다(`whitespace-pre-line`).
@@ -114,51 +114,35 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
   const roleLabel = jobMajor ?? metaParts.join(' · ');
 
   /*
-   * 데스크톱은 메타 줄 오른쪽, 모바일은 제목 아래다(`docs/asset/v9 mobile/채용공고 목록.png`).
-   * 카드 폭이 158px 안팎이라 메타 줄 끝에 두면 `D-102` 가 두 줄로 꺾인다.
+   * 회사명 줄 오른쪽 끝이다(2026-11-05 사용자 시안). 회사명이 길면 회사명이 말줄임으로 줄고 배지는 줄지 않는다.
    */
   const deadlineBadge = dday ? (
-    <Badge tone={urgent ? 'urgent' : 'main'} className="rounded-full px-2 py-0.5 text-xs font-bold">
+    <Badge tone={urgent ? 'urgent' : 'main'} className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold">
       {dday}
     </Badge>
   ) : closed ? (
-    <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs font-bold">
+    <Badge tone="neutral" className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold">
       {closedLabel('job')}
     </Badge>
   ) : isAlwaysOpen(job.recruitmentType, job.recruitmentEndAt) ? (
-    <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
+    <Badge tone="main" className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold">
       {alwaysOpenLabel('job')}
     </Badge>
   ) : null;
 
   /*
-   * 등록 24시간 안이면 D-day 배지 앞에 `NEW` 를 붙인다(`isNewJob`). 같은 알약 모양이고 색만 다르다. 두 배지는
-   * 늘 함께 다니므로 D-day 가 놓이는 세 자리(데스크톱 메타 줄 끝, 모바일 제목 아래, 모바일 featured 로고 줄 끝)에
-   * 묶음으로 둔다.
+   * 등록 24시간 안이면 제목 앞에 주황 동그라미 `N` 을 붙인다(`isNewJob`, 2026-11-05 사용자 시안). 전에는 D-day 앞의
+   * 초록 `NEW` 알약이었다.
    */
   const isNew = isNewJob(job.registeredAt);
-  const badges =
-    isNew || deadlineBadge ? (
-      <span className="inline-flex items-center gap-1">
-        {isNew ? (
-          <Badge tone="success" className="rounded-full px-2 py-0.5 text-xs font-bold">
-            NEW
-          </Badge>
-        ) : null}
-        {deadlineBadge}
-      </span>
-    ) : null;
+  const newMark = isNew ? <NewJobMark className="mr-1.5 align-[-0.3em]" /> : null;
+  const hasRecommendation = Boolean(recommendationTitle || recommendationDescription);
 
-  // 맨 아래 줄 오른쪽 끝. 추천 박스가 없으면 `mt-auto` 로 같은 행의 카드끼리 바닥을 맞춘다. 박스가
-  // 있는 `featured` 는 박스가 이미 `mt-auto` 라서 여기 두 번째 `mt-auto` 를 두면 남는 높이가 둘로 갈린다.
-  const viewCount = (
-    <ViewCount
-      count={job.viewCount}
-      className={cn('self-end', !(recommendationTitle || recommendationDescription) && 'mt-auto')}
-    />
-  );
-
-  /** 썸네일 → 메타 줄 → 회사명 → 제목. `grid` 의 전부이고 `featured` 의 md 이상 모양이다. */
+  /**
+   * 썸네일 → "회사명 · D-day" → "N 제목" → "고용형태 · 직무 · 경력 · 조회수"(2026-11-05 사용자 시안).
+   * `grid` 의 전부이고 `featured` 의 md 이상 모양이다. 맨 아래 줄은 추천 박스가 없으면 `mt-auto` 로 같은 행의
+   * 카드끼리 바닥을 맞춘다. 박스가 있는 `featured` 는 박스가 이미 `mt-auto` 라 두 번째를 두지 않는다.
+   */
   const verticalBody = (
     <>
       <JobThumbnail
@@ -166,19 +150,23 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         coverImageUrl={job.coverImageUrl}
         logoUrl={job.logoUrl}
       />
-      <p className="flex items-center justify-between text-xs text-gray-400">
-        <span>{metaParts.join(' · ')}</span>
-        {badges ? <span className="hidden md:inline-flex">{badges}</span> : null}
-      </p>
-      <JobMeta
-        companyName={job.companyName}
-        recruitmentType={job.recruitmentType}
-        recruitmentEndAt={job.recruitmentEndAt}
-        showDeadline={false}
-      />
-      <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
+      <div className="flex min-h-7 items-center justify-between gap-2">
+        <p className="min-w-0 truncate text-sm font-bold text-gray-600">{job.companyName}</p>
+        {deadlineBadge}
+      </div>
+      <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500 md:text-base">
+        {newMark}
         {job.title}
       </p>
+      <div
+        className={cn(
+          'flex items-center justify-between gap-2 text-xs text-gray-400',
+          !(featured && hasRecommendation) && 'mt-auto',
+        )}
+      >
+        <span className="min-w-0 truncate">{metaParts.join(' · ')}</span>
+        <ViewCount count={job.viewCount} />
+      </div>
     </>
   );
 
@@ -194,6 +182,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         {featured ? (
           <>
             <p className="line-clamp-3 break-keep text-pretty pr-8 text-sm font-bold break-words text-gray-900 transition-colors group-hover:text-blue-500 md:hidden">
+              {newMark}
               {job.title}
             </p>
             <div className="mt-auto flex items-center gap-3 md:hidden">
@@ -206,13 +195,10 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
                 <p className="truncate text-xs text-gray-400">{roleLabel}</p>
                 <p className="truncate text-sm font-bold text-gray-900">{job.companyName}</p>
               </div>
-              {badges ? <span className="flex shrink-0">{badges}</span> : null}
+              {deadlineBadge}
             </div>
             <ViewCount count={job.viewCount} className="self-end md:hidden" />
-            <div className="hidden md:contents">
-              {verticalBody}
-              {viewCount}
-            </div>
+            <div className="hidden md:contents">{verticalBody}</div>
           </>
         ) : (
           verticalBody
@@ -234,8 +220,6 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
             ) : null}
           </div>
         ) : null}
-        {!featured && badges ? <span className="flex md:hidden">{badges}</span> : null}
-        {featured ? null : viewCount}
       </JobCardLink>
       {/* 카드뉴스 버튼은 어드민에게만 보인다. 없으면 북마크가 원래 자리(오른쪽 위 끝)에 남는다. */}
       <div

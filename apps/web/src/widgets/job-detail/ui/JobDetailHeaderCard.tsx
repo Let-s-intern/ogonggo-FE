@@ -1,6 +1,7 @@
-import { Badge, Card } from '@ogonggo/ui';
+import { Card } from '@ogonggo/ui';
 import { isNewJob } from '@/entities/job/model/new-job';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import { NewJobMark } from '@/entities/job/ui/NewJobMark';
 import type { JobRecruitmentType } from '@/entities/job/model/types';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { EyeIcon } from '@/shared/ui/icons';
@@ -14,7 +15,7 @@ export interface JobDetailHeaderCardProps {
   recruitmentType: JobRecruitmentType;
   recruitmentEndAt?: string;
   viewCount: number;
-  /** 등록 시각. 24시간 안이면 D-day 앞에 `NEW` 를 단다(`isNewJob`). */
+  /** 등록 시각. 24시간 안이면 제목 앞에 주황 `N` 을 단다(`isNewJob`). */
   registeredAt?: string;
   /**
    * `page` 는 `/jobs/[jobId]` 화면(v12 시안), `modal` 은 공고 달력의 상세 모달이다. 모달은 v6 시안
@@ -103,14 +104,14 @@ export function JobDetailHeaderCard({
           {region ? <p className={styles.region}>{region}</p> : null}
         </div>
       </div>
-      <h1 className={styles.title}>{title}</h1>
+      <h1 className={styles.title}>
+        {isNewJob(registeredAt) ? (
+          <NewJobMark className="mr-2 size-6 align-[-0.15em] text-sm md:size-8 md:text-base" />
+        ) : null}
+        {title}
+      </h1>
       {layout === 'modal' ? <hr className="my-4 border-gray-200 md:my-6" /> : null}
       <div className={styles.row}>
-        {isNewJob(registeredAt) ? (
-          <Badge tone="success" className="shrink-0 rounded-full px-3.5 py-1 text-base font-extrabold">
-            NEW
-          </Badge>
-        ) : null}
         <DdayBadge recruitmentType={recruitmentType} recruitmentEndAt={recruitmentEndAt} />
         <span className="text-gray-500">
           {formatDeadlineText(recruitmentType, recruitmentEndAt)}

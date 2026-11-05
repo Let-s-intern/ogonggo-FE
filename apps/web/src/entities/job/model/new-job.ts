@@ -4,10 +4,10 @@ import { withKstOffset } from '@/shared/lib/kstDateTime';
 const NEW_JOB_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /**
- * `NEW` 배지를 보일지. 지금은 숨김이다 — 곧 UI/UX 가 바뀔 수 있어서 숨김(2026-11-04 사용자 요청).
- * 판정 로직과 배지 자리는 그대로 두었으니 다시 보일 때는 `true` 로만 바꾼다.
+ * `NEW` 배지를 보일지. 2026-11-04 에 UI/UX 가 바뀔 수 있어 숨겼다가, 2026-11-05 새 시안(주황 `N`)으로 다시 보인다.
+ * 다시 숨길 때는 `false` 로만 바꾼다.
  */
-const SHOW_NEW_BADGE = false;
+const SHOW_NEW_BADGE = true;
 
 /**
  * 등록 24시간 안 공고인지(2026-11-04 사용자: "다음 배치가 들어올 즈음, 하루가 지나면 뗀다").
