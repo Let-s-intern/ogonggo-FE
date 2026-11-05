@@ -19,6 +19,7 @@ import {
   ADMIN_BOOTCAMP_FIXTURES,
   ADMIN_JOB_FIXTURES,
   ADMIN_SIDE_STUDY_FIXTURES,
+  hashId,
   kstTime,
   recruitmentStatusOf,
 } from '../fixtures/admin-content';
@@ -53,6 +54,38 @@ import { matches, notFound, ok, paginate, readPaging } from './paging';
  */
 
 type ContentSort = 'REGISTERED_AT' | 'VIEW_COUNT';
+
+/**
+ * 기업회원 공고 우선 노출을 공고마다 켜고 끄는 값(`priorityExposed`, 백엔드 LC-3573). 목록·상세 응답에 붙고 건별
+ * 수정(PATCH)으로 바꾼다. 백엔드 기본값은 켬이다.
+ *
+ * 생성 모델에 아직 없어 픽스처 밖에 따로 든다. 우선 노출 화면이 꺼진 줄을 그려 보도록 다섯에 하나꼴로 끈 채
+ * 시작한다. LC-3573 배포 뒤 코드젠으로 바꾼다.
+ */
+const priorityExposedById = {
+  job: new Map<number, boolean>(),
+  bootcamp: new Map<number, boolean>(),
+};
+
+function withPriorityExposed<T extends { id: number }>(
+  kind: keyof typeof priorityExposedById,
+  row: T,
+): T & { priorityExposed: boolean } {
+  const priorityExposed = priorityExposedById[kind].get(row.id) ?? hashId(row.id, 13) % 5 !== 0;
+  return { ...row, priorityExposed };
+}
+
+/** 보냈으면 참·거짓이어야 한다. 백엔드는 `null` 을 받지 않는다(non-null 칸). */
+function readPriorityExposed(body: object): { value?: boolean; error?: Response } {
+  if (!('priorityExposed' in body)) {
+    return {};
+  }
+  const value = (body as { priorityExposed: unknown }).priorityExposed;
+  if (typeof value !== 'boolean') {
+    return { error: badRequest('priorityExposed', '참·거짓 값을 보내 주세요.') };
+  }
+  return { value };
+}
 
 const readSort = (url: URL): ContentSort =>
   url.searchParams.get('sort') === 'VIEW_COUNT' ? 'VIEW_COUNT' : 'REGISTERED_AT';
@@ -135,7 +168,7 @@ const listJobsHandler = http.get('*/api/v1/admin/jobs', ({ request }) => {
   const sorted = sortContent(filtered, readSort(url));
   const paged = paginate(sorted, page, size);
   const body: PageResponseAdminJobSummaryResponse = {
-    items: paged.items.map((job) => withInspectedAt(toJobSummary(job))),
+    items: paged.items.map((job) => withPriorityExposed('job', withInspectedAt(toJobSummary(job)))),
     pageInfo: paged.pageInfo,
   };
   return HttpResponse.json(ok(body), { status: 200 });
@@ -147,7 +180,7 @@ const getJobHandler = http.get('*/api/v1/admin/jobs/:jobId', ({ params }) => {
   if (!job) {
     return HttpResponse.json(notFound('채용공고를 찾을 수 없습니다.'), { status: 404 });
   }
-  return HttpResponse.json(ok(withInspection(job)), { status: 200 });
+  return HttpResponse.json(ok(withPriorityExposed('job', withInspection(job))), { status: 200 });
 });
 
 /**
@@ -398,6 +431,10 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (sourceHtml.error) {
     return sourceHtml.error;
   }
+  const priorityExposed = readPriorityExposed(body);
+  if (priorityExposed.error) {
+    return priorityExposed.error;
+  }
 
   const merged = mergeJobDetails(job, body);
   if ('error' in merged) {
@@ -417,8 +454,9 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (analysisSourceOf(job) !== analysisSource) {
     markAnalysisStale(job.id);
   }
-  // 노출·검수 상태 말고 하나라도 보냈으면 운영자 내용 수정이다(백엔드 `markContentEdited`).
-  if (Object.keys(body).some((key) => key !== 'visibility' && key !== 'reviewStatus')) {
+  // 노출·검수 상태·우선 노출 말고 하나라도 보냈으면 운영자 내용 수정이다(백엔드 `markContentEdited`).
+  const operationalKeys = ['visibility', 'reviewStatus', 'priorityExposed'];
+  if (Object.keys(body).some((key) => !operationalKeys.includes(key))) {
     markContentEdited(job.id);
   }
   if (sourceHtml.html !== undefined) {
@@ -435,6 +473,9 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
   if (body.visibility !== undefined) {
     job.visibility = body.visibility;
   }
+  if (priorityExposed.value !== undefined) {
+    priorityExposedById.job.set(job.id, priorityExposed.value);
+  }
   if (body.reviewStatus !== undefined && job.source === 'COMPANY') {
     job.reviewStatus = body.reviewStatus;
   }
@@ -443,7 +484,7 @@ const patchJobHandler = http.patch('*/api/v1/admin/jobs/:jobId', async ({ params
     clearRejection('JOB', job.id);
   }
 
-  return HttpResponse.json(ok(withInspection(job)), { status: 200 });
+  return HttpResponse.json(ok(withPriorityExposed('job', withInspection(job))), { status: 200 });
 });
 
 const patchBootcampHandler = http.patch(
@@ -461,6 +502,10 @@ const patchBootcampHandler = http.patch(
     if (rejected) {
       return rejected;
     }
+    const priorityExposed = readPriorityExposed(body);
+    if (priorityExposed.error) {
+      return priorityExposed.error;
+    }
     const error = applyContentPatch(
       bootcamp as unknown as Record<string, unknown>,
       body,
@@ -476,6 +521,9 @@ const patchBootcampHandler = http.patch(
     if (body.visibility !== undefined) {
       bootcamp.visibility = body.visibility;
     }
+    if (priorityExposed.value !== undefined) {
+      priorityExposedById.bootcamp.set(bootcamp.id, priorityExposed.value);
+    }
     // 검수 상태 규칙은 채용공고와 같다.
     if (body.reviewStatus !== undefined && bootcamp.source === 'COMPANY') {
       bootcamp.reviewStatus = body.reviewStatus;
@@ -484,7 +532,7 @@ const patchBootcampHandler = http.patch(
       clearRejection('BOOTCAMP', bootcamp.id);
     }
 
-    return HttpResponse.json(ok(bootcamp), { status: 200 });
+    return HttpResponse.json(ok(withPriorityExposed('bootcamp', bootcamp)), { status: 200 });
   },
 );
 
@@ -627,7 +675,9 @@ const listBootcampsHandler = http.get('*/api/v1/admin/bootcamps', ({ request }) 
   const sorted = sortContent(filtered, readSort(url));
   const paged = paginate(sorted, page, size);
   const body: PageResponseAdminBootcampSummaryResponse = {
-    items: paged.items.map(toBootcampSummary),
+    items: paged.items.map((bootcamp) =>
+      withPriorityExposed('bootcamp', toBootcampSummary(bootcamp)),
+    ),
     pageInfo: paged.pageInfo,
   };
   return HttpResponse.json(ok(body), { status: 200 });
@@ -639,7 +689,7 @@ const getBootcampHandler = http.get('*/api/v1/admin/bootcamps/:bootcampId', ({ p
   if (!bootcamp) {
     return HttpResponse.json(notFound('부트캠프를 찾을 수 없습니다.'), { status: 404 });
   }
-  return HttpResponse.json(ok(bootcamp), { status: 200 });
+  return HttpResponse.json(ok(withPriorityExposed('bootcamp', bootcamp)), { status: 200 });
 });
 
 /**
