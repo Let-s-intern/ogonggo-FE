@@ -269,3 +269,14 @@ export function CrownIcon({ className, ...props }: IconProps) {
     <span aria-hidden="true" className={cn('icon-[lucide--crown] block', className)} {...props} />
   );
 }
+
+/** 댓글 작성자 배지 `커리어 코치` 앞의 졸업모(`shared/ui/AuthorRoleBadge`). */
+export function GraduationCapIcon({ className, ...props }: IconProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn('icon-[lucide--graduation-cap] block', className)}
+      {...props}
+    />
+  );
+}

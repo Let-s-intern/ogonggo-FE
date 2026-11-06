@@ -1,14 +1,13 @@
-import { enumLabel } from '@ogonggo/api';
-import { CrownIcon } from './icons';
+import { CrownIcon, GraduationCapIcon } from './icons';
 
 export type AuthorRole = 'USER' | 'COMPANY' | 'ADMIN' | 'MENTOR';
 
 /**
- * 댓글 작성자의 현재 역할 배지. 관리자와 멘토만 배지가 있다. 관리자는 왕관 아이콘과 `운영진` 이고, 멘토는
- * enum 카탈로그의 `UserRole` 문구(`멘토 회원`)다. 그 밖의 역할(일반·기업) 은 배지가 없다.
+ * 댓글 작성자의 현재 역할 배지. 관리자와 멘토만 배지가 있다. 관리자는 왕관과 `운영진`, 멘토는 졸업모와
+ * `커리어 코치` 다. 그 밖의 역할(일반·기업) 은 배지가 없다.
  *
- * 관리자 문구를 카탈로그에서 가져오지 않는 이유는 카탈로그의 `관리자 회원` 이 어드민 회원 목록용 이름이어서다.
- * 사용자 화면의 댓글 옆에서는 운영하는 사람이 단 글로 읽혀야 한다.
+ * 문구를 enum 카탈로그(`UserRole`)에서 가져오지 않는 이유는 카탈로그의 `관리자 회원`·`멘토 회원` 이 어드민
+ * 회원 목록용 이름이어서다. 사용자 화면의 댓글 옆에서는 누가 단 글인지가 읽혀야 한다.
  *
  * 취준고민 답변과 사이드·스터디 댓글이 함께 쓴다. `features` 끼리는 서로 가져오지 않으므로 공용 자리에 둔다.
  */
@@ -24,7 +23,10 @@ export function AuthorRoleBadge({ role }: { role: AuthorRole }) {
           운영진
         </>
       ) : (
-        enumLabel('UserRole', role)
+        <>
+          <GraduationCapIcon className="h-3 w-3" />
+          커리어 코치
+        </>
       )}
     </span>
   );
