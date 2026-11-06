@@ -52,10 +52,16 @@ export interface AdminAdContractResponse extends AdContractSummary {
   paidDate: string | null;
   /** 산 자리. 비어 있으면 자리를 정하지 않은 계약이다. */
   products: AdContractProduct[];
+  /**
+   * 산 인스타그램 게재 유형(`./instagram.ts` 의 유형 id). 유형은 운영자가 정해 늘고 줄어 `products` 처럼 고정 값으로 둘 수 없어
+   * 칸을 따로 둔다. 계정은 계약에서 정하지 않고 인스타 광고를 잡을 때 고른다.
+   */
+  instagramFormatIds: number[];
   memo: string | null;
-  /** 이 계약에 이어 둔 배너·광고 공고 수. 서버가 센다. */
+  /** 이 계약에 이어 둔 배너·광고 공고·인스타 광고 수. 서버가 센다. */
   bannerCount: number;
   adPostingCount: number;
+  instagramAdCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,6 +76,7 @@ export interface AdminAdContractRequest {
   paid: boolean;
   paidDate: string | null;
   products: AdContractProduct[];
+  instagramFormatIds: number[];
   memo: string | null;
 }
 

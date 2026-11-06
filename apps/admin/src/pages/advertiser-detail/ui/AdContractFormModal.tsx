@@ -32,6 +32,8 @@ interface FormState {
   paid: boolean;
   paidDate: string;
   products: AdContractProduct[];
+  /** 인스타 게재 유형 id. 계정은 인스타 광고를 잡을 때 고른다. */
+  instagramFormatIds: number[];
   memo: string;
 }
 
@@ -75,6 +77,7 @@ export function AdContractFormModal({
     paid: contract?.paid ?? false,
     paidDate: contract?.paidDate ?? '',
     products: contract?.products ?? [],
+    instagramFormatIds: contract?.instagramFormatIds ?? [],
     memo: contract?.memo ?? '',
   }));
   const [submitted, setSubmitted] = useState(false);
@@ -105,6 +108,7 @@ export function AdContractFormModal({
       paid: form.paid,
       paidDate: form.paid && form.paidDate ? form.paidDate : null,
       products: form.products,
+      instagramFormatIds: form.instagramFormatIds,
       memo: form.memo.trim() || null,
     };
     save.mutate(input, {
