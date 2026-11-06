@@ -25,11 +25,13 @@ export interface NavItem {
  */
 // `service` 는 취준생이 쓰는 오공고 서비스(웹·앱) 운영, `business` 는 비즈니스 회원(기업·교육기관) 운영이다. 처음에는
 // `유저` 라 불렀다가 사용자 요청으로 `서비스` 로 바꿨다(2026-11-05).
-export type NavArea = 'service' | 'business';
+// `calendar` 는 광고 일정과 운영자 할 일을 한 달력에서 보는 구역이다(2026-11-06 사용자).
+export type NavArea = 'service' | 'business' | 'calendar';
 
 export const NAV_AREAS: { area: NavArea; label: string }[] = [
   { area: 'service', label: '서비스' },
   { area: 'business', label: '비즈니스' },
+  { area: 'calendar', label: '캘린더' },
 ];
 
 export interface NavSection {
@@ -167,6 +169,14 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     area: 'service',
     items: [{ path: '/stats', label: '통계' }],
+  },
+  {
+    /*
+     * 화면이 하나라 제목을 두지 않는다. 계약·배너·광고 공고·할 일 거르기는 화면 위 체크로 한다 — 메뉴로 나누면 같은 달력이
+     * 메뉴마다 다른 주소로 생기고, 두세 종류를 겹쳐 보려면 결국 체크가 필요하다.
+     */
+    area: 'calendar',
+    items: [{ path: '/calendar', label: '캘린더' }],
   },
 ];
 

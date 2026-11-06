@@ -12,6 +12,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fullcalendar/core": "6.1.21",
+    "@fullcalendar/daygrid": "6.1.21",
+    "@fullcalendar/interaction": "6.1.21",
+    "@fullcalendar/react": "6.1.21",
     "@ogonggo/api": "workspace:*",
     "@ogonggo/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.8",

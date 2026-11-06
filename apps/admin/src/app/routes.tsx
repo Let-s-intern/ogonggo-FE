@@ -7,6 +7,7 @@ import { AdvertiserListPage } from '@/pages/advertiser-list';
 import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
+import { CalendarPage } from '@/pages/calendar';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
 import { CompanyPriorityPage } from '@/pages/company-priority';
 import { ConcernDetailPage } from '@/pages/concern-detail';
@@ -111,6 +112,8 @@ export const router = createBrowserRouter([
       { path: 'notifications/batches/:batchId', element: <NotificationBatchDetailPage /> },
 
       { path: 'stats', element: <StatsPage /> },
+
+      { path: 'calendar', element: <CalendarPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

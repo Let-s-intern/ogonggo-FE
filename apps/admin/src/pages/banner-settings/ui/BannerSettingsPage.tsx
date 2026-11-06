@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import {
   Badge,
   Button,
@@ -56,7 +57,12 @@ type Editing = { banner: Banner | null } | null;
  * 저장 버튼을 잊을 위험이 더 크기 때문이다.
  */
 export function BannerSettingsPage() {
-  const [placement, setPlacement] = useState<BannerPlacement>('HOME_TOP');
+  // 캘린더에서 오공고 자체 홍보 배너를 누르면 `?placement=` 로 그 자리 탭을 연다. 처음 한 번만 읽는다.
+  const [searchParams] = useSearchParams();
+  const [placement, setPlacement] = useState<BannerPlacement>(() => {
+    const requested = searchParams.get('placement');
+    return BANNER_PLACEMENTS.find((value) => value === requested) ?? 'HOME_TOP';
+  });
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<Banner | null>(null);
   /** 표만 거르는 광고주. 빈 값이면 전체, `none` 이면 광고주 없는 배너다. 순서 버튼은 거르지 않은 순서로 움직인다. */
