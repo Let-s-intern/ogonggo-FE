@@ -13,6 +13,7 @@ import {
   type SuccessResponsePageResponseUserBootcampSummaryResponse,
   type SuccessResponsePageResponseUserJobSummaryResponse,
   type SuccessResponseRecruitmentPostApplicationPageResponse,
+  type UserJobSummaryResponse,
 } from '@ogonggo/api';
 import {
   OPERATION_TYPE_LABELS as BOOTCAMP_OPERATION_TYPE_LABELS,
@@ -154,22 +155,27 @@ async function fetchJobStage(
   const page = response.data;
   return {
     pageInfo: page?.pageInfo ?? emptyPageInfo(params),
-    items: (page?.items ?? []).map((job) => ({
-      id: job.id,
-      key: `job-${job.id}`,
-      href: `/jobs/${job.id}`,
-      logo: { companyName: job.companyName, logoUrl: job.logoUrl },
-      caption: job.companyName,
-      title: job.title,
-      meta: [
-        EMPLOYMENT_TYPE_LABELS[job.employmentType],
-        EXPERIENCE_TYPE_LABELS[job.experienceType],
-        formatRegion(job.region),
-      ].filter((part): part is string => Boolean(part)),
-      recruitmentType: job.recruitmentType,
-      recruitmentEndAt: job.recruitmentEndAt,
-      closedAt: job.closedAt,
-    })),
+    items: (page?.items ?? []).map(toJobBoardItem),
+  };
+}
+
+/** 채용공고 한 건을 보드 카드 값으로. 스크랩 칸의 광고 공고 카드(`ApplicationBoardAdCard`)도 같은 값으로 그린다. */
+export function toJobBoardItem(job: UserJobSummaryResponse): ApplicationBoardItem {
+  return {
+    id: job.id,
+    key: `job-${job.id}`,
+    href: `/jobs/${job.id}`,
+    logo: { companyName: job.companyName, logoUrl: job.logoUrl },
+    caption: job.companyName,
+    title: job.title,
+    meta: [
+      EMPLOYMENT_TYPE_LABELS[job.employmentType],
+      EXPERIENCE_TYPE_LABELS[job.experienceType],
+      formatRegion(job.region),
+    ].filter((part): part is string => Boolean(part)),
+    recruitmentType: job.recruitmentType,
+    recruitmentEndAt: job.recruitmentEndAt,
+    closedAt: job.closedAt,
   };
 }
 

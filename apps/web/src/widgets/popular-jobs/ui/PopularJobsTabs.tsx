@@ -5,6 +5,7 @@ import type { UserTodayJobSummaryResponse } from '@ogonggo/api';
 import { CircleIconButton, cn } from '@ogonggo/ui';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
+import { placeAdsFirst, type AdItem, type AdSlot } from '@/shared/ads/adPosting';
 
 type TabKey = 'pick' | 'popular' | 'intern' | 'newcomer';
 
@@ -21,6 +22,8 @@ export interface PopularJobsTabsProps {
   popular: JobSummary[];
   intern: JobSummary[];
   newcomer: JobSummary[];
+  /** 첫 탭 맨 앞에 고정할 광고 공고(`JOB_PICK`). 같은 공고가 첫 탭에 있으면 그쪽에서 뺀다. */
+  ads: AdItem<JobSummary>[];
 }
 
 /**
@@ -28,7 +31,7 @@ export interface PopularJobsTabsProps {
  * 시 유지할 필요가 없는 화면 상태다(Push 4 task 파일 2.2절). 세 리스트는 서버 컴포넌트
  * (`PopularJobs`)가 이미 나눠 내려준다.
  */
-export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJobsTabsProps) {
+export function PopularJobsTabs({ picks, popular, intern, newcomer, ads }: PopularJobsTabsProps) {
   const firstTab: TabKey = picks.length > 0 ? 'pick' : 'popular';
   const tabs: TabKey[] = [firstTab, 'intern', 'newcomer'];
   const [active, setActive] = useState<TabKey>(firstTab);
@@ -66,7 +69,14 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
             inert={tab !== active}
             className={cn('col-start-1 row-start-1 min-w-0', tab !== active && 'invisible')}
           >
-            <TabList tab={tab} items={itemsByTab[tab]} />
+            <TabList
+              tab={tab}
+              entries={
+                tab === firstTab
+                  ? placeAdsFirst(ads, itemsByTab[tab])
+                  : itemsByTab[tab].map((item) => ({ item }))
+              }
+            />
           </div>
         ))}
       </div>
@@ -89,16 +99,23 @@ function recommendationOf(job: JobSummary) {
 /** PC 에서 한 번에 보이고 화살표 한 번에 넘어가는 카드 수. 그리드 네 칸과 같다. */
 const PAGE_SIZE = 4;
 
-function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
+function TabList({
+  tab,
+  entries,
+}: {
+  tab: TabKey;
+  /** 탭의 카드. 첫 탭은 광고 공고가 맨 앞에 붙어 온다(`ad`). */
+  entries: { item: JobSummary; ad?: AdSlot }[];
+}) {
   const [page, setPage] = useState(0);
 
-  if (items.length === 0) {
+  if (entries.length === 0) {
     return <p className="py-8 text-center text-sm text-gray-500">표시할 공고가 없습니다.</p>;
   }
 
   // PC 는 네 장씩 넘긴다. 목록에는 전부 두고 지금 쪽이 아닌 카드만 md 이상에서 숨긴다 — 모바일은 같은
   // 목록을 손가락으로 끝까지 넘기기 때문이다. 오공고 PICK 은 운영자가 고른 만큼 들어온다.
-  const lastPage = Math.max(0, Math.ceil(items.length / PAGE_SIZE) - 1);
+  const lastPage = Math.max(0, Math.ceil(entries.length / PAGE_SIZE) - 1);
   const current = Math.min(page, lastPage);
   const start = current * PAGE_SIZE;
 
@@ -119,9 +136,9 @@ function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
           폭 240px 가 되고, 같은 모양인 오늘의 추천 공고(343px)는 247px 다. 범위를 둬서 320px 폰과 큰
           폰 모두 옆 카드가 보인다. */}
       <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:min-w-0 md:flex-1 md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
-        {items.map((job, index) => (
+        {entries.map(({ item: job, ad }, index) => (
           <li
-            key={job.id}
+            key={ad ? `ad-${ad.adId}` : job.id}
             className={cn(
               'w-[72%] max-w-[320px] min-w-[240px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0',
               (index < start || index >= start + PAGE_SIZE) && 'md:hidden',
@@ -130,7 +147,9 @@ function TabList({ tab, items }: { tab: TabKey; items: JobSummary[] }) {
             <JobCard
               variant="featured"
               job={job}
-              recommendation={tab === 'pick' ? recommendationOf(job) : undefined}
+              ad={ad}
+              // 광고 카드는 운영자가 쓴 추천 문구가 없어 상자를 그리지 않는다.
+              recommendation={tab === 'pick' && !ad ? recommendationOf(job) : undefined}
               tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
             />
           </li>

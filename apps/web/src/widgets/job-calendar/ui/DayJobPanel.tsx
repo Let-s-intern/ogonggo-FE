@@ -12,6 +12,14 @@ import {
   formatJobField,
 } from '@/entities/job/model/labels';
 import { BookmarkButton } from '@/features/bookmark';
+import {
+  adParams,
+  adPostingClickEvent,
+  placeAdsFirst,
+  type AdItem,
+  type AdSlot,
+} from '@/shared/ads/adPosting';
+import { AdLabel } from '@/shared/ads/AdLabel';
 import { computeDday, isDdayUrgent } from '@/shared/lib/dday';
 import { weekdayLabel } from '../lib/calendar-grid';
 import { DAY_JOBS_PAGE_SIZE } from '../lib/day-jobs';
@@ -52,6 +60,7 @@ export function DayJobCard({
   listPosition,
   highlighted = false,
   otherDate,
+  ad,
 }: {
   job: UserJobCalendarItemResponse;
   /** 이 카드가 놓인 목록 안의 순서, 1부터. `job_card_click` 에 실린다. */
@@ -60,6 +69,8 @@ export function DayJobCard({
   highlighted?: boolean;
   /** 메타 줄 끝에 적는 반대쪽 날짜(`시작 9/25`). 목록 머리가 이미 기준 날짜일 때 쓴다. */
   otherDate?: string;
+  /** 광고 공고 칸(`CALENDAR`). 주면 회사명 앞에 `광고` 를 붙이고 광고 이벤트를 더 보낸다. 모양은 그대로다. */
+  ad?: AdSlot;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -67,7 +78,7 @@ export function DayJobCard({
       ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [highlighted]);
-  const jobInfo = toJobInfo(job);
+  const jobInfo = ad ? { ...toJobInfo(job), ...adParams(ad) } : toJobInfo(job);
   const dday = computeDday('PERIOD', job.recruitmentEndAt);
   const urgent = isDdayUrgent('PERIOD', job.recruitmentEndAt);
   const meta = [
@@ -84,6 +95,7 @@ export function DayJobCard({
         jobId={job.id}
         jobInfo={jobInfo}
         tracking={{ listSource: 'calendar', listPosition, pageNumber: 1 }}
+        extraEvents={ad ? [adPostingClickEvent(ad, 'job', job.id)] : undefined}
         className={cn(
           'block rounded-xl bg-white p-3 shadow-[0_2px_10px_rgba(17,24,39,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(17,24,39,0.1)]',
           highlighted && 'ring-2 ring-blue-400',
@@ -95,8 +107,9 @@ export function DayJobCard({
             logoUrl={job.logoUrl}
             className="h-10 w-10 rounded-lg"
           />
-          <p className="flex-1 truncate pt-1 text-sm font-medium text-gray-800">
-            {job.companyName}
+          <p className="flex min-w-0 flex-1 items-center gap-1 pt-1 text-sm font-medium text-gray-800">
+            {ad ? <AdLabel /> : null}
+            <span className="truncate">{job.companyName}</span>
           </p>
           {/* 북마크 버튼이 겹치는 자리. 빼면 회사명 칸이 36px 넓어져 잘리는 지점이 달라진다. */}
           <span aria-hidden="true" className="h-6 w-6 shrink-0" />
@@ -147,6 +160,11 @@ export interface DayJobPanelProps {
   dateBasis: JobCalendarDateBasis;
   /** 격자에서 누른 로고의 공고. 그 카드를 강조하고, `더보기` 뒤에 있으면 거기까지 펼친다. */
   highlightId?: number | null;
+  /**
+   * 맨 앞에 고정할 광고 공고(`CALENDAR`, 이슈 #573). 고른 날과 상관없이 어드민 순서대로 첫 칸부터 놓이고, 그날 공고에
+   * 같은 공고가 있으면 그쪽에서 뺀다. 제목 옆 건수와 `더보기` 는 그날 공고만 센다. 그날 공고가 없어도 광고는 보인다.
+   */
+  ads?: AdItem<UserJobCalendarItemResponse>[];
 }
 
 /** `YYYY-MM-DD…` → `9/25`. */
@@ -161,7 +179,13 @@ function shortDate(value: string): string {
  * `더보기`는 이제 네트워크 요청이 아니라 이미 받은 `items`를 더 드러내는 것뿐이다 — 그래서
  * 지역 상태(`visibleCount`) 하나로 끝난다.
  */
-export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJobPanelProps) {
+export function DayJobPanel({
+  day,
+  items: dayItems,
+  dateBasis,
+  highlightId = null,
+  ads = [],
+}: DayJobPanelProps) {
   const basisLabel = dateBasis === 'start' ? '시작' : '마감';
   const [visibleCount, setVisibleCount] = useState(DAY_JOBS_PAGE_SIZE);
   // 날이 바뀌면 다시 5건부터 보인다. 렌더 중에 맞추는 것은 `MonthCalendar`의 `selectedDay`와
@@ -172,13 +196,15 @@ export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJo
     setVisibleCount(DAY_JOBS_PAGE_SIZE);
   }
 
+  const adIds = new Set(ads.map((ad) => ad.item.id));
+  const items = dayItems.filter((item) => !adIds.has(item.id));
   // 강조할 카드가 `더보기` 뒤에 있으면 그 카드가 든 묶음까지 펼친다.
   const highlightIndex = items.findIndex((item) => item.id === highlightId);
   const shownCount =
     highlightIndex < visibleCount
       ? visibleCount
       : Math.ceil((highlightIndex + 1) / DAY_JOBS_PAGE_SIZE) * DAY_JOBS_PAGE_SIZE;
-  const jobs = items.slice(0, shownCount);
+  const jobs = placeAdsFirst(ads, items.slice(0, shownCount));
   const hasMore = shownCount < items.length;
 
   return (
@@ -186,7 +212,7 @@ export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJo
       {/* 제목 줄은 왼쪽 달력의 `2026.08` 줄과 같은 높이에 온다. */}
       <h2 className="flex h-10 items-center gap-3">
         <span className="text-xl font-bold text-gray-900">{formatDayTitle(day)}</span>
-        <span className="text-xl text-gray-400">({items.length})</span>
+        <span className="text-xl text-gray-400">({dayItems.length})</span>
         {/*
           어느 기준으로 고른 날짜별 목록인지 알려주는 작은 배지. `aria-label`·빈 상태 문구가
           이미 "마감"/"시작"을 말로 알려주므로, 눈으로 보는 사람에게도 같은 정보를 준다
@@ -198,27 +224,35 @@ export function DayJobPanel({ day, items, dateBasis, highlightId = null }: DayJo
         </span>
       </h2>
 
-      {items.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-400">이 날 {basisLabel}하는 공고가 없어요</p>
-      ) : (
+      {jobs.length > 0 ? (
         <ul className="mt-4 flex flex-col">
-          {jobs.map((job, index) => (
-            <li key={job.id} className="border-b border-gray-200 py-2 first:pt-0 last:border-b-0">
+          {jobs.map(({ item: job, ad }, index) => (
+            <li
+              key={ad ? `ad-${ad.adId}` : job.id}
+              className="border-b border-gray-200 py-2 first:pt-0 last:border-b-0"
+            >
               <DayJobCard
                 job={job}
+                ad={ad}
                 listPosition={index + 1}
                 highlighted={job.id === highlightId}
-                // 목록 머리가 이미 기준 날짜(마감일 기준이면 마감일)라 카드에는 반대쪽 날짜를 적는다.
+                // 목록 머리가 이미 기준 날짜(마감일 기준이면 마감일)라 카드에는 반대쪽 날짜를 적는다. 광고는 그날 공고가
+                // 아니라 적지 않는다.
                 otherDate={
-                  dateBasis === 'start'
-                    ? `마감 ${shortDate(job.recruitmentEndAt)}`
-                    : `시작 ${shortDate(job.recruitmentStartAt)}`
+                  ad
+                    ? undefined
+                    : dateBasis === 'start'
+                      ? `마감 ${shortDate(job.recruitmentEndAt)}`
+                      : `시작 ${shortDate(job.recruitmentStartAt)}`
                 }
               />
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
+      {dayItems.length === 0 ? (
+        <p className="mt-6 text-sm text-gray-400">이 날 {basisLabel}하는 공고가 없어요</p>
+      ) : null}
 
       {hasMore ? (
         <button

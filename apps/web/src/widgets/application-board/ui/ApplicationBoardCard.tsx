@@ -2,7 +2,7 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { useRouter } from 'next/navigation';
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { Badge, cn } from '@ogonggo/ui';
 import {
   canMoveStage,
@@ -62,9 +62,6 @@ export interface ApplicationBoardCardProps {
  * 아무 일도 일어나지 않는다.
  */
 export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoardCardProps) {
-  const dday = computeDday(item.recruitmentType, item.recruitmentEndAt);
-  const urgent = isDdayUrgent(item.recruitmentType, item.recruitmentEndAt);
-  const closed = isRecruitmentClosed(item.recruitmentType, item.recruitmentEndAt, item.closedAt);
   /*
    * `X`(`스크랩으로 되돌리기`)를 그릴 카드인가. 단계 이름을 직접 적지 않는 이유는 탭마다
    * 문구가 달라서다 — 부트캠프에서는 같은 `PREPARING` 이 `신청 전` 이다. 리스트 행의 `X` 와
@@ -117,38 +114,7 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
         draggable.isDragging && 'z-10 opacity-90 shadow-lg',
       )}
     >
-      <div className="px-4 py-4">
-        <div className={cn('flex items-center gap-2', removable && 'pr-6')}>
-          <ApplicationBoardItemImage
-            item={item}
-            className="h-9 w-9 shrink-0 rounded-lg border border-gray-100"
-          />
-          <p className="truncate text-sm font-semibold text-gray-600">{item.caption}</p>
-        </div>
-        <p className="line-clamp-2 pt-3 text-[15px] font-bold text-gray-900">{item.title}</p>
-        <div className="flex items-center justify-between gap-2 pt-2">
-          <p className="truncate text-xs text-gray-400">{item.meta.join(' · ')}</p>
-          {dday ? (
-            <Badge
-              tone={urgent ? 'urgent' : 'main'}
-              className="rounded-full px-2 py-0.5 text-xs font-bold"
-            >
-              {dday}
-            </Badge>
-          ) : closed ? (
-            <Badge
-              tone="neutral"
-              className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
-            >
-              {closedLabel(CONTENT_KIND_BY_TAB[tab])}
-            </Badge>
-          ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
-            <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
-              {alwaysOpenLabel(CONTENT_KIND_BY_TAB[tab])}
-            </Badge>
-          ) : null}
-        </div>
-      </div>
+      <ApplicationBoardCardBody tab={tab} item={item} reserveCorner={removable} />
       {removable ? (
         <button
           type="button"
@@ -164,6 +130,66 @@ export function ApplicationBoardCard({ tab, stage, item, move }: ApplicationBoar
           <span aria-hidden="true" className="icon-[lucide--x] block h-5 w-5" />
         </button>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * 카드 한 장의 내용(로고·회사명 / 제목 / 메타·D-day). 끌 수 있는 카드(`ApplicationBoardCard`)와 스크랩 칸의 광고 공고
+ * 카드(`ApplicationBoardAdCard`)가 같은 모양을 쓴다.
+ */
+export function ApplicationBoardCardBody({
+  tab,
+  item,
+  reserveCorner = false,
+  label,
+}: {
+  tab: ApplicationBoardTab;
+  item: ApplicationBoardItem;
+  /** 오른쪽 위에 `X` 버튼이 겹친다. 회사명 줄이 그만큼 비운다. */
+  reserveCorner?: boolean;
+  /** 회사명 앞에 붙일 것. 광고 카드의 `광고` 표시다. */
+  label?: ReactNode;
+}) {
+  const dday = computeDday(item.recruitmentType, item.recruitmentEndAt);
+  const urgent = isDdayUrgent(item.recruitmentType, item.recruitmentEndAt);
+  const closed = isRecruitmentClosed(item.recruitmentType, item.recruitmentEndAt, item.closedAt);
+
+  return (
+    <div className="px-4 py-4">
+      <div className={cn('flex items-center gap-2', reserveCorner && 'pr-6')}>
+        <ApplicationBoardItemImage
+          item={item}
+          className="h-9 w-9 shrink-0 rounded-lg border border-gray-100"
+        />
+        <p className="flex min-w-0 items-center gap-1 text-sm font-semibold text-gray-600">
+          {label}
+          <span className="truncate">{item.caption}</span>
+        </p>
+      </div>
+      <p className="line-clamp-2 pt-3 text-[15px] font-bold text-gray-900">{item.title}</p>
+      <div className="flex items-center justify-between gap-2 pt-2">
+        <p className="truncate text-xs text-gray-400">{item.meta.join(' · ')}</p>
+        {dday ? (
+          <Badge
+            tone={urgent ? 'urgent' : 'main'}
+            className="rounded-full px-2 py-0.5 text-xs font-bold"
+          >
+            {dday}
+          </Badge>
+        ) : closed ? (
+          <Badge
+            tone="neutral"
+            className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+          >
+            {closedLabel(CONTENT_KIND_BY_TAB[tab])}
+          </Badge>
+        ) : isAlwaysOpen(item.recruitmentType, item.recruitmentEndAt) ? (
+          <Badge tone="main" className="rounded-full px-2 py-0.5 text-xs font-bold">
+            {alwaysOpenLabel(CONTENT_KIND_BY_TAB[tab])}
+          </Badge>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
+import type { AdItem } from '@/shared/ads/adPosting';
+import { fetchAdJobs } from '@/shared/ads/fetchAdPostings';
 import { jobMajorField } from '../lib/job-majors';
 import { buildJobCalendarHref, toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, shiftMonths, shiftWeeks, startOfCalendarWeek } from '../lib/week';
@@ -111,6 +113,31 @@ async function fetchCalendarItemsForMajors(
   return items.filter((item) => item.jobField !== undefined && fields.has(item.jobField));
 }
 
+/**
+ * 달력 자리의 광고 공고(`CALENDAR`, 이슈 #573)를 달력 항목 모양으로 받는다. 날짜별 목록 카드(`DayJobCard`)가 달력
+ * 항목을 그려서다. 목록 요약에는 시작·마감일이 비어 있을 수 있다(상시채용) — 빈 문자열이면 카드가 D-day 를 그리지 않는다.
+ */
+async function fetchCalendarAds(): Promise<AdItem<UserJobCalendarItemResponse>[]> {
+  const ads = await fetchAdJobs('CALENDAR');
+  return ads.map(({ slot, item: job }) => ({
+    slot,
+    item: {
+      id: job.id,
+      companyName: job.companyName,
+      title: job.title,
+      coverImageUrl: job.coverImageUrl,
+      logoUrl: job.logoUrl,
+      employmentType: job.employmentType,
+      experienceType: job.experienceType,
+      jobField: job.jobField,
+      jobRole: job.jobRole,
+      recruitmentStartAt: job.recruitmentStartAt ?? '',
+      recruitmentEndAt: job.recruitmentEndAt ?? '',
+      bookmarked: job.bookmarked,
+    },
+  }));
+}
+
 export interface JobCalendarViewProps {
   query: JobCalendarQuery;
 }
@@ -155,6 +182,8 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   const { from, to } = query.brief ? weekGridRange(baseDate) : monthGridRange(baseDate);
   const fromParam = toCalendarParam(from);
   const toParam = toCalendarParam(to);
+  // 광고는 월간의 날짜별 목록에만 싣는다. 주간에는 그 목록이 없다.
+  const adsPromise = query.brief ? Promise.resolve([]) : fetchCalendarAds();
   const fetchedItems = await fetchCalendarItemsForMajors(fromParam, toParam, query.majors, {
     // 하나만 골랐을 때만 서버가 거른다. 여럿이면 빼고 받아 아래에서 거른다. 서버는 배열도 받지만
     // 이 화면의 거르기 동작은 그대로 둔다.
@@ -178,6 +207,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     // 주므로, 아래에서 `recruitmentStartAt` 이 범위 밖인 항목을 한 번 더 거른다.
     deadlineOnly: query.dateBasis === 'deadline',
   });
+  const ads = await adsPromise;
   const items = fetchedItems.filter((item) => {
     if (query.dateBasis === 'start') {
       const start = item.recruitmentStartAt.slice(0, 10);
@@ -217,6 +247,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
       ) : (
         <MonthCalendar
           items={items}
+          ads={ads}
           initialDate={initialDate}
           header={header}
           bookmarkedOnly={query.bookmarkedOnly}

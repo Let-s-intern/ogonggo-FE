@@ -6,6 +6,8 @@ import {
 } from '@/shared/analytics/dataLayer';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
+import { adParams, adPostingClickEvent, type AdSlot } from '@/shared/ads/adPosting';
+import { AdLabel } from '@/shared/ads/AdLabel';
 import { ViewCount } from '@/shared/ui/ViewCount';
 import { toBootcampInfo } from '../model/analytics';
 import { TUITION_TYPE_LABELS } from '../model/labels';
@@ -17,6 +19,11 @@ export interface BootcampCardProps {
   bootcamp: BootcampSummary;
   /** 목록 안의 자리. 주면 누를 때 `program_card_click`, 광고 카드면 노출 때 `program_impression` 이 나간다. */
   tracking?: ProgramCardTracking;
+  /**
+   * 광고 공고 칸(`BOOTCAMP_LIST`, 이슈 #573). 주면 회사명 앞에 `광고` 를 붙이고 광고 값을 채운다. 광고 값이 차면
+   * 노출 때 `program_impression` 이 나가고, 누르면 `ad_posting_click` 이 더 나간다. 카드 모양은 그대로다.
+   */
+  ad?: AdSlot;
 }
 
 /**
@@ -37,7 +44,7 @@ export interface BootcampCardProps {
  * 자주 들어온다 — 양산직업학교 940x540(2026-10-21). 로고로 그리면 큰 배너가 작은 띠가 된다.
  * 진짜 로고는 작거나 정사각형에 가까워 판정에서 로고로 돌아간다.
  */
-export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
+export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
   const metaParts = [bootcamp.programType, TUITION_TYPE_LABELS[bootcamp.tuitionType]];
   const badge = (
     <BootcampBadge
@@ -47,13 +54,14 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
     />
   );
 
-  const info = toBootcampInfo(bootcamp);
+  const info = ad ? { ...toBootcampInfo(bootcamp), ...adParams(ad) } : toBootcampInfo(bootcamp);
   const listParams = tracking
     ? { ...info, list_position: tracking.listPosition, page_number: tracking.pageNumber }
     : null;
-  const clickEvents: DataLayerEvent[] = listParams
-    ? [{ event: 'program_card_click', params: listParams }]
-    : [];
+  const clickEvents: DataLayerEvent[] = [
+    ...(listParams ? [{ event: 'program_card_click', params: listParams }] : []),
+    ...(ad ? [adPostingClickEvent(ad, 'bootcamp', bootcamp.id)] : []),
+  ];
 
   const card = (
     <div className="relative h-full">
@@ -71,7 +79,10 @@ export function BootcampCard({ bootcamp, tracking }: BootcampCardProps) {
           <span className="truncate">{metaParts.join(' · ')}</span>
           <span className="hidden md:inline-flex">{badge}</span>
         </p>
-        <p className="text-sm text-gray-500">{bootcamp.companyName}</p>
+        <p className="flex min-w-0 items-center gap-1 text-sm text-gray-500">
+          {ad ? <AdLabel /> : null}
+          <span className="truncate">{bootcamp.companyName}</span>
+        </p>
         <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
           {bootcamp.title}
         </p>

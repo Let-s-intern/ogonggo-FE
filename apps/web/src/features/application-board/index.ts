@@ -1,6 +1,7 @@
 export {
   fetchApplicationBoardPage,
   moveApplicationStage,
+  toJobBoardItem,
   type ApplicationBoardFilters,
   type ApplicationBoardItem,
   type ApplicationBoardPage,
