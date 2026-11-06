@@ -313,7 +313,7 @@ function BannerSection({
     {
       key: 'image',
       header: '이미지',
-      width: 'w-56',
+      width: 'w-44',
       render: (row) => (
         <img
           src={bannerImageSrc(row.pcImageUrl)}
@@ -321,7 +321,7 @@ function BannerSection({
           className={cn(
             'rounded border border-gray-200 object-cover',
             PC_IMAGE_SPECS[row.placement].aspectClassName,
-            isSideBannerPlacement(row.placement) ? 'w-20' : 'w-52',
+            isSideBannerPlacement(row.placement) ? 'w-20' : 'w-40',
           )}
         />
       ),
@@ -329,6 +329,7 @@ function BannerSection({
     {
       key: 'name',
       header: '이름',
+      width: 'min-w-32',
       render: (row) => (
         <span className="flex items-center gap-2 font-medium text-gray-900">
           {row.name}
@@ -343,13 +344,13 @@ function BannerSection({
     {
       key: 'link',
       header: '링크',
-      width: 'w-48 max-w-48',
+      width: 'w-40 max-w-40',
       render: (row) => <BannerLinkCell banner={row} notify={notify} />,
     },
     {
       key: 'period',
       header: '노출 기간(KST)',
-      width: 'w-64',
+      width: 'w-52',
       render: (row) => <BannerPeriodCell banner={row} notify={notify} />,
     },
     {

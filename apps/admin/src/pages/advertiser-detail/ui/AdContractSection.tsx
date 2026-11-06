@@ -57,6 +57,7 @@ export function AdContractSection({
     {
       key: 'name',
       header: '계약',
+      width: 'min-w-36',
       render: (row) => (
         <span className="flex flex-col gap-0.5">
           <span className="font-medium text-gray-900">{adContractName(row)}</span>
@@ -67,7 +68,7 @@ export function AdContractSection({
     {
       key: 'period',
       header: '광고 기간(KST)',
-      width: 'w-64',
+      width: 'w-44',
       render: (row) => <span className="text-sm">{formatContractPeriod(row)}</span>,
     },
     {
@@ -105,7 +106,7 @@ export function AdContractSection({
     {
       key: 'products',
       header: '상품',
-      width: 'w-48',
+      width: 'w-44',
       render: (row) => (
         <span className="text-xs text-gray-700">
           {row.products.length === 0
@@ -127,20 +128,30 @@ export function AdContractSection({
     {
       key: 'actions',
       header: '관리',
-      width: 'w-64 whitespace-nowrap',
+      width: 'w-56 whitespace-nowrap',
       render: (row) => (
         <span className="flex gap-1" onClick={(event) => event.stopPropagation()}>
-          <Button size="sm" variant="secondary" onClick={() => onAddBanner(row)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="whitespace-nowrap"
+            onClick={() => onAddBanner(row)}
+          >
             배너 추가
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => onAddAdPosting(row)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="whitespace-nowrap"
+            onClick={() => onAddAdPosting(row)}
+          >
             광고 공고 추가
           </Button>
           <Button
             size="sm"
             variant="secondary"
             aria-label={`${adContractName(row)} 계약 삭제`}
-            className="border-red-200 text-error hover:bg-red-50"
+            className="border-red-200 whitespace-nowrap text-error hover:bg-red-50"
             onClick={() => {
               deleteMutation.reset();
               setDeleting(row);
