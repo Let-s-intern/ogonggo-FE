@@ -307,21 +307,26 @@ export function CalendarPage() {
           }}
           eventContent={(arg) => {
             const props = arg.event.extendedProps as CalendarEventProps;
+            // 하루를 넘는 일정인가. 종일 일정의 `end` 는 미포함이라 하루짜리는 `end` 가 없거나 시작 다음 날이다.
+            const multiDay =
+              arg.event.start !== null &&
+              arg.event.end !== null &&
+              arg.event.end.getTime() - arg.event.start.getTime() > 24 * 60 * 60 * 1000;
             return (
               <span
                 title={props.tooltip}
                 className="flex w-full min-w-0 items-center gap-1 px-1 py-0.5"
               >
                 {/*
-                  여러 주에 걸친 막대는 줄마다 조각으로 그려진다. 앞 주에서 이어진 조각은 왼쪽 끝에, 다음 주로 이어지는 조각은
-                  오른쪽 끝에 작은 화살표를 둔다(2026-11-06 사용자). 이어지는 쪽 모서리는 FullCalendar 가 이미 각지게 그린다.
+                  하루를 넘는 일정은 정말 시작하는 날 조각의 왼쪽에 `>>`, 정말 끝나는 날 조각의 오른쪽 끝에 `<<` 를 둔다. 주가
+                  바뀌어 이어지는 가운데 조각에는 두지 않는다. 하루짜리는 표시가 없다(2026-11-06 사용자).
                 */}
-                {arg.isStart ? null : (
+                {multiDay && arg.isStart ? (
                   <span
                     aria-hidden="true"
-                    className="icon-[lucide--chevron-left] block size-3.5 shrink-0"
+                    className="icon-[lucide--chevrons-right] block size-3.5 shrink-0"
                   />
-                )}
+                ) : null}
                 {props.kind === 'todo' ? (
                   <span
                     data-todo-toggle=""
@@ -345,12 +350,12 @@ export function CalendarPage() {
                   {/* 한 주 안에 다 들어가는 막대는 그대로 두고, 줄이 바뀌는 막대만 조각마다 기간을 붙인다. */}
                   {arg.isStart && arg.isEnd ? '' : ` (${props.periodLabel})`}
                 </span>
-                {arg.isEnd ? null : (
+                {multiDay && arg.isEnd ? (
                   <span
                     aria-hidden="true"
-                    className="ml-auto icon-[lucide--chevron-right] block size-3.5 shrink-0"
+                    className="ml-auto icon-[lucide--chevrons-left] block size-3.5 shrink-0"
                   />
-                )}
+                ) : null}
               </span>
             );
           }}
