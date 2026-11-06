@@ -32,8 +32,20 @@ export interface AdvertiserAdCounts {
   latestEndAt: string | null;
 }
 
+/**
+ * 광고주별 계약 합계(`./ad-contracts.ts`). 서버가 계약에서 세어 싣는다. 진행 중은 지금이 계약 기간 안(시작 포함, 끝 미포함)인
+ * 것이다.
+ */
+export interface AdvertiserContractTotals {
+  contractCount: number;
+  activeContractCount: number;
+  /** 모든 계약 금액의 합(원). */
+  contractTotalAmount: number;
+}
+
 /** `GET /api/v1/admin/advertisers` 한 건이자 `GET /api/v1/admin/advertisers/{id}` 응답. */
-export interface AdminAdvertiserResponse extends AdvertiserSummary, AdvertiserAdCounts {
+export interface AdminAdvertiserResponse
+  extends AdvertiserSummary, AdvertiserAdCounts, AdvertiserContractTotals {
   source: AdvertiserSource;
   /** 비즈니스 회원이면 그 회원의 사용자 id. */
   companyMemberUserId?: number;

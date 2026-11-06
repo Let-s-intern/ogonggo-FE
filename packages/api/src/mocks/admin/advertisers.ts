@@ -4,6 +4,7 @@ import type {
   CreateAdminAdvertiserRequest,
   UpdateAdminAdvertiserRequest,
 } from '../../advertisers';
+import { adContractStore, isAdContractActive } from '../fixtures/ad-contracts';
 import { adPostingStore, isAdPostingLive } from '../fixtures/ad-postings';
 import {
   allAdvertisers,
@@ -25,7 +26,8 @@ import { notFound, ok } from './paging';
  * - `POST  /api/v1/admin/advertisers`               비회원 광고주 추가. 같은 이름(공백·대소문자 무시)이 있으면 400
  * - `PATCH /api/v1/admin/advertisers/{id}`          비회원 광고주 수정. 회원 광고주는 400
  *
- * 응답마다 그 광고주의 배너·광고 공고 수(`AdvertiserAdCounts`)를 저장소에서 세어 붙인다.
+ * 응답마다 그 광고주의 배너·광고 공고 수(`AdvertiserAdCounts`)와 계약 합계(`AdvertiserContractTotals`)를 저장소에서 세어
+ * 붙인다.
  */
 
 const PATH = '*/api/v1/admin/advertisers';
@@ -50,6 +52,9 @@ function toResponse(advertiser: AdvertiserRecord): AdminAdvertiserResponse {
   const banners = bannerStore.banners.filter((banner) => banner.advertiserId === advertiser.id);
   const ads = adPostingStore.adPostings.filter((ad) => ad.advertiserId === advertiser.id);
   const endAts = [...banners, ...ads].flatMap((item) => (item.endAt === null ? [] : [item.endAt]));
+  const contracts = adContractStore.contracts.filter(
+    (contract) => contract.advertiserId === advertiser.id,
+  );
   return {
     ...advertiser,
     bannerCount: banners.length,
@@ -59,6 +64,9 @@ function toResponse(advertiser: AdvertiserRecord): AdminAdvertiserResponse {
       (ad) => isAdPostingLive(ad) && toAdminAdPostingResponse(ad).targetAvailable,
     ).length,
     latestEndAt: endAts.length === 0 ? null : endAts.reduce((a, b) => (a > b ? a : b)),
+    contractCount: contracts.length,
+    activeContractCount: contracts.filter((contract) => isAdContractActive(contract)).length,
+    contractTotalAmount: contracts.reduce((sum, contract) => sum + contract.amount, 0),
   };
 }
 

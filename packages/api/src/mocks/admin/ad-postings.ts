@@ -15,6 +15,7 @@ import {
   saveAdPostings,
   type AdPostingRecord,
 } from '../fixtures/ad-postings';
+import { adContractLinkError, adContractSummary } from '../fixtures/ad-contracts';
 import { advertiserSummary, findAdvertiser } from '../fixtures/advertisers';
 import { notFound, ok } from './paging';
 
@@ -25,7 +26,7 @@ import { notFound, ok } from './paging';
  * - `GET    /api/v1/admin/ad-postings?placement=` 그 자리의 광고 전부(꺼진 것·기간이 지난 것 포함), 순서대로
  *   `?advertiserId=` 를 주면 그 광고주의 광고만. 자리를 함께 주지 않으면 모든 자리에서 자리 순서·자리 안 순서대로 준다
  * - `POST   /api/v1/admin/ad-postings`            등록. 그 자리의 맨 뒤에 붙는다. 같은 자리에 같은 대상은 한 번만
- * - `PATCH  /api/v1/admin/ad-postings/{id}`       광고주·기간·켜기만 수정
+ * - `PATCH  /api/v1/admin/ad-postings/{id}`       광고주·계약·기간·켜기만 수정. 계약은 같은 광고주의 것만
  * - `DELETE /api/v1/admin/ad-postings/{id}`       삭제. 남은 광고의 순서를 1부터 다시 매긴다
  * - `PUT    /api/v1/admin/ad-postings/order`      자리 안 순서를 통째로 바꾼다
  */
@@ -49,7 +50,11 @@ function nowKst(): string {
  * (`./advertisers.ts`)도 쓴다.
  */
 export function toAdminAdPostingResponse(record: AdPostingRecord): AdminAdPostingResponse {
-  const ad = { ...record, advertiser: advertiserSummary(record.advertiserId) };
+  const ad = {
+    ...record,
+    advertiser: advertiserSummary(record.advertiserId),
+    contract: adContractSummary(record.contractId),
+  };
   const targetType = adPostingTargetType(ad.placement);
   if (targetType === 'BOOTCAMP') {
     const bootcamp = ADMIN_BOOTCAMP_FIXTURES.find((item) => item.id === ad.targetId);
@@ -145,6 +150,11 @@ const createHandler = http.post(PATH, async ({ request }) => {
     return badRequest('advertiserId: 광고주를 골라 주세요.');
   }
   const advertiserId = Number(body.advertiserId);
+  const contractId = body.contractId ?? null;
+  const contractError = adContractLinkError(contractId, advertiserId);
+  if (contractError) {
+    return badRequest(contractError);
+  }
   if (typeof body.enabled !== 'boolean') {
     return badRequest('enabled: 참·거짓 값을 보내 주세요.');
   }
@@ -163,6 +173,7 @@ const createHandler = http.post(PATH, async ({ request }) => {
     placement,
     targetId,
     advertiserId,
+    contractId,
     startAt,
     endAt,
     enabled: body.enabled,
@@ -222,7 +233,10 @@ const patchHandler = http.patch(`${PATH}/:adPostingId`, async ({ params, request
   }
   const startAt = body.startAt === undefined ? ad.startAt : body.startAt;
   const endAt = body.endAt === undefined ? ad.endAt : body.endAt;
+  const advertiserId = body.advertiserId ?? ad.advertiserId;
+  const contractId = body.contractId === undefined ? ad.contractId : body.contractId;
   const error =
+    adContractLinkError(contractId, advertiserId) ??
     (body.startAt === undefined ? null : periodValueError('startAt', body.startAt)) ??
     (body.endAt === undefined ? null : periodValueError('endAt', body.endAt)) ??
     periodError(startAt, endAt);
@@ -233,7 +247,8 @@ const patchHandler = http.patch(`${PATH}/:adPostingId`, async ({ params, request
     startAt,
     endAt,
     enabled: body.enabled ?? ad.enabled,
-    advertiserId: body.advertiserId ?? ad.advertiserId,
+    advertiserId,
+    contractId,
     updatedAt: nowKst(),
   });
   saveAdPostings();

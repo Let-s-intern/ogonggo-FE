@@ -109,7 +109,8 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                 <picture>
                   <source media={PC_MEDIA[variant]} srcSet={banner.pcImageUrl} />
                   <img
-                    src={banner.mobileImageUrl}
+                    // 모바일 이미지를 비워 둔 홈 배너는 좁은 화면에도 PC 이미지를 쓴다(잘려 보일 수 있다).
+                    src={banner.mobileImageUrl ?? banner.pcImageUrl}
                     alt={banner.altText}
                     // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
                     loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}

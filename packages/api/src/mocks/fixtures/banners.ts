@@ -12,8 +12,11 @@ import type { AdminBannerResponse, PublicBannerResponse } from '../../banners';
 
 const STORAGE_KEY = 'ogonggo.mock.admin.banners';
 
-/** 저장하는 배너. 응답의 광고주 요약(`advertiser`)은 저장하지 않고 응답할 때 `advertiserId` 로 읽는다. */
-export type BannerRecord = Omit<AdminBannerResponse, 'advertiser'>;
+/**
+ * 저장하는 배너. 응답의 광고주·계약 요약(`advertiser`, `contract`)은 저장하지 않고 응답할 때 `advertiserId`·`contractId` 로
+ * 읽는다.
+ */
+export type BannerRecord = Omit<AdminBannerResponse, 'advertiser' | 'contract'>;
 
 const SEED_TIME = '2026-11-06T09:00:00';
 
@@ -32,6 +35,7 @@ const SEED: BannerRecord[] = [
     endAt: null,
     enabled: true,
     advertiserId: null,
+    contractId: null,
     displayOrder: 1,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -50,6 +54,7 @@ const SEED: BannerRecord[] = [
     endAt: null,
     enabled: true,
     advertiserId: null,
+    contractId: null,
     displayOrder: 2,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -69,6 +74,8 @@ const SEED: BannerRecord[] = [
     endAt: '2026-10-31T23:59:59',
     enabled: false,
     advertiserId: 2,
+    // 10월 기획전 계약(`./ad-contracts.ts` 3번). 계약이 끝나 꺼 두었다.
+    contractId: 3,
     displayOrder: 3,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -87,6 +94,7 @@ const SEED: BannerRecord[] = [
     endAt: null,
     enabled: true,
     advertiserId: null,
+    contractId: null,
     displayOrder: 1,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -106,6 +114,7 @@ const SEED: BannerRecord[] = [
     endAt: null,
     enabled: true,
     advertiserId: null,
+    contractId: null,
     displayOrder: 1,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -120,10 +129,12 @@ const SEED: BannerRecord[] = [
     openInNewTab: false,
     altText: '우리 공고, 딱 맞는 인재에게. 오공고 for business 광고 신청하기',
     showAdLabel: true,
-    startAt: null,
-    endAt: null,
+    // 11월 공고 상세 패키지 계약(`./ad-contracts.ts` 1번) 기간 그대로다.
+    startAt: '2026-11-01T00:00:00',
+    endAt: '2026-12-01T00:00:00',
     enabled: true,
     advertiserId: 1,
+    contractId: 1,
     displayOrder: 2,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -143,10 +154,11 @@ function load(): BannerRecord[] {
   try {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
-      // 광고주 칸이 생기기 전에 저장한 배너는 광고주 없음으로 읽는다.
+      // 광고주·계약 칸이 생기기 전에 저장한 배너는 광고주·계약 없음으로 읽는다.
       const saved = (JSON.parse(raw) as BannerRecord[]).map((banner) => ({
         ...banner,
         advertiserId: banner.advertiserId ?? null,
+        contractId: banner.contractId ?? null,
       }));
       // 저장해 둔 뒤에 새로 생긴 자리(`JOB_DETAIL_SIDE`)는 시드로 채운다. 저장된 자리는 건드리지 않는다.
       const savedPlacements = new Set(saved.map((banner) => banner.placement));

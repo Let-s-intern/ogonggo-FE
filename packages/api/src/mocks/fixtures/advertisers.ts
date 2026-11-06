@@ -1,6 +1,7 @@
 import type {
   AdminAdvertiserResponse,
   AdvertiserAdCounts,
+  AdvertiserContractTotals,
   AdvertiserSummary,
 } from '../../advertisers';
 import { COMPANY_MEMBER_FIXTURES } from './admin-member';
@@ -15,7 +16,10 @@ import { COMPANY_MEMBER_FIXTURES } from './admin-member';
  */
 
 /** 저장하는 광고주. 광고 수(`AdvertiserAdCounts`)는 저장하지 않고 응답할 때 배너·광고 공고에서 센다(`../admin/advertisers.ts`). */
-export type AdvertiserRecord = Omit<AdminAdvertiserResponse, keyof AdvertiserAdCounts>;
+export type AdvertiserRecord = Omit<
+  AdminAdvertiserResponse,
+  keyof AdvertiserAdCounts | keyof AdvertiserContractTotals
+>;
 
 const MEMBER_ID_OFFSET = 100_000;
 const STORAGE_KEY = 'ogonggo.mock.admin.advertisers';

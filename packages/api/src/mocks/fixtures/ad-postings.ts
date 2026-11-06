@@ -14,6 +14,8 @@ export interface AdPostingRecord {
   placement: AdPostingPlacement;
   targetId: number;
   advertiserId: number;
+  /** 이어 둔 광고 계약(`./ad-contracts.ts`). */
+  contractId: number | null;
   startAt: string | null;
   endAt: string | null;
   enabled: boolean;
@@ -33,20 +35,37 @@ const SEED_TIME = '2026-11-06T09:00:00';
  * - `JOB_LIST` 의 700 번과 `BOOTCAMP_LIST` 의 22 번은 최신순 1쪽에도 있는 대상이다. 웹이 1쪽 일반 목록에서 빼는지 본다.
  * - 꺼 둔 것과 노출 예정인 것을 하나씩 둔다. 어드민 표에는 보이고 웹에는 나오지 않는다.
  */
+// 계약: 그로우랩(1)의 11월 패키지는 계약 1, 100104 의 4분기 계약은 계약 4 다. 공고 상세 4번 광고는 계약 1 에 이어 두되
+// 기간을 비워 두어 어드민의 "계약 기간 밖" 경고를 볼 수 있게 했다.
 // 광고주 id: 100xxx 는 비즈니스 회원(`./advertisers.ts` 의 `MEMBER_ID_OFFSET + 사용자 id`), 1·2 는 광고 문의로 들어온
 // 비회원 기업, 3 은 운영자가 더한 비회원 기업이다.
 const SEED: [AdPostingPlacement, number, number, Partial<AdPostingRecord>?][] = [
   ['JOB_LIST', 13, 100103],
-  ['JOB_LIST', 700, 1],
+  [
+    'JOB_LIST',
+    700,
+    1,
+    { contractId: 1, startAt: '2026-11-01T00:00:00', endAt: '2026-12-01T00:00:00' },
+  ],
   ['JOB_LIST', 29, 100105, { enabled: false }],
   ['JOB_LIST', 16, 2, { startAt: '2026-12-01T00:00:00', endAt: '2026-12-31T23:59:00' }],
-  ['JOB_PICK', 18, 100104],
+  [
+    'JOB_PICK',
+    18,
+    100104,
+    { contractId: 4, startAt: '2026-10-01T00:00:00', endAt: '2027-01-01T00:00:00' },
+  ],
   ['JOB_PICK', 22, 1],
   ['BOOTCAMP_LIST', 7, 3],
   ['BOOTCAMP_LIST', 22, 2],
   ['JOB_DETAIL_SIDE', 58, 100104],
-  ['JOB_DETAIL_SIDE', 4, 1],
-  ['CALENDAR', 24, 100104],
+  ['JOB_DETAIL_SIDE', 4, 1, { contractId: 1 }],
+  [
+    'CALENDAR',
+    24,
+    100104,
+    { contractId: 4, startAt: '2026-10-01T00:00:00', endAt: '2027-01-01T00:00:00' },
+  ],
   ['CALENDAR', 12, 2],
   ['MYPAGE_SCRAP', 33, 1],
   ['MYPAGE_SCRAP', 20, 100102, { enabled: false }],
@@ -62,6 +81,7 @@ function seed(): AdPostingRecord[] {
       placement,
       targetId,
       advertiserId,
+      contractId: null,
       startAt: null,
       endAt: null,
       enabled: true,
@@ -86,7 +106,11 @@ function load(): AdPostingRecord[] {
   try {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as AdPostingRecord[];
+      // 계약 칸이 생기기 전에 저장한 광고는 계약 없음으로 읽는다.
+      return (JSON.parse(raw) as AdPostingRecord[]).map((ad) => ({
+        ...ad,
+        contractId: ad.contractId ?? null,
+      }));
     }
   } catch {
     // 깨진 값이면 시드로 시작한다.

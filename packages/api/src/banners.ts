@@ -9,6 +9,7 @@
  * 떨어뜨려 두면 한쪽만 고쳐지기 쉽다. 생성 타입의 이름과 겹치지 않게 `Banner` 를 붙였다.
  */
 
+import type { AdContractSummary } from './ad-contracts';
 import type { AdvertiserSummary } from './advertisers';
 
 /**
@@ -35,8 +36,11 @@ export interface PublicBannerResponse {
    * `/banners/*.svg` 같은 경로다.
    */
   pcImageUrl: string;
-  /** 모바일 이미지(750×200, 모든 자리 같다). `pcImageUrl` 과 같은 규칙이다. */
-  mobileImageUrl: string;
+  /**
+   * 모바일 이미지(750×200, 모든 자리 같다). `pcImageUrl` 과 같은 규칙이다. 홈 자리는 비워 둘 수 있고(`null`), 그러면 웹이
+   * 좁은 화면에도 PC 이미지를 쓴다. 공고 상세 사이드는 PC 가 세로 소재라 모바일 이미지가 꼭 있다.
+   */
+  mobileImageUrl: string | null;
   /** 누르면 가는 곳. `http(s)://` 로 시작하는 주소이거나 `/` 로 시작하는 사이트 안 경로다. */
   linkUrl: string;
   /** 새 탭으로 열지. 외부 주소는 이 값과 상관없이 새 탭이다(웹이 정한다). */
@@ -76,6 +80,10 @@ export interface AdminBannerResponse extends PublicBannerResponse {
   advertiserId: number | null;
   /** 표에 보일 광고주 요약. 서버가 `advertiserId` 로 읽어 싣는다. 없으면 `null` 이다. */
   advertiser: AdvertiserSummary | null;
+  /** 이어 둔 광고 계약(`./ad-contracts.ts`). 같은 광고주의 계약이어야 한다. 없으면 `null` 이다. */
+  contractId: number | null;
+  /** 표와 기간 밖 경고에 쓸 계약 요약. 서버가 `contractId` 로 읽어 싣는다. */
+  contract: AdContractSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -85,7 +93,7 @@ export interface AdminBannerRequest {
   placement: BannerPlacement;
   name: string;
   pcImageUrl: string;
-  mobileImageUrl: string;
+  mobileImageUrl: string | null;
   linkUrl: string;
   openInNewTab: boolean;
   altText: string;
@@ -95,6 +103,8 @@ export interface AdminBannerRequest {
   enabled: boolean;
   /** 광고주. `showAdLabel` 이 참이면 필수, 아니면 `null` 을 보낼 수 있다. */
   advertiserId: number | null;
+  /** 광고 계약. 고른 광고주의 계약만 받는다. `null` 이면 잇지 않는다. */
+  contractId: number | null;
 }
 
 /** 자리 안 순서 바꾸기(`PUT /api/v1/admin/banners/order`). 그 자리의 배너 id 를 빠짐없이 새 순서대로 보낸다. */

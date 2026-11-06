@@ -1,5 +1,7 @@
 import type { HttpHandler } from 'msw';
+import { adContractAdminHandlers } from './ad-contracts';
 import { adPostingAdminHandlers } from './ad-postings';
+import { advertiserNoteAdminHandlers } from './advertiser-notes';
 import { advertiserAdminHandlers } from './advertisers';
 import { bannerAdminHandlers } from './banners';
 import { companyPriorityHandlers } from './company-priority';
@@ -48,4 +50,6 @@ export const adminHandlers: HttpHandler[] = [
   ...bannerAdminHandlers,
   ...adPostingAdminHandlers,
   ...advertiserAdminHandlers,
+  ...adContractAdminHandlers,
+  ...advertiserNoteAdminHandlers,
 ];

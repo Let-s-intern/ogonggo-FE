@@ -1,3 +1,4 @@
+import type { AdContractSummary } from './ad-contracts';
 import type { AdvertiserSummary } from './advertisers';
 import type { UserBootcampSummaryResponse } from './generated/user/models/userBootcampSummaryResponse';
 import type { UserJobSummaryResponse } from './generated/user/models/userJobSummaryResponse';
@@ -96,6 +97,10 @@ export interface AdminAdPostingResponse {
   advertiserId: number;
   /** 표에 보일 광고주 요약. 서버가 `advertiserId` 로 읽어 싣는다. 광고주가 지워졌으면 `null` 이다. */
   advertiser: AdvertiserSummary | null;
+  /** 이어 둔 광고 계약(`./ad-contracts.ts`). 같은 광고주의 계약이어야 한다. 없으면 `null` 이다. */
+  contractId: number | null;
+  /** 표와 기간 밖 경고에 쓸 계약 요약. 서버가 `contractId` 로 읽어 싣는다. */
+  contract: AdContractSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -105,6 +110,8 @@ export interface CreateAdminAdPostingRequest {
   placement: AdPostingPlacement;
   targetId: number;
   advertiserId: number;
+  /** 광고 계약. 고른 광고주의 계약만 받는다. `null` 이면 잇지 않는다. */
+  contractId: number | null;
   startAt: string | null;
   endAt: string | null;
   enabled: boolean;
@@ -113,6 +120,8 @@ export interface CreateAdminAdPostingRequest {
 /** 수정 본문(`PATCH`). 보낸 칸만 바뀐다. 자리와 대상은 바꾸지 않는다 — 바꾸려면 지우고 새로 등록한다. */
 export interface UpdateAdminAdPostingRequest {
   advertiserId?: number;
+  /** 광고주를 바꾸면 계약도 그 광고주의 것으로 함께 보내거나 `null` 로 비운다. */
+  contractId?: number | null;
   startAt?: string | null;
   endAt?: string | null;
   enabled?: boolean;

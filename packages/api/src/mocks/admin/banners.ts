@@ -5,6 +5,7 @@ import {
   type AdminBannerResponse,
   type ReplaceAdminBannerOrderRequest,
 } from '../../banners';
+import { adContractLinkError, adContractSummary } from '../fixtures/ad-contracts';
 import { advertiserSummary, findAdvertiser } from '../fixtures/advertisers';
 import { bannerStore, saveBanners, type BannerRecord } from '../fixtures/banners';
 import { notFound, ok } from './paging';
@@ -75,6 +76,10 @@ function validate(body: Partial<AdminBannerRequest>, partial: boolean): string |
   for (const key of ['pcImageUrl', 'mobileImageUrl'] as const) {
     if (has(key)) {
       const value = body[key];
+      // 모바일은 비울 수 있다(`null`). 공고 상세 자리만 꼭 있어야 하고 그건 합친 결과로 본다(`mobileImageError`).
+      if (key === 'mobileImageUrl' && value === null) {
+        continue;
+      }
       if (typeof value !== 'string' || value.length > URL_MAX_LENGTH || !isImageUrl(value)) {
         return `${key}: https 이미지 주소나 /banners/ 경로를 보내 주세요.`;
       }
@@ -118,9 +123,20 @@ function periodError(startAt: string | null, endAt: string | null): string | nul
     : null;
 }
 
-/** 응답에 광고주 요약을 붙인다. 광고주별 광고(`./advertisers.ts`)도 쓴다. */
+/** 공고 상세 자리는 PC 가 세로 소재라 좁은 화면에 그대로 쓸 수 없다. 모바일 이미지가 꼭 있어야 한다. */
+function mobileImageError(placement: string, mobileImageUrl: string | null | undefined) {
+  return placement === 'JOB_DETAIL_SIDE' && !mobileImageUrl
+    ? 'mobileImageUrl: 공고 상세 배너는 모바일 이미지(750×200)가 있어야 합니다.'
+    : null;
+}
+
+/** 응답에 광고주·계약 요약을 붙인다. 광고주별 광고(`./advertisers.ts`)도 쓴다. */
 export function toAdminBannerResponse(banner: BannerRecord): AdminBannerResponse {
-  return { ...banner, advertiser: advertiserSummary(banner.advertiserId) };
+  return {
+    ...banner,
+    advertiser: advertiserSummary(banner.advertiserId),
+    contract: adContractSummary(banner.contractId),
+  };
 }
 
 /** 광고 표시가 켜진 배너는 광고주가 있어야 한다. 자체 홍보(표시 꺼짐)는 없어도 된다. 수정이면 합친 결과로 본다. */
@@ -176,7 +192,9 @@ const createHandler = http.post(PATH, async ({ request }) => {
   const error =
     validate(body, false) ??
     periodError(body.startAt ?? null, body.endAt ?? null) ??
-    advertiserError(body.showAdLabel === true, body.advertiserId ?? null);
+    advertiserError(body.showAdLabel === true, body.advertiserId ?? null) ??
+    mobileImageError(body.placement as string, body.mobileImageUrl) ??
+    adContractLinkError(body.contractId, body.advertiserId ?? null);
   if (error) {
     return badRequest(error);
   }
@@ -187,6 +205,8 @@ const createHandler = http.post(PATH, async ({ request }) => {
     name: input.name.trim(),
     altText: input.altText.trim(),
     advertiserId: input.advertiserId ?? null,
+    mobileImageUrl: input.mobileImageUrl || null,
+    contractId: input.contractId ?? null,
     id: Math.max(0, ...bannerStore.banners.map((item) => item.id)) + 1,
     displayOrder: inPlacement(input.placement).length + 1,
     createdAt: now,
@@ -244,11 +264,15 @@ const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request })
   const error =
     validate(changes, true) ??
     periodError(merged.startAt, merged.endAt) ??
-    advertiserError(merged.showAdLabel, merged.advertiserId ?? null);
+    advertiserError(merged.showAdLabel, merged.advertiserId ?? null) ??
+    mobileImageError(banner.placement, merged.mobileImageUrl) ??
+    adContractLinkError(merged.contractId, merged.advertiserId ?? null);
   if (error) {
     return badRequest(error);
   }
   Object.assign(banner, changes, {
+    mobileImageUrl: merged.mobileImageUrl || null,
+    contractId: merged.contractId ?? null,
     name: merged.name.trim(),
     altText: merged.altText.trim(),
     updatedAt: nowKst(),
