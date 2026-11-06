@@ -4,6 +4,7 @@ import { adPostingAdminHandlers } from './ad-postings';
 import { advertiserNoteAdminHandlers } from './advertiser-notes';
 import { advertiserAdminHandlers } from './advertisers';
 import { bannerAdminHandlers } from './banners';
+import { calendarAdminHandlers } from './calendar';
 import { companyPriorityHandlers } from './company-priority';
 import { concernHandlers } from './concerns';
 import { contentHandlers } from './content';
@@ -52,4 +53,5 @@ export const adminHandlers: HttpHandler[] = [
   ...advertiserAdminHandlers,
   ...adContractAdminHandlers,
   ...advertiserNoteAdminHandlers,
+  ...calendarAdminHandlers,
 ];
