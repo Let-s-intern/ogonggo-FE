@@ -27,15 +27,6 @@ interface BannerFormModalProps {
   placement: BannerPlacement;
   /** `null` 이면 새 배너다. */
   banner: Banner | null;
-  /**
-   * 새 배너에 미리 고를 광고주. 광고주별 광고 화면에서 열 때 준다. 돈을 받고 싣는 배너라 `광고 표시` 도 켠 채로 시작한다.
-   */
-  initialAdvertiser?: AdvertiserSummary;
-  /**
-   * 새 배너에 미리 고를 계약(`initialAdvertiser` 의 계약). 주면 노출 기간을 계약 기간으로 채운다. 광고주별 광고 화면이 그 광고주의
-   * 기본 계약이나 계약 행의 `배너 추가` 로 고른 계약을 준다.
-   */
-  initialContract?: AdContract | null;
   onClose: () => void;
 }
 
@@ -72,27 +63,22 @@ function withContract(form: FormState, contract: AdContract | null): FormState {
   };
 }
 
-function initialState(
-  banner: Banner | null,
-  initialAdvertiser?: AdvertiserSummary,
-  initialContract?: AdContract | null,
-): FormState {
-  const state: FormState = {
+function initialState(banner: Banner | null): FormState {
+  return {
     name: banner?.name ?? '',
     pcImageUrl: banner?.pcImageUrl ?? '',
     mobileImageUrl: banner?.mobileImageUrl ?? '',
     linkUrl: banner?.linkUrl ?? '',
     openInNewTab: banner?.openInNewTab ?? false,
     altText: banner?.altText ?? '',
-    showAdLabel: banner?.showAdLabel ?? initialAdvertiser !== undefined,
+    showAdLabel: banner?.showAdLabel ?? false,
     startAt: toInputValue(banner?.startAt ?? null),
     endAt: toInputValue(banner?.endAt ?? null),
     // 새 배너는 켠 채로 시작한다. 기간을 정해 두면 그 사이에만 보인다.
     enabled: banner?.enabled ?? true,
-    advertiser: banner?.advertiser ?? initialAdvertiser ?? null,
+    advertiser: banner?.advertiser ?? null,
     contractId: banner?.contractId ?? null,
   };
-  return banner ? state : withContract(state, initialContract ?? null);
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
@@ -129,19 +115,10 @@ function validate(form: FormState, placement: BannerPlacement): FormErrors {
  * 검증은 저장을 누른 뒤부터 보인다. 쓰는 중에 빈 칸마다 빨간 글자가 뜨면 처음 여는 사람에게 모두 틀린 것처럼 보인다.
  * 서버가 거절하면 그 문구를 그대로 보인다.
  */
-export function BannerFormModal({
-  open,
-  placement,
-  banner,
-  initialAdvertiser,
-  initialContract,
-  onClose,
-}: BannerFormModalProps) {
+export function BannerFormModal({ open, placement, banner, onClose }: BannerFormModalProps) {
   const saveMutation = useSaveBanner(placement, banner?.id ?? null);
   const defaultContract = useDefaultAdContract();
-  const [form, setForm] = useState<FormState>(() =>
-    initialState(banner, initialAdvertiser, initialContract),
-  );
+  const [form, setForm] = useState<FormState>(() => initialState(banner));
   const [submitted, setSubmitted] = useState(false);
   const errors = submitted ? validate(form, placement) : {};
 

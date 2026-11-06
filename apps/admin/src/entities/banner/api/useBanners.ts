@@ -74,6 +74,16 @@ export function useToggleBanner(placement: BannerPlacement, bannerId: number) {
   });
 }
 
+/** 몇 칸만 고친다(광고주별 광고 표의 바로 고치기: 노출 기간, 링크). 보낸 칸만 바뀐다. */
+export function usePatchBanner(bannerId: number) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (changes: Partial<BannerInput>) =>
+      adminWrite<Banner>('PATCH', `${ADMIN_BANNERS_PATH}/${bannerId}`, changes),
+    onSuccess: invalidate,
+  });
+}
+
 /** 자리 안 순서를 통째로 바꾼다. 그 자리의 id 를 빠짐없이 새 순서대로 보낸다. */
 export function useReorderBanners(placement: BannerPlacement) {
   const invalidate = useInvalidate();

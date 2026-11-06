@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Button, Callout, Card, ConfirmDelete, Field, Input, Modal, Textarea } from '@ogonggo/ui';
+import {
+  Button,
+  Callout,
+  Card,
+  ConfirmDelete,
+  EmptyState,
+  Field,
+  Input,
+  Modal,
+  Textarea,
+} from '@ogonggo/ui';
 import {
   useAdvertiserNotes,
   useDeleteAdvertiserNote,
@@ -17,7 +27,13 @@ const CONTENT_MAX_LENGTH = 2000;
  * 어드민 메모(이슈 #573, 2026-11-06 사용자). 광고주별 광고 상세에 운영자가 여러 건 남긴다. 최신순, 쓴 사람과 시각(KST)을
  * 보이고 고치고 지운다. 비회원 광고주 정보의 한 칸짜리 `메모` 와는 따로다.
  */
-export function AdvertiserNoteSection({ advertiserId }: { advertiserId: number }) {
+export function AdvertiserNoteSection({
+  advertiserId,
+  notify,
+}: {
+  advertiserId: number;
+  notify: (message: string) => void;
+}) {
   const { data, isPending, isError } = useAdvertiserNotes(advertiserId);
   const [editing, setEditing] = useState<{ note: AdvertiserNote | null } | null>(null);
   const [deleting, setDeleting] = useState<AdvertiserNote | null>(null);
@@ -38,9 +54,15 @@ export function AdvertiserNoteSection({ advertiserId }: { advertiserId: number }
       {isPending ? (
         <p className="text-sm text-gray-500">불러오는 중입니다.</p>
       ) : notes.length === 0 && !isError ? (
-        <p className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
-          남긴 메모가 없습니다.
-        </p>
+        <EmptyState
+          title="남긴 메모가 없습니다"
+          description="통화 내용, 소재 일정, 결제 약속처럼 운영자끼리 알아야 할 것을 남깁니다."
+          action={
+            <Button size="sm" onClick={() => setEditing({ note: null })}>
+              메모 추가
+            </Button>
+          }
+        />
       ) : (
         <ul className="flex flex-col gap-3" aria-label="어드민 메모">
           {notes.map((note) => (
@@ -91,6 +113,7 @@ export function AdvertiserNoteSection({ advertiserId }: { advertiserId: number }
           advertiserId={advertiserId}
           note={editing.note}
           onClose={() => setEditing(null)}
+          onSaved={() => notify(editing.note ? '메모를 고쳤습니다.' : '메모를 남겼습니다.')}
         />
       ) : null}
       <ConfirmDelete
@@ -102,7 +125,12 @@ export function AdvertiserNoteSection({ advertiserId }: { advertiserId: number }
         onClose={() => setDeleting(null)}
         onConfirm={() => {
           if (deleting) {
-            deleteMutation.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
+            deleteMutation.mutate(deleting.id, {
+              onSuccess: () => {
+                notify('메모를 지웠습니다.');
+                setDeleting(null);
+              },
+            });
           }
         }}
       />
@@ -114,10 +142,12 @@ function NoteFormModal({
   advertiserId,
   note,
   onClose,
+  onSaved,
 }: {
   advertiserId: number;
   note: AdvertiserNote | null;
   onClose: () => void;
+  onSaved: () => void;
 }) {
   const save = useSaveAdvertiserNote(advertiserId, note?.id ?? null);
   const [title, setTitle] = useState(note?.title ?? '');
@@ -131,7 +161,15 @@ function NoteFormModal({
     if (!title.trim() || !content.trim()) {
       return;
     }
-    save.mutate({ title: title.trim(), content: content.trim() }, { onSuccess: onClose });
+    save.mutate(
+      { title: title.trim(), content: content.trim() },
+      {
+        onSuccess: () => {
+          onSaved();
+          onClose();
+        },
+      },
+    );
   };
 
   return (

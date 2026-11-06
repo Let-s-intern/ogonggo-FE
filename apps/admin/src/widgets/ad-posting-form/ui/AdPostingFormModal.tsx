@@ -20,7 +20,7 @@ import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { SearchBox } from '@/widgets/list-toolbar';
 
 /** 고른 대상. 표에 보일 제목·회사만 들고 있다. */
-interface Target {
+export interface AdTarget {
   id: number;
   title: string;
   companyName: string;
@@ -32,10 +32,6 @@ interface AdPostingFormModalProps {
   adPosting: AdPosting | null;
   /** 이 자리에 이미 든 대상. 다시 고를 수 없다. */
   takenTargetIds: Set<number>;
-  /** 새 광고에 미리 고를 광고주. 광고주별 광고 화면에서 열 때 준다. */
-  initialAdvertiser?: AdvertiserSummary;
-  /** 새 광고에 미리 고를 계약(`initialAdvertiser` 의 계약). 주면 노출 기간을 계약 기간으로 채운다. */
-  initialContract?: AdContract | null;
   onClose: () => void;
 }
 
@@ -54,8 +50,6 @@ export function AdPostingFormModal({
   placement,
   adPosting,
   takenTargetIds,
-  initialAdvertiser,
-  initialContract,
   onClose,
 }: AdPostingFormModalProps) {
   const targetLabel = adPostingTargetType(placement) === 'BOOTCAMP' ? '부트캠프' : '채용공고';
@@ -63,7 +57,7 @@ export function AdPostingFormModal({
   const update = useUpdateAdPosting(placement, adPosting?.id ?? 0);
   const mutation = adPosting ? update : create;
 
-  const [target, setTarget] = useState<Target | null>(
+  const [target, setTarget] = useState<AdTarget | null>(
     adPosting
       ? {
           id: adPosting.targetId,
@@ -73,19 +67,11 @@ export function AdPostingFormModal({
       : null,
   );
   const [advertiser, setAdvertiser] = useState<AdvertiserSummary | null>(
-    adPosting?.advertiser ?? initialAdvertiser ?? null,
+    adPosting?.advertiser ?? null,
   );
-  // 새 광고에 계약이 미리 골라져 오면 기간을 계약 기간으로 채운다.
-  const startContract = adPosting ? null : (initialContract ?? null);
-  const [contractId, setContractId] = useState<number | null>(
-    adPosting?.contractId ?? startContract?.id ?? null,
-  );
-  const [startAt, setStartAt] = useState(
-    toInputValue(adPosting?.startAt ?? startContract?.startAt ?? null),
-  );
-  const [endAt, setEndAt] = useState(
-    toInputValue(adPosting?.endAt ?? startContract?.endAt ?? null),
-  );
+  const [contractId, setContractId] = useState<number | null>(adPosting?.contractId ?? null);
+  const [startAt, setStartAt] = useState(toInputValue(adPosting?.startAt ?? null));
+  const [endAt, setEndAt] = useState(toInputValue(adPosting?.endAt ?? null));
   const defaultContract = useDefaultAdContract();
 
   /** 계약을 고르면 노출 기간을 계약 기간으로 채운다. 채운 뒤에도 고칠 수 있다. */
@@ -247,15 +233,18 @@ export function AdPostingFormModal({
   );
 }
 
-/** 공개 중인 채용공고·부트캠프를 검색해 고른다. 오공고 PICK 공고 추가(`TodayJobsPage` 의 `JobPicker`)와 같은 방식이다. */
-function TargetPicker({
+/**
+ * 공개 중인 채용공고·부트캠프를 검색해 고른다. 오공고 PICK 공고 추가(`TodayJobsPage` 의 `JobPicker`)와 같은 방식이다. 광고주별
+ * 광고의 한 번에 추가도 쓴다.
+ */
+export function TargetPicker({
   placement,
   takenTargetIds,
   onPick,
 }: {
   placement: AdPostingPlacement;
   takenTargetIds: Set<number>;
-  onPick: (target: Target) => void;
+  onPick: (target: AdTarget) => void;
 }) {
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
@@ -265,7 +254,7 @@ function TargetPicker({
   const jobs = useJobList({ ...common, recruitmentStatus: '', sort: 'REGISTERED_AT' }, !isBootcamp);
   const bootcamps = useBootcampList({ ...common, status: '', sort: 'REGISTERED_AT' }, isBootcamp);
   const query = isBootcamp ? bootcamps : jobs;
-  const rows: Target[] = (query.data?.items ?? []).map(({ id, title, companyName }) => ({
+  const rows: AdTarget[] = (query.data?.items ?? []).map(({ id, title, companyName }) => ({
     id,
     title,
     companyName,

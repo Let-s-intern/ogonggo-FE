@@ -55,11 +55,13 @@ export function AdContractFormModal({
   advertiserId,
   contract,
   onClose,
+  onSaved,
 }: {
   advertiserId: number;
   /** `null` 이면 새 계약이다. */
   contract: AdContract | null;
   onClose: () => void;
+  onSaved?: () => void;
 }) {
   const save = useSaveAdContract(advertiserId, contract?.id ?? null);
   const [form, setForm] = useState<FormState>(() => ({
@@ -101,7 +103,12 @@ export function AdContractFormModal({
       products: form.products,
       memo: form.memo.trim() || null,
     };
-    save.mutate(input, { onSuccess: onClose });
+    save.mutate(input, {
+      onSuccess: () => {
+        onSaved?.();
+        onClose();
+      },
+    });
   };
 
   const productGroup = (title: string, prefix: string) => (

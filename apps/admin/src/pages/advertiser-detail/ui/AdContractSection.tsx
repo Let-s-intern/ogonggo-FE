@@ -5,6 +5,7 @@ import {
   Callout,
   ConfirmDelete,
   DataTable,
+  EmptyState,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import {
@@ -38,11 +39,13 @@ export function AdContractSection({
   query,
   onAddBanner,
   onAddAdPosting,
+  notify,
 }: {
   advertiser: Advertiser;
   query: ReturnType<typeof useAdContracts>;
   onAddBanner: (contract: AdContract) => void;
   onAddAdPosting: (contract: AdContract) => void;
+  notify: (message: string) => void;
 }) {
   const [editing, setEditing] = useState<{ contract: AdContract | null } | null>(null);
   const [deleting, setDeleting] = useState<AdContract | null>(null);
@@ -173,14 +176,26 @@ export function AdContractSection({
         </span>
       </p>
       {query.isError ? <Callout tone="error">계약을 불러오지 못했습니다.</Callout> : null}
-      <DataTable
-        columns={columns}
-        rows={rows}
-        rowKey={(row) => row.id}
-        onRowClick={(row) => setEditing({ contract: row })}
-        isLoading={query.isPending}
-        emptyMessage="이 광고주의 계약이 없습니다."
-      />
+      {!query.isPending && !query.isError && rows.length === 0 ? (
+        <EmptyState
+          title="이 광고주의 계약이 없습니다"
+          description="기간·금액·자리를 적어 두면 배너와 광고 공고를 더할 때 그대로 채워집니다."
+          action={
+            <Button size="sm" onClick={() => setEditing({ contract: null })}>
+              계약 추가
+            </Button>
+          }
+        />
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(row) => row.id}
+          onRowClick={(row) => setEditing({ contract: row })}
+          isLoading={query.isPending}
+          emptyMessage="이 광고주의 계약이 없습니다."
+        />
+      )}
 
       {editing ? (
         <AdContractFormModal
@@ -188,6 +203,7 @@ export function AdContractSection({
           advertiserId={advertiser.id}
           contract={editing.contract}
           onClose={() => setEditing(null)}
+          onSaved={() => notify(editing.contract ? '계약을 고쳤습니다.' : '계약을 더했습니다.')}
         />
       ) : null}
       <ConfirmDelete
@@ -203,7 +219,12 @@ export function AdContractSection({
         onClose={() => setDeleting(null)}
         onConfirm={() => {
           if (deleting) {
-            deleteMutation.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
+            deleteMutation.mutate(deleting.id, {
+              onSuccess: () => {
+                notify('계약을 지웠습니다.');
+                setDeleting(null);
+              },
+            });
           }
         }}
       />
