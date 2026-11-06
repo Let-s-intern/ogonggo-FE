@@ -106,7 +106,12 @@ export function AdvertiserListPage() {
       align: 'right',
       width: 'w-36',
       render: (row) => (
-        <span className="whitespace-nowrap">{formatWon(row.contractTotalAmount)}</span>
+        <span className="flex flex-col items-end">
+          <span className="whitespace-nowrap">{formatWon(row.contractTotalAmount)}</span>
+          {row.contractVatMixed ? (
+            <span className="text-xs whitespace-nowrap text-gray-500">부가세 포함·별도 섞임</span>
+          ) : null}
+        </span>
       ),
     },
     {

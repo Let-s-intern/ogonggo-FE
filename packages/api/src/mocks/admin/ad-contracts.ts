@@ -70,6 +70,9 @@ function validate(contract: AdminAdContractRequest): string | null {
   if (!Number.isInteger(contract.amount) || contract.amount < 0 || contract.amount > AMOUNT_MAX) {
     return 'amount: 0 이상의 정수(원)로 보내 주세요.';
   }
+  if (typeof contract.vatIncluded !== 'boolean') {
+    return 'vatIncluded: 참·거짓 값을 보내 주세요.';
+  }
   if (typeof contract.paid !== 'boolean') {
     return 'paid: 참·거짓 값을 보내 주세요.';
   }
@@ -125,6 +128,7 @@ const createHandler = http.post(NESTED_PATH, async ({ params, request }) => {
     startAt: body.startAt as string,
     endAt: body.endAt as string,
     amount: body.amount as number,
+    vatIncluded: body.vatIncluded as boolean,
     paid: body.paid as boolean,
     paidDate: body.paidDate ?? null,
     products: body.products ?? [],
@@ -164,6 +168,7 @@ const patchHandler = http.patch(PATH, async ({ params, request }) => {
     startAt: contract.startAt,
     endAt: contract.endAt,
     amount: contract.amount,
+    vatIncluded: contract.vatIncluded,
     paid: contract.paid,
     paidDate: contract.paidDate,
     products: contract.products,

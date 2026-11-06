@@ -39,8 +39,10 @@ export interface AdvertiserAdCounts {
 export interface AdvertiserContractTotals {
   contractCount: number;
   activeContractCount: number;
-  /** 모든 계약 금액의 합(원). */
+  /** 모든 계약 금액의 합(원). 부가세 포함·별도를 가리지 않고 적힌 금액 그대로 더한다. */
   contractTotalAmount: number;
+  /** 계약끼리 부가세 포함·별도가 섞였는가. 섞이면 화면이 합계 옆에 알린다. 계약이 없으면 `false`. */
+  contractVatMixed: boolean;
 }
 
 /** `GET /api/v1/admin/advertisers` 한 건이자 `GET /api/v1/admin/advertisers/{id}` 응답. */

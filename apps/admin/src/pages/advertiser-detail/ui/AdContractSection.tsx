@@ -18,6 +18,8 @@ import {
   adContractName,
   adContractStatus,
   formatWon,
+  vatLabel,
+  vatTotalNote,
 } from '@/entities/ad-contract/lib/adContract';
 import type { Advertiser } from '@/entities/advertiser/api/useAdvertisers';
 import {
@@ -52,6 +54,8 @@ export function AdContractSection({
   const deleteMutation = useDeleteAdContract();
   const rows = query.data ?? [];
   const paidAmount = rows.filter((row) => row.paid).reduce((sum, row) => sum + row.amount, 0);
+  // 합계는 적힌 금액을 그대로 더한다. 포함·별도가 섞이면 그렇다고 알린다(2026-11-06 사용자).
+  const vatNote = vatTotalNote(rows.map((row) => row.vatIncluded));
 
   const columns: DataTableColumn<AdContract>[] = [
     {
@@ -84,8 +88,15 @@ export function AdContractSection({
       key: 'amount',
       header: '금액',
       align: 'right',
-      width: 'w-32',
-      render: (row) => <span className="whitespace-nowrap">{formatWon(row.amount)}</span>,
+      width: 'w-36',
+      render: (row) => (
+        <span className="flex flex-col items-end">
+          <span className="whitespace-nowrap">{formatWon(row.amount)}</span>
+          <span className="text-xs whitespace-nowrap text-gray-500">
+            ({vatLabel(row.vatIncluded)})
+          </span>
+        </span>
+      ),
     },
     {
       key: 'paid',
@@ -179,6 +190,7 @@ export function AdContractSection({
         <span className="font-semibold text-gray-900">
           {formatWon(advertiser.contractTotalAmount)}
         </span>
+        {vatNote ? <span className="text-xs text-gray-500"> ({vatNote})</span> : null}
         <span className="text-gray-500">
           {' '}
           · 결제 완료 {formatWon(paidAmount)} · 미결제{' '}

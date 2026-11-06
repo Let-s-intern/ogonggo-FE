@@ -49,6 +49,20 @@ export function formatWon(amount: number): string {
   return `${amount.toLocaleString('ko-KR')}원`;
 }
 
+/** 금액 옆에 붙이는 부가세 표시. */
+export function vatLabel(vatIncluded: boolean): string {
+  return vatIncluded ? '부가세 포함' : '부가세 별도';
+}
+
+/** 합계 옆 안내. 부가세 포함·별도가 섞이면 적힌 금액을 그대로 더한 값이라 알린다. 섞이지 않으면 그 한 가지를 적는다. */
+export function vatTotalNote(vatIncludedValues: boolean[]): string | null {
+  const kinds = new Set(vatIncludedValues);
+  if (kinds.size === 0) {
+    return null;
+  }
+  return kinds.size > 1 ? '부가세 포함·별도 섞임' : vatLabel(vatIncludedValues[0] as boolean);
+}
+
 /**
  * 노출 기간이 계약 기간 밖으로 나가는가. 열린 끝(`null`)은 계약 끝을 넘는 것으로 본다. 경고만 하고 저장은 막지 않는다.
  */

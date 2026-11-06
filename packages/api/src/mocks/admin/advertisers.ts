@@ -67,6 +67,7 @@ function toResponse(advertiser: AdvertiserRecord): AdminAdvertiserResponse {
     contractCount: contracts.length,
     activeContractCount: contracts.filter((contract) => isAdContractActive(contract)).length,
     contractTotalAmount: contracts.reduce((sum, contract) => sum + contract.amount, 0),
+    contractVatMixed: new Set(contracts.map((contract) => contract.vatIncluded)).size > 1,
   };
 }
 

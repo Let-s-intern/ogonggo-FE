@@ -23,6 +23,7 @@ const SEED: AdContractRecord[] = [
     startAt: '2026-11-01T00:00:00',
     endAt: '2026-12-01T00:00:00',
     amount: 1_500_000,
+    vatIncluded: true,
     paid: true,
     paidDate: '2026-10-28',
     products: ['BANNER_JOB_DETAIL_SIDE', 'AD_POSTING_JOB_LIST', 'AD_POSTING_JOB_DETAIL_SIDE'],
@@ -37,6 +38,7 @@ const SEED: AdContractRecord[] = [
     startAt: '2026-12-01T00:00:00',
     endAt: '2027-01-01T00:00:00',
     amount: 2_000_000,
+    vatIncluded: false,
     paid: false,
     paidDate: null,
     products: ['BANNER_HOME_TOP'],
@@ -51,6 +53,7 @@ const SEED: AdContractRecord[] = [
     startAt: '2026-10-01T00:00:00',
     endAt: '2026-11-01T00:00:00',
     amount: 800_000,
+    vatIncluded: true,
     paid: true,
     paidDate: '2026-09-25',
     products: ['BANNER_HOME_TOP', 'AD_POSTING_BOOTCAMP_LIST'],
@@ -65,6 +68,7 @@ const SEED: AdContractRecord[] = [
     startAt: '2026-10-01T00:00:00',
     endAt: '2027-01-01T00:00:00',
     amount: 3_000_000,
+    vatIncluded: true,
     paid: true,
     paidDate: null,
     products: ['AD_POSTING_JOB_PICK', 'AD_POSTING_CALENDAR', 'AD_POSTING_JOB_DETAIL_SIDE'],
@@ -86,7 +90,11 @@ function load(): AdContractRecord[] {
   try {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as AdContractRecord[];
+      // 부가세 칸(`vatIncluded`)이 생기기 전에 저장한 계약은 포함으로 읽는다(새 계약의 기본값과 같다).
+      return (JSON.parse(raw) as AdContractRecord[]).map((contract) => ({
+        ...contract,
+        vatIncluded: contract.vatIncluded ?? true,
+      }));
     }
   } catch {
     // 깨진 값이면 시드로 시작한다.

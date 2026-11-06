@@ -44,6 +44,8 @@ export interface AdminAdContractResponse extends AdContractSummary {
   advertiserId: number;
   /** 금액(원). 0 이상의 정수. */
   amount: number;
+  /** `amount` 가 부가가치세를 포함한 금액인가. 새 계약은 포함(`true`)으로 시작한다(2026-11-06 사용자). */
+  vatIncluded: boolean;
   /** 결제 완료 여부. */
   paid: boolean;
   /** 결제일(KST, `YYYY-MM-DD`). 결제 완료일 때만 있고, 몰라도 비워 둘 수 있다. */
@@ -64,6 +66,7 @@ export interface AdminAdContractRequest {
   startAt: string;
   endAt: string;
   amount: number;
+  vatIncluded: boolean;
   paid: boolean;
   paidDate: string | null;
   products: AdContractProduct[];

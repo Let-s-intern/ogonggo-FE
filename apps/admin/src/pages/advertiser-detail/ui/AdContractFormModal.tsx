@@ -27,6 +27,8 @@ interface FormState {
   endAt: string;
   /** 숫자만 들고 있는다. 보일 때 쉼표를 넣는다. */
   amount: string;
+  /** 금액이 부가세를 포함하는가. 새 계약은 포함으로 시작한다. */
+  vatIncluded: boolean;
   paid: boolean;
   paidDate: string;
   products: AdContractProduct[];
@@ -69,6 +71,7 @@ export function AdContractFormModal({
     startAt: toInputValue(contract?.startAt),
     endAt: toInputValue(contract?.endAt),
     amount: contract ? String(contract.amount) : '',
+    vatIncluded: contract?.vatIncluded ?? true,
     paid: contract?.paid ?? false,
     paidDate: contract?.paidDate ?? '',
     products: contract?.products ?? [],
@@ -98,6 +101,7 @@ export function AdContractFormModal({
       startAt: toServerValue(form.startAt),
       endAt: toServerValue(form.endAt),
       amount: Number(form.amount),
+      vatIncluded: form.vatIncluded,
       paid: form.paid,
       paidDate: form.paid && form.paidDate ? form.paidDate : null,
       products: form.products,
@@ -191,6 +195,13 @@ export function AdContractFormModal({
                   .slice(0, AMOUNT_MAX_DIGITS),
               )
             }
+          />
+          <Checkbox
+            checked={form.vatIncluded}
+            onChange={(checked) => set('vatIncluded', checked)}
+            label="부가가치세 포함"
+            className="pt-2"
+            labelClassName="text-sm text-gray-700"
           />
         </Field>
         <Field
