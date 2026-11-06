@@ -99,12 +99,12 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
  * 홈(채용공고) 히어로 헤드라인. 광고 구좌 시안(`home-pc-guest.png`·`home-pc-member.png`, 이슈 #573)대로 첫 줄은
  * 로그인 여부로, 둘째 줄은 공고 수로 갈린다. `HERO_CONTENT.jobs.lines` 는 그대로 두어 공유 이미지(`og/sectionOgImage`)가 쓴다.
  *
- * - `name` 이 있으면 `{이름}에게 딱! 맞는`, 없으면 `지금 딱! 필요한`
+ * - `name` 이 있으면 `{이름}님께 딱! 맞는`(높임말, 2026-11-06 사용자), 없으면 `지금 딱! 필요한`
  * - `count` 가 있으면 `채용공고가 NN개 올라왔어요`, 없으면(받지 못함) 숫자 없이 `채용공고가 매일 올라와요`
  */
 export function jobsHeroLines(name: string | undefined, count: number | null): HeroSegment[][] {
   const first: HeroSegment[] = name
-    ? [{ text: `${name}에게 ` }, { text: '딱!', accent: true, tilted: true }, { text: ' 맞는' }]
+    ? [{ text: `${name}님께 ` }, { text: '딱!', accent: true, tilted: true }, { text: ' 맞는' }]
     : [{ text: '지금 ' }, { text: '딱!', accent: true, tilted: true }, { text: ' 필요한' }];
   const second: HeroSegment[] =
     count === null

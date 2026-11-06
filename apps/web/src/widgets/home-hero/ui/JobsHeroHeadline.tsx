@@ -29,7 +29,7 @@ type MatchedCountState =
  * 클라이언트 컴포넌트다.
  *
  * - 비로그인: `지금 딱! 필요한` + 서버가 받은 오늘 올라온 공고 수(`count`)
- * - 로그인: 토큰을 붙여 `GET /api/v1/jobs/headline-count` 를 다시 받는다. `matchedWishJob` 이면 `{이름}에게 딱! 맞는` +
+ * - 로그인: 토큰을 붙여 `GET /api/v1/jobs/headline-count` 를 다시 받는다. `matchedWishJob` 이면 `{이름}님께 딱! 맞는` +
  *   희망 직무에 맞는 공고 수다. 아니면(희망 직무가 비었거나 맞는 공고가 0건, 기업 회원) 비로그인과 같다(2026-11-06 사용자).
  *
  * 서버는 로그인 여부를 모른다(`useMyAccount` 주석). 그래서 서버 렌더와 첫 하이드레이션은 첫 줄을 자리만 잡고 감춘다
