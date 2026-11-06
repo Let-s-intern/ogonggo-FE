@@ -23,6 +23,8 @@ import {
   JOB_RECRUITMENT_STATUS_OPTIONS,
   RecruitmentStatusBadge,
   VISIBILITY_OPTIONS,
+  ALL_FILTER_VALUE,
+  withExplicitAll,
 } from '@/shared/config/labels';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
@@ -78,13 +80,16 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
     setSearchParams(next, { replace: true });
   };
 
+  // 비즈니스 구역은 모집 중인 공고만 기본으로 본다. `전체` 를 고르면 주소에 `ALL` 이 남는다(2026-11-06 사용자).
+  const recruitmentStatusParam = get('recruitmentStatus', fixedSource ? 'RECRUITING' : '');
+
   const filters = {
     page,
     keyword: get('keyword'),
     visibility: get('visibility'),
     source: fixedSource ?? get('source'),
     reviewStatus: get('reviewStatus'),
-    recruitmentStatus: get('recruitmentStatus'),
+    recruitmentStatus: recruitmentStatusParam === ALL_FILTER_VALUE ? '' : recruitmentStatusParam,
     sort: get('sort', 'REGISTERED_AT'),
   };
 
@@ -244,8 +249,12 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
           aria-label="검수 상태"
         />
         <Select
-          options={JOB_RECRUITMENT_STATUS_OPTIONS}
-          value={filters.recruitmentStatus}
+          options={
+            fixedSource
+              ? withExplicitAll(JOB_RECRUITMENT_STATUS_OPTIONS)
+              : JOB_RECRUITMENT_STATUS_OPTIONS
+          }
+          value={recruitmentStatusParam}
           onChange={(event) => setFilter('recruitmentStatus', event.target.value)}
           aria-label="모집 상태"
         />
