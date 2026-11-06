@@ -27,6 +27,16 @@
   font-display: swap;
 }
 
+/*
+ * 어드민 전체를 브라우저 90% 확대처럼 줄인다. 글자 크기와 Tailwind 간격 유틸리티가 모두 rem 이라
+ * 루트 글자 크기 하나로 한꺼번에 줄어든다. CSS `zoom` 은 쓰지 않는다 — `h-screen`(100vh) 이
+ * 화면 높이의 90% 로 줄고 echarts 툴팁 좌표가 어긋난다. px 로 적은 값(모서리 반경, `w-[320px]` 같은
+ * 임의 값)은 그대로 남는다.
+ */
+html {
+  font-size: 90%;
+}
+
 /* AI 비서가 채운 칸(`features/ai-assistant/model/screen.ts`). 저장 전에 무엇이 바뀌었는지 보이게 한다. */
 [data-ai-filled] {
   outline: 2px solid var(--color-blue-400);
