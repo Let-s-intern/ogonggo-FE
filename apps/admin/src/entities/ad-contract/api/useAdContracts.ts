@@ -30,7 +30,7 @@ export function useAdContracts(advertiserId: number | null) {
 }
 
 /**
- * 계약 쓰기 뒤에는 광고주(합계)와 배너·광고 공고(표의 계약 표시, 삭제하면 끊긴다)를 다시 받는다.
+ * 계약 쓰기 뒤에는 광고주(합계)와 배너·광고 공고·인스타 광고(표의 계약 표시, 삭제하면 끊긴다)를 다시 받는다.
  */
 function useInvalidate() {
   const queryClient = useQueryClient();
@@ -39,6 +39,7 @@ function useInvalidate() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'advertisers'] }),
       queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] }),
       queryClient.invalidateQueries({ queryKey: ['admin', 'ad-postings'] }),
+      queryClient.invalidateQueries({ queryKey: ['admin', 'instagram'] }),
     ]);
 }
 

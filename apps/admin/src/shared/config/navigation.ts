@@ -106,6 +106,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/business/advertisers', label: '광고 계약' },
       { path: '/business/banners', label: '배너 세팅' },
       { path: '/business/ad-postings', label: '광고 공고 세팅' },
+      { path: '/business/instagram-ads', label: '인스타 광고' },
       { path: '/business/instagram', label: '인스타 등록' },
     ],
   },

@@ -9,6 +9,7 @@ import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CalendarPage } from '@/pages/calendar';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
+import { InstagramAdsPage } from '@/pages/instagram-ads';
 import { InstagramSettingsPage } from '@/pages/instagram-settings';
 import { CompanyPriorityPage } from '@/pages/company-priority';
 import { ConcernDetailPage } from '@/pages/concern-detail';
@@ -95,6 +96,7 @@ export const router = createBrowserRouter([
       { path: 'business/advertisers/:advertiserId', element: <AdvertiserDetailPage /> },
       { path: 'business/banners', element: <BannerSettingsPage /> },
       { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
+      { path: 'business/instagram-ads', element: <InstagramAdsPage /> },
       { path: 'business/instagram', element: <InstagramSettingsPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
