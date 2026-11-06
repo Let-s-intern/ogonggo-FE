@@ -7,6 +7,12 @@ export {
 export { consumeJobFill, useJobFillRequest, type FillableJobField } from './model/jobFill';
 export { consumeReviewJob, useReviewJobRequest } from './model/reviewTarget';
 export {
+  consumeAnalysisFill,
+  consumeClassificationFill,
+  useAnalysisFill,
+  useClassificationFill,
+} from './model/reviewFill';
+export {
   requestAssistantQuestion,
   useAssistantBusy,
   useAssistantQuestion,

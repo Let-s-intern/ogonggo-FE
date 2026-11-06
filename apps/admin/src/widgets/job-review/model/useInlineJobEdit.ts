@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AdminJobDetailResponse } from '@ogonggo/api/src/admin';
 import { usePatchJob } from '@/entities/content/api/useContent';
+import { consumeClassificationFill, useClassificationFill } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import {
   buildPatch,
@@ -139,6 +140,38 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
       ),
     [],
   );
+
+  /*
+   * AI 비서가 이 공고의 분류 칸을 채워 달라고 했다(`fill_job_classification`). 고치는 중인 값에만 넣는다 — 서버로 보내는
+   * 것은 사람이 누르는 `분류 저장` 이다. 직군만 바꾸면 직무를 비우고, 상시 채용이면 마감일을 비운다(`ConditionSection`·
+   * `RecruitmentSection` 이 칸을 바꿀 때의 규칙과 같다). 이 공고의 값이 자리 잡은 뒤에 넣는다.
+   */
+  const classificationFill = useClassificationFill(job?.id ?? null);
+  const loadedId = state?.id ?? null;
+  useEffect(() => {
+    if (!classificationFill || loadedId !== classificationFill.jobId) {
+      return;
+    }
+    consumeClassificationFill(classificationFill.nonce);
+    const filled = classificationFill.values;
+    setState((previous) => {
+      if (!previous || previous.id !== classificationFill.jobId) {
+        return previous;
+      }
+      const values = { ...previous.values, ...filled };
+      if (
+        filled.jobField !== undefined &&
+        filled.jobRole === undefined &&
+        filled.jobField !== previous.values.jobField
+      ) {
+        values.jobRole = '';
+      }
+      if (filled.recruitmentType === 'ALWAYS_OPEN') {
+        values.recruitmentEndAt = '';
+      }
+      return { ...previous, values };
+    });
+  }, [classificationFill, loadedId]);
 
   if (!job || !active) {
     return null;

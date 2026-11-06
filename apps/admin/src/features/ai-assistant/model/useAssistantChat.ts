@@ -2,14 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { type AssistantApiMessage, callAssistant } from '@/shared/api/assistant';
-import { compactReviewedResults, describeToolCall, runTool } from './tools';
+import { fitRequestSize, imageParts } from './images';
+import { compactReviewedResults, describeToolCall, runTool, viewSourceImages } from './tools';
 
 /** 채팅 창에 그리는 줄. 모델과 주고받는 메시지와 따로 둔다 — 도구 결과는 사람에게 보일 글이 아니다. */
 export type ChatLine =
-  | { kind: 'user'; text: string }
+  /** `images` 는 함께 보낸 그림(줄인 data URI). 대화는 메모리에만 있어 저장소 용량을 쓰지 않는다. */
+  | { kind: 'user'; text: string; images?: string[] }
   | { kind: 'assistant'; text: string }
-  /** 도구를 부른 사실. "공고 검색: 마케팅" 같은 한 줄이다. */
-  | { kind: 'activity'; text: string };
+  /** 도구를 부른 사실. "공고 검색: 마케팅" 같은 한 줄이다. 원문 이미지를 봤으면 모델이 본 그림을 함께 보인다. */
+  | { kind: 'activity'; text: string; images?: string[] };
 
 /**
  * 한 질문에 도구를 부르고 다시 묻는 왕복의 최대 횟수. 모델이 같은 도구를 되풀이할 때 끊는다.
@@ -37,7 +39,8 @@ function parseArguments(raw: string): Record<string, unknown> {
 
 /**
  * 비서와의 대화. 질문을 보내고, 모델이 도구를 부르면 실행해 결과를 붙여 다시 묻기를 답이 나올 때까지
- * 되풀이한다. 대화는 레이아웃이 살아 있는 동안(화면을 옮겨도) 남고, 새로고침하면 사라진다.
+ * 되풀이한다. 대화는 레이아웃이 살아 있는 동안(화면을 옮겨도) 남고, 새로고침하면 사라진다. 저장소에 두지 않아
+ * 이미지가 쌓여도 저장소 용량과 상관없다. 요청마다 실리는 크기는 `fitRequestSize` 가 맞춘다.
  */
 export function useAssistantChat() {
   const navigate = useNavigate();
@@ -58,12 +61,16 @@ export function useAssistantChat() {
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const send = useCallback(
-    async (question: string) => {
+    /** `images` 는 `imageToDataUrls` 로 줄인 data URI 다. 글 없이 이미지만 보내도 된다. */
+    async (question: string, images: string[] = []) => {
       const trimmed = question.trim();
-      if (!trimmed || isBusy) {
+      if ((!trimmed && images.length === 0) || isBusy) {
         return;
       }
-      setLines((current) => [...current, { kind: 'user', text: trimmed }]);
+      setLines((current) => [
+        ...current,
+        { kind: 'user', text: trimmed, ...(images.length > 0 ? { images } : {}) },
+      ]);
       setError('');
       setIsBusy(true);
       const controller = new AbortController();
@@ -71,7 +78,15 @@ export function useAssistantChat() {
 
       const messages: AssistantApiMessage[] = [
         ...messagesRef.current,
-        { role: 'user', content: trimmed },
+        images.length > 0
+          ? {
+              role: 'user',
+              content: [
+                { type: 'text', text: trimmed || '이 이미지를 봐 주세요.' },
+                ...imageParts(images),
+              ],
+            }
+          : { role: 'user', content: trimmed },
       ];
       const context = {
         navigate: (path: string) => {
@@ -85,7 +100,7 @@ export function useAssistantChat() {
       try {
         for (let round = 0; ; round += 1) {
           const reply = await callAssistant(
-            compactReviewedResults(messages),
+            fitRequestSize(compactReviewedResults(messages)),
             pathRef.current,
             controller.signal,
           );
@@ -118,6 +133,11 @@ export function useAssistantChat() {
             break;
           }
           let reviews = 0;
+          /**
+           * 원문 이미지(`view_source_images`). 이미지는 user 메시지에만 실을 수 있고, 도구 결과는 도구 호출 바로 뒤에
+           * 모두 와야 한다. 그래서 이 차례의 도구 결과를 다 붙인 뒤에 user 메시지로 붙인다.
+           */
+          const followUps: AssistantApiMessage[] = [];
           for (const call of reply.tool_calls) {
             const args = parseArguments(call.function.arguments);
             if (call.function.name === 'get_job_review' && ++reviews > MAX_REVIEWS_PER_ROUND) {
@@ -128,13 +148,29 @@ export function useAssistantChat() {
               });
               continue;
             }
-            setLines((current) => [
-              ...current,
-              { kind: 'activity', text: describeToolCall(call.function.name, args) },
-            ]);
+            const activity = describeToolCall(call.function.name, args);
+            if (call.function.name === 'view_source_images') {
+              setLines((current) => [...current, { kind: 'activity', text: activity }]);
+              const { result, images: seen, followUp } = await viewSourceImages(args);
+              messages.push({ role: 'tool', tool_call_id: call.id, content: result });
+              if (followUp) {
+                followUps.push(followUp);
+                setLines((current) => [
+                  ...current,
+                  {
+                    kind: 'activity',
+                    text: `원문 이미지 ${seen.length}장을 봤습니다.`,
+                    images: seen,
+                  },
+                ]);
+              }
+              continue;
+            }
+            setLines((current) => [...current, { kind: 'activity', text: activity }]);
             const result = await runTool(call.function.name, args, context);
             messages.push({ role: 'tool', tool_call_id: call.id, content: result });
           }
+          messages.push(...followUps);
         }
         messagesRef.current = messages;
       } catch (caught) {
