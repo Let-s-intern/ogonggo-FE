@@ -1,4 +1,4 @@
-import { fetchRecruitingJobCount } from '../api/fetchRecruitingJobCount';
+import { fetchHeadlineJobCount } from '../api/fetchHeadlineJobCount';
 import { JobsHeroHeadline } from './JobsHeroHeadline';
 
 /**
@@ -6,6 +6,6 @@ import { JobsHeroHeadline } from './JobsHeroHeadline';
  * (인기 공고·전체 공고·배너)과 서로 기다리지 않고 함께 나간다.
  */
 export async function HomeJobsHeadline() {
-  const count = await fetchRecruitingJobCount();
+  const count = await fetchHeadlineJobCount();
   return <JobsHeroHeadline count={count} />;
 }
