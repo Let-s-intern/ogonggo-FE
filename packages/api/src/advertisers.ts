@@ -19,8 +19,21 @@ export interface AdvertiserSummary {
   type: AdvertiserType;
 }
 
-/** `GET /api/v1/admin/advertisers` 한 건. */
-export interface AdminAdvertiserResponse extends AdvertiserSummary {
+/**
+ * 광고주별 광고 수(광고주별 광고 화면). 서버가 배너·광고 공고에서 세어 싣는다. `active` 는 지금 노출 중인 것만 센다 —
+ * 켜져 있고 기간 안이며, 광고 공고는 대상이 공개·모집 중이어야 한다(각 표의 `노출 중` 과 같은 규칙).
+ */
+export interface AdvertiserAdCounts {
+  bannerCount: number;
+  activeBannerCount: number;
+  adPostingCount: number;
+  activeAdPostingCount: number;
+  /** 이 광고주의 배너·광고 공고 노출 끝 가운데 가장 늦은 것(KST). 끝이 정해진 광고가 없으면 `null` 이다. */
+  latestEndAt: string | null;
+}
+
+/** `GET /api/v1/admin/advertisers` 한 건이자 `GET /api/v1/admin/advertisers/{id}` 응답. */
+export interface AdminAdvertiserResponse extends AdvertiserSummary, AdvertiserAdCounts {
   source: AdvertiserSource;
   /** 비즈니스 회원이면 그 회원의 사용자 id. */
   companyMemberUserId?: number;
@@ -40,5 +53,8 @@ export interface CreateAdminAdvertiserRequest {
   contactPhone?: string;
   memo?: string;
 }
+
+/** 비회원 광고주 수정(`PATCH /api/v1/admin/advertisers/{id}`). 보낸 칸만 바뀐다. 빈 문자열은 지운다. 회원 광고주는 400. */
+export type UpdateAdminAdvertiserRequest = Partial<CreateAdminAdvertiserRequest>;
 
 export const ADMIN_ADVERTISERS_PATH = '/api/v1/admin/advertisers';

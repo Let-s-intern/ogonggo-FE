@@ -1,4 +1,8 @@
-import type { AdminAdvertiserResponse, AdvertiserSummary } from '../../advertisers';
+import type {
+  AdminAdvertiserResponse,
+  AdvertiserAdCounts,
+  AdvertiserSummary,
+} from '../../advertisers';
 import { COMPANY_MEMBER_FIXTURES } from './admin-member';
 
 /**
@@ -10,10 +14,13 @@ import { COMPANY_MEMBER_FIXTURES } from './admin-member';
  * - 운영자가 직접 더한 비회원 기업: `POST` 로 늘어난다. 브라우저에서는 `localStorage` 에 남긴다.
  */
 
+/** 저장하는 광고주. 광고 수(`AdvertiserAdCounts`)는 저장하지 않고 응답할 때 배너·광고 공고에서 센다(`../admin/advertisers.ts`). */
+export type AdvertiserRecord = Omit<AdminAdvertiserResponse, keyof AdvertiserAdCounts>;
+
 const MEMBER_ID_OFFSET = 100_000;
 const STORAGE_KEY = 'ogonggo.mock.admin.advertisers';
 
-const SEED: AdminAdvertiserResponse[] = [
+const SEED: AdvertiserRecord[] = [
   {
     id: 1,
     name: '그로우랩',
@@ -51,11 +58,11 @@ function storage(): Storage | undefined {
   }
 }
 
-function load(): AdminAdvertiserResponse[] {
+function load(): AdvertiserRecord[] {
   try {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as AdminAdvertiserResponse[];
+      return JSON.parse(raw) as AdvertiserRecord[];
     }
   } catch {
     // 깨진 값이면 시드로 시작한다.
@@ -64,7 +71,7 @@ function load(): AdminAdvertiserResponse[] {
 }
 
 /** 비회원 광고주(광고 문의·직접 추가). 회원 광고주는 회원 픽스처에서 그때그때 만든다. */
-export const nonMemberAdvertiserStore: { advertisers: AdminAdvertiserResponse[] } = {
+export const nonMemberAdvertiserStore: { advertisers: AdvertiserRecord[] } = {
   advertisers: load(),
 };
 
@@ -77,7 +84,7 @@ export function saveAdvertisers(): void {
 }
 
 /** 탈퇴하지 않은 비즈니스 회원을 광고주로. */
-function memberAdvertisers(): AdminAdvertiserResponse[] {
+function memberAdvertisers(): AdvertiserRecord[] {
   return COMPANY_MEMBER_FIXTURES.filter((member) => member.status !== 'WITHDRAWN').map(
     (member) => ({
       id: MEMBER_ID_OFFSET + member.id,
@@ -92,11 +99,11 @@ function memberAdvertisers(): AdminAdvertiserResponse[] {
 }
 
 /** 합친 목록. 회원이 먼저, 그다음 비회원이 등록 순서대로다. */
-export function allAdvertisers(): AdminAdvertiserResponse[] {
+export function allAdvertisers(): AdvertiserRecord[] {
   return [...memberAdvertisers(), ...nonMemberAdvertiserStore.advertisers];
 }
 
-export function findAdvertiser(id: number | null | undefined): AdminAdvertiserResponse | undefined {
+export function findAdvertiser(id: number | null | undefined): AdvertiserRecord | undefined {
   return id === null || id === undefined
     ? undefined
     : allAdvertisers().find((advertiser) => advertiser.id === id);

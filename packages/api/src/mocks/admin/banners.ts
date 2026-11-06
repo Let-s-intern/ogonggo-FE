@@ -14,6 +14,7 @@ import { notFound, ok } from './paging';
  * 그대로 흉내 낸다.
  *
  * - `GET    /api/v1/admin/banners?placement=` 그 자리의 배너 전부(꺼진 것·기간이 지난 것 포함), 순서대로
+ *   `?advertiserId=` 를 주면 그 광고주의 배너만. 자리를 함께 주지 않으면 모든 자리에서 자리 순서·자리 안 순서대로 준다
  * - `POST   /api/v1/admin/banners`            등록. 그 자리의 맨 뒤에 붙는다
  * - `PATCH  /api/v1/admin/banners/{id}`       보낸 칸만 수정. 자리는 바꾸지 않는다
  * - `DELETE /api/v1/admin/banners/{id}`       삭제. 남은 배너의 순서를 1부터 다시 매긴다
@@ -117,8 +118,8 @@ function periodError(startAt: string | null, endAt: string | null): string | nul
     : null;
 }
 
-/** 응답에 광고주 요약을 붙인다. */
-function toResponse(banner: BannerRecord): AdminBannerResponse {
+/** 응답에 광고주 요약을 붙인다. 광고주별 광고(`./advertisers.ts`)도 쓴다. */
+export function toAdminBannerResponse(banner: BannerRecord): AdminBannerResponse {
   return { ...banner, advertiser: advertiserSummary(banner.advertiserId) };
 }
 
@@ -151,11 +152,20 @@ function readId(raw: unknown): number {
 }
 
 const listHandler = http.get(PATH, ({ request }) => {
-  const placement = new URL(request.url).searchParams.get('placement');
-  if (placement === null || !PLACEMENTS.includes(placement)) {
+  const params = new URL(request.url).searchParams;
+  const placement = params.get('placement');
+  const advertiserParam = params.get('advertiserId');
+  const advertiserId = advertiserParam === null ? null : readId(advertiserParam);
+  if (advertiserId !== null && Number.isNaN(advertiserId)) {
+    return badRequest('advertiserId: 광고주 id 를 숫자로 보내 주세요.');
+  }
+  if (placement === null ? advertiserId === null : !PLACEMENTS.includes(placement)) {
     return badRequest('placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.');
   }
-  return HttpResponse.json(ok(inPlacement(placement).map(toResponse)), { status: 200 });
+  const banners = (placement === null ? BANNER_PLACEMENTS : [placement])
+    .flatMap(inPlacement)
+    .filter((banner) => advertiserId === null || banner.advertiserId === advertiserId);
+  return HttpResponse.json(ok(banners.map(toAdminBannerResponse)), { status: 200 });
 });
 
 const createHandler = http.post(PATH, async ({ request }) => {
@@ -185,7 +195,7 @@ const createHandler = http.post(PATH, async ({ request }) => {
   bannerStore.banners.push(banner);
   saveBanners();
   return HttpResponse.json(
-    { ...ok(toResponse(banner)), status: 201, message: 'Created' },
+    { ...ok(toAdminBannerResponse(banner)), status: 201, message: 'Created' },
     { status: 201 },
   );
 });
@@ -212,7 +222,9 @@ const replaceOrderHandler = http.put(`${PATH}/order`, async ({ request }) => {
     }
   });
   saveBanners();
-  return HttpResponse.json(ok(inPlacement(body.placement).map(toResponse)), { status: 200 });
+  return HttpResponse.json(ok(inPlacement(body.placement).map(toAdminBannerResponse)), {
+    status: 200,
+  });
 });
 
 const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request }) => {
@@ -242,7 +254,7 @@ const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request })
     updatedAt: nowKst(),
   });
   saveBanners();
-  return HttpResponse.json(ok(toResponse(banner)), { status: 200 });
+  return HttpResponse.json(ok(toAdminBannerResponse(banner)), { status: 200 });
 });
 
 const deleteHandler = http.delete(`${PATH}/:bannerId`, ({ params }) => {
