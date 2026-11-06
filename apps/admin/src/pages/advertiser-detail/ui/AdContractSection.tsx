@@ -22,8 +22,8 @@ import {
   vatTotalNote,
 } from '@/entities/ad-contract/lib/adContract';
 import type { Advertiser } from '@/entities/advertiser/api/useAdvertisers';
-import { useInstagramFormats } from '@/entities/instagram/api/useInstagram';
-import { instagramProductLabel } from '@/entities/instagram/lib/instagram';
+import { useAdChannelFormats } from '@/entities/ad-channel/api/useAdChannels';
+import { channelProductLabel } from '@/entities/ad-channel/lib/adChannel';
 import {
   adContractProductLabel,
   formatContractPeriod,
@@ -36,32 +36,35 @@ const formatDate = (value: string) => value.replaceAll('-', '.');
 
 /**
  * 광고 계약(이슈 #573, 2026-11-06 사용자). 광고 계약 상세의 배너·광고 공고 위에 둔다. 계약을 더하고 고치고 지우며, 행의
- * `배너 추가`·`광고 공고 추가`·`인스타 광고 추가` 는 그 계약이 골라지고 기간(인스타는 게시 예정일)이 채워진 모달을 연다.
+ * `배너 추가`·`광고 공고 추가`·`채널 광고 추가` 는 그 계약이 골라지고 기간(채널 광고는 게시 예정일)이 채워진 모달을 연다.
  */
 export function AdContractSection({
   advertiser,
   query,
   onAddBanner,
   onAddAdPosting,
-  onAddInstagramAd,
+  onAddChannelAd,
   notify,
 }: {
   advertiser: Advertiser;
   query: ReturnType<typeof useAdContracts>;
   onAddBanner: (contract: AdContract) => void;
   onAddAdPosting: (contract: AdContract) => void;
-  onAddInstagramAd: (contract: AdContract) => void;
+  onAddChannelAd: (contract: AdContract) => void;
   notify: (message: string) => void;
 }) {
   const [editing, setEditing] = useState<{ contract: AdContract | null } | null>(null);
   const [deleting, setDeleting] = useState<AdContract | null>(null);
   const deleteMutation = useDeleteAdContract();
   const rows = query.data ?? [];
-  const instagramFormats = useInstagramFormats();
+  const channelFormats = useAdChannelFormats();
   const productLabels = (row: AdContract) => [
     ...row.products.map(adContractProductLabel),
-    ...row.instagramFormatIds.map((id) =>
-      instagramProductLabel(instagramFormats.data?.find((format) => format.id === id)?.name, id),
+    ...row.channelFormatIds.map((id) =>
+      channelProductLabel(
+        channelFormats.data?.find((format) => format.id === id),
+        id,
+      ),
     ),
   ];
   const paidAmount = rows.filter((row) => row.paid).reduce((sum, row) => sum + row.amount, 0);
@@ -144,7 +147,7 @@ export function AdContractSection({
           <span>
             배너 {row.bannerCount} · 광고 공고 {row.adPostingCount}
           </span>
-          <span>인스타 광고 {row.instagramAdCount}</span>
+          <span>채널 광고 {row.channelAdCount}</span>
         </span>
       ),
     },
@@ -174,9 +177,9 @@ export function AdContractSection({
             size="sm"
             variant="secondary"
             className="whitespace-nowrap"
-            onClick={() => onAddInstagramAd(row)}
+            onClick={() => onAddChannelAd(row)}
           >
-            인스타 광고 추가
+            채널 광고 추가
           </Button>
           <Button
             size="sm"
@@ -254,7 +257,7 @@ export function AdContractSection({
         targetName={deleting ? adContractName(deleting) : ''}
         description={
           deleting
-            ? `이어 둔 배너 ${deleting.bannerCount}건, 광고 공고 ${deleting.adPostingCount}건, 인스타 광고 ${deleting.instagramAdCount}건은 지우지 않고 계약만 끊습니다.`
+            ? `이어 둔 배너 ${deleting.bannerCount}건, 광고 공고 ${deleting.adPostingCount}건, 채널 광고 ${deleting.channelAdCount}건은 지우지 않고 계약만 끊습니다.`
             : undefined
         }
         isDeleting={deleteMutation.isPending}

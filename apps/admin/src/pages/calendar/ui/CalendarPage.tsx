@@ -44,9 +44,12 @@ const GRID_STYLE = {
   '--fc-page-bg-color': 'var(--color-white, #fff)',
 } as CSSProperties;
 
+/** 바뀐 종류 이름. 인스타 광고를 채널 광고로 넓히기 전의 `?hide=instagram` 도 채널 광고를 끈 것으로 읽는다. */
+const LEGACY_KINDS: Record<string, CalendarKind> = { instagram: 'channelAd' };
+
 /** 거르기 체크에서 끈 종류. 주소의 `hide`(쉼표로 이음)에 남겨 새로고침·공유해도 같다. */
 function readHidden(value: string | null): Set<CalendarKind> {
-  const kinds = (value ?? '').split(',');
+  const kinds = (value ?? '').split(',').map((kind) => LEGACY_KINDS[kind] ?? kind);
   return new Set(CALENDAR_KINDS.filter((kind) => kinds.includes(kind)));
 }
 
@@ -90,7 +93,7 @@ export function CalendarPage() {
     contract: ads.data?.contracts.length ?? 0,
     banner: (ads.data?.banners.length ?? 0) - undatedBanners,
     adPosting: (ads.data?.adPostings.length ?? 0) - undatedAdPostings,
-    instagram: ads.data?.instagramAds.length ?? 0,
+    channelAd: ads.data?.channelAds.length ?? 0,
     todo: todos.data?.length ?? 0,
   };
   const events: EventInput[] = [...adEvents, ...todoEvents].filter(
@@ -164,8 +167,8 @@ export function CalendarPage() {
         }
       />
       <p className="-mt-3 pb-4 text-sm text-gray-500">
-        광고 계약·배너·광고 공고 기간, 인스타 광고 게시일과 운영자 할 일을 함께 봅니다. 날짜를
-        누르거나 여러 날을 끌어 할 일을 추가합니다.
+        광고 계약·배너·광고 공고 기간, 채널 광고(인스타그램·오픈채팅) 게시일과 운영자 할 일을 함께
+        봅니다. 날짜를 누르거나 여러 날을 끌어 할 일을 추가합니다.
       </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
@@ -286,7 +289,7 @@ export function CalendarPage() {
           selectMirror
           // 막대를 끌어 놓은 뒤 이어지는 클릭이 날짜 선택으로 번지지 않게 한다.
           unselectAuto
-          // 할 일 → 계약 → 배너 → 광고 공고 → 인스타 광고 순으로 쌓는다(`STACK_ORDER`). 같은 종류는 먼저 시작한 것이 위.
+          // 할 일 → 계약 → 배너 → 광고 공고 → 채널 광고 순으로 쌓는다(`STACK_ORDER`). 같은 종류는 먼저 시작한 것이 위.
           eventOrder={(a, b) => {
             const kindOf = (event: unknown) =>
               STACK_ORDER.indexOf(

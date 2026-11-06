@@ -13,7 +13,8 @@ import {
   defaultAdContract,
   isOutsideContract,
 } from '@/entities/ad-contract/lib/adContract';
-import { instagramProductLabel } from '@/entities/instagram/lib/instagram';
+import type { AdChannelPlatform } from '@ogonggo/api/src/ad-channels';
+import { channelProductLabel } from '@/entities/ad-channel/lib/adChannel';
 import { adContractProductLabel, formatContractPeriod } from '../lib/adContractProduct';
 
 interface AdContractFieldProps {
@@ -25,10 +26,10 @@ interface AdContractFieldProps {
   onChange: (contract: AdContract | null) => void;
   /** 지금 폼의 노출 기간(서버 값, KST). 계약 기간 밖이면 경고한다. */
   period: { startAt: string | null; endAt: string | null };
-  /** 이 배너·광고 공고의 자리. 계약 상품에 없으면 경고한다. 인스타 광고는 `product` 대신 `instagramFormat` 을 준다. */
+  /** 이 배너·광고 공고의 자리. 계약 상품에 없으면 경고한다. 채널 광고는 `product` 대신 `channelFormat` 을 준다. */
   product?: AdContractProduct;
-  /** 인스타 광고의 게재 유형. 계약의 인스타 상품에 없으면 경고한다. 고르기 전이면 `null`. */
-  instagramFormat?: { id: number; name: string } | null;
+  /** 채널 광고의 게재 유형. 계약의 채널 상품에 없으면 경고한다. 고르기 전이면 `null`. */
+  channelFormat?: { id: number; platform: AdChannelPlatform; name: string } | null;
   /** 칸 아래 안내. 기본은 노출 기간을 채운다는 안내다. */
   hint?: string;
 }
@@ -45,7 +46,7 @@ export function AdContractField({
   onChange,
   period,
   product,
-  instagramFormat,
+  channelFormat,
   hint = '계약을 고르면 노출 기간을 계약 기간으로 채웁니다. 채운 뒤에도 고칠 수 있습니다.',
 }: AdContractFieldProps) {
   const { data: contracts = [], isError } = useAdContracts(advertiserId);
@@ -64,7 +65,7 @@ export function AdContractField({
         isOutsideContract(period, selected)
           ? `노출 기간이 계약 기간(${formatContractPeriod(selected)}) 밖입니다. 저장은 할 수 있습니다.`
           : null,
-        missingProduct(selected, product, instagramFormat),
+        missingProduct(selected, product, channelFormat),
       ].filter((warning): warning is string => warning !== null)
     : [];
 
@@ -108,20 +109,20 @@ export function useDefaultAdContract() {
   };
 }
 
-/** 계약에 상품이 정해져 있는데 이 광고의 자리·인스타 유형이 없으면 그 경고. 상품을 정하지 않은 계약은 경고하지 않는다. */
+/** 계약에 상품이 정해져 있는데 이 광고의 자리·채널 유형이 없으면 그 경고. 상품을 정하지 않은 계약은 경고하지 않는다. */
 function missingProduct(
   contract: AdContract,
   product: AdContractProduct | undefined,
-  instagramFormat: { id: number; name: string } | null | undefined,
+  channelFormat: { id: number; platform: AdChannelPlatform; name: string } | null | undefined,
 ): string | null {
-  if (contract.products.length === 0 && contract.instagramFormatIds.length === 0) {
+  if (contract.products.length === 0 && contract.channelFormatIds.length === 0) {
     return null;
   }
   if (product && !contract.products.includes(product)) {
     return `이 계약의 상품에 ${adContractProductLabel(product)} 자리가 없습니다.`;
   }
-  if (instagramFormat && !contract.instagramFormatIds.includes(instagramFormat.id)) {
-    return `이 계약의 상품에 ${instagramProductLabel(instagramFormat.name, instagramFormat.id)} 이(가) 없습니다.`;
+  if (channelFormat && !contract.channelFormatIds.includes(channelFormat.id)) {
+    return `이 계약의 상품에 ${channelProductLabel(channelFormat, channelFormat.id)} 이(가) 없습니다.`;
   }
   return null;
 }

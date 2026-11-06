@@ -49,13 +49,17 @@ import {
   bannerStatus,
 } from '@/entities/banner/lib/banner';
 import {
-  useDeleteInstagramAd,
-  useInstagramAds,
-  usePatchInstagramAd,
-  type InstagramAd,
-} from '@/entities/instagram/api/useInstagram';
-import { formatInstagramDates, instagramAdPeriod } from '@/entities/instagram/lib/instagram';
-import { InstagramAccountName } from '@/entities/instagram/ui/InstagramAccountName';
+  useChannelAds,
+  useDeleteChannelAd,
+  usePatchChannelAd,
+  type ChannelAd,
+} from '@/entities/ad-channel/api/useAdChannels';
+import {
+  PLATFORM_COPY,
+  channelAdPeriod,
+  formatChannelAdDates,
+} from '@/entities/ad-channel/lib/adChannel';
+import { AdChannelName } from '@/entities/ad-channel/ui/AdChannelName';
 import { AdContractNote } from '@/entities/ad-contract/ui/AdContractNote';
 import { useCompanyMemberDetail } from '@/entities/member/api/useMembers';
 import { AdvertiserJump } from '@/features/advertiser-picker/ui/AdvertiserJump';
@@ -64,17 +68,17 @@ import { formatCount } from '@/shared/lib/format';
 import { AdPostingFormModal } from '@/widgets/ad-posting-form';
 import { BannerFormModal } from '@/widgets/banner-form';
 import {
-  InstagramAdFormModal,
-  InstagramAdStatusSelect,
-  type InstagramAdInitial,
-} from '@/widgets/instagram-ad-form';
+  ChannelAdFormModal,
+  ChannelAdStatusSelect,
+  type ChannelAdInitial,
+} from '@/widgets/channel-ad-form';
 import { PageHeader } from '@/widgets/page-header';
 import { AdContractSection } from './AdContractSection';
 import { AdvertiserEditModal } from './AdvertiserEditModal';
 import { AdvertiserNoteSection } from './AdvertiserNoteSection';
 import { BulkAdModal, type BulkAdKind } from './BulkAdModal';
 import {
-  InlineInstagramDateCell,
+  InlineChannelAdDateCell,
   InlineLinkCell,
   InlinePeriodCell,
   InlinePostUrlCell,
@@ -88,7 +92,7 @@ type BulkAdding = { contract: AdContract | null; kind: BulkAdKind } | null;
 type Notify = (message: string) => void;
 
 /**
- * 광고 계약 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 광고 계약, 배너, 광고 공고, 인스타 광고, 어드민 메모를 모아 보고
+ * 광고 계약 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 광고 계약, 배너, 광고 공고, 채널 광고, 어드민 메모를 모아 보고
  * 고친다.
  * 더할 때는 `광고 한 번에 추가`(`BulkAdModal`)에서 자리를 여러 개 체크해 한 번에 만든다. 표의 노출 기간·링크는 칸을 눌러 바로
  * 고치고, 나머지 칸은 행을 눌러 여는 수정 모달에서 고친다.
@@ -103,9 +107,9 @@ export function AdvertiserDetailPage() {
   const banners = useAdvertiserBanners(advertiserId);
   const adPostings = useAdvertiserAdPostings(advertiserId);
   const contracts = useAdContracts(Number.isInteger(advertiserId) ? advertiserId : null);
-  const instagramAds = useInstagramAds({ advertiserId }, Number.isInteger(advertiserId));
-  /** 인스타 광고 추가 모달. 계약 행에서 열면 그 계약, 섹션 버튼으로 열면 기본 계약을 미리 고른다. */
-  const [addingInstagram, setAddingInstagram] = useState<InstagramAdInitial | null>(null);
+  const channelAds = useChannelAds({ advertiserId }, Number.isInteger(advertiserId));
+  /** 채널 광고 추가 모달. 계약 행에서 열면 그 계약, 섹션 버튼으로 열면 기본 계약을 미리 고른다. */
+  const [addingChannelAd, setAddingChannelAd] = useState<ChannelAdInitial | null>(null);
   const [editingInfo, setEditingInfo] = useState(false);
   const [bulk, setBulk] = useState<BulkAdding>(null);
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
@@ -184,15 +188,15 @@ export function AdvertiserDetailPage() {
         query={contracts}
         onAddBanner={(contract) => openBulk('BANNER', contract)}
         onAddAdPosting={(contract) => openBulk('AD_POSTING', contract)}
-        onAddInstagramAd={(contract) => setAddingInstagram({ advertiser: summary, contract })}
+        onAddChannelAd={(contract) => setAddingChannelAd({ advertiser: summary, contract })}
         notify={notify}
       />
       <BannerSection query={banners} onAdd={() => openBulk('BANNER')} notify={notify} />
       <AdPostingSection query={adPostings} onAdd={() => openBulk('AD_POSTING')} notify={notify} />
-      <InstagramAdSection
-        query={instagramAds}
+      <ChannelAdSection
+        query={channelAds}
         onAdd={() =>
-          setAddingInstagram({
+          setAddingChannelAd({
             advertiser: summary,
             contract: defaultAdContract(contracts.data ?? []),
           })
@@ -211,11 +215,11 @@ export function AdvertiserDetailPage() {
           onDone={notify}
         />
       ) : null}
-      {addingInstagram ? (
-        <InstagramAdFormModal
+      {addingChannelAd ? (
+        <ChannelAdFormModal
           ad={null}
-          initial={addingInstagram}
-          onClose={() => setAddingInstagram(null)}
+          initial={addingChannelAd}
+          onClose={() => setAddingChannelAd(null)}
           onSaved={notify}
         />
       ) : null}
@@ -721,35 +725,43 @@ function AdPostingToggle({ adPosting }: { adPosting: AdPosting }) {
 }
 
 /**
- * 인스타 광고(이슈 #573, 2026-11-06 사용자). 이 광고주의 인스타그램 게시 일정이다. 게시 예정일·상태·게시물 주소는 칸에서 바로
- * 고치고, 계정·유형·메모는 행을 눌러 여는 모달에서 고친다.
+ * 채널 광고(이슈 #573, 2026-11-06 사용자). 이 광고주의 SNS·오픈채팅 게시 일정(인스타그램 계정, 카카오톡 오픈채팅방)이다. 게시
+ * 예정일·상태·게시 확인 주소는 칸에서 바로 고치고, 플랫폼·채널·유형·메모는 행을 눌러 여는 모달에서 고친다.
  */
-function InstagramAdSection({
+function ChannelAdSection({
   query,
   onAdd,
   notify,
 }: {
-  query: ReturnType<typeof useInstagramAds>;
+  query: ReturnType<typeof useChannelAds>;
   onAdd: () => void;
   notify: Notify;
 }) {
-  const [editing, setEditing] = useState<InstagramAd | null>(null);
-  const [deleting, setDeleting] = useState<InstagramAd | null>(null);
-  const deleteMutation = useDeleteInstagramAd();
+  const [editing, setEditing] = useState<ChannelAd | null>(null);
+  const [deleting, setDeleting] = useState<ChannelAd | null>(null);
+  const deleteMutation = useDeleteChannelAd();
   const rows = query.data ?? [];
 
-  const columns: DataTableColumn<InstagramAd>[] = [
+  const columns: DataTableColumn<ChannelAd>[] = [
     {
       key: 'date',
       header: '게시 예정일(KST)',
       width: 'w-48',
-      render: (row) => <InstagramDateCell ad={row} notify={notify} />,
+      render: (row) => <ChannelAdDateCell ad={row} notify={notify} />,
     },
     {
-      key: 'account',
-      header: '계정',
-      width: 'w-48',
-      render: (row) => <InstagramAccountName account={row.account} />,
+      key: 'platform',
+      header: '플랫폼',
+      width: 'w-24 whitespace-nowrap',
+      render: (row) => (
+        <span className="text-sm text-gray-700">{PLATFORM_COPY[row.platform].short}</span>
+      ),
+    },
+    {
+      key: 'channel',
+      header: '채널',
+      width: 'w-52',
+      render: (row) => <AdChannelName channel={row.channel} />,
     },
     {
       key: 'format',
@@ -763,13 +775,13 @@ function InstagramAdSection({
       key: 'status',
       header: '상태',
       width: 'w-32',
-      render: (row) => <InstagramAdStatusSelect ad={row} notify={notify} />,
+      render: (row) => <ChannelAdStatusSelect ad={row} notify={notify} />,
     },
     {
       key: 'url',
-      header: '게시물 주소',
+      header: '게시 확인',
       width: 'w-40 max-w-40',
-      render: (row) => <InstagramUrlCell ad={row} notify={notify} />,
+      render: (row) => <ChannelAdUrlCell ad={row} notify={notify} />,
     },
     {
       key: 'memo',
@@ -788,7 +800,7 @@ function InstagramAdSection({
           <Button
             size="sm"
             variant="secondary"
-            aria-label={`${row.postDate} 인스타 광고 삭제`}
+            aria-label={`${row.postDate} 채널 광고 삭제`}
             className="border-red-200 text-error hover:bg-red-50"
             onClick={() => {
               deleteMutation.reset();
@@ -805,28 +817,28 @@ function InstagramAdSection({
   return (
     <>
       <SectionHeader
-        title={`인스타 광고 ${formatCount(rows.length)}건`}
+        title={`채널 광고 ${formatCount(rows.length)}건`}
         action={
           <Button size="sm" onClick={onAdd}>
-            인스타 광고 추가
+            채널 광고 추가
           </Button>
         }
       />
-      {query.isError ? <Callout tone="error">인스타 광고를 불러오지 못했습니다.</Callout> : null}
+      {query.isError ? <Callout tone="error">채널 광고를 불러오지 못했습니다.</Callout> : null}
       {!query.isPending && !query.isError && rows.length === 0 ? (
         <EmptyState
-          title="이 광고주의 인스타 광고가 없습니다"
-          description="계정·게재 유형·게시 예정일을 정해 우리 인스타그램 계정에 올릴 일정을 잡습니다."
+          title="이 광고주의 채널 광고가 없습니다"
+          description="플랫폼·채널·게재 유형·게시 예정일을 정해 우리 인스타그램 계정이나 카카오톡 오픈채팅방에 올릴 일정을 잡습니다."
           action={
             <Button size="sm" onClick={onAdd}>
-              인스타 광고 추가
+              채널 광고 추가
             </Button>
           }
         />
       ) : (
         <>
           <p className="pb-3 text-sm text-gray-500">
-            게시 예정일·상태·게시물 주소는 칸에서 바로 고칩니다. 다른 칸은 행을 눌러 고칩니다.
+            게시 예정일·상태·게시 확인 주소는 칸에서 바로 고칩니다. 다른 칸은 행을 눌러 고칩니다.
           </p>
           <DataTable
             columns={columns}
@@ -834,13 +846,13 @@ function InstagramAdSection({
             rowKey={(row) => row.id}
             onRowClick={setEditing}
             isLoading={query.isPending}
-            emptyMessage="이 광고주의 인스타 광고가 없습니다."
+            emptyMessage="이 광고주의 채널 광고가 없습니다."
           />
         </>
       )}
 
       {editing ? (
-        <InstagramAdFormModal
+        <ChannelAdFormModal
           key={editing.id}
           ad={editing}
           onClose={() => setEditing(null)}
@@ -849,8 +861,12 @@ function InstagramAdSection({
       ) : null}
       <ConfirmDelete
         open={deleting !== null}
-        targetName={deleting ? `인스타 광고 ${formatInstagramDates(deleting)}` : ''}
-        description="게시 일정만 지웁니다. 이미 올린 인스타그램 게시물은 직접 내려야 합니다."
+        targetName={deleting ? `채널 광고 ${formatChannelAdDates(deleting)}` : ''}
+        description={
+          deleting
+            ? `게시 일정만 지웁니다. 이미 올린 ${PLATFORM_COPY[deleting.platform].label} 글은 직접 내려야 합니다.`
+            : undefined
+        }
         isDeleting={deleteMutation.isPending}
         errorMessage={deleteMutation.isError ? '삭제하지 못했습니다.' : undefined}
         onClose={() => setDeleting(null)}
@@ -858,7 +874,7 @@ function InstagramAdSection({
           if (deleting) {
             deleteMutation.mutate(deleting.id, {
               onSuccess: () => {
-                notify('인스타 광고를 지웠습니다.');
+                notify('채널 광고를 지웠습니다.');
                 setDeleting(null);
               },
             });
@@ -869,35 +885,40 @@ function InstagramAdSection({
   );
 }
 
-function InstagramDateCell({ ad, notify }: { ad: InstagramAd; notify: Notify }) {
-  const patch = usePatchInstagramAd(ad.id);
+function ChannelAdDateCell({ ad, notify }: { ad: ChannelAd; notify: Notify }) {
+  const patch = usePatchChannelAd(ad.id);
   return (
-    <InlineInstagramDateCell
-      name={ad.format?.name ?? '인스타 광고'}
+    <InlineChannelAdDateCell
+      name={ad.format?.name ?? '채널 광고'}
       value={ad}
       display={
         <span className="flex flex-col gap-0.5 text-sm">
-          {formatInstagramDates(ad)}
-          <AdContractNote contract={ad.contract} period={instagramAdPeriod(ad)} />
+          {formatChannelAdDates(ad)}
+          <AdContractNote contract={ad.contract} period={channelAdPeriod(ad)} />
         </span>
       }
       onSave={async (dates) => {
         await patch.mutateAsync(dates);
-        notify('인스타 광고 날짜를 고쳤습니다.');
+        notify('채널 광고 날짜를 고쳤습니다.');
       }}
     />
   );
 }
 
-function InstagramUrlCell({ ad, notify }: { ad: InstagramAd; notify: Notify }) {
-  const patch = usePatchInstagramAd(ad.id);
+function ChannelAdUrlCell({ ad, notify }: { ad: ChannelAd; notify: Notify }) {
+  const patch = usePatchChannelAd(ad.id);
+  const copy = PLATFORM_COPY[ad.platform];
   return (
     <InlinePostUrlCell
-      name={ad.format?.name ?? '인스타 광고'}
+      name={ad.format?.name ?? '채널 광고'}
+      label={copy.postUrlLabel}
+      placeholder={copy.postUrlPlaceholder}
       value={ad.postUrl}
       onSave={async (postUrl) => {
         await patch.mutateAsync({ postUrl });
-        notify(postUrl ? '게시물 주소를 적었습니다.' : '게시물 주소를 지웠습니다.');
+        notify(
+          postUrl ? `${copy.postUrlLabel}를 적었습니다.` : `${copy.postUrlLabel}를 지웠습니다.`,
+        );
       }}
     />
   );

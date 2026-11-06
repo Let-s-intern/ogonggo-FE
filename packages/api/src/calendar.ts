@@ -2,7 +2,7 @@ import type { AdContractProduct, AdContractSummary } from './ad-contracts';
 import type { AdminAdPostingResponse } from './ad-postings';
 import type { AdvertiserSummary } from './advertisers';
 import type { AdminBannerResponse } from './banners';
-import type { AdminInstagramAdResponse } from './instagram';
+import type { AdminChannelAdResponse } from './ad-channels';
 
 /**
  * 어드민 캘린더(이슈 #573, 2026-11-06 사용자). 헤더 `캘린더` 탭의 달력에 광고 일정(계약·배너·광고 공고)과 운영자 할 일을 함께
@@ -55,7 +55,7 @@ export interface AdminAdCalendarContract extends AdContractSummary {
 }
 
 /**
- * `GET /api/v1/admin/ad-calendar?from=&to=`. 기간이 `[from, to)` 와 겹치는 광고 계약·배너·광고 공고·인스타 광고 전부(꺼진 것 포함).
+ * `GET /api/v1/admin/ad-calendar?from=&to=`. 기간이 `[from, to)` 와 겹치는 광고 계약·배너·광고 공고·채널 광고 전부(꺼진 것 포함).
  * 배너·광고 공고의 시작·끝이 `null` 이면 그쪽 끝이 열린 것으로 보고 겹침을 판단한다. 배너·광고 공고 한 건은 어드민 목록
  * 응답과 같은 모양이다.
  */
@@ -63,8 +63,8 @@ export interface AdminAdCalendarResponse {
   contracts: AdminAdCalendarContract[];
   banners: AdminBannerResponse[];
   adPostings: AdminAdPostingResponse[];
-  /** 게시 예정일~노출 끝 날(없으면 게시 예정일 하루)이 겹치는 인스타 광고. 취소한 것도 싣는다. */
-  instagramAds: AdminInstagramAdResponse[];
+  /** 게시 예정일~노출 끝 날(없으면 게시 예정일 하루)이 겹치는 채널 광고(인스타그램·오픈채팅). 취소한 것도 싣는다. */
+  channelAds: AdminChannelAdResponse[];
 }
 
 export const ADMIN_AD_CALENDAR_PATH = '/api/v1/admin/ad-calendar';

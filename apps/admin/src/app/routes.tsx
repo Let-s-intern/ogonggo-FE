@@ -8,9 +8,9 @@ import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CalendarPage } from '@/pages/calendar';
+import { ChannelAdsPage } from '@/pages/channel-ads';
+import { ChannelSettingsPage } from '@/pages/channel-settings';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
-import { InstagramAdsPage } from '@/pages/instagram-ads';
-import { InstagramSettingsPage } from '@/pages/instagram-settings';
 import { CompanyPriorityPage } from '@/pages/company-priority';
 import { ConcernDetailPage } from '@/pages/concern-detail';
 import { ConcernListPage } from '@/pages/concern-list';
@@ -34,6 +34,7 @@ import { StatsPage } from '@/pages/stats';
 import { TodayJobsPage } from '@/pages/today-jobs';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
+import { RedirectKeepingSearch } from './RedirectKeepingSearch';
 import { RequireAuth } from './RequireAuth';
 
 /**
@@ -96,8 +97,16 @@ export const router = createBrowserRouter([
       { path: 'business/advertisers/:advertiserId', element: <AdvertiserDetailPage /> },
       { path: 'business/banners', element: <BannerSettingsPage /> },
       { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
-      { path: 'business/instagram-ads', element: <InstagramAdsPage /> },
-      { path: 'business/instagram', element: <InstagramSettingsPage /> },
+      { path: 'business/channel-ads', element: <ChannelAdsPage /> },
+      { path: 'business/channels', element: <ChannelSettingsPage /> },
+      // 인스타 광고를 채널 광고로 넓히기 전 주소(2026-11-06). 거르기는 그대로 넘기고 `account` 는 `channel` 로 바꾼다.
+      {
+        path: 'business/instagram-ads',
+        element: (
+          <RedirectKeepingSearch to="/business/channel-ads" rename={{ account: 'channel' }} />
+        ),
+      },
+      { path: 'business/instagram', element: <RedirectKeepingSearch to="/business/channels" /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },
