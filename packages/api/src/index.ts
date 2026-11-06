@@ -13,4 +13,4 @@ export * from './ad-postings';
 export * from './advertisers';
 export * from './ad-contracts';
 export * from './advertiser-notes';
-export * from './instagram';
+export * from './ad-channels';

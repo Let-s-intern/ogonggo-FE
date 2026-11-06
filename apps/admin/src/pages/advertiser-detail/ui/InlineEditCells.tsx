@@ -202,8 +202,8 @@ export function InlineLinkCell({
   );
 }
 
-/** 인스타 광고의 게시 예정일·노출 끝 날 칸. 날짜만 고친다. 끝 날을 비우면 하루짜리 게시다. */
-export function InlineInstagramDateCell({
+/** 채널 광고의 게시 예정일·노출 끝 날 칸. 날짜만 고친다. 끝 날을 비우면 하루짜리 게시다. */
+export function InlineChannelAdDateCell({
   name,
   value,
   display,
@@ -255,20 +255,25 @@ export function InlineInstagramDateCell({
   );
 }
 
-/** 인스타 게시물 주소 칸. 비우면 지운다. */
+/** 채널 광고의 게시 확인 주소 칸(인스타그램 게시물 주소, 오픈채팅 확인 링크). 비우면 지운다. */
 export function InlinePostUrlCell({
   name,
+  label,
+  placeholder,
   value,
   onSave,
 }: {
   name: string;
+  /** 칸 이름(`게시물 주소`, `확인 링크`). */
+  label: string;
+  placeholder: string;
   value: string | null;
   onSave: (postUrl: string | null) => Promise<unknown>;
 }) {
   const [postUrl, setPostUrl] = useState('');
   return (
     <InlineEditor
-      label={`${name} 게시물 주소`}
+      label={`${name} ${label}`}
       onStart={() => setPostUrl(value ?? '')}
       display={
         <span className="block max-w-36 truncate text-sm text-gray-700" title={value ?? undefined}>
@@ -277,10 +282,10 @@ export function InlinePostUrlCell({
       }
       editor={
         <Input
-          aria-label="게시물 주소"
+          aria-label={label}
           value={postUrl}
           autoFocus
-          placeholder="https://www.instagram.com/p/"
+          placeholder={placeholder}
           onChange={(event) => setPostUrl(event.target.value)}
         />
       }

@@ -5,10 +5,10 @@ import { adPostingStore } from '../fixtures/ad-postings';
 import { advertiserSummary } from '../fixtures/advertisers';
 import { bannerStore } from '../fixtures/banners';
 import { calendarTodoStore, saveCalendarTodos } from '../fixtures/calendar-todos';
-import { instagramStore } from '../fixtures/instagram';
+import { adChannelStore } from '../fixtures/ad-channels';
 import { toAdminAdPostingResponse } from './ad-postings';
 import { toAdminBannerResponse } from './banners';
-import { instagramAdOverlaps, toInstagramAdResponse } from './instagram';
+import { channelAdOverlaps, toChannelAdResponse } from './ad-channels';
 import { notFound, ok } from './paging';
 
 /**
@@ -18,7 +18,7 @@ import { notFound, ok } from './paging';
  * - `POST   /api/v1/admin/calendar-todos`           등록
  * - `PATCH  /api/v1/admin/calendar-todos/{todoId}`  보낸 칸만 수정
  * - `DELETE /api/v1/admin/calendar-todos/{todoId}`  삭제
- * - `GET    /api/v1/admin/ad-calendar?from=&to=`    기간이 겹치는 광고 계약·배너·광고 공고·인스타 광고
+ * - `GET    /api/v1/admin/ad-calendar?from=&to=`    기간이 겹치는 광고 계약·배너·광고 공고·채널 광고
  */
 
 const TODOS_PATH = '*/api/v1/admin/calendar-todos';
@@ -190,9 +190,9 @@ const adCalendarHandler = http.get(AD_CALENDAR_PATH, ({ request }) => {
     adPostings: adPostingStore.adPostings
       .filter((ad) => overlaps(ad.startAt, ad.endAt, from, to))
       .map(toAdminAdPostingResponse),
-    instagramAds: instagramStore.ads
-      .filter((ad) => instagramAdOverlaps(ad, from, to))
-      .map(toInstagramAdResponse),
+    channelAds: adChannelStore.ads
+      .filter((ad) => channelAdOverlaps(ad, from, to))
+      .map(toChannelAdResponse),
   };
   return HttpResponse.json(ok(body), { status: 200 });
 });

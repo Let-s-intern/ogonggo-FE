@@ -3,16 +3,20 @@ import type { AdCalendar, CalendarTodo } from '@/entities/calendar/api/useCalend
 import { AD_PLACEMENT_LABELS } from '@/entities/ad-posting/lib/adPosting';
 import { adContractName } from '@/entities/ad-contract/lib/adContract';
 import { PLACEMENT_LABELS } from '@/entities/banner/lib/banner';
-import { INSTAGRAM_AD_STATUS_BADGES, instagramHandle } from '@/entities/instagram/lib/instagram';
+import {
+  CHANNEL_AD_STATUS_BADGES,
+  PLATFORM_COPY,
+  channelLabel,
+} from '@/entities/ad-channel/lib/adChannel';
 
 /** 달력에 그리는 일정의 종류. 범례·거르기 체크·색이 이 순서다. */
-export type CalendarKind = 'contract' | 'banner' | 'adPosting' | 'instagram' | 'todo';
+export type CalendarKind = 'contract' | 'banner' | 'adPosting' | 'channelAd' | 'todo';
 
 export const CALENDAR_KINDS: readonly CalendarKind[] = [
   'contract',
   'banner',
   'adPosting',
-  'instagram',
+  'channelAd',
   'todo',
 ];
 
@@ -24,14 +28,14 @@ export const STACK_ORDER: readonly CalendarKind[] = [
   'contract',
   'banner',
   'adPosting',
-  'instagram',
+  'channelAd',
 ];
 
 export const KIND_LABELS: Record<CalendarKind, string> = {
   contract: '계약',
   banner: '배너',
   adPosting: '광고 공고',
-  instagram: '인스타 광고',
+  channelAd: '채널 광고',
   todo: '할 일',
 };
 
@@ -44,7 +48,7 @@ export const KIND_COLORS: Record<CalendarKind, { background: string; text: strin
   contract: { background: '#d6e3ff', text: '#1e3366' },
   banner: { background: '#ede9fe', text: '#4c1d95' },
   adPosting: { background: '#d1fae5', text: '#064e3b' },
-  instagram: { background: '#fce7f3', text: '#831843' },
+  channelAd: { background: '#fce7f3', text: '#831843' },
   todo: { background: '#fef3c7', text: '#78350f' },
 };
 
@@ -59,7 +63,7 @@ export interface CalendarEventProps {
   /** 할 일이면 그 id. */
   todoId?: number;
   done?: boolean;
-  /** 꺼진 배너·광고 공고, 취소한 인스타 광고. 흐리게 그린다. */
+  /** 꺼진 배너·광고 공고, 취소한 채널 광고. 흐리게 그린다. */
   disabled?: boolean;
   /** 막대 위에 올리면 보이는 설명(`title` 속성). */
   tooltip: string;
@@ -139,7 +143,8 @@ function colored(kind: CalendarKind, done = false) {
  * 광고 일정을 막대로.
  *
  * - 계약: `광고주 · 계약명`. 누르면 광고 계약 상세
- * - 인스타 광고: `광고주 · @계정 · 유형`. 누르면 광고주 상세(인스타 광고 표가 있다)
+ * - 채널 광고: `광고주 · 인스타 @계정 · 유형`, `광고주 · 오픈채팅 방 이름 · 유형`. 플랫폼은 색을 나누지 않고 제목에 적는다.
+ *   누르면 광고주 상세(채널 광고 표가 있다)
  * - 배너·광고 공고: `광고주 · 자리`. 누르면 광고주 상세(그 광고주의 배너·광고 공고 표가 있다). 광고주가 없는 배너(오공고 자체
  *   홍보)는 `오공고 · 자리` 이고 누르면 배너 세팅의 그 자리 탭(`?placement=`)
  * - 시작이 없는 배너·광고 공고는 등록일부터, 끝이 없으면 보이는 달력 끝까지 그리고 `끝 없음` 을 붙인다. 꺼진 것은 흐리게
@@ -216,28 +221,29 @@ export function buildAdEvents(data: AdCalendar, rangeEnd: string): EventInput[] 
       } satisfies CalendarEventProps,
     });
   }
-  // 인스타 광고는 날짜만 있다. 게시 하루짜리는 그날 한 칸, 노출 끝 날이 있으면(스토리·고정) 그날까지 막대다. 취소한 것은 흐리게.
-  for (const ad of data.instagramAds) {
+  // 채널 광고는 날짜만 있다. 게시 하루짜리는 그날 한 칸, 노출 끝 날이 있으면(스토리·공지 고정) 그날까지 막대다. 취소한 것은
+  // 흐리게.
+  for (const ad of data.channelAds) {
     const start = ad.postDate;
     const end = addDays(ad.endDate ?? ad.postDate, 1);
     const title = [
       ad.advertiser?.name ?? '광고주 없음',
-      ad.account ? instagramHandle(ad.account.handle) : '지워진 계정',
+      `${PLATFORM_COPY[ad.platform].short} ${ad.channel ? channelLabel(ad.channel) : '지워진 채널'}`,
       ad.format?.name ?? '지워진 유형',
     ].join(' · ');
     const canceled = ad.status === 'CANCELED';
     events.push({
-      id: `instagram-${ad.id}`,
+      id: `channel-ad-${ad.id}`,
       title: `${title}${canceled ? ' (취소)' : ''}`,
       start,
       end,
       allDay: true,
-      ...colored('instagram'),
+      ...colored('channelAd'),
       extendedProps: {
-        kind: 'instagram',
+        kind: 'channelAd',
         href: `/business/advertisers/${ad.advertiserId}`,
         disabled: canceled,
-        tooltip: `인스타 광고 · ${title} · ${INSTAGRAM_AD_STATUS_BADGES[ad.status].label} · ${formatPeriodLabel(start, end, false)}`,
+        tooltip: `채널 광고 · ${title} · ${CHANNEL_AD_STATUS_BADGES[ad.status].label} · ${formatPeriodLabel(start, end, false)}`,
         periodLabel: shortPeriodLabel(start, end, false),
       } satisfies CalendarEventProps,
     });

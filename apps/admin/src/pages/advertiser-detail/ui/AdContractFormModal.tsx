@@ -6,7 +6,9 @@ import {
   type AdContract,
   type AdContractInput,
 } from '@/entities/ad-contract/api/useAdContracts';
-import { useInstagramFormats } from '@/entities/instagram/api/useInstagram';
+import { AD_CHANNEL_PLATFORMS } from '@ogonggo/api/src/ad-channels';
+import { useAdChannelFormats } from '@/entities/ad-channel/api/useAdChannels';
+import { PLATFORM_COPY } from '@/entities/ad-channel/lib/adChannel';
 import { adContractProductLabel } from '@/features/ad-contract-picker/lib/adContractProduct';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 
@@ -33,8 +35,8 @@ interface FormState {
   paid: boolean;
   paidDate: string;
   products: AdContractProduct[];
-  /** 인스타 게재 유형 id. 계정은 인스타 광고를 잡을 때 고른다. */
-  instagramFormatIds: number[];
+  /** 채널 게재 유형 id(모든 플랫폼). 채널(계정·방)은 채널 광고를 잡을 때 고른다. */
+  channelFormatIds: number[];
   memo: string;
 }
 
@@ -69,7 +71,7 @@ export function AdContractFormModal({
   onSaved?: () => void;
 }) {
   const save = useSaveAdContract(advertiserId, contract?.id ?? null);
-  const instagramFormats = useInstagramFormats();
+  const channelFormats = useAdChannelFormats();
   const [form, setForm] = useState<FormState>(() => ({
     name: contract?.name ?? '',
     startAt: toInputValue(contract?.startAt),
@@ -79,7 +81,7 @@ export function AdContractFormModal({
     paid: contract?.paid ?? false,
     paidDate: contract?.paidDate ?? '',
     products: contract?.products ?? [],
-    instagramFormatIds: contract?.instagramFormatIds ?? [],
+    channelFormatIds: contract?.channelFormatIds ?? [],
     memo: contract?.memo ?? '',
   }));
   const [submitted, setSubmitted] = useState(false);
@@ -96,18 +98,18 @@ export function AdContractFormModal({
         : current.products.filter((item) => item !== product),
     }));
 
-  /** 인스타 유형은 `사용` 인 것과 이 계약에 이미 든 것만 보인다. 순서는 유형 순서다. */
-  const formatOptions = (instagramFormats.data ?? []).filter(
-    (format) => format.enabled || contract?.instagramFormatIds.includes(format.id),
+  /** 채널 유형은 `사용` 인 것과 이 계약에 이미 든 것만 보인다. 순서는 유형 목록의 순서(플랫폼, 그 안의 순서)다. */
+  const formatOptions = (channelFormats.data ?? []).filter(
+    (format) => format.enabled || contract?.channelFormatIds.includes(format.id),
   );
-  const toggleInstagramFormat = (formatId: number, checked: boolean) =>
+  const toggleChannelFormat = (formatId: number, checked: boolean) =>
     setForm((current) => ({
       ...current,
-      instagramFormatIds: checked
+      channelFormatIds: checked
         ? formatOptions
             .map((format) => format.id)
-            .filter((id) => id === formatId || current.instagramFormatIds.includes(id))
-        : current.instagramFormatIds.filter((id) => id !== formatId),
+            .filter((id) => id === formatId || current.channelFormatIds.includes(id))
+        : current.channelFormatIds.filter((id) => id !== formatId),
     }));
 
   const submit = () => {
@@ -124,7 +126,7 @@ export function AdContractFormModal({
       paid: form.paid,
       paidDate: form.paid && form.paidDate ? form.paidDate : null,
       products: form.products,
-      instagramFormatIds: form.instagramFormatIds,
+      channelFormatIds: form.channelFormatIds,
       memo: form.memo.trim() || null,
     };
     save.mutate(input, {
@@ -250,33 +252,43 @@ export function AdContractFormModal({
 
       <Field
         label="상품(자리)"
-        hint="고른 자리는 배너·광고 공고를 더할 때 먼저 골라집니다. 인스타그램은 유형만 고르고 계정은 인스타 광고를 잡을 때 고릅니다. 비워도 됩니다."
+        hint="고른 자리는 배너·광고 공고를 더할 때 먼저 골라집니다. 인스타그램·오픈채팅은 유형만 고르고 계정·방은 채널 광고를 잡을 때 고릅니다. 비워도 됩니다."
       >
         <div className="grid grid-cols-2 gap-4 rounded-md border border-gray-200 p-3">
           {productGroup('배너', 'BANNER_')}
           {productGroup('광고 공고', 'AD_POSTING_')}
-          <div className="col-span-2 flex flex-col gap-2 border-t border-gray-100 pt-3">
-            <span className="text-xs font-medium text-gray-500">인스타그램</span>
-            {instagramFormats.isError ? (
-              <span className="text-sm text-error">게재 유형을 불러오지 못했습니다.</span>
-            ) : formatOptions.length === 0 && !instagramFormats.isPending ? (
-              <span className="text-sm text-gray-500">
-                등록된 게재 유형이 없습니다. 인스타 등록에서 더합니다.
-              </span>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {formatOptions.map((format) => (
-                  <Checkbox
-                    key={format.id}
-                    checked={form.instagramFormatIds.includes(format.id)}
-                    onChange={(checked) => toggleInstagramFormat(format.id, checked)}
-                    label={`${format.name}${format.enabled ? '' : ' (사용 안 함)'}`}
-                    labelClassName="text-sm text-gray-700"
-                  />
-                ))}
+          {AD_CHANNEL_PLATFORMS.map((platform) => {
+            const options = formatOptions.filter((format) => format.platform === platform);
+            return (
+              <div
+                key={platform}
+                className="col-span-2 flex flex-col gap-2 border-t border-gray-100 pt-3"
+              >
+                <span className="text-xs font-medium text-gray-500">
+                  {PLATFORM_COPY[platform].label}
+                </span>
+                {channelFormats.isError ? (
+                  <span className="text-sm text-error">게재 유형을 불러오지 못했습니다.</span>
+                ) : options.length === 0 && !channelFormats.isPending ? (
+                  <span className="text-sm text-gray-500">
+                    등록된 게재 유형이 없습니다. 채널 등록에서 더합니다.
+                  </span>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {options.map((format) => (
+                      <Checkbox
+                        key={format.id}
+                        checked={form.channelFormatIds.includes(format.id)}
+                        onChange={(checked) => toggleChannelFormat(format.id, checked)}
+                        label={`${format.name}${format.enabled ? '' : ' (사용 안 함)'}`}
+                        labelClassName="text-sm text-gray-700"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
       </Field>
 

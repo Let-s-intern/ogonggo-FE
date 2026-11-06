@@ -8,7 +8,7 @@ import type { AdContractSummary, AdminAdContractResponse } from '../../ad-contra
 /** 저장하는 계약. 이어 둔 배너·광고 공고 수는 저장하지 않고 응답할 때 센다. */
 export type AdContractRecord = Omit<
   AdminAdContractResponse,
-  'bannerCount' | 'adPostingCount' | 'instagramAdCount'
+  'bannerCount' | 'adPostingCount' | 'channelAdCount'
 >;
 
 const STORAGE_KEY = 'ogonggo.mock.admin.adContracts';
@@ -30,9 +30,9 @@ const SEED: AdContractRecord[] = [
     paid: true,
     paidDate: '2026-10-28',
     products: ['BANNER_JOB_DETAIL_SIDE', 'AD_POSTING_JOB_LIST', 'AD_POSTING_JOB_DETAIL_SIDE'],
-    // 인스타 릴스·스토리(`./instagram.ts` 의 유형 2·3). 인스타 광고 시드 두 건이 이 계약을 가리킨다.
-    instagramFormatIds: [2, 3],
-    memo: '공고 상세 배너 1, 광고 공고 2, 인스타 릴스·스토리. 세금계산서 발행 완료',
+    // 인스타 릴스·스토리와 오픈채팅 일반 글(`./ad-channels.ts` 의 유형 2·3·6). 채널 광고 시드 세 건이 이 계약을 가리킨다.
+    channelFormatIds: [2, 3, 6],
+    memo: '공고 상세 배너 1, 광고 공고 2, 인스타 릴스·스토리, 오픈채팅 일반 글. 세금계산서 발행 완료',
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
   },
@@ -47,7 +47,7 @@ const SEED: AdContractRecord[] = [
     paid: false,
     paidDate: null,
     products: ['BANNER_HOME_TOP'],
-    instagramFormatIds: [],
+    channelFormatIds: [],
     memo: null,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -63,7 +63,7 @@ const SEED: AdContractRecord[] = [
     paid: true,
     paidDate: '2026-09-25',
     products: ['BANNER_HOME_TOP', 'AD_POSTING_BOOTCAMP_LIST'],
-    instagramFormatIds: [],
+    channelFormatIds: [],
     memo: null,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -79,7 +79,7 @@ const SEED: AdContractRecord[] = [
     paid: true,
     paidDate: null,
     products: ['AD_POSTING_JOB_PICK', 'AD_POSTING_CALENDAR', 'AD_POSTING_JOB_DETAIL_SIDE'],
-    instagramFormatIds: [],
+    channelFormatIds: [],
     memo: null,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -99,11 +99,13 @@ function load(): AdContractRecord[] {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
       // 부가세 칸(`vatIncluded`)이 생기기 전에 저장한 계약은 포함으로 읽는다(새 계약의 기본값과 같다).
-      return (JSON.parse(raw) as AdContractRecord[]).map((contract) => ({
+      type StoredContract = AdContractRecord & { instagramFormatIds?: number[] };
+      return (JSON.parse(raw) as StoredContract[]).map(({ instagramFormatIds, ...contract }) => ({
         ...contract,
         vatIncluded: contract.vatIncluded ?? true,
-        // 인스타 유형 칸이 생기기 전에 저장한 계약은 인스타 상품이 없는 것으로 읽는다.
-        instagramFormatIds: contract.instagramFormatIds ?? [],
+        // 채널 광고로 바꾸기 전(인스타 광고) 저장한 계약은 `instagramFormatIds` 를 그대로 옮긴다. 인스타 유형 id 는 채널 유형
+        // 으로 옮겨도 같다(`./ad-channels.ts`). 둘 다 없으면(인스타 칸이 생기기 전) 채널 상품이 없는 것으로 읽는다.
+        channelFormatIds: contract.channelFormatIds ?? instagramFormatIds ?? [],
       }));
     }
   } catch {
@@ -112,7 +114,7 @@ function load(): AdContractRecord[] {
   return SEED.map((contract) => ({
     ...contract,
     products: [...contract.products],
-    instagramFormatIds: [...contract.instagramFormatIds],
+    channelFormatIds: [...contract.channelFormatIds],
   }));
 }
 

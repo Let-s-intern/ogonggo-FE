@@ -1,14 +1,15 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { AD_CHANNEL_PLATFORMS } from '../../ad-channels';
 import {
   AD_CONTRACT_PRODUCTS,
   type AdminAdContractRequest,
   type AdminAdContractResponse,
 } from '../../ad-contracts';
+import { adChannelStore, saveAdChannels } from '../fixtures/ad-channels';
 import { adContractStore, saveAdContracts, type AdContractRecord } from '../fixtures/ad-contracts';
 import { adPostingStore, saveAdPostings } from '../fixtures/ad-postings';
 import { findAdvertiser } from '../fixtures/advertisers';
 import { bannerStore, saveBanners } from '../fixtures/banners';
-import { instagramStore, saveInstagram } from '../fixtures/instagram';
 import { notFound, ok } from './paging';
 
 /**
@@ -17,7 +18,7 @@ import { notFound, ok } from './paging';
  * - `GET    /api/v1/admin/advertisers/{advertiserId}/contracts` 그 광고주의 계약 전부. 시작이 늦은 것이 먼저
  * - `POST   /api/v1/admin/advertisers/{advertiserId}/contracts` 등록
  * - `PATCH  /api/v1/admin/advertiser-contracts/{contractId}`     보낸 칸만 수정
- * - `DELETE /api/v1/admin/advertiser-contracts/{contractId}`     삭제. 이어 둔 배너·광고 공고·인스타 광고는 남기고 계약만 끊는다
+ * - `DELETE /api/v1/admin/advertiser-contracts/{contractId}`     삭제. 이어 둔 배너·광고 공고·채널 광고는 남기고 계약만 끊는다
  */
 
 const NESTED_PATH = '*/api/v1/admin/advertisers/:advertiserId/contracts';
@@ -49,7 +50,7 @@ function toResponse(contract: AdContractRecord): AdminAdContractResponse {
     ...contract,
     bannerCount: bannerStore.banners.filter((banner) => banner.contractId === contract.id).length,
     adPostingCount: adPostingStore.adPostings.filter((ad) => ad.contractId === contract.id).length,
-    instagramAdCount: instagramStore.ads.filter((ad) => ad.contractId === contract.id).length,
+    channelAdCount: adChannelStore.ads.filter((ad) => ad.contractId === contract.id).length,
   };
 }
 
@@ -89,13 +90,13 @@ function validate(contract: AdminAdContractRequest): string | null {
     return `products: ${AD_CONTRACT_PRODUCTS.join(', ')} 가운데 겹치지 않게 보내 주세요.`;
   }
   if (
-    !Array.isArray(contract.instagramFormatIds) ||
-    contract.instagramFormatIds.some(
-      (id) => !instagramStore.formats.some((format) => format.id === id),
+    !Array.isArray(contract.channelFormatIds) ||
+    contract.channelFormatIds.some(
+      (id) => !adChannelStore.formats.some((format) => format.id === id),
     ) ||
-    new Set(contract.instagramFormatIds).size !== contract.instagramFormatIds.length
+    new Set(contract.channelFormatIds).size !== contract.channelFormatIds.length
   ) {
-    return 'instagramFormatIds: 있는 인스타 게재 유형 id 를 겹치지 않게 보내 주세요.';
+    return 'channelFormatIds: 있는 채널 게재 유형 id 를 겹치지 않게 보내 주세요.';
   }
   if (contract.memo !== null && contract.memo.length > MEMO_MAX_LENGTH) {
     return `memo: ${MEMO_MAX_LENGTH}자까지 보낼 수 있습니다.`;
@@ -111,11 +112,15 @@ function normalize(input: AdminAdContractRequest): AdminAdContractRequest {
     memo: trimmedOrNull(input.memo),
     paidDate: input.paid ? input.paidDate : null,
     products: AD_CONTRACT_PRODUCTS.filter((product) => input.products.includes(product)),
-    // 유형 순서(`displayOrder`)대로 둔다.
-    instagramFormatIds: [...instagramStore.formats]
-      .sort((a, b) => a.displayOrder - b.displayOrder)
+    // 플랫폼 순, 그 안에서 유형 순서(`displayOrder`)대로 둔다. 유형 목록과 같은 순서다.
+    channelFormatIds: [...adChannelStore.formats]
+      .sort(
+        (a, b) =>
+          AD_CHANNEL_PLATFORMS.indexOf(a.platform) - AD_CHANNEL_PLATFORMS.indexOf(b.platform) ||
+          a.displayOrder - b.displayOrder,
+      )
       .map((format) => format.id)
-      .filter((id) => input.instagramFormatIds.includes(id)),
+      .filter((id) => input.channelFormatIds.includes(id)),
   };
 }
 
@@ -148,7 +153,7 @@ const createHandler = http.post(NESTED_PATH, async ({ params, request }) => {
     paid: body.paid as boolean,
     paidDate: body.paidDate ?? null,
     products: body.products ?? [],
-    instagramFormatIds: body.instagramFormatIds ?? [],
+    channelFormatIds: body.channelFormatIds ?? [],
     memo: typeof body.memo === 'string' ? body.memo : null,
   };
   const error = validate(input);
@@ -189,7 +194,7 @@ const patchHandler = http.patch(PATH, async ({ params, request }) => {
     paid: contract.paid,
     paidDate: contract.paidDate,
     products: contract.products,
-    instagramFormatIds: contract.instagramFormatIds,
+    channelFormatIds: contract.channelFormatIds,
     memo: contract.memo,
   };
   for (const key of Object.keys(merged) as (keyof AdminAdContractRequest)[]) {
@@ -219,13 +224,13 @@ const deleteHandler = http.delete(PATH, ({ params }) => {
   for (const ad of adPostingStore.adPostings) {
     if (ad.contractId === id) ad.contractId = null;
   }
-  for (const ad of instagramStore.ads) {
+  for (const ad of adChannelStore.ads) {
     if (ad.contractId === id) ad.contractId = null;
   }
   saveAdContracts();
   saveBanners();
   saveAdPostings();
-  saveInstagram();
+  saveAdChannels();
   return HttpResponse.json(ok({ id }), { status: 200 });
 });
 
