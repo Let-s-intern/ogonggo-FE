@@ -54,7 +54,6 @@ export interface AdminAdvertiserResponse
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
-  memo?: string;
 }
 
 /** 비회원 광고주 추가(`POST /api/v1/admin/advertisers`). 이름만 필수다. */
@@ -63,8 +62,12 @@ export interface CreateAdminAdvertiserRequest {
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
-  memo?: string;
 }
+
+/**
+ * 광고주에 한 칸짜리 `memo` 를 두지 않는다. 운영자 메모는 모두 어드민 메모(`./advertiser-notes.ts`)에 여러 건으로 남긴다
+ * (2026-11-06 사용자). 예전에 적힌 `memo` 는 어드민 메모 한 건(`광고주 등록 메모`)으로 옮긴다.
+ */
 
 /** 비회원 광고주 수정(`PATCH /api/v1/admin/advertisers/{id}`). 보낸 칸만 바뀐다. 빈 문자열은 지운다. 회원 광고주는 400. */
 export type UpdateAdminAdvertiserRequest = Partial<CreateAdminAdvertiserRequest>;

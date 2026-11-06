@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Callout, Field, Input, Textarea, cn } from '@ogonggo/ui';
+import { Button, Callout, Field, Input, cn } from '@ogonggo/ui';
 import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
 import {
   useAdvertiserList,
@@ -12,7 +12,6 @@ import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 /** 검색 결과로 한 번에 보이는 수. 더 찾으려면 검색어를 좁힌다. */
 const VISIBLE_COUNT = 8;
 const NAME_MAX_LENGTH = 50;
-const MEMO_MAX_LENGTH = 500;
 
 interface AdvertiserFieldProps {
   id: string;
@@ -194,7 +193,6 @@ export function NewAdvertiserForm({
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
-  const [memo, setMemo] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const nameError = submitted && !name.trim() ? '광고주 이름을 입력해 주세요.' : undefined;
 
@@ -209,7 +207,6 @@ export function NewAdvertiserForm({
         contactName: contactName.trim() || undefined,
         contactEmail: contactEmail.trim() || undefined,
         contactPhone: contactPhone.trim() || undefined,
-        memo: memo.trim() || undefined,
       },
       {
         onSuccess: (advertiser) => {
@@ -261,15 +258,6 @@ export function NewAdvertiserForm({
           />
         </Field>
       </div>
-      <Field label="메모" htmlFor="advertiser-new-memo">
-        <Textarea
-          id="advertiser-new-memo"
-          rows={2}
-          value={memo}
-          maxLength={MEMO_MAX_LENGTH}
-          onChange={(event) => setMemo(event.target.value)}
-        />
-      </Field>
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="secondary" onClick={onCancel}>
           취소

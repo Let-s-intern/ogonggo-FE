@@ -34,7 +34,6 @@ import { notFound, ok } from './paging';
 const PATH = '*/api/v1/admin/advertisers';
 const LIST_LIMIT = 50;
 const NAME_MAX_LENGTH = 50;
-const MEMO_MAX_LENGTH = 500;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function badRequest(message: string) {
@@ -152,10 +151,6 @@ const createHandler = http.post(PATH, async ({ request }) => {
   if (contactEmail && !EMAIL.test(contactEmail)) {
     return badRequest('contactEmail: 메일 주소 형식으로 보내 주세요.');
   }
-  const memo = body.memo?.trim() || undefined;
-  if (memo && memo.length > MEMO_MAX_LENGTH) {
-    return badRequest(`memo: ${MEMO_MAX_LENGTH}자까지 보낼 수 있습니다.`);
-  }
   const advertiser: AdvertiserRecord = {
     id: Math.max(0, ...nonMemberAdvertiserStore.advertisers.map((item) => item.id)) + 1,
     name,
@@ -164,7 +159,6 @@ const createHandler = http.post(PATH, async ({ request }) => {
     contactName: optional(body.contactName),
     contactEmail,
     contactPhone: optional(body.contactPhone),
-    memo,
   };
   nonMemberAdvertiserStore.advertisers.push(advertiser);
   saveAdvertisers();
@@ -208,13 +202,6 @@ const patchHandler = http.patch(`${PATH}/:advertiserId`, async ({ params, reques
       return badRequest('contactEmail: 메일 주소 형식으로 보내 주세요.');
     }
     changes.contactEmail = contactEmail;
-  }
-  if (body.memo !== undefined) {
-    const memo = optional(body.memo);
-    if (memo && memo.length > MEMO_MAX_LENGTH) {
-      return badRequest(`memo: ${MEMO_MAX_LENGTH}자까지 보낼 수 있습니다.`);
-    }
-    changes.memo = memo;
   }
   if (body.contactName !== undefined) {
     changes.contactName = optional(body.contactName);

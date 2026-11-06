@@ -5,6 +5,7 @@ import type {
   AdvertiserSummary,
 } from '../../advertisers';
 import { COMPANY_MEMBER_FIXTURES } from './admin-member';
+import { LEGACY_MEMO_TITLE, advertiserNoteStore, saveAdvertiserNotes } from './advertiser-notes';
 
 /**
  * 광고주 목(이슈 #573). 목록은 세 곳을 합친다.
@@ -50,7 +51,6 @@ const SEED: AdvertiserRecord[] = [
     name: '새싹(서울시)',
     type: 'NON_MEMBER',
     source: 'MANUAL',
-    memo: '부트캠프 제휴. 담당자는 메일로만 연락',
   },
 ];
 
@@ -62,11 +62,47 @@ function storage(): Storage | undefined {
   }
 }
 
+/**
+ * 예전 저장 값의 한 칸짜리 `memo` 를 어드민 메모 한 건으로 옮기고 지운다(2026-11-06 사용자). 같은 광고주에 같은 내용의
+ * `광고주 등록 메모` 가 이미 있으면 다시 만들지 않는다. 백엔드도 같은 이전을 한 번 해야 한다(백엔드 요청 문서 "어드민 메모").
+ */
+function migrateLegacyMemos(records: (AdvertiserRecord & { memo?: string })[]): AdvertiserRecord[] {
+  let moved = false;
+  const result = records.map(({ memo, ...record }) => {
+    const content = memo?.trim();
+    if (
+      content &&
+      !advertiserNoteStore.notes.some(
+        (note) => note.advertiserId === record.id && note.content === content,
+      )
+    ) {
+      const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
+      advertiserNoteStore.notes.push({
+        id: Math.max(0, ...advertiserNoteStore.notes.map((note) => note.id)) + 1,
+        advertiserId: record.id,
+        title: LEGACY_MEMO_TITLE,
+        content,
+        authorName: '관리자',
+        createdAt: now,
+        updatedAt: now,
+      });
+      moved = true;
+    }
+    return record;
+  });
+  if (moved) {
+    saveAdvertiserNotes();
+  }
+  return result;
+}
+
 function load(): AdvertiserRecord[] {
   try {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as AdvertiserRecord[];
+      const records = migrateLegacyMemos(JSON.parse(raw) as AdvertiserRecord[]);
+      storage()?.setItem(STORAGE_KEY, JSON.stringify(records));
+      return records;
     }
   } catch {
     // 깨진 값이면 시드로 시작한다.

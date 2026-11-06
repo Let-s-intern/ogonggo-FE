@@ -214,11 +214,6 @@ function NonMemberInfo({ advertiser }: { advertiser: Advertiser }) {
         { label: '담당자', value: advertiser.contactName ?? '-' },
         { label: '메일', value: advertiser.contactEmail ?? '-' },
         { label: '전화', value: advertiser.contactPhone ?? '-' },
-        {
-          label: '메모',
-          value: <span className="whitespace-pre-line">{advertiser.memo ?? '-'}</span>,
-          full: true,
-        },
       ]}
     />
   );

@@ -6,6 +6,9 @@ import type { AdminAdvertiserNoteResponse } from '../../advertiser-notes';
 
 const STORAGE_KEY = 'ogonggo.mock.admin.advertiserNotes';
 
+/** 광고주의 옛 `memo` 칸을 옮긴 메모의 제목. */
+export const LEGACY_MEMO_TITLE = '광고주 등록 메모';
+
 const SEED: AdminAdvertiserNoteResponse[] = [
   {
     id: 1,
@@ -24,6 +27,16 @@ const SEED: AdminAdvertiserNoteResponse[] = [
     authorName: '관리자',
     createdAt: '2026-10-20T10:05:00',
     updatedAt: '2026-10-20T10:05:00',
+  },
+  {
+    // 광고주에 한 칸짜리 `memo` 가 있던 때의 시드 값을 옮긴 것이다(`./advertisers.ts`).
+    id: 3,
+    advertiserId: 3,
+    title: LEGACY_MEMO_TITLE,
+    content: '부트캠프 제휴. 담당자는 메일로만 연락',
+    authorName: '관리자',
+    createdAt: '2026-11-01T09:00:00',
+    updatedAt: '2026-11-01T09:00:00',
   },
 ];
 

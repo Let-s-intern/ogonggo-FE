@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Button, Callout, Field, Input, Modal, Textarea } from '@ogonggo/ui';
+import { Button, Callout, Field, Input, Modal } from '@ogonggo/ui';
 import { useUpdateAdvertiser, type Advertiser } from '@/entities/advertiser/api/useAdvertisers';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 
 const NAME_MAX_LENGTH = 50;
-const MEMO_MAX_LENGTH = 500;
 
 /**
  * 비회원 광고주 정보 수정(`PATCH /api/v1/admin/advertisers/{id}`). 칸은 추가 폼(`features/advertiser-picker`)과 같다.
- * 비운 칸은 지운다. 서버가 거절하면(같은 이름, 메일 형식) 그 문구를 그대로 보인다.
+ * 비운 칸은 지운다. 서버가 거절하면(같은 이름, 메일 형식) 그 문구를 그대로 보인다. 메모 칸은 없다 — 상세 아래 어드민 메모에
+ * 남긴다(2026-11-06 사용자).
  */
 export function AdvertiserEditModal({
   advertiser,
@@ -22,7 +22,6 @@ export function AdvertiserEditModal({
   const [contactName, setContactName] = useState(advertiser.contactName ?? '');
   const [contactEmail, setContactEmail] = useState(advertiser.contactEmail ?? '');
   const [contactPhone, setContactPhone] = useState(advertiser.contactPhone ?? '');
-  const [memo, setMemo] = useState(advertiser.memo ?? '');
   const [submitted, setSubmitted] = useState(false);
   const nameError = submitted && !name.trim() ? '광고주 이름을 입력해 주세요.' : undefined;
 
@@ -37,7 +36,6 @@ export function AdvertiserEditModal({
         contactName: contactName.trim(),
         contactEmail: contactEmail.trim(),
         contactPhone: contactPhone.trim(),
-        memo: memo.trim(),
       },
       { onSuccess: onClose },
     );
@@ -82,15 +80,6 @@ export function AdvertiserEditModal({
           />
         </Field>
       </div>
-      <Field label="메모" htmlFor="advertiser-edit-memo">
-        <Textarea
-          id="advertiser-edit-memo"
-          rows={3}
-          value={memo}
-          maxLength={MEMO_MAX_LENGTH}
-          onChange={(event) => setMemo(event.target.value)}
-        />
-      </Field>
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose}>
           닫기
