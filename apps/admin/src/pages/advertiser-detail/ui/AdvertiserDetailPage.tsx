@@ -48,18 +48,37 @@ import {
   bannerImageSrc,
   bannerStatus,
 } from '@/entities/banner/lib/banner';
+import {
+  useDeleteInstagramAd,
+  useInstagramAds,
+  usePatchInstagramAd,
+  type InstagramAd,
+} from '@/entities/instagram/api/useInstagram';
+import { formatInstagramDates, instagramAdPeriod } from '@/entities/instagram/lib/instagram';
+import { InstagramAccountName } from '@/entities/instagram/ui/InstagramAccountName';
+import { AdContractNote } from '@/entities/ad-contract/ui/AdContractNote';
 import { useCompanyMemberDetail } from '@/entities/member/api/useMembers';
 import { AdvertiserJump } from '@/features/advertiser-picker/ui/AdvertiserJump';
 import { MemberStatusBadge } from '@/shared/config/labels';
 import { formatCount } from '@/shared/lib/format';
 import { AdPostingFormModal } from '@/widgets/ad-posting-form';
 import { BannerFormModal } from '@/widgets/banner-form';
+import {
+  InstagramAdFormModal,
+  InstagramAdStatusSelect,
+  type InstagramAdInitial,
+} from '@/widgets/instagram-ad-form';
 import { PageHeader } from '@/widgets/page-header';
 import { AdContractSection } from './AdContractSection';
 import { AdvertiserEditModal } from './AdvertiserEditModal';
 import { AdvertiserNoteSection } from './AdvertiserNoteSection';
 import { BulkAdModal, type BulkAdKind } from './BulkAdModal';
-import { InlineLinkCell, InlinePeriodCell } from './InlineEditCells';
+import {
+  InlineInstagramDateCell,
+  InlineLinkCell,
+  InlinePeriodCell,
+  InlinePostUrlCell,
+} from './InlineEditCells';
 
 const BACK_TO = { to: '/business/advertisers', label: '광고 계약 목록' };
 
@@ -69,7 +88,8 @@ type BulkAdding = { contract: AdContract | null; kind: BulkAdKind } | null;
 type Notify = (message: string) => void;
 
 /**
- * 광고 계약 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 광고 계약, 배너, 광고 공고, 어드민 메모를 모아 보고 고친다.
+ * 광고 계약 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 광고 계약, 배너, 광고 공고, 인스타 광고, 어드민 메모를 모아 보고
+ * 고친다.
  * 더할 때는 `광고 한 번에 추가`(`BulkAdModal`)에서 자리를 여러 개 체크해 한 번에 만든다. 표의 노출 기간·링크는 칸을 눌러 바로
  * 고치고, 나머지 칸은 행을 눌러 여는 수정 모달에서 고친다.
  *
@@ -83,6 +103,9 @@ export function AdvertiserDetailPage() {
   const banners = useAdvertiserBanners(advertiserId);
   const adPostings = useAdvertiserAdPostings(advertiserId);
   const contracts = useAdContracts(Number.isInteger(advertiserId) ? advertiserId : null);
+  const instagramAds = useInstagramAds({ advertiserId }, Number.isInteger(advertiserId));
+  /** 인스타 광고 추가 모달. 계약 행에서 열면 그 계약, 섹션 버튼으로 열면 기본 계약을 미리 고른다. */
+  const [addingInstagram, setAddingInstagram] = useState<InstagramAdInitial | null>(null);
   const [editingInfo, setEditingInfo] = useState(false);
   const [bulk, setBulk] = useState<BulkAdding>(null);
   const [alert, setAlert] = useState<{ message: string; nonce: number } | null>(null);
@@ -161,10 +184,21 @@ export function AdvertiserDetailPage() {
         query={contracts}
         onAddBanner={(contract) => openBulk('BANNER', contract)}
         onAddAdPosting={(contract) => openBulk('AD_POSTING', contract)}
+        onAddInstagramAd={(contract) => setAddingInstagram({ advertiser: summary, contract })}
         notify={notify}
       />
       <BannerSection query={banners} onAdd={() => openBulk('BANNER')} notify={notify} />
       <AdPostingSection query={adPostings} onAdd={() => openBulk('AD_POSTING')} notify={notify} />
+      <InstagramAdSection
+        query={instagramAds}
+        onAdd={() =>
+          setAddingInstagram({
+            advertiser: summary,
+            contract: defaultAdContract(contracts.data ?? []),
+          })
+        }
+        notify={notify}
+      />
       <AdvertiserNoteSection advertiserId={advertiser.id} notify={notify} />
 
       {bulk ? (
@@ -175,6 +209,14 @@ export function AdvertiserDetailPage() {
           kind={bulk.kind}
           onClose={() => setBulk(null)}
           onDone={notify}
+        />
+      ) : null}
+      {addingInstagram ? (
+        <InstagramAdFormModal
+          ad={null}
+          initial={addingInstagram}
+          onClose={() => setAddingInstagram(null)}
+          onSaved={notify}
         />
       ) : null}
       {alert ? (
@@ -675,5 +717,188 @@ function AdPostingToggle({ adPosting }: { adPosting: AdPosting }) {
         onChange={(next) => update.mutate({ enabled: next })}
       />
     </span>
+  );
+}
+
+/**
+ * 인스타 광고(이슈 #573, 2026-11-06 사용자). 이 광고주의 인스타그램 게시 일정이다. 게시 예정일·상태·게시물 주소는 칸에서 바로
+ * 고치고, 계정·유형·메모는 행을 눌러 여는 모달에서 고친다.
+ */
+function InstagramAdSection({
+  query,
+  onAdd,
+  notify,
+}: {
+  query: ReturnType<typeof useInstagramAds>;
+  onAdd: () => void;
+  notify: Notify;
+}) {
+  const [editing, setEditing] = useState<InstagramAd | null>(null);
+  const [deleting, setDeleting] = useState<InstagramAd | null>(null);
+  const deleteMutation = useDeleteInstagramAd();
+  const rows = query.data ?? [];
+
+  const columns: DataTableColumn<InstagramAd>[] = [
+    {
+      key: 'date',
+      header: '게시 예정일(KST)',
+      width: 'w-48',
+      render: (row) => <InstagramDateCell ad={row} notify={notify} />,
+    },
+    {
+      key: 'account',
+      header: '계정',
+      width: 'w-48',
+      render: (row) => <InstagramAccountName account={row.account} />,
+    },
+    {
+      key: 'format',
+      header: '유형',
+      width: 'w-32 whitespace-nowrap',
+      render: (row) => (
+        <span className="text-sm text-gray-900">{row.format?.name ?? '지워진 유형'}</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: '상태',
+      width: 'w-32',
+      render: (row) => <InstagramAdStatusSelect ad={row} notify={notify} />,
+    },
+    {
+      key: 'url',
+      header: '게시물 주소',
+      width: 'w-40 max-w-40',
+      render: (row) => <InstagramUrlCell ad={row} notify={notify} />,
+    },
+    {
+      key: 'memo',
+      header: '소재·문구',
+      width: 'min-w-36',
+      render: (row) => (
+        <span className="line-clamp-2 text-xs text-gray-700">{row.creativeMemo ?? '-'}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '관리',
+      width: 'w-24 whitespace-nowrap',
+      render: (row) => (
+        <span onClick={(event) => event.stopPropagation()}>
+          <Button
+            size="sm"
+            variant="secondary"
+            aria-label={`${row.postDate} 인스타 광고 삭제`}
+            className="border-red-200 text-error hover:bg-red-50"
+            onClick={() => {
+              deleteMutation.reset();
+              setDeleting(row);
+            }}
+          >
+            삭제
+          </Button>
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <SectionHeader
+        title={`인스타 광고 ${formatCount(rows.length)}건`}
+        action={
+          <Button size="sm" onClick={onAdd}>
+            인스타 광고 추가
+          </Button>
+        }
+      />
+      {query.isError ? <Callout tone="error">인스타 광고를 불러오지 못했습니다.</Callout> : null}
+      {!query.isPending && !query.isError && rows.length === 0 ? (
+        <EmptyState
+          title="이 광고주의 인스타 광고가 없습니다"
+          description="계정·게재 유형·게시 예정일을 정해 우리 인스타그램 계정에 올릴 일정을 잡습니다."
+          action={
+            <Button size="sm" onClick={onAdd}>
+              인스타 광고 추가
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <p className="pb-3 text-sm text-gray-500">
+            게시 예정일·상태·게시물 주소는 칸에서 바로 고칩니다. 다른 칸은 행을 눌러 고칩니다.
+          </p>
+          <DataTable
+            columns={columns}
+            rows={rows}
+            rowKey={(row) => row.id}
+            onRowClick={setEditing}
+            isLoading={query.isPending}
+            emptyMessage="이 광고주의 인스타 광고가 없습니다."
+          />
+        </>
+      )}
+
+      {editing ? (
+        <InstagramAdFormModal
+          key={editing.id}
+          ad={editing}
+          onClose={() => setEditing(null)}
+          onSaved={notify}
+        />
+      ) : null}
+      <ConfirmDelete
+        open={deleting !== null}
+        targetName={deleting ? `인스타 광고 ${formatInstagramDates(deleting)}` : ''}
+        description="게시 일정만 지웁니다. 이미 올린 인스타그램 게시물은 직접 내려야 합니다."
+        isDeleting={deleteMutation.isPending}
+        errorMessage={deleteMutation.isError ? '삭제하지 못했습니다.' : undefined}
+        onClose={() => setDeleting(null)}
+        onConfirm={() => {
+          if (deleting) {
+            deleteMutation.mutate(deleting.id, {
+              onSuccess: () => {
+                notify('인스타 광고를 지웠습니다.');
+                setDeleting(null);
+              },
+            });
+          }
+        }}
+      />
+    </>
+  );
+}
+
+function InstagramDateCell({ ad, notify }: { ad: InstagramAd; notify: Notify }) {
+  const patch = usePatchInstagramAd(ad.id);
+  return (
+    <InlineInstagramDateCell
+      name={ad.format?.name ?? '인스타 광고'}
+      value={ad}
+      display={
+        <span className="flex flex-col gap-0.5 text-sm">
+          {formatInstagramDates(ad)}
+          <AdContractNote contract={ad.contract} period={instagramAdPeriod(ad)} />
+        </span>
+      }
+      onSave={async (dates) => {
+        await patch.mutateAsync(dates);
+        notify('인스타 광고 날짜를 고쳤습니다.');
+      }}
+    />
+  );
+}
+
+function InstagramUrlCell({ ad, notify }: { ad: InstagramAd; notify: Notify }) {
+  const patch = usePatchInstagramAd(ad.id);
+  return (
+    <InlinePostUrlCell
+      name={ad.format?.name ?? '인스타 광고'}
+      value={ad.postUrl}
+      onSave={async (postUrl) => {
+        await patch.mutateAsync({ postUrl });
+        notify(postUrl ? '게시물 주소를 적었습니다.' : '게시물 주소를 지웠습니다.');
+      }}
+    />
   );
 }

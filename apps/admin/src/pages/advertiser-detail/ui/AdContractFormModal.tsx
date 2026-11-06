@@ -6,6 +6,7 @@ import {
   type AdContract,
   type AdContractInput,
 } from '@/entities/ad-contract/api/useAdContracts';
+import { useInstagramFormats } from '@/entities/instagram/api/useInstagram';
 import { adContractProductLabel } from '@/features/ad-contract-picker/lib/adContractProduct';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 
@@ -68,6 +69,7 @@ export function AdContractFormModal({
   onSaved?: () => void;
 }) {
   const save = useSaveAdContract(advertiserId, contract?.id ?? null);
+  const instagramFormats = useInstagramFormats();
   const [form, setForm] = useState<FormState>(() => ({
     name: contract?.name ?? '',
     startAt: toInputValue(contract?.startAt),
@@ -92,6 +94,20 @@ export function AdContractFormModal({
       products: checked
         ? AD_CONTRACT_PRODUCTS.filter((item) => item === product || current.products.includes(item))
         : current.products.filter((item) => item !== product),
+    }));
+
+  /** 인스타 유형은 `사용` 인 것과 이 계약에 이미 든 것만 보인다. 순서는 유형 순서다. */
+  const formatOptions = (instagramFormats.data ?? []).filter(
+    (format) => format.enabled || contract?.instagramFormatIds.includes(format.id),
+  );
+  const toggleInstagramFormat = (formatId: number, checked: boolean) =>
+    setForm((current) => ({
+      ...current,
+      instagramFormatIds: checked
+        ? formatOptions
+            .map((format) => format.id)
+            .filter((id) => id === formatId || current.instagramFormatIds.includes(id))
+        : current.instagramFormatIds.filter((id) => id !== formatId),
     }));
 
   const submit = () => {
@@ -234,11 +250,33 @@ export function AdContractFormModal({
 
       <Field
         label="상품(자리)"
-        hint="고른 자리는 배너·광고 공고를 더할 때 먼저 골라집니다. 비워도 됩니다."
+        hint="고른 자리는 배너·광고 공고를 더할 때 먼저 골라집니다. 인스타그램은 유형만 고르고 계정은 인스타 광고를 잡을 때 고릅니다. 비워도 됩니다."
       >
         <div className="grid grid-cols-2 gap-4 rounded-md border border-gray-200 p-3">
           {productGroup('배너', 'BANNER_')}
           {productGroup('광고 공고', 'AD_POSTING_')}
+          <div className="col-span-2 flex flex-col gap-2 border-t border-gray-100 pt-3">
+            <span className="text-xs font-medium text-gray-500">인스타그램</span>
+            {instagramFormats.isError ? (
+              <span className="text-sm text-error">게재 유형을 불러오지 못했습니다.</span>
+            ) : formatOptions.length === 0 && !instagramFormats.isPending ? (
+              <span className="text-sm text-gray-500">
+                등록된 게재 유형이 없습니다. 인스타 등록에서 더합니다.
+              </span>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {formatOptions.map((format) => (
+                  <Checkbox
+                    key={format.id}
+                    checked={form.instagramFormatIds.includes(format.id)}
+                    onChange={(checked) => toggleInstagramFormat(format.id, checked)}
+                    label={`${format.name}${format.enabled ? '' : ' (사용 안 함)'}`}
+                    labelClassName="text-sm text-gray-700"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </Field>
 

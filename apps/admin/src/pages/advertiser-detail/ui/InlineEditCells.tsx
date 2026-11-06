@@ -201,3 +201,95 @@ export function InlineLinkCell({
     />
   );
 }
+
+/** 인스타 광고의 게시 예정일·노출 끝 날 칸. 날짜만 고친다. 끝 날을 비우면 하루짜리 게시다. */
+export function InlineInstagramDateCell({
+  name,
+  value,
+  display,
+  onSave,
+}: {
+  name: string;
+  value: { postDate: string; endDate: string | null };
+  display: ReactNode;
+  onSave: (dates: { postDate: string; endDate: string | null }) => Promise<unknown>;
+}) {
+  const [postDate, setPostDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  return (
+    <InlineEditor
+      label={`${name} 게시 예정일`}
+      onStart={() => {
+        setPostDate(value.postDate);
+        setEndDate(value.endDate ?? '');
+      }}
+      display={display}
+      editor={
+        <>
+          <Input
+            type="date"
+            aria-label="게시 예정일(KST)"
+            value={postDate}
+            autoFocus
+            onChange={(event) => setPostDate(event.target.value)}
+          />
+          <Input
+            type="date"
+            aria-label="노출 끝 날"
+            value={endDate}
+            min={postDate || undefined}
+            onChange={(event) => setEndDate(event.target.value)}
+          />
+          <span className="text-xs text-gray-500">끝 날은 기간이 있을 때만</span>
+        </>
+      }
+      validate={() =>
+        !postDate
+          ? '게시 예정일을 입력해 주세요.'
+          : endDate && endDate < postDate
+            ? '노출 끝 날은 게시 예정일과 같거나 뒤여야 해요.'
+            : null
+      }
+      onSave={() => onSave({ postDate, endDate: endDate || null })}
+    />
+  );
+}
+
+/** 인스타 게시물 주소 칸. 비우면 지운다. */
+export function InlinePostUrlCell({
+  name,
+  value,
+  onSave,
+}: {
+  name: string;
+  value: string | null;
+  onSave: (postUrl: string | null) => Promise<unknown>;
+}) {
+  const [postUrl, setPostUrl] = useState('');
+  return (
+    <InlineEditor
+      label={`${name} 게시물 주소`}
+      onStart={() => setPostUrl(value ?? '')}
+      display={
+        <span className="block max-w-36 truncate text-sm text-gray-700" title={value ?? undefined}>
+          {value ?? <span className="text-gray-400">없음</span>}
+        </span>
+      }
+      editor={
+        <Input
+          aria-label="게시물 주소"
+          value={postUrl}
+          autoFocus
+          placeholder="https://www.instagram.com/p/"
+          onChange={(event) => setPostUrl(event.target.value)}
+        />
+      }
+      validate={() =>
+        !postUrl.trim() || /^https?:\/\/\S+$/.test(postUrl.trim())
+          ? null
+          : 'http:// 또는 https:// 로 시작하는 주소를 입력해 주세요.'
+      }
+      onSave={() => onSave(postUrl.trim() || null)}
+    />
+  );
+}

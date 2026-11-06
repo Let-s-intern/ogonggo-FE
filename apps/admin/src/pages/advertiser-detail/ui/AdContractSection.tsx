@@ -22,6 +22,8 @@ import {
   vatTotalNote,
 } from '@/entities/ad-contract/lib/adContract';
 import type { Advertiser } from '@/entities/advertiser/api/useAdvertisers';
+import { useInstagramFormats } from '@/entities/instagram/api/useInstagram';
+import { instagramProductLabel } from '@/entities/instagram/lib/instagram';
 import {
   adContractProductLabel,
   formatContractPeriod,
@@ -34,25 +36,34 @@ const formatDate = (value: string) => value.replaceAll('-', '.');
 
 /**
  * 광고 계약(이슈 #573, 2026-11-06 사용자). 광고 계약 상세의 배너·광고 공고 위에 둔다. 계약을 더하고 고치고 지우며, 행의
- * `배너 추가`·`광고 공고 추가` 는 그 계약이 골라지고 노출 기간이 채워진 모달을 연다.
+ * `배너 추가`·`광고 공고 추가`·`인스타 광고 추가` 는 그 계약이 골라지고 기간(인스타는 게시 예정일)이 채워진 모달을 연다.
  */
 export function AdContractSection({
   advertiser,
   query,
   onAddBanner,
   onAddAdPosting,
+  onAddInstagramAd,
   notify,
 }: {
   advertiser: Advertiser;
   query: ReturnType<typeof useAdContracts>;
   onAddBanner: (contract: AdContract) => void;
   onAddAdPosting: (contract: AdContract) => void;
+  onAddInstagramAd: (contract: AdContract) => void;
   notify: (message: string) => void;
 }) {
   const [editing, setEditing] = useState<{ contract: AdContract | null } | null>(null);
   const [deleting, setDeleting] = useState<AdContract | null>(null);
   const deleteMutation = useDeleteAdContract();
   const rows = query.data ?? [];
+  const instagramFormats = useInstagramFormats();
+  const productLabels = (row: AdContract) => [
+    ...row.products.map(adContractProductLabel),
+    ...row.instagramFormatIds.map((id) =>
+      instagramProductLabel(instagramFormats.data?.find((format) => format.id === id)?.name, id),
+    ),
+  ];
   const paidAmount = rows.filter((row) => row.paid).reduce((sum, row) => sum + row.amount, 0);
   // 합계는 적힌 금액을 그대로 더한다. 포함·별도가 섞이면 그렇다고 알린다(2026-11-06 사용자).
   const vatNote = vatTotalNote(rows.map((row) => row.vatIncluded));
@@ -117,12 +128,10 @@ export function AdContractSection({
     {
       key: 'products',
       header: '상품',
-      width: 'w-44',
+      width: 'min-w-44',
       render: (row) => (
         <span className="text-xs text-gray-700">
-          {row.products.length === 0
-            ? '정하지 않음'
-            : row.products.map(adContractProductLabel).join(', ')}
+          {productLabels(row).length === 0 ? '정하지 않음' : productLabels(row).join(', ')}
         </span>
       ),
     },
@@ -131,17 +140,20 @@ export function AdContractSection({
       header: '이어 둔 광고',
       width: 'w-28',
       render: (row) => (
-        <span className="text-xs whitespace-nowrap text-gray-700">
-          배너 {row.bannerCount} · 광고 공고 {row.adPostingCount}
+        <span className="flex flex-col text-xs whitespace-nowrap text-gray-700">
+          <span>
+            배너 {row.bannerCount} · 광고 공고 {row.adPostingCount}
+          </span>
+          <span>인스타 광고 {row.instagramAdCount}</span>
         </span>
       ),
     },
     {
       key: 'actions',
       header: '관리',
-      width: 'w-56 whitespace-nowrap',
+      width: 'w-64',
       render: (row) => (
-        <span className="flex gap-1" onClick={(event) => event.stopPropagation()}>
+        <span className="grid grid-cols-2 gap-1" onClick={(event) => event.stopPropagation()}>
           <Button
             size="sm"
             variant="secondary"
@@ -157,6 +169,14 @@ export function AdContractSection({
             onClick={() => onAddAdPosting(row)}
           >
             광고 공고 추가
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="whitespace-nowrap"
+            onClick={() => onAddInstagramAd(row)}
+          >
+            인스타 광고 추가
           </Button>
           <Button
             size="sm"
@@ -234,7 +254,7 @@ export function AdContractSection({
         targetName={deleting ? adContractName(deleting) : ''}
         description={
           deleting
-            ? `이어 둔 배너 ${deleting.bannerCount}건과 광고 공고 ${deleting.adPostingCount}건은 지우지 않고 계약만 끊습니다.`
+            ? `이어 둔 배너 ${deleting.bannerCount}건, 광고 공고 ${deleting.adPostingCount}건, 인스타 광고 ${deleting.instagramAdCount}건은 지우지 않고 계약만 끊습니다.`
             : undefined
         }
         isDeleting={deleteMutation.isPending}
