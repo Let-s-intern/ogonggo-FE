@@ -5,6 +5,7 @@ import {
   type PublicBannerListResponse,
   type PublicBannerResponse,
 } from '@ogonggo/api';
+import { isAdsEnabled } from '@/shared/config/ads';
 
 /** 이 시간 안에 응답이 없으면 배너 없이 그린다. 홈 전체가 배너를 기다리지 않게 한다. */
 const TIMEOUT_MS = 3000;
@@ -17,6 +18,10 @@ const TIMEOUT_MS = 3000;
  * 삼킨 오류는 서버 로그에 남긴다(`widgets/popular-jobs/api/fetchTodayJobs.ts` 와 같다).
  */
 export async function fetchBanners(placement: BannerPlacement): Promise<PublicBannerResponse[]> {
+  // 운영에서 광고를 켜기 전에는 없는 API 를 부르지 않는다(`shared/config/ads.ts`).
+  if (!isAdsEnabled) {
+    return [];
+  }
   try {
     const response = await httpClient<PublicBannerListResponse>(getListBannersUrl(placement), {
       signal: AbortSignal.timeout(TIMEOUT_MS),

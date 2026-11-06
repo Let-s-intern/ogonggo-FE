@@ -7,6 +7,7 @@ import {
   type UserJobSummaryResponse,
 } from '@ogonggo/api';
 import type { AdItem } from './adPosting';
+import { isAdsEnabled } from '@/shared/config/ads';
 
 /** 이 시간 안에 응답이 없으면 광고 없이 그린다. 목록이 광고를 기다리지 않게 한다. */
 const TIMEOUT_MS = 3000;
@@ -21,6 +22,10 @@ const TIMEOUT_MS = 3000;
  * 서버 컴포넌트와 브라우저(마이페이지 보드) 모두 부른다.
  */
 async function fetchAdPostings(placement: AdPostingPlacement) {
+  // 운영에서 광고를 켜기 전에는 없는 API 를 부르지 않는다(`shared/config/ads.ts`).
+  if (!isAdsEnabled) {
+    return [];
+  }
   try {
     const response = await httpClient<PublicAdPostingListResponse>(
       getListAdPostingsUrl(placement),
