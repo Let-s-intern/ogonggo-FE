@@ -262,3 +262,10 @@ export function BellIcon({ className, ...props }: IconProps) {
     <span aria-hidden="true" className={cn('icon-[lucide--bell] block', className)} {...props} />
   );
 }
+
+/** 댓글 작성자 배지 `운영진` 앞의 왕관(`shared/ui/AuthorRoleBadge`). */
+export function CrownIcon({ className, ...props }: IconProps) {
+  return (
+    <span aria-hidden="true" className={cn('icon-[lucide--crown] block', className)} {...props} />
+  );
+}
