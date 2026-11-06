@@ -2,10 +2,14 @@ import type { BannerPlacement } from '@ogonggo/api/src/banners';
 import { WEB_HOME } from '@/shared/api/webHandoff';
 import type { Banner } from '../api/useBanners';
 
+/** 어느 화면의 자리인지 이름에 담는다. 채용공고 쪽과 부트캠프 쪽에 같은 모양의 자리가 있다. */
 export const PLACEMENT_LABELS: Record<BannerPlacement, string> = {
-  HOME_TOP: '홈 상단',
-  HOME_BOTTOM: '홈 하단',
+  HOME_TOP: '채용공고 홈 상단',
+  HOME_BOTTOM: '채용공고 홈 하단',
   JOB_DETAIL_SIDE: '공고 상세',
+  BOOTCAMP_TOP: '부트캠프 목록 상단',
+  BOOTCAMP_BOTTOM: '부트캠프 목록 하단',
+  BOOTCAMP_DETAIL_SIDE: '부트캠프 상세',
 };
 
 export const PLACEMENT_DESCRIPTIONS: Record<BannerPlacement, string> = {
@@ -13,34 +17,39 @@ export const PLACEMENT_DESCRIPTIONS: Record<BannerPlacement, string> = {
   HOME_BOTTOM: '채용공고 홈 목록 아래, FOR BUSINESS 배너 바로 위.',
   JOB_DETAIL_SIDE:
     '공고 상세 오른쪽 사이드바의 비슷한 공고 아래. 좁은 화면에서는 본문 아래로 내려가 모바일 이미지가 보입니다.',
+  BOOTCAMP_TOP: '교육·부트캠프 목록 맨 위(카드 목록 바로 위). 첫 페이지에만 보입니다.',
+  BOOTCAMP_BOTTOM: '교육·부트캠프 목록 아래, FOR BUSINESS 배너 바로 위.',
+  BOOTCAMP_DETAIL_SIDE:
+    '부트캠프 상세 오른쪽 사이드바 아래. 좁은 화면에서는 본문 아래로 내려가 모바일 이미지가 보입니다.',
 };
 
+const WIDE_SPEC = {
+  aspectClassName: 'aspect-[1200/120]',
+  size: '1200×120',
+  sizeHint: '1200×120 비율(2400×240 권장). JPG·PNG.',
+  preset: 'pc',
+} as const;
+const SIDE_SPEC = {
+  aspectClassName: 'aspect-[400/500]',
+  size: '400×500',
+  sizeHint: '400×500 비율(800×1000 권장). JPG·PNG.',
+  preset: 'side',
+} as const;
+
 /**
- * 자리마다 PC 이미지 규격. 홈 자리는 가로 띠(1200×120), 공고 상세 사이드는 세로(400×500)다. 모바일 이미지는 모든 자리가
- * 750×200 이다. 미리보기도 이 비율로 그려야 웹에서 잘리는 곳을 미리 안다.
+ * 자리마다 PC 이미지 규격. 목록 위·아래 자리는 가로 띠(1200×120), 상세 사이드(공고·부트캠프)는 세로(400×500)다. 모바일
+ * 이미지는 모든 자리가 750×200 이다. 미리보기도 이 비율로 그려야 웹에서 잘리는 곳을 미리 안다.
  */
 export const PC_IMAGE_SPECS: Record<
   BannerPlacement,
   { aspectClassName: string; size: string; sizeHint: string; preset: 'pc' | 'side' }
 > = {
-  HOME_TOP: {
-    aspectClassName: 'aspect-[1200/120]',
-    size: '1200×120',
-    sizeHint: '1200×120 비율(2400×240 권장). JPG·PNG.',
-    preset: 'pc',
-  },
-  HOME_BOTTOM: {
-    aspectClassName: 'aspect-[1200/120]',
-    size: '1200×120',
-    sizeHint: '1200×120 비율(2400×240 권장). JPG·PNG.',
-    preset: 'pc',
-  },
-  JOB_DETAIL_SIDE: {
-    aspectClassName: 'aspect-[400/500]',
-    size: '400×500',
-    sizeHint: '400×500 비율(800×1000 권장). JPG·PNG.',
-    preset: 'side',
-  },
+  HOME_TOP: WIDE_SPEC,
+  HOME_BOTTOM: WIDE_SPEC,
+  JOB_DETAIL_SIDE: SIDE_SPEC,
+  BOOTCAMP_TOP: WIDE_SPEC,
+  BOOTCAMP_BOTTOM: WIDE_SPEC,
+  BOOTCAMP_DETAIL_SIDE: SIDE_SPEC,
 };
 
 /**
@@ -76,7 +85,7 @@ function kstTime(value: string): number {
 
 export type BannerStatus = 'LIVE' | 'SCHEDULED' | 'ENDED' | 'OFF';
 
-/** 표의 `상태` 칸. 배너 세팅과 광고주별 광고가 같이 쓴다. */
+/** 표의 `상태` 칸. 배너 세팅과 광고 계약 화면이 같이 쓴다. */
 export const BANNER_STATUS_BADGES: Record<
   BannerStatus,
   { label: string; tone: 'success' | 'main' | 'neutral' }

@@ -11,7 +11,11 @@ import {
   cn,
   type DataTableColumn,
 } from '@ogonggo/ui';
-import { BANNER_PLACEMENTS, type BannerPlacement } from '@ogonggo/api/src/banners';
+import {
+  BANNER_PLACEMENTS,
+  type BannerPlacement,
+  isSideBannerPlacement,
+} from '@ogonggo/api/src/banners';
 import {
   useBannerList,
   useDeleteBanner,
@@ -98,7 +102,7 @@ export function BannerSettingsPage() {
           className={cn(
             'rounded border border-gray-200 object-cover',
             PC_IMAGE_SPECS[placement].aspectClassName,
-            placement === 'JOB_DETAIL_SIDE' ? 'w-20' : 'w-52',
+            isSideBannerPlacement(placement) ? 'w-20' : 'w-52',
           )}
         />
       ),

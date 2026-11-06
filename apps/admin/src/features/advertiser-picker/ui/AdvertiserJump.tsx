@@ -8,7 +8,7 @@ import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
 const VISIBLE_COUNT = 8;
 
 /**
- * 광고주 바로 가기(이슈 #573, 2026-11-06 사용자). 광고주별 광고 목록·상세 위에서 광고주를 검색해 고르면 그 광고주 상세로
+ * 광고주 바로 가기(이슈 #573, 2026-11-06 사용자). 광고 계약 목록·상세 위에서 광고주를 검색해 고르면 그 광고주 상세로
  * 간다. 목록은 고르기 칸과 같은 `GET /api/v1/admin/advertisers` 다.
  *
  * 입력에 초점이 있는 동안만 결과를 펼친다. 위아래 화살표로 옮기고 Enter 로 간다. Esc 는 닫는다.

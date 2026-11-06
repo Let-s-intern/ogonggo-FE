@@ -17,7 +17,7 @@ import {
 } from '@ogonggo/ui';
 import type { AdPostingPlacement } from '@ogonggo/api/src/ad-postings';
 import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
-import type { BannerPlacement } from '@ogonggo/api/src/banners';
+import { isSideBannerPlacement, type BannerPlacement } from '@ogonggo/api/src/banners';
 import { useAdContracts, type AdContract } from '@/entities/ad-contract/api/useAdContracts';
 import { defaultAdContract } from '@/entities/ad-contract/lib/adContract';
 import {
@@ -61,7 +61,7 @@ import { AdvertiserNoteSection } from './AdvertiserNoteSection';
 import { BulkAdModal, type BulkAdKind } from './BulkAdModal';
 import { InlineLinkCell, InlinePeriodCell } from './InlineEditCells';
 
-const BACK_TO = { to: '/business/advertisers', label: '광고주별 광고 목록' };
+const BACK_TO = { to: '/business/advertisers', label: '광고 계약 목록' };
 
 /** 한 번에 추가를 연 상태. 미리 고를 계약(계약 행에서 열었거나 기본 계약)과 처음 체크할 종류. */
 type BulkAdding = { contract: AdContract | null; kind: BulkAdKind } | null;
@@ -69,7 +69,7 @@ type BulkAdding = { contract: AdContract | null; kind: BulkAdKind } | null;
 type Notify = (message: string) => void;
 
 /**
- * 광고주별 광고 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 광고 계약, 배너, 광고 공고, 어드민 메모를 모아 보고 고친다.
+ * 광고 계약 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 광고 계약, 배너, 광고 공고, 어드민 메모를 모아 보고 고친다.
  * 더할 때는 `광고 한 번에 추가`(`BulkAdModal`)에서 자리를 여러 개 체크해 한 번에 만든다. 표의 노출 기간·링크는 칸을 눌러 바로
  * 고치고, 나머지 칸은 행을 눌러 여는 수정 모달에서 고친다.
  *
@@ -321,7 +321,7 @@ function BannerSection({
           className={cn(
             'rounded border border-gray-200 object-cover',
             PC_IMAGE_SPECS[row.placement].aspectClassName,
-            row.placement === 'JOB_DETAIL_SIDE' ? 'w-20' : 'w-52',
+            isSideBannerPlacement(row.placement) ? 'w-20' : 'w-52',
           )}
         />
       ),

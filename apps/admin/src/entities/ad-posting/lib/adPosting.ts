@@ -39,7 +39,7 @@ export function adPostingStatus(ad: AdPosting, now = Date.now()): AdPostingStatu
   return 'LIVE';
 }
 
-/** 표의 `상태` 칸. 광고 공고 세팅과 광고주별 광고가 같이 쓴다. */
+/** 표의 `상태` 칸. 광고 공고 세팅과 광고 계약 화면이 같이 쓴다. */
 export const AD_POSTING_STATUS_BADGES: Record<
   AdPostingStatus,
   { label: string; tone: 'success' | 'main' | 'neutral' | 'urgent' }

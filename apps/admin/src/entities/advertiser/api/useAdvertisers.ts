@@ -29,7 +29,7 @@ export function useAdvertiserList(keyword: string, type: AdvertiserType | '' = '
   });
 }
 
-/** 광고주 한 건(광고주별 광고 상세). 목록과 같은 키 아래에 두어 쓰기 뒤 함께 다시 받는다. */
+/** 광고주 한 건(광고 계약 상세). 목록과 같은 키 아래에 두어 쓰기 뒤 함께 다시 받는다. */
 export function useAdvertiserDetail(advertiserId: number) {
   return useQuery({
     queryKey: [...LIST_KEY, 'detail', advertiserId],

@@ -12,6 +12,7 @@ import {
   ADMIN_BANNERS_PATH,
   type AdminBannerRequest,
   type BannerPlacement,
+  isSideBannerPlacement,
 } from '@ogonggo/api/src/banners';
 import type { AdContract } from '@/entities/ad-contract/api/useAdContracts';
 import { adContractName } from '@/entities/ad-contract/lib/adContract';
@@ -68,7 +69,7 @@ interface ResultItem {
 }
 
 /**
- * 광고 한 번에 추가(이슈 #573, 2026-11-06 사용자). 광고주별 광고 상세에서 자리를 여러 개 체크하고, 배너 소재와 광고할 공고를
+ * 광고 한 번에 추가(이슈 #573, 2026-11-06 사용자). 광고 계약 상세에서 자리를 여러 개 체크하고, 배너 소재와 광고할 공고를
  * 한 번만 정해 자리마다 하나씩 만든다. 계약을 고르면 그 계약의 상품(자리)과 기간으로 채우고, 모두 고칠 수 있다.
  *
  * 순서: 입력 → 무엇이 만들어지는지 확인 → 만들기(자리마다 따로 보내고 성공·실패를 줄마다 보인다). 하나가 실패해도 나머지는
@@ -114,8 +115,8 @@ export function BulkAdModal({
 
   const banners = checked.filter(isBanner).map(bannerPlacementOf);
   const ads = checked.filter((product) => !isBanner(product)).map(adPlacementOf);
-  const needsWide = banners.some((placement) => placement !== 'JOB_DETAIL_SIDE');
-  const needsSide = banners.includes('JOB_DETAIL_SIDE');
+  const needsWide = banners.some((placement) => !isSideBannerPlacement(placement));
+  const needsSide = banners.some(isSideBannerPlacement);
   const needsJob = ads.some((placement) => placement !== 'BOOTCAMP_LIST');
   const needsBootcamp = ads.includes('BOOTCAMP_LIST');
 
@@ -136,10 +137,11 @@ export function BulkAdModal({
       banners.length > 0 && !isLinkUrl(linkUrl.trim())
         ? 'http:// 또는 https:// 로 시작하는 주소나 / 로 시작하는 경로를 입력해 주세요.'
         : undefined,
-    pcWide: needsWide && !pcWide ? '홈 자리 PC 이미지(1200×120)를 올려 주세요.' : undefined,
-    pcSide: needsSide && !pcSide ? '공고 상세 PC 이미지(400×500)를 올려 주세요.' : undefined,
+    pcWide:
+      needsWide && !pcWide ? '목록 위·아래 자리 PC 이미지(1200×120)를 올려 주세요.' : undefined,
+    pcSide: needsSide && !pcSide ? '상세 사이드 자리 PC 이미지(400×500)를 올려 주세요.' : undefined,
     mobile:
-      needsSide && !mobile ? '공고 상세 배너는 모바일 이미지(750×200)가 있어야 해요.' : undefined,
+      needsSide && !mobile ? '상세 사이드 배너는 모바일 이미지(750×200)가 있어야 해요.' : undefined,
     jobTarget: needsJob && !jobTarget ? '광고할 채용공고를 골라 주세요.' : undefined,
     bootcampTarget: needsBootcamp && !bootcampTarget ? '광고할 부트캠프를 골라 주세요.' : undefined,
   };
@@ -155,7 +157,7 @@ export function BulkAdModal({
       const body: AdminBannerRequest = {
         placement,
         name: name.trim(),
-        pcImageUrl: placement === 'JOB_DETAIL_SIDE' ? pcSide : pcWide,
+        pcImageUrl: isSideBannerPlacement(placement) ? pcSide : pcWide,
         mobileImageUrl: mobile || null,
         linkUrl: linkUrl.trim(),
         openInNewTab,
@@ -441,7 +443,7 @@ export function BulkAdModal({
           {needsWide ? (
             <BannerImageField
               id="bulk-pc-wide"
-              label="PC 이미지(1200×120) · 홈 상단·홈 하단"
+              label="PC 이미지(1200×120) · 목록 위·아래 자리"
               sizeHint={PC_IMAGE_SPECS.HOME_TOP.sizeHint}
               aspectClassName={PC_IMAGE_SPECS.HOME_TOP.aspectClassName}
               presets={bannerPresets('HOME_TOP').map(({ key, label, pcImageUrl }) => ({
@@ -458,7 +460,7 @@ export function BulkAdModal({
             <div className="max-w-56">
               <BannerImageField
                 id="bulk-pc-side"
-                label="PC 이미지(400×500) · 공고 상세"
+                label="PC 이미지(400×500) · 상세 사이드 자리"
                 sizeHint={PC_IMAGE_SPECS.JOB_DETAIL_SIDE.sizeHint}
                 aspectClassName={PC_IMAGE_SPECS.JOB_DETAIL_SIDE.aspectClassName}
                 presets={bannerPresets('JOB_DETAIL_SIDE').map(({ key, label, pcImageUrl }) => ({
@@ -478,7 +480,7 @@ export function BulkAdModal({
               label="모바일 이미지(750×200) · 체크한 배너 모두"
               sizeHint={
                 needsSide
-                  ? '750×200 비율. 공고 상세 배너가 있어 꼭 있어야 합니다.'
+                  ? '750×200 비율. 상세 사이드 배너가 있어 꼭 있어야 합니다.'
                   : '750×200 비율. 비워 두면 좁은 화면에도 PC 이미지를 씁니다.'
               }
               aspectClassName="aspect-[750/200]"

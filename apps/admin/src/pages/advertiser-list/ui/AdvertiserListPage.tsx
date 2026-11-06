@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Callout, DataTable, Modal, Select, type DataTableColumn } from '@ogonggo/ui';
+import {
+  Badge,
+  Button,
+  Callout,
+  DataTable,
+  Modal,
+  Select,
+  type DataTableColumn,
+} from '@ogonggo/ui';
 import type { AdvertiserType } from '@ogonggo/api/src/advertisers';
 import { useAdvertiserList, type Advertiser } from '@/entities/advertiser/api/useAdvertisers';
 import {
@@ -22,7 +30,7 @@ const toType = (value: string): AdvertiserType | '' =>
   value === 'MEMBER' || value === 'NON_MEMBER' ? value : '';
 
 /**
- * 광고주별 광고 목록(이슈 #573, 2026-11-06 사용자). 자리마다 세팅하는 배너 세팅·광고 공고 세팅과 달리 기업 하나를 기준으로
+ * 광고 계약 목록(이슈 #573, 2026-11-06 사용자). 자리마다 세팅하는 배너 세팅·광고 공고 세팅과 달리 기업 하나를 기준으로
  * 그 기업의 광고가 지금 몇 개 나가는지 본다. 행을 누르면 그 광고주의 배너·광고 공고를 모아 보는 상세로 간다.
  *
  * 목록은 고르기 칸과 같은 `GET /api/v1/admin/advertisers` 이고 행마다 광고 수가 붙는다. 페이지가 없어 최대 50건이다 —
@@ -40,7 +48,17 @@ export function AdvertiserListPage() {
     {
       key: 'name',
       header: '광고주',
-      render: (row) => <AdvertiserName advertiser={row} />,
+      render: (row) => (
+        <span className="flex flex-wrap items-center gap-1.5">
+          <AdvertiserName advertiser={row} />
+          {row.contractCount > 0 ? (
+            <Badge tone={row.activeContractCount > 0 ? 'success' : 'neutral'}>
+              계약 {formatCount(row.contractCount)}건
+              {row.activeContractCount > 0 ? ` · 진행 중 ${row.activeContractCount}` : ''}
+            </Badge>
+          ) : null}
+        </span>
+      ),
     },
     {
       key: 'source',
@@ -83,20 +101,6 @@ export function AdvertiserListPage() {
       render: (row) => formatCount(row.bannerCount + row.adPostingCount),
     },
     {
-      key: 'contracts',
-      header: '계약',
-      align: 'right',
-      width: 'w-28',
-      render: (row) => (
-        <span className="flex flex-col">
-          <span>{formatCount(row.contractCount)}건</span>
-          {row.activeContractCount > 0 ? (
-            <span className="text-xs text-gray-500">진행 중 {row.activeContractCount}</span>
-          ) : null}
-        </span>
-      ),
-    },
-    {
       key: 'contractTotal',
       header: '계약 금액 합계',
       align: 'right',
@@ -118,7 +122,7 @@ export function AdvertiserListPage() {
   return (
     <>
       <PageHeader
-        title="광고주별 광고"
+        title="광고 계약"
         action={
           <span className="flex items-center gap-2">
             <AdvertiserJump />

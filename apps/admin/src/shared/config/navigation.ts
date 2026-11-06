@@ -96,11 +96,11 @@ export const NAV_SECTIONS: NavSection[] = [
     /*
      * 홈의 배너 자리(홈 상단·홈 하단·공고 상세)에 무엇을 걸지 정한다(이슈 #573, 2026-11-06 사용자). 지금은 오공고 자체 홍보
      * 배너가 대부분이지만 돈을 받고 싣는 배너도 여기서 건다. 광고 공고 세팅은 목록 맨 앞 칸에 싣는 공고·부트캠프를 정한다.
-     * 광고주별 광고는 자리가 아니라 기업 하나를 기준으로 그 기업의 배너·광고 공고를 모아 본다(2026-11-06 사용자).
+     * 광고 계약 화면은 자리가 아니라 기업 하나를 기준으로 그 기업의 배너·광고 공고를 모아 본다(2026-11-06 사용자).
      */
     title: '광고',
     items: [
-      { path: '/business/advertisers', label: '광고주별 광고' },
+      { path: '/business/advertisers', label: '광고 계약' },
       { path: '/business/banners', label: '배너 세팅' },
       { path: '/business/ad-postings', label: '광고 공고 세팅' },
     ],

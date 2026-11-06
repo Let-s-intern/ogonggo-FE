@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Callout, Field, Input, Modal } from '@ogonggo/ui';
 import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
-import type { BannerPlacement } from '@ogonggo/api/src/banners';
+import { isSideBannerPlacement, type BannerPlacement } from '@ogonggo/api/src/banners';
 import type { AdContract } from '@/entities/ad-contract/api/useAdContracts';
 import { useSaveBanner, type Banner, type BannerInput } from '@/entities/banner/api/useBanners';
 import {
@@ -90,9 +90,9 @@ function validate(form: FormState, placement: BannerPlacement): FormErrors {
   else if (name.length > NAME_MAX_LENGTH)
     errors.name = `이름은 ${NAME_MAX_LENGTH}자까지 쓸 수 있어요.`;
   if (!form.pcImageUrl) errors.pcImageUrl = 'PC 이미지를 올리거나 기본 소재를 골라 주세요.';
-  if (!form.mobileImageUrl && placement === 'JOB_DETAIL_SIDE')
+  if (!form.mobileImageUrl && isSideBannerPlacement(placement))
     errors.mobileImageUrl =
-      '공고 상세 배너는 모바일 이미지가 있어야 해요. PC 이미지가 세로라 좁은 화면에 쓸 수 없어요.';
+      '상세 사이드 배너는 모바일 이미지가 있어야 해요. PC 이미지가 세로라 좁은 화면에 쓸 수 없어요.';
   const linkUrl = form.linkUrl.trim();
   if (!linkUrl) errors.linkUrl = '링크를 입력해 주세요.';
   else if (!isLinkUrl(linkUrl))
@@ -167,7 +167,7 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
 
   const presets = bannerPresets(placement);
   const pcSpec = PC_IMAGE_SPECS[placement];
-  const mobileRequired = placement === 'JOB_DETAIL_SIDE';
+  const mobileRequired = isSideBannerPlacement(placement);
 
   return (
     <Modal
@@ -194,7 +194,7 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
       </Field>
 
       {/* 세로 소재(공고 상세)는 폭을 줄여 미리 본다. 모달 폭 그대로면 화면을 넘는다. */}
-      <div className={placement === 'JOB_DETAIL_SIDE' ? 'max-w-56' : undefined}>
+      <div className={isSideBannerPlacement(placement) ? 'max-w-56' : undefined}>
         <BannerImageField
           id="banner-pc-image"
           label={`PC 이미지(${pcSpec.size})`}

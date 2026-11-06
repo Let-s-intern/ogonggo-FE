@@ -1,6 +1,6 @@
 import type { AdvertiserSource } from '@ogonggo/api/src/advertisers';
 
-/** 광고주가 들어온 길. 광고주별 광고 목록·상세가 쓴다. */
+/** 광고주가 들어온 길. 광고 계약 목록·상세가 쓴다. */
 export const ADVERTISER_SOURCE_LABELS: Record<AdvertiserSource, string> = {
   COMPANY_MEMBER: '비즈니스 회원',
   AD_INQUIRY: '광고 문의',

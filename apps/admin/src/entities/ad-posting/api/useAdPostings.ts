@@ -27,7 +27,7 @@ export function useAdPostingList(placement: AdPostingPlacement) {
 }
 
 /**
- * 광고주 한 곳의 광고 전부(모든 자리, 꺼진 것 포함). 광고주별 광고 화면이 쓴다. 자리 순서·자리 안 순서대로 온다.
+ * 광고주 한 곳의 광고 전부(모든 자리, 꺼진 것 포함). 광고 계약 화면이 쓴다. 자리 순서·자리 안 순서대로 온다.
  */
 export function useAdvertiserAdPostings(advertiserId: number) {
   return useQuery({

@@ -31,7 +31,7 @@ import { AdContractFormModal } from './AdContractFormModal';
 const formatDate = (value: string) => value.replaceAll('-', '.');
 
 /**
- * 광고 계약(이슈 #573, 2026-11-06 사용자). 광고주별 광고 상세의 배너·광고 공고 위에 둔다. 계약을 더하고 고치고 지우며, 행의
+ * 광고 계약(이슈 #573, 2026-11-06 사용자). 광고 계약 상세의 배너·광고 공고 위에 둔다. 계약을 더하고 고치고 지우며, 행의
  * `배너 추가`·`광고 공고 추가` 는 그 계약이 골라지고 노출 기간이 채워진 모달을 연다.
  */
 export function AdContractSection({
