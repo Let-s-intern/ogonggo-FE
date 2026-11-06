@@ -333,6 +333,14 @@ export const BOOTCAMP_RECRUITMENT_STATUS_OPTIONS = toOptions(
   '모집 상태 전체',
   ['DRAFT'],
 );
+/**
+ * 기본값이 "전체"가 아닌 필터에서 "전체"를 고른 값. 빈 값은 주소에서 지워져 기본값으로 돌아가므로 `ALL` 로
+ * 남긴다. 비즈니스 구역 채용공고·부트캠프 목록의 모집 상태가 기본 `모집 중`이다(2026-11-06 사용자).
+ */
+export const ALL_FILTER_VALUE = 'ALL';
+/** 첫 칸 "전체"의 값을 `ALL_FILTER_VALUE` 로 바꾼 옵션. */
+export const withExplicitAll = <T extends { value: string }>(options: readonly T[]): T[] =>
+  options.map((option) => (option.value === '' ? { ...option, value: ALL_FILTER_VALUE } : option));
 export const SIDE_STUDY_RECRUITMENT_STATUS_OPTIONS = toOptions(
   'RecruitmentPostRecruitmentStatus',
   '모집 상태 전체',

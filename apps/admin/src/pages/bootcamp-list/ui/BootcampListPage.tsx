@@ -16,6 +16,8 @@ import {
   JOB_REVIEW_STATUS_OPTIONS,
   JobReviewStatusBadge,
   VISIBILITY_OPTIONS,
+  ALL_FILTER_VALUE,
+  withExplicitAll,
 } from '@/shared/config/labels';
 import { formatCount, formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
@@ -47,10 +49,13 @@ export function BootcampListPage({
   const navigate = useNavigate();
   const { get, page, setFilter, setPage } = useListQuery();
 
+  // 비즈니스 구역은 모집 중인 과정만 기본으로 본다. `전체` 를 고르면 주소에 `ALL` 이 남는다(2026-11-06 사용자).
+  const statusParam = get('status', fixedSource ? 'RECRUITING' : '');
+
   const filters = {
     page,
     keyword: get('keyword'),
-    status: get('status'),
+    status: statusParam === ALL_FILTER_VALUE ? '' : statusParam,
     visibility: get('visibility'),
     source: fixedSource ?? get('source'),
     reviewStatus: get('reviewStatus'),
@@ -153,8 +158,12 @@ export function BootcampListPage({
           aria-label="검수 상태"
         />
         <Select
-          options={BOOTCAMP_RECRUITMENT_STATUS_OPTIONS}
-          value={filters.status}
+          options={
+            fixedSource
+              ? withExplicitAll(BOOTCAMP_RECRUITMENT_STATUS_OPTIONS)
+              : BOOTCAMP_RECRUITMENT_STATUS_OPTIONS
+          }
+          value={statusParam}
           onChange={(event) => setFilter('status', event.target.value)}
           aria-label="모집 상태"
         />
