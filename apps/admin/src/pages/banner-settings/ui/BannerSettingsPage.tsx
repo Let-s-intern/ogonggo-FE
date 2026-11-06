@@ -5,8 +5,10 @@ import {
   Callout,
   ConfirmDelete,
   DataTable,
+  Select,
   Tabs,
   Toggle,
+  cn,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import { BANNER_PLACEMENTS, type BannerPlacement } from '@ogonggo/api/src/banners';
@@ -17,7 +19,10 @@ import {
   useToggleBanner,
   type Banner,
 } from '@/entities/banner/api/useBanners';
+import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
+import { advertiserFilterOptions } from '@/entities/advertiser/lib/advertiserFilter';
 import {
+  PC_IMAGE_SPECS,
   PLACEMENT_DESCRIPTIONS,
   PLACEMENT_LABELS,
   bannerImageSrc,
@@ -57,10 +62,19 @@ export function BannerSettingsPage() {
   const [placement, setPlacement] = useState<BannerPlacement>('HOME_TOP');
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<Banner | null>(null);
+  /** 표만 거르는 광고주. 빈 값이면 전체, `none` 이면 광고주 없는 배너다. 순서 버튼은 거르지 않은 순서로 움직인다. */
+  const [advertiserFilter, setAdvertiserFilter] = useState('');
   const { data, isPending, isError } = useBannerList(placement);
   const reorder = useReorderBanners(placement);
   const deleteMutation = useDeleteBanner(placement);
   const rows = data ?? [];
+  const shownRows = rows.filter(
+    (row) =>
+      advertiserFilter === '' ||
+      (advertiserFilter === 'none'
+        ? row.advertiser === null
+        : String(row.advertiser?.id) === advertiserFilter),
+  );
 
   const move = (index: number, delta: -1 | 1) => {
     const ids = rows.map((row) => row.id);
@@ -88,7 +102,11 @@ export function BannerSettingsPage() {
         <img
           src={bannerImageSrc(row.pcImageUrl)}
           alt=""
-          className="aspect-[1200/120] w-52 rounded border border-gray-200 object-cover"
+          className={cn(
+            'rounded border border-gray-200 object-cover',
+            PC_IMAGE_SPECS[placement].aspectClassName,
+            placement === 'JOB_DETAIL_SIDE' ? 'w-20' : 'w-52',
+          )}
         />
       ),
     },
@@ -107,6 +125,12 @@ export function BannerSettingsPage() {
           </span>
         </span>
       ),
+    },
+    {
+      key: 'advertiser',
+      header: '광고주',
+      width: 'w-44',
+      render: (row) => <AdvertiserName advertiser={row.advertiser} />,
     },
     {
       key: 'period',
@@ -191,7 +215,10 @@ export function BannerSettingsPage() {
       <Tabs
         items={PLACEMENT_TABS}
         value={placement}
-        onValueChange={setPlacement}
+        onValueChange={(next) => {
+          setPlacement(next);
+          setAdvertiserFilter('');
+        }}
         aria-label="배너 자리"
         className="mb-4"
       />
@@ -199,6 +226,20 @@ export function BannerSettingsPage() {
         {PLACEMENT_DESCRIPTIONS[placement]} 켜져 있고 기간 안인 배너가 이 순서대로 5초마다
         넘어갑니다. 없으면 자리 자체가 보이지 않습니다.
       </p>
+
+      <div className="flex items-center gap-2 pb-4">
+        <Select
+          aria-label="광고주로 거르기"
+          options={advertiserFilterOptions(rows, '광고주 없음(자체 홍보)')}
+          value={advertiserFilter}
+          onChange={(event) => setAdvertiserFilter(event.target.value)}
+        />
+        {advertiserFilter ? (
+          <span className="text-xs text-gray-500">
+            거른 상태에서도 순서 번호와 위로·아래로는 자리 전체 기준입니다.
+          </span>
+        ) : null}
+      </div>
 
       {isError ? <Callout tone="error">배너 목록을 불러오지 못했습니다.</Callout> : null}
       {reorder.isError ? (
@@ -209,7 +250,7 @@ export function BannerSettingsPage() {
 
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={shownRows}
         rowKey={(row) => row.id}
         onRowClick={(row) => setEditing({ banner: row })}
         isLoading={isPending}

@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router';
 import { AdminLayout } from '@/widgets/admin-layout';
 import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
+import { AdPostingSettingsPage } from '@/pages/ad-posting-settings';
 import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
@@ -87,6 +88,7 @@ export const router = createBrowserRouter([
         element: <AdInquiryListPage key="rejected" view="rejected" />,
       },
       { path: 'business/banners', element: <BannerSettingsPage /> },
+      { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },

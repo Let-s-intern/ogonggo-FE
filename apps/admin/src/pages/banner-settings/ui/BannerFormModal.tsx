@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { Button, Callout, Field, Input, Modal, Select } from '@ogonggo/ui';
+import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
 import type { BannerPlacement } from '@ogonggo/api/src/banners';
 import { useSaveBanner, type Banner, type BannerInput } from '@/entities/banner/api/useBanners';
-import { BANNER_PRESETS, PLACEMENT_LABELS, isLinkUrl } from '@/entities/banner/lib/banner';
+import {
+  PC_IMAGE_SPECS,
+  PLACEMENT_LABELS,
+  bannerPresets,
+  isLinkUrl,
+} from '@/entities/banner/lib/banner';
+import { AdvertiserField } from '@/features/advertiser-picker/ui/AdvertiserField';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { BannerImageField } from './BannerImageField';
 
@@ -32,6 +39,7 @@ interface FormState {
   startAt: string;
   endAt: string;
   enabled: boolean;
+  advertiser: AdvertiserSummary | null;
 }
 
 function initialState(banner: Banner | null): FormState {
@@ -47,6 +55,7 @@ function initialState(banner: Banner | null): FormState {
     endAt: toInputValue(banner?.endAt ?? null),
     // 새 배너는 켠 채로 시작한다. 기간을 정해 두면 그 사이에만 보인다.
     enabled: banner?.enabled ?? true,
+    advertiser: banner?.advertiser ?? null,
   };
 }
 
@@ -72,6 +81,8 @@ function validate(form: FormState): FormErrors {
     errors.altText = `배너 문구는 ${ALT_TEXT_MAX_LENGTH}자까지 쓸 수 있어요.`;
   if (form.startAt && form.endAt && form.startAt >= form.endAt)
     errors.endAt = '노출 끝은 시작보다 뒤여야 해요.';
+  if (form.showAdLabel && !form.advertiser)
+    errors.advertiser = '광고 표시가 켜진 배너는 어느 기업의 광고인지 골라 주세요.';
   return errors;
 }
 
@@ -107,13 +118,16 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
       startAt: toServerValue(form.startAt),
       endAt: toServerValue(form.endAt),
       enabled: form.enabled,
+      advertiserId: form.advertiser?.id ?? null,
     };
     saveMutation.mutate(input, { onSuccess: onClose });
   };
 
+  const presets = bannerPresets(placement);
+  const pcSpec = PC_IMAGE_SPECS[placement];
   const presetOptions = [
     { value: '', label: '기본 소재에서 고르기' },
-    ...BANNER_PRESETS.map((preset) => ({ value: preset.key, label: preset.label })),
+    ...presets.map((preset) => ({ value: preset.key, label: preset.label })),
   ];
 
   return (
@@ -150,7 +164,7 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
           options={presetOptions}
           value=""
           onChange={(event) => {
-            const preset = BANNER_PRESETS.find((item) => item.key === event.target.value);
+            const preset = presets.find((item) => item.key === event.target.value);
             if (preset) {
               setForm((current) => ({
                 ...current,
@@ -162,15 +176,18 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
         />
       </Field>
 
-      <BannerImageField
-        id="banner-pc-image"
-        label="PC 이미지"
-        sizeHint="1200×120 비율(2400×240 권장). JPG·PNG."
-        aspectClassName="aspect-[1200/120]"
-        value={form.pcImageUrl}
-        onChange={(url) => set('pcImageUrl', url)}
-        error={errors.pcImageUrl}
-      />
+      {/* 세로 소재(공고 상세)는 폭을 줄여 미리 본다. 모달 폭 그대로면 화면을 넘는다. */}
+      <div className={placement === 'JOB_DETAIL_SIDE' ? 'max-w-56' : undefined}>
+        <BannerImageField
+          id="banner-pc-image"
+          label="PC 이미지"
+          sizeHint={pcSpec.sizeHint}
+          aspectClassName={pcSpec.aspectClassName}
+          value={form.pcImageUrl}
+          onChange={(url) => set('pcImageUrl', url)}
+          error={errors.pcImageUrl}
+        />
+      </div>
       <div className="max-w-xs">
         <BannerImageField
           id="banner-mobile-image"
@@ -263,6 +280,15 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
           광고 표시(돈을 받고 싣는 배너)
         </label>
       </div>
+
+      <AdvertiserField
+        id="banner-advertiser"
+        value={form.advertiser}
+        onChange={(advertiser) => set('advertiser', advertiser)}
+        required={form.showAdLabel}
+        error={errors.advertiser}
+        hint="광고 표시를 켠 배너는 필수입니다. 오공고 자체 홍보 배너는 비워 둡니다."
+      />
 
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose}>

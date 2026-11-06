@@ -94,11 +94,14 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     area: 'business',
     /*
-     * 홈의 배너 자리(홈 상단·홈 하단)에 무엇을 걸지 정한다(이슈 #573, 2026-11-06 사용자). 지금은 오공고 자체 홍보 배너가
-     * 대부분이지만 돈을 받고 싣는 배너도 여기서 건다.
+     * 홈의 배너 자리(홈 상단·홈 하단·공고 상세)에 무엇을 걸지 정한다(이슈 #573, 2026-11-06 사용자). 지금은 오공고 자체 홍보
+     * 배너가 대부분이지만 돈을 받고 싣는 배너도 여기서 건다. 광고 공고 세팅은 목록 맨 앞 칸에 싣는 공고·부트캠프를 정한다.
      */
     title: '광고',
-    items: [{ path: '/business/banners', label: '배너 세팅' }],
+    items: [
+      { path: '/business/banners', label: '배너 세팅' },
+      { path: '/business/ad-postings', label: '광고 공고 세팅' },
+    ],
   },
   {
     area: 'business',
