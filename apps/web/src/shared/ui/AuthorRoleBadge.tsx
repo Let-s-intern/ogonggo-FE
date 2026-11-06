@@ -4,7 +4,7 @@ export type AuthorRole = 'USER' | 'COMPANY' | 'ADMIN' | 'MENTOR';
 
 /**
  * 댓글 작성자의 현재 역할 배지. 관리자와 멘토만 배지가 있다. 관리자는 왕관과 `운영진`, 멘토는 졸업모와
- * `커리어 코치` 다. 그 밖의 역할(일반·기업) 은 배지가 없다.
+ * `멘토` 다. 그 밖의 역할(일반·기업) 은 배지가 없다.
  *
  * 문구를 enum 카탈로그(`UserRole`)에서 가져오지 않는 이유는 카탈로그의 `관리자 회원`·`멘토 회원` 이 어드민
  * 회원 목록용 이름이어서다. 사용자 화면의 댓글 옆에서는 누가 단 글인지가 읽혀야 한다.
@@ -25,7 +25,7 @@ export function AuthorRoleBadge({ role }: { role: AuthorRole }) {
       ) : (
         <>
           <GraduationCapIcon className="h-3 w-3" />
-          커리어 코치
+          멘토
         </>
       )}
     </span>

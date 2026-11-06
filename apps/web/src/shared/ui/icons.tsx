@@ -270,7 +270,7 @@ export function CrownIcon({ className, ...props }: IconProps) {
   );
 }
 
-/** 댓글 작성자 배지 `커리어 코치` 앞의 졸업모(`shared/ui/AuthorRoleBadge`). */
+/** 댓글 작성자 배지 `멘토` 앞의 졸업모(`shared/ui/AuthorRoleBadge`). */
 export function GraduationCapIcon({ className, ...props }: IconProps) {
   return (
     <span
