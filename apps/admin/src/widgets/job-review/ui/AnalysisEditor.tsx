@@ -1,7 +1,8 @@
-import { useLayoutEffect, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import type { Analysis } from '@ogonggo/api/src/admin';
 import { Badge, Button, Callout, Input, Textarea } from '@ogonggo/ui';
 import { useSaveJobAnalysis, type NewJobDetail } from '@/entities/new-job/api/useNewJobQueue';
+import { consumeAnalysisFill, useAnalysisFill } from '@/features/ai-assistant';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { formatDateTime } from '@/shared/lib/format';
 
@@ -164,6 +165,20 @@ export function AnalysisEditor({
   // 분석이 없으면 빈 칸을 바로 펼치지 않는다. `직접 쓰기` 를 누르면 연다.
   const [writing, setWriting] = useState(analysis !== null);
   const mutation = useSaveJobAnalysis();
+  /** AI 비서가 채운 값인지. 확인하라는 안내를 보인다. */
+  const [aiFilled, setAiFilled] = useState(false);
+  const analysisFill = useAnalysisFill(job.id);
+
+  // AI 비서가 분석을 채워 달라고 했다(`fill_job_analysis`). 고치던 값을 통째로 바꾼다. 저장은 사람이 누른다.
+  useEffect(() => {
+    if (!analysisFill) {
+      return;
+    }
+    consumeAnalysisFill(analysisFill.nonce);
+    setForm(toForm(analysisFill.analysis));
+    setWriting(true);
+    setAiFilled(true);
+  }, [analysisFill]);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(base);
   const missing = missingOf(form);
@@ -222,6 +237,11 @@ export function AnalysisEditor({
           : 'AI 가 만든 분석은 제목·본문 칸·모집 안내를 고치면 다시 만들어집니다. 그 칸을 먼저 고치고 분석은 마지막에 고쳐 주세요.'}
       </p>
       {notice}
+      {aiFilled && dirty ? (
+        <Callout tone="info" className="mb-3">
+          AI 비서가 채운 분석입니다. 원문과 맞는지 확인하고 아래 분석 결과 저장을 눌러야 반영됩니다.
+        </Callout>
+      ) : null}
       <div className="space-y-5">
         <Group title="할 일" count={form.tasks.length} max={MAX_TASKS}>
           {form.tasks.map((task, index) => (
@@ -410,6 +430,7 @@ export function AnalysisEditor({
               onClick={() => {
                 setForm(base);
                 setWriting(analysis !== null);
+                setAiFilled(false);
                 mutation.reset();
               }}
             >

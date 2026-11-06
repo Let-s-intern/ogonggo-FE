@@ -193,7 +193,7 @@ async function readLimited(response: Response, maxBytes: number): Promise<Uint8A
  * 리다이렉트를 한 번씩 확인하며 연다. 성공하면 최종 주소와 본문, 아니면 `null`.
  * 주소 확인에서 막히면 `LogoFailure` 를 그대로 던진다.
  */
-async function safeFetch(
+export async function safeFetch(
   start: URL,
   maxBytes: number,
   timeoutMs: number,

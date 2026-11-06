@@ -15,8 +15,13 @@ export interface AssistantToolCall {
   function: { name: string; arguments: string };
 }
 
+/** user 메시지의 `content` 배열 한 칸. 이미지는 줄인 data URI 다(`api/assistant.ts` 의 `parseParts`). */
+export type AssistantContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } };
+
 export type AssistantApiMessage =
-  | { role: 'user'; content: string }
+  | { role: 'user'; content: string | AssistantContentPart[] }
   | { role: 'assistant'; content: string | null; tool_calls?: AssistantToolCall[] }
   | { role: 'tool'; tool_call_id: string; content: string };
 
@@ -57,6 +62,13 @@ export async function callAssistant(
     body = JSON.parse(text);
   } catch {
     // JSON 이 아닌 본문(게이트웨이 오류 등). 아래에서 상태 코드로 알린다.
+  }
+  // Vercel 함수의 요청 본문 상한(4.5MB)을 넘으면 함수에 닿기 전에 JSON 이 아닌 413 이 온다.
+  if (response.status === 413) {
+    throw new AssistantError(
+      413,
+      '보낼 대화가 너무 큽니다. 이미지를 줄이거나 빼고, 안 되면 새 대화로 시작해 주세요.',
+    );
   }
   if (!response.ok) {
     throw new AssistantError(

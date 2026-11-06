@@ -168,6 +168,43 @@ const redashDevApi: Plugin = {
         throw error;
       }
     });
+
+    // AI 비서 원문 이미지의 `POST /source-image-api`. 배포본은 `api/source-image.ts` 가 받는다. 위와 같은 이유로
+    // 함수 파일의 `fetchSourceImage` 를 그대로 부르고, 호출자 검증은 하지 않는다.
+    server.middlewares.use('/source-image-api', async (req, res) => {
+      const { SourceImageFailure, fetchSourceImage, parseSourceImageInput } =
+        (await server.ssrLoadModule('/api/source-image.ts')) as typeof import('./api/source-image');
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(chunk as Buffer);
+      }
+      let input = null;
+      try {
+        input = parseSourceImageInput(JSON.parse(Buffer.concat(chunks).toString()));
+      } catch {
+        // 아래에서 400 으로 답한다.
+      }
+      const fail = (status: number, code: string, message: string) => {
+        res.statusCode = status;
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ status, code, message }));
+      };
+      if (!input) {
+        fail(400, 'INVALID_REQUEST', '이미지 주소가 없습니다.');
+        return;
+      }
+      try {
+        const { bytes, contentType } = await fetchSourceImage(input.url);
+        res.setHeader('content-type', contentType);
+        res.end(Buffer.from(bytes));
+      } catch (error) {
+        if (error instanceof SourceImageFailure) {
+          fail(error.status, error.code, error.message);
+          return;
+        }
+        throw error;
+      }
+    });
   },
 };
 
