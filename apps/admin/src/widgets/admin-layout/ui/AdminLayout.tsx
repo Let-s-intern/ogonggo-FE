@@ -7,6 +7,7 @@ import {
 } from '@/shared/api/adminTokenUnverified';
 import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
 import { NAV_AREAS, NAV_SECTIONS, firstPathOf, navAreaOf } from '@/shared/config/navigation';
+import { Logo } from '@/shared/ui/Logo';
 import { isMockEnabled } from '@/app/enableMocking';
 import { useReviewQueue } from '@/entities/review/api/useReviewQueue';
 import {
@@ -109,10 +110,16 @@ export function AdminLayout() {
           맨 위 헤더. 서비스·비즈니스 구역을 고르면 좌측 메뉴가 그 구역의 묶음으로 바뀌고 구역의 첫 화면으로 간다
           (2026-11-05 사용자). 왼쪽 칸은 좌측 메뉴와 같은 폭이다. 칸과 탭 사이에 세로선은 두지 않는다(2026-11-05 사용자). 탭은 본문 글자(`px-8`)와
           같은 자리에서 시작한다.
+
+          헤더만 어두운 바탕(`gray-900`)이고 좌측 메뉴와 본문은 밝게 둔다(2026-11-06 사용자). 이 색은 웹 앱 매니페스트의
+          `theme_color`·아이콘 바탕(`public/manifest.webmanifest`, `index.html`)과 같다. 왼쪽은 흰 오공고 마크와 `관리자` 다.
+          마크는 글자가 없어 읽히지 않으므로 `오공고` 를 화면 밖 글자로 붙여 "오공고 관리자" 로 읽힌다.
         */}
-        <header className="flex h-14 shrink-0 items-stretch border-b border-gray-200 bg-white">
-          <p className="flex w-56 shrink-0 items-center px-6 text-lg font-bold text-gray-900">
-            오공고 관리자
+        <header className="flex h-14 shrink-0 items-stretch bg-gray-900">
+          <p className="flex w-56 shrink-0 items-center gap-2 px-6 text-lg font-bold text-white">
+            <Logo className="h-5 w-auto shrink-0" />
+            <span className="sr-only">오공고</span>
+            관리자
           </p>
           <div role="tablist" aria-label="관리 구역" className="flex items-stretch gap-8 px-8">
             {NAV_AREAS.map((item) => (
@@ -123,10 +130,10 @@ export function AdminLayout() {
                 aria-selected={area === item.area}
                 onClick={() => navigate(firstPathOf(item.area))}
                 className={cn(
-                  '-mb-px cursor-pointer border-b-2 px-1 text-[15px] font-semibold',
+                  'cursor-pointer border-b-2 px-1 text-[15px] font-semibold',
                   area === item.area
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-800',
+                    ? 'border-blue-400 text-white'
+                    : 'border-transparent text-gray-400 hover:text-white',
                 )}
               >
                 <span className="flex items-center gap-1.5">
@@ -150,9 +157,9 @@ export function AdminLayout() {
                   key={item.label}
                   type="button"
                   onClick={() => navigate(item.to)}
-                  className="cursor-pointer rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
+                  className="cursor-pointer rounded-full border border-gray-700 px-3 py-1 text-sm text-gray-200 hover:bg-gray-800"
                 >
-                  {item.label} <span className="font-semibold text-blue-600">{item.count}</span>건
+                  {item.label} <span className="font-semibold text-blue-300">{item.count}</span>건
                 </button>
               ))}
             </div>
