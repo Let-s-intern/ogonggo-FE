@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Callout, DataTable, Field, Input, Modal, Pagination, cn } from '@ogonggo/ui';
 import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
 import { adPostingTargetType, type AdPostingPlacement } from '@ogonggo/api/src/ad-postings';
+import type { AdContract } from '@/entities/ad-contract/api/useAdContracts';
 import {
   useCreateAdPosting,
   useUpdateAdPosting,
@@ -9,6 +10,11 @@ import {
 } from '@/entities/ad-posting/api/useAdPostings';
 import { AD_PLACEMENT_LABELS } from '@/entities/ad-posting/lib/adPosting';
 import { useBootcampList, useJobList } from '@/entities/content/api/useContent';
+import { adPostingProduct } from '@/features/ad-contract-picker/lib/adContractProduct';
+import {
+  AdContractField,
+  useDefaultAdContract,
+} from '@/features/ad-contract-picker/ui/AdContractField';
 import { AdvertiserField } from '@/features/advertiser-picker/ui/AdvertiserField';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { SearchBox } from '@/widgets/list-toolbar';
@@ -28,6 +34,8 @@ interface AdPostingFormModalProps {
   takenTargetIds: Set<number>;
   /** 새 광고에 미리 고를 광고주. 광고주별 광고 화면에서 열 때 준다. */
   initialAdvertiser?: AdvertiserSummary;
+  /** 새 광고에 미리 고를 계약(`initialAdvertiser` 의 계약). 주면 노출 기간을 계약 기간으로 채운다. */
+  initialContract?: AdContract | null;
   onClose: () => void;
 }
 
@@ -47,6 +55,7 @@ export function AdPostingFormModal({
   adPosting,
   takenTargetIds,
   initialAdvertiser,
+  initialContract,
   onClose,
 }: AdPostingFormModalProps) {
   const targetLabel = adPostingTargetType(placement) === 'BOOTCAMP' ? '부트캠프' : '채용공고';
@@ -66,8 +75,39 @@ export function AdPostingFormModal({
   const [advertiser, setAdvertiser] = useState<AdvertiserSummary | null>(
     adPosting?.advertiser ?? initialAdvertiser ?? null,
   );
-  const [startAt, setStartAt] = useState(toInputValue(adPosting?.startAt ?? null));
-  const [endAt, setEndAt] = useState(toInputValue(adPosting?.endAt ?? null));
+  // 새 광고에 계약이 미리 골라져 오면 기간을 계약 기간으로 채운다.
+  const startContract = adPosting ? null : (initialContract ?? null);
+  const [contractId, setContractId] = useState<number | null>(
+    adPosting?.contractId ?? startContract?.id ?? null,
+  );
+  const [startAt, setStartAt] = useState(
+    toInputValue(adPosting?.startAt ?? startContract?.startAt ?? null),
+  );
+  const [endAt, setEndAt] = useState(
+    toInputValue(adPosting?.endAt ?? startContract?.endAt ?? null),
+  );
+  const defaultContract = useDefaultAdContract();
+
+  /** 계약을 고르면 노출 기간을 계약 기간으로 채운다. 채운 뒤에도 고칠 수 있다. */
+  const applyContract = (contract: AdContract | null) => {
+    setContractId(contract?.id ?? null);
+    if (contract) {
+      setStartAt(toInputValue(contract.startAt));
+      setEndAt(toInputValue(contract.endAt));
+    }
+  };
+
+  /** 광고주를 바꾸면 계약을 비우고, 새 광고면 그 광고주의 기본 계약을 고른다(배너 모달과 같다). */
+  const changeAdvertiser = async (next: AdvertiserSummary | null) => {
+    if (next?.id === advertiser?.id) {
+      return;
+    }
+    setAdvertiser(next);
+    setContractId(null);
+    if (next && !adPosting) {
+      applyContract(await defaultContract(next.id));
+    }
+  };
   const [enabled, setEnabled] = useState(adPosting?.enabled ?? true);
   const [submitted, setSubmitted] = useState(false);
 
@@ -86,10 +126,20 @@ export function AdPostingFormModal({
     }
     const period = { startAt: toServerValue(startAt), endAt: toServerValue(endAt) };
     if (adPosting) {
-      update.mutate({ advertiserId: advertiser.id, ...period, enabled }, { onSuccess: onClose });
+      update.mutate(
+        { advertiserId: advertiser.id, contractId, ...period, enabled },
+        { onSuccess: onClose },
+      );
     } else {
       create.mutate(
-        { placement, targetId: target.id, advertiserId: advertiser.id, ...period, enabled },
+        {
+          placement,
+          targetId: target.id,
+          advertiserId: advertiser.id,
+          contractId,
+          ...period,
+          enabled,
+        },
         { onSuccess: onClose },
       );
     }
@@ -138,9 +188,18 @@ export function AdPostingFormModal({
       <AdvertiserField
         id="ad-posting-advertiser"
         value={advertiser}
-        onChange={setAdvertiser}
+        onChange={(next) => void changeAdvertiser(next)}
         required
         error={errors.advertiser}
+      />
+
+      <AdContractField
+        id="ad-posting-contract"
+        advertiserId={advertiser?.id ?? null}
+        value={contractId}
+        onChange={applyContract}
+        period={{ startAt: toServerValue(startAt), endAt: toServerValue(endAt) }}
+        product={adPostingProduct(placement)}
       />
 
       <div className="grid grid-cols-2 gap-3">

@@ -19,6 +19,7 @@ import {
   useToggleBanner,
   type Banner,
 } from '@/entities/banner/api/useBanners';
+import { AdContractNote } from '@/entities/ad-contract/ui/AdContractNote';
 import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
 import { advertiserFilterOptions } from '@/entities/advertiser/lib/advertiserFilter';
 import {
@@ -122,7 +123,12 @@ export function BannerSettingsPage() {
       key: 'advertiser',
       header: '광고주',
       width: 'w-44',
-      render: (row) => <AdvertiserName advertiser={row.advertiser} />,
+      render: (row) => (
+        <span className="flex flex-col gap-0.5">
+          <AdvertiserName advertiser={row.advertiser} />
+          <AdContractNote contract={row.contract} period={row} />
+        </span>
+      ),
     },
     {
       key: 'period',

@@ -25,6 +25,7 @@ import {
   adPostingStatus,
 } from '@/entities/ad-posting/lib/adPosting';
 import { advertiserFilterOptions } from '@/entities/advertiser/lib/advertiserFilter';
+import { AdContractNote } from '@/entities/ad-contract/ui/AdContractNote';
 import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
 import { formatPeriod } from '@/entities/banner/lib/banner';
 import { PageHeader } from '@/widgets/page-header';
@@ -104,7 +105,12 @@ export function AdPostingSettingsPage() {
       key: 'advertiser',
       header: '광고주',
       width: 'w-44',
-      render: (row) => <AdvertiserName advertiser={row.advertiser} />,
+      render: (row) => (
+        <span className="flex flex-col gap-0.5">
+          <AdvertiserName advertiser={row.advertiser} />
+          <AdContractNote contract={row.contract} period={row} />
+        </span>
+      ),
     },
     {
       key: 'period',

@@ -21,20 +21,23 @@ export const PLACEMENT_DESCRIPTIONS: Record<BannerPlacement, string> = {
  */
 export const PC_IMAGE_SPECS: Record<
   BannerPlacement,
-  { aspectClassName: string; sizeHint: string; preset: 'pc' | 'side' }
+  { aspectClassName: string; size: string; sizeHint: string; preset: 'pc' | 'side' }
 > = {
   HOME_TOP: {
     aspectClassName: 'aspect-[1200/120]',
+    size: '1200×120',
     sizeHint: '1200×120 비율(2400×240 권장). JPG·PNG.',
     preset: 'pc',
   },
   HOME_BOTTOM: {
     aspectClassName: 'aspect-[1200/120]',
+    size: '1200×120',
     sizeHint: '1200×120 비율(2400×240 권장). JPG·PNG.',
     preset: 'pc',
   },
   JOB_DETAIL_SIDE: {
     aspectClassName: 'aspect-[400/500]',
+    size: '400×500',
     sizeHint: '400×500 비율(800×1000 권장). JPG·PNG.',
     preset: 'side',
   },
