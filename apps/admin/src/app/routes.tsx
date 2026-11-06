@@ -30,7 +30,6 @@ import { TodayJobsPage } from '@/pages/today-jobs';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
 import { RequireAuth } from './RequireAuth';
-import { isAdsEnabled } from '@/shared/config/ads';
 
 /**
  * 메뉴 트리가 그대로 경로가 된다(PRD `.claude/tasks/memos/prd-admin-console.md` "라우팅").
@@ -88,13 +87,8 @@ export const router = createBrowserRouter([
         // 경로가 달라도 같은 컴포넌트라 key 가 없으면 메뉴를 옮겨도 상태가 남는다.
         element: <AdInquiryListPage key="rejected" view="rejected" />,
       },
-      // 운영에서 광고를 켜기 전에는 화면도 없다(`shared/config/ads.ts`). 주소로 들어오면 없는 화면이 된다.
-      ...(isAdsEnabled
-        ? [
-            { path: 'business/banners', element: <BannerSettingsPage /> },
-            { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
-          ]
-        : []),
+      { path: 'business/banners', element: <BannerSettingsPage /> },
+      { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },
