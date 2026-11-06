@@ -71,8 +71,7 @@ export function CommentItem({
         <span className="min-w-0 truncate text-sm font-bold text-gray-900">
           {comment.author.nickname ?? AUTHOR_NICKNAME_FALLBACK}
         </span>
-        {/* 사이드·스터디 댓글에는 관리자 배지를 보이지 않는다. 멘토 배지는 그대로 둔다. */}
-        {comment.author.role !== 'ADMIN' ? <AuthorRoleBadge role={comment.author.role} /> : null}
+        <AuthorRoleBadge role={comment.author.role} />
         {comment.author.userId === postAuthorId ? (
           <span className="shrink-0 rounded-sm bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-600">
             작성자
