@@ -1,4 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { bannerHandlers } from './banners';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
 import {
@@ -1184,4 +1185,5 @@ export const handlers: HttpHandler[] = [
   replaceFcmTokenHandler,
   deleteFcmTokenHandler,
   ...userNotificationHandlers,
+  ...bannerHandlers,
 ];
