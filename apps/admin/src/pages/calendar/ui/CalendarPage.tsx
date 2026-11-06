@@ -90,6 +90,7 @@ export function CalendarPage() {
     contract: ads.data?.contracts.length ?? 0,
     banner: (ads.data?.banners.length ?? 0) - undatedBanners,
     adPosting: (ads.data?.adPostings.length ?? 0) - undatedAdPostings,
+    instagram: ads.data?.instagramAds.length ?? 0,
     todo: todos.data?.length ?? 0,
   };
   const events: EventInput[] = [...adEvents, ...todoEvents].filter(
@@ -163,8 +164,8 @@ export function CalendarPage() {
         }
       />
       <p className="-mt-3 pb-4 text-sm text-gray-500">
-        광고 계약·배너·광고 공고 기간과 운영자 할 일을 함께 봅니다. 날짜를 누르거나 여러 날을 끌어
-        할 일을 추가합니다.
+        광고 계약·배너·광고 공고 기간, 인스타 광고 게시일과 운영자 할 일을 함께 봅니다. 날짜를
+        누르거나 여러 날을 끌어 할 일을 추가합니다.
       </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
@@ -285,7 +286,7 @@ export function CalendarPage() {
           selectMirror
           // 막대를 끌어 놓은 뒤 이어지는 클릭이 날짜 선택으로 번지지 않게 한다.
           unselectAuto
-          // 할 일 → 계약 → 배너 → 광고 공고 순으로 쌓는다(`STACK_ORDER`). 같은 종류는 먼저 시작한 것이 위.
+          // 할 일 → 계약 → 배너 → 광고 공고 → 인스타 광고 순으로 쌓는다(`STACK_ORDER`). 같은 종류는 먼저 시작한 것이 위.
           eventOrder={(a, b) => {
             const kindOf = (event: unknown) =>
               STACK_ORDER.indexOf(
