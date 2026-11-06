@@ -9,7 +9,9 @@ import {
 } from '@/entities/advertiser/lib/advertiser';
 import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
 import { formatKst } from '@/entities/banner/lib/banner';
+import { formatWon } from '@/entities/ad-contract/lib/adContract';
 import { NewAdvertiserForm } from '@/features/advertiser-picker/ui/AdvertiserField';
+import { AdvertiserJump } from '@/features/advertiser-picker/ui/AdvertiserJump';
 import { formatCount } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
 import { ListToolbar, SearchBox } from '@/widgets/list-toolbar';
@@ -81,6 +83,29 @@ export function AdvertiserListPage() {
       render: (row) => formatCount(row.bannerCount + row.adPostingCount),
     },
     {
+      key: 'contracts',
+      header: '계약',
+      align: 'right',
+      width: 'w-28',
+      render: (row) => (
+        <span className="flex flex-col">
+          <span>{formatCount(row.contractCount)}건</span>
+          {row.activeContractCount > 0 ? (
+            <span className="text-xs text-gray-500">진행 중 {row.activeContractCount}</span>
+          ) : null}
+        </span>
+      ),
+    },
+    {
+      key: 'contractTotal',
+      header: '계약 금액 합계',
+      align: 'right',
+      width: 'w-36',
+      render: (row) => (
+        <span className="whitespace-nowrap">{formatWon(row.contractTotalAmount)}</span>
+      ),
+    },
+    {
       key: 'latestEndAt',
       header: '마지막 노출 끝(KST)',
       width: 'w-40',
@@ -95,9 +120,12 @@ export function AdvertiserListPage() {
       <PageHeader
         title="광고주별 광고"
         action={
-          <Button size="sm" onClick={() => setAdding(true)}>
-            새 광고주 추가
-          </Button>
+          <span className="flex items-center gap-2">
+            <AdvertiserJump />
+            <Button size="sm" onClick={() => setAdding(true)}>
+              새 광고주 추가
+            </Button>
+          </span>
         }
       />
       <p className="pb-4 text-sm text-gray-500">

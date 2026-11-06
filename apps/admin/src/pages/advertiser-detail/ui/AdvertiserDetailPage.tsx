@@ -16,9 +16,13 @@ import {
   cn,
   type DataTableColumn,
 } from '@ogonggo/ui';
+import type { AdContractProduct } from '@ogonggo/api/src/ad-contracts';
 import { AD_POSTING_PLACEMENTS, type AdPostingPlacement } from '@ogonggo/api/src/ad-postings';
 import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
 import { BANNER_PLACEMENTS, type BannerPlacement } from '@ogonggo/api/src/banners';
+import { useAdContracts, type AdContract } from '@/entities/ad-contract/api/useAdContracts';
+import { adContractName, defaultAdContract } from '@/entities/ad-contract/lib/adContract';
+import { AdContractNote } from '@/entities/ad-contract/ui/AdContractNote';
 import {
   useAdPostingList,
   useAdvertiserAdPostings,
@@ -49,18 +53,35 @@ import {
   formatPeriod,
 } from '@/entities/banner/lib/banner';
 import { useCompanyMemberDetail } from '@/entities/member/api/useMembers';
+import {
+  adPostingProduct,
+  bannerProduct,
+} from '@/features/ad-contract-picker/lib/adContractProduct';
+import { AdvertiserJump } from '@/features/advertiser-picker/ui/AdvertiserJump';
 import { MemberStatusBadge } from '@/shared/config/labels';
 import { formatCount } from '@/shared/lib/format';
 import { AdPostingFormModal } from '@/widgets/ad-posting-form';
 import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
+import { AdContractSection } from './AdContractSection';
 import { AdvertiserEditModal } from './AdvertiserEditModal';
+import { AdvertiserNoteSection } from './AdvertiserNoteSection';
 
 const BACK_TO = { to: '/business/advertisers', label: '광고주별 광고 목록' };
 
-/** 열린 배너 모달. 새 배너는 자리를 먼저 고른다. */
-type BannerEditing = { placement: BannerPlacement; banner: Banner | null } | null;
-type AdEditing = { placement: AdPostingPlacement; adPosting: AdPosting | null } | null;
+/** 열린 배너 모달. 새 배너는 자리를 먼저 고르고, 고른 계약이 있으면 기간을 채운다. */
+type BannerEditing = {
+  placement: BannerPlacement;
+  banner: Banner | null;
+  contract: AdContract | null;
+} | null;
+type AdEditing = {
+  placement: AdPostingPlacement;
+  adPosting: AdPosting | null;
+  contract: AdContract | null;
+} | null;
+/** 자리 고르기를 연 상태. 미리 고를 계약을 들고 있다(계약 행에서 열었거나 기본 계약). */
+type Adding = { contract: AdContract | null } | null;
 
 /**
  * 광고주별 광고 상세(이슈 #573, 2026-11-06 사용자). 기업 하나의 배너와 광고 공고를 자리와 상관없이 모아 보고, 켜고 끄고,
@@ -75,7 +96,10 @@ export function AdvertiserDetailPage() {
   const { data: advertiser, isPending, isError } = useAdvertiserDetail(advertiserId);
   const banners = useAdvertiserBanners(advertiserId);
   const adPostings = useAdvertiserAdPostings(advertiserId);
+  const contracts = useAdContracts(Number.isInteger(advertiserId) ? advertiserId : null);
   const [editingInfo, setEditingInfo] = useState(false);
+  const [addingBanner, setAddingBanner] = useState<Adding>(null);
+  const [addingAdPosting, setAddingAdPosting] = useState<Adding>(null);
 
   if (isPending && Number.isInteger(advertiserId)) {
     return <p className="text-sm text-gray-500">불러오는 중입니다.</p>;
@@ -83,7 +107,7 @@ export function AdvertiserDetailPage() {
   if (isError || !advertiser) {
     return (
       <>
-        <PageHeader title="광고주" backTo={BACK_TO} />
+        <PageHeader title="광고주" backTo={BACK_TO} action={<AdvertiserJump />} />
         <Callout tone="error">광고주를 찾을 수 없습니다.</Callout>
       </>
     );
@@ -97,7 +121,11 @@ export function AdvertiserDetailPage() {
 
   return (
     <>
-      <PageHeader title={advertiser.name} backTo={BACK_TO} />
+      <PageHeader
+        title={advertiser.name}
+        backTo={BACK_TO}
+        action={<AdvertiserJump key={advertiser.id} currentId={advertiser.id} />}
+      />
 
       <Card>
         <div className="flex items-center justify-between gap-2">
@@ -139,8 +167,27 @@ export function AdvertiserDetailPage() {
         />
       </Card>
 
-      <BannerSection advertiser={summary} query={banners} />
-      <AdPostingSection advertiser={summary} query={adPostings} />
+      <AdContractSection
+        advertiser={advertiser}
+        query={contracts}
+        onAddBanner={(contract) => setAddingBanner({ contract })}
+        onAddAdPosting={(contract) => setAddingAdPosting({ contract })}
+      />
+      <BannerSection
+        advertiser={summary}
+        query={banners}
+        contracts={contracts.data ?? []}
+        adding={addingBanner}
+        onAddingChange={setAddingBanner}
+      />
+      <AdPostingSection
+        advertiser={summary}
+        query={adPostings}
+        contracts={contracts.data ?? []}
+        adding={addingAdPosting}
+        onAddingChange={setAddingAdPosting}
+      />
+      <AdvertiserNoteSection advertiserId={advertiser.id} />
 
       {editingInfo ? (
         <AdvertiserEditModal advertiser={advertiser} onClose={() => setEditingInfo(false)} />
@@ -236,27 +283,74 @@ function MemberInfo({ advertiser, userId }: { advertiser: Advertiser; userId: nu
   );
 }
 
-/** 자리 고르기. 배너·광고 공고 추가 모달을 열기 전에 한 번 묻는다. */
+/**
+ * 자리와 계약 고르기. 배너·광고 공고 추가 모달을 열기 전에 한 번 묻는다. 계약에 상품(자리)이 있으면 그 자리를 앞에 두고 먼저
+ * 고른다 — 다른 자리도 고를 수 있다.
+ */
 function PlacementPicker<P extends string>({
   title,
   placements,
   label,
+  productOf,
+  contracts,
+  initialContract,
   onPick,
   onClose,
 }: {
   title: string;
   placements: readonly P[];
   label: (placement: P) => string;
-  onPick: (placement: P) => void;
+  productOf: (placement: P) => AdContractProduct;
+  contracts: AdContract[];
+  initialContract: AdContract | null;
+  onPick: (placement: P, contract: AdContract | null) => void;
   onClose: () => void;
 }) {
-  const [value, setValue] = useState<P | undefined>(placements[0]);
+  const [contract, setContract] = useState<AdContract | null>(initialContract);
+  const inContract = (placement: P) => contract?.products.includes(productOf(placement)) ?? false;
+  const ordered = [
+    ...placements.filter(inContract),
+    ...placements.filter((placement) => !inContract(placement)),
+  ];
+  const [value, setValue] = useState<P | undefined>(ordered[0]);
   return (
-    <Modal open title={title} description="어느 자리에 실을지 먼저 고릅니다." onClose={onClose}>
+    <Modal
+      open
+      title={title}
+      description="어느 계약으로, 어느 자리에 실을지 먼저 고릅니다."
+      onClose={onClose}
+    >
+      <Field
+        label="계약"
+        htmlFor="advertiser-add-contract"
+        hint="고른 계약의 기간이 노출 기간으로 채워집니다."
+      >
+        <Select
+          id="advertiser-add-contract"
+          options={[
+            { value: '', label: '계약 없음' },
+            ...contracts.map((item) => ({ value: String(item.id), label: adContractName(item) })),
+          ]}
+          value={contract ? String(contract.id) : ''}
+          onChange={(event) => {
+            const next = contracts.find((item) => String(item.id) === event.target.value) ?? null;
+            setContract(next);
+            const first = placements.find((placement) =>
+              next?.products.includes(productOf(placement)),
+            );
+            if (first) {
+              setValue(first);
+            }
+          }}
+        />
+      </Field>
       <Field label="자리" htmlFor="advertiser-placement">
         <Select
           id="advertiser-placement"
-          options={placements.map((placement) => ({ value: placement, label: label(placement) }))}
+          options={ordered.map((placement) => ({
+            value: placement,
+            label: inContract(placement) ? `${label(placement)}(계약 상품)` : label(placement),
+          }))}
           value={value}
           onChange={(event) => setValue(event.target.value as P)}
         />
@@ -268,7 +362,7 @@ function PlacementPicker<P extends string>({
         <Button
           onClick={() => {
             if (value) {
-              onPick(value);
+              onPick(value, contract);
             }
           }}
         >
@@ -291,11 +385,16 @@ function SectionHeader({ title, action }: { title: string; action: ReactNode }) 
 function BannerSection({
   advertiser,
   query,
+  contracts,
+  adding,
+  onAddingChange,
 }: {
   advertiser: AdvertiserSummary;
   query: ReturnType<typeof useAdvertiserBanners>;
+  contracts: AdContract[];
+  adding: Adding;
+  onAddingChange: (adding: Adding) => void;
 }) {
-  const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState<BannerEditing>(null);
   const [deleting, setDeleting] = useState<Banner | null>(null);
   const deleteMutation = useDeleteBanner();
@@ -347,7 +446,12 @@ function BannerSection({
       key: 'period',
       header: '노출 기간(KST)',
       width: 'w-64',
-      render: (row) => <span className="text-sm">{formatPeriod(row)}</span>,
+      render: (row) => (
+        <span className="flex flex-col gap-0.5 text-sm">
+          {formatPeriod(row)}
+          <AdContractNote contract={row.contract} period={row} />
+        </span>
+      ),
     },
     {
       key: 'status',
@@ -392,7 +496,10 @@ function BannerSection({
       <SectionHeader
         title={`배너 ${formatCount(rows.length)}건`}
         action={
-          <Button size="sm" onClick={() => setPicking(true)}>
+          <Button
+            size="sm"
+            onClick={() => onAddingChange({ contract: defaultAdContract(contracts) })}
+          >
             배너 추가
           </Button>
         }
@@ -402,20 +509,23 @@ function BannerSection({
         columns={columns}
         rows={rows}
         rowKey={(row) => row.id}
-        onRowClick={(row) => setEditing({ placement: row.placement, banner: row })}
+        onRowClick={(row) => setEditing({ placement: row.placement, banner: row, contract: null })}
         isLoading={query.isPending}
         emptyMessage="이 광고주의 배너가 없습니다."
       />
 
-      {picking ? (
+      {adding ? (
         <PlacementPicker
           title="배너 추가"
           placements={BANNER_PLACEMENTS}
           label={(placement) => PLACEMENT_LABELS[placement]}
-          onClose={() => setPicking(false)}
-          onPick={(placement) => {
-            setPicking(false);
-            setEditing({ placement, banner: null });
+          productOf={bannerProduct}
+          contracts={contracts}
+          initialContract={adding.contract}
+          onClose={() => onAddingChange(null)}
+          onPick={(placement, contract) => {
+            onAddingChange(null);
+            setEditing({ placement, banner: null, contract });
           }}
         />
       ) : null}
@@ -426,6 +536,7 @@ function BannerSection({
           placement={editing.placement}
           banner={editing.banner}
           initialAdvertiser={editing.banner ? undefined : advertiser}
+          initialContract={editing.contract}
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -463,11 +574,16 @@ function BannerToggle({ banner }: { banner: Banner }) {
 function AdPostingSection({
   advertiser,
   query,
+  contracts,
+  adding,
+  onAddingChange,
 }: {
   advertiser: AdvertiserSummary;
   query: ReturnType<typeof useAdvertiserAdPostings>;
+  contracts: AdContract[];
+  adding: Adding;
+  onAddingChange: (adding: Adding) => void;
 }) {
-  const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState<AdEditing>(null);
   const [deleting, setDeleting] = useState<AdPosting | null>(null);
   const deleteMutation = useDeleteAdPosting();
@@ -501,7 +617,12 @@ function AdPostingSection({
       key: 'period',
       header: '노출 기간(KST)',
       width: 'w-56',
-      render: (row) => <span className="text-sm">{formatPeriod(row)}</span>,
+      render: (row) => (
+        <span className="flex flex-col gap-0.5 text-sm">
+          {formatPeriod(row)}
+          <AdContractNote contract={row.contract} period={row} />
+        </span>
+      ),
     },
     {
       key: 'status',
@@ -546,7 +667,10 @@ function AdPostingSection({
       <SectionHeader
         title={`광고 공고 ${formatCount(rows.length)}건`}
         action={
-          <Button size="sm" onClick={() => setPicking(true)}>
+          <Button
+            size="sm"
+            onClick={() => onAddingChange({ contract: defaultAdContract(contracts) })}
+          >
             광고 공고 추가
           </Button>
         }
@@ -560,20 +684,25 @@ function AdPostingSection({
         columns={columns}
         rows={rows}
         rowKey={(row) => row.id}
-        onRowClick={(row) => setEditing({ placement: row.placement, adPosting: row })}
+        onRowClick={(row) =>
+          setEditing({ placement: row.placement, adPosting: row, contract: null })
+        }
         isLoading={query.isPending}
         emptyMessage="이 광고주의 광고 공고가 없습니다."
       />
 
-      {picking ? (
+      {adding ? (
         <PlacementPicker
           title="광고 공고 추가"
           placements={AD_POSTING_PLACEMENTS}
           label={(placement) => AD_PLACEMENT_LABELS[placement]}
-          onClose={() => setPicking(false)}
-          onPick={(placement) => {
-            setPicking(false);
-            setEditing({ placement, adPosting: null });
+          productOf={adPostingProduct}
+          contracts={contracts}
+          initialContract={adding.contract}
+          onClose={() => onAddingChange(null)}
+          onPick={(placement, contract) => {
+            onAddingChange(null);
+            setEditing({ placement, adPosting: null, contract });
           }}
         />
       ) : null}
@@ -590,6 +719,7 @@ function AdPostingSection({
           key={`new-${editing.placement}`}
           placement={editing.placement}
           advertiser={advertiser}
+          contract={editing.contract}
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -614,10 +744,12 @@ function AdPostingSection({
 function NewAdPostingModal({
   placement,
   advertiser,
+  contract,
   onClose,
 }: {
   placement: AdPostingPlacement;
   advertiser: AdvertiserSummary;
+  contract: AdContract | null;
   onClose: () => void;
 }) {
   const { data, isError } = useAdPostingList(placement);
@@ -637,6 +769,7 @@ function NewAdPostingModal({
       adPosting={null}
       takenTargetIds={new Set(data.map((row) => row.targetId))}
       initialAdvertiser={advertiser}
+      initialContract={contract}
       onClose={onClose}
     />
   );
