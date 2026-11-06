@@ -34,6 +34,7 @@ import { StatsPage } from '@/pages/stats';
 import { TodayJobsPage } from '@/pages/today-jobs';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
+import { RedirectKeepingSearch } from './RedirectKeepingSearch';
 import { RequireAuth } from './RequireAuth';
 
 /**
@@ -98,6 +99,14 @@ export const router = createBrowserRouter([
       { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
       { path: 'business/channel-ads', element: <ChannelAdsPage /> },
       { path: 'business/channels', element: <ChannelSettingsPage /> },
+      // 인스타 광고를 채널 광고로 넓히기 전 주소(2026-11-06). 거르기는 그대로 넘기고 `account` 는 `channel` 로 바꾼다.
+      {
+        path: 'business/instagram-ads',
+        element: (
+          <RedirectKeepingSearch to="/business/channel-ads" rename={{ account: 'channel' }} />
+        ),
+      },
+      { path: 'business/instagram', element: <RedirectKeepingSearch to="/business/channels" /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },

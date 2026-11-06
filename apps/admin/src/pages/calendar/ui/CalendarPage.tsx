@@ -44,9 +44,12 @@ const GRID_STYLE = {
   '--fc-page-bg-color': 'var(--color-white, #fff)',
 } as CSSProperties;
 
+/** 바뀐 종류 이름. 인스타 광고를 채널 광고로 넓히기 전의 `?hide=instagram` 도 채널 광고를 끈 것으로 읽는다. */
+const LEGACY_KINDS: Record<string, CalendarKind> = { instagram: 'channelAd' };
+
 /** 거르기 체크에서 끈 종류. 주소의 `hide`(쉼표로 이음)에 남겨 새로고침·공유해도 같다. */
 function readHidden(value: string | null): Set<CalendarKind> {
-  const kinds = (value ?? '').split(',');
+  const kinds = (value ?? '').split(',').map((kind) => LEGACY_KINDS[kind] ?? kind);
   return new Set(CALENDAR_KINDS.filter((kind) => kinds.includes(kind)));
 }
 
