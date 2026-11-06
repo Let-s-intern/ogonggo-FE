@@ -10,6 +10,7 @@ import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { BookmarkHintBand } from '@/features/bookmark';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
+import { SideBannerSlot } from '@/widgets/home-banner';
 import { JobRecommendedContents } from '@/widgets/lets-career-recommend';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
@@ -123,8 +124,8 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       // 모달 목업의 2단은 본문 640px : 사이드바 300px, 사이 20px 이다.
       //
       // 목업 오른쪽 맨 위의 `오늘의 공고의 코멘트`는 그리지 않는다. API 없음: 상세 응답에 코멘트
-      // 필드가 없다. 그 아래 회색 판은 광고 자리인데, 내용이 정해지지 않아 빈 상자만 보여서
-      // 그리지 않는다(홈의 배너 자리와 같다).
+      // 필드가 없다. 그 아래 회색 판은 광고 자리다. 페이지와 같은 배너 자리(`JOB_DETAIL_SIDE`)를 비슷한 공고
+      // 아래에 둔다 — 노출 중인 배너가 없으면 그리지 않는다.
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,640fr)_minmax(0,300fr)]">
         <div className="flex min-w-0 flex-col gap-5">
           {viewTracker}
@@ -135,6 +136,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           {applyCta}
           <JobRecommendedContents jobId={job.id} />
           <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          <SideBannerSlot />
         </aside>
       </div>
     );
@@ -176,6 +178,11 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           </DetailSidebarSection>
           <DetailSidebarSection>
             <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          </DetailSidebarSection>
+          {/* 배너 자리(`JOB_DETAIL_SIDE`, 이슈 #573). 비슷한 공고 바로 아래이고, 좁은 화면에서는 사이드바째 본문
+              아래로 내려가 그 맨 끝이다. 노출 중인 배너가 없으면 띠까지 숨는다(`empty:hidden`). */}
+          <DetailSidebarSection>
+            <SideBannerSlot />
           </DetailSidebarSection>
         </aside>
       </div>

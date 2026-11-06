@@ -12,7 +12,21 @@ export interface BannerCarouselProps {
   /** 서버가 정한 순서 그대로. 비어 있으면 부르지 않는다(`HomeBannerSlot`). */
   banners: PublicBannerResponse[];
   placement: BannerPlacement;
+  /**
+   * `wide` 는 홈의 가로 배너(PC 1200×120, md 부터)이고 `side` 는 공고 상세 사이드바의 세로 배너(PC 400×500)다.
+   * `side` 는 사이드바가 본문 옆에 서는 lg 부터 세로 소재이고, 그 아래(사이드바가 본문 아래로 내려간다)는 홈과 같은
+   * 모바일 소재(750×200)다.
+   */
+  variant?: 'wide' | 'side';
 }
+
+const FRAME_CLASS = {
+  wide: 'aspect-[750/200] rounded-xl md:aspect-[1200/120] md:rounded-2xl',
+  side: 'aspect-[750/200] rounded-xl lg:aspect-[400/500]',
+} as const;
+
+/** PC 소재로 바꾸는 폭. 위 `FRAME_CLASS` 의 비율이 바뀌는 지점과 같아야 이미지가 잘리지 않는다. */
+const PC_MEDIA = { wide: '(min-width: 768px)', side: '(min-width: 1024px)' } as const;
 
 /**
  * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이고 이미지를 `<picture>` 로 나눈다.
@@ -29,7 +43,7 @@ export interface BannerCarouselProps {
  * `광고` 표시는 배너가 `showAdLabel` 일 때만 붙는다. 오공고 자체 홍보 배너는 광고주가 따로 없어 붙이지 않고,
  * 돈을 받고 싣는 배너는 광고임을 밝혀야 해서 운영자가 켠다.
  */
-export function BannerCarousel({ banners, placement }: BannerCarouselProps) {
+export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = banners.length;
@@ -57,7 +71,7 @@ export function BannerCarousel({ banners, placement }: BannerCarouselProps) {
         }
       }}
     >
-      <div className="grid aspect-[750/200] w-full overflow-hidden rounded-xl bg-gray-50 md:aspect-[1200/120] md:rounded-2xl">
+      <div className={cn('grid w-full overflow-hidden bg-gray-50', FRAME_CLASS[variant])}>
         {banners.map((banner, index) => {
           const active = index === current;
           const external = /^https?:\/\//.test(banner.linkUrl);
@@ -93,7 +107,7 @@ export function BannerCarousel({ banners, placement }: BannerCarouselProps) {
                 ]}
               >
                 <picture>
-                  <source media="(min-width: 768px)" srcSet={banner.pcImageUrl} />
+                  <source media={PC_MEDIA[variant]} srcSet={banner.pcImageUrl} />
                   <img
                     src={banner.mobileImageUrl}
                     alt={banner.altText}
