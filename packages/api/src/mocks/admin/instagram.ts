@@ -8,7 +8,12 @@ import {
   type AdminInstagramFormatRequest,
   type AdminInstagramFormatResponse,
 } from '../../instagram';
-import { adContractLinkError, adContractSummary } from '../fixtures/ad-contracts';
+import {
+  adContractLinkError,
+  adContractStore,
+  adContractSummary,
+  saveAdContracts,
+} from '../fixtures/ad-contracts';
 import { advertiserSummary, findAdvertiser } from '../fixtures/advertisers';
 import {
   instagramStore,
@@ -352,7 +357,12 @@ const deleteFormatHandler = http.delete(`${FORMATS_PATH}/:formatId`, ({ params }
   instagramStore.formats.forEach((format, index) => {
     format.displayOrder = index + 1;
   });
+  // 이 유형을 산 계약에서도 뺀다.
+  for (const contract of adContractStore.contracts) {
+    contract.instagramFormatIds = contract.instagramFormatIds.filter((formatId) => formatId !== id);
+  }
   saveInstagram();
+  saveAdContracts();
   return HttpResponse.json(ok({ id }), { status: 200 });
 });
 
