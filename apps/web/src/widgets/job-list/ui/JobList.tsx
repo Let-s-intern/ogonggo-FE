@@ -2,6 +2,8 @@ import { ListPublicJobsSort, enumOptions, httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
+import { placeAdsFirst, type AdItem } from '@/shared/ads/adPosting';
+import { fetchAdJobs } from '@/shared/ads/fetchAdPostings';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
@@ -35,9 +37,18 @@ async function fetchJobPage(
   );
 }
 
-/** 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다. */
+/**
+ * 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다.
+ *
+ * 1쪽에는 광고 공고(`JOB_LIST`, 이슈 #573)를 맨 앞 칸부터 어드민 순서대로 고정한다. 2쪽부터는 싣지 않는다 — 쪽마다
+ * 같은 광고가 다시 앞을 차지하면 넘길수록 새 공고가 덜 보인다. 필터·정렬과 상관없이 1쪽이면 싣고, 조건에 맞는 공고가
+ * 하나도 없으면 빈 상태 문구만 둔다. 1쪽은 광고 수만큼 카드가 늘어난다(일반 공고를 잘라 내지 않는다).
+ */
 export async function JobList(query: JobListProps) {
-  const { items, pageInfo } = await fetchJobPage(query);
+  const [{ items, pageInfo }, ads] = await Promise.all([
+    fetchJobPage(query),
+    query.page === 1 ? fetchAdJobs('JOB_LIST') : Promise.resolve([]),
+  ]);
   const sort = (
     <SortToggle
       options={SORT_OPTIONS}
@@ -76,7 +87,7 @@ export async function JobList(query: JobListProps) {
         {items.length === 0 ? (
           <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
         ) : (
-          <JobListItems items={items} pageNumber={pageInfo.pageNum} />
+          <JobListItems items={items} ads={ads} pageNumber={pageInfo.pageNum} />
         )}
         <NumberedPagination
           pageInfo={pageInfo}
@@ -92,13 +103,23 @@ export async function JobList(query: JobListProps) {
  * "인기 공고"(`widgets/popular-jobs`)와 완전히 같은 카드 디자인을 보장한다. lg 이상은 왼쪽에
  * 필터 열이 있어 시안(`docs/asset/v12 채용공고 상세/목록.webp`)대로 3열이다.
  */
-function JobListItems({ items, pageNumber }: { items: JobSummary[]; pageNumber: number }) {
+function JobListItems({
+  items,
+  ads,
+  pageNumber,
+}: {
+  items: JobSummary[];
+  /** 맨 앞에 고정할 광고 공고. 같은 공고가 `items` 에 있으면 그쪽에서 뺀다(`placeAdsFirst`). */
+  ads: AdItem<JobSummary>[];
+  pageNumber: number;
+}) {
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 lg:grid-cols-3">
-      {items.map((job, index) => (
-        <li key={job.id}>
+      {placeAdsFirst(ads, items).map(({ item: job, ad }, index) => (
+        <li key={ad ? `ad-${ad.adId}` : job.id}>
           <JobCard
             job={job}
+            ad={ad}
             tracking={{ listSource: 'main', listPosition: index + 1, pageNumber }}
           />
         </li>

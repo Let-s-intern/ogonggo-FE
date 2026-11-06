@@ -1,6 +1,6 @@
 import { CardGridSkeleton } from '@/shared/ui/CardGridSkeleton';
 import { ForBusinessBanner } from '@/widgets/for-business-banner';
-import { HomeHero } from '@/widgets/home-hero';
+import { HomeHero, JobsHeroHeadline } from '@/widgets/home-hero';
 
 /** `인기 공고`는 조회수 상위 네 건이다(`widgets/popular-jobs/ui/PopularJobs.tsx`의 `TOP_COUNT`). */
 const POPULAR_CARD_COUNT = 4;
@@ -40,7 +40,8 @@ export default function Loading() {
       <div className="flex w-full flex-col items-center" role="status">
         <span className="sr-only">불러오는 중</span>
 
-        <HomeHero screen="jobs">
+        {/* 헤드라인은 이름·공고 수를 아직 몰라 자리만 잡는다. 정적 문구를 그렸다가 바꾸면 깜빡인다. */}
+        <HomeHero screen="jobs" headline={<JobsHeroHeadline count={null} pending />}>
           <PopularSkeleton />
         </HomeHero>
 

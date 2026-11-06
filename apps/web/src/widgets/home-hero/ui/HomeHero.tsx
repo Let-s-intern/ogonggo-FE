@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@ogonggo/ui';
 import { HERO_CONTENT, type HeroScreen } from '@/shared/lib/heroContent';
+import { HeroLines } from './HeroLines';
 
 export interface HomeHeroProps {
   /** 어느 화면의 히어로인지. 문구와 색은 `HERO_CONTENT`가 안다. */
@@ -10,6 +11,11 @@ export interface HomeHeroProps {
    * 같은 마크업·간격이고, 있을 때만 안쪽 여백과 헤드라인 아래 간격이 시안대로 바뀐다.
    */
   children?: ReactNode;
+  /**
+   * `<h1>` 안에 그릴 헤드라인. 없으면 `HERO_CONTENT` 의 문구다. 홈은 로그인 여부와 공고 수로 바뀌는
+   * `JobsHeroHeadline` 을 넣는다.
+   */
+  headline?: ReactNode;
 }
 
 /**
@@ -46,7 +52,7 @@ function HeroSearchIcon() {
  * 104px 이고, 모바일은 위아래 약 24~28px, 헤드라인과 내용 사이 약 32px 이다. 박스 아래에서 다음 구역까지는
  * 약 40~46px 이라 페이지의 `py-10` 이 이미 맞아 여기서 더하지 않는다.
  */
-export function HomeHero({ screen, children }: HomeHeroProps) {
+export function HomeHero({ screen, children, headline }: HomeHeroProps) {
   const { badge, lines, theme } = HERO_CONTENT[screen];
   const hasChildren = Boolean(children);
 
@@ -73,25 +79,7 @@ export function HomeHero({ screen, children }: HomeHeroProps) {
         </span>
 
         <h1 className="text-[22px] leading-[1.6] font-bold tracking-tight text-gray-800 sm:text-[32px] md:leading-[1.125] lg:text-[40px]">
-          {lines.map((line, lineIndex) => (
-            <span key={lineIndex} className="block">
-              {line.map((segment, segmentIndex) =>
-                segment.accent ? (
-                  <span
-                    key={segmentIndex}
-                    className={cn(
-                      'inline-block text-[1.2em] leading-none text-[#1BC47D]',
-                      segment.tilted && 'mx-[0.1em] -translate-y-[0.15em] rotate-[10deg]',
-                    )}
-                  >
-                    {segment.text}
-                  </span>
-                ) : (
-                  segment.text
-                ),
-              )}
-            </span>
-          ))}
+          {headline ?? <HeroLines lines={lines} accentClassName={theme.accentText} />}
         </h1>
       </div>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import type { ComponentProps } from 'react';
-import { track, type DataLayerParams } from '@/shared/analytics/dataLayer';
+import { track, type DataLayerEvent, type DataLayerParams } from '@/shared/analytics/dataLayer';
 import { rememberListSource } from '../model/listSource';
 
 export interface JobCardTracking {
@@ -20,6 +20,8 @@ export type JobCardLinkProps = ComponentProps<typeof Link> & {
   jobInfo?: DataLayerParams;
   /** 없으면 보통 링크다. 스토리처럼 목록 밖에 놓인 카드가 그렇다. */
   tracking?: JobCardTracking;
+  /** `job_card_click` 뒤에 더 보낼 것. 광고 카드의 `ad_posting_click` 이 여기로 온다. */
+  extraEvents?: DataLayerEvent[];
 };
 
 /**
@@ -29,7 +31,14 @@ export type JobCardLinkProps = ComponentProps<typeof Link> & {
  * 카드 안의 북마크 버튼은 이 링크의 형제라 눌러도 여기로 오지 않는다 — 명세가
  * `stopPropagation` 으로 막으라는 경우가 마크업에서 이미 막혀 있다.
  */
-export function JobCardLink({ jobId, jobInfo, tracking, onClick, ...props }: JobCardLinkProps) {
+export function JobCardLink({
+  jobId,
+  jobInfo,
+  tracking,
+  extraEvents,
+  onClick,
+  ...props
+}: JobCardLinkProps) {
   return (
     <Link
       {...props}
@@ -42,6 +51,9 @@ export function JobCardLink({ jobId, jobInfo, tracking, onClick, ...props }: Job
             page_number: tracking.pageNumber,
           });
           rememberListSource(jobId, tracking.listSource);
+        }
+        for (const { event, params } of extraEvents ?? []) {
+          track(event, params);
         }
         onClick?.(e);
       }}

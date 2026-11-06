@@ -1,9 +1,16 @@
 import { Navigate, createBrowserRouter } from 'react-router';
 import { AdminLayout } from '@/widgets/admin-layout';
 import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
+import { AdPostingSettingsPage } from '@/pages/ad-posting-settings';
+import { AdvertiserDetailPage } from '@/pages/advertiser-detail';
+import { AdvertiserListPage } from '@/pages/advertiser-list';
+import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
 import { BootcampListPage } from '@/pages/bootcamp-list';
+import { CalendarPage } from '@/pages/calendar';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
+import { InstagramAdsPage } from '@/pages/instagram-ads';
+import { InstagramSettingsPage } from '@/pages/instagram-settings';
 import { CompanyPriorityPage } from '@/pages/company-priority';
 import { ConcernDetailPage } from '@/pages/concern-detail';
 import { ConcernListPage } from '@/pages/concern-list';
@@ -85,6 +92,12 @@ export const router = createBrowserRouter([
         // 경로가 달라도 같은 컴포넌트라 key 가 없으면 메뉴를 옮겨도 상태가 남는다.
         element: <AdInquiryListPage key="rejected" view="rejected" />,
       },
+      { path: 'business/advertisers', element: <AdvertiserListPage /> },
+      { path: 'business/advertisers/:advertiserId', element: <AdvertiserDetailPage /> },
+      { path: 'business/banners', element: <BannerSettingsPage /> },
+      { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
+      { path: 'business/instagram-ads', element: <InstagramAdsPage /> },
+      { path: 'business/instagram', element: <InstagramSettingsPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },
@@ -103,6 +116,8 @@ export const router = createBrowserRouter([
       { path: 'notifications/batches/:batchId', element: <NotificationBatchDetailPage /> },
 
       { path: 'stats', element: <StatsPage /> },
+
+      { path: 'calendar', element: <CalendarPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

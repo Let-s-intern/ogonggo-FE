@@ -9,6 +9,8 @@ import {
   closedLabel,
   isAlwaysOpen,
 } from '@/shared/lib/dday';
+import { adParams, adPostingClickEvent, type AdSlot } from '@/shared/ads/adPosting';
+import { AdLabel } from '@/shared/ads/AdLabel';
 import { ViewCount } from '@/shared/ui/ViewCount';
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
@@ -34,6 +36,11 @@ export interface JobCardProps {
    * 쓰는 흰 상자 카드다. 껍데기 클래스와 배치만 다르고 북마크·추적·추천 박스는 같은 코드다.
    */
   variant?: 'grid' | 'featured';
+  /**
+   * 광고 공고 칸(이슈 #573). 주면 회사명 앞에 `광고` 를 붙이고, 이벤트의 광고 값(`is_promoted` 등)을 채우고, 누를 때
+   * `ad_posting_click` 을 더 보낸다. 카드 모양은 그대로다.
+   */
+  ad?: AdSlot;
 }
 
 /**
@@ -94,13 +101,14 @@ const FEATURED_ACTIONS_CLASS =
  * 자리 그대로라 생김새는 바뀌지 않는다. `h-full`은 링크와 뿌리 둘 다에 있어야 한다 — 칸을
  * 채우는 것은 뿌리이고, 그 높이를 카드 내용에 넘기는 것은 링크다.
  */
-export function JobCard({ job, tracking, recommendation, variant = 'grid' }: JobCardProps) {
+export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }: JobCardProps) {
   const featured = variant === 'featured';
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
   const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
   const closed = isRecruitmentClosed(job.recruitmentType, job.recruitmentEndAt, job.closedAt);
   const jobMajor = getJobMajor(job.id);
-  const jobInfo = toJobInfo(job);
+  const jobInfo = ad ? { ...toJobInfo(job), ...adParams(ad) } : toJobInfo(job);
+  const adLabel = ad ? <AdLabel /> : null;
   const recommendationTitle = recommendation?.title.trim();
   const recommendationDescription = recommendation?.description.trim();
   const metaParts = [
@@ -154,7 +162,10 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         logoUrl={job.logoUrl}
       />
       <div className="flex min-h-7 items-center justify-between gap-2">
-        <p className="min-w-0 truncate text-sm font-bold text-gray-600">{job.companyName}</p>
+        <p className="flex min-w-0 items-center gap-1 text-sm font-bold text-gray-600">
+          {adLabel}
+          <span className="truncate">{job.companyName}</span>
+        </p>
         {deadlineBadge}
       </div>
       <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500 md:text-base">
@@ -181,6 +192,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
         jobId={job.id}
         jobInfo={jobInfo}
         tracking={tracking}
+        extraEvents={ad ? [adPostingClickEvent(ad, 'job', job.id)] : undefined}
       >
         {featured ? (
           <>
@@ -196,7 +208,10 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid' }: Job
               />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="truncate text-xs text-gray-400">{roleLabel}</p>
-                <p className="truncate text-sm font-bold text-gray-900">{job.companyName}</p>
+                <p className="flex min-w-0 items-center gap-1 text-sm font-bold text-gray-900">
+                  {adLabel}
+                  <span className="truncate">{job.companyName}</span>
+                </p>
               </div>
               {deadlineBadge}
             </div>

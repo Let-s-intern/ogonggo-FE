@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import type { UserJobCalendarItemResponse } from '@ogonggo/api';
+import type { AdItem } from '@/shared/ads/adPosting';
 import { useMediaQuery } from '@/shared/lib/useMediaQuery';
 import { useScrollLock } from '@/shared/lib/useScrollLock';
 import { filterBookmarkedOnly } from '../lib/bookmarked-only';
@@ -32,6 +33,8 @@ export interface MonthCalendarProps {
   bookmarkedOnly: boolean;
   /** `마감일 기준` 토글 값. 격자·오른쪽 목록이 묶는 날짜 필드를 정한다. */
   dateBasis: JobCalendarDateBasis;
+  /** 날짜별 목록 맨 앞에 고정할 광고 공고(`CALENDAR`). 고른 날과 상관없이 같다. */
+  ads: AdItem<UserJobCalendarItemResponse>[];
 }
 
 /**
@@ -49,6 +52,7 @@ export function MonthCalendar({
   header,
   bookmarkedOnly,
   dateBasis,
+  ads,
 }: MonthCalendarProps) {
   const [selectedDay, setSelectedDay] = useState(() => defaultDay(initialDate));
   const [renderedMonth, setRenderedMonth] = useState(initialDate);
@@ -107,6 +111,7 @@ export function MonthCalendar({
         <DayJobPanel
           day={selectedDay}
           items={dayItems}
+          ads={ads}
           dateBasis={dateBasis}
           highlightId={pickedJobId}
         />
@@ -133,6 +138,7 @@ export function MonthCalendar({
             <DayJobPanel
               day={selectedDay}
               items={dayItems}
+              ads={ads}
               dateBasis={dateBasis}
               highlightId={pickedJobId}
             />

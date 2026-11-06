@@ -44,8 +44,8 @@ export async function adminGet<T>(
   return response.data;
 }
 
-/** 쓰기 요청. 공지의 `POST`·`PUT` 만 남았다. */
-export async function adminWrite<T>(method: 'POST' | 'PUT', path: string, body: unknown) {
+/** 쓰기 요청. 공지의 `POST`·`PUT` 과 배너 세팅(`PATCH` 포함)이 쓴다. */
+export async function adminWrite<T>(method: 'POST' | 'PUT' | 'PATCH', path: string, body: unknown) {
   const response = await httpClient<AdminResponse<T>>(path, {
     method,
     body: JSON.stringify(body),

@@ -14,6 +14,8 @@ export interface HeroTheme {
   /** 배지 pill 배경·글자색. 돋보기 아이콘도 글자색을 따른다. */
   badgeBg: string;
   badgeText: string;
+  /** 강조 조각(`accent`)의 글자색. 없으면 민트(`#1BC47D`)다. */
+  accentText?: string;
 }
 
 export interface HeroConfig {
@@ -42,6 +44,8 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
       backgroundImage: '/hero/jobs.png',
       badgeBg: 'bg-blue-100',
       badgeText: 'text-blue-500',
+      // 광고 구좌 시안(`.claude/tasks/memos/광고-시스템-시안/images/home-pc-guest.png`)의 `딱!`·`NN개` 는 파랑이다.
+      accentText: 'text-blue-500',
     },
   },
   bootcamps: {
@@ -90,6 +94,28 @@ export const HERO_CONTENT: Record<HeroScreen, HeroConfig> = {
     },
   },
 };
+
+/**
+ * 홈(채용공고) 히어로 헤드라인. 광고 구좌 시안(`home-pc-guest.png`·`home-pc-member.png`, 이슈 #573)대로 첫 줄은
+ * 로그인 여부로, 둘째 줄은 공고 수로 갈린다. `HERO_CONTENT.jobs.lines` 는 그대로 두어 공유 이미지(`og/sectionOgImage`)가 쓴다.
+ *
+ * - `name` 이 있으면 `{이름}에게 딱! 맞는`, 없으면 `지금 딱! 필요한`
+ * - `count` 가 있으면 `채용공고가 NN개 올라왔어요`, 없으면(받지 못함) 숫자 없이 `채용공고가 매일 올라와요`
+ */
+export function jobsHeroLines(name: string | undefined, count: number | null): HeroSegment[][] {
+  const first: HeroSegment[] = name
+    ? [{ text: `${name}에게 ` }, { text: '딱!', accent: true, tilted: true }, { text: ' 맞는' }]
+    : [{ text: '지금 ' }, { text: '딱!', accent: true, tilted: true }, { text: ' 필요한' }];
+  const second: HeroSegment[] =
+    count === null
+      ? [{ text: '채용공고가 매일 올라와요' }]
+      : [
+          { text: '채용공고가 ' },
+          { text: `${count.toLocaleString('ko-KR')}개`, accent: true },
+          { text: ' 올라왔어요' },
+        ];
+  return [first, second];
+}
 
 /**
  * `HeroSkeleton`이 자리를 잡는 높이(px). 목업 배경 PNG의 높이다 — 부트캠프·사이드스터디가

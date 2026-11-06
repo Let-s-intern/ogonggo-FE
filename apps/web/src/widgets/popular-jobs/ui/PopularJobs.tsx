@@ -1,6 +1,7 @@
 import { listPublicJobs, ListPublicJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import type { JobSummary } from '@/entities/job/model/types';
+import { fetchAdJobs } from '@/shared/ads/fetchAdPostings';
 import { fetchTodayJobs } from '../api/fetchTodayJobs';
 import { PopularJobsTabs } from './PopularJobsTabs';
 
@@ -26,17 +27,30 @@ async function fetchPopularPool(): Promise<JobSummary[]> {
  *
  * 오공고 PICK 은 운영자가 고른 공고(`fetchTodayJobs`)이고, 0건이거나 받지 못하면 첫 탭이 조회수 상위
  * 네 건인 "인기 공고" 로 바뀐다 — 히어로가 비지 않게 한다(2026-10-12, 사용자). 인턴·신입은 같은
- * 조회수순 묶음에서 나눈다. 두 요청은 서로 기다리지 않는다.
+ * 조회수순 묶음에서 나눈다. 세 요청은 서로 기다리지 않는다.
+ *
+ * 광고 공고(`JOB_PICK`, 이슈 #573)는 첫 탭 맨 앞에 어드민 순서대로 붙는다. 오공고 PICK 이 비어 첫 탭이 인기 공고로
+ * 바뀌면 그 탭 앞에 붙는다 — 광고가 놓이는 곳은 "히어로의 첫 탭" 이다.
  */
 export async function PopularJobs() {
-  const [pool, picks] = await Promise.all([fetchPopularPool(), fetchTodayJobs()]);
+  const [pool, picks, ads] = await Promise.all([
+    fetchPopularPool(),
+    fetchTodayJobs(),
+    fetchAdJobs('JOB_PICK'),
+  ]);
   const popular = pool.slice(0, TOP_COUNT);
   const intern = pool.filter((job) => job.employmentType === 'INTERN').slice(0, TOP_COUNT);
   const newcomer = pool.filter((job) => job.experienceType === 'NEWCOMER').slice(0, TOP_COUNT);
 
   return (
     <section className="w-full">
-      <PopularJobsTabs picks={picks} popular={popular} intern={intern} newcomer={newcomer} />
+      <PopularJobsTabs
+        picks={picks}
+        popular={popular}
+        intern={intern}
+        newcomer={newcomer}
+        ads={ads}
+      />
     </section>
   );
 }

@@ -53,9 +53,11 @@ export interface JobListFilters {
   sort: string;
 }
 
-export function useJobList(filters: JobListFilters) {
+/** `enabled` 는 한 화면에서 채용공고·부트캠프 검색 중 하나만 켤 때 쓴다(광고 공고 추가 모달). */
+export function useJobList(filters: JobListFilters, enabled = true) {
   return useQuery({
     queryKey: ['admin', 'jobs', filters],
+    enabled,
     // 필터 값은 화면의 선택지에서 오므로 스펙의 enum 과 같다. 빈 값("전체") 만 뺀다.
     queryFn: () => unwrapData(listJobs(omitEmpty({ ...filters }) as ListJobsParams)),
   });
@@ -149,9 +151,10 @@ export interface BootcampListFilters {
   sort: string;
 }
 
-export function useBootcampList(filters: BootcampListFilters) {
+export function useBootcampList(filters: BootcampListFilters, enabled = true) {
   return useQuery({
     queryKey: ['admin', 'bootcamps', filters],
+    enabled,
     queryFn: () => unwrapData(listBootcamps(omitEmpty({ ...filters }) as ListBootcampsParams)),
   });
 }

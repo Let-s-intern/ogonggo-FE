@@ -9,6 +9,7 @@ import { DdayBadge } from '@/shared/ui/DdayBadge';
 import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
 import { BookmarkHintBand } from '@/features/bookmark';
 import { DetailSidebarSection } from '@/shared/ui/DetailSidebarSection';
+import { SideBannerSlot } from '@/widgets/home-banner';
 import { BootcampRecommendedChallenges } from '@/widgets/lets-career-recommend';
 import { BootcampCurriculum } from './BootcampCurriculum';
 import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
@@ -157,6 +158,11 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
           </DetailSidebarSection>
           <DetailSidebarSection>
             <SimilarBootcamps excludeBootcampId={bootcamp.id} />
+          </DetailSidebarSection>
+          {/* 배너 자리(`BOOTCAMP_DETAIL_SIDE`, 이슈 #573). 공고 상세와 같이 비슷한 목록 바로 아래이고, 좁은 화면에서는
+              사이드바째 본문 아래로 내려간다. 노출 중인 배너가 없으면 띠까지 숨는다. */}
+          <DetailSidebarSection>
+            <SideBannerSlot placement="BOOTCAMP_DETAIL_SIDE" />
           </DetailSidebarSection>
         </aside>
       </div>
