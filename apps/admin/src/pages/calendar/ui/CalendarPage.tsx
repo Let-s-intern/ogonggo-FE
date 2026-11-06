@@ -308,7 +308,20 @@ export function CalendarPage() {
           eventContent={(arg) => {
             const props = arg.event.extendedProps as CalendarEventProps;
             return (
-              <span title={props.tooltip} className="flex min-w-0 items-center gap-1 px-1 py-0.5">
+              <span
+                title={props.tooltip}
+                className="flex w-full min-w-0 items-center gap-1 px-1 py-0.5"
+              >
+                {/*
+                  여러 주에 걸친 막대는 줄마다 조각으로 그려진다. 앞 주에서 이어진 조각은 왼쪽 끝에, 다음 주로 이어지는 조각은
+                  오른쪽 끝에 작은 화살표를 둔다(2026-11-06 사용자). 이어지는 쪽 모서리는 FullCalendar 가 이미 각지게 그린다.
+                */}
+                {arg.isStart ? null : (
+                  <span
+                    aria-hidden="true"
+                    className="icon-[lucide--chevron-left] block size-3.5 shrink-0"
+                  />
+                )}
                 {props.kind === 'todo' ? (
                   <span
                     data-todo-toggle=""
@@ -328,12 +341,16 @@ export function CalendarPage() {
                   </span>
                 ) : null}
                 <span className={cn('truncate font-medium', props.done ? 'line-through' : '')}>
-                  {/* 앞 주에서 이어진 조각이면 `(계속)` 을 앞에 붙인다. */}
-                  {arg.isStart ? '' : '(계속) '}
                   {arg.event.title}
                   {/* 한 주 안에 다 들어가는 막대는 그대로 두고, 줄이 바뀌는 막대만 조각마다 기간을 붙인다. */}
                   {arg.isStart && arg.isEnd ? '' : ` (${props.periodLabel})`}
                 </span>
+                {arg.isEnd ? null : (
+                  <span
+                    aria-hidden="true"
+                    className="ml-auto icon-[lucide--chevron-right] block size-3.5 shrink-0"
+                  />
+                )}
               </span>
             );
           }}
