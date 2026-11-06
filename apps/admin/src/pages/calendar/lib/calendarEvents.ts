@@ -48,6 +48,11 @@ export interface CalendarEventProps {
   disabled?: boolean;
   /** 막대 위에 올리면 보이는 설명(`title` 속성). */
   tooltip: string;
+  /**
+   * 막대에 붙이는 짧은 기간(`11.03~11.30`). 한 주를 넘겨 줄이 바뀌는 막대에만 보인다(`CalendarPage` 의 `eventContent`) — 줄마다
+   * 따로 그려지는 조각만 보고는 언제 시작해 언제 끝나는지 알 수 없다(2026-11-06 사용자).
+   */
+  periodLabel: string;
 }
 
 /** `YYYY-MM-DD` 에 하루를 더한다. 시간대와 상관없이 달력 날짜로만 센다. */
@@ -86,6 +91,15 @@ function periodDates(
     end = endAt.slice(11) === '00:00:00' ? endDate : addDays(endDate, 1);
   }
   return { start, end: end > start ? end : addDays(start, 1), openEnd: endAt === null };
+}
+
+/** 막대에 붙일 짧은 기간. 해가 같으면 `MM.DD`, 다르면 `YY.MM.DD`. 끝이 열려 있으면 `11.06~`. */
+function shortPeriodLabel(start: string, endExclusive: string, openEnd: boolean): string {
+  const last = addDays(endExclusive, -1);
+  const sameYear = start.slice(0, 4) === last.slice(0, 4);
+  const short = (value: string) =>
+    (sameYear ? value.slice(5) : value.slice(2)).replaceAll('-', '.');
+  return openEnd ? `${short(start)}~` : `${short(start)}~${short(last)}`;
 }
 
 function formatPeriodLabel(start: string, endExclusive: string, openEnd: boolean): string {
@@ -136,6 +150,7 @@ export function buildAdEvents(data: AdCalendar, rangeEnd: string): EventInput[] 
         kind: 'contract',
         href: `/business/advertisers/${contract.advertiserId}`,
         tooltip: `광고 계약 · ${title} · ${formatPeriodLabel(start, end, openEnd)}`,
+        periodLabel: shortPeriodLabel(start, end, openEnd),
       } satisfies CalendarEventProps,
     });
   }
@@ -162,6 +177,7 @@ export function buildAdEvents(data: AdCalendar, rangeEnd: string): EventInput[] 
             : `/business/advertisers/${banner.advertiserId}`,
         disabled: !banner.enabled,
         tooltip: `배너 · ${title} · ${banner.name} · ${formatPeriodLabel(start, end, openEnd)}`,
+        periodLabel: shortPeriodLabel(start, end, openEnd),
       } satisfies CalendarEventProps,
     });
   }
@@ -180,6 +196,7 @@ export function buildAdEvents(data: AdCalendar, rangeEnd: string): EventInput[] 
         href: `/business/advertisers/${ad.advertiserId}`,
         disabled: !ad.enabled,
         tooltip: `광고 공고 · ${title} · ${ad.targetTitle || '대상 없음'} · ${formatPeriodLabel(start, end, openEnd)}`,
+        periodLabel: shortPeriodLabel(start, end, openEnd),
       } satisfies CalendarEventProps,
     });
   }
@@ -201,6 +218,7 @@ export function buildTodoEvents(todos: CalendarTodo[]): EventInput[] {
       todoId: todo.id,
       done: todo.done,
       tooltip: `할 일 · ${todo.title}${todo.done ? ' · 완료' : ''} · ${formatPeriodLabel(todo.startDate, addDays(todo.endDate, 1), false)}`,
+      periodLabel: shortPeriodLabel(todo.startDate, addDays(todo.endDate, 1), false),
     } satisfies CalendarEventProps,
   }));
 }

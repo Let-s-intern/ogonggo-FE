@@ -275,9 +275,9 @@ export function CalendarPage() {
           now={today}
           height="auto"
           fixedWeekCount={false}
-          // 월간은 한 칸에 여섯 줄까지 그리고 넘치면 `+N 개` 를 누르면 펼친다. 주간은 칸이 높아 다 그린다.
-          dayMaxEvents={6}
-          views={{ dayGridWeek: { dayMaxEvents: false } }}
+          // `+N 개` 로 접지 않고 모든 일정을 그린다. 칸이 그만큼 높아진다(2026-11-06 사용자).
+          dayMaxEvents={false}
+          dayMaxEventRows={false}
           // 광고 일정은 끌지 않는다. 할 일만 막대마다 `editable` 을 켠다(`buildTodoEvents`).
           editable={false}
           eventResizableFromStart
@@ -328,7 +328,11 @@ export function CalendarPage() {
                   </span>
                 ) : null}
                 <span className={cn('truncate font-medium', props.done ? 'line-through' : '')}>
+                  {/* 앞 주에서 이어진 조각이면 `(계속)` 을 앞에 붙인다. */}
+                  {arg.isStart ? '' : '(계속) '}
                   {arg.event.title}
+                  {/* 한 주 안에 다 들어가는 막대는 그대로 두고, 줄이 바뀌는 막대만 조각마다 기간을 붙인다. */}
+                  {arg.isStart && arg.isEnd ? '' : ` (${props.periodLabel})`}
                 </span>
               </span>
             );
