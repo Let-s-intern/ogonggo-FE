@@ -1,8 +1,8 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import type { BannerPlacement, PublicBannerListResponse } from '../banners';
+import { BANNER_PLACEMENTS, type PublicBannerListResponse } from '../banners';
 import { bannerStore, isBannerLive, toPublicBanner } from './fixtures/banners';
 
-const PLACEMENTS: readonly string[] = ['HOME_TOP', 'HOME_BOTTOM'] satisfies BannerPlacement[];
+const PLACEMENTS: readonly string[] = BANNER_PLACEMENTS;
 
 /**
  * 홈 배너 공개 조회(`GET /api/v1/banners?placement=`). 지금 노출 중인 것(켜짐, 기간 안)만 자리 안 순서대로 준다.
@@ -18,7 +18,7 @@ const listBannersHandler = http.get('*/api/v1/banners', ({ request }) => {
       {
         status: 400,
         code: 'BAD_REQUEST',
-        message: 'placement: HOME_TOP, HOME_BOTTOM 중 하나를 보내 주세요.',
+        message: 'placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.',
       },
       { status: 400 },
     );

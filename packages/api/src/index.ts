@@ -9,3 +9,5 @@ export * from './generated/user/endpoints';
 export * from './generated/user/models';
 export * from './enums';
 export * from './banners';
+export * from './ad-postings';
+export * from './advertisers';

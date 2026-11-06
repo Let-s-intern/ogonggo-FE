@@ -9,10 +9,19 @@
  * 떨어뜨려 두면 한쪽만 고쳐지기 쉽다. 생성 타입의 이름과 겹치지 않게 `Banner` 를 붙였다.
  */
 
-/** 배너 자리. `HOME_TOP` 은 홈 히어로 아래, `HOME_BOTTOM` 은 홈 목록 아래 `FOR BUSINESS` 배너 위다. */
-export type BannerPlacement = 'HOME_TOP' | 'HOME_BOTTOM';
+import type { AdvertiserSummary } from './advertisers';
 
-export const BANNER_PLACEMENTS: readonly BannerPlacement[] = ['HOME_TOP', 'HOME_BOTTOM'];
+/**
+ * 배너 자리. `HOME_TOP` 은 홈 히어로 아래, `HOME_BOTTOM` 은 홈 목록 아래 `FOR BUSINESS` 배너 위,
+ * `JOB_DETAIL_SIDE` 는 공고 상세 오른쪽 사이드바(비슷한 공고 아래)다.
+ */
+export type BannerPlacement = 'HOME_TOP' | 'HOME_BOTTOM' | 'JOB_DETAIL_SIDE';
+
+export const BANNER_PLACEMENTS: readonly BannerPlacement[] = [
+  'HOME_TOP',
+  'HOME_BOTTOM',
+  'JOB_DETAIL_SIDE',
+];
 
 /**
  * 공개 조회(`GET /api/v1/banners?placement=`) 한 건. 지금 노출 중인 것(켜짐, 기간 안)만 순서대로 온다.
@@ -21,9 +30,12 @@ export const BANNER_PLACEMENTS: readonly BannerPlacement[] = ['HOME_TOP', 'HOME_
 export interface PublicBannerResponse {
   id: number;
   placement: BannerPlacement;
-  /** PC 이미지(1200×120). 절대 주소이거나 사용자 웹이 두는 `/banners/*.svg` 같은 경로다. */
+  /**
+   * PC 이미지. 홈 자리는 1200×120, 공고 상세 사이드는 400×500 이다. 절대 주소이거나 사용자 웹이 두는
+   * `/banners/*.svg` 같은 경로다.
+   */
   pcImageUrl: string;
-  /** 모바일 이미지(750×200). `pcImageUrl` 과 같은 규칙이다. */
+  /** 모바일 이미지(750×200, 모든 자리 같다). `pcImageUrl` 과 같은 규칙이다. */
   mobileImageUrl: string;
   /** 누르면 가는 곳. `http(s)://` 로 시작하는 주소이거나 `/` 로 시작하는 사이트 안 경로다. */
   linkUrl: string;
@@ -57,6 +69,13 @@ export interface AdminBannerResponse extends PublicBannerResponse {
   enabled: boolean;
   /** 자리 안 순서. 1부터, 작은 것이 먼저다. */
   displayOrder: number;
+  /**
+   * 어느 기업이 맡긴 배너인지(`./advertisers.ts`). `showAdLabel` 이 켜진 배너(돈을 받고 싣는 배너)는 반드시 있고,
+   * 오공고 자체 홍보 배너는 `null` 이어도 된다.
+   */
+  advertiserId: number | null;
+  /** 표에 보일 광고주 요약. 서버가 `advertiserId` 로 읽어 싣는다. 없으면 `null` 이다. */
+  advertiser: AdvertiserSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,6 +93,8 @@ export interface AdminBannerRequest {
   startAt: string | null;
   endAt: string | null;
   enabled: boolean;
+  /** 광고주. `showAdLabel` 이 참이면 필수, 아니면 `null` 을 보낼 수 있다. */
+  advertiserId: number | null;
 }
 
 /** 자리 안 순서 바꾸기(`PUT /api/v1/admin/banners/order`). 그 자리의 배너 id 를 빠짐없이 새 순서대로 보낸다. */

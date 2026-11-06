@@ -12,9 +12,12 @@ import type { AdminBannerResponse, PublicBannerResponse } from '../../banners';
 
 const STORAGE_KEY = 'ogonggo.mock.admin.banners';
 
+/** 저장하는 배너. 응답의 광고주 요약(`advertiser`)은 저장하지 않고 응답할 때 `advertiserId` 로 읽는다. */
+export type BannerRecord = Omit<AdminBannerResponse, 'advertiser'>;
+
 const SEED_TIME = '2026-11-06T09:00:00';
 
-const SEED: AdminBannerResponse[] = [
+const SEED: BannerRecord[] = [
   {
     id: 1,
     placement: 'HOME_TOP',
@@ -28,6 +31,7 @@ const SEED: AdminBannerResponse[] = [
     startAt: null,
     endAt: null,
     enabled: true,
+    advertiserId: null,
     displayOrder: 1,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -45,6 +49,7 @@ const SEED: AdminBannerResponse[] = [
     startAt: null,
     endAt: null,
     enabled: true,
+    advertiserId: null,
     displayOrder: 2,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -63,6 +68,7 @@ const SEED: AdminBannerResponse[] = [
     startAt: '2026-10-01T00:00:00',
     endAt: '2026-10-31T23:59:59',
     enabled: false,
+    advertiserId: 2,
     displayOrder: 3,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
@@ -80,7 +86,45 @@ const SEED: AdminBannerResponse[] = [
     startAt: null,
     endAt: null,
     enabled: true,
+    advertiserId: null,
     displayOrder: 1,
+    createdAt: SEED_TIME,
+    updatedAt: SEED_TIME,
+  },
+  {
+    // 공고 상세 사이드. PC 는 400×500 세로 소재, 모바일(사이드바가 본문 아래로 내려간다)은 750×200 이다.
+    id: 5,
+    placement: 'JOB_DETAIL_SIDE',
+    name: '지원일정 관리 홍보(상세)',
+    pcImageUrl: '/banners/schedule-side.svg',
+    mobileImageUrl: '/banners/schedule-mo.svg',
+    linkUrl: '/mypage/applications',
+    openInNewTab: false,
+    altText: '마감 일정, 이제 놓치지 마세요. 스크랩한 공고를 보드에서 한 번에 관리',
+    showAdLabel: false,
+    startAt: null,
+    endAt: null,
+    enabled: true,
+    advertiserId: null,
+    displayOrder: 1,
+    createdAt: SEED_TIME,
+    updatedAt: SEED_TIME,
+  },
+  {
+    id: 6,
+    placement: 'JOB_DETAIL_SIDE',
+    name: '광고주 배너 예시(상세)',
+    pcImageUrl: '/banners/business-side.svg',
+    mobileImageUrl: '/banners/business-mo.svg',
+    linkUrl: '/biz',
+    openInNewTab: false,
+    altText: '우리 공고, 딱 맞는 인재에게. 오공고 for business 광고 신청하기',
+    showAdLabel: true,
+    startAt: null,
+    endAt: null,
+    enabled: true,
+    advertiserId: 1,
+    displayOrder: 2,
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
   },
@@ -95,11 +139,24 @@ function storage(): Storage | undefined {
   }
 }
 
-function load(): AdminBannerResponse[] {
+function load(): BannerRecord[] {
   try {
     const raw = storage()?.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as AdminBannerResponse[];
+      // 광고주 칸이 생기기 전에 저장한 배너는 광고주 없음으로 읽는다.
+      const saved = (JSON.parse(raw) as BannerRecord[]).map((banner) => ({
+        ...banner,
+        advertiserId: banner.advertiserId ?? null,
+      }));
+      // 저장해 둔 뒤에 새로 생긴 자리(`JOB_DETAIL_SIDE`)는 시드로 채운다. 저장된 자리는 건드리지 않는다.
+      const savedPlacements = new Set(saved.map((banner) => banner.placement));
+      const savedIds = new Set(saved.map((banner) => banner.id));
+      return [
+        ...saved,
+        ...SEED.filter(
+          (banner) => !savedPlacements.has(banner.placement) && !savedIds.has(banner.id),
+        ).map((banner) => ({ ...banner })),
+      ];
     }
   } catch {
     // 깨진 값이면 시드로 시작한다.
@@ -107,7 +164,7 @@ function load(): AdminBannerResponse[] {
   return SEED.map((banner) => ({ ...banner }));
 }
 
-export const bannerStore: { banners: AdminBannerResponse[] } = { banners: load() };
+export const bannerStore: { banners: BannerRecord[] } = { banners: load() };
 
 export function saveBanners(): void {
   try {
@@ -123,7 +180,7 @@ function kstTime(value: string): number {
 }
 
 /** 지금 노출 중인가. 켜져 있고, 시작 시각이 지났고(없으면 지난 것), 끝 시각 전이다(없으면 전). */
-export function isBannerLive(banner: AdminBannerResponse, now = Date.now()): boolean {
+export function isBannerLive(banner: BannerRecord, now = Date.now()): boolean {
   return (
     banner.enabled &&
     (banner.startAt === null || kstTime(banner.startAt) <= now) &&
@@ -140,7 +197,7 @@ export function toPublicBanner({
   openInNewTab,
   altText,
   showAdLabel,
-}: AdminBannerResponse): PublicBannerResponse {
+}: BannerRecord): PublicBannerResponse {
   return {
     id,
     placement,

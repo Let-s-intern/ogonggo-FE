@@ -1,11 +1,12 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import type {
-  AdminBannerRequest,
-  AdminBannerResponse,
-  BannerPlacement,
-  ReplaceAdminBannerOrderRequest,
+import {
+  BANNER_PLACEMENTS,
+  type AdminBannerRequest,
+  type AdminBannerResponse,
+  type ReplaceAdminBannerOrderRequest,
 } from '../../banners';
-import { bannerStore, saveBanners } from '../fixtures/banners';
+import { advertiserSummary, findAdvertiser } from '../fixtures/advertisers';
+import { bannerStore, saveBanners, type BannerRecord } from '../fixtures/banners';
 import { notFound, ok } from './paging';
 
 /**
@@ -22,7 +23,7 @@ import { notFound, ok } from './paging';
  */
 
 const PATH = '*/api/v1/admin/banners';
-const PLACEMENTS: readonly string[] = ['HOME_TOP', 'HOME_BOTTOM'] satisfies BannerPlacement[];
+const PLACEMENTS: readonly string[] = BANNER_PLACEMENTS;
 const NAME_MAX_LENGTH = 50;
 const ALT_TEXT_MAX_LENGTH = 100;
 const URL_MAX_LENGTH = 2048;
@@ -62,7 +63,7 @@ function validate(body: Partial<AdminBannerRequest>, partial: boolean): string |
   const has = (key: keyof AdminBannerRequest) => !partial || body[key] !== undefined;
 
   if (!partial && (typeof body.placement !== 'string' || !PLACEMENTS.includes(body.placement))) {
-    return 'placement: HOME_TOP, HOME_BOTTOM 중 하나를 보내 주세요.';
+    return 'placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.';
   }
   if (has('name')) {
     const name = typeof body.name === 'string' ? body.name.trim() : '';
@@ -116,7 +117,22 @@ function periodError(startAt: string | null, endAt: string | null): string | nul
     : null;
 }
 
-function inPlacement(placement: string): AdminBannerResponse[] {
+/** 응답에 광고주 요약을 붙인다. */
+function toResponse(banner: BannerRecord): AdminBannerResponse {
+  return { ...banner, advertiser: advertiserSummary(banner.advertiserId) };
+}
+
+/** 광고 표시가 켜진 배너는 광고주가 있어야 한다. 자체 홍보(표시 꺼짐)는 없어도 된다. 수정이면 합친 결과로 본다. */
+function advertiserError(showAdLabel: boolean, advertiserId: number | null): string | null {
+  if (advertiserId !== null && !findAdvertiser(advertiserId)) {
+    return 'advertiserId: 있는 광고주를 골라 주세요.';
+  }
+  return showAdLabel && advertiserId === null
+    ? 'advertiserId: 광고 표시가 켜진 배너는 광고주를 골라 주세요.'
+    : null;
+}
+
+function inPlacement(placement: string): BannerRecord[] {
   return bannerStore.banners
     .filter((banner) => banner.placement === placement)
     .sort((a, b) => a.displayOrder - b.displayOrder);
@@ -137,9 +153,9 @@ function readId(raw: unknown): number {
 const listHandler = http.get(PATH, ({ request }) => {
   const placement = new URL(request.url).searchParams.get('placement');
   if (placement === null || !PLACEMENTS.includes(placement)) {
-    return badRequest('placement: HOME_TOP, HOME_BOTTOM 중 하나를 보내 주세요.');
+    return badRequest('placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.');
   }
-  return HttpResponse.json(ok(inPlacement(placement)), { status: 200 });
+  return HttpResponse.json(ok(inPlacement(placement).map(toResponse)), { status: 200 });
 });
 
 const createHandler = http.post(PATH, async ({ request }) => {
@@ -147,16 +163,20 @@ const createHandler = http.post(PATH, async ({ request }) => {
   if (body === null || typeof body !== 'object') {
     return badRequest('본문을 JSON 으로 보내 주세요.');
   }
-  const error = validate(body, false) ?? periodError(body.startAt ?? null, body.endAt ?? null);
+  const error =
+    validate(body, false) ??
+    periodError(body.startAt ?? null, body.endAt ?? null) ??
+    advertiserError(body.showAdLabel === true, body.advertiserId ?? null);
   if (error) {
     return badRequest(error);
   }
   const input = body as AdminBannerRequest;
   const now = nowKst();
-  const banner: AdminBannerResponse = {
+  const banner: BannerRecord = {
     ...input,
     name: input.name.trim(),
     altText: input.altText.trim(),
+    advertiserId: input.advertiserId ?? null,
     id: Math.max(0, ...bannerStore.banners.map((item) => item.id)) + 1,
     displayOrder: inPlacement(input.placement).length + 1,
     createdAt: now,
@@ -164,14 +184,17 @@ const createHandler = http.post(PATH, async ({ request }) => {
   };
   bannerStore.banners.push(banner);
   saveBanners();
-  return HttpResponse.json({ ...ok(banner), status: 201, message: 'Created' }, { status: 201 });
+  return HttpResponse.json(
+    { ...ok(toResponse(banner)), status: 201, message: 'Created' },
+    { status: 201 },
+  );
 });
 
 // `/order` 가 `:bannerId` 로 잡히지 않게 그보다 앞에 둔다(메서드가 달라 지금은 겹치지 않지만 순서로도 막는다).
 const replaceOrderHandler = http.put(`${PATH}/order`, async ({ request }) => {
   const body = (await request.json().catch(() => null)) as ReplaceAdminBannerOrderRequest | null;
   if (body === null || typeof body.placement !== 'string' || !PLACEMENTS.includes(body.placement)) {
-    return badRequest('placement: HOME_TOP, HOME_BOTTOM 중 하나를 보내 주세요.');
+    return badRequest('placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.');
   }
   const current = inPlacement(body.placement);
   const ids = Array.isArray(body.bannerIds) ? body.bannerIds : [];
@@ -189,7 +212,7 @@ const replaceOrderHandler = http.put(`${PATH}/order`, async ({ request }) => {
     }
   });
   saveBanners();
-  return HttpResponse.json(ok(inPlacement(body.placement)), { status: 200 });
+  return HttpResponse.json(ok(inPlacement(body.placement).map(toResponse)), { status: 200 });
 });
 
 const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request }) => {
@@ -206,7 +229,10 @@ const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request })
   }
   const { placement: _placement, ...changes } = body;
   const merged = { ...banner, ...changes };
-  const error = validate(changes, true) ?? periodError(merged.startAt, merged.endAt);
+  const error =
+    validate(changes, true) ??
+    periodError(merged.startAt, merged.endAt) ??
+    advertiserError(merged.showAdLabel, merged.advertiserId ?? null);
   if (error) {
     return badRequest(error);
   }
@@ -216,7 +242,7 @@ const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request })
     updatedAt: nowKst(),
   });
   saveBanners();
-  return HttpResponse.json(ok(banner), { status: 200 });
+  return HttpResponse.json(ok(toResponse(banner)), { status: 200 });
 });
 
 const deleteHandler = http.delete(`${PATH}/:bannerId`, ({ params }) => {
