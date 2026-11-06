@@ -139,6 +139,64 @@ const SEED: BannerRecord[] = [
     createdAt: SEED_TIME,
     updatedAt: SEED_TIME,
   },
+  // 부트캠프 쪽 세 자리. 채용공고 쪽과 같은 기본 소재를 쓴다.
+  {
+    id: 7,
+    placement: 'BOOTCAMP_TOP',
+    name: '지원일정 관리 홍보(부트캠프)',
+    pcImageUrl: '/banners/schedule-pc.svg',
+    mobileImageUrl: '/banners/schedule-mo.svg',
+    linkUrl: '/mypage/applications',
+    openInNewTab: false,
+    altText: '마감 일정, 이제 놓치지 마세요. 스크랩한 공고를 보드에서 한 번에 관리',
+    showAdLabel: false,
+    startAt: null,
+    endAt: null,
+    enabled: true,
+    advertiserId: null,
+    contractId: null,
+    displayOrder: 1,
+    createdAt: SEED_TIME,
+    updatedAt: SEED_TIME,
+  },
+  {
+    id: 8,
+    placement: 'BOOTCAMP_BOTTOM',
+    name: '오공고 for business 광고 신청(부트캠프)',
+    pcImageUrl: '/banners/business-pc.svg',
+    mobileImageUrl: '/banners/business-mo.svg',
+    linkUrl: '/biz',
+    openInNewTab: false,
+    altText: '우리 공고, 딱 맞는 인재에게. 오공고 for business 광고 신청하기',
+    showAdLabel: false,
+    startAt: null,
+    endAt: null,
+    enabled: true,
+    advertiserId: null,
+    contractId: null,
+    displayOrder: 1,
+    createdAt: SEED_TIME,
+    updatedAt: SEED_TIME,
+  },
+  {
+    id: 9,
+    placement: 'BOOTCAMP_DETAIL_SIDE',
+    name: '새싹 제휴 배너(부트캠프 상세)',
+    pcImageUrl: '/banners/business-side.svg',
+    mobileImageUrl: '/banners/business-mo.svg',
+    linkUrl: '/biz',
+    openInNewTab: false,
+    altText: '우리 공고, 딱 맞는 인재에게. 오공고 for business 광고 신청하기',
+    showAdLabel: true,
+    startAt: null,
+    endAt: null,
+    enabled: true,
+    advertiserId: 3,
+    contractId: null,
+    displayOrder: 1,
+    createdAt: SEED_TIME,
+    updatedAt: SEED_TIME,
+  },
 ];
 
 /** 브라우저에서만 읽고 쓴다. Node(웹 목 서버)의 `localStorage` 는 실험 기능이라 건드리지 않는다. */
@@ -160,7 +218,7 @@ function load(): BannerRecord[] {
         advertiserId: banner.advertiserId ?? null,
         contractId: banner.contractId ?? null,
       }));
-      // 저장해 둔 뒤에 새로 생긴 자리(`JOB_DETAIL_SIDE`)는 시드로 채운다. 저장된 자리는 건드리지 않는다.
+      // 저장해 둔 뒤에 새로 생긴 자리(`JOB_DETAIL_SIDE`, 부트캠프 세 자리)는 시드로 채운다. 저장된 자리는 건드리지 않는다.
       const savedPlacements = new Set(saved.map((banner) => banner.placement));
       const savedIds = new Set(saved.map((banner) => banner.id));
       return [

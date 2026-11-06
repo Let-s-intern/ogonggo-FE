@@ -21,6 +21,7 @@ import { notFound, ok } from './paging';
  * 광고주 핸들러(이슈 #573). 계약은 `.claude/tasks/memos/백엔드-요청-광고-공고-2026-11-06.md` 의 "광고주".
  *
  * - `GET   /api/v1/admin/advertisers?keyword=&type=` 비즈니스 회원·광고 문의 기업·직접 추가한 기업을 합친 목록.
+ *   계약이 있는 광고주가 먼저다(`sortByContract`).
  *   `keyword` 는 이름·담당자 이름·메일 부분 일치(대소문자 무시), `type` 은 `MEMBER`·`NON_MEMBER`. 페이지 없이 최대 50건
  * - `GET   /api/v1/admin/advertisers/{id}`          한 건
  * - `POST  /api/v1/admin/advertisers`               비회원 광고주 추가. 같은 이름(공백·대소문자 무시)이 있으면 400
@@ -70,6 +71,38 @@ function toResponse(advertiser: AdvertiserRecord): AdminAdvertiserResponse {
   };
 }
 
+/**
+ * 계약이 있는 광고주를 위로 올린다. 진행 중 계약이 있는 곳, 계약만 있는 곳, 없는 곳 순이고, 같은 무리 안에서는 계약 끝이 늦은
+ * 곳이 먼저, 그다음 이름순이다(계약이 없는 곳은 이름순). 광고 계약 목록(2026-11-06 사용자)이 이 순서로 보인다.
+ */
+function sortByContract(advertisers: AdvertiserRecord[]): AdvertiserRecord[] {
+  const rank = (advertiser: AdvertiserRecord) => {
+    const contracts = adContractStore.contracts.filter(
+      (contract) => contract.advertiserId === advertiser.id,
+    );
+    const group = contracts.some((contract) => isAdContractActive(contract))
+      ? 0
+      : contracts.length > 0
+        ? 1
+        : 2;
+    const latestEnd = contracts.reduce(
+      (latest, contract) => (contract.endAt > latest ? contract.endAt : latest),
+      '',
+    );
+    return { group, latestEnd };
+  };
+  const ranked = advertisers.map((advertiser) => ({ advertiser, ...rank(advertiser) }));
+  return ranked
+    .sort((ra, rb) => {
+      const a = ra.advertiser;
+      const b = rb.advertiser;
+      if (ra.group !== rb.group) return ra.group - rb.group;
+      if (ra.latestEnd !== rb.latestEnd) return ra.latestEnd < rb.latestEnd ? 1 : -1;
+      return a.name.localeCompare(b.name, 'ko');
+    })
+    .map(({ advertiser }) => advertiser);
+}
+
 /** 칸 하나를 다듬는다. 빈 문자열은 지운 것이다. */
 const optional = (value: string | undefined) => value?.trim() || undefined;
 
@@ -88,7 +121,9 @@ const listHandler = http.get(PATH, ({ request }) => {
           text?.toLowerCase().includes(keyword),
         )),
   );
-  return HttpResponse.json(ok(matches.slice(0, LIST_LIMIT).map(toResponse)), { status: 200 });
+  return HttpResponse.json(ok(sortByContract(matches).slice(0, LIST_LIMIT).map(toResponse)), {
+    status: 200,
+  });
 });
 
 const detailHandler = http.get(`${PATH}/:advertiserId`, ({ params }) => {

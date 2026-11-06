@@ -1,6 +1,8 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import {
   BANNER_PLACEMENTS,
+  isSideBannerPlacement,
+  type BannerPlacement,
   type AdminBannerRequest,
   type AdminBannerResponse,
   type ReplaceAdminBannerOrderRequest,
@@ -26,6 +28,7 @@ import { notFound, ok } from './paging';
 
 const PATH = '*/api/v1/admin/banners';
 const PLACEMENTS: readonly string[] = BANNER_PLACEMENTS;
+const PLACEMENT_MESSAGE = `placement: ${BANNER_PLACEMENTS.join(', ')} 중 하나를 보내 주세요.`;
 const NAME_MAX_LENGTH = 50;
 const ALT_TEXT_MAX_LENGTH = 100;
 const URL_MAX_LENGTH = 2048;
@@ -65,7 +68,7 @@ function validate(body: Partial<AdminBannerRequest>, partial: boolean): string |
   const has = (key: keyof AdminBannerRequest) => !partial || body[key] !== undefined;
 
   if (!partial && (typeof body.placement !== 'string' || !PLACEMENTS.includes(body.placement))) {
-    return 'placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.';
+    return PLACEMENT_MESSAGE;
   }
   if (has('name')) {
     const name = typeof body.name === 'string' ? body.name.trim() : '';
@@ -76,7 +79,7 @@ function validate(body: Partial<AdminBannerRequest>, partial: boolean): string |
   for (const key of ['pcImageUrl', 'mobileImageUrl'] as const) {
     if (has(key)) {
       const value = body[key];
-      // 모바일은 비울 수 있다(`null`). 공고 상세 자리만 꼭 있어야 하고 그건 합친 결과로 본다(`mobileImageError`).
+      // 모바일은 비울 수 있다(`null`). 상세 사이드 자리만 꼭 있어야 하고 그건 합친 결과로 본다(`mobileImageError`).
       if (key === 'mobileImageUrl' && value === null) {
         continue;
       }
@@ -123,14 +126,14 @@ function periodError(startAt: string | null, endAt: string | null): string | nul
     : null;
 }
 
-/** 공고 상세 자리는 PC 가 세로 소재라 좁은 화면에 그대로 쓸 수 없다. 모바일 이미지가 꼭 있어야 한다. */
-function mobileImageError(placement: string, mobileImageUrl: string | null | undefined) {
-  return placement === 'JOB_DETAIL_SIDE' && !mobileImageUrl
-    ? 'mobileImageUrl: 공고 상세 배너는 모바일 이미지(750×200)가 있어야 합니다.'
+/** 상세 사이드 자리(공고·부트캠프)는 PC 가 세로 소재라 좁은 화면에 그대로 쓸 수 없다. 모바일 이미지가 꼭 있어야 한다. */
+function mobileImageError(placement: BannerPlacement, mobileImageUrl: string | null | undefined) {
+  return isSideBannerPlacement(placement) && !mobileImageUrl
+    ? 'mobileImageUrl: 상세 사이드 배너는 모바일 이미지(750×200)가 있어야 합니다.'
     : null;
 }
 
-/** 응답에 광고주·계약 요약을 붙인다. 광고주별 광고(`./advertisers.ts`)도 쓴다. */
+/** 응답에 광고주·계약 요약을 붙인다. 광고 계약(`./advertisers.ts`)도 쓴다. */
 export function toAdminBannerResponse(banner: BannerRecord): AdminBannerResponse {
   return {
     ...banner,
@@ -176,7 +179,7 @@ const listHandler = http.get(PATH, ({ request }) => {
     return badRequest('advertiserId: 광고주 id 를 숫자로 보내 주세요.');
   }
   if (placement === null ? advertiserId === null : !PLACEMENTS.includes(placement)) {
-    return badRequest('placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.');
+    return badRequest(PLACEMENT_MESSAGE);
   }
   const banners = (placement === null ? BANNER_PLACEMENTS : [placement])
     .flatMap(inPlacement)
@@ -193,7 +196,7 @@ const createHandler = http.post(PATH, async ({ request }) => {
     validate(body, false) ??
     periodError(body.startAt ?? null, body.endAt ?? null) ??
     advertiserError(body.showAdLabel === true, body.advertiserId ?? null) ??
-    mobileImageError(body.placement as string, body.mobileImageUrl) ??
+    mobileImageError(body.placement as BannerPlacement, body.mobileImageUrl) ??
     adContractLinkError(body.contractId, body.advertiserId ?? null);
   if (error) {
     return badRequest(error);
@@ -224,7 +227,7 @@ const createHandler = http.post(PATH, async ({ request }) => {
 const replaceOrderHandler = http.put(`${PATH}/order`, async ({ request }) => {
   const body = (await request.json().catch(() => null)) as ReplaceAdminBannerOrderRequest | null;
   if (body === null || typeof body.placement !== 'string' || !PLACEMENTS.includes(body.placement)) {
-    return badRequest('placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.');
+    return badRequest(PLACEMENT_MESSAGE);
   }
   const current = inPlacement(body.placement);
   const ids = Array.isArray(body.bannerIds) ? body.bannerIds : [];

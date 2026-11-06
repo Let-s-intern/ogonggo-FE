@@ -46,7 +46,7 @@ function nowKst(): string {
 }
 
 /**
- * 저장된 광고에 대상의 제목·회사·노출 가능 여부를 붙인다. 대상이 없으면 빈 칸이고 나갈 수 없다. 광고주별 광고
+ * 저장된 광고에 대상의 제목·회사·노출 가능 여부를 붙인다. 대상이 없으면 빈 칸이고 나갈 수 없다. 광고 계약 화면
  * (`./advertisers.ts`)도 쓴다.
  */
 export function toAdminAdPostingResponse(record: AdPostingRecord): AdminAdPostingResponse {

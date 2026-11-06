@@ -14,15 +14,30 @@ import type { AdvertiserSummary } from './advertisers';
 
 /**
  * 배너 자리. `HOME_TOP` 은 홈 히어로 아래, `HOME_BOTTOM` 은 홈 목록 아래 `FOR BUSINESS` 배너 위,
- * `JOB_DETAIL_SIDE` 는 공고 상세 오른쪽 사이드바(비슷한 공고 아래)다.
+ * `JOB_DETAIL_SIDE` 는 공고 상세 오른쪽 사이드바(비슷한 공고 아래)다. 부트캠프 쪽도 같은 세 자리를 둔다 —
+ * `BOOTCAMP_TOP` 은 부트캠프 목록 위(첫 쪽만), `BOOTCAMP_BOTTOM` 은 목록 아래 `FOR BUSINESS` 배너 위,
+ * `BOOTCAMP_DETAIL_SIDE` 는 부트캠프 상세 오른쪽 사이드바다.
  */
-export type BannerPlacement = 'HOME_TOP' | 'HOME_BOTTOM' | 'JOB_DETAIL_SIDE';
+export type BannerPlacement =
+  | 'HOME_TOP'
+  | 'HOME_BOTTOM'
+  | 'JOB_DETAIL_SIDE'
+  | 'BOOTCAMP_TOP'
+  | 'BOOTCAMP_BOTTOM'
+  | 'BOOTCAMP_DETAIL_SIDE';
 
 export const BANNER_PLACEMENTS: readonly BannerPlacement[] = [
   'HOME_TOP',
   'HOME_BOTTOM',
   'JOB_DETAIL_SIDE',
+  'BOOTCAMP_TOP',
+  'BOOTCAMP_BOTTOM',
+  'BOOTCAMP_DETAIL_SIDE',
 ];
+
+/** 세로 소재(PC 400×500)를 쓰는 사이드바 자리. 모바일 이미지가 꼭 있어야 한다. */
+export const isSideBannerPlacement = (placement: BannerPlacement) =>
+  placement === 'JOB_DETAIL_SIDE' || placement === 'BOOTCAMP_DETAIL_SIDE';
 
 /**
  * 공개 조회(`GET /api/v1/banners?placement=`) 한 건. 지금 노출 중인 것(켜짐, 기간 안)만 순서대로 온다.
@@ -32,7 +47,7 @@ export interface PublicBannerResponse {
   id: number;
   placement: BannerPlacement;
   /**
-   * PC 이미지. 홈 자리는 1200×120, 공고 상세 사이드는 400×500 이다. 절대 주소이거나 사용자 웹이 두는
+   * PC 이미지. 목록 위·아래 자리는 1200×120, 상세 사이드(공고·부트캠프)는 400×500 이다. 절대 주소이거나 사용자 웹이 두는
    * `/banners/*.svg` 같은 경로다.
    */
   pcImageUrl: string;

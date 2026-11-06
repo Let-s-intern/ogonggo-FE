@@ -18,7 +18,7 @@ const listBannersHandler = http.get('*/api/v1/banners', ({ request }) => {
       {
         status: 400,
         code: 'BAD_REQUEST',
-        message: 'placement: HOME_TOP, HOME_BOTTOM, JOB_DETAIL_SIDE 중 하나를 보내 주세요.',
+        message: `placement: ${BANNER_PLACEMENTS.join(', ')} 중 하나를 보내 주세요.`,
       },
       { status: 400 },
     );

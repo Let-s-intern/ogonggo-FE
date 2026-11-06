@@ -20,7 +20,7 @@ export interface AdvertiserSummary {
 }
 
 /**
- * 광고주별 광고 수(광고주별 광고 화면). 서버가 배너·광고 공고에서 세어 싣는다. `active` 는 지금 노출 중인 것만 센다 —
+ * 광고주별 광고 수(광고 계약 화면). 서버가 배너·광고 공고에서 세어 싣는다. `active` 는 지금 노출 중인 것만 센다 —
  * 켜져 있고 기간 안이며, 광고 공고는 대상이 공개·모집 중이어야 한다(각 표의 `노출 중` 과 같은 규칙).
  */
 export interface AdvertiserAdCounts {
