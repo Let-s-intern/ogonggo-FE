@@ -21,25 +21,14 @@ import {
 import {
   AD_PLACEMENT_DESCRIPTIONS,
   AD_PLACEMENT_LABELS,
+  AD_POSTING_STATUS_BADGES,
   adPostingStatus,
-  type AdPostingStatus,
 } from '@/entities/ad-posting/lib/adPosting';
 import { advertiserFilterOptions } from '@/entities/advertiser/lib/advertiserFilter';
 import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
 import { formatPeriod } from '@/entities/banner/lib/banner';
 import { PageHeader } from '@/widgets/page-header';
-import { AdPostingFormModal } from './AdPostingFormModal';
-
-const STATUS_BADGES: Record<
-  AdPostingStatus,
-  { label: string; tone: 'success' | 'main' | 'neutral' | 'urgent' }
-> = {
-  LIVE: { label: '노출 중', tone: 'success' },
-  SCHEDULED: { label: '노출 예정', tone: 'main' },
-  ENDED: { label: '기간 끝남', tone: 'neutral' },
-  OFF: { label: '꺼짐', tone: 'neutral' },
-  UNAVAILABLE: { label: '대상 비공개·마감', tone: 'urgent' },
-};
+import { AdPostingFormModal } from '@/widgets/ad-posting-form';
 
 const PLACEMENT_TABS = AD_POSTING_PLACEMENTS.map((value) => ({
   value,
@@ -64,7 +53,7 @@ export function AdPostingSettingsPage() {
   const [advertiserFilter, setAdvertiserFilter] = useState('');
   const { data, isPending, isError } = useAdPostingList(placement);
   const reorder = useReorderAdPostings(placement);
-  const deleteMutation = useDeleteAdPosting(placement);
+  const deleteMutation = useDeleteAdPosting();
   const rows = data ?? [];
   const shownRows = rows.filter(
     (row) => advertiserFilter === '' || String(row.advertiser?.id) === advertiserFilter,
@@ -128,7 +117,7 @@ export function AdPostingSettingsPage() {
       header: '상태',
       width: 'w-32',
       render: (row) => {
-        const badge = STATUS_BADGES[adPostingStatus(row)];
+        const badge = AD_POSTING_STATUS_BADGES[adPostingStatus(row)];
         return <Badge tone={badge.tone}>{badge.label}</Badge>;
       },
     },

@@ -73,6 +73,17 @@ function kstTime(value: string): number {
 
 export type BannerStatus = 'LIVE' | 'SCHEDULED' | 'ENDED' | 'OFF';
 
+/** 표의 `상태` 칸. 배너 세팅과 광고주별 광고가 같이 쓴다. */
+export const BANNER_STATUS_BADGES: Record<
+  BannerStatus,
+  { label: string; tone: 'success' | 'main' | 'neutral' }
+> = {
+  LIVE: { label: '노출 중', tone: 'success' },
+  SCHEDULED: { label: '노출 예정', tone: 'main' },
+  ENDED: { label: '기간 끝남', tone: 'neutral' },
+  OFF: { label: '꺼짐', tone: 'neutral' },
+};
+
 /** 지금 홈에 보이는지. 공개 조회가 거르는 규칙(켜짐, 시작 ≤ 지금 < 끝)과 같다. */
 export function bannerStatus(banner: Banner, now = Date.now()): BannerStatus {
   if (!banner.enabled) return 'OFF';

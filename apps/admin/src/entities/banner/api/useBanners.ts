@@ -28,14 +28,33 @@ export function useBannerList(placement: BannerPlacement) {
   });
 }
 
-function useInvalidate(placement: BannerPlacement) {
+/**
+ * 광고주 한 곳의 배너 전부(모든 자리, 꺼진 것 포함). 광고주별 광고 화면이 쓴다. 자리 순서·자리 안 순서대로 온다.
+ */
+export function useAdvertiserBanners(advertiserId: number) {
+  return useQuery({
+    queryKey: ['admin', 'banners', 'advertiser', advertiserId],
+    queryFn: () => adminGet<Banner[]>(ADMIN_BANNERS_PATH, { advertiserId }),
+    enabled: Number.isInteger(advertiserId),
+  });
+}
+
+/**
+ * 쓰기 뒤에는 그 자리 목록만이 아니라 배너 목록 전부와 광고주 목록(광고 수)을 다시 받는다. 자리별 화면과 광고주별 화면이
+ * 같은 배너를 다른 키로 들고 있다.
+ */
+function useInvalidate() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: listKey(placement) });
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] }),
+      queryClient.invalidateQueries({ queryKey: ['admin', 'advertisers'] }),
+    ]);
 }
 
 /** 등록과 수정. 수정은 `PATCH` 라 보낸 칸만 바뀌지만 폼이 모든 칸을 들고 있어 모두 보낸다(공지와 같다). */
 export function useSaveBanner(placement: BannerPlacement, bannerId: number | null) {
-  const invalidate = useInvalidate(placement);
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (input: BannerInput) =>
       bannerId === null
@@ -47,7 +66,7 @@ export function useSaveBanner(placement: BannerPlacement, bannerId: number | nul
 
 /** 표에서 켜고 끈다. `enabled` 한 칸만 보낸다. */
 export function useToggleBanner(placement: BannerPlacement, bannerId: number) {
-  const invalidate = useInvalidate(placement);
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (enabled: boolean) =>
       adminWrite<Banner>('PATCH', `${ADMIN_BANNERS_PATH}/${bannerId}`, { enabled }),
@@ -57,7 +76,7 @@ export function useToggleBanner(placement: BannerPlacement, bannerId: number) {
 
 /** 자리 안 순서를 통째로 바꾼다. 그 자리의 id 를 빠짐없이 새 순서대로 보낸다. */
 export function useReorderBanners(placement: BannerPlacement) {
-  const invalidate = useInvalidate(placement);
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (bannerIds: number[]) =>
       adminWrite<Banner[]>('PUT', `${ADMIN_BANNERS_PATH}/order`, { placement, bannerIds }),
@@ -65,8 +84,8 @@ export function useReorderBanners(placement: BannerPlacement) {
   });
 }
 
-export function useDeleteBanner(placement: BannerPlacement) {
-  const invalidate = useInvalidate(placement);
+export function useDeleteBanner() {
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (bannerId: number) => adminDelete(`${ADMIN_BANNERS_PATH}/${bannerId}`),
     onSuccess: invalidate,

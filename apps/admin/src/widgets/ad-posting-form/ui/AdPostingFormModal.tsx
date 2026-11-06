@@ -26,6 +26,8 @@ interface AdPostingFormModalProps {
   adPosting: AdPosting | null;
   /** 이 자리에 이미 든 대상. 다시 고를 수 없다. */
   takenTargetIds: Set<number>;
+  /** 새 광고에 미리 고를 광고주. 광고주별 광고 화면에서 열 때 준다. */
+  initialAdvertiser?: AdvertiserSummary;
   onClose: () => void;
 }
 
@@ -44,10 +46,11 @@ export function AdPostingFormModal({
   placement,
   adPosting,
   takenTargetIds,
+  initialAdvertiser,
   onClose,
 }: AdPostingFormModalProps) {
   const targetLabel = adPostingTargetType(placement) === 'BOOTCAMP' ? '부트캠프' : '채용공고';
-  const create = useCreateAdPosting(placement);
+  const create = useCreateAdPosting();
   const update = useUpdateAdPosting(placement, adPosting?.id ?? 0);
   const mutation = adPosting ? update : create;
 
@@ -61,7 +64,7 @@ export function AdPostingFormModal({
       : null,
   );
   const [advertiser, setAdvertiser] = useState<AdvertiserSummary | null>(
-    adPosting?.advertiser ?? null,
+    adPosting?.advertiser ?? initialAdvertiser ?? null,
   );
   const [startAt, setStartAt] = useState(toInputValue(adPosting?.startAt ?? null));
   const [endAt, setEndAt] = useState(toInputValue(adPosting?.endAt ?? null));

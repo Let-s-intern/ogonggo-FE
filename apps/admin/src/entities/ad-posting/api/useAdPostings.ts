@@ -26,14 +26,33 @@ export function useAdPostingList(placement: AdPostingPlacement) {
   });
 }
 
-function useInvalidate(placement: AdPostingPlacement) {
+/**
+ * 광고주 한 곳의 광고 전부(모든 자리, 꺼진 것 포함). 광고주별 광고 화면이 쓴다. 자리 순서·자리 안 순서대로 온다.
+ */
+export function useAdvertiserAdPostings(advertiserId: number) {
+  return useQuery({
+    queryKey: ['admin', 'ad-postings', 'advertiser', advertiserId],
+    queryFn: () => adminGet<AdPosting[]>(ADMIN_AD_POSTINGS_PATH, { advertiserId }),
+    enabled: Number.isInteger(advertiserId),
+  });
+}
+
+/**
+ * 쓰기 뒤에는 그 자리 목록만이 아니라 광고 목록 전부와 광고주 목록(광고 수)을 다시 받는다. 자리별 화면과 광고주별 화면이
+ * 같은 광고를 다른 키로 들고 있다.
+ */
+function useInvalidate() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: listKey(placement) });
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['admin', 'ad-postings'] }),
+      queryClient.invalidateQueries({ queryKey: ['admin', 'advertisers'] }),
+    ]);
 }
 
 /** 등록. 그 자리의 맨 뒤 칸에 붙는다. */
-export function useCreateAdPosting(placement: AdPostingPlacement) {
-  const invalidate = useInvalidate(placement);
+export function useCreateAdPosting() {
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (input: CreateAdminAdPostingRequest) =>
       adminWrite<AdPosting>('POST', ADMIN_AD_POSTINGS_PATH, input),
@@ -43,7 +62,7 @@ export function useCreateAdPosting(placement: AdPostingPlacement) {
 
 /** 수정(광고주·기간·켜기). 표의 켜기 스위치는 `enabled` 한 칸만 보낸다. */
 export function useUpdateAdPosting(placement: AdPostingPlacement, adPostingId: number) {
-  const invalidate = useInvalidate(placement);
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (input: UpdateAdminAdPostingRequest) =>
       adminWrite<AdPosting>('PATCH', `${ADMIN_AD_POSTINGS_PATH}/${adPostingId}`, input),
@@ -53,7 +72,7 @@ export function useUpdateAdPosting(placement: AdPostingPlacement, adPostingId: n
 
 /** 자리 안 순서를 통째로 바꾼다. 그 자리의 id 를 빠짐없이 새 순서대로 보낸다. */
 export function useReorderAdPostings(placement: AdPostingPlacement) {
-  const invalidate = useInvalidate(placement);
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (adPostingIds: number[]) =>
       adminWrite<AdPosting[]>('PUT', `${ADMIN_AD_POSTINGS_PATH}/order`, {
@@ -64,8 +83,8 @@ export function useReorderAdPostings(placement: AdPostingPlacement) {
   });
 }
 
-export function useDeleteAdPosting(placement: AdPostingPlacement) {
-  const invalidate = useInvalidate(placement);
+export function useDeleteAdPosting() {
+  const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (adPostingId: number) => adminDelete(`${ADMIN_AD_POSTINGS_PATH}/${adPostingId}`),
     onSuccess: invalidate,

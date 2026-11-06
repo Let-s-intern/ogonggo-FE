@@ -38,3 +38,15 @@ export function adPostingStatus(ad: AdPosting, now = Date.now()): AdPostingStatu
   if (!ad.targetAvailable) return 'UNAVAILABLE';
   return 'LIVE';
 }
+
+/** 표의 `상태` 칸. 광고 공고 세팅과 광고주별 광고가 같이 쓴다. */
+export const AD_POSTING_STATUS_BADGES: Record<
+  AdPostingStatus,
+  { label: string; tone: 'success' | 'main' | 'neutral' | 'urgent' }
+> = {
+  LIVE: { label: '노출 중', tone: 'success' },
+  SCHEDULED: { label: '노출 예정', tone: 'main' },
+  ENDED: { label: '기간 끝남', tone: 'neutral' },
+  OFF: { label: '꺼짐', tone: 'neutral' },
+  UNAVAILABLE: { label: '대상 비공개·마감', tone: 'urgent' },
+};

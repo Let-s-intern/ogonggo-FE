@@ -174,15 +174,20 @@ function AdvertiserSearch({
   );
 }
 
-/** 비회원 광고주 추가. 이름만 필수다. 서버가 거절하면(같은 이름 등) 그 문구를 그대로 보인다. */
-function NewAdvertiserForm({
+/**
+ * 비회원 광고주 추가. 이름만 필수다. 서버가 거절하면(같은 이름 등) 그 문구를 그대로 보인다. 광고주별 광고 목록의
+ * `새 광고주 추가` 도 이 폼을 쓴다(`submitLabel` 로 버튼 글자만 바꾼다).
+ */
+export function NewAdvertiserForm({
   initialName,
   onCreated,
   onCancel,
+  submitLabel = '더하고 고르기',
 }: {
   initialName: string;
   onCreated: (advertiser: Advertiser) => void;
   onCancel: () => void;
+  submitLabel?: string;
 }) {
   const create = useCreateAdvertiser();
   const [name, setName] = useState(initialName.trim());
@@ -270,7 +275,7 @@ function NewAdvertiserForm({
           취소
         </Button>
         <Button size="sm" onClick={submit} disabled={create.isPending}>
-          {create.isPending ? '더하는 중' : '더하고 고르기'}
+          {create.isPending ? '더하는 중' : submitLabel}
         </Button>
       </div>
     </div>

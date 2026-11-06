@@ -22,24 +22,16 @@ import {
 import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
 import { advertiserFilterOptions } from '@/entities/advertiser/lib/advertiserFilter';
 import {
+  BANNER_STATUS_BADGES,
   PC_IMAGE_SPECS,
   PLACEMENT_DESCRIPTIONS,
   PLACEMENT_LABELS,
   bannerImageSrc,
   bannerStatus,
   formatPeriod,
-  type BannerStatus,
 } from '@/entities/banner/lib/banner';
 import { PageHeader } from '@/widgets/page-header';
-import { BannerFormModal } from './BannerFormModal';
-
-const STATUS_BADGES: Record<BannerStatus, { label: string; tone: 'success' | 'main' | 'neutral' }> =
-  {
-    LIVE: { label: '노출 중', tone: 'success' },
-    SCHEDULED: { label: '노출 예정', tone: 'main' },
-    ENDED: { label: '기간 끝남', tone: 'neutral' },
-    OFF: { label: '꺼짐', tone: 'neutral' },
-  };
+import { BannerFormModal } from '@/widgets/banner-form';
 
 const PLACEMENT_TABS = BANNER_PLACEMENTS.map((value) => ({
   value,
@@ -66,7 +58,7 @@ export function BannerSettingsPage() {
   const [advertiserFilter, setAdvertiserFilter] = useState('');
   const { data, isPending, isError } = useBannerList(placement);
   const reorder = useReorderBanners(placement);
-  const deleteMutation = useDeleteBanner(placement);
+  const deleteMutation = useDeleteBanner();
   const rows = data ?? [];
   const shownRows = rows.filter(
     (row) =>
@@ -143,7 +135,7 @@ export function BannerSettingsPage() {
       header: '상태',
       width: 'w-24',
       render: (row) => {
-        const badge = STATUS_BADGES[bannerStatus(row)];
+        const badge = BANNER_STATUS_BADGES[bannerStatus(row)];
         return <Badge tone={badge.tone}>{badge.label}</Badge>;
       },
     },
