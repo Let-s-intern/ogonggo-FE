@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { type ReactNode, useMemo, useState } from 'react';
+import { HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
+import { createAdvertisementContract } from '@/shared/api/advertisementContracts';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
 import { PLACEMENTS } from '@/widgets/landing/content';
 import {
@@ -750,6 +752,23 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   },
 };
 
+/**
+ * 서버가 준 오류 문구(`message`)가 있으면 그것을, 없으면 일반 문구를 보인다. 응답을 받지 못했으면(네트워크)
+ * `HttpError` 가 아니다.
+ */
+function submitErrorMessage(error: unknown): string {
+  if (!(error instanceof HttpError)) {
+    return '신청을 접수하지 못했어요. 네트워크 연결을 확인하고 다시 시도해 주세요.';
+  }
+  try {
+    const message = (JSON.parse(error.body) as { message?: unknown }).message;
+    if (typeof message === 'string' && message) return message;
+  } catch {
+    // 본문이 JSON 이 아니면 일반 문구로 간다.
+  }
+  return '신청을 접수하지 못했어요. 잠시 후 다시 시도해 주세요.';
+}
+
 export function AdApplicationForm() {
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
@@ -787,23 +806,11 @@ export function AdApplicationForm() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch('/api/advertisement-contracts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toRequest(values)),
-      });
-      const body = (await res.json().catch(() => null)) as {
-        data?: { id?: number };
-        message?: string;
-      } | null;
-      if (!res.ok || typeof body?.data?.id !== 'number') {
-        setSubmitError(body?.message ?? '신청을 접수하지 못했어요. 잠시 후 다시 시도해 주세요.');
-        return;
-      }
+      const body = await createAdvertisementContract(toRequest(values));
       setDoneId(body.data.id);
       window.scrollTo({ top: 0 });
-    } catch {
-      setSubmitError('신청을 접수하지 못했어요. 네트워크 연결을 확인하고 다시 시도해 주세요.');
+    } catch (caught) {
+      setSubmitError(submitErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }

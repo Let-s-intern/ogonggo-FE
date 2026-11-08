@@ -1,3 +1,4 @@
+import type { CreateAdvertisementContractRequest } from '@/shared/api/advertisementContracts';
 import { PLACEMENTS } from '@/widgets/landing/content';
 
 /**
@@ -182,7 +183,7 @@ export function validateStep(step: number, v: FormValues): Record<string, string
 }
 
 /** 서버 요청 본문. 받을 칸이 없는 상품·기간·모집 형태는 담당자가 읽을 수 있게 `scheduleRequest` 에 적는다. */
-export function toRequest(v: FormValues) {
+export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
   const products = selectedProducts(v);
   const categories = [...new Set(products.map((p) => p.category))];
   const lines = [
