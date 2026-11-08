@@ -9,6 +9,7 @@ import {
 } from '@/shared/config/site';
 import { SiteFooter } from '@/shared/ui/SiteFooter';
 import { SiteHeader } from '@/shared/ui/SiteHeader';
+import { AppProviders } from './providers';
 import './globals.css';
 
 /** `apps/web/src/app/layout.tsx` 와 같은 폰트 파일이다. `variable` 은 `tokens.css` 의 `--font-sans` 가 부른다. */
@@ -65,9 +66,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" className={pretendard.variable}>
       <body className="font-sans antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <AppProviders>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+        </AppProviders>
       </body>
     </html>
   );
