@@ -1,0 +1,326 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Button, Callout } from '@ogonggo/ui';
+import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
+import {
+  findExpiredImages,
+  IMAGE_EXPIRED_MESSAGE,
+  imagesToClearAfterRejection,
+  isImageAssetNotAvailable,
+  useExpiredImageFields,
+} from '@/shared/lib/expiredImages';
+import { useCompanyPostDraft } from '@/shared/lib/useCompanyPostDraft';
+import { DraftRestoreCallout } from '@/shared/ui/DraftRestoreCallout';
+import { FloatingActionBar } from '@/shared/ui/FloatingActionBar';
+import { FormSection } from '@/shared/ui/FormSection';
+import { companyPostCopy } from '@/widgets/company-posts';
+import {
+  createBootcamp,
+  fetchMyBootcamp,
+  replaceBootcamp,
+  saveCompanyBasicInfo,
+  startBootcampRecruitment,
+} from '../lib/api';
+import { validateForDraft, validateForPublish } from '../model/validate';
+import {
+  EMPTY_COMPANY_BOOTCAMP_PASSTHROUGH,
+  EMPTY_COMPANY_BOOTCAMP_VALUES,
+  toCompanyBootcampPassthrough,
+  toCompanyBootcampRequest,
+  toCompanyBootcampValues,
+  toCreateCompanyBootcampRequest,
+  type CompanyBootcampFormValues,
+  type CompanyBootcampPassthrough,
+} from '../model/values';
+import { BootcampApplySettingsSection } from './BootcampApplySettingsSection';
+import { BootcampBasicInfoSection } from './BootcampBasicInfoSection';
+import { BootcampContentSection } from './BootcampContentSection';
+
+export interface CompanyBootcampFormProps {
+  /** 있으면 수정, 없으면 새 공고. 작성한 공고 표에서 넘어올 때만 있다. */
+  bootcampId?: number;
+}
+
+/**
+ * 교육·부트캠프 작성·수정 폼(v5 PRD 4 절, 목업 `docs/asset/v5 기업회원 마이페이지/교육
+ * 부트캠프 공고 등록.png`).
+ *
+ * 채용공고 폼과 같은 3 단 아코디언이고(`shared/ui/FormSection.tsx`) 세 단이 한 벌의 값을
+ * 나눠 그린다. 값은 여기 한 곳에 있다 — 단마다 상태를 두면 저장할 때 세 곳에서 모아야 하고,
+ * 접힌 단의 값이 어디 있는지가 화면 구조에 딸리게 된다.
+ *
+ * 세 단이 처음부터 모두 펼쳐져 있다. 목업이 그렇고, 무엇을 더 채워야 하는지가 한눈에 보여야
+ * 등록이 왜 막혔는지 알 수 있다.
+ *
+ * `bootcampId` 가 있으면 수정이다. `getMyBootcamp` 으로 값을 채운다.
+ *
+ * 값을 읽어 오는 동안은 폼을 그리지 않는다. 빈 폼을 먼저 보이면 그 사이에 저장한 사람이
+ * 자기 공고를 빈 값으로 덮어쓴다.
+ *
+ * **새 공고의 `임시저장` 은 이 브라우저에만 저장한다**(`shared/lib/companyPostDraft.ts`). 채용공고
+ * 폼과 같다 — 서버에 만들면 곧바로 검수 대기가 된다. 이미 저장된 공고를 고칠 때는 서버에 저장한다.
+ *
+ * 서버에 저장할 때 하단 버튼 둘은 저장까지는 같고 그 뒤가 다르다 — `공고 등록` 만 이어서 모집 시작을
+ * 요청한다. **부트캠프에는 `/publish` 가 없다**(v5 PRD 4 절): 새 공고는 언제나 `DRAFT` 로
+ * 만들어지고, 공개는 `start-recruitment` 가 만든다(`lib/api.ts`).
+ *
+ * 저장에 성공하면 작성한 공고의 부트캠프 탭으로 간다. 방금 쓴 공고가 어떤 상태로 들어갔는지
+ * (검수 대기인지 모집 중인지) 를 그 자리에서 보여 주는 화면이 거기뿐이다.
+ */
+export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
+  const router = useRouter();
+  const [values, setValues] = useState<CompanyBootcampFormValues>(EMPTY_COMPANY_BOOTCAMP_VALUES);
+  /** 화면이 그리지 않는 값들. 저장할 때 읽어 온 그대로 다시 싣는다. */
+  const [passthrough, setPassthrough] = useState<CompanyBootcampPassthrough>(
+    EMPTY_COMPANY_BOOTCAMP_PASSTHROUGH,
+  );
+  const [loading, setLoading] = useState(bootcampId !== undefined);
+  const [pending, setPending] = useState(false);
+  const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
+  /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
+  const [formError, setFormError] = useState<string | null>(null);
+  /**
+   * 읽어 온 공고가 게시 중인지. 수정하면 다시 검수를 받는 동안 노출이 멈추므로 폼 위에 알린다
+   * (BE `requestReview`, `prd-company-mypage-posts.md`). 저장을 막지는 않는다.
+   */
+  const [published, setPublished] = useState(false);
+  const isNew = bootcampId === undefined;
+  const expiredImages = useExpiredImageFields<'logoUrl' | 'representativeImageUrl'>();
+  /**
+   * 만료된 업로드 이미지 칸을 비우고 다시 올리라고 표시한다(ogonggo-BE #117). 나머지 칸은 그대로 둔다.
+   */
+  const clearExpired = (keys: ('logoUrl' | 'representativeImageUrl')[]) => {
+    if (keys.length === 0) {
+      return;
+    }
+    setValues((previous) => ({
+      ...previous,
+      ...Object.fromEntries(keys.map((key) => [key, ''])),
+      ...(keys.includes('logoUrl') ? { logoImageId: '' } : {}),
+    }));
+    expiredImages.mark(keys);
+    setOpenSteps((previous) => (previous.includes(1) ? previous : [...previous, 1]));
+  };
+  /** 임시저장을 불러온 뒤, 그 사이 정리 작업이 지운 업로드 이미지가 있으면 비운다. 외부 주소는 보지 않는다. */
+  const checkRestoredImages = (restored: CompanyBootcampFormValues) =>
+    void findExpiredImages({
+      logoUrl: restored.logoUrl ?? '',
+      representativeImageUrl: restored.representativeImageUrl ?? '',
+    }).then(clearExpired);
+  const draft = useCompanyPostDraft({
+    kind: 'bootcamps',
+    enabled: isNew,
+    values,
+    emptyValues: EMPTY_COMPANY_BOOTCAMP_VALUES,
+    onRestore: (restored) => {
+      setValues({ ...EMPTY_COMPANY_BOOTCAMP_VALUES, ...restored });
+      checkRestoredImages(restored);
+    },
+  });
+
+  useEffect(() => {
+    if (bootcampId === undefined) {
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    fetchMyBootcamp(bootcampId)
+      .then((bootcamp) => {
+        if (!active) {
+          return;
+        }
+        if (bootcamp) {
+          setValues(toCompanyBootcampValues(bootcamp));
+          setPublished(bootcamp.publicationStatus === 'PUBLISHED');
+          setPassthrough(toCompanyBootcampPassthrough(bootcamp));
+        } else {
+          setFormError('부트캠프 공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFormError('부트캠프 공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [bootcampId]);
+
+  const change = (patch: Partial<CompanyBootcampFormValues>) => {
+    setValues((previous) => ({ ...previous, ...patch }));
+    expiredImages.onChanged(patch);
+  };
+
+  const toggle = (step: number) =>
+    setOpenSteps((previous) =>
+      previous.includes(step) ? previous.filter((item) => item !== step) : [...previous, step],
+    );
+
+  /**
+   * 검사하는 것이 누른 버튼에 따라 다르다. 임시저장은 요청이 빈 값으로 받지 못하는 칸만
+   * 보고, 등록은 목업의 별표 칸 전부를 본다(`model/validate.ts`).
+   */
+  const save = async (publish: boolean) => {
+    if (pending) {
+      return;
+    }
+    // 새 공고의 임시저장은 서버에 보내지 않는다. 서버에 만들면 곧바로 검수 대기가 된다
+    // (`shared/lib/companyPostDraft.ts`). 저장 뒤에도 이 화면에 머문다.
+    if (!publish && isNew) {
+      setFormError(
+        draft.saveNow() ? null : '임시저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.',
+      );
+      return;
+    }
+    const invalid = publish ? validateForPublish(values) : validateForDraft(values);
+    if (invalid) {
+      setFormError(invalid);
+      return;
+    }
+    setFormError(null);
+    setPending(true);
+    // 기본 정보를 먼저 저장한다. 공고를 만든 뒤에 실패하면 공고만 남고 사용자는 무엇이 저장됐는지
+    // 알 수 없다. 이쪽이 먼저 실패하면 아무것도 만들어지지 않는다.
+    if (values.saveAsBasicInfo) {
+      try {
+        await saveCompanyBasicInfo(values.companyName.trim(), values.logoImageId);
+      } catch (error) {
+        // 기본 정보의 로고가 정리 작업이 지운 업로드 이미지다.
+        if (isImageAssetNotAvailable(error)) {
+          clearExpired(['logoUrl']);
+          setFormError(IMAGE_EXPIRED_MESSAGE);
+          setPending(false);
+          return;
+        }
+        setFormError('기업 기본 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        setPending(false);
+        return;
+      }
+    }
+    try {
+      let savedId = bootcampId;
+      if (savedId === undefined) {
+        savedId = await createBootcamp(
+          toCreateCompanyBootcampRequest(values, passthrough, 'DRAFT'),
+        );
+      } else {
+        await replaceBootcamp(savedId, toCompanyBootcampRequest(values, passthrough));
+      }
+      if (publish && savedId !== undefined) {
+        await startBootcampRecruitment(savedId);
+      }
+      if (isNew) {
+        draft.clear();
+      }
+      router.push('/mypage/company/posts/bootcamps');
+    } catch (error) {
+      // 정리 작업이 지운 업로드 이미지로 저장했다. 응답은 어느 칸인지 알려 주지 않아 이미지를 불러 보고 고른다.
+      if (isImageAssetNotAvailable(error)) {
+        clearExpired(
+          await imagesToClearAfterRejection({
+            logoUrl: values.logoUrl,
+            representativeImageUrl: values.representativeImageUrl,
+          }),
+        );
+        setFormError(IMAGE_EXPIRED_MESSAGE);
+        setPending(false);
+        return;
+      }
+      setFormError(
+        publish
+          ? '부트캠프 공고를 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+          : '임시저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      );
+      setPending(false);
+    }
+  };
+
+  if (loading) {
+    return <p className="py-16 text-center text-sm text-gray-500">불러오는 중입니다.</p>;
+  }
+
+  return (
+    <form
+      className="flex flex-col gap-4 pb-36 md:pb-0"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void save(true);
+      }}
+    >
+      {draft.offeredSavedAt ? (
+        <DraftRestoreCallout
+          savedAt={draft.offeredSavedAt}
+          onRestore={draft.restore}
+          onDiscard={draft.discard}
+        />
+      ) : null}
+      {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
+      <FormSection
+        name="company-bootcamp-form"
+        step={1}
+        title="기본 정보"
+        description="공고를 소개하는 기본 정보를 입력해 주세요"
+        open={openSteps.includes(1)}
+        onToggle={() => toggle(1)}
+      >
+        <BootcampBasicInfoSection
+          values={values}
+          onChange={change}
+          imageNotice={expiredImages.messageOf}
+        />
+      </FormSection>
+
+      <FormSection
+        name="company-bootcamp-form"
+        step={2}
+        title="교육 상세"
+        description="프로그램의 특징과 커리큘럼을 입력해 주세요"
+        open={openSteps.includes(2)}
+        onToggle={() => toggle(2)}
+      >
+        <BootcampContentSection values={values} onChange={change} />
+      </FormSection>
+
+      <FormSection
+        name="company-bootcamp-form"
+        step={3}
+        title="모집 · 지원 설정"
+        description="마감일과 지원 방법을 설정해 주세요"
+        open={openSteps.includes(3)}
+        onToggle={() => toggle(3)}
+      >
+        <BootcampApplySettingsSection values={values} onChange={change} />
+      </FormSection>
+
+      <FloatingActionBar
+        error={formError}
+        status={
+          draft.savedAt
+            ? `이 브라우저에 임시저장했어요 · ${formatDraftSavedAt(draft.savedAt)}`
+            : undefined
+        }
+      >
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={pending}
+          onClick={() => void save(false)}
+          className="flex-1 md:w-36 md:flex-none"
+        >
+          임시저장
+        </Button>
+        <Button type="submit" disabled={pending} className="flex-[2] md:w-44 md:flex-none">
+          공고 등록
+        </Button>
+      </FloatingActionBar>
+    </form>
+  );
+}

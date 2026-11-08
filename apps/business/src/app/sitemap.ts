@@ -1,0 +1,11 @@
+import type { MetadataRoute } from 'next';
+import { SITE_ORIGIN } from '@/shared/config/site';
+
+/** robots 가 막는 `/apply/ad`·`/login`·`/signup`·`/mypage` 는 싣지 않는다. */
+export default function sitemap(): MetadataRoute.Sitemap {
+  return [
+    { url: `${SITE_ORIGIN}/`, changeFrequency: 'monthly', priority: 1 },
+    { url: `${SITE_ORIGIN}/apply`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_ORIGIN}/free-promotion`, changeFrequency: 'monthly', priority: 0.6 },
+  ];
+}

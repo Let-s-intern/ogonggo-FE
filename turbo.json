@@ -7,7 +7,9 @@
         "OGONGGO_USE_MOCKS",
         "OGONGGO_USER_API_ORIGIN",
         "OGONGGO_ADMIN_API_ORIGIN",
-        "OGONGGO_SITE_ORIGIN"
+        "OGONGGO_SITE_ORIGIN",
+        "GOOGLE_SITE_VERIFICATION",
+        "NAVER_SITE_VERIFICATION"
       ],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
