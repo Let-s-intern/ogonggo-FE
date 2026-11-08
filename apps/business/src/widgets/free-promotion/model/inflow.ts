@@ -1,27 +1,25 @@
 import type { InflowFields } from './apply';
 
 /**
- * `/biz` 에 처음 들어온 순간의 유입 원본(PRD `유입 경로`). 서버가 이 값으로 유입 경로를 판정해 저장한다.
+ * `/free-promotion` 에 처음 들어온 순간의 유입 원본(PRD `유입 경로`). 서버가 이 값으로 유입 경로를 판정해 저장한다.
+ * 기준은 `apps/web/src/views/biz/model/inflow.ts` 다.
  *
  * 이 탭에서 처음 한 번만 잡아 `sessionStorage` 에 둔다. 새로고침하거나 페이지 안에서 이동해도 바뀌지 않아,
  * 콜드메일 링크로 들어와 한참 뒤 제출해도 UTM 이 남는다.
  */
-const STORAGE_KEY = 'ogonggo.biz.inflow';
-
-/** `biz.ogonggo.co.kr` 이 `/biz` 로 리다이렉트하며 붙이는 쿼리(PRD `주소`). */
-const ENTRY_QUERY = 'entry';
-const ENTRY_BIZ_HOST = 'biz.ogonggo.co.kr';
+const STORAGE_KEY = 'ogonggo.business.freePromotion.inflow';
 
 /** 서버 요청 필드 길이 상한(`CreateAdvertisementInquiryRequest`). 넘으면 400 이라 잘라 보낸다. */
 const clip = (value: string | null | undefined, max: number) =>
   value ? value.slice(0, max) : undefined;
 
 /**
- * 지금 주소에서 유입 원본을 만든다.
+ * 지금 주소에서 유입 원본을 만든다. `entryHost` 는 실제 호스트다. web 은 `biz.ogonggo.co.kr` 이 `/biz?entry=biz` 로
+ * 리다이렉트해 그 쿼리로 호스트를 되살리지만, 이 앱은 그 도메인에서 바로 열리므로 쿼리를 보지 않는다.
  *
  * 오공고 안의 다른 화면에서 링크로 넘어오면(클라이언트 이동) `document.referrer` 는 그 탭에 처음 문서를
  * 연 곳(예: 검색엔진)으로 남아 있다. 그대로 보내면 `오공고 사이트` 가 아니라 `검색` 으로 판정된다. 그래서
- * 이 문서를 처음 연 주소가 `/biz` 가 아니면 오공고 안에서 넘어온 것으로 보고 그 주소를 `referrer` 로 보낸다.
+ * 이 문서를 처음 연 주소가 `/free-promotion` 이 아니면 오공고 안에서 넘어온 것으로 보고 그 주소를 `referrer` 로 보낸다.
  */
 function captureNow(): InflowFields {
   const url = new URL(window.location.href);
@@ -39,7 +37,7 @@ function captureNow(): InflowFields {
     utmCampaign: clip(query.get('utm_campaign'), 100),
     utmContent: clip(query.get('utm_content'), 100),
     referrer: clip(referrer, 2000),
-    entryHost: clip(query.get(ENTRY_QUERY) === 'biz' ? ENTRY_BIZ_HOST : url.host, 255),
+    entryHost: clip(url.host, 255),
     landingPath: clip(`${url.pathname}${url.search}`, 2000),
   };
 }
