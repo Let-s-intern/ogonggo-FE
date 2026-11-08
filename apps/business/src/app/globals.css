@@ -1,0 +1,15 @@
+@import '@ogonggo/ui/src/styles/tokens.css';
+
+/* Tailwind v4 는 node_modules 를 스캔하지 않아 `@ogonggo/ui` 를 직접 가리킨다(`apps/web/src/app/globals.css` 와 같다). */
+@source '../../../../packages/ui/src';
+@source not '../**/*.stories.tsx';
+@source not '../../../../packages/ui/src/**/*.stories.tsx';
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-gray-00);
+  color: var(--color-gray-900);
+}

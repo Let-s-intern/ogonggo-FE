@@ -1,0 +1,28 @@
+{
+  "name": "business",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "OGONGGO_USER_API_ORIGIN=http://localhost:18080 next dev --turbo --port 4002",
+    "build": "next build",
+    "type-check": "tsgo --noEmit",
+    "lint": "oxlint src",
+    "start": "next start --port 4002"
+  },
+  "dependencies": {
+    "@ogonggo/ui": "workspace:*",
+    "next": "^16.3.8",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@ogonggo/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}
