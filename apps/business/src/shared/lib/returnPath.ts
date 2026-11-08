@@ -17,3 +17,8 @@ export function sanitizeReturnPath(value: string | null | undefined): string | n
   }
   return value;
 }
+
+/** 로그인 화면 주소. 로그인 뒤 `path` 로 돌아온다. 로그인이 필요한 메뉴와 화면이 쓴다. */
+export function loginHref(path: string): string {
+  return `/login?redirect=${encodeURIComponent(path)}`;
+}
