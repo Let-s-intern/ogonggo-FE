@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { createAdvertisementContract } from '@/shared/api/advertisementContracts';
+import { useMyAccount } from '@/shared/api/useMyAccount';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
 import { PLACEMENTS } from '@/widgets/landing/content';
 import {
@@ -19,6 +20,7 @@ import {
   nextMonday,
   parseYmd,
   periodText,
+  prefillFrom,
   PURPOSE_OPTIONS,
   RECRUIT_TYPES,
   type RecruitType,
@@ -777,6 +779,23 @@ export function AdApplicationForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<number | null>(null);
 
+  // 로그인한 기업 회원이면 기업명·담당자·이메일·연락처를 계정 정보로 채운다. 계정은 마운트 뒤에 오므로 그 사이
+  // 사용자가 친 칸은 덮지 않는다. 비로그인이면 `signedOut` 이라 빈 칸 그대로다.
+  const account = useMyAccount();
+  const prefill = useMemo(
+    () => (account.kind === 'ready' ? prefillFrom(account.account) : {}),
+    [account],
+  );
+  useEffect(() => {
+    setValues((prev) => {
+      const next = { ...prev };
+      for (const [key, value] of Object.entries(prefill) as [keyof FormValues, string][]) {
+        if (!prev[key]) Object.assign(next, { [key]: value });
+      }
+      return next;
+    });
+  }, [prefill]);
+
   const set: Update = (key, value) => {
     setValues((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
@@ -822,7 +841,7 @@ export function AdApplicationForm() {
         id={doneId}
         v={values}
         onReset={() => {
-          setValues(INITIAL_VALUES);
+          setValues({ ...INITIAL_VALUES, ...prefill });
           setDoneId(null);
           setStep(1);
         }}

@@ -1,3 +1,4 @@
+import type { MyAccountResponse } from '@ogonggo/api';
 import type { CreateAdvertisementContractRequest } from '@/shared/api/advertisementContracts';
 import { PLACEMENTS } from '@/widgets/landing/content';
 
@@ -61,6 +62,24 @@ export const INITIAL_VALUES: FormValues = {
   agreePrivacy: false,
   agreeNotice: false,
 };
+
+/**
+ * 로그인한 기업 회원의 계정(`GET /api/v1/users/me`)에서 미리 채울 값. 기업 회원이 아니거나 값이 없는 칸은 뺀다.
+ * 신청서에서 고칠 수 있다(PRD 7절).
+ */
+export function prefillFrom(account: MyAccountResponse): Partial<FormValues> {
+  const profile = account.role === 'COMPANY' ? account.companyProfile : undefined;
+  if (!profile) return {};
+  const values: Partial<FormValues> = {
+    companyName: profile.organizationName,
+    managerName: profile.managerName,
+    email: account.email,
+    phone: profile.managerPhone,
+  };
+  return Object.fromEntries(
+    Object.entries(values).filter(([, value]) => value),
+  ) as Partial<FormValues>;
+}
 
 export const STEPS = ['공고 정보', '광고 상품', '집행 일정', '담당자 정보', '최종 확인'] as const;
 
