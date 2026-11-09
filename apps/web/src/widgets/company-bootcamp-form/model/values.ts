@@ -9,11 +9,6 @@ import type {
 } from '@ogonggo/api';
 import { toDateInputValue, toEndDateTime, toStartDateTime } from '@/shared/lib/formDateTime';
 import {
-  appendContentExtras,
-  EMPTY_BOOTCAMP_CONTENT_EXTRAS,
-  type BootcampContentExtras,
-} from '../lib/contentExtras';
-import {
   EMPTY_CURRICULUM_ROW,
   EMPTY_PARTNER_ROW,
   type BootcampCurriculumRow,
@@ -55,11 +50,12 @@ export interface CompanyBootcampFormValues {
   /** 목업의 `공고 상세 내용`. 평문 한 덩어리로 저장된다. */
   content: string;
   curriculums: BootcampCurriculumRow[];
-  /**
-   * 받을 필드가 없어 저장할 때 `content` 뒤에 붙는 칸 셋(`lib/contentExtras.ts`). 되읽을 때
-   * 본문에서 다시 나뉘지 않아, 저장된 공고를 열면 늘 비어 있다.
-   */
-  extras: BootcampContentExtras;
+  /** 목업의 `강사 정보`. */
+  instructorInfo: string;
+  /** 목업의 `교육 특징/혜택`. */
+  programFeatures: string;
+  /** 목업의 `수료 조건`. */
+  completionRequirements: string;
   /** `YYYY-MM-DD`. 백엔드는 일시로 받고 화면은 날짜만 다룬다(`shared/lib/formDateTime.ts`). */
   recruitmentStartAt: string;
   recruitmentEndAt: string;
@@ -97,7 +93,9 @@ export const EMPTY_COMPANY_BOOTCAMP_VALUES: CompanyBootcampFormValues = {
   shortDescription: '',
   content: '',
   curriculums: [EMPTY_CURRICULUM_ROW],
-  extras: EMPTY_BOOTCAMP_CONTENT_EXTRAS,
+  instructorInfo: '',
+  programFeatures: '',
+  completionRequirements: '',
   recruitmentStartAt: '',
   recruitmentEndAt: '',
   applicationMethod: '',
@@ -133,7 +131,9 @@ export function toCompanyBootcampValues(
     shortDescription: bootcamp.shortDescription,
     content: bootcamp.content,
     curriculums: toCurriculumRows(bootcamp.curriculums),
-    extras: EMPTY_BOOTCAMP_CONTENT_EXTRAS,
+    instructorInfo: bootcamp.instructorInfo ?? '',
+    programFeatures: bootcamp.programFeatures ?? '',
+    completionRequirements: bootcamp.completionRequirements ?? '',
     recruitmentStartAt: toDateInputValue(bootcamp.recruitmentStartAt),
     recruitmentEndAt: toDateInputValue(bootcamp.recruitmentEndAt),
     applicationMethod: bootcamp.applicationMethod,
@@ -223,9 +223,6 @@ const numberOrUndefined = (value: string) => (value.trim() === '' ? undefined : 
  * 기간과 같게 둔다 — 요청에 "모집 마감까지" 를 뜻하는 값이 따로 없고 두 날짜뿐이라, 그
  * 뜻을 두 날짜로 옮기는 자리가 여기다.
  *
- * **본문 뒤에 세 칸이 붙는다.** 강사 정보·교육 특징/혜택·수료 조건은 받을 필드가 없어
- * `content` 에 이어 붙인다(`lib/contentExtras.ts`).
- *
  * 목업에 칸이 없는 나머지 값들은 읽어 온 그대로 다시 싣는다(`CompanyBootcampPassthrough`).
  * 수정이 전체 교체라 빼면 지워진다.
  */
@@ -256,8 +253,11 @@ export function toCompanyBootcampRequest(
     tuitionAmount: numberOrUndefined(values.tuitionAmount),
     representativeImageUrl: values.representativeImageUrl.trim(),
     shortDescription: values.shortDescription.trim(),
-    content: appendContentExtras(values.content, values.extras),
+    content: values.content.trim(),
     eligibilityAndSelectionProcess: passthrough.eligibilityAndSelectionProcess,
+    instructorInfo: textOrUndefined(values.instructorInfo),
+    programFeatures: textOrUndefined(values.programFeatures),
+    completionRequirements: textOrUndefined(values.completionRequirements),
     applicationMethod:
       values.applicationMethod as UpdateCompanyBootcampRequest['applicationMethod'],
     applicationUrl: textOrUndefined(values.applicationUrl),

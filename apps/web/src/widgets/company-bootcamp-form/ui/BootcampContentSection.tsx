@@ -3,19 +3,15 @@
 import { Field, Textarea } from '@ogonggo/ui';
 import { CountedInput } from '@/shared/ui/CountedInput';
 import { FormRichTextField } from '@/shared/ui/FormRichTextField';
-import { CONTENT_EXTRA_NOTICE, type BootcampContentExtras } from '../lib/contentExtras';
 import type { CompanyBootcampFormValues } from '../model/values';
 import { BootcampCurriculumField } from './BootcampCurriculumField';
 
 /** `CreateCompanyBootcampRequest.shortDescription` 의 `@maxLength`. */
 const MAX_SHORT_DESCRIPTION_LENGTH = 500;
 
-/**
- * 받을 필드가 없어 본문 뒤에 붙는 칸 셋(v5 PRD 4 절). 목업의 순서 그대로이고, 붙는 순서도
- * 같다(`lib/contentExtras.ts`).
- */
+/** 커리큘럼 아래 글 칸 셋(v5 PRD 4 절). 목업의 순서 그대로다. */
 const EXTRA_FIELDS: readonly {
-  key: keyof BootcampContentExtras;
+  key: 'instructorInfo' | 'programFeatures' | 'completionRequirements';
   label: string;
   placeholder: string;
 }[] = [
@@ -25,7 +21,7 @@ const EXTRA_FIELDS: readonly {
     placeholder: '강사 이름, 경력, 담당 내용을 입력해 주세요.',
   },
   {
-    key: 'programHighlights',
+    key: 'programFeatures',
     label: '교육 특징/혜택',
     placeholder: '프로그램의 강점과 지원자에게 제공되는 혜택을 입력해 주세요.',
   },
@@ -79,19 +75,12 @@ export function BootcampContentSection({ values, onChange }: BootcampContentSect
       />
 
       {EXTRA_FIELDS.map((field) => (
-        <Field
-          key={field.key}
-          label={field.label}
-          htmlFor={`company-bootcamp-${field.key}`}
-          hint={CONTENT_EXTRA_NOTICE}
-        >
+        <Field key={field.key} label={field.label} htmlFor={`company-bootcamp-${field.key}`}>
           <Textarea
             id={`company-bootcamp-${field.key}`}
             rows={4}
-            value={values.extras[field.key]}
-            onChange={(event) =>
-              onChange({ extras: { ...values.extras, [field.key]: event.target.value } })
-            }
+            value={values[field.key]}
+            onChange={(event) => onChange({ [field.key]: event.target.value })}
             placeholder={field.placeholder}
           />
         </Field>
