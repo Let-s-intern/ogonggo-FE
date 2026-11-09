@@ -9,6 +9,7 @@ import {
 } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { ListboxSelect } from '@/shared/ui/ListboxSelect';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
 import {
   AD_PRODUCT_GROUPS,
@@ -185,17 +186,15 @@ function StepPost({
         </div>
         <div>
           <Label required>모집 형태</Label>
-          <select
-            className={INPUT}
+          <ListboxSelect
+            id="ad-recruit-type"
+            label="모집 형태"
+            placeholder="모집 형태를 선택해 주세요."
             value={v.recruitType}
-            onChange={(e) => set('recruitType', e.target.value as RecruitType)}
-          >
-            {RECRUIT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+            options={RECRUIT_TYPES.map((t) => ({ value: t, label: t }))}
+            onChange={(value) => set('recruitType', value as RecruitType)}
+            className="h-[50px] rounded-md text-[15px]"
+          />
         </div>
       </div>
       <div>
