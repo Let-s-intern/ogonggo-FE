@@ -25,9 +25,10 @@ export interface FormValues {
   purpose: Purpose;
   productIds: string[];
   withChannels: boolean;
-  /** 집행 첫 주 월요일 `yyyy-MM-dd`. */
-  weekStart: string | null;
-  weekCount: number;
+  /** 희망 집행 시작일 `yyyy-MM-dd`. */
+  startDate: string | null;
+  /** 희망 집행 종료일 `yyyy-MM-dd`. 시작일과 같으면 하루다. */
+  endDate: string | null;
   scheduleNote: string;
   managerName: string;
   email: string;
@@ -49,8 +50,8 @@ export const INITIAL_VALUES: FormValues = {
   purpose: 'FAST_APPLICANTS',
   productIds: [],
   withChannels: false,
-  weekStart: null,
-  weekCount: 1,
+  startDate: null,
+  endDate: null,
   scheduleNote: '',
   managerName: '',
   email: '',
@@ -109,8 +110,6 @@ export const CREATIVE_OPTIONS: { value: CreativeMethod; label: string; hint: str
 
 export const SCHEDULE_NOTE_MAX = 1000;
 export const AD_REQUEST_MAX = 2000;
-/** 신청 가능한 주 수. 다음 주 월요일부터 12주(랜딩 `운영 원칙`). */
-export const BOOKABLE_WEEKS = 12;
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -140,15 +139,9 @@ export function formatDate(ymd: string, withWeekday = false): string {
   return withWeekday ? `${text}(${WEEKDAYS[date.getDay()]})` : text;
 }
 
-/** 오늘 다음에 오는 월요일. 오늘이 월요일이면 다음 주 월요일이다. */
-export function nextMonday(today: Date): Date {
-  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const diff = (8 - base.getDay()) % 7 || 7;
-  return addDays(base, diff);
-}
-
-export function weekEnd(weekStart: string, weekCount: number): string {
-  return toYmd(addDays(parseYmd(weekStart), weekCount * 7 - 1));
+/** 시작일과 종료일을 모두 넣어 센 날 수. */
+export function periodDays(startDate: string, endDate: string): number {
+  return Math.round((parseYmd(endDate).getTime() - parseYmd(startDate).getTime()) / 86400000) + 1;
 }
 
 export function selectedProducts(values: FormValues) {
@@ -156,9 +149,9 @@ export function selectedProducts(values: FormValues) {
 }
 
 export function periodText(values: FormValues): string | null {
-  if (!values.weekStart) return null;
-  const end = weekEnd(values.weekStart, values.weekCount);
-  return `${formatDate(values.weekStart, true)} – ${formatDate(end, true)} · ${values.weekCount}주`;
+  const { startDate, endDate } = values;
+  if (!startDate || !endDate) return null;
+  return `${formatDate(startDate, true)} – ${formatDate(endDate, true)} · ${periodDays(startDate, endDate)}일`;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -182,7 +175,7 @@ export function validateStep(step: number, v: FormValues): Record<string, string
     e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
   }
   if (step === 3) {
-    if (!v.weekStart) e.weekStart = '집행할 주를 선택해 주세요.';
+    if (!v.startDate || !v.endDate) e.period = '집행 시작일과 종료일을 선택해 주세요.';
     if (v.scheduleNote.length > SCHEDULE_NOTE_MAX)
       e.scheduleNote = `${SCHEDULE_NOTE_MAX}자 이하로 입력해 주세요.`;
   }
@@ -209,8 +202,8 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     ...(v.withChannels
       ? ['[추가 상담] 렛츠커리어 채널 광고(인스타그램·카카오톡·웹 배너)도 함께 상담 희망']
       : []),
-    ...(v.weekStart
-      ? [`[희망 기간] ${v.weekStart} ~ ${weekEnd(v.weekStart, v.weekCount)} (${v.weekCount}주)`]
+    ...(v.startDate && v.endDate
+      ? [`[희망 기간] ${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`]
       : []),
     `[모집 형태] ${v.recruitType}`,
     ...(v.scheduleNote.trim() ? [`[일정 요청] ${v.scheduleNote.trim()}`] : []),
