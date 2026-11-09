@@ -54,7 +54,12 @@ export function BootcampDetailPage() {
               ),
             },
             { label: '노출', value: <VisibilityBadge value={data.visibility} /> },
-            { label: '등록 경로', value: <ContentSourceBadge value={data.source} /> },
+            {
+              label: '등록 경로',
+              value: (
+                <ContentSourceBadge value={data.source} adminRegistered={data.adminRegistered} />
+              ),
+            },
             { label: '검수 상태', value: <JobReviewStatusBadge value={data.reviewStatus} /> },
             { label: '등록일', value: formatDateTime(data.registeredAt) },
             { label: '프로그램 유형', value: data.programType },

@@ -133,8 +133,25 @@ export const JobReviewStatusBadge = ({ value }: { value?: JobReviewStatus | null
     renderBadge(JOB_REVIEW_STATUS_TONE[value], enumLabel('ContentReviewStatus', value))
   );
 
-export const ContentSourceBadge = ({ value }: { value: ContentSource }) =>
-  renderBadge(CONTENT_SOURCE_TONE[value], enumLabel('ContentSource', value));
+/**
+ * 등록 경로. 운영자가 비즈니스 회원 대신 올린 공고(`adminRegistered`, 백엔드 LC-3574)는 옆에 `대리 등록` 을 붙인다.
+ * 경로는 그대로 `비즈니스 등록` 이다 — 그 회원의 공고가 되기 때문이다.
+ */
+export const ContentSourceBadge = ({
+  value,
+  adminRegistered = false,
+}: {
+  value: ContentSource;
+  adminRegistered?: boolean;
+}) =>
+  adminRegistered ? (
+    <span className="inline-flex flex-wrap items-center gap-1">
+      {renderBadge(CONTENT_SOURCE_TONE[value], enumLabel('ContentSource', value))}
+      {renderBadge('neutral', '대리 등록')}
+    </span>
+  ) : (
+    renderBadge(CONTENT_SOURCE_TONE[value], enumLabel('ContentSource', value))
+  );
 
 export const RecruitmentStatusBadge = ({
   enumName,
