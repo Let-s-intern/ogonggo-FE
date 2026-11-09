@@ -259,6 +259,8 @@ const toAdminJob = ({
     analysisCurrent: false,
     // 백엔드 기본값. 공고별 값은 어드민 목(`../admin/content.ts`의 `withPriorityExposed`)이 덮는다.
     priorityExposed: true,
+    // 목 공고는 모두 회원이 직접 올렸거나 수집한 것이다.
+    adminRegistered: false,
     ...(source === 'COMPANY' ? { reviewStatus: reviewStatusFor(id, registeredAt) } : {}),
   };
 };
@@ -284,6 +286,7 @@ export const ADMIN_BOOTCAMP_FIXTURES: AdminBootcampDetailResponse[] = BOOTCAMP_F
       source,
       visibility: visibilityFor(bootcamp.id + 1000),
       priorityExposed: true,
+      adminRegistered: false,
       ...(source === 'COMPANY'
         ? { reviewStatus: reviewStatusFor(bootcamp.id + 1000, registeredAt) }
         : {}),
