@@ -6,6 +6,7 @@ import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
 import { AdProductListPage } from '@/pages/ad-product-list';
 import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
+import { BootcampEditPage } from '@/pages/bootcamp-edit';
 import { BootcampListPage } from '@/pages/bootcamp-list';
 import { CompanyMemberDetailPage } from '@/pages/company-member-detail';
 import { CompanyPriorityPage } from '@/pages/company-priority';
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       { path: 'content/new-jobs', element: <NewJobReviewPage /> },
       { path: 'content/bootcamps', element: <BootcampListPage /> },
       { path: 'content/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
+      { path: 'content/bootcamps/:bootcampId/edit', element: <BootcampEditPage /> },
       { path: 'content/side-studies', element: <SideStudyListPage /> },
       { path: 'content/side-studies/:postId', element: <SideStudyDetailPage /> },
       { path: 'content/concerns', element: <ConcernListPage /> },
@@ -85,6 +87,7 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'business/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
+      { path: 'business/bootcamps/:bootcampId/edit', element: <BootcampEditPage /> },
       { path: 'business/ad-inquiries', element: <AdInquiryListPage /> },
       {
         path: 'business/rejected-ad-inquiries',

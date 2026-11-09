@@ -1,6 +1,6 @@
-import { isBlankCurriculum, type ProxyBootcampValues } from './values';
+import { isBlankCurriculum, type BootcampFormValues } from './values';
 
-export type ProxyBootcampErrors = Partial<Record<keyof ProxyBootcampValues, string>>;
+export type BootcampFormErrors = Partial<Record<keyof BootcampFormValues, string>>;
 
 const MAX_LENGTH_MESSAGE = (max: number) => `${max}자 이하로 입력해 주세요.`;
 const URL_MESSAGE = '올바른 주소를 입력해 주세요.';
@@ -12,14 +12,19 @@ const isEmail = (value: string) => value.length <= 320 && /^[^\s@]+@[^\s@]+\.[^\
 const isWholeNumber = (value: string) => /^\d+$/.test(value);
 
 /**
- * 칸별 오류 문구. 필수 칸은 비즈니스 폼의 `공고 등록` 검증(`validateForPublish`)을, 칸 사이 규칙은 백엔드
+ * 칸별 오류 문구. 대표 이미지는 등록에서만 필수다 — 수집 부트캠프에는 대표 이미지가 없는 과정이 있어, 전체 수정
+ * (`PUT /api/v1/admin/bootcamps/{bootcampId}`)은 비워 둔 채 받는다.
+ * 필수 칸은 비즈니스 폼의 `공고 등록` 검증(`validateForPublish`)을, 칸 사이 규칙은 백엔드
  * `BootcampWriteValidator` 를, 길이는 `CreateProxyBootcampRequest` 의 한도를 따른다.
  *
  * 제휴사·커리큘럼은 줄이 없어도 된다(백엔드가 빈 목록을 받는다). 적은 줄만 본다.
  */
-export function validateProxyBootcamp(values: ProxyBootcampValues): ProxyBootcampErrors {
-  const errors: ProxyBootcampErrors = {};
-  const requireText = (key: keyof ProxyBootcampValues, message: string, max?: number) => {
+export function validateBootcampForm(
+  values: BootcampFormValues,
+  { requireRepresentativeImage = true }: { requireRepresentativeImage?: boolean } = {},
+): BootcampFormErrors {
+  const errors: BootcampFormErrors = {};
+  const requireText = (key: keyof BootcampFormValues, message: string, max?: number) => {
     const value = String(values[key]).trim();
     if (value === '') {
       errors[key] = message;
@@ -44,7 +49,7 @@ export function validateProxyBootcamp(values: ProxyBootcampValues): ProxyBootcam
   if (!values.applicationMethod) {
     errors.applicationMethod = '지원 방법을 골라 주세요.';
   }
-  if (!values.representativeImageUrl) {
+  if (requireRepresentativeImage && !values.representativeImageUrl) {
     errors.representativeImageUrl = '대표 이미지를 올려 주세요.';
   }
 
