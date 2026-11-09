@@ -91,6 +91,12 @@ export function CompanyMemberDetailPage() {
               >
                 채용공고 대리 등록
               </Button>
+              <Button
+                variant="secondary"
+                onClick={() => navigate(`/members/companies/${data.userId}/bootcamps/new`)}
+              >
+                부트캠프 대리 등록
+              </Button>
             </div>
           ) : null
         }

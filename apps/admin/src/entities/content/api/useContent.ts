@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createImage } from '@ogonggo/api';
 import {
+  createCompanyMemberBootcamp,
   createCompanyMemberJob,
   deleteBootcamp,
   deleteJob,
@@ -17,6 +19,7 @@ import {
   updateJobVisibilities,
   updateRecruitmentPostVisibilities,
   type ChangeAdminJobVisibilityRequest,
+  type CreateProxyBootcampRequest,
   type CreateProxyJobRequest,
   type ListBootcampsParams,
   type ListConcernsParams,
@@ -228,6 +231,31 @@ export function useCreateProxyJob(memberId: number) {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'members', 'companies'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
+  });
+}
+
+/** 비즈니스 회원 대신 부트캠프를 등록한다(`POST /api/v1/admin/company-members/{userId}/bootcamps`). 채용공고 대리 등록과 같은 규칙이다. */
+export function useCreateProxyBootcamp(memberId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateProxyBootcampRequest) =>
+      unwrapData(createCompanyMemberBootcamp(memberId, request)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'members', 'companies'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
+    },
+  });
+}
+
+/**
+ * 대리 등록하는 공고의 로고·대표 이미지 올리기. 관리자 API 에는 업로드가 없어 사용자 API `POST /api/v1/images` 로 올리고 받은
+ * 주소를 요청에 싣는다(백엔드 `rest-api-design.md` "비즈니스 회원 공고 대리 등록"). `usage` 는 비즈니스 앱의 공고 폼처럼 보내지 않는다
+ * — 저장 폴더만 정하는 값이고, 공고 이미지에 맞는 값이 없다.
+ */
+export function useUploadContentImage() {
+  return useMutation({
+    mutationFn: (file: File) => unwrapData(createImage({ file })),
   });
 }
 
