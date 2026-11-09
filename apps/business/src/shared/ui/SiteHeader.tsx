@@ -7,6 +7,7 @@ import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
+import { AccountMenu } from './AccountMenu';
 import { Logo } from './Logo';
 
 interface NavItem {
@@ -24,6 +25,9 @@ const SERVICE_NAV: NavItem[] = [
   { href: '/apply', label: '광고 신청/문의', match: (p) => p.startsWith('/apply') },
 ];
 
+/** 마이페이지 첫 화면. `/mypage/company` 는 공고 목록으로 보낸다. */
+const MY_PAGE_HREF = '/mypage/company';
+
 /** 오른쪽 메뉴. 기업 회원으로 로그인해야 쓸 수 있다. */
 const COMPANY_NAV: NavItem[] = [
   {
@@ -39,7 +43,8 @@ const COMPANY_NAV: NavItem[] = [
 ];
 
 /**
- * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의, 오른쪽은 공고등록·내 기업 정보·로그인(로그아웃).
+ * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의, 오른쪽은 공고등록·내 기업 정보·로그인. 로그인하면 로그인 자리에
+ * 기업명이 나오고, 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`). 모바일 메뉴에는 두 항목을 그대로 펼친다.
  *
  * 공고등록·내 기업 정보는 기업 회원으로 로그인했을 때만 그 화면으로 바로 간다. 로그인하지 않았거나 다른 역할이면
  * `/login?redirect=<그 화면>` 으로 보내고, 로그인 화면이 다른 역할에게 기업 회원으로 로그인하라고 안내한다
@@ -59,6 +64,9 @@ export function SiteHeader() {
   const signedIn = account.kind !== 'signedOut';
   const isCompany = account.kind === 'ready' && account.account.role === 'COMPANY';
   const companyHref = (href: string) => (isCompany ? href : loginHref(href));
+  const companyName =
+    account.kind === 'ready' ? account.account.companyProfile?.organizationName : undefined;
+  const myPageActive = pathname.startsWith('/mypage');
 
   // 화면을 옮기면 모바일 메뉴를 닫는다.
   useEffect(() => {
@@ -112,7 +120,15 @@ export function SiteHeader() {
               active={item.match(pathname)}
             />
           ))}
-          {accountAction}
+          {signedIn ? (
+            <AccountMenu
+              companyName={companyName}
+              myPageHref={companyHref(MY_PAGE_HREF)}
+              myPageActive={myPageActive}
+            />
+          ) : (
+            accountAction
+          )}
         </nav>
         <button
           type="button"
@@ -153,6 +169,13 @@ export function SiteHeader() {
                 active={item.match(pathname)}
               />
             ))}
+            {signedIn ? (
+              <MobileLink
+                href={companyHref(MY_PAGE_HREF)}
+                label={companyName ? `마이페이지 (${companyName})` : '마이페이지'}
+                active={myPageActive}
+              />
+            ) : null}
             <li className="flex h-12 items-center">{accountAction}</li>
           </ul>
         </nav>
