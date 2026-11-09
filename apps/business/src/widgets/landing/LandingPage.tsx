@@ -119,8 +119,18 @@ function Reasons() {
             key={r.no}
             data-reveal
             style={order(i)}
-            className={cn(LIFT, 'rounded-xl border border-gray-200 p-7')}
+            className={cn(
+              LIFT,
+              'relative isolate overflow-hidden rounded-xl border border-gray-200 bg-white p-7',
+            )}
           >
+            <Image
+              src={r.icon}
+              alt=""
+              width={155}
+              height={155}
+              className="pointer-events-none absolute right-3 bottom-3 -z-10 h-[120px] w-auto select-none md:h-[140px]"
+            />
             <p className="text-sm font-semibold text-blue-500">{r.no}</p>
             <p className="mt-5 text-lg font-semibold">{r.eyebrow}</p>
             <p className="mt-1 text-[28px] font-bold text-blue-500">{r.title}</p>
