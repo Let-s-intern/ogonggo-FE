@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@ogonggo/ui';
@@ -11,23 +12,31 @@ import {
   PACKAGE,
   PARTNERS,
   PICKS,
-  PLACEMENTS,
   PROCESS,
   REASONS,
 } from './content';
 import { CopyInquiryButton } from './CopyInquiryButton';
-
-const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+import { PlacementSimulator } from './PlacementSimulator';
+import { RevealOnScroll } from './RevealOnScroll';
 
 const CONTAINER = 'mx-auto w-full max-w-[1200px] px-4 md:px-6';
+/** 묶음 안 순서. 화면에 들어올 때 하나씩 늦게 떠오른다(`app/globals.css`). */
+const order = (i: number) => ({ '--i': i }) as CSSProperties;
+/** 히어로가 열자마자 떠오르는 애니메이션. 늦출 시간은 `animationDelay` 로 준다. */
+const RISE = 'motion-safe:animate-[ogonggo-biz-rise_0.9s_cubic-bezier(0.22,1,0.36,1)_both]';
+/** 카드에 마우스를 올리면 살짝 뜬다. */
+const LIFT = 'transition-[translate,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg';
 const PRIMARY_BUTTON =
-  'inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-600';
+  'inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white transition-[background-color,translate,box-shadow] hover:-translate-y-0.5 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/25';
 const OUTLINE_BUTTON =
-  'inline-flex items-center justify-center rounded-full border border-blue-500 bg-white px-6 py-3 text-sm font-semibold text-blue-500 transition-colors hover:bg-blue-00';
+  'inline-flex items-center justify-center rounded-full border border-blue-500 bg-white px-6 py-3 text-sm font-semibold text-blue-500 transition-[background-color,translate] hover:-translate-y-0.5 hover:bg-blue-00';
 
 function Eyebrow({ children, dark }: { children: string; dark?: boolean }) {
   return (
-    <p className={cn('text-sm font-semibold', dark ? 'text-blue-300' : 'text-blue-500')}>
+    <p
+      data-reveal
+      className={cn('text-sm font-semibold', dark ? 'text-blue-300' : 'text-blue-500')}
+    >
       {children}
     </p>
   );
@@ -39,20 +48,34 @@ function Hero() {
       <div className="relative overflow-hidden rounded-xl bg-gray-100 px-5 py-14 text-center md:px-12 md:py-20">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[360px] w-[720px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-150/50 blur-3xl"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[360px] w-[720px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-150/50 blur-3xl motion-safe:animate-[ogonggo-biz-float_9s_ease-in-out_infinite]"
         />
         <div className="relative">
-          <h1 className="text-[32px] font-bold leading-tight tracking-tight text-gray-900 md:text-[52px]">
+          <h1
+            className={cn(
+              RISE,
+              'text-[32px] font-bold leading-tight tracking-tight text-gray-900 md:text-[52px]',
+            )}
+          >
             취준생에게 <span className="text-teal-600">좋은 공고</span>를,
             <br />
             기업에게 <span className="text-emerald-500">좋은 인재</span>를
           </h1>
-          <p className="mx-auto mt-6 max-w-[720px] text-base leading-relaxed text-gray-700 md:text-lg">
+          <p
+            className={cn(
+              RISE,
+              'mx-auto mt-6 max-w-[720px] text-base leading-relaxed text-gray-700 md:text-lg',
+            )}
+            style={{ animationDelay: '120ms' }}
+          >
             인턴·신입 채용을 위한 가장 효과적인 채널. 지원 의사가 높은 취준생이 매일 공고를 찾는
             10만명의 취준생이 함께하는 <strong className="text-gray-900">오늘의 공고 지면</strong>
             과, <strong className="text-gray-900">렛츠커리어 채널</strong>에 공고를 알려보세요.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <div
+            className={cn(RISE, 'mt-8 flex flex-wrap justify-center gap-3')}
+            style={{ animationDelay: '240ms' }}
+          >
             <a href="#placements" className={PRIMARY_BUTTON}>
               광고 구좌 둘러보기
             </a>
@@ -61,8 +84,12 @@ function Hero() {
             </Link>
           </div>
           <ul className="mx-auto mt-12 grid max-w-[1000px] grid-cols-2 gap-3 md:grid-cols-5">
-            {HERO_STATS.map((s) => (
-              <li key={s.label} className="rounded-lg bg-white px-3 py-5 shadow-sm">
+            {HERO_STATS.map((s, i) => (
+              <li
+                key={s.label}
+                className={cn(RISE, LIFT, 'rounded-lg bg-white px-3 py-5 shadow-sm')}
+                style={{ animationDelay: `${380 + i * 90}ms` }}
+              >
                 <p className="text-2xl font-bold text-blue-500 md:text-[28px]">{s.value}</p>
                 <p className="mt-2 text-xs text-gray-600 md:text-sm">{s.label}</p>
               </li>
@@ -78,14 +105,19 @@ function Reasons() {
   return (
     <section className={cn(CONTAINER, 'py-16 md:py-24')}>
       <Eyebrow>오늘의 공고 · 렛츠커리어와 함께해야 하는 이유</Eyebrow>
-      <h2 className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+      <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
         인턴·신입 채용 타겟을
         <br />
         가장 잘 아는 채널이에요
       </h2>
       <ul className="mt-10 grid gap-4 md:grid-cols-3">
-        {REASONS.map((r) => (
-          <li key={r.no} className="rounded-xl border border-gray-200 p-7">
+        {REASONS.map((r, i) => (
+          <li
+            key={r.no}
+            data-reveal
+            style={order(i)}
+            className={cn(LIFT, 'rounded-xl border border-gray-200 p-7')}
+          >
             <p className="text-sm font-semibold text-blue-500">{r.no}</p>
             <p className="mt-5 text-lg font-semibold">{r.eyebrow}</p>
             <p className="mt-1 text-[28px] font-bold text-blue-500">{r.title}</p>
@@ -101,82 +133,21 @@ function Placements() {
   return (
     <section id="placements" className={cn(CONTAINER, 'scroll-mt-20 pb-16 md:pb-24')}>
       <Eyebrow>오늘의공고 지면 광고</Eyebrow>
-      <h2 className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+      <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
         공고를 <span className="text-teal-600">실제로 찾는 사람</span> 앞에,
         <br />
         공고 그대로 보여드려요
       </h2>
-      <p className="mt-5 text-gray-600">
+      <p data-reveal className="mt-5 text-gray-600">
         광고가 노출될 위치와 형태를 미리 확인하고, 원하는 지면을 선택해 보세요.
       </p>
-      <nav aria-label="지면 바로가기" className="mt-8 flex flex-wrap gap-2">
-        {PLACEMENTS.map((p, i) => (
-          <a
-            key={p.id}
-            href={`#${p.id}`}
-            className="rounded-full border border-gray-200 px-5 py-2.5 text-sm text-gray-600 transition-colors hover:border-blue-500 hover:text-blue-500"
-          >
-            {i + 1}. {p.tab}
-          </a>
-        ))}
-      </nav>
-      <ol className="mt-6 space-y-4">
-        {PLACEMENTS.map((p, i) => (
-          <li
-            key={p.id}
-            id={p.id}
-            className="grid scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 md:grid-cols-[45%_1fr]"
-          >
-            <div className="relative aspect-[16/9] bg-gray-200 md:aspect-auto md:min-h-[260px]">
-              <Image
-                src={p.image}
-                alt={p.imageAlt}
-                fill
-                sizes="(min-width: 768px) 540px, 100vw"
-                className="object-cover object-top"
-              />
-            </div>
-            <div className="p-6 md:p-8">
-              <h3 className="flex items-center gap-2.5 text-xl font-semibold">
-                <span className="flex size-7 items-center justify-center rounded-full bg-blue-500 text-sm text-white">
-                  {i + 1}
-                </span>
-                {p.title}
-              </h3>
-              <p className="mt-4 leading-relaxed text-gray-700">
-                {p.description.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </p>
-              <ul className="mt-4 flex flex-wrap gap-2">
-                {p.tags.map((t) => (
-                  <li
-                    key={t.label}
-                    className={cn(
-                      'rounded-sm px-3 py-1.5 text-sm',
-                      t.highlight ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700',
-                    )}
-                  >
-                    {t.label}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
-                <p>
-                  <span className="text-[28px] font-bold">{won(p.price)}</span>
-                  <span className="ml-1 text-sm text-gray-500">/1주 · VAT 별도</span>
-                </p>
-                <p className="rounded-sm bg-blue-50 px-3 py-1.5 text-sm text-blue-600">
-                  예상 CTR {p.ctr}
-                </p>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <div className="mt-4 flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 px-6 py-5 md:flex-row md:items-center md:justify-between">
+      <div data-reveal>
+        <PlacementSimulator />
+      </div>
+      <div
+        data-reveal
+        className="mt-4 flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 px-6 py-5 md:flex-row md:items-center md:justify-between"
+      >
         <p className="text-sm text-gray-700">
           <span className="mr-2 text-gray-500">운영 원칙</span>
           {OPERATING_RULES.join(' · ')}
@@ -190,14 +161,18 @@ function Placements() {
       </div>
 
       <div className="mt-20">
-        <h3 className="text-2xl font-bold md:text-[32px]">나에게 맞는 광고 선택하기</h3>
+        <h3 data-reveal className="text-2xl font-bold md:text-[32px]">
+          나에게 맞는 광고 선택하기
+        </h3>
         <p className="mt-2 text-gray-600">
           3개 모두 별도 상품입니다. <strong>목표와 예산에 맞춰 한 가지씩</strong> 선택할 수 있어요.
         </p>
         <ul className="mt-6 divide-y divide-gray-100 border-y border-gray-100">
-          {PICKS.map((p) => (
+          {PICKS.map((p, i) => (
             <li
               key={p.title}
+              data-reveal
+              style={order(i)}
               className="grid gap-4 px-2 py-6 md:grid-cols-[1.6fr_1fr_0.6fr_0.9fr_auto] md:items-center md:px-6"
             >
               <div>
@@ -229,7 +204,10 @@ function Placements() {
             </li>
           ))}
         </ul>
-        <div className="mt-6 flex flex-col gap-4 rounded-xl bg-blue-50 px-6 py-6 md:flex-row md:items-center md:justify-between">
+        <div
+          data-reveal
+          className="mt-6 flex flex-col gap-4 rounded-xl bg-blue-50 px-6 py-6 md:flex-row md:items-center md:justify-between"
+        >
           <div>
             <p className="text-lg font-semibold">어떤 지면이 맞을지 고민되나요?</p>
             <p className="mt-1 text-sm text-gray-600">
@@ -252,20 +230,25 @@ function Channels() {
     <section className="bg-[#121a2b] py-16 text-white md:py-24">
       <div className={CONTAINER}>
         <Eyebrow dark>렛츠커리어 채널 광고</Eyebrow>
-        <h2 className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+        <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
           그리고 이 공고를 기다리는 사람이
           <br />
           <span className="text-blue-300">월 10만 명</span> 더 있어요
         </h2>
-        <p className="mt-5 max-w-[760px] leading-relaxed text-gray-300">
+        <p data-reveal className="mt-5 max-w-[760px] leading-relaxed text-gray-300">
           렛츠커리어는 이력서·자소서·포트폴리오 챌린지를 운영하며 취준생과 매일 이야기해요.
           인스타그램 두 계정과 카카오톡 오픈채팅방, 채널 DM에서{' '}
           <strong className="text-white">큐레이션 콘텐츠로 공고를 &apos;추천&apos;</strong>하고,
           소재 제작까지 48시간 안에 끝내요.
         </p>
         <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-5">
-          {CHANNEL_STATS.map((s) => (
-            <li key={s.label} className="rounded-lg border border-white/10 bg-white/5 p-5">
+          {CHANNEL_STATS.map((s, i) => (
+            <li
+              key={s.label}
+              data-reveal
+              style={order(i)}
+              className="rounded-lg border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+            >
               <p className="text-2xl font-bold text-blue-300 md:text-[30px]">{s.value}</p>
               <p className="mt-3 text-sm">{s.label}</p>
               <p className="mt-1 text-xs text-gray-400">{s.sub}</p>
@@ -277,13 +260,13 @@ function Channels() {
         </p>
 
         {CHANNEL_GROUPS.map((group) => (
-          <div key={group.id} className="mt-14">
+          <div key={group.id} data-reveal className="mt-14">
             <h3 className="text-2xl font-bold">{group.title}</h3>
-            <ul className="mt-6 grid gap-4 lg:grid-cols-2">
+            <ul className="-mx-4 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-4 md:-mx-6 md:scroll-px-6 md:px-6">
               {group.products.map((p) => (
                 <li
                   key={p.title}
-                  className="grid gap-6 rounded-xl bg-blue-00 p-6 text-gray-900 sm:grid-cols-[200px_1fr] md:p-8"
+                  className="grid w-[85vw] max-w-[560px] shrink-0 snap-start gap-6 rounded-xl bg-blue-00 p-6 text-gray-900 sm:grid-cols-[200px_1fr] md:p-8"
                 >
                   <div className="relative mx-auto h-[260px] w-[200px]">
                     {p.images.map((src, i) => (
@@ -355,16 +338,19 @@ function Combo() {
   return (
     <section className={cn(CONTAINER, 'py-16 md:py-24')}>
       <Eyebrow>오늘의 공고와 렛츠커리어 채널 광고를 함께 집행하면</Eyebrow>
-      <h2 className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+      <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
         공고를 <span className="text-blue-500">보는</span> 지면과 공고를{' '}
         <span className="text-blue-500">추천받는</span> 채널,
         <br />둘 다 쓰면 지원자가 달라져요
       </h2>
       <ul className="mt-10 grid gap-4 md:grid-cols-3">
-        {COMBO_CARDS.map((c) => (
+        {COMBO_CARDS.map((c, i) => (
           <li
             key={c.title}
+            data-reveal
+            style={order(i)}
             className={cn(
+              LIFT,
               'rounded-xl border p-7',
               c.best ? 'border-teal-500 bg-teal-50/50' : 'border-gray-200',
             )}
@@ -383,7 +369,7 @@ function Combo() {
         ))}
       </ul>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-gray-200">
+      <div data-reveal className="mt-6 overflow-hidden rounded-xl border border-gray-200">
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-5">
           <p className="text-xl font-semibold">목적별 추천 패키지 · {PACKAGE.name}</p>
           <p className="mt-1 text-sm text-gray-600">
@@ -451,12 +437,38 @@ function Partners() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
       <Eyebrow>PARTNERS</Eyebrow>
-      <h2 className="mt-3 text-3xl font-bold md:text-[44px]">함께한 회사</h2>
-      <ul className="mt-8 flex flex-wrap gap-x-10 gap-y-4 text-xl font-bold text-gray-400">
-        {PARTNERS.map((name) => (
-          <li key={name}>{name}</li>
-        ))}
-      </ul>
+      <h2 data-reveal className="mt-3 text-3xl font-bold md:text-[44px]">
+        함께한 회사
+      </h2>
+      <div
+        data-reveal
+        className="group mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+      >
+        {/* 같은 목록을 두 번 이어 붙여 끊김 없이 흐르게 한다. 두 번째는 화면 읽기 프로그램에 숨긴다. */}
+        <div className="flex w-max animate-[ogonggo-biz-marquee_40s_linear_infinite] group-hover:[animation-play-state:paused] motion-reduce:animate-none">
+          {[0, 1].map((copy) => (
+            <ul
+              key={copy}
+              aria-hidden={copy === 1}
+              className="flex shrink-0 items-center gap-12 pr-12 md:gap-16 md:pr-16"
+            >
+              {PARTNERS.map((p) => (
+                <li key={p.name} className="shrink-0">
+                  <Image
+                    src={p.logo}
+                    alt={copy === 0 ? p.name : ''}
+                    width={p.width}
+                    height={p.height}
+                    // 띠 밖에 있다가 흘러 들어오는 로고라 미리 받아 둔다. 늦게 받으면 빈칸으로 들어온다.
+                    loading="eager"
+                    className="h-5 w-auto md:h-6"
+                  />
+                </li>
+              ))}
+            </ul>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
@@ -465,10 +477,17 @@ function Process() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
       <Eyebrow>PROCESS</Eyebrow>
-      <h2 className="mt-3 text-3xl font-bold md:text-[44px]">문의부터 게재까지, 이렇게 진행돼요</h2>
+      <h2 data-reveal className="mt-3 text-3xl font-bold md:text-[44px]">
+        문의부터 게재까지, 이렇게 진행돼요
+      </h2>
       <ol className="mt-8 grid gap-3 md:grid-cols-4">
-        {PROCESS.map((p) => (
-          <li key={p.no} className="rounded-xl bg-gray-50 p-6">
+        {PROCESS.map((p, i) => (
+          <li
+            key={p.no}
+            data-reveal
+            style={order(i)}
+            className={cn(LIFT, 'rounded-xl bg-gray-50 p-6')}
+          >
             <p className="text-sm font-semibold text-blue-500">{p.no}</p>
             <p className="mt-3 text-xl font-semibold">{p.title}</p>
             <p className="mt-3 text-sm leading-relaxed text-gray-600">{p.body}</p>
@@ -483,7 +502,7 @@ function Faq() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
       <div className="grid gap-4 lg:grid-cols-[1fr_380px] lg:items-start">
-        <div className="rounded-xl border border-gray-200 p-6 md:p-8">
+        <div data-reveal className="rounded-xl border border-gray-200 p-6 md:p-8">
           <h2 className="text-2xl font-bold">자주 묻는 질문</h2>
           <div className="mt-4 divide-y divide-gray-100">
             {FAQ.map((f) => (
@@ -505,7 +524,11 @@ function Faq() {
             ))}
           </div>
         </div>
-        <aside className="rounded-xl border border-gray-200 p-6 md:p-8">
+        <aside
+          data-reveal
+          style={order(1)}
+          className="rounded-xl border border-gray-200 p-6 md:p-8"
+        >
           <p className="text-xl font-bold leading-snug">
             예산만 알려주시면,
             <br />
@@ -528,7 +551,10 @@ function Faq() {
 function ClosingCta() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
-      <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-14 text-center text-white">
+      <div
+        data-reveal
+        className="rounded-xl bg-gradient-to-r from-blue-500 via-blue-600 to-teal-500 bg-[length:200%_100%] px-6 py-14 text-center text-white motion-safe:animate-[ogonggo-biz-gradient_10s_ease-in-out_infinite]"
+      >
         <h2 className="text-2xl font-bold md:text-[36px]">
           채용공고 홍보 및 교육 모집에 고민이 있다면 지금 문의 주세요
         </h2>
@@ -538,7 +564,7 @@ function ClosingCta() {
         </p>
         <Link
           href="/apply"
-          className="mt-8 inline-flex rounded-full bg-white px-8 py-3.5 font-semibold text-blue-500 hover:bg-blue-00"
+          className="mt-8 inline-flex rounded-full bg-white px-8 py-3.5 font-semibold text-blue-500 transition-[background-color,translate,box-shadow] hover:-translate-y-0.5 hover:bg-blue-00 hover:shadow-xl"
         >
           광고 상담 신청
         </Link>
@@ -559,6 +585,7 @@ export function LandingPage() {
       <Process />
       <Faq />
       <ClosingCta />
+      <RevealOnScroll />
     </>
   );
 }

@@ -39,3 +39,59 @@ body {
     transform: scaleX(1);
   }
 }
+
+/*
+ * 랜딩 `함께한 회사` 로고 띠(`widgets/landing/LandingPage.tsx` 의 `Partners`). 같은 목록을 두 번 이어 붙여 두고
+ * 띠 폭의 절반만큼 옮기면 두 번째 목록이 첫 번째 자리에 와서 끊김 없이 이어진다.
+ */
+@keyframes ogonggo-biz-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/*
+ * 랜딩 애니메이션(`widgets/landing/`). 히어로는 열자마자 떠오르고(`ogonggo-biz-rise`), 아래 섹션은 화면에
+ * 들어올 때 떠오른다(`RevealOnScroll` 이 `data-shown` 을 붙인다). 숨기는 규칙은 `biz-reveal-ready` 아래에만
+ * 있어서 스크립트가 돌기 전이나 돌지 않으면 내용이 그대로 보인다. `--i` 는 묶음 안 순서로, 하나씩 늦게 나온다.
+ * `translate`·`box-shadow` 는 카드 호버용이다(Tailwind v4 의 `-translate-y-*` 는 `transform` 이 아니라
+ * `translate` 를 쓴다) — 이 규칙이 `transition` 을 덮으므로 여기에 같이 둔다.
+ */
+@keyframes ogonggo-biz-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes ogonggo-biz-float {
+  50% {
+    transform: scale(1.15);
+    opacity: 0.6;
+  }
+}
+
+@keyframes ogonggo-biz-gradient {
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .biz-reveal-ready [data-reveal] {
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      translate 0.25s ease-out,
+      box-shadow 0.25s ease-out;
+    transition-delay: calc(var(--i, 0) * 90ms), calc(var(--i, 0) * 90ms), 0s, 0s;
+  }
+
+  .biz-reveal-ready [data-reveal]:not([data-shown]) {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}

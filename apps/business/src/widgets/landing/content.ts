@@ -41,8 +41,6 @@ export interface PlacementProduct {
   tags: { label: string; highlight?: boolean }[];
   price: number;
   ctr: string;
-  image: string;
-  imageAlt: string;
   /** 광고 신청 API 의 `categories` 값. */
   category: 'JOB_POSTING' | 'BANNER';
 }
@@ -59,8 +57,6 @@ export const PLACEMENTS: PlacementProduct[] = [
     tags: [{ label: '피드 게시물' }, { label: '공고 링크' }, { label: '해석 한 줄(40자 이내)' }],
     price: 400000,
     ctr: '2.5 ~ 4%',
-    image: '/landing/jobs-list.webp',
-    imageAlt: '오늘의 공고 채용공고 홈 화면',
     category: 'JOB_POSTING',
   },
   {
@@ -79,8 +75,6 @@ export const PLACEMENTS: PlacementProduct[] = [
     ],
     price: 300000,
     ctr: '3 ~ 5%',
-    image: '/landing/job-detail.webp',
-    imageAlt: '오늘의 공고 공고 상세 화면',
     category: 'JOB_POSTING',
   },
   {
@@ -94,8 +88,6 @@ export const PLACEMENTS: PlacementProduct[] = [
     tags: [{ label: '4슬롯' }, { label: '공고 카드 자동 구성' }],
     price: 400000,
     ctr: '3 ~ 5%',
-    image: '/landing/jobs-list.webp',
-    imageAlt: '오늘의 공고 공고 리스트 화면',
     category: 'JOB_POSTING',
   },
   {
@@ -109,8 +101,6 @@ export const PLACEMENTS: PlacementProduct[] = [
     tags: [{ label: '4슬롯 롤링' }, { label: 'PC 1200×120 · MO 750×200' }],
     price: 500000,
     ctr: '1 ~ 1.8%',
-    image: '/landing/bootcamps-list.webp',
-    imageAlt: '오늘의 공고 목록 화면의 배너 위치',
     category: 'BANNER',
   },
   {
@@ -124,9 +114,179 @@ export const PLACEMENTS: PlacementProduct[] = [
     tags: [{ label: '1슬롯' }, { label: 'PC 1200×120 · MO 750×200' }],
     price: 300000,
     ctr: '0.8 ~ 1.5%',
-    image: '/landing/bootcamps-list.webp',
-    imageAlt: '오늘의 공고 목록 화면의 하단 배너 위치',
     category: 'BANNER',
+  },
+];
+
+type Rect = { top: number; left: number; width: number; height: number };
+
+/** 광고가 놓이는 자리 하나. 시뮬레이터 오른쪽 리스트의 한 줄이고, `id` 는 `#id` 앵커다. */
+export interface PlacementSpot {
+  id: string;
+  name: string;
+  /** 가격·CTR·설명·태그를 가져올 상품. 없으면 아래 값을 쓰고 가격은 견적 문의로 보인다. */
+  productId?: string;
+  title?: string;
+  description?: string[];
+  tags?: string[];
+  /** 스크린샷(1280×1800) 안의 영역, 이미지 크기 대비 %. */
+  rect: Rect;
+  /**
+   * 배너 소재 자리. `push` 는 화면 사이에 끼어들어 아래를 밀어내고(가로 배너), `end` 는 끼어든 곳 아래를
+   * 감춰 화면 끝처럼 보이고, `overlay` 는 빈 자리 위에 나타난다(사이드바 세로 배너).
+   */
+  banner?: { mode: 'push' | 'end' | 'overlay'; size: string };
+  /** 스크린샷에 광고 카드가 없을 때 그 자리에 시안 카드를 그린다. */
+  mockCard?: boolean;
+}
+
+/** 시뮬레이터 위쪽 탭 하나. 오늘의 공고 페이지 하나와 그 안의 광고 자리들이다. */
+export interface PlacementPage {
+  id: string;
+  tab: string;
+  url: string;
+  image: string;
+  imageAlt: string;
+  spots: PlacementSpot[];
+}
+
+const WIDE_BANNER = { mode: 'push', size: 'PC 1200×120' } as const;
+
+/**
+ * 자리 위치는 웹의 실제 배치를 따른다: 배너는 `packages/api/src/banners.ts` 의 `BannerPlacement`,
+ * 공고 카드는 `packages/api/src/ad-postings.ts` 의 `AdPostingPlacement`.
+ */
+export const PLACEMENT_PAGES: PlacementPage[] = [
+  {
+    id: 'home',
+    tab: '채용공고 홈',
+    url: 'ogonggo.co.kr',
+    image: '/landing/jobs-list.webp',
+    imageAlt: '오늘의 공고 채용공고 홈 화면',
+    spots: [
+      {
+        id: 'recommend-card',
+        name: '인기 채용공고',
+        productId: 'recommend-card',
+        rect: { top: 27.4, left: 10, width: 19.1, height: 20.4 },
+      },
+      {
+        id: 'list-top-fixed',
+        name: '리스트 상단 고정 공고',
+        productId: 'list-top-fixed',
+        rect: { top: 56.4, left: 23.9, width: 23.2, height: 17.4 },
+      },
+      {
+        id: 'main-top-banner',
+        name: '메인 상단 배너',
+        productId: 'main-top-banner',
+        rect: { top: 52.2, left: 3.9, width: 92.2, height: 6.6 },
+        banner: WIDE_BANNER,
+      },
+      {
+        id: 'main-bottom-banner',
+        name: '메인 하단 배너',
+        productId: 'main-bottom-banner',
+        // 스크린샷이 목록 중간에서 끝나서, 두 번째 줄 아래를 목록 끝으로 보고 그 아래는 감춘다.
+        rect: { top: 94.9, left: 3.9, width: 92.2, height: 6.6 },
+        banner: { mode: 'end', size: 'PC 1200×120' },
+      },
+    ],
+  },
+  {
+    id: 'bootcamps',
+    tab: '교육·부트캠프',
+    url: 'ogonggo.co.kr/bootcamps',
+    image: '/landing/bootcamps-list.webp',
+    imageAlt: '오늘의 공고 교육·부트캠프 목록 화면',
+    spots: [
+      {
+        id: 'bootcamp-top-banner',
+        name: '부트캠프 상단 배너',
+        title: '부트캠프 상단 배너 1슬롯 노출',
+        description: [
+          '교육·부트캠프 목록 바로 위에 놓이는 가로 배너입니다.',
+          '목록 첫 페이지에서만 보여요.',
+        ],
+        tags: ['PC 1200×120 · MO 750×200'],
+        rect: { top: 25, left: 3.9, width: 92.2, height: 6.6 },
+        banner: WIDE_BANNER,
+      },
+      {
+        id: 'bootcamp-bottom-banner',
+        name: '부트캠프 하단 배너',
+        title: '부트캠프 하단 배너 1슬롯 노출',
+        description: [
+          '부트캠프 목록 끝, FOR BUSINESS 배너 위에 놓이는 가로 배너입니다.',
+          '목록의 모든 페이지에서 보여요.',
+        ],
+        tags: ['PC 1200×120 · MO 750×200'],
+        rect: { top: 89.3, left: 3.9, width: 92.2, height: 6.6 },
+        banner: WIDE_BANNER,
+      },
+    ],
+  },
+  {
+    id: 'calendar',
+    tab: '공고 달력',
+    url: 'ogonggo.co.kr/calendar',
+    image: '/landing/calendar.webp',
+    imageAlt: '오늘의 공고 공고 달력 화면',
+    spots: [
+      {
+        id: 'calendar-day-card',
+        name: '공고 달력 날짜별 공고',
+        title: '공고 달력 날짜별 목록 노출',
+        description: [
+          '공고 달력에서 고른 날짜의 공고 목록 맨 앞에 노출됩니다.',
+          '일반 공고 카드와 같은 모양에 광고 라벨이 표시됩니다.',
+        ],
+        tags: ['공고 카드 자동 구성'],
+        rect: { top: 16.9, left: 72.2, width: 23.9, height: 7.4 },
+      },
+    ],
+  },
+  {
+    id: 'mypage',
+    tab: '마이페이지',
+    url: 'ogonggo.co.kr/mypage/scraps',
+    image: '/landing/mypage-scraps.webp',
+    imageAlt: '오늘의 공고 마이페이지 지원 관리 보드 화면',
+    spots: [
+      {
+        id: 'mypage-scrap-card',
+        name: '마이페이지 스크랩 칸',
+        title: '마이페이지 스크랩 칸 노출',
+        description: [
+          '마이페이지 지원 관리 보드의 채용공고 스크랩 칸 맨 앞에 노출됩니다.',
+          '스크랩한 공고와 같은 카드 모양이고, 모바일 리스트 보기에는 노출되지 않아요.',
+        ],
+        tags: ['공고 카드 자동 구성', 'PC 보드 보기'],
+        rect: { top: 24.8, left: 4.8, width: 21.9, height: 8.4 },
+        mockCard: true,
+      },
+    ],
+  },
+  {
+    id: 'job-detail',
+    tab: '공고 상세',
+    url: 'ogonggo.co.kr/jobs',
+    image: '/landing/job-detail.webp',
+    imageAlt: '오늘의 공고 공고 상세 화면',
+    spots: [
+      {
+        id: 'job-detail-side-banner',
+        name: '공고 상세 사이드 배너',
+        title: '공고 상세 사이드 배너 1슬롯 노출',
+        description: [
+          '공고 상세 오른쪽 사이드바, 비슷한 공고 아래에 놓이는 세로 배너입니다.',
+          '화면이 좁으면 본문 아래로 내려가 가로형으로 바뀌어요.',
+        ],
+        tags: ['PC 400×500 · MO 750×200'],
+        rect: { top: 48.3, left: 69.5, width: 26.6, height: 23.7 },
+        banner: { mode: 'overlay', size: 'PC 400×500' },
+      },
+    ],
   },
 ];
 
@@ -353,7 +513,17 @@ export const PACKAGE = {
 };
 
 /** 시안의 로고 줄에서 이름이 온전히 보이는 회사만 옮겼다. 로고 파일을 받으면 이미지로 바꾼다. */
-export const PARTNERS = ['토스페이먼츠', 'LEVIT', '모두닥', 'InBody', '달라스윗', 'KT', '한컴'];
+/** 로고 파일은 `public/landing/partners/`. 크기는 파일의 실제 픽셀이고, 화면에서는 높이만 맞춘다. */
+export const PARTNERS = [
+  { name: '토스페이먼츠', logo: '/landing/partners/tosspayments.webp', width: 591, height: 96 },
+  { name: 'LEVIT', logo: '/landing/partners/levit.webp', width: 451, height: 96 },
+  { name: '모두닥', logo: '/landing/partners/modoodoc.webp', width: 197, height: 51 },
+  { name: 'InBody', logo: '/landing/partners/inbody.svg', width: 806, height: 240 },
+  { name: '달라스윗', logo: '/landing/partners/dalasweet.webp', width: 333, height: 63 },
+  { name: 'KT', logo: '/landing/partners/kt.svg', width: 118, height: 96 },
+  { name: '한컴', logo: '/landing/partners/hancom.webp', width: 510, height: 85 },
+  { name: '강남언니', logo: '/landing/partners/gangnamunni.webp', width: 170, height: 33 },
+];
 
 export const PROCESS = [
   {
