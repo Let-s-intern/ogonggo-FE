@@ -53,10 +53,10 @@ type BannerProduct = AdvertisementProduct & { position: BannerPosition };
 const isBannerProduct = (product: AdvertisementProduct): product is BannerProduct =>
   product.category === 'BANNER' && product.position != null;
 
-/** 승인된 계약은 `계약`, 나머지는 `광고 신청` 목록으로 돌아간다. 상태를 모르면(불러오는 중·실패) 광고 신청이다. */
+/** 승인된 계약은 `광고 계약`, 나머지는 `유료 광고 신청` 목록으로 돌아간다. 상태를 모르면(불러오는 중·실패) 광고 신청이다. */
 const backTo = (status?: string) =>
   status === 'APPROVED'
-    ? { to: '/business/advertisement-contracts', label: '계약' }
+    ? { to: '/business/advertisement-contracts', label: '광고 계약' }
     : { to: '/business/advertisement-applications', label: '유료 광고 신청' };
 
 /**
