@@ -163,8 +163,10 @@ export interface AdProduct {
   reach: string;
   title: string;
   description: string;
-  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 나란히 놓는다(카카오톡 방). */
+  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다(오공고 웹 화면, 카카오톡 방). */
   images: string[];
+  /** 이미지마다 붙일 화면 이름. 있으면 이미지 아래에 띄운다. */
+  imageLabels?: string[];
   price: string;
   /**
    * 광고 신청 API 의 `categories` 값. 카카오톡 CRM 은 BE 카테고리가 아직 없어 비어 있고 `[희망 상품]` 글에만 남는다.
@@ -180,7 +182,14 @@ export const AD_PRODUCTS: AdProduct[] = [
     reach: '채용공고 홈',
     title: '오늘의 공고 지면광고',
     description: '채용공고 홈의 추천 카드 · 상단 고정 · 배너 자리에 공고를 노출해요.',
-    images: ['/landing/jobs-list.webp'],
+    images: [
+      '/landing/jobs-list.webp',
+      '/landing/job-detail.webp',
+      '/landing/bootcamps-list.webp',
+      '/landing/calendar.webp',
+      '/landing/mypage-scraps.webp',
+    ],
+    imageLabels: ['채용공고 홈', '공고 상세', '부트캠프', '공고 달력', '마이페이지'],
     price: '1주 30만원부터',
     categories: ['JOB_POSTING', 'BANNER'],
   },

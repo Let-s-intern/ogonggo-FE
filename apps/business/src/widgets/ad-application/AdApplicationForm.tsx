@@ -236,7 +236,7 @@ function CheckMark({ on }: { on: boolean }) {
   );
 }
 
-/** 상품 카드의 이미지 칸. 인스타는 피드처럼 3열 격자, 카카오톡은 채팅 캡처를 나란히, 나머지는 한 장이다. */
+/** 상품 카드의 이미지 칸. 인스타는 피드처럼 3열 격자, 오공고 웹 화면과 카카오톡 채팅 캡처는 한 줄로 나란히 놓는다. */
 function ProductImages({ product }: { product: AdProduct }) {
   const { images, title } = product;
   if (images.length >= 6) {
@@ -255,24 +255,33 @@ function ProductImages({ product }: { product: AdProduct }) {
     );
   }
   return (
-    <span className={cn('grid h-52 gap-1 bg-gray-50', images.length > 1 && 'grid-cols-2 p-1')}>
+    <span
+      className={cn(
+        'grid gap-1 bg-gray-50',
+        product.imageLabels ? 'h-72' : 'h-52',
+        images.length > 1 && 'p-1',
+      )}
+      style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}
+    >
       {images.map((src, i) => (
-        <img
-          key={src}
-          src={src}
-          alt={i === 0 ? `${title} 예시` : ''}
-          loading="lazy"
-          className={cn('h-full w-full object-cover object-top', images.length > 1 && 'rounded-md')}
-        />
+        <span key={src} className="relative block h-full overflow-hidden rounded-md">
+          <img
+            src={src}
+            alt={product.imageLabels?.[i] ?? (i === 0 ? `${title} 예시` : '')}
+            loading="lazy"
+            className="h-full w-full object-cover object-top"
+          />
+          {product.imageLabels?.[i] && (
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-900/80 to-transparent px-1.5 pt-4 pb-1.5 text-center text-xs font-semibold text-white">
+              {product.imageLabels[i]}
+            </span>
+          )}
+        </span>
       ))}
     </span>
   );
 }
 
-/**
- * 2단계. 상품 6개(오공고 웹 1 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM 1)를 채널 묶음으로 세로로 쌓아 고른다(2026-11-09
- * 사용자). 묶음은 차례로 떠오르며 나타난다.
- */
 function StepProducts({
   v,
   set,
