@@ -14,6 +14,7 @@ import { adChannelAdminHandlers } from './ad-channels';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
 import { notificationHandlers } from './notifications';
+import { proxyRegistrationHandlers } from './proxy-registration';
 import { recommendWeightsHandlers } from './recommend-weights';
 import { rejectionHandlers } from './rejections';
 import { reviewHandlers } from './review';
@@ -44,6 +45,7 @@ export const adminHandlers: HttpHandler[] = [
   ...contentHandlers,
   ...concernHandlers,
   ...memberHandlers,
+  ...proxyRegistrationHandlers,
   ...noticeHandlers,
   ...serviceFeedbackHandlers,
   ...notificationHandlers,
