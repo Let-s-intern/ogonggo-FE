@@ -4,6 +4,7 @@ import { Checkbox, Field, Input } from '@ogonggo/ui';
 import { FormSelect } from '@/shared/ui/FormSelect';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
 import { CountedInput } from '@/shared/ui/CountedInput';
+import { DatePicker } from '@/shared/ui/DatePicker';
 import { LogoUploadField } from '@/shared/ui/LogoUploadField';
 import {
   OPERATION_TYPE_OPTIONS,
@@ -114,22 +115,24 @@ export function BootcampBasicInfoSection({
         */}
         <Field label="교육 기간" htmlFor="company-bootcamp-program-start" required>
           <div className="flex items-center gap-2">
-            <Input
-              id="company-bootcamp-program-start"
-              type="date"
-              aria-label="교육 시작일"
-              className="w-auto min-w-0 flex-1 px-3"
-              value={values.programStartDate}
-              onChange={(event) => onChange({ programStartDate: event.target.value })}
-            />
+            <div className="min-w-0 flex-1">
+              <DatePicker
+                id="company-bootcamp-program-start"
+                aria-label="교육 시작일"
+                className="px-3"
+                value={values.programStartDate}
+                onChange={(programStartDate) => onChange({ programStartDate })}
+              />
+            </div>
             <span className="shrink-0 text-sm text-gray-400">~</span>
-            <Input
-              type="date"
-              aria-label="교육 종료일"
-              className="w-auto min-w-0 flex-1 px-3"
-              value={values.programEndDate}
-              onChange={(event) => onChange({ programEndDate: event.target.value })}
-            />
+            <div className="min-w-0 flex-1">
+              <DatePicker
+                aria-label="교육 종료일"
+                className="px-3"
+                value={values.programEndDate}
+                onChange={(programEndDate) => onChange({ programEndDate })}
+              />
+            </div>
           </div>
         </Field>
 

@@ -10,6 +10,7 @@ import {
 import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { ListboxSelect } from '@/shared/ui/ListboxSelect';
+import { DatePicker } from '@/shared/ui/DatePicker';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
 import {
   AD_PRODUCT_GROUPS,
@@ -176,11 +177,11 @@ function StepPost({
           <Label required>
             {v.recruitType === '기간 지정 모집' ? '모집 마감일' : '모집 마감일(예정)'}
           </Label>
-          <input
-            className={INPUT}
-            type="date"
+          <DatePicker
+            aria-label="모집 마감일"
             value={v.deadline}
-            onChange={(e) => set('deadline', e.target.value)}
+            onChange={(value) => set('deadline', value)}
+            className="h-[50px] text-[15px]"
           />
           <ErrorText>{errors.deadline}</ErrorText>
         </div>

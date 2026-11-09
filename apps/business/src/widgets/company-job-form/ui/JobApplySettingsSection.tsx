@@ -3,6 +3,7 @@
 import { enumOptions } from '@ogonggo/api';
 import { Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
 import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
+import { DatePicker } from '@/shared/ui/DatePicker';
 import type { CompanyJobFormValues } from '../model/values';
 
 /** `CreateCompanyJobRequest.sourceUrl` 의 `@maxLength`. */
@@ -30,7 +31,7 @@ export interface JobApplySettingsSectionProps {
  * 두 번째에만 지원 링크가 붙어 있어 실수로 본다(v5 PRD 3 절, 2026-09-21 확인). 남긴 것은
  * 링크가 붙은 두 번째 줄의 배치다.
  *
- * 날짜는 `input[type=date]` 다. 백엔드는 일시를 받지만 목업이 `YYYY-MM-DD` 이고 마감 시각이
+ * 날짜는 `DatePicker` 가 `YYYY-MM-DD` 로 준다. 백엔드는 일시를 받지만 목업이 `YYYY-MM-DD` 이고 마감 시각이
  * 23:59 로 고정이라, 화면은 달력 날짜만 다루고 시각은 저장할 때 붙인다(`lib/datetime.ts`).
  */
 export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSectionProps) {
@@ -38,11 +39,10 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
     <div>
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="접수 시작일" htmlFor="company-job-start-at">
-          <Input
+          <DatePicker
             id="company-job-start-at"
-            type="date"
             value={values.recruitmentStartAt}
-            onChange={(event) => onChange({ recruitmentStartAt: event.target.value })}
+            onChange={(recruitmentStartAt) => onChange({ recruitmentStartAt })}
           />
         </Field>
 
@@ -52,11 +52,10 @@ export function JobApplySettingsSection({ values, onChange }: JobApplySettingsSe
           required
           hint="마감 시간은 23:59로 설정됩니다."
         >
-          <Input
+          <DatePicker
             id="company-job-end-at"
-            type="date"
             value={values.recruitmentEndAt}
-            onChange={(event) => onChange({ recruitmentEndAt: event.target.value })}
+            onChange={(recruitmentEndAt) => onChange({ recruitmentEndAt })}
           />
         </Field>
 
