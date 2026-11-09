@@ -16,18 +16,22 @@ export const REASONS = [
     no: '01',
     eyebrow: '지원 중인',
     title: '취준생 중심 유저풀',
+    /** 카드 오른쪽 아래 배경 그림(사용자 제공, 2026-11-09). */
+    icon: '/landing/reasons/users.png',
     body: '렛츠커리어가 취업 준비부터 실제 지원 단계까지 함께해요. 높은 지원 의사와 완성된 서류를 갖춘 타겟에게 바로 닿아요.',
   },
   {
     no: '02',
     eyebrow: '광고가 아닌',
     title: '추천하는 채널',
+    icon: '/landing/reasons/thumbs-up.png',
     body: '취업 교육부터 공고 큐레이션까지 쌓아온 신뢰로, 광고 콘텐츠도 팔로워의 97%가 보는 반응을 만들어요.',
   },
   {
     no: '03',
     eyebrow: '소재 제작까지',
     title: '48시간',
+    icon: '/landing/reasons/clock.png',
     body: "공고 링크만 있으면 '카드뉴스' · '카카오톡 소재' · '오공고 해석 한 줄'까지 직접 만들어 빠르게 집행해요.",
   },
 ];
