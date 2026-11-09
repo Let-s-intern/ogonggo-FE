@@ -24,6 +24,11 @@ interface BannerFormModalProps {
   product: AdvertisementProduct & { position: BannerPosition };
   /** `null` 이면 새 배너다. */
   exposure: AdvertisementExposure | null;
+  /**
+   * 새 배너의 연결 계약을 미리 채운다. 광고 계약 상세에서 열 때 그 계약이다. 계약이 있는 광고라 `광고` 표시도 켠 채로 시작한다.
+   * 모달 안에서 바꿀 수 있다.
+   */
+  initialContract?: { id: number; companyName: string };
   onClose: () => void;
 }
 
@@ -42,17 +47,20 @@ interface FormState {
   contractId: number | null;
 }
 
-function initialState(exposure: AdvertisementExposure | null): FormState {
+function initialState(
+  exposure: AdvertisementExposure | null,
+  initialContractId: number | null,
+): FormState {
   return {
     name: exposure?.name ?? '',
     imageUrl: exposure?.imageUrl ?? '',
     linkUrl: exposure?.linkUrl ?? '',
-    adLabel: exposure?.adLabel ?? false,
+    adLabel: exposure?.adLabel ?? initialContractId !== null,
     startAt: toInputValue(exposure?.startAt),
     endAt: toInputValue(exposure?.endAt),
     // 새 배너는 켠 채로 시작한다. 기간을 정해 두면 그 사이에만 보인다.
     exposed: exposure?.exposed ?? true,
-    contractId: exposure?.contractId ?? null,
+    contractId: exposure ? (exposure.contractId ?? null) : initialContractId,
   };
 }
 
@@ -83,11 +91,19 @@ function validate(form: FormState): FormErrors {
  * 수정은 `PUT` 전체 교체라 모든 칸을 다시 보낸다. 켜짐은 표의 스위치로만 바꾼다(교체 본문에 칸이 없다).
  * 검증은 저장을 누른 뒤부터 보인다. 서버가 거절하면 오류 코드에 맞춘 문구를 보인다.
  */
-export function BannerFormModal({ open, product, exposure, onClose }: BannerFormModalProps) {
+export function BannerFormModal({
+  open,
+  product,
+  exposure,
+  initialContract,
+  onClose,
+}: BannerFormModalProps) {
   const createMutation = useCreateExposure();
   const replaceMutation = useReplaceExposure(exposure?.id ?? 0);
   const saveMutation = exposure ? replaceMutation : createMutation;
-  const [form, setForm] = useState<FormState>(() => initialState(exposure));
+  const [form, setForm] = useState<FormState>(() =>
+    initialState(exposure, initialContract?.id ?? null),
+  );
   const [submitted, setSubmitted] = useState(false);
   const errors = submitted ? validate(form) : {};
 
@@ -186,7 +202,11 @@ export function BannerFormModal({ open, product, exposure, onClose }: BannerForm
       <ContractField
         id="banner-contract"
         value={form.contractId}
-        currentCompanyName={exposure?.advertiserCompanyName ?? null}
+        currentCompanyName={
+          exposure
+            ? (exposure.advertiserCompanyName ?? null)
+            : (initialContract?.companyName ?? null)
+        }
         onChange={(contractId) => set('contractId', contractId)}
       />
 

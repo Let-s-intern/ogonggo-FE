@@ -7,6 +7,7 @@ import {
   Input,
   Pagination,
   Select,
+  Tabs,
   cn,
   type DataTableColumn,
 } from '@ogonggo/ui';
@@ -34,6 +35,25 @@ const SELECTED = 'border-transparent bg-blue-50 font-semibold text-blue-500';
 const UNSELECTED = 'text-gray-500';
 
 const STATUS_OPTIONS = enumOptions('AdvertisementContractStatus');
+
+/**
+ * 탭. BE 에서는 신청 한 건이 곧 계약 한 행이고 상태만 바뀐다. 아직 승인되지 않은 것(신청·협의 중·반려)을 `광고 신청`,
+ * 승인된 것을 `계약` 으로 나눠 본다. 탭 안의 상태 체크는 그 탭의 상태만 고를 수 있고, 하나도 고르지 않으면 탭의 상태
+ * 전부로 거른다.
+ */
+type Tab = 'applications' | 'contracts';
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'applications', label: '광고 신청' },
+  { value: 'contracts', label: '계약' },
+];
+
+const TAB_STATUSES: Record<Tab, ListAdvertisementContractsStatusItem[]> = {
+  applications: ['REQUESTED', 'NEGOTIATING', 'REJECTED'],
+  contracts: ['APPROVED'],
+};
+
+const isTab = (value: string): value is Tab => value === 'applications' || value === 'contracts';
 
 type SelectKey = 'source' | 'promotionTarget' | 'category';
 
@@ -119,9 +139,10 @@ const isStatus = (value: string): value is ListAdvertisementContractsStatusItem 
   STATUS_OPTIONS.some((option) => option.value === value);
 
 /**
- * 광고 계약 목록(PRD 4절). 광고 신청 폼으로 들어온 신청과 기업회원 공고 등록이 만든 계약을 함께 본다. 최신 신청이 먼저다.
+ * 광고 신청·계약 목록(PRD 4절). 광고 신청 폼으로 들어온 신청과 기업회원 공고 등록이 만든 계약을 함께 본다. 최신 신청이
+ * 먼저다. `광고 신청`(승인 전)과 `계약`(승인) 탭으로 나눈다(`TABS`).
  *
- * 필터는 모두 URL 쿼리에 있다. 상태는 여러 개를 고를 수 있어 `status=REQUESTED,NEGOTIATING` 처럼 쉼표로 잇는다.
+ * 필터는 모두 URL 쿼리에 있다. 탭은 `tab`, 상태는 여러 개를 고를 수 있어 `status=REQUESTED,NEGOTIATING` 처럼 쉼표로 잇는다.
  */
 export function AdContractListPage() {
   const navigate = useNavigate();
@@ -139,10 +160,18 @@ export function AdContractListPage() {
     setSearchParams(next);
   };
 
+  const tabParam = get('tab');
+  const tab: Tab = isTab(tabParam) ? tabParam : 'applications';
+  const tabStatuses = TAB_STATUSES[tab];
+  const checkedStatuses = get('status')
+    .split(',')
+    .filter(isStatus)
+    .filter((status) => tabStatuses.includes(status));
+
   const filters: ContractListFilters = {
     page,
     source: get('source'),
-    status: get('status').split(',').filter(isStatus),
+    status: checkedStatuses.length > 0 ? checkedStatuses : tabStatuses,
     promotionTarget: get('promotionTarget'),
     category: get('category'),
     companyName: get('companyName'),
@@ -153,14 +182,22 @@ export function AdContractListPage() {
 
   const toggleStatus = (status: ListAdvertisementContractsStatusItem, on: boolean) => {
     const next = on
-      ? [...filters.status, status]
-      : filters.status.filter((value) => value !== status);
+      ? [...checkedStatuses, status]
+      : checkedStatuses.filter((value) => value !== status);
     change({ status: next.join(',') });
   };
 
   return (
     <>
-      <PageHeader title="광고 계약" />
+      <PageHeader title="광고 신청·계약" />
+      <Tabs
+        items={TABS}
+        value={tab}
+        // 탭을 바꾸면 그 탭에 없는 상태 체크는 의미가 없어 지운다.
+        onValueChange={(next) => change({ tab: next, status: '' })}
+        aria-label="광고 신청·계약"
+        className="mb-4"
+      />
       <ListToolbar>
         {SELECTS.map(({ key, label, options }) => (
           <Select
@@ -196,16 +233,18 @@ export function AdContractListPage() {
             className={cn('h-9 w-36 px-2 text-sm', filters.createdTo ? SELECTED : UNSELECTED)}
           />
         </div>
-        <div className="flex items-center gap-3" role="group" aria-label="상태">
-          {STATUS_OPTIONS.map((option) => (
-            <Checkbox
-              key={option.value}
-              label={option.label}
-              checked={filters.status.includes(option.value)}
-              onChange={(on) => toggleStatus(option.value, on)}
-            />
-          ))}
-        </div>
+        {tabStatuses.length > 1 ? (
+          <div className="flex items-center gap-3" role="group" aria-label="상태">
+            {STATUS_OPTIONS.filter((option) => tabStatuses.includes(option.value)).map((option) => (
+              <Checkbox
+                key={option.value}
+                label={option.label}
+                checked={checkedStatuses.includes(option.value)}
+                onChange={(on) => toggleStatus(option.value, on)}
+              />
+            ))}
+          </div>
+        ) : null}
         <p className="ml-auto text-sm text-gray-500">
           현재 조건{' '}
           <b className="font-semibold text-gray-900">{data?.pageInfo.totalElements ?? '-'}</b>건
@@ -222,7 +261,9 @@ export function AdContractListPage() {
             rowKey={(row) => row.id}
             onRowClick={(row) => navigate(`/business/advertisement-contracts/${row.id}`)}
             isLoading={isPending}
-            emptyMessage="조건에 맞는 계약이 없습니다."
+            emptyMessage={
+              tab === 'contracts' ? '조건에 맞는 계약이 없습니다.' : '조건에 맞는 신청이 없습니다.'
+            }
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>

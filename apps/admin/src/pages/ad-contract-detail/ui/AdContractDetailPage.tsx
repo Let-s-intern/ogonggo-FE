@@ -32,17 +32,28 @@ import {
 } from '@/entities/advertisement-contract/lib/contract';
 import type { AdvertisementExposure } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
+  type BannerPosition,
   EXPOSURE_STATUS_BADGES,
   exposureStatus,
   formatKst,
   formatPeriod,
 } from '@/entities/advertisement-exposure/lib/exposure';
-import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
+import {
+  type AdvertisementProduct,
+  useAdvertisementProducts,
+} from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { productLabel } from '@/entities/advertisement-product/lib/product';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
+import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
 
-const BACK = { to: '/business/advertisement-contracts', label: '광고 계약' };
+type BannerProduct = AdvertisementProduct & { position: BannerPosition };
+
+/** 배너 자리가 있는 상품만 노출을 걸 수 있다. 인스타·카카오·광고 공고 상품은 자리가 없다. */
+const isBannerProduct = (product: AdvertisementProduct): product is BannerProduct =>
+  product.category === 'BANNER' && product.position != null;
+
+const BACK = { to: '/business/advertisement-contracts', label: '광고 신청·계약' };
 
 /**
  * 광고 계약 상세(PRD 4절). 신청 원문을 보고, 상태·협의 금액을 정하고, 판매한 상품을 붙이고, 이 계약에 걸린 노출을 본다.
@@ -289,12 +300,24 @@ function PaymentAmountCard({ contract }: { contract: AdminAdvertisementContractD
   );
 }
 
-/** 판매한 상품(계약 상품). 같은 상품을 여러 번 붙일 수 있다. 지운 상품도 계약에는 남아 `삭제된 상품` 으로 보인다. */
+/**
+ * 판매한 상품(계약 상품). 같은 상품을 여러 번 붙일 수 있다. 지운 상품도 계약에는 남아 `삭제된 상품` 으로 보인다.
+ *
+ * 배너 상품 줄에는 `배너 등록` 이 있다. 그 상품의 자리에, 이 계약을 연결 계약으로 미리 채운 등록 모달을 연다(배너 세팅과 같은
+ * 모달). 저장하면 아래 `걸린 노출` 에 바로 보인다.
+ */
 function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
   const products = useAdvertisementProducts();
   const add = useAddContractProduct(contract.id);
   const remove = useRemoveContractProduct(contract.id);
   const [productId, setProductId] = useState('');
+  const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
+
+  const bannerProductOf = (row: AdminAdvertisementContractProductResponse) => {
+    if (row.productDeleted) return null;
+    const product = products.data?.find((candidate) => candidate.id === row.productId);
+    return product && isBannerProduct(product) ? product : null;
+  };
 
   const columns: DataTableColumn<AdminAdvertisementContractProductResponse>[] = [
     {
@@ -322,18 +345,32 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
     {
       key: 'actions',
       header: '관리',
-      width: 'w-24',
-      render: (row) => (
-        <Button
-          size="sm"
-          variant="secondary"
-          aria-label={`${row.productName} 빼기`}
-          disabled={remove.isPending}
-          onClick={() => remove.mutate(row.contractProductId)}
-        >
-          빼기
-        </Button>
-      ),
+      width: 'w-44',
+      render: (row) => {
+        const banner = bannerProductOf(row);
+        return (
+          <span className="flex items-center gap-1.5">
+            {banner ? (
+              <Button
+                size="sm"
+                aria-label={`${row.productName} 배너 등록`}
+                onClick={() => setBannerProduct(banner)}
+              >
+                배너 등록
+              </Button>
+            ) : null}
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={`${row.productName} 빼기`}
+              disabled={remove.isPending}
+              onClick={() => remove.mutate(row.contractProductId)}
+            >
+              빼기
+            </Button>
+          </span>
+        );
+      },
     },
   ];
 
@@ -374,11 +411,21 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
           emptyMessage="붙인 상품이 없습니다. 판매한 상품을 붙이세요."
         />
       </div>
+      {bannerProduct ? (
+        <BannerFormModal
+          key={bannerProduct.id}
+          open
+          product={bannerProduct}
+          exposure={null}
+          initialContract={{ id: contract.id, companyName: contract.companyName }}
+          onClose={() => setBannerProduct(null)}
+        />
+      ) : null}
     </Card>
   );
 }
 
-/** 이 계약에 걸린 노출. 계약 상품의 자리마다 불러 모은다. 노출은 배너 세팅에서 건다. */
+/** 이 계약에 걸린 노출. 계약 상품의 자리마다 불러 모은다. 노출은 계약 상품의 `배너 등록` 이나 배너 세팅에서 건다. */
 function ExposuresCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
   const exposures = useContractExposures(
     contract.id,
@@ -418,11 +465,11 @@ function ExposuresCard({ contract }: { contract: AdminAdvertisementContractDetai
       <CardTitle>걸린 노출</CardTitle>
       <div className="mt-3 flex flex-col gap-3">
         <p className="text-sm text-gray-500">
-          노출은{' '}
+          배너는 위 계약 상품의 `배너 등록` 으로 바로 겁니다. 순서·켜기·수정은{' '}
           <Link to="/business/banners" className="text-blue-500 hover:underline">
             배너 세팅
           </Link>
-          에서 이 계약을 연결 계약으로 골라 겁니다. 계약에 붙인 상품의 자리만 여기서 보입니다.
+          에서 합니다. 계약에 붙인 상품의 자리만 여기서 보입니다.
         </p>
         {exposures.isError ? <Callout tone="error">노출을 불러오지 못했습니다.</Callout> : null}
         <DataTable
