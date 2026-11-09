@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createCompanyMemberJob,
   deleteBootcamp,
   deleteJob,
   getBootcamp,
@@ -16,6 +17,7 @@ import {
   updateJobVisibilities,
   updateRecruitmentPostVisibilities,
   type ChangeAdminJobVisibilityRequest,
+  type CreateProxyJobRequest,
   type ListBootcampsParams,
   type ListConcernsParams,
   type ListJobsParams,
@@ -208,6 +210,23 @@ export function usePatchJob(jobId: number) {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+    },
+  });
+}
+
+/**
+ * 비즈니스 회원 대신 채용공고를 등록한다(`POST /api/v1/admin/company-members/{userId}/jobs`, 백엔드 LC-3574).
+ * 그 회원의 공고로 검수 없이 승인된다. 목록·회원 상세의 등록 공고·대시보드가 새 공고를 세도록 함께 무효화한다.
+ */
+export function useCreateProxyJob(memberId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateProxyJobRequest) =>
+      unwrapData(createCompanyMemberJob(memberId, request)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'members', 'companies'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
   });
 }

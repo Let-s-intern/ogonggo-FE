@@ -1,5 +1,10 @@
 export { JobEditor } from './ui/JobEditor';
-export { ConditionSection, RecruitmentSection } from './ui/JobInfoSections';
+export {
+  ApplySection,
+  CompanySection,
+  ConditionSection,
+  RecruitmentSection,
+} from './ui/JobInfoSections';
 export { LogoSuggest } from './ui/LogoSuggest';
 export {
   buildPatch,
