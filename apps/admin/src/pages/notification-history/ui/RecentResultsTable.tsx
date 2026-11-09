@@ -25,6 +25,7 @@ export const HISTORY_CHANNELS = {
   push: { channel: 'FCM', title: '푸시 전송 내역' },
   alimtalk: { channel: 'KAKAO', title: '알림톡 전송 내역' },
   email: { channel: 'EMAIL', title: '이메일 전송 내역' },
+  slack: { channel: 'SLACK', title: '슬랙 전송 내역' },
 } as const;
 export type HistoryChannel = keyof typeof HISTORY_CHANNELS;
 
@@ -149,12 +150,13 @@ function PushTitle({ row, contents }: { row: RecentItem; contents: BatchContents
 }
 
 /**
- * 수신 회원 ID 를 일반 회원 상세(`/members/users/:memberId`)로 잇는다. 토픽 작업처럼 회원이 없으면 `-` 다.
+ * 수신 회원 ID 를 일반 회원 상세(`/members/users/:memberId`)로 잇는다. 토픽 작업, 슬랙(영업 채널), 회원이 아닌 광고 신청자에게
+ * 가는 메일처럼 회원이 없으면 `-` 다. 서버가 칸을 빼지 않고 `null` 로 줄 수도 있어 둘 다 본다.
  *
  * 표의 줄은 누르면 상세 모달이 열리므로, 링크를 누를 때는 그 클릭이 줄까지 올라가지 않게 막는다.
  */
-export function RecipientLink({ userId }: { userId?: number }) {
-  if (userId === undefined) {
+export function RecipientLink({ userId }: { userId?: number | null }) {
+  if (userId == null) {
     return '-';
   }
   return (

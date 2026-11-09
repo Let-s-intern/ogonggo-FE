@@ -264,6 +264,8 @@ const NOTIFICATION_TEMPLATE_LABEL: Record<string, string> = {
   fcm_test: 'FCM 테스트 발송',
   CONCERN_COMMENT: '취준고민 댓글 알림',
   SIDE_STUDY_COMMENT_REPLY: '사이드·스터디 답글 알림',
+  advertisement_contract_received: '광고 신청 확인 메일',
+  advertisement_contract_submitted: '광고 신청 슬랙 알림',
 };
 
 /**

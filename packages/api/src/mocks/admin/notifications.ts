@@ -990,6 +990,37 @@ const RECENT_RESULTS: RecentItem[] = [
     recipientUserId: 7,
     attemptCount: 0,
   }),
+  // 광고 신청 한 건이 이메일(신청 확인)과 슬랙(영업 채널)을 함께 쌓는다(BE LC-3584). 둘 다 받는 회원이 없다.
+  job(25, {
+    notificationId: 5824,
+    channel: 'EMAIL',
+    status: 'SENT',
+    recipientType: 'DIRECT',
+    templateCode: 'advertisement_contract_received',
+    sentAt: at(25 * MINUTE_MS),
+    providerMessageId: '0100019a3b7d-ses-5120',
+    attemptCount: 1,
+  }),
+  job(25, {
+    notificationId: 5823,
+    channel: 'SLACK',
+    status: 'SENT',
+    recipientType: 'DIRECT',
+    templateCode: 'advertisement_contract_submitted',
+    sentAt: at(25 * MINUTE_MS),
+    attemptCount: 1,
+  }),
+  job(410, {
+    notificationId: 5770,
+    channel: 'SLACK',
+    status: 'FAILED',
+    recipientType: 'DIRECT',
+    templateCode: 'advertisement_contract_submitted',
+    resultCode: 'HTTP_500',
+    resultCategory: 'PROVIDER_UNAVAILABLE',
+    resultDetail: 'Slack 웹훅이 500 을 돌려주었습니다.',
+    attemptCount: 3,
+  }),
 ];
 
 const recentResultsHandler = http.get('*/api/v1/admin/notifications/recent-results', () => {
