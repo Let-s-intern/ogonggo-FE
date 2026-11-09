@@ -64,6 +64,19 @@ function buildApplicationHref(bootcamp: BootcampDetail): string | undefined {
   return bootcamp.applicationUrl;
 }
 
+/** 제목과 평문 한 덩어리. 부트캠프 본문 칸은 줄바꿈을 그대로 보관한다. 비었으면 그리지 않는다. */
+function BootcampTextSection({ title, body }: { title: string; body: string | undefined }) {
+  if (!body?.trim()) {
+    return null;
+  }
+  return (
+    <section>
+      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+      <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{body}</p>
+    </section>
+  );
+}
+
 /**
  * 교육·부트캠프 상세 — `docs/asset/교육부트캠프 상세페이지.png` 순서(브레드크럼 → 헤더 카드 →
  * 정보 그리드·본문 / 사이드바)로 조합한다. 2단 비율·여백(`lg:grid-cols-[739fr_323fr]`, `px-8`,
@@ -87,19 +100,21 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
           {/* 본문 글자는 위 정보 박스 안 글자와 같은 자리에서 시작한다 — 박스의 `p-4` 와 테두리 1px 를
               더한 17px 만큼 들인다. */}
           <div className="flex flex-col gap-10 px-[17px]">
+            {/* 비즈니스 폼이 "입력한 순서대로 노출" 한다고 안내하는 순서다(상세 내용 → 커리큘럼 → 강사 정보 →
+              교육 특징/혜택 → 수료 조건). 지원 자격은 그 폼에 칸이 없어 뒤에 둔다. 값이 없는 칸은 제목째 사라진다 —
+              커리큘럼과 같은 규칙이다. */}
+            <BootcampTextSection
+              title={contentFieldLabel('BootcampContentField', 'content')}
+              body={bootcamp.content}
+            />
             <BootcampCurriculum curriculums={bootcamp.curriculums} />
-            {/* `지원 자격 및 전형 안내`도 값이 없으면 제목째 사라진다 — 커리큘럼과 같은 규칙이다.
-              본문 섹션이 하나뿐이라 `job-detail`처럼 목록으로 만들지 않는다. */}
-            {bootcamp.eligibilityAndSelectionProcess ? (
-              <section>
-                <h2 className="text-lg font-bold text-gray-900">
-                  {contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess')}
-                </h2>
-                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
-                  {bootcamp.eligibilityAndSelectionProcess}
-                </p>
-              </section>
-            ) : null}
+            <BootcampTextSection title="강사 정보" body={bootcamp.instructorInfo} />
+            <BootcampTextSection title="교육 특징/혜택" body={bootcamp.programFeatures} />
+            <BootcampTextSection title="수료 조건" body={bootcamp.completionRequirements} />
+            <BootcampTextSection
+              title={contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess')}
+              body={bootcamp.eligibilityAndSelectionProcess}
+            />
             <BootcampPhotos images={bootcamp.images} />
           </div>
         </div>
