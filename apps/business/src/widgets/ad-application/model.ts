@@ -144,7 +144,8 @@ export function periodDays(startDate: string, endDate: string): number {
 /**
  * 광고 신청서에서 고르는 상품 6개(2026-11-09 사용자: 오공고 웹 1 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM 1). 오공고 웹의
  * 지면(배너·추천 카드 등)은 여기서 고르지 않고 담당자가 견적 때 정한다. 카카오톡·인스타 이미지는 web 커뮤니티 페이지
- * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹·CRM 은 랜딩(`public/landing`) 것을 쓴다.
+ * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹은 랜딩(`public/landing`) 것,
+ * 카카오톡 CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
  */
 export type AdProductGroupId = 'web' | 'kakao' | 'instagram' | 'crm';
 
@@ -253,7 +254,12 @@ export const AD_PRODUCTS: AdProduct[] = [
     reach: '렛츠커리어 카카오 채널',
     title: '카카오톡 CRM',
     description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
-    images: ['/landing/crm-dm-1.png'],
+    images: [
+      '/ad-products/kakao-crm-1.jpg',
+      '/ad-products/kakao-crm-2.jpg',
+      '/ad-products/kakao-crm-3.jpg',
+      '/ad-products/kakao-crm-4.jpg',
+    ],
     price: '견적 문의',
     categories: [],
   },

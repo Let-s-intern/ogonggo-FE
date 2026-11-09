@@ -258,7 +258,7 @@ function ProductImages({ product }: { product: AdProduct }) {
     <span
       className={cn(
         'grid gap-1 bg-gray-50',
-        product.imageLabels ? 'h-72' : 'h-52',
+        images.length >= 4 ? 'h-72' : 'h-52',
         images.length > 1 && 'p-1',
       )}
       style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}
