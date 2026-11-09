@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
-import type { BannerPlacement, PublicBannerResponse } from '@ogonggo/api';
+import type { AdvertisementExposureResponse } from '@ogonggo/api';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
+import type { BannerPlacement } from '../model/placement';
 
 /** 여럿일 때 다음 배너로 넘기는 간격. */
 const ROTATE_MS = 5000;
 
 export interface BannerCarouselProps {
   /** 서버가 정한 순서 그대로. 비어 있으면 부르지 않는다(`HomeBannerSlot`). */
-  banners: PublicBannerResponse[];
+  banners: AdvertisementExposureResponse[];
   placement: BannerPlacement;
   /**
    * `wide` 는 홈의 가로 배너(PC 1200×120, md 부터)이고 `side` 는 공고 상세 사이드바의 세로 배너(PC 400×500)다.
@@ -25,11 +26,9 @@ const FRAME_CLASS = {
   side: 'aspect-[750/200] rounded-xl lg:aspect-[400/500]',
 } as const;
 
-/** PC 소재로 바꾸는 폭. 위 `FRAME_CLASS` 의 비율이 바뀌는 지점과 같아야 이미지가 잘리지 않는다. */
-const PC_MEDIA = { wide: '(min-width: 768px)', side: '(min-width: 1024px)' } as const;
-
 /**
- * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이고 이미지를 `<picture>` 로 나눈다.
+ * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이다. BE 노출에는 이미지가 하나(`imageUrl`)뿐이라
+ * 두 폭에 같은 이미지를 `object-cover` 로 채운다(모바일 이미지 칸은 BE 에 요청함).
  *
  * 여럿이면 5초마다 넘기고 아래 점으로 고른다. 마우스를 올리거나 초점이 안에 있으면 멈추고, 움직임 줄이기를
  * 켠 사람에게는 넘기지 않는다(점으로만 넘긴다). 무작위 하나 대신 넘기기를 고른 이유는 운영자가 정한 순서가
@@ -37,10 +36,10 @@ const PC_MEDIA = { wide: '(min-width: 768px)', side: '(min-width: 1024px)' } as 
  *
  * 배너는 모두 그려 두고 보이는 것만 남긴다. 숨은 배너는 `inert` 라 탭 이동과 스크린 리더에서 빠진다.
  *
- * 외부 주소는 늘 새 탭이고, 사이트 안 경로는 `openInNewTab` 을 따른다. 누르면 `banner_click` 을 GTM·PostHog 로
+ * 외부 주소는 새 탭, 사이트 안 경로는 같은 탭이다(BE 에 새 탭 칸이 없다). 누르면 `banner_click` 을 GTM·PostHog 로
  * 보낸다 — 마케팅 명세(`shared/analytics/dataLayer.ts`)에 아직 없는 이벤트라 GTM 쪽 태그는 마케팅팀이 더해야 한다.
  *
- * `광고` 표시는 배너가 `showAdLabel` 일 때만 붙는다. 오공고 자체 홍보 배너는 광고주가 따로 없어 붙이지 않고,
+ * `광고` 표시는 배너가 `adLabel` 일 때만 붙는다. 오공고 자체 홍보 배너는 광고주가 따로 없어 붙이지 않고,
  * 돈을 받고 싣는 배너는 광고임을 밝혀야 해서 운영자가 켠다.
  */
 export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerCarouselProps) {
@@ -75,7 +74,7 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
         {banners.map((banner, index) => {
           const active = index === current;
           const external = /^https?:\/\//.test(banner.linkUrl);
-          const newTab = external || banner.openInNewTab;
+          const newTab = external;
           return (
             <div
               key={banner.id}
@@ -106,18 +105,14 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                   },
                 ]}
               >
-                <picture>
-                  <source media={PC_MEDIA[variant]} srcSet={banner.pcImageUrl} />
-                  <img
-                    // 모바일 이미지를 비워 둔 홈 배너는 좁은 화면에도 PC 이미지를 쓴다(잘려 보일 수 있다).
-                    src={banner.mobileImageUrl ?? banner.pcImageUrl}
-                    alt={banner.altText}
-                    // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
-                    loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}
-                    className="h-full w-full object-cover"
-                  />
-                </picture>
-                {banner.showAdLabel ? (
+                <img
+                  src={banner.imageUrl}
+                  alt={banner.name}
+                  // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
+                  loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}
+                  className="h-full w-full object-cover"
+                />
+                {banner.adLabel ? (
                   <span className="absolute top-2 right-2 rounded bg-gray-900/60 px-1.5 py-0.5 text-[11px] leading-none font-medium text-white md:top-3 md:right-3">
                     광고
                   </span>

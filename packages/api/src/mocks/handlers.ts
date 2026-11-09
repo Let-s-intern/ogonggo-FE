@@ -6,7 +6,7 @@ import {
   type PublicAdPostingListResponse,
   type PublicAdPostingResponse,
 } from '../ad-postings';
-import { bannerHandlers } from './banners';
+import { advertisementExposureHandlers } from './advertisementExposures';
 import { adPostingsIn, isAdPostingLive } from './fixtures/ad-postings';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
@@ -1244,6 +1244,6 @@ export const handlers: HttpHandler[] = [
   replaceFcmTokenHandler,
   deleteFcmTokenHandler,
   ...userNotificationHandlers,
-  ...bannerHandlers,
+  ...advertisementExposureHandlers,
   getAdPostingsHandler,
 ];
