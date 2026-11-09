@@ -16,6 +16,7 @@ import {
   REASONS,
 } from './content';
 import { CopyInquiryButton } from './CopyInquiryButton';
+import { CountUp } from './CountUp';
 import { PlacementSimulator } from './PlacementSimulator';
 import { RevealOnScroll } from './RevealOnScroll';
 
@@ -90,7 +91,9 @@ function Hero() {
                 className={cn(RISE, LIFT, 'rounded-lg bg-white px-3 py-5 shadow-sm')}
                 style={{ animationDelay: `${380 + i * 90}ms` }}
               >
-                <p className="text-2xl font-bold text-blue-500 md:text-[28px]">{s.value}</p>
+                <p className="text-2xl font-bold text-blue-500 md:text-[28px]">
+                  <CountUp value={s.value} delay={380 + i * 90} />
+                </p>
                 <p className="mt-2 text-xs text-gray-600 md:text-sm">{s.label}</p>
               </li>
             ))}
@@ -249,7 +252,9 @@ function Channels() {
               style={order(i)}
               className="rounded-lg border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
             >
-              <p className="text-2xl font-bold text-blue-300 md:text-[30px]">{s.value}</p>
+              <p className="text-2xl font-bold text-blue-300 md:text-[30px]">
+                <CountUp value={s.value} delay={i * 90} />
+              </p>
               <p className="mt-3 text-sm">{s.label}</p>
               <p className="mt-1 text-xs text-gray-400">{s.sub}</p>
             </li>
