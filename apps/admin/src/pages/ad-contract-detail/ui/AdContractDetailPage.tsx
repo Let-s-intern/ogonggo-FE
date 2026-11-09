@@ -53,7 +53,11 @@ type BannerProduct = AdvertisementProduct & { position: BannerPosition };
 const isBannerProduct = (product: AdvertisementProduct): product is BannerProduct =>
   product.category === 'BANNER' && product.position != null;
 
-const BACK = { to: '/business/advertisement-contracts', label: '광고 신청·계약' };
+/** 승인된 계약은 `계약`, 나머지는 `광고 신청` 목록으로 돌아간다. 상태를 모르면(불러오는 중·실패) 광고 신청이다. */
+const backTo = (status?: string) =>
+  status === 'APPROVED'
+    ? { to: '/business/advertisement-contracts', label: '계약' }
+    : { to: '/business/advertisement-applications', label: '광고 신청' };
 
 /**
  * 광고 계약 상세(PRD 4절). 신청 원문을 보고, 상태·협의 금액을 정하고, 판매한 상품을 붙이고, 이 계약에 걸린 노출을 본다.
@@ -68,7 +72,7 @@ export function AdContractDetailPage() {
   if (isError) {
     return (
       <>
-        <PageHeader title="광고 계약" backTo={BACK} />
+        <PageHeader title="광고 계약" backTo={backTo()} />
         <Callout tone="error">계약을 불러오지 못했습니다. 없는 계약일 수 있습니다.</Callout>
       </>
     );
@@ -76,7 +80,7 @@ export function AdContractDetailPage() {
   if (isPending || !contract) {
     return (
       <>
-        <PageHeader title="광고 계약" backTo={BACK} />
+        <PageHeader title="광고 계약" backTo={backTo()} />
         <p className="py-10 text-center text-sm text-gray-400">불러오는 중</p>
       </>
     );
@@ -84,7 +88,10 @@ export function AdContractDetailPage() {
 
   return (
     <>
-      <PageHeader title={`${contract.companyName} · ${contract.recruitmentTitle}`} backTo={BACK} />
+      <PageHeader
+        title={`${contract.companyName} · ${contract.recruitmentTitle}`}
+        backTo={backTo(contract.status)}
+      />
       <div className="flex flex-col gap-6">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <ApplicationCard contract={contract} />
