@@ -9,7 +9,7 @@ export type PromotionTarget = 'JOB' | 'BOOTCAMP';
 export type Purpose = 'FAST_APPLICANTS' | 'FIT_APPLICANTS' | 'BRAND_AWARENESS';
 export type InvoiceMethod = 'TAX_INVOICE' | 'NEGOTIATE';
 export type CreativeMethod = 'REQUEST_PRODUCTION' | 'PROVIDE_DIRECTLY';
-export type ProductCategory = 'JOB_POSTING' | 'BANNER';
+export type ProductCategory = CreateAdvertisementContractRequest['categories'][number];
 
 export const RECRUIT_TYPES = ['기간 지정 모집', '채용 시 마감', '상시 모집'] as const;
 export type RecruitType = (typeof RECRUIT_TYPES)[number];
@@ -24,7 +24,6 @@ export interface FormValues {
   recruitType: RecruitType;
   purpose: Purpose;
   productIds: string[];
-  withChannels: boolean;
   /** 희망 집행 시작일 `yyyy-MM-dd`. */
   startDate: string | null;
   /** 희망 집행 종료일 `yyyy-MM-dd`. 시작일과 같으면 하루다. */
@@ -49,7 +48,6 @@ export const INITIAL_VALUES: FormValues = {
   recruitType: '기간 지정 모집',
   purpose: 'FAST_APPLICANTS',
   productIds: [],
-  withChannels: false,
   startDate: null,
   endDate: null,
   scheduleNote: '',
@@ -144,8 +142,103 @@ export function periodDays(startDate: string, endDate: string): number {
   return Math.round((parseYmd(endDate).getTime() - parseYmd(startDate).getTime()) / 86400000) + 1;
 }
 
-export function selectedProducts(values: FormValues) {
-  return PLACEMENTS.filter((p) => values.productIds.includes(p.id));
+/**
+ * 광고 신청서에서 고르는 상품 묶음(2026-11-09 사용자 정리). 오공고 웹은 지면 상품(`PLACEMENTS`), 카카오톡·인스타는 채널
+ * 상품(`CHANNEL_OPTIONS`)이다. 이미지는 랜딩(`public/landing`)과 같은 것을 쓴다.
+ */
+export type ProductGroupId = 'web' | 'kakao' | 'instagram';
+
+export const PRODUCT_GROUPS: {
+  id: ProductGroupId;
+  title: string;
+  reach: string;
+  description: string;
+  image: string;
+}[] = [
+  {
+    id: 'web',
+    title: '오공고 웹',
+    reach: '지면광고',
+    description: '오늘의 공고 채용공고 홈의 정해진 자리에 공고와 배너를 노출해요.',
+    image: '/landing/jobs-list.webp',
+  },
+  {
+    id: 'kakao',
+    title: '카카오톡',
+    reach: '누적 1만 5천명',
+    description: '취업준비생이 모인 오픈채팅방과 채널에 홍보글을 직접 전달해요.',
+    image: '/landing/crm-job-1.png',
+  },
+  {
+    id: 'instagram',
+    title: '인스타그램',
+    reach: '오공고 · 렛츠커리어 계정',
+    description: '피드 게시물과 스토리로 팔로워에게 공고를 알려요.',
+    image: '/landing/insta-job-1.png',
+  },
+];
+
+export interface ChannelOption {
+  id: string;
+  group: Exclude<ProductGroupId, 'web'>;
+  title: string;
+  description: string;
+  image: string;
+  /**
+   * 광고 신청 API 의 `categories` 값. 카카오톡 CRM 은 BE 카테고리가 아직 없어 `null` 이고 `[희망 상품]` 글에만 남는다.
+   * BE 는 카테고리를 하나 이상 요구해 CRM 만 고르면 받지 않는다(`validateStep`).
+   */
+  category: ProductCategory | null;
+}
+
+export const CHANNEL_OPTIONS: ChannelOption[] = [
+  {
+    id: 'kakao-curation',
+    group: 'kakao',
+    title: '직무별 채용공고 큐레이션 톡방',
+    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
+    image: '/landing/crm-job-1.png',
+    category: 'KAKAO_1',
+  },
+  {
+    id: 'kakao-official',
+    group: 'kakao',
+    title: '렛츠커리어 공식 오픈채팅방',
+    description: '쥬디 톡방, 무료 세미나방 등 공식 오픈채팅방에 홍보글을 올려요.',
+    image: '/landing/crm-qna-1.png',
+    category: 'KAKAO_2',
+  },
+  {
+    id: 'kakao-crm',
+    group: 'kakao',
+    title: '카카오톡 CRM',
+    description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
+    image: '/landing/crm-dm-1.png',
+    category: null,
+  },
+  {
+    id: 'instagram-ogonggo',
+    group: 'instagram',
+    title: '오공고 인스타그램',
+    description: '@letscareer.job 계정의 피드 게시물 또는 스토리로 알려요.',
+    image: '/landing/insta-job-1.png',
+    category: 'INSTAGRAM_1',
+  },
+  {
+    id: 'instagram-letscareer',
+    group: 'instagram',
+    title: '렛츠커리어 인스타그램',
+    description: '@letscareer.official 계정의 피드 게시물 또는 스토리로 알려요.',
+    image: '/landing/insta-official-1.png',
+    category: 'INSTAGRAM_2',
+  },
+];
+
+/** 고른 상품. 지면 상품과 채널 상품을 화면 순서대로 함께 돌려준다. */
+export function selectedProducts(
+  values: FormValues,
+): { id: string; title: string; category: ProductCategory | null }[] {
+  return [...PLACEMENTS, ...CHANNEL_OPTIONS].filter((p) => values.productIds.includes(p.id));
 }
 
 export function periodText(values: FormValues): string | null {
@@ -171,8 +264,11 @@ export function validateStep(step: number, v: FormValues): Record<string, string
     else if (v.url.trim().length > 2000) e.url = '링크가 너무 길어요.';
     if (!v.deadline) e.deadline = '모집 마감일을 선택해 주세요.';
   }
-  if (step === 2 && v.productIds.length === 0) {
-    e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
+  if (step === 2) {
+    const products = selectedProducts(v);
+    if (products.length === 0) e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
+    else if (products.every((p) => p.category === null))
+      e.productIds = '카카오톡 CRM은 다른 상품과 함께 신청해 주세요.';
   }
   if (step === 3) {
     if (!v.startDate || !v.endDate) e.period = '집행 시작일과 종료일을 선택해 주세요.';
@@ -196,12 +292,11 @@ export function validateStep(step: number, v: FormValues): Record<string, string
 /** 서버 요청 본문. 받을 칸이 없는 상품·기간·모집 형태는 담당자가 읽을 수 있게 `scheduleRequest` 에 적는다. */
 export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
   const products = selectedProducts(v);
-  const categories = [...new Set(products.map((p) => p.category))];
+  const categories = [
+    ...new Set(products.flatMap((p) => (p.category === null ? [] : [p.category]))),
+  ];
   const lines = [
     `[희망 상품] ${products.map((p) => p.title).join(', ')}`,
-    ...(v.withChannels
-      ? ['[추가 상담] 렛츠커리어 채널 광고(인스타그램·카카오톡·웹 배너)도 함께 상담 희망']
-      : []),
     ...(v.startDate && v.endDate
       ? [`[희망 기간] ${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`]
       : []),
