@@ -14,10 +14,10 @@ export interface AdminAdvertisementProductResponse {
      * | --- | --- | --- |
      * | `JOB_POSTING` | 1 | 광고 공고 |
      * | `BANNER` | 2 | 배너 |
-     * | `INSTAGRAM_1` | 3 | 인스타그램 1 |
-     * | `INSTAGRAM_2` | 4 | 인스타그램 2 |
-     * | `KAKAO_1` | 5 | 카카오톡 채널 1 |
-     * | `KAKAO_2` | 6 | 카카오톡 채널 2 |
+     * | `INSTAGRAM_1` | 3 | 인스타그램 오공고 |
+     * | `INSTAGRAM_2` | 4 | 인스타그램 렛츠커리어 |
+     * | `KAKAO_1` | 5 | 카카오톡 직무별 큐레이션 톡방 |
+     * | `KAKAO_2` | 6 | 카카오톡 렛츠커리어 공식 오픈채팅방 |
      */
   category: AdminAdvertisementProductResponseCategory;
   /**
