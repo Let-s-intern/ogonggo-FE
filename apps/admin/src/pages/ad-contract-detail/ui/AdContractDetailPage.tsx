@@ -345,7 +345,7 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
     },
     {
       key: 'addedAt',
-      header: '붙인 날',
+      header: '넣은 날',
       width: 'w-40',
       render: (row) => <span className="text-sm">{formatKst(row.addedAt)}</span>,
     },
@@ -387,9 +387,9 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
       <div className="mt-3 flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Select
-            aria-label="붙일 상품"
+            aria-label="넣을 상품"
             options={[
-              { value: '', label: '붙일 상품 고르기' },
+              { value: '', label: '넣을 상품 고르기' },
               ...(products.data ?? []).map((product) => ({
                 value: String(product.id),
                 label: productLabel(product),
@@ -403,7 +403,7 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
             disabled={!productId || add.isPending}
             onClick={() => add.mutate(Number(productId), { onSuccess: () => setProductId('') })}
           >
-            붙이기
+            넣기
           </Button>
         </div>
         {add.isError || remove.isError ? (
@@ -415,7 +415,7 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
           columns={columns}
           rows={contract.products}
           rowKey={(row) => row.contractProductId}
-          emptyMessage="붙인 상품이 없습니다. 판매한 상품을 붙이세요."
+          emptyMessage="넣은 상품이 없습니다. 판매한 상품을 넣으세요."
         />
       </div>
       {bannerProduct ? (
@@ -476,7 +476,7 @@ function ExposuresCard({ contract }: { contract: AdminAdvertisementContractDetai
           <Link to="/business/banners" className="text-blue-500 hover:underline">
             배너 세팅
           </Link>
-          에서 합니다. 계약에 붙인 상품의 자리만 여기서 보입니다.
+          에서 합니다. 계약에 넣은 상품의 자리만 여기서 보입니다.
         </p>
         {exposures.isError ? <Callout tone="error">노출을 불러오지 못했습니다.</Callout> : null}
         <DataTable
