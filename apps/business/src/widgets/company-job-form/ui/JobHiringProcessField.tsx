@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Field, Input, Textarea } from '@ogonggo/ui';
+import { DatePicker } from '@/shared/ui/DatePicker';
 import {
   EMPTY_HIRING_PROCESS_STEP,
   joinHiringProcess,
@@ -70,19 +71,18 @@ export function JobHiringProcessField({
           // 모바일은 날짜가 한 줄을 다 쓰고 내용·삭제가 그 아래에 선다. 한 줄에 셋이면 내용 칸이
           // 글자 몇 개 폭으로 줄었다.
           <div key={index} className="flex flex-wrap items-center gap-2 md:flex-nowrap">
-            <Input
-              type="date"
-              aria-label={`채용 절차 ${index + 1}단계 날짜`}
-              className="w-full md:w-44 md:shrink-0"
-              value={step.date}
-              onChange={(event) =>
-                changeSteps(
-                  steps.map((item, target) =>
-                    target === index ? { ...item, date: event.target.value } : item,
-                  ),
-                )
-              }
-            />
+            <div className="w-full md:w-48 md:shrink-0">
+              <DatePicker
+                aria-label={`채용 절차 ${index + 1}단계 날짜`}
+                className="px-3"
+                value={step.date}
+                onChange={(date) =>
+                  changeSteps(
+                    steps.map((item, target) => (target === index ? { ...item, date } : item)),
+                  )
+                }
+              />
+            </div>
             <Input
               aria-label={`채용 절차 ${index + 1}단계 내용`}
               className="w-auto min-w-0 flex-1"

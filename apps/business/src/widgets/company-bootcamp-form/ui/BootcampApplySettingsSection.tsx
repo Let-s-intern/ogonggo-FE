@@ -3,6 +3,7 @@
 import { enumOptions } from '@ogonggo/api';
 import { Checkbox, Field, Input } from '@ogonggo/ui';
 import { FormRadioGroup } from '@/shared/ui/FormRadioGroup';
+import { DatePicker } from '@/shared/ui/DatePicker';
 import type { CompanyBootcampFormValues } from '../model/values';
 
 /** `CreateCompanyBootcampRequest` 의 `@maxLength`. */
@@ -24,7 +25,7 @@ export interface BootcampApplySettingsSectionProps {
  * **문의처 두 칸은 `CreateCompanyBootcampRequest` 의 `managerEmail` 과 `inquiryUrl` 이 받는다.**
  * 채용공고 폼의 담당자 이메일 칸도 `applyEmail` 이 생겨 같은 모양이다(v5 PRD 3·4 절).
  *
- * 날짜는 `input[type=date]` 다. 백엔드는 일시를 받지만 목업이 `YYYY-MM-DD` 이고 마감 시각이
+ * 날짜는 `DatePicker` 가 `YYYY-MM-DD` 로 준다. 백엔드는 일시를 받지만 목업이 `YYYY-MM-DD` 이고 마감 시각이
  * 23:59 로 고정이라, 화면은 달력 날짜만 다루고 시각은 저장할 때 붙인다
  * (`shared/lib/formDateTime.ts`).
  *
@@ -40,11 +41,10 @@ export function BootcampApplySettingsSection({
     <div>
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="모집 시작일" htmlFor="company-bootcamp-recruitment-start" required>
-          <Input
+          <DatePicker
             id="company-bootcamp-recruitment-start"
-            type="date"
             value={values.recruitmentStartAt}
-            onChange={(event) => onChange({ recruitmentStartAt: event.target.value })}
+            onChange={(recruitmentStartAt) => onChange({ recruitmentStartAt })}
           />
         </Field>
 
@@ -54,11 +54,10 @@ export function BootcampApplySettingsSection({
           required
           hint="마감 시간은 23:59로 설정됩니다."
         >
-          <Input
+          <DatePicker
             id="company-bootcamp-recruitment-end"
-            type="date"
             value={values.recruitmentEndAt}
-            onChange={(event) => onChange({ recruitmentEndAt: event.target.value })}
+            onChange={(recruitmentEndAt) => onChange({ recruitmentEndAt })}
           />
         </Field>
       </div>
@@ -137,20 +136,18 @@ export function BootcampApplySettingsSection({
       {values.publishUntilRecruitmentEnd ? null : (
         <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
           <Field label="공개 시작일" htmlFor="company-bootcamp-publication-start">
-            <Input
+            <DatePicker
               id="company-bootcamp-publication-start"
-              type="date"
               value={values.publicationStartAt}
-              onChange={(event) => onChange({ publicationStartAt: event.target.value })}
+              onChange={(publicationStartAt) => onChange({ publicationStartAt })}
             />
           </Field>
 
           <Field label="공개 종료일" htmlFor="company-bootcamp-publication-end">
-            <Input
+            <DatePicker
               id="company-bootcamp-publication-end"
-              type="date"
               value={values.publicationEndAt}
-              onChange={(event) => onChange({ publicationEndAt: event.target.value })}
+              onChange={(publicationEndAt) => onChange({ publicationEndAt })}
             />
           </Field>
         </div>
