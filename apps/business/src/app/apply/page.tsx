@@ -17,7 +17,7 @@ const INQUIRY_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
 )}`;
 
 const NOTES = [
-  { title: '1주 단위 집행', body: '오공고 주요 광고 상품 기준' },
+  { title: '원하는 기간 집행', body: '시작일과 종료일을 직접 선택' },
   { title: '마감 일정 고려', body: '채용·교육 모집 일정에 맞춰 신청' },
   { title: '담당자 확인 후 확정', body: '접수만으로 결제·예약되지 않음' },
 ];

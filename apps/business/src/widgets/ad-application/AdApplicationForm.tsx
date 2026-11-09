@@ -14,13 +14,11 @@ import { PLACEMENTS } from '@/widgets/landing/content';
 import {
   AD_REQUEST_MAX,
   addDays,
-  BOOKABLE_WEEKS,
   CREATIVE_OPTIONS,
   type FormValues,
   formatDate,
   INITIAL_VALUES,
   INVOICE_OPTIONS,
-  nextMonday,
   parseYmd,
   periodText,
   prefillFrom,
@@ -207,10 +205,6 @@ function StepPost({
           onChange={(x) => set('purpose', x)}
         />
       </div>
-      <Info>
-        광고 시작일이 모집 마감일 이후인 경우 집행이 어려울 수 있습니다. 마감 일정에 맞춰 광고
-        기간을 선택해 주세요.
-      </Info>
     </div>
   );
 }
@@ -299,10 +293,13 @@ function StepSchedule({
   set: Update;
   errors: Record<string, string>;
 }) {
-  const firstBookable = useMemo(() => nextMonday(new Date()), []);
-  const lastBookable = addDays(firstBookable, BOOKABLE_WEEKS * 7 - 1);
+  // 오늘부터 고를 수 있다. 주 단위·모집 마감일 제약은 두지 않는다(2026-11-09 사용자). 끝은 열려 있다.
+  const firstBookable = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
   const [month, setMonth] = useState(() => {
-    const base = v.weekStart ? parseYmd(v.weekStart) : firstBookable;
+    const base = v.startDate ? parseYmd(v.startDate) : firstBookable;
     return new Date(base.getFullYear(), base.getMonth(), 1);
   });
 
@@ -313,25 +310,21 @@ function StepSchedule({
     weeks.push(w);
   }
 
-  const start = v.weekStart ? parseYmd(v.weekStart) : null;
-  const end = start ? addDays(start, v.weekCount * 7 - 1) : null;
-  const deadline = v.deadline ? parseYmd(v.deadline) : null;
+  const start = v.startDate ? parseYmd(v.startDate) : null;
+  const end = v.endDate ? parseYmd(v.endDate) : null;
 
-  const bookable = (monday: Date) =>
-    monday >= firstBookable && monday <= lastBookable && (!deadline || monday <= deadline);
-
-  function pickWeek(monday: Date) {
-    if (!bookable(monday)) return;
-    if (!start || v.weekCount > 1 || monday <= start) {
-      set('weekStart', toYmd(monday));
-      set('weekCount', 1);
+  /** 첫 클릭은 시작일, 그 뒤 같은 날이나 뒤의 날은 종료일이다. 기간이 다 잡혀 있거나 앞의 날을 누르면 새로 시작한다. */
+  function pickDay(day: Date) {
+    if (day < firstBookable) return;
+    if (!start || end || day < start) {
+      set('startDate', toYmd(day));
+      set('endDate', null);
       return;
     }
-    set('weekCount', Math.round((monday.getTime() - start.getTime()) / (7 * 86400000)) + 1);
+    set('endDate', toYmd(day));
   }
 
   const canPrev = month > new Date(firstBookable.getFullYear(), firstBookable.getMonth(), 1);
-  const canNext = month < new Date(lastBookable.getFullYear(), lastBookable.getMonth(), 1);
   const products = selectedProducts(v);
 
   return (
@@ -340,7 +333,7 @@ function StepSchedule({
         <Label>선택된 광고 상품</Label>
         <div className="rounded-lg border border-blue-500 bg-blue-00 px-5 py-4">
           <p className="font-semibold">{products.map((p) => p.title).join(', ')}</p>
-          <p className="mt-0.5 text-sm text-gray-500">월요일부터 일요일까지 1주 단위로 노출</p>
+          <p className="mt-0.5 text-sm text-gray-500">원하는 날짜만큼 노출</p>
         </div>
       </div>
       <div>
@@ -361,9 +354,8 @@ function StepSchedule({
             <button
               type="button"
               aria-label="다음 달"
-              disabled={!canNext}
               onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-              className="rounded-md px-3 py-1.5 text-gray-600 hover:bg-gray-100 disabled:opacity-30"
+              className="rounded-md px-3 py-1.5 text-gray-600 hover:bg-gray-100"
             >
               {'>'}
             </button>
@@ -377,65 +369,66 @@ function StepSchedule({
           ))}
         </div>
         <div className="mt-1 space-y-1.5">
-          {weeks.map((monday) => {
-            const ok = bookable(monday);
-            const inRange = start && end && monday >= start && monday <= end;
-            return (
-              <button
-                key={toYmd(monday)}
-                type="button"
-                disabled={!ok}
-                onClick={() => pickWeek(monday)}
-                aria-pressed={Boolean(inRange)}
-                aria-label={`${formatDate(toYmd(monday))} 주`}
-                className="grid w-full grid-cols-7 gap-1.5 disabled:cursor-not-allowed"
-              >
-                {WEEKDAY_LABELS.map((_, i) => {
-                  const day = addDays(monday, i);
-                  const outside = day.getMonth() !== month.getMonth();
-                  return (
-                    <span
-                      key={i}
-                      className={cn(
-                        'flex h-14 flex-col items-center justify-center rounded-md border text-sm',
-                        inRange
-                          ? 'border-blue-500 bg-blue-00 font-semibold text-blue-600'
-                          : ok
-                            ? 'border-gray-200 hover:border-blue-300'
-                            : 'border-gray-100 bg-gray-50 text-gray-300',
-                        outside && !inRange && 'text-gray-300',
-                      )}
-                    >
-                      {day.getDate()}
-                      {inRange && <span className="text-[11px] font-normal">선택</span>}
-                    </span>
-                  );
-                })}
-              </button>
-            );
-          })}
+          {weeks.map((monday) => (
+            <div key={toYmd(monday)} className="grid grid-cols-7 gap-1.5">
+              {WEEKDAY_LABELS.map((_, i) => {
+                const day = addDays(monday, i);
+                const ok = day >= firstBookable;
+                const outside = day.getMonth() !== month.getMonth();
+                const isEdge =
+                  (start && day.getTime() === start.getTime()) ||
+                  (end && day.getTime() === end.getTime());
+                const inRange = start && (end ? day >= start && day <= end : isEdge);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={!ok}
+                    onClick={() => pickDay(day)}
+                    aria-pressed={Boolean(inRange)}
+                    aria-label={formatDate(toYmd(day), true)}
+                    className={cn(
+                      'flex h-14 flex-col items-center justify-center rounded-md border text-sm disabled:cursor-not-allowed',
+                      inRange
+                        ? 'border-blue-500 bg-blue-00 font-semibold text-blue-600'
+                        : ok
+                          ? 'border-gray-200 hover:border-blue-300'
+                          : 'border-gray-100 bg-gray-50 text-gray-300',
+                      outside && !inRange && 'text-gray-300',
+                    )}
+                  >
+                    {day.getDate()}
+                    {isEdge && (
+                      <span className="text-[11px] font-normal">
+                        {start && day.getTime() === start.getTime() ? '시작' : '종료'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
         <p className="mt-3 text-xs text-gray-500">
-          {formatDate(toYmd(firstBookable))}부터 {BOOKABLE_WEEKS}주 안에서, 모집 마감일 이전에
-          시작하는 주만 고를 수 있어요. 주를 하나 누른 뒤 뒤쪽 주를 누르면 기간이 이어집니다.
+          시작일을 누른 뒤 종료일을 누르세요. 하루만 집행하려면 같은 날을 두 번 누르면 됩니다.
         </p>
-        <ErrorText>{errors.weekStart}</ErrorText>
+        <ErrorText>{errors.period}</ErrorText>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label>희망 시작일</Label>
           <p className={cn(INPUT, 'bg-gray-50')}>
-            {v.weekStart ? formatDate(v.weekStart, true) : '주를 선택해 주세요'}
+            {v.startDate ? formatDate(v.startDate, true) : '날짜를 선택해 주세요'}
           </p>
         </div>
         <div>
           <Label>희망 종료일</Label>
           <p className={cn(INPUT, 'bg-gray-50')}>
-            {end ? formatDate(toYmd(end), true) : '주를 선택해 주세요'}
+            {v.endDate ? formatDate(v.endDate, true) : '날짜를 선택해 주세요'}
           </p>
         </div>
       </div>
-      {v.weekStart && (
+      {v.startDate && v.endDate && (
         <Info>
           선택한 집행 기간은 <strong className="text-blue-800">{periodText(v)}</strong>입니다. 실제
           예약 가능 여부는 접수 후 확인합니다.
