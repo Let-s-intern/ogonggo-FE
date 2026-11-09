@@ -206,6 +206,7 @@ const NOTIFICATION_CHANNEL_LABEL: Record<NotificationChannel, string> = {
   FCM: '푸시',
   KAKAO: '알림톡',
   EMAIL: '이메일',
+  SLACK: '슬랙',
 };
 
 const NOTIFICATION_RECIPIENT_TYPE_LABEL: Record<NotificationRecipientType, string> = {

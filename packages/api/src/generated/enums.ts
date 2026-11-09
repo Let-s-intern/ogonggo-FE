@@ -65,6 +65,7 @@ export const ENUM_CATALOG = {
     { name: 'KAKAO', desc: '카카오 알림톡', parent: null },
     { name: 'EMAIL', desc: '이메일', parent: null },
     { name: 'FCM', desc: '푸시 알림', parent: null },
+    { name: 'SLACK', desc: '슬랙 웹훅', parent: null },
   ],
   NotificationStatus: [
     { name: 'PENDING', desc: '발송 대기', parent: null },
@@ -860,5 +861,56 @@ export const ENUM_CATALOG = {
     { name: 'SEARCH', desc: '검색', parent: null },
     { name: 'MANUAL', desc: '직접 입력', parent: null },
     { name: 'MEMBER_PROFILE', desc: '회원 정보', parent: null },
+  ],
+  AdvertisementProductCategory: [
+    { name: 'JOB_POSTING', desc: '광고 공고', parent: null },
+    { name: 'BANNER', desc: '배너', parent: null },
+    { name: 'INSTAGRAM_1', desc: '인스타그램 1', parent: null },
+    { name: 'INSTAGRAM_2', desc: '인스타그램 2', parent: null },
+    { name: 'KAKAO_1', desc: '카카오톡 채널 1', parent: null },
+    { name: 'KAKAO_2', desc: '카카오톡 채널 2', parent: null },
+  ],
+  AdvertisementProductPosition: [
+    { name: 'JOB_HOME_TOP_BANNER', desc: '채용공고 홈 상단', parent: null },
+    { name: 'JOB_HOME_BOTTOM_BANNER', desc: '채용공고 홈 하단', parent: null },
+    { name: 'JOB_DETAIL_BANNER', desc: '공고 상세', parent: null },
+    { name: 'BOOTCAMP_LIST_TOP_BANNER', desc: '부트캠프 목록 상단', parent: null },
+    { name: 'BOOTCAMP_LIST_BOTTOM_BANNER', desc: '부트캠프 목록 하단', parent: null },
+    { name: 'BOOTCAMP_DETAIL_BANNER', desc: '부트캠프 상세', parent: null },
+  ],
+  AdvertisementContractStatus: [
+    { name: 'REQUESTED', desc: '신청', parent: null },
+    { name: 'NEGOTIATING', desc: '협의 중', parent: null },
+    { name: 'APPROVED', desc: '승인', parent: null },
+    { name: 'REJECTED', desc: '반려', parent: null },
+  ],
+  AdvertisementContractSource: [
+    { name: 'APPLICATION_FORM', desc: '광고 신청', parent: null },
+    { name: 'COMPANY_POSTING', desc: '비즈니스 공고 등록', parent: null },
+  ],
+  AdvertisementContractPromotionTarget: [
+    { name: 'JOB', desc: '채용 공고', parent: null },
+    { name: 'BOOTCAMP', desc: '교육·부트캠프', parent: null },
+  ],
+  AdvertisementContractPurpose: [
+    { name: 'FAST_APPLICANTS', desc: '지원자 빠르게 확보', parent: null },
+    { name: 'FIT_APPLICANTS', desc: '적합한 지원자 확보', parent: null },
+    { name: 'BRAND_AWARENESS', desc: '브랜드 인지도 확대', parent: null },
+  ],
+  AdvertisementContractInvoiceMethod: [
+    { name: 'TAX_INVOICE', desc: '세금계산서 발행', parent: null },
+    { name: 'NEGOTIATE', desc: '담당자와 협의', parent: null },
+  ],
+  AdvertisementContractCreativeMethod: [
+    { name: 'REQUEST_PRODUCTION', desc: '공고 정보로 제작 요청', parent: null },
+    { name: 'PROVIDE_DIRECTLY', desc: '직접 제작한 소재 제공', parent: null },
+  ],
+  AdvertisementExposureTargetType: [
+    { name: 'JOB', desc: '채용공고', parent: null },
+    { name: 'BOOTCAMP', desc: '부트캠프', parent: null },
+  ],
+  AdvertisementExposureMoveDirection: [
+    { name: 'UP', desc: '위로', parent: null },
+    { name: 'DOWN', desc: '아래로', parent: null },
   ],
 } as const;

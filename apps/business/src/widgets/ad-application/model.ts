@@ -1,5 +1,4 @@
-import type { MyAccountResponse } from '@ogonggo/api';
-import type { CreateAdvertisementContractRequest } from '@/shared/api/advertisementContracts';
+import type { CreateAdvertisementContractRequest, MyAccountResponse } from '@ogonggo/api';
 import { PLACEMENTS } from '@/widgets/landing/content';
 
 /**
@@ -225,7 +224,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     purpose: v.purpose,
     categories,
     scheduleRequest: lines.join('\n'),
-    advertisementRequest: v.adRequest.trim() || null,
+    advertisementRequest: v.adRequest.trim() || undefined,
     managerName: v.managerName.trim(),
     email: v.email.trim(),
     phoneNumber: v.phone.trim(),

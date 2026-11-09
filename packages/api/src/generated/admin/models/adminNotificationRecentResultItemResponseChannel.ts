@@ -11,6 +11,7 @@
  * | `KAKAO` | 1 | 카카오 알림톡 |
  * | `EMAIL` | 2 | 이메일 |
  * | `FCM` | 3 | 푸시 알림 |
+ * | `SLACK` | 4 | 슬랙 웹훅 |
  */
 export type AdminNotificationRecentResultItemResponseChannel = typeof AdminNotificationRecentResultItemResponseChannel[keyof typeof AdminNotificationRecentResultItemResponseChannel];
 
@@ -19,4 +20,5 @@ export const AdminNotificationRecentResultItemResponseChannel = {
   KAKAO: 'KAKAO',
   EMAIL: 'EMAIL',
   FCM: 'FCM',
+  SLACK: 'SLACK',
 } as const;

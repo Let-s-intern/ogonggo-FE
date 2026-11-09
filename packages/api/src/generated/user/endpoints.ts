@@ -28,6 +28,7 @@ import type {
   ChangeMyPasswordRequest,
   CompanySignInRequest,
   CompanySignUpRequest,
+  CreateAdvertisementContractRequest,
   CreateAdvertisementInquiryRequest,
   CreateCompanyBootcampRequest,
   CreateCompanyJobRequest,
@@ -55,6 +56,8 @@ import type {
   ListMyRecruitmentPostApplicationsParams,
   ListMyRecruitmentPostBookmarksParams,
   ListMyRecruitmentPostsParams,
+  ListPublicAdvertisementExposuresParams,
+  ListPublicAdvertisementProductsParams,
   ListPublicAnnouncementsParams,
   ListPublicBootcampsParams,
   ListPublicCompanyNamesParams,
@@ -78,6 +81,7 @@ import type {
   SuccessResponseCompanyBootcampDetailResponse,
   SuccessResponseCompanyJobDetailResponse,
   SuccessResponseConcernDetailResponse,
+  SuccessResponseCreateAdvertisementContractResponse,
   SuccessResponseCreateAdvertisementInquiryResponse,
   SuccessResponseCreateCompanyBootcampResponse,
   SuccessResponseCreateCompanyJobResponse,
@@ -101,6 +105,8 @@ import type {
   SuccessResponseListUserTodayJobSummaryResponse,
   SuccessResponseMapStringListUserEnumOptionResponse,
   SuccessResponseMyAccountResponse,
+  SuccessResponsePageResponseAdvertisementExposureResponse,
+  SuccessResponsePageResponseAdvertisementProductResponse,
   SuccessResponsePageResponseCompanyBootcampSummaryResponse,
   SuccessResponsePageResponseCompanyJobSummaryResponse,
   SuccessResponsePageResponseConcernCommentResponse,
@@ -7816,6 +7822,112 @@ export const useCreateAdvertisementInquiry = <TError = ErrorResponse,
       return useMutation(getCreateAdvertisementInquiryMutationOptions(options), queryClient);
     }
 
+export type createAdvertisementContractResponse201 = {
+  data: SuccessResponseCreateAdvertisementContractResponse
+  status: 201
+}
+
+export type createAdvertisementContractResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type createAdvertisementContractResponseSuccess = (createAdvertisementContractResponse201) & {
+  headers: Headers;
+};
+export type createAdvertisementContractResponseError = (createAdvertisementContractResponse400) & {
+  headers: Headers;
+};
+
+export type createAdvertisementContractResponse = (createAdvertisementContractResponseSuccess | createAdvertisementContractResponseError)
+
+export const getCreateAdvertisementContractUrl = () => {
+
+
+
+
+  return `/api/v1/advertisement-contracts`
+}
+
+/**
+ *
+ *             광고 신청 정보를 저장하고 새 계약 ID를 반환합니다. 신청은 APPLICATION_FORM·REQUESTED로 저장합니다.
+ *             인증: 비회원 허용, Bearer 선택. 로그인 없이 보낼 수 있으며, 유효한 액세스 토큰이 있으면 회원 ID를 연결합니다. 토큰이 없거나 유효하지 않거나
+ *             토큰의 회원 행이 없으면 비회원 신청으로 접수합니다.
+ *
+ *             categories에는 희망 카테고리만 저장합니다. 실제 상품 연결, 공고 생성, 노출, 결제, 구좌 예약은 만들지 않습니다.
+ *             입력 원문은 보존하며 scheduleRequest와 advertisementRequest만 공백이면 저장 시 null이 됩니다.
+ * @summary 광고 신청 등록
+ */
+export const createAdvertisementContract = async (createAdvertisementContractRequest: CreateAdvertisementContractRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAdvertisementContractResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<createAdvertisementContractResponse>(getCreateAdvertisementContractUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createAdvertisementContractRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateAdvertisementContractMutationKey = () => ['createAdvertisementContract'] as const;
+
+export const getCreateAdvertisementContractMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdvertisementContract>>, TError,CreateAdvertisementContractMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdvertisementContract>>, TError,CreateAdvertisementContractMutationVariables, TContext> => {
+
+const mutationKey = getCreateAdvertisementContractMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdvertisementContract>>, CreateAdvertisementContractMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdvertisementContract(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdvertisementContractMutationResult = NonNullable<Awaited<ReturnType<typeof createAdvertisementContract>>>
+    export type CreateAdvertisementContractMutationBody = CreateAdvertisementContractRequest
+    export type CreateAdvertisementContractMutationError = ErrorResponse
+    export type CreateAdvertisementContractMutationVariables = {data: CreateAdvertisementContractRequest}
+
+    /**
+ * @summary 광고 신청 등록
+ */
+export const useCreateAdvertisementContract = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdvertisementContract>>, TError,CreateAdvertisementContractMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAdvertisementContract>>,
+        TError,
+        CreateAdvertisementContractMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAdvertisementContractMutationOptions(options), queryClient);
+    }
+
 export type deleteRecruitmentPostApplicationResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -10792,15 +10904,15 @@ export const getGetPublicJobHeadlineCountUrl = () => {
  *             홈 히어로의 "채용공고가 NN개 올라왔어요"에 쓰는 공고 수를 반환합니다.
  *
  *             로그인 없이 조회할 수 있습니다. 액세스 토큰을 보내고 내 정보의 희망 직무(wishJob)가 오공고 직무로 옮겨지면
- *             그 직무의 모집 중 공고 수를 주고 matchedWishJob이 true입니다.
+ *             이번 주(Asia/Seoul 월요일 0시부터) 올라온 그 직무의 마감 전 공고 수를 주고 matchedWishJob이 true입니다.
  *             희망 직무는 렛츠커리어 직무 이름이라 서버의 매핑표로 오공고 직무(JobRole)로 옮깁니다. "<직군> 직무 전체"는
  *             그 직군의 직무를 모두 옮기고, "직무 무관"과 맞는 오공고 직무가 없는 값은 옮기지 않습니다.
  *
  *             그 밖의 경우(비로그인, 기업 회원, 희망 직무가 비었거나 옮길 직무가 없음, 맞는 공고가 0건)는
- *             오늘(Asia/Seoul 0시부터) 올라온 모집 중 공고 수를 주고 matchedWishJob이 false입니다.
+ *             오늘(Asia/Seoul 0시부터) 올라온 마감 전 공고 수를 주고 matchedWishJob이 false입니다.
  *             올라온 일시는 목록의 registeredAt과 같습니다(기업회원 공고는 처음 승인한 일시).
  *
- *             모집 중 공고는 게시 중이고 모집 상태가 RECRUITING인 공고입니다.
+ *             마감 전 공고는 게시 중이고 모집 상태가 RECRUITING이며 모집 종료 일시가 없거나 지나지 않은 공고입니다.
  * @summary 홈 히어로 공고 수 조회
  */
 export const getPublicJobHeadlineCount = async ( options?: Parameters<typeof httpClient>[1]): Promise<getPublicJobHeadlineCountResponse> => {
@@ -12402,6 +12514,255 @@ export function useGetPublicAnnouncement<TData = Awaited<ReturnType<typeof getPu
 
 
 
+export type listPublicAdvertisementProductsResponse200 = {
+  data: SuccessResponsePageResponseAdvertisementProductResponse
+  status: 200
+}
+
+export type listPublicAdvertisementProductsResponseSuccess = (listPublicAdvertisementProductsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPublicAdvertisementProductsResponse = (listPublicAdvertisementProductsResponseSuccess)
+
+export const getListPublicAdvertisementProductsUrl = (params?: ListPublicAdvertisementProductsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/advertisement-products?${stringifiedParams}` : `/api/v1/advertisement-products`
+}
+
+/**
+ * 신청 화면에 표시할 삭제되지 않은 상품 정보를 카테고리와 상품 ID 순으로 페이지 조회합니다. page는 1부터 시작하고 size는 1~100이며 기본값은 1과 10입니다. 신청 계약에는 이 응답의 상품 ID가 아니라 광고 카테고리가 저장됩니다. 비회원도 조회할 수 있습니다.
+ * @summary 광고 신청 상품 목록 조회
+ */
+export const listPublicAdvertisementProducts = async (params?: ListPublicAdvertisementProductsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicAdvertisementProductsResponse> => {
+
+  return httpClient<listPublicAdvertisementProductsResponse>(getListPublicAdvertisementProductsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicAdvertisementProductsQueryKey = (params?: ListPublicAdvertisementProductsParams,) => {
+    return [
+    `/api/v1/advertisement-products`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicAdvertisementProductsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError = unknown>(params?: ListPublicAdvertisementProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicAdvertisementProductsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>> = ({ signal }) => listPublicAdvertisementProducts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicAdvertisementProductsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>>
+export type ListPublicAdvertisementProductsQueryError = unknown
+
+
+export function useListPublicAdvertisementProducts<TData = Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError = unknown>(
+ params: undefined |  ListPublicAdvertisementProductsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAdvertisementProducts>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAdvertisementProducts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAdvertisementProducts<TData = Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError = unknown>(
+ params?: ListPublicAdvertisementProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAdvertisementProducts>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAdvertisementProducts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAdvertisementProducts<TData = Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError = unknown>(
+ params?: ListPublicAdvertisementProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 광고 신청 상품 목록 조회
+ */
+
+export function useListPublicAdvertisementProducts<TData = Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError = unknown>(
+ params?: ListPublicAdvertisementProductsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementProducts>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicAdvertisementProductsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicAdvertisementExposuresResponse200 = {
+  data: SuccessResponsePageResponseAdvertisementExposureResponse
+  status: 200
+}
+
+export type listPublicAdvertisementExposuresResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPublicAdvertisementExposuresResponseSuccess = (listPublicAdvertisementExposuresResponse200) & {
+  headers: Headers;
+};
+export type listPublicAdvertisementExposuresResponseError = (listPublicAdvertisementExposuresResponse400) & {
+  headers: Headers;
+};
+
+export type listPublicAdvertisementExposuresResponse = (listPublicAdvertisementExposuresResponseSuccess | listPublicAdvertisementExposuresResponseError)
+
+export const getListPublicAdvertisementExposuresUrl = (params: ListPublicAdvertisementExposuresParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/advertisement-exposures?${stringifiedParams}` : `/api/v1/advertisement-exposures`
+}
+
+/**
+ * 비회원도 조회할 수 있습니다. 현재 AdvertisementProductPosition의 배너 자리 6종만 받으며, 켜져 있고 노출 기간 안인 배너를 displayOrder와 노출 ID 순으로 페이지 조회합니다. page는 1부터 시작하고 size는 1~100이며 기본값은 1과 10입니다. linkUrl은 노출 등록 때 허용한 HTTP(S) 절대 URL 또는 단일 슬래시 내부 경로를 저장된 값 그대로 반환합니다. 광고주·상품·계약·대상 식별 정보와 기간 등 공개 계약에 없는 값은 반환하지 않습니다.
+ * @summary 자리별 공개 배너 조회
+ */
+export const listPublicAdvertisementExposures = async (params: ListPublicAdvertisementExposuresParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicAdvertisementExposuresResponse> => {
+
+  return httpClient<listPublicAdvertisementExposuresResponse>(getListPublicAdvertisementExposuresUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicAdvertisementExposuresQueryKey = (params?: ListPublicAdvertisementExposuresParams,) => {
+    return [
+    `/api/v1/advertisement-exposures`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicAdvertisementExposuresQueryOptions = <TData = Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError = ErrorResponse>(params: ListPublicAdvertisementExposuresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicAdvertisementExposuresQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>> = ({ signal }) => listPublicAdvertisementExposures(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicAdvertisementExposuresQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>>
+export type ListPublicAdvertisementExposuresQueryError = ErrorResponse
+
+
+export function useListPublicAdvertisementExposures<TData = Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError = ErrorResponse>(
+ params: ListPublicAdvertisementExposuresParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAdvertisementExposures>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAdvertisementExposures>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAdvertisementExposures<TData = Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError = ErrorResponse>(
+ params: ListPublicAdvertisementExposuresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAdvertisementExposures>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAdvertisementExposures>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAdvertisementExposures<TData = Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError = ErrorResponse>(
+ params: ListPublicAdvertisementExposuresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 자리별 공개 배너 조회
+ */
+
+export function useListPublicAdvertisementExposures<TData = Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError = ErrorResponse>(
+ params: ListPublicAdvertisementExposuresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAdvertisementExposures>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicAdvertisementExposuresQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type deleteRecruitmentPostCommentResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -12762,6 +13123,8 @@ export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementInquiryResponse, object>> = {}): SuccessResponseCreateAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
+export const getCreateAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementContractResponse, object>> = {}): SuccessResponseCreateAdvertisementContractResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
 export const getDeleteRecruitmentPostApplicationResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getUpdateRecruitmentPostApplicationStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -12835,6 +13198,10 @@ export const getListMyBootcampBookmarksResponseMock = (overrideResponse: Partial
 export const getListPublicAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseUserAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getGetPublicAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserAnnouncementDetailResponse, object>> = {}): SuccessResponseUserAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getListPublicAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getListPublicAdvertisementExposuresResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdvertisementExposureResponse, object>> = {}): SuccessResponsePageResponseAdvertisementExposureResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), imageUrl: faker.string.alpha({length: {min: 10, max: 20}}), linkUrl: faker.string.alpha({length: {min: 10, max: 20}}), adLabel: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getDeleteRecruitmentPostCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -13663,6 +14030,18 @@ export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: Succ
   }, options)
 }
 
+export const getCreateAdvertisementContractMockHandler = (overrideResponse?: SuccessResponseCreateAdvertisementContractResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateAdvertisementContractResponse> | SuccessResponseCreateAdvertisementContractResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/advertisement-contracts', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateAdvertisementContractResponseMock(),
+      { status: 201
+      })
+  }, options)
+}
+
 export const getDeleteRecruitmentPostApplicationMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/users/me/recruitment-post-applications/:postId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
@@ -14083,6 +14462,30 @@ export const getGetPublicAnnouncementMockHandler = (overrideResponse?: SuccessRe
   }, options)
 }
 
+export const getListPublicAdvertisementProductsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdvertisementProductResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdvertisementProductResponse> | SuccessResponsePageResponseAdvertisementProductResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/advertisement-products', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicAdvertisementProductsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getListPublicAdvertisementExposuresMockHandler = (overrideResponse?: SuccessResponsePageResponseAdvertisementExposureResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdvertisementExposureResponse> | SuccessResponsePageResponseAdvertisementExposureResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/advertisement-exposures', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicAdvertisementExposuresResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getDeleteRecruitmentPostCommentMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.delete('*/api/v1/recruitment-posts/:postId/comments/:commentId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
 
@@ -14176,6 +14579,7 @@ export const getOgonggoUserAPIMock = () => [
   getSignUpCompanyMockHandler(),
   getSignInCompanyMockHandler(),
   getCreateAdvertisementInquiryMockHandler(),
+  getCreateAdvertisementContractMockHandler(),
   getDeleteRecruitmentPostApplicationMockHandler(),
   getUpdateRecruitmentPostApplicationStatusMockHandler(),
   getChangeMyPasswordMockHandler(),
@@ -14211,6 +14615,8 @@ export const getOgonggoUserAPIMock = () => [
   getListMyBootcampBookmarksMockHandler(),
   getListPublicAnnouncementsMockHandler(),
   getGetPublicAnnouncementMockHandler(),
+  getListPublicAdvertisementProductsMockHandler(),
+  getListPublicAdvertisementExposuresMockHandler(),
   getDeleteRecruitmentPostCommentMockHandler(),
   getDeleteMyConcernCommentMockHandler()
 ]
