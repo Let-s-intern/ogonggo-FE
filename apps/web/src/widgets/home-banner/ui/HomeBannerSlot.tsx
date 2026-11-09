@@ -1,5 +1,5 @@
-import type { BannerPlacement } from '@ogonggo/api';
 import { fetchBanners } from '../api/fetchBanners';
+import type { BannerPlacement } from '../model/placement';
 import { BannerCarousel } from './BannerCarousel';
 
 /**

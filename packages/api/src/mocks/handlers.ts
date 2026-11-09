@@ -1,13 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import {
-  AD_POSTING_PLACEMENTS,
-  adPostingTargetType,
-  type AdPostingPlacement,
-  type PublicAdPostingListResponse,
-  type PublicAdPostingResponse,
-} from '../ad-postings';
-import { bannerHandlers } from './banners';
-import { adPostingsIn, isAdPostingLive } from './fixtures/ad-postings';
+import { advertisementExposureHandlers } from './advertisementExposures';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
 import {
@@ -526,57 +518,6 @@ const getBootcampsHandler = http.get('*/api/v1/bootcamps', ({ request }) => {
     data: { items, pageInfo },
   };
 
-  return HttpResponse.json(body, { status: 200 });
-});
-
-/** 마감 처리됐거나 마감일이 지났는가. 웹 카드의 `isRecruitmentClosed` 와 같은 기준이다. */
-const isClosedAt = (
-  closedAt: string | undefined,
-  recruitmentEndAt: string | undefined,
-  now: number,
-) =>
-  closedAt !== undefined || (recruitmentEndAt !== undefined && Date.parse(recruitmentEndAt) <= now);
-
-/**
- * 광고 공고 공개 조회(`GET /api/v1/ad-postings?placement=`, 이슈 #573). 계약은
- * `.claude/tasks/memos/백엔드-요청-광고-공고-2026-11-06.md`.
- *
- * 켜져 있고 기간 안인 광고 가운데 대상이 아직 모집 중인 것만 자리 안 순서대로 준다. 대상의 카드 내용은 목록 API 와 같은
- * 요약(`toSummary`, `toBootcampSummary`)으로 싣는다. 자리를 빠뜨리거나 모르는 값이면 400 이다.
- *
- * 저장소는 어드민 목과 같은 배열이지만 웹 서버 목은 다른 프로세스라 어드민에서 바꾼 것이 보이지 않는다
- * (`./fixtures/ad-postings.ts`). 웹 목 서버는 뜰 때 핸들러를 한 번 등록해, 시드를 고치면 웹 서버를 다시 띄워야 한다.
- */
-const getAdPostingsHandler = http.get('*/api/v1/ad-postings', ({ request }) => {
-  const placement = new URL(request.url).searchParams.get('placement');
-  if (placement === null || !(AD_POSTING_PLACEMENTS as readonly string[]).includes(placement)) {
-    const body: ErrorResponse = {
-      status: 400,
-      code: 'BAD_REQUEST',
-      message: `placement: ${AD_POSTING_PLACEMENTS.join(', ')} 중 하나를 보내 주세요.`,
-    };
-    return HttpResponse.json(body, { status: 400 });
-  }
-  const now = Date.now();
-  const targetType = adPostingTargetType(placement as AdPostingPlacement);
-  const data: PublicAdPostingResponse[] = adPostingsIn(placement)
-    .filter((ad) => isAdPostingLive(ad, now))
-    .flatMap((ad): PublicAdPostingResponse[] => {
-      const base = { id: ad.id, placement: ad.placement, targetType };
-      if (targetType === 'BOOTCAMP') {
-        const bootcamp = BOOTCAMP_FIXTURES.find((item) => item.id === ad.targetId);
-        return bootcamp &&
-          bootcamp.status === 'RECRUITING' &&
-          !isClosedAt(bootcamp.closedAt, bootcamp.recruitmentEndAt, now)
-          ? [{ ...base, bootcamp: toBootcampSummary(bootcamp) }]
-          : [];
-      }
-      const job = JOB_FIXTURES.find((item) => item.id === ad.targetId);
-      return job && !isClosedAt(job.closedAt, job.recruitmentEndAt, now)
-        ? [{ ...base, job: toSummary(job) }]
-        : [];
-    });
-  const body: PublicAdPostingListResponse = { status: 200, message: '요청이 성공했습니다.', data };
   return HttpResponse.json(body, { status: 200 });
 });
 
@@ -1244,6 +1185,5 @@ export const handlers: HttpHandler[] = [
   replaceFcmTokenHandler,
   deleteFcmTokenHandler,
   ...userNotificationHandlers,
-  ...bannerHandlers,
-  getAdPostingsHandler,
+  ...advertisementExposureHandlers,
 ];

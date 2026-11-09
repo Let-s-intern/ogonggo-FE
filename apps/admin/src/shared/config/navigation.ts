@@ -25,13 +25,11 @@ export interface NavItem {
  */
 // `service` 는 취준생이 쓰는 오공고 서비스(웹·앱) 운영, `business` 는 비즈니스 회원(기업·교육기관) 운영이다. 처음에는
 // `유저` 라 불렀다가 사용자 요청으로 `서비스` 로 바꿨다(2026-11-05).
-// `calendar` 는 광고 일정과 운영자 할 일을 한 달력에서 보는 구역이다(2026-11-06 사용자).
-export type NavArea = 'service' | 'business' | 'calendar';
+export type NavArea = 'service' | 'business';
 
 export const NAV_AREAS: { area: NavArea; label: string }[] = [
   { area: 'service', label: '서비스' },
   { area: 'business', label: '비즈니스' },
-  { area: 'calendar', label: '캘린더' },
 ];
 
 export interface NavSection {
@@ -97,18 +95,16 @@ export const NAV_SECTIONS: NavSection[] = [
     area: 'business',
     /*
      * 홈의 배너 자리(홈 상단·홈 하단·공고 상세)에 무엇을 걸지 정한다(이슈 #573, 2026-11-06 사용자). 지금은 오공고 자체 홍보
-     * 배너가 대부분이지만 돈을 받고 싣는 배너도 여기서 건다. 광고 공고 세팅은 목록 맨 앞 칸에 싣는 공고·부트캠프를 정한다.
-     * 광고 계약 화면은 자리가 아니라 기업 하나를 기준으로 그 기업의 배너·광고 공고를 모아 본다(2026-11-06 사용자).
-     * 채널 광고는 우리 SNS·오픈채팅 채널(인스타그램 계정, 카카오톡 오픈채팅방)에 광고주 홍보를 올리는 일정이고, 채널
-     * 등록에서 플랫폼별 채널과 게재 유형을 정한다(2026-11-06 사용자: 인스타 광고에서 넓힘).
+     * 배너가 대부분이지만 돈을 받고 싣는 배너도 여기서 건다. 광고 상품은 파는 광고(배너 자리마다 하나, 인스타·카카오 등)를
+     * 정하고, 배너 세팅이 그 자리의 상품에 배너를 건다(BE LC-3583). 광고 계약은 광고 신청 한 건이고, 판매한 상품을
+     * 붙인다. 광고주·광고 공고·채널 광고·캘린더 화면은 백엔드에 API 가 없어 지웠다(2026-11-09 사용자,
+     * PRD `prd-ad-backend-sync.md` D1).
      */
     title: '광고',
     items: [
-      { path: '/business/advertisers', label: '광고 계약' },
+      { path: '/business/advertisement-contracts', label: '광고 계약' },
+      { path: '/business/advertisement-products', label: '광고 상품' },
       { path: '/business/banners', label: '배너 세팅' },
-      { path: '/business/ad-postings', label: '광고 공고 세팅' },
-      { path: '/business/channel-ads', label: '채널 광고' },
-      { path: '/business/channels', label: '채널 등록' },
     ],
   },
   {
@@ -159,7 +155,7 @@ export const NAV_SECTIONS: NavSection[] = [
     area: 'service',
     /*
      * 보내는 화면과 지난 발송을 보는 화면을 나누고, 전송 내역은 채널마다 따로 둔다. 관리자 발송뿐 아니라 댓글 푸시·
-     * 알림톡·이메일도 있어 `고객지원` 에 두기에는 범위가 넓다. 세 내역 화면은 같은 페이지가 채널만 바꿔 그린다
+     * 알림톡·이메일·슬랙도 있어 `고객지원` 에 두기에는 범위가 넓다. 네 내역 화면은 같은 페이지가 채널만 바꿔 그린다
      * (`pages/notification-history`).
      */
     title: '알림',
@@ -168,19 +164,12 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/notifications/history/push', label: '푸시 전송 내역' },
       { path: '/notifications/history/alimtalk', label: '알림톡 전송 내역' },
       { path: '/notifications/history/email', label: '이메일 전송 내역' },
+      { path: '/notifications/history/slack', label: '슬랙 전송 내역' },
     ],
   },
   {
     area: 'service',
     items: [{ path: '/stats', label: '통계' }],
-  },
-  {
-    /*
-     * 화면이 하나라 제목을 두지 않는다. 계약·배너·광고 공고·할 일 거르기는 화면 위 체크로 한다 — 메뉴로 나누면 같은 달력이
-     * 메뉴마다 다른 주소로 생기고, 두세 종류를 겹쳐 보려면 결국 체크가 필요하다.
-     */
-    area: 'calendar',
-    items: [{ path: '/calendar', label: '캘린더' }],
   },
 ];
 

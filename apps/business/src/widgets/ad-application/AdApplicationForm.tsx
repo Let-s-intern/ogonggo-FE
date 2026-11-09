@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { HttpError } from '@ogonggo/api';
+import {
+  createAdvertisementContract,
+  HttpError,
+  type SuccessResponseCreateAdvertisementContractResponse,
+} from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
-import { createAdvertisementContract } from '@/shared/api/advertisementContracts';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
 import { PLACEMENTS } from '@/widgets/landing/content';
@@ -825,7 +828,12 @@ export function AdApplicationForm() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const body = await createAdvertisementContract(toRequest(values));
+      const body = (await createAdvertisementContract(
+        toRequest(values),
+      )) as unknown as SuccessResponseCreateAdvertisementContractResponse;
+      if (!body.data) {
+        throw new Error('광고 신청 응답에 신청 번호가 없습니다.');
+      }
       setDoneId(body.data.id);
       window.scrollTo({ top: 0 });
     } catch (caught) {

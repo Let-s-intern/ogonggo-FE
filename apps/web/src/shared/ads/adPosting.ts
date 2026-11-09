@@ -1,14 +1,16 @@
-import type { AdPostingPlacement } from '@ogonggo/api';
 import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLayer';
 
 /**
  * 광고 공고 카드 한 장이 어느 광고의 몇 번째 칸인지(이슈 #573). 카드는 일반 카드와 같은 컴포넌트이고, 이 값이 있으면
  * `광고` 표시를 붙이고 누를 때 `ad_posting_click` 을 더 보낸다.
+ *
+ * 백엔드에 광고 공고 공개 자리가 아직 없어(BE PRD F-01 보류) 지금은 목록이 이 값을 채우지 않는다. 자리 이름도 정해진
+ * enum 이 없어 문자열로 둔다.
  */
 export interface AdSlot {
   /** 광고 id. 공고 id 가 아니다. */
   adId: number;
-  placement: AdPostingPlacement;
+  placement: string;
   /** 자리 안 순서, 1부터. 어드민이 정한 순서이고 목록의 칸 번호와 같다. */
   position: number;
 }
@@ -41,25 +43,4 @@ export function adPostingClickEvent(
       content_id: String(contentId),
     },
   };
-}
-
-/** 광고 대상 하나와 그 칸. 웹이 카드를 그리는 단위다. */
-export interface AdItem<T> {
-  slot: AdSlot;
-  item: T;
-}
-
-/**
- * 광고를 목록 맨 앞에 고정하고 일반 항목을 잇는다. 광고 1 은 첫 칸, 광고 2 는 둘째 칸이다(2026-11-06 사용자).
- * 광고 대상이 일반 목록에도 있으면 일반 쪽에서 뺀다 — 한 화면에 같은 카드가 두 번 보이지 않게 한다.
- */
-export function placeAdsFirst<T extends { id: number }>(
-  ads: AdItem<T>[],
-  items: T[],
-): { item: T; ad?: AdSlot }[] {
-  const adIds = new Set(ads.map((ad) => ad.item.id));
-  return [
-    ...ads.map((ad) => ({ item: ad.item, ad: ad.slot })),
-    ...items.filter((item) => !adIds.has(item.id)).map((item) => ({ item })),
-  ];
 }

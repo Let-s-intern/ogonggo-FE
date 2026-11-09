@@ -171,13 +171,17 @@ async function issueToken(): Promise<string> {
     onMessage(messaging, (message) => {
       // 알림함 배지가 바로 오르게 알린다(`PUSH_RECEIVED_EVENT`).
       window.dispatchEvent(new Event(PUSH_RECEIVED_EVENT));
-      const { title, body } = message.notification ?? {};
+      const { title, body, image } = message.notification ?? {};
       if (title) {
-        void registration.showNotification(title, {
+        // 어드민이 붙인 알림 이미지(LC-3570). `image` 는 TS DOM 타입에서 빠졌지만 Chrome 은 큰 이미지로 그린다. 백그라운드
+        // 알림은 Firebase SDK 가 띄워 같은 이미지를 쓴다.
+        const options: NotificationOptions & { image?: string } = {
           body,
           icon: '/icon-192.png',
+          image,
           data: message.data,
-        });
+        };
+        void registration.showNotification(title, options);
       }
     });
   }

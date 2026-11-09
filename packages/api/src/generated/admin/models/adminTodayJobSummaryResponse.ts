@@ -622,6 +622,8 @@ export interface AdminTodayJobSummaryResponse {
   sourceUrl?: string;
   /** 기업회원 공고 우선 노출을 이 공고에 줄지입니다. 기업회원 공고(source = COMPANY)에만 영향이 있고, 다른 경로 공고는 저장한 값(기본 true)을 그대로 보여 줍니다. 전체 설정(company-content-priority)이 켜져 있고 이 값이 true인 마감 전 공고만 공개 목록 맨 앞에 둡니다. */
   priorityExposed: boolean;
+  /** 운영자가 비즈니스 회원 대신 등록한 공고(대리 등록)인지입니다. 회원이 직접 등록했거나 수집한 공고는 false입니다. 회원이 나중에 고쳐도 바뀌지 않습니다. */
+  adminRegistered: boolean;
   /** 사용자 화면 카드에 굵게 보여 주는 추천 문구 제목 */
   recommendationTitle: string;
   /** 추천 문구 제목 아래 설명 */

@@ -95,6 +95,8 @@ export interface AdminBootcampDetailResponse {
   registeredAt: string;
   /** 기업회원 공고 우선 노출을 이 과정에 줄지입니다. 기업회원 과정(source = COMPANY)에만 영향이 있고, 다른 경로 과정은 저장한 값(기본 true)을 그대로 보여 줍니다. 전체 설정(company-content-priority)이 켜져 있고 이 값이 true인 마감 전 과정만 공개 목록 맨 앞에 둡니다. */
   priorityExposed: boolean;
+  /** 운영자가 비즈니스 회원 대신 등록한 과정(대리 등록)인지입니다. 회원이 직접 등록했거나 수집한 과정은 false입니다. 회원이 나중에 고쳐도 바뀌지 않습니다. */
+  adminRegistered: boolean;
   content: string;
   eligibilityAndSelectionProcess?: string;
   logoUrl?: string;

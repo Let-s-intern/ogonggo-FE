@@ -37,9 +37,7 @@ export function BizHero() {
             있습니다.
           </p>
           <div className="mt-8 flex flex-wrap gap-2.5">
-            <BizApplyLink
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-500 px-[22px] text-base font-bold text-white hover:bg-blue-600"
-            >
+            <BizApplyLink className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-500 px-[22px] text-base font-bold text-white hover:bg-blue-600">
               무료 홍보 신청하기
             </BizApplyLink>
             <a

@@ -6,7 +6,7 @@
  */
 
 export interface UserJobHeadlineCountResponse {
-  /** 공고 수. matchedWishJob이 참이면 희망 직무에 맞는 모집 중 공고 수, 거짓이면 오늘 올라온 모집 중 공고 수 */
+  /** 공고 수. matchedWishJob이 참이면 이번 주 올라온 희망 직무 공고 수, 거짓이면 오늘 올라온 공고 수. 둘 다 마감 전 공고만 센다 */
   count: number;
   /** 희망 직무에 맞는 공고 수인지. 거짓이면 비로그인과 같은 오늘 올라온 공고 수다 */
   matchedWishJob: boolean;
