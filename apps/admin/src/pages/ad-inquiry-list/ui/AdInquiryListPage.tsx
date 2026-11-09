@@ -12,7 +12,10 @@ import { AdInquiryCsvButton } from './AdInquiryCsvButton';
 import { AdInquiryFilters } from './AdInquiryFilters';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
-const TITLES: Record<AdInquiryView, string> = { active: '광고 문의', rejected: '반려한 문의' };
+const TITLES: Record<AdInquiryView, string> = {
+  active: '무료 홍보 신청',
+  rejected: '반려한 무료 홍보',
+};
 
 /**
  * 광고 문의 목록(PRD `어드민 화면`). 영업이 한 건씩 읽고 연락하는 흐름이라 표가 아니라 한 줄에 카드 하나다.

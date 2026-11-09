@@ -36,7 +36,7 @@ const UNSELECTED = 'text-gray-500';
 const STATUS_OPTIONS = enumOptions('AdvertisementContractStatus');
 
 /**
- * 화면. BE 에서는 신청 한 건이 곧 계약 한 행이고 상태만 바뀐다. 아직 승인되지 않은 것(신청·협의 중·반려)을 `광고 신청`,
+ * 화면. BE 에서는 신청 한 건이 곧 계약 한 행이고 상태만 바뀐다. 아직 승인되지 않은 것(신청·협의 중·반려)을 `유료 광고 신청`,
  * 승인된 것을 `계약` 메뉴로 나눠 본다(2026-11-09 사용자). 상태 체크는 그 화면의 상태만 고를 수 있고, 하나도 고르지 않으면
  * 화면의 상태 전부로 거른다.
  */
@@ -47,21 +47,22 @@ const VIEWS: Record<
   { title: string; statuses: ListAdvertisementContractsStatusItem[]; empty: string }
 > = {
   applications: {
-    title: '광고 신청',
+    title: '유료 광고 신청',
     statuses: ['REQUESTED', 'NEGOTIATING', 'REJECTED'],
     empty: '조건에 맞는 신청이 없습니다.',
   },
   contracts: { title: '계약', statuses: ['APPROVED'], empty: '조건에 맞는 계약이 없습니다.' },
 };
 
-type SelectKey = 'source' | 'promotionTarget' | 'category';
+/**
+ * 광고 신청서로 들어온 계약만 본다. 기업회원 공고 등록(`COMPANY_POSTING`)도 계약 행을 만들지만 공고 하나에 자동으로
+ * 생기고 상태가 공고 검수를 따라가 계약이 아니다(2026-11-09 사용자). 그 건은 `채용공고·부트캠프 등록` 검수에서 본다.
+ */
+const SOURCE = 'APPLICATION_FORM';
+
+type SelectKey = 'promotionTarget' | 'category';
 
 const SELECTS: { key: SelectKey; label: string; options: { value: string; label: string }[] }[] = [
-  {
-    key: 'source',
-    label: '경로',
-    options: [{ value: '', label: '경로' }, ...enumOptions('AdvertisementContractSource')],
-  },
   {
     key: 'promotionTarget',
     label: '홍보 대상',
@@ -81,12 +82,6 @@ type Row = AdminAdvertisementContractSummaryResponse;
 
 const COLUMNS: DataTableColumn<Row>[] = [
   { key: 'id', header: 'ID', width: 'w-16', render: (row) => row.id },
-  {
-    key: 'source',
-    header: '경로',
-    width: 'w-36',
-    render: (row) => enumLabel('AdvertisementContractSource', row.source),
-  },
   {
     key: 'status',
     header: '상태',
@@ -138,8 +133,8 @@ const isStatus = (value: string): value is ListAdvertisementContractsStatusItem 
   STATUS_OPTIONS.some((option) => option.value === value);
 
 /**
- * 광고 신청·계약 목록(PRD 4절). 광고 신청 폼으로 들어온 신청과 기업회원 공고 등록이 만든 계약을 함께 본다. 최신 신청이
- * 먼저다. `광고 신청`(승인 전, `/business/advertisement-applications`)과 `계약`(승인, `/business/advertisement-contracts`)
+ * 유료 광고 신청·계약 목록(PRD 4절). 광고 신청 폼으로 들어온 신청만 본다(`SOURCE`). 최신 신청이 먼저다.
+ * `유료 광고 신청`(승인 전, `/business/advertisement-applications`)과 `계약`(승인, `/business/advertisement-contracts`)
  * 이 같은 화면을 `view` 로 나눠 쓴다(`VIEWS`).
  *
  * 필터는 모두 URL 쿼리에 있다. 상태는 여러 개를 고를 수 있어 `status=REQUESTED,NEGOTIATING` 처럼 쉼표로 잇는다.
@@ -168,7 +163,7 @@ export function AdContractListPage({ view }: { view: ContractListView }) {
 
   const filters: ContractListFilters = {
     page,
-    source: get('source'),
+    source: SOURCE,
     status: checkedStatuses.length > 0 ? checkedStatuses : tabStatuses,
     promotionTarget: get('promotionTarget'),
     category: get('category'),
