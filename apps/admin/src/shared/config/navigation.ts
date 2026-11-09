@@ -85,19 +85,10 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     area: 'business',
     /*
-     * 비즈니스 회원 공고를 공개 목록 맨 앞에 둘지 정한다. 전체 스위치와 공고별 설정이 있다(2026-11-05 사용자: 기업회원
-     * 쪽에서 보고 공고마다 정한다). 광고 구좌가 열리기 전까지의 임시 혜택이다.
-     */
-    title: '노출',
-    items: [{ path: '/placements/company-priority', label: '기업회원 공고 우선 노출' }],
-  },
-  {
-    area: 'business',
-    /*
      * 홈의 배너 자리(홈 상단·홈 하단·공고 상세)에 무엇을 걸지 정한다(이슈 #573, 2026-11-06 사용자). 지금은 오공고 자체 홍보
      * 배너가 대부분이지만 돈을 받고 싣는 배너도 여기서 건다. 광고 상품은 파는 광고(배너 자리마다 하나, 인스타·카카오 등)를
      * 정하고, 배너 세팅이 그 자리의 상품에 배너를 건다(BE LC-3583). 광고 신청 한 건이 곧 계약 한 행이라, 승인 전은
-     * `유료 광고 신청`, 승인은 `계약` 으로 나눠 본다. 광고주·광고 공고·채널 광고·캘린더 화면은 백엔드에 API 가 없어
+     * `유료 광고 신청`, 승인은 `광고 계약` 으로 나눠 본다. 광고주·광고 공고·채널 광고·캘린더 화면은 백엔드에 API 가 없어
      * 지웠다(2026-11-09 사용자, PRD `prd-ad-backend-sync.md` D1).
      *
      * 무료 홍보 신청은 계약이 아니라 광고 문의 테이블에 쌓인다. 들어오는 신청을 한 곳에서 보려고 이 묶음에 둔다(2026-11-09
@@ -109,16 +100,22 @@ export const NAV_SECTIONS: NavSection[] = [
       // `/business/ad-inquiries/rejected` 로 두면 메뉴 링크(`end` 없음)가 `무료 홍보 신청` 까지 함께 켠다.
       { path: '/business/rejected-ad-inquiries', label: '반려한 무료 홍보' },
       { path: '/business/advertisement-applications', label: '유료 광고 신청' },
-      { path: '/business/advertisement-contracts', label: '계약' },
+      { path: '/business/advertisement-contracts', label: '광고 계약' },
     ],
   },
   {
     area: 'business',
-    /* 파는 광고 상품과 그 자리에 거는 배너. 신청·계약을 처리하는 `광고` 와 달리 한 번 정해 두는 설정이다(2026-11-09 사용자). */
+    /*
+     * 파는 광고 상품과 그 자리에 거는 배너. 신청·계약을 처리하는 `광고` 와 달리 한 번 정해 두는 설정이다(2026-11-09 사용자).
+     *
+     * 기업회원 공고 우선 노출도 여기 둔다(2026-11-09 사용자). 비즈니스 회원 공고를 공개 목록 맨 앞에 둘지 정하는 전체
+     * 스위치와 공고별 설정이다(2026-11-05 사용자). 광고 구좌가 열리기 전까지의 임시 혜택이다.
+     */
     title: '광고 설정',
     items: [
       { path: '/business/advertisement-products', label: '광고 상품' },
       { path: '/business/banners', label: '배너 세팅' },
+      { path: '/placements/company-priority', label: '기업회원 공고 우선 노출' },
     ],
   },
   {

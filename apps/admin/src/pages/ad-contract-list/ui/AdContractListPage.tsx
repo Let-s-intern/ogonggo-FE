@@ -51,7 +51,7 @@ const VIEWS: Record<
     statuses: ['REQUESTED', 'NEGOTIATING', 'REJECTED'],
     empty: '조건에 맞는 신청이 없습니다.',
   },
-  contracts: { title: '계약', statuses: ['APPROVED'], empty: '조건에 맞는 계약이 없습니다.' },
+  contracts: { title: '광고 계약', statuses: ['APPROVED'], empty: '조건에 맞는 계약이 없습니다.' },
 };
 
 /**
