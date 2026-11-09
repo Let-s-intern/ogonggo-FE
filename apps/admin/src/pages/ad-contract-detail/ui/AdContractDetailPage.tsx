@@ -57,7 +57,7 @@ const isBannerProduct = (product: AdvertisementProduct): product is BannerProduc
 const backTo = (status?: string) =>
   status === 'APPROVED'
     ? { to: '/business/advertisement-contracts', label: '계약' }
-    : { to: '/business/advertisement-applications', label: '광고 신청' };
+    : { to: '/business/advertisement-applications', label: '유료 광고 신청' };
 
 /**
  * 광고 계약 상세(PRD 4절). 신청 원문을 보고, 상태·협의 금액을 정하고, 판매한 상품을 붙이고, 이 계약에 걸린 노출을 본다.
