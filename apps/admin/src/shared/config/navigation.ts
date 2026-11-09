@@ -96,13 +96,21 @@ export const NAV_SECTIONS: NavSection[] = [
     /*
      * 홈의 배너 자리(홈 상단·홈 하단·공고 상세)에 무엇을 걸지 정한다(이슈 #573, 2026-11-06 사용자). 지금은 오공고 자체 홍보
      * 배너가 대부분이지만 돈을 받고 싣는 배너도 여기서 건다. 광고 상품은 파는 광고(배너 자리마다 하나, 인스타·카카오 등)를
-     * 정하고, 배너 세팅이 그 자리의 상품에 배너를 건다(BE LC-3583). 광고 계약은 광고 신청 한 건이고, 판매한 상품을
-     * 붙인다. 광고주·광고 공고·채널 광고·캘린더 화면은 백엔드에 API 가 없어 지웠다(2026-11-09 사용자,
+     * 정하고, 배너 세팅이 그 자리의 상품에 배너를 건다(BE LC-3583). 광고 신청 한 건이 곧 계약 한 행이라, 승인 전은 `광고 신청`,
+     * 승인은 `계약` 으로 나눠 본다. 광고주·광고 공고·채널 광고·캘린더 화면은 백엔드에 API 가 없어 지웠다(2026-11-09 사용자,
      * PRD `prd-ad-backend-sync.md` D1).
      */
     title: '광고',
     items: [
-      { path: '/business/advertisement-contracts', label: '광고 신청·계약' },
+      { path: '/business/advertisement-applications', label: '광고 신청' },
+      { path: '/business/advertisement-contracts', label: '계약' },
+    ],
+  },
+  {
+    area: 'business',
+    /* 파는 광고 상품과 그 자리에 거는 배너. 신청·계약을 처리하는 `광고` 와 달리 한 번 정해 두는 설정이다(2026-11-09 사용자). */
+    title: '광고 설정',
+    items: [
       { path: '/business/advertisement-products', label: '광고 상품' },
       { path: '/business/banners', label: '배너 세팅' },
     ],
