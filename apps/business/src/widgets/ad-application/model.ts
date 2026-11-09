@@ -1,5 +1,4 @@
 import type { CreateAdvertisementContractRequest, MyAccountResponse } from '@ogonggo/api';
-import { PLACEMENTS } from '@/widgets/landing/content';
 
 /**
  * 광고 신청서 값. 서버 요청(`CreateAdvertisementContractRequest`, ogonggo-BE user API)에 칸이 있는 값은 그 이름의
@@ -143,102 +142,102 @@ export function periodDays(startDate: string, endDate: string): number {
 }
 
 /**
- * 광고 신청서에서 고르는 상품 묶음(2026-11-09 사용자 정리). 오공고 웹은 지면 상품(`PLACEMENTS`), 카카오톡·인스타는 채널
- * 상품(`CHANNEL_OPTIONS`)이다. 이미지는 랜딩(`public/landing`)과 같은 것을 쓴다.
+ * 광고 신청서에서 고르는 상품 6개(2026-11-09 사용자: 오공고 웹 1 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM 1). 오공고 웹의
+ * 지면(배너·추천 카드 등)은 여기서 고르지 않고 담당자가 견적 때 정한다. 카카오톡·인스타 이미지는 web 커뮤니티 페이지
+ * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹·CRM 은 랜딩(`public/landing`) 것을 쓴다.
  */
-export type ProductGroupId = 'web' | 'kakao' | 'instagram';
-
-export const PRODUCT_GROUPS: {
-  id: ProductGroupId;
-  title: string;
-  reach: string;
-  description: string;
-  image: string;
-}[] = [
-  {
-    id: 'web',
-    title: '오공고 웹',
-    reach: '지면광고',
-    description: '오늘의 공고 채용공고 홈의 정해진 자리에 공고와 배너를 노출해요.',
-    image: '/landing/jobs-list.webp',
-  },
-  {
-    id: 'kakao',
-    title: '카카오톡',
-    reach: '누적 1만 5천명',
-    description: '취업준비생이 모인 오픈채팅방과 채널에 홍보글을 직접 전달해요.',
-    image: '/landing/crm-job-1.png',
-  },
-  {
-    id: 'instagram',
-    title: '인스타그램',
-    reach: '오공고 · 렛츠커리어 계정',
-    description: '피드 게시물과 스토리로 팔로워에게 공고를 알려요.',
-    image: '/landing/insta-job-1.png',
-  },
-];
-
-export interface ChannelOption {
+export interface AdProduct {
   id: string;
-  group: Exclude<ProductGroupId, 'web'>;
+  /** 카드 위 채널 이름. */
+  channel: string;
+  /** 채널 규모. */
+  reach: string;
   title: string;
   description: string;
-  image: string;
+  /** 하나면 카드 전체, 여럿이면 나란히 놓는다(인스타 게시물 3장). */
+  images: string[];
+  price: string;
   /**
-   * 광고 신청 API 의 `categories` 값. 카카오톡 CRM 은 BE 카테고리가 아직 없어 `null` 이고 `[희망 상품]` 글에만 남는다.
+   * 광고 신청 API 의 `categories` 값. 카카오톡 CRM 은 BE 카테고리가 아직 없어 비어 있고 `[희망 상품]` 글에만 남는다.
    * BE 는 카테고리를 하나 이상 요구해 CRM 만 고르면 받지 않는다(`validateStep`).
    */
-  category: ProductCategory | null;
+  categories: ProductCategory[];
 }
 
-export const CHANNEL_OPTIONS: ChannelOption[] = [
+export const AD_PRODUCTS: AdProduct[] = [
+  {
+    id: 'ogonggo-web',
+    channel: '오공고 웹',
+    reach: '지면광고',
+    title: '오늘의 공고 지면광고',
+    description: '채용공고 홈의 추천 카드 · 상단 고정 · 배너 자리에 공고를 노출해요.',
+    images: ['/landing/jobs-list.webp'],
+    price: '1주 30만원부터',
+    categories: ['JOB_POSTING', 'BANNER'],
+  },
   {
     id: 'kakao-curation',
-    group: 'kakao',
+    channel: '카카오톡',
+    reach: '누적 1만 5천명',
     title: '직무별 채용공고 큐레이션 톡방',
     description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
-    image: '/landing/crm-job-1.png',
-    category: 'KAKAO_1',
+    images: ['/ad-products/chat-job.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_1'],
   },
   {
     id: 'kakao-official',
-    group: 'kakao',
+    channel: '카카오톡',
+    reach: '누적 1만 5천명',
     title: '렛츠커리어 공식 오픈채팅방',
     description: '쥬디 톡방, 무료 세미나방 등 공식 오픈채팅방에 홍보글을 올려요.',
-    image: '/landing/crm-qna-1.png',
-    category: 'KAKAO_2',
-  },
-  {
-    id: 'kakao-crm',
-    group: 'kakao',
-    title: '카카오톡 CRM',
-    description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
-    image: '/landing/crm-dm-1.png',
-    category: null,
+    images: ['/ad-products/chat-tip.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_2'],
   },
   {
     id: 'instagram-ogonggo',
-    group: 'instagram',
+    channel: '인스타그램',
+    reach: '@letscareer.job',
     title: '오공고 인스타그램',
-    description: '@letscareer.job 계정의 피드 게시물 또는 스토리로 알려요.',
-    image: '/landing/insta-job-1.png',
-    category: 'INSTAGRAM_1',
+    description: '오늘의 공고 계정의 피드 게시물 또는 스토리로 알려요.',
+    images: [
+      '/ad-products/instagram-job-1.jpg',
+      '/ad-products/instagram-job-2.jpg',
+      '/ad-products/instagram-job-3.jpg',
+    ],
+    price: '견적 문의',
+    categories: ['INSTAGRAM_1'],
   },
   {
     id: 'instagram-letscareer',
-    group: 'instagram',
+    channel: '인스타그램',
+    reach: '@letscareer.official',
     title: '렛츠커리어 인스타그램',
-    description: '@letscareer.official 계정의 피드 게시물 또는 스토리로 알려요.',
-    image: '/landing/insta-official-1.png',
-    category: 'INSTAGRAM_2',
+    description: '렛츠커리어 메인 계정의 피드 게시물 또는 스토리로 알려요.',
+    images: [
+      '/ad-products/instagram-official-1.jpg',
+      '/ad-products/instagram-official-2.jpg',
+      '/ad-products/instagram-official-3.jpg',
+    ],
+    price: '견적 문의',
+    categories: ['INSTAGRAM_2'],
+  },
+  {
+    id: 'kakao-crm',
+    channel: '카카오톡 CRM',
+    reach: '약 2만명',
+    title: '카카오톡 CRM',
+    description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
+    images: ['/landing/crm-dm-1.png'],
+    price: '견적 문의',
+    categories: [],
   },
 ];
 
-/** 고른 상품. 지면 상품과 채널 상품을 화면 순서대로 함께 돌려준다. */
-export function selectedProducts(
-  values: FormValues,
-): { id: string; title: string; category: ProductCategory | null }[] {
-  return [...PLACEMENTS, ...CHANNEL_OPTIONS].filter((p) => values.productIds.includes(p.id));
+/** 고른 상품. 화면 순서대로 돌려준다. */
+export function selectedProducts(values: FormValues): AdProduct[] {
+  return AD_PRODUCTS.filter((p) => values.productIds.includes(p.id));
 }
 
 export function periodText(values: FormValues): string | null {
@@ -267,7 +266,7 @@ export function validateStep(step: number, v: FormValues): Record<string, string
   if (step === 2) {
     const products = selectedProducts(v);
     if (products.length === 0) e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
-    else if (products.every((p) => p.category === null))
+    else if (products.every((p) => p.categories.length === 0))
       e.productIds = '카카오톡 CRM은 다른 상품과 함께 신청해 주세요.';
   }
   if (step === 3) {
@@ -292,9 +291,7 @@ export function validateStep(step: number, v: FormValues): Record<string, string
 /** 서버 요청 본문. 받을 칸이 없는 상품·기간·모집 형태는 담당자가 읽을 수 있게 `scheduleRequest` 에 적는다. */
 export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
   const products = selectedProducts(v);
-  const categories = [
-    ...new Set(products.flatMap((p) => (p.category === null ? [] : [p.category]))),
-  ];
+  const categories = [...new Set(products.flatMap((p) => p.categories))];
   const lines = [
     `[희망 상품] ${products.map((p) => p.title).join(', ')}`,
     ...(v.startDate && v.endDate
