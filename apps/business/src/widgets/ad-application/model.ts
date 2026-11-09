@@ -146,15 +146,24 @@ export function periodDays(startDate: string, endDate: string): number {
  * 지면(배너·추천 카드 등)은 여기서 고르지 않고 담당자가 견적 때 정한다. 카카오톡·인스타 이미지는 web 커뮤니티 페이지
  * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹·CRM 은 랜딩(`public/landing`) 것을 쓴다.
  */
+export type AdProductGroupId = 'web' | 'kakao' | 'instagram' | 'crm';
+
+/** 화면에서 상품을 묶어 보이는 단위. 세로로 쌓아 어느 채널의 상품인지 바로 보이게 한다. */
+export const AD_PRODUCT_GROUPS: { id: AdProductGroupId; title: string; reach: string }[] = [
+  { id: 'web', title: '오공고 웹', reach: '지면광고' },
+  { id: 'kakao', title: '카카오톡', reach: '누적 1만 5천명' },
+  { id: 'instagram', title: '인스타그램', reach: '오공고 · 렛츠커리어 계정' },
+  { id: 'crm', title: '카카오톡 CRM', reach: '약 2만명' },
+];
+
 export interface AdProduct {
   id: string;
-  /** 카드 위 채널 이름. */
-  channel: string;
-  /** 채널 규모. */
+  group: AdProductGroupId;
+  /** 카드 위 작은 글씨. 계정·규모. */
   reach: string;
   title: string;
   description: string;
-  /** 하나면 카드 전체, 여럿이면 나란히 놓는다(인스타 게시물 3장). */
+  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 나란히 놓는다(카카오톡 방). */
   images: string[];
   price: string;
   /**
@@ -167,8 +176,8 @@ export interface AdProduct {
 export const AD_PRODUCTS: AdProduct[] = [
   {
     id: 'ogonggo-web',
-    channel: '오공고 웹',
-    reach: '지면광고',
+    group: 'web',
+    reach: '채용공고 홈',
     title: '오늘의 공고 지면광고',
     description: '채용공고 홈의 추천 카드 · 상단 고정 · 배너 자리에 공고를 노출해요.',
     images: ['/landing/jobs-list.webp'],
@@ -177,27 +186,27 @@ export const AD_PRODUCTS: AdProduct[] = [
   },
   {
     id: 'kakao-curation',
-    channel: '카카오톡',
-    reach: '누적 1만 5천명',
+    group: 'kakao',
+    reach: '직무별 톡방 6개',
     title: '직무별 채용공고 큐레이션 톡방',
     description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
-    images: ['/ad-products/chat-job.jpg'],
+    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
     price: '견적 문의',
     categories: ['KAKAO_1'],
   },
   {
     id: 'kakao-official',
-    channel: '카카오톡',
-    reach: '누적 1만 5천명',
+    group: 'kakao',
+    reach: '쥬디 톡방 · 무료 세미나방 등',
     title: '렛츠커리어 공식 오픈채팅방',
-    description: '쥬디 톡방, 무료 세미나방 등 공식 오픈채팅방에 홍보글을 올려요.',
-    images: ['/ad-products/chat-tip.jpg'],
+    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
+    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
     price: '견적 문의',
     categories: ['KAKAO_2'],
   },
   {
     id: 'instagram-ogonggo',
-    channel: '인스타그램',
+    group: 'instagram',
     reach: '@letscareer.job',
     title: '오공고 인스타그램',
     description: '오늘의 공고 계정의 피드 게시물 또는 스토리로 알려요.',
@@ -205,13 +214,16 @@ export const AD_PRODUCTS: AdProduct[] = [
       '/ad-products/instagram-job-1.jpg',
       '/ad-products/instagram-job-2.jpg',
       '/ad-products/instagram-job-3.jpg',
+      '/ad-products/instagram-job-4.jpg',
+      '/ad-products/instagram-job-5.jpg',
+      '/ad-products/instagram-job-6.jpg',
     ],
     price: '견적 문의',
     categories: ['INSTAGRAM_1'],
   },
   {
     id: 'instagram-letscareer',
-    channel: '인스타그램',
+    group: 'instagram',
     reach: '@letscareer.official',
     title: '렛츠커리어 인스타그램',
     description: '렛츠커리어 메인 계정의 피드 게시물 또는 스토리로 알려요.',
@@ -219,14 +231,17 @@ export const AD_PRODUCTS: AdProduct[] = [
       '/ad-products/instagram-official-1.jpg',
       '/ad-products/instagram-official-2.jpg',
       '/ad-products/instagram-official-3.jpg',
+      '/ad-products/instagram-official-4.jpg',
+      '/ad-products/instagram-official-5.jpg',
+      '/ad-products/instagram-official-6.jpg',
     ],
     price: '견적 문의',
     categories: ['INSTAGRAM_2'],
   },
   {
     id: 'kakao-crm',
-    channel: '카카오톡 CRM',
-    reach: '약 2만명',
+    group: 'crm',
+    reach: '렛츠커리어 카카오 채널',
     title: '카카오톡 CRM',
     description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
     images: ['/landing/crm-dm-1.png'],

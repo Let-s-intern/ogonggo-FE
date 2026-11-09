@@ -11,7 +11,9 @@ import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
 import {
+  AD_PRODUCT_GROUPS,
   AD_PRODUCTS,
+  type AdProduct,
   AD_REQUEST_MAX,
   addDays,
   CREATIVE_OPTIONS,
@@ -234,9 +236,42 @@ function CheckMark({ on }: { on: boolean }) {
   );
 }
 
+/** 상품 카드의 이미지 칸. 인스타는 피드처럼 3열 격자, 카카오톡은 채팅 캡처를 나란히, 나머지는 한 장이다. */
+function ProductImages({ product }: { product: AdProduct }) {
+  const { images, title } = product;
+  if (images.length >= 6) {
+    return (
+      <span className="grid grid-cols-3 gap-0.5 bg-white">
+        {images.map((src, i) => (
+          <img
+            key={src}
+            src={src}
+            alt={i === 0 ? `${title} 게시물 예시` : ''}
+            loading="lazy"
+            className="aspect-[4/5] w-full object-cover"
+          />
+        ))}
+      </span>
+    );
+  }
+  return (
+    <span className={cn('grid h-52 gap-1 bg-gray-50', images.length > 1 && 'grid-cols-2 p-1')}>
+      {images.map((src, i) => (
+        <img
+          key={src}
+          src={src}
+          alt={i === 0 ? `${title} 예시` : ''}
+          loading="lazy"
+          className={cn('h-full w-full object-cover object-top', images.length > 1 && 'rounded-md')}
+        />
+      ))}
+    </span>
+  );
+}
+
 /**
- * 2단계. 상품 6개(오공고 웹 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM)를 실제 화면 이미지가 있는 카드로 고른다(2026-11-09
- * 사용자). 카드는 차례로 떠오르며 나타난다.
+ * 2단계. 상품 6개(오공고 웹 1 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM 1)를 채널 묶음으로 세로로 쌓아 고른다(2026-11-09
+ * 사용자). 묶음은 차례로 떠오르며 나타난다.
  */
 function StepProducts({
   v,
@@ -254,62 +289,68 @@ function StepProducts({
     );
 
   return (
-    <div className="space-y-6">
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {AD_PRODUCTS.map((product, index) => {
-          const checked = v.productIds.includes(product.id);
-          return (
-            <li
-              key={product.id}
-              style={{ animationDelay: `${index * 70}ms` }}
-              className="motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both]"
-            >
-              <button
-                type="button"
-                aria-pressed={checked}
-                onClick={() => toggle(product.id)}
-                className={cn(
-                  'group flex h-full w-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-200',
-                  checked
-                    ? 'border-blue-500 shadow-sm ring-2 ring-blue-100'
-                    : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md',
-                )}
-              >
-                <span className="relative block h-40 overflow-hidden bg-gray-50">
-                  <span
-                    className={cn(
-                      'grid h-full transition-transform duration-500 group-hover:scale-105',
-                      product.images.length > 1 && 'grid-cols-3 gap-0.5',
-                    )}
-                  >
-                    {product.images.map((src, i) => (
-                      <img
-                        key={src}
-                        src={src}
-                        alt={i === 0 ? `${product.title} 예시` : ''}
-                        loading="lazy"
-                        className="h-full w-full object-cover object-top"
-                      />
-                    ))}
-                  </span>
-                  <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-gray-800 shadow-sm">
-                    {product.channel}
-                  </span>
-                  <span className="absolute top-2 right-2">
-                    <CheckMark on={checked} />
-                  </span>
+    <div className="space-y-8">
+      {AD_PRODUCT_GROUPS.map((group, index) => {
+        const products = AD_PRODUCTS.filter((p) => p.group === group.id);
+        const count = products.filter((p) => v.productIds.includes(p.id)).length;
+        return (
+          <section
+            key={group.id}
+            aria-label={group.title}
+            style={{ animationDelay: `${index * 90}ms` }}
+            className="motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both]"
+          >
+            <header className="mb-3 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
+              <h3 className="text-lg font-bold">{group.title}</h3>
+              <span className="text-sm font-medium text-blue-600">{group.reach}</span>
+              {count > 0 && (
+                <span className="ml-auto rounded-full bg-blue-500 px-2.5 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
+                  {count}개 선택
                 </span>
-                <span className="flex flex-1 flex-col px-4 py-3">
-                  <span className="text-xs font-medium text-blue-600">{product.reach}</span>
-                  <span className="mt-0.5 font-semibold">{product.title}</span>
-                  <span className="mt-1 flex-1 text-sm text-gray-500">{product.description}</span>
-                  <span className="mt-3 text-sm font-semibold text-gray-900">{product.price}</span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+              )}
+            </header>
+            <ul className={cn('grid gap-4', products.length > 1 && 'sm:grid-cols-2')}>
+              {products.map((product) => {
+                const checked = v.productIds.includes(product.id);
+                return (
+                  <li key={product.id}>
+                    <button
+                      type="button"
+                      aria-pressed={checked}
+                      onClick={() => toggle(product.id)}
+                      className={cn(
+                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-200',
+                        checked
+                          ? 'border-blue-500 shadow-sm ring-2 ring-blue-100'
+                          : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md',
+                      )}
+                    >
+                      <span className="relative block overflow-hidden">
+                        <span className="block transition-transform duration-500 group-hover:scale-[1.03]">
+                          <ProductImages product={product} />
+                        </span>
+                        <span className="absolute top-2 right-2">
+                          <CheckMark on={checked} />
+                        </span>
+                      </span>
+                      <span className="flex flex-1 flex-col px-4 py-3">
+                        <span className="text-xs font-medium text-blue-600">{product.reach}</span>
+                        <span className="mt-0.5 font-semibold">{product.title}</span>
+                        <span className="mt-1 flex-1 text-sm text-gray-500">
+                          {product.description}
+                        </span>
+                        <span className="mt-3 text-sm font-semibold text-gray-900">
+                          {product.price}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
       <ErrorText>{errors.productIds}</ErrorText>
       <Info>
         3개 이상 묶어 신청하면 10% 할인돼요. 오공고 웹의 노출 자리와 최종 금액은 담당자 확인 후
