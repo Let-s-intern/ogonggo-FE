@@ -23,6 +23,11 @@ export interface ContentActionsProps {
   fields?: ContentEditorField[];
   /** 채용공고 상세. 넘기면 `내용 수정` 이 제목·본문과 공고 정보를 함께 고치는 `JobEditor` 를 연다. */
   job?: AdminJobDetailResponse;
+  /**
+   * 모든 칸을 고치는 수정 화면 주소. 넘기면 `내용 수정` 이 창을 여는 대신 이 화면으로 간다(부트캠프, #620).
+   * 수정 버튼을 하나로 두려는 것이다 — 일부 칸만 고치는 창과 모든 칸을 고치는 화면이 따로 있으면 어느 쪽을 눌러야 할지 헷갈린다.
+   */
+  editPath?: string;
   /** 삭제 후 돌아갈 목록 주소. */
   listPath: string;
   /**
@@ -52,6 +57,7 @@ export function ContentActions({
   title,
   fields,
   job,
+  editPath,
   listPath,
   operation,
 }: ContentActionsProps) {
@@ -74,7 +80,9 @@ export function ContentActions({
       setIsEditing(true);
     }
   }, [fillRequest]);
-  const canEdit = kind !== 'side-studies' && (fields !== undefined || job !== undefined);
+  const canEdit =
+    kind !== 'side-studies' &&
+    (fields !== undefined || job !== undefined || editPath !== undefined);
 
   return (
     <>
@@ -105,7 +113,7 @@ export function ContentActions({
         {canEdit ? (
           <Button
             className="rounded-full shadow-[0_8px_24px_-6px_rgba(74,118,255,0.6)]"
-            onClick={() => setIsEditing(true)}
+            onClick={() => (editPath ? navigate(editPath) : setIsEditing(true))}
           >
             내용 수정
           </Button>
