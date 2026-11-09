@@ -11,10 +11,10 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 const VIEWPORT = 50;
 /** 끼워 넣는 배너 위아래 여백(이미지 높이 대비 %). */
 const PAD = 1;
-const EASE = 'duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
+const EASE = 'duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
-/** 지면 하나에 머무는 시간. 진행바가 이 시간 동안 차고, 다 차면 다음 지면이다(2026-11-09 사용자: 천천히). */
-const DWELL_MS = 5000;
+/** 지면 하나에 머무는 시간. 진행바가 이 시간 동안 차고, 다 차면 다음 지면이다(2026-11-09 사용자: 더 빠르게). */
+const DWELL_MS = 3000;
 
 /** 자동으로 넘기는 순서. 페이지 탭 순서대로, 페이지 안에서는 지면 순서대로 모두 돈다. */
 const STEPS = PLACEMENT_PAGES.flatMap((p) => p.spots.map((s) => ({ pageId: p.id, spotId: s.id })));
@@ -62,7 +62,7 @@ function BannerCreative({ spot, shown }: { spot: PlacementSpot; shown: boolean }
         'absolute flex origin-top overflow-hidden rounded-[0.8cqw] bg-gradient-to-r from-blue-500 to-teal-500 text-white shadow-lg transition-[transform,opacity]',
         // 세로 배너는 길어서 같은 시간이면 빨리 떨어져 보인다. 천천히 내려오게 둔다.
         tall
-          ? 'duration-[1400ms] ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none'
+          ? 'duration-[1000ms] ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none'
           : EASE,
         tall
           ? 'flex-col items-center justify-center gap-[1cqw] text-center'
@@ -183,7 +183,7 @@ function PageCanvas({
 }
 
 /**
- * 지면 미리보기. 모든 지면을 차례로 자동으로 넘긴다(2026-11-09 사용자). 위의 진행바가 지면마다 한 칸씩 차고, 멈춤 버튼으로
+ * 지면 미리보기. 모든 지면을 차례로 자동으로 넘긴다(2026-11-09 사용자). 미리보기 아래 진행바가 지면마다 한 칸씩 차고, 멈춤 버튼으로
  * 세워 둘 수 있다. 탭이나 지면을 누르면 그 지면으로 가서 거기서부터 잇는다.
  *
  * 시계는 `BizHeroScreens` 처럼 진행바의 CSS 애니메이션이다. 다 차면(`animationend`) 다음 지면이고, 멈춤은
@@ -297,89 +297,93 @@ export function PlacementSimulator() {
         })}
       </div>
 
-      <div className="mt-5 flex items-center gap-3">
-        <div className="flex flex-1 gap-1" aria-hidden="true">
-          {STEPS.map((step, i) => (
-            <span
-              key={step.spotId}
-              className={cn(
-                'h-1 flex-1 overflow-hidden rounded-full',
-                i < stepIndex ? 'bg-blue-500' : 'bg-gray-200',
-              )}
-            >
-              {i === stepIndex ? (
-                <span
-                  key={run}
-                  className="block h-full origin-left bg-blue-500"
-                  style={
-                    mounted
-                      ? {
-                          animation: `ogonggo-biz-progress ${DWELL_MS}ms linear forwards`,
-                          animationPlayState: running ? 'running' : 'paused',
-                        }
-                      : { transform: 'scaleX(0)' }
-                  }
-                  onAnimationEnd={next}
-                />
-              ) : null}
-            </span>
-          ))}
-        </div>
-        <span className="shrink-0 text-sm tabular-nums text-gray-500">
-          {stepIndex + 1} / {STEPS.length}
-        </span>
-        <button
-          type="button"
-          onClick={() => setPlaying((p) => !p)}
-          aria-label={playing ? '자동 넘김 멈춤' : '자동 넘김 재생'}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
-        >
-          <span
-            aria-hidden="true"
-            className={cn('block size-4', playing ? 'icon-[lucide--pause]' : 'icon-[lucide--play]')}
-          />
-        </button>
-      </div>
-
       <div className="mt-5 grid items-start gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-10">
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] md:sticky md:top-24">
-          <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
-            <span className="size-2.5 rounded-full bg-gray-300" />
-            <span className="size-2.5 rounded-full bg-gray-300" />
-            <span className="size-2.5 rounded-full bg-gray-300" />
-            <span className="ml-3 flex-1 truncate rounded-full bg-white px-3 py-1 text-xs text-gray-500">
-              {page.url}
-            </span>
-          </div>
-          <div className="@container relative aspect-[1280/900] overflow-hidden bg-white">
-            <div
-              className={cn('relative aspect-[1280/1800] w-full transition-transform', EASE)}
-              style={{ transform: `translateY(-${scrollOffset(active)}%)` }}
-            >
-              {PLACEMENT_PAGES.map((p) => (
-                <PageCanvas key={p.id} page={p} active={active} visible={p.id === page.id} />
-              ))}
+        <div className="md:sticky md:top-24">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)]">
+            <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+              <span className="size-2.5 rounded-full bg-gray-300" />
+              <span className="size-2.5 rounded-full bg-gray-300" />
+              <span className="size-2.5 rounded-full bg-gray-300" />
+              <span className="ml-3 flex-1 truncate rounded-full bg-white px-3 py-1 text-xs text-gray-500">
+                {page.url}
+              </span>
+            </div>
+            <div className="@container relative aspect-[1280/900] overflow-hidden bg-white">
               <div
-                aria-hidden="true"
-                className={cn(
-                  'pointer-events-none absolute rounded-[0.8cqw] shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] ring-2 ring-blue-500 transition-all',
-                  EASE,
-                )}
-                style={{
-                  top: `${rect.top}%`,
-                  left: `${rect.left}%`,
-                  width: `${rect.width}%`,
-                  height: `${rect.height}%`,
-                }}
+                className={cn('relative aspect-[1280/1800] w-full transition-transform', EASE)}
+                style={{ transform: `translateY(-${scrollOffset(active)}%)` }}
               >
-                {!active.banner && !active.mockCard && (
-                  <span className="absolute inset-0 animate-pulse rounded-[0.8cqw] bg-blue-500/10 motion-reduce:animate-none" />
-                )}
-                <span className="absolute -top-2 left-2 -translate-y-full whitespace-nowrap rounded-sm bg-blue-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow">
-                  AD · {active.name}
-                </span>
+                {PLACEMENT_PAGES.map((p) => (
+                  <PageCanvas key={p.id} page={p} active={active} visible={p.id === page.id} />
+                ))}
+                <div
+                  aria-hidden="true"
+                  className={cn(
+                    'pointer-events-none absolute rounded-[0.8cqw] shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] ring-2 ring-blue-500 transition-all',
+                    EASE,
+                  )}
+                  style={{
+                    top: `${rect.top}%`,
+                    left: `${rect.left}%`,
+                    width: `${rect.width}%`,
+                    height: `${rect.height}%`,
+                  }}
+                >
+                  {!active.banner && !active.mockCard && (
+                    <span className="absolute inset-0 animate-pulse rounded-[0.8cqw] bg-blue-500/10 motion-reduce:animate-none" />
+                  )}
+                  <span className="absolute -top-2 left-2 -translate-y-full whitespace-nowrap rounded-sm bg-blue-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow">
+                    AD · {active.name}
+                  </span>
+                </div>
               </div>
             </div>
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex flex-1 gap-1" aria-hidden="true">
+              {STEPS.map((step, i) => (
+                <span
+                  key={step.spotId}
+                  className={cn(
+                    'h-1 flex-1 overflow-hidden rounded-full',
+                    i < stepIndex ? 'bg-blue-500' : 'bg-gray-200',
+                  )}
+                >
+                  {i === stepIndex ? (
+                    <span
+                      key={run}
+                      className="block h-full origin-left bg-blue-500"
+                      style={
+                        mounted
+                          ? {
+                              animation: `ogonggo-biz-progress ${DWELL_MS}ms linear forwards`,
+                              animationPlayState: running ? 'running' : 'paused',
+                            }
+                          : { transform: 'scaleX(0)' }
+                      }
+                      onAnimationEnd={next}
+                    />
+                  ) : null}
+                </span>
+              ))}
+            </div>
+            <span className="shrink-0 text-sm tabular-nums text-gray-500">
+              {stepIndex + 1} / {STEPS.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? '자동 넘김 멈춤' : '자동 넘김 재생'}
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'block size-4',
+                  playing ? 'icon-[lucide--pause]' : 'icon-[lucide--play]',
+                )}
+              />
+            </button>
           </div>
         </div>
 
