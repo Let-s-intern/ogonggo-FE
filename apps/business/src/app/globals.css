@@ -95,3 +95,30 @@ body {
     transform: translateY(32px);
   }
 }
+
+/*
+ * 광고 신청 2단계(`widgets/ad-application`). 상품 묶음이 차례로 떠오르고, 고른 상품의 체크 표시가 살짝 튄다.
+ * 쓰는 쪽에서 `motion-safe:` 로 감싸 움직임 줄이기 설정에서는 돌지 않는다.
+ */
+@keyframes ogonggo-biz-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ogonggo-biz-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
