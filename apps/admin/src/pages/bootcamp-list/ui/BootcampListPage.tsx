@@ -3,6 +3,7 @@ import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } 
 import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogonggo/api/src/admin';
 import { listAllIds, useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { BootcampPriorityToggle } from '@/features/priority-exposed';
+import { ProxyRegisterButton } from '@/features/proxy-registration';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
@@ -131,7 +132,11 @@ export function BootcampListPage({
 
   return (
     <>
-      <PageHeader title={title ?? '부트캠프'} />
+      <PageHeader
+        title={title ?? '부트캠프'}
+        // 비즈니스 목록에서만 기업회원 대신 올린다(#594).
+        action={fixedSource === 'COMPANY' ? <ProxyRegisterButton kind="bootcamps" /> : undefined}
+      />
 
       <ListToolbar>
         <SearchBox

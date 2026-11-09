@@ -10,6 +10,7 @@ import {
 } from '@/entities/content/api/useContent';
 import { useReplaceTodayJobs, useTodayJobList } from '@/entities/today-job/api/useTodayJobs';
 import { JobPriorityToggle } from '@/features/priority-exposed';
+import { ProxyRegisterButton } from '@/features/proxy-registration';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
@@ -222,7 +223,11 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
 
   return (
     <>
-      <PageHeader title={title ?? '채용공고'} />
+      <PageHeader
+        title={title ?? '채용공고'}
+        // 비즈니스 목록에서만 기업회원 대신 올린다(#594).
+        action={fixedSource === 'COMPANY' ? <ProxyRegisterButton kind="jobs" /> : undefined}
+      />
 
       <ListToolbar>
         <SearchBox
