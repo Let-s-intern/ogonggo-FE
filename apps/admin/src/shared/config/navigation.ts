@@ -102,7 +102,7 @@ export const NAV_SECTIONS: NavSection[] = [
      */
     title: '광고',
     items: [
-      { path: '/business/advertisement-contracts', label: '광고 계약' },
+      { path: '/business/advertisement-contracts', label: '광고 신청·계약' },
       { path: '/business/advertisement-products', label: '광고 상품' },
       { path: '/business/banners', label: '배너 세팅' },
     ],
