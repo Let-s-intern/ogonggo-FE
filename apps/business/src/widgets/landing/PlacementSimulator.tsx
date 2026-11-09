@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { cn } from '@ogonggo/ui';
 import { PLACEMENT_PAGES, PLACEMENTS, type PlacementPage, type PlacementSpot } from './content';
 
@@ -12,6 +12,25 @@ const VIEWPORT = 50;
 /** 끼워 넣는 배너 위아래 여백(이미지 높이 대비 %). */
 const PAD = 1;
 const EASE = 'duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
+
+/** 지면 하나에 머무는 시간. 진행바가 이 시간 동안 차고, 다 차면 다음 지면이다(2026-11-09 사용자: 천천히). */
+const DWELL_MS = 5000;
+
+/** 자동으로 넘기는 순서. 페이지 탭 순서대로, 페이지 안에서는 지면 순서대로 모두 돈다. */
+const STEPS = PLACEMENT_PAGES.flatMap((p) => p.spots.map((s) => ({ pageId: p.id, spotId: s.id })));
+
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+function subscribeReducedMotion(listener: () => void): () => void {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  query.addEventListener('change', listener);
+  return () => query.removeEventListener('change', listener);
+}
+
+function subscribeVisibility(listener: () => void): () => void {
+  document.addEventListener('visibilitychange', listener);
+  return () => document.removeEventListener('visibilitychange', listener);
+}
 
 const productOf = (spot: PlacementSpot) => PLACEMENTS.find((p) => p.id === spot.productId);
 /** 배너가 끼어들 때 아래 화면이 내려가는 양. */
@@ -163,9 +182,50 @@ function PageCanvas({
   );
 }
 
+/**
+ * 지면 미리보기. 모든 지면을 차례로 자동으로 넘긴다(2026-11-09 사용자). 위의 진행바가 지면마다 한 칸씩 차고, 멈춤 버튼으로
+ * 세워 둘 수 있다. 탭이나 지면을 누르면 그 지면으로 가서 거기서부터 잇는다.
+ *
+ * 시계는 `BizHeroScreens` 처럼 진행바의 CSS 애니메이션이다. 다 차면(`animationend`) 다음 지면이고, 멈춤은
+ * `animation-play-state` 하나라 다시 누르면 멈춘 자리에서 잇는다. 화면 밖에 있거나 탭이 숨으면 멈춘다 — 아래로
+ * 내려와 보기 전에 다 지나가 버리지 않게. `prefers-reduced-motion` 이면 멈춘 채로 시작한다.
+ */
 export function PlacementSimulator() {
   const [pageId, setPageId] = useState(PLACEMENT_PAGES[0]?.id);
   const [spotId, setSpotId] = useState(PLACEMENT_PAGES[0]?.spots[0]?.id);
+  /** 지면이 바뀔 때마다 늘린다. 진행바 `key` 로 써서 애니메이션을 처음부터 다시 돌린다. */
+  const [run, setRun] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [inView, setInView] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false,
+  );
+  const hidden = useSyncExternalStore(
+    subscribeVisibility,
+    () => document.visibilityState === 'hidden',
+    () => false,
+  );
+
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (reducedMotion) setPlaying(false);
+  }, [reducedMotion]);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(Boolean(entry?.isIntersecting)),
+      {
+        threshold: 0.3,
+      },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // `#자리id` 로 들어오거나(위치 보기 링크) 해시가 바뀌면 그 페이지와 자리를 고른다.
   useEffect(() => {
@@ -189,13 +249,24 @@ export function PlacementSimulator() {
   if (!page || !active) return null;
   const { rect } = active;
 
-  const selectPage = (next: PlacementPage) => {
-    setPageId(next.id);
-    setSpotId(next.spots[0]?.id);
+  const goTo = (nextPageId: string, nextSpotId: string | undefined) => {
+    setPageId(nextPageId);
+    setSpotId(nextSpotId);
+    setRun((r) => r + 1);
   };
+  const selectPage = (next: PlacementPage) => goTo(next.id, next.spots[0]?.id);
+  const stepIndex = Math.max(
+    STEPS.findIndex((st) => st.spotId === active.id),
+    0,
+  );
+  const next = () => {
+    const step = STEPS[(stepIndex + 1) % STEPS.length];
+    if (step) goTo(step.pageId, step.spotId);
+  };
+  const running = playing && inView && !hidden;
 
   return (
-    <div className="mt-10">
+    <div ref={rootRef} className="mt-10">
       <div
         role="tablist"
         aria-label="광고가 보이는 페이지"
@@ -226,7 +297,51 @@ export function PlacementSimulator() {
         })}
       </div>
 
-      <div className="mt-8 grid items-start gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-10">
+      <div className="mt-5 flex items-center gap-3">
+        <div className="flex flex-1 gap-1" aria-hidden="true">
+          {STEPS.map((step, i) => (
+            <span
+              key={step.spotId}
+              className={cn(
+                'h-1 flex-1 overflow-hidden rounded-full',
+                i < stepIndex ? 'bg-blue-500' : 'bg-gray-200',
+              )}
+            >
+              {i === stepIndex ? (
+                <span
+                  key={run}
+                  className="block h-full origin-left bg-blue-500"
+                  style={
+                    mounted
+                      ? {
+                          animation: `ogonggo-biz-progress ${DWELL_MS}ms linear forwards`,
+                          animationPlayState: running ? 'running' : 'paused',
+                        }
+                      : { transform: 'scaleX(0)' }
+                  }
+                  onAnimationEnd={next}
+                />
+              ) : null}
+            </span>
+          ))}
+        </div>
+        <span className="shrink-0 text-sm tabular-nums text-gray-500">
+          {stepIndex + 1} / {STEPS.length}
+        </span>
+        <button
+          type="button"
+          onClick={() => setPlaying((p) => !p)}
+          aria-label={playing ? '자동 넘김 멈춤' : '자동 넘김 재생'}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+        >
+          <span
+            aria-hidden="true"
+            className={cn('block size-4', playing ? 'icon-[lucide--pause]' : 'icon-[lucide--play]')}
+          />
+        </button>
+      </div>
+
+      <div className="mt-5 grid items-start gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-10">
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] md:sticky md:top-24">
           <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
             <span className="size-2.5 rounded-full bg-gray-300" />
@@ -289,7 +404,7 @@ export function PlacementSimulator() {
                   type="button"
                   aria-expanded={selected}
                   aria-controls={`${spot.id}-detail`}
-                  onClick={() => setSpotId(spot.id)}
+                  onClick={() => goTo(page.id, spot.id)}
                   className="flex w-full items-center gap-3 px-5 py-4 text-left"
                 >
                   <span

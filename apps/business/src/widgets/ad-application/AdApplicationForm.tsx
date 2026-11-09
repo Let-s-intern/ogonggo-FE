@@ -9,9 +9,12 @@ import {
 } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { ListboxSelect } from '@/shared/ui/ListboxSelect';
 import { PRIVACY_POLICY_URL } from '@/shared/config/site';
-import { PLACEMENTS } from '@/widgets/landing/content';
 import {
+  AD_PRODUCT_GROUPS,
+  AD_PRODUCTS,
+  type AdProduct,
   AD_REQUEST_MAX,
   addDays,
   CREATIVE_OPTIONS,
@@ -183,17 +186,15 @@ function StepPost({
         </div>
         <div>
           <Label required>모집 형태</Label>
-          <select
-            className={INPUT}
+          <ListboxSelect
+            id="ad-recruit-type"
+            label="모집 형태"
+            placeholder="모집 형태를 선택해 주세요."
             value={v.recruitType}
-            onChange={(e) => set('recruitType', e.target.value as RecruitType)}
-          >
-            {RECRUIT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+            options={RECRUIT_TYPES.map((t) => ({ value: t, label: t }))}
+            onChange={(value) => set('recruitType', value as RecruitType)}
+            className="h-[50px] rounded-md text-[15px]"
+          />
         </div>
       </div>
       <div>
@@ -206,6 +207,77 @@ function StepPost({
         />
       </div>
     </div>
+  );
+}
+
+/** 고르면 나타나는 체크 표시. 눌렀을 때 살짝 튀어 오른다. */
+function CheckMark({ on }: { on: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200',
+        on ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 bg-white',
+      )}
+    >
+      {on && (
+        <svg
+          viewBox="0 0 16 16"
+          className="size-3.5 motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+        >
+          <path d="M3.5 8.5l3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
+/** 상품 카드의 이미지 칸. 인스타는 피드처럼 3열 격자, 오공고 웹 화면과 카카오톡 채팅 캡처는 한 줄로 나란히 놓는다. */
+function ProductImages({ product }: { product: AdProduct }) {
+  const { images, title } = product;
+  if (images.length >= 6) {
+    return (
+      <span className="grid grid-cols-3 gap-0.5 bg-white">
+        {images.map((src, i) => (
+          <img
+            key={src}
+            src={src}
+            alt={i === 0 ? `${title} 게시물 예시` : ''}
+            loading="lazy"
+            className="aspect-[4/5] w-full object-cover"
+          />
+        ))}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        'grid gap-1 bg-gray-50',
+        images.length >= 4 ? 'h-72' : 'h-52',
+        images.length > 1 && 'p-1',
+      )}
+      style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}
+    >
+      {images.map((src, i) => (
+        <span key={src} className="relative block h-full overflow-hidden rounded-md">
+          <img
+            src={src}
+            alt={product.imageLabels?.[i] ?? (i === 0 ? `${title} 예시` : '')}
+            loading="lazy"
+            className="h-full w-full object-cover object-top"
+          />
+          {product.imageLabels?.[i] && (
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-900/80 to-transparent px-1.5 pt-4 pb-1.5 text-center text-xs font-semibold text-white">
+              {product.imageLabels[i]}
+            </span>
+          )}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -223,60 +295,74 @@ function StepProducts({
       'productIds',
       v.productIds.includes(id) ? v.productIds.filter((x) => x !== id) : [...v.productIds, id],
     );
+
   return (
-    <div className="space-y-6">
-      <div>
-        <Label required>오늘의 공고 지면</Label>
-        <ul className="space-y-3">
-          {PLACEMENTS.map((p) => {
-            const checked = v.productIds.includes(p.id);
-            return (
-              <li key={p.id}>
-                <label
-                  className={cn(
-                    'flex cursor-pointer items-start gap-3 rounded-lg border px-5 py-4 transition-colors',
-                    checked
-                      ? 'border-blue-500 bg-blue-00'
-                      : 'border-gray-200 hover:border-gray-300',
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggle(p.id)}
-                    className="mt-1 size-4 accent-blue-500"
-                  />
-                  <span className="flex-1">
-                    <span className="block font-semibold">{p.title}</span>
-                    <span className="mt-0.5 block text-sm text-gray-500">{p.description[0]}</span>
-                  </span>
-                  <span className="shrink-0 text-right text-sm">
-                    <span className="block font-semibold">{p.price.toLocaleString('ko-KR')}원</span>
-                    <span className="text-xs text-gray-500">/1주 · VAT 별도</span>
-                  </span>
-                </label>
-              </li>
-            );
-          })}
-        </ul>
-        <ErrorText>{errors.productIds}</ErrorText>
-      </div>
-      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 px-5 py-4">
-        <input
-          type="checkbox"
-          checked={v.withChannels}
-          onChange={(e) => set('withChannels', e.target.checked)}
-          className="mt-1 size-4 accent-blue-500"
-        />
-        <span>
-          <span className="block font-semibold">렛츠커리어 채널 광고도 함께 상담받기</span>
-          <span className="mt-0.5 block text-sm text-gray-500">
-            인스타그램 · 카카오톡 오픈채팅 · 채널 DM · 웹 배너. 가격은 견적으로 안내해요.
-          </span>
-        </span>
-      </label>
+    <div className="space-y-8">
+      {AD_PRODUCT_GROUPS.map((group, index) => {
+        const products = AD_PRODUCTS.filter((p) => p.group === group.id);
+        const count = products.filter((p) => v.productIds.includes(p.id)).length;
+        return (
+          <section
+            key={group.id}
+            aria-label={group.title}
+            style={{ animationDelay: `${index * 90}ms` }}
+            className="motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both]"
+          >
+            <header className="mb-3 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
+              <h3 className="text-lg font-bold">{group.title}</h3>
+              <span className="text-sm font-medium text-blue-600">{group.reach}</span>
+              {count > 0 && (
+                <span className="ml-auto rounded-full bg-blue-500 px-2.5 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
+                  {count}개 선택
+                </span>
+              )}
+            </header>
+            <ul className={cn('grid gap-4', products.length > 1 && 'sm:grid-cols-2')}>
+              {products.map((product) => {
+                const checked = v.productIds.includes(product.id);
+                return (
+                  <li key={product.id} className={cn(product.wide && 'sm:col-span-2')}>
+                    <button
+                      type="button"
+                      aria-pressed={checked}
+                      onClick={() => toggle(product.id)}
+                      className={cn(
+                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-200',
+                        checked
+                          ? 'border-blue-500 shadow-sm ring-2 ring-blue-100'
+                          : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md',
+                      )}
+                    >
+                      <span className="relative block overflow-hidden">
+                        <span className="block transition-transform duration-500 group-hover:scale-[1.03]">
+                          <ProductImages product={product} />
+                        </span>
+                        <span className="absolute top-2 right-2">
+                          <CheckMark on={checked} />
+                        </span>
+                      </span>
+                      <span className="flex flex-1 flex-col px-4 py-3">
+                        <span className="text-xs font-medium text-blue-600">{product.reach}</span>
+                        <span className="mt-0.5 font-semibold">{product.title}</span>
+                        <span className="mt-1 flex-1 text-sm text-gray-500">
+                          {product.description}
+                        </span>
+                        <span className="mt-3 text-sm font-semibold text-gray-900">
+                          {product.price}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+      <ErrorText>{errors.productIds}</ErrorText>
       <Info>
-        3개 이상 묶어 신청하면 10% 할인돼요. 최종 금액은 담당자 확인 후 견적서로 안내합니다.
+        3개 이상 묶어 신청하면 10% 할인돼요. 오공고 웹의 노출 자리와 최종 금액은 담당자 확인 후
+        견적서로 안내합니다.
       </Info>
     </div>
   );
@@ -590,9 +676,6 @@ function StepConfirm({
                 .map((p) => p.title)
                 .join(', '),
             ],
-            ...(v.withChannels
-              ? ([['추가 상담', '렛츠커리어 채널 광고']] as [string, string][])
-              : []),
             ['기간', periodText(v) ?? ''],
             ['견적', '담당자 확인 후 안내'],
           ]}
@@ -730,7 +813,7 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   },
   2: {
     title: '광고 상품',
-    desc: '원하는 지면을 골라 주세요. 여러 개를 함께 고를 수 있습니다.',
+    desc: '원하는 광고 상품을 골라 주세요. 여러 개를 함께 고를 수 있습니다.',
     lead: '공고를 노출할 광고 상품을 선택해 주세요.',
   },
   3: {

@@ -1,6 +1,7 @@
 'use client';
 
-import { Field, Input, Select } from '@ogonggo/ui';
+import { Field, Input } from '@ogonggo/ui';
+import { FormSelect } from '@/shared/ui/FormSelect';
 import {
   EDUCATION_LEVEL_OPTIONS,
   EMPLOYMENT_TYPE_OPTIONS,
@@ -66,68 +67,64 @@ export function JobBasicInfoSection({ values, onChange, imageNotice }: JobBasicI
         </Field>
 
         <Field label="직무 분야" htmlFor="company-job-job-field" required>
-          <Select
+          <FormSelect
             id="company-job-job-field"
-            className="h-11 w-full px-4 text-base"
+            label="직무 분야"
             options={withCurrentValue(JOB_FIELD_OPTIONS, values.jobField)}
             value={values.jobField}
-            onChange={(event) =>
-              onChange({ jobField: event.target.value as CompanyJobFormValues['jobField'] })
-            }
+            onChange={(value) => onChange({ jobField: value as CompanyJobFormValues['jobField'] })}
           />
         </Field>
 
         <Field label="채용 유형" htmlFor="company-job-employment-type" required>
-          <Select
+          <FormSelect
             id="company-job-employment-type"
-            className="h-11 w-full px-4 text-base"
+            label="채용 유형"
             options={EMPLOYMENT_TYPE_OPTIONS}
             value={values.employmentType}
-            onChange={(event) =>
+            onChange={(value) =>
               onChange({
-                employmentType: event.target.value as CompanyJobFormValues['employmentType'],
+                employmentType: value as CompanyJobFormValues['employmentType'],
               })
             }
           />
         </Field>
 
         <Field label="경력" htmlFor="company-job-experience-type" required>
-          <Select
+          <FormSelect
             id="company-job-experience-type"
-            className="h-11 w-full px-4 text-base"
+            label="경력"
             options={EXPERIENCE_TYPE_OPTIONS}
             value={values.experienceType}
-            onChange={(event) =>
+            onChange={(value) =>
               onChange({
-                experienceType: event.target.value as CompanyJobFormValues['experienceType'],
+                experienceType: value as CompanyJobFormValues['experienceType'],
               })
             }
           />
         </Field>
 
         <Field label="학력" htmlFor="company-job-education-level" required>
-          <Select
+          <FormSelect
             id="company-job-education-level"
-            className="h-11 w-full px-4 text-base"
+            label="학력"
             options={EDUCATION_LEVEL_OPTIONS}
             value={values.educationLevel}
-            onChange={(event) =>
+            onChange={(value) =>
               onChange({
-                educationLevel: event.target.value as CompanyJobFormValues['educationLevel'],
+                educationLevel: value as CompanyJobFormValues['educationLevel'],
               })
             }
           />
         </Field>
 
         <Field label="지역" htmlFor="company-job-region" required>
-          <Select
+          <FormSelect
             id="company-job-region"
-            className="h-11 w-full px-4 text-base"
+            label="지역"
             options={withCurrentValue(REGION_OPTIONS, values.region)}
             value={values.region}
-            onChange={(event) =>
-              onChange({ region: event.target.value as CompanyJobFormValues['region'] })
-            }
+            onChange={(value) => onChange({ region: value as CompanyJobFormValues['region'] })}
           />
         </Field>
 

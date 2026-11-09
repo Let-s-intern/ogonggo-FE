@@ -1,6 +1,7 @@
 'use client';
 
-import { Checkbox, Field, Input, Select } from '@ogonggo/ui';
+import { Checkbox, Field, Input } from '@ogonggo/ui';
+import { FormSelect } from '@/shared/ui/FormSelect';
 import { CoverImageField } from '@/shared/ui/CoverImageField';
 import { CountedInput } from '@/shared/ui/CountedInput';
 import { LogoUploadField } from '@/shared/ui/LogoUploadField';
@@ -83,26 +84,24 @@ export function BootcampBasicInfoSection({
 
       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         <Field label="프로그램 유형" htmlFor="company-bootcamp-program-type" required>
-          <Select
+          <FormSelect
             id="company-bootcamp-program-type"
-            className="h-11 w-full px-4 text-base"
+            label="프로그램 유형"
             options={withCurrentValue(PROGRAM_TYPE_OPTIONS, values.programType)}
             value={values.programType}
-            onChange={(event) =>
-              onChange({ programType: event.target.value.slice(0, MAX_PROGRAM_TYPE_LENGTH) })
-            }
+            onChange={(value) => onChange({ programType: value.slice(0, MAX_PROGRAM_TYPE_LENGTH) })}
           />
         </Field>
 
         <Field label="진행 방식" htmlFor="company-bootcamp-operation-type" required>
-          <Select
+          <FormSelect
             id="company-bootcamp-operation-type"
-            className="h-11 w-full px-4 text-base"
+            label="진행 방식"
             options={OPERATION_TYPE_OPTIONS}
             value={values.operationType}
-            onChange={(event) =>
+            onChange={(value) =>
               onChange({
-                operationType: event.target.value as CompanyBootcampFormValues['operationType'],
+                operationType: value as CompanyBootcampFormValues['operationType'],
               })
             }
           />
@@ -146,14 +145,14 @@ export function BootcampBasicInfoSection({
         </Field>
 
         <Field label="수강료 유형" htmlFor="company-bootcamp-tuition-type" required>
-          <Select
+          <FormSelect
             id="company-bootcamp-tuition-type"
-            className="h-11 w-full px-4 text-base"
+            label="수강료 유형"
             options={TUITION_TYPE_OPTIONS}
             value={values.tuitionType}
-            onChange={(event) =>
+            onChange={(value) =>
               onChange({
-                tuitionType: event.target.value as CompanyBootcampFormValues['tuitionType'],
+                tuitionType: value as CompanyBootcampFormValues['tuitionType'],
               })
             }
           />

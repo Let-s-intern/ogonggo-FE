@@ -9,6 +9,7 @@ import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
 import { Logo } from './Logo';
+import { POST_REGISTER_OPTIONS, PostRegisterMenu } from './PostRegisterMenu';
 
 interface NavItem {
   href: string;
@@ -28,13 +29,14 @@ const SERVICE_NAV: NavItem[] = [
 /** 마이페이지 첫 화면. `/mypage/company` 는 공고 목록으로 보낸다. */
 const MY_PAGE_HREF = '/mypage/company';
 
-/** 오른쪽 메뉴. 기업 회원으로 로그인해야 쓸 수 있다. */
+/** 공고 작성 화면에 있으면 `공고등록` 에 밑줄을 긋는다. */
+const isPostRegister = (p: string) => /^\/mypage\/company\/posts\/(jobs|bootcamps)\/new/.test(p);
+
+/**
+ * 오른쪽 메뉴. 기업 회원으로 로그인해야 쓸 수 있다. 맨 앞의 `공고등록` 은 채용공고·부트캠프를 먼저 고르는
+ * 메뉴라 따로 둔다(`PostRegisterMenu`).
+ */
 const COMPANY_NAV: NavItem[] = [
-  {
-    href: '/mypage/company/posts',
-    label: '공고등록',
-    match: (p) => p.startsWith('/mypage/company/posts'),
-  },
   {
     href: '/mypage/company/profile',
     label: '내 기업 정보',
@@ -112,6 +114,7 @@ export function SiteHeader() {
           aria-label="기업 회원 메뉴"
           className="ml-auto hidden h-full items-center gap-5 md:flex"
         >
+          <PostRegisterMenu hrefFor={companyHref} active={isPostRegister(pathname)} />
           {COMPANY_NAV.map((item) => (
             <DesktopLink
               key={item.href}
@@ -161,6 +164,14 @@ export function SiteHeader() {
             ))}
           </ul>
           <ul className="mt-2 border-t border-gray-100 pt-2">
+            {POST_REGISTER_OPTIONS.map((option) => (
+              <MobileLink
+                key={option.href}
+                href={companyHref(option.href)}
+                label={option.label}
+                active={pathname.startsWith(option.href)}
+              />
+            ))}
             {COMPANY_NAV.map((item) => (
               <MobileLink
                 key={item.href}
