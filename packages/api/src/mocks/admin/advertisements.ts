@@ -422,6 +422,110 @@ const listContractsHandler = http.get(CONTRACTS, ({ request }) => {
   return HttpResponse.json(ok(paginate(rows, page, size)), { status: 200 });
 });
 
+function findContract(raw: unknown) {
+  const id = readId(raw);
+  return advertisementStore.contracts.find((contract) => contract.id === id);
+}
+
+const getContractHandler = http.get(`${CONTRACTS}/:contractId`, ({ params }) => {
+  const contract = findContract(params.contractId);
+  if (!contract) return contractNotFound();
+  return HttpResponse.json(ok(contract), { status: 200 });
+});
+
+/** 신청 폼 계약만 바꾼다. 비즈니스 공고 계약은 공고 검수를 따라가 409 다. */
+const changeStatusHandler = http.patch(
+  `${CONTRACTS}/:contractId/status`,
+  async ({ params, request }) => {
+    const contract = findContract(params.contractId);
+    if (!contract) return contractNotFound();
+    const body = (await request.json().catch(() => null)) as { status?: unknown } | null;
+    if (typeof body?.status !== 'string' || !STATUSES.includes(body.status)) {
+      return badRequest('status: 계약 상태를 보내 주세요.');
+    }
+    if (contract.source === 'COMPANY_POSTING') {
+      return error(
+        409,
+        'ADVERTISEMENT_CONTRACT_FOLLOWS_REVIEW',
+        '비즈니스 공고 계약의 상태는 공고 검수로만 바뀝니다.',
+      );
+    }
+    contract.status = body.status as typeof contract.status;
+    contract.updatedAt = nowKst();
+    saveAdvertisementStore();
+    return HttpResponse.json(ok(null), { status: 200 });
+  },
+);
+
+/** `null` 이면 금액을 지운다. 0 은 0원이다. */
+const changePaymentAmountHandler = http.patch(
+  `${CONTRACTS}/:contractId/payment-amount`,
+  async ({ params, request }) => {
+    const contract = findContract(params.contractId);
+    if (!contract) return contractNotFound();
+    const body = (await request.json().catch(() => null)) as { paymentAmount?: unknown } | null;
+    const amount = body?.paymentAmount;
+    if (
+      amount !== null &&
+      (typeof amount !== 'number' || !Number.isInteger(amount) || amount < 0)
+    ) {
+      return badRequest('paymentAmount: 0 이상의 정수이거나 null 이어야 합니다.');
+    }
+    contract.paymentAmount = amount ?? undefined;
+    contract.updatedAt = nowKst();
+    saveAdvertisementStore();
+    return HttpResponse.json(ok(null), { status: 200 });
+  },
+);
+
+/** 같은 상품을 여러 번 붙여도 막지 않는다(기간을 나눠 파는 경우). 지운 상품은 붙이지 못한다. */
+const addContractProductHandler = http.post(
+  `${CONTRACTS}/:contractId/products`,
+  async ({ params, request }) => {
+    const contract = findContract(params.contractId);
+    if (!contract) return contractNotFound();
+    const body = (await request.json().catch(() => null)) as { productId?: unknown } | null;
+    const product = activeProduct(readId(body?.productId));
+    if (!product) return productNotFound();
+    const id =
+      Math.max(
+        0,
+        ...advertisementStore.contracts.flatMap((item) =>
+          item.products.map((cp) => cp.contractProductId),
+        ),
+      ) + 1;
+    contract.products.push({
+      contractProductId: id,
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      productDeleted: false,
+      addedAt: nowKst(),
+    });
+    saveAdvertisementStore();
+    return HttpResponse.json({ status: 201, message: 'Created', data: { id } }, { status: 201 });
+  },
+);
+
+const removeContractProductHandler = http.delete(
+  `${CONTRACTS}/:contractId/products/:contractProductId`,
+  ({ params }) => {
+    const contract = findContract(params.contractId);
+    if (!contract) return contractNotFound();
+    const id = readId(params.contractProductId);
+    if (!contract.products.some((item) => item.contractProductId === id)) {
+      return error(
+        404,
+        'ADVERTISEMENT_CONTRACT_PRODUCT_NOT_FOUND',
+        '계약에 붙인 광고 상품을 찾을 수 없습니다.',
+      );
+    }
+    contract.products = contract.products.filter((item) => item.contractProductId !== id);
+    saveAdvertisementStore();
+    return HttpResponse.json(ok(null), { status: 200 });
+  },
+);
+
 export const advertisementAdminHandlers: HttpHandler[] = [
   listProductsHandler,
   createProductHandler,
@@ -435,4 +539,9 @@ export const advertisementAdminHandlers: HttpHandler[] = [
   replaceExposureHandler,
   deleteExposureHandler,
   listContractsHandler,
+  getContractHandler,
+  changeStatusHandler,
+  changePaymentAmountHandler,
+  addContractProductHandler,
+  removeContractProductHandler,
 ];
