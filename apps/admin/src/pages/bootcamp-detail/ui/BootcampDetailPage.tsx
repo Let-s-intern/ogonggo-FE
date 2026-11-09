@@ -1,6 +1,6 @@
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 import { contentFieldLabel, enumLabel } from '@ogonggo/api/src/admin';
-import { Button, Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
+import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import {
@@ -12,10 +12,10 @@ import {
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
 
-/** 부트캠프 상세. 모든 칸은 `전체 수정`(`./edit`)에서 고친다. */
+/** 부트캠프 상세. `내용 수정` 은 모든 칸을 고치는 수정 화면(`./edit`)으로 간다. */
 export function BootcampDetailPage() {
   const { bootcampId } = useParams();
-  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { data, isPending, isError } = useBootcampDetail(Number(bootcampId));
 
   if (isPending) {
@@ -39,11 +39,6 @@ export function BootcampDetailPage() {
       <PageHeader
         title={data.title}
         backTo={{ to: '/content/bootcamps', label: '부트캠프 목록' }}
-        action={
-          <Button variant="secondary" onClick={() => navigate('edit', { relative: 'path' })}>
-            전체 수정
-          </Button>
-        }
       />
 
       <Card>
@@ -154,18 +149,8 @@ export function BootcampDetailPage() {
           source: data.source,
           reviewStatus: data.reviewStatus,
         }}
-        fields={[
-          {
-            field: 'content',
-            label: contentFieldLabel('BootcampContentField', 'content'),
-            value: data.content ?? '',
-          },
-          {
-            field: 'eligibilityAndSelectionProcess',
-            label: contentFieldLabel('BootcampContentField', 'eligibilityAndSelectionProcess'),
-            value: data.eligibilityAndSelectionProcess ?? '',
-          },
-        ]}
+        // 상세는 `/content/bootcamps/:id` 와 `/business/bootcamps/:id` 두 곳에 있다. 들어온 쪽의 수정 화면으로 간다.
+        editPath={`${pathname}/edit`}
       />
 
       {data.partners.length > 0 ? (
