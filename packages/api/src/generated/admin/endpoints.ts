@@ -71,6 +71,7 @@ import type {
   ListServiceFeedbacksParams,
   MoveAdminAdvertisementExposureRequest,
   ReplaceAdminAdvertisementProductRequest,
+  ReplaceAdminBootcampRequest,
   ReplaceAdminCompanyContentPriorityRequest,
   ReplaceAdminLetsCareerContentRecommendWeightsRequest,
   ReplaceAdminTodayJobsRequest,
@@ -1930,6 +1931,455 @@ export const useReplaceCompanyContentPriority = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getReplaceCompanyContentPriorityMutationOptions(options), queryClient);
+    }
+
+export type getBootcampResponse200 = {
+  data: SuccessResponseAdminBootcampDetailResponse
+  status: 200
+}
+
+export type getBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getBootcampResponseSuccess = (getBootcampResponse200) & {
+  headers: Headers;
+};
+export type getBootcampResponseError = (getBootcampResponse404) & {
+  headers: Headers;
+};
+
+export type getBootcampResponse = (getBootcampResponseSuccess | getBootcampResponseError)
+
+export const getGetBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/admin/bootcamps/${bootcampId}`
+}
+
+/**
+ * @summary 부트캠프 상세 조회
+ */
+export const getBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<getBootcampResponse> => {
+
+  return httpClient<getBootcampResponse>(getGetBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBootcampQueryKey = (bootcampId: number,) => {
+    return [
+    `/api/v1/admin/bootcamps/${bootcampId}`
+    ] as const;
+    }
+
+
+export const getGetBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBootcampQueryKey(bootcampId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBootcamp>>> = ({ signal }) => getBootcamp(bootcampId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: bootcampId !== null && bootcampId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getBootcamp>>>
+export type GetBootcampQueryError = ErrorResponse
+
+
+export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBootcamp>>,
+          TError,
+          Awaited<ReturnType<typeof getBootcamp>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBootcamp>>,
+          TError,
+          Awaited<ReturnType<typeof getBootcamp>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 부트캠프 상세 조회
+ */
+
+export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
+ bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBootcampQueryOptions(bootcampId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type replaceBootcampResponse200 = {
+  data: SuccessResponseAdminBootcampDetailResponse
+  status: 200
+}
+
+export type replaceBootcampResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceBootcampResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type replaceBootcampResponseSuccess = (replaceBootcampResponse200) & {
+  headers: Headers;
+};
+export type replaceBootcampResponseError = (replaceBootcampResponse400 | replaceBootcampResponse404 | replaceBootcampResponse409) & {
+  headers: Headers;
+};
+
+export type replaceBootcampResponse = (replaceBootcampResponseSuccess | replaceBootcampResponseError)
+
+export const getReplaceBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/admin/bootcamps/${bootcampId}`
+}
+
+/**
+ *
+ *             부트캠프의 모든 내용과 모집 상태를 보낸 값으로 바꾸고 수정된 부트캠프 전체를 반환합니다.
+ *             칸과 검증은 부트캠프 대리 등록과 같고 노출(visibility)은 받지 않습니다. 대표 이미지는 선택입니다.
+ *             보내지 않은 선택 칸은 비우고, 커리큘럼과 파트너사는 보낸 목록으로 바꿉니다.
+ *             status는 RECRUITING 또는 CLOSED입니다. 마감으로 바꾸면 지금을 마감 일시로 남기고, 모집 중으로 되돌리면 마감 일시를 지웁니다.
+ *             검수 상태와 노출은 바꾸지 않습니다.
+ * @summary 부트캠프 전체 수정
+ */
+export const replaceBootcamp = async (bootcampId: number,
+    replaceAdminBootcampRequest: ReplaceAdminBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceBootcampResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceBootcampResponse>(getReplaceBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceAdminBootcampRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceBootcampMutationKey = () => ['replaceBootcamp'] as const;
+
+export const getReplaceBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceBootcamp>>, TError,ReplaceBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceBootcamp>>, TError,ReplaceBootcampMutationVariables, TContext> => {
+
+const mutationKey = getReplaceBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceBootcamp>>, ReplaceBootcampMutationVariables> = (props) => {
+          const {bootcampId,data} = props ?? {};
+
+          return  replaceBootcamp(bootcampId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof replaceBootcamp>>>
+    export type ReplaceBootcampMutationBody = ReplaceAdminBootcampRequest
+    export type ReplaceBootcampMutationError = ErrorResponse
+    export type ReplaceBootcampMutationVariables = {bootcampId: number;data: ReplaceAdminBootcampRequest}
+
+    /**
+ * @summary 부트캠프 전체 수정
+ */
+export const useReplaceBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceBootcamp>>, TError,ReplaceBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceBootcamp>>,
+        TError,
+        ReplaceBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceBootcampMutationOptions(options), queryClient);
+    }
+
+export type deleteBootcampResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteBootcampResponseSuccess = (deleteBootcampResponse200) & {
+  headers: Headers;
+};
+export type deleteBootcampResponseError = (deleteBootcampResponse404) & {
+  headers: Headers;
+};
+
+export type deleteBootcampResponse = (deleteBootcampResponseSuccess | deleteBootcampResponseError)
+
+export const getDeleteBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/admin/bootcamps/${bootcampId}`
+}
+
+/**
+ *
+ *             소프트 삭제합니다. 이미 삭제한 부트캠프를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
+ *             반려 기록은 지우지 않고 반려 보관 목록에 contentExists=false로 남깁니다.
+ * @summary 부트캠프 삭제
+ */
+export const deleteBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteBootcampResponse> => {
+
+  return httpClient<deleteBootcampResponse>(getDeleteBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteBootcampMutationKey = () => ['deleteBootcamp'] as const;
+
+export const getDeleteBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext> => {
+
+const mutationKey = getDeleteBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBootcamp>>, DeleteBootcampMutationVariables> = (props) => {
+          const {bootcampId} = props ?? {};
+
+          return  deleteBootcamp(bootcampId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBootcamp>>>
+
+    export type DeleteBootcampMutationError = ErrorResponse
+    export type DeleteBootcampMutationVariables = {bootcampId: number}
+
+    /**
+ * @summary 부트캠프 삭제
+ */
+export const useDeleteBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBootcamp>>,
+        TError,
+        DeleteBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteBootcampMutationOptions(options), queryClient);
+    }
+
+export type updateBootcampResponse200 = {
+  data: SuccessResponseAdminBootcampDetailResponse
+  status: 200
+}
+
+export type updateBootcampResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateBootcampResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateBootcampResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type updateBootcampResponseSuccess = (updateBootcampResponse200) & {
+  headers: Headers;
+};
+export type updateBootcampResponseError = (updateBootcampResponse400 | updateBootcampResponse404 | updateBootcampResponse409) & {
+  headers: Headers;
+};
+
+export type updateBootcampResponse = (updateBootcampResponseSuccess | updateBootcampResponseError)
+
+export const getUpdateBootcampUrl = (bootcampId: number,) => {
+
+
+
+
+  return `/api/v1/admin/bootcamps/${bootcampId}`
+}
+
+/**
+ *
+ *             보낸 값만 바꾸고 수정된 부트캠프 전체를 반환합니다. 규칙은 채용공고 수정과 같습니다.
+ *
+ *             fields는 content, eligibilityAndSelectionProcess만 반영하고 나머지 키는 버립니다.
+ *             빈 문자열은 그 칸을 비우지만 content는 비울 수 없어 400입니다.
+ *             커리큘럼과 파트너사는 이 API로 고치지 않습니다.
+ *             priorityExposed는 채용공고와 같이 기업회원 과정의 우선 노출을 과정마다 켜고 끕니다.
+ * @summary 부트캠프 운영 값·내용 수정
+ */
+export const updateBootcamp = async (bootcampId: number,
+    updateAdminBootcampRequest: UpdateAdminBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateBootcampResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateBootcampResponse>(getUpdateBootcampUrl(bootcampId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateAdminBootcampRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateBootcampMutationKey = () => ['updateBootcamp'] as const;
+
+export const getUpdateBootcampMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext> => {
+
+const mutationKey = getUpdateBootcampMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBootcamp>>, UpdateBootcampMutationVariables> = (props) => {
+          const {bootcampId,data} = props ?? {};
+
+          return  updateBootcamp(bootcampId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof updateBootcamp>>>
+    export type UpdateBootcampMutationBody = UpdateAdminBootcampRequest
+    export type UpdateBootcampMutationError = ErrorResponse
+    export type UpdateBootcampMutationVariables = {bootcampId: number;data: UpdateAdminBootcampRequest}
+
+    /**
+ * @summary 부트캠프 운영 값·내용 수정
+ */
+export const useUpdateBootcamp = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBootcamp>>,
+        TError,
+        UpdateBootcampMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateBootcampMutationOptions(options), queryClient);
     }
 
 export type replaceAdvertisementProductResponse200 = {
@@ -5668,339 +6118,6 @@ export const useUpdateConcernVisibilities = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateConcernVisibilitiesMutationOptions(options), queryClient);
-    }
-
-export type getBootcampResponse200 = {
-  data: SuccessResponseAdminBootcampDetailResponse
-  status: 200
-}
-
-export type getBootcampResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type getBootcampResponseSuccess = (getBootcampResponse200) & {
-  headers: Headers;
-};
-export type getBootcampResponseError = (getBootcampResponse404) & {
-  headers: Headers;
-};
-
-export type getBootcampResponse = (getBootcampResponseSuccess | getBootcampResponseError)
-
-export const getGetBootcampUrl = (bootcampId: number,) => {
-
-
-
-
-  return `/api/v1/admin/bootcamps/${bootcampId}`
-}
-
-/**
- * @summary 부트캠프 상세 조회
- */
-export const getBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<getBootcampResponse> => {
-
-  return httpClient<getBootcampResponse>(getGetBootcampUrl(bootcampId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetBootcampQueryKey = (bootcampId: number,) => {
-    return [
-    `/api/v1/admin/bootcamps/${bootcampId}`
-    ] as const;
-    }
-
-
-export const getGetBootcampQueryOptions = <TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetBootcampQueryKey(bootcampId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBootcamp>>> = ({ signal }) => getBootcamp(bootcampId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: bootcampId !== null && bootcampId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetBootcampQueryResult = NonNullable<Awaited<ReturnType<typeof getBootcamp>>>
-export type GetBootcampQueryError = ErrorResponse
-
-
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamp>>,
-          TError,
-          Awaited<ReturnType<typeof getBootcamp>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBootcamp>>,
-          TError,
-          Awaited<ReturnType<typeof getBootcamp>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 부트캠프 상세 조회
- */
-
-export function useGetBootcamp<TData = Awaited<ReturnType<typeof getBootcamp>>, TError = ErrorResponse>(
- bootcampId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBootcamp>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetBootcampQueryOptions(bootcampId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type deleteBootcampResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type deleteBootcampResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteBootcampResponseSuccess = (deleteBootcampResponse200) & {
-  headers: Headers;
-};
-export type deleteBootcampResponseError = (deleteBootcampResponse404) & {
-  headers: Headers;
-};
-
-export type deleteBootcampResponse = (deleteBootcampResponseSuccess | deleteBootcampResponseError)
-
-export const getDeleteBootcampUrl = (bootcampId: number,) => {
-
-
-
-
-  return `/api/v1/admin/bootcamps/${bootcampId}`
-}
-
-/**
- *
- *             소프트 삭제합니다. 이미 삭제한 부트캠프를 다시 삭제해도 성공하며 최초 삭제 일시를 유지합니다.
- *             반려 기록은 지우지 않고 반려 보관 목록에 contentExists=false로 남깁니다.
- * @summary 부트캠프 삭제
- */
-export const deleteBootcamp = async (bootcampId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteBootcampResponse> => {
-
-  return httpClient<deleteBootcampResponse>(getDeleteBootcampUrl(bootcampId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteBootcampMutationKey = () => ['deleteBootcamp'] as const;
-
-export const getDeleteBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext> => {
-
-const mutationKey = getDeleteBootcampMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBootcamp>>, DeleteBootcampMutationVariables> = (props) => {
-          const {bootcampId} = props ?? {};
-
-          return  deleteBootcamp(bootcampId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBootcamp>>>
-
-    export type DeleteBootcampMutationError = ErrorResponse
-    export type DeleteBootcampMutationVariables = {bootcampId: number}
-
-    /**
- * @summary 부트캠프 삭제
- */
-export const useDeleteBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBootcamp>>, TError,DeleteBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteBootcamp>>,
-        TError,
-        DeleteBootcampMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteBootcampMutationOptions(options), queryClient);
-    }
-
-export type updateBootcampResponse200 = {
-  data: SuccessResponseAdminBootcampDetailResponse
-  status: 200
-}
-
-export type updateBootcampResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type updateBootcampResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type updateBootcampResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type updateBootcampResponseSuccess = (updateBootcampResponse200) & {
-  headers: Headers;
-};
-export type updateBootcampResponseError = (updateBootcampResponse400 | updateBootcampResponse404 | updateBootcampResponse409) & {
-  headers: Headers;
-};
-
-export type updateBootcampResponse = (updateBootcampResponseSuccess | updateBootcampResponseError)
-
-export const getUpdateBootcampUrl = (bootcampId: number,) => {
-
-
-
-
-  return `/api/v1/admin/bootcamps/${bootcampId}`
-}
-
-/**
- *
- *             보낸 값만 바꾸고 수정된 부트캠프 전체를 반환합니다. 규칙은 채용공고 수정과 같습니다.
- *
- *             fields는 content, eligibilityAndSelectionProcess만 반영하고 나머지 키는 버립니다.
- *             빈 문자열은 그 칸을 비우지만 content는 비울 수 없어 400입니다.
- *             커리큘럼과 파트너사는 이 API로 고치지 않습니다.
- *             priorityExposed는 채용공고와 같이 기업회원 과정의 우선 노출을 과정마다 켜고 끕니다.
- * @summary 부트캠프 운영 값·내용 수정
- */
-export const updateBootcamp = async (bootcampId: number,
-    updateAdminBootcampRequest: UpdateAdminBootcampRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateBootcampResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return httpClient<updateBootcampResponse>(getUpdateBootcampUrl(bootcampId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(updateAdminBootcampRequest)
-  }
-);}
-
-
-
-
-
-export const getUpdateBootcampMutationKey = () => ['updateBootcamp'] as const;
-
-export const getUpdateBootcampMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext> => {
-
-const mutationKey = getUpdateBootcampMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBootcamp>>, UpdateBootcampMutationVariables> = (props) => {
-          const {bootcampId,data} = props ?? {};
-
-          return  updateBootcamp(bootcampId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBootcampMutationResult = NonNullable<Awaited<ReturnType<typeof updateBootcamp>>>
-    export type UpdateBootcampMutationBody = UpdateAdminBootcampRequest
-    export type UpdateBootcampMutationError = ErrorResponse
-    export type UpdateBootcampMutationVariables = {bootcampId: number;data: UpdateAdminBootcampRequest}
-
-    /**
- * @summary 부트캠프 운영 값·내용 수정
- */
-export const useUpdateBootcamp = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBootcamp>>, TError,UpdateBootcampMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBootcamp>>,
-        TError,
-        UpdateBootcampMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateBootcampMutationOptions(options), queryClient);
     }
 
 export type updateBootcampVisibilitiesResponse200 = {
@@ -10547,6 +10664,14 @@ export const getGetCompanyContentPriorityResponseMock = (overrideResponse: Parti
 
 export const getReplaceCompanyContentPriorityResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminCompanyContentPriorityResponse, object>> = {}): SuccessResponseAdminCompanyContentPriorityResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{enabled: faker.datatype.boolean()}, undefined]), ...overrideResponse})
 
+export const getGetBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getReplaceBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getDeleteBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getUpdateBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
+
 export const getReplaceAdvertisementProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getDeleteAdvertisementProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -10610,12 +10735,6 @@ export const getUndoContentReviewResponseMock = (overrideResponse: Partial<Extra
 export const getUpdateContentRejectionResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminContentRejectionResponse, object>> = {}): SuccessResponseAdminContentRejectionResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{type: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), reason: faker.string.alpha({length: {min: 10, max: 20}}), rejectedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reasonUpdatedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), contentExists: faker.datatype.boolean()}, undefined]), ...overrideResponse})
 
 export const getUpdateConcernVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getGetBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
-
-export const getDeleteBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getUpdateBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
 export const getUpdateBootcampVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -10877,6 +10996,54 @@ export const getReplaceCompanyContentPriorityMockHandler = (overrideResponse?: S
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getReplaceCompanyContentPriorityResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetBootcampMockHandler = (overrideResponse?: SuccessResponseAdminBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminBootcampDetailResponse> | SuccessResponseAdminBootcampDetailResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceBootcampMockHandler = (overrideResponse?: SuccessResponseAdminBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseAdminBootcampDetailResponse> | SuccessResponseAdminBootcampDetailResponse), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateBootcampMockHandler = (overrideResponse?: SuccessResponseAdminBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminBootcampDetailResponse> | SuccessResponseAdminBootcampDetailResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateBootcampResponseMock(),
       { status: 200
       })
   }, options)
@@ -11261,42 +11428,6 @@ export const getUpdateConcernVisibilitiesMockHandler = (overrideResponse?: Succe
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getUpdateConcernVisibilitiesResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getGetBootcampMockHandler = (overrideResponse?: SuccessResponseAdminBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseAdminBootcampDetailResponse> | SuccessResponseAdminBootcampDetailResponse), options?: RequestHandlerOptions) => {
-  return http.get('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetBootcampResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getDeleteBootcampMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteBootcampResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getUpdateBootcampMockHandler = (overrideResponse?: SuccessResponseAdminBootcampDetailResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseAdminBootcampDetailResponse> | SuccessResponseAdminBootcampDetailResponse), options?: RequestHandlerOptions) => {
-  return http.patch('*/api/v1/admin/bootcamps/:bootcampId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUpdateBootcampResponseMock(),
       { status: 200
       })
   }, options)
@@ -11738,6 +11869,10 @@ export const getOgonggoAdminAPIMock = () => [
   getReplaceTodayJobsMockHandler(),
   getGetCompanyContentPriorityMockHandler(),
   getReplaceCompanyContentPriorityMockHandler(),
+  getGetBootcampMockHandler(),
+  getReplaceBootcampMockHandler(),
+  getDeleteBootcampMockHandler(),
+  getUpdateBootcampMockHandler(),
   getReplaceAdvertisementProductMockHandler(),
   getDeleteAdvertisementProductMockHandler(),
   getReplaceAdvertisementExposureMockHandler(),
@@ -11770,9 +11905,6 @@ export const getOgonggoAdminAPIMock = () => [
   getUndoContentReviewMockHandler(),
   getUpdateContentRejectionMockHandler(),
   getUpdateConcernVisibilitiesMockHandler(),
-  getGetBootcampMockHandler(),
-  getDeleteBootcampMockHandler(),
-  getUpdateBootcampMockHandler(),
   getUpdateBootcampVisibilitiesMockHandler(),
   getGetAnnouncementMockHandler(),
   getDeleteAnnouncementMockHandler(),

@@ -1,6 +1,6 @@
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { contentFieldLabel, enumLabel } from '@ogonggo/api/src/admin';
-import { Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
+import { Button, Callout, Card, CardTitle, DescriptionList } from '@ogonggo/ui';
 import { useBootcampDetail } from '@/entities/content/api/useContent';
 import { PageHeader } from '@/widgets/page-header';
 import {
@@ -12,9 +12,10 @@ import {
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 import { ContentActions } from '@/widgets/content-actions';
 
-/** 부트캠프 상세. 읽기 전용이다. */
+/** 부트캠프 상세. 모든 칸은 `전체 수정`(`./edit`)에서 고친다. */
 export function BootcampDetailPage() {
   const { bootcampId } = useParams();
+  const navigate = useNavigate();
   const { data, isPending, isError } = useBootcampDetail(Number(bootcampId));
 
   if (isPending) {
@@ -38,6 +39,11 @@ export function BootcampDetailPage() {
       <PageHeader
         title={data.title}
         backTo={{ to: '/content/bootcamps', label: '부트캠프 목록' }}
+        action={
+          <Button variant="secondary" onClick={() => navigate('edit', { relative: 'path' })}>
+            전체 수정
+          </Button>
+        }
       />
 
       <Card>

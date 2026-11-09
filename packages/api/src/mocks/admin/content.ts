@@ -11,6 +11,7 @@ import type {
   PageResponseAdminJobSummaryResponse,
   PageResponseAdminRecruitmentPostSummaryResponse,
   SuccessResponseUnit,
+  ReplaceAdminBootcampRequest,
   UpdateAdminBootcampRequest,
   UpdateAdminJobRequest,
 } from '../../generated/admin/models';
@@ -540,6 +541,61 @@ const patchBootcampHandler = http.patch(
 );
 
 /**
+ * 부트캠프 전체 수정(`PUT /api/v1/admin/bootcamps/{bootcampId}`, 백엔드 LC-3592). 보낸 값으로 칸을 모두 바꾸고 보내지 않은 선택 칸은
+ * 비운다. 검수·노출은 그대로다. 마감으로 바꾸면 지금을 마감 일시로, 모집 중으로 되돌리면 마감 일시를 지운다.
+ * 칸 사이 규칙(`BootcampWriteValidator`)은 백엔드가 한다.
+ */
+const putBootcampHandler = http.put(
+  '*/api/v1/admin/bootcamps/:bootcampId',
+  async ({ params, request }) => {
+    const index = ADMIN_BOOTCAMP_FIXTURES.findIndex(
+      (fixture) => fixture.id === Number(params.bootcampId),
+    );
+    const bootcamp = ADMIN_BOOTCAMP_FIXTURES[index];
+    if (!bootcamp) {
+      return HttpResponse.json(notFound('부트캠프를 찾을 수 없습니다.'), { status: 404 });
+    }
+    const { partners, status, ...body } = (await request.json()) as ReplaceAdminBootcampRequest;
+    if (status === 'DRAFT') {
+      return HttpResponse.json(
+        { status: 400, code: 'BAD_REQUEST', message: '[status] 임시저장으로는 바꿀 수 없습니다.' },
+        { status: 400 },
+      );
+    }
+    const closedAt =
+      status === 'CLOSED'
+        ? bootcamp.status === 'CLOSED'
+          ? bootcamp.closedAt
+          : new Date().toISOString().slice(0, 19)
+        : undefined;
+    ADMIN_BOOTCAMP_FIXTURES[index] = {
+      id: bootcamp.id,
+      viewCount: bootcamp.viewCount,
+      bookmarkCount: bootcamp.bookmarkCount,
+      commentCount: bootcamp.commentCount,
+      visibility: bootcamp.visibility,
+      source: bootcamp.source,
+      reviewStatus: bootcamp.reviewStatus,
+      registeredAt: bootcamp.registeredAt,
+      priorityExposed: bootcamp.priorityExposed,
+      adminRegistered: bootcamp.adminRegistered,
+      images: bootcamp.images,
+      ...body,
+      partners: partners.map(({ partnerName, displayOrder }) => ({
+        name: partnerName,
+        displayOrder,
+      })),
+      status,
+      closedAt,
+    };
+
+    return HttpResponse.json(ok(withPriorityExposed('bootcamp', ADMIN_BOOTCAMP_FIXTURES[index])), {
+      status: 200,
+    });
+  },
+);
+
+/**
  * 노출 일괄 변경(`PATCH /api/v1/admin/{jobs|bootcamps}/visibility`). 백엔드(LC-3429)와 같은 규칙이다.
  *
  * - 하나라도 바꿀 수 없으면 아무것도 바꾸지 않는다.
@@ -806,6 +862,7 @@ export const contentHandlers: HttpHandler[] = [
   getBootcampHandler,
   changeBootcampVisibilitiesHandler,
   patchBootcampHandler,
+  putBootcampHandler,
   deleteJobHandler,
   deleteBootcampHandler,
   deleteSideStudyHandler,

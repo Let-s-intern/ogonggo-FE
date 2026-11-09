@@ -12,6 +12,7 @@ import {
   listConcerns,
   listJobs,
   listRecruitmentPosts,
+  replaceBootcamp,
   updateBootcamp,
   updateBootcampVisibilities,
   updateConcernVisibilities,
@@ -25,6 +26,7 @@ import {
   type ListConcernsParams,
   type ListJobsParams,
   type ListRecruitmentPostsParams,
+  type ReplaceAdminBootcampRequest,
   type UpdateAdminBootcampRequest,
   type UpdateAdminJobRequest,
 } from '@ogonggo/api/src/admin';
@@ -291,6 +293,21 @@ export function usePatchBootcamp(bootcampId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+    },
+  });
+}
+
+/**
+ * 부트캠프의 모든 내용과 모집 상태를 바꾼다(`PUT /api/v1/admin/bootcamps/{bootcampId}`, 백엔드 LC-3592).
+ * 검수·노출은 그대로라 검수 대기열은 무효화하지 않는다.
+ */
+export function useReplaceBootcamp(bootcampId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: ReplaceAdminBootcampRequest) =>
+      unwrapData(replaceBootcamp(bootcampId, request)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'bootcamps'] });
     },
   });
 }
