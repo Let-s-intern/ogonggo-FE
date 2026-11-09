@@ -298,7 +298,11 @@ export function RecruitmentSection(props: JobInfoSectionProps) {
   );
 }
 
-export function ApplySection(props: JobInfoSectionProps) {
+/** `showInquiryEmail` 은 대리 등록이 끈다 — 등록 요청(`CreateProxyJobRequest`)에 문의 이메일 칸이 없다. */
+export function ApplySection({
+  showInquiryEmail = true,
+  ...props
+}: JobInfoSectionProps & { showInquiryEmail?: boolean }) {
   const { values, onChange, idPrefix = 'job' } = props;
   return (
     <Section title="지원">
@@ -312,7 +316,9 @@ export function ApplySection(props: JobInfoSectionProps) {
         />
       </Field>
       <TextInput {...props} name="applyEmail" label="지원 이메일" type="email" />
-      <TextInput {...props} name="inquiryEmail" label="문의 이메일" type="email" />
+      {showInquiryEmail ? (
+        <TextInput {...props} name="inquiryEmail" label="문의 이메일" type="email" />
+      ) : null}
       <TextInput {...props} name="sourceUrl" label="원문 주소" type="url" wide />
     </Section>
   );

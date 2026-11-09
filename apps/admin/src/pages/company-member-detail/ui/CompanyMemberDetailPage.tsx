@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router';
 import {
+  Button,
   Callout,
   Card,
   CardTitle,
@@ -14,7 +15,7 @@ import { companyInfoItems, managerInfoItems } from '@/entities/member/model/comp
 import { formatCount, formatDate, formatDateTime } from '@/shared/lib/format';
 
 /**
- * 비즈니스 회원 상세. 읽기 전용이다.
+ * 비즈니스 회원 상세. 회원 정보는 읽기 전용이고, 활동 중인 회원이면 그 회원 대신 공고를 올리는 버튼이 있다(FE #568).
  *
  * 그 회사가 등록한 공고를 함께 보여준다. 검수 대기가 섞여 있으면 여기서 바로 채용공고 상세로
  * 넘어갈 수 있다. 가입 때 낸 기업·담당자 정보(LC-3526)는 목록 모달과 같은 줄이다(`companySignupInfo`).
@@ -80,6 +81,25 @@ export function CompanyMemberDetailPage() {
       <PageHeader
         title={data.organizationName ?? '비즈니스 회원'}
         backTo={{ to: '/members/companies', label: '비즈니스 회원 목록' }}
+        action={
+          // 정지·탈퇴 회원에게는 백엔드가 대리 등록을 거절한다(409 `COMPANY_MEMBER_NOT_ACTIVE`).
+          data.status === 'ACTIVE' ? (
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(`/members/companies/${data.userId}/jobs/new`)}
+              >
+                채용공고 대리 등록
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => navigate(`/members/companies/${data.userId}/bootcamps/new`)}
+              >
+                부트캠프 대리 등록
+              </Button>
+            </div>
+          ) : null
+        }
       />
 
       <Card>

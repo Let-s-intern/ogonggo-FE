@@ -96,7 +96,9 @@ export function BootcampListPage({
       key: 'source',
       header: '등록 경로',
       width: 'w-32',
-      render: (row) => <ContentSourceBadge value={row.source} />,
+      render: (row) => (
+        <ContentSourceBadge value={row.source} adminRegistered={row.adminRegistered} />
+      ),
     },
     {
       key: 'reviewStatus',

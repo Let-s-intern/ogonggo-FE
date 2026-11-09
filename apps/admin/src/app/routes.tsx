@@ -21,6 +21,8 @@ import { NotificationBatchDetailPage } from '@/pages/notification-batch-detail';
 import { NotificationHistoryPage } from '@/pages/notification-history';
 import { NotificationSendPage } from '@/pages/notification-send';
 import { NotFoundPage } from '@/pages/not-found';
+import { ProxyBootcampNewPage } from '@/pages/proxy-bootcamp-new';
+import { ProxyJobNewPage } from '@/pages/proxy-job-new';
 import { RecommendWeightsPage } from '@/pages/recommend-weights';
 import { RejectionsPage } from '@/pages/rejections';
 import { ReviewQueuePage } from '@/pages/review-queue';
@@ -105,6 +107,9 @@ export const router = createBrowserRouter([
       { path: 'members/users/:memberId', element: <UserMemberDetailPage /> },
       { path: 'members/companies', element: <CompanyMemberListPage /> },
       { path: 'members/companies/:memberId', element: <CompanyMemberDetailPage /> },
+      // 비즈니스 회원 대신 공고를 올린다(FE #568). 메뉴에는 없고 회원 상세의 버튼으로 들어온다.
+      { path: 'members/companies/:memberId/jobs/new', element: <ProxyJobNewPage /> },
+      { path: 'members/companies/:memberId/bootcamps/new', element: <ProxyBootcampNewPage /> },
 
       { path: 'support/notices', element: <NoticeListPage /> },
       { path: 'support/feedbacks', element: <ServiceFeedbackListPage /> },
