@@ -865,10 +865,10 @@ export const ENUM_CATALOG = {
   AdvertisementProductCategory: [
     { name: 'JOB_POSTING', desc: '광고 공고', parent: null },
     { name: 'BANNER', desc: '배너', parent: null },
-    { name: 'INSTAGRAM_1', desc: '인스타그램 1', parent: null },
-    { name: 'INSTAGRAM_2', desc: '인스타그램 2', parent: null },
-    { name: 'KAKAO_1', desc: '카카오톡 채널 1', parent: null },
-    { name: 'KAKAO_2', desc: '카카오톡 채널 2', parent: null },
+    { name: 'INSTAGRAM_1', desc: '인스타그램 오공고', parent: null },
+    { name: 'INSTAGRAM_2', desc: '인스타그램 렛츠커리어', parent: null },
+    { name: 'KAKAO_1', desc: '카카오톡 직무별 큐레이션 톡방', parent: null },
+    { name: 'KAKAO_2', desc: '카카오톡 렛츠커리어 공식 오픈채팅방', parent: null },
   ],
   AdvertisementProductPosition: [
     { name: 'JOB_HOME_TOP_BANNER', desc: '채용공고 홈 상단', parent: null },
