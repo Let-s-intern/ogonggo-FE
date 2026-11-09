@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { Button, Field, Select, cn } from '@ogonggo/ui';
-import { useUploadBannerImage } from '@/entities/banner/api/useBanners';
-import { bannerImageSrc } from '@/entities/banner/lib/banner';
+import { Button, Field, cn } from '@ogonggo/ui';
+import { useUploadBannerImage } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
+import { bannerImageSrc } from '@/entities/advertisement-exposure/lib/exposure';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 
 /** 올릴 수 있는 형식. 업로드가 알림 이미지 `usage`(`NOTIFICATION`)를 빌려 써서 JPEG·PNG 뿐이다. */
@@ -17,15 +17,11 @@ interface BannerImageFieldProps {
   value: string;
   onChange: (url: string) => void;
   error?: string;
-  /** 비워 둘 수 없는가. 모바일 이미지는 홈 자리에서 비울 수 있다(웹이 PC 이미지를 쓴다). */
-  required?: boolean;
-  /** 이 칸에 고를 수 있는 기본 소재(사용자 웹의 `/banners/*.svg`). */
-  presets?: { key: string; label: string; url: string }[];
 }
 
 /**
- * 배너 이미지 하나(PC 또는 모바일). 파일을 고르면 바로 올리고 받은 주소를 쓴다. 칸마다 업로드·기본 소재·미리보기가 따로
- * 있어 PC 와 모바일을 다른 소재로 채울 수 있다.
+ * 배너 이미지. 파일을 고르면 바로 올리고 받은 주소를 쓴다. BE 노출은 이미지가 한 장뿐이고 HTTP(S) 절대 주소만 받아, 웹 안의
+ * 기본 소재(`/banners/*.svg`)는 고를 수 없다.
  */
 export function BannerImageField({
   id,
@@ -35,8 +31,6 @@ export function BannerImageField({
   value,
   onChange,
   error,
-  required = true,
-  presets = [],
 }: BannerImageFieldProps) {
   const upload = useUploadBannerImage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +63,7 @@ export function BannerImageField({
       : error);
 
   return (
-    <Field label={label} htmlFor={id} error={shownError} required={required} hint={sizeHint}>
+    <Field label={label} htmlFor={id} error={shownError} required hint={sizeHint}>
       <input
         ref={inputRef}
         id={id}
@@ -115,25 +109,6 @@ export function BannerImageField({
             <Button size="sm" variant="secondary" onClick={() => onChange('')}>
               빼기
             </Button>
-          ) : null}
-          {presets.length > 0 ? (
-            <Select
-              aria-label={`${label} 기본 소재`}
-              className="w-auto"
-              options={[
-                { value: '', label: '기본 소재에서 고르기' },
-                ...presets.map((preset) => ({ value: preset.key, label: preset.label })),
-              ]}
-              value=""
-              onChange={(event) => {
-                const preset = presets.find((item) => item.key === event.target.value);
-                if (preset) {
-                  upload.reset();
-                  setTypeError(null);
-                  onChange(preset.url);
-                }
-              }}
-            />
           ) : null}
         </div>
       </div>

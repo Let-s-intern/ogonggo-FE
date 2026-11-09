@@ -1,144 +1,151 @@
 import { useState } from 'react';
 import { Button, Callout, Field, Input, Modal } from '@ogonggo/ui';
-import { isSideBannerPlacement, type BannerPlacement } from '@ogonggo/api/src/banners';
-import { useSaveBanner, type Banner, type BannerInput } from '@/entities/banner/api/useBanners';
 import {
-  PC_IMAGE_SPECS,
-  PLACEMENT_LABELS,
-  bannerPresets,
+  useCreateExposure,
+  useReplaceExposure,
+  type AdvertisementExposure,
+} from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
+import {
+  imageSpec,
   isLinkUrl,
-} from '@/entities/banner/lib/banner';
-import { serverErrorMessage } from '@/shared/api/authErrorMessages';
+  isSidePosition,
+  type BannerPosition,
+} from '@/entities/advertisement-exposure/lib/exposure';
+import type { AdvertisementProduct } from '@/entities/advertisement-product/api/useAdvertisementProducts';
+import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { BannerImageField } from './BannerImageField';
+import { ContractField } from './ContractField';
 
-const NAME_MAX_LENGTH = 50;
-const ALT_TEXT_MAX_LENGTH = 100;
+const NAME_MAX_LENGTH = 100;
 
 interface BannerFormModalProps {
   open: boolean;
-  placement: BannerPlacement;
+  /** 노출을 거는 상품(자리). 열 때의 상품으로 정해지고 바꾸지 않는다. */
+  product: AdvertisementProduct & { position: BannerPosition };
   /** `null` 이면 새 배너다. */
-  banner: Banner | null;
+  exposure: AdvertisementExposure | null;
   onClose: () => void;
 }
 
 /** `datetime-local` 값(`YYYY-MM-DDTHH:mm`)과 서버 값(`YYYY-MM-DDTHH:mm:ss`, KST)을 오간다. 브라우저 시간대는 보지 않는다. */
-const toInputValue = (value: string | null) => (value ? value.slice(0, 16) : '');
+const toInputValue = (value: string | null | undefined) => (value ? value.slice(0, 16) : '');
 const toServerValue = (value: string) => (value ? `${value}:00` : null);
 
 interface FormState {
   name: string;
-  pcImageUrl: string;
-  mobileImageUrl: string;
+  imageUrl: string;
   linkUrl: string;
-  openInNewTab: boolean;
-  altText: string;
-  showAdLabel: boolean;
+  adLabel: boolean;
   startAt: string;
   endAt: string;
-  enabled: boolean;
+  exposed: boolean;
+  contractId: number | null;
 }
 
-function initialState(banner: Banner | null): FormState {
+function initialState(exposure: AdvertisementExposure | null): FormState {
   return {
-    name: banner?.name ?? '',
-    pcImageUrl: banner?.pcImageUrl ?? '',
-    mobileImageUrl: banner?.mobileImageUrl ?? '',
-    linkUrl: banner?.linkUrl ?? '',
-    openInNewTab: banner?.openInNewTab ?? false,
-    altText: banner?.altText ?? '',
-    showAdLabel: banner?.showAdLabel ?? false,
-    startAt: toInputValue(banner?.startAt ?? null),
-    endAt: toInputValue(banner?.endAt ?? null),
+    name: exposure?.name ?? '',
+    imageUrl: exposure?.imageUrl ?? '',
+    linkUrl: exposure?.linkUrl ?? '',
+    adLabel: exposure?.adLabel ?? false,
+    startAt: toInputValue(exposure?.startAt),
+    endAt: toInputValue(exposure?.endAt),
     // 새 배너는 켠 채로 시작한다. 기간을 정해 두면 그 사이에만 보인다.
-    enabled: banner?.enabled ?? true,
+    exposed: exposure?.exposed ?? true,
+    contractId: exposure?.contractId ?? null,
   };
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
 
-function validate(form: FormState, placement: BannerPlacement): FormErrors {
+function validate(form: FormState): FormErrors {
   const errors: FormErrors = {};
   const name = form.name.trim();
   if (!name) errors.name = '이름을 입력해 주세요.';
   else if (name.length > NAME_MAX_LENGTH)
     errors.name = `이름은 ${NAME_MAX_LENGTH}자까지 쓸 수 있어요.`;
-  if (!form.pcImageUrl) errors.pcImageUrl = 'PC 이미지를 올리거나 기본 소재를 골라 주세요.';
-  if (!form.mobileImageUrl && isSideBannerPlacement(placement))
-    errors.mobileImageUrl =
-      '상세 사이드 배너는 모바일 이미지가 있어야 해요. PC 이미지가 세로라 좁은 화면에 쓸 수 없어요.';
+  if (!form.imageUrl) errors.imageUrl = '이미지를 올려 주세요.';
   const linkUrl = form.linkUrl.trim();
   if (!linkUrl) errors.linkUrl = '링크를 입력해 주세요.';
   else if (!isLinkUrl(linkUrl))
     errors.linkUrl = 'http:// 또는 https:// 로 시작하는 주소나 / 로 시작하는 경로를 입력해 주세요.';
-  const altText = form.altText.trim();
-  if (!altText)
-    errors.altText = '배너 문구를 입력해 주세요. 화면을 읽어 주는 기능이 이 문구를 읽어요.';
-  else if (altText.length > ALT_TEXT_MAX_LENGTH)
-    errors.altText = `배너 문구는 ${ALT_TEXT_MAX_LENGTH}자까지 쓸 수 있어요.`;
-  if (form.startAt && form.endAt && form.startAt >= form.endAt)
+  // BE 는 기간을 둘 다 넣거나 둘 다 비우게 한다(`ADVERTISEMENT_EXPOSURE_PERIOD_INVALID`).
+  if (Boolean(form.startAt) !== Boolean(form.endAt))
+    errors.endAt = '노출 시작과 끝을 함께 넣거나 둘 다 비워 주세요. 둘 다 비우면 상시예요.';
+  else if (form.startAt && form.startAt >= form.endAt)
     errors.endAt = '노출 끝은 시작보다 뒤여야 해요.';
   return errors;
 }
 
 /**
- * 배너 등록·수정 모달(이슈 #573). 자리는 열 때의 탭으로 정해지고 바꾸지 않는다 — 다른 자리에 쓰려면 새로 등록한다.
+ * 배너 노출 등록·수정 모달(BE LC-3583). 자리(상품)는 열 때의 탭으로 정해지고 바꾸지 않는다 — 다른 자리에 쓰려면 새로 등록한다.
  *
- * 검증은 저장을 누른 뒤부터 보인다. 쓰는 중에 빈 칸마다 빨간 글자가 뜨면 처음 여는 사람에게 모두 틀린 것처럼 보인다.
- * 서버가 거절하면 그 문구를 그대로 보인다.
+ * 수정은 `PUT` 전체 교체라 모든 칸을 다시 보낸다. 켜짐은 표의 스위치로만 바꾼다(교체 본문에 칸이 없다).
+ * 검증은 저장을 누른 뒤부터 보인다. 서버가 거절하면 오류 코드에 맞춘 문구를 보인다.
  */
-export function BannerFormModal({ open, placement, banner, onClose }: BannerFormModalProps) {
-  const saveMutation = useSaveBanner(placement, banner?.id ?? null);
-  const [form, setForm] = useState<FormState>(() => initialState(banner));
+export function BannerFormModal({ open, product, exposure, onClose }: BannerFormModalProps) {
+  const createMutation = useCreateExposure();
+  const replaceMutation = useReplaceExposure(exposure?.id ?? 0);
+  const saveMutation = exposure ? replaceMutation : createMutation;
+  const [form, setForm] = useState<FormState>(() => initialState(exposure));
   const [submitted, setSubmitted] = useState(false);
-  const errors = submitted ? validate(form, placement) : {};
+  const errors = submitted ? validate(form) : {};
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
 
   const save = () => {
     setSubmitted(true);
-    if (Object.keys(validate(form, placement)).length > 0) {
+    if (Object.keys(validate(form)).length > 0) {
       return;
     }
-    const input: BannerInput = {
-      placement,
+    const body = {
+      contractId: form.contractId,
       name: form.name.trim(),
-      pcImageUrl: form.pcImageUrl,
-      mobileImageUrl: form.mobileImageUrl || null,
+      imageUrl: form.imageUrl,
       linkUrl: form.linkUrl.trim(),
-      openInNewTab: form.openInNewTab,
-      altText: form.altText.trim(),
-      showAdLabel: form.showAdLabel,
+      targetType: null,
+      targetId: null,
+      adLabel: form.adLabel,
       startAt: toServerValue(form.startAt),
       endAt: toServerValue(form.endAt),
-      enabled: form.enabled,
-      // 광고주·계약 화면을 지워(PRD D1) 고르지 않는다. 저장된 값은 그대로 되보낸다.
-      advertiserId: banner?.advertiserId ?? null,
-      contractId: banner?.contractId ?? null,
     };
-    saveMutation.mutate(input, { onSuccess: onClose });
+    if (exposure) {
+      replaceMutation.mutate(body, { onSuccess: onClose });
+    } else {
+      createMutation.mutate(
+        { ...body, productId: product.id, exposed: form.exposed },
+        { onSuccess: onClose },
+      );
+    }
   };
 
-  const presets = bannerPresets(placement);
-  const pcSpec = PC_IMAGE_SPECS[placement];
-  const mobileRequired = isSideBannerPlacement(placement);
+  const spec = imageSpec(product.position);
 
   return (
     <Modal
       open={open}
-      title={banner ? '배너 수정' : '새 배너'}
-      description={`${PLACEMENT_LABELS[placement]} 자리`}
+      title={exposure ? '배너 수정' : '새 배너'}
+      description={product.name}
       onClose={onClose}
       className="w-[min(44rem,calc(100vw-2rem))]"
     >
       {saveMutation.isError ? (
         <Callout tone="error" className="mb-4">
-          {serverErrorMessage(saveMutation.error) ?? '저장하지 못했습니다. 입력값을 확인해 주세요.'}
+          {advertisementErrorMessage(
+            saveMutation.error,
+            '저장하지 못했습니다. 입력값을 확인해 주세요.',
+          )}
         </Callout>
       ) : null}
 
-      <Field label="이름(내부용)" htmlFor="banner-name" required error={errors.name}>
+      <Field
+        label="이름"
+        htmlFor="banner-name"
+        required
+        error={errors.name}
+        hint="이미지에 적힌 문구를 그대로 적어 주세요. 이미지를 볼 수 없는 사람에게 이 이름을 읽어 줍니다."
+      >
         <Input
           id="banner-name"
           value={form.name}
@@ -148,62 +155,25 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
         />
       </Field>
 
-      {/* 세로 소재(공고 상세)는 폭을 줄여 미리 본다. 모달 폭 그대로면 화면을 넘는다. */}
-      <div className={isSideBannerPlacement(placement) ? 'max-w-56' : undefined}>
+      {/* 세로 소재(상세 사이드)는 폭을 줄여 미리 본다. 모달 폭 그대로면 화면을 넘는다. */}
+      <div className={isSidePosition(product.position) ? 'max-w-56' : undefined}>
         <BannerImageField
-          id="banner-pc-image"
-          label={`PC 이미지(${pcSpec.size})`}
-          sizeHint={pcSpec.sizeHint}
-          aspectClassName={pcSpec.aspectClassName}
-          presets={presets.map(({ key, label, pcImageUrl }) => ({ key, label, url: pcImageUrl }))}
-          value={form.pcImageUrl}
-          onChange={(url) => set('pcImageUrl', url)}
-          error={errors.pcImageUrl}
+          id="banner-image"
+          label="이미지"
+          sizeHint={`${spec.sizeHint} 한 장을 PC·모바일에 같이 씁니다.`}
+          aspectClassName={spec.aspectClassName}
+          value={form.imageUrl}
+          onChange={(url) => set('imageUrl', url)}
+          error={errors.imageUrl}
         />
       </div>
-      <div className="max-w-xs">
-        <BannerImageField
-          id="banner-mobile-image"
-          label="모바일 이미지(750×200)"
-          sizeHint={
-            mobileRequired
-              ? '750×200 비율(1500×400 권장). JPG·PNG. 좁은 화면에서 사이드바가 본문 아래로 내려가면 이 이미지가 보입니다.'
-              : '750×200 비율(1500×400 권장). JPG·PNG. 비워 두면 좁은 화면에도 PC 이미지를 씁니다(잘려 보일 수 있어요).'
-          }
-          aspectClassName="aspect-[750/200]"
-          required={mobileRequired}
-          presets={presets.map(({ key, label, mobileImageUrl }) => ({
-            key,
-            label,
-            url: mobileImageUrl,
-          }))}
-          value={form.mobileImageUrl}
-          onChange={(url) => set('mobileImageUrl', url)}
-          error={errors.mobileImageUrl}
-        />
-      </div>
-
-      <Field
-        label="배너 문구(대체 텍스트)"
-        htmlFor="banner-alt"
-        required
-        error={errors.altText}
-        hint="이미지에 적힌 문구를 그대로 적어 주세요. 이미지를 볼 수 없는 사람에게 읽어 줍니다."
-      >
-        <Input
-          id="banner-alt"
-          value={form.altText}
-          maxLength={ALT_TEXT_MAX_LENGTH}
-          onChange={(event) => set('altText', event.target.value)}
-        />
-      </Field>
 
       <Field
         label="링크"
         htmlFor="banner-link"
         required
         error={errors.linkUrl}
-        hint="https:// 로 시작하는 주소, 또는 /calendar 처럼 오공고 안의 경로."
+        hint="https:// 로 시작하는 주소는 새 탭, /calendar 처럼 오공고 안의 경로는 같은 탭에서 열립니다."
       >
         <Input
           id="banner-link"
@@ -213,8 +183,15 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
         />
       </Field>
 
+      <ContractField
+        id="banner-contract"
+        value={form.contractId}
+        currentCompanyName={exposure?.advertiserCompanyName ?? null}
+        onChange={(contractId) => set('contractId', contractId)}
+      />
+
       <div className="grid grid-cols-2 gap-3">
-        <Field label="노출 시작(KST)" htmlFor="banner-start" hint="비우면 켜는 즉시">
+        <Field label="노출 시작(KST)" htmlFor="banner-start" hint="시작·끝을 모두 비우면 상시">
           <Input
             id="banner-start"
             type="datetime-local"
@@ -222,12 +199,7 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
             onChange={(event) => set('startAt', event.target.value)}
           />
         </Field>
-        <Field
-          label="노출 끝(KST)"
-          htmlFor="banner-end"
-          error={errors.endAt}
-          hint="비우면 끌 때까지"
-        >
+        <Field label="노출 끝(KST)" htmlFor="banner-end" error={errors.endAt}>
           <Input
             id="banner-end"
             type="datetime-local"
@@ -238,27 +210,21 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
       </div>
 
       <div className="flex flex-wrap gap-x-6 gap-y-2 pb-4">
+        {exposure ? null : (
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={form.exposed}
+              onChange={(event) => set('exposed', event.target.checked)}
+            />
+            켜기
+          </label>
+        )}
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input
             type="checkbox"
-            checked={form.enabled}
-            onChange={(event) => set('enabled', event.target.checked)}
-          />
-          켜기
-        </label>
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={form.openInNewTab}
-            onChange={(event) => set('openInNewTab', event.target.checked)}
-          />
-          새 탭에서 열기(외부 주소는 늘 새 탭)
-        </label>
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={form.showAdLabel}
-            onChange={(event) => set('showAdLabel', event.target.checked)}
+            checked={form.adLabel}
+            onChange={(event) => set('adLabel', event.target.checked)}
           />
           광고 표시(돈을 받고 싣는 배너)
         </label>

@@ -1,8 +1,10 @@
 import type {
+  AdminAdvertisementContractDetailResponse,
   AdminAdvertisementExposureResponse,
   AdminAdvertisementProductResponse,
 } from '../../generated/admin/models';
 import type { AdvertisementExposureResponse } from '../../generated/user/models';
+import { contractSeed } from './advertisement-contracts';
 
 /**
  * 광고 상품과 노출 목의 저장소(BE LC-3583). 공개 배너 조회(`../advertisementExposures.ts`)가 이 배열을 본다.
@@ -11,7 +13,12 @@ import type { AdvertisementExposureResponse } from '../../generated/user/models'
  * 상품이 시드로 들어가지 않는다 — 운영자가 어드민에서 등록해야 배너가 나온다.
  *
  * 이미지는 사용자 웹의 `public/banners/` 소재다. BE 노출에는 이미지가 하나(`imageUrl`)뿐이라 PC 소재를 넣는다.
+ *
+ * 어드민 목(`../admin/advertisements.ts`)도 이 저장소를 쓴다. 상품·노출·계약을 함께 들고, 어드민 브라우저에서는
+ * `localStorage` 에 적어 새로고침해도 남긴다. 웹 목 서버(Node)는 다른 프로세스라 어드민에서 바꾼 것이 보이지 않는다.
  */
+
+const STORAGE_KEY = 'ogonggo.mock.admin.advertisements';
 
 const SEED_TIME = '2026-11-06T09:00:00';
 
@@ -170,21 +177,61 @@ const EXPOSURE_SEED: ExposureSeed[] = [
   },
 ];
 
-export const advertisementStore: {
-  products: AdminAdvertisementProductResponse[];
+/** 상품은 BE 처럼 지워도 행이 남는다(`deletedAt`). 계약 상품이 지운 상품을 계속 가리킨다. */
+export type ProductRecord = AdminAdvertisementProductResponse & { deletedAt: string | null };
+
+interface AdvertisementStore {
+  products: ProductRecord[];
   exposures: AdminAdvertisementExposureResponse[];
-} = {
-  products: PRODUCT_SEED.map((product) => ({ ...product })),
-  exposures: EXPOSURE_SEED.map((exposure) => ({
-    contractId: null,
-    advertiserCompanyName: null,
-    startAt: null,
-    endAt: null,
-    registeredAt: SEED_TIME,
-    updatedAt: SEED_TIME,
-    ...exposure,
-  })),
-};
+  contracts: AdminAdvertisementContractDetailResponse[];
+}
+
+function seedStore(): AdvertisementStore {
+  return {
+    products: PRODUCT_SEED.map((product) => ({ ...product, deletedAt: null })),
+    exposures: EXPOSURE_SEED.map((exposure) => ({
+      contractId: null,
+      advertiserCompanyName: null,
+      startAt: null,
+      endAt: null,
+      registeredAt: SEED_TIME,
+      updatedAt: SEED_TIME,
+      ...exposure,
+    })),
+    contracts: contractSeed(),
+  };
+}
+
+/** 브라우저에서만 읽고 쓴다. Node(웹 목 서버)의 `localStorage` 는 실험 기능이라 건드리지 않는다. */
+function storage(): Storage | undefined {
+  try {
+    return typeof window === 'undefined' ? undefined : window.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+function load(): AdvertisementStore {
+  try {
+    const raw = storage()?.getItem(STORAGE_KEY);
+    if (raw) {
+      return { ...seedStore(), ...(JSON.parse(raw) as Partial<AdvertisementStore>) };
+    }
+  } catch {
+    // 깨진 값이면 시드로 시작한다.
+  }
+  return seedStore();
+}
+
+export const advertisementStore: AdvertisementStore = load();
+
+export function saveAdvertisementStore(): void {
+  try {
+    storage()?.setItem(STORAGE_KEY, JSON.stringify(advertisementStore));
+  } catch {
+    // 메모리에는 남는다.
+  }
+}
 
 /** KST 벽시계 시각(`YYYY-MM-DDTHH:mm:ss`)을 시각으로. 오프셋이 없어 `+09:00` 을 붙인다. */
 function kstTime(value: string): number {
