@@ -7,8 +7,6 @@ import {
   type AdminBannerResponse,
   type ReplaceAdminBannerOrderRequest,
 } from '../../banners';
-import { adContractLinkError, adContractSummary } from '../fixtures/ad-contracts';
-import { advertiserSummary, findAdvertiser } from '../fixtures/advertisers';
 import { bannerStore, saveBanners, type BannerRecord } from '../fixtures/banners';
 import { notFound, ok } from './paging';
 
@@ -133,23 +131,8 @@ function mobileImageError(placement: BannerPlacement, mobileImageUrl: string | n
     : null;
 }
 
-/** 응답에 광고주·계약 요약을 붙인다. 광고 계약(`./advertisers.ts`)도 쓴다. */
 export function toAdminBannerResponse(banner: BannerRecord): AdminBannerResponse {
-  return {
-    ...banner,
-    advertiser: advertiserSummary(banner.advertiserId),
-    contract: adContractSummary(banner.contractId),
-  };
-}
-
-/** 광고 표시가 켜진 배너는 광고주가 있어야 한다. 자체 홍보(표시 꺼짐)는 없어도 된다. 수정이면 합친 결과로 본다. */
-function advertiserError(showAdLabel: boolean, advertiserId: number | null): string | null {
-  if (advertiserId !== null && !findAdvertiser(advertiserId)) {
-    return 'advertiserId: 있는 광고주를 골라 주세요.';
-  }
-  return showAdLabel && advertiserId === null
-    ? 'advertiserId: 광고 표시가 켜진 배너는 광고주를 골라 주세요.'
-    : null;
+  return banner;
 }
 
 function inPlacement(placement: string): BannerRecord[] {
@@ -195,9 +178,7 @@ const createHandler = http.post(PATH, async ({ request }) => {
   const error =
     validate(body, false) ??
     periodError(body.startAt ?? null, body.endAt ?? null) ??
-    advertiserError(body.showAdLabel === true, body.advertiserId ?? null) ??
-    mobileImageError(body.placement as BannerPlacement, body.mobileImageUrl) ??
-    adContractLinkError(body.contractId, body.advertiserId ?? null);
+    mobileImageError(body.placement as BannerPlacement, body.mobileImageUrl);
   if (error) {
     return badRequest(error);
   }
@@ -267,9 +248,7 @@ const patchHandler = http.patch(`${PATH}/:bannerId`, async ({ params, request })
   const error =
     validate(changes, true) ??
     periodError(merged.startAt, merged.endAt) ??
-    advertiserError(merged.showAdLabel, merged.advertiserId ?? null) ??
-    mobileImageError(banner.placement, merged.mobileImageUrl) ??
-    adContractLinkError(merged.contractId, merged.advertiserId ?? null);
+    mobileImageError(banner.placement, merged.mobileImageUrl);
   if (error) {
     return badRequest(error);
   }

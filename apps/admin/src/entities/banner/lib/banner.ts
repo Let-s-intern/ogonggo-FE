@@ -85,7 +85,7 @@ function kstTime(value: string): number {
 
 export type BannerStatus = 'LIVE' | 'SCHEDULED' | 'ENDED' | 'OFF';
 
-/** 표의 `상태` 칸. 배너 세팅과 광고 계약 화면이 같이 쓴다. */
+/** 표의 `상태` 칸. */
 export const BANNER_STATUS_BADGES: Record<
   BannerStatus,
   { label: string; tone: 'success' | 'main' | 'neutral' }

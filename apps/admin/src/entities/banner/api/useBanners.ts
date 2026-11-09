@@ -28,28 +28,10 @@ export function useBannerList(placement: BannerPlacement) {
   });
 }
 
-/**
- * 광고주 한 곳의 배너 전부(모든 자리, 꺼진 것 포함). 광고 계약 화면이 쓴다. 자리 순서·자리 안 순서대로 온다.
- */
-export function useAdvertiserBanners(advertiserId: number) {
-  return useQuery({
-    queryKey: ['admin', 'banners', 'advertiser', advertiserId],
-    queryFn: () => adminGet<Banner[]>(ADMIN_BANNERS_PATH, { advertiserId }),
-    enabled: Number.isInteger(advertiserId),
-  });
-}
-
-/**
- * 쓰기 뒤에는 그 자리 목록만이 아니라 배너 목록 전부와 광고주 목록(광고 수)을 다시 받는다. 자리별 화면과 광고주별 화면이
- * 같은 배너를 다른 키로 들고 있다.
- */
+/** 쓰기 뒤에는 배너 목록 전부를 다시 받는다. */
 function useInvalidate() {
   const queryClient = useQueryClient();
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] }),
-      queryClient.invalidateQueries({ queryKey: ['admin', 'advertisers'] }),
-    ]);
+  return () => queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] });
 }
 
 /** 등록과 수정. 수정은 `PATCH` 라 보낸 칸만 바뀌지만 폼이 모든 칸을 들고 있어 모두 보낸다(공지와 같다). */
@@ -70,16 +52,6 @@ export function useToggleBanner(placement: BannerPlacement, bannerId: number) {
   return useMutation({
     mutationFn: (enabled: boolean) =>
       adminWrite<Banner>('PATCH', `${ADMIN_BANNERS_PATH}/${bannerId}`, { enabled }),
-    onSuccess: invalidate,
-  });
-}
-
-/** 몇 칸만 고친다(광고 계약 표의 바로 고치기: 노출 기간, 링크). 보낸 칸만 바뀐다. */
-export function usePatchBanner(bannerId: number) {
-  const invalidate = useInvalidate();
-  return useMutation({
-    mutationFn: (changes: Partial<BannerInput>) =>
-      adminWrite<Banner>('PATCH', `${ADMIN_BANNERS_PATH}/${bannerId}`, changes),
     onSuccess: invalidate,
   });
 }

@@ -9,9 +9,6 @@
  * 떨어뜨려 두면 한쪽만 고쳐지기 쉽다. 생성 타입의 이름과 겹치지 않게 `Banner` 를 붙였다.
  */
 
-import type { AdContractSummary } from './ad-contracts';
-import type { AdvertiserSummary } from './advertisers';
-
 /**
  * 배너 자리. `HOME_TOP` 은 홈 히어로 아래, `HOME_BOTTOM` 은 홈 목록 아래 `FOR BUSINESS` 배너 위,
  * `JOB_DETAIL_SIDE` 는 공고 상세 오른쪽 사이드바(비슷한 공고 아래)다. 부트캠프 쪽도 같은 세 자리를 둔다 —
@@ -88,17 +85,10 @@ export interface AdminBannerResponse extends PublicBannerResponse {
   enabled: boolean;
   /** 자리 안 순서. 1부터, 작은 것이 먼저다. */
   displayOrder: number;
-  /**
-   * 어느 기업이 맡긴 배너인지(`./advertisers.ts`). `showAdLabel` 이 켜진 배너(돈을 받고 싣는 배너)는 반드시 있고,
-   * 오공고 자체 홍보 배너는 `null` 이어도 된다.
-   */
+  /** 광고주 id. 광고주 API 를 지워(PRD `prd-ad-backend-sync.md` D1) 화면은 고르지 않고 저장된 값만 되보낸다. */
   advertiserId: number | null;
-  /** 표에 보일 광고주 요약. 서버가 `advertiserId` 로 읽어 싣는다. 없으면 `null` 이다. */
-  advertiser: AdvertiserSummary | null;
-  /** 이어 둔 광고 계약(`./ad-contracts.ts`). 같은 광고주의 계약이어야 한다. 없으면 `null` 이다. */
+  /** 광고 계약 id. `advertiserId` 와 같다. */
   contractId: number | null;
-  /** 표와 기간 밖 경고에 쓸 계약 요약. 서버가 `contractId` 로 읽어 싣는다. */
-  contract: AdContractSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -116,9 +106,7 @@ export interface AdminBannerRequest {
   startAt: string | null;
   endAt: string | null;
   enabled: boolean;
-  /** 광고주. `showAdLabel` 이 참이면 필수, 아니면 `null` 을 보낼 수 있다. */
   advertiserId: number | null;
-  /** 광고 계약. 고른 광고주의 계약만 받는다. `null` 이면 잇지 않는다. */
   contractId: number | null;
 }
 

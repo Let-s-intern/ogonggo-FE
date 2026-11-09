@@ -5,8 +5,6 @@ import type {
 } from '@ogonggo/api';
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampCard } from '@/entities/bootcamp/ui/BootcampCard';
-import { placeAdsFirst } from '@/shared/ads/adPosting';
-import { fetchAdBootcamps } from '@/shared/ads/fetchAdPostings';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
   buildBootcampListHref,
@@ -56,18 +54,9 @@ async function fetchBootcampPage(
   );
 }
 
-/**
- * `교육부트캠프.png`의 목록 본문 — 컨트롤 한 줄 + 4열 카드 그리드 + 번호 페이지네이션.
- *
- * 1쪽에는 광고 공고(`BOOTCAMP_LIST`, 이슈 #573)를 맨 앞 칸부터 어드민 순서대로 고정한다. 규칙은 채용공고 목록
- * (`widgets/job-list/ui/JobList.tsx`)과 같다 — 1쪽에만, 탭·검색과 상관없이, 결과가 없으면 싣지 않고, 일반 목록의 같은
- * 과정은 뺀다.
- */
+/** `교육부트캠프.png`의 목록 본문 — 컨트롤 한 줄 + 4열 카드 그리드 + 번호 페이지네이션. */
 export async function BootcampList(query: BootcampListProps) {
-  const [{ items, pageInfo }, ads] = await Promise.all([
-    fetchBootcampPage(query),
-    query.page === 1 ? fetchAdBootcamps() : Promise.resolve([]),
-  ]);
+  const { items, pageInfo } = await fetchBootcampPage(query);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -76,11 +65,10 @@ export async function BootcampList(query: BootcampListProps) {
         <p className="py-16 text-center text-sm text-gray-500">교육·부트캠프가 없습니다.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
-          {placeAdsFirst(ads, items).map(({ item: bootcamp, ad }, index) => (
-            <li key={ad ? `ad-${ad.adId}` : bootcamp.id}>
+          {items.map((bootcamp, index) => (
+            <li key={bootcamp.id}>
               <BootcampCard
                 bootcamp={bootcamp}
-                ad={ad}
                 tracking={{ listPosition: index + 1, pageNumber: pageInfo.pageNum }}
               />
             </li>

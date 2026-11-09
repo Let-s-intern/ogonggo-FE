@@ -6,7 +6,6 @@ import {
   Callout,
   ConfirmDelete,
   DataTable,
-  Select,
   Tabs,
   Toggle,
   cn,
@@ -24,9 +23,6 @@ import {
   useToggleBanner,
   type Banner,
 } from '@/entities/banner/api/useBanners';
-import { AdContractNote } from '@/entities/ad-contract/ui/AdContractNote';
-import { AdvertiserName } from '@/entities/advertiser/ui/AdvertiserName';
-import { advertiserFilterOptions } from '@/entities/advertiser/lib/advertiserFilter';
 import {
   BANNER_STATUS_BADGES,
   PC_IMAGE_SPECS,
@@ -57,7 +53,7 @@ type Editing = { banner: Banner | null } | null;
  * 저장 버튼을 잊을 위험이 더 크기 때문이다.
  */
 export function BannerSettingsPage() {
-  // 캘린더에서 오공고 자체 홍보 배너를 누르면 `?placement=` 로 그 자리 탭을 연다. 처음 한 번만 읽는다.
+  // `?placement=` 로 그 자리 탭을 연다. 처음 한 번만 읽는다.
   const [searchParams] = useSearchParams();
   const [placement, setPlacement] = useState<BannerPlacement>(() => {
     const requested = searchParams.get('placement');
@@ -65,19 +61,10 @@ export function BannerSettingsPage() {
   });
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<Banner | null>(null);
-  /** 표만 거르는 광고주. 빈 값이면 전체, `none` 이면 광고주 없는 배너다. 순서 버튼은 거르지 않은 순서로 움직인다. */
-  const [advertiserFilter, setAdvertiserFilter] = useState('');
   const { data, isPending, isError } = useBannerList(placement);
   const reorder = useReorderBanners(placement);
   const deleteMutation = useDeleteBanner();
   const rows = data ?? [];
-  const shownRows = rows.filter(
-    (row) =>
-      advertiserFilter === '' ||
-      (advertiserFilter === 'none'
-        ? row.advertiser === null
-        : String(row.advertiser?.id) === advertiserFilter),
-  );
 
   const move = (index: number, delta: -1 | 1) => {
     const ids = rows.map((row) => row.id);
@@ -126,17 +113,6 @@ export function BannerSettingsPage() {
             {row.linkUrl}
             {row.openInNewTab || /^https?:\/\//.test(row.linkUrl) ? ' (새 탭)' : ''}
           </span>
-        </span>
-      ),
-    },
-    {
-      key: 'advertiser',
-      header: '광고주',
-      width: 'w-44',
-      render: (row) => (
-        <span className="flex flex-col gap-0.5">
-          <AdvertiserName advertiser={row.advertiser} />
-          <AdContractNote contract={row.contract} period={row} />
         </span>
       ),
     },
@@ -223,10 +199,7 @@ export function BannerSettingsPage() {
       <Tabs
         items={PLACEMENT_TABS}
         value={placement}
-        onValueChange={(next) => {
-          setPlacement(next);
-          setAdvertiserFilter('');
-        }}
+        onValueChange={setPlacement}
         aria-label="배너 자리"
         className="mb-4"
       />
@@ -234,20 +207,6 @@ export function BannerSettingsPage() {
         {PLACEMENT_DESCRIPTIONS[placement]} 켜져 있고 기간 안인 배너가 이 순서대로 5초마다
         넘어갑니다. 없으면 자리 자체가 보이지 않습니다.
       </p>
-
-      <div className="flex items-center gap-2 pb-4">
-        <Select
-          aria-label="광고주로 거르기"
-          options={advertiserFilterOptions(rows, '광고주 없음(자체 홍보)')}
-          value={advertiserFilter}
-          onChange={(event) => setAdvertiserFilter(event.target.value)}
-        />
-        {advertiserFilter ? (
-          <span className="text-xs text-gray-500">
-            거른 상태에서도 순서 번호와 위로·아래로는 자리 전체 기준입니다.
-          </span>
-        ) : null}
-      </div>
 
       {isError ? <Callout tone="error">배너 목록을 불러오지 못했습니다.</Callout> : null}
       {reorder.isError ? (
@@ -258,7 +217,7 @@ export function BannerSettingsPage() {
 
       <DataTable
         columns={columns}
-        rows={shownRows}
+        rows={rows}
         rowKey={(row) => row.id}
         onRowClick={(row) => setEditing({ banner: row })}
         isLoading={isPending}

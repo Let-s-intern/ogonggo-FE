@@ -1,16 +1,10 @@
 import type { HttpHandler } from 'msw';
-import { adContractAdminHandlers } from './ad-contracts';
-import { adPostingAdminHandlers } from './ad-postings';
-import { advertiserNoteAdminHandlers } from './advertiser-notes';
-import { advertiserAdminHandlers } from './advertisers';
 import { bannerAdminHandlers } from './banners';
-import { calendarAdminHandlers } from './calendar';
 import { companyPriorityHandlers } from './company-priority';
 import { concernHandlers } from './concerns';
 import { contentHandlers } from './content';
 import { dashboardHandlers } from './dashboard';
 import { inspectionHandlers } from './inspection';
-import { adChannelAdminHandlers } from './ad-channels';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
 import { notificationHandlers } from './notifications';
@@ -50,10 +44,4 @@ export const adminHandlers: HttpHandler[] = [
   ...recommendWeightsHandlers,
   ...companyPriorityHandlers,
   ...bannerAdminHandlers,
-  ...adPostingAdminHandlers,
-  ...advertiserAdminHandlers,
-  ...adContractAdminHandlers,
-  ...advertiserNoteAdminHandlers,
-  ...calendarAdminHandlers,
-  ...adChannelAdminHandlers,
 ];

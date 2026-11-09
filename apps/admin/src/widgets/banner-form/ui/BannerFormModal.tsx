@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Button, Callout, Field, Input, Modal } from '@ogonggo/ui';
-import type { AdvertiserSummary } from '@ogonggo/api/src/advertisers';
 import { isSideBannerPlacement, type BannerPlacement } from '@ogonggo/api/src/banners';
-import type { AdContract } from '@/entities/ad-contract/api/useAdContracts';
 import { useSaveBanner, type Banner, type BannerInput } from '@/entities/banner/api/useBanners';
 import {
   PC_IMAGE_SPECS,
@@ -10,12 +8,6 @@ import {
   bannerPresets,
   isLinkUrl,
 } from '@/entities/banner/lib/banner';
-import { bannerProduct } from '@/features/ad-contract-picker/lib/adContractProduct';
-import {
-  AdContractField,
-  useDefaultAdContract,
-} from '@/features/ad-contract-picker/ui/AdContractField';
-import { AdvertiserField } from '@/features/advertiser-picker/ui/AdvertiserField';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { BannerImageField } from './BannerImageField';
 
@@ -45,22 +37,6 @@ interface FormState {
   startAt: string;
   endAt: string;
   enabled: boolean;
-  advertiser: AdvertiserSummary | null;
-  contractId: number | null;
-}
-
-/** 계약을 고르면 노출 기간을 계약 기간으로 채우고 `광고 표시` 를 켠다. 계약이 있는 배너는 돈을 받고 싣는 배너다. */
-function withContract(form: FormState, contract: AdContract | null): FormState {
-  if (!contract) {
-    return { ...form, contractId: null };
-  }
-  return {
-    ...form,
-    contractId: contract.id,
-    startAt: toInputValue(contract.startAt),
-    endAt: toInputValue(contract.endAt),
-    showAdLabel: true,
-  };
 }
 
 function initialState(banner: Banner | null): FormState {
@@ -76,8 +52,6 @@ function initialState(banner: Banner | null): FormState {
     endAt: toInputValue(banner?.endAt ?? null),
     // 새 배너는 켠 채로 시작한다. 기간을 정해 두면 그 사이에만 보인다.
     enabled: banner?.enabled ?? true,
-    advertiser: banner?.advertiser ?? null,
-    contractId: banner?.contractId ?? null,
   };
 }
 
@@ -104,8 +78,6 @@ function validate(form: FormState, placement: BannerPlacement): FormErrors {
     errors.altText = `배너 문구는 ${ALT_TEXT_MAX_LENGTH}자까지 쓸 수 있어요.`;
   if (form.startAt && form.endAt && form.startAt >= form.endAt)
     errors.endAt = '노출 끝은 시작보다 뒤여야 해요.';
-  if (form.showAdLabel && !form.advertiser)
-    errors.advertiser = '광고 표시가 켜진 배너는 어느 기업의 광고인지 골라 주세요.';
   return errors;
 }
 
@@ -117,27 +89,9 @@ function validate(form: FormState, placement: BannerPlacement): FormErrors {
  */
 export function BannerFormModal({ open, placement, banner, onClose }: BannerFormModalProps) {
   const saveMutation = useSaveBanner(placement, banner?.id ?? null);
-  const defaultContract = useDefaultAdContract();
   const [form, setForm] = useState<FormState>(() => initialState(banner));
   const [submitted, setSubmitted] = useState(false);
   const errors = submitted ? validate(form, placement) : {};
-
-  /**
-   * 광고주를 바꾸면 계약은 그 광고주의 것이어야 한다. 새 배너는 기본 계약을 골라 기간을 채우고, 수정 중인 배너는 계약을
-   * 비운다(다른 광고주의 계약이 남지 않게).
-   */
-  const changeAdvertiser = async (advertiser: AdvertiserSummary | null) => {
-    if (advertiser?.id === form.advertiser?.id) {
-      return;
-    }
-    setForm((current) => ({ ...current, advertiser, contractId: null }));
-    if (advertiser && !banner) {
-      const contract = await defaultContract(advertiser.id);
-      setForm((current) =>
-        current.advertiser?.id === advertiser.id ? withContract(current, contract) : current,
-      );
-    }
-  };
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -159,8 +113,9 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
       startAt: toServerValue(form.startAt),
       endAt: toServerValue(form.endAt),
       enabled: form.enabled,
-      advertiserId: form.advertiser?.id ?? null,
-      contractId: form.contractId,
+      // 광고주·계약 화면을 지워(PRD D1) 고르지 않는다. 저장된 값은 그대로 되보낸다.
+      advertiserId: banner?.advertiserId ?? null,
+      contractId: banner?.contractId ?? null,
     };
     saveMutation.mutate(input, { onSuccess: onClose });
   };
@@ -257,24 +212,6 @@ export function BannerFormModal({ open, placement, banner, onClose }: BannerForm
           onChange={(event) => set('linkUrl', event.target.value)}
         />
       </Field>
-
-      <AdvertiserField
-        id="banner-advertiser"
-        value={form.advertiser}
-        onChange={(advertiser) => void changeAdvertiser(advertiser)}
-        required={form.showAdLabel}
-        error={errors.advertiser}
-        hint="광고 표시를 켠 배너는 필수입니다. 오공고 자체 홍보 배너는 비워 둡니다."
-      />
-
-      <AdContractField
-        id="banner-contract"
-        advertiserId={form.advertiser?.id ?? null}
-        value={form.contractId}
-        onChange={(contract) => setForm((current) => withContract(current, contract))}
-        period={{ startAt: toServerValue(form.startAt), endAt: toServerValue(form.endAt) }}
-        product={bannerProduct(placement)}
-      />
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="노출 시작(KST)" htmlFor="banner-start" hint="비우면 켜는 즉시">
