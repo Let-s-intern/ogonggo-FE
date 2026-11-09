@@ -322,7 +322,7 @@ function StepProducts({
               {products.map((product) => {
                 const checked = v.productIds.includes(product.id);
                 return (
-                  <li key={product.id}>
+                  <li key={product.id} className={cn(product.wide && 'sm:col-span-2')}>
                     <button
                       type="button"
                       aria-pressed={checked}

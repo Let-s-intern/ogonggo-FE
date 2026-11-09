@@ -147,14 +147,14 @@ export function periodDays(startDate: string, endDate: string): number {
  * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹은 랜딩(`public/landing`) 것,
  * 카카오톡 CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
  */
-export type AdProductGroupId = 'web' | 'kakao' | 'instagram' | 'crm';
+export type AdProductGroupId = 'web' | 'instagram' | 'kakao';
 
 /** 화면에서 상품을 묶어 보이는 단위. 세로로 쌓아 어느 채널의 상품인지 바로 보이게 한다. */
 export const AD_PRODUCT_GROUPS: { id: AdProductGroupId; title: string; reach: string }[] = [
   { id: 'web', title: '오공고 웹', reach: '지면광고' },
-  { id: 'kakao', title: '카카오톡', reach: '누적 1만 5천명' },
   { id: 'instagram', title: '인스타그램', reach: '오공고 · 렛츠커리어 계정' },
-  { id: 'crm', title: '카카오톡 CRM', reach: '약 2만명' },
+  // 채팅방 두 개 아래에 CRM 이 이어진다(2026-11-09 사용자). CRM 은 채널 친구 약 2만명이다.
+  { id: 'kakao', title: '카카오톡', reach: '오픈채팅 누적 1만 5천명 · CRM 약 2만명' },
 ];
 
 export interface AdProduct {
@@ -166,6 +166,8 @@ export interface AdProduct {
   description: string;
   /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다(오공고 웹 화면, 카카오톡 방). */
   images: string[];
+  /** 묶음 안에서 한 줄을 다 쓴다. 카카오톡 CRM 이 채팅방 두 장 아래에 넓게 놓인다. */
+  wide?: boolean;
   /** 이미지마다 붙일 화면 이름. 있으면 이미지 아래에 띄운다. */
   imageLabels?: string[];
   price: string;
@@ -193,26 +195,6 @@ export const AD_PRODUCTS: AdProduct[] = [
     imageLabels: ['채용공고 홈', '공고 상세', '부트캠프', '공고 달력', '마이페이지'],
     price: '1주 30만원부터',
     categories: ['JOB_POSTING', 'BANNER'],
-  },
-  {
-    id: 'kakao-curation',
-    group: 'kakao',
-    reach: '직무별 톡방 6개',
-    title: '직무별 채용공고 큐레이션 톡방',
-    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
-    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
-    price: '견적 문의',
-    categories: ['KAKAO_1'],
-  },
-  {
-    id: 'kakao-official',
-    group: 'kakao',
-    reach: '쥬디 톡방 · 무료 세미나방 등',
-    title: '렛츠커리어 공식 오픈채팅방',
-    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
-    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
-    price: '견적 문의',
-    categories: ['KAKAO_2'],
   },
   {
     id: 'instagram-ogonggo',
@@ -249,8 +231,29 @@ export const AD_PRODUCTS: AdProduct[] = [
     categories: ['INSTAGRAM_2'],
   },
   {
+    id: 'kakao-curation',
+    group: 'kakao',
+    reach: '직무별 톡방 6개',
+    title: '직무별 채용공고 큐레이션 톡방',
+    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
+    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_1'],
+  },
+  {
+    id: 'kakao-official',
+    group: 'kakao',
+    reach: '쥬디 톡방 · 무료 세미나방 등',
+    title: '렛츠커리어 공식 오픈채팅방',
+    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
+    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_2'],
+  },
+  {
     id: 'kakao-crm',
-    group: 'crm',
+    group: 'kakao',
+    wide: true,
     reach: '렛츠커리어 카카오 채널',
     title: '카카오톡 CRM',
     description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
