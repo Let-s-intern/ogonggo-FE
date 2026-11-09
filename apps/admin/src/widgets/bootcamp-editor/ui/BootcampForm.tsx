@@ -3,6 +3,7 @@ import { enumOptions } from '@ogonggo/api/src/admin';
 import { Button, Callout, Card, Checkbox, Field, Input, Select, Textarea } from '@ogonggo/ui';
 import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { BOOTCAMP_RECRUITMENT_STATUS_OPTIONS, VISIBILITY_OPTIONS } from '@/shared/config/labels';
+import { LogoSuggest } from '@/widgets/job-editor';
 import { validateBootcampForm, type BootcampFormErrors } from '../model/validate';
 import { EMPTY_CURRICULUM_ROW, PROGRAM_TYPES, type BootcampFormValues } from '../model/values';
 import { ImageUploadField } from './ImageUploadField';
@@ -58,6 +59,21 @@ export function BootcampForm({
   const hasErrors = Object.keys(errors).length > 0;
   const shown: BootcampFormErrors = submitted ? errors : {};
   const alwaysOpen = values.recruitmentType === 'ALWAYS_OPEN';
+  /**
+   * 로고 추천에 쓸 사이트. 채용공고 편집처럼 원문 주소로 찾고, 대리 등록은 원문 주소를 비우는 일이 많아 없으면 지원 링크로 찾는다.
+   * 형식이 맞는 주소만 쓴다.
+   */
+  const usable = (key: 'sourceUrl' | 'applicationUrl') => {
+    const url = values[key].trim();
+    return url !== '' && !errors[key] ? url : null;
+  };
+  const sourceSite = usable('sourceUrl');
+  const applicationSite = usable('applicationUrl');
+  const logoSite = sourceSite
+    ? { url: sourceSite, label: '원문 주소' }
+    : applicationSite
+      ? { url: applicationSite, label: '지원 링크' }
+      : { url: null, label: '원문 주소나 지원 링크' };
 
   /** 한 줄 글 칸. */
   const text = (
@@ -216,7 +232,15 @@ export function BootcampForm({
           value={values.logoUrl}
           onChange={(url) => set('logoUrl', url)}
           error={shown.logoUrl}
-        />
+        >
+          <LogoSuggest
+            key={logoSite.url ?? ''}
+            sourceUrl={logoSite.url}
+            sourceLabel={logoSite.label}
+            logoUrl={values.logoUrl}
+            onPick={(url) => set('logoUrl', url)}
+          />
+        </ImageUploadField>
       </Section>
 
       <Section title="내용">

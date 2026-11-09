@@ -99,7 +99,13 @@ export function validateBootcampForm(
   if (values.applicationMethod === 'EXTERNAL_PAGE' && applicationUrl === '') {
     errors.applicationUrl = '외부 페이지 지원은 지원 링크가 필요합니다.';
   }
-  for (const key of ['applicationUrl', 'inquiryUrl', 'sourceUrl', 'logoUrl'] as const) {
+  for (const key of [
+    'applicationUrl',
+    'inquiryUrl',
+    'sourceUrl',
+    'logoUrl',
+    'representativeImageUrl',
+  ] as const) {
     const value = values[key].trim();
     if (value !== '' && !isUrl(value) && !errors[key]) {
       errors[key] = URL_MESSAGE;

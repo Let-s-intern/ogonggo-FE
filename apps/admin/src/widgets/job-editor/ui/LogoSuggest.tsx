@@ -62,11 +62,14 @@ export function LogoSuggest({
   sourceUrl,
   logoUrl,
   onPick,
+  sourceLabel = '원문 주소',
 }: {
   /** 형식이 맞는 원문 주소. 없으면 버튼을 막는다. */
   sourceUrl: string | null;
   logoUrl: string;
   onPick: (url: string) => void;
+  /** 안내 문구에 쓰는 주소 이름. 부트캠프는 원문 주소가 없으면 지원 링크로 찾는다. */
+  sourceLabel?: string;
 }) {
   const [state, setState] = useState<State>({ kind: 'idle' });
 
@@ -100,8 +103,8 @@ export function LogoSuggest({
         </Button>
         <span className="text-xs text-gray-500">
           {sourceUrl
-            ? '원문 주소 사이트의 아이콘을 큰 순서로 보여줘요.'
-            : '원문 주소를 넣으면 그 사이트의 아이콘을 추천해요.'}
+            ? `${sourceLabel} 사이트의 아이콘을 큰 순서로 보여줘요.`
+            : `${sourceLabel}를 넣으면 그 사이트의 아이콘을 추천해요.`}
         </span>
       </div>
       {state.kind === 'error' ? <p className="mt-2 text-xs text-error">{state.message}</p> : null}
