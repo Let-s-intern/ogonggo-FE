@@ -420,10 +420,13 @@ function StepSchedule({
   v,
   set,
   errors,
+  onEditProducts,
 }: {
   v: FormValues;
   set: Update;
   errors: Record<string, string>;
+  /** 광고 상품 단계로 돌아간다. */
+  onEditProducts: () => void;
 }) {
   // 오늘부터 고를 수 있다. 주 단위·모집 마감일 제약은 두지 않는다(2026-11-09 사용자). 끝은 열려 있다.
   const firstBookable = useMemo(() => {
@@ -461,12 +464,43 @@ function StepSchedule({
 
   return (
     <div className="space-y-6">
-      <div>
-        <Label>선택된 광고 상품</Label>
-        <div className="rounded-lg border border-blue-500 bg-blue-00 px-5 py-4">
-          <p className="font-semibold">{products.map((p) => p.title).join(', ')}</p>
-          <p className="mt-0.5 text-sm text-gray-500">원하는 날짜만큼 노출</p>
+      {/* 고른 상품을 이름 나열 대신 카드로 보여 무엇을 골랐는지 한눈에 보이게 한다(2026-11-10 사용자). */}
+      <div className="rounded-xl bg-gray-50 p-4 md:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold">
+            선택한 광고 상품 <span className="text-blue-600">{products.length}개</span>
+          </p>
+          <button
+            type="button"
+            onClick={onEditProducts}
+            className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          >
+            상품 변경
+          </button>
         </div>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {products.map((p) => (
+            <li
+              key={p.id}
+              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm"
+            >
+              <img
+                src={p.images[0]}
+                alt=""
+                className="size-12 shrink-0 rounded-md bg-gray-100 object-cover object-top"
+              />
+              <span className="min-w-0">
+                <span className="block text-xs text-blue-600">
+                  {AD_PRODUCT_GROUPS.find((g) => g.id === p.group)?.title}
+                </span>
+                <span className="block truncate text-sm font-semibold">{p.title}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-sm break-keep text-gray-600">
+          아래 달력에서 고른 기간 동안 선택한 상품이 노출돼요.
+        </p>
       </div>
       <div>
         <div className="mb-3 flex items-center justify-between">
@@ -908,8 +942,8 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   },
   3: {
     title: '광고 일정 선택',
-    desc: '집행할 주를 고르면 월요일부터 일요일까지 노출됩니다.',
-    lead: '모집 마감 전에 노출될 수 있도록 광고 집행 주간을 선택해 주세요.',
+    desc: '달력에서 노출을 시작할 날과 끝낼 날을 차례로 눌러 주세요.',
+    lead: '광고를 노출하고 싶은 기간을 골라 주세요. 일정은 담당자와 상담하며 조율할 수 있어요.',
   },
   4: {
     title: '담당자 정보',
@@ -1084,7 +1118,7 @@ export function AdApplicationForm() {
           <div className="px-6 py-6 md:px-8">
             {step === 1 && <StepPost {...stepProps} />}
             {step === 2 && <StepProducts {...stepProps} />}
-            {step === 3 && <StepSchedule {...stepProps} />}
+            {step === 3 && <StepSchedule {...stepProps} onEditProducts={() => goTo(2)} />}
             {step === 4 && <StepContact {...stepProps} />}
             {step === 5 && <StepConfirm {...stepProps} />}
             {submitError && (
