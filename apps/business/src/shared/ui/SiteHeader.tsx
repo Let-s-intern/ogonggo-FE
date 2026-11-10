@@ -16,10 +16,18 @@ interface NavItem {
   match: (pathname: string) => boolean;
 }
 
-/** 시안 헤더의 왼쪽 메뉴. 광고 신청 내역은 기업 회원 화면의 왼쪽 메뉴에서 간다(2026-11-10 사용자). */
+/**
+ * 시안 헤더의 왼쪽 메뉴. 광고 신청 내역은 기업 회원 화면의 왼쪽 메뉴에서 간다(2026-11-10 사용자). 출시 기념 무료
+ * 홍보(`/free-promotion`)는 web `/biz` 를 옮겨 온 이벤트 화면이다(2026-11-10 사용자).
+ */
 const SERVICE_NAV: NavItem[] = [
   { href: '/', label: '광고 안내', match: (p) => p === '/' },
   { href: '/apply', label: '광고 신청/문의', match: (p) => p.startsWith('/apply') },
+  {
+    href: '/free-promotion',
+    label: '출시 기념 무료 홍보',
+    match: (p) => p.startsWith('/free-promotion'),
+  },
 ];
 
 /** 기업 회원 대시보드. 공고·기업 정보는 그 화면의 왼쪽 메뉴에서 간다(`CompanyConsoleNav`). */

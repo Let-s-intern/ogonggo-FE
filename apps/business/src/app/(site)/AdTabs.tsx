@@ -11,9 +11,14 @@ const TABS = [
     match: (p: string) => p === '/apply' || p.startsWith('/apply/'),
   },
   { href: '/', label: '광고 안내', match: (p: string) => p === '/' },
+  {
+    href: '/free-promotion',
+    label: '출시 기념 무료 홍보',
+    match: (p: string) => p.startsWith('/free-promotion'),
+  },
 ] as const;
 
-/** 탭을 다는 화면. 광고 신청/문의(`/apply` 아래)와 광고 안내(`/`)다. */
+/** 탭을 다는 화면. 광고 신청/문의(`/apply` 아래), 광고 안내(`/`), 출시 기념 무료 홍보다. */
 export const hasAdTabs = (pathname: string) => TABS.some((tab) => tab.match(pathname));
 
 /**
