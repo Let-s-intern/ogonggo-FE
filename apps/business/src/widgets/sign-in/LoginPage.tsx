@@ -21,7 +21,7 @@ export interface LoginPageProps {
  * `apps/web/src/views/login/ui/LoginPage.tsx`) 이고, biz 는 기업 회원 전용이라 일반 회원 탭과 간편 로그인이 없다.
  *
  * 로그인하면, 또는 이미 기업 회원으로 로그인한 사람이 오면 돌아갈 화면(없으면 대시보드) 으로 보낸다. 다른 역할로 로그인한 사람에게는
- * 기업 회원으로 로그인하라는 안내와 폼을 보인다 — 헤더의 공고등록·내 기업 정보가 이 사람을 여기로 보낸다
+ * 기업 회원으로 로그인하라는 안내와 폼을 보인다 — 헤더의 신청 내역·마이페이지가 이 사람을 여기로 보낸다
  * (`shared/ui/SiteHeader.tsx`). 기업 계정으로 로그인하면 토큰을 덮어쓴다(`saveTokens`). 토큰이 브라우저 저장소에만 있어
  * 역할은 첫 렌더 뒤에 받는다.
  */
@@ -71,7 +71,7 @@ export function LoginPage({ returnPath }: LoginPageProps) {
         </p>
         {otherRole ? (
           <p className="mb-4 rounded-md bg-blue-00 px-4 py-3 text-sm text-gray-700">
-            지금 로그인한 계정은 기업 회원이 아닙니다. 공고등록과 내 기업 정보는 기업 회원 계정으로
+            지금 로그인한 계정은 기업 회원이 아닙니다. 공고 등록과 기업 정보는 기업 회원 계정으로
             로그인해야 쓸 수 있습니다.
           </p>
         ) : null}

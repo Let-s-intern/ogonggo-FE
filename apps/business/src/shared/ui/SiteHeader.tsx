@@ -9,7 +9,6 @@ import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
 import { Logo } from './Logo';
-import { POST_HISTORY_OPTION, POST_REGISTER_OPTIONS, PostRegisterMenu } from './PostRegisterMenu';
 
 interface NavItem {
   href: string;
@@ -31,32 +30,17 @@ const SERVICE_NAV: NavItem[] = [
   },
 ];
 
-/** 마이페이지 첫 화면. `/mypage/company` 는 공고 목록으로 보낸다. */
+/** 기업 회원 대시보드. 공고·기업 정보는 그 화면의 왼쪽 메뉴에서 간다(`CompanyConsoleNav`). */
 const MY_PAGE_HREF = '/mypage/company';
 
-/** 공고 작성 화면이나 공고 목록(드롭다운의 `등록 내역`)에 있으면 `공고등록` 에 밑줄을 긋는다. */
-const isPostRegister = (p: string) => p.startsWith('/mypage/company/posts');
-/** 모바일 메뉴의 `등록 내역` 은 작성 화면이 아닌 목록에서만 켠다. */
-const isPostHistory = (p: string) =>
-  p.startsWith(POST_HISTORY_OPTION.href) && !/\/(new|edit)$/.test(p);
-
 /**
- * 오른쪽 메뉴. 기업 회원으로 로그인해야 쓸 수 있다. 맨 앞의 `공고등록` 은 채용공고·부트캠프를 먼저 고르는
- * 메뉴라 따로 둔다(`PostRegisterMenu`).
- */
-const COMPANY_NAV: NavItem[] = [
-  {
-    href: '/mypage/company/profile',
-    label: '내 기업 정보',
-    match: (p) => p.startsWith('/mypage/company/profile'),
-  },
-];
-
-/**
- * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의·신청 내역, 오른쪽은 공고등록·내 기업 정보·로그인. 로그인하면 로그인 자리에
- * 기업명이 나오고, 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`). 모바일 메뉴에는 두 항목을 그대로 펼친다.
+ * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의·신청 내역, 오른쪽은 로그인. 로그인하면 로그인 자리에 기업명이 나오고,
+ * 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`).
  *
- * 공고등록·내 기업 정보는 기업 회원으로 로그인했을 때만 그 화면으로 바로 간다. 로그인하지 않았거나 다른 역할이면
+ * `공고등록`·`내 기업 정보` 는 두지 않는다. 기업 회원 화면(`/mypage/company`)에 왼쪽 메뉴가 생겨 거기서 간다
+ * (2026-11-10 사용자). 헤더 모양은 공개 화면과 기업 회원 화면이 같다.
+ *
+ * `신청 내역` 은 기업 회원으로 로그인했을 때만 바로 간다. 로그인하지 않았거나 다른 역할이면
  * `/login?redirect=<그 화면>` 으로 보내고, 로그인 화면이 다른 역할에게 기업 회원으로 로그인하라고 안내한다
  * (`widgets/sign-in/LoginPage.tsx`). 역할은 `getMyAccount` 에만 있어 받기 전에는 로그인 화면으로 건다 — 기업
  * 회원이 그 사이에 누르면 로그인 화면이 바로 돌려보낸다.
@@ -118,19 +102,7 @@ export function SiteHeader() {
             />
           ))}
         </nav>
-        <nav
-          aria-label="기업 회원 메뉴"
-          className="ml-auto hidden h-full items-center gap-5 md:flex"
-        >
-          <PostRegisterMenu hrefFor={companyHref} active={isPostRegister(pathname)} />
-          {COMPANY_NAV.map((item) => (
-            <DesktopLink
-              key={item.href}
-              href={companyHref(item.href)}
-              label={item.label}
-              active={item.match(pathname)}
-            />
-          ))}
+        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
           {signedIn ? (
             <AccountMenu
               companyName={companyName}
@@ -172,27 +144,6 @@ export function SiteHeader() {
             ))}
           </ul>
           <ul className="mt-2 border-t border-gray-100 pt-2">
-            {POST_REGISTER_OPTIONS.map((option) => (
-              <MobileLink
-                key={option.href}
-                href={companyHref(option.href)}
-                label={option.label}
-                active={pathname.startsWith(option.href)}
-              />
-            ))}
-            <MobileLink
-              href={companyHref(POST_HISTORY_OPTION.href)}
-              label={POST_HISTORY_OPTION.label}
-              active={isPostHistory(pathname)}
-            />
-            {COMPANY_NAV.map((item) => (
-              <MobileLink
-                key={item.href}
-                href={companyHref(item.href)}
-                label={item.label}
-                active={item.match(pathname)}
-              />
-            ))}
             {signedIn ? (
               <MobileLink
                 href={companyHref(MY_PAGE_HREF)}
