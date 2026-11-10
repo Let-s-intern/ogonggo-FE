@@ -20,6 +20,14 @@ export const POST_REGISTER_OPTIONS = [
   },
 ] as const;
 
+/** 드롭다운 맨 아래, 구분선 뒤의 `등록 내역`. 마이페이지 공고 목록(`/mypage/company/posts` → 채용공고)으로 간다. */
+export const POST_HISTORY_OPTION = {
+  href: '/mypage/company/posts',
+  label: '등록 내역',
+  hint: '올린 채용공고 · 부트캠프',
+  icon: 'icon-[lucide--list]',
+} as const;
+
 export interface PostRegisterMenuProps {
   /** 기업 회원이 아니면 로그인 화면을 거치게 바꾼다(`SiteHeader` 의 `companyHref`). */
   hrefFor: (href: string) => string;
@@ -28,7 +36,7 @@ export interface PostRegisterMenuProps {
 
 /**
  * 데스크톱 헤더의 `공고등록`. 바로 이동하지 않고 채용공고·부트캠프 중 무엇을 올릴지 먼저 고르게 한다(2026-11-09
- * 사용자). 여닫는 방식은 `AccountMenu` 와 같다 — 바깥을 누르거나 Esc 를 누르면 닫힌다.
+ * 사용자). 아래에 올린 공고 목록으로 가는 `등록 내역` 을 둔다(2026-11-10 사용자). 여닫는 방식은 `AccountMenu` 와 같다 — 바깥을 누르거나 Esc 를 누르면 닫힌다.
  */
 export function PostRegisterMenu({ hrefFor, active }: PostRegisterMenuProps) {
   const [open, setOpen] = useState(false);
@@ -78,8 +86,14 @@ export function PostRegisterMenu({ hrefFor, active }: PostRegisterMenuProps) {
           role="menu"
           className="absolute top-full right-0 z-20 mt-1 w-60 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
         >
-          {POST_REGISTER_OPTIONS.map((option) => (
-            <li role="none" key={option.href}>
+          {[...POST_REGISTER_OPTIONS, POST_HISTORY_OPTION].map((option) => (
+            <li
+              role="none"
+              key={option.href}
+              className={cn(
+                option === POST_HISTORY_OPTION && 'mt-1.5 border-t border-gray-100 pt-1.5',
+              )}
+            >
               <Link
                 role="menuitem"
                 href={hrefFor(option.href)}

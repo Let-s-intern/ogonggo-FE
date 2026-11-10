@@ -9,7 +9,7 @@ import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
 import { Logo } from './Logo';
-import { POST_REGISTER_OPTIONS, PostRegisterMenu } from './PostRegisterMenu';
+import { POST_HISTORY_OPTION, POST_REGISTER_OPTIONS, PostRegisterMenu } from './PostRegisterMenu';
 
 interface NavItem {
   href: string;
@@ -34,8 +34,11 @@ const SERVICE_NAV: NavItem[] = [
 /** 마이페이지 첫 화면. `/mypage/company` 는 공고 목록으로 보낸다. */
 const MY_PAGE_HREF = '/mypage/company';
 
-/** 공고 작성 화면에 있으면 `공고등록` 에 밑줄을 긋는다. */
-const isPostRegister = (p: string) => /^\/mypage\/company\/posts\/(jobs|bootcamps)\/new/.test(p);
+/** 공고 작성 화면이나 공고 목록(드롭다운의 `등록 내역`)에 있으면 `공고등록` 에 밑줄을 긋는다. */
+const isPostRegister = (p: string) => p.startsWith('/mypage/company/posts');
+/** 모바일 메뉴의 `등록 내역` 은 작성 화면이 아닌 목록에서만 켠다. */
+const isPostHistory = (p: string) =>
+  p.startsWith(POST_HISTORY_OPTION.href) && !/\/(new|edit)$/.test(p);
 
 /**
  * 오른쪽 메뉴. 기업 회원으로 로그인해야 쓸 수 있다. 맨 앞의 `공고등록` 은 채용공고·부트캠프를 먼저 고르는
@@ -177,6 +180,11 @@ export function SiteHeader() {
                 active={pathname.startsWith(option.href)}
               />
             ))}
+            <MobileLink
+              href={companyHref(POST_HISTORY_OPTION.href)}
+              label={POST_HISTORY_OPTION.label}
+              active={isPostHistory(pathname)}
+            />
             {COMPANY_NAV.map((item) => (
               <MobileLink
                 key={item.href}
