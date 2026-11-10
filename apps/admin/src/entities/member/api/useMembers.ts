@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   changeGeneralMemberRole,
   getCompanyMember,
@@ -63,6 +63,8 @@ export type UserMemberListFilters = MemberListFilters & { role: string };
 
 export function useUserMemberList(filters: UserMemberListFilters) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'members', 'users', filters],
     // 상태 값은 화면의 선택지에서 오므로 스펙의 enum 과 같다.
     queryFn: () =>
@@ -97,6 +99,8 @@ export function useUserMemberDetail(memberId: number) {
 
 export function useCompanyMemberList(filters: MemberListFilters) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'members', 'companies', filters],
     queryFn: () =>
       unwrapData(listCompanyMembers(toMemberListParams(filters) as ListCompanyMembersParams)),

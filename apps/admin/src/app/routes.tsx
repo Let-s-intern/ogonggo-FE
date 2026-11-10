@@ -88,11 +88,21 @@ export const router = createBrowserRouter([
       },
       { path: 'business/bootcamps/:bootcampId', element: <BootcampDetailPage /> },
       { path: 'business/bootcamps/:bootcampId/edit', element: <BootcampEditPage /> },
-      { path: 'business/ad-inquiries', element: <AdInquiryListPage /> },
+      {
+        path: 'business/ad-inquiries',
+        element: <AdInquiryListPage title="무료 홍보 신청" fixedInquiryType="FREE_PROMOTION" />,
+      },
       {
         path: 'business/rejected-ad-inquiries',
         // 경로가 달라도 같은 컴포넌트라 key 가 없으면 메뉴를 옮겨도 상태가 남는다.
-        element: <AdInquiryListPage key="rejected" view="rejected" />,
+        element: (
+          <AdInquiryListPage
+            key="rejected"
+            view="rejected"
+            title="반려한 무료 홍보"
+            fixedInquiryType="FREE_PROMOTION"
+          />
+        ),
       },
       {
         path: 'business/advertisement-applications',

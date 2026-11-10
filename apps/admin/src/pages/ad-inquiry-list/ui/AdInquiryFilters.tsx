@@ -25,7 +25,7 @@ const ACTIVE_STATUS_OPTIONS = AD_INQUIRY_STATUS_OPTIONS.filter(
   (option) => option.value !== 'REJECTED',
 );
 
-type FilterKey = Exclude<keyof AdInquiryListFilters, 'page' | 'view'>;
+export type FilterKey = Exclude<keyof AdInquiryListFilters, 'page' | 'view'>;
 
 const SELECTS: { key: FilterKey; label: string; options: SelectOption[] }[] = [
   { key: 'inquiryType', label: '문의 유형', options: AD_INQUIRY_TYPE_OPTIONS },
@@ -49,8 +49,11 @@ export function AdInquiryFilters({
   filters,
   total,
   onChange,
+  hiddenKeys = [],
 }: {
   filters: AdInquiryListFilters;
+  /** 화면이 값을 정해 둔 필터. 그리지 않는다(무료 홍보 메뉴의 `문의 유형` 등). */
+  hiddenKeys?: readonly FilterKey[];
   /** 현재 조건의 건수. 아직 모르면 `undefined`. */
   total: number | undefined;
   onChange: (changes: Partial<Record<FilterKey, string>>) => void;
@@ -60,18 +63,19 @@ export function AdInquiryFilters({
 
   return (
     <ListToolbar>
-      {SELECTS.filter(({ key }) => !(key === 'status' && filters.view === 'rejected')).map(
-        ({ key, label, options }) => (
-          <Select
-            key={key}
-            aria-label={label}
-            options={options}
-            value={filters[key]}
-            onChange={(event) => onChange({ [key]: event.target.value })}
-            className={filters[key] ? SELECTED : UNSELECTED}
-          />
-        ),
-      )}
+      {SELECTS.filter(
+        ({ key }) =>
+          !hiddenKeys.includes(key) && !(key === 'status' && filters.view === 'rejected'),
+      ).map(({ key, label, options }) => (
+        <Select
+          key={key}
+          aria-label={label}
+          options={options}
+          value={filters[key]}
+          onChange={(event) => onChange({ [key]: event.target.value })}
+          className={filters[key] ? SELECTED : UNSELECTED}
+        />
+      ))}
       <div className="flex items-center gap-1.5">
         <Input
           type="date"

@@ -6,10 +6,11 @@ import {
   isAdminTokenUnverified,
 } from '@/shared/api/adminTokenUnverified';
 import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
-import { NAV_AREAS, NAV_SECTIONS, firstPathOf, navAreaOf } from '@/shared/config/navigation';
+import { NAV_AREAS, NAV_SECTIONS, firstPathOf, stickyNavAreaOf } from '@/shared/config/navigation';
 import { Logo } from '@/shared/ui/Logo';
 import { isMockEnabled } from '@/app/enableMocking';
 import { useReviewQueue } from '@/entities/review/api/useReviewQueue';
+import { usePendingApplicationCount } from '@/entities/advertisement-contract/api/useAdvertisementContracts';
 import {
   todayAdInquiriesHref,
   useAdInquiryTodayCount,
@@ -58,8 +59,11 @@ export function AdminLayout() {
   }, [assistantQuestion, isAssistantOpen, setIsAssistantOpen]);
   // 검수 대기 화면과 같은 쿼리를 쓴다. 판정을 저장하면 그 화면이 무효화하므로 숫자도 함께 바뀐다.
   const { data: reviewQueue } = useReviewQueue();
+  // 처리할 유료 광고 신청(신청 · 협의 중). 상태를 바꾸면 목록과 함께 다시 읽는다.
+  const { data: pendingApplications } = usePendingApplicationCount();
   const navCounts: Record<string, number | undefined> = {
     '/ads/review': reviewQueue?.length,
+    '/business/advertisement-applications': pendingApplications,
   };
   /*
    * 파란 숫자 배지. 위의 회색 숫자(남은 일의 양)와 달리 "새로 들어온 것" 을 알린다. 누르면 그 숫자에 해당하는
@@ -84,8 +88,8 @@ export function AdminLayout() {
     { label: '오늘 문의', count: adInquiryToday?.count ?? 0, to: todayAdInquiriesHref() },
   ].filter((item) => item.count > 0);
   const businessTotal = headerCounts.reduce((sum, item) => sum + item.count, 0);
-  // 헤더의 구역은 주소에서 정한다. 주소로 바로 들어와도(상세 등) 그 화면이 속한 구역이 켜진다.
-  const area = navAreaOf(useLocation().pathname);
+  // 헤더의 구역은 메뉴 화면이면 그 메뉴의 구역, 상세·수정이면 직전 구역이다(`stickyNavAreaOf`).
+  const area = stickyNavAreaOf(useLocation().pathname);
   const navBadgeFor = (path: string) => {
     const badge = navBadges[path];
     return badge?.count ? (

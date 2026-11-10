@@ -51,7 +51,7 @@ export function SideStudyListPage() {
 
   const { data, isPending, isError } = useSideStudyList(filters);
   const selection = useRowSelection(
-    (data?.items ?? []).map((row) => row.id),
+    data?.items ?? [],
     JSON.stringify({ ...filters, page: undefined }),
   );
   // 검색을 바꿔도 남는, UTM 링크용으로 담아 둔 공고.
@@ -165,7 +165,7 @@ export function SideStudyListPage() {
             actions={
               <UtmLinksButton
                 kind="side-studies"
-                postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
+                postings={selection.selectedRows}
                 allMatching={selection.allMatching}
                 basket={utmBasket}
               />

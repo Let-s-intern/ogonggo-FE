@@ -1,4 +1,10 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 import {
   createAdvertisementContractProduct,
   deleteAdvertisementContractProduct,
@@ -37,6 +43,8 @@ export interface ContractListFilters {
 export function useContractList(filters: ContractListFilters) {
   const { status, ...rest } = filters;
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: [...LIST_KEY, 'list', filters],
     queryFn: () =>
       unwrapData(
@@ -46,6 +54,27 @@ export function useContractList(filters: ContractListFilters) {
           status: status.length > 0 ? status : undefined,
         }),
       ),
+  });
+}
+
+/**
+ * 처리할 유료 광고 신청 수(신청 · 협의 중). 메뉴 `유료 광고 신청` 옆 숫자다(2026-11-10 사용자). 반려는 끝난 일이라 세지
+ * 않는다. 목록 키 아래에 두어 상태를 바꾸면(목록 무효화) 숫자도 다시 읽는다. 한 건만 받아 전체 건수만 읽는다.
+ */
+export function usePendingApplicationCount() {
+  return useQuery({
+    queryKey: [...LIST_KEY, 'pending-application-count'],
+    queryFn: async () => {
+      const page = await unwrapData(
+        listAdvertisementContracts({
+          source: 'APPLICATION_FORM',
+          status: ['REQUESTED', 'NEGOTIATING'],
+          page: 1,
+          size: 1,
+        }),
+      );
+      return page?.pageInfo.totalElements;
+    },
   });
 }
 

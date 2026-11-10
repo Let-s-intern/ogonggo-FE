@@ -1,9 +1,10 @@
-import { useNavigate } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { Callout, DataTable, Pagination, Select, Toggle, type DataTableColumn } from '@ogonggo/ui';
 import type { AdminBootcampSummaryResponse as AdminBootcampSummary } from '@ogonggo/api/src/admin';
 import { listAllIds, useBootcampList, usePatchBootcamp } from '@/entities/content/api/useContent';
 import { BootcampPriorityToggle } from '@/features/priority-exposed';
 import { ProxyRegisterButton } from '@/features/proxy-registration';
+import { BootcampDetailDialog } from '@/widgets/bootcamp-detail';
 import { PageHeader } from '@/widgets/page-header';
 import { BulkVisibilityBar, selectionColumn, useRowSelection } from '@/widgets/bulk-visibility';
 import { UtmBasketBar, UtmLinksButton, useUtmBasket } from '@/widgets/utm-links';
@@ -44,11 +45,26 @@ export function BootcampListPage({
   fixedSource?: 'COMPANY';
   /** 화면 제목. 없으면 `부트캠프`. */
   title?: string;
-  /** 행을 누르면 갈 상세의 앞부분. 비즈니스 구역은 `/business/bootcamps` 라 헤더 구역이 유지된다. */
+  /** 이 목록의 주소이자 상세의 앞부분. 모달의 `상세 화면으로 열기`·`내용 수정` 이 이 아래로 간다. */
   detailBasePath?: string;
 } = {}) {
-  const navigate = useNavigate();
   const { get, page, setFilter, setPage } = useListQuery();
+  /**
+   * 행을 누르면 상세를 모달로 연다(2026-11-10 사용자). 열린 건은 `?bootcamp=<id>` 라 뒤로가기로 닫히고, 목록의
+   * 페이지·필터는 그대로다.
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openId = Number(searchParams.get('bootcamp')) || null;
+  const openDetail = (id: number) => {
+    const next = new URLSearchParams(window.location.search);
+    next.set('bootcamp', String(id));
+    setSearchParams(next);
+  };
+  const closeDetail = () => {
+    const next = new URLSearchParams(window.location.search);
+    next.delete('bootcamp');
+    setSearchParams(next);
+  };
 
   // 비즈니스 구역은 모집 중인 과정만 기본으로 본다. `전체` 를 고르면 주소에 `ALL` 이 남는다(2026-11-06 사용자).
   const statusParam = get('status', fixedSource ? 'RECRUITING' : '');
@@ -64,9 +80,9 @@ export function BootcampListPage({
   };
 
   const { data, isPending, isError } = useBootcampList(filters);
-  // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
+  // 고른 행과 검색 결과 전체는 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
   const selection = useRowSelection(
-    (data?.items ?? []).map((row) => row.id),
+    data?.items ?? [],
     JSON.stringify({ ...filters, page: undefined }),
   );
   // 검색을 바꿔도 남는, UTM 링크용으로 담아 둔 공고.
@@ -196,7 +212,7 @@ export function BootcampListPage({
             actions={
               <UtmLinksButton
                 kind="bootcamps"
-                postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
+                postings={selection.selectedRows}
                 allMatching={selection.allMatching}
                 basket={utmBasket}
               />
@@ -206,13 +222,16 @@ export function BootcampListPage({
             columns={columns}
             rows={data?.items ?? []}
             rowKey={(row) => row.id}
-            onRowClick={(row) => navigate(`${detailBasePath}/${row.id}`)}
+            onRowClick={(row) => openDetail(row.id)}
             isLoading={isPending}
             emptyMessage="조건에 맞는 부트캠프가 없습니다."
           />
           <Pagination page={page} totalPages={data?.pageInfo.totalPages ?? 1} onChange={setPage} />
         </>
       )}
+      {openId ? (
+        <BootcampDetailDialog bootcampId={openId} listPath={detailBasePath} onClose={closeDetail} />
+      ) : null}
     </>
   );
 }

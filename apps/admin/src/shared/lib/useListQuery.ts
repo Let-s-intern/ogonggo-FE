@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { useSearchParams } from 'react-router';
+import { useCallback, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router';
+import { rememberListSearch } from './listReturn';
 
 /**
  * 목록 화면의 검색·필터·정렬·페이지를 URL 쿼리스트링에서 읽고 쓴다.
@@ -7,11 +8,18 @@ import { useSearchParams } from 'react-router';
  * 상태를 컴포넌트 안에 두지 않는 이유는 PRD "라우팅" 에 있다 — 운영자가 걸러낸 목록을 그대로
  * 북마크하고, 상세에서 뒤로 갔을 때 조건이 살아 있어야 한다.
  *
+ * 지금 조건은 탭에 기억해 두어, 상세의 `목록으로` 링크가 같은 페이지·필터로 돌아온다(`listReturn.ts`).
+ *
  * 필터를 바꾸면 페이지를 1 로 되돌린다. 3페이지를 보다가 상태를 바꾸면 결과가 두 페이지뿐일 수
  * 있고, 그러면 빈 화면이 나온다.
  */
 export function useListQuery() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    rememberListSearch(pathname, searchParams);
+  }, [pathname, searchParams]);
 
   const get = useCallback(
     (key: string, fallback = '') => searchParams.get(key) ?? fallback,

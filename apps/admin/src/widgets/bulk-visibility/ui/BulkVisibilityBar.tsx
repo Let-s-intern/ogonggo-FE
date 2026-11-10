@@ -8,50 +8,64 @@ import { serverErrorMessage } from '@/shared/api/authErrorMessages';
 import { visibilityLabel } from '@/shared/config/labels';
 
 /**
- * 목록에서 고른 행의 id, 또는 검색 결과 전체.
+ * 목록에서 고른 행, 또는 검색 결과 전체.
  *
- * 행은 지금 페이지에 보이는 것만 고를 수 있고, 페이지나 필터가 바뀌면 비운다. 남겨 두면 화면에
- * 없는 행까지 함께 바뀌는데, 운영자는 무엇이 바뀌는지 볼 수 없다. 보이는 행 id 를 이어 붙인 값이
- * 바뀌는 것으로 그때를 안다.
+ * 고른 행은 필터(`scopeKey`, 페이지 번호는 빼고)에 묶는다. 페이지를 넘기거나 목록을 다시 받아도(노출을 바꾼 뒤 등)
+ * 남고, 필터가 바뀔 때만 풀린다(2026-11-10 사용자: 다음 페이지로 넘어가면 이전 페이지 체크가 풀려 불편했다). 고른 건수가
+ * 표 위와 아래 바에 보이므로 다른 페이지의 행까지 바뀐다는 것을 운영자가 안다. 다른 페이지 행도 UTM 링크에 쓰도록 행을
+ * 함께 기억한다(`selectedRows`).
  *
- * 검색 결과 전체는 필터(`scopeKey`, 페이지 번호는 빼고)에 묶는다. 페이지를 넘겨도 남고 필터가
- * 바뀌면 풀린다 — 건수가 표 위에 보이므로 무엇이 바뀌는지 운영자가 안다.
+ * 검색 결과 전체도 같은 필터에 묶는다.
  */
-export function useRowSelection(rowIds: number[], scopeKey: string) {
-  const rowsKey = rowIds.join(',');
+export function useRowSelection<T extends { id: number }>(rows: readonly T[], scopeKey: string) {
+  const rowIds = rows.map((row) => row.id);
   const [state, setState] = useState<{
-    rowsKey: string;
-    ids: Set<number>;
+    scope: string;
+    picked: Map<number, T>;
     allScope: string | null;
-  }>({ rowsKey, ids: new Set(), allScope: null });
+  }>({ scope: scopeKey, picked: new Map(), allScope: null });
   const allMatching = state.allScope === scopeKey;
-  const selected = state.rowsKey === rowsKey ? state.ids : new Set<number>();
+  const picked = state.scope === scopeKey ? state.picked : new Map<number, T>();
+  const selected = new Set(picked.keys());
 
-  const update = (next: Set<number>) => setState({ rowsKey, ids: next, allScope: null });
+  const update = (next: Map<number, T>) =>
+    setState({ scope: scopeKey, picked: next, allScope: null });
 
   return {
     selected,
+    /** 고른 행. 다른 페이지에서 고른 것도 들어 있다. */
+    selectedRows: [...picked.values()],
     rowCount: rowIds.length,
     allMatching,
     isSelected: (id: number) => allMatching || selected.has(id),
     allSelected: allMatching || (rowIds.length > 0 && rowIds.every((id) => selected.has(id))),
     toggle: (id: number, checked: boolean) => {
       // 전체를 고른 채 한 행을 빼면 이 페이지의 나머지 행만 남긴다.
-      const next = new Set(allMatching ? rowIds : selected);
-      if (checked) {
-        next.add(id);
+      const next = allMatching ? new Map(rows.map((row) => [row.id, row])) : new Map(picked);
+      const row = rows.find((candidate) => candidate.id === id);
+      if (checked && row) {
+        next.set(id, row);
       } else {
         next.delete(id);
       }
       update(next);
     },
-    toggleAll: (checked: boolean) => update(checked ? new Set(rowIds) : new Set()),
-    selectAllMatching: () => setState({ rowsKey, ids: new Set(), allScope: scopeKey }),
-    clear: () => update(new Set()),
+    /** 이 페이지의 행만 더하거나 뺀다. 다른 페이지에서 고른 것은 그대로다. */
+    toggleAll: (checked: boolean) => {
+      const next = new Map(picked);
+      for (const row of rows) {
+        if (checked) next.set(row.id, row);
+        else next.delete(row.id);
+      }
+      update(next);
+    },
+    selectAllMatching: () => setState({ scope: scopeKey, picked: new Map(), allScope: scopeKey }),
+    clear: () => update(new Map()),
   };
 }
 
-type RowSelection = ReturnType<typeof useRowSelection>;
+// 칸·바는 행 모양과 상관없이 고른 id 만 쓴다.
+type RowSelection = ReturnType<typeof useRowSelection<{ id: number }>>;
 
 /**
  * 표 맨 앞의 체크박스 칸.
