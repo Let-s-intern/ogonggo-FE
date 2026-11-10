@@ -91,17 +91,31 @@ export const NAV_SECTIONS: NavSection[] = [
      * `유료 광고 신청`, 승인은 `광고 계약` 으로 나눠 본다. 광고주·광고 공고·채널 광고·캘린더 화면은 백엔드에 API 가 없어
      * 지웠다(2026-11-09 사용자, PRD `prd-ad-backend-sync.md` D1).
      *
-     * 무료 홍보 신청은 계약이 아니라 광고 문의 테이블에 쌓인다. 들어오는 신청을 한 곳에서 보려고 이 묶음에 둔다(2026-11-09
-     * 사용자). 그 테이블에는 출시 알림 신청도 함께 있다.
+     * 무료 홍보 신청은 계약이 아니라 광고 문의 테이블에 쌓여 아래 `무료 홍보` 로 나눴다(2026-11-10 사용자).
      */
     title: '광고',
+    items: [
+      { path: '/business/advertisement-applications', label: '유료 광고 신청' },
+      { path: '/business/advertisement-contracts', label: '광고 계약' },
+    ],
+  },
+  {
+    area: 'business',
+    /*
+     * 무료 홍보 신청. 광고 문의 테이블의 무료 홍보 문의만 본다. 유료 광고와 섞이지 않게 `광고` 에서 나눴다(2026-11-10
+     * 사용자).
+     */
+    title: '무료 홍보',
     items: [
       { path: '/business/ad-inquiries', label: '무료 홍보 신청' },
       // `/business/ad-inquiries/rejected` 로 두면 메뉴 링크(`end` 없음)가 `무료 홍보 신청` 까지 함께 켠다.
       { path: '/business/rejected-ad-inquiries', label: '반려한 무료 홍보' },
-      { path: '/business/advertisement-applications', label: '유료 광고 신청' },
-      { path: '/business/advertisement-contracts', label: '광고 계약' },
     ],
+  },
+  {
+    area: 'business',
+    // 광고 문의 테이블의 문의 전체(무료 홍보·출시 알림·반려)를 탭으로 본다(2026-11-10 사용자). 하나뿐이라 제목이 없다.
+    items: [{ path: '/business/inquiries', label: '문의 관리' }],
   },
   {
     area: 'business',

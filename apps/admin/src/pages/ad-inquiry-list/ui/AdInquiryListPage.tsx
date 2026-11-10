@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { Callout, Pagination } from '@ogonggo/ui';
 import {
@@ -12,18 +13,27 @@ import { AdInquiryCsvButton } from './AdInquiryCsvButton';
 import { AdInquiryFilters } from './AdInquiryFilters';
 import { useListQuery } from '@/shared/lib/useListQuery';
 
-const TITLES: Record<AdInquiryView, string> = {
-  active: '무료 홍보 신청',
-  rejected: '반려한 무료 홍보',
-};
+export interface AdInquiryListPageProps {
+  view?: AdInquiryView;
+  /** 화면이 정해 둔 문의 유형. 있으면 `문의 유형` 필터를 숨기고 이 유형만 본다. */
+  fixedInquiryType?: string;
+  title: string;
+  /** 제목 아래, 필터 위에 붙는 줄(`문의 관리` 의 탭). */
+  tabs?: ReactNode;
+}
 
 /**
  * 광고 문의 목록(PRD `어드민 화면`). 영업이 한 건씩 읽고 연락하는 흐름이라 표가 아니라 한 줄에 카드 하나다.
  *
- * `광고 문의`(반려 제외)와 `반려한 문의` 두 메뉴가 이 화면을 함께 쓴다(LC-3525). 처음에는 목록 위 탭이었는데
- * 어색하다는 말이 있어(2026-10-29, 사용자) `광고` 구역의 `검수 대기`·`반려 보관` 처럼 메뉴로 나눴다.
+ * `무료 홍보 신청`(반려 제외)·`반려한 무료 홍보` 두 메뉴와 `문의 관리`(탭) 가 이 화면을 함께 쓴다(LC-3525). 무료 홍보
+ * 두 메뉴는 무료 홍보 문의만 보고, 문의 관리는 문의 유형·반려를 탭으로 나눠 전체를 본다(2026-11-10 사용자).
  */
-export function AdInquiryListPage({ view = 'active' }: { view?: AdInquiryView }) {
+export function AdInquiryListPage({
+  view = 'active',
+  fixedInquiryType,
+  title,
+  tabs,
+}: AdInquiryListPageProps) {
   const { get, page, setPage } = useListQuery();
   const [, setSearchParams] = useSearchParams();
 
@@ -47,7 +57,7 @@ export function AdInquiryListPage({ view = 'active' }: { view?: AdInquiryView })
   const filters: AdInquiryListFilters = {
     page,
     view,
-    inquiryType: get('inquiryType'),
+    inquiryType: fixedInquiryType ?? get('inquiryType'),
     campaignCode: get('campaignCode'),
     status: get('status'),
     memberType: get('memberType'),
@@ -62,11 +72,13 @@ export function AdInquiryListPage({ view = 'active' }: { view?: AdInquiryView })
 
   return (
     <>
-      <PageHeader title={TITLES[view]} action={<AdInquiryCsvButton filters={filters} />} />
+      <PageHeader title={title} action={<AdInquiryCsvButton filters={filters} />} />
+      {tabs}
       <AdInquiryFilters
         filters={filters}
         total={data?.pageInfo.totalElements}
         onChange={changeFilters}
+        hiddenKeys={fixedInquiryType ? ['inquiryType'] : []}
       />
 
       {isError ? (
