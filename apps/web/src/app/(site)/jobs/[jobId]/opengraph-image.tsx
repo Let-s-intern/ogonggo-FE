@@ -1,5 +1,12 @@
 import { getCompanyLogoUrl } from '@/entities/job/model/company-logo';
 import {
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  formatJobField,
+  formatRegion,
+} from '@/entities/job/model/labels';
+import {
+  type OgInfoCell,
   ogDeadlineText,
   POSTING_OG_SIZE,
   renderPostingOgImage,
@@ -14,16 +21,30 @@ export const contentType = 'image/png';
  * 채용공고를 공유했을 때 미리보기 카드. 모양은 `shared/lib/og/postingOgImage.tsx` 가 정한다.
  * 파일로 둔 이미지는 `generateMetadata` 의 `openGraph.images` 보다 우선한다
  * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/01-metadata/opengraph-image.md).
+ *
+ * 정보 칸은 고용 형태·경력·직무·지역이다. 직무와 지역은 선택 필드라 없으면 칸을 뺀다.
  */
 export default async function Image({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await params;
   const job = await fetchJobDetail(Number(jobId));
+  const field = formatJobField(job.jobField);
+  const region = formatRegion(job.region);
+  const infoCells: OgInfoCell[] = [
+    { label: '고용 형태', value: EMPLOYMENT_TYPE_LABELS[job.employmentType] },
+    { label: '경력', value: EXPERIENCE_TYPE_LABELS[job.experienceType] },
+    ...(field ? [{ label: '직무', value: field }] : []),
+    ...(region ? [{ label: '지역', value: region }] : []),
+  ];
+
   return renderPostingOgImage({
+    theme: 'job',
     kindLabel: '채용공고',
     organizationName: job.companyName,
     title: job.title,
     // API 가 로고를 주지 않으면 상세 헤더(`CompanyLogo`)와 같은 회사명 목록에서 찾는다.
     logoUrl: job.logoUrl ?? getCompanyLogoUrl(job.companyName),
+    coverUrl: job.coverImageUrl,
+    infoCells,
     deadlineText: ogDeadlineText(
       'job',
       job.recruitmentEndAt,

@@ -1,56 +1,113 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { enumLabel } from '@ogonggo/api';
 import { ImageResponse } from 'next/og';
 import { HERO_CONTENT, type HeroScreen } from '@/shared/lib/heroContent';
-import { loadFont, POSTING_OG_SIZE } from './postingOgImage';
+import { OgLogoMark } from './ogLogoMark';
+import { loadFonts, POSTING_OG_SIZE } from './postingOgImage';
 
-/**
- * 미리보기 카드가 있는 화면. 취준고민(`concerns`)은 미리보기 카드를 만들지 않기로 했다(v13 PRD
- * "하지 않는 것"). 커뮤니티(`community`)도 만들지 않는다. 히어로 화면이 늘 때마다 아래 표를 채우게 되지
- * 않도록 뺀다.
- */
-type OgScreen = Exclude<HeroScreen, 'concerns' | 'community'>;
+/** 헤드라인 한 조각. `accent` 면 민트로 칠한다. */
+interface OgSegment {
+  text: string;
+  accent?: boolean;
+}
 
-/**
- * 목록 화면의 배지 색. 히어로(`HERO_CONTENT`)는 Tailwind 클래스로 들고 있어 이미지 생성기에
- * 넘길 수 없다. 같은 색을 hex 로 적는다 — `blue-100`·`blue-500`·`gray-600` 은 `tokens.css`,
- * 민트 둘과 틸은 히어로가 쓰는 hex 그대로다.
- */
-const BADGE_COLORS: Record<OgScreen, { background: string; color: string }> = {
-  jobs: { background: '#D6E3FF', color: '#4A76FF' },
-  bootcamps: { background: '#BBEDD8', color: '#009C89' },
-  'side-studies': { background: '#D1F3E5', color: '#4B5563' },
-};
-
-/** 오른쪽 위 칩. 상세 미리보기(`renderPostingOgImage`)의 `kindLabel` 과 같은 말이다. */
-const KIND_LABELS: Record<OgScreen, string> = {
-  jobs: '채용공고',
-  bootcamps: '교육·부트캠프',
-  'side-studies': '사이드·스터디',
-};
-
-/** 히어로 배경 PNG(`public/hero/`)를 data URL 로. 목록 미리보기는 빌드 때 한 번 그려진다. */
-async function loadBackground(screen: OgScreen): Promise<string> {
-  const path = join(process.cwd(), 'public', HERO_CONTENT[screen].theme.backgroundImage);
-  return `data:image/png;base64,${(await readFile(path)).toString('base64')}`;
+interface SectionOgConfig {
+  /** 왼쪽 흰 칩. 상세 미리보기(`renderPostingOgImage`)의 `kindLabel` 과 같은 말이다. */
+  kindLabel: string;
+  /** 오른쪽 위 주소 뒤에 붙는 경로. */
+  path: string;
+  /** 카드 바탕색. 흰 글자가 4.5:1 을 넘는 진한 색이다. */
+  ground: string;
+  /** 흰 칩 안 글자색. */
+  labelColor: string;
+  lines: OgSegment[][];
+  /** 아래 줄 `#` 칩. 이 화면에서 고를 수 있는 분류의 라벨이다(enum 카탈로그). */
+  chips: string[];
 }
 
 /**
- * 채용공고(`/`)·교육·부트캠프·사이드·스터디 목록을 공유했을 때 미리보기 카드.
+ * 목록 화면별 미리보기 카드 내용. 배지 문구는 그 화면 히어로(`HERO_CONTENT`)의 것을 그대로 쓰고,
+ * 헤드라인은 강조 위치만 미리보기에 맞게 다시 적었다 — 히어로는 사이드·스터디와 취준 고민에
+ * 강조가 없는데, 단색 바탕에서는 한 조각을 민트로 칠해야 눈이 간다.
+ */
+const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
+  jobs: {
+    kindLabel: '채용공고',
+    path: '',
+    ground: '#3B60E6',
+    labelColor: '#2D4ABD',
+    lines: [
+      [{ text: '커리어 여정에' }, { text: '딱!', accent: true }, { text: '맞는' }],
+      [{ text: '채용공고만' }, { text: '쏙!', accent: true }, { text: '보여드려요' }],
+    ],
+    chips: (
+      ['IT_DEVELOPMENT', 'PLANNING_STRATEGY', 'MARKETING_ADVERTISING', 'SALES', 'GAME'] as const
+    ).map((value) => enumLabel('JobField', value)),
+  },
+  bootcamps: {
+    kindLabel: '교육·부트캠프',
+    path: '/bootcamps',
+    ground: '#00806F',
+    labelColor: '#00705F',
+    lines: [[{ text: '실무를 배울 수 있는' }], [{ text: '교육만 골라 모았어요' }]],
+    chips: [
+      '부트캠프',
+      enumLabel('BootcampCategory', 'KDT'),
+      enumLabel('BootcampCategory', 'SESAC'),
+      enumLabel('BootcampTuitionType', 'GOVERNMENT_FUNDED'),
+      enumLabel('BootcampTuitionType', 'FREE'),
+    ],
+  },
+  'side-studies': {
+    kindLabel: '사이드·스터디',
+    path: '/side-studies',
+    ground: '#111827',
+    labelColor: '#111827',
+    lines: [
+      [{ text: '혼자 말고,' }],
+      [{ text: '함께할 사람을' }, { text: '찾아보세요', accent: true }],
+    ],
+    chips: (['BACKEND', 'FRONTEND', 'DESIGN', 'PM', 'MARKETING'] as const).map((value) =>
+      enumLabel('RecruitmentPostPosition', value),
+    ),
+  },
+  concerns: {
+    kindLabel: '취준 고민',
+    path: '/concerns',
+    ground: '#1E3366',
+    labelColor: '#1E3366',
+    lines: [
+      [{ text: '취업 준비하다' }, { text: '막히는 순간', accent: true }],
+      [{ text: '여기서 물어보세요' }],
+    ],
+    chips: (['JOB_POSTING', 'CAREER', 'APPLICATION_INTERVIEW', 'SIDE_EXPERIENCE'] as const).map(
+      (value) => enumLabel('ConcernCategory', value),
+    ),
+  },
+  /** 칩은 이 화면이 안내하는 채널들이다(`app/(site)/community/page.tsx` 의 설명). */
+  community: {
+    kindLabel: '커뮤니티',
+    path: '/community',
+    ground: '#2D4ABD',
+    labelColor: '#2D4ABD',
+    lines: [
+      [{ text: '막막하고 외로운 취준,' }],
+      [{ text: '함께라면' }, { text: '달라집니다', accent: true }],
+    ],
+    chips: ['직무별 오픈채팅방', '오공고 인스타그램', '렛츠커리어 인스타그램'],
+  },
+};
+
+/**
+ * 채용공고(`/`)·교육·부트캠프·사이드·스터디·취준 고민 목록을 공유했을 때 미리보기 카드.
  *
  * 목록에 `og:image` 가 없으면 카카오톡 같은 미리보기가 본문의 첫 이미지, 곧 목록 첫 카드의
- * 썸네일을 가져다 쓴다. 그래서 화면마다 자기 카드를 낸다. 모양은 그 화면 맨 위 히어로
- * (`widgets/home-hero`) 를 옮긴 것이다 — 같은 배경, 같은 배지, 같은 헤드라인이라 링크를 열었을 때
- * 처음 보이는 것과 미리보기가 같다.
+ * 썸네일을 가져다 쓴다. 그래서 화면마다 자기 카드를 낸다. 화면마다 바탕색이 다르고, 오른쪽 아래에
+ * 로고 마크를 크게 깔아 오공고 카드임을 알린다. 목록 미리보기는 빌드 때 한 번 그려지므로 특정
+ * 공고나 개수처럼 금방 낡는 내용은 넣지 않는다.
  */
-export async function renderSectionOgImage(screen: OgScreen): Promise<ImageResponse> {
-  const { badge, lines } = HERO_CONTENT[screen];
-  const badgeColors = BADGE_COLORS[screen];
-  const [bold, medium, background] = await Promise.all([
-    loadFont('Bold'),
-    loadFont('Medium'),
-    loadBackground(screen),
-  ]);
+export async function renderSectionOgImage(screen: HeroScreen): Promise<ImageResponse> {
+  const section = SECTIONS[screen];
+  const fonts = await loadFonts(['ExtraBold', 'Bold', 'SemiBold', 'Medium']);
 
   return new ImageResponse(
     <div
@@ -60,88 +117,109 @@ export async function renderSectionOgImage(screen: OgScreen): Promise<ImageRespo
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '64px 72px',
-        fontFamily: 'Pretendard',
-        color: '#1F2937',
+        padding: '60px 72px',
         position: 'relative',
+        background: section.ground,
+        fontFamily: 'Pretendard',
+        color: '#FFFFFF',
       }}
     >
-      <img
-        src={background}
-        width={POSTING_OG_SIZE.width}
-        height={POSTING_OG_SIZE.height}
-        style={{ position: 'absolute', top: 0, left: 0, objectFit: 'cover' }}
-        alt=""
+      <OgLogoMark
+        width={760}
+        color="rgba(255, 255, 255, 0.13)"
+        style={{ position: 'absolute', right: -150, bottom: -70 }}
       />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        <div style={{ display: 'flex', fontSize: 36, fontWeight: 700, color: '#4A76FF' }}>
-          오늘의 공고
-        </div>
-        <div style={{ display: 'flex', fontSize: 20, fontWeight: 500, color: '#9CA3AF' }}>
-          BY LETS CAREER
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <OgLogoMark width={64} color="#FFFFFF" />
+          <div style={{ display: 'flex', fontSize: 34, fontWeight: 800 }}>오늘의 공고</div>
         </div>
         <div
           style={{
             display: 'flex',
             marginLeft: 'auto',
-            padding: '10px 24px',
-            borderRadius: 999,
-            background: '#4A76FF',
-            color: '#FFFFFF',
-            fontSize: 24,
-            fontWeight: 700,
+            fontSize: 26,
+            fontWeight: 600,
           }}
         >
-          {KIND_LABELS[screen]}
+          {`ogonggo.co.kr${section.path}`}
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 22,
+        }}
+      >
         <div
           style={{
             display: 'flex',
-            padding: '12px 28px',
+            padding: '10px 24px',
             borderRadius: 999,
-            background: badgeColors.background,
-            color: badgeColors.color,
-            fontSize: 28,
-            fontWeight: 500,
+            background: '#FFFFFF',
+            color: section.labelColor,
+            fontSize: 30,
+            fontWeight: 800,
           }}
         >
-          {badge}
+          {section.kindLabel}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {lines.map((line, lineIndex) => (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {section.lines.map((line, lineIndex) => (
             <div
               key={lineIndex}
-              style={{ display: 'flex', alignItems: 'center', fontSize: 68, fontWeight: 700 }}
+              style={{
+                display: 'flex',
+                gap: 18,
+                fontSize: 76,
+                fontWeight: 800,
+                lineHeight: 1.2,
+                letterSpacing: '-0.035em',
+              }}
             >
               {line.map((segment, segmentIndex) => (
-                <span
-                  key={segmentIndex}
-                  style={segment.accent ? { color: '#1BC47D', fontSize: 80, margin: '0 8px' } : {}}
-                >
-                  {segment.text.trim()}
+                <span key={segmentIndex} style={segment.accent ? { color: '#8FF0C2' } : {}}>
+                  {segment.text}
                 </span>
               ))}
             </div>
           ))}
         </div>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <div style={{ display: 'flex', fontSize: 26, fontWeight: 500, color: '#9CA3AF' }}>
-          ogonggo.co.kr
+        <div
+          style={{
+            display: 'flex',
+            fontSize: 30,
+            fontWeight: 500,
+            opacity: 0.92,
+          }}
+        >
+          {HERO_CONTENT[screen].badge}
         </div>
       </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        {section.chips.map((chip) => (
+          <div
+            key={chip}
+            style={{
+              display: 'flex',
+              padding: '10px 22px',
+              borderRadius: 999,
+              background: 'rgba(255, 255, 255, 0.16)',
+              border: '2px solid rgba(255, 255, 255, 0.4)',
+              fontSize: 26,
+              fontWeight: 700,
+            }}
+          >
+            {`# ${chip}`}
+          </div>
+        ))}
+      </div>
     </div>,
-    {
-      ...POSTING_OG_SIZE,
-      fonts: [
-        { name: 'Pretendard', data: bold, weight: 700, style: 'normal' },
-        { name: 'Pretendard', data: medium, weight: 500, style: 'normal' },
-      ],
-    },
+    { ...POSTING_OG_SIZE, fonts },
   );
 }
