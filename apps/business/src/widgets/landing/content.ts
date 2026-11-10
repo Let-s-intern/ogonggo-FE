@@ -541,7 +541,7 @@ export const FAQ = [
  */
 export const CASES = [
   {
-    image: '/landing/cases/case-1.jpg',
+    image: '/landing/cases/tosspayments.jpg',
     kind: '채용공고 광고',
     company: '토스페이먼츠',
     title: '세일즈 계약직 채용',
@@ -554,7 +554,7 @@ export const CASES = [
     ],
   },
   {
-    image: '/landing/cases/case-2.jpg',
+    image: '/landing/cases/levit.jpg',
     kind: '채용공고 광고',
     company: '레브잇',
     title: '콘텐츠 마케팅 인턴 채용',
@@ -567,7 +567,7 @@ export const CASES = [
     ],
   },
   {
-    image: '/landing/cases/case-3.jpg',
+    image: '/landing/cases/modoodoc.jpg',
     kind: '채용공고 광고',
     company: '모두닥',
     title: '전환형 인턴 채용',
@@ -580,7 +580,7 @@ export const CASES = [
     ],
   },
   {
-    image: '/landing/cases/case-4.jpg',
+    image: '/landing/cases/inbody.jpg',
     kind: '채용공고 광고',
     company: '인바디',
     title: 'GBD 통합 직무 인턴',
@@ -593,7 +593,7 @@ export const CASES = [
     ],
   },
   {
-    image: '/landing/cases/case-5.jpg',
+    image: '/landing/cases/lalasweet.jpg',
     kind: '채용설명회',
     company: '라라스윗',
     title: '그로스 마케팅 인턴 채용설명회',
