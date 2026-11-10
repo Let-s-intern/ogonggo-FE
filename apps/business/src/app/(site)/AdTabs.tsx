@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
+import { EventNavLabel } from '@/shared/ui/EventNavLabel';
 
 const TABS = [
   {
@@ -15,6 +16,7 @@ const TABS = [
     href: '/free-promotion',
     label: '출시 기념 무료 홍보',
     match: (p: string) => p.startsWith('/free-promotion'),
+    event: true,
   },
 ] as const;
 
@@ -33,7 +35,8 @@ export function AdTabs() {
         {TABS.map((tab) => {
           const current = tab.match(pathname);
           return (
-            <li key={tab.href}>
+            // 이벤트 탭은 오른쪽 끝에 둔다(2026-11-10 사용자).
+            <li key={tab.href} className={cn('event' in tab && 'ml-auto')}>
               <Link
                 href={tab.href}
                 aria-current={current ? 'page' : undefined}
@@ -44,7 +47,7 @@ export function AdTabs() {
                     : 'border-transparent text-gray-500 hover:text-gray-900',
                 )}
               >
-                {tab.label}
+                {'event' in tab ? <EventNavLabel>{tab.label}</EventNavLabel> : tab.label}
               </Link>
             </li>
           );

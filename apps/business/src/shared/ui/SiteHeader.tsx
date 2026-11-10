@@ -2,18 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
+import { EventNavLabel } from './EventNavLabel';
 import { Logo } from './Logo';
 
 interface NavItem {
   href: string;
   label: string;
   match: (pathname: string) => boolean;
+  /** 이벤트 메뉴. 깜빡이는 점과 흐르는 빛으로 다른 메뉴와 달리 보인다(`EventNavLabel`). */
+  event?: boolean;
 }
 
 /**
@@ -27,6 +30,7 @@ const SERVICE_NAV: NavItem[] = [
     href: '/free-promotion',
     label: '출시 기념 무료 홍보',
     match: (p) => p.startsWith('/free-promotion'),
+    event: true,
   },
 ];
 
@@ -112,7 +116,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
           <span className="text-sm font-semibold text-gray-600">for business</span>
         </Link>
         <nav aria-label="주요 메뉴" className="hidden h-full items-center gap-5 md:flex">
-          {SERVICE_NAV.map((item) => (
+          {SERVICE_NAV.filter((item) => !item.event).map((item) => (
             <DesktopLink
               key={item.href}
               href={item.href}
@@ -121,7 +125,16 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
             />
           ))}
         </nav>
-        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
+        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-6 md:flex">
+          {/* 이벤트 메뉴는 오른쪽, 로그인 앞에 둔다(2026-11-10 사용자). */}
+          {SERVICE_NAV.filter((item) => item.event).map((item) => (
+            <DesktopLink
+              key={item.href}
+              href={item.href}
+              label={<EventNavLabel>{item.label}</EventNavLabel>}
+              active={item.match(pathname)}
+            />
+          ))}
           {signedIn ? (
             <AccountMenu
               companyName={companyName}
@@ -175,7 +188,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
               <MobileLink
                 key={item.href}
                 href={item.href}
-                label={item.label}
+                label={item.event ? <EventNavLabel>{item.label}</EventNavLabel> : item.label}
                 active={item.match(pathname)}
               />
             ))}
@@ -196,7 +209,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
   );
 }
 
-function DesktopLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function DesktopLink({ href, label, active }: { href: string; label: ReactNode; active: boolean }) {
   return (
     <Link
       href={href}
@@ -213,7 +226,7 @@ function DesktopLink({ href, label, active }: { href: string; label: string; act
   );
 }
 
-function MobileLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function MobileLink({ href, label, active }: { href: string; label: ReactNode; active: boolean }) {
   return (
     <li>
       <Link
