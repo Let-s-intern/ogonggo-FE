@@ -45,8 +45,8 @@ export interface SiteHeaderProps {
   /**
    * `member` 는 기업 회원 화면(`CompanyMyPageLayout`)의 헤더다. 로그인하면 헤더도 왼쪽 메뉴에 맞춘다(2026-11-10 사용자): 화면
    * 전체 폭으로 펴고, 로고 칸을 왼쪽 메뉴와 같은 폭·바탕으로 둬 메뉴가 헤더까지 이어져 보이게 한다. 로고는
-   * 대시보드로 간다. 광고 안내·광고 신청/문의는 헤더에서 빼고 왼쪽 메뉴에 둔다(2026-11-10 사용자). 흰 바탕은
-   * 공개 화면과 같다.
+   * 대시보드로 간다. 광고 안내·광고 신청/문의와 계정(기업명·로그아웃)은 헤더에서 빼고 왼쪽 메뉴에 둔다
+   * (2026-11-10 사용자). 모바일은 왼쪽 메뉴가 없어 헤더의 메뉴 버튼이 계정을 펼친다. 흰 바탕은 공개 화면과 같다.
    */
   layout?: 'site' | 'member';
 }
@@ -123,17 +123,20 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
             ))}
           </nav>
         )}
-        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
-          {signedIn ? (
-            <AccountMenu
-              companyName={companyName}
-              myPageHref={companyHref(MY_PAGE_HREF)}
-              myPageActive={myPageActive}
-            />
-          ) : (
-            accountAction
-          )}
-        </nav>
+        {/* 기업 회원 틀에서는 계정(기업명·로그아웃)이 왼쪽 메뉴 아래에 있다(`MemberShell`). */}
+        {isConsole ? null : (
+          <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
+            {signedIn ? (
+              <AccountMenu
+                companyName={companyName}
+                myPageHref={companyHref(MY_PAGE_HREF)}
+                myPageActive={myPageActive}
+              />
+            ) : (
+              accountAction
+            )}
+          </nav>
+        )}
         <button
           type="button"
           aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
