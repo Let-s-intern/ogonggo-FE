@@ -327,7 +327,7 @@ function StepProducts({
             key={group.id}
             aria-label={group.title}
             style={{ animationDelay: `${index * 90}ms` }}
-            className="motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both]"
+            className="rounded-2xl bg-gray-50 p-4 motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both] md:p-5"
           >
             <header className="mb-3 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
               <h3 className="text-lg font-bold">{group.title}</h3>
@@ -348,25 +348,52 @@ function StepProducts({
                       aria-pressed={checked}
                       onClick={() => toggle(product.id)}
                       className={cn(
-                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-200',
+                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white text-left transition-all duration-200',
                         checked
-                          ? 'border-blue-500 shadow-sm ring-2 ring-blue-100'
-                          : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md',
+                          ? '-translate-y-0.5 border-blue-500 shadow-lg shadow-blue-500/20 ring-4 ring-blue-100'
+                          : 'border-transparent shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md',
                       )}
                     >
                       <span className="relative block overflow-hidden">
                         <span className="block transition-transform duration-500 group-hover:scale-[1.03]">
                           <ProductImages product={product} />
                         </span>
+                        {/* 고른 카드는 이미지에 파란 막을 씌워 한눈에 보이게 한다. */}
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'pointer-events-none absolute inset-0 bg-blue-500/15 transition-opacity duration-200',
+                            checked ? 'opacity-100' : 'opacity-0',
+                          )}
+                        />
                         <span className="absolute top-2 right-2">
                           <CheckMark on={checked} />
                         </span>
                       </span>
-                      <span className="flex flex-1 flex-col px-4 py-3">
-                        <span className="text-xs font-medium text-blue-600">{product.reach}</span>
+                      <span
+                        className={cn(
+                          'flex flex-1 flex-col px-4 py-3 transition-colors',
+                          checked && 'bg-blue-00',
+                        )}
+                      >
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-medium text-blue-600">{product.reach}</span>
+                          {checked && (
+                            <span className="shrink-0 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
+                              선택됨
+                            </span>
+                          )}
+                        </span>
                         <span className="mt-0.5 font-semibold">{product.title}</span>
-                        <span className="mt-1 flex-1 text-sm text-gray-500">
-                          {product.description}
+                        <span className="mt-1 text-sm text-gray-500">{product.description}</span>
+                        <span
+                          className={cn(
+                            'mt-3 mb-auto rounded-md px-3 py-2 text-[13px] text-gray-700',
+                            checked ? 'bg-white' : 'bg-gray-50',
+                          )}
+                        >
+                          <span className="font-semibold text-blue-600">이럴 때 추천</span>{' '}
+                          {product.recommend}
                         </span>
                         <span className="mt-3 text-sm font-semibold text-gray-900">
                           {product.price}
@@ -874,8 +901,8 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   },
   2: {
     title: '광고 상품',
-    desc: '원하는 광고 상품을 골라 주세요. 여러 개를 함께 고를 수 있습니다.',
-    lead: '공고를 노출할 광고 상품을 선택해 주세요.',
+    desc: '관심 가는 상품을 편하게 골라 주세요. 최종 구성은 담당자와 상담하며 함께 정해요.',
+    lead: '관심 있는 광고 상품을 골라 주세요. 여러 개 골라도 괜찮아요.',
   },
   3: {
     title: '광고 일정 선택',

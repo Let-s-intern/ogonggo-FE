@@ -207,20 +207,24 @@ export function periodDays(startDate: string, endDate: string): number {
 }
 
 /**
- * 광고 신청서에서 고르는 상품 6개(2026-11-09 사용자: 오공고 웹 1 · 인스타그램 2 · 카카오톡 2 · CRM 1). 오공고 웹의
- * 지면(배너·추천 카드 등)은 여기서 고르지 않고 담당자가 견적 때 정한다. 카카오톡·인스타 이미지는 web 커뮤니티 페이지
- * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹은 랜딩(`public/landing`) 것,
- * CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
+ * 광고 신청서에서 고르는 상품(2026-11-10 사용자): 리스트 상단 노출 1 · 웹사이트 배너 2 · 카카오톡 2 · CRM 1 ·
+ * 인스타그램 2. 오늘의 공고 화면은 랜딩(`public/landing`), 카카오톡·인스타 이미지는 web 커뮤니티 페이지에서 복사한
+ * `public/ad-products`, CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
  */
-export type AdProductGroupId = 'web' | 'instagram' | 'kakao' | 'crm';
+export type AdProductGroupId = 'list-top' | 'web-banner' | 'kakao' | 'crm' | 'instagram';
 
 /** 화면에서 상품을 묶어 보이는 단위. 세로로 쌓아 어느 채널의 상품인지 바로 보이게 한다. */
 export const AD_PRODUCT_GROUPS: { id: AdProductGroupId; title: string; reach: string }[] = [
-  { id: 'web', title: '오공고 웹', reach: '지면광고' },
-  { id: 'instagram', title: '인스타그램', reach: '오공고 · 렛츠커리어 계정' },
-  { id: 'kakao', title: '카카오톡', reach: '오픈채팅 누적 1만 5천명' },
+  {
+    id: 'list-top',
+    title: '오늘의 공고 리스트 상단 노출',
+    reach: '리스트 · 마이페이지 · 공고 달력',
+  },
+  { id: 'web-banner', title: '웹사이트 지면 광고', reach: '렛츠커리어 · 오늘의 공고 배너' },
+  { id: 'kakao', title: '카카오톡', reach: '누적 1만 5천명' },
   // CRM 은 카카오톡 오픈채팅과 다른 상품이라 따로 묶는다(2026-11-10 사용자).
-  { id: 'crm', title: 'CRM', reach: '마케팅 수신 동의 유저 약 2만명' },
+  { id: 'crm', title: 'CRM', reach: '약 2만명' },
+  { id: 'instagram', title: '인스타그램', reach: '오늘의 공고 · 렛츠커리어 계정' },
 ];
 
 export interface AdProduct {
@@ -230,41 +234,106 @@ export interface AdProduct {
   reach: string;
   title: string;
   description: string;
-  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다(오공고 웹 화면, 카카오톡 방). */
+  /** 언제 고르면 좋은지. 카드 아래 `이럴 때 추천` 으로 보인다. */
+  recommend: string;
+  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다. */
   images: string[];
-  /** 묶음 안에서 한 줄을 다 쓴다. CRM 처럼 혼자인 묶음에 쓴다. */
+  /** 묶음 안에서 한 줄을 다 쓴다. 혼자인 묶음에 쓴다. */
   wide?: boolean;
   /** 이미지마다 붙일 화면 이름. 있으면 이미지 아래에 띄운다. */
   imageLabels?: string[];
   price: string;
-  /** 광고 신청 API 의 `categories` 값. */
+  /**
+   * 광고 신청 API 의 `categories` 값. 렛츠커리어 배너는 맞는 값이 없어 `BANNER` 로 보낸다. 어느 배너인지는
+   * 신청 메모의 `[희망 상품]` 으로 구분된다.
+   */
   categories: ProductCategory[];
 }
 
 export const AD_PRODUCTS: AdProduct[] = [
   {
-    id: 'ogonggo-web',
-    group: 'web',
-    reach: '채용공고 홈',
-    title: '오늘의 공고 지면광고',
-    description: '채용공고 홈의 추천 카드 · 상단 고정 · 배너 자리에 공고를 노출해요.',
-    images: [
-      '/landing/jobs-list.webp',
-      '/landing/job-detail.webp',
-      '/landing/bootcamps-list.webp',
-      '/landing/calendar.webp',
-      '/landing/mypage-scraps.webp',
-    ],
-    imageLabels: ['채용공고 홈', '공고 상세', '부트캠프', '공고 달력', '마이페이지'],
+    id: 'ogonggo-list-top',
+    group: 'list-top',
+    wide: true,
+    reach: '채용공고 리스트 · 마이페이지 · 공고 달력',
+    title: '오늘의 공고 리스트 상단 노출',
+    description: '공고 리스트, 마이페이지 스크랩 칸, 공고 달력의 맨 앞에 공고 카드로 노출돼요.',
+    recommend: '공고를 찾고 있는 취준생에게 지원 직전에 보여주고 싶을 때',
+    images: ['/landing/jobs-list.webp', '/landing/mypage-scraps.webp', '/landing/calendar.webp'],
+    imageLabels: ['공고 리스트', '마이페이지', '공고 달력'],
     price: '1주 30만원부터',
-    categories: ['JOB_POSTING', 'BANNER'],
+    categories: ['JOB_POSTING'],
+  },
+  {
+    id: 'letscareer-banner',
+    group: 'web-banner',
+    reach: '렛츠커리어 홈페이지 메인',
+    title: '렛츠커리어 배너',
+    description: '렛츠커리어 홈페이지 메인 상단 배너에 노출돼요.',
+    recommend: '교육 프로그램이나 브랜드를 취업 준비생 전체에게 넓게 알리고 싶을 때',
+    images: ['/landing/web-banner-1.png', '/landing/web-banner-2.png'],
+    price: '견적 문의',
+    categories: ['BANNER'],
+  },
+  {
+    id: 'ogonggo-banner',
+    group: 'web-banner',
+    reach: '채용공고 홈 · 공고 상세 · 부트캠프',
+    title: '오늘의 공고 배너',
+    description: '오늘의 공고 채용공고 홈, 공고 상세, 부트캠프 목록의 배너 자리에 노출돼요.',
+    recommend: '공고를 둘러보는 취준생 눈에 이미지로 확실히 띄고 싶을 때',
+    images: ['/landing/jobs-list.webp', '/landing/job-detail.webp'],
+    imageLabels: ['채용공고 홈', '공고 상세'],
+    price: '1주 30만원부터',
+    categories: ['BANNER'],
+  },
+  {
+    id: 'kakao-curation',
+    group: 'kakao',
+    reach: '직무별 톡방 총 6개',
+    title: '직무별 채용공고 큐레이션 톡방',
+    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
+    recommend: '직무가 분명한 공고를 그 직무를 준비하는 사람에게 바로 알리고 싶을 때',
+    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_1'],
+  },
+  {
+    id: 'kakao-official',
+    group: 'kakao',
+    reach: '쥬디 톡방 · 무료 세미나방 등',
+    title: '렛츠커리어 공식 오픈채팅방',
+    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
+    recommend: '설명회·교육처럼 직무와 관계없이 참여자를 넓게 모으고 싶을 때',
+    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_2'],
+  },
+  {
+    id: 'crm',
+    group: 'crm',
+    wide: true,
+    reach: '마케팅 수신 동의 유저',
+    title: '카카오톡 CRM · MMS · 뉴스레터',
+    description:
+      '마케팅 수신에 동의한 렛츠커리어 유저에게 카카오톡 채널 메시지, MMS, 뉴스레터로 직접 보내요.',
+    recommend: '마감이 가까워 짧은 기간에 많은 사람에게 확실히 알려야 할 때',
+    images: [
+      '/ad-products/kakao-crm-1.jpg',
+      '/ad-products/kakao-crm-2.jpg',
+      '/ad-products/kakao-crm-3.jpg',
+      '/ad-products/kakao-crm-4.jpg',
+    ],
+    price: '견적 문의',
+    categories: ['KAKAO_CRM'],
   },
   {
     id: 'instagram-ogonggo',
     group: 'instagram',
     reach: '@letscareer.job',
-    title: '오공고 인스타그램',
+    title: '오늘의 공고 인스타그램',
     description: '오늘의 공고 계정의 피드 게시물 또는 스토리로 알려요.',
+    recommend: '채용·교육 소식을 찾아보는 팔로워에게 콘텐츠로 자연스럽게 알리고 싶을 때',
     images: [
       '/ad-products/instagram-job-1.jpg',
       '/ad-products/instagram-job-2.jpg',
@@ -282,6 +351,7 @@ export const AD_PRODUCTS: AdProduct[] = [
     reach: '@letscareer.official',
     title: '렛츠커리어 인스타그램',
     description: '렛츠커리어 메인 계정의 피드 게시물 또는 스토리로 알려요.',
+    recommend: '취업 준비 중인 많은 팔로워에게 회사와 브랜드를 알리고 싶을 때',
     images: [
       '/ad-products/instagram-official-1.jpg',
       '/ad-products/instagram-official-2.jpg',
@@ -292,43 +362,6 @@ export const AD_PRODUCTS: AdProduct[] = [
     ],
     price: '견적 문의',
     categories: ['INSTAGRAM_2'],
-  },
-  {
-    id: 'kakao-curation',
-    group: 'kakao',
-    reach: '직무별 톡방 6개',
-    title: '직무별 채용공고 큐레이션 톡방',
-    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
-    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
-    price: '견적 문의',
-    categories: ['KAKAO_1'],
-  },
-  {
-    id: 'kakao-official',
-    group: 'kakao',
-    reach: '쥬디 톡방 · 무료 세미나방 등',
-    title: '렛츠커리어 공식 오픈채팅방',
-    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
-    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
-    price: '견적 문의',
-    categories: ['KAKAO_2'],
-  },
-  {
-    id: 'kakao-crm',
-    group: 'crm',
-    wide: true,
-    reach: '카카오톡 채널 · 뉴스레터',
-    title: 'CRM 메시지',
-    description:
-      '마케팅 수신에 동의한 렛츠커리어 유저에게 카카오톡 채널 메시지와 뉴스레터로 직접 알려요.',
-    images: [
-      '/ad-products/kakao-crm-1.jpg',
-      '/ad-products/kakao-crm-2.jpg',
-      '/ad-products/kakao-crm-3.jpg',
-      '/ad-products/kakao-crm-4.jpg',
-    ],
-    price: '견적 문의',
-    categories: ['KAKAO_CRM'],
   },
 ];
 
