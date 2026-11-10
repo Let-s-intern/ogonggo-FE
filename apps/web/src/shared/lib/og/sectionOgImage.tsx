@@ -20,6 +20,8 @@ interface SectionOgConfig {
   /** 흰 칩 안 글자색. */
   labelColor: string;
   lines: OgSegment[][];
+  /** 헤드라인 아래 한 줄. 히어로가 있는 화면은 히어로 배지 문구 그대로다. */
+  badge: string;
   /** 아래 줄 `#` 칩. 이 화면에서 고를 수 있는 분류의 라벨이다(enum 카탈로그). */
   chips: string[];
 }
@@ -29,8 +31,12 @@ interface SectionOgConfig {
  * 헤드라인은 강조 위치만 미리보기에 맞게 다시 적었다 — 히어로는 사이드·스터디와 취준 고민에
  * 강조가 없는데, 단색 바탕에서는 한 조각을 민트로 칠해야 눈이 간다.
  */
-const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
+/** 목록 카드가 있는 화면. 히어로가 있는 화면들과, 히어로 없이 카드만 있는 공고 달력이다. */
+export type SectionOgScreen = HeroScreen | 'calendar';
+
+const SECTIONS: Record<SectionOgScreen, SectionOgConfig> = {
   jobs: {
+    badge: HERO_CONTENT.jobs.badge,
     kindLabel: '채용공고',
     path: '',
     ground: '#3B60E6',
@@ -44,6 +50,7 @@ const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
     ).map((value) => enumLabel('JobField', value)),
   },
   bootcamps: {
+    badge: HERO_CONTENT.bootcamps.badge,
     kindLabel: '교육·부트캠프',
     path: '/bootcamps',
     ground: '#00806F',
@@ -58,6 +65,7 @@ const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
     ],
   },
   'side-studies': {
+    badge: HERO_CONTENT['side-studies'].badge,
     kindLabel: '사이드·스터디',
     path: '/side-studies',
     ground: '#111827',
@@ -71,6 +79,7 @@ const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
     ),
   },
   concerns: {
+    badge: HERO_CONTENT.concerns.badge,
     kindLabel: '취준 고민',
     path: '/concerns',
     ground: '#1E3366',
@@ -85,6 +94,7 @@ const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
   },
   /** 칩은 이 화면이 안내하는 채널들이다(`app/(site)/community/page.tsx` 의 설명). */
   community: {
+    badge: HERO_CONTENT.community.badge,
     kindLabel: '커뮤니티',
     path: '/community',
     ground: '#2D4ABD',
@@ -95,17 +105,36 @@ const SECTIONS: Record<HeroScreen, SectionOgConfig> = {
     ],
     chips: ['직무별 오픈채팅방', '오공고 인스타그램', '렛츠커리어 인스타그램'],
   },
+  /**
+   * 공고 달력(`/calendar`). 히어로가 없어 배지 문구를 따로 적는다. 채용공고의 하위 메뉴라 칩은
+   * 채용공고와 같은 직군이고, 바탕은 채용공고보다 한 단계 진한 파랑이다.
+   */
+  calendar: {
+    badge: '관심 직무를 고르면 그 공고만 날짜별로 모아 보여드려요',
+    kindLabel: '공고 달력',
+    path: '/calendar',
+    ground: '#2C4999',
+    labelColor: '#2C4999',
+    lines: [
+      [{ text: '관심 직무 공고 마감일,' }],
+      [{ text: '달력으로' }, { text: '한눈에', accent: true }],
+    ],
+    chips: (
+      ['IT_DEVELOPMENT', 'PLANNING_STRATEGY', 'MARKETING_ADVERTISING', 'SALES', 'GAME'] as const
+    ).map((value) => enumLabel('JobField', value)),
+  },
 };
 
 /**
- * 채용공고(`/`)·교육·부트캠프·사이드·스터디·취준 고민 목록을 공유했을 때 미리보기 카드.
+ * 채용공고(`/`)·교육·부트캠프·사이드·스터디·취준 고민·커뮤니티 목록과 공고 달력을 공유했을 때
+ * 미리보기 카드.
  *
  * 목록에 `og:image` 가 없으면 카카오톡 같은 미리보기가 본문의 첫 이미지, 곧 목록 첫 카드의
  * 썸네일을 가져다 쓴다. 그래서 화면마다 자기 카드를 낸다. 화면마다 바탕색이 다르고, 오른쪽 아래에
  * 로고 마크를 크게 깔아 오공고 카드임을 알린다. 목록 미리보기는 빌드 때 한 번 그려지므로 특정
  * 공고나 개수처럼 금방 낡는 내용은 넣지 않는다.
  */
-export async function renderSectionOgImage(screen: HeroScreen): Promise<ImageResponse> {
+export async function renderSectionOgImage(screen: SectionOgScreen): Promise<ImageResponse> {
   const section = SECTIONS[screen];
   const fonts = await loadFonts(['ExtraBold', 'Bold', 'SemiBold', 'Medium']);
 
@@ -197,7 +226,7 @@ export async function renderSectionOgImage(screen: HeroScreen): Promise<ImageRes
             opacity: 0.92,
           }}
         >
-          {HERO_CONTENT[screen].badge}
+          {section.badge}
         </div>
       </div>
 

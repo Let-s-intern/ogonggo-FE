@@ -122,6 +122,12 @@ export function ogDeadlineText(
   return `${end.getMonth() + 1}/${end.getDate()}(${WEEKDAYS[end.getDay()]}) 마감`;
 }
 
+/** 공지 아래 줄의 게시일 문구(`11/3(월) 게시`). */
+export function ogPostedText(createdAt: string): string {
+  const date = parseLocalDate(createdAt);
+  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAYS[date.getDay()]}) 게시`;
+}
+
 /** `M/D` 짧은 날짜. 부트캠프 교육 기간 칸이 쓴다. */
 export function ogShortDate(value: string): string {
   const date = parseLocalDate(value);
@@ -190,9 +196,9 @@ export interface PostingOgImageProps {
   logoUrl?: string | null;
   /** 공고 썸네일. 있으면 카드 전체에 깔고 글자는 반투명 흰 판 위에 올린다. */
   coverUrl?: string | null;
-  /** 제목 아래 정보 칸(최대 4칸). 값이 없는 칸은 부르는 쪽에서 뺀다. */
-  infoCells: OgInfoCell[];
-  /** 아래 줄의 마감 문구(`10/14(수) 마감`, `상시 채용`). */
+  /** 제목 아래 정보 칸(최대 4칸). 값이 없는 칸은 부르는 쪽에서 뺀다. 비면 줄째 그리지 않는다. */
+  infoCells?: OgInfoCell[];
+  /** 아래 줄의 마감 문구(`10/14(수) 마감`, `상시 채용`). 공지는 게시일(`11/3(월) 게시`)이다. */
   deadlineText: string;
 }
 
@@ -215,7 +221,7 @@ export async function renderPostingOgImage({
   title,
   logoUrl,
   coverUrl,
-  infoCells,
+  infoCells = [],
   deadlineText,
 }: PostingOgImageProps): Promise<ImageResponse> {
   const colors = THEMES[theme];
@@ -392,40 +398,42 @@ export async function renderPostingOgImage({
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            borderRadius: 18,
-            background: colors.gridBackground,
-            padding: '18px 28px',
-          }}
-        >
-          {infoCells.map((cell, index) => (
-            <div
-              key={cell.label}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                gap: 6,
-                paddingLeft: index === 0 ? 0 : 24,
-                borderLeft: index === 0 ? 'none' : `2px solid ${colors.gridDivider}`,
-              }}
-            >
+        {infoCells.length > 0 ? (
+          <div
+            style={{
+              display: 'flex',
+              borderRadius: 18,
+              background: colors.gridBackground,
+              padding: '18px 28px',
+            }}
+          >
+            {infoCells.map((cell, index) => (
               <div
+                key={cell.label}
                 style={{
                   display: 'flex',
-                  fontSize: 22,
-                  fontWeight: 600,
-                  color: '#4B5563',
+                  flexDirection: 'column',
+                  flex: 1,
+                  gap: 6,
+                  paddingLeft: index === 0 ? 0 : 24,
+                  borderLeft: index === 0 ? 'none' : `2px solid ${colors.gridDivider}`,
                 }}
               >
-                {cell.label}
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: '#4B5563',
+                  }}
+                >
+                  {cell.label}
+                </div>
+                <div style={{ display: 'flex', fontSize: 30, fontWeight: 700 }}>{cell.value}</div>
               </div>
-              <div style={{ display: 'flex', fontSize: 30, fontWeight: 700 }}>{cell.value}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : null}
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div
