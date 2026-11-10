@@ -348,7 +348,7 @@ function StepProducts({
                       aria-pressed={checked}
                       onClick={() => toggle(product.id)}
                       className={cn(
-                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white text-left transition-all duration-200',
+                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white text-left break-keep transition-all duration-200',
                         checked
                           ? '-translate-y-0.5 border-blue-500 shadow-lg shadow-blue-500/20 ring-4 ring-blue-100'
                           : 'border-transparent shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md',
@@ -388,12 +388,14 @@ function StepProducts({
                         <span className="mt-1 text-sm text-gray-500">{product.description}</span>
                         <span
                           className={cn(
-                            'mt-3 mb-auto rounded-md px-3 py-2 text-[13px] text-gray-700',
+                            'mt-3 mb-auto block rounded-md px-3 py-2.5 text-[13px] leading-relaxed text-pretty text-gray-700',
                             checked ? 'bg-white' : 'bg-gray-50',
                           )}
                         >
-                          <span className="font-semibold text-blue-600">이럴 때 추천</span>{' '}
-                          {product.recommend}
+                          <span className="block font-semibold text-blue-600">
+                            이럴 때 추천해요
+                          </span>
+                          <span className="mt-0.5 block">{product.recommend}</span>
                         </span>
                         <span className="mt-3 text-sm font-semibold text-gray-900">
                           {product.price}
