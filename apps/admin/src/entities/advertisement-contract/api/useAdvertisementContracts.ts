@@ -50,6 +50,27 @@ export function useContractList(filters: ContractListFilters) {
 }
 
 /**
+ * 처리할 유료 광고 신청 수(신청 · 협의 중). 메뉴 `유료 광고 신청` 옆 숫자다(2026-11-10 사용자). 반려는 끝난 일이라 세지
+ * 않는다. 목록 키 아래에 두어 상태를 바꾸면(목록 무효화) 숫자도 다시 읽는다. 한 건만 받아 전체 건수만 읽는다.
+ */
+export function usePendingApplicationCount() {
+  return useQuery({
+    queryKey: [...LIST_KEY, 'pending-application-count'],
+    queryFn: async () => {
+      const page = await unwrapData(
+        listAdvertisementContracts({
+          source: 'APPLICATION_FORM',
+          status: ['REQUESTED', 'NEGOTIATING'],
+          page: 1,
+          size: 1,
+        }),
+      );
+      return page?.pageInfo.totalElements;
+    },
+  });
+}
+
+/**
  * 회사명으로 찾은 광고 계약(최신 신청 순 20건). 배너 노출의 `연결 계약` 고르기가 쓴다. 회사명이 비면 최근 계약이다.
  */
 export function useContractSearch(companyName: string) {
