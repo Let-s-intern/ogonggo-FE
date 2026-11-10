@@ -90,7 +90,11 @@ function Hero() {
             {HERO_STATS.map((s, i) => (
               <li
                 key={s.label}
-                className={cn(RISE, LIFT, 'rounded-lg bg-white px-3 py-5 shadow-sm')}
+                className={cn(
+                  RISE,
+                  LIFT,
+                  'rounded-lg bg-white px-3 py-5 shadow-sm max-md:last:odd:col-span-2',
+                )}
                 style={{ animationDelay: `${380 + i * 90}ms` }}
               >
                 <p className="text-2xl font-bold text-blue-500 md:text-[28px]">
@@ -193,7 +197,7 @@ function Channels() {
               key={s.label}
               data-reveal
               style={order(i)}
-              className="rounded-lg border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+              className="rounded-lg border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10 max-md:last:odd:col-span-2"
             >
               <p className="text-2xl font-bold text-blue-300 md:text-[30px]">
                 <CountUp value={s.value} delay={i * 90} />
@@ -596,7 +600,9 @@ function ClosingCta() {
 
 export function LandingPage() {
   return (
-    <>
+    // 한국어가 낱말 가운데서 끊기지 않게 하고(`break-keep`), 제목은 줄 길이를 고르게, 본문은 마지막 줄에 한 낱말만
+    // 남지 않게 한다. 데스크톱·모바일 모두 같은 규칙이다.
+    <div className="break-keep [&_h1]:text-balance [&_h2]:text-balance [&_h3]:text-balance [&_p]:text-pretty">
       <Hero />
       <Reasons />
       <Placements />
@@ -607,6 +613,6 @@ export function LandingPage() {
       <Faq />
       <ClosingCta />
       <RevealOnScroll />
-    </>
+    </div>
   );
 }
