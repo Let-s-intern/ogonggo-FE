@@ -114,11 +114,6 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     area: 'business',
-    // 광고 문의 테이블의 문의 전체(무료 홍보·출시 알림·반려)를 탭으로 본다(2026-11-10 사용자). 하나뿐이라 제목이 없다.
-    items: [{ path: '/business/inquiries', label: '문의 관리' }],
-  },
-  {
-    area: 'business',
     /*
      * 파는 광고 상품과 그 자리에 거는 배너. 신청·계약을 처리하는 `광고` 와 달리 한 번 정해 두는 설정이다(2026-11-09 사용자).
      *
@@ -154,6 +149,12 @@ export const NAV_SECTIONS: NavSection[] = [
     area: 'business',
     title: '회원',
     items: [{ path: '/members/companies', label: '비즈니스 회원' }],
+  },
+  {
+    area: 'business',
+    // 광고 문의 테이블의 문의 전체(무료 홍보·출시 알림·반려)를 탭으로 본다(2026-11-10 사용자). 하나뿐이라 제목이 없고,
+    // 비즈니스 구역 맨 아래에 둔다.
+    items: [{ path: '/business/inquiries', label: '문의 관리' }],
   },
   {
     area: 'service',
