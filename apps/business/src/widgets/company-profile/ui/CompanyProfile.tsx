@@ -29,7 +29,7 @@ type State =
  * `기업/기관 정보`(v5 PRD 5 절) 에서 **값을 읽는 쪽**. 그리는 것은 `CompanyProfileView` 다.
  *
  * 계정을 여기서 한 번 더 읽는다. 바깥 껍데기(`widgets/company-mypage/ui/CompanyMyPageLayout.tsx`) 도 읽지만
- * 그쪽은 역할 가드에만 쓰고 본문으로 내려 주지 않는다 — v4 의 `widgets/my-profile` 과
+ * 그쪽은 역할 가드와 상단 바 기업명에만 쓰고 본문으로 내려 주지 않는다 — v4 의 `widgets/my-profile` 과
  * 같은 이유다.
  *
  * 로그인 가드도 껍데기가 한다. 여기서는 토큰이 없으면 요청을 보내지 않기만 한다.

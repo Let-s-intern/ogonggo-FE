@@ -10,10 +10,10 @@ export interface CompanyJobFormPageProps {
 }
 
 /**
- * 채용공고 작성·수정 본문. 기준은 `apps/web/src/views/mypage/ui/CompanyJobFormPage.tsx` 다. 바깥 껍데기(탭·
+ * 채용공고 작성·수정 본문. 기준은 `apps/web/src/views/mypage/ui/CompanyJobFormPage.tsx` 다. 바깥 껍데기(콘솔 틀·
  * 로그인 가드·역할 가드) 는 `app/mypage/company/layout.tsx` 의 `CompanyMyPageLayout` 이라 여기는 제목 줄과 폼만 그린다.
  *
- * 탭의 `채용공고` 가 켜진 채로 남는다 — `MyPageTabs` 가 하위 경로까지 현재 항목으로 보기 때문이다.
+ * 콘솔 메뉴의 `채용공고` 가 켜진 채로 남는다 — `CompanyConsoleNav` 가 하위 경로까지 현재 항목으로 보기 때문이다.
  *
  * 제목만 작성과 수정이 다르다. 폼은 같은 것이고 `jobId` 하나로 갈린다.
  */

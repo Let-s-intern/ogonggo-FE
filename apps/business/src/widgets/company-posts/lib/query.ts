@@ -1,8 +1,8 @@
 /**
  * `/mypage/company/posts/{jobs|bootcamps}` 의 URL 상태(v5 PRD 2 절, `prd-company-mypage-posts.md`).
  *
- * 종류는 경로가, 페이지는 `?page=` 가 정한다. 종류가 경로에 있는 이유는 마이페이지 탭이 `채용공고` ·
- * `부트캠프` 둘로 나뉘어서다 — 메뉴의 현재 항목은 경로 앞부분으로 고르므로(`MyPageTabs`) 쿼리로는
+ * 종류는 경로가, 페이지는 `?page=` 가 정한다. 종류가 경로에 있는 이유는 콘솔 메뉴가 `채용공고` ·
+ * `부트캠프` 둘로 나뉘어서다 — 메뉴의 현재 항목은 경로 앞부분으로 고르므로(`CompanyConsoleNav`) 쿼리로는
  * 켤 수 없다. 작성·수정 폼도 이미 `.../posts/jobs/new` 처럼 종류 아래에 있다.
  *
  * `listMyJobs`·`listMyBootcamps` 가 받는 것이 `page`·`size` 뿐이라 필터도 검색도 정렬도 없다 — 그 줄을

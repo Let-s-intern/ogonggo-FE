@@ -3,29 +3,28 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
-import { cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
+import { Logo } from '@/shared/ui/Logo';
 import { fetchCompanyPostTotals } from '@/widgets/company-posts';
-import { COMPANY_MYPAGE_MENU, myPageMobileHeaderOf } from '../model/menu';
-import { MyPageTabs } from './MyPageTabs';
+import { myPageMobileHeaderOf } from '../model/menu';
+import { CompanyConsoleNav } from './CompanyConsoleNav';
 
 export interface CompanyMyPageLayoutProps {
   children: ReactNode;
 }
 
 /**
- * `/mypage/company` 아래 화면의 껍데기. 가로 탭 + 본문이다. 제목은 각 화면이 단다(기업명은 사이트 헤더에 있다). 처음에는
- * web 의 `apps/web/src/views/mypage/ui/MyPageLayout.tsx` 처럼 좌측 사이드바였는데 위쪽 탭으로 바꿨다
- * (2026-11-10 사용자).
+ * 기업 회원 화면(`/mypage/company` 아래)의 콘솔 틀. 로그인하면 어드민처럼 페이지 모양이 바뀐다(2026-11-10 사용자):
+ * 공개 화면의 사이트 헤더·푸터(`app/(site)/layout.tsx`) 대신 어두운 상단 바와 회색 왼쪽 고정 메뉴, 흰 본문이다.
  *
  * 토큰이 브라우저 저장소에만 있어 로그인 여부와 역할은 첫 렌더 뒤에 본다. 로그인하지 않았거나 기업 회원이 아니면
  * `/login?redirect=<지금 경로>` 로 보낸다. 로그인 화면이 기업 회원이 아닌 계정에게 안내한다
- * (`widgets/sign-in/LoginPage.tsx`). web 처럼 본문은 계정을 기다리지 않고 바로 그린다.
+ * (`widgets/sign-in/LoginPage.tsx`). 본문은 계정을 기다리지 않고 바로 그린다.
  *
- * 모바일은 web 과 다르다. web 은 `/mypage/company` 가 메뉴 화면이지만 biz 는 그 주소가 탭 없는 대시보드다.
- * 그래서 목록·기업 정보 화면은 탭을 본문 위에 두고, 작성·수정 화면은 탭 대신 `< 제목` 머리를 단다.
+ * 모바일(md 미만)은 왼쪽 메뉴 대신 상단 바 아래에 가로 메뉴를 둔다. 작성·수정 화면은 메뉴 대신 `< 제목` 머리를 단다.
  */
 export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
   const router = useRouter();
@@ -40,7 +39,7 @@ export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
   }, [router, pathname, notCompany]);
 
   /**
-   * 탭 옆 건수(`채용공고` · `부트캠프`). 경로가 바뀔 때마다 다시 센다 — 공고를 저장하고 목록으로 돌아오면
+   * 메뉴 옆 건수(`채용공고` · `부트캠프`). 경로가 바뀔 때마다 다시 센다 — 공고를 저장하고 목록으로 돌아오면
    * 늘어 있어야 한다. 실패하면 숫자 없이 이름만 둔다.
    */
   const [postTotals, setPostTotals] = useState<Record<string, number | undefined>>({});
@@ -65,41 +64,68 @@ export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
   }, [pathname]);
 
   const mobileHeader = myPageMobileHeaderOf(pathname);
-  /**
-   * 대시보드(`/mypage/company`)와 광고 신청 내역은 공고·기업 정보 탭을 달지 않는다(2026-11-10 사용자). 신청 내역은
-   * 헤더 `신청 내역` 으로 들어오는 따로인 화면이고, 대시보드는 모든 화면으로 가는 첫 화면이다.
-   */
-  const withoutTabs = pathname === '/mypage/company' || pathname.startsWith('/mypage/company/ads');
+  const { signOut, pending } = useSignOut();
+  const organizationName =
+    account.kind === 'ready' ? account.account.companyProfile?.organizationName : undefined;
 
   return (
-    <div
-      className={cn(
-        'mx-auto w-full max-w-page-padded px-5 md:pt-8 md:pb-12',
-        mobileHeader ? 'pb-12' : 'py-6',
-      )}
-    >
-      {mobileHeader ? (
-        <div className="-mx-5 mb-4 flex h-14 items-center gap-2 border-b border-gray-200 px-5 md:hidden">
-          <Link href={mobileHeader.back} aria-label="뒤로" className="-ml-1 p-1 text-gray-900">
-            <span aria-hidden="true" className="icon-[lucide--chevron-left] block h-6 w-6" />
+    <div className="flex min-h-dvh flex-col bg-white">
+      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 bg-gray-900 px-5 md:px-6">
+        <Link
+          href="/mypage/company"
+          aria-label="오늘의 공고 비즈니스 대시보드"
+          className="flex items-end gap-1.5 md:w-44"
+        >
+          <Logo className="h-[20px] w-[42px] text-white" />
+          <span className="text-sm font-semibold text-gray-300">for business</span>
+        </Link>
+        <div className="ml-auto flex items-center gap-4 text-sm md:gap-5">
+          <Link href="/" className="hidden text-gray-400 hover:text-white sm:block">
+            광고 안내
           </Link>
-          <p className="text-lg font-bold text-gray-950">{mobileHeader.title}</p>
+          {organizationName ? (
+            <span className="max-w-40 truncate font-semibold text-white">{organizationName}</span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => signOut()}
+            disabled={pending}
+            className="text-gray-400 hover:text-white disabled:text-gray-600"
+          >
+            로그아웃
+          </button>
         </div>
-      ) : null}
-      <div className="flex flex-col gap-6 md:gap-8">
-        {withoutTabs ? null : (
-          <div className={cn(mobileHeader && 'hidden md:block')}>
-            <MyPageTabs menuItems={COMPANY_MYPAGE_MENU} counts={postTotals} />
+      </header>
+
+      <div className="flex flex-1">
+        <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 md:block">
+          <div className="sticky top-14">
+            <CompanyConsoleNav variant="side" counts={postTotals} />
           </div>
-        )}
-        <div className="min-w-0">
-          {account.kind === 'error' ? (
-            <p role="alert" className="text-sm text-error">
-              내 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
-            </p>
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          {mobileHeader ? (
+            <div className="flex h-14 items-center gap-2 border-b border-gray-200 bg-white px-5 md:hidden">
+              <Link href={mobileHeader.back} aria-label="뒤로" className="-ml-1 p-1 text-gray-900">
+                <span aria-hidden="true" className="icon-[lucide--chevron-left] block h-6 w-6" />
+              </Link>
+              <p className="text-lg font-bold text-gray-950">{mobileHeader.title}</p>
+            </div>
           ) : (
-            children
+            <div className="md:hidden">
+              <CompanyConsoleNav variant="bar" />
+            </div>
           )}
+          <main className="mx-auto w-full max-w-[1120px] flex-1 px-5 py-6 md:px-10 md:py-10">
+            {account.kind === 'error' ? (
+              <p role="alert" className="text-sm text-error">
+                내 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+              </p>
+            ) : (
+              children
+            )}
+          </main>
         </div>
       </div>
     </div>

@@ -7,8 +7,6 @@ import {
   SITE_NAME,
   SITE_ORIGIN,
 } from '@/shared/config/site';
-import { SiteFooter } from '@/shared/ui/SiteFooter';
-import { SiteHeader } from '@/shared/ui/SiteHeader';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -66,12 +64,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" className={pretendard.variable}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
-        <AppProviders>
-          <SiteHeader />
-          {/* 본문이 짧아도 푸터가 화면 아래에 붙게 본문이 남는 높이를 채운다. */}
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-        </AppProviders>
+        {/* 헤더·푸터는 공개 화면(`(site)/layout.tsx`)만 단다. 기업 회원 화면은 콘솔 틀이다(`mypage/company/layout.tsx`). */}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
