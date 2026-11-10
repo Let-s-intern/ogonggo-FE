@@ -29,6 +29,8 @@ export interface ContentActionsProps {
    * 수정 버튼을 하나로 두려는 것이다 — 일부 칸만 고치는 창과 모든 칸을 고치는 화면이 따로 있으면 어느 쪽을 눌러야 할지 헷갈린다.
    */
   editPath?: string;
+  /** `내용 수정` 을 눌렀을 때 할 일. 있으면 `editPath` 로 가지 않고 이것을 부른다(목록 모달 안에서 수정, 2026-11-10 사용자). */
+  onEdit?: () => void;
   /** 삭제 후 돌아갈 목록 주소. */
   listPath: string;
   /**
@@ -59,6 +61,7 @@ export function ContentActions({
   fields,
   job,
   editPath,
+  onEdit,
   listPath,
   operation,
 }: ContentActionsProps) {
@@ -83,7 +86,7 @@ export function ContentActions({
   }, [fillRequest]);
   const canEdit =
     kind !== 'side-studies' &&
-    (fields !== undefined || job !== undefined || editPath !== undefined);
+    (fields !== undefined || job !== undefined || editPath !== undefined || onEdit !== undefined);
 
   return (
     <>
@@ -114,7 +117,7 @@ export function ContentActions({
         {canEdit ? (
           <Button
             className="rounded-full shadow-[0_8px_24px_-6px_rgba(74,118,255,0.6)]"
-            onClick={() => (editPath ? navigate(editPath) : setIsEditing(true))}
+            onClick={() => (onEdit ? onEdit() : editPath ? navigate(editPath) : setIsEditing(true))}
           >
             내용 수정
           </Button>

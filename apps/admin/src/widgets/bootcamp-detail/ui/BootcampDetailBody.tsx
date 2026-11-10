@@ -18,9 +18,12 @@ import { ContentActions } from '@/widgets/content-actions';
 export function BootcampDetailBody({
   data,
   listPath,
+  onEdit,
 }: {
   data: NonNullable<ReturnType<typeof useBootcampDetail>['data']>;
   listPath: string;
+  /** 있으면 `내용 수정` 이 수정 화면으로 가지 않고 이것을 부른다. 목록 모달이 모달 안 수정으로 바꾼다. */
+  onEdit?: () => void;
 }) {
   return (
     <>
@@ -134,6 +137,7 @@ export function BootcampDetailBody({
         }}
         // 상세는 `/content/bootcamps/:id` 와 `/business/bootcamps/:id` 두 곳에 있다. 들어온 쪽의 수정 화면으로 간다.
         editPath={`${listPath}/${data.id}/edit`}
+        onEdit={onEdit}
       />
 
       {data.partners.length > 0 ? (
