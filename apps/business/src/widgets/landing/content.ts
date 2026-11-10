@@ -294,12 +294,6 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
   },
 ];
 
-export const OPERATING_RULES = [
-  '3개 이상 묶어 신청하면 10% 할인',
-  '다음 주 월요일부터 12주까지 신청',
-  '가격은 VAT 별도 정가, 견적서에서 확인',
-];
-
 export const CHANNEL_STATS = [
   {
     value: '6.7만+',
@@ -536,7 +530,7 @@ export const FAQ = [
 ];
 
 /**
- * 고객 사례 5건. 소개서 17~21쪽을 옮겼다(2026-11-10 사용자). 이미지는 그 쪽의 실제 집행 소재를 잘라 낸 것이다
+ * 고객 사례 4건. 소개서 17~20쪽을 옮겼다(2026-11-10 사용자). 이미지는 그 쪽의 실제 집행 소재를 잘라 낸 것이다
  * (`public/landing/cases`). 처음에는 모자이크했다가 회사명이 이미 드러나 가릴 이유가 없어 뺐다.
  */
 export const CASES = [
@@ -547,11 +541,6 @@ export const CASES = [
     title: '세일즈 계약직 채용',
     situation: '마감이 촉박해 직무 적합도 높은 지원자가 빠르게 필요했어요.',
     channels: ['오공고 인스타 피드·스토리', '직무 큐레이션 톡방 4곳'],
-    metrics: [
-      { value: '1.8만', label: '조회수' },
-      { value: '97.5%', label: '팔로워 조회 비율' },
-      { value: '135', label: '전체 클릭' },
-    ],
   },
   {
     image: '/landing/cases/levit.jpg',
@@ -560,11 +549,6 @@ export const CASES = [
     title: '콘텐츠 마케팅 인턴 채용',
     situation: '채용 시 마감이라 빠른 유입이 필요했어요. 문의 24분 만에 톡방 홍보를 시작했어요.',
     channels: ['마케팅·세일즈 톡방', '인스타 2개 계정 스토리'],
-    metrics: [
-      { value: '113', label: '링크 유입' },
-      { value: '1,700+', label: '스토리 조회' },
-      { value: '3개월', label: '만에 재구매' },
-    ],
   },
   {
     image: '/landing/cases/modoodoc.jpg',
@@ -573,11 +557,6 @@ export const CASES = [
     title: '전환형 인턴 채용',
     situation: '지원자 수와 함께 후보자의 적합도까지 확보해야 했어요.',
     channels: ['오공고 인스타 피드 1회'],
-    metrics: [
-      { value: '2.8만', label: '조회수' },
-      { value: '1만', label: '도달 계정' },
-      { value: '149', label: '저장' },
-    ],
   },
   {
     image: '/landing/cases/inbody.jpg',
@@ -586,19 +565,5 @@ export const CASES = [
     title: 'GBD 통합 직무 인턴',
     situation: '채용 시 마감이라 빠르게, 적합한 지원자를 모아야 했어요.',
     channels: ['오공고 인스타 피드 1회'],
-    metrics: [
-      { value: '3.9만', label: '조회수' },
-      { value: '1.4만', label: '도달' },
-      { value: '308', label: '저장' },
-    ],
-  },
-  {
-    image: '/landing/cases/lalasweet.jpg',
-    kind: '채용설명회',
-    company: '라라스윗',
-    title: '그로스 마케팅 인턴 채용설명회',
-    situation: '기업에 관심 있는 지원자의 리드를 확보해야 했어요.',
-    channels: ['현직자 세미나'],
-    metrics: [{ value: '250명', label: '취준생 참여' }],
   },
 ];

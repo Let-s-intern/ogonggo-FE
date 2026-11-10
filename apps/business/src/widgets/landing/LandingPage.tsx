@@ -10,7 +10,6 @@ import {
   COMBO_CARDS,
   FAQ,
   HERO_STATS,
-  OPERATING_RULES,
   PACKAGE,
   PARTNERS,
   PROCESS,
@@ -160,14 +159,7 @@ function Placements() {
       <div data-reveal>
         <PlacementSimulator />
       </div>
-      <div
-        data-reveal
-        className="mt-4 flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 px-6 py-5 md:flex-row md:items-center md:justify-between"
-      >
-        <p className="text-sm text-gray-700">
-          <span className="mr-2 text-gray-500">운영 원칙</span>
-          {OPERATING_RULES.join(' · ')}
-        </p>
+      <div data-reveal className="mt-4 flex justify-end">
         <Link
           href="/apply/ad"
           className="shrink-0 rounded-md bg-blue-500 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-600"
@@ -454,8 +446,7 @@ function PartnersAndCases() {
             <PartnerMarquee />
           </div>
         </div>
-        {/* 앞의 두 사례는 넓게, 뒤의 셋은 3열로 둬 다섯 장이 빈칸 없이 두 줄에 들어간다. */}
-        <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-5">
+        <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {CASES.map((c, i) => (
             <li
               key={c.company}
@@ -464,22 +455,15 @@ function PartnersAndCases() {
               className={cn(
                 LIFT,
                 'group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white',
-                i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
-                i === 4 && 'sm:col-span-2 lg:col-span-2',
               )}
             >
-              <div
-                className={cn(
-                  'relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-00 p-4',
-                  i < 2 ? 'aspect-[16/9]' : 'aspect-[4/3]',
-                )}
-              >
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-50 to-blue-00 p-4">
                 <div className="relative h-full w-full overflow-hidden rounded-lg shadow-sm">
                   <Image
                     src={c.image}
                     alt=""
                     fill
-                    sizes="(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw"
+                    sizes="(min-width: 1024px) 280px, (min-width: 640px) 50vw, 100vw"
                     className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 </div>
@@ -491,7 +475,7 @@ function PartnersAndCases() {
                 <p className="text-sm font-semibold text-blue-500">{c.company}</p>
                 <p className="mt-1 text-xl font-bold leading-snug">{c.title}</p>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.situation}</p>
-                <ul className="mt-3 mb-5 flex flex-wrap gap-1.5">
+                <ul className="mt-3 flex flex-wrap gap-1.5">
                   {c.channels.map((channel) => (
                     <li
                       key={channel}
@@ -501,22 +485,6 @@ function PartnersAndCases() {
                     </li>
                   ))}
                 </ul>
-                <dl
-                  className={cn(
-                    'mt-auto grid gap-2 border-t border-gray-100 pt-5',
-                    c.metrics.length > 1 ? 'grid-cols-3' : 'grid-cols-1',
-                  )}
-                >
-                  {c.metrics.map((m) => (
-                    // 숫자를 위에 크게 보이고, 읽는 순서는 이름 → 값이다.
-                    <div key={m.label} className="flex flex-col">
-                      <dt className="order-2 mt-0.5 text-xs text-gray-500">{m.label}</dt>
-                      <dd className="order-1 text-2xl font-bold tracking-tight text-blue-500">
-                        {m.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
               </div>
             </li>
           ))}
