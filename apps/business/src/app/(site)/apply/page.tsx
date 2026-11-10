@@ -86,39 +86,41 @@ export default function ApplyChoicePage() {
           {/* 카드 어디를 눌러도 광고 신청으로 간다(2026-11-10 사용자). */}
           <Link
             href="/apply/ad"
-            className={`${CARD} group/btn bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30`}
+            className={`${CARD} group/btn border border-blue-150 bg-gradient-to-br from-blue-00 via-blue-50 to-blue-100 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/15`}
           >
             <Image
               src="/landing/reasons/clock.png"
               alt=""
               width={155}
               height={155}
-              className="pointer-events-none absolute -right-2 -bottom-2 -z-10 h-[150px] w-auto opacity-25 select-none md:h-[180px]"
+              className="pointer-events-none absolute -right-2 -bottom-2 -z-10 h-[150px] w-auto opacity-70 select-none md:h-[180px]"
             />
-            <span className="self-start rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+            <span className="self-start rounded-full bg-white px-3 py-1 text-xs font-semibold text-blue-600 shadow-sm">
               상품과 일정이 정해졌다면
             </span>
             <h2 className="mt-6 text-[28px] font-bold">광고 신청하기</h2>
-            <p className="mt-2 text-blue-100">
+            <p className="mt-2 text-gray-600">
               원하는 구좌와 기간을 골라 담당자 검토를 요청하세요.
             </p>
             <ul className="mt-6 mb-8 space-y-2.5">
               {APPLY_POINTS.map((point) => (
-                <li key={point} className="flex items-center gap-2.5 text-sm">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-white/20">
+                <li key={point} className="flex items-center gap-2.5 text-sm text-gray-700">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-blue-500 text-white">
                     <Check className="size-3.5" />
                   </span>
                   {point}
                 </li>
               ))}
             </ul>
-            <span className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-white px-6 py-3.5 font-semibold text-blue-600 transition-colors group-hover/btn:bg-blue-00">
+            <span className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-blue-500 px-6 py-3.5 font-semibold text-white shadow-md shadow-blue-500/25 transition-colors group-hover/btn:bg-blue-600">
               광고 신청하기
               <Arrow />
             </span>
+            {/* 오른쪽 카드의 이메일 줄과 높이를 맞춰 두 카드의 버튼이 같은 선에 놓인다. */}
+            <p className="mt-4 text-xs text-gray-500">회원가입 없이 3분이면 신청할 수 있어요</p>
           </Link>
           <div
-            className={`${CARD} border border-gray-200 bg-white hover:border-blue-200 hover:shadow-lg`}
+            className={`${CARD} border border-teal-100 bg-gradient-to-br from-white via-teal-50 to-emerald-50 hover:border-teal-300 hover:shadow-xl hover:shadow-teal-500/15`}
           >
             <Image
               src="/landing/reasons/thumbs-up.png"
@@ -127,7 +129,7 @@ export default function ApplyChoicePage() {
               height={155}
               className="pointer-events-none absolute -right-2 -bottom-2 -z-10 h-[150px] w-auto opacity-60 select-none md:h-[180px]"
             />
-            <span className="self-start rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+            <span className="self-start rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm">
               상품 선택이 어렵다면
             </span>
             <h2 className="mt-6 text-[28px] font-bold">광고 문의하기</h2>
@@ -135,7 +137,7 @@ export default function ApplyChoicePage() {
             <ul className="mt-6 mb-8 space-y-2.5">
               {INQUIRY_POINTS.map((point) => (
                 <li key={point} className="flex items-center gap-2.5 text-sm text-gray-700">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-blue-50 text-blue-500">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-teal-500 text-white">
                     <Check className="size-3.5" />
                   </span>
                   {point}
@@ -145,7 +147,7 @@ export default function ApplyChoicePage() {
             <div className="mt-auto flex flex-wrap gap-2">
               <a
                 href={INQUIRY_MAILTO}
-                className="group/btn inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-gray-700"
+                className="group/btn inline-flex items-center gap-1.5 rounded-full bg-teal-600 px-6 py-3.5 font-semibold text-white shadow-md shadow-teal-600/25 transition-colors hover:bg-teal-700"
               >
                 이메일로 문의하기
                 <Arrow />
@@ -155,7 +157,7 @@ export default function ApplyChoicePage() {
                 href={AD_INTRODUCTION_PDF}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center rounded-full border border-gray-300 bg-white px-6 py-3.5 font-semibold text-gray-900 transition-colors hover:border-gray-900"
+                className="inline-flex items-center rounded-full border border-teal-600 bg-white px-6 py-3.5 font-semibold text-teal-700 transition-colors hover:bg-teal-50"
               >
                 소개서 받기
               </a>
