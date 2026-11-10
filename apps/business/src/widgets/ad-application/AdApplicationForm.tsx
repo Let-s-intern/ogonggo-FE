@@ -368,15 +368,28 @@ function StepProducts({
       <ErrorText>{errors.productIds}</ErrorText>
       <div>
         <Label optional>예정 예산</Label>
-        <ListboxSelect
-          id="ad-budget-range"
-          label="예정 예산"
-          placeholder="예정 예산을 선택해 주세요."
-          value={v.budgetRange}
-          options={BUDGET_RANGE_OPTIONS}
-          onChange={(value) => set('budgetRange', value as BudgetRange)}
-          className="h-[50px] rounded-md text-[15px]"
-        />
+        {/* 선택 칸이라 고른 것을 다시 누르면 풀린다. */}
+        <div role="group" aria-label="예정 예산" className="flex flex-wrap gap-2">
+          {BUDGET_RANGE_OPTIONS.map((o) => {
+            const checked = o.value === v.budgetRange;
+            return (
+              <button
+                key={o.value}
+                type="button"
+                aria-pressed={checked}
+                onClick={() => set('budgetRange', checked ? '' : (o.value as BudgetRange))}
+                className={cn(
+                  'rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
+                  checked
+                    ? 'border-blue-500 bg-blue-00 text-blue-600'
+                    : 'border-gray-200 text-gray-700 hover:border-gray-300',
+                )}
+              >
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <Info>
         3개 이상 묶어 신청하면 10% 할인돼요. 오공고 웹의 노출 자리와 최종 금액은 담당자 확인 후
