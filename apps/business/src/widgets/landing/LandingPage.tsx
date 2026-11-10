@@ -16,12 +16,13 @@ import {
   PROCESS,
   REASONS,
 } from './content';
-import { CopyInquiryButton } from './CopyInquiryButton';
 import { CountUp } from './CountUp';
 import { PlacementSimulator } from './PlacementSimulator';
 import { RevealOnScroll } from './RevealOnScroll';
 
 const CONTAINER = 'page-container mx-auto w-full max-w-[1200px] px-4 md:px-6';
+/** `목적별 추천 패키지` 구역. 지금은 숨긴다(2026-11-10 사용자). 다시 보이려면 `true` 로 바꾼다. */
+const SHOW_COMBO = false;
 /** 묶음 안 순서. 화면에 들어올 때 하나씩 늦게 떠오른다(`app/globals.css`). */
 const order = (i: number) => ({ '--i': i }) as CSSProperties;
 /** 히어로가 열자마자 떠오르는 애니메이션. 늦출 시간은 `animationDelay` 로 준다. */
@@ -173,20 +174,6 @@ function Placements() {
         >
           지면 골라 신청하기
         </Link>
-      </div>
-
-      <div
-        data-reveal
-        className="mt-10 flex flex-col gap-4 rounded-xl bg-blue-50 px-6 py-6 md:flex-row md:items-center md:justify-between"
-      >
-        <div>
-          <p className="text-lg font-semibold">어떤 지면이 맞을지 고민되나요?</p>
-          <p className="mt-1 text-sm text-gray-600">
-            공고 특성, 목표 지원자, 예산을 알려주시면 세 지면 중 적합한 상품을 비교해볼 수 있어요.
-            이 페이지의 상품은 모두 개별 구매입니다.
-          </p>
-        </div>
-        <CopyInquiryButton />
       </div>
     </section>
   );
@@ -402,133 +389,139 @@ function Combo() {
   );
 }
 
-function Partners() {
+/** 함께한 회사 로고가 흐르는 띠. 고객 사례와 한 묶음으로 둔다(`PartnersAndCases`). */
+function PartnerMarquee() {
   return (
-    <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
-      <Eyebrow>PARTNERS</Eyebrow>
-      <h2 data-reveal className="mt-3 text-3xl font-bold md:text-[44px]">
-        함께한 회사
-      </h2>
-      <div
-        data-reveal
-        className="group mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
-      >
-        {/* 같은 목록을 두 번 이어 붙여 끊김 없이 흐르게 한다. 두 번째는 화면 읽기 프로그램에 숨긴다. */}
-        <div className="flex w-max animate-[ogonggo-biz-marquee_40s_linear_infinite] group-hover:[animation-play-state:paused] motion-reduce:animate-none">
-          {[0, 1].map((copy) => (
-            <ul
-              key={copy}
-              aria-hidden={copy === 1}
-              className="flex shrink-0 items-center gap-12 pr-12 md:gap-16 md:pr-16"
-            >
-              {PARTNERS.map((p) => (
-                <li key={p.name} className="shrink-0">
-                  <Image
-                    src={p.logo}
-                    alt={copy === 0 ? p.name : ''}
-                    width={p.width}
-                    height={p.height}
-                    // 띠 밖에 있다가 흘러 들어오는 로고라 미리 받아 둔다. 늦게 받으면 빈칸으로 들어온다.
-                    loading="eager"
-                    className="h-5 w-auto md:h-6"
-                  />
-                </li>
-              ))}
-            </ul>
-          ))}
-        </div>
+    <div
+      data-reveal
+      className="group overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+    >
+      {/* 같은 목록을 두 번 이어 붙여 끊김 없이 흐르게 한다. 두 번째는 화면 읽기 프로그램에 숨긴다. */}
+      <div className="flex w-max animate-[ogonggo-biz-marquee_40s_linear_infinite] group-hover:[animation-play-state:paused] motion-reduce:animate-none">
+        {[0, 1].map((copy) => (
+          <ul
+            key={copy}
+            aria-hidden={copy === 1}
+            className="flex shrink-0 items-center gap-12 pr-12 md:gap-16 md:pr-16"
+          >
+            {PARTNERS.map((p) => (
+              <li key={p.name} className="shrink-0">
+                <Image
+                  src={p.logo}
+                  alt={copy === 0 ? p.name : ''}
+                  width={p.width}
+                  height={p.height}
+                  // 띠 밖에 있다가 흘러 들어오는 로고라 미리 받아 둔다. 늦게 받으면 빈칸으로 들어온다.
+                  loading="eager"
+                  className="h-5 w-auto md:h-6"
+                />
+              </li>
+            ))}
+          </ul>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }
 
-/** 고객 사례 5건(소개서 17~21쪽). 실제 집행 소재와 숫자 성과를 함께 보인다. */
-function Cases() {
+/**
+ * 함께한 회사와 고객 사례를 한 묶음으로 둔다(2026-11-10 사용자). 옅은 회색 띠 위에 제목 하나, 로고 띠, 사례 카드
+ * 순서다. 로고로 "누가" 함께했는지, 카드로 "무엇을 얻었는지" 를 이어서 보인다.
+ */
+function PartnersAndCases() {
   return (
-    <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
-      <Eyebrow>CASES</Eyebrow>
-      <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
-        먼저 집행한 기업들의 결과예요
-      </h2>
-      <p data-reveal className="mt-4 text-gray-600">
-        렛츠커리어가 직접 만들어 집행한 소재와 결과예요. 자세한 사례는{' '}
-        <a
-          href={AD_INTRODUCTION_PDF}
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-blue-500 underline underline-offset-2"
-        >
-          소개서
-        </a>
-        에서 볼 수 있어요.
-      </p>
-      {/* 앞의 두 사례는 넓게, 뒤의 셋은 3열로 둬 다섯 장이 빈칸 없이 두 줄에 들어간다. */}
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-5">
-        {CASES.map((c, i) => (
-          <li
-            key={c.company}
-            data-reveal
-            style={order(i)}
-            className={cn(
-              LIFT,
-              'group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white',
-              i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
-              i === 4 && 'sm:col-span-2 lg:col-span-2',
-            )}
+    <section className="bg-gray-50 py-16 md:py-24">
+      <div className={CONTAINER}>
+        <Eyebrow>PARTNERS · CASES</Eyebrow>
+        <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+          먼저 함께한 기업들의 결과예요
+        </h2>
+        <p data-reveal className="mt-4 text-gray-600">
+          렛츠커리어가 직접 만들어 집행한 소재와 결과예요. 자세한 사례는{' '}
+          <a
+            href={AD_INTRODUCTION_PDF}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-blue-500 underline underline-offset-2"
           >
-            <div
+            소개서
+          </a>
+          에서 볼 수 있어요.
+        </p>
+        <div className="mt-8 flex flex-col gap-4 rounded-2xl bg-white px-6 py-5 md:flex-row md:items-center md:gap-8">
+          <p className="shrink-0 text-sm font-semibold text-gray-500">함께한 회사</p>
+          <div className="min-w-0 flex-1">
+            <PartnerMarquee />
+          </div>
+        </div>
+        {/* 앞의 두 사례는 넓게, 뒤의 셋은 3열로 둬 다섯 장이 빈칸 없이 두 줄에 들어간다. */}
+        <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-5">
+          {CASES.map((c, i) => (
+            <li
+              key={c.company}
+              data-reveal
+              style={order(i)}
               className={cn(
-                'relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-00 p-4',
-                i < 2 ? 'aspect-[16/9]' : 'aspect-[4/3]',
+                LIFT,
+                'group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white',
+                i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
+                i === 4 && 'sm:col-span-2 lg:col-span-2',
               )}
             >
-              <div className="relative h-full w-full overflow-hidden rounded-lg shadow-sm">
-                <Image
-                  src={c.image}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-              </div>
-              <span className="absolute top-6 left-6 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-gray-900 shadow-sm">
-                사례 {i + 1} · {c.kind}
-              </span>
-            </div>
-            <div className="flex flex-1 flex-col px-6 pt-5 pb-6">
-              <p className="text-sm font-semibold text-blue-500">{c.company}</p>
-              <p className="mt-1 text-xl font-bold leading-snug">{c.title}</p>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.situation}</p>
-              <ul className="mt-3 mb-5 flex flex-wrap gap-1.5">
-                {c.channels.map((channel) => (
-                  <li
-                    key={channel}
-                    className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600"
-                  >
-                    {channel}
-                  </li>
-                ))}
-              </ul>
-              <dl
+              <div
                 className={cn(
-                  'mt-auto grid gap-2 border-t border-gray-100 pt-5',
-                  c.metrics.length > 1 ? 'grid-cols-3' : 'grid-cols-1',
+                  'relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-00 p-4',
+                  i < 2 ? 'aspect-[16/9]' : 'aspect-[4/3]',
                 )}
               >
-                {c.metrics.map((m) => (
-                  // 숫자를 위에 크게 보이고, 읽는 순서는 이름 → 값이다.
-                  <div key={m.label} className="flex flex-col">
-                    <dt className="order-2 mt-0.5 text-xs text-gray-500">{m.label}</dt>
-                    <dd className="order-1 text-2xl font-bold tracking-tight text-blue-500">
-                      {m.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </li>
-        ))}
-      </ul>
+                <div className="relative h-full w-full overflow-hidden rounded-lg shadow-sm">
+                  <Image
+                    src={c.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </div>
+                <span className="absolute top-6 left-6 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-gray-900 shadow-sm">
+                  사례 {i + 1} · {c.kind}
+                </span>
+              </div>
+              <div className="flex flex-1 flex-col px-6 pt-5 pb-6">
+                <p className="text-sm font-semibold text-blue-500">{c.company}</p>
+                <p className="mt-1 text-xl font-bold leading-snug">{c.title}</p>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.situation}</p>
+                <ul className="mt-3 mb-5 flex flex-wrap gap-1.5">
+                  {c.channels.map((channel) => (
+                    <li
+                      key={channel}
+                      className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600"
+                    >
+                      {channel}
+                    </li>
+                  ))}
+                </ul>
+                <dl
+                  className={cn(
+                    'mt-auto grid gap-2 border-t border-gray-100 pt-5',
+                    c.metrics.length > 1 ? 'grid-cols-3' : 'grid-cols-1',
+                  )}
+                >
+                  {c.metrics.map((m) => (
+                    // 숫자를 위에 크게 보이고, 읽는 순서는 이름 → 값이다.
+                    <div key={m.label} className="flex flex-col">
+                      <dt className="order-2 mt-0.5 text-xs text-gray-500">{m.label}</dt>
+                      <dd className="order-1 text-2xl font-bold tracking-tight text-blue-500">
+                        {m.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
@@ -640,9 +633,8 @@ export function LandingPage() {
       <Reasons />
       <Placements />
       <Channels />
-      <Combo />
-      <Partners />
-      <Cases />
+      {SHOW_COMBO ? <Combo /> : null}
+      <PartnersAndCases />
       <Process />
       <Faq />
       <ClosingCta />

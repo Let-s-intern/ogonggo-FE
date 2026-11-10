@@ -300,16 +300,6 @@ export const OPERATING_RULES = [
   '가격은 VAT 별도 정가, 견적서에서 확인',
 ];
 
-/** `문의 문구 복사` 가 클립보드에 넣는 문구. */
-export const INQUIRY_TEMPLATE = `[오늘의 공고 광고 문의]
-- 기업·기관명:
-- 담당자 / 연락처:
-- 홍보할 공고(링크):
-- 모집 마감일:
-- 목표 지원자:
-- 예상 예산:
-- 관심 있는 지면:`;
-
 export const CHANNEL_STATS = [
   {
     value: '6.7만+',
