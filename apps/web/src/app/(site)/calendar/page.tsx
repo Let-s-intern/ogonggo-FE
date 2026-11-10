@@ -1,8 +1,28 @@
+import type { Metadata } from 'next';
 import { JobCalendarPage } from '@/views/job-calendar';
 import {
   parseJobCalendarQuery,
   type JobCalendarSearchParams,
 } from '@/widgets/job-calendar/lib/query';
+
+const DESCRIPTION = '관심 직무 공고를 마감일·시작일 기준으로 달력에 모아 봅니다.';
+
+/**
+ * 공유했을 때 제목이 서비스 이름만 뜨지 않게 이 화면 제목을 둔다. `openGraph` 는 루트 것과
+ * 합쳐지지 않고 통째로 바뀌므로 사이트 이름과 형식을 다시 적는다. 이미지는 같은 폴더의
+ * `opengraph-image.tsx` 가 낸다.
+ */
+export const metadata: Metadata = {
+  title: '공고 달력',
+  description: DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: '오늘의 공고',
+    title: '공고 달력 | 오늘의 공고',
+    description: DESCRIPTION,
+    locale: 'ko_KR',
+  },
+};
 
 /**
  * 공고 달력 라우트. 이 Next 버전에서 `searchParams`는 Promise로 온다 — 다른 화면들과 같다.

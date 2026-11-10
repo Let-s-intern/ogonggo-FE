@@ -68,6 +68,8 @@ export const metadata: Metadata = {
     description: '커리어 여정에 딱 맞는 채용공고, 교육·부트캠프, 사이드·스터디를 모아 봅니다.',
     locale: 'ko_KR',
   },
+  /** X 는 이 값이 없으면 작은 정사각 카드로 띄운다. 이미지는 `og:image` 를 그대로 읽는다. */
+  twitter: { card: 'summary_large_image' },
   /**
    * RSS 피드 셋(`app/rss/*.xml/route.ts`)을 `<head>`에 알린다. `alternates.canonical`과 달리
    * 사이트 전체를 가리키는 값이라 화면마다 갈릴 이유가 없어 루트에 둔다 — canonical을 루트에
