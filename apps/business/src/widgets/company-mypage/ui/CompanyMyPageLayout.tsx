@@ -16,8 +16,9 @@ export interface CompanyMyPageLayoutProps {
 }
 
 /**
- * 기업 회원 화면(`/mypage/company` 아래)의 틀. 사이트 헤더는 공개 화면과 같고, 그 아래 왼쪽에 고정 메뉴가 생긴다
- * (2026-11-10 사용자: 헤더 디자인은 그대로, 사이드가 생기는 느낌). 푸터는 두지 않는다.
+ * 기업 회원 화면(`/mypage/company` 아래)의 틀. 흰 사이트 헤더를 전체 폭으로 펴고(`SiteHeader` 의 `layout="member"`), 그
+ * 아래 왼쪽에 고정 메뉴를 둔다. 헤더의 로고 칸이 메뉴와 같은 폭·바탕이라 메뉴가 위까지 이어져 보인다(2026-11-10
+ * 사용자: 로그인하면 헤더도 그에 맞게). 푸터는 두지 않는다.
  *
  * 토큰이 브라우저 저장소에만 있어 로그인 여부와 역할은 첫 렌더 뒤에 본다. 로그인하지 않았거나 기업 회원이 아니면
  * `/login?redirect=<지금 경로>` 로 보낸다. 로그인 화면이 기업 회원이 아닌 계정에게 안내한다
@@ -66,7 +67,7 @@ export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <SiteHeader />
+      <SiteHeader layout="member" />
 
       <div className="flex flex-1">
         <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 md:block">
