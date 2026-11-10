@@ -14,33 +14,25 @@ interface NavItem {
   href: string;
   label: string;
   match: (pathname: string) => boolean;
-  /** 로그인해야 쓰는 화면. 기업 회원이 아니면 로그인 화면을 거친다(`companyHref`). */
-  company?: boolean;
 }
 
-/** 시안 헤더의 왼쪽 메뉴. `신청 내역` 은 내 광고 신청 목록(BE LC-3590)이다. */
+/** 시안 헤더의 왼쪽 메뉴. 광고 신청 내역은 기업 회원 화면의 왼쪽 메뉴에서 간다(2026-11-10 사용자). */
 const SERVICE_NAV: NavItem[] = [
   { href: '/', label: '광고 안내', match: (p) => p === '/' },
   { href: '/apply', label: '광고 신청/문의', match: (p) => p.startsWith('/apply') },
-  {
-    href: '/mypage/company/ads',
-    label: '신청 내역',
-    match: (p) => p.startsWith('/mypage/company/ads'),
-    company: true,
-  },
 ];
 
 /** 기업 회원 대시보드. 공고·기업 정보는 그 화면의 왼쪽 메뉴에서 간다(`CompanyConsoleNav`). */
 const MY_PAGE_HREF = '/mypage/company';
 
 /**
- * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의·신청 내역, 오른쪽은 로그인. 로그인하면 로그인 자리에 기업명이 나오고,
+ * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의, 오른쪽은 로그인. 로그인하면 로그인 자리에 기업명이 나오고,
  * 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`).
  *
  * `공고등록`·`내 기업 정보` 는 두지 않는다. 기업 회원 화면(`/mypage/company`)에 왼쪽 메뉴가 생겨 거기서 간다
- * (2026-11-10 사용자). 헤더 모양은 공개 화면과 기업 회원 화면이 같다.
+ * (2026-11-10 사용자). 광고 신청 내역도 그 메뉴에서 간다.
  *
- * `신청 내역` 은 기업 회원으로 로그인했을 때만 바로 간다. 로그인하지 않았거나 다른 역할이면
+ * `마이페이지` 는 기업 회원으로 로그인했을 때만 바로 간다. 다른 역할이면
  * `/login?redirect=<그 화면>` 으로 보내고, 로그인 화면이 다른 역할에게 기업 회원으로 로그인하라고 안내한다
  * (`widgets/sign-in/LoginPage.tsx`). 역할은 `getMyAccount` 에만 있어 받기 전에는 로그인 화면으로 건다 — 기업
  * 회원이 그 사이에 누르면 로그인 화면이 바로 돌려보낸다.
@@ -121,7 +113,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
           {SERVICE_NAV.map((item) => (
             <DesktopLink
               key={item.href}
-              href={item.company ? companyHref(item.href) : item.href}
+              href={item.href}
               label={item.label}
               active={item.match(pathname)}
             />
@@ -162,7 +154,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
             {SERVICE_NAV.map((item) => (
               <MobileLink
                 key={item.href}
-                href={item.company ? companyHref(item.href) : item.href}
+                href={item.href}
                 label={item.label}
                 active={item.match(pathname)}
               />
