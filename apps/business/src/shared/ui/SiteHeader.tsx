@@ -2,24 +2,36 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
+import { EventNavLabel } from './EventNavLabel';
 import { Logo } from './Logo';
 
 interface NavItem {
   href: string;
   label: string;
   match: (pathname: string) => boolean;
+  /** 이벤트 메뉴. 깜빡이는 점과 흐르는 빛으로 다른 메뉴와 달리 보인다(`EventNavLabel`). */
+  event?: boolean;
 }
 
-/** 시안 헤더의 왼쪽 메뉴. 광고 신청 내역은 기업 회원 화면의 왼쪽 메뉴에서 간다(2026-11-10 사용자). */
+/**
+ * 시안 헤더의 왼쪽 메뉴. 광고 신청 내역은 기업 회원 화면의 왼쪽 메뉴에서 간다(2026-11-10 사용자). 출시 기념 무료
+ * 홍보(`/free-promotion`)는 web `/biz` 를 옮겨 온 이벤트 화면이다(2026-11-10 사용자).
+ */
 const SERVICE_NAV: NavItem[] = [
   { href: '/', label: '광고 안내', match: (p) => p === '/' },
   { href: '/apply', label: '광고 신청/문의', match: (p) => p.startsWith('/apply') },
+  {
+    href: '/free-promotion',
+    label: '출시 기념 무료 홍보',
+    match: (p) => p.startsWith('/free-promotion'),
+    event: true,
+  },
 ];
 
 /** 기업 회원 대시보드. 공고·기업 정보는 그 화면의 왼쪽 메뉴에서 간다(`CompanyConsoleNav`). */
@@ -108,7 +120,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
             <DesktopLink
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={item.event ? <EventNavLabel>{item.label}</EventNavLabel> : item.label}
               active={item.match(pathname)}
             />
           ))}
@@ -167,7 +179,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
               <MobileLink
                 key={item.href}
                 href={item.href}
-                label={item.label}
+                label={item.event ? <EventNavLabel>{item.label}</EventNavLabel> : item.label}
                 active={item.match(pathname)}
               />
             ))}
@@ -188,7 +200,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
   );
 }
 
-function DesktopLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function DesktopLink({ href, label, active }: { href: string; label: ReactNode; active: boolean }) {
   return (
     <Link
       href={href}
@@ -205,7 +217,7 @@ function DesktopLink({ href, label, active }: { href: string; label: string; act
   );
 }
 
-function MobileLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function MobileLink({ href, label, active }: { href: string; label: ReactNode; active: boolean }) {
   return (
     <li>
       <Link

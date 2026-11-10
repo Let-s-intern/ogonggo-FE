@@ -14,6 +14,8 @@ import {
   OPEN_CHAT_ROOM_COUNT,
   STEPS,
 } from '../model/content';
+import { BizLoginPrompt } from './BizLoginPrompt';
+import { CONTAINER, LIFT } from './styles';
 
 export function SectionHeading({
   eyebrow,
@@ -26,12 +28,19 @@ export function SectionHeading({
 }) {
   return (
     <>
-      <p className="text-sm font-bold text-blue-500">{eyebrow}</p>
-      <h2 className="mt-2.5 text-2xl leading-[1.35] font-extrabold tracking-[-0.03em] text-gray-900 md:text-[34px]">
+      <p data-reveal className="text-sm font-semibold text-blue-500">
+        {eyebrow}
+      </p>
+      <h2
+        data-reveal
+        className="mt-3 text-3xl leading-tight font-bold text-gray-900 md:text-[44px]"
+      >
         {title}
       </h2>
       {sub ? (
-        <p className="mt-3 text-base leading-relaxed text-gray-500 md:text-[17px]">{sub}</p>
+        <p data-reveal className="mt-4 text-base leading-relaxed text-gray-600">
+          {sub}
+        </p>
       ) : null}
     </>
   );
@@ -41,7 +50,7 @@ export function SectionHeading({
 export function BizIntro() {
   return (
     <section id="intro" className="scroll-mt-16 py-16 md:py-24">
-      <div className="mx-auto max-w-[1120px] px-5 md:px-8">
+      <div className={CONTAINER}>
         <SectionHeading
           eyebrow="소개 방식"
           title={
@@ -55,6 +64,7 @@ export function BizIntro() {
         {INTRO_FEATURES.map((feature, index) => (
           <div
             key={feature.image.src}
+            data-reveal
             className={cn(
               'mt-12 grid items-center gap-8 md:mt-[72px] md:gap-14',
               index % 2 === 1 ? 'md:grid-cols-[1.25fr_1fr]' : 'md:grid-cols-[1fr_1.25fr]',
@@ -70,7 +80,7 @@ export function BizIntro() {
               </h3>
               <p className="mt-3 text-base leading-[1.75] text-gray-600">{feature.body}</p>
             </div>
-            <div className="rounded-3xl border border-gray-150 bg-gray-50 p-4 md:p-7">
+            <div className="rounded-2xl bg-gray-100 p-4 md:p-7">
               <Image
                 src={feature.image.src}
                 alt={feature.image.alt}
@@ -87,24 +97,65 @@ export function BizIntro() {
   );
 }
 
+/**
+ * 채널 카드 위의 실제 게시물·톡방 화면(2026-11-10 사용자). 광고 신청의 상품 이미지(`public/ad-products`)를 같이 쓴다.
+ */
+const INSTAGRAM_SAMPLES = [
+  '/ad-products/instagram-job-1.jpg',
+  '/ad-products/instagram-job-2.jpg',
+  '/ad-products/instagram-job-3.jpg',
+];
+const OPEN_CHAT_SAMPLES = ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'];
+
+function ChannelSamples({ images, alt }: { images: string[]; alt: string }) {
+  return (
+    <div
+      className="mb-6 grid gap-1.5 overflow-hidden rounded-xl bg-gray-100 p-1.5"
+      style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}
+    >
+      {images.map((src, i) => (
+        <img
+          key={src}
+          src={src}
+          alt={i === 0 ? alt : ''}
+          loading="lazy"
+          className="h-44 w-full rounded-lg object-cover object-top md:h-52"
+        />
+      ))}
+    </div>
+  );
+}
+
 /** 홍보 채널, 집행 사례, 진행 3단계. */
 export function BizChannels() {
   return (
     <section className="bg-gray-50 py-16 md:py-24">
-      <div className="mx-auto max-w-[1120px] px-5 md:px-8">
+      <div className={CONTAINER}>
         <SectionHeading
           eyebrow="홍보 채널"
           title="원하는 채널 한 곳을 고르세요"
           sub="렛츠커리어가 직접 운영하는 채널에서, 채용 정보를 기다리는 인턴·신입 구직자에게 공고가 전달됩니다."
         />
         <div className="mt-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[20px] border border-gray-150 bg-white p-6 md:p-7">
-            <p className="text-[15px] font-semibold text-gray-500">
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-                {enumLabel('AdvertisementInquiryPromotionChannel', 'INSTAGRAM')}
-              </a>
-            </p>
-            <p className="mt-2 text-[36px] font-extrabold tracking-[-0.03em] text-gray-900">
+          <div
+            data-reveal
+            className={cn(LIFT, 'rounded-2xl border border-gray-200 bg-white p-6 md:p-8')}
+          >
+            <ChannelSamples
+              images={INSTAGRAM_SAMPLES}
+              alt="오늘의 공고 인스타그램 채용공고 게시물 예시"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[15px] font-semibold text-gray-600">
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                  {enumLabel('AdvertisementInquiryPromotionChannel', 'INSTAGRAM')}
+                </a>
+              </p>
+              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">
+                1회 무료
+              </span>
+            </div>
+            <p className="mt-3 text-[36px] font-bold tracking-tight text-blue-500">
               {INSTAGRAM_FOLLOWERS_LABEL}
               <small className="ml-1.5 text-base font-semibold text-gray-500">팔로워</small>
             </p>
@@ -112,12 +163,24 @@ export function BizChannels() {
               저장과 공유가 가장 많이 일어나는 채널입니다.
             </p>
             <p className="mt-3.5 text-[13px] text-gray-500">
-              기존 유료 상품 · 이벤트 기간 <b className="text-blue-600">1회 무료</b>
+              기존 유료 상품을 이벤트 기간에 무료로
             </p>
           </div>
-          <div className="rounded-[20px] border border-gray-150 bg-white p-6 md:p-7">
-            <p className="text-[15px] font-semibold text-gray-500">직무별 오픈채팅방</p>
-            <p className="mt-2 text-[36px] font-extrabold tracking-[-0.03em] text-gray-900">
+          <div
+            data-reveal
+            className={cn(LIFT, 'rounded-2xl border border-gray-200 bg-white p-6 md:p-8')}
+          >
+            <ChannelSamples
+              images={OPEN_CHAT_SAMPLES}
+              alt="직무별 오픈채팅방에 올린 채용공고 홍보글 예시"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[15px] font-semibold text-gray-600">직무별 오픈채팅방</p>
+              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">
+                1회 무료
+              </span>
+            </div>
+            <p className="mt-3 text-[36px] font-bold tracking-tight text-blue-500">
               {OPEN_CHAT_MEMBERS_LABEL}
               <small className="ml-1.5 text-base font-semibold text-gray-500">
                 명 · {OPEN_CHAT_ROOM_COUNT}개 방
@@ -140,7 +203,7 @@ export function BizChannels() {
           </div>
         </div>
 
-        <figure className="mt-4 rounded-[20px] border border-gray-150 bg-white p-4 md:p-6">
+        <figure data-reveal className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 md:p-6">
           <Image
             src="/free-promotion/showcase.jpg"
             alt="오공고 인스타그램 @letscareer.job 계정과 실제 집행한 채용공고 카드뉴스, 직무별 큐레이션 오픈채팅방 6곳 목록"
@@ -156,9 +219,9 @@ export function BizChannels() {
 
         <ol className="mt-10 grid gap-4 md:grid-cols-3">
           {STEPS.map((step, index) => (
-            <li key={step.title} className="rounded-[20px] border border-gray-150 bg-white p-6">
-              <p className="text-[13px] font-bold text-blue-500">STEP {index + 1}</p>
-              <h3 className="mt-2 text-lg font-bold text-gray-900">{step.title}</h3>
+            <li key={step.title} data-reveal className={cn(LIFT, 'rounded-xl bg-white p-6')}>
+              <p className="text-sm font-semibold text-blue-500">0{index + 1}</p>
+              <h3 className="mt-3 text-xl font-semibold text-gray-900">{step.title}</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-gray-600">{step.body}</p>
             </li>
           ))}
@@ -186,11 +249,14 @@ export function BizApplySide() {
       <ul className="mt-2">
         {APPLY_NOTES.map((note, index) => (
           <li key={note} className="mt-4 flex gap-3 text-[15px] leading-relaxed text-gray-700">
-            <b className="w-5 flex-none font-extrabold text-blue-500">{index + 1}</b>
+            <span className="flex size-6 flex-none items-center justify-center rounded-full bg-blue-500 text-xs font-semibold text-white">
+              {index + 1}
+            </span>
             {note}
           </li>
         ))}
       </ul>
+      <BizLoginPrompt variant="card" />
     </div>
   );
 }
@@ -198,7 +264,7 @@ export function BizApplySide() {
 export function BizFaq() {
   return (
     <section className="py-16 md:py-24">
-      <div className="mx-auto max-w-[820px] px-5 md:px-8">
+      <div className="page-container mx-auto w-full max-w-[820px] px-4 md:px-6">
         <SectionHeading eyebrow="자주 묻는 질문" title="궁금한 점이 있으신가요" />
         <div className="mt-8 border-t border-gray-200">
           {FAQ.map((item, index) => (

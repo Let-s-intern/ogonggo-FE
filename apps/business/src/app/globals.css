@@ -107,6 +107,13 @@ body {
   }
 }
 
+/* 메뉴의 이벤트 이름표(`shared/ui/EventNavLabel.tsx`) 글자 위로 빛이 흐른다. 그라데이션 양끝 색이 같아 이어 돈다. */
+@keyframes ogonggo-biz-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @keyframes ogonggo-biz-gradient {
   50% {
     background-position: 100% 50%;

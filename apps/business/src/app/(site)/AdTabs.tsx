@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@ogonggo/ui';
+import { EventNavLabel } from '@/shared/ui/EventNavLabel';
 
 const TABS = [
   {
@@ -11,9 +12,15 @@ const TABS = [
     match: (p: string) => p === '/apply' || p.startsWith('/apply/'),
   },
   { href: '/', label: '광고 안내', match: (p: string) => p === '/' },
+  {
+    href: '/free-promotion',
+    label: '출시 기념 무료 홍보',
+    match: (p: string) => p.startsWith('/free-promotion'),
+    event: true,
+  },
 ] as const;
 
-/** 탭을 다는 화면. 광고 신청/문의(`/apply` 아래)와 광고 안내(`/`)다. */
+/** 탭을 다는 화면. 광고 신청/문의(`/apply` 아래), 광고 안내(`/`), 출시 기념 무료 홍보다. */
 export const hasAdTabs = (pathname: string) => TABS.some((tab) => tab.match(pathname));
 
 /**
@@ -39,7 +46,7 @@ export function AdTabs() {
                     : 'border-transparent text-gray-500 hover:text-gray-900',
                 )}
               >
-                {tab.label}
+                {'event' in tab ? <EventNavLabel>{tab.label}</EventNavLabel> : tab.label}
               </Link>
             </li>
           );

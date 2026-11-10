@@ -50,7 +50,7 @@ export const COMPANY_CONSOLE_NAV: readonly ConsoleNavSection[] = [
         href: '/apply',
         label: '광고 신청/문의',
         icon: 'icon-[lucide--send]',
-        alsoActiveOn: ['/'],
+        alsoActiveOn: ['/', '/free-promotion'],
       },
       { href: '/mypage/company/ads', label: '광고 신청 내역', icon: 'icon-[lucide--megaphone]' },
     ],

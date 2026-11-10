@@ -1,7 +1,9 @@
 import { BizApplyForm } from './BizApplyForm';
 import { BizFloatingApply } from './BizFloatingApply';
 import { BizHero } from './BizHero';
+import { RevealOnScroll } from '@/widgets/landing/RevealOnScroll';
 import { BizApplySide, BizChannels, BizFaq, BizIntro } from './BizSections';
+import { CONTAINER } from './styles';
 
 /**
  * 출시 기념 무료 홍보 이벤트(`/free-promotion`). 기준은 `apps/web/src/views/biz/ui/BizPage.tsx` 다.
@@ -14,18 +16,21 @@ import { BizApplySide, BizChannels, BizFaq, BizIntro } from './BizSections';
  */
 export function BizPage() {
   return (
-    <div className="min-w-0 overflow-x-clip bg-white tracking-[-0.012em] text-gray-900">
+    <div className="min-w-0 overflow-x-clip bg-white break-keep text-gray-900 [&_h1]:text-balance [&_h2]:text-balance [&_h3]:text-balance [&_p]:text-pretty">
       <BizHero />
       <BizIntro />
       <BizChannels />
       <section id="apply" className="scroll-mt-16 bg-blue-00 py-16 md:py-24">
-        <div className="mx-auto grid max-w-[1120px] items-start gap-10 px-5 md:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
+        <div
+          className={`${CONTAINER} grid items-start gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14`}
+        >
           <BizApplySide />
           <BizApplyForm />
         </div>
       </section>
       <BizFaq />
       <BizFloatingApply />
+      <RevealOnScroll />
     </div>
   );
 }

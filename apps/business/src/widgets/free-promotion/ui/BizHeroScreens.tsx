@@ -72,8 +72,9 @@ export function BizHeroScreens() {
   const screen = HERO_SCREENS[active] ?? HERO_SCREENS[0];
 
   return (
+    // 격자 칸 안에서 내용 폭만큼 늘어나지 않게 한다(`min-w-0`). 늘어나면 히어로 판 오른쪽에서 잘린다.
     <div
-      className="lg:-mr-[120px]"
+      className="min-w-0"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
