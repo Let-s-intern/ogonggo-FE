@@ -41,8 +41,11 @@ export const COMPANY_CONSOLE_NAV: readonly ConsoleNavSection[] = [
     ],
   },
   {
+    // 로그인하면 헤더의 광고 안내·광고 신청/문의도 여기로 옮긴다(2026-11-10 사용자).
     title: '광고',
     items: [
+      { href: '/', label: '광고 안내', icon: 'icon-[lucide--presentation]', exact: true },
+      { href: '/apply', label: '광고 신청/문의', icon: 'icon-[lucide--send]' },
       { href: '/mypage/company/ads', label: '광고 신청 내역', icon: 'icon-[lucide--megaphone]' },
     ],
   },

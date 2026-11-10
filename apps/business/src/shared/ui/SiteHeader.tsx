@@ -45,7 +45,8 @@ export interface SiteHeaderProps {
   /**
    * `member` 는 기업 회원 화면(`CompanyMyPageLayout`)의 헤더다. 로그인하면 헤더도 왼쪽 메뉴에 맞춘다(2026-11-10 사용자): 화면
    * 전체 폭으로 펴고, 로고 칸을 왼쪽 메뉴와 같은 폭·바탕으로 둬 메뉴가 헤더까지 이어져 보이게 한다. 로고는
-   * 대시보드로 간다. 흰 바탕과 메뉴 항목은 공개 화면과 같다.
+   * 대시보드로 간다. 광고 안내·광고 신청/문의는 헤더에서 빼고 왼쪽 메뉴에 둔다(2026-11-10 사용자). 흰 바탕은
+   * 공개 화면과 같다.
    */
   layout?: 'site' | 'member';
 }
@@ -109,16 +110,19 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
             <span className="text-sm font-semibold text-gray-600">for business</span>
           </span>
         </Link>
-        <nav aria-label="주요 메뉴" className="hidden h-full items-center gap-5 md:flex">
-          {SERVICE_NAV.map((item) => (
-            <DesktopLink
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              active={item.match(pathname)}
-            />
-          ))}
-        </nav>
+        {/* 기업 회원 틀에서는 이 메뉴가 왼쪽 메뉴의 `광고` 묶음으로 간다(`CompanyConsoleNav`). */}
+        {isConsole ? null : (
+          <nav aria-label="주요 메뉴" className="hidden h-full items-center gap-5 md:flex">
+            {SERVICE_NAV.map((item) => (
+              <DesktopLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                active={item.match(pathname)}
+              />
+            ))}
+          </nav>
+        )}
         <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
           {signedIn ? (
             <AccountMenu
@@ -150,17 +154,19 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
           aria-label="메뉴"
           className="border-t border-gray-100 bg-white px-4 pt-2 pb-4 md:hidden"
         >
+          {isConsole ? null : (
+            <ul className="mb-2 border-b border-gray-100 pb-2">
+              {SERVICE_NAV.map((item) => (
+                <MobileLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  active={item.match(pathname)}
+                />
+              ))}
+            </ul>
+          )}
           <ul>
-            {SERVICE_NAV.map((item) => (
-              <MobileLink
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                active={item.match(pathname)}
-              />
-            ))}
-          </ul>
-          <ul className="mt-2 border-t border-gray-100 pt-2">
             {signedIn ? (
               <MobileLink
                 href={companyHref(MY_PAGE_HREF)}
