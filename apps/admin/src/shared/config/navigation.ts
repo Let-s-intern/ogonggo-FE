@@ -180,6 +180,38 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
+/** 메뉴 화면(목록) 주소 그대로일 때의 구역. 상세·수정처럼 메뉴에 없는 주소는 `undefined` 다. */
+export function menuAreaOf(pathname: string): NavArea | undefined {
+  return NAV_SECTIONS.find((section) => section.items.some((item) => item.path === pathname))?.area;
+}
+
+const LAST_AREA_KEY = 'ogonggo-admin:last-nav-area';
+
+/**
+ * 헤더에 켤 구역. 메뉴 화면에 들어오면 그 메뉴의 구역이고, 상세·수정처럼 메뉴에 없는 화면은 직전 구역을 그대로 둔다
+ * (2026-11-10 사용자: 비즈니스에서 채용공고 상세(`/content/jobs/:id`)를 열거나 뒤로가기를 하면 서비스로 바뀌어 불편했다).
+ * 직전 구역은 탭에 남겨 새로고침해도 이어진다. 처음 들어온 상세는 주소 앞부분으로 정한다(`navAreaOf`).
+ */
+export function stickyNavAreaOf(pathname: string): NavArea {
+  const menuArea = menuAreaOf(pathname);
+  let area = menuArea;
+  if (!area) {
+    try {
+      const saved = sessionStorage.getItem(LAST_AREA_KEY);
+      area = NAV_AREAS.some((item) => item.area === saved) ? (saved as NavArea) : undefined;
+    } catch {
+      area = undefined;
+    }
+  }
+  const resolved = area ?? navAreaOf(pathname);
+  try {
+    sessionStorage.setItem(LAST_AREA_KEY, resolved);
+  } catch {
+    // 저장소를 쓸 수 없으면 주소로만 정한다.
+  }
+  return resolved;
+}
+
 /** 경로가 속한 구역. 메뉴에 없는 경로(상세 등)는 같은 앞부분을 가진 메뉴 항목의 구역이고, 없으면 서비스다. */
 export function navAreaOf(pathname: string): NavArea {
   const section = NAV_SECTIONS.find((candidate) =>

@@ -6,7 +6,7 @@ import {
   isAdminTokenUnverified,
 } from '@/shared/api/adminTokenUnverified';
 import { WEB_HOME, webHandoffHref } from '@/shared/api/webHandoff';
-import { NAV_AREAS, NAV_SECTIONS, firstPathOf, navAreaOf } from '@/shared/config/navigation';
+import { NAV_AREAS, NAV_SECTIONS, firstPathOf, stickyNavAreaOf } from '@/shared/config/navigation';
 import { Logo } from '@/shared/ui/Logo';
 import { isMockEnabled } from '@/app/enableMocking';
 import { useReviewQueue } from '@/entities/review/api/useReviewQueue';
@@ -88,8 +88,8 @@ export function AdminLayout() {
     { label: '오늘 문의', count: adInquiryToday?.count ?? 0, to: todayAdInquiriesHref() },
   ].filter((item) => item.count > 0);
   const businessTotal = headerCounts.reduce((sum, item) => sum + item.count, 0);
-  // 헤더의 구역은 주소에서 정한다. 주소로 바로 들어와도(상세 등) 그 화면이 속한 구역이 켜진다.
-  const area = navAreaOf(useLocation().pathname);
+  // 헤더의 구역은 메뉴 화면이면 그 메뉴의 구역, 상세·수정이면 직전 구역이다(`stickyNavAreaOf`).
+  const area = stickyNavAreaOf(useLocation().pathname);
   const navBadgeFor = (path: string) => {
     const badge = navBadges[path];
     return badge?.count ? (
