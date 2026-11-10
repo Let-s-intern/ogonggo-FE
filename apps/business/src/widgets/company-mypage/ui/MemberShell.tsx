@@ -106,7 +106,13 @@ export function MemberShell({ children, contained = true }: MemberShellProps) {
               contained && 'mx-auto w-full max-w-[1120px] px-5 py-6 md:px-10 md:py-10',
             )}
           >
-            {children}
+            {/* 경로가 바뀌면 다시 그려 떠오르며 나타난다. `?page=` 만 바뀔 때는 그대로 둔다. */}
+            <div
+              key={pathname}
+              className="motion-safe:animate-[ogonggo-biz-page-in_0.35s_cubic-bezier(0.22,1,0.36,1)]"
+            >
+              {children}
+            </div>
           </main>
         </div>
       </div>

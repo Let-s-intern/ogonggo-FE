@@ -151,8 +151,10 @@ function Counts({
               {item.label}
             </dt>
             <dd
+              // 불러오기 전 `-` 에서 값으로 바뀔 때 흐리게 들어온다.
+              key={state}
               className={cn(
-                'text-2xl font-bold',
+                'text-2xl font-bold motion-safe:animate-[ogonggo-biz-fade-in_0.3s_ease-out]',
                 alert ? 'text-error' : item.strong ? 'text-blue-500' : 'text-gray-900',
               )}
             >
@@ -270,7 +272,7 @@ export function CompanyDashboard() {
           ) : posts.kind === 'ready' && posts.value.recent.length === 0 ? (
             <Empty>아직 등록한 공고가 없어요.</Empty>
           ) : posts.kind === 'ready' ? (
-            <ul className="mt-4 divide-y divide-gray-100">
+            <ul className="mt-4 divide-y divide-gray-100 motion-safe:animate-[ogonggo-biz-fade-in_0.3s_ease-out]">
               {posts.value.recent.map((row) => (
                 <li
                   key={row.key}
@@ -304,7 +306,7 @@ export function CompanyDashboard() {
           ) : ads.kind === 'ready' && ads.value.recent.length === 0 ? (
             <Empty>아직 광고 신청이 없어요.</Empty>
           ) : ads.kind === 'ready' ? (
-            <ul className="mt-4 divide-y divide-gray-100">
+            <ul className="mt-4 divide-y divide-gray-100 motion-safe:animate-[ogonggo-biz-fade-in_0.3s_ease-out]">
               {ads.value.recent.map((item) => (
                 <li key={item.id}>
                   <Link

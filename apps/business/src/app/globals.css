@@ -67,6 +67,24 @@ body {
   }
 }
 
+/*
+ * 기업 회원 틀(`MemberShell`)에서 화면을 옮길 때 본문이 살짝 떠오르며 나타난다. 끝 상태를 남기지 않게(fill 없음)
+ * 쓴다 — 남으면 본문 안의 `position: fixed` 바가 본문 기준으로 붙는다.
+ */
+@keyframes ogonggo-biz-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* 늦게 도착한 값(메뉴 옆 건수)이 툭 튀어나오지 않게 흐리게 들어온다. */
+@keyframes ogonggo-biz-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes ogonggo-biz-float {
   50% {
     transform: scale(1.15);

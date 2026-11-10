@@ -34,7 +34,7 @@ export function CompanyConsoleNav({ counts, variant }: CompanyConsoleNavProps) {
                   href={item.href}
                   aria-current={current ? 'page' : undefined}
                   className={cn(
-                    '-mb-px flex h-12 items-center border-b-2 text-[15px] whitespace-nowrap',
+                    '-mb-px flex h-12 items-center border-b-2 text-[15px] whitespace-nowrap transition-colors duration-200',
                     current
                       ? 'border-gray-900 font-semibold text-gray-900'
                       : 'border-transparent text-gray-500',
@@ -67,7 +67,7 @@ export function CompanyConsoleNav({ counts, variant }: CompanyConsoleNavProps) {
                     href={item.href}
                     aria-current={current ? 'page' : undefined}
                     className={cn(
-                      'flex h-10 items-center gap-2.5 rounded-md px-3 text-[15px] transition-colors',
+                      'flex h-10 items-center gap-2.5 rounded-md px-3 text-[15px] transition-colors duration-200',
                       current
                         ? 'bg-blue-50 font-semibold text-blue-600'
                         : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900',
@@ -81,7 +81,7 @@ export function CompanyConsoleNav({ counts, variant }: CompanyConsoleNavProps) {
                     {count === undefined ? null : (
                       <span
                         className={cn(
-                          'text-sm font-medium',
+                          'text-sm font-medium motion-safe:animate-[ogonggo-biz-fade-in_0.3s_ease-out]',
                           current ? 'text-blue-500' : 'text-gray-400',
                         )}
                       >
