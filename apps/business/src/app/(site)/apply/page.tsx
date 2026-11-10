@@ -83,8 +83,10 @@ export default function ApplyChoicePage() {
           <p className="mt-4 text-gray-600">회원가입 없이 바로 진행할 수 있어요.</p>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-2">
-          <div
-            className={`${CARD} bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30`}
+          {/* 카드 어디를 눌러도 광고 신청으로 간다(2026-11-10 사용자). */}
+          <Link
+            href="/apply/ad"
+            className={`${CARD} group/btn bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30`}
           >
             <Image
               src="/landing/reasons/clock.png"
@@ -110,14 +112,11 @@ export default function ApplyChoicePage() {
                 </li>
               ))}
             </ul>
-            <Link
-              href="/apply/ad"
-              className="group/btn mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-white px-6 py-3.5 font-semibold text-blue-600 transition-colors hover:bg-blue-00"
-            >
+            <span className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-white px-6 py-3.5 font-semibold text-blue-600 transition-colors group-hover/btn:bg-blue-00">
               광고 신청하기
               <Arrow />
-            </Link>
-          </div>
+            </span>
+          </Link>
           <div
             className={`${CARD} border border-gray-200 bg-white hover:border-blue-200 hover:shadow-lg`}
           >
