@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { Callout, Pagination } from '@ogonggo/ui';
 import {
@@ -18,21 +17,18 @@ export interface AdInquiryListPageProps {
   /** 화면이 정해 둔 문의 유형. 있으면 `문의 유형` 필터를 숨기고 이 유형만 본다. */
   fixedInquiryType?: string;
   title: string;
-  /** 제목 아래, 필터 위에 붙는 줄(`문의 관리` 의 탭). */
-  tabs?: ReactNode;
 }
 
 /**
  * 광고 문의 목록(PRD `어드민 화면`). 영업이 한 건씩 읽고 연락하는 흐름이라 표가 아니라 한 줄에 카드 하나다.
  *
- * `무료 홍보 신청`(반려 제외)·`반려한 무료 홍보` 두 메뉴와 `문의 관리`(탭) 가 이 화면을 함께 쓴다(LC-3525). 무료 홍보
- * 두 메뉴는 무료 홍보 문의만 보고, 문의 관리는 문의 유형·반려를 탭으로 나눠 전체를 본다(2026-11-10 사용자).
+ * `무료 홍보 신청`(반려 제외)·`반려한 무료 홍보` 두 메뉴가 이 화면을 함께 쓴다(LC-3525). 두 메뉴 모두 무료 홍보 문의만
+ * 본다(2026-11-10 사용자).
  */
 export function AdInquiryListPage({
   view = 'active',
   fixedInquiryType,
   title,
-  tabs,
 }: AdInquiryListPageProps) {
   const { get, page, setPage } = useListQuery();
   const [, setSearchParams] = useSearchParams();
@@ -73,7 +69,6 @@ export function AdInquiryListPage({
   return (
     <>
       <PageHeader title={title} action={<AdInquiryCsvButton filters={filters} />} />
-      {tabs}
       <AdInquiryFilters
         filters={filters}
         total={data?.pageInfo.totalElements}

@@ -19,10 +19,9 @@ import { unwrapData } from '@/shared/api/unwrapData';
 
 /**
  * 어느 메뉴의 목록인가(PRD `어드민 화면`, LC-3525). `active` 는 `광고 문의`(반려하지 않은 문의), `rejected` 는
- * `반려한 문의`, `all` 은 `문의 관리` 의 전체 탭(반려까지 모든 상태)이다. 처리 상태 조건만 정하고 나머지 필터와 함께
- * 쓴다. 메뉴·탭이 정해 URL 쿼리에는 없다.
+ * `반려한 문의` 다. 처리 상태 조건만 정하고 나머지 필터와 함께 쓴다. 메뉴마다 경로가 따로라 URL 쿼리에는 없다.
  */
-export type AdInquiryView = 'active' | 'rejected' | 'all';
+export type AdInquiryView = 'active' | 'rejected';
 
 /** `active` 목록이 보는 상태. 반려(`REJECTED`)를 뺀 셋이고, 메뉴 숫자(`today-count`)도 같은 조건이다. */
 export const ACTIVE_AD_INQUIRY_STATUSES: readonly ListAdvertisementInquiriesStatusItem[] = [
@@ -55,11 +54,6 @@ const LIST_KEY = ['admin', 'advertisement-inquiries'] as const;
  */
 function statusesOf(filters: AdInquiryListFilters): ListAdvertisementInquiriesStatusItem[] {
   if (filters.view === 'rejected') return ['REJECTED'];
-  if (filters.view === 'all') {
-    const all: ListAdvertisementInquiriesStatusItem[] = [...ACTIVE_AD_INQUIRY_STATUSES, 'REJECTED'];
-    const picked = all.find((status) => status === filters.status);
-    return picked ? [picked] : all;
-  }
   const chosen = ACTIVE_AD_INQUIRY_STATUSES.find((status) => status === filters.status);
   return chosen ? [chosen] : [...ACTIVE_AD_INQUIRY_STATUSES];
 }

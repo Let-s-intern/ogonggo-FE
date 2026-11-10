@@ -3,7 +3,6 @@ import { AdminLayout } from '@/widgets/admin-layout';
 import { AdContractDetailPage } from '@/pages/ad-contract-detail';
 import { AdContractListPage } from '@/pages/ad-contract-list';
 import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
-import { InquiryManagementPage } from '@/pages/inquiry-management';
 import { AdProductListPage } from '@/pages/ad-product-list';
 import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
@@ -105,7 +104,6 @@ export const router = createBrowserRouter([
           />
         ),
       },
-      { path: 'business/inquiries', element: <InquiryManagementPage /> },
       {
         path: 'business/advertisement-applications',
         element: <AdContractListPage key="applications" view="applications" />,

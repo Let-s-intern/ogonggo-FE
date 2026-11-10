@@ -70,8 +70,7 @@ export function AdInquiryFilters({
         <Select
           key={key}
           aria-label={label}
-          // `문의 관리` 전체 탭은 반려까지 고를 수 있다.
-          options={key === 'status' && filters.view === 'all' ? AD_INQUIRY_STATUS_OPTIONS : options}
+          options={options}
           value={filters[key]}
           onChange={(event) => onChange({ [key]: event.target.value })}
           className={filters[key] ? SELECTED : UNSELECTED}
