@@ -74,7 +74,7 @@ export default function ApplyChoicePage() {
         aria-hidden
         className="absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(60%_80%_at_50%_0%,var(--color-blue-50),transparent)]"
       />
-      <div className="page-container mx-auto max-w-[1080px] px-4 py-14 md:px-6 md:py-20">
+      <div className="page-container mx-auto w-full max-w-[1200px] px-4 py-14 md:px-6 md:py-20">
         <div className="text-center">
           <p className="text-sm font-semibold text-blue-500">광고 신청 · 문의</p>
           <h1 className="mt-3 text-3xl font-bold leading-tight md:text-[40px]">
