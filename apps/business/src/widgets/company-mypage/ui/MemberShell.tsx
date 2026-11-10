@@ -3,10 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
+import {
+  listMyAdvertisementContracts,
+  type SuccessResponsePageResponseMyAdvertisementContractSummaryResponse,
+} from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { SiteHeader } from '@/shared/ui/SiteHeader';
 import { fetchCompanyPostTotals } from '@/widgets/company-posts';
+import { MY_AD_CONTRACTS_HREF } from '@/widgets/my-ad-contracts/model';
 import { myPageMobileHeaderOf } from '../model/menu';
 import { CompanyConsoleNav } from './CompanyConsoleNav';
 
@@ -32,10 +37,11 @@ export function MemberShell({ children, contained = true }: MemberShellProps) {
   const pathname = usePathname();
 
   /**
-   * 메뉴 옆 건수(`채용공고` · `부트캠프`). 경로가 바뀔 때마다 다시 센다 — 공고를 저장하고 목록으로 돌아오면
-   * 늘어 있어야 한다. 실패하면 숫자 없이 이름만 둔다.
+   * 메뉴 옆 건수(`채용공고` · `부트캠프` · `광고 신청 내역`). 경로가 바뀔 때마다 다시 센다 — 공고를 저장하거나
+   * 광고를 신청하고 돌아오면 늘어 있어야 한다. 실패한 것은 숫자 없이 이름만 둔다.
    */
   const [postTotals, setPostTotals] = useState<Record<string, number | undefined>>({});
+  const [adTotal, setAdTotal] = useState<number | undefined>(undefined);
   useEffect(() => {
     if (!isSignedIn()) {
       return;
@@ -51,10 +57,22 @@ export function MemberShell({ children, contained = true }: MemberShellProps) {
         }
       })
       .catch(() => undefined);
+    // 한 건만 불러 전체 건수만 읽는다(`GET /api/v1/users/me/advertisement-contracts`).
+    (
+      listMyAdvertisementContracts({
+        page: 1,
+        size: 1,
+      }) as unknown as Promise<SuccessResponsePageResponseMyAdvertisementContractSummaryResponse>
+    )
+      .then((response) => {
+        if (active) setAdTotal(response.data?.pageInfo.totalElements);
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
     };
   }, [pathname]);
+  const counts = { ...postTotals, [MY_AD_CONTRACTS_HREF]: adTotal };
 
   const mobileHeader = myPageMobileHeaderOf(pathname);
 
@@ -65,7 +83,7 @@ export function MemberShell({ children, contained = true }: MemberShellProps) {
       <div className="flex flex-1">
         <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 md:block">
           <div className="sticky top-16">
-            <CompanyConsoleNav variant="side" counts={postTotals} />
+            <CompanyConsoleNav variant="side" counts={counts} />
           </div>
         </aside>
 
