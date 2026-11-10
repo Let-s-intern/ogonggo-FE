@@ -131,7 +131,7 @@ export function MemberShell({ children, contained = true, top }: MemberShellProp
   const mobileHeader = myPageMobileHeaderOf(pathname);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div data-member-shell className="flex min-h-dvh flex-col bg-white">
       {/* 모바일에서만 보인다. PC 는 헤더 없이 왼쪽 메뉴가 화면 위까지 올라간다. */}
       <SiteHeader layout="member" />
 
@@ -170,7 +170,7 @@ export function MemberShell({ children, contained = true, top }: MemberShellProp
           <main
             className={cn(
               'min-w-0 flex-1',
-              contained && 'mx-auto w-full max-w-[1120px] px-5 py-6 md:px-10 md:py-10',
+              contained && 'page-container mx-auto w-full max-w-[1200px] py-6 md:py-10',
             )}
           >
             {/* 경로가 바뀌면 다시 그려 떠오르며 나타난다. `?page=` 만 바뀔 때는 그대로 둔다. */}

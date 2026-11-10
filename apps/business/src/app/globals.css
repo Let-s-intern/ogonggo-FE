@@ -68,6 +68,21 @@ body {
 }
 
 /*
+ * 본문 폭 칸(`page-container`, 최대 1200px, 가운데). 기업 회원 틀(`MemberShell`, `data-member-shell`) 안에서는
+ * 좌우 여백을 기업 회원 화면과 같게 맞춘다. 폭과 여백이 같아야 메뉴를 오갈 때 제목과 탭의 시작선이 흔들리지
+ * 않는다(2026-11-10 검수). 유틸리티 층 밖에 두어 `px-*` 를 이긴다.
+ */
+[data-member-shell] .page-container {
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 48rem) {
+  [data-member-shell] .page-container {
+    padding-inline: 2.5rem;
+  }
+}
+
+/*
  * 기업 회원 틀(`MemberShell`)에서 화면을 옮길 때 본문이 살짝 떠오르며 나타난다. 끝 상태를 남기지 않게(fill 없음)
  * 쓴다 — 남으면 본문 안의 `position: fixed` 바가 본문 기준으로 붙는다.
  */

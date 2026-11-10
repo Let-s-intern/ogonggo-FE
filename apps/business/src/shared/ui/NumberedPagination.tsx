@@ -67,8 +67,13 @@ const MOBILE_BLOCK_SIZE = 5;
  *
  * `처음`·`끝`은 묶음과 무관하게 언제나 1페이지와 마지막 페이지다.
  * 검색·필터·정렬 상태를 링크에 보존하는 일은 `buildHref`를 넘기는 쪽 몫이다.
+ *
+ * 한 쪽뿐이면(전체가 한 쪽 이하) 그리지 않는다. 누를 곳 없는 `1` 과 꺼진 화살표만 남는다(2026-11-10 검수).
  */
 export function NumberedPagination({ pageInfo, buildHref }: NumberedPaginationProps) {
+  if (pageInfo.totalPages <= 1) {
+    return null;
+  }
   return (
     <>
       <PaginationRow

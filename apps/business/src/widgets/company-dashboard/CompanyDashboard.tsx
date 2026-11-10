@@ -8,9 +8,8 @@ import {
   type MyAdvertisementContractSummaryResponseStatus,
   type SuccessResponsePageResponseMyAdvertisementContractSummaryResponse,
 } from '@ogonggo/api';
-import { cn } from '@ogonggo/ui';
+import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
-import { useMyAccount } from '@/shared/api/useMyAccount';
 import { StageTrack } from '@/shared/ui/StageTrack';
 import {
   companyPostStage,
@@ -167,8 +166,24 @@ function Counts({
   );
 }
 
-function Empty({ children }: { children: ReactNode }) {
-  return <p className="py-6 text-center text-sm text-gray-500">{children}</p>;
+/** 빈 목록 문구. `action` 이 있으면 그 아래에 다음 할 일 버튼을 둔다(2026-11-10 검수). */
+function Empty({
+  children,
+  action,
+}: {
+  children: ReactNode;
+  action?: { href: string; label: string };
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-6">
+      <p className="text-center text-sm text-gray-500">{children}</p>
+      {action ? (
+        <Button asChild size="sm" variant="secondary" className="rounded-md px-4">
+          <Link href={action.href}>{action.label}</Link>
+        </Button>
+      ) : null}
+    </div>
+  );
 }
 
 const QUICK_ACTIONS = [
@@ -202,12 +217,9 @@ const QUICK_ACTIONS = [
  * 처음 온 기업(공고·신청이 모두 0건)에게는 바로가기를 맨 위에 크게 둔다.
  */
 export function CompanyDashboard() {
-  const account = useMyAccount();
   const posts = useLoad(loadPosts);
   const ads = useLoad(loadAds);
 
-  const organizationName =
-    account.kind === 'ready' ? account.account.companyProfile?.organizationName : undefined;
   const postCounts = posts.kind === 'ready' ? posts.value.counts : undefined;
   const adCounts = ads.kind === 'ready' ? ads.value.counts : undefined;
   const isNew =
@@ -244,9 +256,7 @@ export function CompanyDashboard() {
   return (
     <div className="flex flex-col gap-6 md:gap-8">
       <header>
-        <h1 className="text-2xl font-bold text-gray-950 md:text-3xl">
-          {organizationName ? `${organizationName} 대시보드` : '대시보드'}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-950 md:text-3xl">대시보드</h1>
         <p className="pt-2 text-sm text-gray-500">
           {isNew
             ? '첫 공고를 등록하거나 광고를 신청해 보세요.'
@@ -270,7 +280,9 @@ export function CompanyDashboard() {
           {posts.kind === 'error' ? (
             <Empty>공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</Empty>
           ) : posts.kind === 'ready' && posts.value.recent.length === 0 ? (
-            <Empty>아직 등록한 공고가 없어요.</Empty>
+            <Empty action={{ href: '/mypage/company/posts/jobs/new', label: '채용공고 등록하기' }}>
+              아직 등록한 공고가 없어요.
+            </Empty>
           ) : posts.kind === 'ready' ? (
             <ul className="mt-4 divide-y divide-gray-100 motion-safe:animate-[ogonggo-biz-fade-in_0.3s_ease-out]">
               {posts.value.recent.map((row) => (
@@ -304,7 +316,9 @@ export function CompanyDashboard() {
           {ads.kind === 'error' ? (
             <Empty>광고 신청을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</Empty>
           ) : ads.kind === 'ready' && ads.value.recent.length === 0 ? (
-            <Empty>아직 광고 신청이 없어요.</Empty>
+            <Empty action={{ href: '/apply/ad', label: '광고 신청하기' }}>
+              아직 광고 신청이 없어요.
+            </Empty>
           ) : ads.kind === 'ready' ? (
             <ul className="mt-4 divide-y divide-gray-100 motion-safe:animate-[ogonggo-biz-fade-in_0.3s_ease-out]">
               {ads.value.recent.map((item) => (

@@ -44,8 +44,8 @@ const MY_PAGE_HREF = '/mypage/company';
 export interface SiteHeaderProps {
   /**
    * `member` 는 기업 회원으로 로그인했을 때(`MemberShell`)의 헤더다. PC 에서는 헤더를 숨기고 로고·메뉴·계정이 모두
-   * 왼쪽 메뉴에 있다(2026-11-10 사용자). 왼쪽 메뉴가 없는 모바일에서만 보이고, 로고는 대시보드로 가며 펼친 메뉴에는
-   * 계정만 둔다(광고 메뉴는 헤더 아래 가로 메뉴에 있다).
+   * 왼쪽 메뉴에 있다(2026-11-10 사용자). 왼쪽 메뉴가 없는 모바일에서만 보이고, 로고는 대시보드로 가고, 메뉴 버튼
+   * 대신 기업명과 로그아웃을 바로 둔다(광고 메뉴는 헤더 아래 가로 메뉴에 있다).
    */
   layout?: 'site' | 'member';
 }
@@ -124,39 +124,55 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
             accountAction
           )}
         </nav>
-        <button
-          type="button"
-          aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
-          aria-expanded={menuOpen}
-          aria-controls="site-mobile-menu"
-          onClick={() => setMenuOpen((open) => !open)}
-          className="-mr-1 ml-auto p-1 text-gray-900 md:hidden"
-        >
-          <span
-            aria-hidden="true"
-            className={cn('block size-6', menuOpen ? 'icon-[lucide--x]' : 'icon-[lucide--menu]')}
-          />
-        </button>
+        {isConsole ? (
+          // 기업 회원 틀의 모바일은 메뉴가 헤더 아래 가로 메뉴에 다 있어 펼칠 것이 계정뿐이다. 펼치지 않고 기업명과
+          // 로그아웃을 바로 둔다(2026-11-10 검수).
+          <div className="ml-auto flex min-w-0 items-center gap-3 md:hidden">
+            {companyName ? (
+              <span className="truncate text-sm font-semibold text-gray-900">{companyName}</span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => signOut()}
+              disabled={pending}
+              className="shrink-0 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:text-gray-900 disabled:text-gray-300"
+            >
+              로그아웃
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={menuOpen}
+            aria-controls="site-mobile-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="-mr-1 ml-auto p-1 text-gray-900 md:hidden"
+          >
+            <span
+              aria-hidden="true"
+              className={cn('block size-6', menuOpen ? 'icon-[lucide--x]' : 'icon-[lucide--menu]')}
+            />
+          </button>
+        )}
       </div>
-      {menuOpen ? (
+      {menuOpen && !isConsole ? (
         <nav
           id="site-mobile-menu"
           aria-label="메뉴"
           className="border-t border-gray-100 bg-white px-4 pt-2 pb-4 md:hidden"
         >
-          {isConsole ? null : (
-            <ul className="mb-2 border-b border-gray-100 pb-2">
-              {SERVICE_NAV.map((item) => (
-                <MobileLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  active={item.match(pathname)}
-                />
-              ))}
-            </ul>
-          )}
           <ul>
+            {SERVICE_NAV.map((item) => (
+              <MobileLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                active={item.match(pathname)}
+              />
+            ))}
+          </ul>
+          <ul className="mt-2 border-t border-gray-100 pt-2">
             {signedIn ? (
               <MobileLink
                 href={companyHref(MY_PAGE_HREF)}

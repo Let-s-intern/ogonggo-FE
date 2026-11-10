@@ -24,7 +24,7 @@ const NOTES = [
 
 export default function ApplyChoicePage() {
   return (
-    <section className="mx-auto max-w-[1200px] px-4 py-12 md:px-6">
+    <section className="page-container mx-auto max-w-[1200px] px-4 py-12 md:px-6">
       <p className="text-sm font-semibold text-blue-500">START HERE</p>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
         <h1 className="text-2xl font-bold">어떤 도움이 필요하신가요?</h1>

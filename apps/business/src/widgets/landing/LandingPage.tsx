@@ -20,7 +20,7 @@ import { CountUp } from './CountUp';
 import { PlacementSimulator } from './PlacementSimulator';
 import { RevealOnScroll } from './RevealOnScroll';
 
-const CONTAINER = 'mx-auto w-full max-w-[1200px] px-4 md:px-6';
+const CONTAINER = 'page-container mx-auto w-full max-w-[1200px] px-4 md:px-6';
 /** 묶음 안 순서. 화면에 들어올 때 하나씩 늦게 떠오른다(`app/globals.css`). */
 const order = (i: number) => ({ '--i': i }) as CSSProperties;
 /** 히어로가 열자마자 떠오르는 애니메이션. 늦출 시간은 `animationDelay` 로 준다. */
