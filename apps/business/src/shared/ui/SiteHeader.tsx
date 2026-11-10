@@ -9,7 +9,6 @@ import { useSignOut } from '@/shared/api/useSignOut';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
 import { Logo } from './Logo';
-import { POST_REGISTER_OPTIONS, PostRegisterMenu } from './PostRegisterMenu';
 
 interface NavItem {
   href: string;
@@ -17,38 +16,23 @@ interface NavItem {
   match: (pathname: string) => boolean;
 }
 
-/**
- * 시안 헤더의 왼쪽 메뉴. `광고 내역` 은 내 광고 신청을 조회하는 API 가 없어 두지 않는다(PRD 3절). API 가 생기면
- * `/mypage/company/ads` 로 넣는다.
- */
+/** 시안 헤더의 왼쪽 메뉴. 광고 신청 내역은 기업 회원 화면의 왼쪽 메뉴에서 간다(2026-11-10 사용자). */
 const SERVICE_NAV: NavItem[] = [
   { href: '/', label: '광고 안내', match: (p) => p === '/' },
   { href: '/apply', label: '광고 신청/문의', match: (p) => p.startsWith('/apply') },
 ];
 
-/** 마이페이지 첫 화면. `/mypage/company` 는 공고 목록으로 보낸다. */
+/** 기업 회원 대시보드. 공고·기업 정보는 그 화면의 왼쪽 메뉴에서 간다(`CompanyConsoleNav`). */
 const MY_PAGE_HREF = '/mypage/company';
 
-/** 공고 작성 화면에 있으면 `공고등록` 에 밑줄을 긋는다. */
-const isPostRegister = (p: string) => /^\/mypage\/company\/posts\/(jobs|bootcamps)\/new/.test(p);
-
 /**
- * 오른쪽 메뉴. 기업 회원으로 로그인해야 쓸 수 있다. 맨 앞의 `공고등록` 은 채용공고·부트캠프를 먼저 고르는
- * 메뉴라 따로 둔다(`PostRegisterMenu`).
- */
-const COMPANY_NAV: NavItem[] = [
-  {
-    href: '/mypage/company/profile',
-    label: '내 기업 정보',
-    match: (p) => p.startsWith('/mypage/company/profile'),
-  },
-];
-
-/**
- * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의, 오른쪽은 공고등록·내 기업 정보·로그인. 로그인하면 로그인 자리에
- * 기업명이 나오고, 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`). 모바일 메뉴에는 두 항목을 그대로 펼친다.
+ * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의, 오른쪽은 로그인. 로그인하면 로그인 자리에 기업명이 나오고,
+ * 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`).
  *
- * 공고등록·내 기업 정보는 기업 회원으로 로그인했을 때만 그 화면으로 바로 간다. 로그인하지 않았거나 다른 역할이면
+ * `공고등록`·`내 기업 정보` 는 두지 않는다. 기업 회원 화면(`/mypage/company`)에 왼쪽 메뉴가 생겨 거기서 간다
+ * (2026-11-10 사용자). 광고 신청 내역도 그 메뉴에서 간다.
+ *
+ * `마이페이지` 는 기업 회원으로 로그인했을 때만 바로 간다. 다른 역할이면
  * `/login?redirect=<그 화면>` 으로 보내고, 로그인 화면이 다른 역할에게 기업 회원으로 로그인하라고 안내한다
  * (`widgets/sign-in/LoginPage.tsx`). 역할은 `getMyAccount` 에만 있어 받기 전에는 로그인 화면으로 건다 — 기업
  * 회원이 그 사이에 누르면 로그인 화면이 바로 돌려보낸다.
@@ -57,7 +41,17 @@ const COMPANY_NAV: NavItem[] = [
  *
  * 모바일(md 미만)은 로고와 메뉴 버튼만 두고, 버튼을 누르면 헤더 아래에 같은 메뉴를 세로로 펼친다.
  */
-export function SiteHeader() {
+export interface SiteHeaderProps {
+  /**
+   * `member` 는 기업 회원으로 로그인했을 때(`MemberShell`)의 헤더다. PC 에서는 헤더를 숨기고 로고·메뉴·계정이 모두
+   * 왼쪽 메뉴에 있다(2026-11-10 사용자). 왼쪽 메뉴가 없는 모바일에서만 보이고, 로고는 대시보드로 가고, 메뉴 버튼
+   * 대신 기업명과 로그아웃을 바로 둔다(광고 메뉴는 헤더 아래 가로 메뉴에 있다).
+   */
+  layout?: 'site' | 'member';
+}
+
+export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
+  const isConsole = layout === 'member';
   const pathname = usePathname();
   const account = useMyAccount();
   const { signOut, pending } = useSignOut();
@@ -94,9 +88,18 @@ export function SiteHeader() {
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur">
+    <header
+      className={cn(
+        'sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur',
+        isConsole && 'md:hidden',
+      )}
+    >
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-8 px-4 md:px-6">
-        <Link href="/" aria-label="오늘의 공고 비즈니스 홈" className="flex items-end gap-1.5">
+        <Link
+          href={isConsole ? MY_PAGE_HREF : '/'}
+          aria-label={isConsole ? '오늘의 공고 비즈니스 대시보드' : '오늘의 공고 비즈니스 홈'}
+          className="flex items-end gap-1.5"
+        >
           <Logo className="h-[22px] w-[46px] text-blue-500" />
           <span className="text-sm font-semibold text-gray-600">for business</span>
         </Link>
@@ -110,19 +113,7 @@ export function SiteHeader() {
             />
           ))}
         </nav>
-        <nav
-          aria-label="기업 회원 메뉴"
-          className="ml-auto hidden h-full items-center gap-5 md:flex"
-        >
-          <PostRegisterMenu hrefFor={companyHref} active={isPostRegister(pathname)} />
-          {COMPANY_NAV.map((item) => (
-            <DesktopLink
-              key={item.href}
-              href={companyHref(item.href)}
-              label={item.label}
-              active={item.match(pathname)}
-            />
-          ))}
+        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
           {signedIn ? (
             <AccountMenu
               companyName={companyName}
@@ -133,21 +124,39 @@ export function SiteHeader() {
             accountAction
           )}
         </nav>
-        <button
-          type="button"
-          aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
-          aria-expanded={menuOpen}
-          aria-controls="site-mobile-menu"
-          onClick={() => setMenuOpen((open) => !open)}
-          className="-mr-1 ml-auto p-1 text-gray-900 md:hidden"
-        >
-          <span
-            aria-hidden="true"
-            className={cn('block size-6', menuOpen ? 'icon-[lucide--x]' : 'icon-[lucide--menu]')}
-          />
-        </button>
+        {isConsole ? (
+          // 기업 회원 틀의 모바일은 메뉴가 헤더 아래 가로 메뉴에 다 있어 펼칠 것이 계정뿐이다. 펼치지 않고 기업명과
+          // 로그아웃을 바로 둔다(2026-11-10 검수).
+          <div className="ml-auto flex min-w-0 items-center gap-3 md:hidden">
+            {companyName ? (
+              <span className="truncate text-sm font-semibold text-gray-900">{companyName}</span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => signOut()}
+              disabled={pending}
+              className="shrink-0 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:text-gray-900 disabled:text-gray-300"
+            >
+              로그아웃
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={menuOpen}
+            aria-controls="site-mobile-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="-mr-1 ml-auto p-1 text-gray-900 md:hidden"
+          >
+            <span
+              aria-hidden="true"
+              className={cn('block size-6', menuOpen ? 'icon-[lucide--x]' : 'icon-[lucide--menu]')}
+            />
+          </button>
+        )}
       </div>
-      {menuOpen ? (
+      {menuOpen && !isConsole ? (
         <nav
           id="site-mobile-menu"
           aria-label="메뉴"
@@ -164,22 +173,6 @@ export function SiteHeader() {
             ))}
           </ul>
           <ul className="mt-2 border-t border-gray-100 pt-2">
-            {POST_REGISTER_OPTIONS.map((option) => (
-              <MobileLink
-                key={option.href}
-                href={companyHref(option.href)}
-                label={option.label}
-                active={pathname.startsWith(option.href)}
-              />
-            ))}
-            {COMPANY_NAV.map((item) => (
-              <MobileLink
-                key={item.href}
-                href={companyHref(item.href)}
-                label={item.label}
-                active={item.match(pathname)}
-              />
-            ))}
             {signedIn ? (
               <MobileLink
                 href={companyHref(MY_PAGE_HREF)}

@@ -7,8 +7,6 @@ import {
   SITE_NAME,
   SITE_ORIGIN,
 } from '@/shared/config/site';
-import { SiteFooter } from '@/shared/ui/SiteFooter';
-import { SiteHeader } from '@/shared/ui/SiteHeader';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -65,12 +63,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" className={pretendard.variable}>
-      <body className="font-sans antialiased">
-        <AppProviders>
-          <SiteHeader />
-          <main>{children}</main>
-          <SiteFooter />
-        </AppProviders>
+      <body className="flex min-h-dvh flex-col font-sans antialiased">
+        {/* 헤더·푸터는 공개 화면(`(site)/layout.tsx`)만 단다. 기업 회원 화면은 콘솔 틀이다(`mypage/company/layout.tsx`). */}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

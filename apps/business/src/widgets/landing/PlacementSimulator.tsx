@@ -11,10 +11,10 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 const VIEWPORT = 50;
 /** 끼워 넣는 배너 위아래 여백(이미지 높이 대비 %). */
 const PAD = 1;
-const EASE = 'duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
+const EASE = 'duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
-/** 지면 하나에 머무는 시간. 진행바가 이 시간 동안 차고, 다 차면 다음 지면이다(2026-11-09·11-10 사용자: 더 빠르게). */
-const DWELL_MS = 2000;
+/** 지면 하나에 머무는 시간. 진행바가 이 시간 동안 차고, 다 차면 다음 지면이다(2026-11-09·11-10 사용자: 더 빠르게, 다시 살짝 느리게). */
+const DWELL_MS = 2500;
 
 /** 자동으로 넘기는 순서. 페이지 탭 순서대로, 페이지 안에서는 지면 순서대로 모두 돈다. */
 const STEPS = PLACEMENT_PAGES.flatMap((p) => p.spots.map((s) => ({ pageId: p.id, spotId: s.id })));
@@ -62,7 +62,7 @@ function BannerCreative({ spot, shown }: { spot: PlacementSpot; shown: boolean }
         'absolute flex origin-top overflow-hidden rounded-[0.8cqw] bg-gradient-to-r from-blue-500 to-teal-500 text-white shadow-lg transition-[transform,opacity]',
         // 세로 배너는 길어서 같은 시간이면 빨리 떨어져 보인다. 천천히 내려오게 둔다.
         tall
-          ? 'duration-[700ms] ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none'
+          ? 'duration-[850ms] ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none'
           : EASE,
         tall
           ? 'flex-col items-center justify-center gap-[1cqw] text-center'

@@ -17,7 +17,6 @@ import { buildCompanyPostsHref, type CompanyPostsQuery } from '../lib/query';
 import { companyPostNewHref } from '../lib/routes';
 import { CompanyPostCard } from './CompanyPostCard';
 import { CompanyPostDraftCard } from './CompanyPostDraftCard';
-import { CompanyPostsCta } from './CompanyPostsCta';
 
 type State = { kind: 'loading' } | { kind: 'ready'; page: CompanyPostsPage } | { kind: 'error' };
 
@@ -27,8 +26,8 @@ export interface CompanyPostsProps {
 
 /**
  * 기업 회원의 `채용공고` · `부트캠프` 목록(v5 PRD 2 절, B2 시안 `prd-company-mypage-posts.md`).
- * 제목 줄 + 카드 목록 + 페이지네이션 + 하단 CTA 배너다. 어느 종류인지는 경로가 정하고, 사이드바
- * 메뉴가 둘로 나뉘어 있어 화면 안의 탭은 없다.
+ * 제목 줄 + 카드 목록 + 페이지네이션이다. 하단 CTA 배너는 뺐다(2026-11-10 사용자). 어느 종류인지는 경로가 정하고, 콘솔
+ * 메뉴가 둘로 나뉘어 있어 목록 안에 따로 탭을 두지 않는다.
  *
  * 카드마다 `작성 → 검수 → 게시 → 종료` 단계를 보인다(`model/stage.ts`). 단계로 거르는 필터는 없다.
  * `listMyJobs`·`listMyBootcamps` 가 받는 것이 `page`·`size` 뿐이라 거를 것도 정렬할 것도
@@ -181,8 +180,6 @@ export function CompanyPosts({ query }: CompanyPostsProps) {
         pageInfo={pageInfo}
         buildHref={(page) => buildCompanyPostsHref(query, { page })}
       />
-
-      <CompanyPostsCta tab={query.tab} />
     </section>
   );
 }

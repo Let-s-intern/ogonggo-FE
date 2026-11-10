@@ -300,36 +300,6 @@ export const OPERATING_RULES = [
   '가격은 VAT 별도 정가, 견적서에서 확인',
 ];
 
-export const PICKS = [
-  {
-    eyebrow: '01 · 발견 가능성을 높이고 싶다면',
-    title: '적극 채용중 공고 4칸',
-    body: '일반 공고와 동일한 카드 형태로 리스트 상단 고정',
-    method: '4개 슬롯 · 전체 직무 노출',
-    ctr: '3 ~ 5%',
-    price: 400000,
-    target: 'active-hiring-card',
-  },
-  {
-    eyebrow: '02 · 짧은 메시지를 넓게 알리고 싶다면',
-    title: '메인 상단 배너',
-    body: '리스트 위에서 4개 광고 소재가 순차 롤링',
-    method: '4개 롤링 · 가로형 배너',
-    ctr: '1 ~ 1.8%',
-    price: 500000,
-    target: 'main-top-banner',
-  },
-  {
-    eyebrow: '03 · 합리적인 비용으로 반복 노출하려면',
-    title: '메인 하단 배너',
-    body: '채용공고 리스트 끝, 페이지네이션 위 단독 노출',
-    method: '1개 슬롯 · 단독 배너',
-    ctr: '0.8 ~ 1.5%',
-    price: 300000,
-    target: 'main-bottom-banner',
-  },
-];
-
 /** `문의 문구 복사` 가 클립보드에 넣는 문구. */
 export const INQUIRY_TEMPLATE = `[오늘의 공고 광고 문의]
 - 기업·기관명:

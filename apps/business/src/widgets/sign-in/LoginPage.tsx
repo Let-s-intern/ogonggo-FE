@@ -8,6 +8,9 @@ import { saveTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { SignInForm } from './SignInForm';
 
+/** 돌아갈 화면이 없을 때 로그인 뒤 가는 곳. 기업 회원 대시보드다(2026-11-10 사용자). */
+const COMPANY_DASHBOARD_HREF = '/mypage/company';
+
 export interface LoginPageProps {
   /** `?redirect=` 를 거른 값(`shared/lib/returnPath.ts`). 같은 사이트의 경로가 아니면 `null` 이다. */
   returnPath: string | null;
@@ -17,8 +20,8 @@ export interface LoginPageProps {
  * 기업 회원 로그인. 기준은 web 의 기업 회원 탭(`apps/web/src/features/sign-in/ui/CompanySignInPanel.tsx`,
  * `apps/web/src/views/login/ui/LoginPage.tsx`) 이고, biz 는 기업 회원 전용이라 일반 회원 탭과 간편 로그인이 없다.
  *
- * 이미 기업 회원으로 로그인한 사람이 오면 돌아갈 화면(없으면 홈) 으로 보낸다. 다른 역할로 로그인한 사람에게는
- * 기업 회원으로 로그인하라는 안내와 폼을 보인다 — 헤더의 공고등록·내 기업 정보가 이 사람을 여기로 보낸다
+ * 로그인하면, 또는 이미 기업 회원으로 로그인한 사람이 오면 돌아갈 화면(없으면 대시보드) 으로 보낸다. 다른 역할로 로그인한 사람에게는
+ * 기업 회원으로 로그인하라는 안내와 폼을 보인다 — 헤더의 신청 내역·마이페이지가 이 사람을 여기로 보낸다
  * (`shared/ui/SiteHeader.tsx`). 기업 계정으로 로그인하면 토큰을 덮어쓴다(`saveTokens`). 토큰이 브라우저 저장소에만 있어
  * 역할은 첫 렌더 뒤에 받는다.
  */
@@ -33,7 +36,7 @@ export function LoginPage({ returnPath }: LoginPageProps) {
 
   useEffect(() => {
     if (alreadyCompany) {
-      router.replace(returnPath ?? '/');
+      router.replace(returnPath ?? COMPANY_DASHBOARD_HREF);
     }
   }, [alreadyCompany, router, returnPath]);
 
@@ -50,7 +53,7 @@ export function LoginPage({ returnPath }: LoginPageProps) {
       }
       saveTokens(body.data);
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다. 풀면 이동 전에 버튼이 잠깐 다시 켜진다.
-      router.replace(returnPath ?? '/');
+      router.replace(returnPath ?? COMPANY_DASHBOARD_HREF);
     } catch (caught) {
       setError(signInErrorMessage(caught));
       setPending(false);
@@ -68,7 +71,7 @@ export function LoginPage({ returnPath }: LoginPageProps) {
         </p>
         {otherRole ? (
           <p className="mb-4 rounded-md bg-blue-00 px-4 py-3 text-sm text-gray-700">
-            지금 로그인한 계정은 기업 회원이 아닙니다. 공고등록과 내 기업 정보는 기업 회원 계정으로
+            지금 로그인한 계정은 기업 회원이 아닙니다. 공고 등록과 기업 정보는 기업 회원 계정으로
             로그인해야 쓸 수 있습니다.
           </p>
         ) : null}
