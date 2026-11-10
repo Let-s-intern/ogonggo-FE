@@ -17,7 +17,7 @@ const isTab = (value: string | null): value is InquiryTab =>
   TABS.some((tab) => tab.value === value);
 
 /**
- * 비즈니스 문의. 광고 문의 테이블(무료 홍보·출시 알림)의 문의 전체를 탭으로 나눠 본다(2026-11-10 사용자). 목록·필터·
+ * 문의 관리. 광고 문의 테이블(무료 홍보·출시 알림)의 문의 전체를 탭으로 나눠 본다(2026-11-10 사용자). 목록·필터·
  * 처리는 무료 홍보 메뉴와 같은 화면(`AdInquiryListPage`)이다. 일반 문의가 생기면 탭을 더한다.
  *
  * 탭은 주소(`?tab=`)에 담아 새로고침·북마크에도 남는다. 탭을 바꾸면 다른 필터와 페이지는 비운다 — 탭마다 맞는
@@ -32,7 +32,7 @@ export function InquiryManagementPage() {
     <AdInquiryListPage
       // 탭마다 목록 상태를 새로 시작한다.
       key={current.value}
-      title="비즈니스 문의"
+      title="문의 관리"
       view={current.view}
       fixedInquiryType={current.inquiryType}
       tabs={

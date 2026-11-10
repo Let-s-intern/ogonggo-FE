@@ -19,7 +19,7 @@ import { unwrapData } from '@/shared/api/unwrapData';
 
 /**
  * 어느 메뉴의 목록인가(PRD `어드민 화면`, LC-3525). `active` 는 `광고 문의`(반려하지 않은 문의), `rejected` 는
- * `반려한 문의`, `all` 은 `비즈니스 문의` 의 전체 탭(반려까지 모든 상태)이다. 처리 상태 조건만 정하고 나머지 필터와 함께
+ * `반려한 문의`, `all` 은 `문의 관리` 의 전체 탭(반려까지 모든 상태)이다. 처리 상태 조건만 정하고 나머지 필터와 함께
  * 쓴다. 메뉴·탭이 정해 URL 쿼리에는 없다.
  */
 export type AdInquiryView = 'active' | 'rejected' | 'all';
