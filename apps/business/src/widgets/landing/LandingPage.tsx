@@ -2,8 +2,9 @@ import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@ogonggo/ui';
-import { AD_INTRODUCTION_PDF } from '@/shared/config/site';
 import {
+  AD_INTRODUCTION_PDF,
+  CASES,
   CHANNEL_GROUPS,
   CHANNEL_STATS,
   COMBO_CARDS,
@@ -449,6 +450,75 @@ function Partners() {
   );
 }
 
+/** 고객 사례 5건(소개서 17~21쪽). 소재는 모자이크한 이미지라 분위기만 보이고, 숫자 성과를 앞에 둔다. */
+function Cases() {
+  return (
+    <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
+      <Eyebrow>CASES</Eyebrow>
+      <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+        먼저 집행한 기업들의 결과예요
+      </h2>
+      <p data-reveal className="mt-4 text-gray-600">
+        실제 집행 소재는 모자이크했어요. 자세한 사례는{' '}
+        <a
+          href={AD_INTRODUCTION_PDF}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-blue-500 underline underline-offset-2"
+        >
+          소개서
+        </a>
+        에서 볼 수 있어요.
+      </p>
+      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {CASES.map((c, i) => (
+          <li
+            key={c.company}
+            data-reveal
+            style={order(i)}
+            className={cn(
+              LIFT,
+              'flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white',
+            )}
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
+              <Image
+                src={c.image}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
+                className="object-cover"
+              />
+              <span className="absolute top-3 left-3 rounded-full bg-gray-900/70 px-2.5 py-1 text-xs font-medium text-white">
+                사례 {i + 1} · {c.kind}
+              </span>
+            </div>
+            <div className="flex flex-1 flex-col px-5 py-5">
+              <p className="text-sm font-semibold text-blue-500">{c.company}</p>
+              <p className="mt-1 text-lg font-bold">{c.title}</p>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.situation}</p>
+              <p className="mt-3 text-xs text-gray-500">
+                <span className="mr-1.5 text-gray-400">진행</span>
+                {c.channels}
+              </p>
+              <ul className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-4">
+                {c.results.map((r) => (
+                  <li
+                    key={r}
+                    className="rounded-md bg-blue-00 px-2.5 py-1 text-sm font-semibold text-blue-600"
+                  >
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Process() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
@@ -558,6 +628,7 @@ export function LandingPage() {
       <Channels />
       <Combo />
       <Partners />
+      <Cases />
       <Process />
       <Faq />
       <ClosingCta />
