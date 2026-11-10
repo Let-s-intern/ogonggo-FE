@@ -66,8 +66,8 @@ export function MyAdContracts({ page }: { page: number }) {
   return (
     <section className="flex flex-col gap-5 md:gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="hidden md:block">
-          <h1 className="text-3xl font-bold text-gray-950">광고 신청 내역</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-950 md:text-3xl">광고 신청 내역</h1>
           <p className="pt-2 text-sm text-gray-500">
             광고 신청 폼으로 낸 신청의 진행 상태를 확인할 수 있어요.
           </p>

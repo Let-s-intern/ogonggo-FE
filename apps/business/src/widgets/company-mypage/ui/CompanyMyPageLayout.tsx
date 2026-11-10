@@ -65,6 +65,8 @@ export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
   }, [pathname]);
 
   const mobileHeader = myPageMobileHeaderOf(pathname);
+  /** 광고 신청 내역은 헤더 `신청 내역` 으로 들어오는 따로인 화면이라 공고·기업 정보 탭을 달지 않는다(2026-11-10 사용자). */
+  const withoutTabs = pathname.startsWith('/mypage/company/ads');
 
   return (
     <div
@@ -82,9 +84,11 @@ export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
         </div>
       ) : null}
       <div className="flex flex-col gap-6 md:gap-8">
-        <div className={cn(mobileHeader && 'hidden md:block')}>
-          <MyPageTabs menuItems={COMPANY_MYPAGE_MENU} counts={postTotals} />
-        </div>
+        {withoutTabs ? null : (
+          <div className={cn(mobileHeader && 'hidden md:block')}>
+            <MyPageTabs menuItems={COMPANY_MYPAGE_MENU} counts={postTotals} />
+          </div>
+        )}
         <div className="min-w-0">
           {account.kind === 'error' ? (
             <p role="alert" className="text-sm text-error">
