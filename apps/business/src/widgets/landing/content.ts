@@ -4,7 +4,7 @@
  */
 
 export const HERO_STATS = [
-  { value: '월 10만명+', label: '두 채널 합산 이용자' },
+  { value: '월 10만명+', label: '매달 찾아오는 취준생' },
   { value: '6.7만명+', label: '인스타그램 팔로워' },
   { value: '1만명+', label: '카카오톡 오픈채팅 참여자' },
   { value: '24시간 이내', label: '광고 문의 답변' },

@@ -187,10 +187,10 @@ function Channels() {
           <span className="text-blue-300">월 10만 명</span> 더 있어요
         </h2>
         <p data-reveal className="mt-5 max-w-[760px] leading-relaxed text-gray-300">
-          렛츠커리어는 이력서·자소서·포트폴리오 챌린지를 운영하며 취준생과 매일 이야기해요.
-          인스타그램 두 계정과 카카오톡 오픈채팅방, 채널 DM에서{' '}
-          <strong className="text-white">큐레이션 콘텐츠로 공고를 &apos;추천&apos;</strong>하고,
-          소재 제작까지 48시간 안에 끝내요.
+          렛츠커리어는 취업 교육으로 신뢰를 쌓아 온 취준생 채널이에요. 인스타그램, 카카오톡
+          오픈채팅, CRM 메시지에서 공고를 광고가 아닌{' '}
+          <strong className="text-white">믿고 보는 &apos;추천&apos; 콘텐츠</strong>로 전해 지원
+          반응이 달라요. 공고 링크만 주시면 소재 제작부터 집행까지 48시간 안에 끝내드려요.
         </p>
         <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-5">
           {CHANNEL_STATS.map((s, i) => (
