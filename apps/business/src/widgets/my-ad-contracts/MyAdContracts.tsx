@@ -8,15 +8,18 @@ import {
   type PageResponseMyAdvertisementContractSummaryResponse,
   type SuccessResponsePageResponseMyAdvertisementContractSummaryResponse,
 } from '@ogonggo/api';
-import { Badge, Button } from '@ogonggo/ui';
+import { Badge, Button, cn } from '@ogonggo/ui';
 import { formatDateDots } from '@/shared/lib/localDate';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
+import { StageTrack } from '@/shared/ui/StageTrack';
 import {
   formatPaymentAmount,
   MY_AD_CONTRACTS_HREF,
   myAdContractHref,
   PAGE_SIZE,
-  statusBadge,
+  STATUS_CARD_CLASSES,
+  STATUS_HINTS,
+  STATUS_STEPS,
 } from './model';
 
 type State =
@@ -80,45 +83,60 @@ export function MyAdContracts({ page }: { page: number }) {
       {items.length > 0 ? (
         <ul className="flex flex-col gap-3">
           {items.map((item) => {
-            const badge = statusBadge(item.status);
+            const hint = STATUS_HINTS[item.status];
             return (
-              <li key={item.id}>
-                <Link
-                  href={myAdContractHref(item.id)}
-                  className="flex flex-col gap-3 rounded-lg border border-gray-200 px-5 py-4 transition-colors hover:border-gray-300 md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone={badge.tone}>{badge.label}</Badge>
-                      <span className="text-sm text-gray-500">
-                        {enumLabel('AdvertisementContractPromotionTarget', item.promotionTarget)}
-                      </span>
-                    </div>
-                    <p className="mt-2 truncate font-semibold text-gray-950">
+              <li
+                key={item.id}
+                className={cn(
+                  'grid gap-4 rounded-md border p-4 md:grid-cols-[minmax(0,1fr)_13rem_auto] md:items-center md:gap-6 md:px-6 md:py-5',
+                  STATUS_CARD_CLASSES[item.status],
+                )}
+              >
+                <div className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <Badge
+                      tone="neutral"
+                      className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+                    >
+                      {enumLabel('AdvertisementContractPromotionTarget', item.promotionTarget)}
+                    </Badge>
+                    <Link
+                      href={myAdContractHref(item.id)}
+                      className="truncate text-base font-bold text-gray-900 hover:underline"
+                    >
                       {item.recruitmentTitle}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {item.companyName} · 모집 마감 {formatDateDots(item.recruitmentDeadline)}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {item.categories
-                        .map((category) => enumLabel('AdvertisementProductCategory', category))
-                        .join(', ')}
-                    </p>
+                    </Link>
                   </div>
-                  <dl className="flex shrink-0 gap-6 text-sm md:flex-col md:gap-1 md:text-right">
-                    <div>
-                      <dt className="inline text-gray-500">협의 금액 </dt>
-                      <dd className="inline font-medium text-gray-900">
-                        {formatPaymentAmount(item.paymentAmount)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="inline text-gray-500">신청일 </dt>
-                      <dd className="inline text-gray-900">{formatDateDots(item.registeredAt)}</dd>
-                    </div>
-                  </dl>
-                </Link>
+                  <p className="mt-0.5 truncate text-xs text-gray-500">
+                    {[
+                      item.companyName,
+                      item.categories
+                        .map((category) => enumLabel('AdvertisementProductCategory', category))
+                        .join(', '),
+                    ].join(' · ')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    {[
+                      `신청 ${formatDateDots(item.registeredAt)}`,
+                      `모집 마감 ${formatDateDots(item.recruitmentDeadline)}`,
+                      `협의 금액 ${formatPaymentAmount(item.paymentAmount)}`,
+                    ].join(' · ')}
+                  </p>
+                  <p className={cn('mt-2 text-xs', hint.className)}>{hint.text}</p>
+                </div>
+
+                <StageTrack steps={STATUS_STEPS[item.status]} />
+
+                <div className="flex items-center justify-end">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="sm"
+                    className="rounded-md px-4 whitespace-nowrap"
+                  >
+                    <Link href={myAdContractHref(item.id)}>상세 보기</Link>
+                  </Button>
+                </div>
               </li>
             );
           })}

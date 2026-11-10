@@ -5,7 +5,7 @@
 export interface MyPageMenuItem {
   href: string;
   label: string;
-  /** 이 항목 위에 구분선을 둔다. 공고 메뉴와 계정 메뉴를 가른다(B2 시안). */
+  /** PC 탭 줄에서 이 항목을 오른쪽 끝으로 띄운다. 공고·광고 메뉴와 계정 메뉴를 가른다. */
   separated?: boolean;
 }
 

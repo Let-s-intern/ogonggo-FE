@@ -9,9 +9,16 @@ import {
   type MyAdvertisementContractDetailResponse,
   type SuccessResponseMyAdvertisementContractDetailResponse,
 } from '@ogonggo/api';
-import { Badge } from '@ogonggo/ui';
+import { Badge, cn } from '@ogonggo/ui';
 import { formatDateDots } from '@/shared/lib/localDate';
-import { formatPaymentAmount, MY_AD_CONTRACTS_HREF, statusBadge } from './model';
+import { StageTrack } from '@/shared/ui/StageTrack';
+import {
+  formatPaymentAmount,
+  MY_AD_CONTRACTS_HREF,
+  STATUS_HINTS,
+  STATUS_STEPS,
+  statusBadge,
+} from './model';
 
 type State =
   | { kind: 'loading' }
@@ -123,6 +130,12 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
         <h1 className="text-2xl font-bold text-gray-950 md:text-3xl">
           {contract.recruitmentTitle}
         </h1>
+        <div className="mt-2 max-w-xs">
+          <StageTrack steps={STATUS_STEPS[contract.status]} />
+        </div>
+        <p className={cn('text-sm', STATUS_HINTS[contract.status].className)}>
+          {STATUS_HINTS[contract.status].text}
+        </p>
       </header>
 
       <Section title="공고 정보">
