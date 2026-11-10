@@ -18,12 +18,16 @@ import {
   type AdProduct,
   AD_REQUEST_MAX,
   addDays,
+  BUDGET_UNITS,
+  budgetAmountOf,
+  budgetText,
   BUSINESS_NUMBER_TYPE_OPTIONS,
   type BusinessNumberType,
   CREATIVE_OPTIONS,
   type FormValues,
   formatBusinessNumber,
   formatDate,
+  formatWon,
   INITIAL_VALUES,
   INVOICE_OPTIONS,
   parseYmd,
@@ -31,6 +35,7 @@ import {
   prefillFrom,
   PURPOSE_OPTIONS,
   RECRUIT_TYPES,
+  sanitizeBudget,
   type RecruitType,
   SCHEDULE_NOTE_MAX,
   selectedProducts,
@@ -299,6 +304,7 @@ function StepProducts({
       'productIds',
       v.productIds.includes(id) ? v.productIds.filter((x) => x !== id) : [...v.productIds, id],
     );
+  const budgetAmount = budgetAmountOf(v);
 
   return (
     <div className="space-y-8">
@@ -310,14 +316,50 @@ function StepProducts({
         <p className="mt-1 text-sm text-gray-600">
           예산에 맞춰 담당자가 상품 조합을 제안드려요. 정하지 않았다면 비워 두세요.
         </p>
-        <input
-          id="ad-budget"
-          className={cn(INPUT, 'mt-3 h-14 bg-white text-lg')}
-          value={v.budget}
-          onChange={(e) => set('budget', e.target.value)}
-          placeholder="예: 200만원"
-          maxLength={50}
-        />
+        {/* 숫자는 그대로 두고 단위 칩만 바꿔 `2` 를 200만원·2,000만원으로 바로 고칠 수 있다(2026-11-10 사용자). */}
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            id="ad-budget"
+            inputMode="decimal"
+            autoComplete="off"
+            aria-invalid={errors.budget ? true : undefined}
+            className={cn(INPUT, 'h-14 flex-1 bg-white text-lg', errors.budget && 'border-error')}
+            value={v.budget}
+            onChange={(e) => set('budget', sanitizeBudget(e.target.value))}
+            placeholder="숫자만 입력"
+          />
+          <div
+            role="radiogroup"
+            aria-label="예산 단위"
+            className="flex h-14 shrink-0 rounded-md border border-gray-200 bg-white p-1"
+          >
+            {BUDGET_UNITS.map((unit) => {
+              const on = v.budgetUnit === unit.value;
+              return (
+                <button
+                  key={unit.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => set('budgetUnit', unit.value)}
+                  className={cn(
+                    'flex-1 rounded px-4 text-[15px] font-medium whitespace-nowrap transition-colors',
+                    on ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50',
+                  )}
+                >
+                  {unit.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {budgetAmount !== undefined && budgetAmount >= 1 && !errors.budget && (
+          <p className="mt-2 text-sm text-gray-700">
+            <span className="font-semibold text-blue-600">{formatWon(budgetAmount)}</span>
+            <span className="ml-1.5 text-gray-500">({budgetAmount.toLocaleString('ko-KR')}원)</span>
+          </p>
+        )}
+        <ErrorText>{errors.budget}</ErrorText>
       </div>
       {AD_PRODUCT_GROUPS.map((group, index) => {
         const products = AD_PRODUCTS.filter((p) => p.group === group.id);
@@ -794,7 +836,7 @@ function StepConfirm({
                 .join(', '),
             ],
             ['기간', periodText(v) ?? ''],
-            ['예정 예산', v.budget.trim() || '입력 안 함'],
+            ['예정 예산', budgetText(v)],
             ['견적', '담당자 확인 후 안내'],
           ]}
         />

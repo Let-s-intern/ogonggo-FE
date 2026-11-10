@@ -4,7 +4,6 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
-import type { AdminAdvertisementContractSummaryResponseBudgetRange } from './adminAdvertisementContractSummaryResponseBudgetRange';
 import type { AdminAdvertisementContractSummaryResponseCategoriesItem } from './adminAdvertisementContractSummaryResponseCategoriesItem';
 import type { AdminAdvertisementContractSummaryResponsePromotionTarget } from './adminAdvertisementContractSummaryResponsePromotionTarget';
 import type { AdminAdvertisementContractSummaryResponseSource } from './adminAdvertisementContractSummaryResponseSource';
@@ -39,16 +38,7 @@ export interface AdminAdvertisementContractSummaryResponse {
   companyName: string;
   recruitmentTitle: string;
   recruitmentDeadline?: string;
-  /**
-     * | 값 | code | 설명 |
-     * | --- | --- | --- |
-     * | `UNDER_500K` | 1 | 50만원 미만 |
-     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
-     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
-     * | `OVER_3M` | 4 | 300만원 이상 |
-     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
-     */
-  budgetRange?: AdminAdvertisementContractSummaryResponseBudgetRange;
+  budgetAmount?: number;
   categories: AdminAdvertisementContractSummaryResponseCategoriesItem[];
   paymentAmount?: number;
   registeredAt: string;

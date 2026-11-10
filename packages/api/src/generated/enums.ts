@@ -898,13 +898,6 @@ export const ENUM_CATALOG = {
     { name: 'FIT_APPLICANTS', desc: '적합한 지원자 확보', parent: null },
     { name: 'BRAND_AWARENESS', desc: '브랜드 인지도 확대', parent: null },
   ],
-  AdvertisementContractBudgetRange: [
-    { name: 'UNDER_500K', desc: '50만원 미만', parent: null },
-    { name: 'FROM_500K_TO_1M', desc: '50만~100만원', parent: null },
-    { name: 'FROM_1M_TO_3M', desc: '100만~300만원', parent: null },
-    { name: 'OVER_3M', desc: '300만원 이상', parent: null },
-    { name: 'UNDECIDED', desc: '아직 정하지 않았어요', parent: null },
-  ],
   AdvertisementContractInvoiceMethod: [
     { name: 'TAX_INVOICE', desc: '세금계산서 발행', parent: null },
     { name: 'NEGOTIATE', desc: '담당자와 협의', parent: null },

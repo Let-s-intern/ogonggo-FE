@@ -4,7 +4,6 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
-import type { AdminAdvertisementContractDetailResponseBudgetRange } from './adminAdvertisementContractDetailResponseBudgetRange';
 import type { AdminAdvertisementContractDetailResponseBusinessNumberType } from './adminAdvertisementContractDetailResponseBusinessNumberType';
 import type { AdminAdvertisementContractDetailResponseCategoriesItem } from './adminAdvertisementContractDetailResponseCategoriesItem';
 import type { AdminAdvertisementContractDetailResponseCreativeMethod } from './adminAdvertisementContractDetailResponseCreativeMethod';
@@ -54,16 +53,7 @@ export interface AdminAdvertisementContractDetailResponse {
      * | `BRAND_AWARENESS` | 3 | 브랜드 인지도 확대 |
      */
   purpose?: AdminAdvertisementContractDetailResponsePurpose;
-  /**
-     * | 값 | code | 설명 |
-     * | --- | --- | --- |
-     * | `UNDER_500K` | 1 | 50만원 미만 |
-     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
-     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
-     * | `OVER_3M` | 4 | 300만원 이상 |
-     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
-     */
-  budgetRange?: AdminAdvertisementContractDetailResponseBudgetRange;
+  budgetAmount?: number;
   categories: AdminAdvertisementContractDetailResponseCategoriesItem[];
   scheduleRequest?: string;
   advertisementRequest?: string;

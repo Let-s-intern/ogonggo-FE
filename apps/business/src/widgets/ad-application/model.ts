@@ -1,6 +1,5 @@
 import {
   type CreateAdvertisementContractRequest,
-  type CreateAdvertisementContractRequestBudgetRange,
   enumOptions,
   type MyAccountResponse,
 } from '@ogonggo/api';
@@ -14,7 +13,6 @@ export type Purpose = 'FAST_APPLICANTS' | 'FIT_APPLICANTS' | 'BRAND_AWARENESS';
 export type InvoiceMethod = 'TAX_INVOICE' | 'NEGOTIATE';
 export type CreativeMethod = 'REQUEST_PRODUCTION' | 'PROVIDE_DIRECTLY';
 export type ProductCategory = CreateAdvertisementContractRequest['categories'][number];
-export type BudgetRange = CreateAdvertisementContractRequestBudgetRange;
 /** 사업자 번호 종류. 빈 문자열은 고르지 않은 것이다. 신청 API 는 번호를 선택으로 받는다. */
 export type BusinessNumberType =
   | NonNullable<CreateAdvertisementContractRequest['businessNumberType']>
@@ -33,8 +31,10 @@ export interface FormValues {
   recruitType: RecruitType;
   purpose: Purpose;
   productIds: string[];
-  /** 예정 예산. 자유 입력이고 비워도 된다(2026-11-10 사용자). */
+  /** 예정 예산 숫자. 비워도 된다. 소수점 둘째 자리까지 받고, `budgetUnit` 을 곱해 원으로 보낸다(`budgetAmountOf`). */
   budget: string;
+  /** 예정 예산 단위(원). 숫자는 그대로 두고 단위만 바꿀 수 있다(2026-11-10 사용자). */
+  budgetUnit: BudgetUnit;
   /** 희망 집행 시작일 `yyyy-MM-dd`. */
   startDate: string | null;
   /** 희망 집행 종료일 `yyyy-MM-dd`. 시작일과 같으면 하루다. */
@@ -63,6 +63,7 @@ export const INITIAL_VALUES: FormValues = {
   purpose: 'FAST_APPLICANTS',
   productIds: [],
   budget: '',
+  budgetUnit: 10_000,
   startDate: null,
   endDate: null,
   scheduleNote: '',
@@ -128,24 +129,50 @@ export const CREATIVE_OPTIONS: { value: CreativeMethod; label: string; hint: str
   { value: 'PROVIDE_DIRECTLY', label: '직접 제작한 소재 제공', hint: '이미지·카피 별도 전달' },
 ];
 
-/** 카탈로그 선택지. 순서는 백엔드 선언 순서 그대로다. */
-/**
- * 자유 입력한 예산을 서버의 예산 구간으로 옮긴다. 서버는 구간만 받아(`budgetRange`), 적은 글 그대로는 신청 메모
- * (`scheduleRequest`)에 함께 싣는다. `150만원`, `1,500,000`, `1.5백만` 처럼 숫자를 못 읽으면 구간 없이 보낸다.
- */
-export function budgetRangeOf(text: string): BudgetRange | undefined {
-  const t = text.replaceAll(',', '').replaceAll(' ', '');
-  if (!t) return undefined;
-  if (/미정|모르|정하지/.test(t)) return 'UNDECIDED';
-  const m = /(\d+(?:\.\d+)?)(억|천만|백만|만)?/.exec(t);
-  if (!m) return undefined;
-  const unit = { 억: 1e8, 천만: 1e7, 백만: 1e6, 만: 1e4 }[m[2] ?? ''] ?? 1;
-  const won = Number(m[1]) * unit;
-  if (won < 5e5) return 'UNDER_500K';
-  if (won < 1e6) return 'FROM_500K_TO_1M';
-  if (won < 3e6) return 'FROM_1M_TO_3M';
-  return 'OVER_3M';
+/** 예정 예산 단위. 칩으로 고른다. */
+export const BUDGET_UNITS = [
+  { value: 10_000, label: '만원' },
+  { value: 1_000_000, label: '100만원' },
+  { value: 10_000_000, label: '1,000만원' },
+] as const;
+export type BudgetUnit = (typeof BUDGET_UNITS)[number]['value'];
+
+/** 서버가 예산을 `int` 로 받아 넘지 못하는 값. */
+export const BUDGET_MAX = 2_147_483_647;
+
+/** 입력칸에 남길 글자. 숫자와 소수점 하나, 소수 둘째 자리까지다. */
+export function sanitizeBudget(text: string): string {
+  const [int = '', ...rest] = text.replace(/[^\d.]/g, '').split('.');
+  return rest.length > 0 ? `${int}.${rest.join('').slice(0, 2)}` : int;
 }
+
+/** 적은 숫자에 단위를 곱한 원 금액. 비었거나 숫자가 아니면 없다. */
+export function budgetAmountOf(v: Pick<FormValues, 'budget' | 'budgetUnit'>): number | undefined {
+  const n = Number(v.budget);
+  if (!v.budget || !Number.isFinite(n)) return undefined;
+  return Math.round(n * v.budgetUnit);
+}
+
+/** `12,300,000원` 을 `1,230만원` 처럼, 억이 넘으면 `1억 2,000만원` 처럼 읽기 쉽게 쓴다. 만원 아래는 그대로 붙인다. */
+export function formatWon(amount: number): string {
+  const eok = Math.floor(amount / 1e8);
+  const man = Math.floor((amount % 1e8) / 1e4);
+  const won = amount % 1e4;
+  const parts = [
+    eok > 0 ? `${eok.toLocaleString('ko-KR')}억` : '',
+    man > 0 ? `${man.toLocaleString('ko-KR')}만` : '',
+    won > 0 ? won.toLocaleString('ko-KR') : '',
+  ].filter(Boolean);
+  return `${parts.join(' ') || '0'}원`;
+}
+
+/** 최종 확인에 쓰는 예정 예산. `200만원 (2,000,000원)`. */
+export function budgetText(v: Pick<FormValues, 'budget' | 'budgetUnit'>): string {
+  const amount = budgetAmountOf(v);
+  return amount ? `${formatWon(amount)} (${amount.toLocaleString('ko-KR')}원)` : '입력 안 함';
+}
+
+/** 카탈로그 선택지. 순서는 백엔드 선언 순서 그대로다. */
 export const BUSINESS_NUMBER_TYPE_OPTIONS = enumOptions('CompanyBusinessNumberType');
 
 /** 번호 종류마다 숫자 자릿수. 백엔드 `CompanyBusinessNumberType.digitCount` 와 같다. 해외 기업은 번호가 없다. */
@@ -396,6 +423,10 @@ export function validateStep(step: number, v: FormValues): Record<string, string
   if (step === 2) {
     const products = selectedProducts(v);
     if (products.length === 0) e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
+    const amount = budgetAmountOf(v);
+    if (v.budget && (amount === undefined || amount < 1))
+      e.budget = '0보다 큰 금액을 입력해 주세요.';
+    else if (amount !== undefined && amount > BUDGET_MAX) e.budget = '21억원 이하로 입력해 주세요.';
   }
   if (step === 3) {
     if (!v.startDate || !v.endDate) e.period = '집행 시작일과 종료일을 선택해 주세요.';
@@ -437,7 +468,6 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
       ? [`[희망 기간] ${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`]
       : []),
     `[모집 형태] ${v.recruitType}`,
-    ...(v.budget.trim() ? [`[예정 예산] ${v.budget.trim()}`] : []),
     ...(v.scheduleNote.trim() ? [`[일정 요청] ${v.scheduleNote.trim()}`] : []),
   ];
   return {
@@ -447,7 +477,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     recruitmentUrl: v.url.trim(),
     recruitmentDeadline: v.deadline,
     purpose: v.purpose,
-    budgetRange: budgetRangeOf(v.budget),
+    budgetAmount: budgetAmountOf(v),
     categories,
     scheduleRequest: lines.join('\n'),
     advertisementRequest: v.adRequest.trim() || undefined,

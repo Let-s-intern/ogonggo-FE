@@ -164,8 +164,8 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
             .join(', ')}
         </Row>
         <Row label="예정 예산">
-          {contract.budgetRange
-            ? enumLabel('AdvertisementContractBudgetRange', contract.budgetRange)
+          {contract.budgetAmount != null
+            ? `${contract.budgetAmount.toLocaleString('ko-KR')}원`
             : null}
         </Row>
         <Row label="일정 요청">{contract.scheduleRequest}</Row>

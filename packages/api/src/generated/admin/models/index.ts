@@ -7,7 +7,6 @@
 
 export * from './addAdminAdvertisementContractProductRequest';
 export * from './adminAdvertisementContractDetailResponse';
-export * from './adminAdvertisementContractDetailResponseBudgetRange';
 export * from './adminAdvertisementContractDetailResponseBusinessNumberType';
 export * from './adminAdvertisementContractDetailResponseCategoriesItem';
 export * from './adminAdvertisementContractDetailResponseCreativeMethod';
@@ -19,7 +18,6 @@ export * from './adminAdvertisementContractDetailResponseStatus';
 export * from './adminAdvertisementContractProductResponse';
 export * from './adminAdvertisementContractProductResponseCategory';
 export * from './adminAdvertisementContractSummaryResponse';
-export * from './adminAdvertisementContractSummaryResponseBudgetRange';
 export * from './adminAdvertisementContractSummaryResponseCategoriesItem';
 export * from './adminAdvertisementContractSummaryResponsePromotionTarget';
 export * from './adminAdvertisementContractSummaryResponseSource';
