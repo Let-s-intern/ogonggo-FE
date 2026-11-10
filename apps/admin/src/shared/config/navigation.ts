@@ -102,19 +102,6 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     area: 'business',
     /*
-     * 무료 홍보 신청. 광고 문의 테이블의 무료 홍보 문의만 본다. 유료 광고와 섞이지 않게 `광고` 에서 나눴다(2026-11-10
-     * 사용자).
-     */
-    title: '무료 홍보',
-    items: [
-      { path: '/business/ad-inquiries', label: '무료 홍보 신청' },
-      // `/business/ad-inquiries/rejected` 로 두면 메뉴 링크(`end` 없음)가 `무료 홍보 신청` 까지 함께 켠다.
-      { path: '/business/rejected-ad-inquiries', label: '반려한 무료 홍보' },
-    ],
-  },
-  {
-    area: 'business',
-    /*
      * 파는 광고 상품과 그 자리에 거는 배너. 신청·계약을 처리하는 `광고` 와 달리 한 번 정해 두는 설정이다(2026-11-09 사용자).
      *
      * 기업회원 공고 우선 노출도 여기 둔다(2026-11-09 사용자). 비즈니스 회원 공고를 공개 목록 맨 앞에 둘지 정하는 전체
@@ -125,6 +112,19 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/business/advertisement-products', label: '광고 상품' },
       { path: '/business/banners', label: '배너 세팅' },
       { path: '/placements/company-priority', label: '기업회원 공고 우선 노출' },
+    ],
+  },
+  {
+    area: 'business',
+    /*
+     * 무료 홍보 신청. 광고 문의 테이블의 무료 홍보 문의만 본다. 유료 광고와 섞이지 않게 `광고` 에서 나눴다(2026-11-10
+     * 사용자).
+     */
+    title: '무료 홍보',
+    items: [
+      { path: '/business/ad-inquiries', label: '무료 홍보 신청' },
+      // `/business/ad-inquiries/rejected` 로 두면 메뉴 링크(`end` 없음)가 `무료 홍보 신청` 까지 함께 켠다.
+      { path: '/business/rejected-ad-inquiries', label: '반려한 무료 홍보' },
     ],
   },
   {
