@@ -270,7 +270,9 @@ export function PlacementSimulator() {
       <div
         role="tablist"
         aria-label="광고가 보이는 페이지"
-        className="flex gap-1 overflow-x-auto border-b border-gray-200"
+        // 밑줄을 테두리 대신 안쪽 그림자로 긋는다. 탭의 `-mb-px` 가 목록 밖으로 1px 나가면 `overflow-x-auto` 가 세로
+        // 스크롤바를 만들었다. 모바일에서 가로로 밀 때도 스크롤바는 감춘다.
+        className="flex gap-1 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--color-gray-200)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {PLACEMENT_PAGES.map((p) => {
           const selected = p.id === page.id;
@@ -282,7 +284,7 @@ export function PlacementSimulator() {
               aria-selected={selected}
               onClick={() => selectPage(p)}
               className={cn(
-                '-mb-px shrink-0 border-b-2 px-4 py-3 text-[15px] font-semibold transition-colors md:px-6',
+                'shrink-0 border-b-2 px-4 py-3 text-[15px] font-semibold transition-colors md:px-6',
                 selected
                   ? 'border-blue-500 text-gray-900'
                   : 'border-transparent text-gray-400 hover:text-gray-700',

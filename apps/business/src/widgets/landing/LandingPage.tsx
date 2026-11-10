@@ -70,21 +70,22 @@ function Hero() {
             )}
             style={{ animationDelay: '120ms' }}
           >
-            인턴·신입 채용을 위한 가장 효과적인 채널. 지원 의사가 높은 취준생이 매일 공고를 찾는
-            10만명의 취준생이 함께하는 <strong className="text-gray-900">오늘의 공고 지면</strong>
-            과, <strong className="text-gray-900">렛츠커리어 채널</strong>에 공고를 알려보세요.
+            인턴·신입 채용을 위한 가장 효과적인 채널,
+            <br />
+            <strong className="text-gray-900">오늘의 공고</strong>와{' '}
+            <strong className="text-gray-900">렛츠커리어</strong>에 공고를 알려보세요.
           </p>
           <div
             className={cn(RISE, 'mt-8 flex flex-wrap justify-center gap-3')}
             style={{ animationDelay: '240ms' }}
           >
-            <a href="#placements" className={PRIMARY_BUTTON}>
+            {/* 주 버튼은 광고 신청 및 문의다. 소개서 받기는 그 화면에 있다(2026-11-10 사용자). */}
+            <Link href="/apply" className={PRIMARY_BUTTON}>
+              광고 신청 및 문의
+            </Link>
+            <a href="#placements" className={OUTLINE_BUTTON}>
               광고 구좌 둘러보기
             </a>
-            {/* 소개서 받기는 광고 신청·문의 화면에 있다(2026-11-10 사용자). */}
-            <Link href="/apply" className={OUTLINE_BUTTON}>
-              견적 문의
-            </Link>
           </div>
           <ul className="mx-auto mt-12 grid max-w-[1000px] grid-cols-2 gap-3 md:grid-cols-5">
             {HERO_STATS.map((s, i) => (
@@ -151,7 +152,7 @@ function Reasons() {
 function Placements() {
   return (
     <section id="placements" className={cn(CONTAINER, 'scroll-mt-20 pb-16 md:pb-24')}>
-      <Eyebrow>오늘의공고 지면 광고</Eyebrow>
+      <Eyebrow>오늘의 공고 지면 광고</Eyebrow>
       <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
         공고를 <span className="text-teal-600">실제로 찾는 사람</span> 앞에,
         <br />
@@ -207,9 +208,6 @@ function Channels() {
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-right text-xs text-gray-400">
-          수치는 2026년 9월 기준 · 콘텐츠 제작 대행 포함 · 가격은 견적 문의
-        </p>
 
         {CHANNEL_GROUPS.map((group) => (
           <div key={group.id} data-reveal className="mt-14">
@@ -428,12 +426,11 @@ function PartnersAndCases() {
   return (
     <section className="bg-gray-50 py-16 md:py-24">
       <div className={CONTAINER}>
-        <Eyebrow>PARTNERS · CASES</Eyebrow>
-        <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
+        <h2 data-reveal className="text-3xl font-bold leading-tight md:text-[44px]">
           먼저 함께한 기업들의 결과예요
         </h2>
         <p data-reveal className="mt-4 text-gray-600">
-          렛츠커리어가 직접 만들어 집행한 소재와 결과예요. 자세한 사례는{' '}
+          렛츠커리어가 직접 만들어 집행한 소재예요. 자세한 결과는{' '}
           <a
             href={AD_INTRODUCTION_PDF}
             target="_blank"
@@ -501,8 +498,7 @@ function PartnersAndCases() {
 function Process() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
-      <Eyebrow>PROCESS</Eyebrow>
-      <h2 data-reveal className="mt-3 text-3xl font-bold md:text-[44px]">
+      <h2 data-reveal className="text-3xl font-bold md:text-[44px]">
         문의부터 게재까지, 이렇게 진행돼요
       </h2>
       <ol className="mt-8 grid gap-3 md:grid-cols-4">
@@ -560,12 +556,11 @@ function Faq() {
             광고 조합은 저희가 추천드려요!
           </p>
           <p className="mt-5 text-sm leading-relaxed text-gray-600">
-            예산 · 목표 · 관심 구좌 세 가지만 적으면 끝. 회원가입 없이도 접수 가능해요. 접수 후,
-            24시간 안에 세일즈 매니저가 오공고 지면과 렛츠커리어 채널을 묶은 예산 맞춤 제안서를
-            드려요.
+            예산, 목표, 관심 구좌 세 가지만 적으면 돼요. 회원가입 없이 접수할 수 있고, 24시간 이내
+            세일즈 매니저가 오늘의 공고 지면과 렛츠커리어 채널을 묶은 예산 맞춤 제안서를 드려요.
           </p>
           <Link href="/apply" className={cn(PRIMARY_BUTTON, 'mt-6')}>
-            광고 상담 신청
+            광고 신청 및 문의
           </Link>
         </aside>
       </div>
@@ -581,17 +576,17 @@ function ClosingCta() {
         className="rounded-xl bg-gradient-to-r from-blue-500 via-blue-600 to-teal-500 bg-[length:200%_100%] px-6 py-14 text-center text-white motion-safe:animate-[ogonggo-biz-gradient_10s_ease-in-out_infinite]"
       >
         <h2 className="text-2xl font-bold md:text-[36px]">
-          채용공고 홍보 및 교육 모집에 고민이 있다면 지금 문의 주세요
+          채용공고 홍보나 교육 모집이 고민이라면 지금 문의하세요
         </h2>
         <p className="mt-4 text-sm text-blue-50 md:text-base">
-          예산과 목표만 알려주시면 24시간 안에 세일즈 매니저가 연락드리고, 예산에 맞는
-          렛츠커리어&오늘의공고 광고를 제안드립니다.
+          예산과 목표만 알려주시면 24시간 이내 세일즈 매니저가 연락드리고, 예산에 맞는 오늘의
+          공고·렛츠커리어 광고 조합을 제안드려요.
         </p>
         <Link
           href="/apply"
           className="mt-8 inline-flex rounded-full bg-white px-8 py-3.5 font-semibold text-blue-500 transition-[background-color,translate,box-shadow] hover:-translate-y-0.5 hover:bg-blue-00 hover:shadow-xl"
         >
-          광고 상담 신청
+          광고 신청 및 문의
         </Link>
       </div>
     </section>
