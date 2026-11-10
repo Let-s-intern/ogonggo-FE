@@ -11,7 +11,6 @@ import {
   OPERATING_RULES,
   PACKAGE,
   PARTNERS,
-  PICKS,
   PROCESS,
   REASONS,
 } from './content';
@@ -173,66 +172,18 @@ function Placements() {
         </Link>
       </div>
 
-      <div className="mt-20">
-        <h3 data-reveal className="text-2xl font-bold md:text-[32px]">
-          나에게 맞는 광고 선택하기
-        </h3>
-        <p className="mt-2 text-gray-600">
-          3개 모두 별도 상품입니다. <strong>목표와 예산에 맞춰 한 가지씩</strong> 선택할 수 있어요.
-        </p>
-        <ul className="mt-6 divide-y divide-gray-100 border-y border-gray-100">
-          {PICKS.map((p, i) => (
-            <li
-              key={p.title}
-              data-reveal
-              style={order(i)}
-              className="grid gap-4 px-2 py-6 md:grid-cols-[1.6fr_1fr_0.6fr_0.9fr_auto] md:items-center md:px-6"
-            >
-              <div>
-                <p className="text-sm font-semibold text-blue-500">{p.eyebrow}</p>
-                <p className="mt-1 text-xl font-semibold">{p.title}</p>
-                <p className="mt-1 text-sm text-gray-500">{p.body}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">노출 방식</p>
-                <p className="mt-1 text-sm">{p.method}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">예상 CTR</p>
-                <p className="mt-1 font-semibold">{p.ctr}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">구매가</p>
-                <p className="mt-1">
-                  <span className="text-2xl font-bold">₩{p.price.toLocaleString('ko-KR')}</span>
-                  <span className="ml-1 text-xs text-gray-500">/1주</span>
-                </p>
-              </div>
-              <a
-                href={`#${p.target}`}
-                className="rounded-md border border-gray-200 px-6 py-3 text-center text-sm text-blue-500 hover:border-blue-500"
-              >
-                위치 보기
-              </a>
-            </li>
-          ))}
-        </ul>
-        <div
-          data-reveal
-          className="mt-6 flex flex-col gap-4 rounded-xl bg-blue-50 px-6 py-6 md:flex-row md:items-center md:justify-between"
-        >
-          <div>
-            <p className="text-lg font-semibold">어떤 지면이 맞을지 고민되나요?</p>
-            <p className="mt-1 text-sm text-gray-600">
-              공고 특성, 목표 지원자, 예산을 알려주시면 세 지면 중 적합한 상품을 비교해볼 수 있어요.
-              이 페이지의 상품은 모두 개별 구매입니다.
-            </p>
-          </div>
-          <CopyInquiryButton />
+      <div
+        data-reveal
+        className="mt-10 flex flex-col gap-4 rounded-xl bg-blue-50 px-6 py-6 md:flex-row md:items-center md:justify-between"
+      >
+        <div>
+          <p className="text-lg font-semibold">어떤 지면이 맞을지 고민되나요?</p>
+          <p className="mt-1 text-sm text-gray-600">
+            공고 특성, 목표 지원자, 예산을 알려주시면 세 지면 중 적합한 상품을 비교해볼 수 있어요.
+            이 페이지의 상품은 모두 개별 구매입니다.
+          </p>
         </div>
-        <p className="mt-3 text-xs text-gray-400">
-          ※ 예상 CTR은 성과 보장이 아닙니다. 문의 문구를 복사하여 담당자에게 전달할 수 있습니다.
-        </p>
+        <CopyInquiryButton />
       </div>
     </section>
   );
