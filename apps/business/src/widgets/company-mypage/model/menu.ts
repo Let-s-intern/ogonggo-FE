@@ -15,7 +15,7 @@ export const COMPANY_MYPAGE_MENU: readonly MyPageMenuItem[] = [
   { href: '/mypage/company/profile', label: '기업/기관 정보', separated: true },
 ];
 
-/** 메뉴 화면 없이 바로 들어가는 첫 화면. `/mypage/company`·`/mypage/company/posts` 가 여기로 보낸다. */
+/** 공고 목록의 첫 화면. `/mypage/company/posts` 가 여기로 보낸다. `/mypage/company` 는 대시보드다. */
 export const COMPANY_MYPAGE_HOME = COMPANY_MYPAGE_MENU[0]!.href;
 
 /**
@@ -23,7 +23,7 @@ export const COMPANY_MYPAGE_HOME = COMPANY_MYPAGE_MENU[0]!.href;
  * 간다.
  *
  * web 은 목록 화면에도 머리를 달고 `<` 가 메뉴 화면(`/mypage/company`)으로 간다. biz 의 `/mypage/company` 는
- * 메뉴 화면 없이 목록으로 보내므로(PRD 6절) 목록 화면은 머리 대신 메뉴를 위에 둔다(`CompanyMyPageLayout`).
+ * 대시보드라(2026-11-10 사용자) 목록 화면은 머리 대신 탭을 위에 둔다(`CompanyMyPageLayout`).
  */
 const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[] = [
   {

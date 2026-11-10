@@ -71,14 +71,17 @@ function formatProgramPeriod(startDate: string, endDate: string): string {
  * 응답 언랩은 마이페이지 목록 화면 넷과 같다 — 생성 타입은 `{ data, status, headers }` 를
  * 선언하지만 `httpClient` 는 응답 봉투를 그대로 준다.
  */
-export async function fetchCompanyPosts(query: CompanyPostsQuery): Promise<CompanyPostsPage> {
-  return query.tab === 'jobs' ? fetchJobs(query) : fetchBootcamps(query);
+export async function fetchCompanyPosts(
+  query: CompanyPostsQuery,
+  size = PAGE_SIZE,
+): Promise<CompanyPostsPage> {
+  return query.tab === 'jobs' ? fetchJobs(query, size) : fetchBootcamps(query, size);
 }
 
-async function fetchJobs(query: CompanyPostsQuery): Promise<CompanyPostsPage> {
+async function fetchJobs(query: CompanyPostsQuery, size: number): Promise<CompanyPostsPage> {
   const response = (await listMyJobs({
     page: query.page,
-    size: PAGE_SIZE,
+    size,
   })) as unknown as SuccessResponsePageResponseCompanyJobSummaryResponse;
 
   const page = response.data;
@@ -114,10 +117,10 @@ async function fetchJobs(query: CompanyPostsQuery): Promise<CompanyPostsPage> {
   };
 }
 
-async function fetchBootcamps(query: CompanyPostsQuery): Promise<CompanyPostsPage> {
+async function fetchBootcamps(query: CompanyPostsQuery, size: number): Promise<CompanyPostsPage> {
   const response = (await listMyBootcamps({
     page: query.page,
-    size: PAGE_SIZE,
+    size,
   })) as unknown as SuccessResponsePageResponseCompanyBootcampSummaryResponse;
 
   const page = response.data;

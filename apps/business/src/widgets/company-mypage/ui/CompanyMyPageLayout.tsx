@@ -24,7 +24,7 @@ export interface CompanyMyPageLayoutProps {
  * `/login?redirect=<지금 경로>` 로 보낸다. 로그인 화면이 기업 회원이 아닌 계정에게 안내한다
  * (`widgets/sign-in/LoginPage.tsx`). web 처럼 본문은 계정을 기다리지 않고 바로 그린다.
  *
- * 모바일은 web 과 다르다. web 은 `/mypage/company` 가 메뉴 화면이지만 biz 는 그 주소를 목록으로 보낸다(PRD 6절).
+ * 모바일은 web 과 다르다. web 은 `/mypage/company` 가 메뉴 화면이지만 biz 는 그 주소가 탭 없는 대시보드다.
  * 그래서 목록·기업 정보 화면은 탭을 본문 위에 두고, 작성·수정 화면은 탭 대신 `< 제목` 머리를 단다.
  */
 export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
@@ -65,8 +65,11 @@ export function CompanyMyPageLayout({ children }: CompanyMyPageLayoutProps) {
   }, [pathname]);
 
   const mobileHeader = myPageMobileHeaderOf(pathname);
-  /** 광고 신청 내역은 헤더 `신청 내역` 으로 들어오는 따로인 화면이라 공고·기업 정보 탭을 달지 않는다(2026-11-10 사용자). */
-  const withoutTabs = pathname.startsWith('/mypage/company/ads');
+  /**
+   * 대시보드(`/mypage/company`)와 광고 신청 내역은 공고·기업 정보 탭을 달지 않는다(2026-11-10 사용자). 신청 내역은
+   * 헤더 `신청 내역` 으로 들어오는 따로인 화면이고, 대시보드는 모든 화면으로 가는 첫 화면이다.
+   */
+  const withoutTabs = pathname === '/mypage/company' || pathname.startsWith('/mypage/company/ads');
 
   return (
     <div

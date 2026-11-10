@@ -6,5 +6,7 @@ export {
   type CompanyPostsQuery,
   type CompanyPostTab,
 } from './lib/query';
-export { fetchCompanyPostTotals } from './lib/fetch';
+export { fetchCompanyPosts, fetchCompanyPostTotals, type CompanyPostRow } from './lib/fetch';
+export { companyPostStage, type CompanyPostStage } from './model/stage';
+export { CompanyPostStageTrack } from './ui/CompanyPostStageTrack';
 export { default as companyPostCopy } from './config/copy.json';
