@@ -12,6 +12,7 @@ import { isSignedIn } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { useSignOut } from '@/shared/api/useSignOut';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
+import { Logo } from '@/shared/ui/Logo';
 import { SiteHeader } from '@/shared/ui/SiteHeader';
 import { fetchCompanyPostTotals } from '@/widgets/company-posts';
 import { MY_AD_CONTRACTS_HREF } from '@/widgets/my-ad-contracts/model';
@@ -30,13 +31,13 @@ export interface MemberShellProps {
 }
 
 /**
- * 기업 회원으로 로그인했을 때의 틀. 전체 폭의 흰 헤더(`SiteHeader` 의 `layout="member"`) 아래 왼쪽 고정 메뉴와
- * 본문이다. 헤더의 로고 칸이 메뉴와 같은 폭·바탕이라 메뉴가 위까지 이어져 보인다.
+ * 기업 회원으로 로그인했을 때의 틀. PC 는 헤더 없이 화면 높이의 왼쪽 메뉴(로고 · 메뉴 · 계정)와 본문이다(2026-11-10
+ * 사용자: 로그인하면 헤더를 숨긴다). 모바일은 왼쪽 메뉴 대신 작은 헤더(`SiteHeader` 의 `layout="member"`)와 가로 메뉴다.
  *
  * 기업 회원 화면(`CompanyMyPageLayout`)과, 로그인한 채로 여는 공개 화면(`app/(site)/SiteFrame.tsx`)이 같이 쓴다 —
  * 광고 안내·광고 신청을 눌러도 메뉴가 사라지지 않는다(2026-11-10 사용자). 푸터는 두지 않는다.
  *
- * 모바일(md 미만)은 왼쪽 메뉴 대신 헤더 아래에 가로 메뉴를 둔다. 작성·수정 화면은 메뉴 대신 `< 제목` 머리를 단다.
+ * 작성·수정 화면의 모바일은 가로 메뉴 대신 `< 제목` 머리를 단다.
  */
 /**
  * 왼쪽 메뉴 맨 아래의 계정. 로고·기업명·담당자와 로그아웃이다(2026-11-10 사용자: 헤더 오른쪽 기업명을 왼쪽 아래로).
@@ -131,11 +132,20 @@ export function MemberShell({ children, contained = true, top }: MemberShellProp
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
+      {/* 모바일에서만 보인다. PC 는 헤더 없이 왼쪽 메뉴가 화면 위까지 올라간다. */}
       <SiteHeader layout="member" />
 
       <div className="flex flex-1">
         <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-gray-50 md:block">
-          <div className="sticky top-16 flex h-[calc(100dvh-4rem)] flex-col">
+          <div className="sticky top-0 flex h-dvh flex-col">
+            <Link
+              href="/mypage/company"
+              aria-label="오늘의 공고 비즈니스 대시보드"
+              className="flex h-16 shrink-0 items-end gap-1.5 px-6 pb-5"
+            >
+              <Logo className="h-[22px] w-[46px] text-blue-500" />
+              <span className="text-sm font-semibold text-gray-600">for business</span>
+            </Link>
             <div className="flex-1 overflow-y-auto">
               <CompanyConsoleNav variant="side" counts={counts} />
             </div>

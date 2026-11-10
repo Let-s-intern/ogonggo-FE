@@ -12,7 +12,7 @@ export interface CompanyMyPageLayoutProps {
 }
 
 /**
- * 기업 회원 화면(`/mypage/company` 아래)의 틀. 모양은 `MemberShell`(전체 폭 헤더 + 왼쪽 메뉴)이고, 여기서는
+ * 기업 회원 화면(`/mypage/company` 아래)의 틀. 모양은 `MemberShell`(왼쪽 메뉴 + 본문)이고, 여기서는
  * 로그인·역할 가드만 더한다.
  *
  * 토큰이 브라우저 저장소에만 있어 로그인 여부와 역할은 첫 렌더 뒤에 본다. 로그인하지 않았거나 기업 회원이 아니면
