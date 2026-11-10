@@ -97,6 +97,35 @@ export function BizIntro() {
   );
 }
 
+/**
+ * 채널 카드 위의 실제 게시물·톡방 화면(2026-11-10 사용자). 광고 신청의 상품 이미지(`public/ad-products`)를 같이 쓴다.
+ */
+const INSTAGRAM_SAMPLES = [
+  '/ad-products/instagram-job-1.jpg',
+  '/ad-products/instagram-job-2.jpg',
+  '/ad-products/instagram-job-3.jpg',
+];
+const OPEN_CHAT_SAMPLES = ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'];
+
+function ChannelSamples({ images, alt }: { images: string[]; alt: string }) {
+  return (
+    <div
+      className="mb-6 grid gap-1.5 overflow-hidden rounded-xl bg-gray-100 p-1.5"
+      style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}
+    >
+      {images.map((src, i) => (
+        <img
+          key={src}
+          src={src}
+          alt={i === 0 ? alt : ''}
+          loading="lazy"
+          className="h-44 w-full rounded-lg object-cover object-top md:h-52"
+        />
+      ))}
+    </div>
+  );
+}
+
 /** 홍보 채널, 집행 사례, 진행 3단계. */
 export function BizChannels() {
   return (
@@ -112,6 +141,10 @@ export function BizChannels() {
             data-reveal
             className={cn(LIFT, 'rounded-2xl border border-gray-200 bg-white p-6 md:p-8')}
           >
+            <ChannelSamples
+              images={INSTAGRAM_SAMPLES}
+              alt="오늘의 공고 인스타그램 채용공고 게시물 예시"
+            />
             <div className="flex items-center justify-between gap-2">
               <p className="text-[15px] font-semibold text-gray-600">
                 <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
@@ -137,6 +170,10 @@ export function BizChannels() {
             data-reveal
             className={cn(LIFT, 'rounded-2xl border border-gray-200 bg-white p-6 md:p-8')}
           >
+            <ChannelSamples
+              images={OPEN_CHAT_SAMPLES}
+              alt="직무별 오픈채팅방에 올린 채용공고 홍보글 예시"
+            />
             <div className="flex items-center justify-between gap-2">
               <p className="text-[15px] font-semibold text-gray-600">직무별 오픈채팅방</p>
               <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">
