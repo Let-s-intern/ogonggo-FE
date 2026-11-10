@@ -20,7 +20,7 @@ export type BusinessNumberType =
   | NonNullable<CreateAdvertisementContractRequest['businessNumberType']>
   | '';
 
-export const RECRUIT_TYPES = ['기간 지정 모집', '채용 시 마감', '상시 모집'] as const;
+export const RECRUIT_TYPES = ['기간 모집', '채용 시 마감', '상시 모집'] as const;
 export type RecruitType = (typeof RECRUIT_TYPES)[number];
 
 export interface FormValues {
@@ -33,8 +33,8 @@ export interface FormValues {
   recruitType: RecruitType;
   purpose: Purpose;
   productIds: string[];
-  /** 예정 예산 구간. 빈 문자열은 고르지 않은 것이다. */
-  budgetRange: BudgetRange | '';
+  /** 예정 예산. 자유 입력이고 비워도 된다(2026-11-10 사용자). */
+  budget: string;
   /** 희망 집행 시작일 `yyyy-MM-dd`. */
   startDate: string | null;
   /** 희망 집행 종료일 `yyyy-MM-dd`. 시작일과 같으면 하루다. */
@@ -59,10 +59,10 @@ export const INITIAL_VALUES: FormValues = {
   title: '',
   url: '',
   deadline: '',
-  recruitType: '기간 지정 모집',
+  recruitType: '기간 모집',
   purpose: 'FAST_APPLICANTS',
   productIds: [],
-  budgetRange: '',
+  budget: '',
   startDate: null,
   endDate: null,
   scheduleNote: '',
@@ -129,7 +129,23 @@ export const CREATIVE_OPTIONS: { value: CreativeMethod; label: string; hint: str
 ];
 
 /** 카탈로그 선택지. 순서는 백엔드 선언 순서 그대로다. */
-export const BUDGET_RANGE_OPTIONS = enumOptions('AdvertisementContractBudgetRange');
+/**
+ * 자유 입력한 예산을 서버의 예산 구간으로 옮긴다. 서버는 구간만 받아(`budgetRange`), 적은 글 그대로는 신청 메모
+ * (`scheduleRequest`)에 함께 싣는다. `150만원`, `1,500,000`, `1.5백만` 처럼 숫자를 못 읽으면 구간 없이 보낸다.
+ */
+export function budgetRangeOf(text: string): BudgetRange | undefined {
+  const t = text.replaceAll(',', '').replaceAll(' ', '');
+  if (!t) return undefined;
+  if (/미정|모르|정하지/.test(t)) return 'UNDECIDED';
+  const m = /(\d+(?:\.\d+)?)(억|천만|백만|만)?/.exec(t);
+  if (!m) return undefined;
+  const unit = { 억: 1e8, 천만: 1e7, 백만: 1e6, 만: 1e4 }[m[2] ?? ''] ?? 1;
+  const won = Number(m[1]) * unit;
+  if (won < 5e5) return 'UNDER_500K';
+  if (won < 1e6) return 'FROM_500K_TO_1M';
+  if (won < 3e6) return 'FROM_1M_TO_3M';
+  return 'OVER_3M';
+}
 export const BUSINESS_NUMBER_TYPE_OPTIONS = enumOptions('CompanyBusinessNumberType');
 
 /** 번호 종류마다 숫자 자릿수. 백엔드 `CompanyBusinessNumberType.digitCount` 와 같다. 해외 기업은 번호가 없다. */
@@ -191,19 +207,24 @@ export function periodDays(startDate: string, endDate: string): number {
 }
 
 /**
- * 광고 신청서에서 고르는 상품 6개(2026-11-09 사용자: 오공고 웹 1 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM 1). 오공고 웹의
- * 지면(배너·추천 카드 등)은 여기서 고르지 않고 담당자가 견적 때 정한다. 카카오톡·인스타 이미지는 web 커뮤니티 페이지
- * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹은 랜딩(`public/landing`) 것,
- * 카카오톡 CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
+ * 광고 신청서에서 고르는 상품(2026-11-10 사용자): 리스트 상단 노출 1 · 웹사이트 배너 2 · 카카오톡 2 · CRM 1 ·
+ * 인스타그램 2. 오늘의 공고 화면은 랜딩(`public/landing`), 카카오톡·인스타 이미지는 web 커뮤니티 페이지에서 복사한
+ * `public/ad-products`, CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
  */
-export type AdProductGroupId = 'web' | 'instagram' | 'kakao';
+export type AdProductGroupId = 'list-top' | 'web-banner' | 'kakao' | 'crm' | 'instagram';
 
 /** 화면에서 상품을 묶어 보이는 단위. 세로로 쌓아 어느 채널의 상품인지 바로 보이게 한다. */
 export const AD_PRODUCT_GROUPS: { id: AdProductGroupId; title: string; reach: string }[] = [
-  { id: 'web', title: '오공고 웹', reach: '지면광고' },
-  { id: 'instagram', title: '인스타그램', reach: '오공고 · 렛츠커리어 계정' },
-  // 채팅방 두 개 아래에 CRM 이 이어진다(2026-11-09 사용자). CRM 은 채널 친구 약 2만명이다.
-  { id: 'kakao', title: '카카오톡', reach: '오픈채팅 누적 1만 5천명 · CRM 약 2만명' },
+  {
+    id: 'list-top',
+    title: '오늘의 공고 리스트 상단 노출',
+    reach: '리스트 · 마이페이지 · 공고 달력',
+  },
+  { id: 'web-banner', title: '웹사이트 지면 광고', reach: '렛츠커리어 · 오늘의 공고 배너' },
+  { id: 'kakao', title: '카카오톡', reach: '누적 1만 5천명' },
+  // CRM 은 카카오톡 오픈채팅과 다른 상품이라 따로 묶는다(2026-11-10 사용자).
+  { id: 'crm', title: 'CRM', reach: '약 2만명' },
+  { id: 'instagram', title: '인스타그램', reach: '오늘의 공고 · 렛츠커리어 계정' },
 ];
 
 export interface AdProduct {
@@ -213,41 +234,106 @@ export interface AdProduct {
   reach: string;
   title: string;
   description: string;
-  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다(오공고 웹 화면, 카카오톡 방). */
+  /** 언제 고르면 좋은지. 카드 아래 `이럴 때 추천` 으로 보인다. */
+  recommend: string;
+  /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다. */
   images: string[];
-  /** 묶음 안에서 한 줄을 다 쓴다. 카카오톡 CRM 이 채팅방 두 장 아래에 넓게 놓인다. */
+  /** 묶음 안에서 한 줄을 다 쓴다. 혼자인 묶음에 쓴다. */
   wide?: boolean;
   /** 이미지마다 붙일 화면 이름. 있으면 이미지 아래에 띄운다. */
   imageLabels?: string[];
   price: string;
-  /** 광고 신청 API 의 `categories` 값. */
+  /**
+   * 광고 신청 API 의 `categories` 값. 렛츠커리어 배너는 맞는 값이 없어 `BANNER` 로 보낸다. 어느 배너인지는
+   * 신청 메모의 `[희망 상품]` 으로 구분된다.
+   */
   categories: ProductCategory[];
 }
 
 export const AD_PRODUCTS: AdProduct[] = [
   {
-    id: 'ogonggo-web',
-    group: 'web',
-    reach: '채용공고 홈',
-    title: '오늘의 공고 지면광고',
-    description: '채용공고 홈의 추천 카드 · 상단 고정 · 배너 자리에 공고를 노출해요.',
-    images: [
-      '/landing/jobs-list.webp',
-      '/landing/job-detail.webp',
-      '/landing/bootcamps-list.webp',
-      '/landing/calendar.webp',
-      '/landing/mypage-scraps.webp',
-    ],
-    imageLabels: ['채용공고 홈', '공고 상세', '부트캠프', '공고 달력', '마이페이지'],
+    id: 'ogonggo-list-top',
+    group: 'list-top',
+    wide: true,
+    reach: '채용공고 리스트 · 마이페이지 · 공고 달력',
+    title: '오늘의 공고 리스트 상단 노출',
+    description: '공고 리스트, 마이페이지 스크랩 칸, 공고 달력의 맨 앞에 공고 카드로 노출돼요.',
+    recommend: '지원할 공고를 찾고 있는 취준생에게 우리 공고를 가장 먼저 보여주고 싶을 때 좋아요.',
+    images: ['/landing/jobs-list.webp', '/landing/mypage-scraps.webp', '/landing/calendar.webp'],
+    imageLabels: ['공고 리스트', '마이페이지', '공고 달력'],
     price: '1주 30만원부터',
-    categories: ['JOB_POSTING', 'BANNER'],
+    categories: ['JOB_POSTING'],
+  },
+  {
+    id: 'letscareer-banner',
+    group: 'web-banner',
+    reach: '렛츠커리어 홈페이지 메인',
+    title: '렛츠커리어 배너',
+    description: '렛츠커리어 홈페이지 메인 상단 배너에 노출돼요.',
+    recommend: '교육 프로그램이나 회사 브랜드를 취업 준비생에게 폭넓게 알리고 싶을 때 좋아요.',
+    images: ['/landing/web-banner-1.png', '/landing/web-banner-2.png'],
+    price: '견적 문의',
+    categories: ['BANNER'],
+  },
+  {
+    id: 'ogonggo-banner',
+    group: 'web-banner',
+    reach: '채용공고 홈 · 공고 상세 · 부트캠프',
+    title: '오늘의 공고 배너',
+    description: '오늘의 공고 채용공고 홈, 공고 상세, 부트캠프 목록의 배너 자리에 노출돼요.',
+    recommend: '채용 캠페인이나 모집 소식을 이미지로 눈에 띄게 알리고 싶을 때 좋아요.',
+    images: ['/landing/jobs-list.webp', '/landing/job-detail.webp'],
+    imageLabels: ['채용공고 홈', '공고 상세'],
+    price: '1주 30만원부터',
+    categories: ['BANNER'],
+  },
+  {
+    id: 'kakao-curation',
+    group: 'kakao',
+    reach: '직무별 톡방 총 6개',
+    title: '직무별 채용공고 큐레이션 톡방',
+    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
+    recommend: '특정 직무의 인재를 찾고 있어, 그 직무를 준비하는 분들께 바로 닿고 싶을 때 좋아요.',
+    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_1'],
+  },
+  {
+    id: 'kakao-official',
+    group: 'kakao',
+    reach: '쥬디 톡방 · 무료 세미나방 등',
+    title: '렛츠커리어 공식 오픈채팅방',
+    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
+    recommend: '채용설명회나 교육처럼 직무와 관계없이 많은 참여자를 모으고 싶을 때 좋아요.',
+    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
+    price: '견적 문의',
+    categories: ['KAKAO_2'],
+  },
+  {
+    id: 'crm',
+    group: 'crm',
+    wide: true,
+    reach: '마케팅 수신 동의 유저',
+    title: '카카오톡 CRM · MMS · 뉴스레터',
+    description:
+      '마케팅 수신에 동의한 렛츠커리어 유저에게 카카오톡 채널 메시지, MMS, 뉴스레터로 직접 보내요.',
+    recommend: '마감이 얼마 남지 않아 짧은 기간에 많은 분께 확실히 알려야 할 때 좋아요.',
+    images: [
+      '/ad-products/kakao-crm-1.jpg',
+      '/ad-products/kakao-crm-2.jpg',
+      '/ad-products/kakao-crm-3.jpg',
+      '/ad-products/kakao-crm-4.jpg',
+    ],
+    price: '견적 문의',
+    categories: ['KAKAO_CRM'],
   },
   {
     id: 'instagram-ogonggo',
     group: 'instagram',
     reach: '@letscareer.job',
-    title: '오공고 인스타그램',
+    title: '오늘의 공고 인스타그램',
     description: '오늘의 공고 계정의 피드 게시물 또는 스토리로 알려요.',
+    recommend: '채용·교육 소식을 챙겨 보는 팔로워에게 콘텐츠로 자연스럽게 소개하고 싶을 때 좋아요.',
     images: [
       '/ad-products/instagram-job-1.jpg',
       '/ad-products/instagram-job-2.jpg',
@@ -265,6 +351,7 @@ export const AD_PRODUCTS: AdProduct[] = [
     reach: '@letscareer.official',
     title: '렛츠커리어 인스타그램',
     description: '렛츠커리어 메인 계정의 피드 게시물 또는 스토리로 알려요.',
+    recommend: '취업을 준비하는 많은 팔로워에게 회사와 브랜드를 알리고 싶을 때 좋아요.',
     images: [
       '/ad-products/instagram-official-1.jpg',
       '/ad-products/instagram-official-2.jpg',
@@ -275,42 +362,6 @@ export const AD_PRODUCTS: AdProduct[] = [
     ],
     price: '견적 문의',
     categories: ['INSTAGRAM_2'],
-  },
-  {
-    id: 'kakao-curation',
-    group: 'kakao',
-    reach: '직무별 톡방 6개',
-    title: '직무별 채용공고 큐레이션 톡방',
-    description: '직무별 오픈채팅방 총 6개에 홍보글을 올려요.',
-    images: ['/ad-products/chat-job.jpg', '/ad-products/chat-hr.jpg'],
-    price: '견적 문의',
-    categories: ['KAKAO_1'],
-  },
-  {
-    id: 'kakao-official',
-    group: 'kakao',
-    reach: '쥬디 톡방 · 무료 세미나방 등',
-    title: '렛츠커리어 공식 오픈채팅방',
-    description: '렛츠커리어가 운영하는 공식 오픈채팅방에 홍보글을 올려요.',
-    images: ['/ad-products/chat-tip.jpg', '/ad-products/chat-info.jpg'],
-    price: '견적 문의',
-    categories: ['KAKAO_2'],
-  },
-  {
-    id: 'kakao-crm',
-    group: 'kakao',
-    wide: true,
-    reach: '렛츠커리어 카카오 채널',
-    title: '카카오톡 CRM',
-    description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
-    images: [
-      '/ad-products/kakao-crm-1.jpg',
-      '/ad-products/kakao-crm-2.jpg',
-      '/ad-products/kakao-crm-3.jpg',
-      '/ad-products/kakao-crm-4.jpg',
-    ],
-    price: '견적 문의',
-    categories: ['KAKAO_CRM'],
   },
 ];
 
@@ -386,6 +437,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
       ? [`[희망 기간] ${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`]
       : []),
     `[모집 형태] ${v.recruitType}`,
+    ...(v.budget.trim() ? [`[예정 예산] ${v.budget.trim()}`] : []),
     ...(v.scheduleNote.trim() ? [`[일정 요청] ${v.scheduleNote.trim()}`] : []),
   ];
   return {
@@ -395,7 +447,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     recruitmentUrl: v.url.trim(),
     recruitmentDeadline: v.deadline,
     purpose: v.purpose,
-    budgetRange: v.budgetRange || undefined,
+    budgetRange: budgetRangeOf(v.budget),
     categories,
     scheduleRequest: lines.join('\n'),
     advertisementRequest: v.adRequest.trim() || undefined,

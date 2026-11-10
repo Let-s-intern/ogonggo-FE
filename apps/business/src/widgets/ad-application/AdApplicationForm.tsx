@@ -18,8 +18,6 @@ import {
   type AdProduct,
   AD_REQUEST_MAX,
   addDays,
-  BUDGET_RANGE_OPTIONS,
-  type BudgetRange,
   BUSINESS_NUMBER_TYPE_OPTIONS,
   type BusinessNumberType,
   CREATIVE_OPTIONS,
@@ -180,7 +178,7 @@ function StepPost({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label required>
-            {v.recruitType === '기간 지정 모집' ? '모집 마감일' : '모집 마감일(예정)'}
+            {v.recruitType === '기간 모집' ? '모집 마감일' : '모집 마감일(예정)'}
           </Label>
           <DatePicker
             aria-label="모집 마감일"
@@ -304,6 +302,23 @@ function StepProducts({
 
   return (
     <div className="space-y-8">
+      {/* 예산을 먼저 적게 해 상품을 그 안에서 고르게 한다. 구간 대신 직접 적는다(2026-11-10 사용자). */}
+      <div className="rounded-xl bg-blue-00 p-5 md:p-6">
+        <label htmlFor="ad-budget" className="text-lg font-bold">
+          예정 예산 <span className="text-sm font-normal text-gray-500">(선택)</span>
+        </label>
+        <p className="mt-1 text-sm text-gray-600">
+          예산에 맞춰 담당자가 상품 조합을 제안드려요. 정하지 않았다면 비워 두세요.
+        </p>
+        <input
+          id="ad-budget"
+          className={cn(INPUT, 'mt-3 h-14 bg-white text-lg')}
+          value={v.budget}
+          onChange={(e) => set('budget', e.target.value)}
+          placeholder="예: 200만원"
+          maxLength={50}
+        />
+      </div>
       {AD_PRODUCT_GROUPS.map((group, index) => {
         const products = AD_PRODUCTS.filter((p) => p.group === group.id);
         const count = products.filter((p) => v.productIds.includes(p.id)).length;
@@ -312,7 +327,7 @@ function StepProducts({
             key={group.id}
             aria-label={group.title}
             style={{ animationDelay: `${index * 90}ms` }}
-            className="motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both]"
+            className="rounded-2xl bg-gray-50 p-4 motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both] md:p-5"
           >
             <header className="mb-3 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
               <h3 className="text-lg font-bold">{group.title}</h3>
@@ -333,25 +348,54 @@ function StepProducts({
                       aria-pressed={checked}
                       onClick={() => toggle(product.id)}
                       className={cn(
-                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-200',
+                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white text-left break-keep transition-all duration-200',
                         checked
-                          ? 'border-blue-500 shadow-sm ring-2 ring-blue-100'
-                          : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md',
+                          ? '-translate-y-0.5 border-blue-500 shadow-lg shadow-blue-500/20 ring-4 ring-blue-100'
+                          : 'border-transparent shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md',
                       )}
                     >
                       <span className="relative block overflow-hidden">
                         <span className="block transition-transform duration-500 group-hover:scale-[1.03]">
                           <ProductImages product={product} />
                         </span>
+                        {/* 고른 카드는 이미지에 파란 막을 씌워 한눈에 보이게 한다. */}
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'pointer-events-none absolute inset-0 bg-blue-500/15 transition-opacity duration-200',
+                            checked ? 'opacity-100' : 'opacity-0',
+                          )}
+                        />
                         <span className="absolute top-2 right-2">
                           <CheckMark on={checked} />
                         </span>
                       </span>
-                      <span className="flex flex-1 flex-col px-4 py-3">
-                        <span className="text-xs font-medium text-blue-600">{product.reach}</span>
+                      <span
+                        className={cn(
+                          'flex flex-1 flex-col px-4 py-3 transition-colors',
+                          checked && 'bg-blue-00',
+                        )}
+                      >
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-medium text-blue-600">{product.reach}</span>
+                          {checked && (
+                            <span className="shrink-0 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
+                              선택됨
+                            </span>
+                          )}
+                        </span>
                         <span className="mt-0.5 font-semibold">{product.title}</span>
-                        <span className="mt-1 flex-1 text-sm text-gray-500">
-                          {product.description}
+                        <span className="mt-1 text-sm text-gray-500">{product.description}</span>
+                        <span
+                          className={cn(
+                            'mt-3 mb-auto block rounded-md px-3 py-2.5 text-[13px] leading-relaxed text-pretty text-gray-700',
+                            checked ? 'bg-white' : 'bg-gray-50',
+                          )}
+                        >
+                          <span className="block font-semibold text-blue-600">
+                            이럴 때 추천해요
+                          </span>
+                          <span className="mt-0.5 block">{product.recommend}</span>
                         </span>
                         <span className="mt-3 text-sm font-semibold text-gray-900">
                           {product.price}
@@ -366,35 +410,6 @@ function StepProducts({
         );
       })}
       <ErrorText>{errors.productIds}</ErrorText>
-      <div>
-        <Label optional>예정 예산</Label>
-        {/* 선택 칸이라 고른 것을 다시 누르면 풀린다. */}
-        <div role="group" aria-label="예정 예산" className="flex flex-wrap gap-2">
-          {BUDGET_RANGE_OPTIONS.map((o) => {
-            const checked = o.value === v.budgetRange;
-            return (
-              <button
-                key={o.value}
-                type="button"
-                aria-pressed={checked}
-                onClick={() => set('budgetRange', checked ? '' : (o.value as BudgetRange))}
-                className={cn(
-                  'rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
-                  checked
-                    ? 'border-blue-500 bg-blue-00 text-blue-600'
-                    : 'border-gray-200 text-gray-700 hover:border-gray-300',
-                )}
-              >
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <Info>
-        3개 이상 묶어 신청하면 10% 할인돼요. 오공고 웹의 노출 자리와 최종 금액은 담당자 확인 후
-        견적서로 안내합니다.
-      </Info>
     </div>
   );
 }
@@ -405,10 +420,13 @@ function StepSchedule({
   v,
   set,
   errors,
+  onEditProducts,
 }: {
   v: FormValues;
   set: Update;
   errors: Record<string, string>;
+  /** 광고 상품 단계로 돌아간다. */
+  onEditProducts: () => void;
 }) {
   // 오늘부터 고를 수 있다. 주 단위·모집 마감일 제약은 두지 않는다(2026-11-09 사용자). 끝은 열려 있다.
   const firstBookable = useMemo(() => {
@@ -446,12 +464,43 @@ function StepSchedule({
 
   return (
     <div className="space-y-6">
-      <div>
-        <Label>선택된 광고 상품</Label>
-        <div className="rounded-lg border border-blue-500 bg-blue-00 px-5 py-4">
-          <p className="font-semibold">{products.map((p) => p.title).join(', ')}</p>
-          <p className="mt-0.5 text-sm text-gray-500">원하는 날짜만큼 노출</p>
+      {/* 고른 상품을 이름 나열 대신 카드로 보여 무엇을 골랐는지 한눈에 보이게 한다(2026-11-10 사용자). */}
+      <div className="rounded-xl bg-gray-50 p-4 md:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold">
+            선택한 광고 상품 <span className="text-blue-600">{products.length}개</span>
+          </p>
+          <button
+            type="button"
+            onClick={onEditProducts}
+            className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          >
+            상품 변경
+          </button>
         </div>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {products.map((p) => (
+            <li
+              key={p.id}
+              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm"
+            >
+              <img
+                src={p.images[0]}
+                alt=""
+                className="size-12 shrink-0 rounded-md bg-gray-100 object-cover object-top"
+              />
+              <span className="min-w-0">
+                <span className="block text-xs text-blue-600">
+                  {AD_PRODUCT_GROUPS.find((g) => g.id === p.group)?.title}
+                </span>
+                <span className="block truncate text-sm font-semibold">{p.title}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-sm break-keep text-gray-600">
+          아래 달력에서 고른 기간 동안 선택한 상품이 노출돼요.
+        </p>
       </div>
       <div>
         <div className="mb-3 flex items-center justify-between">
@@ -745,10 +794,7 @@ function StepConfirm({
                 .join(', '),
             ],
             ['기간', periodText(v) ?? ''],
-            [
-              '예정 예산',
-              BUDGET_RANGE_OPTIONS.find((o) => o.value === v.budgetRange)?.label ?? '선택 안 함',
-            ],
+            ['예정 예산', v.budget.trim() || '입력 안 함'],
             ['견적', '담당자 확인 후 안내'],
           ]}
         />
@@ -815,8 +861,7 @@ function Summary({ v }: { v: FormValues }) {
   return (
     <aside className="overflow-hidden rounded-xl border border-gray-200 lg:sticky lg:top-24">
       <div className="bg-blue-50 px-6 py-5">
-        <p className="text-xs font-semibold text-blue-500">YOUR REQUEST</p>
-        <p className="mt-1 text-lg font-semibold">신청 내용 요약</p>
+        <p className="text-lg font-semibold">신청 내용 요약</p>
         <p className="mt-0.5 text-xs text-gray-500">현재 입력한 신청 정보를 확인하세요.</p>
       </div>
       <div className="px-6 py-2">
@@ -840,8 +885,7 @@ function Summary({ v }: { v: FormValues }) {
 function Done({ id, v, onReset }: { id: number; v: FormValues; onReset: () => void }) {
   return (
     <div className="mx-auto max-w-[680px] py-6 text-center">
-      <p className="text-sm font-semibold text-blue-500">REQUEST RECEIVED</p>
-      <h1 className="mt-2 text-3xl font-bold">광고 신청이 접수되었습니다</h1>
+      <h1 className="text-3xl font-bold">광고 신청이 접수되었습니다</h1>
       <p className="mt-4 leading-relaxed text-gray-600">
         광고 신청 내역을 확인해 주셔서 감사합니다.
         <br />
@@ -893,13 +937,13 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   },
   2: {
     title: '광고 상품',
-    desc: '원하는 광고 상품을 골라 주세요. 여러 개를 함께 고를 수 있습니다.',
-    lead: '공고를 노출할 광고 상품을 선택해 주세요.',
+    desc: '관심 가는 상품을 편하게 골라 주세요. 최종 구성은 담당자와 상담하며 함께 정해요.',
+    lead: '관심 있는 광고 상품을 골라 주세요. 여러 개 골라도 괜찮아요.',
   },
   3: {
     title: '광고 일정 선택',
-    desc: '집행할 주를 고르면 월요일부터 일요일까지 노출됩니다.',
-    lead: '모집 마감 전에 노출될 수 있도록 광고 집행 주간을 선택해 주세요.',
+    desc: '달력에서 노출을 시작할 날과 끝낼 날을 차례로 눌러 주세요.',
+    lead: '광고를 노출하고 싶은 기간을 골라 주세요. 일정은 담당자와 상담하며 조율할 수 있어요.',
   },
   4: {
     title: '담당자 정보',
@@ -1018,8 +1062,7 @@ export function AdApplicationForm() {
 
   return (
     <>
-      <p className="text-sm font-semibold text-blue-500">ADVERTISING APPLICATION</p>
-      <h1 className="mt-2 text-3xl font-bold md:text-[40px]">광고 신청</h1>
+      <h1 className="text-3xl font-bold md:text-[40px]">광고 신청</h1>
       <p className="mt-3 text-gray-600">{meta.lead}</p>
 
       <ol className="mt-8 grid grid-cols-5 gap-2 rounded-xl border border-gray-200 px-3 py-4 md:px-6">
@@ -1075,7 +1118,7 @@ export function AdApplicationForm() {
           <div className="px-6 py-6 md:px-8">
             {step === 1 && <StepPost {...stepProps} />}
             {step === 2 && <StepProducts {...stepProps} />}
-            {step === 3 && <StepSchedule {...stepProps} />}
+            {step === 3 && <StepSchedule {...stepProps} onEditProducts={() => goTo(2)} />}
             {step === 4 && <StepContact {...stepProps} />}
             {step === 5 && <StepConfirm {...stepProps} />}
             {submitError && (

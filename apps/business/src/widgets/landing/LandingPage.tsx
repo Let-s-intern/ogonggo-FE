@@ -2,24 +2,26 @@ import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@ogonggo/ui';
+import { AD_INTRODUCTION_PDF } from '@/shared/config/site';
 import {
+  CASES,
   CHANNEL_GROUPS,
   CHANNEL_STATS,
   COMBO_CARDS,
   FAQ,
   HERO_STATS,
-  OPERATING_RULES,
   PACKAGE,
   PARTNERS,
   PROCESS,
   REASONS,
 } from './content';
-import { CopyInquiryButton } from './CopyInquiryButton';
 import { CountUp } from './CountUp';
 import { PlacementSimulator } from './PlacementSimulator';
 import { RevealOnScroll } from './RevealOnScroll';
 
 const CONTAINER = 'page-container mx-auto w-full max-w-[1200px] px-4 md:px-6';
+/** `목적별 추천 패키지` 구역. 지금은 숨긴다(2026-11-10 사용자). 다시 보이려면 `true` 로 바꾼다. */
+const SHOW_COMBO = false;
 /** 묶음 안 순서. 화면에 들어올 때 하나씩 늦게 떠오른다(`app/globals.css`). */
 const order = (i: number) => ({ '--i': i }) as CSSProperties;
 /** 히어로가 열자마자 떠오르는 애니메이션. 늦출 시간은 `animationDelay` 로 준다. */
@@ -68,26 +70,32 @@ function Hero() {
             )}
             style={{ animationDelay: '120ms' }}
           >
-            인턴·신입 채용을 위한 가장 효과적인 채널. 지원 의사가 높은 취준생이 매일 공고를 찾는
-            10만명의 취준생이 함께하는 <strong className="text-gray-900">오늘의 공고 지면</strong>
-            과, <strong className="text-gray-900">렛츠커리어 채널</strong>에 공고를 알려보세요.
+            인턴·신입 채용을 위한 가장 효과적인 채널,
+            <br />
+            <strong className="text-gray-900">오늘의 공고</strong>와{' '}
+            <strong className="text-gray-900">렛츠커리어</strong>에 공고를 알려보세요.
           </p>
           <div
             className={cn(RISE, 'mt-8 flex flex-wrap justify-center gap-3')}
             style={{ animationDelay: '240ms' }}
           >
-            <a href="#placements" className={PRIMARY_BUTTON}>
+            {/* 주 버튼은 광고 신청 및 문의다. 소개서 받기는 그 화면에 있다(2026-11-10 사용자). */}
+            <Link href="/apply" className={PRIMARY_BUTTON}>
+              광고 신청 및 문의
+            </Link>
+            <a href="#placements" className={OUTLINE_BUTTON}>
               광고 구좌 둘러보기
             </a>
-            <Link href="/apply" className={OUTLINE_BUTTON}>
-              소개서 · 견적 문의
-            </Link>
           </div>
           <ul className="mx-auto mt-12 grid max-w-[1000px] grid-cols-2 gap-3 md:grid-cols-5">
             {HERO_STATS.map((s, i) => (
               <li
                 key={s.label}
-                className={cn(RISE, LIFT, 'rounded-lg bg-white px-3 py-5 shadow-sm')}
+                className={cn(
+                  RISE,
+                  LIFT,
+                  'rounded-lg bg-white px-3 py-5 shadow-sm max-md:last:odd:col-span-2',
+                )}
                 style={{ animationDelay: `${380 + i * 90}ms` }}
               >
                 <p className="text-2xl font-bold text-blue-500 md:text-[28px]">
@@ -144,7 +152,7 @@ function Reasons() {
 function Placements() {
   return (
     <section id="placements" className={cn(CONTAINER, 'scroll-mt-20 pb-16 md:pb-24')}>
-      <Eyebrow>오늘의공고 지면 광고</Eyebrow>
+      <Eyebrow>오늘의 공고 지면 광고</Eyebrow>
       <h2 data-reveal className="mt-3 text-3xl font-bold leading-tight md:text-[44px]">
         공고를 <span className="text-teal-600">실제로 찾는 사람</span> 앞에,
         <br />
@@ -156,34 +164,13 @@ function Placements() {
       <div data-reveal>
         <PlacementSimulator />
       </div>
-      <div
-        data-reveal
-        className="mt-4 flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 px-6 py-5 md:flex-row md:items-center md:justify-between"
-      >
-        <p className="text-sm text-gray-700">
-          <span className="mr-2 text-gray-500">운영 원칙</span>
-          {OPERATING_RULES.join(' · ')}
-        </p>
+      <div data-reveal className="mt-4 flex justify-end">
         <Link
           href="/apply/ad"
           className="shrink-0 rounded-md bg-blue-500 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-600"
         >
           지면 골라 신청하기
         </Link>
-      </div>
-
-      <div
-        data-reveal
-        className="mt-10 flex flex-col gap-4 rounded-xl bg-blue-50 px-6 py-6 md:flex-row md:items-center md:justify-between"
-      >
-        <div>
-          <p className="text-lg font-semibold">어떤 지면이 맞을지 고민되나요?</p>
-          <p className="mt-1 text-sm text-gray-600">
-            공고 특성, 목표 지원자, 예산을 알려주시면 세 지면 중 적합한 상품을 비교해볼 수 있어요.
-            이 페이지의 상품은 모두 개별 구매입니다.
-          </p>
-        </div>
-        <CopyInquiryButton />
       </div>
     </section>
   );
@@ -199,11 +186,13 @@ function Channels() {
           <br />
           <span className="text-blue-300">월 10만 명</span> 더 있어요
         </h2>
-        <p data-reveal className="mt-5 max-w-[760px] leading-relaxed text-gray-300">
-          렛츠커리어는 이력서·자소서·포트폴리오 챌린지를 운영하며 취준생과 매일 이야기해요.
-          인스타그램 두 계정과 카카오톡 오픈채팅방, 채널 DM에서{' '}
-          <strong className="text-white">큐레이션 콘텐츠로 공고를 &apos;추천&apos;</strong>하고,
-          소재 제작까지 48시간 안에 끝내요.
+        {/* 데스크톱은 문장마다 줄을 바꾸고, 모바일은 낱말 단위로 자연스럽게 흐른다. */}
+        <p data-reveal className="mt-5 max-w-[820px] leading-relaxed text-gray-300">
+          렛츠커리어는 취업 교육으로 취준생의 신뢰를 쌓아 온 채널이에요.
+          <br className="hidden md:block" /> 인스타그램, 카카오톡 오픈채팅, CRM 메시지로 공고를
+          광고가 아닌 <strong className="text-white">&apos;추천&apos;으로 전해드려요.</strong>
+          <br className="hidden md:block" /> 공고 링크만 보내 주시면, 소재 제작부터 집행까지 48시간
+          안에 준비해 드릴게요.
         </p>
         <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-5">
           {CHANNEL_STATS.map((s, i) => (
@@ -211,7 +200,7 @@ function Channels() {
               key={s.label}
               data-reveal
               style={order(i)}
-              className="rounded-lg border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+              className="rounded-lg border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10 max-md:last:odd:col-span-2"
             >
               <p className="text-2xl font-bold text-blue-300 md:text-[30px]">
                 <CountUp value={s.value} delay={i * 90} />
@@ -221,9 +210,6 @@ function Channels() {
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-right text-xs text-gray-400">
-          수치는 2026년 9월 기준 · 콘텐츠 제작 대행 포함 · 가격은 견적 문의
-        </p>
 
         {CHANNEL_GROUPS.map((group) => (
           <div key={group.id} data-reveal className="mt-14">
@@ -399,41 +385,113 @@ function Combo() {
   );
 }
 
-function Partners() {
+/** 함께한 회사 로고가 흐르는 띠. 고객 사례와 한 묶음으로 둔다(`PartnersAndCases`). */
+function PartnerMarquee() {
   return (
-    <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
-      <Eyebrow>PARTNERS</Eyebrow>
-      <h2 data-reveal className="mt-3 text-3xl font-bold md:text-[44px]">
-        함께한 회사
-      </h2>
-      <div
-        data-reveal
-        className="group mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
-      >
-        {/* 같은 목록을 두 번 이어 붙여 끊김 없이 흐르게 한다. 두 번째는 화면 읽기 프로그램에 숨긴다. */}
-        <div className="flex w-max animate-[ogonggo-biz-marquee_40s_linear_infinite] group-hover:[animation-play-state:paused] motion-reduce:animate-none">
-          {[0, 1].map((copy) => (
-            <ul
-              key={copy}
-              aria-hidden={copy === 1}
-              className="flex shrink-0 items-center gap-12 pr-12 md:gap-16 md:pr-16"
-            >
-              {PARTNERS.map((p) => (
-                <li key={p.name} className="shrink-0">
-                  <Image
-                    src={p.logo}
-                    alt={copy === 0 ? p.name : ''}
-                    width={p.width}
-                    height={p.height}
-                    // 띠 밖에 있다가 흘러 들어오는 로고라 미리 받아 둔다. 늦게 받으면 빈칸으로 들어온다.
-                    loading="eager"
-                    className="h-5 w-auto md:h-6"
-                  />
-                </li>
-              ))}
-            </ul>
-          ))}
+    <div
+      data-reveal
+      className="group overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+    >
+      {/* 같은 목록을 두 번 이어 붙여 끊김 없이 흐르게 한다. 두 번째는 화면 읽기 프로그램에 숨긴다. */}
+      <div className="flex w-max animate-[ogonggo-biz-marquee_40s_linear_infinite] group-hover:[animation-play-state:paused] motion-reduce:animate-none">
+        {[0, 1].map((copy) => (
+          <ul
+            key={copy}
+            aria-hidden={copy === 1}
+            className="flex shrink-0 items-center gap-12 pr-12 md:gap-16 md:pr-16"
+          >
+            {PARTNERS.map((p) => (
+              <li key={p.name} className="shrink-0">
+                <Image
+                  src={p.logo}
+                  alt={copy === 0 ? p.name : ''}
+                  width={p.width}
+                  height={p.height}
+                  // 띠 밖에 있다가 흘러 들어오는 로고라 미리 받아 둔다. 늦게 받으면 빈칸으로 들어온다.
+                  loading="eager"
+                  className="h-5 w-auto md:h-6"
+                />
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 함께한 회사와 고객 사례를 한 묶음으로 둔다(2026-11-10 사용자). 옅은 회색 띠 위에 제목 하나, 로고 띠, 사례 카드
+ * 순서다. 로고로 "누가" 함께했는지, 카드로 "무엇을 얻었는지" 를 이어서 보인다.
+ */
+function PartnersAndCases() {
+  return (
+    <section className="bg-gray-50 py-16 md:py-24">
+      <div className={CONTAINER}>
+        <h2 data-reveal className="text-3xl font-bold leading-tight md:text-[44px]">
+          먼저 함께한 기업들의 결과예요
+        </h2>
+        <p data-reveal className="mt-4 text-gray-600">
+          렛츠커리어가 직접 만들어 집행한 소재예요. 자세한 결과는{' '}
+          <a
+            href={AD_INTRODUCTION_PDF}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-blue-500 underline underline-offset-2"
+          >
+            소개서
+          </a>
+          에서 볼 수 있어요.
+        </p>
+        <div className="mt-8 flex flex-col gap-4 rounded-2xl bg-white px-6 py-5 md:flex-row md:items-center md:gap-8">
+          <p className="shrink-0 text-sm font-semibold text-gray-500">함께한 회사</p>
+          <div className="min-w-0 flex-1">
+            <PartnerMarquee />
+          </div>
         </div>
+        <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+          {CASES.map((c, i) => (
+            <li
+              key={c.company}
+              data-reveal
+              style={order(i)}
+              className={cn(
+                LIFT,
+                'group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white',
+              )}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-50 to-blue-00 p-4">
+                <div className="relative h-full w-full overflow-hidden rounded-lg shadow-sm">
+                  <Image
+                    src={c.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 280px, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </div>
+                <span className="absolute top-6 left-6 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-gray-900 shadow-sm">
+                  사례 {i + 1} · {c.kind}
+                </span>
+              </div>
+              <div className="flex flex-1 flex-col px-6 pt-5 pb-6">
+                <p className="text-sm font-semibold text-blue-500">{c.company}</p>
+                <p className="mt-1 text-xl font-bold leading-snug">{c.title}</p>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.situation}</p>
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {c.channels.map((channel) => (
+                    <li
+                      key={channel}
+                      className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600"
+                    >
+                      {channel}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -442,8 +500,7 @@ function Partners() {
 function Process() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
-      <Eyebrow>PROCESS</Eyebrow>
-      <h2 data-reveal className="mt-3 text-3xl font-bold md:text-[44px]">
+      <h2 data-reveal className="text-3xl font-bold md:text-[44px]">
         문의부터 게재까지, 이렇게 진행돼요
       </h2>
       <ol className="mt-8 grid gap-3 md:grid-cols-4">
@@ -501,12 +558,11 @@ function Faq() {
             광고 조합은 저희가 추천드려요!
           </p>
           <p className="mt-5 text-sm leading-relaxed text-gray-600">
-            예산 · 목표 · 관심 구좌 세 가지만 적으면 끝. 회원가입 없이도 접수 가능해요. 접수 후,
-            24시간 안에 세일즈 매니저가 오공고 지면과 렛츠커리어 채널을 묶은 예산 맞춤 제안서를
-            드려요.
+            예산, 목표, 관심 구좌 세 가지만 적으면 돼요. 회원가입 없이 접수할 수 있고, 24시간 이내
+            세일즈 매니저가 오늘의 공고 지면과 렛츠커리어 채널을 묶은 예산 맞춤 제안서를 드려요.
           </p>
           <Link href="/apply" className={cn(PRIMARY_BUTTON, 'mt-6')}>
-            광고 상담 신청
+            광고 신청 및 문의
           </Link>
         </aside>
       </div>
@@ -522,17 +578,17 @@ function ClosingCta() {
         className="rounded-xl bg-gradient-to-r from-blue-500 via-blue-600 to-teal-500 bg-[length:200%_100%] px-6 py-14 text-center text-white motion-safe:animate-[ogonggo-biz-gradient_10s_ease-in-out_infinite]"
       >
         <h2 className="text-2xl font-bold md:text-[36px]">
-          채용공고 홍보 및 교육 모집에 고민이 있다면 지금 문의 주세요
+          채용공고 홍보나 교육 모집이 고민이라면 지금 문의하세요
         </h2>
         <p className="mt-4 text-sm text-blue-50 md:text-base">
-          예산과 목표만 알려주시면 24시간 안에 세일즈 매니저가 연락드리고, 예산에 맞는
-          렛츠커리어&오늘의공고 광고를 제안드립니다.
+          예산과 목표만 알려주시면 24시간 이내 세일즈 매니저가 연락드리고, 예산에 맞는 오늘의
+          공고·렛츠커리어 광고 조합을 제안드려요.
         </p>
         <Link
           href="/apply"
           className="mt-8 inline-flex rounded-full bg-white px-8 py-3.5 font-semibold text-blue-500 transition-[background-color,translate,box-shadow] hover:-translate-y-0.5 hover:bg-blue-00 hover:shadow-xl"
         >
-          광고 상담 신청
+          광고 신청 및 문의
         </Link>
       </div>
     </section>
@@ -541,17 +597,19 @@ function ClosingCta() {
 
 export function LandingPage() {
   return (
-    <>
+    // 한국어가 낱말 가운데서 끊기지 않게 하고(`break-keep`), 제목은 줄 길이를 고르게, 본문은 마지막 줄에 한 낱말만
+    // 남지 않게 한다. 데스크톱·모바일 모두 같은 규칙이다.
+    <div className="break-keep [&_h1]:text-balance [&_h2]:text-balance [&_h3]:text-balance [&_p]:text-pretty">
       <Hero />
       <Reasons />
       <Placements />
       <Channels />
-      <Combo />
-      <Partners />
+      {SHOW_COMBO ? <Combo /> : null}
+      <PartnersAndCases />
       <Process />
       <Faq />
       <ClosingCta />
       <RevealOnScroll />
-    </>
+    </div>
   );
 }

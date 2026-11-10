@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
-import { CONTACT_EMAIL } from '@/shared/config/site';
+import { AD_INTRODUCTION_PDF, CONTACT_EMAIL } from '@/shared/config/site';
 
 export const metadata: Metadata = {
   title: '광고 신청 · 문의',
@@ -16,68 +17,154 @@ const INQUIRY_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
   '- 기업·기관명:\n- 담당자 성함 / 연락처:\n- 홍보 대상(채용 공고 / 교육·부트캠프):\n- 광고 목표:\n- 예상 광고 예산:\n- 문의 내용:\n',
 )}`;
 
-const NOTES = [
-  { title: '원하는 기간 집행', body: '시작일과 종료일을 직접 선택' },
-  { title: '마감 일정 고려', body: '채용·교육 모집 일정에 맞춰 신청' },
-  { title: '담당자 확인 후 확정', body: '접수만으로 결제·예약되지 않음' },
+/** 카드 안 항목 앞의 체크 표시. */
+function Check({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden className={className}>
+      <path
+        d="M5 10.5l3.2 3L15 6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      aria-hidden
+      className="size-4 transition-transform duration-200 group-hover/btn:translate-x-0.5"
+    >
+      <path
+        d="M4 10h11m-4-4.5L15.5 10 11 14.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const APPLY_POINTS = [
+  '광고 구좌와 집행 기간을 직접 선택',
+  '채용·교육 모집 일정에 맞춰 신청',
+  '담당자 확인 후 확정',
 ];
+const INQUIRY_POINTS = [
+  '목적과 예산에 맞는 조합 제안',
+  '소개서로 상품을 한눈에 확인',
+  '24시간 이내 답변',
+];
+
+const CARD =
+  'group relative isolate flex flex-col overflow-hidden rounded-2xl p-8 transition-[translate,box-shadow] duration-300 hover:-translate-y-1 md:p-10';
 
 export default function ApplyChoicePage() {
   return (
-    <section className="page-container mx-auto max-w-[1200px] px-4 py-12 md:px-6">
-      <p className="text-sm font-semibold text-blue-500">START HERE</p>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
-        <h1 className="text-2xl font-bold">어떤 도움이 필요하신가요?</h1>
-        <p className="text-sm text-gray-500">회원가입 없이 진행할 수 있습니다</p>
-      </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-xl border border-blue-300 bg-blue-00 p-8">
-          <span className="rounded-sm bg-blue-50 px-2.5 py-1 text-xs text-blue-600">
-            상품과 일정이 정해졌다면
-          </span>
-          <h3 className="mt-5 text-2xl font-bold">광고 신청하기</h3>
-          <p className="mt-3 text-gray-600">
-            원하는 광고 구좌와 집행 기간을 직접 선택하고
-            <br />
-            담당자 검토를 요청하세요.
-          </p>
-          <Link
-            href="/apply/ad"
-            className="mt-6 inline-flex rounded-md bg-blue-500 px-6 py-3.5 font-semibold text-white hover:bg-blue-600"
-          >
-            광고 신청하기
-          </Link>
+    <section className="relative isolate overflow-hidden">
+      {/* 위쪽에 옅은 파란 빛을 깔아 빈 화면이 밋밋하지 않게 한다. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(60%_80%_at_50%_0%,var(--color-blue-50),transparent)]"
+      />
+      <div className="page-container mx-auto max-w-[1080px] px-4 py-14 md:px-6 md:py-20">
+        <div className="text-center">
+          <p className="text-sm font-semibold text-blue-500">광고 신청 · 문의</p>
+          <h1 className="mt-3 text-3xl font-bold leading-tight md:text-[40px]">
+            어떤 도움이 필요하신가요?
+          </h1>
+          <p className="mt-4 text-gray-600">회원가입 없이 바로 진행할 수 있어요.</p>
         </div>
-        <div className="rounded-xl border border-gray-200 p-8">
-          <span className="rounded-sm bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
-            상품 선택이 어렵다면
-          </span>
-          <h3 className="mt-5 text-2xl font-bold">광고 문의하기</h3>
-          <p className="mt-3 text-gray-600">
-            광고 목적과 희망 예산만 남겨주세요.
-            <br />
-            상황에 맞는 상품과 집행 방식을 안내합니다. ({CONTACT_EMAIL})
-          </p>
-          <a
-            href={INQUIRY_MAILTO}
-            className="mt-6 inline-flex rounded-md border border-gray-300 px-6 py-3.5 font-semibold hover:border-gray-900"
+        <div className="mt-12 grid gap-5 md:grid-cols-2">
+          <div
+            className={`${CARD} bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30`}
           >
-            이메일로 문의하기
-          </a>
+            <Image
+              src="/landing/reasons/clock.png"
+              alt=""
+              width={155}
+              height={155}
+              className="pointer-events-none absolute -right-2 -bottom-2 -z-10 h-[150px] w-auto opacity-25 select-none md:h-[180px]"
+            />
+            <span className="self-start rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+              상품과 일정이 정해졌다면
+            </span>
+            <h2 className="mt-6 text-[28px] font-bold">광고 신청하기</h2>
+            <p className="mt-2 text-blue-100">
+              원하는 구좌와 기간을 골라 담당자 검토를 요청하세요.
+            </p>
+            <ul className="mt-6 mb-8 space-y-2.5">
+              {APPLY_POINTS.map((point) => (
+                <li key={point} className="flex items-center gap-2.5 text-sm">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-white/20">
+                    <Check className="size-3.5" />
+                  </span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/apply/ad"
+              className="group/btn mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-white px-6 py-3.5 font-semibold text-blue-600 transition-colors hover:bg-blue-00"
+            >
+              광고 신청하기
+              <Arrow />
+            </Link>
+          </div>
+          <div
+            className={`${CARD} border border-gray-200 bg-white hover:border-blue-200 hover:shadow-lg`}
+          >
+            <Image
+              src="/landing/reasons/thumbs-up.png"
+              alt=""
+              width={155}
+              height={155}
+              className="pointer-events-none absolute -right-2 -bottom-2 -z-10 h-[150px] w-auto opacity-60 select-none md:h-[180px]"
+            />
+            <span className="self-start rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+              상품 선택이 어렵다면
+            </span>
+            <h2 className="mt-6 text-[28px] font-bold">광고 문의하기</h2>
+            <p className="mt-2 text-gray-600">광고 목적과 희망 예산만 남겨주세요.</p>
+            <ul className="mt-6 mb-8 space-y-2.5">
+              {INQUIRY_POINTS.map((point) => (
+                <li key={point} className="flex items-center gap-2.5 text-sm text-gray-700">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-blue-50 text-blue-500">
+                    <Check className="size-3.5" />
+                  </span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-auto flex flex-wrap gap-2">
+              <a
+                href={INQUIRY_MAILTO}
+                className="group/btn inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-gray-700"
+              >
+                이메일로 문의하기
+                <Arrow />
+              </a>
+              {/* 상품을 고르기 전에 소개서부터 보게 한다. 새 탭의 PDF 다(2026-11-10 사용자). */}
+              <a
+                href={AD_INTRODUCTION_PDF}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center rounded-full border border-gray-300 bg-white px-6 py-3.5 font-semibold text-gray-900 transition-colors hover:border-gray-900"
+              >
+                소개서 받기
+              </a>
+            </div>
+            <p className="mt-4 text-xs text-gray-500">{CONTACT_EMAIL}</p>
+          </div>
         </div>
       </div>
-      <p className="mt-6 rounded-lg bg-blue-00 px-5 py-4 text-sm text-gray-600">
-        <strong className="text-blue-800">신청 즉시 광고가 확정되지 않습니다.</strong> 접수 후
-        담당자가 잔여 구좌와 일정을 확인하고, 영업일 2일 내 견적 및 확정 절차를 안내합니다.
-      </p>
-      <ul className="mt-4 grid gap-3 md:grid-cols-3">
-        {NOTES.map((n) => (
-          <li key={n.title} className="rounded-lg border border-gray-200 px-5 py-4">
-            <p className="font-semibold">{n.title}</p>
-            <p className="mt-1 text-sm text-gray-500">{n.body}</p>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }
