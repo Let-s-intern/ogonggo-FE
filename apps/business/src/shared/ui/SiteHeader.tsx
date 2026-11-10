@@ -116,25 +116,16 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
           <span className="text-sm font-semibold text-gray-600">for business</span>
         </Link>
         <nav aria-label="주요 메뉴" className="hidden h-full items-center gap-5 md:flex">
-          {SERVICE_NAV.filter((item) => !item.event).map((item) => (
+          {SERVICE_NAV.map((item) => (
             <DesktopLink
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={item.event ? <EventNavLabel>{item.label}</EventNavLabel> : item.label}
               active={item.match(pathname)}
             />
           ))}
         </nav>
-        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-6 md:flex">
-          {/* 이벤트 메뉴는 오른쪽, 로그인 앞에 둔다(2026-11-10 사용자). */}
-          {SERVICE_NAV.filter((item) => item.event).map((item) => (
-            <DesktopLink
-              key={item.href}
-              href={item.href}
-              label={<EventNavLabel>{item.label}</EventNavLabel>}
-              active={item.match(pathname)}
-            />
-          ))}
+        <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
           {signedIn ? (
             <AccountMenu
               companyName={companyName}

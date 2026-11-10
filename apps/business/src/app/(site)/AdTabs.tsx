@@ -35,8 +35,7 @@ export function AdTabs() {
         {TABS.map((tab) => {
           const current = tab.match(pathname);
           return (
-            // 이벤트 탭은 오른쪽 끝에 둔다(2026-11-10 사용자).
-            <li key={tab.href} className={cn('event' in tab && 'ml-auto')}>
+            <li key={tab.href}>
               <Link
                 href={tab.href}
                 aria-current={current ? 'page' : undefined}
