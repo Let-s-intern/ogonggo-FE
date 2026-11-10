@@ -34,7 +34,10 @@ const labelOrDash = (
  * 사업자 번호 칸. 종류 라벨과 하이픈 넣은 번호(가입 화면과 같은 자리), 해외 기업은 종류 라벨만 보인다.
  * 서버는 숫자만 저장한다.
  */
-function businessNumberOf(member: CompanySignupInfo): string {
+export function businessNumberOf(member: {
+  businessNumberType?: string | null;
+  businessNumber?: string | null;
+}): string {
   const { businessNumberType: type, businessNumber: number } = member;
   if (!type) return '-';
   const label = enumLabel('CompanyBusinessNumberType', type);

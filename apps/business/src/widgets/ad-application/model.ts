@@ -1,4 +1,9 @@
-import type { CreateAdvertisementContractRequest, MyAccountResponse } from '@ogonggo/api';
+import {
+  type CreateAdvertisementContractRequest,
+  type CreateAdvertisementContractRequestBudgetRange,
+  enumOptions,
+  type MyAccountResponse,
+} from '@ogonggo/api';
 
 /**
  * 광고 신청서 값. 서버 요청(`CreateAdvertisementContractRequest`, ogonggo-BE user API)에 칸이 있는 값은 그 이름의
@@ -9,6 +14,11 @@ export type Purpose = 'FAST_APPLICANTS' | 'FIT_APPLICANTS' | 'BRAND_AWARENESS';
 export type InvoiceMethod = 'TAX_INVOICE' | 'NEGOTIATE';
 export type CreativeMethod = 'REQUEST_PRODUCTION' | 'PROVIDE_DIRECTLY';
 export type ProductCategory = CreateAdvertisementContractRequest['categories'][number];
+export type BudgetRange = CreateAdvertisementContractRequestBudgetRange;
+/** 사업자 번호 종류. 빈 문자열은 고르지 않은 것이다. 신청 API 는 번호를 선택으로 받는다. */
+export type BusinessNumberType =
+  | NonNullable<CreateAdvertisementContractRequest['businessNumberType']>
+  | '';
 
 export const RECRUIT_TYPES = ['기간 지정 모집', '채용 시 마감', '상시 모집'] as const;
 export type RecruitType = (typeof RECRUIT_TYPES)[number];
@@ -23,6 +33,8 @@ export interface FormValues {
   recruitType: RecruitType;
   purpose: Purpose;
   productIds: string[];
+  /** 예정 예산 구간. 빈 문자열은 고르지 않은 것이다. */
+  budgetRange: BudgetRange | '';
   /** 희망 집행 시작일 `yyyy-MM-dd`. */
   startDate: string | null;
   /** 희망 집행 종료일 `yyyy-MM-dd`. 시작일과 같으면 하루다. */
@@ -31,6 +43,9 @@ export interface FormValues {
   managerName: string;
   email: string;
   phone: string;
+  businessNumberType: BusinessNumberType;
+  /** 화면에 보이는 값이다. 하이픈이 들어 있을 수 있고, 보낼 때 숫자만 남긴다. */
+  businessNumber: string;
   invoiceMethod: InvoiceMethod;
   creativeMethod: CreativeMethod;
   adRequest: string;
@@ -47,12 +62,15 @@ export const INITIAL_VALUES: FormValues = {
   recruitType: '기간 지정 모집',
   purpose: 'FAST_APPLICANTS',
   productIds: [],
+  budgetRange: '',
   startDate: null,
   endDate: null,
   scheduleNote: '',
   managerName: '',
   email: '',
   phone: '',
+  businessNumberType: '',
+  businessNumber: '',
   invoiceMethod: 'TAX_INVOICE',
   creativeMethod: 'REQUEST_PRODUCTION',
   adRequest: '',
@@ -72,6 +90,11 @@ export function prefillFrom(account: MyAccountResponse): Partial<FormValues> {
     managerName: profile.managerName,
     email: account.email,
     phone: profile.managerPhone,
+    businessNumberType: profile.businessNumberType,
+    businessNumber:
+      profile.businessNumberType && profile.businessNumber
+        ? formatBusinessNumber(profile.businessNumberType, profile.businessNumber)
+        : undefined,
   };
   return Object.fromEntries(
     Object.entries(values).filter(([, value]) => value),
@@ -104,6 +127,32 @@ export const CREATIVE_OPTIONS: { value: CreativeMethod; label: string; hint: str
   },
   { value: 'PROVIDE_DIRECTLY', label: '직접 제작한 소재 제공', hint: '이미지·카피 별도 전달' },
 ];
+
+/** 카탈로그 선택지. 순서는 백엔드 선언 순서 그대로다. */
+export const BUDGET_RANGE_OPTIONS = enumOptions('AdvertisementContractBudgetRange');
+export const BUSINESS_NUMBER_TYPE_OPTIONS = enumOptions('CompanyBusinessNumberType');
+
+/** 번호 종류마다 숫자 자릿수. 백엔드 `CompanyBusinessNumberType.digitCount` 와 같다. 해외 기업은 번호가 없다. */
+export const BUSINESS_NUMBER_DIGITS = {
+  BUSINESS_REGISTRATION: 10,
+  CORPORATE_REGISTRATION: 13,
+  OVERSEAS: 0,
+} as const satisfies Record<Exclude<BusinessNumberType, ''>, number>;
+
+/**
+ * 사업자 번호에 하이픈을 넣는다. 사업자등록번호는 3-2-5, 법인등록번호는 6-7 이다. 회원가입
+ * (`apps/business/src/widgets/sign-up/companySignUp.ts` 의 `formatBusinessNumber`)과 같은 모양이다.
+ */
+export function formatBusinessNumber(type: BusinessNumberType, value: string): string {
+  if (!type || type === 'OVERSEAS') return '';
+  const digits = value.replace(/\D/g, '').slice(0, BUSINESS_NUMBER_DIGITS[type]);
+  if (type === 'CORPORATE_REGISTRATION') {
+    return digits.length <= 6 ? digits : `${digits.slice(0, 6)}-${digits.slice(6)}`;
+  }
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+}
 
 export const SCHEDULE_NOTE_MAX = 1000;
 export const AD_REQUEST_MAX = 2000;
@@ -171,10 +220,7 @@ export interface AdProduct {
   /** 이미지마다 붙일 화면 이름. 있으면 이미지 아래에 띄운다. */
   imageLabels?: string[];
   price: string;
-  /**
-   * 광고 신청 API 의 `categories` 값. 카카오톡 CRM 은 BE 카테고리가 아직 없어 비어 있고 `[희망 상품]` 글에만 남는다.
-   * BE 는 카테고리를 하나 이상 요구해 CRM 만 고르면 받지 않는다(`validateStep`).
-   */
+  /** 광고 신청 API 의 `categories` 값. */
   categories: ProductCategory[];
 }
 
@@ -264,7 +310,7 @@ export const AD_PRODUCTS: AdProduct[] = [
       '/ad-products/kakao-crm-4.jpg',
     ],
     price: '견적 문의',
-    categories: [],
+    categories: ['KAKAO_CRM'],
   },
 ];
 
@@ -299,8 +345,6 @@ export function validateStep(step: number, v: FormValues): Record<string, string
   if (step === 2) {
     const products = selectedProducts(v);
     if (products.length === 0) e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
-    else if (products.every((p) => p.categories.length === 0))
-      e.productIds = '카카오톡 CRM은 다른 상품과 함께 신청해 주세요.';
   }
   if (step === 3) {
     if (!v.startDate || !v.endDate) e.period = '집행 시작일과 종료일을 선택해 주세요.';
@@ -312,6 +356,15 @@ export function validateStep(step: number, v: FormValues): Record<string, string
     else if (v.managerName.trim().length > 50) e.managerName = '50자 이하로 입력해 주세요.';
     if (!EMAIL_PATTERN.test(v.email.trim())) e.email = '이메일 형식을 확인해 주세요.';
     if (!PHONE_PATTERN.test(v.phone.trim())) e.phone = '연락처를 확인해 주세요.';
+    if (v.businessNumberType && v.businessNumberType !== 'OVERSEAS') {
+      const expected = BUSINESS_NUMBER_DIGITS[v.businessNumberType];
+      if (digitsOf(v.businessNumber).length !== expected) {
+        const name = BUSINESS_NUMBER_TYPE_OPTIONS.find(
+          (o) => o.value === v.businessNumberType,
+        )?.label;
+        e.businessNumber = `${name}는 숫자 ${expected}자리입니다.`;
+      }
+    }
     if (v.adRequest.length > AD_REQUEST_MAX)
       e.adRequest = `${AD_REQUEST_MAX}자 이하로 입력해 주세요.`;
   }
@@ -320,6 +373,8 @@ export function validateStep(step: number, v: FormValues): Record<string, string
   }
   return e;
 }
+
+const digitsOf = (value: string) => value.replace(/\D/g, '');
 
 /** 서버 요청 본문. 받을 칸이 없는 상품·기간·모집 형태는 담당자가 읽을 수 있게 `scheduleRequest` 에 적는다. */
 export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
@@ -340,12 +395,18 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     recruitmentUrl: v.url.trim(),
     recruitmentDeadline: v.deadline,
     purpose: v.purpose,
+    budgetRange: v.budgetRange || undefined,
     categories,
     scheduleRequest: lines.join('\n'),
     advertisementRequest: v.adRequest.trim() || undefined,
     managerName: v.managerName.trim(),
     email: v.email.trim(),
     phoneNumber: v.phone.trim(),
+    businessNumberType: v.businessNumberType || undefined,
+    businessNumber:
+      v.businessNumberType && v.businessNumberType !== 'OVERSEAS'
+        ? digitsOf(v.businessNumber)
+        : undefined,
     invoiceMethod: v.invoiceMethod,
     creativeMethod: v.creativeMethod,
   };

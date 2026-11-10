@@ -17,10 +17,12 @@ interface BannerImageFieldProps {
   value: string;
   onChange: (url: string) => void;
   error?: string;
+  /** 모바일 이미지처럼 비워도 되는 칸은 false 다. */
+  required?: boolean;
 }
 
 /**
- * 배너 이미지. 파일을 고르면 바로 올리고 받은 주소를 쓴다. BE 노출은 이미지가 한 장뿐이고 HTTP(S) 절대 주소만 받아, 웹 안의
+ * 배너 이미지. 파일을 고르면 바로 올리고 받은 주소를 쓴다. BE 노출은 HTTP(S) 절대 주소만 받아, 웹 안의
  * 기본 소재(`/banners/*.svg`)는 고를 수 없다.
  */
 export function BannerImageField({
@@ -31,6 +33,7 @@ export function BannerImageField({
   value,
   onChange,
   error,
+  required = true,
 }: BannerImageFieldProps) {
   const upload = useUploadBannerImage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +66,7 @@ export function BannerImageField({
       : error);
 
   return (
-    <Field label={label} htmlFor={id} error={shownError} required hint={sizeHint}>
+    <Field label={label} htmlFor={id} error={shownError} required={required} hint={sizeHint}>
       <input
         ref={inputRef}
         id={id}

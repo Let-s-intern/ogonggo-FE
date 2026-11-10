@@ -19,6 +19,7 @@ export interface AdminAdvertisementContractProductResponse {
      * | `INSTAGRAM_2` | 4 | 인스타그램 렛츠커리어 |
      * | `KAKAO_1` | 5 | 카카오톡 직무별 큐레이션 톡방 |
      * | `KAKAO_2` | 6 | 카카오톡 렛츠커리어 공식 오픈채팅방 |
+     * | `KAKAO_CRM` | 7 | 카카오톡 CRM |
      */
   category: AdminAdvertisementContractProductResponseCategory;
   productDeleted: boolean;

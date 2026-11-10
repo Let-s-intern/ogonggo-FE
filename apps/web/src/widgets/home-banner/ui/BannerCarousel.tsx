@@ -26,9 +26,15 @@ const FRAME_CLASS = {
   side: 'aspect-[750/200] rounded-xl lg:aspect-[400/500]',
 } as const;
 
+/** 모바일 이미지(`mobileImageUrl`)를 쓰는 폭. `FRAME_CLASS` 가 모바일 비율을 쓰는 폭과 같다(md 768px, lg 1024px 미만). */
+const MOBILE_MEDIA = {
+  wide: '(max-width: 767px)',
+  side: '(max-width: 1023px)',
+} as const;
+
 /**
- * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이다. BE 노출에는 이미지가 하나(`imageUrl`)뿐이라
- * 두 폭에 같은 이미지를 `object-cover` 로 채운다(모바일 이미지 칸은 BE 에 요청함).
+ * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이다. 모바일 폭에서는
+ * `mobileImageUrl` 을 쓰고, 없으면 두 폭에 같은 `imageUrl` 을 `object-cover` 로 채운다(BE LC-3589).
  *
  * 여럿이면 5초마다 넘기고 아래 점으로 고른다. 마우스를 올리거나 초점이 안에 있으면 멈추고, 움직임 줄이기를
  * 켠 사람에게는 넘기지 않는다(점으로만 넘긴다). 무작위 하나 대신 넘기기를 고른 이유는 운영자가 정한 순서가
@@ -105,13 +111,18 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                   },
                 ]}
               >
-                <img
-                  src={banner.imageUrl}
-                  alt={banner.name}
-                  // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
-                  loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}
-                  className="h-full w-full object-cover"
-                />
+                <picture className="block h-full w-full">
+                  {banner.mobileImageUrl ? (
+                    <source media={MOBILE_MEDIA[variant]} srcSet={banner.mobileImageUrl} />
+                  ) : null}
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.name}
+                    // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
+                    loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}
+                    className="h-full w-full object-cover"
+                  />
+                </picture>
                 {banner.adLabel ? (
                   <span className="absolute top-2 right-2 rounded bg-gray-900/60 px-1.5 py-0.5 text-[11px] leading-none font-medium text-white md:top-3 md:right-3">
                     광고

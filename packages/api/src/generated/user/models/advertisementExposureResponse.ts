@@ -9,6 +9,11 @@ export interface AdvertisementExposureResponse {
   id: number;
   name: string;
   imageUrl: string;
+  /**
+     * 모바일 배너 이미지. null이면 모바일에서도 imageUrl을 씁니다.
+     * @nullable
+     */
+  mobileImageUrl?: string | null;
   linkUrl: string;
   adLabel: boolean;
 }

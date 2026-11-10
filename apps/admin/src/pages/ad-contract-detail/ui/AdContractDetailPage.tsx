@@ -31,6 +31,7 @@ import {
   formatPaymentAmount,
 } from '@/entities/advertisement-contract/lib/contract';
 import type { AdvertisementExposure } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
+import { businessNumberOf } from '@/entities/member/model/companySignupInfo';
 import {
   type BannerPosition,
   EXPOSURE_STATUS_BADGES,
@@ -177,6 +178,11 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
             .map((category) => enumLabel('AdvertisementProductCategory', category))
             .join(', ')}
         </Row>
+        <Row label="예정 예산">
+          {contract.budgetRange
+            ? enumLabel('AdvertisementContractBudgetRange', contract.budgetRange)
+            : null}
+        </Row>
         <Row label="일정 요청">{contract.scheduleRequest}</Row>
         <Row label="요청 사항">{contract.advertisementRequest}</Row>
         <Row label="담당자">
@@ -184,6 +190,7 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
             .filter(Boolean)
             .join(' · ') || null}
         </Row>
+        <Row label="사업자 번호">{businessNumberOf(contract)}</Row>
         <Row label="세금계산서">
           {contract.invoiceMethod
             ? enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)

@@ -15,4 +15,5 @@ export const ListAdvertisementContractsCategory = {
   INSTAGRAM_2: 'INSTAGRAM_2',
   KAKAO_1: 'KAKAO_1',
   KAKAO_2: 'KAKAO_2',
+  KAKAO_CRM: 'KAKAO_CRM',
 } as const;
