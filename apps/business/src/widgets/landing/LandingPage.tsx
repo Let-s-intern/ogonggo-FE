@@ -186,11 +186,13 @@ function Channels() {
           <br />
           <span className="text-blue-300">월 10만 명</span> 더 있어요
         </h2>
-        <p data-reveal className="mt-5 max-w-[760px] leading-relaxed text-gray-300">
-          렛츠커리어는 취업 교육으로 신뢰를 쌓아 온 취준생 채널이에요. 인스타그램, 카카오톡
-          오픈채팅, CRM 메시지에서 공고를 광고가 아닌{' '}
-          <strong className="text-white">믿고 보는 &apos;추천&apos; 콘텐츠</strong>로 전해 지원
-          반응이 달라요. 공고 링크만 주시면 소재 제작부터 집행까지 48시간 안에 끝내드려요.
+        {/* 데스크톱은 문장마다 줄을 바꾸고, 모바일은 낱말 단위로 자연스럽게 흐른다. */}
+        <p data-reveal className="mt-5 max-w-[820px] leading-relaxed text-gray-300">
+          렛츠커리어는 취업 교육으로 취준생의 신뢰를 쌓아 온 채널이에요.
+          <br className="hidden md:block" /> 인스타그램, 카카오톡 오픈채팅, CRM 메시지로 공고를
+          광고가 아닌 <strong className="text-white">&apos;추천&apos;으로 전해드려요.</strong>
+          <br className="hidden md:block" /> 공고 링크만 보내 주시면, 소재 제작부터 집행까지 48시간
+          안에 준비해 드릴게요.
         </p>
         <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-5">
           {CHANNEL_STATS.map((s, i) => (
