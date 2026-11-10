@@ -24,3 +24,6 @@ export const TERMS_URL =
   'https://letsintern.notion.site/3e95e77cbee180f993a3c70e3bce5a21?source=copy_link';
 export const PRIVACY_POLICY_URL =
   'https://letsintern.notion.site/3e95e77cbee18074a1c7dc485644d737?pvs=74';
+
+/** 광고 상품 소개서(PDF). 랜딩 첫 화면의 `소개서 받기` 와 광고 신청·문의의 고객 사례가 연다. 원본은 `AD_introduction.pdf`(2026-11-10). */
+export const AD_INTRODUCTION_PDF = '/ad-introduction.pdf';
