@@ -65,10 +65,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" className={pretendard.variable}>
-      <body className="font-sans antialiased">
+      <body className="flex min-h-dvh flex-col font-sans antialiased">
         <AppProviders>
           <SiteHeader />
-          <main>{children}</main>
+          {/* 본문이 짧아도 푸터가 화면 아래에 붙게 본문이 남는 높이를 채운다. */}
+          <main className="flex-1">{children}</main>
           <SiteFooter />
         </AppProviders>
       </body>
