@@ -25,6 +25,8 @@ export interface MemberShellProps {
    * (광고 안내·광고 신청)은 자기 폭과 배경이 있어 넣지 않는다.
    */
   contained?: boolean;
+  /** 본문 위에 붙는 줄(광고 화면의 탭). 화면을 옮겨도 떠오르는 애니메이션 없이 그대로 있다. */
+  top?: ReactNode;
 }
 
 /**
@@ -84,7 +86,7 @@ function AccountBlock() {
   );
 }
 
-export function MemberShell({ children, contained = true }: MemberShellProps) {
+export function MemberShell({ children, contained = true, top }: MemberShellProps) {
   const pathname = usePathname();
 
   /**
@@ -154,6 +156,7 @@ export function MemberShell({ children, contained = true }: MemberShellProps) {
               <CompanyConsoleNav variant="bar" />
             </div>
           )}
+          {top}
           <main
             className={cn(
               'min-w-0 flex-1',

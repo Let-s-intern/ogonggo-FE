@@ -9,6 +9,8 @@ export interface ConsoleNavItem {
   icon: string;
   /** 정확히 이 주소일 때만 켠다. 대시보드(`/mypage/company`)는 모든 화면의 앞부분이라 이것이 필요하다. */
   exact?: boolean;
+  /** 이 항목을 켜는 다른 주소. 그 주소와 같거나 그 아래면 켠다. */
+  alsoActiveOn?: readonly string[];
 }
 
 export interface ConsoleNavSection {
@@ -41,11 +43,15 @@ export const COMPANY_CONSOLE_NAV: readonly ConsoleNavSection[] = [
     ],
   },
   {
-    // 로그인하면 헤더의 광고 안내·광고 신청/문의도 여기로 옮긴다(2026-11-10 사용자).
+    // 로그인하면 헤더의 광고 신청/문의도 여기로 옮긴다. 광고 안내(`/`)는 그 화면의 탭이다(`AdTabs`, 2026-11-10 사용자).
     title: '광고',
     items: [
-      { href: '/', label: '광고 안내', icon: 'icon-[lucide--presentation]', exact: true },
-      { href: '/apply', label: '광고 신청/문의', icon: 'icon-[lucide--send]' },
+      {
+        href: '/apply',
+        label: '광고 신청/문의',
+        icon: 'icon-[lucide--send]',
+        alsoActiveOn: ['/'],
+      },
       { href: '/mypage/company/ads', label: '광고 신청 내역', icon: 'icon-[lucide--megaphone]' },
     ],
   },
@@ -61,10 +67,13 @@ export const COMPANY_CONSOLE_NAV: readonly ConsoleNavSection[] = [
   },
 ];
 
-export const isConsoleNavActive = (item: ConsoleNavItem, pathname: string) =>
-  item.exact
-    ? pathname === item.href
-    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+const matchesPath = (href: string, pathname: string) =>
+  pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
+
+export const isConsoleNavActive = (item: ConsoleNavItem, pathname: string) => {
+  if (item.alsoActiveOn?.some((href) => matchesPath(href, pathname))) return true;
+  return item.exact ? pathname === item.href : matchesPath(item.href, pathname);
+};
 
 /** 공고 목록의 첫 화면. `/mypage/company/posts` 가 여기로 보낸다. `/mypage/company` 는 대시보드다. */
 export const COMPANY_MYPAGE_HOME = '/mypage/company/posts/jobs';
