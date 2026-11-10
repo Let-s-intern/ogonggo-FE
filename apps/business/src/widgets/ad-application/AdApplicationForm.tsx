@@ -18,8 +18,13 @@ import {
   type AdProduct,
   AD_REQUEST_MAX,
   addDays,
+  BUDGET_RANGE_OPTIONS,
+  type BudgetRange,
+  BUSINESS_NUMBER_TYPE_OPTIONS,
+  type BusinessNumberType,
   CREATIVE_OPTIONS,
   type FormValues,
+  formatBusinessNumber,
   formatDate,
   INITIAL_VALUES,
   INVOICE_OPTIONS,
@@ -361,6 +366,18 @@ function StepProducts({
         );
       })}
       <ErrorText>{errors.productIds}</ErrorText>
+      <div>
+        <Label optional>예정 예산</Label>
+        <ListboxSelect
+          id="ad-budget-range"
+          label="예정 예산"
+          placeholder="예정 예산을 선택해 주세요."
+          value={v.budgetRange}
+          options={BUDGET_RANGE_OPTIONS}
+          onChange={(value) => set('budgetRange', value as BudgetRange)}
+          className="h-[50px] rounded-md text-[15px]"
+        />
+      </div>
       <Info>
         3개 이상 묶어 신청하면 10% 할인돼요. 오공고 웹의 노출 자리와 최종 금액은 담당자 확인 후
         견적서로 안내합니다.
@@ -601,6 +618,43 @@ function StepContact({
           onChange={(x) => set('invoiceMethod', x)}
         />
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label optional>사업자 번호 종류</Label>
+          <ListboxSelect
+            id="ad-business-number-type"
+            label="사업자 번호 종류"
+            placeholder="번호 종류를 선택해 주세요."
+            value={v.businessNumberType}
+            options={BUSINESS_NUMBER_TYPE_OPTIONS}
+            onChange={(value) => {
+              const type = value as BusinessNumberType;
+              set('businessNumberType', type);
+              set('businessNumber', formatBusinessNumber(type, v.businessNumber));
+            }}
+            className="h-[50px] rounded-md text-[15px]"
+          />
+        </div>
+        {v.businessNumberType && v.businessNumberType !== 'OVERSEAS' && (
+          <div>
+            <Label>사업자 번호</Label>
+            <input
+              className={INPUT}
+              inputMode="numeric"
+              value={v.businessNumber}
+              onChange={(e) =>
+                set('businessNumber', formatBusinessNumber(v.businessNumberType, e.target.value))
+              }
+              placeholder={
+                v.businessNumberType === 'CORPORATE_REGISTRATION'
+                  ? '000000-0000000'
+                  : '000-00-00000'
+              }
+            />
+            <ErrorText>{errors.businessNumber}</ErrorText>
+          </div>
+        )}
+      </div>
       <div>
         <Label>소재 준비 방식</Label>
         <RadioCards
@@ -678,6 +732,10 @@ function StepConfirm({
                 .join(', '),
             ],
             ['기간', periodText(v) ?? ''],
+            [
+              '예정 예산',
+              BUDGET_RANGE_OPTIONS.find((o) => o.value === v.budgetRange)?.label ?? '선택 안 함',
+            ],
             ['견적', '담당자 확인 후 안내'],
           ]}
         />
@@ -689,6 +747,14 @@ function StepConfirm({
             ['담당자', `${v.managerName} · ${v.companyName}`],
             ['이메일', v.email],
             ['연락처', v.phone],
+            [
+              '사업자 번호',
+              v.businessNumberType === 'OVERSEAS'
+                ? '해외 기업'
+                : v.businessNumberType && v.businessNumber
+                  ? v.businessNumber
+                  : '입력 안 함',
+            ],
           ]}
         />
       </section>

@@ -39,6 +39,8 @@ const toServerValue = (value: string) => (value ? `${value}:00` : null);
 interface FormState {
   name: string;
   imageUrl: string;
+  /** 빈 문자열이면 모바일에서도 `imageUrl` 을 쓴다. */
+  mobileImageUrl: string;
   linkUrl: string;
   adLabel: boolean;
   startAt: string;
@@ -54,6 +56,7 @@ function initialState(
   return {
     name: exposure?.name ?? '',
     imageUrl: exposure?.imageUrl ?? '',
+    mobileImageUrl: exposure?.mobileImageUrl ?? '',
     linkUrl: exposure?.linkUrl ?? '',
     adLabel: exposure?.adLabel ?? initialContractId !== null,
     startAt: toInputValue(exposure?.startAt),
@@ -119,6 +122,7 @@ export function BannerFormModal({
       contractId: form.contractId,
       name: form.name.trim(),
       imageUrl: form.imageUrl,
+      mobileImageUrl: form.mobileImageUrl || null,
       linkUrl: form.linkUrl.trim(),
       targetType: null,
       targetId: null,
@@ -176,11 +180,23 @@ export function BannerFormModal({
         <BannerImageField
           id="banner-image"
           label="이미지"
-          sizeHint={`${spec.sizeHint} 한 장을 PC·모바일에 같이 씁니다.`}
+          sizeHint={`${spec.sizeHint} 모바일 이미지가 없으면 모바일에도 이 이미지를 씁니다.`}
           aspectClassName={spec.aspectClassName}
           value={form.imageUrl}
           onChange={(url) => set('imageUrl', url)}
           error={errors.imageUrl}
+        />
+      </div>
+
+      <div className="max-w-80">
+        <BannerImageField
+          id="banner-mobile-image"
+          label="모바일 이미지"
+          sizeHint="750×200 비율(1500×400 권장). JPG·PNG. 선택입니다."
+          aspectClassName="aspect-[750/200]"
+          value={form.mobileImageUrl}
+          onChange={(url) => set('mobileImageUrl', url)}
+          required={false}
         />
       </div>
 

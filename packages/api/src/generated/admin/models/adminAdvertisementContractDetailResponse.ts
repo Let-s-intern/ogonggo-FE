@@ -4,6 +4,8 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { AdminAdvertisementContractDetailResponseBudgetRange } from './adminAdvertisementContractDetailResponseBudgetRange';
+import type { AdminAdvertisementContractDetailResponseBusinessNumberType } from './adminAdvertisementContractDetailResponseBusinessNumberType';
 import type { AdminAdvertisementContractDetailResponseCategoriesItem } from './adminAdvertisementContractDetailResponseCategoriesItem';
 import type { AdminAdvertisementContractDetailResponseCreativeMethod } from './adminAdvertisementContractDetailResponseCreativeMethod';
 import type { AdminAdvertisementContractDetailResponseInvoiceMethod } from './adminAdvertisementContractDetailResponseInvoiceMethod';
@@ -52,12 +54,38 @@ export interface AdminAdvertisementContractDetailResponse {
      * | `BRAND_AWARENESS` | 3 | 브랜드 인지도 확대 |
      */
   purpose?: AdminAdvertisementContractDetailResponsePurpose;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `UNDER_500K` | 1 | 50만원 미만 |
+     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
+     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
+     * | `OVER_3M` | 4 | 300만원 이상 |
+     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
+     */
+  budgetRange?: AdminAdvertisementContractDetailResponseBudgetRange;
   categories: AdminAdvertisementContractDetailResponseCategoriesItem[];
   scheduleRequest?: string;
   advertisementRequest?: string;
   managerName?: string;
   email?: string;
   phoneNumber?: string;
+  /**
+     * 신청 폼에서 받은 사업자 번호 종류. 보내지 않은 신청과 비즈니스 공고 계약은 null입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `BUSINESS_REGISTRATION` | 1 | 사업자등록번호 |
+     * | `CORPORATE_REGISTRATION` | 2 | 법인등록번호 |
+     * | `OVERSEAS` | 3 | 해외 기업 |
+     * @nullable
+     */
+  businessNumberType?: AdminAdvertisementContractDetailResponseBusinessNumberType;
+  /**
+     * 하이픈 없는 사업자 번호. 해외 기업이거나 보내지 않은 신청, 비즈니스 공고 계약은 null입니다.
+     * @nullable
+     */
+  businessNumber?: string | null;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |

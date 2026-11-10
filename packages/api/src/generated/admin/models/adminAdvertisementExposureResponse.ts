@@ -15,6 +15,11 @@ export interface AdminAdvertisementExposureResponse {
   name?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  /**
+     * 모바일 배너 이미지. null이면 모바일에서도 imageUrl을 씁니다.
+     * @nullable
+     */
+  mobileImageUrl?: string | null;
   /** @nullable */
   linkUrl?: string | null;
   /**

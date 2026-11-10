@@ -4,6 +4,8 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { CreateAdvertisementContractRequestBudgetRange } from './createAdvertisementContractRequestBudgetRange';
+import type { CreateAdvertisementContractRequestBusinessNumberType } from './createAdvertisementContractRequestBusinessNumberType';
 import type { CreateAdvertisementContractRequestCategoriesItem } from './createAdvertisementContractRequestCategoriesItem';
 import type { CreateAdvertisementContractRequestCreativeMethod } from './createAdvertisementContractRequestCreativeMethod';
 import type { CreateAdvertisementContractRequestInvoiceMethod } from './createAdvertisementContractRequestInvoiceMethod';
@@ -44,8 +46,20 @@ export interface CreateAdvertisementContractRequest {
      */
   purpose: CreateAdvertisementContractRequestPurpose;
   /**
+     * 예정 예산 구간. 보내지 않으면 고르지 않은 것으로 저장합니다
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `UNDER_500K` | 1 | 50만원 미만 |
+     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
+     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
+     * | `OVER_3M` | 4 | 300만원 이상 |
+     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
+     */
+  budgetRange?: CreateAdvertisementContractRequestBudgetRange;
+  /**
      * @minItems 0
-     * @maxItems 6
+     * @maxItems 7
      */
   categories: CreateAdvertisementContractRequestCategoriesItem[];
   /**
@@ -73,6 +87,23 @@ export interface CreateAdvertisementContractRequest {
      * @maxLength 20
      */
   phoneNumber: string;
+  /**
+     * 사업자 번호 종류. 선택이며 기업 회원가입과 같은 규칙이다. 해외 기업이면 OVERSEAS이고 businessNumber를 보내지 않는다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `BUSINESS_REGISTRATION` | 1 | 사업자등록번호 |
+     * | `CORPORATE_REGISTRATION` | 2 | 법인등록번호 |
+     * | `OVERSEAS` | 3 | 해외 기업 |
+     */
+  businessNumberType?: CreateAdvertisementContractRequestBusinessNumberType;
+  /**
+     * 하이픈 없이 숫자만. 사업자등록번호는 10자리, 법인등록번호는 13자리다. businessNumberType 없이 보내거나 종류와 자릿수가 맞지 않으면 400이다.
+     * @minLength 0
+     * @maxLength 13
+     * @pattern ^[0-9]+$
+     */
+  businessNumber?: string;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
