@@ -442,7 +442,7 @@ function Partners() {
   );
 }
 
-/** 고객 사례 5건(소개서 17~21쪽). 소재는 모자이크한 이미지라 분위기만 보이고, 숫자 성과를 앞에 둔다. */
+/** 고객 사례 5건(소개서 17~21쪽). 실제 집행 소재와 숫자 성과를 함께 보인다. */
 function Cases() {
   return (
     <section className={cn(CONTAINER, 'pb-16 md:pb-24')}>
@@ -451,7 +451,7 @@ function Cases() {
         먼저 집행한 기업들의 결과예요
       </h2>
       <p data-reveal className="mt-4 text-gray-600">
-        실제 집행 소재는 모자이크했어요. 자세한 사례는{' '}
+        렛츠커리어가 직접 만들어 집행한 소재와 결과예요. 자세한 사례는{' '}
         <a
           href={AD_INTRODUCTION_PDF}
           target="_blank"
