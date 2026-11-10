@@ -15,15 +15,20 @@ interface NavItem {
   href: string;
   label: string;
   match: (pathname: string) => boolean;
+  /** 로그인해야 쓰는 화면. 기업 회원이 아니면 로그인 화면을 거친다(`companyHref`). */
+  company?: boolean;
 }
 
-/**
- * 시안 헤더의 왼쪽 메뉴. `광고 내역` 은 내 광고 신청을 조회하는 API 가 없어 두지 않는다(PRD 3절). API 가 생기면
- * `/mypage/company/ads` 로 넣는다.
- */
+/** 시안 헤더의 왼쪽 메뉴. `신청 내역` 은 내 광고 신청 목록(BE LC-3590)이다. */
 const SERVICE_NAV: NavItem[] = [
   { href: '/', label: '광고 안내', match: (p) => p === '/' },
   { href: '/apply', label: '광고 신청/문의', match: (p) => p.startsWith('/apply') },
+  {
+    href: '/mypage/company/ads',
+    label: '신청 내역',
+    match: (p) => p.startsWith('/mypage/company/ads'),
+    company: true,
+  },
 ];
 
 /** 마이페이지 첫 화면. `/mypage/company` 는 공고 목록으로 보낸다. */
@@ -45,7 +50,7 @@ const COMPANY_NAV: NavItem[] = [
 ];
 
 /**
- * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의, 오른쪽은 공고등록·내 기업 정보·로그인. 로그인하면 로그인 자리에
+ * 사이트 헤더. 왼쪽은 광고 안내·광고 신청/문의·신청 내역, 오른쪽은 공고등록·내 기업 정보·로그인. 로그인하면 로그인 자리에
  * 기업명이 나오고, 누르면 `마이페이지`·`로그아웃` 이 펼쳐진다(`AccountMenu`). 모바일 메뉴에는 두 항목을 그대로 펼친다.
  *
  * 공고등록·내 기업 정보는 기업 회원으로 로그인했을 때만 그 화면으로 바로 간다. 로그인하지 않았거나 다른 역할이면
@@ -104,7 +109,7 @@ export function SiteHeader() {
           {SERVICE_NAV.map((item) => (
             <DesktopLink
               key={item.href}
-              href={item.href}
+              href={item.company ? companyHref(item.href) : item.href}
               label={item.label}
               active={item.match(pathname)}
             />
@@ -157,7 +162,7 @@ export function SiteHeader() {
             {SERVICE_NAV.map((item) => (
               <MobileLink
                 key={item.href}
-                href={item.href}
+                href={item.company ? companyHref(item.href) : item.href}
                 label={item.label}
                 active={item.match(pathname)}
               />

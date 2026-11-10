@@ -12,6 +12,7 @@ export interface MyPageMenuItem {
 export const COMPANY_MYPAGE_MENU: readonly MyPageMenuItem[] = [
   { href: '/mypage/company/posts/jobs', label: '채용공고' },
   { href: '/mypage/company/posts/bootcamps', label: '부트캠프' },
+  { href: '/mypage/company/ads', label: '광고 신청 내역' },
   { href: '/mypage/company/profile', label: '기업/기관 정보', separated: true },
 ];
 
@@ -45,6 +46,11 @@ const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[
     pattern: /^\/mypage\/company\/posts\/bootcamps\/[^/]+\/edit$/,
     title: '교육 · 부트캠프 공고 수정',
     back: '/mypage/company/posts/bootcamps',
+  },
+  {
+    pattern: /^\/mypage\/company\/ads\/[^/]+$/,
+    title: '광고 신청 상세',
+    back: '/mypage/company/ads',
   },
 ];
 
