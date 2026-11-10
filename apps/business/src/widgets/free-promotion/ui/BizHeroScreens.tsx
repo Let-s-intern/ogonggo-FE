@@ -72,7 +72,12 @@ export function BizHeroScreens() {
   const screen = HERO_SCREENS[active] ?? HERO_SCREENS[0];
 
   return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    // 격자 칸 안에서 내용 폭만큼 늘어나지 않게 한다(`min-w-0`). 늘어나면 히어로 판 오른쪽에서 잘린다.
+    <div
+      className="min-w-0"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="overflow-hidden rounded-2xl bg-white shadow-[0_32px_64px_-24px_rgba(30,51,102,0.28),0_0_0_1px_rgba(17,24,39,0.06)]">
         <div className="flex h-10 items-center gap-[7px] border-b border-gray-150 bg-gray-100 px-4">
           <span className="size-[11px] rounded-full bg-gray-300" />
