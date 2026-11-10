@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   createAnnouncement,
   deleteAnnouncement,
@@ -31,6 +31,8 @@ export interface NoticeWriteInput {
  */
 export function useNoticeList(page: number) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'notices', page],
     queryFn: () => unwrapData(listAnnouncements({ page })),
   });

@@ -69,7 +69,8 @@ export function Modal({ open, title, description, onClose, children, className }
       return;
     }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      // 이 모달 안에 다른 모달이 열려 있으면 그쪽이 먼저 닫힌다. 한 번에 둘 다 닫히지 않게 한다.
+      if (event.key === 'Escape' && !dialogRef.current?.querySelector('dialog[open]')) {
         dialogRef.current?.close();
       }
     };
@@ -98,7 +99,13 @@ export function Modal({ open, title, description, onClose, children, className }
       ) : null}
       <dialog
         ref={dialogRef}
-        onClose={onClose}
+        // React 는 버블되지 않는 `close` 도 컴포넌트 트리를 따라 위로 올린다. 안에 띄운 모달(확인 창 등)이 닫힐 때 이
+        // 모달까지 닫히지 않게 자기 `<dialog>` 의 닫힘만 받는다.
+        onClose={(event) => {
+          if (event.target === event.currentTarget) {
+            onClose();
+          }
+        }}
         className={cn(
           'm-auto w-[min(36rem,calc(100vw-2rem))] rounded-lg border border-gray-200 bg-white p-6',
           'backdrop:bg-gray-950/40',

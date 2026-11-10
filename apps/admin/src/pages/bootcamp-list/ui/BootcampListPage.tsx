@@ -80,9 +80,9 @@ export function BootcampListPage({
   };
 
   const { data, isPending, isError } = useBootcampList(filters);
-  // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
+  // 고른 행과 검색 결과 전체는 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
   const selection = useRowSelection(
-    (data?.items ?? []).map((row) => row.id),
+    data?.items ?? [],
     JSON.stringify({ ...filters, page: undefined }),
   );
   // 검색을 바꿔도 남는, UTM 링크용으로 담아 둔 공고.
@@ -212,7 +212,7 @@ export function BootcampListPage({
             actions={
               <UtmLinksButton
                 kind="bootcamps"
-                postings={(data?.items ?? []).filter((row) => selection.selected.has(row.id))}
+                postings={selection.selectedRows}
                 allMatching={selection.allMatching}
                 basket={utmBasket}
               />

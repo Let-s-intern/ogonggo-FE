@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { createImage } from '@ogonggo/api';
 import {
   createCompanyMemberBootcamp,
@@ -63,6 +63,8 @@ export interface JobListFilters {
 /** `enabled` 는 한 화면에서 채용공고·부트캠프 검색 중 하나만 켤 때 쓴다(광고 공고 추가 모달). */
 export function useJobList(filters: JobListFilters, enabled = true) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'jobs', filters],
     enabled,
     // 필터 값은 화면의 선택지에서 오므로 스펙의 enum 과 같다. 빈 값("전체") 만 뺀다.
@@ -160,6 +162,8 @@ export interface BootcampListFilters {
 
 export function useBootcampList(filters: BootcampListFilters, enabled = true) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'bootcamps', filters],
     enabled,
     queryFn: () => unwrapData(listBootcamps(omitEmpty({ ...filters }) as ListBootcampsParams)),
@@ -185,6 +189,8 @@ export interface SideStudyListFilters {
 
 export function useSideStudyList(filters: SideStudyListFilters) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'side-studies', filters],
     queryFn: () =>
       unwrapData(listRecruitmentPosts(omitEmpty({ ...filters }) as ListRecruitmentPostsParams)),
@@ -272,6 +278,8 @@ export interface ConcernListFilters {
 /** 취준고민 고민글 목록(`GET /api/v1/admin/concerns`). */
 export function useConcernList(filters: ConcernListFilters) {
   return useQuery({
+    // 다음 페이지를 받는 동안 지금 페이지를 그대로 둔다. 비우면 표와 페이지 번호가 사라져 1페이지로 돌아간 것처럼 보인다.
+    placeholderData: keepPreviousData,
     queryKey: ['admin', 'concerns', filters],
     queryFn: () => unwrapData(listConcerns(omitEmpty({ ...filters }) as ListConcernsParams)),
   });

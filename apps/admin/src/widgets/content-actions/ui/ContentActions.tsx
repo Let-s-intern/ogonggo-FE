@@ -12,6 +12,7 @@ import { useJobFillRequest } from '@/features/ai-assistant';
 import { ContentEditor, type ContentEditorField } from '@/widgets/content-editor';
 import { JobEditor } from '@/widgets/job-editor';
 import { OperationEditor } from '@/widgets/operation-editor';
+import { listHref } from '@/shared/lib/listReturn';
 
 type ContentKind = 'jobs' | 'bootcamps' | 'side-studies';
 
@@ -175,8 +176,8 @@ export function ContentActions({
         onClose={() => setIsDeleting(false)}
         onConfirm={() =>
           deleteMutation.mutate(id, {
-            // 지운 글의 상세에 남아 있을 수 없으므로 목록으로 돌아간다.
-            onSuccess: () => navigate(listPath, { replace: true }),
+            // 지운 글의 상세에 남아 있을 수 없으므로 목록으로 돌아간다. 보던 페이지·필터를 지킨다(목록 모달이면 모달만 닫힌다).
+            onSuccess: () => navigate(listHref(listPath), { replace: true }),
           })
         }
       />

@@ -46,7 +46,7 @@ export function ConcernListPage() {
 
   const { data, isPending, isError } = useConcernList(filters);
   const selection = useRowSelection(
-    (data?.items ?? []).map((row) => row.id),
+    data?.items ?? [],
     JSON.stringify({ ...filters, page: undefined }),
   );
 

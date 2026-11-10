@@ -115,11 +115,8 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
   // 행이든 PICK 을 못 바꾸게 한다. 두 요청이 겹치면 먼저 보낸 변경을 나중 것이 덮어쓴다.
   const isPickLocked = isPickUnknown || todayJobs.isFetching || replaceMutation.isPending;
   const [pickNotice, setPickNotice] = useState<PickNotice | null>(null);
-  // 검색 결과 전체를 고른 것은 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
-  const selection = useRowSelection(
-    items.map((row) => row.id),
-    JSON.stringify({ ...filters, page: undefined }),
-  );
+  // 고른 행과 검색 결과 전체는 페이지를 넘겨도 남고 필터가 바뀌면 풀린다.
+  const selection = useRowSelection(items, JSON.stringify({ ...filters, page: undefined }));
   // 검색을 바꿔도 남는, UTM 링크용으로 담아 둔 공고.
   const utmBasket = useUtmBasket();
   const checkboxColumn = selectionColumn<AdminJobSummary>(selection);
@@ -300,7 +297,7 @@ export function JobListPage({ fixedSource, title }: ContentListScope = {}) {
             actions={
               <UtmLinksButton
                 kind="jobs"
-                postings={rows.filter((row) => selection.selected.has(row.id))}
+                postings={selection.selectedRows}
                 allMatching={selection.allMatching}
                 basket={utmBasket}
               />

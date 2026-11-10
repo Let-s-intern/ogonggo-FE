@@ -1,9 +1,10 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { listHref } from '@/shared/lib/listReturn';
 
 export interface PageHeaderProps {
   title: string;
-  /** 상세 화면에서 목록으로 돌아가는 링크. `to` 와 `label` 을 함께 넘긴다. */
+  /** 상세 화면에서 목록으로 돌아가는 링크. `to` 와 `label` 을 함께 넘긴다. 목록이 마지막으로 본 페이지·필터로 간다. */
   backTo?: { to: string; label: string };
   /** 제목 오른쪽. 저장 버튼 등. */
   action?: ReactNode;
@@ -15,7 +16,7 @@ export function PageHeader({ title, backTo, action }: PageHeaderProps) {
     <div className="pb-6">
       {backTo ? (
         <Link
-          to={backTo.to}
+          to={listHref(backTo.to)}
           className="inline-block pb-2 text-sm text-gray-500 hover:text-gray-900"
         >
           ← {backTo.label}

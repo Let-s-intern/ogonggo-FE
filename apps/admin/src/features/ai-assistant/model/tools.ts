@@ -635,7 +635,11 @@ async function showReviewEditor(context: ToolContext, jobId: number): Promise<vo
       return;
     }
   }
-  context.navigate(`${JOB_LIST_PATH}?edit=${jobId}`);
+  // 이미 채용공고 목록이면 보던 페이지·필터에 편집 창만 더한다. 쿼리를 통째로 바꾸면 1페이지로 돌아간다.
+  const current = new URL(context.currentPath(), 'http://admin');
+  const search = current.pathname === JOB_LIST_PATH ? current.searchParams : new URLSearchParams();
+  search.set('edit', String(jobId));
+  context.navigate(`${JOB_LIST_PATH}?${search.toString()}`);
 }
 
 /** 원문 이미지를 볼 때 기본으로 받는 수. */
