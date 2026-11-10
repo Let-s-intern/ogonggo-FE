@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CONTACT_EMAIL } from '@/shared/config/site';
+import { AD_INTRODUCTION_PDF, CONTACT_EMAIL } from '@/shared/config/site';
 
 export const metadata: Metadata = {
   title: '광고 신청 · 문의',
@@ -58,12 +58,23 @@ export default function ApplyChoicePage() {
             <br />
             상황에 맞는 상품과 집행 방식을 안내합니다. ({CONTACT_EMAIL})
           </p>
-          <a
-            href={INQUIRY_MAILTO}
-            className="mt-6 inline-flex rounded-md border border-gray-300 px-6 py-3.5 font-semibold hover:border-gray-900"
-          >
-            이메일로 문의하기
-          </a>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <a
+              href={INQUIRY_MAILTO}
+              className="inline-flex rounded-md border border-gray-300 px-6 py-3.5 font-semibold hover:border-gray-900"
+            >
+              이메일로 문의하기
+            </a>
+            {/* 상품을 고르기 전에 소개서부터 보게 한다. 새 탭의 PDF 다(2026-11-10 사용자). */}
+            <a
+              href={AD_INTRODUCTION_PDF}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex rounded-md border border-blue-500 px-6 py-3.5 font-semibold text-blue-500 hover:bg-blue-00"
+            >
+              소개서 받기
+            </a>
+          </div>
         </div>
       </div>
       <p className="mt-6 rounded-lg bg-blue-00 px-5 py-4 text-sm text-gray-600">

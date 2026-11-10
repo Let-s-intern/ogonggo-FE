@@ -545,12 +545,9 @@ export const FAQ = [
   },
 ];
 
-/** 광고 상품 소개서(PDF). 랜딩 첫 화면의 `소개서 받기` 가 연다. 원본은 디자인팀 `AD_introduction.pdf`(2026-11-10). */
-export const AD_INTRODUCTION_PDF = '/ad-introduction.pdf';
-
 /**
  * 고객 사례 5건. 소개서 17~21쪽을 옮겼다(2026-11-10 사용자). 이미지는 그 쪽의 실제 집행 소재를 모자이크한 것이라
- * 소재 글씨는 읽히지 않는다(`public/landing/cases`).
+ * 소재의 큰 제목 모양만 보이고 세부 글씨는 읽히지 않는다(`public/landing/cases`).
  */
 export const CASES = [
   {
@@ -559,18 +556,25 @@ export const CASES = [
     company: '토스페이먼츠',
     title: '세일즈 계약직 채용',
     situation: '마감이 촉박해 직무 적합도 높은 지원자가 빠르게 필요했어요.',
-    channels: '오공고 인스타 피드·스토리 + 직무 큐레이션 톡방 4곳',
-    results: ['조회수 1.8만회', '팔로워 조회 비율 97.5%', '전체 클릭 135'],
+    channels: ['오공고 인스타 피드·스토리', '직무 큐레이션 톡방 4곳'],
+    metrics: [
+      { value: '1.8만', label: '조회수' },
+      { value: '97.5%', label: '팔로워 조회 비율' },
+      { value: '135', label: '전체 클릭' },
+    ],
   },
   {
     image: '/landing/cases/case-2.jpg',
     kind: '채용공고 광고',
     company: '레브잇',
     title: '콘텐츠 마케팅 인턴 채용',
-    situation:
-      '채용 시 마감이라 빠른 지원 유입이 필요했어요. 문의 24분 만에 톡방 홍보를 시작했어요.',
-    channels: '마케팅·세일즈 톡방 + 인스타 2개 계정 스토리',
-    results: ['링크 유입 113건', '스토리 조회 1,700여건', '3개월 만에 재구매'],
+    situation: '채용 시 마감이라 빠른 유입이 필요했어요. 문의 24분 만에 톡방 홍보를 시작했어요.',
+    channels: ['마케팅·세일즈 톡방', '인스타 2개 계정 스토리'],
+    metrics: [
+      { value: '113', label: '링크 유입' },
+      { value: '1,700+', label: '스토리 조회' },
+      { value: '3개월', label: '만에 재구매' },
+    ],
   },
   {
     image: '/landing/cases/case-3.jpg',
@@ -578,8 +582,12 @@ export const CASES = [
     company: '모두닥',
     title: '전환형 인턴 채용',
     situation: '지원자 수와 함께 후보자의 적합도까지 확보해야 했어요.',
-    channels: '오공고 인스타 피드 1회',
-    results: ['도달 1만 계정', '조회수 2.8만회', '저장 149 · 공유 102'],
+    channels: ['오공고 인스타 피드 1회'],
+    metrics: [
+      { value: '2.8만', label: '조회수' },
+      { value: '1만', label: '도달 계정' },
+      { value: '149', label: '저장' },
+    ],
   },
   {
     image: '/landing/cases/case-4.jpg',
@@ -587,8 +595,12 @@ export const CASES = [
     company: '인바디',
     title: 'GBD 통합 직무 인턴',
     situation: '채용 시 마감이라 빠르게, 적합한 지원자를 모아야 했어요.',
-    channels: '오공고 인스타 피드 1회',
-    results: ['조회수 3.9만회', '도달 1.4만', '저장 308 · 공유 147'],
+    channels: ['오공고 인스타 피드 1회'],
+    metrics: [
+      { value: '3.9만', label: '조회수' },
+      { value: '1.4만', label: '도달' },
+      { value: '308', label: '저장' },
+    ],
   },
   {
     image: '/landing/cases/case-5.jpg',
@@ -596,7 +608,7 @@ export const CASES = [
     company: '라라스윗',
     title: '그로스 마케팅 인턴 채용설명회',
     situation: '기업에 관심 있는 지원자의 리드를 확보해야 했어요.',
-    channels: '라라스윗 현직자 세미나',
-    results: ['취준생 약 250명 참여'],
+    channels: ['현직자 세미나'],
+    metrics: [{ value: '250명', label: '취준생 참여' }],
   },
 ];

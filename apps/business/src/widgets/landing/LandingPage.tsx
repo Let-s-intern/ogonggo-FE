@@ -2,8 +2,8 @@ import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@ogonggo/ui';
+import { AD_INTRODUCTION_PDF } from '@/shared/config/site';
 import {
-  AD_INTRODUCTION_PDF,
   CASES,
   CHANNEL_GROUPS,
   CHANNEL_STATS,
@@ -81,15 +81,7 @@ function Hero() {
             <a href="#placements" className={PRIMARY_BUTTON}>
               광고 구좌 둘러보기
             </a>
-            {/* 소개서는 새 탭의 PDF 다. 견적 문의는 신청·문의 화면으로 간다(2026-11-10 사용자). */}
-            <a
-              href={AD_INTRODUCTION_PDF}
-              target="_blank"
-              rel="noreferrer"
-              className={OUTLINE_BUTTON}
-            >
-              소개서 받기
-            </a>
+            {/* 소개서 받기는 광고 신청·문의 화면에 있다(2026-11-10 사용자). */}
             <Link href="/apply" className={OUTLINE_BUTTON}>
               견적 문의
             </Link>
@@ -470,7 +462,8 @@ function Cases() {
         </a>
         에서 볼 수 있어요.
       </p>
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* 앞의 두 사례는 넓게, 뒤의 셋은 3열로 둬 다섯 장이 빈칸 없이 두 줄에 들어간다. */}
+      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-5">
         {CASES.map((c, i) => (
           <li
             key={c.company}
@@ -478,39 +471,60 @@ function Cases() {
             style={order(i)}
             className={cn(
               LIFT,
-              'flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white',
+              'group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white',
+              i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
+              i === 4 && 'sm:col-span-2 lg:col-span-2',
             )}
           >
-            <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
-              <Image
-                src={c.image}
-                alt=""
-                fill
-                sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
-                className="object-cover"
-              />
-              <span className="absolute top-3 left-3 rounded-full bg-gray-900/70 px-2.5 py-1 text-xs font-medium text-white">
+            <div
+              className={cn(
+                'relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-00 p-4',
+                i < 2 ? 'aspect-[16/9]' : 'aspect-[4/3]',
+              )}
+            >
+              <div className="relative h-full w-full overflow-hidden rounded-lg shadow-sm">
+                <Image
+                  src={c.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              </div>
+              <span className="absolute top-6 left-6 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-gray-900 shadow-sm">
                 사례 {i + 1} · {c.kind}
               </span>
             </div>
-            <div className="flex flex-1 flex-col px-5 py-5">
+            <div className="flex flex-1 flex-col px-6 pt-5 pb-6">
               <p className="text-sm font-semibold text-blue-500">{c.company}</p>
-              <p className="mt-1 text-lg font-bold">{c.title}</p>
+              <p className="mt-1 text-xl font-bold leading-snug">{c.title}</p>
               <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.situation}</p>
-              <p className="mt-3 text-xs text-gray-500">
-                <span className="mr-1.5 text-gray-400">진행</span>
-                {c.channels}
-              </p>
-              <ul className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-4">
-                {c.results.map((r) => (
+              <ul className="mt-3 mb-5 flex flex-wrap gap-1.5">
+                {c.channels.map((channel) => (
                   <li
-                    key={r}
-                    className="rounded-md bg-blue-00 px-2.5 py-1 text-sm font-semibold text-blue-600"
+                    key={channel}
+                    className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600"
                   >
-                    {r}
+                    {channel}
                   </li>
                 ))}
               </ul>
+              <dl
+                className={cn(
+                  'mt-auto grid gap-2 border-t border-gray-100 pt-5',
+                  c.metrics.length > 1 ? 'grid-cols-3' : 'grid-cols-1',
+                )}
+              >
+                {c.metrics.map((m) => (
+                  // 숫자를 위에 크게 보이고, 읽는 순서는 이름 → 값이다.
+                  <div key={m.label} className="flex flex-col">
+                    <dt className="order-2 mt-0.5 text-xs text-gray-500">{m.label}</dt>
+                    <dd className="order-1 text-2xl font-bold tracking-tight text-blue-500">
+                      {m.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </li>
         ))}
