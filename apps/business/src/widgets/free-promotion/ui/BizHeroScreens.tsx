@@ -72,11 +72,7 @@ export function BizHeroScreens() {
   const screen = HERO_SCREENS[active] ?? HERO_SCREENS[0];
 
   return (
-    <div
-      className="lg:-mr-[120px]"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="overflow-hidden rounded-2xl bg-white shadow-[0_32px_64px_-24px_rgba(30,51,102,0.28),0_0_0_1px_rgba(17,24,39,0.06)]">
         <div className="flex h-10 items-center gap-[7px] border-b border-gray-150 bg-gray-100 px-4">
           <span className="size-[11px] rounded-full bg-gray-300" />
