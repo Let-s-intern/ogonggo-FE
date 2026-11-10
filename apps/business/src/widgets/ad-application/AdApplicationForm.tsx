@@ -18,8 +18,6 @@ import {
   type AdProduct,
   AD_REQUEST_MAX,
   addDays,
-  BUDGET_RANGE_OPTIONS,
-  type BudgetRange,
   BUSINESS_NUMBER_TYPE_OPTIONS,
   type BusinessNumberType,
   CREATIVE_OPTIONS,
@@ -180,7 +178,7 @@ function StepPost({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label required>
-            {v.recruitType === '기간 지정 모집' ? '모집 마감일' : '모집 마감일(예정)'}
+            {v.recruitType === '기간 모집' ? '모집 마감일' : '모집 마감일(예정)'}
           </Label>
           <DatePicker
             aria-label="모집 마감일"
@@ -304,6 +302,23 @@ function StepProducts({
 
   return (
     <div className="space-y-8">
+      {/* 예산을 먼저 적게 해 상품을 그 안에서 고르게 한다. 구간 대신 직접 적는다(2026-11-10 사용자). */}
+      <div className="rounded-xl bg-blue-00 p-5 md:p-6">
+        <label htmlFor="ad-budget" className="text-lg font-bold">
+          예정 예산 <span className="text-sm font-normal text-gray-500">(선택)</span>
+        </label>
+        <p className="mt-1 text-sm text-gray-600">
+          예산에 맞춰 담당자가 상품 조합을 제안드려요. 정하지 않았다면 비워 두세요.
+        </p>
+        <input
+          id="ad-budget"
+          className={cn(INPUT, 'mt-3 h-14 bg-white text-lg')}
+          value={v.budget}
+          onChange={(e) => set('budget', e.target.value)}
+          placeholder="예: 200만원"
+          maxLength={50}
+        />
+      </div>
       {AD_PRODUCT_GROUPS.map((group, index) => {
         const products = AD_PRODUCTS.filter((p) => p.group === group.id);
         const count = products.filter((p) => v.productIds.includes(p.id)).length;
@@ -366,35 +381,6 @@ function StepProducts({
         );
       })}
       <ErrorText>{errors.productIds}</ErrorText>
-      <div>
-        <Label optional>예정 예산</Label>
-        {/* 선택 칸이라 고른 것을 다시 누르면 풀린다. */}
-        <div role="group" aria-label="예정 예산" className="flex flex-wrap gap-2">
-          {BUDGET_RANGE_OPTIONS.map((o) => {
-            const checked = o.value === v.budgetRange;
-            return (
-              <button
-                key={o.value}
-                type="button"
-                aria-pressed={checked}
-                onClick={() => set('budgetRange', checked ? '' : (o.value as BudgetRange))}
-                className={cn(
-                  'rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
-                  checked
-                    ? 'border-blue-500 bg-blue-00 text-blue-600'
-                    : 'border-gray-200 text-gray-700 hover:border-gray-300',
-                )}
-              >
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <Info>
-        3개 이상 묶어 신청하면 10% 할인돼요. 오공고 웹의 노출 자리와 최종 금액은 담당자 확인 후
-        견적서로 안내합니다.
-      </Info>
     </div>
   );
 }
@@ -745,10 +731,7 @@ function StepConfirm({
                 .join(', '),
             ],
             ['기간', periodText(v) ?? ''],
-            [
-              '예정 예산',
-              BUDGET_RANGE_OPTIONS.find((o) => o.value === v.budgetRange)?.label ?? '선택 안 함',
-            ],
+            ['예정 예산', v.budget.trim() || '입력 안 함'],
             ['견적', '담당자 확인 후 안내'],
           ]}
         />
@@ -815,8 +798,7 @@ function Summary({ v }: { v: FormValues }) {
   return (
     <aside className="overflow-hidden rounded-xl border border-gray-200 lg:sticky lg:top-24">
       <div className="bg-blue-50 px-6 py-5">
-        <p className="text-xs font-semibold text-blue-500">YOUR REQUEST</p>
-        <p className="mt-1 text-lg font-semibold">신청 내용 요약</p>
+        <p className="text-lg font-semibold">신청 내용 요약</p>
         <p className="mt-0.5 text-xs text-gray-500">현재 입력한 신청 정보를 확인하세요.</p>
       </div>
       <div className="px-6 py-2">
@@ -840,8 +822,7 @@ function Summary({ v }: { v: FormValues }) {
 function Done({ id, v, onReset }: { id: number; v: FormValues; onReset: () => void }) {
   return (
     <div className="mx-auto max-w-[680px] py-6 text-center">
-      <p className="text-sm font-semibold text-blue-500">REQUEST RECEIVED</p>
-      <h1 className="mt-2 text-3xl font-bold">광고 신청이 접수되었습니다</h1>
+      <h1 className="text-3xl font-bold">광고 신청이 접수되었습니다</h1>
       <p className="mt-4 leading-relaxed text-gray-600">
         광고 신청 내역을 확인해 주셔서 감사합니다.
         <br />
@@ -1018,8 +999,7 @@ export function AdApplicationForm() {
 
   return (
     <>
-      <p className="text-sm font-semibold text-blue-500">ADVERTISING APPLICATION</p>
-      <h1 className="mt-2 text-3xl font-bold md:text-[40px]">광고 신청</h1>
+      <h1 className="text-3xl font-bold md:text-[40px]">광고 신청</h1>
       <p className="mt-3 text-gray-600">{meta.lead}</p>
 
       <ol className="mt-8 grid grid-cols-5 gap-2 rounded-xl border border-gray-200 px-3 py-4 md:px-6">

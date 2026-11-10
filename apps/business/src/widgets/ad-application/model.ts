@@ -20,7 +20,7 @@ export type BusinessNumberType =
   | NonNullable<CreateAdvertisementContractRequest['businessNumberType']>
   | '';
 
-export const RECRUIT_TYPES = ['기간 지정 모집', '채용 시 마감', '상시 모집'] as const;
+export const RECRUIT_TYPES = ['기간 모집', '채용 시 마감', '상시 모집'] as const;
 export type RecruitType = (typeof RECRUIT_TYPES)[number];
 
 export interface FormValues {
@@ -33,8 +33,8 @@ export interface FormValues {
   recruitType: RecruitType;
   purpose: Purpose;
   productIds: string[];
-  /** 예정 예산 구간. 빈 문자열은 고르지 않은 것이다. */
-  budgetRange: BudgetRange | '';
+  /** 예정 예산. 자유 입력이고 비워도 된다(2026-11-10 사용자). */
+  budget: string;
   /** 희망 집행 시작일 `yyyy-MM-dd`. */
   startDate: string | null;
   /** 희망 집행 종료일 `yyyy-MM-dd`. 시작일과 같으면 하루다. */
@@ -59,10 +59,10 @@ export const INITIAL_VALUES: FormValues = {
   title: '',
   url: '',
   deadline: '',
-  recruitType: '기간 지정 모집',
+  recruitType: '기간 모집',
   purpose: 'FAST_APPLICANTS',
   productIds: [],
-  budgetRange: '',
+  budget: '',
   startDate: null,
   endDate: null,
   scheduleNote: '',
@@ -129,7 +129,23 @@ export const CREATIVE_OPTIONS: { value: CreativeMethod; label: string; hint: str
 ];
 
 /** 카탈로그 선택지. 순서는 백엔드 선언 순서 그대로다. */
-export const BUDGET_RANGE_OPTIONS = enumOptions('AdvertisementContractBudgetRange');
+/**
+ * 자유 입력한 예산을 서버의 예산 구간으로 옮긴다. 서버는 구간만 받아(`budgetRange`), 적은 글 그대로는 신청 메모
+ * (`scheduleRequest`)에 함께 싣는다. `150만원`, `1,500,000`, `1.5백만` 처럼 숫자를 못 읽으면 구간 없이 보낸다.
+ */
+export function budgetRangeOf(text: string): BudgetRange | undefined {
+  const t = text.replaceAll(',', '').replaceAll(' ', '');
+  if (!t) return undefined;
+  if (/미정|모르|정하지/.test(t)) return 'UNDECIDED';
+  const m = /(\d+(?:\.\d+)?)(억|천만|백만|만)?/.exec(t);
+  if (!m) return undefined;
+  const unit = { 억: 1e8, 천만: 1e7, 백만: 1e6, 만: 1e4 }[m[2] ?? ''] ?? 1;
+  const won = Number(m[1]) * unit;
+  if (won < 5e5) return 'UNDER_500K';
+  if (won < 1e6) return 'FROM_500K_TO_1M';
+  if (won < 3e6) return 'FROM_1M_TO_3M';
+  return 'OVER_3M';
+}
 export const BUSINESS_NUMBER_TYPE_OPTIONS = enumOptions('CompanyBusinessNumberType');
 
 /** 번호 종류마다 숫자 자릿수. 백엔드 `CompanyBusinessNumberType.digitCount` 와 같다. 해외 기업은 번호가 없다. */
@@ -191,19 +207,20 @@ export function periodDays(startDate: string, endDate: string): number {
 }
 
 /**
- * 광고 신청서에서 고르는 상품 6개(2026-11-09 사용자: 오공고 웹 1 · 카카오톡 2 · 인스타그램 2 · 카카오톡 CRM 1). 오공고 웹의
+ * 광고 신청서에서 고르는 상품 6개(2026-11-09 사용자: 오공고 웹 1 · 인스타그램 2 · 카카오톡 2 · CRM 1). 오공고 웹의
  * 지면(배너·추천 카드 등)은 여기서 고르지 않고 담당자가 견적 때 정한다. 카카오톡·인스타 이미지는 web 커뮤니티 페이지
  * (`apps/web/public/community`)에서 `public/ad-products` 로 복사했고, 오공고 웹은 랜딩(`public/landing`) 것,
- * 카카오톡 CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
+ * CRM 은 렛츠커리어 채널 메시지 캡처(2026-11-09 사용자 제공)를 쓴다.
  */
-export type AdProductGroupId = 'web' | 'instagram' | 'kakao';
+export type AdProductGroupId = 'web' | 'instagram' | 'kakao' | 'crm';
 
 /** 화면에서 상품을 묶어 보이는 단위. 세로로 쌓아 어느 채널의 상품인지 바로 보이게 한다. */
 export const AD_PRODUCT_GROUPS: { id: AdProductGroupId; title: string; reach: string }[] = [
   { id: 'web', title: '오공고 웹', reach: '지면광고' },
   { id: 'instagram', title: '인스타그램', reach: '오공고 · 렛츠커리어 계정' },
-  // 채팅방 두 개 아래에 CRM 이 이어진다(2026-11-09 사용자). CRM 은 채널 친구 약 2만명이다.
-  { id: 'kakao', title: '카카오톡', reach: '오픈채팅 누적 1만 5천명 · CRM 약 2만명' },
+  { id: 'kakao', title: '카카오톡', reach: '오픈채팅 누적 1만 5천명' },
+  // CRM 은 카카오톡 오픈채팅과 다른 상품이라 따로 묶는다(2026-11-10 사용자).
+  { id: 'crm', title: 'CRM', reach: '마케팅 수신 동의 유저 약 2만명' },
 ];
 
 export interface AdProduct {
@@ -215,7 +232,7 @@ export interface AdProduct {
   description: string;
   /** 하나면 카드 전체, 여섯 장 이상이면 3열 격자(인스타 피드), 그 사이면 한 줄로 나란히 놓는다(오공고 웹 화면, 카카오톡 방). */
   images: string[];
-  /** 묶음 안에서 한 줄을 다 쓴다. 카카오톡 CRM 이 채팅방 두 장 아래에 넓게 놓인다. */
+  /** 묶음 안에서 한 줄을 다 쓴다. CRM 처럼 혼자인 묶음에 쓴다. */
   wide?: boolean;
   /** 이미지마다 붙일 화면 이름. 있으면 이미지 아래에 띄운다. */
   imageLabels?: string[];
@@ -298,11 +315,12 @@ export const AD_PRODUCTS: AdProduct[] = [
   },
   {
     id: 'kakao-crm',
-    group: 'kakao',
+    group: 'crm',
     wide: true,
-    reach: '렛츠커리어 카카오 채널',
-    title: '카카오톡 CRM',
-    description: '렛츠커리어 카카오 채널 친구에게 메시지로 직접 보내요.',
+    reach: '카카오톡 채널 · 뉴스레터',
+    title: 'CRM 메시지',
+    description:
+      '마케팅 수신에 동의한 렛츠커리어 유저에게 카카오톡 채널 메시지와 뉴스레터로 직접 알려요.',
     images: [
       '/ad-products/kakao-crm-1.jpg',
       '/ad-products/kakao-crm-2.jpg',
@@ -386,6 +404,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
       ? [`[희망 기간] ${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`]
       : []),
     `[모집 형태] ${v.recruitType}`,
+    ...(v.budget.trim() ? [`[예정 예산] ${v.budget.trim()}`] : []),
     ...(v.scheduleNote.trim() ? [`[일정 요청] ${v.scheduleNote.trim()}`] : []),
   ];
   return {
@@ -395,7 +414,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     recruitmentUrl: v.url.trim(),
     recruitmentDeadline: v.deadline,
     purpose: v.purpose,
-    budgetRange: v.budgetRange || undefined,
+    budgetRange: budgetRangeOf(v.budget),
     categories,
     scheduleRequest: lines.join('\n'),
     advertisementRequest: v.adRequest.trim() || undefined,
