@@ -2,6 +2,7 @@ import { ListPublicJobsSort, enumOptions, httpClient } from '@ogonggo/api';
 import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
+import { RememberListHref } from '@/shared/ui/ListReturnLink';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
@@ -54,6 +55,8 @@ export async function JobList(query: JobListProps) {
     // 그 아래는 지금처럼 위에서 아래로 쌓는다.
     <JobListPendingProvider>
       <div className="flex w-full flex-col gap-4 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-8">
+        {/* `buildJobListHref` 는 `page` 를 넘기지 않으면 1쪽으로 되돌린다. 보던 쪽을 기억하려면 같이 넘긴다. */}
+        <RememberListHref kind="jobs" href={buildJobListHref(query, { page: query.page })} />
         {/* lg 이상에서는 `contents` 로 풀려 제목과 컨트롤 줄이 그리드 칸이 된다. */}
         <div className="flex flex-wrap items-center justify-between gap-4 lg:contents">
           {/* 모바일은 정렬을 제목 줄 오른쪽 끝에 둔다. 필터 뒤에 두면 혼자 한 줄을 차지한다. */}

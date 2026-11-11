@@ -5,6 +5,7 @@ import type {
 } from '@ogonggo/api';
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampCard } from '@/entities/bootcamp/ui/BootcampCard';
+import { RememberListHref } from '@/shared/ui/ListReturnLink';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
   buildBootcampListHref,
@@ -60,6 +61,7 @@ export async function BootcampList(query: BootcampListProps) {
 
   return (
     <div className="flex w-full flex-col gap-6">
+      <RememberListHref kind="bootcamps" href={buildBootcampListHref(query)} />
       <BootcampListControls query={query} />
       {items.length === 0 ? (
         <p className="py-16 text-center text-sm text-gray-500">교육·부트캠프가 없습니다.</p>
