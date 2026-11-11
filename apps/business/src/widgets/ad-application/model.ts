@@ -431,9 +431,6 @@ export function validateStep(step: number, v: FormValues): Record<string, string
     if (!v.purpose) e.purpose = '홍보 목표를 선택해 주세요.';
     if (v.desiredSlots.length > DESIRED_SLOTS_MAX)
       e.desiredSlots = `${DESIRED_SLOTS_MAX}자 이하로 입력해 주세요.`;
-    // 서버가 신청 폼 계약에 카테고리를 하나 이상 받는다(ogonggo-BE `AdvertisementContract`).
-    const products = selectedProducts(v);
-    if (products.length === 0) e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
     const amount = budgetAmountOf(v);
     if (v.budget && (amount === undefined || amount < 1))
       e.budget = '0보다 큰 금액을 입력해 주세요.';
