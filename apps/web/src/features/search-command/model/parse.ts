@@ -180,6 +180,37 @@ export function completionsFor(
   return result;
 }
 
+/**
+ * Tab 이 아무 줄도 안 골랐을 때 스스로 넣어도 되는 후보인가. 이름(또는 `·` 로 나눈 조각)이 친 글자로 시작해야 한다.
+ * 글자가 가운데 들어 있기만 한 후보(`내일` → `미래내일 일경험`)는 추천 목록에만 두고 ↑↓ 로 골라야 넣는다.
+ */
+export function startsWithToken(
+  fields: readonly SearchField[],
+  chip: SearchChip,
+  token: string,
+): boolean {
+  const colon = token.indexOf(':');
+  const target = normalize(colon > 0 ? token.slice(colon + 1) : token);
+  // `지역:` 처럼 항목만 붙였으면 그 항목의 첫 선택지를 넣어도 된다.
+  if (target === '') return colon > 0;
+  const label =
+    fields.find((field) => field.key === chip.field)?.options.find((o) => o.value === chip.value)
+      ?.label ?? '';
+  // 한 글자는 너무 많은 것과 맞는다(`일` → `미래내일 일경험`·`일반영업`). 이름이 그 한 글자인 것(`웹`)만 넣는다.
+  if (target.length < 2) return normalize(label) === target;
+  return normalize(label).startsWith(target) || aliasesOf(label).some((a) => a.startsWith(target));
+}
+
+/**
+ * 회사명이 친 글자로 시작하는가. 앞의 `(주)`·`㈜`·`주식회사` 는 떼고 본다. 필터와 달리 한 글자도 받는다 — 회사 후보는
+ * 그 글자로 받아 온 실제 회사명이라 `딥` → `딥엑스` 처럼 한 글자로 고르는 일이 흔하다.
+ */
+export function companyStartsWith(name: string, keyword: string): boolean {
+  const bare = name.replace(/^\s*(\(주\)|㈜|주식회사)\s*/, '');
+  const target = normalize(keyword);
+  return target !== '' && normalize(bare).startsWith(target);
+}
+
 /** 칩을 `지역:서울` 꼴의 글로. 최근 검색에 적어 두었다가 같은 결과로 다시 읽는 데 쓴다. */
 export function chipToToken(fields: readonly SearchField[], chip: SearchChip): string {
   const field = fields.find((item) => item.key === chip.field);

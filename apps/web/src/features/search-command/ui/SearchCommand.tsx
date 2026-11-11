@@ -17,10 +17,12 @@ import {
   chipLabel,
   chipToToken,
   chipsToFilters,
+  companyStartsWith,
   parentOf,
   completionsFor,
   filtersToChips,
   parseQuery,
+  startsWithToken,
   type SearchChip,
   type SearchField,
   type SearchFilters,
@@ -241,7 +243,12 @@ function SearchDialog({
   const fields = [...filterFields, COMPANY_FIELD];
   const [text, setText] = useState(initialText);
   const [chips, setChips] = useState<SearchChip[]>(initialChips);
-  const [suggestions, setSuggestions] = useState<SearchSuggestions>({ companies: [], items: [] });
+  /** `keyword` 는 이 추천을 받아 온 검색어다. 치는 동안 앞 글자의 추천이 남아 있어도 Tab 이 그것을 쓰지 않게 한다. */
+  const [suggestions, setSuggestions] = useState<SearchSuggestions & { keyword: string }>({
+    companies: [],
+    items: [],
+    keyword: '',
+  });
   const [count, setCount] = useState<number | undefined>();
   const [recent, setRecent] = useState<string[]>([]);
   /** 강조된 줄. -1 은 아무 줄도 아니다 — 엔터가 친 글로 검색한다. */
@@ -249,10 +256,16 @@ function SearchDialog({
   /** 늦게 온 응답이 새 결과를 덮지 않게 마지막 요청 번호를 둔다. */
   const requestSeq = useRef(0);
   const countSeq = useRef(0);
+  const composingRef = useRef(false);
+  /** 한글 조합 중에 누른 Tab 이 넣을 칩. 조합이 끝나면 넣는다. */
+  const pendingTabRef = useRef<SearchChip | null>(null);
   useScrollLock(true);
 
   useEffect(() => {
     dialogRef.current?.showModal();
+    // `showModal()` 은 모달 안의 첫 버튼에 초점을 둔다. 필터가 걸린 채 열면 그게 첫 칩의 빼기 버튼이라 Backspace 가
+    // 입력칸에 닿지 않는다. 열자마자 입력칸으로 옮긴다.
+    inputRef.current?.focus();
     setRecent(readRecent(scope));
   }, [scope]);
 
@@ -268,12 +281,12 @@ function SearchDialog({
   useEffect(() => {
     const seq = ++requestSeq.current;
     if (keyword === '') {
-      setSuggestions({ companies: [], items: [] });
+      setSuggestions({ companies: [], items: [], keyword: '' });
       return;
     }
     const timer = window.setTimeout(() => {
       fetchSuggestions(scope, keyword).then((next) => {
-        if (seq === requestSeq.current) setSuggestions(next);
+        if (seq === requestSeq.current) setSuggestions({ ...next, keyword });
       });
     }, DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
@@ -402,9 +415,18 @@ function SearchDialog({
   };
 
   /**
-   * Tab 이 넣을 칩. 아래 추천에서 필터나 회사 줄을 골랐으면 그것, 아무 줄도 안 골랐으면 치는 중인 낱말의 첫 필터
-   * 후보, 그것도 없으면 첫 회사다. 입력칸 바로 아래 줄이 이것을 미리 보인다.
+   * Tab 이 넣을 칩. 아래 추천에서 필터나 회사 줄을 골랐으면 그것이다. 아무 줄도 안 골랐으면 이름이 치는 중인 낱말로
+   * **시작하는** 첫 필터, 그것도 없으면 이름이 검색어로 시작하는 회사다(지금 검색어로 받아 온 추천일 때만). 글자가
+   * 가운데 들어 있기만 한 후보는 스스로 넣지 않는다 — `내일` 에 `미래내일 일경험` 이 들어가면 안 된다. 입력칸 바로
+   * 아래 줄이 이것을 미리 보인다.
    */
+  const freshCompany =
+    suggestions.keyword === keyword
+      ? suggestions.companies.find((name) => companyStartsWith(name, keyword))
+      : undefined;
+  const autoCompany: SearchChip | undefined = freshCompany
+    ? { field: COMPANY_FIELD.key, value: freshCompany }
+    : undefined;
   const activeRow = rows[active];
   const tabTarget: SearchChip | undefined =
     activeRow?.kind === 'filter'
@@ -413,14 +435,16 @@ function SearchDialog({
         ? { field: COMPANY_FIELD.key, value: activeRow.name }
         : activeRow
           ? undefined
-          : (completions[0] ??
-            (keyword !== '' && suggestions.companies[0] !== undefined
-              ? { field: COMPANY_FIELD.key, value: suggestions.companies[0] }
-              : undefined));
+          : (completions.find((chip) => startsWithToken(fields, chip, lastToken)) ?? autoCompany);
   const applyTab = (chip: SearchChip) => {
     if (chip.field === COMPANY_FIELD.key) applyCompany(chip.value);
     else applyCompletion(chip);
   };
+  // 조합이 끝난 뒤(`compositionend`) 미뤄 둔 Tab 을 넣을 때, 확정된 글자로 다시 그린 최신 `applyTab` 을 쓴다.
+  const applyTabRef = useRef(applyTab);
+  useEffect(() => {
+    applyTabRef.current = applyTab;
+  });
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     // `type="search"` 칸은 글자가 있으면 Esc 를 글자 지우기로 먼저 써서, 두 번 눌러야 모달이 닫힌다. 한 번에 닫는다.
@@ -437,7 +461,16 @@ function SearchDialog({
     // Tab 은 자동완성만 한다. 완성할 것이 없어도, Shift 를 눌러도 다른 버튼으로 초점을 옮기지 않는다.
     if (event.key === 'Tab') {
       event.preventDefault();
-      if (tabTarget && !event.shiftKey) applyTab(tabTarget);
+      if (!tabTarget || event.shiftKey) return;
+      // 한글은 마지막 글자가 조합 중으로 남는다(치고 몇 초가 지나도 그렇다). 그대로 칸을 비우면 입력기가 그 글자를
+      // 나중에 확정하면서 칸에 다시 써 넣는다(`딥` + Tab → 칩 뒤에 `딥` 이 남는다). 조합을 먼저 끝내고, 확정된 뒤에 넣는다.
+      if (event.nativeEvent.isComposing || composingRef.current) {
+        pendingTabRef.current = tabTarget;
+        inputRef.current?.blur();
+        inputRef.current?.focus();
+        return;
+      }
+      applyTab(tabTarget);
       return;
     }
     if (rows.length === 0) return;
@@ -503,8 +536,6 @@ function SearchDialog({
         ))}
         <input
           ref={inputRef}
-          // 모달이 열리면 바로 칠 수 있게 한다. `showModal()` 이 첫 초점 대상으로 이 칸을 고른다.
-          autoFocus
           type="search"
           role="combobox"
           aria-label={PLACEHOLDER[scope]}
@@ -518,6 +549,17 @@ function SearchDialog({
           autoComplete="off"
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
+          onCompositionStart={() => {
+            composingRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            composingRef.current = false;
+            const chip = pendingTabRef.current;
+            if (!chip) return;
+            pendingTabRef.current = null;
+            // 확정된 글자가 `onChange` 로 들어와 다시 그려진 뒤에 넣는다.
+            window.setTimeout(() => applyTabRef.current(chip), 0);
+          }}
           className="h-8 min-w-[8rem] flex-1 bg-transparent text-base text-gray-900 placeholder:text-gray-400 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {filterFields.length > 0 ? <HelpTooltip /> : null}
