@@ -27,7 +27,13 @@ import {
   type SearchField,
   type SearchFilters,
 } from '../model/parse';
-import { clearRecent, pushRecent, readRecent } from '../model/recent';
+import {
+  clearRecent,
+  pushRecent,
+  readCompanyQuery,
+  readRecent,
+  rememberCompanyQuery,
+} from '../model/recent';
 import { fetchSuggestions, type SearchScope, type SearchSuggestions } from '../model/suggest';
 
 const DEBOUNCE_MS = 250;
@@ -192,8 +198,14 @@ export function SearchCommand({
         <SearchDialog
           scope={scope}
           fields={fields}
-          initialText={value ?? ''}
-          initialChips={filtersToChips(fields, filters)}
+          // 지금 검색어가 회사 칩으로 건 것이면 칩으로 되살린다(`rememberCompanyQuery`).
+          initialText={value && value === readCompanyQuery(scope) ? '' : (value ?? '')}
+          initialChips={[
+            ...filtersToChips(fields, filters),
+            ...(value && value === readCompanyQuery(scope)
+              ? [{ field: COMPANY_FIELD.key, value }]
+              : []),
+          ]}
           countOf={countOf}
           onClose={() => setOpen(false)}
           onSearch={search}
@@ -365,6 +377,7 @@ function SearchDialog({
       ...(next.q && !fromCompany ? [next.q] : []),
     ].join(' ');
     pushRecent(scope, entry);
+    rememberCompanyQuery(scope, fromCompany ? next.q : undefined);
     onSearch(next);
   };
 
@@ -393,10 +406,11 @@ function SearchDialog({
       const resolved = resolve(again.chips, again.words);
       finish(resolved.request, resolved.shownChips);
     } else if (row.kind === 'company') {
-      finish(
-        { q: row.name, filters: request.filters },
-        shownChips.filter((chip) => chip.field !== COMPANY_FIELD.key),
-      );
+      // 회사 줄을 엔터·클릭으로 고르면 그 회사 칩으로 검색한 것과 같다.
+      finish({ q: row.name, filters: request.filters }, [
+        ...shownChips.filter((chip) => chip.field !== COMPANY_FIELD.key),
+        { field: COMPANY_FIELD.key, value: row.name },
+      ]);
     } else onGo(row.href);
   };
 

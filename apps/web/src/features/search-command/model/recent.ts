@@ -39,3 +39,26 @@ export function clearRecent(scope: SearchScope): void {
     // 저장소가 막혀 있으면 지울 것도 없다.
   }
 }
+
+/**
+ * 마지막 검색의 검색어가 회사 칩에서 왔다면 그 회사명. 주소에는 `q=토스` 만 남아서, 다시 열 때 이것이 없으면 회사 칩을
+ * 친 글자로 되살린다. 탭 하나 안의 흐름이라 `sessionStorage` 다.
+ */
+const companyKeyOf = (scope: SearchScope) => `ogonggo.web.searchCompany.${scope}`;
+
+export function rememberCompanyQuery(scope: SearchScope, company: string | undefined): void {
+  try {
+    if (company) sessionStorage.setItem(companyKeyOf(scope), company);
+    else sessionStorage.removeItem(companyKeyOf(scope));
+  } catch {
+    // 저장소가 막혀 있으면 다시 열 때 글자로 보인다. 검색은 같다.
+  }
+}
+
+export function readCompanyQuery(scope: SearchScope): string | undefined {
+  try {
+    return sessionStorage.getItem(companyKeyOf(scope)) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
