@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { cn } from '@ogonggo/ui';
 import { useSignOut } from '@/features/sign-out';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
+import { BIZ_DASHBOARD_PATH, bizUrl, onBizLinkClick } from '@/shared/api/bizHandoff';
 import { AccountIcon, ChevronIcon } from '@/shared/ui/icons';
 
 export interface AccountMenuProps {
@@ -14,6 +15,8 @@ export interface AccountMenuProps {
   myPageActive: boolean;
   /** 관리자일 때만 온다. 있으면 드롭다운에 `어드민` 이 더해진다. */
   adminOrigin?: string;
+  /** 기업 회원이면 `true`. 드롭다운에 `비즈 오공고` 가 더해진다(이슈 #649). */
+  showBiz?: boolean;
   /** 열림 상태는 `SiteHeader` 가 든다. 알림 패널(`NotificationBell`)과 한 번에 하나만 열린다. */
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +37,7 @@ export function AccountMenu({
   myPageHref,
   myPageActive,
   adminOrigin,
+  showBiz,
   open,
   onOpenChange: setOpen,
 }: AccountMenuProps) {
@@ -96,6 +100,19 @@ export function AccountMenu({
               마이페이지
             </Link>
           </li>
+          {showBiz ? (
+            <li role="none">
+              {/* 다른 도메인이라 `a` 다. 누르면 웹 로그인을 들고 biz 대시보드로 간다(`bizHandoff`). */}
+              <a
+                role="menuitem"
+                href={bizUrl(BIZ_DASHBOARD_PATH)}
+                onClick={onBizLinkClick(BIZ_DASHBOARD_PATH, () => setOpen(false))}
+                className={cn(itemClass, 'font-semibold text-blue-600')}
+              >
+                비즈 오공고
+              </a>
+            </li>
+          ) : null}
           {adminOrigin ? (
             <li role="none">
               {/* 다른 도메인이라 `Link` 가 아니라 `a` 다. 누르면 웹 로그인을 들고 간다(`adminHandoff`). */}

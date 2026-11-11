@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Tabs } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { goToBizAfterCompanySignIn } from '@/shared/api/bizHandoff';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { BuildingIcon, UserIcon } from '@/shared/ui/icons';
 import { CompanySignInPanel, UserSignInPanel } from '@/features/sign-in';
@@ -57,7 +58,7 @@ export function LoginPage({ initialTab, returnPath, initialError }: LoginPagePro
 
   // 기업 탭으로 왔으면 역할을 받은 뒤에 정한다. 기업 회원만 보낸다.
   useEffect(() => {
-    if (companyEntry && alreadyCompany) {
+    if (companyEntry && alreadyCompany && !goToBizAfterCompanySignIn(returnPath)) {
       router.replace(returnPath ?? '/');
     }
   }, [companyEntry, alreadyCompany, router, returnPath]);
