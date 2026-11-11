@@ -12,6 +12,7 @@ import type { AdminAdvertisementContractDetailResponsePromotionTarget } from './
 import type { AdminAdvertisementContractDetailResponsePurpose } from './adminAdvertisementContractDetailResponsePurpose';
 import type { AdminAdvertisementContractDetailResponseSource } from './adminAdvertisementContractDetailResponseSource';
 import type { AdminAdvertisementContractDetailResponseStatus } from './adminAdvertisementContractDetailResponseStatus';
+import type { AdminAdvertisementContractFormAnswerResponse } from './adminAdvertisementContractFormAnswerResponse';
 import type { AdminAdvertisementContractProductResponse } from './adminAdvertisementContractProductResponse';
 
 export interface AdminAdvertisementContractDetailResponse {
@@ -90,6 +91,11 @@ export interface AdminAdvertisementContractDetailResponse {
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
      */
   creativeMethod?: AdminAdvertisementContractDetailResponseCreativeMethod;
+  /**
+     * 신청 폼에서 칸이 따로 없는 문항의 답. 받은 순서대로입니다. 답 없이 낸 신청, 이 값이 생기기 전 신청, 비즈니스 공고 계약은 null입니다.
+     * @nullable
+     */
+  formAnswers?: AdminAdvertisementContractFormAnswerResponse[] | null;
   paymentAmount?: number;
   registeredAt: string;
   updatedAt: string;

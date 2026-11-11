@@ -11,6 +11,7 @@ import type { MyAdvertisementContractDetailResponseInvoiceMethod } from './myAdv
 import type { MyAdvertisementContractDetailResponsePromotionTarget } from './myAdvertisementContractDetailResponsePromotionTarget';
 import type { MyAdvertisementContractDetailResponsePurpose } from './myAdvertisementContractDetailResponsePurpose';
 import type { MyAdvertisementContractDetailResponseStatus } from './myAdvertisementContractDetailResponseStatus';
+import type { MyAdvertisementContractFormAnswerResponse } from './myAdvertisementContractFormAnswerResponse';
 import type { MyAdvertisementContractProductResponse } from './myAdvertisementContractProductResponse';
 
 export interface MyAdvertisementContractDetailResponse {
@@ -93,6 +94,11 @@ export interface MyAdvertisementContractDetailResponse {
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
      */
   creativeMethod: MyAdvertisementContractDetailResponseCreativeMethod;
+  /**
+     * 칸이 따로 없는 폼 문항의 답. 보낸 순서대로. 답 없이 낸 신청과 이 값이 생기기 전 신청은 null
+     * @nullable
+     */
+  formAnswers?: MyAdvertisementContractFormAnswerResponse[] | null;
   /**
      * 협의로 정한 결제 금액(원). 아직 정하지 않았으면 null
      * @nullable

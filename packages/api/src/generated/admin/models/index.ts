@@ -15,6 +15,7 @@ export * from './adminAdvertisementContractDetailResponsePromotionTarget';
 export * from './adminAdvertisementContractDetailResponsePurpose';
 export * from './adminAdvertisementContractDetailResponseSource';
 export * from './adminAdvertisementContractDetailResponseStatus';
+export * from './adminAdvertisementContractFormAnswerResponse';
 export * from './adminAdvertisementContractProductResponse';
 export * from './adminAdvertisementContractProductResponseCategory';
 export * from './adminAdvertisementContractSummaryResponse';

@@ -6,7 +6,7 @@ import {
 
 /**
  * 광고 신청서 값. 서버 요청(`CreateAdvertisementContractRequest`, ogonggo-BE user API)에 칸이 있는 값은 그 이름의
- * 의미대로, 칸이 없는 값(상품·희망 기간·모집 형태)은 `scheduleRequest` 텍스트로 합쳐 보낸다(`toRequest`).
+ * 의미대로, 칸이 없는 값(원하는 구좌·희망 상품·희망 기간·모집 형태)은 `formAnswers` 로 보낸다(`toRequest`).
  */
 export type PromotionTarget = 'JOB' | 'BOOTCAMP';
 export type Purpose = 'FAST_APPLICANTS' | 'FIT_APPLICANTS' | 'BRAND_AWARENESS';
@@ -29,7 +29,10 @@ export interface FormValues {
   /** `yyyy-MM-dd`. 서버가 필수로 받는다. */
   deadline: string;
   recruitType: RecruitType;
-  purpose: Purpose;
+  /** 홍보 목표. 2단계에서 반드시 고른다. 빈 문자열은 아직 고르지 않은 것이다. */
+  purpose: Purpose | '';
+  /** 원하는 광고 구좌를 적은 글. 비워도 된다. */
+  desiredSlots: string;
   productIds: string[];
   /** 예정 예산 숫자. 비워도 된다. 소수점 둘째 자리까지 받고, `budgetUnit` 을 곱해 원으로 보낸다(`budgetAmountOf`). */
   budget: string;
@@ -60,7 +63,8 @@ export const INITIAL_VALUES: FormValues = {
   url: '',
   deadline: '',
   recruitType: '기간 모집',
-  purpose: 'FAST_APPLICANTS',
+  purpose: '',
+  desiredSlots: '',
   productIds: [],
   budget: '',
   budgetUnit: 10_000,
@@ -109,10 +113,11 @@ export const TARGET_OPTIONS: { value: PromotionTarget; label: string; hint: stri
   { value: 'BOOTCAMP', label: '교육·부트캠프', hint: '교육과정 및 프로그램 모집' },
 ];
 
-export const PURPOSE_OPTIONS: { value: Purpose; label: string; hint: string }[] = [
-  { value: 'FAST_APPLICANTS', label: '지원자 빠르게 확보', hint: '모집 기간 내 유입 확대' },
-  { value: 'FIT_APPLICANTS', label: '적합한 지원자 확보', hint: '관심 직무·타겟 집중' },
-  { value: 'BRAND_AWARENESS', label: '브랜드 인지도 확대', hint: '기업·프로그램 소개' },
+/** 2단계 홍보 목표. 문구는 영업팀이 정했다. 값은 서버의 `purpose` 그대로다. */
+export const PURPOSE_OPTIONS: { value: Purpose; label: string }[] = [
+  { value: 'BRAND_AWARENESS', label: '폭넓은 노출 확보' },
+  { value: 'FIT_APPLICANTS', label: '관심 직무와 지원 조건에 맞는 취준생에게 집중적인 홍보' },
+  { value: 'FAST_APPLICANTS', label: '실제 지원 페이지 유입과 신청 유도' },
 ];
 
 export const INVOICE_OPTIONS: { value: InvoiceMethod; label: string; hint: string }[] = [
@@ -198,6 +203,8 @@ export function formatBusinessNumber(type: BusinessNumberType, value: string): s
 }
 
 export const SCHEDULE_NOTE_MAX = 1000;
+/** 서버의 `formAnswers[].value` 상한과 같다. */
+export const DESIRED_SLOTS_MAX = 1000;
 export const AD_REQUEST_MAX = 2000;
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -272,7 +279,7 @@ export interface AdProduct {
   price: string;
   /**
    * 광고 신청 API 의 `categories` 값. 렛츠커리어 배너는 맞는 값이 없어 `BANNER` 로 보낸다. 어느 배너인지는
-   * 신청 메모의 `[희망 상품]` 으로 구분된다.
+   * `formAnswers` 의 `희망 상품` 으로 구분된다.
    */
   categories: ProductCategory[];
 }
@@ -421,6 +428,10 @@ export function validateStep(step: number, v: FormValues): Record<string, string
     if (!v.deadline) e.deadline = '모집 마감일을 선택해 주세요.';
   }
   if (step === 2) {
+    if (!v.purpose) e.purpose = '홍보 목표를 선택해 주세요.';
+    if (v.desiredSlots.length > DESIRED_SLOTS_MAX)
+      e.desiredSlots = `${DESIRED_SLOTS_MAX}자 이하로 입력해 주세요.`;
+    // 서버가 신청 폼 계약에 카테고리를 하나 이상 받는다(ogonggo-BE `AdvertisementContract`).
     const products = selectedProducts(v);
     if (products.length === 0) e.productIds = '광고 상품을 하나 이상 선택해 주세요.';
     const amount = budgetAmountOf(v);
@@ -458,28 +469,39 @@ export function validateStep(step: number, v: FormValues): Record<string, string
 
 const digitsOf = (value: string) => value.replace(/\D/g, '');
 
-/** 서버 요청 본문. 받을 칸이 없는 상품·기간·모집 형태는 담당자가 읽을 수 있게 `scheduleRequest` 에 적는다. */
+/**
+ * 서버 요청 본문. 받을 칸이 없는 답은 `formAnswers` 에 화면 순서대로, 답한 것만 담는다. `label` 이 어드민 상세와
+ * 영업 Slack 에 그대로 보인다. `scheduleRequest` 에는 일정 요청 메모만 담는다.
+ */
 export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
   const products = selectedProducts(v);
   const categories = [...new Set(products.flatMap((p) => p.categories))];
-  const lines = [
-    `[희망 상품] ${products.map((p) => p.title).join(', ')}`,
-    ...(v.startDate && v.endDate
-      ? [`[희망 기간] ${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`]
-      : []),
-    `[모집 형태] ${v.recruitType}`,
-    ...(v.scheduleNote.trim() ? [`[일정 요청] ${v.scheduleNote.trim()}`] : []),
+  const answers: [key: string, label: string, value: string][] = [
+    ['desiredSlots', '원하는 구좌', v.desiredSlots.trim()],
+    ['desiredProducts', '희망 상품', products.map((p) => p.title).join(', ')],
+    [
+      'desiredPeriod',
+      '희망 기간',
+      v.startDate && v.endDate
+        ? `${v.startDate} ~ ${v.endDate} (${periodDays(v.startDate, v.endDate)}일)`
+        : '',
+    ],
+    ['recruitType', '모집 형태', v.recruitType],
   ];
+  const formAnswers = answers
+    .filter(([, , value]) => value)
+    .map(([key, label, value]) => ({ key, label, value }));
   return {
     promotionTarget: v.target,
     companyName: v.companyName.trim(),
     recruitmentTitle: v.title.trim(),
     recruitmentUrl: v.url.trim(),
     recruitmentDeadline: v.deadline,
-    purpose: v.purpose,
+    // 2단계 검사(`validateStep`)를 지나야 여기에 온다.
+    purpose: v.purpose as Purpose,
     budgetAmount: budgetAmountOf(v),
     categories,
-    scheduleRequest: lines.join('\n'),
+    scheduleRequest: v.scheduleNote.trim() || undefined,
     advertisementRequest: v.adRequest.trim() || undefined,
     managerName: v.managerName.trim(),
     email: v.email.trim(),
@@ -491,5 +513,6 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
         : undefined,
     invoiceMethod: v.invoiceMethod,
     creativeMethod: v.creativeMethod,
+    formAnswers,
   };
 }

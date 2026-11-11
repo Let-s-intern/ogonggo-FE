@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 
+export * from './advertisementContractFormAnswerRequest';
 export * from './advertisementExposureResponse';
 export * from './advertisementProductResponse';
 export * from './advertisementProductResponseCategory';
@@ -230,6 +231,7 @@ export * from './myAdvertisementContractDetailResponseInvoiceMethod';
 export * from './myAdvertisementContractDetailResponsePromotionTarget';
 export * from './myAdvertisementContractDetailResponsePurpose';
 export * from './myAdvertisementContractDetailResponseStatus';
+export * from './myAdvertisementContractFormAnswerResponse';
 export * from './myAdvertisementContractProductResponse';
 export * from './myAdvertisementContractProductResponseCategory';
 export * from './myAdvertisementContractProductResponsePosition';

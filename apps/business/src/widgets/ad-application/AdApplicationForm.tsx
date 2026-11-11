@@ -24,6 +24,7 @@ import {
   BUSINESS_NUMBER_TYPE_OPTIONS,
   type BusinessNumberType,
   CREATIVE_OPTIONS,
+  DESIRED_SLOTS_MAX,
   type FormValues,
   formatBusinessNumber,
   formatDate,
@@ -33,6 +34,7 @@ import {
   parseYmd,
   periodText,
   prefillFrom,
+  type Purpose,
   PURPOSE_OPTIONS,
   RECRUIT_TYPES,
   sanitizeBudget,
@@ -91,14 +93,17 @@ function RadioCards<T extends string>({
   options,
   value,
   onChange,
+  stacked,
 }: {
   name: string;
   options: { value: T; label: string; hint?: string }[];
   value: T;
   onChange: (value: T) => void;
+  /** 문구가 길어 한 줄에 하나씩 놓는다. */
+  stacked?: boolean;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className={cn('grid gap-3', !stacked && 'sm:grid-cols-2')}>
       {options.map((o) => {
         const checked = o.value === value;
         return (
@@ -206,15 +211,6 @@ function StepPost({
           />
         </div>
       </div>
-      <div>
-        <Label required>광고 목적</Label>
-        <RadioCards
-          name="purpose"
-          options={PURPOSE_OPTIONS}
-          value={v.purpose}
-          onChange={(x) => set('purpose', x)}
-        />
-      </div>
     </div>
   );
 }
@@ -308,6 +304,35 @@ function StepProducts({
 
   return (
     <div className="space-y-8">
+      {/* 구좌를 고르게 하는 대신 홍보 목표를 받고, 담당자가 목표에 맞춰 구성을 제안한다(영업팀 요청). */}
+      <div role="radiogroup" aria-labelledby="ad-purpose-title">
+        <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p id="ad-purpose-title" className="text-lg font-bold">
+            현재 가장 필요한 홍보 목표<span className="ml-1 text-blue-500">*</span>
+          </p>
+          <p className="text-sm text-gray-600">담당자가 목표에 맞춰 구성을 제안드려요</p>
+        </div>
+        <RadioCards<Purpose | ''>
+          name="purpose"
+          options={PURPOSE_OPTIONS}
+          value={v.purpose}
+          onChange={(x) => set('purpose', x)}
+          stacked
+        />
+        <ErrorText>{errors.purpose}</ErrorText>
+      </div>
+      <div>
+        <Label optional>원하는 광고 구좌가 있다면 적어 주세요</Label>
+        <textarea
+          aria-label="원하는 광고 구좌"
+          className={cn(INPUT, 'min-h-24')}
+          maxLength={DESIRED_SLOTS_MAX}
+          value={v.desiredSlots}
+          onChange={(e) => set('desiredSlots', e.target.value)}
+          placeholder="예) 오늘의 공고 리스트 상단 노출 2주, 직무별 큐레이션 톡방"
+        />
+        <ErrorText>{errors.desiredSlots}</ErrorText>
+      </div>
       {/* 예산을 먼저 적게 해 상품을 그 안에서 고르게 한다. 구간 대신 직접 적는다(2026-11-10 사용자). */}
       <div className="rounded-xl bg-blue-00 p-5 md:p-6">
         <label htmlFor="ad-budget" className="text-lg font-bold">
@@ -360,6 +385,12 @@ function StepProducts({
           </p>
         )}
         <ErrorText>{errors.budget}</ErrorText>
+      </div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <p className="text-lg font-bold">
+          관심 있는 광고 상품<span className="ml-1 text-blue-500">*</span>
+        </p>
+        <p className="text-sm text-gray-600">여러 개 골라도 괜찮아요</p>
       </div>
       {AD_PRODUCT_GROUPS.map((group, index) => {
         const products = AD_PRODUCTS.filter((p) => p.group === group.id);
@@ -821,7 +852,6 @@ function StepConfirm({
             ['기업명', v.companyName],
             ['공고명', v.title],
             ['모집 마감일', `${formatDate(v.deadline)} · ${v.recruitType}`],
-            ['광고 목적', purpose],
           ]}
         />
       </section>
@@ -829,6 +859,10 @@ function StepConfirm({
         <p className="mb-1 text-lg font-semibold">광고 신청 내역</p>
         <Rows
           rows={[
+            ['홍보 목표', purpose],
+            ...(v.desiredSlots.trim()
+              ? [['원하는 구좌', v.desiredSlots.trim()] as [string, string]]
+              : []),
             [
               '상품',
               selectedProducts(v)
@@ -975,12 +1009,12 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   1: {
     title: '공고 정보',
     desc: '공고 링크가 있으면 기본 정보만 입력할 수 있습니다.',
-    lead: '광고할 채용·교육 공고를 등록하고, 홍보 목적을 선택해 주세요.',
+    lead: '광고할 채용·교육 공고를 등록해 주세요.',
   },
   2: {
     title: '광고 상품',
-    desc: '관심 가는 상품을 편하게 골라 주세요. 최종 구성은 담당자와 상담하며 함께 정해요.',
-    lead: '관심 있는 광고 상품을 골라 주세요. 여러 개 골라도 괜찮아요.',
+    desc: '홍보 목표와 관심 가는 상품을 골라 주세요. 최종 구성은 담당자와 상담하며 함께 정해요.',
+    lead: '현재 가장 필요한 홍보 목표를 골라 주세요. 담당자가 목표에 맞춰 구성을 제안드려요.',
   },
   3: {
     title: '광고 일정 선택',

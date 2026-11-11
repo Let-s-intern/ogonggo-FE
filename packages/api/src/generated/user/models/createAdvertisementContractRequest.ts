@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { AdvertisementContractFormAnswerRequest } from './advertisementContractFormAnswerRequest';
 import type { CreateAdvertisementContractRequestBusinessNumberType } from './createAdvertisementContractRequestBusinessNumberType';
 import type { CreateAdvertisementContractRequestCategoriesItem } from './createAdvertisementContractRequestCategoriesItem';
 import type { CreateAdvertisementContractRequestCreativeMethod } from './createAdvertisementContractRequestCreativeMethod';
@@ -107,4 +108,11 @@ export interface CreateAdvertisementContractRequest {
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
      */
   creativeMethod: CreateAdvertisementContractRequestCreativeMethod;
+  /**
+     * 칸이 따로 없는 폼 문항의 답. 화면에 보인 순서대로 최대 30개. 선택이며 보내지 않거나 빈 배열이면 null로 저장합니다. key의 뜻은 서버가 검사하지 않습니다.
+     * @minItems 0
+     * @maxItems 30
+     * @nullable
+     */
+  formAnswers?: AdvertisementContractFormAnswerRequest[] | null;
 }

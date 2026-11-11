@@ -183,6 +183,12 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
             ? `${contract.budgetAmount.toLocaleString('ko-KR')}원`
             : null}
         </Row>
+        {/* 신청서에서 칸이 따로 없는 문항의 답. 이 값이 생기기 전 신청은 없어서 아래 일정 요청에 그대로 있다. */}
+        {contract.formAnswers?.map((answer) => (
+          <Row key={answer.key} label={answer.label}>
+            {answer.value}
+          </Row>
+        ))}
         <Row label="일정 요청">{contract.scheduleRequest}</Row>
         <Row label="요청 사항">{contract.advertisementRequest}</Row>
         <Row label="담당자">
