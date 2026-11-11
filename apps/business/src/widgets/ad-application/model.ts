@@ -29,8 +29,8 @@ export interface FormValues {
   /** `yyyy-MM-dd`. 서버가 필수로 받는다. */
   deadline: string;
   recruitType: RecruitType;
-  /** 홍보 목표. 2단계에서 반드시 고른다. 빈 문자열은 아직 고르지 않은 것이다. */
-  purpose: Purpose | '';
+  /** 홍보 목표를 누른 순서(우선순위)대로 둔다. 2단계에서 하나 이상 고른다. 첫째가 서버의 `purpose` 가 된다. */
+  purposes: Purpose[];
   /** 원하는 광고 구좌를 적은 글. 비워도 된다. */
   desiredSlots: string;
   productIds: string[];
@@ -63,7 +63,7 @@ export const INITIAL_VALUES: FormValues = {
   url: '',
   deadline: '',
   recruitType: '기간 모집',
-  purpose: '',
+  purposes: [],
   desiredSlots: '',
   productIds: [],
   budget: '',
@@ -119,6 +119,13 @@ export const PURPOSE_OPTIONS: { value: Purpose; label: string }[] = [
   { value: 'FIT_APPLICANTS', label: '관심 직무와 지원 조건에 맞는 취준생에게 집중적인 홍보' },
   { value: 'FAST_APPLICANTS', label: '실제 지원 페이지 유입과 신청 유도' },
 ];
+
+export const purposeLabel = (value: Purpose) =>
+  PURPOSE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+
+/** 순위마다 한 줄: `1순위 폭넓은 노출 확보` */
+export const purposeRankLines = (purposes: Purpose[]) =>
+  purposes.map((p, i) => `${i + 1}순위 ${purposeLabel(p)}`);
 
 export const INVOICE_OPTIONS: { value: InvoiceMethod; label: string; hint: string }[] = [
   { value: 'TAX_INVOICE', label: '세금계산서 발행', hint: '사업자 정보는 추후 제출' },
@@ -428,7 +435,7 @@ export function validateStep(step: number, v: FormValues): Record<string, string
     if (!v.deadline) e.deadline = '모집 마감일을 선택해 주세요.';
   }
   if (step === 2) {
-    if (!v.purpose) e.purpose = '홍보 목표를 선택해 주세요.';
+    if (!v.purposes.length) e.purpose = '홍보 목표를 선택해 주세요.';
     if (v.desiredSlots.length > DESIRED_SLOTS_MAX)
       e.desiredSlots = `${DESIRED_SLOTS_MAX}자 이하로 입력해 주세요.`;
     const amount = budgetAmountOf(v);
@@ -474,6 +481,9 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
   const products = selectedProducts(v);
   const categories = [...new Set(products.flatMap((p) => p.categories))];
   const answers: [key: string, label: string, value: string][] = [
+    // `purpose` 는 1순위 하나라 서버 enum 문구로만 보인다. 영업팀 문구와 순위를 보이려고 늘 싣는다.
+    // 어드민·내 신청 상세가 이 key 로 찾아 홍보 목표 칸에 보인다.
+    ['purposePriority', '홍보 목표 우선순위', purposeRankLines(v.purposes).join('\n')],
     ['desiredSlots', '원하는 구좌', v.desiredSlots.trim()],
     ['desiredProducts', '희망 상품', products.map((p) => p.title).join(', ')],
     [
@@ -495,7 +505,7 @@ export function toRequest(v: FormValues): CreateAdvertisementContractRequest {
     recruitmentUrl: v.url.trim(),
     recruitmentDeadline: v.deadline,
     // 2단계 검사(`validateStep`)를 지나야 여기에 온다.
-    purpose: v.purpose as Purpose,
+    purpose: v.purposes[0]!,
     budgetAmount: budgetAmountOf(v),
     categories,
     scheduleRequest: v.scheduleNote.trim() || undefined,

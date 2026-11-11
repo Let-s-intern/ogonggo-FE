@@ -32,10 +32,11 @@ import {
   INITIAL_VALUES,
   INVOICE_OPTIONS,
   parseYmd,
+  periodDays,
   periodText,
   prefillFrom,
-  type Purpose,
   PURPOSE_OPTIONS,
+  purposeLabel,
   RECRUIT_TYPES,
   sanitizeBudget,
   type RecruitType,
@@ -127,6 +128,50 @@ function RadioCards<T extends string>({
               {o.hint && <span className="mt-0.5 block text-sm text-gray-500">{o.hint}</span>}
             </span>
           </label>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 누른 순서대로 1, 2, 3 을 붙인다. 다시 누르면 빠지고 뒤 순위가 당겨진다. */
+function PriorityCards<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T[];
+  onChange: (value: T[]) => void;
+}) {
+  return (
+    <div className="grid gap-3">
+      {options.map((o) => {
+        const rank = value.indexOf(o.value) + 1;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={rank > 0}
+            onClick={() =>
+              onChange(rank ? value.filter((x) => x !== o.value) : [...value, o.value])
+            }
+            className={cn(
+              'flex items-center gap-3 rounded-lg border px-5 py-4 text-left transition-colors',
+              rank ? 'border-blue-500 bg-blue-00' : 'border-gray-200 hover:border-gray-300',
+            )}
+          >
+            <span
+              className={cn(
+                'flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold',
+                rank ? 'bg-blue-500 text-white' : 'border border-gray-300 text-transparent',
+              )}
+            >
+              {rank || '-'}
+            </span>
+            <span className="font-semibold">{o.label}</span>
+            {rank > 0 && <span className="ml-auto shrink-0 text-sm text-blue-600">{rank}순위</span>}
+          </button>
         );
       })}
     </div>
@@ -359,27 +404,32 @@ function StepProducts({
         <ErrorText>{errors.budget}</ErrorText>
       </div>
       {/* 구좌를 고르게 하는 대신 홍보 목표를 받고, 담당자가 목표에 맞춰 구성을 제안한다(영업팀 요청). */}
-      <div role="radiogroup" aria-labelledby="ad-purpose-title">
+      {/* 여러 개 고르면 다 누르기 쉬워서, 누른 순서로 우선순위를 매긴다(영업팀 요청). */}
+      <div role="group" aria-labelledby="ad-purpose-title">
         <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <p id="ad-purpose-title" className="text-lg font-bold">
             현재 가장 필요한 홍보 목표<span className="ml-1 text-blue-500">*</span>
           </p>
-          <p className="text-sm text-gray-600">담당자가 목표에 맞춰 구성을 제안드려요</p>
+          <p className="text-sm text-gray-600">목표에 맞춰 구성을 제안드려요!</p>
         </div>
-        <RadioCards<Purpose | ''>
-          name="purpose"
+        <p className="mb-3 text-sm text-gray-500">
+          중요한 순서대로 눌러 주세요. 누른 순서가 우선순위가 되고, 다시 누르면 빠집니다.
+        </p>
+        <PriorityCards
           options={PURPOSE_OPTIONS}
-          value={v.purpose}
-          onChange={(x) => set('purpose', x)}
-          stacked
+          value={v.purposes}
+          onChange={(x) => set('purposes', x)}
         />
         <ErrorText>{errors.purpose}</ErrorText>
       </div>
       <div>
-        <Label optional>원하는 광고 구좌가 있다면 적어 주세요</Label>
+        <label htmlFor="ad-desired-slots" className="mb-3 block text-lg font-bold">
+          원하는 광고 구좌가 있다면 적어 주세요{' '}
+          <span className="text-sm font-normal text-gray-500">(선택)</span>
+        </label>
         <textarea
-          aria-label="원하는 광고 구좌"
-          className={cn(INPUT, 'min-h-24')}
+          id="ad-desired-slots"
+          className={cn(INPUT, 'min-h-32 text-base')}
           maxLength={DESIRED_SLOTS_MAX}
           value={v.desiredSlots}
           onChange={(e) => set('desiredSlots', e.target.value)}
@@ -388,15 +438,15 @@ function StepProducts({
         <ErrorText>{errors.desiredSlots}</ErrorText>
       </div>
       {/* 상품은 고르지 않아도 된다. 이미 원하는 상품이 있는 사람만 펼쳐 고른다(2026-11-11 사용자). */}
-      <div>
+      <div className="-mt-5">
         <button
           type="button"
           aria-expanded={productsOpen}
           aria-controls="ad-products"
           onClick={() => setProductsOpen((open) => !open)}
-          className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-gray-200 bg-white px-5 py-4 text-left hover:bg-gray-50"
+          className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left hover:bg-gray-50"
         >
-          <span className="text-lg font-bold">
+          <span className="text-base font-bold">
             관심 있는 광고 상품 <span className="text-sm font-normal text-gray-500">(선택)</span>
           </span>
           <span className="text-sm text-gray-600">
@@ -844,18 +894,70 @@ function StepContact({
   );
 }
 
-function Rows({ rows }: { rows: [string, string][] }) {
+/** `stacked` 면 이름 아래에 값을 왼쪽 정렬로 쌓는다. 여러 줄 값(홍보 목표 순위)에 쓴다. */
+type RowItem = [label: string, value: ReactNode, stacked?: boolean];
+
+function Rows({ rows }: { rows: RowItem[] }) {
   return (
     <dl className="divide-y divide-gray-100">
-      {rows.map(([k, val]) => (
-        <div key={k} className="flex justify-between gap-6 py-3 text-sm">
+      {rows.map(([k, val, stacked]) => (
+        <div
+          key={k}
+          className={cn('py-3 text-sm', stacked ? 'space-y-2' : 'flex justify-between gap-6')}
+        >
           <dt className="shrink-0 text-gray-500">{k}</dt>
-          <dd className="text-right font-medium">{val}</dd>
+          <dd
+            className={cn(
+              'min-w-0 font-medium break-keep break-words whitespace-pre-wrap',
+              !stacked && 'text-right',
+            )}
+          >
+            {val}
+          </dd>
         </div>
       ))}
     </dl>
   );
 }
+
+/** 입력한 것만 줄로 만든다. 비운 선택 항목은 줄째 뺀다. */
+const optionalRow = (label: string, value: string): RowItem[] =>
+  value.trim() ? [[label, value.trim()]] : [];
+
+/** 홍보 목표를 순위마다 한 줄로 보인다. */
+function PurposeRanks({ v, empty }: { v: FormValues; empty: string }) {
+  if (!v.purposes.length) return <span className="text-gray-400">{empty}</span>;
+  return (
+    <ol className="space-y-1.5">
+      {v.purposes.map((p, i) => (
+        <li key={p} className="flex items-start gap-2">
+          <span className="mt-px shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-blue-600">
+            {i + 1}순위
+          </span>
+          <span className="min-w-0 break-keep">{purposeLabel(p)}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** 좁은 칸에서도 날짜나 `14일` 이 중간에서 끊기지 않게, 시작일과 `종료일 · 기간` 단위로만 줄을 바꾼다. */
+function PeriodValue({ v, empty }: { v: FormValues; empty: string }) {
+  if (!v.startDate || !v.endDate) return empty;
+  return (
+    <>
+      <span className="whitespace-nowrap">{formatDate(v.startDate, true)} –</span>{' '}
+      <span className="whitespace-nowrap">
+        {formatDate(v.endDate, true)} · {periodDays(v.startDate, v.endDate)}일
+      </span>
+    </>
+  );
+}
+
+const productsText = (v: FormValues) =>
+  selectedProducts(v)
+    .map((p) => p.title)
+    .join(', ');
 
 function StepConfirm({
   v,
@@ -867,7 +969,6 @@ function StepConfirm({
   errors: Record<string, string>;
 }) {
   const target = TARGET_OPTIONS.find((o) => o.value === v.target)?.label ?? '';
-  const purpose = PURPOSE_OPTIONS.find((o) => o.value === v.purpose)?.label ?? '';
   return (
     <div className="space-y-8">
       <section>
@@ -885,18 +986,12 @@ function StepConfirm({
         <p className="mb-1 text-lg font-semibold">광고 신청 내역</p>
         <Rows
           rows={[
-            ['홍보 목표', purpose],
-            ...(v.desiredSlots.trim()
-              ? [['원하는 구좌', v.desiredSlots.trim()] as [string, string]]
-              : []),
-            [
-              '상품',
-              selectedProducts(v)
-                .map((p) => p.title)
-                .join(', ') || '선택하지 않음',
-            ],
-            ['기간', periodText(v) ?? ''],
             ['예정 예산', budgetText(v)],
+            ['홍보 목표', <PurposeRanks v={v} empty="선택 전" />, true],
+            ...optionalRow('원하는 구좌', v.desiredSlots),
+            ['관심 상품', productsText(v) || '선택 안 함'],
+            ['기간', <PeriodValue v={v} empty="" />],
+            ...optionalRow('일정 요청', v.scheduleNote),
             ['견적', '담당자 확인 후 안내'],
           ]}
         />
@@ -916,6 +1011,7 @@ function StepConfirm({
                   ? v.businessNumber
                   : '입력 안 함',
             ],
+            ...optionalRow('추가 요청', v.adRequest),
           ]}
         />
       </section>
@@ -959,7 +1055,6 @@ function StepConfirm({
 }
 
 function Summary({ v }: { v: FormValues }) {
-  const products = selectedProducts(v);
   return (
     <aside className="overflow-hidden rounded-xl border border-gray-200 lg:sticky lg:top-24">
       <div className="bg-blue-50 px-6 py-5">
@@ -971,8 +1066,11 @@ function Summary({ v }: { v: FormValues }) {
           rows={[
             ['공고', v.title.trim() || '미입력'],
             ['모집 마감일', v.deadline ? formatDate(v.deadline) : '미입력'],
-            ['광고 상품', products.length ? products.map((p) => p.title).join(', ') : '선택 전'],
-            ['광고 일정', periodText(v) ?? '선택 전'],
+            ['예정 예산', budgetText(v)],
+            ['홍보 목표', <PurposeRanks v={v} empty="선택 전" />, true],
+            ...optionalRow('원하는 구좌', v.desiredSlots),
+            ['관심 상품', productsText(v) || '선택 안 함'],
+            ['광고 일정', <PeriodValue v={v} empty="선택 전" />],
             ['담당 기업', v.companyName.trim() || '미입력'],
           ]}
         />
@@ -1001,13 +1099,11 @@ function Done({ id, v, onReset }: { id: number; v: FormValues; onReset: () => vo
         <Rows
           rows={[
             ['신청 공고', v.title],
-            [
-              '상품',
-              selectedProducts(v)
-                .map((p) => p.title)
-                .join(', ') || '선택하지 않음',
-            ],
-            ['희망 집행 기간', periodText(v) ?? ''],
+            ['예정 예산', budgetText(v)],
+            ['홍보 목표', <PurposeRanks v={v} empty="선택 전" />, true],
+            ...optionalRow('원하는 구좌', v.desiredSlots),
+            ['관심 상품', productsText(v) || '선택 안 함'],
+            ['희망 집행 기간', <PeriodValue v={v} empty="" />],
             ['현재 상태', '접수 · 검토 전'],
           ]}
         />

@@ -125,13 +125,30 @@ function targetHref(contract: AdminAdvertisementContractDetailResponse): string 
     : `/content/jobs/${contract.targetId}`;
 }
 
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mt-5 first-of-type:mt-3">
+      <h3 className="text-xs font-semibold text-gray-500">{title}</h3>
+      <dl className="mt-1 divide-y divide-gray-100 border-t border-gray-100">{children}</dl>
+    </section>
+  );
+}
+
+/**
+ * biz 신청서가 홍보 목표를 순위대로 보내는 답의 key(apps/business ad-application `toRequest`). 있으면 `purpose`(1순위 enum)
+ * 대신 이 답을 홍보 목표 칸에 보이고, 답 목록에서는 뺀다.
+ */
+const PURPOSE_PRIORITY_KEY = 'purposePriority';
+
 /** 신청 원문. 비즈니스 공고 계약은 신청서가 없어 담당자·세금계산서 등이 비어 있다. */
 function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
   const href = targetHref(contract);
+  const purposeAnswer = contract.formAnswers?.find((a) => a.key === PURPOSE_PRIORITY_KEY);
+  const answers = contract.formAnswers?.filter((a) => a.key !== PURPOSE_PRIORITY_KEY) ?? [];
   return (
     <Card>
       <CardTitle>신청 내용</CardTitle>
-      <dl className="mt-2 divide-y divide-gray-100">
+      <Section title="공고">
         <Row label="경로">{enumLabel('AdvertisementContractSource', contract.source)}</Row>
         <Row label="홍보 대상">
           {enumLabel('AdvertisementContractPromotionTarget', contract.promotionTarget)}
@@ -170,13 +187,27 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
           ) : null}
         </Row>
         <Row label="마감일">{contract.recruitmentDeadline}</Row>
-        <Row label="목적">
-          {contract.purpose ? enumLabel('AdvertisementContractPurpose', contract.purpose) : null}
-        </Row>
-        <Row label="희망 카테고리">
-          {contract.categories
-            .map((category) => enumLabel('AdvertisementProductCategory', category))
-            .join(', ')}
+      </Section>
+      <Section title="광고 요청">
+        <Row label="홍보 목표">
+          {purposeAnswer ? (
+            <ol className="flex flex-col gap-1">
+              {purposeAnswer.value.split('\n').map((line) => {
+                // `1순위 폭넓은 노출 확보` 를 순위와 문구로 나눠, 문구가 길면 문구끼리 줄을 맞춘다.
+                const [rank, ...rest] = line.split(' ');
+                return (
+                  <li key={line} className="flex items-start gap-2">
+                    <span className="shrink-0 font-semibold whitespace-nowrap text-blue-600">
+                      {rank}
+                    </span>
+                    <span className="min-w-0 break-keep">{rest.join(' ')}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : contract.purpose ? (
+            enumLabel('AdvertisementContractPurpose', contract.purpose)
+          ) : null}
         </Row>
         <Row label="예정 예산">
           {contract.budgetAmount != null
@@ -184,13 +215,20 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
             : null}
         </Row>
         {/* 신청서에서 칸이 따로 없는 문항의 답. 이 값이 생기기 전 신청은 없어서 아래 일정 요청에 그대로 있다. */}
-        {contract.formAnswers?.map((answer) => (
+        {answers.map((answer) => (
           <Row key={answer.key} label={answer.label}>
             {answer.value}
           </Row>
         ))}
+        <Row label="희망 카테고리">
+          {contract.categories
+            .map((category) => enumLabel('AdvertisementProductCategory', category))
+            .join(', ') || null}
+        </Row>
         <Row label="일정 요청">{contract.scheduleRequest}</Row>
         <Row label="요청 사항">{contract.advertisementRequest}</Row>
+      </Section>
+      <Section title="담당자·정산">
         <Row label="담당자">
           {[contract.managerName, contract.email, contract.phoneNumber]
             .filter(Boolean)
@@ -208,7 +246,7 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
             : null}
         </Row>
         <Row label="신청일">{formatKst(contract.registeredAt)}</Row>
-      </dl>
+      </Section>
     </Card>
   );
 }
