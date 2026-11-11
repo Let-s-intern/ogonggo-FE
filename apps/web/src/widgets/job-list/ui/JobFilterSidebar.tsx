@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@ogonggo/ui';
-import { SearchCommand } from '@/features/search-command';
 import { rememberJobFilters } from '../lib/filterCookie';
 import {
   clearSelection,
@@ -19,6 +18,7 @@ import { buildJobListHref, KEYWORD_MIN_LENGTH, type JobListQuery } from '../lib/
 import { pendingFilter } from '../lib/pendingFilter';
 import { FilterCheckGroup } from './FilterCheckGroup';
 import { FilterChipGroup } from './FilterChipGroup';
+import { JobSearchCommand } from './JobSearchCommand';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
 const DEBOUNCE_MS = 300;
@@ -129,11 +129,17 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
     change(toggleSelection(view, key, value));
   };
 
-  const search = (text: string | undefined) => {
-    const next = { ...view, q: text && text.length >= KEYWORD_MIN_LENGTH ? text : undefined };
+  // 검색 모달은 검색어와 함께 필터 전체를 고른다. 직군·직무는 칩 쪽 몫이라 `go` 의 덮어쓰기로 넘긴다.
+  const search = (text: string | undefined, filters: Partial<JobListQuery>) => {
+    const next: SidebarState = {
+      employmentTypes: filters.employmentTypes ?? [],
+      experienceTypes: filters.experienceTypes ?? [],
+      regions: filters.regions ?? [],
+      q: text && text.length >= KEYWORD_MIN_LENGTH ? text : undefined,
+    };
     cancelTimer();
     setDraft(next);
-    go(next);
+    go(next, { jobFields: filters.jobFields, jobRoles: filters.jobRoles });
   };
 
   const reset = () => {
@@ -153,7 +159,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   return (
     <aside aria-label="공고 필터" className="flex flex-col gap-6">
-      <SearchCommand scope="jobs" value={view.q} onSearch={search} />
+      <JobSearchCommand query={{ ...query, ...view }} value={view.q} onSearch={search} />
 
       {(['employmentTypes', 'experienceTypes'] as const).map((key) => (
         <FilterCheckGroup
