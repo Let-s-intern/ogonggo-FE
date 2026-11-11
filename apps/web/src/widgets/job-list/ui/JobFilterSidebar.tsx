@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, SearchInput } from '@ogonggo/ui';
+import { Button } from '@ogonggo/ui';
+import { SearchCommand } from '@/features/search-command';
 import { rememberJobFilters } from '../lib/filterCookie';
 import {
   clearSelection,
@@ -14,29 +15,13 @@ import {
   type FilterKey,
   type FilterSelection,
 } from '../lib/filter';
-import {
-  buildJobListHref,
-  KEYWORD_MAX_LENGTH,
-  KEYWORD_MIN_LENGTH,
-  type JobListQuery,
-} from '../lib/query';
+import { buildJobListHref, KEYWORD_MIN_LENGTH, type JobListQuery } from '../lib/query';
 import { pendingFilter } from '../lib/pendingFilter';
 import { FilterCheckGroup } from './FilterCheckGroup';
 import { FilterChipGroup } from './FilterChipGroup';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
 const DEBOUNCE_MS = 300;
-
-/**
- * 검색 입력칸의 값을 직접 쓴다. 칸은 비제어라 주소가 바뀌어도 따라가지 않는다. `key` 로 새로 만들면
- * 제출할 때마다 초점을 잃으므로 칸은 그대로 두고 값만 맞춘다.
- */
-function writeKeyword(form: HTMLFormElement | null, value: string) {
-  const input = form?.elements.namedItem('q');
-  if (input instanceof HTMLInputElement) {
-    input.value = value;
-  }
-}
 
 interface SidebarState extends FilterSelection {
   q: string | undefined;
@@ -60,7 +45,6 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
   const view = draft ?? applied;
 
   // 타이머와 요청 중 여부는 렌더와 무관해야 해서 ref 에 둔다. 타이머 안에서 읽을 때 옛 값이면 안 된다.
-  const formRef = useRef<HTMLFormElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const latestQuery = useRef(query);
   const pending = useRef(false);
@@ -96,11 +80,6 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
       pendingFilter.takeSidebarDraft = () => null;
     };
   }, []);
-
-  // 뒤로 가기처럼 주소의 검색어가 밖에서 바뀌면 입력칸도 그 값으로 맞춘다.
-  useEffect(() => {
-    writeKeyword(formRef.current, query.q ?? '');
-  }, [query.q]);
 
   const cancelTimer = () => {
     window.clearTimeout(timer.current);
@@ -150,10 +129,8 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
     change(toggleSelection(view, key, value));
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const text = String(new FormData(event.currentTarget).get('q') ?? '').trim();
-    const next = { ...view, q: text.length >= KEYWORD_MIN_LENGTH ? text : undefined };
+  const search = (text: string | undefined) => {
+    const next = { ...view, q: text && text.length >= KEYWORD_MIN_LENGTH ? text : undefined };
     cancelTimer();
     setDraft(next);
     go(next);
@@ -161,7 +138,6 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   const reset = () => {
     cancelTimer();
-    writeKeyword(formRef.current, '');
     setDraft({ employmentTypes: [], experienceTypes: [], regions: [], q: undefined });
     go(
       { employmentTypes: [], experienceTypes: [], regions: [], q: undefined },
@@ -169,11 +145,6 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
     );
   };
 
-  // 검색 form 이 실어 보낼 나머지 상태. 주소를 되읽어 만들어서 필터가 늘어도 빠지지 않는다. 스크립트가
-  // 켜지기 전에 제출해도 걸어 둔 필터가 풀리지 않게 하는 용도다.
-  const carried = new URLSearchParams(
-    buildJobListHref(query, { ...view, q: undefined }).split('?')[1] ?? '',
-  );
   const hasFilters =
     !isSelectionEmpty(view) ||
     view.q !== undefined ||
@@ -182,22 +153,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   return (
     <aside aria-label="공고 필터" className="flex flex-col gap-6">
-      <form ref={formRef} action="/" method="GET" onSubmit={submit}>
-        {[...carried].map(([name, value]) => (
-          <input key={`${name}=${value}`} type="hidden" name={name} value={value} />
-        ))}
-        <SearchInput
-          name="q"
-          defaultValue={view.q}
-          placeholder="공고 검색"
-          aria-label="공고 검색"
-          minLength={KEYWORD_MIN_LENGTH}
-          maxLength={KEYWORD_MAX_LENGTH}
-        />
-        <button type="submit" className="sr-only">
-          검색
-        </button>
-      </form>
+      <SearchCommand scope="jobs" value={view.q} onSearch={search} />
 
       {(['employmentTypes', 'experienceTypes'] as const).map((key) => (
         <FilterCheckGroup
