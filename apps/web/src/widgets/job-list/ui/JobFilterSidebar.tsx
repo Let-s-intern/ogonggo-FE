@@ -18,6 +18,7 @@ import { buildJobListHref, KEYWORD_MIN_LENGTH, type JobListQuery } from '../lib/
 import { pendingFilter } from '../lib/pendingFilter';
 import { FilterCheckGroup } from './FilterCheckGroup';
 import { FilterChipGroup } from './FilterChipGroup';
+import { useReportJobListPending } from './JobListPending';
 import { JobSearchCommand } from './JobSearchCommand';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
@@ -40,6 +41,7 @@ interface SidebarState extends FilterSelection {
 export function JobFilterSidebar({ query }: { query: JobListQuery }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  useReportJobListPending(isPending);
   const [draft, setDraft] = useState<SidebarState | null>(null);
   const applied: SidebarState = { ...selectionOf(query), q: query.q };
   const view = draft ?? applied;
