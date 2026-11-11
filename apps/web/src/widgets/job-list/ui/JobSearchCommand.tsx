@@ -49,7 +49,13 @@ const JOB_SEARCH_FIELDS: SearchField[] = [
   {
     key: 'jobRoles',
     label: '직무',
-    options: Object.entries(JOB_ROLES).map(([value, { label }]) => ({ value, label })),
+    // 직무마다 직군을 단다. 직무 칩에 직군이 함께 보이고, 직군을 치면 그 직무들이 펼쳐진다.
+    options: Object.entries(JOB_ROLES).map(([value, { label, field }]) => ({
+      value,
+      label,
+      parent: field,
+    })),
+    parentField: 'jobFields',
   },
 ];
 

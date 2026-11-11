@@ -17,12 +17,10 @@ import {
   chipLabel,
   chipToToken,
   chipsToFilters,
-  decodeSpace,
+  parentOf,
   completionsFor,
   filtersToChips,
   parseQuery,
-  plainWord,
-  tokenToChip,
   type SearchChip,
   type SearchField,
   type SearchFilters,
@@ -55,7 +53,7 @@ const PLACEHOLDER: Record<SearchScope, string> = {
 };
 
 const DIALOG_PLACEHOLDER: Record<SearchScope, string> = {
-  jobs: '서울 인턴 마케팅처럼 치면 필터로 바뀌어요',
+  jobs: '검색어를 치고 Tab 으로 필터·회사를 넣어요',
   bootcamps: '부트캠프 검색',
 };
 
@@ -319,8 +317,13 @@ function SearchDialog({
     };
   }
 
+  // 이미 고른 칩, 이미 통째로 고른 직군의 직무는 후보에서 뺀다. 치는 중인 낱말이 맞힌 칩(`parsed.chips` 의 끝)은
+  // 아직 고른 것이 아니다 — 그것까지 빼면 `마케팅` 을 다 쳤을 때 그 직군과 직무가 후보에서 사라진다.
+  const picked = (chip: SearchChip | undefined) =>
+    chip !== undefined &&
+    chips.some((item) => item.field === chip.field && item.value === chip.value);
   const completions = completionsFor(fields, lastToken, MAX_COMPLETIONS).filter(
-    (chip) => !parsed.chips.some((item) => item.field === chip.field && item.value === chip.value),
+    (chip) => !picked(chip) && !picked(parentOf(fields, chip)),
   );
   const empty = text.trim() === '' && chips.length === 0;
   const canSearch = shownChips.length > 0 || request.q !== undefined;
@@ -392,29 +395,31 @@ function SearchDialog({
     else if (canSearch || empty) finish(request, shownChips);
   };
 
+  // 띄어쓰기는 그냥 띄어쓰기다. 칩은 Tab 으로만 넣는다.
   const onChange = (next: string) => {
-    // 낱말 뒤에 띄어쓰기가 오면 그 낱말은 다 친 것이다. 필터에 맞으면 칩으로 옮긴다.
-    const parts = next.split(/(\s+)/);
-    const done = /\s$/.test(next) ? parts : parts.slice(0, -1);
-    const rest = /\s$/.test(next) ? '' : (parts.at(-1) ?? '');
-    let nextChips = chips;
-    const kept: string[] = [];
-    for (const token of done.filter((part) => part.trim() !== '')) {
-      const chip = tokenToChip(fields, token);
-      if (chip) nextChips = addChip(fields, nextChips, chip);
-      else kept.push(token);
-    }
-    // 다 친 검색어가 생기면 회사 칩은 빠진다. 둘 다 검색어 자리를 쓴다.
-    if (kept.some((word) => plainWord(word).length >= SEARCH_MIN_LENGTH)) {
-      nextChips = nextChips.filter((chip) => chip.field !== COMPANY_FIELD.key);
-    }
-    if (nextChips !== chips) {
-      setChips(nextChips);
-      setText(kept.length > 0 ? `${kept.join(' ')} ${rest}` : rest);
-    } else {
-      setText(next);
-    }
+    setText(next);
     setActive(-1);
+  };
+
+  /**
+   * Tab 이 넣을 칩. 아래 추천에서 필터나 회사 줄을 골랐으면 그것, 아무 줄도 안 골랐으면 치는 중인 낱말의 첫 필터
+   * 후보, 그것도 없으면 첫 회사다. 입력칸 바로 아래 줄이 이것을 미리 보인다.
+   */
+  const activeRow = rows[active];
+  const tabTarget: SearchChip | undefined =
+    activeRow?.kind === 'filter'
+      ? activeRow.chip
+      : activeRow?.kind === 'company'
+        ? { field: COMPANY_FIELD.key, value: activeRow.name }
+        : activeRow
+          ? undefined
+          : (completions[0] ??
+            (keyword !== '' && suggestions.companies[0] !== undefined
+              ? { field: COMPANY_FIELD.key, value: suggestions.companies[0] }
+              : undefined));
+  const applyTab = (chip: SearchChip) => {
+    if (chip.field === COMPANY_FIELD.key) applyCompany(chip.value);
+    else applyCompletion(chip);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -429,19 +434,10 @@ function SearchDialog({
       setChips(chips.slice(0, -1));
       return;
     }
-    if (event.key === 'Tab' && !event.shiftKey) {
-      // 고른 줄이 필터나 회사면 그것을, 아니면 첫 필터 후보를, 그것도 없으면 첫 회사를 칩으로 넣는다.
-      const row = rows[active];
-      const chip = row?.kind === 'filter' ? row.chip : row ? undefined : completions[0];
-      const company =
-        row?.kind === 'company' ? row.name : row || chip ? undefined : suggestions.companies[0];
-      if (chip) {
-        event.preventDefault();
-        applyCompletion(chip);
-      } else if (company && keyword !== '') {
-        event.preventDefault();
-        applyCompany(company);
-      }
+    // Tab 은 자동완성만 한다. 완성할 것이 없어도, Shift 를 눌러도 다른 버튼으로 초점을 옮기지 않는다.
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      if (tabTarget && !event.shiftKey) applyTab(tabTarget);
       return;
     }
     if (rows.length === 0) return;
@@ -473,6 +469,13 @@ function SearchDialog({
       onClick={(event) => {
         if (event.target === event.currentTarget) dialogRef.current?.close();
       }}
+      // 칩 빼기·도움말 버튼 등을 눌러 초점이 입력칸 밖에 있을 때도 Tab 은 버튼 사이를 돌지 않고 입력칸으로 돌아온다.
+      onKeyDown={(event) => {
+        if (event.key === 'Tab' && event.target !== inputRef.current) {
+          event.preventDefault();
+          inputRef.current?.focus();
+        }
+      }}
       className="mx-auto mt-[12vh] w-[min(40rem,calc(100vw-2rem))] overflow-visible rounded-2xl border border-gray-200 bg-white p-0 shadow-xl backdrop:bg-gray-950/40"
     >
       <form
@@ -484,26 +487,19 @@ function SearchDialog({
           className="icon-[lucide--search] block h-5 w-5 shrink-0 text-gray-400"
         />
         {chips.map((chip, index) => (
-          <span
+          <ChipTag
             key={`${chip.field}:${chip.value}`}
-            className="flex h-7 shrink-0 items-center gap-1 rounded-full bg-blue-50 pr-1 pl-2.5 text-sm text-blue-700"
-          >
-            <span className="text-xs text-blue-400">
-              {fields.find((field) => field.key === chip.field)?.label}
-            </span>
-            {chipLabel(fields, chip)}
-            <button
-              type="button"
-              aria-label={`${chipLabel(fields, chip)} 필터 빼기`}
-              onClick={() => {
-                setChips(chips.filter((_, at) => at !== index));
-                inputRef.current?.focus();
-              }}
-              className="flex h-5 w-5 items-center justify-center rounded-full text-blue-400 hover:bg-blue-100"
-            >
-              <span aria-hidden="true" className="icon-[lucide--x] block h-3.5 w-3.5" />
-            </button>
-          </span>
+            fields={fields}
+            chip={chip}
+            // 두 글자 이상 검색어를 치면 회사 칩은 검색어에 밀려 쓰이지 않는다. 지우지 않고 흐리게 둔다.
+            muted={
+              !shownChips.some((item) => item.field === chip.field && item.value === chip.value)
+            }
+            onRemove={() => {
+              setChips(chips.filter((_, at) => at !== index));
+              inputRef.current?.focus();
+            }}
+          />
         ))}
         <input
           ref={inputRef}
@@ -533,6 +529,21 @@ function SearchDialog({
           esc
         </button>
       </form>
+      {tabTarget ? (
+        // 자동완성. Tab 을 누르면 무엇이 들어가는지 입력칸 바로 아래에 보인다. 눌러도 같다.
+        <button
+          type="button"
+          onClick={() => applyTab(tabTarget)}
+          className="flex w-full items-center gap-2 border-b border-gray-100 bg-gray-50 px-5 py-2 text-left text-sm text-gray-500 hover:bg-gray-100"
+        >
+          <kbd className="shrink-0 rounded border border-gray-300 bg-white px-1.5 font-sans text-xs text-gray-600">
+            Tab
+          </kbd>
+          <span className="shrink-0">을 누르면</span>
+          <ChipTag fields={fields} chip={tabTarget} />
+          <span className="shrink-0">로 완성</span>
+        </button>
+      ) : null}
       <div className="max-h-[60vh] overflow-y-auto rounded-b-2xl">
         {rows.length > 0 ? (
           <ul id={listId} role="listbox" className="py-2">
@@ -566,13 +577,12 @@ function SearchDialog({
                   id={optionId(index)}
                   role="option"
                   aria-selected={index === active}
-                  // `mouseenter` 가 아니라 움직임으로 고른다. 가만히 있는 커서 밑에 목록이 새로 그려져도 줄이 골라지면,
-                  // 엔터가 친 글자 대신 그 줄을 검색한다.
-                  onMouseMove={() => setActive(index)}
+                  // 마우스는 고르지 않는다. 줄 색만 바뀌고 누르면 실행한다. 고르는 것(`active`)은 ↑↓ 뿐이다 — 마우스가
+                  // 고르면 커서가 가만히 짚은 줄로 Tab·엔터가 완성돼서, 입력칸 아래 자동완성 줄과 어긋난다.
                   onClick={() => choose(row)}
                   className={cn(
                     'mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm',
-                    index === active ? 'bg-gray-100' : '',
+                    index === active ? 'bg-gray-100' : 'hover:bg-gray-50',
                   )}
                 >
                   <RowContent row={row} fields={fields} summary={searchSummary} count={count} />
@@ -595,22 +605,21 @@ function HelpBody({ className }: { className?: string }) {
     <div className={cn('flex flex-col gap-2 text-xs leading-5 text-gray-500', className)}>
       <p className="font-semibold text-gray-700">이렇게 검색해 보세요</p>
       <p>
-        <span className="text-gray-800">서울 인턴 마케팅 삼성</span> — 지역·채용
-        형태·경력·직군·직무는 필터로, 나머지는 검색어로 들어가요.
+        낱말을 치다가 <span className="text-gray-800">Tab</span> 을 누르면 지역·채용
+        형태·경력·직군·직무·회사로 완성돼요. 무엇으로 완성될지는 입력칸 바로 아래에 보여요.
       </p>
       <p>
-        <span className="text-gray-800">지역: 형태: 경력: 직군: 직무:</span> 를 앞에 붙이면 그
-        항목에서만 골라요. Tab 으로 채워요.
+        <span className="text-gray-800">↑↓</span> 로 아래 추천을 고르면 Tab 이 그것으로 완성해요.
+        직군을 치면 그 직군의 직무도 함께 나와요.
       </p>
       <p>
-        회사 이름을 치다가 <span className="text-gray-800">Tab</span> 을 누르면 회사가 칩으로
-        들어가요. 회사는 검색어 자리에 들어가서 다른 검색어와 함께 쓰지 않아요.
+        <span className="text-gray-800">지역: 형태: 경력: 직군: 직무: 회사:</span> 를 앞에 붙이면 그
+        항목에서만 찾아요.
       </p>
       <p>
-        필터로 바꾸기 싫은 낱말은 <span className="text-gray-800">&quot;영업&quot;</span> 처럼
-        따옴표로 감싸요.
+        회사는 검색어 자리에 들어가요. 두 글자 넘게 다른 검색어를 치면 회사 대신 그 검색어로 찾아요.
       </p>
-      <p>↑↓ 고르기 · Enter 검색 · Backspace 필터 빼기 · Esc 닫기</p>
+      <p>Tab 완성 · Enter 검색 · Backspace 필터 빼기 · Esc 닫기</p>
     </div>
   );
 }
@@ -635,6 +644,63 @@ function HelpTooltip() {
       >
         <HelpBody />
       </span>
+    </span>
+  );
+}
+
+/**
+ * 필터 칩. 항목 이름(`직무`)을 작게 앞에 두고, 직무는 그 직군도 함께 보인다(`IT·개발 › 백엔드`). 입력칸의 칩은
+ * 빼기 버튼이 있고, 최근 검색의 칩은 작게 보이기만 한다.
+ */
+function ChipTag({
+  fields,
+  chip,
+  muted,
+  onRemove,
+}: {
+  fields: readonly SearchField[];
+  chip: SearchChip;
+  muted?: boolean;
+  onRemove?: () => void;
+}) {
+  const parent = parentOf(fields, chip);
+  const label = chipLabel(fields, chip);
+  return (
+    <span
+      className={cn(
+        'flex shrink-0 items-center gap-1 rounded-full bg-blue-50 text-blue-700',
+        muted && 'line-through opacity-40',
+        onRemove ? 'h-7 pr-1 pl-2.5 text-sm' : 'h-6 px-2 text-xs',
+      )}
+    >
+      <span className={cn('text-blue-400', onRemove ? 'text-xs' : 'text-[11px]')}>
+        {fields.find((field) => field.key === chip.field)?.label}
+      </span>
+      {parent ? <span className="text-blue-500">{chipLabel(fields, parent)} ›</span> : null}
+      {label}
+      {onRemove ? (
+        <button
+          type="button"
+          aria-label={`${label} 필터 빼기`}
+          onClick={onRemove}
+          className="flex h-5 w-5 items-center justify-center rounded-full text-blue-400 hover:bg-blue-100"
+        >
+          <span aria-hidden="true" className="icon-[lucide--x] block h-3.5 w-3.5" />
+        </button>
+      ) : null}
+    </span>
+  );
+}
+
+/** 최근 검색 한 줄. 무엇으로 걸었는지 보이게 칩은 태그로, 남은 낱말은 글로 그린다. */
+function RecentEntry({ fields, entry }: { fields: readonly SearchField[]; entry: string }) {
+  const { chips, words } = parseQuery(fields, entry);
+  return (
+    <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+      {chips.map((chip) => (
+        <ChipTag key={`${chip.field}:${chip.value}`} fields={fields} chip={chip} />
+      ))}
+      {words.length > 0 ? <span className="truncate text-gray-900">{words.join(' ')}</span> : null}
     </span>
   );
 }
@@ -676,21 +742,23 @@ function RowContent({
     );
   }
   if (row.kind === 'filter') {
+    const parent = parentOf(fields, row.chip);
     return (
       <>
         <span
           aria-hidden="true"
-          className="icon-[lucide--sliders-horizontal] block h-4 w-4 shrink-0 text-gray-400"
+          className={cn(
+            'block h-4 w-4 shrink-0 text-gray-400',
+            parent ? 'icon-[lucide--corner-down-right]' : 'icon-[lucide--sliders-horizontal]',
+          )}
         />
         <span className="min-w-0 flex-1 truncate text-gray-900">
           <span className="text-gray-500">
             {fields.find((field) => field.key === row.chip.field)?.label}
           </span>{' '}
+          {parent ? <span className="text-gray-500">{chipLabel(fields, parent)} › </span> : null}
           {chipLabel(fields, row.chip)}
         </span>
-        <kbd className="hidden shrink-0 rounded border border-gray-200 px-1.5 font-sans text-xs text-gray-400 md:block">
-          Tab
-        </kbd>
       </>
     );
   }
@@ -701,12 +769,7 @@ function RowContent({
           aria-hidden="true"
           className="icon-[lucide--history] block h-4 w-4 shrink-0 text-gray-400"
         />
-        <span className="min-w-0 truncate text-gray-900">
-          {row.entry
-            .split(' ')
-            .map((token) => decodeSpace(plainWord(token)))
-            .join(' ')}
-        </span>
+        <RecentEntry fields={fields} entry={row.entry} />
       </>
     );
   }
@@ -718,9 +781,6 @@ function RowContent({
           className="icon-[lucide--building-2] block h-4 w-4 shrink-0 text-gray-400"
         />
         <span className="min-w-0 flex-1 truncate text-gray-900">{row.name}</span>
-        <kbd className="hidden shrink-0 rounded border border-gray-200 px-1.5 font-sans text-xs text-gray-400 md:block">
-          Tab
-        </kbd>
       </>
     );
   }
