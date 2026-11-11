@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { InstallAppButton, useInstallState } from '@/features/install-app';
 import { NotificationBellLink } from '@/features/notification-inbox';
 import { SignOutButton } from '@/features/sign-out';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
+import { BIZ_DASHBOARD_PATH, bizUrl, onBizLinkClick } from '@/shared/api/bizHandoff';
+import type { CompanyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
 import { hasBottomNav } from './MobileBottomNav';
 import { NAV_ITEMS } from './navItems';
@@ -17,10 +19,13 @@ import { ServiceLogoToggle } from './ServiceLogoToggle';
 export interface MobileSiteHeaderProps {
   pathname: string;
   signedIn: boolean;
-  registerHref: string;
+  /** `공고 등록하기` 가 갈 곳. 비즈 오공고다(`companyJobRegisterLink`). */
+  register: CompanyJobRegisterLink;
   myPageHref: string;
   /** 관리자일 때만 온다. 없으면 어드민 항목을 그리지 않는다. */
   adminOrigin?: string;
+  /** 기업 회원이면 `true`. `내 계정` 에 `비즈 오공고` 가 더해진다(이슈 #649). */
+  showBiz?: boolean;
 }
 
 /**
@@ -54,9 +59,10 @@ function revealCurrentTab(nav: HTMLElement) {
 export function MobileSiteHeader({
   pathname,
   signedIn,
-  registerHref,
+  register,
   myPageHref,
   adminOrigin,
+  showBiz,
 }: MobileSiteHeaderProps) {
   const [open, setOpen] = useState(false);
   // 메뉴는 누르면 닫히며 사라지므로 광고 문의 모달은 메뉴 밖, 여기서 띄운다.
@@ -139,9 +145,10 @@ export function MobileSiteHeader({
       {open ? (
         <MobileMenu
           signedIn={signedIn}
-          registerHref={registerHref}
+          register={register}
           myPageHref={myPageHref}
           adminOrigin={adminOrigin}
+          showBiz={showBiz}
           onClose={() => setOpen(false)}
           onAdInquiry={() => setAdInquiryOpen(true)}
         />
@@ -186,8 +193,11 @@ function TopRow({ signedIn, children }: { signedIn: boolean; children: ReactNode
 interface MenuLink {
   label: string;
   href: string;
-  /** 다른 도메인(어드민)이면 `Link` 가 아니라 `a` 로 그리고, 웹 로그인을 들고 간다(`adminHandoff`). */
-  external?: boolean;
+  /**
+   * 다른 도메인(어드민, 비즈 오공고)이면 `Link` 가 아니라 `a` 로 그리고, 누르면 이것을 부른다 — 웹 로그인을 들고
+   * 간다(`adminHandoff`, `bizHandoff`).
+   */
+  external?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
 /**
@@ -201,9 +211,10 @@ interface MenuLink {
  */
 function MobileMenu({
   signedIn,
-  registerHref,
+  register,
   myPageHref,
   adminOrigin,
+  showBiz,
   onClose,
   onAdInquiry,
 }: Omit<MobileSiteHeaderProps, 'pathname'> & { onClose: () => void; onAdInquiry: () => void }) {
@@ -228,7 +239,16 @@ function MobileMenu({
     { label: '공고 달력', href: '/calendar' },
   ];
   const account: MenuLink[] = [{ label: '마이페이지', href: myPageHref }];
-  if (adminOrigin) account.push({ label: '어드민', href: adminOrigin, external: true });
+  if (showBiz) {
+    account.push({
+      label: '비즈 오공고',
+      href: bizUrl(BIZ_DASHBOARD_PATH),
+      external: onBizLinkClick(BIZ_DASHBOARD_PATH, onClose),
+    });
+  }
+  if (adminOrigin) {
+    account.push({ label: '어드민', href: adminOrigin, external: onAdminLinkClick(adminOrigin) });
+  }
 
   return (
     <div
@@ -272,7 +292,13 @@ function MobileMenu({
         />
         <MenuSection
           title="기업 서비스"
-          links={[{ label: '공고 등록하기', href: registerHref }]}
+          links={[
+            {
+              label: '공고 등록하기',
+              href: register.href,
+              external: register.onClick ?? onClose,
+            },
+          ]}
           onNavigate={onClose}
         >
           <li>
@@ -312,7 +338,7 @@ function MenuSection({
         {links.map(({ label, href, external }) => (
           <li key={label}>
             {external ? (
-              <a href={href} onClick={onAdminLinkClick(href)} className={itemClass}>
+              <a href={href} onClick={external} className={itemClass}>
                 {label}
               </a>
             ) : (

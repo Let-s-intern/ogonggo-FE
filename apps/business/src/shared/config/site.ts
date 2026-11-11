@@ -14,8 +14,12 @@ export const SITE_NAME = '오늘의 공고 비즈니스';
 export const SITE_DESCRIPTION =
   '인턴·신입 채용과 교육 모집 광고. 월 10만 명의 취준생이 보는 오늘의 공고 지면과 렛츠커리어 채널에 채용공고·부트캠프를 알려보세요.';
 
-/** 오공고 서비스(일반 회원용) 주소. */
-export const OGONGGO_WEB_ORIGIN = 'https://www.ogonggo.co.kr';
+/**
+ * 오공고 서비스(일반 회원용) 주소. 비우면 운영 주소다. `오늘의 공고 웹으로`(`shared/api/webHandoff.ts`)를 로컬 웹
+ * (`http://localhost:4000`)으로 보내 볼 때만 `NEXT_PUBLIC_OGONGGO_WEB_ORIGIN` 을 넣는다. 빌드 시점에 박힌다.
+ */
+export const OGONGGO_WEB_ORIGIN =
+  process.env.NEXT_PUBLIC_OGONGGO_WEB_ORIGIN || 'https://www.ogonggo.co.kr';
 
 export const CONTACT_EMAIL = 'official@letscareer.co.kr';
 

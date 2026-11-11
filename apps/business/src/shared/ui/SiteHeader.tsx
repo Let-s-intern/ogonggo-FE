@@ -6,6 +6,8 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { useSignOut } from '@/shared/api/useSignOut';
+import { onWebLinkClick } from '@/shared/api/webHandoff';
+import { OGONGGO_WEB_ORIGIN } from '@/shared/config/site';
 import { loginHref } from '@/shared/lib/returnPath';
 import { AccountMenu } from './AccountMenu';
 import { EventNavLabel } from './EventNavLabel';
@@ -81,6 +83,19 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
     setMenuOpen(false);
   }, [pathname]);
 
+  /**
+   * 오늘의 공고 웹으로 간다. 로그인했으면 로그인을 들고 간다(`webHandoff`, 이슈 #649). 다른 도메인이라 `a` 다.
+   */
+  const webLink = (className: string, label = '오늘의 공고') => (
+    <a
+      href={OGONGGO_WEB_ORIGIN}
+      onClick={signedIn ? onWebLinkClick : undefined}
+      className={className}
+    >
+      {label}
+    </a>
+  );
+
   const accountAction = signedIn ? (
     <button
       type="button"
@@ -126,6 +141,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
           ))}
         </nav>
         <nav aria-label="계정 메뉴" className="ml-auto hidden h-full items-center gap-5 md:flex">
+          {webLink('text-[15px] font-medium text-gray-500 transition-colors hover:text-gray-900')}
           {signedIn ? (
             <AccountMenu
               companyName={companyName}
@@ -140,6 +156,7 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
           // 기업 회원 틀의 모바일은 메뉴가 헤더 아래 가로 메뉴에 다 있어 펼칠 것이 계정뿐이다. 펼치지 않고 기업명과
           // 로그아웃을 바로 둔다(2026-11-10 검수).
           <div className="ml-auto flex min-w-0 items-center gap-3 md:hidden">
+            {webLink('shrink-0 text-sm text-gray-500 hover:text-gray-900', '웹으로')}
             {companyName ? (
               <span className="truncate text-sm font-semibold text-gray-900">{companyName}</span>
             ) : null}
@@ -192,6 +209,11 @@ export function SiteHeader({ layout = 'site' }: SiteHeaderProps) {
                 active={myPageActive}
               />
             ) : null}
+            <li className="flex h-12 items-center">
+              {webLink(
+                'text-[15px] font-medium text-gray-500 transition-colors hover:text-gray-900',
+              )}
+            </li>
             <li className="flex h-12 items-center">{accountAction}</li>
           </ul>
         </nav>

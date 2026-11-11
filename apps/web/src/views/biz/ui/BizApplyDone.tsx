@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { MyAccountResponseRole } from '@ogonggo/api';
-import { COMPANY_JOB_REGISTER_HREF } from '@/shared/lib/companyJobRegister';
+import { companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { trackBiz } from '../model/analytics';
 
 const COMPANY_SIGNUP_HREF = '/signup/company';
@@ -47,12 +47,13 @@ export function BizApplyDone({ companyName, email, role }: BizApplyDoneProps) {
       </p>
 
       {isCompany ? (
-        <Link
-          href={COMPANY_JOB_REGISTER_HREF}
+        // 비즈 오공고 등록 폼으로 로그인을 들고 간다(다른 도메인이라 `a`).
+        <a
+          {...companyJobRegisterLink(role)}
           className="mt-8 inline-flex h-12 w-full items-center justify-center rounded-xl bg-blue-500 text-base font-bold text-white hover:bg-blue-600"
         >
           공고 등록하러 가기
-        </Link>
+        </a>
       ) : cardHidden ? null : (
         <>
           <div className="mt-8 rounded-2xl bg-gray-50 p-6 text-left">

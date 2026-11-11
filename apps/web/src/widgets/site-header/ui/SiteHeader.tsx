@@ -8,7 +8,7 @@ import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { NotificationBell } from '@/features/notification-inbox';
 import { PushConsentButton } from '@/features/push-notification';
-import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
+import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
@@ -40,8 +40,8 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
  * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
- * `{이름} 님` 은 `마이페이지`·`로그아웃` 을 펼치는 드롭다운이고, 관리자에게는 `어드민` 이
- * 더해진다(`AccountMenu`, `showAdmin`). `로그아웃` 은 마이페이지의 `개인 정보`·`기업/기관 정보`
+ * `{이름} 님` 은 `마이페이지`·`로그아웃` 을 펼치는 드롭다운이고, 관리자에게는 `어드민` 이, 기업 회원에게는
+ * `비즈 오공고` 가 더해진다(`AccountMenu`, `showAdmin`·`showBiz`). `로그아웃` 은 마이페이지의 `개인 정보`·`기업/기관 정보`
  * 화면 아래와 모바일 햄버거 메뉴에도 있다.
  *
  * 맨 오른쪽은 토큰 유무로 갈린다. 없으면 "로그인"(`/login`), 있으면 "{이름} 님". 토큰이 브라우저 저장소에만
@@ -71,11 +71,10 @@ export function SiteHeader() {
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
 
   /*
-   * 기업 회원이면 공고 등록 폼으로, 그 밖에는(로그아웃, 일반 회원) 기업 회원 **로그인**으로
-   * 보낸다. `ForBusinessBanner` 의 같은 버튼과 같은 규칙이다(`shared/lib/companyJobRegister.ts`).
-   * 기업 계정이 없는 사람은 로그인 화면의 `회원가입` 으로 간다.
+   * 비즈 오공고로 보낸다. 기업 회원이면 등록 폼으로 로그인을 들고 가고, 그 밖에는 biz 기업 회원 **로그인**으로
+   * 간다. `ForBusinessBanner` 의 같은 버튼과 같은 규칙이다(`shared/lib/companyJobRegister.ts`).
    */
-  const registerHref = companyJobRegisterHref(role);
+  const register = companyJobRegisterLink(role);
   const registerActive = pathname.startsWith(COMPANY_JOB_REGISTER_HREF);
 
   /*
@@ -100,6 +99,8 @@ export function SiteHeader() {
    * 보이고 그것을 되돌려 줄 가드가 헤더에는 없다. 그래서 늦게 나타나는 쪽을 택한다.
    */
   const showAdmin = role === 'ADMIN' && Boolean(ADMIN_ORIGIN);
+  /** 기업 회원에게만 비즈 오공고로 가는 항목을 보인다(이슈 #649). */
+  const showBiz = role === 'COMPANY';
 
   /** `{이름} 님` 의 이름. 마이페이지 껍데기(`MyPageLayout`)와 같은 규칙이다. */
   const account = accountState.kind === 'ready' ? accountState.account : undefined;
@@ -118,9 +119,10 @@ export function SiteHeader() {
       <MobileSiteHeader
         pathname={pathname}
         signedIn={signedIn}
-        registerHref={registerHref}
+        register={register}
         myPageHref={myPageMobileHref}
         adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+        showBiz={showBiz}
       />
       {/* 탭이 넷이 되어 md 경계(768px)의 여유가 줄었다. 이름이 5자 이상이거나 관리자 계정이면 768px 에서 탭과
           우측 글자가 음절 사이에서 줄바꿈되므로(실측) `whitespace-nowrap` 으로 막고, 탭 사이는 lg 미만에서만
@@ -179,8 +181,10 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-          <Link
-            href={registerHref}
+          {/* 비즈 오공고(다른 도메인)로 가서 `Link` 가 아니라 `a` 다. */}
+          <a
+            href={register.href}
+            onClick={register.onClick}
             aria-current={registerActive ? 'page' : undefined}
             className={cn(
               'transition-colors hover:text-gray-900',
@@ -188,7 +192,7 @@ export function SiteHeader() {
             )}
           >
             공고 등록
-          </Link>
+          </a>
           <Link
             href="/calendar"
             aria-current={calendarActive ? 'page' : undefined}
@@ -205,6 +209,7 @@ export function SiteHeader() {
               myPageHref={myPageHref}
               myPageActive={myPageActive}
               adminOrigin={showAdmin ? ADMIN_ORIGIN : undefined}
+              showBiz={showBiz}
               open={openMenu === 'account'}
               onOpenChange={toggleMenu('account')}
             />

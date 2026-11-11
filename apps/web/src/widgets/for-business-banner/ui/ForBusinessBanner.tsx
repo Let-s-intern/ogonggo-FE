@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useSyncExternalStore } from 'react';
 import { Button, cn } from '@ogonggo/ui';
 import { useInstallState } from '@/features/install-app';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
-import { companyJobRegisterHref } from '@/shared/lib/companyJobRegister';
+import { companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmailDialog';
 
 /**
@@ -25,7 +24,7 @@ import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmai
 export function ForBusinessBanner() {
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
-  const registerHref = companyJobRegisterHref(role);
+  const register = companyJobRegisterLink(role);
   const [adInquiryOpen, setAdInquiryOpen] = useState(false);
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const installed = useInstallState().kind === 'installed';
@@ -58,7 +57,10 @@ export function ForBusinessBanner() {
         {/* 모바일은 둘을 한 줄에 두면 `광고 상품 문의하기`가 카드 밖으로 밀려 위아래로 쌓는다. */}
         <div className="flex flex-col gap-2 whitespace-nowrap md:flex-row">
           <Button asChild>
-            <Link href={registerHref}>무료로 공고 등록하기</Link>
+            {/* 비즈 오공고로 간다(다른 도메인이라 `a`). */}
+            <a href={register.href} onClick={register.onClick}>
+              무료로 공고 등록하기
+            </a>
           </Button>
           <Button variant="secondary" onClick={() => setAdInquiryOpen(true)}>
             광고 상품 문의하기

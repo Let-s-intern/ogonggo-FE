@@ -11,6 +11,8 @@ import { cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { useSignOut } from '@/shared/api/useSignOut';
+import { onWebLinkClick } from '@/shared/api/webHandoff';
+import { OGONGGO_WEB_ORIGIN } from '@/shared/config/site';
 import { LetsCareerMark } from '@/shared/ui/LetsCareerMark';
 import { Logo } from '@/shared/ui/Logo';
 import { SiteHeader } from '@/shared/ui/SiteHeader';
@@ -74,11 +76,20 @@ function AccountBlock() {
           </span>
         )}
       </div>
+      {/* 다른 도메인이라 `a` 다. 누르면 로그인을 들고 웹으로 간다(`webHandoff`, 이슈 #649). */}
+      <a
+        href={OGONGGO_WEB_ORIGIN}
+        onClick={onWebLinkClick}
+        className="mt-1 flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-200/60 hover:text-gray-900"
+      >
+        <span aria-hidden="true" className="icon-[lucide--external-link] block size-4" />
+        오늘의 공고 웹으로
+      </a>
       <button
         type="button"
         onClick={() => signOut()}
         disabled={pending}
-        className="mt-1 flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-200/60 hover:text-gray-900 disabled:text-gray-300"
+        className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-200/60 hover:text-gray-900 disabled:text-gray-300"
       >
         <span aria-hidden="true" className="icon-[lucide--log-out] block size-4" />
         로그아웃

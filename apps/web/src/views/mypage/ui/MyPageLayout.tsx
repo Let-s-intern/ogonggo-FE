@@ -10,6 +10,7 @@ import {
 } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { BizMoveNotice } from '@/widgets/biz-move-notice';
 import { fetchCompanyPostTotals } from '@/widgets/company-posts';
 import {
   type MyPageAudience,
@@ -171,6 +172,8 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           <p className="text-lg font-bold text-gray-950">{mobileHeader.title}</p>
         </div>
       ) : null}
+      {/* 기업 회원 기능을 비즈 오공고로 옮기는 중이다(이슈 #649). 계정을 확인한 뒤에만 보인다. */}
+      {isCompany && state.kind === 'ready' ? <BizMoveNotice pathname={pathname} /> : null}
       {tabbed ? (
         <div className={cn('mt-6', mobileHeader && 'hidden md:block')}>
           <MyPageTabs
