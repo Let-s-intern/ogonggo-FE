@@ -48,6 +48,7 @@ export interface CreateAdvertisementContractRequest {
   /** 예정 예산(원). 1 이상 정수. 보내지 않으면 정하지 않은 것으로 저장합니다 */
   budgetAmount?: number;
   /**
+     * 희망 광고 카테고리. 고르지 않았으면 빈 배열을 보냅니다
      * @minItems 0
      * @maxItems 7
      */
