@@ -9,6 +9,7 @@ import { rememberJobFilters } from '../lib/filterCookie';
 import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 import { JOB_ROLE_CHIPS } from '../lib/roleChips';
+import { useReportJobListPending } from './JobListPending';
 import { JobRoleSheet, type JobRoleSelection } from './JobRoleSheet';
 
 /**
@@ -29,6 +30,7 @@ import { JobRoleSheet, type JobRoleSelection } from './JobRoleSheet';
 export function JobRoleChips({ query }: { query: JobListQuery }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  useReportJobListPending(isPending);
   // 켜짐은 서버가 새 `query` 를 내려준 뒤에야 바뀐다. 그 사이 칩이 꺼져 보이면 다시 누르게 되므로
   // 이동 중에는 고른 값을 먼저 보인다. 이동이 끝나면 서버 값으로 돌아간다.
   const [shown, showOptimistically] = useOptimistic<JobRoleSelection>({
