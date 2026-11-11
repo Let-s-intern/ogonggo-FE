@@ -117,6 +117,9 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
 
   const { contract } = state;
   const badge = statusBadge(contract.status);
+  // 신청서가 홍보 목표를 순위대로 보낸 답(ad-application `toRequest`). 없으면 1순위 enum 만 보인다.
+  const purposeAnswer = contract.formAnswers?.find((a) => a.key === 'purposePriority');
+  const answers = contract.formAnswers?.filter((a) => a.key !== 'purposePriority') ?? [];
   return (
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
@@ -154,20 +157,48 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
           </a>
         </Row>
         <Row label="모집 마감일">{formatDateDots(contract.recruitmentDeadline)}</Row>
-        <Row label="광고 목적">{enumLabel('AdvertisementContractPurpose', contract.purpose)}</Row>
       </Section>
 
       <Section title="광고 신청 내역">
-        <Row label="희망 카테고리">
-          {contract.categories
-            .map((category) => enumLabel('AdvertisementProductCategory', category))
-            .join(', ')}
-        </Row>
         <Row label="예정 예산">
-          {contract.budgetRange
-            ? enumLabel('AdvertisementContractBudgetRange', contract.budgetRange)
+          {contract.budgetAmount != null
+            ? `${contract.budgetAmount.toLocaleString('ko-KR')}원`
             : null}
         </Row>
+        <Row label="홍보 목표">
+          {purposeAnswer ? (
+            <ol className="flex flex-col gap-1">
+              {purposeAnswer.value.split('\n').map((line) => {
+                // `1순위 폭넓은 노출 확보` 를 순위와 문구로 나눠, 문구가 길면 문구끼리 줄을 맞춘다.
+                const [rank, ...rest] = line.split(' ');
+                return (
+                  <li key={line} className="flex items-start gap-2">
+                    <span className="shrink-0 font-semibold whitespace-nowrap text-blue-600">
+                      {rank}
+                    </span>
+                    <span className="min-w-0 break-keep">{rest.join(' ')}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            enumLabel('AdvertisementContractPurpose', contract.purpose)
+          )}
+        </Row>
+        {/* 신청서에서 칸이 따로 없는 문항의 답. 이 값이 생기기 전 신청은 없어서 아래 일정 요청에 그대로 있다. */}
+        {answers.map((answer) => (
+          <Row key={answer.key} label={answer.label}>
+            {answer.value}
+          </Row>
+        ))}
+        {/* 상품을 고르지 않은 신청은 카테고리가 없다. */}
+        {contract.categories.length > 0 && (
+          <Row label="희망 카테고리">
+            {contract.categories
+              .map((category) => enumLabel('AdvertisementProductCategory', category))
+              .join(', ')}
+          </Row>
+        )}
         <Row label="일정 요청">{contract.scheduleRequest}</Row>
         <Row label="추가 요청">{contract.advertisementRequest}</Row>
         <Row label="협의 금액">{formatPaymentAmount(contract.paymentAmount)}</Row>

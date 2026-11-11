@@ -4,7 +4,6 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
-import type { AdminAdvertisementContractDetailResponseBudgetRange } from './adminAdvertisementContractDetailResponseBudgetRange';
 import type { AdminAdvertisementContractDetailResponseBusinessNumberType } from './adminAdvertisementContractDetailResponseBusinessNumberType';
 import type { AdminAdvertisementContractDetailResponseCategoriesItem } from './adminAdvertisementContractDetailResponseCategoriesItem';
 import type { AdminAdvertisementContractDetailResponseCreativeMethod } from './adminAdvertisementContractDetailResponseCreativeMethod';
@@ -13,6 +12,7 @@ import type { AdminAdvertisementContractDetailResponsePromotionTarget } from './
 import type { AdminAdvertisementContractDetailResponsePurpose } from './adminAdvertisementContractDetailResponsePurpose';
 import type { AdminAdvertisementContractDetailResponseSource } from './adminAdvertisementContractDetailResponseSource';
 import type { AdminAdvertisementContractDetailResponseStatus } from './adminAdvertisementContractDetailResponseStatus';
+import type { AdminAdvertisementContractFormAnswerResponse } from './adminAdvertisementContractFormAnswerResponse';
 import type { AdminAdvertisementContractProductResponse } from './adminAdvertisementContractProductResponse';
 
 export interface AdminAdvertisementContractDetailResponse {
@@ -54,16 +54,7 @@ export interface AdminAdvertisementContractDetailResponse {
      * | `BRAND_AWARENESS` | 3 | 브랜드 인지도 확대 |
      */
   purpose?: AdminAdvertisementContractDetailResponsePurpose;
-  /**
-     * | 값 | code | 설명 |
-     * | --- | --- | --- |
-     * | `UNDER_500K` | 1 | 50만원 미만 |
-     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
-     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
-     * | `OVER_3M` | 4 | 300만원 이상 |
-     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
-     */
-  budgetRange?: AdminAdvertisementContractDetailResponseBudgetRange;
+  budgetAmount?: number;
   categories: AdminAdvertisementContractDetailResponseCategoriesItem[];
   scheduleRequest?: string;
   advertisementRequest?: string;
@@ -100,6 +91,11 @@ export interface AdminAdvertisementContractDetailResponse {
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
      */
   creativeMethod?: AdminAdvertisementContractDetailResponseCreativeMethod;
+  /**
+     * 신청 폼에서 칸이 따로 없는 문항의 답. 받은 순서대로입니다. 답 없이 낸 신청, 이 값이 생기기 전 신청, 비즈니스 공고 계약은 null입니다.
+     * @nullable
+     */
+  formAnswers?: AdminAdvertisementContractFormAnswerResponse[] | null;
   paymentAmount?: number;
   registeredAt: string;
   updatedAt: string;

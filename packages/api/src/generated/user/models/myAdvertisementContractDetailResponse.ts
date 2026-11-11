@@ -4,7 +4,6 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { MyAdvertisementContractDetailResponseBudgetRange } from './myAdvertisementContractDetailResponseBudgetRange';
 import type { MyAdvertisementContractDetailResponseBusinessNumberType } from './myAdvertisementContractDetailResponseBusinessNumberType';
 import type { MyAdvertisementContractDetailResponseCategoriesItem } from './myAdvertisementContractDetailResponseCategoriesItem';
 import type { MyAdvertisementContractDetailResponseCreativeMethod } from './myAdvertisementContractDetailResponseCreativeMethod';
@@ -12,6 +11,7 @@ import type { MyAdvertisementContractDetailResponseInvoiceMethod } from './myAdv
 import type { MyAdvertisementContractDetailResponsePromotionTarget } from './myAdvertisementContractDetailResponsePromotionTarget';
 import type { MyAdvertisementContractDetailResponsePurpose } from './myAdvertisementContractDetailResponsePurpose';
 import type { MyAdvertisementContractDetailResponseStatus } from './myAdvertisementContractDetailResponseStatus';
+import type { MyAdvertisementContractFormAnswerResponse } from './myAdvertisementContractFormAnswerResponse';
 import type { MyAdvertisementContractProductResponse } from './myAdvertisementContractProductResponse';
 
 export interface MyAdvertisementContractDetailResponse {
@@ -45,18 +45,10 @@ export interface MyAdvertisementContractDetailResponse {
      */
   purpose: MyAdvertisementContractDetailResponsePurpose;
   /**
-     * 예정 예산 구간. 고르지 않았으면 null
-     *
-     * | 값 | code | 설명 |
-     * | --- | --- | --- |
-     * | `UNDER_500K` | 1 | 50만원 미만 |
-     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
-     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
-     * | `OVER_3M` | 4 | 300만원 이상 |
-     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
+     * 예정 예산(원). 적지 않았으면 null
      * @nullable
      */
-  budgetRange?: MyAdvertisementContractDetailResponseBudgetRange;
+  budgetAmount?: number | null;
   /** 신청 때 고른 광고 카테고리 */
   categories: MyAdvertisementContractDetailResponseCategoriesItem[];
   /**
@@ -102,6 +94,11 @@ export interface MyAdvertisementContractDetailResponse {
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
      */
   creativeMethod: MyAdvertisementContractDetailResponseCreativeMethod;
+  /**
+     * 칸이 따로 없는 폼 문항의 답. 보낸 순서대로. 답 없이 낸 신청과 이 값이 생기기 전 신청은 null
+     * @nullable
+     */
+  formAnswers?: MyAdvertisementContractFormAnswerResponse[] | null;
   /**
      * 협의로 정한 결제 금액(원). 아직 정하지 않았으면 null
      * @nullable

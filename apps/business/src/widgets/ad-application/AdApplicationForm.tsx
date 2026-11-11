@@ -18,19 +18,27 @@ import {
   type AdProduct,
   AD_REQUEST_MAX,
   addDays,
+  BUDGET_UNITS,
+  budgetAmountOf,
+  budgetText,
   BUSINESS_NUMBER_TYPE_OPTIONS,
   type BusinessNumberType,
   CREATIVE_OPTIONS,
+  DESIRED_SLOTS_MAX,
   type FormValues,
   formatBusinessNumber,
   formatDate,
+  formatWon,
   INITIAL_VALUES,
   INVOICE_OPTIONS,
   parseYmd,
+  periodDays,
   periodText,
   prefillFrom,
   PURPOSE_OPTIONS,
+  purposeLabel,
   RECRUIT_TYPES,
+  sanitizeBudget,
   type RecruitType,
   SCHEDULE_NOTE_MAX,
   selectedProducts,
@@ -86,14 +94,17 @@ function RadioCards<T extends string>({
   options,
   value,
   onChange,
+  stacked,
 }: {
   name: string;
   options: { value: T; label: string; hint?: string }[];
   value: T;
   onChange: (value: T) => void;
+  /** 문구가 길어 한 줄에 하나씩 놓는다. */
+  stacked?: boolean;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className={cn('grid gap-3', !stacked && 'sm:grid-cols-2')}>
       {options.map((o) => {
         const checked = o.value === value;
         return (
@@ -117,6 +128,50 @@ function RadioCards<T extends string>({
               {o.hint && <span className="mt-0.5 block text-sm text-gray-500">{o.hint}</span>}
             </span>
           </label>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 누른 순서대로 1, 2, 3 을 붙인다. 다시 누르면 빠지고 뒤 순위가 당겨진다. */
+function PriorityCards<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T[];
+  onChange: (value: T[]) => void;
+}) {
+  return (
+    <div className="grid gap-3">
+      {options.map((o) => {
+        const rank = value.indexOf(o.value) + 1;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={rank > 0}
+            onClick={() =>
+              onChange(rank ? value.filter((x) => x !== o.value) : [...value, o.value])
+            }
+            className={cn(
+              'flex items-center gap-3 rounded-lg border px-5 py-4 text-left transition-colors',
+              rank ? 'border-blue-500 bg-blue-00' : 'border-gray-200 hover:border-gray-300',
+            )}
+          >
+            <span
+              className={cn(
+                'flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold',
+                rank ? 'bg-blue-500 text-white' : 'border border-gray-300 text-transparent',
+              )}
+            >
+              {rank || '-'}
+            </span>
+            <span className="font-semibold">{o.label}</span>
+            {rank > 0 && <span className="ml-auto shrink-0 text-sm text-blue-600">{rank}순위</span>}
+          </button>
         );
       })}
     </div>
@@ -200,15 +255,6 @@ function StepPost({
             className="h-[50px] rounded-md text-[15px]"
           />
         </div>
-      </div>
-      <div>
-        <Label required>광고 목적</Label>
-        <RadioCards
-          name="purpose"
-          options={PURPOSE_OPTIONS}
-          value={v.purpose}
-          onChange={(x) => set('purpose', x)}
-        />
       </div>
     </div>
   );
@@ -299,6 +345,8 @@ function StepProducts({
       'productIds',
       v.productIds.includes(id) ? v.productIds.filter((x) => x !== id) : [...v.productIds, id],
     );
+  const budgetAmount = budgetAmountOf(v);
+  const [productsOpen, setProductsOpen] = useState(() => v.productIds.length > 0);
 
   return (
     <div className="space-y-8">
@@ -310,106 +358,205 @@ function StepProducts({
         <p className="mt-1 text-sm text-gray-600">
           예산에 맞춰 담당자가 상품 조합을 제안드려요. 정하지 않았다면 비워 두세요.
         </p>
-        <input
-          id="ad-budget"
-          className={cn(INPUT, 'mt-3 h-14 bg-white text-lg')}
-          value={v.budget}
-          onChange={(e) => set('budget', e.target.value)}
-          placeholder="예: 200만원"
-          maxLength={50}
-        />
-      </div>
-      {AD_PRODUCT_GROUPS.map((group, index) => {
-        const products = AD_PRODUCTS.filter((p) => p.group === group.id);
-        const count = products.filter((p) => v.productIds.includes(p.id)).length;
-        return (
-          <section
-            key={group.id}
-            aria-label={group.title}
-            style={{ animationDelay: `${index * 90}ms` }}
-            className="rounded-2xl bg-gray-50 p-4 motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both] md:p-5"
+        {/* 숫자는 그대로 두고 단위 칩만 바꿔 `2` 를 200만원·2,000만원으로 바로 고칠 수 있다(2026-11-10 사용자). */}
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            id="ad-budget"
+            inputMode="decimal"
+            autoComplete="off"
+            aria-invalid={errors.budget ? true : undefined}
+            className={cn(INPUT, 'h-14 flex-1 bg-white text-lg', errors.budget && 'border-error')}
+            value={v.budget}
+            onChange={(e) => set('budget', sanitizeBudget(e.target.value))}
+            placeholder="숫자만 입력"
+          />
+          <div
+            role="radiogroup"
+            aria-label="예산 단위"
+            className="flex h-14 shrink-0 rounded-md border border-gray-200 bg-white p-1"
           >
-            <header className="mb-3 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
-              <h3 className="text-lg font-bold">{group.title}</h3>
-              <span className="text-sm font-medium text-blue-600">{group.reach}</span>
-              {count > 0 && (
-                <span className="ml-auto rounded-full bg-blue-500 px-2.5 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
-                  {count}개 선택
-                </span>
-              )}
-            </header>
-            <ul className={cn('grid gap-4', products.length > 1 && 'sm:grid-cols-2')}>
-              {products.map((product) => {
-                const checked = v.productIds.includes(product.id);
-                return (
-                  <li key={product.id} className={cn(product.wide && 'sm:col-span-2')}>
-                    <button
-                      type="button"
-                      aria-pressed={checked}
-                      onClick={() => toggle(product.id)}
-                      className={cn(
-                        'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white text-left break-keep transition-all duration-200',
-                        checked
-                          ? '-translate-y-0.5 border-blue-500 shadow-lg shadow-blue-500/20 ring-4 ring-blue-100'
-                          : 'border-transparent shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md',
-                      )}
-                    >
-                      <span className="relative block overflow-hidden">
-                        <span className="block transition-transform duration-500 group-hover:scale-[1.03]">
-                          <ProductImages product={product} />
-                        </span>
-                        {/* 고른 카드는 이미지에 파란 막을 씌워 한눈에 보이게 한다. */}
-                        <span
-                          aria-hidden
+            {BUDGET_UNITS.map((unit) => {
+              const on = v.budgetUnit === unit.value;
+              return (
+                <button
+                  key={unit.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => set('budgetUnit', unit.value)}
+                  className={cn(
+                    'flex-1 rounded px-4 text-[15px] font-medium whitespace-nowrap transition-colors',
+                    on ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50',
+                  )}
+                >
+                  {unit.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {budgetAmount !== undefined && budgetAmount >= 1 && !errors.budget && (
+          <p className="mt-2 text-sm text-gray-700">
+            <span className="font-semibold text-blue-600">{formatWon(budgetAmount)}</span>
+            <span className="ml-1.5 text-gray-500">({budgetAmount.toLocaleString('ko-KR')}원)</span>
+          </p>
+        )}
+        <ErrorText>{errors.budget}</ErrorText>
+      </div>
+      {/* 구좌를 고르게 하는 대신 홍보 목표를 받고, 담당자가 목표에 맞춰 구성을 제안한다(영업팀 요청). */}
+      {/* 여러 개 고르면 다 누르기 쉬워서, 누른 순서로 우선순위를 매긴다(영업팀 요청). */}
+      <div role="group" aria-labelledby="ad-purpose-title">
+        <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p id="ad-purpose-title" className="text-lg font-bold">
+            현재 가장 필요한 홍보 목표<span className="ml-1 text-blue-500">*</span>
+          </p>
+          <p className="text-sm text-gray-600">목표에 맞춰 구성을 제안드려요!</p>
+        </div>
+        <p className="mb-3 text-sm text-gray-500">
+          중요한 순서대로 눌러 주세요. 누른 순서가 우선순위가 되고, 다시 누르면 빠집니다.
+        </p>
+        <PriorityCards
+          options={PURPOSE_OPTIONS}
+          value={v.purposes}
+          onChange={(x) => set('purposes', x)}
+        />
+        <ErrorText>{errors.purpose}</ErrorText>
+      </div>
+      <div>
+        <label htmlFor="ad-desired-slots" className="mb-3 block text-lg font-bold">
+          원하는 광고 구좌가 있다면 적어 주세요{' '}
+          <span className="text-sm font-normal text-gray-500">(선택)</span>
+        </label>
+        <textarea
+          id="ad-desired-slots"
+          className={cn(INPUT, 'min-h-32 text-base')}
+          maxLength={DESIRED_SLOTS_MAX}
+          value={v.desiredSlots}
+          onChange={(e) => set('desiredSlots', e.target.value)}
+          placeholder="예) 오늘의 공고 리스트 상단 노출 2주, 직무별 큐레이션 톡방"
+        />
+        <ErrorText>{errors.desiredSlots}</ErrorText>
+      </div>
+      {/* 상품은 고르지 않아도 된다. 이미 원하는 상품이 있는 사람만 펼쳐 고른다(2026-11-11 사용자). */}
+      <div className="-mt-5">
+        <button
+          type="button"
+          aria-expanded={productsOpen}
+          aria-controls="ad-products"
+          onClick={() => setProductsOpen((open) => !open)}
+          className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left hover:bg-gray-50"
+        >
+          <span className="text-base font-bold">
+            관심 있는 광고 상품 <span className="text-sm font-normal text-gray-500">(선택)</span>
+          </span>
+          <span className="text-sm text-gray-600">
+            {v.productIds.length > 0
+              ? `${v.productIds.length}개 선택`
+              : '원하는 상품이 있다면 골라 주세요'}
+          </span>
+          <span className="ml-auto text-sm font-semibold text-blue-600">
+            {productsOpen ? '접기' : '펼치기'}
+          </span>
+        </button>
+      </div>
+      {productsOpen && (
+        <div id="ad-products" className="space-y-8">
+          {AD_PRODUCT_GROUPS.map((group, index) => {
+            const products = AD_PRODUCTS.filter((p) => p.group === group.id);
+            const count = products.filter((p) => v.productIds.includes(p.id)).length;
+            return (
+              <section
+                key={group.id}
+                aria-label={group.title}
+                style={{ animationDelay: `${index * 90}ms` }}
+                className="rounded-2xl bg-gray-50 p-4 motion-safe:animate-[ogonggo-biz-rise_0.45s_ease-out_both] md:p-5"
+              >
+                <header className="mb-3 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
+                  <h3 className="text-lg font-bold">{group.title}</h3>
+                  <span className="text-sm font-medium text-blue-600">{group.reach}</span>
+                  {count > 0 && (
+                    <span className="ml-auto rounded-full bg-blue-500 px-2.5 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
+                      {count}개 선택
+                    </span>
+                  )}
+                </header>
+                <ul className={cn('grid gap-4', products.length > 1 && 'sm:grid-cols-2')}>
+                  {products.map((product) => {
+                    const checked = v.productIds.includes(product.id);
+                    return (
+                      <li key={product.id} className={cn(product.wide && 'sm:col-span-2')}>
+                        <button
+                          type="button"
+                          aria-pressed={checked}
+                          onClick={() => toggle(product.id)}
                           className={cn(
-                            'pointer-events-none absolute inset-0 bg-blue-500/15 transition-opacity duration-200',
-                            checked ? 'opacity-100' : 'opacity-0',
-                          )}
-                        />
-                        <span className="absolute top-2 right-2">
-                          <CheckMark on={checked} />
-                        </span>
-                      </span>
-                      <span
-                        className={cn(
-                          'flex flex-1 flex-col px-4 py-3 transition-colors',
-                          checked && 'bg-blue-00',
-                        )}
-                      >
-                        <span className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-medium text-blue-600">{product.reach}</span>
-                          {checked && (
-                            <span className="shrink-0 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
-                              선택됨
-                            </span>
-                          )}
-                        </span>
-                        <span className="mt-0.5 font-semibold">{product.title}</span>
-                        <span className="mt-1 text-sm text-gray-500">{product.description}</span>
-                        <span
-                          className={cn(
-                            'mt-3 mb-auto block rounded-md px-3 py-2.5 text-[13px] leading-relaxed text-pretty text-gray-700',
-                            checked ? 'bg-white' : 'bg-gray-50',
+                            'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 bg-white text-left break-keep transition-all duration-200',
+                            checked
+                              ? '-translate-y-0.5 border-blue-500 shadow-lg shadow-blue-500/20 ring-4 ring-blue-100'
+                              : 'border-transparent shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md',
                           )}
                         >
-                          <span className="block font-semibold text-blue-600">
-                            이럴 때 추천해요
+                          <span className="relative block overflow-hidden">
+                            <span className="block transition-transform duration-500 group-hover:scale-[1.03]">
+                              <ProductImages product={product} />
+                            </span>
+                            {/* 고른 카드는 이미지에 파란 막을 씌워 한눈에 보이게 한다. */}
+                            <span
+                              aria-hidden
+                              className={cn(
+                                'pointer-events-none absolute inset-0 bg-blue-500/15 transition-opacity duration-200',
+                                checked ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            <span className="absolute top-2 right-2">
+                              <CheckMark on={checked} />
+                            </span>
                           </span>
-                          <span className="mt-0.5 block">{product.recommend}</span>
-                        </span>
-                        <span className="mt-3 text-sm font-semibold text-gray-900">
-                          {product.price}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        );
-      })}
-      <ErrorText>{errors.productIds}</ErrorText>
+                          <span
+                            className={cn(
+                              'flex flex-1 flex-col px-4 py-3 transition-colors',
+                              checked && 'bg-blue-00',
+                            )}
+                          >
+                            <span className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-medium text-blue-600">
+                                {product.reach}
+                              </span>
+                              {checked && (
+                                <span className="shrink-0 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white motion-safe:animate-[ogonggo-biz-pop_0.25s_ease-out]">
+                                  선택됨
+                                </span>
+                              )}
+                            </span>
+                            <span className="mt-0.5 font-semibold">{product.title}</span>
+                            <span className="mt-1 text-sm text-gray-500">
+                              {product.description}
+                            </span>
+                            <span
+                              className={cn(
+                                'mt-3 mb-auto block rounded-md px-3 py-2.5 text-[13px] leading-relaxed text-pretty text-gray-700',
+                                checked ? 'bg-white' : 'bg-gray-50',
+                              )}
+                            >
+                              <span className="block font-semibold text-blue-600">
+                                이럴 때 추천해요
+                              </span>
+                              <span className="mt-0.5 block">{product.recommend}</span>
+                            </span>
+                            <span className="mt-3 text-sm font-semibold text-gray-900">
+                              {product.price}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -465,43 +612,45 @@ function StepSchedule({
   return (
     <div className="space-y-6">
       {/* 고른 상품을 이름 나열 대신 카드로 보여 무엇을 골랐는지 한눈에 보이게 한다(2026-11-10 사용자). */}
-      <div className="rounded-xl bg-gray-50 p-4 md:p-5">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-semibold">
-            선택한 광고 상품 <span className="text-blue-600">{products.length}개</span>
-          </p>
-          <button
-            type="button"
-            onClick={onEditProducts}
-            className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50"
-          >
-            상품 변경
-          </button>
-        </div>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-          {products.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm"
+      {products.length > 0 && (
+        <div className="rounded-xl bg-gray-50 p-4 md:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold">
+              선택한 광고 상품 <span className="text-blue-600">{products.length}개</span>
+            </p>
+            <button
+              type="button"
+              onClick={onEditProducts}
+              className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50"
             >
-              <img
-                src={p.images[0]}
-                alt=""
-                className="size-12 shrink-0 rounded-md bg-gray-100 object-cover object-top"
-              />
-              <span className="min-w-0">
-                <span className="block text-xs text-blue-600">
-                  {AD_PRODUCT_GROUPS.find((g) => g.id === p.group)?.title}
+              상품 변경
+            </button>
+          </div>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {products.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm"
+              >
+                <img
+                  src={p.images[0]}
+                  alt=""
+                  className="size-12 shrink-0 rounded-md bg-gray-100 object-cover object-top"
+                />
+                <span className="min-w-0">
+                  <span className="block text-xs text-blue-600">
+                    {AD_PRODUCT_GROUPS.find((g) => g.id === p.group)?.title}
+                  </span>
+                  <span className="block truncate text-sm font-semibold">{p.title}</span>
                 </span>
-                <span className="block truncate text-sm font-semibold">{p.title}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-sm break-keep text-gray-600">
-          아래 달력에서 고른 기간 동안 선택한 상품이 노출돼요.
-        </p>
-      </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm break-keep text-gray-600">
+            아래 달력에서 고른 기간 동안 선택한 상품이 노출돼요.
+          </p>
+        </div>
+      )}
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-lg font-semibold">
@@ -745,18 +894,70 @@ function StepContact({
   );
 }
 
-function Rows({ rows }: { rows: [string, string][] }) {
+/** `stacked` 면 이름 아래에 값을 왼쪽 정렬로 쌓는다. 여러 줄 값(홍보 목표 순위)에 쓴다. */
+type RowItem = [label: string, value: ReactNode, stacked?: boolean];
+
+function Rows({ rows }: { rows: RowItem[] }) {
   return (
     <dl className="divide-y divide-gray-100">
-      {rows.map(([k, val]) => (
-        <div key={k} className="flex justify-between gap-6 py-3 text-sm">
+      {rows.map(([k, val, stacked]) => (
+        <div
+          key={k}
+          className={cn('py-3 text-sm', stacked ? 'space-y-2' : 'flex justify-between gap-6')}
+        >
           <dt className="shrink-0 text-gray-500">{k}</dt>
-          <dd className="text-right font-medium">{val}</dd>
+          <dd
+            className={cn(
+              'min-w-0 font-medium break-keep break-words whitespace-pre-wrap',
+              !stacked && 'text-right',
+            )}
+          >
+            {val}
+          </dd>
         </div>
       ))}
     </dl>
   );
 }
+
+/** 입력한 것만 줄로 만든다. 비운 선택 항목은 줄째 뺀다. */
+const optionalRow = (label: string, value: string): RowItem[] =>
+  value.trim() ? [[label, value.trim()]] : [];
+
+/** 홍보 목표를 순위마다 한 줄로 보인다. */
+function PurposeRanks({ v, empty }: { v: FormValues; empty: string }) {
+  if (!v.purposes.length) return <span className="text-gray-400">{empty}</span>;
+  return (
+    <ol className="space-y-1.5">
+      {v.purposes.map((p, i) => (
+        <li key={p} className="flex items-start gap-2">
+          <span className="mt-px shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-blue-600">
+            {i + 1}순위
+          </span>
+          <span className="min-w-0 break-keep">{purposeLabel(p)}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** 좁은 칸에서도 날짜나 `14일` 이 중간에서 끊기지 않게, 시작일과 `종료일 · 기간` 단위로만 줄을 바꾼다. */
+function PeriodValue({ v, empty }: { v: FormValues; empty: string }) {
+  if (!v.startDate || !v.endDate) return empty;
+  return (
+    <>
+      <span className="whitespace-nowrap">{formatDate(v.startDate, true)} –</span>{' '}
+      <span className="whitespace-nowrap">
+        {formatDate(v.endDate, true)} · {periodDays(v.startDate, v.endDate)}일
+      </span>
+    </>
+  );
+}
+
+const productsText = (v: FormValues) =>
+  selectedProducts(v)
+    .map((p) => p.title)
+    .join(', ');
 
 function StepConfirm({
   v,
@@ -768,7 +969,6 @@ function StepConfirm({
   errors: Record<string, string>;
 }) {
   const target = TARGET_OPTIONS.find((o) => o.value === v.target)?.label ?? '';
-  const purpose = PURPOSE_OPTIONS.find((o) => o.value === v.purpose)?.label ?? '';
   return (
     <div className="space-y-8">
       <section>
@@ -779,7 +979,6 @@ function StepConfirm({
             ['기업명', v.companyName],
             ['공고명', v.title],
             ['모집 마감일', `${formatDate(v.deadline)} · ${v.recruitType}`],
-            ['광고 목적', purpose],
           ]}
         />
       </section>
@@ -787,14 +986,12 @@ function StepConfirm({
         <p className="mb-1 text-lg font-semibold">광고 신청 내역</p>
         <Rows
           rows={[
-            [
-              '상품',
-              selectedProducts(v)
-                .map((p) => p.title)
-                .join(', '),
-            ],
-            ['기간', periodText(v) ?? ''],
-            ['예정 예산', v.budget.trim() || '입력 안 함'],
+            ['예정 예산', budgetText(v)],
+            ['홍보 목표', <PurposeRanks v={v} empty="선택 전" />, true],
+            ...optionalRow('원하는 구좌', v.desiredSlots),
+            ['관심 상품', productsText(v) || '선택 안 함'],
+            ['기간', <PeriodValue v={v} empty="" />],
+            ...optionalRow('일정 요청', v.scheduleNote),
             ['견적', '담당자 확인 후 안내'],
           ]}
         />
@@ -814,6 +1011,7 @@ function StepConfirm({
                   ? v.businessNumber
                   : '입력 안 함',
             ],
+            ...optionalRow('추가 요청', v.adRequest),
           ]}
         />
       </section>
@@ -857,7 +1055,6 @@ function StepConfirm({
 }
 
 function Summary({ v }: { v: FormValues }) {
-  const products = selectedProducts(v);
   return (
     <aside className="overflow-hidden rounded-xl border border-gray-200 lg:sticky lg:top-24">
       <div className="bg-blue-50 px-6 py-5">
@@ -869,8 +1066,11 @@ function Summary({ v }: { v: FormValues }) {
           rows={[
             ['공고', v.title.trim() || '미입력'],
             ['모집 마감일', v.deadline ? formatDate(v.deadline) : '미입력'],
-            ['광고 상품', products.length ? products.map((p) => p.title).join(', ') : '선택 전'],
-            ['광고 일정', periodText(v) ?? '선택 전'],
+            ['예정 예산', budgetText(v)],
+            ['홍보 목표', <PurposeRanks v={v} empty="선택 전" />, true],
+            ...optionalRow('원하는 구좌', v.desiredSlots),
+            ['관심 상품', productsText(v) || '선택 안 함'],
+            ['광고 일정', <PeriodValue v={v} empty="선택 전" />],
             ['담당 기업', v.companyName.trim() || '미입력'],
           ]}
         />
@@ -899,13 +1099,11 @@ function Done({ id, v, onReset }: { id: number; v: FormValues; onReset: () => vo
         <Rows
           rows={[
             ['신청 공고', v.title],
-            [
-              '상품',
-              selectedProducts(v)
-                .map((p) => p.title)
-                .join(', '),
-            ],
-            ['희망 집행 기간', periodText(v) ?? ''],
+            ['예정 예산', budgetText(v)],
+            ['홍보 목표', <PurposeRanks v={v} empty="선택 전" />, true],
+            ...optionalRow('원하는 구좌', v.desiredSlots),
+            ['관심 상품', productsText(v) || '선택 안 함'],
+            ['희망 집행 기간', <PeriodValue v={v} empty="" />],
             ['현재 상태', '접수 · 검토 전'],
           ]}
         />
@@ -933,12 +1131,12 @@ const STEP_TITLES: Record<1 | 2 | 3 | 4 | 5, { title: string; desc: string; lead
   1: {
     title: '공고 정보',
     desc: '공고 링크가 있으면 기본 정보만 입력할 수 있습니다.',
-    lead: '광고할 채용·교육 공고를 등록하고, 홍보 목적을 선택해 주세요.',
+    lead: '광고할 채용·교육 공고를 등록해 주세요.',
   },
   2: {
     title: '광고 상품',
-    desc: '관심 가는 상품을 편하게 골라 주세요. 최종 구성은 담당자와 상담하며 함께 정해요.',
-    lead: '관심 있는 광고 상품을 골라 주세요. 여러 개 골라도 괜찮아요.',
+    desc: '홍보 목표와 관심 가는 상품을 골라 주세요. 최종 구성은 담당자와 상담하며 함께 정해요.',
+    lead: '현재 가장 필요한 홍보 목표를 골라 주세요. 담당자가 목표에 맞춰 구성을 제안드려요.',
   },
   3: {
     title: '광고 일정 선택',

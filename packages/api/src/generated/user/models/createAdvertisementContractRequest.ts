@@ -4,7 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
-import type { CreateAdvertisementContractRequestBudgetRange } from './createAdvertisementContractRequestBudgetRange';
+import type { AdvertisementContractFormAnswerRequest } from './advertisementContractFormAnswerRequest';
 import type { CreateAdvertisementContractRequestBusinessNumberType } from './createAdvertisementContractRequestBusinessNumberType';
 import type { CreateAdvertisementContractRequestCategoriesItem } from './createAdvertisementContractRequestCategoriesItem';
 import type { CreateAdvertisementContractRequestCreativeMethod } from './createAdvertisementContractRequestCreativeMethod';
@@ -45,19 +45,10 @@ export interface CreateAdvertisementContractRequest {
      * | `BRAND_AWARENESS` | 3 | 브랜드 인지도 확대 |
      */
   purpose: CreateAdvertisementContractRequestPurpose;
+  /** 예정 예산(원). 1 이상 정수. 보내지 않으면 정하지 않은 것으로 저장합니다 */
+  budgetAmount?: number;
   /**
-     * 예정 예산 구간. 보내지 않으면 고르지 않은 것으로 저장합니다
-     *
-     * | 값 | code | 설명 |
-     * | --- | --- | --- |
-     * | `UNDER_500K` | 1 | 50만원 미만 |
-     * | `FROM_500K_TO_1M` | 2 | 50만~100만원 |
-     * | `FROM_1M_TO_3M` | 3 | 100만~300만원 |
-     * | `OVER_3M` | 4 | 300만원 이상 |
-     * | `UNDECIDED` | 5 | 아직 정하지 않았어요 |
-     */
-  budgetRange?: CreateAdvertisementContractRequestBudgetRange;
-  /**
+     * 희망 광고 카테고리. 고르지 않았으면 빈 배열을 보냅니다
      * @minItems 0
      * @maxItems 7
      */
@@ -118,4 +109,11 @@ export interface CreateAdvertisementContractRequest {
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
      */
   creativeMethod: CreateAdvertisementContractRequestCreativeMethod;
+  /**
+     * 칸이 따로 없는 폼 문항의 답. 화면에 보인 순서대로 최대 30개. 선택이며 보내지 않거나 빈 배열이면 null로 저장합니다. key의 뜻은 서버가 검사하지 않습니다.
+     * @minItems 0
+     * @maxItems 30
+     * @nullable
+     */
+  formAnswers?: AdvertisementContractFormAnswerRequest[] | null;
 }
