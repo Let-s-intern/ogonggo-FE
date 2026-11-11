@@ -219,6 +219,12 @@ function SearchDialog({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    // `type="search"` 칸은 글자가 있으면 Esc 를 글자 지우기로 먼저 써서, 두 번 눌러야 모달이 닫힌다. 한 번에 닫는다.
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dialogRef.current?.close();
+      return;
+    }
     if (rows.length === 0) return;
     if (event.key === 'ArrowDown') {
       event.preventDefault();
@@ -294,7 +300,9 @@ function SearchDialog({
                 id={optionId(index)}
                 role="option"
                 aria-selected={index === active}
-                onMouseEnter={() => setActive(index)}
+                // `mouseenter` 가 아니라 움직임으로 고른다. 가만히 있는 커서 밑에 목록이 새로 그려져도 줄이 골라지면,
+                // 엔터가 친 글자 대신 그 줄을 검색한다.
+                onMouseMove={() => setActive(index)}
                 onClick={() => choose(row)}
                 className={cn(
                   'mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm',
