@@ -55,16 +55,11 @@ export async function goToBiz(path: string): Promise<void> {
 }
 
 /**
- * 기업 회원이 웹에서 로그인했을 때(또는 이미 기업 회원으로 로그인 화면에 왔을 때) 갈 곳. 웹에서 하던 일이
- * 있으면(`returnPath`) 그리로 돌아가고, 없거나 기업 마이페이지면 biz 로 간다 — 기업 마이페이지는 biz 의 같은
- * 경로다. biz 로 가면 `true` 다.
+ * 기업 회원이 웹에서 로그인했을 때(또는 이미 기업 회원으로 로그인 화면에 왔을 때) 늘 biz 로 간다(2026-11-11
+ * 사용자). 돌아갈 곳이 기업 마이페이지면 biz 의 같은 경로로, 그 밖에는 biz 대시보드로 간다.
  */
-export function goToBizAfterCompanySignIn(returnPath: string | null): boolean {
-  if (returnPath && !returnPath.startsWith(BIZ_DASHBOARD_PATH)) {
-    return false;
-  }
-  void goToBiz(returnPath ?? BIZ_DASHBOARD_PATH);
-  return true;
+export function goToBizAfterCompanySignIn(returnPath: string | null): void {
+  void goToBiz(returnPath?.startsWith(BIZ_DASHBOARD_PATH) ? returnPath : BIZ_DASHBOARD_PATH);
 }
 
 /**

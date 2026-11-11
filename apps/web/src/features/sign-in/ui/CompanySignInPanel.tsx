@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { HttpError, signInCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
 import { track } from '@/shared/analytics/dataLayer';
@@ -21,7 +20,6 @@ export interface CompanySignInPanelProps {
  * 안내 문구는 디자인에 없어 일반 탭과 같은 자리에 둔다(PRD "화면 > 로그인").
  */
 export function CompanySignInPanel({ returnPath }: CompanySignInPanelProps) {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,10 +38,8 @@ export function CompanySignInPanel({ returnPath }: CompanySignInPanelProps) {
       recordSignInMethod('email');
       track('login', { method: 'email' });
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다. 풀면 이동 전에 버튼이 잠깐 다시 켜진다.
-      // 하던 일이 없으면 비즈 오공고로 간다(이슈 #649).
-      if (!goToBizAfterCompanySignIn(returnPath)) {
-        router.replace(returnPath ?? '/');
-      }
+      // 기업 회원은 비즈 오공고로 간다(이슈 #649).
+      goToBizAfterCompanySignIn(returnPath);
     } catch (caught) {
       setError(companySignInErrorMessage(caught));
       setPending(false);
