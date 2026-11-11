@@ -6,6 +6,7 @@ import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { JobFilterSidebar } from './JobFilterSidebar';
+import { JobListPendingArea, JobListPendingProvider } from './JobListPending';
 import { JobRoleChips } from './JobRoleChips';
 import { SearchFilterBar } from './SearchFilterBar';
 
@@ -51,41 +52,45 @@ export async function JobList(query: JobListProps) {
   return (
     // lg 이상은 왼쪽 열(제목, 필터)과 오른쪽 열(칩·직무·정렬 줄, 카드, 쪽 번호)의 두 칸 그리드다.
     // 그 아래는 지금처럼 위에서 아래로 쌓는다.
-    <div className="flex w-full flex-col gap-4 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-8">
-      {/* lg 이상에서는 `contents` 로 풀려 제목과 컨트롤 줄이 그리드 칸이 된다. */}
-      <div className="flex flex-wrap items-center justify-between gap-4 lg:contents">
-        {/* 모바일은 정렬을 제목 줄 오른쪽 끝에 둔다. 필터 뒤에 두면 혼자 한 줄을 차지한다. */}
-        <div className="flex w-full items-center justify-between md:w-auto lg:col-start-1 lg:row-start-1">
-          <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
-          <div className="md:hidden">{sort}</div>
-        </div>
-        {/* 칩은 모바일에서도 한 줄을 다 쓰고(가로로 넘긴다) 그 아래에 검색·필터가 선다. md 는 그 아래에
+    <JobListPendingProvider>
+      <div className="flex w-full flex-col gap-4 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-8">
+        {/* lg 이상에서는 `contents` 로 풀려 제목과 컨트롤 줄이 그리드 칸이 된다. */}
+        <div className="flex flex-wrap items-center justify-between gap-4 lg:contents">
+          {/* 모바일은 정렬을 제목 줄 오른쪽 끝에 둔다. 필터 뒤에 두면 혼자 한 줄을 차지한다. */}
+          <div className="flex w-full items-center justify-between md:w-auto lg:col-start-1 lg:row-start-1">
+            <h2 className="text-lg font-bold text-gray-900">전체 공고</h2>
+            <div className="md:hidden">{sort}</div>
+          </div>
+          {/* 칩은 모바일에서도 한 줄을 다 쓰고(가로로 넘긴다) 그 아래에 검색·필터가 선다. md 는 그 아래에
             검색·필터와 정렬이 선다. lg 이상은 한 줄에 `칩 … 정렬` 이고 정렬이 오른쪽 끝이다. */}
-        <div className="flex w-full flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:flex-nowrap">
-          <JobRoleChips query={query} />
-          <SearchFilterBar query={query} totalCount={pageInfo.totalElements} />
-          {/* 한 줄이 넘치면 칩 줄(`min-w-0`, 가로 넘김)이 넘친 만큼을 받는다. 정렬은 줄어들지 않고 라벨도
+          <div className="flex w-full flex-wrap items-center gap-2 lg:col-start-2 lg:row-start-1 lg:flex-nowrap">
+            <JobRoleChips query={query} />
+            <SearchFilterBar query={query} totalCount={pageInfo.totalElements} />
+            {/* 한 줄이 넘치면 칩 줄(`min-w-0`, 가로 넘김)이 넘친 만큼을 받는다. 정렬은 줄어들지 않고 라벨도
               음절 사이에서 꺾이지 않는다. */}
-          <div className="hidden whitespace-nowrap md:ml-auto md:block md:shrink-0">{sort}</div>
+            <div className="hidden whitespace-nowrap md:ml-auto md:block md:shrink-0">{sort}</div>
+          </div>
+        </div>
+        {/* 목록을 내려도 필터가 화면에 남도록 붙인다. `self-start` 가 없으면 칸이 행 높이만큼 늘어나 붙을 자리가 없다.
+          필터가 화면보다 길면(지역 칩까지 합치면 그렇다) 아래가 잘리지 않도록 이 칸 안에서 스크롤한다. */}
+        <div className="hidden lg:sticky lg:top-6 lg:col-start-1 lg:row-start-2 lg:block lg:max-h-[calc(100dvh-3rem)] lg:self-start lg:overflow-y-auto">
+          <JobFilterSidebar query={query} />
+        </div>
+        <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
+          <JobListPendingArea count={items.length}>
+            {items.length === 0 ? (
+              <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
+            ) : (
+              <JobListItems items={items} pageNumber={pageInfo.pageNum} />
+            )}
+          </JobListPendingArea>
+          <NumberedPagination
+            pageInfo={pageInfo}
+            buildHref={(page) => buildJobListHref(query, { page })}
+          />
         </div>
       </div>
-      {/* 목록을 내려도 필터가 화면에 남도록 붙인다. `self-start` 가 없으면 칸이 행 높이만큼 늘어나 붙을 자리가 없다.
-          필터가 화면보다 길면(지역 칩까지 합치면 그렇다) 아래가 잘리지 않도록 이 칸 안에서 스크롤한다. */}
-      <div className="hidden lg:sticky lg:top-6 lg:col-start-1 lg:row-start-2 lg:block lg:max-h-[calc(100dvh-3rem)] lg:self-start lg:overflow-y-auto">
-        <JobFilterSidebar query={query} />
-      </div>
-      <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
-        {items.length === 0 ? (
-          <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
-        ) : (
-          <JobListItems items={items} pageNumber={pageInfo.pageNum} />
-        )}
-        <NumberedPagination
-          pageInfo={pageInfo}
-          buildHref={(page) => buildJobListHref(query, { page })}
-        />
-      </div>
-    </div>
+    </JobListPendingProvider>
   );
 }
 
@@ -101,7 +106,11 @@ function JobListItems({ items, pageNumber }: { items: JobSummary[]; pageNumber: 
         <li key={job.id}>
           <JobCard
             job={job}
-            tracking={{ listSource: 'main', listPosition: index + 1, pageNumber }}
+            tracking={{
+              listSource: 'main',
+              listPosition: index + 1,
+              pageNumber,
+            }}
           />
         </li>
       ))}
