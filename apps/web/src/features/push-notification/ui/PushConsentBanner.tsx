@@ -5,8 +5,8 @@ import { BellIcon } from '@/shared/ui/icons';
 import { usePushConsent } from '../model/usePushConsent';
 
 /**
- * 모바일 알림함(`/notifications`) 목록 위에 두는 푸시 동의 안내. 모바일 헤더 윗줄은 360px 에서 자리가 없어 헤더의
- * `PushConsentButton` 대신 여기에 둔다. 켜지면 사라진다. 상태와 켜기는 `usePushConsent` 가 맡는다.
+ * 알림 목록 위에 두는 푸시 동의 안내. 모바일 알림함(`/notifications`)과 데스크톱 헤더의 알림 패널(`NotificationBell`
+ * 의 `top`, 이슈 #655) 두 곳에 같은 모양으로 둔다. 켜지면 사라진다. 상태와 켜기는 `usePushConsent` 가 맡는다.
  */
 export function PushConsentBanner({ className }: { className?: string }) {
   const { visible, pending, enable } = usePushConsent();
