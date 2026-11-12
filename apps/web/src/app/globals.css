@@ -117,6 +117,63 @@
 }
 
 /*
+ * 채용공고 상세 `멘토한테 마지막 검토받기` 의 반짝임 아이콘(`widgets/job-detail/ui/MentorReviewButton.tsx`).
+ * 큰 별은 살짝 커지며 기울었다 돌아오고, 오른쪽 위 작은 십자는 그 뒤를 따라 반짝인다. 둘의 박자를
+ * 어긋나게 두어 번갈아 빛나 보인다. 모션 줄이기에서는 움직이지 않는다.
+ */
+@keyframes ogonggo-sparkle-star {
+  0%,
+  55%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  70% {
+    transform: scale(1.18) rotate(12deg);
+  }
+  85% {
+    transform: scale(0.94) rotate(-4deg);
+  }
+}
+
+@keyframes ogonggo-sparkle-plus {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.3);
+    opacity: 0.2;
+  }
+  90% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+.ogonggo-sparkle-star,
+.ogonggo-sparkle-plus {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ogonggo-sparkle-star {
+  animation: ogonggo-sparkle-star 2.4s ease-in-out infinite;
+}
+
+.ogonggo-sparkle-plus {
+  animation: ogonggo-sparkle-plus 2.4s ease-in-out 0.15s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ogonggo-sparkle-star,
+  .ogonggo-sparkle-plus {
+    animation: none;
+  }
+}
+
+/*
  * 모바일 하단 내비게이션(`widgets/site-header/ui/MobileBottomNav.tsx`). 바의 파인 자리와 그 위
  * 동그라미의 가로 위치가 `--notch-x` 하나다. 타입을 등록해야 이 변수가 숫자로 보간되어, 페이지를
  * 옮길 때 파인 자리와 동그라미가 함께 새 탭으로 미끄러진다. 등록하지 않으면 한 번에 건너뛴다.

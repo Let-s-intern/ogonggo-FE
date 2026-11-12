@@ -31,6 +31,11 @@ export interface ApplyCtaProps {
   applyEvent?: DataLayerEvent;
   /** 북마크를 누를 때 보낼 `scrap` 이벤트의 공고 정보. 채용공고만 넘긴다. */
   scrapParams?: DataLayerParams;
+  /**
+   * 신청 버튼 줄과 `공고 공유하기` 사이에 넣을 넓은 버튼. 채용공고의 `멘토한테 마지막 검토받기` 다.
+   * 데스크톱에만 보인다 — 모바일은 이 줄이 화면 아래 고정 바라 한 줄 더 넣으면 그만큼 화면을 가린다.
+   */
+  extra?: ReactNode;
   /** 넘기면 신청 버튼 줄 아래에 `공고 공유하기` 가 붙는다(`features/share-posting`). */
   share?: SharePosting;
   /**
@@ -65,6 +70,7 @@ export function ApplyCta({
   bookmarkCount,
   applyEvent,
   scrapParams,
+  extra,
   share,
   sourceCheck,
 }: ApplyCtaProps) {
@@ -119,6 +125,7 @@ export function ApplyCta({
           </div>
         ) : null}
       </div>
+      {extra ? <div className="hidden md:block">{extra}</div> : null}
       {share ? (
         <div className="hidden md:block">
           <SharePostingButton posting={share} />
