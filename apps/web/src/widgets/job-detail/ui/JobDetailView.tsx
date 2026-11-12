@@ -14,6 +14,7 @@ import { SideBannerSlot } from '@/widgets/home-banner';
 import { JobRecommendedContents } from '@/widgets/lets-career-recommend';
 import { JobDetailBreadcrumb } from './JobDetailBreadcrumb';
 import { JobDetailViewTracker } from './JobDetailViewTracker';
+import { MentorReviewButton } from './MentorReviewButton';
 import { AnalysisTab } from './AnalysisTab';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobDetailTabs } from './JobDetailTabs';
@@ -101,6 +102,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
       bookmarkCount={job.bookmarkCount}
       applyEvent={{ event: 'apply_click', params: { ...jobInfo, click_location: 'detail' } }}
       scrapParams={{ ...jobInfo, click_location: 'detail' }}
+      extra={<MentorReviewButton />}
       share={{
         kind: 'jobs',
         title: job.title,

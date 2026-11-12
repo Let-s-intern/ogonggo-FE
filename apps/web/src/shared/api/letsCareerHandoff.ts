@@ -66,3 +66,17 @@ export function letsCareerChallengeUrl(challengeId: number): string {
   url.searchParams.set('utm_content', 'detail_sidebar');
   return url.toString();
 }
+
+/**
+ * 렛츠커리어 멘토링 목록(`lets-intern-client` 의 `/program?catalog=mentoring` — `/live-mentoring` 이 여기로
+ * 넘긴다). 채용공고 상세의 `멘토한테 마지막 검토받기` 가 쓴다.
+ */
+export function letsCareerMentoringUrl(): string {
+  const url = new URL('/program', LETSCAREER_WEB_ORIGIN);
+  url.searchParams.set('catalog', 'mentoring');
+  url.searchParams.set('utm_source', UTM_PARAMS.utm_source);
+  url.searchParams.set('utm_medium', UTM_PARAMS.utm_medium);
+  url.searchParams.set('utm_campaign', 'cross_sell');
+  url.searchParams.set('utm_content', 'detail_mentor_review');
+  return url.toString();
+}
