@@ -80,6 +80,7 @@ import type {
   SuccessResponseAdminAdvertisementInquiryTodayCountResponse,
   SuccessResponseAdminAnnouncementDetailResponse,
   SuccessResponseAdminBootcampDetailResponse,
+  SuccessResponseAdminBusinessAccountIssueResponse,
   SuccessResponseAdminCompanyContentPriorityResponse,
   SuccessResponseAdminCompanyMemberDetailResponse,
   SuccessResponseAdminConcernDetailResponse,
@@ -4985,6 +4986,120 @@ export const useCreateAdvertisementContractProduct = <TError = ErrorResponse,
       return useMutation(getCreateAdvertisementContractProductMutationOptions(options), queryClient);
     }
 
+export type issueAdvertisementContractBusinessAccountResponse200 = {
+  data: SuccessResponseAdminBusinessAccountIssueResponse
+  status: 200
+}
+
+export type issueAdvertisementContractBusinessAccountResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type issueAdvertisementContractBusinessAccountResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type issueAdvertisementContractBusinessAccountResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type issueAdvertisementContractBusinessAccountResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type issueAdvertisementContractBusinessAccountResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type issueAdvertisementContractBusinessAccountResponseSuccess = (issueAdvertisementContractBusinessAccountResponse200) & {
+  headers: Headers;
+};
+export type issueAdvertisementContractBusinessAccountResponseError = (issueAdvertisementContractBusinessAccountResponse400 | issueAdvertisementContractBusinessAccountResponse401 | issueAdvertisementContractBusinessAccountResponse403 | issueAdvertisementContractBusinessAccountResponse404 | issueAdvertisementContractBusinessAccountResponse409) & {
+  headers: Headers;
+};
+
+export type issueAdvertisementContractBusinessAccountResponse = (issueAdvertisementContractBusinessAccountResponseSuccess | issueAdvertisementContractBusinessAccountResponseError)
+
+export const getIssueAdvertisementContractBusinessAccountUrl = (contractId: number,) => {
+
+
+
+
+  return `/api/v1/admin/advertisement-contracts/${contractId}/business-account`
+}
+
+/**
+ * 비회원 신청 폼 계약의 신청 이메일로 비즈니스 계정을 발급합니다. 그 이메일의 비즈니스 회원이 없으면 신청서의 기업명·담당자·연락처·사업자 번호로 만들고 임시 비밀번호 메일을 발송 대기열에 넣습니다(created=true). 운영자가 고객에게 전달할 수 있도록 로그인 이메일과 임시 비밀번호를 응답에 담습니다. 임시 비밀번호는 이 응답에서만 볼 수 있습니다. 있으면 새로 만들지 않고 비밀번호도 바꾸지 않습니다(created=false, temporaryPassword=null). 어느 쪽이든 그 이메일로 낸 비회원 신청을 모두 그 회원에 연결하고 연결한 수를 돌려줍니다. 응답은 메일 적재까지이며 실제 발송 결과가 아닙니다.
+ * @summary 비즈니스 계정 발급
+ */
+export const issueAdvertisementContractBusinessAccount = async (contractId: number, options?: Parameters<typeof httpClient>[1]): Promise<issueAdvertisementContractBusinessAccountResponse> => {
+
+  return httpClient<issueAdvertisementContractBusinessAccountResponse>(getIssueAdvertisementContractBusinessAccountUrl(contractId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getIssueAdvertisementContractBusinessAccountMutationKey = () => ['issueAdvertisementContractBusinessAccount'] as const;
+
+export const getIssueAdvertisementContractBusinessAccountMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueAdvertisementContractBusinessAccount>>, TError,IssueAdvertisementContractBusinessAccountMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof issueAdvertisementContractBusinessAccount>>, TError,IssueAdvertisementContractBusinessAccountMutationVariables, TContext> => {
+
+const mutationKey = getIssueAdvertisementContractBusinessAccountMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof issueAdvertisementContractBusinessAccount>>, IssueAdvertisementContractBusinessAccountMutationVariables> = (props) => {
+          const {contractId} = props ?? {};
+
+          return  issueAdvertisementContractBusinessAccount(contractId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IssueAdvertisementContractBusinessAccountMutationResult = NonNullable<Awaited<ReturnType<typeof issueAdvertisementContractBusinessAccount>>>
+
+    export type IssueAdvertisementContractBusinessAccountMutationError = ErrorResponse
+    export type IssueAdvertisementContractBusinessAccountMutationVariables = {contractId: number}
+
+    /**
+ * @summary 비즈니스 계정 발급
+ */
+export const useIssueAdvertisementContractBusinessAccount = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueAdvertisementContractBusinessAccount>>, TError,IssueAdvertisementContractBusinessAccountMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof issueAdvertisementContractBusinessAccount>>,
+        TError,
+        IssueAdvertisementContractBusinessAccountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIssueAdvertisementContractBusinessAccountMutationOptions(options), queryClient);
+    }
+
 export type updateRecruitmentPostVisibilitiesResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -6482,7 +6597,8 @@ export const getUpdateAnnouncementUrl = (announcementId: number,) => {
 /**
  *
  *             보낸 값만 바꾸고 수정된 공지 전체를 반환합니다. 제목과 본문은 비울 수 없습니다.
- *             노출(visibility)과 상단 고정(pinned)도 이 API로 바꿉니다.
+ *             노출(visibility)과 상단 고정(pinned), 카테고리(category)도 이 API로 바꿉니다.
+ *             썸네일(thumbnailUrl)과 요약(summary)은 빈 글자를 보내면 지웁니다. 상단 고정 공지는 사용자 공지사항 화면의 추천 카드입니다.
  * @summary 공지사항 수정
  */
 export const updateAnnouncement = async (announcementId: number,
@@ -10701,9 +10817,9 @@ export const getCreateCompanyMemberJobResponseMock = (overrideResponse: Partial<
 
 export const getCreateCompanyMemberBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
-export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getListAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -10716,6 +10832,8 @@ export const getCreateAdvertisementExposureResponseMock = (overrideResponse: Par
 export const getMoveAdvertisementExposureResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCreateAdvertisementContractProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdminAdvertisementContractProductResponse, object>> = {}): SuccessResponseCreateAdminAdvertisementContractProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
+export const getIssueAdvertisementContractBusinessAccountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBusinessAccountIssueResponse, object>> = {}): SuccessResponseAdminBusinessAccountIssueResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{userId: faker.number.int(), created: faker.datatype.boolean(), loginEmail: faker.string.alpha({length: {min: 10, max: 20}}), temporaryPassword: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), linkedContractCount: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getUpdateRecruitmentPostVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -10739,11 +10857,11 @@ export const getUpdateConcernVisibilitiesResponseMock = (overrideResponse: Parti
 
 export const getUpdateBootcampVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getGetAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getDeleteAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getUpdateAdvertisementInquiryStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementInquiryResponse, object>> = {}): SuccessResponseAdminAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), inquiryType: faker.helpers.arrayElement(['FREE_PROMOTION','LAUNCH_ALERT'] as const), campaignCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['RECEIVED','CONTACTED','EXECUTED','REJECTED'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), companyNameSource: faker.helpers.arrayElement(['SEARCH','MANUAL','MEMBER_PROFILE'] as const), managerName: faker.string.alpha({length: {min: 10, max: 20}}), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.string.alpha({length: {min: 10, max: 20}}), phoneNumber: faker.string.alpha({length: {min: 10, max: 20}}), promotionChannel: faker.helpers.arrayElement(['INSTAGRAM','OPEN_CHAT_MARKETING','OPEN_CHAT_PLANNING','OPEN_CHAT_HR','OPEN_CHAT_PUBLIC_RECRUITMENT','OPEN_CHAT_SALES','OPEN_CHAT_AI_DEVELOPMENT','RECOMMENDATION_REQUESTED'] as const), hiringJobName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobPostingUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), promotionAnswer: faker.string.alpha({length: {min: 10, max: 20}}), marketingConsent: faker.datatype.boolean(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), memberType: faker.helpers.arrayElement(['COMPANY','USER','GUEST'] as const), inflowChannel: faker.helpers.arrayElement(['COLDMAIL','INSTAGRAM','KAKAO','NEWSLETTER','UTM_OTHER','OGONGGO','LETSCAREER','SEARCH','EXTERNAL_SITE','DIRECT'] as const), utmSource: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmMedium: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmCampaign: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmContent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), referrer: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), entryHost: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), landingPath: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
@@ -11310,6 +11428,18 @@ export const getCreateAdvertisementContractProductMockHandler = (overrideRespons
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateAdvertisementContractProductResponseMock(),
       { status: 201
+      })
+  }, options)
+}
+
+export const getIssueAdvertisementContractBusinessAccountMockHandler = (overrideResponse?: SuccessResponseAdminBusinessAccountIssueResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseAdminBusinessAccountIssueResponse> | SuccessResponseAdminBusinessAccountIssueResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/admin/advertisement-contracts/:contractId/business-account', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getIssueAdvertisementContractBusinessAccountResponseMock(),
+      { status: 200
       })
   }, options)
 }
@@ -11896,6 +12026,7 @@ export const getOgonggoAdminAPIMock = () => [
   getCreateAdvertisementExposureMockHandler(),
   getMoveAdvertisementExposureMockHandler(),
   getCreateAdvertisementContractProductMockHandler(),
+  getIssueAdvertisementContractBusinessAccountMockHandler(),
   getUpdateRecruitmentPostVisibilitiesMockHandler(),
   getGetJobMockHandler(),
   getDeleteJobMockHandler(),

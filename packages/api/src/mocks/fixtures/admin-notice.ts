@@ -12,6 +12,7 @@
  */
 
 export type NoticeVisibility = 'VISIBLE' | 'HIDDEN';
+export type NoticeCategory = 'OGONGGO_UPDATE' | 'NEW_JOB_NOTE' | 'SERVICE_NOTICE';
 
 export interface AdminNotice {
   id: number;
@@ -20,6 +21,9 @@ export interface AdminNotice {
   content: string;
   pinned: boolean;
   visibility: NoticeVisibility;
+  category: NoticeCategory;
+  thumbnailUrl?: string;
+  summary?: string;
   /** `2026-09-20T10:20:00`. 시간대가 붙지 않는다 — `localDateTime` 머리 주석. */
   registeredAt: string;
   updatedAt: string;
@@ -95,6 +99,7 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     ),
     pinned: true,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
     registeredAt: daysFromNow(-3),
     updatedAt: daysFromNow(-2),
   },
@@ -104,6 +109,7 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     content: lexical('9월 27일부터 10월 1일까지 문의 답변이 지연될 수 있습니다.'),
     pinned: false,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
     registeredAt: daysFromNow(-6),
     updatedAt: daysFromNow(-6),
   },
@@ -115,6 +121,7 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     ),
     pinned: false,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
     registeredAt: daysFromNow(-14),
     updatedAt: daysFromNow(-14),
   },
@@ -124,6 +131,7 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     content: lexical('8월 30일 새벽 2시부터 4시까지 진행한 점검이 완료됐습니다.'),
     pinned: false,
     visibility: 'HIDDEN',
+    category: 'OGONGGO_UPDATE',
     registeredAt: daysFromNow(-41),
     updatedAt: daysFromNow(-38),
   },

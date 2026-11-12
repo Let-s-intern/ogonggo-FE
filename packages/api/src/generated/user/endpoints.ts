@@ -26,6 +26,7 @@ import type {
 import type {
   ChangeMyNicknameRequest,
   ChangeMyPasswordRequest,
+  CompanyPasswordResetRequest,
   CompanySignInRequest,
   CompanySignUpRequest,
   CreateAdvertisementContractRequest,
@@ -99,6 +100,7 @@ import type {
   SuccessResponseLetsCareerJobProfileSyncResponse,
   SuccessResponseListConcernSummaryResponse,
   SuccessResponseListString,
+  SuccessResponseListUserAnnouncementCategoryResponse,
   SuccessResponseListUserJobCalendarItemResponse,
   SuccessResponseListUserJobSummaryResponse,
   SuccessResponseListUserRecommendedChallengeResponse,
@@ -7718,6 +7720,106 @@ export const useSignInCompany = <TError = ErrorResponse,
       return useMutation(getSignInCompanyMutationOptions(options), queryClient);
     }
 
+export type resetCompanyPasswordResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type resetCompanyPasswordResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type resetCompanyPasswordResponseSuccess = (resetCompanyPasswordResponse200) & {
+  headers: Headers;
+};
+export type resetCompanyPasswordResponseError = (resetCompanyPasswordResponse400) & {
+  headers: Headers;
+};
+
+export type resetCompanyPasswordResponse = (resetCompanyPasswordResponseSuccess | resetCompanyPasswordResponseError)
+
+export const getResetCompanyPasswordUrl = () => {
+
+
+
+
+  return `/api/v1/auth/company/password-resets`
+}
+
+/**
+ * 로그인 이메일의 비밀번호를 임시 비밀번호로 바로 바꾸고 그 이메일로 보냅니다. 기존 세션은 끊깁니다. 계정이 없거나 정지·탈퇴했어도 같은 200을 돌려줍니다. 같은 이메일은 5분에 한 번만 처리하고 그 사이 요청은 아무것도 하지 않고 200입니다. 응답은 메일 적재까지이며 실제 발송 결과가 아닙니다.
+ * @summary 기업 비밀번호 찾기
+ */
+export const resetCompanyPassword = async (companyPasswordResetRequest: CompanyPasswordResetRequest, options?: Parameters<typeof httpClient>[1]): Promise<resetCompanyPasswordResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<resetCompanyPasswordResponse>(getResetCompanyPasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(companyPasswordResetRequest)
+  }
+);}
+
+
+
+
+
+export const getResetCompanyPasswordMutationKey = () => ['resetCompanyPassword'] as const;
+
+export const getResetCompanyPasswordMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetCompanyPassword>>, TError,ResetCompanyPasswordMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetCompanyPassword>>, TError,ResetCompanyPasswordMutationVariables, TContext> => {
+
+const mutationKey = getResetCompanyPasswordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetCompanyPassword>>, ResetCompanyPasswordMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  resetCompanyPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetCompanyPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetCompanyPassword>>>
+    export type ResetCompanyPasswordMutationBody = CompanyPasswordResetRequest
+    export type ResetCompanyPasswordMutationError = ErrorResponse
+    export type ResetCompanyPasswordMutationVariables = {data: CompanyPasswordResetRequest}
+
+    /**
+ * @summary 기업 비밀번호 찾기
+ */
+export const useResetCompanyPassword = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetCompanyPassword>>, TError,ResetCompanyPasswordMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resetCompanyPassword>>,
+        TError,
+        ResetCompanyPasswordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResetCompanyPasswordMutationOptions(options), queryClient);
+    }
+
 export type createAdvertisementInquiryResponse201 = {
   data: SuccessResponseCreateAdvertisementInquiryResponse
   status: 201
@@ -12589,6 +12691,8 @@ export const getListPublicAnnouncementsUrl = (params?: ListPublicAnnouncementsPa
  *
  *             로그인 없이 조회할 수 있습니다. 노출 중인 공지만 반환하며 목록에는 본문을 싣지 않습니다.
  *             상단 고정 공지가 먼저 오고 그 안에서 최신순입니다.
+ *             카테고리(`category`), 고정 여부(`pinned`), 검색어(`keyword`)로 거를 수 있습니다. 검색어는 제목·요약·본문에서
+ *             부분 일치로 찾습니다. 공지사항 화면의 맨 위 추천 카드는 `pinned=true` 로 부릅니다.
  * @summary 공지사항 목록 조회
  */
 export const listPublicAnnouncements = async (params?: ListPublicAnnouncementsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicAnnouncementsResponse> => {
@@ -12790,6 +12894,123 @@ export function useGetPublicAnnouncement<TData = Awaited<ReturnType<typeof getPu
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPublicAnnouncementQueryOptions(announcementId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listPublicAnnouncementCategoriesResponse200 = {
+  data: SuccessResponseListUserAnnouncementCategoryResponse
+  status: 200
+}
+
+export type listPublicAnnouncementCategoriesResponseSuccess = (listPublicAnnouncementCategoriesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listPublicAnnouncementCategoriesResponse = (listPublicAnnouncementCategoriesResponseSuccess)
+
+export const getListPublicAnnouncementCategoriesUrl = () => {
+
+
+
+
+  return `/api/v1/announcements/categories`
+}
+
+/**
+ *
+ *             로그인 없이 조회할 수 있습니다. 공지사항 화면의 `전체 카테고리` 칸들입니다.
+ *             모든 카테고리를 정해진 순서대로 주며, 카테고리마다 노출 중인 공지 수와 최근 공지 3건을 싣습니다.
+ *             공지가 없는 카테고리도 0건과 빈 목록으로 줍니다.
+ * @summary 공지사항 카테고리 목록 조회
+ */
+export const listPublicAnnouncementCategories = async ( options?: Parameters<typeof httpClient>[1]): Promise<listPublicAnnouncementCategoriesResponse> => {
+
+  return httpClient<listPublicAnnouncementCategoriesResponse>(getListPublicAnnouncementCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicAnnouncementCategoriesQueryKey = () => {
+    return [
+    `/api/v1/announcements/categories`
+    ] as const;
+    }
+
+
+export const getListPublicAnnouncementCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicAnnouncementCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>> = ({ signal }) => listPublicAnnouncementCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicAnnouncementCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>>
+export type ListPublicAnnouncementCategoriesQueryError = unknown
+
+
+export function useListPublicAnnouncementCategories<TData = Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAnnouncementCategories>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAnnouncementCategories>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAnnouncementCategories<TData = Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicAnnouncementCategories>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicAnnouncementCategories>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicAnnouncementCategories<TData = Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 공지사항 카테고리 목록 조회
+ */
+
+export function useListPublicAnnouncementCategories<TData = Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicAnnouncementCategories>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicAnnouncementCategoriesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -13409,6 +13630,8 @@ export const getSignUpCompanyResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
 
+export const getResetCompanyPasswordResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementInquiryResponse, object>> = {}): SuccessResponseCreateAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementContractResponse, object>> = {}): SuccessResponseCreateAdvertisementContractResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
@@ -13487,9 +13710,11 @@ export const getGetPublicBootcampResponseMock = (overrideResponse: Partial<Extra
 
 export const getListMyBootcampBookmarksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserBootcampSummaryResponse, object>> = {}): SuccessResponsePageResponseUserBootcampSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getListPublicAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseUserAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListPublicAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseUserAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseUserAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getGetPublicAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserAnnouncementDetailResponse, object>> = {}): SuccessResponseUserAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getGetPublicAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserAnnouncementDetailResponse, object>> = {}): SuccessResponseUserAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+
+export const getListPublicAnnouncementCategoriesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserAnnouncementCategoryResponse, object>> = {}): SuccessResponseListUserAnnouncementCategoryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), count: faker.number.int(), recentAnnouncements: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}))})), undefined]), ...overrideResponse})
 
 export const getListPublicAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -14310,6 +14535,18 @@ export const getSignInCompanyMockHandler = (overrideResponse?: SuccessResponseAu
   }, options)
 }
 
+export const getResetCompanyPasswordMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/auth/company/password-resets', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getResetCompanyPasswordResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: SuccessResponseCreateAdvertisementInquiryResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateAdvertisementInquiryResponse> | SuccessResponseCreateAdvertisementInquiryResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/advertisement-inquiries', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
@@ -14778,6 +15015,18 @@ export const getGetPublicAnnouncementMockHandler = (overrideResponse?: SuccessRe
   }, options)
 }
 
+export const getListPublicAnnouncementCategoriesMockHandler = (overrideResponse?: SuccessResponseListUserAnnouncementCategoryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListUserAnnouncementCategoryResponse> | SuccessResponseListUserAnnouncementCategoryResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/announcements/categories', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListPublicAnnouncementCategoriesResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListPublicAdvertisementProductsMockHandler = (overrideResponse?: SuccessResponsePageResponseAdvertisementProductResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseAdvertisementProductResponse> | SuccessResponsePageResponseAdvertisementProductResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/advertisement-products', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -14894,6 +15143,7 @@ export const getOgonggoUserAPIMock = () => [
   getSignInWithLetsCareerMockHandler(),
   getSignUpCompanyMockHandler(),
   getSignInCompanyMockHandler(),
+  getResetCompanyPasswordMockHandler(),
   getCreateAdvertisementInquiryMockHandler(),
   getCreateAdvertisementContractMockHandler(),
   getDeleteRecruitmentPostApplicationMockHandler(),
@@ -14933,6 +15183,7 @@ export const getOgonggoUserAPIMock = () => [
   getListMyBootcampBookmarksMockHandler(),
   getListPublicAnnouncementsMockHandler(),
   getGetPublicAnnouncementMockHandler(),
+  getListPublicAnnouncementCategoriesMockHandler(),
   getListPublicAdvertisementProductsMockHandler(),
   getListPublicAdvertisementExposuresMockHandler(),
   getDeleteRecruitmentPostCommentMockHandler(),

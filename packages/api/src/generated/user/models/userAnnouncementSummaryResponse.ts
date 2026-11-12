@@ -4,10 +4,24 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { UserAnnouncementSummaryResponseCategory } from './userAnnouncementSummaryResponseCategory';
 
 export interface UserAnnouncementSummaryResponse {
   id: number;
   title: string;
+  /** 상단 고정 공지입니다. 공지사항 화면은 고정 공지를 맨 위 추천 카드로 보입니다. */
   pinned: boolean;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
+     * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
+     * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     */
+  category: UserAnnouncementSummaryResponseCategory;
+  /** 추천 카드 썸네일 주소. 없으면 null이며 화면은 카테고리 기본 이미지를 보입니다. */
+  thumbnailUrl?: string;
+  /** 목록·추천 카드에 보이는 한두 줄 요약. 없으면 null입니다. */
+  summary?: string;
   createdAt: string;
 }

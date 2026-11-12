@@ -10,6 +10,7 @@ import {
   Field,
   Input,
   Pagination,
+  Select,
   Toggle,
   type DataTableColumn,
 } from '@ogonggo/ui';
@@ -19,14 +20,32 @@ import {
   useNoticeList,
   usePatchNoticeVisibility,
   useSaveNotice,
+  type NoticeCategory,
   type NoticeDetail,
   type NoticeSummary,
 } from '@/entities/notice/api/useNotices';
+import { BannerImageField } from '@/widgets/banner-form';
 import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
 import { lexicalToText } from '@/entities/notice/lib/content';
 import { PageHeader } from '@/widgets/page-header';
 import { formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
+
+/**
+ * 공지 카테고리(BE `AnnouncementCategory`, LC-3614). 사용자 공지사항 화면의 카테고리 칸이 이 순서다.
+ * `새로운 공고 노트` 는 나중에 백엔드가 자동으로 올릴 카테고리이고, 그 전까지는 여기서 직접 올린다.
+ */
+const CATEGORY_LABELS: Record<NoticeCategory, string> = {
+  OGONGGO_UPDATE: '오공고 업데이트',
+  NEW_JOB_NOTE: '새로운 공고 노트',
+  SERVICE_NOTICE: '서비스 안내',
+};
+const CATEGORY_OPTIONS = (Object.keys(CATEGORY_LABELS) as NoticeCategory[]).map((value) => ({
+  value,
+  label: CATEGORY_LABELS[value],
+}));
+/** 요약 상한. BE 와 같다. */
+const SUMMARY_MAX = 300;
 
 /**
  * 공지사항 목록과 작성·수정·삭제.
@@ -58,6 +77,12 @@ export function NoticeListPage() {
           {row.title}
         </span>
       ),
+    },
+    {
+      key: 'category',
+      header: '카테고리',
+      width: 'w-36',
+      render: (row) => CATEGORY_LABELS[row.category],
     },
     {
       key: 'visibility',
@@ -166,6 +191,9 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
   const [contentText, setContentText] = useState(notice ? lexicalToText(notice.content) : '');
   const [pinned, setPinned] = useState(notice?.pinned ?? false);
   const [visible, setVisible] = useState(notice ? notice.visibility === 'VISIBLE' : true);
+  const [category, setCategory] = useState<NoticeCategory>(notice?.category ?? 'OGONGGO_UPDATE');
+  const [thumbnailUrl, setThumbnailUrl] = useState(notice?.thumbnailUrl ?? '');
+  const [summary, setSummary] = useState(notice?.summary ?? '');
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const canSave = title.trim().length > 0 && contentText.trim().length > 0;
@@ -195,6 +223,39 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
           />
         </Field>
 
+        <Field label="카테고리" htmlFor="notice-category" required>
+          <Select
+            id="notice-category"
+            options={CATEGORY_OPTIONS}
+            value={category}
+            onChange={(event) => setCategory(event.target.value as NoticeCategory)}
+          />
+        </Field>
+
+        <Field
+          label="요약"
+          htmlFor="notice-summary"
+          hint={`선택 · 목록과 추천 카드에 한두 줄로 보입니다. ${summary.length}/${SUMMARY_MAX}자`}
+        >
+          <Input
+            id="notice-summary"
+            value={summary}
+            maxLength={SUMMARY_MAX}
+            onChange={(event) => setSummary(event.target.value)}
+            placeholder="예: 공고 달력에 마감 알림이 생겼어요."
+          />
+        </Field>
+
+        <BannerImageField
+          id="notice-thumbnail"
+          label="썸네일"
+          sizeHint="선택 · 상단 고정 공지는 사용자 공지사항 화면 맨 위 추천 카드로 보입니다. 권장 844 x 440px. 없으면 카테고리 아이콘을 보입니다."
+          aspectClassName="aspect-[422/220] max-w-md"
+          value={thumbnailUrl}
+          onChange={setThumbnailUrl}
+          required={false}
+        />
+
         <Field label="본문" htmlFor="notice-content" required>
           <RichTextEditor
             id="notice-content"
@@ -214,7 +275,7 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
               checked={pinned}
               onChange={(event) => setPinned(event.target.checked)}
             />
-            상단 고정
+            상단 고정(추천)
           </label>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
@@ -234,6 +295,9 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
                 content,
                 pinned,
                 visibility: visible ? 'VISIBLE' : 'HIDDEN',
+                category,
+                thumbnailUrl,
+                summary: summary.trim(),
               })
             }
             disabled={!canSave || saveMutation.isPending}

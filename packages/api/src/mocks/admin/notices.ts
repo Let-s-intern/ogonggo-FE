@@ -97,6 +97,9 @@ interface CreateNoticeBody {
   content: string;
   pinned: boolean;
   visibility: AdminNotice['visibility'];
+  category: AdminNotice['category'];
+  thumbnailUrl?: string;
+  summary?: string;
 }
 
 const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ request }) => {
@@ -115,6 +118,9 @@ const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ r
     content: body.content,
     pinned: body.pinned,
     visibility: body.visibility,
+    category: body.category,
+    thumbnailUrl: body.thumbnailUrl || undefined,
+    summary: body.summary || undefined,
     registeredAt: now,
     updatedAt: now,
   };
@@ -156,6 +162,16 @@ const updateNoticeHandler = http.patch(
     }
     if (body.visibility !== undefined) {
       notice.visibility = body.visibility;
+    }
+    if (body.category !== undefined) {
+      notice.category = body.category;
+    }
+    // 백엔드처럼 빈 글자는 지운다.
+    if (body.thumbnailUrl !== undefined) {
+      notice.thumbnailUrl = body.thumbnailUrl || undefined;
+    }
+    if (body.summary !== undefined) {
+      notice.summary = body.summary || undefined;
     }
     notice.updatedAt = localDateTime(new Date());
 

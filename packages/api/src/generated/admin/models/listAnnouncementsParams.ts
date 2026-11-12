@@ -4,6 +4,7 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { ListAnnouncementsCategory } from './listAnnouncementsCategory';
 import type { ListAnnouncementsVisibility } from './listAnnouncementsVisibility';
 
 export type ListAnnouncementsParams = {
@@ -29,4 +30,12 @@ keyword?: string;
  */
 visibility?: ListAnnouncementsVisibility;
 pinned?: boolean;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
+ * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
+ * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+ */
+category?: ListAnnouncementsCategory;
 };

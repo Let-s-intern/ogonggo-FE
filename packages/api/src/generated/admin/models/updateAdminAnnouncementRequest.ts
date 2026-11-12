@@ -4,6 +4,7 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { UpdateAdminAnnouncementRequestCategory } from './updateAdminAnnouncementRequestCategory';
 import type { UpdateAdminAnnouncementRequestVisibility } from './updateAdminAnnouncementRequestVisibility';
 
 export interface UpdateAdminAnnouncementRequest {
@@ -22,4 +23,24 @@ export interface UpdateAdminAnnouncementRequest {
      * | `HIDDEN` | 2 | 비노출 |
      */
   visibility?: UpdateAdminAnnouncementRequestVisibility;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
+     * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
+     * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     */
+  category?: UpdateAdminAnnouncementRequestCategory;
+  /**
+     * 추천 카드 썸네일 주소. 빈 글자를 보내면 지웁니다.
+     * @minLength 0
+     * @maxLength 2048
+     */
+  thumbnailUrl?: string;
+  /**
+     * 목록·추천 카드에 보이는 한두 줄 요약. 빈 글자를 보내면 지웁니다.
+     * @minLength 0
+     * @maxLength 300
+     */
+  summary?: string;
 }
