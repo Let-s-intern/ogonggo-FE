@@ -118,57 +118,33 @@
 
 /*
  * 채용공고 상세 `멘토한테 마지막 검토받기` 의 반짝임 아이콘(`widgets/job-detail/ui/MentorReviewButton.tsx`).
- * 큰 별은 살짝 커지며 기울었다 돌아오고, 오른쪽 위 작은 십자는 그 뒤를 따라 반짝인다. 둘의 박자를
- * 어긋나게 두어 번갈아 빛나 보인다. 모션 줄이기에서는 움직이지 않는다.
+ * 몇 초마다 아이콘 전체가 살짝 커지며 4분의 1 바퀴 돈다. 네 꼭짓점 별이라 90도 돌면 처음 모양과 같아서
+ * 다음 바퀴의 0도로 끊김 없이 이어진다. 나머지 시간은 가만히 있어 산만하지 않게 한다. 모션 줄이기에서는
+ * 움직이지 않는다.
  */
-@keyframes ogonggo-sparkle-star {
+@keyframes ogonggo-sparkle {
   0%,
-  55%,
-  100% {
-    transform: scale(1) rotate(0deg);
+  50% {
+    transform: rotate(0deg) scale(1);
   }
   70% {
-    transform: scale(1.18) rotate(12deg);
+    transform: rotate(50deg) scale(1.15);
   }
   85% {
-    transform: scale(0.94) rotate(-4deg);
+    transform: rotate(95deg) scale(0.95);
   }
-}
-
-@keyframes ogonggo-sparkle-plus {
-  0%,
-  60%,
+  92%,
   100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  75% {
-    transform: scale(0.3);
-    opacity: 0.2;
-  }
-  90% {
-    transform: scale(1.3);
-    opacity: 1;
+    transform: rotate(90deg) scale(1);
   }
 }
 
-.ogonggo-sparkle-star,
-.ogonggo-sparkle-plus {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.ogonggo-sparkle-star {
-  animation: ogonggo-sparkle-star 2.4s ease-in-out infinite;
-}
-
-.ogonggo-sparkle-plus {
-  animation: ogonggo-sparkle-plus 2.4s ease-in-out 0.15s infinite;
+.ogonggo-sparkle {
+  animation: ogonggo-sparkle 2.8s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ogonggo-sparkle-star,
-  .ogonggo-sparkle-plus {
+  .ogonggo-sparkle {
     animation: none;
   }
 }
