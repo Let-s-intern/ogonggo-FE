@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button, Callout } from '@ogonggo/ui';
+import { Button, Callout, cn } from '@ogonggo/ui';
 import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
 import {
   findExpiredImages,
@@ -37,6 +37,7 @@ import {
 import { BootcampApplySettingsSection } from './BootcampApplySettingsSection';
 import { BootcampBasicInfoSection } from './BootcampBasicInfoSection';
 import { BootcampContentSection } from './BootcampContentSection';
+import { BootcampPreview } from './BootcampPreview';
 
 export interface CompanyBootcampFormProps {
   /** 있으면 수정, 없으면 새 공고. 작성한 공고 표에서 넘어올 때만 있다. */
@@ -66,6 +67,9 @@ export interface CompanyBootcampFormProps {
  * 요청한다. **부트캠프에는 `/publish` 가 없다**(v5 PRD 4 절): 새 공고는 언제나 `DRAFT` 로
  * 만들어지고, 공개는 `start-recruitment` 가 만든다(`lib/api.ts`).
  *
+ * 탭 둘 중 `미리보기` 는 같은 값을 공개 부트캠프 상세 모양으로 그릴 뿐 아무것도 저장하지 않는다
+ * (`BootcampPreview`, 이슈 #653). 하단 버튼 둘은 탭을 따라가지 않고 늘 자리에 있다 — 채용공고 폼과 같다.
+ *
  * 저장에 성공하면 작성한 공고의 부트캠프 탭으로 간다. 방금 쓴 공고가 어떤 상태로 들어갔는지
  * (검수 대기인지 모집 중인지) 를 그 자리에서 보여 주는 화면이 거기뿐이다.
  */
@@ -79,6 +83,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
   const [loading, setLoading] = useState(bootcampId !== undefined);
   const [pending, setPending] = useState(false);
   const [openSteps, setOpenSteps] = useState<readonly number[]>([1, 2, 3]);
+  const [tab, setTab] = useState<'write' | 'preview'>('write');
   /** 모자란 칸의 이름, 또는 저장이 실패한 이유. 버튼 바로 위에 한 줄로 띄운다. */
   const [formError, setFormError] = useState<string | null>(null);
   /**
@@ -230,6 +235,7 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
             representativeImageUrl: values.representativeImageUrl,
           }),
         );
+        setTab('write');
         setFormError(IMAGE_EXPIRED_MESSAGE);
         setPending(false);
         return;
@@ -263,42 +269,71 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
         />
       ) : null}
       {published ? <Callout tone="warning">{companyPostCopy.edit.publishedNotice}</Callout> : null}
-      <FormSection
-        name="company-bootcamp-form"
-        step={1}
-        title="기본 정보"
-        description="공고를 소개하는 기본 정보를 입력해 주세요"
-        open={openSteps.includes(1)}
-        onToggle={() => toggle(1)}
-      >
-        <BootcampBasicInfoSection
-          values={values}
-          onChange={change}
-          imageNotice={expiredImages.messageOf}
-        />
-      </FormSection>
+      <div role="tablist" aria-label="부트캠프 공고 작성" className="flex border-b border-gray-200">
+        {(
+          [
+            { value: 'write', label: '작성' },
+            { value: 'preview', label: '미리보기' },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.value}
+            onClick={() => setTab(item.value)}
+            className={cn(
+              '-mb-px border-b-2 px-4 py-3 text-base',
+              tab === item.value
+                ? 'border-blue-500 font-semibold text-blue-500'
+                : 'border-transparent font-medium text-gray-400 hover:text-gray-600',
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
 
-      <FormSection
-        name="company-bootcamp-form"
-        step={2}
-        title="교육 상세"
-        description="프로그램의 특징과 커리큘럼을 입력해 주세요"
-        open={openSteps.includes(2)}
-        onToggle={() => toggle(2)}
-      >
-        <BootcampContentSection values={values} onChange={change} />
-      </FormSection>
+      {tab === 'preview' ? <BootcampPreview values={values} /> : null}
 
-      <FormSection
-        name="company-bootcamp-form"
-        step={3}
-        title="모집 · 지원 설정"
-        description="마감일과 지원 방법을 설정해 주세요"
-        open={openSteps.includes(3)}
-        onToggle={() => toggle(3)}
-      >
-        <BootcampApplySettingsSection values={values} onChange={change} />
-      </FormSection>
+      <div className={cn('flex flex-col gap-4', tab !== 'write' && 'hidden')}>
+        <FormSection
+          name="company-bootcamp-form"
+          step={1}
+          title="기본 정보"
+          description="공고를 소개하는 기본 정보를 입력해 주세요"
+          open={openSteps.includes(1)}
+          onToggle={() => toggle(1)}
+        >
+          <BootcampBasicInfoSection
+            values={values}
+            onChange={change}
+            imageNotice={expiredImages.messageOf}
+          />
+        </FormSection>
+
+        <FormSection
+          name="company-bootcamp-form"
+          step={2}
+          title="교육 상세"
+          description="프로그램의 특징과 커리큘럼을 입력해 주세요"
+          open={openSteps.includes(2)}
+          onToggle={() => toggle(2)}
+        >
+          <BootcampContentSection values={values} onChange={change} />
+        </FormSection>
+
+        <FormSection
+          name="company-bootcamp-form"
+          step={3}
+          title="모집 · 지원 설정"
+          description="마감일과 지원 방법을 설정해 주세요"
+          open={openSteps.includes(3)}
+          onToggle={() => toggle(3)}
+        >
+          <BootcampApplySettingsSection values={values} onChange={change} />
+        </FormSection>
+      </div>
 
       <FloatingActionBar
         error={formError}
