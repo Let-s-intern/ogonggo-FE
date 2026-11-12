@@ -18,7 +18,7 @@ import { useListQuery } from '@/shared/lib/useListQuery';
  * 서비스 개선 의견 목록. 읽기 전용이다.
  *
  * API 가 페이지 말고는 파라미터를 받지 않아 검색·필터는 없다. 순서는 서버가 정한 최신순이다.
- * 두 문항은 길 수 있어 표에서는 한 줄로 자르고, 행을 누르면 모달에서 전문을 보여 준다.
+ * 두 문항은 표에서 자르지 않고 줄바꿈까지 전부 보여 준다. 행을 누르면 모달에서 닉네임·이름·회원 ID 를 함께 본다.
  */
 export function ServiceFeedbackListPage() {
   const [selected, setSelected] = useState<AdminServiceFeedbackResponse | null>(null);
@@ -44,17 +44,19 @@ export function ServiceFeedbackListPage() {
       key: 'email',
       header: '이메일',
       width: 'w-48',
-      render: (row) => <OneLine text={row.userEmail} />,
+      render: (row) => <span className="break-all">{row.userEmail ?? '-'}</span>,
     },
     {
       key: 'satisfaction',
       header: '만족한 점',
-      render: (row) => <OneLine text={row.satisfaction} />,
+      width: 'min-w-64',
+      render: (row) => <FullText text={row.satisfaction} />,
     },
     {
       key: 'improvement',
       header: '아쉬운 점',
-      render: (row) => <OneLine text={row.improvement} />,
+      width: 'min-w-64',
+      render: (row) => <FullText text={row.improvement} />,
     },
   ];
 
@@ -91,11 +93,11 @@ const authorLabel = ({ userId, userNickname, userName }: AdminServiceFeedbackRes
   userNickname ?? userName ?? (userId === undefined ? '비로그인' : `회원 ${userId}`);
 
 /**
- * 비운 문항은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. 표는 내용 폭으로 칸을
- * 나누므로, 긴 글 칸의 상한이 넓으면 등록 일시·작성자 칸이 한 글자씩 꺾일 만큼 좁아진다.
+ * 비운 문항은 `-` 로 둔다. 빈 칸은 값이 안 그려진 것과 구분되지 않는다. 긴 글은 행 높이를 늘려 받고,
+ * 등록 일시·작성자 칸은 `whitespace-nowrap` 이라 꺾이지 않는다.
  */
-function OneLine({ text }: { text: string | undefined }) {
-  return <span className="block max-w-56 truncate">{text ?? '-'}</span>;
+function FullText({ text }: { text: string | undefined }) {
+  return <p className="whitespace-pre-wrap break-words">{text ?? '-'}</p>;
 }
 
 function FeedbackModal({

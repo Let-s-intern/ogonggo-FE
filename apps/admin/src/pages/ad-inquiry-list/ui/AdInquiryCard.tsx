@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { cn } from '@ogonggo/ui';
 import { type AdminAdvertisementInquiryResponse, enumLabel } from '@ogonggo/api/src/admin';
@@ -91,7 +91,7 @@ export function AdInquiryCard({
       </Section>
 
       <Section title="설문">
-        <FoldedText text={inquiry.promotionAnswer} />
+        <p className="whitespace-pre-wrap break-words">{inquiry.promotionAnswer}</p>
         <p className="mt-2 text-gray-500">
           마케팅 정보 수신 {inquiry.marketingConsent ? '동의' : '미동의'}
         </p>
@@ -171,36 +171,5 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       />
       {copied ? '복사됨' : '복사'}
     </button>
-  );
-}
-
-/** 세 줄이 넘으면 접고 `더 보기` 를 둔다(PRD `설문`). 넘는지는 그려 본 뒤 높이로 잰다. */
-function FoldedText({ text }: { text: string }) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const [overflowing, setOverflowing] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  useLayoutEffect(() => {
-    const element = ref.current;
-    if (element && !open) {
-      setOverflowing(element.scrollHeight > element.clientHeight + 1);
-    }
-  }, [text, open]);
-
-  return (
-    <div>
-      <p ref={ref} className={cn('whitespace-pre-wrap', !open && 'line-clamp-3')}>
-        {text}
-      </p>
-      {overflowing || open ? (
-        <button
-          type="button"
-          onClick={() => setOpen((current) => !current)}
-          className="mt-1 text-xs text-gray-500 underline"
-        >
-          {open ? '접기' : '더 보기'}
-        </button>
-      ) : null}
-    </div>
   );
 }
