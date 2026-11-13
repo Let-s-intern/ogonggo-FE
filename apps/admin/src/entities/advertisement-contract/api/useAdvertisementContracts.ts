@@ -9,6 +9,7 @@ import {
   createAdvertisementContractProduct,
   deleteAdvertisementContractProduct,
   getAdvertisementContract,
+  issueAdvertisementContractBusinessAccount,
   listAdvertisementContracts,
   listAdvertisementExposures,
   updateAdvertisementContractPaymentAmount,
@@ -124,6 +125,18 @@ export function useChangePaymentAmount(contractId: number) {
   return useMutation({
     mutationFn: (paymentAmount: number | null) =>
       unwrapData(updateAdvertisementContractPaymentAmount(contractId, { paymentAmount })),
+    onSuccess: invalidate,
+  });
+}
+
+/**
+ * 신청 이메일로 비즈니스 계정을 만들고, 그 이메일로 낸 비회원 신청을 모두 그 계정에 붙인다(BE LC-3600). 같은 이메일의 활성
+ * 비즈니스 회원이 있으면 새로 만들지 않고 연결만 한다. 새로 만들었을 때만 임시 비밀번호가 응답과 메일로 간다.
+ */
+export function useIssueBusinessAccount(contractId: number) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: () => unwrapData(issueAdvertisementContractBusinessAccount(contractId)),
     onSuccess: invalidate,
   });
 }
