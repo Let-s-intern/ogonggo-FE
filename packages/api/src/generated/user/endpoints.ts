@@ -26,6 +26,7 @@ import type {
 import type {
   ChangeMyNicknameRequest,
   ChangeMyPasswordRequest,
+  CompanyPasswordResetRequest,
   CompanySignInRequest,
   CompanySignUpRequest,
   CreateAdvertisementContractRequest,
@@ -7718,6 +7719,106 @@ export const useSignInCompany = <TError = ErrorResponse,
       return useMutation(getSignInCompanyMutationOptions(options), queryClient);
     }
 
+export type resetCompanyPasswordResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type resetCompanyPasswordResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type resetCompanyPasswordResponseSuccess = (resetCompanyPasswordResponse200) & {
+  headers: Headers;
+};
+export type resetCompanyPasswordResponseError = (resetCompanyPasswordResponse400) & {
+  headers: Headers;
+};
+
+export type resetCompanyPasswordResponse = (resetCompanyPasswordResponseSuccess | resetCompanyPasswordResponseError)
+
+export const getResetCompanyPasswordUrl = () => {
+
+
+
+
+  return `/api/v1/auth/company/password-resets`
+}
+
+/**
+ * 로그인 이메일의 비밀번호를 임시 비밀번호로 바로 바꾸고 그 이메일로 보냅니다. 기존 세션은 끊깁니다. 계정이 없거나 정지·탈퇴했어도 같은 200을 돌려줍니다. 같은 이메일은 5분에 한 번만 처리하고 그 사이 요청은 아무것도 하지 않고 200입니다. 응답은 메일 적재까지이며 실제 발송 결과가 아닙니다.
+ * @summary 기업 비밀번호 찾기
+ */
+export const resetCompanyPassword = async (companyPasswordResetRequest: CompanyPasswordResetRequest, options?: Parameters<typeof httpClient>[1]): Promise<resetCompanyPasswordResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<resetCompanyPasswordResponse>(getResetCompanyPasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(companyPasswordResetRequest)
+  }
+);}
+
+
+
+
+
+export const getResetCompanyPasswordMutationKey = () => ['resetCompanyPassword'] as const;
+
+export const getResetCompanyPasswordMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetCompanyPassword>>, TError,ResetCompanyPasswordMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetCompanyPassword>>, TError,ResetCompanyPasswordMutationVariables, TContext> => {
+
+const mutationKey = getResetCompanyPasswordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetCompanyPassword>>, ResetCompanyPasswordMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  resetCompanyPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetCompanyPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetCompanyPassword>>>
+    export type ResetCompanyPasswordMutationBody = CompanyPasswordResetRequest
+    export type ResetCompanyPasswordMutationError = ErrorResponse
+    export type ResetCompanyPasswordMutationVariables = {data: CompanyPasswordResetRequest}
+
+    /**
+ * @summary 기업 비밀번호 찾기
+ */
+export const useResetCompanyPassword = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetCompanyPassword>>, TError,ResetCompanyPasswordMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resetCompanyPassword>>,
+        TError,
+        ResetCompanyPasswordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResetCompanyPasswordMutationOptions(options), queryClient);
+    }
+
 export type createAdvertisementInquiryResponse201 = {
   data: SuccessResponseCreateAdvertisementInquiryResponse
   status: 201
@@ -13409,6 +13510,8 @@ export const getSignUpCompanyResponseMock = (overrideResponse: Partial<Extract<S
 
 export const getSignInCompanyResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAuthTokenResponse, object>> = {}): SuccessResponseAuthTokenResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{accessToken: faker.string.alpha({length: {min: 10, max: 20}}), refreshToken: faker.string.alpha({length: {min: 10, max: 20}})}, undefined]), ...overrideResponse})
 
+export const getResetCompanyPasswordResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getCreateAdvertisementInquiryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementInquiryResponse, object>> = {}): SuccessResponseCreateAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdvertisementContractResponse, object>> = {}): SuccessResponseCreateAdvertisementContractResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
@@ -14310,6 +14413,18 @@ export const getSignInCompanyMockHandler = (overrideResponse?: SuccessResponseAu
   }, options)
 }
 
+export const getResetCompanyPasswordMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/auth/company/password-resets', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getResetCompanyPasswordResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getCreateAdvertisementInquiryMockHandler = (overrideResponse?: SuccessResponseCreateAdvertisementInquiryResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseCreateAdvertisementInquiryResponse> | SuccessResponseCreateAdvertisementInquiryResponse), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/advertisement-inquiries', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
 
@@ -14894,6 +15009,7 @@ export const getOgonggoUserAPIMock = () => [
   getSignInWithLetsCareerMockHandler(),
   getSignUpCompanyMockHandler(),
   getSignInCompanyMockHandler(),
+  getResetCompanyPasswordMockHandler(),
   getCreateAdvertisementInquiryMockHandler(),
   getCreateAdvertisementContractMockHandler(),
   getDeleteRecruitmentPostApplicationMockHandler(),

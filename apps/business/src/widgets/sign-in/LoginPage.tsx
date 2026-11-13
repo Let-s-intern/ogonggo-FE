@@ -81,6 +81,11 @@ export function LoginPage({ returnPath }: LoginPageProps) {
           error={error}
           emailLabel="업무용 이메일"
         />
+        <div className="flex justify-end pt-3 text-sm">
+          <Link href="/login/password-reset" className="text-gray-500 hover:underline">
+            비밀번호 찾기
+          </Link>
+        </div>
         <div className="flex justify-center gap-2 pt-12 text-sm">
           <span className="text-gray-500">아직 기업 회원이 아니신가요?</span>
           <Link href={signUpHref} className="font-medium text-gray-900 hover:underline">

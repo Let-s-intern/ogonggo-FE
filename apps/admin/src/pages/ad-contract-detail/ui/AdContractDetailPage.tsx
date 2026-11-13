@@ -24,6 +24,7 @@ import {
   useChangePaymentAmount,
   useContract,
   useContractExposures,
+  useIssueBusinessAccount,
   useRemoveContractProduct,
 } from '@/entities/advertisement-contract/api/useAdvertisementContracts';
 import {
@@ -99,6 +100,9 @@ export function AdContractDetailPage() {
           <div className="flex flex-col gap-6">
             <StatusCard contract={contract} />
             <PaymentAmountCard key={contract.paymentAmount ?? 'none'} contract={contract} />
+            {contract.source === 'APPLICATION_FORM' ? (
+              <BusinessAccountCard contract={contract} />
+            ) : null}
           </div>
         </div>
         <ProductsCard contract={contract} />
@@ -351,6 +355,89 @@ function PaymentAmountCard({ contract }: { contract: AdminAdvertisementContractD
         {change.isError ? (
           <Callout tone="error">
             {advertisementErrorMessage(change.error, '금액을 저장하지 못했습니다.')}
+          </Callout>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * 비즈니스 계정 발급(BE LC-3600). 비회원 신청이면 신청 이메일을 로그인 이메일로 계정을 만들고 같은 이메일의 비회원 신청을 모두
+ * 붙인다. 고객은 그 계정으로 biz 에 로그인해 신청 내역을 본다. 회원이 붙은 신청(`userId`)은 발급할 일이 없어 회원 링크만 둔다.
+ *
+ * 새로 만든 계정의 임시 비밀번호는 응답에만 있고 다시 볼 수 없다. 발급 직후 이 카드에서만 보이고, 화면을 떠나면 사라진다.
+ * 메일로도 가므로 놓쳐도 고객은 메일이나 biz 의 비밀번호 찾기로 받는다.
+ */
+function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
+  const issue = useIssueBusinessAccount(contract.id);
+  const result = issue.data;
+
+  return (
+    <Card>
+      <CardTitle>비즈니스 계정</CardTitle>
+      <div className="mt-3 flex flex-col gap-3 text-sm">
+        {result ? (
+          <div className="flex flex-col gap-1.5">
+            <p className="text-gray-900">
+              {result.created
+                ? '계정을 새로 만들고 임시 비밀번호를 메일로 보냈습니다.'
+                : '이미 있는 비즈니스 계정에 연결했습니다. 비밀번호와 메일은 바꾸지 않았습니다.'}
+            </p>
+            <dl className="flex flex-col gap-1.5">
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-gray-500">로그인 이메일</dt>
+                <dd className="break-all text-gray-900">{result.loginEmail}</dd>
+              </div>
+              {result.temporaryPassword ? (
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-gray-500">임시 비밀번호</dt>
+                  <dd className="font-mono break-all text-gray-900 select-all">
+                    {result.temporaryPassword}
+                  </dd>
+                </div>
+              ) : null}
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-gray-500">연결한 신청</dt>
+                <dd className="text-gray-900">{result.linkedContractCount}건</dd>
+              </div>
+            </dl>
+            {result.temporaryPassword ? (
+              <p className="pt-1 text-xs text-gray-500">
+                임시 비밀번호는 지금만 보입니다. 화면을 떠나면 다시 볼 수 없습니다.
+              </p>
+            ) : null}
+          </div>
+        ) : contract.userId != null ? (
+          <p className="text-gray-500">
+            회원이 붙은 신청입니다.{' '}
+            <Link
+              to={`/members/companies/${contract.userId}`}
+              className="text-blue-500 hover:underline"
+            >
+              회원 정보
+            </Link>
+          </p>
+        ) : (
+          <>
+            <p className="text-gray-500">
+              비회원 신청입니다. 신청 이메일({contract.email ?? '-'})로 계정을 만들고, 같은 이메일로
+              낸 비회원 신청을 모두 이 계정에 붙입니다. 이미 그 이메일의 비즈니스 계정이 있으면
+              연결만 합니다.
+            </p>
+            <Button
+              size="sm"
+              className="self-start"
+              disabled={issue.isPending}
+              onClick={() => issue.mutate()}
+            >
+              {issue.isPending ? '발급하는 중' : '계정 발급'}
+            </Button>
+          </>
+        )}
+        {issue.isError ? (
+          <Callout tone="error">
+            {advertisementErrorMessage(issue.error, '계정을 발급하지 못했습니다.')}
           </Callout>
         ) : null}
       </div>

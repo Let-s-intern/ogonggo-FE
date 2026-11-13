@@ -3,7 +3,7 @@ import { serverErrorMessage } from './authErrorMessages';
 
 /**
  * 광고 상품·노출·계약 API 의 오류 코드별 화면 문구(BE `AdvertisementProductErrorCode`·`AdvertisementExposureErrorCode`·
- * `AdvertisementContractErrorCode`). 서버 문구는 개발자에게 하는 말이라 운영자가 무엇을 고칠지로 바꾼다.
+ * `AdvertisementContractErrorCode`, 계정 발급 `BUSINESS_ACCOUNT_*`). 서버 문구는 개발자에게 하는 말이라 운영자가 무엇을 고칠지로 바꾼다.
  */
 const MESSAGES: Record<string, string> = {
   ADVERTISEMENT_PRODUCT_POSITION_MISMATCH: '노출 자리를 고른 상품은 카테고리가 배너여야 해요.',
@@ -18,6 +18,10 @@ const MESSAGES: Record<string, string> = {
     '계약에 붙인 상품을 찾을 수 없어요. 이미 뺐을 수 있어요.',
   ADVERTISEMENT_CONTRACT_FOLLOWS_REVIEW:
     '비즈니스 공고 계약은 공고 검수 결과를 따라가서 상태를 바꿀 수 없어요.',
+  BUSINESS_ACCOUNT_NOT_ISSUABLE:
+    '이미 회원이 붙은 신청이거나 비즈니스 공고 계약이라 계정을 발급할 수 없어요.',
+  BUSINESS_ACCOUNT_MEMBER_NOT_ACTIVE:
+    '이 이메일의 비즈니스 회원이 정지되었거나 탈퇴했어요. 회원 관리에서 상태를 확인해 주세요.',
 };
 
 function errorCode(error: unknown): string | undefined {

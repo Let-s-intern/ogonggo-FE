@@ -54,6 +54,7 @@ export * from './companyJobSummaryResponseRecruitmentType';
 export * from './companyJobSummaryResponseRegion';
 export * from './companyJobSummaryResponseReviewStatus';
 export * from './companyJobSummaryResponseSubRegion';
+export * from './companyPasswordResetRequest';
 export * from './companySignInRequest';
 export * from './companySignUpRequest';
 export * from './companySignUpRequestBusinessNumberType';
