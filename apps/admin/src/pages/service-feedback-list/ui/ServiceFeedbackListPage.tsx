@@ -13,11 +13,13 @@ import { useServiceFeedbackList } from '@/entities/service-feedback/api/useServi
 import { PageHeader } from '@/widgets/page-header';
 import { formatDateTime } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
+import { ServiceFeedbackCsvButton } from './ServiceFeedbackCsvButton';
 
 /**
  * 서비스 개선 의견 목록. 읽기 전용이다.
  *
  * API 가 페이지 말고는 파라미터를 받지 않아 검색·필터는 없다. 순서는 서버가 정한 최신순이다.
+ * 오른쪽 위 `CSV 내보내기` 로 전체를 내려받는다.
  * 두 문항은 표에서 자르지 않고 줄바꿈까지 전부 보여 준다. 행을 누르면 모달에서 닉네임·이름·회원 ID 를 함께 본다.
  */
 export function ServiceFeedbackListPage() {
@@ -62,7 +64,7 @@ export function ServiceFeedbackListPage() {
 
   return (
     <>
-      <PageHeader title="서비스 의견" />
+      <PageHeader title="서비스 의견" action={<ServiceFeedbackCsvButton />} />
 
       {isError ? (
         <Callout tone="error">목록을 불러오지 못했습니다.</Callout>

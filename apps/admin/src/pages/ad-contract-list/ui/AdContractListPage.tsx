@@ -39,20 +39,37 @@ const STATUS_OPTIONS = enumOptions('AdvertisementContractStatus');
  * 화면. BE 에서는 신청 한 건이 곧 계약 한 행이고 상태만 바뀐다. 아직 승인되지 않은 것(신청·협의 중·반려)을 `유료 광고 신청`,
  * 승인된 것을 `계약` 메뉴로 나눠 본다(2026-11-09 사용자). 상태 체크는 그 화면의 상태만 고를 수 있고, 하나도 고르지 않으면
  * 화면의 상태 전부로 거른다.
+ *
+ * 처음 들어오면(`status` 쿼리 없음) `defaultStatuses` 가 체크돼 있다. 유료 광고 신청은 반려를 빼고 본다(2026-11-13 사용자).
+ * 전부 해제하면 쿼리 없음과 구분되도록 `status=none` 으로 남긴다.
  */
 export type ContractListView = 'applications' | 'contracts';
 
 const VIEWS: Record<
   ContractListView,
-  { title: string; statuses: ListAdvertisementContractsStatusItem[]; empty: string }
+  {
+    title: string;
+    statuses: ListAdvertisementContractsStatusItem[];
+    defaultStatuses: ListAdvertisementContractsStatusItem[];
+    empty: string;
+  }
 > = {
   applications: {
     title: '유료 광고 신청',
     statuses: ['REQUESTED', 'NEGOTIATING', 'REJECTED'],
+    defaultStatuses: ['REQUESTED', 'NEGOTIATING'],
     empty: '조건에 맞는 신청이 없습니다.',
   },
-  contracts: { title: '광고 계약', statuses: ['APPROVED'], empty: '조건에 맞는 계약이 없습니다.' },
+  contracts: {
+    title: '광고 계약',
+    statuses: ['APPROVED'],
+    defaultStatuses: ['APPROVED'],
+    empty: '조건에 맞는 계약이 없습니다.',
+  },
 };
+
+/** 체크를 전부 푼 상태. 빈 값은 `change` 가 쿼리에서 지워 기본 체크로 돌아가 버린다. */
+const NO_STATUS = 'none';
 
 /**
  * 광고 신청서로 들어온 계약만 본다. 기업회원 공고 등록(`COMPANY_POSTING`)도 계약 행을 만들지만 공고 하나에 자동으로
@@ -155,11 +172,14 @@ export function AdContractListPage({ view }: { view: ContractListView }) {
     setSearchParams(next);
   };
 
-  const { title, statuses: tabStatuses, empty } = VIEWS[view];
-  const checkedStatuses = get('status')
-    .split(',')
-    .filter(isStatus)
-    .filter((status) => tabStatuses.includes(status));
+  const { title, statuses: tabStatuses, defaultStatuses, empty } = VIEWS[view];
+  const statusParam = get('status');
+  const checkedStatuses = statusParam
+    ? statusParam
+        .split(',')
+        .filter(isStatus)
+        .filter((status) => tabStatuses.includes(status))
+    : defaultStatuses;
 
   const filters: ContractListFilters = {
     page,
@@ -177,7 +197,7 @@ export function AdContractListPage({ view }: { view: ContractListView }) {
     const next = on
       ? [...checkedStatuses, status]
       : checkedStatuses.filter((value) => value !== status);
-    change({ status: next.join(',') });
+    change({ status: next.length > 0 ? next.join(',') : NO_STATUS });
   };
 
   return (
