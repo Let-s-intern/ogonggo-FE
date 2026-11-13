@@ -3,12 +3,15 @@
 import { FormRichTextField } from '@/shared/ui/FormRichTextField';
 import type { CompanyJobFormValues } from '../model/values';
 import { JobHiringProcessField } from './JobHiringProcessField';
+import { JobSourceImagesField } from './JobSourceImagesField';
 
 export interface JobContentSectionProps {
   values: CompanyJobFormValues;
   onChange: (patch: Partial<CompanyJobFormValues>) => void;
   /** 저장된 채용 절차를 읽어 왔는지. 그때는 행이 아니라 한 덩어리 글로 그린다. */
   hiringProcessStored: boolean;
+  /** 원문 이미지 칸 아래 안내. 만료된 이미지를 뺐을 때 쓴다. */
+  sourceImagesNotice?: string;
 }
 
 /**
@@ -18,11 +21,14 @@ export interface JobContentSectionProps {
  * `benefits` 에 그대로 들어간다. 공개 상세는 `공고 분석`·`공고 원문` 두 탭인데(`JobDetailTabs.tsx`),
  * 이 글들을 그대로 보여 주는 `공고 원문` 탭이 같은 순서로 그린다
  * (`widgets/job-detail/ui/OriginalTab.tsx` 의 `buildSections`).
+ *
+ * 맨 끝의 원문 이미지는 선택이다. 올리면 같은 탭에서 글 섹션 아래에 보인다(`JobSourceImagesField`).
  */
 export function JobContentSection({
   values,
   onChange,
   hiringProcessStored,
+  sourceImagesNotice,
 }: JobContentSectionProps) {
   return (
     <div>
@@ -65,6 +71,12 @@ export function JobContentSection({
         steps={values.hiringProcessSteps}
         stored={hiringProcessStored}
         onChange={onChange}
+      />
+
+      <JobSourceImagesField
+        value={values.sourceImageUrls}
+        notice={sourceImagesNotice}
+        onChange={(sourceImageUrls) => onChange({ sourceImageUrls })}
       />
     </div>
   );
