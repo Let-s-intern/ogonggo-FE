@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import {
   Badge,
   Button,
@@ -22,6 +23,7 @@ import {
   useSaveNotice,
   type NoticeCategory,
   type NoticeDetail,
+  type NoticePushTarget,
   type NoticeSummary,
 } from '@/entities/notice/api/useNotices';
 import { BannerImageField } from '@/widgets/banner-form';
@@ -39,11 +41,22 @@ const CATEGORY_LABELS: Record<NoticeCategory, string> = {
   OGONGGO_UPDATE: '오공고 업데이트',
   NEW_JOB_NOTE: '새로운 공고 노트',
   SERVICE_NOTICE: '서비스 안내',
+  BUSINESS_NOTICE: '비즈니스 공지',
 };
 const CATEGORY_OPTIONS = (Object.keys(CATEGORY_LABELS) as NoticeCategory[]).map((value) => ({
   value,
   label: CATEGORY_LABELS[value],
 }));
+/** 푸시 대상(BE `AnnouncementPushTarget`). 관리자 알림 발송의 회원 종류 대상과 같다. */
+const PUSH_TARGET_LABELS: Record<NoticePushTarget, string> = {
+  NONE: '보내지 않음',
+  ALL: '전체 회원',
+  GENERAL_MEMBERS: '일반 회원',
+  COMPANY_MEMBERS: '기업 회원',
+};
+const PUSH_TARGET_OPTIONS = (Object.keys(PUSH_TARGET_LABELS) as NoticePushTarget[]).map(
+  (value) => ({ value, label: PUSH_TARGET_LABELS[value] }),
+);
 /** 요약 상한. BE 와 같다. */
 const SUMMARY_MAX = 300;
 
@@ -194,6 +207,9 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
   const [category, setCategory] = useState<NoticeCategory>(notice?.category ?? 'OGONGGO_UPDATE');
   const [thumbnailUrl, setThumbnailUrl] = useState(notice?.thumbnailUrl ?? '');
   const [summary, setSummary] = useState(notice?.summary ?? '');
+  const [pushTarget, setPushTarget] = useState<NoticePushTarget>(notice?.pushTarget ?? 'NONE');
+  /** 이미 보낸 공지는 대상을 바꿀 수 없다(BE 409). */
+  const pushed = Boolean(notice?.pushBatchId);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const canSave = title.trim().length > 0 && contentText.trim().length > 0;
@@ -256,6 +272,35 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
           required={false}
         />
 
+        <Field
+          label="푸시 알림"
+          htmlFor="notice-push-target"
+          hint={
+            pushed
+              ? undefined
+              : '노출하는 순간 한 번 보냅니다. 이미 노출 중인 공지에 대상을 정하면 저장할 때 바로 보내고, 숨겼다 다시 노출해도 다시 보내지 않습니다. 제목이 푸시 제목, 요약이 푸시 본문입니다.'
+          }
+        >
+          <Select
+            id="notice-push-target"
+            options={PUSH_TARGET_OPTIONS}
+            value={pushTarget}
+            disabled={pushed}
+            onChange={(event) => setPushTarget(event.target.value as NoticePushTarget)}
+          />
+          {pushed && notice?.pushBatchId ? (
+            <p className="pt-1 text-xs text-gray-500">
+              {notice.pushedAt ? `${formatDate(notice.pushedAt)}에 ` : ''}보냈습니다.{' '}
+              <Link
+                to={`/notifications/batches/${notice.pushBatchId}`}
+                className="text-blue-500 hover:underline"
+              >
+                발송 결과 보기
+              </Link>
+            </p>
+          ) : null}
+        </Field>
+
         <Field label="본문" htmlFor="notice-content" required>
           <RichTextEditor
             id="notice-content"
@@ -298,6 +343,7 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
                 category,
                 thumbnailUrl,
                 summary: summary.trim(),
+                pushTarget,
               })
             }
             disabled={!canSave || saveMutation.isPending}

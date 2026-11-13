@@ -12,4 +12,5 @@ export const ListAnnouncementsCategory = {
   OGONGGO_UPDATE: 'OGONGGO_UPDATE',
   NEW_JOB_NOTE: 'NEW_JOB_NOTE',
   SERVICE_NOTICE: 'SERVICE_NOTICE',
+  BUSINESS_NOTICE: 'BUSINESS_NOTICE',
 } as const;

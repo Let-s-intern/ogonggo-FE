@@ -22,6 +22,7 @@ size?: number;
  * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
  * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
  * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+ * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
  */
 category?: ListPublicAnnouncementsCategory;
 /**

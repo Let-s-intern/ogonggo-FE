@@ -1084,7 +1084,12 @@ const getNoticesHandler = http.get('*/api/v1/announcements', ({ request }) => {
  * `:noticeId` 핸들러보다 앞에 둔다 — 순서가 바뀌면 `categories` 가 공지 id 로 읽힌다.
  */
 const getNoticeCategoriesHandler = http.get('*/api/v1/announcements/categories', () => {
-  const categories = ['OGONGGO_UPDATE', 'NEW_JOB_NOTE', 'SERVICE_NOTICE'] as const;
+  const categories = [
+    'OGONGGO_UPDATE',
+    'NEW_JOB_NOTE',
+    'SERVICE_NOTICE',
+    'BUSINESS_NOTICE',
+  ] as const;
   const body: SuccessResponseListUserAnnouncementCategoryResponse = {
     status: 200,
     message: '요청이 성공했습니다.',

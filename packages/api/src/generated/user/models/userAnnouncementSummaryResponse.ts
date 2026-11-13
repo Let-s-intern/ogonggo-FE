@@ -17,6 +17,7 @@ export interface UserAnnouncementSummaryResponse {
      * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
      * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
      * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
      */
   category: UserAnnouncementSummaryResponseCategory;
   /** 추천 카드 썸네일 주소. 없으면 null이며 화면은 카테고리 기본 이미지를 보입니다. */

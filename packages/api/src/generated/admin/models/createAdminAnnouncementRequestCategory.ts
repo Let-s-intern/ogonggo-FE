@@ -6,11 +6,14 @@
  */
 
 /**
+ * 카테고리. 보내지 않으면 OGONGGO_UPDATE입니다.
+ *
  * | 값 | code | 설명 |
  * | --- | --- | --- |
  * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
  * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
  * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+ * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
  */
 export type CreateAdminAnnouncementRequestCategory = typeof CreateAdminAnnouncementRequestCategory[keyof typeof CreateAdminAnnouncementRequestCategory];
 
@@ -19,4 +22,5 @@ export const CreateAdminAnnouncementRequestCategory = {
   OGONGGO_UPDATE: 'OGONGGO_UPDATE',
   NEW_JOB_NOTE: 'NEW_JOB_NOTE',
   SERVICE_NOTICE: 'SERVICE_NOTICE',
+  BUSINESS_NOTICE: 'BUSINESS_NOTICE',
 } as const;

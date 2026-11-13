@@ -38,6 +38,12 @@ export const NOTICE_CATEGORY_META: Record<NoticeCategory, NoticeCategoryMeta> = 
     icon: 'icon-[lucide--megaphone]',
     tone: 'bg-orange-50 text-orange-500',
   },
+  BUSINESS_NOTICE: {
+    label: '비즈니스 공지',
+    description: '채용 공고를 올리는 기업회원께 드리는 안내예요.',
+    icon: 'icon-[lucide--briefcase]',
+    tone: 'bg-green-50 text-green-600',
+  },
 };
 
 export const NOTICE_CATEGORIES = Object.keys(NOTICE_CATEGORY_META) as NoticeCategory[];

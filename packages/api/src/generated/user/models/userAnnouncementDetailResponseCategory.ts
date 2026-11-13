@@ -11,6 +11,7 @@
  * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
  * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
  * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+ * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
  */
 export type UserAnnouncementDetailResponseCategory = typeof UserAnnouncementDetailResponseCategory[keyof typeof UserAnnouncementDetailResponseCategory];
 
@@ -19,4 +20,5 @@ export const UserAnnouncementDetailResponseCategory = {
   OGONGGO_UPDATE: 'OGONGGO_UPDATE',
   NEW_JOB_NOTE: 'NEW_JOB_NOTE',
   SERVICE_NOTICE: 'SERVICE_NOTICE',
+  BUSINESS_NOTICE: 'BUSINESS_NOTICE',
 } as const;

@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { CreateAdminAnnouncementRequestCategory } from './createAdminAnnouncementRequestCategory';
+import type { CreateAdminAnnouncementRequestPushTarget } from './createAdminAnnouncementRequestPushTarget';
 import type { CreateAdminAnnouncementRequestVisibility } from './createAdminAnnouncementRequestVisibility';
 
 export interface CreateAdminAnnouncementRequest {
@@ -24,11 +25,14 @@ export interface CreateAdminAnnouncementRequest {
      */
   visibility: CreateAdminAnnouncementRequestVisibility;
   /**
+     * 카테고리. 보내지 않으면 OGONGGO_UPDATE입니다.
+     *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
      * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
      * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
      */
   category: CreateAdminAnnouncementRequestCategory;
   /**
@@ -38,9 +42,20 @@ export interface CreateAdminAnnouncementRequest {
      */
   thumbnailUrl?: string;
   /**
-     * 목록·추천 카드에 보이는 한두 줄 요약(선택).
+     * 목록·추천 카드에 보이는 한두 줄 요약(선택). 푸시 알림 본문에도 씁니다.
      * @minLength 0
      * @maxLength 300
      */
   summary?: string;
+  /**
+     * 노출할 때 푸시 알림을 보낼 대상. NONE이면 보내지 않습니다. 노출 상태가 되는 순간 한 번만 보내고, 보낸 뒤에는 바꿀 수 없습니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NONE` | 1 | 보내지 않음 |
+     * | `ALL` | 2 | 전체 회원 |
+     * | `GENERAL_MEMBERS` | 3 | 일반 회원 |
+     * | `COMPANY_MEMBERS` | 4 | 기업 회원 |
+     */
+  pushTarget: CreateAdminAnnouncementRequestPushTarget;
 }

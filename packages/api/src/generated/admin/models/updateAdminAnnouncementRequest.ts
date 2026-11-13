@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { UpdateAdminAnnouncementRequestCategory } from './updateAdminAnnouncementRequestCategory';
+import type { UpdateAdminAnnouncementRequestPushTarget } from './updateAdminAnnouncementRequestPushTarget';
 import type { UpdateAdminAnnouncementRequestVisibility } from './updateAdminAnnouncementRequestVisibility';
 
 export interface UpdateAdminAnnouncementRequest {
@@ -29,6 +30,7 @@ export interface UpdateAdminAnnouncementRequest {
      * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
      * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
      * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
      */
   category?: UpdateAdminAnnouncementRequestCategory;
   /**
@@ -43,4 +45,15 @@ export interface UpdateAdminAnnouncementRequest {
      * @maxLength 300
      */
   summary?: string;
+  /**
+     * 노출할 때 푸시 알림을 보낼 대상. NONE이면 보내지 않습니다. 노출 상태가 되는 순간 한 번만 보내고, 보낸 뒤에는 바꿀 수 없습니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NONE` | 1 | 보내지 않음 |
+     * | `ALL` | 2 | 전체 회원 |
+     * | `GENERAL_MEMBERS` | 3 | 일반 회원 |
+     * | `COMPANY_MEMBERS` | 4 | 기업 회원 |
+     */
+  pushTarget?: UpdateAdminAnnouncementRequestPushTarget;
 }
