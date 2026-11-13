@@ -657,6 +657,18 @@ export const ENUM_CATALOG = {
     { name: 'COMPANY', desc: '비즈니스 등록', parent: null },
     { name: 'WORK24', desc: '고용24', parent: null },
   ],
+  AnnouncementCategory: [
+    { name: 'OGONGGO_UPDATE', desc: '오공고 업데이트', parent: null },
+    { name: 'NEW_JOB_NOTE', desc: '새로운 공고 노트', parent: null },
+    { name: 'SERVICE_NOTICE', desc: '서비스 안내', parent: null },
+    { name: 'BUSINESS_NOTICE', desc: '비즈니스 공지', parent: null },
+  ],
+  AnnouncementPushTarget: [
+    { name: 'NONE', desc: '보내지 않음', parent: null },
+    { name: 'ALL', desc: '전체 회원', parent: null },
+    { name: 'GENERAL_MEMBERS', desc: '일반 회원', parent: null },
+    { name: 'COMPANY_MEMBERS', desc: '기업 회원', parent: null },
+  ],
   LetsCareerContentKind: [
     { name: 'CHALLENGE', desc: '챌린지', parent: null },
     { name: 'LIVE', desc: '라이브', parent: null },
