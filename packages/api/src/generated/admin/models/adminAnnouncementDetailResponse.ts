@@ -4,6 +4,8 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { AdminAnnouncementDetailResponseCategory } from './adminAnnouncementDetailResponseCategory';
+import type { AdminAnnouncementDetailResponsePushTarget } from './adminAnnouncementDetailResponsePushTarget';
 import type { AdminAnnouncementDetailResponseVisibility } from './adminAnnouncementDetailResponseVisibility';
 
 export interface AdminAnnouncementDetailResponse {
@@ -19,6 +21,32 @@ export interface AdminAnnouncementDetailResponse {
      * | `HIDDEN` | 2 | 비노출 |
      */
   visibility: AdminAnnouncementDetailResponseVisibility;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
+     * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
+     * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
+     */
+  category: AdminAnnouncementDetailResponseCategory;
+  thumbnailUrl?: string;
+  summary?: string;
+  /**
+     * 노출할 때 푸시 알림을 보낼 대상. NONE이면 보내지 않습니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NONE` | 1 | 보내지 않음 |
+     * | `ALL` | 2 | 전체 회원 |
+     * | `GENERAL_MEMBERS` | 3 | 일반 회원 |
+     * | `COMPANY_MEMBERS` | 4 | 기업 회원 |
+     */
+  pushTarget: AdminAnnouncementDetailResponsePushTarget;
+  /** 보낸 푸시의 발송 묶음 식별자. 발송 결과 조회(`GET /api/v1/admin/notification-batches/{batchId}`)에 씁니다. 보내기 전에는 null입니다. */
+  pushBatchId?: string;
+  /** 푸시를 보낸 일시. 보내기 전에는 null입니다. */
+  pushedAt?: string;
   registeredAt: string;
   updatedAt: string;
 }

@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { UserAnnouncementDetailResponseCategory } from './userAnnouncementDetailResponseCategory';
 
 export interface UserAnnouncementDetailResponse {
   id: number;
@@ -11,5 +12,18 @@ export interface UserAnnouncementDetailResponse {
   /** Lexical EditorState JSON 문자열입니다. */
   content: string;
   pinned: boolean;
+  /**
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
+     * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
+     * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+     * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
+     */
+  category: UserAnnouncementDetailResponseCategory;
+  /** 추천 카드 썸네일 주소. 없으면 null이며 화면은 카테고리 기본 이미지를 보입니다. */
+  thumbnailUrl?: string;
+  /** 목록·추천 카드에 보이는 한두 줄 요약. 없으면 null입니다. */
+  summary?: string;
   createdAt: string;
 }

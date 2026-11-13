@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NOTICE_CATEGORY_META, type NoticeCategory } from '@/entities/notice';
 import { notFound } from 'next/navigation';
 import { getPublicAnnouncement, HttpError } from '@ogonggo/api';
 import type {
@@ -9,6 +10,11 @@ import { formatDateDots } from '@/shared/lib/localDate';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
 import { ChevronIcon } from '@/shared/ui/icons';
 import { LexicalContent } from '@/shared/ui/LexicalContent';
+
+/** 카테고리 이름을 누르면 그 카테고리 목록으로 간다(`/notices?category=`). */
+function buildNoticeCategoryHref(category: NoticeCategory): string {
+  return `/notices?category=${category}`;
+}
 
 export interface NoticeDetailViewProps {
   noticeId: number;
@@ -47,7 +53,7 @@ export async function fetchNoticeDetail(noticeId: number): Promise<UserAnnouncem
 }
 
 /**
- * 공지 상세 — 목록으로 돌아가는 링크, 제목·작성일, 본문.
+ * 공지 상세 — 목록으로 돌아가는 링크, 카테고리(이슈 #656)·제목·작성일, 본문.
  *
  * 본문(`content`) 은 Lexical EditorState JSON 문자열이다(스펙의 필드 설명, 백엔드
  * `UserNoticeResponses.kt`). 어드민이 넣은 값을 백엔드가 검사 없이 그대로 돌려주므로 형식이
@@ -68,7 +74,15 @@ export async function NoticeDetailView({ noticeId }: NoticeDetailViewProps) {
       </Link>
 
       <header className="flex flex-col gap-2 border-b border-gray-200 pb-6">
-        {notice.pinned ? <span className="text-xs font-bold text-blue-500">고정</span> : null}
+        <span className="flex items-center gap-2 text-xs font-bold">
+          <Link
+            href={buildNoticeCategoryHref(notice.category)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            {NOTICE_CATEGORY_META[notice.category].label}
+          </Link>
+          {notice.pinned ? <span className="text-blue-500">고정</span> : null}
+        </span>
         <h1 className="text-2xl font-bold text-gray-900">{notice.title}</h1>
         <time dateTime={notice.createdAt} className="text-sm text-gray-400">
           {formatDateDots(notice.createdAt)}

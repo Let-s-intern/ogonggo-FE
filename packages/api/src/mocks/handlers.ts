@@ -53,6 +53,7 @@ import type { SuccessResponseImageUploadResponse } from '../generated/user/model
 import type { SuccessResponseFcmTokenResponse } from '../generated/user/models/successResponseFcmTokenResponse';
 import type { SuccessResponseUnit } from '../generated/user/models/successResponseUnit';
 import type { SuccessResponsePageResponseUserAnnouncementSummaryResponse } from '../generated/user/models/successResponsePageResponseUserAnnouncementSummaryResponse';
+import type { SuccessResponseListUserAnnouncementCategoryResponse } from '../generated/user/models/successResponseListUserAnnouncementCategoryResponse';
 import type { SuccessResponseUserAnnouncementDetailResponse } from '../generated/user/models/successResponseUserAnnouncementDetailResponse';
 import type { UserAnnouncementSummaryResponse } from '../generated/user/models/userAnnouncementSummaryResponse';
 import type { SuccessResponseListUserJobCalendarItemResponse } from '../generated/user/models/successResponseListUserJobCalendarItemResponse';
@@ -1044,8 +1045,22 @@ const getNoticesHandler = http.get('*/api/v1/announcements', ({ request }) => {
   const page = Number(url.searchParams.get('page') ?? DEFAULT_PAGE);
   const size = Number(url.searchParams.get('size') ?? DEFAULT_NOTICE_SIZE);
 
+  // 백엔드처럼 카테고리·고정 여부·검색어(제목·요약·본문)로 거른다.
+  const category = url.searchParams.get('category');
+  const pinned = url.searchParams.get('pinned');
+  const keyword = url.searchParams.get('keyword')?.toLowerCase();
+  const matched = USER_NOTICE_FIXTURES.filter(
+    (notice) =>
+      (!category || notice.category === category) &&
+      (pinned === null || String(notice.pinned) === pinned) &&
+      (!keyword ||
+        [notice.title, notice.summary ?? '', notice.content].some((value) =>
+          value.toLowerCase().includes(keyword),
+        )),
+  );
+
   const start = (page - 1) * size;
-  const items = USER_NOTICE_FIXTURES.slice(start, start + size).map(toNoticeSummary);
+  const items = matched.slice(start, start + size).map(toNoticeSummary);
 
   const body: SuccessResponsePageResponseUserAnnouncementSummaryResponse = {
     status: 200,
@@ -1055,12 +1070,41 @@ const getNoticesHandler = http.get('*/api/v1/announcements', ({ request }) => {
       pageInfo: {
         pageNum: page,
         pageSize: size,
-        totalElements: USER_NOTICE_FIXTURES.length,
-        totalPages: Math.ceil(USER_NOTICE_FIXTURES.length / size),
+        totalElements: matched.length,
+        totalPages: Math.ceil(matched.length / size),
       },
     },
   };
 
+  return HttpResponse.json(body, { status: 200 });
+});
+
+/**
+ * `listPublicAnnouncementCategories`(`GET /api/v1/announcements/categories`). 카테고리마다 공지 수와 최근 3건(id 역순)이다.
+ * `:noticeId` 핸들러보다 앞에 둔다 — 순서가 바뀌면 `categories` 가 공지 id 로 읽힌다.
+ */
+const getNoticeCategoriesHandler = http.get('*/api/v1/announcements/categories', () => {
+  const categories = [
+    'OGONGGO_UPDATE',
+    'NEW_JOB_NOTE',
+    'SERVICE_NOTICE',
+    'BUSINESS_NOTICE',
+  ] as const;
+  const body: SuccessResponseListUserAnnouncementCategoryResponse = {
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: categories.map((category) => {
+      const notices = USER_NOTICE_FIXTURES.filter((notice) => notice.category === category);
+      return {
+        category,
+        count: notices.length,
+        recentAnnouncements: [...notices]
+          .sort((a, b) => b.id - a.id)
+          .slice(0, 3)
+          .map(toNoticeSummary),
+      };
+    }),
+  };
   return HttpResponse.json(body, { status: 200 });
 });
 
@@ -1180,6 +1224,7 @@ export const handlers: HttpHandler[] = [
   ...myCompanyPostHandlers,
   ...userConcernHandlers,
   getNoticesHandler,
+  getNoticeCategoriesHandler,
   getNoticeHandler,
   createServiceFeedbackHandler,
   replaceFcmTokenHandler,

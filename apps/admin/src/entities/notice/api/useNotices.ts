@@ -7,6 +7,8 @@ import {
   updateAnnouncement,
   type AdminAnnouncementDetailResponse,
   type AdminAnnouncementSummaryResponse,
+  type CreateAdminAnnouncementRequestCategory,
+  type CreateAdminAnnouncementRequestPushTarget,
   type CreateAdminAnnouncementRequestVisibility,
 } from '@ogonggo/api/src/admin';
 import { unwrapData } from '@/shared/api/unwrapData';
@@ -14,6 +16,8 @@ import { unwrapData } from '@/shared/api/unwrapData';
 export type NoticeSummary = AdminAnnouncementSummaryResponse;
 export type NoticeDetail = AdminAnnouncementDetailResponse;
 export type NoticeVisibility = CreateAdminAnnouncementRequestVisibility;
+export type NoticeCategory = CreateAdminAnnouncementRequestCategory;
+export type NoticePushTarget = CreateAdminAnnouncementRequestPushTarget;
 
 export interface NoticeWriteInput {
   title: string;
@@ -21,6 +25,17 @@ export interface NoticeWriteInput {
   content: string;
   pinned: boolean;
   visibility: NoticeVisibility;
+  /** 공지사항 화면의 카테고리 칸(BE LC-3614). */
+  category: NoticeCategory;
+  /** 추천 카드 썸네일 주소. 비어 있으면 없음이다. */
+  thumbnailUrl: string;
+  /** 목록·추천 카드의 한두 줄 요약. 비어 있으면 없음이다. 푸시 본문에도 쓴다. */
+  summary: string;
+  /**
+   * 노출할 때 푸시를 보낼 대상. `NONE` 이면 보내지 않는다. 서버가 노출 상태가 되는 순간 한 번만 보내고,
+   * 보낸 뒤에는 바꿀 수 없다(같은 값은 다시 보내도 된다).
+   */
+  pushTarget: NoticePushTarget;
 }
 
 /**
@@ -54,7 +69,7 @@ export function useNoticeDetail(noticeId: number | null) {
 /**
  * 새 공지 등록과 기존 공지 수정.
  *
- * 수정은 `PATCH` 라 보낸 값만 바뀌지만 폼이 네 칸을 모두 들고 있으므로 모두 보낸다. 일부만
+ * 수정은 `PATCH` 라 보낸 값만 바뀌지만 폼이 모든 칸을 들고 있으므로 모두 보낸다. 일부만
  * 보내면 폼에서 지운 값이 서버에 남아 있는 것과 구분되지 않는다.
  */
 export function useSaveNotice(noticeId: number | null) {
@@ -66,10 +81,25 @@ export function useSaveNotice(noticeId: number | null) {
         content: input.content,
         pinned: input.pinned,
         visibility: input.visibility,
+        category: input.category,
+        pushTarget: input.pushTarget,
       };
+      // 등록은 빈 칸을 보내지 않고, 수정은 빈 글자를 보내 지운다(BE: 썸네일·요약은 빈 글자면 지운다).
       return noticeId === null
-        ? unwrapData(createAnnouncement(body))
-        : unwrapData(updateAnnouncement(noticeId, body));
+        ? unwrapData(
+            createAnnouncement({
+              ...body,
+              thumbnailUrl: input.thumbnailUrl || undefined,
+              summary: input.summary || undefined,
+            }),
+          )
+        : unwrapData(
+            updateAnnouncement(noticeId, {
+              ...body,
+              thumbnailUrl: input.thumbnailUrl,
+              summary: input.summary,
+            }),
+          );
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] });

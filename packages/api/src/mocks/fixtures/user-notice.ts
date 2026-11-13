@@ -82,6 +82,8 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 12,
     title: '개인정보 처리방침 개정 안내',
+    category: 'SERVICE_NOTICE',
+    summary: '10월 1일부터 개인정보 처리방침이 바뀌어요.',
     pinned: true,
     createdAt: daysAgo(3, '10:20:00'),
     content: editorState([
@@ -102,6 +104,8 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 4,
     title: '오늘의 공고 서비스 이용 안내',
+    category: 'OGONGGO_UPDATE',
+    summary: '오늘의 공고를 처음 쓰는 분을 위한 안내예요.',
     pinned: true,
     createdAt: daysAgo(60, '11:00:00'),
     content: editorState([
@@ -118,6 +122,8 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 13,
     title: '공고 달력에서 마감일을 한눈에 볼 수 있습니다',
+    category: 'OGONGGO_UPDATE',
+    summary: '공고 달력에 마감일이 날짜별로 보여요.',
     pinned: false,
     createdAt: daysAgo(1, '14:30:00'),
     content: editorState([
@@ -128,6 +134,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 11,
     title: '추석 연휴 고객센터 운영 안내',
+    category: 'SERVICE_NOTICE',
     pinned: false,
     createdAt: daysAgo(5, '09:30:00'),
     content: editorState([
@@ -137,6 +144,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 10,
     title: '기업 회원 공고 등록 절차가 간단해졌습니다',
+    category: 'OGONGGO_UPDATE',
     pinned: false,
     createdAt: daysAgo(9),
     content: editorState([
@@ -147,6 +155,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 9,
     title: '사이드·스터디 모집글 작성 가이드',
+    category: 'OGONGGO_UPDATE',
     pinned: false,
     createdAt: daysAgo(14),
     content: editorState([
@@ -157,6 +166,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 8,
     title: '서비스 점검 안내 (9월 12일 새벽)',
+    category: 'SERVICE_NOTICE',
     pinned: false,
     createdAt: daysAgo(18),
     content: editorState([
@@ -167,6 +177,8 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 7,
     title: '부트캠프 정보가 매주 갱신됩니다',
+    category: 'NEW_JOB_NOTE',
+    summary: '이번 주 새로 열린 부트캠프를 정리했어요.',
     pinned: false,
     createdAt: daysAgo(23),
     content: editorState([paragraph(text('매주 월요일 교육·부트캠프 목록을 갱신합니다.'))]),
@@ -174,6 +186,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 6,
     title: '스크랩한 공고를 마이페이지에서 볼 수 있습니다',
+    category: 'OGONGGO_UPDATE',
     pinned: false,
     createdAt: daysAgo(30),
     content: editorState([
@@ -183,6 +196,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 5,
     title: '회원 가입 방식이 렛츠커리어 통합 로그인으로 바뀝니다',
+    category: 'SERVICE_NOTICE',
     pinned: false,
     createdAt: daysAgo(35),
     // 일부러 Lexical JSON 이 아닌 평문이다. 위 주석의 대체 경로 확인용이다.
@@ -192,6 +206,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 3,
     title: '공고 검색에 직무 필터가 추가됐습니다',
+    category: 'OGONGGO_UPDATE',
     pinned: false,
     createdAt: daysAgo(44),
     content: editorState([paragraph(text('채용공고 목록에서 직무별로 걸러 볼 수 있습니다.'))]),
@@ -199,6 +214,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 2,
     title: '오늘의 공고 로고가 바뀌었습니다',
+    category: 'OGONGGO_UPDATE',
     pinned: false,
     createdAt: daysAgo(51),
     content: editorState([paragraph(text('서비스 로고와 앱 아이콘을 새로 바꿨습니다.'))]),
@@ -206,6 +222,7 @@ export const USER_NOTICE_FIXTURES: UserAnnouncementDetailResponse[] = [
   {
     id: 1,
     title: '오늘의 공고를 열었습니다',
+    category: 'OGONGGO_UPDATE',
     pinned: false,
     createdAt: daysAgo(70, '08:00:00'),
     content: editorState([
