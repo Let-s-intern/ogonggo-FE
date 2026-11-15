@@ -478,15 +478,34 @@ const changePaymentAmountHandler = http.patch(
   },
 );
 
-/** 같은 상품을 여러 번 붙여도 막지 않는다(기간을 나눠 파는 경우). 지운 상품은 붙이지 못한다. */
+/**
+ * 같은 상품을 여러 번 붙여도 막지 않는다(기간을 나눠 파는 경우). 지운 상품은 붙이지 못한다. 게시 기간은 필수이고 시작일이
+ * 종료일보다 늦으면 400 이다(BE LC-3599).
+ */
 const addContractProductHandler = http.post(
   `${CONTRACTS}/:contractId/products`,
   async ({ params, request }) => {
     const contract = findContract(params.contractId);
     if (!contract) return contractNotFound();
-    const body = (await request.json().catch(() => null)) as { productId?: unknown } | null;
+    const body = (await request.json().catch(() => null)) as {
+      productId?: unknown;
+      startDate?: unknown;
+      endDate?: unknown;
+    } | null;
     const product = activeProduct(readId(body?.productId));
     if (!product) return productNotFound();
+    const startDate = typeof body?.startDate === 'string' ? body.startDate : '';
+    const endDate = typeof body?.endDate === 'string' ? body.endDate : '';
+    if (!startDate || !endDate) {
+      return badRequest('게시 시작일과 종료일을 넣어 주세요.');
+    }
+    if (startDate > endDate) {
+      return error(
+        400,
+        'ADVERTISEMENT_CONTRACT_PRODUCT_PERIOD_INVALID',
+        '게시 시작일은 종료일보다 늦을 수 없습니다.',
+      );
+    }
     const id =
       Math.max(
         0,
@@ -500,6 +519,8 @@ const addContractProductHandler = http.post(
       productName: product.name,
       category: product.category,
       productDeleted: false,
+      startDate,
+      endDate,
       addedAt: nowKst(),
     });
     saveAdvertisementStore();

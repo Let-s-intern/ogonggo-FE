@@ -7,4 +7,8 @@
 
 export interface AddAdminAdvertisementContractProductRequest {
   productId: number;
+  /** 게시 시작일(yyyy-MM-dd). */
+  startDate: string;
+  /** 게시 종료일(yyyy-MM-dd). 이 날까지 게시하며 시작일과 같아도 됩니다. */
+  endDate: string;
 }

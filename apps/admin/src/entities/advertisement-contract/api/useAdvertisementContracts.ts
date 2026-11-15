@@ -14,6 +14,7 @@ import {
   listAdvertisementExposures,
   updateAdvertisementContractPaymentAmount,
   updateAdvertisementContractStatus,
+  type AddAdminAdvertisementContractProductRequest,
   type ChangeAdminAdvertisementContractStatusRequestStatus,
   type ListAdvertisementContractsParams,
   type ListAdvertisementContractsStatusItem,
@@ -141,12 +142,15 @@ export function useIssueBusinessAccount(contractId: number) {
   });
 }
 
-/** 판매한 상품을 계약에 붙인다. 같은 상품을 여러 번 붙일 수 있다(기간을 나눠 파는 경우). */
+/**
+ * 판매한 상품을 게시 기간과 함께 계약에 붙인다(BE LC-3599). 기간은 `yyyy-MM-dd` 하루 단위이고 종료일도 게시한다. 같은 상품을
+ * 여러 번 붙일 수 있다(기간을 나눠 파는 경우).
+ */
 export function useAddContractProduct(contractId: number) {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (productId: number) =>
-      unwrapData(createAdvertisementContractProduct(contractId, { productId })),
+    mutationFn: (body: AddAdminAdvertisementContractProductRequest) =>
+      unwrapData(createAdvertisementContractProduct(contractId, body)),
     onSuccess: invalidate,
   });
 }

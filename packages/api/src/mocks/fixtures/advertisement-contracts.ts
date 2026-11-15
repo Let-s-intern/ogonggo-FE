@@ -41,6 +41,8 @@ const CONTRACT_SEED: AdminAdvertisementContractDetailResponse[] = [
         productName: '공고 상세 배너',
         category: 'BANNER',
         productDeleted: false,
+        startDate: '2026-11-05',
+        endDate: '2026-11-18',
         addedAt: '2026-11-04T15:20:00',
       },
     ],
