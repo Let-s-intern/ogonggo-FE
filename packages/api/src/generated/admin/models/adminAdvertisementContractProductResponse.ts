@@ -23,5 +23,7 @@ export interface AdminAdvertisementContractProductResponse {
      */
   category: AdminAdvertisementContractProductResponseCategory;
   productDeleted: boolean;
+  startDate?: string;
+  endDate?: string;
   addedAt: string;
 }
