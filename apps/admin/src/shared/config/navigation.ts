@@ -178,6 +178,15 @@ export const NAV_SECTIONS: NavSection[] = [
     area: 'service',
     items: [{ path: '/stats', label: '통계' }],
   },
+  {
+    area: 'service',
+    /*
+     * 비용 때문에 평소 꺼 두는 리대시·크롤러 EC2 를 쓸 때만 켠다(BE LC-3616, 2026-11-15 요청). 콘텐츠·회원 운영과 성격이
+     * 달라 따로 둔다.
+     */
+    title: '운영 도구',
+    items: [{ path: '/tools/servers', label: '리대시·크롤러 서버' }],
+  },
 ];
 
 /** 메뉴 화면(목록) 주소 그대로일 때의 구역. 상세·수정처럼 메뉴에 없는 주소는 `undefined` 다. */
