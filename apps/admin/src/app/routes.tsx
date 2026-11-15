@@ -27,6 +27,7 @@ import { ProxyJobNewPage } from '@/pages/proxy-job-new';
 import { RecommendWeightsPage } from '@/pages/recommend-weights';
 import { RejectionsPage } from '@/pages/rejections';
 import { ReviewQueuePage } from '@/pages/review-queue';
+import { ServerInstancesPage } from '@/pages/server-instances';
 import { ServiceFeedbackListPage } from '@/pages/service-feedback-list';
 import { SideStudyDetailPage } from '@/pages/side-study-detail';
 import { SideStudyListPage } from '@/pages/side-study-list';
@@ -139,6 +140,8 @@ export const router = createBrowserRouter([
       { path: 'notifications/batches/:batchId', element: <NotificationBatchDetailPage /> },
 
       { path: 'stats', element: <StatsPage /> },
+
+      { path: 'tools/servers', element: <ServerInstancesPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],
