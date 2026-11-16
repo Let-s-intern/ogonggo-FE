@@ -6,7 +6,7 @@ import type { Analysis } from '@ogonggo/api/src/admin';
  * 결과(`fill_job_analysis`)다. 비서(`./tools.ts`)가 남기고, 분류는 바로 고치기(`useInlineJobEdit`)가, 분석은 분석 결과
  * 편집기(`AnalysisEditor`)가 넣은 뒤 지운다.
  *
- * 저장은 여기 없다. 편집기는 채운 값을 고치는 중인 값으로만 들고, 서버로 보내는 것은 사람이 누르는 `분류 저장`·
+ * 저장은 여기 없다. 편집기는 채운 값을 고치는 중인 값으로만 들고, 서버로 보내는 것은 사람이나 비서(`press_button`)가 누르는 `분류 저장`·
  * `분석 결과 저장` 뿐이다.
  *
  * 수정 창 채우기(`./jobFill.ts`)와 같이 모듈 하나에 둔다. 분류와 분석은 한 차례에 함께 올 수 있어 자리를 따로 두고,

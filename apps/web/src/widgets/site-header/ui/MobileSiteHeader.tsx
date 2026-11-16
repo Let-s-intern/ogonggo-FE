@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
-import { Button, MenuItem, cn } from '@ogonggo/ui';
+import { Button } from '@ogonggo/ui';
 import { InstallAppButton, useInstallState } from '@/features/install-app';
 import { NotificationBellLink } from '@/features/notification-inbox';
 import { SignOutButton } from '@/features/sign-out';
@@ -11,9 +11,7 @@ import { CONTACT_DIALOG_COPY, ContactEmailDialog } from '@/shared/ui/ContactEmai
 import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { BIZ_DASHBOARD_PATH, bizUrl, onBizLinkClick } from '@/shared/api/bizHandoff';
 import type { CompanyJobRegisterLink } from '@/shared/lib/companyJobRegister';
-import { CalendarIcon, MenuIcon } from '@/shared/ui/icons';
-import { hasBottomNav } from './MobileBottomNav';
-import { NAV_ITEMS } from './navItems';
+import { MenuIcon } from '@/shared/ui/icons';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
 export interface MobileSiteHeaderProps {
@@ -29,30 +27,11 @@ export interface MobileSiteHeaderProps {
 }
 
 /**
- * 선택된 탭이 가로 스크롤에 가려져 있으면 보일 만큼만 묶음을 민다.
- *
- * `scrollIntoView` 를 쓰지 않는다. 그것은 묶음뿐 아니라 페이지의 세로 스크롤도 함께 움직여서, 헤더가 화면 밖에
- * 있을 때(스크롤을 내린 채 새로고침하거나, 아래쪽 링크를 눌러 이동한 직후) 페이지가 헤더로 끌려 올라간다.
- * 안쪽 여백만큼 안에 들어오게 맞춰 포커스 링이 잘리지 않는다.
- */
-function revealCurrentTab(nav: HTMLElement) {
-  const current = nav.querySelector('[aria-current="page"]');
-  if (!current) return;
-  const navBox = nav.getBoundingClientRect();
-  const box = current.getBoundingClientRect();
-  const { paddingLeft, paddingRight } = getComputedStyle(nav);
-  const hiddenLeft = navBox.left + parseFloat(paddingLeft) - box.left;
-  const hiddenRight = box.right - (navBox.right - parseFloat(paddingRight));
-  if (hiddenLeft > 0) nav.scrollLeft -= hiddenLeft;
-  else if (hiddenRight > 0) nav.scrollLeft += hiddenRight;
-}
-
-/**
  * 모바일 헤더(`md` 미만). 시안은 `docs/asset/v9 mobile/채용공고 상세  플로팅버튼.png` 과
  * `상단 햄버거 버튼.png` 이다(360px 폭의 두 배로 그려져 있어 값은 절반으로 읽었다).
  *
- * 두 줄이다. 윗줄은 로고와 `앱 다운로드`(또는 `로그인`)·햄버거, 아랫줄은 목록 탭 넷과 달력
- * 아이콘이다. 로그인했으면 윗줄 햄버거 왼쪽에 알림 아이콘이 붙는다(`/notifications` 로 간다).
+ * 한 줄이다. 로고와 `앱 다운로드`(또는 `로그인`)·햄버거이고, 로그인했으면 햄버거 왼쪽에 알림 아이콘이
+ * 붙는다(`/notifications` 로 간다). 목록 탭은 화면 아래 하단 내비게이션(`MobileBottomNav`)이 맡는다.
  * 데스크톱 우측에 있던 `공고 등록`·`마이페이지`·`로그아웃` 은 햄버거 메뉴 안으로 들어간다.
  * 로그인하지 않았으면 `로그인` 도 메뉴 안에 있다.
  */
@@ -67,25 +46,6 @@ export function MobileSiteHeader({
   const [open, setOpen] = useState(false);
   // 메뉴는 누르면 닫히며 사라지므로 광고 문의 모달은 메뉴 밖, 여기서 띄운다.
   const [adInquiryOpen, setAdInquiryOpen] = useState(false);
-  const calendarActive = pathname.startsWith('/calendar');
-  const install = useInstallState();
-  const bottomNav = hasBottomNav(install.kind === 'installed', signedIn);
-  const tabsRef = useRef<HTMLElement>(null);
-
-  // 약 345px 이하 폰은 탭 묶음이 가로로 밀려 있다. 처음부터 화면 밖에 있는 탭이 선택돼 있으면(`/concerns`)
-  // 보이게 맞춘다. 글꼴이 늦게 와서 탭 폭이 바뀐 뒤에도 한 번 더 맞춘다.
-  useEffect(() => {
-    const nav = tabsRef.current;
-    if (!nav) return;
-    revealCurrentTab(nav);
-    let cancelled = false;
-    void document.fonts.ready.then(() => {
-      if (!cancelled) revealCurrentTab(nav);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname, bottomNav]);
 
   return (
     <div className="md:hidden">
@@ -102,45 +62,6 @@ export function MobileSiteHeader({
           <MenuIcon className="h-6 w-6" />
         </button>
       </TopRow>
-
-      {/* 앱을 설치하고 로그인해 하단 내비게이션(`MobileBottomNav`)이 떠 있으면 같은 탭이 위아래로 두 번 보이지 않게
-          이 줄을 숨긴다. 공고 달력은 하단 채용공고 탭의 서브 메뉴로 간다. */}
-      {bottomNav ? null : (
-        <div className="flex h-11 items-stretch justify-between px-5">
-          {/* 탭 넷이 360px 에서도 한 줄에 들어가도록 글자 14px, 간격 8px 이다(Pretendard 로 잰 글자 폭 합 266px +
-              간격 24px 가 쓸 수 있는 폭 304px 안에 든다). 그보다 좁은 폰에서만 이 묶음이 가로로 밀리고, 달력
-              아이콘은 제자리에 있다. `whitespace-nowrap` 이 없으면 좁을 때 글자가 음절 사이에서 줄바꿈된다.
-              `overflow-x-auto` 는 세로도 잘라서 탭의 키보드 포커스 링이 위·아래·왼쪽에서 잘리므로 사방 4px 안쪽 여백을
-              두고 위·아래·왼쪽은 같은 크기의 음수 바깥 여백으로 되돌려 자리를 그대로 둔다. 오른쪽은 되돌리지 않는다 —
-              되돌리면 좁은 폰에서 묶음의 잘리는 경계가 달력 아이콘 안으로 4px 들어가 글자가 아이콘에 닿는다. */}
-          <nav
-            ref={tabsRef}
-            className="-my-1 -ml-1 flex min-w-0 items-stretch gap-2 overflow-x-auto p-1 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {NAV_ITEMS.map(({ href, label, matches }) => {
-              const active = matches(pathname);
-              return (
-                <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
-                  <MenuItem
-                    state={active ? 'current' : 'default'}
-                    className={cn('h-full text-sm', active && 'font-semibold')}
-                  >
-                    {label}
-                  </MenuItem>
-                </Link>
-              );
-            })}
-          </nav>
-          <Link
-            href="/calendar"
-            aria-label="공고 달력"
-            aria-current={calendarActive ? 'page' : undefined}
-            className={cn('flex items-center', calendarActive ? 'text-gray-900' : 'text-gray-700')}
-          >
-            <CalendarIcon className="h-6 w-6" />
-          </Link>
-        </div>
-      )}
 
       {open ? (
         <MobileMenu
@@ -284,10 +205,14 @@ function MobileMenu({
           />
         )}
         <MenuSection title="공고" links={postings} onNavigate={onClose} />
-        {/* 데스크톱은 헤더 맨 위 띠의 알림 아이콘 왼쪽에 있다. 모바일 윗줄은 로고·앱 다운로드·알림·햄버거로 차 있다. */}
+        {/* 오공고 커뮤니티는 데스크톱에서 헤더 맨 위 띠의 알림 아이콘 왼쪽에 있다. 모바일 윗줄은 로고·앱 다운로드·알림·햄버거로
+            차 있다. 취준 고민은 하단 내비게이션에도 있다. */}
         <MenuSection
           title="커뮤니티"
-          links={[{ label: '오공고 커뮤니티', href: '/community' }]}
+          links={[
+            { label: '취준 고민', href: '/concerns' },
+            { label: '오공고 커뮤니티', href: '/community' },
+          ]}
           onNavigate={onClose}
         />
         <MenuSection
