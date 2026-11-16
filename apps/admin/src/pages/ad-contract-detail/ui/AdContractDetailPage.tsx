@@ -446,7 +446,10 @@ function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContrac
 }
 
 /**
- * 판매한 상품(계약 상품). 같은 상품을 여러 번 붙일 수 있다. 지운 상품도 계약에는 남아 `삭제된 상품` 으로 보인다.
+ * 판매한 상품(계약 상품). 상품은 게시 시작일·종료일과 함께 넣는다(BE LC-3599, 하루 단위, 종료일 포함). 같은 상품을 여러 번
+ * 붙일 수 있다. 지운 상품도 계약에는 남아 `삭제된 상품` 으로 보인다. 기간을 넣기 전에 붙인 상품은 기간이 `-` 다.
+ *
+ * 게시 기간은 배너 노출 기간과 연동하지 않는다. 배너는 노출 기간을 따로 넣는다.
  *
  * 배너 상품 줄에는 `배너 등록` 이 있다. 그 상품의 자리에, 이 계약을 연결 계약으로 미리 채운 등록 모달을 연다(배너 세팅과 같은
  * 모달). 저장하면 아래 `걸린 노출` 에 바로 보인다.
@@ -456,6 +459,10 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
   const add = useAddContractProduct(contract.id);
   const remove = useRemoveContractProduct(contract.id);
   const [productId, setProductId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const periodInvalid = Boolean(startDate && endDate && startDate > endDate);
+  const canAdd = Boolean(productId && startDate && endDate) && !periodInvalid;
   const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
 
   const bannerProductOf = (row: AdminAdvertisementContractProductResponse) => {
@@ -480,6 +487,16 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
       header: '카테고리',
       width: 'w-36',
       render: (row) => enumLabel('AdvertisementProductCategory', row.category),
+    },
+    {
+      key: 'period',
+      header: '게시 기간',
+      width: 'w-56',
+      render: (row) => (
+        <span className="text-sm">
+          {row.startDate && row.endDate ? `${row.startDate} ~ ${row.endDate}` : '-'}
+        </span>
+      ),
     },
     {
       key: 'addedAt',
@@ -536,14 +553,47 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
             value={productId}
             onChange={(event) => setProductId(event.target.value)}
           />
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="date"
+              aria-label="게시 시작일"
+              value={startDate}
+              max={endDate || undefined}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="h-9 w-36 px-2 text-sm"
+            />
+            <span className="text-sm text-gray-400">~</span>
+            <Input
+              type="date"
+              aria-label="게시 종료일"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="h-9 w-36 px-2 text-sm"
+            />
+          </div>
           <Button
             size="sm"
-            disabled={!productId || add.isPending}
-            onClick={() => add.mutate(Number(productId), { onSuccess: () => setProductId('') })}
+            disabled={!canAdd || add.isPending}
+            onClick={() =>
+              add.mutate(
+                { productId: Number(productId), startDate, endDate },
+                {
+                  onSuccess: () => {
+                    setProductId('');
+                    setStartDate('');
+                    setEndDate('');
+                  },
+                },
+              )
+            }
           >
             넣기
           </Button>
         </div>
+        {periodInvalid ? (
+          <Callout tone="error">게시 시작일은 종료일과 같거나 앞서야 해요.</Callout>
+        ) : null}
         {add.isError || remove.isError ? (
           <Callout tone="error">
             {advertisementErrorMessage(add.error ?? remove.error, '계약 상품을 바꾸지 못했습니다.')}

@@ -43,4 +43,14 @@ export interface MyAdvertisementContractProductResponse {
   position?: MyAdvertisementContractProductResponsePosition;
   /** 운영자가 상품을 지웠는지. 지운 상품도 계약에 붙어 있으면 이름과 함께 준다 */
   productDeleted: boolean;
+  /**
+     * 게시 시작일. 기간을 넣기 전에 붙인 상품은 null
+     * @nullable
+     */
+  startDate?: string | null;
+  /**
+     * 게시 종료일(이 날까지 게시). 기간을 넣기 전에 붙인 상품은 null
+     * @nullable
+     */
+  endDate?: string | null;
 }
