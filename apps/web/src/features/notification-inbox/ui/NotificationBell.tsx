@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef } from 'react';
+import { type ReactNode, useEffect, useId, useRef } from 'react';
 import { cn } from '@ogonggo/ui';
 import { BellIcon } from '@/shared/ui/icons';
 import { useRefreshOnPushReceived, useUnreadCount } from '../model/useNotifications';
@@ -11,6 +11,11 @@ import { UnreadBadge, bellLabel } from './UnreadBadge';
 export interface NotificationBellProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * 패널 제목 아래, 목록 위에 두는 것. 푸시 동의 안내(`features/push-notification` 의 `PushConsentBanner`)를 쓰는 쪽
+   * (`widgets/site-header`)이 넘긴다. 기능끼리 서로 가져다 쓰지 않도록 여기서는 자리만 둔다(이슈 #655).
+   */
+  top?: ReactNode;
 }
 
 /**
@@ -26,7 +31,7 @@ export interface NotificationBellProps {
  * 앱을 보고 있을 때 푸시가 오면 개수와 목록을 다시 읽는다(`useRefreshOnPushReceived`). 듣는 곳은 여기 하나다 —
  * 이 컴포넌트는 모바일에서도 숨겨진 채 마운트돼 있다(`SiteHeader` 의 `hidden md:block`).
  */
-export function NotificationBell({ open, onOpenChange }: NotificationBellProps) {
+export function NotificationBell({ open, onOpenChange, top }: NotificationBellProps) {
   const count = useUnreadCount();
   useRefreshOnPushReceived();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -79,6 +84,7 @@ export function NotificationBell({ open, onOpenChange }: NotificationBellProps) 
             <h2 className="text-base font-bold text-gray-900">알림</h2>
             <ReadAllButton className="py-1.5 text-[13px]" />
           </div>
+          {top}
           <div className="min-h-0 flex-1 overflow-y-auto">
             {/* 닫기를 한 박자 늦춘다. 클릭 처리 중에 패널을 지우면 새 탭으로 여는 `a` 가 문서에서 떨어져 열리지 않는다
                 — 브라우저는 연결이 끊긴 링크를 따라가지 않는다. */}

@@ -16,7 +16,7 @@ function shouldShow(): boolean {
 }
 
 /**
- * 푸시 동의 버튼 둘(헤더의 `PushConsentButton`, 모바일 알림함의 `PushConsentBanner`)이 같이 쓰는 상태와 켜기.
+ * 푸시 동의 안내(`PushConsentBanner`, 데스크톱 알림 패널과 모바일 알림함)가 쓰는 상태와 켜기.
  * 누르면 브라우저 권한을 묻고 이 기기의 토큰을 저장한다(`enablePush`). 결과는 토스트로 알리고, 켜거나 막히면
  * `visible` 이 거짓이 된다. 마이페이지 스위치에서 바꿔도 `subscribePushState` 로 따라 바뀐다.
  *

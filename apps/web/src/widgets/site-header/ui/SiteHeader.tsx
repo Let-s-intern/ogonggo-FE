@@ -7,7 +7,7 @@ import { Button, MenuItem, cn } from '@ogonggo/ui';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { NotificationBell } from '@/features/notification-inbox';
-import { PushConsentButton } from '@/features/push-notification';
+import { PushConsentBanner } from '@/features/push-notification';
 import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { AccountMenu } from './AccountMenu';
@@ -34,8 +34,10 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  *
  * 토글은 렛츠커리어 마크를 누르면 렛츠커리어 웹으로 로그인을 이어 가고, 로고는 홈이다. 로그인했으면 이 띠의
  * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`). 이 기기에서 푸시를
- * 아직 켜지 않았으면 아이콘 왼쪽에 `푸시 알림 받기` 가 붙고, 켜면 사라진다(`PushConsentButton`).
- * 알림 아이콘 바로 왼쪽에는 `/community` 로 가는 `오공고 커뮤니티+` 알약이 늘 있다(이슈 #569). 모바일은 윗줄에
+ * 아직 켜지 않았으면 그 패널 맨 위에 `푸시 알림 받기 / 켜기` 안내가 붙고, 켜면 사라진다(`PushConsentBanner`, 이슈 #655).
+ * 모바일 알림함과 같은 자리다. 전에는 윗줄 아이콘 왼쪽의 버튼이었다.
+ * 알림 아이콘 바로 왼쪽에는 `/community` 로 가는 `오공고 커뮤니티+` 알약이 늘 있고(이슈 #569), 그 왼쪽에 `/notices` 로
+ * 가는 `공지사항` 글자 링크가 있다(공지사항 시안, 이슈 #655). 모바일은 윗줄에
  * 자리가 없어 햄버거 메뉴의 `커뮤니티` 묶음에 둔다(`MobileSiteHeader`).
  *
  * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
@@ -66,6 +68,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
   const communityActive = pathname === '/community';
+  const noticesActive = pathname === '/notices' || pathname.startsWith('/notices/');
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
@@ -136,7 +139,16 @@ export function SiteHeader() {
           {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다.
               `오공고 커뮤니티` 는 알림 아이콘 바로 왼쪽이고, 로그인하지 않아 아이콘이 없으면 오른쪽 끝이다. */}
           <div className="flex items-center gap-3">
-            {signedIn ? <PushConsentButton /> : null}
+            <Link
+              href="/notices"
+              aria-current={noticesActive ? 'page' : undefined}
+              className={cn(
+                'text-xs font-medium transition-colors',
+                noticesActive ? 'text-blue-500' : 'text-gray-700 hover:text-gray-900',
+              )}
+            >
+              공지사항
+            </Link>
             <Link
               href="/community"
               aria-current={communityActive ? 'page' : undefined}
@@ -154,6 +166,7 @@ export function SiteHeader() {
               <NotificationBell
                 open={openMenu === 'notifications'}
                 onOpenChange={toggleMenu('notifications')}
+                top={<PushConsentBanner className="mx-4 mb-3 shrink-0" />}
               />
             ) : null}
           </div>
