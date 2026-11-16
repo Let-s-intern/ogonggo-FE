@@ -39,8 +39,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          web=false
-          admin=false
+          apps=''
           shared=false
           deps=false
 
@@ -50,9 +49,18 @@ jobs:
               pnpm-lock.yaml|package.json|*/package.json) deps=true ;;
             esac
             case "$file" in
-              apps/web/*)   web=true ;;
-              apps/admin/*) admin=true ;;
-              # 공용 패키지는 web·admin 이 함께 쓴다. 여기가 바뀌면 앱 하나만 봐서는
+              # 문서는 타입·린트·포맷 검사 대상이 아니다. 어느 폴더에 있든 건너뛴다.
+              *.md) ;;
+              # 앱은 바뀐 앱만 돈다. 폴더 이름이 곧 패키지 이름이다(web, admin, business, card-news).
+              # package.json 이 없는 폴더(정적 페이지)는 워크스페이스가 아니라 건너뛴다.
+              apps/*)
+                app="${file#apps/}"
+                app="${app%%/*}"
+                if [ -f "apps/$app/package.json" ]; then
+                  case " $apps " in *" $app "*) ;; *) apps="$apps $app" ;; esac
+                fi
+                ;;
+              # 공용 패키지는 모든 앱이 함께 쓴다. 여기가 바뀌면 앱 하나만 봐서는
               # 깨진 걸 못 잡으므로 전체를 돈다. 루트 설정도 마찬가지다.
               packages/*) shared=true ;;
               package.json|pnpm-lock.yaml|pnpm-workspace.yaml|turbo.json) shared=true ;;
@@ -69,14 +77,10 @@ jobs:
           else
             filter=''
             format_paths=''
-            if [ "$web" = true ]; then
-              filter="$filter --filter=web"
-              format_paths="$format_paths apps/web"
-            fi
-            if [ "$admin" = true ]; then
-              filter="$filter --filter=admin"
-              format_paths="$format_paths apps/admin"
-            fi
+            for app in $apps; do
+              filter="$filter --filter=$app"
+              format_paths="$format_paths apps/$app"
+            done
             if [ -n "$filter" ]; then run=true; else run=false; fi
           fi
 
@@ -85,7 +89,7 @@ jobs:
           echo "format_paths=$format_paths" >> "$GITHUB_OUTPUT"
           echo "deps=$deps" >> "$GITHUB_OUTPUT"
 
-          echo "web=$web admin=$admin shared=$shared deps=$deps" >> "$GITHUB_STEP_SUMMARY"
+          echo "apps=${apps:-(없음)} shared=$shared deps=$deps" >> "$GITHUB_STEP_SUMMARY"
           echo "turbo filter: ${filter:-(전체)}" >> "$GITHUB_STEP_SUMMARY"
 
   # 타입체크·린트·포맷을 한 job 에서 돈다. 셋 다 몇 초면 끝나서, job 을 나누면 검사보다
