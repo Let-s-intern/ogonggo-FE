@@ -59,6 +59,7 @@ import type {
   ListAdvertisementInquiriesParams,
   ListAdvertisementProductsParams,
   ListAiJobAnalysisTargetsParams,
+  ListAiJobSourceCheckTargetsParams,
   ListAiLetsCareerContentTagTargetsParams,
   ListAnnouncementsParams,
   ListBootcampsParams,
@@ -108,6 +109,7 @@ import type {
   SuccessResponseListAdminNotificationJobRoleOptionResponse,
   SuccessResponseListAdminTodayJobSummaryResponse,
   SuccessResponseListAiJobAnalysisTargetResponse,
+  SuccessResponseListAiJobSourceCheckTargetResponse,
   SuccessResponseListAiLetsCareerContentResponse,
   SuccessResponseListAiLetsCareerContentTagTargetResponse,
   SuccessResponseMapStringListAdminEnumOptionResponse,
@@ -2648,7 +2650,7 @@ export const getReplaceAdvertisementExposureUrl = (exposureId: number,) => {
 }
 
 /**
- * 미삭제 노출의 계약, 카테고리별 콘텐츠, 광고 표시와 기간을 전체 교체합니다. contractId·mobileImageUrl·targetType·targetId·기간은 생략하거나 null로 보내면 null이며, BANNER의 name·imageUrl·linkUrl은 필수입니다. productId, exposed와 displayOrder는 변경하지 않습니다.
+ * 미삭제 노출의 계약, 카테고리별 콘텐츠, 광고 표시와 기간을 전체 교체합니다. contractId·mobileImageUrl·targetType·targetId·기간은 생략하거나 null로 보내면 null이며, BANNER의 name·imageUrl·linkUrl은 필수입니다. productId, exposed와 displayOrder는 변경하지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
  * @summary 광고 노출 내용·계약·기간 교체
  */
 export const replaceAdvertisementExposure = async (exposureId: number,
@@ -3078,6 +3080,108 @@ export const useCreateAiJob = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCreateAiJobMutationOptions(options), queryClient);
+    }
+
+export type closeAiJobBySourceCheckResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type closeAiJobBySourceCheckResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type closeAiJobBySourceCheckResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type closeAiJobBySourceCheckResponseSuccess = (closeAiJobBySourceCheckResponse200) & {
+  headers: Headers;
+};
+export type closeAiJobBySourceCheckResponseError = (closeAiJobBySourceCheckResponse401 | closeAiJobBySourceCheckResponse404) & {
+  headers: Headers;
+};
+
+export type closeAiJobBySourceCheckResponse = (closeAiJobBySourceCheckResponseSuccess | closeAiJobBySourceCheckResponseError)
+
+export const getCloseAiJobBySourceCheckUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}/source-check-close`
+}
+
+/**
+ *
+ *             원문 페이지가 없어졌거나 마감으로 바뀐 공고의 모집을 마감합니다. 등록 경로를 가리지 않습니다.
+ *             게시 상태는 바꾸지 않아 사용자 화면에 모집 마감으로 보입니다.
+ *             이미 마감한 공고를 다시 마감해도 처음 마감 일시를 그대로 두고 성공합니다.
+ * @summary 원문이 내려간 공고 마감
+ */
+export const closeAiJobBySourceCheck = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<closeAiJobBySourceCheckResponse> => {
+
+  return httpClient<closeAiJobBySourceCheckResponse>(getCloseAiJobBySourceCheckUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseAiJobBySourceCheckMutationKey = () => ['closeAiJobBySourceCheck'] as const;
+
+export const getCloseAiJobBySourceCheckMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, TError,CloseAiJobBySourceCheckMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, TError,CloseAiJobBySourceCheckMutationVariables, TContext> => {
+
+const mutationKey = getCloseAiJobBySourceCheckMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, CloseAiJobBySourceCheckMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeAiJobBySourceCheck(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseAiJobBySourceCheckMutationResult = NonNullable<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>>
+
+    export type CloseAiJobBySourceCheckMutationError = ErrorResponse
+    export type CloseAiJobBySourceCheckMutationVariables = {jobId: number}
+
+    /**
+ * @summary 원문이 내려간 공고 마감
+ */
+export const useCloseAiJobBySourceCheck = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, TError,CloseAiJobBySourceCheckMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeAiJobBySourceCheck>>,
+        TError,
+        CloseAiJobBySourceCheckMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseAiJobBySourceCheckMutationOptions(options), queryClient);
     }
 
 export type hideAiJobResponse200 = {
@@ -4909,7 +5013,7 @@ export const getCreateAdvertisementExposureUrl = () => {
 }
 
 /**
- * 상품 category에 따라 BANNER 콘텐츠 또는 JOB_POSTING 대상을 등록합니다. category, displayOrder와 슬롯은 요청에 포함하지 않습니다. contractId는 선택이며 존재만 확인합니다. JOB_POSTING target의 실제 존재·게시 상태는 확인하지 않습니다. BANNER의 mobileImageUrl은 선택이며 null이면 모바일에서도 imageUrl을 씁니다. JOB_POSTING은 mobileImageUrl을 보내지 않습니다.
+ * 상품 category에 따라 BANNER 콘텐츠 또는 JOB_POSTING 대상을 등록합니다. category, displayOrder와 슬롯은 요청에 포함하지 않습니다. contractId는 선택이며 존재만 확인합니다. JOB_POSTING target의 실제 존재·게시 상태는 확인하지 않습니다. BANNER의 mobileImageUrl은 선택이며 null이면 모바일에서도 imageUrl을 씁니다. JOB_POSTING은 mobileImageUrl을 보내지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부해 정리 작업이 지우지 않게 하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
  * @summary 광고 노출 등록
  */
 export const createAdvertisementExposure = async (createAdminAdvertisementExposureRequest: CreateAdminAdvertisementExposureRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAdvertisementExposureResponse> => {
@@ -7716,6 +7820,142 @@ export function useListAiLetsCareerContentTagTargets<TData = Awaited<ReturnType<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListAiLetsCareerContentTagTargetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listAiJobSourceCheckTargetsResponse200 = {
+  data: SuccessResponseListAiJobSourceCheckTargetResponse
+  status: 200
+}
+
+export type listAiJobSourceCheckTargetsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listAiJobSourceCheckTargetsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listAiJobSourceCheckTargetsResponseSuccess = (listAiJobSourceCheckTargetsResponse200) & {
+  headers: Headers;
+};
+export type listAiJobSourceCheckTargetsResponseError = (listAiJobSourceCheckTargetsResponse400 | listAiJobSourceCheckTargetsResponse401) & {
+  headers: Headers;
+};
+
+export type listAiJobSourceCheckTargetsResponse = (listAiJobSourceCheckTargetsResponseSuccess | listAiJobSourceCheckTargetsResponseError)
+
+export const getListAiJobSourceCheckTargetsUrl = (params?: ListAiJobSourceCheckTargetsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/internal/jobs/source-check-targets?${stringifiedParams}` : `/api/v1/internal/jobs/source-check-targets`
+}
+
+/**
+ *
+ *             게시 중인 모집 중 상시 채용 공고 가운데 원문 URL이 있는 것을 `afterId` 다음부터 식별자 순으로 `size`건 줍니다.
+ *             AI 서버가 등록한 공고만이 아니라 고용24·기업회원 공고도 들어 있습니다.
+ *             다음 쪽은 받은 마지막 `jobId`를 `afterId`로 넘겨 읽고, 빈 목록이면 끝입니다.
+ * @summary 원문 확인 대상 조회
+ */
+export const listAiJobSourceCheckTargets = async (params?: ListAiJobSourceCheckTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listAiJobSourceCheckTargetsResponse> => {
+
+  return httpClient<listAiJobSourceCheckTargetsResponse>(getListAiJobSourceCheckTargetsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAiJobSourceCheckTargetsQueryKey = (params?: ListAiJobSourceCheckTargetsParams,) => {
+    return [
+    `/api/v1/internal/jobs/source-check-targets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAiJobSourceCheckTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAiJobSourceCheckTargetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>> = ({ signal }) => listAiJobSourceCheckTargets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAiJobSourceCheckTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>>
+export type ListAiJobSourceCheckTargetsQueryError = ErrorResponse
+
+
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params: undefined |  ListAiJobSourceCheckTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 원문 확인 대상 조회
+ */
+
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAiJobSourceCheckTargetsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -11156,6 +11396,8 @@ export const getGetAiJobResponseMock = (overrideResponse: Partial<Extract<Succes
 
 export const getCreateAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobRegistrationResponse, object>> = {}): SuccessResponseAiJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
+export const getCloseAiJobBySourceCheckResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getHideAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCloseAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -11235,6 +11477,8 @@ export const getUpdateAdvertisementContractPaymentAmountResponseMock = (override
 export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
 export const getListAiLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListAiLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+
+export const getListAiJobSourceCheckTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiJobSourceCheckTargetResponse, object>> = {}): SuccessResponseListAiJobSourceCheckTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), sourceUrl: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
 
 export const getListAiJobAnalysisTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiJobAnalysisTargetResponse, object>> = {}): SuccessResponseListAiJobAnalysisTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), contentHash: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), undefined]), ...overrideResponse})
 
@@ -11597,6 +11841,18 @@ export const getCreateAiJobMockHandler = (overrideResponse?: SuccessResponseAiJo
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateAiJobResponseMock(),
       { status: 201
+      })
+  }, options)
+}
+
+export const getCloseAiJobBySourceCheckMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/internal/jobs/:jobId/source-check-close', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCloseAiJobBySourceCheckResponseMock(),
+      { status: 200
       })
   }, options)
 }
@@ -12081,6 +12337,18 @@ export const getListAiLetsCareerContentTagTargetsMockHandler = (overrideResponse
   }, options)
 }
 
+export const getListAiJobSourceCheckTargetsMockHandler = (overrideResponse?: SuccessResponseListAiJobSourceCheckTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiJobSourceCheckTargetResponse> | SuccessResponseListAiJobSourceCheckTargetResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/internal/jobs/source-check-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListAiJobSourceCheckTargetsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListAiJobAnalysisTargetsMockHandler = (overrideResponse?: SuccessResponseListAiJobAnalysisTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiJobAnalysisTargetResponse> | SuccessResponseListAiJobAnalysisTargetResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/jobs/analysis-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -12407,6 +12675,7 @@ export const getOgonggoAdminAPIMock = () => [
   getDeleteAdvertisementExposureMockHandler(),
   getGetAiJobMockHandler(),
   getCreateAiJobMockHandler(),
+  getCloseAiJobBySourceCheckMockHandler(),
   getHideAiJobMockHandler(),
   getCloseAiJobMockHandler(),
   getGetAiBootcampMockHandler(),
@@ -12447,6 +12716,7 @@ export const getOgonggoAdminAPIMock = () => [
   getUpdateAdvertisementContractPaymentAmountMockHandler(),
   getListAiLetsCareerContentsMockHandler(),
   getListAiLetsCareerContentTagTargetsMockHandler(),
+  getListAiJobSourceCheckTargetsMockHandler(),
   getListAiJobAnalysisTargetsMockHandler(),
   getGetWork24ApiResponseMockHandler(),
   getListServiceFeedbacksMockHandler(),
