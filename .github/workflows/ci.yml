@@ -27,6 +27,7 @@ jobs:
       run: ${{ steps.classify.outputs.run }}
       filter: ${{ steps.classify.outputs.filter }}
       format_paths: ${{ steps.classify.outputs.format_paths }}
+      deps: ${{ steps.classify.outputs.deps }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -41,8 +42,13 @@ jobs:
           web=false
           admin=false
           shared=false
+          deps=false
 
           while IFS= read -r file; do
+            # 의존성 검사(audit)는 lockfile 이나 package.json 이 바뀐 PR 에서만 돈다.
+            case "$file" in
+              pnpm-lock.yaml|package.json|*/package.json) deps=true ;;
+            esac
             case "$file" in
               apps/web/*)   web=true ;;
               apps/admin/*) admin=true ;;
@@ -77,8 +83,9 @@ jobs:
           echo "run=$run" >> "$GITHUB_OUTPUT"
           echo "filter=$filter" >> "$GITHUB_OUTPUT"
           echo "format_paths=$format_paths" >> "$GITHUB_OUTPUT"
+          echo "deps=$deps" >> "$GITHUB_OUTPUT"
 
-          echo "web=$web admin=$admin shared=$shared" >> "$GITHUB_STEP_SUMMARY"
+          echo "web=$web admin=$admin shared=$shared deps=$deps" >> "$GITHUB_STEP_SUMMARY"
           echo "turbo filter: ${filter:-(전체)}" >> "$GITHUB_STEP_SUMMARY"
 
   # 순서는 타입체크 → 린트 → 포맷 → 보안이다. `needs` 로 묶었으므로 앞이 실패하면
@@ -130,8 +137,12 @@ jobs:
   # 보안은 두 갈래다. 의존성(pnpm audit)과 코드(CodeQL). 둘 다 저장소 전체가
   # 대상이라 스코프를 나누지 않는다 — lockfile 은 하나고, CodeQL 은 호출 경로를
   # 따라가므로 바뀐 파일만 봐서는 의미가 없다.
+  #
+  # audit 은 의존성이 바뀐 PR 에서만 돈다. 의존성이 그대로면 PR 이 새 취약점을 들이지 않는다.
+  # 다른 검사와 상관없어 앞 단계를 기다리지 않고 바로 시작한다.
   audit:
-    needs: format
+    needs: scope
+    if: needs.scope.outputs.deps == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
