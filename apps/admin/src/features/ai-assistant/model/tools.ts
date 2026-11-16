@@ -25,7 +25,6 @@ import { omitEmpty } from '@/shared/api/omitEmpty';
 import { runRedashQuery } from '@/shared/api/redash';
 import { unwrapData } from '@/shared/api/unwrapData';
 import { fetchSourceImage } from '@/shared/api/sourceImage';
-import { NAV_SECTIONS } from '@/shared/config/navigation';
 import { imageParts, imageToDataUrls, MAX_IMAGES_PER_MESSAGE } from './images';
 import { FILLABLE_JOB_FIELDS, type FillableJobField, requestJobFill } from './jobFill';
 import {
@@ -41,12 +40,10 @@ import { type FieldValue, fillFields, pressButton, readScreen } from './screen';
  * AI 비서의 도구 실행기. 모델이 부른 도구를 브라우저에서 기존 어드민 API 로 실행한다. 도구의 이름과
  * 인자 모양은 `api/assistant.ts` 의 `TOOLS` 와 같다.
  *
- * 로그인한 관리자의 토큰으로 실행되므로 비서는 그 관리자가 할 수 있는 일을 넘지 못한다. 그중에서도 조회와
- * 화면 이동, 입력 칸 채우기, 양식을 여는 버튼까지만 둔다 — 저장·삭제·노출 변경처럼 서버에 반영하는 버튼은
- * 사람이 누른다(`./screen.ts`).
- *
- * 예외는 검수 완료 표시(`mark_inspected`) 하나다(2026-11-05 운영자: 문제 없는 공고는 비서가 검수 완료를 누르고
- * 다음으로 넘긴다). 화면의 체크와 같은 API·캐시 갱신(`setJobInspected`)을 쓰고, 노출 상태는 바꾸지 않는다.
+ * 로그인한 관리자의 토큰으로 실행되므로 비서는 그 관리자가 할 수 있는 일을 넘지 못한다. 그 안에서는 조회,
+ * 어드민의 모든 화면 이동, 입력 칸 채우기, 저장·삭제·노출 변경을 포함한 모든 버튼 누르기를 한다
+ * (2026-11-16 운영자, `./screen.ts`). 검수 완료 표시(`mark_inspected`)는 화면의 체크와 같은 API·캐시
+ * 갱신(`setJobInspected`)을 쓴다.
  *
  * 실행기는 모델에게 돌려줄 글을 만든다. 실패도 글로 돌려줘 모델이 사용자에게 설명하게 한다.
  */
@@ -107,15 +104,6 @@ const STATS_TITLES: Record<number, string> = {
   [KPI_QUERY.channelTrend]: '채널별 방문자 추이 (GA4)',
   [KPI_QUERY.searchLanding]: '검색 유입 랜딩 페이지 (GA4)',
 };
-
-/** 화면 이동을 허용하는 경로. 메뉴에 있는 목록과 상세뿐이다. */
-const MENU_PATHS = new Set(
-  NAV_SECTIONS.flatMap((section) => section.items)
-    .filter((item) => !item.disabled)
-    .map((item) => item.path),
-);
-const DETAIL_PATH =
-  /^\/(content\/(jobs|bootcamps|side-studies|concerns)|members\/(users|companies))\/\d+$/;
 
 /** 사용자에게 보일 진행 문구. 모델이 무엇을 하고 있는지 채팅 창에 한 줄로 적는다. */
 export function describeToolCall(name: string, args: Record<string, unknown>): string {
@@ -603,9 +591,9 @@ export function compactReviewedResults(messages: AssistantApiMessage[]): Assista
 
 function goTo(args: Record<string, unknown>, context: ToolContext): string {
   const path = typeof args.path === 'string' ? args.path.trim() : '';
-  const pathname = path.split('?')[0] ?? '';
-  if (!MENU_PATHS.has(pathname) && !DETAIL_PATH.test(pathname)) {
-    return `${path} 는 이동할 수 없는 경로입니다.`;
+  // 어드민 안의 경로면 어디든 간다. `//` 로 시작하면 다른 사이트 주소라 막는다.
+  if (!path.startsWith('/') || path.startsWith('//')) {
+    return `${path} 는 어드민 경로가 아닙니다. / 로 시작하는 경로를 주세요.`;
   }
   context.navigate(path);
   return `${path} 로 이동했습니다.`;
@@ -935,7 +923,7 @@ function fillJobText(args: Record<string, unknown>, context: ToolContext): strin
     context.navigate(`/content/jobs/${jobId}`);
   }
   requestJobFill(jobId, values);
-  return `공고 ${jobId} 수정 창의 ${Object.keys(values).join(', ')} 칸을 채웠습니다. 저장은 하지 않았습니다 — 사용자가 확인하고 저장을 눌러야 반영됩니다.`;
+  return `공고 ${jobId} 수정 창의 ${Object.keys(values).join(', ')} 칸을 채웠습니다. 아직 저장하지 않았습니다 — 반영하려면 수정 창의 저장 버튼을 press_button 으로 누르세요.`;
 }
 
 export async function runTool(

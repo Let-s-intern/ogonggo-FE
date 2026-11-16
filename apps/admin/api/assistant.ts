@@ -9,8 +9,8 @@ import { isAdmin } from './redash-query.js';
  * (`src/features/ai-assistant/model/tools.ts`). 그래서
  * - 이 함수는 오공고 데이터에 손대지 않는다. 키는 모델 키 하나뿐이다.
  * - 도구는 로그인한 관리자의 토큰으로 실행되어, 비서가 할 수 있는 일은 그 관리자가 할 수 있는 일을 넘지 않는다.
- * - 저장·삭제·노출 변경 도구는 정의하지 않는다. 공고 문장은 수정 창의 입력 칸을 채우는 데까지만 하고,
- *   저장은 사람이 누른다. 서버에 반영하는 도구는 검수 완료 표시(`mark_inspected`) 하나뿐이다(2026-11-05 운영자).
+ * - 저장·삭제·노출 변경은 화면의 버튼을 `press_button` 으로 눌러 한다. 비서는 모든 버튼을 누를 수 있다
+ *   (2026-11-16 운영자: 버튼 누르는 것까지 전부 맡긴다).
  *
  * 시스템 프롬프트와 도구 목록은 여기서만 정한다. 브라우저는 대화만 보낸다.
  *
@@ -265,7 +265,7 @@ const TOOLS = [
     function: {
       name: 'read_screen',
       description:
-        '사용자가 지금 보고 있는 어드민 화면을 읽는다(열린 모달이 있으면 그 안). 화면의 글과 함께 입력 칸(fields: ref, label, type, value, options)과 버튼(buttons: ref, text, humanOnly)이 온다. 칸을 채우거나 버튼을 누르기 전에 먼저 부른다.',
+        '사용자가 지금 보고 있는 어드민 화면을 읽는다(열린 모달이 있으면 그 안). 화면의 글과 함께 입력 칸(fields: ref, label, type, value, options)과 버튼(buttons: ref, text, disabled)이 온다. 칸을 채우거나 버튼을 누르기 전에 먼저 부른다.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -299,7 +299,7 @@ const TOOLS = [
     function: {
       name: 'press_button',
       description:
-        "read_screen 으로 받은 버튼(ref)을 누른다. '새 공지', '내용 수정', '검색' 처럼 양식을 열거나 화면을 바꾸는 버튼만 누를 수 있다. humanOnly 버튼(저장·등록·삭제·적용 등)은 누를 수 없다 — 사용자에게 눌러 달라고 안내한다.",
+        'read_screen 으로 받은 버튼(ref)을 누른다. 저장·등록·삭제·적용·승인·노출 변경을 포함해 화면의 모든 버튼을 누를 수 있다. 버튼이 띄우는 확인 창은 승인한 것으로 처리된다.',
       parameters: {
         type: 'object',
         properties: { ref: { type: 'string' } },
@@ -312,7 +312,7 @@ const TOOLS = [
     function: {
       name: 'navigate',
       description:
-        '어드민 화면을 옮긴다. 갈 수 있는 곳: /content/jobs, /content/new-jobs(오늘 올라온 공고 검수), /content/bootcamps, /content/side-studies, /content/concerns, /ads/review, /ads/rejections, /placements/pick-jobs, /placements/recommend-weights, /members/users, /members/companies, /support/notices, /support/feedbacks, /stats, 그리고 상세 /content/jobs/{id} 등. 채용공고 목록은 쿼리스트링으로 거를 수 있다: keyword, visibility(VISIBLE|HIDDEN), source(CRAWLER|COMPANY), recruitmentStatus(RECRUITING|CLOSED).',
+        '어드민 화면을 옮긴다. / 로 시작하는 어드민 경로면 어디든 간다. 주요 화면: /content/jobs, /content/new-jobs(오늘 올라온 공고 검수), /content/bootcamps, /content/side-studies, /content/concerns, /ads/review, /ads/rejections, /placements/pick-jobs, /placements/recommend-weights, /members/users, /members/companies, /support/notices, /support/feedbacks, /stats, 그리고 상세 /content/jobs/{id} 등. 채용공고 목록은 쿼리스트링으로 거를 수 있다: keyword, visibility(VISIBLE|HIDDEN), source(CRAWLER|COMPANY), recruitmentStatus(RECRUITING|CLOSED).',
       parameters: {
         type: 'object',
         properties: { path: { type: 'string', description: '예: /content/jobs?keyword=마케팅' } },
@@ -484,9 +484,10 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 8. 이미지 읽기: 사용자가 채팅에 올린 이미지와 view_source_images 로 붙은 원문 이미지를 읽는다.
 
 [할 수 없는 일]
-- 확정 버튼(humanOnly: 저장, 등록, 삭제, 적용, 승인, 노출 변경 등)은 누를 수 없다. 칸을 다 채운 뒤 어느 버튼을 누르면 되는지 사용자에게 알려 준다.
-- 서버에 반영하는 일은 검수 완료 표시(mark_inspected) 하나만 한다. 공고 저장, 노출·비노출, 삭제는 사람이 한다. 문제 있는 공고를 비노출해 달라는 부탁에도 어느 버튼을 누르면 되는지만 알려 준다.
-- 칸을 채우는 것은 저장이 아니다. "수정했습니다"·"저장했습니다"·"등록했습니다" 라고 말하지 않는다. "입력 칸을 채웠습니다. 확인 후 저장을 눌러 주세요" 처럼 말한다.
+- 저장, 등록, 삭제, 적용, 승인, 노출·비노출 변경을 포함해 화면의 모든 버튼을 press_button 으로 직접 누른다. 사용자에게 버튼을 눌러 달라고 넘기지 않는다.
+- 사용자가 맡긴 일이면 칸을 채운 뒤 저장·등록 버튼까지 눌러 끝낸다. 누른 뒤 read_screen 으로 반영됐는지 확인하고 결과를 말한다.
+- 삭제처럼 되돌릴 수 없는 버튼은 사용자가 그 일을 시켰을 때 누른다.
+- 칸만 채우고 저장 버튼을 누르지 않았으면 "저장했습니다" 라고 말하지 않는다.
 - 날짜·시각처럼 사용자가 말하지 않은 값은 지어내지 말고 비워 두거나 묻는다.
 
 [데이터 다루기]
@@ -517,10 +518,10 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 - 한 건 검수의 답: 첫 줄에 "판정: 문제 없음" 이나 "판정: 확인 필요".
   - 확인 필요면 이어서 한 줄에 하나씩 "- 칸 이름: 지금 값 → 원문 기준 값 (원문: "원문 문장")". 대조할 수 없거나 분석 대기면 그 사실을 한 줄로 적는다.
   - 문제 없음이면 확인한 항목을 한 줄로 적는다.
-- 고칠 문장은 사용자가 원하면 fill_job_text 로 수정 창에 채운다. 저장과 비노출은 사용자가 직접 누른다.
+- 고칠 문장은 사용자가 원하면 fill_job_text 로 수정 창에 채우고, 사용자가 맡기면 저장·비노출 버튼도 press_button 으로 누른다.
 
 [검수 완료 표시]
-- mark_inspected 는 검수 완료 체크만 바꾼다. 내용 저장, 노출 상태, 삭제는 건드리지 않는다.
+- mark_inspected 는 검수 완료 체크만 바꾼다. 내용 저장, 노출 상태, 삭제는 화면 버튼으로 따로 한다.
 - 이번 대화에서 get_job_review 로 읽고 "문제 없음" 으로 판정한 공고만 표시한다. 확인 필요인 공고는 표시하지 않는다.
 - 사용자가 공고를 콕 집어 검수 완료를 눌러 달라고 하면 그 공고는 판정 없이 표시해도 된다. 해제(inspected=false)는 사용자가 부탁할 때만 한다.
 - 표시한 뒤에는 "검수 완료로 표시했습니다" 라고 말한다. "저장했습니다" 라고 하지 않는다.
@@ -545,8 +546,9 @@ const SYSTEM_PROMPT = `너는 채용 공고 서비스 '오늘의 공고' 어드�
 3. 분류는 fill_job_classification, 본문 칸은 fill_job_text, 분석 결과는 fill_job_analysis 로 채운다. 사용자가 일부만 말하면 그 칸만 채운다.
   - 분류 값은 get_job_review 의 분류에 보이는 것과 같은 enum 값(영문 대문자)이다. 직무는 그 직군에 속한 값이어야 한다. 모르면 빼고 답에 적는다.
   - 분석 결과의 quote 는 원문 문장 그대로 옮긴다. 목록의 글은 1000자까지이고 빈 글은 넣지 않는다.
-4. 다 채운 뒤 답한다: 채운 칸을 한 줄에 하나씩 "- 칸: 넣은 값" 으로 적고, 원문에 없어 비운 칸을 적고, "입력 칸을 채웠습니다. 확인 후 분류 저장, 본문 칸은 수정 창의 저장, 마지막에 분석 결과 저장을 눌러 주세요" 처럼 안내한다. 분석 결과는 본문을 먼저 저장한 뒤 마지막에 저장해야 다시 분석에 덮이지 않는다.
-- 이 도구들은 저장하지 않는다. 서버에 반영하는 일은 여전히 검수 완료 표시(mark_inspected) 하나뿐이다.
+4. 사용자가 저장까지 맡기면 read_screen 으로 버튼을 찾아 분류 저장, 수정 창의 저장, 마지막에 분석 결과 저장 순서로 누른다. 분석 결과는 본문을 먼저 저장한 뒤 마지막에 저장해야 다시 분석에 덮이지 않는다.
+5. 다 채운 뒤 답한다: 채운 칸을 한 줄에 하나씩 "- 칸: 넣은 값" 으로 적고, 원문에 없어 비운 칸을 적고, 누른 저장 버튼과 아직 누르지 않은 저장 버튼을 적는다.
+- 이 도구들은 칸만 채운다. 저장은 위처럼 press_button 으로 한다.
 
 [대화]
 - "이 공고", "여기" 는 [현재 화면] 의 경로가 /content/jobs/{id} 이면 그 공고, /content/new-jobs?job={id} 나 /content/jobs?edit={id} 이면 그 공고다.

@@ -26,6 +26,9 @@ import {
 /** 크롤링 서버(`ogonggo-crawler`) 운영 화면. EC2 의 고정 IP 이고 HTTPS 가 없다. */
 const CRAWLER_SERVER_URL = 'http://43.201.214.251';
 
+/** 리대시(통계 쿼리·대시보드). 인스턴스를 켜고 끄며 운영해 꺼져 있을 때는 열리지 않는다. */
+const REDASH_URL = 'https://redash.lets-career.com';
+
 /**
  * 콘솔의 바깥 틀. 좌측 고정 메뉴와 본문 자리다.
  *
@@ -244,6 +247,15 @@ export function AdminLayout() {
               className="mx-3 mt-2 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
               크롤링 서버로
+              <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
+            </a>
+            <a
+              href={REDASH_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mx-3 mt-2 flex items-center justify-between rounded-sm border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              리대시로
               <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
             </a>
           </nav>
