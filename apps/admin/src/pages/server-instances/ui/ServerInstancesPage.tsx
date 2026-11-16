@@ -14,11 +14,12 @@ import { PageHeader } from '@/widgets/page-header';
 
 /**
  * 이름은 BE `/enums` 의 `Ec2Instance` 에 있지만 그 카탈로그는 사용자 API 에서 받아 어드민 전용 enum 이 없다. 두 개뿐이라
- * 여기 둔다. 자동으로 끄는 시각은 BE 스케줄이다(켜기 API 설명, 크롤러 14:00·리대시 22:00).
+ * 여기 둔다. 자동으로 끄는 시각은 BE 스케줄이다(켜기 API 설명, 크롤러 14:00·리대시 22:00). `url` 은 이름을 눌러
+ * 새 탭으로 여는 서버 화면이다. 크롤러는 EC2 고정 IP 이고 HTTPS 가 없다.
  */
-const INSTANCES: Record<Ec2InstanceName, { label: string; autoStop: string }> = {
-  REDASH: { label: '리대시', autoStop: '매일 22:00' },
-  CRAWLER: { label: '크롤러', autoStop: '매일 14:00' },
+const INSTANCES: Record<Ec2InstanceName, { label: string; autoStop: string; url: string }> = {
+  REDASH: { label: '리대시', autoStop: '매일 22:00', url: 'https://redash.lets-career.com' },
+  CRAWLER: { label: '크롤러', autoStop: '매일 14:00', url: 'http://43.201.214.251' },
 };
 
 const STATE_LABEL: Record<Ec2InstanceState, string> = {
@@ -81,7 +82,21 @@ export function ServerInstancesPage() {
     {
       key: 'instance',
       header: '서버',
-      render: (row) => INSTANCES[row.instance]?.label ?? row.instance,
+      render: (row) => {
+        const instance = INSTANCES[row.instance];
+        if (!instance) return row.instance;
+        return (
+          <a
+            href={instance.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+          >
+            {instance.label}
+            <span aria-hidden="true" className="icon-[lucide--arrow-up-right] block h-4 w-4" />
+          </a>
+        );
+      },
     },
     {
       key: 'state',
