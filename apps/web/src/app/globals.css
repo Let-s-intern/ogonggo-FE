@@ -218,17 +218,6 @@
 }
 
 /*
- * 모바일에서 웹 앱을 설치하고 로그인한 일반 회원에게는 `FOR BUSINESS` 배너를 숨긴다
- * (`widgets/for-business-banner/ui/ForBusinessBanner.tsx`). 배너를 감싼 페이지의 칸도 함께 접어야
- * 칸 사이 간격(`gap`)이 빈자리로 남지 않는다.
- */
-@media (max-width: 767.98px) {
-  :has(> [data-for-business-hidden]) {
-    display: none;
-  }
-}
-
-/*
  * `/biz` 히어로의 화면 전환(`views/biz/ui/BizHeroScreens.tsx`). 화면이 머무는 동안 캡처를 끝까지
  * 내리는 스크롤과, 탭 아래 진행 막대다. 진행 막대의 `animationend` 가 다음 화면으로 넘기는 시계라
  * 둘을 함께 `animation-play-state` 로 멈추면 정지와 재개가 따로 맞출 것 없이 맞는다.
