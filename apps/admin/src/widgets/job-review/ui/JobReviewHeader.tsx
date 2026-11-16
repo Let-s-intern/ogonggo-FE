@@ -69,11 +69,7 @@ export function JobReviewHeader({
         {/* 키보드가 주 조작인 화면도 있어 버튼을 둔다. 키 이름은 `title` 로 남긴다. */}
         <div className="flex shrink-0 items-center gap-2">
           {extra}
-          {/*
-            누르는 즉시 저장하는 체크박스라 AI 비서가 칸 채우기로 누르지 않게 막는다(`data-ai-human-only`,
-            `features/ai-assistant/model/screen.ts`). 확정은 사람이 한다.
-          */}
-          <span data-ai-human-only title={hint('검수 완료 체크', 'Space 는 체크하고 다음 건')}>
+          <span title={hint('검수 완료 체크', 'Space 는 체크하고 다음 건')}>
             <Checkbox
               checked={Boolean(job.inspectedAt)}
               onChange={onCheck}

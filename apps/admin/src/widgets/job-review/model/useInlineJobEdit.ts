@@ -143,7 +143,7 @@ export function useInlineJobEdit(job: AdminJobDetailResponse | undefined) {
 
   /*
    * AI 비서가 이 공고의 분류 칸을 채워 달라고 했다(`fill_job_classification`). 고치는 중인 값에만 넣는다 — 서버로 보내는
-   * 것은 사람이 누르는 `분류 저장` 이다. 직군만 바꾸면 직무를 비우고, 상시 채용이면 마감일을 비운다(`ConditionSection`·
+   * 것은 `분류 저장` 버튼이다. 직군만 바꾸면 직무를 비우고, 상시 채용이면 마감일을 비운다(`ConditionSection`·
    * `RecruitmentSection` 이 칸을 바꿀 때의 규칙과 같다). 이 공고의 값이 자리 잡은 뒤에 넣는다.
    */
   const classificationFill = useClassificationFill(job?.id ?? null);

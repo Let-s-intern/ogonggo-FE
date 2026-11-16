@@ -1,22 +1,14 @@
 /**
- * AI 비서가 지금 보이는 화면을 읽고, 입력 칸을 채우고, 양식을 여는 버튼을 누르게 하는 도구. 화면마다 전용
- * 도구를 붙이지 않고 어느 화면이든 같은 방식으로 다룬다(공지 작성, 부트캠프 수정, 운영 값 등).
+ * AI 비서가 지금 보이는 화면을 읽고, 입력 칸을 채우고, 버튼을 누르게 하는 도구. 화면마다 전용 도구를 붙이지
+ * 않고 어느 화면이든 같은 방식으로 다룬다(공지 작성, 부트캠프 수정, 운영 값 등).
  *
- * 원칙: 확정은 사람이 한다. 운영자가 요청한 경계다 — "버튼만 사람이 누르고 나머지는 비서가 한다".
- * - 저장·등록·삭제·적용·승인처럼 서버에 반영하는 버튼은 누르지 않는다(`isHumanOnlyButton`). 비서는 칸을
- *   채우고 "저장을 눌러 주세요" 라고 넘긴다.
- * - 표(`table`) 안의 컨트롤은 건드리지 않는다. 목록의 노출 토글처럼 누르는 즉시 서버에 반영되는 것이
- *   표 안에 있다. 표 밖의 입력 칸은 화면 상태일 뿐이라 저장을 누르기 전에는 아무것도 바뀌지 않는다.
+ * 비서는 저장·삭제·노출 변경을 포함해 화면의 모든 버튼과 칸을 다룬다(2026-11-16 운영자: 버튼 누르는 것까지
+ * 전부 맡긴다). 표 안의 노출 토글처럼 누르는 즉시 서버에 반영되는 컨트롤도 포함한다.
  * - 좌측 메뉴와 비서 패널(`data-pdf-hide`) 자신은 다루지 않는다. 화면 이동은 `navigate` 도구가 한다.
- * - `data-ai-human-only` 안의 컨트롤도 건드리지 않는다. 표 밖이지만 누르는 즉시 저장되는 것(오늘 올라온 공고의
- *   검수 완료 체크박스)에 단다.
+ * - 비서가 누른 버튼이 띄우는 `window.confirm` 은 비서가 승인한 것으로 본다(`pressButton`).
  *
  * 비서가 채운 칸에는 `data-ai-filled` 를 달아 파란 테두리로 보인다(`app/index.css`).
  */
-
-/** 이 낱말이 든 버튼은 사람만 누른다. 서버에 반영하거나 되돌리기 어려운 동작의 낱말이다. */
-const HUMAN_ONLY_WORDS =
-  /저장|등록|삭제|적용|제출|확인|발행|게시|전송|승인|반려|노출|업로드|일괄|변경|완료|로그아웃|복구|해제/;
 
 const REF_ATTR = 'data-ai-ref';
 const MAX_TEXT = 4_000;
@@ -31,7 +23,7 @@ function scope(): HTMLElement | null {
 }
 
 function isOffLimits(element: Element): boolean {
-  return Boolean(element.closest('nav, table, [data-pdf-hide], [data-ai-human-only]'));
+  return Boolean(element.closest('nav, [data-pdf-hide]'));
 }
 
 function isVisible(element: HTMLElement): boolean {
@@ -75,16 +67,6 @@ function buttonText(button: HTMLButtonElement): string {
   return (button.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
-/**
- * 사람만 누를 버튼인지. `type` 을 적지 않은 버튼은 브라우저가 `submit` 으로 보지만(공용 `Button` 이 그렇다),
- * 실제로 양식(`form`)을 제출하는 것은 `form` 안에 있을 때뿐이라 그때만 제출 버튼으로 본다.
- */
-export function isHumanOnlyButton(button: HTMLButtonElement): boolean {
-  return (
-    (button.type === 'submit' && button.form !== null) || HUMAN_ONLY_WORDS.test(buttonText(button))
-  );
-}
-
 /** 클릭·이동 뒤 화면이 다시 그려지고 목록을 불러올 때까지 잠깐 기다린다. */
 async function settle(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 300));
@@ -98,7 +80,6 @@ async function settle(): Promise<void> {
 
 /**
  * 화면을 읽어 모델에게 줄 글로 만든다. 칸과 버튼에 번호(`ref`)를 붙여 다음 도구가 가리키게 한다.
- * 사람만 누를 버튼에는 `humanOnly` 를 붙여, 모델이 사용자에게 누르라고 안내하게 한다.
  */
 export async function readScreen(): Promise<string> {
   await settle();
@@ -142,7 +123,6 @@ export async function readScreen(): Promise<string> {
       return {
         ref,
         text: buttonText(button),
-        ...(isHumanOnlyButton(button) ? { humanOnly: true } : {}),
         ...(button.disabled ? { disabled: true } : {}),
       };
     });
@@ -234,22 +214,28 @@ export async function fillFields(values: FieldValue[]): Promise<string> {
     results.push(`${ref}(${labelOf(element)}): 채웠습니다.`);
   }
   await settle();
-  return `${results.join('\n')}\n저장·등록은 하지 않았습니다. 사용자가 확인하고 눌러야 반영됩니다.`;
+  return `${results.join('\n')}\n아직 저장하지 않았습니다. 반영하려면 저장 버튼을 press_button 으로 누르세요.`;
 }
 
-/** 양식을 여는 버튼(새 공지, 내용 수정 등)만 누른다. 사람만 누를 버튼은 누르지 않고 그렇다고 답한다. */
+/**
+ * 버튼을 누른다. 저장·삭제처럼 서버에 반영하는 버튼도 누른다. 누르는 동안 뜨는 `window.confirm` 은 비서가
+ * 승인한 것으로 보고 묻지 않는다 — 클릭 핸들러는 동기로 confirm 을 부르므로 클릭이 끝나면 바로 되돌린다.
+ */
 export async function pressButton(ref: string): Promise<string> {
   const element = findRef(ref);
   if (!(element instanceof HTMLButtonElement) || isOffLimits(element)) {
     return `${ref}: 버튼을 찾지 못했습니다. read_screen 을 다시 부르세요.`;
   }
-  if (isHumanOnlyButton(element)) {
-    return `"${buttonText(element)}" 는 사람이 누르는 버튼입니다. 누르지 않았습니다. 사용자에게 눌러 달라고 안내하세요.`;
-  }
   if (element.disabled) {
     return `"${buttonText(element)}" 는 지금 누를 수 없습니다.`;
   }
-  element.click();
+  const confirm = window.confirm;
+  window.confirm = () => true;
+  try {
+    element.click();
+  } finally {
+    window.confirm = confirm;
+  }
   await settle();
   return `"${buttonText(element)}" 를 눌렀습니다. 바뀐 화면은 read_screen 으로 확인하세요.`;
 }

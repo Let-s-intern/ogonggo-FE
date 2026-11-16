@@ -169,7 +169,7 @@ export function AnalysisEditor({
   const [aiFilled, setAiFilled] = useState(false);
   const analysisFill = useAnalysisFill(job.id);
 
-  // AI 비서가 분석을 채워 달라고 했다(`fill_job_analysis`). 고치던 값을 통째로 바꾼다. 저장은 사람이 누른다.
+  // AI 비서가 분석을 채워 달라고 했다(`fill_job_analysis`). 고치던 값을 통째로 바꾼다. 저장은 저장 버튼이 한다.
   useEffect(() => {
     if (!analysisFill) {
       return;
