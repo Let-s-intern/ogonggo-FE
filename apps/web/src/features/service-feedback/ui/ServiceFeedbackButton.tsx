@@ -36,7 +36,7 @@ export function openServiceFeedback() {
 
 /**
  * 모바일에서 화면 아래에 붙는 것들 위로 올린다. 공고 상세의 신청하기 바(`data-sticky-apply-bar`)와,
- * 앱을 설치하고 로그인했을 때의 하단 내비게이션(`data-bottom-nav`, 떠 있는 동그라미까지 약 84px)이다.
+ * 모바일에 늘 떠 있는 하단 내비게이션(`data-bottom-nav`, 떠 있는 동그라미까지 약 84px)이다.
  * 상세 화면에서는 신청하기 바가 내비게이션 위에 올라앉아 둘을 합친 높이만큼 올린다.
  */
 const ABOVE_STICKY_BAR = cn(
@@ -197,7 +197,7 @@ function FloatingButton({ onClick }: { onClick: () => void }) {
         // 같은 `z-30` 이면 나중에 그려지는 이 버튼이 공유 창 위로 올라왔다.
         'group fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 focus-visible:outline-none md:right-8 md:bottom-8',
         ABOVE_STICKY_BAR,
-        // 하단 내비게이션이 떠 있으면(모바일 로그인) 탭을 가리므로 숨긴다. 그때는 마이페이지 탭의
+        // 하단 내비게이션이 떠 있으면(모바일) 탭을 가리므로 숨긴다. 그때는 마이페이지 탭의
         // 서브 메뉴 `의견 보내기` 가 이 창을 연다(`openServiceFeedback`).
         'max-md:[body:has([data-bottom-nav])_&]:hidden',
       )}
