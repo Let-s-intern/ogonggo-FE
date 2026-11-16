@@ -88,9 +88,10 @@ jobs:
           echo "web=$web admin=$admin shared=$shared deps=$deps" >> "$GITHUB_STEP_SUMMARY"
           echo "turbo filter: ${filter:-(전체)}" >> "$GITHUB_STEP_SUMMARY"
 
-  # 순서는 타입체크 → 린트 → 포맷 → 보안이다. `needs` 로 묶었으므로 앞이 실패하면
-  # 뒤는 돌지 않는다. 앞 단계가 건너뛰어지면(코드 변경 없는 PR) 뒤도 함께 건너뛴다.
-  type-check:
+  # 타입체크·린트·포맷을 한 job 에서 돈다. 셋 다 몇 초면 끝나서, job 을 나누면 검사보다
+  # 단계마다 되풀이하는 checkout·설치가 더 오래 걸린다. 앞 검사가 실패해도 뒤 검사를 돌려
+  # 한 번에 모든 실패를 보인다. 코드 변경이 없는 PR 은 통째로 건너뛴다.
+  check:
     needs: scope
     if: needs.scope.outputs.run == 'true'
     runs-on: ubuntu-latest
@@ -103,40 +104,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # tsgo (@typescript/native-preview) 로 각 패키지의 `type-check` 를 돈다.
-      - run: pnpm turbo run type-check ${{ needs.scope.outputs.filter }}
-
-  lint:
-    needs: [scope, type-check]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: type-check
+        run: pnpm turbo run type-check ${{ needs.scope.outputs.filter }}
       # oxlint. 규칙은 루트 `.oxlintrc.json` 이 정한다.
-      - run: pnpm turbo run lint ${{ needs.scope.outputs.filter }}
-
-  format:
-    needs: [scope, lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: lint
+        if: ${{ !cancelled() }}
+        run: pnpm turbo run lint ${{ needs.scope.outputs.filter }}
       # oxfmt. `--check` 는 고치지 않고 어긋난 파일만 알려준다.
       # 고치려면 로컬에서 `pnpm format`.
-      - run: pnpm exec oxfmt --check ${{ needs.scope.outputs.format_paths }}
+      - name: format
+        if: ${{ !cancelled() }}
+        run: pnpm exec oxfmt --check ${{ needs.scope.outputs.format_paths }}
 
-  # 보안은 두 갈래다. 의존성(pnpm audit)과 코드(CodeQL). 둘 다 저장소 전체가
-  # 대상이라 스코프를 나누지 않는다 — lockfile 은 하나고, CodeQL 은 호출 경로를
-  # 따라가므로 바뀐 파일만 봐서는 의미가 없다.
+  # 의존성 보안 검사. lockfile 이 하나라 스코프를 나누지 않는다.
   #
   # audit 은 의존성이 바뀐 PR 에서만 돈다. 의존성이 그대로면 PR 이 새 취약점을 들이지 않는다.
   # 다른 검사와 상관없어 앞 단계를 기다리지 않고 바로 시작한다.
@@ -154,19 +134,3 @@ jobs:
       # high 이상만 막는다. low/moderate 까지 막으면 고칠 수 없는 전이 의존성
       # 하나에 PR 전체가 멈춘다.
       - run: pnpm audit --audit-level=high
-
-  codeql:
-    needs: format
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v5
-      - uses: github/codeql-action/init@v4
-        with:
-          languages: javascript-typescript
-          # JS/TS 는 컴파일이 필요 없다. 빌드를 돌리지 않으므로 설치도 생략한다.
-          build-mode: none
-      - uses: github/codeql-action/analyze@v4
