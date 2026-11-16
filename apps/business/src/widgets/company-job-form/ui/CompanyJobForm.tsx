@@ -32,6 +32,19 @@ import { JobBasicInfoSection } from './JobBasicInfoSection';
 import { JobContentSection } from './JobContentSection';
 import { JobPreview } from './JobPreview';
 
+/** 원문 이미지를 만료 확인 함수가 받는 칸 이름(순번) → 주소 모양으로 바꾼다. */
+function sourceImageRecord(urls: readonly string[]): Record<string, string> {
+  return Object.fromEntries(urls.map((url, index) => [String(index), url]));
+}
+
+/** `sourceImageRecord` 의 칸 이름(순번)들로 원문 이미지 주소를 고른다. */
+function pickByIndex(urls: readonly string[], keys: readonly string[]): string[] {
+  return keys.flatMap((key) => {
+    const url = urls[Number(key)];
+    return url === undefined ? [] : [url];
+  });
+}
+
 export interface CompanyJobFormProps {
   /** 있으면 수정, 없으면 새 공고. 작성한 공고 표에서 넘어올 때만 있다. */
   jobId?: number;
@@ -108,12 +121,31 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
     expiredImages.mark(keys);
     setOpenSteps((previous) => (previous.includes(1) ? previous : [...previous, 1]));
   };
+  /** 원문 이미지 칸 아래 안내. 만료된 원문 이미지를 뺐으면 다시 올리라고 띄운다. */
+  const [sourceImagesNotice, setSourceImagesNotice] = useState<string | undefined>();
+  /** 만료된 원문 이미지를 목록에서 빼고 알린다. 남은 이미지의 순서는 그대로다. */
+  const dropExpiredSourceImages = (expired: readonly string[]) => {
+    if (expired.length === 0) {
+      return;
+    }
+    setValues((previous) => ({
+      ...previous,
+      sourceImageUrls: previous.sourceImageUrls.filter((url) => !expired.includes(url)),
+    }));
+    setSourceImagesNotice(IMAGE_EXPIRED_MESSAGE);
+    setOpenSteps((previous) => (previous.includes(2) ? previous : [...previous, 2]));
+  };
   /** 임시저장을 불러온 뒤, 그 사이 정리 작업이 지운 업로드 이미지가 있으면 비운다. 외부 주소는 보지 않는다. */
-  const checkRestoredImages = (restored: CompanyJobFormValues) =>
+  const checkRestoredImages = (restored: CompanyJobFormValues) => {
     void findExpiredImages({
       logoUrl: restored.logoUrl ?? '',
       coverImageUrl: restored.coverImageUrl ?? '',
     }).then(clearExpired);
+    const sourceImages = restored.sourceImageUrls ?? [];
+    void findExpiredImages(sourceImageRecord(sourceImages)).then((keys) =>
+      dropExpiredSourceImages(pickByIndex(sourceImages, keys)),
+    );
+  };
   const draft = useCompanyPostDraft({
     kind: 'jobs',
     enabled: isNew,
@@ -163,6 +195,9 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
   const change = (patch: Partial<CompanyJobFormValues>) => {
     setValues((previous) => ({ ...previous, ...patch }));
     expiredImages.onChanged(patch);
+    if (patch.sourceImageUrls) {
+      setSourceImagesNotice(undefined);
+    }
   };
 
   const toggle = (step: number) =>
@@ -211,11 +246,22 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
     } catch (error) {
       // 정리 작업이 지운 업로드 이미지로 저장했다. 응답은 어느 칸인지 알려 주지 않아 이미지를 불러 보고 고른다.
       if (isImageAssetNotAvailable(error)) {
+        const rejected = await imagesToClearAfterRejection({
+          logoUrl: values.logoUrl,
+          coverImageUrl: values.coverImageUrl,
+          ...sourceImageRecord(values.sourceImageUrls),
+        });
         clearExpired(
-          await imagesToClearAfterRejection({
-            logoUrl: values.logoUrl,
-            coverImageUrl: values.coverImageUrl,
-          }),
+          rejected.filter(
+            (key): key is 'logoUrl' | 'coverImageUrl' =>
+              key === 'logoUrl' || key === 'coverImageUrl',
+          ),
+        );
+        dropExpiredSourceImages(
+          pickByIndex(
+            values.sourceImageUrls,
+            rejected.filter((key) => key !== 'logoUrl' && key !== 'coverImageUrl'),
+          ),
         );
         setTab('write');
         setFormError(IMAGE_EXPIRED_MESSAGE);
@@ -276,7 +322,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
         ))}
       </div>
 
-      {tab === 'preview' ? <JobPreview values={values} /> : null}
+      {tab === 'preview' ? <JobPreview values={values} passthrough={passthrough} /> : null}
 
       <div className={cn('flex flex-col gap-4', tab !== 'write' && 'hidden')}>
         <FormSection
@@ -306,6 +352,7 @@ export function CompanyJobForm({ jobId }: CompanyJobFormProps) {
             values={values}
             onChange={change}
             hiringProcessStored={hiringProcessStored}
+            sourceImagesNotice={sourceImagesNotice}
           />
         </FormSection>
 

@@ -440,6 +440,7 @@ export * from './userJobDetailResponseJobField';
 export * from './userJobDetailResponseJobRole';
 export * from './userJobDetailResponseRecruitmentType';
 export * from './userJobDetailResponseRegion';
+export * from './userJobDetailResponseSource';
 export * from './userJobDetailResponseSubRegion';
 export * from './userJobHeadlineCountResponse';
 export * from './userJobSummaryResponse';

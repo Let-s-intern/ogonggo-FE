@@ -26,9 +26,13 @@ export function buildSections(job: JobDetail): { label: string; value?: string }
 }
 
 /**
- * `공고 원문` 탭. 원문 HTML(`sourceHtml`)이 있으면 그 HTML 을 그대로 그린다. 원문이 없는 공고와
- * 기업회원 공고는 값이 없어, 그때는 탭이 생기기 전 상세 본문 그대로 값이 있는 섹션만 글 덩어리로
- * 보여 준다. 맨 아래에는 원문 사이트 링크(`sourceUrl`)를 둔다.
+ * `공고 원문` 탭. 원문 HTML(`sourceHtml`)이 있으면 그 HTML 을 그대로 그린다. 원문이 없는 공고는
+ * 탭이 생기기 전 상세 본문 그대로 값이 있는 섹션만 글 덩어리로 보여 준다. 맨 아래에는 원문 사이트
+ * 링크(`sourceUrl`)를 둔다.
+ *
+ * 기업회원 공고(`source === 'COMPANY'`)는 다르다. 기업이 글 칸을 모두 쓰고 원문 이미지는 선택으로
+ * 더하므로(BE LC-3612), 원문 HTML은 원문 이미지뿐이다. 그래서 글 섹션을 먼저 그리고 그 아래에
+ * 원문 이미지를 그린다. 원문 HTML만 그리면 기업이 쓴 글이 모두 빠진다.
  *
  * `sourceHtml` 은 프런트에서 다시 거르지 않는다. 백엔드가 저장할 때 jsoup `Safelist.relaxed()` 로
  * 안전한 태그만 남기고(BE `JobSourceHtmlSanitizer.kt`) 스타일 속성도 없앤 값이라, 여기서 한 번 더
@@ -49,36 +53,43 @@ export function OriginalTab({
   layout?: 'page' | 'modal';
 }) {
   const sourceHtml = job.sourceHtml?.trim();
-  const sections = sourceHtml ? [] : buildSections(job).filter((section) => Boolean(section.value));
+  const companyPosting = job.source === 'COMPANY';
+  const sections =
+    sourceHtml && !companyPosting
+      ? []
+      : buildSections(job).filter((section) => Boolean(section.value));
   const sourceUrl = job.sourceUrl && /^https?:\/\//.test(job.sourceUrl) ? job.sourceUrl : undefined;
+
+  const sourceBlock = sourceHtml ? (
+    <SourceHtml
+      html={sourceHtml}
+      className={cn(
+        'break-words text-sm leading-relaxed text-gray-700',
+        '[&_:is(p,ul,ol,table,h1,h2,h3,h4,h5,h6)]:my-3 [&>:first-child]:mt-0',
+        '[&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_:is(h1,h2,h3,h4,h5,h6)]:text-gray-900',
+        // 소제목 크기를 단계로 나눈다. 전에는 모두 본문과 같은 14px 라 원문의 소제목이 본문과 구분되지 않았다
+        '[&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_:is(h4,h5,h6)]:text-sm',
+        '[&_ul]:list-disc [&_ol]:list-decimal [&_:is(ul,ol)]:pl-5',
+        '[&_img]:h-auto [&_img]:max-w-full',
+        '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',
+        '[&_:is(td,th)]:border [&_:is(td,th)]:border-gray-200 [&_:is(td,th)]:px-2 [&_:is(td,th)]:py-1',
+        '[&_a]:text-blue-500 [&_a]:underline',
+        // 원문 위쪽 "칸 이름 + 값" 묶음은 표 한 줄로 그린다(`markLabelRows`)
+        SOURCE_LABEL_ROW_CLASS,
+      )}
+    />
+  ) : null;
 
   return (
     <div className={cn('flex flex-col gap-10', layout === 'modal' && 'px-[17px]')}>
-      {sourceHtml ? (
-        <SourceHtml
-          html={sourceHtml}
-          className={cn(
-            'break-words text-sm leading-relaxed text-gray-700',
-            '[&_:is(p,ul,ol,table,h1,h2,h3,h4,h5,h6)]:my-3 [&>:first-child]:mt-0',
-            '[&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_:is(h1,h2,h3,h4,h5,h6)]:text-gray-900',
-            // 소제목 크기를 단계로 나눈다. 전에는 모두 본문과 같은 14px 라 원문의 소제목이 본문과 구분되지 않았다
-            '[&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_:is(h4,h5,h6)]:text-sm',
-            '[&_ul]:list-disc [&_ol]:list-decimal [&_:is(ul,ol)]:pl-5',
-            '[&_img]:h-auto [&_img]:max-w-full',
-            '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:break-keep',
-            '[&_:is(td,th)]:border [&_:is(td,th)]:border-gray-200 [&_:is(td,th)]:px-2 [&_:is(td,th)]:py-1',
-            '[&_a]:text-blue-500 [&_a]:underline',
-            // 원문 위쪽 "칸 이름 + 값" 묶음은 표 한 줄로 그린다(`markLabelRows`)
-            SOURCE_LABEL_ROW_CLASS,
-          )}
-        />
-      ) : null}
+      {companyPosting ? null : sourceBlock}
       {sections.map((section) => (
         <div key={section.label}>
           <h2 className="text-lg font-bold text-gray-900">{section.label}</h2>
           <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{section.value}</p>
         </div>
       ))}
+      {companyPosting ? sourceBlock : null}
       {sourceUrl ? (
         <div>
           <a

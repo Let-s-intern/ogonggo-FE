@@ -53,7 +53,15 @@ export interface CompanyJobFormValues {
   applyEmail: string;
   recruitmentNotice: string;
   autoCloseEnabled: boolean;
+  /**
+   * 원문 이미지 주소(선택, 이슈 #653). 올린 순서대로 공개 상세 `공고 원문` 탭에 글 아래로 보인다. 글 칸을
+   * 대신하지 않는다 — 필수 칸은 그대로다.
+   */
+  sourceImageUrls: string[];
 }
+
+/** 원문 이미지 상한. BE 요청 검증(`sourceImageUrls` 최대 10장)과 같다. */
+export const MAX_SOURCE_IMAGES = 10;
 
 /**
  * 목업에 칸이 없는데 응답에는 있는 값들. **화면이 그리지 않고 그대로 되돌려 보낸다.**
@@ -97,6 +105,7 @@ export const EMPTY_COMPANY_JOB_VALUES: CompanyJobFormValues = {
   applyEmail: '',
   recruitmentNotice: '',
   autoCloseEnabled: false,
+  sourceImageUrls: [],
 };
 
 export const EMPTY_COMPANY_JOB_PASSTHROUGH: CompanyJobPassthrough = {};
@@ -127,6 +136,7 @@ export function toCompanyJobValues(job: CompanyJobDetailResponse): CompanyJobFor
     applyEmail: job.applyEmail ?? '',
     recruitmentNotice: job.recruitmentNotice ?? '',
     autoCloseEnabled: job.autoCloseEnabled ?? false,
+    sourceImageUrls: job.sourceImageUrls ?? [],
   };
 }
 
@@ -157,6 +167,9 @@ const numberOrUndefined = (value: string) => (value.trim() === '' ? undefined : 
  *
  * 목업에 칸이 없는 나머지 값들은 읽어 온 그대로 다시 싣는다(`CompanyJobPassthrough`).
  * 수정이 전체 교체라 빼면 지워진다.
+ *
+ * 원문 이미지는 늘 목록으로 보낸다. 수정에서 빈 목록은 원문 이미지를 모두 빼라는 뜻이다(BE LC-3612 —
+ * 보내지 않으면 그대로 둔다).
  */
 export function toCompanyJobRequest(
   values: CompanyJobFormValues,
@@ -193,5 +206,6 @@ export function toCompanyJobRequest(
     applicationMethod: values.applicationMethod || undefined,
     sourceUrl: textOrUndefined(values.sourceUrl),
     applyEmail: textOrUndefined(values.applyEmail),
+    sourceImageUrls: values.sourceImageUrls,
   };
 }

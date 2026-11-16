@@ -632,4 +632,10 @@ export interface CreateCompanyJobRequest {
      * @maxLength 2048
      */
   sourceUrl?: string;
+  /**
+     * 원문 이미지 주소(선택, 최대 10장). 올린 순서대로 공고 원문에 보입니다. 비우거나 보내지 않으면 원문 이미지가 없습니다.
+     * @minItems 0
+     * @maxItems 10
+     */
+  sourceImageUrls?: string[];
 }

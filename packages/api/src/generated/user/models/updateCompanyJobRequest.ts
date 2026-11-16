@@ -632,4 +632,10 @@ export interface UpdateCompanyJobRequest {
      * @maxLength 2048
      */
   sourceUrl?: string;
+  /**
+     * 원문 이미지 주소(선택, 최대 10장). 보내지 않으면(null) 지금 원문 이미지를 그대로 두고, 빈 목록이면 모두 뺍니다. 값이 있으면 그 이미지들로 바꿉니다.
+     * @minItems 0
+     * @maxItems 10
+     */
+  sourceImageUrls?: string[];
 }

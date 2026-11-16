@@ -601,6 +601,8 @@ export interface CompanyJobDetailResponse {
   applicationMethod?: CompanyJobDetailResponseApplicationMethod;
   applyEmail?: string;
   sourceUrl?: string;
+  /** 선택으로 올린 원문 이미지 주소. 올린 순서이며, 없으면 빈 목록입니다. */
+  sourceImageUrls: string[];
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
