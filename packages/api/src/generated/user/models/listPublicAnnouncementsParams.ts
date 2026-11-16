@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListPublicAnnouncementsCategory } from './listPublicAnnouncementsCategory';
 
 export type ListPublicAnnouncementsParams = {
 /**
@@ -15,4 +16,23 @@ page?: number;
  * @maximum 100
  */
 size?: number;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `OGONGGO_UPDATE` | 1 | 오공고 업데이트 |
+ * | `NEW_JOB_NOTE` | 2 | 새로운 공고 노트 |
+ * | `SERVICE_NOTICE` | 3 | 서비스 안내 |
+ * | `BUSINESS_NOTICE` | 4 | 비즈니스 공지 |
+ */
+category?: ListPublicAnnouncementsCategory;
+/**
+ * true면 상단 고정 공지만, false면 고정하지 않은 공지만 줍니다. 보내지 않으면 모두입니다.
+ */
+pinned?: boolean;
+/**
+ * 제목·요약·본문 검색어
+ * @minLength 1
+ * @maxLength 100
+ */
+keyword?: string;
 };

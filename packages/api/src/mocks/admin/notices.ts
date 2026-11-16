@@ -12,6 +12,9 @@ import { matches, ok, paginate, readPaging } from './paging';
  *
  * 쓰기가 일어나는 두 곳 중 하나다. 배열을 실제로 고치고, 삭제는 서버와 같이 소프트 삭제라
  * 같은 id 를 두 번 지워도 성공한다.
+ *
+ * 푸시는 서버 규칙을 흉내만 낸다. 대상이 정해진 공지가 노출 상태가 되면 발송 묶음 식별자를 한 번 남기고,
+ * 남긴 뒤에는 대상을 바꾸면 409 다. 실제 발송 기록은 만들지 않는다.
  */
 
 const notices = NOTICE_FIXTURES;
@@ -34,6 +37,25 @@ function toDetail(notice: AdminNotice) {
 
 function badRequest(message: string) {
   return HttpResponse.json({ status: 400, code: 'BAD_REQUEST', message }, { status: 400 });
+}
+
+function pushAlreadySent() {
+  return HttpResponse.json(
+    {
+      status: 409,
+      code: 'ANNOUNCEMENT_PUSH_ALREADY_SENT',
+      message: '이미 푸시를 보낸 공지는 푸시 대상을 바꿀 수 없습니다.',
+    },
+    { status: 409 },
+  );
+}
+
+/** 노출 중이고 대상이 있고 아직 보내지 않았으면 보냈다고 남긴다(BE `Announcement.isPushDue`). */
+function pushIfDue(notice: AdminNotice) {
+  if (notice.visibility === 'VISIBLE' && notice.pushTarget !== 'NONE' && !notice.pushBatchId) {
+    notice.pushBatchId = crypto.randomUUID();
+    notice.pushedAt = localDateTime(new Date());
+  }
 }
 
 function noticeNotFound() {
@@ -97,6 +119,10 @@ interface CreateNoticeBody {
   content: string;
   pinned: boolean;
   visibility: AdminNotice['visibility'];
+  category?: AdminNotice['category'];
+  thumbnailUrl?: string;
+  summary?: string;
+  pushTarget?: AdminNotice['pushTarget'];
 }
 
 const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ request }) => {
@@ -115,9 +141,14 @@ const createNoticeHandler = http.post('*/api/v1/admin/announcements', async ({ r
     content: body.content,
     pinned: body.pinned,
     visibility: body.visibility,
+    category: body.category ?? 'OGONGGO_UPDATE',
+    thumbnailUrl: body.thumbnailUrl || undefined,
+    summary: body.summary || undefined,
+    pushTarget: body.pushTarget ?? 'NONE',
     registeredAt: now,
     updatedAt: now,
   };
+  pushIfDue(notice);
   notices.push(notice);
 
   return HttpResponse.json(
@@ -144,6 +175,13 @@ const updateNoticeHandler = http.patch(
     if (body.content !== undefined && !isEditorJson(body.content)) {
       return badRequest('에디터 내용 JSON 형식이 올바르지 않습니다.');
     }
+    if (
+      body.pushTarget !== undefined &&
+      notice.pushBatchId &&
+      body.pushTarget !== notice.pushTarget
+    ) {
+      return pushAlreadySent();
+    }
 
     if (body.title !== undefined) {
       notice.title = body.title.trim();
@@ -157,7 +195,21 @@ const updateNoticeHandler = http.patch(
     if (body.visibility !== undefined) {
       notice.visibility = body.visibility;
     }
+    if (body.category !== undefined) {
+      notice.category = body.category;
+    }
+    // 백엔드처럼 빈 글자는 지운다.
+    if (body.thumbnailUrl !== undefined) {
+      notice.thumbnailUrl = body.thumbnailUrl || undefined;
+    }
+    if (body.summary !== undefined) {
+      notice.summary = body.summary || undefined;
+    }
+    if (body.pushTarget !== undefined) {
+      notice.pushTarget = body.pushTarget;
+    }
     notice.updatedAt = localDateTime(new Date());
+    pushIfDue(notice);
 
     return HttpResponse.json(ok(toDetail(notice)), { status: 200 });
   },

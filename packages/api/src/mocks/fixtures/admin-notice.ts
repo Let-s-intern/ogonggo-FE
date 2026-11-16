@@ -12,6 +12,12 @@
  */
 
 export type NoticeVisibility = 'VISIBLE' | 'HIDDEN';
+export type NoticeCategory =
+  | 'OGONGGO_UPDATE'
+  | 'NEW_JOB_NOTE'
+  | 'SERVICE_NOTICE'
+  | 'BUSINESS_NOTICE';
+export type NoticePushTarget = 'NONE' | 'ALL' | 'GENERAL_MEMBERS' | 'COMPANY_MEMBERS';
 
 export interface AdminNotice {
   id: number;
@@ -20,6 +26,13 @@ export interface AdminNotice {
   content: string;
   pinned: boolean;
   visibility: NoticeVisibility;
+  category: NoticeCategory;
+  thumbnailUrl?: string;
+  summary?: string;
+  /** 노출할 때 푸시를 보낼 대상. 목은 보내는 대신 발송 묶음 식별자만 남긴다. */
+  pushTarget: NoticePushTarget;
+  pushBatchId?: string;
+  pushedAt?: string;
   /** `2026-09-20T10:20:00`. 시간대가 붙지 않는다 — `localDateTime` 머리 주석. */
   registeredAt: string;
   updatedAt: string;
@@ -95,6 +108,8 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     ),
     pinned: true,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
+    pushTarget: 'NONE',
     registeredAt: daysFromNow(-3),
     updatedAt: daysFromNow(-2),
   },
@@ -104,6 +119,8 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     content: lexical('9월 27일부터 10월 1일까지 문의 답변이 지연될 수 있습니다.'),
     pinned: false,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
+    pushTarget: 'NONE',
     registeredAt: daysFromNow(-6),
     updatedAt: daysFromNow(-6),
   },
@@ -115,6 +132,8 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     ),
     pinned: false,
     visibility: 'VISIBLE',
+    category: 'OGONGGO_UPDATE',
+    pushTarget: 'NONE',
     registeredAt: daysFromNow(-14),
     updatedAt: daysFromNow(-14),
   },
@@ -124,6 +143,8 @@ export const NOTICE_FIXTURES: AdminNotice[] = [
     content: lexical('8월 30일 새벽 2시부터 4시까지 진행한 점검이 완료됐습니다.'),
     pinned: false,
     visibility: 'HIDDEN',
+    category: 'OGONGGO_UPDATE',
+    pushTarget: 'NONE',
     registeredAt: daysFromNow(-41),
     updatedAt: daysFromNow(-38),
   },

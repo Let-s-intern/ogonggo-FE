@@ -59,6 +59,7 @@ import type {
   ListAdvertisementInquiriesParams,
   ListAdvertisementProductsParams,
   ListAiJobAnalysisTargetsParams,
+  ListAiJobSourceCheckTargetsParams,
   ListAiLetsCareerContentTagTargetsParams,
   ListAnnouncementsParams,
   ListBootcampsParams,
@@ -108,6 +109,7 @@ import type {
   SuccessResponseListAdminNotificationJobRoleOptionResponse,
   SuccessResponseListAdminTodayJobSummaryResponse,
   SuccessResponseListAiJobAnalysisTargetResponse,
+  SuccessResponseListAiJobSourceCheckTargetResponse,
   SuccessResponseListAiLetsCareerContentResponse,
   SuccessResponseListAiLetsCareerContentTagTargetResponse,
   SuccessResponseMapStringListAdminEnumOptionResponse,
@@ -2648,7 +2650,7 @@ export const getReplaceAdvertisementExposureUrl = (exposureId: number,) => {
 }
 
 /**
- * 미삭제 노출의 계약, 카테고리별 콘텐츠, 광고 표시와 기간을 전체 교체합니다. contractId·mobileImageUrl·targetType·targetId·기간은 생략하거나 null로 보내면 null이며, BANNER의 name·imageUrl·linkUrl은 필수입니다. productId, exposed와 displayOrder는 변경하지 않습니다.
+ * 미삭제 노출의 계약, 카테고리별 콘텐츠, 광고 표시와 기간을 전체 교체합니다. contractId·mobileImageUrl·targetType·targetId·기간은 생략하거나 null로 보내면 null이며, BANNER의 name·imageUrl·linkUrl은 필수입니다. productId, exposed와 displayOrder는 변경하지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
  * @summary 광고 노출 내용·계약·기간 교체
  */
 export const replaceAdvertisementExposure = async (exposureId: number,
@@ -3078,6 +3080,108 @@ export const useCreateAiJob = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getCreateAiJobMutationOptions(options), queryClient);
+    }
+
+export type closeAiJobBySourceCheckResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type closeAiJobBySourceCheckResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type closeAiJobBySourceCheckResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type closeAiJobBySourceCheckResponseSuccess = (closeAiJobBySourceCheckResponse200) & {
+  headers: Headers;
+};
+export type closeAiJobBySourceCheckResponseError = (closeAiJobBySourceCheckResponse401 | closeAiJobBySourceCheckResponse404) & {
+  headers: Headers;
+};
+
+export type closeAiJobBySourceCheckResponse = (closeAiJobBySourceCheckResponseSuccess | closeAiJobBySourceCheckResponseError)
+
+export const getCloseAiJobBySourceCheckUrl = (jobId: number,) => {
+
+
+
+
+  return `/api/v1/internal/jobs/${jobId}/source-check-close`
+}
+
+/**
+ *
+ *             원문 페이지가 없어졌거나 마감으로 바뀐 공고의 모집을 마감합니다. 등록 경로를 가리지 않습니다.
+ *             게시 상태는 바꾸지 않아 사용자 화면에 모집 마감으로 보입니다.
+ *             이미 마감한 공고를 다시 마감해도 처음 마감 일시를 그대로 두고 성공합니다.
+ * @summary 원문이 내려간 공고 마감
+ */
+export const closeAiJobBySourceCheck = async (jobId: number, options?: Parameters<typeof httpClient>[1]): Promise<closeAiJobBySourceCheckResponse> => {
+
+  return httpClient<closeAiJobBySourceCheckResponse>(getCloseAiJobBySourceCheckUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseAiJobBySourceCheckMutationKey = () => ['closeAiJobBySourceCheck'] as const;
+
+export const getCloseAiJobBySourceCheckMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, TError,CloseAiJobBySourceCheckMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, TError,CloseAiJobBySourceCheckMutationVariables, TContext> => {
+
+const mutationKey = getCloseAiJobBySourceCheckMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, CloseAiJobBySourceCheckMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeAiJobBySourceCheck(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseAiJobBySourceCheckMutationResult = NonNullable<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>>
+
+    export type CloseAiJobBySourceCheckMutationError = ErrorResponse
+    export type CloseAiJobBySourceCheckMutationVariables = {jobId: number}
+
+    /**
+ * @summary 원문이 내려간 공고 마감
+ */
+export const useCloseAiJobBySourceCheck = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAiJobBySourceCheck>>, TError,CloseAiJobBySourceCheckMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeAiJobBySourceCheck>>,
+        TError,
+        CloseAiJobBySourceCheckMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseAiJobBySourceCheckMutationOptions(options), queryClient);
     }
 
 export type hideAiJobResponse200 = {
@@ -4412,6 +4516,8 @@ export const getCreateAnnouncementUrl = () => {
  *
  *             등록한 공지 전체를 반환합니다. visibility가 VISIBLE이면 곧바로 사용자에게 노출됩니다.
  *             content는 Lexical EditorState JSON 문자열이며 200,000자 이하여야 합니다.
+ *             pushTarget을 정하고 VISIBLE로 등록하면 그 대상에게 푸시 알림을 한 번 보냅니다. HIDDEN으로 등록하면 나중에 노출할 때 보냅니다.
+ *             푸시 제목은 공지 제목(100자까지), 본문은 요약(없으면 기본 문구)이고 누르면 사용자 공지 상세로 이동합니다.
  * @summary 공지사항 등록
  */
 export const createAnnouncement = async (createAdminAnnouncementRequest: CreateAdminAnnouncementRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAnnouncementResponse> => {
@@ -4907,7 +5013,7 @@ export const getCreateAdvertisementExposureUrl = () => {
 }
 
 /**
- * 상품 category에 따라 BANNER 콘텐츠 또는 JOB_POSTING 대상을 등록합니다. category, displayOrder와 슬롯은 요청에 포함하지 않습니다. contractId는 선택이며 존재만 확인합니다. JOB_POSTING target의 실제 존재·게시 상태는 확인하지 않습니다. BANNER의 mobileImageUrl은 선택이며 null이면 모바일에서도 imageUrl을 씁니다. JOB_POSTING은 mobileImageUrl을 보내지 않습니다.
+ * 상품 category에 따라 BANNER 콘텐츠 또는 JOB_POSTING 대상을 등록합니다. category, displayOrder와 슬롯은 요청에 포함하지 않습니다. contractId는 선택이며 존재만 확인합니다. JOB_POSTING target의 실제 존재·게시 상태는 확인하지 않습니다. BANNER의 mobileImageUrl은 선택이며 null이면 모바일에서도 imageUrl을 씁니다. JOB_POSTING은 mobileImageUrl을 보내지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부해 정리 작업이 지우지 않게 하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
  * @summary 광고 노출 등록
  */
 export const createAdvertisementExposure = async (createAdminAdvertisementExposureRequest: CreateAdminAdvertisementExposureRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAdvertisementExposureResponse> => {
@@ -6802,10 +6908,15 @@ export type updateAnnouncementResponse404 = {
   status: 404
 }
 
+export type updateAnnouncementResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type updateAnnouncementResponseSuccess = (updateAnnouncementResponse200) & {
   headers: Headers;
 };
-export type updateAnnouncementResponseError = (updateAnnouncementResponse400 | updateAnnouncementResponse404) & {
+export type updateAnnouncementResponseError = (updateAnnouncementResponse400 | updateAnnouncementResponse404 | updateAnnouncementResponse409) & {
   headers: Headers;
 };
 
@@ -6822,7 +6933,10 @@ export const getUpdateAnnouncementUrl = (announcementId: number,) => {
 /**
  *
  *             보낸 값만 바꾸고 수정된 공지 전체를 반환합니다. 제목과 본문은 비울 수 없습니다.
- *             노출(visibility)과 상단 고정(pinned)도 이 API로 바꿉니다.
+ *             노출(visibility)과 상단 고정(pinned), 카테고리(category)도 이 API로 바꿉니다.
+ *             썸네일(thumbnailUrl)과 요약(summary)은 빈 글자를 보내면 지웁니다. 상단 고정 공지는 사용자 공지사항 화면의 추천 카드입니다.
+ *             푸시 대상(pushTarget)이 정해진 공지가 이 수정으로 노출 상태가 되면 푸시를 한 번 보냅니다. 노출 중인 공지에 대상을 정해도 바로 보냅니다.
+ *             NONE이면 노출해도 보내지 않고, 이미 보낸 공지는 숨겼다 다시 노출해도 다시 보내지 않습니다.
  * @summary 공지사항 수정
  */
 export const updateAnnouncement = async (announcementId: number,
@@ -7706,6 +7820,142 @@ export function useListAiLetsCareerContentTagTargets<TData = Awaited<ReturnType<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListAiLetsCareerContentTagTargetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listAiJobSourceCheckTargetsResponse200 = {
+  data: SuccessResponseListAiJobSourceCheckTargetResponse
+  status: 200
+}
+
+export type listAiJobSourceCheckTargetsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listAiJobSourceCheckTargetsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listAiJobSourceCheckTargetsResponseSuccess = (listAiJobSourceCheckTargetsResponse200) & {
+  headers: Headers;
+};
+export type listAiJobSourceCheckTargetsResponseError = (listAiJobSourceCheckTargetsResponse400 | listAiJobSourceCheckTargetsResponse401) & {
+  headers: Headers;
+};
+
+export type listAiJobSourceCheckTargetsResponse = (listAiJobSourceCheckTargetsResponseSuccess | listAiJobSourceCheckTargetsResponseError)
+
+export const getListAiJobSourceCheckTargetsUrl = (params?: ListAiJobSourceCheckTargetsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/internal/jobs/source-check-targets?${stringifiedParams}` : `/api/v1/internal/jobs/source-check-targets`
+}
+
+/**
+ *
+ *             게시 중인 모집 중 상시 채용 공고 가운데 원문 URL이 있는 것을 `afterId` 다음부터 식별자 순으로 `size`건 줍니다.
+ *             AI 서버가 등록한 공고만이 아니라 고용24·기업회원 공고도 들어 있습니다.
+ *             다음 쪽은 받은 마지막 `jobId`를 `afterId`로 넘겨 읽고, 빈 목록이면 끝입니다.
+ * @summary 원문 확인 대상 조회
+ */
+export const listAiJobSourceCheckTargets = async (params?: ListAiJobSourceCheckTargetsParams, options?: Parameters<typeof httpClient>[1]): Promise<listAiJobSourceCheckTargetsResponse> => {
+
+  return httpClient<listAiJobSourceCheckTargetsResponse>(getListAiJobSourceCheckTargetsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAiJobSourceCheckTargetsQueryKey = (params?: ListAiJobSourceCheckTargetsParams,) => {
+    return [
+    `/api/v1/internal/jobs/source-check-targets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAiJobSourceCheckTargetsQueryOptions = <TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAiJobSourceCheckTargetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>> = ({ signal }) => listAiJobSourceCheckTargets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAiJobSourceCheckTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>>
+export type ListAiJobSourceCheckTargetsQueryError = ErrorResponse
+
+
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params: undefined |  ListAiJobSourceCheckTargetsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 원문 확인 대상 조회
+ */
+
+export function useListAiJobSourceCheckTargets<TData = Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError = ErrorResponse>(
+ params?: ListAiJobSourceCheckTargetsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiJobSourceCheckTargets>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAiJobSourceCheckTargetsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -11146,6 +11396,8 @@ export const getGetAiJobResponseMock = (overrideResponse: Partial<Extract<Succes
 
 export const getCreateAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobRegistrationResponse, object>> = {}): SuccessResponseAiJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
+export const getCloseAiJobBySourceCheckResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
 export const getHideAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getCloseAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
@@ -11166,9 +11418,9 @@ export const getCreateCompanyMemberJobResponseMock = (overrideResponse: Partial<
 
 export const getCreateCompanyMemberBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminBootcampDetailResponse, object>> = {}): SuccessResponseAdminBootcampDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), reviewStatus: faker.helpers.arrayElement([faker.helpers.arrayElement(['PENDING','APPROVED','REJECTED'] as const), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', priorityExposed: faker.datatype.boolean(), adminRegistered: faker.datatype.boolean(), content: faker.string.alpha({length: {min: 10, max: 20}}), eligibilityAndSelectionProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), instructorInfo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), programFeatures: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), completionRequirements: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), applicationMethod: faker.helpers.arrayElement(['EXTERNAL_PAGE','EMAIL'] as const), applicationUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), inquiryUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), publicationStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), publicationEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), partners: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({name: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), curriculums: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({startWeek: faker.number.int(), endWeek: faker.number.int(), subtitle: faker.string.alpha({length: {min: 10, max: 20}}), displayOrder: faker.number.int()})), images: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({url: faker.string.alpha({length: {min: 10, max: 20}}), caption: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int()}))}, undefined]), ...overrideResponse})
 
-export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAnnouncementSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAnnouncementSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushTarget: faker.helpers.arrayElement(['NONE','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS'] as const), pushBatchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushTarget: faker.helpers.arrayElement(['NONE','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS'] as const), pushBatchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getListAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -11206,11 +11458,11 @@ export const getUpdateConcernVisibilitiesResponseMock = (overrideResponse: Parti
 
 export const getUpdateBootcampVisibilitiesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getGetAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getGetAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushTarget: faker.helpers.arrayElement(['NONE','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS'] as const), pushBatchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getDeleteAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
-export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
+export const getUpdateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushTarget: faker.helpers.arrayElement(['NONE','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS'] as const), pushBatchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
 export const getUpdateAdvertisementInquiryStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementInquiryResponse, object>> = {}): SuccessResponseAdminAdvertisementInquiryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), inquiryType: faker.helpers.arrayElement(['FREE_PROMOTION','LAUNCH_ALERT'] as const), campaignCode: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), status: faker.helpers.arrayElement(['RECEIVED','CONTACTED','EXECUTED','REJECTED'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), companyNameSource: faker.helpers.arrayElement(['SEARCH','MANUAL','MEMBER_PROFILE'] as const), managerName: faker.string.alpha({length: {min: 10, max: 20}}), managerTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.string.alpha({length: {min: 10, max: 20}}), phoneNumber: faker.string.alpha({length: {min: 10, max: 20}}), promotionChannel: faker.helpers.arrayElement(['INSTAGRAM','OPEN_CHAT_MARKETING','OPEN_CHAT_PLANNING','OPEN_CHAT_HR','OPEN_CHAT_PUBLIC_RECRUITMENT','OPEN_CHAT_SALES','OPEN_CHAT_AI_DEVELOPMENT','RECOMMENDATION_REQUESTED'] as const), hiringJobName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jobPostingUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), promotionAnswer: faker.string.alpha({length: {min: 10, max: 20}}), marketingConsent: faker.datatype.boolean(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), memberType: faker.helpers.arrayElement(['COMPANY','USER','GUEST'] as const), inflowChannel: faker.helpers.arrayElement(['COLDMAIL','INSTAGRAM','KAKAO','NEWSLETTER','UTM_OTHER','OGONGGO','LETSCAREER','SEARCH','EXTERNAL_SITE','DIRECT'] as const), utmSource: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmMedium: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmCampaign: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), utmContent: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), referrer: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), entryHost: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), landingPath: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), memo: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
@@ -11225,6 +11477,8 @@ export const getUpdateAdvertisementContractPaymentAmountResponseMock = (override
 export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
 export const getListAiLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListAiLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
+
+export const getListAiJobSourceCheckTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiJobSourceCheckTargetResponse, object>> = {}): SuccessResponseListAiJobSourceCheckTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), sourceUrl: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
 
 export const getListAiJobAnalysisTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiJobAnalysisTargetResponse, object>> = {}): SuccessResponseListAiJobAnalysisTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), contentHash: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), undefined]), ...overrideResponse})
 
@@ -11587,6 +11841,18 @@ export const getCreateAiJobMockHandler = (overrideResponse?: SuccessResponseAiJo
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getCreateAiJobResponseMock(),
       { status: 201
+      })
+  }, options)
+}
+
+export const getCloseAiJobBySourceCheckMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/internal/jobs/:jobId/source-check-close', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCloseAiJobBySourceCheckResponseMock(),
+      { status: 200
       })
   }, options)
 }
@@ -12071,6 +12337,18 @@ export const getListAiLetsCareerContentTagTargetsMockHandler = (overrideResponse
   }, options)
 }
 
+export const getListAiJobSourceCheckTargetsMockHandler = (overrideResponse?: SuccessResponseListAiJobSourceCheckTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiJobSourceCheckTargetResponse> | SuccessResponseListAiJobSourceCheckTargetResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/internal/jobs/source-check-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListAiJobSourceCheckTargetsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListAiJobAnalysisTargetsMockHandler = (overrideResponse?: SuccessResponseListAiJobAnalysisTargetResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiJobAnalysisTargetResponse> | SuccessResponseListAiJobAnalysisTargetResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/jobs/analysis-targets', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -12397,6 +12675,7 @@ export const getOgonggoAdminAPIMock = () => [
   getDeleteAdvertisementExposureMockHandler(),
   getGetAiJobMockHandler(),
   getCreateAiJobMockHandler(),
+  getCloseAiJobBySourceCheckMockHandler(),
   getHideAiJobMockHandler(),
   getCloseAiJobMockHandler(),
   getGetAiBootcampMockHandler(),
@@ -12437,6 +12716,7 @@ export const getOgonggoAdminAPIMock = () => [
   getUpdateAdvertisementContractPaymentAmountMockHandler(),
   getListAiLetsCareerContentsMockHandler(),
   getListAiLetsCareerContentTagTargetsMockHandler(),
+  getListAiJobSourceCheckTargetsMockHandler(),
   getListAiJobAnalysisTargetsMockHandler(),
   getGetWork24ApiResponseMockHandler(),
   getListServiceFeedbacksMockHandler(),

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import {
   Badge,
   Button,
@@ -10,6 +11,7 @@ import {
   Field,
   Input,
   Pagination,
+  Select,
   Toggle,
   type DataTableColumn,
 } from '@ogonggo/ui';
@@ -19,14 +21,44 @@ import {
   useNoticeList,
   usePatchNoticeVisibility,
   useSaveNotice,
+  type NoticeCategory,
   type NoticeDetail,
+  type NoticePushTarget,
   type NoticeSummary,
 } from '@/entities/notice/api/useNotices';
+import { BannerImageField } from '@/widgets/banner-form';
 import { RichTextEditor } from '@ogonggo/ui/src/editor/RichTextEditor';
 import { lexicalToText } from '@/entities/notice/lib/content';
 import { PageHeader } from '@/widgets/page-header';
 import { formatDate } from '@/shared/lib/format';
 import { useListQuery } from '@/shared/lib/useListQuery';
+
+/**
+ * 공지 카테고리(BE `AnnouncementCategory`, LC-3614). 사용자 공지사항 화면의 카테고리 칸이 이 순서다.
+ * `새로운 공고 노트` 는 나중에 백엔드가 자동으로 올릴 카테고리이고, 그 전까지는 여기서 직접 올린다.
+ */
+const CATEGORY_LABELS: Record<NoticeCategory, string> = {
+  OGONGGO_UPDATE: '오공고 업데이트',
+  NEW_JOB_NOTE: '새로운 공고 노트',
+  SERVICE_NOTICE: '서비스 안내',
+  BUSINESS_NOTICE: '비즈니스 공지',
+};
+const CATEGORY_OPTIONS = (Object.keys(CATEGORY_LABELS) as NoticeCategory[]).map((value) => ({
+  value,
+  label: CATEGORY_LABELS[value],
+}));
+/** 푸시 대상(BE `AnnouncementPushTarget`). 관리자 알림 발송의 회원 종류 대상과 같다. */
+const PUSH_TARGET_LABELS: Record<NoticePushTarget, string> = {
+  NONE: '보내지 않음',
+  ALL: '전체 회원',
+  GENERAL_MEMBERS: '일반 회원',
+  COMPANY_MEMBERS: '기업 회원',
+};
+const PUSH_TARGET_OPTIONS = (Object.keys(PUSH_TARGET_LABELS) as NoticePushTarget[]).map(
+  (value) => ({ value, label: PUSH_TARGET_LABELS[value] }),
+);
+/** 요약 상한. BE 와 같다. */
+const SUMMARY_MAX = 300;
 
 /**
  * 공지사항 목록과 작성·수정·삭제.
@@ -58,6 +90,12 @@ export function NoticeListPage() {
           {row.title}
         </span>
       ),
+    },
+    {
+      key: 'category',
+      header: '카테고리',
+      width: 'w-36',
+      render: (row) => CATEGORY_LABELS[row.category],
     },
     {
       key: 'visibility',
@@ -166,6 +204,12 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
   const [contentText, setContentText] = useState(notice ? lexicalToText(notice.content) : '');
   const [pinned, setPinned] = useState(notice?.pinned ?? false);
   const [visible, setVisible] = useState(notice ? notice.visibility === 'VISIBLE' : true);
+  const [category, setCategory] = useState<NoticeCategory>(notice?.category ?? 'OGONGGO_UPDATE');
+  const [thumbnailUrl, setThumbnailUrl] = useState(notice?.thumbnailUrl ?? '');
+  const [summary, setSummary] = useState(notice?.summary ?? '');
+  const [pushTarget, setPushTarget] = useState<NoticePushTarget>(notice?.pushTarget ?? 'NONE');
+  /** 이미 보낸 공지는 대상을 바꿀 수 없다(BE 409). */
+  const pushed = Boolean(notice?.pushBatchId);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const canSave = title.trim().length > 0 && contentText.trim().length > 0;
@@ -195,6 +239,68 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
           />
         </Field>
 
+        <Field label="카테고리" htmlFor="notice-category" required>
+          <Select
+            id="notice-category"
+            options={CATEGORY_OPTIONS}
+            value={category}
+            onChange={(event) => setCategory(event.target.value as NoticeCategory)}
+          />
+        </Field>
+
+        <Field
+          label="요약"
+          htmlFor="notice-summary"
+          hint={`선택 · 목록과 추천 카드에 한두 줄로 보입니다. ${summary.length}/${SUMMARY_MAX}자`}
+        >
+          <Input
+            id="notice-summary"
+            value={summary}
+            maxLength={SUMMARY_MAX}
+            onChange={(event) => setSummary(event.target.value)}
+            placeholder="예: 공고 달력에 마감 알림이 생겼어요."
+          />
+        </Field>
+
+        <BannerImageField
+          id="notice-thumbnail"
+          label="썸네일"
+          sizeHint="선택 · 상단 고정 공지는 사용자 공지사항 화면 맨 위 추천 카드로 보입니다. 권장 844 x 440px. 없으면 카테고리 아이콘을 보입니다."
+          aspectClassName="aspect-[422/220] max-w-md"
+          value={thumbnailUrl}
+          onChange={setThumbnailUrl}
+          required={false}
+        />
+
+        <Field
+          label="푸시 알림"
+          htmlFor="notice-push-target"
+          hint={
+            pushed
+              ? undefined
+              : '노출하는 순간 한 번 보냅니다. 이미 노출 중인 공지에 대상을 정하면 저장할 때 바로 보내고, 숨겼다 다시 노출해도 다시 보내지 않습니다. 제목이 푸시 제목, 요약이 푸시 본문입니다.'
+          }
+        >
+          <Select
+            id="notice-push-target"
+            options={PUSH_TARGET_OPTIONS}
+            value={pushTarget}
+            disabled={pushed}
+            onChange={(event) => setPushTarget(event.target.value as NoticePushTarget)}
+          />
+          {pushed && notice?.pushBatchId ? (
+            <p className="pt-1 text-xs text-gray-500">
+              {notice.pushedAt ? `${formatDate(notice.pushedAt)}에 ` : ''}보냈습니다.{' '}
+              <Link
+                to={`/notifications/batches/${notice.pushBatchId}`}
+                className="text-blue-500 hover:underline"
+              >
+                발송 결과 보기
+              </Link>
+            </p>
+          ) : null}
+        </Field>
+
         <Field label="본문" htmlFor="notice-content" required>
           <RichTextEditor
             id="notice-content"
@@ -214,7 +320,7 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
               checked={pinned}
               onChange={(event) => setPinned(event.target.checked)}
             />
-            상단 고정
+            상단 고정(추천)
           </label>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
@@ -234,6 +340,10 @@ function NoticeForm({ notice, onClose }: NoticeFormProps) {
                 content,
                 pinned,
                 visibility: visible ? 'VISIBLE' : 'HIDDEN',
+                category,
+                thumbnailUrl,
+                summary: summary.trim(),
+                pushTarget,
               })
             }
             disabled={!canSave || saveMutation.isPending}
