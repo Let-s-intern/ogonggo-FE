@@ -284,10 +284,14 @@ function MobileMenu({
           />
         )}
         <MenuSection title="공고" links={postings} onNavigate={onClose} />
-        {/* 데스크톱은 헤더 맨 위 띠의 알림 아이콘 왼쪽에 있다. 모바일 윗줄은 로고·앱 다운로드·알림·햄버거로 차 있다. */}
+        {/* 오공고 커뮤니티는 데스크톱에서 헤더 맨 위 띠의 알림 아이콘 왼쪽에 있다. 모바일 윗줄은 로고·앱 다운로드·알림·햄버거로
+            차 있다. 취준 고민은 헤더 둘째 줄 탭에도 있지만, 앱을 설치하고 로그인하면 그 줄이 숨으므로 여기에도 둔다. */}
         <MenuSection
           title="커뮤니티"
-          links={[{ label: '오공고 커뮤니티', href: '/community' }]}
+          links={[
+            { label: '취준 고민', href: '/concerns' },
+            { label: '오공고 커뮤니티', href: '/community' },
+          ]}
           onNavigate={onClose}
         />
         <MenuSection

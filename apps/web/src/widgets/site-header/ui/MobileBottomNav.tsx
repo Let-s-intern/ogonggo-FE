@@ -15,13 +15,14 @@ import { openServiceFeedback } from '@/features/service-feedback';
 import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { myPageIndexFor } from '@/widgets/mypage-sidebar';
+import { NAV_ITEMS } from './navItems';
 
 /**
  * 상세 화면. 신청하기 바(`shared/ui/StickyApplyBar.tsx`)가 내비게이션 바로 위에 올라앉는다. 떠 있는
  * 동그라미가 그 바를 가리지 않도록 상세 화면에서는 파인 자리와 동그라미 없이 평평한 바로 두고, 그 공고가
  * 속한 탭만 파랗게 칠한다. 그 탭을 누르면 서브 메뉴가 아니라 목록으로 돌아간다.
  */
-const DETAIL_PATH = /^\/(jobs|bootcamps|side-studies)\/[^/]+/;
+const DETAIL_PATH = /^\/(jobs|bootcamps|side-studies|concerns)\/[^/]+/;
 
 /**
  * 이 화면에 하단 내비게이션이 뜨는지. 웹 앱을 설치했고(`features/install-app`) 로그인했을 때만이다 —
@@ -60,46 +61,64 @@ interface Tab {
   subMenu: SubMenuItem[];
 }
 
+type NavHref = (typeof NAV_ITEMS)[number]['href'];
+
 /**
- * 탭 네 개와 각 탭의 서브 메뉴. 아이콘 클래스는 Iconify 플러그인이 소스의 이 문자열을 찾아 그리므로
- * 글자 그대로 적는다(`packages/ui/src/styles/tokens.css`). 마이페이지는 역할마다 주소가 다르다.
+ * 헤더 메뉴(`NAV_ITEMS`) 하나하나가 하단 탭에서 어떻게 보이는지. 키가 `NAV_ITEMS` 의 주소라 헤더에 메뉴를
+ * 더하고 여기를 채우지 않으면 타입 검사가 실패한다 — 설치·로그인하면 헤더 탭이 숨으므로(`MobileSiteHeader`)
+ * 하단에 없는 메뉴는 들어갈 길이 사라진다. 글자는 바가 좁아 가운뎃점 앞뒤를 띄우지 않는다.
+ */
+const NAV_TABS: Record<
+  NavHref,
+  { label: string; icon: string; alsoActive?: (path: string) => boolean; subMenu: SubMenuItem[] }
+> = {
+  '/': {
+    label: '채용공고',
+    icon: 'icon-[lucide--briefcase-business]',
+    // 공고 달력은 채용공고의 서브 메뉴라 그 화면에서도 채용공고 탭이 켜진다.
+    alsoActive: (path) => path.startsWith('/calendar'),
+    subMenu: [
+      { label: '공고 달력', href: '/calendar', icon: 'icon-[lucide--calendar-days]' },
+      { label: '스크랩한 공고', href: '/mypage/scraps', icon: 'icon-[lucide--bookmark]' },
+    ],
+  },
+  '/bootcamps': {
+    label: '교육·부트캠프',
+    icon: 'icon-[lucide--graduation-cap]',
+    subMenu: [
+      {
+        label: '스크랩한 교육',
+        href: '/mypage/scraps?tab=bootcamps',
+        icon: 'icon-[lucide--bookmark]',
+      },
+    ],
+  },
+  '/side-studies': {
+    label: '사이드·스터디',
+    icon: 'icon-[lucide--users-round]',
+    subMenu: [
+      { label: '모집글 쓰기', href: '/mypage/posts/new', icon: 'icon-[lucide--square-pen]' },
+      { label: '작성한 모집글', href: '/mypage/posts', icon: 'icon-[lucide--file-text]' },
+    ],
+  },
+  '/concerns': {
+    label: '취준 고민',
+    icon: 'icon-[lucide--message-circle-question]',
+    subMenu: [],
+  },
+};
+
+/**
+ * 탭 다섯 개와 각 탭의 서브 메뉴. 헤더 메뉴(`NAV_ITEMS`) 넷에 마이페이지를 더한다. 아이콘 클래스는
+ * Iconify 플러그인이 소스의 이 문자열을 찾아 그리므로 글자 그대로 적는다(`packages/ui/src/styles/tokens.css`).
+ * 마이페이지는 역할마다 주소가 다르다.
  */
 function buildTabs(pathname: string, company: boolean): Tab[] {
   return [
-    {
-      href: '/',
-      label: '채용공고',
-      icon: 'icon-[lucide--briefcase-business]',
-      // 공고 달력은 채용공고의 서브 메뉴라 그 화면에서도 채용공고 탭이 켜진다.
-      active: pathname === '/' || pathname.startsWith('/jobs') || pathname.startsWith('/calendar'),
-      subMenu: [
-        { label: '공고 달력', href: '/calendar', icon: 'icon-[lucide--calendar-days]' },
-        { label: '스크랩한 공고', href: '/mypage/scraps', icon: 'icon-[lucide--bookmark]' },
-      ],
-    },
-    {
-      href: '/bootcamps',
-      label: '교육·부트캠프',
-      icon: 'icon-[lucide--graduation-cap]',
-      active: pathname.startsWith('/bootcamps'),
-      subMenu: [
-        {
-          label: '스크랩한 교육',
-          href: '/mypage/scraps?tab=bootcamps',
-          icon: 'icon-[lucide--bookmark]',
-        },
-      ],
-    },
-    {
-      href: '/side-studies',
-      label: '사이드·스터디',
-      icon: 'icon-[lucide--users-round]',
-      active: pathname.startsWith('/side-studies'),
-      subMenu: [
-        { label: '모집글 쓰기', href: '/mypage/posts/new', icon: 'icon-[lucide--square-pen]' },
-        { label: '작성한 모집글', href: '/mypage/posts', icon: 'icon-[lucide--file-text]' },
-      ],
-    },
+    ...NAV_ITEMS.map(({ href, matches }) => {
+      const { alsoActive, ...tab } = NAV_TABS[href];
+      return { ...tab, href, active: matches(pathname) || (alsoActive?.(pathname) ?? false) };
+    }),
     {
       href: myPageIndexFor(company ? 'COMPANY' : 'USER'),
       label: '마이페이지',
@@ -139,13 +158,13 @@ function buildTabs(pathname: string, company: boolean): Tab[] {
 
 /**
  * 모바일에서 웹 앱을 설치하고 로그인했을 때 화면 아래에 붙는 내비게이션. 채용공고·교육·부트캠프·사이드·스터디·
- * 마이페이지 네 탭이다. 로그인 전에는 헤더의 `앱 다운로드`·`로그인` 이 먼저이고(`MobileSiteHeader`),
+ * 취준 고민·마이페이지 다섯 탭이다. 로그인 전에는 헤더의 `앱 다운로드`·`로그인` 이 먼저이고(`MobileSiteHeader`),
  * 데스크톱은 헤더 탭이 이 일을 한다.
  *
  * 바의 위 변은 지금 탭 자리만 반원으로 파여 있고, 그 위에 지금 탭의 아이콘이 파란 동그라미로 떠 있다.
  * 파인 자리와 동그라미의 가로 위치는 CSS 변수 `--notch-x` 하나가 정한다. `@property` 로 등록해 두어
  * 페이지를 옮기면 그 값이 새 탭 자리로 미끄러지듯 바뀐다(`app/globals.css`, `ogonggo-bottom-nav`).
- * 네 탭 어디에도 속하지 않는 화면(공지 등)에서는 파인 자리 없이 평평한 바만 둔다.
+ * 다섯 탭 어디에도 속하지 않는 화면(공지 등)에서는 파인 자리 없이 평평한 바만 둔다.
  *
  * 지금 탭(또는 떠 있는 동그라미)을 한 번 더 누르면 동그라미 위로 그 탭의 서브 메뉴가 차례로 솟아오른다.
  * 채용공고는 공고 달력, 사이드·스터디는 모집글 쓰기처럼 그 화면에서 다음에 할 일로 바로 간다. 동그라미의
@@ -256,7 +275,7 @@ export function MobileBottomNav() {
           </Link>
         ) : null}
 
-        <ul className="absolute inset-x-0 top-0 grid h-16 grid-cols-4">
+        <ul className="absolute inset-x-0 top-0 grid h-16 grid-cols-5">
           {tabs.map((tab) => (
             <li key={tab.label}>
               <Link
