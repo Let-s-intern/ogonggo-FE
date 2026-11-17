@@ -38,11 +38,11 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`). 이 기기에서 푸시를
  * 아직 켜지 않았으면 그 패널 맨 위에 `푸시 알림 받기 / 켜기` 안내가 붙고, 켜면 사라진다(`PushConsentBanner`, 이슈 #655).
  * 모바일 알림함과 같은 자리다. 전에는 윗줄 아이콘 왼쪽의 버튼이었다.
- * 알림 아이콘 바로 왼쪽에는 비즈 오공고로 가는 `기업 서비스` 알약이 늘 있다. `공지사항`·`오공고 커뮤니티` 는 아래 메뉴
- * 줄 끝의 `커뮤니티` 탭(`CommunityMenu`)을 누르면 펼쳐진다(운영 요청, 이슈 #680). 모바일은 윗줄에 자리가 없어
+ * 알림 아이콘 바로 왼쪽에는 비즈 오공고로 가는 `기업 서비스` 알약이 늘 있다. `공지사항`·`오공고 커뮤니티` 는 아래 줄
+ * 우측 `{이름} 님` 바로 왼쪽의 `커뮤니티`(`CommunityMenu`)를 누르면 펼쳐진다(운영 요청, 이슈 #680). 모바일은 윗줄에 자리가 없어
  * 햄버거 메뉴의 `커뮤니티`·`기업 서비스` 묶음에 둔다(`MobileSiteHeader`).
  *
- * 우측은 `공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다. 데스크톱의 `공고 등록` 은 뺐다 — 기업은 윗줄의
+ * 우측은 `공고 달력`·`커뮤니티`, 그리고 로그인했으면 `[사람] {이름} 님` 이다. 데스크톱의 `공고 등록` 은 뺐다 — 기업은 윗줄의
  * `기업 서비스` 로 비즈 오공고에 간다(이슈 #680). 모바일 햄버거의 `공고 등록하기` 는 남아 있다(`register`).
  * `{이름} 님` 은 `마이페이지`·`로그아웃` 을 펼치는 드롭다운이고, 관리자에게는 `어드민` 이, 기업 회원에게는
  * `비즈 오공고` 가 더해진다(`AccountMenu`, `showAdmin`·`showBiz`). `로그아웃` 은 마이페이지의 `개인 정보`·`기업/기관 정보`
@@ -175,11 +175,6 @@ export function SiteHeader() {
                 </Link>
               );
             })}
-            <CommunityMenu
-              pathname={pathname}
-              open={openMenu === 'community'}
-              onOpenChange={toggleMenu('community')}
-            />
           </nav>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
@@ -193,6 +188,11 @@ export function SiteHeader() {
           >
             공고 달력
           </Link>
+          <CommunityMenu
+            pathname={pathname}
+            open={openMenu === 'community'}
+            onOpenChange={toggleMenu('community')}
+          />
           {signedIn ? (
             <AccountMenu
               name={accountName}
