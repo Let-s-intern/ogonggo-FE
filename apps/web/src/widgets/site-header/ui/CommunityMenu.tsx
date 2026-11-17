@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
-import { cn } from '@ogonggo/ui';
+import { MenuItem, cn } from '@ogonggo/ui';
 import { ChevronIcon } from '@/shared/ui/icons';
 
 const ITEMS = [
@@ -22,8 +22,8 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 /**
- * 데스크톱 헤더 맨 위 띠의 `커뮤니티` 알약. 누르면 `공지사항`·`오공고 커뮤니티` 가 펼쳐진다(이슈 #680). 전에는 두
- * 링크가 띠에 따로 있었다. 둘 중 한 화면에 있으면 알약이 파랗다.
+ * 데스크톱 헤더 메뉴 줄의 `커뮤니티` 탭. 누르면 아래로 `공지사항`·`오공고 커뮤니티` 가 펼쳐진다(이슈 #680). 전에는 두
+ * 링크가 맨 위 띠에 따로 있었다. 옆 탭과 같은 `MenuItem` 이라 둘 중 한 화면에 있으면 밑줄이 붙는다.
  *
  * `AccountMenu` 와 같은 방식으로 여닫는다 — 바깥을 누르거나 Esc 를 누르면 닫고, 항목을 누르면 닫힌다.
  */
@@ -53,21 +53,21 @@ export function CommunityMenu({ pathname, open, onOpenChange: setOpen }: Communi
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-current={active ? 'page' : undefined}
         onClick={() => setOpen(!open)}
-        className={cn(
-          'flex h-7 items-center gap-0.5 rounded-full border px-3 text-xs font-medium transition-colors',
-          active
-            ? 'border-blue-500 text-blue-500'
-            : 'border-gray-300 text-gray-700 hover:text-gray-900',
-        )}
       >
-        커뮤니티
-        <ChevronIcon direction={open ? 'up' : 'down'} className="h-3 w-3" />
+        <MenuItem
+          state={active ? 'current' : 'default'}
+          className={cn('gap-0.5 text-sm', active && 'font-semibold')}
+        >
+          커뮤니티
+          <ChevronIcon direction={open ? 'up' : 'down'} className="h-4 w-4" />
+        </MenuItem>
       </button>
       {open ? (
         <ul
           role="menu"
-          className="absolute right-0 z-20 mt-2 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-md"
+          className="absolute left-0 z-20 mt-1 w-36 rounded-md border border-gray-200 bg-white py-1 shadow-md"
         >
           {ITEMS.map((item) => {
             const current = isActive(pathname, item.href);
