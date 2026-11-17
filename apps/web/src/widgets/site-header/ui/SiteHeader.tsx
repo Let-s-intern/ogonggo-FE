@@ -8,9 +8,11 @@ import { isSignedIn, subscribeTokens } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { NotificationBell } from '@/features/notification-inbox';
 import { PushConsentBanner } from '@/features/push-notification';
-import { COMPANY_JOB_REGISTER_HREF, companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
+import { companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
+import { bizUrl, onBizLinkClick } from '@/shared/api/bizHandoff';
 import { AccountMenu } from './AccountMenu';
+import { CommunityMenu } from './CommunityMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
 import { Logo } from '@/shared/ui/Logo';
 import { NAV_ITEMS } from './navItems';
@@ -36,12 +38,12 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
  * 오른쪽 끝에 알림 아이콘이 있고, 누르면 그 아래로 알림 패널이 열린다(`NotificationBell`). 이 기기에서 푸시를
  * 아직 켜지 않았으면 그 패널 맨 위에 `푸시 알림 받기 / 켜기` 안내가 붙고, 켜면 사라진다(`PushConsentBanner`, 이슈 #655).
  * 모바일 알림함과 같은 자리다. 전에는 윗줄 아이콘 왼쪽의 버튼이었다.
- * 알림 아이콘 바로 왼쪽에는 `/community` 로 가는 `오공고 커뮤니티+` 알약이 늘 있고(이슈 #569), 그 왼쪽에 `/notices` 로
- * 가는 `공지사항` 글자 링크가 있다(공지사항 시안, 이슈 #655). 모바일은 윗줄에
- * 자리가 없어 햄버거 메뉴의 `커뮤니티` 묶음에 둔다(`MobileSiteHeader`).
+ * 알림 아이콘 바로 왼쪽에는 비즈 오공고로 가는 `기업 서비스` 알약이 늘 있다. `공지사항`·`오공고 커뮤니티` 는 아래 줄
+ * 우측 `{이름} 님` 바로 왼쪽의 `커뮤니티`(`CommunityMenu`)를 누르면 펼쳐진다(운영 요청, 이슈 #680). 모바일은 윗줄에 자리가 없어
+ * 햄버거 메뉴의 `커뮤니티`·`기업 서비스` 묶음에 둔다(`MobileSiteHeader`).
  *
- * 우측은 `공고 등록`·`공고 달력`, 그리고 로그인했으면 `[사람] {이름} 님` 이다.
- * `공고 등록` 이 가는 곳은 역할마다 다르다 — 아래 `registerHref` 주석에 적었다.
+ * 우측은 `공고 달력`·`커뮤니티`, 그리고 로그인했으면 `[사람] {이름} 님` 이다. 데스크톱의 `공고 등록` 은 뺐다 — 기업은 윗줄의
+ * `기업 서비스` 로 비즈 오공고에 간다(이슈 #680). 모바일 햄버거의 `공고 등록하기` 는 남아 있다(`register`).
  * `{이름} 님` 은 `마이페이지`·`로그아웃` 을 펼치는 드롭다운이고, 관리자에게는 `어드민` 이, 기업 회원에게는
  * `비즈 오공고` 가 더해진다(`AccountMenu`, `showAdmin`·`showBiz`). `로그아웃` 은 마이페이지의 `개인 정보`·`기업/기관 정보`
  * 화면 아래와 모바일 햄버거 메뉴에도 있다.
@@ -67,8 +69,6 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
 export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
-  const communityActive = pathname === '/community';
-  const noticesActive = pathname === '/notices' || pathname.startsWith('/notices/');
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
@@ -78,7 +78,6 @@ export function SiteHeader() {
    * 간다. `ForBusinessBanner` 의 같은 버튼과 같은 규칙이다(`shared/lib/companyJobRegister.ts`).
    */
   const register = companyJobRegisterLink(role);
-  const registerActive = pathname.startsWith(COMPANY_JOB_REGISTER_HREF);
 
   /*
    * 마이페이지는 역할마다 첫 화면이 다르다(`myPageHomeFor`). 역할을 아직 모르는 동안에는
@@ -110,9 +109,9 @@ export function SiteHeader() {
   const accountName =
     role === 'COMPANY' ? account?.companyProfile?.managerName : account?.profile?.name;
 
-  /** 데스크톱의 두 드롭다운(알림 패널, `{이름} 님` 메뉴) 중 열린 것. 하나가 열리면 다른 하나는 닫힌다. */
-  const [openMenu, setOpenMenu] = useState<'notifications' | 'account' | null>(null);
-  const toggleMenu = (menu: 'notifications' | 'account') => (open: boolean) =>
+  /** 데스크톱의 드롭다운(커뮤니티, 알림 패널, `{이름} 님` 메뉴) 중 열린 것. 하나가 열리면 나머지는 닫힌다. */
+  const [openMenu, setOpenMenu] = useState<'community' | 'notifications' | 'account' | null>(null);
+  const toggleMenu = (menu: 'community' | 'notifications' | 'account') => (open: boolean) =>
     setOpenMenu((current) => (open ? menu : current === menu ? null : current));
 
   return (
@@ -137,31 +136,16 @@ export function SiteHeader() {
         <div className="mx-auto flex h-10 max-w-page-padded items-center justify-between px-5 pt-2 whitespace-nowrap">
           <ServiceLogoToggle size="desktop" />
           {/* 알림 아이콘은 이 띠의 오른쪽 끝이다(사용자 결정). 아래 메뉴 줄은 768px 에서 여유가 없다.
-              `오공고 커뮤니티` 는 알림 아이콘 바로 왼쪽이고, 로그인하지 않아 아이콘이 없으면 오른쪽 끝이다. */}
+              `기업 서비스` 는 알림 아이콘 바로 왼쪽이고, 로그인하지 않아 아이콘이 없으면 오른쪽 끝이다. */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/notices"
-              aria-current={noticesActive ? 'page' : undefined}
-              className={cn(
-                'text-xs font-medium transition-colors',
-                noticesActive ? 'text-blue-500' : 'text-gray-700 hover:text-gray-900',
-              )}
+            {/* 비즈 오공고(다른 도메인)로 가서 `a` 다. 기업 회원은 웹 로그인을 들고 간다(`bizHandoff`). */}
+            <a
+              href={bizUrl('/')}
+              onClick={showBiz ? onBizLinkClick('/') : undefined}
+              className="flex h-7 items-center rounded-full border border-gray-300 px-3 text-xs font-medium text-gray-700 transition-colors hover:text-gray-900"
             >
-              공지사항
-            </Link>
-            <Link
-              href="/community"
-              aria-current={communityActive ? 'page' : undefined}
-              className={cn(
-                'flex h-7 items-center gap-0.5 rounded-full border px-3 text-xs font-medium transition-colors',
-                communityActive
-                  ? 'border-blue-500 text-blue-500'
-                  : 'border-gray-300 text-gray-700 hover:text-gray-900',
-              )}
-            >
-              오공고 커뮤니티
-              <span aria-hidden="true" className="icon-[lucide--plus] block h-3 w-3" />
-            </Link>
+              기업 서비스
+            </a>
             {signedIn ? (
               <NotificationBell
                 open={openMenu === 'notifications'}
@@ -194,18 +178,6 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-          {/* 비즈 오공고(다른 도메인)로 가서 `Link` 가 아니라 `a` 다. */}
-          <a
-            href={register.href}
-            onClick={register.onClick}
-            aria-current={registerActive ? 'page' : undefined}
-            className={cn(
-              'transition-colors hover:text-gray-900',
-              registerActive && 'font-semibold text-gray-900',
-            )}
-          >
-            공고 등록
-          </a>
           <Link
             href="/calendar"
             aria-current={calendarActive ? 'page' : undefined}
@@ -216,6 +188,11 @@ export function SiteHeader() {
           >
             공고 달력
           </Link>
+          <CommunityMenu
+            pathname={pathname}
+            open={openMenu === 'community'}
+            onOpenChange={toggleMenu('community')}
+          />
           {signedIn ? (
             <AccountMenu
               name={accountName}
