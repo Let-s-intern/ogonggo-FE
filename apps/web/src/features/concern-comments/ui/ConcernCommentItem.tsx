@@ -5,6 +5,7 @@ import { getAuthorName } from '@/entities/concern/model/author';
 import { RelativeTime } from '@/entities/concern/ui/RelativeTime';
 import { AuthorRoleBadge } from '@/shared/ui/AuthorRoleBadge';
 import { CommentIcon } from '@/shared/ui/icons';
+import { MarkdownText } from '@/shared/ui/MarkdownText';
 import { DELETED_COMMENT_CONTENT } from '../api/concernCommentsApi';
 import { AuthorAvatar } from './AuthorAvatar';
 import { ConcernAuthorBadge } from './CommentBadges';
@@ -59,6 +60,7 @@ function TimeAndDelete({
 
 /**
  * 답변·답글 한 건 — 시안의 `프로필 · 닉네임 · 배지 … N시간 전` 줄, 본문, `도움돼요 N` 과 답글 수 줄.
+ * 본문은 마크다운으로 그린다(`MarkdownText`). 주소는 링크로, 주소만 쓴 줄은 링크 카드로 보인다.
  * 시각의 자리가 화면 폭에 따라 다르다(`상세.webp`, `모바일 상세.webp`). 데스크톱은 윗줄 오른쪽 끝이고
  * 모바일은 아랫줄 오른쪽 끝이다. 같은 노드를 두 자리에 두고 화면 폭으로 가린다.
  *
@@ -96,9 +98,9 @@ export function ConcernCommentItem({
         {comment.concernAuthor ? <ConcernAuthorBadge /> : null}
         <TimeAndDelete comment={comment} onDelete={onDelete} className="ml-auto hidden md:flex" />
       </div>
-      <p className="mt-3 text-sm leading-relaxed break-words whitespace-pre-line text-gray-800">
+      <MarkdownText className="mt-3 text-sm leading-relaxed text-gray-800">
         {comment.content}
-      </p>
+      </MarkdownText>
       <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
         <CommentLikeButton concernId={concernId} comment={comment} signInHref={signInHref} />
         {replyCount === undefined ? null : onReply && signInHref ? (

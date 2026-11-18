@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Button, cn, Textarea } from '@ogonggo/ui';
 import { COMMENT_MAX_LENGTH } from '../api/concernCommentsApi';
+import { LinkInsertPanel } from './LinkInsertPanel';
 
 export interface ConcernCommentComposerProps {
   placeholder: string;
@@ -30,6 +31,9 @@ export interface ConcernCommentComposerProps {
  * 1000 자에서 자른다 — 1001 자는 보내기 전에 막힌다.
  *
  * 공백만 있는 글은 보내지 않는다. 백엔드도 `@NotBlank` 로 400 을 준다.
+ *
+ * 글은 마크다운으로 보인다(`shared/ui/MarkdownText.tsx`). `링크 넣기` 로 주소를 링크나 카드 중 골라 넣는다
+ * (`LinkInsertPanel`) — 넣는 것은 마크다운 글자라 손으로 써도 같다.
  */
 export function ConcernCommentComposer({
   placeholder,
@@ -44,6 +48,8 @@ export function ConcernCommentComposer({
 }: ConcernCommentComposerProps) {
   const id = useId();
   const [content, setContent] = useState('');
+  const [linkOpen, setLinkOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const trimmed = content.trim();
   const locked = signInHref !== null;
 
@@ -58,12 +64,35 @@ export function ConcernCommentComposer({
     );
   };
 
+  /** 커서 자리에 넣는다. 1000 자를 넘으면 넣지 않고 false 를 돌려준다. */
+  const insertAtCursor = (makeText: (before: string, after: string) => string): boolean => {
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? content.length;
+    const end = textarea?.selectionEnd ?? content.length;
+    const before = content.slice(0, start);
+    const after = content.slice(end);
+    const inserted = makeText(before, after);
+    const next = before + inserted + after;
+    if (next.length > COMMENT_MAX_LENGTH) {
+      return false;
+    }
+    setContent(next);
+    setLinkOpen(false);
+    requestAnimationFrame(() => {
+      const caret = before.length + inserted.length;
+      textarea?.focus();
+      textarea?.setSelectionRange(caret, caret);
+    });
+    return true;
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <label htmlFor={id} className="sr-only">
         {placeholder}
       </label>
       <Textarea
+        ref={textareaRef}
         id={id}
         rows={rows}
         value={content}
@@ -74,10 +103,24 @@ export function ConcernCommentComposer({
         onChange={(event) => setContent(event.target.value)}
         className={cn('resize-none border-transparent bg-gray-100 enabled:hover:border-gray-300')}
       />
+      {linkOpen && !locked ? (
+        <LinkInsertPanel onInsert={insertAtCursor} onClose={() => setLinkOpen(false)} />
+      ) : null}
       <div className="flex items-center justify-end gap-2">
         {locked ? null : (
-          <span className="mr-auto text-xs text-gray-400">
-            {content.length}/{COMMENT_MAX_LENGTH}
+          <span className="mr-auto flex items-center gap-3 text-xs text-gray-400">
+            <span>
+              {content.length}/{COMMENT_MAX_LENGTH}
+            </span>
+            <button
+              type="button"
+              aria-expanded={linkOpen}
+              onClick={() => setLinkOpen((open) => !open)}
+              className="text-gray-500 hover:text-gray-900"
+            >
+              링크 넣기
+            </button>
+            <span className="hidden sm:inline">마크다운을 쓸 수 있어요</span>
           </span>
         )}
         {onCancel ? (
