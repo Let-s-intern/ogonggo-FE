@@ -12,7 +12,7 @@ import type { LinkPreview } from '@/shared/api/linkPreview';
  * - http·https 만, 기본 포트(80·443)만 읽는다.
  * - 호스트를 DNS 로 풀어 사설·루프백·링크로컬 등 공인이 아닌 주소가 하나라도 나오면 연결하지 않는다.
  * - 리다이렉트는 직접 따라가며 매번 같은 검사를 한다(최대 3번).
- * - 4초 안에 끝나지 않거나 HTML 이 아니면 그만두고, `</head>` 까지(많아야 2MB)만 읽는다.
+ * - 4초 안에 끝나지 않거나 HTML 이 아니면 그만두고, `og:image` 가 나올 때까지(많아야 2MB)만 읽는다.
  *
  * 결과는 CDN 에 하루 캐시한다. 읽지 못하면 빈 미리보기(`{ url }`)를 주고, 카드는 그때 평범한 링크로 그린다.
  *
@@ -20,7 +20,7 @@ import type { LinkPreview } from '@/shared/api/linkPreview';
  */
 
 const TIMEOUT_MS = 4000;
-// 유튜브 영상 페이지는 `og:title` 이 800KB 쯤에 있다. `</head>` 가 오면 그 전에 멈춘다.
+// 유튜브 영상 페이지는 `og:title` 이 800KB 쯤에 있다.
 const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
 const CACHE_CONTROL = 'public, s-maxage=86400, stale-while-revalidate=604800';
@@ -94,7 +94,11 @@ function charsetOf(contentType: string): string {
 
 /**
  * 한 번 요청한다. Next 가 감싼 `fetch` 는 개발 서버에서 큰 응답의 본문 읽기를 끝까지 붙잡아(GitHub 메인
- * 20초) `node:http` 를 직접 쓴다. HTML 이 아니면 본문을 읽지 않고, `</head>` 까지(많아야 2MB)만 읽고 끊는다.
+ * 20초) `node:http` 를 직접 쓴다. HTML 이 아니면 본문을 읽지 않는다.
+ *
+ * `</head>` 에서 멈추면 안 된다. Next 16 은 봇이 아닌 요청에 메타데이터를 `</head>` 뒤 본문으로 흘려
+ * 보낸다(오공고 공고 상세는 `</head>` 가 2KB, `og:title` 이 70KB 쯤). `og:image` 가 든 조각을 받으면 태그가
+ * 조각 경계에서 잘렸을 수 있어 한 조각을 더 받고 끊는다. 끝내 없으면 끝까지(많아야 2MB) 읽는다.
  */
 function requestOnce(url: URL, signal: AbortSignal): Promise<RawResponse> {
   return new Promise((resolve, reject) => {
@@ -116,6 +120,7 @@ function requestOnce(url: URL, signal: AbortSignal): Promise<RawResponse> {
         }
         const chunks: Buffer[] = [];
         let size = 0;
+        let sawImage = false;
         const finish = () => {
           const body = new TextDecoder(charsetOf(contentType)).decode(
             Buffer.concat(chunks).subarray(0, MAX_BYTES),
@@ -125,10 +130,12 @@ function requestOnce(url: URL, signal: AbortSignal): Promise<RawResponse> {
         response.on('data', (chunk: Buffer) => {
           chunks.push(chunk);
           size += chunk.byteLength;
-          if (size >= MAX_BYTES || chunk.includes('</head>')) {
+          if (size >= MAX_BYTES || sawImage) {
             response.destroy();
             finish();
+            return;
           }
+          sawImage = chunk.includes('og:image');
         });
         response.on('end', finish);
         response.on('error', reject);
