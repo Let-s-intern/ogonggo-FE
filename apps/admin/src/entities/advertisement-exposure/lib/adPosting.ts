@@ -68,6 +68,9 @@ export const AD_POSTING_JOB_FIELD_OPTIONS = AD_POSTING_JOB_FIELDS.map((value) =>
   label: enumLabel('JobField', value),
 }));
 
+/** 추천 문구(제목·설명)가 필요한 자리. 운영자 PICK 과 같은 상자로 웹 카드에 나간다(계약 9절). */
+export const needsRecommendation = (position: AdPostingPosition | null) => position === 'JOB_PICK';
+
 /** 직무가 필요한 자리. */
 export const needsJobField = (position: AdPostingPosition | null) => position === 'JOB_LIST';
 
@@ -83,6 +86,11 @@ export type AdPostingExposure = AdvertisementExposure &
   Partial<
     Pick<
       AdminAdPostingExposureResponse,
-      'targetTitle' | 'targetCompanyName' | 'targetPublished' | 'jobField'
+      | 'targetTitle'
+      | 'targetCompanyName'
+      | 'targetPublished'
+      | 'jobField'
+      | 'recommendationTitle'
+      | 'recommendationDescription'
     >
   >;

@@ -44,6 +44,8 @@ export interface AttachInput {
     targetId: number;
     /** 리스트 상단 고정(`JOB_LIST`) 노출의 직무(계약 8절). 다른 자리는 null. */
     jobField: string | null;
+    /** 오공고 PICK(`JOB_PICK`) 노출의 추천 문구(계약 9절). 다른 자리는 null. */
+    recommendation: { title: string; description: string } | null;
     expose: boolean;
     /** 맨 앞(상단 고정) 또는 맨 뒤. */
     order: 'first' | 'last';
@@ -58,14 +60,18 @@ function nextDay(date: string): string {
 }
 
 /**
- * 한 번에 세팅의 노출 등록 본문. 상품 기간 그대로이고 광고 표시를 켠다. `jobField` 는 생성 요청 타입에 아직 없는 칸이라
+ * 한 번에 세팅의 노출 등록 본문. 상품 기간 그대로이고 광고 표시를 켠다. `jobField`·추천 문구는 생성 요청 타입에 아직 없는 칸이라
  * (코드젠 전) 넓힌 타입으로 넘긴다.
  */
 function exposureBody(
   contractId: number,
   next: AttachInput,
   posting: NonNullable<AttachInput['posting']>,
-): CreateAdminAdvertisementExposureRequest & { jobField: string | null } {
+): CreateAdminAdvertisementExposureRequest & {
+  jobField: string | null;
+  recommendationTitle: string | null;
+  recommendationDescription: string | null;
+} {
   return {
     productId: next.productId,
     contractId,
@@ -76,6 +82,8 @@ function exposureBody(
     targetType: posting.targetType,
     targetId: posting.targetId,
     jobField: posting.jobField,
+    recommendationTitle: posting.recommendation?.title.trim() ?? null,
+    recommendationDescription: posting.recommendation?.description.trim() ?? null,
     adLabel: true,
     startAt: `${next.startDate}T00:00:00`,
     endAt: `${nextDay(next.endDate)}T00:00:00`,

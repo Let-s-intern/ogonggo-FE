@@ -181,9 +181,14 @@ const EXPOSURE_SEED: ExposureSeed[] = [
 export type ProductRecord = AdminAdvertisementProductResponse & { deletedAt: string | null };
 
 /**
- * 노출 한 건. `jobField` 는 리스트 상단 고정(`JOB_LIST`) 노출의 직무다(계약 8절). 생성 타입에는 아직 없다(코드젠 전).
+ * 노출 한 건. `jobField` 는 리스트 상단 고정(`JOB_LIST`) 노출의 직무(계약 8절), 추천 문구 두 칸은 오공고 PICK(`JOB_PICK`)
+ * 노출의 것이다(계약 9절). 생성 타입에는 아직 없다(코드젠 전).
  */
-export type ExposureRecord = AdminAdvertisementExposureResponse & { jobField?: string | null };
+export type ExposureRecord = AdminAdvertisementExposureResponse & {
+  jobField?: string | null;
+  recommendationTitle?: string | null;
+  recommendationDescription?: string | null;
+};
 
 interface AdvertisementStore {
   products: ProductRecord[];

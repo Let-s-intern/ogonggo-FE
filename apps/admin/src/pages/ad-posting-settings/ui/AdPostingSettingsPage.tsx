@@ -24,6 +24,7 @@ import {
   isAdPostingPosition,
   jobFieldLabel,
   needsJobField,
+  needsRecommendation,
   type AdPostingExposure,
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
@@ -139,6 +140,28 @@ export function AdPostingSettingsPage() {
         </span>
       ),
     },
+    ...(needsRecommendation(position)
+      ? [
+          {
+            key: 'recommendation',
+            header: '추천 문구',
+            width: 'w-72',
+            render: (row: AdPostingExposure) =>
+              row.recommendationTitle ? (
+                <span className="flex flex-col gap-0.5">
+                  <span className="truncate text-sm font-medium text-gray-900">
+                    {row.recommendationTitle}
+                  </span>
+                  <span className="line-clamp-2 text-xs whitespace-pre-line text-gray-500">
+                    {row.recommendationDescription}
+                  </span>
+                </span>
+              ) : (
+                <span className="text-sm text-error">없음</span>
+              ),
+          },
+        ]
+      : []),
     {
       key: 'contract',
       header: '연결 계약',

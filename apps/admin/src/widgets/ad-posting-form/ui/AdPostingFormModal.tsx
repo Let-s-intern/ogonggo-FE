@@ -11,11 +11,14 @@ import {
   AD_POSTING_FIXED_TARGET,
   AD_POSTING_JOB_FIELD_OPTIONS,
   needsJobField,
+  needsRecommendation,
   type AdPostingExposure,
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import type { AdvertisementProduct } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { positionLabel } from '@/entities/advertisement-product/lib/product';
+import { isRecommendationValid } from '@/features/today-job/lib/validate';
+import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { ContractField } from '@/widgets/banner-form';
 import {
@@ -117,6 +120,12 @@ export function AdPostingFormModal({
   const [exposed, setExposed] = useState(exposure?.exposed ?? true);
   const withJobField = needsJobField(position);
   const [jobField, setJobField] = useState(exposure?.jobField ?? '');
+  // 오공고 PICK 은 운영자 PICK 처럼 추천 문구 두 칸이 있어야 한다(계약 9절). 입력칸·글자 수·검사는 운영자 PICK 것 그대로다.
+  const withRecommendation = needsRecommendation(position);
+  const [recommendation, setRecommendation] = useState({
+    title: exposure?.recommendationTitle ?? '',
+    description: exposure?.recommendationDescription ?? '',
+  });
   const [submitted, setSubmitted] = useState(false);
 
   // 수정 중인 노출 자신은 빼고, 리스트 상단 고정이면 고른 직무의 노출만 본다.
@@ -149,6 +158,7 @@ export function AdPostingFormModal({
     if (
       !target ||
       (withJobField && !jobField) ||
+      (withRecommendation && !isRecommendationValid(recommendation)) ||
       Boolean(startAt) !== Boolean(endAt) ||
       (startAt && startAt >= endAt)
     )
@@ -163,6 +173,8 @@ export function AdPostingFormModal({
       targetId: target.targetId,
       // 리스트 상단 고정 노출의 직무(계약 8절). 생성 요청 타입에는 아직 없다(코드젠 전).
       jobField: withJobField ? jobField : null,
+      recommendationTitle: withRecommendation ? recommendation.title.trim() : null,
+      recommendationDescription: withRecommendation ? recommendation.description.trim() : null,
       adLabel,
       startAt: toServerValue(startAt),
       endAt: toServerValue(endAt),
@@ -288,6 +300,20 @@ export function AdPostingFormModal({
           />
         )}
       </Field>
+
+      {withRecommendation ? (
+        <Field
+          label="추천 문구"
+          required
+          hint="웹 오공고 PICK 카드 아래 상자에 운영자 PICK 과 같은 모양으로 나가요."
+        >
+          <RecommendationFields
+            idPrefix="ad-posting"
+            value={recommendation}
+            onChange={setRecommendation}
+          />
+        </Field>
+      ) : null}
 
       <ContractField
         id="ad-posting-contract"

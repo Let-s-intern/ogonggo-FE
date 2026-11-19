@@ -38,6 +38,9 @@ export type AdPostingPosition =
 export type AdminAdPostingExposureResponse = AdminAdvertisementExposureResponse & {
   /** 리스트 상단 고정(`JOB_LIST`) 노출의 직무. 다른 자리·배너는 null 이다(계약 8절). */
   jobField: string | null;
+  /** 오공고 PICK 노출의 추천 문구(계약 9절). 다른 자리·배너는 null 이다. */
+  recommendationTitle: string | null;
+  recommendationDescription: string | null;
   targetTitle: string | null;
   targetCompanyName: string | null;
   targetPublished: boolean | null;
@@ -55,6 +58,7 @@ const POSTING_PRODUCTS: { id: number; position: AdPostingPosition; name: string;
     { id: 102, position: 'CALENDAR_DAY', name: '공고 달력 날짜별 공고', price: 200000 },
     { id: 103, position: 'JOB_DETAIL_SIDE', name: '공고 상세 옆 추천 공고', price: 150000 },
     { id: 110, position: 'MYPAGE_SCRAP', name: '마이페이지 스크랩 칸 공고', price: 150000 },
+    { id: 111, position: 'JOB_PICK', name: '인기 채용공고 추천 카드', price: 400000 },
   ];
 
 /** 시드 상품의 자리가 이 값으로 바뀌어 있으면 이 목의 옛 판이 남긴 것이라 시드 자리로 되돌린다. */
@@ -153,6 +157,29 @@ function seedPostings() {
       },
     );
   }
+  // 오공고 PICK 자리. 운영자 PICK 처럼 추천 문구 두 칸이 있다(계약 9절).
+  if (!advertisementStore.exposures.some((exposure) => exposure.productId === 111)) {
+    advertisementStore.exposures.push({
+      id: Math.max(0, ...advertisementStore.exposures.map((item) => item.id)) + 1,
+      productId: 111,
+      contractId: null,
+      name: null,
+      imageUrl: null,
+      linkUrl: null,
+      targetType: 'JOB',
+      targetId: 7,
+      recommendationTitle: '바이오 QC 첫 커리어로 추천',
+      recommendationDescription: '신입도 지원할 수 있는 품질관리 계약직이에요.',
+      adLabel: true,
+      exposed: true,
+      advertiserCompanyName: null,
+      startAt: null,
+      endAt: null,
+      displayOrder: 1,
+      registeredAt: SEED_TIME,
+      updatedAt: SEED_TIME,
+    });
+  }
   // 공고 달력 자리. 옛 부트캠프 노출을 지운 저장소에도 다시 하나 건다.
   if (!advertisementStore.exposures.some((exposure) => exposure.productId === 102)) {
     advertisementStore.exposures.push({
@@ -236,6 +263,8 @@ function withTarget(exposure: ExposureRecord): AdminAdPostingExposureResponse {
   return {
     ...exposure,
     jobField: exposure.jobField ?? null,
+    recommendationTitle: exposure.recommendationTitle ?? null,
+    recommendationDescription: exposure.recommendationDescription ?? null,
     advertiserCompanyName: contract?.companyName ?? null,
     targetTitle: content?.title ?? null,
     targetCompanyName: content?.companyName ?? null,
@@ -264,12 +293,30 @@ const listExposuresHandler = http.get(EXPOSURES, ({ request }) => {
 /** 광고 공고 상품의 대상만 본다. 문제가 없으면 아무것도 돌려주지 않아 다음 핸들러가 받는다. */
 function targetError(
   productId: number,
-  body: UpdateAdminAdvertisementExposureRequest & { jobField?: string | null },
+  body: UpdateAdminAdvertisementExposureRequest & {
+    jobField?: string | null;
+    recommendationTitle?: string | null;
+    recommendationDescription?: string | null;
+  },
   selfId?: number,
 ) {
   const product = advertisementStore.products.find((item) => item.id === productId);
   if (product?.category !== 'JOB_POSTING' || !body.targetType || body.targetId == null) {
     return undefined;
+  }
+  // 추천 문구는 오공고 PICK 만, 둘 다 공백 아닌 값으로(계약 9절). 길이는 운영자 PICK 과 같다(제목 30, 설명 200).
+  const title = body.recommendationTitle?.trim() ?? '';
+  const description = body.recommendationDescription?.trim() ?? '';
+  if (String(product.position ?? '') === 'JOB_PICK') {
+    if (!title || !description || title.length > 30 || description.length > 200) {
+      return error(
+        400,
+        'BAD_REQUEST',
+        'recommendationTitle·recommendationDescription: 오공고 PICK 은 추천 제목(30자 이하)과 설명(200자 이하)을 보내 주세요.',
+      );
+    }
+  } else if (body.recommendationTitle != null || body.recommendationDescription != null) {
+    return error(400, 'BAD_REQUEST', '추천 문구는 오공고 PICK 노출에만 보낼 수 있습니다.');
   }
   const byJobField = String(product.position ?? '') === 'JOB_LIST';
   if (byJobField && !body.jobField) {

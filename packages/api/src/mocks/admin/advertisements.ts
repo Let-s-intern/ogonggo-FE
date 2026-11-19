@@ -281,6 +281,19 @@ function jobFieldOf(product: ProductRecord, body: object): string | null {
   return String(product.position ?? '') === 'JOB_LIST' ? (jobField ?? null) : null;
 }
 
+/** 오공고 PICK 노출만 추천 문구를 남긴다(계약 9절). 검사는 `./advertisementPostings.ts` 가 먼저 한다. */
+function recommendationOf(product: ProductRecord, body: object) {
+  const { recommendationTitle, recommendationDescription } = body as {
+    recommendationTitle?: string | null;
+    recommendationDescription?: string | null;
+  };
+  const pick = String(product.position ?? '') === 'JOB_PICK';
+  return {
+    recommendationTitle: pick ? (recommendationTitle?.trim() ?? null) : null,
+    recommendationDescription: pick ? (recommendationDescription?.trim() ?? null) : null,
+  };
+}
+
 /** `GET ?productId=&contractId=` 상품 자리 하나의 노출 전부(꺼진 것·기간 밖 포함). 순서대로 온다. */
 const listExposuresHandler = http.get(EXPOSURES, ({ request }) => {
   const url = new URL(request.url);
@@ -316,6 +329,7 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
     jobField: jobFieldOf(product, body),
+    ...recommendationOf(product, body),
     adLabel: body.adLabel as boolean,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,
@@ -355,6 +369,7 @@ const replaceExposureHandler = http.put(`${EXPOSURES}/:exposureId`, async ({ par
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
     jobField: jobFieldOf(product, body),
+    ...recommendationOf(product, body),
     adLabel: body.adLabel,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,
