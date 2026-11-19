@@ -50,6 +50,7 @@ import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
 import { ContractReportCard } from './ContractReportCard';
+import { ContractReportSummaryCard } from './ContractReportSummaryCard';
 import { ContractTargetsCard } from './ContractTargetsCard';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
@@ -98,6 +99,7 @@ export function AdContractDetailPage() {
         backTo={backTo(contract.status)}
       />
       <div className="flex flex-col gap-6">
+        <ContractReportSummaryCard contractId={contract.id} />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <ApplicationCard contract={contract} />
           <div className="flex flex-col gap-6">

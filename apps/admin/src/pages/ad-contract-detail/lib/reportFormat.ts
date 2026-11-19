@@ -103,6 +103,53 @@ export function scrollFunnelOption(steps: ScrollStep[]): EChartsCoreOption {
 }
 
 /**
+ * 희망 직무별 가로 막대. 위가 큰 값이다(응답이 큰 순이라 축을 뒤집는다). 값은 `metric` 한 가지 — 상세 숫자가 있으면 순 방문
+ * 회원, 없으면(상세로 이어지지 않는 배너) 광고 클릭 회원이다.
+ */
+export function jobFieldChartOption(
+  rows: ContractProductReport['byJobField'],
+  metric: 'memberUniqueVisitors' | 'adClickMembers',
+): EChartsCoreOption {
+  const unit = metric === 'memberUniqueVisitors' ? '순 방문 회원' : '광고 클릭 회원';
+  return {
+    color: COLORS,
+    textStyle: { fontFamily: FONT_FAMILY },
+    grid: { top: 8, right: 56, bottom: 8, left: 8, containLabel: true },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      valueFormatter: (value: unknown) =>
+        typeof value === 'number' ? `${value.toLocaleString('ko-KR')}명` : '-',
+    },
+    xAxis: { type: 'value', show: false },
+    yAxis: {
+      type: 'category',
+      inverse: true,
+      data: rows.map((row) => row.label),
+      axisLabel: AXIS_LABEL,
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    series: [
+      {
+        name: unit,
+        type: 'bar',
+        barMaxWidth: 18,
+        itemStyle: { borderRadius: [0, 4, 4, 0] },
+        label: {
+          show: true,
+          position: 'right',
+          color: '#374151',
+          fontSize: 12,
+          formatter: (params: { value: number }) => `${params.value.toLocaleString('ko-KR')}명`,
+        },
+        data: rows.map((row) => row[metric]),
+      },
+    ],
+  };
+}
+
+/**
  * 날짜별 추이. 노출은 막대(왼쪽 축), 클릭·조회·CTA 는 선(오른쪽 축)이다 — 노출이 두 자릿수 크다. 집계 전 날짜는 값을 비워
  * 0 으로 내려앉지 않게 한다.
  */

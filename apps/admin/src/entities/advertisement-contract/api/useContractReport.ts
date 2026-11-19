@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type {
   AdminContractDetailWithTargets,
+  AdminContractReportSummary,
   AdminContractProductReport,
   AdminContractProductWithReport,
 } from '@ogonggo/api/src/mocks/admin/advertisementReports';
@@ -17,6 +18,7 @@ import { adminGet } from '@/shared/api/adminClient';
  * 코드젠 뒤 생성 함수로 옮긴다.
  */
 export type ContractProductReport = AdminContractProductReport;
+export type ContractReportSummary = AdminContractReportSummary;
 export type ReportableContractProduct = AdminContractProductWithReport;
 
 const reportPath = (contractId: number, contractProductId: number) =>
@@ -60,6 +62,17 @@ export function useContractReport(
     enabled: contractProductId !== null,
     // 기간을 바꾸는 동안 앞 숫자를 그대로 두어 카드가 접혔다 펴지지 않게 한다.
     placeholderData: keepPreviousData,
+  });
+}
+
+/** 계약 전체 합계(API 계약 6.2). 리포트를 열 수 있는 상품만, 각 상품 기간 전체를 합친다. */
+export function useContractReportSummary(contractId: number) {
+  return useQuery({
+    queryKey: ['admin', 'advertisement-contracts', 'report-summary', contractId],
+    queryFn: () =>
+      adminGet<ContractReportSummary>(
+        `/api/v1/admin/advertisement-contracts/${contractId}/report-summary`,
+      ),
   });
 }
 

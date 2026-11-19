@@ -5,6 +5,7 @@ import type {
 } from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
 import { advertisementStore, saveAdvertisementStore } from '../fixtures/advertisement-exposures';
+import { enumOptions } from '../../enums';
 import { ok } from './paging';
 
 /**
@@ -227,6 +228,8 @@ export interface ReportDetailMetrics {
 
 export interface ReportSummary extends ReportDetailMetrics {
   impressions: number;
+  /** 같은 방문자·같은 노출은 KST 하루 한 번으로 센 노출(계약 6.1). */
+  uniqueImpressions: number;
   adClicks: number;
   adClickRate: number | null;
   memberUniqueVisitors: number;
@@ -258,6 +261,7 @@ export interface ReportDaily extends Omit<
 > {
   date: string;
   impressions: number;
+  uniqueImpressions: number;
   adClicks: number;
   avgScrollPercent: number | null;
   avgDurationSeconds: number | null;
@@ -279,6 +283,16 @@ export interface ReportTarget {
   bySource: { source: ReportSource; views: number; ctaClicks: number }[];
 }
 
+export interface ReportJobField {
+  /** 희망 직무 enum(`JobField`). 직무가 없는 회원은 null. */
+  jobField: string | null;
+  label: string;
+  memberUniqueVisitors: number;
+  memberViews: number;
+  ctaUniqueMembers: number;
+  adClickMembers: number;
+}
+
 export interface AdminContractProductReport {
   product: {
     contractProductId: number;
@@ -296,6 +310,8 @@ export interface AdminContractProductReport {
   daily: ReportDaily[];
   exposures: ReportExposure[];
   targets: ReportTarget[];
+  /** 로그인 회원만 센 희망 직무별 나눔. */
+  byJobField: ReportJobField[];
 }
 
 /** 목의 수집 시작일. 이보다 앞 날짜는 모두 0 이고 화면이 `집계 전` 으로 적는다. */
@@ -389,6 +405,7 @@ interface DayExposureRow {
   exposureId: number;
   exposureName: string;
   impressions: number;
+  uniqueImpressions: number;
   adClicks: number;
   views: number;
   uniqueVisitors: number;
@@ -431,6 +448,7 @@ function dayExposureRow(
     exposureId: exposure.id,
     exposureName: exposure.name,
     impressions,
+    uniqueImpressions: Math.round(impressions * (0.55 + noise(date, exposure.id, 'uimp') * 0.2)),
     adClicks,
     views,
     uniqueVisitors,
@@ -530,8 +548,12 @@ function exposureName(exposure: {
 
 const REPORT = `${CONTRACTS}/:contractId/products/:contractProductId`;
 
-const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
-  const input = reportInput(params, new URL(request.url));
+/** 상품 리포트 본문. 리포트를 열 수 없으면 오류 응답이다. 계약 전체 합계도 이것을 상품마다 부른다. */
+function buildReport(
+  params: Record<string, unknown>,
+  url: URL,
+): AdminContractProductReport | Response {
+  const input = reportInput(params, url);
   if (input instanceof Response) return input;
   const contract = findContract(params.contractId) as AdminAdvertisementContractDetailResponse;
   const cp = contract.products.find(
@@ -548,6 +570,8 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
   const ctaUniqueVisitors = Math.round(detail.ctaUniqueVisitors * 0.85);
   const summary: ReportSummary = {
     impressions,
+    // 하루 한 번씩 센 값이라 날짜 합이 기간 값이다.
+    uniqueImpressions: rows.reduce((sum, row) => sum + row.uniqueImpressions, 0),
     adClicks,
     adClickRate: rate(adClicks, impressions),
     ...detail,
@@ -570,6 +594,7 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
     return {
       date,
       impressions: day.reduce((sum, row) => sum + row.impressions, 0),
+      uniqueImpressions: day.reduce((sum, row) => sum + row.uniqueImpressions, 0),
       adClicks: day.reduce((sum, row) => sum + row.adClicks, 0),
       ...sumDetail(day),
     };
@@ -627,7 +652,7 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
     };
   });
 
-  const body: AdminContractProductReport = {
+  return {
     product: {
       contractProductId: cp.contractProductId,
       productId: cp.productId,
@@ -644,7 +669,118 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
     daily,
     exposures,
     targets,
+    byJobField: jobFieldBreakdown(cp.contractProductId, summary),
   };
+}
+
+/**
+ * 희망 직무별 나눔(계약 6.1). 로그인 회원만, 직무가 여럿이면 각 직무에 한 번씩 센다. 직무가 없는 회원은 `jobField: null`.
+ * 목은 상품마다 직무 다섯 개를 골라 회원 숫자를 나눈다. 큰 순서다.
+ */
+function jobFieldBreakdown(contractProductId: number, summary: ReportSummary): ReportJobField[] {
+  const options = enumOptions('JobField');
+  const picked = [0, 1, 2, 3, 4].map(
+    (index) => options[Math.floor(noise(contractProductId, 'field', index) * options.length)],
+  );
+  const unique = [
+    ...new Map(picked.flatMap((item) => (item ? [[item.value, item]] : []))).values(),
+  ];
+  const clickMembers = Math.round(summary.adClicks * 0.4);
+  const rows = [
+    ...unique.map((item) => ({ jobField: item.value as string | null, label: item.label })),
+    { jobField: null, label: '직무 미설정' },
+  ].map((field, index) => {
+    const share =
+      field.jobField === null ? 0.06 : 0.12 + noise(contractProductId, field.jobField, index) * 0.3;
+    return {
+      ...field,
+      memberUniqueVisitors: Math.round(summary.memberUniqueVisitors * share),
+      memberViews: Math.round(summary.memberViews * share),
+      ctaUniqueMembers: Math.round(summary.ctaUniqueMembers * share),
+      adClickMembers: Math.round(clickMembers * share),
+    };
+  });
+  return rows
+    .filter((row) => row.memberUniqueVisitors > 0 || row.adClickMembers > 0)
+    .sort(
+      (a, b) =>
+        b.memberUniqueVisitors - a.memberUniqueVisitors || b.adClickMembers - a.adClickMembers,
+    );
+}
+
+export interface AdminContractReportSummary {
+  total: {
+    impressions: number;
+    uniqueImpressions: number;
+    adClicks: number;
+    adClickRate: number | null;
+    views: number;
+    ctaClicks: number;
+  };
+  products: {
+    contractProductId: number;
+    category: string;
+    position: string | null;
+    name: string;
+    startDate: string;
+    endDate: string;
+    impressions: number;
+    uniqueImpressions: number;
+    adClicks: number;
+    views: number;
+    ctaClicks: number;
+  }[];
+}
+
+/** 계약 전체 합계(계약 6.2). 리포트를 열 수 있는 상품만, 각 상품 기간 전체를 합친다. */
+const reportSummaryHandler = http.get(`${CONTRACTS}/:contractId/report-summary`, ({ params }) => {
+  const contract = findContract(params.contractId);
+  if (!contract) return contractNotFound();
+  const url = new URL('http://mock/report');
+  const products = contract.products
+    .filter((cp) => unavailableReason(cp) === null)
+    .flatMap((cp) => {
+      const report = buildReport(
+        { contractId: contract.id, contractProductId: cp.contractProductId },
+        url,
+      );
+      if (report instanceof Response) return [];
+      const { summary, product } = report;
+      return [
+        {
+          contractProductId: product.contractProductId,
+          category: product.category,
+          position: product.position,
+          name: product.name,
+          startDate: product.startDate,
+          endDate: product.endDate,
+          impressions: summary.impressions,
+          uniqueImpressions: summary.uniqueImpressions,
+          adClicks: summary.adClicks,
+          views: summary.views,
+          ctaClicks: summary.ctaClicks,
+        },
+      ];
+    });
+  const sum = (key: 'impressions' | 'uniqueImpressions' | 'adClicks' | 'views' | 'ctaClicks') =>
+    products.reduce((total, item) => total + item[key], 0);
+  const body: AdminContractReportSummary = {
+    total: {
+      impressions: sum('impressions'),
+      uniqueImpressions: sum('uniqueImpressions'),
+      adClicks: sum('adClicks'),
+      adClickRate: rate(sum('adClicks'), sum('impressions')),
+      views: sum('views'),
+      ctaClicks: sum('ctaClicks'),
+    },
+    products,
+  };
+  return HttpResponse.json(ok(body), { status: 200 });
+});
+
+const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
+  const body = buildReport(params, new URL(request.url));
+  if (body instanceof Response) return body;
   return HttpResponse.json(ok(body), { status: 200 });
 });
 
@@ -653,6 +789,7 @@ const CSV_COLUMNS = [
   'exposureId',
   'exposureName',
   'impressions',
+  'uniqueImpressions',
   'adClicks',
   'views',
   'uniqueVisitors',
@@ -690,4 +827,5 @@ export const advertisementReportHandlers: HttpHandler[] = [
   // `report.csv` 를 `report` 보다 앞에 둔다.
   reportCsvHandler,
   reportHandler,
+  reportSummaryHandler,
 ];

@@ -31,6 +31,7 @@ import {
   formatSeconds,
   isBannerReport,
   isBeforeCollection,
+  jobFieldChartOption,
   scrollFunnelOption,
   showsDetail,
   scrollStepLabel,
@@ -239,14 +240,17 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
+    <div className="rounded-lg border border-gray-200 bg-white p-3" title={hint}>
       <p className="text-xs text-gray-500">{label}</p>
       <p className="pt-1 text-xl font-semibold text-gray-900">{value}</p>
+      {hint ? <p className="pt-1 text-[11px] leading-tight text-gray-400">{hint}</p> : null}
     </div>
   );
 }
+
+const UNIQUE_IMPRESSION_HINT = '같은 사람이 하루에 여러 번 봐도 한 번으로 센 노출';
 
 function ReportBody({
   report,
@@ -270,13 +274,17 @@ function ReportBody({
     ...(
       [
         ['impressions', '노출'],
+        ['uniqueImpressions', '순 노출'],
         ['adClicks', '클릭'],
         ['views', '상세 조회'],
         ['uniqueVisitors', '순 방문자'],
         ['ctaClicks', 'CTA 클릭'],
       ] as const
     )
-      .filter(([key]) => detail || key === 'impressions' || key === 'adClicks')
+      .filter(
+        ([key]) =>
+          detail || key === 'impressions' || key === 'uniqueImpressions' || key === 'adClicks',
+      )
       .map(([key, header]) => ({
         key,
         header,
@@ -383,6 +391,11 @@ function ReportBody({
       <Section title={`상품 몫 요약(이 상품의 ${ownLabel}로 들어온 것만)`}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           <Tile label="노출" value={formatCount(summary.impressions)} />
+          <Tile
+            label="순 노출"
+            value={formatCount(summary.uniqueImpressions)}
+            hint={UNIQUE_IMPRESSION_HINT}
+          />
           <Tile label="클릭" value={formatCount(summary.adClicks)} />
           <Tile label="클릭률" value={formatRate(summary.adClickRate)} />
           {detail ? (
@@ -410,6 +423,10 @@ function ReportBody({
           <ScrollFunnel report={report} steps={summary.scrollFunnel} />
         </Section>
       ) : null}
+
+      <Section title="희망 직무별(로그인 회원 기준)">
+        <JobFieldBreakdown report={report} detail={detail} />
+      </Section>
 
       <Section title="날짜별 추이">
         {chartOption ? <EChart option={chartOption} height={280} /> : null}
@@ -506,11 +523,79 @@ function ScrollFunnel({
   );
 }
 
+type JobFieldRow = ContractProductReport['byJobField'][number];
+
+/**
+ * 희망 직무별 나눔(API 계약 6.1). 가로 막대와 표. 로그인 회원만 세므로 안내를 함께 둔다. 상세 숫자가 없는 배너는 막대를 광고
+ * 클릭 회원으로 그리고 상세 칸을 뺀다.
+ */
+function JobFieldBreakdown({ report, detail }: { report: ContractProductReport; detail: boolean }) {
+  const rows = report.byJobField;
+  const metric = detail ? 'memberUniqueVisitors' : 'adClickMembers';
+  const option = useMemo(() => jobFieldChartOption(rows, metric), [rows, metric]);
+  if (rows.length === 0) {
+    return <p className="text-sm text-gray-500">기간 안에 로그인 회원의 기록이 없습니다.</p>;
+  }
+  const columns: DataTableColumn<JobFieldRow>[] = [
+    { key: 'label', header: '희망 직무', render: (row) => row.label },
+    ...(detail
+      ? ([
+          {
+            key: 'memberUniqueVisitors',
+            header: '순 방문 회원',
+            align: 'right',
+            render: (row) => formatCount(row.memberUniqueVisitors),
+          },
+          {
+            key: 'memberViews',
+            header: '회원 조회',
+            align: 'right',
+            render: (row) => formatCount(row.memberViews),
+          },
+          {
+            key: 'ctaUniqueMembers',
+            header: 'CTA 클릭 회원',
+            align: 'right',
+            render: (row) => formatCount(row.ctaUniqueMembers),
+          },
+        ] satisfies DataTableColumn<JobFieldRow>[])
+      : []),
+    {
+      key: 'adClickMembers',
+      header: '광고 클릭 회원',
+      align: 'right',
+      render: (row) => formatCount(row.adClickMembers),
+    },
+  ];
+  return (
+    <>
+      <p className="text-xs text-gray-500">
+        로그인한 회원만 셉니다. 희망 직무가 여럿인 회원은 직무마다 한 번씩 세서 합이 회원 수보다 클
+        수 있어요. 막대는 {detail ? '순 방문 회원' : '광고 클릭 회원'} 수입니다.
+      </p>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <EChart option={option} height={Math.max(160, rows.length * 34)} />
+        <DataTable columns={columns} rows={rows} rowKey={(row) => row.jobField ?? 'NONE'} />
+      </div>
+    </>
+  );
+}
+
 /** PRD 5장 지표 정의를 화면 말로 옮긴 것. 화면에 있는 지표만 보인다(`definitionsFor`). */
 type Definition = [term: string, description: string, shownWhen: 'all' | 'detail' | 'scroll'];
 
 const DEFINITIONS: Definition[] = [
   ['노출', '배너·광고 카드가 화면에 절반 이상 1초 넘게 보인 횟수', 'all'],
+  [
+    '순 노출',
+    '같은 사람(회원, 비회원은 익명 방문자 id)이 같은 광고를 하루에 여러 번 봐도 한 번으로 센 노출',
+    'all',
+  ],
+  [
+    '희망 직무별',
+    '로그인한 회원만 회원의 희망 직무로 나눈다. 직무가 여럿인 회원은 직무마다 한 번씩 세서 합이 회원 수보다 클 수 있다',
+    'all',
+  ],
   ['클릭', '배너·광고 카드를 누른 횟수. 클릭률은 클릭 ÷ 노출', 'all'],
   ['상세 조회', '상세 페이지가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번', 'detail'],
   ['순 방문자', '기간 안 상세를 연 서로 다른 방문자(회원, 비회원은 익명 방문자 id)', 'detail'],
