@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { enumLabel, HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { DatePicker } from '@/shared/ui/DatePicker';
-import { fetchAdReport } from '../lib/api';
+import { downloadAdReportCsv, fetchAdReport } from '../lib/api';
+import { exportReportPdf } from '../lib/exportPdf';
 import {
   dotDate,
   positionLabel,
@@ -127,10 +128,45 @@ function ProductReport({
   }, [contractId, product.contractProductId, from, to]);
 
   const narrowed = from !== '' || to !== '';
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
+  const [exportFailed, setExportFailed] = useState(false);
+
+  /** 내려받기. 이름은 `오공고-리포트-<상품>-<시작>_<끝>` 이고 화면에 보이는 기간과 같다. */
+  const runExport = async (kind: 'pdf' | 'csv') => {
+    if (load.kind !== 'ready' || exporting) return;
+    const { report } = load;
+    const name = `오공고-리포트-${report.product.name}-${report.from}_${report.to}`;
+    setExporting(kind);
+    setExportFailed(false);
+    try {
+      if (kind === 'pdf') {
+        if (rootRef.current) await exportReportPdf(rootRef.current, `${name}.pdf`);
+      } else {
+        await downloadAdReportCsv(contractId, product.contractProductId, from, to, `${name}.csv`);
+      }
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setExporting(null);
+    }
+  };
+  const exportButton = (kind: 'pdf' | 'csv', label: string) => (
+    <button
+      type="button"
+      // 아직 불러오는 중이면 PDF 에 "불러오는 중" 이 찍힌다. 다 받은 뒤에만 누를 수 있다.
+      disabled={load.kind !== 'ready' || exporting !== null}
+      onClick={() => void runExport(kind)}
+      className="flex h-10 items-center gap-1.5 rounded-md border border-gray-200 px-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:text-gray-300 disabled:hover:bg-transparent"
+    >
+      <span aria-hidden="true" className="icon-[lucide--download] block size-4" />
+      {exporting === kind ? `${label} 만드는 중` : label}
+    </button>
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div data-pdf-hide className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    <div ref={rootRef} className="flex flex-col gap-4 bg-white">
+      <div data-pdf-hide className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="grid grid-cols-1 gap-2 sm:w-[30rem] sm:grid-cols-2">
           <DatePicker
             aria-label="시작일"
@@ -160,11 +196,21 @@ function ProductReport({
         >
           전체 기간
         </button>
+        <div className="flex gap-2 sm:ml-auto">
+          {exportButton('pdf', 'PDF')}
+          {exportButton('csv', 'CSV')}
+        </div>
       </div>
+      {exportFailed ? (
+        <p role="alert" data-pdf-hide className="text-sm text-error">
+          파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.
+        </p>
+      ) : null}
 
       {load.kind === 'ready' ? (
         <>
-          <p className="text-sm text-gray-500 tabular-nums">
+          <p data-pdf-block className="text-sm text-gray-500 tabular-nums">
+            <span className="mr-2 font-semibold text-gray-900">{load.report.product.name}</span>
             {dotDate(load.report.from)} ~ {dotDate(load.report.to)}
             {productProgress(product) === 'RUNNING' && load.report.to === today
               ? ' · 오늘까지 집계'

@@ -1,4 +1,6 @@
-import { httpClient } from '@ogonggo/api';
+import { HttpError, httpClient } from '@ogonggo/api';
+import { getAccessToken } from '@/shared/api/authTokens';
+import { handleUnauthorized } from '@/shared/api/reissue';
 import type { AdReport } from '../model/types';
 
 const reportPath = (contractId: number, contractProductId: number) =>
@@ -27,4 +29,37 @@ export async function fetchAdReport(
     `${reportPath(contractId, contractProductId)}${periodQuery(from, to)}`,
   );
   return body.data;
+}
+
+/**
+ * 리포트 CSV(`.../report.csv`, 날짜별·소재별 행)를 받아 파일로 내려받는다. `httpClient` 는 본문을 JSON 으로 읽어서
+ * 여기서는 `fetch` 를 직접 쓰고, 토큰과 401 재발급은 `httpClient` 와 같은 함수를 빌린다.
+ */
+export async function downloadAdReportCsv(
+  contractId: number,
+  contractProductId: number,
+  from: string,
+  to: string,
+  fileName: string,
+): Promise<void> {
+  const url = `${reportPath(contractId, contractProductId)}.csv${periodQuery(from, to)}`;
+  const send = (token: string | null) =>
+    fetch(url, {
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  const sent = getAccessToken();
+  let response = await send(sent);
+  if (response.status === 401 && (await handleUnauthorized(url, sent))) {
+    response = await send(getAccessToken());
+  }
+  if (!response.ok) {
+    throw new HttpError(`GET ${url} failed: ${response.status}`, response.status);
+  }
+  const href = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(href);
 }
