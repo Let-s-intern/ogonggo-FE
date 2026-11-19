@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { enumLabel, HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
@@ -41,61 +41,6 @@ function periodText(product: ReportableProduct): string {
   return product.startDate && product.endDate
     ? `${dotDate(product.startDate)} ~ ${dotDate(product.endDate)}`
     : '기간 미정';
-}
-
-/** 처음 보일 상품. 진행 중인 것, 없으면 리포트를 열 수 있는 것, 그것도 없으면 첫 상품. */
-function initialProduct(products: ReportableProduct[]): number | undefined {
-  const open = products.filter((product) => unavailableReason(product) === null);
-  return (open.find((product) => productProgress(product) === 'RUNNING') ?? open[0] ?? products[0])
-    ?.contractProductId;
-}
-
-function ProductPicker({
-  products,
-  selectedId,
-  onSelect,
-}: {
-  products: ReportableProduct[];
-  selectedId: number | undefined;
-  onSelect: (id: number) => void;
-}) {
-  return (
-    <div role="radiogroup" aria-label="리포트를 볼 상품" className="grid gap-2 sm:grid-cols-2">
-      {products.map((product) => {
-        const progress = productProgress(product);
-        const selected = product.contractProductId === selectedId;
-        return (
-          <button
-            key={product.contractProductId}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onSelect(product.contractProductId)}
-            className={cn(
-              'flex min-w-0 flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors',
-              selected
-                ? 'border-blue-500 bg-blue-50/40 ring-1 ring-blue-500'
-                : 'border-gray-200 hover:border-gray-300',
-            )}
-          >
-            <span className="flex items-center justify-between gap-2">
-              <span className="truncate font-semibold text-gray-900">{product.productName}</span>
-              <span
-                className={cn(
-                  'shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold',
-                  PROGRESS_TONE[progress],
-                )}
-              >
-                {PROGRESS_LABELS[progress]}
-              </span>
-            </span>
-            <span className="truncate text-xs text-gray-500">{productMeta(product)}</span>
-            <span className="text-xs text-gray-500 tabular-nums">{periodText(product)}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 /** 한 상품의 리포트. 기간을 좁히면 다시 받는다. 빈 기간은 백엔드 기본값(상품 기간 전체, 진행 중이면 오늘까지)이다. */
@@ -236,8 +181,9 @@ function ProductReport({
 }
 
 /**
- * 계약 상세의 성과 리포트(PRD 6.6). 상품을 고르고 기간을 좁혀 그 상품 몫의 숫자를 본다. 기간이 없거나 오늘의 공고 밖
- * 채널 상품이면 리포트 대신 이유를 적는다.
+ * 계약 상세의 광고 상품 목록(PRD 6.6, 2026-11-19 사용자 요청). 리포트는 상품별이라 상품 줄을 누르면 그 줄 아래에 그 상품
+ * 리포트가 펼쳐진다. 한 번에 하나만 열리고, 연 상품은 주소의 `?product=` 에 남아 대시보드 카드 링크·뒤로 가기·새로 고침이
+ * 같은 상품을 연다. 열린 줄을 다시 누르면 닫힌다. 리포트가 없는 상품(기간 미정, 채널 상품, 시작 전)은 펼치면 이유를 적는다.
  */
 export function AdReport({
   contractId,
@@ -246,36 +192,101 @@ export function AdReport({
   contractId: number;
   products: ReportableProduct[];
 }) {
-  // 대시보드 카드에서 오면 `?product=<contractProductId>` 로 그 상품을 골라 둔다. 이 계약에 없는 값이면 무시한다.
-  const requested = Number(useSearchParams().get('product'));
-  const [selectedId, setSelectedId] = useState(() =>
-    products.some((p) => p.contractProductId === requested) ? requested : initialProduct(products),
-  );
-  const product = products.find((p) => p.contractProductId === selectedId);
-  const reason = product ? unavailableReason(product) : null;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requested = Number(searchParams.get('product'));
+  const openId = products.some((p) => p.contractProductId === requested) ? requested : null;
+
+  const toggle = (id: number) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (id === openId) next.delete('product');
+    else next.set('product', String(id));
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-3">
       <header>
-        <h2 className="text-lg font-semibold text-gray-950">성과 리포트</h2>
-        <p className="pt-1 text-sm text-gray-500">
-          상품을 고르면 그 상품으로 들어온 숫자를 보여 드려요.
-        </p>
+        <h2 className="text-lg font-semibold text-gray-950">광고 상품</h2>
+        <p className="pt-1 text-sm text-gray-500">상품을 누르면 그 상품의 성과 리포트가 열려요.</p>
       </header>
-      <div data-pdf-hide>
-        <ProductPicker products={products} selectedId={selectedId} onSelect={setSelectedId} />
-      </div>
-      {!product ? null : reason || !product.startDate || !product.endDate ? (
-        <p className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-10 text-center text-sm break-keep text-gray-600">
-          {UNAVAILABLE_MESSAGES[reason ?? 'NO_PERIOD']}
-        </p>
-      ) : (
-        <ProductReport
-          key={product.contractProductId}
-          contractId={contractId}
-          product={{ ...product, startDate: product.startDate, endDate: product.endDate }}
-        />
-      )}
+      <ul className="flex flex-col gap-3">
+        {products.map((product) => {
+          const open = product.contractProductId === openId;
+          const progress = productProgress(product);
+          const reason = unavailableReason(product);
+          const panelId = `product-report-${product.contractProductId}`;
+          return (
+            <li
+              key={product.contractProductId}
+              className={cn(
+                'overflow-hidden rounded-xl border bg-white transition-colors',
+                open ? 'border-blue-300' : 'border-gray-200',
+              )}
+            >
+              <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => toggle(product.contractProductId)}
+                className={cn(
+                  'flex w-full items-center gap-3 px-4 py-4 text-left transition-colors md:px-5',
+                  open ? 'bg-blue-50/40' : 'hover:bg-gray-50',
+                )}
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={cn(
+                        'shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold',
+                        PROGRESS_TONE[progress],
+                      )}
+                    >
+                      {PROGRESS_LABELS[progress]}
+                    </span>
+                    <span className="truncate font-semibold text-gray-900">
+                      {product.productName}
+                    </span>
+                  </span>
+                  <span className="truncate text-xs text-gray-500">
+                    {productMeta(product)} · {periodText(product)}
+                  </span>
+                </span>
+                <span className="hidden shrink-0 text-xs text-gray-500 sm:block">
+                  {reason ? '리포트 없음' : open ? '접기' : '리포트 보기'}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'icon-[lucide--chevron-down] block size-5 shrink-0 text-gray-400 transition-transform',
+                    open && 'rotate-180',
+                  )}
+                />
+              </button>
+              {open ? (
+                <div id={panelId} className="border-t border-gray-100 px-4 py-5 md:px-5">
+                  {reason || !product.startDate || !product.endDate ? (
+                    <p className="rounded-lg bg-gray-50 px-5 py-8 text-center text-sm break-keep text-gray-600">
+                      {UNAVAILABLE_MESSAGES[reason ?? 'NO_PERIOD']}
+                    </p>
+                  ) : (
+                    <ProductReport
+                      contractId={contractId}
+                      product={{
+                        ...product,
+                        startDate: product.startDate,
+                        endDate: product.endDate,
+                      }}
+                    />
+                  )}
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
