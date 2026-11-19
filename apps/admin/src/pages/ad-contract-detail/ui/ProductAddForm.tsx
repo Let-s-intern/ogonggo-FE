@@ -176,6 +176,9 @@ export function ProductAddForm({
           {posting ? '넣고 세팅하기' : '넣기'}
         </Button>
       </div>
+      <p className="-mt-1 text-xs text-gray-500">
+        게시 기간은 데이터 집계 기간이에요. 리포트는 이 기간의 데이터만 보여 줘요.
+      </p>
       {periodInvalid ? (
         <Callout tone="error">게시 시작일은 종료일과 같거나 앞서야 해요.</Callout>
       ) : null}

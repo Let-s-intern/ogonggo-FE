@@ -176,6 +176,9 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
             </div>
           ))}
         </dl>
+        <p className="mt-2 text-xs text-gray-500">
+          광고 기간은 상품의 게시 기간이에요. 리포트는 게시 기간 동안의 데이터만 집계돼요.
+        </p>
       </section>
 
       {/* 운영자가 상품을 붙인 계약만 성과가 있다. 합칠 상품이 없으면 합계는 스스로 숨는다. */}

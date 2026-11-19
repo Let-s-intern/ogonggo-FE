@@ -148,6 +148,9 @@ function ProductReport({
           {exportButton('csv', 'CSV')}
         </div>
       </div>
+      <p data-pdf-hide className="text-xs text-gray-500">
+        게시 기간 동안의 데이터만 집계돼요.
+      </p>
       {exportFailed ? (
         <p role="alert" data-pdf-hide className="text-sm text-error">
           파일을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.

@@ -290,6 +290,11 @@ export function BannerFormModal({
         </Field>
       </div>
 
+      <p className="-mt-2 pb-4 text-xs text-gray-500">
+        노출 기간은 광고가 실제로 화면에 보이는 기간이에요. 리포트는 계약 상품의 게시 기간 데이터만
+        집계해요.
+      </p>
+
       {exposure && orderIndex >= 0 ? (
         <div className="flex items-center gap-2 pb-4 text-sm text-gray-700">
           <span>
