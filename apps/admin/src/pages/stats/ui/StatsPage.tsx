@@ -8,6 +8,7 @@ import {
   useKpiQuery,
 } from '@/entities/kpi';
 import type { RedashRow } from '@/shared/api/redash';
+import { exportPdf } from '@/shared/lib/exportPdf';
 import { EChart } from '@/shared/ui/EChart';
 import { PageHeader } from '@/widgets/page-header';
 import {
@@ -17,7 +18,6 @@ import {
   sortByX,
   timeSeriesOption,
 } from '../lib/chartOptions';
-import { exportStatsPdf } from '../lib/exportPdf';
 import { useKpiFilters } from '../lib/useKpiFilters';
 import { KpiFilterBar } from './KpiFilterBar';
 import { MetricTile } from './MetricTile';
@@ -153,7 +153,7 @@ export function StatsPage() {
     const { start, end } = resolveDateRange(filters);
     setIsExporting(true);
     try {
-      await exportStatsPdf(rootRef.current, `오공고-통계-${start}_${end}.pdf`);
+      await exportPdf(rootRef.current, `오공고-통계-${start}_${end}.pdf`);
     } finally {
       setIsExporting(false);
     }

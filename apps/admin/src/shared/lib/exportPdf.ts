@@ -1,5 +1,6 @@
 /**
- * 통계 화면을 A4 가로 PDF 로 내려받는다. 서버 없이 브라우저에서 화면을 그림으로 떠서 페이지로 나눈다.
+ * 화면의 한 영역을 A4 가로 PDF 로 내려받는다. 통계 화면과 광고 계약 리포트가 쓴다. 서버 없이 브라우저에서
+ * 화면을 그림으로 떠서 페이지로 나눈다.
  *
  * 그림으로 뜨는 이유: jsPDF 로 글자를 직접 쓰려면 한글 글꼴 파일을 PDF 에 넣어야 하고, 차트도 다시
  * 그려야 한다. 화면을 그대로 뜨면 보이는 그대로 나온다. 대신 PDF 안의 글자는 선택·검색되지 않는다.
@@ -18,7 +19,7 @@ const PIXEL_RATIO = 2;
 /** 나눌 자리가 이보다 위에 있으면 쓰지 않고 그냥 자른다. 한 페이지가 거의 빈 채로 넘어가는 것을 막는다. */
 const MIN_PAGE_FILL = 0.4;
 
-export async function exportStatsPdf(root: HTMLElement, fileName: string): Promise<void> {
+export async function exportPdf(root: HTMLElement, fileName: string): Promise<void> {
   const [{ toCanvas }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
 
   const rootTop = root.getBoundingClientRect().top;

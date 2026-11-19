@@ -48,6 +48,7 @@ import { productLabel } from '@/entities/advertisement-product/lib/product';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
+import { ContractReportCard } from './ContractReportCard';
 import { ContractTargetsCard } from './ContractTargetsCard';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
@@ -107,6 +108,7 @@ export function AdContractDetailPage() {
           </div>
         </div>
         <ProductsCard contract={contract} />
+        <ContractReportCard contract={contract} />
         <ContractTargetsCard contract={contract} />
         <ExposuresCard contract={contract} />
       </div>
