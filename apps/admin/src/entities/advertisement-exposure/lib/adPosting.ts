@@ -14,7 +14,10 @@ import type { AdvertisementExposure } from '../api/useAdvertisementExposures';
  */
 export type { AdPostingPosition };
 
-/** 판매 상품 차례(계약 8절, 공고 상세 옆은 2026-11-19 사용자 결정으로 남김). 광고 공고 세팅 탭이 이 차례다. */
+/**
+ * 판매 상품 차례(계약 8절, 공고 상세 옆은 2026-11-19 사용자 결정으로 남김). 부트캠프 상세 옆·마이페이지 스크랩 부트캠프 칸은
+ * 계약 11절(BE LC-3652)이다. 광고 공고 세팅 탭이 이 차례다.
+ */
 export const AD_POSTING_POSITIONS: readonly AdPostingPosition[] = [
   'JOB_PICK',
   'JOB_LIST',
@@ -22,6 +25,8 @@ export const AD_POSTING_POSITIONS: readonly AdPostingPosition[] = [
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
   'BOOTCAMP_LIST',
+  'BOOTCAMP_DETAIL_SIDE',
+  'BOOTCAMP_MYPAGE_SCRAP',
 ];
 
 export const AD_POSTING_POSITION_LABELS: Record<AdPostingPosition, string> = {
@@ -31,6 +36,8 @@ export const AD_POSTING_POSITION_LABELS: Record<AdPostingPosition, string> = {
   CALENDAR_DAY: '공고 달력',
   MYPAGE_SCRAP: '마이페이지 스크랩',
   BOOTCAMP_LIST: '부트캠프 목록 상단 고정',
+  BOOTCAMP_DETAIL_SIDE: '부트캠프 상세 옆',
+  BOOTCAMP_MYPAGE_SCRAP: '마이페이지 스크랩 부트캠프',
 };
 
 export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string> = {
@@ -46,9 +53,13 @@ export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string>
     '마이페이지 지원 관리 보드(PC 보드 보기)의 채용공고 스크랩 칸 맨 앞 칸. 모바일 리스트 보기에는 없습니다.',
   BOOTCAMP_LIST:
     '부트캠프 목록 전체 탭 1페이지 맨 앞 칸. 일반 카드와 같은 모양에 광고 표시가 붙고, 많아야 3칸입니다. 대상은 부트캠프입니다.',
+  BOOTCAMP_DETAIL_SIDE:
+    '부트캠프 상세 오른쪽 사이드바 맨 위 카드. 개수 제한 없이 이 순서대로 쌓이고, 지금 보는 부트캠프는 빠집니다. 좁은 화면에서는 본문 아래로 내려갑니다. 대상은 부트캠프입니다.',
+  BOOTCAMP_MYPAGE_SCRAP:
+    '마이페이지 지원 관리 보드(PC 보드 보기)의 부트캠프 스크랩 칸 맨 앞 칸. 모바일 리스트 보기에는 없습니다. 대상은 부트캠프입니다.',
 };
 
-/** 광고 공고 자리는 채용공고만 걸 수 있다(계약 8절). 부트캠프 목록 상단 고정만 부트캠프다. */
+/** 광고 공고 자리는 채용공고만 걸 수 있다(계약 8절). 부트캠프 세 자리만 부트캠프다(계약 11절). */
 export const AD_POSTING_FIXED_TARGET: Record<AdPostingPosition, 'JOB' | 'BOOTCAMP' | undefined> = {
   JOB_PICK: 'JOB',
   JOB_LIST: 'JOB',
@@ -56,6 +67,8 @@ export const AD_POSTING_FIXED_TARGET: Record<AdPostingPosition, 'JOB' | 'BOOTCAM
   CALENDAR_DAY: 'JOB',
   MYPAGE_SCRAP: 'JOB',
   BOOTCAMP_LIST: 'BOOTCAMP',
+  BOOTCAMP_DETAIL_SIDE: 'BOOTCAMP',
+  BOOTCAMP_MYPAGE_SCRAP: 'BOOTCAMP',
 };
 
 /**

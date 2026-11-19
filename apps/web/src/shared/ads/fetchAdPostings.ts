@@ -11,7 +11,8 @@ import type { AdSlot } from './adPosting';
  * 광고 공고 자리(PRD 6.8, D12). 백엔드 `AdvertisementProductPosition` 에 더해지는 값이다. `JOB_PICK` 은 홈 히어로
  * `오공고 PICK` 탭, `CALENDAR_DAY` 는 공고 달력 날짜별 목록, `MYPAGE_SCRAP` 은 마이페이지 지원 관리 보드의 채용공고
  * 스크랩 칸, `JOB_DETAIL_SIDE` 는 공고 상세 옆 추천, `BOOTCAMP_LIST` 는 부트캠프 목록 상단 고정(대상은 부트캠프)이다
- * (계약 7·8절, 2026-11-19 사용자 결정).
+ * (계약 7·8절, 2026-11-19 사용자 결정). `BOOTCAMP_DETAIL_SIDE` 는 부트캠프 상세 옆, `BOOTCAMP_MYPAGE_SCRAP` 은 마이페이지 지원
+ * 관리 보드의 부트캠프 스크랩 칸이고 대상은 부트캠프다(계약 11절, BE LC-3652).
  */
 export type AdPostingPosition =
   | 'JOB_LIST'
@@ -19,7 +20,9 @@ export type AdPostingPosition =
   | 'JOB_DETAIL_SIDE'
   | 'CALENDAR_DAY'
   | 'MYPAGE_SCRAP'
-  | 'BOOTCAMP_LIST';
+  | 'BOOTCAMP_LIST'
+  | 'BOOTCAMP_DETAIL_SIDE'
+  | 'BOOTCAMP_MYPAGE_SCRAP';
 
 /**
  * 광고 공고 한 칸. `targetType` 이 `JOB` 이면 `job`, `BOOTCAMP` 면 `bootcamp` 가 찬다. 응답 모양은

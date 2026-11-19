@@ -13,6 +13,7 @@ import {
   type SuccessResponsePageResponseUserBootcampSummaryResponse,
   type SuccessResponsePageResponseUserJobSummaryResponse,
   type SuccessResponseRecruitmentPostApplicationPageResponse,
+  type UserBootcampSummaryResponse,
   type UserJobSummaryResponse,
 } from '@ogonggo/api';
 import {
@@ -195,24 +196,29 @@ async function fetchBootcampStage(
   const page = response.data;
   return {
     pageInfo: page?.pageInfo ?? emptyPageInfo(params),
-    items: (page?.items ?? []).map((bootcamp) => ({
-      id: bootcamp.id,
-      key: `bootcamp-${bootcamp.id}`,
-      href: `/bootcamps/${bootcamp.id}`,
-      thumbnailUrl: bootcamp.representativeImageUrl,
-      caption: bootcamp.companyName,
-      title: bootcamp.title,
-      meta: [
-        bootcamp.programType,
-        BOOTCAMP_OPERATION_TYPE_LABELS[bootcamp.operationType],
-        TUITION_TYPE_LABELS[bootcamp.tuitionType],
-      ].filter((part): part is string => Boolean(part)),
-      recruitmentType: bootcamp.recruitmentType,
-      recruitmentEndAt: bootcamp.recruitmentEndAt,
-      closedAt: bootcamp.closedAt,
-      activityStartDate: bootcamp.programStartDate,
-      activityEndDate: bootcamp.programEndDate,
-    })),
+    items: (page?.items ?? []).map(toBootcampBoardItem),
+  };
+}
+
+/** 부트캠프 한 건을 보드 카드 값으로. 스크랩 칸의 광고 공고 카드도 같은 값으로 그린다. */
+export function toBootcampBoardItem(bootcamp: UserBootcampSummaryResponse): ApplicationBoardItem {
+  return {
+    id: bootcamp.id,
+    key: `bootcamp-${bootcamp.id}`,
+    href: `/bootcamps/${bootcamp.id}`,
+    thumbnailUrl: bootcamp.representativeImageUrl,
+    caption: bootcamp.companyName,
+    title: bootcamp.title,
+    meta: [
+      bootcamp.programType,
+      BOOTCAMP_OPERATION_TYPE_LABELS[bootcamp.operationType],
+      TUITION_TYPE_LABELS[bootcamp.tuitionType],
+    ].filter((part): part is string => Boolean(part)),
+    recruitmentType: bootcamp.recruitmentType,
+    recruitmentEndAt: bootcamp.recruitmentEndAt,
+    closedAt: bootcamp.closedAt,
+    activityStartDate: bootcamp.programStartDate,
+    activityEndDate: bootcamp.programEndDate,
   };
 }
 

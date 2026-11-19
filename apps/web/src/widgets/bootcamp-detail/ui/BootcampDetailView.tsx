@@ -17,6 +17,7 @@ import { BootcampDetailBreadcrumb } from './BootcampDetailBreadcrumb';
 import { BootcampDetailHeaderCard, formatDeadlineText } from './BootcampDetailHeaderCard';
 import { BootcampInfoGrid } from './BootcampInfoGrid';
 import { BootcampPhotos } from './BootcampPhotos';
+import { SideAdBootcamps } from './SideAdBootcamps';
 import { SimilarBootcamps } from './SimilarBootcamps';
 
 export interface BootcampDetailViewProps {
@@ -170,6 +171,11 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
               }
             />
           </StickyApplyBar>
+          {/* 광고 공고 자리(`BOOTCAMP_DETAIL_SIDE`, 계약 11절). 신청 버튼 바로 아래 사이드바 맨 위이고, 좁은 화면에서는
+              사이드바째 본문 아래로 내려간다. 보일 광고가 없으면 띠까지 숨는다. */}
+          <DetailSidebarSection>
+            <SideAdBootcamps excludeBootcampId={bootcamp.id} />
+          </DetailSidebarSection>
           <DetailSidebarSection>
             <BootcampRecommendedChallenges />
           </DetailSidebarSection>

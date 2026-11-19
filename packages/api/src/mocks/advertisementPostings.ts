@@ -10,7 +10,8 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * 광고 공고 공개 조회(`GET /api/v1/advertisement-exposures/postings?position=`, BE Push 5). 모양은
  * `.claude/tasks/memos/광고-리포트-API-계약-2026-11-19.md` 2절이다. 코드젠 전이라 응답 타입은 아래에 손으로 적는다.
  *
- * 대상은 기존 목 공고·부트캠프다. 부트캠프 목록 상단 고정만 부트캠프이고 나머지는 채용공고다.
+ * 대상은 기존 목 공고·부트캠프다. 부트캠프 세 자리(`BOOTCAMP_LIST`·`BOOTCAMP_DETAIL_SIDE`·`BOOTCAMP_MYPAGE_SCRAP`)는 부트캠프이고
+ * 나머지는 채용공고다.
  * - `JOB_LIST`: 리스트 상단 고정. 웹 직무 칩 다섯 직군마다 하나씩 둔다. `jobField` 를 빼면 `전체` 탭 노출(직무 없음)을
  *   준다(계약 10절). `전체` 탭에는 기획·전략 탭과 같은 공고 653 을 둬, 한 공고를 두 탭에 건 모습을 본다.
  *   세일즈의 공고 683 은 그 탭 첫 쪽에도 있는 공고라 웹이 일반 목록에서 빼는지 본다. IT·개발에는 둘을 둬 웹이 첫 건만
@@ -21,6 +22,8 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * - `BOOTCAMP_LIST`: 부트캠프 목록 상단 고정, 대상은 부트캠프. 넷을 둬 웹이 세 칸만 쓰는지 본다. 부트캠프 23 은 목록 첫 쪽에도
  *   있어 일반 목록에서 빠지는지 본다.
  * - `MYPAGE_SCRAP`: 마이페이지 지원 관리 보드(칸반)의 채용공고 스크랩 칸 맨 앞. 브라우저 목 워커가 받는다.
+ * - `BOOTCAMP_DETAIL_SIDE`: 부트캠프 상세 옆(계약 11절). 부트캠프 9 를 둬 `/bootcamps/9` 에서는 빠지는지 본다.
+ * - `BOOTCAMP_MYPAGE_SCRAP`: 마이페이지 보드의 부트캠프 스크랩 칸 맨 앞(계약 11절). 브라우저 목 워커가 받는다.
  * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 운영자 PICK 처럼 추천 문구 두 칸이 있다(계약 9절). 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
  *
  * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·53·72·82·62·43)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
@@ -35,7 +38,9 @@ export type AdPostingPosition =
   | 'JOB_DETAIL_SIDE'
   | 'CALENDAR_DAY'
   | 'MYPAGE_SCRAP'
-  | 'BOOTCAMP_LIST';
+  | 'BOOTCAMP_LIST'
+  | 'BOOTCAMP_DETAIL_SIDE'
+  | 'BOOTCAMP_MYPAGE_SCRAP';
 
 export interface AdPostingResponse {
   exposureId: number;
@@ -63,6 +68,8 @@ const POSITIONS: readonly string[] = [
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
   'BOOTCAMP_LIST',
+  'BOOTCAMP_DETAIL_SIDE',
+  'BOOTCAMP_MYPAGE_SCRAP',
 ];
 
 const SEED: {
@@ -177,6 +184,20 @@ const SEED: {
   },
   { exposureId: 81, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 698, adLabel: true },
   { exposureId: 82, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 693, adLabel: false },
+  {
+    exposureId: 91,
+    position: 'BOOTCAMP_DETAIL_SIDE',
+    targetType: 'BOOTCAMP',
+    targetId: 9,
+    adLabel: true,
+  },
+  {
+    exposureId: 95,
+    position: 'BOOTCAMP_MYPAGE_SCRAP',
+    targetType: 'BOOTCAMP',
+    targetId: 4,
+    adLabel: true,
+  },
   {
     exposureId: 61,
     position: 'JOB_PICK',
