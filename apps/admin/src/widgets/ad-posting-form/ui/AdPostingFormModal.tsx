@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Button, Callout, Field, Input, Modal } from '@ogonggo/ui';
+import { Button, Callout, Field, Input, Modal, Select } from '@ogonggo/ui';
 import {
+  useAdvertisementExposures,
   useCreateExposure,
+  useMoveExposure,
   useReplaceExposure,
+  useToggleExposure,
 } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
   AD_POSTING_FIXED_TARGET,
@@ -28,13 +31,27 @@ interface AdPostingFormModalProps {
   /** 이 자리에 이미 건 대상(`targetKey`). 같은 자리에 같은 공고를 두 번 걸 수 없다(BE 409). */
   takenKeys: Set<string>;
   onClose: () => void;
+  /** 새 광고 공고의 연결 계약을 미리 채운다(계약 상세에서 열 때). */
+  initialContract?: { id: number; companyName: string };
+  /** 새 광고 공고의 대상을 미리 채운다(계약의 광고할 공고). 바꿀 수 있다. */
+  initialTarget?: ContentTarget | null;
+  /** 새 광고 공고의 노출 기간(`datetime-local` 값). 계약 상품 기간이다. */
+  initialPeriod?: { startAt: string; endAt: string };
+  /**
+   * 넘기면 새 광고 공고에 `광고할 공고로 등록` 체크(기본 켬)가 나오고, 저장한 뒤 그 대상을 계약의 광고할 공고로 연결한다.
+   * 계약 상세에서 열 때만 넘긴다.
+   */
+  onRegisterTarget?: (target: ContentTarget) => Promise<void>;
+  /** 같은 계약·상품의 노출이 여럿일 때 수정 모달 안에서 고른다. */
+  siblings?: AdPostingExposure[];
+  onSwitch?: (exposure: AdPostingExposure) => void;
 }
 
 /** `datetime-local` 값과 서버 값(KST, 초까지)을 오간다. 배너 모달과 같다. */
 const toInputValue = (value: string | null | undefined) => (value ? value.slice(0, 16) : '');
 const toServerValue = (value: string) => (value ? `${value}:00` : null);
 
-function initialTarget(exposure: AdPostingExposure | null): ContentTarget | null {
+function targetOf(exposure: AdPostingExposure | null): ContentTarget | null {
   if (!exposure?.targetType || exposure.targetId == null) return null;
   return {
     targetType: exposure.targetType,
@@ -48,7 +65,8 @@ function initialTarget(exposure: AdPostingExposure | null): ContentTarget | null
  * 광고 공고 등록·수정 모달(PRD 6.8). 배너 모달(`widgets/banner-form`)과 같은 모양이고, 이미지·링크 대신 띄울 공고·부트캠프를
  * 검색해 고른다. 카드는 웹이 대상 요약으로 그린다.
  *
- * 수정은 `PUT` 전체 교체라 모든 칸을 다시 보낸다. 켜짐은 표의 스위치로만 바꾼다.
+ * 수정은 `PUT` 전체 교체라 모든 칸을 다시 보낸다. 켜기는 교체 본문에 칸이 없어 바뀌었을 때만 따로 보낸다. 순서는 수정할 때
+ * 한 칸씩 바로 옮긴다(배너 세팅의 위로·아래로와 같다).
  */
 export function AdPostingFormModal({
   product,
@@ -56,21 +74,45 @@ export function AdPostingFormModal({
   exposure,
   takenKeys,
   onClose,
+  initialContract,
+  initialTarget,
+  initialPeriod,
+  onRegisterTarget,
+  siblings = [],
+  onSwitch,
 }: AdPostingFormModalProps) {
   const createMutation = useCreateExposure();
   const replaceMutation = useReplaceExposure(exposure?.id ?? 0);
   const saveMutation = exposure ? replaceMutation : createMutation;
-  const [target, setTarget] = useState<ContentTarget | null>(() => initialTarget(exposure));
-  const [contractId, setContractId] = useState<number | null>(exposure?.contractId ?? null);
-  const [startAt, setStartAt] = useState(toInputValue(exposure?.startAt));
-  const [endAt, setEndAt] = useState(toInputValue(exposure?.endAt));
+  const toggle = useToggleExposure(exposure?.id ?? 0);
+  const move = useMoveExposure();
+  // 순서는 자리 전체에서 정해진다. 수정할 때 몇 번째인지 보이고 한 칸씩 옮긴다.
+  const allInProduct = useAdvertisementExposures(exposure ? product.id : null);
+  const orderIndex = exposure
+    ? (allInProduct.data ?? []).findIndex((row) => row.id === exposure.id)
+    : -1;
+  const orderTotal = allInProduct.data?.length ?? 0;
+  const [target, setTarget] = useState<ContentTarget | null>(() =>
+    exposure ? targetOf(exposure) : (initialTarget ?? null),
+  );
+  const [contractId, setContractId] = useState<number | null>(
+    exposure ? (exposure.contractId ?? null) : (initialContract?.id ?? null),
+  );
+  const [startAt, setStartAt] = useState(
+    exposure ? toInputValue(exposure.startAt) : (initialPeriod?.startAt ?? ''),
+  );
+  const [endAt, setEndAt] = useState(
+    exposure ? toInputValue(exposure.endAt) : (initialPeriod?.endAt ?? ''),
+  );
+  const [registerTarget, setRegisterTarget] = useState(true);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   // 광고 공고는 돈을 받고 싣는 자리라 광고 표시를 켠 채로 시작한다.
   const [adLabel, setAdLabel] = useState(exposure?.adLabel ?? true);
-  const [exposed, setExposed] = useState(true);
+  const [exposed, setExposed] = useState(exposure?.exposed ?? true);
   const [submitted, setSubmitted] = useState(false);
 
   // 수정 중인 노출 자신의 대상은 다시 골라도 된다.
-  const ownKey = exposure ? initialTarget(exposure) : null;
+  const ownKey = exposure ? targetOf(exposure) : null;
   const blocked = new Set([...takenKeys].filter((key) => !ownKey || key !== targetKey(ownKey)));
 
   const errors = submitted
@@ -101,9 +143,33 @@ export function AdPostingFormModal({
       endAt: toServerValue(endAt),
     };
     if (exposure) {
-      replaceMutation.mutate(body, { onSuccess: onClose });
+      replaceMutation.mutate(body, {
+        onSuccess: async () => {
+          // 켜기는 교체 본문에 칸이 없어 바뀌었을 때만 따로 보낸다.
+          if (exposed !== exposure.exposed) await toggle.mutateAsync(exposed);
+          onClose();
+        },
+      });
     } else {
-      createMutation.mutate({ ...body, productId: product.id, exposed }, { onSuccess: onClose });
+      createMutation.mutate(
+        { ...body, productId: product.id, exposed },
+        {
+          onSuccess: async () => {
+            if (onRegisterTarget && registerTarget) {
+              try {
+                await onRegisterTarget(target);
+              } catch (failure) {
+                // 노출은 저장됐다. 연결만 실패했다고 알리고 모달은 닫지 않는다.
+                setRegisterError(
+                  advertisementErrorMessage(failure, '광고할 공고로 연결하지 못했어요.'),
+                );
+                return;
+              }
+            }
+            onClose();
+          },
+        },
+      );
     }
   };
 
@@ -122,6 +188,32 @@ export function AdPostingFormModal({
             '저장하지 못했습니다. 입력값을 확인해 주세요.',
           )}
         </Callout>
+      ) : null}
+      {registerError ? (
+        <Callout tone="error" className="mb-4">
+          광고 공고는 저장했지만 {registerError} 계약 정보의 광고할 공고에서 다시 연결해 주세요.
+        </Callout>
+      ) : null}
+
+      {exposure && siblings.length > 1 && onSwitch ? (
+        <Field
+          label="수정할 노출"
+          htmlFor="ad-posting-sibling"
+          hint={`이 계약·상품의 노출이 ${siblings.length}개예요.`}
+        >
+          <Select
+            id="ad-posting-sibling"
+            options={siblings.map((sibling, index) => ({
+              value: String(sibling.id),
+              label: `${index + 1}. ${sibling.targetTitle ?? `${sibling.targetId}번`}`,
+            }))}
+            value={String(exposure.id)}
+            onChange={(event) => {
+              const next = siblings.find((sibling) => String(sibling.id) === event.target.value);
+              if (next) onSwitch(next);
+            }}
+          />
+        </Field>
       ) : null}
 
       <Field label="띄울 공고" required error={errors.target}>
@@ -152,7 +244,11 @@ export function AdPostingFormModal({
       <ContractField
         id="ad-posting-contract"
         value={contractId}
-        currentCompanyName={exposure?.advertiserCompanyName ?? null}
+        currentCompanyName={
+          exposure
+            ? (exposure.advertiserCompanyName ?? null)
+            : (initialContract?.companyName ?? null)
+        }
         onChange={setContractId}
         hint="돈을 받고 싣는 광고 공고는 그 광고 계약을 고릅니다. 계약 리포트의 광고 카드 숫자가 이 연결로 모입니다."
       />
@@ -176,17 +272,49 @@ export function AdPostingFormModal({
         </Field>
       </div>
 
+      {exposure && orderIndex >= 0 ? (
+        <div className="flex items-center gap-2 pb-4 text-sm text-gray-700">
+          <span>
+            순서 {orderIndex + 1} / {orderTotal}
+          </span>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={move.isPending || orderIndex === 0}
+            onClick={() => move.mutate({ exposureId: exposure.id, direction: 'UP' })}
+          >
+            위로
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={move.isPending || orderIndex === orderTotal - 1}
+            onClick={() => move.mutate({ exposureId: exposure.id, direction: 'DOWN' })}
+          >
+            아래로
+          </Button>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-x-6 gap-y-2 pb-4">
-        {exposure ? null : (
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={exposed}
+            onChange={(event) => setExposed(event.target.checked)}
+          />
+          켜기
+        </label>
+        {!exposure && onRegisterTarget ? (
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
-              checked={exposed}
-              onChange={(event) => setExposed(event.target.checked)}
+              checked={registerTarget}
+              onChange={(event) => setRegisterTarget(event.target.checked)}
             />
-            켜기
+            광고할 공고로 등록(계약 정보의 광고할 공고에 들어가요)
           </label>
-        )}
+        ) : null}
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input
             type="checkbox"

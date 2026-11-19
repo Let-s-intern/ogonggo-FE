@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
+import { HttpError } from '@ogonggo/api';
 import {
   Badge,
   Button,
@@ -33,7 +34,17 @@ import {
 } from '@/entities/advertisement-contract/lib/contract';
 import { reportProductsOf } from '@/entities/advertisement-contract/api/useContractReport';
 import type { AdvertisementExposure } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
-import type { AdPostingExposure } from '@/entities/advertisement-exposure/lib/adPosting';
+import { useAdvertisementExposures } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
+import {
+  AD_POSTING_FIXED_TARGET,
+  isAdPostingPosition,
+  type AdPostingExposure,
+  type AdPostingPosition,
+} from '@/entities/advertisement-exposure/lib/adPosting';
+import {
+  targetsOf,
+  useAddContractTarget,
+} from '@/entities/advertisement-contract/api/useContractTargets';
 import { businessNumberOf } from '@/entities/member/model/companySignupInfo';
 import {
   type BannerPosition,
@@ -47,7 +58,9 @@ import {
   useAdvertisementProducts,
 } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
+import { AdPostingFormModal } from '@/widgets/ad-posting-form';
 import { BannerFormModal } from '@/widgets/banner-form';
+import { targetKey, type ContentTarget } from '@/widgets/content-target-picker';
 import { PageHeader } from '@/widgets/page-header';
 import { ProductReportModal, reportCellLabel, unavailableMessage } from './ProductReportModal';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
@@ -55,6 +68,20 @@ import { AdTargetsField } from './AdTargetsField';
 import { ProductAddForm } from './ProductAddForm';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
+
+/** 계약 상품 행에서 연 광고 공고 모달. `exposure` 가 `null` 이면 새로 건다. */
+interface PostingEdit {
+  product: AdvertisementProduct;
+  position: AdPostingPosition;
+  row: AdminAdvertisementContractProductResponse;
+  exposure: AdPostingExposure | null;
+}
+
+/** `YYYY-MM-DD` 다음 날. 광고 공고 노출 끝은 상품 종료일 다음 날 00:00(KST)이다. */
+function nextDay(date: string): string {
+  const time = Date.parse(`${date}T00:00:00Z`) + 24 * 60 * 60 * 1000;
+  return new Date(time).toISOString().slice(0, 10);
+}
 
 /** 배너 자리가 있는 상품만 노출을 걸 수 있다. 인스타·카카오·광고 공고 상품은 자리가 없다. */
 const isBannerProduct = (product: AdvertisementProduct): product is BannerProduct =>
@@ -530,6 +557,41 @@ function ProductsCard({
   };
   const remove = useRemoveContractProduct(contract.id);
   const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
+  const [postingEdit, setPostingEdit] = useState<PostingEdit | null>(null);
+  const contractExposures = useContractExposures(
+    contract.id,
+    contract.products.map((product) => product.productId),
+  );
+  // 열린 광고 공고 모달의 자리 전체 노출. 같은 자리에 같은 공고를 두 번 고르지 못하게 막는다.
+  const postingSiblings = useAdvertisementExposures(postingEdit?.product.id ?? null);
+  const addTarget = useAddContractTarget(contract.id);
+
+  /** 광고 공고 자리가 있는 상품만 노출을 걸 수 있다. `비즈니스 공고 등록` 처럼 자리가 없는 광고 공고 상품은 제외. */
+  const postingProductOf = (row: AdminAdvertisementContractProductResponse) => {
+    if (row.productDeleted) return null;
+    const product = products.data?.find((candidate) => candidate.id === row.productId);
+    const position = String(product?.position ?? '');
+    return product && product.category === 'JOB_POSTING' && isAdPostingPosition(position)
+      ? { product, position }
+      : null;
+  };
+
+  /** 이 계약 상품에 걸린 노출. 같은 상품을 기간을 나눠 두 번 붙였으면 기간이 겹치는 것만. */
+  const exposuresOf = (row: AdminAdvertisementContractProductResponse): AdPostingExposure[] =>
+    contractExposures.data.filter(
+      (exposure) =>
+        exposure.productId === row.productId &&
+        (!row.startDate ||
+          !row.endDate ||
+          ((!exposure.startAt || exposure.startAt.slice(0, 10) <= row.endDate) &&
+            (!exposure.endAt || exposure.endAt.slice(0, 10) >= row.startDate))),
+    );
+
+  /** 새 광고 공고 모달의 기본 대상: 계약의 광고할 공고 중 그 자리에 걸 수 있는 첫 번째(공고 등록 계약이면 자동 대상). */
+  const defaultTarget = (position: AdPostingPosition): ContentTarget | null => {
+    const fixed = AD_POSTING_FIXED_TARGET[position];
+    return targetsOf(contract).find((target) => !fixed || target.targetType === fixed) ?? null;
+  };
 
   const bannerProductOf = (row: AdminAdvertisementContractProductResponse) => {
     if (row.productDeleted) return null;
@@ -597,6 +659,8 @@ function ProductsCard({
       width: 'w-44',
       render: (row) => {
         const banner = bannerProductOf(row);
+        const posting = postingProductOf(row);
+        const postingExposures = posting ? exposuresOf(row) : [];
         return (
           // 행 전체가 리포트를 여는 자리라 버튼 클릭은 여기서 멈춘다.
           <span className="flex items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
@@ -607,6 +671,26 @@ function ProductsCard({
                 onClick={() => setBannerProduct(banner)}
               >
                 배너 등록
+              </Button>
+            ) : null}
+            {posting ? (
+              <Button
+                size="sm"
+                aria-label={`${row.productName} ${postingExposures.length > 0 ? '공고 수정' : '공고 등록'}`}
+                onClick={() =>
+                  setPostingEdit({
+                    ...posting,
+                    row,
+                    exposure: postingExposures[0] ?? null,
+                  })
+                }
+              >
+                {postingExposures.length > 0 ? '공고 수정' : '공고 등록'}
+                {postingExposures.length > 1 ? (
+                  <span className="ml-1 rounded-full bg-white/25 px-1.5 text-[11px]">
+                    {postingExposures.length}
+                  </span>
+                ) : null}
               </Button>
             ) : null}
             <Button
@@ -663,6 +747,48 @@ function ProductsCard({
           exposure={null}
           initialContract={{ id: contract.id, companyName: contract.companyName }}
           onClose={() => setBannerProduct(null)}
+        />
+      ) : null}
+      {postingEdit ? (
+        <AdPostingFormModal
+          key={`${postingEdit.row.contractProductId}-${postingEdit.exposure?.id ?? 'new'}`}
+          product={postingEdit.product}
+          position={postingEdit.position}
+          exposure={postingEdit.exposure}
+          takenKeys={
+            new Set(
+              (postingSiblings.data ?? []).flatMap((row) =>
+                row.targetType && row.targetId != null
+                  ? [targetKey({ targetType: row.targetType, targetId: row.targetId })]
+                  : [],
+              ),
+            )
+          }
+          initialContract={{ id: contract.id, companyName: contract.companyName }}
+          initialTarget={defaultTarget(postingEdit.position)}
+          initialPeriod={
+            postingEdit.row.startDate && postingEdit.row.endDate
+              ? {
+                  startAt: `${postingEdit.row.startDate}T00:00`,
+                  endAt: `${nextDay(postingEdit.row.endDate)}T00:00`,
+                }
+              : undefined
+          }
+          onRegisterTarget={async (target) => {
+            try {
+              await addTarget.mutateAsync({
+                targetType: target.targetType,
+                targetId: target.targetId,
+              });
+            } catch (failure) {
+              // 이미 광고할 공고면 할 일이 끝난 것이다.
+              if (failure instanceof HttpError && failure.status === 409) return;
+              throw failure;
+            }
+          }}
+          siblings={exposuresOf(postingEdit.row)}
+          onSwitch={(exposure) => setPostingEdit({ ...postingEdit, exposure })}
+          onClose={() => setPostingEdit(null)}
         />
       ) : null}
     </Card>
