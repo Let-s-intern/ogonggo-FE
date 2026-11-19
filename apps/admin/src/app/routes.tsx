@@ -3,6 +3,7 @@ import { AdminLayout } from '@/widgets/admin-layout';
 import { AdContractDetailPage } from '@/pages/ad-contract-detail';
 import { AdContractListPage } from '@/pages/ad-contract-list';
 import { AdInquiryListPage } from '@/pages/ad-inquiry-list';
+import { AdPostingSettingsPage } from '@/pages/ad-posting-settings';
 import { AdProductListPage } from '@/pages/ad-product-list';
 import { BannerSettingsPage } from '@/pages/banner-settings';
 import { BootcampDetailPage } from '@/pages/bootcamp-detail';
@@ -119,6 +120,7 @@ export const router = createBrowserRouter([
       },
       { path: 'business/advertisement-products', element: <AdProductListPage /> },
       { path: 'business/banners', element: <BannerSettingsPage /> },
+      { path: 'business/ad-postings', element: <AdPostingSettingsPage /> },
 
       { path: 'placements/pick-jobs', element: <TodayJobsPage /> },
       { path: 'placements/recommend-weights', element: <RecommendWeightsPage /> },

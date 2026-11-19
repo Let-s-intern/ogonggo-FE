@@ -111,6 +111,8 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { path: '/business/advertisement-products', label: '광고 상품' },
       { path: '/business/banners', label: '배너 세팅' },
+      // 목록·상세 옆 광고 카드 자리(PRD prd-business-report.md 6.8). 배너 세팅과 같은 모양이다.
+      { path: '/business/ad-postings', label: '광고 공고 세팅' },
       { path: '/placements/company-priority', label: '기업회원 공고 우선 노출' },
     ],
   },

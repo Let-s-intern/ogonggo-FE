@@ -9,6 +9,8 @@ interface ContractFieldProps {
   /** 지금 이어 둔 계약의 회사명(노출 응답의 `advertiserCompanyName`). 검색 결과에 없어도 고른 값을 보이려고 쓴다. */
   currentCompanyName: string | null;
   onChange: (contractId: number | null) => void;
+  /** 칸 아래 안내. 광고 공고 모달이 자기 말로 바꾼다. */
+  hint?: string;
 }
 
 /**
@@ -16,7 +18,13 @@ interface ContractFieldProps {
  *
  * 계약은 광고 신청 한 건이다. 같은 회사의 계약이 여럿이면 공고명과 상태로 가른다.
  */
-export function ContractField({ id, value, currentCompanyName, onChange }: ContractFieldProps) {
+export function ContractField({
+  id,
+  value,
+  currentCompanyName,
+  onChange,
+  hint = '돈을 받고 싣는 배너는 그 광고 계약을 고릅니다. 오공고 자체 홍보는 비워 둡니다.',
+}: ContractFieldProps) {
   const [keyword, setKeyword] = useState('');
   const { data = [], isFetching } = useContractSearch(keyword);
   const options = [
@@ -31,11 +39,7 @@ export function ContractField({ id, value, currentCompanyName, onChange }: Contr
   ];
 
   return (
-    <Field
-      label="연결 계약"
-      htmlFor={id}
-      hint="돈을 받고 싣는 배너는 그 광고 계약을 고릅니다. 오공고 자체 홍보는 비워 둡니다."
-    >
+    <Field label="연결 계약" htmlFor={id} hint={hint}>
       <div className="flex flex-col gap-2">
         <Input
           aria-label="계약 회사명 검색"

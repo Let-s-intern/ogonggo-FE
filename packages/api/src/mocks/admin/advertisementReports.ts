@@ -465,10 +465,26 @@ function reportInput(params: Record<string, unknown>, url: URL): ReportInput | R
   );
   const rows = datesBetween(from, to).flatMap((date) =>
     exposures.map((exposure) =>
-      dayExposureRow(date, { id: exposure.id, name: exposure.name ?? `소재 #${exposure.id}` }),
+      dayExposureRow(date, { id: exposure.id, name: exposureName(exposure) }),
     ),
   );
   return { from, to, rows };
+}
+
+/** 배너는 노출 이름, 광고 카드는 이름이 없어 띄운 공고 제목을 쓴다. */
+function exposureName(exposure: {
+  id: number;
+  name?: string | null;
+  targetType?: string | null;
+  targetId?: number | null;
+}) {
+  if (exposure.name) return exposure.name;
+  const content =
+    (exposure.targetType === 'JOB' || exposure.targetType === 'BOOTCAMP') &&
+    exposure.targetId != null
+      ? findContent(exposure.targetType, exposure.targetId)
+      : undefined;
+  return content ? `광고 카드 · ${content.title}` : `소재 #${exposure.id}`;
 }
 
 const REPORT = `${CONTRACTS}/:contractId/products/:contractProductId`;
