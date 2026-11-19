@@ -9,9 +9,9 @@ import type { AdSlot } from './adPosting';
 
 /**
  * 광고 공고 자리(PRD 6.8, D12). 백엔드 `AdvertisementProductPosition` 에 더해지는 값이다. `JOB_PICK` 은 홈 히어로
- * `오공고 PICK` 탭이다(계약 7절). 판매 상품이 없는 `BOOTCAMP_LIST`·`JOB_DETAIL_SIDE` 는 뺐다(계약 8절).
+ * `오공고 PICK` 탭, `CALENDAR_DAY` 는 공고 달력 날짜별 목록이다(계약 7·8절). 판매 상품이 없는 `BOOTCAMP_LIST`·`JOB_DETAIL_SIDE` 는 뺐다(계약 8절).
  */
-export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK';
+export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK' | 'CALENDAR_DAY';
 
 /**
  * 광고 공고 한 칸. `targetType` 이 `JOB` 이면 `job`, `BOOTCAMP` 면 `bootcamp` 가 찬다. 응답 모양은
@@ -26,6 +26,12 @@ export interface AdPostingResponse {
   adLabel: boolean;
   /** `JOB_LIST` 노출의 직무(계약 8절). 다른 자리는 null 이다. */
   jobField?: UserJobSummaryResponseJobField | null;
+  /**
+   * 노출 기간(KST, 오프셋 없음). 계약 2·8절에는 없는 칸이라 백엔드에 더해 달라고 했다. 공고 달력이 고른 날짜가 기간
+   * 안인지 가르는 데 쓴다. 오지 않으면 그쪽 끝이 열린 것으로 본다 — 지금 노출 중인 광고가 모든 날짜에 보인다.
+   */
+  startAt?: string | null;
+  endAt?: string | null;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }

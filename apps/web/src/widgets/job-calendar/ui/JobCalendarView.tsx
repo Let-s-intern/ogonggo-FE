@@ -1,4 +1,5 @@
 import { listPublicJobCalendar } from '@ogonggo/api';
+import { fetchDayAds } from '../lib/day-ads';
 import { jobMajorField } from '../lib/job-majors';
 import { buildJobCalendarHref, toCalendarParam, type JobCalendarQuery } from '../lib/query';
 import { CALENDAR_FIRST_DAY, shiftMonths, shiftWeeks, startOfCalendarWeek } from '../lib/week';
@@ -155,6 +156,8 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
   const { from, to } = query.brief ? weekGridRange(baseDate) : monthGridRange(baseDate);
   const fromParam = toCalendarParam(from);
   const toParam = toCalendarParam(to);
+  // 날짜별 목록 맨 앞의 광고 공고(`CALENDAR_DAY`, 계약 8절)는 월간의 오른쪽 목록에만 있다. 달력 요청을 기다리지 않는다.
+  const dayAdsRequest = query.brief ? Promise.resolve([]) : fetchDayAds();
   const fetchedItems = await fetchCalendarItemsForMajors(fromParam, toParam, query.majors, {
     // 하나만 골랐을 때만 서버가 거른다. 여럿이면 빼고 받아 아래에서 거른다. 서버는 배열도 받지만
     // 이 화면의 거르기 동작은 그대로 둔다.
@@ -178,6 +181,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
     // 주므로, 아래에서 `recruitmentStartAt` 이 범위 밖인 항목을 한 번 더 거른다.
     deadlineOnly: query.dateBasis === 'deadline',
   });
+  const dayAds = await dayAdsRequest;
   const items = fetchedItems.filter((item) => {
     if (query.dateBasis === 'start') {
       const start = item.recruitmentStartAt.slice(0, 10);
@@ -221,6 +225,7 @@ export async function JobCalendarView({ query }: JobCalendarViewProps) {
           header={header}
           bookmarkedOnly={query.bookmarkedOnly}
           dateBasis={query.dateBasis}
+          dayAds={dayAds}
         />
       )}
     </CalendarSwipe>

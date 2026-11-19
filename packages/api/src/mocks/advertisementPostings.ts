@@ -12,15 +12,17 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * - `JOB_LIST`: 리스트 상단 고정. 웹 직무 칩 다섯 직군마다 하나씩 둔다. `jobField` 가 없으면 400 이다(계약 8절).
  *   세일즈의 공고 683 은 그 탭 첫 쪽에도 있는 공고라 웹이 일반 목록에서 빼는지 본다. IT·개발에는 둘을 둬 웹이 첫 건만
  *   쓰는지 본다. 대상 공고는 목 공고 목록(`handlers.ts`)에서 그 직군으로 걸러지는 공고다.
+ * - `CALENDAR_DAY`: 공고 달력 날짜별 목록 맨 앞. 노출 기간(`startAt`·`endAt`)을 함께 준다 — 계약에 없는 칸이라 백엔드에
+ *   요청했다. 71 은 11월 16일~30일, 72 는 11월 19일~21일이라 그 밖의 날을 고르면 빠져야 한다.
  * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
  *
- * 자리마다 하나(32·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
+ * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·72·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
  *
  * 웹 목 서버(`apps/web/src/instrumentation.ts`)는 핸들러를 서버가 뜰 때 한 번 등록한다. 이 파일을 더한 뒤에는 웹 목
  * 서버를 다시 띄워야 서버 렌더가 이 응답을 받는다.
  */
 
-export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK';
+export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK' | 'CALENDAR_DAY';
 
 export interface AdPostingResponse {
   exposureId: number;
@@ -31,11 +33,14 @@ export interface AdPostingResponse {
   adLabel: boolean;
   /** `JOB_LIST` 노출의 직무(계약 8절). 다른 자리는 null 이다. */
   jobField: string | null;
+  /** 노출 기간(KST, 오프셋 없음). 계약에 없는 칸이고 웹 공고 달력이 날짜를 가른다. */
+  startAt: string | null;
+  endAt: string | null;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }
 
-const POSITIONS: readonly string[] = ['JOB_LIST', 'JOB_PICK'];
+const POSITIONS: readonly string[] = ['JOB_LIST', 'JOB_PICK', 'CALENDAR_DAY'];
 
 const SEED: {
   exposureId: number;
@@ -44,6 +49,8 @@ const SEED: {
   targetId: number;
   adLabel: boolean;
   jobField?: string;
+  startAt?: string;
+  endAt?: string;
 }[] = [
   {
     exposureId: 31,
@@ -93,6 +100,24 @@ const SEED: {
     targetId: 592,
     adLabel: true,
   },
+  {
+    exposureId: 71,
+    position: 'CALENDAR_DAY',
+    targetType: 'JOB',
+    targetId: 695,
+    adLabel: true,
+    startAt: '2026-11-16T00:00:00',
+    endAt: '2026-12-01T00:00:00',
+  },
+  {
+    exposureId: 72,
+    position: 'CALENDAR_DAY',
+    targetType: 'JOB',
+    targetId: 674,
+    adLabel: false,
+    startAt: '2026-11-19T00:00:00',
+    endAt: '2026-11-22T00:00:00',
+  },
   { exposureId: 61, position: 'JOB_PICK', targetType: 'JOB', targetId: 7, adLabel: true },
   { exposureId: 62, position: 'JOB_PICK', targetType: 'JOB', targetId: 690, adLabel: false },
 ];
@@ -124,6 +149,8 @@ function toResponse(seed: (typeof SEED)[number], displayOrder: number): AdPostin
     targetType,
     adLabel,
     jobField: seed.jobField ?? null,
+    startAt: seed.startAt ?? null,
+    endAt: seed.endAt ?? null,
   };
   const job = JOB_FIXTURES.find((fixture) => fixture.id === targetId);
   return job ? { ...base, job: toJobSummary(job), bootcamp: null } : null;
@@ -151,9 +178,13 @@ const listAdPostingsHandler = http.get(
         { status: 400 },
       );
     }
+    const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
     const data = SEED.filter(
       (seed) =>
-        seed.position === position && (position !== 'JOB_LIST' || seed.jobField === jobField),
+        seed.position === position &&
+        (position !== 'JOB_LIST' || seed.jobField === jobField) &&
+        (!seed.startAt || seed.startAt <= now) &&
+        (!seed.endAt || now < seed.endAt),
     )
       .map((seed, index) => toResponse(seed, index + 1))
       .filter((item): item is AdPostingResponse => item !== null);
