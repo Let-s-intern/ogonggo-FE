@@ -7,6 +7,7 @@ import {
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { adParams, adPostingClickEvent, type AdSlot } from '@/shared/ads/adPosting';
+import { AdPostingImpressionTracker } from '@/shared/ads/AdPostingImpressionTracker';
 import { AdLabel } from '@/shared/ads/AdLabel';
 import { ViewCount } from '@/shared/ui/ViewCount';
 import { toBootcampInfo } from '../model/analytics';
@@ -108,7 +109,7 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
     </div>
   );
 
-  // 광고 카드는 광고 리포트의 노출(`IMPRESSION`, PRD 6.5)도 같은 때에 센다.
+  // Keep the existing content-event tracking and the contract-report collector on the same card.
   const contentEvent = ad
     ? ({
         type: 'IMPRESSION',
@@ -119,7 +120,7 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
       } as const)
     : undefined;
   const programImpression = listParams && isPromoted(info);
-  return programImpression || contentEvent ? (
+  const programTrackedCard = programImpression || contentEvent ? (
     <ImpressionTracker
       event={programImpression ? 'program_impression' : undefined}
       params={programImpression ? listParams : undefined}
@@ -130,4 +131,5 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
   ) : (
     card
   );
+  return ad ? <AdPostingImpressionTracker ad={ad}>{programTrackedCard}</AdPostingImpressionTracker> : programTrackedCard;
 }

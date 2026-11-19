@@ -26,8 +26,9 @@ export function TrackedLink({ events, adClick, onClick, ...props }: TrackedLinkP
     <Link
       {...props}
       onClick={(e) => {
-        for (const { event, params } of events) {
-          track(event, params);
+        for (const { event, params, posthogParams, onTrack } of events) {
+          track(event, params, posthogParams);
+          onTrack?.();
         }
         if (adClick) {
           recordAdClick(adClick);

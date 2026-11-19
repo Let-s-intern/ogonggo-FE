@@ -7,6 +7,8 @@ export {
 export { CompanyJobFormPage, type CompanyJobFormPageProps } from './ui/CompanyJobFormPage';
 export { CompanyPostsPage, type CompanyPostsPageProps } from './ui/CompanyPostsPage';
 export { CompanyProfilePage } from './ui/CompanyProfilePage';
+export { AdvertisementContractsPage } from './ui/AdvertisementContractsPage';
+export { AdvertisementContractReportPage } from './ui/AdvertisementContractReportPage';
 export { MyApplicationsPage, type MyApplicationsPageProps } from './ui/MyApplicationsPage';
 export { MyPostFormPage, type MyPostFormPageProps } from './ui/MyPostFormPage';
 export { MyPostsPage, type MyPostsPageProps } from './ui/MyPostsPage';

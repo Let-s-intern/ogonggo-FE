@@ -8,6 +8,7 @@
     "mock": "next dev --turbo --port 4000",
     "build": "next build",
     "type-check": "tsgo --noEmit",
+    "test:ad-posting": "node --experimental-strip-types --test src/shared/ads/adPostingContract.test.mjs",
     "lint": "oxlint src",
     "test": "rm -rf node_modules/.cache/unit-tests && tsc -p tsconfig.test.json && echo '{\"type\":\"commonjs\"}' > node_modules/.cache/unit-tests/package.json && node --test node_modules/.cache/unit-tests/",
     "start": "next start --port 4000"

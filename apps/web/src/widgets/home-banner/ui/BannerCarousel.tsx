@@ -6,7 +6,9 @@ import type { AdvertisementExposureResponse } from '@ogonggo/api';
 import type { AdClick } from '@/shared/analytics/contentEvents';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
-import type { BannerPlacement } from '../model/placement';
+import { AdvertisementImpressionTracker } from '@/shared/analytics/AdvertisementImpressionTracker';
+import { recordAdvertisementEvent } from '@/shared/ads/advertisementEvents';
+import { BANNER_POSITION, type BannerPlacement } from '../model/placement';
 
 /** 여럿일 때 다음 배너로 넘기는 간격. */
 const ROTATE_MS = 5000;
@@ -35,18 +37,6 @@ const MOBILE_MEDIA = {
 } as const;
 
 /**
- * 배너가 사이트 안 공고·부트캠프 상세로 가면 그 대상. 같은 탭으로 가는 상대 경로만 본다 — 외부 주소는 새 탭이라
- * 이 탭의 저장소로 노출 id 를 넘길 수 없다.
- */
-function bannerTarget(linkUrl: string): AdClick['target'] {
-  const match = /^\/(jobs|bootcamps)\/(\d+)(?:[/?#]|$)/.exec(linkUrl);
-  if (!match) {
-    return null;
-  }
-  return { targetType: match[1] === 'jobs' ? 'JOB' : 'BOOTCAMP', targetId: Number(match[2]) };
-}
-
-/**
  * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이다. 모바일 폭에서는
  * `mobileImageUrl` 을 쓰고, 없으면 두 폭에 같은 `imageUrl` 을 `object-cover` 로 채운다(BE LC-3589).
  *
@@ -62,6 +52,13 @@ function bannerTarget(linkUrl: string): AdClick['target'] {
  * `광고` 표시는 배너가 `adLabel` 일 때만 붙는다. 오공고 자체 홍보 배너는 광고주가 따로 없어 붙이지 않고,
  * 돈을 받고 싣는 배너는 광고임을 밝혀야 해서 운영자가 켠다.
  */
+/** A same-tab banner link to a content detail can attribute the visit to its exposure. */
+function bannerTarget(linkUrl: string): AdClick['target'] {
+  const match = /^\/(jobs|bootcamps)\/(\d+)(?:[/?#]|$)/.exec(linkUrl);
+  if (!match) return null;
+  return { targetType: match[1] === 'jobs' ? 'JOB' : 'BOOTCAMP', targetId: Number(match[2]) };
+}
+
 export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -108,7 +105,6 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                 active ? 'opacity-100' : 'opacity-0',
               )}
             >
-              {/* 광고 리포트의 노출·클릭(PRD 6.5). 넘기는 배너는 지금 보이는 한 장만 센다. */}
               <ImpressionTracker
                 active={active}
                 contentEvent={{
@@ -119,16 +115,22 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                   source: 'BANNER',
                 }}
               >
+                <AdvertisementImpressionTracker
+                  exposureId={banner.id}
+                  positionCode={BANNER_POSITION[placement]}
+                  active={active}
+                >
                 <TrackedLink
                   href={banner.linkUrl}
+                  target={newTab ? '_blank' : undefined}
+                  rel={newTab ? 'noopener noreferrer' : undefined}
+                  className="block h-full w-full"
                   adClick={{
                     exposureId: banner.id,
                     source: 'BANNER',
                     target: bannerTarget(banner.linkUrl),
                   }}
-                  target={newTab ? '_blank' : undefined}
-                  rel={newTab ? 'noopener noreferrer' : undefined}
-                  className="block h-full w-full"
+                  onClick={() => recordAdvertisementEvent(banner.id, 'CLICK')}
                   events={[
                     {
                       event: 'banner_click',
@@ -137,6 +139,11 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                         banner_placement: placement,
                         banner_position: index + 1,
                         link_url: banner.linkUrl,
+                      },
+                      posthogParams: {
+                        exposure_id: banner.id,
+                        category: 'BANNER',
+                        position: BANNER_POSITION[placement],
                       },
                     },
                   ]}
@@ -159,6 +166,7 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                     </span>
                   ) : null}
                 </TrackedLink>
+                </AdvertisementImpressionTracker>
               </ImpressionTracker>
             </div>
           );

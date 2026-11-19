@@ -124,6 +124,11 @@ function buildTabs(pathname: string, company: boolean): Tab[] {
               icon: 'icon-[lucide--graduation-cap]',
             },
             {
+              label: '광고 리포트',
+              href: '/mypage/company/advertisement-contracts',
+              icon: 'icon-[lucide--chart-no-axes-combined]',
+            },
+            {
               label: '기업 정보',
               href: '/mypage/company/profile',
               icon: 'icon-[lucide--user-round-cog]',

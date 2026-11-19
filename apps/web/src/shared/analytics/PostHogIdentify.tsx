@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { identifyUser, resetUser } from './posthog';
+import { setAdvertisementJobRoleCodes } from './dataLayer';
 
 /**
  * 로그인 상태를 PostHog 사용자에 맞춘다. 계정은 헤더와 같은 요청을 함께 쓴다(`useMyAccount`).
@@ -17,8 +18,12 @@ export function PostHogIdentify() {
   useEffect(() => {
     if (account.kind === 'ready') {
       identifyUser(account.account.userId, { role: account.account.role });
-    } else if (account.kind === 'signedOut' && !isSignedIn()) {
-      resetUser();
+      setAdvertisementJobRoleCodes(account.account.profile?.wishJobRoleCodes ?? []);
+    } else {
+      const signedInProfilePending =
+        isSignedIn() && (account.kind === 'loading' || account.kind === 'signedOut');
+      setAdvertisementJobRoleCodes([], !signedInProfilePending);
+      if (account.kind === 'signedOut' && !isSignedIn()) resetUser();
     }
   }, [account]);
 

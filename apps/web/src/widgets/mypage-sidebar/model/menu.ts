@@ -40,6 +40,10 @@ export const USER_MYPAGE_MENU: readonly MyPageMenuItem[] = [
 export const COMPANY_MYPAGE_MENU: readonly MyPageMenuItem[] = [
   { href: '/mypage/company/posts/jobs', label: '채용공고' },
   { href: '/mypage/company/posts/bootcamps', label: '부트캠프' },
+  {
+    href: '/mypage/company/advertisement-contracts',
+    label: '광고 리포트',
+  },
   { href: '/mypage/company/profile', label: '기업/기관 정보', separated: true },
 ];
 
@@ -116,6 +120,16 @@ const MOBILE_HEADERS: readonly { pattern: RegExp; title: string; back: string }[
     pattern: /^\/mypage\/company\/posts\/bootcamps\/[^/]+\/edit$/,
     title: '교육 · 부트캠프 공고 수정',
     back: '/mypage/company/posts/bootcamps',
+  },
+  {
+    pattern: /^\/mypage\/company\/advertisement-contracts$/,
+    title: '광고 리포트',
+    back: COMPANY_MYPAGE_ROOT,
+  },
+  {
+    pattern: /^\/mypage\/company\/advertisement-contracts\/\d+$/,
+    title: '광고 성과 리포트',
+    back: '/mypage/company/advertisement-contracts',
   },
   { pattern: /^\/mypage\/company\/profile$/, title: '기업/기관 정보', back: COMPANY_MYPAGE_ROOT },
 ];

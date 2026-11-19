@@ -175,6 +175,26 @@ const EXPOSURE_SEED: ExposureSeed[] = [
     exposed: true,
     displayOrder: 1,
   },
+  {
+    id: 10,
+    productId: 7,
+    contractId: 1,
+    targetType: 'JOB',
+    targetId: 1,
+    adLabel: true,
+    exposed: true,
+    displayOrder: 1,
+  },
+  {
+    id: 11,
+    productId: 7,
+    contractId: 2,
+    targetType: 'BOOTCAMP',
+    targetId: 1,
+    adLabel: true,
+    exposed: true,
+    displayOrder: 1,
+  },
 ];
 
 /** 상품은 BE 처럼 지워도 행이 남는다(`deletedAt`). 계약 상품이 지운 상품을 계속 가리킨다. */

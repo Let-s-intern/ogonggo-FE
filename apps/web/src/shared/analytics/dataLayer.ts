@@ -1,5 +1,9 @@
 import { isSignedIn } from '@/shared/api/authTokens';
 import { captureEvent } from './posthog';
+import {
+  safeAdvertisementPosthogProperties,
+  safePromotedPosthogProperties,
+} from '@/shared/ads/adPostingContract';
 
 /**
  * GTM 으로 보내는 이벤트. 키 이름과 허용값은 마케팅팀 'dataLayer 개발 명세서(프론트엔드)'
@@ -31,11 +35,19 @@ export function isPromoted(info: DataLayerParams): boolean {
 export interface DataLayerEvent {
   event: string;
   params: DataLayerParams;
+  /** 마케팅 dataLayer에는 넣지 않고 PostHog에만 추가할 properties. */
+  posthogParams?: Record<string, unknown>;
+  /** 이벤트가 실제로 발생한 클릭 시점에 실행한다. */
+  onTrack?: () => void;
 }
 
 type DataLayerWindow = Window & { dataLayer?: Record<string, unknown>[] };
 
-export function track(event: string, params: DataLayerParams = {}): void {
+export function track(
+  event: string,
+  params: DataLayerParams = {},
+  posthogParams: Record<string, unknown> = {},
+): void {
   if (typeof window === 'undefined') {
     return;
   }
@@ -43,11 +55,112 @@ export function track(event: string, params: DataLayerParams = {}): void {
   push({ event, ...params });
   // 같은 이벤트를 PostHog 에도 보낸다. 화면 종류·로그인 여부는 GTM 처럼 직전 `page_context` 에서
   // 붙지 않으므로 여기서 함께 싣는다.
-  captureEvent(event, {
-    ...params,
-    page_type: pageTypeOf(window.location.pathname),
-    login_state: isSignedIn() ? 'Y' : 'N',
+  captureAdvertisementAwareEvent(event, params, posthogParams);
+}
+
+/** GTM 명세 변경 없이 PostHog 전용 이벤트를 보낸다. */
+export function trackPostHogOnly(event: string, params: Record<string, unknown> = {}): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  captureAdvertisementAwareEvent(event, {}, params);
+}
+
+let advertisementJobRoleCodes: string[] = [];
+let advertisementJobRoleCodesReady = false;
+const pendingAdvertisementClicks: PendingAdvertisementClick[] = [];
+const MAX_PENDING_ADVERTISEMENT_CLICKS = 100;
+
+/** Authenticated profile API supplies normalized JobRole codes, never the raw wish-job labels. */
+export function setAdvertisementJobRoleCodes(codes: readonly string[], ready = true): void {
+  advertisementJobRoleCodes = [...new Set(codes.filter((code) => /^[A-Z0-9_]+$/.test(code)))].sort();
+  advertisementJobRoleCodesReady = ready;
+  if (!ready) return;
+
+  const queued = pendingAdvertisementClicks.splice(0);
+  for (const click of queued) {
+    captureEvent(
+      click.event,
+      posthogProperties(
+        click.event,
+        click.dataLayerParams,
+        click.explicitPosthogParams,
+        click.loginState,
+        click.pathname,
+      ),
+    );
+  }
+}
+
+interface PendingAdvertisementClick {
+  event: string;
+  dataLayerParams: DataLayerParams;
+  explicitPosthogParams: Record<string, unknown>;
+  loginState: boolean;
+  pathname: string;
+}
+
+function captureAdvertisementAwareEvent(
+  event: string,
+  dataLayerParams: DataLayerParams,
+  explicitPosthogParams: Record<string, unknown>,
+): void {
+  const loginState = isSignedIn();
+  const isAdvertisementClick =
+    (event.startsWith('banner_') || event.startsWith('ad_posting_')) && event.endsWith('_click');
+  if (loginState && isAdvertisementClick && !advertisementJobRoleCodesReady) {
+    if (pendingAdvertisementClicks.length >= MAX_PENDING_ADVERTISEMENT_CLICKS) {
+      pendingAdvertisementClicks.shift();
+    }
+    pendingAdvertisementClicks.push({
+      event,
+      dataLayerParams,
+      explicitPosthogParams,
+      loginState,
+      pathname: window.location.pathname,
+    });
+    return;
+  }
+
+  captureEvent(
+    event,
+    posthogProperties(event, dataLayerParams, explicitPosthogParams, loginState, window.location.pathname),
+  );
+}
+
+function posthogProperties(
+  event: string,
+  dataLayerParams: DataLayerParams,
+  explicitPosthogParams: Record<string, unknown>,
+  loginState: boolean,
+  pathname: string,
+): Record<string, unknown> {
+  const pageContext = {
+    page_type: pageTypeOf(pathname),
+    login_state: loginState ? 'Y' : 'N',
+  };
+
+  // Dedicated ad events carry only report contract fields. Generic promoted-card analytics retain their
+  // GTM fields but reduce to `is_promoted` in PostHog; neither path sends content IDs, URLs, campaigns, or raw profile data.
+  if (event.startsWith('banner_') || event.startsWith('ad_posting_')) {
+    return {
+      ...safeAdvertisementPosthogProperties(
+        event,
+        explicitPosthogParams,
+        loginState,
+        advertisementJobRoleCodes,
+      ),
+      ...pageContext,
+    };
+  }
+
+  const promotedProperties = safePromotedPosthogProperties({
+    ...dataLayerParams,
+    ...explicitPosthogParams,
   });
+  if (promotedProperties) return { ...promotedProperties, ...pageContext };
+
+  return { ...dataLayerParams, ...explicitPosthogParams, ...pageContext };
 }
 
 let lastPageContext = '';

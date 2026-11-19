@@ -53,6 +53,64 @@ const listPublicAdvertisementExposuresHandler = http.get(
   },
 );
 
+type PublicPostingExposureResponse = {
+  id: number;
+  category: 'JOB_POSTING';
+  position: null;
+  targetType: 'JOB' | 'BOOTCAMP';
+  targetId: number;
+  displayOrder: number;
+  adLabel: boolean;
+};
+
+/** Active paid job and bootcamp targets for top-of-list ad cards. */
+const listPublicAdvertisementPostingsHandler = http.get(
+  '*/api/v1/advertisement-exposures/postings',
+  ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const page = Math.max(1, Number(params.get('page') ?? 1) || 1);
+    const size = Math.min(100, Math.max(1, Number(params.get('size') ?? 50) || 50));
+    const products = new Map(advertisementStore.products.map((product) => [product.id, product]));
+    const shown = advertisementStore.exposures
+      .filter((exposure) => {
+        const product = products.get(exposure.productId);
+        return (
+          product?.category === 'JOB_POSTING' &&
+          exposure.targetType != null &&
+          exposure.targetId != null &&
+          isExposureShown(exposure)
+        );
+      })
+      .sort((a, b) => a.displayOrder - b.displayOrder || a.id - b.id);
+    const items = shown.slice((page - 1) * size, page * size).map((exposure) => ({
+      id: exposure.id,
+      category: 'JOB_POSTING' as const,
+      position: null,
+      targetType: exposure.targetType as 'JOB' | 'BOOTCAMP',
+      targetId: exposure.targetId as number,
+      displayOrder: exposure.displayOrder,
+      adLabel: exposure.adLabel,
+    })) satisfies PublicPostingExposureResponse[];
+    return HttpResponse.json(
+      {
+        status: 200,
+        message: '요청이 성공했습니다.',
+        data: {
+          items,
+          pageInfo: {
+            pageNum: page,
+            pageSize: size,
+            totalElements: shown.length,
+            totalPages: Math.ceil(shown.length / size),
+          },
+        },
+      },
+      { status: 200 },
+    );
+  },
+);
+
 export const advertisementExposureHandlers: HttpHandler[] = [
   listPublicAdvertisementExposuresHandler,
+  listPublicAdvertisementPostingsHandler,
 ];

@@ -10,6 +10,8 @@ import type { MyAdvertisementContractSummaryResponseStatus } from './myAdvertise
 
 export interface MyAdvertisementContractSummaryResponse {
   id: number;
+  /** 계약 생성 경로. 신청 폼 계약과 기업 공고 등록 계약을 모두 포함한다. */
+  source?: 'APPLICATION_FORM' | 'COMPANY_POSTING';
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -28,7 +30,8 @@ export interface MyAdvertisementContractSummaryResponse {
   promotionTarget: MyAdvertisementContractSummaryResponsePromotionTarget;
   companyName: string;
   recruitmentTitle: string;
-  recruitmentDeadline: string;
+  /** 모집 마감일. 정하지 않았으면 null. */
+  recruitmentDeadline: string | null;
   /** 신청 때 고른 광고 카테고리 */
   categories: MyAdvertisementContractSummaryResponseCategoriesItem[];
   /**

@@ -45,6 +45,8 @@ export interface MyProfileResponse {
   grade?: MyProfileResponseGrade;
   wishField?: string;
   wishJob?: string;
+  /** 희망 직무의 오공고 JobRole 정규화 코드. 분석 이벤트에서는 이 값만 사용한다. */
+  wishJobRoleCodes?: string[];
   wishIndustry?: string;
   wishEmploymentType?: string;
   wishCompany?: string;

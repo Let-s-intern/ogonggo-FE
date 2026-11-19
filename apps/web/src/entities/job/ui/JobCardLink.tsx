@@ -56,8 +56,9 @@ export function JobCardLink({
           });
           rememberListSource(jobId, tracking.listSource);
         }
-        for (const { event, params } of extraEvents ?? []) {
-          track(event, params);
+        for (const { event, params, posthogParams, onTrack } of extraEvents ?? []) {
+          track(event, params, posthogParams);
+          onTrack?.();
         }
         if (adClick) {
           recordAdClick(adClick);

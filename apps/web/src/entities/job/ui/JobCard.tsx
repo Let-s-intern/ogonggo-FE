@@ -10,6 +10,7 @@ import {
   isAlwaysOpen,
 } from '@/shared/lib/dday';
 import { adParams, adPostingClickEvent, type AdSlot } from '@/shared/ads/adPosting';
+import { AdPostingImpressionTracker } from '@/shared/ads/AdPostingImpressionTracker';
 import { AdLabel } from '@/shared/ads/AdLabel';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { ViewCount } from '@/shared/ui/ViewCount';
@@ -265,20 +266,20 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }:
       </div>
     </div>
   );
-
-  // 광고 카드는 광고 리포트의 노출(`IMPRESSION`, PRD 6.5)을 센다. 공고 카드에는 GTM 노출 이벤트가 없어 그것만 보낸다.
   return ad ? (
-    <ImpressionTracker
-      contentEvent={{
-        type: 'IMPRESSION',
-        targetType: 'JOB',
-        targetId: job.id,
-        exposureId: ad.adId,
-        source: 'AD_CARD',
-      }}
-    >
-      {card}
-    </ImpressionTracker>
+    <AdPostingImpressionTracker ad={ad}>
+      <ImpressionTracker
+        contentEvent={{
+          type: 'IMPRESSION',
+          targetType: 'JOB',
+          targetId: job.id,
+          exposureId: ad.adId,
+          source: 'AD_CARD',
+        }}
+      >
+        {card}
+      </ImpressionTracker>
+    </AdPostingImpressionTracker>
   ) : (
     card
   );

@@ -1,13 +1,19 @@
 import { ListPublicJobsSort, enumOptions, httpClient } from '@ogonggo/api';
-import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
+import type {
+  PageInfo,
+  SuccessResponsePageResponseUserJobSummaryResponse,
+  SuccessResponseUserJobDetailResponse,
+} from '@ogonggo/api';
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
-import type { AdSlot } from '@/shared/ads/adPosting';
-import { fetchAdPostings, MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
+import {
+  fetchJobPostingAdsForPage,
+  type LoadedPostingAd,
+} from '@/shared/ads/fetchJobPostingExposures';
+import { removeAdvertisementPostingDuplicates } from '@/shared/ads/adPostingContract';
 import { RememberListHref } from '@/shared/ui/ListReturnLink';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
-import { matchesJobQuery } from '../lib/adPostings';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { JobFilterSidebar } from './JobFilterSidebar';
 import { JobListPendingArea, JobListPendingProvider } from './JobListPending';
@@ -41,36 +47,26 @@ async function fetchJobPage(
 }
 
 /**
- * 첫 쪽 맨 앞에 넣을 광고 공고 칸(`JOB_LIST`, PRD 6.8·D13). 검색·필터에 맞는 것만, 자리당 최대 3칸이다. 2쪽부터는
- * 넣지 않는다.
- */
-async function fetchListAds(query: JobListQuery): Promise<{ job: JobSummary; ad: AdSlot }[]> {
-  if (query.page !== 1) {
-    return [];
-  }
-  const postings = await fetchAdPostings('JOB_LIST');
-  return postings
-    .flatMap((posting) => (posting.job && matchesJobQuery(posting.job, query) ? [posting] : []))
-    .slice(0, MAX_AD_POSTINGS)
-    .map((posting, index) => ({
-      job: posting.job as JobSummary,
-      ad: toAdSlot(posting, index + 1),
-    }));
-}
-
-/**
  * 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다.
- *
- * 첫 쪽은 광고 공고 칸이 맨 앞이다. 같은 공고가 이 쪽의 일반 목록에도 있으면 일반 쪽에서 빼 두 번 보이지 않게 한다.
- * 광고가 없거나 받지 못하면 일반 목록 그대로다.
  */
 export async function JobList(query: JobListProps) {
-  const [{ items: pageItems, pageInfo }, ads] = await Promise.all([
-    fetchJobPage(query),
-    fetchListAds(query),
+  const jobPage = fetchJobPage(query);
+  const paidPostingPage = fetchJobPostingAdsForPage(
+    'JOB',
+    query.page,
+    jobPage.then(({ items: pageItems }) => pageItems),
+    fetchJobSummaryById,
+  );
+  const [{ items, pageInfo }, loadedPaidPostingPage] = await Promise.all([
+    jobPage,
+    paidPostingPage,
   ]);
-  const adJobIds = new Set(ads.map(({ job }) => job.id));
-  const items = pageItems.filter((job) => !adJobIds.has(job.id));
+  const visiblePageInfo = {
+    ...pageInfo,
+    totalPages: Math.max(pageInfo.totalPages, loadedPaidPostingPage.totalPages),
+  };
+  const promotedTargetIds = new Set(loadedPaidPostingPage.ads.map(({ item }) => item.id));
+  const organicItems = removeAdvertisementPostingDuplicates(items, promotedTargetIds);
   const sort = (
     <SortToggle
       options={SORT_OPTIONS}
@@ -109,15 +105,19 @@ export async function JobList(query: JobListProps) {
           <JobFilterSidebar query={query} />
         </div>
         <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
-          <JobListPendingArea count={ads.length + items.length}>
-            {ads.length + items.length === 0 ? (
+          <JobListPendingArea count={organicItems.length + loadedPaidPostingPage.ads.length}>
+            {organicItems.length === 0 && loadedPaidPostingPage.ads.length === 0 ? (
               <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
             ) : (
-              <JobListItems ads={ads} items={items} pageNumber={pageInfo.pageNum} />
+              <JobListItems
+                items={organicItems}
+                ads={loadedPaidPostingPage.ads}
+                pageNumber={query.page}
+              />
             )}
           </JobListPendingArea>
           <NumberedPagination
-            pageInfo={pageInfo}
+            pageInfo={visiblePageInfo}
             buildHref={(page) => buildJobListHref(query, { page })}
           />
         </div>
@@ -126,31 +126,47 @@ export async function JobList(query: JobListProps) {
   );
 }
 
+async function fetchJobSummaryById(jobId: number): Promise<JobSummary | undefined> {
+  try {
+    const response = await httpClient<SuccessResponseUserJobDetailResponse>(`/api/v1/jobs/${jobId}`);
+    return response.data as JobSummary | undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * `home.png`의 "전체 공고" 4열 그리드(3.4절) — `entities/job/ui/JobCard.tsx`를 그대로 써서
  * "인기 공고"(`widgets/popular-jobs`)와 완전히 같은 카드 디자인을 보장한다. lg 이상은 왼쪽에
  * 필터 열이 있어 시안(`docs/asset/v12 채용공고 상세/목록.webp`)대로 3열이다.
  */
 function JobListItems({
-  ads,
   items,
+  ads,
   pageNumber,
 }: {
-  ads: { job: JobSummary; ad: AdSlot }[];
   items: JobSummary[];
+  ads: LoadedPostingAd<JobSummary>[];
   pageNumber: number;
 }) {
-  const cards: { job: JobSummary; ad?: AdSlot }[] = [...ads, ...items.map((job) => ({ job }))];
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 lg:grid-cols-3">
-      {cards.map(({ job, ad }, index) => (
-        <li key={ad ? `ad-${ad.adId}` : job.id}>
+      {ads.map(({ item, slot }, index) => (
+        <li key={`ad-${slot.adId}`}>
+          <JobCard
+            job={item}
+            ad={slot}
+            tracking={{ listSource: 'main', listPosition: index + 1, pageNumber }}
+          />
+        </li>
+      ))}
+      {items.map((job, index) => (
+        <li key={job.id}>
           <JobCard
             job={job}
-            ad={ad}
             tracking={{
               listSource: 'main',
-              listPosition: index + 1,
+              listPosition: ads.length + index + 1,
               pageNumber,
             }}
           />
