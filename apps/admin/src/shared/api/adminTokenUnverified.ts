@@ -12,9 +12,8 @@
  * 시크릿이 들어오면 다음 로그인이 200 을 받아 이 기록이 지워지고, 안내도 같이 사라진다 — 코드를
  * 고칠 일이 없다.
  *
- * `sessionStorage` 에 두는 이유는 토큰과 수명을 맞추기 위해서다(`./accessToken.ts`). 새로고침에는
- * 남고 탭을 닫으면 토큰과 함께 사라진다. 메모리에만 두면 새로고침한 순간 안내가 사라져서, 데이터가
- * 없는 이유를 다시 알 수 없게 된다.
+ * 토큰과 같은 `localStorage` 에 두어 수명을 맞춘다(`./accessToken.ts`). 새 탭에도 남고, 다음 로그인이 지운다.
+ * 메모리에만 두면 새로고침한 순간 안내가 사라져서, 데이터가 없는 이유를 다시 알 수 없게 된다.
  */
 const STORAGE_KEY = 'ogonggo.admin.tokenUnverified';
 
@@ -25,13 +24,13 @@ export const ADMIN_TOKEN_UNVERIFIED_MESSAGE =
   '관리자 서버가 로그인 토큰을 확인하지 못했습니다(401). 목록과 집계가 비어 있는 것은 이 때문이며 계정 문제가 아닙니다. 서버에 인증 설정이 반영되면 화면은 그대로 다시 채워집니다.';
 
 export function isAdminTokenUnverified(): boolean {
-  return sessionStorage.getItem(STORAGE_KEY) === 'true';
+  return localStorage.getItem(STORAGE_KEY) === 'true';
 }
 
 export function setAdminTokenUnverified(unverified: boolean): void {
   if (unverified) {
-    sessionStorage.setItem(STORAGE_KEY, 'true');
+    localStorage.setItem(STORAGE_KEY, 'true');
     return;
   }
-  sessionStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_KEY);
 }
