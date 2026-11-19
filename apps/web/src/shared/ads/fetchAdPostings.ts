@@ -1,5 +1,9 @@
 import { httpClient } from '@ogonggo/api';
-import type { UserBootcampSummaryResponse, UserJobSummaryResponse } from '@ogonggo/api';
+import type {
+  UserBootcampSummaryResponse,
+  UserJobSummaryResponse,
+  UserJobSummaryResponseJobField,
+} from '@ogonggo/api';
 import { isAdsEnabled } from '@/shared/config/ads';
 import type { AdSlot } from './adPosting';
 
@@ -20,6 +24,8 @@ export interface AdPostingResponse {
   targetType: 'JOB' | 'BOOTCAMP';
   /** 카드에 `AD` 표시를 붙일지(계약 7절). */
   adLabel: boolean;
+  /** `JOB_LIST` 노출의 직무(계약 8절). 다른 자리는 null 이다. */
+  jobField?: UserJobSummaryResponseJobField | null;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }
@@ -34,19 +40,31 @@ const TIMEOUT_MS = 3000;
  * 자리 하나의 지금 노출 중인 광고 공고(`GET /api/v1/advertisement-exposures/postings?position=`). 서버가 정한 순서
  * 그대로다. 광고를 끈 배포(`shared/config/ads.ts`)에서는 부르지 않고, 실패하면 빈 목록이다 — 광고 때문에 목록이
  * 오류 화면이 되면 안 된다.
+ *
+ * `JOB_LIST` 는 직무(`jobField`)가 있어야 한다(없으면 400, 계약 8절). 그 직무의 광고만 온다.
  */
-export async function fetchAdPostings(position: AdPostingPosition): Promise<AdPostingResponse[]> {
+export async function fetchAdPostings(
+  position: AdPostingPosition,
+  jobField?: UserJobSummaryResponseJobField,
+): Promise<AdPostingResponse[]> {
   if (!isAdsEnabled) {
     return [];
   }
+  const params = new URLSearchParams({ position });
+  if (jobField) {
+    params.set('jobField', jobField);
+  }
   try {
     const response = await httpClient<{ data?: AdPostingResponse[] }>(
-      `/api/v1/advertisement-exposures/postings?position=${position}`,
+      `/api/v1/advertisement-exposures/postings?${params.toString()}`,
       { signal: AbortSignal.timeout(TIMEOUT_MS) },
     );
     return response.data ?? [];
   } catch (error) {
-    console.error(`[ad-postings] ${position} 광고 공고를 받지 못해 자리를 비웁니다.`, error);
+    console.error(
+      `[ad-postings] ${params.toString()} 광고 공고를 받지 못해 자리를 비웁니다.`,
+      error,
+    );
     return [];
   }
 }

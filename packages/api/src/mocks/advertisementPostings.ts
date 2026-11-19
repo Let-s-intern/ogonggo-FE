@@ -9,10 +9,12 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * `.claude/tasks/memos/광고-리포트-API-계약-2026-11-19.md` 2절이다. 코드젠 전이라 응답 타입은 아래에 손으로 적는다.
  *
  * 대상은 기존 목 공고이고 모두 채용공고다(계약 8절, 부트캠프 자리는 판매 상품이 없어 뺐다).
- * - `JOB_LIST`: 공고 700 은 목록 첫 쪽에도 있는 공고다. 웹이 일반 목록에서 빼는지 본다.
+ * - `JOB_LIST`: 리스트 상단 고정. 웹 직무 칩 다섯 직군마다 하나씩 둔다. `jobField` 가 없으면 400 이다(계약 8절).
+ *   세일즈의 공고 683 은 그 탭 첫 쪽에도 있는 공고라 웹이 일반 목록에서 빼는지 본다. IT·개발에는 둘을 둬 웹이 첫 건만
+ *   쓰는지 본다. 대상 공고는 목 공고 목록(`handlers.ts`)에서 그 직군으로 걸러지는 공고다.
  * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
  *
- * 자리마다 하나(33·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
+ * 자리마다 하나(32·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
  *
  * 웹 목 서버(`apps/web/src/instrumentation.ts`)는 핸들러를 서버가 뜰 때 한 번 등록한다. 이 파일을 더한 뒤에는 웹 목
  * 서버를 다시 띄워야 서버 렌더가 이 응답을 받는다.
@@ -27,6 +29,8 @@ export interface AdPostingResponse {
   targetType: 'JOB' | 'BOOTCAMP';
   /** 카드에 `AD` 표시를 붙일지. 어드민이 광고 상품으로 등록하면 기본 켬이다(계약 7절). */
   adLabel: boolean;
+  /** `JOB_LIST` 노출의 직무(계약 8절). 다른 자리는 null 이다. */
+  jobField: string | null;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }
@@ -39,10 +43,56 @@ const SEED: {
   targetType: 'JOB' | 'BOOTCAMP';
   targetId: number;
   adLabel: boolean;
+  jobField?: string;
 }[] = [
-  { exposureId: 31, position: 'JOB_LIST', targetType: 'JOB', targetId: 700, adLabel: true },
-  { exposureId: 32, position: 'JOB_LIST', targetType: 'JOB', targetId: 650, adLabel: true },
-  { exposureId: 33, position: 'JOB_LIST', targetType: 'JOB', targetId: 600, adLabel: false },
+  {
+    exposureId: 31,
+    position: 'JOB_LIST',
+    jobField: 'MARKETING_ADVERTISING',
+    targetType: 'JOB',
+    targetId: 588,
+    adLabel: true,
+  },
+  {
+    exposureId: 32,
+    position: 'JOB_LIST',
+    jobField: 'HR_GENERAL_AFFAIRS',
+    targetType: 'JOB',
+    targetId: 525,
+    adLabel: false,
+  },
+  {
+    exposureId: 33,
+    position: 'JOB_LIST',
+    jobField: 'PLANNING_STRATEGY',
+    targetType: 'JOB',
+    targetId: 653,
+    adLabel: true,
+  },
+  {
+    exposureId: 34,
+    position: 'JOB_LIST',
+    jobField: 'SALES',
+    targetType: 'JOB',
+    targetId: 683,
+    adLabel: true,
+  },
+  {
+    exposureId: 35,
+    position: 'JOB_LIST',
+    jobField: 'IT_DEVELOPMENT',
+    targetType: 'JOB',
+    targetId: 598,
+    adLabel: true,
+  },
+  {
+    exposureId: 36,
+    position: 'JOB_LIST',
+    jobField: 'IT_DEVELOPMENT',
+    targetType: 'JOB',
+    targetId: 592,
+    adLabel: true,
+  },
   { exposureId: 61, position: 'JOB_PICK', targetType: 'JOB', targetId: 7, adLabel: true },
   { exposureId: 62, position: 'JOB_PICK', targetType: 'JOB', targetId: 690, adLabel: false },
 ];
@@ -67,7 +117,14 @@ const toJobSummary = ({
 
 function toResponse(seed: (typeof SEED)[number], displayOrder: number): AdPostingResponse | null {
   const { exposureId, position, targetType, targetId, adLabel } = seed;
-  const base = { exposureId, position, displayOrder, targetType, adLabel };
+  const base = {
+    exposureId,
+    position,
+    displayOrder,
+    targetType,
+    adLabel,
+    jobField: seed.jobField ?? null,
+  };
   const job = JOB_FIXTURES.find((fixture) => fixture.id === targetId);
   return job ? { ...base, job: toJobSummary(job), bootcamp: null } : null;
 }
@@ -75,14 +132,29 @@ function toResponse(seed: (typeof SEED)[number], displayOrder: number): AdPostin
 const listAdPostingsHandler = http.get(
   '*/api/v1/advertisement-exposures/postings',
   ({ request }) => {
-    const position = new URL(request.url).searchParams.get('position');
+    const params = new URL(request.url).searchParams;
+    const position = params.get('position');
+    const jobField = params.get('jobField');
     if (position === null || !POSITIONS.includes(position)) {
       return HttpResponse.json(
         { status: 400, code: 'BAD_REQUEST', message: 'position: 광고 공고 자리를 보내 주세요.' },
         { status: 400 },
       );
     }
-    const data = SEED.filter((seed) => seed.position === position)
+    if (position === 'JOB_LIST' && !jobField) {
+      return HttpResponse.json(
+        {
+          status: 400,
+          code: 'BAD_REQUEST',
+          message: 'jobField: 리스트 상단 고정은 직무를 보내 주세요.',
+        },
+        { status: 400 },
+      );
+    }
+    const data = SEED.filter(
+      (seed) =>
+        seed.position === position && (position !== 'JOB_LIST' || seed.jobField === jobField),
+    )
       .map((seed, index) => toResponse(seed, index + 1))
       .filter((item): item is AdPostingResponse => item !== null);
     return HttpResponse.json(
