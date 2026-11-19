@@ -24,8 +24,16 @@ export interface AdminAdvertisementContractProductResponse {
      */
   category: AdminAdvertisementContractProductResponseCategory;
   productDeleted: boolean;
-  startDate?: string;
-  endDate?: string;
+  /**
+     * 게시 시작일. 게시 기간은 데이터 집계 기간이며 리포트는 이 기간의 데이터만 보여 줍니다. 기간을 넣기 전에 붙인 상품은 null
+     * @nullable
+     */
+  startDate?: string | null;
+  /**
+     * 게시 종료일(이 날까지 게시). 게시 기간은 데이터 집계 기간이며 리포트는 이 기간의 데이터만 보여 줍니다. 기간을 넣기 전에 붙인 상품은 null
+     * @nullable
+     */
+  endDate?: string | null;
   addedAt: string;
   /** 성과 리포트를 열 수 있는 상품인지 */
   reportAvailable: boolean;

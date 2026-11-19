@@ -34,6 +34,7 @@ import type {
   AiLetsCareerContentTagRequest,
   Analysis,
   ChangeAdminAdvertisementContractPaymentAmountRequest,
+  ChangeAdminAdvertisementContractProductEndDateRequest,
   ChangeAdminAdvertisementContractStatusRequest,
   ChangeAdminAdvertisementExposureExposedRequest,
   ChangeAdminBootcampVisibilityRequest,
@@ -7599,6 +7600,235 @@ export const useUpdateAdvertisementContractStatus = <TError = ErrorResponse,
       return useMutation(getUpdateAdvertisementContractStatusMutationOptions(options), queryClient);
     }
 
+export type deleteAdvertisementContractProductResponse200 = {
+  data: SuccessResponseUnit
+  status: 200
+}
+
+export type deleteAdvertisementContractProductResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteAdvertisementContractProductResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteAdvertisementContractProductResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteAdvertisementContractProductResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteAdvertisementContractProductResponseSuccess = (deleteAdvertisementContractProductResponse200) & {
+  headers: Headers;
+};
+export type deleteAdvertisementContractProductResponseError = (deleteAdvertisementContractProductResponse400 | deleteAdvertisementContractProductResponse401 | deleteAdvertisementContractProductResponse403 | deleteAdvertisementContractProductResponse404) & {
+  headers: Headers;
+};
+
+export type deleteAdvertisementContractProductResponse = (deleteAdvertisementContractProductResponseSuccess | deleteAdvertisementContractProductResponseError)
+
+export const getDeleteAdvertisementContractProductUrl = (contractId: number,
+    contractProductId: number,) => {
+
+
+
+
+  return `/api/v1/admin/advertisement-contracts/${contractId}/products/${contractProductId}`
+}
+
+/**
+ * 해당 계약에 속한 살아 있는 연결 행만 소프트 삭제합니다. 기존 광고 노출은 변경하지 않습니다.
+ * @summary 계약에서 상품 제거
+ */
+export const deleteAdvertisementContractProduct = async (contractId: number,
+    contractProductId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteAdvertisementContractProductResponse> => {
+
+  return httpClient<deleteAdvertisementContractProductResponse>(getDeleteAdvertisementContractProductUrl(contractId,contractProductId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdvertisementContractProductMutationKey = () => ['deleteAdvertisementContractProduct'] as const;
+
+export const getDeleteAdvertisementContractProductMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, TError,DeleteAdvertisementContractProductMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, TError,DeleteAdvertisementContractProductMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAdvertisementContractProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, DeleteAdvertisementContractProductMutationVariables> = (props) => {
+          const {contractId,contractProductId} = props ?? {};
+
+          return  deleteAdvertisementContractProduct(contractId,contractProductId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdvertisementContractProductMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>>
+
+    export type DeleteAdvertisementContractProductMutationError = ErrorResponse
+    export type DeleteAdvertisementContractProductMutationVariables = {contractId: number;contractProductId: number}
+
+    /**
+ * @summary 계약에서 상품 제거
+ */
+export const useDeleteAdvertisementContractProduct = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, TError,DeleteAdvertisementContractProductMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>,
+        TError,
+        DeleteAdvertisementContractProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAdvertisementContractProductMutationOptions(options), queryClient);
+    }
+
+export type updateAdvertisementContractProductResponse200 = {
+  data: SuccessResponseCreateAdminAdvertisementContractProductResponse
+  status: 200
+}
+
+export type updateAdvertisementContractProductResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateAdvertisementContractProductResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type updateAdvertisementContractProductResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateAdvertisementContractProductResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateAdvertisementContractProductResponseSuccess = (updateAdvertisementContractProductResponse200) & {
+  headers: Headers;
+};
+export type updateAdvertisementContractProductResponseError = (updateAdvertisementContractProductResponse400 | updateAdvertisementContractProductResponse401 | updateAdvertisementContractProductResponse403 | updateAdvertisementContractProductResponse404) & {
+  headers: Headers;
+};
+
+export type updateAdvertisementContractProductResponse = (updateAdvertisementContractProductResponseSuccess | updateAdvertisementContractProductResponseError)
+
+export const getUpdateAdvertisementContractProductUrl = (contractId: number,
+    contractProductId: number,) => {
+
+
+
+
+  return `/api/v1/admin/advertisement-contracts/${contractId}/products/${contractProductId}`
+}
+
+/**
+ * 계약 상품의 게시 종료일만 바꿉니다(계약 연장·단축). 시작일은 바꾸지 않습니다. 게시 기간(startDate~endDate)은 데이터 집계 기간이며 리포트는 이 기간의 데이터만 보여 줍니다. 노출 기간(광고 노출의 startAt~endAt)은 실제로 광고가 화면에 노출되는 기간이며 이 API는 바꾸지 않습니다. 노출 기간도 맞추려면 광고 노출 API로 따로 바꿉니다. 응답 data.id는 바꾼 계약 상품 식별자(contractProductId)입니다.
+ * @summary 계약 상품의 게시 종료일 수정
+ */
+export const updateAdvertisementContractProduct = async (contractId: number,
+    contractProductId: number,
+    changeAdminAdvertisementContractProductEndDateRequest: ChangeAdminAdvertisementContractProductEndDateRequest, options?: Parameters<typeof httpClient>[1]): Promise<updateAdvertisementContractProductResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<updateAdvertisementContractProductResponse>(getUpdateAdvertisementContractProductUrl(contractId,contractProductId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(changeAdminAdvertisementContractProductEndDateRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdvertisementContractProductMutationKey = () => ['updateAdvertisementContractProduct'] as const;
+
+export const getUpdateAdvertisementContractProductMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementContractProduct>>, TError,UpdateAdvertisementContractProductMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementContractProduct>>, TError,UpdateAdvertisementContractProductMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdvertisementContractProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdvertisementContractProduct>>, UpdateAdvertisementContractProductMutationVariables> = (props) => {
+          const {contractId,contractProductId,data} = props ?? {};
+
+          return  updateAdvertisementContractProduct(contractId,contractProductId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdvertisementContractProductMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdvertisementContractProduct>>>
+    export type UpdateAdvertisementContractProductMutationBody = ChangeAdminAdvertisementContractProductEndDateRequest
+    export type UpdateAdvertisementContractProductMutationError = ErrorResponse
+    export type UpdateAdvertisementContractProductMutationVariables = {contractId: number;contractProductId: number;data: ChangeAdminAdvertisementContractProductEndDateRequest}
+
+    /**
+ * @summary 계약 상품의 게시 종료일 수정
+ */
+export const useUpdateAdvertisementContractProduct = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdvertisementContractProduct>>, TError,UpdateAdvertisementContractProductMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdvertisementContractProduct>>,
+        TError,
+        UpdateAdvertisementContractProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdvertisementContractProductMutationOptions(options), queryClient);
+    }
+
 export type updateAdvertisementContractPaymentAmountResponse200 = {
   data: SuccessResponseUnit
   status: 200
@@ -11958,117 +12188,6 @@ export const useDeleteAdvertisementContractTarget = <TError = ErrorResponse,
       return useMutation(getDeleteAdvertisementContractTargetMutationOptions(options), queryClient);
     }
 
-export type deleteAdvertisementContractProductResponse200 = {
-  data: SuccessResponseUnit
-  status: 200
-}
-
-export type deleteAdvertisementContractProductResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type deleteAdvertisementContractProductResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type deleteAdvertisementContractProductResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type deleteAdvertisementContractProductResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteAdvertisementContractProductResponseSuccess = (deleteAdvertisementContractProductResponse200) & {
-  headers: Headers;
-};
-export type deleteAdvertisementContractProductResponseError = (deleteAdvertisementContractProductResponse400 | deleteAdvertisementContractProductResponse401 | deleteAdvertisementContractProductResponse403 | deleteAdvertisementContractProductResponse404) & {
-  headers: Headers;
-};
-
-export type deleteAdvertisementContractProductResponse = (deleteAdvertisementContractProductResponseSuccess | deleteAdvertisementContractProductResponseError)
-
-export const getDeleteAdvertisementContractProductUrl = (contractId: number,
-    contractProductId: number,) => {
-
-
-
-
-  return `/api/v1/admin/advertisement-contracts/${contractId}/products/${contractProductId}`
-}
-
-/**
- * 해당 계약에 속한 살아 있는 연결 행만 소프트 삭제합니다. 기존 광고 노출은 변경하지 않습니다.
- * @summary 계약에서 상품 제거
- */
-export const deleteAdvertisementContractProduct = async (contractId: number,
-    contractProductId: number, options?: Parameters<typeof httpClient>[1]): Promise<deleteAdvertisementContractProductResponse> => {
-
-  return httpClient<deleteAdvertisementContractProductResponse>(getDeleteAdvertisementContractProductUrl(contractId,contractProductId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteAdvertisementContractProductMutationKey = () => ['deleteAdvertisementContractProduct'] as const;
-
-export const getDeleteAdvertisementContractProductMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, TError,DeleteAdvertisementContractProductMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, TError,DeleteAdvertisementContractProductMutationVariables, TContext> => {
-
-const mutationKey = getDeleteAdvertisementContractProductMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, DeleteAdvertisementContractProductMutationVariables> = (props) => {
-          const {contractId,contractProductId} = props ?? {};
-
-          return  deleteAdvertisementContractProduct(contractId,contractProductId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteAdvertisementContractProductMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>>
-
-    export type DeleteAdvertisementContractProductMutationError = ErrorResponse
-    export type DeleteAdvertisementContractProductMutationVariables = {contractId: number;contractProductId: number}
-
-    /**
- * @summary 계약에서 상품 제거
- */
-export const useDeleteAdvertisementContractProduct = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>, TError,DeleteAdvertisementContractProductMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteAdvertisementContractProduct>>,
-        TError,
-        DeleteAdvertisementContractProductMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteAdvertisementContractProductMutationOptions(options), queryClient);
-    }
-
 
 export const getReplaceAiLetsCareerContentTagsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -12200,6 +12319,10 @@ export const getUpdateAdvertisementExposureExposedResponseMock = (overrideRespon
 
 export const getUpdateAdvertisementContractStatusResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getDeleteAdvertisementContractProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getUpdateAdvertisementContractProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdminAdvertisementContractProductResponse, object>> = {}): SuccessResponseCreateAdminAdvertisementContractProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
+
 export const getUpdateAdvertisementContractPaymentAmountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
@@ -12256,7 +12379,7 @@ export const getGetAdvertisementInquiryTodayCountResponseMock = (overrideRespons
 
 export const getListAdvertisementContractsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementContractSummaryResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementContractSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), source: faker.helpers.arrayElement(['APPLICATION_FORM','COMPANY_POSTING'] as const), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.helpers.arrayElement([faker.number.int(), undefined]), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentDeadline: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), budgetAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), paymentAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getGetAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementContractDetailResponse, object>> = {}): SuccessResponseAdminAdvertisementContractDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), source: faker.helpers.arrayElement(['APPLICATION_FORM','COMPANY_POSTING'] as const), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), targetId: faker.helpers.arrayElement([faker.number.int(), undefined]), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentDeadline: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), purpose: faker.helpers.arrayElement([faker.helpers.arrayElement(['FAST_APPLICANTS','FIT_APPLICANTS','BRAND_AWARENESS'] as const), undefined]), budgetAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), scheduleRequest: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), advertisementRequest: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), phoneNumber: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), businessNumberType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['BUSINESS_REGISTRATION','CORPORATE_REGISTRATION','OVERSEAS'] as const), null]), undefined]), businessNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), invoiceMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['TAX_INVOICE','NEGOTIATE'] as const), undefined]), creativeMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['REQUEST_PRODUCTION','PROVIDE_DIRECTLY'] as const), undefined]), formAnswers: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), paymentAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), productId: faker.number.int(), productName: faker.string.alpha({length: {min: 10, max: 20}}), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), productDeleted: faker.datatype.boolean(), startDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), endDate: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), addedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reportAvailable: faker.datatype.boolean(), reportUnavailableReason: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['NO_PERIOD','NOT_EXPOSABLE'] as const), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}})}))}, undefined]), ...overrideResponse})
+export const getGetAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementContractDetailResponse, object>> = {}): SuccessResponseAdminAdvertisementContractDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), source: faker.helpers.arrayElement(['APPLICATION_FORM','COMPANY_POSTING'] as const), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), targetId: faker.helpers.arrayElement([faker.number.int(), undefined]), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentDeadline: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), undefined]), purpose: faker.helpers.arrayElement([faker.helpers.arrayElement(['FAST_APPLICANTS','FIT_APPLICANTS','BRAND_AWARENESS'] as const), undefined]), budgetAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), scheduleRequest: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), advertisementRequest: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), managerName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), phoneNumber: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), businessNumberType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['BUSINESS_REGISTRATION','CORPORATE_REGISTRATION','OVERSEAS'] as const), null]), undefined]), businessNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), invoiceMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['TAX_INVOICE','NEGOTIATE'] as const), undefined]), creativeMethod: faker.helpers.arrayElement([faker.helpers.arrayElement(['REQUEST_PRODUCTION','PROVIDE_DIRECTLY'] as const), undefined]), formAnswers: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), paymentAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), productId: faker.number.int(), productName: faker.string.alpha({length: {min: 10, max: 20}}), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), productDeleted: faker.datatype.boolean(), startDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), endDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), addedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', reportAvailable: faker.datatype.boolean(), reportUnavailableReason: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['NO_PERIOD','NOT_EXPOSABLE'] as const), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}})}))}, undefined]), ...overrideResponse})
 
 export const getGetAdvertisementContractReportSummaryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportTotalResponse, object>> = {}): SuccessResponseAdminAdvertisementReportTotalResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{total: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), ctaClicks: faker.number.int()}, products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), ctaClicks: faker.number.int()}))}, undefined]), ...overrideResponse})
 
@@ -12265,8 +12388,6 @@ export const getGetAdvertisementContractProductReportResponseMock = (overrideRes
 export const getDownloadAdvertisementContractProductReportCsvResponseMock = (): string => (faker.word.sample())
 
 export const getDeleteAdvertisementContractTargetResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
-
-export const getDeleteAdvertisementContractProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
 
 export const getReplaceAiLetsCareerContentTagsMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
@@ -13049,6 +13170,30 @@ export const getUpdateAdvertisementContractStatusMockHandler = (overrideResponse
   }, options)
 }
 
+export const getDeleteAdvertisementContractProductMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
+  return http.delete('*/api/v1/admin/advertisement-contracts/:contractId/products/:contractProductId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteAdvertisementContractProductResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getUpdateAdvertisementContractProductMockHandler = (overrideResponse?: SuccessResponseCreateAdminAdvertisementContractProductResponse | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseCreateAdminAdvertisementContractProductResponse> | SuccessResponseCreateAdminAdvertisementContractProductResponse), options?: RequestHandlerOptions) => {
+  return http.patch('*/api/v1/admin/advertisement-contracts/:contractId/products/:contractProductId', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getUpdateAdvertisementContractProductResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getUpdateAdvertisementContractPaymentAmountMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
   return http.patch('*/api/v1/admin/advertisement-contracts/:contractId/payment-amount', async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
 
@@ -13433,18 +13578,6 @@ export const getDeleteAdvertisementContractTargetMockHandler = (overrideResponse
       })
   }, options)
 }
-
-export const getDeleteAdvertisementContractProductMockHandler = (overrideResponse?: SuccessResponseUnit | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<SuccessResponseUnit> | SuccessResponseUnit), options?: RequestHandlerOptions) => {
-  return http.delete('*/api/v1/admin/advertisement-contracts/:contractId/products/:contractProductId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getDeleteAdvertisementContractProductResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
 export const getOgonggoAdminAPIMock = () => [
   getReplaceAiLetsCareerContentTagsMockHandler(),
   getReplaceAiJobMockHandler(),
@@ -13511,6 +13644,8 @@ export const getOgonggoAdminAPIMock = () => [
   getUpdateAdvertisementInquiryMemoMockHandler(),
   getUpdateAdvertisementExposureExposedMockHandler(),
   getUpdateAdvertisementContractStatusMockHandler(),
+  getDeleteAdvertisementContractProductMockHandler(),
+  getUpdateAdvertisementContractProductMockHandler(),
   getUpdateAdvertisementContractPaymentAmountMockHandler(),
   getListAiLetsCareerContentsMockHandler(),
   getListAiLetsCareerContentTagTargetsMockHandler(),
@@ -13542,6 +13677,5 @@ export const getOgonggoAdminAPIMock = () => [
   getGetAdvertisementContractReportSummaryMockHandler(),
   getGetAdvertisementContractProductReportMockHandler(),
   getDownloadAdvertisementContractProductReportCsvMockHandler(),
-  getDeleteAdvertisementContractTargetMockHandler(),
-  getDeleteAdvertisementContractProductMockHandler()
+  getDeleteAdvertisementContractTargetMockHandler()
 ]
