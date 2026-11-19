@@ -22,38 +22,58 @@ const placeOf = (ad: ActiveAd) =>
   ad.position ? positionLabel(ad.position) : enumLabel('AdvertisementProductCategory', ad.category);
 
 /** 이미지가 없을 때의 칸. 어느 자리의 광고인지 글자로 적는다. */
-function PlaceFallback({ place }: { place: string }) {
+function PlaceFallback({ place, className }: { place: string; className?: string }) {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-gray-50 text-sm font-semibold text-gray-400">
+    <div
+      className={cn(
+        'flex items-center justify-center bg-gray-50 text-xs font-semibold text-gray-400',
+        className,
+      )}
+    >
       {place}
     </div>
   );
 }
 
+/** 두 카드의 머리 높이. 배너 띠와 광고 공고의 썸네일 줄이 같은 높이라 카드가 들쭉날쭉하지 않다. */
+const HEAD = 'h-16';
+
 /**
- * 카드 위의 대표 이미지. 배너는 소재 이미지(PC), 광고 공고는 대상 공고의 썸네일 → 로고 순으로 기존 `Thumbnail` 에 넘긴다 —
- * 공고 카드(`widgets/company-posts/ui/CompanyPostCard.tsx`)와 같은 컴포넌트·같은 폴백 규칙이고 새로 맞추는 규칙은 없다.
- * 칸 비율은 배너가 PC 배너처럼 가로로 길고(4:1), 광고 공고는 공고 카드 썸네일과 같은 8:5 다.
+ * 카드 머리. 배너는 소재 이미지(PC, 10:1 띠)를 자르지 않고(`object-contain`) 옅은 배경 위에 둔다. 광고 공고는 큰 이미지 대신
+ * 공고 카드(`widgets/company-posts/ui/CompanyPostCard.tsx`)처럼 작은 정사각 썸네일 → 로고를 제목 왼쪽에 둔다. 둘 다 기존
+ * `Thumbnail` 의 후보·폴백 규칙 그대로다(2026-11-19 사용자 검수).
  */
-function CardImage({ ad }: { ad: ActiveAd }) {
+function CardHead({ ad }: { ad: ActiveAd }) {
   const place = placeOf(ad);
-  const banner = ad.category !== 'JOB_POSTING';
-  const src = banner
-    ? (ad.imageUrl ?? undefined)
-    : [ad.target?.thumbnailUrl ?? undefined, ad.target?.logoUrl ?? undefined];
+  if (ad.category !== 'JOB_POSTING') {
+    return (
+      <div className={cn(HEAD, 'overflow-hidden rounded-lg bg-gray-50')}>
+        <Thumbnail
+          src={ad.imageUrl ?? undefined}
+          alt={`${ad.name} 소재`}
+          className="h-full w-full object-contain"
+          fallback={<PlaceFallback place={place} className="h-full w-full" />}
+        />
+      </div>
+    );
+  }
   return (
-    <div
-      className={cn(
-        'overflow-hidden border-b border-gray-100',
-        banner ? 'aspect-[4/1]' : 'aspect-[8/5]',
-      )}
-    >
-      <Thumbnail
-        src={src}
-        alt={banner ? `${ad.name} 소재` : (ad.target?.title ?? '')}
-        className="h-full w-full"
-        fallback={<PlaceFallback place={place} />}
-      />
+    <div className={cn(HEAD, 'flex items-center gap-3 rounded-lg bg-gray-50 px-3')}>
+      <span className="size-12 shrink-0 overflow-hidden rounded-md border border-gray-100 bg-white">
+        <Thumbnail
+          src={[ad.target?.thumbnailUrl ?? undefined, ad.target?.logoUrl ?? undefined]}
+          alt=""
+          className="h-full w-full"
+        />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold text-gray-900">
+          {ad.target?.title ?? place}
+        </span>
+        {ad.target ? (
+          <span className="block truncate text-xs text-gray-500">{ad.target.companyName}</span>
+        ) : null}
+      </span>
     </div>
   );
 }
@@ -68,27 +88,34 @@ function elapsedShare(ad: ActiveAd): number {
 
 function ActiveAdCard({ ad }: { ad: ActiveAd }) {
   const posting = ad.category === 'JOB_POSTING';
+  const first = posting ? '카드 노출' : '노출';
+  const second = posting ? '상세 조회' : '클릭';
   // 배너는 노출·클릭, 광고 공고는 카드 노출·상세 조회를 그린다(2026-11-19 사용자).
   const spark = useMemo(
     () =>
       sparklineOption(
         ad.daily.map((row) => row.date),
         [
-          { name: posting ? '카드 노출' : '노출', values: ad.daily.map((row) => row.impressions) },
-          posting
-            ? { name: '상세 조회', values: ad.daily.map((row) => row.views) }
-            : { name: '클릭', values: ad.daily.map((row) => row.adClicks) },
+          { name: first, values: ad.daily.map((row) => row.impressions) },
+          {
+            name: second,
+            values: ad.daily.map((row) => (posting ? row.views : row.adClicks)),
+          },
         ],
+        // 셋 다 0 인 날은 집계 전이거나 숫자가 없는 날이라 선을 끊는다.
+        ad.daily.map((row) => row.impressions + row.adClicks + row.views > 0),
       ),
-    [ad.daily, posting],
+    [ad.daily, posting, first, second],
   );
-  // 배너는 스크롤을 세지 않는다(계약 5절). 스크롤 50% 칸 대신 클릭률을 크게 둔다(2026-11-19 사용자).
-  const metrics: (readonly [string, string])[] = posting
+  // 두 카드 같은 틀: 큰 숫자 하나 + 작은 칸 넷. 배너는 클릭률, 광고 공고는 상세 조회가 큰 숫자다. 배너는 스크롤을 세지
+  // 않는다(계약 5절).
+  const lead = posting
+    ? { label: '상세 조회', value: formatCount(ad.views) }
+    : { label: '클릭률', value: formatRate(ad.adClickRate) };
+  const cells: (readonly [string, string])[] = posting
     ? [
         ['노출', formatCount(ad.impressions)],
-        ['클릭', formatCount(ad.adClicks)],
         ['클릭률', formatRate(ad.adClickRate)],
-        ['상세 조회', formatCount(ad.views)],
         ['CTA 클릭', formatCount(ad.ctaClicks)],
         ['스크롤 50%', formatRate(ad.scroll50Rate)],
       ]
@@ -103,74 +130,65 @@ function ActiveAdCard({ ad }: { ad: ActiveAd }) {
     <li className="min-w-0">
       <Link
         href={adReportHref(ad.contractId, ad.contractProductId)}
-        className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors hover:border-gray-300"
+        className="flex h-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300"
       >
-        <CardImage ad={ad} />
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="min-w-0">
-            <p className="truncate text-xs text-gray-500">
-              {enumLabel('AdvertisementProductCategory', ad.category)} · {placeOf(ad)}
-            </p>
-            <p className="truncate font-semibold text-gray-900">{ad.name}</p>
-            {ad.target ? <p className="truncate text-xs text-gray-500">{ad.target.title}</p> : null}
-          </div>
+        <CardHead ad={ad} />
 
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs tabular-nums">
-              <span className="text-gray-500">
-                {dotDate(ad.startDate)} ~ {dotDate(ad.endDate)}
-              </span>
-              <span className="font-semibold text-blue-600">
-                {ad.daysLeft > 0 ? `${ad.daysLeft}일 남음` : '오늘 종료'}
-              </span>
-            </div>
-            <span
-              role="progressbar"
-              aria-label="게시 기간 중 지난 날"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(elapsedShare(ad) * 100)}
-              className="block h-1.5 rounded-full bg-gray-100"
-            >
-              <span
-                className="block h-1.5 rounded-full bg-blue-500"
-                style={{ width: `${elapsedShare(ad) * 100}%` }}
-              />
+        <div className="min-w-0">
+          <p className="truncate text-xs text-gray-500">
+            {enumLabel('AdvertisementProductCategory', ad.category)} · {placeOf(ad)}
+          </p>
+          <p className="truncate font-semibold text-gray-900">{ad.name}</p>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between text-xs tabular-nums">
+            <span className="text-gray-500">
+              {dotDate(ad.startDate)} ~ {dotDate(ad.endDate)}
+            </span>
+            <span className="font-semibold text-blue-600">
+              {ad.daysLeft > 0 ? `${ad.daysLeft}일 남음` : '오늘 종료'}
             </span>
           </div>
-
-          <div>
-            <EChart option={spark} height={56} />
-            <p className="mt-1 flex gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <span aria-hidden="true" className="block h-0.5 w-3 rounded bg-[#2a78d6]" />
-                {posting ? '카드 노출' : '노출'}
-              </span>
-              <span className="flex items-center gap-1">
-                <span aria-hidden="true" className="block h-0.5 w-3 rounded bg-[#eb6834]" />
-                {posting ? '상세 조회' : '클릭'}
-              </span>
-            </p>
-          </div>
-
-          {posting ? null : (
-            <p className="flex items-baseline justify-between rounded-lg bg-blue-50 px-4 py-3">
-              <span className="text-sm text-blue-700">클릭률</span>
-              <span className="text-2xl font-bold text-blue-700 tabular-nums">
-                {formatRate(ad.adClickRate)}
-              </span>
-            </p>
-          )}
-          <dl
-            className={cn(
-              'grid gap-y-3 rounded-lg bg-gray-50 py-3',
-              posting ? 'grid-cols-3' : 'grid-cols-4',
-            )}
+          <span
+            role="progressbar"
+            aria-label="게시 기간 중 지난 날"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(elapsedShare(ad) * 100)}
+            className="block h-1.5 rounded-full bg-gray-100"
           >
-            {metrics.map(([label, value]) => (
-              <div key={label} className="flex flex-col items-center gap-0.5">
-                <dt className="text-xs text-gray-500">{label}</dt>
-                <dd className="font-bold text-gray-900 tabular-nums">{value}</dd>
+            <span
+              className="block h-1.5 rounded-full bg-blue-500"
+              style={{ width: `${elapsedShare(ad) * 100}%` }}
+            />
+          </span>
+        </div>
+
+        <div>
+          <EChart option={spark} height={44} />
+          <p className="mt-1 flex gap-3 text-[11px] text-gray-500">
+            <span className="flex items-center gap-1">
+              <span aria-hidden="true" className="block h-0.5 w-2.5 rounded bg-[#2a78d6]" />
+              {first}
+            </span>
+            <span className="flex items-center gap-1">
+              <span aria-hidden="true" className="block h-0.5 w-2.5 rounded bg-[#eb6834]" />
+              {second}
+            </span>
+          </p>
+        </div>
+
+        <div className="mt-auto rounded-lg bg-gray-50">
+          <p className="flex items-baseline justify-between px-4 pt-3">
+            <span className="text-sm text-gray-600">{lead.label}</span>
+            <span className="text-2xl font-bold text-gray-950 tabular-nums">{lead.value}</span>
+          </p>
+          <dl className="mt-3 grid grid-cols-4 border-t border-gray-200/70 py-3">
+            {cells.map(([label, value]) => (
+              <div key={label} className="flex min-w-0 flex-col items-center gap-0.5">
+                <dt className="truncate text-[11px] text-gray-500">{label}</dt>
+                <dd className="text-sm font-bold text-gray-900 tabular-nums">{value}</dd>
               </div>
             ))}
           </dl>

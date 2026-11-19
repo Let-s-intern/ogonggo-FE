@@ -148,17 +148,19 @@ export interface SparkSeries {
 }
 
 /**
- * 대시보드 카드의 작은 추이 그래프. 축·눈금 없이 두 선만 그린다. 두 값의 크기가 많이 달라(노출과 클릭) 축을 따로 둔다.
- * 색은 날짜별 추이 그래프와 같은 순서다.
+ * 대시보드 카드의 작은 추이 그래프. 축·눈금 없이 두 선만 그린다. 두 값의 크기가 많이 달라(노출과 클릭) 보이지 않는 축을
+ * 따로 둔다. 곡선으로 그리면 값 사이가 넘쳐 0 아래로 꺼져 보여 꺾은선이다. `hasData` 가 거짓인 날(집계 전, 숫자 없는
+ * 날)은 0 으로 떨어뜨리지 않고 선을 끊는다. 색은 날짜별 추이 그래프와 같은 순서다.
  */
 export function sparklineOption(
   dates: string[],
   series: [SparkSeries, SparkSeries],
+  hasData: boolean[],
 ): EChartsCoreOption {
   return {
     color: COLORS,
     textStyle: { fontFamily: FONT_FAMILY },
-    grid: { left: 2, right: 2, top: 4, bottom: 2 },
+    grid: { left: 2, right: 2, top: 4, bottom: 4 },
     tooltip: {
       trigger: 'axis',
       confine: true,
@@ -167,17 +169,18 @@ export function sparklineOption(
     },
     xAxis: { type: 'category', data: dates, show: false, boundaryGap: false },
     yAxis: [
-      { type: 'value', show: false },
-      { type: 'value', show: false },
+      { type: 'value', show: false, min: 0 },
+      { type: 'value', show: false, min: 0 },
     ],
     series: series.map((item, index) => ({
       name: item.name,
       type: 'line',
       yAxisIndex: index,
-      data: item.values,
+      data: item.values.map((value, day) => (hasData[day] ? value : null)),
+      connectNulls: false,
       showSymbol: false,
-      smooth: true,
-      lineStyle: { width: 2 },
+      smooth: false,
+      lineStyle: { width: 1.5 },
       ...(index === 0 ? { areaStyle: { opacity: 0.08 } } : {}),
     })),
   };
