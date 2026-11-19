@@ -10,37 +10,38 @@ import type { AdvertisementExposure } from '../api/useAdvertisementExposures';
  */
 export type { AdPostingPosition };
 
+/** 판매 상품 차례(계약 8절). 광고 공고 세팅 탭과 상품 자리 고르기가 이 차례다. */
 export const AD_POSTING_POSITIONS: readonly AdPostingPosition[] = [
   'JOB_PICK',
   'JOB_LIST',
-  'BOOTCAMP_LIST',
-  'JOB_DETAIL_SIDE',
+  'CALENDAR_DAY',
+  'MYPAGE_SCRAP',
 ];
 
 export const AD_POSTING_POSITION_LABELS: Record<AdPostingPosition, string> = {
   JOB_PICK: '오공고 PICK',
-  JOB_LIST: '채용공고 목록',
-  BOOTCAMP_LIST: '부트캠프 목록',
-  JOB_DETAIL_SIDE: '공고 상세 추천',
+  JOB_LIST: '리스트 상단 고정',
+  CALENDAR_DAY: '공고 달력',
+  MYPAGE_SCRAP: '마이페이지 스크랩',
 };
 
 export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string> = {
   JOB_PICK:
     '홈 히어로 "오늘의 추천 공고" 의 오공고 PICK 탭 맨 앞 칸. 탭의 카드 수는 그대로이고, 같은 공고는 PICK 목록에서 빠집니다.',
   JOB_LIST:
-    '채용공고 목록 첫 페이지 맨 앞 칸. 일반 카드와 같은 모양에 광고 표시가 붙고, 많아야 3칸입니다.',
-  BOOTCAMP_LIST:
-    '부트캠프 목록 첫 페이지 맨 앞 칸. 일반 카드와 같은 모양에 광고 표시가 붙고, 많아야 3칸입니다.',
-  JOB_DETAIL_SIDE:
-    '공고 상세 오른쪽 추천 카드. 지금 보는 공고는 빠지고, 좁은 화면에서는 본문 아래로 내려갑니다.',
+    '채용공고 목록의 직무 탭 1페이지 맨 위 칸. 직무당 한 칸이고 직렬 필터와 상관없이 붙습니다. 전체 탭과 2페이지부터는 없습니다.',
+  CALENDAR_DAY:
+    '공고 달력에서 고른 날짜의 공고 목록 맨 앞 칸. 노출 기간 안의 날짜면 날마다 붙습니다.',
+  MYPAGE_SCRAP:
+    '마이페이지 지원 관리 보드(PC 보드 보기)의 채용공고 스크랩 칸 맨 앞 칸. 모바일 리스트 보기에는 없습니다.',
 };
 
-/** 목록 자리와 오공고 PICK 은 그 목록의 콘텐츠만 걸 수 있다(PICK 은 채용공고만, 계약 7절). 상세 추천은 둘 다 된다. */
+/** 광고 공고 자리는 모두 채용공고만 걸 수 있다(계약 8절). */
 export const AD_POSTING_FIXED_TARGET: Record<AdPostingPosition, 'JOB' | 'BOOTCAMP' | undefined> = {
   JOB_PICK: 'JOB',
   JOB_LIST: 'JOB',
-  BOOTCAMP_LIST: 'BOOTCAMP',
-  JOB_DETAIL_SIDE: undefined,
+  CALENDAR_DAY: 'JOB',
+  MYPAGE_SCRAP: 'JOB',
 };
 
 export const isAdPostingPosition = (value: unknown): value is AdPostingPosition =>

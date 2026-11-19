@@ -29,16 +29,19 @@ const PRODUCTS = '*/api/v1/admin/advertisement-products';
 const EXPOSURES = '*/api/v1/admin/advertisement-exposures';
 const CONTRACTS = '*/api/v1/admin/advertisement-contracts';
 
-/** 자리마다 그 자리가 속한 카테고리(BE `AdvertisementProductPosition.category`). 생성 enum 의 자리는 모두 배너다. */
+/**
+ * 자리마다 그 자리가 속한 카테고리(BE `AdvertisementProductPosition.category`). 생성 enum 에는 광고 공고 자리도 섞여 있어
+ * 이름이 `_BANNER` 로 끝나는 것만 배너 자리로 본다.
+ */
 const BANNER_POSITIONS: readonly string[] = Object.values(
   AdminAdvertisementProductResponsePosition,
-);
-/** 광고 공고(카드) 자리(PRD `prd-business-report.md` 6.8, D12). 코드젠 전이라 생성 enum 에 아직 없다. */
+).filter((position) => position.endsWith('_BANNER'));
+/** 광고 공고(카드) 자리(계약 8절, 판매 상품 차례). 생성 enum 에는 아직 옛 자리가 남아 있다(코드젠 전). */
 const AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_PICK',
   'JOB_LIST',
-  'BOOTCAMP_LIST',
-  'JOB_DETAIL_SIDE',
+  'CALENDAR_DAY',
+  'MYPAGE_SCRAP',
 ];
 const POSITIONS: readonly string[] = [...BANNER_POSITIONS, ...AD_POSTING_POSITIONS];
 const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductResponseCategory);
