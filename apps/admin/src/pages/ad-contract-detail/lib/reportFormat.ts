@@ -17,9 +17,18 @@ export const SOURCE_LABELS: Record<string, string> = {
 export const formatCount = (value: number | null | undefined) =>
   value == null ? '-' : value.toLocaleString('ko-KR');
 
-/** 0~1 소수를 `12.3%` 로. 분모가 0 이라 `null` 이면 `-`. */
+/** 0~1 소수를 `12.3%` 로. 소수 한 자리로 고정한다(`2.0%`). 분모가 0 이라 `null` 이면 `-`. */
 export const formatRate = (value: number | null | undefined) =>
-  value == null ? '-' : `${(value * 100).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}%`;
+  value == null
+    ? '-'
+    : `${(value * 100).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+
+/** `2026-11-05` → `2026.11.05`. 날짜만 쓰는 곳은 모두 이 모양이다(노출 시각은 `formatKst`). */
+export const formatDate = (date: string) => date.slice(0, 10).replaceAll('-', '.');
+
+/** `2026.11.05 ~ 2026.11.18`. 둘 중 하나라도 없으면 `기간 미정`. */
+export const formatDateRange = (start?: string | null, end?: string | null) =>
+  start && end ? `${formatDate(start)} ~ ${formatDate(end)}` : '기간 미정';
 
 export const formatPercent = (value: number | null | undefined) =>
   value == null ? '-' : `${value.toLocaleString('ko-KR', { maximumFractionDigits: 1 })}%`;

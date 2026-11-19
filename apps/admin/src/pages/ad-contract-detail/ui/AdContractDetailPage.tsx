@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { HttpError } from '@ogonggo/api';
 import {
@@ -65,6 +65,7 @@ import { PageHeader } from '@/widgets/page-header';
 import { ProductReportModal, reportCellLabel, unavailableMessage } from './ProductReportModal';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
 import { AdTargetsField } from './AdTargetsField';
+import { formatDateRange } from '../lib/reportFormat';
 import { ProductAddForm } from './ProductAddForm';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
@@ -72,9 +73,40 @@ type BannerProduct = AdvertisementProduct & { position: BannerPosition };
 /** 계약 상품 행에서 연 광고 공고 모달. `exposure` 가 `null` 이면 새로 건다. */
 interface PostingEdit {
   product: AdvertisementProduct;
-  position: AdPostingPosition;
+  position: AdPostingPosition | null;
   row: AdminAdvertisementContractProductResponse;
   exposure: AdPostingExposure | null;
+}
+
+/**
+ * 계약 상품 행의 관리 버튼. 배너·광고 공고가 같은 규칙이다 — 등록은 채움, 수정은 파란 외곽선, 빼기는 회색 외곽선. 모두 같은
+ * 높이·한 줄이고, 클릭 뒤 포커스 테두리는 남기지 않고 키보드 포커스에만 보인다. 노출이 여럿이면 `· 3` 처럼 개수를 붙인다.
+ */
+function RowActionButton({
+  kind,
+  label,
+  count,
+  ...props
+}: {
+  kind: 'register' | 'edit' | 'remove';
+  label: string;
+  count?: number;
+} & Omit<ComponentProps<typeof Button>, 'children'>) {
+  return (
+    <Button
+      size="sm"
+      variant={kind === 'register' ? 'primary' : 'secondary'}
+      className={cn(
+        'h-8 shrink-0 px-2.5 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
+        kind === 'edit' && 'border-blue-300 text-blue-600 hover:bg-blue-50',
+        kind === 'remove' && 'text-gray-600',
+      )}
+      {...props}
+    >
+      {label}
+      {count ? <span className="pl-1 text-xs font-medium opacity-80">· {count}</span> : null}
+    </Button>
+  );
 }
 
 /** `YYYY-MM-DD` 다음 날. 광고 공고 노출 끝은 상품 종료일 다음 날 00:00(KST)이다. */
@@ -566,14 +598,16 @@ function ProductsCard({
   const postingSiblings = useAdvertisementExposures(postingEdit?.product.id ?? null);
   const addTarget = useAddContractTarget(contract.id);
 
-  /** 광고 공고 자리가 있는 상품만 노출을 걸 수 있다. `비즈니스 공고 등록` 처럼 자리가 없는 광고 공고 상품은 제외. */
+  /**
+   * 광고 공고 상품은 카테고리(`JOB_POSTING`)로 가른다(2026-11-19 사용자). 자리가 없는 상품(`비즈니스 공고 등록`)도 노출을 걸 수
+   * 있게 두되, 모달이 자리가 없어 웹 목록에 나오지 않는다고 알린다.
+   */
   const postingProductOf = (row: AdminAdvertisementContractProductResponse) => {
-    if (row.productDeleted) return null;
+    if (row.productDeleted || row.category !== 'JOB_POSTING') return null;
     const product = products.data?.find((candidate) => candidate.id === row.productId);
-    const position = String(product?.position ?? '');
-    return product && product.category === 'JOB_POSTING' && isAdPostingPosition(position)
-      ? { product, position }
-      : null;
+    if (!product) return null;
+    const position = String(product.position ?? '');
+    return { product, position: isAdPostingPosition(position) ? position : null };
   };
 
   /** 이 계약 상품에 걸린 노출. 같은 상품을 기간을 나눠 두 번 붙였으면 기간이 겹치는 것만. */
@@ -588,8 +622,8 @@ function ProductsCard({
     );
 
   /** 새 광고 공고 모달의 기본 대상: 계약의 광고할 공고 중 그 자리에 걸 수 있는 첫 번째(공고 등록 계약이면 자동 대상). */
-  const defaultTarget = (position: AdPostingPosition): ContentTarget | null => {
-    const fixed = AD_POSTING_FIXED_TARGET[position];
+  const defaultTarget = (position: AdPostingPosition | null): ContentTarget | null => {
+    const fixed = position ? AD_POSTING_FIXED_TARGET[position] : undefined;
     return targetsOf(contract).find((target) => !fixed || target.targetType === fixed) ?? null;
   };
 
@@ -619,23 +653,21 @@ function ProductsCard({
     {
       key: 'period',
       header: '게시 기간',
-      width: 'w-56',
+      width: 'w-48',
       render: (row) => (
-        <span className="text-sm">
-          {row.startDate && row.endDate ? `${row.startDate} ~ ${row.endDate}` : '-'}
-        </span>
+        <span className="text-sm">{formatDateRange(row.startDate, row.endDate)}</span>
       ),
     },
     {
       key: 'addedAt',
       header: '넣은 날',
-      width: 'w-40',
+      width: 'w-36',
       render: (row) => <span className="text-sm">{formatKst(row.addedAt)}</span>,
     },
     {
       key: 'report',
       header: '리포트',
-      width: 'w-32',
+      width: 'w-28',
       render: (row) => {
         const item = reportProducts.find(
           (candidate) => candidate.contractProductId === row.contractProductId,
@@ -656,26 +688,31 @@ function ProductsCard({
     {
       key: 'actions',
       header: '관리',
-      width: 'w-44',
+      // 버튼 둘이 한 줄에 들어가는 고정 폭. 좁은 화면에서도 줄바꿈하지 않는다.
+      width: 'w-60 min-w-60',
       render: (row) => {
         const banner = bannerProductOf(row);
         const posting = postingProductOf(row);
         const postingExposures = posting ? exposuresOf(row) : [];
         return (
           // 행 전체가 리포트를 여는 자리라 버튼 클릭은 여기서 멈춘다.
-          <span className="flex items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+          <span
+            className="flex flex-nowrap items-center gap-1.5"
+            onClick={(event) => event.stopPropagation()}
+          >
             {banner ? (
-              <Button
-                size="sm"
+              <RowActionButton
+                kind="register"
+                label="배너 등록"
                 aria-label={`${row.productName} 배너 등록`}
                 onClick={() => setBannerProduct(banner)}
-              >
-                배너 등록
-              </Button>
+              />
             ) : null}
             {posting ? (
-              <Button
-                size="sm"
+              <RowActionButton
+                kind={postingExposures.length > 0 ? 'edit' : 'register'}
+                label={postingExposures.length > 0 ? '공고 수정' : '공고 등록'}
+                count={postingExposures.length > 1 ? postingExposures.length : undefined}
                 aria-label={`${row.productName} ${postingExposures.length > 0 ? '공고 수정' : '공고 등록'}`}
                 onClick={() =>
                   setPostingEdit({
@@ -684,18 +721,11 @@ function ProductsCard({
                     exposure: postingExposures[0] ?? null,
                   })
                 }
-              >
-                {postingExposures.length > 0 ? '공고 수정' : '공고 등록'}
-                {postingExposures.length > 1 ? (
-                  <span className="ml-1 rounded-full bg-white/25 px-1.5 text-[11px]">
-                    {postingExposures.length}
-                  </span>
-                ) : null}
-              </Button>
+              />
             ) : null}
-            <Button
-              size="sm"
-              variant="secondary"
+            <RowActionButton
+              kind="remove"
+              label="빼기"
               aria-label={`${row.productName} 빼기`}
               disabled={remove.isPending}
               onClick={() =>
@@ -705,9 +735,7 @@ function ProductsCard({
                   },
                 })
               }
-            >
-              빼기
-            </Button>
+            />
           </span>
         );
       },

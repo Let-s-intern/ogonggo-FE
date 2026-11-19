@@ -9,11 +9,11 @@ import {
 } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
   AD_POSTING_FIXED_TARGET,
-  AD_POSTING_POSITION_LABELS,
   type AdPostingExposure,
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import type { AdvertisementProduct } from '@/entities/advertisement-product/api/useAdvertisementProducts';
+import { positionLabel } from '@/entities/advertisement-product/lib/product';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { ContractField } from '@/widgets/banner-form';
 import {
@@ -25,7 +25,8 @@ import {
 interface AdPostingFormModalProps {
   /** 노출을 거는 광고 공고 상품(자리). 열 때의 탭으로 정해지고 바꾸지 않는다. */
   product: AdvertisementProduct;
-  position: AdPostingPosition;
+  /** 자리가 없는 광고 공고 상품(`비즈니스 공고 등록`)이면 `null`. 노출은 걸리지만 웹 목록에 나오지 않는다. */
+  position: AdPostingPosition | null;
   /** `null` 이면 새 광고 공고다. */
   exposure: AdPostingExposure | null;
   /** 이 자리에 이미 건 대상(`targetKey`). 같은 자리에 같은 공고를 두 번 걸 수 없다(BE 409). */
@@ -177,7 +178,7 @@ export function AdPostingFormModal({
     <Modal
       open
       title={exposure ? '광고 공고 수정' : '새 광고 공고'}
-      description={`${product.name} · ${AD_POSTING_POSITION_LABELS[position]} 자리`}
+      description={position ? `${product.name} · ${positionLabel(position)}` : product.name}
       onClose={onClose}
       className="w-[min(56rem,calc(100vw-2rem))]"
     >
@@ -187,6 +188,12 @@ export function AdPostingFormModal({
             saveMutation.error,
             '저장하지 못했습니다. 입력값을 확인해 주세요.',
           )}
+        </Callout>
+      ) : null}
+      {position === null ? (
+        <Callout tone="info" className="mb-4">
+          이 상품에는 노출 자리가 없어 웹 목록에는 나오지 않아요. 광고 상품에서 자리를 정하면 그
+          자리에 나와요.
         </Callout>
       ) : null}
       {registerError ? (
@@ -235,7 +242,7 @@ export function AdPostingFormModal({
         ) : (
           <ContentTargetPicker
             takenKeys={blocked}
-            fixedType={AD_POSTING_FIXED_TARGET[position]}
+            fixedType={position ? AD_POSTING_FIXED_TARGET[position] : undefined}
             onPick={setTarget}
           />
         )}
@@ -250,7 +257,6 @@ export function AdPostingFormModal({
             : (initialContract?.companyName ?? null)
         }
         onChange={setContractId}
-        hint="돈을 받고 싣는 광고 공고는 그 광고 계약을 고릅니다. 계약 리포트의 광고 카드 숫자가 이 연결로 모입니다."
       />
 
       <div className="grid grid-cols-2 gap-3">
@@ -321,7 +327,7 @@ export function AdPostingFormModal({
             checked={adLabel}
             onChange={(event) => setAdLabel(event.target.checked)}
           />
-          광고 표시(카드에 광고 딱지를 붙인다)
+          광고 표시(AD 딱지를 붙인다)
         </label>
       </div>
 
