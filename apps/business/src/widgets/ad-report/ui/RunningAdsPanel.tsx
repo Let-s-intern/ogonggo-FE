@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { enumLabel } from '@ogonggo/api';
-import { cn } from '@ogonggo/ui';
+import { Badge, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { EChart } from '@/shared/ui/EChart';
-import { Thumbnail } from '@/shared/ui/Thumbnail';
 import { myAdContractHref } from '@/widgets/my-ad-contracts/model';
 import { fetchActiveAds } from '../lib/api';
 import { sparklineOption } from '../lib/chartOptions';
@@ -20,63 +19,6 @@ export const adReportHref = (contractId: number, contractProductId: number) =>
 /** 자리 이름. 광고 공고는 자리가 없으면 카테고리 이름이다. */
 const placeOf = (ad: ActiveAd) =>
   ad.position ? positionLabel(ad.position) : enumLabel('AdvertisementProductCategory', ad.category);
-
-/** 이미지가 없을 때의 칸. 어느 자리의 광고인지 글자로 적는다. */
-function PlaceFallback({ place, className }: { place: string; className?: string }) {
-  return (
-    <div
-      className={cn(
-        'flex items-center justify-center bg-gray-50 text-xs font-semibold text-gray-400',
-        className,
-      )}
-    >
-      {place}
-    </div>
-  );
-}
-
-/** 두 카드의 머리 높이. 배너 띠와 광고 공고의 썸네일 줄이 같은 높이라 카드가 들쭉날쭉하지 않다. */
-const HEAD = 'h-16';
-
-/**
- * 카드 머리. 배너는 소재 이미지(PC, 10:1 띠)를 자르지 않고(`object-contain`) 옅은 배경 위에 둔다. 광고 공고는 큰 이미지 대신
- * 공고 카드(`widgets/company-posts/ui/CompanyPostCard.tsx`)처럼 작은 정사각 썸네일 → 로고를 제목 왼쪽에 둔다. 둘 다 기존
- * `Thumbnail` 의 후보·폴백 규칙 그대로다(2026-11-19 사용자 검수).
- */
-function CardHead({ ad }: { ad: ActiveAd }) {
-  const place = placeOf(ad);
-  if (ad.category !== 'JOB_POSTING') {
-    return (
-      <div className={cn(HEAD, 'overflow-hidden rounded-lg bg-gray-50')}>
-        <Thumbnail
-          src={ad.imageUrl ?? undefined}
-          alt={`${ad.name} 소재`}
-          className="h-full w-full object-contain"
-          fallback={<PlaceFallback place={place} className="h-full w-full" />}
-        />
-      </div>
-    );
-  }
-  return (
-    <div className={cn(HEAD, 'flex items-center gap-3 rounded-lg bg-gray-50 px-3')}>
-      <span className="size-12 shrink-0 overflow-hidden rounded-md border border-gray-100 bg-white">
-        <Thumbnail
-          src={[ad.target?.thumbnailUrl ?? undefined, ad.target?.logoUrl ?? undefined]}
-          alt=""
-          className="h-full w-full"
-        />
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-semibold text-gray-900">
-          {ad.target?.title ?? place}
-        </span>
-        {ad.target ? (
-          <span className="block truncate text-xs text-gray-500">{ad.target.companyName}</span>
-        ) : null}
-      </span>
-    </div>
-  );
-}
 
 /** 상품 기간 중 지난 몫. 시작일과 종료일을 모두 하루로 센다. */
 function elapsedShare(ad: ActiveAd): number {
@@ -133,38 +75,47 @@ function ActiveAdCard({ ad }: { ad: ActiveAd }) {
         href={adReportHref(ad.contractId, ad.contractProductId)}
         className="grid gap-5 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 md:grid-cols-[3fr_4fr_3fr] md:items-center md:gap-6 md:p-5"
       >
-        {/* 왼쪽: 무엇을 어디에 언제까지 */}
-        <div className="flex min-w-0 flex-col gap-3">
-          <CardHead ad={ad} />
-          <div className="min-w-0">
-            <p className="truncate text-xs text-gray-500">
-              {enumLabel('AdvertisementProductCategory', ad.category)} · {placeOf(ad)}
-            </p>
-            <p className="truncate font-semibold text-gray-900">{ad.name}</p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs tabular-nums">
-              <span className="text-gray-500">
-                {dotDate(ad.startDate)} ~ {dotDate(ad.endDate)}
-              </span>
-              <span className="font-semibold text-blue-600">
-                {ad.daysLeft > 0 ? `${ad.daysLeft}일 남음` : '오늘 종료'}
-              </span>
-            </div>
-            <span
-              role="progressbar"
-              aria-label="게시 기간 중 지난 날"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(elapsedShare(ad) * 100)}
-              className="block h-1.5 rounded-full bg-gray-100"
-            >
-              <span
-                className="block h-1.5 rounded-full bg-blue-500"
-                style={{ width: `${elapsedShare(ad) * 100}%` }}
-              />
+        {/* 왼쪽: 종류·자리 → 무엇(크게) → 기간·남은 날 → 진행 바 */}
+        <div className="flex min-w-0 flex-col">
+          <p className="flex min-w-0 items-center gap-2">
+            <Badge tone="main" className="shrink-0 px-1.5 py-0.5 text-xs font-semibold">
+              {enumLabel('AdvertisementProductCategory', ad.category)}
+            </Badge>
+            <span className="truncate text-xs text-gray-500">{placeOf(ad)}</span>
+          </p>
+          {/* 광고 공고는 상품명이 자리 칩과 겹쳐 대상 공고 제목을 크게 쓴다. 배너는 상품명이다. */}
+          <p className="mt-1.5 truncate text-[17px] font-bold text-gray-900">
+            {ad.target?.title ?? ad.name}
+          </p>
+          <p className="mt-3 flex items-center justify-between gap-2 text-[13px] tabular-nums">
+            <span className="text-gray-500">
+              {dotDate(ad.startDate)} ~ {dotDate(ad.endDate)}
             </span>
-          </div>
+            <span
+              className={cn(
+                'shrink-0 font-semibold',
+                ad.daysLeft <= 3 ? 'text-orange-600' : 'text-blue-500',
+              )}
+            >
+              {ad.daysLeft > 0 ? `${ad.daysLeft}일 남음` : '오늘 종료'}
+            </span>
+          </p>
+          <span
+            role="progressbar"
+            aria-label="게시 기간 중 지난 날"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(elapsedShare(ad) * 100)}
+            className="mt-1.5 block h-1 rounded-full bg-gray-100"
+          >
+            <span
+              className={cn(
+                'block h-1 rounded-full',
+                ad.daysLeft <= 3 ? 'bg-orange-500' : 'bg-blue-500',
+              )}
+              style={{ width: `${elapsedShare(ad) * 100}%` }}
+            />
+          </span>
         </div>
 
         {/* 가운데: 선 하나짜리 추이. 수집 시작일부터 오늘까지 */}

@@ -97,12 +97,8 @@ interface ReportPlan {
   dailyImpressions: number;
   zeroDays: string[];
   target: { targetType: 'JOB' | 'BOOTCAMP'; targetId: number; title: string };
-  /**
-   * 대시보드 카드의 대표 이미지(계약 4절). 배너는 첫 소재의 PC 이미지 — 사용자 웹(4000)의 `public/banners/` 소재를
-   * 쓴다. 웹이 안 떠 있으면 카드가 기본 칸으로 떨어진다. 광고 공고는 대상 공고의 썸네일·로고.
-   */
-  imageUrl: string | null;
-  targetImages: { companyName: string; thumbnailUrl: string | null; logoUrl: string | null } | null;
+  /** 광고 공고 상품의 대상 공고 회사명. 광고 공고 소재 이름(`<제목> · <회사명>`, 계약 5절)에 쓴다. 배너는 null. */
+  targetCompanyName: string | null;
 }
 
 const PLANS: Record<number, ReportPlan> = {
@@ -116,8 +112,7 @@ const PLANS: Record<number, ReportPlan> = {
     dailyImpressions: 1400,
     zeroDays: ['2026-11-09'],
     target: { targetType: 'JOB', targetId: 15818, title: '2027 상반기 신입 백엔드 개발자' },
-    imageUrl: 'http://localhost:4000/banners/jobs-pc.svg',
-    targetImages: null,
+    targetCompanyName: null,
   },
   12: {
     position: 'JOB_LIST',
@@ -126,13 +121,7 @@ const PLANS: Record<number, ReportPlan> = {
     dailyImpressions: 2600,
     zeroDays: ['2026-11-12'],
     target: { targetType: 'JOB', targetId: 15818, title: '2027 상반기 신입 백엔드 개발자' },
-    imageUrl: null,
-    // biz 의 `public/landing/cases/` 사진이라 4002 에서 바로 뜬다.
-    targetImages: {
-      companyName: '오공고 테스트 기업',
-      thumbnailUrl: '/landing/cases/tosspayments.jpg',
-      logoUrl: null,
-    },
+    targetCompanyName: '오공고 테스트 기업',
   },
   21: {
     position: 'BOOTCAMP_LIST_TOP_BANNER',
@@ -141,8 +130,7 @@ const PLANS: Record<number, ReportPlan> = {
     dailyImpressions: 900,
     zeroDays: [],
     target: { targetType: 'BOOTCAMP', targetId: 501, title: '프론트엔드 부트캠프 12기' },
-    imageUrl: 'http://localhost:4000/banners/business-pc.svg',
-    targetImages: null,
+    targetCompanyName: null,
   },
 };
 
@@ -285,8 +273,8 @@ function withoutScroll<
 
 /** 소재 이름. 광고 공고 소재는 대상 공고 제목 · 회사명이다(계약 5절). */
 function exposureNameOf(plan: ReportPlan, exposure: ReportPlan['exposures'][number]): string {
-  return plan.targetImages
-    ? `${plan.target.title} · ${plan.targetImages.companyName}`
+  return plan.targetCompanyName
+    ? `${plan.target.title} · ${plan.targetCompanyName}`
     : exposure.name;
 }
 
@@ -459,15 +447,7 @@ export interface MockActiveAd {
   views: number;
   ctaClicks: number;
   scroll50Rate: number | null;
-  imageUrl: string | null;
-  target: {
-    targetType: 'JOB' | 'BOOTCAMP';
-    targetId: number;
-    title: string;
-    companyName: string;
-    thumbnailUrl: string | null;
-    logoUrl: string | null;
-  } | null;
+  target: { targetType: 'JOB' | 'BOOTCAMP'; targetId: number; title: string } | null;
   collectedSince: string;
   daily: { date: string; impressions: number; adClicks: number; views: number }[];
 }
@@ -508,11 +488,7 @@ export function buildActiveAds(
             views: summary.views,
             ctaClicks: summary.ctaClicks,
             scroll50Rate: summary.scrollFunnel?.find((step) => step.threshold === 50)?.rate ?? null,
-            imageUrl: plan.imageUrl,
-            target:
-              product.category === 'JOB_POSTING' && plan.targetImages
-                ? { ...plan.target, ...plan.targetImages }
-                : null,
+            target: product.category === 'JOB_POSTING' ? plan.target : null,
             collectedSince: COLLECTED_SINCE,
             daily: report.daily.map(({ date, impressions, adClicks, views }) => ({
               date,

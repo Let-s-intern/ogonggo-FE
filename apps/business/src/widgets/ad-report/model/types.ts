@@ -118,17 +118,8 @@ export interface ActiveAd {
   ctaClicks: number;
   /** 스크롤 50% 까지 내린 순 방문자 비율(0~1). */
   scroll50Rate: number | null;
-  /** 배너 상품의 첫 소재 이미지. */
-  imageUrl: string | null;
-  /** 광고 공고 상품이 걸린 공고·부트캠프. */
-  target: {
-    targetType: 'JOB' | 'BOOTCAMP';
-    targetId: number;
-    title: string;
-    companyName: string;
-    thumbnailUrl: string | null;
-    logoUrl: string | null;
-  } | null;
+  /** 광고 공고 상품이 걸린 공고·부트캠프. 카드는 상품명 아래 제목 한 줄만 쓴다. */
+  target: { targetType: 'JOB' | 'BOOTCAMP'; targetId: number; title: string } | null;
   /** 수집 시작일. 카드 그래프는 이 날부터 그린다. */
   collectedSince: string;
   daily: { date: string; impressions: number; adClicks: number; views: number }[];
