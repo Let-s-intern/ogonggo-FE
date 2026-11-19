@@ -1,6 +1,8 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { BOOTCAMP_FIXTURES } from './fixtures/bootcamp';
 import { registeredAtFor } from './fixtures/admin-content';
 import { JOB_FIXTURES, type JobFixture } from './fixtures/job';
+import type { UserBootcampDetailResponse } from '../generated/user/models/userBootcampDetailResponse';
 import type { UserBootcampSummaryResponse } from '../generated/user/models/userBootcampSummaryResponse';
 import type { UserJobSummaryResponse } from '../generated/user/models/userJobSummaryResponse';
 
@@ -8,17 +10,19 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * 광고 공고 공개 조회(`GET /api/v1/advertisement-exposures/postings?position=`, BE Push 5). 모양은
  * `.claude/tasks/memos/광고-리포트-API-계약-2026-11-19.md` 2절이다. 코드젠 전이라 응답 타입은 아래에 손으로 적는다.
  *
- * 대상은 기존 목 공고이고 모두 채용공고다(계약 8절, 부트캠프 자리는 판매 상품이 없어 뺐다).
+ * 대상은 기존 목 공고·부트캠프다. 부트캠프 목록 상단 고정만 부트캠프이고 나머지는 채용공고다.
  * - `JOB_LIST`: 리스트 상단 고정. 웹 직무 칩 다섯 직군마다 하나씩 둔다. `jobField` 가 없으면 400 이다(계약 8절).
  *   세일즈의 공고 683 은 그 탭 첫 쪽에도 있는 공고라 웹이 일반 목록에서 빼는지 본다. IT·개발에는 둘을 둬 웹이 첫 건만
  *   쓰는지 본다. 대상 공고는 목 공고 목록(`handlers.ts`)에서 그 직군으로 걸러지는 공고다.
  * - `CALENDAR_DAY`: 공고 달력 날짜별 목록 맨 앞. 노출 기간(`startAt`·`endAt`)을 함께 준다 — 계약에 없는 칸이라 백엔드에
  *   요청했다. 71 은 11월 16일~30일, 72 는 11월 19일~21일이라 그 밖의 날을 고르면 빠져야 한다.
  * - `JOB_DETAIL_SIDE`: 공고 상세 옆 추천. 개수 제한 없이 쌓는다. 공고 700 을 넣어 `/jobs/700` 에서 자기 공고가 빠지는지 본다.
+ * - `BOOTCAMP_LIST`: 부트캠프 목록 상단 고정, 대상은 부트캠프. 넷을 둬 웹이 세 칸만 쓰는지 본다. 부트캠프 23 은 목록 첫 쪽에도
+ *   있어 일반 목록에서 빠지는지 본다.
  * - `MYPAGE_SCRAP`: 마이페이지 지원 관리 보드(칸반)의 채용공고 스크랩 칸 맨 앞. 브라우저 목 워커가 받는다.
  * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 운영자 PICK 처럼 추천 문구 두 칸이 있다(계약 9절). 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
  *
- * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·53·72·82·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
+ * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·53·72·82·62·43)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
  *
  * 웹 목 서버(`apps/web/src/instrumentation.ts`)는 핸들러를 서버가 뜰 때 한 번 등록한다. 이 파일을 더한 뒤에는 웹 목
  * 서버를 다시 띄워야 서버 렌더가 이 응답을 받는다.
@@ -29,7 +33,8 @@ export type AdPostingPosition =
   | 'JOB_PICK'
   | 'JOB_DETAIL_SIDE'
   | 'CALENDAR_DAY'
-  | 'MYPAGE_SCRAP';
+  | 'MYPAGE_SCRAP'
+  | 'BOOTCAMP_LIST';
 
 export interface AdPostingResponse {
   exposureId: number;
@@ -56,6 +61,7 @@ const POSITIONS: readonly string[] = [
   'JOB_DETAIL_SIDE',
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
+  'BOOTCAMP_LIST',
 ];
 
 const SEED: {
@@ -139,6 +145,28 @@ const SEED: {
   { exposureId: 51, position: 'JOB_DETAIL_SIDE', targetType: 'JOB', targetId: 700, adLabel: true },
   { exposureId: 52, position: 'JOB_DETAIL_SIDE', targetType: 'JOB', targetId: 689, adLabel: true },
   { exposureId: 53, position: 'JOB_DETAIL_SIDE', targetType: 'JOB', targetId: 600, adLabel: false },
+  {
+    exposureId: 41,
+    position: 'BOOTCAMP_LIST',
+    targetType: 'BOOTCAMP',
+    targetId: 23,
+    adLabel: true,
+  },
+  { exposureId: 42, position: 'BOOTCAMP_LIST', targetType: 'BOOTCAMP', targetId: 9, adLabel: true },
+  {
+    exposureId: 43,
+    position: 'BOOTCAMP_LIST',
+    targetType: 'BOOTCAMP',
+    targetId: 5,
+    adLabel: false,
+  },
+  {
+    exposureId: 44,
+    position: 'BOOTCAMP_LIST',
+    targetType: 'BOOTCAMP',
+    targetId: 13,
+    adLabel: true,
+  },
   { exposureId: 81, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 698, adLabel: true },
   { exposureId: 82, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 693, adLabel: false },
   {
@@ -180,6 +208,21 @@ const toJobSummary = ({
     .slice(0, 19),
 });
 
+const toBootcampSummary = ({
+  content: _content,
+  eligibilityAndSelectionProcess: _eligibilityAndSelectionProcess,
+  applicationMethod: _applicationMethod,
+  applicationUrl: _applicationUrl,
+  managerEmail: _managerEmail,
+  inquiryUrl: _inquiryUrl,
+  publicationStartAt: _publicationStartAt,
+  publicationEndAt: _publicationEndAt,
+  sourceUrl: _sourceUrl,
+  partners: _partners,
+  curriculums: _curriculums,
+  ...summary
+}: UserBootcampDetailResponse): UserBootcampSummaryResponse => summary;
+
 function toResponse(seed: (typeof SEED)[number], displayOrder: number): AdPostingResponse | null {
   const { exposureId, position, targetType, targetId, adLabel } = seed;
   const base = {
@@ -194,6 +237,10 @@ function toResponse(seed: (typeof SEED)[number], displayOrder: number): AdPostin
     recommendationTitle: seed.recommendationTitle ?? null,
     recommendationDescription: seed.recommendationDescription ?? null,
   };
+  if (targetType === 'BOOTCAMP') {
+    const bootcamp = BOOTCAMP_FIXTURES.find((fixture) => fixture.id === targetId);
+    return bootcamp ? { ...base, job: null, bootcamp: toBootcampSummary(bootcamp) } : null;
+  }
   const job = JOB_FIXTURES.find((fixture) => fixture.id === targetId);
   return job ? { ...base, job: toJobSummary(job), bootcamp: null } : null;
 }
