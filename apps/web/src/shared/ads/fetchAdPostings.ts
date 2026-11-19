@@ -32,7 +32,7 @@ export interface AdPostingResponse {
   targetType: 'JOB' | 'BOOTCAMP';
   /** 카드에 `AD` 표시를 붙일지(계약 7절). */
   adLabel: boolean;
-  /** `JOB_LIST` 노출의 직무(계약 8절). 다른 자리는 null 이다. */
+  /** `JOB_LIST` 노출의 직무(계약 8절). `전체` 탭 노출과 다른 자리는 null 이다(계약 10절). */
   jobField?: UserJobSummaryResponseJobField | null;
   /**
    * 노출 기간(KST, 오프셋 없음). 계약 2·8절에는 없는 칸이라 백엔드에 더해 달라고 했다. 공고 달력이 고른 날짜가 기간
@@ -58,7 +58,7 @@ const TIMEOUT_MS = 3000;
  * 그대로다. 광고를 끈 배포(`shared/config/ads.ts`)에서는 부르지 않고, 실패하면 빈 목록이다 — 광고 때문에 목록이
  * 오류 화면이 되면 안 된다.
  *
- * `JOB_LIST` 는 직무(`jobField`)가 있어야 한다(없으면 400, 계약 8절). 그 직무의 광고만 온다.
+ * `JOB_LIST` 는 직무(`jobField`)를 주면 그 직무 탭의 광고, 빼면 `전체` 탭의 광고(직무가 없는 노출)만 온다(계약 10절).
  */
 export async function fetchAdPostings(
   position: AdPostingPosition,

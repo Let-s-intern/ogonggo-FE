@@ -14,7 +14,7 @@ const MESSAGES: Record<string, string> = {
     '노출 기간은 시작과 끝을 함께 넣거나 둘 다 비워 주세요. 시작이 끝보다 앞서야 해요.',
   ADVERTISEMENT_JOB_POSTING_TARGET_REQUIRED: '광고 공고는 띄울 공고를 골라야 해요.',
   ADVERTISEMENT_EXPOSURE_TARGET_DUPLICATED:
-    '이 자리에 이미 같은 공고의 광고가 있어요. 리스트 상단 고정은 같은 직무에 같은 공고를 두 번 걸 수 없어요.',
+    '이 자리에 이미 같은 공고의 광고가 있어요. 리스트 상단 고정은 같은 탭(전체 또는 직무)에 같은 공고를 두 번 걸 수 없어요.',
   ADVERTISEMENT_EXPOSURE_TARGET_NOT_FOUND: '광고할 공고를 찾을 수 없어요. 지워졌을 수 있어요.',
   ADVERTISEMENT_EXPOSURE_NOT_FOUND: '배너를 찾을 수 없어요. 다른 사람이 지웠을 수 있어요.',
   ADVERTISEMENT_CONTRACT_NOT_FOUND: '광고 계약을 찾을 수 없어요.',

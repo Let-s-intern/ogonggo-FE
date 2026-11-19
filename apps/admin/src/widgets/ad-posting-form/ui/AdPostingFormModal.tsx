@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CreateAdminAdvertisementExposureRequestJobField } from '@ogonggo/api/src/admin';
+import type { CreateAdminAdvertisementExposureRequest } from '@ogonggo/api/src/admin';
 import { Button, Callout, Field, Input, Modal, Select } from '@ogonggo/ui';
 import {
   useAdvertisementExposures,
@@ -9,10 +9,14 @@ import {
   useToggleExposure,
 } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
+  AD_POSTING_ALL_TAB,
   AD_POSTING_FIXED_TARGET,
-  AD_POSTING_JOB_FIELD_OPTIONS,
+  AD_POSTING_TAB_OPTIONS,
+  jobFieldLabel,
+  jobFieldOfTab,
   needsJobField,
   needsRecommendation,
+  tabOf,
   type AdPostingExposure,
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
@@ -36,8 +40,8 @@ interface AdPostingFormModalProps {
   /** `null` 이면 새 광고 공고다. */
   exposure: AdPostingExposure | null;
   /**
-   * 이 자리(상품)에 이미 건 노출. 같은 자리에 같은 공고를 두 번 걸 수 없다(BE 409). 리스트 상단 고정은 같은 직무 안에서만
-   * 막는다 — 다른 직무 탭이면 같은 공고를 또 걸 수 있다(계약 8절).
+   * 이 자리(상품)에 이미 건 노출. 같은 자리에 같은 공고를 두 번 걸 수 없다(BE 409). 리스트 상단 고정은 같은 탭(`전체`
+   * 또는 직무) 안에서만 막는다 — 다른 탭이면 같은 공고를 또 걸 수 있다(계약 8·10절).
    */
   taken: AdPostingExposure[];
   onClose: () => void;
@@ -57,6 +61,9 @@ interface AdPostingFormModalProps {
   onSwitch?: (exposure: AdPostingExposure) => void;
 }
 
+/** 탭 이름. `전체` 탭 값은 직무가 없는 것과 같다. */
+const tabName = (tab: string) => jobFieldLabel(jobFieldOfTab(tab));
+
 /** `datetime-local` 값과 서버 값(KST, 초까지)을 오간다. 배너 모달과 같다. */
 const toInputValue = (value: string | null | undefined) => (value ? value.slice(0, 16) : '');
 const toServerValue = (value: string) => (value ? `${value}:00` : null);
@@ -74,6 +81,9 @@ function targetOf(exposure: AdPostingExposure | null): ContentTarget | null {
 /**
  * 광고 공고 등록·수정 모달(PRD 6.8). 배너 모달(`widgets/banner-form`)과 같은 모양이고, 이미지·링크 대신 띄울 공고·부트캠프를
  * 검색해 고른다. 카드는 웹이 대상 요약으로 그린다.
+ *
+ * 리스트 상단 고정은 새로 걸 때 `전체` 와 직무 탭을 여럿 골라, 고른 탭마다 노출을 하나씩 차례로 만든다(계약 10절). 일부
+ * 탭만 실패하면 만든 노출은 두고 실패한 탭만 남겨 알린다 — 다시 저장하면 남은 탭만 만든다. 고칠 때는 탭 하나다.
  *
  * 수정은 `PUT` 전체 교체라 모든 칸을 다시 보낸다. 켜기는 교체 본문에 칸이 없어 바뀌었을 때만 따로 보낸다. 순서는 수정할 때
  * 한 칸씩 바로 옮긴다(배너 세팅의 위로·아래로와 같다).
@@ -93,7 +103,6 @@ export function AdPostingFormModal({
 }: AdPostingFormModalProps) {
   const createMutation = useCreateExposure();
   const replaceMutation = useReplaceExposure(exposure?.id ?? 0);
-  const saveMutation = exposure ? replaceMutation : createMutation;
   const toggle = useToggleExposure(exposure?.id ?? 0);
   const move = useMoveExposure();
   // 순서는 자리 전체에서 정해진다. 수정할 때 몇 번째인지 보이고 한 칸씩 옮긴다.
@@ -120,7 +129,14 @@ export function AdPostingFormModal({
   const [adLabel, setAdLabel] = useState(exposure?.adLabel ?? true);
   const [exposed, setExposed] = useState(exposure?.exposed ?? true);
   const withJobField = needsJobField(position);
-  const [jobField, setJobField] = useState(exposure?.jobField ?? '');
+  // 고칠 때의 탭 하나. `jobField` 가 없는 노출은 `전체` 탭이다.
+  const [jobField, setJobField] = useState(tabOf(exposure?.jobField));
+  // 새로 걸 때 고른 탭들. 고른 탭마다 노출을 하나씩 만든다.
+  const [tabs, setTabs] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  // 일부 탭만 실패해 다시 저장할 때 광고할 공고 연결을 또 부르지 않는다.
+  const [registered, setRegistered] = useState(false);
   // 오공고 PICK 은 운영자 PICK 처럼 추천 문구 두 칸이 있어야 한다(계약 9절). 입력칸·글자 수·검사는 운영자 PICK 것 그대로다.
   const withRecommendation = needsRecommendation(position);
   const [recommendation, setRecommendation] = useState({
@@ -129,13 +145,15 @@ export function AdPostingFormModal({
   });
   const [submitted, setSubmitted] = useState(false);
 
-  // 수정 중인 노출 자신은 빼고, 리스트 상단 고정이면 고른 직무의 노출만 본다.
+  // 수정 중인 노출 자신은 빼고, 리스트 상단 고정이면 고른 탭의 노출만 본다. 새로 걸 때는 고른 탭 중 하나라도 이미 그
+  // 공고가 있으면 막는다 — 그 탭은 409 로 실패한다.
+  const chosenTabs = exposure ? [jobField] : tabs;
   const blocked = new Set(
     taken.flatMap((row) =>
       row.id !== exposure?.id &&
       row.targetType &&
       row.targetId != null &&
-      (!withJobField || (row.jobField ?? '') === jobField)
+      (!withJobField || chosenTabs.includes(tabOf(row.jobField)))
         ? [targetKey({ targetType: row.targetType, targetId: row.targetId })]
         : [],
     ),
@@ -144,7 +162,10 @@ export function AdPostingFormModal({
   const errors = submitted
     ? {
         target: target ? undefined : '띄울 공고를 골라 주세요.',
-        jobField: withJobField && !jobField ? '직무를 골라 주세요.' : undefined,
+        jobField:
+          withJobField && !exposure && tabs.length === 0
+            ? '띄울 탭을 하나 이상 골라 주세요.'
+            : undefined,
         endAt:
           Boolean(startAt) !== Boolean(endAt)
             ? '노출 시작과 끝을 함께 넣거나 둘 다 비워 주세요. 둘 다 비우면 상시예요.'
@@ -158,7 +179,7 @@ export function AdPostingFormModal({
     setSubmitted(true);
     if (
       !target ||
-      (withJobField && !jobField) ||
+      (withJobField && !exposure && tabs.length === 0) ||
       (withRecommendation && !isRecommendationValid(recommendation)) ||
       Boolean(startAt) !== Boolean(endAt) ||
       (startAt && startAt >= endAt)
@@ -172,10 +193,8 @@ export function AdPostingFormModal({
       linkUrl: null,
       targetType: target.targetType,
       targetId: target.targetId,
-      // 리스트 상단 고정 노출의 직무(계약 8절). 값은 JobField 목록에서만 고른다.
-      jobField: withJobField
-        ? (jobField as CreateAdminAdvertisementExposureRequestJobField)
-        : undefined,
+      // 리스트 상단 고정 노출의 직무(계약 8·10절). `전체` 탭이면 비운다. 새로 걸 때는 아래에서 탭마다 채운다.
+      jobField: withJobField && exposure ? jobFieldOfTab(jobField) : undefined,
       recommendationTitle: withRecommendation ? recommendation.title.trim() : null,
       recommendationDescription: withRecommendation ? recommendation.description.trim() : null,
       adLabel,
@@ -191,27 +210,73 @@ export function AdPostingFormModal({
         },
       });
     } else {
-      createMutation.mutate(
-        { ...body, productId: product.id, exposed },
-        {
-          onSuccess: async () => {
-            if (onRegisterTarget && registerTarget) {
-              try {
-                await onRegisterTarget(target);
-              } catch (failure) {
-                // 노출은 저장됐다. 연결만 실패했다고 알리고 모달은 닫지 않는다.
-                setRegisterError(
-                  advertisementErrorMessage(failure, '광고할 공고로 연결하지 못했어요.'),
-                );
-                return;
-              }
-            }
-            onClose();
-          },
-        },
-      );
+      void createAll(body, target);
     }
   };
+
+  // 새 노출. 리스트 상단 고정은 고른 탭마다 하나씩 차례로 만들고, 다른 자리는 하나다.
+  const createAll = async (
+    body: Omit<CreateAdminAdvertisementExposureRequest, 'productId' | 'exposed'>,
+    picked: ContentTarget,
+  ) => {
+    setCreating(true);
+    setCreateError(null);
+    const failed: { tab: string; message: string }[] = [];
+    let createdAny = false;
+    for (const tab of withJobField ? tabs : [AD_POSTING_ALL_TAB]) {
+      try {
+        await createMutation.mutateAsync({
+          ...body,
+          jobField: withJobField ? jobFieldOfTab(tab) : undefined,
+          productId: product.id,
+          exposed,
+        });
+        createdAny = true;
+      } catch (failure) {
+        failed.push({
+          tab,
+          message: advertisementErrorMessage(
+            failure,
+            '저장하지 못했습니다. 입력값을 확인해 주세요.',
+          ),
+        });
+      }
+    }
+    setCreating(false);
+    if (failed.length > 0) {
+      // 만든 탭은 고르기에서 빼, 다시 저장하면 실패한 탭만 만든다.
+      setTabs(failed.map(({ tab }) => tab));
+      setCreateError(
+        withJobField
+          ? `${createdAny ? '나머지 탭은 걸었지만 ' : ''}${failed
+              .map(({ tab, message }) => `${tabName(tab)} 탭은 걸지 못했어요(${message})`)
+              .join(' ')}`
+          : (failed[0]?.message ?? null),
+      );
+    }
+    if (!createdAny) return;
+    if (onRegisterTarget && registerTarget && !registered) {
+      try {
+        await onRegisterTarget(picked);
+        setRegistered(true);
+      } catch (failure) {
+        // 노출은 저장됐다. 연결만 실패했다고 알리고 모달은 닫지 않는다.
+        setRegisterError(advertisementErrorMessage(failure, '광고할 공고로 연결하지 못했어요.'));
+        return;
+      }
+    }
+    if (failed.length === 0) onClose();
+  };
+
+  const saveError = exposure
+    ? replaceMutation.isError
+      ? advertisementErrorMessage(
+          replaceMutation.error,
+          '저장하지 못했습니다. 입력값을 확인해 주세요.',
+        )
+      : null
+    : createError;
+  const saving = exposure ? replaceMutation.isPending : creating;
 
   return (
     <Modal
@@ -221,12 +286,9 @@ export function AdPostingFormModal({
       onClose={onClose}
       className="w-[min(56rem,calc(100vw-2rem))]"
     >
-      {saveMutation.isError ? (
+      {saveError ? (
         <Callout tone="error" className="mb-4">
-          {advertisementErrorMessage(
-            saveMutation.error,
-            '저장하지 못했습니다. 입력값을 확인해 주세요.',
-          )}
+          {saveError}
         </Callout>
       ) : null}
       {position === null ? (
@@ -262,20 +324,48 @@ export function AdPostingFormModal({
         </Field>
       ) : null}
 
-      {withJobField ? (
+      {withJobField && exposure ? (
         <Field
-          label="직무"
+          label="탭"
           htmlFor="ad-posting-job-field"
           required
-          error={errors.jobField}
-          hint="웹 채용공고 목록의 이 직무 탭 1페이지 맨 위에 나가요. 직무당 한 칸이에요."
+          hint="웹 채용공고 목록의 이 탭 1페이지 맨 위에 나가요. 탭당 한 칸이에요."
         >
           <Select
             id="ad-posting-job-field"
-            options={[{ value: '', label: '직무 고르기' }, ...AD_POSTING_JOB_FIELD_OPTIONS]}
+            options={AD_POSTING_TAB_OPTIONS}
             value={jobField}
             onChange={(event) => setJobField(event.target.value)}
           />
+        </Field>
+      ) : null}
+      {withJobField && !exposure ? (
+        <Field
+          label="탭"
+          required
+          error={errors.jobField}
+          hint="고른 탭마다 웹 채용공고 목록 1페이지 맨 위에 나가요. 탭마다 노출이 하나씩 생겨요."
+        >
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {AD_POSTING_TAB_OPTIONS.map((option) => (
+              <label key={option.value} className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={tabs.includes(option.value)}
+                  onChange={(event) =>
+                    setTabs((current) =>
+                      event.target.checked
+                        ? AD_POSTING_TAB_OPTIONS.map(({ value }) => value).filter(
+                            (value) => value === option.value || current.includes(value),
+                          )
+                        : current.filter((value) => value !== option.value),
+                    )
+                  }
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
         </Field>
       ) : null}
 
@@ -405,8 +495,8 @@ export function AdPostingFormModal({
         <Button variant="secondary" onClick={onClose}>
           닫기
         </Button>
-        <Button onClick={save} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? '저장 중' : '저장'}
+        <Button onClick={save} disabled={saving}>
+          {saving ? '저장 중' : '저장'}
         </Button>
       </div>
     </Modal>

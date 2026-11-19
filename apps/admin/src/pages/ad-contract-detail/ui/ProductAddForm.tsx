@@ -3,8 +3,9 @@ import { Button, Callout, Input, Select, cn } from '@ogonggo/ui';
 import type { AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/admin';
 import {
   AD_POSTING_FIXED_TARGET,
-  AD_POSTING_JOB_FIELD_OPTIONS,
+  AD_POSTING_TAB_OPTIONS,
   isAdPostingPosition,
+  jobFieldOfTab,
   needsJobField,
   needsRecommendation,
 } from '@/entities/advertisement-exposure/lib/adPosting';
@@ -55,7 +56,8 @@ export function ProductAddForm({
   const [target, setTarget] = useState<ContentTarget | null>(null);
   const [expose, setExpose] = useState(true);
   const [order, setOrder] = useState<'first' | 'last'>('first');
-  const [jobField, setJobField] = useState('');
+  // 리스트 상단 고정을 띄울 탭들(`전체`·직무). 고른 탭마다 노출을 하나씩 만든다(계약 10절).
+  const [tabs, setTabs] = useState<string[]>([]);
   const [recommendation, setRecommendation] = useState({ title: '', description: '' });
   // 광고할 공고 연결(LC-3647)이 배포되기 전에는 이 단계를 부르지 않는다.
   const [registerTarget, setRegisterTarget] = useState(isReportEnabled);
@@ -65,8 +67,8 @@ export function ProductAddForm({
   const posting = isAdPostingPosition(position) ? position : null;
   const periodInvalid = Boolean(startDate && endDate && startDate > endDate);
   const needsTarget = posting !== null && (expose || registerTarget);
-  // 리스트 상단 고정 자리에 바로 노출하면 직무가 있어야 한다(계약 8절).
-  const jobFieldMissing = posting !== null && needsJobField(posting) && expose && !jobField;
+  // 리스트 상단 고정 자리에 바로 노출하면 탭을 하나 이상 골라야 한다(계약 10절).
+  const jobFieldMissing = posting !== null && needsJobField(posting) && expose && tabs.length === 0;
   // 오공고 PICK 자리에 바로 노출하면 추천 문구가 있어야 한다(계약 9절).
   const recommendationMissing =
     posting !== null &&
@@ -89,7 +91,7 @@ export function ProductAddForm({
     setTarget(null);
     setExpose(true);
     setOrder('first');
-    setJobField('');
+    setTabs([]);
     setRecommendation({ title: '', description: '' });
     setRegisterTarget(isReportEnabled);
     attach.reset();
@@ -105,7 +107,9 @@ export function ProductAddForm({
           ? {
               targetType: target.targetType,
               targetId: target.targetId,
-              jobField: needsJobField(posting) ? jobField : null,
+              jobFields: needsJobField(posting)
+                ? tabs.map((tab) => jobFieldOfTab(tab) ?? null)
+                : [null],
               recommendation: needsRecommendation(posting) ? recommendation : null,
               expose,
               order,
@@ -195,19 +199,30 @@ export function ProductAddForm({
                   onChange={(event) => setOrder(event.target.value as 'first' | 'last')}
                 />
               ) : null}
-              {expose && needsJobField(posting) ? (
-                <Select
-                  aria-label="직무"
-                  className="h-8 text-xs"
-                  options={[
-                    { value: '', label: '직무 고르기(필수)' },
-                    ...AD_POSTING_JOB_FIELD_OPTIONS,
-                  ]}
-                  value={jobField}
-                  onChange={(event) => setJobField(event.target.value)}
-                />
-              ) : null}
             </div>
+            {expose && needsJobField(posting) ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="text-xs text-gray-500">띄울 탭(하나 이상, 탭마다 노출 하나)</span>
+                {AD_POSTING_TAB_OPTIONS.map((option) => (
+                  <label key={option.value} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={tabs.includes(option.value)}
+                      onChange={(event) =>
+                        setTabs((current) =>
+                          event.target.checked
+                            ? AD_POSTING_TAB_OPTIONS.map(({ value }) => value).filter(
+                                (value) => value === option.value || current.includes(value),
+                              )
+                            : current.filter((value) => value !== option.value),
+                        )
+                      }
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            ) : null}
             {expose && needsRecommendation(posting) ? (
               <div className="rounded-md border border-gray-200 bg-white p-3">
                 <p className="pb-2 text-xs text-gray-500">

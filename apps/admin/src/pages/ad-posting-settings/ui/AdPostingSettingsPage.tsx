@@ -18,11 +18,12 @@ import {
   useToggleExposure,
 } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
-  AD_POSTING_JOB_FIELD_OPTIONS,
+  AD_POSTING_TAB_OPTIONS,
   AD_POSTING_POSITIONS,
   AD_POSTING_POSITION_DESCRIPTIONS,
   isAdPostingPosition,
   jobFieldLabel,
+  tabOf,
   needsJobField,
   needsRecommendation,
   type AdPostingExposure,
@@ -75,10 +76,13 @@ export function AdPostingSettingsPage() {
   const move = useMoveExposure();
   const deleteMutation = useDeleteExposure();
   const allRows: AdPostingExposure[] = data ?? [];
-  // 리스트 상단 고정은 직무로 거를 수 있다(`?jobField=`). 순서는 거른 뒤에도 자리 전체의 순서다.
+  // 리스트 상단 고정은 탭(`전체`·직무)으로 거를 수 있다(`?jobField=`, `전체` 탭은 `ALL`). 순서는 거른 뒤에도 자리 전체의
+  // 순서다.
   const withJobField = needsJobField(position);
   const jobFieldFilter = withJobField ? (searchParams.get('jobField') ?? '') : '';
-  const rows = jobFieldFilter ? allRows.filter((row) => row.jobField === jobFieldFilter) : allRows;
+  const rows = jobFieldFilter
+    ? allRows.filter((row) => tabOf(row.jobField) === jobFieldFilter)
+    : allRows;
 
   // 목록을 받기 전이거나 없는 id 면 모달을 열지 않는다.
   const editingRow = allRows.find((row) => String(row.id) === editParam);
@@ -117,7 +121,7 @@ export function AdPostingSettingsPage() {
       ? [
           {
             key: 'jobField',
-            header: '직무',
+            header: '탭',
             width: 'w-32 whitespace-nowrap',
             render: (row: AdPostingExposure) => jobFieldLabel(row.jobField),
           },
@@ -282,8 +286,8 @@ export function AdPostingSettingsPage() {
           {withJobField ? (
             <div className="flex items-center gap-2 pb-4">
               <Select
-                aria-label="직무"
-                options={[{ value: '', label: '직무 전체' }, ...AD_POSTING_JOB_FIELD_OPTIONS]}
+                aria-label="탭"
+                options={[{ value: '', label: '모든 탭' }, ...AD_POSTING_TAB_OPTIONS]}
                 value={jobFieldFilter}
                 onChange={(event) => {
                   const next = new URLSearchParams(searchParams);
@@ -293,7 +297,7 @@ export function AdPostingSettingsPage() {
                 }}
               />
               <span className="text-xs text-gray-500">
-                같은 직무 안에서는 순서가 앞선 한 건만 웹에 나가요.
+                같은 탭 안에서는 순서가 앞선 한 건만 웹에 나가요.
               </span>
             </div>
           ) : null}

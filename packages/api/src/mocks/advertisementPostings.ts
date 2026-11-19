@@ -11,7 +11,8 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  * `.claude/tasks/memos/광고-리포트-API-계약-2026-11-19.md` 2절이다. 코드젠 전이라 응답 타입은 아래에 손으로 적는다.
  *
  * 대상은 기존 목 공고·부트캠프다. 부트캠프 목록 상단 고정만 부트캠프이고 나머지는 채용공고다.
- * - `JOB_LIST`: 리스트 상단 고정. 웹 직무 칩 다섯 직군마다 하나씩 둔다. `jobField` 가 없으면 400 이다(계약 8절).
+ * - `JOB_LIST`: 리스트 상단 고정. 웹 직무 칩 다섯 직군마다 하나씩 둔다. `jobField` 를 빼면 `전체` 탭 노출(직무 없음)을
+ *   준다(계약 10절). `전체` 탭에는 기획·전략 탭과 같은 공고 653 을 둬, 한 공고를 두 탭에 건 모습을 본다.
  *   세일즈의 공고 683 은 그 탭 첫 쪽에도 있는 공고라 웹이 일반 목록에서 빼는지 본다. IT·개발에는 둘을 둬 웹이 첫 건만
  *   쓰는지 본다. 대상 공고는 목 공고 목록(`handlers.ts`)에서 그 직군으로 걸러지는 공고다.
  * - `CALENDAR_DAY`: 공고 달력 날짜별 목록 맨 앞. 노출 기간(`startAt`·`endAt`)을 함께 준다 — 계약에 없는 칸이라 백엔드에
@@ -122,6 +123,13 @@ const SEED: {
     jobField: 'IT_DEVELOPMENT',
     targetType: 'JOB',
     targetId: 592,
+    adLabel: true,
+  },
+  {
+    exposureId: 37,
+    position: 'JOB_LIST',
+    targetType: 'JOB',
+    targetId: 653,
     adLabel: true,
   },
   {
@@ -257,21 +265,12 @@ const listAdPostingsHandler = http.get(
         { status: 400 },
       );
     }
-    if (position === 'JOB_LIST' && !jobField) {
-      return HttpResponse.json(
-        {
-          status: 400,
-          code: 'BAD_REQUEST',
-          message: 'jobField: 리스트 상단 고정은 직무를 보내 주세요.',
-        },
-        { status: 400 },
-      );
-    }
     const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19);
     const data = SEED.filter(
       (seed) =>
         seed.position === position &&
-        (position !== 'JOB_LIST' || seed.jobField === jobField) &&
+        // `jobField` 를 빼면 직무가 없는 `전체` 탭 노출이다.
+        (position !== 'JOB_LIST' || (seed.jobField ?? null) === jobField) &&
         (!seed.startAt || seed.startAt <= now) &&
         (!seed.endAt || now < seed.endAt),
     )
