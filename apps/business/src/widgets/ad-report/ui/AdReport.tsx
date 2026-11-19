@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { enumLabel, HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
+import { isReportEnabled } from '@/shared/config/reports';
 import { DatePicker } from '@/shared/ui/DatePicker';
 import { downloadAdReportCsv, fetchAdReport } from '../lib/api';
 import { exportReportPdf } from '../lib/exportPdf';
@@ -196,7 +197,8 @@ export function AdReport({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const requested = Number(searchParams.get('product'));
-  const openId = products.some((p) => p.contractProductId === requested) ? requested : null;
+  const openId =
+    isReportEnabled && products.some((p) => p.contractProductId === requested) ? requested : null;
 
   const toggle = (id: number) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -210,7 +212,11 @@ export function AdReport({
     <section className="flex flex-col gap-3">
       <header>
         <h2 className="text-lg font-semibold text-gray-950">광고 상품</h2>
-        <p className="pt-1 text-sm text-gray-500">상품을 누르면 그 상품의 성과 리포트가 열려요.</p>
+        {isReportEnabled ? (
+          <p className="pt-1 text-sm text-gray-500">
+            상품을 누르면 그 상품의 성과 리포트가 열려요.
+          </p>
+        ) : null}
       </header>
       <ul className="flex flex-col gap-3">
         {products.map((product) => {
@@ -226,46 +232,70 @@ export function AdReport({
                 open ? 'border-blue-300' : 'border-gray-200',
               )}
             >
-              <button
-                type="button"
-                aria-expanded={open}
-                aria-controls={panelId}
-                onClick={() => toggle(product.contractProductId)}
-                className={cn(
-                  'flex w-full items-center gap-3 px-4 py-4 text-left transition-colors md:px-5',
-                  open ? 'bg-blue-50/40' : 'hover:bg-gray-50',
-                )}
-              >
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span
-                      className={cn(
-                        'shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold',
-                        PROGRESS_TONE[progress],
-                      )}
-                    >
-                      {PROGRESS_LABELS[progress]}
+              {/* 리포트가 꺼진 배포본에서는 누를 수 없는 정보 줄이다. */}
+              {!isReportEnabled ? (
+                <div className="flex w-full items-center gap-3 px-4 py-4 md:px-5">
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={cn(
+                          'shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold',
+                          PROGRESS_TONE[progress],
+                        )}
+                      >
+                        {PROGRESS_LABELS[progress]}
+                      </span>
+                      <span className="truncate font-semibold text-gray-900">
+                        {product.productName}
+                      </span>
                     </span>
-                    <span className="truncate font-semibold text-gray-900">
-                      {product.productName}
+                    <span className="truncate text-xs text-gray-500">
+                      {productMeta(product)} · {periodText(product)}
                     </span>
                   </span>
-                  <span className="truncate text-xs text-gray-500">
-                    {productMeta(product)} · {periodText(product)}
-                  </span>
-                </span>
-                <span className="hidden shrink-0 text-xs text-gray-500 sm:block">
-                  {reason ? '리포트 없음' : open ? '접기' : '리포트 보기'}
-                </span>
-                <span
-                  aria-hidden="true"
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  aria-controls={panelId}
+                  onClick={() => toggle(product.contractProductId)}
                   className={cn(
-                    'icon-[lucide--chevron-down] block size-5 shrink-0 text-gray-400 transition-transform',
-                    open && 'rotate-180',
+                    'flex w-full items-center gap-3 px-4 py-4 text-left transition-colors md:px-5',
+                    open ? 'bg-blue-50/40' : 'hover:bg-gray-50',
                   )}
-                />
-              </button>
-              {open ? (
+                >
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={cn(
+                          'shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold',
+                          PROGRESS_TONE[progress],
+                        )}
+                      >
+                        {PROGRESS_LABELS[progress]}
+                      </span>
+                      <span className="truncate font-semibold text-gray-900">
+                        {product.productName}
+                      </span>
+                    </span>
+                    <span className="truncate text-xs text-gray-500">
+                      {productMeta(product)} · {periodText(product)}
+                    </span>
+                  </span>
+                  <span className="hidden shrink-0 text-xs text-gray-500 sm:block">
+                    {reason ? '리포트 없음' : open ? '접기' : '리포트 보기'}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'icon-[lucide--chevron-down] block size-5 shrink-0 text-gray-400 transition-transform',
+                      open && 'rotate-180',
+                    )}
+                  />
+                </button>
+              )}
+              {isReportEnabled && open ? (
                 <div id={panelId} className="border-t border-gray-100 px-4 py-5 md:px-5">
                   {reason || !product.startDate || !product.endDate ? (
                     <p className="rounded-lg bg-gray-50 px-5 py-8 text-center text-sm break-keep text-gray-600">
