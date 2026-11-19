@@ -14,7 +14,8 @@ export const BANNER_POSITIONS: readonly BannerPosition[] = [
   'BOOTCAMP_DETAIL_BANNER',
 ];
 
-export const POSITION_DESCRIPTIONS: Record<BannerPosition, string> = {
+/** 배너 자리만. 광고 공고 자리 설명은 `adPosting.ts` 의 `AD_POSTING_POSITION_DESCRIPTIONS` 다. */
+export const POSITION_DESCRIPTIONS: Partial<Record<BannerPosition, string>> = {
   JOB_HOME_TOP_BANNER: '채용공고 홈 히어로 바로 아래. 첫 페이지에만 보입니다.',
   JOB_HOME_BOTTOM_BANNER: '채용공고 홈 목록 아래, FOR BUSINESS 배너 바로 위.',
   JOB_DETAIL_BANNER:

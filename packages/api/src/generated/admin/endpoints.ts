@@ -2632,10 +2632,15 @@ export type replaceAdvertisementExposureResponse404 = {
   status: 404
 }
 
+export type replaceAdvertisementExposureResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type replaceAdvertisementExposureResponseSuccess = (replaceAdvertisementExposureResponse200) & {
   headers: Headers;
 };
-export type replaceAdvertisementExposureResponseError = (replaceAdvertisementExposureResponse400 | replaceAdvertisementExposureResponse401 | replaceAdvertisementExposureResponse403 | replaceAdvertisementExposureResponse404) & {
+export type replaceAdvertisementExposureResponseError = (replaceAdvertisementExposureResponse400 | replaceAdvertisementExposureResponse401 | replaceAdvertisementExposureResponse403 | replaceAdvertisementExposureResponse404 | replaceAdvertisementExposureResponse409) & {
   headers: Headers;
 };
 
@@ -2650,7 +2655,7 @@ export const getReplaceAdvertisementExposureUrl = (exposureId: number,) => {
 }
 
 /**
- * 미삭제 노출의 계약, 카테고리별 콘텐츠, 광고 표시와 기간을 전체 교체합니다. contractId·mobileImageUrl·targetType·targetId·기간은 생략하거나 null로 보내면 null이며, BANNER의 name·imageUrl·linkUrl은 필수입니다. productId, exposed와 displayOrder는 변경하지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
+ * 미삭제 노출의 계약, 카테고리별 콘텐츠, 광고 표시와 기간을 전체 교체합니다. contractId·mobileImageUrl·targetType·targetId·기간은 생략하거나 null로 보내면 null이며, BANNER의 name·imageUrl·linkUrl은 필수입니다. JOB_POSTING 대상 규칙은 등록과 같고, 같은 자리 중복 검사에서 이 노출 자신은 뺍니다. productId, exposed와 displayOrder는 변경하지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
  * @summary 광고 노출 내용·계약·기간 교체
  */
 export const replaceAdvertisementExposure = async (exposureId: number,
@@ -4877,7 +4882,7 @@ export const getListAdvertisementExposuresUrl = (params: ListAdvertisementExposu
 }
 
 /**
- * 미삭제 노출을 displayOrder와 ID 오름차순으로 페이지 조회합니다. page는 1부터 시작하고 size는 1~100이며 기본값은 1과 10입니다. 꺼짐·기간 전·기간 종료 항목과 삭제된 상품 자리의 항목도 포함합니다. contractId를 생략하면 자체 홍보를 포함한 전체 노출을 반환합니다. advertiserCompanyName은 현재 계약의 companyName이며 자체 홍보는 null입니다.
+ * 미삭제 노출을 displayOrder와 ID 오름차순으로 페이지 조회합니다. page는 1부터 시작하고 size는 1~100이며 기본값은 1과 10입니다. 꺼짐·기간 전·기간 종료 항목과 삭제된 상품 자리의 항목도 포함합니다. contractId를 생략하면 자체 홍보를 포함한 전체 노출을 반환합니다. advertiserCompanyName은 현재 계약의 companyName이며 자체 홍보는 null입니다. 광고 공고는 대상의 지금 제목·회사명(targetTitle, targetCompanyName)과 게시 여부(targetPublished)를 함께 주며, 배너는 셋 다 null입니다.
  * @summary 상품 자리의 광고 노출 목록 조회
  */
 export const listAdvertisementExposures = async (params: ListAdvertisementExposuresParams, options?: Parameters<typeof httpClient>[1]): Promise<listAdvertisementExposuresResponse> => {
@@ -4995,10 +5000,15 @@ export type createAdvertisementExposureResponse404 = {
   status: 404
 }
 
+export type createAdvertisementExposureResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type createAdvertisementExposureResponseSuccess = (createAdvertisementExposureResponse201) & {
   headers: Headers;
 };
-export type createAdvertisementExposureResponseError = (createAdvertisementExposureResponse400 | createAdvertisementExposureResponse401 | createAdvertisementExposureResponse403 | createAdvertisementExposureResponse404) & {
+export type createAdvertisementExposureResponseError = (createAdvertisementExposureResponse400 | createAdvertisementExposureResponse401 | createAdvertisementExposureResponse403 | createAdvertisementExposureResponse404 | createAdvertisementExposureResponse409) & {
   headers: Headers;
 };
 
@@ -5013,7 +5023,7 @@ export const getCreateAdvertisementExposureUrl = () => {
 }
 
 /**
- * 상품 category에 따라 BANNER 콘텐츠 또는 JOB_POSTING 대상을 등록합니다. category, displayOrder와 슬롯은 요청에 포함하지 않습니다. contractId는 선택이며 존재만 확인합니다. JOB_POSTING target의 실제 존재·게시 상태는 확인하지 않습니다. BANNER의 mobileImageUrl은 선택이며 null이면 모바일에서도 imageUrl을 씁니다. JOB_POSTING은 mobileImageUrl을 보내지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부해 정리 작업이 지우지 않게 하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
+ * 상품 category에 따라 BANNER 콘텐츠 또는 JOB_POSTING 대상을 등록합니다. category, displayOrder와 슬롯은 요청에 포함하지 않습니다. contractId는 선택이며 존재만 확인합니다. JOB_POSTING은 targetType·targetId가 필수이고 name·imageUrl·linkUrl은 null이어야 합니다. 대상은 지워지지 않은 채용공고·부트캠프여야 하며(게시·모집 상태는 보지 않음) 자리와 종류가 맞아야 합니다(BOOTCAMP_LIST는 BOOTCAMP, JOB_LIST·JOB_DETAIL_SIDE·JOB_PICK은 JOB). 같은 자리에 지우지 않은 같은 대상의 노출이 있으면 409입니다. BANNER의 mobileImageUrl은 선택이며 null이면 모바일에서도 imageUrl을 씁니다. JOB_POSTING은 mobileImageUrl을 보내지 않습니다. 오공고에 올린 imageUrl·mobileImageUrl 이미지는 첨부해 정리 작업이 지우지 않게 하고, 이미 지워진 이미지면 IMAGE_ASSET_NOT_AVAILABLE로 막습니다.
  * @summary 광고 노출 등록
  */
 export const createAdvertisementExposure = async (createAdminAdvertisementExposureRequest: CreateAdminAdvertisementExposureRequest, options?: Parameters<typeof httpClient>[1]): Promise<createAdvertisementExposureResponse> => {
@@ -11422,11 +11432,11 @@ export const getListAnnouncementsResponseMock = (overrideResponse: Partial<Extra
 
 export const getCreateAnnouncementResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAnnouncementDetailResponse, object>> = {}): SuccessResponseAdminAnnouncementDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), visibility: faker.helpers.arrayElement(['VISIBLE','HIDDEN'] as const), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushTarget: faker.helpers.arrayElement(['NONE','ALL','GENERAL_MEMBERS','COMPANY_MEMBERS'] as const), pushBatchId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pushedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}, undefined]), ...overrideResponse})
 
-export const getListAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateAdvertisementProductResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdminAdvertisementProductResponse, object>> = {}): SuccessResponseCreateAdminAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getListAdvertisementExposuresResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementExposureResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementExposureResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), productId: faker.number.int(), contractId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), name: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), imageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), mobileImageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), linkUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), targetType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), null]), undefined]), targetId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), adLabel: faker.datatype.boolean(), startAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', null]), undefined]), endAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', null]), undefined]), exposed: faker.datatype.boolean(), advertiserCompanyName: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), displayOrder: faker.number.int(), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListAdvertisementExposuresResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminAdvertisementExposureResponse, object>> = {}): SuccessResponsePageResponseAdminAdvertisementExposureResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), productId: faker.number.int(), contractId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), name: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), imageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), mobileImageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), linkUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), targetType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), null]), undefined]), targetId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), adLabel: faker.datatype.boolean(), startAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', null]), undefined]), endAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', null]), undefined]), exposed: faker.datatype.boolean(), advertiserCompanyName: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), targetTitle: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), targetCompanyName: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), targetPublished: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), displayOrder: faker.number.int(), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getCreateAdvertisementExposureResponseMock = (overrideResponse: Partial<Extract<SuccessResponseCreateAdminAdvertisementExposureResponse, object>> = {}): SuccessResponseCreateAdminAdvertisementExposureResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int()}, undefined]), ...overrideResponse})
 
