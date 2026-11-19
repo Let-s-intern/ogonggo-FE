@@ -4,6 +4,7 @@ import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
+import { DetailContentTracker } from '@/shared/analytics/DetailContentTracker';
 import { closedLabel } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -69,7 +70,12 @@ export async function fetchJobDetail(jobId: number): Promise<JobDetail> {
 export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
   const jobInfo = toJobInfo(job);
-  const viewTracker = <JobDetailViewTracker jobId={job.id} jobInfo={jobInfo} />;
+  const viewTracker = (
+    <>
+      <JobDetailViewTracker jobId={job.id} jobInfo={jobInfo} />
+      <DetailContentTracker targetType="JOB" targetId={job.id} measureScroll={layout === 'page'} />
+    </>
+  );
 
   const headerCard = (
     <JobDetailHeaderCard
