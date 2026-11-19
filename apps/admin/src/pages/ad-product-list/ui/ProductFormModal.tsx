@@ -5,10 +5,7 @@ import {
   type CreateAdminAdvertisementProductRequestCategory,
   type CreateAdminAdvertisementProductRequestPosition,
 } from '@ogonggo/api/src/admin';
-import {
-  AD_POSTING_POSITIONS,
-  isAdPostingPosition,
-} from '@/entities/advertisement-exposure/lib/adPosting';
+import { isAdPostingPosition } from '@/entities/advertisement-exposure/lib/adPosting';
 import {
   useSaveAdvertisementProduct,
   type AdvertisementProduct,
@@ -18,22 +15,28 @@ import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 
 const NAME_MAX_LENGTH = 100;
 const CATEGORY_OPTIONS = enumOptions('AdvertisementProductCategory');
-const POSITION_OPTIONS = [
-  { value: '', label: '자리 없음' },
-  ...enumOptions('AdvertisementProductPosition').map((option) => ({
-    ...option,
-    label: `배너 · ${option.label}`,
-  })),
-  // 광고 공고(카드) 자리. 코드젠 전이라 카탈로그에 없어 따로 붙인다.
-  ...AD_POSTING_POSITIONS.map((value) => ({
-    value,
-    label: `광고 공고 · ${positionLabel(value)}`,
-  })),
-];
 
-/** 자리가 정하는 카테고리. 배너 자리는 배너, 광고 공고 자리는 광고 공고다(BE `ADVERTISEMENT_PRODUCT_POSITION_MISMATCH`). */
-const categoryOf = (position: string): CreateAdminAdvertisementProductRequestCategory =>
-  isAdPostingPosition(position) ? 'JOB_POSTING' : 'BANNER';
+/** 판매 중인 광고 공고 상품의 자리. 부트캠프 목록·공고 상세 추천은 판매 상품이 없어 고르지 않는다(LC-3649). */
+const SOLD_AD_POSTING_POSITIONS: readonly string[] = ['JOB_PICK', 'JOB_LIST'];
+
+/**
+ * 카테고리마다 고를 수 있는 자리. 카탈로그 하나에 배너·광고 공고 자리가 함께 있어 광고 공고 자리 목록으로 가른다.
+ * 같은 값이 두 번 들어가면 `select` 가 앞의 것을 골라 보여 주므로(배너로 바뀌어 보이던 버그) 값마다 한 번만 둔다.
+ */
+function positionOptions(category: CreateAdminAdvertisementProductRequestCategory) {
+  const all = enumOptions('AdvertisementProductPosition');
+  const none = { value: '', label: '자리 없음' };
+  if (category === 'BANNER') {
+    return [none, ...all.filter((option) => !isAdPostingPosition(option.value))];
+  }
+  if (category === 'JOB_POSTING') {
+    return [
+      none,
+      ...SOLD_AD_POSTING_POSITIONS.map((value) => ({ value, label: positionLabel(value) })),
+    ];
+  }
+  return null;
+}
 
 interface FormState {
   category: CreateAdminAdvertisementProductRequestCategory;
@@ -69,7 +72,8 @@ function validate(form: FormState): FormErrors {
 /**
  * 광고 상품 등록·수정 모달(BE LC-3583). 수정은 `PUT` 전체 교체라 모든 칸을 보낸다.
  *
- * 자리를 고르면 카테고리를 그 자리의 것으로 고정한다 — 배너 자리는 `배너`, 광고 공고 자리는 `광고 공고`. 다르면 BE 가 400
+ * 카테고리를 먼저 고르고, 그 카테고리의 자리만 고른다 — 배너는 배너 자리, 광고 공고는 광고 공고 자리. 인스타그램·카카오톡처럼
+ * 오공고 밖에 싣는 상품은 자리가 없다. 카테고리를 바꾸면 자리를 비운다. 둘이 다르면 BE 가 400
  * (`ADVERTISEMENT_PRODUCT_POSITION_MISMATCH`)으로 거절한다.
  */
 export function ProductFormModal({
@@ -84,6 +88,7 @@ export function ProductFormModal({
   const [form, setForm] = useState<FormState>(() => initialState(product));
   const [submitted, setSubmitted] = useState(false);
   const errors = submitted ? validate(form) : {};
+  const positions = positionOptions(form.category);
 
   const submit = () => {
     setSubmitted(true);
@@ -109,45 +114,37 @@ export function ProductFormModal({
         </Callout>
       ) : null}
 
-      <Field
-        label="노출 자리"
-        htmlFor="product-position"
-        hint="오공고 화면의 배너·광고 공고 자리입니다. 인스타그램·카카오톡처럼 오공고 밖에 싣는 상품은 자리 없음입니다."
-      >
-        <Select
-          id="product-position"
-          options={POSITION_OPTIONS}
-          value={form.position}
-          onChange={(event) => {
-            const position = event.target.value;
-            setForm((current) => ({
-              ...current,
-              position,
-              category: position ? categoryOf(position) : current.category,
-            }));
-          }}
-        />
-      </Field>
-
-      <Field
-        label="카테고리"
-        htmlFor="product-category"
-        required
-        hint={form.position ? '노출 자리가 정하는 카테고리입니다.' : undefined}
-      >
+      <Field label="카테고리" htmlFor="product-category" required>
         <Select
           id="product-category"
           options={CATEGORY_OPTIONS}
           value={form.category}
-          disabled={Boolean(form.position)}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               category: event.target.value as CreateAdminAdvertisementProductRequestCategory,
+              position: '',
             }))
           }
         />
       </Field>
+
+      {positions ? (
+        <Field
+          label="노출 자리"
+          htmlFor="product-position"
+          hint="이 카테고리의 오공고 화면 자리입니다. 자리가 없으면 웹에 나오지 않습니다."
+        >
+          <Select
+            id="product-position"
+            options={positions}
+            value={form.position}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, position: event.target.value }))
+            }
+          />
+        </Field>
+      ) : null}
 
       <Field label="상품 이름" htmlFor="product-name" required error={errors.name}>
         <Input
