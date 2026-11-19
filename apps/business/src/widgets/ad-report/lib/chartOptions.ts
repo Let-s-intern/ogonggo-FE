@@ -136,6 +136,17 @@ export function scrollFunnelOption(steps: ScrollFunnelStep[]): EChartsCoreOption
         data: steps.map((step) => ({
           name: funnelStepLabel(step.threshold),
           value: step.visitors,
+          // 칸이 좁으면 흰 글자가 칸 밖 흰 바탕으로 넘쳐 보이지 않는다. 흰 바탕의 진한 글자로 적는다.
+          ...(step.visitors / Math.max(1, steps[0]?.visitors ?? 0) < 0.5
+            ? {
+                label: {
+                  color: '#1f2937',
+                  backgroundColor: '#ffffff',
+                  padding: [2, 6],
+                  borderRadius: 4,
+                },
+              }
+            : {}),
         })),
       },
     ],

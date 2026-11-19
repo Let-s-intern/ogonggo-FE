@@ -67,6 +67,17 @@ export const scrollStepValue = (step: ScrollStep) =>
   `${formatCount(step.visitors)}명 (${formatRate(step.rate)})`;
 
 /**
+ * 칸이 좁으면 흰 글자가 칸 밖 흰 바탕으로 넘쳐 보이지 않는다. 폭이 절반보다 좁은 칸은 흰 바탕의 진한 글자로 적는다.
+ */
+export function narrowFunnelLabel(ratio: number) {
+  return ratio < 0.5
+    ? {
+        label: { color: '#1f2937', backgroundColor: '#ffffff', padding: [2, 6], borderRadius: 4 },
+      }
+    : {};
+}
+
+/**
  * 스크롤 깊이 깔때기. 단계 순서를 그대로 두고(`sort: none`), 폭은 0% 단계 방문자 수에 맞춘다. 라벨은 단계 이름과
  * `N명 (xx%)` 다.
  */
@@ -105,7 +116,11 @@ export function scrollFunnelOption(steps: ScrollStep[]): EChartsCoreOption {
             return step ? `${scrollStepLabel(step)}  ${scrollStepValue(step)}` : '';
           },
         },
-        data: steps.map((step) => ({ name: scrollStepLabel(step), value: step.visitors })),
+        data: steps.map((step) => ({
+          name: scrollStepLabel(step),
+          value: step.visitors,
+          ...narrowFunnelLabel(step.visitors / max),
+        })),
       },
     ],
   };
