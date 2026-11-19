@@ -135,3 +135,44 @@ export function scrollFunnelOption(steps: ScrollFunnelStep[]): EChartsCoreOption
     ],
   };
 }
+
+export interface SparkSeries {
+  name: string;
+  values: number[];
+}
+
+/**
+ * 대시보드 카드의 작은 추이 그래프. 축·눈금 없이 두 선만 그린다. 두 값의 크기가 많이 달라(노출과 클릭) 축을 따로 둔다.
+ * 색은 날짜별 추이 그래프와 같은 순서다.
+ */
+export function sparklineOption(
+  dates: string[],
+  series: [SparkSeries, SparkSeries],
+): EChartsCoreOption {
+  return {
+    color: COLORS,
+    textStyle: { fontFamily: FONT_FAMILY },
+    grid: { left: 2, right: 2, top: 4, bottom: 2 },
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      valueFormatter: (value: unknown) =>
+        typeof value === 'number' ? value.toLocaleString('ko-KR') : '-',
+    },
+    xAxis: { type: 'category', data: dates, show: false, boundaryGap: false },
+    yAxis: [
+      { type: 'value', show: false },
+      { type: 'value', show: false },
+    ],
+    series: series.map((item, index) => ({
+      name: item.name,
+      type: 'line',
+      yAxisIndex: index,
+      data: item.values,
+      showSymbol: false,
+      smooth: true,
+      lineStyle: { width: 2 },
+      ...(index === 0 ? { areaStyle: { opacity: 0.08 } } : {}),
+    })),
+  };
+}

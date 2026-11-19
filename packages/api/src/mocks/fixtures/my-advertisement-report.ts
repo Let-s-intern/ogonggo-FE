@@ -94,6 +94,12 @@ interface ReportPlan {
   dailyImpressions: number;
   zeroDays: string[];
   target: { targetType: 'JOB' | 'BOOTCAMP'; targetId: number; title: string };
+  /**
+   * 대시보드 카드의 대표 이미지(계약 4절). 배너는 첫 소재의 PC 이미지 — 사용자 웹(4000)의 `public/banners/` 소재를
+   * 쓴다. 웹이 안 떠 있으면 카드가 기본 칸으로 떨어진다. 광고 공고는 대상 공고의 썸네일·로고.
+   */
+  imageUrl: string | null;
+  targetImages: { companyName: string; thumbnailUrl: string | null; logoUrl: string | null } | null;
 }
 
 const PLANS: Record<number, ReportPlan> = {
@@ -107,6 +113,8 @@ const PLANS: Record<number, ReportPlan> = {
     dailyImpressions: 1400,
     zeroDays: ['2026-11-09'],
     target: { targetType: 'JOB', targetId: 15818, title: '2027 상반기 신입 백엔드 개발자' },
+    imageUrl: 'http://localhost:4000/banners/jobs-pc.svg',
+    targetImages: null,
   },
   12: {
     position: 'JOB_LIST',
@@ -115,6 +123,13 @@ const PLANS: Record<number, ReportPlan> = {
     dailyImpressions: 2600,
     zeroDays: ['2026-11-12'],
     target: { targetType: 'JOB', targetId: 15818, title: '2027 상반기 신입 백엔드 개발자' },
+    imageUrl: null,
+    // biz 의 `public/landing/cases/` 사진이라 4002 에서 바로 뜬다.
+    targetImages: {
+      companyName: '오공고 테스트 기업',
+      thumbnailUrl: '/landing/cases/tosspayments.jpg',
+      logoUrl: null,
+    },
   },
   21: {
     position: 'BOOTCAMP_LIST_TOP_BANNER',
@@ -123,6 +138,8 @@ const PLANS: Record<number, ReportPlan> = {
     dailyImpressions: 900,
     zeroDays: [],
     target: { targetType: 'BOOTCAMP', targetId: 501, title: '프론트엔드 부트캠프 12기' },
+    imageUrl: 'http://localhost:4000/banners/business-pc.svg',
+    targetImages: null,
   },
 };
 
@@ -399,4 +416,86 @@ export function toReportCsv(rows: MockReportCsvRow[]): string {
     ...rows.map((row) => CSV_COLUMNS.map((column) => escape(row[column])).join(',')),
   ];
   return `﻿${lines.join('\n')}\n`;
+}
+
+/** 대시보드 진행 중 광고 요약 한 줄(계약 4절). */
+export interface MockActiveAd {
+  contractId: number;
+  contractProductId: number;
+  category: string;
+  position: string | null;
+  name: string;
+  startDate: string;
+  endDate: string;
+  daysLeft: number;
+  impressions: number;
+  adClicks: number;
+  adClickRate: number | null;
+  views: number;
+  ctaClicks: number;
+  scroll50Rate: number | null;
+  imageUrl: string | null;
+  target: {
+    targetType: 'JOB' | 'BOOTCAMP';
+    targetId: number;
+    title: string;
+    companyName: string;
+    thumbnailUrl: string | null;
+    logoUrl: string | null;
+  } | null;
+  daily: { date: string; impressions: number; adClicks: number; views: number }[];
+}
+
+const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000);
+
+/**
+ * 오늘 게시 중이고 리포트를 열 수 있는 상품의 요약. 숫자는 상품 시작일~오늘의 `buildReport` 와 같다. 끝나는 날이
+ * 가까운 순.
+ */
+export function buildActiveAds(
+  contracts: { id: number; products: MyContractProductFixture[] }[],
+): MockActiveAd[] {
+  const today = todayKst();
+  return contracts
+    .flatMap((contract) =>
+      contract.products.flatMap((product): MockActiveAd[] => {
+        const found = reportPlanOf(product);
+        if (!found || today < found.startDate || today > found.endDate) return [];
+        const report = buildReport(product, found.startDate, today);
+        if (!report) return [];
+        const { plan } = found;
+        const { summary } = report;
+        return [
+          {
+            contractId: contract.id,
+            contractProductId: product.contractProductId,
+            category: product.category,
+            position: plan.position,
+            name: product.productName,
+            startDate: found.startDate,
+            endDate: found.endDate,
+            daysLeft: daysBetween(today, found.endDate),
+            impressions: summary.impressions,
+            adClicks: summary.adClicks,
+            adClickRate: summary.adClickRate,
+            views: summary.views,
+            ctaClicks: summary.ctaClicks,
+            scroll50Rate: summary.scrollFunnel.find((step) => step.threshold === 50)?.rate ?? null,
+            imageUrl: plan.imageUrl,
+            target:
+              product.category === 'JOB_POSTING' && plan.targetImages
+                ? { ...plan.target, ...plan.targetImages }
+                : null,
+            daily: report.daily.map(({ date, impressions, adClicks, views }) => ({
+              date,
+              impressions,
+              adClicks,
+              views,
+            })),
+          },
+        ];
+      }),
+    )
+    .sort((a, b) => a.endDate.localeCompare(b.endDate));
 }

@@ -267,9 +267,6 @@ export function CompanyDashboard() {
 
       {isNew ? quickActions : null}
 
-      {/* 오늘 게시 중인 광고 상품이 있을 때만 보인다. */}
-      <RunningAdsPanel />
-
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         <Panel title="공고 현황" href="/mypage/company/posts/jobs" linkLabel="등록 내역">
           <Counts
@@ -345,6 +342,9 @@ export function CompanyDashboard() {
           ) : null}
         </Panel>
       </div>
+
+      {/* 오늘 게시 중인 광고 상품이 있을 때만 보인다. `공고 현황`·`광고 신청 현황` 아래다(2026-11-19 사용자). */}
+      <RunningAdsPanel />
 
       {isNew ? null : quickActions}
     </div>

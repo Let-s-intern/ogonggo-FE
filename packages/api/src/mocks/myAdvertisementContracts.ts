@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import { myContractSeed, toMyContractSummary } from './fixtures/my-advertisement-contracts';
 import {
+  buildActiveAds,
   buildReport,
   clipPeriod,
   reportCsvRows,
@@ -18,7 +19,8 @@ import {
  * `reportUnavailableReason` 이 이미 들어 있다. 리포트 응답에만 쓰는 `productId` 는 상세에서 뺀다.
  *
  * 상품별 리포트(`.../products/{contractProductId}/report`, `report.csv`)도 여기서 받는다. 숫자는
- * `./fixtures/my-advertisement-report.ts` 가 만든다.
+ * `./fixtures/my-advertisement-report.ts` 가 만든다. 대시보드의 진행 중 광고 요약
+ * (`GET /api/v1/users/me/advertisement-reports/active`, 계약 4절)도 같은 숫자로 준다.
  */
 
 const BASE = '*/api/v1/users/me/advertisement-contracts';
@@ -110,4 +112,11 @@ export const myAdvertisementContractHandlers: HttpHandler[] = [
       },
     });
   }),
+  http.get('*/api/v1/users/me/advertisement-reports/active', () =>
+    HttpResponse.json({
+      status: 200,
+      message: '요청이 성공했습니다.',
+      data: buildActiveAds(contracts),
+    }),
+  ),
 ];

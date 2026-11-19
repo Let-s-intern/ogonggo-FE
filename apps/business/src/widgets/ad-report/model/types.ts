@@ -97,3 +97,37 @@ export interface AdReport {
     bySource: { source: ReportSource; views: number; ctaClicks: number }[];
   }[];
 }
+
+/**
+ * 대시보드의 진행 중 광고 요약 한 줄(`GET /api/v1/users/me/advertisement-reports/active`, 계약 4절). 숫자는 상품 시작일부터
+ * 오늘까지의 상품 몫이다.
+ */
+export interface ActiveAd {
+  contractId: number;
+  contractProductId: number;
+  category: string;
+  position: string | null;
+  name: string;
+  startDate: string;
+  endDate: string;
+  daysLeft: number;
+  impressions: number;
+  adClicks: number;
+  adClickRate: number | null;
+  views: number;
+  ctaClicks: number;
+  /** 스크롤 50% 까지 내린 순 방문자 비율(0~1). */
+  scroll50Rate: number | null;
+  /** 배너 상품의 첫 소재 이미지. */
+  imageUrl: string | null;
+  /** 광고 공고 상품이 걸린 공고·부트캠프. */
+  target: {
+    targetType: 'JOB' | 'BOOTCAMP';
+    targetId: number;
+    title: string;
+    companyName: string;
+    thumbnailUrl: string | null;
+    logoUrl: string | null;
+  } | null;
+  daily: { date: string; impressions: number; adClicks: number; views: number }[];
+}

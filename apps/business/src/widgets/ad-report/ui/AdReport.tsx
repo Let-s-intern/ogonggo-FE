@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { enumLabel, HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
@@ -245,7 +246,11 @@ export function AdReport({
   contractId: number;
   products: ReportableProduct[];
 }) {
-  const [selectedId, setSelectedId] = useState(() => initialProduct(products));
+  // 대시보드 카드에서 오면 `?product=<contractProductId>` 로 그 상품을 골라 둔다. 이 계약에 없는 값이면 무시한다.
+  const requested = Number(useSearchParams().get('product'));
+  const [selectedId, setSelectedId] = useState(() =>
+    products.some((p) => p.contractProductId === requested) ? requested : initialProduct(products),
+  );
   const product = products.find((p) => p.contractProductId === selectedId);
   const reason = product ? unavailableReason(product) : null;
 
