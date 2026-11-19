@@ -9,6 +9,7 @@ import {
   type CreateAdminAdvertisementExposureRequest,
   type CreateAdminAdvertisementExposureRequestJobField,
 } from '@ogonggo/api/src/admin';
+import { jobFieldLabel } from '@/entities/advertisement-exposure/lib/adPosting';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { adminWrite } from '@/shared/api/adminClient';
 import { unwrapData } from '@/shared/api/unwrapData';
@@ -43,8 +44,11 @@ export interface AttachInput {
   posting: {
     targetType: 'JOB' | 'BOOTCAMP';
     targetId: number;
-    /** 리스트 상단 고정(`JOB_LIST`) 노출의 직무(계약 8절). 다른 자리는 null. */
-    jobField: string | null;
+    /**
+     * 노출을 걸 탭마다 하나씩의 직무. 리스트 상단 고정(`JOB_LIST`)은 고른 탭 수만큼이고 `전체` 탭은 null 이다(계약 10절).
+     * 다른 자리는 `[null]` 하나다.
+     */
+    jobFields: (string | null)[];
     /** 오공고 PICK(`JOB_PICK`) 노출의 추천 문구(계약 9절). 다른 자리는 null. */
     recommendation: { title: string; description: string } | null;
     expose: boolean;
@@ -65,6 +69,7 @@ function exposureBody(
   contractId: number,
   next: AttachInput,
   posting: NonNullable<AttachInput['posting']>,
+  jobField: string | null,
 ): CreateAdminAdvertisementExposureRequest {
   return {
     productId: next.productId,
@@ -75,8 +80,8 @@ function exposureBody(
     linkUrl: null,
     targetType: posting.targetType,
     targetId: posting.targetId,
-    // 직무 고르기의 값은 JobField 목록에서만 나온다.
-    jobField: (posting.jobField ?? undefined) as
+    // 직무 고르기의 값은 JobField 목록에서만 나온다. `전체` 탭이면 비운다.
+    jobField: (jobField ?? undefined) as
       | CreateAdminAdvertisementExposureRequestJobField
       | undefined,
     recommendationTitle: posting.recommendation?.title.trim() ?? null,
@@ -102,13 +107,48 @@ const initialSteps = (input: AttachInput | null): Record<StepKey, StepState> => 
 
 const isConflict = (failure: unknown) => failure instanceof HttpError && failure.status === 409;
 
+/** 노출 단계에서 일부 탭만 실패했을 때. 메시지에 탭별 실패 이유를 모은다. */
+class TabsFailed extends Error {}
+
+/** 탭을 가르는 열쇠. `전체` 탭(직무 없음)은 빈 문자열이다. */
+const tabKey = (jobField: string | null) => jobField ?? '';
+
 export function useAttachProduct(contractId: number) {
   const queryClient = useQueryClient();
   const [input, setInput] = useState<AttachInput | null>(null);
   const [steps, setSteps] = useState<Record<StepKey, StepState> | null>(null);
   const [running, setRunning] = useState(false);
-  // 노출은 만들었는데 순서 옮기기에서 실패했으면, 다시 시도할 때 또 만들지 않고 옮기기만 한다.
-  const createdExposureId = useRef<number | null>(null);
+  // 노출은 만들었는데 순서 옮기기에서 실패했으면, 다시 시도할 때 또 만들지 않고 옮기기만 한다. 탭마다 따로 센다.
+  const createdExposureIds = useRef(new Map<string, number>());
+  // 만들고 순서까지 끝낸 탭. 다시 시도할 때 건너뛴다.
+  const finishedTabs = useRef(new Set<string>());
+
+  /** 탭 하나의 노출을 만들고(이미 만들었으면 건너뛰고) 고른 순서로 옮긴다. */
+  const exposeOne = async (
+    next: AttachInput,
+    posting: NonNullable<AttachInput['posting']>,
+    jobField: string | null,
+    key: string,
+  ) => {
+    const createdId =
+      createdExposureIds.current.get(key) ??
+      (
+        await unwrapData(
+          createAdvertisementExposure(exposureBody(contractId, next, posting, jobField)),
+        )
+      )?.id;
+    if (createdId === undefined) return;
+    createdExposureIds.current.set(key, createdId);
+    if (posting.order === 'last') return;
+    // 새 노출은 맨 뒤에 붙는다. 맨 앞으로 가려면 앞에 있는 수만큼 한 칸씩 올린다(BE 에 순서 지정이 없다).
+    const siblings =
+      (await unwrapData(listAdvertisementExposures({ productId: next.productId, size: 100 })))
+        ?.items ?? [];
+    const index = siblings.findIndex((item) => item.id === createdId);
+    for (let step = 0; step < index; step += 1) {
+      await unwrapData(moveAdvertisementExposure(createdId, { direction: 'UP' }));
+    }
+  };
 
   const run = async (next: AttachInput, from: Record<StepKey, StepState>) => {
     setInput(next);
@@ -128,7 +168,10 @@ export function useAttachProduct(contractId: number) {
       } catch (failure) {
         update(key, {
           status: 'failed',
-          message: advertisementErrorMessage(failure, '알 수 없는 이유로 실패했어요.'),
+          message:
+            failure instanceof TabsFailed
+              ? failure.message
+              : advertisementErrorMessage(failure, '알 수 없는 이유로 실패했어요.'),
         });
         return false;
       }
@@ -156,23 +199,22 @@ export function useAttachProduct(contractId: number) {
       }
       if (
         !(await attempt('exposure', async () => {
-          const created =
-            createdExposureId.current !== null
-              ? { id: createdExposureId.current }
-              : await unwrapData(
-                  createAdvertisementExposure(exposureBody(contractId, next, posting)),
-                );
-          if (!created) return;
-          createdExposureId.current = created.id;
-          if (posting.order === 'last') return;
-          // 새 노출은 맨 뒤에 붙는다. 맨 앞으로 가려면 앞에 있는 수만큼 한 칸씩 올린다(BE 에 순서 지정이 없다).
-          const siblings =
-            (await unwrapData(listAdvertisementExposures({ productId: next.productId, size: 100 })))
-              ?.items ?? [];
-          const index = siblings.findIndex((item) => item.id === created.id);
-          for (let step = 0; step < index; step += 1) {
-            await unwrapData(moveAdvertisementExposure(created.id, { direction: 'UP' }));
+          // 리스트 상단 고정은 고른 탭마다 노출 하나다. 한 탭이 실패해도 나머지 탭은 걸고, 실패한 탭만 모아 알린다.
+          const failures: string[] = [];
+          for (const jobField of posting.jobFields) {
+            const key = tabKey(jobField);
+            if (finishedTabs.current.has(key)) continue;
+            try {
+              await exposeOne(next, posting, jobField, key);
+              finishedTabs.current.add(key);
+            } catch (failure) {
+              const reason = advertisementErrorMessage(failure, '알 수 없는 이유로 실패했어요.');
+              failures.push(
+                posting.jobFields.length > 1 ? `${jobFieldLabel(jobField)} 탭: ${reason}` : reason,
+              );
+            }
           }
+          if (failures.length > 0) throw new TabsFailed(failures.join(' / '));
         }))
       ) {
         return;
@@ -208,7 +250,8 @@ export function useAttachProduct(contractId: number) {
     failed,
     finished,
     start: (next: AttachInput) => {
-      createdExposureId.current = null;
+      createdExposureIds.current = new Map();
+      finishedTabs.current = new Set();
       return run(next, initialSteps(next));
     },
     /** 끝나지 않은 단계만 다시 부른다. */
