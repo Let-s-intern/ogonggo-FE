@@ -576,6 +576,42 @@ const addContractProductHandler = http.post(
   },
 );
 
+/**
+ * 게시 종료일만 바꾼다(BE #158). 시작일은 그대로다. 기간이 없는 상품이거나 종료일이 시작일보다 앞이면 400 이고, 노출은 바꾸지
+ * 않는다(어드민이 노출 교체로 따로 옮긴다).
+ */
+const updateContractProductHandler = http.patch(
+  `${CONTRACTS}/:contractId/products/:contractProductId`,
+  async ({ params, request }) => {
+    const contract = findContract(params.contractId);
+    if (!contract) return contractNotFound();
+    const id = readId(params.contractProductId);
+    const item = contract.products.find((candidate) => candidate.contractProductId === id);
+    if (!item) {
+      return error(
+        404,
+        'ADVERTISEMENT_CONTRACT_PRODUCT_NOT_FOUND',
+        '계약에 붙인 광고 상품을 찾을 수 없습니다.',
+      );
+    }
+    const body = (await request.json().catch(() => null)) as { endDate?: unknown } | null;
+    const endDate = typeof body?.endDate === 'string' ? body.endDate : '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+      return badRequest('endDate: YYYY-MM-DD 날짜를 보내 주세요.');
+    }
+    if (!item.startDate || item.startDate > endDate) {
+      return error(
+        400,
+        'ADVERTISEMENT_CONTRACT_PRODUCT_PERIOD_INVALID',
+        '기간이 없는 상품이거나 게시 종료일이 시작일보다 앞입니다.',
+      );
+    }
+    item.endDate = endDate;
+    saveAdvertisementStore();
+    return HttpResponse.json(ok({ id }), { status: 200 });
+  },
+);
+
 const removeContractProductHandler = http.delete(
   `${CONTRACTS}/:contractId/products/:contractProductId`,
   ({ params }) => {
@@ -612,5 +648,6 @@ export const advertisementAdminHandlers: HttpHandler[] = [
   changeStatusHandler,
   changePaymentAmountHandler,
   addContractProductHandler,
+  updateContractProductHandler,
   removeContractProductHandler,
 ];

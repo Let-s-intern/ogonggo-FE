@@ -261,6 +261,7 @@ export * from './aiLetsCareerContentTagTargetResponse';
 export * from './aiLetsCareerContentTagTargetResponseKind';
 export * from './analysis';
 export * from './changeAdminAdvertisementContractPaymentAmountRequest';
+export * from './changeAdminAdvertisementContractProductEndDateRequest';
 export * from './changeAdminAdvertisementContractStatusRequest';
 export * from './changeAdminAdvertisementContractStatusRequestStatus';
 export * from './changeAdminAdvertisementExposureExposedRequest';

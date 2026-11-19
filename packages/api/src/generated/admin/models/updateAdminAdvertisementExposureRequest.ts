@@ -93,12 +93,12 @@ export interface UpdateAdminAdvertisementExposureRequest {
   recommendationDescription?: string | null;
   adLabel: boolean;
   /**
-     * Asia/Seoul 기준 일시. 시작·종료를 함께 생략하면 상시입니다.
+     * 노출 시작 일시(Asia/Seoul). 노출 기간은 실제로 광고가 화면에 노출되는 기간이며, 리포트의 집계 기간인 계약 상품의 게시 기간과 다릅니다. 시작·종료를 함께 생략하면 상시입니다.
      * @nullable
      */
   startAt?: string | null;
   /**
-     * Asia/Seoul 기준 일시. 시작·종료를 함께 생략하면 상시입니다.
+     * 노출 종료 일시(Asia/Seoul). 노출 기간은 실제로 광고가 화면에 노출되는 기간이며, 리포트의 집계 기간인 계약 상품의 게시 기간과 다릅니다. 시작·종료를 함께 생략하면 상시입니다.
      * @nullable
      */
   endAt?: string | null;

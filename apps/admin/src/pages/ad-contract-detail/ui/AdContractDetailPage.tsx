@@ -68,6 +68,7 @@ import { AdTargetsField } from './AdTargetsField';
 import { isReportEnabled } from '@/shared/config/reports';
 import { formatDateRange } from '../lib/reportFormat';
 import { ProductAddForm } from './ProductAddForm';
+import { ProductEndDateModal } from './ProductEndDateModal';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
 
@@ -77,6 +78,15 @@ interface BannerEdit {
   row: AdminAdvertisementContractProductResponse;
   exposure: AdvertisementExposure | null;
 }
+
+/** 게시 종료일을 바꿀 계약 상품. 기간이 있는 상품만 바꾼다. */
+type DatedProduct = AdminAdvertisementContractProductResponse & {
+  startDate: string;
+  endDate: string;
+};
+
+const isDated = (row: AdminAdvertisementContractProductResponse): row is DatedProduct =>
+  Boolean(row.startDate && row.endDate);
 
 /** 계약 상품 행에서 연 광고 공고 모달. `exposure` 가 `null` 이면 새로 건다. */
 interface PostingEdit {
@@ -571,7 +581,8 @@ function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContrac
  * 판매한 상품(계약 상품). 상품은 게시 시작일·종료일과 함께 넣는다(BE LC-3599, 하루 단위, 종료일 포함). 같은 상품을 여러 번
  * 붙일 수 있다. 지운 상품도 계약에는 남아 `삭제된 상품` 으로 보인다. 기간을 넣기 전에 붙인 상품은 기간이 `-` 다.
  *
- * 게시 기간은 배너 노출 기간과 연동하지 않는다. 배너는 노출 기간을 따로 넣는다.
+ * 게시 기간은 데이터 집계 기간(리포트가 보는 기간)이고, 노출 기간은 광고가 실제로 보이는 기간이다(계약 12절). 둘은 연동하지
+ * 않는다. 기간이 있는 상품은 `변경` 으로 게시 종료일만 바꾸고, 그때 끝이 같은 노출을 함께 옮길 수 있다.
  *
  * 배너·광고 공고 상품 줄에는 같은 규칙의 버튼이 있다 — 이 계약의 노출이 없으면 `배너 등록`·`공고 등록`(이 계약을 연결 계약으로
  * 미리 채운 등록 모달), 있으면 `배너 수정`·`공고 수정`(여럿이면 개수, 모달 안에서 고르기). 세팅 화면과 같은 모달이고, 저장하면
@@ -602,6 +613,7 @@ function ProductsCard({
   const remove = useRemoveContractProduct(contract.id);
   const [bannerEdit, setBannerEdit] = useState<BannerEdit | null>(null);
   const [postingEdit, setPostingEdit] = useState<PostingEdit | null>(null);
+  const [endDateEdit, setEndDateEdit] = useState<DatedProduct | null>(null);
   const contractExposures = useContractExposures(
     contract.id,
     contract.products.map((product) => product.productId),
@@ -687,9 +699,25 @@ function ProductsCard({
     {
       key: 'period',
       header: '게시 기간',
-      width: 'w-48',
+      width: 'w-56',
       render: (row) => (
-        <span className="text-sm">{formatDateRange(row.startDate, row.endDate)}</span>
+        <span className="flex items-center gap-1.5 text-sm whitespace-nowrap">
+          {formatDateRange(row.startDate, row.endDate)}
+          {isDated(row) ? (
+            <button
+              type="button"
+              className="text-xs text-blue-600 hover:underline"
+              aria-label={`${row.productName} 게시 종료일 변경`}
+              onClick={(event) => {
+                // 행 전체가 리포트를 여는 자리라 여기서 멈춘다.
+                event.stopPropagation();
+                setEndDateEdit(row);
+              }}
+            >
+              변경
+            </button>
+          ) : null}
+        </span>
       ),
     },
     {
@@ -834,6 +862,17 @@ function ProductsCard({
           siblings={exposuresOf(postingEdit.row)}
           onSwitch={(exposure) => setPostingEdit({ ...postingEdit, exposure })}
           onClose={() => setPostingEdit(null)}
+        />
+      ) : null}
+      {endDateEdit ? (
+        <ProductEndDateModal
+          key={endDateEdit.contractProductId}
+          contractId={contract.id}
+          row={endDateEdit}
+          exposures={contractExposures.data.filter(
+            (exposure) => exposure.productId === endDateEdit.productId,
+          )}
+          onClose={() => setEndDateEdit(null)}
         />
       ) : null}
     </Card>

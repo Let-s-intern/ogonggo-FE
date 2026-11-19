@@ -71,9 +71,15 @@ export interface AdminAdvertisementExposureResponse {
      */
   recommendationDescription?: string | null;
   adLabel: boolean;
-  /** @nullable */
+  /**
+     * 노출 시작 일시. 노출 기간은 실제로 광고가 화면에 노출되는 기간입니다. 없으면 상시
+     * @nullable
+     */
   startAt?: string | null;
-  /** @nullable */
+  /**
+     * 노출 종료 일시. 노출 기간은 실제로 광고가 화면에 노출되는 기간입니다. 없으면 상시
+     * @nullable
+     */
   endAt?: string | null;
   exposed: boolean;
   /** @nullable */

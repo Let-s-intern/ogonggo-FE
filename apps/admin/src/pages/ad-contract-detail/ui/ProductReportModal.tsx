@@ -156,8 +156,8 @@ function ProductReport({
             type="date"
             aria-label="리포트 시작일"
             value={range.from || report?.from || ''}
-            min={product.startDate}
-            max={product.endDate}
+            min={product.startDate ?? undefined}
+            max={product.endDate ?? undefined}
             onChange={(event) => setRange((current) => ({ ...current, from: event.target.value }))}
             className="h-9 w-36 px-2 text-sm"
           />
@@ -166,8 +166,8 @@ function ProductReport({
             type="date"
             aria-label="리포트 종료일"
             value={range.to || report?.to || ''}
-            min={product.startDate}
-            max={product.endDate}
+            min={product.startDate ?? undefined}
+            max={product.endDate ?? undefined}
             onChange={(event) => setRange((current) => ({ ...current, to: event.target.value }))}
             className="h-9 w-36 px-2 text-sm"
           />
