@@ -33,16 +33,8 @@ export function formatSeconds(value: number | null): string {
   return minutes > 0 ? `${minutes}분 ${seconds}초` : `${seconds}초`;
 }
 
-/** 광고 공고 자리는 enum 카탈로그에 아직 없다(백엔드 Push 5 배포 전). 그동안 여기 이름을 쓴다. */
-const NEW_POSITION_LABELS: Record<string, string> = {
-  JOB_LIST: '채용공고 목록',
-  BOOTCAMP_LIST: '부트캠프 목록',
-  JOB_DETAIL_SIDE: '공고 상세 옆 추천',
-};
-
 export function positionLabel(position: string): string {
-  const label = enumLabel('AdvertisementProductPosition', position);
-  return label === position ? (NEW_POSITION_LABELS[position] ?? position) : label;
+  return enumLabel('AdvertisementProductPosition', position);
 }
 
 export const SOURCE_LABELS: Record<ReportSource, string> = {

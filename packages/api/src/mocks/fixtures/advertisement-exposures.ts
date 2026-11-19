@@ -1,10 +1,9 @@
 import type {
-  AdminAdvertisementContractDetailResponse,
   AdminAdvertisementExposureResponse,
   AdminAdvertisementProductResponse,
 } from '../../generated/admin/models';
 import type { AdvertisementExposureResponse } from '../../generated/user/models';
-import { contractSeed } from './advertisement-contracts';
+import { contractSeed, type StoredContract } from './advertisement-contracts';
 
 /**
  * 광고 상품과 노출 목의 저장소(BE LC-3583). 공개 배너 조회(`../advertisementExposures.ts`)가 이 배열을 본다.
@@ -193,7 +192,7 @@ export type ExposureRecord = AdminAdvertisementExposureResponse & {
 interface AdvertisementStore {
   products: ProductRecord[];
   exposures: ExposureRecord[];
-  contracts: AdminAdvertisementContractDetailResponse[];
+  contracts: StoredContract[];
 }
 
 function seedStore(): AdvertisementStore {

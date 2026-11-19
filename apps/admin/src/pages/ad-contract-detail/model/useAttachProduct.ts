@@ -7,6 +7,7 @@ import {
   listAdvertisementExposures,
   moveAdvertisementExposure,
   type CreateAdminAdvertisementExposureRequest,
+  type CreateAdminAdvertisementExposureRequestJobField,
 } from '@ogonggo/api/src/admin';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { adminWrite } from '@/shared/api/adminClient';
@@ -59,19 +60,12 @@ function nextDay(date: string): string {
   return new Date(time).toISOString().slice(0, 10);
 }
 
-/**
- * 한 번에 세팅의 노출 등록 본문. 상품 기간 그대로이고 광고 표시를 켠다. `jobField`·추천 문구는 생성 요청 타입에 아직 없는 칸이라
- * (코드젠 전) 넓힌 타입으로 넘긴다.
- */
+/** 한 번에 세팅의 노출 등록 본문. 상품 기간 그대로이고 광고 표시를 켠다. */
 function exposureBody(
   contractId: number,
   next: AttachInput,
   posting: NonNullable<AttachInput['posting']>,
-): CreateAdminAdvertisementExposureRequest & {
-  jobField: string | null;
-  recommendationTitle: string | null;
-  recommendationDescription: string | null;
-} {
+): CreateAdminAdvertisementExposureRequest {
   return {
     productId: next.productId,
     contractId,
@@ -81,7 +75,10 @@ function exposureBody(
     linkUrl: null,
     targetType: posting.targetType,
     targetId: posting.targetId,
-    jobField: posting.jobField,
+    // 직무 고르기의 값은 JobField 목록에서만 나온다.
+    jobField: (posting.jobField ?? undefined) as
+      | CreateAdminAdvertisementExposureRequestJobField
+      | undefined,
     recommendationTitle: posting.recommendation?.title.trim() ?? null,
     recommendationDescription: posting.recommendation?.description.trim() ?? null,
     adLabel: true,

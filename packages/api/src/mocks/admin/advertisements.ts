@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import {
+  type AdminAdvertisementExposureResponseJobField,
   AdminAdvertisementProductResponseCategory,
   AdminAdvertisementProductResponsePosition,
   ListAdvertisementContractsStatusItem,
@@ -277,9 +278,12 @@ function exposureError(
 }
 
 /** 리스트 상단 고정 노출만 직무를 남긴다. 다른 자리는 보내도 null 이다(계약 8절). */
-function jobFieldOf(product: ProductRecord, body: object): string | null {
-  const { jobField } = body as { jobField?: string | null };
-  return String(product.position ?? '') === 'JOB_LIST' ? (jobField ?? null) : null;
+function jobFieldOf(
+  product: ProductRecord,
+  body: object,
+): AdminAdvertisementExposureResponseJobField | undefined {
+  const { jobField } = body as { jobField?: AdminAdvertisementExposureResponseJobField | null };
+  return String(product.position ?? '') === 'JOB_LIST' ? (jobField ?? undefined) : undefined;
 }
 
 /** 오공고 PICK 노출만 추천 문구를 남긴다(계약 9절). 검사는 `./advertisementPostings.ts` 가 먼저 한다. */

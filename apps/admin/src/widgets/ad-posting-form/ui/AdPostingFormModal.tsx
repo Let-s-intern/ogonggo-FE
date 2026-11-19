@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CreateAdminAdvertisementExposureRequestJobField } from '@ogonggo/api/src/admin';
 import { Button, Callout, Field, Input, Modal, Select } from '@ogonggo/ui';
 import {
   useAdvertisementExposures,
@@ -171,8 +172,10 @@ export function AdPostingFormModal({
       linkUrl: null,
       targetType: target.targetType,
       targetId: target.targetId,
-      // 리스트 상단 고정 노출의 직무(계약 8절). 생성 요청 타입에는 아직 없다(코드젠 전).
-      jobField: withJobField ? jobField : null,
+      // 리스트 상단 고정 노출의 직무(계약 8절). 값은 JobField 목록에서만 고른다.
+      jobField: withJobField
+        ? (jobField as CreateAdminAdvertisementExposureRequestJobField)
+        : undefined,
       recommendationTitle: withRecommendation ? recommendation.title.trim() : null,
       recommendationDescription: withRecommendation ? recommendation.description.trim() : null,
       adLabel,

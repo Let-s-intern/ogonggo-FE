@@ -4,6 +4,7 @@ import type {
   AdminAdvertisementContractProductResponse,
 } from '../../generated/admin/models';
 import { ADMIN_BOOTCAMP_FIXTURES, ADMIN_JOB_FIXTURES } from '../fixtures/admin-content';
+import type { StoredContract, StoredContractProduct } from '../fixtures/advertisement-contracts';
 import { advertisementStore, saveAdvertisementStore } from '../fixtures/advertisement-exposures';
 import { enumOptions } from '../../enums';
 import { ok } from './paging';
@@ -100,7 +101,7 @@ function save() {
 }
 
 /** 공고 등록 계약은 계약의 공고가 자동으로 대상이다. 지울 수 없다. */
-function fixedTarget(contract: AdminAdvertisementContractDetailResponse): TargetKey | null {
+function fixedTarget(contract: StoredContract): TargetKey | null {
   if (contract.source !== 'COMPANY_POSTING' || contract.targetId == null) return null;
   return {
     targetType: contract.promotionTarget === 'BOOTCAMP' ? 'BOOTCAMP' : 'JOB',
@@ -112,9 +113,7 @@ const sameTarget = (a: TargetKey, b: TargetKey) =>
   a.targetType === b.targetType && a.targetId === b.targetId;
 
 /** 계약의 대상 전부. 자동 대상이 맨 앞이다. */
-export function contractTargets(
-  contract: AdminAdvertisementContractDetailResponse,
-): AdminContractTarget[] {
+export function contractTargets(contract: StoredContract): AdminContractTarget[] {
   const fixed = fixedTarget(contract);
   const keys = [
     ...(fixed ? [fixed] : []),
@@ -165,11 +164,10 @@ const addTargetHandler = http.post(
       return error(400, 'BAD_REQUEST', 'targetType, targetId 를 보내 주세요.');
     }
     if (!findContent(targetType, targetId)) {
-      return error(
-        404,
-        'ADVERTISEMENT_CONTRACT_TARGET_NOT_FOUND',
-        '광고할 공고를 찾을 수 없습니다.',
-      );
+      // 실제 BE 는 공고·부트캠프 자체의 없음 코드를 돌려준다.
+      return targetType === 'JOB'
+        ? error(404, 'JOB_NOT_FOUND', '채용공고를 찾을 수 없습니다.')
+        : error(404, 'BOOTCAMP_NOT_FOUND', '부트캠프를 찾을 수 없습니다.');
     }
     const key = { targetType, targetId };
     if (contractTargets(contract).some((target) => sameTarget(target, key))) {
@@ -202,17 +200,11 @@ const removeTargetHandler = http.delete(
         '공고 등록 계약의 공고는 대상에서 뺄 수 없습니다.',
       );
     }
+    // 실제 BE 처럼 연결이 없어도 성공(200, data null)이다.
     const before = linked[contract.id] ?? [];
-    if (!before.some((item) => sameTarget(item, key))) {
-      return error(
-        404,
-        'ADVERTISEMENT_CONTRACT_TARGET_NOT_FOUND',
-        '이 계약에 연결한 대상이 아닙니다.',
-      );
-    }
     linked[contract.id] = before.filter((item) => !sameTarget(item, key));
     save();
-    return new HttpResponse(null, { status: 204 });
+    return HttpResponse.json({ status: 200, message: 'OK', data: null });
   },
 );
 
@@ -323,9 +315,7 @@ const COLLECTED_SINCE = '2026-11-08';
 /** 오공고 화면에 노출하는 카테고리만 리포트가 있다. 인스타·카카오는 집계 대상이 아니다(D8). */
 const REPORTABLE: readonly string[] = ['BANNER', 'JOB_POSTING'];
 
-function unavailableReason(
-  product: AdminAdvertisementContractProductResponse,
-): ReportUnavailableReason | null {
+function unavailableReason(product: StoredContractProduct): ReportUnavailableReason | null {
   if (!REPORTABLE.includes(product.category)) return 'NOT_EXPOSABLE';
   if (!product.startDate || !product.endDate) return 'NO_PERIOD';
   return null;
@@ -559,10 +549,10 @@ function buildReport(
 ): AdminContractProductReport | Response {
   const input = reportInput(params, url);
   if (input instanceof Response) return input;
-  const contract = findContract(params.contractId) as AdminAdvertisementContractDetailResponse;
+  const contract = findContract(params.contractId) as StoredContract;
   const cp = contract.products.find(
     (item) => item.contractProductId === Number(params.contractProductId),
-  ) as AdminAdvertisementContractProductResponse;
+  ) as StoredContractProduct;
   const product = advertisementStore.products.find((item) => item.id === cp.productId);
   const { from, to, rows } = input;
 
