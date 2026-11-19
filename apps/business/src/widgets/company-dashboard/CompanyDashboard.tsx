@@ -11,6 +11,7 @@ import {
 import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
 import { StageTrack } from '@/shared/ui/StageTrack';
+import { RunningAdsPanel } from '@/widgets/ad-report/ui/RunningAdsPanel';
 import {
   companyPostStage,
   CompanyPostStageTrack,
@@ -265,6 +266,9 @@ export function CompanyDashboard() {
       </header>
 
       {isNew ? quickActions : null}
+
+      {/* 오늘 게시 중인 광고 상품이 있을 때만 보인다. */}
+      <RunningAdsPanel />
 
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         <Panel title="공고 현황" href="/mypage/company/posts/jobs" linkLabel="등록 내역">
