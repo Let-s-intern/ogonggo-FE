@@ -14,15 +14,16 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  *   쓰는지 본다. 대상 공고는 목 공고 목록(`handlers.ts`)에서 그 직군으로 걸러지는 공고다.
  * - `CALENDAR_DAY`: 공고 달력 날짜별 목록 맨 앞. 노출 기간(`startAt`·`endAt`)을 함께 준다 — 계약에 없는 칸이라 백엔드에
  *   요청했다. 71 은 11월 16일~30일, 72 는 11월 19일~21일이라 그 밖의 날을 고르면 빠져야 한다.
+ * - `MYPAGE_SCRAP`: 마이페이지 지원 관리 보드(칸반)의 채용공고 스크랩 칸 맨 앞. 브라우저 목 워커가 받는다.
  * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
  *
- * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·72·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
+ * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·72·82·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
  *
  * 웹 목 서버(`apps/web/src/instrumentation.ts`)는 핸들러를 서버가 뜰 때 한 번 등록한다. 이 파일을 더한 뒤에는 웹 목
  * 서버를 다시 띄워야 서버 렌더가 이 응답을 받는다.
  */
 
-export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK' | 'CALENDAR_DAY';
+export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK' | 'CALENDAR_DAY' | 'MYPAGE_SCRAP';
 
 export interface AdPostingResponse {
   exposureId: number;
@@ -40,7 +41,7 @@ export interface AdPostingResponse {
   bootcamp: UserBootcampSummaryResponse | null;
 }
 
-const POSITIONS: readonly string[] = ['JOB_LIST', 'JOB_PICK', 'CALENDAR_DAY'];
+const POSITIONS: readonly string[] = ['JOB_LIST', 'JOB_PICK', 'CALENDAR_DAY', 'MYPAGE_SCRAP'];
 
 const SEED: {
   exposureId: number;
@@ -118,6 +119,8 @@ const SEED: {
     startAt: '2026-11-19T00:00:00',
     endAt: '2026-11-22T00:00:00',
   },
+  { exposureId: 81, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 698, adLabel: true },
+  { exposureId: 82, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 693, adLabel: false },
   { exposureId: 61, position: 'JOB_PICK', targetType: 'JOB', targetId: 7, adLabel: true },
   { exposureId: 62, position: 'JOB_PICK', targetType: 'JOB', targetId: 690, adLabel: false },
 ];
