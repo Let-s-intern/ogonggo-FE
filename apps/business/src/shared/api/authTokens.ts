@@ -1,4 +1,3 @@
-
 /**
  * 오공고가 발급한 기업 회원 토큰을 보관한다. 기준은 `apps/web/src/shared/api/authTokens.ts` 이고, biz 는 기업 회원
  * 전용이라 렛츠커리어 토큰을 뺐다. 목데이터 모드는 `isSignedIn` 만 다룬다.
