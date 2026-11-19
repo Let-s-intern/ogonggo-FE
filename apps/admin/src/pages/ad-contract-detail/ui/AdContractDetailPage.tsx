@@ -19,7 +19,6 @@ import {
   type ChangeAdminAdvertisementContractStatusRequestStatus,
 } from '@ogonggo/api/src/admin';
 import {
-  useAddContractProduct,
   useChangeContractStatus,
   useChangePaymentAmount,
   useContract,
@@ -45,13 +44,13 @@ import {
   type AdvertisementProduct,
   useAdvertisementProducts,
 } from '@/entities/advertisement-product/api/useAdvertisementProducts';
-import { productLabel } from '@/entities/advertisement-product/lib/product';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
 import { ContractReportCard } from './ContractReportCard';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
 import { ContractTargetsCard } from './ContractTargetsCard';
+import { ProductAddForm } from './ProductAddForm';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
 
@@ -463,13 +462,7 @@ function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContrac
  */
 function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
   const products = useAdvertisementProducts();
-  const add = useAddContractProduct(contract.id);
   const remove = useRemoveContractProduct(contract.id);
-  const [productId, setProductId] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const periodInvalid = Boolean(startDate && endDate && startDate > endDate);
-  const canAdd = Boolean(productId && startDate && endDate) && !periodInvalid;
   const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
 
   const bannerProductOf = (row: AdminAdvertisementContractProductResponse) => {
@@ -547,63 +540,10 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
     <Card>
       <CardTitle>계약 상품</CardTitle>
       <div className="mt-3 flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            aria-label="넣을 상품"
-            options={[
-              { value: '', label: '넣을 상품 고르기' },
-              ...(products.data ?? []).map((product) => ({
-                value: String(product.id),
-                label: productLabel(product),
-              })),
-            ]}
-            value={productId}
-            onChange={(event) => setProductId(event.target.value)}
-          />
-          <div className="flex items-center gap-1.5">
-            <Input
-              type="date"
-              aria-label="게시 시작일"
-              value={startDate}
-              max={endDate || undefined}
-              onChange={(event) => setStartDate(event.target.value)}
-              className="h-9 w-36 px-2 text-sm"
-            />
-            <span className="text-sm text-gray-400">~</span>
-            <Input
-              type="date"
-              aria-label="게시 종료일"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(event) => setEndDate(event.target.value)}
-              className="h-9 w-36 px-2 text-sm"
-            />
-          </div>
-          <Button
-            size="sm"
-            disabled={!canAdd || add.isPending}
-            onClick={() =>
-              add.mutate(
-                { productId: Number(productId), startDate, endDate },
-                {
-                  onSuccess: () => {
-                    setProductId('');
-                    setStartDate('');
-                    setEndDate('');
-                  },
-                },
-              )
-            }
-          >
-            넣기
-          </Button>
-        </div>
-        {periodInvalid ? (
-          <Callout tone="error">게시 시작일은 종료일과 같거나 앞서야 해요.</Callout>
-        ) : null}
-        {add.isError || remove.isError ? (
+        <ProductAddForm contract={contract} />
+        {remove.isError ? (
           <Callout tone="error">
-            {advertisementErrorMessage(add.error ?? remove.error, '계약 상품을 바꾸지 못했습니다.')}
+            {advertisementErrorMessage(remove.error, '계약 상품을 빼지 못했습니다.')}
           </Callout>
         ) : null}
         <DataTable
