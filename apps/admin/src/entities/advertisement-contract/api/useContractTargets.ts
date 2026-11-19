@@ -8,7 +8,7 @@ import type { AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/
 import { adminDelete, adminWrite } from '@/shared/api/adminClient';
 
 /**
- * 계약의 리포트 대상 공고·부트캠프(PRD `prd-business-report.md` 6.3, D2). 목록은 계약 상세 응답의 `targets` 에 온다.
+ * 계약의 광고할 공고·부트캠프(PRD `prd-business-report.md` 6.3, D2). 목록은 계약 상세 응답의 `targets` 에 온다.
  *
  * BE(Push 3) 배포 전이라 생성 함수가 없어 `adminClient` 로 부르고 목의 타입을 쓴다. 코드젠 뒤 생성 함수로 옮긴다.
  */

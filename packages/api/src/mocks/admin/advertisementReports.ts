@@ -9,7 +9,7 @@ import { enumOptions } from '../../enums';
 import { ok } from './paging';
 
 /**
- * 광고 계약의 리포트 대상 공고 연결 목(PRD `prd-business-report.md` 6.3·6.7, API 계약
+ * 광고 계약의 광고할 공고 연결 목(PRD `prd-business-report.md` 6.3·6.7, API 계약
  * `.claude/tasks/memos/광고-리포트-API-계약-2026-11-19.md` 3절). BE(Push 3) 가 아직 없어 이 모양이 그대로 계약이다.
  *
  * 계약 상세(`GET /advertisement-contracts/{id}`)를 여기서 먼저 받아 `targets` 를 얹는다. `./handlers.ts` 에서
@@ -165,7 +165,11 @@ const addTargetHandler = http.post(
       return error(400, 'BAD_REQUEST', 'targetType, targetId 를 보내 주세요.');
     }
     if (!findContent(targetType, targetId)) {
-      return error(404, 'ADVERTISEMENT_CONTRACT_TARGET_NOT_FOUND', '대상 공고를 찾을 수 없습니다.');
+      return error(
+        404,
+        'ADVERTISEMENT_CONTRACT_TARGET_NOT_FOUND',
+        '광고할 공고를 찾을 수 없습니다.',
+      );
     }
     const key = { targetType, targetId };
     if (contractTargets(contract).some((target) => sameTarget(target, key))) {

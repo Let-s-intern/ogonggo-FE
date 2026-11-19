@@ -51,7 +51,7 @@ import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
 import { ProductReportPanel, reportCellLabel } from './ProductReportPanel';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
-import { ContractTargetsCard } from './ContractTargetsCard';
+import { AdTargetsField } from './AdTargetsField';
 import { ProductAddForm } from './ProductAddForm';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
@@ -111,7 +111,7 @@ export function AdContractDetailPage() {
         backTo={backTo(contract.status)}
       />
       {/*
-       * 위계(2026-11-19 사용자): 계약 정보 → 계약 전체 성과 → 상품 목록(누르면 그 상품 리포트) → 대상 공고·걸린 노출 → 신청
+       * 위계(2026-11-19 사용자): 계약 정보(광고할 공고 포함) → 계약 전체 성과 → 상품 목록(누르면 그 상품 리포트) → 걸린 노출 → 신청
        * 메모. 카드 사이는 같은 간격, 카드 제목은 같은 크기다.
        */}
       <div className="flex flex-col gap-8">
@@ -127,7 +127,6 @@ export function AdContractDetailPage() {
         </div>
         <ContractReportSummaryCard contractId={contract.id} />
         <ProductsCard contract={contract} selectedId={selectedProductId} onSelect={selectProduct} />
-        <ContractTargetsCard contract={contract} />
         <ExposuresCard contract={contract} />
         <RequestMemoCard contract={contract} />
       </div>
@@ -212,6 +211,9 @@ function ContractInfoCard({ contract }: { contract: AdminAdvertisementContractDe
           ) : null}
         </Row>
         <Row label="마감일">{contract.recruitmentDeadline}</Row>
+        <Row label="광고할 공고">
+          <AdTargetsField contract={contract} />
+        </Row>
       </Section>
       <Section title="담당자·정산">
         <Row label="담당자">

@@ -62,7 +62,7 @@ export function reportCellLabel(product: ReportableContractProduct, open: boolea
 
 /**
  * 계약 상품 하나의 성과 리포트(PRD 6.6·6.7). 계약 상세의 상품 표에서 상품을 누르면 그 아래에 펼쳐진다(`?product=`). 비즈니스
- * 앱과 같은 구성 — 기간 좁히기 → 상품 몫 요약 → 날짜별 추이 → 광고물별 → 대상 공고 전체 숫자 → 지표 정의.
+ * 앱과 같은 구성 — 기간 좁히기 → 상품 몫 요약 → 날짜별 추이 → 광고물별 → 광고할 공고 전체 숫자 → 지표 정의.
  *
  * 리포트가 없는 상품(기간 미정, 채널 상품)은 이유만 안내한다. PDF 는 통계 화면과 같은 방식(화면을 그림으로 떠서 A4 로 나눔),
  * CSV 는 서버의 `report.csv` 를 그대로 받는다.
@@ -249,7 +249,7 @@ function ReportBody({
   const banner = isBannerReport(report);
   const detail = showsDetail(report);
   const ownLabel = banner ? '배너' : '광고 카드';
-  // 배너는 상세 페이지가 아니라 스크롤·체류를 보이지 않는다(대상 공고 표 포함, API 계약 5절).
+  // 배너는 상세 페이지가 아니라 스크롤·체류를 보이지 않는다(광고할 공고 표 포함, API 계약 5절).
   const scrolls = !banner;
   const notCollected = report.from < report.collectedSince;
   const dayBeforeCollection = addDays(report.collectedSince, -1);
@@ -439,12 +439,12 @@ function ReportBody({
         </p>
       ) : null}
 
-      <Section title="대상 공고 전체 숫자(유입 경로 무관)">
+      <Section title="광고할 공고 전체 숫자(유입 경로 무관)">
         <DataTable
           columns={targetColumns}
           rows={report.targets}
           rowKey={(row) => `${row.targetType}:${row.targetId}`}
-          emptyMessage="연결한 대상 공고가 없습니다. 아래 리포트 대상 공고에서 연결하세요."
+          emptyMessage="연결한 광고할 공고가 없습니다. 위 계약 정보의 광고할 공고에서 연결하세요."
         />
         {report.targets.length > 0 ? (
           <>
@@ -604,14 +604,14 @@ const DEFINITIONS: Definition[] = [
     'all',
   ],
   [
-    '대상 공고 전체',
+    '광고할 공고 전체',
     '연결한 공고의 모든 유입(일반 목록·검색·외부 포함). 어느 상품 몫에도 넣지 않은 숫자도 있다',
     'all',
   ],
 ];
 
 /**
- * 상품 종류에 맞는 정의만. 대상 공고 표가 상세 조회·CTA 를 늘 보이므로 상세 정의는 배너에도 남긴다. 스크롤·체류는 광고 카드만.
+ * 상품 종류에 맞는 정의만. 광고할 공고 표가 상세 조회·CTA 를 늘 보이므로 상세 정의는 배너에도 남긴다. 스크롤·체류는 광고 카드만.
  */
 function definitionsFor(banner: boolean): [string, string][] {
   return DEFINITIONS.filter(([, , shownWhen]) => shownWhen !== 'scroll' || !banner).map(

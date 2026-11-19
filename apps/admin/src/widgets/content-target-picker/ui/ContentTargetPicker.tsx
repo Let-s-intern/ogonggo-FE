@@ -34,9 +34,9 @@ interface ContentTargetPickerProps {
 }
 
 /**
- * 채용공고·부트캠프를 검색해 고른다. 광고 계약의 리포트 대상 연결과 광고 공고 설정이 함께 쓴다.
+ * 채용공고·부트캠프를 검색해 고른다. 광고 계약의 광고할 공고 연결과 광고 공고 설정이 함께 쓴다.
  *
- * 콘텐츠 목록 API(`GET /api/v1/admin/jobs`·`/bootcamps`)를 그대로 쓴다. 공개 여부로 거르지 않는다 — 리포트 대상은 내린
+ * 콘텐츠 목록 API(`GET /api/v1/admin/jobs`·`/bootcamps`)를 그대로 쓴다. 공개 여부로 거르지 않는다 — 광고할 공고는 내린
  * 공고도 연결할 수 있어야 한다. 표의 `공개` 칸으로 가른다.
  */
 export function ContentTargetPicker({
