@@ -2,6 +2,7 @@ import type {
   AdminAdvertisementContractDetailResponse,
   AdminAdvertisementExposureResponse,
   AdminAdvertisementProductResponse,
+  AdminJobSummaryResponseJobField,
 } from '../../generated/admin/models';
 import type { AdvertisementExposureResponse } from '../../generated/user/models';
 import { contractSeed } from './advertisement-contracts';
@@ -202,7 +203,9 @@ export type ProductRecord = AdminAdvertisementProductResponse & { deletedAt: str
 
 interface AdvertisementStore {
   products: ProductRecord[];
-  exposures: AdminAdvertisementExposureResponse[];
+  exposures: (AdminAdvertisementExposureResponse & {
+    jobField?: AdminJobSummaryResponseJobField | null;
+  })[];
   contracts: AdminAdvertisementContractDetailResponse[];
 }
 

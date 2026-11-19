@@ -42,7 +42,7 @@ export async function PopularJobs() {
   const ads: { job: JobSummary; ad: AdSlot }[] = pickAds
     .flatMap((posting) => (posting.job ? [{ ...posting, job: posting.job }] : []))
     .slice(0, MAX_AD_POSTINGS)
-    .map((posting, index) => ({ job: posting.job, ad: toAdSlot(posting, index + 1) }));
+    .map((posting) => ({ job: posting.job, ad: toAdSlot(posting) }));
   const adJobIds = new Set(ads.map(({ job }) => job.id));
   const picks: { job: JobSummary; ad?: AdSlot }[] = [
     ...ads,

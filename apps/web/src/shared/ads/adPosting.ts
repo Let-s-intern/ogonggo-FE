@@ -6,8 +6,7 @@ import { adPostingClickData, adReportPosthogParams } from './adPostingContract';
  * 광고 공고 카드에 연결된 공개 exposure metadata. 카드는 일반 카드와 같은 컴포넌트이고, 이 값이 있으면
  * `광고` 표시를 붙이고 누를 때 `ad_posting_click` 을 더 보낸다.
  *
- * 백엔드는 position enum이 없는 JOB_POSTING feed에서 이를 공급한다. 리스트에서는 이미 조회된 공고/부트캠프 중
- * target ID가 일치하는 카드만 표시 광고로 표시한다. productPosition은 현재 null이다.
+ * 공개 노출 조회 응답에서 받는다. 광고 상품 자리와 표시 순서가 클릭·노출 리포트에도 사용된다.
  */
 export interface AdSlot {
   /** 광고 id. 공고 id 가 아니다. */
@@ -17,7 +16,7 @@ export interface AdSlot {
   position: number;
   category: 'JOB_POSTING';
   /** JOB_POSTING에는 현재 공개 position enum이 없어 null이다. */
-  productPosition: string | null;
+  productPosition: string;
   adLabel: boolean;
 }
 

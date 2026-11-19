@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Callout, DataTable, Pagination, Tabs, cn } from '@ogonggo/ui';
+import { enumLabel, type AdminJobSummaryResponseJobField } from '@ogonggo/api/src/admin';
 import { useBootcampList, useJobList } from '@/entities/content/api/useContent';
 import { SearchBox } from '@/widgets/list-toolbar';
 
@@ -11,6 +12,7 @@ export interface ContentTarget {
   targetId: number;
   title: string;
   companyName: string;
+  jobField?: AdminJobSummaryResponseJobField | null;
 }
 
 const TYPE_TABS = [
@@ -61,6 +63,7 @@ export function ContentTargetPicker({
     targetId: row.id,
     title: row.title,
     companyName: row.companyName,
+    jobField: 'jobField' in row ? (row.jobField ?? null) : null,
     visible: row.visibility === 'VISIBLE',
   }));
 
@@ -106,6 +109,13 @@ export function ContentTargetPicker({
                 },
                 { key: 'title', header: '제목', render: (row) => row.title },
                 { key: 'company', header: '회사', width: 'w-40', render: (row) => row.companyName },
+                {
+                  key: 'jobField',
+                  header: '직군',
+                  width: 'w-28',
+                  render: (row) =>
+                    row.jobField ? enumLabel('JobField', row.jobField) : <span className="text-gray-400">-</span>,
+                },
                 {
                   key: 'visible',
                   header: '공개',

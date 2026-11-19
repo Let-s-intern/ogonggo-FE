@@ -12,9 +12,18 @@ import {
   type MoveAdminAdvertisementExposureRequestDirection,
   type UpdateAdminAdvertisementExposureRequest,
 } from '@ogonggo/api/src/admin';
+import type { AdminJobSummaryResponseJobField } from '@ogonggo/api/src/admin';
 import { unwrapData } from '@/shared/api/unwrapData';
 
 export type AdvertisementExposure = AdminAdvertisementExposureResponse;
+
+/** BE의 직군 필드는 FE 코드젠 스냅숏보다 최신이어서 요청 타입에 덧붙인다. */
+export type CreateAdvertisementExposureInput = CreateAdminAdvertisementExposureRequest & {
+  jobField?: AdminJobSummaryResponseJobField | null;
+};
+export type ReplaceAdvertisementExposureInput = UpdateAdminAdvertisementExposureRequest & {
+  jobField?: AdminJobSummaryResponseJobField | null;
+};
 
 /**
  * 광고 노출(BE LC-3583). 상품(자리) 하나의 노출을 순서대로 받는다. 꺼진 것·기간 밖도 온다.
@@ -53,8 +62,8 @@ function useInvalidate() {
 export function useCreateExposure() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (input: CreateAdminAdvertisementExposureRequest) =>
-      unwrapData(createAdvertisementExposure(input)),
+    mutationFn: (input: CreateAdvertisementExposureInput) =>
+      unwrapData(createAdvertisementExposure(input as CreateAdminAdvertisementExposureRequest)),
     onSuccess: invalidate,
   });
 }
@@ -63,8 +72,8 @@ export function useCreateExposure() {
 export function useReplaceExposure(exposureId: number) {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (input: UpdateAdminAdvertisementExposureRequest) =>
-      unwrapData(replaceAdvertisementExposure(exposureId, input)),
+    mutationFn: (input: ReplaceAdvertisementExposureInput) =>
+      unwrapData(replaceAdvertisementExposure(exposureId, input as UpdateAdminAdvertisementExposureRequest)),
     onSuccess: invalidate,
   });
 }

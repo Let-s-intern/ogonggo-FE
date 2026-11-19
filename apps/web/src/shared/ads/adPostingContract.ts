@@ -1,7 +1,7 @@
 export interface AdReportSlot {
   exposureId: number;
   category: 'JOB_POSTING' | 'BANNER';
-  position: string | null;
+  position: string;
 }
 
 export interface AdPostingClickData {
@@ -26,42 +26,6 @@ export function adReportPosthogParams(slot: AdReportSlot): AdPostingClickData['p
     category: slot.category,
     position: slot.position,
   };
-}
-
-export function hasNextPostingExposurePage(currentPage: number, totalPages: number): boolean {
-  return currentPage < Math.max(1, totalPages);
-}
-
-export interface OrderedAdvertisementPosting {
-  id: number;
-  targetId: number;
-  displayOrder: number;
-}
-
-/** Sorts paid postings by the configured order and assigns each target to one ad page. */
-export function advertisementPostingPage<T extends OrderedAdvertisementPosting>(
-  exposures: readonly T[],
-  page: number,
-  pageSize: number,
-): T[] {
-  const seenTargets = new Set<number>();
-  const unique = [...exposures]
-    .sort((a, b) => a.displayOrder - b.displayOrder || a.id - b.id)
-    .filter((exposure) => {
-      if (seenTargets.has(exposure.targetId)) return false;
-      seenTargets.add(exposure.targetId);
-      return true;
-    });
-  const start = (page - 1) * pageSize;
-  return unique.slice(start, start + pageSize);
-}
-
-/** Avoids showing one target twice when its paid slot and organic result share a page. */
-export function removeAdvertisementPostingDuplicates<T extends { id: number }>(
-  organicItems: readonly T[],
-  paidTargetIds: ReadonlySet<number>,
-): T[] {
-  return organicItems.filter((item) => !paidTargetIds.has(item.id));
 }
 
 export function qualifiesAdvertisementImpression(intersectionRatio: number, visibleMs: number): boolean {

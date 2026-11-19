@@ -2,6 +2,7 @@ import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import { JobThumbnail } from '@/entities/job/ui/JobThumbnail';
 import { adPostingClickEvent, type AdSlot } from '@/shared/ads/adPosting';
 import { AdLabel } from '@/shared/ads/AdLabel';
+import { AdPostingImpressionTracker } from '@/shared/ads/AdPostingImpressionTracker';
 import { fetchAdPostings, MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
@@ -28,8 +29,8 @@ export async function SideAdPostings({ excludeJobId }: { excludeJobId: number })
     .filter((posting) => !(posting.targetType === 'JOB' && posting.job?.id === excludeJobId))
     .slice(0, MAX_AD_POSTINGS);
 
-  const items = postings.flatMap((posting, index): SideItem[] => {
-    const ad = toAdSlot(posting, index + 1);
+  const items = postings.flatMap((posting): SideItem[] => {
+    const ad = toAdSlot(posting);
     if (posting.job) {
       const { job } = posting;
       return [{ ad, kind: 'job', id: job.id, summary: job, coverImageUrl: job.coverImageUrl }];
@@ -88,36 +89,38 @@ export async function SideAdPostings({ excludeJobId }: { excludeJobId: number })
           const className = 'group flex items-center gap-4 py-4';
           return (
             <li key={ad.adId}>
-              <ImpressionTracker
-                contentEvent={{
-                  type: 'IMPRESSION',
-                  targetType,
-                  targetId: id,
-                  exposureId: ad.adId,
-                  source: 'AD_CARD',
-                }}
-              >
-                {kind === 'job' ? (
-                  <JobCardLink
-                    href={href}
-                    className={className}
-                    jobId={id}
-                    extraEvents={[adPostingClickEvent(ad, 'job', id)]}
-                    adClick={adClick}
-                  >
-                    {body}
-                  </JobCardLink>
-                ) : (
-                  <TrackedLink
-                    href={href}
-                    className={className}
-                    events={[adPostingClickEvent(ad, 'bootcamp', id)]}
-                    adClick={adClick}
-                  >
-                    {body}
-                  </TrackedLink>
-                )}
-              </ImpressionTracker>
+              <AdPostingImpressionTracker ad={ad}>
+                <ImpressionTracker
+                  contentEvent={{
+                    type: 'IMPRESSION',
+                    targetType,
+                    targetId: id,
+                    exposureId: ad.adId,
+                    source: 'AD_CARD',
+                  }}
+                >
+                  {kind === 'job' ? (
+                    <JobCardLink
+                      href={href}
+                      className={className}
+                      jobId={id}
+                      extraEvents={[adPostingClickEvent(ad, 'job', id)]}
+                      adClick={adClick}
+                    >
+                      {body}
+                    </JobCardLink>
+                  ) : (
+                    <TrackedLink
+                      href={href}
+                      className={className}
+                      events={[adPostingClickEvent(ad, 'bootcamp', id)]}
+                      adClick={adClick}
+                    >
+                      {body}
+                    </TrackedLink>
+                  )}
+                </ImpressionTracker>
+              </AdPostingImpressionTracker>
             </li>
           );
         })}

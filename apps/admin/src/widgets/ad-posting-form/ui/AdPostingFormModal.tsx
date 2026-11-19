@@ -59,6 +59,7 @@ function targetOf(exposure: AdPostingExposure | null): ContentTarget | null {
     targetId: exposure.targetId,
     title: exposure.targetTitle ?? `${exposure.targetId}번`,
     companyName: exposure.targetCompanyName ?? '',
+    jobField: exposure.jobField ?? null,
   };
 }
 
@@ -119,6 +120,10 @@ export function AdPostingFormModal({
   const errors = submitted
     ? {
         target: target ? undefined : '띄울 공고를 골라 주세요.',
+        jobField:
+          position === 'JOB_LIST' && !target?.jobField
+            ? '채용공고 목록 광고는 직군 정보가 있는 공고를 골라야 합니다.'
+            : undefined,
         endAt:
           Boolean(startAt) !== Boolean(endAt)
             ? '노출 시작과 끝을 함께 넣거나 둘 다 비워 주세요. 둘 다 비우면 상시예요.'
@@ -130,7 +135,12 @@ export function AdPostingFormModal({
 
   const save = () => {
     setSubmitted(true);
-    if (!target || Boolean(startAt) !== Boolean(endAt) || (startAt && startAt >= endAt)) return;
+    if (
+      !target ||
+      (position === 'JOB_LIST' && !target.jobField) ||
+      Boolean(startAt) !== Boolean(endAt) ||
+      (startAt && startAt >= endAt)
+    ) return;
     const body = {
       contractId,
       name: null,
@@ -139,6 +149,7 @@ export function AdPostingFormModal({
       linkUrl: null,
       targetType: target.targetType,
       targetId: target.targetId,
+      jobField: position === 'JOB_LIST' ? (target.jobField ?? null) : null,
       adLabel,
       startAt: toServerValue(startAt),
       endAt: toServerValue(endAt),
@@ -247,6 +258,7 @@ export function AdPostingFormModal({
           />
         )}
       </Field>
+      {errors.jobField ? <p role="alert" className="-mt-3 text-sm text-red-600">{errors.jobField}</p> : null}
 
       <ContractField
         id="ad-posting-contract"

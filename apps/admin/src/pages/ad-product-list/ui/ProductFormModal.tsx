@@ -5,7 +5,6 @@ import {
   type CreateAdminAdvertisementProductRequestCategory,
   type CreateAdminAdvertisementProductRequestPosition,
 } from '@ogonggo/api/src/admin';
-import { isAdPostingPosition } from '@/entities/advertisement-exposure/lib/adPosting';
 import {
   useSaveAdvertisementProduct,
   type AdvertisementProduct,
@@ -16,7 +15,7 @@ import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 const NAME_MAX_LENGTH = 100;
 const CATEGORY_OPTIONS = enumOptions('AdvertisementProductCategory');
 
-/** 판매 중인 광고 공고 상품의 자리. 부트캠프 목록·공고 상세 추천은 판매 상품이 없어 고르지 않는다(LC-3649). */
+/** 판매 정책상 상품으로 등록할 수 있는 광고 공고 자리(LC-3649). */
 const SOLD_AD_POSTING_POSITIONS: readonly string[] = ['JOB_PICK', 'JOB_LIST'];
 
 /**
@@ -27,7 +26,7 @@ function positionOptions(category: CreateAdminAdvertisementProductRequestCategor
   const all = enumOptions('AdvertisementProductPosition');
   const none = { value: '', label: '자리 없음' };
   if (category === 'BANNER') {
-    return [none, ...all.filter((option) => !isAdPostingPosition(option.value))];
+    return [none, ...all.filter((option) => option.value.endsWith('_BANNER'))];
   }
   if (category === 'JOB_POSTING') {
     return [

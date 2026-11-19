@@ -635,6 +635,8 @@ function ProductsCard({
 
   /** 새 광고 공고 모달의 기본 대상: 계약의 광고할 공고 중 그 자리에 걸 수 있는 첫 번째(공고 등록 계약이면 자동 대상). */
   const defaultTarget = (position: AdPostingPosition | null): ContentTarget | null => {
+    // 계약의 연결 대상에는 직군이 포함되지 않는다. 목록 광고는 직군이 확인되는 공고를 다시 고르게 한다.
+    if (position === 'JOB_LIST') return null;
     const fixed = position ? AD_POSTING_FIXED_TARGET[position] : undefined;
     return targetsOf(contract).find((target) => !fixed || target.targetType === fixed) ?? null;
   };

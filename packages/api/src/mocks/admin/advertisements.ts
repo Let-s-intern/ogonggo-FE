@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import {
+  AdminJobSummaryResponseJobField,
   AdminAdvertisementProductResponseCategory,
   AdminAdvertisementProductResponsePosition,
   ListAdvertisementContractsStatusItem,
@@ -29,16 +30,17 @@ const PRODUCTS = '*/api/v1/admin/advertisement-products';
 const EXPOSURES = '*/api/v1/admin/advertisement-exposures';
 const CONTRACTS = '*/api/v1/admin/advertisement-contracts';
 
-/** 자리마다 그 자리가 속한 카테고리(BE `AdvertisementProductPosition.category`). 생성 enum 의 자리는 모두 배너다. */
+/** 생성 enum 에는 과거 광고 공고 자리도 남아 있어 배너 enum 값만 고른다. */
 const BANNER_POSITIONS: readonly string[] = Object.values(
   AdminAdvertisementProductResponsePosition,
-);
+).filter((position) => position.endsWith('_BANNER'));
 /** 광고 공고(카드) 자리(PRD `prd-business-report.md` 6.8, D12). 코드젠 전이라 생성 enum 에 아직 없다. */
 const AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_PICK',
   'JOB_LIST',
-  'BOOTCAMP_LIST',
   'JOB_DETAIL_SIDE',
+  'CALENDAR_DAY',
+  'MYPAGE_SCRAP',
 ];
 const POSITIONS: readonly string[] = [...BANNER_POSITIONS, ...AD_POSTING_POSITIONS];
 const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductResponseCategory);
@@ -46,6 +48,10 @@ const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductRes
 const EXPOSABLE: readonly string[] = ['BANNER', 'JOB_POSTING'];
 const NAME_MAX_LENGTH = 100;
 const URL_MAX_LENGTH = 2048;
+
+type AdvertisementExposureWrite = Partial<UpdateAdminAdvertisementExposureRequest> & {
+  jobField?: AdminJobSummaryResponseJobField | null;
+};
 
 function error(status: number, code: string, message: string) {
   return HttpResponse.json({ status, code, message }, { status });
@@ -200,7 +206,7 @@ function siblingsOf(productId: number): AdminAdvertisementExposureResponse[] {
  */
 function exposureError(
   product: ProductRecord,
-  body: Partial<UpdateAdminAdvertisementExposureRequest>,
+  body: AdvertisementExposureWrite,
 ) {
   if (!EXPOSABLE.includes(product.category)) {
     return error(
@@ -246,6 +252,37 @@ function exposureError(
       '광고 공고는 띄울 공고만 있어야 합니다.',
     );
   }
+  const hasPostingPosition =
+    product.category === 'JOB_POSTING' &&
+    product.position != null &&
+    AD_POSTING_POSITIONS.includes(product.position);
+  if (hasPostingPosition) {
+    if (body.targetType !== 'JOB') {
+      return error(
+        400,
+        'ADVERTISEMENT_EXPOSURE_TARGET_TYPE_MISMATCH',
+        '이 자리는 채용공고만 등록할 수 있습니다.',
+      );
+    }
+    const jobFieldRequired = product.position === 'JOB_LIST';
+    if (
+      jobFieldRequired !== (body.jobField != null) ||
+      (body.jobField != null &&
+        !Object.values(AdminJobSummaryResponseJobField).some((value) => value === body.jobField))
+    ) {
+      return error(
+        400,
+        'ADVERTISEMENT_EXPOSURE_JOB_FIELD_INVALID',
+        '채용공고 목록 자리는 직군이 필요하며 다른 자리는 직군을 보낼 수 없습니다.',
+      );
+    }
+  } else if (body.jobField != null) {
+    return error(
+      400,
+      'ADVERTISEMENT_EXPOSURE_JOB_FIELD_INVALID',
+      '배너에는 직군을 보낼 수 없습니다.',
+    );
+  }
   const startAt = body.startAt ?? null;
   const endAt = body.endAt ?? null;
   if (
@@ -287,7 +324,11 @@ const listExposuresHandler = http.get(EXPOSURES, ({ request }) => {
 const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
   const body = (await request
     .json()
-    .catch(() => null)) as Partial<CreateAdminAdvertisementExposureRequest> | null;
+    .catch(() => null)) as
+    | (Partial<CreateAdminAdvertisementExposureRequest> & {
+        jobField?: AdminJobSummaryResponseJobField | null;
+      })
+    | null;
   if (body === null || typeof body !== 'object') return badRequest('본문을 JSON 으로 보내 주세요.');
   const product = activeProduct(readId(body.productId));
   if (!product) return productNotFound();
@@ -295,7 +336,9 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
   if (invalid) return invalid;
   if (typeof body.exposed !== 'boolean') return badRequest('exposed: 참·거짓 값을 보내 주세요.');
   const now = nowKst();
-  const exposure: AdminAdvertisementExposureResponse = {
+  const exposure: AdminAdvertisementExposureResponse & {
+    jobField?: AdminJobSummaryResponseJobField | null;
+  } = {
     id: nextId(advertisementStore.exposures),
     productId: product.id,
     contractId: body.contractId ?? null,
@@ -304,6 +347,7 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
     linkUrl: body.linkUrl?.trim() ?? null,
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
+    jobField: body.jobField ?? null,
     adLabel: body.adLabel as boolean,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,
@@ -331,7 +375,7 @@ const replaceExposureHandler = http.put(`${EXPOSURES}/:exposureId`, async ({ par
   if (!product) return productNotFound();
   const body = (await request
     .json()
-    .catch(() => null)) as Partial<UpdateAdminAdvertisementExposureRequest> | null;
+    .catch(() => null)) as AdvertisementExposureWrite | null;
   if (body === null || typeof body !== 'object') return badRequest('본문을 JSON 으로 보내 주세요.');
   const invalid = exposureError(product, body);
   if (invalid) return invalid;
@@ -342,6 +386,7 @@ const replaceExposureHandler = http.put(`${EXPOSURES}/:exposureId`, async ({ par
     linkUrl: body.linkUrl?.trim() ?? null,
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
+    jobField: body.jobField ?? null,
     adLabel: body.adLabel,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,

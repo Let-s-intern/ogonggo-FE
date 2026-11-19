@@ -2,19 +2,17 @@ import { ListPublicJobsSort, enumOptions, httpClient } from '@ogonggo/api';
 import type {
   PageInfo,
   SuccessResponsePageResponseUserJobSummaryResponse,
-  SuccessResponseUserJobDetailResponse,
 } from '@ogonggo/api';
 import { JobCard } from '@/entities/job/ui/JobCard';
-import type { JobSummary } from '@/entities/job/model/types';
-import {
-  fetchJobPostingAdsForPage,
-  type LoadedPostingAd,
-} from '@/shared/ads/fetchJobPostingExposures';
-import { removeAdvertisementPostingDuplicates } from '@/shared/ads/adPostingContract';
+import { JOB_ROLES } from '@/entities/job/model/labels';
+import type { JobField, JobSummary } from '@/entities/job/model/types';
+import type { AdSlot } from '@/shared/ads/adPosting';
+import { fetchAdPostings, MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
 import { RememberListHref } from '@/shared/ui/ListReturnLink';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
+import { matchesJobQuery } from '../lib/adPostings';
 import { JobFilterSidebar } from './JobFilterSidebar';
 import { JobListPendingArea, JobListPendingProvider } from './JobListPending';
 import { JobRoleChips } from './JobRoleChips';
@@ -46,27 +44,42 @@ async function fetchJobPage(
   );
 }
 
+function adJobFieldForQuery(query: JobListQuery): JobField | undefined {
+  const fields = new Set<JobField>(query.jobFields ?? []);
+  for (const role of query.jobRoles ?? []) {
+    const field = JOB_ROLES[role]?.field;
+    if (field) fields.add(field);
+  }
+  return fields.size === 1 ? [...fields][0] : undefined;
+}
+
+async function fetchListAds(query: JobListQuery): Promise<{ job: JobSummary; ad: AdSlot }[]> {
+  if (query.page !== 1) return [];
+  const jobField = adJobFieldForQuery(query);
+  if (!jobField) return [];
+
+  const postings = await fetchAdPostings('JOB_LIST', jobField);
+  return postings
+    .filter(
+      (posting) =>
+        posting.targetType === 'JOB' &&
+        posting.job !== null &&
+        matchesJobQuery(posting.job as JobSummary, query),
+    )
+    .slice(0, MAX_AD_POSTINGS)
+    .map((posting) => ({ job: posting.job as JobSummary, ad: toAdSlot(posting) }));
+}
+
 /**
  * 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다.
  */
 export async function JobList(query: JobListProps) {
-  const jobPage = fetchJobPage(query);
-  const paidPostingPage = fetchJobPostingAdsForPage(
-    'JOB',
-    query.page,
-    jobPage.then(({ items: pageItems }) => pageItems),
-    fetchJobSummaryById,
-  );
-  const [{ items, pageInfo }, loadedPaidPostingPage] = await Promise.all([
-    jobPage,
-    paidPostingPage,
+  const [{ items: pageItems, pageInfo }, ads] = await Promise.all([
+    fetchJobPage(query),
+    fetchListAds(query),
   ]);
-  const visiblePageInfo = {
-    ...pageInfo,
-    totalPages: Math.max(pageInfo.totalPages, loadedPaidPostingPage.totalPages),
-  };
-  const promotedTargetIds = new Set(loadedPaidPostingPage.ads.map(({ item }) => item.id));
-  const organicItems = removeAdvertisementPostingDuplicates(items, promotedTargetIds);
+  const adJobIds = new Set(ads.map(({ job }) => job.id));
+  const organicItems = pageItems.filter(({ id }) => !adJobIds.has(id));
   const sort = (
     <SortToggle
       options={SORT_OPTIONS}
@@ -105,34 +118,25 @@ export async function JobList(query: JobListProps) {
           <JobFilterSidebar query={query} />
         </div>
         <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-2">
-          <JobListPendingArea count={organicItems.length + loadedPaidPostingPage.ads.length}>
-            {organicItems.length === 0 && loadedPaidPostingPage.ads.length === 0 ? (
+          <JobListPendingArea count={organicItems.length + ads.length}>
+            {organicItems.length === 0 && ads.length === 0 ? (
               <p className="py-16 text-center text-sm text-gray-500">채용공고가 없습니다.</p>
             ) : (
               <JobListItems
                 items={organicItems}
-                ads={loadedPaidPostingPage.ads}
+                ads={ads}
                 pageNumber={query.page}
               />
             )}
           </JobListPendingArea>
           <NumberedPagination
-            pageInfo={visiblePageInfo}
+            pageInfo={pageInfo}
             buildHref={(page) => buildJobListHref(query, { page })}
           />
         </div>
       </div>
     </JobListPendingProvider>
   );
-}
-
-async function fetchJobSummaryById(jobId: number): Promise<JobSummary | undefined> {
-  try {
-    const response = await httpClient<SuccessResponseUserJobDetailResponse>(`/api/v1/jobs/${jobId}`);
-    return response.data as JobSummary | undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 /**
@@ -146,29 +150,18 @@ function JobListItems({
   pageNumber,
 }: {
   items: JobSummary[];
-  ads: LoadedPostingAd<JobSummary>[];
+  ads: { job: JobSummary; ad: AdSlot }[];
   pageNumber: number;
 }) {
+  const cards: { job: JobSummary; ad?: AdSlot }[] = [...ads, ...items.map((job) => ({ job }))];
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 lg:grid-cols-3">
-      {ads.map(({ item, slot }, index) => (
-        <li key={`ad-${slot.adId}`}>
-          <JobCard
-            job={item}
-            ad={slot}
-            tracking={{ listSource: 'main', listPosition: index + 1, pageNumber }}
-          />
-        </li>
-      ))}
-      {items.map((job, index) => (
-        <li key={job.id}>
+      {cards.map(({ job, ad }, index) => (
+        <li key={ad ? `ad-${ad.adId}` : job.id}>
           <JobCard
             job={job}
-            tracking={{
-              listSource: 'main',
-              listPosition: ads.length + index + 1,
-              pageNumber,
-            }}
+            ad={ad}
+            tracking={{ listSource: 'main', listPosition: index + 1, pageNumber }}
           />
         </li>
       ))}

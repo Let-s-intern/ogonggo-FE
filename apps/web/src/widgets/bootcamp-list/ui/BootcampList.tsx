@@ -1,13 +1,10 @@
 import { httpClient } from '@ogonggo/api';
 import type {
   PageInfo,
-  SuccessResponseUserBootcampDetailResponse,
   SuccessResponsePageResponseUserBootcampSummaryResponse,
 } from '@ogonggo/api';
 import type { BootcampSummary } from '@/entities/bootcamp/model/types';
 import { BootcampCard } from '@/entities/bootcamp/ui/BootcampCard';
-import { fetchJobPostingAdsForPage } from '@/shared/ads/fetchJobPostingExposures';
-import { removeAdvertisementPostingDuplicates } from '@/shared/ads/adPostingContract';
 import { RememberListHref } from '@/shared/ui/ListReturnLink';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import {
@@ -60,47 +57,22 @@ async function fetchBootcampPage(
 
 /** `교육부트캠프.png`의 목록 본문 — 컨트롤 한 줄 + 4열 카드 그리드 + 번호 페이지네이션. */
 export async function BootcampList(query: BootcampListProps) {
-  const bootcampPage = fetchBootcampPage(query);
-  const paidPostingPage = fetchJobPostingAdsForPage(
-    'BOOTCAMP',
-    query.page,
-    bootcampPage.then(({ items: pageItems }) => pageItems),
-    fetchBootcampSummaryById,
-  );
-  const [{ items, pageInfo }, loadedPaidPostingPage] = await Promise.all([
-    bootcampPage,
-    paidPostingPage,
-  ]);
-  const visiblePageInfo = {
-    ...pageInfo,
-    totalPages: Math.max(pageInfo.totalPages, loadedPaidPostingPage.totalPages),
-  };
-  const promotedTargetIds = new Set(loadedPaidPostingPage.ads.map(({ item }) => item.id));
-  const organicItems = removeAdvertisementPostingDuplicates(items, promotedTargetIds);
+  const { items, pageInfo } = await fetchBootcampPage(query);
 
   return (
     <div className="flex w-full flex-col gap-6">
       <RememberListHref kind="bootcamps" href={buildBootcampListHref(query)} />
       <BootcampListControls query={query} />
-      {organicItems.length === 0 && loadedPaidPostingPage.ads.length === 0 ? (
+      {items.length === 0 ? (
         <p className="py-16 text-center text-sm text-gray-500">교육·부트캠프가 없습니다.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
-          {loadedPaidPostingPage.ads.map(({ item: bootcamp, slot }, index) => (
-            <li key={`ad-${slot.adId}`}>
-              <BootcampCard
-                bootcamp={bootcamp}
-                ad={slot}
-                tracking={{ listPosition: index + 1, pageNumber: query.page }}
-              />
-            </li>
-          ))}
-          {organicItems.map((bootcamp, index) => (
+          {items.map((bootcamp, index) => (
             <li key={bootcamp.id}>
               <BootcampCard
                 bootcamp={bootcamp}
                 tracking={{
-                  listPosition: loadedPaidPostingPage.ads.length + index + 1,
+                  listPosition: index + 1,
                   pageNumber: pageInfo.pageNum,
                 }}
               />
@@ -109,20 +81,9 @@ export async function BootcampList(query: BootcampListProps) {
         </ul>
       )}
       <NumberedPagination
-        pageInfo={visiblePageInfo}
+        pageInfo={pageInfo}
         buildHref={(page) => buildBootcampListHref(query, { page })}
       />
     </div>
   );
-}
-
-async function fetchBootcampSummaryById(bootcampId: number): Promise<BootcampSummary | undefined> {
-  try {
-    const response = await httpClient<SuccessResponseUserBootcampDetailResponse>(
-      `/api/v1/bootcamps/${bootcampId}`,
-    );
-    return response.data as BootcampSummary | undefined;
-  } catch {
-    return undefined;
-  }
 }

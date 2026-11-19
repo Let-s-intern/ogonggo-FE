@@ -21,7 +21,7 @@ export interface BootcampCardProps {
   /** 목록 안의 자리. 주면 누를 때 `program_card_click`, 광고 카드면 노출 때 `program_impression` 이 나간다. */
   tracking?: ProgramCardTracking;
   /**
-   * 광고 공고 칸(`BOOTCAMP_LIST`, 이슈 #573). 주면 광고 값을 채우고, `adLabel` 이 켜진 칸에 회사명 앞 `AD` 를 붙인다. 광고 값이 차면
+   * 광고 공고로 재사용할 수 있는 카드 슬롯. 주면 광고 값을 채우고, `adLabel` 이 켜진 칸에 회사명 앞 `AD` 를 붙인다. 광고 값이 차면
    * 노출 때 `program_impression` 이 나가고, 누르면 `ad_posting_click` 이 더 나간다. 카드 모양은 그대로다.
    */
   ad?: AdSlot;
