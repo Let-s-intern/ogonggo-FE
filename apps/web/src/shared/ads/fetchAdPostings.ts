@@ -5,9 +5,9 @@ import type { AdSlot } from './adPosting';
 
 /**
  * 광고 공고 자리(PRD 6.8, D12). 백엔드 `AdvertisementProductPosition` 에 더해지는 값이다. `JOB_PICK` 은 홈 히어로
- * `오공고 PICK` 탭이다(계약 7절).
+ * `오공고 PICK` 탭이다(계약 7절). 판매 상품이 없는 `BOOTCAMP_LIST`·`JOB_DETAIL_SIDE` 는 뺐다(계약 8절).
  */
-export type AdPostingPosition = 'JOB_LIST' | 'BOOTCAMP_LIST' | 'JOB_DETAIL_SIDE' | 'JOB_PICK';
+export type AdPostingPosition = 'JOB_LIST' | 'JOB_PICK';
 
 /**
  * 광고 공고 한 칸. `targetType` 이 `JOB` 이면 `job`, `BOOTCAMP` 면 `bootcamp` 가 찬다. 응답 모양은
