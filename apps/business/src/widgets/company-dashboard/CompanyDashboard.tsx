@@ -10,7 +10,9 @@ import {
 } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { isReportEnabled } from '@/shared/config/reports';
 import { StageTrack } from '@/shared/ui/StageTrack';
+import { RunningAdsPanel } from '@/widgets/ad-report/ui/RunningAdsPanel';
 import {
   companyPostStage,
   CompanyPostStageTrack,
@@ -341,6 +343,9 @@ export function CompanyDashboard() {
           ) : null}
         </Panel>
       </div>
+
+      {/* 오늘 게시 중인 광고 상품이 있을 때만 보인다. `공고 현황`·`광고 신청 현황` 아래다(2026-11-19 사용자). */}
+      {isReportEnabled ? <RunningAdsPanel /> : null}
 
       {isNew ? null : quickActions}
     </div>

@@ -1,8 +1,9 @@
 import { cn } from '@ogonggo/ui';
 
 /**
- * 광고 공고 카드의 `광고` 표시(이슈 #573). 모든 자리에서 같은 모양이고, 회사명 바로 앞에 둔다 — 카드는 일반 카드 그대로라
- * 이것 하나로 광고임을 밝힌다. 회사명이 길어 줄어도 이 글자는 줄지 않는다.
+ * 광고 공고 카드의 `AD` 표시(이슈 #573, 계약 7절). 모든 자리에서 같은 모양이고, 회사명 바로 앞에 둔다 — 카드는 일반 카드
+ * 그대로라 이것 하나로 광고임을 밝힌다. 회사명이 길어 줄어도 이 글자는 줄지 않는다. 광고 공고 응답의 `adLabel` 이 켜진
+ * 칸에만 붙인다(`AdSlot.adLabel`).
  */
 export function AdLabel({ className }: { className?: string }) {
   return (
@@ -12,7 +13,7 @@ export function AdLabel({ className }: { className?: string }) {
         className,
       )}
     >
-      광고
+      AD
     </span>
   );
 }

@@ -11,7 +11,10 @@ import {
 } from '@ogonggo/api';
 import { Badge, cn } from '@ogonggo/ui';
 import { formatDateDots } from '@/shared/lib/localDate';
+import { isReportEnabled } from '@/shared/config/reports';
 import { StageTrack } from '@/shared/ui/StageTrack';
+import { AdReport } from '@/widgets/ad-report/ui/AdReport';
+import { ContractReportSummaryCard } from '@/widgets/ad-report/ui/ContractReportSummaryCard';
 import {
   formatPaymentAmount,
   MY_AD_CONTRACTS_HREF,
@@ -37,6 +40,15 @@ function businessNumberText(contract: MyAdvertisementContractDetailResponse): st
       ? `${number.slice(0, 6)}-${number.slice(6)}`
       : `${number.slice(0, 3)}-${number.slice(3, 5)}-${number.slice(5)}`;
   return `${label} ${formatted}`;
+}
+
+/** 붙은 상품 기간을 모두 덮는 기간. 기간이 있는 상품이 없으면 `미정`. */
+function adPeriodText(products: MyAdvertisementContractDetailResponse['products']): string {
+  const starts = products.flatMap((p) => (p.startDate ? [p.startDate] : [])).sort();
+  const ends = products.flatMap((p) => (p.endDate ? [p.endDate] : [])).sort();
+  const first = starts[0];
+  const last = ends.at(-1);
+  return first && last ? `${formatDateDots(first)} ~ ${formatDateDots(last)}` : '미정';
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -141,101 +153,130 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
         </p>
       </header>
 
-      <Section title="공고 정보">
-        <Row label="홍보 유형">
-          {enumLabel('AdvertisementContractPromotionTarget', contract.promotionTarget)}
-        </Row>
-        <Row label="기업명">{contract.companyName}</Row>
-        <Row label="공고·지원 링크">
-          <a
-            href={contract.recruitmentUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 underline"
-          >
-            {contract.recruitmentUrl}
-          </a>
-        </Row>
-        <Row label="모집 마감일">{formatDateDots(contract.recruitmentDeadline)}</Row>
-      </Section>
+      {/* 위계(2026-11-19 사용자): 계약 정보 → 계약 전체 성과 → 광고 상품(누르면 리포트) → 신청서 원문. */}
+      <section aria-labelledby="contract-facts-title">
+        <h2 id="contract-facts-title" className="sr-only">
+          계약 정보
+        </h2>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl border border-gray-200 p-5 md:grid-cols-4">
+          {(
+            [
+              [
+                '홍보 유형',
+                enumLabel('AdvertisementContractPromotionTarget', contract.promotionTarget),
+              ],
+              ['기업명', contract.companyName],
+              ['협의 금액', formatPaymentAmount(contract.paymentAmount)],
+              ['광고 기간', adPeriodText(contract.products)],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-xs text-gray-500">{label}</dt>
+              <dd className="mt-1 truncate font-semibold text-gray-900">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
-      <Section title="광고 신청 내역">
-        <Row label="예정 예산">
-          {contract.budgetAmount != null
-            ? `${contract.budgetAmount.toLocaleString('ko-KR')}원`
-            : null}
-        </Row>
-        <Row label="홍보 목표">
-          {purposeAnswer ? (
-            <ol className="flex flex-col gap-1">
-              {purposeAnswer.value.split('\n').map((line) => {
-                // `1순위 폭넓은 노출 확보` 를 순위와 문구로 나눠, 문구가 길면 문구끼리 줄을 맞춘다.
-                const [rank, ...rest] = line.split(' ');
-                return (
-                  <li key={line} className="flex items-start gap-2">
-                    <span className="shrink-0 font-semibold whitespace-nowrap text-blue-600">
-                      {rank}
-                    </span>
-                    <span className="min-w-0 break-keep">{rest.join(' ')}</span>
-                  </li>
-                );
-              })}
-            </ol>
-          ) : (
-            enumLabel('AdvertisementContractPurpose', contract.purpose)
-          )}
-        </Row>
-        {/* 신청서에서 칸이 따로 없는 문항의 답. 이 값이 생기기 전 신청은 없어서 아래 일정 요청에 그대로 있다. */}
-        {answers.map((answer) => (
-          <Row key={answer.key} label={answer.label}>
-            {answer.value}
-          </Row>
-        ))}
-        {/* 상품을 고르지 않은 신청은 카테고리가 없다. */}
-        {contract.categories.length > 0 && (
-          <Row label="희망 카테고리">
-            {contract.categories
-              .map((category) => enumLabel('AdvertisementProductCategory', category))
-              .join(', ')}
-          </Row>
-        )}
-        <Row label="일정 요청">{contract.scheduleRequest}</Row>
-        <Row label="추가 요청">{contract.advertisementRequest}</Row>
-        <Row label="협의 금액">{formatPaymentAmount(contract.paymentAmount)}</Row>
-        <Row label="광고 상품">
-          {contract.products.length > 0 ? (
-            <ul className="flex flex-col gap-1">
-              {contract.products.map((product) => (
-                <li key={product.contractProductId}>
-                  {product.productName}
-                  <span className="text-gray-500">
-                    {' · '}
-                    {enumLabel('AdvertisementProductCategory', product.category)}
-                    {product.position
-                      ? ` · ${enumLabel('AdvertisementProductPosition', product.position)}`
-                      : ''}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            '담당자 확인 후 정해집니다.'
-          )}
-        </Row>
-      </Section>
+      {/* 운영자가 상품을 붙인 계약만 성과가 있다. 합칠 상품이 없으면 합계는 스스로 숨는다. */}
+      {contract.products.length > 0 ? (
+        <>
+          {isReportEnabled ? <ContractReportSummaryCard contractId={contract.id} /> : null}
+          <AdReport contractId={contract.id} products={contract.products} />
+        </>
+      ) : null}
 
-      <Section title="담당자·계약">
-        <Row label="담당자">{contract.managerName}</Row>
-        <Row label="이메일">{contract.email}</Row>
-        <Row label="연락처">{contract.phoneNumber}</Row>
-        <Row label="사업자 번호">{businessNumberText(contract)}</Row>
-        <Row label="계산서 발행">
-          {enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)}
-        </Row>
-        <Row label="소재 준비">
-          {enumLabel('AdvertisementContractCreativeMethod', contract.creativeMethod)}
-        </Row>
-      </Section>
+      {/* 신청서 원문. 상품이 붙은 계약은 위 숫자가 먼저라 접어 두고, 아직 상품이 없으면 펼쳐 둔다. */}
+      <details open={contract.products.length === 0} className="group flex flex-col">
+        <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg py-2 text-lg font-semibold text-gray-950 [&::-webkit-details-marker]:hidden">
+          신청서 내용
+          <span
+            aria-hidden="true"
+            className="icon-[lucide--chevron-down] block size-5 text-gray-400 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <div className="mt-4 flex flex-col gap-8">
+          <Section title="공고 정보">
+            <Row label="홍보 유형">
+              {enumLabel('AdvertisementContractPromotionTarget', contract.promotionTarget)}
+            </Row>
+            <Row label="기업명">{contract.companyName}</Row>
+            <Row label="공고·지원 링크">
+              <a
+                href={contract.recruitmentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 underline"
+              >
+                {contract.recruitmentUrl}
+              </a>
+            </Row>
+            <Row label="모집 마감일">{formatDateDots(contract.recruitmentDeadline)}</Row>
+          </Section>
+
+          <Section title="광고 신청 내역">
+            <Row label="예정 예산">
+              {contract.budgetAmount != null
+                ? `${contract.budgetAmount.toLocaleString('ko-KR')}원`
+                : null}
+            </Row>
+            <Row label="홍보 목표">
+              {purposeAnswer ? (
+                <ol className="flex flex-col gap-1">
+                  {purposeAnswer.value.split('\n').map((line) => {
+                    // `1순위 폭넓은 노출 확보` 를 순위와 문구로 나눠, 문구가 길면 문구끼리 줄을 맞춘다.
+                    const [rank, ...rest] = line.split(' ');
+                    return (
+                      <li key={line} className="flex items-start gap-2">
+                        <span className="shrink-0 font-semibold whitespace-nowrap text-blue-600">
+                          {rank}
+                        </span>
+                        <span className="min-w-0 break-keep">{rest.join(' ')}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                enumLabel('AdvertisementContractPurpose', contract.purpose)
+              )}
+            </Row>
+            {/* 신청서에서 칸이 따로 없는 문항의 답. 이 값이 생기기 전 신청은 없어서 아래 일정 요청에 그대로 있다. */}
+            {answers.map((answer) => (
+              <Row key={answer.key} label={answer.label}>
+                {answer.value}
+              </Row>
+            ))}
+            {/* 상품을 고르지 않은 신청은 카테고리가 없다. */}
+            {contract.categories.length > 0 && (
+              <Row label="희망 카테고리">
+                {contract.categories
+                  .map((category) => enumLabel('AdvertisementProductCategory', category))
+                  .join(', ')}
+              </Row>
+            )}
+            <Row label="일정 요청">{contract.scheduleRequest}</Row>
+            <Row label="추가 요청">{contract.advertisementRequest}</Row>
+            <Row label="협의 금액">{formatPaymentAmount(contract.paymentAmount)}</Row>
+            {/* 상품이 붙으면 위 `광고 상품` 목록이 보여 준다. */}
+            {contract.products.length === 0 ? (
+              <Row label="광고 상품">담당자 확인 후 정해집니다.</Row>
+            ) : null}
+          </Section>
+
+          <Section title="담당자·계약">
+            <Row label="담당자">{contract.managerName}</Row>
+            <Row label="이메일">{contract.email}</Row>
+            <Row label="연락처">{contract.phoneNumber}</Row>
+            <Row label="사업자 번호">{businessNumberText(contract)}</Row>
+            <Row label="계산서 발행">
+              {enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)}
+            </Row>
+            <Row label="소재 준비">
+              {enumLabel('AdvertisementContractCreativeMethod', contract.creativeMethod)}
+            </Row>
+          </Section>
+        </div>
+      </details>
     </section>
   );
 }

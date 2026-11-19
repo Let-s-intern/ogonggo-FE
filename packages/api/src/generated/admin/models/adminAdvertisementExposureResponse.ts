@@ -40,6 +40,21 @@ export interface AdminAdvertisementExposureResponse {
   exposed: boolean;
   /** @nullable */
   advertiserCompanyName?: string | null;
+  /**
+     * 광고 공고 대상의 제목. 배너이거나 대상 행이 없으면 null입니다.
+     * @nullable
+     */
+  targetTitle?: string | null;
+  /**
+     * 광고 공고 대상의 회사명. 배너이거나 대상 행이 없으면 null입니다.
+     * @nullable
+     */
+  targetCompanyName?: string | null;
+  /**
+     * 광고 공고 대상이 지금 게시 상태(PUBLISHED)이고 지워지지 않았는지. 모집 마감 여부는 보지 않습니다. 대상 행이 없으면 false, 배너는 null입니다.
+     * @nullable
+     */
+  targetPublished?: boolean | null;
   displayOrder: number;
   registeredAt: string;
   updatedAt: string;

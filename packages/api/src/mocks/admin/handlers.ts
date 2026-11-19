@@ -1,4 +1,6 @@
 import type { HttpHandler } from 'msw';
+import { advertisementPostingHandlers } from './advertisementPostings';
+import { advertisementReportHandlers } from './advertisementReports';
 import { advertisementAdminHandlers } from './advertisements';
 import { companyPriorityHandlers } from './company-priority';
 import { concernHandlers } from './concerns';
@@ -46,6 +48,10 @@ export const adminHandlers: HttpHandler[] = [
   ...notificationHandlers,
   ...recommendWeightsHandlers,
   ...companyPriorityHandlers,
+  // 계약 상세를 먼저 받아 리포트 칸을 얹으므로 `advertisementAdminHandlers` 보다 앞에 둔다.
+  ...advertisementReportHandlers,
+  // 노출 목록에 대상 칸을 얹고 광고 공고 대상 중복을 먼저 막는다. 역시 앞에 둔다.
+  ...advertisementPostingHandlers,
   ...advertisementAdminHandlers,
   ...ec2InstanceHandlers,
 ];

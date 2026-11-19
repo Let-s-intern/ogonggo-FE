@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { HttpError, signInCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
 import { saveTokens } from '@/shared/api/authTokens';
+import { isMockEnabled } from '@/shared/config/mocks';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { SignInForm } from './SignInForm';
 
@@ -69,6 +70,11 @@ export function LoginPage({ returnPath }: LoginPageProps) {
         <p className="pt-2 pb-8 text-center text-sm text-gray-500">
           오늘의 공고 기업 계정으로 로그인합니다.
         </p>
+        {isMockEnabled ? (
+          <p className="mb-4 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-700">
+            목데이터 모드입니다. 아무 이메일과 비밀번호로 기업 회원 로그인이 됩니다.
+          </p>
+        ) : null}
         {otherRole ? (
           <p className="mb-4 rounded-md bg-blue-00 px-4 py-3 text-sm text-gray-700">
             지금 로그인한 계정은 기업 회원이 아닙니다. 공고 등록과 기업 정보는 기업 회원 계정으로

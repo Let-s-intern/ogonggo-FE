@@ -8,14 +8,7 @@ import type { ListPublicAdvertisementExposuresPosition } from './listPublicAdver
 
 export type ListPublicAdvertisementExposuresParams = {
 /**
- * | 값 | code | 설명 |
- * | --- | --- | --- |
- * | `JOB_HOME_TOP_BANNER` | 1 | 채용공고 홈 상단 |
- * | `JOB_HOME_BOTTOM_BANNER` | 2 | 채용공고 홈 하단 |
- * | `JOB_DETAIL_BANNER` | 3 | 공고 상세 |
- * | `BOOTCAMP_LIST_TOP_BANNER` | 4 | 부트캠프 목록 상단 |
- * | `BOOTCAMP_LIST_BOTTOM_BANNER` | 5 | 부트캠프 목록 하단 |
- * | `BOOTCAMP_DETAIL_BANNER` | 6 | 부트캠프 상세 |
+ * 고정된 배너 자리 이름
  */
 position: ListPublicAdvertisementExposuresPosition;
 /**

@@ -3,6 +3,7 @@
 import { createBootcampSourceUrlClick, createJobSourceUrlClick } from '@ogonggo/api';
 import type { BookmarkKind } from '@/features/bookmark';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { currentVisitFor, sendContentEvent } from '@/shared/analytics/contentEvents';
 import { TrackedLink, type TrackedLinkProps } from '@/shared/analytics/TrackedLink';
 
 export type ApplyLinkProps = TrackedLinkProps & {
@@ -32,6 +33,17 @@ function recordApplyClick(kind: BookmarkKind, id: number, href: string): void {
 }
 
 /**
+ * 광고 리포트용 `CTA_CLICK`(PRD 6.5). 위 기록과 달리 비회원도, 이메일 지원(`mailto:`)도 보낸다. 상세가 열릴 때 읽은
+ * 유입 경로와 노출 id 를 그대로 싣는다(`DetailContentTracker`). 사이드 스터디는 리포트 대상이 아니다.
+ */
+function sendCtaClick(kind: BookmarkKind, id: number): void {
+  const targetType = kind === 'jobs' ? 'JOB' : kind === 'bootcamps' ? 'BOOTCAMP' : null;
+  if (targetType) {
+    sendContentEvent({ type: 'CTA_CLICK', ...currentVisitFor(targetType, id) });
+  }
+}
+
+/**
  * 상세의 지원·신청 버튼 링크. `ApplyCta` 가 서버 컴포넌트라 `onClick` 을 넘길 수 없어 여기서 단다.
  */
 export function ApplyLink({ kind, contentId, onClick, ...props }: ApplyLinkProps) {
@@ -40,6 +52,7 @@ export function ApplyLink({ kind, contentId, onClick, ...props }: ApplyLinkProps
       {...props}
       onClick={(e) => {
         recordApplyClick(kind, contentId, String(props.href));
+        sendCtaClick(kind, contentId);
         onClick?.(e);
       }}
     />

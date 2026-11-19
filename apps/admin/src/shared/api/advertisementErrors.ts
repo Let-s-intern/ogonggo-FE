@@ -12,6 +12,9 @@ const MESSAGES: Record<string, string> = {
   ADVERTISEMENT_BANNER_CONTENT_REQUIRED: '배너 이름, 이미지, 링크를 모두 채워 주세요.',
   ADVERTISEMENT_EXPOSURE_PERIOD_INVALID:
     '노출 기간은 시작과 끝을 함께 넣거나 둘 다 비워 주세요. 시작이 끝보다 앞서야 해요.',
+  ADVERTISEMENT_JOB_POSTING_TARGET_REQUIRED: '광고 공고는 띄울 공고를 골라야 해요.',
+  ADVERTISEMENT_EXPOSURE_TARGET_DUPLICATED: '이 자리에 이미 같은 공고의 광고가 있어요.',
+  ADVERTISEMENT_EXPOSURE_TARGET_NOT_FOUND: '광고할 공고를 찾을 수 없어요. 지워졌을 수 있어요.',
   ADVERTISEMENT_EXPOSURE_NOT_FOUND: '배너를 찾을 수 없어요. 다른 사람이 지웠을 수 있어요.',
   ADVERTISEMENT_CONTRACT_NOT_FOUND: '광고 계약을 찾을 수 없어요.',
   ADVERTISEMENT_CONTRACT_PRODUCT_NOT_FOUND:
@@ -19,6 +22,10 @@ const MESSAGES: Record<string, string> = {
   ADVERTISEMENT_CONTRACT_PRODUCT_PERIOD_INVALID: '게시 시작일은 종료일과 같거나 앞서야 해요.',
   ADVERTISEMENT_CONTRACT_FOLLOWS_REVIEW:
     '비즈니스 공고 계약은 공고 검수 결과를 따라가서 상태를 바꿀 수 없어요.',
+  ADVERTISEMENT_CONTRACT_TARGET_DUPLICATED: '이미 이 계약에 연결한 공고예요.',
+  ADVERTISEMENT_CONTRACT_TARGET_NOT_FOUND:
+    '공고를 찾을 수 없어요. 지워졌거나 이미 연결을 뺐을 수 있어요.',
+  ADVERTISEMENT_CONTRACT_TARGET_FIXED: '공고 등록 계약의 공고는 광고할 공고에서 뺄 수 없어요.',
   BUSINESS_ACCOUNT_NOT_ISSUABLE:
     '이미 회원이 붙은 신청이거나 비즈니스 공고 계약이라 계정을 발급할 수 없어요.',
   BUSINESS_ACCOUNT_MEMBER_NOT_ACTIVE:

@@ -122,6 +122,15 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
+      echarts:
+        specifier: ^6.1.0
+        version: 6.1.0
+      html-to-image:
+        specifier: ^1.11.13
+        version: 1.11.13
+      jspdf:
+        specifier: ^4.2.1
+        version: 4.2.1
       next:
         specifier: ^16.3.8
         version: 16.4.3(@types/node@22.20.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -216,7 +225,7 @@ importers:
         version: 7.14.0(@datadog/browser-logs@7.14.0)
       '@datadog/browser-rum-nextjs':
         specifier: 7.14.0
-        version: 7.14.0(@datadog/browser-rum@7.14.0)(next@16.4.3(@babel/core@7.29.7)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-router@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 7.14.0(@datadog/browser-rum@7.14.0)(next@16.4.3(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-router@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -273,7 +282,7 @@ importers:
         version: 0.51.0(typescript@5.9.3)
       next:
         specifier: ^16.4.3
-        version: 16.4.3(@babel/core@7.29.7)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.4.3(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       posthog-js:
         specifier: 1.438.9
         version: 1.438.9(@types/react@19.2.18)(react@19.2.8)
@@ -4992,14 +5001,14 @@ snapshots:
       '@datadog/browser-core': 7.14.0
       '@datadog/js-core': 0.0.15
 
-  '@datadog/browser-rum-nextjs@7.14.0(@datadog/browser-rum@7.14.0)(next@16.4.3(@babel/core@7.29.7)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-router@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@datadog/browser-rum-nextjs@7.14.0(@datadog/browser-rum@7.14.0)(next@16.4.3(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-router@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@datadog/browser-core': 7.14.0
       '@datadog/browser-rum-core': 7.14.0
       '@datadog/browser-rum-react': 7.14.0(@datadog/browser-rum@7.14.0)(react-router@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@datadog/js-core': 0.0.15
     optionalDependencies:
-      next: 16.4.3(@babel/core@7.29.7)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      next: 16.4.3(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
     transitivePeerDependencies:
       - '@datadog/browser-rum'
@@ -8348,7 +8357,7 @@ snapshots:
 
   nanoid@3.3.18: {}
 
-  next@16.4.3(@babel/core@7.29.7)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  next@16.4.3(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@next/env': 16.4.3
       '@swc/helpers': 0.5.23
@@ -8357,7 +8366,7 @@ snapshots:
       postcss: 8.5.23
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
-      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.8)
+      styled-jsx: 5.1.6(react@19.2.8)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.4.3
       '@next/swc-darwin-x64': 16.4.3
@@ -8382,7 +8391,7 @@ snapshots:
       postcss: 8.5.23
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
-      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.8)
+      styled-jsx: 5.1.6(react@19.2.8)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.4.3
       '@next/swc-darwin-x64': 16.4.3
@@ -9040,12 +9049,10 @@ snapshots:
     dependencies:
       inline-style-parser: 0.2.9
 
-  styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.8):
+  styled-jsx@5.1.6(react@19.2.8):
     dependencies:
       client-only: 0.0.1
       react: 19.2.8
-    optionalDependencies:
-      '@babel/core': 7.29.7
 
   supports-preserve-symlinks-flag@1.0.0: {}
 

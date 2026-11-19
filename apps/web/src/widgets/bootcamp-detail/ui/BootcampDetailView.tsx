@@ -3,6 +3,7 @@ import { contentFieldLabel, getPublicBootcamp } from '@ogonggo/api';
 import type { SuccessResponseUserBootcampDetailResponse } from '@ogonggo/api';
 import { toBootcampInfo } from '@/entities/bootcamp/model/analytics';
 import type { BootcampDetail } from '@/entities/bootcamp/model/types';
+import { DetailContentTracker } from '@/shared/analytics/DetailContentTracker';
 import { closedLabel } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -92,6 +93,7 @@ export async function BootcampDetailView({ bootcampId }: BootcampDetailViewProps
 
   return (
     <div className="flex w-full max-w-page flex-col gap-4">
+      <DetailContentTracker targetType="BOOTCAMP" targetId={bootcamp.id} />
       <BootcampDetailBreadcrumb />
       <BootcampDetailHeaderCard bootcamp={bootcamp} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">

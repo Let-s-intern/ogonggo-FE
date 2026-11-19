@@ -890,6 +890,10 @@ export const ENUM_CATALOG = {
     { name: 'BOOTCAMP_LIST_TOP_BANNER', desc: '부트캠프 목록 상단', parent: null },
     { name: 'BOOTCAMP_LIST_BOTTOM_BANNER', desc: '부트캠프 목록 하단', parent: null },
     { name: 'BOOTCAMP_DETAIL_BANNER', desc: '부트캠프 상세', parent: null },
+    { name: 'JOB_LIST', desc: '채용공고 목록', parent: null },
+    { name: 'BOOTCAMP_LIST', desc: '부트캠프 목록', parent: null },
+    { name: 'JOB_DETAIL_SIDE', desc: '공고 상세 옆 추천', parent: null },
+    { name: 'JOB_PICK', desc: '오공고 PICK', parent: null },
   ],
   AdvertisementContractStatus: [
     { name: 'REQUESTED', desc: '신청', parent: null },
@@ -925,5 +929,25 @@ export const ENUM_CATALOG = {
   AdvertisementExposureMoveDirection: [
     { name: 'UP', desc: '위로', parent: null },
     { name: 'DOWN', desc: '아래로', parent: null },
+  ],
+  ContentEventType: [
+    { name: 'VIEW', desc: '상세 조회', parent: null },
+    { name: 'CTA_CLICK', desc: 'CTA 클릭', parent: null },
+    { name: 'SCROLL', desc: '스크롤', parent: null },
+    { name: 'IMPRESSION', desc: '광고 노출', parent: null },
+    { name: 'AD_CLICK', desc: '광고 클릭', parent: null },
+  ],
+  ContentEventTargetType: [
+    { name: 'JOB', desc: '채용공고', parent: null },
+    { name: 'BOOTCAMP', desc: '부트캠프', parent: null },
+  ],
+  ContentEventSource: [
+    { name: 'AD_CARD', desc: '광고 카드', parent: null },
+    { name: 'BANNER', desc: '배너', parent: null },
+    { name: 'LIST', desc: '목록', parent: null },
+    { name: 'SEARCH', desc: '검색', parent: null },
+    { name: 'DIRECT', desc: '직접 방문', parent: null },
+    { name: 'EXTERNAL', desc: '외부 유입', parent: null },
+    { name: 'OTHER', desc: '기타', parent: null },
   ],
 } as const;

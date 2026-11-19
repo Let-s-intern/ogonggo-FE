@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "OGONGGO_USER_API_ORIGIN=http://localhost:18080 next dev --turbo --port 4002",
+    "mock": "OGONGGO_USE_MOCKS=true next dev --turbo --port 4002",
     "build": "next build",
     "type-check": "tsgo --noEmit",
     "lint": "oxlint src",
@@ -14,6 +15,9 @@
     "@ogonggo/api": "workspace:*",
     "@ogonggo/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.8",
+    "echarts": "^6.1.0",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
     "next": "^16.3.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

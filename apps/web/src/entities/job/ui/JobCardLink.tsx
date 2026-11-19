@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { ComponentProps } from 'react';
+import { recordAdClick, type AdClick } from '@/shared/analytics/contentEvents';
 import { track, type DataLayerEvent, type DataLayerParams } from '@/shared/analytics/dataLayer';
 import { rememberListSource } from '../model/listSource';
 
@@ -22,6 +23,8 @@ export type JobCardLinkProps = ComponentProps<typeof Link> & {
   tracking?: JobCardTracking;
   /** `job_card_click` 뒤에 더 보낼 것. 광고 카드의 `ad_posting_click` 이 여기로 온다. */
   extraEvents?: DataLayerEvent[];
+  /** 광고 카드면 그 값. 누를 때 `AD_CLICK` 을 보내고 상세로 노출 id 를 넘긴다. */
+  adClick?: AdClick;
 };
 
 /**
@@ -36,6 +39,7 @@ export function JobCardLink({
   jobInfo,
   tracking,
   extraEvents,
+  adClick,
   onClick,
   ...props
 }: JobCardLinkProps) {
@@ -54,6 +58,9 @@ export function JobCardLink({
         }
         for (const { event, params } of extraEvents ?? []) {
           track(event, params);
+        }
+        if (adClick) {
+          recordAdClick(adClick);
         }
         onClick?.(e);
       }}

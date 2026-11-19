@@ -20,7 +20,7 @@ export interface BootcampCardProps {
   /** 목록 안의 자리. 주면 누를 때 `program_card_click`, 광고 카드면 노출 때 `program_impression` 이 나간다. */
   tracking?: ProgramCardTracking;
   /**
-   * 광고 공고 칸(`BOOTCAMP_LIST`, 이슈 #573). 주면 회사명 앞에 `광고` 를 붙이고 광고 값을 채운다. 광고 값이 차면
+   * 광고 공고 칸(`BOOTCAMP_LIST`, 이슈 #573). 주면 광고 값을 채우고, `adLabel` 이 켜진 칸에 회사명 앞 `AD` 를 붙인다. 광고 값이 차면
    * 노출 때 `program_impression` 이 나가고, 누르면 `ad_posting_click` 이 더 나간다. 카드 모양은 그대로다.
    */
   ad?: AdSlot;
@@ -69,6 +69,15 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
         href={`/bootcamps/${bootcamp.id}`}
         className="group flex h-full flex-col gap-2"
         events={clickEvents}
+        adClick={
+          ad
+            ? {
+                exposureId: ad.adId,
+                source: 'AD_CARD',
+                target: { targetType: 'BOOTCAMP', targetId: bootcamp.id },
+              }
+            : undefined
+        }
       >
         <JobThumbnail
           companyName={bootcamp.companyName}
@@ -80,7 +89,7 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
           <span className="hidden md:inline-flex">{badge}</span>
         </p>
         <p className="flex min-w-0 items-center gap-1 text-sm text-gray-500">
-          {ad ? <AdLabel /> : null}
+          {ad?.adLabel ? <AdLabel /> : null}
           <span className="truncate">{bootcamp.companyName}</span>
         </p>
         <p className="line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-500">
@@ -99,8 +108,23 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
     </div>
   );
 
-  return listParams && isPromoted(info) ? (
-    <ImpressionTracker event="program_impression" params={listParams}>
+  // 광고 카드는 광고 리포트의 노출(`IMPRESSION`, PRD 6.5)도 같은 때에 센다.
+  const contentEvent = ad
+    ? ({
+        type: 'IMPRESSION',
+        targetType: 'BOOTCAMP',
+        targetId: bootcamp.id,
+        exposureId: ad.adId,
+        source: 'AD_CARD',
+      } as const)
+    : undefined;
+  const programImpression = listParams && isPromoted(info);
+  return programImpression || contentEvent ? (
+    <ImpressionTracker
+      event={programImpression ? 'program_impression' : undefined}
+      params={programImpression ? listParams : undefined}
+      contentEvent={contentEvent}
+    >
       {card}
     </ImpressionTracker>
   ) : (

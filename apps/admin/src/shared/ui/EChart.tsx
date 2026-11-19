@@ -1,11 +1,19 @@
 import { useEffect, useRef } from 'react';
-import { BarChart, LineChart } from 'echarts/charts';
+import { BarChart, FunnelChart, LineChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import { type EChartsCoreOption, init, use } from 'echarts/core';
 import { SVGRenderer } from 'echarts/renderers';
 
 // 쓰는 것만 등록한다. `echarts` 전체를 불러오면 번들이 1MB 가까이 는다.
-use([BarChart, LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer]);
+use([
+  BarChart,
+  FunnelChart,
+  LineChart,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  SVGRenderer,
+]);
 
 export interface EChartProps {
   option: EChartsCoreOption;

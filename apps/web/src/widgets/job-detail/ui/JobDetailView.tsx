@@ -4,6 +4,7 @@ import type { SuccessResponseUserJobDetailResponse } from '@ogonggo/api';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { formatRegion } from '@/entities/job/model/labels';
 import type { JobDetail } from '@/entities/job/model/types';
+import { DetailContentTracker } from '@/shared/analytics/DetailContentTracker';
 import { closedLabel } from '@/shared/lib/dday';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -19,6 +20,7 @@ import { AnalysisTab } from './AnalysisTab';
 import { formatDeadlineText, JobDetailHeaderCard } from './JobDetailHeaderCard';
 import { JobDetailTabs } from './JobDetailTabs';
 import { OriginalTab } from './OriginalTab';
+import { SideAdPostings } from './SideAdPostings';
 import { SimilarJobs } from './SimilarJobs';
 
 export interface JobDetailViewProps {
@@ -69,7 +71,12 @@ export async function fetchJobDetail(jobId: number): Promise<JobDetail> {
 export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewProps) {
   const job = await fetchJobDetail(jobId);
   const jobInfo = toJobInfo(job);
-  const viewTracker = <JobDetailViewTracker jobId={job.id} jobInfo={jobInfo} />;
+  const viewTracker = (
+    <>
+      <JobDetailViewTracker jobId={job.id} jobInfo={jobInfo} />
+      <DetailContentTracker targetType="JOB" targetId={job.id} measureScroll={layout === 'page'} />
+    </>
+  );
 
   const headerCard = (
     <JobDetailHeaderCard
@@ -138,6 +145,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           {applyCta}
           <JobRecommendedContents jobId={job.id} />
           <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          <SideAdPostings excludeJobId={job.id} />
           <SideBannerSlot />
         </aside>
       </div>
@@ -180,6 +188,10 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
           </DetailSidebarSection>
           <DetailSidebarSection>
             <SimilarJobs excludeJobId={job.id} jobRole={job.jobRole} />
+          </DetailSidebarSection>
+          {/* 광고 공고 자리(`JOB_DETAIL_SIDE`, PRD 6.8). 좁은 화면에서는 사이드바째 본문 아래로 내려간다. */}
+          <DetailSidebarSection>
+            <SideAdPostings excludeJobId={job.id} />
           </DetailSidebarSection>
           {/* 배너 자리(`JOB_DETAIL_SIDE`, 이슈 #573). 비슷한 공고 바로 아래이고, 좁은 화면에서는 사이드바째 본문
               아래로 내려가 그 맨 끝이다. 노출 중인 배너가 없으면 띠까지 숨는다(`empty:hidden`). */}

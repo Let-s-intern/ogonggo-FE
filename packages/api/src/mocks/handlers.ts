@@ -1,11 +1,14 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { advertisementExposureHandlers } from './advertisementExposures';
+import { advertisementPostingHandlers } from './advertisementPostings';
+import { contentEventHandlers } from './contentEvents';
 import { userConcernHandlers } from './concerns';
 import { imageUploadHandlers } from './images';
 import {
   getJobRecommendedContentsHandler,
   getRecommendedChallengesHandler,
 } from './job-recommended-contents';
+import { myAdvertisementContractHandlers } from './myAdvertisementContracts';
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { userNotificationHandlers } from './notifications';
@@ -1222,6 +1225,7 @@ export const handlers: HttpHandler[] = [
   reportRecruitmentPostCommentHandler,
   ...myRecruitmentPostHandlers,
   ...myCompanyPostHandlers,
+  ...myAdvertisementContractHandlers,
   ...userConcernHandlers,
   getNoticesHandler,
   getNoticeCategoriesHandler,
@@ -1231,4 +1235,6 @@ export const handlers: HttpHandler[] = [
   deleteFcmTokenHandler,
   ...userNotificationHandlers,
   ...advertisementExposureHandlers,
+  ...contentEventHandlers,
+  ...advertisementPostingHandlers,
 ];

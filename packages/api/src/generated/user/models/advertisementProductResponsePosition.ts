@@ -16,6 +16,10 @@
  * | `BOOTCAMP_LIST_TOP_BANNER` | 4 | 부트캠프 목록 상단 |
  * | `BOOTCAMP_LIST_BOTTOM_BANNER` | 5 | 부트캠프 목록 하단 |
  * | `BOOTCAMP_DETAIL_BANNER` | 6 | 부트캠프 상세 |
+ * | `JOB_LIST` | 7 | 채용공고 목록 |
+ * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 |
+ * | `JOB_DETAIL_SIDE` | 9 | 공고 상세 옆 추천 |
+ * | `JOB_PICK` | 10 | 오공고 PICK |
  * @nullable
  */
 export type AdvertisementProductResponsePosition = typeof AdvertisementProductResponsePosition[keyof typeof AdvertisementProductResponsePosition] | null;
@@ -28,4 +32,8 @@ export const AdvertisementProductResponsePosition = {
   BOOTCAMP_LIST_TOP_BANNER: 'BOOTCAMP_LIST_TOP_BANNER',
   BOOTCAMP_LIST_BOTTOM_BANNER: 'BOOTCAMP_LIST_BOTTOM_BANNER',
   BOOTCAMP_DETAIL_BANNER: 'BOOTCAMP_DETAIL_BANNER',
+  JOB_LIST: 'JOB_LIST',
+  BOOTCAMP_LIST: 'BOOTCAMP_LIST',
+  JOB_DETAIL_SIDE: 'JOB_DETAIL_SIDE',
+  JOB_PICK: 'JOB_PICK',
 } as const;

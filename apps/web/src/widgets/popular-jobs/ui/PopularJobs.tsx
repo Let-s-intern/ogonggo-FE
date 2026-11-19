@@ -1,6 +1,8 @@
 import { listPublicJobs, ListPublicJobsSort } from '@ogonggo/api';
 import type { SuccessResponsePageResponseUserJobSummaryResponse } from '@ogonggo/api';
 import type { JobSummary } from '@/entities/job/model/types';
+import type { AdSlot } from '@/shared/ads/adPosting';
+import { fetchAdPostings, MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
 import { fetchTodayJobs } from '../api/fetchTodayJobs';
 import { PopularJobsTabs } from './PopularJobsTabs';
 
@@ -29,7 +31,23 @@ async function fetchPopularPool(): Promise<JobSummary[]> {
  * 조회수순 묶음에서 나눈다. 두 요청은 서로 기다리지 않는다.
  */
 export async function PopularJobs() {
-  const [pool, picks] = await Promise.all([fetchPopularPool(), fetchTodayJobs()]);
+  const [pool, todayPicks, pickAds] = await Promise.all([
+    fetchPopularPool(),
+    fetchTodayJobs(),
+    fetchAdPostings('JOB_PICK'),
+  ]);
+  // 오공고 PICK 맨 앞은 광고 공고(`JOB_PICK`, 계약 7절)다. 같은 공고는 운영자 PICK 쪽에서 빼고, 탭의 카드 수는 운영자가
+  // 고른 수 그대로다 — 광고가 들어온 만큼 PICK 뒤쪽이 밀려난다. 운영자 PICK 이 없으면 탭이 `인기 공고` 로 바뀌므로
+  // 광고도 넣지 않는다.
+  const ads: { job: JobSummary; ad: AdSlot }[] = pickAds
+    .flatMap((posting) => (posting.job ? [{ ...posting, job: posting.job }] : []))
+    .slice(0, MAX_AD_POSTINGS)
+    .map((posting, index) => ({ job: posting.job, ad: toAdSlot(posting, index + 1) }));
+  const adJobIds = new Set(ads.map(({ job }) => job.id));
+  const picks: { job: JobSummary; ad?: AdSlot }[] = [
+    ...ads,
+    ...todayPicks.filter(({ id }) => !adJobIds.has(id)).map((job) => ({ job })),
+  ].slice(0, todayPicks.length);
   const popular = pool.slice(0, TOP_COUNT);
   const intern = pool.filter((job) => job.employmentType === 'INTERN').slice(0, TOP_COUNT);
   const newcomer = pool.filter((job) => job.experienceType === 'NEWCOMER').slice(0, TOP_COUNT);

@@ -194,7 +194,7 @@ export const KEYWORD_MIN_LENGTH = 2;
 export const KEYWORD_MAX_LENGTH = 100;
 
 /** 길이를 벗어나면 400 이라 화면 전체가 에러가 되므로 검색어 없이 보낸다. */
-function pickKeyword(q: string | undefined): string | undefined {
+export function pickKeyword(q: string | undefined): string | undefined {
   const keyword = q?.trim();
   return keyword && keyword.length >= KEYWORD_MIN_LENGTH && keyword.length <= KEYWORD_MAX_LENGTH
     ? keyword

@@ -34,6 +34,8 @@ export interface DatePickerProps {
   'aria-label'?: string;
   /** 이 날 앞은 고를 수 없다(`YYYY-MM-DD`). */
   min?: string;
+  /** 이 날 뒤는 고를 수 없다(`YYYY-MM-DD`). */
+  max?: string;
   /** 닫힌 칸에 더할 클래스(높이·폭·모서리). */
   className?: string;
   disabled?: boolean;
@@ -54,6 +56,7 @@ export function DatePicker({
   placeholder = '날짜를 선택해 주세요',
   'aria-label': ariaLabel,
   min,
+  max,
   className,
   disabled = false,
 }: DatePickerProps) {
@@ -70,7 +73,8 @@ export function DatePicker({
   const minDate = min ? parseYmd(min) : null;
   const today = new Date();
   const todayYmd = toYmd(today);
-  const blocked = (d: Date) => Boolean(minDate && d < minDate);
+  const maxDate = max ? parseYmd(max) : null;
+  const blocked = (d: Date) => Boolean((minDate && d < minDate) || (maxDate && d > maxDate));
 
   const openPanel = () => {
     const rect = rootRef.current?.getBoundingClientRect();
@@ -78,7 +82,10 @@ export function DatePicker({
       const below = window.innerHeight - rect.bottom;
       setDropUp(below < PANEL_HEIGHT && rect.top > below);
     }
-    setFocused(selected ?? (minDate && today < minDate ? minDate : today));
+    setFocused(
+      selected ??
+        (minDate && today < minDate ? minDate : maxDate && today > maxDate ? maxDate : today),
+    );
     setOpen(true);
   };
 
@@ -116,6 +123,7 @@ export function DatePicker({
     (week, w) => w === 0 || week[0]?.getMonth() === focused.getMonth(),
   );
   const canPrev = !minDate || first > new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  const canNext = !maxDate || first < new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
 
   const handleTriggerKey = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (!open && ['ArrowDown', 'Enter', ' '].includes(event.key)) {
@@ -218,8 +226,9 @@ export function DatePicker({
             <button
               type="button"
               aria-label="다음 달"
+              disabled={!canNext}
               onClick={() => setFocused(addMonths(focused, 1))}
-              className="flex size-8 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+              className="flex size-8 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-30"
             >
               <span aria-hidden="true" className="icon-[lucide--chevron-right] block size-5" />
             </button>
