@@ -1,4 +1,3 @@
-import { isMockEnabled } from '@/shared/config/mocks';
 
 /**
  * 오공고가 발급한 기업 회원 토큰을 보관한다. 기준은 `apps/web/src/shared/api/authTokens.ts` 이고, biz 는 기업 회원
@@ -53,10 +52,11 @@ export function clearTokens(): void {
  * 로그인 상태로 볼지. 리프레시 토큰이 있으면 로그인이다 — 액세스 토큰은 탭을 닫으면 없어져도 첫 401 에서
  * 다시 받는다.
  *
- * 목데이터 모드(`pnpm mock`)에서는 늘 로그인이다. 계정은 목 워커가 기업 회원으로 준다(`shared/mocks/startMockWorker.ts`).
+ * 목데이터 모드(`pnpm mock`)도 같다. 로그인 화면에서 아무 이메일·비밀번호로 로그인하면 목 워커가 토큰과 기업 회원
+ * 계정을 준다(`shared/mocks/startMockWorker.ts`). 로그아웃도 실제처럼 동작한다.
  */
 export function isSignedIn(): boolean {
-  return isMockEnabled || getRefreshToken() !== null;
+  return getRefreshToken() !== null;
 }
 
 /** `useSyncExternalStore` 용 구독. 이 탭의 저장·삭제와 다른 탭의 `localStorage` 변경을 함께 받는다. */

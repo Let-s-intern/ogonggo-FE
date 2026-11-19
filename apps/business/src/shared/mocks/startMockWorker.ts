@@ -1,5 +1,7 @@
 import {
   getGetMyAccountMockHandler,
+  getSignInCompanyMockHandler,
+  getSignOutMockHandler,
   type MyAccountResponse,
   type SuccessResponseMyAccountResponse,
 } from '@ogonggo/api';
@@ -29,5 +31,15 @@ export async function startMockWorker(): Promise<void> {
     message: '요청이 성공했습니다.',
     data: MOCK_ACCOUNT,
   }));
-  await setupUserWorker(accountHandler).start({ onUnhandledRequest: 'bypass', quiet: true });
+  // 로그인 화면은 아무 이메일·비밀번호나 받는다. 토큰 값은 목 서버가 들어 있는지만 본다.
+  const signInHandler = getSignInCompanyMockHandler({
+    status: 200,
+    message: '요청이 성공했습니다.',
+    data: { accessToken: 'mock-access-token', refreshToken: 'mock-refresh-token' },
+  });
+  const signOutHandler = getSignOutMockHandler({ status: 200, message: '요청이 성공했습니다.' });
+  await setupUserWorker(accountHandler, signInHandler, signOutHandler).start({
+    onUnhandledRequest: 'bypass',
+    quiet: true,
+  });
 }
