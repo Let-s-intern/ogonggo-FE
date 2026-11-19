@@ -11,6 +11,7 @@ import {
 } from '@/shared/lib/dday';
 import { adParams, adPostingClickEvent, type AdSlot } from '@/shared/ads/adPosting';
 import { AdLabel } from '@/shared/ads/AdLabel';
+import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { ViewCount } from '@/shared/ui/ViewCount';
 import { toJobInfo } from '../model/analytics';
 import { getJobMajor } from '../model/job-major';
@@ -184,7 +185,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }:
     </>
   );
 
-  return (
+  const card = (
     <div className="relative h-full">
       <JobCardLink
         href={`/jobs/${job.id}`}
@@ -193,6 +194,15 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }:
         jobInfo={jobInfo}
         tracking={tracking}
         extraEvents={ad ? [adPostingClickEvent(ad, 'job', job.id)] : undefined}
+        adClick={
+          ad
+            ? {
+                exposureId: ad.adId,
+                source: 'AD_CARD',
+                target: { targetType: 'JOB', targetId: job.id },
+              }
+            : undefined
+        }
       >
         {featured ? (
           <>
@@ -254,5 +264,22 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }:
         <CardNewsLinkButton jobId={job.id} variant="card" />
       </div>
     </div>
+  );
+
+  // 광고 카드는 광고 리포트의 노출(`IMPRESSION`, PRD 6.5)을 센다. 공고 카드에는 GTM 노출 이벤트가 없어 그것만 보낸다.
+  return ad ? (
+    <ImpressionTracker
+      contentEvent={{
+        type: 'IMPRESSION',
+        targetType: 'JOB',
+        targetId: job.id,
+        exposureId: ad.adId,
+        source: 'AD_CARD',
+      }}
+    >
+      {card}
+    </ImpressionTracker>
+  ) : (
+    card
   );
 }

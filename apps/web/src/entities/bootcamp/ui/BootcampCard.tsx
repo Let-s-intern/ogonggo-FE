@@ -69,6 +69,15 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
         href={`/bootcamps/${bootcamp.id}`}
         className="group flex h-full flex-col gap-2"
         events={clickEvents}
+        adClick={
+          ad
+            ? {
+                exposureId: ad.adId,
+                source: 'AD_CARD',
+                target: { targetType: 'BOOTCAMP', targetId: bootcamp.id },
+              }
+            : undefined
+        }
       >
         <JobThumbnail
           companyName={bootcamp.companyName}
@@ -99,8 +108,23 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
     </div>
   );
 
-  return listParams && isPromoted(info) ? (
-    <ImpressionTracker event="program_impression" params={listParams}>
+  // 광고 카드는 광고 리포트의 노출(`IMPRESSION`, PRD 6.5)도 같은 때에 센다.
+  const contentEvent = ad
+    ? ({
+        type: 'IMPRESSION',
+        targetType: 'BOOTCAMP',
+        targetId: bootcamp.id,
+        exposureId: ad.adId,
+        source: 'AD_CARD',
+      } as const)
+    : undefined;
+  const programImpression = listParams && isPromoted(info);
+  return programImpression || contentEvent ? (
+    <ImpressionTracker
+      event={programImpression ? 'program_impression' : undefined}
+      params={programImpression ? listParams : undefined}
+      contentEvent={contentEvent}
+    >
       {card}
     </ImpressionTracker>
   ) : (

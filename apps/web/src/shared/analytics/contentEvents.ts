@@ -92,20 +92,18 @@ export function flushContentEventsOnLeave(): void {
   getQueue()?.flushOnLeave();
 }
 
-/**
- * 광고를 누를 때 부른다. `AD_CLICK` 을 보내고, 상세로 가는 클릭이면 대상과 노출 id 를 이 탭의 `sessionStorage` 에
- * 남긴다. 주소 쿼리에 싣지 않는 것은 공유·북마크된 주소로 나중에 온 방문까지 광고 몫으로 잡히기 때문이다.
- */
-export function recordAdClick({
-  exposureId,
-  source,
-  target,
-}: {
+export interface AdClick {
   exposureId: number;
   source: 'AD_CARD' | 'BANNER';
   /** 누르면 가는 상세. 배너가 사이트 밖이나 목록으로 가면 없다. */
   target: { targetType: ContentTargetType; targetId: number } | null;
-}): void {
+}
+
+/**
+ * 광고를 누를 때 부른다. `AD_CLICK` 을 보내고, 상세로 가는 클릭이면 대상과 노출 id 를 이 탭의 `sessionStorage` 에
+ * 남긴다. 주소 쿼리에 싣지 않는 것은 공유·북마크된 주소로 나중에 온 방문까지 광고 몫으로 잡히기 때문이다.
+ */
+export function recordAdClick({ exposureId, source, target }: AdClick): void {
   // 배너 클릭은 대상 없이 보낸다(API 계약 1절). 배너 노출에는 대상이 없어 대상을 실으면 불일치로 버려질 수 있다.
   const clickTarget = source === 'BANNER' ? null : target;
   sendContentEvent({

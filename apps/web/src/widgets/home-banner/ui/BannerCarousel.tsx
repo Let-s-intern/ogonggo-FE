@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import type { AdvertisementExposureResponse } from '@ogonggo/api';
+import type { AdClick } from '@/shared/analytics/contentEvents';
+import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import type { BannerPlacement } from '../model/placement';
 
@@ -31,6 +33,18 @@ const MOBILE_MEDIA = {
   wide: '(max-width: 767px)',
   side: '(max-width: 1023px)',
 } as const;
+
+/**
+ * 배너가 사이트 안 공고·부트캠프 상세로 가면 그 대상. 같은 탭으로 가는 상대 경로만 본다 — 외부 주소는 새 탭이라
+ * 이 탭의 저장소로 노출 id 를 넘길 수 없다.
+ */
+function bannerTarget(linkUrl: string): AdClick['target'] {
+  const match = /^\/(jobs|bootcamps)\/(\d+)(?:[/?#]|$)/.exec(linkUrl);
+  if (!match) {
+    return null;
+  }
+  return { targetType: match[1] === 'jobs' ? 'JOB' : 'BOOTCAMP', targetId: Number(match[2]) };
+}
 
 /**
  * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이다. 모바일 폭에서는
@@ -94,41 +108,58 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                 active ? 'opacity-100' : 'opacity-0',
               )}
             >
-              <TrackedLink
-                href={banner.linkUrl}
-                target={newTab ? '_blank' : undefined}
-                rel={newTab ? 'noopener noreferrer' : undefined}
-                className="block h-full w-full"
-                events={[
-                  {
-                    event: 'banner_click',
-                    params: {
-                      banner_id: banner.id,
-                      banner_placement: placement,
-                      banner_position: index + 1,
-                      link_url: banner.linkUrl,
-                    },
-                  },
-                ]}
+              {/* 광고 리포트의 노출·클릭(PRD 6.5). 넘기는 배너는 지금 보이는 한 장만 센다. */}
+              <ImpressionTracker
+                active={active}
+                contentEvent={{
+                  type: 'IMPRESSION',
+                  targetType: null,
+                  targetId: null,
+                  exposureId: banner.id,
+                  source: 'BANNER',
+                }}
               >
-                <picture className="block h-full w-full">
-                  {banner.mobileImageUrl ? (
-                    <source media={MOBILE_MEDIA[variant]} srcSet={banner.mobileImageUrl} />
+                <TrackedLink
+                  href={banner.linkUrl}
+                  adClick={{
+                    exposureId: banner.id,
+                    source: 'BANNER',
+                    target: bannerTarget(banner.linkUrl),
+                  }}
+                  target={newTab ? '_blank' : undefined}
+                  rel={newTab ? 'noopener noreferrer' : undefined}
+                  className="block h-full w-full"
+                  events={[
+                    {
+                      event: 'banner_click',
+                      params: {
+                        banner_id: banner.id,
+                        banner_placement: placement,
+                        banner_position: index + 1,
+                        link_url: banner.linkUrl,
+                      },
+                    },
+                  ]}
+                >
+                  <picture className="block h-full w-full">
+                    {banner.mobileImageUrl ? (
+                      <source media={MOBILE_MEDIA[variant]} srcSet={banner.mobileImageUrl} />
+                    ) : null}
+                    <img
+                      src={banner.imageUrl}
+                      alt={banner.name}
+                      // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
+                      loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}
+                      className="h-full w-full object-cover"
+                    />
+                  </picture>
+                  {banner.adLabel ? (
+                    <span className="absolute top-2 right-2 rounded bg-gray-900/60 px-1.5 py-0.5 text-[11px] leading-none font-medium text-white md:top-3 md:right-3">
+                      광고
+                    </span>
                   ) : null}
-                  <img
-                    src={banner.imageUrl}
-                    alt={banner.name}
-                    // 맨 위 자리의 첫 배너만 바로 받는다. 나머지는 화면 아래이거나 넘겨야 보인다.
-                    loading={placement === 'HOME_TOP' && index === 0 ? 'eager' : 'lazy'}
-                    className="h-full w-full object-cover"
-                  />
-                </picture>
-                {banner.adLabel ? (
-                  <span className="absolute top-2 right-2 rounded bg-gray-900/60 px-1.5 py-0.5 text-[11px] leading-none font-medium text-white md:top-3 md:right-3">
-                    광고
-                  </span>
-                ) : null}
-              </TrackedLink>
+                </TrackedLink>
+              </ImpressionTracker>
             </div>
           );
         })}

@@ -8,7 +8,7 @@ import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLay
  * enum 이 없어 문자열로 둔다.
  */
 export interface AdSlot {
-  /** 광고 id. 공고 id 가 아니다. */
+  /** 광고 노출 id(`exposureId`). 공고 id 가 아니다. 광고 리포트 이벤트의 `exposureId` 로도 나간다. */
   adId: number;
   placement: string;
   /** 자리 안 순서, 1부터. 어드민이 정한 순서이고 목록의 칸 번호와 같다. */
