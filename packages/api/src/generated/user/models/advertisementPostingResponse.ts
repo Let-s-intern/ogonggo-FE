@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { AdvertisementPostingResponseJobField } from './advertisementPostingResponseJobField';
 import type { AdvertisementPostingResponsePosition } from './advertisementPostingResponsePosition';
 import type { AdvertisementPostingResponseTargetType } from './advertisementPostingResponseTargetType';
 import type { UserBootcampSummaryResponse } from './userBootcampSummaryResponse';
@@ -22,11 +23,60 @@ export interface AdvertisementPostingResponse {
      * | `BOOTCAMP_LIST_BOTTOM_BANNER` | 5 | 부트캠프 목록 하단 |
      * | `BOOTCAMP_DETAIL_BANNER` | 6 | 부트캠프 상세 |
      * | `JOB_LIST` | 7 | 채용공고 목록 |
-     * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 |
+     * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 상단 고정 |
      * | `JOB_DETAIL_SIDE` | 9 | 공고 상세 옆 추천 |
      * | `JOB_PICK` | 10 | 오공고 PICK |
+     * | `CALENDAR_DAY` | 11 | 공고 달력 날짜별 |
+     * | `MYPAGE_SCRAP` | 12 | 마이페이지 스크랩 칸 |
      */
   position: AdvertisementPostingResponsePosition;
+  /**
+     * 채용공고 목록(JOB_LIST) 노출의 직군 탭. 다른 자리는 null입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `IT_DEVELOPMENT` | 1 | IT·개발 |
+     * | `GAME` | 3 | 게임 |
+     * | `PLANNING_STRATEGY` | 5 | 기획·전략 |
+     * | `MARKETING_ADVERTISING` | 6 | 마케팅·광고 |
+     * | `SALES` | 8 | 영업 |
+     * | `TRADE_LOGISTICS` | 9 | 무역·물류 |
+     * | `TRANSPORT_DELIVERY` | 10 | 운송·배송 |
+     * | `LEGAL` | 11 | 법률·법무 |
+     * | `HR_GENERAL_AFFAIRS` | 12 | HR·총무 |
+     * | `SECURITIES_ASSET_MANAGEMENT` | 14 | 증권·운용 |
+     * | `BANKING_CARD_INSURANCE` | 15 | 은행·카드·보험 |
+     * | `ENGINEERING_RND` | 16 | 엔지니어링·R&D |
+     * | `CONSTRUCTION_ARCHITECTURE` | 17 | 건설·건축 |
+     * | `PRODUCTION_SKILLED_TRADES` | 18 | 생산·기능직 |
+     * | `MEDICAL_HEALTH` | 19 | 의료·보건 |
+     * | `PUBLIC_WELFARE` | 20 | 공공·복지 |
+     * | `EDUCATION` | 21 | 교육 |
+     * | `SERVICE` | 24 | 서비스 |
+     * | `FOOD_BEVERAGE` | 25 | 식음료 |
+     * @nullable
+     */
+  jobField?: AdvertisementPostingResponseJobField;
+  /**
+     * 오공고 PICK(JOB_PICK) 광고 카드에 운영자 PICK과 같은 상자로 보이는 추천 문구 제목. JOB_PICK이면 늘 있고 다른 자리는 null입니다.
+     * @nullable
+     */
+  recommendationTitle?: string | null;
+  /**
+     * 추천 문구 제목 아래 설명. JOB_PICK이면 늘 있고 다른 자리는 null입니다.
+     * @nullable
+     */
+  recommendationDescription?: string | null;
+  /**
+     * 노출 시작 일시(Asia/Seoul). null이면 시작이 열려 있습니다. 공고 달력 자리(CALENDAR_DAY)는 고른 날짜가 노출 기간 안인지 가리는 데 씁니다.
+     * @nullable
+     */
+  startAt?: string | null;
+  /**
+     * 노출 종료 일시(Asia/Seoul). null이면 끝이 열려 있습니다.
+     * @nullable
+     */
+  endAt?: string | null;
   /** 같은 자리 안의 순서. 작을수록 먼저입니다. */
   displayOrder: number;
   /** 카드에 "광고" 표시를 붙일지 */

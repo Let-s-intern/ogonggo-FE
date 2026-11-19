@@ -5,6 +5,7 @@
  * OpenAPI spec version: v1
  */
 import type { AdminAdvertisementContractProductResponseCategory } from './adminAdvertisementContractProductResponseCategory';
+import type { AdminAdvertisementContractProductResponseReportUnavailableReason } from './adminAdvertisementContractProductResponseReportUnavailableReason';
 
 export interface AdminAdvertisementContractProductResponse {
   contractProductId: number;
@@ -26,4 +27,16 @@ export interface AdminAdvertisementContractProductResponse {
   startDate?: string;
   endDate?: string;
   addedAt: string;
+  /** 성과 리포트를 열 수 있는 상품인지 */
+  reportAvailable: boolean;
+  /**
+     * 리포트를 열 수 없는 이유. 기간 없음(NO_PERIOD), 채널 상품(NOT_EXPOSABLE). 열 수 있으면 null
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NO_PERIOD` | 1 | 기간 미정 |
+     * | `NOT_EXPOSABLE` | 2 | 집계 대상 아님 |
+     * @nullable
+     */
+  reportUnavailableReason?: AdminAdvertisementContractProductResponseReportUnavailableReason;
 }

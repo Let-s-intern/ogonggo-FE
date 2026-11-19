@@ -203,7 +203,7 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
             <Row label="기업명">{contract.companyName}</Row>
             <Row label="공고·지원 링크">
               <a
-                href={contract.recruitmentUrl}
+                href={contract.recruitmentUrl ?? undefined}
                 target="_blank"
                 rel="noreferrer"
                 className="text-blue-600 underline"
@@ -211,7 +211,9 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
                 {contract.recruitmentUrl}
               </a>
             </Row>
-            <Row label="모집 마감일">{formatDateDots(contract.recruitmentDeadline)}</Row>
+            <Row label="모집 마감일">
+              {contract.recruitmentDeadline ? formatDateDots(contract.recruitmentDeadline) : '-'}
+            </Row>
           </Section>
 
           <Section title="광고 신청 내역">
@@ -236,8 +238,10 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
                     );
                   })}
                 </ol>
-              ) : (
+              ) : contract.purpose ? (
                 enumLabel('AdvertisementContractPurpose', contract.purpose)
+              ) : (
+                '-'
               )}
             </Row>
             {/* 신청서에서 칸이 따로 없는 문항의 답. 이 값이 생기기 전 신청은 없어서 아래 일정 요청에 그대로 있다. */}
@@ -269,10 +273,14 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
             <Row label="연락처">{contract.phoneNumber}</Row>
             <Row label="사업자 번호">{businessNumberText(contract)}</Row>
             <Row label="계산서 발행">
-              {enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)}
+              {contract.invoiceMethod
+                ? enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)
+                : '-'}
             </Row>
             <Row label="소재 준비">
-              {enumLabel('AdvertisementContractCreativeMethod', contract.creativeMethod)}
+              {contract.creativeMethod
+                ? enumLabel('AdvertisementContractCreativeMethod', contract.creativeMethod)
+                : '-'}
             </Row>
           </Section>
         </div>

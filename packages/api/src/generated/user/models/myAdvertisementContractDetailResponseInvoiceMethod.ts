@@ -6,12 +6,15 @@
  */
 
 /**
+ * 계산서 발행 방식. 비즈니스 공고 계약은 null
+ *
  * | 값 | code | 설명 |
  * | --- | --- | --- |
  * | `TAX_INVOICE` | 1 | 세금계산서 발행 |
  * | `NEGOTIATE` | 2 | 담당자와 협의 |
+ * @nullable
  */
-export type MyAdvertisementContractDetailResponseInvoiceMethod = typeof MyAdvertisementContractDetailResponseInvoiceMethod[keyof typeof MyAdvertisementContractDetailResponseInvoiceMethod];
+export type MyAdvertisementContractDetailResponseInvoiceMethod = typeof MyAdvertisementContractDetailResponseInvoiceMethod[keyof typeof MyAdvertisementContractDetailResponseInvoiceMethod] | null;
 
 
 export const MyAdvertisementContractDetailResponseInvoiceMethod = {

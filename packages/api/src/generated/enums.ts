@@ -891,9 +891,11 @@ export const ENUM_CATALOG = {
     { name: 'BOOTCAMP_LIST_BOTTOM_BANNER', desc: '부트캠프 목록 하단', parent: null },
     { name: 'BOOTCAMP_DETAIL_BANNER', desc: '부트캠프 상세', parent: null },
     { name: 'JOB_LIST', desc: '채용공고 목록', parent: null },
-    { name: 'BOOTCAMP_LIST', desc: '부트캠프 목록', parent: null },
+    { name: 'BOOTCAMP_LIST', desc: '부트캠프 목록 상단 고정', parent: null },
     { name: 'JOB_DETAIL_SIDE', desc: '공고 상세 옆 추천', parent: null },
     { name: 'JOB_PICK', desc: '오공고 PICK', parent: null },
+    { name: 'CALENDAR_DAY', desc: '공고 달력 날짜별', parent: null },
+    { name: 'MYPAGE_SCRAP', desc: '마이페이지 스크랩 칸', parent: null },
   ],
   AdvertisementContractStatus: [
     { name: 'REQUESTED', desc: '신청', parent: null },
@@ -913,6 +915,10 @@ export const ENUM_CATALOG = {
     { name: 'FAST_APPLICANTS', desc: '지원자 빠르게 확보', parent: null },
     { name: 'FIT_APPLICANTS', desc: '적합한 지원자 확보', parent: null },
     { name: 'BRAND_AWARENESS', desc: '브랜드 인지도 확대', parent: null },
+  ],
+  AdvertisementContractReportUnavailableReason: [
+    { name: 'NO_PERIOD', desc: '기간 미정', parent: null },
+    { name: 'NOT_EXPOSABLE', desc: '집계 대상 아님', parent: null },
   ],
   AdvertisementContractInvoiceMethod: [
     { name: 'TAX_INVOICE', desc: '세금계산서 발행', parent: null },

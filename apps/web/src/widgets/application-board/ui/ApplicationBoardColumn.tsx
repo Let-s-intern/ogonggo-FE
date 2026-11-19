@@ -10,6 +10,7 @@ import {
   type ApplicationStageId,
   type MoveStage,
 } from '@/features/application-board';
+import { ApplicationBoardAdCards } from './ApplicationBoardAdCards';
 import { ApplicationBoardCard } from './ApplicationBoardCard';
 import { ApplicationBoardColumnHead } from './ApplicationBoardColumnHead';
 
@@ -60,6 +61,10 @@ export function ApplicationBoardColumn({ tab, stage, filters, move }: Applicatio
     >
       <ApplicationBoardColumnHead label={stage.label} total={list.total} />
       <div className="flex flex-col gap-4">
+        {/* 채용공고 `스크랩` 칸에만 광고 공고가 맨 앞에 붙는다(`MYPAGE_SCRAP`). 리스트 보기(모바일)에는 싣지 않는다. */}
+        {tab === 'jobs' && stage.id === 'SCRAPPED' ? (
+          <ApplicationBoardAdCards scrappedIds={new Set(list.items.map((item) => item.id))} />
+        ) : null}
         {list.items.map((item) => (
           <ApplicationBoardCard key={item.key} tab={tab} stage={stage} item={item} move={move} />
         ))}

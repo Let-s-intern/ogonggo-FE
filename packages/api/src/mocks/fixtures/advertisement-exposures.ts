@@ -1,10 +1,9 @@
 import type {
-  AdminAdvertisementContractDetailResponse,
   AdminAdvertisementExposureResponse,
   AdminAdvertisementProductResponse,
 } from '../../generated/admin/models';
 import type { AdvertisementExposureResponse } from '../../generated/user/models';
-import { contractSeed } from './advertisement-contracts';
+import { contractSeed, type StoredContract } from './advertisement-contracts';
 
 /**
  * 광고 상품과 노출 목의 저장소(BE LC-3583). 공개 배너 조회(`../advertisementExposures.ts`)가 이 배열을 본다.
@@ -180,10 +179,20 @@ const EXPOSURE_SEED: ExposureSeed[] = [
 /** 상품은 BE 처럼 지워도 행이 남는다(`deletedAt`). 계약 상품이 지운 상품을 계속 가리킨다. */
 export type ProductRecord = AdminAdvertisementProductResponse & { deletedAt: string | null };
 
+/**
+ * 노출 한 건. `jobField` 는 리스트 상단 고정(`JOB_LIST`) 노출의 직무(계약 8절), 추천 문구 두 칸은 오공고 PICK(`JOB_PICK`)
+ * 노출의 것이다(계약 9절). 생성 타입에는 아직 없다(코드젠 전).
+ */
+export type ExposureRecord = AdminAdvertisementExposureResponse & {
+  jobField?: string | null;
+  recommendationTitle?: string | null;
+  recommendationDescription?: string | null;
+};
+
 interface AdvertisementStore {
   products: ProductRecord[];
-  exposures: AdminAdvertisementExposureResponse[];
-  contracts: AdminAdvertisementContractDetailResponse[];
+  exposures: ExposureRecord[];
+  contracts: StoredContract[];
 }
 
 function seedStore(): AdvertisementStore {

@@ -60,7 +60,7 @@ import {
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { AdPostingFormModal } from '@/widgets/ad-posting-form';
 import { BannerFormModal } from '@/widgets/banner-form';
-import { targetKey, type ContentTarget } from '@/widgets/content-target-picker';
+import type { ContentTarget } from '@/widgets/content-target-picker';
 import { PageHeader } from '@/widgets/page-header';
 import { ProductReportModal, reportCellLabel, unavailableMessage } from './ProductReportModal';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
@@ -803,15 +803,7 @@ function ProductsCard({
           product={postingEdit.product}
           position={postingEdit.position}
           exposure={postingEdit.exposure}
-          takenKeys={
-            new Set(
-              (postingSiblings.data ?? []).flatMap((row) =>
-                row.targetType && row.targetId != null
-                  ? [targetKey({ targetType: row.targetType, targetId: row.targetId })]
-                  : [],
-              ),
-            )
-          }
+          taken={postingSiblings.data ?? []}
           initialContract={{ id: contract.id, companyName: contract.companyName }}
           initialTarget={defaultTarget(postingEdit.position)}
           initialPeriod={

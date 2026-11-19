@@ -9,6 +9,13 @@ import type { AdSlot } from '@/shared/ads/adPosting';
 
 type TabKey = 'pick' | 'popular' | 'intern' | 'newcomer';
 
+/** 탭의 카드 한 장. 오공고 PICK 의 광고 공고는 노출에 적힌 추천 문구를 `recommendation` 으로 들고 온다(계약 9절). */
+export interface PickCard {
+  job: JobSummary;
+  ad?: AdSlot;
+  recommendation?: { title: string; description: string };
+}
+
 const TAB_LABELS: Record<TabKey, string> = {
   pick: '오공고 PICK',
   popular: '인기 공고',
@@ -21,7 +28,7 @@ export interface PopularJobsTabsProps {
    * 운영자가 고른 공고. 맨 앞에 광고 공고(`ad` 가 있는 칸)가 섞여 온다(`PopularJobs`). 비면 첫 탭이 `인기 공고` 로
    * 바뀐다.
    */
-  picks: { job: JobSummary; ad?: AdSlot }[];
+  picks: PickCard[];
   popular: JobSummary[];
   intern: JobSummary[];
   newcomer: JobSummary[];
@@ -37,7 +44,7 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
   const tabs: TabKey[] = [firstTab, 'intern', 'newcomer'];
   const [active, setActive] = useState<TabKey>(firstTab);
   const toCards = (jobs: JobSummary[]) => jobs.map((job) => ({ job }));
-  const itemsByTab: Record<TabKey, { job: JobSummary; ad?: AdSlot }[]> = {
+  const itemsByTab: Record<TabKey, PickCard[]> = {
     pick: picks,
     popular: toCards(popular),
     intern: toCards(intern),
@@ -99,7 +106,7 @@ function recommendationOf(job: JobSummary) {
 /** PC 에서 한 번에 보이고 화살표 한 번에 넘어가는 카드 수. 그리드 네 칸과 같다. */
 const PAGE_SIZE = 4;
 
-function TabList({ tab, items }: { tab: TabKey; items: { job: JobSummary; ad?: AdSlot }[] }) {
+function TabList({ tab, items }: { tab: TabKey; items: PickCard[] }) {
   const [page, setPage] = useState(0);
 
   if (items.length === 0) {
@@ -129,7 +136,7 @@ function TabList({ tab, items }: { tab: TabKey; items: { job: JobSummary; ad?: A
           폭 240px 가 되고, 같은 모양인 오늘의 추천 공고(343px)는 247px 다. 범위를 둬서 320px 폰과 큰
           폰 모두 옆 카드가 보인다. */}
       <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:min-w-0 md:flex-1 md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
-        {items.map(({ job, ad }, index) => (
+        {items.map(({ job, ad, recommendation }, index) => (
           <li
             key={ad ? `ad-${ad.adId}` : job.id}
             className={cn(
@@ -141,7 +148,10 @@ function TabList({ tab, items }: { tab: TabKey; items: { job: JobSummary; ad?: A
               variant="featured"
               job={job}
               ad={ad}
-              recommendation={tab === 'pick' && !ad ? recommendationOf(job) : undefined}
+              // 광고 공고는 노출의 추천 문구, 운영자 PICK 은 공고의 추천 문구다. 둘 다 같은 상자로 보인다(계약 9절).
+              recommendation={
+                tab === 'pick' ? (ad ? recommendation : recommendationOf(job)) : undefined
+              }
               tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
             />
           </li>

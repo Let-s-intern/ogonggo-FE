@@ -6,13 +6,16 @@
  */
 
 /**
+ * 광고 목적. 비즈니스 공고 계약은 null
+ *
  * | 값 | code | 설명 |
  * | --- | --- | --- |
  * | `FAST_APPLICANTS` | 1 | 지원자 빠르게 확보 |
  * | `FIT_APPLICANTS` | 2 | 적합한 지원자 확보 |
  * | `BRAND_AWARENESS` | 3 | 브랜드 인지도 확대 |
+ * @nullable
  */
-export type MyAdvertisementContractDetailResponsePurpose = typeof MyAdvertisementContractDetailResponsePurpose[keyof typeof MyAdvertisementContractDetailResponsePurpose];
+export type MyAdvertisementContractDetailResponsePurpose = typeof MyAdvertisementContractDetailResponsePurpose[keyof typeof MyAdvertisementContractDetailResponsePurpose] | null;
 
 
 export const MyAdvertisementContractDetailResponsePurpose = {

@@ -1,7 +1,22 @@
 import type {
   AdminAdvertisementContractDetailResponse,
+  AdminAdvertisementContractProductResponse,
   AdminAdvertisementContractSummaryResponse,
 } from '../../generated/admin/models';
+
+/** 목 저장소의 계약 상품. 리포트 칸은 응답할 때 `../admin/advertisementReports.ts` 가 얹는다. */
+export type StoredContractProduct = Omit<
+  AdminAdvertisementContractProductResponse,
+  'reportAvailable' | 'reportUnavailableReason'
+>;
+
+/** 목 저장소의 계약. `targets` 와 상품의 리포트 칸은 응답할 때 얹는다. */
+export type StoredContract = Omit<
+  AdminAdvertisementContractDetailResponse,
+  'targets' | 'products'
+> & {
+  products: StoredContractProduct[];
+};
 
 /**
  * 광고 계약 목의 시드(BE LC-3583·3584). 어드민 계약 목록·상세와 배너 노출의 연결 계약 고르기가 본다.
@@ -12,7 +27,7 @@ import type {
  * 계약 상품(`products`)의 상품 id 는 `./advertisement-exposures.ts` 의 상품 시드를 가리킨다.
  */
 
-const CONTRACT_SEED: AdminAdvertisementContractDetailResponse[] = [
+const CONTRACT_SEED: StoredContract[] = [
   {
     id: 1,
     source: 'APPLICATION_FORM',
@@ -131,7 +146,7 @@ const CONTRACT_SEED: AdminAdvertisementContractDetailResponse[] = [
   },
 ];
 
-export function contractSeed(): AdminAdvertisementContractDetailResponse[] {
+export function contractSeed(): StoredContract[] {
   return CONTRACT_SEED.map((contract) => ({
     ...contract,
     categories: [...contract.categories],
@@ -153,7 +168,7 @@ export function toContractSummary({
   paymentAmount,
   registeredAt,
   updatedAt,
-}: AdminAdvertisementContractDetailResponse): AdminAdvertisementContractSummaryResponse {
+}: StoredContract): AdminAdvertisementContractSummaryResponse {
   return {
     id,
     source,

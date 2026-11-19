@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import {
+  type AdminAdvertisementExposureResponseJobField,
   AdminAdvertisementProductResponseCategory,
   AdminAdvertisementProductResponsePosition,
   ListAdvertisementContractsStatusItem,
@@ -13,6 +14,7 @@ import { toContractSummary } from '../fixtures/advertisement-contracts';
 import {
   advertisementStore,
   saveAdvertisementStore,
+  type ExposureRecord,
   type ProductRecord,
 } from '../fixtures/advertisement-exposures';
 import { matches, ok, paginate, readPaging } from './paging';
@@ -29,16 +31,21 @@ const PRODUCTS = '*/api/v1/admin/advertisement-products';
 const EXPOSURES = '*/api/v1/admin/advertisement-exposures';
 const CONTRACTS = '*/api/v1/admin/advertisement-contracts';
 
-/** 자리마다 그 자리가 속한 카테고리(BE `AdvertisementProductPosition.category`). 생성 enum 의 자리는 모두 배너다. */
+/**
+ * 자리마다 그 자리가 속한 카테고리(BE `AdvertisementProductPosition.category`). 생성 enum 에는 광고 공고 자리도 섞여 있어
+ * 이름이 `_BANNER` 로 끝나는 것만 배너 자리로 본다.
+ */
 const BANNER_POSITIONS: readonly string[] = Object.values(
   AdminAdvertisementProductResponsePosition,
-);
-/** 광고 공고(카드) 자리(PRD `prd-business-report.md` 6.8, D12). 코드젠 전이라 생성 enum 에 아직 없다. */
+).filter((position) => position.endsWith('_BANNER'));
+/** 광고 공고(카드) 자리(계약 8절, 판매 상품 차례). 생성 enum 에는 아직 옛 자리가 남아 있다(코드젠 전). */
 const AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_PICK',
   'JOB_LIST',
-  'BOOTCAMP_LIST',
   'JOB_DETAIL_SIDE',
+  'CALENDAR_DAY',
+  'MYPAGE_SCRAP',
+  'BOOTCAMP_LIST',
 ];
 const POSITIONS: readonly string[] = [...BANNER_POSITIONS, ...AD_POSTING_POSITIONS];
 const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductResponseCategory);
@@ -270,6 +277,28 @@ function exposureError(
   return null;
 }
 
+/** 리스트 상단 고정 노출만 직무를 남긴다. 다른 자리는 보내도 null 이다(계약 8절). */
+function jobFieldOf(
+  product: ProductRecord,
+  body: object,
+): AdminAdvertisementExposureResponseJobField | undefined {
+  const { jobField } = body as { jobField?: AdminAdvertisementExposureResponseJobField | null };
+  return String(product.position ?? '') === 'JOB_LIST' ? (jobField ?? undefined) : undefined;
+}
+
+/** 오공고 PICK 노출만 추천 문구를 남긴다(계약 9절). 검사는 `./advertisementPostings.ts` 가 먼저 한다. */
+function recommendationOf(product: ProductRecord, body: object) {
+  const { recommendationTitle, recommendationDescription } = body as {
+    recommendationTitle?: string | null;
+    recommendationDescription?: string | null;
+  };
+  const pick = String(product.position ?? '') === 'JOB_PICK';
+  return {
+    recommendationTitle: pick ? (recommendationTitle?.trim() ?? null) : null,
+    recommendationDescription: pick ? (recommendationDescription?.trim() ?? null) : null,
+  };
+}
+
 /** `GET ?productId=&contractId=` 상품 자리 하나의 노출 전부(꺼진 것·기간 밖 포함). 순서대로 온다. */
 const listExposuresHandler = http.get(EXPOSURES, ({ request }) => {
   const url = new URL(request.url);
@@ -295,7 +324,7 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
   if (invalid) return invalid;
   if (typeof body.exposed !== 'boolean') return badRequest('exposed: 참·거짓 값을 보내 주세요.');
   const now = nowKst();
-  const exposure: AdminAdvertisementExposureResponse = {
+  const exposure: ExposureRecord = {
     id: nextId(advertisementStore.exposures),
     productId: product.id,
     contractId: body.contractId ?? null,
@@ -304,6 +333,8 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
     linkUrl: body.linkUrl?.trim() ?? null,
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
+    jobField: jobFieldOf(product, body),
+    ...recommendationOf(product, body),
     adLabel: body.adLabel as boolean,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,
@@ -342,6 +373,8 @@ const replaceExposureHandler = http.put(`${EXPOSURES}/:exposureId`, async ({ par
     linkUrl: body.linkUrl?.trim() ?? null,
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
+    jobField: jobFieldOf(product, body),
+    ...recommendationOf(product, body),
     adLabel: body.adLabel,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,

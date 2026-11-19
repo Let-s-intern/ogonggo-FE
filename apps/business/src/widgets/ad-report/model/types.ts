@@ -8,11 +8,8 @@ import type { MyAdvertisementContractProductResponse } from '@ogonggo/api';
 /** 리포트를 못 여는 이유. 기간을 아직 안 넣었거나(`NO_PERIOD`), 오늘의 공고 화면 밖 채널 상품이다(`NOT_EXPOSABLE`). */
 export type ReportUnavailableReason = 'NO_PERIOD' | 'NOT_EXPOSABLE';
 
-/** 계약 상세의 `products[]` 에 리포트 계약이 더하는 두 칸. 코드젠 전에는 응답에 있어도 타입에 없다. */
-export interface ReportableProduct extends MyAdvertisementContractProductResponse {
-  reportAvailable?: boolean;
-  reportUnavailableReason?: ReportUnavailableReason | null;
-}
+/** 계약 상세의 `products[]`. 리포트를 열 수 있는지(`reportAvailable`)와 못 여는 이유를 함께 가진다. */
+export type ReportableProduct = MyAdvertisementContractProductResponse;
 
 export type ReportSource =
   | 'AD_CARD'

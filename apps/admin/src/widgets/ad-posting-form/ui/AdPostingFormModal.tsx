@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CreateAdminAdvertisementExposureRequestJobField } from '@ogonggo/api/src/admin';
 import { Button, Callout, Field, Input, Modal, Select } from '@ogonggo/ui';
 import {
   useAdvertisementExposures,
@@ -9,11 +10,16 @@ import {
 } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
   AD_POSTING_FIXED_TARGET,
+  AD_POSTING_JOB_FIELD_OPTIONS,
+  needsJobField,
+  needsRecommendation,
   type AdPostingExposure,
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import type { AdvertisementProduct } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { positionLabel } from '@/entities/advertisement-product/lib/product';
+import { isRecommendationValid } from '@/features/today-job/lib/validate';
+import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { ContractField } from '@/widgets/banner-form';
 import {
@@ -29,8 +35,11 @@ interface AdPostingFormModalProps {
   position: AdPostingPosition | null;
   /** `null` 이면 새 광고 공고다. */
   exposure: AdPostingExposure | null;
-  /** 이 자리에 이미 건 대상(`targetKey`). 같은 자리에 같은 공고를 두 번 걸 수 없다(BE 409). */
-  takenKeys: Set<string>;
+  /**
+   * 이 자리(상품)에 이미 건 노출. 같은 자리에 같은 공고를 두 번 걸 수 없다(BE 409). 리스트 상단 고정은 같은 직무 안에서만
+   * 막는다 — 다른 직무 탭이면 같은 공고를 또 걸 수 있다(계약 8절).
+   */
+  taken: AdPostingExposure[];
   onClose: () => void;
   /** 새 광고 공고의 연결 계약을 미리 채운다(계약 상세에서 열 때). */
   initialContract?: { id: number; companyName: string };
@@ -73,7 +82,7 @@ export function AdPostingFormModal({
   product,
   position,
   exposure,
-  takenKeys,
+  taken,
   onClose,
   initialContract,
   initialTarget,
@@ -110,15 +119,32 @@ export function AdPostingFormModal({
   // 광고 공고는 돈을 받고 싣는 자리라 광고 표시를 켠 채로 시작한다.
   const [adLabel, setAdLabel] = useState(exposure?.adLabel ?? true);
   const [exposed, setExposed] = useState(exposure?.exposed ?? true);
+  const withJobField = needsJobField(position);
+  const [jobField, setJobField] = useState(exposure?.jobField ?? '');
+  // 오공고 PICK 은 운영자 PICK 처럼 추천 문구 두 칸이 있어야 한다(계약 9절). 입력칸·글자 수·검사는 운영자 PICK 것 그대로다.
+  const withRecommendation = needsRecommendation(position);
+  const [recommendation, setRecommendation] = useState({
+    title: exposure?.recommendationTitle ?? '',
+    description: exposure?.recommendationDescription ?? '',
+  });
   const [submitted, setSubmitted] = useState(false);
 
-  // 수정 중인 노출 자신의 대상은 다시 골라도 된다.
-  const ownKey = exposure ? targetOf(exposure) : null;
-  const blocked = new Set([...takenKeys].filter((key) => !ownKey || key !== targetKey(ownKey)));
+  // 수정 중인 노출 자신은 빼고, 리스트 상단 고정이면 고른 직무의 노출만 본다.
+  const blocked = new Set(
+    taken.flatMap((row) =>
+      row.id !== exposure?.id &&
+      row.targetType &&
+      row.targetId != null &&
+      (!withJobField || (row.jobField ?? '') === jobField)
+        ? [targetKey({ targetType: row.targetType, targetId: row.targetId })]
+        : [],
+    ),
+  );
 
   const errors = submitted
     ? {
         target: target ? undefined : '띄울 공고를 골라 주세요.',
+        jobField: withJobField && !jobField ? '직무를 골라 주세요.' : undefined,
         endAt:
           Boolean(startAt) !== Boolean(endAt)
             ? '노출 시작과 끝을 함께 넣거나 둘 다 비워 주세요. 둘 다 비우면 상시예요.'
@@ -130,7 +156,14 @@ export function AdPostingFormModal({
 
   const save = () => {
     setSubmitted(true);
-    if (!target || Boolean(startAt) !== Boolean(endAt) || (startAt && startAt >= endAt)) return;
+    if (
+      !target ||
+      (withJobField && !jobField) ||
+      (withRecommendation && !isRecommendationValid(recommendation)) ||
+      Boolean(startAt) !== Boolean(endAt) ||
+      (startAt && startAt >= endAt)
+    )
+      return;
     const body = {
       contractId,
       name: null,
@@ -139,6 +172,12 @@ export function AdPostingFormModal({
       linkUrl: null,
       targetType: target.targetType,
       targetId: target.targetId,
+      // 리스트 상단 고정 노출의 직무(계약 8절). 값은 JobField 목록에서만 고른다.
+      jobField: withJobField
+        ? (jobField as CreateAdminAdvertisementExposureRequestJobField)
+        : undefined,
+      recommendationTitle: withRecommendation ? recommendation.title.trim() : null,
+      recommendationDescription: withRecommendation ? recommendation.description.trim() : null,
       adLabel,
       startAt: toServerValue(startAt),
       endAt: toServerValue(endAt),
@@ -223,6 +262,23 @@ export function AdPostingFormModal({
         </Field>
       ) : null}
 
+      {withJobField ? (
+        <Field
+          label="직무"
+          htmlFor="ad-posting-job-field"
+          required
+          error={errors.jobField}
+          hint="웹 채용공고 목록의 이 직무 탭 1페이지 맨 위에 나가요. 직무당 한 칸이에요."
+        >
+          <Select
+            id="ad-posting-job-field"
+            options={[{ value: '', label: '직무 고르기' }, ...AD_POSTING_JOB_FIELD_OPTIONS]}
+            value={jobField}
+            onChange={(event) => setJobField(event.target.value)}
+          />
+        </Field>
+      ) : null}
+
       <Field label="띄울 공고" required error={errors.target}>
         {target ? (
           <div className="flex items-center justify-between gap-2 rounded-md border border-gray-200 px-3 py-2">
@@ -247,6 +303,20 @@ export function AdPostingFormModal({
           />
         )}
       </Field>
+
+      {withRecommendation ? (
+        <Field
+          label="추천 문구"
+          required
+          hint="웹 오공고 PICK 카드 아래 상자에 운영자 PICK 과 같은 모양으로 나가요."
+        >
+          <RecommendationFields
+            idPrefix="ad-posting"
+            value={recommendation}
+            onChange={setRecommendation}
+          />
+        </Field>
+      ) : null}
 
       <ContractField
         id="ad-posting-contract"

@@ -28,6 +28,7 @@ export interface MyContractFixture extends MyAdvertisementContractDetailResponse
 }
 
 const COMPANY = {
+  source: 'APPLICATION_FORM',
   companyName: '오공고 테스트 기업',
   managerName: '김담당',
   email: 'company@example.com',
@@ -194,6 +195,7 @@ export function myContractSeed(): MyContractFixture[] {
 /** 목록 한 줄. 상세에서 신청서 칸과 계약 상품을 뺀 것이다. */
 export function toMyContractSummary({
   id,
+  source,
   status,
   promotionTarget,
   companyName,
@@ -205,6 +207,7 @@ export function toMyContractSummary({
 }: MyContractFixture): MyAdvertisementContractSummaryResponse {
   return {
     id,
+    source,
     status,
     promotionTarget,
     companyName,

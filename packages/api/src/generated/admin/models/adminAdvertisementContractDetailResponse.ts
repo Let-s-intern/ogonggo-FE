@@ -14,6 +14,7 @@ import type { AdminAdvertisementContractDetailResponseSource } from './adminAdve
 import type { AdminAdvertisementContractDetailResponseStatus } from './adminAdvertisementContractDetailResponseStatus';
 import type { AdminAdvertisementContractFormAnswerResponse } from './adminAdvertisementContractFormAnswerResponse';
 import type { AdminAdvertisementContractProductResponse } from './adminAdvertisementContractProductResponse';
+import type { AdminAdvertisementContractTargetResponse } from './adminAdvertisementContractTargetResponse';
 
 export interface AdminAdvertisementContractDetailResponse {
   id: number;
@@ -100,4 +101,6 @@ export interface AdminAdvertisementContractDetailResponse {
   registeredAt: string;
   updatedAt: string;
   products: AdminAdvertisementContractProductResponse[];
+  /** 리포트가 전체 숫자를 셀 대상 공고·부트캠프. 비즈니스 공고 계약의 공고가 맨 앞이고 뺄 수 없다. 없으면 빈 배열 */
+  targets: AdminAdvertisementContractTargetResponse[];
 }

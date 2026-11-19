@@ -118,7 +118,7 @@ export function MyAdContracts({ page }: { page: number }) {
                   <p className="mt-0.5 text-xs text-gray-400">
                     {[
                       `신청 ${formatDateDots(item.registeredAt)}`,
-                      `모집 마감 ${formatDateDots(item.recruitmentDeadline)}`,
+                      `모집 마감 ${item.recruitmentDeadline ? formatDateDots(item.recruitmentDeadline) : '-'}`,
                       `협의 금액 ${formatPaymentAmount(item.paymentAmount)}`,
                     ].join(' · ')}
                   </p>

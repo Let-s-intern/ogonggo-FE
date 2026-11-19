@@ -18,9 +18,13 @@ import {
   useToggleExposure,
 } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import {
+  AD_POSTING_JOB_FIELD_OPTIONS,
   AD_POSTING_POSITIONS,
   AD_POSTING_POSITION_DESCRIPTIONS,
   isAdPostingPosition,
+  jobFieldLabel,
+  needsJobField,
+  needsRecommendation,
   type AdPostingExposure,
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
@@ -33,7 +37,6 @@ import { positionLabel } from '@/entities/advertisement-product/lib/product';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { AdPostingFormModal } from '@/widgets/ad-posting-form';
-import { targetKey } from '@/widgets/content-target-picker';
 import { PageHeader } from '@/widgets/page-header';
 
 const POSITION_TABS = AD_POSTING_POSITIONS.map((value) => ({
@@ -71,17 +74,14 @@ export function AdPostingSettingsPage() {
   const { data, isPending, isError } = useAdvertisementExposures(product?.id ?? null);
   const move = useMoveExposure();
   const deleteMutation = useDeleteExposure();
-  const rows: AdPostingExposure[] = data ?? [];
-  const takenKeys = new Set(
-    rows.flatMap((row) =>
-      row.targetType && row.targetId != null
-        ? [targetKey({ targetType: row.targetType, targetId: row.targetId })]
-        : [],
-    ),
-  );
+  const allRows: AdPostingExposure[] = data ?? [];
+  // 리스트 상단 고정은 직무로 거를 수 있다(`?jobField=`). 순서는 거른 뒤에도 자리 전체의 순서다.
+  const withJobField = needsJobField(position);
+  const jobFieldFilter = withJobField ? (searchParams.get('jobField') ?? '') : '';
+  const rows = jobFieldFilter ? allRows.filter((row) => row.jobField === jobFieldFilter) : allRows;
 
   // 목록을 받기 전이거나 없는 id 면 모달을 열지 않는다.
-  const editingRow = rows.find((row) => String(row.id) === editParam);
+  const editingRow = allRows.find((row) => String(row.id) === editParam);
   const editing =
     editParam === 'new' ? { exposure: null } : editingRow ? { exposure: editingRow } : null;
 
@@ -111,8 +111,18 @@ export function AdPostingSettingsPage() {
       key: 'order',
       header: '순서',
       width: 'w-16 whitespace-nowrap',
-      render: (row) => rows.indexOf(row) + 1,
+      render: (row) => allRows.indexOf(row) + 1,
     },
+    ...(withJobField
+      ? [
+          {
+            key: 'jobField',
+            header: '직무',
+            width: 'w-32 whitespace-nowrap',
+            render: (row: AdPostingExposure) => jobFieldLabel(row.jobField),
+          },
+        ]
+      : []),
     {
       key: 'target',
       header: '대상',
@@ -130,6 +140,28 @@ export function AdPostingSettingsPage() {
         </span>
       ),
     },
+    ...(needsRecommendation(position)
+      ? [
+          {
+            key: 'recommendation',
+            header: '추천 문구',
+            width: 'w-72',
+            render: (row: AdPostingExposure) =>
+              row.recommendationTitle ? (
+                <span className="flex flex-col gap-0.5">
+                  <span className="truncate text-sm font-medium text-gray-900">
+                    {row.recommendationTitle}
+                  </span>
+                  <span className="line-clamp-2 text-xs whitespace-pre-line text-gray-500">
+                    {row.recommendationDescription}
+                  </span>
+                </span>
+              ) : (
+                <span className="text-sm text-error">없음</span>
+              ),
+          },
+        ]
+      : []),
     {
       key: 'contract',
       header: '연결 계약',
@@ -169,7 +201,7 @@ export function AdPostingSettingsPage() {
       header: '관리',
       width: 'w-52',
       render: (row) => {
-        const index = rows.indexOf(row);
+        const index = allRows.indexOf(row);
         return (
           // 행 전체가 수정 모달을 여는 자리라 버튼 클릭은 여기서 멈춘다.
           <span
@@ -189,7 +221,7 @@ export function AdPostingSettingsPage() {
               size="sm"
               variant="secondary"
               aria-label={`${targetLabel(row)} 아래로`}
-              disabled={move.isPending || index === rows.length - 1}
+              disabled={move.isPending || index === allRows.length - 1}
               onClick={() => move.mutate({ exposureId: row.id, direction: 'DOWN' })}
             >
               아래로
@@ -247,6 +279,24 @@ export function AdPostingSettingsPage() {
         </Callout>
       ) : (
         <>
+          {withJobField ? (
+            <div className="flex items-center gap-2 pb-4">
+              <Select
+                aria-label="직무"
+                options={[{ value: '', label: '직무 전체' }, ...AD_POSTING_JOB_FIELD_OPTIONS]}
+                value={jobFieldFilter}
+                onChange={(event) => {
+                  const next = new URLSearchParams(searchParams);
+                  if (event.target.value) next.set('jobField', event.target.value);
+                  else next.delete('jobField');
+                  setSearchParams(next, { replace: true });
+                }}
+              />
+              <span className="text-xs text-gray-500">
+                같은 직무 안에서는 순서가 앞선 한 건만 웹에 나가요.
+              </span>
+            </div>
+          ) : null}
           {productsHere.length > 1 ? (
             <div className="flex items-center gap-2 pb-4">
               <Select
@@ -291,7 +341,7 @@ export function AdPostingSettingsPage() {
           product={product}
           position={position}
           exposure={editing.exposure}
-          takenKeys={takenKeys}
+          taken={allRows}
           onClose={closeEdit}
         />
       ) : null}

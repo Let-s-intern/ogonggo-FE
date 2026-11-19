@@ -10,12 +10,22 @@ import type { MyAdvertisementContractDetailResponseCreativeMethod } from './myAd
 import type { MyAdvertisementContractDetailResponseInvoiceMethod } from './myAdvertisementContractDetailResponseInvoiceMethod';
 import type { MyAdvertisementContractDetailResponsePromotionTarget } from './myAdvertisementContractDetailResponsePromotionTarget';
 import type { MyAdvertisementContractDetailResponsePurpose } from './myAdvertisementContractDetailResponsePurpose';
+import type { MyAdvertisementContractDetailResponseSource } from './myAdvertisementContractDetailResponseSource';
 import type { MyAdvertisementContractDetailResponseStatus } from './myAdvertisementContractDetailResponseStatus';
 import type { MyAdvertisementContractFormAnswerResponse } from './myAdvertisementContractFormAnswerResponse';
 import type { MyAdvertisementContractProductResponse } from './myAdvertisementContractProductResponse';
 
 export interface MyAdvertisementContractDetailResponse {
   id: number;
+  /**
+     * 계약이 생긴 경로. 광고 신청 폼(APPLICATION_FORM) 또는 비즈니스 공고 등록(COMPANY_POSTING)
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `APPLICATION_FORM` | 1 | 광고 신청 |
+     * | `COMPANY_POSTING` | 2 | 비즈니스 공고 등록 |
+     */
+  source: MyAdvertisementContractDetailResponseSource;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -33,17 +43,29 @@ export interface MyAdvertisementContractDetailResponse {
      */
   promotionTarget: MyAdvertisementContractDetailResponsePromotionTarget;
   companyName: string;
+  /** 공고명. 비즈니스 공고 계약은 공고를 등록할 때의 제목 */
   recruitmentTitle: string;
-  recruitmentUrl: string;
-  recruitmentDeadline: string;
   /**
+     * 공고·지원 링크. 비즈니스 공고 계약은 null
+     * @nullable
+     */
+  recruitmentUrl?: string | null;
+  /**
+     * 모집 마감일. 비즈니스 상시 공고는 null
+     * @nullable
+     */
+  recruitmentDeadline?: string | null;
+  /**
+     * 광고 목적. 비즈니스 공고 계약은 null
+     *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `FAST_APPLICANTS` | 1 | 지원자 빠르게 확보 |
      * | `FIT_APPLICANTS` | 2 | 적합한 지원자 확보 |
      * | `BRAND_AWARENESS` | 3 | 브랜드 인지도 확대 |
+     * @nullable
      */
-  purpose: MyAdvertisementContractDetailResponsePurpose;
+  purpose?: MyAdvertisementContractDetailResponsePurpose;
   /**
      * 예정 예산(원). 적지 않았으면 null
      * @nullable
@@ -61,9 +83,21 @@ export interface MyAdvertisementContractDetailResponse {
      * @nullable
      */
   advertisementRequest?: string | null;
-  managerName: string;
-  email: string;
-  phoneNumber: string;
+  /**
+     * 담당자 이름. 비즈니스 공고 계약은 null(회원의 기업 정보를 본다)
+     * @nullable
+     */
+  managerName?: string | null;
+  /**
+     * 담당자 이메일. 비즈니스 공고 계약은 null
+     * @nullable
+     */
+  email?: string | null;
+  /**
+     * 담당자 연락처. 비즈니스 공고 계약은 null
+     * @nullable
+     */
+  phoneNumber?: string | null;
   /**
      * 사업자 번호 종류. 보내지 않았으면 null
      *
@@ -81,19 +115,25 @@ export interface MyAdvertisementContractDetailResponse {
      */
   businessNumber?: string | null;
   /**
+     * 계산서 발행 방식. 비즈니스 공고 계약은 null
+     *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `TAX_INVOICE` | 1 | 세금계산서 발행 |
      * | `NEGOTIATE` | 2 | 담당자와 협의 |
+     * @nullable
      */
-  invoiceMethod: MyAdvertisementContractDetailResponseInvoiceMethod;
+  invoiceMethod?: MyAdvertisementContractDetailResponseInvoiceMethod;
   /**
+     * 소재 준비 방식. 비즈니스 공고 계약은 null
+     *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
      * | `REQUEST_PRODUCTION` | 1 | 공고 정보로 제작 요청 |
      * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
+     * @nullable
      */
-  creativeMethod: MyAdvertisementContractDetailResponseCreativeMethod;
+  creativeMethod?: MyAdvertisementContractDetailResponseCreativeMethod;
   /**
      * 칸이 따로 없는 폼 문항의 답. 보낸 순서대로. 답 없이 낸 신청과 이 값이 생기기 전 신청은 null
      * @nullable

@@ -5,6 +5,7 @@ import type { UserJobCalendarItemResponse } from '@ogonggo/api';
 import { useMediaQuery } from '@/shared/lib/useMediaQuery';
 import { useScrollLock } from '@/shared/lib/useScrollLock';
 import { filterBookmarkedOnly } from '../lib/bookmarked-only';
+import { dayAdsOn, type DayAd } from '../lib/day-ads';
 import { parseCalendarDate, toCalendarParam, type JobCalendarDateBasis } from '../lib/query';
 import { useBookmarkedIds } from './BookmarkedOnlyFilterPill';
 import { DayJobPanel } from './DayJobPanel';
@@ -32,6 +33,8 @@ export interface MonthCalendarProps {
   bookmarkedOnly: boolean;
   /** `마감일 기준` 토글 값. 격자·오른쪽 목록이 묶는 날짜 필드를 정한다. */
   dateBasis: JobCalendarDateBasis;
+  /** 날짜별 목록 맨 앞의 광고 공고(`CALENDAR_DAY`). 고른 날이 노출 기간 안인 것만 그 날 목록에 붙는다. */
+  dayAds?: DayAd[];
 }
 
 /**
@@ -49,6 +52,7 @@ export function MonthCalendar({
   header,
   bookmarkedOnly,
   dateBasis,
+  dayAds = [],
 }: MonthCalendarProps) {
   const [selectedDay, setSelectedDay] = useState(() => defaultDay(initialDate));
   const [renderedMonth, setRenderedMonth] = useState(initialDate);
@@ -89,6 +93,7 @@ export function MonthCalendar({
     const day = dateBasis === 'start' ? item.recruitmentStartAt : item.recruitmentEndAt;
     return day.slice(0, 10) === selectedDay;
   });
+  const selectedDayAds = dayAdsOn(dayAds, selectedDay);
 
   return (
     // 목업의 격자는 791px, 목록은 290px, 사이는 40px 이다.
@@ -109,6 +114,7 @@ export function MonthCalendar({
           items={dayItems}
           dateBasis={dateBasis}
           highlightId={pickedJobId}
+          ads={selectedDayAds}
         />
       </div>
       {panelVisible ? (
@@ -135,6 +141,7 @@ export function MonthCalendar({
               items={dayItems}
               dateBasis={dateBasis}
               highlightId={pickedJobId}
+              ads={selectedDayAds}
             />
           </div>
         </div>

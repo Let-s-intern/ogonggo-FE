@@ -3,10 +3,15 @@ import { Button, Callout, Input, Select, cn } from '@ogonggo/ui';
 import type { AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/admin';
 import {
   AD_POSTING_FIXED_TARGET,
+  AD_POSTING_JOB_FIELD_OPTIONS,
   isAdPostingPosition,
+  needsJobField,
+  needsRecommendation,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { positionLabel, productLabel } from '@/entities/advertisement-product/lib/product';
+import { isRecommendationValid } from '@/features/today-job/lib/validate';
+import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { isReportEnabled } from '@/shared/config/reports';
 import { ContentTargetPicker, type ContentTarget } from '@/widgets/content-target-picker';
 import {
@@ -50,6 +55,8 @@ export function ProductAddForm({
   const [target, setTarget] = useState<ContentTarget | null>(null);
   const [expose, setExpose] = useState(true);
   const [order, setOrder] = useState<'first' | 'last'>('first');
+  const [jobField, setJobField] = useState('');
+  const [recommendation, setRecommendation] = useState({ title: '', description: '' });
   // 광고할 공고 연결(LC-3647)이 배포되기 전에는 이 단계를 부르지 않는다.
   const [registerTarget, setRegisterTarget] = useState(isReportEnabled);
 
@@ -58,10 +65,20 @@ export function ProductAddForm({
   const posting = isAdPostingPosition(position) ? position : null;
   const periodInvalid = Boolean(startDate && endDate && startDate > endDate);
   const needsTarget = posting !== null && (expose || registerTarget);
+  // 리스트 상단 고정 자리에 바로 노출하면 직무가 있어야 한다(계약 8절).
+  const jobFieldMissing = posting !== null && needsJobField(posting) && expose && !jobField;
+  // 오공고 PICK 자리에 바로 노출하면 추천 문구가 있어야 한다(계약 9절).
+  const recommendationMissing =
+    posting !== null &&
+    needsRecommendation(posting) &&
+    expose &&
+    !isRecommendationValid(recommendation);
   const canSave =
     Boolean(productId && startDate && endDate) &&
     !periodInvalid &&
     (!needsTarget || target !== null) &&
+    !jobFieldMissing &&
+    !recommendationMissing &&
     !attach.running &&
     attach.steps === null;
 
@@ -72,6 +89,8 @@ export function ProductAddForm({
     setTarget(null);
     setExpose(true);
     setOrder('first');
+    setJobField('');
+    setRecommendation({ title: '', description: '' });
     setRegisterTarget(isReportEnabled);
     attach.reset();
   };
@@ -86,6 +105,8 @@ export function ProductAddForm({
           ? {
               targetType: target.targetType,
               targetId: target.targetId,
+              jobField: needsJobField(posting) ? jobField : null,
+              recommendation: needsRecommendation(posting) ? recommendation : null,
               expose,
               order,
               registerTarget,
@@ -174,7 +195,31 @@ export function ProductAddForm({
                   onChange={(event) => setOrder(event.target.value as 'first' | 'last')}
                 />
               ) : null}
+              {expose && needsJobField(posting) ? (
+                <Select
+                  aria-label="직무"
+                  className="h-8 text-xs"
+                  options={[
+                    { value: '', label: '직무 고르기(필수)' },
+                    ...AD_POSTING_JOB_FIELD_OPTIONS,
+                  ]}
+                  value={jobField}
+                  onChange={(event) => setJobField(event.target.value)}
+                />
+              ) : null}
             </div>
+            {expose && needsRecommendation(posting) ? (
+              <div className="rounded-md border border-gray-200 bg-white p-3">
+                <p className="pb-2 text-xs text-gray-500">
+                  오공고 PICK 카드 아래 상자에 나갈 추천 문구예요(필수).
+                </p>
+                <RecommendationFields
+                  idPrefix="product-add"
+                  value={recommendation}
+                  onChange={setRecommendation}
+                />
+              </div>
+            ) : null}
             {isReportEnabled ? (
               <>
                 <label className="flex items-center gap-2">

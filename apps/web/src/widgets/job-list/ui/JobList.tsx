@@ -3,11 +3,11 @@ import type { PageInfo, SuccessResponsePageResponseUserJobSummaryResponse } from
 import { JobCard } from '@/entities/job/ui/JobCard';
 import type { JobSummary } from '@/entities/job/model/types';
 import type { AdSlot } from '@/shared/ads/adPosting';
-import { fetchAdPostings, MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
+import { fetchAdPostings, toAdSlot } from '@/shared/ads/fetchAdPostings';
 import { RememberListHref } from '@/shared/ui/ListReturnLink';
 import { NumberedPagination } from '@/shared/ui/NumberedPagination';
 import { SortToggle, type SortOption } from '@/shared/ui/SortToggle';
-import { matchesJobQuery } from '../lib/adPostings';
+import { adJobFields } from '../lib/adPostings';
 import { buildJobListHref, buildJobsApiUrl, type JobListQuery } from '../lib/query';
 import { JobFilterSidebar } from './JobFilterSidebar';
 import { JobListPendingArea, JobListPendingProvider } from './JobListPending';
@@ -41,27 +41,28 @@ async function fetchJobPage(
 }
 
 /**
- * 첫 쪽 맨 앞에 넣을 광고 공고 칸(`JOB_LIST`, PRD 6.8·D13). 검색·필터에 맞는 것만, 자리당 최대 3칸이다. 2쪽부터는
- * 넣지 않는다.
+ * 첫 쪽 맨 위에 고정하는 광고 공고 칸(`JOB_LIST`, 리스트 상단 고정 공고, 계약 8절). 켜진 직무 탭마다 그 직무의 광고
+ * 한 칸이다(`adJobFields`). 직렬·채용 형태·지역·검색어 같은 다른 조건과 상관없이 붙는다 — 탭 자리를 판 상품이다.
+ * `전체` 탭과 2쪽부터는 없다. 서버가 한 직무에 여럿을 주면 서버 순서의 첫 건만 쓴다.
  */
 async function fetchListAds(query: JobListQuery): Promise<{ job: JobSummary; ad: AdSlot }[]> {
   if (query.page !== 1) {
     return [];
   }
-  const postings = await fetchAdPostings('JOB_LIST');
-  return postings
-    .flatMap((posting) => (posting.job && matchesJobQuery(posting.job, query) ? [posting] : []))
-    .slice(0, MAX_AD_POSTINGS)
-    .map((posting, index) => ({
-      job: posting.job as JobSummary,
-      ad: toAdSlot(posting, index + 1),
-    }));
+  const fields = adJobFields(query);
+  const perField = await Promise.all(fields.map((field) => fetchAdPostings('JOB_LIST', field)));
+  return perField
+    .flatMap((postings) => {
+      const first = postings.find((posting) => posting.job);
+      return first?.job ? [{ ...first, job: first.job }] : [];
+    })
+    .map((posting, index) => ({ job: posting.job, ad: toAdSlot(posting, index + 1) }));
 }
 
 /**
  * 채용공고 목록을 카드로 렌더링한다. 빈 목록이면 빈 상태 문구를 보여준다.
  *
- * 첫 쪽은 광고 공고 칸이 맨 앞이다. 같은 공고가 이 쪽의 일반 목록에도 있으면 일반 쪽에서 빼 두 번 보이지 않게 한다.
+ * 직무 탭의 첫 쪽은 광고 공고 칸이 맨 앞이다. 같은 공고가 이 쪽의 일반 목록에도 있으면 일반 쪽에서 빼 두 번 보이지 않게 한다.
  * 광고가 없거나 받지 못하면 일반 목록 그대로다.
  */
 export async function JobList(query: JobListProps) {
