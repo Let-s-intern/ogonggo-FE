@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import {
   Badge,
   Button,
@@ -49,7 +49,7 @@ import {
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
-import { ProductReportPanel, reportCellLabel } from './ProductReportPanel';
+import { ProductReportModal, reportCellLabel, unavailableMessage } from './ProductReportModal';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
 import { AdTargetsField } from './AdTargetsField';
 import { ProductAddForm } from './ProductAddForm';
@@ -76,14 +76,25 @@ export function AdContractDetailPage() {
   const contractId = Number(useParams().contractId);
   const { data: contract, isPending, isError } = useContract(contractId);
   // 펼친 상품 리포트. 주소에 남겨 새로고침·공유해도 같은 리포트가 열린다.
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const productParam = Number(searchParams.get('product'));
   const selectedProductId =
     Number.isInteger(productParam) && productParam > 0 ? productParam : null;
-  const selectProduct = (id: number | null) => {
+  const openReport = (id: number) => {
     const next = new URLSearchParams(searchParams);
-    if (id === null) next.delete('product');
-    else next.set('product', String(id));
+    next.set('product', String(id));
+    // 이 화면에서 열었다는 표시. 닫을 때 기록을 하나 되돌려, 뒤로 가기가 닫힌 같은 화면을 한 번 더 밟지 않게 한다.
+    setSearchParams(next, { state: { reportOpenedHere: true } });
+  };
+  const closeReport = () => {
+    if ((location.state as { reportOpenedHere?: boolean } | null)?.reportOpenedHere) {
+      navigate(-1);
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('product');
     setSearchParams(next, { replace: true });
   };
 
@@ -126,10 +137,17 @@ export function AdContractDetailPage() {
           </div>
         </div>
         <ContractReportSummaryCard contractId={contract.id} />
-        <ProductsCard contract={contract} selectedId={selectedProductId} onSelect={selectProduct} />
+        <ProductsCard contract={contract} onOpenReport={openReport} />
         <ExposuresCard contract={contract} />
         <RequestMemoCard contract={contract} />
       </div>
+      {selectedProductId !== null ? (
+        <ProductReportModal
+          contract={contract}
+          contractProductId={selectedProductId}
+          onClose={closeReport}
+        />
+      ) : null}
     </>
   );
 }
@@ -490,17 +508,26 @@ function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContrac
  */
 function ProductsCard({
   contract,
-  selectedId,
-  onSelect,
+  onOpenReport,
 }: {
   contract: AdminAdvertisementContractDetailResponse;
-  /** 리포트를 펼친 계약 상품(`?product=`). */
-  selectedId: number | null;
-  onSelect: (contractProductId: number | null) => void;
+  /** 리포트 모달(`?product=`)을 연다. */
+  onOpenReport: (contractProductId: number) => void;
 }) {
   const products = useAdvertisementProducts();
   const reportProducts = reportProductsOf(contract);
-  const toggle = (id: number) => onSelect(selectedId === id ? null : id);
+  // 리포트가 없는 상품을 누르면 모달 대신 표 아래 한 줄로 이유를 보인다.
+  const [noticeId, setNoticeId] = useState<number | null>(null);
+  const notice = reportProducts.find((item) => item.contractProductId === noticeId);
+  const openRow = (id: number) => {
+    const item = reportProducts.find((candidate) => candidate.contractProductId === id);
+    if (item?.reportAvailable) {
+      setNoticeId(null);
+      onOpenReport(id);
+    } else {
+      setNoticeId(id);
+    }
+  };
   const remove = useRemoveContractProduct(contract.id);
   const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
 
@@ -515,12 +542,7 @@ function ProductsCard({
       key: 'name',
       header: '상품',
       render: (row) => (
-        <span
-          className={cn(
-            'flex items-center gap-2',
-            row.contractProductId === selectedId && 'font-semibold text-blue-600',
-          )}
-        >
+        <span className="flex items-center gap-2">
           {row.productName}
           {row.productDeleted ? <Badge tone="neutral">삭제된 상품</Badge> : null}
         </span>
@@ -557,15 +579,14 @@ function ProductsCard({
           (candidate) => candidate.contractProductId === row.contractProductId,
         );
         if (!item) return null;
-        const open = row.contractProductId === selectedId;
         return (
           <span
             className={cn(
               'text-sm whitespace-nowrap',
-              open || item.reportAvailable ? 'text-blue-600' : 'text-gray-400',
+              item.reportAvailable ? 'text-blue-600' : 'text-gray-400',
             )}
           >
-            {reportCellLabel(item, open)}
+            {reportCellLabel(item)}
           </span>
         );
       },
@@ -596,7 +617,7 @@ function ProductsCard({
               onClick={() =>
                 remove.mutate(row.contractProductId, {
                   onSuccess: () => {
-                    if (selectedId === row.contractProductId) onSelect(null);
+                    if (noticeId === row.contractProductId) setNoticeId(null);
                   },
                 })
               }
@@ -623,19 +644,15 @@ function ProductsCard({
           columns={columns}
           rows={contract.products}
           rowKey={(row) => row.contractProductId}
-          onRowClick={(row) => toggle(row.contractProductId)}
+          onRowClick={(row) => openRow(row.contractProductId)}
           emptyMessage="넣은 상품이 없습니다. 판매한 상품을 넣으세요."
         />
-        {selectedId !== null ? (
-          <ProductReportPanel
-            contract={contract}
-            contractProductId={selectedId}
-            onClose={() => onSelect(null)}
-          />
-        ) : contract.products.length > 0 ? (
-          <p className="text-xs text-gray-500">
-            상품을 누르면 그 상품의 성과 리포트가 여기 펼쳐져요.
+        {notice ? (
+          <p className="text-sm text-gray-600">
+            {notice.productName}: {unavailableMessage(notice)}
           </p>
+        ) : contract.products.length > 0 ? (
+          <p className="text-xs text-gray-500">상품을 누르면 그 상품의 성과 리포트가 열려요.</p>
         ) : null}
       </div>
       {bannerProduct ? (

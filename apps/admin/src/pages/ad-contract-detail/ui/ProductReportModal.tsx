@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, Callout, DataTable, Input, type DataTableColumn } from '@ogonggo/ui';
+import { Button, Callout, DataTable, Input, Modal, type DataTableColumn } from '@ogonggo/ui';
 import { enumLabel, type AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/admin';
 import {
   downloadReportCsv,
@@ -54,20 +54,25 @@ function productPeriodLabel(product: ReportableContractProduct): string {
 }
 
 /** 상품 표의 `리포트` 칸 문구. 열 수 없는 상품은 이유를 짧게. */
-export function reportCellLabel(product: ReportableContractProduct, open: boolean): string {
-  if (open) return '닫기';
+export function reportCellLabel(product: ReportableContractProduct): string {
   if (product.reportAvailable) return '리포트 보기';
   return product.reportUnavailableReason === 'NOT_EXPOSABLE' ? '집계 대상 아님' : '기간 미정';
 }
 
+/** 리포트를 열 수 없는 상품의 이유. 상품 표의 행 안내와 모달이 같이 쓴다. */
+export function unavailableMessage(product: ReportableContractProduct): string {
+  return UNAVAILABLE_MESSAGES[product.reportUnavailableReason ?? 'NO_PERIOD'] ?? '';
+}
+
 /**
- * 계약 상품 하나의 성과 리포트(PRD 6.6·6.7). 계약 상세의 상품 표에서 상품을 누르면 그 아래에 펼쳐진다(`?product=`). 비즈니스
- * 앱과 같은 구성 — 기간 좁히기 → 상품 몫 요약 → 날짜별 추이 → 광고물별 → 광고할 공고 전체 숫자 → 지표 정의.
+ * 계약 상품 하나의 성과 리포트 모달(PRD 6.6·6.7, 2026-11-19 사용자: 어드민 상세·설정은 쿼리 파라미터가 있는 넓은 모달). 계약
+ * 상세의 상품 표에서 상품을 누르면 `?product=` 로 열린다. 비즈니스 앱과 같은 구성 — 기간 좁히기 → 상품 몫 요약 → 날짜별 추이 →
+ * 광고물별 → 광고할 공고 전체 숫자 → 지표 정의.
  *
- * 리포트가 없는 상품(기간 미정, 채널 상품)은 이유만 안내한다. PDF 는 통계 화면과 같은 방식(화면을 그림으로 떠서 A4 로 나눔),
+ * 주소로 리포트 없는 상품을 바로 열면 이유만 안내한다. PDF 는 통계 화면과 같은 방식(모달 본문을 그림으로 떠서 A4 로 나눔),
  * CSV 는 서버의 `report.csv` 를 그대로 받는다.
  */
-export function ProductReportPanel({
+export function ProductReportModal({
   contract,
   contractProductId,
   onClose,
@@ -79,31 +84,22 @@ export function ProductReportPanel({
   const product = reportProductsOf(contract).find(
     (item) => item.contractProductId === contractProductId,
   );
-  if (!product) {
-    return <Callout tone="info">이 계약에 없는 상품입니다. 이미 뺐을 수 있어요.</Callout>;
-  }
   return (
-    <section
-      aria-label={`${product.productName} 리포트`}
-      className="flex flex-col gap-4 rounded-lg border border-blue-100 bg-blue-50/30 p-4"
+    <Modal
+      open
+      title={product ? `${product.productName} 리포트` : '상품 리포트'}
+      description={product ? productPeriodLabel(product) : undefined}
+      onClose={onClose}
+      className="w-[min(72rem,calc(100vw-var(--assistant-width)-2rem))]"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-base font-semibold text-gray-900">{product.productName} 리포트</h3>
-          <p className="pt-0.5 text-xs text-gray-500">{productPeriodLabel(product)}</p>
-        </div>
-        <Button size="sm" variant="secondary" onClick={onClose}>
-          리포트 닫기
-        </Button>
-      </div>
-      {product.reportAvailable ? (
+      {!product ? (
+        <Callout tone="info">이 계약에 없는 상품입니다. 이미 뺐을 수 있어요.</Callout>
+      ) : product.reportAvailable ? (
         <ProductReport key={product.contractProductId} contract={contract} product={product} />
       ) : (
-        <Callout tone="info">
-          {UNAVAILABLE_MESSAGES[product.reportUnavailableReason ?? 'NO_PERIOD']}
-        </Callout>
+        <Callout tone="info">{unavailableMessage(product)}</Callout>
       )}
-    </section>
+    </Modal>
   );
 }
 
