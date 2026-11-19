@@ -232,8 +232,24 @@ export interface ReportSummary extends ReportDetailMetrics {
   memberUniqueVisitors: number;
   ctaUniqueMembers: number;
   ctaClickRate: number | null;
-  scrollReach: { p25: number; p50: number; p75: number; p100: number } | null;
+  /** 스크롤 깊이 깔때기. 0% 단계가 순 방문자 전체다. `rate` 는 순 방문자 대비, 분모가 0 이면 null. */
+  scrollFunnel: ScrollFunnelStep[];
 }
+
+export interface ScrollFunnelStep {
+  threshold: 0 | 25 | 50 | 75 | 100;
+  visitors: number;
+  rate: number | null;
+}
+
+/** 목의 단계별 도달 비율. 방문자별로 가장 깊이 내린 값으로 센다(BE). */
+const SCROLL_STEPS = [
+  [0, 1],
+  [25, 0.9],
+  [50, 0.7],
+  [75, 0.45],
+  [100, 0.2],
+] as const;
 
 export interface ReportDaily extends Omit<
   ReportDetailMetrics,
@@ -515,7 +531,10 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
     ctaUniqueVisitors,
     ctaUniqueMembers: Math.round(ctaUniqueVisitors * 0.6),
     ctaClickRate: rate(ctaUniqueVisitors, uniqueVisitors),
-    scrollReach: detail.views === 0 ? null : { p25: 0.9, p50: 0.7, p75: 0.45, p100: 0.2 },
+    scrollFunnel: SCROLL_STEPS.map(([threshold, share]) => {
+      const visitors = Math.round(uniqueVisitors * share);
+      return { threshold, visitors, rate: rate(visitors, uniqueVisitors) };
+    }),
   };
 
   const daily: ReportDaily[] = datesBetween(from, to).map((date) => {

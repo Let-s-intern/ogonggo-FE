@@ -30,6 +30,9 @@ import {
   formatRate,
   formatSeconds,
   isBeforeCollection,
+  scrollFunnelOption,
+  scrollStepLabel,
+  scrollStepValue,
 } from '../lib/reportFormat';
 
 type Daily = ContractProductReport['daily'][number];
@@ -375,9 +378,12 @@ function ReportBody({
           <Tile label="회원 조회" value={formatCount(summary.memberViews)} />
           <Tile label="CTA 클릭" value={formatCount(summary.ctaClicks)} />
           <Tile label="CTA 클릭률" value={formatRate(summary.ctaClickRate)} />
-          <Tile label="평균 스크롤" value={formatPercent(summary.avgScrollPercent)} />
           <Tile label="평균 체류" value={formatSeconds(summary.avgDurationSeconds)} />
         </div>
+      </Section>
+
+      <Section title="스크롤 깊이(순 방문자 기준)">
+        <ScrollFunnel report={report} />
       </Section>
 
       <Section title="날짜별 추이">
@@ -432,6 +438,38 @@ function ReportBody({
   );
 }
 
+/**
+ * 스크롤 깊이 깔때기(2026-11-19 사용자 요청, API 계약 3절 `scrollFunnel`). 단계마다 몇 명이 거기까지 내렸는지 보인다.
+ * 평균은 옆에 작게 둔다. 그래프 옆에 같은 숫자를 글로도 적어 PDF·복사에서 읽힌다.
+ */
+function ScrollFunnel({ report }: { report: ContractProductReport }) {
+  const steps = report.summary.scrollFunnel;
+  const option = useMemo(() => scrollFunnelOption(steps), [steps]);
+  if (steps.length === 0 || steps[0]?.visitors === 0) {
+    return <p className="text-sm text-gray-500">기간 안에 상세를 연 방문자가 없습니다.</p>;
+  }
+  return (
+    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem]">
+      <EChart option={option} height={240} />
+      <div className="flex flex-col gap-2 text-sm">
+        <ol className="flex flex-col gap-1.5">
+          {steps.map((step) => (
+            <li key={step.threshold} className="flex justify-between gap-3">
+              <span className="text-gray-600">{scrollStepLabel(step)}</span>
+              <span className="font-medium text-gray-900 [font-variant-numeric:tabular-nums]">
+                {scrollStepValue(step)}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="border-t border-gray-100 pt-2 text-xs text-gray-500">
+          평균 스크롤 {formatPercent(report.summary.avgScrollPercent)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /** PRD 5장 지표 정의를 화면 말로 옮긴 것. */
 const DEFINITIONS: [string, string][] = [
   ['노출', '배너·광고 카드가 화면에 절반 이상 1초 넘게 보인 횟수'],
@@ -440,6 +478,10 @@ const DEFINITIONS: [string, string][] = [
   ['순 방문자', '기간 안 상세를 연 서로 다른 방문자(회원, 비회원은 익명 방문자 id)'],
   ['회원 조회', '로그인한 상태로 연 상세 조회'],
   ['CTA 클릭', '지원하러 가기·신청하러 가기를 누른 횟수. 클릭률은 CTA 순 방문자 ÷ 순 방문자'],
+  [
+    '스크롤 깊이',
+    '상세를 연 순 방문자 중 각 깊이(25·50·75·100%)까지 내린 사람 수. 방문자마다 가장 깊이 내린 값으로 센다',
+  ],
   ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균'],
   ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균'],
   [
