@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   replaceAdvertisementExposure,
+  updateAdvertisementContractProduct,
   type UpdateAdminAdvertisementExposureRequest,
   type UpdateAdminAdvertisementExposureRequestJobField,
 } from '@ogonggo/api/src/admin';
 import type { AdvertisementExposure } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
-import { adminWrite } from '@/shared/api/adminClient';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { unwrapData } from '@/shared/api/unwrapData';
 
@@ -72,11 +72,10 @@ export function useChangeProductEndDate(contractId: number) {
     setResult(null);
     try {
       try {
-        // 생성 함수는 BE #158 배포 뒤 codegen 에서 생긴다. 그때 `updateAdvertisementContractProduct` 로 바꾼다.
-        await adminWrite<{ id: number }>(
-          'PATCH',
-          `/api/v1/admin/advertisement-contracts/${contractId}/products/${change.contractProductId}`,
-          { endDate: change.newEndDate },
+        await unwrapData(
+          updateAdvertisementContractProduct(contractId, change.contractProductId, {
+            endDate: change.newEndDate,
+          }),
         );
       } catch (failure) {
         setError(advertisementErrorMessage(failure, '게시 종료일을 바꾸지 못했어요.'));
