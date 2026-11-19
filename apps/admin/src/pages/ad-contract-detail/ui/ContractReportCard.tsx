@@ -29,8 +29,10 @@ import {
   formatPercent,
   formatRate,
   formatSeconds,
+  isBannerReport,
   isBeforeCollection,
   scrollFunnelOption,
+  showsDetail,
   scrollStepLabel,
   scrollStepValue,
 } from '../lib/reportFormat';
@@ -254,7 +256,11 @@ function ReportBody({
   chartOption: ReturnType<typeof dailyChartOption> | null;
 }) {
   const { summary } = report;
-  const ownLabel = report.product.category === 'BANNER' ? '배너' : '광고 카드';
+  const banner = isBannerReport(report);
+  const detail = showsDetail(report);
+  const ownLabel = banner ? '배너' : '광고 카드';
+  // 배너는 상세 페이지가 아니라 스크롤·체류를 보이지 않는다(대상 공고 표 포함, API 계약 5절).
+  const scrolls = !banner;
   const notCollected = report.from < report.collectedSince;
   const dayBeforeCollection = addDays(report.collectedSince, -1);
   const lastUncollected = dayBeforeCollection < report.to ? dayBeforeCollection : report.to;
@@ -264,26 +270,28 @@ function ReportBody({
     ...(
       [
         ['impressions', '노출'],
-        ['adClicks', '소재 클릭'],
+        ['adClicks', '클릭'],
         ['views', '상세 조회'],
         ['uniqueVisitors', '순 방문자'],
         ['ctaClicks', 'CTA 클릭'],
       ] as const
-    ).map(([key, header]) => ({
-      key,
-      header,
-      align: 'right' as const,
-      render: (row: Daily) =>
-        isBeforeCollection(report, row.date) ? (
-          <span className="text-gray-400">집계 전</span>
-        ) : (
-          formatCount(row[key])
-        ),
-    })),
+    )
+      .filter(([key]) => detail || key === 'impressions' || key === 'adClicks')
+      .map(([key, header]) => ({
+        key,
+        header,
+        align: 'right' as const,
+        render: (row: Daily) =>
+          isBeforeCollection(report, row.date) ? (
+            <span className="text-gray-400">집계 전</span>
+          ) : (
+            formatCount(row[key])
+          ),
+      })),
   ];
 
   const exposureColumns: DataTableColumn<Exposure>[] = [
-    { key: 'name', header: '소재', render: (row) => row.name },
+    { key: 'name', header: '광고물', render: (row) => row.name },
     {
       key: 'impressions',
       header: '노출',
@@ -329,18 +337,22 @@ function ReportBody({
       align: 'right',
       render: (row) => formatCount(row.total.ctaClicks),
     },
-    {
-      key: 'scroll',
-      header: '평균 스크롤',
-      align: 'right',
-      render: (row) => formatPercent(row.total.avgScrollPercent),
-    },
-    {
-      key: 'duration',
-      header: '평균 체류',
-      align: 'right',
-      render: (row) => formatSeconds(row.total.avgDurationSeconds),
-    },
+    ...(scrolls
+      ? ([
+          {
+            key: 'scroll',
+            header: '평균 스크롤',
+            align: 'right',
+            render: (row) => formatPercent(row.total.avgScrollPercent),
+          },
+          {
+            key: 'duration',
+            header: '평균 체류',
+            align: 'right',
+            render: (row) => formatSeconds(row.total.avgDurationSeconds),
+          },
+        ] satisfies DataTableColumn<Target>[])
+      : []),
   ];
 
   const sources = report.targets[0]?.bySource.map((item) => item.source) ?? [];
@@ -371,20 +383,33 @@ function ReportBody({
       <Section title={`상품 몫 요약(이 상품의 ${ownLabel}로 들어온 것만)`}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           <Tile label="노출" value={formatCount(summary.impressions)} />
-          <Tile label="소재 클릭" value={formatCount(summary.adClicks)} />
-          <Tile label="소재 클릭률" value={formatRate(summary.adClickRate)} />
-          <Tile label="상세 조회" value={formatCount(summary.views)} />
-          <Tile label="순 방문자" value={formatCount(summary.uniqueVisitors)} />
-          <Tile label="회원 조회" value={formatCount(summary.memberViews)} />
-          <Tile label="CTA 클릭" value={formatCount(summary.ctaClicks)} />
-          <Tile label="CTA 클릭률" value={formatRate(summary.ctaClickRate)} />
-          <Tile label="평균 체류" value={formatSeconds(summary.avgDurationSeconds)} />
+          <Tile label="클릭" value={formatCount(summary.adClicks)} />
+          <Tile label="클릭률" value={formatRate(summary.adClickRate)} />
+          {detail ? (
+            <>
+              <Tile label="상세 조회" value={formatCount(summary.views)} />
+              <Tile label="순 방문자" value={formatCount(summary.uniqueVisitors)} />
+              <Tile label="회원 조회" value={formatCount(summary.memberViews)} />
+              <Tile label="CTA 클릭" value={formatCount(summary.ctaClicks)} />
+              <Tile label="CTA 클릭률" value={formatRate(summary.ctaClickRate)} />
+            </>
+          ) : null}
+          {scrolls ? (
+            <Tile label="평균 체류" value={formatSeconds(summary.avgDurationSeconds)} />
+          ) : null}
         </div>
+        {detail ? null : (
+          <p className="text-xs text-gray-500">
+            배너 링크가 공고 상세가 아니어서 상세 조회는 세지 않아요.
+          </p>
+        )}
       </Section>
 
-      <Section title="스크롤 깊이(순 방문자 기준)">
-        <ScrollFunnel report={report} />
-      </Section>
+      {scrolls && summary.scrollFunnel ? (
+        <Section title="스크롤 깊이(순 방문자 기준)">
+          <ScrollFunnel report={report} steps={summary.scrollFunnel} />
+        </Section>
+      ) : null}
 
       <Section title="날짜별 추이">
         {chartOption ? <EChart option={chartOption} height={280} /> : null}
@@ -396,14 +421,20 @@ function ReportBody({
         />
       </Section>
 
-      <Section title="소재별">
-        <DataTable
-          columns={exposureColumns}
-          rows={report.exposures}
-          rowKey={(row) => row.exposureId}
-          emptyMessage="이 상품에 걸린 소재가 없습니다. 노출을 걸면 숫자가 쌓입니다."
-        />
-      </Section>
+      {/* 소재가 하나면 요약과 같은 숫자라 표를 두지 않는다(API 계약 5절). */}
+      {report.exposures.length >= 2 ? (
+        <Section title="광고물별 성과">
+          <DataTable
+            columns={exposureColumns}
+            rows={report.exposures}
+            rowKey={(row) => row.exposureId}
+          />
+        </Section>
+      ) : report.exposures.length === 0 ? (
+        <p className="text-sm text-gray-500" data-pdf-block>
+          이 상품에 걸린 광고물이 없습니다. 노출을 걸면 숫자가 쌓입니다.
+        </p>
+      ) : null}
 
       <Section title="대상 공고 전체 숫자(유입 경로 무관)">
         <DataTable
@@ -426,7 +457,7 @@ function ReportBody({
 
       <Section title="지표 정의">
         <dl className="grid gap-x-6 gap-y-1.5 text-xs text-gray-600 sm:grid-cols-2">
-          {DEFINITIONS.map(([term, description]) => (
+          {definitionsFor(banner).map(([term, description]) => (
             <div key={term} className="flex gap-2">
               <dt className="w-24 shrink-0 font-medium text-gray-900">{term}</dt>
               <dd>{description}</dd>
@@ -442,8 +473,13 @@ function ReportBody({
  * 스크롤 깊이 깔때기(2026-11-19 사용자 요청, API 계약 3절 `scrollFunnel`). 단계마다 몇 명이 거기까지 내렸는지 보인다.
  * 평균은 옆에 작게 둔다. 그래프 옆에 같은 숫자를 글로도 적어 PDF·복사에서 읽힌다.
  */
-function ScrollFunnel({ report }: { report: ContractProductReport }) {
-  const steps = report.summary.scrollFunnel;
+function ScrollFunnel({
+  report,
+  steps,
+}: {
+  report: ContractProductReport;
+  steps: NonNullable<ContractProductReport['summary']['scrollFunnel']>;
+}) {
   const option = useMemo(() => scrollFunnelOption(steps), [steps]);
   if (steps.length === 0 || steps[0]?.visitors === 0) {
     return <p className="text-sm text-gray-500">기간 안에 상세를 연 방문자가 없습니다.</p>;
@@ -470,26 +506,44 @@ function ScrollFunnel({ report }: { report: ContractProductReport }) {
   );
 }
 
-/** PRD 5장 지표 정의를 화면 말로 옮긴 것. */
-const DEFINITIONS: [string, string][] = [
-  ['노출', '배너·광고 카드가 화면에 절반 이상 1초 넘게 보인 횟수'],
-  ['소재 클릭', '배너·광고 카드를 누른 횟수. 클릭률은 소재 클릭 ÷ 노출'],
-  ['상세 조회', '상세 페이지가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번'],
-  ['순 방문자', '기간 안 상세를 연 서로 다른 방문자(회원, 비회원은 익명 방문자 id)'],
-  ['회원 조회', '로그인한 상태로 연 상세 조회'],
-  ['CTA 클릭', '지원하러 가기·신청하러 가기를 누른 횟수. 클릭률은 CTA 순 방문자 ÷ 순 방문자'],
+/** PRD 5장 지표 정의를 화면 말로 옮긴 것. 화면에 있는 지표만 보인다(`definitionsFor`). */
+type Definition = [term: string, description: string, shownWhen: 'all' | 'detail' | 'scroll'];
+
+const DEFINITIONS: Definition[] = [
+  ['노출', '배너·광고 카드가 화면에 절반 이상 1초 넘게 보인 횟수', 'all'],
+  ['클릭', '배너·광고 카드를 누른 횟수. 클릭률은 클릭 ÷ 노출', 'all'],
+  ['상세 조회', '상세 페이지가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번', 'detail'],
+  ['순 방문자', '기간 안 상세를 연 서로 다른 방문자(회원, 비회원은 익명 방문자 id)', 'detail'],
+  ['회원 조회', '로그인한 상태로 연 상세 조회', 'detail'],
+  [
+    'CTA 클릭',
+    '지원하러 가기·신청하러 가기를 누른 횟수. 클릭률은 CTA 순 방문자 ÷ 순 방문자',
+    'detail',
+  ],
   [
     '스크롤 깊이',
     '상세를 연 순 방문자 중 각 깊이(25·50·75·100%)까지 내린 사람 수. 방문자마다 가장 깊이 내린 값으로 센다',
+    'scroll',
   ],
-  ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균'],
-  ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균'],
+  ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균', 'scroll'],
+  ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균', 'scroll'],
   [
     '상품 몫',
-    '이 상품의 노출(배너·광고 카드)로 들어온 조회만 센다. 겹치는 상품끼리 중복으로 세지 않는다',
+    '이 상품의 노출(배너·광고 카드)로 들어온 것만 센다. 겹치는 상품끼리 중복으로 세지 않는다',
+    'all',
   ],
   [
     '대상 공고 전체',
     '연결한 공고의 모든 유입(일반 목록·검색·외부 포함). 어느 상품 몫에도 넣지 않은 숫자도 있다',
+    'all',
   ],
 ];
+
+/**
+ * 상품 종류에 맞는 정의만. 대상 공고 표가 상세 조회·CTA 를 늘 보이므로 상세 정의는 배너에도 남긴다. 스크롤·체류는 광고 카드만.
+ */
+function definitionsFor(banner: boolean): [string, string][] {
+  return DEFINITIONS.filter(([, , shownWhen]) => shownWhen !== 'scroll' || !banner).map(
+    ([term, description]) => [term, description],
+  );
+}

@@ -32,11 +32,22 @@ export function addDays(date: string, days: number): string {
   return new Date(time).toISOString().slice(0, 10);
 }
 
+/** 배너 상품. 배너는 상세 페이지가 아니라 스크롤·체류가 없다(API 계약 5절). */
+export const isBannerReport = (report: ContractProductReport) =>
+  report.product.category === 'BANNER';
+
+/**
+ * 상품 몫 상세 숫자(상세 조회·CTA)를 보일지. 광고 카드는 늘 보인다. 배너는 링크가 공고 상세일 때만 숫자가 생겨, 0 이면
+ * 칸을 숨기고 안내 한 줄로 바꾼다.
+ */
+export const showsDetail = (report: ContractProductReport) =>
+  !isBannerReport(report) || report.summary.views > 0;
+
 /** 수집 시작일 앞 날짜는 숫자가 없다. 0 이 아니라 `집계 전` 이다. */
 export const isBeforeCollection = (report: ContractProductReport, date: string) =>
   date < report.collectedSince;
 
-type ScrollStep = ContractProductReport['summary']['scrollFunnel'][number];
+type ScrollStep = NonNullable<ContractProductReport['summary']['scrollFunnel']>[number];
 
 /** 깔때기 단계 이름. 0% 는 상세를 연 순 방문자 전체다. */
 export const scrollStepLabel = (step: ScrollStep) =>
@@ -119,6 +130,7 @@ export function dailyChartOption(report: ContractProductReport): EChartsCoreOpti
       axisLine: { lineStyle: { color: '#d1d5db' } },
       axisTick: { show: false },
     },
+    // 배너가 상세 숫자 없이 클릭만 있으면 오른쪽 축 이름도 클릭이다.
     yAxis: [
       {
         type: 'value',
@@ -129,7 +141,7 @@ export function dailyChartOption(report: ContractProductReport): EChartsCoreOpti
       },
       {
         type: 'value',
-        name: '클릭·조회',
+        name: showsDetail(report) ? '클릭·조회' : '클릭',
         nameTextStyle: { ...AXIS_LABEL, align: 'left' },
         axisLabel: AXIS_LABEL,
         splitLine: { show: false },
@@ -145,20 +157,22 @@ export function dailyChartOption(report: ContractProductReport): EChartsCoreOpti
       },
       ...(
         [
-          ['소재 클릭', 'adClicks'],
+          ['클릭', 'adClicks'],
           ['상세 조회', 'views'],
           ['CTA 클릭', 'ctaClicks'],
         ] as const
-      ).map(([name, key]) => ({
-        name,
-        type: 'line',
-        yAxisIndex: 1,
-        symbol: 'circle',
-        symbolSize: 7,
-        showSymbol: days.length <= 31,
-        lineStyle: { width: 2 },
-        data: days.map((day) => value(day.date, day[key])),
-      })),
+      )
+        .filter(([, key]) => key === 'adClicks' || showsDetail(report))
+        .map(([name, key]) => ({
+          name,
+          type: 'line',
+          yAxisIndex: 1,
+          symbol: 'circle',
+          symbolSize: 7,
+          showSymbol: days.length <= 31,
+          lineStyle: { width: 2 },
+          data: days.map((day) => value(day.date, day[key])),
+        })),
     ],
   };
 }

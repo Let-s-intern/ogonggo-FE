@@ -112,6 +112,33 @@ function seedPostings() {
       },
     );
   }
+  // 계약 1번 광고 카드 상품에 광고 공고를 둘 건다. 리포트 `광고물별 성과` 표는 소재가 둘 이상일 때만 보인다.
+  if (
+    !advertisementStore.exposures.some(
+      (exposure) =>
+        exposure.productId === 101 && exposure.contractId === 1 && exposure.targetId === 3,
+    )
+  ) {
+    const siblings = advertisementStore.exposures.filter((exposure) => exposure.productId === 101);
+    advertisementStore.exposures.push({
+      id: Math.max(0, ...advertisementStore.exposures.map((item) => item.id)) + 1,
+      productId: 101,
+      contractId: 1,
+      name: null,
+      imageUrl: null,
+      linkUrl: null,
+      targetType: 'JOB',
+      targetId: 3,
+      adLabel: true,
+      exposed: true,
+      advertiserCompanyName: null,
+      startAt: '2026-11-15T00:00:00',
+      endAt: '2026-11-30T23:59:59',
+      displayOrder: siblings.length + 1,
+      registeredAt: SEED_TIME,
+      updatedAt: SEED_TIME,
+    });
+  }
   const contract = advertisementStore.contracts.find((item) => item.id === 1);
   const cpId = 902;
   if (

@@ -233,7 +233,8 @@ export interface ReportSummary extends ReportDetailMetrics {
   ctaUniqueMembers: number;
   ctaClickRate: number | null;
   /** 스크롤 깊이 깔때기. 0% 단계가 순 방문자 전체다. `rate` 는 순 방문자 대비, 분모가 0 이면 null. */
-  scrollFunnel: ScrollFunnelStep[];
+  /** 배너 상품은 null 이다(배너는 상세 페이지가 아니다, 계약 5절). */
+  scrollFunnel: ScrollFunnelStep[] | null;
 }
 
 export interface ScrollFunnelStep {
@@ -398,12 +399,31 @@ interface DayExposureRow {
   avgDurationSeconds: number | null;
 }
 
+/**
+ * 소재가 상세 숫자를 얼마나 갖는지. 광고 카드는 다 갖는다. 배너는 스크롤·체류가 없고(계약 5절), 링크가 공고·부트캠프 상세가
+ * 아니면 상세 조회·CTA 도 없다.
+ */
+type DetailKind = 'full' | 'noScroll' | 'none';
+
+const DETAIL_LINK = /^\/(jobs|bootcamps)\/\d+/;
+
+function detailKind(category: string, linkUrl: string | null | undefined): DetailKind {
+  if (category !== 'BANNER') return 'full';
+  return linkUrl && DETAIL_LINK.test(linkUrl) ? 'noScroll' : 'none';
+}
+
 /** 날짜·소재 한 칸. 수집 전 날과 일주일에 하루쯤은 0 이다(데이터 없는 날). */
-function dayExposureRow(date: string, exposure: { id: number; name: string }): DayExposureRow {
+function dayExposureRow(
+  date: string,
+  exposure: { id: number; name: string },
+  kind: DetailKind,
+): DayExposureRow {
   const empty = date < COLLECTED_SINCE || noise(date, exposure.id, 'empty') < 0.12;
   const impressions = empty ? 0 : Math.round(300 + noise(date, exposure.id, 'imp') * 600);
   const adClicks = Math.round(impressions * (0.008 + noise(date, exposure.id, 'ctr') * 0.022));
-  const views = Math.round(adClicks * (0.7 + noise(date, exposure.id, 'view') * 0.25));
+  const views =
+    kind === 'none' ? 0 : Math.round(adClicks * (0.7 + noise(date, exposure.id, 'view') * 0.25));
+  const scrolls = kind === 'full' && views > 0;
   const uniqueVisitors = Math.round(views * 0.85);
   const ctaClicks = Math.round(views * (0.1 + noise(date, exposure.id, 'cta') * 0.2));
   return {
@@ -417,13 +437,14 @@ function dayExposureRow(date: string, exposure: { id: number; name: string }): D
     memberViews: Math.round(views * 0.5),
     ctaClicks,
     ctaUniqueVisitors: Math.round(ctaClicks * 0.85),
-    avgScrollPercent: views === 0 ? null : round1(45 + noise(date, exposure.id, 'scroll') * 35),
-    avgDurationSeconds: views === 0 ? null : round1(20 + noise(date, exposure.id, 'dur') * 50),
+    avgScrollPercent: scrolls ? round1(45 + noise(date, exposure.id, 'scroll') * 35) : null,
+    avgDurationSeconds: scrolls ? round1(20 + noise(date, exposure.id, 'dur') * 50) : null,
   };
 }
 
-/** 조회 수로 가중한 평균. 조회가 없으면 null. */
-function weightedAverage(rows: DayExposureRow[], key: 'avgScrollPercent' | 'avgDurationSeconds') {
+/** 조회 수로 가중한 평균. 값이 있는 행이 없으면(조회 없음, 배너) null. */
+function weightedAverage(all: DayExposureRow[], key: 'avgScrollPercent' | 'avgDurationSeconds') {
+  const rows = all.filter((row) => row[key] !== null);
   const views = rows.reduce((sum, row) => sum + row.views, 0);
   if (views === 0) return null;
   return round1(rows.reduce((sum, row) => sum + (row[key] ?? 0) * row.views, 0) / views);
@@ -481,13 +502,17 @@ function reportInput(params: Record<string, unknown>, url: URL): ReportInput | R
   );
   const rows = datesBetween(from, to).flatMap((date) =>
     exposures.map((exposure) =>
-      dayExposureRow(date, { id: exposure.id, name: exposureName(exposure) }),
+      dayExposureRow(
+        date,
+        { id: exposure.id, name: exposureName(exposure) },
+        detailKind(product.category, exposure.linkUrl),
+      ),
     ),
   );
   return { from, to, rows };
 }
 
-/** 배너는 노출 이름, 광고 카드는 이름이 없어 띄운 공고 제목을 쓴다. */
+/** 배너는 노출 이름, 광고 카드는 이름이 없어 띄운 공고의 `<제목> · <회사명>` 이다(계약 5절). */
 function exposureName(exposure: {
   id: number;
   name?: string | null;
@@ -500,7 +525,7 @@ function exposureName(exposure: {
     exposure.targetId != null
       ? findContent(exposure.targetType, exposure.targetId)
       : undefined;
-  return content ? `광고 카드 · ${content.title}` : `소재 #${exposure.id}`;
+  return content ? `${content.title} · ${content.companyName}` : `소재 #${exposure.id}`;
 }
 
 const REPORT = `${CONTRACTS}/:contractId/products/:contractProductId`;
@@ -531,10 +556,13 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
     ctaUniqueVisitors,
     ctaUniqueMembers: Math.round(ctaUniqueVisitors * 0.6),
     ctaClickRate: rate(ctaUniqueVisitors, uniqueVisitors),
-    scrollFunnel: SCROLL_STEPS.map(([threshold, share]) => {
-      const visitors = Math.round(uniqueVisitors * share);
-      return { threshold, visitors, rate: rate(visitors, uniqueVisitors) };
-    }),
+    scrollFunnel:
+      cp.category === 'BANNER'
+        ? null
+        : SCROLL_STEPS.map(([threshold, share]) => {
+            const visitors = Math.round(uniqueVisitors * share);
+            return { threshold, visitors, rate: rate(visitors, uniqueVisitors) };
+          }),
   };
 
   const daily: ReportDaily[] = datesBetween(from, to).map((date) => {
