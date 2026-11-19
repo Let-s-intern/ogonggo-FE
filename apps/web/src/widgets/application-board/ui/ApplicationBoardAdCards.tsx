@@ -1,6 +1,6 @@
 'use client';
 
-import { toJobBoardItem } from '@/features/application-board';
+import { toBootcampBoardItem, toJobBoardItem } from '@/features/application-board';
 import { toJobInfo } from '@/entities/job/model/analytics';
 import { JobCardLink } from '@/entities/job/ui/JobCardLink';
 import { adParams, adPostingClickEvent } from '@/shared/ads/adPosting';
@@ -8,6 +8,7 @@ import { AdLabel } from '@/shared/ads/AdLabel';
 import { MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
 import { useAdPostings } from '@/shared/ads/useAdPostings';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
+import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { ApplicationBoardCardBody } from './ApplicationBoardCard';
 
 /**
@@ -60,6 +61,56 @@ export function ApplicationBoardAdCards({ scrappedIds }: { scrappedIds: Set<numb
           label={ad.adLabel ? <AdLabel /> : undefined}
         />
       </JobCardLink>
+    </ImpressionTracker>
+  ));
+}
+
+/**
+ * 부트캠프 보드 `스크랩` 칸 맨 앞의 광고 공고(`BOOTCAMP_MYPAGE_SCRAP`, 마이페이지 스크랩 부트캠프 칸, 계약 11절). 채용공고 칸의
+ * `ApplicationBoardAdCards` 와 같은 규칙이다 — 칸반(PC 보드 보기)에만 있고, 끌 수 없고, 칸 머리 건수에 세지 않고, 이미 스크랩한
+ * 부트캠프의 광고는 그리지 않는다.
+ *
+ * 노출 때 `IMPRESSION`, 누르면 `ad_posting_click`·`AD_CLICK` 이고 상세로 노출 id 를 넘긴다. `program_card_click` 은 교육 목록
+ * 칸의 이벤트라 보내지 않는다.
+ */
+export function ApplicationBoardBootcampAdCards({ scrappedIds }: { scrappedIds: Set<number> }) {
+  const { data = [] } = useAdPostings('BOOTCAMP_MYPAGE_SCRAP');
+  const ads = data
+    .flatMap((posting) =>
+      posting.bootcamp && !scrappedIds.has(posting.bootcamp.id)
+        ? [{ ...posting, bootcamp: posting.bootcamp }]
+        : [],
+    )
+    .slice(0, MAX_AD_POSTINGS)
+    .map((posting, index) => ({ bootcamp: posting.bootcamp, ad: toAdSlot(posting, index + 1) }));
+
+  return ads.map(({ bootcamp, ad }) => (
+    <ImpressionTracker
+      key={`ad-${ad.adId}`}
+      contentEvent={{
+        type: 'IMPRESSION',
+        targetType: 'BOOTCAMP',
+        targetId: bootcamp.id,
+        exposureId: ad.adId,
+        source: 'AD_CARD',
+      }}
+    >
+      <TrackedLink
+        href={`/bootcamps/${bootcamp.id}`}
+        events={[adPostingClickEvent(ad, 'bootcamp', bootcamp.id)]}
+        adClick={{
+          exposureId: ad.adId,
+          source: 'AD_CARD',
+          target: { targetType: 'BOOTCAMP', targetId: bootcamp.id },
+        }}
+        className="block rounded-xl bg-white"
+      >
+        <ApplicationBoardCardBody
+          tab="bootcamps"
+          item={toBootcampBoardItem(bootcamp)}
+          label={ad.adLabel ? <AdLabel /> : undefined}
+        />
+      </TrackedLink>
     </ImpressionTracker>
   ));
 }

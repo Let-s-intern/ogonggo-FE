@@ -42,7 +42,7 @@ import {
   type AdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import {
-  targetsOf,
+  quickTargetsOf,
   useAddContractTarget,
 } from '@/entities/advertisement-contract/api/useContractTargets';
 import { businessNumberOf } from '@/entities/member/model/companySignupInfo';
@@ -636,7 +636,7 @@ function ProductsCard({
   /** 새 광고 공고 모달의 기본 대상: 계약의 광고할 공고 중 그 자리에 걸 수 있는 첫 번째(공고 등록 계약이면 자동 대상). */
   const defaultTarget = (position: AdPostingPosition | null): ContentTarget | null => {
     const fixed = position ? AD_POSTING_FIXED_TARGET[position] : undefined;
-    return targetsOf(contract).find((target) => !fixed || target.targetType === fixed) ?? null;
+    return quickTargetsOf(contract).find((target) => !fixed || target.targetType === fixed) ?? null;
   };
 
   const bannerProductOf = (row: AdminAdvertisementContractProductResponse) => {
@@ -806,6 +806,7 @@ function ProductsCard({
           taken={postingSiblings.data ?? []}
           initialContract={{ id: contract.id, companyName: contract.companyName }}
           initialTarget={defaultTarget(postingEdit.position)}
+          quickTargets={quickTargetsOf(contract)}
           initialPeriod={
             postingEdit.row.startDate && postingEdit.row.endDate
               ? {

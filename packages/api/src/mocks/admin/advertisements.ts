@@ -46,6 +46,8 @@ const AD_POSTING_POSITIONS: readonly string[] = [
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
   'BOOTCAMP_LIST',
+  'BOOTCAMP_DETAIL_SIDE',
+  'BOOTCAMP_MYPAGE_SCRAP',
 ];
 const POSITIONS: readonly string[] = [...BANNER_POSITIONS, ...AD_POSTING_POSITIONS];
 const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductResponseCategory);

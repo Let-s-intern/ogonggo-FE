@@ -17,7 +17,7 @@ const CATEGORY_OPTIONS = enumOptions('AdvertisementProductCategory');
 
 /**
  * 판매 중인 광고 공고 상품의 자리, 판매 상품 차례(계약 8절). 공고 상세 옆과 부트캠프 목록 상단 고정은 2026-11-19 사용자
- * 결정으로 남긴다.
+ * 결정으로 남긴다. 부트캠프 상세 옆·마이페이지 스크랩 부트캠프 칸은 계약 11절이다. 카탈로그(코드젠 전)에 없어도 값을 그대로 보낸다.
  */
 const SOLD_AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_PICK',
@@ -26,6 +26,8 @@ const SOLD_AD_POSTING_POSITIONS: readonly string[] = [
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
   'BOOTCAMP_LIST',
+  'BOOTCAMP_DETAIL_SIDE',
+  'BOOTCAMP_MYPAGE_SCRAP',
 ];
 
 /**

@@ -28,6 +28,7 @@ import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { ContractField } from '@/widgets/banner-form';
 import {
   ContentTargetPicker,
+  QuickTargetPicks,
   targetKey,
   type ContentTarget,
 } from '@/widgets/content-target-picker';
@@ -49,6 +50,10 @@ interface AdPostingFormModalProps {
   initialContract?: { id: number; companyName: string };
   /** 새 광고 공고의 대상을 미리 채운다(계약의 광고할 공고). 바꿀 수 있다. */
   initialTarget?: ContentTarget | null;
+  /**
+   * 검색 없이 바로 고를 대상(계약 상세에서 열 때 그 계약의 광고할 공고). 이 자리에 걸 수 있는 종류만 검색 위에 보인다.
+   */
+  quickTargets?: ContentTarget[];
   /** 새 광고 공고의 노출 기간(`datetime-local` 값). 계약 상품 기간이다. */
   initialPeriod?: { startAt: string; endAt: string };
   /**
@@ -96,6 +101,7 @@ export function AdPostingFormModal({
   onClose,
   initialContract,
   initialTarget,
+  quickTargets = [],
   initialPeriod,
   onRegisterTarget,
   siblings = [],
@@ -148,6 +154,7 @@ export function AdPostingFormModal({
   // 수정 중인 노출 자신은 빼고, 리스트 상단 고정이면 고른 탭의 노출만 본다. 새로 걸 때는 고른 탭 중 하나라도 이미 그
   // 공고가 있으면 막는다 — 그 탭은 409 로 실패한다.
   const chosenTabs = exposure ? [jobField] : tabs;
+  const fixedType = position ? AD_POSTING_FIXED_TARGET[position] : undefined;
   const blocked = new Set(
     taken.flatMap((row) =>
       row.id !== exposure?.id &&
@@ -386,11 +393,16 @@ export function AdPostingFormModal({
             </Button>
           </div>
         ) : (
-          <ContentTargetPicker
-            takenKeys={blocked}
-            fixedType={position ? AD_POSTING_FIXED_TARGET[position] : undefined}
-            onPick={setTarget}
-          />
+          <div className="flex flex-col gap-3">
+            <QuickTargetPicks
+              targets={quickTargets.filter(
+                (candidate) => !fixedType || candidate.targetType === fixedType,
+              )}
+              takenKeys={blocked}
+              onPick={setTarget}
+            />
+            <ContentTargetPicker takenKeys={blocked} fixedType={fixedType} onPick={setTarget} />
+          </div>
         )}
       </Field>
 

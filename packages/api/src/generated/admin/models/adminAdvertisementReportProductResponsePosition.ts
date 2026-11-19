@@ -22,6 +22,8 @@
  * | `JOB_PICK` | 10 | 오공고 PICK |
  * | `CALENDAR_DAY` | 11 | 공고 달력 날짜별 |
  * | `MYPAGE_SCRAP` | 12 | 마이페이지 스크랩 칸 |
+ * | `BOOTCAMP_DETAIL_SIDE` | 13 | 부트캠프 상세 옆 |
+ * | `BOOTCAMP_MYPAGE_SCRAP` | 14 | 마이페이지 스크랩 부트캠프 칸 |
  * @nullable
  */
 export type AdminAdvertisementReportProductResponsePosition = typeof AdminAdvertisementReportProductResponsePosition[keyof typeof AdminAdvertisementReportProductResponsePosition] | null;
@@ -40,4 +42,6 @@ export const AdminAdvertisementReportProductResponsePosition = {
   JOB_PICK: 'JOB_PICK',
   CALENDAR_DAY: 'CALENDAR_DAY',
   MYPAGE_SCRAP: 'MYPAGE_SCRAP',
+  BOOTCAMP_DETAIL_SIDE: 'BOOTCAMP_DETAIL_SIDE',
+  BOOTCAMP_MYPAGE_SCRAP: 'BOOTCAMP_MYPAGE_SCRAP',
 } as const;
