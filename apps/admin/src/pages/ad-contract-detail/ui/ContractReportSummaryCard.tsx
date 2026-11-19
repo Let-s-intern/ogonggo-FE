@@ -1,11 +1,13 @@
-import { Callout, Card, CardTitle, DataTable, type DataTableColumn } from '@ogonggo/ui';
+import { useState } from 'react';
+import { Button, Callout, Card, CardTitle, DataTable, type DataTableColumn } from '@ogonggo/ui';
 import { enumLabel } from '@ogonggo/api/src/admin';
 import {
   useContractReportSummary,
   type ContractReportSummary,
 } from '@/entities/advertisement-contract/api/useContractReport';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
-import { formatCount, formatRate } from '../lib/reportFormat';
+import { formatCount, formatDateRange, formatRate } from '../lib/reportFormat';
+import { InfoTip, Tile } from './reportParts';
 
 type Row = ContractReportSummary['products'][number];
 
@@ -17,6 +19,7 @@ type Row = ContractReportSummary['products'][number];
  */
 export function ContractReportSummaryCard({ contractId }: { contractId: number }) {
   const { data, isError, error } = useContractReportSummary(contractId);
+  const [showProducts, setShowProducts] = useState(false);
 
   if (isError) {
     return (
@@ -36,8 +39,8 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
         <span className="flex flex-col">
           <span className="text-gray-900">{row.name}</span>
           <span className="text-xs text-gray-500">
-            {enumLabel('AdvertisementProductCategory', row.category)} · {row.startDate} ~{' '}
-            {row.endDate}
+            {enumLabel('AdvertisementProductCategory', row.category)} ·{' '}
+            {formatDateRange(row.startDate, row.endDate)}
           </span>
         </span>
       ),
@@ -69,20 +72,34 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
 
   return (
     <Card>
-      <CardTitle>계약 전체 성과</CardTitle>
+      <div className="flex items-center gap-1.5">
+        <CardTitle>계약 전체 성과</CardTitle>
+        <InfoTip text="리포트를 열 수 있는 상품을 각 상품 기간 전체(진행 중이면 오늘까지)로 합쳤습니다." />
+      </div>
       <div className="mt-3 flex flex-col gap-3">
-        <p className="text-xs text-gray-500">
-          리포트를 열 수 있는 상품을 각 상품 기간 전체(진행 중이면 오늘까지)로 합쳤습니다.
-        </p>
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {tiles.map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-gray-200 p-3">
-              <dt className="text-xs text-gray-500">{label}</dt>
-              <dd className="pt-1 text-lg font-semibold text-gray-900">{value}</dd>
-            </div>
+            <Tile key={label} label={label} value={value} />
           ))}
-        </dl>
-        <DataTable columns={columns} rows={data.products} rowKey={(row) => row.contractProductId} />
+        </div>
+        <div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+            aria-expanded={showProducts}
+            onClick={() => setShowProducts((open) => !open)}
+          >
+            {showProducts ? '접기 ▴' : '상품별 보기 ▾'}
+          </Button>
+        </div>
+        {showProducts ? (
+          <DataTable
+            columns={columns}
+            rows={data.products}
+            rowKey={(row) => row.contractProductId}
+          />
+        ) : null}
       </div>
     </Card>
   );

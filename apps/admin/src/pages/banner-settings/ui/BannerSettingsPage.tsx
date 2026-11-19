@@ -12,7 +12,6 @@ import {
   cn,
   type DataTableColumn,
 } from '@ogonggo/ui';
-import { enumLabel } from '@ogonggo/api/src/admin';
 import {
   useAdvertisementExposures,
   useDeleteExposure,
@@ -35,13 +34,14 @@ import {
   useAdvertisementProducts,
   type AdvertisementProduct,
 } from '@/entities/advertisement-product/api/useAdvertisementProducts';
+import { positionLabel } from '@/entities/advertisement-product/lib/product';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { PageHeader } from '@/widgets/page-header';
 import { BannerFormModal } from '@/widgets/banner-form';
 
 const POSITION_TABS = BANNER_POSITIONS.map((value) => ({
   value,
-  label: enumLabel('AdvertisementProductPosition', value),
+  label: positionLabel(value),
 }));
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };

@@ -7,13 +7,13 @@ import {
 } from '@ogonggo/api/src/admin';
 import {
   AD_POSTING_POSITIONS,
-  AD_POSTING_POSITION_LABELS,
   isAdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import {
   useSaveAdvertisementProduct,
   type AdvertisementProduct,
 } from '@/entities/advertisement-product/api/useAdvertisementProducts';
+import { positionLabel } from '@/entities/advertisement-product/lib/product';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 
 const NAME_MAX_LENGTH = 100;
@@ -27,7 +27,7 @@ const POSITION_OPTIONS = [
   // 광고 공고(카드) 자리. 코드젠 전이라 카탈로그에 없어 따로 붙인다.
   ...AD_POSTING_POSITIONS.map((value) => ({
     value,
-    label: `광고 공고 · ${AD_POSTING_POSITION_LABELS[value]}`,
+    label: `광고 공고 · ${positionLabel(value)}`,
   })),
 ];
 

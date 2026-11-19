@@ -70,6 +70,13 @@ import { ProductAddForm } from './ProductAddForm';
 
 type BannerProduct = AdvertisementProduct & { position: BannerPosition };
 
+/** 계약 상품 행에서 연 배너 모달. `exposure` 가 `null` 이면 새로 건다. */
+interface BannerEdit {
+  product: BannerProduct;
+  row: AdminAdvertisementContractProductResponse;
+  exposure: AdvertisementExposure | null;
+}
+
 /** 계약 상품 행에서 연 광고 공고 모달. `exposure` 가 `null` 이면 새로 건다. */
 interface PostingEdit {
   product: AdvertisementProduct;
@@ -562,8 +569,9 @@ function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContrac
  *
  * 게시 기간은 배너 노출 기간과 연동하지 않는다. 배너는 노출 기간을 따로 넣는다.
  *
- * 배너 상품 줄에는 `배너 등록` 이 있다. 그 상품의 자리에, 이 계약을 연결 계약으로 미리 채운 등록 모달을 연다(배너 세팅과 같은
- * 모달). 저장하면 아래 `걸린 노출` 에 바로 보인다.
+ * 배너·광고 공고 상품 줄에는 같은 규칙의 버튼이 있다 — 이 계약의 노출이 없으면 `배너 등록`·`공고 등록`(이 계약을 연결 계약으로
+ * 미리 채운 등록 모달), 있으면 `배너 수정`·`공고 수정`(여럿이면 개수, 모달 안에서 고르기). 세팅 화면과 같은 모달이고, 저장하면
+ * 아래 `걸린 노출` 과 세팅 목록에 바로 보인다.
  */
 function ProductsCard({
   contract,
@@ -588,7 +596,7 @@ function ProductsCard({
     }
   };
   const remove = useRemoveContractProduct(contract.id);
-  const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
+  const [bannerEdit, setBannerEdit] = useState<BannerEdit | null>(null);
   const [postingEdit, setPostingEdit] = useState<PostingEdit | null>(null);
   const contractExposures = useContractExposures(
     contract.id,
@@ -692,6 +700,7 @@ function ProductsCard({
       width: 'w-60 min-w-60',
       render: (row) => {
         const banner = bannerProductOf(row);
+        const bannerExposures = banner ? exposuresOf(row) : [];
         const posting = postingProductOf(row);
         const postingExposures = posting ? exposuresOf(row) : [];
         return (
@@ -702,10 +711,13 @@ function ProductsCard({
           >
             {banner ? (
               <RowActionButton
-                kind="register"
-                label="배너 등록"
-                aria-label={`${row.productName} 배너 등록`}
-                onClick={() => setBannerProduct(banner)}
+                kind={bannerExposures.length > 0 ? 'edit' : 'register'}
+                label={bannerExposures.length > 0 ? '배너 수정' : '배너 등록'}
+                count={bannerExposures.length > 1 ? bannerExposures.length : undefined}
+                aria-label={`${row.productName} ${bannerExposures.length > 0 ? '배너 수정' : '배너 등록'}`}
+                onClick={() =>
+                  setBannerEdit({ product: banner, row, exposure: bannerExposures[0] ?? null })
+                }
               />
             ) : null}
             {posting ? (
@@ -767,14 +779,16 @@ function ProductsCard({
           <p className="text-xs text-gray-500">상품을 누르면 그 상품의 성과 리포트가 열려요.</p>
         ) : null}
       </div>
-      {bannerProduct ? (
+      {bannerEdit ? (
         <BannerFormModal
-          key={bannerProduct.id}
+          key={`${bannerEdit.row.contractProductId}-${bannerEdit.exposure?.id ?? 'new'}`}
           open
-          product={bannerProduct}
-          exposure={null}
+          product={bannerEdit.product}
+          exposure={bannerEdit.exposure}
           initialContract={{ id: contract.id, companyName: contract.companyName }}
-          onClose={() => setBannerProduct(null)}
+          siblings={exposuresOf(bannerEdit.row)}
+          onSwitch={(exposure) => setBannerEdit({ ...bannerEdit, exposure })}
+          onClose={() => setBannerEdit(null)}
         />
       ) : null}
       {postingEdit ? (
@@ -869,11 +883,15 @@ function ExposuresCard({ contract }: { contract: AdminAdvertisementContractDetai
       <CardTitle>걸린 노출</CardTitle>
       <div className="mt-3 flex flex-col gap-3">
         <p className="text-sm text-gray-500">
-          배너는 위 계약 상품의 `배너 등록` 으로 바로 겁니다. 순서·켜기·수정은{' '}
+          노출은 위 계약 상품의 `배너 등록`·`공고 등록` 으로 바로 겁니다. 자리 전체의 순서·켜기는{' '}
           <Link to="/business/banners" className="text-blue-500 hover:underline">
             배너 세팅
           </Link>
-          에서 합니다. 계약에 넣은 상품의 자리만 여기서 보입니다.
+          ·{' '}
+          <Link to="/business/ad-postings" className="text-blue-500 hover:underline">
+            광고 공고 세팅
+          </Link>
+          에서도 합니다. 계약에 넣은 상품의 자리만 여기서 보입니다.
         </p>
         {exposures.isError ? <Callout tone="error">노출을 불러오지 못했습니다.</Callout> : null}
         <DataTable

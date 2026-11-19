@@ -17,6 +17,8 @@ import {
   addDays,
   dailyChartOption,
   formatCount,
+  formatDate,
+  formatDateRange,
   formatPercent,
   formatRate,
   formatSeconds,
@@ -28,6 +30,7 @@ import {
   scrollStepLabel,
   scrollStepValue,
 } from '../lib/reportFormat';
+import { Tile } from './reportParts';
 
 type Daily = ContractProductReport['daily'][number];
 type Exposure = ContractProductReport['exposures'][number];
@@ -50,7 +53,7 @@ function productPeriodLabel(product: ReportableContractProduct): string {
   if (!product.startDate || !product.endDate) return '기간 미정';
   const today = todayKst();
   const state = today < product.startDate ? '예정' : today > product.endDate ? '끝남' : '진행 중';
-  return `${product.startDate} ~ ${product.endDate} · ${state}`;
+  return `${formatDateRange(product.startDate, product.endDate)} · ${state}`;
 }
 
 /** 상품 표의 `리포트` 칸 문구. 열 수 없는 상품은 이유를 짧게. */
@@ -222,16 +225,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3" title={hint}>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="pt-1 text-xl font-semibold text-gray-900">{value}</p>
-      {hint ? <p className="pt-1 text-[11px] leading-tight text-gray-400">{hint}</p> : null}
-    </div>
-  );
-}
-
 const UNIQUE_IMPRESSION_HINT = '같은 사람이 하루에 여러 번 봐도 한 번으로 센 노출';
 
 function ReportBody({
@@ -252,7 +245,7 @@ function ReportBody({
   const lastUncollected = dayBeforeCollection < report.to ? dayBeforeCollection : report.to;
 
   const dailyColumns: DataTableColumn<Daily>[] = [
-    { key: 'date', header: '날짜', width: 'w-32', render: (row) => row.date },
+    { key: 'date', header: '날짜', width: 'w-32', render: (row) => formatDate(row.date) },
     ...(
       [
         ['impressions', '노출'],
@@ -363,10 +356,10 @@ function ReportBody({
     <>
       <p className="text-sm text-gray-500" data-pdf-block>
         {report.product.name}({enumLabel('AdvertisementProductCategory', report.product.category)})
-        · 게시 기간 {report.product.startDate} ~ {report.product.endDate} · 보는 기간 {report.from}{' '}
-        ~ {report.to}
+        · 게시 기간 {formatDateRange(report.product.startDate, report.product.endDate)} · 보는 기간{' '}
+        {formatDateRange(report.from, report.to)}
         {notCollected
-          ? ` · ${report.from} ~ ${lastUncollected} 은 집계 전이라 숫자가 없습니다.`
+          ? ` · ${formatDateRange(report.from, lastUncollected)} 은 집계 전이라 숫자가 없습니다.`
           : ''}
       </p>
 

@@ -3,11 +3,10 @@ import { Button, Callout, Input, Select, cn } from '@ogonggo/ui';
 import type { AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/admin';
 import {
   AD_POSTING_FIXED_TARGET,
-  AD_POSTING_POSITION_LABELS,
   isAdPostingPosition,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
-import { productLabel } from '@/entities/advertisement-product/lib/product';
+import { positionLabel, productLabel } from '@/entities/advertisement-product/lib/product';
 import { ContentTargetPicker, type ContentTarget } from '@/widgets/content-target-picker';
 import {
   STEP_LABELS,
@@ -146,7 +145,7 @@ export function ProductAddForm({
       {posting && !locked ? (
         <div className="flex flex-col gap-3 border-t border-gray-200 pt-3">
           <p className="text-sm font-medium text-gray-900">
-            {AD_POSTING_POSITION_LABELS[posting]} 광고 공고 한 번에 세팅
+            {positionLabel(posting)} 광고 공고 한 번에 세팅
           </p>
           <div className="flex flex-col gap-2 text-sm text-gray-700">
             <div className="flex flex-wrap items-center gap-2">

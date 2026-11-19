@@ -23,7 +23,7 @@ export function ContractField({
   value,
   currentCompanyName,
   onChange,
-  hint = '돈을 받고 싣는 배너는 그 광고 계약을 고릅니다. 오공고 자체 홍보는 비워 둡니다.',
+  hint = '돈을 받고 싣는 노출은 그 광고 계약을 고릅니다. 오공고 자체 홍보는 비워 둡니다. 계약 리포트의 숫자가 이 연결로 모입니다.',
 }: ContractFieldProps) {
   const [keyword, setKeyword] = useState('');
   const { data = [], isFetching } = useContractSearch(keyword);

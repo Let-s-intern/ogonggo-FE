@@ -20,7 +20,6 @@ import {
 import {
   AD_POSTING_POSITIONS,
   AD_POSTING_POSITION_DESCRIPTIONS,
-  AD_POSTING_POSITION_LABELS,
   isAdPostingPosition,
   type AdPostingExposure,
   type AdPostingPosition,
@@ -30,6 +29,7 @@ import {
   exposureStatus,
   formatPeriod,
 } from '@/entities/advertisement-exposure/lib/exposure';
+import { positionLabel } from '@/entities/advertisement-product/lib/product';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { AdPostingFormModal } from '@/widgets/ad-posting-form';
@@ -38,7 +38,7 @@ import { PageHeader } from '@/widgets/page-header';
 
 const POSITION_TABS = AD_POSTING_POSITIONS.map((value) => ({
   value,
-  label: AD_POSTING_POSITION_LABELS[value],
+  label: positionLabel(value),
 }));
 
 const targetLabel = (row: AdPostingExposure) =>
@@ -280,7 +280,7 @@ export function AdPostingSettingsPage() {
             rowKey={(row) => row.id}
             onRowClick={(row) => openEdit(String(row.id))}
             isLoading={isPending}
-            emptyMessage="이 자리에 건 광고 공고가 없습니다. 웹에서는 일반 카드만 보입니다."
+            emptyMessage="이 자리에 등록된 광고 공고가 없습니다. 웹에서는 일반 카드만 보입니다."
           />
         </>
       )}
