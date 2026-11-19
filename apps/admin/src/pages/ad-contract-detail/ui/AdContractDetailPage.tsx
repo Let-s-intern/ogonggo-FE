@@ -65,6 +65,7 @@ import { PageHeader } from '@/widgets/page-header';
 import { ProductReportModal, reportCellLabel, unavailableMessage } from './ProductReportModal';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
 import { AdTargetsField } from './AdTargetsField';
+import { isReportEnabled } from '@/shared/config/reports';
 import { formatDateRange } from '../lib/reportFormat';
 import { ProductAddForm } from './ProductAddForm';
 
@@ -202,12 +203,13 @@ export function AdContractDetailPage() {
             ) : null}
           </div>
         </div>
-        <ContractReportSummaryCard contractId={contract.id} />
-        <ProductsCard contract={contract} onOpenReport={openReport} />
+        {/* 리포트 API(LC-3647) 배포 전에는 리포트 화면을 그리지 않는다(`shared/config/reports.ts`). */}
+        {isReportEnabled ? <ContractReportSummaryCard contractId={contract.id} /> : null}
+        <ProductsCard contract={contract} onOpenReport={isReportEnabled ? openReport : undefined} />
         <ExposuresCard contract={contract} />
         <RequestMemoCard contract={contract} />
       </div>
-      {selectedProductId !== null ? (
+      {isReportEnabled && selectedProductId !== null ? (
         <ProductReportModal
           contract={contract}
           contractProductId={selectedProductId}
@@ -295,9 +297,11 @@ function ContractInfoCard({ contract }: { contract: AdminAdvertisementContractDe
           ) : null}
         </Row>
         <Row label="마감일">{contract.recruitmentDeadline}</Row>
-        <Row label="광고할 공고">
-          <AdTargetsField contract={contract} />
-        </Row>
+        {isReportEnabled ? (
+          <Row label="광고할 공고">
+            <AdTargetsField contract={contract} />
+          </Row>
+        ) : null}
       </Section>
       <Section title="담당자·정산">
         <Row label="담당자">
@@ -578,8 +582,8 @@ function ProductsCard({
   onOpenReport,
 }: {
   contract: AdminAdvertisementContractDetailResponse;
-  /** 리포트 모달(`?product=`)을 연다. */
-  onOpenReport: (contractProductId: number) => void;
+  /** 리포트 모달(`?product=`)을 연다. 리포트가 꺼져 있으면 없고, 행은 정보만 보인다. */
+  onOpenReport?: (contractProductId: number) => void;
 }) {
   const products = useAdvertisementProducts();
   const reportProducts = reportProductsOf(contract);
@@ -590,7 +594,7 @@ function ProductsCard({
     const item = reportProducts.find((candidate) => candidate.contractProductId === id);
     if (item?.reportAvailable) {
       setNoticeId(null);
-      onOpenReport(id);
+      onOpenReport?.(id);
     } else {
       setNoticeId(id);
     }
@@ -641,6 +645,28 @@ function ProductsCard({
     return product && isBannerProduct(product) ? product : null;
   };
 
+  const reportColumn: DataTableColumn<AdminAdvertisementContractProductResponse> = {
+    key: 'report',
+    header: '리포트',
+    width: 'w-28',
+    render: (row) => {
+      const item = reportProducts.find(
+        (candidate) => candidate.contractProductId === row.contractProductId,
+      );
+      if (!item) return null;
+      return (
+        <span
+          className={cn(
+            'text-sm whitespace-nowrap',
+            item.reportAvailable ? 'text-blue-600' : 'text-gray-400',
+          )}
+        >
+          {reportCellLabel(item)}
+        </span>
+      );
+    },
+  };
+
   const columns: DataTableColumn<AdminAdvertisementContractProductResponse>[] = [
     {
       key: 'name',
@@ -672,27 +698,7 @@ function ProductsCard({
       width: 'w-36',
       render: (row) => <span className="text-sm">{formatKst(row.addedAt)}</span>,
     },
-    {
-      key: 'report',
-      header: '리포트',
-      width: 'w-28',
-      render: (row) => {
-        const item = reportProducts.find(
-          (candidate) => candidate.contractProductId === row.contractProductId,
-        );
-        if (!item) return null;
-        return (
-          <span
-            className={cn(
-              'text-sm whitespace-nowrap',
-              item.reportAvailable ? 'text-blue-600' : 'text-gray-400',
-            )}
-          >
-            {reportCellLabel(item)}
-          </span>
-        );
-      },
-    },
+    ...(onOpenReport ? [reportColumn] : []),
     {
       key: 'actions',
       header: '관리',
@@ -768,10 +774,10 @@ function ProductsCard({
           columns={columns}
           rows={contract.products}
           rowKey={(row) => row.contractProductId}
-          onRowClick={(row) => openRow(row.contractProductId)}
+          onRowClick={onOpenReport ? (row) => openRow(row.contractProductId) : undefined}
           emptyMessage="넣은 상품이 없습니다. 판매한 상품을 넣으세요."
         />
-        {notice ? (
+        {!onOpenReport ? null : notice ? (
           <p className="text-sm text-gray-600">
             {notice.productName}: {unavailableMessage(notice)}
           </p>
@@ -816,18 +822,22 @@ function ProductsCard({
                 }
               : undefined
           }
-          onRegisterTarget={async (target) => {
-            try {
-              await addTarget.mutateAsync({
-                targetType: target.targetType,
-                targetId: target.targetId,
-              });
-            } catch (failure) {
-              // 이미 광고할 공고면 할 일이 끝난 것이다.
-              if (failure instanceof HttpError && failure.status === 409) return;
-              throw failure;
-            }
-          }}
+          onRegisterTarget={
+            isReportEnabled
+              ? async (target) => {
+                  try {
+                    await addTarget.mutateAsync({
+                      targetType: target.targetType,
+                      targetId: target.targetId,
+                    });
+                  } catch (failure) {
+                    // 이미 광고할 공고면 할 일이 끝난 것이다.
+                    if (failure instanceof HttpError && failure.status === 409) return;
+                    throw failure;
+                  }
+                }
+              : undefined
+          }
           siblings={exposuresOf(postingEdit.row)}
           onSwitch={(exposure) => setPostingEdit({ ...postingEdit, exposure })}
           onClose={() => setPostingEdit(null)}

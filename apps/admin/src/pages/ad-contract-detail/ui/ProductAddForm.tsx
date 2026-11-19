@@ -7,6 +7,7 @@ import {
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { positionLabel, productLabel } from '@/entities/advertisement-product/lib/product';
+import { isReportEnabled } from '@/shared/config/reports';
 import { ContentTargetPicker, type ContentTarget } from '@/widgets/content-target-picker';
 import {
   STEP_LABELS,
@@ -49,7 +50,8 @@ export function ProductAddForm({
   const [target, setTarget] = useState<ContentTarget | null>(null);
   const [expose, setExpose] = useState(true);
   const [order, setOrder] = useState<'first' | 'last'>('first');
-  const [registerTarget, setRegisterTarget] = useState(true);
+  // 광고할 공고 연결(LC-3647)이 배포되기 전에는 이 단계를 부르지 않는다.
+  const [registerTarget, setRegisterTarget] = useState(isReportEnabled);
 
   const product = products.data?.find((candidate) => String(candidate.id) === productId);
   const position = product?.category === 'JOB_POSTING' ? String(product.position ?? '') : '';
@@ -70,7 +72,7 @@ export function ProductAddForm({
     setTarget(null);
     setExpose(true);
     setOrder('first');
-    setRegisterTarget(true);
+    setRegisterTarget(isReportEnabled);
     attach.reset();
   };
 
@@ -173,18 +175,22 @@ export function ProductAddForm({
                 />
               ) : null}
             </div>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={registerTarget}
-                onChange={(event) => setRegisterTarget(event.target.checked)}
-              />
-              광고할 공고로 등록
-            </label>
-            <p className="pl-6 text-xs text-gray-500">
-              켜면 위 계약 정보의 광고할 공고에 자동으로 들어가, 리포트에 그 공고의 전체 조회·지원
-              클릭이 함께 나와요.
-            </p>
+            {isReportEnabled ? (
+              <>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={registerTarget}
+                    onChange={(event) => setRegisterTarget(event.target.checked)}
+                  />
+                  광고할 공고로 등록
+                </label>
+                <p className="pl-6 text-xs text-gray-500">
+                  켜면 위 계약 정보의 광고할 공고에 자동으로 들어가, 리포트에 그 공고의 전체
+                  조회·지원 클릭이 함께 나와요.
+                </p>
+              </>
+            ) : null}
           </div>
           {needsTarget ? (
             target ? (
@@ -221,7 +227,8 @@ export function ProductAddForm({
           <ol className="flex flex-col gap-1 text-sm">
             {(Object.keys(STEP_LABELS) as StepKey[]).map((key, index) => {
               const step = attach.steps?.[key];
-              if (!step) return null;
+              // 리포트가 꺼져 있으면 광고할 공고 단계는 없는 단계다.
+              if (!step || (key === 'target' && !isReportEnabled)) return null;
               return (
                 <li key={key} className="flex flex-wrap items-baseline gap-2">
                   <span className="text-gray-500">{index + 1}.</span>
