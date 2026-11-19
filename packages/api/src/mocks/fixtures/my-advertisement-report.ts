@@ -468,6 +468,7 @@ export interface MockActiveAd {
     thumbnailUrl: string | null;
     logoUrl: string | null;
   } | null;
+  collectedSince: string;
   daily: { date: string; impressions: number; adClicks: number; views: number }[];
 }
 
@@ -512,6 +513,7 @@ export function buildActiveAds(
               product.category === 'JOB_POSTING' && plan.targetImages
                 ? { ...plan.target, ...plan.targetImages }
                 : null,
+            collectedSince: COLLECTED_SINCE,
             daily: report.daily.map(({ date, impressions, adClicks, views }) => ({
               date,
               impressions,

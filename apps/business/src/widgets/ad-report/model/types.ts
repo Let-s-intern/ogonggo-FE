@@ -129,5 +129,7 @@ export interface ActiveAd {
     thumbnailUrl: string | null;
     logoUrl: string | null;
   } | null;
+  /** 수집 시작일. 카드 그래프는 이 날부터 그린다. */
+  collectedSince: string;
   daily: { date: string; impressions: number; adClicks: number; views: number }[];
 }

@@ -142,25 +142,21 @@ export function scrollFunnelOption(steps: ScrollFunnelStep[]): EChartsCoreOption
   };
 }
 
-export interface SparkSeries {
-  name: string;
-  values: number[];
-}
-
 /**
- * 대시보드 카드의 작은 추이 그래프. 축·눈금 없이 두 선만 그린다. 두 값의 크기가 많이 달라(노출과 클릭) 보이지 않는 축을
- * 따로 둔다. 곡선으로 그리면 값 사이가 넘쳐 0 아래로 꺼져 보여 꺾은선이다. `hasData` 가 거짓인 날(집계 전, 숫자 없는
- * 날)은 0 으로 떨어뜨리지 않고 선을 끊는다. 색은 날짜별 추이 그래프와 같은 순서다.
+ * 대시보드 카드의 작은 추이 그래프(2026-11-19 사용자 검수). 선 하나만 영역을 채운 꺾은선으로 그린다. 축·눈금·격자·점이 없고
+ * 마지막 날만 점을 작게 찍는다. y 축은 0 에서 시작한다. 날짜는 부르는 쪽이 수집 시작일부터 넘기고, 숫자 없는 날은 0 으로
+ * 이어 그린다.
  */
 export function sparklineOption(
   dates: string[],
-  series: [SparkSeries, SparkSeries],
-  hasData: boolean[],
+  name: string,
+  values: number[],
 ): EChartsCoreOption {
+  const last = values.length - 1;
   return {
-    color: COLORS,
+    color: ['#2a78d6'],
     textStyle: { fontFamily: FONT_FAMILY },
-    grid: { left: 2, right: 2, top: 4, bottom: 4 },
+    grid: { left: 0, right: 4, top: 6, bottom: 2 },
     tooltip: {
       trigger: 'axis',
       confine: true,
@@ -168,20 +164,19 @@ export function sparklineOption(
         typeof value === 'number' ? value.toLocaleString('ko-KR') : '-',
     },
     xAxis: { type: 'category', data: dates, show: false, boundaryGap: false },
-    yAxis: [
-      { type: 'value', show: false, min: 0 },
-      { type: 'value', show: false, min: 0 },
+    yAxis: { type: 'value', show: false, min: 0 },
+    series: [
+      {
+        name,
+        type: 'line',
+        data: values.map((value, day) =>
+          day === last ? { value, symbol: 'circle', symbolSize: 5 } : value,
+        ),
+        showSymbol: false,
+        smooth: false,
+        lineStyle: { width: 1.5 },
+        areaStyle: { opacity: 0.12 },
+      },
     ],
-    series: series.map((item, index) => ({
-      name: item.name,
-      type: 'line',
-      yAxisIndex: index,
-      data: item.values.map((value, day) => (hasData[day] ? value : null)),
-      connectNulls: false,
-      showSymbol: false,
-      smooth: false,
-      lineStyle: { width: 1.5 },
-      ...(index === 0 ? { areaStyle: { opacity: 0.08 } } : {}),
-    })),
   };
 }
