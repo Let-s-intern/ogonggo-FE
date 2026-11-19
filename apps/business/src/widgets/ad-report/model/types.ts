@@ -23,6 +23,13 @@ export type ReportSource =
   | 'EXTERNAL'
   | 'OTHER';
 
+export interface ScrollFunnelStep {
+  threshold: 0 | 25 | 50 | 75 | 100;
+  visitors: number;
+  /** 0~1. 순 방문자가 0 이면 null. */
+  rate: number | null;
+}
+
 export interface ReportDetailMetrics {
   views: number;
   uniqueVisitors: number;
@@ -67,7 +74,11 @@ export interface AdReport {
     ctaUniqueMembers: number;
     ctaClickRate: number | null;
     avgScrollPercent: number | null;
-    scrollReach: { p25: number; p50: number; p75: number; p100: number } | null;
+    /**
+     * 스크롤 깊이 깔때기. 상세를 연 순 방문자 중 0·25·50·75·100% 까지 내린 순 방문자 수와 비율. 0% 단계는 순 방문자
+     * 전체다. 방문자별로 가장 깊이 내린 값으로 센다.
+     */
+    scrollFunnel: ScrollFunnelStep[];
     avgDurationSeconds: number | null;
   };
   daily: ReportDailyRow[];

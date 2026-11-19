@@ -3,7 +3,7 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import { EChart } from '@/shared/ui/EChart';
-import { trendOption } from '../lib/chartOptions';
+import { funnelStepLabel, scrollFunnelOption, trendOption } from '../lib/chartOptions';
 import {
   dotDate,
   formatCount,
@@ -61,14 +61,9 @@ function SummaryCards({ report }: { report: AdReport }) {
       value: formatCount(summary.ctaClicks),
       sub: `CTA 클릭률 ${formatRate(summary.ctaClickRate)}`,
     },
-    {
-      label: '평균 스크롤',
-      value: formatPercent(summary.avgScrollPercent),
-      sub: `평균 체류 ${formatSeconds(summary.avgDurationSeconds)}`,
-    },
   ];
   return (
-    <div data-pdf-block className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+    <div data-pdf-block className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       {items.map((item) => (
         <div key={item.label} className="min-w-0 rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500">{item.label}</p>
@@ -117,6 +112,44 @@ function DailyTable({ report }: { report: AdReport }) {
         ))}
       </tbody>
     </table>
+  );
+}
+
+/**
+ * 스크롤 깊이 깔때기(2026-11-19 사용자: 평균 한 숫자 대신 단계별로 몇 명인지). 왼쪽은 그래프, 오른쪽은 단계별
+ * "N명 (xx%)". 평균 스크롤·체류는 아래 작은 글자로 남긴다.
+ */
+function ScrollFunnelCard({ report }: { report: AdReport }) {
+  const { scrollFunnel: steps, avgScrollPercent, avgDurationSeconds } = report.summary;
+  const option = useMemo(() => scrollFunnelOption(steps), [steps]);
+  const empty = (steps[0]?.visitors ?? 0) === 0;
+  return (
+    <ReportCard title="스크롤 깊이">
+      {empty ? (
+        <p className="py-4 text-center text-sm text-gray-500">아직 상세를 연 방문자가 없어요.</p>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_16rem] md:items-center">
+          <EChart option={option} height={220} />
+          <div className="flex flex-col gap-3">
+            <ol className="flex flex-col divide-y divide-gray-100 text-sm">
+              {steps.map((step) => (
+                <li key={step.threshold} className="flex items-center justify-between gap-3 py-2">
+                  <span className="text-gray-600">{funnelStepLabel(step.threshold)}</span>
+                  <span className="text-gray-900 tabular-nums">
+                    <span className="font-semibold">{formatCount(step.visitors)}명</span>
+                    <span className="ml-1 text-gray-500">({formatRate(step.rate)})</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-gray-500">
+              평균 스크롤 {formatPercent(avgScrollPercent)} · 평균 체류{' '}
+              {formatSeconds(avgDurationSeconds)}
+            </p>
+          </div>
+        </div>
+      )}
+    </ReportCard>
   );
 }
 
@@ -262,6 +295,10 @@ const DEFINITIONS = [
   ['순 방문자', '기간 안에 상세를 연 서로 다른 방문자 수'],
   ['CTA 클릭', '상세의 지원하러 가기·신청하러 가기를 누른 횟수'],
   ['CTA 클릭률', 'CTA 를 누른 순 방문자 / 상세를 연 순 방문자'],
+  [
+    '스크롤 깊이',
+    '상세를 연 순 방문자 중 25·50·75·100% 까지 내린 사람 수. 방문자마다 가장 깊이 내린 값으로 셉니다',
+  ],
   ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균'],
   ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균'],
 ] as const;
@@ -318,6 +355,7 @@ export function ReportBody({ report }: { report: AdReport }) {
       ) : null}
       <SummaryCards report={report} />
       <TrendCard report={report} />
+      <ScrollFunnelCard report={report} />
       <ExposureTable report={report} />
       <Targets report={report} />
       <Definitions />

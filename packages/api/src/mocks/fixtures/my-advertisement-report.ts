@@ -60,7 +60,8 @@ export interface MockReport {
     ctaUniqueMembers: number;
     ctaClickRate: number | null;
     avgScrollPercent: number | null;
-    scrollReach: { p25: number; p50: number; p75: number; p100: number } | null;
+    /** 스크롤 깊이 깔때기. 0·25·50·75·100% 단계. 0% 는 순 방문자 전체. 방문자가 없으면 `rate` 가 null. */
+    scrollFunnel: { threshold: 0 | 25 | 50 | 75 | 100; visitors: number; rate: number | null }[];
     avgDurationSeconds: number | null;
   };
   daily: MockReportDailyRow[];
@@ -301,7 +302,18 @@ export function buildReport(
   ];
   const targetViews = bySource.reduce((acc, row) => acc + row.views, 0);
   const targetUnique = Math.round(targetViews * 0.8);
-  const scrollReach = total.views > 0 ? { p25: 0.92, p50: 0.71, p75: 0.44, p100: 0.18 } : null;
+  // 기간 안의 서로 다른 방문자는 날마다 더한 것보다 적다.
+  const uniqueVisitors = Math.round(total.uniqueVisitors * 0.85);
+  // 깊이마다 남는 몫. 상품마다 조금씩 다르게 한다.
+  const keep = [1, 0.9, 0.7, 0.45, 0.2].map((share, i) =>
+    i === 0
+      ? 1
+      : Math.min(1, share * between(`${product.contractProductId}:funnel:${i}`, 0.9, 1.1)),
+  );
+  const scrollFunnel = ([0, 25, 50, 75, 100] as const).map((threshold, i) => {
+    const visitors = Math.round(uniqueVisitors * keep[i]!);
+    return { threshold, visitors, rate: rate(visitors, uniqueVisitors) };
+  });
 
   return {
     product: {
@@ -321,8 +333,7 @@ export function buildReport(
       adClicks: total.adClicks,
       adClickRate: rate(total.adClicks, total.impressions),
       views: total.views,
-      // 기간 안의 서로 다른 방문자는 날마다 더한 것보다 적다.
-      uniqueVisitors: Math.round(total.uniqueVisitors * 0.85),
+      uniqueVisitors,
       memberViews: total.memberViews,
       memberUniqueVisitors: Math.round(total.memberViews * 0.75),
       ctaClicks: total.ctaClicks,
@@ -330,7 +341,7 @@ export function buildReport(
       ctaUniqueMembers: Math.round(total.ctaUniqueVisitors * 0.5),
       ctaClickRate: rate(total.ctaUniqueVisitors, total.uniqueVisitors),
       avgScrollPercent: total.avgScrollPercent,
-      scrollReach,
+      scrollFunnel,
       avgDurationSeconds: total.avgDurationSeconds,
     },
     daily,
