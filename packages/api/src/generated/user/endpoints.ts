@@ -44,7 +44,9 @@ import type {
   CreateRecruitmentPostRequest,
   CreateServiceFeedbackRequest,
   DeleteFcmTokenRequest,
+  DownloadMyAdvertisementContractProductReportCsvParams,
   ErrorResponse,
+  GetMyAdvertisementContractProductReportParams,
   GetRecruitmentPostCommentRepliesParams,
   GetRecruitmentPostCommentsParams,
   GetRecruitmentPostsParams,
@@ -102,6 +104,7 @@ import type {
   SuccessResponseLetsCareerJobProfileSyncResponse,
   SuccessResponseListAdvertisementPostingResponse,
   SuccessResponseListConcernSummaryResponse,
+  SuccessResponseListMyActiveAdvertisementReportResponse,
   SuccessResponseListString,
   SuccessResponseListUserAnnouncementCategoryResponse,
   SuccessResponseListUserJobCalendarItemResponse,
@@ -112,6 +115,8 @@ import type {
   SuccessResponseMapStringListUserEnumOptionResponse,
   SuccessResponseMyAccountResponse,
   SuccessResponseMyAdvertisementContractDetailResponse,
+  SuccessResponseMyAdvertisementReportResponse,
+  SuccessResponseMyAdvertisementReportTotalResponse,
   SuccessResponsePageResponseAdvertisementExposureResponse,
   SuccessResponsePageResponseAdvertisementProductResponse,
   SuccessResponsePageResponseCompanyBootcampSummaryResponse,
@@ -9905,6 +9910,134 @@ export function useGetMyNotificationUnreadCount<TData = Awaited<ReturnType<typeo
 
 
 
+export type listMyActiveAdvertisementReportsResponse200 = {
+  data: SuccessResponseListMyActiveAdvertisementReportResponse
+  status: 200
+}
+
+export type listMyActiveAdvertisementReportsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listMyActiveAdvertisementReportsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listMyActiveAdvertisementReportsResponseSuccess = (listMyActiveAdvertisementReportsResponse200) & {
+  headers: Headers;
+};
+export type listMyActiveAdvertisementReportsResponseError = (listMyActiveAdvertisementReportsResponse401 | listMyActiveAdvertisementReportsResponse403) & {
+  headers: Headers;
+};
+
+export type listMyActiveAdvertisementReportsResponse = (listMyActiveAdvertisementReportsResponseSuccess | listMyActiveAdvertisementReportsResponseError)
+
+export const getListMyActiveAdvertisementReportsUrl = () => {
+
+
+
+
+  return `/api/v1/users/me/advertisement-reports/active`
+}
+
+/**
+ *
+ *             대시보드 카드용입니다. 내 모든 계약에서 오늘이 상품 기간 안이고 리포트를 열 수 있는 상품을 끝나는 날이 가까운 순으로 줍니다.
+ *             숫자는 상품 시작일부터 오늘까지의 상품 몫이며 상품 리포트의 summary와 같은 정의입니다. 없으면 빈 배열입니다.
+ * @summary 진행 중 광고 요약 조회
+ */
+export const listMyActiveAdvertisementReports = async ( options?: Parameters<typeof httpClient>[1]): Promise<listMyActiveAdvertisementReportsResponse> => {
+
+  return httpClient<listMyActiveAdvertisementReportsResponse>(getListMyActiveAdvertisementReportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyActiveAdvertisementReportsQueryKey = () => {
+    return [
+    `/api/v1/users/me/advertisement-reports/active`
+    ] as const;
+    }
+
+
+export const getListMyActiveAdvertisementReportsQueryOptions = <TData = Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyActiveAdvertisementReportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>> = ({ signal }) => listMyActiveAdvertisementReports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMyActiveAdvertisementReportsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>>
+export type ListMyActiveAdvertisementReportsQueryError = ErrorResponse
+
+
+export function useListMyActiveAdvertisementReports<TData = Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>,
+          TError,
+          Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyActiveAdvertisementReports<TData = Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>,
+          TError,
+          Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMyActiveAdvertisementReports<TData = Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 진행 중 광고 요약 조회
+ */
+
+export function useListMyActiveAdvertisementReports<TData = Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyActiveAdvertisementReports>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMyActiveAdvertisementReportsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listMyAdvertisementContractsResponse200 = {
   data: SuccessResponsePageResponseMyAdvertisementContractSummaryResponse
   status: 200
@@ -9954,10 +10087,10 @@ export const getListMyAdvertisementContractsUrl = (params?: ListMyAdvertisementC
 
 /**
  *
- *             로그인한 회원이 광고 신청 폼으로 낸 신청을 최근 신청부터 조회합니다. 로그인 없이 낸 신청과
- *             비즈니스 공고 등록으로 생긴 계약은 넣지 않습니다. status를 여러 번 보내면 그중 하나인 신청을 찾습니다.
+ *             로그인한 회원의 광고 계약을 최근 것부터 조회합니다. 광고 신청 폼으로 낸 신청과 비즈니스 공고 등록으로 생긴 계약을
+ *             모두 주며 source로 가릅니다. 로그인 없이 낸 신청은 넣지 않습니다. status를 여러 번 보내면 그중 하나인 계약을 찾습니다.
  *             page는 1부터 시작하고 기본 1, size 기본 10·최대 100입니다.
- * @summary 내 광고 신청 목록 조회
+ * @summary 내 광고 계약 목록 조회
  */
 export const listMyAdvertisementContracts = async (params?: ListMyAdvertisementContractsParams, options?: Parameters<typeof httpClient>[1]): Promise<listMyAdvertisementContractsResponse> => {
 
@@ -10028,7 +10161,7 @@ export function useListMyAdvertisementContracts<TData = Awaited<ReturnType<typeo
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 내 광고 신청 목록 조회
+ * @summary 내 광고 계약 목록 조회
  */
 
 export function useListMyAdvertisementContracts<TData = Awaited<ReturnType<typeof listMyAdvertisementContracts>>, TError = ErrorResponse>(
@@ -10088,10 +10221,11 @@ export const getGetMyAdvertisementContractUrl = (contractId: number,) => {
 
 /**
  *
- *             내가 낸 신청의 폼 입력값, 상태, 협의 금액과 운영자가 계약에 붙인 광고 상품을 조회합니다.
+ *             내 계약의 폼 입력값, 상태, 협의 금액과 운영자가 계약에 붙인 광고 상품을 조회합니다. 비즈니스 공고 계약은 폼에서만 받는 값이 null입니다.
  *             상품 이름·카테고리·자리는 조회 시점의 상품 값이며, 운영자가 지운 상품도 productDeleted=true로 보입니다.
- *             다른 회원의 신청, 로그인 없이 낸 신청, 비즈니스 공고 계약은 없는 신청과 같이 404입니다.
- * @summary 내 광고 신청 상세 조회
+ *             products[]의 reportAvailable·reportUnavailableReason이 성과 리포트를 열 수 있는지 알려 줍니다.
+ *             다른 회원의 계약과 로그인 없이 낸 신청은 없는 계약과 같이 404입니다.
+ * @summary 내 광고 계약 상세 조회
  */
 export const getMyAdvertisementContract = async (contractId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyAdvertisementContractResponse> => {
 
@@ -10162,7 +10296,7 @@ export function useGetMyAdvertisementContract<TData = Awaited<ReturnType<typeof 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 내 광고 신청 상세 조회
+ * @summary 내 광고 계약 상세 조회
  */
 
 export function useGetMyAdvertisementContract<TData = Awaited<ReturnType<typeof getMyAdvertisementContract>>, TError = ErrorResponse>(
@@ -10171,6 +10305,479 @@ export function useGetMyAdvertisementContract<TData = Awaited<ReturnType<typeof 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetMyAdvertisementContractQueryOptions(contractId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getMyAdvertisementContractReportSummaryResponse200 = {
+  data: SuccessResponseMyAdvertisementReportTotalResponse
+  status: 200
+}
+
+export type getMyAdvertisementContractReportSummaryResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getMyAdvertisementContractReportSummaryResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getMyAdvertisementContractReportSummaryResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getMyAdvertisementContractReportSummaryResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyAdvertisementContractReportSummaryResponseSuccess = (getMyAdvertisementContractReportSummaryResponse200) & {
+  headers: Headers;
+};
+export type getMyAdvertisementContractReportSummaryResponseError = (getMyAdvertisementContractReportSummaryResponse400 | getMyAdvertisementContractReportSummaryResponse401 | getMyAdvertisementContractReportSummaryResponse403 | getMyAdvertisementContractReportSummaryResponse404) & {
+  headers: Headers;
+};
+
+export type getMyAdvertisementContractReportSummaryResponse = (getMyAdvertisementContractReportSummaryResponseSuccess | getMyAdvertisementContractReportSummaryResponseError)
+
+export const getGetMyAdvertisementContractReportSummaryUrl = (contractId: number,) => {
+
+
+
+
+  return `/api/v1/users/me/advertisement-contracts/${contractId}/report-summary`
+}
+
+/**
+ *
+ *             계약에 붙은 상품 중 리포트를 열 수 있는 상품의 상품 몫을 더합니다. 각 상품은 상품 기간 전체(진행 중이면 오늘까지)이고,
+ *             아직 시작하지 않은 상품은 0입니다. 기간이 없거나 채널 상품은 products에 넣지 않습니다.
+ * @summary 내 광고 계약 전체 합계 조회
+ */
+export const getMyAdvertisementContractReportSummary = async (contractId: number, options?: Parameters<typeof httpClient>[1]): Promise<getMyAdvertisementContractReportSummaryResponse> => {
+
+  return httpClient<getMyAdvertisementContractReportSummaryResponse>(getGetMyAdvertisementContractReportSummaryUrl(contractId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyAdvertisementContractReportSummaryQueryKey = (contractId: number,) => {
+    return [
+    `/api/v1/users/me/advertisement-contracts/${contractId}/report-summary`
+    ] as const;
+    }
+
+
+export const getGetMyAdvertisementContractReportSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError = ErrorResponse>(contractId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyAdvertisementContractReportSummaryQueryKey(contractId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>> = ({ signal }) => getMyAdvertisementContractReportSummary(contractId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: contractId !== null && contractId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyAdvertisementContractReportSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>>
+export type GetMyAdvertisementContractReportSummaryQueryError = ErrorResponse
+
+
+export function useGetMyAdvertisementContractReportSummary<TData = Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError = ErrorResponse>(
+ contractId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyAdvertisementContractReportSummary<TData = Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError = ErrorResponse>(
+ contractId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyAdvertisementContractReportSummary<TData = Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError = ErrorResponse>(
+ contractId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 광고 계약 전체 합계 조회
+ */
+
+export function useGetMyAdvertisementContractReportSummary<TData = Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError = ErrorResponse>(
+ contractId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractReportSummary>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyAdvertisementContractReportSummaryQueryOptions(contractId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getMyAdvertisementContractProductReportResponse200 = {
+  data: SuccessResponseMyAdvertisementReportResponse
+  status: 200
+}
+
+export type getMyAdvertisementContractProductReportResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getMyAdvertisementContractProductReportResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getMyAdvertisementContractProductReportResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getMyAdvertisementContractProductReportResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getMyAdvertisementContractProductReportResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type getMyAdvertisementContractProductReportResponseSuccess = (getMyAdvertisementContractProductReportResponse200) & {
+  headers: Headers;
+};
+export type getMyAdvertisementContractProductReportResponseError = (getMyAdvertisementContractProductReportResponse400 | getMyAdvertisementContractProductReportResponse401 | getMyAdvertisementContractProductReportResponse403 | getMyAdvertisementContractProductReportResponse404 | getMyAdvertisementContractProductReportResponse409) & {
+  headers: Headers;
+};
+
+export type getMyAdvertisementContractProductReportResponse = (getMyAdvertisementContractProductReportResponseSuccess | getMyAdvertisementContractProductReportResponseError)
+
+export const getGetMyAdvertisementContractProductReportUrl = (contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report?${stringifiedParams}` : `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report`
+}
+
+/**
+ *
+ *     기업 회원이 자기 광고 계약에 붙은 상품 하나의 성과 리포트를 봅니다. 광고 신청 폼 계약과 비즈니스 공고 계약 모두 됩니다.
+ *     summary·daily·exposures는 이 상품의 노출로 들어온 이벤트만 센 상품 몫이고, targets는 계약 대상 공고의 전체 숫자입니다.
+ *     전날까지는 일별 집계, 오늘은 원본에서 셉니다. from·to(yyyy-MM-dd, 포함)는 상품 기간 안으로 자르며 비우면 상품 기간 전체(진행 중이면 오늘까지)입니다.
+ *     배너 상품은 스크롤 깊이·체류 시간이 null입니다.
+ * @summary 내 광고 상품 리포트 조회
+ */
+export const getMyAdvertisementContractProductReport = async (contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams, options?: Parameters<typeof httpClient>[1]): Promise<getMyAdvertisementContractProductReportResponse> => {
+
+  return httpClient<getMyAdvertisementContractProductReportResponse>(getGetMyAdvertisementContractProductReportUrl(contractId,contractProductId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyAdvertisementContractProductReportQueryKey = (contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams,) => {
+    return [
+    `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetMyAdvertisementContractProductReportQueryOptions = <TData = Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError = ErrorResponse>(contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyAdvertisementContractProductReportQueryKey(contractId,contractProductId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>> = ({ signal }) => getMyAdvertisementContractProductReport(contractId,contractProductId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: contractId !== null && contractId !== undefined && contractProductId !== null && contractProductId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyAdvertisementContractProductReportQueryResult = NonNullable<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>>
+export type GetMyAdvertisementContractProductReportQueryError = ErrorResponse
+
+
+export function useGetMyAdvertisementContractProductReport<TData = Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params: undefined |  GetMyAdvertisementContractProductReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyAdvertisementContractProductReport<TData = Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyAdvertisementContractProductReport<TData = Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 광고 상품 리포트 조회
+ */
+
+export function useGetMyAdvertisementContractProductReport<TData = Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params?: GetMyAdvertisementContractProductReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdvertisementContractProductReport>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyAdvertisementContractProductReportQueryOptions(contractId,contractProductId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type downloadMyAdvertisementContractProductReportCsvResponse200 = {
+  data: string
+  status: 200
+}
+
+export type downloadMyAdvertisementContractProductReportCsvResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type downloadMyAdvertisementContractProductReportCsvResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type downloadMyAdvertisementContractProductReportCsvResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type downloadMyAdvertisementContractProductReportCsvResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type downloadMyAdvertisementContractProductReportCsvResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type downloadMyAdvertisementContractProductReportCsvResponseSuccess = (downloadMyAdvertisementContractProductReportCsvResponse200) & {
+  headers: Headers;
+};
+export type downloadMyAdvertisementContractProductReportCsvResponseError = (downloadMyAdvertisementContractProductReportCsvResponse400 | downloadMyAdvertisementContractProductReportCsvResponse401 | downloadMyAdvertisementContractProductReportCsvResponse403 | downloadMyAdvertisementContractProductReportCsvResponse404 | downloadMyAdvertisementContractProductReportCsvResponse409) & {
+  headers: Headers;
+};
+
+export type downloadMyAdvertisementContractProductReportCsvResponse = (downloadMyAdvertisementContractProductReportCsvResponseSuccess | downloadMyAdvertisementContractProductReportCsvResponseError)
+
+export const getDownloadMyAdvertisementContractProductReportCsvUrl = (contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report.csv?${stringifiedParams}` : `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report.csv`
+}
+
+/**
+ *
+ *             리포트와 같은 기간·숫자를 날짜별·소재별 한 줄로 내려받습니다. UTF-8(BOM 포함) CSV이며 열은
+ *             date,exposureId,exposureName,impressions,adClicks,views,uniqueVisitors,memberViews,ctaClicks,ctaUniqueVisitors,avgScrollPercent,avgDurationSeconds
+ *             입니다. 값이 없는 평균은 빈 칸입니다. 오류는 JSON 오류 응답입니다.
+ * @summary 내 광고 상품 리포트 CSV 다운로드
+ */
+export const downloadMyAdvertisementContractProductReportCsv = async (contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams, options?: Parameters<typeof httpClient>[1]): Promise<downloadMyAdvertisementContractProductReportCsvResponse> => {
+
+  return httpClient<downloadMyAdvertisementContractProductReportCsvResponse>(getDownloadMyAdvertisementContractProductReportCsvUrl(contractId,contractProductId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadMyAdvertisementContractProductReportCsvQueryKey = (contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams,) => {
+    return [
+    `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report.csv`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getDownloadMyAdvertisementContractProductReportCsvQueryOptions = <TData = Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError = ErrorResponse>(contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadMyAdvertisementContractProductReportCsvQueryKey(contractId,contractProductId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>> = ({ signal }) => downloadMyAdvertisementContractProductReportCsv(contractId,contractProductId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: contractId !== null && contractId !== undefined && contractProductId !== null && contractProductId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadMyAdvertisementContractProductReportCsvQueryResult = NonNullable<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>>
+export type DownloadMyAdvertisementContractProductReportCsvQueryError = ErrorResponse
+
+
+export function useDownloadMyAdvertisementContractProductReportCsv<TData = Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params: undefined |  DownloadMyAdvertisementContractProductReportCsvParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>,
+          TError,
+          Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadMyAdvertisementContractProductReportCsv<TData = Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>,
+          TError,
+          Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadMyAdvertisementContractProductReportCsv<TData = Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 내 광고 상품 리포트 CSV 다운로드
+ */
+
+export function useDownloadMyAdvertisementContractProductReportCsv<TData = Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError = ErrorResponse>(
+ contractId: number,
+    contractProductId: number,
+    params?: DownloadMyAdvertisementContractProductReportCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMyAdvertisementContractProductReportCsv>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadMyAdvertisementContractProductReportCsvQueryOptions(contractId,contractProductId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -13424,7 +14031,7 @@ export const getListPublicAdvertisementPostingsUrl = (params: ListPublicAdvertis
 }
 
 /**
- * 로그인 없이 호출할 수 있고, 토큰을 보내면 요약의 bookmarked가 채워집니다. 광고 공고 자리(JOB_LIST, BOOTCAMP_LIST, JOB_DETAIL_SIDE, JOB_PICK)만 받습니다. 켜져 있고 노출 기간 안인 노출 중 대상이 게시 중이고 모집 중인 것만 displayOrder와 노출 ID 순으로 모두 반환하며 페이지를 나누지 않습니다. targetType이 JOB이면 job에 공개 채용공고 목록 요약이, BOOTCAMP이면 bootcamp에 공개 부트캠프 목록 요약이 있고 나머지 하나는 null입니다. 광고주·상품·계약·기간은 반환하지 않습니다.
+ * 로그인 없이 호출할 수 있고, 토큰을 보내면 요약의 bookmarked가 채워집니다. 광고 공고 자리(JOB_PICK, JOB_LIST, JOB_DETAIL_SIDE, CALENDAR_DAY, MYPAGE_SCRAP, BOOTCAMP_LIST)만 받습니다. BOOTCAMP_LIST(부트캠프 목록 상단 고정)는 부트캠프만 띄우므로 항목의 bootcamp가 채워지고 job은 null이며, 나머지 자리는 채용공고를 띄웁니다. JOB_LIST는 채용공고 목록의 직군 탭마다 따로 팔므로 jobField(GET /api/v1/enums의 JobField 값)가 필수이고 그 직군의 노출만 주며, 다른 자리는 jobField를 보내지 않습니다. 항목의 jobField는 JOB_LIST 노출의 직군이고 다른 자리는 null입니다. 항목의 recommendationTitle·recommendationDescription은 JOB_PICK 노출의 추천 문구(운영자 PICK 카드와 같은 상자에 보임)로 JOB_PICK이면 늘 있고 다른 자리는 null입니다. 켜져 있고 노출 기간 안인 노출 중 대상이 게시 중이고 모집 중인 것만 displayOrder와 노출 ID 순으로 모두 반환하며 페이지를 나누지 않습니다. targetType이 JOB이면 job에 공개 채용공고 목록 요약이, BOOTCAMP이면 bootcamp에 공개 부트캠프 목록 요약이 있고 나머지 하나는 null입니다. 항목의 startAt·endAt은 노출 기간(Asia/Seoul)이며 null이면 그쪽 끝이 열려 있습니다. 공고 달력 자리(CALENDAR_DAY)는 이것으로 고른 날짜가 노출 기간 안인지 가립니다. 광고주·상품·계약은 반환하지 않습니다.
  * @summary 자리별 공개 광고 공고 조회
  */
 export const listPublicAdvertisementPostings = async (params: ListPublicAdvertisementPostingsParams, options?: Parameters<typeof httpClient>[1]): Promise<listPublicAdvertisementPostingsResponse> => {
@@ -13907,13 +14514,21 @@ export const getListMyRecruitmentPostApplicationsResponseMock = (overrideRespons
         [faker.string.alphanumeric(5)]: faker.number.int()
       }}, undefined]), ...overrideResponse})
 
-export const getListMyNotificationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserNotificationPageResponse, object>> = {}): SuccessResponseUserNotificationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), type: faker.helpers.arrayElement(['SIDE_STUDY_COMMENT_REPLY','CONCERN_COMMENT','ADMIN_NOTIFICATION'] as const), actorNickname: faker.string.alpha({length: {min: 10, max: 20}}), actorProfileImageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), postTitle: faker.string.alpha({length: {min: 10, max: 20}}), preview: faker.string.alpha({length: {min: 10, max: 20}}), postId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), commentId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), isRead: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), batchId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), body: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), sourceId: faker.string.alpha({length: {min: 10, max: 20}}), source: faker.string.alpha({length: {min: 10, max: 20}})})), nextCursor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), hasNext: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+export const getListMyNotificationsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserNotificationPageResponse, object>> = {}): SuccessResponseUserNotificationPageResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), type: faker.helpers.arrayElement(['SIDE_STUDY_COMMENT_REPLY','CONCERN_COMMENT','ADMIN_NOTIFICATION'] as const), actorNickname: faker.string.alpha({length: {min: 10, max: 20}}), actorProfileImageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), postTitle: faker.string.alpha({length: {min: 10, max: 20}}), preview: faker.string.alpha({length: {min: 10, max: 20}}), postId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), commentId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), isRead: faker.datatype.boolean(), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', url: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), batchId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), body: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), source: faker.string.alpha({length: {min: 10, max: 20}}), sourceId: faker.string.alpha({length: {min: 10, max: 20}})})), nextCursor: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), hasNext: faker.datatype.boolean()}, undefined]), ...overrideResponse})
 
 export const getGetMyNotificationUnreadCountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUserNotificationUnreadCountResponse, object>> = {}): SuccessResponseUserNotificationUnreadCountResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{count: faker.number.int()}, undefined]), ...overrideResponse})
 
-export const getListMyAdvertisementContractsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseMyAdvertisementContractSummaryResponse, object>> = {}): SuccessResponsePageResponseMyAdvertisementContractSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentDeadline: faker.date.past().toISOString().slice(0, 10), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), paymentAmount: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListMyActiveAdvertisementReportsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListMyActiveAdvertisementReportResponse, object>> = {}): SuccessResponseListMyActiveAdvertisementReportResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractId: faker.number.int(), contractProductId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10), daysLeft: faker.number.int(), impressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), ctaClicks: faker.number.int(), scroll50Rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), target: faker.helpers.arrayElement([faker.helpers.arrayElement([{targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}})},null,]), undefined]), daily: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int()}))})), undefined]), ...overrideResponse})
 
-export const getGetMyAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAdvertisementContractDetailResponse, object>> = {}): SuccessResponseMyAdvertisementContractDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentUrl: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentDeadline: faker.date.past().toISOString().slice(0, 10), purpose: faker.helpers.arrayElement(['FAST_APPLICANTS','FIT_APPLICANTS','BRAND_AWARENESS'] as const), budgetAmount: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), scheduleRequest: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), advertisementRequest: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), managerName: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.string.alpha({length: {min: 10, max: 20}}), phoneNumber: faker.string.alpha({length: {min: 10, max: 20}}), businessNumberType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['BUSINESS_REGISTRATION','CORPORATE_REGISTRATION','OVERSEAS'] as const), null]), undefined]), businessNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), invoiceMethod: faker.helpers.arrayElement(['TAX_INVOICE','NEGOTIATE'] as const), creativeMethod: faker.helpers.arrayElement(['REQUEST_PRODUCTION','PROVIDE_DIRECTLY'] as const), formAnswers: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), paymentAmount: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), productName: faker.string.alpha({length: {min: 10, max: 20}}), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK'] as const), null]), undefined]), productDeleted: faker.datatype.boolean(), startDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), endDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined])}))}, undefined]), ...overrideResponse})
+export const getListMyAdvertisementContractsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseMyAdvertisementContractSummaryResponse, object>> = {}): SuccessResponsePageResponseMyAdvertisementContractSummaryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), source: faker.helpers.arrayElement(['APPLICATION_FORM','COMPANY_POSTING'] as const), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentDeadline: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), paymentAmount: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+
+export const getGetMyAdvertisementContractResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAdvertisementContractDetailResponse, object>> = {}): SuccessResponseMyAdvertisementContractDetailResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{id: faker.number.int(), source: faker.helpers.arrayElement(['APPLICATION_FORM','COMPANY_POSTING'] as const), status: faker.helpers.arrayElement(['REQUESTED','NEGOTIATING','APPROVED','REJECTED'] as const), promotionTarget: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), companyName: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentTitle: faker.string.alpha({length: {min: 10, max: 20}}), recruitmentUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), recruitmentDeadline: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), purpose: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['FAST_APPLICANTS','FIT_APPLICANTS','BRAND_AWARENESS'] as const), null]), undefined]), budgetAmount: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), categories: faker.helpers.arrayElements(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), scheduleRequest: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), advertisementRequest: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), managerName: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), email: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), businessNumberType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['BUSINESS_REGISTRATION','CORPORATE_REGISTRATION','OVERSEAS'] as const), null]), undefined]), businessNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), invoiceMethod: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['TAX_INVOICE','NEGOTIATE'] as const), null]), undefined]), creativeMethod: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['REQUEST_PRODUCTION','PROVIDE_DIRECTLY'] as const), null]), undefined]), formAnswers: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), label: faker.string.alpha({length: {min: 10, max: 20}}), value: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), paymentAmount: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), productName: faker.string.alpha({length: {min: 10, max: 20}}), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP'] as const), null]), undefined]), productDeleted: faker.datatype.boolean(), startDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), endDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]), undefined]), reportAvailable: faker.datatype.boolean(), reportUnavailableReason: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['NO_PERIOD','NOT_EXPOSABLE'] as const), null]), undefined])}))}, undefined]), ...overrideResponse})
+
+export const getGetMyAdvertisementContractReportSummaryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAdvertisementReportTotalResponse, object>> = {}): SuccessResponseMyAdvertisementReportTotalResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{total: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), ctaClicks: faker.number.int()}, products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), ctaClicks: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getGetMyAdvertisementContractProductReportResponseMock = (overrideResponse: Partial<Extract<SuccessResponseMyAdvertisementReportResponse, object>> = {}): SuccessResponseMyAdvertisementReportResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{product: {contractProductId: faker.number.int(), productId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10)}, from: faker.date.past().toISOString().slice(0, 10), to: faker.date.past().toISOString().slice(0, 10), collectedSince: faker.date.past().toISOString().slice(0, 10), uniqueCountsApproximate: faker.datatype.boolean(), summary: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), memberUniqueVisitors: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), ctaUniqueMembers: faker.number.int(), ctaClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), scrollFunnel: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({threshold: faker.number.int(), visitors: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, daily: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), exposures: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), impressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), total: {views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, bySource: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({source: faker.helpers.arrayElement(['AD_CARD','BANNER','LIST','SEARCH','DIRECT','EXTERNAL','OTHER'] as const), views: faker.number.int(), ctaClicks: faker.number.int()}))})), byJobField: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaUniqueMembers: faker.number.int(), adClickMembers: faker.number.int()}))}, undefined]), ...overrideResponse})
+
+export const getDownloadMyAdvertisementContractProductReportCsvResponseMock = (): string => (faker.word.sample())
 
 export const getGetRecruitmentPostCommentRepliesResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseRecruitmentPostCommentResponse, object>> = {}): SuccessResponsePageResponseRecruitmentPostCommentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), parentId: faker.helpers.arrayElement([faker.number.int(), undefined]), author: {userId: faker.number.int(), nickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), profileImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), role: faker.helpers.arrayElement(['USER','COMPANY','ADMIN','MENTOR'] as const)}, content: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z', updatedAt: faker.date.past().toISOString().slice(0, 19) + 'Z', mine: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -13961,11 +14576,11 @@ export const getGetPublicAnnouncementResponseMock = (overrideResponse: Partial<E
 
 export const getListPublicAnnouncementCategoriesResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListUserAnnouncementCategoryResponse, object>> = {}): SuccessResponseListUserAnnouncementCategoryResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), count: faker.number.int(), recentAnnouncements: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), pinned: faker.datatype.boolean(), category: faker.helpers.arrayElement(['OGONGGO_UPDATE','NEW_JOB_NOTE','SERVICE_NOTICE','BUSINESS_NOTICE'] as const), thumbnailUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), summary: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), createdAt: faker.date.past().toISOString().slice(0, 19) + 'Z'}))})), undefined]), ...overrideResponse})
 
-export const getListPublicAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
+export const getListPublicAdvertisementProductsResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdvertisementProductResponse, object>> = {}): SuccessResponsePageResponseAdvertisementProductResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined])})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
 export const getListPublicAdvertisementExposuresResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdvertisementExposureResponse, object>> = {}): SuccessResponsePageResponseAdvertisementExposureResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), imageUrl: faker.string.alpha({length: {min: 10, max: 20}}), mobileImageUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), linkUrl: faker.string.alpha({length: {min: 10, max: 20}}), adLabel: faker.datatype.boolean()})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
-export const getListPublicAdvertisementPostingsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdvertisementPostingResponse, object>> = {}): SuccessResponseListAdvertisementPostingResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), position: faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK'] as const), displayOrder: faker.number.int(), adLabel: faker.datatype.boolean(), targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), job: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), bootcamp: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined])})), undefined]), ...overrideResponse})
+export const getListPublicAdvertisementPostingsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdvertisementPostingResponse, object>> = {}): SuccessResponseListAdvertisementPostingResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), position: faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), null]), undefined]), recommendationTitle: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), recommendationDescription: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), startAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', null]), undefined]), endAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', null]), undefined]), displayOrder: faker.number.int(), adLabel: faker.datatype.boolean(), targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), job: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), coverImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), experienceType: faker.helpers.arrayElement(['NEWCOMER','EXPERIENCED','BOTH','IRRELEVANT'] as const), jobField: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), undefined]), jobRole: faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_BACKEND','IT_FRONTEND_FULLSTACK','IT_WEB','IT_ANDROID','IT_IOS','IT_INFRA_DEVOPS','IT_SECURITY','IT_EMBEDDED_IOT_ROBOTICS','IT_ERP_SAP','IT_DEV_PM','IT_ETC','AI_DATA_ANALYST_SCIENTIST','AI_DATA_ENGINEER','AI_ML_MLOPS','AI_LLM_GENERATIVE_AI','AI_ETC','GAME_PLANNING_PM','GAME_OPERATION','GAME_QA','GAME_CLIENT','GAME_SERVER','GAME_MOBILE','GAME_TECHNICAL_ARTIST','GAME_ART','GAME_MODELING_3D','GAME_ANIMATION','GAME_EFFECT_FX','GAME_UI','GAME_DIRECTING_VIDEO','GAME_SOUND','GAME_ETC','DESIGN_UX_UI_PRODUCT','DESIGN_RESEARCH','PLANNING_PM_PO','PLANNING_SERVICE_PRODUCT_PLANNING','PLANNING_BUSINESS_STRATEGY','PLANNING_CONSULTING','PLANNING_BUSINESS_DEVELOPMENT','PLANNING_PROJECT_MANAGER','PLANNING_OPERATIONS_MANAGEMENT','PLANNING_MANAGEMENT_SUPPORT','PLANNING_ETC','MARKETING_STRATEGY','MARKETING_PERFORMANCE','MARKETING_CONTENT','MARKETING_SNS','MARKETING_BRAND','MARKETING_CRM','MARKETING_GLOBAL','MARKETING_AD_PLANNING_AE','MARKETING_PR','MARKETING_EXHIBITION_EVENT','MARKETING_ETC','MD_PRODUCT_PLANNING','MD_ONLINE','MD_FOOD','MD_FASHION','MD_BEAUTY','MD_SALES','MD_RETAIL','MD_ETC','SALES_B2C','SALES_B2B','SALES_GENERAL','SALES_MANAGEMENT_SUPPORT','SALES_TECH_IT','SALES_OVERSEAS','SALES_PHARMA_MEDICAL','SALES_ETC','TRADE_OVERSEAS_TRADING_SALES','TRADE_IMPORT_EXPORT','TRADE_CUSTOMS_BROKER','TRADE_TRADE_FINANCE','TRADE_FORWARDING','TRADE_PURCHASING','TRADE_LOGISTICS_SCM','TRADE_WAREHOUSE_PACKING','TRADE_INVENTORY','TRADE_TRANSPORTATION','TRADE_DISTRIBUTION','TRADE_FACILITY_MANAGEMENT','TRADE_ETC','TRANSPORT_DELIVERY','TRANSPORT_PASSENGER','TRANSPORT_FREIGHT','TRANSPORT_PROFESSIONAL_DRIVING','TRANSPORT_DISPATCH','TRANSPORT_ETC','LEGAL_LAWYER','LEGAL_PATENT_ATTORNEY','LEGAL_LEGAL_AFFAIRS','LEGAL_COMPLIANCE','LEGAL_INTERNAL_AUDIT','LEGAL_ESG_ETHICS','LEGAL_PATENT_IP','LEGAL_ETC','HR_PLANNING','HR_COMPENSATION','HR_HRD_CULTURE','HR_LABOR_RELATIONS','HR_GENERAL_AFFAIRS_SECRETARY','HR_ETC','ACCOUNTING_FINANCE','ACCOUNTING_ACCOUNTING','ACCOUNTING_TAX','ACCOUNTING_ETC','SECURITIES_TRADING','SECURITIES_RISK_COMPLIANCE_REVIEW','SECURITIES_VC_PE','SECURITIES_INVESTMENT_BANKING','SECURITIES_REAL_ESTATE_INFRA_FINANCE','SECURITIES_PB_WM','SECURITIES_MANAGEMENT_SUPPORT','SECURITIES_PRODUCT_DEVELOPMENT_SALES','SECURITIES_ETC','BANKING_BANK','BANKING_CARD','BANKING_CAPITAL','BANKING_INSURANCE_PLANNER','BANKING_ACTUARY','BANKING_CLAIMS_ADJUSTER','BANKING_UNDERWRITING','BANKING_CLAIMS','BANKING_INSURANCE_PRODUCT','BANKING_ETC','ENGINEERING_SEMICONDUCTOR_DISPLAY','ENGINEERING_ELECTRICAL_ELECTRONIC_CONTROL','ENGINEERING_TELECOM_NETWORK','ENGINEERING_MECHANICAL','ENGINEERING_MECHANICAL_DESIGN_CAD','ENGINEERING_AUTOMOTIVE','ENGINEERING_SHIPBUILDING_AEROSPACE','ENGINEERING_METAL_STEEL','ENGINEERING_CHEMICAL','ENGINEERING_COSMETICS','ENGINEERING_BIO_PHARMA','ENGINEERING_FOOD','ENGINEERING_ENERGY','ENGINEERING_ENVIRONMENT','ENGINEERING_ETC','CONSTRUCTION_ARCHITECTURAL_DESIGN','CONSTRUCTION_CIVIL_SURVEY_LANDSCAPE','CONSTRUCTION_MEP_FIRE','CONSTRUCTION_DESIGN_SUPERVISION','CONSTRUCTION_SAFETY_QUALITY_MATERIAL','CONSTRUCTION_OFFICE_ADMIN','CONSTRUCTION_SPECIAL_DAILY_LABOR','CONSTRUCTION_ETC','PRODUCTION_PRODUCTION','PRODUCTION_PLANT_ADMIN','PRODUCTION_EQUIPMENT','PRODUCTION_ENVIRONMENT_SAFETY','PRODUCTION_LOGISTICS','PRODUCTION_QUALITY','PRODUCTION_CONSTRUCTION_PROJECT','PRODUCTION_DESIGN_CAD_CAM','PRODUCTION_FACILITY_MANAGEMENT','PRODUCTION_ETC','MEDICAL_DOCTOR','MEDICAL_KOREAN_MEDICINE_DOCTOR','MEDICAL_VETERINARIAN','MEDICAL_PHARMACIST','MEDICAL_NURSE','MEDICAL_NURSE_AIDE','MEDICAL_DENTAL_HYGIENIST','MEDICAL_EMT','MEDICAL_PHYSICAL_OCCUPATIONAL_THERAPY','MEDICAL_RADIOLOGY_CLINICAL_LAB','MEDICAL_DIETITIAN','MEDICAL_MEDICAL_AESTHETICS','MEDICAL_HOSPITAL_ADMIN','MEDICAL_CARE_WORKER','MEDICAL_POSTPARTUM_CARE','MEDICAL_OPTICIAN','MEDICAL_ETC','PUBLIC_ADMINISTRATION','PUBLIC_TECH_IT_FACILITY','PUBLIC_SOCIAL_SERVICE','PUBLIC_EDUCATION_RESEARCH','PUBLIC_PUBLIC_SAFETY','PUBLIC_COUNSELING','PUBLIC_RELIGION','PUBLIC_CHILD_YOUTH_WELFARE','PUBLIC_ELDERLY_WOMEN_WELFARE','PUBLIC_VOLUNTEER','PUBLIC_ETC','EDUCATION_KINDERGARTEN_CHILDCARE','EDUCATION_CONTRACT_PRIVATE_TEACHER','EDUCATION_AFTER_SCHOOL_PART_TIME','EDUCATION_PROFESSOR_LECTURER','EDUCATION_STAFF_ASSISTANT','EDUCATION_ACADEMY_EXAM_INSTRUCTOR','EDUCATION_LANGUAGE_INSTRUCTOR','EDUCATION_TECHNICAL_INSTRUCTOR','EDUCATION_HOME_VISIT_TEACHER','EDUCATION_ACADEMY_COUNSELING_OPERATION','EDUCATION_INSTRUCTIONAL_DESIGN','EDUCATION_ETC','MEDIA_PD_DIRECTOR','MEDIA_CONTENT_PLANNING_EDITOR','MEDIA_VIDEO_EDITOR','MEDIA_CREATOR_INFLUENCER','CS_CS','CS_CX_MANAGER','SERVICE_INSTALLATION_REPAIR','SERVICE_PARKING_FUEL','SERVICE_HOUSEKEEPER','SERVICE_PET_GROOMING_TRAINING','SERVICE_SECURITY_GUARD','SERVICE_HOTEL','SERVICE_TOURISM','SERVICE_AIRLINE','SERVICE_STORE_MANAGEMENT','SERVICE_RECEPTION','SERVICE_HAIR_DESIGNER','SERVICE_MAKEUP_NAIL','SERVICE_SKIN_CARE','SERVICE_MASSAGE_BODY_CARE','SERVICE_WEDDING_PLANNER','SERVICE_SANITATION','SERVICE_ETC','FOOD_FOOD_PROCESSING_DEVELOPMENT','FOOD_KITCHEN_COOKING','FOOD_BAKERY','FOOD_BEVERAGE_LIQUOR','FOOD_STORE_OPERATION','FOOD_HALL_STAFF','FOOD_CONSULTING_SUPPORT','FOOD_ETC'] as const), undefined]), experienceMinYears: faker.helpers.arrayElement([faker.number.int(), undefined]), educationLevel: faker.helpers.arrayElement(['ANY','HIGH_SCHOOL','ASSOCIATE','BACHELOR','MASTER','DOCTORATE'] as const), region: faker.helpers.arrayElement([faker.helpers.arrayElement(['NATIONWIDE','SEOUL','GYEONGGI','INCHEON','BUSAN','DAEGU','JEONNAM_GWANGJU','DAEJEON','ULSAN','SEJONG','GANGWON','GYEONGNAM','GYEONGBUK','CHUNGNAM','CHUNGBUK','JEONBUK','JEJU','OVERSEAS'] as const), undefined]), subRegion: faker.helpers.arrayElement([faker.helpers.arrayElement(['SEOUL_JONGNO_GU','SEOUL_JUNG_GU','SEOUL_YONGSAN_GU','SEOUL_SEONGDONG_GU','SEOUL_GWANGJIN_GU','SEOUL_DONGDAEMUN_GU','SEOUL_JUNGNANG_GU','SEOUL_SEONGBUK_GU','SEOUL_GANGBUK_GU','SEOUL_DOBONG_GU','SEOUL_NOWON_GU','SEOUL_EUNPYEONG_GU','SEOUL_SEODAEMUN_GU','SEOUL_MAPO_GU','SEOUL_YANGCHEON_GU','SEOUL_GANGSEO_GU','SEOUL_GURO_GU','SEOUL_GEUMCHEON_GU','SEOUL_YEONGDEUNGPO_GU','SEOUL_DONGJAK_GU','SEOUL_GWANAK_GU','SEOUL_SEOCHO_GU','SEOUL_GANGNAM_GU','SEOUL_SONGPA_GU','SEOUL_GANGDONG_GU','GYEONGGI_SUWON_SI','GYEONGGI_SEONGNAM_SI','GYEONGGI_UIJEONGBU_SI','GYEONGGI_ANYANG_SI','GYEONGGI_BUCHEON_SI','GYEONGGI_GWANGMYEONG_SI','GYEONGGI_PYEONGTAEK_SI','GYEONGGI_DONGDUCHEON_SI','GYEONGGI_ANSAN_SI','GYEONGGI_GOYANG_SI','GYEONGGI_GWACHEON_SI','GYEONGGI_GURI_SI','GYEONGGI_NAMYANGJU_SI','GYEONGGI_OSAN_SI','GYEONGGI_SIHEUNG_SI','GYEONGGI_GUNPO_SI','GYEONGGI_UIWANG_SI','GYEONGGI_HANAM_SI','GYEONGGI_YONGIN_SI','GYEONGGI_PAJU_SI','GYEONGGI_ICHEON_SI','GYEONGGI_ANSEONG_SI','GYEONGGI_GIMPO_SI','GYEONGGI_HWASEONG_SI','GYEONGGI_GWANGJU_SI','GYEONGGI_YANGJU_SI','GYEONGGI_POCHEON_SI','GYEONGGI_YEOJU_SI','GYEONGGI_YEONCHEON_GUN','GYEONGGI_GAPYEONG_GUN','GYEONGGI_YANGPYEONG_GUN','INCHEON_JEMULPO_GU','INCHEON_YEONGJONG_GU','INCHEON_MICHUHOL_GU','INCHEON_YEONSU_GU','INCHEON_NAMDONG_GU','INCHEON_BUPYEONG_GU','INCHEON_GYEYANG_GU','INCHEON_SEOHAE_GU','INCHEON_GEOMDAN_GU','INCHEON_GANGHWA_GUN','INCHEON_ONGJIN_GUN','BUSAN_JUNG_GU','BUSAN_SEO_GU','BUSAN_DONG_GU','BUSAN_YEONGDO_GU','BUSAN_BUSANJIN_GU','BUSAN_DONGNAE_GU','BUSAN_NAM_GU','BUSAN_BUK_GU','BUSAN_HAEUNDAE_GU','BUSAN_SAHA_GU','BUSAN_GEUMJEONG_GU','BUSAN_GANGSEO_GU','BUSAN_YEONJE_GU','BUSAN_SUYEONG_GU','BUSAN_SASANG_GU','BUSAN_GIJANG_GUN','DAEGU_JUNG_GU','DAEGU_DONG_GU','DAEGU_SEO_GU','DAEGU_NAM_GU','DAEGU_BUK_GU','DAEGU_SUSEONG_GU','DAEGU_DALSEO_GU','DAEGU_DALSEONG_GUN','DAEGU_GUNWI_GUN','JEONNAM_GWANGJU_MOKPO_SI','JEONNAM_GWANGJU_YEOSU_SI','JEONNAM_GWANGJU_SUNCHEON_SI','JEONNAM_GWANGJU_NAJU_SI','JEONNAM_GWANGJU_GWANGYANG_SI','JEONNAM_GWANGJU_DONG_GU','JEONNAM_GWANGJU_SEO_GU','JEONNAM_GWANGJU_NAM_GU','JEONNAM_GWANGJU_BUK_GU','JEONNAM_GWANGJU_GWANGSAN_GU','JEONNAM_GWANGJU_DAMYANG_GUN','JEONNAM_GWANGJU_GOKSEONG_GUN','JEONNAM_GWANGJU_GURYE_GUN','JEONNAM_GWANGJU_GOHEUNG_GUN','JEONNAM_GWANGJU_BOSEONG_GUN','JEONNAM_GWANGJU_HWASUN_GUN','JEONNAM_GWANGJU_JANGHEUNG_GUN','JEONNAM_GWANGJU_GANGJIN_GUN','JEONNAM_GWANGJU_HAENAM_GUN','JEONNAM_GWANGJU_YEONGAM_GUN','JEONNAM_GWANGJU_MUAN_GUN','JEONNAM_GWANGJU_HAMPYEONG_GUN','JEONNAM_GWANGJU_YEONGGWANG_GUN','JEONNAM_GWANGJU_JANGSEONG_GUN','JEONNAM_GWANGJU_WANDO_GUN','JEONNAM_GWANGJU_JINDO_GUN','JEONNAM_GWANGJU_SINAN_GUN','DAEJEON_DONG_GU','DAEJEON_JUNG_GU','DAEJEON_SEO_GU','DAEJEON_YUSEONG_GU','DAEJEON_DAEDEOK_GU','ULSAN_JUNG_GU','ULSAN_NAM_GU','ULSAN_DONG_GU','ULSAN_BUK_GU','ULSAN_ULJU_GUN','GANGWON_CHUNCHEON_SI','GANGWON_WONJU_SI','GANGWON_GANGNEUNG_SI','GANGWON_DONGHAE_SI','GANGWON_TAEBAEK_SI','GANGWON_SOKCHO_SI','GANGWON_SAMCHEOK_SI','GANGWON_HONGCHEON_GUN','GANGWON_HOENGSEONG_GUN','GANGWON_YEONGWOL_GUN','GANGWON_PYEONGCHANG_GUN','GANGWON_JEONGSEON_GUN','GANGWON_CHEORWON_GUN','GANGWON_HWACHEON_GUN','GANGWON_YANGGU_GUN','GANGWON_INJE_GUN','GANGWON_GOSEONG_GUN','GANGWON_YANGYANG_GUN','GYEONGNAM_CHANGWON_SI','GYEONGNAM_JINJU_SI','GYEONGNAM_TONGYEONG_SI','GYEONGNAM_SACHEON_SI','GYEONGNAM_GIMHAE_SI','GYEONGNAM_MIRYANG_SI','GYEONGNAM_GEOJE_SI','GYEONGNAM_YANGSAN_SI','GYEONGNAM_UIRYEONG_GUN','GYEONGNAM_HAMAN_GUN','GYEONGNAM_CHANGNYEONG_GUN','GYEONGNAM_GOSEONG_GUN','GYEONGNAM_NAMHAE_GUN','GYEONGNAM_HADONG_GUN','GYEONGNAM_SANCHEONG_GUN','GYEONGNAM_HAMYANG_GUN','GYEONGNAM_GEOCHANG_GUN','GYEONGNAM_HAPCHEON_GUN','GYEONGBUK_POHANG_SI','GYEONGBUK_GYEONGJU_SI','GYEONGBUK_GIMCHEON_SI','GYEONGBUK_ANDONG_SI','GYEONGBUK_GUMI_SI','GYEONGBUK_YEONGJU_SI','GYEONGBUK_YEONGCHEON_SI','GYEONGBUK_SANGJU_SI','GYEONGBUK_MUNGYEONG_SI','GYEONGBUK_GYEONGSAN_SI','GYEONGBUK_UISEONG_GUN','GYEONGBUK_CHEONGSONG_GUN','GYEONGBUK_YEONGYANG_GUN','GYEONGBUK_YEONGDEOK_GUN','GYEONGBUK_CHEONGDO_GUN','GYEONGBUK_GORYEONG_GUN','GYEONGBUK_SEONGJU_GUN','GYEONGBUK_CHILGOK_GUN','GYEONGBUK_YECHEON_GUN','GYEONGBUK_BONGHWA_GUN','GYEONGBUK_ULJIN_GUN','GYEONGBUK_ULLEUNG_GUN','CHUNGNAM_CHEONAN_SI','CHUNGNAM_GONGJU_SI','CHUNGNAM_BORYEONG_SI','CHUNGNAM_ASAN_SI','CHUNGNAM_SEOSAN_SI','CHUNGNAM_NONSAN_SI','CHUNGNAM_GYERYONG_SI','CHUNGNAM_DANGJIN_SI','CHUNGNAM_GEUMSAN_GUN','CHUNGNAM_BUYEO_GUN','CHUNGNAM_SEOCHEON_GUN','CHUNGNAM_CHEONGYANG_GUN','CHUNGNAM_HONGSEONG_GUN','CHUNGNAM_YESAN_GUN','CHUNGNAM_TAEAN_GUN','CHUNGBUK_CHEONGJU_SI','CHUNGBUK_CHUNGJU_SI','CHUNGBUK_JECHEON_SI','CHUNGBUK_BOEUN_GUN','CHUNGBUK_OKCHEON_GUN','CHUNGBUK_YEONGDONG_GUN','CHUNGBUK_JEUNGPYEONG_GUN','CHUNGBUK_JINCHEON_GUN','CHUNGBUK_GOESAN_GUN','CHUNGBUK_EUMSEONG_GUN','CHUNGBUK_DANYANG_GUN','JEONBUK_JEONJU_SI','JEONBUK_GUNSAN_SI','JEONBUK_IKSAN_SI','JEONBUK_JEONGEUP_SI','JEONBUK_NAMWON_SI','JEONBUK_GIMJE_SI','JEONBUK_WANJU_GUN','JEONBUK_JINAN_GUN','JEONBUK_MUJU_GUN','JEONBUK_JANGSU_GUN','JEONBUK_IMSIL_GUN','JEONBUK_SUNCHANG_GUN','JEONBUK_GOCHANG_GUN','JEONBUK_BUAN_GUN','JEJU_JEJU_SI','JEJU_SEOGWIPO_SI'] as const), undefined]), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z', bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined]), bootcamp: faker.helpers.arrayElement([{id: faker.number.int(), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), programType: faker.string.alpha({length: {min: 10, max: 20}}), operationType: faker.helpers.arrayElement(['ONLINE','OFFLINE','HYBRID'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), programStartDate: faker.date.past().toISOString().slice(0, 10), programEndDate: faker.date.past().toISOString().slice(0, 10), capacity: faker.helpers.arrayElement([faker.number.int(), undefined]), tuitionType: faker.helpers.arrayElement(['FREE','PAID','GOVERNMENT_FUNDED'] as const), tuitionAmount: faker.helpers.arrayElement([faker.number.int(), undefined]), representativeImageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), logoUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), shortDescription: faker.string.alpha({length: {min: 10, max: 20}}), status: faker.helpers.arrayElement(['DRAFT','RECRUITING','CLOSED'] as const), closedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), bookmarked: faker.datatype.boolean(), viewCount: faker.number.int(), bookmarkCount: faker.number.int(), commentCount: faker.number.int()}, undefined])})), undefined]), ...overrideResponse})
 
 export const getDeleteRecruitmentPostCommentResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
@@ -14996,6 +15611,18 @@ export const getGetMyNotificationUnreadCountMockHandler = (overrideResponse?: Su
   }, options)
 }
 
+export const getListMyActiveAdvertisementReportsMockHandler = (overrideResponse?: SuccessResponseListMyActiveAdvertisementReportResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListMyActiveAdvertisementReportResponse> | SuccessResponseListMyActiveAdvertisementReportResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/advertisement-reports/active', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListMyActiveAdvertisementReportsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListMyAdvertisementContractsMockHandler = (overrideResponse?: SuccessResponsePageResponseMyAdvertisementContractSummaryResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponsePageResponseMyAdvertisementContractSummaryResponse> | SuccessResponsePageResponseMyAdvertisementContractSummaryResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/users/me/advertisement-contracts', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -15016,6 +15643,43 @@ export const getGetMyAdvertisementContractMockHandler = (overrideResponse?: Succ
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getGetMyAdvertisementContractResponseMock(),
       { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyAdvertisementContractReportSummaryMockHandler = (overrideResponse?: SuccessResponseMyAdvertisementReportTotalResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMyAdvertisementReportTotalResponse> | SuccessResponseMyAdvertisementReportTotalResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/advertisement-contracts/:contractId/report-summary', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyAdvertisementContractReportSummaryResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetMyAdvertisementContractProductReportMockHandler = (overrideResponse?: SuccessResponseMyAdvertisementReportResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseMyAdvertisementReportResponse> | SuccessResponseMyAdvertisementReportResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/advertisement-contracts/:contractId/products/:contractProductId/report', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetMyAdvertisementContractProductReportResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDownloadMyAdvertisementContractProductReportCsvMockHandler = (overrideResponse?: string | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<string> | string), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/users/me/advertisement-contracts/:contractId/products/:contractProductId/report.csv', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+  const resolvedBody = overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDownloadMyAdvertisementContractProductReportCsvResponseMock();
+    const textBody = typeof resolvedBody === 'string' ? resolvedBody : JSON.stringify(resolvedBody ?? null);
+    return HttpResponse.text(textBody,
+      { status: 200, headers: { 'Content-Type': 'text/csv' }
       })
   }, options)
 }
@@ -15430,8 +16094,12 @@ export const getOgonggoUserAPIMock = () => [
   getListMyRecruitmentPostApplicationsMockHandler(),
   getListMyNotificationsMockHandler(),
   getGetMyNotificationUnreadCountMockHandler(),
+  getListMyActiveAdvertisementReportsMockHandler(),
   getListMyAdvertisementContractsMockHandler(),
   getGetMyAdvertisementContractMockHandler(),
+  getGetMyAdvertisementContractReportSummaryMockHandler(),
+  getGetMyAdvertisementContractProductReportMockHandler(),
+  getDownloadMyAdvertisementContractProductReportCsvMockHandler(),
   getGetRecruitmentPostCommentRepliesMockHandler(),
   getListMyRecruitmentPostBookmarksMockHandler(),
   getListPublicRecommendedChallengesMockHandler(),

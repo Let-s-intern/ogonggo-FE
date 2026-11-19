@@ -6,12 +6,15 @@
  */
 
 /**
+ * 소재 준비 방식. 비즈니스 공고 계약은 null
+ *
  * | 값 | code | 설명 |
  * | --- | --- | --- |
  * | `REQUEST_PRODUCTION` | 1 | 공고 정보로 제작 요청 |
  * | `PROVIDE_DIRECTLY` | 2 | 직접 제작한 소재 제공 |
+ * @nullable
  */
-export type MyAdvertisementContractDetailResponseCreativeMethod = typeof MyAdvertisementContractDetailResponseCreativeMethod[keyof typeof MyAdvertisementContractDetailResponseCreativeMethod];
+export type MyAdvertisementContractDetailResponseCreativeMethod = typeof MyAdvertisementContractDetailResponseCreativeMethod[keyof typeof MyAdvertisementContractDetailResponseCreativeMethod] | null;
 
 
 export const MyAdvertisementContractDetailResponseCreativeMethod = {

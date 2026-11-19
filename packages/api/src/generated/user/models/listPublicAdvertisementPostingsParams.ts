@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { ListPublicAdvertisementPostingsJobField } from './listPublicAdvertisementPostingsJobField';
 import type { ListPublicAdvertisementPostingsPosition } from './listPublicAdvertisementPostingsPosition';
 
 export type ListPublicAdvertisementPostingsParams = {
@@ -11,4 +12,28 @@ export type ListPublicAdvertisementPostingsParams = {
  * 고정된 광고 공고 자리 이름
  */
 position: ListPublicAdvertisementPostingsPosition;
+/**
+ * | 값 | code | 설명 |
+ * | --- | --- | --- |
+ * | `IT_DEVELOPMENT` | 1 | IT·개발 |
+ * | `GAME` | 3 | 게임 |
+ * | `PLANNING_STRATEGY` | 5 | 기획·전략 |
+ * | `MARKETING_ADVERTISING` | 6 | 마케팅·광고 |
+ * | `SALES` | 8 | 영업 |
+ * | `TRADE_LOGISTICS` | 9 | 무역·물류 |
+ * | `TRANSPORT_DELIVERY` | 10 | 운송·배송 |
+ * | `LEGAL` | 11 | 법률·법무 |
+ * | `HR_GENERAL_AFFAIRS` | 12 | HR·총무 |
+ * | `SECURITIES_ASSET_MANAGEMENT` | 14 | 증권·운용 |
+ * | `BANKING_CARD_INSURANCE` | 15 | 은행·카드·보험 |
+ * | `ENGINEERING_RND` | 16 | 엔지니어링·R&D |
+ * | `CONSTRUCTION_ARCHITECTURE` | 17 | 건설·건축 |
+ * | `PRODUCTION_SKILLED_TRADES` | 18 | 생산·기능직 |
+ * | `MEDICAL_HEALTH` | 19 | 의료·보건 |
+ * | `PUBLIC_WELFARE` | 20 | 공공·복지 |
+ * | `EDUCATION` | 21 | 교육 |
+ * | `SERVICE` | 24 | 서비스 |
+ * | `FOOD_BEVERAGE` | 25 | 식음료 |
+ */
+jobField?: ListPublicAdvertisementPostingsJobField;
 };

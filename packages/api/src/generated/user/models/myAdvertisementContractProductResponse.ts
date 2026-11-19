@@ -6,6 +6,7 @@
  */
 import type { MyAdvertisementContractProductResponseCategory } from './myAdvertisementContractProductResponseCategory';
 import type { MyAdvertisementContractProductResponsePosition } from './myAdvertisementContractProductResponsePosition';
+import type { MyAdvertisementContractProductResponseReportUnavailableReason } from './myAdvertisementContractProductResponseReportUnavailableReason';
 
 /**
  * 운영자가 계약에 붙인 광고 상품. 붙인 순서이며 아직 없으면 빈 배열
@@ -39,9 +40,11 @@ export interface MyAdvertisementContractProductResponse {
      * | `BOOTCAMP_LIST_BOTTOM_BANNER` | 5 | 부트캠프 목록 하단 |
      * | `BOOTCAMP_DETAIL_BANNER` | 6 | 부트캠프 상세 |
      * | `JOB_LIST` | 7 | 채용공고 목록 |
-     * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 |
+     * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 상단 고정 |
      * | `JOB_DETAIL_SIDE` | 9 | 공고 상세 옆 추천 |
      * | `JOB_PICK` | 10 | 오공고 PICK |
+     * | `CALENDAR_DAY` | 11 | 공고 달력 날짜별 |
+     * | `MYPAGE_SCRAP` | 12 | 마이페이지 스크랩 칸 |
      * @nullable
      */
   position?: MyAdvertisementContractProductResponsePosition;
@@ -57,4 +60,16 @@ export interface MyAdvertisementContractProductResponse {
      * @nullable
      */
   endDate?: string | null;
+  /** 성과 리포트를 열 수 있는 상품인지 */
+  reportAvailable: boolean;
+  /**
+     * 리포트를 열 수 없는 이유. 기간 없음(NO_PERIOD), 채널 상품(NOT_EXPOSABLE). 열 수 있으면 null
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `NO_PERIOD` | 1 | 기간 미정 |
+     * | `NOT_EXPOSABLE` | 2 | 집계 대상 아님 |
+     * @nullable
+     */
+  reportUnavailableReason?: MyAdvertisementContractProductResponseReportUnavailableReason;
 }

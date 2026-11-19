@@ -6,10 +6,20 @@
  */
 import type { MyAdvertisementContractSummaryResponseCategoriesItem } from './myAdvertisementContractSummaryResponseCategoriesItem';
 import type { MyAdvertisementContractSummaryResponsePromotionTarget } from './myAdvertisementContractSummaryResponsePromotionTarget';
+import type { MyAdvertisementContractSummaryResponseSource } from './myAdvertisementContractSummaryResponseSource';
 import type { MyAdvertisementContractSummaryResponseStatus } from './myAdvertisementContractSummaryResponseStatus';
 
 export interface MyAdvertisementContractSummaryResponse {
   id: number;
+  /**
+     * 계약이 생긴 경로. 광고 신청 폼(APPLICATION_FORM) 또는 비즈니스 공고 등록(COMPANY_POSTING)
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `APPLICATION_FORM` | 1 | 광고 신청 |
+     * | `COMPANY_POSTING` | 2 | 비즈니스 공고 등록 |
+     */
+  source: MyAdvertisementContractSummaryResponseSource;
   /**
      * | 값 | code | 설명 |
      * | --- | --- | --- |
@@ -27,15 +37,20 @@ export interface MyAdvertisementContractSummaryResponse {
      */
   promotionTarget: MyAdvertisementContractSummaryResponsePromotionTarget;
   companyName: string;
+  /** 공고명. 비즈니스 공고 계약은 공고를 등록할 때의 제목 */
   recruitmentTitle: string;
-  recruitmentDeadline: string;
-  /** 신청 때 고른 광고 카테고리 */
+  /**
+     * 모집 마감일. 비즈니스 상시 공고는 null
+     * @nullable
+     */
+  recruitmentDeadline?: string | null;
+  /** 신청 때 고른 광고 카테고리. 비즈니스 공고 계약은 빈 배열 */
   categories: MyAdvertisementContractSummaryResponseCategoriesItem[];
   /**
      * 협의로 정한 결제 금액(원). 아직 정하지 않았으면 null
      * @nullable
      */
   paymentAmount?: number | null;
-  /** 신청 일시 */
+  /** 신청 일시. 비즈니스 공고 계약은 공고 등록 일시 */
   registeredAt: string;
 }

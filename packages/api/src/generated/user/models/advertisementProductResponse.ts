@@ -33,9 +33,11 @@ export interface AdvertisementProductResponse {
      * | `BOOTCAMP_LIST_BOTTOM_BANNER` | 5 | 부트캠프 목록 하단 |
      * | `BOOTCAMP_DETAIL_BANNER` | 6 | 부트캠프 상세 |
      * | `JOB_LIST` | 7 | 채용공고 목록 |
-     * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 |
+     * | `BOOTCAMP_LIST` | 8 | 부트캠프 목록 상단 고정 |
      * | `JOB_DETAIL_SIDE` | 9 | 공고 상세 옆 추천 |
      * | `JOB_PICK` | 10 | 오공고 PICK |
+     * | `CALENDAR_DAY` | 11 | 공고 달력 날짜별 |
+     * | `MYPAGE_SCRAP` | 12 | 마이페이지 스크랩 칸 |
      * @nullable
      */
   position?: AdvertisementProductResponsePosition;

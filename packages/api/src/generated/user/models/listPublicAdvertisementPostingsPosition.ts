@@ -9,8 +9,10 @@ export type ListPublicAdvertisementPostingsPosition = typeof ListPublicAdvertise
 
 
 export const ListPublicAdvertisementPostingsPosition = {
-  JOB_LIST: 'JOB_LIST',
-  BOOTCAMP_LIST: 'BOOTCAMP_LIST',
-  JOB_DETAIL_SIDE: 'JOB_DETAIL_SIDE',
   JOB_PICK: 'JOB_PICK',
+  JOB_LIST: 'JOB_LIST',
+  JOB_DETAIL_SIDE: 'JOB_DETAIL_SIDE',
+  CALENDAR_DAY: 'CALENDAR_DAY',
+  MYPAGE_SCRAP: 'MYPAGE_SCRAP',
+  BOOTCAMP_LIST: 'BOOTCAMP_LIST',
 } as const;

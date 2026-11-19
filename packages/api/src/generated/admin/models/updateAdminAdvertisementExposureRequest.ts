@@ -4,6 +4,7 @@
  * Ogonggo Admin API
  * OpenAPI spec version: v1
  */
+import type { UpdateAdminAdvertisementExposureRequestJobField } from './updateAdminAdvertisementExposureRequestJobField';
 import type { UpdateAdminAdvertisementExposureRequestTargetType } from './updateAdminAdvertisementExposureRequestTargetType';
 
 export interface UpdateAdminAdvertisementExposureRequest {
@@ -49,6 +50,47 @@ export interface UpdateAdminAdvertisementExposureRequest {
   targetType?: UpdateAdminAdvertisementExposureRequestTargetType;
   /** @nullable */
   targetId?: number | null;
+  /**
+     * 광고 공고가 채용공고 목록(JOB_LIST) 자리면 띄울 직군 탭. GET /api/v1/enums의 JobField 값이며 JOB_LIST는 필수, 다른 자리와 배너는 null입니다.
+     *
+     * | 값 | code | 설명 |
+     * | --- | --- | --- |
+     * | `IT_DEVELOPMENT` | 1 | IT·개발 |
+     * | `GAME` | 3 | 게임 |
+     * | `PLANNING_STRATEGY` | 5 | 기획·전략 |
+     * | `MARKETING_ADVERTISING` | 6 | 마케팅·광고 |
+     * | `SALES` | 8 | 영업 |
+     * | `TRADE_LOGISTICS` | 9 | 무역·물류 |
+     * | `TRANSPORT_DELIVERY` | 10 | 운송·배송 |
+     * | `LEGAL` | 11 | 법률·법무 |
+     * | `HR_GENERAL_AFFAIRS` | 12 | HR·총무 |
+     * | `SECURITIES_ASSET_MANAGEMENT` | 14 | 증권·운용 |
+     * | `BANKING_CARD_INSURANCE` | 15 | 은행·카드·보험 |
+     * | `ENGINEERING_RND` | 16 | 엔지니어링·R&D |
+     * | `CONSTRUCTION_ARCHITECTURE` | 17 | 건설·건축 |
+     * | `PRODUCTION_SKILLED_TRADES` | 18 | 생산·기능직 |
+     * | `MEDICAL_HEALTH` | 19 | 의료·보건 |
+     * | `PUBLIC_WELFARE` | 20 | 공공·복지 |
+     * | `EDUCATION` | 21 | 교육 |
+     * | `SERVICE` | 24 | 서비스 |
+     * | `FOOD_BEVERAGE` | 25 | 식음료 |
+     * @nullable
+     */
+  jobField?: UpdateAdminAdvertisementExposureRequestJobField;
+  /**
+     * 오공고 PICK(JOB_PICK) 광고 카드의 추천 문구 제목(운영자 PICK과 같은 30자 이하). JOB_PICK은 필수이고 공백일 수 없으며, 다른 자리와 배너는 null입니다.
+     * @minLength 0
+     * @maxLength 30
+     * @nullable
+     */
+  recommendationTitle?: string | null;
+  /**
+     * 오공고 PICK(JOB_PICK) 광고 카드의 추천 문구 설명(운영자 PICK과 같은 200자 이하). JOB_PICK은 필수이고 공백일 수 없으며, 다른 자리와 배너는 null입니다.
+     * @minLength 0
+     * @maxLength 200
+     * @nullable
+     */
+  recommendationDescription?: string | null;
   adLabel: boolean;
   /**
      * Asia/Seoul 기준 일시. 시작·종료를 함께 생략하면 상시입니다.
