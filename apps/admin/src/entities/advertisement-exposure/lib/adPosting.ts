@@ -18,6 +18,7 @@ export const AD_POSTING_POSITIONS: readonly AdPostingPosition[] = [
   'JOB_DETAIL_SIDE',
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
+  'BOOTCAMP_LIST',
 ];
 
 export const AD_POSTING_POSITION_LABELS: Record<AdPostingPosition, string> = {
@@ -26,6 +27,7 @@ export const AD_POSTING_POSITION_LABELS: Record<AdPostingPosition, string> = {
   JOB_DETAIL_SIDE: '공고 상세 옆',
   CALENDAR_DAY: '공고 달력',
   MYPAGE_SCRAP: '마이페이지 스크랩',
+  BOOTCAMP_LIST: '부트캠프 목록 상단 고정',
 };
 
 export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string> = {
@@ -39,15 +41,18 @@ export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string>
     '공고 달력에서 고른 날짜의 공고 목록 맨 앞 칸. 노출 기간 안의 날짜면 날마다 붙습니다.',
   MYPAGE_SCRAP:
     '마이페이지 지원 관리 보드(PC 보드 보기)의 채용공고 스크랩 칸 맨 앞 칸. 모바일 리스트 보기에는 없습니다.',
+  BOOTCAMP_LIST:
+    '부트캠프 목록 전체 탭 1페이지 맨 앞 칸. 일반 카드와 같은 모양에 광고 표시가 붙고, 많아야 3칸입니다. 대상은 부트캠프입니다.',
 };
 
-/** 광고 공고 자리는 모두 채용공고만 걸 수 있다(계약 8절). */
+/** 광고 공고 자리는 채용공고만 걸 수 있다(계약 8절). 부트캠프 목록 상단 고정만 부트캠프다. */
 export const AD_POSTING_FIXED_TARGET: Record<AdPostingPosition, 'JOB' | 'BOOTCAMP' | undefined> = {
   JOB_PICK: 'JOB',
   JOB_LIST: 'JOB',
   JOB_DETAIL_SIDE: 'JOB',
   CALENDAR_DAY: 'JOB',
   MYPAGE_SCRAP: 'JOB',
+  BOOTCAMP_LIST: 'BOOTCAMP',
 };
 
 /**

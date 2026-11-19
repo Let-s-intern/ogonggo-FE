@@ -15,8 +15,8 @@ import { ok, paginate, readPaging } from './paging';
 /**
  * 광고 공고(카드) 노출 목(PRD `prd-business-report.md` 6.8, API 계약 2절). BE(Push 5) 배포 전이라 이 모양이 계약이다.
  *
- * - 광고 공고 자리는 다섯이다(계약 8절, 공고 상세 옆은 사용자 결정으로 남김): `JOB_PICK`·`JOB_LIST`·`JOB_DETAIL_SIDE`·
- *   `CALENDAR_DAY`·`MYPAGE_SCRAP`. 오공고 PICK 을 뺀 넷에 광고 공고 상품 하나씩을 시드로 넣는다
+ * - 광고 공고 자리는 여섯이다(계약 8절, 공고 상세 옆·부트캠프 목록 상단 고정은 사용자 결정으로 남김): `JOB_PICK`·`JOB_LIST`·
+ *   `JOB_DETAIL_SIDE`·`CALENDAR_DAY`·`MYPAGE_SCRAP`·`BOOTCAMP_LIST`. 자리마다 광고 공고 상품 하나씩을 시드로 넣는다
  * - 어드민 노출 응답에 `targetTitle`·`targetCompanyName`·`targetPublished` 가 더해진다. 노출 목록을 여기서 먼저 받아 얹는다
  * - 리스트 상단 고정(`JOB_LIST`) 노출은 직무(`jobField`)가 있어야 한다(없으면 400). 같은 직무 안 같은 대상은 409, 다른 자리는
  *   같은 자리(상품) 안 같은 대상이 409. 없는 대상은 404. 나머지 검증·저장은 `./advertisements.ts` 가 그대로 한다
@@ -32,7 +32,8 @@ export type AdPostingPosition =
   | 'JOB_LIST'
   | 'JOB_DETAIL_SIDE'
   | 'CALENDAR_DAY'
-  | 'MYPAGE_SCRAP';
+  | 'MYPAGE_SCRAP'
+  | 'BOOTCAMP_LIST';
 
 /** 어드민 노출 응답에 이 목이 얹는 칸. 배너는 모두 null 이다. */
 export type AdminAdPostingExposureResponse = AdminAdvertisementExposureResponse & {
@@ -58,6 +59,7 @@ const POSTING_PRODUCTS: { id: number; position: AdPostingPosition; name: string;
     { id: 102, position: 'CALENDAR_DAY', name: '공고 달력 날짜별 공고', price: 200000 },
     { id: 103, position: 'JOB_DETAIL_SIDE', name: '공고 상세 옆 추천 공고', price: 150000 },
     { id: 110, position: 'MYPAGE_SCRAP', name: '마이페이지 스크랩 칸 공고', price: 150000 },
+    { id: 112, position: 'BOOTCAMP_LIST', name: '부트캠프 목록 상단 고정', price: 200000 },
     { id: 111, position: 'JOB_PICK', name: '인기 채용공고 추천 카드', price: 400000 },
   ];
 
@@ -71,7 +73,7 @@ const STALE_POSITIONS: readonly string[] = [
 
 /**
  * 이 목의 옛 판이 어드민 브라우저 `localStorage` 에 남긴 시드 상품 자리(102 부트캠프 목록, 잠깐 마이페이지 스크랩이던 103)를
- * 지금 시드 자리로 되돌린다. 옛 부트캠프 노출은 광고 공고 자리에 걸 수 없어(채용공고만) 지운다.
+ * 지금 시드 자리로 되돌린다. 부트캠프 목록 상단 고정이 아닌 상품에 남은 옛 부트캠프 노출은 지운다(채용공고만 걸린다).
  */
 function migrateRemovedPositions() {
   for (const product of POSTING_PRODUCTS) {
@@ -94,7 +96,9 @@ function migrateRemovedPositions() {
     (exposure) =>
       !(
         exposure.targetType === 'BOOTCAMP' &&
-        POSTING_PRODUCTS.some((product) => product.id === exposure.productId)
+        POSTING_PRODUCTS.some(
+          (product) => product.id === exposure.productId && product.position !== 'BOOTCAMP_LIST',
+        )
       ),
   );
 }
@@ -170,6 +174,27 @@ function seedPostings() {
       targetId: 7,
       recommendationTitle: '바이오 QC 첫 커리어로 추천',
       recommendationDescription: '신입도 지원할 수 있는 품질관리 계약직이에요.',
+      adLabel: true,
+      exposed: true,
+      advertiserCompanyName: null,
+      startAt: null,
+      endAt: null,
+      displayOrder: 1,
+      registeredAt: SEED_TIME,
+      updatedAt: SEED_TIME,
+    });
+  }
+  // 부트캠프 목록 상단 고정 자리. 대상은 부트캠프다.
+  if (!advertisementStore.exposures.some((exposure) => exposure.productId === 112)) {
+    advertisementStore.exposures.push({
+      id: Math.max(0, ...advertisementStore.exposures.map((item) => item.id)) + 1,
+      productId: 112,
+      contractId: null,
+      name: null,
+      imageUrl: null,
+      linkUrl: null,
+      targetType: 'BOOTCAMP',
+      targetId: 3,
       adLabel: true,
       exposed: true,
       advertiserCompanyName: null,

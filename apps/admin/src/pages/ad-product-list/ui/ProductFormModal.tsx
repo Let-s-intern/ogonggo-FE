@@ -16,8 +16,8 @@ const NAME_MAX_LENGTH = 100;
 const CATEGORY_OPTIONS = enumOptions('AdvertisementProductCategory');
 
 /**
- * 판매 중인 광고 공고 상품의 자리, 판매 상품 차례(계약 8절). 부트캠프 목록은 판매 상품이 없어 고르지 않는다(LC-3649).
- * 공고 상세 옆은 2026-11-19 사용자 결정으로 남긴다.
+ * 판매 중인 광고 공고 상품의 자리, 판매 상품 차례(계약 8절). 공고 상세 옆과 부트캠프 목록 상단 고정은 2026-11-19 사용자
+ * 결정으로 남긴다.
  */
 const SOLD_AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_PICK',
@@ -25,6 +25,7 @@ const SOLD_AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_DETAIL_SIDE',
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
+  'BOOTCAMP_LIST',
 ];
 
 /**
