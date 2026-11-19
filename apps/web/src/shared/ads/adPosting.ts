@@ -2,10 +2,8 @@ import type { DataLayerEvent, DataLayerParams } from '@/shared/analytics/dataLay
 
 /**
  * 광고 공고 카드 한 장이 어느 광고의 몇 번째 칸인지(이슈 #573). 카드는 일반 카드와 같은 컴포넌트이고, 이 값이 있으면
- * `광고` 표시를 붙이고 누를 때 `ad_posting_click` 을 더 보낸다.
- *
- * 백엔드에 광고 공고 공개 자리가 아직 없어(BE PRD F-01 보류) 지금은 목록이 이 값을 채우지 않는다. 자리 이름도 정해진
- * enum 이 없어 문자열로 둔다.
+ * `adLabel` 에 따라 `AD` 표시를 붙이고 누를 때 `ad_posting_click` 을 더 보낸다. 값은 광고 공고 공개 조회
+ * (`./fetchAdPostings.ts`)에서 온다. 자리 이름은 그 응답의 `position` 문자열이다.
  */
 export interface AdSlot {
   /** 광고 노출 id(`exposureId`). 공고 id 가 아니다. 광고 리포트 이벤트의 `exposureId` 로도 나간다. */
@@ -13,6 +11,8 @@ export interface AdSlot {
   placement: string;
   /** 자리 안 순서, 1부터. 어드민이 정한 순서이고 목록의 칸 번호와 같다. */
   position: number;
+  /** 카드에 `AD` 표시를 붙일지. 광고 공고 응답의 `adLabel` 그대로다. 꺼져 있어도 광고 이벤트는 그대로 나간다. */
+  adLabel: boolean;
 }
 
 /**

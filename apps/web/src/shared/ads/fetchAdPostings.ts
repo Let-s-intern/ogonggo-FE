@@ -3,8 +3,11 @@ import type { UserBootcampSummaryResponse, UserJobSummaryResponse } from '@ogong
 import { isAdsEnabled } from '@/shared/config/ads';
 import type { AdSlot } from './adPosting';
 
-/** 광고 공고 자리(PRD 6.8, D12). 백엔드 `AdvertisementProductPosition` 에 더해지는 값이다. */
-export type AdPostingPosition = 'JOB_LIST' | 'BOOTCAMP_LIST' | 'JOB_DETAIL_SIDE';
+/**
+ * 광고 공고 자리(PRD 6.8, D12). 백엔드 `AdvertisementProductPosition` 에 더해지는 값이다. `JOB_PICK` 은 홈 히어로
+ * `오공고 PICK` 탭이다(계약 7절).
+ */
+export type AdPostingPosition = 'JOB_LIST' | 'BOOTCAMP_LIST' | 'JOB_DETAIL_SIDE' | 'JOB_PICK';
 
 /**
  * 광고 공고 한 칸. `targetType` 이 `JOB` 이면 `job`, `BOOTCAMP` 면 `bootcamp` 가 찬다. 응답 모양은
@@ -15,6 +18,8 @@ export interface AdPostingResponse {
   position: AdPostingPosition;
   displayOrder: number;
   targetType: 'JOB' | 'BOOTCAMP';
+  /** 카드에 `AD` 표시를 붙일지(계약 7절). */
+  adLabel: boolean;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }
@@ -48,5 +53,10 @@ export async function fetchAdPostings(position: AdPostingPosition): Promise<AdPo
 
 /** 카드에 넘기는 광고 값. 칸 번호는 자리 안 순서(1부터)다. */
 export function toAdSlot(posting: AdPostingResponse, position: number): AdSlot {
-  return { adId: posting.exposureId, placement: posting.position, position };
+  return {
+    adId: posting.exposureId,
+    placement: posting.position,
+    position,
+    adLabel: posting.adLabel === true,
+  };
 }

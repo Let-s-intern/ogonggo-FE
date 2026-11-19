@@ -16,7 +16,7 @@ interface SideItem {
 
 /**
  * 공고 상세 옆 추천 광고 공고(`JOB_DETAIL_SIDE`, PRD 6.8). 모양은 바로 위 `비슷한 공고`(`SimilarJobs`)와 같은 한 줄
- * 카드이고, 회사명 앞에 `광고` 를 붙인다. 지금 보는 공고는 뺀다. 공고와 부트캠프가 섞여 올 수 있다.
+ * 카드이고, `adLabel` 이 켜진 칸은 회사명 앞에 `AD` 를 붙인다. 지금 보는 공고는 뺀다. 공고와 부트캠프가 섞여 올 수 있다.
  *
  * 좁은 화면에서는 사이드바가 본문 아래로 내려가므로 이 묶음도 본문 아래다. 보일 광고가 없으면 아무것도 그리지 않는다.
  *
@@ -69,7 +69,7 @@ export async function SideAdPostings({ excludeJobId }: { excludeJobId: number })
             <>
               <div className="min-w-0 flex-1">
                 <p className="flex min-w-0 items-center gap-1 text-xs text-gray-500">
-                  <AdLabel />
+                  {ad.adLabel ? <AdLabel /> : null}
                   <span className="truncate">{summary.companyName}</span>
                 </p>
                 <p className="mt-1 line-clamp-2 break-keep text-pretty break-words text-sm font-bold text-gray-800 transition-colors group-hover:text-blue-500">

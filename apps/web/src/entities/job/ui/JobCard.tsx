@@ -38,7 +38,7 @@ export interface JobCardProps {
    */
   variant?: 'grid' | 'featured';
   /**
-   * 광고 공고 칸(이슈 #573). 주면 회사명 앞에 `광고` 를 붙이고, 이벤트의 광고 값(`is_promoted` 등)을 채우고, 누를 때
+   * 광고 공고 칸(이슈 #573). 주면 `adLabel` 이 켜진 칸에 회사명 앞 `AD` 를 붙이고, 이벤트의 광고 값(`is_promoted` 등)을 채우고, 누를 때
    * `ad_posting_click` 을 더 보낸다. 카드 모양은 그대로다.
    */
   ad?: AdSlot;
@@ -109,7 +109,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }:
   const closed = isRecruitmentClosed(job.recruitmentType, job.recruitmentEndAt, job.closedAt);
   const jobMajor = getJobMajor(job.id);
   const jobInfo = ad ? { ...toJobInfo(job), ...adParams(ad) } : toJobInfo(job);
-  const adLabel = ad ? <AdLabel /> : null;
+  const adLabel = ad?.adLabel ? <AdLabel /> : null;
   const recommendationTitle = recommendation?.title.trim();
   const recommendationDescription = recommendation?.description.trim();
   const metaParts = [
