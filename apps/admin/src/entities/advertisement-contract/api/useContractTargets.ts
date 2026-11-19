@@ -21,6 +21,25 @@ export function targetsOf(contract: AdminAdvertisementContractDetailResponse): C
   return (contract as Partial<AdminContractDetailWithTargets>).targets ?? [];
 }
 
+/**
+ * 광고 공고를 걸 때 바로 고를 수 있는 계약의 대상(2026-11-20 사용자 요청). 광고할 공고 전부이고, 공고 등록 계약이면 그 공고를
+ * 맨 앞에 둔다 — 응답의 `targets` 에 이미 있으면 그것을 쓰고, 없으면 계약의 공고 제목·회사로 채운다.
+ */
+export function quickTargetsOf(
+  contract: AdminAdvertisementContractDetailResponse,
+): ContractTarget[] {
+  const targets = targetsOf(contract);
+  if (contract.source !== 'COMPANY_POSTING' || contract.targetId == null) return targets;
+  const fixed: ContractTarget = {
+    targetType: contract.promotionTarget === 'BOOTCAMP' ? 'BOOTCAMP' : 'JOB',
+    targetId: contract.targetId,
+    title: contract.recruitmentTitle,
+    companyName: contract.companyName,
+  };
+  const listed = targets.find((target) => isFixedTarget(contract, target));
+  return [listed ?? fixed, ...targets.filter((target) => target !== listed)];
+}
+
 /** 공고 등록 계약의 공고는 자동 대상이라 뺄 수 없다. */
 export function isFixedTarget(
   contract: AdminAdvertisementContractDetailResponse,

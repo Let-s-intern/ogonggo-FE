@@ -9,12 +9,17 @@ import {
   needsJobField,
   needsRecommendation,
 } from '@/entities/advertisement-exposure/lib/adPosting';
+import { quickTargetsOf } from '@/entities/advertisement-contract/api/useContractTargets';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { positionLabel, productLabel } from '@/entities/advertisement-product/lib/product';
 import { isRecommendationValid } from '@/features/today-job/lib/validate';
 import { RecommendationFields } from '@/features/today-job/ui/RecommendationFields';
 import { isReportEnabled } from '@/shared/config/reports';
-import { ContentTargetPicker, type ContentTarget } from '@/widgets/content-target-picker';
+import {
+  ContentTargetPicker,
+  QuickTargetPicks,
+  type ContentTarget,
+} from '@/widgets/content-target-picker';
 import {
   STEP_LABELS,
   useAttachProduct,
@@ -66,6 +71,12 @@ export function ProductAddForm({
   const position = product?.category === 'JOB_POSTING' ? String(product.position ?? '') : '';
   const posting = isAdPostingPosition(position) ? position : null;
   const periodInvalid = Boolean(startDate && endDate && startDate > endDate);
+  // 계약에 이미 등록된 광고할 공고 중 이 자리에 걸 수 있는 종류(채용공고·부트캠프)만 검색 없이 고르게 보인다.
+  const quickTargets = posting
+    ? quickTargetsOf(contract).filter(
+        (candidate) => candidate.targetType === AD_POSTING_FIXED_TARGET[posting],
+      )
+    : [];
   const needsTarget = posting !== null && (expose || registerTarget);
   // 리스트 상단 고정 자리에 바로 노출하면 탭을 하나 이상 골라야 한다(계약 10절).
   const jobFieldMissing = posting !== null && needsJobField(posting) && expose && tabs.length === 0;
@@ -271,6 +282,13 @@ export function ProductAddForm({
             ) : (
               <div className="rounded-md border border-gray-200 bg-white p-3">
                 <p className="pb-2 text-xs text-gray-500">띄울 공고를 고르세요.</p>
+                <div className="pb-3 empty:hidden">
+                  <QuickTargetPicks
+                    targets={quickTargets}
+                    takenKeys={new Set()}
+                    onPick={setTarget}
+                  />
+                </div>
                 <ContentTargetPicker
                   takenKeys={new Set()}
                   fixedType={AD_POSTING_FIXED_TARGET[posting]}

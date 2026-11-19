@@ -4,3 +4,4 @@ export {
   type ContentTarget,
   type ContentTargetType,
 } from './ui/ContentTargetPicker';
+export { QuickTargetPicks } from './ui/QuickTargetPicks';
