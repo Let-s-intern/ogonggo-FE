@@ -48,12 +48,20 @@ export const isBannerReport = (report: AdReport) => report.product.category === 
 const hasDetailNumbers = (report: AdReport) =>
   report.summary.views > 0 || report.summary.ctaClicks > 0;
 
+const UNIQUE_IMPRESSION_HINT = '같은 사람이 같은 광고를 하루에 여러 번 봐도 한 번으로 센 노출';
+
 function SummaryCards({ report }: { report: AdReport }) {
   const { summary } = report;
   const banner = isBannerReport(report);
   const unit = banner ? '배너' : '광고 카드';
-  const items = [
-    { label: '노출', value: formatCount(summary.impressions), sub: `${unit}가 화면에 보인 횟수` },
+  const items: { label: string; value: string; sub: string; hint?: string }[] = [
+    {
+      label: '노출',
+      value: formatCount(summary.impressions),
+      // 순 노출은 노출 옆 작은 글자로, 뜻은 아이콘의 툴팁으로(계약 6.1).
+      sub: `순 노출 ${formatCount(summary.uniqueImpressions)}`,
+      hint: UNIQUE_IMPRESSION_HINT,
+    },
     { label: '클릭', value: formatCount(summary.adClicks), sub: `${unit}를 누른 횟수` },
     { label: '클릭률', value: formatRate(summary.adClickRate), sub: '클릭 / 노출' },
     // 배너는 그 배너로 들어온 상세 숫자가 있을 때만 보인다.
@@ -86,7 +94,17 @@ function SummaryCards({ report }: { report: AdReport }) {
           <p className="mt-1 text-2xl font-bold tracking-tight text-gray-950 tabular-nums">
             {item.value}
           </p>
-          <p className="mt-1 truncate text-xs text-gray-500">{item.sub}</p>
+          <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-gray-500">
+            <span className="truncate">{item.sub}</span>
+            {item.hint ? (
+              <span
+                role="img"
+                aria-label={item.hint}
+                title={item.hint}
+                className="icon-[lucide--info] block size-3.5 shrink-0 text-gray-400"
+              />
+            ) : null}
+          </p>
         </div>
       ))}
       {items.length === 3 ? (
@@ -245,6 +263,65 @@ function ExposureTable({ report }: { report: AdReport }) {
   );
 }
 
+/**
+ * 희망 직무별(계약 6.1). 로그인 회원만 세므로 그 안내를 먼저 쓴다. 막대는 회원 순 방문자, 표에 네 숫자를 모두 둔다.
+ * 회원 숫자가 없으면 칸을 그리지 않는다.
+ */
+function JobFieldCard({ report }: { report: AdReport }) {
+  const rows = report.byJobField;
+  if (rows.length === 0) return null;
+  const max = Math.max(1, ...rows.map((row) => row.memberUniqueVisitors));
+  return (
+    <ReportCard title="희망 직무별">
+      <p className="-mt-2 mb-4 text-sm break-keep text-gray-500">
+        로그인 회원 기준이에요. 비회원은 들어가지 않고, 희망 직무가 여럿인 회원은 직무마다 한 번씩
+        셉니다.
+      </p>
+      <ul className="mb-5 flex flex-col gap-2">
+        {rows.map((row) => (
+          <li
+            key={row.jobField ?? 'none'}
+            className="grid grid-cols-[7rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-sm"
+          >
+            <span className="truncate text-gray-600">{row.label}</span>
+            <span className="h-2 rounded-full bg-gray-100">
+              <span
+                className="block h-2 rounded-full bg-blue-400"
+                style={{ width: `${(row.memberUniqueVisitors / max) * 100}%` }}
+              />
+            </span>
+            <span className="text-right text-gray-900 tabular-nums">
+              {formatCount(row.memberUniqueVisitors)}명
+            </span>
+          </li>
+        ))}
+      </ul>
+      <table className="w-full table-fixed text-xs sm:text-sm">
+        <thead className="bg-gray-50 text-gray-500">
+          <tr>
+            <th className={cn(TH, 'w-[30%]')}>희망 직무</th>
+            <th className={TH}>회원 순 방문자</th>
+            <th className={TH}>회원 조회</th>
+            <th className={TH}>광고 클릭 회원</th>
+            <th className={TH}>CTA 클릭 회원</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {rows.map((row) => (
+            <tr key={row.jobField ?? 'none'}>
+              <td className={cn(TD, 'break-keep')}>{row.label}</td>
+              <td className={TD}>{formatCount(row.memberUniqueVisitors)}</td>
+              <td className={TD}>{formatCount(row.memberViews)}</td>
+              <td className={TD}>{formatCount(row.adClickMembers)}</td>
+              <td className={TD}>{formatCount(row.ctaUniqueMembers)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </ReportCard>
+  );
+}
+
 function Targets({ report }: { report: AdReport }) {
   const banner = isBannerReport(report);
   return (
@@ -326,12 +403,17 @@ function Targets({ report }: { report: AdReport }) {
 /** 지표 정의. 배너 리포트에서는 `scroll` 이 붙은 줄(스크롤·체류)을 뺀다. */
 const DEFINITIONS: readonly (readonly [string, string, 'scroll'?])[] = [
   ['노출', '배너·광고 카드가 화면에 절반 넘게 1초 이상 보인 횟수'],
+  ['순 노출', `${UNIQUE_IMPRESSION_HINT}. 회원은 회원 id, 비회원은 방문자 id 로 가립니다`],
   ['클릭', '배너·광고 카드를 누른 횟수'],
   ['클릭률', '클릭 / 노출'],
   ['상세 조회', '공고 상세가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번으로 셉니다'],
   ['순 방문자', '기간 안에 상세를 연 서로 다른 방문자 수'],
   ['CTA 클릭', '상세의 지원하러 가기·신청하러 가기를 누른 횟수'],
   ['CTA 클릭률', 'CTA 를 누른 순 방문자 / 상세를 연 순 방문자'],
+  [
+    '희망 직무별',
+    '로그인 회원만, 프로필의 희망 직무로 나눈 숫자. 직무가 여럿인 회원은 직무마다 한 번씩 셉니다',
+  ],
   [
     '스크롤 깊이',
     '상세를 연 순 방문자 중 25·50·75·100% 까지 내린 사람 수. 방문자마다 가장 깊이 내린 값으로 셉니다',
@@ -397,6 +479,7 @@ export function ReportBody({ report }: { report: AdReport }) {
       <TrendCard report={report} />
       {isBannerReport(report) ? null : <ScrollFunnelCard report={report} />}
       <ExposureTable report={report} />
+      <JobFieldCard report={report} />
       <Targets report={report} />
       <Definitions report={report} />
     </div>

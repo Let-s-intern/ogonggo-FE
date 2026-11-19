@@ -43,6 +43,8 @@ export interface ReportDetailMetrics {
 export interface ReportDailyRow extends ReportDetailMetrics {
   date: string;
   impressions: number;
+  /** 같은 방문자·같은 노출을 하루 한 번으로 센 노출(계약 6.1). */
+  uniqueImpressions: number;
   adClicks: number;
 }
 
@@ -62,6 +64,8 @@ export interface AdReport {
   collectedSince: string;
   summary: {
     impressions: number;
+    /** 같은 방문자(회원 id, 없으면 방문자 id)·같은 노출을 하루 한 번으로 센 노출(계약 6.1). */
+    uniqueImpressions: number;
     adClicks: number;
     /** 0~1. 분모가 0 이면 null. */
     adClickRate: number | null;
@@ -95,6 +99,43 @@ export interface AdReport {
     title: string;
     total: ReportDetailMetrics;
     bySource: { source: ReportSource; views: number; ctaClicks: number }[];
+  }[];
+  /** 로그인 회원의 희망 직무별 나눔(계약 6.1). 비회원은 없다. 회원 순 방문자 큰 순. */
+  byJobField: JobFieldRow[];
+}
+
+export interface JobFieldRow {
+  /** 희망 직무 enum 값. 직무를 안 정한 회원은 null. */
+  jobField: string | null;
+  label: string;
+  memberUniqueVisitors: number;
+  memberViews: number;
+  ctaUniqueMembers: number;
+  adClickMembers: number;
+}
+
+/** 계약 전체 합계(`GET .../{contractId}/report-summary`, 계약 6.2). 리포트를 열 수 있는 상품만 합친다. */
+export interface ContractReportSummary {
+  total: {
+    impressions: number;
+    uniqueImpressions: number;
+    adClicks: number;
+    adClickRate: number | null;
+    views: number;
+    ctaClicks: number;
+  };
+  products: {
+    contractProductId: number;
+    category: string;
+    position: string | null;
+    name: string;
+    startDate: string;
+    endDate: string;
+    impressions: number;
+    uniqueImpressions: number;
+    adClicks: number;
+    views: number;
+    ctaClicks: number;
   }[];
 }
 

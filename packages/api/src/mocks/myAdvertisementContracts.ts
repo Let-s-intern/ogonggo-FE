@@ -3,6 +3,7 @@ import type { ErrorResponse } from '../generated/user/models/errorResponse';
 import { myContractSeed, toMyContractSummary } from './fixtures/my-advertisement-contracts';
 import {
   buildActiveAds,
+  buildReportSummary,
   buildReport,
   clipPeriod,
   reportCsvRows,
@@ -89,6 +90,15 @@ export const myAdvertisementContractHandlers: HttpHandler[] = [
         ...contract,
         products: contract.products.map(({ productId: _productId, ...product }) => product),
       },
+    });
+  }),
+  http.get(`${BASE}/:contractId/report-summary`, ({ params }) => {
+    const contract = findMyContract(params.contractId);
+    if (!contract) return myContractNotFound();
+    return HttpResponse.json({
+      status: 200,
+      message: '요청이 성공했습니다.',
+      data: buildReportSummary(contract.products),
     });
   }),
   http.get(`${BASE}/:contractId/products/:contractProductId/report`, ({ params, request }) => {

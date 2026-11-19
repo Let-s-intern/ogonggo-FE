@@ -1,7 +1,7 @@
 import { HttpError, httpClient } from '@ogonggo/api';
 import { getAccessToken } from '@/shared/api/authTokens';
 import { handleUnauthorized } from '@/shared/api/reissue';
-import type { ActiveAd, AdReport } from '../model/types';
+import type { ActiveAd, AdReport, ContractReportSummary } from '../model/types';
 
 const reportPath = (contractId: number, contractProductId: number) =>
   `/api/v1/users/me/advertisement-contracts/${contractId}/products/${contractProductId}/report`;
@@ -68,6 +68,16 @@ export async function downloadAdReportCsv(
 export async function fetchActiveAds(): Promise<ActiveAd[]> {
   const body = await httpClient<{ data: ActiveAd[] }>(
     '/api/v1/users/me/advertisement-reports/active',
+  );
+  return body.data;
+}
+
+/** 계약 전체 합계(`GET /api/v1/users/me/advertisement-contracts/{contractId}/report-summary`). */
+export async function fetchContractReportSummary(
+  contractId: number,
+): Promise<ContractReportSummary> {
+  const body = await httpClient<{ data: ContractReportSummary }>(
+    `/api/v1/users/me/advertisement-contracts/${contractId}/report-summary`,
   );
   return body.data;
 }

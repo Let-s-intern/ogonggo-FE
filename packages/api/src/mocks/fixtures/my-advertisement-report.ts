@@ -1,3 +1,4 @@
+import { enumLabel } from '../../enums';
 import type { MyContractProductFixture } from './my-advertisement-contracts';
 
 /**
@@ -13,6 +14,8 @@ import type { MyContractProductFixture } from './my-advertisement-contracts';
 
 export interface MockReportMetrics {
   impressions: number;
+  /** 같은 방문자·같은 노출을 하루 한 번으로 센 노출(계약 6.1). */
+  uniqueImpressions: number;
   adClicks: number;
   views: number;
   uniqueVisitors: number;
@@ -49,6 +52,7 @@ export interface MockReport {
   collectedSince: string;
   summary: {
     impressions: number;
+    uniqueImpressions: number;
     adClicks: number;
     adClickRate: number | null;
     views: number;
@@ -79,9 +83,50 @@ export interface MockReport {
     targetType: 'JOB' | 'BOOTCAMP';
     targetId: number;
     title: string;
-    total: Omit<MockReportMetrics, 'impressions' | 'adClicks'>;
+    total: Omit<MockReportMetrics, 'impressions' | 'uniqueImpressions' | 'adClicks'>;
     bySource: { source: Source; views: number; ctaClicks: number }[];
   }[];
+  /** 로그인 회원의 희망 직무별 나눔(계약 6.1). 회원 순 방문자 큰 순. */
+  byJobField: MockJobFieldRow[];
+}
+
+export interface MockJobFieldRow {
+  jobField: string | null;
+  label: string;
+  memberUniqueVisitors: number;
+  memberViews: number;
+  ctaUniqueMembers: number;
+  adClickMembers: number;
+}
+
+/**
+ * 희망 직무 몫. 값은 희망 직무 enum(`JobRole`, 회원 프로필의 희망 직무)이고 라벨은 enum 카탈로그에서 읽는다. 직무가 여럿인
+ * 회원은 직무마다 한 번씩 세므로 몫의 합이 1 을 넘는다.
+ */
+const JOB_FIELD_SHARES: readonly [string | null, number][] = [
+  ['IT_BACKEND', 0.42],
+  ['IT_FRONTEND_FULLSTACK', 0.24],
+  ['AI_DATA_ENGINEER', 0.15],
+  ['IT_INFRA_DEVOPS', 0.11],
+  [null, 0.13],
+];
+
+function jobFieldRows(
+  key: string,
+  members: { uniqueVisitors: number; views: number; ctaUnique: number; adClicks: number },
+): MockJobFieldRow[] {
+  if (members.uniqueVisitors === 0) return [];
+  return JOB_FIELD_SHARES.map(([jobField, share]) => {
+    const k = share * between(`${key}:${jobField}`, 0.85, 1.15);
+    return {
+      jobField,
+      label: jobField ? enumLabel('JobRole', jobField) : '직무 미설정',
+      memberUniqueVisitors: Math.round(members.uniqueVisitors * k),
+      memberViews: Math.round(members.views * k),
+      ctaUniqueMembers: Math.round(members.ctaUnique * k),
+      adClickMembers: Math.round(members.adClicks * k),
+    };
+  }).sort((a, b) => b.memberUniqueVisitors - a.memberUniqueVisitors);
 }
 
 /** 이벤트 수집을 시작한 날. 이 앞은 "집계 전" 이다. */
@@ -165,6 +210,7 @@ export function todayKst(): string {
 
 const ZERO: MockReportMetrics = {
   impressions: 0,
+  uniqueImpressions: 0,
   adClicks: 0,
   views: 0,
   uniqueVisitors: 0,
@@ -191,6 +237,7 @@ function exposureDay(plan: ReportPlan, exposure: ReportPlan['exposures'][number]
   );
   return {
     impressions,
+    uniqueImpressions: Math.round(impressions * between(`${key}:uimp`, 0.55, 0.75)),
     adClicks,
     views,
     uniqueVisitors,
@@ -210,6 +257,7 @@ function sum(rows: MockReportMetrics[]): MockReportMetrics {
   const total = rows.reduce<MockReportMetrics>(
     (acc, row) => ({
       impressions: acc.impressions + row.impressions,
+      uniqueImpressions: acc.uniqueImpressions + row.uniqueImpressions,
       adClicks: acc.adClicks + row.adClicks,
       views: acc.views + row.views,
       uniqueVisitors: acc.uniqueVisitors + row.uniqueVisitors,
@@ -360,6 +408,7 @@ export function buildReport(
     collectedSince: COLLECTED_SINCE,
     summary: {
       impressions: total.impressions,
+      uniqueImpressions: total.uniqueImpressions,
       adClicks: total.adClicks,
       adClickRate: rate(total.adClicks, total.impressions),
       views: total.views,
@@ -400,6 +449,13 @@ export function buildReport(
         bySource,
       },
     ],
+    byJobField: jobFieldRows(String(product.contractProductId), {
+      uniqueVisitors: Math.round(total.memberViews * 0.75),
+      views: total.memberViews,
+      ctaUnique: Math.round(total.ctaUniqueVisitors * 0.5),
+      // 광고를 누른 회원. 누른 사람의 절반쯤이 회원이라고 둔다.
+      adClicks: Math.round(total.adClicks * 0.45),
+    }),
   };
 }
 
@@ -408,6 +464,7 @@ const CSV_COLUMNS = [
   'exposureId',
   'exposureName',
   'impressions',
+  'uniqueImpressions',
   'adClicks',
   'views',
   'uniqueVisitors',
@@ -501,4 +558,46 @@ export function buildActiveAds(
       }),
     )
     .sort((a, b) => a.endDate.localeCompare(b.endDate));
+}
+
+/** 계약 전체 합계(`report-summary`, 계약 6.2). 리포트를 열 수 있는 상품만, 각 상품 기간 전체(진행 중이면 오늘까지). */
+export function buildReportSummary(products: MyContractProductFixture[]) {
+  const rows = products.flatMap((product) => {
+    const found = reportPlanOf(product);
+    if (!found) return [];
+    const period = clipPeriod(found.startDate, found.endDate, null, null);
+    const report = period ? buildReport(product, period.from, period.to) : null;
+    if (!report) return [];
+    const { summary } = report;
+    return [
+      {
+        contractProductId: product.contractProductId,
+        category: product.category,
+        position: found.plan.position,
+        name: product.productName,
+        startDate: found.startDate,
+        endDate: found.endDate,
+        impressions: summary.impressions,
+        uniqueImpressions: summary.uniqueImpressions,
+        adClicks: summary.adClicks,
+        views: summary.views,
+        ctaClicks: summary.ctaClicks,
+      },
+    ];
+  });
+  const add = (pick: (row: (typeof rows)[number]) => number) =>
+    rows.reduce((acc, row) => acc + pick(row), 0);
+  const impressions = add((row) => row.impressions);
+  const adClicks = add((row) => row.adClicks);
+  return {
+    total: {
+      impressions,
+      uniqueImpressions: add((row) => row.uniqueImpressions),
+      adClicks,
+      adClickRate: rate(adClicks, impressions),
+      views: add((row) => row.views),
+      ctaClicks: add((row) => row.ctaClicks),
+    },
+    products: rows,
+  };
 }

@@ -13,6 +13,7 @@ import { Badge, cn } from '@ogonggo/ui';
 import { formatDateDots } from '@/shared/lib/localDate';
 import { StageTrack } from '@/shared/ui/StageTrack';
 import { AdReport } from '@/widgets/ad-report/ui/AdReport';
+import { ContractReportSummaryCard } from '@/widgets/ad-report/ui/ContractReportSummaryCard';
 import {
   formatPaymentAmount,
   MY_AD_CONTRACTS_HREF,
@@ -143,8 +144,12 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
       </header>
 
       {/* 운영자가 상품을 붙인 계약만 리포트가 있다. 상품마다 열 수 있는지는 리포트 영역이 가린다. */}
+      {/* 계약 전체 합계가 맨 위, 그 아래 상품별 리포트. 합칠 상품이 없으면 합계는 스스로 숨는다. */}
       {contract.products.length > 0 ? (
-        <AdReport contractId={contract.id} products={contract.products} />
+        <>
+          <ContractReportSummaryCard contractId={contract.id} />
+          <AdReport contractId={contract.id} products={contract.products} />
+        </>
       ) : null}
 
       <Section title="공고 정보">
