@@ -23,7 +23,8 @@ import { ok, paginate, readPaging } from './paging';
 
 const EXPOSURES = '*/api/v1/admin/advertisement-exposures';
 
-export type AdPostingPosition = 'JOB_LIST' | 'BOOTCAMP_LIST' | 'JOB_DETAIL_SIDE';
+/** 계약 7절에서 `JOB_PICK`(오공고 PICK, 채용공고만)이 더해졌다. */
+export type AdPostingPosition = 'JOB_PICK' | 'JOB_LIST' | 'BOOTCAMP_LIST' | 'JOB_DETAIL_SIDE';
 
 /** 어드민 노출 응답에 이 목이 얹는 칸. 배너는 모두 null 이다. */
 export type AdminAdPostingExposureResponse = AdminAdvertisementExposureResponse & {

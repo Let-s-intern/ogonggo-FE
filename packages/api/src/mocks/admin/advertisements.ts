@@ -34,7 +34,12 @@ const BANNER_POSITIONS: readonly string[] = Object.values(
   AdminAdvertisementProductResponsePosition,
 );
 /** 광고 공고(카드) 자리(PRD `prd-business-report.md` 6.8, D12). 코드젠 전이라 생성 enum 에 아직 없다. */
-const AD_POSTING_POSITIONS: readonly string[] = ['JOB_LIST', 'BOOTCAMP_LIST', 'JOB_DETAIL_SIDE'];
+const AD_POSTING_POSITIONS: readonly string[] = [
+  'JOB_PICK',
+  'JOB_LIST',
+  'BOOTCAMP_LIST',
+  'JOB_DETAIL_SIDE',
+];
 const POSITIONS: readonly string[] = [...BANNER_POSITIONS, ...AD_POSTING_POSITIONS];
 const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductResponseCategory);
 /** 오공고 화면에 노출하는 카테고리. 인스타·카카오는 계약에 붙이는 판매 기록만 있다. */
