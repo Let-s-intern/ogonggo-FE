@@ -41,29 +41,45 @@ export function ReportCard({
   );
 }
 
+/** 배너 상품인지. 배너는 상세 페이지가 아니라 스크롤 깊이·체류 시간을 보이지 않는다(2026-11-19 사용자, 계약 5절). */
+export const isBannerReport = (report: AdReport) => report.product.category === 'BANNER';
+
+/** 배너가 데려온 상세 숫자가 있는지. 배너 링크가 공고 상세가 아니면 0 이다. */
+const hasDetailNumbers = (report: AdReport) =>
+  report.summary.views > 0 || report.summary.ctaClicks > 0;
+
 function SummaryCards({ report }: { report: AdReport }) {
   const { summary } = report;
+  const banner = isBannerReport(report);
+  const unit = banner ? '배너' : '광고 카드';
   const items = [
-    { label: '노출', value: formatCount(summary.impressions), sub: '광고가 화면에 보인 횟수' },
-    {
-      label: '광고 클릭',
-      value: formatCount(summary.adClicks),
-      sub: '배너·광고 카드를 누른 횟수',
-    },
-    { label: '클릭률', value: formatRate(summary.adClickRate), sub: '광고 클릭 / 노출' },
-    {
-      label: '상세 조회',
-      value: formatCount(summary.views),
-      sub: `순 방문자 ${formatCount(summary.uniqueVisitors)}명`,
-    },
-    {
-      label: 'CTA 클릭',
-      value: formatCount(summary.ctaClicks),
-      sub: `CTA 클릭률 ${formatRate(summary.ctaClickRate)}`,
-    },
+    { label: '노출', value: formatCount(summary.impressions), sub: `${unit}가 화면에 보인 횟수` },
+    { label: '클릭', value: formatCount(summary.adClicks), sub: `${unit}를 누른 횟수` },
+    { label: '클릭률', value: formatRate(summary.adClickRate), sub: '클릭 / 노출' },
+    // 배너는 그 배너로 들어온 상세 숫자가 있을 때만 보인다.
+    ...(!banner || hasDetailNumbers(report)
+      ? [
+          {
+            label: '상세 조회',
+            value: formatCount(summary.views),
+            sub: `순 방문자 ${formatCount(summary.uniqueVisitors)}명`,
+          },
+          {
+            label: 'CTA 클릭',
+            value: formatCount(summary.ctaClicks),
+            sub: `CTA 클릭률 ${formatRate(summary.ctaClickRate)}`,
+          },
+        ]
+      : []),
   ];
   return (
-    <div data-pdf-block className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <div
+      data-pdf-block
+      className={cn(
+        'grid grid-cols-2 gap-3',
+        items.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-3',
+      )}
+    >
       {items.map((item) => (
         <div key={item.label} className="min-w-0 rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500">{item.label}</p>
@@ -73,6 +89,11 @@ function SummaryCards({ report }: { report: AdReport }) {
           <p className="mt-1 truncate text-xs text-gray-500">{item.sub}</p>
         </div>
       ))}
+      {items.length === 3 ? (
+        <p className="col-span-full text-sm text-gray-500">
+          배너 링크가 공고 상세가 아니어서 상세 조회는 세지 않아요.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -87,7 +108,7 @@ function DailyTable({ report }: { report: AdReport }) {
         <tr>
           <th className={TH}>날짜</th>
           <th className={TH}>노출</th>
-          <th className={TH}>광고 클릭</th>
+          <th className={TH}>클릭</th>
           <th className={TH}>상세 조회</th>
           <th className={TH}>CTA 클릭</th>
         </tr>
@@ -120,7 +141,8 @@ function DailyTable({ report }: { report: AdReport }) {
  * "N명 (xx%)". 평균 스크롤·체류는 아래 작은 글자로 남긴다.
  */
 function ScrollFunnelCard({ report }: { report: AdReport }) {
-  const { scrollFunnel: steps, avgScrollPercent, avgDurationSeconds } = report.summary;
+  const { avgScrollPercent, avgDurationSeconds } = report.summary;
+  const steps = report.summary.scrollFunnel ?? [];
   const option = useMemo(() => scrollFunnelOption(steps), [steps]);
   const empty = (steps[0]?.visitors ?? 0) === 0;
   return (
@@ -156,8 +178,13 @@ function ScrollFunnelCard({ report }: { report: AdReport }) {
 function TrendCard({ report }: { report: AdReport }) {
   const [view, setView] = useState<'chart' | 'table'>('chart');
   const option = useMemo(
-    () => trendOption(report.daily, report.collectedSince),
-    [report.daily, report.collectedSince],
+    () =>
+      trendOption(
+        report.daily,
+        report.collectedSince,
+        !isBannerReport(report) || hasDetailNumbers(report),
+      ),
+    [report],
   );
   const toggle = (
     <div className="flex rounded-md border border-gray-200 p-0.5 text-sm" data-pdf-hide>
@@ -189,38 +216,37 @@ function TrendCard({ report }: { report: AdReport }) {
   );
 }
 
+/** 광고물(노출 소재)별 표. 하나뿐이면 요약 카드와 같은 숫자라 보이지 않는다(2026-11-19 사용자). */
 function ExposureTable({ report }: { report: AdReport }) {
+  if (report.exposures.length < 2) return null;
   return (
-    <ReportCard title="소재별 성과">
-      {report.exposures.length === 0 ? (
-        <p className="py-4 text-center text-sm text-gray-500">이 상품에 걸린 소재가 없어요.</p>
-      ) : (
-        <table className="w-full table-fixed text-xs sm:text-sm">
-          <thead className="bg-gray-50 text-gray-500">
-            <tr>
-              <th className={cn(TH, 'w-[40%]')}>소재</th>
-              <th className={TH}>노출</th>
-              <th className={TH}>클릭</th>
-              <th className={TH}>클릭률</th>
+    <ReportCard title="광고물별 성과">
+      <table className="w-full table-fixed text-xs sm:text-sm">
+        <thead className="bg-gray-50 text-gray-500">
+          <tr>
+            <th className={cn(TH, 'w-[40%]')}>광고물</th>
+            <th className={TH}>노출</th>
+            <th className={TH}>클릭</th>
+            <th className={TH}>클릭률</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {report.exposures.map((exposure) => (
+            <tr key={exposure.exposureId}>
+              <td className={cn(TD, 'break-keep')}>{exposure.name}</td>
+              <td className={TD}>{formatCount(exposure.impressions)}</td>
+              <td className={TD}>{formatCount(exposure.adClicks)}</td>
+              <td className={cn(TD, 'font-semibold')}>{formatRate(exposure.adClickRate)}</td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {report.exposures.map((exposure) => (
-              <tr key={exposure.exposureId}>
-                <td className={cn(TD, 'break-keep')}>{exposure.name}</td>
-                <td className={TD}>{formatCount(exposure.impressions)}</td>
-                <td className={TD}>{formatCount(exposure.adClicks)}</td>
-                <td className={cn(TD, 'font-semibold')}>{formatRate(exposure.adClickRate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
     </ReportCard>
   );
 }
 
 function Targets({ report }: { report: AdReport }) {
+  const banner = isBannerReport(report);
   return (
     <ReportCard title="대상 공고 전체 숫자">
       <p className="-mt-2 mb-4 text-sm text-gray-500">
@@ -237,8 +263,13 @@ function Targets({ report }: { report: AdReport }) {
               ['순 방문자', formatCount(target.total.uniqueVisitors)],
               ['회원 조회', formatCount(target.total.memberViews)],
               ['CTA 클릭', formatCount(target.total.ctaClicks)],
-              ['평균 스크롤', formatPercent(target.total.avgScrollPercent)],
-              ['평균 체류', formatSeconds(target.total.avgDurationSeconds)],
+              // 배너 상품의 리포트는 스크롤·체류를 보이지 않는다(계약 5절).
+              ...(banner
+                ? []
+                : [
+                    ['평균 스크롤', formatPercent(target.total.avgScrollPercent)],
+                    ['평균 체류', formatSeconds(target.total.avgDurationSeconds)],
+                  ]),
             ];
             return (
               <div key={`${target.targetType}-${target.targetId}`} className="flex flex-col gap-4">
@@ -248,7 +279,12 @@ function Targets({ report }: { report: AdReport }) {
                   </span>
                   {target.title}
                 </p>
-                <dl className="grid grid-cols-3 gap-y-3 rounded-lg bg-gray-50 py-4 md:grid-cols-6">
+                <dl
+                  className={cn(
+                    'grid grid-cols-3 gap-y-3 rounded-lg bg-gray-50 py-4',
+                    banner ? 'md:grid-cols-4' : 'md:grid-cols-6',
+                  )}
+                >
                   {stats.map(([label, value]) => (
                     <div key={label} className="flex flex-col items-center gap-1">
                       <dt className="text-xs text-gray-500">{label}</dt>
@@ -287,10 +323,11 @@ function Targets({ report }: { report: AdReport }) {
   );
 }
 
-const DEFINITIONS = [
+/** 지표 정의. 배너 리포트에서는 `scroll` 이 붙은 줄(스크롤·체류)을 뺀다. */
+const DEFINITIONS: readonly (readonly [string, string, 'scroll'?])[] = [
   ['노출', '배너·광고 카드가 화면에 절반 넘게 1초 이상 보인 횟수'],
-  ['광고 클릭', '배너·광고 카드를 누른 횟수'],
-  ['클릭률', '광고 클릭 / 노출'],
+  ['클릭', '배너·광고 카드를 누른 횟수'],
+  ['클릭률', '클릭 / 노출'],
   ['상세 조회', '공고 상세가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번으로 셉니다'],
   ['순 방문자', '기간 안에 상세를 연 서로 다른 방문자 수'],
   ['CTA 클릭', '상세의 지원하러 가기·신청하러 가기를 누른 횟수'],
@@ -298,20 +335,23 @@ const DEFINITIONS = [
   [
     '스크롤 깊이',
     '상세를 연 순 방문자 중 25·50·75·100% 까지 내린 사람 수. 방문자마다 가장 깊이 내린 값으로 셉니다',
+    'scroll',
   ],
-  ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균'],
-  ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균'],
-] as const;
+  ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균', 'scroll'],
+  ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균', 'scroll'],
+];
 
-function Definitions() {
+function Definitions({ report }: { report: AdReport }) {
+  const banner = isBannerReport(report);
+  const rows = DEFINITIONS.filter(([, , kind]) => !(banner && kind === 'scroll'));
   return (
     <ReportCard title="지표 정의">
       <p className="-mt-2 mb-3 text-sm text-gray-500">
-        요약 카드·추이·소재별 숫자는 이 상품의 광고로 들어온 것만 셉니다. 날짜는 한국 시간
+        요약 카드·추이·광고물별 숫자는 이 상품의 광고로 들어온 것만 셉니다. 날짜는 한국 시간
         기준입니다.
       </p>
       <dl className="grid gap-x-6 gap-y-2 text-sm md:grid-cols-2">
-        {DEFINITIONS.map(([term, description]) => (
+        {rows.map(([term, description]) => (
           <div key={term} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
             <dt className="font-semibold text-gray-700">{term}</dt>
             <dd className="break-keep text-gray-600">{description}</dd>
@@ -323,7 +363,7 @@ function Definitions() {
 }
 
 /**
- * 리포트 본문: 요약 카드 → 날짜별 추이 → 소재별 표 → 대상 공고 전체 숫자와 유입 경로별 나눔 → 지표 정의.
+ * 리포트 본문: 요약 카드 → 날짜별 추이 → 스크롤 깊이(배너 제외) → 광고물별 표(2개 이상일 때) → 대상 공고 전체 숫자와 유입 경로별 나눔 → 지표 정의.
  * 기간이 수집 시작일보다 앞이면 그 앞은 "집계 전" 이다. 기간 전체가 그렇다면 숫자 대신 안내만 보인다.
  */
 export function ReportBody({ report }: { report: AdReport }) {
@@ -340,7 +380,7 @@ export function ReportBody({ report }: { report: AdReport }) {
           이 기간({dotDate(report.from)} ~ {dotDate(report.to)})은 집계 전이에요. 성과 숫자는{' '}
           {dotDate(report.collectedSince)}부터 모으고 있어요.
         </p>
-        <Definitions />
+        <Definitions report={report} />
       </div>
     );
   }
@@ -355,10 +395,10 @@ export function ReportBody({ report }: { report: AdReport }) {
       ) : null}
       <SummaryCards report={report} />
       <TrendCard report={report} />
-      <ScrollFunnelCard report={report} />
+      {isBannerReport(report) ? null : <ScrollFunnelCard report={report} />}
       <ExposureTable report={report} />
       <Targets report={report} />
-      <Definitions />
+      <Definitions report={report} />
     </div>
   );
 }

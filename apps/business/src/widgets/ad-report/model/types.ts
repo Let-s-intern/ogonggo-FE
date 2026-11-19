@@ -76,9 +76,9 @@ export interface AdReport {
     avgScrollPercent: number | null;
     /**
      * 스크롤 깊이 깔때기. 상세를 연 순 방문자 중 0·25·50·75·100% 까지 내린 순 방문자 수와 비율. 0% 단계는 순 방문자
-     * 전체다. 방문자별로 가장 깊이 내린 값으로 센다.
+     * 전체다. 방문자별로 가장 깊이 내린 값으로 센다. 배너 상품은 null 이다(계약 5절, 배너는 상세 페이지가 아니다).
      */
-    scrollFunnel: ScrollFunnelStep[];
+    scrollFunnel: ScrollFunnelStep[] | null;
     avgDurationSeconds: number | null;
   };
   daily: ReportDailyRow[];

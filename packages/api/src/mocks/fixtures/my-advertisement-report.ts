@@ -61,7 +61,10 @@ export interface MockReport {
     ctaClickRate: number | null;
     avgScrollPercent: number | null;
     /** 스크롤 깊이 깔때기. 0·25·50·75·100% 단계. 0% 는 순 방문자 전체. 방문자가 없으면 `rate` 가 null. */
-    scrollFunnel: { threshold: 0 | 25 | 50 | 75 | 100; visitors: number; rate: number | null }[];
+    /** 배너 상품은 null(계약 5절: 배너는 상세 페이지가 아니라 스크롤·체류를 보이지 않는다). */
+    scrollFunnel:
+      | { threshold: 0 | 25 | 50 | 75 | 100; visitors: number; rate: number | null }[]
+      | null;
     avgDurationSeconds: number | null;
   };
   daily: MockReportDailyRow[];
@@ -271,18 +274,37 @@ export function clipPeriod(
   return clippedFrom <= clippedTo ? { from: clippedFrom, to: clippedTo } : null;
 }
 
-/** CSV 행: 날짜별·소재별. */
+/** 배너 상품인지. 배너는 스크롤·체류 칸을 null 로 준다(계약 5절). */
+const isBanner = (product: MyContractProductFixture) => product.category === 'BANNER';
+
+function withoutScroll<
+  T extends { avgScrollPercent: number | null; avgDurationSeconds: number | null },
+>(row: T): T {
+  return { ...row, avgScrollPercent: null, avgDurationSeconds: null };
+}
+
+/** 소재 이름. 광고 공고 소재는 대상 공고 제목 · 회사명이다(계약 5절). */
+function exposureNameOf(plan: ReportPlan, exposure: ReportPlan['exposures'][number]): string {
+  return plan.targetImages
+    ? `${plan.target.title} · ${plan.targetImages.companyName}`
+    : exposure.name;
+}
+
+/** CSV 행: 날짜별·소재별. 배너는 스크롤·체류 열이 빈칸이다. */
 export function reportCsvRows(product: MyContractProductFixture, from: string, to: string) {
   const found = reportPlanOf(product);
   if (!found) return [];
   const { plan } = found;
   return datesBetween(from, to).flatMap((date) =>
-    plan.exposures.map((exposure): MockReportCsvRow => ({
-      date,
-      exposureId: exposure.exposureId,
-      exposureName: exposure.name,
-      ...exposureDay(plan, exposure, date),
-    })),
+    plan.exposures.map((exposure): MockReportCsvRow => {
+      const row: MockReportCsvRow = {
+        date,
+        exposureId: exposure.exposureId,
+        exposureName: exposureNameOf(plan, exposure),
+        ...exposureDay(plan, exposure, date),
+      };
+      return isBanner(product) ? withoutScroll(row) : row;
+    }),
   );
 }
 
@@ -298,7 +320,10 @@ export function buildReport(
   const cells = dates.map((date) =>
     plan.exposures.map((exposure) => exposureDay(plan, exposure, date)),
   );
-  const daily = dates.map((date, i): MockReportDailyRow => ({ date, ...dayTotal(cells[i]!) }));
+  const daily = dates.map((date, i): MockReportDailyRow => {
+    const row = { date, ...dayTotal(cells[i]!) };
+    return isBanner(product) ? withoutScroll(row) : row;
+  });
   const total = sum(cells.flat());
 
   // 대상 공고 전체 숫자: 이 상품이 데려온 몫에 다른 경로(일반 목록·검색·외부)를 더한다.
@@ -357,16 +382,16 @@ export function buildReport(
       ctaUniqueVisitors: Math.round(total.ctaUniqueVisitors * 0.85),
       ctaUniqueMembers: Math.round(total.ctaUniqueVisitors * 0.5),
       ctaClickRate: rate(total.ctaUniqueVisitors, total.uniqueVisitors),
-      avgScrollPercent: total.avgScrollPercent,
-      scrollFunnel,
-      avgDurationSeconds: total.avgDurationSeconds,
+      avgScrollPercent: isBanner(product) ? null : total.avgScrollPercent,
+      scrollFunnel: isBanner(product) ? null : scrollFunnel,
+      avgDurationSeconds: isBanner(product) ? null : total.avgDurationSeconds,
     },
     daily,
     exposures: plan.exposures.map((exposure, index) => {
       const own = sum(cells.map((day) => day[index]!));
       return {
         exposureId: exposure.exposureId,
-        name: exposure.name,
+        name: exposureNameOf(plan, exposure),
         impressions: own.impressions,
         adClicks: own.adClicks,
         adClickRate: rate(own.adClicks, own.impressions),
@@ -481,7 +506,7 @@ export function buildActiveAds(
             adClickRate: summary.adClickRate,
             views: summary.views,
             ctaClicks: summary.ctaClicks,
-            scroll50Rate: summary.scrollFunnel.find((step) => step.threshold === 50)?.rate ?? null,
+            scroll50Rate: summary.scrollFunnel?.find((step) => step.threshold === 50)?.rate ?? null,
             imageUrl: plan.imageUrl,
             target:
               product.category === 'JOB_POSTING' && plan.targetImages

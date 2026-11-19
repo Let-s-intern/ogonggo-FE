@@ -82,14 +82,22 @@ function ActiveAdCard({ ad }: { ad: ActiveAd }) {
       ),
     [ad.daily, posting],
   );
-  const metrics = [
-    ['노출', formatCount(ad.impressions)],
-    ['클릭', formatCount(ad.adClicks)],
-    ['클릭률', formatRate(ad.adClickRate)],
-    ['상세 조회', formatCount(ad.views)],
-    ['CTA 클릭', formatCount(ad.ctaClicks)],
-    ['스크롤 50%', formatRate(ad.scroll50Rate)],
-  ] as const;
+  // 배너는 스크롤을 세지 않는다(계약 5절). 스크롤 50% 칸 대신 클릭률을 크게 둔다(2026-11-19 사용자).
+  const metrics: (readonly [string, string])[] = posting
+    ? [
+        ['노출', formatCount(ad.impressions)],
+        ['클릭', formatCount(ad.adClicks)],
+        ['클릭률', formatRate(ad.adClickRate)],
+        ['상세 조회', formatCount(ad.views)],
+        ['CTA 클릭', formatCount(ad.ctaClicks)],
+        ['스크롤 50%', formatRate(ad.scroll50Rate)],
+      ]
+    : [
+        ['노출', formatCount(ad.impressions)],
+        ['클릭', formatCount(ad.adClicks)],
+        ['상세 조회', formatCount(ad.views)],
+        ['CTA 클릭', formatCount(ad.ctaClicks)],
+      ];
 
   return (
     <li className="min-w-0">
@@ -145,7 +153,20 @@ function ActiveAdCard({ ad }: { ad: ActiveAd }) {
             </p>
           </div>
 
-          <dl className="grid grid-cols-3 gap-y-3 rounded-lg bg-gray-50 py-3">
+          {posting ? null : (
+            <p className="flex items-baseline justify-between rounded-lg bg-blue-50 px-4 py-3">
+              <span className="text-sm text-blue-700">클릭률</span>
+              <span className="text-2xl font-bold text-blue-700 tabular-nums">
+                {formatRate(ad.adClickRate)}
+              </span>
+            </p>
+          )}
+          <dl
+            className={cn(
+              'grid gap-y-3 rounded-lg bg-gray-50 py-3',
+              posting ? 'grid-cols-3' : 'grid-cols-4',
+            )}
+          >
             {metrics.map(([label, value]) => (
               <div key={label} className="flex flex-col items-center gap-0.5">
                 <dt className="text-xs text-gray-500">{label}</dt>

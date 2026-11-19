@@ -12,7 +12,12 @@ const GRID_LINE = { lineStyle: { color: '#ecedf0' } };
  * 날짜별 추이. 노출은 수가 커서 왼쪽 축 막대로, 클릭·상세 조회·CTA 클릭은 오른쪽 축 선으로 그린다. 수집 시작일 앞은
  * 0 이 아니라 빈칸으로 두고 회색 칸에 "집계 전" 을 적는다 — 0 으로 그리면 숫자가 없었던 날로 읽힌다.
  */
-export function trendOption(daily: ReportDailyRow[], collectedSince: string): EChartsCoreOption {
+export function trendOption(
+  daily: ReportDailyRow[],
+  collectedSince: string,
+  /** 상세 조회·CTA 클릭 선을 그릴지. 배너 링크가 공고 상세가 아니면 0 뿐이라 빼다. */
+  withDetail = true,
+): EChartsCoreOption {
   const dates = daily.map((row) => row.date);
   const before = (date: string) => date < collectedSince;
   const values = (pick: (row: ReportDailyRow) => number) =>
@@ -82,9 +87,10 @@ export function trendOption(daily: ReportDailyRow[], collectedSince: string): EC
               }
             : undefined,
       },
-      line('광고 클릭', (row) => row.adClicks),
-      line('상세 조회', (row) => row.views),
-      line('CTA 클릭', (row) => row.ctaClicks),
+      line('클릭', (row) => row.adClicks),
+      ...(withDetail
+        ? [line('상세 조회', (row) => row.views), line('CTA 클릭', (row) => row.ctaClicks)]
+        : []),
     ],
   };
 }
