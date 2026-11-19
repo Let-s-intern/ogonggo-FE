@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 import {
   Badge,
   Button,
@@ -9,6 +9,7 @@ import {
   DataTable,
   Input,
   Select,
+  cn,
   type DataTableColumn,
 } from '@ogonggo/ui';
 import {
@@ -30,6 +31,7 @@ import {
   CONTRACT_STATUS_TONE,
   formatPaymentAmount,
 } from '@/entities/advertisement-contract/lib/contract';
+import { reportProductsOf } from '@/entities/advertisement-contract/api/useContractReport';
 import type { AdvertisementExposure } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
 import type { AdPostingExposure } from '@/entities/advertisement-exposure/lib/adPosting';
 import { businessNumberOf } from '@/entities/member/model/companySignupInfo';
@@ -47,7 +49,7 @@ import {
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { BannerFormModal } from '@/widgets/banner-form';
 import { PageHeader } from '@/widgets/page-header';
-import { ContractReportCard } from './ContractReportCard';
+import { ProductReportPanel, reportCellLabel } from './ProductReportPanel';
 import { ContractReportSummaryCard } from './ContractReportSummaryCard';
 import { ContractTargetsCard } from './ContractTargetsCard';
 import { ProductAddForm } from './ProductAddForm';
@@ -73,6 +75,17 @@ const backTo = (status?: string) =>
 export function AdContractDetailPage() {
   const contractId = Number(useParams().contractId);
   const { data: contract, isPending, isError } = useContract(contractId);
+  // 펼친 상품 리포트. 주소에 남겨 새로고침·공유해도 같은 리포트가 열린다.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const productParam = Number(searchParams.get('product'));
+  const selectedProductId =
+    Number.isInteger(productParam) && productParam > 0 ? productParam : null;
+  const selectProduct = (id: number | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (id === null) next.delete('product');
+    else next.set('product', String(id));
+    setSearchParams(next, { replace: true });
+  };
 
   if (isError) {
     return (
@@ -97,10 +110,13 @@ export function AdContractDetailPage() {
         title={`${contract.companyName} · ${contract.recruitmentTitle}`}
         backTo={backTo(contract.status)}
       />
-      <div className="flex flex-col gap-6">
-        <ContractReportSummaryCard contractId={contract.id} />
+      {/*
+       * 위계(2026-11-19 사용자): 계약 정보 → 계약 전체 성과 → 상품 목록(누르면 그 상품 리포트) → 대상 공고·걸린 노출 → 신청
+       * 메모. 카드 사이는 같은 간격, 카드 제목은 같은 크기다.
+       */}
+      <div className="flex flex-col gap-8">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <ApplicationCard contract={contract} />
+          <ContractInfoCard contract={contract} />
           <div className="flex flex-col gap-6">
             <StatusCard contract={contract} />
             <PaymentAmountCard key={contract.paymentAmount ?? 'none'} contract={contract} />
@@ -109,10 +125,11 @@ export function AdContractDetailPage() {
             ) : null}
           </div>
         </div>
-        <ProductsCard contract={contract} />
-        <ContractReportCard contract={contract} />
+        <ContractReportSummaryCard contractId={contract.id} />
+        <ProductsCard contract={contract} selectedId={selectedProductId} onSelect={selectProduct} />
         <ContractTargetsCard contract={contract} />
         <ExposuresCard contract={contract} />
+        <RequestMemoCard contract={contract} />
       </div>
     </>
   );
@@ -150,14 +167,12 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
  */
 const PURPOSE_PRIORITY_KEY = 'purposePriority';
 
-/** 신청 원문. 비즈니스 공고 계약은 신청서가 없어 담당자·세금계산서 등이 비어 있다. */
-function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
+/** 계약 정보: 무엇을 누가 광고하는지와 담당자·정산. 비즈니스 공고 계약은 신청서가 없어 담당자·세금계산서 등이 비어 있다. */
+function ContractInfoCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
   const href = targetHref(contract);
-  const purposeAnswer = contract.formAnswers?.find((a) => a.key === PURPOSE_PRIORITY_KEY);
-  const answers = contract.formAnswers?.filter((a) => a.key !== PURPOSE_PRIORITY_KEY) ?? [];
   return (
     <Card>
-      <CardTitle>신청 내용</CardTitle>
+      <CardTitle>계약 정보</CardTitle>
       <Section title="공고">
         <Row label="경로">{enumLabel('AdvertisementContractSource', contract.source)}</Row>
         <Row label="홍보 대상">
@@ -198,6 +213,36 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
         </Row>
         <Row label="마감일">{contract.recruitmentDeadline}</Row>
       </Section>
+      <Section title="담당자·정산">
+        <Row label="담당자">
+          {[contract.managerName, contract.email, contract.phoneNumber]
+            .filter(Boolean)
+            .join(' · ') || null}
+        </Row>
+        <Row label="사업자 번호">{businessNumberOf(contract)}</Row>
+        <Row label="세금계산서">
+          {contract.invoiceMethod
+            ? enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)
+            : null}
+        </Row>
+        <Row label="소재 방식">
+          {contract.creativeMethod
+            ? enumLabel('AdvertisementContractCreativeMethod', contract.creativeMethod)
+            : null}
+        </Row>
+        <Row label="신청일">{formatKst(contract.registeredAt)}</Row>
+      </Section>
+    </Card>
+  );
+}
+
+/** 신청 메모: 신청서의 광고 요청(홍보 목표, 예산, 문항 답, 일정·요청 사항). 운영자가 상품을 고를 때 참고한다. */
+function RequestMemoCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
+  const purposeAnswer = contract.formAnswers?.find((a) => a.key === PURPOSE_PRIORITY_KEY);
+  const answers = contract.formAnswers?.filter((a) => a.key !== PURPOSE_PRIORITY_KEY) ?? [];
+  return (
+    <Card>
+      <CardTitle>신청 메모</CardTitle>
       <Section title="광고 요청">
         <Row label="홍보 목표">
           {purposeAnswer ? (
@@ -237,25 +282,6 @@ function ApplicationCard({ contract }: { contract: AdminAdvertisementContractDet
         </Row>
         <Row label="일정 요청">{contract.scheduleRequest}</Row>
         <Row label="요청 사항">{contract.advertisementRequest}</Row>
-      </Section>
-      <Section title="담당자·정산">
-        <Row label="담당자">
-          {[contract.managerName, contract.email, contract.phoneNumber]
-            .filter(Boolean)
-            .join(' · ') || null}
-        </Row>
-        <Row label="사업자 번호">{businessNumberOf(contract)}</Row>
-        <Row label="세금계산서">
-          {contract.invoiceMethod
-            ? enumLabel('AdvertisementContractInvoiceMethod', contract.invoiceMethod)
-            : null}
-        </Row>
-        <Row label="소재 방식">
-          {contract.creativeMethod
-            ? enumLabel('AdvertisementContractCreativeMethod', contract.creativeMethod)
-            : null}
-        </Row>
-        <Row label="신청일">{formatKst(contract.registeredAt)}</Row>
       </Section>
     </Card>
   );
@@ -460,8 +486,19 @@ function BusinessAccountCard({ contract }: { contract: AdminAdvertisementContrac
  * 배너 상품 줄에는 `배너 등록` 이 있다. 그 상품의 자리에, 이 계약을 연결 계약으로 미리 채운 등록 모달을 연다(배너 세팅과 같은
  * 모달). 저장하면 아래 `걸린 노출` 에 바로 보인다.
  */
-function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetailResponse }) {
+function ProductsCard({
+  contract,
+  selectedId,
+  onSelect,
+}: {
+  contract: AdminAdvertisementContractDetailResponse;
+  /** 리포트를 펼친 계약 상품(`?product=`). */
+  selectedId: number | null;
+  onSelect: (contractProductId: number | null) => void;
+}) {
   const products = useAdvertisementProducts();
+  const reportProducts = reportProductsOf(contract);
+  const toggle = (id: number) => onSelect(selectedId === id ? null : id);
   const remove = useRemoveContractProduct(contract.id);
   const [bannerProduct, setBannerProduct] = useState<BannerProduct | null>(null);
 
@@ -476,7 +513,12 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
       key: 'name',
       header: '상품',
       render: (row) => (
-        <span className="flex items-center gap-2">
+        <span
+          className={cn(
+            'flex items-center gap-2',
+            row.contractProductId === selectedId && 'font-semibold text-blue-600',
+          )}
+        >
           {row.productName}
           {row.productDeleted ? <Badge tone="neutral">삭제된 상품</Badge> : null}
         </span>
@@ -505,13 +547,36 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
       render: (row) => <span className="text-sm">{formatKst(row.addedAt)}</span>,
     },
     {
+      key: 'report',
+      header: '리포트',
+      width: 'w-32',
+      render: (row) => {
+        const item = reportProducts.find(
+          (candidate) => candidate.contractProductId === row.contractProductId,
+        );
+        if (!item) return null;
+        const open = row.contractProductId === selectedId;
+        return (
+          <span
+            className={cn(
+              'text-sm whitespace-nowrap',
+              open || item.reportAvailable ? 'text-blue-600' : 'text-gray-400',
+            )}
+          >
+            {reportCellLabel(item, open)}
+          </span>
+        );
+      },
+    },
+    {
       key: 'actions',
       header: '관리',
       width: 'w-44',
       render: (row) => {
         const banner = bannerProductOf(row);
         return (
-          <span className="flex items-center gap-1.5">
+          // 행 전체가 리포트를 여는 자리라 버튼 클릭은 여기서 멈춘다.
+          <span className="flex items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
             {banner ? (
               <Button
                 size="sm"
@@ -526,7 +591,13 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
               variant="secondary"
               aria-label={`${row.productName} 빼기`}
               disabled={remove.isPending}
-              onClick={() => remove.mutate(row.contractProductId)}
+              onClick={() =>
+                remove.mutate(row.contractProductId, {
+                  onSuccess: () => {
+                    if (selectedId === row.contractProductId) onSelect(null);
+                  },
+                })
+              }
             >
               빼기
             </Button>
@@ -550,8 +621,20 @@ function ProductsCard({ contract }: { contract: AdminAdvertisementContractDetail
           columns={columns}
           rows={contract.products}
           rowKey={(row) => row.contractProductId}
+          onRowClick={(row) => toggle(row.contractProductId)}
           emptyMessage="넣은 상품이 없습니다. 판매한 상품을 넣으세요."
         />
+        {selectedId !== null ? (
+          <ProductReportPanel
+            contract={contract}
+            contractProductId={selectedId}
+            onClose={() => onSelect(null)}
+          />
+        ) : contract.products.length > 0 ? (
+          <p className="text-xs text-gray-500">
+            상품을 누르면 그 상품의 성과 리포트가 여기 펼쳐져요.
+          </p>
+        ) : null}
       </div>
       {bannerProduct ? (
         <BannerFormModal

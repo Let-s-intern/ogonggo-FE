@@ -1,14 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import {
-  Button,
-  Callout,
-  Card,
-  CardTitle,
-  DataTable,
-  Input,
-  Select,
-  type DataTableColumn,
-} from '@ogonggo/ui';
+import { Button, Callout, DataTable, Input, type DataTableColumn } from '@ogonggo/ui';
 import { enumLabel, type AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/admin';
 import {
   downloadReportCsv,
@@ -53,71 +44,66 @@ function todayKst(): string {
   return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-/** 고르기 목록의 상품 이름. 기간과 진행 상태를 붙인다. */
-function productOptionLabel(product: ReportableContractProduct): string {
-  if (product.reportUnavailableReason === 'NOT_EXPOSABLE') {
-    return `${product.productName} · 집계 대상 아님`;
-  }
-  if (!product.startDate || !product.endDate) return `${product.productName} · 기간 미정`;
+/** 리포트 머리의 상품 설명: 기간과 진행 상태. */
+function productPeriodLabel(product: ReportableContractProduct): string {
+  if (product.reportUnavailableReason === 'NOT_EXPOSABLE') return '집계 대상 아님';
+  if (!product.startDate || !product.endDate) return '기간 미정';
   const today = todayKst();
   const state = today < product.startDate ? '예정' : today > product.endDate ? '끝남' : '진행 중';
-  return `${product.productName} · ${product.startDate} ~ ${product.endDate} · ${state}`;
+  return `${product.startDate} ~ ${product.endDate} · ${state}`;
+}
+
+/** 상품 표의 `리포트` 칸 문구. 열 수 없는 상품은 이유를 짧게. */
+export function reportCellLabel(product: ReportableContractProduct, open: boolean): string {
+  if (open) return '닫기';
+  if (product.reportAvailable) return '리포트 보기';
+  return product.reportUnavailableReason === 'NOT_EXPOSABLE' ? '집계 대상 아님' : '기간 미정';
 }
 
 /**
- * 계약 상품별 성과 리포트(PRD 6.6·6.7). 비즈니스 앱의 리포트와 같은 구성이다 — 상품 고르기 → 기간 좁히기 → 상품 몫 요약 →
- * 날짜별 추이 → 소재별 표 → 대상 공고 전체 숫자와 유입 경로별 나눔 → 지표 정의.
+ * 계약 상품 하나의 성과 리포트(PRD 6.6·6.7). 계약 상세의 상품 표에서 상품을 누르면 그 아래에 펼쳐진다(`?product=`). 비즈니스
+ * 앱과 같은 구성 — 기간 좁히기 → 상품 몫 요약 → 날짜별 추이 → 광고물별 → 대상 공고 전체 숫자 → 지표 정의.
  *
- * PDF 는 통계 화면과 같은 방식(화면을 그림으로 떠서 A4 로 나눔), CSV 는 서버의 `report.csv` 를 그대로 받는다.
+ * 리포트가 없는 상품(기간 미정, 채널 상품)은 이유만 안내한다. PDF 는 통계 화면과 같은 방식(화면을 그림으로 떠서 A4 로 나눔),
+ * CSV 는 서버의 `report.csv` 를 그대로 받는다.
  */
-export function ContractReportCard({
+export function ProductReportPanel({
   contract,
+  contractProductId,
+  onClose,
 }: {
   contract: AdminAdvertisementContractDetailResponse;
+  contractProductId: number;
+  onClose: () => void;
 }) {
-  const products = reportProductsOf(contract);
-  const [chosenId, setChosenId] = useState<number | null>(null);
-  const product =
-    products.find((item) => item.contractProductId === chosenId) ??
-    products.find((item) => item.reportAvailable) ??
-    products[0] ??
-    null;
-
+  const product = reportProductsOf(contract).find(
+    (item) => item.contractProductId === contractProductId,
+  );
+  if (!product) {
+    return <Callout tone="info">이 계약에 없는 상품입니다. 이미 뺐을 수 있어요.</Callout>;
+  }
   return (
-    <Card>
-      <CardTitle>성과 리포트</CardTitle>
-      <div className="mt-3 flex flex-col gap-4">
-        {product === null ? (
-          <p className="text-sm text-gray-500">
-            계약 상품이 없습니다. 위 계약 상품에 판매한 상품을 기간과 함께 넣으면 리포트가 열립니다.
-          </p>
-        ) : (
-          <>
-            <Select
-              aria-label="리포트 상품"
-              className="max-w-full"
-              options={products.map((item) => ({
-                value: String(item.contractProductId),
-                label: productOptionLabel(item),
-              }))}
-              value={String(product.contractProductId)}
-              onChange={(event) => setChosenId(Number(event.target.value))}
-            />
-            {product.reportAvailable ? (
-              <ProductReport
-                key={product.contractProductId}
-                contract={contract}
-                product={product}
-              />
-            ) : (
-              <Callout tone="info">
-                {UNAVAILABLE_MESSAGES[product.reportUnavailableReason ?? 'NO_PERIOD']}
-              </Callout>
-            )}
-          </>
-        )}
+    <section
+      aria-label={`${product.productName} 리포트`}
+      className="flex flex-col gap-4 rounded-lg border border-blue-100 bg-blue-50/30 p-4"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold text-gray-900">{product.productName} 리포트</h3>
+          <p className="pt-0.5 text-xs text-gray-500">{productPeriodLabel(product)}</p>
+        </div>
+        <Button size="sm" variant="secondary" onClick={onClose}>
+          리포트 닫기
+        </Button>
       </div>
-    </Card>
+      {product.reportAvailable ? (
+        <ProductReport key={product.contractProductId} contract={contract} product={product} />
+      ) : (
+        <Callout tone="info">
+          {UNAVAILABLE_MESSAGES[product.reportUnavailableReason ?? 'NO_PERIOD']}
+        </Callout>
+      )}
+    </section>
   );
 }
 
