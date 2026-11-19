@@ -24,15 +24,15 @@ const JOB_FILTER_PARAM_NAMES = [
 /**
  * 세 가지를 한다.
  *
- * `/letscareer-api/**` 요청에서 `Origin` 헤더를 뺀다. 그 뒤 `next.config.ts` 의 rewrite 가 렛츠커리어로 넘긴다.
+ * `/api/**` 와 `/letscareer-api/**` 요청에서 `Origin` 헤더를 뺀다. 두 경로는 `next.config.ts` 의 rewrite 가
+ * 백엔드로 전달하므로 브라우저의 Origin 을 그대로 넘기면 안 된다.
  *
- * 브라우저는 같은 오리진 POST 에도 `Origin: http://localhost:4000`(배포에서는 `https://ogonggo.co.kr`) 을
- * 붙이고, rewrite 는 그 헤더를 그대로 넘긴다. 렛츠커리어 서버의 CORS 허용 목록(`WebSecurityConfig.java` 의
- * `getDefaultCorsConfiguration`) 에 두 주소가 없어, 스프링이 본문을 보기도 전에 403 `Invalid CORS request` 로
- * 끊는다(2026-09-18 확인: 같은 요청이 `Origin` 을 빼면 400 검증 오류까지 간다).
+ * 브라우저는 같은 오리진 POST 에도 Origin 을 붙인다. 사용자 API 의 광고 이벤트처럼 브라우저에서 호출해
+ * rewrite 로 전달하는 요청은 Spring CORS 필터가 Origin 을 검사해 거절할 수 있다. 렛츠커리어 API 도
+ * 허용 목록(`WebSecurityConfig.java` 의 `getDefaultCorsConfiguration`) 에 프론트 도메인이 없어 같은 문제가 있다.
  *
- * 렛츠커리어를 부르는 것은 이 Next 서버다. 브라우저는 같은 오리진만 부르므로 CORS 가 지킬 경계가 없다.
- * 백엔드를 고치지 않는다는 PRD 원칙에 따라 허용 목록을 늘려 달라고 하지 않고 여기서 뺀다.
+ * 둘 다 이 Next 서버가 호출하므로 여기서 Origin 을 제거한다. 브라우저는 계속 같은 오리진만 부르고,
+ * 백엔드 CORS 허용 도메인을 추가할 필요가 없다.
  *
  * `/` 와 `/calendar` 는 쿠키에 기억한 필터·직무를 주소에 붙여 보낸다(`jobListRedirect`, `calendarRedirect`).
  * 이 일을 `page.tsx` 의 `redirect()` 가 하던 때는 이동하는 동안 스켈레톤이 뜨지 않았다. 렌더 중에 던진
@@ -96,5 +96,5 @@ function calendarRedirect(request: NextRequest): string | undefined {
 }
 
 export const config = {
-  matcher: ['/letscareer-api/:path*', '/', '/calendar'],
+  matcher: ['/api/:path*', '/letscareer-api/:path*', '/', '/calendar'],
 };
