@@ -34,7 +34,7 @@ export interface AdminAdvertisementExposureResponse {
   /** @nullable */
   targetId?: number | null;
   /**
-     * 채용공고 목록(JOB_LIST) 노출의 직군 탭. 다른 자리와 배너는 null입니다.
+     * 채용공고 목록(JOB_LIST) 노출의 직군 탭. JOB_LIST의 null은 전체 탭이고, 다른 자리와 배너는 늘 null입니다.
      *
      * | 값 | code | 설명 |
      * | --- | --- | --- |
