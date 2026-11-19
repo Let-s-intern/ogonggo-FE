@@ -41,6 +41,7 @@ const BANNER_POSITIONS: readonly string[] = Object.values(
 const AD_POSTING_POSITIONS: readonly string[] = [
   'JOB_PICK',
   'JOB_LIST',
+  'JOB_DETAIL_SIDE',
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
 ];

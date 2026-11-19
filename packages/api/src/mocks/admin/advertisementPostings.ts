@@ -15,8 +15,8 @@ import { ok, paginate, readPaging } from './paging';
 /**
  * 광고 공고(카드) 노출 목(PRD `prd-business-report.md` 6.8, API 계약 2절). BE(Push 5) 배포 전이라 이 모양이 계약이다.
  *
- * - 광고 공고 자리는 판매 상품에 맞춘 넷이다(계약 8절): `JOB_PICK`·`JOB_LIST`·`CALENDAR_DAY`·`MYPAGE_SCRAP`. 리스트 상단
- *   고정·공고 달력·마이페이지 스크랩 자리에 광고 공고 상품 하나씩을 시드로 넣는다
+ * - 광고 공고 자리는 다섯이다(계약 8절, 공고 상세 옆은 사용자 결정으로 남김): `JOB_PICK`·`JOB_LIST`·`JOB_DETAIL_SIDE`·
+ *   `CALENDAR_DAY`·`MYPAGE_SCRAP`. 오공고 PICK 을 뺀 넷에 광고 공고 상품 하나씩을 시드로 넣는다
  * - 어드민 노출 응답에 `targetTitle`·`targetCompanyName`·`targetPublished` 가 더해진다. 노출 목록을 여기서 먼저 받아 얹는다
  * - 리스트 상단 고정(`JOB_LIST`) 노출은 직무(`jobField`)가 있어야 한다(없으면 400). 같은 직무 안 같은 대상은 409, 다른 자리는
  *   같은 자리(상품) 안 같은 대상이 409. 없는 대상은 404. 나머지 검증·저장은 `./advertisements.ts` 가 그대로 한다
@@ -26,8 +26,13 @@ import { ok, paginate, readPaging } from './paging';
 
 const EXPOSURES = '*/api/v1/admin/advertisement-exposures';
 
-/** 계약 8절. 판매 상품이 없는 `BOOTCAMP_LIST`·`JOB_DETAIL_SIDE` 는 뺐다. 대상은 모두 채용공고다. */
-export type AdPostingPosition = 'JOB_PICK' | 'JOB_LIST' | 'CALENDAR_DAY' | 'MYPAGE_SCRAP';
+/** 계약 8절. 판매 상품이 없는 `BOOTCAMP_LIST` 는 뺐다. 공고 상세 옆(`JOB_DETAIL_SIDE`)은 남긴다(2026-11-19 사용자). 대상은 모두 채용공고다. */
+export type AdPostingPosition =
+  | 'JOB_PICK'
+  | 'JOB_LIST'
+  | 'JOB_DETAIL_SIDE'
+  | 'CALENDAR_DAY'
+  | 'MYPAGE_SCRAP';
 
 /** 어드민 노출 응답에 이 목이 얹는 칸. 배너는 모두 null 이다. */
 export type AdminAdPostingExposureResponse = AdminAdvertisementExposureResponse & {
@@ -48,18 +53,27 @@ const POSTING_PRODUCTS: { id: number; position: AdPostingPosition; name: string;
   [
     { id: 101, position: 'JOB_LIST', name: '리스트 상단 고정 공고', price: 300000 },
     { id: 102, position: 'CALENDAR_DAY', name: '공고 달력 날짜별 공고', price: 200000 },
-    { id: 103, position: 'MYPAGE_SCRAP', name: '마이페이지 스크랩 칸 공고', price: 150000 },
+    { id: 103, position: 'JOB_DETAIL_SIDE', name: '공고 상세 옆 추천 공고', price: 150000 },
+    { id: 110, position: 'MYPAGE_SCRAP', name: '마이페이지 스크랩 칸 공고', price: 150000 },
   ];
 
+/** 시드 상품의 자리가 이 값으로 바뀌어 있으면 이 목의 옛 판이 남긴 것이라 시드 자리로 되돌린다. */
+const STALE_POSITIONS: readonly string[] = [
+  'BOOTCAMP_LIST',
+  'JOB_DETAIL_SIDE',
+  'CALENDAR_DAY',
+  'MYPAGE_SCRAP',
+];
+
 /**
- * 이 목을 고치기 전에 어드민 브라우저 `localStorage` 에 남은 옛 자리 상품(102 부트캠프 목록, 103 공고 상세 추천)을 새
- * 자리로 옮긴다. 옛 부트캠프 노출은 새 자리에 걸 수 없어(채용공고만) 지운다.
+ * 이 목의 옛 판이 어드민 브라우저 `localStorage` 에 남긴 시드 상품 자리(102 부트캠프 목록, 잠깐 마이페이지 스크랩이던 103)를
+ * 지금 시드 자리로 되돌린다. 옛 부트캠프 노출은 광고 공고 자리에 걸 수 없어(채용공고만) 지운다.
  */
 function migrateRemovedPositions() {
   for (const product of POSTING_PRODUCTS) {
     const stored = advertisementStore.products.find((item) => item.id === product.id);
     const position = String(stored?.position ?? '');
-    if (stored && (position === 'BOOTCAMP_LIST' || position === 'JOB_DETAIL_SIDE')) {
+    if (stored && position !== product.position && STALE_POSITIONS.includes(position)) {
       Object.assign(stored, {
         name: product.name,
         price: product.price,

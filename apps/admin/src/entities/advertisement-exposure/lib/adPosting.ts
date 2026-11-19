@@ -11,10 +11,11 @@ import type { AdvertisementExposure } from '../api/useAdvertisementExposures';
  */
 export type { AdPostingPosition };
 
-/** 판매 상품 차례(계약 8절). 광고 공고 세팅 탭과 상품 자리 고르기가 이 차례다. */
+/** 판매 상품 차례(계약 8절, 공고 상세 옆은 2026-11-19 사용자 결정으로 남김). 광고 공고 세팅 탭이 이 차례다. */
 export const AD_POSTING_POSITIONS: readonly AdPostingPosition[] = [
   'JOB_PICK',
   'JOB_LIST',
+  'JOB_DETAIL_SIDE',
   'CALENDAR_DAY',
   'MYPAGE_SCRAP',
 ];
@@ -22,6 +23,7 @@ export const AD_POSTING_POSITIONS: readonly AdPostingPosition[] = [
 export const AD_POSTING_POSITION_LABELS: Record<AdPostingPosition, string> = {
   JOB_PICK: '오공고 PICK',
   JOB_LIST: '리스트 상단 고정',
+  JOB_DETAIL_SIDE: '공고 상세 옆',
   CALENDAR_DAY: '공고 달력',
   MYPAGE_SCRAP: '마이페이지 스크랩',
 };
@@ -31,6 +33,8 @@ export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string>
     '홈 히어로 "오늘의 추천 공고" 의 오공고 PICK 탭 맨 앞 칸. 탭의 카드 수는 그대로이고, 같은 공고는 PICK 목록에서 빠집니다.',
   JOB_LIST:
     '채용공고 목록의 직무 탭 1페이지 맨 위 칸. 직무당 한 칸이고 직렬 필터와 상관없이 붙습니다. 전체 탭과 2페이지부터는 없습니다.',
+  JOB_DETAIL_SIDE:
+    '공고 상세 오른쪽 추천 카드. 개수 제한 없이 이 순서대로 쌓이고, 지금 보는 공고는 빠집니다. 좁은 화면에서는 본문 아래로 내려갑니다.',
   CALENDAR_DAY:
     '공고 달력에서 고른 날짜의 공고 목록 맨 앞 칸. 노출 기간 안의 날짜면 날마다 붙습니다.',
   MYPAGE_SCRAP:
@@ -41,6 +45,7 @@ export const AD_POSTING_POSITION_DESCRIPTIONS: Record<AdPostingPosition, string>
 export const AD_POSTING_FIXED_TARGET: Record<AdPostingPosition, 'JOB' | 'BOOTCAMP' | undefined> = {
   JOB_PICK: 'JOB',
   JOB_LIST: 'JOB',
+  JOB_DETAIL_SIDE: 'JOB',
   CALENDAR_DAY: 'JOB',
   MYPAGE_SCRAP: 'JOB',
 };
