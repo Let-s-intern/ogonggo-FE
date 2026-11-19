@@ -1,4 +1,5 @@
 import type { HttpHandler } from 'msw';
+import { advertisementReportHandlers } from './advertisementReports';
 import { advertisementAdminHandlers } from './advertisements';
 import { companyPriorityHandlers } from './company-priority';
 import { concernHandlers } from './concerns';
@@ -46,6 +47,8 @@ export const adminHandlers: HttpHandler[] = [
   ...notificationHandlers,
   ...recommendWeightsHandlers,
   ...companyPriorityHandlers,
+  // 계약 상세를 먼저 받아 리포트 칸을 얹으므로 `advertisementAdminHandlers` 보다 앞에 둔다.
+  ...advertisementReportHandlers,
   ...advertisementAdminHandlers,
   ...ec2InstanceHandlers,
 ];

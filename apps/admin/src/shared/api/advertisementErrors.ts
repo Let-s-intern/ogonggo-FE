@@ -19,6 +19,10 @@ const MESSAGES: Record<string, string> = {
   ADVERTISEMENT_CONTRACT_PRODUCT_PERIOD_INVALID: '게시 시작일은 종료일과 같거나 앞서야 해요.',
   ADVERTISEMENT_CONTRACT_FOLLOWS_REVIEW:
     '비즈니스 공고 계약은 공고 검수 결과를 따라가서 상태를 바꿀 수 없어요.',
+  ADVERTISEMENT_CONTRACT_TARGET_DUPLICATED: '이미 이 계약에 연결한 공고예요.',
+  ADVERTISEMENT_CONTRACT_TARGET_NOT_FOUND:
+    '공고를 찾을 수 없어요. 지워졌거나 이미 연결을 뺐을 수 있어요.',
+  ADVERTISEMENT_CONTRACT_TARGET_FIXED: '공고 등록 계약의 공고는 리포트 대상에서 뺄 수 없어요.',
   BUSINESS_ACCOUNT_NOT_ISSUABLE:
     '이미 회원이 붙은 신청이거나 비즈니스 공고 계약이라 계정을 발급할 수 없어요.',
   BUSINESS_ACCOUNT_MEMBER_NOT_ACTIVE:
