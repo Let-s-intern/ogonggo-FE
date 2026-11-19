@@ -6,6 +6,11 @@ import {
   type CreateAdminAdvertisementProductRequestPosition,
 } from '@ogonggo/api/src/admin';
 import {
+  AD_POSTING_POSITIONS,
+  AD_POSTING_POSITION_LABELS,
+  isAdPostingPosition,
+} from '@/entities/advertisement-exposure/lib/adPosting';
+import {
   useSaveAdvertisementProduct,
   type AdvertisementProduct,
 } from '@/entities/advertisement-product/api/useAdvertisementProducts';
@@ -15,8 +20,20 @@ const NAME_MAX_LENGTH = 100;
 const CATEGORY_OPTIONS = enumOptions('AdvertisementProductCategory');
 const POSITION_OPTIONS = [
   { value: '', label: '자리 없음' },
-  ...enumOptions('AdvertisementProductPosition'),
+  ...enumOptions('AdvertisementProductPosition').map((option) => ({
+    ...option,
+    label: `배너 · ${option.label}`,
+  })),
+  // 광고 공고(카드) 자리. 코드젠 전이라 카탈로그에 없어 따로 붙인다.
+  ...AD_POSTING_POSITIONS.map((value) => ({
+    value,
+    label: `광고 공고 · ${AD_POSTING_POSITION_LABELS[value]}`,
+  })),
 ];
+
+/** 자리가 정하는 카테고리. 배너 자리는 배너, 광고 공고 자리는 광고 공고다(BE `ADVERTISEMENT_PRODUCT_POSITION_MISMATCH`). */
+const categoryOf = (position: string): CreateAdminAdvertisementProductRequestCategory =>
+  isAdPostingPosition(position) ? 'JOB_POSTING' : 'BANNER';
 
 interface FormState {
   category: CreateAdminAdvertisementProductRequestCategory;
@@ -52,7 +69,7 @@ function validate(form: FormState): FormErrors {
 /**
  * 광고 상품 등록·수정 모달(BE LC-3583). 수정은 `PUT` 전체 교체라 모든 칸을 보낸다.
  *
- * 노출 자리는 지금 모두 배너 자리라, 자리를 고르면 카테고리를 `배너` 로 고정한다. 다르면 BE 가 400
+ * 자리를 고르면 카테고리를 그 자리의 것으로 고정한다 — 배너 자리는 `배너`, 광고 공고 자리는 `광고 공고`. 다르면 BE 가 400
  * (`ADVERTISEMENT_PRODUCT_POSITION_MISMATCH`)으로 거절한다.
  */
 export function ProductFormModal({
@@ -95,7 +112,7 @@ export function ProductFormModal({
       <Field
         label="노출 자리"
         htmlFor="product-position"
-        hint="오공고 화면의 배너 자리입니다. 인스타그램·카카오톡처럼 오공고 밖에 싣는 상품은 자리 없음입니다."
+        hint="오공고 화면의 배너·광고 공고 자리입니다. 인스타그램·카카오톡처럼 오공고 밖에 싣는 상품은 자리 없음입니다."
       >
         <Select
           id="product-position"
@@ -106,7 +123,7 @@ export function ProductFormModal({
             setForm((current) => ({
               ...current,
               position,
-              category: position ? 'BANNER' : current.category,
+              category: position ? categoryOf(position) : current.category,
             }));
           }}
         />
@@ -116,7 +133,7 @@ export function ProductFormModal({
         label="카테고리"
         htmlFor="product-category"
         required
-        hint={form.position ? '노출 자리가 있는 상품은 배너입니다.' : undefined}
+        hint={form.position ? '노출 자리가 정하는 카테고리입니다.' : undefined}
       >
         <Select
           id="product-category"

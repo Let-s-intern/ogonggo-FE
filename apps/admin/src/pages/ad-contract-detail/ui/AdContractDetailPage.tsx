@@ -32,6 +32,7 @@ import {
   formatPaymentAmount,
 } from '@/entities/advertisement-contract/lib/contract';
 import type { AdvertisementExposure } from '@/entities/advertisement-exposure/api/useAdvertisementExposures';
+import type { AdPostingExposure } from '@/entities/advertisement-exposure/lib/adPosting';
 import { businessNumberOf } from '@/entities/member/model/companySignupInfo';
 import {
   type BannerPosition,
@@ -641,7 +642,13 @@ function ExposuresCard({ contract }: { contract: AdminAdvertisementContractDetai
       width: 'w-56',
       render: (row) => productName(row.productId),
     },
-    { key: 'name', header: '이름', render: (row) => row.name ?? '-' },
+    {
+      key: 'name',
+      header: '이름',
+      // 광고 공고 노출은 이름이 없어 띄운 공고 제목을 보인다.
+      render: (row: AdPostingExposure) =>
+        row.name ?? (row.targetTitle ? `광고 공고 · ${row.targetTitle}` : '-'),
+    },
     {
       key: 'period',
       header: '노출 기간(KST)',

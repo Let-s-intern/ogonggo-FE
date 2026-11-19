@@ -29,8 +29,13 @@ const PRODUCTS = '*/api/v1/admin/advertisement-products';
 const EXPOSURES = '*/api/v1/admin/advertisement-exposures';
 const CONTRACTS = '*/api/v1/admin/advertisement-contracts';
 
-/** 자리마다 그 자리가 속한 카테고리. 지금 자리는 모두 배너다(BE `AdvertisementProductPosition.category`). */
-const POSITIONS: readonly string[] = Object.values(AdminAdvertisementProductResponsePosition);
+/** 자리마다 그 자리가 속한 카테고리(BE `AdvertisementProductPosition.category`). 생성 enum 의 자리는 모두 배너다. */
+const BANNER_POSITIONS: readonly string[] = Object.values(
+  AdminAdvertisementProductResponsePosition,
+);
+/** 광고 공고(카드) 자리(PRD `prd-business-report.md` 6.8, D12). 코드젠 전이라 생성 enum 에 아직 없다. */
+const AD_POSTING_POSITIONS: readonly string[] = ['JOB_LIST', 'BOOTCAMP_LIST', 'JOB_DETAIL_SIDE'];
+const POSITIONS: readonly string[] = [...BANNER_POSITIONS, ...AD_POSTING_POSITIONS];
 const CATEGORIES: readonly string[] = Object.values(AdminAdvertisementProductResponseCategory);
 /** 오공고 화면에 노출하는 카테고리. 인스타·카카오는 계약에 붙이는 판매 기록만 있다. */
 const EXPOSABLE: readonly string[] = ['BANNER', 'JOB_POSTING'];
@@ -87,8 +92,11 @@ function productError(body: Partial<CreateAdminAdvertisementProductRequest> | nu
   if (body.price != null && (!Number.isInteger(body.price) || body.price < 0)) {
     return badRequest('price: 0 이상의 정수이거나 null 이어야 합니다.');
   }
-  // 지금 노출 자리는 모두 배너 자리다.
-  if (body.position != null && body.category !== 'BANNER') {
+  // 배너 자리는 배너, 광고 공고 자리는 광고 공고 상품만 된다.
+  if (
+    body.position != null &&
+    body.category !== (AD_POSTING_POSITIONS.includes(body.position) ? 'JOB_POSTING' : 'BANNER')
+  ) {
     return error(
       400,
       'ADVERTISEMENT_PRODUCT_POSITION_MISMATCH',

@@ -6,7 +6,7 @@ import {
   useDeleteAdvertisementProduct,
   type AdvertisementProduct,
 } from '@/entities/advertisement-product/api/useAdvertisementProducts';
-import { formatProductPrice } from '@/entities/advertisement-product/lib/product';
+import { formatProductPrice, positionLabel } from '@/entities/advertisement-product/lib/product';
 import { formatKst } from '@/entities/advertisement-exposure/lib/exposure';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { PageHeader } from '@/widgets/page-header';
@@ -40,7 +40,7 @@ export function AdProductListPage() {
       width: 'w-44',
       render: (row) =>
         row.position ? (
-          enumLabel('AdvertisementProductPosition', row.position)
+          positionLabel(row.position)
         ) : (
           <span className="text-gray-500">자리 없음</span>
         ),
