@@ -4,7 +4,7 @@ import type { JobSummary } from '@/entities/job/model/types';
 import type { AdSlot } from '@/shared/ads/adPosting';
 import { fetchAdPostings, MAX_AD_POSTINGS, toAdSlot } from '@/shared/ads/fetchAdPostings';
 import { fetchTodayJobs } from '../api/fetchTodayJobs';
-import { PopularJobsTabs } from './PopularJobsTabs';
+import { PopularJobsTabs, type PickCard } from './PopularJobsTabs';
 
 const POOL_SIZE = 100;
 const TOP_COUNT = 4;
@@ -39,12 +39,19 @@ export async function PopularJobs() {
   // 오공고 PICK 맨 앞은 광고 공고(`JOB_PICK`, 계약 7절)다. 같은 공고는 운영자 PICK 쪽에서 빼고, 탭의 카드 수는 운영자가
   // 고른 수 그대로다 — 광고가 들어온 만큼 PICK 뒤쪽이 밀려난다. 운영자 PICK 이 없으면 탭이 `인기 공고` 로 바뀌므로
   // 광고도 넣지 않는다.
-  const ads: { job: JobSummary; ad: AdSlot }[] = pickAds
+  const ads: (PickCard & { ad: AdSlot })[] = pickAds
     .flatMap((posting) => (posting.job ? [{ ...posting, job: posting.job }] : []))
     .slice(0, MAX_AD_POSTINGS)
-    .map((posting, index) => ({ job: posting.job, ad: toAdSlot(posting, index + 1) }));
+    .map((posting, index) => ({
+      job: posting.job,
+      ad: toAdSlot(posting, index + 1),
+      recommendation: {
+        title: posting.recommendationTitle ?? '',
+        description: posting.recommendationDescription ?? '',
+      },
+    }));
   const adJobIds = new Set(ads.map(({ job }) => job.id));
-  const picks: { job: JobSummary; ad?: AdSlot }[] = [
+  const picks: PickCard[] = [
     ...ads,
     ...todayPicks.filter(({ id }) => !adJobIds.has(id)).map((job) => ({ job })),
   ].slice(0, todayPicks.length);

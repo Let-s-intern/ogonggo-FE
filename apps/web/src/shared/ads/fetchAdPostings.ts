@@ -38,6 +38,9 @@ export interface AdPostingResponse {
    */
   startAt?: string | null;
   endAt?: string | null;
+  /** 오공고 PICK(`JOB_PICK`) 노출의 추천 문구(계약 9절). 운영자 PICK 카드와 같은 상자에 보인다. 다른 자리는 null 이다. */
+  recommendationTitle?: string | null;
+  recommendationDescription?: string | null;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }

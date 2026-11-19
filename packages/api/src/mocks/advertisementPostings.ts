@@ -16,7 +16,7 @@ import type { UserJobSummaryResponse } from '../generated/user/models/userJobSum
  *   요청했다. 71 은 11월 16일~30일, 72 는 11월 19일~21일이라 그 밖의 날을 고르면 빠져야 한다.
  * - `JOB_DETAIL_SIDE`: 공고 상세 옆 추천. 개수 제한 없이 쌓는다. 공고 700 을 넣어 `/jobs/700` 에서 자기 공고가 빠지는지 본다.
  * - `MYPAGE_SCRAP`: 마이페이지 지원 관리 보드(칸반)의 채용공고 스크랩 칸 맨 앞. 브라우저 목 워커가 받는다.
- * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
+ * - `JOB_PICK`: 홈 히어로 `오공고 PICK` 탭. 운영자 PICK 처럼 추천 문구 두 칸이 있다(계약 9절). 공고 7 은 PICK 목(`/api/v1/jobs/today`)에도 있는 공고다.
  *
  * 서버처럼 지금이 노출 기간 밖인 것은 주지 않는다. 자리마다 하나(32·53·72·82·62)는 `adLabel` 이 false 라 `AD` 표시가 없어야 한다.
  *
@@ -43,6 +43,9 @@ export interface AdPostingResponse {
   /** 노출 기간(KST, 오프셋 없음). 계약에 없는 칸이고 웹 공고 달력이 날짜를 가른다. */
   startAt: string | null;
   endAt: string | null;
+  /** 오공고 PICK 노출의 추천 문구(계약 9절). 다른 자리는 null 이다. */
+  recommendationTitle: string | null;
+  recommendationDescription: string | null;
   job: UserJobSummaryResponse | null;
   bootcamp: UserBootcampSummaryResponse | null;
 }
@@ -64,6 +67,8 @@ const SEED: {
   jobField?: string;
   startAt?: string;
   endAt?: string;
+  recommendationTitle?: string;
+  recommendationDescription?: string;
 }[] = [
   {
     exposureId: 31,
@@ -136,8 +141,25 @@ const SEED: {
   { exposureId: 53, position: 'JOB_DETAIL_SIDE', targetType: 'JOB', targetId: 600, adLabel: false },
   { exposureId: 81, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 698, adLabel: true },
   { exposureId: 82, position: 'MYPAGE_SCRAP', targetType: 'JOB', targetId: 693, adLabel: false },
-  { exposureId: 61, position: 'JOB_PICK', targetType: 'JOB', targetId: 7, adLabel: true },
-  { exposureId: 62, position: 'JOB_PICK', targetType: 'JOB', targetId: 690, adLabel: false },
+  {
+    exposureId: 61,
+    position: 'JOB_PICK',
+    targetType: 'JOB',
+    targetId: 7,
+    adLabel: true,
+    recommendationTitle: '바이오 QC 첫 커리어로 추천',
+    recommendationDescription:
+      '신입도 지원할 수 있는 품질관리 계약직이에요.\n샘플링 업무부터 차근차근 배울 수 있어요.',
+  },
+  {
+    exposureId: 62,
+    position: 'JOB_PICK',
+    targetType: 'JOB',
+    targetId: 690,
+    adLabel: false,
+    recommendationTitle: 'AI 엔지니어를 꿈꾼다면',
+    recommendationDescription: '자산관리 서비스에 AI 를 붙이는 팀이에요.',
+  },
 ];
 
 /** `handlers.ts` 의 공고 요약과 같은 모양이다. 본문 칸을 빼고 등록 시각을 오프셋 없는 KST 로 적는다. */
@@ -169,6 +191,8 @@ function toResponse(seed: (typeof SEED)[number], displayOrder: number): AdPostin
     jobField: seed.jobField ?? null,
     startAt: seed.startAt ?? null,
     endAt: seed.endAt ?? null,
+    recommendationTitle: seed.recommendationTitle ?? null,
+    recommendationDescription: seed.recommendationDescription ?? null,
   };
   const job = JOB_FIXTURES.find((fixture) => fixture.id === targetId);
   return job ? { ...base, job: toJobSummary(job), bootcamp: null } : null;
