@@ -9,6 +9,7 @@
     "build": "next build",
     "type-check": "tsgo --noEmit",
     "lint": "oxlint src",
+    "test": "rm -rf node_modules/.cache/unit-tests && tsc -p tsconfig.test.json && echo '{\"type\":\"commonjs\"}' > node_modules/.cache/unit-tests/package.json && node --test node_modules/.cache/unit-tests/",
     "start": "next start --port 4000"
   },
   "dependencies": {

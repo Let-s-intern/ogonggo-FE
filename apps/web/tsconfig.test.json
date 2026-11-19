@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "types": ["node"],
+    "rootDir": "src",
+    "outDir": "node_modules/.cache/unit-tests"
+  },
+  "include": ["src/**/*.test.ts"]
+}
