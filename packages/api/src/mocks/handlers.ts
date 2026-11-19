@@ -6,6 +6,7 @@ import {
   getJobRecommendedContentsHandler,
   getRecommendedChallengesHandler,
 } from './job-recommended-contents';
+import { myAdvertisementContractHandlers } from './myAdvertisementContracts';
 import { myCompanyPostHandlers } from './myCompanyPosts';
 import { myRecruitmentPostHandlers } from './myRecruitmentPosts';
 import { userNotificationHandlers } from './notifications';
@@ -1222,6 +1223,7 @@ export const handlers: HttpHandler[] = [
   reportRecruitmentPostCommentHandler,
   ...myRecruitmentPostHandlers,
   ...myCompanyPostHandlers,
+  ...myAdvertisementContractHandlers,
   ...userConcernHandlers,
   getNoticesHandler,
   getNoticeCategoriesHandler,

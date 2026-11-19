@@ -1,6 +1,8 @@
+import { isMockEnabled } from '@/shared/config/mocks';
+
 /**
  * 오공고가 발급한 기업 회원 토큰을 보관한다. 기준은 `apps/web/src/shared/api/authTokens.ts` 이고, biz 는 기업 회원
- * 전용이라 렛츠커리어 토큰과 목데이터 처리를 뺐다.
+ * 전용이라 렛츠커리어 토큰을 뺐다. 목데이터 모드는 `isSignedIn` 만 다룬다.
  *
  * 액세스 토큰(30분) 은 `sessionStorage`, 리프레시 토큰(14일) 은 `localStorage` 에 둔다. 액세스 토큰은 탭을
  * 닫으면 사라져도 리프레시 토큰으로 다시 받으면 되고, 리프레시 토큰은 탭을 닫아도 남아야 다시 로그인하지
@@ -50,9 +52,11 @@ export function clearTokens(): void {
 /**
  * 로그인 상태로 볼지. 리프레시 토큰이 있으면 로그인이다 — 액세스 토큰은 탭을 닫으면 없어져도 첫 401 에서
  * 다시 받는다.
+ *
+ * 목데이터 모드(`pnpm mock`)에서는 늘 로그인이다. 계정은 목 워커가 기업 회원으로 준다(`shared/mocks/startMockWorker.ts`).
  */
 export function isSignedIn(): boolean {
-  return getRefreshToken() !== null;
+  return isMockEnabled || getRefreshToken() !== null;
 }
 
 /** `useSyncExternalStore` 용 구독. 이 탭의 저장·삭제와 다른 탭의 `localStorage` 변경을 함께 받는다. */

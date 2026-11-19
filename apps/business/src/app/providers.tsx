@@ -5,6 +5,7 @@ import { type ReactNode, useState } from 'react';
 import { setAccessTokenProvider, setUnauthorizedHandler } from '@ogonggo/api';
 import { getAccessToken } from '@/shared/api/authTokens';
 import { handleUnauthorized } from '@/shared/api/reissue';
+import { MockGate } from './MockGate';
 
 // 브라우저의 API 호출에 로그인 토큰을 붙인다. 서버에서는 `getAccessToken` 이 null 이라 토큰 없이 간다.
 // `apps/web/src/app/providers.tsx` 와 같은 방식이다.
@@ -14,5 +15,9 @@ setUnauthorizedHandler(handleUnauthorized);
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <MockGate>{children}</MockGate>
+    </QueryClientProvider>
+  );
 }
