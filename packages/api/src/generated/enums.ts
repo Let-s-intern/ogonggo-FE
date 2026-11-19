@@ -896,6 +896,8 @@ export const ENUM_CATALOG = {
     { name: 'JOB_PICK', desc: '오공고 PICK', parent: null },
     { name: 'CALENDAR_DAY', desc: '공고 달력 날짜별', parent: null },
     { name: 'MYPAGE_SCRAP', desc: '마이페이지 스크랩 칸', parent: null },
+    { name: 'BOOTCAMP_DETAIL_SIDE', desc: '부트캠프 상세 옆', parent: null },
+    { name: 'BOOTCAMP_MYPAGE_SCRAP', desc: '마이페이지 스크랩 부트캠프 칸', parent: null },
   ],
   AdvertisementContractStatus: [
     { name: 'REQUESTED', desc: '신청', parent: null },
