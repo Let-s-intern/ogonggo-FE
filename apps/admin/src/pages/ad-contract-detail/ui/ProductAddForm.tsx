@@ -3,7 +3,9 @@ import { Button, Callout, Input, Select, cn } from '@ogonggo/ui';
 import type { AdminAdvertisementContractDetailResponse } from '@ogonggo/api/src/admin';
 import {
   AD_POSTING_FIXED_TARGET,
+  AD_POSTING_JOB_FIELD_OPTIONS,
   isAdPostingPosition,
+  needsJobField,
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import { useAdvertisementProducts } from '@/entities/advertisement-product/api/useAdvertisementProducts';
 import { positionLabel, productLabel } from '@/entities/advertisement-product/lib/product';
@@ -50,6 +52,7 @@ export function ProductAddForm({
   const [target, setTarget] = useState<ContentTarget | null>(null);
   const [expose, setExpose] = useState(true);
   const [order, setOrder] = useState<'first' | 'last'>('first');
+  const [jobField, setJobField] = useState('');
   // 광고할 공고 연결(LC-3647)이 배포되기 전에는 이 단계를 부르지 않는다.
   const [registerTarget, setRegisterTarget] = useState(isReportEnabled);
 
@@ -58,10 +61,13 @@ export function ProductAddForm({
   const posting = isAdPostingPosition(position) ? position : null;
   const periodInvalid = Boolean(startDate && endDate && startDate > endDate);
   const needsTarget = posting !== null && (expose || registerTarget);
+  // 리스트 상단 고정 자리에 바로 노출하면 직무가 있어야 한다(계약 8절).
+  const jobFieldMissing = posting !== null && needsJobField(posting) && expose && !jobField;
   const canSave =
     Boolean(productId && startDate && endDate) &&
     !periodInvalid &&
     (!needsTarget || target !== null) &&
+    !jobFieldMissing &&
     !attach.running &&
     attach.steps === null;
 
@@ -72,6 +78,7 @@ export function ProductAddForm({
     setTarget(null);
     setExpose(true);
     setOrder('first');
+    setJobField('');
     setRegisterTarget(isReportEnabled);
     attach.reset();
   };
@@ -86,6 +93,7 @@ export function ProductAddForm({
           ? {
               targetType: target.targetType,
               targetId: target.targetId,
+              jobField: needsJobField(posting) ? jobField : null,
               expose,
               order,
               registerTarget,
@@ -172,6 +180,18 @@ export function ProductAddForm({
                   ]}
                   value={order}
                   onChange={(event) => setOrder(event.target.value as 'first' | 'last')}
+                />
+              ) : null}
+              {expose && needsJobField(posting) ? (
+                <Select
+                  aria-label="직무"
+                  className="h-8 text-xs"
+                  options={[
+                    { value: '', label: '직무 고르기(필수)' },
+                    ...AD_POSTING_JOB_FIELD_OPTIONS,
+                  ]}
+                  value={jobField}
+                  onChange={(event) => setJobField(event.target.value)}
                 />
               ) : null}
             </div>

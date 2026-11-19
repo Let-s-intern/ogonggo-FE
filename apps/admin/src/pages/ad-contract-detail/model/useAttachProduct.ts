@@ -6,6 +6,7 @@ import {
   createAdvertisementExposure,
   listAdvertisementExposures,
   moveAdvertisementExposure,
+  type CreateAdminAdvertisementExposureRequest,
 } from '@ogonggo/api/src/admin';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { adminWrite } from '@/shared/api/adminClient';
@@ -41,6 +42,8 @@ export interface AttachInput {
   posting: {
     targetType: 'JOB' | 'BOOTCAMP';
     targetId: number;
+    /** 리스트 상단 고정(`JOB_LIST`) 노출의 직무(계약 8절). 다른 자리는 null. */
+    jobField: string | null;
     expose: boolean;
     /** 맨 앞(상단 고정) 또는 맨 뒤. */
     order: 'first' | 'last';
@@ -52,6 +55,32 @@ export interface AttachInput {
 function nextDay(date: string): string {
   const time = Date.parse(`${date}T00:00:00Z`) + 24 * 60 * 60 * 1000;
   return new Date(time).toISOString().slice(0, 10);
+}
+
+/**
+ * 한 번에 세팅의 노출 등록 본문. 상품 기간 그대로이고 광고 표시를 켠다. `jobField` 는 생성 요청 타입에 아직 없는 칸이라
+ * (코드젠 전) 넓힌 타입으로 넘긴다.
+ */
+function exposureBody(
+  contractId: number,
+  next: AttachInput,
+  posting: NonNullable<AttachInput['posting']>,
+): CreateAdminAdvertisementExposureRequest & { jobField: string | null } {
+  return {
+    productId: next.productId,
+    contractId,
+    name: null,
+    imageUrl: null,
+    mobileImageUrl: null,
+    linkUrl: null,
+    targetType: posting.targetType,
+    targetId: posting.targetId,
+    jobField: posting.jobField,
+    adLabel: true,
+    startAt: `${next.startDate}T00:00:00`,
+    endAt: `${nextDay(next.endDate)}T00:00:00`,
+    exposed: true,
+  };
 }
 
 const initialSteps = (input: AttachInput | null): Record<StepKey, StepState> => ({
@@ -126,20 +155,7 @@ export function useAttachProduct(contractId: number) {
             createdExposureId.current !== null
               ? { id: createdExposureId.current }
               : await unwrapData(
-                  createAdvertisementExposure({
-                    productId: next.productId,
-                    contractId,
-                    name: null,
-                    imageUrl: null,
-                    mobileImageUrl: null,
-                    linkUrl: null,
-                    targetType: posting.targetType,
-                    targetId: posting.targetId,
-                    adLabel: true,
-                    startAt: `${next.startDate}T00:00:00`,
-                    endAt: `${nextDay(next.endDate)}T00:00:00`,
-                    exposed: true,
-                  }),
+                  createAdvertisementExposure(exposureBody(contractId, next, posting)),
                 );
           if (!created) return;
           createdExposureId.current = created.id;

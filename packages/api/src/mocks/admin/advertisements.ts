@@ -13,6 +13,7 @@ import { toContractSummary } from '../fixtures/advertisement-contracts';
 import {
   advertisementStore,
   saveAdvertisementStore,
+  type ExposureRecord,
   type ProductRecord,
 } from '../fixtures/advertisement-exposures';
 import { matches, ok, paginate, readPaging } from './paging';
@@ -273,6 +274,12 @@ function exposureError(
   return null;
 }
 
+/** 리스트 상단 고정 노출만 직무를 남긴다. 다른 자리는 보내도 null 이다(계약 8절). */
+function jobFieldOf(product: ProductRecord, body: object): string | null {
+  const { jobField } = body as { jobField?: string | null };
+  return String(product.position ?? '') === 'JOB_LIST' ? (jobField ?? null) : null;
+}
+
 /** `GET ?productId=&contractId=` 상품 자리 하나의 노출 전부(꺼진 것·기간 밖 포함). 순서대로 온다. */
 const listExposuresHandler = http.get(EXPOSURES, ({ request }) => {
   const url = new URL(request.url);
@@ -298,7 +305,7 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
   if (invalid) return invalid;
   if (typeof body.exposed !== 'boolean') return badRequest('exposed: 참·거짓 값을 보내 주세요.');
   const now = nowKst();
-  const exposure: AdminAdvertisementExposureResponse = {
+  const exposure: ExposureRecord = {
     id: nextId(advertisementStore.exposures),
     productId: product.id,
     contractId: body.contractId ?? null,
@@ -307,6 +314,7 @@ const createExposureHandler = http.post(EXPOSURES, async ({ request }) => {
     linkUrl: body.linkUrl?.trim() ?? null,
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
+    jobField: jobFieldOf(product, body),
     adLabel: body.adLabel as boolean,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,
@@ -345,6 +353,7 @@ const replaceExposureHandler = http.put(`${EXPOSURES}/:exposureId`, async ({ par
     linkUrl: body.linkUrl?.trim() ?? null,
     targetType: body.targetType ?? null,
     targetId: body.targetId ?? null,
+    jobField: jobFieldOf(product, body),
     adLabel: body.adLabel,
     startAt: body.startAt ?? null,
     endAt: body.endAt ?? null,

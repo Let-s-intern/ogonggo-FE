@@ -180,9 +180,14 @@ const EXPOSURE_SEED: ExposureSeed[] = [
 /** 상품은 BE 처럼 지워도 행이 남는다(`deletedAt`). 계약 상품이 지운 상품을 계속 가리킨다. */
 export type ProductRecord = AdminAdvertisementProductResponse & { deletedAt: string | null };
 
+/**
+ * 노출 한 건. `jobField` 는 리스트 상단 고정(`JOB_LIST`) 노출의 직무다(계약 8절). 생성 타입에는 아직 없다(코드젠 전).
+ */
+export type ExposureRecord = AdminAdvertisementExposureResponse & { jobField?: string | null };
+
 interface AdvertisementStore {
   products: ProductRecord[];
-  exposures: AdminAdvertisementExposureResponse[];
+  exposures: ExposureRecord[];
   contracts: AdminAdvertisementContractDetailResponse[];
 }
 

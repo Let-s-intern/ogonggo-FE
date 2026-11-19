@@ -6,6 +6,7 @@ import type {
 import {
   advertisementStore,
   saveAdvertisementStore,
+  type ExposureRecord,
   type ProductRecord,
 } from '../fixtures/advertisement-exposures';
 import { findContent } from './advertisementReports';
@@ -17,7 +18,8 @@ import { ok, paginate, readPaging } from './paging';
  * - 광고 공고 자리는 판매 상품에 맞춘 넷이다(계약 8절): `JOB_PICK`·`JOB_LIST`·`CALENDAR_DAY`·`MYPAGE_SCRAP`. 리스트 상단
  *   고정·공고 달력·마이페이지 스크랩 자리에 광고 공고 상품 하나씩을 시드로 넣는다
  * - 어드민 노출 응답에 `targetTitle`·`targetCompanyName`·`targetPublished` 가 더해진다. 노출 목록을 여기서 먼저 받아 얹는다
- * - 같은 자리(상품) 안 같은 대상은 409. 없는 대상은 404. 나머지 검증·저장은 `./advertisements.ts` 가 그대로 한다
+ * - 리스트 상단 고정(`JOB_LIST`) 노출은 직무(`jobField`)가 있어야 한다(없으면 400). 같은 직무 안 같은 대상은 409, 다른 자리는
+ *   같은 자리(상품) 안 같은 대상이 409. 없는 대상은 404. 나머지 검증·저장은 `./advertisements.ts` 가 그대로 한다
  *
  * `./handlers.ts` 에서 `advertisementAdminHandlers` 보다 앞에 둔다.
  */
@@ -29,6 +31,8 @@ export type AdPostingPosition = 'JOB_PICK' | 'JOB_LIST' | 'CALENDAR_DAY' | 'MYPA
 
 /** 어드민 노출 응답에 이 목이 얹는 칸. 배너는 모두 null 이다. */
 export type AdminAdPostingExposureResponse = AdminAdvertisementExposureResponse & {
+  /** 리스트 상단 고정(`JOB_LIST`) 노출의 직무. 다른 자리·배너는 null 이다(계약 8절). */
+  jobField: string | null;
   targetTitle: string | null;
   targetCompanyName: string | null;
   targetPublished: boolean | null;
@@ -62,6 +66,11 @@ function migrateRemovedPositions() {
         position: product.position as unknown as ProductRecord['position'],
       });
     }
+  }
+  // 직무가 생기기 전에 건 리스트 상단 고정 노출은 마케팅으로 둔다(어드민에서 바꿀 수 있다).
+  for (const exposure of advertisementStore.exposures) {
+    if (exposure.productId === 101 && !exposure.jobField)
+      exposure.jobField = 'MARKETING_ADVERTISING';
   }
   advertisementStore.exposures = advertisementStore.exposures.filter(
     (exposure) =>
@@ -110,6 +119,7 @@ function seedPostings() {
         contractId: 1,
         targetType: 'JOB',
         targetId: 1,
+        jobField: 'MARKETING_ADVERTISING',
         startAt: '2026-11-12T00:00:00',
         endAt: '2026-11-30T23:59:59',
         displayOrder: 1,
@@ -121,6 +131,7 @@ function seedPostings() {
         contractId: null,
         targetType: 'JOB',
         targetId: 2,
+        jobField: 'IT_DEVELOPMENT',
         adLabel: false,
         startAt: null,
         endAt: null,
@@ -166,6 +177,7 @@ function seedPostings() {
       linkUrl: null,
       targetType: 'JOB',
       targetId: 3,
+      jobField: 'IT_DEVELOPMENT',
       adLabel: true,
       exposed: true,
       advertiserCompanyName: null,
@@ -201,7 +213,7 @@ function seedPostings() {
 migrateRemovedPositions();
 seedPostings();
 
-function withTarget(exposure: AdminAdvertisementExposureResponse): AdminAdPostingExposureResponse {
+function withTarget(exposure: ExposureRecord): AdminAdPostingExposureResponse {
   const contract = advertisementStore.contracts.find((item) => item.id === exposure.contractId);
   const content =
     exposure.targetType && exposure.targetId != null
@@ -209,6 +221,7 @@ function withTarget(exposure: AdminAdvertisementExposureResponse): AdminAdPostin
       : undefined;
   return {
     ...exposure,
+    jobField: exposure.jobField ?? null,
     advertiserCompanyName: contract?.companyName ?? null,
     targetTitle: content?.title ?? null,
     targetCompanyName: content?.companyName ?? null,
@@ -237,12 +250,16 @@ const listExposuresHandler = http.get(EXPOSURES, ({ request }) => {
 /** 광고 공고 상품의 대상만 본다. 문제가 없으면 아무것도 돌려주지 않아 다음 핸들러가 받는다. */
 function targetError(
   productId: number,
-  body: UpdateAdminAdvertisementExposureRequest,
+  body: UpdateAdminAdvertisementExposureRequest & { jobField?: string | null },
   selfId?: number,
 ) {
   const product = advertisementStore.products.find((item) => item.id === productId);
   if (product?.category !== 'JOB_POSTING' || !body.targetType || body.targetId == null) {
     return undefined;
+  }
+  const byJobField = String(product.position ?? '') === 'JOB_LIST';
+  if (byJobField && !body.jobField) {
+    return error(400, 'BAD_REQUEST', 'jobField: 리스트 상단 고정은 직무를 보내 주세요.');
   }
   if (!findContent(body.targetType, body.targetId)) {
     return error(404, 'ADVERTISEMENT_EXPOSURE_TARGET_NOT_FOUND', '광고할 공고를 찾을 수 없습니다.');
@@ -252,13 +269,16 @@ function targetError(
       exposure.id !== selfId &&
       exposure.productId === productId &&
       exposure.targetType === body.targetType &&
-      exposure.targetId === body.targetId,
+      exposure.targetId === body.targetId &&
+      (!byJobField || exposure.jobField === body.jobField),
   );
   return duplicated
     ? error(
         409,
         'ADVERTISEMENT_EXPOSURE_TARGET_DUPLICATED',
-        '이 자리에 이미 같은 공고의 광고가 있습니다.',
+        byJobField
+          ? '이 직무에 이미 같은 공고의 광고가 있습니다.'
+          : '이 자리에 이미 같은 공고의 광고가 있습니다.',
       )
     : undefined;
 }

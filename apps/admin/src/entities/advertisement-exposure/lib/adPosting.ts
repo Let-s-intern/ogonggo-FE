@@ -1,3 +1,4 @@
+import { enumLabel } from '@ogonggo/api/src/admin';
 import type {
   AdPostingPosition,
   AdminAdPostingExposureResponse,
@@ -44,11 +45,39 @@ export const AD_POSTING_FIXED_TARGET: Record<AdPostingPosition, 'JOB' | 'BOOTCAM
   MYPAGE_SCRAP: 'JOB',
 };
 
+/**
+ * 리스트 상단 고정(`JOB_LIST`) 노출의 직무(계약 8절, 필수). 웹 채용공고 목록의 직무 칩 다섯 직군과 같은 값·차례다
+ * (`apps/web/src/widgets/job-list/lib/roleChips.ts`). BE 는 직군 enum 전부를 받지만, 웹에 탭이 없는 직군에 걸면 어디에도
+ * 보이지 않아 고르지 못하게 한다. 웹 칩이 바뀌면 여기도 바꾼다.
+ */
+export const AD_POSTING_JOB_FIELDS = [
+  'MARKETING_ADVERTISING',
+  'HR_GENERAL_AFFAIRS',
+  'PLANNING_STRATEGY',
+  'SALES',
+  'IT_DEVELOPMENT',
+] as const;
+
+export const AD_POSTING_JOB_FIELD_OPTIONS = AD_POSTING_JOB_FIELDS.map((value) => ({
+  value,
+  label: enumLabel('JobField', value),
+}));
+
+/** 직무가 필요한 자리. */
+export const needsJobField = (position: AdPostingPosition | null) => position === 'JOB_LIST';
+
+/** 표에 쓰는 직무 이름. 없으면 `-`. */
+export const jobFieldLabel = (value: string | null | undefined) =>
+  value ? enumLabel('JobField', value) : '-';
+
 export const isAdPostingPosition = (value: unknown): value is AdPostingPosition =>
   AD_POSTING_POSITIONS.includes(value as AdPostingPosition);
 
 /** 코드젠 전 생성 타입에는 대상 칸이 없다. 없으면 null 이다. */
 export type AdPostingExposure = AdvertisementExposure &
   Partial<
-    Pick<AdminAdPostingExposureResponse, 'targetTitle' | 'targetCompanyName' | 'targetPublished'>
+    Pick<
+      AdminAdPostingExposureResponse,
+      'targetTitle' | 'targetCompanyName' | 'targetPublished' | 'jobField'
+    >
   >;
