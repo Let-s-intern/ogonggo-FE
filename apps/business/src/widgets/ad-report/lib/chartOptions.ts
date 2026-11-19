@@ -32,7 +32,15 @@ export function trendOption(daily: ReportDailyRow[], collectedSince: string): EC
   return {
     color: COLORS,
     textStyle: { fontFamily: FONT_FAMILY },
-    grid: { left: 8, right: 8, top: 40, bottom: 8, containLabel: true },
+    // ECharts 6 에서 `containLabel` 은 따로 등록해야 해서 같은 뜻의 `outerBounds*` 를 쓴다.
+    grid: {
+      left: 8,
+      right: 8,
+      top: 40,
+      bottom: 8,
+      outerBoundsMode: 'same',
+      outerBoundsContain: 'axisLabel',
+    },
     legend: {
       top: 0,
       left: 0,
