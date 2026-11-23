@@ -48,4 +48,9 @@ export interface AdminAdvertisementReportProductResponse {
   name: string;
   startDate: string;
   endDate: string;
+  /**
+     * 상품의 소개용 가격(정가, 원). 견적 문의 상품은 null. 비용 효율의 광고비로 쓴다
+     * @nullable
+     */
+  price?: number | null;
 }
