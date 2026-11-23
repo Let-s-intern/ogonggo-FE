@@ -76,6 +76,7 @@ import type {
   ListServiceFeedbacksParams,
   MoveAdminAdvertisementExposureRequest,
   ReplaceAdminAdvertisementProductRequest,
+  ReplaceAdminAdvertisementReportInsightsRequest,
   ReplaceAdminBootcampRequest,
   ReplaceAdminCompanyContentPriorityRequest,
   ReplaceAdminLetsCareerContentRecommendWeightsRequest,
@@ -110,6 +111,7 @@ import type {
   SuccessResponseCreateAdminAdvertisementExposureResponse,
   SuccessResponseCreateAdminAdvertisementProductResponse,
   SuccessResponseJsonNode,
+  SuccessResponseListAdminAdvertisementReportInsightResponse,
   SuccessResponseListAdminContentReviewItemResponse,
   SuccessResponseListAdminEc2InstanceResponse,
   SuccessResponseListAdminNotificationJobRoleOptionResponse,
@@ -2841,6 +2843,127 @@ export const useDeleteAdvertisementExposure = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteAdvertisementExposureMutationOptions(options), queryClient);
+    }
+
+export type replaceAdvertisementReportInsightsResponse200 = {
+  data: SuccessResponseListAdminAdvertisementReportInsightResponse
+  status: 200
+}
+
+export type replaceAdvertisementReportInsightsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceAdvertisementReportInsightsResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type replaceAdvertisementReportInsightsResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type replaceAdvertisementReportInsightsResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type replaceAdvertisementReportInsightsResponseSuccess = (replaceAdvertisementReportInsightsResponse200) & {
+  headers: Headers;
+};
+export type replaceAdvertisementReportInsightsResponseError = (replaceAdvertisementReportInsightsResponse400 | replaceAdvertisementReportInsightsResponse401 | replaceAdvertisementReportInsightsResponse403 | replaceAdvertisementReportInsightsResponse404) & {
+  headers: Headers;
+};
+
+export type replaceAdvertisementReportInsightsResponse = (replaceAdvertisementReportInsightsResponseSuccess | replaceAdvertisementReportInsightsResponseError)
+
+export const getReplaceAdvertisementReportInsightsUrl = (contractId: number,
+    contractProductId: number,) => {
+
+
+
+
+  return `/api/v1/admin/advertisement-contracts/${contractId}/products/${contractProductId}/report-insights`
+}
+
+/**
+ *
+ *             계약 상품 하나의 인사이트(제목·본문)를 통째로 바꿉니다. 목록 순서가 보이는 순서이고 빈 목록이면 모두 걷어냅니다.
+ *             published가 true이면 기업 회원의 리포트에 보내고, false이면 운영자만 보는 임시 저장입니다(이미 보낸 것도 숨겨집니다).
+ *             인사이트는 최대 6개, 제목 60자·본문 500자까지입니다. 운영자는 리포트 조회 응답의 insights로 임시 저장까지 읽습니다.
+ * @summary 광고 상품 리포트 인사이트 저장
+ */
+export const replaceAdvertisementReportInsights = async (contractId: number,
+    contractProductId: number,
+    replaceAdminAdvertisementReportInsightsRequest: ReplaceAdminAdvertisementReportInsightsRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceAdvertisementReportInsightsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceAdvertisementReportInsightsResponse>(getReplaceAdvertisementReportInsightsUrl(contractId,contractProductId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceAdminAdvertisementReportInsightsRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceAdvertisementReportInsightsMutationKey = () => ['replaceAdvertisementReportInsights'] as const;
+
+export const getReplaceAdvertisementReportInsightsMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAdvertisementReportInsights>>, TError,ReplaceAdvertisementReportInsightsMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceAdvertisementReportInsights>>, TError,ReplaceAdvertisementReportInsightsMutationVariables, TContext> => {
+
+const mutationKey = getReplaceAdvertisementReportInsightsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceAdvertisementReportInsights>>, ReplaceAdvertisementReportInsightsMutationVariables> = (props) => {
+          const {contractId,contractProductId,data} = props ?? {};
+
+          return  replaceAdvertisementReportInsights(contractId,contractProductId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceAdvertisementReportInsightsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceAdvertisementReportInsights>>>
+    export type ReplaceAdvertisementReportInsightsMutationBody = ReplaceAdminAdvertisementReportInsightsRequest
+    export type ReplaceAdvertisementReportInsightsMutationError = ErrorResponse
+    export type ReplaceAdvertisementReportInsightsMutationVariables = {contractId: number;contractProductId: number;data: ReplaceAdminAdvertisementReportInsightsRequest}
+
+    /**
+ * @summary 광고 상품 리포트 인사이트 저장
+ */
+export const useReplaceAdvertisementReportInsights = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceAdvertisementReportInsights>>, TError,ReplaceAdvertisementReportInsightsMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceAdvertisementReportInsights>>,
+        TError,
+        ReplaceAdvertisementReportInsightsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceAdvertisementReportInsightsMutationOptions(options), queryClient);
     }
 
 export type getAiJobResponse200 = {
@@ -12237,6 +12360,8 @@ export const getReplaceAdvertisementExposureResponseMock = (overrideResponse: Pa
 
 export const getDeleteAdvertisementExposureResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReplaceAdvertisementReportInsightsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminAdvertisementReportInsightResponse, object>> = {}): SuccessResponseListAdminAdvertisementReportInsightResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), published: faker.datatype.boolean()})), undefined]), ...overrideResponse})
+
 export const getGetAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobLookupResponse, object>> = {}): SuccessResponseAiJobLookupResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getCreateAiJobResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAiJobRegistrationResponse, object>> = {}): SuccessResponseAiJobRegistrationResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobId: faker.number.int()}, undefined]), ...overrideResponse})
@@ -12383,7 +12508,7 @@ export const getGetAdvertisementContractResponseMock = (overrideResponse: Partia
 
 export const getGetAdvertisementContractReportSummaryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportTotalResponse, object>> = {}): SuccessResponseAdminAdvertisementReportTotalResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{total: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), ctaClicks: faker.number.int()}, products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), ctaClicks: faker.number.int()}))}, undefined]), ...overrideResponse})
 
-export const getGetAdvertisementContractProductReportResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportResponse, object>> = {}): SuccessResponseAdminAdvertisementReportResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{product: {contractProductId: faker.number.int(), productId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10)}, from: faker.date.past().toISOString().slice(0, 10), to: faker.date.past().toISOString().slice(0, 10), collectedSince: faker.date.past().toISOString().slice(0, 10), uniqueCountsApproximate: faker.datatype.boolean(), summary: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), memberUniqueVisitors: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), ctaUniqueMembers: faker.number.int(), ctaClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), scrollFunnel: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({threshold: faker.number.int(), visitors: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, daily: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), exposures: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), impressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), total: {saves: faker.number.int(), shares: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, bySource: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({source: faker.helpers.arrayElement(['AD_CARD','BANNER','LIST','SEARCH','DIRECT','EXTERNAL','OTHER'] as const), views: faker.number.int(), ctaClicks: faker.number.int()}))})), byJobField: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaUniqueMembers: faker.number.int(), adClickMembers: faker.number.int()})), audience: {reach: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), avgFrequency: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), adClickVisitors: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), targetJobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), targetMatch: {matchedMembers: faker.number.int(), members: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, byGrade: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({grade: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int()}))}}, undefined]), ...overrideResponse})
+export const getGetAdvertisementContractProductReportResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportResponse, object>> = {}): SuccessResponseAdminAdvertisementReportResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{product: {contractProductId: faker.number.int(), productId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10)}, from: faker.date.past().toISOString().slice(0, 10), to: faker.date.past().toISOString().slice(0, 10), collectedSince: faker.date.past().toISOString().slice(0, 10), uniqueCountsApproximate: faker.datatype.boolean(), summary: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), memberUniqueVisitors: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), ctaUniqueMembers: faker.number.int(), ctaClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), scrollFunnel: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({threshold: faker.number.int(), visitors: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, daily: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), exposures: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), impressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), total: {saves: faker.number.int(), shares: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, bySource: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({source: faker.helpers.arrayElement(['AD_CARD','BANNER','LIST','SEARCH','DIRECT','EXTERNAL','OTHER'] as const), views: faker.number.int(), ctaClicks: faker.number.int()}))})), byJobField: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaUniqueMembers: faker.number.int(), adClickMembers: faker.number.int()})), audience: {reach: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), avgFrequency: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), adClickVisitors: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), targetJobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), targetMatch: {matchedMembers: faker.number.int(), members: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, byGrade: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({grade: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int()}))}, insights: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), published: faker.datatype.boolean()}))}, undefined]), ...overrideResponse})
 
 export const getDownloadAdvertisementContractProductReportCsvResponseMock = (): string => (faker.word.sample())
 
@@ -12673,6 +12798,18 @@ export const getDeleteAdvertisementExposureMockHandler = (overrideResponse?: Suc
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteAdvertisementExposureResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceAdvertisementReportInsightsMockHandler = (overrideResponse?: SuccessResponseListAdminAdvertisementReportInsightResponse | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseListAdminAdvertisementReportInsightResponse> | SuccessResponseListAdminAdvertisementReportInsightResponse), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/advertisement-contracts/:contractId/products/:contractProductId/report-insights', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceAdvertisementReportInsightsResponseMock(),
       { status: 200
       })
   }, options)
@@ -13603,6 +13740,7 @@ export const getOgonggoAdminAPIMock = () => [
   getDeleteAdvertisementProductMockHandler(),
   getReplaceAdvertisementExposureMockHandler(),
   getDeleteAdvertisementExposureMockHandler(),
+  getReplaceAdvertisementReportInsightsMockHandler(),
   getGetAiJobMockHandler(),
   getCreateAiJobMockHandler(),
   getCloseAiJobBySourceCheckMockHandler(),
