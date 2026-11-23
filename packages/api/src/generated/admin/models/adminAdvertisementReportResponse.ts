@@ -7,6 +7,7 @@
 import type { AdminAdvertisementReportAudienceResponse } from './adminAdvertisementReportAudienceResponse';
 import type { AdminAdvertisementReportDailyResponse } from './adminAdvertisementReportDailyResponse';
 import type { AdminAdvertisementReportExposureResponse } from './adminAdvertisementReportExposureResponse';
+import type { AdminAdvertisementReportInsightResponse } from './adminAdvertisementReportInsightResponse';
 import type { AdminAdvertisementReportJobFieldResponse } from './adminAdvertisementReportJobFieldResponse';
 import type { AdminAdvertisementReportProductResponse } from './adminAdvertisementReportProductResponse';
 import type { AdminAdvertisementReportSummaryResponse } from './adminAdvertisementReportSummaryResponse';
@@ -32,4 +33,6 @@ export interface AdminAdvertisementReportResponse {
   /** 상품 몫의 로그인 회원을 희망 직군으로 나눈 것. 여러 직군을 고른 회원은 각 직군에 한 번씩, 직무가 없으면 jobField null. 비회원은 넣지 않는다. 순 회원 수가 큰 순 */
   byJobField: AdminAdvertisementReportJobFieldResponse[];
   audience: AdminAdvertisementReportAudienceResponse;
+  /** 운영자가 쓴 인사이트. 임시 저장도 보이며 published 로 기업 회원에게 보냈는지 가린다 */
+  insights: AdminAdvertisementReportInsightResponse[];
 }

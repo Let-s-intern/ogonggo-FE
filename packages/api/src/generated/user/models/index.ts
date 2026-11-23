@@ -270,6 +270,7 @@ export * from './myAdvertisementReportDailyResponse';
 export * from './myAdvertisementReportExposureResponse';
 export * from './myAdvertisementReportGradeResponse';
 export * from './myAdvertisementReportGradeResponseGrade';
+export * from './myAdvertisementReportInsightResponse';
 export * from './myAdvertisementReportJobFieldResponse';
 export * from './myAdvertisementReportJobFieldResponseJobField';
 export * from './myAdvertisementReportProductResponse';
