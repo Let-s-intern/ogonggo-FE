@@ -315,6 +315,8 @@ export interface AdminContractProductReport {
     name: string;
     startDate: string;
     endDate: string;
+    /** 상품 정가(원). 견적 문의 상품은 null. 비용 효율의 광고비다. */
+    price: number | null;
   };
   from: string;
   to: string;
@@ -677,6 +679,7 @@ function buildReport(
       name: cp.productName,
       startDate: cp.startDate as string,
       endDate: cp.endDate as string,
+      price: product?.price ?? null,
     },
     from,
     to,

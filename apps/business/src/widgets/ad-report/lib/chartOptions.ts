@@ -1,6 +1,6 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import { shortDate } from '../model/format';
-import type { ReportDailyRow, ScrollFunnelStep } from '../model/types';
+import type { ReportDailyRow } from '../model/types';
 
 /** 어드민 통계(`apps/admin/src/pages/stats/lib/chartOptions.ts`)와 같은 색 순서·글꼴·축 모양. */
 const COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'];
@@ -9,14 +9,16 @@ const AXIS_LABEL = { color: '#6b7280', fontSize: 12 };
 const GRID_LINE = { lineStyle: { color: '#ecedf0' } };
 
 /**
- * 날짜별 추이. 노출은 수가 커서 왼쪽 축 막대로, 클릭·상세 조회·CTA 클릭은 오른쪽 축 선으로 그린다. 수집 시작일 앞은
+ * 날짜별 추이. 노출은 수가 커서 왼쪽 축 막대로, 조회(배너는 클릭)·지원하기 클릭은 오른쪽 축 선으로 그린다. 수집 시작일 앞은
  * 0 이 아니라 빈칸으로 두고 회색 칸에 "집계 전" 을 적는다 — 0 으로 그리면 숫자가 없었던 날로 읽힌다.
  */
 export function trendOption(
   daily: ReportDailyRow[],
   collectedSince: string,
-  /** 상세 조회·CTA 클릭 선을 그릴지. 배너 링크가 공고 상세가 아니면 0 뿐이라 빼다. */
-  withDetail = true,
+  /** 클릭 선의 이름. 광고 카드는 `조회`, 배너는 `클릭`(목업 용어). */
+  clickLabel: string,
+  /** 지원하기 클릭 선을 그릴지. 배너 링크가 공고 상세가 아니면 0 뿐이라 뺀다. */
+  withApply = true,
 ): EChartsCoreOption {
   const dates = daily.map((row) => row.date);
   const before = (date: string) => date < collectedSince;
@@ -87,68 +89,8 @@ export function trendOption(
               }
             : undefined,
       },
-      line('클릭', (row) => row.adClicks),
-      ...(withDetail
-        ? [line('상세 조회', (row) => row.views), line('CTA 클릭', (row) => row.ctaClicks)]
-        : []),
-    ],
-  };
-}
-
-/** 깔때기 단계 이름. 0% 는 상세를 연 순 방문자 전체다. */
-export const funnelStepLabel = (threshold: number) =>
-  threshold === 0 ? '상세를 연 방문자' : `${threshold}% 이상`;
-
-/**
- * 스크롤 깊이 깔때기. 단계 순서(0 → 100%)를 그대로 위에서 아래로 그린다 — 정렬을 맡기면 값이 같은 단계끼리 순서가
- * 바뀔 수 있다. 칸 안에는 단계 이름과 사람 수를 적는다.
- */
-export function scrollFunnelOption(steps: ScrollFunnelStep[]): EChartsCoreOption {
-  return {
-    textStyle: { fontFamily: FONT_FAMILY },
-    tooltip: {
-      trigger: 'item',
-      formatter: (params: { name: string; value: number }) =>
-        `${params.name}: ${params.value.toLocaleString('ko-KR')}명`,
-    },
-    series: [
-      {
-        type: 'funnel',
-        sort: 'none',
-        left: 0,
-        right: 0,
-        top: 4,
-        bottom: 4,
-        gap: 2,
-        minSize: '18%',
-        // 사람 수 비율대로 폭을 정한다. 최댓값은 0% 단계(순 방문자 전체)다.
-        max: Math.max(1, steps[0]?.visitors ?? 0),
-        label: {
-          show: true,
-          position: 'inside',
-          color: '#ffffff',
-          fontSize: 12,
-          formatter: (params: { name: string; value: number }) =>
-            `${params.name} ${params.value.toLocaleString('ko-KR')}명`,
-        },
-        itemStyle: { borderWidth: 0 },
-        color: ['#1f5fb0', '#2a78d6', '#4f93e3', '#7aaeea', '#a5c9f1'],
-        data: steps.map((step) => ({
-          name: funnelStepLabel(step.threshold),
-          value: step.visitors,
-          // 칸이 좁으면 흰 글자가 칸 밖 흰 바탕으로 넘쳐 보이지 않는다. 흰 바탕의 진한 글자로 적는다.
-          ...(step.visitors / Math.max(1, steps[0]?.visitors ?? 0) < 0.5
-            ? {
-                label: {
-                  color: '#1f2937',
-                  backgroundColor: '#ffffff',
-                  padding: [2, 6],
-                  borderRadius: 4,
-                },
-              }
-            : {}),
-        })),
-      },
+      line(clickLabel, (row) => row.adClicks),
+      ...(withApply ? [line('지원하기 클릭', (row) => row.ctaClicks)] : []),
     ],
   };
 }

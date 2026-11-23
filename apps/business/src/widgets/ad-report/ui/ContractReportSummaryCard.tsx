@@ -39,7 +39,7 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
     ['클릭', formatCount(total.adClicks)],
     ['클릭률', formatRate(total.adClickRate)],
     ['상세 조회', formatCount(total.views)],
-    ['CTA 클릭', formatCount(total.ctaClicks)],
+    ['지원하기 클릭', formatCount(total.ctaClicks)],
   ] as const;
 
   return (
@@ -87,7 +87,7 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
               <th className={`${TH} hidden md:table-cell`}>순 노출</th>
               <th className={TH}>클릭</th>
               <th className={`${TH} hidden md:table-cell`}>상세 조회</th>
-              <th className={TH}>CTA 클릭</th>
+              <th className={TH}>지원하기 클릭</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
