@@ -51,7 +51,7 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
         ['uniqueImpressions', '순 노출'],
         ['adClicks', '클릭'],
         ['views', '상세 조회'],
-        ['ctaClicks', 'CTA 클릭'],
+        ['ctaClicks', '지원하기 클릭'],
       ] as const
     ).map(([key, header]) => ({
       key,
@@ -67,7 +67,7 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
     ['클릭', formatCount(total.adClicks)],
     ['클릭률', formatRate(total.adClickRate)],
     ['상세 조회', formatCount(total.views)],
-    ['CTA 클릭', formatCount(total.ctaClicks)],
+    ['지원하기 클릭', formatCount(total.ctaClicks)],
   ];
 
   return (

@@ -15,6 +15,8 @@ import { EChart } from '@/shared/ui/EChart';
 import {
   SOURCE_LABELS,
   addDays,
+  clickLabelOf,
+  costEfficiency,
   dailyChartOption,
   formatCount,
   formatDate,
@@ -25,10 +27,13 @@ import {
   isBannerReport,
   isBeforeCollection,
   jobFieldChartOption,
+  rateLabelOf,
+  ratioOf,
   scrollFunnelOption,
   showsDetail,
   scrollStepLabel,
   scrollStepValue,
+  statusCounts,
 } from '../lib/reportFormat';
 import { Tile } from './reportParts';
 import { ReportInsightsEditor } from './ReportInsightsEditor';
@@ -189,7 +194,7 @@ function ProductReport({
             disabled={!report || isFetching || exporting !== null}
             onClick={() => void run('pdf')}
           >
-            {exporting === 'pdf' ? 'PDF 만드는 중' : 'PDF 다운로드'}
+            {exporting === 'pdf' ? 'PDF 만드는 중' : 'PDF로 저장'}
           </Button>
           <Button
             size="sm"
@@ -239,6 +244,9 @@ function ReportBody({
 }) {
   const { summary, audience } = report;
   const banner = isBannerReport(report);
+  const cost = costEfficiency(report);
+  // 공고 전체 조회 중 광고에서 나온 비중. 대상 공고가 여럿이면 합친다.
+  const totalViews = report.targets.reduce((acc, target) => acc + target.total.views, 0);
   const detail = showsDetail(report);
   const ownLabel = banner ? '배너' : '광고 카드';
   // 배너는 상세 페이지가 아니라 스크롤·체류를 보이지 않는다(광고할 공고 표 포함, API 계약 5절).
@@ -247,33 +255,52 @@ function ReportBody({
   const dayBeforeCollection = addDays(report.collectedSince, -1);
   const lastUncollected = dayBeforeCollection < report.to ? dayBeforeCollection : report.to;
 
+  const clickLabel = clickLabelOf(report);
+  // 집계 전 날짜는 숫자 대신 `집계 전`, 아니면 값을 그린다.
+  const dailyCell = (row: Daily, value: () => string) =>
+    isBeforeCollection(report, row.date) ? <span className="text-gray-400">집계 전</span> : value();
   const dailyColumns: DataTableColumn<Daily>[] = [
     { key: 'date', header: '날짜', width: 'w-32', render: (row) => formatDate(row.date) },
-    ...(
-      [
-        ['impressions', '노출'],
-        ['uniqueImpressions', '순 노출'],
-        ['adClicks', '클릭'],
-        ['views', '상세 조회'],
-        ['uniqueVisitors', '순 방문자'],
-        ['ctaClicks', 'CTA 클릭'],
-      ] as const
-    )
-      .filter(
-        ([key]) =>
-          detail || key === 'impressions' || key === 'uniqueImpressions' || key === 'adClicks',
-      )
-      .map(([key, header]) => ({
-        key,
-        header,
-        align: 'right' as const,
-        render: (row: Daily) =>
-          isBeforeCollection(report, row.date) ? (
-            <span className="text-gray-400">집계 전</span>
-          ) : (
-            formatCount(row[key])
-          ),
-      })),
+    {
+      key: 'impressions',
+      header: '노출',
+      align: 'right',
+      render: (row) => dailyCell(row, () => formatCount(row.impressions)),
+    },
+    {
+      key: 'uniqueImpressions',
+      header: '순 노출',
+      align: 'right',
+      render: (row) => dailyCell(row, () => formatCount(row.uniqueImpressions)),
+    },
+    {
+      key: 'adClicks',
+      header: clickLabel,
+      align: 'right',
+      render: (row) => dailyCell(row, () => formatCount(row.adClicks)),
+    },
+    {
+      key: 'adClickRate',
+      header: rateLabelOf(clickLabel),
+      align: 'right',
+      render: (row) => dailyCell(row, () => formatRate(ratioOf(row.adClicks, row.impressions))),
+    },
+    ...(detail
+      ? ([
+          {
+            key: 'ctaClicks',
+            header: '지원하기 클릭',
+            align: 'right',
+            render: (row) => dailyCell(row, () => formatCount(row.ctaClicks)),
+          },
+          {
+            key: 'applyRate',
+            header: '지원 전환율',
+            align: 'right',
+            render: (row) => dailyCell(row, () => formatRate(ratioOf(row.ctaClicks, row.adClicks))),
+          },
+        ] satisfies DataTableColumn<Daily>[])
+      : []),
   ];
 
   const exposureColumns: DataTableColumn<Exposure>[] = [
@@ -284,10 +311,15 @@ function ReportBody({
       align: 'right',
       render: (row) => formatCount(row.impressions),
     },
-    { key: 'adClicks', header: '클릭', align: 'right', render: (row) => formatCount(row.adClicks) },
+    {
+      key: 'adClicks',
+      header: clickLabel,
+      align: 'right',
+      render: (row) => formatCount(row.adClicks),
+    },
     {
       key: 'adClickRate',
-      header: '클릭률',
+      header: rateLabelOf(clickLabel),
       align: 'right',
       render: (row) => formatRate(row.adClickRate),
     },
@@ -301,13 +333,13 @@ function ReportBody({
     },
     {
       key: 'views',
-      header: '상세 조회',
+      header: '조회',
       align: 'right',
       render: (row) => formatCount(row.total.views),
     },
     {
       key: 'uniqueVisitors',
-      header: '순 방문자',
+      header: '조회한 사람',
       align: 'right',
       render: (row) => formatCount(row.total.uniqueVisitors),
     },
@@ -319,7 +351,7 @@ function ReportBody({
     },
     {
       key: 'ctaClicks',
-      header: 'CTA 클릭',
+      header: '지원하기 클릭',
       align: 'right',
       render: (row) => formatCount(row.total.ctaClicks),
     },
@@ -334,7 +366,7 @@ function ReportBody({
       ? ([
           {
             key: 'scroll',
-            header: '평균 스크롤',
+            header: '평균 스크롤 깊이',
             align: 'right',
             render: (row) => formatPercent(row.total.avgScrollPercent),
           },
@@ -373,95 +405,91 @@ function ReportBody({
           : ''}
       </p>
 
-      <Section title={`상품 몫 요약(이 상품의 ${ownLabel}로 들어온 것만)`}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+      <Section title="한눈에 보기 — 광고가 지원까지 이어진 흐름">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Tile label="노출" value={formatCount(summary.impressions)} />
+          <Tile
+            label={clickLabel}
+            value={formatCount(summary.adClicks)}
+            hint={`${rateLabelOf(clickLabel)} ${formatRate(summary.adClickRate)}`}
+          />
+          {detail ? (
+            <Tile
+              label="지원하기 클릭"
+              value={formatCount(summary.ctaClicks)}
+              hint={`지원 전환율 ${formatRate(ratioOf(summary.ctaClicks, summary.adClicks))}`}
+            />
+          ) : null}
+        </div>
+        {!banner && totalViews > 0 ? (
+          <p className="text-sm text-gray-600">
+            이 공고의 조회 {formatCount(totalViews)}회 중 {formatCount(summary.views)}회(
+            {Math.round(Math.min(1, summary.views / totalViews) * 100)}%)가 광고 카드에서 나왔어요.
+          </p>
+        ) : null}
+      </Section>
+
+      <Section title={`01 · 광고 구좌 성과 — 이 상품의 ${ownLabel}로 들어온 것만`}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           <Tile label="노출" value={formatCount(summary.impressions)} />
           <Tile
             label="순 노출"
             value={formatCount(summary.uniqueImpressions)}
             hint={UNIQUE_IMPRESSION_HINT}
           />
-          <Tile label="클릭" value={formatCount(summary.adClicks)} />
-          <Tile label="클릭률" value={formatRate(summary.adClickRate)} />
-          {detail ? (
-            <>
-              <Tile label="상세 조회" value={formatCount(summary.views)} />
-              <Tile label="순 방문자" value={formatCount(summary.uniqueVisitors)} />
-              <Tile label="회원 조회" value={formatCount(summary.memberViews)} />
-              <Tile label="CTA 클릭" value={formatCount(summary.ctaClicks)} />
-              <Tile label="CTA 클릭률" value={formatRate(summary.ctaClickRate)} />
-            </>
-          ) : null}
-          {scrolls ? (
-            <Tile label="평균 체류" value={formatSeconds(summary.avgDurationSeconds)} />
-          ) : null}
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Tile
             label="도달"
             value={audience.reach == null ? '-' : `${formatCount(audience.reach)}명`}
-            hint="광고를 본 서로 다른 사람"
+            hint={`기간 동안 ${ownLabel}를 본 사람 수 (중복 제외)`}
           />
           <Tile
             label="평균 빈도"
             value={audience.avgFrequency == null ? '-' : `${audience.avgFrequency.toFixed(1)}회`}
             hint="한 사람이 평균 몇 번 봤는지"
           />
+          <Tile label={clickLabel} value={formatCount(summary.adClicks)} />
           <Tile
-            label={`${ownLabel}를 누른 사람`}
+            label={`${clickLabel}한 사람`}
             value={
               audience.adClickVisitors == null ? '-' : `${formatCount(audience.adClickVisitors)}명`
             }
-            hint="서로 다른 사람"
+            hint="중복 제외"
           />
+          <Tile label={rateLabelOf(clickLabel)} value={formatRate(summary.adClickRate)} />
+          {detail ? (
+            <>
+              <Tile label="지원하기 클릭" value={formatCount(summary.ctaClicks)} />
+              <Tile
+                label="지원 전환율"
+                value={formatRate(ratioOf(summary.ctaClicks, summary.adClicks))}
+                hint="지원하기 클릭 ÷ 조회"
+              />
+            </>
+          ) : null}
         </div>
         {detail ? null : (
           <p className="text-xs text-gray-500">
-            배너 링크가 공고 상세가 아니어서 상세 조회는 세지 않아요.
+            배너 링크가 공고 상세가 아니어서 지원하기 클릭은 세지 않아요.
           </p>
         )}
+        {/* 소재가 하나면 요약과 같은 숫자라 표를 두지 않는다(API 계약 5절). */}
+        {report.exposures.length >= 2 ? (
+          <>
+            <p className="pt-2 text-xs text-gray-500">광고물별 성과</p>
+            <DataTable
+              columns={exposureColumns}
+              rows={report.exposures}
+              rowKey={(row) => row.exposureId}
+            />
+          </>
+        ) : report.exposures.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            이 상품에 걸린 광고물이 없습니다. 노출을 걸면 숫자가 쌓입니다.
+          </p>
+        ) : null}
       </Section>
 
-      {scrolls && summary.scrollFunnel ? (
-        <Section title="스크롤 깊이(순 방문자 기준)">
-          <ScrollFunnel report={report} steps={summary.scrollFunnel} />
-        </Section>
-      ) : null}
-
-      <Section title="희망 직무별(로그인 회원 기준)">
-        <JobFieldBreakdown report={report} detail={detail} />
-      </Section>
-
-      <Section title="타깃 적합도(공고를 연 로그인 회원 기준)">
-        <AudienceFit report={report} />
-      </Section>
-
-      <Section title="날짜별 추이">
-        {chartOption ? <EChart option={chartOption} height={280} /> : null}
-        <DataTable
-          columns={dailyColumns}
-          rows={report.daily}
-          rowKey={(row) => row.date}
-          emptyMessage="기간 안에 날짜가 없습니다."
-        />
-      </Section>
-
-      {/* 소재가 하나면 요약과 같은 숫자라 표를 두지 않는다(API 계약 5절). */}
-      {report.exposures.length >= 2 ? (
-        <Section title="광고물별 성과">
-          <DataTable
-            columns={exposureColumns}
-            rows={report.exposures}
-            rowKey={(row) => row.exposureId}
-          />
-        </Section>
-      ) : report.exposures.length === 0 ? (
-        <p className="text-sm text-gray-500" data-pdf-block>
-          이 상품에 걸린 광고물이 없습니다. 노출을 걸면 숫자가 쌓입니다.
-        </p>
-      ) : null}
-
-      <Section title="광고할 공고 전체 숫자(유입 경로 무관)">
+      <Section title="02 · 공고 전체 성과 — 유입 경로 무관, 모든 경로를 합친 숫자">
         <DataTable
           columns={targetColumns}
           rows={report.targets}
@@ -470,7 +498,7 @@ function ReportBody({
         />
         {report.targets.length > 0 ? (
           <>
-            <p className="pt-2 text-xs text-gray-500">유입 경로별 상세 조회 / CTA 클릭</p>
+            <p className="pt-2 text-xs text-gray-500">유입 경로별 조회 / 지원하기 클릭</p>
             <DataTable
               columns={sourceColumns}
               rows={report.targets}
@@ -480,7 +508,47 @@ function ReportBody({
         ) : null}
       </Section>
 
-      <Section title="인사이트(비즈니스 리포트에 보내는 글)">
+      {scrolls && summary.scrollFunnel ? (
+        <Section title="03 · 공고 몰입도 — 광고 카드로 공고를 연 사람 기준">
+          <ScrollFunnel report={report} steps={summary.scrollFunnel} />
+        </Section>
+      ) : null}
+
+      <Section title="04 · 타깃 적합도 — 로그인한 회원만 집계">
+        <JobFieldBreakdown report={report} detail={detail} />
+        <AudienceFit report={report} />
+      </Section>
+
+      {cost ? (
+        <Section title="05 · 비용 효율 — 광고비는 상품 정가, 무료 혜택도 정가로 환산">
+          <p className="text-xs text-gray-500">
+            {cost.prorated
+              ? `정가 ${formatCount(report.product.price)}원 중 게시 ${cost.prorated[1]}일 가운데 ${cost.prorated[0]}일치 ${formatCount(Math.round(cost.cost))}원 기준입니다.`
+              : `광고비 ${formatCount(Math.round(cost.cost))}원 기준입니다.`}
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {cost.items.map((item) => (
+              <Tile key={item.label} label={item.label} value={item.value} hint={item.hint} />
+            ))}
+          </div>
+        </Section>
+      ) : (
+        <p className="text-sm text-gray-500" data-pdf-block>
+          05 · 비용 효율: 정가가 없는 견적 문의 상품이라 비즈니스 리포트에도 보이지 않습니다.
+        </p>
+      )}
+
+      <Section title="06 · 날짜별 추이">
+        {chartOption ? <EChart option={chartOption} height={280} /> : null}
+        <DataTable
+          columns={dailyColumns}
+          rows={report.daily}
+          rowKey={(row) => row.date}
+          emptyMessage="기간 안에 날짜가 없습니다."
+        />
+      </Section>
+
+      <Section title="07 · 인사이트와 다음 제안 — 비즈니스 리포트에 보내는 글">
         <ReportInsightsEditor
           key={JSON.stringify(report.insights ?? [])}
           contractId={contractId}
@@ -488,7 +556,7 @@ function ReportBody({
         />
       </Section>
 
-      <Section title="지표 정의">
+      <Section title="지표는 이렇게 셌어요">
         <dl className="grid gap-x-6 gap-y-1.5 text-xs text-gray-600 sm:grid-cols-2">
           {definitionsFor(banner).map(([term, description]) => (
             <div key={term} className="flex gap-2">
@@ -515,7 +583,7 @@ function ScrollFunnel({
 }) {
   const option = useMemo(() => scrollFunnelOption(steps), [steps]);
   if (steps.length === 0 || steps[0]?.visitors === 0) {
-    return <p className="text-sm text-gray-500">기간 안에 상세를 연 방문자가 없습니다.</p>;
+    return <p className="text-sm text-gray-500">아직 공고를 연 사람이 없어요.</p>;
   }
   return (
     <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem]">
@@ -532,7 +600,8 @@ function ScrollFunnel({
           ))}
         </ol>
         <p className="border-t border-gray-100 pt-2 text-xs text-gray-500">
-          평균 스크롤 {formatPercent(report.summary.avgScrollPercent)}
+          평균 스크롤 깊이 {formatPercent(report.summary.avgScrollPercent)} · 평균 체류{' '}
+          {formatSeconds(report.summary.avgDurationSeconds)}
         </p>
       </div>
     </div>
@@ -541,43 +610,40 @@ function ScrollFunnel({
 
 type JobFieldRow = ContractProductReport['byJobField'][number];
 
-/** 타깃 직무 일치율과 학년. 공고를 연 로그인 회원만 센다. */
+/** 타깃 직무 일치율, 로그인 회원 비중, 신분·학년. 공고를 연 로그인 회원만 센다. */
 function AudienceFit({ report }: { report: ContractProductReport }) {
   const { targetMatch, targetJobFields, byGrade } = report.audience;
-  if (targetMatch.members === 0 && byGrade.length === 0) {
-    return <p className="text-sm text-gray-500">공고를 연 로그인 회원이 아직 없습니다.</p>;
-  }
-  const max = Math.max(1, ...byGrade.map((row) => row.memberUniqueVisitors));
+  const { summary } = report;
+  if (targetMatch.members === 0 && byGrade.length === 0) return null;
+  const status = statusCounts(byGrade);
+  const grades = byGrade.filter((row) => row.grade != null && row.memberUniqueVisitors > 0);
   return (
-    <div className="flex flex-col gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <Tile
         label="타깃 직무 일치율"
         value={formatRate(targetMatch.rate)}
         hint={
           targetJobFields.length === 0
             ? '타깃 직군이 없어 계산하지 않아요.'
-            : `${targetJobFields.map((field) => enumLabel('JobField', field)).join(', ')} 희망 ${formatCount(targetMatch.matchedMembers)}명 / 공고를 연 회원 ${formatCount(targetMatch.members)}명`
+            : `${targetJobFields.map((field) => enumLabel('JobField', field)).join(', ')}을 하나라도 희망하는 회원 ${formatCount(targetMatch.matchedMembers)}명 ÷ 공고를 연 회원 ${formatCount(targetMatch.members)}명`
         }
       />
-      <ul className="flex flex-col gap-1.5">
-        {byGrade.map((row) => (
-          <li
-            key={row.grade ?? 'none'}
-            className="grid grid-cols-[6rem_minmax(0,1fr)_3rem] items-center gap-3 text-sm"
-          >
-            <span className="truncate text-gray-600">{row.label}</span>
-            <span className="h-2 rounded-full bg-gray-100">
-              <span
-                className="block h-2 rounded-full bg-blue-400"
-                style={{ width: `${(row.memberUniqueVisitors / max) * 100}%` }}
-              />
-            </span>
-            <span className="text-right text-gray-900 tabular-nums">
-              {formatCount(row.memberUniqueVisitors)}명
-            </span>
-          </li>
-        ))}
-      </ul>
+      <Tile
+        label="로그인 회원 비중"
+        value={`${formatCount(summary.memberUniqueVisitors)}명 / ${formatCount(summary.uniqueVisitors)}명`}
+        hint="광고로 공고를 연 사람 중 회원"
+      />
+      <Tile
+        label="신분 · 학년"
+        value={`재학 ${formatCount(status.studying)} · 졸업 ${formatCount(status.graduated)}${status.unset > 0 ? ` · 미설정 ${formatCount(status.unset)}` : ''}`}
+        hint={
+          grades.length > 0
+            ? grades
+                .map((row) => `${row.label} ${formatCount(row.memberUniqueVisitors)}명`)
+                .join(' · ')
+            : undefined
+        }
+      />
     </div>
   );
 }
@@ -611,7 +677,7 @@ function JobFieldBreakdown({ report, detail }: { report: ContractProductReport; 
           },
           {
             key: 'ctaUniqueMembers',
-            header: 'CTA 클릭 회원',
+            header: '지원하기 클릭 회원',
             align: 'right',
             render: (row) => formatCount(row.ctaUniqueMembers),
           },
@@ -627,8 +693,8 @@ function JobFieldBreakdown({ report, detail }: { report: ContractProductReport; 
   return (
     <>
       <p className="text-xs text-gray-500">
-        로그인한 회원만 셉니다. 희망 직무가 여럿인 회원은 직무마다 한 번씩 세서 합이 회원 수보다 클
-        수 있어요. 막대는 {detail ? '순 방문 회원' : '광고 클릭 회원'} 수입니다.
+        희망 직무가 여럿인 회원은 직무마다 한 번씩 세서 합이 회원 수보다 클 수 있어요. 막대는{' '}
+        {detail ? '순 방문 회원' : '광고 클릭 회원'} 수입니다.
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
         <EChart option={option} height={Math.max(160, rows.length * 34)} />
@@ -642,57 +708,61 @@ function JobFieldBreakdown({ report, detail }: { report: ContractProductReport; 
 type Definition = [term: string, description: string, shownWhen: 'all' | 'detail' | 'scroll'];
 
 const DEFINITIONS: Definition[] = [
-  ['노출', '배너·광고 카드가 화면에 절반 이상 1초 넘게 보인 횟수', 'all'],
+  ['노출', '배너·광고 카드가 화면에 절반 이상, 1초 넘게 보인 횟수', 'all'],
   [
     '순 노출',
     '같은 사람(회원, 비회원은 익명 방문자 id)이 같은 광고를 하루에 여러 번 봐도 한 번으로 센 노출',
     'all',
   ],
   [
-    '희망 직무별',
-    '로그인한 회원만 회원의 희망 직무로 나눈다. 직무가 여럿인 회원은 직무마다 한 번씩 세서 합이 회원 수보다 클 수 있다',
-    'all',
-  ],
-  ['클릭', '배너·광고 카드를 누른 횟수. 클릭률은 클릭 ÷ 노출', 'all'],
-  [
     '도달',
-    '기간 동안 광고를 본 서로 다른 사람(회원, 비회원은 익명 방문자 id). 원본 보관 기간(365일)보다 앞이면 센 값이 없다',
+    '기간 동안 광고를 본 서로 다른 사람 수(회원, 비회원은 익명 방문자 id). 원본 보관 기간(365일)보다 앞이면 센 값이 없다',
     'all',
   ],
   ['평균 빈도', '노출 ÷ 도달. 한 사람이 같은 광고를 평균 몇 번 봤는지', 'all'],
+  ['조회', '공고를 연 횟수. 광고 구좌는 카드를 누른 횟수로 센다. 배너는 클릭이라 부른다', 'all'],
+  ['조회한 사람', '공고를 연 서로 다른 사람 수. 광고 구좌는 광고를 눌러 연 사람', 'all'],
+  ['조회율', '조회 ÷ 노출', 'all'],
+  ['지원 전환율', '지원하기 클릭 ÷ 조회', 'detail'],
+  [
+    '지원하기 클릭',
+    '공고의 지원하기·신청하기 버튼을 누른 횟수. 이후 외부 지원 페이지의 실제 제출 여부는 알 수 없다',
+    'detail',
+  ],
+  [
+    '스크롤 깊이',
+    '공고를 연 사람이 25·50·75·100%까지 내렸는지. 방문자마다 가장 깊이 내린 값으로 센다',
+    'scroll',
+  ],
+  ['평균 체류', '공고를 열고 떠날 때까지 화면이 보인 시간의 평균', 'scroll'],
+  [
+    '희망 직무',
+    '로그인한 회원만 회원의 희망 직무로 나눈다. 직무가 여럿인 회원은 직무마다 한 번씩 세서 합이 회원 수보다 클 수 있다',
+    'all',
+  ],
   [
     '타깃 직무 일치율',
     '공고를 연 로그인 회원 중 희망 직무의 직군이 광고 공고의 직군(노출의 직군 탭 포함)과 겹치는 회원 비율',
     'all',
   ],
-  ['학년', '공고를 연 로그인 회원이 프로필에 적은 학년. 적지 않으면 학년 미설정', 'all'],
   [
-    '저장·공유',
-    '광고할 공고 전체의 저장(기간 안에 저장했고 지금도 저장 중인 사람 수)과 공유(링크 복사·공유 창·SNS) 횟수',
+    '신분 · 학년',
+    '공고를 연 로그인 회원의 프로필 학년. 1~4학년·5학년 이상은 재학, 졸업생은 졸업으로 묶는다. 졸업 예정은 따로 받지 않는다',
     'all',
   ],
-  ['상세 조회', '상세 페이지가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번', 'detail'],
-  ['순 방문자', '기간 안 상세를 연 서로 다른 방문자(회원, 비회원은 익명 방문자 id)', 'detail'],
-  ['회원 조회', '로그인한 상태로 연 상세 조회', 'detail'],
   [
-    'CTA 클릭',
-    '지원하러 가기·신청하러 가기를 누른 횟수. 클릭률은 CTA 순 방문자 ÷ 순 방문자',
-    'detail',
+    '저장·공유',
+    '공고 전체의 저장(기간 안에 저장했고 지금도 저장 중인 사람 수)과 공유(링크 복사·공유 창·SNS) 횟수',
+    'all',
   ],
+  ['비용 효율', '광고비(상품 정가)를 노출, 조회, 지원하기 클릭 수로 나눈 값', 'all'],
   [
-    '스크롤 깊이',
-    '상세를 연 순 방문자 중 각 깊이(25·50·75·100%)까지 내린 사람 수. 방문자마다 가장 깊이 내린 값으로 센다',
-    'scroll',
-  ],
-  ['평균 스크롤', '상세를 떠날 때 가장 깊이 내린 비율의 평균', 'scroll'],
-  ['평균 체류', '상세를 연 뒤 떠날 때까지 화면이 보인 시간의 평균', 'scroll'],
-  [
-    '상품 몫',
+    '광고 구좌 성과',
     '이 상품의 노출(배너·광고 카드)로 들어온 것만 센다. 겹치는 상품끼리 중복으로 세지 않는다',
     'all',
   ],
   [
-    '광고할 공고 전체',
+    '공고 전체 성과',
     '연결한 공고의 모든 유입(일반 목록·검색·외부 포함). 어느 상품 몫에도 넣지 않은 숫자도 있다',
     'all',
   ],

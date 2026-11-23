@@ -185,7 +185,11 @@ export function MyAdContractDetail({ contractId }: { contractId: number }) {
       {contract.products.length > 0 ? (
         <>
           {isReportEnabled ? <ContractReportSummaryCard contractId={contract.id} /> : null}
-          <AdReport contractId={contract.id} products={contract.products} />
+          <AdReport
+            contractId={contract.id}
+            companyName={contract.companyName}
+            products={contract.products}
+          />
         </>
       ) : null}
 

@@ -19,6 +19,7 @@ import {
 } from '../model/format';
 import type { AdReport as AdReportData, ReportableProduct } from '../model/types';
 import { ReportBody } from './ReportBody';
+import { ReportHeader } from './ReportHeader';
 
 type Load =
   | { kind: 'loading' }
@@ -47,9 +48,11 @@ function periodText(product: ReportableProduct): string {
 /** 한 상품의 리포트. 기간을 좁히면 다시 받는다. 빈 기간은 백엔드 기본값(상품 기간 전체, 진행 중이면 오늘까지)이다. */
 function ProductReport({
   contractId,
+  companyName,
   product,
 }: {
   contractId: number;
+  companyName: string;
   product: ReportableProduct & { startDate: string; endDate: string };
 }) {
   const today = todayYmd();
@@ -144,7 +147,7 @@ function ProductReport({
           전체 기간
         </button>
         <div className="flex gap-2 sm:ml-auto">
-          {exportButton('pdf', 'PDF')}
+          {exportButton('pdf', 'PDF로 저장')}
           {exportButton('csv', 'CSV')}
         </div>
       </div>
@@ -159,13 +162,7 @@ function ProductReport({
 
       {load.kind === 'ready' ? (
         <>
-          <p data-pdf-block className="text-sm text-gray-500 tabular-nums">
-            <span className="mr-2 font-semibold text-gray-900">{load.report.product.name}</span>
-            {dotDate(load.report.from)} ~ {dotDate(load.report.to)}
-            {productProgress(product) === 'RUNNING' && load.report.to === today
-              ? ' · 오늘까지 집계'
-              : ''}
-          </p>
+          <ReportHeader report={load.report} companyName={companyName} today={today} />
           <ReportBody report={load.report} />
         </>
       ) : (
@@ -191,9 +188,11 @@ function ProductReport({
  */
 export function AdReport({
   contractId,
+  companyName,
   products,
 }: {
   contractId: number;
+  companyName: string;
   products: ReportableProduct[];
 }) {
   const router = useRouter();
@@ -307,6 +306,7 @@ export function AdReport({
                   ) : (
                     <ProductReport
                       contractId={contractId}
+                      companyName={companyName}
                       product={{
                         ...product,
                         startDate: product.startDate,

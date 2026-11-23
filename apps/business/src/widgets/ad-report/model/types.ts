@@ -54,6 +54,8 @@ export interface AdReport {
     name: string;
     startDate: string;
     endDate: string;
+    /** 상품의 소개용 가격(정가, 원). 비용 효율의 광고비다. 견적 문의 상품은 null 이고 배포 전 응답에는 없다. */
+    price?: number | null;
   };
   from: string;
   to: string;

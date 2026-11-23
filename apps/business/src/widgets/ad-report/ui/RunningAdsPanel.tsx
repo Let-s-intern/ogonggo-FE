@@ -59,14 +59,14 @@ function ActiveAdCard({ ad }: { ad: ActiveAd }) {
     ? [
         ['노출', formatCount(ad.impressions)],
         ['클릭률', formatRate(ad.adClickRate)],
-        ['CTA 클릭', formatCount(ad.ctaClicks)],
+        ['지원하기 클릭', formatCount(ad.ctaClicks)],
         ['스크롤 50%', formatRate(ad.scroll50Rate)],
       ]
     : [
         ['노출', formatCount(ad.impressions)],
         ['클릭', formatCount(ad.adClicks)],
         ['상세 조회', formatCount(ad.views)],
-        ['CTA 클릭', formatCount(ad.ctaClicks)],
+        ['지원하기 클릭', formatCount(ad.ctaClicks)],
       ];
 
   return (

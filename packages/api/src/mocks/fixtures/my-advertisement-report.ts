@@ -46,6 +46,8 @@ export interface MockReport {
     name: string;
     startDate: string;
     endDate: string;
+    /** 상품 정가(원). 견적 문의 상품은 null. */
+    price: number | null;
   };
   from: string;
   to: string;
@@ -454,6 +456,8 @@ export function buildReport(
       name: product.productName,
       startDate,
       endDate,
+      // 배너 500,000원, 광고 공고 300,000원, 나머지(채널 아닌 견적형)는 null 로 견적 문의 상품을 보인다.
+      price: isBanner(product) ? 500_000 : product.category === 'JOB_POSTING' ? 300_000 : null,
     },
     from,
     to,

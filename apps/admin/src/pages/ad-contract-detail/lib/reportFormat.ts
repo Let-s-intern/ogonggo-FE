@@ -52,6 +52,86 @@ export const isBannerReport = (report: ContractProductReport) =>
 export const showsDetail = (report: ContractProductReport) =>
   !isBannerReport(report) || report.summary.views > 0;
 
+/**
+ * 광고를 눌러 들어온 것의 이름. 목업(2026-11-23)은 광고 카드를 눌러 공고를 연 것을 `조회`라 부르고, 지원 버튼을 누른 것은
+ * `지원하기 클릭`이라 부른다. 배너는 공고 상세가 아니라 `클릭`이다.
+ */
+export const clickLabelOf = (report: ContractProductReport) =>
+  isBannerReport(report) ? '클릭' : '조회';
+
+/** `조회` → `조회율`, `클릭` → `클릭률`. */
+export const rateLabelOf = (clickLabel: string) => (clickLabel === '클릭' ? '클릭률' : '조회율');
+
+/** 분모가 0 이면 null. */
+export const ratioOf = (numerator: number, denominator: number): number | null =>
+  denominator > 0 ? numerator / denominator : null;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 두 날짜(양 끝 포함) 사이 일수. */
+export function inclusiveDays(from: string, to: string): number {
+  const diff = (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS;
+  return Math.max(0, Math.round(diff) + 1);
+}
+
+const won = (value: number) => `${Math.round(value).toLocaleString('ko-KR')}원`;
+
+export interface CostEfficiency {
+  /** 리포트 기간 몫의 광고비(원). */
+  cost: number;
+  /** 정가 일부 기간 몫이면 `[리포트 일수, 게시 일수]`. */
+  prorated: [number, number] | null;
+  items: { label: string; value: string; hint: string }[];
+}
+
+/**
+ * 비용 효율. 광고비는 상품 정가이고 무료 혜택도 정가로 환산한다(2026-11-23 목업). 정가가 없는 견적 문의 상품은 null.
+ * 기간을 좁히면 정가를 게시 일수로 나눠 리포트 일수만큼만 쓴다(하루치 숫자에 한 달 광고비를 나누면 단가가 부풀기 때문).
+ */
+export function costEfficiency(report: ContractProductReport): CostEfficiency | null {
+  const price = report.product.price;
+  if (price == null) return null;
+  const total = inclusiveDays(report.product.startDate, report.product.endDate);
+  const days = inclusiveDays(report.from, report.to);
+  const prorated = days > 0 && days < total ? ([days, total] as [number, number]) : null;
+  const cost = prorated ? (price * days) / total : price;
+  const { summary } = report;
+  const banner = isBannerReport(report);
+  const clickLabel = clickLabelOf(report);
+  const per = (count: number) => (count > 0 ? won(cost / count) : '-');
+  const items: CostEfficiency['items'] = [
+    {
+      label: '노출 1,000회당 비용',
+      value: summary.impressions > 0 ? won((cost / summary.impressions) * 1000) : '-',
+      hint: `광고비 ÷ ${formatCount(summary.impressions)} × 1,000`,
+    },
+    {
+      label: `${clickLabel}당 비용`,
+      value: per(summary.adClicks),
+      hint: `광고비 ÷ ${clickLabel} ${formatCount(summary.adClicks)}`,
+    },
+  ];
+  if (!banner || summary.ctaClicks > 0) {
+    items.push({
+      label: '지원하기 클릭당 비용',
+      value: per(summary.ctaClicks),
+      hint: `광고비 ÷ 지원하기 클릭 ${formatCount(summary.ctaClicks)}`,
+    });
+  }
+  return { cost, prorated, items };
+}
+
+/** 학년 칸을 목업의 신분으로 묶는다. 1~4학년·5학년 이상은 재학, 졸업생은 졸업. 졸업 예정은 따로 받지 않아 나누지 못한다. */
+export function statusCounts(byGrade: ContractProductReport['audience']['byGrade']) {
+  const sum = (pick: (row: (typeof byGrade)[number]) => boolean) =>
+    byGrade.filter(pick).reduce((acc, row) => acc + row.memberUniqueVisitors, 0);
+  return {
+    studying: sum((row) => row.grade != null && row.grade !== 'GRADUATE'),
+    graduated: sum((row) => row.grade === 'GRADUATE'),
+    unset: sum((row) => row.grade == null),
+  };
+}
+
 /** 수집 시작일 앞 날짜는 숫자가 없다. 0 이 아니라 `집계 전` 이다. */
 export const isBeforeCollection = (report: ContractProductReport, date: string) =>
   date < report.collectedSince;
@@ -60,7 +140,11 @@ type ScrollStep = NonNullable<ContractProductReport['summary']['scrollFunnel']>[
 
 /** 깔때기 단계 이름. 0% 는 상세를 연 순 방문자 전체다. */
 export const scrollStepLabel = (step: ScrollStep) =>
-  step.threshold === 0 ? '상세를 연 방문자' : `${step.threshold}% 까지 내림`;
+  step.threshold === 0
+    ? '공고를 연 사람'
+    : step.threshold === 100
+      ? '끝까지'
+      : `${step.threshold}%까지`;
 
 /** 단계 라벨 `N명 (xx%)`. */
 export const scrollStepValue = (step: ScrollStep) =>
@@ -212,7 +296,7 @@ export function dailyChartOption(report: ContractProductReport): EChartsCoreOpti
       },
       {
         type: 'value',
-        name: showsDetail(report) ? '클릭·조회' : '클릭',
+        name: showsDetail(report) ? `${clickLabelOf(report)}·지원하기 클릭` : clickLabelOf(report),
         nameTextStyle: { ...AXIS_LABEL, align: 'left' },
         axisLabel: AXIS_LABEL,
         splitLine: { show: false },
@@ -228,9 +312,8 @@ export function dailyChartOption(report: ContractProductReport): EChartsCoreOpti
       },
       ...(
         [
-          ['클릭', 'adClicks'],
-          ['상세 조회', 'views'],
-          ['CTA 클릭', 'ctaClicks'],
+          [clickLabelOf(report), 'adClicks'],
+          ['지원하기 클릭', 'ctaClicks'],
         ] as const
       )
         .filter(([, key]) => key === 'adClicks' || showsDetail(report))
