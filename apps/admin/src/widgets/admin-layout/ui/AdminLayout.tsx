@@ -103,6 +103,9 @@ export function AdminLayout() {
   return (
     <div
       className="flex min-h-screen bg-gray-50"
+      // 모달을 바 안이 아니라 여기로 포털해야 할 때의 자리(`widgets/utm-links`). `--assistant-width` 가 이 요소에 있어
+      // 여기 두면 비서 패널을 비켜 서는 모달 동작이 그대로다.
+      data-overlay-root
       // 오른쪽 AI 비서 패널의 폭. 화면 오른쪽에 붙는 플로팅 요소(상세의 수정 버튼, 목록의 일괄 변경 바)가
       // 이 값만큼 비켜 서서 패널에 가리지 않는다.
       style={
