@@ -94,11 +94,39 @@ export interface AdReport {
     targetType: 'JOB' | 'BOOTCAMP';
     targetId: number;
     title: string;
-    total: ReportDetailMetrics;
+    total: ReportDetailMetrics & {
+      /** 기간 안에 저장했고 지금도 저장 중인 사람 수. */
+      saves: number;
+      shares: number;
+    };
     bySource: { source: ReportSource; views: number; ctaClicks: number }[];
   }[];
   /** 로그인 회원의 희망 직무별 나눔(계약 6.1). 비회원은 없다. 회원 순 방문자 큰 순. */
   byJobField: JobFieldRow[];
+  /** 상품 몫을 본 사람의 구성. */
+  audience: ReportAudience;
+  /** 운영자가 써서 보낸 인사이트. 보내지 않은 임시 저장은 오지 않는다. 인사이트 배포(LC-3657) 전 응답에는 없다. */
+  insights?: { title: string; body: string }[];
+}
+
+/**
+ * 도달·평균 빈도는 기간 동안 광고를 본 서로 다른 사람(회원·비회원 합) 기준이다. 원본 보관 기간(365일)보다 앞날이 걸리면
+ * `reach`·`avgFrequency`·`adClickVisitors` 가 null 이다.
+ */
+export interface ReportAudience {
+  reach: number | null;
+  avgFrequency: number | null;
+  adClickVisitors: number | null;
+  /** 광고가 띄우는 공고의 직군과 노출을 띄우는 직군 탭. 없으면 빈 배열이고 일치율은 null. */
+  targetJobFields: string[];
+  targetMatch: {
+    matchedMembers: number;
+    members: number;
+    /** 0~1. 타깃 직군이 없거나 공고를 연 회원이 없으면 null. */
+    rate: number | null;
+  };
+  /** 공고를 연 로그인 회원의 학년. 학년 순이고 미설정이 맨 뒤. */
+  byGrade: { grade: string | null; label: string; memberUniqueVisitors: number }[];
 }
 
 export interface JobFieldRow {

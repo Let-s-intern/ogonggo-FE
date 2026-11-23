@@ -275,7 +275,7 @@ export interface ReportTarget {
   targetType: ContractTargetType;
   targetId: number;
   title: string;
-  total: ReportDetailMetrics;
+  total: ReportDetailMetrics & { saves: number; shares: number };
   bySource: { source: ReportSource; views: number; ctaClicks: number }[];
 }
 
@@ -287,6 +287,23 @@ export interface ReportJobField {
   memberViews: number;
   ctaUniqueMembers: number;
   adClickMembers: number;
+}
+
+/** 상품 몫을 본 사람의 구성(BE LC-3656). 도달·광고를 누른 사람은 원본 보관 기간을 넘기면 null. */
+export interface ReportAudience {
+  reach: number | null;
+  avgFrequency: number | null;
+  adClickVisitors: number | null;
+  targetJobFields: string[];
+  targetMatch: { matchedMembers: number; members: number; rate: number | null };
+  byGrade: { grade: string | null; label: string; memberUniqueVisitors: number }[];
+}
+
+/** 운영자가 쓴 인사이트(BE LC-3657). `published` 가 거짓이면 운영자만 보는 임시 저장. */
+export interface ReportInsight {
+  title: string;
+  body: string;
+  published: boolean;
 }
 
 export interface AdminContractProductReport {
@@ -308,6 +325,9 @@ export interface AdminContractProductReport {
   targets: ReportTarget[];
   /** 로그인 회원만 센 희망 직무별 나눔. */
   byJobField: ReportJobField[];
+  audience: ReportAudience;
+  /** 인사이트 배포(LC-3657) 전 응답에는 없다. */
+  insights?: ReportInsight[];
 }
 
 /** 목의 수집 시작일. 이보다 앞 날짜는 모두 0 이고 화면이 `집계 전` 으로 적는다. */
@@ -634,6 +654,8 @@ function buildReport(
       targetId: target.targetId,
       title: target.title,
       total: {
+        saves: Math.round(views * 0.09),
+        shares: Math.round(views * 0.03),
         views,
         uniqueVisitors: Math.round(views * 0.75),
         memberViews: Math.round(views * 0.45),
@@ -664,7 +686,61 @@ function buildReport(
     exposures,
     targets,
     byJobField: jobFieldBreakdown(cp.contractProductId, summary),
+    audience: audienceOf(cp.category === 'BANNER', summary),
+    insights: insightStore.get(cp.contractProductId) ?? [],
   };
+}
+
+/** 학년별 회원 몫. 학년을 입력하지 않은 회원이 맨 뒤다. */
+const GRADE_SHARES: [string | null, string, number][] = [
+  ['FOURTH', '4학년', 0.38],
+  ['THIRD', '3학년', 0.24],
+  ['GRADUATE', '졸업생', 0.16],
+  ['SECOND', '2학년', 0.1],
+  [null, '학년 미설정', 0.12],
+];
+
+function audienceOf(banner: boolean, summary: ReportSummary): ReportAudience {
+  const reach = Math.round(summary.impressions * 0.55);
+  const members = summary.memberUniqueVisitors;
+  const matched = Math.round(members * 0.42);
+  const targetJobFields = banner ? [] : ['IT_DEVELOPMENT'];
+  return {
+    reach: reach > 0 ? reach : null,
+    avgFrequency: reach > 0 ? round1(summary.impressions / reach) : null,
+    adClickVisitors: reach > 0 ? Math.round(summary.adClicks * 0.85) : null,
+    targetJobFields,
+    targetMatch: {
+      matchedMembers: targetJobFields.length > 0 ? matched : 0,
+      members,
+      rate: targetJobFields.length > 0 ? rate(matched, members) : null,
+    },
+    byGrade: GRADE_SHARES.map(([grade, label, share]) => ({
+      grade,
+      label,
+      memberUniqueVisitors: Math.round(members * share),
+    })).filter((row) => row.memberUniqueVisitors > 0),
+  };
+}
+
+const INSIGHT_STORAGE_KEY = 'ogonggo.mock.admin.reportInsights';
+
+/** 계약 상품 id → 인사이트. 저장하면 `localStorage` 에도 둬서 새로고침해도 남는다. */
+const insightStore: Map<number, ReportInsight[]> = (() => {
+  try {
+    const raw = localStorage.getItem(INSIGHT_STORAGE_KEY);
+    return new Map(raw ? (JSON.parse(raw) as [number, ReportInsight[]][]) : []);
+  } catch {
+    return new Map();
+  }
+})();
+
+function saveInsights() {
+  try {
+    localStorage.setItem(INSIGHT_STORAGE_KEY, JSON.stringify([...insightStore]));
+  } catch {
+    // 저장소를 못 쓰는 환경에서는 새로고침 전까지만 남는다.
+  }
 }
 
 /**
@@ -778,6 +854,41 @@ const reportHandler = http.get(`${REPORT}/report`, ({ params, request }) => {
   return HttpResponse.json(ok(body), { status: 200 });
 });
 
+/** 인사이트를 통째로 바꾼다. BE 와 같이 6개를 넘거나 제목·본문이 비면 400. */
+const replaceInsightsHandler = http.put(
+  `${REPORT}/report-insights`,
+  async ({ params, request }) => {
+    const body = (await request.json()) as {
+      insights?: { title?: string; body?: string }[];
+      published?: boolean;
+    };
+    const items = body.insights ?? [];
+    const invalid =
+      items.length > 6 ||
+      items.some(
+        (item) =>
+          !item.title?.trim() ||
+          !item.body?.trim() ||
+          item.title.length > 60 ||
+          item.body.length > 500,
+      );
+    if (invalid || typeof body.published !== 'boolean') {
+      return HttpResponse.json(
+        { status: 400, code: 'BAD_REQUEST', message: '인사이트 입력이 올바르지 않습니다.' },
+        { status: 400 },
+      );
+    }
+    const saved = items.map((item) => ({
+      title: (item.title as string).trim(),
+      body: (item.body as string).trim(),
+      published: body.published as boolean,
+    }));
+    insightStore.set(Number(params.contractProductId), saved);
+    saveInsights();
+    return HttpResponse.json(ok(saved), { status: 200 });
+  },
+);
+
 const CSV_COLUMNS = [
   'date',
   'exposureId',
@@ -821,5 +932,6 @@ export const advertisementReportHandlers: HttpHandler[] = [
   // `report.csv` 를 `report` 보다 앞에 둔다.
   reportCsvHandler,
   reportHandler,
+  replaceInsightsHandler,
   reportSummaryHandler,
 ];

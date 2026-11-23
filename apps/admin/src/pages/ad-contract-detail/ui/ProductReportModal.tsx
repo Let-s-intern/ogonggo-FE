@@ -31,6 +31,7 @@ import {
   scrollStepValue,
 } from '../lib/reportFormat';
 import { Tile } from './reportParts';
+import { ReportInsightsEditor } from './ReportInsightsEditor';
 
 type Daily = ContractProductReport['daily'][number];
 type Exposure = ContractProductReport['exposures'][number];
@@ -210,7 +211,7 @@ function ProductReport({
       ) : isPending || !report ? (
         <p className="py-10 text-center text-sm text-gray-400">불러오는 중</p>
       ) : (
-        <ReportBody report={report} chartOption={chartOption} />
+        <ReportBody contractId={contract.id} report={report} chartOption={chartOption} />
       )}
     </div>
   );
@@ -228,13 +229,15 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 const UNIQUE_IMPRESSION_HINT = '같은 사람이 하루에 여러 번 봐도 한 번으로 센 노출';
 
 function ReportBody({
+  contractId,
   report,
   chartOption,
 }: {
+  contractId: number;
   report: ContractProductReport;
   chartOption: ReturnType<typeof dailyChartOption> | null;
 }) {
-  const { summary } = report;
+  const { summary, audience } = report;
   const banner = isBannerReport(report);
   const detail = showsDetail(report);
   const ownLabel = banner ? '배너' : '광고 카드';
@@ -320,6 +323,13 @@ function ReportBody({
       align: 'right',
       render: (row) => formatCount(row.total.ctaClicks),
     },
+    { key: 'saves', header: '저장', align: 'right', render: (row) => formatCount(row.total.saves) },
+    {
+      key: 'shares',
+      header: '공유',
+      align: 'right',
+      render: (row) => formatCount(row.total.shares),
+    },
     ...(scrolls
       ? ([
           {
@@ -386,6 +396,25 @@ function ReportBody({
             <Tile label="평균 체류" value={formatSeconds(summary.avgDurationSeconds)} />
           ) : null}
         </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Tile
+            label="도달"
+            value={audience.reach == null ? '-' : `${formatCount(audience.reach)}명`}
+            hint="광고를 본 서로 다른 사람"
+          />
+          <Tile
+            label="평균 빈도"
+            value={audience.avgFrequency == null ? '-' : `${audience.avgFrequency.toFixed(1)}회`}
+            hint="한 사람이 평균 몇 번 봤는지"
+          />
+          <Tile
+            label={`${ownLabel}를 누른 사람`}
+            value={
+              audience.adClickVisitors == null ? '-' : `${formatCount(audience.adClickVisitors)}명`
+            }
+            hint="서로 다른 사람"
+          />
+        </div>
         {detail ? null : (
           <p className="text-xs text-gray-500">
             배너 링크가 공고 상세가 아니어서 상세 조회는 세지 않아요.
@@ -401,6 +430,10 @@ function ReportBody({
 
       <Section title="희망 직무별(로그인 회원 기준)">
         <JobFieldBreakdown report={report} detail={detail} />
+      </Section>
+
+      <Section title="타깃 적합도(공고를 연 로그인 회원 기준)">
+        <AudienceFit report={report} />
       </Section>
 
       <Section title="날짜별 추이">
@@ -445,6 +478,14 @@ function ReportBody({
             />
           </>
         ) : null}
+      </Section>
+
+      <Section title="인사이트(비즈니스 리포트에 보내는 글)">
+        <ReportInsightsEditor
+          key={JSON.stringify(report.insights ?? [])}
+          contractId={contractId}
+          report={report}
+        />
       </Section>
 
       <Section title="지표 정의">
@@ -499,6 +540,47 @@ function ScrollFunnel({
 }
 
 type JobFieldRow = ContractProductReport['byJobField'][number];
+
+/** 타깃 직무 일치율과 학년. 공고를 연 로그인 회원만 센다. */
+function AudienceFit({ report }: { report: ContractProductReport }) {
+  const { targetMatch, targetJobFields, byGrade } = report.audience;
+  if (targetMatch.members === 0 && byGrade.length === 0) {
+    return <p className="text-sm text-gray-500">공고를 연 로그인 회원이 아직 없습니다.</p>;
+  }
+  const max = Math.max(1, ...byGrade.map((row) => row.memberUniqueVisitors));
+  return (
+    <div className="flex flex-col gap-3">
+      <Tile
+        label="타깃 직무 일치율"
+        value={formatRate(targetMatch.rate)}
+        hint={
+          targetJobFields.length === 0
+            ? '타깃 직군이 없어 계산하지 않아요.'
+            : `${targetJobFields.map((field) => enumLabel('JobField', field)).join(', ')} 희망 ${formatCount(targetMatch.matchedMembers)}명 / 공고를 연 회원 ${formatCount(targetMatch.members)}명`
+        }
+      />
+      <ul className="flex flex-col gap-1.5">
+        {byGrade.map((row) => (
+          <li
+            key={row.grade ?? 'none'}
+            className="grid grid-cols-[6rem_minmax(0,1fr)_3rem] items-center gap-3 text-sm"
+          >
+            <span className="truncate text-gray-600">{row.label}</span>
+            <span className="h-2 rounded-full bg-gray-100">
+              <span
+                className="block h-2 rounded-full bg-blue-400"
+                style={{ width: `${(row.memberUniqueVisitors / max) * 100}%` }}
+              />
+            </span>
+            <span className="text-right text-gray-900 tabular-nums">
+              {formatCount(row.memberUniqueVisitors)}명
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 /**
  * 희망 직무별 나눔(API 계약 6.1). 가로 막대와 표. 로그인 회원만 세므로 안내를 함께 둔다. 상세 숫자가 없는 배너는 막대를 광고
@@ -572,6 +654,23 @@ const DEFINITIONS: Definition[] = [
     'all',
   ],
   ['클릭', '배너·광고 카드를 누른 횟수. 클릭률은 클릭 ÷ 노출', 'all'],
+  [
+    '도달',
+    '기간 동안 광고를 본 서로 다른 사람(회원, 비회원은 익명 방문자 id). 원본 보관 기간(365일)보다 앞이면 센 값이 없다',
+    'all',
+  ],
+  ['평균 빈도', '노출 ÷ 도달. 한 사람이 같은 광고를 평균 몇 번 봤는지', 'all'],
+  [
+    '타깃 직무 일치율',
+    '공고를 연 로그인 회원 중 희망 직무의 직군이 광고 공고의 직군(노출의 직군 탭 포함)과 겹치는 회원 비율',
+    'all',
+  ],
+  ['학년', '공고를 연 로그인 회원이 프로필에 적은 학년. 적지 않으면 학년 미설정', 'all'],
+  [
+    '저장·공유',
+    '광고할 공고 전체의 저장(기간 안에 저장했고 지금도 저장 중인 사람 수)과 공유(링크 복사·공유 창·SNS) 횟수',
+    'all',
+  ],
   ['상세 조회', '상세 페이지가 열린 횟수. 같은 방문자가 30분 안에 다시 열면 한 번', 'detail'],
   ['순 방문자', '기간 안 상세를 연 서로 다른 방문자(회원, 비회원은 익명 방문자 id)', 'detail'],
   ['회원 조회', '로그인한 상태로 연 상세 조회', 'detail'],

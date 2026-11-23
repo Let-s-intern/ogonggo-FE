@@ -13,6 +13,7 @@
  * | `SCROLL` | 3 | 스크롤 |
  * | `IMPRESSION` | 4 | 광고 노출 |
  * | `AD_CLICK` | 5 | 광고 클릭 |
+ * | `SHARE` | 6 | 공유 |
  */
 export type ContentEventRequestType = typeof ContentEventRequestType[keyof typeof ContentEventRequestType];
 
@@ -23,4 +24,5 @@ export const ContentEventRequestType = {
   SCROLL: 'SCROLL',
   IMPRESSION: 'IMPRESSION',
   AD_CLICK: 'AD_CLICK',
+  SHARE: 'SHARE',
 } as const;

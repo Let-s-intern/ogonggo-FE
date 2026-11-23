@@ -83,11 +83,27 @@ export interface MockReport {
     targetType: 'JOB' | 'BOOTCAMP';
     targetId: number;
     title: string;
-    total: Omit<MockReportMetrics, 'impressions' | 'uniqueImpressions' | 'adClicks'>;
+    total: Omit<MockReportMetrics, 'impressions' | 'uniqueImpressions' | 'adClicks'> & {
+      saves: number;
+      shares: number;
+    };
     bySource: { source: Source; views: number; ctaClicks: number }[];
   }[];
   /** 로그인 회원의 희망 직무별 나눔(계약 6.1). 회원 순 방문자 큰 순. */
   byJobField: MockJobFieldRow[];
+  /** 상품 몫을 본 사람의 구성(BE LC-3656). */
+  audience: MockAudience;
+  /** 운영자가 써서 보낸 인사이트(BE LC-3657). 보내지 않은 것은 오지 않는다. */
+  insights: { title: string; body: string }[];
+}
+
+export interface MockAudience {
+  reach: number | null;
+  avgFrequency: number | null;
+  adClickVisitors: number | null;
+  targetJobFields: string[];
+  targetMatch: { matchedMembers: number; members: number; rate: number | null };
+  byGrade: { grade: string | null; label: string; memberUniqueVisitors: number }[];
 }
 
 export interface MockJobFieldRow {
@@ -127,6 +143,42 @@ function jobFieldRows(
       adClickMembers: Math.round(members.adClicks * k),
     };
   }).sort((a, b) => b.memberUniqueVisitors - a.memberUniqueVisitors);
+}
+
+/** 학년별 회원 몫. 학년을 입력하지 않은 회원이 맨 뒤다. */
+const GRADE_SHARES: [string | null, string, number][] = [
+  ['FOURTH', '4학년', 0.38],
+  ['THIRD', '3학년', 0.24],
+  ['GRADUATE', '졸업생', 0.16],
+  ['SECOND', '2학년', 0.1],
+  [null, '학년 미설정', 0.12],
+];
+
+function audienceOf(
+  product: MyContractProductFixture,
+  total: { impressions: number; adClicks: number },
+  members: number,
+): MockAudience {
+  const reach = Math.round(total.impressions * 0.55);
+  // 타깃 직군은 광고 공고 상품에만 있다. 배너는 띄우는 공고가 없다.
+  const targetJobFields = isBanner(product) ? [] : ['IT_DEVELOPMENT'];
+  const matched = Math.round(members * 0.42);
+  return {
+    reach: reach > 0 ? reach : null,
+    avgFrequency: reach > 0 ? Math.round((total.impressions / reach) * 10) / 10 : null,
+    adClickVisitors: reach > 0 ? Math.round(total.adClicks * 0.85) : null,
+    targetJobFields,
+    targetMatch: {
+      matchedMembers: targetJobFields.length > 0 ? matched : 0,
+      members,
+      rate: targetJobFields.length > 0 && members > 0 ? rate(matched, members) : null,
+    },
+    byGrade: GRADE_SHARES.map(([grade, label, share]) => ({
+      grade,
+      label,
+      memberUniqueVisitors: Math.round(members * share),
+    })).filter((row) => row.memberUniqueVisitors > 0),
+  };
 }
 
 /** 이벤트 수집을 시작한 날. 이 앞은 "집계 전" 이다. */
@@ -438,6 +490,8 @@ export function buildReport(
       {
         ...plan.target,
         total: {
+          saves: Math.round(targetViews * 0.09),
+          shares: Math.round(targetViews * 0.03),
           views: targetViews,
           uniqueVisitors: targetUnique,
           memberViews: Math.round(targetViews * 0.5),
@@ -449,6 +503,20 @@ export function buildReport(
         bySource,
       },
     ],
+    audience: audienceOf(product, total, Math.round(total.memberViews * 0.75)),
+    insights:
+      isBanner(product) || total.views === 0
+        ? []
+        : [
+            {
+              title: '광고가 사실상 유일한 유입 경로였어요',
+              body: '이 공고의 조회 대부분이 광고 카드에서 나왔어요. 광고가 없었다면 공고가 거의 노출되지 않았을 거예요.',
+            },
+            {
+              title: '마감 전 재노출을 제안해요',
+              body: '게시는 먼저 끝나지만 공고 마감은 더 남았어요. 마감 2주 전 한 번 더 노출하면 지원 막바지 수요를 잡을 수 있어요.',
+            },
+          ],
     byJobField: jobFieldRows(String(product.contractProductId), {
       uniqueVisitors: Math.round(total.memberViews * 0.75),
       views: total.memberViews,

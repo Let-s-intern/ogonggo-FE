@@ -944,6 +944,7 @@ export const ENUM_CATALOG = {
     { name: 'SCROLL', desc: '스크롤', parent: null },
     { name: 'IMPRESSION', desc: '광고 노출', parent: null },
     { name: 'AD_CLICK', desc: '광고 클릭', parent: null },
+    { name: 'SHARE', desc: '공유', parent: null },
   ],
   ContentEventTargetType: [
     { name: 'JOB', desc: '채용공고', parent: null },

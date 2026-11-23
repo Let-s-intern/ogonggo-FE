@@ -17,10 +17,11 @@ export interface ContentEventRequest {
      * | `SCROLL` | 3 | 스크롤 |
      * | `IMPRESSION` | 4 | 광고 노출 |
      * | `AD_CLICK` | 5 | 광고 클릭 |
+     * | `SHARE` | 6 | 공유 |
      */
   type: ContentEventRequestType;
   /**
-     * VIEW·CTA_CLICK·SCROLL은 필수. 대상 없는 배너의 IMPRESSION·AD_CLICK은 null
+     * VIEW·CTA_CLICK·SCROLL·SHARE는 필수. 대상 없는 배너의 IMPRESSION·AD_CLICK은 null
      *
      * | 값 | code | 설명 |
      * | --- | --- | --- |

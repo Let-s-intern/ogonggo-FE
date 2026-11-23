@@ -4,12 +4,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn, useToast } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
+import { currentVisitFor, sendContentEvent } from '@/shared/analytics/contentEvents';
 import {
   googleCalendarUrl,
   linkedInShareUrl,
   naverBlogShareUrl,
   shareCopy,
   shareKindLabel,
+  shareTargetOf,
   shareUrl,
   xShareUrl,
   type SharePosting,
@@ -86,6 +88,17 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
   const label = shareKindLabel(posting.kind);
   const copy = shareCopy(posting.kind);
 
+  /**
+   * 광고 리포트의 `공유`(`SHARE`). 링크를 복사하거나 공유 창·SNS 로 보낼 때 한 번 센다. 캘린더에 넣는 것은 공유가 아니다.
+   * 사이드 스터디는 리포트 대상이 아니라 보내지 않는다.
+   */
+  const recordShare = () => {
+    const target = shareTargetOf(posting);
+    if (target) {
+      sendContentEvent({ type: 'SHARE', ...currentVisitFor(target.targetType, target.targetId) });
+    }
+  };
+
   const copyLink = (text = linkUrl, message = `${label} 링크가 클립보드에 복사되었습니다.`) =>
     navigator.clipboard
       .writeText(text)
@@ -99,6 +112,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
    * 공유 창이 없는 브라우저(대부분의 데스크톱)에서는 링크를 복사한다.
    */
   const shareWithDevice = () => {
+    recordShare();
     const url = shareUrl(posting, 'native_share');
     if (typeof navigator.share === 'function') {
       navigator.share({ title: posting.title, url }).catch(() => {
@@ -110,6 +124,10 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
   };
 
   const openWindow = (href: string) => window.open(href, '_blank', 'noopener,noreferrer');
+  const openShareWindow = (href: string) => {
+    recordShare();
+    openWindow(href);
+  };
 
   // `document.body` 에 바로 그린다. 이 창을 여는 버튼은 신청하기 바(`StickyApplyBar`, `z-30`) 안에
   // 있어서 그 안에 그리면 창의 `z-40` 이 그 바의 층에 묶였다 — 하단 내비게이션과 의견 버튼이 창 위로
@@ -174,7 +192,10 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           />
           <button
             type="button"
-            onClick={() => void copyLink()}
+            onClick={() => {
+              recordShare();
+              void copyLink();
+            }}
             aria-label="링크 복사"
             className="flex h-10 shrink-0 items-center gap-1 rounded-md px-2 text-sm font-semibold text-gray-900 hover:bg-gray-200"
           >
@@ -207,7 +228,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
             label="네이버 블로그"
             className="bg-black"
             onClick={() =>
-              openWindow(naverBlogShareUrl(shareUrl(posting, 'naver_blog'), posting.title))
+              openShareWindow(naverBlogShareUrl(shareUrl(posting, 'naver_blog'), posting.title))
             }
           >
             {/* 시안의 네이버 블로그 표식(`b|`)이다. 아이콘 세트에 같은 모양이 없어 글자로 그린다. */}
@@ -218,7 +239,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="linkedin"
             className="bg-[#0A66C2]"
-            onClick={() => openWindow(linkedInShareUrl(shareUrl(posting, 'linkedin')))}
+            onClick={() => openShareWindow(linkedInShareUrl(shareUrl(posting, 'linkedin')))}
           >
             <span
               aria-hidden="true"
@@ -228,7 +249,7 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
           <ShareIcon
             label="twitter"
             className="bg-black"
-            onClick={() => openWindow(xShareUrl(shareUrl(posting, 'x'), posting.title))}
+            onClick={() => openShareWindow(xShareUrl(shareUrl(posting, 'x'), posting.title))}
           >
             <span aria-hidden="true" className="icon-[simple-icons--x] block h-6 w-6 text-white" />
           </ShareIcon>

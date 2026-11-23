@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useMemo, useState } from 'react';
+import { enumLabel } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
 import { EChart } from '@/shared/ui/EChart';
 import { funnelStepLabel, scrollFunnelOption, trendOption } from '../lib/chartOptions';
@@ -112,6 +113,42 @@ function SummaryCards({ report }: { report: AdReport }) {
           배너 링크가 공고 상세가 아니어서 상세 조회는 세지 않아요.
         </p>
       ) : null}
+    </div>
+  );
+}
+
+/** 도달·평균 빈도·광고를 누른 사람. 하루 집계로는 기간 합을 낼 수 없어 오래된 기간은 값이 없다(`-`). */
+function ReachCards({ report }: { report: AdReport }) {
+  const { audience } = report;
+  const banner = isBannerReport(report);
+  const items: { label: string; value: string; sub: string }[] = [
+    {
+      label: '도달',
+      value: audience.reach == null ? '-' : `${formatCount(audience.reach)}명`,
+      sub: '광고를 본 서로 다른 사람',
+    },
+    {
+      label: '평균 빈도',
+      value: audience.avgFrequency == null ? '-' : `${audience.avgFrequency.toFixed(1)}회`,
+      sub: '한 사람이 평균 몇 번 봤는지',
+    },
+    {
+      label: banner ? '배너를 누른 사람' : '광고를 눌러 공고를 연 사람',
+      value: audience.adClickVisitors == null ? '-' : `${formatCount(audience.adClickVisitors)}명`,
+      sub: '서로 다른 사람',
+    },
+  ];
+  return (
+    <div data-pdf-block className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {items.map((item) => (
+        <div key={item.label} className="min-w-0 rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500">{item.label}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight text-gray-950 tabular-nums">
+            {item.value}
+          </p>
+          <p className="mt-1 truncate text-xs text-gray-500">{item.sub}</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -322,6 +359,75 @@ function JobFieldCard({ report }: { report: AdReport }) {
   );
 }
 
+/** 운영자가 이 광고를 보고 직접 쓴 해석과 제안. 없으면 칸을 그리지 않는다. */
+function InsightsCard({ report }: { report: AdReport }) {
+  const insights = report.insights ?? [];
+  if (insights.length === 0) return null;
+  return (
+    <ReportCard title="인사이트와 다음 제안">
+      <ul className="grid gap-3 md:grid-cols-2">
+        {insights.map((insight, index) => (
+          <li key={index} className="rounded-lg bg-gray-50 px-4 py-4">
+            <p className="font-semibold break-keep text-gray-900">{insight.title}</p>
+            <p className="mt-1.5 text-sm leading-relaxed break-keep whitespace-pre-line text-gray-600">
+              {insight.body}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </ReportCard>
+  );
+}
+
+/** 타깃 직무 일치율과 학년. 로그인 회원 중 공고를 연 사람만 센다. */
+function AudienceFitCard({ report }: { report: AdReport }) {
+  const { targetMatch, targetJobFields, byGrade } = report.audience;
+  if (targetMatch.members === 0 && byGrade.length === 0) return null;
+  const max = Math.max(1, ...byGrade.map((row) => row.memberUniqueVisitors));
+  return (
+    <ReportCard title="타깃 적합도">
+      <p className="-mt-2 mb-4 text-sm break-keep text-gray-500">
+        공고를 연 로그인 회원 기준이에요. 비회원은 들어가지 않아요.
+      </p>
+      <div className="mb-5 rounded-lg bg-gray-50 px-4 py-4">
+        <p className="text-xs text-gray-500">타깃 직무 일치율</p>
+        <p className="mt-1 text-2xl font-bold text-gray-950 tabular-nums">
+          {formatRate(targetMatch.rate)}
+        </p>
+        <p className="mt-1 text-xs break-keep text-gray-500">
+          {targetJobFields.length === 0
+            ? '이 광고에는 타깃 직군이 없어 계산하지 않아요.'
+            : `${targetJobFields.map((field) => enumLabel('JobField', field)).join(', ')}을 희망하는 회원 ${formatCount(targetMatch.matchedMembers)}명 / 공고를 연 회원 ${formatCount(targetMatch.members)}명`}
+        </p>
+      </div>
+      {byGrade.length === 0 ? null : (
+        <>
+          <p className="mb-2 text-sm font-semibold text-gray-700">학년</p>
+          <ul className="flex flex-col gap-2">
+            {byGrade.map((row) => (
+              <li
+                key={row.grade ?? 'none'}
+                className="grid grid-cols-[7rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-sm"
+              >
+                <span className="truncate text-gray-600">{row.label}</span>
+                <span className="h-2 rounded-full bg-gray-100">
+                  <span
+                    className="block h-2 rounded-full bg-blue-400"
+                    style={{ width: `${(row.memberUniqueVisitors / max) * 100}%` }}
+                  />
+                </span>
+                <span className="text-right text-gray-900 tabular-nums">
+                  {formatCount(row.memberUniqueVisitors)}명
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </ReportCard>
+  );
+}
+
 function Targets({ report }: { report: AdReport }) {
   const banner = isBannerReport(report);
   return (
@@ -340,6 +446,8 @@ function Targets({ report }: { report: AdReport }) {
               ['순 방문자', formatCount(target.total.uniqueVisitors)],
               ['회원 조회', formatCount(target.total.memberViews)],
               ['CTA 클릭', formatCount(target.total.ctaClicks)],
+              ['저장', formatCount(target.total.saves)],
+              ['공유', formatCount(target.total.shares)],
               // 배너 상품의 리포트는 스크롤·체류를 보이지 않는다(계약 5절).
               ...(banner
                 ? []
@@ -359,7 +467,7 @@ function Targets({ report }: { report: AdReport }) {
                 <dl
                   className={cn(
                     'grid grid-cols-3 gap-y-3 rounded-lg bg-gray-50 py-4',
-                    banner ? 'md:grid-cols-4' : 'md:grid-cols-6',
+                    banner ? 'md:grid-cols-6' : 'md:grid-cols-4 lg:grid-cols-8',
                   )}
                 >
                   {stats.map(([label, value]) => (
@@ -410,6 +518,15 @@ const DEFINITIONS: readonly (readonly [string, string, 'scroll'?])[] = [
   ['순 방문자', '기간 안에 상세를 연 서로 다른 방문자 수'],
   ['CTA 클릭', '상세의 지원하러 가기·신청하러 가기를 누른 횟수'],
   ['CTA 클릭률', 'CTA 를 누른 순 방문자 / 상세를 연 순 방문자'],
+  ['도달', '기간 동안 광고를 본 서로 다른 사람 수. 회원은 회원 id, 비회원은 방문자 id 로 셉니다'],
+  ['평균 빈도', '노출 / 도달. 한 사람이 같은 광고를 평균 몇 번 봤는지'],
+  [
+    '타깃 직무 일치율',
+    '공고를 연 로그인 회원 중 희망 직무의 직군이 광고 공고의 직군과 겹치는 회원 비율',
+  ],
+  ['학년', '공고를 연 로그인 회원이 프로필에 적은 학년. 적지 않은 회원은 미설정'],
+  ['저장', '기간 안에 대상 공고를 저장했고 지금도 저장 중인 사람 수. 저장을 풀면 빠집니다'],
+  ['공유', '대상 공고의 링크 복사·공유 창·SNS 공유 횟수'],
   [
     '희망 직무별',
     '로그인 회원만, 프로필의 희망 직무로 나눈 숫자. 직무가 여럿인 회원은 직무마다 한 번씩 셉니다',
@@ -476,11 +593,14 @@ export function ReportBody({ report }: { report: AdReport }) {
         </p>
       ) : null}
       <SummaryCards report={report} />
+      <ReachCards report={report} />
       <TrendCard report={report} />
       {isBannerReport(report) ? null : <ScrollFunnelCard report={report} />}
       <ExposureTable report={report} />
       <JobFieldCard report={report} />
+      <AudienceFitCard report={report} />
       <Targets report={report} />
+      <InsightsCard report={report} />
       <Definitions report={report} />
     </div>
   );

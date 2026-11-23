@@ -4,6 +4,7 @@
  * Ogonggo User API
  * OpenAPI spec version: v1
  */
+import type { MyAdvertisementReportAudienceResponse } from './myAdvertisementReportAudienceResponse';
 import type { MyAdvertisementReportDailyResponse } from './myAdvertisementReportDailyResponse';
 import type { MyAdvertisementReportExposureResponse } from './myAdvertisementReportExposureResponse';
 import type { MyAdvertisementReportJobFieldResponse } from './myAdvertisementReportJobFieldResponse';
@@ -30,4 +31,5 @@ export interface MyAdvertisementReportResponse {
   targets: MyAdvertisementReportTargetResponse[];
   /** 상품 몫의 로그인 회원을 희망 직군으로 나눈 것. 여러 직군을 고른 회원은 각 직군에 한 번씩, 직무가 없으면 jobField null. 비회원은 넣지 않는다. 순 회원 수가 큰 순 */
   byJobField: MyAdvertisementReportJobFieldResponse[];
+  audience: MyAdvertisementReportAudienceResponse;
 }
