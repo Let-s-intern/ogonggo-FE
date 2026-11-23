@@ -6,7 +6,7 @@
  */
 
 /**
- * VIEW·CTA_CLICK·SCROLL은 필수. 대상 없는 배너의 IMPRESSION·AD_CLICK은 null
+ * VIEW·CTA_CLICK·SCROLL·SHARE는 필수. 대상 없는 배너의 IMPRESSION·AD_CLICK은 null
  *
  * | 값 | code | 설명 |
  * | --- | --- | --- |

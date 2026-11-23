@@ -8,7 +8,13 @@
  * 다른 모듈을 가져오지 않는다. 단위 테스트(`pnpm --filter web test`)가 이 파일만 Node 에서 돌린다.
  */
 
-export type ContentEventType = 'VIEW' | 'CTA_CLICK' | 'SCROLL' | 'IMPRESSION' | 'AD_CLICK';
+export type ContentEventType =
+  | 'VIEW'
+  | 'CTA_CLICK'
+  | 'SCROLL'
+  | 'IMPRESSION'
+  | 'AD_CLICK'
+  | 'SHARE';
 
 export type ContentTargetType = 'JOB' | 'BOOTCAMP';
 

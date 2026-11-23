@@ -16,6 +16,20 @@ export interface SharePosting {
   recruitmentEndAt?: string;
 }
 
+/**
+ * 광고 리포트의 `SHARE` 가 가리킬 대상이다. 공고·부트캠프만 리포트 대상이고, 주소(`/jobs/12`)에서 읽는다.
+ * 사이드 스터디거나 주소가 모양과 다르면 null 이다.
+ */
+export function shareTargetOf(posting: Pick<SharePosting, 'kind' | 'path'>): {
+  targetType: 'JOB' | 'BOOTCAMP';
+  targetId: number;
+} | null {
+  const targetType =
+    posting.kind === 'jobs' ? 'JOB' : posting.kind === 'bootcamps' ? 'BOOTCAMP' : null;
+  const id = /^\/(?:jobs|bootcamps)\/(\d+)(?:[/?#]|$)/.exec(posting.path)?.[1];
+  return targetType && id ? { targetType, targetId: Number(id) } : null;
+}
+
 const KIND_LABEL: Record<SharePostingKind, string> = {
   jobs: '채용공고',
   bootcamps: '부트캠프',

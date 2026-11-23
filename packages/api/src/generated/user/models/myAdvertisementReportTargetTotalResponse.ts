@@ -6,6 +6,10 @@
  */
 
 export interface MyAdvertisementReportTargetTotalResponse {
+  /** 기간 안에 저장했고 지금도 저장 중인 사람 수. 저장을 풀면 빠진다 */
+  saves: number;
+  /** 공유 수. 원본 보관 기간(365일)보다 앞인 날은 빠진다 */
+  shares: number;
   views: number;
   uniqueVisitors: number;
   memberViews: number;
