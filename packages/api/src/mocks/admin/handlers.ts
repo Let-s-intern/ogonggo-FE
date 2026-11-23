@@ -13,6 +13,7 @@ import { noticeHandlers } from './notices';
 import { notificationHandlers } from './notifications';
 import { proxyRegistrationHandlers } from './proxy-registration';
 import { recommendWeightsHandlers } from './recommend-weights';
+import { work24JobFieldHandlers } from './work24-job-fields';
 import { rejectionHandlers } from './rejections';
 import { reviewHandlers } from './review';
 import { serviceFeedbackHandlers } from './serviceFeedbacks';
@@ -47,6 +48,7 @@ export const adminHandlers: HttpHandler[] = [
   ...serviceFeedbackHandlers,
   ...notificationHandlers,
   ...recommendWeightsHandlers,
+  ...work24JobFieldHandlers,
   ...companyPriorityHandlers,
   // 계약 상세를 먼저 받아 리포트 칸을 얹으므로 `advertisementAdminHandlers` 보다 앞에 둔다.
   ...advertisementReportHandlers,

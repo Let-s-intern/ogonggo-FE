@@ -58,6 +58,7 @@ import type {
   GetAiJobParams,
   GetNotificationBatchStatisticsParams,
   GetWork24ApiResponseParams,
+  Health200,
   ListAdvertisementContractsParams,
   ListAdvertisementExposuresParams,
   ListAdvertisementInquiriesParams,
@@ -8174,6 +8175,113 @@ export const useUpdateAdvertisementContractPaymentAmount = <TError = ErrorRespon
       return useMutation(getUpdateAdvertisementContractPaymentAmountMutationOptions(options), queryClient);
     }
 
+export type healthResponse200 = {
+  data: Health200
+  status: 200
+}
+
+export type healthResponseSuccess = (healthResponse200) & {
+  headers: Headers;
+};
+;
+
+export type healthResponse = (healthResponseSuccess)
+
+export const getHealthUrl = () => {
+
+
+
+
+  return `/health`
+}
+
+export const health = async ( options?: Parameters<typeof httpClient>[1]): Promise<healthResponse> => {
+
+  return httpClient<healthResponse>(getHealthUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getHealthQueryKey = () => {
+    return [
+    `/health`
+    ] as const;
+    }
+
+
+export const getHealthQueryOptions = <TData = Awaited<ReturnType<typeof health>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHealthQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof health>>> = ({ signal }) => health({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HealthQueryResult = NonNullable<Awaited<ReturnType<typeof health>>>
+export type HealthQueryError = unknown
+
+
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof health>>,
+          TError,
+          Awaited<ReturnType<typeof health>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof health>>,
+          TError,
+          Awaited<ReturnType<typeof health>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listAiLetsCareerContentsResponse200 = {
   data: SuccessResponseListAiLetsCareerContentResponse
   status: 200
@@ -12675,6 +12783,10 @@ export const getUpdateAdvertisementContractProductResponseMock = (overrideRespon
 
 export const getUpdateAdvertisementContractPaymentAmountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getHealthResponseMock = (): Health200 => ({
+        [faker.string.alphanumeric(5)]: {}
+      })
+
 export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
 export const getListAiLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListAiLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
@@ -13582,6 +13694,18 @@ export const getUpdateAdvertisementContractPaymentAmountMockHandler = (overrideR
   }, options)
 }
 
+export const getHealthMockHandler = (overrideResponse?: Health200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Health200> | Health200), options?: RequestHandlerOptions) => {
+  return http.get('*/health', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getHealthResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListAiLetsCareerContentsMockHandler = (overrideResponse?: SuccessResponseListAiLetsCareerContentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiLetsCareerContentResponse> | SuccessResponseListAiLetsCareerContentResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/lets-career-contents', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -14037,6 +14161,7 @@ export const getOgonggoAdminAPIMock = () => [
   getDeleteAdvertisementContractProductMockHandler(),
   getUpdateAdvertisementContractProductMockHandler(),
   getUpdateAdvertisementContractPaymentAmountMockHandler(),
+  getHealthMockHandler(),
   getListAiLetsCareerContentsMockHandler(),
   getListAiLetsCareerContentTagTargetsMockHandler(),
   getListAiJobSourceCheckTargetsMockHandler(),

@@ -187,7 +187,11 @@ export const NAV_SECTIONS: NavSection[] = [
      * 달라 따로 둔다.
      */
     title: '운영 도구',
-    items: [{ path: '/tools/servers', label: '리대시·크롤러 서버' }],
+    items: [
+      { path: '/tools/servers', label: '리대시·크롤러 서버' },
+      // 고용24 채용정보를 매일 받을 때 어느 직군의 공고를 받을지 켜고 끈다(BE `AdminWork24JobFieldApi`).
+      { path: '/tools/work24-job-fields', label: '고용24 수집 직군' },
+    ],
   },
 ];
 

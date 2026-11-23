@@ -61,13 +61,20 @@ function UtmLinksModal({
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
-  return (
+  /*
+   * 일괄 변경 바는 `-translate-x-1/2` 로 가운데에 둔다. transform 이 걸린 조상 안에서는 모달(비서 패널을 비켜 서는
+   * `fixed` 배치)의 기준이 화면이 아니라 그 바가 되어, 팝업이 화면 아래로 밀려 내려가 버튼을 못 눌렀다. 바 밖인
+   * 레이아웃 루트로 빼서 띄운다. 루트에 `--assistant-width` 가 있어 비서 패널을 피하는 동작은 같다.
+   */
+  const target = document.querySelector('[data-overlay-root]') ?? document.body;
+  return createPortal(
     <Modal
       open={open}
       title="UTM 링크 만들기"
       description={`고른 ${postings.length}건에 붙일 채널을 고릅니다.`}
       onClose={onClose}
-      className="w-[min(64rem,calc(100vw-2rem))]"
+      // 비서 패널을 비켜 선 모달의 폭 계산(`Modal`)을 덮어쓰지 않도록 패널 폭을 함께 뺀다.
+      className="w-[min(64rem,calc(100vw-var(--assistant-width,0px)-2rem))]"
     >
       {open ? (
         <UtmLinksForm
@@ -80,7 +87,8 @@ function UtmLinksModal({
           }}
         />
       ) : null}
-    </Modal>
+    </Modal>,
+    target,
   );
 }
 

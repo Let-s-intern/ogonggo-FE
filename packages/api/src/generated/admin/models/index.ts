@@ -336,6 +336,7 @@ export * from './getAiJobParams';
 export * from './getNotificationBatchStatisticsParams';
 export * from './getNotificationBatchStatisticsTargetType';
 export * from './getWork24ApiResponseParams';
+export * from './health200';
 export * from './jsonNode';
 export * from './listAdvertisementContractsCategory';
 export * from './listAdvertisementContractsParams';

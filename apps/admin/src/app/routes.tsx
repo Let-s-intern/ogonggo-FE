@@ -36,6 +36,7 @@ import { StatsPage } from '@/pages/stats';
 import { TodayJobsPage } from '@/pages/today-jobs';
 import { UserMemberDetailPage } from '@/pages/user-member-detail';
 import { UserMemberListPage } from '@/pages/user-member-list';
+import { Work24JobFieldsPage } from '@/pages/work24-job-fields';
 import { RequireAuth } from './RequireAuth';
 
 /**
@@ -144,6 +145,7 @@ export const router = createBrowserRouter([
       { path: 'stats', element: <StatsPage /> },
 
       { path: 'tools/servers', element: <ServerInstancesPage /> },
+      { path: 'tools/work24-job-fields', element: <Work24JobFieldsPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],
