@@ -58,6 +58,7 @@ import type {
   GetAiJobParams,
   GetNotificationBatchStatisticsParams,
   GetWork24ApiResponseParams,
+  Health200,
   ListAdvertisementContractsParams,
   ListAdvertisementExposuresParams,
   ListAdvertisementInquiriesParams,
@@ -81,6 +82,7 @@ import type {
   ReplaceAdminCompanyContentPriorityRequest,
   ReplaceAdminLetsCareerContentRecommendWeightsRequest,
   ReplaceAdminTodayJobsRequest,
+  ReplaceAdminWork24JobFieldRequest,
   SuccessResponseAdminAdvertisementContractDetailResponse,
   SuccessResponseAdminAdvertisementInquiryResponse,
   SuccessResponseAdminAdvertisementInquiryTodayCountResponse,
@@ -103,6 +105,7 @@ import type {
   SuccessResponseAdminNotificationBatchStatisticsResponse,
   SuccessResponseAdminNotificationRecentResultsResponse,
   SuccessResponseAdminWelcomeEmailResendResponse,
+  SuccessResponseAdminWork24JobFieldResponse,
   SuccessResponseAiBootcampLookupResponse,
   SuccessResponseAiBootcampRegistrationResponse,
   SuccessResponseAiJobLookupResponse,
@@ -116,6 +119,7 @@ import type {
   SuccessResponseListAdminEc2InstanceResponse,
   SuccessResponseListAdminNotificationJobRoleOptionResponse,
   SuccessResponseListAdminTodayJobSummaryResponse,
+  SuccessResponseListAdminWork24JobFieldResponse,
   SuccessResponseListAiJobAnalysisTargetResponse,
   SuccessResponseListAiJobSourceCheckTargetResponse,
   SuccessResponseListAiLetsCareerContentResponse,
@@ -970,6 +974,109 @@ export const useDeleteAiBootcamp = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getDeleteAiBootcampMutationOptions(options), queryClient);
+    }
+
+export type replaceWork24JobFieldResponse200 = {
+  data: SuccessResponseAdminWork24JobFieldResponse
+  status: 200
+}
+
+export type replaceWork24JobFieldResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type replaceWork24JobFieldResponseSuccess = (replaceWork24JobFieldResponse200) & {
+  headers: Headers;
+};
+export type replaceWork24JobFieldResponseError = (replaceWork24JobFieldResponse400) & {
+  headers: Headers;
+};
+
+export type replaceWork24JobFieldResponse = (replaceWork24JobFieldResponseSuccess | replaceWork24JobFieldResponseError)
+
+export const getReplaceWork24JobFieldUrl = (jobField: 'IT_DEVELOPMENT' | 'GAME' | 'PLANNING_STRATEGY' | 'MARKETING_ADVERTISING' | 'SALES' | 'TRADE_LOGISTICS' | 'TRANSPORT_DELIVERY' | 'LEGAL' | 'HR_GENERAL_AFFAIRS' | 'SECURITIES_ASSET_MANAGEMENT' | 'BANKING_CARD_INSURANCE' | 'ENGINEERING_RND' | 'CONSTRUCTION_ARCHITECTURE' | 'PRODUCTION_SKILLED_TRADES' | 'MEDICAL_HEALTH' | 'PUBLIC_WELFARE' | 'EDUCATION' | 'SERVICE' | 'FOOD_BEVERAGE',) => {
+
+
+
+
+  return `/api/v1/admin/work24-job-fields/${jobField}`
+}
+
+/**
+ *
+ *             직군 하나의 수집을 켜거나 끄고 바뀐 값을 반환합니다. 다음 수집 회차부터 씁니다. 같은 요청을 반복해도 결과가 같습니다.
+ *             끄면 그 직군의 공고를 더 받지 않고, 이미 등록한 공고는 그대로 둡니다.
+ * @summary 고용24 수집 직군 수정
+ */
+export const replaceWork24JobField = async (jobField: 'IT_DEVELOPMENT' | 'GAME' | 'PLANNING_STRATEGY' | 'MARKETING_ADVERTISING' | 'SALES' | 'TRADE_LOGISTICS' | 'TRANSPORT_DELIVERY' | 'LEGAL' | 'HR_GENERAL_AFFAIRS' | 'SECURITIES_ASSET_MANAGEMENT' | 'BANKING_CARD_INSURANCE' | 'ENGINEERING_RND' | 'CONSTRUCTION_ARCHITECTURE' | 'PRODUCTION_SKILLED_TRADES' | 'MEDICAL_HEALTH' | 'PUBLIC_WELFARE' | 'EDUCATION' | 'SERVICE' | 'FOOD_BEVERAGE',
+    replaceAdminWork24JobFieldRequest: ReplaceAdminWork24JobFieldRequest, options?: Parameters<typeof httpClient>[1]): Promise<replaceWork24JobFieldResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return httpClient<replaceWork24JobFieldResponse>(getReplaceWork24JobFieldUrl(jobField),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceAdminWork24JobFieldRequest)
+  }
+);}
+
+
+
+
+
+export const getReplaceWork24JobFieldMutationKey = () => ['replaceWork24JobField'] as const;
+
+export const getReplaceWork24JobFieldMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceWork24JobField>>, TError,ReplaceWork24JobFieldMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceWork24JobField>>, TError,ReplaceWork24JobFieldMutationVariables, TContext> => {
+
+const mutationKey = getReplaceWork24JobFieldMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceWork24JobField>>, ReplaceWork24JobFieldMutationVariables> = (props) => {
+          const {jobField,data} = props ?? {};
+
+          return  replaceWork24JobField(jobField,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceWork24JobFieldMutationResult = NonNullable<Awaited<ReturnType<typeof replaceWork24JobField>>>
+    export type ReplaceWork24JobFieldMutationBody = ReplaceAdminWork24JobFieldRequest
+    export type ReplaceWork24JobFieldMutationError = ErrorResponse
+    export type ReplaceWork24JobFieldMutationVariables = {jobField: 'IT_DEVELOPMENT' | 'GAME' | 'PLANNING_STRATEGY' | 'MARKETING_ADVERTISING' | 'SALES' | 'TRADE_LOGISTICS' | 'TRANSPORT_DELIVERY' | 'LEGAL' | 'HR_GENERAL_AFFAIRS' | 'SECURITIES_ASSET_MANAGEMENT' | 'BANKING_CARD_INSURANCE' | 'ENGINEERING_RND' | 'CONSTRUCTION_ARCHITECTURE' | 'PRODUCTION_SKILLED_TRADES' | 'MEDICAL_HEALTH' | 'PUBLIC_WELFARE' | 'EDUCATION' | 'SERVICE' | 'FOOD_BEVERAGE';data: ReplaceAdminWork24JobFieldRequest}
+
+    /**
+ * @summary 고용24 수집 직군 수정
+ */
+export const useReplaceWork24JobField = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceWork24JobField>>, TError,ReplaceWork24JobFieldMutationVariables, TContext>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceWork24JobField>>,
+        TError,
+        ReplaceWork24JobFieldMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplaceWork24JobFieldMutationOptions(options), queryClient);
     }
 
 export type getLetsCareerContentRecommendWeightsResponse200 = {
@@ -8068,6 +8175,113 @@ export const useUpdateAdvertisementContractPaymentAmount = <TError = ErrorRespon
       return useMutation(getUpdateAdvertisementContractPaymentAmountMutationOptions(options), queryClient);
     }
 
+export type healthResponse200 = {
+  data: Health200
+  status: 200
+}
+
+export type healthResponseSuccess = (healthResponse200) & {
+  headers: Headers;
+};
+;
+
+export type healthResponse = (healthResponseSuccess)
+
+export const getHealthUrl = () => {
+
+
+
+
+  return `/health`
+}
+
+export const health = async ( options?: Parameters<typeof httpClient>[1]): Promise<healthResponse> => {
+
+  return httpClient<healthResponse>(getHealthUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getHealthQueryKey = () => {
+    return [
+    `/health`
+    ] as const;
+    }
+
+
+export const getHealthQueryOptions = <TData = Awaited<ReturnType<typeof health>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHealthQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof health>>> = ({ signal }) => health({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HealthQueryResult = NonNullable<Awaited<ReturnType<typeof health>>>
+export type HealthQueryError = unknown
+
+
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof health>>,
+          TError,
+          Awaited<ReturnType<typeof health>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof health>>,
+          TError,
+          Awaited<ReturnType<typeof health>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listAiLetsCareerContentsResponse200 = {
   data: SuccessResponseListAiLetsCareerContentResponse
   status: 200
@@ -8759,6 +8973,123 @@ export function useGetWork24ApiResponse<TData = Awaited<ReturnType<typeof getWor
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetWork24ApiResponseQueryOptions(apiName,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getWork24JobFieldsResponse200 = {
+  data: SuccessResponseListAdminWork24JobFieldResponse
+  status: 200
+}
+
+export type getWork24JobFieldsResponseSuccess = (getWork24JobFieldsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getWork24JobFieldsResponse = (getWork24JobFieldsResponseSuccess)
+
+export const getGetWork24JobFieldsUrl = () => {
+
+
+
+
+  return `/api/v1/admin/work24-job-fields`
+}
+
+/**
+ *
+ *             고용24 채용정보를 매일 받을 때 직군마다 공고를 받는지 줍니다. 모든 직군을 직군 순서대로 줍니다.
+ *             바꾼 적이 없는 직군은 이 설정이 생기기 전에 받던 다섯 직군(IT·개발, 기획·전략, 마케팅·광고, 영업, HR·총무)만 켜짐입니다.
+ *             일학습병행 훈련과정과 부트캠프 수집에는 쓰지 않습니다.
+ * @summary 고용24 수집 직군 조회
+ */
+export const getWork24JobFields = async ( options?: Parameters<typeof httpClient>[1]): Promise<getWork24JobFieldsResponse> => {
+
+  return httpClient<getWork24JobFieldsResponse>(getGetWork24JobFieldsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWork24JobFieldsQueryKey = () => {
+    return [
+    `/api/v1/admin/work24-job-fields`
+    ] as const;
+    }
+
+
+export const getGetWork24JobFieldsQueryOptions = <TData = Awaited<ReturnType<typeof getWork24JobFields>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24JobFields>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWork24JobFieldsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWork24JobFields>>> = ({ signal }) => getWork24JobFields({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWork24JobFields>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWork24JobFieldsQueryResult = NonNullable<Awaited<ReturnType<typeof getWork24JobFields>>>
+export type GetWork24JobFieldsQueryError = unknown
+
+
+export function useGetWork24JobFields<TData = Awaited<ReturnType<typeof getWork24JobFields>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24JobFields>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWork24JobFields>>,
+          TError,
+          Awaited<ReturnType<typeof getWork24JobFields>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWork24JobFields<TData = Awaited<ReturnType<typeof getWork24JobFields>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24JobFields>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWork24JobFields>>,
+          TError,
+          Awaited<ReturnType<typeof getWork24JobFields>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWork24JobFields<TData = Awaited<ReturnType<typeof getWork24JobFields>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24JobFields>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 고용24 수집 직군 조회
+ */
+
+export function useGetWork24JobFields<TData = Awaited<ReturnType<typeof getWork24JobFields>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWork24JobFields>>, TError, TData>>, request?: SecondParameter<typeof httpClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWork24JobFieldsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -12326,6 +12657,8 @@ export const getReplaceAiBootcampResponseMock = (overrideResponse: Partial<Extra
 
 export const getDeleteAiBootcampResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getReplaceWork24JobFieldResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminWork24JobFieldResponse, object>> = {}): SuccessResponseAdminWork24JobFieldResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{jobField: faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), enabled: faker.datatype.boolean()}, undefined]), ...overrideResponse})
+
 export const getGetLetsCareerContentRecommendWeightsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminLetsCareerContentRecommendWeightsResponse, object>> = {}): SuccessResponseAdminLetsCareerContentRecommendWeightsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{roleScore: faker.number.int(), fieldScore: faker.number.int(), topicScore: faker.number.int(), maxTopicMatches: faker.number.int(), programBonus: faker.number.int(), materialBonus: faker.number.int(), blogBonus: faker.number.int(), maxPerGroup: faker.number.int()}, undefined]), ...overrideResponse})
 
 export const getReplaceLetsCareerContentRecommendWeightsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminLetsCareerContentRecommendWeightsResponse, object>> = {}): SuccessResponseAdminLetsCareerContentRecommendWeightsResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{roleScore: faker.number.int(), fieldScore: faker.number.int(), topicScore: faker.number.int(), maxTopicMatches: faker.number.int(), programBonus: faker.number.int(), materialBonus: faker.number.int(), blogBonus: faker.number.int(), maxPerGroup: faker.number.int()}, undefined]), ...overrideResponse})
@@ -12450,6 +12783,10 @@ export const getUpdateAdvertisementContractProductResponseMock = (overrideRespon
 
 export const getUpdateAdvertisementContractPaymentAmountResponseMock = (overrideResponse: Partial<Extract<SuccessResponseUnit, object>> = {}): SuccessResponseUnit => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
 
+export const getHealthResponseMock = (): Health200 => ({
+        [faker.string.alphanumeric(5)]: {}
+      })
+
 export const getListAiLetsCareerContentsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentResponse, object>> = {}): SuccessResponseListAiLetsCareerContentResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), letsCareerContentId: faker.number.int(), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), path: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), recruitmentStartAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), tagged: faker.datatype.boolean(), jobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), topics: faker.helpers.arrayElements(['CAREER_START','RESUME','PERSONAL_STATEMENT','PORTFOLIO','INTERVIEW','WRITTEN_TEST','EXPERIENCE_SUMMARY','INDUSTRY_COMPANY_ANALYSIS','LARGE_COMPANY','INTERNSHIP'] as const), taggedAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined])})), undefined]), ...overrideResponse})
 
 export const getListAiLetsCareerContentTagTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiLetsCareerContentTagTargetResponse, object>> = {}): SuccessResponseListAiLetsCareerContentTagTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contentId: faker.number.int(), kind: faker.helpers.arrayElement(['CHALLENGE','LIVE','VOD','GUIDEBOOK','REPORT','MATERIAL','BLOG'] as const), category: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), title: faker.string.alpha({length: {min: 10, max: 20}}), description: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), contentHash: faker.string.alpha({length: {min: 10, max: 20}})})), undefined]), ...overrideResponse})
@@ -12459,6 +12796,8 @@ export const getListAiJobSourceCheckTargetsResponseMock = (overrideResponse: Par
 export const getListAiJobAnalysisTargetsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAiJobAnalysisTargetResponse, object>> = {}): SuccessResponseListAiJobAnalysisTargetResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobId: faker.number.int(), source: faker.helpers.arrayElement(['CRAWLER','COMPANY','WORK24'] as const), contentHash: faker.string.alpha({length: {min: 10, max: 20}}), companyName: faker.string.alpha({length: {min: 10, max: 20}}), title: faker.string.alpha({length: {min: 10, max: 20}}), employmentType: faker.helpers.arrayElement(['FULL_TIME','CONTRACT','INTERN','PART_TIME','WORK_STUDY','WORK_EXPERIENCE','ETC'] as const), recruitmentType: faker.helpers.arrayElement(['PERIOD','ALWAYS_OPEN'] as const), recruitmentEndAt: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + 'Z', undefined]), sourceUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), companyAndTeamIntroduction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), responsibilities: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), qualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), preferredQualifications: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), compensation: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), benefits: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), hiringProcess: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), recruitmentNotice: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})), undefined]), ...overrideResponse})
 
 export const getGetWork24ApiResponseResponseMock = (overrideResponse: Partial<Extract<SuccessResponseJsonNode, object>> = {}): SuccessResponseJsonNode => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{}, undefined]), ...overrideResponse})
+
+export const getGetWork24JobFieldsResponseMock = (overrideResponse: Partial<Extract<SuccessResponseListAdminWork24JobFieldResponse, object>> = {}): SuccessResponseListAdminWork24JobFieldResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), enabled: faker.datatype.boolean()})), undefined]), ...overrideResponse})
 
 export const getListServiceFeedbacksResponseMock = (overrideResponse: Partial<Extract<SuccessResponsePageResponseAdminServiceFeedbackResponse, object>> = {}): SuccessResponsePageResponseAdminServiceFeedbackResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{items: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), userId: faker.helpers.arrayElement([faker.number.int(), undefined]), userName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userNickname: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), userEmail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), satisfaction: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), improvement: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), registeredAt: faker.date.past().toISOString().slice(0, 19) + 'Z'})), pageInfo: {pageNum: faker.number.int(), pageSize: faker.number.int(), totalElements: faker.number.int(), totalPages: faker.number.int()}}, undefined]), ...overrideResponse})
 
@@ -12508,7 +12847,7 @@ export const getGetAdvertisementContractResponseMock = (overrideResponse: Partia
 
 export const getGetAdvertisementContractReportSummaryResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportTotalResponse, object>> = {}): SuccessResponseAdminAdvertisementReportTotalResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{total: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), ctaClicks: faker.number.int()}, products: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({contractProductId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), ctaClicks: faker.number.int()}))}, undefined]), ...overrideResponse})
 
-export const getGetAdvertisementContractProductReportResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportResponse, object>> = {}): SuccessResponseAdminAdvertisementReportResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{product: {contractProductId: faker.number.int(), productId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10)}, from: faker.date.past().toISOString().slice(0, 10), to: faker.date.past().toISOString().slice(0, 10), collectedSince: faker.date.past().toISOString().slice(0, 10), uniqueCountsApproximate: faker.datatype.boolean(), summary: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), memberUniqueVisitors: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), ctaUniqueMembers: faker.number.int(), ctaClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), scrollFunnel: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({threshold: faker.number.int(), visitors: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, daily: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), exposures: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), impressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), total: {saves: faker.number.int(), shares: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, bySource: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({source: faker.helpers.arrayElement(['AD_CARD','BANNER','LIST','SEARCH','DIRECT','EXTERNAL','OTHER'] as const), views: faker.number.int(), ctaClicks: faker.number.int()}))})), byJobField: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaUniqueMembers: faker.number.int(), adClickMembers: faker.number.int()})), audience: {reach: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), avgFrequency: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), adClickVisitors: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), targetJobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), targetMatch: {matchedMembers: faker.number.int(), members: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, byGrade: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({grade: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int()}))}, insights: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), published: faker.datatype.boolean()}))}, undefined]), ...overrideResponse})
+export const getGetAdvertisementContractProductReportResponseMock = (overrideResponse: Partial<Extract<SuccessResponseAdminAdvertisementReportResponse, object>> = {}): SuccessResponseAdminAdvertisementReportResponse => ({status: faker.number.int(), message: faker.string.alpha({length: {min: 10, max: 20}}), data: faker.helpers.arrayElement([{product: {contractProductId: faker.number.int(), productId: faker.number.int(), category: faker.helpers.arrayElement(['JOB_POSTING','BANNER','INSTAGRAM_1','INSTAGRAM_2','KAKAO_1','KAKAO_2','KAKAO_CRM'] as const), position: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['JOB_HOME_TOP_BANNER','JOB_HOME_BOTTOM_BANNER','JOB_DETAIL_BANNER','BOOTCAMP_LIST_TOP_BANNER','BOOTCAMP_LIST_BOTTOM_BANNER','BOOTCAMP_DETAIL_BANNER','JOB_LIST','BOOTCAMP_LIST','JOB_DETAIL_SIDE','JOB_PICK','CALENDAR_DAY','MYPAGE_SCRAP','BOOTCAMP_DETAIL_SIDE','BOOTCAMP_MYPAGE_SCRAP'] as const), null]), undefined]), name: faker.string.alpha({length: {min: 10, max: 20}}), startDate: faker.date.past().toISOString().slice(0, 10), endDate: faker.date.past().toISOString().slice(0, 10), price: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined])}, from: faker.date.past().toISOString().slice(0, 10), to: faker.date.past().toISOString().slice(0, 10), collectedSince: faker.date.past().toISOString().slice(0, 10), uniqueCountsApproximate: faker.datatype.boolean(), summary: {impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), memberUniqueVisitors: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), ctaUniqueMembers: faker.number.int(), ctaClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), scrollFunnel: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({threshold: faker.number.int(), visitors: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, daily: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({date: faker.date.past().toISOString().slice(0, 10), impressions: faker.number.int(), uniqueImpressions: faker.number.int(), adClicks: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), exposures: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({exposureId: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), impressions: faker.number.int(), adClicks: faker.number.int(), adClickRate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])})), targets: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({targetType: faker.helpers.arrayElement(['JOB','BOOTCAMP'] as const), targetId: faker.number.int(), title: faker.string.alpha({length: {min: 10, max: 20}}), total: {saves: faker.number.int(), shares: faker.number.int(), views: faker.number.int(), uniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaClicks: faker.number.int(), ctaUniqueVisitors: faker.number.int(), avgScrollPercent: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), avgDurationSeconds: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, bySource: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({source: faker.helpers.arrayElement(['AD_CARD','BANNER','LIST','SEARCH','DIRECT','EXTERNAL','OTHER'] as const), views: faker.number.int(), ctaClicks: faker.number.int()}))})), byJobField: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({jobField: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int(), memberViews: faker.number.int(), ctaUniqueMembers: faker.number.int(), adClickMembers: faker.number.int()})), audience: {reach: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), avgFrequency: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined]), adClickVisitors: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int(), null]), undefined]), targetJobFields: faker.helpers.arrayElements(['IT_DEVELOPMENT','GAME','PLANNING_STRATEGY','MARKETING_ADVERTISING','SALES','TRADE_LOGISTICS','TRANSPORT_DELIVERY','LEGAL','HR_GENERAL_AFFAIRS','SECURITIES_ASSET_MANAGEMENT','BANKING_CARD_INSURANCE','ENGINEERING_RND','CONSTRUCTION_ARCHITECTURE','PRODUCTION_SKILLED_TRADES','MEDICAL_HEALTH','PUBLIC_WELFARE','EDUCATION','SERVICE','FOOD_BEVERAGE'] as const), targetMatch: {matchedMembers: faker.number.int(), members: faker.number.int(), rate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), null]), undefined])}, byGrade: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({grade: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.helpers.arrayElement(['FIRST','SECOND','THIRD','FOURTH','ETC','GRADUATE'] as const), null]), undefined]), label: faker.string.alpha({length: {min: 10, max: 20}}), memberUniqueVisitors: faker.number.int()}))}, insights: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({title: faker.string.alpha({length: {min: 10, max: 20}}), body: faker.string.alpha({length: {min: 10, max: 20}}), published: faker.datatype.boolean()}))}, undefined]), ...overrideResponse})
 
 export const getDownloadAdvertisementContractProductReportCsvResponseMock = (): string => (faker.word.sample())
 
@@ -12594,6 +12933,18 @@ export const getDeleteAiBootcampMockHandler = (overrideResponse?: SuccessRespons
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getDeleteAiBootcampResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getReplaceWork24JobFieldMockHandler = (overrideResponse?: SuccessResponseAdminWork24JobFieldResponse | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SuccessResponseAdminWork24JobFieldResponse> | SuccessResponseAdminWork24JobFieldResponse), options?: RequestHandlerOptions) => {
+  return http.put('*/api/v1/admin/work24-job-fields/:jobField', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReplaceWork24JobFieldResponseMock(),
       { status: 200
       })
   }, options)
@@ -13343,6 +13694,18 @@ export const getUpdateAdvertisementContractPaymentAmountMockHandler = (overrideR
   }, options)
 }
 
+export const getHealthMockHandler = (overrideResponse?: Health200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Health200> | Health200), options?: RequestHandlerOptions) => {
+  return http.get('*/health', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getHealthResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
 export const getListAiLetsCareerContentsMockHandler = (overrideResponse?: SuccessResponseListAiLetsCareerContentResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAiLetsCareerContentResponse> | SuccessResponseListAiLetsCareerContentResponse), options?: RequestHandlerOptions) => {
   return http.get('*/api/v1/internal/lets-career-contents', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
 
@@ -13398,6 +13761,18 @@ export const getGetWork24ApiResponseMockHandler = (overrideResponse?: SuccessRes
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getGetWork24ApiResponseResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getGetWork24JobFieldsMockHandler = (overrideResponse?: SuccessResponseListAdminWork24JobFieldResponse | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SuccessResponseListAdminWork24JobFieldResponse> | SuccessResponseListAdminWork24JobFieldResponse), options?: RequestHandlerOptions) => {
+  return http.get('*/api/v1/admin/work24-job-fields', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetWork24JobFieldsResponseMock(),
       { status: 200
       })
   }, options)
@@ -13723,6 +14098,7 @@ export const getOgonggoAdminAPIMock = () => [
   getReplaceAiJobAnalysisMockHandler(),
   getReplaceAiBootcampMockHandler(),
   getDeleteAiBootcampMockHandler(),
+  getReplaceWork24JobFieldMockHandler(),
   getGetLetsCareerContentRecommendWeightsMockHandler(),
   getReplaceLetsCareerContentRecommendWeightsMockHandler(),
   getReplaceJobInspectionMockHandler(),
@@ -13785,11 +14161,13 @@ export const getOgonggoAdminAPIMock = () => [
   getDeleteAdvertisementContractProductMockHandler(),
   getUpdateAdvertisementContractProductMockHandler(),
   getUpdateAdvertisementContractPaymentAmountMockHandler(),
+  getHealthMockHandler(),
   getListAiLetsCareerContentsMockHandler(),
   getListAiLetsCareerContentTagTargetsMockHandler(),
   getListAiJobSourceCheckTargetsMockHandler(),
   getListAiJobAnalysisTargetsMockHandler(),
   getGetWork24ApiResponseMockHandler(),
+  getGetWork24JobFieldsMockHandler(),
   getListServiceFeedbacksMockHandler(),
   getListRecruitmentPostsMockHandler(),
   getGetRecentNotificationResultsMockHandler(),
