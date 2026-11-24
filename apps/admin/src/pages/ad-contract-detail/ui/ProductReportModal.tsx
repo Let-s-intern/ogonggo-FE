@@ -238,7 +238,11 @@ function Section({
       <h3 className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-900">
         {title}
         {badge ? (
-          <span className="rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-600">
+          // 운영자용 표시라 PDF 저장에는 넣지 않는다.
+          <span
+            data-pdf-hide
+            className="rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-600"
+          >
             {badge}
           </span>
         ) : null}
