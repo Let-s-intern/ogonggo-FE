@@ -1,5 +1,5 @@
 /**
- * 광고 안내(랜딩) 문구와 수치. 출처는 디자인 시안 `.claude/tasks/todo/오공고 비즈니스/image.png` 다.
+ * 광고 안내(랜딩) 문구와 수치. 출처는 디자인 시안 `.claude/tasks/done/business-app/image.png` 다.
  * CTR·팔로워 수는 시안 값이며, 바꿀 때는 이 파일만 고친다.
  * 지면 가격은 어드민 광고 상품에서 읽는다(`loadPlacementPrices.ts`).
  */
@@ -72,12 +72,7 @@ export const PLACEMENTS: PlacementProduct[] = [
       '직무 탭별 공고 리스트 1페이지의 상단 위치에 고정됩니다.',
       '직렬과 무관하게 노출되며, 2페이지부터 비노출됩니다.',
     ],
-    tags: [
-      { label: '직무당 1슬롯' },
-      { label: '로고' },
-      { label: '공고 링크' },
-      { label: '무료 쿠폰 적용 대상', highlight: true },
-    ],
+    tags: [{ label: '직무당 1슬롯' }, { label: '로고' }, { label: '공고 링크' }],
     ctr: '3 ~ 5%',
     category: 'JOB_POSTING',
   },
@@ -541,10 +536,6 @@ export const FAQ = [
   {
     q: '어떤 공고든 광고할 수 있나요?',
     a: '정규직·인턴 공고를 우선해요. 급여·근무지·기간이 불명확하면 상담 때 세일즈 매니저가 보완할 점을 안내드려요.',
-  },
-  {
-    q: '처음이면 무료로 해볼 수 있나요?',
-    a: '신규 기업회원에게 리스트 상단 고정 1주 무료 쿠폰을 드려요.',
   },
 ];
 
