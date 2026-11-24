@@ -21,7 +21,8 @@ import type { AdReport } from '../model/types';
 /**
  * 광고 성과 리포트 본문. 구성과 문구는 목업(`오공고 광고 성과 리포트.html`, 2026-11-23 사용자)을 따른다:
  * 한눈에 보기 → 01 광고 구좌 성과 → 02 공고 전체 성과 → 03 공고 몰입도 → 04 타깃 적합도 → 05 비용 효율 →
- * 06 날짜별 추이 → 07 인사이트 → 지표 정의. 구좌 평균 비교와 탭별 노출·조회는 사용자가 뺐다.
+ * 06 날짜별 추이 → 07 인사이트 → 지표 정의. 구좌 평균 비교와 탭별 노출·조회는 사용자가 뺐다. 번호는 그려지는 칸에만
+ * 01 부터 빈칸 없이 붙인다(`numberSections`). 05 비용 효율은 플래그 `ad_report_cost_efficiency` 가 켜졌을 때만 그린다.
  * 용어: 광고 카드를 눌러 공고를 연 것은 `조회`, 지원 버튼을 누른 것은 `지원하기 클릭` 이다.
  */
 
@@ -180,14 +181,14 @@ function Overview({ report }: { report: AdReport }) {
 }
 
 /** 01. 광고 구좌 성과: 노출, 도달, 평균 빈도, 조회, 조회한 사람, 조회율. */
-function SlotSection({ report }: { report: AdReport }) {
+function SlotSection({ report, no }: { report: AdReport; no: string }) {
   const { summary, audience } = report;
   const banner = isBannerReport(report);
   const unit = banner ? '배너' : '광고 카드';
   const clickLabel = banner ? '클릭' : '조회';
   return (
     <Section
-      eyebrow="01 · 광고 구좌 성과"
+      eyebrow={`${no} · 광고 구좌 성과`}
       title={`몇 명에게 보였고, 몇 번 ${clickLabel}됐나요?`}
       description={`이 상품의 ${unit}로 발생한 숫자만 셉니다.`}
     >
@@ -266,10 +267,10 @@ function ExposureTable({ report }: { report: AdReport }) {
 }
 
 /** 02. 공고 전체 성과: 대상 공고마다 조회, 조회한 사람, 회원 조회, 지원하기 클릭, 저장, 공유와 유입 경로별. */
-function PostingSection({ report }: { report: AdReport }) {
+function PostingSection({ report, no }: { report: AdReport; no: string }) {
   return (
     <Section
-      eyebrow="02 · 공고 전체 성과"
+      eyebrow={`${no} · 공고 전체 성과`}
       title="공고는 얼마나 읽혔고, 지원으로 이어졌나요?"
       description="광고 카드뿐 아니라 일반 목록, 검색, 외부 링크 등 모든 경로를 합친 숫자예요."
     >
@@ -356,7 +357,7 @@ function PostingSection({ report }: { report: AdReport }) {
 }
 
 /** 03. 공고 몰입도: 평균 체류·스크롤 깊이(공고 전체 기준을 옆에), 어디까지 읽었나요. 배너는 상세 페이지가 아니라 없다. */
-function EngagementSection({ report }: { report: AdReport }) {
+function EngagementSection({ report, no }: { report: AdReport; no: string }) {
   const { summary } = report;
   const steps = summary.scrollFunnel ?? [];
   const opened = steps[0]?.visitors ?? 0;
@@ -371,7 +372,7 @@ function EngagementSection({ report }: { report: AdReport }) {
   };
   return (
     <Section
-      eyebrow="03 · 공고 몰입도"
+      eyebrow={`${no} · 공고 몰입도`}
       title="들어온 사람은 공고를 얼마나 읽었나요?"
       description={`광고 카드로 공고를 연 ${formatCount(opened)}명 기준이에요.`}
     >
@@ -426,16 +427,15 @@ function EngagementSection({ report }: { report: AdReport }) {
 }
 
 /** 04. 타깃 적합도: 희망 직무(타깃은 진하게), 타깃 직무 일치율, 로그인 회원 비중, 신분·학년. 로그인 회원만 센다. */
-function AudienceSection({ report }: { report: AdReport }) {
+function AudienceSection({ report, no }: { report: AdReport; no: string }) {
   const { audience, summary, byJobField } = report;
   const { targetMatch, targetJobFields, byGrade } = audience;
-  if (summary.uniqueVisitors === 0 && byJobField.length === 0) return null;
   const max = Math.max(1, ...byJobField.map((row) => row.memberUniqueVisitors));
   const status = statusCounts(byGrade);
   const grades = byGrade.filter((row) => row.grade != null && row.memberUniqueVisitors > 0);
   return (
     <Section
-      eyebrow="04 · 타깃 적합도"
+      eyebrow={`${no} · 타깃 적합도`}
       title="우리가 원하는 사람이 봤나요?"
       description="로그인한 회원만 집계해요. 희망 직무를 여러 개 고른 회원은 직무마다 한 번씩 세요."
     >
@@ -520,12 +520,12 @@ function AudienceSection({ report }: { report: AdReport }) {
 }
 
 /** 05. 비용 효율. 광고비는 상품 정가다. 정가가 없는 견적 문의 상품과 정가 0원(무료) 상품은 칸을 그리지 않는다. */
-function CostSection({ report }: { report: AdReport }) {
+function CostSection({ report, no }: { report: AdReport; no: string }) {
   const cost = costEfficiency(report, isBannerReport(report));
   if (!cost) return null;
   return (
     <Section
-      eyebrow="05 · 비용 효율"
+      eyebrow={`${no} · 비용 효율`}
       title="광고비만큼 효과가 있었나요?"
       description={
         cost.prorated
@@ -545,7 +545,7 @@ function CostSection({ report }: { report: AdReport }) {
 }
 
 /** 06. 날짜별 추이: 그래프와 표(합계 줄 포함). 수집 시작일 앞 날짜는 "집계 전" 이다. */
-function TrendSection({ report }: { report: AdReport }) {
+function TrendSection({ report, no }: { report: AdReport; no: string }) {
   const banner = isBannerReport(report);
   const clickLabel = banner ? '클릭' : '조회';
   const withApply = !banner || hasDetailNumbers(report);
@@ -557,7 +557,7 @@ function TrendSection({ report }: { report: AdReport }) {
   );
   const cells = withApply ? 5 : 3;
   return (
-    <Section eyebrow="06 · 날짜별 추이" title="하루하루 어떻게 움직였나요?">
+    <Section eyebrow={`${no} · 날짜별 추이`} title="하루하루 어떻게 움직였나요?">
       <EChart option={option} height={280} />
       <div className="overflow-x-auto">
         <table className="w-full min-w-[34rem] table-fixed text-xs sm:text-sm">
@@ -618,11 +618,11 @@ function TrendSection({ report }: { report: AdReport }) {
 }
 
 /** 07. 인사이트와 다음 제안. 운영자가 써서 보낸 것만 온다. 없으면 칸을 그리지 않는다. */
-function InsightsSection({ report }: { report: AdReport }) {
+function InsightsSection({ report, no }: { report: AdReport; no: string }) {
   const insights = report.insights ?? [];
   if (insights.length === 0) return null;
   return (
-    <Section eyebrow="07 · 인사이트와 다음 제안" title="오공고가 본 이번 광고" dark>
+    <Section eyebrow={`${no} · 인사이트와 다음 제안`} title="오공고가 본 이번 광고" dark>
       <ul className="grid gap-3 md:grid-cols-2">
         {insights.map((insight, index) => (
           <li key={index} className="flex flex-col gap-2 rounded-2xl bg-[#23265a] p-5">
@@ -637,8 +637,11 @@ function InsightsSection({ report }: { report: AdReport }) {
   );
 }
 
-/** 지표 정의. 배너 리포트에서는 `scroll` 이 붙은 줄(스크롤·체류)을 뺀다. 앞 열 개는 목업의 문구다. */
-const DEFINITIONS: readonly (readonly [string, string, 'scroll'?])[] = [
+/**
+ * 지표 정의. 배너 리포트에서는 `scroll` 이 붙은 줄(스크롤·체류)을, 비용 효율 플래그가 꺼져 있으면 `cost` 가 붙은 줄을
+ * 뺀다. 앞 열 개는 목업의 문구다.
+ */
+const DEFINITIONS: readonly (readonly [string, string, ('scroll' | 'cost')?])[] = [
   ['노출', '광고 카드가 화면에 절반 이상, 1초 넘게 보인 횟수'],
   ['도달', '기간 동안 광고 카드를 본 서로 다른 사람 수 (회원, 비회원은 익명 방문자 ID 기준)'],
   ['평균 빈도', '노출 ÷ 도달. 한 사람이 같은 광고를 평균 몇 번 봤는지'],
@@ -666,14 +669,16 @@ const DEFINITIONS: readonly (readonly [string, string, 'scroll'?])[] = [
   ],
   ['저장', '기간 안에 대상 공고를 저장했고 지금도 저장 중인 사람 수. 저장을 풀면 빠짐'],
   ['공유', '대상 공고의 링크 복사·공유 창·SNS 공유 횟수'],
-  ['비용 효율', '광고비(상품 정가)를 노출, 조회, 지원하기 클릭 수로 나눈 값'],
+  ['비용 효율', '광고비(상품 정가)를 노출, 조회, 지원하기 클릭 수로 나눈 값', 'cost'],
   ['광고 구좌 성과', '광고 카드를 통해 들어온 것만 셈'],
   ['공고 전체 성과', '일반 목록, 검색, 외부 링크 등 모든 유입을 합침'],
 ];
 
-function Definitions({ report }: { report: AdReport }) {
+function Definitions({ report, showCost }: { report: AdReport; showCost: boolean }) {
   const banner = isBannerReport(report);
-  const rows = DEFINITIONS.filter(([, , kind]) => !(banner && kind === 'scroll'));
+  const rows = DEFINITIONS.filter(
+    ([, , kind]) => !(banner && kind === 'scroll') && !(!showCost && kind === 'cost'),
+  );
   return (
     <section data-pdf-block className="flex flex-col gap-3.5 px-1 py-2">
       <h3 className="text-base font-extrabold text-gray-950">지표는 이렇게 셌어요</h3>
@@ -693,11 +698,55 @@ function Definitions({ report }: { report: AdReport }) {
   );
 }
 
+type SectionKey = 'slot' | 'posting' | 'engagement' | 'audience' | 'cost' | 'trend' | 'insights';
+
+/** 타깃 적합도 칸을 그릴지. 본 사람도 희망 직무도 없으면 그리지 않는다. */
+const hasAudience = (report: AdReport) =>
+  !(report.summary.uniqueVisitors === 0 && report.byJobField.length === 0);
+
+/**
+ * 칸 번호. 그려지는 칸에만 01 부터 빈칸 없이 붙인다(PRD `prd-ad-price-feature-flag.md` D4): 비용 효율이 플래그로 빠지거나
+ * 배너라서 몰입도가 없을 때 고객이 빠진 칸이 있다고 읽지 않게 하려는 것이다. 그려지지 않는 칸은 빈 문자열이다.
+ */
+function numberSections(report: AdReport, showCost: boolean): Record<SectionKey, string> {
+  const banner = isBannerReport(report);
+  const shown: [SectionKey, boolean][] = [
+    ['slot', true],
+    ['posting', true],
+    ['engagement', !banner],
+    ['audience', hasAudience(report)],
+    ['cost', showCost && costEfficiency(report, banner) != null],
+    ['trend', true],
+    ['insights', (report.insights ?? []).length > 0],
+  ];
+  const numbers: Record<SectionKey, string> = {
+    slot: '',
+    posting: '',
+    engagement: '',
+    audience: '',
+    cost: '',
+    trend: '',
+    insights: '',
+  };
+  let next = 0;
+  for (const [key, show] of shown) {
+    if (show) numbers[key] = String(++next).padStart(2, '0');
+  }
+  return numbers;
+}
+
 /**
  * 리포트 본문. 기간이 수집 시작일보다 앞이면 그 앞은 "집계 전" 이다. 기간 전체가 그렇다면 숫자 대신 안내만 보인다.
- * 배너 상품은 스크롤 깊이·체류 시간(03)을 보이지 않는다.
+ * 배너 상품은 스크롤 깊이·체류 시간(03)을 보이지 않는다. `showCostEfficiency` 는 플래그 `ad_report_cost_efficiency` 가
+ * 켜졌는지이고, 꺼져 있으면 비용 효율 칸과 지표 정의의 비용 효율 줄을 그리지 않는다.
  */
-export function ReportBody({ report }: { report: AdReport }) {
+export function ReportBody({
+  report,
+  showCostEfficiency,
+}: {
+  report: AdReport;
+  showCostEfficiency: boolean;
+}) {
   const allBefore = report.to < report.collectedSince;
   const partlyBefore = !allBefore && report.from < report.collectedSince;
 
@@ -711,11 +760,12 @@ export function ReportBody({ report }: { report: AdReport }) {
           이 기간({dotDate(report.from)} ~ {dotDate(report.to)})은 집계 전이에요. 성과 숫자는{' '}
           {dotDate(report.collectedSince)}부터 모으고 있어요.
         </p>
-        <Definitions report={report} />
+        <Definitions report={report} showCost={showCostEfficiency} />
       </div>
     );
   }
 
+  const no = numberSections(report, showCostEfficiency);
   return (
     <div className="flex flex-col gap-6">
       {partlyBefore ? (
@@ -725,14 +775,14 @@ export function ReportBody({ report }: { report: AdReport }) {
         </p>
       ) : null}
       <Overview report={report} />
-      <SlotSection report={report} />
-      <PostingSection report={report} />
-      {isBannerReport(report) ? null : <EngagementSection report={report} />}
-      <AudienceSection report={report} />
-      <CostSection report={report} />
-      <TrendSection report={report} />
-      <InsightsSection report={report} />
-      <Definitions report={report} />
+      <SlotSection report={report} no={no.slot} />
+      <PostingSection report={report} no={no.posting} />
+      {isBannerReport(report) ? null : <EngagementSection report={report} no={no.engagement} />}
+      {hasAudience(report) ? <AudienceSection report={report} no={no.audience} /> : null}
+      {showCostEfficiency ? <CostSection report={report} no={no.cost} /> : null}
+      <TrendSection report={report} no={no.trend} />
+      <InsightsSection report={report} no={no.insights} />
+      <Definitions report={report} showCost={showCostEfficiency} />
     </div>
   );
 }
