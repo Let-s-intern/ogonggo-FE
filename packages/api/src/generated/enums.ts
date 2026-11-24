@@ -949,6 +949,8 @@ export const ENUM_CATALOG = {
   ContentEventTargetType: [
     { name: 'JOB', desc: '채용공고', parent: null },
     { name: 'BOOTCAMP', desc: '부트캠프', parent: null },
+    { name: 'CONCERN', desc: '취준고민', parent: null },
+    { name: 'RECRUITMENT_POST', desc: '사이드·스터디 모집글', parent: null },
   ],
   ContentEventSource: [
     { name: 'AD_CARD', desc: '광고 카드', parent: null },

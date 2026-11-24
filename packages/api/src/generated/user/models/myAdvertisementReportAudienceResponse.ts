@@ -13,7 +13,7 @@ import type { MyAdvertisementReportTargetMatchResponse } from './myAdvertisement
  */
 export interface MyAdvertisementReportAudienceResponse {
   /**
-     * 도달. 기간 동안 광고를 본 서로 다른 사람(회원·비회원 합). 기간이 원본 보관 기간보다 앞이면 null
+     * 도달. 기간 동안 광고를 본 서로 다른 사람(회원·비회원 합, 같은 브라우저가 기간 안에 로그인한 적이 있으면 한 사람). 기간이 원본 보관 기간보다 앞이면 null
      * @nullable
      */
   reach?: number | null;
@@ -23,7 +23,7 @@ export interface MyAdvertisementReportAudienceResponse {
      */
   avgFrequency?: number | null;
   /**
-     * 광고를 눌러 공고를 연 서로 다른 사람. 기간이 원본 보관 기간보다 앞이면 null
+     * 광고를 눌러 공고를 연 서로 다른 사람(방문자 규칙은 도달과 같다). 기간이 원본 보관 기간보다 앞이면 null
      * @nullable
      */
   adClickVisitors?: number | null;

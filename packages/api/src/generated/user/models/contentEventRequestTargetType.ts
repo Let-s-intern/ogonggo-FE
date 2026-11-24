@@ -12,6 +12,8 @@
  * | --- | --- | --- |
  * | `JOB` | 1 | 채용공고 |
  * | `BOOTCAMP` | 2 | 부트캠프 |
+ * | `CONCERN` | 3 | 취준고민 |
+ * | `RECRUITMENT_POST` | 4 | 사이드·스터디 모집글 |
  */
 export type ContentEventRequestTargetType = typeof ContentEventRequestTargetType[keyof typeof ContentEventRequestTargetType];
 
@@ -19,4 +21,6 @@ export type ContentEventRequestTargetType = typeof ContentEventRequestTargetType
 export const ContentEventRequestTargetType = {
   JOB: 'JOB',
   BOOTCAMP: 'BOOTCAMP',
+  CONCERN: 'CONCERN',
+  RECRUITMENT_POST: 'RECRUITMENT_POST',
 } as const;

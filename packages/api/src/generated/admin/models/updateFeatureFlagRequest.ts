@@ -5,4 +5,7 @@
  * OpenAPI spec version: v1
  */
 
-export type Health200 = {[key: string]: { [key: string]: unknown }};
+export interface UpdateFeatureFlagRequest {
+  /** 참이면 플래그를 켠다 */
+  enabled: boolean;
+}
