@@ -231,8 +231,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-const UNIQUE_IMPRESSION_HINT = '같은 사람이 하루에 여러 번 봐도 한 번으로 센 노출';
-
 function ReportBody({
   contractId,
   report,
@@ -266,12 +264,6 @@ function ReportBody({
       header: '노출',
       align: 'right',
       render: (row) => dailyCell(row, () => formatCount(row.impressions)),
-    },
-    {
-      key: 'uniqueImpressions',
-      header: '순 노출',
-      align: 'right',
-      render: (row) => dailyCell(row, () => formatCount(row.uniqueImpressions)),
     },
     {
       key: 'adClicks',
@@ -432,11 +424,6 @@ function ReportBody({
       <Section title={`01 · 광고 구좌 성과 — 이 상품의 ${ownLabel}로 들어온 것만`}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           <Tile label="노출" value={formatCount(summary.impressions)} />
-          <Tile
-            label="순 노출"
-            value={formatCount(summary.uniqueImpressions)}
-            hint={UNIQUE_IMPRESSION_HINT}
-          />
           <Tile
             label="도달"
             value={audience.reach == null ? '-' : `${formatCount(audience.reach)}명`}
@@ -709,11 +696,6 @@ type Definition = [term: string, description: string, shownWhen: 'all' | 'detail
 
 const DEFINITIONS: Definition[] = [
   ['노출', '배너·광고 카드가 화면에 절반 이상, 1초 넘게 보인 횟수', 'all'],
-  [
-    '순 노출',
-    '같은 사람(회원, 비회원은 익명 방문자 id)이 같은 광고를 하루에 여러 번 봐도 한 번으로 센 노출',
-    'all',
-  ],
   [
     '도달',
     '기간 동안 광고를 본 서로 다른 사람 수(회원, 비회원은 익명 방문자 id). 원본 보관 기간(365일)보다 앞이면 센 값이 없다',

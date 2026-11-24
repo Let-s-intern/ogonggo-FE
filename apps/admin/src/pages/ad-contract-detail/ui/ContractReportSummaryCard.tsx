@@ -48,7 +48,6 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
     ...(
       [
         ['impressions', '노출'],
-        ['uniqueImpressions', '순 노출'],
         ['adClicks', '클릭'],
         ['views', '상세 조회'],
         ['ctaClicks', '지원하기 클릭'],
@@ -63,7 +62,6 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
 
   const tiles: [string, string][] = [
     ['노출', formatCount(total.impressions)],
-    ['순 노출', formatCount(total.uniqueImpressions)],
     ['클릭', formatCount(total.adClicks)],
     ['클릭률', formatRate(total.adClickRate)],
     ['상세 조회', formatCount(total.views)],
@@ -77,7 +75,7 @@ export function ContractReportSummaryCard({ contractId }: { contractId: number }
         <InfoTip text="리포트를 열 수 있는 상품을 각 상품 기간 전체(진행 중이면 오늘까지)로 합쳤습니다." />
       </div>
       <div className="mt-3 flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           {tiles.map(([label, value]) => (
             <Tile key={label} label={label} value={value} />
           ))}
