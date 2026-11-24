@@ -60,6 +60,49 @@ export interface ContentEventTransport {
   beacon(body: string): boolean;
 }
 
+/** 묶음 전송이 실패했을 때 다시 보내기까지 기다리는 시간. */
+export const RETRY_DELAY_MS = 3000;
+
+/**
+ * 같은 묶음을 다시 보낼 만한 실패인지. 네트워크 오류(`fetch` 가 `TypeError` 로 거절)와 서버 오류(5xx)만이다. 이 요청의 성공 응답
+ * 202 는 본문이 없어 `httpClient` 가 읽다가 던지므로(`SyntaxError`) 던졌다고 다 실패가 아니다 — 4xx 와 함께 다시 보내지 않는다.
+ * 같은 묶음이 두 번 저장되는 것보다 한 번 유실되는 쪽이 낫다.
+ */
+export function isRetryableFailure(error: unknown): boolean {
+  if (error instanceof TypeError) {
+    return true;
+  }
+  const status = (error as { status?: unknown } | null)?.status;
+  return typeof status === 'number' && status >= 500;
+}
+
+/**
+ * 묶음을 보내고, 다시 보낼 만한 실패(`isRetryableFailure`)면 `RETRY_DELAY_MS` 뒤 한 번만 다시 보낸다(A9). 두 번째도 실패하면
+ * 버린다. 던지지 않는다 — 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 페이지가 내려가면 타이머도 사라져 그 묶음은
+ * 유실된다.
+ */
+export function sendWithOneRetry(
+  send: () => Promise<unknown>,
+  setTimer: (callback: () => void, ms: number) => unknown = (callback, ms) => setTimeout(callback, ms),
+): Promise<void> {
+  return send().then(
+    () => undefined,
+    (error: unknown) => {
+      if (!isRetryableFailure(error)) {
+        return undefined;
+      }
+      return new Promise<void>((resolve) => {
+        setTimer(() => {
+          send().then(
+            () => resolve(),
+            () => resolve(),
+          );
+        }, RETRY_DELAY_MS);
+      });
+    },
+  );
+}
+
 export interface ContentEventQueue {
   push(event: ContentEvent): void;
   /** 모인 것을 지금 보낸다. */

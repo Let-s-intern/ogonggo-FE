@@ -6,10 +6,13 @@ import {
   FLUSH_DELAY_MS,
   createContentEventQueue,
   createImpressionRegistry,
+  RETRY_DELAY_MS,
   detailSource,
+  isRetryableFailure,
   landingSource,
   readVisitorId,
   rememberAdEntry,
+  sendWithOneRetry,
   staysInThisTab,
   takeAdEntry,
   type ContentEvent,
@@ -266,4 +269,71 @@ test('새 페이지 조회가 시작되면 다시 센다', () => {
   assert.equal(registry.claim(impression(1)), true);
   registry.reset();
   assert.equal(registry.claim(impression(1)), true);
+});
+
+class HttpFailure extends Error {
+  constructor(readonly status: number) {
+    super(`failed: ${status}`);
+  }
+}
+
+function retrySetup(results: Array<'ok' | Error>) {
+  let calls = 0;
+  const timers: { callback: () => void; ms: number }[] = [];
+  const done = sendWithOneRetry(
+    async () => {
+      const result = results[calls++];
+      if (result instanceof Error) {
+        throw result;
+      }
+    },
+    (callback, ms) => timers.push({ callback, ms }),
+  );
+  return { done, timers, calls: () => calls };
+}
+
+const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
+test('네트워크 오류와 서버 오류만 다시 보낼 만한 실패다', () => {
+  assert.equal(isRetryableFailure(new TypeError('Failed to fetch')), true);
+  assert.equal(isRetryableFailure(new HttpFailure(500)), true);
+  assert.equal(isRetryableFailure(new HttpFailure(503)), true);
+  assert.equal(isRetryableFailure(new HttpFailure(400)), false);
+  assert.equal(isRetryableFailure(new HttpFailure(429)), false);
+  // 202 는 본문이 없어 `response.json()` 이 던진다. 성공이므로 다시 보내지 않는다.
+  assert.equal(isRetryableFailure(new SyntaxError('Unexpected end of JSON input')), false);
+});
+
+test('성공하면 다시 보내지 않는다', async () => {
+  const { done, timers, calls } = retrySetup(['ok']);
+  await done;
+  assert.equal(calls(), 1);
+  assert.equal(timers.length, 0);
+});
+
+test('실패하면 3초 뒤 한 번만 다시 보낸다', async () => {
+  const { done, timers, calls } = retrySetup([new TypeError('Failed to fetch'), 'ok']);
+  await flushMicrotasks();
+  assert.equal(calls(), 1);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0]?.ms, RETRY_DELAY_MS);
+  timers[0]?.callback();
+  await done;
+  assert.equal(calls(), 2);
+});
+
+test('다시 보내도 실패하면 버리고 더 보내지 않는다', async () => {
+  const { done, timers, calls } = retrySetup([new HttpFailure(502), new HttpFailure(502), 'ok']);
+  await flushMicrotasks();
+  timers[0]?.callback();
+  await done;
+  assert.equal(calls(), 2);
+  assert.equal(timers.length, 1);
+});
+
+test('다시 보낼 만한 실패가 아니면 그대로 버린다', async () => {
+  const { done, timers, calls } = retrySetup([new HttpFailure(400), 'ok']);
+  await done;
+  assert.equal(calls(), 1);
+  assert.equal(timers.length, 0);
 });

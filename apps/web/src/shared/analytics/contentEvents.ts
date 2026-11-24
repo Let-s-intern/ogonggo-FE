@@ -6,6 +6,7 @@ import {
   createImpressionRegistry,
   readVisitorId,
   rememberAdEntry,
+  sendWithOneRetry,
   takeAdEntry,
   type AdEntry,
   type ContentEvent,
@@ -81,19 +82,20 @@ function getQueue(): ContentEventQueue | null {
           if (!supportsKeepalive()) {
             return false;
           }
+          // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 네트워크·서버 오류면 한 번 다시 보낸다(`sendWithOneRetry`).
           const send = () =>
-            httpClient(ENDPOINT, {
-              method: 'POST',
-              body: JSON.stringify(request),
-              keepalive: true,
-            }).catch(() => {
-              // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 202 는 본문이 없어 읽기에서 던지는 것도 여기로 온다.
-            });
+            sendWithOneRetry(() =>
+              httpClient(ENDPOINT, {
+                method: 'POST',
+                body: JSON.stringify(request),
+                keepalive: true,
+              }),
+            );
           if (needsReissue()) {
             // 재발급이 실패해도 던지지 않는다. 그때는 토큰 없이 비회원으로라도 보낸다.
             void ensureAccessToken().then(send, send);
           } else {
-            send();
+            void send();
           }
           return true;
         },

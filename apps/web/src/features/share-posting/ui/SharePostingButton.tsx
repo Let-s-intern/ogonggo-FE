@@ -93,7 +93,8 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
   const copy = shareCopy(posting.kind);
 
   /**
-   * 광고 리포트의 `공유`(`SHARE`). 링크를 복사하거나 공유 창·SNS 로 보낼 때 한 번 센다. 캘린더에 넣는 것은 공유가 아니다.
+   * 광고 리포트의 `공유`(`SHARE`). 링크를 복사하거나 SNS 공유 창을 열 때, 기기 공유(`navigator.share`)는 끝난 뒤에 한 번 센다.
+   * 캘린더에 넣는 것은 공유가 아니다.
    * 사이드 스터디는 리포트 대상이 아니라 보내지 않는다.
    */
   const recordShare = () => {
@@ -118,14 +119,18 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
    * 공유 창이 없는 브라우저(대부분의 데스크톱)에서는 링크를 복사한다.
    */
   const shareWithDevice = () => {
-    recordShare();
     const url = shareUrl(posting, 'native_share');
     if (typeof navigator.share === 'function') {
-      navigator.share({ title: posting.title, url }).catch(() => {
-        // 공유 창을 닫은 것도 여기로 온다. 알릴 것이 없다.
-      });
+      // 공유 창을 열 때가 아니라 공유가 끝난 뒤에 센다. 창을 닫으면(취소) 거절로 끝나 세지 않는다.
+      navigator
+        .share({ title: posting.title, url })
+        .then(recordShare)
+        .catch(() => {
+          // 공유 창을 닫은 것도 여기로 온다. 알릴 것이 없다.
+        });
       return;
     }
+    recordShare();
     void copyLink(url);
   };
 
