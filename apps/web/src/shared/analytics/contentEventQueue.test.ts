@@ -5,6 +5,7 @@ import {
   AD_ENTRY_TTL_MS,
   FLUSH_DELAY_MS,
   createContentEventQueue,
+  createImpressionRegistry,
   detailSource,
   landingSource,
   readVisitorId,
@@ -235,4 +236,34 @@ test('새로 고침이나 뒤로 가기로 다시 열린 문서는 처음 referr
     detailSource({ ...landing, navigation: { ...landing.navigation, type: 'back_forward' } }),
     'OTHER',
   );
+});
+
+const impression = (exposureId: number, targetId: number | null = null): ContentEvent => ({
+  type: 'IMPRESSION',
+  targetType: targetId === null ? null : 'JOB',
+  targetId,
+  exposureId,
+  source: targetId === null ? 'BANNER' : 'AD_CARD',
+});
+
+test('같은 페이지 조회 안에서는 노출 id 마다 한 번만 센다', () => {
+  const registry = createImpressionRegistry();
+  assert.equal(registry.claim(impression(1)), true);
+  assert.equal(registry.claim(impression(1)), false);
+  assert.equal(registry.claim(impression(2)), true);
+  assert.equal(registry.claim(impression(31, 7)), true);
+  assert.equal(registry.claim(impression(31, 7)), false);
+});
+
+test('같은 노출 id 라도 대상이 다르면 다른 노출이다', () => {
+  const registry = createImpressionRegistry();
+  assert.equal(registry.claim(impression(31, 7)), true);
+  assert.equal(registry.claim(impression(31, 8)), true);
+});
+
+test('새 페이지 조회가 시작되면 다시 센다', () => {
+  const registry = createImpressionRegistry();
+  assert.equal(registry.claim(impression(1)), true);
+  registry.reset();
+  assert.equal(registry.claim(impression(1)), true);
 });

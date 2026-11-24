@@ -3,6 +3,7 @@ import { getRefreshToken, hasUsableAccessToken } from '@/shared/api/authTokens';
 import { ensureAccessToken } from '@/shared/api/reissue';
 import {
   createContentEventQueue,
+  createImpressionRegistry,
   readVisitorId,
   rememberAdEntry,
   takeAdEntry,
@@ -113,6 +114,20 @@ function getQueue(): ContentEventQueue | null {
 
 export function sendContentEvent(event: ContentEvent): void {
   getQueue()?.push(event);
+}
+
+const impressions = createImpressionRegistry();
+
+/** 새 페이지 조회(주소의 경로가 바뀜)가 시작됐다. 이 조회 안에서 센 노출을 잊는다(`createImpressionRegistry`). */
+export function startPageView(): void {
+  impressions.reset();
+}
+
+/** 광고 노출(`IMPRESSION`)을 보낸다. 이 페이지 조회에서 이미 센 노출이면 보내지 않는다. */
+export function sendImpression(event: ContentEvent): void {
+  if (impressions.claim(event)) {
+    sendContentEvent(event);
+  }
 }
 
 /**

@@ -130,6 +130,36 @@ export function createContentEventQueue({
   };
 }
 
+export interface ImpressionRegistry {
+  /** 이 노출을 이번 페이지 조회에서 처음 보내는 것이면 `true`. 같은 노출이 다시 오면 `false`. */
+  claim(event: ContentEvent): boolean;
+  /** 새 페이지 조회가 시작될 때 부른다. */
+  reset(): void;
+}
+
+/**
+ * 노출을 한 페이지 조회 안에서 노출 id 마다 한 번만 보내려고 이미 보낸 노출을 기억한다(A8, 2026-11-24). 한 페이지 조회는 주소의
+ * 경로가 바뀔 때마다 새로 시작한다 — 홈 2쪽에서 1쪽으로 와도 같은 조회라 히어로·배너를 다시 세지 않고, 상세에 갔다가 뒤로 가기로
+ * 돌아온 화면은 새 조회라 다시 센다. 카드가 다시 그려지는 횟수(마운트)와 모바일·데스크톱 달력의 구조 차이에 값이 따라가지
+ * 않게 하는 것이 목적이다. 같은 노출 id 라도 대상이 다르면 다른 노출이다.
+ */
+export function createImpressionRegistry(): ImpressionRegistry {
+  const seen = new Set<string>();
+  return {
+    claim(event) {
+      const key = `${event.source}:${event.exposureId}:${event.targetType}:${event.targetId}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    },
+    reset() {
+      seen.clear();
+    },
+  };
+}
+
 /** 익명 방문자 id 쿠키. 이름은 API 계약에 적힌 것이다. 서버가 `Set-Cookie` 로 발급하고(`proxy.ts`) 브라우저는 읽기만 한다. */
 export const VISITOR_COOKIE = 'ogg_vid';
 /** 서버(`proxy.ts`)가 쿠키를 발급할 때의 수명. 1년이다. */
