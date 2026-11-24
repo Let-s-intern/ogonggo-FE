@@ -519,7 +519,7 @@ function AudienceSection({ report }: { report: AdReport }) {
   );
 }
 
-/** 05. 비용 효율. 광고비는 상품 정가다. 정가가 없는 견적 문의 상품은 칸을 그리지 않는다. */
+/** 05. 비용 효율. 광고비는 상품 정가다. 정가가 없는 견적 문의 상품과 정가 0원(무료) 상품은 칸을 그리지 않는다. */
 function CostSection({ report }: { report: AdReport }) {
   const cost = costEfficiency(report, isBannerReport(report));
   if (!cost) return null;

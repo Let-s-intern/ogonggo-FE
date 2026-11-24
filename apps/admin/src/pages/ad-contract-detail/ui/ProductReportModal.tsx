@@ -521,7 +521,10 @@ function ReportBody({
         </Section>
       ) : (
         <p className="text-sm text-gray-500" data-pdf-block>
-          05 · 비용 효율: 정가가 없는 견적 문의 상품이라 비즈니스 리포트에도 보이지 않습니다.
+          05 · 비용 효율:{' '}
+          {report.product.price === 0
+            ? '정가가 0원(무료)인 상품이라 비즈니스 리포트에도 보이지 않습니다.'
+            : '정가가 없는 견적 문의 상품이라 비즈니스 리포트에도 보이지 않습니다.'}
         </p>
       )}
 

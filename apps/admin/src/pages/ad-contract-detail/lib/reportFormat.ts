@@ -85,12 +85,13 @@ export interface CostEfficiency {
 }
 
 /**
- * 비용 효율. 광고비는 상품 정가이고 무료 혜택도 정가로 환산한다(2026-11-23 목업). 정가가 없는 견적 문의 상품은 null.
+ * 비용 효율. 광고비는 상품 정가이고 무료 혜택도 정가로 환산한다(2026-11-23 목업). 정가가 없는 견적 문의 상품과 정가가
+ * 0원(무료)인 상품은 null.
  * 기간을 좁히면 정가를 게시 일수로 나눠 리포트 일수만큼만 쓴다(하루치 숫자에 한 달 광고비를 나누면 단가가 부풀기 때문).
  */
 export function costEfficiency(report: ContractProductReport): CostEfficiency | null {
   const price = report.product.price;
-  if (price == null) return null;
+  if (price == null || price === 0) return null;
   const total = inclusiveDays(report.product.startDate, report.product.endDate);
   const days = inclusiveDays(report.from, report.to);
   const prorated = days > 0 && days < total ? ([days, total] as [number, number]) : null;
