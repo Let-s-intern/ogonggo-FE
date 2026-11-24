@@ -51,9 +51,12 @@ export const FLUSH_DELAY_MS = 2000;
 export const FLUSH_COUNT = 10;
 
 export interface ContentEventTransport {
-  /** 평소 보내기. 실패는 보내는 쪽이 삼킨다. */
-  post(request: ContentEventsRequest): void;
-  /** 페이지를 떠날 때. 브라우저가 받아 주지 않으면 `false` 이고 그때는 `post` 로 보낸다. */
+  /**
+   * 토큰을 실은 `fetch(keepalive)` 로 보낸다. 보내기 시작했으면 `true` 다. 못 시작하면(keepalive 를 못 쓰는 브라우저)
+   * `false` 이고, 떠날 때만 그것을 보고 `beacon` 으로 돌린다. 요청이 실패한 것은 보내는 쪽이 삼킨다.
+   */
+  post(request: ContentEventsRequest): boolean;
+  /** 비콘은 토큰을 실을 수 없어 비회원으로 저장된다. 떠날 때 `post` 가 못 보냈을 때만 쓴다. 브라우저가 받아 주지 않으면 `false`. */
   beacon(body: string): boolean;
 }
 
@@ -61,7 +64,7 @@ export interface ContentEventQueue {
   push(event: ContentEvent): void;
   /** 모인 것을 지금 보낸다. */
   flush(): void;
-  /** 모인 것을 `sendBeacon` 으로 보낸다. 탭이 숨거나 페이지가 내려갈 때 부른다. */
+  /** 모인 것을 떠나는 길에 보낸다. 토큰을 실은 `post` 가 먼저이고 `sendBeacon` 은 그것을 못 쓸 때만이다. 탭이 숨거나 페이지가 내려갈 때 부른다. */
   flushOnLeave(): void;
 }
 
@@ -120,8 +123,8 @@ export function createContentEventQueue({
     flush,
     flushOnLeave() {
       const request = take();
-      if (request && !transport.beacon(JSON.stringify(request))) {
-        transport.post(request);
+      if (request && !transport.post(request)) {
+        transport.beacon(JSON.stringify(request));
       }
     },
   };

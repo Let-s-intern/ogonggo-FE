@@ -3,7 +3,11 @@
 import { createBootcampSourceUrlClick, createJobSourceUrlClick } from '@ogonggo/api';
 import type { BookmarkKind } from '@/features/bookmark';
 import { isSignedIn } from '@/shared/api/authTokens';
-import { currentVisitFor, sendContentEvent } from '@/shared/analytics/contentEvents';
+import {
+  currentVisitFor,
+  flushContentEvents,
+  sendContentEvent,
+} from '@/shared/analytics/contentEvents';
 import { TrackedLink, type TrackedLinkProps } from '@/shared/analytics/TrackedLink';
 
 export type ApplyLinkProps = TrackedLinkProps & {
@@ -40,6 +44,8 @@ function sendCtaClick(kind: BookmarkKind, id: number): void {
   const targetType = kind === 'jobs' ? 'JOB' : kind === 'bootcamps' ? 'BOOTCAMP' : null;
   if (targetType) {
     sendContentEvent({ type: 'CTA_CLICK', ...currentVisitFor(targetType, id) });
+    // 지원 버튼은 새 탭을 열어 이 탭을 곧바로 숨긴다. 숨기 전에 보내야 토큰 실린 요청으로 나간다.
+    flushContentEvents();
   }
 }
 

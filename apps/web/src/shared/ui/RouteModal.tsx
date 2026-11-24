@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useRef, type ReactNode } from 'react';
+import { ScrollBoxContext } from '@/shared/lib/scrollBox';
 import { useScrollLock } from '@/shared/lib/useScrollLock';
 import { LogoLoader } from './LogoLoader';
 
@@ -29,6 +30,7 @@ export interface RouteModalProps {
 export function RouteModal({ label, children }: RouteModalProps) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const scrollBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -56,7 +58,10 @@ export function RouteModal({ label, children }: RouteModalProps) {
         위아래를 `py-3` 만큼 띄워 스크롤바가 둥근 자리에 닿지 않게 한다. `max-h` 는 바깥 높이에서 그
         여백을 뺀 값이다.
       */}
-      <div className="h-full overflow-y-auto overscroll-contain p-4 md:h-auto md:max-h-[calc(100dvh-5.5rem)] md:px-5 md:py-2">
+      <div
+        ref={scrollBoxRef}
+        className="h-full overflow-y-auto overscroll-contain p-4 md:h-auto md:max-h-[calc(100dvh-5.5rem)] md:px-5 md:py-2"
+      >
         {/* 닫기 줄은 스크롤해도 위에 붙어 있다. 긴 상세·폼을 내려 읽다가 닫으려고 다시 맨 위까지
             올라가지 않게 한다. 배경을 칠해 아래로 지나가는 내용을 가린다. 붙는 자리는 스크롤 상자의
             안쪽 여백만큼 위(`-top-4`·`md:-top-2`)다 — `top-0` 이면 그 여백 틈으로 글이 비친다. */}
@@ -84,7 +89,8 @@ export function RouteModal({ label, children }: RouteModalProps) {
               </div>
             }
           >
-            {children}
+            {/* 안의 상세가 어디까지 읽혔는지 재려면 문서가 아니라 이 상자의 스크롤을 봐야 한다(`DetailContentTracker`). */}
+            <ScrollBoxContext.Provider value={scrollBoxRef}>{children}</ScrollBoxContext.Provider>
           </Suspense>
         </div>
       </div>

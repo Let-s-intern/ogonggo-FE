@@ -74,7 +74,7 @@ export async function JobDetailView({ jobId, layout = 'page' }: JobDetailViewPro
   const viewTracker = (
     <>
       <JobDetailViewTracker jobId={job.id} jobInfo={jobInfo} />
-      <DetailContentTracker targetType="JOB" targetId={job.id} measureScroll={layout === 'page'} />
+      <DetailContentTracker targetType="JOB" targetId={job.id} />
     </>
   );
 
