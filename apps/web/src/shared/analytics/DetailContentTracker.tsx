@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
+import { ScrollBoxContext } from '@/shared/lib/scrollBox';
 import {
   flushContentEventsOnLeave,
   sendContentEvent,
@@ -34,12 +35,17 @@ function isLandingPage(): boolean {
   }
 }
 
-function scrollPercent(): number {
-  const { scrollHeight } = document.documentElement;
+/** 스크롤하는 곳이 모달의 안쪽 상자면 그 상자, 아니면 문서. */
+function scrollPercent(box: HTMLElement | null): number {
+  const { scrollTop, scrollHeight, clientHeight } = box ?? {
+    scrollTop: window.scrollY,
+    scrollHeight: document.documentElement.scrollHeight,
+    clientHeight: window.innerHeight,
+  };
   if (scrollHeight <= 0) {
     return 0;
   }
-  return Math.min(100, Math.round(((window.scrollY + window.innerHeight) / scrollHeight) * 100));
+  return Math.min(100, Math.round(((scrollTop + clientHeight) / scrollHeight) * 100));
 }
 
 /**
@@ -55,18 +61,17 @@ function scrollPercent(): number {
  * 개발 모드의 effect 두 번 실행(마운트, 정리, 다시 마운트)에 `SCROLL` 이 먼저 나가지 않도록, 정리에서 바로 보내지 않고
  * 한 틱 미룬다. 같은 상세로 다시 마운트되면 그것을 지운다.
  *
- * `measureScroll` 이 거짓이면(달력의 공고 모달) `SCROLL` 은 보내지 않는다. 모달은 문서가 아니라 모달 안이 스크롤돼서
- * 문서 비율로는 틀린 값이 나간다.
+ * 모달(`RouteModal`) 안에서 열린 상세는 문서가 아니라 모달의 스크롤 상자로 잰다(`ScrollBoxContext`). 모달이 떠 있는
+ * 동안 문서는 잠겨 있어 문서 비율로는 틀린 값이 나간다.
  */
 export function DetailContentTracker({
   targetType,
   targetId,
-  measureScroll = true,
 }: {
   targetType: ContentTargetType;
   targetId: number;
-  measureScroll?: boolean;
 }) {
+  const scrollBoxRef = useContext(ScrollBoxContext);
   const stateRef = useRef<VisitState | null>(null);
   const pendingLeave = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -99,9 +104,10 @@ export function DetailContentTracker({
       stateRef.current = state;
     }
     const current = state;
-    if (!measureScroll || current.left) {
+    if (current.left) {
       return;
     }
+    const scrollBox = scrollBoxRef?.current ?? null;
 
     const stopVisibleClock = () => {
       if (current.visibleSince !== null) {
@@ -123,7 +129,7 @@ export function DetailContentTracker({
       });
     };
     const onScroll = () => {
-      current.maxScrollPercent = Math.max(current.maxScrollPercent, scrollPercent());
+      current.maxScrollPercent = Math.max(current.maxScrollPercent, scrollPercent(scrollBox));
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
@@ -139,16 +145,16 @@ export function DetailContentTracker({
     };
 
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
+    (scrollBox ?? window).addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('pagehide', onPageHide);
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      (scrollBox ?? window).removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('pagehide', onPageHide);
       pendingLeave.current = setTimeout(leave, 0);
     };
-  }, [targetType, targetId, measureScroll]);
+  }, [targetType, targetId, scrollBoxRef]);
 
   return null;
 }
