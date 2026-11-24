@@ -40,6 +40,8 @@ export interface ReportDetailMetrics {
 export interface ReportDailyRow extends ReportDetailMetrics {
   date: string;
   impressions: number;
+  /** 그날 광고를 본 서로 다른 사람 수. 원본 보관 기간(365일)보다 앞날은 null. 배포 전 응답에는 없다. */
+  reach?: number | null;
   adClicks: number;
 }
 

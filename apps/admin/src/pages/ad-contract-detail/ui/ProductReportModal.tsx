@@ -292,6 +292,13 @@ function ReportBody({
       render: (row) => dailyCell(row, () => formatCount(row.impressions)),
     },
     {
+      key: 'reach',
+      header: '도달',
+      align: 'right',
+      // 그날 본 서로 다른 사람 수. 원본 보관 기간보다 앞날은 센 값이 없어 null 이다.
+      render: (row) => dailyCell(row, () => (row.reach == null ? '-' : formatCount(row.reach))),
+    },
+    {
       key: 'adClicks',
       header: clickLabel,
       align: 'right',
@@ -730,7 +737,7 @@ const DEFINITIONS: Definition[] = [
   ['노출', '배너·광고 카드가 화면에 절반 이상, 1초 넘게 보인 횟수', 'all'],
   [
     '도달',
-    '기간 동안 광고를 본 서로 다른 사람 수(회원, 비회원은 익명 방문자 id). 원본 보관 기간(365일)보다 앞이면 센 값이 없다',
+    '기간 동안 광고를 본 서로 다른 사람 수(회원, 비회원은 익명 방문자 id). 원본 보관 기간(365일)보다 앞이면 센 값이 없다. 날짜별 표는 그날 본 서로 다른 사람 수',
     'all',
   ],
   ['평균 빈도', '노출 ÷ 도달. 한 사람이 같은 광고를 평균 몇 번 봤는지', 'all'],

@@ -555,16 +555,17 @@ function TrendSection({ report, no }: { report: AdReport; no: string }) {
     () => trendOption(report.daily, report.collectedSince, clickLabel, withApply),
     [report, clickLabel, withApply],
   );
-  const cells = withApply ? 5 : 3;
+  const cells = withApply ? 6 : 4;
   return (
     <Section eyebrow={`${no} · 날짜별 추이`} title="하루하루 어떻게 움직였나요?">
       <EChart option={option} height={280} />
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[34rem] table-fixed text-xs sm:text-sm">
+        <table className="w-full min-w-[38rem] table-fixed text-xs sm:text-sm">
           <thead className="text-gray-500">
             <tr>
               <th className={cn(TH, 'w-[28%]')}>날짜</th>
               <th className={TH}>노출</th>
+              <th className={TH}>도달</th>
               <th className={TH}>{clickLabel}</th>
               <th className={TH}>{rateLabelOf(clickLabel)}</th>
               {withApply ? (
@@ -586,6 +587,7 @@ function TrendSection({ report, no }: { report: AdReport; no: string }) {
                 ) : (
                   <>
                     <td className={TD}>{formatCount(row.impressions)}</td>
+                    <td className={TD}>{countOrDash(row.reach ?? null, '')}</td>
                     <td className={TD}>{formatCount(row.adClicks)}</td>
                     <td className={TD}>{formatRate(ratio(row.adClicks, row.impressions))}</td>
                     {withApply ? (
@@ -601,6 +603,8 @@ function TrendSection({ report, no }: { report: AdReport; no: string }) {
             <tr className="border-t-2 border-gray-300 font-extrabold">
               <td className={TD}>합계</td>
               <td className={TD}>{formatCount(summary.impressions)}</td>
+              {/* 날짜별 도달을 더하면 같은 사람이 여러 날 세어져 기간 도달보다 커진다. 합계 줄은 기간 도달이다. */}
+              <td className={TD}>{countOrDash(report.audience.reach, '')}</td>
               <td className={TD}>{formatCount(summary.adClicks)}</td>
               <td className={TD}>{formatRate(summary.adClickRate)}</td>
               {withApply ? (
@@ -643,7 +647,10 @@ function InsightsSection({ report, no }: { report: AdReport; no: string }) {
  */
 const DEFINITIONS: readonly (readonly [string, string, ('scroll' | 'cost')?])[] = [
   ['노출', '광고 카드가 화면에 절반 이상, 1초 넘게 보인 횟수'],
-  ['도달', '기간 동안 광고 카드를 본 서로 다른 사람 수 (회원, 비회원은 익명 방문자 ID 기준)'],
+  [
+    '도달',
+    '기간 동안 광고 카드를 본 서로 다른 사람 수 (회원, 비회원은 익명 방문자 ID 기준). 날짜별 표는 그날 본 서로 다른 사람 수',
+  ],
   ['평균 빈도', '노출 ÷ 도달. 한 사람이 같은 광고를 평균 몇 번 봤는지'],
   ['조회', '공고를 연 횟수. 광고 구좌는 카드를 누른 횟수로 셈'],
   ['조회한 사람', '공고를 연 서로 다른 사람 수. 광고 구좌는 광고를 눌러 연 사람'],
