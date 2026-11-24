@@ -42,6 +42,11 @@ export interface JobCardProps {
    * `ad_posting_click` 을 더 보낸다. 카드 모양은 그대로다.
    */
   ad?: AdSlot;
+  /**
+   * 광고 카드의 노출을 셀지. 겹쳐 놓은 탭의 고르지 않은 탭처럼 `visibility: hidden` 으로 가려진 자리는 끈다 — 화면 교차
+   * 관찰은 가려진 요소도 보인다고 판정해 보이지 않는 노출이 세어진다(A10). 켜지면 그때부터 지켜본다. 기본은 켠다.
+   */
+  trackImpression?: boolean;
 }
 
 /**
@@ -102,7 +107,14 @@ const FEATURED_ACTIONS_CLASS =
  * 자리 그대로라 생김새는 바뀌지 않는다. `h-full`은 링크와 뿌리 둘 다에 있어야 한다 — 칸을
  * 채우는 것은 뿌리이고, 그 높이를 카드 내용에 넘기는 것은 링크다.
  */
-export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }: JobCardProps) {
+export function JobCard({
+  job,
+  tracking,
+  recommendation,
+  variant = 'grid',
+  ad,
+  trackImpression = true,
+}: JobCardProps) {
   const featured = variant === 'featured';
   const dday = computeDday(job.recruitmentType, job.recruitmentEndAt);
   const urgent = isDdayUrgent(job.recruitmentType, job.recruitmentEndAt);
@@ -269,6 +281,7 @@ export function JobCard({ job, tracking, recommendation, variant = 'grid', ad }:
   // 광고 카드는 광고 리포트의 노출(`IMPRESSION`, PRD 6.5)을 센다. 공고 카드에는 GTM 노출 이벤트가 없어 그것만 보낸다.
   return ad ? (
     <ImpressionTracker
+      active={trackImpression}
       contentEvent={{
         type: 'IMPRESSION',
         targetType: 'JOB',
