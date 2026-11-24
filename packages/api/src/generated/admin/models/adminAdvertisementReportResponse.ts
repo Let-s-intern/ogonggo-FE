@@ -21,8 +21,10 @@ export interface AdminAdvertisementReportResponse {
   to: string;
   /** 이벤트 수집을 시작한 날. from보다 늦으면 그 앞은 집계 전 */
   collectedSince: string;
-  /** 기간이 원본 보관 기간(365일)보다 앞이라 순 방문자·스크롤 깔때기를 날마다 센 값의 합으로 대신했으면 true */
+  /** 기간이 원본 보관 기간(365일)보다 앞이라 순 방문자·스크롤 깔때기를 날마다 센 값의 합으로 대신했으면 true. 이때 일별·CSV의 순 방문자도 그날의 칸(노출·유입 경로·대상)을 더한 값이라 같은 사람이 여러 칸으로 들어온 날은 여러 번 센다 */
   uniqueCountsApproximate: boolean;
+  /** 기간이 원본 보관 기간(365일)보다 앞이라 원본에서만 세는 값(공유 수, 직군별·학년별·타깃 일치 회원 나눔)이 보관 기간 밖 날을 뺀 값이면 true. 실제보다 작을 수 있다 */
+  rawCountsApproximate: boolean;
   summary: AdminAdvertisementReportSummaryResponse;
   /** from~to의 모든 날짜. 이벤트가 없는 날은 0 */
   daily: AdminAdvertisementReportDailyResponse[];

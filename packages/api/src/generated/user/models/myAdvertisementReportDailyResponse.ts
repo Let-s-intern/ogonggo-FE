@@ -11,21 +11,27 @@
 export interface MyAdvertisementReportDailyResponse {
   date: string;
   impressions: number;
-  /** 그날 순 노출수(같은 방문자·소재는 한 번) */
+  /** 그날 순 노출수(같은 방문자·소재는 한 번). 노출이 여럿이면 한 사람이 둘로 세어질 수 있어 날짜별 표에는 reach를 쓴다 */
   uniqueImpressions: number;
+  /**
+     * 그날 도달. 그날 광고를 본 서로 다른 사람(기간 도달과 같은 방식: 회원·비회원 합, 같은 브라우저가 기간 안에 로그인한 적이 있으면 한 사람). 원본 보관 기간(365일)보다 앞날은 null
+     * @nullable
+     */
+  reach?: number | null;
   adClicks: number;
   views: number;
+  /** 그날 상세를 연 순 방문자 수. 모든 노출을 합쳐 날짜 단위로 센다(방문자 규칙은 요약과 같다). 기간이 원본 보관 기간보다 앞이면 칸 합 */
   uniqueVisitors: number;
   memberViews: number;
   ctaClicks: number;
   ctaUniqueVisitors: number;
   /**
-     * 그날 평균 스크롤 깊이(%). 기록이 없는 날은 0, 배너 상품은 null
+     * 그날 평균 스크롤 깊이(%). 스크롤 기록이 없는 날과 배너 상품은 null
      * @nullable
      */
   avgScrollPercent?: number | null;
   /**
-     * 그날 평균 체류 시간(초). 기록이 없는 날은 0, 배너 상품은 null
+     * 그날 평균 체류 시간(초). 스크롤 기록이 없는 날과 배너 상품은 null
      * @nullable
      */
   avgDurationSeconds?: number | null;
