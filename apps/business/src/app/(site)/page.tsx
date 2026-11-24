@@ -6,15 +6,23 @@ import {
   SITE_NAME,
   SITE_ORIGIN,
 } from '@/shared/config/site';
-import { FAQ, PLACEMENTS } from '@/widgets/landing/content';
+import { FAQ, PLACEMENT_PAGES, PLACEMENTS } from '@/widgets/landing/content';
 import { LandingPage } from '@/widgets/landing/LandingPage';
+import { loadPlacementPrices } from '@/widgets/landing/loadPlacementPrices';
+import type { PlacementPrices } from '@/widgets/landing/price';
+
+/** 가격은 어드민에서 바뀌므로 소개 화면을 5분마다 다시 만든다. 정적 분석 때문에 숫자로 적고, 값은 `loadPlacementPrices` 의 `PLACEMENT_PRICE_REVALIDATE` 와 같다. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-/** 검색 결과에 회사·상품·FAQ 를 함께 알린다. 화면에 보이는 내용과 같은 값만 싣는다. */
-const jsonLd = {
+/**
+ * 검색 결과에 회사·상품·FAQ 를 함께 알린다. 화면에 보이는 내용과 같은 값만 싣는다. 가격이 없는(견적 문의) 상품은
+ * 가격 없이 알리지 않고 뺀다.
+ */
+const buildJsonLd = (prices: PlacementPrices) => ({
   '@context': 'https://schema.org',
   '@graph': [
     {
@@ -40,13 +48,20 @@ const jsonLd = {
       description: SITE_DESCRIPTION,
       provider: { '@id': `${SITE_ORIGIN}/#organization` },
       areaServed: 'KR',
-      offers: PLACEMENTS.map((p) => ({
-        '@type': 'Offer',
-        name: p.title,
-        price: p.price,
-        priceCurrency: 'KRW',
-        description: `1주 · VAT 별도. ${p.description.join(' ')}`,
-      })),
+      offers: PLACEMENT_PAGES.flatMap((page) => page.spots).flatMap((spot) => {
+        const product = PLACEMENTS.find((p) => p.id === spot.productId);
+        const price = prices[spot.position];
+        if (!product || price == null) return [];
+        return [
+          {
+            '@type': 'Offer',
+            name: product.title,
+            price,
+            priceCurrency: 'KRW',
+            description: `1주 · VAT 별도. ${product.description.join(' ')}`,
+          },
+        ];
+      }),
     },
     {
       '@type': 'FAQPage',
@@ -57,17 +72,20 @@ const jsonLd = {
       })),
     },
   ],
-};
+});
 
-export default function Page() {
+export default async function Page() {
+  const prices = await loadPlacementPrices();
   return (
     <>
       <script
         type="application/ld+json"
         // 정적 상수만 직렬화한다. `<` 를 이스케이프해 스크립트 태그가 닫히지 않게 한다.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildJsonLd(prices)).replace(/</g, '\\u003c'),
+        }}
       />
-      <LandingPage />
+      <LandingPage placementPrices={prices} />
     </>
   );
 }

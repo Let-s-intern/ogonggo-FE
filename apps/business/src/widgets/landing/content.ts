@@ -1,7 +1,10 @@
 /**
  * 광고 안내(랜딩) 문구와 수치. 출처는 디자인 시안 `.claude/tasks/todo/오공고 비즈니스/image.png` 다.
- * 가격·CTR·팔로워 수는 시안 값이며, 바꿀 때는 이 파일만 고친다.
+ * CTR·팔로워 수는 시안 값이며, 바꿀 때는 이 파일만 고친다.
+ * 지면 가격은 어드민 광고 상품에서 읽는다(`loadPlacementPrices.ts`).
  */
+
+import type { PlacementPosition } from './price';
 
 export const HERO_STATS = [
   { value: '월 10만명+', label: '매달 찾아오는 취준생' },
@@ -43,7 +46,6 @@ export interface PlacementProduct {
   title: string;
   description: string[];
   tags: { label: string; highlight?: boolean }[];
-  price: number;
   ctr: string;
   /** 광고 신청 API 의 `categories` 값. */
   category: 'JOB_POSTING' | 'BANNER';
@@ -59,7 +61,6 @@ export const PLACEMENTS: PlacementProduct[] = [
       '일반 추천 카드와 동일한 형태로 제공되며, AD 라벨이 표시됩니다.',
     ],
     tags: [{ label: '피드 게시물' }, { label: '공고 링크' }, { label: '해석 한 줄(40자 이내)' }],
-    price: 400000,
     ctr: '2.5 ~ 4%',
     category: 'JOB_POSTING',
   },
@@ -77,7 +78,6 @@ export const PLACEMENTS: PlacementProduct[] = [
       { label: '공고 링크' },
       { label: '무료 쿠폰 적용 대상', highlight: true },
     ],
-    price: 300000,
     ctr: '3 ~ 5%',
     category: 'JOB_POSTING',
   },
@@ -90,7 +90,6 @@ export const PLACEMENTS: PlacementProduct[] = [
       '일반 공고 카드와 동일한 형태로 제공되며, AD 라벨이 표시됩니다.',
     ],
     tags: [{ label: '4슬롯' }, { label: '공고 카드 자동 구성' }],
-    price: 400000,
     ctr: '3 ~ 5%',
     category: 'JOB_POSTING',
   },
@@ -103,7 +102,6 @@ export const PLACEMENTS: PlacementProduct[] = [
       '4개 소재가 새로고침마다 롤링됩니다.',
     ],
     tags: [{ label: '4슬롯 롤링' }, { label: 'PC 1200×120 · MO 750×200' }],
-    price: 500000,
     ctr: '1 ~ 1.8%',
     category: 'BANNER',
   },
@@ -116,7 +114,6 @@ export const PLACEMENTS: PlacementProduct[] = [
       '리스트를 끝까지 본 적극 탐색 유저에게 닿아요.',
     ],
     tags: [{ label: '1슬롯' }, { label: 'PC 1200×120 · MO 750×200' }],
-    price: 300000,
     ctr: '0.8 ~ 1.5%',
     category: 'BANNER',
   },
@@ -128,7 +125,9 @@ type Rect = { top: number; left: number; width: number; height: number };
 export interface PlacementSpot {
   id: string;
   name: string;
-  /** 가격·CTR·설명·태그를 가져올 상품. 없으면 아래 값을 쓰고 가격은 견적 문의로 보인다. */
+  /** 이 칸의 상품이 놓이는 노출 자리. 소개 가격은 이 자리의 상품에서 읽는다. */
+  position: PlacementPosition;
+  /** CTR·설명·태그를 가져올 상품. 없으면 아래 값을 쓰고 CTR 은 보이지 않는다. */
   productId?: string;
   title?: string;
   description?: string[];
@@ -171,18 +170,21 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'recommend-card',
         name: '인기 채용공고',
+        position: 'JOB_PICK',
         productId: 'recommend-card',
         rect: { top: 27.4, left: 10, width: 19.1, height: 20.4 },
       },
       {
         id: 'list-top-fixed',
         name: '리스트 상단 고정 공고',
+        position: 'JOB_LIST',
         productId: 'list-top-fixed',
         rect: { top: 56.4, left: 23.9, width: 23.2, height: 17.4 },
       },
       {
         id: 'main-top-banner',
         name: '메인 상단 배너',
+        position: 'JOB_HOME_TOP_BANNER',
         productId: 'main-top-banner',
         rect: { top: 52.2, left: 3.9, width: 92.2, height: 6.6 },
         banner: WIDE_BANNER,
@@ -190,6 +192,7 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'main-bottom-banner',
         name: '메인 하단 배너',
+        position: 'JOB_HOME_BOTTOM_BANNER',
         productId: 'main-bottom-banner',
         // 스크린샷이 목록 중간에서 끝나서, 두 번째 줄 아래를 목록 끝으로 보고 그 아래는 감춘다.
         rect: { top: 94.9, left: 3.9, width: 92.2, height: 6.6 },
@@ -207,6 +210,7 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'bootcamp-top-banner',
         name: '부트캠프 상단 배너',
+        position: 'BOOTCAMP_LIST_TOP_BANNER',
         title: '부트캠프 상단 배너 1슬롯 노출',
         description: [
           '교육·부트캠프 목록 바로 위에 놓이는 가로 배너입니다.',
@@ -219,6 +223,7 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'bootcamp-bottom-banner',
         name: '부트캠프 하단 배너',
+        position: 'BOOTCAMP_LIST_BOTTOM_BANNER',
         title: '부트캠프 하단 배너 1슬롯 노출',
         description: [
           '부트캠프 목록 끝, FOR BUSINESS 배너 위에 놓이는 가로 배너입니다.',
@@ -240,6 +245,7 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'calendar-day-card',
         name: '공고 달력 날짜별 공고',
+        position: 'CALENDAR_DAY',
         title: '공고 달력 날짜별 목록 노출',
         description: [
           '공고 달력에서 고른 날짜의 공고 목록 맨 앞에 노출됩니다.',
@@ -260,6 +266,7 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'mypage-scrap-card',
         name: '마이페이지 스크랩 칸',
+        position: 'MYPAGE_SCRAP',
         title: '마이페이지 스크랩 칸 노출',
         description: [
           '마이페이지 지원 관리 보드의 채용공고 스크랩 칸 맨 앞에 노출됩니다.',
@@ -281,6 +288,7 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
       {
         id: 'job-detail-side-banner',
         name: '공고 상세 사이드 배너',
+        position: 'JOB_DETAIL_BANNER',
         title: '공고 상세 사이드 배너 1슬롯 노출',
         description: [
           '공고 상세 오른쪽 사이드바, 비슷한 공고 아래에 놓이는 세로 배너입니다.',
