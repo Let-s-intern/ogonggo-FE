@@ -208,6 +208,20 @@ export const PLACEMENT_PAGES: PlacementPage[] = [
     imageAlt: '오늘의 공고 교육·부트캠프 목록 화면',
     spots: [
       {
+        id: 'bootcamp-top-fixed',
+        name: '부트캠프 상단 고정',
+        position: 'BOOTCAMP_LIST',
+        title: '부트캠프 상단 고정 1슬롯 노출',
+        description: [
+          '교육·부트캠프 목록 첫 페이지의 맨 앞에 고정됩니다.',
+          '일반 부트캠프 카드와 같은 모양으로 노출되며, 전체 탭에서만 보이고 2페이지부터 비노출됩니다.',
+        ],
+        tags: ['부트캠프 카드 자동 구성'],
+        // 스크린샷에는 광고 카드가 없어서, 목록 맨 앞 칸 자리에 시안 카드를 그린다.
+        rect: { top: 29.8, left: 3.8, width: 22.4, height: 16.9 },
+        mockCard: true,
+      },
+      {
         id: 'bootcamp-top-banner',
         name: '부트캠프 상단 배너',
         position: 'BOOTCAMP_LIST_TOP_BANNER',
