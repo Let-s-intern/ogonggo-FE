@@ -62,6 +62,7 @@ export function SideStudyCard({ sideStudy, tracking }: SideStudyCardProps) {
     <div className="relative h-full">
       <TrackedLink
         href={`/side-studies/${sideStudy.id}`}
+        prefetch={false}
         className="group flex h-full flex-col gap-3 px-4 py-6 md:rounded-2xl md:border md:border-gray-100 md:bg-white md:p-4 md:transition-shadow md:hover:shadow-md"
         events={clickEvents}
       >

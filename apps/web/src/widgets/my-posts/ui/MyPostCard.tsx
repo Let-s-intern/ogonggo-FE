@@ -68,6 +68,7 @@ export function MyPostCard({
 
       <Link
         href={`/side-studies/${row.postId}`}
+        prefetch={false}
         className="mt-2 line-clamp-2 text-base font-bold text-gray-900"
       >
         {row.title}

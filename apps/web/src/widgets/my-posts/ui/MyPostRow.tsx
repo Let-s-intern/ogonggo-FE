@@ -81,6 +81,7 @@ export function MyPostRow({
           <div className="flex min-w-0 items-center gap-2">
             <Link
               href={`/side-studies/${row.postId}`}
+              prefetch={false}
               className="truncate text-base font-bold text-gray-900 hover:underline"
             >
               {row.title}
