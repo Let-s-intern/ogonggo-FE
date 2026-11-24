@@ -11,7 +11,7 @@ import {
   type ContentTargetType,
   type DetailVisit,
 } from './contentEvents';
-import { detailSource } from './contentEventQueue';
+import { detailSource, tracksScroll } from './contentEventQueue';
 import { scrollDepthPercent } from './scrollDepth';
 
 interface VisitState {
@@ -54,8 +54,8 @@ function scrollPercent(box: HTMLElement | null): number {
 }
 
 /**
- * 공고·부트캠프 상세의 광고 리포트 이벤트(PRD 6.5). 열릴 때 `VIEW`, 떠날 때 `SCROLL`(가장 깊이 내린 비율, 화면이 보인
- * 시간) 한 번이다.
+ * 상세의 광고 리포트 이벤트(PRD 6.5). 공고·부트캠프는 열릴 때 `VIEW`, 떠날 때 `SCROLL`(가장 깊이 내린 비율, 화면이 보인
+ * 시간) 한 번이다. 취준고민·사이드 스터디 모집글은 열릴 때 `VIEW` 만 보낸다. 공개 조회수를 이 `VIEW` 가 올린다.
  *
  * 유입 경로는 광고를 눌러 왔으면 그 광고(`AD_CARD`·`BANNER`)와 노출 id 다. 아니면 사이트에 처음 들어온 페이지일 때
  * 이전 페이지 주소로 가르고(`detailSource`), 앱 안에서 옮겨 왔거나 같은 주소를 다시 열었으면 `LIST` 다.
@@ -111,7 +111,8 @@ export function DetailContentTracker({
       stateRef.current = state;
     }
     const current = state;
-    if (current.left) {
+    // 취준고민·모집글은 `VIEW` 만 보낸다. 스크롤과 떠남 이벤트를 재지 않는다.
+    if (current.left || !tracksScroll(targetType)) {
       return;
     }
     const scrollBox = scrollBoxRef?.current ?? null;

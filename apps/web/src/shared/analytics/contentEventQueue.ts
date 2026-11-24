@@ -16,7 +16,15 @@ export type ContentEventType =
   | 'AD_CLICK'
   | 'SHARE';
 
-export type ContentTargetType = 'JOB' | 'BOOTCAMP';
+export type ContentTargetType = 'JOB' | 'BOOTCAMP' | 'CONCERN' | 'RECRUITMENT_POST';
+
+/**
+ * 상세를 떠날 때 `SCROLL` 을 보내는 대상. 취준고민·사이드 스터디 모집글은 조회수(`VIEW`)만 세고 광고 리포트의
+ * 스크롤은 재지 않는다.
+ */
+export function tracksScroll(targetType: ContentTargetType): boolean {
+  return targetType === 'JOB' || targetType === 'BOOTCAMP';
+}
 
 export type ContentEventSource =
   | 'AD_CARD'

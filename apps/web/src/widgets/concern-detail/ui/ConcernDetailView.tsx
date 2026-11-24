@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { HttpError, type ConcernDetailResponse } from '@ogonggo/api';
+import { DetailContentTracker } from '@/shared/analytics/DetailContentTracker';
 import { ConcernComments } from '@/features/concern-comments';
 import { readConcernDetail } from '../api/concernDetail';
 import { ConcernDetailBreadcrumb } from './ConcernDetailBreadcrumb';
@@ -51,6 +52,7 @@ export async function ConcernDetailView({ concernId }: ConcernDetailViewProps) {
 
   return (
     <div className="flex w-full max-w-page flex-col gap-4 md:gap-12">
+      <DetailContentTracker targetType="CONCERN" targetId={concern.id} />
       <ConcernDetailBreadcrumb />
       <div className="flex flex-col gap-10 md:px-10">
         <ConcernDetailCard concern={concern} />
