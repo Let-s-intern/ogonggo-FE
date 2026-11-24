@@ -130,9 +130,10 @@ export function createContentEventQueue({
   };
 }
 
-/** 익명 방문자 id 쿠키. 이름은 API 계약에 적힌 것이다. */
+/** 익명 방문자 id 쿠키. 이름은 API 계약에 적힌 것이다. 서버가 `Set-Cookie` 로 발급하고(`proxy.ts`) 브라우저는 읽기만 한다. */
 export const VISITOR_COOKIE = 'ogg_vid';
-const VISITOR_COOKIE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
+/** 서버(`proxy.ts`)가 쿠키를 발급할 때의 수명. 1년이다. */
+export const VISITOR_COOKIE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
 /** 백엔드가 받는 최대 길이. UUID 는 36자다. */
 const VISITOR_ID_MAX_LENGTH = 36;
 
@@ -147,11 +148,6 @@ export function readVisitorId(cookie: string): string | null {
     return /^[0-9A-Za-z-]+$/.test(value) && value.length <= VISITOR_ID_MAX_LENGTH ? value : null;
   }
   return null;
-}
-
-/** 방문자 id 를 1년 두는 1st-party 쿠키 한 줄(`document.cookie` 에 넣는 값). */
-export function visitorCookie(visitorId: string, secure: boolean): string {
-  return `${VISITOR_COOKIE}=${visitorId}; Max-Age=${VISITOR_COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secure ? '; Secure' : ''}`;
 }
 
 const SEARCH_ENGINE_HOST = /(^|\.)(google|naver|daum|bing|yahoo|duckduckgo)\./;

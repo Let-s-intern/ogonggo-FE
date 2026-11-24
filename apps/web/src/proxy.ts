@@ -1,4 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import {
+  VISITOR_COOKIE,
+  VISITOR_COOKIE_MAX_AGE_SECONDS,
+  readVisitorId,
+} from '@/shared/analytics/contentEventQueue';
 import { JOB_MAJOR_COOKIE_NAME } from '@/widgets/job-calendar/lib/major-cookie';
 import {
   buildJobCalendarHref,
@@ -22,7 +27,9 @@ const JOB_FILTER_PARAM_NAMES = [
 ] as const;
 
 /**
- * 세 가지를 한다.
+ * 네 가지를 한다.
+ *
+ * 방문자 id 쿠키가 없는 페이지 요청에 `Set-Cookie` 로 새 id 를 둔다(`withVisitorCookie`).
  *
  * `/letscareer-api/**` 요청에서 `Origin` 헤더를 뺀다. 그 뒤 `next.config.ts` 의 rewrite 가 렛츠커리어로 넘긴다.
  *
@@ -44,14 +51,40 @@ const JOB_FILTER_PARAM_NAMES = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/' || pathname === '/calendar') {
-    const target = pathname === '/' ? jobListRedirect(request) : calendarRedirect(request);
-    return target ? NextResponse.redirect(new URL(target, request.url)) : NextResponse.next();
+  if (pathname === '/letscareer-api' || pathname.startsWith('/letscareer-api/')) {
+    const headers = new Headers(request.headers);
+    headers.delete('origin');
+    return NextResponse.next({ request: { headers } });
   }
 
-  const headers = new Headers(request.headers);
-  headers.delete('origin');
-  return NextResponse.next({ request: { headers } });
+  if (pathname === '/' || pathname === '/calendar') {
+    const target = pathname === '/' ? jobListRedirect(request) : calendarRedirect(request);
+    return withVisitorCookie(
+      request,
+      target ? NextResponse.redirect(new URL(target, request.url)) : NextResponse.next(),
+    );
+  }
+
+  return withVisitorCookie(request, NextResponse.next());
+}
+
+/**
+ * 방문자 id 쿠키(`ogg_vid`)가 없거나 모양이 틀리면 새로 발급한다. 광고 리포트의 방문자 구분(`shared/analytics/contentEvents.ts`)
+ * 이 이 값을 읽는다. 브라우저의 `document.cookie` 로 쓴 쿠키는 Safari 가 7일로 줄이므로(ITP) 서버 응답의 `Set-Cookie` 로 둔다.
+ * 브라우저 코드가 읽어야 해서 `HttpOnly` 가 아니다. 쿠키가 있으면 건드리지 않아 수명을 늘리지도, 값을 바꾸지도 않는다.
+ */
+function withVisitorCookie(request: NextRequest, response: NextResponse): NextResponse {
+  if (readVisitorId(request.headers.get('cookie') ?? '') === null) {
+    response.cookies.set({
+      name: VISITOR_COOKIE,
+      value: crypto.randomUUID(),
+      maxAge: VISITOR_COOKIE_MAX_AGE_SECONDS,
+      path: '/',
+      sameSite: 'lax',
+      secure: request.nextUrl.protocol === 'https:',
+    });
+  }
+  return response;
 }
 
 /**
@@ -96,5 +129,15 @@ function calendarRedirect(request: NextRequest): string | undefined {
 }
 
 export const config = {
-  matcher: ['/letscareer-api/:path*', '/', '/calendar'],
+  matcher: [
+    '/letscareer-api/:path*',
+    '/',
+    '/calendar',
+    // 방문자 id 쿠키가 없는 페이지 요청. `api`·`_next`·확장자가 있는 정적 파일(`/rss/jobs.xml` 포함)은 뺀다. 값은 상수여야 해서
+    // 쿠키 이름을 여기 직접 적는다(`VISITOR_COOKIE`).
+    {
+      source: '/((?!api(?:/|$)|_next/|.*\\..*).*)',
+      missing: [{ type: 'cookie', key: 'ogg_vid' }],
+    },
+  ],
 };

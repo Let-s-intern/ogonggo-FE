@@ -11,7 +11,6 @@ import {
   rememberAdEntry,
   staysInThisTab,
   takeAdEntry,
-  visitorCookie,
   type ContentEvent,
   type ContentEventsRequest,
 } from './contentEventQueue';
@@ -127,11 +126,6 @@ test('방문자 id 쿠키를 읽고, 모양이 틀리면 버린다', () => {
   assert.equal(readVisitorId('a=1'), null);
   assert.equal(readVisitorId('ogg_vid=<script>'), null);
   assert.equal(readVisitorId(`ogg_vid=${'a'.repeat(37)}`), null);
-});
-
-test('방문자 쿠키는 1년이고 https 에서만 Secure 다', () => {
-  assert.equal(visitorCookie('v', false), 'ogg_vid=v; Max-Age=31536000; Path=/; SameSite=Lax');
-  assert.match(visitorCookie('v', true), /; Secure$/);
 });
 
 test('사이트 밖에서 바로 연 상세의 유입 경로', () => {

@@ -6,7 +6,6 @@ import {
   readVisitorId,
   rememberAdEntry,
   takeAdEntry,
-  visitorCookie,
   type AdEntry,
   type ContentEvent,
   type ContentEventQueue,
@@ -45,13 +44,13 @@ function newVisitorId(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** 첫 방문이면 만들어 1년 쿠키로 둔다. 쿠키를 막아 두었으면 이 탭에서만 같은 값을 쓴다. */
+/**
+ * 서버가 응답의 `Set-Cookie` 로 둔 방문자 id 를 읽는다(`proxy.ts`). 브라우저에서는 쿠키를 쓰지 않는다 — `document.cookie` 로
+ * 쓴 쿠키는 Safari 가 7일로 줄여(ITP) iOS 비회원이 매주 새 사람이 된다. 쿠키가 없으면(막았거나 서버가 못 줬으면) 이 문서에서만
+ * 같은 값을 쓴다.
+ */
 function getVisitorId(): string {
-  visitorId ??= readVisitorId(document.cookie);
-  if (!visitorId) {
-    visitorId = newVisitorId();
-    document.cookie = visitorCookie(visitorId, location.protocol === 'https:');
-  }
+  visitorId ??= readVisitorId(document.cookie) ?? newVisitorId();
   return visitorId;
 }
 
