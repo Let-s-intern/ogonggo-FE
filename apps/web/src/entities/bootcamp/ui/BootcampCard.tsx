@@ -67,6 +67,7 @@ export function BootcampCard({ bootcamp, tracking, ad }: BootcampCardProps) {
     <div className="relative h-full">
       <TrackedLink
         href={`/bootcamps/${bootcamp.id}`}
+        prefetch={false}
         className="group flex h-full flex-col gap-2"
         events={clickEvents}
         adClick={

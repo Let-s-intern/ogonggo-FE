@@ -25,6 +25,7 @@ export function PopularConcernCard({ concern }: PopularConcernCardProps) {
   return (
     <Link
       href={`/concerns/${concern.id}`}
+      prefetch={false}
       className="flex h-full flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md"
     >
       <div className="flex items-center justify-between gap-2">

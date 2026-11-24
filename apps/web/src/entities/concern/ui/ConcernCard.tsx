@@ -28,6 +28,7 @@ export function ConcernCard({ concern }: ConcernCardProps) {
   return (
     <Link
       href={`/concerns/${concern.id}`}
+      prefetch={false}
       className="flex items-center gap-4 border-b border-gray-100 px-2 py-5 transition-colors hover:bg-gray-50"
     >
       <div className="min-w-0 flex-1">

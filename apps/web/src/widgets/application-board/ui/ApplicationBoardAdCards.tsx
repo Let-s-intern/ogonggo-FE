@@ -97,6 +97,7 @@ export function ApplicationBoardBootcampAdCards({ scrappedIds }: { scrappedIds: 
     >
       <TrackedLink
         href={`/bootcamps/${bootcamp.id}`}
+        prefetch={false}
         events={[adPostingClickEvent(ad, 'bootcamp', bootcamp.id)]}
         adClick={{
           exposureId: ad.adId,

@@ -48,6 +48,7 @@ export async function SideAdBootcamps({ excludeBootcampId }: { excludeBootcampId
             >
               <TrackedLink
                 href={`/bootcamps/${bootcamp.id}`}
+                prefetch={false}
                 className="group flex items-center gap-4 py-4"
                 events={[adPostingClickEvent(ad, 'bootcamp', bootcamp.id)]}
                 adClick={{
