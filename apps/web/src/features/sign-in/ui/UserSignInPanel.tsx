@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { track } from '@/shared/analytics/dataLayer';
+import { track, trackSignUp } from '@/shared/analytics/dataLayer';
 import {
   letsCareerSignInErrorMessage,
   pathAfterLetsCareerSignIn,
@@ -46,7 +46,7 @@ export function UserSignInPanel({ returnPath, initialError = null }: UserSignInP
       recordSignInMethod('email');
       // 렛츠커리어 계정으로 처음 들어오면 이 교환에서 오공고 계정이 생긴다. 그것이 가입이다.
       if (isNewUser) {
-        track('sign_up', { method: 'email' });
+        trackSignUp('email');
       }
       track('login', { method: 'email' });
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다.

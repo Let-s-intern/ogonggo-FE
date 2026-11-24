@@ -1,5 +1,6 @@
 import { isSignedIn } from '@/shared/api/authTokens';
 import { captureEvent } from './posthog';
+import { claimSignUpEvent } from './signUpOnce';
 
 /**
  * GTM 으로 보내는 이벤트. 키 이름과 허용값은 마케팅팀 'dataLayer 개발 명세서(프론트엔드)'
@@ -48,6 +49,32 @@ export function track(event: string, params: DataLayerParams = {}): void {
     page_type: pageTypeOf(window.location.pathname),
     login_state: isSignedIn() ? 'Y' : 'N',
   });
+}
+
+/** 이벤트 여럿을 차례로 보낸다. 해제와 선택처럼 한 번의 조작이 여러 건이 될 때 쓴다. */
+export function trackEvents(events: readonly DataLayerEvent[]): void {
+  for (const { event, params } of events) {
+    track(event, params);
+  }
+}
+
+/**
+ * 가입(`sign_up`). 한 세션에서 한 번만 보낸다 — 가입 직후 로그인이 실패해 `/login` 에서 다시 로그인하면
+ * 신규 사용자로 판정돼 또 나가기 때문이다(`signUpOnce.ts`).
+ */
+export function trackSignUp(method: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  let storage: Storage | undefined;
+  try {
+    storage = window.sessionStorage;
+  } catch {
+    storage = undefined;
+  }
+  if (claimSignUpEvent(storage)) {
+    track('sign_up', { method });
+  }
 }
 
 let lastPageContext = '';
@@ -108,34 +135,6 @@ export const NO_AD_PARAMS = {
   ad_product: 'none',
   ad_campaign_id: '',
 } satisfies DataLayerParams;
-
-/**
- * 필터 하나를 `current` 에서 `next` 로 바꿀 때 나갈 `filter_apply` 들. 값 하나당 한 건이라, 고른
- * 값을 다른 값으로 바꾸면 해제와 선택 두 건이다. 같은 값을 다시 고르면 목록이 바뀌지 않아 없다.
- */
-export function filterApplyEvents(
-  filterType: string,
-  current: string | undefined,
-  next: string | undefined,
-): DataLayerEvent[] {
-  if (current === next) {
-    return [];
-  }
-  const events: DataLayerEvent[] = [];
-  if (current) {
-    events.push({
-      event: 'filter_apply',
-      params: { filter_type: filterType, filter_value: current, filter_action: 'deselect' },
-    });
-  }
-  if (next) {
-    events.push({
-      event: 'filter_apply',
-      params: { filter_type: filterType, filter_value: next, filter_action: 'select' },
-    });
-  }
-  return events;
-}
 
 /**
  * `program_status`. 마감이 아니면서 마감까지 7일 이내(D-7~D-DAY)면 `closing_soon` 이다.

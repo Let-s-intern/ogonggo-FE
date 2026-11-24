@@ -10,7 +10,9 @@ import {
   isSelectionEmpty,
   selectionOf,
   toggleSelection,
-  trackFilterSelected,
+  trackFilterCleared,
+  trackFilterToggled,
+  trackSelectionChanges,
   type FilterKey,
   type FilterSelection,
 } from '../lib/filter';
@@ -19,6 +21,7 @@ import { pendingFilter } from '../lib/pendingFilter';
 import { FilterCheckGroup } from './FilterCheckGroup';
 import { FilterChipGroup } from './FilterChipGroup';
 import { useReportJobListPending } from './JobListPending';
+import { trackJobRoleChanges } from './JobRoleSheet';
 import { JobSearchCommand } from './JobSearchCommand';
 
 /** 체크박스를 연달아 누르는 동안은 주소를 바꾸지 않고, 멈춘 뒤 한 번만 바꾼다. */
@@ -124,11 +127,13 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
   };
 
   const toggle = (key: FilterKey, value: string) => {
-    const current: readonly string[] = view[key];
-    if (!current.includes(value)) {
-      trackFilterSelected(FILTER_GROUPS[key].filterType, value);
-    }
+    trackFilterToggled(key, view, value);
     change(toggleSelection(view, key, value));
+  };
+
+  const clear = (key: FilterKey) => {
+    trackFilterCleared(key, view);
+    change(clearSelection(view, key));
   };
 
   // 검색 모달은 검색어와 함께 필터 전체를 고른다. 직군·직무는 칩 쪽 몫이라 `go` 의 덮어쓰기로 넘긴다.
@@ -146,6 +151,13 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
 
   const reset = () => {
     cancelTimer();
+    // 지우는 값마다 해제 한 건. 직무는 칩이 이동 중이면 그쪽이 고른 값이 지금 값이다.
+    const roles = { ...query, ...pendingFilter.roleInFlight() };
+    trackSelectionChanges(view, { employmentTypes: [], experienceTypes: [], regions: [] });
+    trackJobRoleChanges(
+      { fields: roles.jobFields ?? [], roles: roles.jobRoles ?? [] },
+      { fields: [], roles: [] },
+    );
     setDraft({ employmentTypes: [], experienceTypes: [], regions: [], q: undefined });
     go(
       { employmentTypes: [], experienceTypes: [], regions: [], q: undefined },
@@ -169,7 +181,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
           group={FILTER_GROUPS[key]}
           selected={view[key]}
           onToggle={(value) => toggle(key, value)}
-          onClear={() => change(clearSelection(view, key))}
+          onClear={() => clear(key)}
         />
       ))}
 
@@ -179,7 +191,7 @@ export function JobFilterSidebar({ query }: { query: JobListQuery }) {
         collapsedCount={5}
         selected={view.regions}
         onSelect={(value) => toggle('regions', value)}
-        onClear={() => change(clearSelection(view, 'regions'))}
+        onClear={() => clear('regions')}
       />
 
       <Button

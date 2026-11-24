@@ -4,7 +4,7 @@ import {
   EMPLOYMENT_TYPE_FILTER_OPTIONS,
   EXPERIENCE_TYPE_LABELS,
 } from '@/entities/job/model/labels';
-import { filterApplyEvents } from '@/shared/analytics/dataLayer';
+import { filterApplyEvents, filterToggleEvents } from '@/shared/analytics/filterApply';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import { ChevronIcon, SearchIcon } from '@/shared/ui/icons';
 import {
@@ -129,7 +129,7 @@ function FilterDropdown<TValue extends string>({
             scroll={false}
             role="menuitemcheckbox"
             aria-checked={selected.length === 0}
-            events={filterApplyEvents(filterType, selected.join(',') || undefined, undefined)}
+            events={filterApplyEvents(filterType, selected, [])}
             className={itemClass(selected.length === 0)}
           >
             전체
@@ -146,11 +146,7 @@ function FilterDropdown<TValue extends string>({
                 scroll={false}
                 role="menuitemcheckbox"
                 aria-checked={checked}
-                events={
-                  checked
-                    ? filterApplyEvents(filterType, value, undefined)
-                    : filterApplyEvents(filterType, undefined, value)
-                }
+                events={filterToggleEvents(filterType, selected, value)}
                 className={itemClass(checked)}
               >
                 {optionLabel}
