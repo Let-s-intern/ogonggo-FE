@@ -61,11 +61,12 @@ export function SideStudyContactButton({
   }, [open]);
 
   const onApply = () => {
-    track(applyEvent.event, applyEvent.params);
     if (!isSignedIn()) {
+      // 로그인 화면으로 보낼 뿐 신청이 아니다. 신청 클릭으로 세지 않는다.
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
+    track(applyEvent.event, applyEvent.params);
     setOpen(true);
   };
 

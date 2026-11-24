@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 import { Button, CheckAllGroup, Input } from '@ogonggo/ui';
-import { track } from '@/shared/analytics/dataLayer';
+import { track, trackSignUp } from '@/shared/analytics/dataLayer';
 import { LetsCareerApiError, signUp } from '@/shared/api/letscareer';
 import {
   pathAfterLetsCareerSignIn,
@@ -154,7 +154,7 @@ export function UserSignUpForm() {
     }
 
     // 여기부터는 렛츠커리어 계정이 이미 있다. 무엇이 실패하든 가입 폼으로 되돌리지 않는다.
-    track('sign_up', { method: 'email' });
+    trackSignUp('email');
     try {
       const { isNewUser } = await signInWithLetsCareerEmail({ email, password: values.password });
       recordSignInMethod('email');

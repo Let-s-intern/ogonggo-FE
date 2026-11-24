@@ -1,5 +1,6 @@
 import { isSignedIn } from '@/shared/api/authTokens';
 import { captureEvent } from './posthog';
+import { claimSignUpEvent } from './signUpOnce';
 
 /**
  * GTM 으로 보내는 이벤트. 키 이름과 허용값은 마케팅팀 'dataLayer 개발 명세서(프론트엔드)'
@@ -54,6 +55,25 @@ export function track(event: string, params: DataLayerParams = {}): void {
 export function trackEvents(events: readonly DataLayerEvent[]): void {
   for (const { event, params } of events) {
     track(event, params);
+  }
+}
+
+/**
+ * 가입(`sign_up`). 한 세션에서 한 번만 보낸다 — 가입 직후 로그인이 실패해 `/login` 에서 다시 로그인하면
+ * 신규 사용자로 판정돼 또 나가기 때문이다(`signUpOnce.ts`).
+ */
+export function trackSignUp(method: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  let storage: Storage | undefined;
+  try {
+    storage = window.sessionStorage;
+  } catch {
+    storage = undefined;
+  }
+  if (claimSignUpEvent(storage)) {
+    track('sign_up', { method });
   }
 }
 
