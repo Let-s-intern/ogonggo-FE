@@ -83,7 +83,8 @@ export function isRetryableFailure(error: unknown): boolean {
  */
 export function sendWithOneRetry(
   send: () => Promise<unknown>,
-  setTimer: (callback: () => void, ms: number) => unknown = (callback, ms) => setTimeout(callback, ms),
+  setTimer: (callback: () => void, ms: number) => unknown = (callback, ms) =>
+    setTimeout(callback, ms),
 ): Promise<void> {
   return send().then(
     () => undefined,

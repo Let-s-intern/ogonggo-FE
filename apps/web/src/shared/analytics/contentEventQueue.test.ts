@@ -234,7 +234,10 @@ test('처음 들어온 페이지가 아닌 상세는 목록에서 온 것이다'
 });
 
 test('새로 고침이나 뒤로 가기로 다시 열린 문서는 처음 referrer 를 쓰지 않는다', () => {
-  assert.equal(detailSource({ ...landing, navigation: { ...landing.navigation, type: 'reload' } }), 'OTHER');
+  assert.equal(
+    detailSource({ ...landing, navigation: { ...landing.navigation, type: 'reload' } }),
+    'OTHER',
+  );
   assert.equal(
     detailSource({ ...landing, navigation: { ...landing.navigation, type: 'back_forward' } }),
     'OTHER',
