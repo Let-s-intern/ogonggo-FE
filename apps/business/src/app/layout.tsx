@@ -7,6 +7,12 @@ import {
   SITE_NAME,
   SITE_ORIGIN,
 } from '@/shared/config/site';
+import {
+  GoogleTagManagerNoScript,
+  GoogleTagManagerScript,
+} from '@/shared/analytics/GoogleTagManager';
+import { LandingCtaTracker } from '@/shared/analytics/LandingCtaTracker';
+import { PageContextTracker } from '@/shared/analytics/PageContextTracker';
 import { AppProviders } from './providers';
 import './globals.css';
 
@@ -63,7 +69,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" className={pretendard.variable}>
+      {/* 웹과 같은 GTM 컨테이너. `NEXT_PUBLIC_GTM_ID` 가 없으면 둘 다 아무것도 그리지 않는다. */}
+      <GoogleTagManagerScript />
       <body className="flex min-h-dvh flex-col font-sans antialiased">
+        <GoogleTagManagerNoScript />
+        {/* 화면 이동·로그인 상태가 바뀔 때마다 GTM 에 `page_context` 를 보낸다. */}
+        <PageContextTracker />
+        {/* 소개 화면(`/`)의 행동 유도 링크 클릭을 센다. 소개 화면 파일은 건드리지 않는다. */}
+        <LandingCtaTracker />
         {/* 헤더·푸터는 공개 화면(`(site)/layout.tsx`)만 단다. 기업 회원 화면은 콘솔 틀이다(`mypage/company/layout.tsx`). */}
         <AppProviders>{children}</AppProviders>
       </body>

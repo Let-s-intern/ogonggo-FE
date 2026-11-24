@@ -1,6 +1,7 @@
 import { BizApplyForm } from './BizApplyForm';
 import { BizFloatingApply } from './BizFloatingApply';
 import { BizHero } from './BizHero';
+import { BizPageView } from './BizPageView';
 import { RevealOnScroll } from '@/widgets/landing/RevealOnScroll';
 import { BizApplySide, BizChannels, BizFaq, BizIntro } from './BizSections';
 import { CONTAINER } from './styles';
@@ -30,6 +31,7 @@ export function BizPage() {
       </section>
       <BizFaq />
       <BizFloatingApply />
+      <BizPageView />
       <RevealOnScroll />
     </div>
   );

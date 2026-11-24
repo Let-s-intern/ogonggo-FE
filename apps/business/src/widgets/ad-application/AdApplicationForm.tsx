@@ -8,6 +8,7 @@ import {
   type SuccessResponseCreateAdvertisementContractResponse,
 } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
+import { trackBiz } from '@/shared/analytics/bizEvents';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { ListboxSelect } from '@/shared/ui/ListboxSelect';
 import { DatePicker } from '@/shared/ui/DatePicker';
@@ -1232,6 +1233,7 @@ export function AdApplicationForm() {
       if (!body.data) {
         throw new Error('광고 신청 응답에 신청 번호가 없습니다.');
       }
+      trackBiz('biz_ad_apply_submit');
       setDoneId(body.data.id);
       window.scrollTo({ top: 0 });
     } catch (caught) {

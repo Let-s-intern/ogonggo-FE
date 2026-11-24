@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button, Callout } from '@ogonggo/ui';
+import { trackBiz } from '@/shared/analytics/bizEvents';
 import { formatDraftSavedAt } from '@/shared/lib/companyPostDraft';
 import {
   findExpiredImages,
@@ -216,6 +217,10 @@ export function CompanyBootcampForm({ bootcampId }: CompanyBootcampFormProps) {
       }
       if (publish && savedId !== undefined) {
         await startBootcampRecruitment(savedId);
+      }
+      // 새 공고의 등록만 센다. 이미 있는 공고를 고쳐 다시 저장하는 것은 등록이 아니다.
+      if (publish && isNew) {
+        trackBiz('biz_post_submit', { biz_post_type: 'bootcamp' });
       }
       if (isNew) {
         draft.clear();

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { cn } from '@ogonggo/ui';
+import { trackBiz } from '@/shared/analytics/bizEvents';
 import { HERO_SCREENS } from '../model/content';
 
 /** 한 화면에 머무는 시간. 진행 막대가 이 시간 동안 차고, 다 차면 다음 화면이다. */
@@ -146,6 +147,7 @@ export function BizHeroScreens() {
               aria-selected={isActive}
               onClick={() => {
                 show(index);
+                trackBiz('biz_hero_screen_click', { biz_screen: item.key });
               }}
               className={cn(
                 'flex flex-col gap-2 text-left text-xs font-semibold md:text-[13px]',

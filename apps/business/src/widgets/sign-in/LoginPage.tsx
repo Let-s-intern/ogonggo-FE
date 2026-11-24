@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { HttpError, signInCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
+import { trackCompanyAuth } from '@/shared/analytics/bizEvents';
 import { saveTokens } from '@/shared/api/authTokens';
 import { isMockEnabled } from '@/shared/config/mocks';
 import { useMyAccount } from '@/shared/api/useMyAccount';
@@ -53,6 +54,8 @@ export function LoginPage({ returnPath }: LoginPageProps) {
         throw new Error('기업 로그인 응답에 토큰이 없습니다.');
       }
       saveTokens(body.data);
+      // 토큰 저장이 먼저라 `page_context`(login_state Y)가 `login` 보다 앞에 나간다. 웹과 같다.
+      trackCompanyAuth('login');
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다. 풀면 이동 전에 버튼이 잠깐 다시 켜진다.
       router.replace(returnPath ?? COMPANY_DASHBOARD_HREF);
     } catch (caught) {

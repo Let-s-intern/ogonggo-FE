@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createAdvertisementInquiry } from '@ogonggo/api';
 import { Button, Checkbox, Field, Input, Textarea } from '@ogonggo/ui';
+import { trackBiz } from '@/shared/analytics/bizEvents';
 import { useMyAccount } from '@/shared/api/useMyAccount';
 import { formatPhone } from '@/shared/lib/formatPhone';
 import { CompanyNameCombobox } from '@/shared/ui/CompanyNameCombobox';
@@ -28,7 +29,7 @@ type SubmitState = 'idle' | 'sending' | 'error';
 
 /**
  * 무료 홍보 신청서(PRD 5절, 시안 `.formcard`). 생성된 클라이언트(`createAdvertisementInquiry`)로 보낸다.
- * 기준은 `apps/web/src/views/biz/ui/BizApplyForm.tsx` 다. 이 앱에는 분석 도구가 없어 `biz_*` 이벤트는 보내지 않는다.
+ * 기준은 `apps/web/src/views/biz/ui/BizApplyForm.tsx` 다. 입력 시작·채널 선택·접수를 `biz_*` 이벤트로 GTM 에 보낸다.
  * 로그인했으면 `httpClient` 가 토큰을 실어 서버가 회원 구분과 회원 ID 를 정한다.
  *
  * 오류는 제출을 누른 뒤에 보인다. 그 뒤로는 고칠 때마다 다시 검사해 고친 칸의 문구가 바로 사라진다.
@@ -59,7 +60,17 @@ export function BizApplyForm() {
 
   const errors: ApplyErrors = submitted ? validateApply(values) : {};
 
+  /** `biz_form_start` 는 사람이 처음 칸을 고칠 때 한 번만 보낸다. 미리 채우기는 세지 않는다. */
+  const formStarted = useRef(false);
+  const markStarted = () => {
+    if (!formStarted.current) {
+      formStarted.current = true;
+      trackBiz('biz_form_start');
+    }
+  };
+
   const set = <K extends keyof ApplyValues>(key: K, value: ApplyValues[K]) => {
+    markStarted();
     setValues((current) => ({ ...current, [key]: value }));
   };
 
@@ -80,6 +91,7 @@ export function BizApplyForm() {
     try {
       const request = toRequest(values, readInflow());
       await createAdvertisementInquiry(request);
+      trackBiz('biz_apply_submit', { biz_channel: request.promotionChannel });
       setDone(values.email.trim());
     } catch {
       setState('error');
@@ -123,6 +135,7 @@ export function BizApplyForm() {
             value={values.company}
             maxLength={100}
             onChange={(company, companyNameSource) => {
+              markStarted();
               setValues((current) => ({ ...current, company, companyNameSource }));
             }}
           />
@@ -179,8 +192,14 @@ export function BizApplyForm() {
           group={values.channelGroup}
           room={values.openChatRoom}
           error={errors.channel}
-          onGroupChange={(group) => set('channelGroup', group)}
-          onRoomChange={(room) => set('openChatRoom', room)}
+          onGroupChange={(group) => {
+            set('channelGroup', group);
+            trackBiz('biz_channel_select', { biz_channel: group });
+          }}
+          onRoomChange={(room) => {
+            set('openChatRoom', room);
+            trackBiz('biz_channel_select', { biz_channel: room });
+          }}
         />
         <div className="grid gap-x-3 md:grid-cols-2">
           <Field label="채용 직무명" htmlFor="biz-role" required error={errors.role}>

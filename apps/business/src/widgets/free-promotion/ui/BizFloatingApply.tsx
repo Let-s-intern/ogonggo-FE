@@ -29,6 +29,7 @@ export function BizFloatingApply() {
 
   return (
     <BizApplyLink
+      placement="floating"
       aria-hidden={formVisible}
       tabIndex={formVisible ? -1 : undefined}
       className={`fixed right-5 bottom-5 z-20 inline-flex h-14 items-center rounded-full bg-blue-500 px-[26px] text-base font-bold text-white shadow-[0_12px_24px_-8px_rgba(74,118,255,0.5)] transition-opacity hover:bg-blue-600 md:right-8 md:bottom-8 ${
