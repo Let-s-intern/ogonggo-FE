@@ -9,6 +9,7 @@ import {
   type ReportRange,
   type ReportableContractProduct,
 } from '@/entities/advertisement-contract/api/useContractReport';
+import { useFeatureFlags } from '@/entities/feature-flag/api/useFeatureFlags';
 import { advertisementErrorMessage } from '@/shared/api/advertisementErrors';
 import { exportPdf } from '@/shared/lib/exportPdf';
 import { EChart } from '@/shared/ui/EChart';
@@ -222,10 +223,26 @@ function ProductReport({
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  badge,
+  children,
+}: {
+  title: string;
+  /** 제목 옆에 붙이는 작은 표시. */
+  badge?: string;
+  children: ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-2" data-pdf-block>
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <h3 className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-900">
+        {title}
+        {badge ? (
+          <span className="rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-600">
+            {badge}
+          </span>
+        ) : null}
+      </h3>
       {children}
     </section>
   );
@@ -243,6 +260,15 @@ function ReportBody({
   const { summary, audience } = report;
   const banner = isBannerReport(report);
   const cost = costEfficiency(report);
+  /*
+   * 비용 효율은 플래그와 상관없이 보인다. 운영자는 숨긴 상태에서도 값을 보고 다시 켤지 정해야 한다(PRD D2). 대신 플래그가
+   * 꺼져 있어 비즈니스 리포트에는 보이지 않는다고 제목 옆에 적는다. 플래그를 읽는 중이거나 읽지 못했으면 켜졌는지 모르므로
+   * 적지 않고, 목록에 없는 key 는 꺼짐으로 본다.
+   */
+  const { data: featureFlags } = useFeatureFlags();
+  const costHiddenFromBusiness =
+    featureFlags !== undefined &&
+    featureFlags.find((flag) => flag.key === 'ad_report_cost_efficiency')?.enabled !== true;
   // 공고 전체 조회 중 광고에서 나온 비중. 대상 공고가 여럿이면 합친다.
   const totalViews = report.targets.reduce((acc, target) => acc + target.total.views, 0);
   const detail = showsDetail(report);
@@ -507,7 +533,10 @@ function ReportBody({
       </Section>
 
       {cost ? (
-        <Section title="05 · 비용 효율 — 광고비는 상품 정가, 무료 혜택도 정가로 환산">
+        <Section
+          title="05 · 비용 효율 — 광고비는 상품 정가, 무료 혜택도 정가로 환산"
+          badge={costHiddenFromBusiness ? '비즈니스 리포트에는 숨김' : undefined}
+        >
           <p className="text-xs text-gray-500">
             {cost.prorated
               ? `정가 ${formatCount(report.product.price)}원 중 게시 ${cost.prorated[1]}일 가운데 ${cost.prorated[0]}일치 ${formatCount(Math.round(cost.cost))}원 기준입니다.`
