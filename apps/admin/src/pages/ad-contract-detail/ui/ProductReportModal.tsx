@@ -522,7 +522,16 @@ function ReportBody({
         />
         {report.targets.length > 0 ? (
           <>
-            <p className="pt-2 text-xs text-gray-500">유입 경로별 조회 / 지원하기 클릭</p>
+            <p className="flex flex-wrap items-center gap-2 pt-2 text-xs text-gray-500">
+              유입 경로별 조회 / 지원하기 클릭
+              {/* 운영자용 표시라 PDF 저장에는 넣지 않는다. */}
+              <span
+                data-pdf-hide
+                className="rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-600"
+              >
+                비즈니스 리포트에는 숨김
+              </span>
+            </p>
             <DataTable
               columns={sourceColumns}
               rows={report.targets}
