@@ -10,7 +10,7 @@ import { pendingFilter, type RoleSelection } from '../lib/pendingFilter';
 import { buildJobListHref, type JobListQuery } from '../lib/query';
 import { JOB_ROLE_CHIPS } from '../lib/roleChips';
 import { useReportJobListPending } from './JobListPending';
-import { JobRoleSheet, type JobRoleSelection } from './JobRoleSheet';
+import { JobRoleSheet, trackJobRoleChanges, type JobRoleSelection } from './JobRoleSheet';
 
 /**
  * 목록 줄의 직무 칩 `전체 · 마케팅 · 인사 · 기획 · 세일즈 · 개발`. 새 주소 상태를 만들지 않고
@@ -23,7 +23,7 @@ import { JobRoleSheet, type JobRoleSelection } from './JobRoleSheet';
  * 켜진 칩은 그 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 고른 칩이다. 창에서 여러 직군을 섞어
  * 고를 수 있으므로 칩도 여러 개 켜진다(2026-11-04, 사용자 설문). 칩에 없는 직군은 창에도 없다(`lib/roleChips.ts`).
  *
- * 이미 `전체` 인데 `전체` 를 다시 누르면 직무 조건이 그대로라 이벤트는 없다. 1쪽이면 아무 일도 없고,
+ * 이미 `전체` 인데 `전체` 를 다시 누르면 직무 조건이 그대로라 이벤트는 없다(고른 것이 있을 때 `전체` 는 그 값마다 해제를 보낸다). 1쪽이면 아무 일도 없고,
  * 2쪽 이상이면 1쪽으로만 돌아간다 — 쪽이 바뀌므로 보이는 목록도 바뀐다. `filter_apply` 이벤트는
  * 창이 보낸다(`filter_type: 'job_field'`·`'job_role'`).
  */
@@ -75,7 +75,11 @@ export function JobRoleChips({ query }: { query: JobListQuery }) {
 
   const pressAll = () => {
     // 이미 `전체` 인데 2쪽 이상이면 직무 조건은 그대로이므로 쪽만 1쪽으로 돌린다. 이동 중이면 이미 1쪽으로 가는 중이다.
-    if (!allOn || (query.page > 1 && !isPending)) move({ fields: [], roles: [] });
+    if (!allOn || (query.page > 1 && !isPending)) {
+      // 골라 둔 직군·직무를 비우는 것이므로 값마다 해제를 보낸다. 이미 `전체` 면 보낼 것이 없다.
+      trackJobRoleChanges({ fields, roles }, { fields: [], roles: [] });
+      move({ fields: [], roles: [] });
+    }
   };
 
   // 고른 직군들. 직군을 통째로 골랐거나 그 직군의 직무를 하나라도 골랐으면 담긴다.

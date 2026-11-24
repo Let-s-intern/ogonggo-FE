@@ -13,7 +13,7 @@ import {
   isSelectionEmpty,
   selectionOf,
   toggleSelection,
-  trackAddedSelections,
+  trackSelectionChanges,
   type FilterKey,
   type FilterSelection,
 } from '../lib/filter';
@@ -176,7 +176,7 @@ function JobFilterSheet({
 
   const apply = () => {
     if (!unchanged) {
-      trackAddedSelections(initial, draft);
+      trackSelectionChanges(initial, draft);
       const href = buildJobListHref(query, draft);
       rememberJobFilters(href);
       router.push(href, { scroll: false });

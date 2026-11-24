@@ -50,6 +50,13 @@ export function track(event: string, params: DataLayerParams = {}): void {
   });
 }
 
+/** 이벤트 여럿을 차례로 보낸다. 해제와 선택처럼 한 번의 조작이 여러 건이 될 때 쓴다. */
+export function trackEvents(events: readonly DataLayerEvent[]): void {
+  for (const { event, params } of events) {
+    track(event, params);
+  }
+}
+
 let lastPageContext = '';
 
 /**
@@ -108,34 +115,6 @@ export const NO_AD_PARAMS = {
   ad_product: 'none',
   ad_campaign_id: '',
 } satisfies DataLayerParams;
-
-/**
- * 필터 하나를 `current` 에서 `next` 로 바꿀 때 나갈 `filter_apply` 들. 값 하나당 한 건이라, 고른
- * 값을 다른 값으로 바꾸면 해제와 선택 두 건이다. 같은 값을 다시 고르면 목록이 바뀌지 않아 없다.
- */
-export function filterApplyEvents(
-  filterType: string,
-  current: string | undefined,
-  next: string | undefined,
-): DataLayerEvent[] {
-  if (current === next) {
-    return [];
-  }
-  const events: DataLayerEvent[] = [];
-  if (current) {
-    events.push({
-      event: 'filter_apply',
-      params: { filter_type: filterType, filter_value: current, filter_action: 'deselect' },
-    });
-  }
-  if (next) {
-    events.push({
-      event: 'filter_apply',
-      params: { filter_type: filterType, filter_value: next, filter_action: 'select' },
-    });
-  }
-  return events;
-}
 
 /**
  * `program_status`. 마감이 아니면서 마감까지 7일 이내(D-7~D-DAY)면 `closing_soon` 이다.

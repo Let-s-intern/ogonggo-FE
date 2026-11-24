@@ -74,6 +74,15 @@ function trackRoleChanges(before: JobRole[], after: JobRole[]) {
   );
 }
 
+/**
+ * 직군·직무 선택이 `before` 에서 `after` 로 바뀔 때의 `filter_apply`. 창의 `N개 공고보기` 와, 창 없이 직무
+ * 조건을 비우는 칩 `전체`·사이드바 `초기화` 가 같은 규칙으로 보낸다.
+ */
+export function trackJobRoleChanges(before: JobRoleSelection, after: JobRoleSelection) {
+  trackChanges('job_field', before.fields, after.fields);
+  trackRoleChanges(before.roles, after.roles);
+}
+
 function trackChanges(filterType: string, before: string[], after: string[]) {
   for (const value of after.filter((item) => !before.includes(item))) {
     track('filter_apply', {
@@ -188,8 +197,7 @@ export function JobRoleSheet({
     );
 
   const apply = () => {
-    trackChanges('job_field', initial.fields, selection.fields);
-    trackRoleChanges(initial.roles, selection.roles);
+    trackJobRoleChanges(initial, selection);
     onApply(selection);
     onClose();
   };

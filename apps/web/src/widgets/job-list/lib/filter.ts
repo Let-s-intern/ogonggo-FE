@@ -4,7 +4,8 @@ import {
   REGION_LABELS,
 } from '@/entities/job/model/labels';
 import type { JobRegion } from '@/entities/job/model/types';
-import { track } from '@/shared/analytics/dataLayer';
+import { trackEvents } from '@/shared/analytics/dataLayer';
+import { filterApplyEvents, filterToggleEvents } from '@/shared/analytics/filterApply';
 import type { JobListQuery } from './query';
 
 /**
@@ -152,25 +153,30 @@ export function isSameSelection(a: FilterSelection, b: FilterSelection): boolean
 }
 
 /**
- * 고른 값 하나를 GTM 으로 보낸다. `filter_type` 은 기존 이름(`employment`, `experience`)을 그대로
- * 쓴다. 복수 선택에서는 추가된 값마다 한 건이고, 해제와 초기화는 보내지 않는다.
+ * 값 하나를 눌러 켜거나 끌 때 GTM `filter_apply` 를 보낸다. `filter_type` 은 기존 이름(`employment`,
+ * `experience`)을 그대로 쓴다. 값 하나에 한 건이고 선택과 해제를 모두 보낸다. 지역처럼 하나만 고르는 묶음에서
+ * 다른 값이 골라져 있었다면 그 값의 해제가 먼저 나간다.
  */
-export function trackFilterSelected(filterType: string, value: string): void {
-  track('filter_apply', {
-    filter_type: filterType,
-    filter_value: value,
-    filter_action: 'select',
-  });
+export function trackFilterToggled(
+  key: FilterKey,
+  selection: FilterSelection,
+  value: string,
+): void {
+  const { filterType, single } = FILTER_GROUPS[key];
+  trackEvents(filterToggleEvents(filterType, selection[key], value, single));
 }
 
-/** `before` 에 없던 값마다 `trackFilterSelected` 를 보낸다. 시트의 `공고보기` 가 쓴다. */
-export function trackAddedSelections(before: FilterSelection, after: FilterSelection): void {
+/** 묶음 하나를 `전체` 로 비울 때, 골라 둔 값마다 해제 한 건을 보낸다. */
+export function trackFilterCleared(key: FilterKey, selection: FilterSelection): void {
+  trackEvents(filterApplyEvents(FILTER_GROUPS[key].filterType, selection[key], []));
+}
+
+/**
+ * `before` 에서 `after` 로 바뀐 값마다 한 건씩 보낸다 — 더해진 값은 선택, 빠진 값은 해제다. 모바일 시트의
+ * `공고보기` 와 사이드바의 `초기화` 가 쓴다.
+ */
+export function trackSelectionChanges(before: FilterSelection, after: FilterSelection): void {
   for (const key of Object.keys(FILTER_GROUPS) as FilterKey[]) {
-    const previous: readonly string[] = before[key];
-    for (const value of after[key]) {
-      if (!previous.includes(value)) {
-        trackFilterSelected(FILTER_GROUPS[key].filterType, value);
-      }
-    }
+    trackEvents(filterApplyEvents(FILTER_GROUPS[key].filterType, before[key], after[key]));
   }
 }
