@@ -45,6 +45,9 @@ export function JobCardLink({
 }: JobCardLinkProps) {
   return (
     <Link
+      // 상세 조회수는 상세 페이지의 서버 렌더가 올린다. 화면에 들어온 카드를 미리 불러오면 열지도 않은
+      // 공고의 조회수가 오르므로 기본으로 끈다. 필요한 자리만 `prefetch` 를 넘겨 다시 켠다.
+      prefetch={false}
       {...props}
       onClick={(e) => {
         if (jobInfo && tracking) {

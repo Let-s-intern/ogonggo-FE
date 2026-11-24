@@ -52,7 +52,11 @@ export async function SimilarBootcamps({ excludeBootcampId }: SimilarBootcampsPr
       <ul className="mt-1 divide-y divide-gray-100">
         {items.map((bootcamp) => (
           <li key={bootcamp.id}>
-            <Link href={`/bootcamps/${bootcamp.id}`} className="group flex items-center gap-4 py-4">
+            <Link
+              href={`/bootcamps/${bootcamp.id}`}
+              prefetch={false}
+              className="group flex items-center gap-4 py-4"
+            >
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-xs text-gray-500">
                   <span className="truncate">
