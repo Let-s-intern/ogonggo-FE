@@ -22,14 +22,17 @@ const view = (targetId: number): ContentEvent => ({
   source: 'LIST',
 });
 
-function setup({ beaconAccepts = true } = {}) {
+function setup({ beaconAccepts = true, postStarts = true } = {}) {
   const posted: ContentEventsRequest[] = [];
   const beacons: string[] = [];
   const timers: { callback: () => void; ms: number; cleared: boolean }[] = [];
   const queue = createContentEventQueue({
     getVisitorId: () => 'visitor-1',
     transport: {
-      post: (request) => posted.push(request),
+      post: (request) => {
+        posted.push(request);
+        return postStarts;
+      },
       beacon: (body) => {
         beacons.push(body);
         return beaconAccepts;
@@ -74,25 +77,26 @@ test('10건이 차면 기다리지 않고 보내고 타이머를 지운다', () 
   assert.equal(timers[0]?.cleared, true);
 });
 
-test('떠날 때는 남은 것을 비콘 한 번으로 보낸다', () => {
+test('떠날 때는 남은 것을 토큰 실은 post 한 번으로 보내고 비콘은 쓰지 않는다', () => {
   const { queue, posted, beacons } = setup();
   for (let id = 1; id <= 9; id += 1) {
     queue.push(view(id));
   }
   queue.flushOnLeave();
-  assert.equal(posted.length, 0);
-  assert.equal(beacons.length, 1);
-  const body = JSON.parse(beacons[0] ?? '') as ContentEventsRequest;
-  assert.equal(body.visitorId, 'visitor-1');
-  assert.equal(body.events.length, 9);
+  assert.equal(posted.length, 1);
+  assert.equal(posted[0]?.visitorId, 'visitor-1');
+  assert.equal(posted[0]?.events.length, 9);
+  assert.equal(beacons.length, 0);
 });
 
-test('비콘을 브라우저가 받지 않으면 평소 요청으로 보낸다', () => {
-  const { queue, posted, beacons } = setup({ beaconAccepts: false });
+test('post 를 못 시작할 때만 비콘으로 보낸다', () => {
+  const { queue, posted, beacons } = setup({ postStarts: false });
   queue.push(view(1));
   queue.flushOnLeave();
+  assert.equal(posted.length, 1);
   assert.equal(beacons.length, 1);
-  assert.deepEqual(posted, [{ visitorId: 'visitor-1', events: [view(1)] }]);
+  const body = JSON.parse(beacons[0] ?? '') as ContentEventsRequest;
+  assert.deepEqual(body, { visitorId: 'visitor-1', events: [view(1)] });
 });
 
 test('빈 큐는 아무것도 보내지 않는다', () => {

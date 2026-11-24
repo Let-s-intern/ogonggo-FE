@@ -18,9 +18,9 @@ export type { ContentEvent, ContentEventSource, ContentTargetType } from './cont
  * 광고 성과 리포트용 자체 이벤트를 백엔드로 보낸다(`POST /api/v1/events`, PRD 6.5). GTM·PostHog
  * (`./dataLayer.ts`)와 따로 가는 길이고, 그쪽 이벤트는 그대로 둔다.
  *
- * 모아 보내기는 `./contentEventQueue.ts` 다. 평소에는 `httpClient` 로 보내 로그인했으면 토큰이 실린다. 탭이 숨거나
- * 페이지가 내려갈 때는 남은 것을 `sendBeacon`(text/plain JSON)으로 보낸다 — 그 순간의 `fetch` 는 끊길 수 있다.
- * 비콘에는 토큰을 실을 수 없어 비회원으로 잡힌다.
+ * 모아 보내기는 `./contentEventQueue.ts` 다. 평소에도 탭이 숨거나 페이지가 내려갈 때도 `httpClient` 의
+ * `fetch(keepalive)` 로 보내 로그인했으면 토큰이 실린다. `sendBeacon`(text/plain JSON)은 keepalive 를 못 쓰는
+ * 브라우저에서만 쓴다 — 비콘에는 토큰을 실을 수 없어 비회원으로 잡힌다.
  *
  * 서버 렌더에서는 아무것도 하지 않는다. 큐와 리스너는 처음 보낼 때 만든다.
  */
@@ -51,6 +51,11 @@ function getVisitorId(): string {
   return visitorId;
 }
 
+/** 페이지를 떠나는 순간에도 끊기지 않는 `fetch` 를 쓸 수 있는지. 못 쓰면 떠날 때 비콘으로 돌린다. */
+function supportsKeepalive(): boolean {
+  return typeof Request !== 'undefined' && 'keepalive' in Request.prototype;
+}
+
 function getQueue(): ContentEventQueue | null {
   if (typeof window === 'undefined') {
     return null;
@@ -60,6 +65,9 @@ function getQueue(): ContentEventQueue | null {
       getVisitorId,
       transport: {
         post: (request) => {
+          if (!supportsKeepalive()) {
+            return false;
+          }
           httpClient(ENDPOINT, {
             method: 'POST',
             body: JSON.stringify(request),
@@ -67,6 +75,7 @@ function getQueue(): ContentEventQueue | null {
           }).catch(() => {
             // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 202 는 본문이 없어 읽기에서 던지는 것도 여기로 온다.
           });
+          return true;
         },
         beacon: (body) =>
           typeof navigator.sendBeacon === 'function' && navigator.sendBeacon(ENDPOINT, body),
@@ -87,7 +96,7 @@ export function sendContentEvent(event: ContentEvent): void {
   getQueue()?.push(event);
 }
 
-/** 모인 것을 지금 비콘으로 보낸다. 떠날 때 마지막 이벤트(`SCROLL`)를 넣은 쪽이 부른다. */
+/** 모인 것을 떠나는 길로 지금 보낸다(토큰 실은 keepalive `fetch`). 떠날 때 마지막 이벤트(`SCROLL`)를 넣은 쪽이 부른다. */
 export function flushContentEventsOnLeave(): void {
   getQueue()?.flushOnLeave();
 }
