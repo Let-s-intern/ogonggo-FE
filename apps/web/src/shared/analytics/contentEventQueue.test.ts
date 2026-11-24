@@ -5,6 +5,7 @@ import {
   AD_ENTRY_TTL_MS,
   FLUSH_DELAY_MS,
   createContentEventQueue,
+  detailSource,
   landingSource,
   readVisitorId,
   rememberAdEntry,
@@ -139,6 +140,10 @@ test('사이트 밖에서 바로 연 상세의 유입 경로', () => {
   assert.equal(landingSource('https://www.google.com/', origin), 'SEARCH');
   assert.equal(landingSource('https://search.naver.com/search.naver?q=x', origin), 'SEARCH');
   assert.equal(landingSource('https://www.instagram.com/', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://blog.naver.com/someone/1', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://m.blog.naver.com/someone/1', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://cafe.naver.com/club', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://m.search.naver.com/search.naver?q=x', origin), 'SEARCH');
   assert.equal(landingSource('https://www.ogonggo.co.kr/jobs', origin), 'OTHER');
 });
 
@@ -205,4 +210,35 @@ test('수정키 없는 왼쪽 클릭만 이 탭이 상세로 옮겨 간다', () 
 
 test('링크가 새 탭이면 이 탭은 그대로다', () => {
   assert.equal(staysInThisTab(click(), '_blank'), false);
+});
+
+const landing = {
+  firstJudgement: true,
+  navigation: { name: 'https://www.ogonggo.co.kr/jobs/1', type: 'navigate' },
+  pathname: '/jobs/1',
+  referrer: 'https://www.google.com/',
+  ownOrigin: 'https://www.ogonggo.co.kr',
+};
+
+test('처음 들어온 그 상세는 이전 페이지 주소로 가른다', () => {
+  assert.equal(detailSource(landing), 'SEARCH');
+  assert.equal(detailSource({ ...landing, referrer: 'https://blog.naver.com/a/1' }), 'EXTERNAL');
+  assert.equal(detailSource({ ...landing, referrer: '' }), 'DIRECT');
+});
+
+test('착지를 소비한 뒤에는 같은 주소를 다시 열어도 목록에서 온 것이다', () => {
+  assert.equal(detailSource({ ...landing, firstJudgement: false }), 'LIST');
+});
+
+test('처음 들어온 페이지가 아닌 상세는 목록에서 온 것이다', () => {
+  assert.equal(detailSource({ ...landing, pathname: '/jobs/2' }), 'LIST');
+  assert.equal(detailSource({ ...landing, navigation: undefined }), 'LIST');
+});
+
+test('새로 고침이나 뒤로 가기로 다시 열린 문서는 처음 referrer 를 쓰지 않는다', () => {
+  assert.equal(detailSource({ ...landing, navigation: { ...landing.navigation, type: 'reload' } }), 'OTHER');
+  assert.equal(
+    detailSource({ ...landing, navigation: { ...landing.navigation, type: 'back_forward' } }),
+    'OTHER',
+  );
 });

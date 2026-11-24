@@ -155,10 +155,13 @@ export function visitorCookie(visitorId: string, secure: boolean): string {
 }
 
 const SEARCH_ENGINE_HOST = /(^|\.)(google|naver|daum|bing|yahoo|duckduckgo)\./;
+/** 네이버 블로그·카페는 검색이 아니라 사람이 건 링크다(`naver` 를 포함해도 `SEARCH` 가 아니다). */
+const NAVER_COMMUNITY_HOST = /(^|\.)(blog|cafe)\.naver\.com$/;
 
 /**
  * 상세를 사이트 밖에서 바로 연 경우의 유입 경로. 검색 엔진에서 왔으면 `SEARCH`, 다른 사이트면 `EXTERNAL`,
  * 주소를 직접 쳤거나 북마크면 `DIRECT` 다. 우리 사이트에서 새로 고쳤거나 새 탭으로 연 것은 `OTHER` 다.
+ * 네이버 블로그·카페(`blog.naver.com`, `cafe.naver.com`)는 `EXTERNAL` 이다(2026-11-24).
  */
 export function landingSource(referrer: string, ownOrigin: string): ContentEventSource {
   if (!referrer) {
@@ -173,7 +176,55 @@ export function landingSource(referrer: string, ownOrigin: string): ContentEvent
   if (url.origin === ownOrigin) {
     return 'OTHER';
   }
+  if (NAVER_COMMUNITY_HOST.test(url.hostname)) {
+    return 'EXTERNAL';
+  }
   return SEARCH_ENGINE_HOST.test(url.hostname) ? 'SEARCH' : 'EXTERNAL';
+}
+
+/** `performance.getEntriesByType('navigation')[0]` 에서 `detailSource` 가 보는 값. */
+export interface NavigationLike {
+  /** 페이지를 처음 연 주소. */
+  name: string;
+  /** `navigate` | `reload` | `back_forward` | `prerender`. */
+  type: string;
+}
+
+export interface DetailSourceInput {
+  /** 이 문서(페이지 로드)에서 처음 하는 판정인가. 한 번 판정한 뒤에는 착지를 소비한 것이다. */
+  firstJudgement: boolean;
+  navigation: NavigationLike | undefined;
+  pathname: string;
+  referrer: string;
+  ownOrigin: string;
+}
+
+/**
+ * 광고를 누르지 않고 열린 상세의 유입 경로. 사이트에 처음 들어온 그 페이지일 때만 이전 페이지 주소로 가른다. 한 번 판정한
+ * 뒤에는 같은 주소를 앱 안에서 다시 열어도 검색·외부로 잡지 않고(`LIST`), 새로 고침이나 뒤·앞으로 가기로 다시 열린 문서는
+ * 처음 referrer 가 남아 있어도 어디서 왔는지 알 수 없어 `OTHER` 다(2026-11-24).
+ */
+export function detailSource({
+  firstJudgement,
+  navigation,
+  pathname,
+  referrer,
+  ownOrigin,
+}: DetailSourceInput): ContentEventSource {
+  if (!firstJudgement || !navigation) {
+    return 'LIST';
+  }
+  try {
+    if (new URL(navigation.name).pathname !== pathname) {
+      return 'LIST';
+    }
+  } catch {
+    return 'LIST';
+  }
+  if (navigation.type === 'reload' || navigation.type === 'back_forward') {
+    return 'OTHER';
+  }
+  return landingSource(referrer, ownOrigin);
 }
 
 /** 클릭 이벤트에서 `staysInThisTab` 이 보는 값. React 의 `MouseEvent` 가 그대로 맞는다. */
