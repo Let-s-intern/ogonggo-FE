@@ -15,6 +15,7 @@ import {
   sendWithOneRetry,
   staysInThisTab,
   takeAdEntry,
+  tracksScroll,
   type ContentEvent,
   type ContentEventsRequest,
 } from './contentEventQueue';
@@ -70,6 +71,25 @@ test('2초 뒤에 모인 것을 한 요청으로 보낸다', () => {
   assert.equal(timers[0]?.ms, FLUSH_DELAY_MS);
   fire();
   assert.deepEqual(posted, [{ visitorId: 'visitor-1', events: [view(1), view(2)] }]);
+});
+
+test('취준고민·모집글 상세의 VIEW 도 한 건으로 한 번 나간다', () => {
+  const { queue, posted, fire } = setup();
+  const concern: ContentEvent = { ...view(7), targetType: 'CONCERN' };
+  const post: ContentEvent = { ...view(8), targetType: 'RECRUITMENT_POST' };
+  queue.push(concern);
+  queue.push(post);
+  fire();
+  assert.deepEqual(posted, [{ visitorId: 'visitor-1', events: [concern, post] }]);
+  fire();
+  assert.equal(posted.length, 1);
+});
+
+test('SCROLL 은 공고·부트캠프 상세에서만 잰다', () => {
+  assert.equal(tracksScroll('JOB'), true);
+  assert.equal(tracksScroll('BOOTCAMP'), true);
+  assert.equal(tracksScroll('CONCERN'), false);
+  assert.equal(tracksScroll('RECRUITMENT_POST'), false);
 });
 
 test('10건이 차면 기다리지 않고 보내고 타이머를 지운다', () => {

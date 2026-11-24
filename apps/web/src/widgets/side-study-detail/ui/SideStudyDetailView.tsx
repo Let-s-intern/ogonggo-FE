@@ -6,6 +6,7 @@ import { toSideStudyInfo } from '@/entities/side-study/model/analytics';
 import type { SideStudyDetail } from '@/entities/side-study/model/types';
 import { RecruitmentPostComments } from '@/features/recruitment-post-comments';
 import { hasLexicalText } from '@/shared/lib/lexicalHtml';
+import { DetailContentTracker } from '@/shared/analytics/DetailContentTracker';
 import { ApplyCta } from '@/shared/ui/ApplyCta';
 import { AttachedImages } from '@/shared/ui/AttachedImages';
 import { DdayBadge } from '@/shared/ui/DdayBadge';
@@ -100,6 +101,7 @@ export async function SideStudyDetailView({ postId }: SideStudyDetailViewProps) 
 
   return (
     <div className="flex w-full max-w-page flex-col gap-4">
+      <DetailContentTracker targetType="RECRUITMENT_POST" targetId={sideStudy.id} />
       <SideStudyDetailBreadcrumb />
       <SideStudyDetailHeaderCard sideStudy={sideStudy} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15">
