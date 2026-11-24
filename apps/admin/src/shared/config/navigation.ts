@@ -24,12 +24,14 @@ export interface NavItem {
  * 예정이라 비즈니스 관련 메뉴를 따로 본다). 라우트는 구역과 상관없이 모두 열려 있다.
  */
 // `service` 는 취준생이 쓰는 오공고 서비스(웹·앱) 운영, `business` 는 비즈니스 회원(기업·교육기관) 운영이다. 처음에는
-// `유저` 라 불렀다가 사용자 요청으로 `서비스` 로 바꿨다(2026-11-05).
-export type NavArea = 'service' | 'business';
+// `유저` 라 불렀다가 사용자 요청으로 `서비스` 로 바꿨다(2026-11-05). `developer` 는 개발자가 쓰는 설정·운영 도구·로그다
+// (2026-11-24 사용자, PRD `prd-ad-price-feature-flag.md` 5.6).
+export type NavArea = 'service' | 'business' | 'developer';
 
 export const NAV_AREAS: { area: NavArea; label: string }[] = [
   { area: 'service', label: '서비스' },
   { area: 'business', label: '비즈니스' },
+  { area: 'developer', label: '디벨로퍼' },
 ];
 
 export interface NavSection {
@@ -164,8 +166,8 @@ export const NAV_SECTIONS: NavSection[] = [
     area: 'service',
     /*
      * 보내는 화면과 지난 발송을 보는 화면을 나누고, 전송 내역은 채널마다 따로 둔다. 관리자 발송뿐 아니라 댓글 푸시·
-     * 알림톡·이메일·슬랙도 있어 `고객지원` 에 두기에는 범위가 넓다. 네 내역 화면은 같은 페이지가 채널만 바꿔 그린다
-     * (`pages/notification-history`).
+     * 알림톡·이메일도 있어 `고객지원` 에 두기에는 범위가 넓다. 내역 화면은 같은 페이지가 채널만 바꿔 그린다
+     * (`pages/notification-history`). 슬랙 전송 내역은 내부 알림 기록이라 디벨로퍼 구역 `로그` 에 있다.
      */
     title: '알림',
     items: [
@@ -173,7 +175,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/notifications/history/push', label: '푸시 전송 내역' },
       { path: '/notifications/history/alimtalk', label: '알림톡 전송 내역' },
       { path: '/notifications/history/email', label: '이메일 전송 내역' },
-      { path: '/notifications/history/slack', label: '슬랙 전송 내역' },
     ],
   },
   {
@@ -181,10 +182,16 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ path: '/stats', label: '통계' }],
   },
   {
-    area: 'service',
+    area: 'developer',
+    // 코드가 이 key 로 플래그를 읽는다. 새 플래그는 그 기능의 배포 SQL 로 들어오므로 화면에는 만드는 기능이 없다.
+    title: '설정',
+    items: [{ path: '/developer/feature-flags', label: 'Feature Flag', disabled: true }],
+  },
+  {
+    area: 'developer',
     /*
      * 비용 때문에 평소 꺼 두는 리대시·크롤러 EC2 를 쓸 때만 켠다(BE LC-3616, 2026-11-15 요청). 콘텐츠·회원 운영과 성격이
-     * 달라 따로 둔다.
+     * 달라 따로 둔다. 서비스 구역에 있다가 디벨로퍼 구역으로 옮겼다(2026-11-24). 주소는 그대로다.
      */
     title: '운영 도구',
     items: [
@@ -192,6 +199,12 @@ export const NAV_SECTIONS: NavSection[] = [
       // 고용24 채용정보를 매일 받을 때 어느 직군의 공고를 받을지 켜고 끈다(BE `AdminWork24JobFieldApi`).
       { path: '/tools/work24-job-fields', label: '고용24 수집 직군' },
     ],
+  },
+  {
+    area: 'developer',
+    // 슬랙 전송 내역. 서비스 구역 `알림` 에 있다가 옮겼다(2026-11-24). 주소는 그대로다.
+    title: '로그',
+    items: [{ path: '/notifications/history/slack', label: '슬랙 전송 내역' }],
   },
 ];
 
