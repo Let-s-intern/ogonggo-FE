@@ -185,7 +185,7 @@ export const NAV_SECTIONS: NavSection[] = [
     area: 'developer',
     // 코드가 이 key 로 플래그를 읽는다. 새 플래그는 그 기능의 배포 SQL 로 들어오므로 화면에는 만드는 기능이 없다.
     title: '설정',
-    items: [{ path: '/developer/feature-flags', label: 'Feature Flag', disabled: true }],
+    items: [{ path: '/developer/feature-flags', label: 'Feature Flag' }],
   },
   {
     area: 'developer',

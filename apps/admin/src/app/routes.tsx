@@ -14,6 +14,7 @@ import { CompanyPriorityPage } from '@/pages/company-priority';
 import { ConcernDetailPage } from '@/pages/concern-detail';
 import { ConcernListPage } from '@/pages/concern-list';
 import { CompanyMemberListPage } from '@/pages/company-member-list';
+import { FeatureFlagsPage } from '@/pages/feature-flags';
 import { JobDetailPage } from '@/pages/job-detail';
 import { JobListPage } from '@/pages/job-list';
 import { LoginPage } from '@/pages/login';
@@ -143,6 +144,8 @@ export const router = createBrowserRouter([
       { path: 'notifications/batches/:batchId', element: <NotificationBatchDetailPage /> },
 
       { path: 'stats', element: <StatsPage /> },
+
+      { path: 'developer/feature-flags', element: <FeatureFlagsPage /> },
 
       { path: 'tools/servers', element: <ServerInstancesPage /> },
       { path: 'tools/work24-job-fields', element: <Work24JobFieldsPage /> },
