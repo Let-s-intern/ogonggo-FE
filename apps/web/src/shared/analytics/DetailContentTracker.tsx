@@ -11,6 +11,7 @@ import {
   type DetailVisit,
 } from './contentEvents';
 import { landingSource } from './contentEventQueue';
+import { scrollDepthPercent } from './scrollDepth';
 
 interface VisitState {
   key: string;
@@ -37,15 +38,13 @@ function isLandingPage(): boolean {
 
 /** 스크롤하는 곳이 모달의 안쪽 상자면 그 상자, 아니면 문서. */
 function scrollPercent(box: HTMLElement | null): number {
-  const { scrollTop, scrollHeight, clientHeight } = box ?? {
-    scrollTop: window.scrollY,
-    scrollHeight: document.documentElement.scrollHeight,
-    clientHeight: window.innerHeight,
-  };
-  if (scrollHeight <= 0) {
-    return 0;
-  }
-  return Math.min(100, Math.round(((scrollTop + clientHeight) / scrollHeight) * 100));
+  return scrollDepthPercent(
+    box ?? {
+      scrollTop: window.scrollY,
+      scrollHeight: document.documentElement.scrollHeight,
+      clientHeight: window.innerHeight,
+    },
+  );
 }
 
 /**
@@ -55,7 +54,9 @@ function scrollPercent(box: HTMLElement | null): number {
  * 유입 경로는 광고를 눌러 왔으면 그 광고(`AD_CARD`·`BANNER`)와 노출 id 다. 아니면 사이트에 처음 들어온 페이지일 때
  * 이전 페이지 주소로 가르고(`landingSource`), 앱 안에서 옮겨 왔으면 `LIST` 다.
  *
- * 떠남은 탭이 처음 숨을 때, 페이지가 내려갈 때, 앱 안에서 다른 화면으로 옮길 때 중 먼저 오는 것이다. 보인 시간은 탭이
+ * 떠남은 페이지가 내려갈 때(`pagehide`, 백그라운드에서 얼려질 때의 `freeze` 포함), 앱 안에서 다른 화면으로 옮길 때
+ * 중 먼저 오는 것이다. 탭이 숨는 것(지원 버튼으로 새 탭을 열거나 다른 탭으로 감)은 떠남이 아니다 — 그때는 지금까지의
+ * 가장 깊은 비율을 남겨 두고 시간 재기만 멈춘다. 돌아와 더 내리면 그것까지 합쳐 떠날 때 한 번 보낸다. 보인 시간은 탭이
  * 숨은 동안을 뺀다. 한 번 떠나면 다시 돌아와도 더 보내지 않는다 — 조회 한 번에 `SCROLL` 하나여야 평균이 맞다.
  *
  * 개발 모드의 effect 두 번 실행(마운트, 정리, 다시 마운트)에 `SCROLL` 이 먼저 나가지 않도록, 정리에서 바로 보내지 않고
@@ -133,13 +134,16 @@ export function DetailContentTracker({
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        leave();
+        // 떠난 것이 아니다. 숨기 직전 위치까지 남겨 두고, 다른 이벤트(`CTA_CLICK` 등)가 남아 있으면 내보낸다.
+        onScroll();
+        stopVisibleClock();
         flushContentEventsOnLeave();
       } else {
         current.visibleSince ??= Date.now();
       }
     };
     const onPageHide = () => {
+      onScroll();
       leave();
       flushContentEventsOnLeave();
     };
@@ -148,10 +152,13 @@ export function DetailContentTracker({
     (scrollBox ?? window).addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('pagehide', onPageHide);
+    // 백그라운드 탭이 얼려지면 브라우저가 그 뒤 `pagehide` 없이 탭을 버릴 수 있다. 그 전에 보낸다(Chromium).
+    document.addEventListener('freeze', onPageHide);
     return () => {
       (scrollBox ?? window).removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('pagehide', onPageHide);
+      document.removeEventListener('freeze', onPageHide);
       pendingLeave.current = setTimeout(leave, 0);
     };
   }, [targetType, targetId, scrollBoxRef]);
