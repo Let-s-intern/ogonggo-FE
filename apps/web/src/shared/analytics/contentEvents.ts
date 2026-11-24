@@ -3,10 +3,11 @@ import { getRefreshToken, hasUsableAccessToken } from '@/shared/api/authTokens';
 import { ensureAccessToken } from '@/shared/api/reissue';
 import {
   createContentEventQueue,
+  createImpressionRegistry,
   readVisitorId,
   rememberAdEntry,
+  sendWithOneRetry,
   takeAdEntry,
-  visitorCookie,
   type AdEntry,
   type ContentEvent,
   type ContentEventQueue,
@@ -45,13 +46,13 @@ function newVisitorId(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** 첫 방문이면 만들어 1년 쿠키로 둔다. 쿠키를 막아 두었으면 이 탭에서만 같은 값을 쓴다. */
+/**
+ * 서버가 응답의 `Set-Cookie` 로 둔 방문자 id 를 읽는다(`proxy.ts`). 브라우저에서는 쿠키를 쓰지 않는다 — `document.cookie` 로
+ * 쓴 쿠키는 Safari 가 7일로 줄여(ITP) iOS 비회원이 매주 새 사람이 된다. 쿠키가 없으면(막았거나 서버가 못 줬으면) 이 문서에서만
+ * 같은 값을 쓴다.
+ */
 function getVisitorId(): string {
-  visitorId ??= readVisitorId(document.cookie);
-  if (!visitorId) {
-    visitorId = newVisitorId();
-    document.cookie = visitorCookie(visitorId, location.protocol === 'https:');
-  }
+  visitorId ??= readVisitorId(document.cookie) ?? newVisitorId();
   return visitorId;
 }
 
@@ -81,19 +82,20 @@ function getQueue(): ContentEventQueue | null {
           if (!supportsKeepalive()) {
             return false;
           }
+          // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 네트워크·서버 오류면 한 번 다시 보낸다(`sendWithOneRetry`).
           const send = () =>
-            httpClient(ENDPOINT, {
-              method: 'POST',
-              body: JSON.stringify(request),
-              keepalive: true,
-            }).catch(() => {
-              // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 202 는 본문이 없어 읽기에서 던지는 것도 여기로 온다.
-            });
+            sendWithOneRetry(() =>
+              httpClient(ENDPOINT, {
+                method: 'POST',
+                body: JSON.stringify(request),
+                keepalive: true,
+              }),
+            );
           if (needsReissue()) {
             // 재발급이 실패해도 던지지 않는다. 그때는 토큰 없이 비회원으로라도 보낸다.
             void ensureAccessToken().then(send, send);
           } else {
-            send();
+            void send();
           }
           return true;
         },
@@ -114,6 +116,20 @@ function getQueue(): ContentEventQueue | null {
 
 export function sendContentEvent(event: ContentEvent): void {
   getQueue()?.push(event);
+}
+
+const impressions = createImpressionRegistry();
+
+/** 새 페이지 조회(주소의 경로가 바뀜)가 시작됐다. 이 조회 안에서 센 노출을 잊는다(`createImpressionRegistry`). */
+export function startPageView(): void {
+  impressions.reset();
+}
+
+/** 광고 노출(`IMPRESSION`)을 보낸다. 이 페이지 조회에서 이미 센 노출이면 보내지 않는다. */
+export function sendImpression(event: ContentEvent): void {
+  if (impressions.claim(event)) {
+    sendContentEvent(event);
+  }
 }
 
 /**
@@ -137,10 +153,15 @@ export interface AdClick {
 }
 
 /**
- * 광고를 누를 때 부른다. `AD_CLICK` 을 보내고, 상세로 가는 클릭이면 대상과 노출 id 를 이 탭의 `sessionStorage` 에
- * 남긴다. 주소 쿼리에 싣지 않는 것은 공유·북마크된 주소로 나중에 온 방문까지 광고 몫으로 잡히기 때문이다.
+ * 광고를 누를 때 부른다. `AD_CLICK` 은 어떤 클릭이든 보내고, 이 탭이 상세로 이동하는 클릭(`sameTab`)일 때만 대상과 노출 id 를
+ * 이 탭의 `sessionStorage` 에 남긴다. 새 탭은 그 값을 받지 못하고, 이동하지 않는 탭에 남기면 나중에 같은 공고를 일반 카드로 열 때
+ * 광고 몫으로 잡히기 때문이다(`staysInThisTab`). 주소 쿼리에 싣지 않는 것은 공유·북마크된 주소로 나중에 온 방문까지 광고 몫으로
+ * 잡히기 때문이다.
  */
-export function recordAdClick({ exposureId, source, target }: AdClick): void {
+export function recordAdClick(
+  { exposureId, source, target }: AdClick,
+  { sameTab }: { sameTab: boolean },
+): void {
   // 배너 클릭은 대상 없이 보낸다(API 계약 1절). 배너 노출에는 대상이 없어 대상을 실으면 불일치로 버려질 수 있다.
   const clickTarget = source === 'BANNER' ? null : target;
   sendContentEvent({
@@ -150,7 +171,7 @@ export function recordAdClick({ exposureId, source, target }: AdClick): void {
     exposureId,
     source,
   });
-  if (target) {
+  if (target && sameTab) {
     rememberAdEntry(sessionStorage, { ...target, exposureId, source, at: Date.now() });
   }
 }

@@ -75,7 +75,8 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
       </div>
       {/* 세 탭 목록을 같은 칸에 겹쳐 두고 고른 탭만 보인다. 칸 높이가 가장 높은 탭에 맞춰져, 탭을 바꿔도
           히어로 박스가 줄었다 늘었다 하지 않는다 — 오공고 PICK 카드에만 추천 이유 상자가 붙어 탭마다 높이가
-          달랐다(2026-10-12, 사용자). 숨긴 탭은 `inert` 로 포커스·스크린 리더에서 뺀다. */}
+          달랐다(2026-10-12, 사용자). 숨긴 탭은 `inert` 로 포커스·스크린 리더에서 뺀다. 노출도
+          고른 탭의 카드만 센다(`TabList` 의 `selected`). */}
       <div className="grid">
         {tabs.map((tab) => (
           <div
@@ -83,7 +84,7 @@ export function PopularJobsTabs({ picks, popular, intern, newcomer }: PopularJob
             inert={tab !== active}
             className={cn('col-start-1 row-start-1 min-w-0', tab !== active && 'invisible')}
           >
-            <TabList tab={tab} items={itemsByTab[tab]} />
+            <TabList tab={tab} items={itemsByTab[tab]} selected={tab === active} />
           </div>
         ))}
       </div>
@@ -106,7 +107,7 @@ function recommendationOf(job: JobSummary) {
 /** PC 에서 한 번에 보이고 화살표 한 번에 넘어가는 카드 수. 그리드 네 칸과 같다. */
 const PAGE_SIZE = 4;
 
-function TabList({ tab, items }: { tab: TabKey; items: PickCard[] }) {
+function TabList({ tab, items, selected }: { tab: TabKey; items: PickCard[]; selected: boolean }) {
   const [page, setPage] = useState(0);
 
   if (items.length === 0) {
@@ -153,6 +154,8 @@ function TabList({ tab, items }: { tab: TabKey; items: PickCard[] }) {
                 tab === 'pick' ? (ad ? recommendation : recommendationOf(job)) : undefined
               }
               tracking={{ listSource: 'main', listPosition: index + 1, pageNumber: 1 }}
+              // 고르지 않은 탭은 `invisible` 로 가려져 있을 뿐이라 화면 교차 관찰에는 보인다. 고를 때까지 노출을 세지 않는다.
+              trackImpression={selected}
             />
           </li>
         ))}

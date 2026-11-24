@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import type { AdvertisementExposureResponse } from '@ogonggo/api';
-import { flushContentEvents, type AdClick } from '@/shared/analytics/contentEvents';
+import { flushContentEvents } from '@/shared/analytics/contentEvents';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
+import { bannerLink, bannerTarget } from '../model/bannerLink';
 import type { BannerPlacement } from '../model/placement';
 
 /** 여럿일 때 다음 배너로 넘기는 간격. */
@@ -35,18 +36,6 @@ const MOBILE_MEDIA = {
 } as const;
 
 /**
- * 배너가 사이트 안 공고·부트캠프 상세로 가면 그 대상. 같은 탭으로 가는 상대 경로만 본다 — 외부 주소는 새 탭이라
- * 이 탭의 저장소로 노출 id 를 넘길 수 없다.
- */
-function bannerTarget(linkUrl: string): AdClick['target'] {
-  const match = /^\/(jobs|bootcamps)\/(\d+)(?:[/?#]|$)/.exec(linkUrl);
-  if (!match) {
-    return null;
-  }
-  return { targetType: match[1] === 'jobs' ? 'JOB' : 'BOOTCAMP', targetId: Number(match[2]) };
-}
-
-/**
  * 가로 배너 한 자리. PC(md 이상)는 1200×120, 모바일은 750×200 비율이다. 모바일 폭에서는
  * `mobileImageUrl` 을 쓰고, 없으면 두 폭에 같은 `imageUrl` 을 `object-cover` 로 채운다(BE LC-3589).
  *
@@ -56,7 +45,7 @@ function bannerTarget(linkUrl: string): AdClick['target'] {
  *
  * 배너는 모두 그려 두고 보이는 것만 남긴다. 숨은 배너는 `inert` 라 탭 이동과 스크린 리더에서 빠진다.
  *
- * 외부 주소는 새 탭, 사이트 안 경로는 같은 탭이다(BE 에 새 탭 칸이 없다). 누르면 `banner_click` 을 GTM·PostHog 로
+ * 외부 주소는 새 탭, 사이트 안 경로는 같은 탭이다(BE 에 새 탭 칸이 없다). 우리 사이트의 절대 주소는 사이트 안 경로로 본다(`bannerLink`). 누르면 `banner_click` 을 GTM·PostHog 로
  * 보낸다 — 마케팅 명세(`shared/analytics/dataLayer.ts`)에 아직 없는 이벤트라 GTM 쪽 태그는 마케팅팀이 더해야 한다.
  *
  * `광고` 표시는 배너가 `adLabel` 일 때만 붙는다. 오공고 자체 홍보 배너는 광고주가 따로 없어 붙이지 않고,
@@ -93,8 +82,7 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
       <div className={cn('grid w-full overflow-hidden bg-gray-50', FRAME_CLASS[variant])}>
         {banners.map((banner, index) => {
           const active = index === current;
-          const external = /^https?:\/\//.test(banner.linkUrl);
-          const newTab = external;
+          const { href, newTab } = bannerLink(banner.linkUrl);
           return (
             <div
               key={banner.id}
@@ -120,11 +108,11 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                 }}
               >
                 <TrackedLink
-                  href={banner.linkUrl}
+                  href={href}
                   adClick={{
                     exposureId: banner.id,
                     source: 'BANNER',
-                    target: bannerTarget(banner.linkUrl),
+                    target: bannerTarget(href),
                   }}
                   onClick={newTab ? flushContentEvents : undefined}
                   target={newTab ? '_blank' : undefined}

@@ -5,11 +5,16 @@ import {
   AD_ENTRY_TTL_MS,
   FLUSH_DELAY_MS,
   createContentEventQueue,
+  createImpressionRegistry,
+  RETRY_DELAY_MS,
+  detailSource,
+  isRetryableFailure,
   landingSource,
   readVisitorId,
   rememberAdEntry,
+  sendWithOneRetry,
+  staysInThisTab,
   takeAdEntry,
-  visitorCookie,
   type ContentEvent,
   type ContentEventsRequest,
 } from './contentEventQueue';
@@ -127,17 +132,16 @@ test('방문자 id 쿠키를 읽고, 모양이 틀리면 버린다', () => {
   assert.equal(readVisitorId(`ogg_vid=${'a'.repeat(37)}`), null);
 });
 
-test('방문자 쿠키는 1년이고 https 에서만 Secure 다', () => {
-  assert.equal(visitorCookie('v', false), 'ogg_vid=v; Max-Age=31536000; Path=/; SameSite=Lax');
-  assert.match(visitorCookie('v', true), /; Secure$/);
-});
-
 test('사이트 밖에서 바로 연 상세의 유입 경로', () => {
   const origin = 'https://www.ogonggo.co.kr';
   assert.equal(landingSource('', origin), 'DIRECT');
   assert.equal(landingSource('https://www.google.com/', origin), 'SEARCH');
   assert.equal(landingSource('https://search.naver.com/search.naver?q=x', origin), 'SEARCH');
   assert.equal(landingSource('https://www.instagram.com/', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://blog.naver.com/someone/1', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://m.blog.naver.com/someone/1', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://cafe.naver.com/club', origin), 'EXTERNAL');
+  assert.equal(landingSource('https://m.search.naver.com/search.naver?q=x', origin), 'SEARCH');
   assert.equal(landingSource('https://www.ogonggo.co.kr/jobs', origin), 'OTHER');
 });
 
@@ -181,4 +185,158 @@ test('대상이 다르거나 30분이 지나면 광고 몫이 아니다', () => 
   assert.equal(takeAdEntry(storage, 'JOB', 8, 1000), null);
   rememberAdEntry(storage, entry);
   assert.equal(takeAdEntry(storage, 'JOB', 7, 1001 + AD_ENTRY_TTL_MS), null);
+});
+
+const click = (overrides: Partial<Parameters<typeof staysInThisTab>[0]> = {}) => ({
+  button: 0,
+  metaKey: false,
+  ctrlKey: false,
+  shiftKey: false,
+  altKey: false,
+  ...overrides,
+});
+
+test('수정키 없는 왼쪽 클릭만 이 탭이 상세로 옮겨 간다', () => {
+  assert.equal(staysInThisTab(click()), true);
+  assert.equal(staysInThisTab(click(), '_self'), true);
+  assert.equal(staysInThisTab(click({ metaKey: true })), false);
+  assert.equal(staysInThisTab(click({ ctrlKey: true })), false);
+  assert.equal(staysInThisTab(click({ shiftKey: true })), false);
+  assert.equal(staysInThisTab(click({ altKey: true })), false);
+  assert.equal(staysInThisTab(click({ button: 1 })), false);
+});
+
+test('링크가 새 탭이면 이 탭은 그대로다', () => {
+  assert.equal(staysInThisTab(click(), '_blank'), false);
+});
+
+const landing = {
+  firstJudgement: true,
+  navigation: { name: 'https://www.ogonggo.co.kr/jobs/1', type: 'navigate' },
+  pathname: '/jobs/1',
+  referrer: 'https://www.google.com/',
+  ownOrigin: 'https://www.ogonggo.co.kr',
+};
+
+test('처음 들어온 그 상세는 이전 페이지 주소로 가른다', () => {
+  assert.equal(detailSource(landing), 'SEARCH');
+  assert.equal(detailSource({ ...landing, referrer: 'https://blog.naver.com/a/1' }), 'EXTERNAL');
+  assert.equal(detailSource({ ...landing, referrer: '' }), 'DIRECT');
+});
+
+test('착지를 소비한 뒤에는 같은 주소를 다시 열어도 목록에서 온 것이다', () => {
+  assert.equal(detailSource({ ...landing, firstJudgement: false }), 'LIST');
+});
+
+test('처음 들어온 페이지가 아닌 상세는 목록에서 온 것이다', () => {
+  assert.equal(detailSource({ ...landing, pathname: '/jobs/2' }), 'LIST');
+  assert.equal(detailSource({ ...landing, navigation: undefined }), 'LIST');
+});
+
+test('새로 고침이나 뒤로 가기로 다시 열린 문서는 처음 referrer 를 쓰지 않는다', () => {
+  assert.equal(
+    detailSource({ ...landing, navigation: { ...landing.navigation, type: 'reload' } }),
+    'OTHER',
+  );
+  assert.equal(
+    detailSource({ ...landing, navigation: { ...landing.navigation, type: 'back_forward' } }),
+    'OTHER',
+  );
+});
+
+const impression = (exposureId: number, targetId: number | null = null): ContentEvent => ({
+  type: 'IMPRESSION',
+  targetType: targetId === null ? null : 'JOB',
+  targetId,
+  exposureId,
+  source: targetId === null ? 'BANNER' : 'AD_CARD',
+});
+
+test('같은 페이지 조회 안에서는 노출 id 마다 한 번만 센다', () => {
+  const registry = createImpressionRegistry();
+  assert.equal(registry.claim(impression(1)), true);
+  assert.equal(registry.claim(impression(1)), false);
+  assert.equal(registry.claim(impression(2)), true);
+  assert.equal(registry.claim(impression(31, 7)), true);
+  assert.equal(registry.claim(impression(31, 7)), false);
+});
+
+test('같은 노출 id 라도 대상이 다르면 다른 노출이다', () => {
+  const registry = createImpressionRegistry();
+  assert.equal(registry.claim(impression(31, 7)), true);
+  assert.equal(registry.claim(impression(31, 8)), true);
+});
+
+test('새 페이지 조회가 시작되면 다시 센다', () => {
+  const registry = createImpressionRegistry();
+  assert.equal(registry.claim(impression(1)), true);
+  registry.reset();
+  assert.equal(registry.claim(impression(1)), true);
+});
+
+class HttpFailure extends Error {
+  constructor(readonly status: number) {
+    super(`failed: ${status}`);
+  }
+}
+
+function retrySetup(results: Array<'ok' | Error>) {
+  let calls = 0;
+  const timers: { callback: () => void; ms: number }[] = [];
+  const done = sendWithOneRetry(
+    async () => {
+      const result = results[calls++];
+      if (result instanceof Error) {
+        throw result;
+      }
+    },
+    (callback, ms) => timers.push({ callback, ms }),
+  );
+  return { done, timers, calls: () => calls };
+}
+
+const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
+test('네트워크 오류와 서버 오류만 다시 보낼 만한 실패다', () => {
+  assert.equal(isRetryableFailure(new TypeError('Failed to fetch')), true);
+  assert.equal(isRetryableFailure(new HttpFailure(500)), true);
+  assert.equal(isRetryableFailure(new HttpFailure(503)), true);
+  assert.equal(isRetryableFailure(new HttpFailure(400)), false);
+  assert.equal(isRetryableFailure(new HttpFailure(429)), false);
+  // 202 는 본문이 없어 `response.json()` 이 던진다. 성공이므로 다시 보내지 않는다.
+  assert.equal(isRetryableFailure(new SyntaxError('Unexpected end of JSON input')), false);
+});
+
+test('성공하면 다시 보내지 않는다', async () => {
+  const { done, timers, calls } = retrySetup(['ok']);
+  await done;
+  assert.equal(calls(), 1);
+  assert.equal(timers.length, 0);
+});
+
+test('실패하면 3초 뒤 한 번만 다시 보낸다', async () => {
+  const { done, timers, calls } = retrySetup([new TypeError('Failed to fetch'), 'ok']);
+  await flushMicrotasks();
+  assert.equal(calls(), 1);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0]?.ms, RETRY_DELAY_MS);
+  timers[0]?.callback();
+  await done;
+  assert.equal(calls(), 2);
+});
+
+test('다시 보내도 실패하면 버리고 더 보내지 않는다', async () => {
+  const { done, timers, calls } = retrySetup([new HttpFailure(502), new HttpFailure(502), 'ok']);
+  await flushMicrotasks();
+  timers[0]?.callback();
+  await done;
+  assert.equal(calls(), 2);
+  assert.equal(timers.length, 1);
+});
+
+test('다시 보낼 만한 실패가 아니면 그대로 버린다', async () => {
+  const { done, timers, calls } = retrySetup([new HttpFailure(400), 'ok']);
+  await done;
+  assert.equal(calls(), 1);
+  assert.equal(timers.length, 0);
 });
