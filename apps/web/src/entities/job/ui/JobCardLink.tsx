@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ComponentProps } from 'react';
 import { recordAdClick, type AdClick } from '@/shared/analytics/contentEvents';
+import { staysInThisTab } from '@/shared/analytics/contentEventQueue';
 import { track, type DataLayerEvent, type DataLayerParams } from '@/shared/analytics/dataLayer';
 import { rememberListSource } from '../model/listSource';
 
@@ -41,6 +42,7 @@ export function JobCardLink({
   extraEvents,
   adClick,
   onClick,
+  onAuxClick,
   ...props
 }: JobCardLinkProps) {
   return (
@@ -63,9 +65,16 @@ export function JobCardLink({
           track(event, params);
         }
         if (adClick) {
-          recordAdClick(adClick);
+          recordAdClick(adClick, { sameTab: staysInThisTab(e, props.target) });
         }
         onClick?.(e);
+      }}
+      onAuxClick={(e) => {
+        // 가운데 클릭은 `onClick` 이 불리지 않는다. 광고 클릭만 센다 — 새 탭으로 열리므로 노출 id 는 남기지 않는다.
+        if (adClick && e.button === 1) {
+          recordAdClick(adClick, { sameTab: false });
+        }
+        onAuxClick?.(e);
       }}
     />
   );

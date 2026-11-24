@@ -137,10 +137,15 @@ export interface AdClick {
 }
 
 /**
- * 광고를 누를 때 부른다. `AD_CLICK` 을 보내고, 상세로 가는 클릭이면 대상과 노출 id 를 이 탭의 `sessionStorage` 에
- * 남긴다. 주소 쿼리에 싣지 않는 것은 공유·북마크된 주소로 나중에 온 방문까지 광고 몫으로 잡히기 때문이다.
+ * 광고를 누를 때 부른다. `AD_CLICK` 은 어떤 클릭이든 보내고, 이 탭이 상세로 이동하는 클릭(`sameTab`)일 때만 대상과 노출 id 를
+ * 이 탭의 `sessionStorage` 에 남긴다. 새 탭은 그 값을 받지 못하고, 이동하지 않는 탭에 남기면 나중에 같은 공고를 일반 카드로 열 때
+ * 광고 몫으로 잡히기 때문이다(`staysInThisTab`). 주소 쿼리에 싣지 않는 것은 공유·북마크된 주소로 나중에 온 방문까지 광고 몫으로
+ * 잡히기 때문이다.
  */
-export function recordAdClick({ exposureId, source, target }: AdClick): void {
+export function recordAdClick(
+  { exposureId, source, target }: AdClick,
+  { sameTab }: { sameTab: boolean },
+): void {
   // 배너 클릭은 대상 없이 보낸다(API 계약 1절). 배너 노출에는 대상이 없어 대상을 실으면 불일치로 버려질 수 있다.
   const clickTarget = source === 'BANNER' ? null : target;
   sendContentEvent({
@@ -150,7 +155,7 @@ export function recordAdClick({ exposureId, source, target }: AdClick): void {
     exposureId,
     source,
   });
-  if (target) {
+  if (target && sameTab) {
     rememberAdEntry(sessionStorage, { ...target, exposureId, source, at: Date.now() });
   }
 }

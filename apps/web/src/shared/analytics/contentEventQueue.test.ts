@@ -8,6 +8,7 @@ import {
   landingSource,
   readVisitorId,
   rememberAdEntry,
+  staysInThisTab,
   takeAdEntry,
   visitorCookie,
   type ContentEvent,
@@ -181,4 +182,27 @@ test('대상이 다르거나 30분이 지나면 광고 몫이 아니다', () => 
   assert.equal(takeAdEntry(storage, 'JOB', 8, 1000), null);
   rememberAdEntry(storage, entry);
   assert.equal(takeAdEntry(storage, 'JOB', 7, 1001 + AD_ENTRY_TTL_MS), null);
+});
+
+const click = (overrides: Partial<Parameters<typeof staysInThisTab>[0]> = {}) => ({
+  button: 0,
+  metaKey: false,
+  ctrlKey: false,
+  shiftKey: false,
+  altKey: false,
+  ...overrides,
+});
+
+test('수정키 없는 왼쪽 클릭만 이 탭이 상세로 옮겨 간다', () => {
+  assert.equal(staysInThisTab(click()), true);
+  assert.equal(staysInThisTab(click(), '_self'), true);
+  assert.equal(staysInThisTab(click({ metaKey: true })), false);
+  assert.equal(staysInThisTab(click({ ctrlKey: true })), false);
+  assert.equal(staysInThisTab(click({ shiftKey: true })), false);
+  assert.equal(staysInThisTab(click({ altKey: true })), false);
+  assert.equal(staysInThisTab(click({ button: 1 })), false);
+});
+
+test('링크가 새 탭이면 이 탭은 그대로다', () => {
+  assert.equal(staysInThisTab(click(), '_blank'), false);
 });

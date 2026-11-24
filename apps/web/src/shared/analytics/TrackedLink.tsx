@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ComponentProps } from 'react';
 import { recordAdClick, type AdClick } from './contentEvents';
+import { staysInThisTab } from './contentEventQueue';
 import { track, type DataLayerEvent } from './dataLayer';
 
 export type TrackedLinkProps = ComponentProps<typeof Link> & {
@@ -21,7 +22,7 @@ export type TrackedLinkProps = ComponentProps<typeof Link> & {
  * 보내는 시점은 핸들러 처음, 이동 전이다(명세 2장). 같은 탭 이동은 SPA 라우팅이라 페이지가
  * 내려가지 않고, 외부 링크는 전부 새 탭이라 `eventCallback` 이 필요 없다.
  */
-export function TrackedLink({ events, adClick, onClick, ...props }: TrackedLinkProps) {
+export function TrackedLink({ events, adClick, onClick, onAuxClick, ...props }: TrackedLinkProps) {
   return (
     <Link
       {...props}
@@ -30,9 +31,16 @@ export function TrackedLink({ events, adClick, onClick, ...props }: TrackedLinkP
           track(event, params);
         }
         if (adClick) {
-          recordAdClick(adClick);
+          recordAdClick(adClick, { sameTab: staysInThisTab(e, props.target) });
         }
         onClick?.(e);
+      }}
+      onAuxClick={(e) => {
+        // 가운데 클릭은 `onClick` 이 불리지 않는다. 광고 클릭만 센다 — 새 탭으로 열리므로 노출 id 는 남기지 않는다.
+        if (adClick && e.button === 1) {
+          recordAdClick(adClick, { sameTab: false });
+        }
+        onAuxClick?.(e);
       }}
     />
   );

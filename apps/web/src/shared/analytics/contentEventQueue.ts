@@ -176,6 +176,27 @@ export function landingSource(referrer: string, ownOrigin: string): ContentEvent
   return SEARCH_ENGINE_HOST.test(url.hostname) ? 'SEARCH' : 'EXTERNAL';
 }
 
+/** 클릭 이벤트에서 `staysInThisTab` 이 보는 값. React 의 `MouseEvent` 가 그대로 맞는다. */
+export interface ClickLike {
+  button: number;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+}
+
+/**
+ * 이 클릭이 지금 탭을 링크 대상으로 옮기는지. 수정키(cmd·ctrl·shift·alt)를 누르거나 가운데 버튼이거나 링크가 새 탭
+ * (`target`)이면 다른 탭이 열려 이 탭은 그대로다. 광고 클릭이 상세로 넘기는 노출 id 는 이 탭의 `sessionStorage` 에 남기므로,
+ * 이동하지 않는 클릭이 남기면 원래 탭에서 나중에 같은 공고를 일반 카드로 열 때 광고 몫으로 잡힌다(2026-11-24).
+ */
+export function staysInThisTab(click: ClickLike, linkTarget?: string | null): boolean {
+  if (click.button !== 0 || click.metaKey || click.ctrlKey || click.shiftKey || click.altKey) {
+    return false;
+  }
+  return !linkTarget || linkTarget === '_self';
+}
+
 /** 광고(카드·배너)를 눌러 상세로 갈 때 남기는 값. 상세가 읽어 자기 이벤트의 `exposureId` 로 싣는다. */
 export interface AdEntry {
   targetType: ContentTargetType;
