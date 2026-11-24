@@ -7,6 +7,7 @@ import { concernHandlers } from './concerns';
 import { contentHandlers } from './content';
 import { dashboardHandlers } from './dashboard';
 import { ec2InstanceHandlers } from './ec2-instances';
+import { featureFlagHandlers } from './featureFlags';
 import { inspectionHandlers } from './inspection';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
@@ -49,6 +50,7 @@ export const adminHandlers: HttpHandler[] = [
   ...notificationHandlers,
   ...recommendWeightsHandlers,
   ...work24JobFieldHandlers,
+  ...featureFlagHandlers,
   ...companyPriorityHandlers,
   // 계약 상세를 먼저 받아 리포트 칸을 얹으므로 `advertisementAdminHandlers` 보다 앞에 둔다.
   ...advertisementReportHandlers,

@@ -28,9 +28,13 @@ export interface MockReportMetrics {
 
 export interface MockReportDailyRow extends MockReportMetrics {
   date: string;
+  /** 그날 광고를 본 서로 다른 사람 수. 원본 보관 기간보다 앞날은 null. */
+  reach: number | null;
 }
 
-export interface MockReportCsvRow extends MockReportDailyRow {
+/** CSV 는 날짜별 도달을 싣지 않는다(PRD 5.8). */
+export interface MockReportCsvRow extends MockReportMetrics {
+  date: string;
   exposureId: number;
   exposureName: string;
 }
@@ -411,7 +415,8 @@ export function buildReport(
     plan.exposures.map((exposure) => exposureDay(plan, exposure, date)),
   );
   const daily = dates.map((date, i): MockReportDailyRow => {
-    const row = { date, ...dayTotal(cells[i]!) };
+    const metrics = dayTotal(cells[i]!);
+    const row = { date, ...metrics, reach: Math.round(metrics.impressions * 0.5) };
     return isBanner(product) ? withoutScroll(row) : row;
   });
   const total = sum(cells.flat());

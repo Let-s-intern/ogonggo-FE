@@ -258,6 +258,8 @@ export interface ReportDaily extends Omit<
   date: string;
   impressions: number;
   uniqueImpressions: number;
+  /** 그날 광고를 본 서로 다른 사람 수. 원본 보관 기간보다 앞날은 null. */
+  reach: number | null;
   adClicks: number;
   avgScrollPercent: number | null;
   avgDurationSeconds: number | null;
@@ -611,6 +613,7 @@ function buildReport(
       date,
       impressions: day.reduce((sum, row) => sum + row.impressions, 0),
       uniqueImpressions: day.reduce((sum, row) => sum + row.uniqueImpressions, 0),
+      reach: Math.round(day.reduce((sum, row) => sum + row.impressions, 0) * 0.5),
       adClicks: day.reduce((sum, row) => sum + row.adClicks, 0),
       ...sumDetail(day),
     };

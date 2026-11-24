@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { enumLabel, HttpError } from '@ogonggo/api';
 import { cn } from '@ogonggo/ui';
+import { useFeatureFlag } from '@/shared/api/useFeatureFlag';
 import { isReportEnabled } from '@/shared/config/reports';
 import { DatePicker } from '@/shared/ui/DatePicker';
 import { downloadAdReportCsv, fetchAdReport } from '../lib/api';
@@ -60,6 +61,8 @@ function ProductReport({
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [load, setLoad] = useState<Load>({ kind: 'loading' });
+  // 리포트를 받는 동안 같이 읽어 본문이 그려질 때 이미 알고 있게 한다. 읽는 동안과 읽지 못했을 때는 꺼짐이다.
+  const showCostEfficiency = useFeatureFlag('ad_report_cost_efficiency');
 
   useEffect(() => {
     let active = true;
@@ -163,7 +166,7 @@ function ProductReport({
       {load.kind === 'ready' ? (
         <>
           <ReportHeader report={load.report} companyName={companyName} today={today} />
-          <ReportBody report={load.report} />
+          <ReportBody report={load.report} showCostEfficiency={showCostEfficiency} />
         </>
       ) : (
         <p
