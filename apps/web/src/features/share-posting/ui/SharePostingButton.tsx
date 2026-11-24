@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn, useToast } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
-import { currentVisitFor, sendContentEvent } from '@/shared/analytics/contentEvents';
+import { currentVisitFor, flushContentEvents, sendContentEvent } from '@/shared/analytics/contentEvents';
 import {
   googleCalendarUrl,
   linkedInShareUrl,
@@ -96,6 +96,8 @@ function ShareSheet({ posting, onClose }: { posting: SharePosting; onClose: () =
     const target = shareTargetOf(posting);
     if (target) {
       sendContentEvent({ type: 'SHARE', ...currentVisitFor(target.targetType, target.targetId) });
+      // SNS 공유 창과 기기 공유 창이 열리면 이 탭이 숨는다. 숨기 전에 보낸다.
+      flushContentEvents();
     }
   };
 

@@ -96,6 +96,14 @@ export function sendContentEvent(event: ContentEvent): void {
   getQueue()?.push(event);
 }
 
+/**
+ * 모인 것을 지금 보낸다. 새 탭을 여는 클릭(지원 버튼, 외부 주소 배너, SNS 공유)이 이벤트를 넣은 직후 부른다 — 새 탭이
+ * 열리면 원래 탭이 곧바로 숨는데, 그때까지 2초 타이머를 기다리게 두지 않는다.
+ */
+export function flushContentEvents(): void {
+  getQueue()?.flush();
+}
+
 /** 모인 것을 떠나는 길로 지금 보낸다(토큰 실은 keepalive `fetch`). 떠날 때 마지막 이벤트(`SCROLL`)를 넣은 쪽이 부른다. */
 export function flushContentEventsOnLeave(): void {
   getQueue()?.flushOnLeave();

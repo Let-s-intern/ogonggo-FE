@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@ogonggo/ui';
 import type { AdvertisementExposureResponse } from '@ogonggo/api';
-import type { AdClick } from '@/shared/analytics/contentEvents';
+import { flushContentEvents, type AdClick } from '@/shared/analytics/contentEvents';
 import { ImpressionTracker } from '@/shared/analytics/ImpressionTracker';
 import { TrackedLink } from '@/shared/analytics/TrackedLink';
 import type { BannerPlacement } from '../model/placement';
@@ -126,6 +126,7 @@ export function BannerCarousel({ banners, placement, variant = 'wide' }: BannerC
                     source: 'BANNER',
                     target: bannerTarget(banner.linkUrl),
                   }}
+                  onClick={newTab ? flushContentEvents : undefined}
                   target={newTab ? '_blank' : undefined}
                   rel={newTab ? 'noopener noreferrer' : undefined}
                   className="block h-full w-full"
