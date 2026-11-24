@@ -1,5 +1,5 @@
 import { enumLabel } from '@ogonggo/api';
-import type { ReportableProduct, ReportSource } from './types';
+import type { ReportableProduct } from './types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -36,16 +36,6 @@ export function formatSeconds(value: number | null): string {
 export function positionLabel(position: string): string {
   return enumLabel('AdvertisementProductPosition', position);
 }
-
-export const SOURCE_LABELS: Record<ReportSource, string> = {
-  AD_CARD: '광고 카드',
-  BANNER: '배너',
-  LIST: '일반 목록',
-  SEARCH: '검색',
-  DIRECT: '직접 방문',
-  EXTERNAL: '외부',
-  OTHER: '기타',
-};
 
 export type ProductProgress = 'NO_PERIOD' | 'SCHEDULED' | 'RUNNING' | 'ENDED';
 

@@ -13,7 +13,6 @@ import {
   formatPercent,
   formatRate,
   formatSeconds,
-  SOURCE_LABELS,
   todayYmd,
 } from '../model/format';
 import type { AdReport } from '../model/types';
@@ -266,7 +265,7 @@ function ExposureTable({ report }: { report: AdReport }) {
   );
 }
 
-/** 02. 공고 전체 성과: 대상 공고마다 조회, 조회한 사람, 회원 조회, 지원하기 클릭, 저장, 공유와 유입 경로별. */
+/** 02. 공고 전체 성과: 대상 공고마다 조회, 조회한 사람, 회원 조회, 지원하기 클릭, 저장, 공유. 유입 경로별은 어드민 리포트에만 둔다. */
 function PostingSection({ report, no }: { report: AdReport; no: string }) {
   return (
     <Section
@@ -278,78 +277,48 @@ function PostingSection({ report, no }: { report: AdReport; no: string }) {
         <p className="py-4 text-center text-sm text-gray-500">이 계약에 연결된 공고가 없어요.</p>
       ) : (
         <div className="flex flex-col gap-8">
-          {report.targets.map((target) => {
-            const maxViews = Math.max(1, ...target.bySource.map((row) => row.views));
-            return (
-              <div key={`${target.targetType}-${target.targetId}`} className="flex flex-col gap-4">
-                {report.targets.length > 1 ? (
-                  <p className="font-semibold break-keep text-gray-900">
-                    <span className="mr-2 text-xs font-normal text-gray-500">
-                      {target.targetType === 'JOB' ? '채용공고' : '부트캠프'}
-                    </span>
-                    {target.title}
-                  </p>
-                ) : null}
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                  <Stat label="조회" value={formatCount(target.total.views)} sub="모든 경로 합계" />
-                  <Stat
-                    label="조회한 사람"
-                    value={`${formatCount(target.total.uniqueVisitors)}명`}
-                    sub="공고를 연 서로 다른 사람"
-                  />
-                  <Stat
-                    label="회원 조회"
-                    value={formatCount(target.total.memberViews)}
-                    sub="로그인 상태로 연 조회"
-                  />
-                  <Stat
-                    label="지원하기 클릭"
-                    value={formatCount(target.total.ctaClicks)}
-                    sub="지원 페이지로 이동한 횟수"
-                  />
-                  <Stat
-                    label="저장"
-                    value={formatCount(target.total.saves)}
-                    sub="북마크한 사람 수"
-                    isNew
-                  />
-                  <Stat
-                    label="공유"
-                    value={formatCount(target.total.shares)}
-                    sub="링크 공유 횟수"
-                    isNew
-                  />
-                </div>
-                <div className="flex flex-col gap-2 rounded-2xl bg-gray-50 p-5">
-                  <span className="text-base font-bold text-gray-950">유입 경로별</span>
-                  <ul className="flex flex-col gap-2">
-                    {target.bySource.map((row) => (
-                      <li
-                        key={row.source}
-                        className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 text-sm"
-                      >
-                        <span className="text-gray-600">{SOURCE_LABELS[row.source]}</span>
-                        <span className="h-3 rounded-full bg-gray-200">
-                          <span
-                            className={cn(
-                              'block h-3 rounded-full',
-                              row.source === 'AD_CARD' || row.source === 'BANNER'
-                                ? 'bg-blue-600'
-                                : 'bg-gray-400',
-                            )}
-                            style={{ width: `${(row.views / maxViews) * 100}%` }}
-                          />
-                        </span>
-                        <span className="text-right text-xs text-gray-500 tabular-nums">
-                          조회 {formatCount(row.views)} · 지원하기 클릭 {formatCount(row.ctaClicks)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+          {report.targets.map((target) => (
+            <div key={`${target.targetType}-${target.targetId}`} className="flex flex-col gap-4">
+              {report.targets.length > 1 ? (
+                <p className="font-semibold break-keep text-gray-900">
+                  <span className="mr-2 text-xs font-normal text-gray-500">
+                    {target.targetType === 'JOB' ? '채용공고' : '부트캠프'}
+                  </span>
+                  {target.title}
+                </p>
+              ) : null}
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                <Stat label="조회" value={formatCount(target.total.views)} sub="모든 경로 합계" />
+                <Stat
+                  label="조회한 사람"
+                  value={`${formatCount(target.total.uniqueVisitors)}명`}
+                  sub="공고를 연 서로 다른 사람"
+                />
+                <Stat
+                  label="회원 조회"
+                  value={formatCount(target.total.memberViews)}
+                  sub="로그인 상태로 연 조회"
+                />
+                <Stat
+                  label="지원하기 클릭"
+                  value={formatCount(target.total.ctaClicks)}
+                  sub="지원 페이지로 이동한 횟수"
+                />
+                <Stat
+                  label="저장"
+                  value={formatCount(target.total.saves)}
+                  sub="북마크한 사람 수"
+                  isNew
+                />
+                <Stat
+                  label="공유"
+                  value={formatCount(target.total.shares)}
+                  sub="링크 공유 횟수"
+                  isNew
+                />
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </Section>
