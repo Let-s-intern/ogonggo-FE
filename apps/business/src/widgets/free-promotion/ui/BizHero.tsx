@@ -55,7 +55,9 @@ export function BizHero() {
               ))}
             </ul>
             <div className="mt-8 flex flex-wrap gap-3">
-              <BizApplyLink className={PRIMARY_BUTTON}>무료 홍보 신청하기</BizApplyLink>
+              <BizApplyLink placement="hero" className={PRIMARY_BUTTON}>
+                무료 홍보 신청하기
+              </BizApplyLink>
               <a href="#intro" className={OUTLINE_BUTTON}>
                 소개 방식 보기
               </a>

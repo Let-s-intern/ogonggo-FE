@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { MyAccountResponseRole } from '@ogonggo/api';
+import { trackBiz } from '@/shared/analytics/bizEvents';
 
 /** 기업 회원이 채용공고를 등록하는 화면. */
 const COMPANY_JOB_REGISTER_HREF = '/mypage/company/posts/jobs/new';
@@ -68,6 +69,7 @@ export function BizApplyDone({ email, role }: BizApplyDoneProps) {
             </p>
             <Link
               href={COMPANY_SIGNUP_HREF}
+              onClick={() => trackBiz('biz_signup_click', { biz_placement: 'done' })}
               className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-blue-500 text-base font-bold text-white hover:bg-blue-600"
             >
               기업회원 가입하기

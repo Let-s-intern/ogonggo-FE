@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { HttpError, signUpCompany, type SuccessResponseAuthTokenResponse } from '@ogonggo/api';
 import { Button, Checkbox, Input, cn } from '@ogonggo/ui';
+import { trackCompanyAuth } from '@/shared/analytics/bizEvents';
 import { saveTokens } from '@/shared/api/authTokens';
 import { formatPhone } from '@/shared/lib/formatPhone';
 import { CompanyNameCombobox } from '@/shared/ui/CompanyNameCombobox';
@@ -104,6 +105,7 @@ export function CompanySignUpForm({ returnPath }: CompanySignUpFormProps) {
         throw new Error('기업 가입 응답에 토큰이 없습니다.');
       }
       saveTokens(body.data);
+      trackCompanyAuth('sign_up');
       // 성공하면 화면을 떠나므로 pending 을 풀지 않는다.
       router.replace(returnPath ?? '/');
     } catch (caught) {
