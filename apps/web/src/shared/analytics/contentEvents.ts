@@ -1,4 +1,6 @@
 import { httpClient } from '@ogonggo/api';
+import { getRefreshToken, hasUsableAccessToken } from '@/shared/api/authTokens';
+import { ensureAccessToken } from '@/shared/api/reissue';
 import {
   createContentEventQueue,
   readVisitorId,
@@ -21,6 +23,8 @@ export type { ContentEvent, ContentEventSource, ContentTargetType } from './cont
  * 모아 보내기는 `./contentEventQueue.ts` 다. 평소에도 탭이 숨거나 페이지가 내려갈 때도 `httpClient` 의
  * `fetch(keepalive)` 로 보내 로그인했으면 토큰이 실린다. `sendBeacon`(text/plain JSON)은 keepalive 를 못 쓰는
  * 브라우저에서만 쓴다 — 비콘에는 토큰을 실을 수 없어 비회원으로 잡힌다.
+ *
+ * 보내기 전에 액세스 토큰이 만료됐으면 재발급(`ensureAccessToken`)을 기다린다.
  *
  * 서버 렌더에서는 아무것도 하지 않는다. 큐와 리스너는 처음 보낼 때 만든다.
  */
@@ -56,6 +60,15 @@ function supportsKeepalive(): boolean {
   return typeof Request !== 'undefined' && 'keepalive' in Request.prototype;
 }
 
+/**
+ * 로그인했는데(리프레시 토큰이 있는데) 액세스 토큰이 없거나 곧 만료되는지. 이 공개 API 는 만료된 토큰을 401 이 아니라
+ * 익명으로 받아 재발급이 일어나지 않으므로, 보내기 전에 재발급을 기다려야 회원 이벤트로 저장된다. 아니면 기다리지
+ * 않고 그 자리에서 보낸다 — 로그인하지 않았거나 토큰이 멀쩡하면 떠나는 순간에도 바로 나간다.
+ */
+function needsReissue(): boolean {
+  return getRefreshToken() !== null && !hasUsableAccessToken();
+}
+
 function getQueue(): ContentEventQueue | null {
   if (typeof window === 'undefined') {
     return null;
@@ -68,13 +81,20 @@ function getQueue(): ContentEventQueue | null {
           if (!supportsKeepalive()) {
             return false;
           }
-          httpClient(ENDPOINT, {
-            method: 'POST',
-            body: JSON.stringify(request),
-            keepalive: true,
-          }).catch(() => {
-            // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 202 는 본문이 없어 읽기에서 던지는 것도 여기로 온다.
-          });
+          const send = () =>
+            httpClient(ENDPOINT, {
+              method: 'POST',
+              body: JSON.stringify(request),
+              keepalive: true,
+            }).catch(() => {
+              // 이벤트 한 묶음 못 보낸 것을 사용자에게 알릴 일은 없다. 202 는 본문이 없어 읽기에서 던지는 것도 여기로 온다.
+            });
+          if (needsReissue()) {
+            // 재발급이 실패해도 던지지 않는다. 그때는 토큰 없이 비회원으로라도 보낸다.
+            void ensureAccessToken().then(send, send);
+          } else {
+            send();
+          }
           return true;
         },
         beacon: (body) =>
