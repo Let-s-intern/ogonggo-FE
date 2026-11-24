@@ -5,9 +5,11 @@ import {
 } from '@/entities/advertisement-exposure/lib/adPosting';
 import type { AdvertisementProduct } from '../api/useAdvertisementProducts';
 
-/** 소개 가격. `null` 은 견적 문의이고 0원과 다르다. */
+/** 소개 가격. `null` 은 견적 문의, 0 은 무료, 그 밖은 금액이다(소개 화면과 같은 규칙). */
 export function formatProductPrice(price: number | null | undefined): string {
-  return price == null ? '견적 문의' : `${price.toLocaleString('ko-KR')}원`;
+  if (price == null) return '견적 문의';
+  if (price === 0) return '무료';
+  return `${price.toLocaleString('ko-KR')}원`;
 }
 
 /** 자리 라벨. 광고 공고 자리는 코드젠 전이라 카탈로그에 없어 로컬 라벨을 쓴다. */

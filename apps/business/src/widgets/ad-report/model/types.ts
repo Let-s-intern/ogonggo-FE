@@ -40,8 +40,6 @@ export interface ReportDetailMetrics {
 export interface ReportDailyRow extends ReportDetailMetrics {
   date: string;
   impressions: number;
-  /** 같은 방문자·같은 노출을 하루 한 번으로 센 노출(계약 6.1). */
-  uniqueImpressions: number;
   adClicks: number;
 }
 
@@ -63,8 +61,6 @@ export interface AdReport {
   collectedSince: string;
   summary: {
     impressions: number;
-    /** 같은 방문자(회원 id, 없으면 방문자 id)·같은 노출을 하루 한 번으로 센 노출(계약 6.1). */
-    uniqueImpressions: number;
     adClicks: number;
     /** 0~1. 분모가 0 이면 null. */
     adClickRate: number | null;
@@ -145,7 +141,6 @@ export interface JobFieldRow {
 export interface ContractReportSummary {
   total: {
     impressions: number;
-    uniqueImpressions: number;
     adClicks: number;
     adClickRate: number | null;
     views: number;
@@ -159,7 +154,6 @@ export interface ContractReportSummary {
     startDate: string;
     endDate: string;
     impressions: number;
-    uniqueImpressions: number;
     adClicks: number;
     views: number;
     ctaClicks: number;

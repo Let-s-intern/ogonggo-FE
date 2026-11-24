@@ -17,6 +17,7 @@ import {
 } from './content';
 import { CountUp } from './CountUp';
 import { PlacementSimulator } from './PlacementSimulator';
+import type { PlacementPrices } from './price';
 import { RevealOnScroll } from './RevealOnScroll';
 
 const CONTAINER = 'page-container mx-auto w-full max-w-[1200px] px-4 md:px-6';
@@ -149,7 +150,7 @@ function Reasons() {
   );
 }
 
-function Placements() {
+function Placements({ prices }: { prices: PlacementPrices }) {
   return (
     <section id="placements" className={cn(CONTAINER, 'scroll-mt-20 pb-16 md:pb-24')}>
       <Eyebrow>오늘의 공고 지면 광고</Eyebrow>
@@ -162,7 +163,7 @@ function Placements() {
         광고가 노출될 위치와 형태를 미리 확인하고, 원하는 지면을 선택해 보세요.
       </p>
       <div data-reveal>
-        <PlacementSimulator />
+        <PlacementSimulator prices={prices} />
       </div>
       <div data-reveal className="mt-4 flex justify-end">
         <Link
@@ -595,14 +596,14 @@ function ClosingCta() {
   );
 }
 
-export function LandingPage() {
+export function LandingPage({ placementPrices }: { placementPrices: PlacementPrices }) {
   return (
     // 한국어가 낱말 가운데서 끊기지 않게 하고(`break-keep`), 제목은 줄 길이를 고르게, 본문은 마지막 줄에 한 낱말만
     // 남지 않게 한다. 데스크톱·모바일 모두 같은 규칙이다.
     <div className="break-keep [&_h1]:text-balance [&_h2]:text-balance [&_h3]:text-balance [&_p]:text-pretty">
       <Hero />
       <Reasons />
-      <Placements />
+      <Placements prices={placementPrices} />
       <Channels />
       {SHOW_COMBO ? <Combo /> : null}
       <PartnersAndCases />

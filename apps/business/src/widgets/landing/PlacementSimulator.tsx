@@ -4,8 +4,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { cn } from '@ogonggo/ui';
 import { PLACEMENT_PAGES, PLACEMENTS, type PlacementPage, type PlacementSpot } from './content';
-
-const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+import { formatPlacementPrice, type PlacementPrices } from './price';
 
 /** 브라우저 프레임에 보이는 높이 ÷ 스크린샷 높이 (1280×900 창으로 1280×1800 이미지를 본다). */
 const VIEWPORT = 50;
@@ -190,7 +189,7 @@ function PageCanvas({
  * `animation-play-state` 하나라 다시 누르면 멈춘 자리에서 잇는다. 화면 밖에 있거나 탭이 숨으면 멈춘다 — 아래로
  * 내려와 보기 전에 다 지나가 버리지 않게. `prefers-reduced-motion` 이면 멈춘 채로 시작한다.
  */
-export function PlacementSimulator() {
+export function PlacementSimulator({ prices }: { prices: PlacementPrices }) {
   const [pageId, setPageId] = useState(PLACEMENT_PAGES[0]?.id);
   const [spotId, setSpotId] = useState(PLACEMENT_PAGES[0]?.spots[0]?.id);
   /** 지면이 바뀔 때마다 늘린다. 진행바 `key` 로 써서 애니메이션을 처음부터 다시 돌린다. */
@@ -427,8 +426,8 @@ export function PlacementSimulator() {
                     </span>
                     <span className="mt-0.5 block text-sm text-gray-500">
                       {product
-                        ? `${won(product.price)} / 1주 · 예상 CTR ${product.ctr}`
-                        : '가격은 견적 문의'}
+                        ? `${formatPlacementPrice(prices[spot.position])} · 예상 CTR ${product.ctr}`
+                        : formatPlacementPrice(prices[spot.position])}
                     </span>
                   </span>
                 </button>

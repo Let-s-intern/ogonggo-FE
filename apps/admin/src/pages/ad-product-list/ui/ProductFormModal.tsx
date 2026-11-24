@@ -55,7 +55,7 @@ interface FormState {
   /** 빈 문자열이면 자리 없음이다. */
   position: string;
   name: string;
-  /** 빈 문자열이면 견적 문의(`null`)다. 0 은 0원이다. */
+  /** 빈 문자열이면 견적 문의(`null`)다. 0 은 무료다. */
   price: string;
 }
 
@@ -172,7 +172,7 @@ export function ProductFormModal({
         label="소개 가격(원)"
         htmlFor="product-price"
         error={errors.price}
-        hint="상품 소개용 가격입니다. 비우면 견적 문의, 0 은 0원입니다. 실제 결제 금액은 계약마다 따로 적습니다."
+        hint="상품 소개용 가격입니다. 비우면 견적 문의, 0 은 무료로 보입니다. 실제 결제 금액은 계약마다 따로 적습니다."
       >
         <Input
           id="product-price"

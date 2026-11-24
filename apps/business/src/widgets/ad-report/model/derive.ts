@@ -50,13 +50,14 @@ export interface CostEfficiency {
 const won = (value: number) => `${Math.round(value).toLocaleString('ko-KR')}원`;
 
 /**
- * 비용 효율. 광고비는 상품 정가다 — 무료 혜택이어도 정가로 환산한다(2026-11-23 목업). 견적 문의 상품(정가 없음)은 null.
+ * 비용 효율. 광고비는 상품 정가다 — 무료 혜택이어도 정가로 환산한다(2026-11-23 목업). 견적 문의 상품(정가 없음)과
+ * 정가 0원(무료) 상품은 null.
  * 기간을 좁히거나 아직 진행 중이면 정가를 게시 일수로 나눠 리포트 일수만큼만 쓴다. 하루치 숫자에 한 달 광고비를 나누면
  * 단가가 부풀기 때문이다.
  */
 export function costEfficiency(report: AdReport, banner: boolean): CostEfficiency | null {
   const price = report.product.price;
-  if (price == null) return null;
+  if (price == null || price === 0) return null;
   const total = inclusiveDays(report.product.startDate, report.product.endDate);
   const days = inclusiveDays(report.from, report.to);
   const prorated = days > 0 && days < total ? ([days, total] as [number, number]) : null;
