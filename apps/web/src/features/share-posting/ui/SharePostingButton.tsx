@@ -4,7 +4,11 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn, useToast } from '@ogonggo/ui';
 import { CompanyLogo } from '@/entities/job/ui/CompanyLogo';
-import { currentVisitFor, flushContentEvents, sendContentEvent } from '@/shared/analytics/contentEvents';
+import {
+  currentVisitFor,
+  flushContentEvents,
+  sendContentEvent,
+} from '@/shared/analytics/contentEvents';
 import {
   googleCalendarUrl,
   linkedInShareUrl,

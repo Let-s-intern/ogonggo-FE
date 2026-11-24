@@ -20,7 +20,11 @@ export interface ScrollMetrics {
  *
  * 창에 다 들어가는 글은 내릴 곳이 없고 끝까지 보인 것이라 100 이다.
  */
-export function scrollDepthPercent({ scrollTop, scrollHeight, clientHeight }: ScrollMetrics): number {
+export function scrollDepthPercent({
+  scrollTop,
+  scrollHeight,
+  clientHeight,
+}: ScrollMetrics): number {
   const scrollable = scrollHeight - clientHeight;
   if (scrollable <= 0) {
     return 100;

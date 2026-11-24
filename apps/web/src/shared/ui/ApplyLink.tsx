@@ -3,7 +3,11 @@
 import { createBootcampSourceUrlClick, createJobSourceUrlClick } from '@ogonggo/api';
 import type { BookmarkKind } from '@/features/bookmark';
 import { isSignedIn } from '@/shared/api/authTokens';
-import { currentVisitFor, flushContentEvents, sendContentEvent } from '@/shared/analytics/contentEvents';
+import {
+  currentVisitFor,
+  flushContentEvents,
+  sendContentEvent,
+} from '@/shared/analytics/contentEvents';
 import { TrackedLink, type TrackedLinkProps } from '@/shared/analytics/TrackedLink';
 
 export type ApplyLinkProps = TrackedLinkProps & {
