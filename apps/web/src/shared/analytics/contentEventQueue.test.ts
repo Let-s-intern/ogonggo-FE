@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AD_ENTRY_KEY,
-  AD_ENTRY_TTL_MS,
   FLUSH_DELAY_MS,
   createContentEventQueue,
   createImpressionRegistry,
@@ -175,7 +174,7 @@ function memoryStorage() {
   };
 }
 
-test('광고로 들어온 상세는 30분 안에 같은 대상이면 노출 id 를 한 번 읽는다', () => {
+test('광고로 들어온 상세는 1분 안에 같은 대상이면 노출 id 를 한 번 읽는다', () => {
   const storage = memoryStorage();
   const entry = {
     targetType: 'JOB',
@@ -185,12 +184,12 @@ test('광고로 들어온 상세는 30분 안에 같은 대상이면 노출 id �
     at: 1000,
   } as const;
   rememberAdEntry(storage, entry);
-  assert.deepEqual(takeAdEntry(storage, 'JOB', 7, 1000 + AD_ENTRY_TTL_MS), entry);
+  assert.deepEqual(takeAdEntry(storage, 'JOB', 7, 1000 + 60_000), entry);
   assert.equal(storage.map.has(AD_ENTRY_KEY), false);
   assert.equal(takeAdEntry(storage, 'JOB', 7, 2000), null);
 });
 
-test('대상이 다르거나 30분이 지나면 광고 몫이 아니다', () => {
+test('대상이 다르거나 1분이 지나면 광고 몫이 아니다', () => {
   const storage = memoryStorage();
   const entry = {
     targetType: 'JOB',
@@ -204,7 +203,7 @@ test('대상이 다르거나 30분이 지나면 광고 몫이 아니다', () => 
   rememberAdEntry(storage, entry);
   assert.equal(takeAdEntry(storage, 'JOB', 8, 1000), null);
   rememberAdEntry(storage, entry);
-  assert.equal(takeAdEntry(storage, 'JOB', 7, 1001 + AD_ENTRY_TTL_MS), null);
+  assert.equal(takeAdEntry(storage, 'JOB', 7, 1001 + 60_000), null);
 });
 
 const click = (overrides: Partial<Parameters<typeof staysInThisTab>[0]> = {}) => ({

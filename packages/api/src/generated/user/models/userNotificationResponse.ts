@@ -55,6 +55,6 @@ export interface UserNotificationResponse {
      * @nullable
      */
   body?: string | null;
-  source: string;
   sourceId: string;
+  source: string;
 }

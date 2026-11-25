@@ -21,7 +21,7 @@ export interface AdminAdvertisementReportSummaryResponse {
      * @nullable
      */
   adClickRate?: number | null;
-  /** 상세 조회수. 같은 방문자가 30분 안에 다시 연 것은 한 번 */
+  /** 상세 조회수. 같은 방문자가 1분 안에 다시 연 것은 한 번 */
   views: number;
   /** 상세를 연 순 방문자 수. 회원은 회원 id로 세고, 비회원은 익명 방문자 id로 세되 같은 브라우저가 기간 안에 로그인한 적이 있으면 그 회원으로 센다 */
   uniqueVisitors: number;
