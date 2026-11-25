@@ -8,6 +8,8 @@ export interface IndustryReportSaleProps {
   report: IndustryReport;
   /** 렛츠커리어에서 읽은 상품. 읽지 못했으면 `null` 이고, 이때는 산업 이름과 안내 한 줄만 보인다. */
   guidebook: LetsCareerGuidebook | null;
+  /** 이 상품의 오공고 판매 상세 절대 주소. 구매 창에 넘긴다. */
+  returnUrl: string;
 }
 
 /**
@@ -17,7 +19,7 @@ export interface IndustryReportSaleProps {
  * 값을 읽지 못한 칸(썸네일, 소개, 가격, 상세 이미지)은 그 칸만 숨긴다. 상품 전체를 읽지 못하면 구매 버튼도
  * 두지 않는다 — 값을 모르는 상품을 결제 창으로 보내지 않는다.
  */
-export function IndustryReportSale({ report, guidebook }: IndustryReportSaleProps) {
+export function IndustryReportSale({ report, guidebook, returnUrl }: IndustryReportSaleProps) {
   if (!guidebook) {
     return (
       <div className="flex flex-col gap-3">
@@ -54,7 +56,7 @@ export function IndustryReportSale({ report, guidebook }: IndustryReportSaleProp
           </div>
         ) : null}
         <div className="mt-4">
-          <PurchaseButton />
+          <PurchaseButton guidebookId={report.guidebookId} returnUrl={returnUrl} />
         </div>
       </aside>
       {images.length > 0 ? (

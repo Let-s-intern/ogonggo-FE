@@ -1,4 +1,5 @@
 import { fetchLetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
+import { SITE_ORIGIN } from '@/shared/config/site';
 import type { IndustryReport } from '@/shared/config/industryReports';
 import { IndustryReportSale } from '@/widgets/industry-report-sale';
 
@@ -12,9 +13,11 @@ export interface IndustryReportPageProps {
  */
 export async function IndustryReportPage({ report }: IndustryReportPageProps) {
   const guidebook = await fetchLetsCareerGuidebook(report.guidebookId);
+  // 사이트 주소는 서버 환경 변수(`OGONGGO_SITE_ORIGIN`)라 브라우저에서는 읽지 못한다. 서버에서 만들어 넘긴다.
+  const returnUrl = new URL(`/reports/${report.slug}`, SITE_ORIGIN).toString();
   return (
     <main className="mx-auto w-full max-w-page px-5 py-6 md:py-10">
-      <IndustryReportSale report={report} guidebook={guidebook} />
+      <IndustryReportSale report={report} guidebook={guidebook} returnUrl={returnUrl} />
     </main>
   );
 }
