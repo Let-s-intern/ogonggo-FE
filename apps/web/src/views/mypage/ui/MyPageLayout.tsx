@@ -10,6 +10,7 @@ import {
 } from '@ogonggo/api';
 import { Button, cn } from '@ogonggo/ui';
 import { isSignedIn } from '@/shared/api/authTokens';
+import { useFeatureFlag } from '@/shared/api/useFeatureFlag';
 import { BizMoveNotice } from '@/widgets/biz-move-notice';
 import { fetchCompanyPostTotals } from '@/widgets/company-posts';
 import {
@@ -25,6 +26,7 @@ import {
   myPageMenuFor,
   myPageMobileHeaderOf,
 } from '@/widgets/mypage-sidebar';
+import { INDUSTRY_TREND_REPORT_SALE_FLAG } from '@/widgets/report-entry';
 
 type State =
   | { kind: 'loading' }
@@ -72,6 +74,9 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
   const pathname = usePathname();
   const [state, setState] = useState<State>({ kind: 'loading' });
   const audience = myPageAudienceOf(pathname);
+  // `내 리포트` 탭은 플래그가 켜졌을 때만 보인다. 주소로 들어오는 `/mypage/reports` 는 플래그와 상관없이 열린다(PRD 7.1).
+  const reportsEnabled = useFeatureFlag(INDUSTRY_TREND_REPORT_SALE_FLAG);
+  const menuItems = myPageMenuFor(audience, { reports: reportsEnabled });
 
   useEffect(() => {
     if (!isSignedIn()) {
@@ -177,7 +182,7 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
       {tabbed ? (
         <div className={cn('mt-6', mobileHeader && 'hidden md:block')}>
           <MyPageTabs
-            menuItems={myPageMenuFor(audience)}
+            menuItems={menuItems}
             action={
               pathname === '/mypage/posts' ? (
                 <Button asChild className="gap-1 whitespace-nowrap">
@@ -200,7 +205,7 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
       >
         <div className={cn('mt-6 md:mt-0', !isIndex && 'hidden md:block', tabbed && 'md:hidden')}>
           <MyPageSidebar
-            menuItems={myPageMenuFor(audience)}
+            menuItems={menuItems}
             counts={isCompany ? postTotals : undefined}
             card={
               isCompany ? (
