@@ -17,12 +17,29 @@ interface Frame {
  * 목록은 렛츠커리어 화면 그대로다. 오공고는 걸러내지 않고, 구매가 없을 때의 빈 화면도 따로 만들지 않는다.
  * iframe 은 높이를 고정하고 안쪽에서만 스크롤해 페이지와 이중 스크롤이 되지 않게 한다. 오공고는 iframe 안을
  * 읽을 수 없어 로그인이 풀렸는지 알 수 없다(PRD 위험) — 그래서 새 창 링크를 늘 곁에 둔다.
+ *
+ * 다시 불러오는 때는 둘이다. 이 화면으로 들어올 때(결제 후 안내의 `내 리포트 보기` 포함)는 마운트가 곧 새로
+ * 불러오는 것이고, 다른 탭에 갔다 돌아올 때(`visibilitychange`)는 직접 다시 불러온다. 구매를 다른 탭이나 창에서
+ * 마쳤다면 돌아온 순간 새 구매가 목록에 있어야 하기 때문이다.
  */
 export function MyReports() {
   const [frame, setFrame] = useState<Frame | null>(null);
 
   useEffect(() => {
-    setFrame({ src: letsCareerGuidebookPurchasesUrl(), version: 1 });
+    const load = () => {
+      setFrame((current) => ({
+        src: letsCareerGuidebookPurchasesUrl(),
+        version: (current?.version ?? 0) + 1,
+      }));
+    };
+    load();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        load();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, []);
 
   return (
