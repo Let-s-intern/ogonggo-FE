@@ -26,6 +26,8 @@ export interface LetsCareerGuidebook {
   title: string;
   thumbnail: string | null;
   desktopThumbnail: string | null;
+  /** 이 상품을 누구에게 권하는지 적은 한 줄. 판매 화면의 한 줄 소개로 쓴다. 비어 있으면 `null`. */
+  recommendedFor: string | null;
   /** Lexical 에디터 상태 JSON 문자열. 그대로 그릴 수 없다(`shared/lib/lexicalHtml.ts` 참고). */
   description: string | null;
   priceInfo: LetsCareerGuidebookPrice;
@@ -55,12 +57,12 @@ function parsePrice(value: unknown): LetsCareerGuidebookPrice | null {
   return { originalPrice, discountRate, finalPrice };
 }
 
-/** 응답 봉투(`{ status, message, data }`)에서 쓰는 다섯 값만 꺼낸다. 모양이 다르면 `null`. */
+/** 응답 봉투(`{ status, message, data }`)에서 쓰는 값만 꺼낸다. 모양이 다르면 `null`. */
 function parseGuidebook(body: unknown): LetsCareerGuidebook | null {
   if (!isRecord(body) || !isRecord(body.data)) {
     return null;
   }
-  const { title, thumbnail, desktopThumbnail, description, priceInfo } = body.data;
+  const { title, thumbnail, desktopThumbnail, recommendedFor, description, priceInfo } = body.data;
   const price = parsePrice(priceInfo);
   if (typeof title !== 'string' || title === '' || !price) {
     return null;
@@ -69,6 +71,7 @@ function parseGuidebook(body: unknown): LetsCareerGuidebook | null {
     title,
     thumbnail: textOrNull(thumbnail),
     desktopThumbnail: textOrNull(desktopThumbnail),
+    recommendedFor: textOrNull(recommendedFor),
     description: textOrNull(description),
     priceInfo: price,
   };
