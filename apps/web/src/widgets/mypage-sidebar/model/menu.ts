@@ -29,6 +29,16 @@ export const USER_MYPAGE_MENU: readonly MyPageMenuItem[] = [
 ];
 
 /**
+ * 산업 트렌드 리포트 판매의 `내 리포트`. v11 목업에 없는 항목이라 디자인 확인 전 제안(맨 뒤, 이름 `내 리포트`)이다.
+ * `USER_MYPAGE_MENU` 에 넣지 않은 이유는 플래그가 켜졌을 때만 보여야 해서다 — 그 배열의 첫 항목이
+ * `/mypage` 가 보내는 곳(`myPageHomeFor`)이라 상수는 그대로 두고 `myPageMenuFor` 가 뒤에 붙인다.
+ */
+export const REPORTS_MYPAGE_MENU_ITEM: MyPageMenuItem = {
+  href: '/mypage/reports',
+  label: '내 리포트',
+};
+
+/**
  * 기업 회원 메뉴 셋(B2 시안, `prd-company-mypage-posts.md`). v5 의 `작성한 공고` 하나를 종류별
  * 둘로 나눴다 — 화면 안 탭으로 고르던 것을 메뉴로 올렸다.
  *
@@ -59,8 +69,18 @@ export function myPageAudienceOf(pathname: string): MyPageAudience {
     : 'USER';
 }
 
-export function myPageMenuFor(audience: MyPageAudience): readonly MyPageMenuItem[] {
-  return audience === 'COMPANY' ? COMPANY_MYPAGE_MENU : USER_MYPAGE_MENU;
+/**
+ * `reports` 는 산업 트렌드 리포트 판매 플래그가 켜졌는지다. 일반 회원 메뉴 맨 뒤에 `내 리포트` 를 붙인다.
+ * 기업 회원 메뉴에는 붙이지 않는다.
+ */
+export function myPageMenuFor(
+  audience: MyPageAudience,
+  options: { reports?: boolean } = {},
+): readonly MyPageMenuItem[] {
+  if (audience === 'COMPANY') {
+    return COMPANY_MYPAGE_MENU;
+  }
+  return options.reports ? [...USER_MYPAGE_MENU, REPORTS_MYPAGE_MENU_ITEM] : USER_MYPAGE_MENU;
 }
 
 /** 그 마이페이지의 첫 화면. `/mypage` 와 `/mypage/company` 가 여기로 보낸다. */

@@ -12,3 +12,4 @@ export { MyPostFormPage, type MyPostFormPageProps } from './ui/MyPostFormPage';
 export { MyPostsPage, type MyPostsPageProps } from './ui/MyPostsPage';
 export { MyProfilePage } from './ui/MyProfilePage';
 export { MyScrapsPage, type MyScrapsPageProps } from './ui/MyScrapsPage';
+export { MyReportsPage } from './ui/MyReportsPage';
