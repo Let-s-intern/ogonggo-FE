@@ -80,3 +80,47 @@ export function letsCareerMentoringUrl(): string {
   url.searchParams.set('utm_content', 'detail_mentor_review');
   return url.toString();
 }
+
+/** 산업 트렌드 리포트 판매 화면이 렛츠커리어로 보낼 때의 UTM. 자리(`utm_content`)만 호출마다 다르다. */
+function industryReportUtm(url: URL, content: 'landing_buy' | 'mypage_reports'): void {
+  url.searchParams.set('utm_source', UTM_PARAMS.utm_source);
+  url.searchParams.set('utm_medium', UTM_PARAMS.utm_medium);
+  url.searchParams.set('utm_campaign', 'industry_report');
+  url.searchParams.set('utm_content', content);
+}
+
+/** 로그인 때 받아 둔 렛츠커리어 토큰이 있으면 `#__sso` 를 붙인다. 없으면 그대로 둔다(`letsCareerWebHref` 참고). */
+function withSso(url: URL): string {
+  const tokens = getLetsCareerTokens();
+  if (tokens) {
+    url.hash = `__sso=${encodeURIComponent(`${tokens.accessToken}|${tokens.refreshToken}`)}`;
+  }
+  return url.toString();
+}
+
+/**
+ * 렛츠커리어 가이드북 구매 팝업 주소(`/guidebook/purchase/{id}`). 결제가 끝나고 창이 닫히지 않으면 렛츠커리어가
+ * `returnUrl`(그 상품의 오공고 판매 상세 주소)로 같은 창을 옮긴다. 허용 목록 검증은 렛츠커리어가 한다.
+ *
+ * 브라우저에서 구매 버튼을 누를 때 부른다 — 토큰은 `localStorage` 에서 읽는다. 토큰이 없으면(`#__sso` 없이)
+ * 열리고, 렛츠커리어가 로그인을 요구하면 팝업 안에서 끝낸다.
+ */
+export function letsCareerGuidebookPurchaseUrl(guidebookId: number, returnUrl: string): string {
+  const url = new URL(`/guidebook/purchase/${guidebookId}`, LETSCAREER_WEB_ORIGIN);
+  industryReportUtm(url, 'landing_buy');
+  url.searchParams.set('returnUrl', returnUrl);
+  return withSso(url);
+}
+
+/**
+ * 렛츠커리어 가이드북 구매 목록 전용 경로. 마이페이지 `내 리포트` 의 iframe 과 새 창 링크가 같은 주소를 쓴다.
+ *
+ * 경로 `/guidebook/my` 는 렛커 Push 3 의 제안이다. 렛츠커리어에서 다르게 정하면 이 상수만 바꾼다.
+ */
+const GUIDEBOOK_PURCHASES_PATH = '/guidebook/my';
+
+export function letsCareerGuidebookPurchasesUrl(): string {
+  const url = new URL(GUIDEBOOK_PURCHASES_PATH, LETSCAREER_WEB_ORIGIN);
+  industryReportUtm(url, 'mypage_reports');
+  return withSso(url);
+}
