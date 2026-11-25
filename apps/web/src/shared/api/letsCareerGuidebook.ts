@@ -30,7 +30,8 @@ export interface LetsCareerGuidebook {
   recommendedFor: string | null;
   /** Lexical 에디터 상태 JSON 문자열. 그대로 그릴 수 없다(`shared/lib/lexicalHtml.ts` 참고). */
   description: string | null;
-  priceInfo: LetsCareerGuidebookPrice;
+  /** 가격을 읽지 못했으면 `null`. 화면은 가격 줄만 숨긴다. */
+  priceInfo: LetsCareerGuidebookPrice | null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -64,7 +65,7 @@ function parseGuidebook(body: unknown): LetsCareerGuidebook | null {
   }
   const { title, thumbnail, desktopThumbnail, recommendedFor, description, priceInfo } = body.data;
   const price = parsePrice(priceInfo);
-  if (typeof title !== 'string' || title === '' || !price) {
+  if (typeof title !== 'string' || title === '') {
     return null;
   }
   return {
