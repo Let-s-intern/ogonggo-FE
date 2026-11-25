@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Button, Callout } from '@ogonggo/ui';
 import { letsCareerGuidebookPurchaseUrl } from '@/shared/api/letsCareerHandoff';
 import { useMyAccount } from '@/shared/api/useMyAccount';
+import { usePurchaseWindow } from '../model/usePurchaseWindow';
+import { PurchaseFollowUp } from './PurchaseFollowUp';
 
 export interface PurchaseButtonProps {
   guidebookId: number;
@@ -17,7 +19,8 @@ export interface PurchaseButtonProps {
  *
  * - 비로그인: 오공고 로그인으로 보낸다. 로그인하면 지금 화면으로 돌아온다(`/login?redirect=`).
  * - 기업 회원: 일반 회원 계정이 필요하다는 안내를 버튼 아래에 보인다.
- * - 일반 회원(관리자 포함): 렛츠커리어 구매 창을 연다.
+ * - 일반 회원(관리자 포함): 렛츠커리어 구매 창을 팝업으로 연다. 열기가 막히면 새 탭으로 여는 링크를 보인다.
+ *   창이 닫히거나 이 화면으로 돌아오면 구매 후 안내를 보인다(`usePurchaseWindow`).
  *
  * 로그인 여부와 역할은 `useMyAccount` 가 읽는다. 토큰이 브라우저 저장소에만 있어 서버 렌더는 늘 비로그인으로
  * 그린다. 역할을 읽는 동안(`loading`)은 누를 수 없다. 계정을 읽지 못했을 때(`error`)는 기업 회원인지 알 수 없지만
@@ -28,6 +31,7 @@ export function PurchaseButton({ guidebookId, returnUrl }: PurchaseButtonProps) 
   const pathname = usePathname();
   const account = useMyAccount();
   const [companyNotice, setCompanyNotice] = useState(false);
+  const purchaseWindow = usePurchaseWindow();
 
   const handleClick = () => {
     setCompanyNotice(false);
@@ -39,7 +43,8 @@ export function PurchaseButton({ guidebookId, returnUrl }: PurchaseButtonProps) 
       setCompanyNotice(true);
       return;
     }
-    window.open(letsCareerGuidebookPurchaseUrl(guidebookId, returnUrl), '_blank');
+    // 클릭 처리 안에서 바로 연다. 비동기 뒤에 열면 팝업 차단기가 막는다.
+    purchaseWindow.open(letsCareerGuidebookPurchaseUrl(guidebookId, returnUrl));
   };
 
   return (
@@ -57,6 +62,21 @@ export function PurchaseButton({ guidebookId, returnUrl }: PurchaseButtonProps) 
           기업 회원 계정으로는 구매할 수 없어요. 일반 회원 계정으로 로그인해 주세요.
         </Callout>
       ) : null}
+      {purchaseWindow.blockedUrl ? (
+        <p className="text-sm break-keep text-gray-600">
+          구매 창이 열리지 않았어요.{' '}
+          <a
+            href={purchaseWindow.blockedUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={purchaseWindow.markOpened}
+            className="font-semibold text-blue-500 underline"
+          >
+            새 탭에서 구매 화면 열기
+          </a>
+        </p>
+      ) : null}
+      {purchaseWindow.settled ? <PurchaseFollowUp /> : null}
     </div>
   );
 }
