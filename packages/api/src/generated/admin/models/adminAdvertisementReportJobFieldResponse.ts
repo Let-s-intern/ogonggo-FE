@@ -41,7 +41,7 @@ export interface AdminAdvertisementReportJobFieldResponse {
   label: string;
   /** 상세를 연 순 회원 수 */
   memberUniqueVisitors: number;
-  /** 회원 상세 조회수(30분 안 재조회는 한 번) */
+  /** 회원 상세 조회수(1분 안 재조회는 한 번) */
   memberViews: number;
   /** CTA를 누른 순 회원 수 */
   ctaUniqueMembers: number;
