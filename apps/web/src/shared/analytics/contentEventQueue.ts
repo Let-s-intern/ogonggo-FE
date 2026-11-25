@@ -337,7 +337,7 @@ export interface AdEntry {
 }
 
 /** 광고를 누른 뒤 이 시간 안에 열린 상세만 광고로 들어온 것으로 본다. */
-export const AD_ENTRY_TTL_MS = 30 * 60 * 1000;
+export const AD_ENTRY_TTL_MS = 60 * 1000;
 
 export const AD_ENTRY_KEY = 'ogonggo:ad-entry';
 
@@ -353,7 +353,7 @@ export function rememberAdEntry(storage: EntryStorage, entry: AdEntry): void {
 
 /**
  * 연 상세가 방금 누른 광고의 대상이면 그 값을 준다. 한 번 읽으면 지운다 — 새로 고친 상세가 광고로 한 번 더 들어온
- * 것으로 잡히지 않게 한다(`entities/job/model/listSource.ts` 와 같은 규칙). 대상이 다르거나 30분이 지났으면 `null`.
+ * 것으로 잡히지 않게 한다(`entities/job/model/listSource.ts` 와 같은 규칙). 대상이 다르거나 1분이 지났으면 `null`.
  */
 export function takeAdEntry(
   storage: EntryStorage,
