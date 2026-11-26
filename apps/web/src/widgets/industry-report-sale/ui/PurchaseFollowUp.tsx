@@ -8,7 +8,7 @@ import { Button, Callout } from '@ogonggo/ui';
  */
 export function PurchaseFollowUp() {
   return (
-    <Callout tone="info" className="flex flex-col gap-3">
+    <Callout tone="info" className="flex flex-col gap-2 px-3 py-2">
       <p className="font-semibold break-keep">결제하셨다면 내 리포트에서 확인해 주세요</p>
       <Button asChild variant="secondary" size="sm" className="w-full bg-white">
         <Link href="/mypage/reports">내 리포트 보기</Link>

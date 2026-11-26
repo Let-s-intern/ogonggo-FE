@@ -3,6 +3,7 @@ import type { IndustryReport } from '@/shared/config/industryReports';
 import { cn } from '@ogonggo/ui';
 import { extractDescriptionImages } from '../lib/descriptionImages';
 import { PurchaseCard } from './PurchaseCard';
+import { ReportLinks } from './ReportLinks';
 
 export interface IndustryReportSaleProps {
   report: IndustryReport;
@@ -17,7 +18,7 @@ export interface IndustryReportSaleProps {
  * (공고·부트캠프 상세와 같은 `739fr / 323fr` 두 칸). 좁은 화면은 구매 카드 아래에 상세 이미지가 이어진다.
  *
  * 썸네일은 카드 안에만 있다. 573px 원본이라 본문 폭으로 늘려 두면 흐려 보인다(`PurchaseCard`). 본문은 1074px
- * 상세 이미지로 채운다.
+ * 상세 이미지로 채운다. 이동 링크(`ReportLinks`)는 카드 밖 본문 위에 둔다 — 따라오는 카드가 길어지면 아래가 잘린다.
  *
  * 값을 읽지 못한 칸(썸네일, 가격, 상세 이미지)은 그 칸만 숨긴다. 상품 전체를 읽지 못하면 구매 버튼도
  * 두지 않는다 — 값을 모르는 상품을 결제 창으로 보내지 않는다.
@@ -48,27 +49,32 @@ export function IndustryReportSale({ report, guidebook, returnUrl }: IndustryRep
         className={cn(
           'min-w-0',
           hasImages
-            ? 'lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:self-start'
+            ? 'lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1 lg:self-start'
             : 'lg:mx-auto lg:w-full lg:max-w-sm',
         )}
       >
         <PurchaseCard report={report} guidebook={guidebook} returnUrl={returnUrl} />
       </aside>
-      {hasImages ? (
-        <section aria-label="상세 소개" className="min-w-0 lg:col-start-1 lg:row-start-1">
-          {images.map((image, index) => (
-            <img
-              key={`${index}-${image.src}`}
-              src={image.src}
-              alt={image.alt}
-              // 긴 세로 이미지(약 2MB)라 첫 장만 바로 받고 나머지는 내려올 때 받는다.
-              loading={index === 0 ? 'eager' : 'lazy'}
-              decoding="async"
-              className="block h-auto w-full"
-            />
-          ))}
-        </section>
-      ) : null}
+      <div
+        className={cn('flex min-w-0 flex-col gap-4', hasImages && 'lg:col-start-1 lg:row-start-1')}
+      >
+        <ReportLinks currentSlug={report.slug} />
+        {hasImages ? (
+          <section aria-label="상세 소개">
+            {images.map((image, index) => (
+              <img
+                key={`${index}-${image.src}`}
+                src={image.src}
+                alt={image.alt}
+                // 긴 세로 이미지(약 2MB)라 첫 장만 바로 받고 나머지는 내려올 때 받는다.
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                className="block h-auto w-full"
+              />
+            ))}
+          </section>
+        ) : null}
+      </div>
     </div>
   );
 }

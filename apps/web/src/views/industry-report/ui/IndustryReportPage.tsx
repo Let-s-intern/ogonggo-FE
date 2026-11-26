@@ -17,7 +17,7 @@ export async function IndustryReportPage({ report }: IndustryReportPageProps) {
   const returnUrl = new URL(`/reports/${report.slug}`, SITE_ORIGIN).toString();
   return (
     // 공고·부트캠프 상세와 같은 바깥틀이다(`px-5`, 안쪽 `max-w-page`).
-    <main className="flex min-h-screen flex-col items-center bg-white px-5 pt-4 pb-40 md:py-10">
+    <main className="flex min-h-screen flex-col items-center bg-white px-5 pt-4 pb-40 md:pt-6 md:pb-10">
       <div className="w-full max-w-page">
         <IndustryReportSale report={report} guidebook={guidebook} returnUrl={returnUrl} />
       </div>

@@ -6,7 +6,6 @@ import { priceView } from '../lib/price';
 import { saleInfoRows } from '../model/saleInfo';
 import { PriceLine } from './PriceLine';
 import { PurchaseButton } from './PurchaseButton';
-import { ReportLinks } from './ReportLinks';
 import { SaleInfoList } from './SaleInfoList';
 
 /** 렛츠커리어 썸네일의 원본 크기(2026-11-26 실측 573x430, 4:3). 카드 안쪽 폭이 이보다 커지지 않게 폭을 정한다. */
@@ -20,7 +19,10 @@ export interface PurchaseCardProps {
 }
 
 /**
- * 구매 카드. 위에서 아래로 썸네일, 산업, 제목, 가격, 정보 줄, 구매 버튼, 결제 안내, 이동 링크다.
+ * 구매 카드. 위에서 아래로 썸네일, 산업, 제목, 가격, 정보 줄, 구매 버튼이다. 구매 뒤 안내가 버튼 아래에 붙어도
+ * 화면 안에 들도록 구매에 필요한 것만 담는다(이동 링크는 `ReportLinks` 로 카드 밖).
+ *
+ * 썸네일 그림 안에 제목이 들어 있어 `alt` 는 비운다. 제목은 바로 아래 `h1` 이 한 번만 읽힌다.
  *
  * 썸네일이 573px 짜리라 카드 안에서만 보인다. 본문 폭으로 늘리면 1.4배(레티나는 3배)로 커져 깨져 보인다.
  * 데스크톱 카드는 폭이 340px 안팎이라 안쪽 306px 로 1배보다 작게 줄어든다. 좁은 화면에서 카드가 넓어져도
@@ -30,12 +32,12 @@ export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps
   const thumbnail = guidebook.thumbnail ?? guidebook.desktopThumbnail;
 
   return (
-    <Card className="flex flex-col gap-5 p-5 md:max-lg:grid md:max-lg:grid-cols-2 md:max-lg:gap-x-6">
+    <Card className="flex flex-col gap-3 p-4 md:max-lg:grid md:max-lg:grid-cols-2 md:max-lg:items-start md:max-lg:gap-x-6">
       {thumbnail ? (
-        <div className="mx-auto w-full max-w-md md:max-lg:row-span-2 md:max-lg:mx-0 md:max-lg:max-w-none">
+        <div className="mx-auto w-full max-w-md md:max-lg:mx-0 md:max-lg:max-w-none">
           <img
             src={thumbnail}
-            alt={guidebook.title}
+            alt=""
             width={THUMBNAIL_WIDTH}
             height={THUMBNAIL_HEIGHT}
             decoding="async"
@@ -43,14 +45,16 @@ export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps
           />
         </div>
       ) : null}
-      <div className="flex flex-col gap-5">
-        <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <Badge tone="main">{report.label}</Badge>
-          <h1 className="text-xl font-bold break-keep text-balance text-gray-900">{guidebook.title}</h1>
+          {guidebook.priceInfo ? <PriceLine price={guidebook.priceInfo} /> : null}
         </div>
-        {guidebook.priceInfo ? <PriceLine price={guidebook.priceInfo} /> : null}
+        <h1 className="text-xl font-bold break-keep text-balance text-gray-900">
+          {guidebook.title}
+        </h1>
         <SaleInfoList rows={saleInfoRows(guidebook)} />
-        <div className="flex flex-col gap-2">
+        <div>
           {/* 모바일(`md` 미만)에서는 화면 아래에 떠서 스크롤해도 누를 수 있고, 그 위 줄에 가격을 보인다.
               `md` 이상에서는 카드 안 제자리로 돌아온다(공고·부트캠프 상세와 같은 부품). */}
           <StickyApplyBar
@@ -64,13 +68,7 @@ export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps
           >
             <PurchaseButton guidebookId={report.guidebookId} returnUrl={returnUrl} />
           </StickyApplyBar>
-          <p className="text-center text-xs text-gray-500">
-            결제는 렛츠커리어 결제창에서 진행돼요
-          </p>
         </div>
-      </div>
-      <div className="border-t border-gray-200 pt-4 md:max-lg:col-span-2">
-        <ReportLinks currentSlug={report.slug} />
       </div>
     </Card>
   );
