@@ -28,6 +28,7 @@ export { Field, type FieldProps } from './components/Field';
 export { FilterButton, type FilterButtonProps } from './components/FilterButton';
 export { Input, type InputProps } from './components/Input';
 export { MenuItem, type MenuItemProps } from './components/MenuItem';
+export { MockModeFrame, type MockModeFrameProps } from './components/MockModeFrame';
 export { Modal, type ModalProps } from './components/Modal';
 export { Pagination, type PaginationProps } from './components/Pagination';
 export { Select, type SelectOption, type SelectProps } from './components/Select';
