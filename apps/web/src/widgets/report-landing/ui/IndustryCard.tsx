@@ -113,25 +113,28 @@ export function IndustryCard({
           'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',
         )}
       >
-        <div className="flex w-full items-stretch gap-8">
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <span className="w-fit rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
-              {report.label} · 지난주 핵심
-            </span>
-            <p className="text-xl font-bold break-keep text-gray-900">{report.lastWeek.headline}</p>
-            <div className="flex flex-col gap-1.5">
-              {report.lastWeek.points.map((point, index) => (
-                <p
-                  key={point}
-                  className="flex items-start gap-2.5 text-sm break-keep text-gray-700"
-                >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
-                    {index + 1}
-                  </span>
-                  {point}
-                </p>
-              ))}
+        <div className="flex w-full items-center gap-10">
+          <div className="flex w-96 shrink-0 flex-col items-start gap-3">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
+                지난주 핵심
+              </span>
+              <span className="text-xs font-bold text-gray-600">{report.label}</span>
             </div>
+            <p className="text-xl font-bold break-keep text-gray-900">{report.lastWeek.headline}</p>
+            <p className="text-xs break-keep text-gray-500">
+              지난주 리포트 기준이에요. 이번 주 내용은 리포트에서 확인해 주세요.
+            </p>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-2 border-l border-gray-200 pl-10">
+            {report.lastWeek.points.map((point, index) => (
+              <p key={point} className="flex items-start gap-2.5 text-sm break-keep text-gray-700">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
+                  {index + 1}
+                </span>
+                {point}
+              </p>
+            ))}
           </div>
         </div>
       </div>
