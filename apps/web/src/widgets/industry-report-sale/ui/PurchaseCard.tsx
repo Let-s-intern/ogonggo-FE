@@ -58,18 +58,15 @@ export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps
         <p className="text-sm break-keep text-gray-600">{report.tagline}</p>
         <SaleInfoList rows={infoRows} />
         <div>
-          {/* 모바일(`md` 미만)에서는 화면 아래에 떠서 스크롤해도 누를 수 있고, 그 위 줄에 가격을 보인다.
-              `md` 이상에서는 카드 안 제자리로 돌아온다(공고·부트캠프 상세와 같은 부품). */}
-          <StickyApplyBar
-            summary={
-              guidebook.priceInfo ? (
-                <span className="font-semibold text-gray-900">
-                  {priceView(guidebook.priceInfo).final}
-                </span>
-              ) : undefined
-            }
-          >
-            <PurchaseButton guidebookId={report.guidebookId} returnUrl={returnUrl} />
+          {/* 모바일(`md` 미만)에서는 화면 아래에 떠서 스크롤해도 누를 수 있다. 가격은 윗줄을 따로 쓰지 않고 버튼 글자에
+              붙인다(`990원 구매하기`) — 바를 낮게 두려는 것이다. `md` 이상에서는 카드 안 제자리로 돌아오고 가격은 카드가
+              이미 보인다(공고·부트캠프 상세와 같은 부품). */}
+          <StickyApplyBar>
+            <PurchaseButton
+              guidebookId={report.guidebookId}
+              returnUrl={returnUrl}
+              priceLabel={guidebook.priceInfo ? priceView(guidebook.priceInfo).final : undefined}
+            />
           </StickyApplyBar>
         </div>
       </div>
