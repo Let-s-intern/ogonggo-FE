@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { commonFinalPrice, landingPrice } from './price';
+import { landingPrice } from './price';
 
 const p990 = { originalPrice: 990, discountRate: 0, finalPrice: 990 };
 
@@ -21,14 +21,4 @@ test('0원이면 무료다', () => {
 
 test('가격을 읽지 못했으면 null 이다', () => {
   assert.equal(landingPrice(null), null);
-});
-
-test('다섯 가격이 같으면 그 금액을 준다', () => {
-  assert.equal(commonFinalPrice([p990, p990, p990, p990, p990]), '990원');
-});
-
-test('하나라도 다르거나 읽지 못했으면 null 이다', () => {
-  assert.equal(commonFinalPrice([p990, p990, { ...p990, finalPrice: 1900 }, p990, p990]), null);
-  assert.equal(commonFinalPrice([p990, null, p990, p990, p990]), null);
-  assert.equal(commonFinalPrice([]), null);
 });

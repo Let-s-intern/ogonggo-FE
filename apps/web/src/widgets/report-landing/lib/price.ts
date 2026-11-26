@@ -29,15 +29,3 @@ export function landingPrice(price: PriceInput | null): LandingPrice | null {
     original: discounted ? won(price.originalPrice) : null,
   };
 }
-
-/**
- * 산업 다섯의 가격이 모두 같을 때만 그 결제 금액을 준다. 하나라도 읽지 못했거나 다르면 `null` — 히어로의
- * `산업별 한 편 990원` 같은 문구를 지어낼 근거가 없다.
- */
-export function commonFinalPrice(prices: readonly (PriceInput | null)[]): string | null {
-  const first = prices[0];
-  if (!first || prices.some((price) => price === null || price.finalPrice !== first.finalPrice)) {
-    return null;
-  }
-  return landingPrice(first)?.final ?? null;
-}
