@@ -1,6 +1,7 @@
 import { DatadogAppRouter } from '@datadog/browser-rum-nextjs';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { MockModeFrame } from '@ogonggo/ui';
 import type { ReactNode } from 'react';
 import {
   GoogleTagManagerNoScript,
@@ -8,6 +9,7 @@ import {
 } from '@/shared/analytics/GoogleTagManager';
 import { PostHogIdentify } from '@/shared/analytics/PostHogIdentify';
 import { PageContextTracker } from '@/shared/analytics/PageContextTracker';
+import { isMockEnabled } from '@/shared/config/mocks';
 import { SITE_ORIGIN } from '@/shared/config/site';
 import { PushOpenTracker } from '@/features/notification-inbox';
 import { MockGate } from './MockGate';
@@ -101,6 +103,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <DatadogAppRouter />
         {/* 화면 이동·로그인 상태가 바뀔 때마다 GTM 에 `page_context` 를 보낸다. */}
         <PageContextTracker />
+        {/*
+          목데이터로 동작 중임을 화면 테두리와 라벨로 알린다. `MockGate` 는 워커가 뜰 때까지 화면을 비우므로
+          그 밖에 둔다. 그래야 워커를 기다리는 동안과 워커가 못 떴을 때도 목 모드임이 보인다.
+        */}
+        <MockModeFrame enabled={isMockEnabled} />
         {/*
           헤더·푸터는 여기가 아니라 `(site)/layout.tsx`가 단다. 소개 페이지(`/about`)는 그
           그룹 밖이라 껍데기 없이 렌더된다.
