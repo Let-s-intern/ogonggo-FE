@@ -28,11 +28,11 @@ const REPORT_PARTS = [
  * 위에서 아래로 4:3 썸네일, 산업 이름, 산업 소개 줄(`tagline`, 마케팅팀 상세 이미지의 글), 가격과 `리포트 보기` 를 둔다.
  * 가격은 알약이 아니라 글자로 보인다(알약은 값싼 이벤트 딱지처럼 보인다). 정가가 있으면 취소선으로 함께 보인다.
  *
- * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 줄 아래에 설명(`HOVER_POINTS`)이 크게 뜨고, 카드가 10% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
+ * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 줄 아래에 설명(`HOVER_POINTS`)이 크게 뜨고, 카드가 20% 커지고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
  * 카드 안에서 천천히 커지고(칸이 잘라 주므로 카드 크기는 그대로) 화살표가 오른쪽으로 간다. 나머지 카드는 `ul`(group/list)
- * 안에 올려진 카드가 있을 때만 흐려지고 10% 작아진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
+ * 안에 올려진 카드가 있을 때만 흐려지고 20% 작아진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
  *
- * 호버한 카드는 이전 호버로 줄어 있던 상태(`scale-90`)를 즉시 푼다(`hover:duration-0`, 줄어든 크기에서 시작해 커지면
+ * 호버한 카드는 이전 호버로 줄어 있던 상태(`scale-80`)를 즉시 푼다(`hover:duration-0`, 줄어든 크기에서 시작해 커지면
  * 작았다가 커지는 것처럼 보인다). 이어서 `Link` 가 평소 크기에서 10% 커진다. 나머지 카드가 줄어드는 것은 천천히 한다.
  *
  * 모바일(sm 미만)은 썸네일이 왼쪽, 글이 오른쪽인 가로 카드다. 썸네일은 렛츠커리어의 실제 이미지(573x430)를 자르지 않고
@@ -63,8 +63,8 @@ export function IndustryCard({
         style={{ animationDelay: `${delayMs}ms` }}
         className={cn(
           'ogonggo-rise-in h-full transition duration-300 hover:duration-0 has-focus-visible:duration-0',
-          'group-has-hover/list:not-hover:opacity-50 motion-safe:group-has-hover/list:not-hover:scale-90',
-          'group-has-focus-visible/list:not-has-focus-visible:opacity-50 motion-safe:group-has-focus-visible/list:not-has-focus-visible:scale-90',
+          'group-has-hover/list:not-hover:opacity-50 motion-safe:group-has-hover/list:not-hover:scale-80',
+          'group-has-focus-visible/list:not-has-focus-visible:opacity-50 motion-safe:group-has-focus-visible/list:not-has-focus-visible:scale-80',
         )}
       >
         <Link
@@ -74,7 +74,7 @@ export function IndustryCard({
             'group/card relative flex h-full items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:flex-col sm:items-stretch',
             'transition duration-300 hover:border-transparent hover:shadow-2xl focus-visible:border-transparent focus-visible:shadow-2xl',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-            'hover:z-10 focus-visible:z-10 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-110 motion-safe:focus-visible:-translate-y-2 motion-safe:focus-visible:scale-110',
+            'hover:z-10 focus-visible:z-10 motion-safe:hover:scale-120 motion-safe:focus-visible:scale-120',
           )}
         >
           <span className="block aspect-4/3 w-2/5 shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:w-full">
@@ -123,7 +123,7 @@ export function IndustryCard({
       <div
         aria-hidden="true"
         className={cn(
-          'pointer-events-none absolute inset-x-0 top-full mt-3 hidden rounded-3xl bg-gray-50 px-10 py-3 lg:flex',
+          'pointer-events-none absolute inset-x-0 top-full mt-7 hidden rounded-3xl bg-gray-50 px-10 py-3 lg:flex',
           'opacity-0 transition duration-300 motion-safe:translate-y-3',
           'group-hover/item:translate-y-0 group-hover/item:opacity-100',
           'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',

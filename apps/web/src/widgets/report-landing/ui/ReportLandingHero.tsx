@@ -5,7 +5,7 @@ import { IndustryCard } from './IndustryCard';
 /**
  * `/reports` 의 전부. 헤더 아래에서 화면 높이를 채우는 히어로 하나이고, 히어로 자체가 산업 다섯으로 들어가는 입구다.
  * 바탕은 사이트 기본 흰색이고 내용(소개 글과 카드 다섯)은 헤더·푸터와 같은 본문 기준선(`mx-auto max-w-page-padded px-5`)
- * 안에서 헤더 바로 아래(`pt-6`)부터 위에서 아래로 선다. 가운데에 두면 위가 비어 보여서 위로 붙였다.
+ * 안에서 헤더 바로 아래(`pt-4`)부터 위에서 아래로 선다. 가운데에 두면 위가 비어 보여서 위로 붙였다.
  *
  * 소개 문장과 구성 태그는 넓은 화면(lg)에서 한 줄에 놓아 세로를 아낀다(호버 설명이 화면 안에 들어오도록). 들어올 때 소개 글 네 줄과 카드 다섯이 차례로 떠오른다. 이미 있는 `.ogonggo-rise-in`(`globals.css`)을 쓰고 차례는
  * `animationDelay` 로 준다. 움직임을 줄인 환경은 그 클래스가 알아서 멈춘다.
@@ -30,9 +30,9 @@ export function ReportLandingHero({
     <div className="-mb-28 flex min-h-svh flex-col md:-mb-24">
       <section
         aria-labelledby="reports-hero-title"
-        className="flex flex-1 flex-col pt-6 pb-30 md:pb-26"
+        className="flex flex-1 flex-col pt-4 pb-30 md:pb-26"
       >
-        <div className="mx-auto flex w-full max-w-page-padded flex-col gap-5 px-5">
+        <div className="mx-auto flex w-full max-w-page-padded flex-col gap-7 px-5">
           <div className="flex flex-col gap-3">
             <p className="ogonggo-rise-in text-sm font-bold text-blue-600">
               오늘의 공고 · 주간 산업 트렌드 리포트
