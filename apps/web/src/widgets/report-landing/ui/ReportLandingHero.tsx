@@ -1,81 +1,70 @@
-import { Badge, cn } from '@ogonggo/ui';
+import { Badge } from '@ogonggo/ui';
+import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
+import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
+import { IndustryPanel } from './IndustryPanel';
 
 /**
- * 부채꼴 다섯 장의 자리별 모양. 가운데가 맨 위에 오고 바깥으로 갈수록 낮고 더 기운다(`rotate-3` 이하). 클래스를 조립하지
- * 않고 통째로 적는다(Tailwind 가 소스의 글자를 스캔한다). 다섯 장이 안 되면 앞에서부터 쓴다.
- */
-const FAN_SLOTS = [
-  '-rotate-3 translate-y-3 z-0',
-  '-rotate-2 translate-y-1 z-10',
-  'rotate-0 z-20',
-  'rotate-2 translate-y-1 z-10',
-  'rotate-3 translate-y-3 z-0',
-] as const;
-
-/**
- * 랜딩 맨 위. 다른 화면의 히어로(`widgets/home-hero/ui/HomeHero.tsx`)와 같은 상자다 — 좌우 20px/40px 떨어진
- * `rounded-3xl` 박스에 같은 옅은 파랑 배경 이미지(`/hero/jobs.png`)를 깔고, 제목은
- * `font-bold tracking-tight text-gray-800` 이다. 다른 화면이 가운데 정렬이고 이 화면만 오른쪽에 그림이 있어
- * 왼쪽 정렬이다. 제목은 시스템 최대 글자(`text-7xl`)다. 글은 제목과 읽은 가격으로 만든 칩뿐이다 — 회차·발행 주기·
- * 구성을 말하는 문구는 근거가 없어 두지 않는다(PRD 11.3 L7).
+ * `/reports` 의 전부. 헤더 아래에서 화면 높이를 채우는 히어로 하나이고, 히어로 자체가 산업 다섯으로 들어가는 입구다.
+ * 위쪽에 제목과 한 줄 안내, (다섯 가격이 같을 때만) 가격 칩이 있고 나머지 높이를 산업 패널 다섯이 쓴다. 바탕은 박스 없이 화면
+ * 폭 전체에 깐 옅은 파랑(`bg-blue-50`) 한 겹이고 그 위에 흰 패널이 바로 놓인다. 제목과 패널은 헤더·푸터와 같은 본문
+ * 기준선(`mx-auto max-w-page-padded px-5`) 안에 선다.
  *
- * 오른쪽 그림은 렛츠커리어에서 읽은 실제 썸네일(4:3)을 겹쳐 펼친 것이다. 장식이라 `alt=""` 와 `aria-hidden` 이고 링크가
- * 아니다 — 누르는 곳은 아래 목록 카드다. 데스크톱(lg)에서만 보이고, 한 장도 읽지 못했으면 자리를 비워 글만 남는다.
- * 움직임은 `motion-safe` 의 `transition-transform` 뿐이다.
+ * 높이: 바깥 `min-h-svh` 가 뷰포트 높이이고 헤더가 그 위에 얹히므로, 바탕은 헤더가 차지하는 높이만큼 아래 여백을 두어 패널이
+ * 첫 화면 안에서 끝난다(바탕 색은 그 아래로 이어진다). 데스크톱·태블릿(md)은 헤더(`h-10` + `h-14` 에 테두리 2px)에 맞춰
+ * `md:pb-26`, 모바일은 헤더(`h-14`)와 하단 탭(`h-16`)을 더한 `pb-30` 이다. 헤더나 하단 탭 높이가 바뀌면 이 값도 맞춘다.
+ *
+ * 화면의 글은 제목·가격 칩·산업 이름·`리포트 보기` 뿐이다. 회차·발행 주기·구성을 말하는 문구는 근거가 없어 두지 않는다(PRD 11.3 L7).
  */
 export function ReportLandingHero({
   price,
-  thumbnails,
+  guidebooks,
 }: {
   /** 다섯 상품의 공통 결제 금액(`990원`, `무료`). 모르면 `null` 이고 가격 칩을 뺀다. */
   price: string | null;
-  /** 산업 순서대로 읽은 썸네일 주소. 못 읽은 건은 빠진다. */
-  thumbnails: readonly string[];
+  /** `INDUSTRY_REPORTS` 와 같은 순서. 읽지 못한 칸은 `null`. */
+  guidebooks: readonly (LetsCareerGuidebook | null)[];
 }) {
-  const fan = thumbnails.slice(0, FAN_SLOTS.length);
   return (
-    <section
-      className="relative mx-5 mt-4 overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 md:mx-10 md:mt-6 lg:py-10"
-      style={{ backgroundImage: 'url(/hero/jobs.png)' }}
-    >
-      <div className="relative mx-auto grid w-full max-w-page items-center gap-8 lg:grid-cols-12">
-        <div className={cn('lg:col-span-12', fan.length > 0 && 'lg:col-span-6')}>
-          <h1 className="text-5xl font-bold tracking-tight break-keep text-balance text-gray-800 md:text-7xl">
-            이번 주 산업 트렌드를 채용공고와 함께 읽어요
-          </h1>
-          {price ? (
-            <Badge tone="main" className="mt-6 rounded-full px-3 py-2 text-sm font-medium">
-              산업별 한 편&nbsp;<span className="font-bold">{price}</span>
-            </Badge>
-          ) : null}
-        </div>
-
-        {fan.length > 0 ? (
-          <div
-            aria-hidden="true"
-            className="hidden justify-center -space-x-7 lg:col-span-6 lg:flex lg:justify-end"
-          >
-            {fan.map((src, index) => (
-              <div
-                key={src}
-                className={cn(
-                  'relative w-32 shrink-0 overflow-hidden rounded-lg bg-white shadow-lg ring-2 ring-white',
-                  'motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-2 hover:z-30',
-                  FAN_SLOTS[index],
-                )}
+    <div className="-mb-28 flex min-h-svh flex-col md:-mb-24">
+      <section
+        aria-labelledby="reports-hero-title"
+        className="flex flex-1 flex-col pt-6 pb-30 lg:pt-8"
+      >
+        <div className="mx-auto flex w-full max-w-page-padded flex-1 flex-col gap-4 px-5 lg:gap-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-1 md:gap-2">
+              <h1
+                id="reports-hero-title"
+                className="text-2xl font-bold tracking-tight break-keep text-balance text-gray-800 md:text-4xl lg:text-5xl"
               >
-                <img
-                  src={src}
-                  alt=""
-                  width={573}
-                  height={430}
-                  className="block aspect-4/3 w-full object-contain"
-                />
-              </div>
-            ))}
+                이번 주 산업 트렌드 분석 리포트
+              </h1>
+              <p className="text-sm break-keep text-gray-600 md:text-base">
+                관심 있는 산업을 골라 리포트를 열어 보세요
+              </p>
+            </div>
+            {price ? (
+              <Badge
+                tone="main"
+                className="w-fit shrink-0 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap"
+              >
+                산업별 한 편&nbsp;<span className="font-bold">{price}</span>
+              </Badge>
+            ) : null}
           </div>
-        ) : null}
-      </div>
-    </section>
+
+          <ul className="group/list flex flex-1 flex-col gap-2 md:gap-3 lg:flex-row lg:items-stretch lg:gap-4">
+            {INDUSTRY_REPORTS.map((report, index) => (
+              <IndustryPanel
+                key={report.slug}
+                report={report}
+                guidebook={guidebooks[index] ?? null}
+                priority={index < 2}
+              />
+            ))}
+          </ul>
+        </div>
+      </section>
+    </div>
   );
 }
