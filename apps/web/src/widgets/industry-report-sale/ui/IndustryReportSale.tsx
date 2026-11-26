@@ -1,8 +1,8 @@
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import type { IndustryReport } from '@/shared/config/industryReports';
+import { cn } from '@ogonggo/ui';
 import { extractDescriptionImages } from '../lib/descriptionImages';
-import { PriceLine } from './PriceLine';
-import { PurchaseButton } from './PurchaseButton';
+import { PurchaseCard } from './PurchaseCard';
 
 export interface IndustryReportSaleProps {
   report: IndustryReport;
@@ -13,10 +13,13 @@ export interface IndustryReportSaleProps {
 }
 
 /**
- * 산업 트렌드 리포트 판매 상세 본문. 데스크톱은 왼쪽에 썸네일과 상세 이미지, 오른쪽에 제목·소개·가격·구매 버튼이
- * 고정되어 따라온다. 모바일은 썸네일, 구매 칸, 상세 이미지 순으로 쌓인다.
+ * 산업 트렌드 리포트 판매 상세 본문. 데스크톱은 왼쪽에 상세 이미지, 오른쪽에 구매 카드가 고정되어 따라온다
+ * (공고·부트캠프 상세와 같은 `739fr / 323fr` 두 칸). 좁은 화면은 구매 카드 아래에 상세 이미지가 이어진다.
  *
- * 값을 읽지 못한 칸(썸네일, 소개, 가격, 상세 이미지)은 그 칸만 숨긴다. 상품 전체를 읽지 못하면 구매 버튼도
+ * 썸네일은 카드 안에만 있다. 573px 원본이라 본문 폭으로 늘려 두면 흐려 보인다(`PurchaseCard`). 본문은 1074px
+ * 상세 이미지로 채운다.
+ *
+ * 값을 읽지 못한 칸(썸네일, 가격, 상세 이미지)은 그 칸만 숨긴다. 상품 전체를 읽지 못하면 구매 버튼도
  * 두지 않는다 — 값을 모르는 상품을 결제 창으로 보내지 않는다.
  */
 export function IndustryReportSale({ report, guidebook, returnUrl }: IndustryReportSaleProps) {
@@ -32,41 +35,35 @@ export function IndustryReportSale({ report, guidebook, returnUrl }: IndustryRep
   }
 
   const images = extractDescriptionImages(guidebook.description);
-  const thumbnail = guidebook.thumbnail ?? guidebook.desktopThumbnail;
+  const hasImages = images.length > 0;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-x-12">
-      {thumbnail ? (
-        <picture className="block overflow-hidden rounded-xl bg-gray-100 lg:col-start-1 lg:row-start-1">
-          {guidebook.desktopThumbnail ? (
-            <source media="(min-width: 768px)" srcSet={guidebook.desktopThumbnail} />
-          ) : null}
-          <img src={thumbnail} alt={guidebook.title} className="block h-auto w-full" />
-        </picture>
-      ) : null}
-      <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
-        <p className="text-sm font-semibold text-blue-500">{report.label}</p>
-        <h1 className="mt-1 text-2xl font-bold break-keep text-gray-950">{guidebook.title}</h1>
-        {guidebook.recommendedFor ? (
-          <p className="mt-3 text-sm break-keep text-gray-600">{guidebook.recommendedFor}</p>
-        ) : null}
-        {guidebook.priceInfo ? (
-          <div className="mt-6">
-            <PriceLine price={guidebook.priceInfo} />
-          </div>
-        ) : null}
-        <div className="mt-4">
-          <PurchaseButton guidebookId={report.guidebookId} returnUrl={returnUrl} />
-        </div>
+    <div
+      className={cn(
+        'grid grid-cols-1 gap-6',
+        hasImages && 'lg:grid-cols-[minmax(0,739fr)_minmax(0,323fr)] lg:gap-15',
+      )}
+    >
+      <aside
+        className={cn(
+          'min-w-0',
+          hasImages
+            ? 'lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:self-start'
+            : 'lg:mx-auto lg:w-full lg:max-w-sm',
+        )}
+      >
+        <PurchaseCard report={report} guidebook={guidebook} returnUrl={returnUrl} />
       </aside>
-      {images.length > 0 ? (
-        <section aria-label="상세 소개" className="lg:col-start-1 lg:row-start-2">
+      {hasImages ? (
+        <section aria-label="상세 소개" className="min-w-0 lg:col-start-1 lg:row-start-1">
           {images.map((image, index) => (
             <img
               key={`${index}-${image.src}`}
               src={image.src}
               alt={image.alt}
-              loading="lazy"
+              // 긴 세로 이미지(약 2MB)라 첫 장만 바로 받고 나머지는 내려올 때 받는다.
+              loading={index === 0 ? 'eager' : 'lazy'}
+              decoding="async"
               className="block h-auto w-full"
             />
           ))}
