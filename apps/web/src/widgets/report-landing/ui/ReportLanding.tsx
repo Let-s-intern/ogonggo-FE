@@ -1,4 +1,5 @@
-import { LANDING_ISSUE_LABEL } from '../model/landingMock';
+import { LANDING_ISSUE_CODE, LANDING_ISSUE_LABEL } from '../model/landingMock';
+import './reportLanding.css';
 import { IndustryCardGrid } from './IndustryCardGrid';
 import { ReportLandingHero } from './ReportLandingHero';
 import { ReportStructure } from './ReportStructure';
@@ -9,8 +10,8 @@ import { ReportStructure } from './ReportStructure';
  */
 export function ReportLanding() {
   return (
-    <main>
-      <ReportLandingHero issueLabel={LANDING_ISSUE_LABEL} />
+    <main className="overflow-x-clip bg-gray-950 text-gray-100">
+      <ReportLandingHero issueLabel={LANDING_ISSUE_LABEL} issueCode={LANDING_ISSUE_CODE} />
       <div className="mx-auto flex w-full max-w-page-padded flex-col gap-16 px-5 py-12 md:py-16">
         <IndustryCardGrid />
         <ReportStructure />
