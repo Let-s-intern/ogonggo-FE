@@ -3,7 +3,6 @@ import { Badge, Button, cn } from '@ogonggo/ui';
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
-import { INDUSTRY_LANDING_COPY } from '../model/landingMock';
 
 /**
  * 산업 한눈에 보기. 산업 다섯 카드가 처음부터 모두 보이고, 카드 어디를 눌러도 판매 상세(`/reports/{slug}`)로 간다.
@@ -39,13 +38,8 @@ export function IndustryList({
       <h2 id="industries-title" className="text-4xl font-bold break-keep text-gray-950">
         산업별 리포트
       </h2>
-      <p className="mt-2 text-base break-keep text-gray-600">
-        산업별 이번 주 헤드라인과 공고 속 직무를 한눈에 보고, 리포트를 열어 보세요
-      </p>
-
       <ul className="-mx-5 mt-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-8 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
         {INDUSTRY_REPORTS.map((report, index) => {
-          const copy = INDUSTRY_LANDING_COPY[report.slug];
           const guidebook = guidebooks[index] ?? null;
           const thumbnail = guidebook ? (guidebook.thumbnail ?? guidebook.desktopThumbnail) : null;
           const price = landingPrice(guidebook?.priceInfo ?? null);
@@ -86,18 +80,6 @@ export function IndustryList({
                     </Badge>
                   ) : null}
                 </div>
-                <p className="line-clamp-2 min-h-10 text-sm font-bold break-keep text-gray-900 md:min-h-12 md:text-base">
-                  {copy.headline}
-                </p>
-                <ul aria-label="공고 속 직무" className="flex flex-wrap gap-1">
-                  {copy.roles.slice(0, 2).map((role) => (
-                    <li key={role}>
-                      <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs">
-                        {role}
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
                 <Button
                   asChild
                   size="sm"

@@ -14,20 +14,19 @@ const FAN_SLOTS = [
 
 /**
  * 랜딩 맨 위. 다른 화면의 히어로(`widgets/home-hero/ui/HomeHero.tsx`)와 같은 상자다 — 좌우 20px/40px 떨어진
- * `rounded-3xl` 박스에 같은 옅은 파랑 배경 이미지(`/hero/jobs.png`)를 깔고, 배지는 알약(`bg-blue-100 text-blue-500`),
- * 제목은 `font-bold tracking-tight text-gray-800` 이다. 다른 화면이 가운데 정렬이고 이 화면만 오른쪽에 그림이 있어
- * 왼쪽 정렬이다. 제목은 시스템 최대 글자(`text-7xl`)다.
+ * `rounded-3xl` 박스에 같은 옅은 파랑 배경 이미지(`/hero/jobs.png`)를 깔고, 제목은
+ * `font-bold tracking-tight text-gray-800` 이다. 다른 화면이 가운데 정렬이고 이 화면만 오른쪽에 그림이 있어
+ * 왼쪽 정렬이다. 제목은 시스템 최대 글자(`text-7xl`)다. 글은 제목과 읽은 가격으로 만든 칩뿐이다 — 회차·발행 주기·
+ * 구성을 말하는 문구는 근거가 없어 두지 않는다(PRD 11.3 L7).
  *
  * 오른쪽 그림은 렛츠커리어에서 읽은 실제 썸네일(4:3)을 겹쳐 펼친 것이다. 장식이라 `alt=""` 와 `aria-hidden` 이고 링크가
  * 아니다 — 누르는 곳은 아래 목록 카드다. 데스크톱(lg)에서만 보이고, 한 장도 읽지 못했으면 자리를 비워 글만 남는다.
  * 움직임은 `motion-safe` 의 `transition-transform` 뿐이다.
  */
 export function ReportLandingHero({
-  issueLabel,
   price,
   thumbnails,
 }: {
-  issueLabel: string;
   /** 다섯 상품의 공통 결제 금액(`990원`, `무료`). 모르면 `null` 이고 가격 칩을 뺀다. */
   price: string | null;
   /** 산업 순서대로 읽은 썸네일 주소. 못 읽은 건은 빠진다. */
@@ -41,19 +40,9 @@ export function ReportLandingHero({
     >
       <div className="relative mx-auto grid w-full max-w-page items-center gap-8 lg:grid-cols-12">
         <div className={cn('lg:col-span-12', fan.length > 0 && 'lg:col-span-6')}>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-2 text-sm font-medium text-blue-500">
-              <span aria-hidden="true" className="icon-[lucide--calendar-check] h-4 w-4" />
-              매주 월요일 발행
-            </span>
-            <span className="text-sm font-medium text-gray-600">{issueLabel}</span>
-          </div>
-          <h1 className="mt-5 text-5xl font-bold tracking-tight break-keep text-balance text-gray-800 md:text-7xl">
+          <h1 className="text-5xl font-bold tracking-tight break-keep text-balance text-gray-800 md:text-7xl">
             이번 주 산업 트렌드를 채용공고와 함께 읽어요
           </h1>
-          <p className="mt-4 text-base break-keep text-gray-600 md:text-lg">
-            뉴스 4꼭지, 공고 속 직무, 혼자 해볼 준비 3가지를 산업별 한 편에 담았어요.
-          </p>
           {price ? (
             <Badge tone="main" className="mt-6 rounded-full px-3 py-2 text-sm font-medium">
               산업별 한 편&nbsp;<span className="font-bold">{price}</span>
