@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { MockModeFrame } from '@ogonggo/ui';
 import type { ReactNode } from 'react';
+import { isMockEnabled } from '@/shared/config/mocks';
 import {
   IS_INDEXABLE_DEPLOYMENT,
   SITE_DESCRIPTION,
@@ -77,6 +79,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <PageContextTracker />
         {/* 소개 화면(`/`)의 행동 유도 링크 클릭을 센다. 소개 화면 파일은 건드리지 않는다. */}
         <LandingCtaTracker />
+        {/* 목데이터로 동작 중임을 화면 테두리와 라벨로 알린다. 비즈니스는 `pnpm mock` 처럼 켠다고 한 배포본에서만 보인다. */}
+        <MockModeFrame enabled={isMockEnabled} />
         {/* 헤더·푸터는 공개 화면(`(site)/layout.tsx`)만 단다. 기업 회원 화면은 콘솔 틀이다(`mypage/company/layout.tsx`). */}
         <AppProviders>{children}</AppProviders>
       </body>
