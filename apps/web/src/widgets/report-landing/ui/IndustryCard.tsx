@@ -5,23 +5,14 @@ import type { IndustryReport } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 
 /**
- * 호버하면 카드 줄 아래에 크게 뜨는 설명의 글. 마케팅팀 상세 이미지에 적힌 것이고 다섯 산업이 같은 말이다(상세 이미지가
- * 같은 구성이라 산업마다 따로 두지 않는다). `HOVER_POINTS` 는 `그냥 뉴스 요약이 아니에요` 세 항목과 각 설명, `REPORT_PARTS`
- * 는 `리포트 구성` 목록(분야별 산업 뉴스 01~04, 취업 관점 05~07, 부록)이다. 상세 이미지가 바뀌면 여기도 맞춘다.
+ * 호버하면 카드 줄 아래에 크게 뜨는 설명의 글. 가운데 `이번 주 핵심` 은 산업마다 다르고(`report.weekly`, 설정 파일에서 매주
+ * 갱신) 오른쪽의 `HOVER_POINTS`(`그냥 뉴스 요약이 아니에요` 세 항목)와 `REPORT_PARTS`(`리포트 구성` 목록)는 다섯 산업이
+ * 같은 말이다. 모두 마케팅팀 상세 이미지에 적힌 글이고, 상세 이미지가 바뀌면 여기도 맞춘다.
  */
 const HOVER_POINTS = [
-  {
-    title: "산업 뉴스를 '취업 관점'으로",
-    description: '이번 주 흐름을 정리하고, 왜 주목해야 하는지·어느 직무와 닿는지까지 풀어줘요.',
-  },
-  {
-    title: '실제 채용공고(JD)에 바로 연결',
-    description: "각 트렌드를 현재 올라온 실제 공고의 '주요 업무·자격'과 묶어줘요.",
-  },
-  {
-    title: '지금 혼자 할 수 있는 난이도',
-    description: '트렌드에 맞는 경험·스펙은 지금 당장 해볼 수 있는 수준으로 제안드려요.',
-  },
+  "산업 뉴스를 '취업 관점'으로",
+  '실제 채용공고(JD)에 바로 연결',
+  '지금 혼자 할 수 있는 난이도',
 ] as const;
 
 const REPORT_PARTS = [
@@ -144,36 +135,42 @@ export function IndustryCard({
           'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',
         )}
       >
-        <div className="flex w-full flex-col gap-5">
-          <div className="flex items-start gap-10">
-            <div className="flex w-44 shrink-0 flex-col gap-1">
-              <p className="text-2xl font-bold break-keep text-gray-900">{report.label}</p>
-              <p className="text-sm break-keep text-gray-600">{report.tagline}</p>
-            </div>
-            <div className="flex flex-1 items-start gap-8 border-l border-gray-200 pl-10">
-              {HOVER_POINTS.map((point, index) => (
-                <div key={point.title} className="flex flex-1 flex-col gap-1.5">
-                  <span className="text-xs font-bold text-blue-600">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="text-lg font-bold break-keep text-gray-900">{point.title}</span>
-                  <span className="text-sm leading-relaxed break-keep text-gray-600">
-                    {point.description}
-                  </span>
-                </div>
+        <div className="flex w-full items-stretch gap-10">
+          <div className="flex min-w-0 flex-3 flex-col gap-3">
+            <p className="text-xs font-bold text-blue-600">{report.label} · 이번 주 핵심</p>
+            <p className="text-2xl font-bold break-keep text-gray-900">{report.weekly.headline}</p>
+            <div className="flex flex-col gap-1.5">
+              {report.weekly.points.map((point) => (
+                <p key={point} className="flex gap-2 text-sm break-keep text-gray-700">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                  {point}
+                </p>
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-gray-200 pt-4">
-            <span className="mr-2 text-xs font-bold text-blue-600">리포트 구성</span>
-            {REPORT_PARTS.map((part) => (
-              <span
-                key={part}
-                className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
-              >
-                {part}
-              </span>
-            ))}
+          <div className="flex min-w-0 flex-2 flex-col gap-4 border-l border-gray-200 pl-10">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-bold text-blue-600">리포트 특징</span>
+              {HOVER_POINTS.map((point, index) => (
+                <p key={point} className="flex gap-2 text-sm font-bold break-keep text-gray-900">
+                  <span className="text-blue-600">{String(index + 1).padStart(2, '0')}</span>
+                  {point}
+                </p>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-bold text-blue-600">리포트 구성</span>
+              <div className="flex flex-wrap gap-1.5">
+                {REPORT_PARTS.map((part) => (
+                  <span
+                    key={part}
+                    className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
+                  >
+                    {part}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
