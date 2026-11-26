@@ -20,9 +20,6 @@ export interface IndustryLandingCopy {
 /** 이번에 발행한 회차. 히어로에 보인다. */
 export const LANDING_ISSUE_LABEL = '2026년 11월 4주차';
 
-/** 같은 회차를 히어로 위 작은 영문 라벨에 맞게 줄인 글. `LANDING_ISSUE_LABEL` 과 같이 바꾼다. */
-export const LANDING_ISSUE_CODE = 'ISSUE 2026.11 / W4';
-
 export const INDUSTRY_LANDING_COPY: Record<IndustrySlug, IndustryLandingCopy> = {
   fnb: {
     tagline: '먹고 마시는 브랜드가 사람을 모으는 방법',

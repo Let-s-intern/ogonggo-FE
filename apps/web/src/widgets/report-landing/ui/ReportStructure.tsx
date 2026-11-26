@@ -13,7 +13,7 @@ const SECTION_ICONS = [
 /** `리포트는 이렇게 구성돼요`. 세 칸이 데스크톱에서는 한 줄, 그 아래에서는 쌓인다. */
 export function ReportStructure() {
   return (
-    <section id="structure" aria-labelledby="structure-title" className="scroll-mt-6">
+    <section aria-labelledby="structure-title">
       <h2 id="structure-title" className="text-2xl font-bold break-keep text-gray-950">
         리포트는 이렇게 구성돼요
       </h2>

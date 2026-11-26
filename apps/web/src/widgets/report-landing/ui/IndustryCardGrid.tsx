@@ -1,7 +1,7 @@
-import { cn } from '@ogonggo/ui';
+import Link from 'next/link';
+import { Badge, cn } from '@ogonggo/ui';
 import { INDUSTRY_REPORTS, type IndustrySlug } from '@/shared/config/industryReports';
 import { INDUSTRY_LANDING_COPY } from '../model/landingMock';
-import { SpotlightCard } from './SpotlightCard';
 
 /**
  * 산업마다 쓰는 아이콘. Iconify 플러그인은 소스에 적힌 글자를 스캔하므로 이름을 조립하지 않고 통째로 적는다.
@@ -17,87 +17,70 @@ const INDUSTRY_ICON: Record<IndustrySlug, string> = {
 
 /**
  * 산업 카드 다섯. 카드 전체가 판매 상세(`/reports/{slug}`)로 가는 링크다. 산업 사이는 색을 늘리지 않고 아이콘과
- * 큰 외곽선 번호로 가른다.
+ * 번호로 가른다.
  *
- * 배치는 데스크톱이 6칸 격자라 위 줄이 큰 카드(4칸) 하나와 작은 카드(2칸) 하나, 아래 줄이 작은 카드 셋(2칸씩)이다.
- * 첫 카드만 제목과 헤드라인이 한 단계 크다. 태블릿은 2열이고 첫 카드와 다섯째가 두 칸을 쓴다. 모바일은 1열이다.
+ * 배치는 데스크톱이 6칸 격자에 2칸씩이라 위 줄 셋, 아래 줄 둘이고, 아래 둘은 3칸씩 차지해 마지막 줄이 비어 보이지
+ * 않는다. 태블릿은 2열이고 다섯째가 두 칸을 쓴다. 모바일은 1열이다.
  */
 export function IndustryCardGrid() {
   return (
     <section id="industries" aria-labelledby="industries-title" className="scroll-mt-6">
-      <p className="text-xs font-semibold tracking-[0.2em] text-blue-300">PICK AN INDUSTRY</p>
-      <h2
-        id="industries-title"
-        className="mt-3 text-4xl font-extrabold tracking-[-0.03em] break-keep text-white md:text-6xl"
-      >
+      <h2 id="industries-title" className="text-2xl font-bold break-keep text-gray-950">
         산업을 골라 리포트를 열어 보세요
       </h2>
-      <ul className="mt-10 grid gap-4 md:mt-14 md:grid-cols-2 md:gap-5 lg:grid-cols-6">
+      <ul className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         {INDUSTRY_REPORTS.map((report, index) => {
           const copy = INDUSTRY_LANDING_COPY[report.slug];
-          const featured = index === 0;
+          const wide = index >= 3;
           return (
             <li
               key={report.slug}
               className={cn(
                 'lg:col-span-2',
-                featured && 'md:col-span-2 lg:col-span-4',
-                index === INDUSTRY_REPORTS.length - 1 && 'md:col-span-2 lg:col-span-2',
+                wide && 'lg:col-span-3',
+                index === INDUSTRY_REPORTS.length - 1 && 'md:col-span-2',
               )}
             >
-              <SpotlightCard
+              <Link
                 href={`/reports/${report.slug}`}
-                className={cn('min-h-[22rem]', featured && 'lg:min-h-[26rem]')}
+                className={cn(
+                  'group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-6',
+                  'transition-[transform,border-color,box-shadow] duration-200',
+                  'hover:border-blue-200 hover:shadow-lg motion-safe:hover:-translate-y-1',
+                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+                  'motion-reduce:transition-none',
+                )}
               >
-                {/* 거대한 외곽선 번호. 장식이라 보조기기에서 뺀다. 카드 오른쪽 위로 일부가 잘려 나간다. */}
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'pointer-events-none absolute -top-4 -right-3 leading-none font-extrabold tracking-[-0.06em] text-white/[0.06] select-none tabular-nums',
-                    'transition-colors duration-300 group-hover:text-blue-400/20 group-focus-visible:text-blue-400/20',
-                    featured ? 'text-[11rem] md:text-[15rem]' : 'text-[9rem] md:text-[11rem]',
-                  )}
-                >
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-blue-300">
-                  <span aria-hidden="true" className={cn(INDUSTRY_ICON[report.slug], 'h-7 w-7')} />
-                </span>
-                <h3
-                  className={cn(
-                    'mt-8 font-extrabold tracking-[-0.03em] text-white',
-                    featured ? 'text-4xl md:text-6xl' : 'text-4xl',
-                  )}
-                >
-                  {report.label}
-                </h3>
-                <p className="mt-2 text-sm break-keep text-gray-400 md:text-base">{copy.tagline}</p>
-                <p
-                  className={cn(
-                    'mt-6 font-semibold break-keep text-gray-100',
-                    featured ? 'text-lg md:text-2xl lg:max-w-xl' : 'text-base md:text-lg',
-                  )}
-                >
+                <div className="flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-md bg-blue-50 text-blue-500">
+                    <span aria-hidden="true" className={cn(INDUSTRY_ICON[report.slug], 'h-6 w-6')} />
+                  </span>
+                  <span className="text-2xl font-bold text-blue-200 tabular-nums">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-gray-950">{report.label}</h3>
+                <p className="mt-1 text-sm break-keep text-gray-500">{copy.tagline}</p>
+                <p className="mt-5 text-base font-semibold break-keep text-gray-900">
                   {copy.headline}
                 </p>
-                <ul className="mt-5 flex flex-wrap gap-2">
+                <ul className="mt-4 flex flex-wrap gap-1.5">
                   {copy.keywords.map((keyword) => (
-                    <li
-                      key={keyword}
-                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-gray-300"
-                    >
-                      {keyword}
+                    <li key={keyword}>
+                      <Badge tone="neutral" className="rounded-full px-3 py-1 text-xs">
+                        {keyword}
+                      </Badge>
                     </li>
                   ))}
                 </ul>
-                <span className="mt-auto inline-flex items-center gap-1.5 pt-8 text-sm font-semibold text-blue-300 group-hover:text-blue-200">
+                <span className="mt-auto inline-flex items-center gap-1 pt-6 text-sm font-semibold text-blue-500">
                   리포트 보기
                   <span
                     aria-hidden="true"
-                    className="icon-[lucide--arrow-right] h-4 w-4 motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-1.5 motion-safe:group-focus-visible:translate-x-1.5"
+                    className="icon-[lucide--arrow-right] h-4 w-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-1"
                   />
                 </span>
-              </SpotlightCard>
+              </Link>
             </li>
           );
         })}
