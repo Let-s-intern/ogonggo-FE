@@ -19,9 +19,6 @@ export interface IndustryLandingCopy {
   roles: readonly [string, string, string];
 }
 
-/** 히어로 오른쪽 표지에 보이는 산업. 글은 `INDUSTRY_LANDING_COPY` 에서 읽는다. */
-export const HERO_COVER_SLUG: IndustrySlug = 'it-platform';
-
 /** 이번에 발행한 회차. 히어로에 보인다. */
 export const LANDING_ISSUE_LABEL = '2026년 11월 4주차';
 
