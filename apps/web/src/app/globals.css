@@ -117,6 +117,29 @@
 }
 
 /*
+ * 헤더 `산업 리포트` 글자 옆 별(`widgets/site-header/ui/ReportNavLabel.tsx`). 별이 작아졌다 커지며 살짝 돌고
+ * 투명해졌다 또렷해진다. 크기·회전·투명도를 한 번에 오가야 해서 표준 유틸리티(`animate-pulse` 는 투명도만)로
+ * 안 되어 키프레임을 둔다. `--animate-*` 는 Tailwind 가 `animate-nav-sparkle` 유틸리티로 만들어 주고, 두 번째
+ * 별은 주기의 절반을 먼저 지난 채로 시작해(`-0.9s`) 두 별이 엇갈린다. 움직이는 것은 `motion-safe:` 로만 건다.
+ */
+@keyframes ogonggo-nav-sparkle {
+  0%,
+  100% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.1) rotate(15deg);
+    opacity: 1;
+  }
+}
+
+@theme {
+  --animate-nav-sparkle: ogonggo-nav-sparkle 1.8s ease-in-out infinite;
+  --animate-nav-sparkle-late: ogonggo-nav-sparkle 1.8s ease-in-out -0.9s infinite;
+}
+
+/*
  * 모바일 하단 내비게이션(`widgets/site-header/ui/MobileBottomNav.tsx`). 바의 파인 자리와 그 위
  * 동그라미의 가로 위치가 `--notch-x` 하나다. 타입을 등록해야 이 변수가 숫자로 보간되어, 페이지를
  * 옮길 때 파인 자리와 동그라미가 함께 새 탭으로 미끄러진다. 등록하지 않으면 한 번에 건너뛴다.

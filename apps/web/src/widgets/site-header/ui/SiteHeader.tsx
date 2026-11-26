@@ -17,6 +17,7 @@ import { CommunityMenu } from './CommunityMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
 import { Logo } from '@/shared/ui/Logo';
 import { NAV_ITEMS } from './navItems';
+import { ReportNavLabel } from './ReportNavLabel';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
 /**
@@ -185,7 +186,7 @@ export function SiteHeader() {
                   state={reportsActive ? 'current' : 'default'}
                   className={cn('text-sm', reportsActive && 'font-semibold')}
                 >
-                  산업 리포트
+                  <ReportNavLabel>산업 리포트</ReportNavLabel>
                 </MenuItem>
               </Link>
             </ReportEntry>
