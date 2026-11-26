@@ -32,15 +32,15 @@ export function ReportLandingHero({
         aria-labelledby="reports-hero-title"
         className="flex flex-1 flex-col pt-4 pb-30 md:pb-26"
       >
-        <div className="mx-auto flex w-full max-w-page-padded flex-col gap-7 px-5">
-          <div className="flex flex-col gap-3">
+        <div className="mx-auto flex w-full max-w-page-padded flex-col gap-8 px-5">
+          <div className="flex flex-col gap-2">
             <p className="ogonggo-rise-in text-sm font-bold text-blue-600">
               오늘의 공고 · 주간 산업 트렌드 리포트
             </p>
             <h1
               id="reports-hero-title"
               style={{ animationDelay: '80ms' }}
-              className="ogonggo-rise-in text-3xl font-bold tracking-tight break-keep text-gray-900 md:text-5xl"
+              className="ogonggo-rise-in text-3xl font-bold tracking-tight break-keep text-gray-900 md:text-4xl"
             >
               이번 주 산업 트렌드 분석 리포트
             </h1>

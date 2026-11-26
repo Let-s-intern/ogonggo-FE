@@ -5,22 +5,6 @@ import type { IndustryReport } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 
 /**
- * 호버하면 카드 줄 아래에 크게 뜨는 설명의 글. 왼쪽 `지난주 핵심`(지난주 내용이라고 밝혀 보인다) 은 산업마다 다르고(`report.lastWeek`, 설정 파일에서 매주
- * 갱신) 오른쪽 `REPORT_PARTS`(`리포트 구성` 목록)는 다섯 산업이 같은 말이다. 모두 마케팅팀 상세 이미지에 적힌 글이고, 상세
- * 이미지가 바뀌면 여기도 맞춘다. 패널이 화면 아래로 잘리지 않게 높이를 아낀다 — 784px 높이 화면에서도 들어와야 한다.
- */
-const REPORT_PARTS = [
-  '산업·비즈니스',
-  '주요 트렌드 심화',
-  '채널·글로벌 확장',
-  '기술·신성장',
-  '채용공고로 보는 직무',
-  '뜨는 직무·필요 역량',
-  '지망생 준비 포인트',
-  '용어 설명',
-] as const;
-
-/**
  * 산업 한 칸. 카드 전체가 링크 하나이고 어디를 눌러도 판매 상세(`/reports/{slug}`)로 간다. 링크 안에 링크·버튼이 없고
  * 스크린리더는 `{산업 이름} 리포트 보기` 한 번만 읽는다.
  *
@@ -28,12 +12,12 @@ const REPORT_PARTS = [
  * 위에서 아래로 4:3 썸네일, 산업 이름, 산업 소개 줄(`tagline`, 마케팅팀 상세 이미지의 글), 가격과 `리포트 보기` 를 둔다.
  * 가격은 알약이 아니라 글자로 보인다(알약은 값싼 이벤트 딱지처럼 보인다). 정가가 있으면 취소선으로 함께 보인다.
  *
- * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 줄 아래에 설명(`HOVER_POINTS`)이 크게 뜨고, 카드가 20% 커지고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
+ * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 줄 아래에 설명이 크게 뜨고(산업마다 다른 `지난주 핵심` 한 줄과 근거 세 줄 — `report.lastWeek`, 설정 파일에서 매주 갱신하며 지난주 내용이라고 밝혀 보인다. 마케팅팀 상세 이미지의 글이다), 카드가 15% 커지고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
  * 카드 안에서 천천히 커지고(칸이 잘라 주므로 카드 크기는 그대로) 화살표가 오른쪽으로 간다. 나머지 카드는 `ul`(group/list)
  * 안에 올려진 카드가 있을 때만 흐려지고 20% 작아진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
  *
  * 호버한 카드는 이전 호버로 줄어 있던 상태(`scale-80`)를 즉시 푼다(`hover:duration-0`, 줄어든 크기에서 시작해 커지면
- * 작았다가 커지는 것처럼 보인다). 이어서 `Link` 가 평소 크기에서 10% 커진다. 나머지 카드가 줄어드는 것은 천천히 한다.
+ * 작았다가 커지는 것처럼 보인다). 이어서 `Link` 가 평소 크기에서 15% 커진다. 나머지 카드가 줄어드는 것은 천천히 한다.
  *
  * 모바일(sm 미만)은 썸네일이 왼쪽, 글이 오른쪽인 가로 카드다. 썸네일은 렛츠커리어의 실제 이미지(573x430)를 자르지 않고
  * (`object-contain`) 두며 어느 폭에서도 원본 폭보다 작다. 읽지 못한 카드도 칸은 남기고 썸네일·가격만 빠진다.
@@ -74,7 +58,7 @@ export function IndustryCard({
             'group/card relative flex h-full items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:flex-col sm:items-stretch',
             'transition duration-300 hover:border-transparent hover:shadow-2xl focus-visible:border-transparent focus-visible:shadow-2xl',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-            'hover:z-10 focus-visible:z-10 motion-safe:hover:scale-120 motion-safe:focus-visible:scale-120',
+            'hover:z-10 focus-visible:z-10 motion-safe:hover:scale-115 motion-safe:focus-visible:scale-115',
           )}
         >
           <span className="block aspect-4/3 w-2/5 shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:w-full">
@@ -123,38 +107,30 @@ export function IndustryCard({
       <div
         aria-hidden="true"
         className={cn(
-          'pointer-events-none absolute inset-x-0 top-full mt-7 hidden rounded-3xl bg-gray-50 px-10 py-3 lg:flex',
+          'pointer-events-none absolute inset-x-0 top-full mt-10 hidden rounded-3xl border border-gray-100 bg-white px-10 py-2.5 shadow-2xl lg:flex',
           'opacity-0 transition duration-300 motion-safe:translate-y-3',
           'group-hover/item:translate-y-0 group-hover/item:opacity-100',
           'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',
         )}
       >
         <div className="flex w-full items-stretch gap-8">
-          <div className="flex min-w-0 flex-4 flex-col gap-2.5">
-            <p className="text-xs font-bold text-blue-600">{report.label} · 지난주 핵심</p>
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <span className="w-fit rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
+              {report.label} · 지난주 핵심
+            </span>
             <p className="text-xl font-bold break-keep text-gray-900">{report.lastWeek.headline}</p>
             <div className="flex flex-col gap-0.5">
-              {report.lastWeek.points.map((point) => (
-                <p key={point} className="flex gap-2 text-sm break-keep text-gray-700">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+              {report.lastWeek.points.map((point, index) => (
+                <p
+                  key={point}
+                  className="flex items-start gap-2.5 text-sm break-keep text-gray-700"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
+                    {index + 1}
+                  </span>
                   {point}
                 </p>
               ))}
-            </div>
-          </div>
-          <div className="flex min-w-0 flex-3 flex-col border-l border-gray-200 pl-8">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-blue-600">리포트 구성</span>
-              <div className="flex flex-wrap gap-1.5">
-                {REPORT_PARTS.map((part) => (
-                  <span
-                    key={part}
-                    className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
-                  >
-                    {part}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>
