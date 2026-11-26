@@ -5,9 +5,9 @@
  * 배열 순서다. 제목·썸네일·가격은 가이드북 id 로 렛츠커리어에서 읽으므로(`shared/api/letsCareerGuidebook.ts`)
  * 여기에 두지 않는다.
  *
- * 임시: `guidebookId` 는 렛츠커리어에 이미 있는 가이드북(포트폴리오 2, 자기소개서 5, 이력서 6, 경험정리 7,
- * 면접 9)으로 개발과 검증을 하려고 채운 값이다. 마케팅팀이 실제 리포트 가이드북을 개설하면 이 다섯 id 만
- * 교체한다(PRD 5장). 다른 코드는 바뀌지 않는다.
+ * `guidebookId` 는 마케팅팀이 렛츠커리어 어드민에서 개설한 `이번주 {산업} 산업 트렌드 분석 리포트`
+ * 가이드북이다(2026-11-26 개설, 21 엔터, 22 뷰티, 23 F&B, 24 IT·플랫폼, 25 유통·이커머스). 제목으로 렛츠커리어
+ * 공개 API 에서 찾은 id 다. 리포트 가이드북이 바뀌면 이 다섯 id 만 교체한다. 다른 코드는 바뀌지 않는다.
  */
 
 export interface IndustryReport {
@@ -15,16 +15,16 @@ export interface IndustryReport {
   slug: string;
   /** 화면에 보이는 산업 이름. */
   label: string;
-  /** 렛츠커리어 가이드북 id. 임시 값이다(파일 위 주석). */
+  /** 렛츠커리어 가이드북 id(파일 위 주석). */
   guidebookId: number;
 }
 
 export const INDUSTRY_REPORTS = [
-  { slug: 'fnb', label: 'F&B', guidebookId: 2 },
-  { slug: 'it-platform', label: 'IT·플랫폼', guidebookId: 5 },
-  { slug: 'beauty', label: '뷰티', guidebookId: 6 },
-  { slug: 'entertainment', label: '엔터', guidebookId: 7 },
-  { slug: 'retail-ecommerce', label: '유통·이커머스', guidebookId: 9 },
+  { slug: 'fnb', label: 'F&B', guidebookId: 23 },
+  { slug: 'it-platform', label: 'IT·플랫폼', guidebookId: 24 },
+  { slug: 'beauty', label: '뷰티', guidebookId: 22 },
+  { slug: 'entertainment', label: '엔터', guidebookId: 21 },
+  { slug: 'retail-ecommerce', label: '유통·이커머스', guidebookId: 25 },
 ] as const satisfies readonly IndustryReport[];
 
 export type IndustrySlug = (typeof INDUSTRY_REPORTS)[number]['slug'];
