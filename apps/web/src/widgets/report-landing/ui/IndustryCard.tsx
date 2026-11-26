@@ -107,19 +107,19 @@ export function IndustryCard({
       <div
         aria-hidden="true"
         className={cn(
-          'pointer-events-none absolute inset-x-0 top-full mt-10 hidden rounded-3xl border border-gray-100 bg-white px-10 py-2.5 shadow-2xl lg:flex',
+          'pointer-events-none absolute inset-x-0 top-full mt-10 hidden rounded-3xl border border-gray-100 bg-white px-10 py-5 shadow-2xl lg:flex',
           'opacity-0 transition duration-300 motion-safe:translate-y-3',
           'group-hover/item:translate-y-0 group-hover/item:opacity-100',
           'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',
         )}
       >
         <div className="flex w-full items-stretch gap-8">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
             <span className="w-fit rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
               {report.label} · 지난주 핵심
             </span>
             <p className="text-xl font-bold break-keep text-gray-900">{report.lastWeek.headline}</p>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-1.5">
               {report.lastWeek.points.map((point, index) => (
                 <p
                   key={point}
