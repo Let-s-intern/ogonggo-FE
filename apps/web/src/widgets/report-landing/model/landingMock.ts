@@ -19,6 +19,9 @@ export interface IndustryLandingCopy {
   roles: readonly [string, string, string];
 }
 
+/** 히어로 오른쪽 표지에 보이는 산업. 글은 `INDUSTRY_LANDING_COPY` 에서 읽는다. */
+export const HERO_COVER_SLUG: IndustrySlug = 'it-platform';
+
 /** 이번에 발행한 회차. 히어로에 보인다. */
 export const LANDING_ISSUE_LABEL = '2026년 11월 4주차';
 
@@ -54,54 +57,3 @@ export const INDUSTRY_LANDING_COPY: Record<IndustrySlug, IndustryLandingCopy> = 
     roles: ['상품기획(MD)', '물류 기획', '멤버십 CRM 마케터'],
   },
 };
-
-/** `받아 보는 리포트는 이런 모양이에요` 의 부분. 세 부분이고 번호는 화면이 붙인다. */
-export interface LandingSection {
-  title: string;
-  /** 부분이 무엇인지 한 줄로. */
-  description: string;
-  /** 샘플 리포트에서 이 부분을 가리키는 짧은 이름표. */
-  tag: string;
-}
-
-export const LANDING_SECTIONS: readonly LandingSection[] = [
-  {
-    title: '이번 주 산업 흐름',
-    description: '한 주 동안 눈여겨볼 산업 뉴스를 골랐어요.',
-    tag: '뉴스 4꼭지',
-  },
-  {
-    title: '채용공고로 보는 직무',
-    description: '공고에 적힌 문구가 산업 흐름과 어떻게 이어지는지 보여 줘요.',
-    tag: '직무 표',
-  },
-  {
-    title: '지금 혼자 할 수 있는 준비',
-    description: '부담 없이 시작할 수 있는 활동을 골랐어요.',
-    tag: '준비 3가지',
-  },
-];
-
-/**
- * 샘플 리포트 한 장. 히어로의 표지와 `SampleReport` 가 같이 쓴다. 산업은 `IT·플랫폼` 이고 문구는 모두 예시다 —
- * 실제 발행 내용이 아니고 특정 회사나 숫자를 넣지 않았다.
- */
-export const SAMPLE_REPORT = {
-  slug: 'it-platform',
-  news: [
-    { title: '생성형 AI 기능이 앱 첫 화면으로', why: '서비스 기획자가 가장 먼저 보는 변화예요' },
-    { title: '구독 모델로 옮겨 가는 플랫폼', why: '수익 구조가 직무 요구사항을 바꿔요' },
-    { title: '개인화 추천 경쟁', why: '데이터를 읽는 역량이 공고에 늘어요' },
-    { title: '서비스끼리 손잡는 제휴', why: '협업 경험을 묻는 공고가 보여요' },
-  ],
-  jobs: [
-    { role: '서비스 기획자', phrase: '사용자 데이터를 바탕으로 기능 개선', trend: '생성형 AI' },
-    { role: '그로스 마케터', phrase: '고객 유형별 메시지 설계', trend: '개인화 추천' },
-    { role: '프로덕트 매니저', phrase: '구독 전환 개선 경험', trend: '구독 모델' },
-  ],
-  tasks: [
-    { tag: '분석', text: '좋아하는 서비스를 덕질하듯 분석해 보기' },
-    { tag: '개선안', text: '앱을 뜯어보고 개선안 적어 보기' },
-    { tag: '정리', text: '후기를 모아 소비자 반응 정리하기' },
-  ],
-} as const;

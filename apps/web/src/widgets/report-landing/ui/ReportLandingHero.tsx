@@ -1,6 +1,6 @@
 import { Badge, Button, Card } from '@ogonggo/ui';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
-import { INDUSTRY_LANDING_COPY, SAMPLE_REPORT } from '../model/landingMock';
+import { HERO_COVER_SLUG, INDUSTRY_LANDING_COPY } from '../model/landingMock';
 
 /**
  * 랜딩 맨 위. 파랑 면(blue-600) 한 줄 높이에 제목과 한 줄 소개, 산업 목록으로 내려가는 버튼 하나를 두고, 오른쪽에는
@@ -9,11 +9,11 @@ import { INDUSTRY_LANDING_COPY, SAMPLE_REPORT } from '../model/landingMock';
  *
  * 디자인 스케일의 가장 큰 글자(`text-7xl`, 36px)가 상한이라 제목을 더 키우지 않았다. 흰 글자 대비는 blue-600 이상에서
  * 4.5:1 을 넘기므로 파랑 면은 blue-600 보다 옅게 가지 않는다. 표지는 `md` 부터 보인다 — 모바일에서는 히어로가
- * 길어져 아래 샘플 리포트 절이 그 몫을 한다.
+ * 길어지는 만큼 표지를 뺀다.
  */
 export function ReportLandingHero({ issueLabel }: { issueLabel: string }) {
-  const sample = INDUSTRY_REPORTS.find((report) => report.slug === SAMPLE_REPORT.slug);
-  const sampleCopy = INDUSTRY_LANDING_COPY[SAMPLE_REPORT.slug];
+  const sample = INDUSTRY_REPORTS.find((report) => report.slug === HERO_COVER_SLUG);
+  const sampleCopy = INDUSTRY_LANDING_COPY[HERO_COVER_SLUG];
   return (
     <section className="overflow-hidden bg-blue-600 text-white">
       <div className="mx-auto grid w-full max-w-page-padded gap-8 px-5 py-8 md:py-12 lg:grid-cols-12 lg:items-center lg:gap-12">
