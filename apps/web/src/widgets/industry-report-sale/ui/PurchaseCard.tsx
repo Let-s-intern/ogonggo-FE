@@ -1,6 +1,8 @@
 import { Badge, Card } from '@ogonggo/ui';
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import type { IndustryReport } from '@/shared/config/industryReports';
+import { StickyApplyBar } from '@/shared/ui/StickyApplyBar';
+import { priceView } from '../lib/price';
 import { saleInfoRows } from '../model/saleInfo';
 import { PriceLine } from './PriceLine';
 import { PurchaseButton } from './PurchaseButton';
@@ -49,7 +51,19 @@ export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps
         {guidebook.priceInfo ? <PriceLine price={guidebook.priceInfo} /> : null}
         <SaleInfoList rows={saleInfoRows(guidebook)} />
         <div className="flex flex-col gap-2">
-          <PurchaseButton guidebookId={report.guidebookId} returnUrl={returnUrl} />
+          {/* 모바일(`md` 미만)에서는 화면 아래에 떠서 스크롤해도 누를 수 있고, 그 위 줄에 가격을 보인다.
+              `md` 이상에서는 카드 안 제자리로 돌아온다(공고·부트캠프 상세와 같은 부품). */}
+          <StickyApplyBar
+            summary={
+              guidebook.priceInfo ? (
+                <span className="font-semibold text-gray-900">
+                  {priceView(guidebook.priceInfo).final}
+                </span>
+              ) : undefined
+            }
+          >
+            <PurchaseButton guidebookId={report.guidebookId} returnUrl={returnUrl} />
+          </StickyApplyBar>
           <p className="text-center text-xs text-gray-500">
             결제는 렛츠커리어 결제창에서 진행돼요
           </p>
