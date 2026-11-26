@@ -1,5 +1,5 @@
 import { LANDING_ISSUE_LABEL } from '../model/landingMock';
-import { IndustryPicker } from './IndustryPicker';
+import { IndustryList } from './IndustryList';
 import { ReportLandingClosing } from './ReportLandingClosing';
 import { ReportLandingHero } from './ReportLandingHero';
 import { SampleReport } from './SampleReport';
@@ -14,7 +14,7 @@ export function ReportLanding() {
     <main>
       <ReportLandingHero issueLabel={LANDING_ISSUE_LABEL} />
       <div className="mx-auto w-full max-w-page-padded px-5 py-12 md:py-16">
-        <IndustryPicker />
+        <IndustryList />
       </div>
       <SampleReport />
       <div className="mx-auto w-full max-w-page-padded px-5 py-12 md:py-16">
