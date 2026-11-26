@@ -4,7 +4,10 @@ import type { UserFeatureFlagResponse } from '../generated/user/models';
 /**
  * 공개 기능 플래그 목록(`GET /api/v1/feature-flags`)의 목. key 와 켜짐 여부만 준다.
  *
- * 기본은 운영과 같이 `ad_report_cost_efficiency` 가 켜짐이다. 화면에서 다른 경우를 보려면 브라우저 콘솔에서 정한다.
+ * 기본은 `ad_report_cost_efficiency` 와 `industry_trend_report_sale` 이 켜짐이다. 앞의 것은 운영과 같이 켠다.
+ * 뒤의 것은 운영에서 켜졌는지와 상관없이 목에서만 켠다. 웹 프리뷰가 목 모드라 이 키가 없으면 헤더 `산업 리포트` 메뉴 등
+ * 리포트 진입점이 프리뷰에서 보이지 않는다. 운영은 목을 거치지 않아 영향이 없다.
+ * 화면에서 다른 경우를 보려면 브라우저 콘솔에서 정한다.
  *
  *   localStorage.setItem('ogonggo-mock:feature-flags', '{"ad_report_cost_efficiency":false}')  // 끔
  *   localStorage.setItem('ogonggo-mock:feature-flags:fail', '1')                                // 목록 요청이 500
@@ -26,7 +29,12 @@ const read = (key: string): string | null => {
 
 const currentFlags = (): UserFeatureFlagResponse[] => {
   const raw = read(FLAGS_KEY);
-  if (raw === null) return [{ key: 'ad_report_cost_efficiency', enabled: true }];
+  if (raw === null) {
+    return [
+      { key: 'ad_report_cost_efficiency', enabled: true },
+      { key: 'industry_trend_report_sale', enabled: true },
+    ];
+  }
   try {
     const parsed = JSON.parse(raw) as Record<string, boolean>;
     return Object.entries(parsed).map(([key, enabled]) => ({ key, enabled }));
