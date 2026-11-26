@@ -1,54 +1,102 @@
-import { Badge, Button } from '@ogonggo/ui';
+import { Badge, Button, cn } from '@ogonggo/ui';
 
 /**
- * 랜딩 맨 위. 파랑 면(blue-600) 한 줄 높이에 제목과 한 줄 소개를 왼쪽에, 산업 목록으로 내려가는 버튼을 오른쪽에 둔다.
- * 가격을 읽었으면 버튼 위에 `산업별 한 편 990원` 한 줄을 둔다. 표지 같은 그림은 두지 않는다 — 판매 상세가 이미 보여 주는 것이라 랜딩은 입구 역할만 한다.
+ * 부채꼴 다섯 장의 자리별 모양. 가운데가 맨 위에 오고 바깥으로 갈수록 낮고 더 기운다(`rotate-3` 이하). 클래스를 조립하지
+ * 않고 통째로 적는다(Tailwind 가 소스의 글자를 스캔한다). 다섯 장이 안 되면 앞에서부터 쓴다.
+ */
+const FAN_SLOTS = [
+  '-rotate-3 translate-y-3 z-0',
+  '-rotate-2 translate-y-1 z-10',
+  'rotate-0 z-20',
+  'rotate-2 translate-y-1 z-10',
+  'rotate-3 translate-y-3 z-0',
+] as const;
+
+/**
+ * 랜딩 맨 위. 다른 화면의 히어로(`widgets/home-hero/ui/HomeHero.tsx`)와 같은 상자다 — 좌우 20px/40px 떨어진
+ * `rounded-3xl` 박스에 같은 옅은 파랑 배경 이미지(`/hero/jobs.png`)를 깔고, 배지는 알약(`bg-blue-100 text-blue-500`),
+ * 제목은 `font-bold tracking-tight text-gray-800` 이다. 다른 화면이 가운데 정렬이고 이 화면만 오른쪽에 그림이 있어
+ * 왼쪽 정렬이다. 제목은 시스템 최대 글자(`text-7xl`)다.
  *
- * 디자인 스케일의 가장 큰 글자(`text-7xl`, 36px)가 상한이라 제목을 더 키우지 않았다. 흰 글자 대비는 blue-600 이상에서
- * 4.5:1 을 넘기므로 파랑 면은 blue-600 보다 옅게 가지 않는다.
+ * 오른쪽 그림은 렛츠커리어에서 읽은 실제 썸네일(4:3)을 겹쳐 펼친 것이다. 장식이라 `alt=""` 와 `aria-hidden` 이고 링크가
+ * 아니다 — 누르는 곳은 아래 목록 카드다. 데스크톱(lg)에서만 보이고, 한 장도 읽지 못했으면 자리를 비워 글만 남는다.
+ * 움직임은 `motion-safe` 의 `transition-transform` 뿐이다.
  */
 export function ReportLandingHero({
   issueLabel,
   price,
+  thumbnails,
 }: {
   issueLabel: string;
-  /** 다섯 상품의 공통 결제 금액(`990원`, `무료`). 모르면 `null` 이고 가격 줄을 뺀다. */
+  /** 다섯 상품의 공통 결제 금액(`990원`, `무료`). 모르면 `null` 이고 가격 칩을 뺀다. */
   price: string | null;
+  /** 산업 순서대로 읽은 썸네일 주소. 못 읽은 건은 빠진다. */
+  thumbnails: readonly string[];
 }) {
+  const fan = thumbnails.slice(0, FAN_SLOTS.length);
   return (
-    <section className="bg-blue-600 text-white">
-      <div className="mx-auto grid w-full max-w-page-padded gap-6 px-5 py-8 md:py-8 lg:grid-cols-12 lg:items-end lg:gap-12">
-        <div className="lg:col-span-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="main" className="gap-1 bg-white text-blue-600">
+    <section
+      className="relative mx-5 mt-4 overflow-hidden rounded-3xl bg-cover bg-center px-4 py-8 sm:px-6 md:mx-10 md:mt-6 lg:py-12"
+      style={{ backgroundImage: 'url(/hero/jobs.png)' }}
+    >
+      <div className="relative mx-auto grid w-full max-w-page items-center gap-8 lg:grid-cols-12">
+        <div className={cn('lg:col-span-12', fan.length > 0 && 'lg:col-span-6')}>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-2 text-sm font-medium text-blue-500">
               <span aria-hidden="true" className="icon-[lucide--calendar-check] h-4 w-4" />
               매주 월요일 발행
-            </Badge>
-            <span className="text-sm font-medium text-white">{issueLabel}</span>
+            </span>
+            <span className="text-sm font-medium text-gray-600">{issueLabel}</span>
           </div>
-          <h1 className="mt-4 text-5xl font-bold break-keep md:text-7xl">
+          <h1 className="mt-5 text-5xl font-bold tracking-tight break-keep text-balance text-gray-800 md:text-7xl">
             이번 주 산업 트렌드를 채용공고와 함께 읽어요
           </h1>
-          <p className="mt-4 text-base break-keep text-white md:text-lg">
+          <p className="mt-4 text-base break-keep text-gray-600 md:text-lg">
             뉴스 4꼭지, 공고 속 직무, 혼자 해볼 준비 3가지를 산업별 한 편에 담았어요.
           </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button
+              asChild
+              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+            >
+              <a href="#industries">
+                산업별 리포트 보기
+                <span aria-hidden="true" className="ml-1.5 icon-[lucide--arrow-down] h-4 w-4" />
+              </a>
+            </Button>
+            {price ? (
+              <Badge tone="main" className="rounded-full px-3 py-2 text-sm font-medium">
+                산업별 한 편&nbsp;<span className="font-bold">{price}</span>
+              </Badge>
+            ) : null}
+          </div>
         </div>
-        <div className="lg:col-span-4 lg:border-l lg:border-blue-400 lg:pl-8">
-          {price ? (
-            <p className="mb-3 text-base text-white">
-              산업별 한 편 <span className="text-3xl font-bold">{price}</span>
-            </p>
-          ) : null}
-          <Button
-            asChild
-            className="border-transparent bg-white px-5 text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+
+        {fan.length > 0 ? (
+          <div
+            aria-hidden="true"
+            className="hidden justify-center -space-x-7 lg:col-span-6 lg:flex lg:justify-end"
           >
-            <a href="#industries">
-              산업별 리포트 보기
-              <span aria-hidden="true" className="ml-1.5 icon-[lucide--arrow-down] h-4 w-4" />
-            </a>
-          </Button>
-        </div>
+            {fan.map((src, index) => (
+              <div
+                key={src}
+                className={cn(
+                  'relative w-32 shrink-0 overflow-hidden rounded-lg bg-white shadow-lg ring-2 ring-white',
+                  'motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-2 hover:z-30',
+                  FAN_SLOTS[index],
+                )}
+              >
+                <img
+                  src={src}
+                  alt=""
+                  width={573}
+                  height={430}
+                  className="block aspect-4/3 w-full object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
