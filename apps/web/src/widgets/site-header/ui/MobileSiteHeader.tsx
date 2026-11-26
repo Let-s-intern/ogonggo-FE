@@ -13,6 +13,7 @@ import { BIZ_DASHBOARD_PATH, bizUrl, onBizLinkClick } from '@/shared/api/bizHand
 import type { CompanyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { MenuIcon } from '@/shared/ui/icons';
 import { ReportEntry } from '@/widgets/report-entry';
+import { ReportNavLabel } from './ReportNavLabel';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
 export interface MobileSiteHeaderProps {
@@ -214,7 +215,7 @@ function MobileMenu({
                 onClick={onClose}
                 className="flex h-[58px] items-center text-base text-gray-900"
               >
-                산업 리포트
+                <ReportNavLabel>산업 리포트</ReportNavLabel>
               </Link>
             </li>
           </ReportEntry>
