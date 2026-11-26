@@ -18,13 +18,7 @@ const DEPLOYMENTS_PATH = '/preview-api/deployments';
 
 export type PreviewApp = 'web' | 'admin' | 'business';
 
-export type PreviewState =
-  | 'READY'
-  | 'BUILDING'
-  | 'QUEUED'
-  | 'INITIALIZING'
-  | 'ERROR'
-  | 'CANCELED';
+export type PreviewState = 'READY' | 'BUILDING' | 'QUEUED' | 'INITIALIZING' | 'ERROR' | 'CANCELED';
 
 export interface PreviewDeployment {
   app: PreviewApp;
