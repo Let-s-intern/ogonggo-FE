@@ -73,7 +73,8 @@ function useNow(intervalMs: number): number {
  * 브랜치 검색은 받은 목록을 화면에서 거르므로 요청이 나가지 않는다.
  */
 export function PreviewDeploymentsPage() {
-  const deployments = usePreviewDeployments();
+  // 탭과 페이징은 2.1 에서 붙인다. 지금은 훅의 새 시그니처에 맞춰 첫 페이지 프리뷰만 부른다.
+  const deployments = usePreviewDeployments({ target: 'preview', app: 'all', cursor: null });
   const now = useNow(CLOCK_MS);
   const [app, setApp] = useState<AppFilter>('all');
   const [keyword, setKeyword] = useState('');
