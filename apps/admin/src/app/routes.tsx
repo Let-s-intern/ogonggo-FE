@@ -24,6 +24,7 @@ import { NotificationBatchDetailPage } from '@/pages/notification-batch-detail';
 import { NotificationHistoryPage } from '@/pages/notification-history';
 import { NotificationSendPage } from '@/pages/notification-send';
 import { NotFoundPage } from '@/pages/not-found';
+import { PreviewDeploymentsPage } from '@/pages/preview-deployments';
 import { ProxyBootcampNewPage } from '@/pages/proxy-bootcamp-new';
 import { ProxyJobNewPage } from '@/pages/proxy-job-new';
 import { RecommendWeightsPage } from '@/pages/recommend-weights';
@@ -149,6 +150,7 @@ export const router = createBrowserRouter([
 
       { path: 'tools/servers', element: <ServerInstancesPage /> },
       { path: 'tools/work24-job-fields', element: <Work24JobFieldsPage /> },
+      { path: 'tools/previews', element: <PreviewDeploymentsPage /> },
 
       { path: '*', element: <NotFoundPage /> },
     ],

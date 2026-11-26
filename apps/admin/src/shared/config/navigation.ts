@@ -198,6 +198,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { path: '/tools/servers', label: '리대시·크롤러 서버' },
       // 고용24 채용정보를 매일 받을 때 어느 직군의 공고를 받을지 켜고 끈다(BE `AdminWork24JobFieldApi`).
       { path: '/tools/work24-job-fields', label: '고용24 수집 직군' },
+      // 웹·어드민·비즈니스 프리뷰 배포 주소를 한곳에서 본다. 10초마다 갱신한다.
+      { path: '/tools/previews', label: '프리뷰 배포' },
     ],
   },
   {

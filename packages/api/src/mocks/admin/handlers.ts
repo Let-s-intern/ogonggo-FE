@@ -12,6 +12,7 @@ import { inspectionHandlers } from './inspection';
 import { memberHandlers } from './members';
 import { noticeHandlers } from './notices';
 import { notificationHandlers } from './notifications';
+import { previewDeploymentHandlers } from './previewDeployments';
 import { proxyRegistrationHandlers } from './proxy-registration';
 import { recommendWeightsHandlers } from './recommend-weights';
 import { work24JobFieldHandlers } from './work24-job-fields';
@@ -58,4 +59,5 @@ export const adminHandlers: HttpHandler[] = [
   ...advertisementPostingHandlers,
   ...advertisementAdminHandlers,
   ...ec2InstanceHandlers,
+  ...previewDeploymentHandlers,
 ];

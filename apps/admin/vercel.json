@@ -26,6 +26,10 @@
       "destination": "/api/redash-query"
     },
     {
+      "source": "/preview-api/deployments",
+      "destination": "/api/preview-deployments"
+    },
+    {
       "source": "/assistant-api/chat",
       "destination": "/api/assistant"
     },
