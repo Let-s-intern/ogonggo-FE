@@ -1,7 +1,7 @@
 import { getAccessToken } from './accessToken';
 
 /**
- * 웹·어드민·비즈니스 세 앱의 프리뷰 배포 목록을 받는 작은 클라이언트. `프리뷰 배포` 화면이 쓴다.
+ * 웹·어드민·비즈니스 세 앱의 프리뷰 또는 운영 배포를 한 페이지(10건)씩 받는 작은 클라이언트. `배포 현황` 화면이 쓴다.
  *
  * `@ogonggo/api` 의 `httpClient` 를 쓰지 않는다. 그쪽은 401 을 받으면 어드민 로그인이 끝난 것으로 보고
  * 로그인 화면으로 돌려보내는데, 이 호출의 실패는 Vercel 쪽 사정일 수 있다(`./redash.ts` 와 같은 이유).
@@ -18,7 +18,8 @@ const DEPLOYMENTS_PATH = '/preview-api/deployments';
 
 export type PreviewApp = 'web' | 'admin' | 'business';
 
-export type PreviewState = 'READY' | 'BUILDING' | 'QUEUED' | 'INITIALIZING' | 'ERROR' | 'CANCELED';
+/** 취소(`CANCELED`)는 함수가 상류에서 빼서 응답에 오지 않는다. */
+export type PreviewState = 'READY' | 'BUILDING' | 'QUEUED' | 'INITIALIZING' | 'ERROR';
 
 export interface PreviewDeployment {
   app: PreviewApp;
@@ -35,8 +36,22 @@ export interface PreviewDeployment {
   createdAt: string;
 }
 
+export type PreviewTarget = 'preview' | 'production';
+
+export type PreviewAppFilter = PreviewApp | 'all';
+
+export interface PreviewDeploymentsQuery {
+  target: PreviewTarget;
+  app: PreviewAppFilter;
+  /** 이 시각(ms) 이전에 만든 배포만 받는다. `null` 이면 첫 페이지. */
+  cursor: number | null;
+}
+
 export interface PreviewDeploymentsResult {
+  /** 최대 10건. 전체 건수가 10의 배수이면 마지막에 빈 페이지가 하나 더 올 수 있다. */
   deployments: PreviewDeployment[];
+  /** 다음 페이지를 받을 `cursor`(ms). 더 없으면 `null`. */
+  nextCursor: number | null;
   /** 불러오지 못한 앱. 나머지 앱의 배포는 그대로 들어 있다. */
   failedApps: PreviewApp[];
 }
@@ -54,9 +69,16 @@ export class PreviewDeploymentsError extends Error {
   }
 }
 
-export async function fetchPreviewDeployments(): Promise<PreviewDeploymentsResult> {
+export async function fetchPreviewDeployments(
+  query: PreviewDeploymentsQuery,
+): Promise<PreviewDeploymentsResult> {
   const token = getAccessToken();
-  const response = await fetch(DEPLOYMENTS_PATH, {
+  const params = new URLSearchParams({ target: query.target, app: query.app });
+  // 빈 값을 보내면 함수가 400 으로 막는다. 첫 페이지는 키를 아예 싣지 않는다.
+  if (query.cursor !== null) {
+    params.set('cursor', String(query.cursor));
+  }
+  const response = await fetch(`${DEPLOYMENTS_PATH}?${params}`, {
     headers: token ? { authorization: `Bearer ${token}` } : {},
   });
 
@@ -73,7 +95,7 @@ export async function fetchPreviewDeployments(): Promise<PreviewDeploymentsResul
     throw new PreviewDeploymentsError(
       response.status,
       error?.code ?? '',
-      error?.message ?? `프리뷰 배포 목록을 불러오지 못했습니다(${response.status}).`,
+      error?.message ?? `배포 목록을 불러오지 못했습니다(${response.status}).`,
     );
   }
   return body as PreviewDeploymentsResult;

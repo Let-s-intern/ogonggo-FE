@@ -20,6 +20,8 @@ export interface DataTableProps<T> {
   rowKey: (row: T) => string | number;
   /** 행을 눌렀을 때. 넘기면 행에 커서와 호버 배경이 붙는다. */
   onRowClick?: (row: T) => void;
+  /** 행마다 더할 클래스. 가장 최근 건처럼 한 줄만 배경으로 눈에 띄게 할 때 쓴다. */
+  rowClassName?: (row: T) => string | undefined;
   /** 행이 없을 때 보여줄 문구. */
   emptyMessage?: string;
   isLoading?: boolean;
@@ -44,6 +46,7 @@ export function DataTable<T>({
   rows,
   rowKey,
   onRowClick,
+  rowClassName,
   emptyMessage = '결과가 없습니다.',
   isLoading = false,
   className,
@@ -93,6 +96,7 @@ export function DataTable<T>({
                 className={cn(
                   'border-b border-gray-100 last:border-b-0',
                   onRowClick ? 'cursor-pointer hover:bg-gray-50' : undefined,
+                  rowClassName?.(row),
                 )}
               >
                 {columns.map((column) => (
