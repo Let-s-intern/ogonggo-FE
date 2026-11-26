@@ -10,7 +10,7 @@ import { landingPrice } from '../lib/price';
  * 카드 전체가 눌리는 방식은 stretched link 다. 카드 맨 아래 `리포트 보기` 가 카드마다 하나뿐인 링크이고, 그 링크의
  * `::after` 가 카드(`relative`) 전체를 덮는다. 링크 안에 링크·버튼이 없고 스크린리더는 `{산업 이름} 리포트 보기` 한 번만
  * 읽는다. 마우스를 올리거나 키보드 포커스가 오면 카드 테두리가 blue-500 이 되고 그림자가 커지며 살짝 떠오르고(떠오름은
- * `motion-safe`, 움직임을 줄인 환경은 색·그림자만), 버튼은 한 단계 진해진다. 썸네일은 확대하지 않는다.
+ * `motion-safe`, 움직임을 줄인 환경은 색·그림자만), 평소 옅은 버튼은 파랑으로 채워진다. 썸네일은 확대하지 않는다.
  *
  * 카드에는 근거 있는 것만 담는다 — 썸네일·가격(렛츠커리어 공개 API), 산업 이름(상수). 헤드라인·직무 같은 글은 지어낸
  * 것이라 두지 않는다(PRD 11.3 L7).
@@ -18,7 +18,7 @@ import { landingPrice } from '../lib/price';
  * 카드는 홈의 채용공고 카드(`entities/job/ui/JobCard.tsx`)와 같은 계열로 맞췄다. 껍데기는 인기 공고가 쓰는
  * `featured` 카드와 같고(`rounded-2xl border-gray-100 bg-white shadow-sm`, 안쪽 여백 `p-4`/`md:p-3`, 간격
  * `gap-3`/`md:gap-2`), 안은 위에서 아래로 4:3 썸네일(`rounded-lg shadow-sm`, 공고는 8:5), 산업 이름 + 가격 알약(공고의
- * 회사명 + D-day 자리), `리포트 보기` 버튼이다.
+ * 회사명 + D-day 자리), 옅은 `리포트 보기` 버튼이다.
  *
  * 열은 모바일 한 열(가로로 넘기지 않고 세로로 쌓는다), 640px(sm) 두 열, 태블릿(md) 세 열, 데스크톱(lg) 다섯 열 한 줄이다
  * (`gap-x-4 gap-y-8`, 공고 목록 그리드와 같다). 다섯 열의 카드 폭은 1440px 에서 약 223px 로 홈 공고 카드(170~297px)
@@ -85,7 +85,8 @@ export function IndustryList({
                 <Button
                   asChild
                   size="sm"
-                  className="mt-auto w-full transition-colors group-hover:bg-blue-600 group-has-focus-visible:bg-blue-600 after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                  variant="secondary"
+                  className="mt-auto w-full hover:border-blue-500 hover:bg-blue-500 hover:text-white group-has-focus-visible:border-blue-500 group-has-focus-visible:bg-blue-500 group-has-focus-visible:text-white after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 >
                   <Link href={`/reports/${report.slug}`} aria-label={`${report.label} 리포트 보기`}>
                     리포트 보기
