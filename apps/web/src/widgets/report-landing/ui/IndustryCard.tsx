@@ -5,7 +5,7 @@ import type { IndustryReport } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 
 /**
- * 호버하면 카드 바깥 아래에 뜨는 요약. 마케팅팀 상세 이미지의 `그냥 뉴스 요약이 아니에요` 세 항목이고 다섯 산업이 같은
+ * 호버하면 카드 줄 아래에 크게 뜨는 설명. 마케팅팀 상세 이미지의 `그냥 뉴스 요약이 아니에요` 세 항목이고 다섯 산업이 같은
  * 말이다(상세 이미지가 같은 구성이라 산업마다 따로 두지 않는다). 상세 이미지가 바뀌면 여기도 맞춘다.
  */
 const HOVER_POINTS = [
@@ -22,7 +22,7 @@ const HOVER_POINTS = [
  * 위에서 아래로 4:3 썸네일, 산업 이름, 산업 소개 줄(`tagline`, 마케팅팀 상세 이미지의 글), 가격과 `리포트 보기` 를 둔다.
  * 가격은 알약이 아니라 글자로 보인다(알약은 값싼 이벤트 딱지처럼 보인다). 정가가 있으면 취소선으로 함께 보인다.
  *
- * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 바깥 아래에 요약(`HOVER_POINTS`)이 뜨고, 카드가 10% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
+ * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 줄 아래에 설명(`HOVER_POINTS`)이 크게 뜨고, 카드가 10% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
  * 카드 안에서 천천히 커지고(칸이 잘라 주므로 카드 크기는 그대로) 화살표가 오른쪽으로 간다. 나머지 카드는 `ul`(group/list)
  * 안에 올려진 카드가 있을 때만 흐려지고 10% 작아진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
  *
@@ -50,7 +50,7 @@ export function IndustryCard({
     <li
       style={{ animationDelay: `${delayMs}ms` }}
       className={cn(
-        'ogonggo-rise-in min-w-0 transition duration-300',
+        'group/item ogonggo-rise-in min-w-0 transition duration-300',
         'group-has-hover/list:not-hover:opacity-50 motion-safe:group-has-hover/list:not-hover:scale-90',
         'group-has-focus-visible/list:not-has-focus-visible:opacity-50 motion-safe:group-has-focus-visible/list:not-has-focus-visible:scale-90',
       )}
@@ -102,23 +102,35 @@ export function IndustryCard({
             </span>
           </span>
         </span>
-        {/* 카드 바깥 아래에 뜨는 요약. 카드와 떨어진 글이라 배경·그림자가 없다. 카드 높이를 늘리지 않아 같은 줄의 다른 카드가
-            따라 늘어나지 않는다. 호버·포커스 때만 보이고(그 밖에는 눌림도 받지 않는다), 스크린리더에는 카드 이름이 이미
-            읽히므로 숨긴다. 호버가 없는 모바일(sm 미만)은 두지 않는다. */}
-        <span
-          aria-hidden="true"
-          className={cn(
-            'pointer-events-none absolute inset-x-0 top-full mt-5 hidden flex-col gap-1.5 px-1 text-sm font-medium break-keep text-gray-700 sm:flex',
-            'opacity-0 transition duration-300 motion-safe:-translate-y-2',
-            'group-hover/card:translate-y-0 group-hover/card:opacity-100',
-            'group-focus-visible/card:translate-y-0 group-focus-visible/card:opacity-100',
-          )}
-        >
-          {HOVER_POINTS.map((point) => (
-            <span key={point}>{point}</span>
-          ))}
-        </span>
       </Link>
+      {/* 카드 줄 아래 빈 자리에 크게 뜨는 설명. 위치 기준은 카드 줄(`ul`, `relative`)이라 줄 전체 폭을 쓰고, 자리를 차지하지
+          않아 푸터가 밀리지 않는다. 설명이 카드(확대되는 `Link`) 안에 있으면 변형 때문에 기준이 카드로 바뀌므로 `Link` 밖에 둔다.
+          호버·포커스 때만 보이고 눌림을 받지 않는다. 스크린리더에는 카드 이름이 이미 읽히므로 숨긴다. 줄이 5열인
+          lg 이상에서만 둔다 — 그보다 좁은 화면은 호버가 드물고 설명이 놓일 빈 자리도 없다. */}
+      <div
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 top-full mt-10 hidden items-center gap-10 rounded-3xl bg-gray-50 px-10 py-8 lg:flex',
+          'opacity-0 transition duration-300 motion-safe:translate-y-3',
+          'group-hover/item:translate-y-0 group-hover/item:opacity-100',
+          'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',
+        )}
+      >
+        <div className="flex shrink-0 flex-col gap-1">
+          <p className="text-3xl font-bold text-gray-900">{report.label}</p>
+          <p className="text-base text-gray-600">{report.tagline}</p>
+        </div>
+        <div className="flex flex-1 items-start gap-8 border-l border-gray-200 pl-10">
+          {HOVER_POINTS.map((point, index) => (
+            <div key={point} className="flex flex-1 flex-col gap-2">
+              <span className="text-sm font-bold text-blue-600">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span className="text-xl font-bold break-keep text-gray-900">{point}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </li>
   );
 }
