@@ -20,7 +20,7 @@ export async function ReportLanding() {
   return (
     <main>
       <ReportLandingHero issueLabel={LANDING_ISSUE_LABEL} price={price} />
-      <div className="mx-auto w-full max-w-page-padded px-5 py-10 md:py-6">
+      <div className="mx-auto w-full max-w-page-padded px-5 py-10 md:py-10">
         <IndustryList guidebooks={guidebooks} />
       </div>
     </main>

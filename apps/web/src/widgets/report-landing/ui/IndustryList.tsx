@@ -1,9 +1,21 @@
 import Link from 'next/link';
-import { Badge, Button, Card } from '@ogonggo/ui';
+import { Badge, Button, Card, cn } from '@ogonggo/ui';
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 import { INDUSTRY_LANDING_COPY } from '../model/landingMock';
+
+/**
+ * 아랫줄 카드의 시작 칸. 태블릿(4칸 격자)에서는 다섯째가 가운데(2번째 칸)에, 데스크톱(6칸 격자)에서는 넷째가 2번째,
+ * 다섯째가 4번째 칸에 선다. 클래스를 조립하지 않고 통째로 적는다(Tailwind 가 소스의 글자를 스캔한다).
+ */
+const CARD_START: readonly string[] = [
+  '',
+  '',
+  '',
+  'lg:col-start-2',
+  'md:col-start-2 lg:col-start-4',
+];
 
 /**
  * 산업 한눈에 보기. 산업 다섯 카드가 처음부터 모두 보이고, 카드 맨 아래 `리포트 보기` 버튼이 판매 상세
@@ -14,8 +26,9 @@ import { INDUSTRY_LANDING_COPY } from '../model/landingMock';
  * 썸네일은 렛츠커리어가 주는 실제 이미지(573x430, 4:3)라 칸을 4:3 으로 고정했다. 읽지 못한 카드도 칸은 남겨 둔다 —
  * 줄이 어긋나지 않는다. 가격은 렛츠커리어에서 읽은 `priceInfo` 이고 읽지 못하면 가격 줄만 빈다.
  *
- * 열은 모바일 1, 태블릿(md) 2, 넓은 화면(xl) 5 이다. 다섯 열이 안 들어가는 폭에서 3+2 로 가르면 아래 줄 카드만
- * 넓어져 썸네일 크기가 달라지므로 2열로 둔다.
+ * 열은 모바일 1, 태블릿(md) 2, 데스크톱(lg) 3 이다. 격자는 카드 하나가 2칸이라 태블릿 4칸, 데스크톱 6칸이고, 아랫줄은
+ * 가운데에 놓인다(다섯 카드의 폭이 모두 같다). 모바일에서는 카드가 썸네일 원본 폭(573px)을 넘어 늘지 않게
+ * `max-w-lg` 로 막는다.
  */
 export function IndustryList({
   guidebooks,
@@ -32,7 +45,7 @@ export function IndustryList({
         산업별 이번 주 헤드라인과 공고 속 직무를 한눈에 보고, 리포트를 열어 보세요
       </p>
 
-      <div role="list" className="mt-5 grid gap-x-4 md:grid-cols-2 xl:grid-cols-5">
+      <div role="list" className="mt-5 grid gap-x-4 md:grid-cols-4 lg:grid-cols-6">
         {INDUSTRY_REPORTS.map((report, index) => {
           const copy = INDUSTRY_LANDING_COPY[report.slug];
           const guidebook = guidebooks[index] ?? null;
@@ -42,7 +55,11 @@ export function IndustryList({
             <Card
               key={report.slug}
               role="listitem"
-              className="mb-4 row-span-6 grid grid-rows-subgrid overflow-hidden rounded-xl p-0"
+              className={cn(
+                'row-span-6 mx-auto mb-4 grid w-full max-w-lg grid-rows-subgrid overflow-hidden rounded-xl p-0',
+                'md:col-span-2 md:max-w-none',
+                CARD_START[index],
+              )}
             >
               <div className="aspect-4/3 bg-gray-100">
                 {guidebook && thumbnail ? (
@@ -58,9 +75,9 @@ export function IndustryList({
                 <p aria-hidden="true" className="text-sm font-bold text-blue-600 tabular-nums">
                   {String(index + 1).padStart(2, '0')}
                 </p>
-                <h3 className="text-2xl font-bold break-keep text-gray-950">{report.label}</h3>
+                <h3 className="text-3xl font-bold break-keep text-gray-950">{report.label}</h3>
               </div>
-              <p className="px-4 pt-3 text-base font-bold break-keep text-gray-900">
+              <p className="px-4 pt-3 text-lg font-bold break-keep text-gray-900">
                 {copy.headline}
               </p>
               <div className="px-4 pt-3">

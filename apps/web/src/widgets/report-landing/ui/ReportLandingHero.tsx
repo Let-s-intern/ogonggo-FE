@@ -17,7 +17,7 @@ export function ReportLandingHero({
 }) {
   return (
     <section className="bg-blue-600 text-white">
-      <div className="mx-auto grid w-full max-w-page-padded gap-6 px-5 py-8 md:py-6 lg:grid-cols-12 lg:items-end lg:gap-12">
+      <div className="mx-auto grid w-full max-w-page-padded gap-6 px-5 py-8 md:py-8 lg:grid-cols-12 lg:items-end lg:gap-12">
         <div className="lg:col-span-8">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="main" className="gap-1 bg-white text-blue-600">
