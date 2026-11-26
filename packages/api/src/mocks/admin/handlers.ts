@@ -1,4 +1,5 @@
 import type { HttpHandler } from 'msw';
+import { advertisementInquiryHandlers } from './advertisementInquiries';
 import { advertisementPostingHandlers } from './advertisementPostings';
 import { advertisementReportHandlers } from './advertisementReports';
 import { advertisementAdminHandlers } from './advertisements';
@@ -58,6 +59,7 @@ export const adminHandlers: HttpHandler[] = [
   // 노출 목록에 대상 칸을 얹고 광고 공고 대상 중복을 먼저 막는다. 역시 앞에 둔다.
   ...advertisementPostingHandlers,
   ...advertisementAdminHandlers,
+  ...advertisementInquiryHandlers,
   ...ec2InstanceHandlers,
   ...previewDeploymentHandlers,
 ];
