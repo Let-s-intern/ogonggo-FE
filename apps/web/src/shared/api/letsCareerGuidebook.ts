@@ -26,6 +26,10 @@ export interface LetsCareerGuidebook {
   title: string;
   thumbnail: string | null;
   desktopThumbnail: string | null;
+  /** 상품이 어떤 구성인지(형식) 적은 말. 비어 있으면 `null` 이고 판매 화면이 기본 문구를 쓴다. */
+  contentComposition: string | null;
+  /** 구매 뒤 어떻게 열람하는지 적은 말. 비어 있으면 `null`. */
+  accessMethod: string | null;
   /** 이 상품을 누구에게 권하는지 적은 한 줄. 판매 화면의 한 줄 소개로 쓴다. 비어 있으면 `null`. */
   recommendedFor: string | null;
   /** Lexical 에디터 상태 JSON 문자열. 그대로 그릴 수 없다(`shared/lib/lexicalHtml.ts` 참고). */
@@ -63,7 +67,16 @@ function parseGuidebook(body: unknown): LetsCareerGuidebook | null {
   if (!isRecord(body) || !isRecord(body.data)) {
     return null;
   }
-  const { title, thumbnail, desktopThumbnail, recommendedFor, description, priceInfo } = body.data;
+  const {
+    title,
+    thumbnail,
+    desktopThumbnail,
+    contentComposition,
+    accessMethod,
+    recommendedFor,
+    description,
+    priceInfo,
+  } = body.data;
   const price = parsePrice(priceInfo);
   if (typeof title !== 'string' || title === '') {
     return null;
@@ -72,6 +85,8 @@ function parseGuidebook(body: unknown): LetsCareerGuidebook | null {
     title,
     thumbnail: textOrNull(thumbnail),
     desktopThumbnail: textOrNull(desktopThumbnail),
+    contentComposition: textOrNull(contentComposition),
+    accessMethod: textOrNull(accessMethod),
     recommendedFor: textOrNull(recommendedFor),
     description: textOrNull(description),
     priceInfo: price,

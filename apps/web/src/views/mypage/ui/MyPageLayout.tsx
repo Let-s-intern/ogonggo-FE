@@ -26,6 +26,7 @@ import {
   myPageMenuFor,
   myPageMobileHeaderOf,
 } from '@/widgets/mypage-sidebar';
+import { MyReports } from '@/widgets/my-reports';
 import { INDUSTRY_TREND_REPORT_SALE_FLAG } from '@/widgets/report-entry';
 
 type State =
@@ -158,6 +159,13 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
   const mobileHeader = myPageMobileHeaderOf(pathname);
   /** 데스크톱에서 사이드바 대신 상단 탭을 쓰는지(v11). */
   const tabbed = !isCompany;
+  /** 지금 `내 리포트` 를 보고 있는지. */
+  const onReports = pathname.startsWith('/mypage/reports');
+  /**
+   * `내 리포트`(렛츠커리어 구매 목록 iframe)를 마운트할지. 보고 있으면 당연히 마운트하고, 플래그가 켜졌으면 계정을 확인한
+   * 일반 회원에게는 다른 탭에서도 미리 마운트해 숨은 채로 불러 둔다 — 탭을 눌렀을 때 흰 상자로 기다리지 않게(`MyReports` 주석).
+   */
+  const mountReports = tabbed && (onReports || (reportsEnabled && state.kind === 'ready'));
 
   return (
     <main
@@ -237,6 +245,7 @@ export function MyPageLayout({ children }: MyPageLayoutProps) {
           ) : (
             children
           )}
+          {mountReports ? <MyReports active={onReports} /> : null}
         </div>
       </div>
     </main>

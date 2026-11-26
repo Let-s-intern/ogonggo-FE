@@ -16,8 +16,11 @@ export async function IndustryReportPage({ report }: IndustryReportPageProps) {
   // 사이트 주소는 서버 환경 변수(`OGONGGO_SITE_ORIGIN`)라 브라우저에서는 읽지 못한다. 서버에서 만들어 넘긴다.
   const returnUrl = new URL(`/reports/${report.slug}`, SITE_ORIGIN).toString();
   return (
-    <main className="mx-auto w-full max-w-page px-5 py-6 md:py-10">
-      <IndustryReportSale report={report} guidebook={guidebook} returnUrl={returnUrl} />
+    // 공고·부트캠프 상세와 같은 바깥틀이다(`px-5`, 안쪽 `max-w-page`).
+    <main className="flex min-h-screen flex-col items-center bg-white px-5 pt-4 pb-40 md:pb-10">
+      <div className="w-full max-w-page">
+        <IndustryReportSale report={report} guidebook={guidebook} returnUrl={returnUrl} />
+      </div>
     </main>
   );
 }

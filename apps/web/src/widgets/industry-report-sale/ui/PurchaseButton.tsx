@@ -12,6 +12,8 @@ export interface PurchaseButtonProps {
   guidebookId: number;
   /** 결제가 끝나고 창이 닫히지 않을 때 렛츠커리어가 같은 창을 옮길 곳. 이 상품의 오공고 판매 상세 주소다. */
   returnUrl: string;
+  /** 결제 금액(`990원`). 주면 모바일(`md` 미만)에서 버튼 글자에 붙인다 — 떠 있는 바에 가격 줄을 따로 두지 않으려는 것이다. */
+  priceLabel?: string;
 }
 
 /**
@@ -26,7 +28,7 @@ export interface PurchaseButtonProps {
  * 그린다. 역할을 읽는 동안(`loading`)은 누를 수 없다. 계정을 읽지 못했을 때(`error`)는 기업 회원인지 알 수 없지만
  * 막지 않는다 — 구매 창은 렛츠커리어가 로그인을 이어 받거나 요구한다.
  */
-export function PurchaseButton({ guidebookId, returnUrl }: PurchaseButtonProps) {
+export function PurchaseButton({ guidebookId, returnUrl, priceLabel }: PurchaseButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
   const account = useMyAccount();
@@ -55,7 +57,7 @@ export function PurchaseButton({ guidebookId, returnUrl }: PurchaseButtonProps) 
         onClick={handleClick}
         disabled={account.kind === 'loading'}
       >
-        구매하기
+        {priceLabel ? <span className="md:hidden">{priceLabel}&nbsp;</span> : null}구매하기
       </Button>
       {companyNotice ? (
         <Callout tone="warning">
