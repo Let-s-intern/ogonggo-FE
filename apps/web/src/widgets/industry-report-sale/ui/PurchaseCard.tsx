@@ -19,8 +19,9 @@ export interface PurchaseCardProps {
 }
 
 /**
- * 구매 카드. 위에서 아래로 썸네일, 산업, 제목, 가격, 정보 줄, 구매 버튼이다. 구매 뒤 안내가 버튼 아래에 붙어도
- * 화면 안에 들도록 구매에 필요한 것만 담는다(이동 링크는 `ReportLinks` 로 카드 밖).
+ * 구매 카드. 위에서 아래로 썸네일, 산업, 제목, 가격, 구매 버튼이다. 렛츠커리어가 구성·열람·대상 값을 주면
+ * 정보 줄이 가격 아래에 더해지고, 비어 있으면 줄이 없다. 구매 뒤 안내가 버튼 아래에 붙어도 화면 안에 들도록
+ * 구매에 필요한 것만 담는다(이동 링크는 `ReportLinks` 로 카드 밖).
  *
  * 썸네일 그림 안에 제목이 들어 있어 `alt` 는 비운다. 제목은 바로 아래 `h1` 이 한 번만 읽힌다.
  *
@@ -30,6 +31,7 @@ export interface PurchaseCardProps {
  */
 export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps) {
   const thumbnail = guidebook.thumbnail ?? guidebook.desktopThumbnail;
+  const infoRows = saleInfoRows(guidebook);
 
   return (
     <Card className="flex flex-col gap-3 p-4 md:max-lg:grid md:max-lg:grid-cols-2 md:max-lg:items-start md:max-lg:gap-x-6">
@@ -53,7 +55,7 @@ export function PurchaseCard({ report, guidebook, returnUrl }: PurchaseCardProps
         <h1 className="text-xl font-bold break-keep text-balance text-gray-900">
           {guidebook.title}
         </h1>
-        <SaleInfoList rows={saleInfoRows(guidebook)} />
+        {infoRows.length > 0 ? <SaleInfoList rows={infoRows} /> : null}
         <div>
           {/* 모바일(`md` 미만)에서는 화면 아래에 떠서 스크롤해도 누를 수 있고, 그 위 줄에 가격을 보인다.
               `md` 이상에서는 카드 안 제자리로 돌아온다(공고·부트캠프 상세와 같은 부품). */}
