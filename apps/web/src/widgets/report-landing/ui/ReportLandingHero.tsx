@@ -1,91 +1,88 @@
 import Link from 'next/link';
-import { Badge, Button, Card, cn } from '@ogonggo/ui';
+import { Badge, Button, Card } from '@ogonggo/ui';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
+import { INDUSTRY_LANDING_COPY, SAMPLE_REPORT } from '../model/landingMock';
 
 /**
- * 랜딩 맨 위. 화면 폭 끝까지 닿는 채도 높은 파랑 면(blue-600 → blue-700) 위에 흰 제목이 놓이고, 오른쪽에는
- * 이번 회차와 산업 바로가기를 담은 흰 카드가 걸친다. 발행 회차는 목데이터다(`model/landingMock.ts`).
+ * 랜딩 맨 위. 파랑 면(blue-600) 한 줄 높이에 제목과 한 줄 소개, 산업 바로가기 버튼 다섯을 두고, 오른쪽에는
+ * 이번 회차 샘플 표지를 겹쳐 쌓은 종이처럼 놓는다. 표지와 문구는 목데이터다(`model/landingMock.ts`) — 표지에
+ * `샘플` 이름표가 붙는다.
  *
- * 디자인 스케일의 가장 큰 글자(`text-7xl`, 36px)가 상한이라 제목을 더 키우지 않았다. 대신 글자 무게(bold)와
- * 색면 대비(파랑 면 위 흰 글자, 강조 구절은 흰 면 위 파랑 글자)로 힘을 준다. 흰 글자 대비는 blue-600 이상에서
- * 4.5:1 을 넘기므로 파랑 면은 blue-600 보다 옅게 가지 않는다.
+ * 디자인 스케일의 가장 큰 글자(`text-7xl`, 36px)가 상한이라 제목을 더 키우지 않았다. 흰 글자 대비는 blue-600 이상에서
+ * 4.5:1 을 넘기므로 파랑 면은 blue-600 보다 옅게 가지 않는다. 표지는 `md` 부터 보인다 — 모바일에서는 히어로가
+ * 길어져 아래 샘플 리포트 절이 그 몫을 한다.
  */
 export function ReportLandingHero({ issueLabel }: { issueLabel: string }) {
+  const sample = INDUSTRY_REPORTS.find((report) => report.slug === SAMPLE_REPORT.slug);
+  const sampleCopy = INDUSTRY_LANDING_COPY[SAMPLE_REPORT.slug];
   return (
-    <section className="relative overflow-hidden bg-linear-to-br from-blue-600 to-blue-700 text-white">
-      {/* 장식 원. 평평한 색면이고 글자 뒤에 깔린다. 보조기기에서는 뺀다. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-blue-500 opacity-60" />
-        <div className="absolute -bottom-40 left-1/3 h-80 w-80 rounded-full bg-blue-800 opacity-60" />
-      </div>
-      <div className="relative mx-auto grid w-full max-w-page-padded gap-10 px-5 py-14 md:py-20 lg:grid-cols-12 lg:items-center lg:gap-12 lg:py-24">
+    <section className="overflow-hidden bg-blue-600 text-white">
+      <div className="mx-auto grid w-full max-w-page-padded gap-8 px-5 py-8 md:py-12 lg:grid-cols-12 lg:items-center lg:gap-12">
         <div className="lg:col-span-7">
-          <p className="text-sm font-semibold tracking-widest text-blue-100">
-            WEEKLY INDUSTRY REPORT
-          </p>
-          <h1 className="mt-4 text-6xl font-bold break-keep md:text-7xl">
-            <span className="block">이번 주 산업 트렌드를</span>
-            <span className="mt-2 inline-block rounded-md bg-white px-3 py-1 text-blue-600">
-              채용공고와 함께
-            </span>
-            <span className="mt-2 block">읽어요</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="main" className="gap-1 bg-white text-blue-600">
+              <span aria-hidden="true" className="icon-[lucide--calendar-check] h-4 w-4" />
+              매주 월요일 발행
+            </Badge>
+            <span className="text-sm font-medium text-white">{issueLabel}</span>
+          </div>
+          <h1 className="mt-4 text-5xl font-bold break-keep md:text-7xl">
+            이번 주 산업 트렌드를 채용공고와 함께 읽어요
           </h1>
-          <p className="mt-8 max-w-xl text-base break-keep text-white md:text-lg">
-            매주 따라가기 번거로운 산업 흐름을 실제 채용공고가 요구하는 역량과 이어 드려요. 자소서와
-            포트폴리오에 녹일 수 있는 준비 활동까지 한 번에 받아 보세요.
+          <p className="mt-4 text-base break-keep text-white md:text-lg">
+            뉴스 4꼭지, 공고 속 직무, 혼자 해볼 준비 3가지를 산업별 한 편에 담았어요.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button
-              asChild
-              className="border-transparent bg-white px-6 text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <a href="#industries">
-                산업 고르기
-                <span aria-hidden="true" className="ml-1.5 icon-[lucide--arrow-down] h-4 w-4" />
-              </a>
-            </Button>
-            <Button
-              asChild
-              variant="secondary"
-              className="border-blue-200 bg-transparent px-6 text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <a href="#structure">리포트 구성 보기</a>
-            </Button>
+          <div className="mt-6">
+            <p className="text-sm font-semibold text-white">산업 바로 열기</p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {INDUSTRY_REPORTS.map((report) => (
+                <li key={report.slug}>
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="sm"
+                    className="border-blue-200 text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  >
+                    <Link href={`/reports/${report.slug}`}>{report.label}</Link>
+                  </Button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        <Card className="rounded-xl border-transparent p-6 md:p-8 lg:col-span-5">
-          <Badge tone="main" className="gap-1 text-sm">
-            <span aria-hidden="true" className="icon-[lucide--calendar-check] h-4 w-4" />
-            매주 월요일 발행
-          </Badge>
-          <p className="mt-4 text-sm font-semibold text-gray-500">이번 회차</p>
-          <p className="mt-1 text-5xl font-bold text-gray-950">{issueLabel}</p>
-          <p className="mt-6 text-sm font-semibold text-gray-500">이번 주 다루는 산업</p>
-          <ol className="mt-2 divide-y divide-gray-100">
-            {INDUSTRY_REPORTS.map((report, index) => (
-              <li key={report.slug}>
-                <Link
-                  href={`/reports/${report.slug}`}
-                  className={cn(
-                    'group flex items-center gap-4 py-3 text-lg font-bold text-gray-900',
-                    'transition-colors hover:text-blue-500',
-                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-                  )}
-                >
-                  <span className="w-8 text-base font-bold text-blue-200 tabular-nums">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  {report.label}
-                  <span
-                    aria-hidden="true"
-                    className="ml-auto icon-[lucide--arrow-right] h-4 w-4 text-gray-400 transition group-hover:text-blue-500 motion-safe:group-hover:translate-x-1"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </Card>
+        {sample ? (
+          <div className="relative mr-6 mb-6 hidden max-w-sm md:block lg:col-span-5 lg:ml-auto">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 translate-x-6 translate-y-6 rounded-xl bg-blue-800"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 translate-x-3 translate-y-3 rounded-xl bg-blue-500"
+            />
+            <Card className="relative rounded-xl border-transparent p-0 text-gray-900">
+              <div className="flex items-center justify-between rounded-t-xl border-b border-gray-100 bg-blue-00 px-5 py-3">
+                <span className="text-xs font-semibold tracking-widest text-blue-600">
+                  WEEKLY INDUSTRY REPORT
+                </span>
+                <Badge tone="neutral">샘플</Badge>
+              </div>
+              <div className="px-5 py-5">
+                <p className="text-sm font-semibold text-gray-500">{issueLabel}</p>
+                <p className="mt-1 text-5xl font-bold text-gray-950">{sample.label}</p>
+                <p className="mt-4 text-lg font-bold break-keep text-gray-900">
+                  {sampleCopy.headline}
+                </p>
+              </div>
+              <ul className="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100 text-center text-sm font-medium text-gray-700">
+                <li className="py-3">뉴스 4꼭지</li>
+                <li className="py-3">직무 표</li>
+                <li className="py-3">준비 3가지</li>
+              </ul>
+            </Card>
+          </div>
+        ) : null}
       </div>
     </section>
   );
