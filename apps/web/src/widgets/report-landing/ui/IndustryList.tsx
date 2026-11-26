@@ -1,13 +1,18 @@
 import Link from 'next/link';
-import { Badge, Button } from '@ogonggo/ui';
+import { Badge, Button, cn } from '@ogonggo/ui';
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 import { INDUSTRY_LANDING_COPY } from '../model/landingMock';
 
 /**
- * 산업 한눈에 보기. 산업 다섯 카드가 처음부터 모두 보이고, 카드 맨 아래 `리포트 보기` 버튼이 판매 상세
- * (`/reports/{slug}`)로 보낸다. 누르는 것은 카드 안 버튼 하나뿐이고 카드 자체는 링크가 아니다.
+ * 산업 한눈에 보기. 산업 다섯 카드가 처음부터 모두 보이고, 카드 어디를 눌러도 판매 상세(`/reports/{slug}`)로 간다.
+ *
+ * 카드 전체가 눌리는 방식은 stretched link 다. 카드 맨 아래 `리포트 보기` 가 카드마다 하나뿐인 링크이고, 그 링크의
+ * `::after` 가 카드(`relative`) 전체를 덮는다. 링크 안에 링크·버튼이 없고 스크린리더는 `{산업 이름} 리포트 보기` 한 번만
+ * 읽는다. 버튼은 그대로 보이고 누를 수 있는 범위만 카드로 넓어졌다. 마우스를 올리거나 키보드 포커스가 오면 카드
+ * 테두리가 blue-500 이 되고 그림자가 커지며 살짝 떠오른다(떠오름은 `motion-safe`, 움직임을 줄인 환경은 색·그림자만),
+ * 버튼은 한 단계 진해진다. 썸네일은 확대하지 않는다.
  *
  * 카드는 홈의 채용공고 카드(`entities/job/ui/JobCard.tsx`)와 같은 계열로 맞췄다. 껍데기는 인기 공고가 쓰는
  * `featured` 카드와 같고(`rounded-2xl border-gray-100 bg-white shadow-sm`, 안쪽 여백 `p-4`/`md:p-3`, 간격
@@ -46,7 +51,14 @@ export function IndustryList({
           const price = landingPrice(guidebook?.priceInfo ?? null);
           return (
             <li key={report.slug} className="w-60 shrink-0 snap-start md:w-auto">
-              <div className="flex h-full flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:gap-2 md:p-3">
+              <div
+                className={cn(
+                  'group relative flex h-full flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:gap-2 md:p-3',
+                  'transition duration-200 hover:border-blue-500 hover:shadow-lg',
+                  'has-focus-visible:border-blue-500 has-focus-visible:shadow-lg has-focus-visible:ring-2 has-focus-visible:ring-blue-500',
+                  'motion-safe:hover:-translate-y-1 motion-safe:has-focus-visible:-translate-y-1',
+                )}
+              >
                 <div className="aspect-4/3 w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
                   {guidebook && thumbnail ? (
                     <img
@@ -89,7 +101,7 @@ export function IndustryList({
                 <Button
                   asChild
                   size="sm"
-                  className="mt-auto w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                  className="mt-auto w-full transition-colors group-hover:bg-blue-600 group-has-focus-visible:bg-blue-600 after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 >
                   <Link href={`/reports/${report.slug}`} aria-label={`${report.label} 리포트 보기`}>
                     리포트 보기
