@@ -27,6 +27,7 @@ export function IndustryCard({
   guidebook,
   priority,
   delayMs,
+  className,
 }: {
   report: IndustryReport;
   /** 읽지 못했으면 `null`. */
@@ -35,12 +36,14 @@ export function IndustryCard({
   priority: boolean;
   /** 들어올 때 떠오르기 시작할 때까지의 지연(ms). 카드마다 달라 차례로 보인다. */
   delayMs: number;
+  /** 칸(`li`)에 더할 클래스. 격자에서의 자리(`col-span`, `col-start`)를 정할 때 쓴다. */
+  className?: string;
 }) {
   const thumbnail = guidebook ? (guidebook.thumbnail ?? guidebook.desktopThumbnail) : null;
   const price = landingPrice(guidebook?.priceInfo ?? null);
 
   return (
-    <li className="group/item min-w-0">
+    <li className={cn('group/item min-w-0', className)}>
       {/* 들어오기·흐려짐·줄어듦은 `li` 가 아니라 이 안쪽 칸이 맡는다. `li` 에 크기 변형이 걸려 있으면 아래 설명(`absolute`)의
           폭 기준이 변형이 끝날 때까지 카드 폭으로 바뀌어, 설명이 작았다가 줄 폭으로 커진다. */}
       <div
@@ -114,7 +117,7 @@ export function IndustryCard({
         )}
       >
         <div className="flex w-full items-center gap-10">
-          <div className="flex w-96 shrink-0 flex-col items-start gap-3">
+          <div className="flex w-72 shrink-0 flex-col items-start gap-3 xl:w-96">
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
                 지난주 핵심

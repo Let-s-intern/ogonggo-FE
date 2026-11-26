@@ -1,3 +1,4 @@
+import { cn } from '@ogonggo/ui';
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
 import { IndustryCard } from './IndustryCard';
@@ -67,7 +68,18 @@ export function ReportLandingHero({
             </div>
           </div>
 
-          <ul className="group/list relative grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <ul className="group/list relative grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-6 lg:grid-cols-5">
+            <li
+              aria-hidden="true"
+              className={cn(
+                'pointer-events-none absolute inset-x-0 top-full mt-10 hidden items-center gap-3 rounded-3xl border border-dashed border-gray-200 px-10 py-6 text-sm text-gray-500 lg:flex',
+                'transition-opacity duration-300',
+                'group-has-hover/list:opacity-0 group-has-focus-visible/list:opacity-0',
+              )}
+            >
+              <span className="icon-[lucide--mouse-pointer-click] h-5 w-5 shrink-0 text-gray-400" />
+              카드에 마우스를 올리면 지난주 핵심을 미리 볼 수 있어요
+            </li>
             {INDUSTRY_REPORTS.map((report, index) => (
               <IndustryCard
                 key={report.slug}
@@ -75,6 +87,10 @@ export function ReportLandingHero({
                 guidebook={guidebooks[index] ?? null}
                 priority={index < 3}
                 delayMs={320 + index * 80}
+                className={cn(
+                  'md:col-span-2 lg:col-span-1',
+                  index === 3 && 'md:col-start-2 lg:col-start-auto',
+                )}
               />
             ))}
           </ul>
