@@ -8,6 +8,8 @@
  * `guidebookId` 는 마케팅팀이 렛츠커리어 어드민에서 개설한 `이번주 {산업} 산업 트렌드 분석 리포트`
  * 가이드북이다(2026-11-26 개설, 21 엔터, 22 뷰티, 23 F&B, 24 IT·플랫폼, 25 유통·이커머스). 제목으로 렛츠커리어
  * 공개 API 에서 찾은 id 다. 리포트 가이드북이 바뀌면 이 다섯 id 만 교체한다. 다른 코드는 바뀌지 않는다.
+ *
+ * `fnb` 의 화면 이름은 `식음료` 다(`F&B` 는 줄임말이라 뜻이 바로 안 와닿는다). 주소 이름과 가이드북 id 는 그대로다.
  */
 
 export interface IndustryReport {
@@ -20,7 +22,7 @@ export interface IndustryReport {
 }
 
 export const INDUSTRY_REPORTS = [
-  { slug: 'fnb', label: 'F&B', guidebookId: 23 },
+  { slug: 'fnb', label: '식음료', guidebookId: 23 },
   { slug: 'it-platform', label: 'IT·플랫폼', guidebookId: 24 },
   { slug: 'beauty', label: '뷰티', guidebookId: 22 },
   { slug: 'entertainment', label: '엔터', guidebookId: 21 },
