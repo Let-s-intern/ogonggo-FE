@@ -78,7 +78,7 @@ export function ReportLandingHero({
               )}
             >
               <span className="icon-[lucide--mouse-pointer-click] h-5 w-5 shrink-0 text-gray-400" />
-              카드에 마우스를 올리면 지난주 핵심을 미리 볼 수 있어요
+              카드에 마우스를 올리면 리포트 소개를 미리 볼 수 있어요
             </li>
             {INDUSTRY_REPORTS.map((report, index) => (
               <IndustryCard
