@@ -11,6 +11,7 @@ import { PushConsentBanner } from '@/features/push-notification';
 import { companyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { myPageHomeFor, myPageIndexFor, myPageMobileHeaderOf } from '@/widgets/mypage-sidebar';
 import { bizUrl, onBizLinkClick } from '@/shared/api/bizHandoff';
+import { ReportEntry } from '@/widgets/report-entry';
 import { AccountMenu } from './AccountMenu';
 import { CommunityMenu } from './CommunityMenu';
 import { MobileSiteHeader } from './MobileSiteHeader';
@@ -69,6 +70,7 @@ const ADMIN_ORIGIN = process.env.NEXT_PUBLIC_ADMIN_ORIGIN;
 export function SiteHeader() {
   const pathname = usePathname();
   const calendarActive = pathname.startsWith('/calendar');
+  const reportsActive = pathname.startsWith('/reports');
   const signedIn = useSyncExternalStore(subscribeTokens, isSignedIn, () => false);
   const accountState = useMyAccount();
   const role = accountState.kind === 'ready' ? accountState.account.role : undefined;
@@ -157,11 +159,11 @@ export function SiteHeader() {
         </div>
       </div>
       <div className="mx-auto hidden h-14 max-w-page-padded items-stretch justify-between px-5 whitespace-nowrap md:flex">
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-6 lg:gap-10">
           <Link href="/" aria-label="오늘의 공고 홈">
             <Logo className="h-[25px] w-[52px] text-blue-500" />
           </Link>
-          <nav className="flex items-stretch gap-4 lg:gap-6">
+          <nav className="flex items-stretch gap-3 lg:gap-6">
             {NAV_ITEMS.map(({ href, label, matches }) => {
               const active = matches(pathname);
               return (
@@ -175,9 +177,21 @@ export function SiteHeader() {
                 </Link>
               );
             })}
+            {/* `NAV_ITEMS` 는 모바일 하단 탭(다섯 칸)과 함께 쓰는 상수라 여기에 더하지 않는다. 산업 트렌드 리포트 플래그가
+                켜졌을 때만 `취준 고민` 오른쪽에 둔다. 읽는 동안은 꺼짐이라 메뉴가 늦게 나타난다(`ReportEntry`). */}
+            <ReportEntry>
+              <Link href="/reports" aria-current={reportsActive ? 'page' : undefined}>
+                <MenuItem
+                  state={reportsActive ? 'current' : 'default'}
+                  className={cn('text-sm', reportsActive && 'font-semibold')}
+                >
+                  산업 리포트
+                </MenuItem>
+              </Link>
+            </ReportEntry>
           </nav>
         </div>
-        <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
+        <div className="flex items-center gap-4 text-sm font-medium text-gray-500 lg:gap-6">
           <Link
             href="/calendar"
             aria-current={calendarActive ? 'page' : undefined}

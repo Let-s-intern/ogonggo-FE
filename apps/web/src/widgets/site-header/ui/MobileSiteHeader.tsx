@@ -12,6 +12,7 @@ import { onAdminLinkClick } from '@/shared/api/adminHandoff';
 import { BIZ_DASHBOARD_PATH, bizUrl, onBizLinkClick } from '@/shared/api/bizHandoff';
 import type { CompanyJobRegisterLink } from '@/shared/lib/companyJobRegister';
 import { MenuIcon } from '@/shared/ui/icons';
+import { ReportEntry } from '@/widgets/report-entry';
 import { ServiceLogoToggle } from './ServiceLogoToggle';
 
 export interface MobileSiteHeaderProps {
@@ -204,7 +205,20 @@ function MobileMenu({
             onNavigate={onClose}
           />
         )}
-        <MenuSection title="공고" links={postings} onNavigate={onClose} />
+        <MenuSection title="공고" links={postings} onNavigate={onClose}>
+          {/* 데스크톱 헤더의 `취준 고민` 오른쪽 항목과 같은 플래그다. 모바일은 정보 묶음인 `공고` 에 둔다. 하단 탭은 다섯 칸이 디자인이라 더하지 않는다. */}
+          <ReportEntry>
+            <li>
+              <Link
+                href="/reports"
+                onClick={onClose}
+                className="flex h-[58px] items-center text-base text-gray-900"
+              >
+                산업 리포트
+              </Link>
+            </li>
+          </ReportEntry>
+        </MenuSection>
         {/* 오공고 커뮤니티는 데스크톱에서 헤더 맨 위 띠의 알림 아이콘 왼쪽에 있다. 모바일 윗줄은 로고·앱 다운로드·알림·햄버거로
             차 있다. 취준 고민은 하단 내비게이션에도 있다. */}
         <MenuSection
