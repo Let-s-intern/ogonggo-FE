@@ -1,10 +1,9 @@
-import Link from 'next/link';
 import { Badge, Button, Card } from '@ogonggo/ui';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
 import { INDUSTRY_LANDING_COPY, SAMPLE_REPORT } from '../model/landingMock';
 
 /**
- * 랜딩 맨 위. 파랑 면(blue-600) 한 줄 높이에 제목과 한 줄 소개, 산업 바로가기 버튼 다섯을 두고, 오른쪽에는
+ * 랜딩 맨 위. 파랑 면(blue-600) 한 줄 높이에 제목과 한 줄 소개, 산업 목록으로 내려가는 버튼 하나를 두고, 오른쪽에는
  * 이번 회차 샘플 표지를 겹쳐 쌓은 종이처럼 놓는다. 표지와 문구는 목데이터다(`model/landingMock.ts`) — 표지에
  * `샘플` 이름표가 붙는다.
  *
@@ -32,23 +31,15 @@ export function ReportLandingHero({ issueLabel }: { issueLabel: string }) {
           <p className="mt-4 text-base break-keep text-white md:text-lg">
             뉴스 4꼭지, 공고 속 직무, 혼자 해볼 준비 3가지를 산업별 한 편에 담았어요.
           </p>
-          <div className="mt-6">
-            <p className="text-sm font-semibold text-white">산업 바로 열기</p>
-            <ul className="mt-2 flex flex-wrap gap-2">
-              {INDUSTRY_REPORTS.map((report) => (
-                <li key={report.slug}>
-                  <Button
-                    asChild
-                    variant="secondary"
-                    size="sm"
-                    className="border-blue-200 text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  >
-                    <Link href={`/reports/${report.slug}`}>{report.label}</Link>
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Button
+            asChild
+            className="mt-6 border-transparent bg-white px-5 text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <a href="#industries">
+              산업별 리포트 보기
+              <span aria-hidden="true" className="ml-1.5 icon-[lucide--arrow-down] h-4 w-4" />
+            </a>
+          </Button>
         </div>
 
         {sample ? (
