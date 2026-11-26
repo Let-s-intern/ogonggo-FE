@@ -5,6 +5,16 @@ import type { IndustryReport } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 
 /**
+ * 호버하면 카드 아래에 펼쳐지는 요약. 마케팅팀 상세 이미지의 `그냥 뉴스 요약이 아니에요` 세 항목이고 다섯 산업이 같은
+ * 말이다(상세 이미지가 같은 구성이라 산업마다 따로 두지 않는다). 상세 이미지가 바뀌면 여기도 맞춘다.
+ */
+const HOVER_POINTS = [
+  "산업 뉴스를 '취업 관점'으로",
+  '실제 채용공고(JD)에 바로 연결',
+  '지금 혼자 할 수 있는 난이도',
+] as const;
+
+/**
  * 산업 한 칸. 카드 전체가 링크 하나이고 어디를 눌러도 판매 상세(`/reports/{slug}`)로 간다. 링크 안에 링크·버튼이 없고
  * 스크린리더는 `{산업 이름} 리포트 보기` 한 번만 읽는다.
  *
@@ -12,7 +22,7 @@ import { landingPrice } from '../lib/price';
  * 위에서 아래로 4:3 썸네일, 산업 이름, 산업 소개 줄(`tagline`, 마케팅팀 상세 이미지의 글), 가격과 `리포트 보기` 를 둔다.
  * 가격은 알약이 아니라 글자로 보인다(알약은 값싼 이벤트 딱지처럼 보인다). 정가가 있으면 취소선으로 함께 보인다.
  *
- * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드가 10% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
+ * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드 아래에 요약(`HOVER_POINTS`)이 펼쳐지고, 카드가 10% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
  * 카드 안에서 천천히 커지고(칸이 잘라 주므로 카드 크기는 그대로) 화살표가 오른쪽으로 간다. 나머지 카드는 `ul`(group/list)
  * 안에 올려진 카드가 있을 때만 흐려지고 조금 작아진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
  *
@@ -90,6 +100,24 @@ export function IndustryCard({
                 className="icon-[lucide--arrow-right] h-4 w-4 motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover/card:translate-x-1 motion-safe:group-focus-visible/card:translate-x-1"
               />
             </span>
+          </span>
+        </span>
+        {/* 카드 아래에 겹쳐 붙는 요약. 카드 높이를 늘리지 않아 같은 줄의 다른 카드가 따라 늘어나지 않는다.
+            호버·포커스 때만 보이고(그 밖에는 눌림도 받지 않는다), 스크린리더에는 카드 이름이 이미 읽히므로 숨긴다.
+            호버가 없는 모바일(sm 미만)은 두지 않는다. */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute inset-x-0 top-full -mt-2 hidden rounded-b-2xl bg-white px-4 pt-4 pb-4 shadow-2xl sm:block',
+            'opacity-0 transition duration-300 motion-safe:-translate-y-2',
+            'group-hover/card:pointer-events-auto group-hover/card:translate-y-0 group-hover/card:opacity-100',
+            'group-focus-visible/card:pointer-events-auto group-focus-visible/card:translate-y-0 group-focus-visible/card:opacity-100',
+          )}
+        >
+          <span className="flex flex-col gap-1.5 border-t border-gray-100 pt-3 text-sm break-keep text-gray-700">
+            {HOVER_POINTS.map((point) => (
+              <span key={point}>{point}</span>
+            ))}
           </span>
         </span>
       </Link>
