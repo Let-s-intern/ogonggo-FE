@@ -5,16 +5,10 @@ import type { IndustryReport } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 
 /**
- * 호버하면 카드 줄 아래에 크게 뜨는 설명의 글. 가운데 `이번 주 핵심` 은 산업마다 다르고(`report.weekly`, 설정 파일에서 매주
- * 갱신) 오른쪽의 `HOVER_POINTS`(`그냥 뉴스 요약이 아니에요` 세 항목)와 `REPORT_PARTS`(`리포트 구성` 목록)는 다섯 산업이
- * 같은 말이다. 모두 마케팅팀 상세 이미지에 적힌 글이고, 상세 이미지가 바뀌면 여기도 맞춘다.
+ * 호버하면 카드 줄 아래에 크게 뜨는 설명의 글. 왼쪽 `지난주 핵심`(지난주 내용이라고 밝혀 보인다) 은 산업마다 다르고(`report.lastWeek`, 설정 파일에서 매주
+ * 갱신) 오른쪽 `REPORT_PARTS`(`리포트 구성` 목록)는 다섯 산업이 같은 말이다. 모두 마케팅팀 상세 이미지에 적힌 글이고, 상세
+ * 이미지가 바뀌면 여기도 맞춘다. 패널이 화면 아래로 잘리지 않게 높이를 아낀다 — 784px 높이 화면에서도 들어와야 한다.
  */
-const HOVER_POINTS = [
-  "산업 뉴스를 '취업 관점'으로",
-  '실제 채용공고(JD)에 바로 연결',
-  '지금 혼자 할 수 있는 난이도',
-] as const;
-
 const REPORT_PARTS = [
   '산업·비즈니스',
   '주요 트렌드 심화',
@@ -129,18 +123,18 @@ export function IndustryCard({
       <div
         aria-hidden="true"
         className={cn(
-          'pointer-events-none absolute inset-x-0 top-full mt-8 hidden rounded-3xl bg-gray-50 px-10 py-6 lg:flex',
+          'pointer-events-none absolute inset-x-0 top-full mt-3 hidden rounded-3xl bg-gray-50 px-10 py-3 lg:flex',
           'opacity-0 transition duration-300 motion-safe:translate-y-3',
           'group-hover/item:translate-y-0 group-hover/item:opacity-100',
           'group-has-focus-visible/item:translate-y-0 group-has-focus-visible/item:opacity-100',
         )}
       >
-        <div className="flex w-full items-stretch gap-10">
-          <div className="flex min-w-0 flex-3 flex-col gap-3">
-            <p className="text-xs font-bold text-blue-600">{report.label} · 이번 주 핵심</p>
-            <p className="text-2xl font-bold break-keep text-gray-900">{report.weekly.headline}</p>
-            <div className="flex flex-col gap-1.5">
-              {report.weekly.points.map((point) => (
+        <div className="flex w-full items-stretch gap-8">
+          <div className="flex min-w-0 flex-4 flex-col gap-2.5">
+            <p className="text-xs font-bold text-blue-600">{report.label} · 지난주 핵심</p>
+            <p className="text-xl font-bold break-keep text-gray-900">{report.lastWeek.headline}</p>
+            <div className="flex flex-col gap-0.5">
+              {report.lastWeek.points.map((point) => (
                 <p key={point} className="flex gap-2 text-sm break-keep text-gray-700">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                   {point}
@@ -148,16 +142,7 @@ export function IndustryCard({
               ))}
             </div>
           </div>
-          <div className="flex min-w-0 flex-2 flex-col gap-4 border-l border-gray-200 pl-10">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-blue-600">리포트 특징</span>
-              {HOVER_POINTS.map((point, index) => (
-                <p key={point} className="flex gap-2 text-sm font-bold break-keep text-gray-900">
-                  <span className="text-blue-600">{String(index + 1).padStart(2, '0')}</span>
-                  {point}
-                </p>
-              ))}
-            </div>
+          <div className="flex min-w-0 flex-3 flex-col border-l border-gray-200 pl-8">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-bold text-blue-600">리포트 구성</span>
               <div className="flex flex-wrap gap-1.5">
