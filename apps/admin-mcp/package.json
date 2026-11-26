@@ -1,0 +1,28 @@
+{
+  "name": "admin-mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env.local scripts/dev.ts",
+    "type-check": "tsgo --noEmit",
+    "lint": "oxlint src scripts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/mcp": "0.3.5",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "hono": "4.13.22",
+    "jose": "6.2.18",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^2.1.11",
+    "@ogonggo/api": "workspace:*",
+    "@ogonggo/config": "workspace:*",
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.2"
+  }
+}

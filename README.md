@@ -1,7 +1,8 @@
 # ogonggo-FE
 
 pnpm workspace: `apps/admin`(Vite, 내부 관리자), `apps/web`(Next.js + Turbopack, 대국민 서비스),
-`packages/ui`(디자인 시스템), `packages/api`(백엔드 OpenAPI 기반 코드젠). 구조와 빌드 체계는
+`packages/ui`(디자인 시스템), `packages/api`(백엔드 OpenAPI 기반 코드젠),
+`apps/admin-mcp`(Hono, 관리자 API 를 Claude 커넥터용 MCP tool 로 여는 서버 — [`apps/admin-mcp/README.md`](apps/admin-mcp/README.md)). 구조와 빌드 체계는
 [`docs/architecture.md`](docs/architecture.md), 디자인 토큰은 [`docs/design-system.md`](docs/design-system.md)
 참고.
 
