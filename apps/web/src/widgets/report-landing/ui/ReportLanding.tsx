@@ -1,6 +1,6 @@
-import { fetchLetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
-import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
-import { ReportLandingHero } from './ReportLandingHero';
+import { fetchLetsCareerGuidebook } from "@/shared/api/letsCareerGuidebook";
+import { INDUSTRY_REPORTS } from "@/shared/config/industryReports";
+import { ReportLandingHero } from "./ReportLandingHero";
 
 /**
  * 산업 트렌드 리포트 통합 랜딩 본문(`/reports`). 화면 전체를 채우는 히어로 하나이고, 히어로 안의 산업 카드 다섯이
@@ -11,7 +11,9 @@ import { ReportLandingHero } from './ReportLandingHero';
  */
 export async function ReportLanding() {
   const guidebooks = await Promise.all(
-    INDUSTRY_REPORTS.map((report) => fetchLetsCareerGuidebook(report.guidebookId)),
+    INDUSTRY_REPORTS.map((report) =>
+      fetchLetsCareerGuidebook(report.guidebookId),
+    ),
   );
   return (
     <main>
