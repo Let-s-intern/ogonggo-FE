@@ -18,7 +18,8 @@ const DEPLOYMENTS_PATH = '/preview-api/deployments';
 
 export type PreviewApp = 'web' | 'admin' | 'business';
 
-export type PreviewState = 'READY' | 'BUILDING' | 'QUEUED' | 'INITIALIZING' | 'ERROR' | 'CANCELED';
+/** 취소(`CANCELED`)는 함수가 상류에서 빼서 응답에 오지 않는다. */
+export type PreviewState = 'READY' | 'BUILDING' | 'QUEUED' | 'INITIALIZING' | 'ERROR';
 
 export interface PreviewDeployment {
   app: PreviewApp;
