@@ -12,9 +12,9 @@ import { landingPrice } from '../lib/price';
  * 위에서 아래로 4:3 썸네일, 산업 이름, 산업 소개 줄(`tagline`, 마케팅팀 상세 이미지의 글), 가격과 `리포트 보기` 를 둔다.
  * 가격은 알약이 아니라 글자로 보인다(알약은 값싼 이벤트 딱지처럼 보인다). 정가가 있으면 취소선으로 함께 보인다.
  *
- * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드가 5% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리가 blue-500 이 되고 그림자가 깊어지며, 썸네일이
+ * 들어올 때 카드가 차례로 떠오른다(`.ogonggo-rise-in`, 차례는 `delayMs`). 마우스를 올리거나 키보드 포커스가 오면 카드가 10% 커지며 떠오르고(`motion-safe`, 이웃 위로 겹치도록 `z-10`) 테두리 없이 그림자만 깊어지며, 썸네일이
  * 카드 안에서 천천히 커지고(칸이 잘라 주므로 카드 크기는 그대로) 화살표가 오른쪽으로 간다. 나머지 카드는 `ul`(group/list)
- * 안에 올려진 카드가 있을 때만 흐려진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
+ * 안에 올려진 카드가 있을 때만 흐려지고 조금 작아진다. 움직임을 줄인 환경은 색·그림자만 바뀐다.
  *
  * 모바일(sm 미만)은 썸네일이 왼쪽, 글이 오른쪽인 가로 카드다. 썸네일은 렛츠커리어의 실제 이미지(573x430)를 자르지 않고
  * (`object-contain`) 두며 어느 폭에서도 원본 폭보다 작다. 읽지 못한 카드도 칸은 남기고 썸네일·가격만 빠진다.
@@ -40,9 +40,9 @@ export function IndustryCard({
     <li
       style={{ animationDelay: `${delayMs}ms` }}
       className={cn(
-        'ogonggo-rise-in min-w-0 transition-opacity duration-300',
-        'group-has-hover/list:not-hover:opacity-60',
-        'group-has-focus-visible/list:not-has-focus-visible:opacity-60',
+        'ogonggo-rise-in min-w-0 transition duration-300',
+        'group-has-hover/list:not-hover:opacity-50 motion-safe:group-has-hover/list:not-hover:scale-95',
+        'group-has-focus-visible/list:not-has-focus-visible:opacity-50 motion-safe:group-has-focus-visible/list:not-has-focus-visible:scale-95',
       )}
     >
       <Link
@@ -50,9 +50,9 @@ export function IndustryCard({
         aria-label={`${report.label} 리포트 보기`}
         className={cn(
           'group/card relative flex h-full items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:flex-col sm:items-stretch',
-          'transition duration-300 hover:border-blue-500 hover:shadow-xl focus-visible:border-blue-500 focus-visible:shadow-xl',
+          'transition duration-300 hover:border-transparent hover:shadow-2xl focus-visible:border-transparent focus-visible:shadow-2xl',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-          'hover:z-10 focus-visible:z-10 motion-safe:hover:-translate-y-1 motion-safe:hover:scale-105 motion-safe:focus-visible:-translate-y-1 motion-safe:focus-visible:scale-105',
+          'hover:z-10 focus-visible:z-10 motion-safe:hover:-translate-y-2 motion-safe:hover:scale-110 motion-safe:focus-visible:-translate-y-2 motion-safe:focus-visible:scale-110',
         )}
       >
         <span className="block aspect-4/3 w-2/5 shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:w-full">
