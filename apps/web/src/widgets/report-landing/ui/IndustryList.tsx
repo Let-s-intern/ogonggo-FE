@@ -1,34 +1,27 @@
 import Link from 'next/link';
-import { Badge, Button, Card, cn } from '@ogonggo/ui';
+import { Badge, Button } from '@ogonggo/ui';
 import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
 import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
 import { landingPrice } from '../lib/price';
 import { INDUSTRY_LANDING_COPY } from '../model/landingMock';
 
 /**
- * 아랫줄 카드의 시작 칸. 태블릿(4칸 격자)에서는 다섯째가 가운데(2번째 칸)에, 데스크톱(6칸 격자)에서는 넷째가 2번째,
- * 다섯째가 4번째 칸에 선다. 클래스를 조립하지 않고 통째로 적는다(Tailwind 가 소스의 글자를 스캔한다).
- */
-const CARD_START: readonly string[] = [
-  '',
-  '',
-  '',
-  'lg:col-start-2',
-  'md:col-start-2 lg:col-start-4',
-];
-
-/**
  * 산업 한눈에 보기. 산업 다섯 카드가 처음부터 모두 보이고, 카드 맨 아래 `리포트 보기` 버튼이 판매 상세
  * (`/reports/{slug}`)로 보낸다. 누르는 것은 카드 안 버튼 하나뿐이고 카드 자체는 링크가 아니다.
  *
- * 카드는 위에서 아래로 썸네일, 번호와 산업 이름, 이번 주 헤드라인, 공고 속 직무 칩 셋, 가격, 버튼이다. 목록 격자의
- * 줄을 카드들이 나눠 쓰므로(카드마다 `row-span-6` = 칸 여섯, subgrid) 같은 줄의 카드는 글이 몇 줄이든 요소의 세로 위치가 같고 버튼이 같은 높이에 선다.
- * 썸네일은 렛츠커리어가 주는 실제 이미지(573x430, 4:3)라 칸을 4:3 으로 고정했다. 읽지 못한 카드도 칸은 남겨 둔다 —
- * 줄이 어긋나지 않는다. 가격은 렛츠커리어에서 읽은 `priceInfo` 이고 읽지 못하면 가격 줄만 빈다.
+ * 카드는 홈의 채용공고 카드(`entities/job/ui/JobCard.tsx`)와 같은 계열로 맞췄다. 껍데기는 인기 공고가 쓰는
+ * `featured` 카드와 같고(`rounded-2xl border-gray-100 bg-white shadow-sm`, 안쪽 여백 `p-4`/`md:p-3`, 간격
+ * `gap-3`/`md:gap-2`), 안은 위에서 아래로 4:3 썸네일(`rounded-lg shadow-sm`, 공고는 8:5), 산업 이름 + 가격 알약(공고의 회사명 +
+ * D-day 자리), 헤드라인(최대 두 줄, 공고 제목과 같은 크기), 직무 칩 둘, 버튼이다.
  *
- * 열은 모바일 1, 태블릿(md) 2, 데스크톱(lg) 3 이다. 격자는 카드 하나가 2칸이라 태블릿 4칸, 데스크톱 6칸이고, 아랫줄은
- * 가운데에 놓인다(다섯 카드의 폭이 모두 같다). 모바일에서는 카드가 썸네일 원본 폭(573px)을 넘어 늘지 않게
- * `max-w-lg` 로 막는다.
+ * 열은 공고 목록 그리드와 같은 규칙으로 왼쪽부터 채운다(`gap-x-4 gap-y-8`). 데스크톱(lg) 4열, 태블릿(md) 3열이고
+ * 마지막 줄은 왼쪽 정렬이다. 공고 목록은 태블릿에서 4열이지만 카드가 170px 라 헤드라인이 네 줄이 되어 3열로 뒀다.
+ * 모바일은 인기 공고처럼 카드를 가로로 넘긴다(폭 240px).
+ *
+ * 같은 줄의 카드는 높이와 요소의 세로 위치가 같다. 헤드라인 칸이 두 줄 높이로 고정이고 칩은 한 줄, 버튼은 `mt-auto`
+ * 라 맨 아래에 선다. 썸네일은 렛츠커리어의 실제 이미지(573x430, 4:3)를 자르지 않고(`object-contain`, `width`/`height` 로 로딩 전에도 비율 자리를 잡는다) — 이미지 안에 제목 글자가 있어 8:5 로 자르면
+ * 글자 아랫줄이 잘린다. 카드 안쪽 폭은 가장 넓은 곳(lg 직전 3열)에서도 원본 폭보다 작다. 읽지 못한 카드도 칸은 남겨 둔다. 가격은 렛츠커리어에서 읽은 `priceInfo` 이고 읽지 못하면 가격 알약만
+ * 빈다.
  */
 export function IndustryList({
   guidebooks,
@@ -45,67 +38,58 @@ export function IndustryList({
         산업별 이번 주 헤드라인과 공고 속 직무를 한눈에 보고, 리포트를 열어 보세요
       </p>
 
-      <div role="list" className="mt-5 grid gap-x-4 md:grid-cols-4 lg:grid-cols-6">
+      <ul className="-mx-5 mt-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-8 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
         {INDUSTRY_REPORTS.map((report, index) => {
           const copy = INDUSTRY_LANDING_COPY[report.slug];
           const guidebook = guidebooks[index] ?? null;
           const thumbnail = guidebook ? (guidebook.thumbnail ?? guidebook.desktopThumbnail) : null;
           const price = landingPrice(guidebook?.priceInfo ?? null);
           return (
-            <Card
-              key={report.slug}
-              role="listitem"
-              className={cn(
-                'row-span-6 mx-auto mb-4 grid w-full max-w-lg grid-rows-subgrid overflow-hidden rounded-xl p-0',
-                'md:col-span-2 md:max-w-none',
-                CARD_START[index],
-              )}
-            >
-              <div className="aspect-4/3 bg-gray-100">
-                {guidebook && thumbnail ? (
-                  <img
-                    src={thumbnail}
-                    alt={`${report.label} ${guidebook.title}`}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    className="block h-full w-full object-cover"
-                  />
-                ) : null}
-              </div>
-              <div className="px-4 pt-4">
-                <p aria-hidden="true" className="text-sm font-bold text-blue-600 tabular-nums">
-                  {String(index + 1).padStart(2, '0')}
+            <li key={report.slug} className="w-60 shrink-0 snap-start md:w-auto">
+              <div className="flex h-full flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:gap-2 md:p-3">
+                <div className="aspect-4/3 w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm">
+                  {guidebook && thumbnail ? (
+                    <img
+                      src={thumbnail}
+                      alt={`${report.label} ${guidebook.title}`}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      width={573}
+                      height={430}
+                      className="block h-full w-full object-contain"
+                    />
+                  ) : null}
+                </div>
+                <div className="flex min-h-7 items-center justify-between gap-2">
+                  <h3 className="min-w-0 truncate text-sm font-bold text-gray-600">
+                    {report.label}
+                  </h3>
+                  {price ? (
+                    <Badge tone="main" className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold">
+                      {price.original ? (
+                        <span className="mr-1 font-normal text-gray-400 line-through">
+                          {price.original}
+                        </span>
+                      ) : null}
+                      {price.final}
+                    </Badge>
+                  ) : null}
+                </div>
+                <p className="line-clamp-2 min-h-10 text-sm font-bold break-keep text-gray-900 md:min-h-12 md:text-base">
+                  {copy.headline}
                 </p>
-                <h3 className="text-3xl font-bold break-keep text-gray-950">{report.label}</h3>
-              </div>
-              <p className="px-4 pt-3 text-lg font-bold break-keep text-gray-900">
-                {copy.headline}
-              </p>
-              <div className="px-4 pt-3">
-                <p className="text-xs font-semibold text-gray-500">공고 속 직무</p>
-                <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                  {copy.roles.map((role) => (
+                <ul aria-label="공고 속 직무" className="flex flex-wrap gap-1">
+                  {copy.roles.slice(0, 2).map((role) => (
                     <li key={role}>
-                      <Badge tone="neutral" className="rounded-full px-2.5 py-1 text-xs">
+                      <Badge tone="neutral" className="rounded-full px-2 py-0.5 text-xs">
                         {role}
                       </Badge>
                     </li>
                   ))}
                 </ul>
-              </div>
-              <p className="flex items-baseline gap-1.5 px-4 pt-4">
-                {price ? (
-                  <>
-                    <span className="text-lg font-bold text-gray-950">{price.final}</span>
-                    {price.original ? (
-                      <span className="text-sm text-gray-400 line-through">{price.original}</span>
-                    ) : null}
-                  </>
-                ) : null}
-              </p>
-              <div className="p-4 pt-2">
                 <Button
                   asChild
-                  className="w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                  size="sm"
+                  className="mt-auto w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 >
                   <Link href={`/reports/${report.slug}`} aria-label={`${report.label} 리포트 보기`}>
                     리포트 보기
@@ -116,10 +100,10 @@ export function IndustryList({
                   </Link>
                 </Button>
               </div>
-            </Card>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }
