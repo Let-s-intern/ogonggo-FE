@@ -9,23 +9,25 @@ import { landingPrice } from '../lib/price';
  *
  * 카드 전체가 눌리는 방식은 stretched link 다. 카드 맨 아래 `리포트 보기` 가 카드마다 하나뿐인 링크이고, 그 링크의
  * `::after` 가 카드(`relative`) 전체를 덮는다. 링크 안에 링크·버튼이 없고 스크린리더는 `{산업 이름} 리포트 보기` 한 번만
- * 읽는다. 버튼은 그대로 보이고 누를 수 있는 범위만 카드로 넓어졌다. 마우스를 올리거나 키보드 포커스가 오면 카드
- * 테두리가 blue-500 이 되고 그림자가 커지며 살짝 떠오른다(떠오름은 `motion-safe`, 움직임을 줄인 환경은 색·그림자만),
- * 버튼은 한 단계 진해진다. 썸네일은 확대하지 않는다.
+ * 읽는다. 마우스를 올리거나 키보드 포커스가 오면 카드 테두리가 blue-500 이 되고 그림자가 커지며 살짝 떠오르고(떠오름은
+ * `motion-safe`, 움직임을 줄인 환경은 색·그림자만), 버튼은 한 단계 진해진다. 썸네일은 확대하지 않는다.
+ *
+ * 카드에는 근거 있는 것만 담는다 — 썸네일·가격(렛츠커리어 공개 API), 산업 이름(상수). 헤드라인·직무 같은 글은 지어낸
+ * 것이라 두지 않는다(PRD 11.3 L7).
  *
  * 카드는 홈의 채용공고 카드(`entities/job/ui/JobCard.tsx`)와 같은 계열로 맞췄다. 껍데기는 인기 공고가 쓰는
  * `featured` 카드와 같고(`rounded-2xl border-gray-100 bg-white shadow-sm`, 안쪽 여백 `p-4`/`md:p-3`, 간격
- * `gap-3`/`md:gap-2`), 안은 위에서 아래로 4:3 썸네일(`rounded-lg shadow-sm`, 공고는 8:5), 산업 이름 + 가격 알약(공고의 회사명 +
- * D-day 자리), 헤드라인(최대 두 줄, 공고 제목과 같은 크기), 직무 칩 둘, 버튼이다.
+ * `gap-3`/`md:gap-2`), 안은 위에서 아래로 4:3 썸네일(`rounded-lg shadow-sm`, 공고는 8:5), 산업 이름 + 가격 알약(공고의
+ * 회사명 + D-day 자리), `리포트 보기` 버튼이다.
  *
- * 열은 공고 목록 그리드와 같은 규칙으로 왼쪽부터 채운다(`gap-x-4 gap-y-8`). 데스크톱(lg) 4열, 태블릿(md) 3열이고
- * 마지막 줄은 왼쪽 정렬이다. 공고 목록은 태블릿에서 4열이지만 카드가 170px 라 헤드라인이 네 줄이 되어 3열로 뒀다.
- * 모바일은 인기 공고처럼 카드를 가로로 넘긴다(폭 240px).
+ * 열은 모바일 한 열(가로로 넘기지 않고 세로로 쌓는다), 640px(sm) 두 열, 태블릿(md) 세 열, 데스크톱(lg) 다섯 열 한 줄이다
+ * (`gap-x-4 gap-y-8`, 공고 목록 그리드와 같다). 다섯 열의 카드 폭은 1440px 에서 약 223px 로 홈 공고 카드(170~297px)
+ * 범위 안이다. sm 에서 두 열로 한 것은 한 열이 640~767px 에서 카드를 원본(573px)보다 넓게 늘리기 때문이다.
  *
- * 같은 줄의 카드는 높이와 요소의 세로 위치가 같다. 헤드라인 칸이 두 줄 높이로 고정이고 칩은 한 줄, 버튼은 `mt-auto`
- * 라 맨 아래에 선다. 썸네일은 렛츠커리어의 실제 이미지(573x430, 4:3)를 자르지 않고(`object-contain`, `width`/`height` 로 로딩 전에도 비율 자리를 잡는다) — 이미지 안에 제목 글자가 있어 8:5 로 자르면
- * 글자 아랫줄이 잘린다. 카드 안쪽 폭은 가장 넓은 곳(lg 직전 3열)에서도 원본 폭보다 작다. 읽지 못한 카드도 칸은 남겨 둔다. 가격은 렛츠커리어에서 읽은 `priceInfo` 이고 읽지 못하면 가격 알약만
- * 빈다.
+ * 같은 줄의 카드는 높이와 요소의 세로 위치가 같다(썸네일 4:3, 한 줄 이름, 같은 높이 버튼). 썸네일은 렛츠커리어의 실제
+ * 이미지(573x430, 4:3)를 자르지 않고(`object-contain`, `width`/`height` 로 로딩 전에도 비율 자리를 잡는다) 두며
+ * 어느 폭에서도 원본 폭보다 작다. 읽지 못한 카드도 칸은 남겨 둔다. 가격은 렛츠커리어에서 읽은 `priceInfo` 이고 읽지 못하면
+ * 가격 알약만 빈다.
  */
 export function IndustryList({
   guidebooks,
@@ -38,13 +40,13 @@ export function IndustryList({
       <h2 id="industries-title" className="text-4xl font-bold break-keep text-gray-950">
         산업별 리포트
       </h2>
-      <ul className="-mx-5 mt-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-8 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
+      <ul className="mt-5 grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 md:grid-cols-3 md:gap-y-8 lg:grid-cols-5">
         {INDUSTRY_REPORTS.map((report, index) => {
           const guidebook = guidebooks[index] ?? null;
           const thumbnail = guidebook ? (guidebook.thumbnail ?? guidebook.desktopThumbnail) : null;
           const price = landingPrice(guidebook?.priceInfo ?? null);
           return (
-            <li key={report.slug} className="w-60 shrink-0 snap-start md:w-auto">
+            <li key={report.slug}>
               <div
                 className={cn(
                   'group relative flex h-full flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:gap-2 md:p-3',
