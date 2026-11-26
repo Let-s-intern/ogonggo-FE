@@ -77,7 +77,9 @@ export function toPreviewDeployment(app: PreviewApp, raw: unknown): PreviewDeplo
     return null;
   }
   const meta =
-    typeof item.meta === 'object' && item.meta !== null ? (item.meta as Record<string, unknown>) : {};
+    typeof item.meta === 'object' && item.meta !== null
+      ? (item.meta as Record<string, unknown>)
+      : {};
   const message = asString(meta.githubCommitMessage);
   return {
     app,
