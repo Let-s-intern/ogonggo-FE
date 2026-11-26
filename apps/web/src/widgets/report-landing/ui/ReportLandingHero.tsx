@@ -1,6 +1,6 @@
-import type { LetsCareerGuidebook } from "@/shared/api/letsCareerGuidebook";
-import { INDUSTRY_REPORTS } from "@/shared/config/industryReports";
-import { IndustryCard } from "./IndustryCard";
+import type { LetsCareerGuidebook } from '@/shared/api/letsCareerGuidebook';
+import { INDUSTRY_REPORTS } from '@/shared/config/industryReports';
+import { IndustryCard } from './IndustryCard';
 
 /**
  * `/reports` 의 전부. 헤더 아래에서 화면 높이를 채우는 히어로 하나이고, 히어로 자체가 산업 다섯으로 들어가는 입구다.
@@ -17,6 +17,9 @@ import { IndustryCard } from "./IndustryCard";
  * `한 주의 산업 흐름을 '취업 언어'로 번역해 드려요`, 구성 `분야별 산업 뉴스 · 실제 JD 연결 · 자소서 활용 활동 · 용어 각주`.
  * 회차·발행 주기·무료 이벤트처럼 근거가 확인되지 않은 말은 두지 않는다(PRD 11.3 L7).
  */
+/** 리포트 구성. 마케팅팀 상세 이미지의 `분야별 산업 뉴스 · 실제 JD 연결 · 자소서 활용 활동 · 용어 각주` 를 항목별 태그로 보인다. */
+const FEATURES = ['분야별 산업 뉴스', '실제 JD 연결', '자소서 활용 활동', '용어 각주'] as const;
+
 export function ReportLandingHero({
   guidebooks,
 }: {
@@ -36,23 +39,30 @@ export function ReportLandingHero({
             </p>
             <h1
               id="reports-hero-title"
-              style={{ animationDelay: "80ms" }}
+              style={{ animationDelay: '80ms' }}
               className="ogonggo-rise-in text-3xl font-bold tracking-tight break-keep text-gray-900 md:text-5xl"
             >
               이번 주 산업 트렌드 분석 리포트
             </h1>
             <p
-              style={{ animationDelay: "160ms" }}
+              style={{ animationDelay: '160ms' }}
               className="ogonggo-rise-in text-base break-keep text-gray-700 md:text-xl"
             >
               한 주의 산업 흐름을 &lsquo;취업 언어&rsquo;로 번역해 드려요
             </p>
-            <p
-              style={{ animationDelay: "240ms" }}
-              className="ogonggo-rise-in text-sm break-keep text-gray-500 md:text-base"
+            <ul
+              style={{ animationDelay: '240ms' }}
+              className="ogonggo-rise-in flex flex-wrap gap-2 pt-1"
             >
-              분야별 산업 뉴스 · 실제 JD 연결 · 자소서 활용 활동 · 용어 각주
-            </p>
+              {FEATURES.map((feature) => (
+                <li
+                  key={feature}
+                  className="rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700"
+                >
+                  {feature}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <ul className="group/list grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">

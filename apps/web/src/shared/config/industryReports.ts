@@ -32,7 +32,12 @@ export const INDUSTRY_REPORTS = [
   { slug: 'it-platform', label: 'IT·플랫폼', tagline: '네이버·카카오·AI', guidebookId: 24 },
   { slug: 'beauty', label: '뷰티', tagline: '화장품·K뷰티·올리브영', guidebookId: 22 },
   { slug: 'entertainment', label: '엔터테인먼트', tagline: '영화·OTT·드라마·K팝', guidebookId: 21 },
-  { slug: 'retail-ecommerce', label: '유통·이커머스', tagline: '쿠팡·무신사·전문몰', guidebookId: 25 },
+  {
+    slug: 'retail-ecommerce',
+    label: '유통·이커머스',
+    tagline: '쿠팡·무신사·전문몰',
+    guidebookId: 25,
+  },
 ] as const satisfies readonly IndustryReport[];
 
 export type IndustrySlug = (typeof INDUSTRY_REPORTS)[number]['slug'];
